@@ -1,0 +1,264 @@
+import React from 'react';
+import type { Group, Member } from '../types';
+
+type Props = {
+  showMembersRequiredNotice: boolean;
+  dismissMembersRequiredNotice: () => void;
+
+  activeTripMembers: Member[];
+  visibleMembers: Member[];
+  archivedMembers: Member[];
+  showAddMember: boolean;
+  setShowAddMember: (v: boolean) => void;
+  newMemberName: string;
+  setNewMemberName: (v: string) => void;
+  onAddMember: (e: React.FormEvent) => void;
+  onToggleArchiveMember: (id: string) => void;
+
+  visibleTripGroups: Group[];
+  showAddGroup: boolean;
+  setShowAddGroup: (v: boolean) => void;
+  newGroupName: string;
+  setNewGroupName: (v: string) => void;
+  selectedGroupMembers: Record<string, boolean>;
+  setSelectedGroupMembers: (v: Record<string, boolean>) => void;
+  editingGroupId: string | null;
+  groupFormError: string;
+  onCreateGroup: (e: React.FormEvent) => void;
+  onCancelGroupForm: () => void;
+  onStartEditGroup: (group: Group) => void;
+  onDeleteGroup: (group: Group) => void;
+
+  members: Record<string, Member>;
+};
+
+export function MembersGroupsTab({
+  showMembersRequiredNotice,
+  dismissMembersRequiredNotice,
+  activeTripMembers,
+  visibleMembers,
+  archivedMembers,
+  showAddMember,
+  setShowAddMember,
+  newMemberName,
+  setNewMemberName,
+  onAddMember,
+  onToggleArchiveMember,
+  visibleTripGroups,
+  showAddGroup,
+  setShowAddGroup,
+  newGroupName,
+  setNewGroupName,
+  selectedGroupMembers,
+  setSelectedGroupMembers,
+  editingGroupId,
+  groupFormError,
+  onCreateGroup,
+  onCancelGroupForm,
+  onStartEditGroup,
+  onDeleteGroup,
+  members,
+}: Props) {
+  return (
+    <div className="fade-in">
+      {showMembersRequiredNotice && (
+        <div className="glass-card" style={{ padding: '12px 16px', marginBottom: '16px', border: '1px dashed var(--color-warning)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span style={{ fontSize: '13px' }}>Please add a member before recording expenses.</span>
+          <button
+            style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '16px', lineHeight: 1 }}
+            onClick={dismissMembersRequiredNotice}
+          >
+            &times;
+          </button>
+        </div>
+      )}
+      {/* 1. Add Members Section */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+        <h3 style={{ fontSize: '18px' }}>Trip Members</h3>
+        {!showAddMember && (
+          <button className="gradient-btn" style={{ padding: '6px 12px', fontSize: '13px' }} onClick={() => setShowAddMember(true)}>
+            + Add Member
+          </button>
+        )}
+      </div>
+
+      {showAddMember && (
+        <form className="glass-card fade-in" onSubmit={onAddMember} style={{ marginBottom: '24px' }}>
+          <h4 style={{ marginBottom: '14px', fontSize: '15px' }}>New Member</h4>
+          <div className="form-group">
+            <label className="form-label">Name</label>
+            <input
+              type="text"
+              required
+              className="input-field"
+              placeholder="Enter full name"
+              value={newMemberName}
+              onChange={(e) => setNewMemberName(e.target.value)}
+            />
+          </div>
+          <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
+            <button type="submit" className="gradient-btn" style={{ flex: 1, padding: '10px' }}>Add</button>
+            <button type="button" className="secondary-btn" style={{ flex: 1, padding: '10px' }} onClick={() => setShowAddMember(false)}>Cancel</button>
+          </div>
+        </form>
+      )}
+
+      {/* Members list */}
+      {activeTripMembers.length === 0 ? (
+        <div className="glass-card" style={{ textAlign: 'center', padding: '24px', borderStyle: 'dashed', marginBottom: '32px' }}>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>No members added yet.</p>
+        </div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '32px' }}>
+          {visibleMembers.map((member) => (
+            <div key={member.id} className="glass-card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px' }}>
+              <span style={{ fontSize: '15px', fontWeight: '500' }}>{member.name}</span>
+              <button
+                className="secondary-btn"
+                style={{ padding: '4px 10px', fontSize: '12px', color: 'var(--color-warning)', borderColor: 'rgba(217,119,6,0.2)' }}
+                onClick={() => onToggleArchiveMember(member.id)}
+              >
+                Archive
+              </button>
+            </div>
+          ))}
+
+          {/* Archived Members */}
+          {archivedMembers.length > 0 && (
+            <div style={{ marginTop: '16px' }}>
+              <h4 style={{ fontSize: '12px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>
+                Archived ({archivedMembers.length})
+              </h4>
+              {archivedMembers.map((member) => (
+                <div key={member.id} className="glass-card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 16px', opacity: 0.5 }}>
+                  <span style={{ fontSize: '14px', textDecoration: 'line-through' }}>{member.name}</span>
+                  <button
+                    className="secondary-btn"
+                    style={{ padding: '3px 8px', fontSize: '11px' }}
+                    onClick={() => onToggleArchiveMember(member.id)}
+                  >
+                    Restore
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* 2. Group Management Section */}
+      <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '24px', marginTop: '24px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+          <h3 style={{ fontSize: '18px' }}>Member Groups</h3>
+          {!showAddGroup && visibleMembers.length > 0 && (
+            <button className="gradient-btn" style={{ padding: '6px 12px', fontSize: '13px' }} onClick={() => setShowAddGroup(true)}>
+              + Create Group
+            </button>
+          )}
+        </div>
+
+        {showAddGroup && (
+          <form className="glass-card fade-in" onSubmit={onCreateGroup} style={{ marginBottom: '24px' }}>
+            <h4 style={{ marginBottom: '14px', fontSize: '15px' }}>{editingGroupId ? 'Edit Group' : 'New Group'}</h4>
+
+            <div className="form-group">
+              <label className="form-label">Group Name</label>
+              <input
+                type="text"
+                required
+                className="input-field"
+                placeholder="e.g. Couple A & B or Family"
+                value={newGroupName}
+                onChange={(e) => setNewGroupName(e.target.value)}
+              />
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Group Members</label>
+              <div className="input-field" style={{ maxHeight: '150px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px', background: '#fff' }}>
+                {visibleMembers.map((m) => (
+                  <label key={m.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '14px' }}>
+                    <input
+                      type="checkbox"
+                      checked={!!selectedGroupMembers[m.id]}
+                      onChange={(e) => {
+                        setSelectedGroupMembers({
+                          ...selectedGroupMembers,
+                          [m.id]: e.target.checked
+                        });
+                      }}
+                      style={{ width: '16px', height: '16px', accentColor: 'var(--primary-accent)' }}
+                    />
+                    {m.name}
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            {groupFormError && (
+              <p style={{ color: 'var(--color-danger)', fontSize: '13px', marginTop: '4px' }}>{groupFormError}</p>
+            )}
+
+            <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
+              <button type="submit" className="gradient-btn" style={{ flex: 1, padding: '10px' }}>
+                {editingGroupId ? 'Update Group' : 'Save Group'}
+              </button>
+              <button
+                type="button"
+                className="secondary-btn"
+                style={{ flex: 1, padding: '10px' }}
+                onClick={onCancelGroupForm}
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        )}
+
+        {/* Groups list */}
+        {visibleTripGroups.length === 0 ? (
+          <div className="glass-card" style={{ textAlign: 'center', padding: '24px', borderStyle: 'dashed' }}>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '13px' }}>
+              No groups created yet. Groups help you quickly select multiple members for expense divisions.
+            </p>
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {visibleTripGroups.map((grp) => {
+              const grpMemberNames = grp.memberIds
+                .map((id) => members[id]?.name)
+                .filter(Boolean)
+                .join(', ');
+              return (
+                <div key={grp.id} className="glass-card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 16px' }}>
+                  <div>
+                    <h4 style={{ fontSize: '15px', fontWeight: '600' }}>{grp.name}</h4>
+                    <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '2px' }}>
+                      Members: {grpMemberNames || 'None'}
+                    </p>
+                  </div>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <button
+                      className="secondary-btn"
+                      style={{ padding: '4px 10px', fontSize: '11px' }}
+                      onClick={() => onStartEditGroup(grp)}
+                    >
+                      Edit
+                    </button>
+                    <button
+                      className="secondary-btn"
+                      style={{ padding: '4px 10px', fontSize: '11px', color: 'var(--color-danger)', borderColor: 'rgba(225,29,72,0.15)' }}
+                      onClick={() => onDeleteGroup(grp)}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

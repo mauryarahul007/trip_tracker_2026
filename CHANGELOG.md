@@ -37,10 +37,14 @@ Eight targeted improvements, implemented and user-validated one at a time (each 
 - Expense form gets an optional image upload; photos are downscaled and re-encoded client-side (`src/utils/image.ts`, max 1000px, JPEG q0.7) before being stored as a base64 data URL on the expense record (`Expense.receiptImage`).
 - Thumbnail + Remove button while editing; full image shown (click to open full-size) in the expense review modal.
 
+### 9. Split `App.tsx` into components — ✅ signed off
+- Pure refactor, no behavior change: `App.tsx` (2072 lines, single-file UI) broken into `TripsListScreen`, `ExpenseForm`, `ExpenseList`, `BalancesSettlements`, `MembersGroupsTab`, `AnalyticsTab`, `SettingsTab`, `ExpenseReviewModal`, `UndoToasts`, `NavTabs` under `src/components/`.
+- `App.tsx` now owns only state/handlers and wires the components together (911 lines).
+- Verified with `tsc -b`, `oxlint`, a full `vite build`, and a manual click-through of every flow.
+
 ### Descoped
 - **Vestigial per-expense currency field** — originally flagged as a possible cleanup (the field exists but is always forced to the trip's base currency; no real multi-currency conversion is implemented). User confirmed this is not needed — left as-is.
-- **Split `App.tsx` into components** — proposed as a pure-refactor cleanup (the file is ~1900 lines, single-file UI) to be done last so it wouldn't conflict with the feature work above. Not started; still open if wanted later.
 
 ### Files touched
 - `src/App.tsx`, `src/index.css`, `src/store/tripStore.ts`, `src/types/index.ts`
-- New: `src/components/ConfirmDialog.tsx`, `src/utils/image.ts`
+- New: `src/components/ConfirmDialog.tsx`, `src/components/TripsListScreen.tsx`, `src/components/ExpenseForm.tsx`, `src/components/ExpenseList.tsx`, `src/components/BalancesSettlements.tsx`, `src/components/MembersGroupsTab.tsx`, `src/components/AnalyticsTab.tsx`, `src/components/SettingsTab.tsx`, `src/components/ExpenseReviewModal.tsx`, `src/components/UndoToasts.tsx`, `src/components/NavTabs.tsx`, `src/utils/image.ts`
