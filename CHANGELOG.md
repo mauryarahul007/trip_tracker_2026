@@ -1,5 +1,19 @@
 # Changelog
 
+## 2026-08-08 (later still) — Expense form fixes — ✅ signed off
+
+### Category dropdown overflowing its container
+- `.form-group`/`.input-field` grid cells had no `min-width: 0`, so CSS Grid's default `min-width: auto` kept the column from shrinking below the `<select>`'s content width — a long category name pushed the box outside the card.
+- Added `min-width: 0` to `.form-group` and `.input-field`, `width: 100%` to `.input-field`, and ellipsis truncation to `.select-field` so it always stays inside its column.
+
+### Comma-formatted amount input
+- The Amount field now displays thousands separators as you type (`10000` → `10,000`) via a display-only formatter in `ExpenseForm.tsx`; the underlying raw value used for calculations is unchanged.
+
+### Files touched
+- `src/index.css`, `src/components/ExpenseForm.tsx`
+
+---
+
 ## 2026-08-08 — UX & functionality improvement pass
 
 Eight targeted improvements, implemented and user-validated one at a time (each run locally, checked, and signed off before starting the next).

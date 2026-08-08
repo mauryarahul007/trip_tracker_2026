@@ -3,6 +3,13 @@ import type { Category, Group, Member, Trip } from '../types';
 
 type SplitMode = 'equal' | 'custom' | 'exact' | 'percentage';
 
+function formatAmountDisplay(raw: string): string {
+  if (!raw) return '';
+  const [intPart, decPart] = raw.split('.');
+  const withCommas = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  return decPart !== undefined ? `${withCommas}.${decPart}` : withCommas;
+}
+
 type Props = {
   trip: Trip | undefined;
   visibleMembers: Member[];
@@ -97,13 +104,16 @@ export function ExpenseForm({
         <div className="form-group">
           <label className="form-label">Amount ({trip?.baseCurrency})</label>
           <input
-            type="number"
-            step="0.01"
+            type="text"
+            inputMode="decimal"
             required
             className="input-field"
             placeholder="0.00"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
+            value={formatAmountDisplay(amount)}
+            onChange={(e) => {
+              const raw = e.target.value.replace(/,/g, '');
+              if (/^\d*\.?\d*$/.test(raw)) setAmount(raw);
+            }}
           />
         </div>
         <div className="form-group">
