@@ -140,6 +140,11 @@ export function ExpenseForm({
             value={payer}
             onChange={(e) => setPayer(e.target.value)}
           >
+            {!visibleMembers.some((m) => m.id === payer) && payer && (
+              <option value={payer} disabled style={{ color: 'var(--color-danger)' }}>
+                ⚠️ Unknown / Deleted Payer (Select a new payer)
+              </option>
+            )}
             {visibleMembers.map((m) => (
               <option key={m.id} value={m.id}>{m.name}</option>
             ))}
@@ -310,6 +315,33 @@ export function ExpenseForm({
               </div>
             );
           })}
+
+          {/* Render any checked members that are now deleted */}
+          {Object.keys(selectedSplitMembers)
+            .filter((id) => selectedSplitMembers[id] && !visibleMembers.some((m) => m.id === id))
+            .map((id) => {
+              return (
+                <div key={id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', color: 'var(--color-danger)' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '14px', fontWeight: 500, flex: 1 }}>
+                    <input
+                      type="checkbox"
+                      checked={true}
+                      onChange={() => {
+                        setSelectedSplitMembers({
+                          ...selectedSplitMembers,
+                          [id]: false
+                        });
+                        const updatedConfig = { ...splitConfig };
+                        delete updatedConfig[id];
+                        setSplitConfig(updatedConfig);
+                      }}
+                      style={{ width: '16px', height: '16px', accentColor: 'var(--color-danger)' }}
+                    />
+                    ⚠️ [Deleted Member] (Uncheck to remove)
+                  </label>
+                </div>
+              );
+            })}
         </div>
       </div>
 

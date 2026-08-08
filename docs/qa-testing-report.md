@@ -49,8 +49,7 @@ The mathematical validation engine ran successfully and generated the following 
 | **Equal Split** | Penny Balancing & Rounding | Ensure that splitting indivisible totals does not result in rounding residue (e.g. $100 among 3 people). | The sum of all shares equals exactly $100.00. The payer (or first participant) absorbs the +$0.01 discrepancy to yield shares of $33.34, $33.33, and $33.33. |
 | **Custom Split** | Weight-based Division | Ensure that weights are correctly translated to percentages and mapped to exact cents. | Splitting $100.00 with weights 2:1:1 results in exact shares of $50.00, $25.00, and $25.00. |
 | **Settlements** | Greedy Debt Optimization | Ensure cyclic/transitive debts are reduced to minimize the number of transfers. | A owes B $10, and B owes C $10 is correctly optimized down to a single optimized transfer: **A pays C $10**. |
-| **Payer Reassign** | Member Deletion | Ensure that if a member who fronted an expense is deleted, the payer is reassigned. | If B paid for an expense and is deleted, the payer is reassigned to the first remaining member of the trip (A). |
-| **Split Reassign** | Member Deletion | Ensure that if a member participating in an expense split is deleted, their share is redistributed. | If an expense is split between A and B, deleting B redistributes the split list to contain only A, who then owes the full expense amount. |
+| **Needs Review Flag** | Member Deletion | Ensure that if a member who is part of a transaction is deleted, the transaction is marked for review. | Transactions involving a deleted member (as payer or participant) are flagged with an exclamation mark (`⚠️ Needs Review`) and display warning messages until edited by the user. |
 
 ---
 

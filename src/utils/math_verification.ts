@@ -103,7 +103,17 @@ function runTests() {
   // mem-2 (B): balance 0 (paid 10, owed 10)
   // mem-3 (C): balance +10
   // Transfers should be optimized: A pays C $10 directly (1 transfer instead of 2)
-  const trip: Trip = { id: 'trip-1', name: 'Test Trip', startDate: '2026-08-08', endDate: '2026-08-10', baseCurrency: 'INR', memberIds: ['mem-1', 'mem-2', 'mem-3'] };
+  const trip: Trip = { 
+    id: 'trip-1', 
+    name: 'Test Trip', 
+    startDate: '2026-08-08', 
+    endDate: '2026-08-10', 
+    baseCurrency: 'INR', 
+    memberIds: ['mem-1', 'mem-2', 'mem-3'],
+    groupIds: [],
+    createdAt: Date.now(),
+    updatedAt: Date.now()
+  };
   const members: Record<string, Member> = {
     'mem-1': { id: 'mem-1', name: 'A' },
     'mem-2': { id: 'mem-2', name: 'B' },
@@ -192,8 +202,7 @@ function runTests() {
   assert(updatedE2.resolvedShares['mem-3'] === 20, "C's share is now the full $20");
 
   if (failed) {
-    console.error("❌ Some math validation tests failed!");
-    process.exit(1);
+    throw new Error("Some math validation tests failed!");
   } else {
     console.log("🎉 All math validation tests passed successfully!");
   }
