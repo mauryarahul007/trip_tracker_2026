@@ -254,6 +254,9 @@ export const useTripStore = create<TripStore>((set, get) => {
       const activeTripId = get().activeTripId;
       if (!activeTripId) return;
 
+      const member = get().members[id];
+      const memberName = member ? member.name : '';
+
       const remainingMembers = get().trips
         .find((t) => t.id === activeTripId)
         ?.memberIds.filter((mid) => mid !== id) || [];
@@ -262,31 +265,50 @@ export const useTripStore = create<TripStore>((set, get) => {
       const updatedMembers = { ...get().members };
       delete updatedMembers[id];
 
-      // 2. Remove memberId from active trip's memberIds list
+      // 2. Remove member from any groups that contain them, handle group name updates & dissolution
+      const updatedGroups = { ...get().groups };
+      Object.keys(updatedGroups).forEach((gid) => {
+        const group = updatedGroups[gid];
+        if (group.memberIds.includes(id)) {
+          const remainingGroupMembers = group.memberIds.filter((mid) => mid !== id);
+          
+          if (remainingGroupMembers.length < 2) {
+            // "If there are 2 members in group and one member is deleted, the group should be dissolved"
+            delete updatedGroups[gid];
+          } else {
+            // "If there are 3 members in a group and we delete one member, the group name should be automatically updated to 2 members."
+            const memberNames = remainingGroupMembers.map((mid) => updatedMembers[mid]?.name || get().members[mid]?.name).filter(Boolean);
+            let newGroupName = '';
+            if (memberNames.length === 2) {
+              newGroupName = `${memberNames[0]} & ${memberNames[1]}`;
+            } else if (memberNames.length > 2) {
+              newGroupName = `${memberNames.slice(0, -1).join(', ')} & ${memberNames[memberNames.length - 1]}`;
+            }
+
+            updatedGroups[gid] = {
+              ...group,
+              name: newGroupName || group.name,
+              memberIds: remainingGroupMembers,
+            };
+          }
+        }
+      });
+
+      // 3. Remove memberId from active trip's memberIds list and update groupIds to filter out dissolved ones
       const updatedTrips = get().trips.map((t) => {
         if (t.id === activeTripId) {
+          const filteredGroupIds = (t.groupIds || []).filter((gid) => updatedGroups[gid] !== undefined);
           return {
             ...t,
             memberIds: t.memberIds.filter((mid) => mid !== id),
+            groupIds: filteredGroupIds,
             updatedAt: Date.now(),
           };
         }
         return t;
       });
 
-      // 3. Remove member from any groups that contain them
-      const updatedGroups = { ...get().groups };
-      Object.keys(updatedGroups).forEach((gid) => {
-        const group = updatedGroups[gid];
-        if (group.memberIds.includes(id)) {
-          updatedGroups[gid] = {
-            ...group,
-            memberIds: group.memberIds.filter((mid) => mid !== id),
-          };
-        }
-      });
-
-      // 4. Update expenses to redistribute the deleted member's share
+      // 4. Update expenses to redistribute the deleted member's share (supporting both ID-based and name-based matches)
       const updatedExpenses = get().expenses.filter((exp) => {
         if (exp.tripId !== activeTripId) return true;
         // If no members left on this trip, clean up all its expenses
@@ -302,15 +324,15 @@ export const useTripStore = create<TripStore>((set, get) => {
         let splitConfig = exp.splitConfig;
 
         // If the deleted member was the payer, assign to the first remaining member
-        if (exp.paidBy === id) {
+        if (exp.paidBy === id || (memberName && exp.paidBy === memberName)) {
           needUpdate = true;
           paidBy = remainingMembers[0] || '';
         }
 
         // If the deleted member was in the split, remove them and recalculate
-        if (exp.splitMemberIds.includes(id)) {
+        if (exp.splitMemberIds.includes(id) || (memberName && exp.splitMemberIds.includes(memberName))) {
           needUpdate = true;
-          splitMemberIds = exp.splitMemberIds.filter((mid) => mid !== id);
+          splitMemberIds = exp.splitMemberIds.filter((mid) => mid !== id && mid !== memberName);
           
           // If no split participants are left, default to all remaining members
           if (splitMemberIds.length === 0) {

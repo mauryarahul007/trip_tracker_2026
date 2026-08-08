@@ -392,7 +392,11 @@ export default function App() {
 
   const handleDeleteMember = (member: Member) => {
     const hasTransactions = activeTripExpenses.some(
-      (e) => e.paidBy === member.id || e.splitMemberIds.includes(member.id)
+      (e) => 
+        e.paidBy === member.id || 
+        e.paidBy === member.name || 
+        e.splitMemberIds.includes(member.id) ||
+        e.splitMemberIds.includes(member.name)
     );
 
     let message = `Are you sure you want to permanently delete member "${member.name}"?`;
@@ -481,7 +485,26 @@ export default function App() {
       initialChecked[id] = true;
     });
     setSelectedGroupMembers(initialChecked);
-    setIsGroupNameAuto(false);
+
+    const memberNames = grp.memberIds
+      .map((id) => members[id]?.name)
+      .filter(Boolean);
+
+    let expectedAutoName = '';
+    if (memberNames.length === 1) {
+      expectedAutoName = memberNames[0];
+    } else if (memberNames.length === 2) {
+      expectedAutoName = `${memberNames[0]} & ${memberNames[1]}`;
+    } else if (memberNames.length > 2) {
+      expectedAutoName = `${memberNames.slice(0, -1).join(', ')} & ${memberNames[memberNames.length - 1]}`;
+    }
+
+    if (grp.name === expectedAutoName || grp.name.trim() === '') {
+      setIsGroupNameAuto(true);
+    } else {
+      setIsGroupNameAuto(false);
+    }
+
     setShowAddGroup(true);
   };
 
