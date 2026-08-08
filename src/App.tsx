@@ -34,6 +34,7 @@ export default function App() {
     addMember,
     toggleArchiveMember,
     updateMember,
+    deleteMember,
     createGroup,
     updateGroup,
     deleteGroup,
@@ -387,6 +388,16 @@ export default function App() {
     setNewMemberName(member.name);
     setMemberFormError('');
     setShowAddMember(true);
+  };
+
+  const handleDeleteMember = (member: Member) => {
+    setConfirmRequest({
+      title: 'Delete member',
+      message: `Are you sure you want to permanently delete duplicate member "${member.name}"?`,
+      confirmLabel: 'Delete',
+      danger: true,
+      onConfirm: () => deleteMember(member.id),
+    });
   };
 
   const handleAddCategory = async (e: React.FormEvent) => {
@@ -936,6 +947,7 @@ export default function App() {
                 editingMemberId={editingMemberId}
                 onStartEditMember={handleStartEditMember}
                 memberFormError={memberFormError}
+                onDeleteMember={handleDeleteMember}
                 visibleTripGroups={visibleTripGroups}
                 showAddGroup={showAddGroup}
                 setShowAddGroup={setShowAddGroup}

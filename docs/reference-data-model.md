@@ -166,6 +166,7 @@ Defined in `src/store/tripStore.ts`. All actions are async and persist state to 
 | `addMember` | `(name) → void` | Creates member, adds to active trip |
 | `toggleArchiveMember` | `(id) → void` | Flips `archived` flag |
 | `updateMember` | `(id, name) → void` | Updates display name |
+| `deleteMember` | `(id) → void` | Permanently deletes member record |
 
 ### Group actions
 
