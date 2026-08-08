@@ -17,6 +17,7 @@ interface TripStore extends TripState {
   // Member Actions
   addMember: (name: string) => Promise<void>;
   toggleArchiveMember: (id: string) => Promise<void>;
+  updateMember: (id: string, name: string) => Promise<void>;
 
   // Group Actions
   createGroup: (name: string, memberIds: string[]) => Promise<void>;
@@ -231,6 +232,18 @@ export const useTripStore = create<TripStore>((set, get) => {
       const updatedMembers = {
         ...get().members,
         [id]: { ...member, archived: !member.archived },
+      };
+
+      await persist({ members: updatedMembers });
+    },
+
+    updateMember: async (id, name) => {
+      const member = get().members[id];
+      if (!member) return;
+
+      const updatedMembers = {
+        ...get().members,
+        [id]: { ...member, name },
       };
 
       await persist({ members: updatedMembers });

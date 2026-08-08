@@ -14,6 +14,8 @@ type Props = {
   setNewMemberName: (v: string) => void;
   onAddMember: (e: React.FormEvent) => void;
   onToggleArchiveMember: (id: string) => void;
+  editingMemberId: string | null;
+  onStartEditMember: (member: Member) => void;
 
   visibleTripGroups: Group[];
   showAddGroup: boolean;
@@ -44,6 +46,8 @@ export function MembersGroupsTab({
   setNewMemberName,
   onAddMember,
   onToggleArchiveMember,
+  editingMemberId,
+  onStartEditMember,
   visibleTripGroups,
   showAddGroup,
   setShowAddGroup,
@@ -84,7 +88,7 @@ export function MembersGroupsTab({
 
       {showAddMember && (
         <form className="glass-card fade-in" onSubmit={onAddMember} style={{ marginBottom: '24px' }}>
-          <h4 style={{ marginBottom: '14px', fontSize: '15px' }}>New Member</h4>
+          <h4 style={{ marginBottom: '14px', fontSize: '15px' }}>{editingMemberId ? 'Edit Member' : 'New Member'}</h4>
           <div className="form-group">
             <label className="form-label">Name</label>
             <input
@@ -97,7 +101,9 @@ export function MembersGroupsTab({
             />
           </div>
           <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
-            <button type="submit" className="gradient-btn" style={{ flex: 1, padding: '10px' }}>Add</button>
+            <button type="submit" className="gradient-btn" style={{ flex: 1, padding: '10px' }}>
+              {editingMemberId ? 'Update' : 'Add'}
+            </button>
             <button type="button" className="secondary-btn" style={{ flex: 1, padding: '10px' }} onClick={() => setShowAddMember(false)}>Cancel</button>
           </div>
         </form>
@@ -113,13 +119,22 @@ export function MembersGroupsTab({
           {visibleMembers.map((member) => (
             <div key={member.id} className="glass-card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px' }}>
               <span style={{ fontSize: '15px', fontWeight: '500' }}>{member.name}</span>
-              <button
-                className="secondary-btn"
-                style={{ padding: '4px 10px', fontSize: '12px', color: 'var(--color-warning)', borderColor: 'rgba(217,119,6,0.2)' }}
-                onClick={() => onToggleArchiveMember(member.id)}
-              >
-                Archive
-              </button>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button
+                  className="secondary-btn"
+                  style={{ padding: '4px 10px', fontSize: '12px' }}
+                  onClick={() => onStartEditMember(member)}
+                >
+                  Edit
+                </button>
+                <button
+                  className="secondary-btn"
+                  style={{ padding: '4px 10px', fontSize: '12px', color: 'var(--color-warning)', borderColor: 'rgba(217,119,6,0.2)' }}
+                  onClick={() => onToggleArchiveMember(member.id)}
+                >
+                  Archive
+                </button>
+              </div>
             </div>
           ))}
 

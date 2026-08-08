@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useTripStore } from './store/tripStore';
 import { calculateSettlements } from './utils/settlement';
-import type { Expense, Trip, Group } from './types';
+import type { Expense, Trip, Group, Member } from './types';
 import { exportTripToCSV } from './utils/csvExport';
 import { compressImageToDataUrl } from './utils/image';
 import { ConfirmDialog, type ConfirmRequest } from './components/ConfirmDialog';
@@ -33,6 +33,7 @@ export default function App() {
     deleteTrip,
     addMember,
     toggleArchiveMember,
+    updateMember,
     createGroup,
     updateGroup,
     deleteGroup,
@@ -58,6 +59,15 @@ export default function App() {
   // Form states - Members
   const [showAddMember, setShowAddMember] = useState(false);
   const [newMemberName, setNewMemberName] = useState('');
+  const [editingMemberId, setEditingMemberId] = useState<string | null>(null);
+
+  const handleSetShowAddMember = (val: boolean) => {
+    if (!val) {
+      setEditingMemberId(null);
+      setNewMemberName('');
+    }
+    setShowAddMember(val);
+  };
 
   // Form states - Groups
   const [showAddGroup, setShowAddGroup] = useState(false);
@@ -343,10 +353,21 @@ export default function App() {
   const handleAddMember = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newMemberName.trim()) return;
-    await addMember(newMemberName.trim());
+    if (editingMemberId) {
+      await updateMember(editingMemberId, newMemberName.trim());
+    } else {
+      await addMember(newMemberName.trim());
+    }
     setNewMemberName('');
+    setEditingMemberId(null);
     setShowAddMember(false);
     setShowMembersRequiredNotice(false);
+  };
+
+  const handleStartEditMember = (member: Member) => {
+    setEditingMemberId(member.id);
+    setNewMemberName(member.name);
+    setShowAddMember(true);
   };
 
   const handleAddCategory = async (e: React.FormEvent) => {
@@ -872,11 +893,13 @@ export default function App() {
                 visibleMembers={visibleMembers}
                 archivedMembers={archivedMembers}
                 showAddMember={showAddMember}
-                setShowAddMember={setShowAddMember}
+                setShowAddMember={handleSetShowAddMember}
                 newMemberName={newMemberName}
                 setNewMemberName={setNewMemberName}
                 onAddMember={handleAddMember}
                 onToggleArchiveMember={toggleArchiveMember}
+                editingMemberId={editingMemberId}
+                onStartEditMember={handleStartEditMember}
                 visibleTripGroups={visibleTripGroups}
                 showAddGroup={showAddGroup}
                 setShowAddGroup={setShowAddGroup}
