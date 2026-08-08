@@ -1,8 +1,12 @@
-import type { Member, Expense, Trip } from '../types';
+import type { Member, Expense, Trip, Group } from '../types';
 
 export interface Transfer {
-  from: string;
+  from: string; // settlement node id: memberId, or `group:<groupId>`
   to: string;
+  fromLabel: string; // member name, or group name if merged
+  toLabel: string;
+  fromMemberId: string; // real member id to record as payer
+  toMemberId: string; // real member id to record as recipient
   amount: number;
 }
 
@@ -12,10 +16,56 @@ export interface MemberBalance {
   balance: number; // positive = gets back, negative = owes
 }
 
+interface SettlementNode {
+  id: string;
+  name: string;
+  memberIds: string[];
+  balance: number;
+}
+
+// Groups' members owe nothing to each other for settlement purposes -
+// each group is merged into a single node, netted against everyone else.
+function buildSettlementNodes(balances: MemberBalance[], groups: Group[]): SettlementNode[] {
+  const groupOfMember: Record<string, Group> = {};
+  groups.forEach((g) => {
+    g.memberIds.forEach((mid) => {
+      if (!groupOfMember[mid]) groupOfMember[mid] = g;
+    });
+  });
+
+  const nodeMap: Record<string, SettlementNode> = {};
+  balances.forEach((b) => {
+    const grp = groupOfMember[b.memberId];
+    const key = grp ? `group:${grp.id}` : `member:${b.memberId}`;
+    if (!nodeMap[key]) {
+      nodeMap[key] = { id: key, name: grp ? grp.name : b.name, memberIds: [], balance: 0 };
+    }
+    nodeMap[key].memberIds.push(b.memberId);
+    nodeMap[key].balance = Number((nodeMap[key].balance + b.balance).toFixed(2));
+  });
+
+  return Object.values(nodeMap);
+}
+
+// Within a merged group node, the member with the most extreme individual
+// balance is recorded as the actual payer/recipient for the ledger entry.
+function pickRepresentative(
+  memberIds: string[],
+  balances: MemberBalance[],
+  direction: 'debtor' | 'creditor'
+): string {
+  return memberIds.reduce((best, id) => {
+    const bal = balances.find((b) => b.memberId === id)?.balance ?? 0;
+    const bestBal = balances.find((b) => b.memberId === best)?.balance ?? 0;
+    return direction === 'debtor' ? (bal < bestBal ? id : best) : (bal > bestBal ? id : best);
+  }, memberIds[0]);
+}
+
 export function calculateSettlements(
   trip: Trip,
   members: Record<string, Member>,
-  expenses: Expense[]
+  expenses: Expense[],
+  groups: Group[] = []
 ): { balances: MemberBalance[]; transfers: Transfer[] } {
   const activeTripExpenses = expenses.filter((e) => e.tripId === trip.id);
   
@@ -49,14 +99,11 @@ export function calculateSettlements(
     };
   });
 
-  // 2. Greedy algorithm to minimize transfers
-  // Create copies of non-zero balances to mutate
-  const debtors = balances
-    .filter((b) => b.balance < -0.01)
-    .map((b) => ({ ...b }));
-  const creditors = balances
-    .filter((b) => b.balance > 0.01)
-    .map((b) => ({ ...b }));
+  // 2. Merge group members into single settlement nodes, then greedily
+  // match debtor nodes to creditor nodes to minimize transfers.
+  const nodes = buildSettlementNodes(balances, groups);
+  const debtors = nodes.filter((n) => n.balance < -0.01).map((n) => ({ ...n }));
+  const creditors = nodes.filter((n) => n.balance > 0.01).map((n) => ({ ...n }));
 
   const transfers: Transfer[] = [];
 
@@ -70,14 +117,18 @@ export function calculateSettlements(
     const creditor = creditors[0];
 
     const amountToSettle = Math.min(-debtor.balance, creditor.balance);
-    
+
     if (amountToSettle > 0.005) {
       transfers.push({
-        from: debtor.memberId,
-        to: creditor.memberId,
+        from: debtor.id,
+        to: creditor.id,
+        fromLabel: debtor.name,
+        toLabel: creditor.name,
+        fromMemberId: pickRepresentative(debtor.memberIds, balances, 'debtor'),
+        toMemberId: pickRepresentative(creditor.memberIds, balances, 'creditor'),
         amount: Number(amountToSettle.toFixed(2))
       });
-      
+
       debtor.balance += amountToSettle;
       creditor.balance -= amountToSettle;
     }

@@ -1,4 +1,4 @@
-import type { Trip, Member, Expense } from '../types';
+import type { Trip, Member, Expense, Group } from '../types';
 import { calculateSettlements } from './settlement';
 
 const safeCell = (str: string): string => {
@@ -23,7 +23,8 @@ const safeCell = (str: string): string => {
 export function exportTripToCSV(
   trip: Trip,
   members: Record<string, Member>,
-  expenses: Expense[]
+  expenses: Expense[],
+  groups: Group[] = []
 ): string {
   const activeTripExpenses = expenses.filter((e) => e.tripId === trip.id);
   const nonSettlementExpenses = activeTripExpenses.filter((e) => !e.title.startsWith('Settlement:'));
@@ -59,7 +60,7 @@ export function exportTripToCSV(
   csvLines.push('NET BALANCES');
   csvLines.push('Member Name,Status,Net Balance');
 
-  const { balances, transfers } = calculateSettlements(trip, members, expenses);
+  const { balances, transfers } = calculateSettlements(trip, members, expenses, groups);
 
   balances.forEach((b) => {
     const statusStr = b.balance > 0.01 
@@ -84,12 +85,9 @@ export function exportTripToCSV(
   csvLines.push('Debtor (Who Pays),Creditor (Who Gets Paid),Amount');
 
   transfers.forEach((t) => {
-    const fromName = members[t.from]?.name || 'Deleted';
-    const toName = members[t.to]?.name || 'Deleted';
-
     const row = [
-      fromName,
-      toName,
+      t.fromLabel,
+      t.toLabel,
       t.amount.toFixed(2)
     ];
     csvLines.push(row.map(safeCell).join(','));

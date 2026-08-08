@@ -61,8 +61,8 @@ The app doesn't use a separate "settled" table. Instead, settlement transfers ar
 ```
 isSettled = expenses.some(e =>
   e.title.startsWith("Settlement:") &&
-  e.paidBy === transfer.from &&
-  e.splitMemberIds.includes(transfer.to) &&
+  e.paidBy === transfer.fromMemberId &&
+  e.splitMemberIds.includes(transfer.toMemberId) &&
   |e.amount − transfer.amount| < 0.02
 )
 ```
@@ -91,6 +91,22 @@ shares[roundTarget] += diff;
 ```
 
 If the payer is not a split participant (e.g. they paid on behalf of others but don't share the expense), the first participant absorbs the remainder.
+
+---
+
+## Group settlement: why merge instead of exclude
+
+Trip groups (e.g. a couple, a family) already exist for split convenience — quick-selecting all of a group's members when dividing an expense. Reusing that same `Group` entity for settlement was the obvious choice over inventing a second "settlement pairing" concept.
+
+**Why merge balances instead of just hiding intra-group transfers?** Hiding would still let a group's members show up as separate debtor/creditor nodes towards outsiders, which can produce more transfers than necessary (e.g. A owes ₹50, A's groupmate B is owed ₹70 — merged, the group owes nothing to C and gets ₹20; unmerged, that ₹20 net position isn't visible and two separate transfers might get suggested). Merging into one node before the greedy match keeps the minimization property intact.
+
+**Picking who actually pays/receives.** A merged group node isn't a real bank account — an actual person has to send the money. The member with the most extreme individual balance in the group is picked as the default payer/recipient. This is a suggestion, not a constraint; group members are free to settle among themselves differently.
+
+---
+
+## Why the settle amount is a free input, not locked to the suggestion
+
+The suggested `transfer.amount` is the minimum-transfer-count recommendation, not a requirement. Real payments round to convenient numbers, get short-paid, or get rounded up — locking the input to the exact suggested figure would force users to under/over-report or fudge a separate correcting expense. Letting the settle amount be freely typed and recorded as-is keeps the ledger honest: whatever actually changed hands is what gets recorded, and the next render's balance/transfer recalculation (same derivation as any other expense) picks up any remainder automatically.
 
 ---
 

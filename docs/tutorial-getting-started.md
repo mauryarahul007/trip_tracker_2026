@@ -88,7 +88,7 @@ Scroll down to **Balances & Settlements**. You'll see:
 - **Priya** — gets back (paid Dinner, lower weight)
 - **Amit** — owes (equal share Hotel + Dinner)
 
-The **Settlement Actions** panel shows the minimum transfers needed. Click **Settle** next to a transfer, confirm in the dialog that appears, and the row changes to **✓ Settled**.
+The **Settlement Actions** panel shows the minimum transfers needed. If two people who owe each other are also in the same group, they won't see a transfer between them at all — the group is netted as one entity against everyone else. Each row has an amount field next to **Settle**: leave it blank to record the suggested amount, or type a different figure if the actual payment was more or less. Click **Settle**, confirm in the dialog that appears, and the row changes to **✓ Settled** — balances and the remaining suggested transfers recalculate immediately.
 
 ---
 

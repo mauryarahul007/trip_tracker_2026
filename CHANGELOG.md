@@ -1,5 +1,23 @@
 # Changelog
 
+## 2026-08-08 (latest) — Settlement engine: transitive, group, and custom settlements
+
+### Transitive settlement (already present, verified)
+- The settlement algorithm nets each member's balance across *all* expenses before matching debtors to creditors, so a member whose debts and credits cancel out (e.g. B owes A but is also owed the same amount by C) simply never appears — A is matched directly to C. Confirmed with a self-check script; no code change needed.
+
+### Group settlement
+- Trip groups are now merged into a single settlement node before the greedy match runs — members of the same group never see a suggested transfer between each other, and the group's combined balance settles against everyone else as one entity.
+- The actual ledger entry still needs two real members: the group's most-negative-balance member is picked as the default payer, most-positive as the default recipient (shown in the confirm dialog, e.g. "Roomies pays Amit ₹500 (paid by Priya)").
+- `calculateSettlements()` and `exportTripToCSV()` both take an optional `groups` parameter now; `Transfer` gained `fromLabel`/`toLabel` (display name — member or group) and `fromMemberId`/`toMemberId` (real member ids for the ledger).
+
+### Custom settlement amount
+- Each settlement row now has a free amount input next to **Settle** — leave blank to use the suggested amount, or type any other figure (partial payment, overpayment, rounding). Balances and the remaining suggested transfers recalculate on the next render, same as any other recorded expense.
+
+### Files touched
+- `src/utils/settlement.ts`, `src/utils/csvExport.ts`, `src/components/BalancesSettlements.tsx`, `src/App.tsx`, `docs/reference-settlement.md`, `docs/explanation-settlement-design.md`, `docs/tutorial-getting-started.md`
+
+---
+
 ## 2026-08-08 (later still) — Expense form fixes — ✅ signed off
 
 ### Category dropdown overflowing its container

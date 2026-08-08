@@ -172,7 +172,7 @@ export default function App() {
 
   // Settlements and Net balances calculation
   const { balances, transfers } = activeTrip
-    ? calculateSettlements(activeTrip, members, expenses)
+    ? calculateSettlements(activeTrip, members, expenses, visibleTripGroups)
     : { balances: [], transfers: [] };
 
   // Filters out settlements to keep expense analytics clean
@@ -576,20 +576,24 @@ export default function App() {
     setSelectedSplitMembers(updated);
   };
 
-  // Record a settlement transfer
-  const handleSettle = (fromId: string, toId: string, amount: number) => {
+  // Record a settlement transfer. fromId/toId are the real member ids that
+  // record the ledger entry; fromLabel/toLabel are what the user picked the
+  // transfer between (a member name, or a group name for merged settlements).
+  const handleSettle = (fromId: string, toId: string, amount: number, fromLabel: string, toLabel: string) => {
     const fromMember = members[fromId];
     const toMember = members[toId];
-    if (!fromMember || !toMember || !activeTrip) return;
+    if (!fromMember || !toMember || !activeTrip || !(amount > 0)) return;
 
     const currencySymbol = activeTrip.baseCurrency === 'INR' ? '₹' : activeTrip.baseCurrency;
+    const payerNote = fromLabel !== fromMember.name ? ` (paid by ${fromMember.name})` : '';
+    const receiverNote = toLabel !== toMember.name ? ` (received by ${toMember.name})` : '';
     setConfirmRequest({
       title: 'Confirm settlement',
-      message: `Mark transfer: ${fromMember.name} pays ${toMember.name} ${currencySymbol}${amount.toFixed(2)} as settled?`,
+      message: `Mark transfer: ${fromLabel} pays ${toLabel} ${currencySymbol}${amount.toFixed(2)}${payerNote}${receiverNote} as settled?`,
       confirmLabel: 'Mark Settled',
       onConfirm: () => {
         addExpense({
-          title: `Settlement: ${fromMember.name} ➔ ${toMember.name}`,
+          title: `Settlement: ${fromLabel} ➔ ${toLabel}`,
           amount: amount,
           currency: activeTrip.baseCurrency,
           category: 'cat-misc',
@@ -641,7 +645,7 @@ export default function App() {
 
   const triggerCsvExport = () => {
     if (!activeTrip) return;
-    const csv = exportTripToCSV(activeTrip, members, expenses);
+    const csv = exportTripToCSV(activeTrip, members, expenses, visibleTripGroups);
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -801,7 +805,6 @@ export default function App() {
                 {activeTrip && visibleMembers.length > 0 && (
                   <BalancesSettlements
                     trip={activeTrip}
-                    members={members}
                     balances={balances}
                     transfers={transfers}
                     activeTripExpenses={activeTripExpenses}
