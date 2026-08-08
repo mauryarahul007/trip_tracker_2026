@@ -28,8 +28,8 @@ export default function App() {
     importDatabase,
   } = useTripStore();
 
-  // Navigation tabs: 'expenses' | 'members' | 'settings'
-  const [activeTab, setActiveTab] = useState<'expenses' | 'members' | 'settings'>('expenses');
+  // Navigation tabs: 'expenses' | 'members' | 'analytics' | 'settings'
+  const [activeTab, setActiveTab] = useState<'expenses' | 'members' | 'analytics' | 'settings'>('expenses');
 
   // Form states - Trips
   const [showAddTrip, setShowAddTrip] = useState(false);
@@ -87,6 +87,88 @@ export default function App() {
   const { balances, transfers } = activeTrip
     ? calculateSettlements(activeTrip, members, expenses)
     : { balances: [], transfers: [] };
+
+  // Filters out settlements to keep expense analytics clean
+  const nonSettlementExpenses = activeTripExpenses.filter((e) => !e.title.startsWith('Settlement:'));
+  const totalSpent = nonSettlementExpenses.reduce((sum, e) => sum + e.amount, 0);
+
+  // Category breakdown calculations
+  const categoryTotals: Record<string, number> = {};
+  categories.forEach((cat) => {
+    categoryTotals[cat.id] = 0;
+  });
+  nonSettlementExpenses.forEach((exp) => {
+    categoryTotals[exp.category] = (categoryTotals[exp.category] || 0) + exp.amount;
+  });
+
+  const CATEGORY_COLORS: Record<string, string> = {
+    'cat-food': '#6366f1', // Indigo
+    'cat-stay': '#3b82f6', // Blue
+    'cat-travel': '#06b6d4', // Cyan
+    'cat-activities': '#10b981', // Emerald
+    'cat-shopping': '#f59e0b', // Amber
+    'cat-misc': '#8b5cf6', // Violet
+  };
+  const getCatColor = (id: string, idx: number) => {
+    if (CATEGORY_COLORS[id]) return CATEGORY_COLORS[id];
+    const fallbacks = ['#ec4899', '#f43f5e', '#84cc16', '#a855f7', '#64748b'];
+    return fallbacks[idx % fallbacks.length];
+  };
+
+  const categoryData = Object.entries(categoryTotals)
+    .map(([catId, amount]) => {
+      const cat = categories.find((c) => c.id === catId);
+      return {
+        id: catId,
+        name: cat ? cat.name : 'Other',
+        icon: cat ? cat.icon : '🏷️',
+        amount,
+        percentage: totalSpent > 0 ? (amount / totalSpent) * 100 : 0,
+      };
+    })
+    .filter((d) => d.amount > 0)
+    .sort((a, b) => b.amount - a.amount);
+
+  const topCategory = categoryData[0] ? `${categoryData[0].icon} ${categoryData[0].name}` : 'N/A';
+
+  // Member spend calculations
+  const memberSpentMap: Record<string, number> = {};
+  visibleMembers.forEach((m) => {
+    memberSpentMap[m.id] = 0;
+  });
+  nonSettlementExpenses.forEach((exp) => {
+    if (memberSpentMap[exp.paidBy] !== undefined) {
+      memberSpentMap[exp.paidBy] += exp.amount;
+    }
+  });
+
+  const memberSpentList = visibleMembers.map((m) => ({
+    id: m.id,
+    name: m.name,
+    amount: memberSpentMap[m.id] || 0,
+    percentage: totalSpent > 0 ? ((memberSpentMap[m.id] || 0) / totalSpent) * 100 : 0,
+  })).sort((a, b) => b.amount - a.amount);
+
+  const biggestSpender = memberSpentList[0] && memberSpentList[0].amount > 0 ? memberSpentList[0].name : 'N/A';
+  const averageCost = visibleMembers.length > 0 ? totalSpent / visibleMembers.length : 0;
+
+  // Daily spend timeline calculations
+  const dailyTotals: Record<string, number> = {};
+  nonSettlementExpenses.forEach((exp) => {
+    const dateStr = exp.date;
+    dailyTotals[dateStr] = (dailyTotals[dateStr] || 0) + exp.amount;
+  });
+
+  const sortedDates = Object.keys(dailyTotals).sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
+  const dailySpendData = sortedDates.map((dateStr) => {
+    const dateObj = new Date(dateStr);
+    const formattedDate = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' });
+    return {
+      rawDate: dateStr,
+      dateLabel: formattedDate,
+      amount: dailyTotals[dateStr] || 0,
+    };
+  });
 
   // Set default form values when opening forms
   useEffect(() => {
@@ -961,6 +1043,229 @@ export default function App() {
               </div>
             )}
 
+            {activeTab === 'analytics' && (
+              <div className="fade-in">
+                <h3 style={{ fontSize: '18px', marginBottom: '20px' }}>Charts & Analytics</h3>
+
+                {/* 1. Key Statistics Cards Grid */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '20px' }}>
+                  <div className="glass-card" style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <span style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Total Spent</span>
+                    <strong style={{ fontSize: '20px', color: 'var(--primary-accent)' }}>
+                      {activeTrip?.baseCurrency === 'INR' ? '₹' : activeTrip?.baseCurrency} {totalSpent.toFixed(2)}
+                    </strong>
+                  </div>
+                  <div className="glass-card" style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <span style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Per-Head Cost</span>
+                    <strong style={{ fontSize: '20px', color: 'var(--text-primary)' }}>
+                      {activeTrip?.baseCurrency === 'INR' ? '₹' : activeTrip?.baseCurrency} {averageCost.toFixed(2)}
+                    </strong>
+                  </div>
+                  <div className="glass-card" style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <span style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Top Category</span>
+                    <strong style={{ fontSize: '16px', color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {topCategory}
+                    </strong>
+                  </div>
+                  <div className="glass-card" style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <span style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Biggest Spender</span>
+                    <strong style={{ fontSize: '16px', color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {biggestSpender}
+                    </strong>
+                  </div>
+                </div>
+
+                {nonSettlementExpenses.length === 0 ? (
+                  <div className="glass-card" style={{ textAlign: 'center', padding: '40px 20px', borderStyle: 'dashed' }}>
+                    <p style={{ color: 'var(--text-secondary)' }}>Add some non-settlement expenses to see chart details.</p>
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                    
+                    {/* 2. Spend by Category SVG Donut Chart */}
+                    <div className="glass-card">
+                      <h4 style={{ fontSize: '14px', marginBottom: '16px', fontWeight: '600' }}>Spend by Category</h4>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: '24px' }}>
+                        {/* Donut SVG */}
+                        <div style={{ position: 'relative', width: '140px', height: '140px' }}>
+                          <svg width="140" height="140" viewBox="0 0 140 140">
+                            <circle cx="70" cy="70" r="50" fill="transparent" stroke="var(--border-color)" strokeWidth="1" />
+                            {(() => {
+                              let accumPercent = 0;
+                              const r = 50;
+                              const circ = 2 * Math.PI * r;
+                              return categoryData.map((d, idx) => {
+                                const strokeDash = `${(d.percentage / 100) * circ} ${circ}`;
+                                const strokeOffset = `${- (accumPercent / 100) * circ}`;
+                                accumPercent += d.percentage;
+                                return (
+                                  <circle
+                                    key={d.id}
+                                    cx="70"
+                                    cy="70"
+                                    r={r}
+                                    fill="transparent"
+                                    stroke={getCatColor(d.id, idx)}
+                                    strokeWidth="12"
+                                    strokeDasharray={strokeDash}
+                                    strokeDashoffset={strokeOffset}
+                                    transform="rotate(-90 70 70)"
+                                    style={{ transition: 'stroke-dashoffset 0.5s ease' }}
+                                  />
+                                );
+                              });
+                            })()}
+                          </svg>
+                          <div style={{
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            textAlign: 'center',
+                            pointerEvents: 'none'
+                          }}>
+                            <span style={{ fontSize: '10px', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: 600 }}>Total</span>
+                            <span style={{ fontSize: '15px', fontWeight: '800', color: 'var(--text-primary)' }}>
+                              {activeTrip?.baseCurrency === 'INR' ? '₹' : activeTrip?.baseCurrency}
+                              {totalSpent > 1000 ? `${(totalSpent / 1000).toFixed(1)}k` : totalSpent.toFixed(0)}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Legends */}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1, minWidth: '150px' }}>
+                          {categoryData.map((d, idx) => (
+                            <div key={d.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '13px' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: getCatColor(d.id, idx) }} />
+                                <span>{d.icon} {d.name}</span>
+                              </div>
+                              <strong style={{ color: 'var(--text-secondary)' }}>
+                                {d.percentage.toFixed(0)}%
+                              </strong>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* 3. Spend by Member CSS Bar Chart */}
+                    <div className="glass-card">
+                      <h4 style={{ fontSize: '14px', marginBottom: '16px', fontWeight: '600' }}>Spend by Member (Paid sums)</h4>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                        {memberSpentList.map((m) => (
+                          <div key={m.id} style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', fontWeight: 500 }}>
+                              <span>{m.name}</span>
+                              <span>
+                                {activeTrip?.baseCurrency === 'INR' ? '₹' : activeTrip?.baseCurrency} {m.amount.toFixed(2)}{' '}
+                                <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>({m.percentage.toFixed(0)}%)</span>
+                              </span>
+                            </div>
+                            <div style={{ width: '100%', height: '8px', background: 'rgba(15,23,42,0.05)', borderRadius: '4px', overflow: 'hidden' }}>
+                              <div style={{
+                                width: `${m.percentage}%`,
+                                height: '100%',
+                                background: 'linear-gradient(90deg, var(--primary-accent), var(--secondary-accent))',
+                                borderRadius: '4px',
+                                transition: 'width 0.4s ease'
+                              }} />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* 4. Daily Spend SVG Line Chart */}
+                    {dailySpendData.length > 0 && (
+                      <div className="glass-card">
+                        <h4 style={{ fontSize: '14px', marginBottom: '16px', fontWeight: '600' }}>Daily Spending Trend</h4>
+                        <div style={{ width: '100%', overflowX: 'auto' }}>
+                          <svg width="100%" height="200" viewBox="0 0 400 200" preserveAspectRatio="none" style={{ minWidth: '350px' }}>
+                            <line x1="30" y1="40" x2="380" y2="40" stroke="var(--border-color)" strokeWidth="1" strokeDasharray="4 4" />
+                            <line x1="30" y1="100" x2="380" y2="100" stroke="var(--border-color)" strokeWidth="1" strokeDasharray="4 4" />
+                            <line x1="30" y1="160" x2="380" y2="160" stroke="var(--border-color)" strokeWidth="1" />
+
+                            {(() => {
+                              const amounts = dailySpendData.map((d) => d.amount);
+                              const maxAmount = Math.max(...amounts, 100);
+                              const getCoords = (idx: number, amt: number) => {
+                                const totalPoints = dailySpendData.length;
+                                const x = totalPoints > 1 
+                                  ? 40 + idx * (330 / (totalPoints - 1))
+                                  : 200;
+                                const y = 160 - (amt / maxAmount) * 110;
+                                return { x, y };
+                              };
+
+                              const points = dailySpendData.map((d, idx) => getCoords(idx, d.amount));
+                              const pointsStr = points.map((p) => `${p.x},${p.y}`).join(' ');
+
+                              return (
+                                <>
+                                  <text x="25" y="44" textAnchor="end" fontSize="9" fill="var(--text-secondary)">{maxAmount.toFixed(0)}</text>
+                                  <text x="25" y="104" textAnchor="end" fontSize="9" fill="var(--text-secondary)">{(maxAmount / 2).toFixed(0)}</text>
+                                  <text x="25" y="164" textAnchor="end" fontSize="9" fill="var(--text-secondary)">0</text>
+
+                                  {points.length > 1 && (
+                                    <polyline
+                                      fill="none"
+                                      stroke="var(--primary-accent)"
+                                      strokeWidth="2.5"
+                                      points={pointsStr}
+                                      style={{ transition: 'all 0.5s ease' }}
+                                    />
+                                  )}
+
+                                  {points.map((p, idx) => (
+                                    <g key={idx}>
+                                      <circle
+                                        cx={p.x}
+                                        cy={p.y}
+                                        r="4"
+                                        fill="var(--primary-accent)"
+                                        stroke="#ffffff"
+                                        strokeWidth="1.5"
+                                      />
+                                      <text
+                                        x={p.x}
+                                        y={p.y - 8}
+                                        textAnchor="middle"
+                                        fontSize="9"
+                                        fontWeight="700"
+                                        fill="var(--text-primary)"
+                                      >
+                                        {dailySpendData[idx].amount.toFixed(0)}
+                                      </text>
+                                      <text
+                                        x={p.x}
+                                        y="178"
+                                        textAnchor="middle"
+                                        fontSize="9"
+                                        fill="var(--text-secondary)"
+                                      >
+                                        {dailySpendData[idx].dateLabel}
+                                      </text>
+                                    </g>
+                                  ))}
+                                </>
+                              );
+                            })()}
+                          </svg>
+                        </div>
+                      </div>
+                    )}
+
+                  </div>
+                )}
+              </div>
+            )}
+
             {activeTab === 'settings' && (
               <div className="fade-in">
                 <h3 style={{ fontSize: '18px', marginBottom: '20px' }}>Settings & Data Utility</h3>
@@ -1020,6 +1325,10 @@ export default function App() {
             <button className={`nav-tab-item ${activeTab === 'members' ? 'active' : ''}`} onClick={() => setActiveTab('members')}>
               <span className="nav-tab-icon">👥</span>
               <span>Members & Groups</span>
+            </button>
+            <button className={`nav-tab-item ${activeTab === 'analytics' ? 'active' : ''}`} onClick={() => setActiveTab('analytics')}>
+              <span className="nav-tab-icon">📊</span>
+              <span>Analytics</span>
             </button>
             <button className={`nav-tab-item ${activeTab === 'settings' ? 'active' : ''}`} onClick={() => setActiveTab('settings')}>
               <span className="nav-tab-icon">⚙</span>
