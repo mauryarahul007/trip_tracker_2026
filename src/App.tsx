@@ -748,15 +748,28 @@ export default function App() {
     setPendingDeleteGroup(null);
   };
 
-  // Group quick select toggles for splits
+  // Group quick select for splits — replaces the current selection with
+  // exactly this group's members, unselecting everyone else, rather than
+  // just adding the group on top of whatever was already checked.
   const applyGroupToSplit = (memberIds: string[], checked: boolean) => {
-    const updated = { ...selectedSplitMembers };
-    memberIds.forEach((id) => {
-      if (members[id] && !members[id].archived) {
-        updated[id] = checked;
-      }
-    });
-    setSelectedSplitMembers(updated);
+    const updatedConfig = { ...newExpSplitConfig };
+    if (checked) {
+      const updatedSelection: Record<string, boolean> = {};
+      visibleMembers.forEach((m) => {
+        const inGroup = memberIds.includes(m.id);
+        updatedSelection[m.id] = inGroup;
+        if (!inGroup) delete updatedConfig[m.id];
+      });
+      setSelectedSplitMembers(updatedSelection);
+    } else {
+      const updatedSelection = { ...selectedSplitMembers };
+      memberIds.forEach((id) => {
+        updatedSelection[id] = false;
+        delete updatedConfig[id];
+      });
+      setSelectedSplitMembers(updatedSelection);
+    }
+    setNewExpSplitConfig(updatedConfig);
   };
 
   // Record a settlement transfer. fromId/toId are the real member ids that
