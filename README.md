@@ -2,7 +2,7 @@
 
 A **mobile-first, offline-first PWA** for splitting trip expenses among friends and family. Add members, record expenses with flexible split modes, track who owes whom, and settle up — all without an internet connection or an account.
 
-[![Live App](https://img.shields.io/badge/Live-trip--tracker-blue)](http://localhost:5173/)
+[![Live App](https://img.shields.io/badge/Live-trip--tracker-blue)](https://mauryarahul007.github.io/trip_tracker_2026/)
 [![Tech](https://img.shields.io/badge/Stack-React%20%2B%20Zustand%20%2B%20Vite-blueviolet)](https://vitejs.dev/)
 
 ---

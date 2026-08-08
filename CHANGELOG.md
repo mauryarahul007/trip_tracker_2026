@@ -69,3 +69,17 @@ Follow-up fixes to the expense list card, found after using the app post-ship.
 
 ### Files touched
 - `src/components/ExpenseList.tsx`
+
+---
+
+## 2026-08-08 (later still) — GitHub Pages deployment — ✅ signed off
+- Live app now published at https://mauryarahul007.github.io/trip_tracker_2026/, deployed automatically on every push to `main` via GitHub Actions.
+- `vite.config.ts`: build-only `base: '/trip_tracker_2026/'` so asset URLs resolve under the project-site subpath (dev server still serves from `/`).
+- `index.html`: favicon/manifest links and the service-worker registration now use `%BASE_URL%` / `import.meta.env.BASE_URL` instead of hardcoded absolute paths.
+- `public/manifest.json`, `public/sw.js`: switched to relative paths (`.`, `./sw.js`, etc.) since Vite doesn't rewrite static `public/` files — these now work under both `/` and `/trip_tracker_2026/`.
+- Added `.github/workflows/deploy-pages.yml` (checkout → npm ci → build → upload-pages-artifact → deploy-pages).
+- Enabled GitHub Pages (Actions build type) on the repo.
+- README's live-app badge now points at the real deployed URL.
+
+### Files touched
+- `vite.config.ts`, `index.html`, `public/manifest.json`, `public/sw.js`, `.github/workflows/deploy-pages.yml`, `README.md`, `package-lock.json`

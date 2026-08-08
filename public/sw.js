@@ -1,9 +1,11 @@
 const CACHE_NAME = 'trip-tracker-cache-v1';
+// Relative to this script's own location (self.location), so precaching works
+// whether the app is served from / (local dev) or a subpath (GitHub Pages).
 const PRECACHE_URLS = [
-  '/',
-  '/index.html',
-  '/favicon.svg',
-  '/manifest.json'
+  './',
+  './index.html',
+  './favicon.svg',
+  './manifest.json'
 ];
 
 // Perform install and cache shell assets
