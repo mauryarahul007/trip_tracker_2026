@@ -39,13 +39,13 @@ export function AnalyticsTab({
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '20px' }}>
         <div className="glass-card" style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
           <span style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Total Spent</span>
-          <strong style={{ fontSize: '20px', color: 'var(--primary-accent)' }}>
+          <strong className="money" style={{ fontSize: '19px', color: 'var(--primary-accent)' }}>
             {currencySymbol} {totalSpent.toFixed(2)}
           </strong>
         </div>
         <div className="glass-card" style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
           <span style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Per-Head Cost</span>
-          <strong style={{ fontSize: '20px', color: 'var(--text-primary)' }}>
+          <strong className="money" style={{ fontSize: '19px', color: 'var(--text-primary)' }}>
             {currencySymbol} {averageCost.toFixed(2)}
           </strong>
         </div>
@@ -65,7 +65,7 @@ export function AnalyticsTab({
 
       {!hasExpenses ? (
         <div className="glass-card" style={{ textAlign: 'center', padding: '40px 20px', borderStyle: 'dashed' }}>
-          <p style={{ color: 'var(--text-secondary)' }}>Add some non-settlement expenses to see chart details.</p>
+          <p style={{ color: 'var(--text-secondary)' }}>Log a few expenses and the numbers will show up here.</p>
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
@@ -159,7 +159,7 @@ export function AnalyticsTab({
                     <div style={{
                       width: `${m.percentage}%`,
                       height: '100%',
-                      background: 'linear-gradient(90deg, var(--primary-accent), var(--secondary-accent))',
+                      background: 'var(--primary-accent)',
                       borderRadius: '4px',
                       transition: 'width 0.4s ease'
                     }} />

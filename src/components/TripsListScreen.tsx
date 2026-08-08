@@ -1,5 +1,6 @@
 import React from 'react';
 import type { Trip } from '../types';
+import { IconCalendar, IconMembers, IconTrash } from './Icons';
 
 type Props = {
   trips: Trip[];
@@ -117,7 +118,7 @@ export function TripsListScreen({
         {/* Trips List Grid */}
         {trips.length === 0 ? (
           <div className="glass-card" style={{ textAlign: 'center', padding: '40px 20px', borderStyle: 'dashed' }}>
-            <p style={{ color: 'var(--text-secondary)', marginBottom: '16px' }}>No trips registered yet.</p>
+            <p style={{ color: 'var(--text-secondary)', marginBottom: '16px' }}>Nothing here yet. Start a trip and add who's coming.</p>
             <button className="gradient-btn" style={{ margin: '0 auto' }} onClick={() => setShowAddTrip(true)}>
               Create Your First Trip
             </button>
@@ -127,23 +128,25 @@ export function TripsListScreen({
             {trips.map((trip) => (
               <div key={trip.id} className="glass-card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }} onClick={() => onSelectTrip(trip.id)}>
                 <div>
-                  <h3 style={{ fontSize: '18px', marginBottom: '4px' }}>{trip.name}</h3>
-                  <p style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
-                    📅 {trip.startDate} to {trip.endDate}
+                  <h3 style={{ fontSize: '18px', marginBottom: '6px' }}>{trip.name}</h3>
+                  <p style={{ fontSize: '13px', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <IconCalendar size={13} className="icon-sm" /> {trip.startDate} to {trip.endDate}
                   </p>
-                  <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px' }}>
-                    👥 {trip.memberIds.length} members • Currency: {trip.baseCurrency}
+                  <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <IconMembers size={13} className="icon-sm" /> {trip.memberIds.length} members · {trip.baseCurrency}
                   </p>
                 </div>
                 <button
                   className="secondary-btn"
-                  style={{ padding: '8px 12px', color: 'var(--color-danger)', borderColor: 'rgba(225,29,72,0.2)' }}
+                  style={{ padding: '8px', color: 'var(--color-danger)', borderColor: 'rgba(184,69,46,0.2)' }}
+                  aria-label="Delete trip"
+                  title="Delete trip"
                   onClick={(e) => {
                     e.stopPropagation();
                     onDeleteTrip(trip);
                   }}
                 >
-                  Delete
+                  <IconTrash size={15} className="icon-sm" />
                 </button>
               </div>
             ))}

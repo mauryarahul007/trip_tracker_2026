@@ -67,8 +67,8 @@ export function ExpenseReviewModal({ expense, members, categories, trip, onClose
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           {/* Main amount display */}
           <div style={{
-            background: 'rgba(79, 70, 229, 0.03)',
-            border: '1px dashed rgba(79, 70, 229, 0.15)',
+            background: 'rgba(31, 110, 104, 0.05)',
+            border: '1.5px dashed rgba(31, 110, 104, 0.25)',
             borderRadius: 'var(--border-radius-md)',
             padding: '16px',
             textAlign: 'center'
@@ -76,7 +76,7 @@ export function ExpenseReviewModal({ expense, members, categories, trip, onClose
             <span style={{ fontSize: '13px', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
               Total Expense
             </span>
-            <span style={{ fontSize: '32px', fontWeight: '800', color: 'var(--primary-accent)' }}>
+            <span className="money" style={{ fontSize: '30px', fontWeight: '700', color: 'var(--primary-accent)' }}>
               {currencySymbol} {expense.amount.toFixed(2)}
             </span>
           </div>
@@ -150,7 +150,7 @@ export function ExpenseReviewModal({ expense, members, categories, trip, onClose
                       {mem?.name || 'Deleted Member'}{' '}
                       <span style={{ color: 'var(--text-muted)', fontSize: '12px' }}>{detailLabel}</span>
                     </span>
-                    <strong style={{ color: 'var(--text-primary)' }}>
+                    <strong className="money" style={{ color: 'var(--text-primary)' }}>
                       {currencySymbol} {share.toFixed(2)}
                     </strong>
                   </div>

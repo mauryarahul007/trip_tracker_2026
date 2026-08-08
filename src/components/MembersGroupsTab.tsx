@@ -128,7 +128,7 @@ export function MembersGroupsTab({
       {/* Members list */}
       {activeTripMembers.length === 0 ? (
         <div className="glass-card" style={{ textAlign: 'center', padding: '24px', borderStyle: 'dashed', marginBottom: '32px' }}>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>No members added yet.</p>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>No one's on this trip yet. Add the first member to start splitting costs.</p>
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '32px' }}>
@@ -256,7 +256,7 @@ export function MembersGroupsTab({
         {visibleTripGroups.length === 0 ? (
           <div className="glass-card" style={{ textAlign: 'center', padding: '24px', borderStyle: 'dashed' }}>
             <p style={{ color: 'var(--text-secondary)', fontSize: '13px' }}>
-              No groups created yet. Groups help you quickly select multiple members for expense divisions.
+              No groups yet. Create one to split expenses across a few people in a single tap.
             </p>
           </div>
         ) : (

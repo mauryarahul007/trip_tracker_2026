@@ -1,5 +1,6 @@
 import React from 'react';
 import type { Category } from '../types';
+import { IconDownload, IconUpload, IconCheckCircle, IconAlertCircle } from './Icons';
 
 const CATEGORY_ICON_PRESETS = ['🍔', '🏨', '✈️', '🎟️', '🛍️', '📦', '🚗', '⛽', '🎬', '🍺', '💊', '🎁', '🧾', '🏥', '🎓', '🐾', '🎵', '🚕'];
 
@@ -108,7 +109,7 @@ export function SettingsTab({
                       width: '28px', height: '28px', fontSize: '15px', lineHeight: 1,
                       borderRadius: '6px', cursor: 'pointer',
                       border: newCategoryIcon === icon ? '2px solid var(--primary-accent)' : '1px solid transparent',
-                      background: newCategoryIcon === icon ? 'rgba(79,70,229,0.08)' : 'transparent',
+                      background: newCategoryIcon === icon ? 'rgba(31,110,104,0.10)' : 'transparent',
                     }}
                   >
                     {icon}
@@ -137,7 +138,7 @@ export function SettingsTab({
           Download a secure, formula-injection-protected CSV file containing your expense lists, member balances, and outstanding settlements. This file can be opened directly in Microsoft Excel or Google Sheets.
         </p>
         <button className="gradient-btn" style={{ padding: '12px' }} onClick={onExportCsv}>
-          📊 Export Excel CSV
+          <IconDownload size={16} className="icon-sm" /> Export Excel CSV
         </button>
       </div>
 
@@ -149,10 +150,10 @@ export function SettingsTab({
 
         <div style={{ display: 'flex', gap: '12px' }}>
           <button className="gradient-btn" style={{ flex: 1, padding: '12px' }} onClick={onExportJson}>
-            📥 Export Backup JSON
+            <IconDownload size={16} className="icon-sm" /> Export Backup JSON
           </button>
           <button className="secondary-btn" style={{ flex: 1, padding: '12px' }} onClick={() => setShowImportArea(!showImportArea)}>
-            📤 Import Backup JSON
+            <IconUpload size={16} className="icon-sm" /> Import Backup JSON
           </button>
         </div>
 
@@ -171,13 +172,13 @@ export function SettingsTab({
             </button>
 
             {importStatus === 'success' && (
-              <p style={{ color: 'var(--color-success)', fontSize: '13px', textAlign: 'center' }}>
-                ✔ Database restored successfully! Reloading...
+              <p style={{ color: 'var(--color-success)', fontSize: '13px', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+                <IconCheckCircle size={15} className="icon-sm" /> Database restored successfully! Reloading...
               </p>
             )}
             {importStatus === 'error' && (
-              <p style={{ color: 'var(--color-danger)', fontSize: '13px', textAlign: 'center' }}>
-                ❌ Invalid database backup format. Please verify the string.
+              <p style={{ color: 'var(--color-danger)', fontSize: '13px', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+                <IconAlertCircle size={15} className="icon-sm" /> Invalid database backup format. Please verify the string.
               </p>
             )}
           </div>

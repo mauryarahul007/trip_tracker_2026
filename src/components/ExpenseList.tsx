@@ -1,4 +1,6 @@
 import type { Category, Expense, Member, Trip } from '../types';
+import { IconSearch, IconEdit, IconTrash, IconAlertCircle } from './Icons';
+import { SwipeableRow } from './SwipeableRow';
 
 type Props = {
   trip: Trip | undefined;
@@ -56,14 +58,16 @@ export function ExpenseList({
       {/* Search & Filters */}
       {activeTripExpenseCount > 0 && (
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '16px' }}>
-          <input
-            type="text"
-            className="input-field"
-            placeholder="🔍 Search expenses..."
-            style={{ flex: '2 1 160px' }}
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
+          <div className="input-icon-wrap" style={{ flex: '2 1 160px' }}>
+            <IconSearch size={16} className="icon-sm" />
+            <input
+              type="text"
+              className="input-field"
+              placeholder="Search expenses..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
           <select
             className="input-field select-field"
             style={{ flex: '1 1 130px' }}
@@ -114,114 +118,109 @@ export function ExpenseList({
       {filteredExpenses.length === 0 ? (
         <div className="glass-card" style={{ textAlign: 'center', padding: '32px', borderStyle: 'dashed' }}>
           <p style={{ color: 'var(--text-secondary)' }}>
-            {hasActiveFilters ? 'No expenses match your search/filters.' : 'No expenses recorded yet.'}
+            {hasActiveFilters ? "Nothing matches those filters — try clearing them." : 'Nothing logged yet. Add the first expense to start the ledger.'}
           </p>
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          {filteredExpenses.map((exp) => {
+        <div className="glass-card" style={{ padding: 0, overflow: 'hidden' }}>
+          {filteredExpenses.map((exp, idx) => {
             const isPayerDeleted = trip ? !trip.memberIds.includes(exp.paidBy) : false;
-            const hasDeletedParticipants = trip ? exp.splitMemberIds.some(id => !trip.memberIds.includes(id)) : false;
+            const hasDeletedParticipants = trip ? exp.splitMemberIds.some((id) => !trip.memberIds.includes(id)) : false;
             const needsReview = isPayerDeleted || hasDeletedParticipants;
-
-            const payerName = members[exp.paidBy]?.name || 'Unknown (Deleted)';
+            const payerName = members[exp.paidBy]?.name || 'Unknown (deleted)';
             const cat = categories.find((c) => c.id === exp.category);
-            
             const splitNames = exp.splitMemberIds.map((id) => {
               const m = members[id];
-              if (!m || (trip && !trip.memberIds.includes(id))) {
-                return '[Deleted Member]';
-              }
+              if (!m || (trip && !trip.memberIds.includes(id))) return '[Deleted Member]';
               return m.name;
             }).join(', ');
 
+            const reviewMessage = isPayerDeleted && hasDeletedParticipants
+              ? 'Payer and a split member were removed — reassign the payer and update the split.'
+              : isPayerDeleted
+                ? 'Payer was removed — assign a new payer.'
+                : 'A split member was removed — update the split.';
+
             return (
-              <div 
-                key={exp.id} 
-                className="glass-card" 
-                style={{ 
-                  display: 'flex', 
-                  flexDirection: 'column', 
-                  gap: '8px', 
-                  padding: '16px',
-                  border: needsReview ? '1px solid rgba(245, 158, 11, 0.35)' : undefined,
-                  background: needsReview ? 'rgba(245, 158, 11, 0.02)' : undefined,
+              <div
+                key={exp.id}
+                style={{
+                  borderBottom: idx < filteredExpenses.length - 1 ? '1.5px dashed var(--border-color)' : 'none',
                 }}
               >
-                <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', rowGap: '10px', width: '100%' }}>
+                <SwipeableRow onDelete={() => onDelete(exp)}>
                   <div
-                    style={{ display: 'flex', gap: '12px', alignItems: 'center', cursor: 'pointer', flex: '1 1 200px', minWidth: 0 }}
-                    onClick={() => onReview(exp)}
+                    style={{
+                      display: 'flex', flexDirection: 'column', gap: '8px',
+                      padding: '14px 16px',
+                      borderLeft: needsReview ? '3px solid var(--color-warning)' : 'none',
+                      background: needsReview ? 'rgba(185, 138, 62, 0.07)' : undefined,
+                    }}
                   >
-                    <div style={{ flexShrink: 0, fontSize: '24px', background: 'rgba(15,23,42,0.03)', padding: '8px', borderRadius: '50%' }}>
-                      {cat?.icon || '🏷️'}
-                    </div>
-                    <div style={{ minWidth: 0, display: 'flex', flexDirection: 'column', gap: '3px' }}>
-                      <h4 style={{ fontSize: '15px', lineHeight: 1.3, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{exp.title}</h4>
-                      <p style={{ fontSize: '13px', lineHeight: 1.4, fontWeight: 500, color: 'var(--text-secondary)' }}>
-                        <span style={isPayerDeleted ? { color: 'var(--color-warning)', fontWeight: 600 } : {}}>
-                          {isPayerDeleted ? '⚠️ Unknown (Deleted)' : payerName}
-                        </span>
-                        <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}> · {exp.date}</span>
-                      </p>
-                      <p style={{ fontSize: '12px', lineHeight: 1.4, fontWeight: 400, color: 'var(--text-muted)', maxWidth: '240px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={splitNames}>
-                        with {splitNames}
-                      </p>
-                    </div>
-                  </div>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'flex-end', gap: '10px', flex: '0 1 auto' }}>
-                    <span style={{ fontFamily: 'var(--font-family-title)', fontSize: '17px', fontWeight: '700', color: 'var(--text-primary)', letterSpacing: '-0.01em', whiteSpace: 'nowrap' }}>
-                      {currencySymbol} {exp.amount.toFixed(2)}
-                    </span>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                      {!exp.title.startsWith('Settlement:') && (
-                        <button
-                          className="secondary-btn"
-                          style={{ 
-                            padding: '4px 10px', 
-                            fontSize: '12px',
-                            background: needsReview ? 'var(--color-warning)' : undefined,
-                            color: needsReview ? '#ffffff' : undefined,
-                            borderColor: needsReview ? 'rgba(217,119,6,0.3)' : undefined,
-                          }}
-                          onClick={(e) => { e.stopPropagation(); onEdit(exp); }}
-                        >
-                          {needsReview ? 'Review' : 'Edit'}
-                        </button>
-                      )}
-                      <button
-                        className="secondary-btn"
-                        style={{ padding: '4px 10px', fontSize: '12px', color: 'var(--color-danger)', borderColor: 'rgba(225,29,72,0.15)' }}
-                        onClick={(e) => { e.stopPropagation(); onDelete(exp); }}
+                    <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', rowGap: '10px' }}>
+                      <div
+                        style={{ display: 'flex', gap: '12px', alignItems: 'center', cursor: 'pointer', flex: '1 1 200px', minWidth: 0 }}
+                        onClick={() => onReview(exp)}
                       >
-                        Delete
-                      </button>
+                        <div style={{ flexShrink: 0, fontSize: '21px', width: '38px', height: '38px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-surface-hover)', borderRadius: '50%' }}>
+                          {cat?.icon || '🏷️'}
+                        </div>
+                        <div style={{ minWidth: 0, display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                          <h4 style={{ fontSize: '15px', lineHeight: 1.3, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{exp.title}</h4>
+                          <p style={{ fontSize: '13px', lineHeight: 1.4, fontWeight: 500, color: 'var(--text-secondary)' }}>
+                            <span style={isPayerDeleted ? { color: 'var(--color-warning)', fontWeight: 600 } : undefined}>
+                              {payerName}
+                            </span>
+                            <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}> · {exp.date}</span>
+                          </p>
+                          <p style={{ fontSize: '12px', lineHeight: 1.4, fontWeight: 400, color: 'var(--text-muted)', maxWidth: '240px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={splitNames}>
+                            with {splitNames}
+                          </p>
+                        </div>
+                      </div>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'flex-end', gap: '10px', flex: '0 1 auto' }}>
+                        <span className="money" style={{ fontSize: '15.5px', fontWeight: '600', color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
+                          {currencySymbol} {exp.amount.toFixed(2)}
+                        </span>
+                        <div style={{ display: 'flex', gap: '6px' }}>
+                          {!exp.title.startsWith('Settlement:') && (
+                            <button
+                              className="secondary-btn"
+                              style={{
+                                padding: '6px 8px',
+                                color: needsReview ? 'var(--color-warning)' : undefined,
+                                borderColor: needsReview ? 'rgba(185,138,62,0.35)' : undefined,
+                              }}
+                              aria-label={needsReview ? 'Review expense' : 'Edit expense'}
+                              title={needsReview ? 'Review' : 'Edit'}
+                              onClick={(e) => { e.stopPropagation(); onEdit(exp); }}
+                            >
+                              {needsReview ? <IconAlertCircle size={14} className="icon-sm" /> : <IconEdit size={14} className="icon-sm" />}
+                            </button>
+                          )}
+                          <button
+                            className="secondary-btn"
+                            style={{ padding: '6px 8px', color: 'var(--color-danger)', borderColor: 'rgba(184,69,46,0.25)' }}
+                            aria-label="Delete expense"
+                            title="Delete"
+                            onClick={(e) => { e.stopPropagation(); onDelete(exp); }}
+                          >
+                            <IconTrash size={14} className="icon-sm" />
+                          </button>
+                        </div>
+                      </div>
                     </div>
+                    {needsReview && (
+                      <div style={{
+                        display: 'flex', alignItems: 'center', gap: '6px',
+                        fontSize: '12px', fontWeight: 500, color: 'var(--color-warning)',
+                      }}>
+                        <IconAlertCircle size={14} className="icon-sm" />
+                        <span>{reviewMessage}</span>
+                      </div>
+                    )}
                   </div>
-                </div>
-                {needsReview && (
-                  <div style={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    gap: '6px', 
-                    background: 'rgba(245, 158, 11, 0.06)', 
-                    padding: '6px 12px', 
-                    borderRadius: '6px', 
-                    fontSize: '12px', 
-                    color: 'rgb(180, 83, 9)',
-                    fontWeight: '500',
-                    border: '1px solid rgba(245, 158, 11, 0.15)'
-                  }}>
-                    <span>⚠️</span>
-                    <span>
-                      {isPayerDeleted && hasDeletedParticipants 
-                        ? 'Payer and split participant(s) were deleted. Please change ownership/splits.'
-                        : isPayerDeleted
-                        ? 'Payer was deleted. Please assign a new payer.'
-                        : 'A split participant was deleted. Please update split configuration.'}
-                    </span>
-                  </div>
-                )}
+                </SwipeableRow>
               </div>
             );
           })}

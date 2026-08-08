@@ -1,4 +1,5 @@
 import type { Expense, Group, Trip } from '../types';
+import { IconTrash } from './Icons';
 
 type Props = {
   pendingDeleteExpense: Expense | null;
@@ -27,34 +28,34 @@ export function UndoToasts({
     }}>
       {pendingDeleteExpense && (
         <div style={{
-          background: 'rgba(15,23,42,0.92)', color: '#fff', borderRadius: '12px',
+          background: 'rgba(28,42,56,0.94)', color: '#fff', borderRadius: '12px',
           padding: '12px 20px', display: 'flex', alignItems: 'center', gap: '16px',
           boxShadow: '0 4px 20px rgba(0,0,0,0.25)', fontSize: '14px',
           backdropFilter: 'blur(8px)', minWidth: '280px'
         }}>
-          <span>🗑️ <strong>'{pendingDeleteExpense.title}'</strong> deleted</span>
+          <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><IconTrash size={15} className="icon-sm" /> <strong>'{pendingDeleteExpense.title}'</strong> deleted</span>
           <button onClick={onUndoDeleteExpense} className="undo-toast-btn">Undo</button>
         </div>
       )}
       {pendingDeleteTrip && (
         <div style={{
-          background: 'rgba(15,23,42,0.92)', color: '#fff', borderRadius: '12px',
+          background: 'rgba(28,42,56,0.94)', color: '#fff', borderRadius: '12px',
           padding: '12px 20px', display: 'flex', alignItems: 'center', gap: '16px',
           boxShadow: '0 4px 20px rgba(0,0,0,0.25)', fontSize: '14px',
           backdropFilter: 'blur(8px)', minWidth: '280px'
         }}>
-          <span>🗑️ Trip <strong>'{pendingDeleteTrip.name}'</strong> deleted</span>
+          <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><IconTrash size={15} className="icon-sm" /> Trip <strong>'{pendingDeleteTrip.name}'</strong> deleted</span>
           <button onClick={onUndoDeleteTrip} className="undo-toast-btn">Undo</button>
         </div>
       )}
       {pendingDeleteGroup && (
         <div style={{
-          background: 'rgba(15,23,42,0.92)', color: '#fff', borderRadius: '12px',
+          background: 'rgba(28,42,56,0.94)', color: '#fff', borderRadius: '12px',
           padding: '12px 20px', display: 'flex', alignItems: 'center', gap: '16px',
           boxShadow: '0 4px 20px rgba(0,0,0,0.25)', fontSize: '14px',
           backdropFilter: 'blur(8px)', minWidth: '280px'
         }}>
-          <span>🗑️ Group <strong>'{pendingDeleteGroup.name}'</strong> deleted</span>
+          <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><IconTrash size={15} className="icon-sm" /> Group <strong>'{pendingDeleteGroup.name}'</strong> deleted</span>
           <button onClick={onUndoDeleteGroup} className="undo-toast-btn">Undo</button>
         </div>
       )}

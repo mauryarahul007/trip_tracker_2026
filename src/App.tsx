@@ -15,6 +15,7 @@ import { SettingsTab } from './components/SettingsTab';
 import { ExpenseReviewModal } from './components/ExpenseReviewModal';
 import { UndoToasts } from './components/UndoToasts';
 import { NavTabs } from './components/NavTabs';
+import { IconCalendar, IconChevronLeft } from './components/Icons';
 
 export default function App() {
   const {
@@ -308,8 +309,13 @@ export default function App() {
 
       // Default: set today's date in local YYYY-MM-DD format
       setNewExpDate(getTodayDateString());
+
+      // Default: clear any leftover title/amount/category from a cancelled edit
+      setNewExpTitle('');
+      setNewExpAmount('');
+      setNewExpCategory('');
     }
-  }, [showAddExpense, activeTripId, editingExpenseId, visibleMembers]);
+  }, [showAddExpense, activeTripId, editingExpenseId, visibleMembers.length]);
 
   // Sync group checkboxes when opening add group form
   useEffect(() => {
@@ -339,7 +345,7 @@ export default function App() {
       }
       setNewGroupName(autoName);
     }
-  }, [selectedGroupMembers, isGroupNameAuto, visibleMembers]);
+  }, [selectedGroupMembers, isGroupNameAuto, visibleMembers.length]);
 
   // Form submissions
   const handleCreateTrip = async (e: React.FormEvent) => {
@@ -863,13 +869,18 @@ export default function App() {
         <div className="fade-in" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
           <header className="app-header">
             <div className="app-title-group">
-              <h2 style={{ fontSize: '20px' }}>{activeTrip?.name}</h2>
-              <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
-                Base: {activeTrip?.baseCurrency} • 📅 {activeTrip?.startDate} to {activeTrip?.endDate}
+              <span className="app-eyebrow">
+                <IconCalendar size={12} className="icon-sm" />
+                {activeTrip?.baseCurrency} · {activeTrip?.startDate} to {activeTrip?.endDate}
               </span>
+              <h2 className="app-logo" style={{ fontSize: '21px', color: '#F2ECDC' }}>{activeTrip?.name}</h2>
             </div>
-            <button className="secondary-btn" style={{ padding: '6px 12px', fontSize: '12px' }} onClick={() => selectTrip(null)}>
-              ◀ Back to Trips
+            <button
+              className="secondary-btn"
+              style={{ padding: '7px 12px', fontSize: '12px', color: '#F2ECDC', borderColor: 'rgba(242,236,220,0.28)', background: 'rgba(242,236,220,0.06)', flexShrink: 0 }}
+              onClick={() => selectTrip(null)}
+            >
+              <IconChevronLeft size={14} className="icon-sm" /> Trips
             </button>
           </header>
 
@@ -956,6 +967,8 @@ export default function App() {
                     groups={visibleTripGroups}
                     transfers={transfers}
                     activeTripExpenses={activeTripExpenses}
+                    topCategoryName={categoryData[0]?.name}
+                    topCategoryPercentage={categoryData[0]?.percentage}
                     onMemberClick={handleFilterByMember}
                     onSettle={handleSettle}
                   />

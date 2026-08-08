@@ -1,5 +1,6 @@
 import React from 'react';
 import type { Category, Group, Member, Trip } from '../types';
+import { IconCheck, IconAlertCircle } from './Icons';
 
 type SplitMode = 'equal' | 'custom' | 'exact' | 'percentage';
 
@@ -8,6 +9,10 @@ function formatAmountDisplay(raw: string): string {
   const [intPart, decPart] = raw.split('.');
   const withCommas = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
   return decPart !== undefined ? `${withCommas}.${decPart}` : withCommas;
+}
+
+function initial(name: string): string {
+  return name.trim().charAt(0).toUpperCase() || '?';
 }
 
 type Props = {
@@ -132,34 +137,44 @@ export function ExpenseForm({
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-        <div className="form-group">
-          <label className="form-label">Paid By (Payer)</label>
-          <select
-            className="input-field select-field"
-            value={payer}
-            onChange={(e) => setPayer(e.target.value)}
-          >
-            {!visibleMembers.some((m) => m.id === payer) && payer && (
-              <option value={payer} disabled style={{ color: 'var(--color-danger)' }}>
-                ⚠️ Unknown / Deleted Payer (Select a new payer)
-              </option>
-            )}
-            {visibleMembers.map((m) => (
-              <option key={m.id} value={m.id}>{m.name}</option>
-            ))}
-          </select>
+      <div className="form-group">
+        <label className="form-label">Paid By</label>
+        {payer && !visibleMembers.some((m) => m.id === payer) && (
+          <p style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12.5px', fontWeight: 500, color: 'var(--color-warning)', marginBottom: '4px' }}>
+            <IconAlertCircle size={14} className="icon-sm" /> Previous payer was removed — choose someone new.
+          </p>
+        )}
+        <div className="member-grid">
+          {visibleMembers.map((m) => {
+            const isSelected = payer === m.id;
+            return (
+              <button
+                key={m.id}
+                type="button"
+                className="member-card"
+                style={isSelected ? { borderColor: 'var(--primary-accent)', background: 'rgba(31,110,104,0.07)' } : undefined}
+                onClick={() => setPayer(m.id)}
+                aria-pressed={isSelected}
+              >
+                <div className="member-avatar" style={isSelected ? { background: 'var(--primary-accent)' } : undefined}>
+                  {initial(m.name)}
+                </div>
+                <span className="member-name">{m.name}</span>
+              </button>
+            );
+          })}
         </div>
-        <div className="form-group">
-          <label className="form-label">Date</label>
-          <input
-            type="date"
-            required
-            className="input-field"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-          />
-        </div>
+      </div>
+
+      <div className="form-group">
+        <label className="form-label">Date</label>
+        <input
+          type="date"
+          required
+          className="input-field"
+          value={date}
+          onChange={(e) => setDate(e.target.value)}
+        />
       </div>
 
       <div className="form-group">
@@ -236,16 +251,19 @@ export function ExpenseForm({
         {splitMode !== 'equal' && splitSelectedIds.length > 0 && (
           <div style={{
             fontSize: '12px', fontWeight: 600, marginBottom: '8px',
+            display: 'flex', alignItems: 'center', gap: '5px',
             color: splitMode === 'custom'
               ? 'var(--text-secondary)'
               : splitConfigMatches ? 'var(--color-success)' : 'var(--color-danger)'
           }}>
-            {splitMode === 'percentage'
-              ? `${splitConfigSum.toFixed(1)} / 100%`
-              : splitMode === 'exact'
-                ? `${currencySymbol}${splitConfigSum.toFixed(2)} / ${currencySymbol}${(parseFloat(amount) || 0).toFixed(2)}`
-                : `Total weight: ${splitConfigSum.toFixed(2)}`}
-            {splitConfigMatches && (splitMode === 'exact' || splitMode === 'percentage') ? ' ✓' : ''}
+            <span>
+              {splitMode === 'percentage'
+                ? `${splitConfigSum.toFixed(1)} / 100%`
+                : splitMode === 'exact'
+                  ? `${currencySymbol}${splitConfigSum.toFixed(2)} / ${currencySymbol}${(parseFloat(amount) || 0).toFixed(2)}`
+                  : `Total weight: ${splitConfigSum.toFixed(2)}`}
+            </span>
+            {splitConfigMatches && (splitMode === 'exact' || splitMode === 'percentage') && <IconCheck size={13} className="icon-sm" />}
           </div>
         )}
 
@@ -267,43 +285,58 @@ export function ExpenseForm({
           </div>
         )}
 
-        {/* Individual Member Checklist & Config Inputs */}
-        <div className="input-field" style={{ maxHeight: '200px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '10px', background: '#fff' }}>
+        {/* Member avatar-card multi-select, with inline config input for non-equal splits */}
+        <div className="member-grid">
           {visibleMembers.map((m) => {
             const isChecked = !!selectedSplitMembers[m.id];
+            const toggle = () => {
+              const nextChecked = !isChecked;
+              setSelectedSplitMembers({
+                ...selectedSplitMembers,
+                [m.id]: nextChecked
+              });
+              if (!nextChecked) {
+                const updatedConfig = { ...splitConfig };
+                delete updatedConfig[m.id];
+                setSplitConfig(updatedConfig);
+              }
+            };
             return (
-              <div key={m.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '14px', fontWeight: 500, flex: 1 }}>
-                  <input
-                    type="checkbox"
-                    checked={isChecked}
-                    onChange={(e) => {
-                      setSelectedSplitMembers({
-                        ...selectedSplitMembers,
-                        [m.id]: e.target.checked
-                      });
-                      if (!e.target.checked) {
-                        const updatedConfig = { ...splitConfig };
-                        delete updatedConfig[m.id];
-                        setSplitConfig(updatedConfig);
-                      }
-                    }}
-                    style={{ width: '16px', height: '16px', accentColor: 'var(--primary-accent)' }}
-                  />
-                  {m.name}
-                </label>
-
+              <div
+                key={m.id}
+                role="button"
+                tabIndex={0}
+                className="member-card"
+                style={isChecked ? { borderColor: 'var(--color-success)', background: 'rgba(44,122,75,0.07)' } : undefined}
+                aria-pressed={isChecked}
+                onClick={toggle}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    toggle();
+                  }
+                }}
+              >
+                <div className="member-avatar">
+                  {initial(m.name)}
+                  {isChecked && (
+                    <span className="member-check-badge">
+                      <IconCheck size={10} className="icon-sm" />
+                    </span>
+                  )}
+                </div>
+                <span className="member-name">{m.name}</span>
                 {isChecked && splitMode !== 'equal' && (
                   <input
                     type="text"
                     required
                     placeholder={
-                      splitMode === 'custom' ? 'Weight (e.g. 1)' :
-                      splitMode === 'exact' ? 'Amount (e.g. 200)' : 'Percent (e.g. 25)'
+                      splitMode === 'custom' ? 'e.g. 1' :
+                      splitMode === 'exact' ? 'e.g. 200' : 'e.g. 25'
                     }
-                    className="input-field"
-                    style={{ padding: '6px 10px', fontSize: '13px', width: '125px', height: '32px' }}
+                    className="input-field member-config-input"
                     value={splitConfig[m.id] || ''}
+                    onClick={(e) => e.stopPropagation()}
                     onChange={(e) => {
                       setSplitConfig({
                         ...splitConfig,
@@ -316,32 +349,31 @@ export function ExpenseForm({
             );
           })}
 
-          {/* Render any checked members that are now deleted */}
+          {/* Any checked members that are now deleted — kept visible so they can be unchecked */}
           {Object.keys(selectedSplitMembers)
             .filter((id) => selectedSplitMembers[id] && !visibleMembers.some((m) => m.id === id))
-            .map((id) => {
-              return (
-                <div key={id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', color: 'var(--color-danger)' }}>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '14px', fontWeight: 500, flex: 1 }}>
-                    <input
-                      type="checkbox"
-                      checked={true}
-                      onChange={() => {
-                        setSelectedSplitMembers({
-                          ...selectedSplitMembers,
-                          [id]: false
-                        });
-                        const updatedConfig = { ...splitConfig };
-                        delete updatedConfig[id];
-                        setSplitConfig(updatedConfig);
-                      }}
-                      style={{ width: '16px', height: '16px', accentColor: 'var(--color-danger)' }}
-                    />
-                    ⚠️ [Deleted Member] (Uncheck to remove)
-                  </label>
+            .map((id) => (
+              <button
+                key={id}
+                type="button"
+                className="member-card"
+                style={{ borderColor: 'var(--color-danger)', background: 'rgba(184,69,46,0.06)' }}
+                onClick={() => {
+                  setSelectedSplitMembers({
+                    ...selectedSplitMembers,
+                    [id]: false
+                  });
+                  const updatedConfig = { ...splitConfig };
+                  delete updatedConfig[id];
+                  setSplitConfig(updatedConfig);
+                }}
+              >
+                <div className="member-avatar" style={{ background: 'var(--color-danger)' }}>
+                  <IconAlertCircle size={16} className="icon-sm" />
                 </div>
-              );
-            })}
+                <span className="member-name" style={{ color: 'var(--color-danger)' }}>Removed</span>
+              </button>
+            ))}
         </div>
       </div>
 

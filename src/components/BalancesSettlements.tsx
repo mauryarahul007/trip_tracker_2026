@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { Expense, Group, Trip } from '../types';
 import { buildSettlementNodes, calculateGroupInternalTransfers, type MemberBalance, type Transfer } from '../utils/settlement';
+import { IconCheck, IconCheckCircle, IconMembers } from './Icons';
 
 type Props = {
   trip: Trip;
@@ -8,6 +9,8 @@ type Props = {
   groups: Group[];
   transfers: Transfer[];
   activeTripExpenses: Expense[];
+  topCategoryName?: string;
+  topCategoryPercentage?: number;
   onMemberClick: (memberId: string) => void;
   onSettle: (fromMemberId: string, toMemberId: string, amount: number, fromLabel: string, toLabel: string) => void;
 };
@@ -49,7 +52,7 @@ type TransferRowProps = {
 function TransferRow({ transfer: t, note, currencySymbol, isSettled, customValue, onCustomChange, onSettle }: TransferRowProps) {
   const settleAmount = parseFloat(customValue) || t.amount;
   return (
-    <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '8px', padding: '8px 0', borderBottom: '1px dashed rgba(15,23,42,0.05)' }}>
+    <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '8px', padding: '10px 0', borderBottom: '1.5px dashed var(--border-color)' }}>
       <div style={{ fontSize: '14px' }}>
         <strong>{t.fromLabel}</strong> owes <strong>{t.toLabel}</strong>
         {note && (
@@ -57,11 +60,11 @@ function TransferRow({ transfer: t, note, currencySymbol, isSettled, customValue
         )}
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-        <span style={{ fontSize: '14px', fontWeight: '700', color: isSettled ? 'var(--color-success)' : 'var(--color-danger)' }}>
+        <span className="money" style={{ fontSize: '14px', fontWeight: '600', color: isSettled ? 'var(--color-success)' : 'var(--color-danger)' }}>
           {currencySymbol} {t.amount.toFixed(2)}
         </span>
         {isSettled ? (
-          <span style={{ fontSize: '12px', fontWeight: '600', color: 'var(--color-success)', display: 'flex', alignItems: 'center', gap: '4px' }}>✓ Settled</span>
+          <span className="settle-pop" style={{ fontSize: '12px', fontWeight: '600', color: 'var(--color-success)' }}><IconCheck size={14} className="icon-sm" /> Settled</span>
         ) : (
           <>
             <input
@@ -97,6 +100,8 @@ export function BalancesSettlements({
   groups,
   transfers,
   activeTripExpenses,
+  topCategoryName,
+  topCategoryPercentage,
   onMemberClick,
   onSettle,
 }: Props) {
@@ -107,9 +112,54 @@ export function BalancesSettlements({
 
   const setCustom = (rowKey: string, v: string) => setCustomAmounts({ ...customAmounts, [rowKey]: v });
 
+  const totalOutstanding = transfers.reduce((sum, t) => sum + t.amount, 0);
+  const isFullySettled = transfers.length === 0;
+  const topTransfer = transfers.length > 0 ? [...transfers].sort((a, b) => b.amount - a.amount)[0] : null;
+  const topTransferShare = topTransfer && totalOutstanding > 0 ? topTransfer.amount / totalOutstanding : 0;
+  const transferIsDominant = transfers.length === 1 || topTransferShare >= 0.5;
+  const categoryIsDominant = !!topCategoryName && (topCategoryPercentage ?? 0) >= 50;
+  const categoryClause = categoryIsDominant ? `, driven by ${topCategoryName} spend` : '';
+
   return (
     <div style={{ marginTop: '32px', borderTop: '1px solid var(--border-color)', paddingTop: '24px' }}>
       <h3 style={{ fontSize: '18px', marginBottom: '16px' }}>Balances & Settlements</h3>
+
+      {/* Boarding-pass balance summary */}
+      <div className="boarding-pass">
+        <div className="bp-top">
+          <div>
+            <div className="bp-eyebrow">{trip.name}</div>
+            <div className="bp-title">Balance summary</div>
+          </div>
+          <div className="bp-meta">{trip.baseCurrency}</div>
+          <div className="bp-stamp-pos">
+            <span key={isFullySettled ? 'settled' : 'unsettled'} className="stamp-badge" style={{ color: isFullySettled ? 'var(--color-success)' : 'var(--color-danger)' }}>
+              {isFullySettled && <IconCheckCircle size={14} className="icon-sm" />}
+              {isFullySettled ? 'Settled' : 'Unsettled'}
+            </span>
+          </div>
+        </div>
+        <div className="bp-perf" />
+        <div className="bp-body">
+          <div className="bp-who">{isFullySettled ? 'Outstanding' : 'Outstanding to settle'}</div>
+          <div className="bp-amount" style={{ color: isFullySettled ? 'var(--color-success)' : 'var(--color-danger)' }}>
+            {currencySymbol} {totalOutstanding.toFixed(2)}
+          </div>
+          <div className="bp-sub">
+            {isFullySettled
+              ? 'Every balance is settled — nothing left to pay.'
+              : topTransfer && transferIsDominant
+                ? `${transfers.length > 1 ? 'Mostly ' : ''}${topTransfer.fromLabel} owes ${topTransfer.toLabel}${categoryClause}.`
+                : categoryIsDominant
+                  ? `${transfers.length} transfers to settle, driven mostly by ${topCategoryName} spend.`
+                  : `${transfers.length} transfer${transfers.length === 1 ? '' : 's'} will clear every balance.`}
+          </div>
+        </div>
+        <div className="bp-foot">
+          <span>{balances.length} members</span>
+          <span>{transfers.length} transfer{transfers.length === 1 ? '' : 's'} left</span>
+        </div>
+      </div>
 
       {/* Balances List */}
       <div className="glass-card" style={{ marginBottom: '16px' }}>
@@ -162,9 +212,10 @@ export function BalancesSettlements({
                   onClick={() => setExpandedGroups({ ...expandedGroups, [n.id]: !isExpanded })}
                   title={`${isExpanded ? 'Collapse' : 'Expand'} ${n.name} group members`}
                 >
-                  <span>
-                    <span style={{ display: 'inline-block', width: '14px', color: 'var(--text-muted)' }}>{isExpanded ? '▾' : '▸'}</span>
-                    <strong>👥 {n.name}</strong>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                    <span style={{ display: 'inline-block', width: '10px', color: 'var(--text-muted)' }}>{isExpanded ? '▾' : '▸'}</span>
+                    <IconMembers size={15} className="icon-sm" />
+                    <strong>{n.name}</strong>
                   </span>
                   <span style={{ color: statusColor, fontWeight: '700' }}>
                     {statusLabel}
@@ -228,7 +279,7 @@ export function BalancesSettlements({
         </h4>
         {transfers.length === 0 ? (
           <p style={{ color: 'var(--color-success)', fontSize: '14px', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '6px' }}>
-            🎉 All settlements complete! No outstanding debts.
+            <IconCheckCircle size={17} className="icon" /> All settlements complete — no outstanding debts.
           </p>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>

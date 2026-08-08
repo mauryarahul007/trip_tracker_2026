@@ -4,8 +4,8 @@
   "description": "Offline-first cost splitting, member grouping, and expense settlements dashboard.",
   "start_url": ".",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#4f46e5",
+  "background_color": "#F2ECDC",
+  "theme_color": "#1F6E68",
   "orientation": "portrait-primary",
   "icons": [
     {
