@@ -1,0 +1,18 @@
+{
+  "name": "Trip Tracker 2026",
+  "short_name": "TripTracker",
+  "description": "Offline-first cost splitting, member grouping, and expense settlements dashboard.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#4f46e5",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

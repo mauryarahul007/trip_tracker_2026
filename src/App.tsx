@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useTripStore } from './store/tripStore';
 import { calculateSettlements } from './utils/settlement';
 import type { Expense } from './types';
+import { exportTripToCSV } from './utils/csvExport';
 
 export default function App() {
   const {
@@ -363,6 +364,18 @@ export default function App() {
     const link = document.createElement('a');
     link.href = url;
     link.download = `trip-tracker-backup-${Date.now()}.json`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const triggerCsvExport = () => {
+    if (!activeTrip) return;
+    const csv = exportTripToCSV(activeTrip, members, expenses);
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `trip-tracker-export-${activeTrip.name.replace(/\s+/g, '-')}-${Date.now()}.csv`;
     link.click();
     URL.revokeObjectURL(url);
   };
@@ -1308,6 +1321,17 @@ export default function App() {
             {activeTab === 'settings' && (
               <div className="fade-in">
                 <h3 style={{ fontSize: '18px', marginBottom: '20px' }}>Settings & Data Utility</h3>
+
+                {/* Excel CSV Exporter */}
+                <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '24px' }}>
+                  <h4 style={{ fontSize: '16px' }}>Excel CSV Export</h4>
+                  <p style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
+                    Download a secure, formula-injection-protected CSV file containing your expense lists, member balances, and outstanding settlements. This file can be opened directly in Microsoft Excel or Google Sheets.
+                  </p>
+                  <button className="gradient-btn" style={{ padding: '12px' }} onClick={triggerCsvExport}>
+                    📊 Export Excel CSV
+                  </button>
+                </div>
 
                 <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '24px' }}>
                   <h4 style={{ fontSize: '16px' }}>JSON Database Backups</h4>
