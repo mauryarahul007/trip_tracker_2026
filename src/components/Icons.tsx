@@ -200,3 +200,11 @@ export function IconCatMisc({ size = 20, className = 'icon' }: IconProps) {
     </svg>
   );
 }
+
+export function IconClose({ size = 20, className = 'icon' }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" className={className} {...base}>
+      <path d="M6 6l12 12M18 6L6 18" />
+    </svg>
+  );
+}

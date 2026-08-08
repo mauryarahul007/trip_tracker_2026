@@ -1,7 +1,8 @@
 import React from 'react';
 import type { Category, Group, Member, Trip } from '../types';
-import { IconCheck, IconAlertCircle } from './Icons';
+import { IconCheck, IconAlertCircle, IconClose } from './Icons';
 import { CategoryIcon } from './CategoryIcon';
+import { initial } from '../utils/initials';
 
 type SplitMode = 'equal' | 'custom' | 'exact' | 'percentage';
 
@@ -10,10 +11,6 @@ function formatAmountDisplay(raw: string): string {
   const [intPart, decPart] = raw.split('.');
   const withCommas = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
   return decPart !== undefined ? `${withCommas}.${decPart}` : withCommas;
-}
-
-function initial(name: string): string {
-  return name.trim().charAt(0).toUpperCase() || '?';
 }
 
 type Props = {
@@ -91,8 +88,21 @@ export function ExpenseForm({
   const currencySymbol = trip?.baseCurrency === 'INR' ? '₹' : trip?.baseCurrency;
 
   return (
-    <form className="glass-card fade-in" onSubmit={onSubmit} style={{ marginBottom: '24px' }}>
-      <h4 style={{ marginBottom: '16px', fontSize: '16px' }}>{editingExpenseId ? 'Edit Expense' : 'New Expense'}</h4>
+    <div className="modal-backdrop" onClick={onCancel}>
+      <form className="modal-sheet" onSubmit={onSubmit} onClick={(e) => e.stopPropagation()}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+        <h4 style={{ fontSize: '18px' }}>{editingExpenseId ? 'Edit Expense' : 'New Expense'}</h4>
+        <button
+          type="button"
+          className="secondary-btn"
+          style={{ padding: '6px 8px' }}
+          aria-label="Close"
+          title="Close"
+          onClick={onCancel}
+        >
+          <IconClose size={16} className="icon-sm" />
+        </button>
+      </div>
 
       <div className="form-group">
         <label className="form-label">Amount ({trip?.baseCurrency})</label>
@@ -407,6 +417,7 @@ export function ExpenseForm({
           Cancel
         </button>
       </div>
-    </form>
+      </form>
+    </div>
   );
 }

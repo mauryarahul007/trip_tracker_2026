@@ -1,5 +1,7 @@
 import React from 'react';
 import type { Group, Member } from '../types';
+import { initial } from '../utils/initials';
+import { IconCheck } from './Icons';
 
 type Props = {
   showMembersRequiredNotice: boolean;
@@ -213,30 +215,44 @@ export function MembersGroupsTab({
 
             <div className="form-group">
               <label className="form-label">Group Members</label>
-              <div className="input-field" style={{ maxHeight: '150px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px', background: '#fff' }}>
-                {availableMembers.length === 0 ? (
-                  <p style={{ color: 'var(--text-secondary)', fontSize: '13px', padding: '8px 0' }}>
-                    All active members are already assigned to other groups.
-                  </p>
-                ) : (
-                  availableMembers.map((m) => (
-                    <label key={m.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '14px' }}>
-                      <input
-                        type="checkbox"
-                        checked={!!selectedGroupMembers[m.id]}
-                        onChange={(e) => {
-                          setSelectedGroupMembers({
-                            ...selectedGroupMembers,
-                            [m.id]: e.target.checked
-                          });
+              {availableMembers.length === 0 ? (
+                <p style={{ color: 'var(--text-secondary)', fontSize: '13px' }}>
+                  All active members are already assigned to other groups.
+                </p>
+              ) : (
+                <div className="member-grid">
+                  {availableMembers.map((m) => {
+                    const isChecked = !!selectedGroupMembers[m.id];
+                    return (
+                      <div
+                        key={m.id}
+                        role="button"
+                        tabIndex={0}
+                        className="member-card"
+                        style={isChecked ? { borderColor: 'var(--color-success)', background: 'rgba(44,122,75,0.07)' } : undefined}
+                        aria-pressed={isChecked}
+                        onClick={() => setSelectedGroupMembers({ ...selectedGroupMembers, [m.id]: !isChecked })}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            setSelectedGroupMembers({ ...selectedGroupMembers, [m.id]: !isChecked });
+                          }
                         }}
-                        style={{ width: '16px', height: '16px', accentColor: 'var(--primary-accent)' }}
-                      />
-                      {m.name}
-                    </label>
-                  ))
-                )}
-              </div>
+                      >
+                        <div className="member-avatar">
+                          {initial(m.name)}
+                          {isChecked && (
+                            <span className="member-check-badge">
+                              <IconCheck size={10} className="icon-sm" />
+                            </span>
+                          )}
+                        </div>
+                        <span className="member-name">{m.name}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
 
             {groupFormError && (

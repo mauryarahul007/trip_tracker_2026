@@ -748,6 +748,36 @@ button, [role="button"], input, select, a {
   .fade-in { animation: none; }
 }
 
+/* Full-height bottom sheet — used for the add/edit expense form, which has
+   too many fields for a small centered dialog to feel like the right space. */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(28, 42, 56, 0.55);
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  z-index: 1000;
+}
+.modal-sheet {
+  width: 100%;
+  max-width: 500px;
+  max-height: 92vh;
+  overflow-y: auto;
+  background: var(--bg-surface);
+  border-radius: var(--border-radius-md) var(--border-radius-md) 0 0;
+  padding: 20px;
+  box-shadow: 0 -12px 40px rgba(28, 42, 56, 0.3);
+  animation: sheetUp 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes sheetUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .modal-sheet { animation: none; }
+}
+
 :focus-visible {
   outline: 2px solid var(--primary-accent);
   outline-offset: 2px;
