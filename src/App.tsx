@@ -59,7 +59,7 @@ export default function App() {
   const [newTripCurrency, setNewTripCurrency] = useState('INR');
 
   // Form states - Members
-  const [showAddMember, setShowAddMember] = useState(false);
+  const [showAddMember, setShowAddMember] = useState(true);
   const [newMemberName, setNewMemberName] = useState('');
   const [editingMemberId, setEditingMemberId] = useState<string | null>(null);
 
@@ -69,7 +69,7 @@ export default function App() {
       setNewMemberName('');
     }
     setMemberFormError('');
-    setShowAddMember(val);
+    setShowAddMember(true);
   };
 
   // Form states - Groups
@@ -385,7 +385,7 @@ export default function App() {
     }
     setNewMemberName('');
     setEditingMemberId(null);
-    setShowAddMember(false);
+    setShowAddMember(true);
     setShowMembersRequiredNotice(false);
   };
 
