@@ -76,6 +76,17 @@ export function MembersGroupsTab({
 
   const availableMembers = visibleMembers.filter((m) => !otherGroupMemberIds.has(m.id));
 
+  const memberInputRef = React.useRef<HTMLInputElement>(null);
+
+  React.useEffect(() => {
+    if (showAddMember) {
+      const timer = setTimeout(() => {
+        memberInputRef.current?.focus();
+      }, 50);
+      return () => clearTimeout(timer);
+    }
+  }, [showAddMember, editingMemberId]);
+
   return (
     <div className="fade-in">
       {showMembersRequiredNotice && (
@@ -105,6 +116,7 @@ export function MembersGroupsTab({
           <div className="form-group">
             <label className="form-label">Name</label>
             <input
+              ref={memberInputRef}
               type="text"
               required
               className="input-field"
