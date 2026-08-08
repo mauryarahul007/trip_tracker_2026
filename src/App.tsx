@@ -1,8 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { useTripStore } from './store/tripStore';
 import { calculateSettlements } from './utils/settlement';
-import type { Expense } from './types';
+import type { Expense, Trip, Group } from './types';
 import { exportTripToCSV } from './utils/csvExport';
+import { ConfirmDialog, type ConfirmRequest } from './components/ConfirmDialog';
+import { compressImageToDataUrl } from './utils/image';
+
+const CATEGORY_ICON_PRESETS = ['🍔', '🏨', '✈️', '🎟️', '🛍️', '📦', '🚗', '⛽', '🎬', '🍺', '💊', '🎁', '🧾', '🏥', '🎓', '🐾', '🎵', '🚕'];
 
 export default function App() {
   const {
@@ -27,6 +31,8 @@ export default function App() {
     addExpense,
     updateExpense,
     deleteExpense,
+    addCategory,
+    deleteCategory,
     exportDatabase,
     importDatabase,
   } = useTripStore();
@@ -63,23 +69,72 @@ export default function App() {
   const [newExpSplitConfig, setNewExpSplitConfig] = useState<Record<string, string>>({});
   const [selectedReviewExpense, setSelectedReviewExpense] = useState<Expense | null>(null);
   const [editingExpenseId, setEditingExpenseId] = useState<string | null>(null);
+  const [newExpReceiptImage, setNewExpReceiptImage] = useState('');
+  const [receiptProcessing, setReceiptProcessing] = useState(false);
+
+  // Expense list search & filters
+  const [expenseSearch, setExpenseSearch] = useState('');
+  const [expenseFilterCategory, setExpenseFilterCategory] = useState('');
+  const [expenseFilterMember, setExpenseFilterMember] = useState('');
+  const [expenseFilterDateFrom, setExpenseFilterDateFrom] = useState('');
+  const [expenseFilterDateTo, setExpenseFilterDateTo] = useState('');
+
+  // Category management (Settings tab)
+  const [newCategoryName, setNewCategoryName] = useState('');
+  const [newCategoryIcon, setNewCategoryIcon] = useState('');
+  const [showIconPicker, setShowIconPicker] = useState(false);
 
   // Undo delete toast state
   const [pendingDeleteExpense, setPendingDeleteExpense] = useState<Expense | null>(null);
   const [undoTimer, setUndoTimer] = useState<ReturnType<typeof setTimeout> | null>(null);
+  const [pendingDeleteTrip, setPendingDeleteTrip] = useState<Trip | null>(null);
+  const [tripUndoTimer, setTripUndoTimer] = useState<ReturnType<typeof setTimeout> | null>(null);
+  const [pendingDeleteGroup, setPendingDeleteGroup] = useState<Group | null>(null);
+  const [groupUndoTimer, setGroupUndoTimer] = useState<ReturnType<typeof setTimeout> | null>(null);
 
   // JSON Import state
   const [importJson, setImportJson] = useState('');
   const [showImportArea, setShowImportArea] = useState(false);
   const [importStatus, setImportStatus] = useState<'idle' | 'success' | 'error'>('idle');
 
+  // Confirm dialog (replaces window.confirm)
+  const [confirmRequest, setConfirmRequest] = useState<ConfirmRequest | null>(null);
+
+  // Inline form validation errors (replace window.alert)
+  const [groupFormError, setGroupFormError] = useState('');
+  const [expenseFormError, setExpenseFormError] = useState('');
+  const [showMembersRequiredNotice, setShowMembersRequiredNotice] = useState(false);
+
   // Load state on mount
   useEffect(() => {
     initialize();
   }, [initialize]);
 
+  const visibleTrips = trips.filter((t) => t.id !== pendingDeleteTrip?.id);
   const activeTrip = trips.find((t) => t.id === activeTripId);
-  const activeTripExpenses = expenses.filter((e) => e.tripId === activeTripId);
+
+  // Reset expense filters when switching trips
+  useEffect(() => {
+    setExpenseSearch('');
+    setExpenseFilterCategory('');
+    setExpenseFilterMember('');
+    setExpenseFilterDateFrom('');
+    setExpenseFilterDateTo('');
+  }, [activeTripId]);
+  const activeTripExpenses = expenses
+    .filter((e) => e.tripId === activeTripId)
+    .sort((a, b) => b.date.localeCompare(a.date) || b.createdAt - a.createdAt);
+
+  // Search + category/member filters, applied only to the visible expense list
+  const filteredExpenses = activeTripExpenses.filter((e) => {
+    if (expenseSearch.trim() && !e.title.toLowerCase().includes(expenseSearch.trim().toLowerCase())) return false;
+    if (expenseFilterCategory && e.category !== expenseFilterCategory) return false;
+    if (expenseFilterMember && e.paidBy !== expenseFilterMember && !e.splitMemberIds.includes(expenseFilterMember)) return false;
+    if (expenseFilterDateFrom && e.date < expenseFilterDateFrom) return false;
+    if (expenseFilterDateTo && e.date > expenseFilterDateTo) return false;
+    return true;
+  });
+  const hasActiveExpenseFilters = !!(expenseSearch || expenseFilterCategory || expenseFilterMember || expenseFilterDateFrom || expenseFilterDateTo);
 
   // Get active trip members and groups
   const activeTripMembers = activeTrip
@@ -91,6 +146,13 @@ export default function App() {
   const activeTripGroups = activeTrip
     ? (activeTrip.groupIds || []).map((id) => groups[id]).filter(Boolean)
     : [];
+  const visibleTripGroups = activeTripGroups.filter((g) => g.id !== pendingDeleteGroup?.id);
+
+  // Live running sum for exact/percentage split inputs (feedback while typing)
+  const splitSelectedIds = Object.keys(selectedSplitMembers).filter((id) => selectedSplitMembers[id]);
+  const splitConfigSum = splitSelectedIds.reduce((sum, id) => sum + (parseFloat(newExpSplitConfig[id] || '') || 0), 0);
+  const splitConfigTarget = newExpSplitMode === 'percentage' ? 100 : newExpSplitMode === 'exact' ? (parseFloat(newExpAmount) || 0) : null;
+  const splitConfigMatches = splitConfigTarget === null || Math.abs(splitConfigSum - splitConfigTarget) < 0.02;
 
   // Settlements and Net balances calculation
   const { balances, transfers } = activeTrip
@@ -202,6 +264,7 @@ export default function App() {
       // Default: reset config inputs
       setNewExpSplitMode('equal');
       setNewExpSplitConfig({});
+      setExpenseFormError('');
     }
   }, [showAddExpense, activeTripId]);
 
@@ -209,6 +272,7 @@ export default function App() {
   useEffect(() => {
     if (showAddGroup) {
       setSelectedGroupMembers({});
+      setGroupFormError('');
     }
   }, [showAddGroup]);
 
@@ -230,6 +294,25 @@ export default function App() {
     await addMember(newMemberName.trim());
     setNewMemberName('');
     setShowAddMember(false);
+    setShowMembersRequiredNotice(false);
+  };
+
+  const handleAddCategory = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newCategoryName.trim()) return;
+    await addCategory(newCategoryName.trim(), newCategoryIcon.trim() || undefined);
+    setNewCategoryName('');
+    setNewCategoryIcon('');
+  };
+
+  const handleDeleteCategory = (categoryId: string, categoryName: string) => {
+    setConfirmRequest({
+      title: 'Delete category',
+      message: `Delete category "${categoryName}"? Existing expenses using it will show as "Other".`,
+      confirmLabel: 'Delete',
+      danger: true,
+      onConfirm: () => deleteCategory(categoryId),
+    });
   };
 
   const handleCreateGroup = async (e: React.FormEvent) => {
@@ -237,9 +320,10 @@ export default function App() {
     if (!newGroupName.trim()) return;
     const selectedIds = Object.keys(selectedGroupMembers).filter((id) => selectedGroupMembers[id]);
     if (selectedIds.length === 0) {
-      alert('Please select at least one member to add to the group.');
+      setGroupFormError('Please select at least one member to add to the group.');
       return;
     }
+    setGroupFormError('');
     if (editingGroupId) {
       await updateGroup(editingGroupId, newGroupName.trim(), selectedIds);
     } else {
@@ -257,11 +341,11 @@ export default function App() {
     const splitIds = Object.keys(selectedSplitMembers).filter((id) => selectedSplitMembers[id]);
 
     if (!newExpTitle.trim() || isNaN(amountVal) || amountVal <= 0 || !newExpPayer || !newExpCategory || !newExpDate) {
-      alert('Please fill out all required fields with valid entries.');
+      setExpenseFormError('Please fill out all required fields with valid entries.');
       return;
     }
     if (splitIds.length === 0) {
-      alert('Please select at least one member for the expense division.');
+      setExpenseFormError('Please select at least one member for the expense division.');
       return;
     }
 
@@ -273,7 +357,7 @@ export default function App() {
         const valStr = newExpSplitConfig[id] || '';
         const numVal = parseFloat(valStr);
         if (isNaN(numVal) || numVal < 0) {
-          alert(`Please enter a valid non-negative number for member ${members[id]?.name || id}.`);
+          setExpenseFormError(`Please enter a valid non-negative number for member ${members[id]?.name || id}.`);
           return;
         }
         splitConfig[id] = numVal;
@@ -283,18 +367,19 @@ export default function App() {
       if (newExpSplitMode === 'exact') {
         const diff = Math.abs(sum - amountVal);
         if (diff > 0.02) {
-          alert(`The sum of individual amounts (${sum.toFixed(2)}) must equal the total expense amount (${amountVal.toFixed(2)}).`);
+          setExpenseFormError(`The sum of individual amounts (${sum.toFixed(2)}) must equal the total expense amount (${amountVal.toFixed(2)}).`);
           return;
         }
       } else if (newExpSplitMode === 'percentage') {
         const diff = Math.abs(sum - 100);
         if (diff > 0.05) {
-          alert(`The sum of individual percentages (${sum.toFixed(1)}%) must equal 100%.`);
+          setExpenseFormError(`The sum of individual percentages (${sum.toFixed(1)}%) must equal 100%.`);
           return;
         }
       }
     }
 
+    setExpenseFormError('');
     const expensePayload = {
       title: newExpTitle.trim(),
       amount: amountVal,
@@ -305,6 +390,7 @@ export default function App() {
       splitMode: newExpSplitMode,
       splitMemberIds: splitIds,
       splitConfig: newExpSplitMode !== 'equal' ? splitConfig : undefined,
+      receiptImage: newExpReceiptImage || undefined,
     };
 
     if (editingExpenseId) {
@@ -319,7 +405,23 @@ export default function App() {
     setNewExpDate('');
     setNewExpSplitMode('equal');
     setNewExpSplitConfig({});
+    setNewExpReceiptImage('');
     setShowAddExpense(false);
+  };
+
+  const handleReceiptFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    setReceiptProcessing(true);
+    try {
+      const dataUrl = await compressImageToDataUrl(file);
+      setNewExpReceiptImage(dataUrl);
+    } catch {
+      setExpenseFormError('Could not process that image. Try a different photo.');
+    } finally {
+      setReceiptProcessing(false);
+    }
   };
 
   // Opens expense form pre-filled for editing
@@ -339,6 +441,7 @@ export default function App() {
       Object.entries(exp.splitConfig).forEach(([id, val]) => { initialConfig[id] = String(val); });
     }
     setNewExpSplitConfig(initialConfig);
+    setNewExpReceiptImage(exp.receiptImage || '');
     setShowAddExpense(true);
   };
 
@@ -360,6 +463,56 @@ export default function App() {
     setPendingDeleteExpense(null);
   };
 
+  // Undo-delete: stage the trip, start a 5-second timer
+  const handleDeleteTrip = (trip: Trip) => {
+    setConfirmRequest({
+      title: 'Delete trip',
+      message: `Are you sure you want to delete "${trip.name}"? This cannot be undone.`,
+      confirmLabel: 'Delete',
+      danger: true,
+      onConfirm: () => {
+        if (tripUndoTimer) clearTimeout(tripUndoTimer);
+        setPendingDeleteTrip(trip);
+        const timer = setTimeout(() => {
+          deleteTrip(trip.id);
+          setPendingDeleteTrip(null);
+        }, 5000);
+        setTripUndoTimer(timer);
+      },
+    });
+  };
+
+  const handleUndoDeleteTrip = () => {
+    if (tripUndoTimer) clearTimeout(tripUndoTimer);
+    setTripUndoTimer(null);
+    setPendingDeleteTrip(null);
+  };
+
+  // Undo-delete: stage the group, start a 5-second timer
+  const handleDeleteGroup = (group: Group) => {
+    setConfirmRequest({
+      title: 'Delete group',
+      message: `Delete group "${group.name}"? (Individual members are NOT deleted)`,
+      confirmLabel: 'Delete',
+      danger: true,
+      onConfirm: () => {
+        if (groupUndoTimer) clearTimeout(groupUndoTimer);
+        setPendingDeleteGroup(group);
+        const timer = setTimeout(() => {
+          deleteGroup(group.id);
+          setPendingDeleteGroup(null);
+        }, 5000);
+        setGroupUndoTimer(timer);
+      },
+    });
+  };
+
+  const handleUndoDeleteGroup = () => {
+    if (groupUndoTimer) clearTimeout(groupUndoTimer);
+    setGroupUndoTimer(null);
+    setPendingDeleteGroup(null);
+  };
+
   // Group quick select toggles for splits
   const applyGroupToSplit = (memberIds: string[], checked: boolean) => {
     const updated = { ...selectedSplitMembers };
@@ -372,24 +525,30 @@ export default function App() {
   };
 
   // Record a settlement transfer
-  const handleSettle = async (fromId: string, toId: string, amount: number) => {
+  const handleSettle = (fromId: string, toId: string, amount: number) => {
     const fromMember = members[fromId];
     const toMember = members[toId];
     if (!fromMember || !toMember || !activeTrip) return;
 
-    if (confirm(`Mark transfer: ${fromMember.name} pays ${toMember.name} ${activeTrip.baseCurrency === 'INR' ? '₹' : activeTrip.baseCurrency} ${amount.toFixed(2)} as settled?`)) {
-      await addExpense({
-        title: `Settlement: ${fromMember.name} ➔ ${toMember.name}`,
-        amount: amount,
-        currency: activeTrip.baseCurrency,
-        category: 'cat-misc',
-        date: new Date().toISOString().split('T')[0],
-        paidBy: fromId, // paid by debtor
-        splitMode: 'exact',
-        splitMemberIds: [toId], // split 100% to creditor
-        splitConfig: { [toId]: amount }
-      });
-    }
+    const currencySymbol = activeTrip.baseCurrency === 'INR' ? '₹' : activeTrip.baseCurrency;
+    setConfirmRequest({
+      title: 'Confirm settlement',
+      message: `Mark transfer: ${fromMember.name} pays ${toMember.name} ${currencySymbol}${amount.toFixed(2)} as settled?`,
+      confirmLabel: 'Mark Settled',
+      onConfirm: () => {
+        addExpense({
+          title: `Settlement: ${fromMember.name} ➔ ${toMember.name}`,
+          amount: amount,
+          currency: activeTrip.baseCurrency,
+          category: 'cat-misc',
+          date: new Date().toISOString().split('T')[0],
+          paidBy: fromId, // paid by debtor
+          splitMode: 'exact',
+          splitMemberIds: [toId], // split 100% to creditor
+          splitConfig: { [toId]: amount }
+        });
+      },
+    });
   };
 
   const handleImport = async () => {
@@ -551,7 +710,7 @@ export default function App() {
             )}
 
             {/* Trips List Grid */}
-            {trips.length === 0 ? (
+            {visibleTrips.length === 0 ? (
               <div className="glass-card" style={{ textAlign: 'center', padding: '40px 20px', borderStyle: 'dashed' }}>
                 <p style={{ color: 'var(--text-secondary)', marginBottom: '16px' }}>No trips registered yet.</p>
                 <button className="gradient-btn" style={{ margin: '0 auto' }} onClick={() => setShowAddTrip(true)}>
@@ -560,7 +719,7 @@ export default function App() {
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                {trips.map((trip) => (
+                {visibleTrips.map((trip) => (
                   <div key={trip.id} className="glass-card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }} onClick={() => selectTrip(trip.id)}>
                     <div>
                       <h3 style={{ fontSize: '18px', marginBottom: '4px' }}>{trip.name}</h3>
@@ -576,9 +735,7 @@ export default function App() {
                       style={{ padding: '8px 12px', color: 'var(--color-danger)', borderColor: 'rgba(225,29,72,0.2)' }}
                       onClick={(e) => {
                         e.stopPropagation();
-                        if (confirm(`Are you sure you want to delete "${trip.name}"?`)) {
-                          deleteTrip(trip.id);
-                        }
+                        handleDeleteTrip(trip);
                       }}
                     >
                       Delete
@@ -615,10 +772,11 @@ export default function App() {
                     style={{ padding: '8px 16px', fontSize: '14px' }}
                     onClick={() => {
                       if (visibleMembers.length === 0) {
-                        alert('Please add members to the trip first before recording expenses.');
+                        setShowMembersRequiredNotice(true);
                         setActiveTab('members');
                         return;
                       }
+                      setNewExpReceiptImage('');
                       setShowAddExpense(true);
                     }}
                   >
@@ -714,6 +872,33 @@ export default function App() {
                       </select>
                     </div>
 
+                    <div className="form-group">
+                      <label className="form-label">Receipt (optional)</label>
+                      {newExpReceiptImage ? (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                          <img
+                            src={newExpReceiptImage}
+                            alt="Receipt preview"
+                            style={{ width: '64px', height: '64px', objectFit: 'cover', borderRadius: 'var(--border-radius-sm)', border: '1px solid var(--border-color)' }}
+                          />
+                          <button type="button" className="secondary-btn" style={{ padding: '6px 12px', fontSize: '12px' }} onClick={() => setNewExpReceiptImage('')}>
+                            Remove
+                          </button>
+                        </div>
+                      ) : (
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="input-field"
+                          onChange={handleReceiptFileChange}
+                          disabled={receiptProcessing}
+                        />
+                      )}
+                      {receiptProcessing && (
+                        <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '4px' }}>Processing image...</p>
+                      )}
+                    </div>
+
                     {/* Checkboxes to select division participants */}
                     <div className="form-group" style={{ marginTop: '8px' }}>
                       <label className="form-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -744,11 +929,27 @@ export default function App() {
                         </div>
                       </label>
 
+                      {newExpSplitMode !== 'equal' && splitSelectedIds.length > 0 && (
+                        <div style={{
+                          fontSize: '12px', fontWeight: 600, marginBottom: '8px',
+                          color: newExpSplitMode === 'custom'
+                            ? 'var(--text-secondary)'
+                            : splitConfigMatches ? 'var(--color-success)' : 'var(--color-danger)'
+                        }}>
+                          {newExpSplitMode === 'percentage'
+                            ? `${splitConfigSum.toFixed(1)} / 100%`
+                            : newExpSplitMode === 'exact'
+                              ? `${activeTrip?.baseCurrency === 'INR' ? '₹' : activeTrip?.baseCurrency}${splitConfigSum.toFixed(2)} / ${activeTrip?.baseCurrency === 'INR' ? '₹' : activeTrip?.baseCurrency}${(parseFloat(newExpAmount) || 0).toFixed(2)}`
+                              : `Total weight: ${splitConfigSum.toFixed(2)}`}
+                          {splitConfigMatches && (newExpSplitMode === 'exact' || newExpSplitMode === 'percentage') ? ' ✓' : ''}
+                        </div>
+                      )}
+
                       {/* Quick Select Group Buttons */}
-                      {activeTripGroups.length > 0 && (
+                      {visibleTripGroups.length > 0 && (
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '8px' }}>
                           <span style={{ fontSize: '11px', color: 'var(--text-secondary)', alignSelf: 'center', marginRight: '4px' }}>Groups:</span>
-                          {activeTripGroups.map((grp) => (
+                          {visibleTripGroups.map((grp) => (
                             <button
                               key={grp.id}
                               type="button"
@@ -813,6 +1014,10 @@ export default function App() {
                       </div>
                     </div>
 
+                    {expenseFormError && (
+                      <p style={{ color: 'var(--color-danger)', fontSize: '13px', marginTop: '12px' }}>{expenseFormError}</p>
+                    )}
+
                     <div style={{ display: 'flex', gap: '12px', marginTop: '16px' }}>
                       <button type="submit" className="gradient-btn" style={{ flex: 1 }}>
                         {editingExpenseId ? 'Update Expense' : 'Add Expense'}
@@ -823,6 +1028,8 @@ export default function App() {
                         style={{ flex: 1 }}
                         onClick={() => {
                           setEditingExpenseId(null);
+                          setExpenseFormError('');
+                          setNewExpReceiptImage('');
                           setShowAddExpense(false);
                         }}
                       >
@@ -832,14 +1039,83 @@ export default function App() {
                   </form>
                 )}
 
+                {/* Search & Filters */}
+                {activeTripExpenses.length > 0 && (
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '16px' }}>
+                    <input
+                      type="text"
+                      className="input-field"
+                      placeholder="🔍 Search expenses..."
+                      style={{ flex: '2 1 160px' }}
+                      value={expenseSearch}
+                      onChange={(e) => setExpenseSearch(e.target.value)}
+                    />
+                    <select
+                      className="input-field select-field"
+                      style={{ flex: '1 1 130px' }}
+                      value={expenseFilterCategory}
+                      onChange={(e) => setExpenseFilterCategory(e.target.value)}
+                    >
+                      <option value="">All Categories</option>
+                      {categories.map((c) => (
+                        <option key={c.id} value={c.id}>{c.icon} {c.name}</option>
+                      ))}
+                    </select>
+                    <select
+                      className="input-field select-field"
+                      style={{ flex: '1 1 130px' }}
+                      value={expenseFilterMember}
+                      onChange={(e) => setExpenseFilterMember(e.target.value)}
+                    >
+                      <option value="">All Members</option>
+                      {activeTripMembers.map((m) => (
+                        <option key={m.id} value={m.id}>{m.name}</option>
+                      ))}
+                    </select>
+                    <input
+                      type="date"
+                      className="input-field"
+                      style={{ flex: '1 1 130px' }}
+                      value={expenseFilterDateFrom}
+                      onChange={(e) => setExpenseFilterDateFrom(e.target.value)}
+                      aria-label="From date"
+                    />
+                    <input
+                      type="date"
+                      className="input-field"
+                      style={{ flex: '1 1 130px' }}
+                      value={expenseFilterDateTo}
+                      onChange={(e) => setExpenseFilterDateTo(e.target.value)}
+                      aria-label="To date"
+                    />
+                    {hasActiveExpenseFilters && (
+                      <button
+                        type="button"
+                        className="secondary-btn"
+                        onClick={() => {
+                          setExpenseSearch('');
+                          setExpenseFilterCategory('');
+                          setExpenseFilterMember('');
+                          setExpenseFilterDateFrom('');
+                          setExpenseFilterDateTo('');
+                        }}
+                      >
+                        Clear
+                      </button>
+                    )}
+                  </div>
+                )}
+
                 {/* Expenses List */}
-                {activeTripExpenses.length === 0 ? (
+                {filteredExpenses.length === 0 ? (
                   <div className="glass-card" style={{ textAlign: 'center', padding: '32px', borderStyle: 'dashed' }}>
-                    <p style={{ color: 'var(--text-secondary)' }}>No expenses recorded yet.</p>
+                    <p style={{ color: 'var(--text-secondary)' }}>
+                      {hasActiveExpenseFilters ? 'No expenses match your search/filters.' : 'No expenses recorded yet.'}
+                    </p>
                   </div>
                 ) : (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                    {activeTripExpenses.map((exp) => {
+                    {filteredExpenses.map((exp) => {
                       const payer = members[exp.paidBy];
                       const cat = categories.find((c) => c.id === exp.category);
                       const splitNames = exp.splitMemberIds.map((id) => members[id]?.name).filter(Boolean).join(', ');
@@ -907,7 +1183,20 @@ export default function App() {
                           const absVal = Math.abs(b.balance).toFixed(2);
                           const currencySymbol = activeTrip.baseCurrency === 'INR' ? '₹' : activeTrip.baseCurrency;
                           return (
-                            <div key={b.memberId} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '14px', padding: '6px 0' }}>
+                            <div
+                              key={b.memberId}
+                              className="balance-row"
+                              style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '14px', padding: '6px 4px', borderRadius: '8px', cursor: 'pointer' }}
+                              onClick={() => {
+                                setExpenseFilterMember(b.memberId);
+                                setExpenseSearch('');
+                                setExpenseFilterCategory('');
+                                setExpenseFilterDateFrom('');
+                                setExpenseFilterDateTo('');
+                                setActiveTab('expenses');
+                              }}
+                              title={`View ${b.name}'s expenses`}
+                            >
                               <span><strong>{b.name}</strong></span>
                               <span style={{ color, fontWeight: '700' }}>
                                 {isPositive ? `gets back ${currencySymbol}${absVal}` : isNegative ? `owes ${currencySymbol}${absVal}` : 'settled'}
@@ -974,6 +1263,17 @@ export default function App() {
 
             {activeTab === 'members' && (
               <div className="fade-in">
+                {showMembersRequiredNotice && (
+                  <div className="glass-card" style={{ padding: '12px 16px', marginBottom: '16px', border: '1px dashed var(--color-warning)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: '13px' }}>Please add a member before recording expenses.</span>
+                    <button
+                      style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '16px', lineHeight: 1 }}
+                      onClick={() => setShowMembersRequiredNotice(false)}
+                    >
+                      &times;
+                    </button>
+                  </div>
+                )}
                 {/* 1. Add Members Section */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
                   <h3 style={{ fontSize: '18px' }}>Trip Members</h3>
@@ -1097,18 +1397,23 @@ export default function App() {
                         </div>
                       </div>
 
+                      {groupFormError && (
+                        <p style={{ color: 'var(--color-danger)', fontSize: '13px', marginTop: '4px' }}>{groupFormError}</p>
+                      )}
+
                       <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
                         <button type="submit" className="gradient-btn" style={{ flex: 1, padding: '10px' }}>
                           {editingGroupId ? 'Update Group' : 'Save Group'}
                         </button>
-                        <button 
-                          type="button" 
-                          className="secondary-btn" 
-                          style={{ flex: 1, padding: '10px' }} 
+                        <button
+                          type="button"
+                          className="secondary-btn"
+                          style={{ flex: 1, padding: '10px' }}
                           onClick={() => {
                             setEditingGroupId(null);
                             setNewGroupName('');
                             setSelectedGroupMembers({});
+                            setGroupFormError('');
                             setShowAddGroup(false);
                           }}
                         >
@@ -1119,7 +1424,7 @@ export default function App() {
                   )}
 
                   {/* Groups list */}
-                  {activeTripGroups.length === 0 ? (
+                  {visibleTripGroups.length === 0 ? (
                     <div className="glass-card" style={{ textAlign: 'center', padding: '24px', borderStyle: 'dashed' }}>
                       <p style={{ color: 'var(--text-secondary)', fontSize: '13px' }}>
                         No groups created yet. Groups help you quickly select multiple members for expense divisions.
@@ -1127,7 +1432,7 @@ export default function App() {
                     </div>
                   ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                      {activeTripGroups.map((grp) => {
+                      {visibleTripGroups.map((grp) => {
                         const grpMemberNames = grp.memberIds
                           .map((id) => members[id]?.name)
                           .filter(Boolean)
@@ -1160,11 +1465,7 @@ export default function App() {
                               <button
                                 className="secondary-btn"
                                 style={{ padding: '4px 10px', fontSize: '11px', color: 'var(--color-danger)', borderColor: 'rgba(225,29,72,0.15)' }}
-                                onClick={() => {
-                                  if (confirm(`Delete group "${grp.name}"? (Individual members are NOT deleted)`)) {
-                                    deleteGroup(grp.id);
-                                  }
-                                }}
+                                onClick={() => handleDeleteGroup(grp)}
                               >
                                 Delete
                               </button>
@@ -1405,6 +1706,89 @@ export default function App() {
               <div className="fade-in">
                 <h3 style={{ fontSize: '18px', marginBottom: '20px' }}>Settings & Data Utility</h3>
 
+                {/* Manage Categories */}
+                <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '24px' }}>
+                  <h4 style={{ fontSize: '16px' }}>Manage Categories</h4>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {categories.map((cat) => (
+                      <div key={cat.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', background: 'rgba(15,23,42,0.02)', borderRadius: 'var(--border-radius-sm)' }}>
+                        <span style={{ fontSize: '14px' }}>{cat.icon} {cat.name}</span>
+                        {cat.isCustom ? (
+                          <button
+                            className="secondary-btn"
+                            style={{ padding: '3px 8px', fontSize: '11px', color: 'var(--color-danger)', borderColor: 'rgba(225,29,72,0.15)' }}
+                            onClick={() => handleDeleteCategory(cat.id, cat.name)}
+                          >
+                            Delete
+                          </button>
+                        ) : (
+                          <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Built-in</span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+
+                  <form onSubmit={handleAddCategory} style={{ display: 'flex', gap: '8px' }}>
+                    <div
+                      style={{ position: 'relative' }}
+                      onBlur={(e) => {
+                        if (!e.currentTarget.contains(e.relatedTarget as Node)) setShowIconPicker(false);
+                      }}
+                    >
+                      <input
+                        type="text"
+                        className="input-field"
+                        style={{ width: '56px', textAlign: 'center' }}
+                        placeholder="🏷️"
+                        maxLength={4}
+                        value={newCategoryIcon}
+                        onChange={(e) => setNewCategoryIcon(e.target.value)}
+                        onFocus={() => setShowIconPicker(true)}
+                        aria-label="Category emoji icon"
+                        title="Pick an emoji or type/paste your own"
+                      />
+                      {showIconPicker && (
+                        <div style={{
+                          position: 'absolute', top: 'calc(100% + 4px)', left: 0, zIndex: 20,
+                          width: '176px', display: 'flex', flexWrap: 'wrap', gap: '4px',
+                          padding: '8px', background: '#fff', border: '1px solid var(--border-color)',
+                          borderRadius: 'var(--border-radius-sm)', boxShadow: '0 10px 25px -5px rgba(15,23,42,0.15)'
+                        }}>
+                          {CATEGORY_ICON_PRESETS.map((icon) => (
+                            <button
+                              key={icon}
+                              type="button"
+                              onClick={() => {
+                                setNewCategoryIcon(icon);
+                                setShowIconPicker(false);
+                              }}
+                              style={{
+                                width: '28px', height: '28px', fontSize: '15px', lineHeight: 1,
+                                borderRadius: '6px', cursor: 'pointer',
+                                border: newCategoryIcon === icon ? '2px solid var(--primary-accent)' : '1px solid transparent',
+                                background: newCategoryIcon === icon ? 'rgba(79,70,229,0.08)' : 'transparent',
+                              }}
+                            >
+                              {icon}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    <input
+                      type="text"
+                      required
+                      className="input-field"
+                      style={{ flex: 1 }}
+                      placeholder="New category name"
+                      value={newCategoryName}
+                      onChange={(e) => setNewCategoryName(e.target.value)}
+                    />
+                    <button type="submit" className="gradient-btn" style={{ padding: '10px 16px' }}>Add</button>
+                  </form>
+                </div>
+
                 {/* Excel CSV Exporter */}
                 <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '24px' }}>
                   <h4 style={{ fontSize: '16px' }}>Excel CSV Export</h4>
@@ -1571,6 +1955,17 @@ export default function App() {
                 </div>
               </div>
 
+              {/* Receipt image */}
+              {selectedReviewExpense.receiptImage && (
+                <a href={selectedReviewExpense.receiptImage} target="_blank" rel="noopener noreferrer">
+                  <img
+                    src={selectedReviewExpense.receiptImage}
+                    alt="Receipt"
+                    style={{ width: '100%', maxHeight: '220px', objectFit: 'contain', borderRadius: 'var(--border-radius-md)', border: '1px solid var(--border-color)', background: 'rgba(15,23,42,0.02)' }}
+                  />
+                </a>
+              )}
+
               {/* Split details list */}
               <div>
                 <h4 style={{
@@ -1626,27 +2021,51 @@ export default function App() {
         </div>
       )}
 
-      {/* Global Undo Delete Toast - renders on any tab */}
-      {pendingDeleteExpense && (
+      {/* Global Undo Delete Toasts - renders on any tab, stacked */}
+      {(pendingDeleteExpense || pendingDeleteTrip || pendingDeleteGroup) && (
         <div style={{
           position: 'fixed', bottom: '24px', left: '50%', transform: 'translateX(-50%)',
-          background: 'rgba(15,23,42,0.92)', color: '#fff', borderRadius: '12px',
-          padding: '12px 20px', display: 'flex', alignItems: 'center', gap: '16px',
-          boxShadow: '0 4px 20px rgba(0,0,0,0.25)', zIndex: 9999, fontSize: '14px',
-          backdropFilter: 'blur(8px)', minWidth: '280px'
+          display: 'flex', flexDirection: 'column-reverse', gap: '10px', alignItems: 'center',
+          zIndex: 9999
         }}>
-          <span>🗑️ <strong>'{pendingDeleteExpense.title}'</strong> deleted</span>
-          <button
-            onClick={handleUndoDelete}
-            style={{
-              background: 'var(--primary-accent)', color: '#fff', border: 'none',
-              borderRadius: '8px', padding: '6px 14px', cursor: 'pointer',
-              fontWeight: '600', fontSize: '13px'
-            }}
-          >
-            Undo
-          </button>
+          {pendingDeleteExpense && (
+            <div style={{
+              background: 'rgba(15,23,42,0.92)', color: '#fff', borderRadius: '12px',
+              padding: '12px 20px', display: 'flex', alignItems: 'center', gap: '16px',
+              boxShadow: '0 4px 20px rgba(0,0,0,0.25)', fontSize: '14px',
+              backdropFilter: 'blur(8px)', minWidth: '280px'
+            }}>
+              <span>🗑️ <strong>'{pendingDeleteExpense.title}'</strong> deleted</span>
+              <button onClick={handleUndoDelete} className="undo-toast-btn">Undo</button>
+            </div>
+          )}
+          {pendingDeleteTrip && (
+            <div style={{
+              background: 'rgba(15,23,42,0.92)', color: '#fff', borderRadius: '12px',
+              padding: '12px 20px', display: 'flex', alignItems: 'center', gap: '16px',
+              boxShadow: '0 4px 20px rgba(0,0,0,0.25)', fontSize: '14px',
+              backdropFilter: 'blur(8px)', minWidth: '280px'
+            }}>
+              <span>🗑️ Trip <strong>'{pendingDeleteTrip.name}'</strong> deleted</span>
+              <button onClick={handleUndoDeleteTrip} className="undo-toast-btn">Undo</button>
+            </div>
+          )}
+          {pendingDeleteGroup && (
+            <div style={{
+              background: 'rgba(15,23,42,0.92)', color: '#fff', borderRadius: '12px',
+              padding: '12px 20px', display: 'flex', alignItems: 'center', gap: '16px',
+              boxShadow: '0 4px 20px rgba(0,0,0,0.25)', fontSize: '14px',
+              backdropFilter: 'blur(8px)', minWidth: '280px'
+            }}>
+              <span>🗑️ Group <strong>'{pendingDeleteGroup.name}'</strong> deleted</span>
+              <button onClick={handleUndoDeleteGroup} className="undo-toast-btn">Undo</button>
+            </div>
+          )}
         </div>
+      )}
+
+      {confirmRequest && (
+        <ConfirmDialog request={confirmRequest} onCancel={() => setConfirmRequest(null)} />
       )}
     </div>
   );

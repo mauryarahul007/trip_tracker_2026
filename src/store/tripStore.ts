@@ -29,7 +29,7 @@ interface TripStore extends TripState {
   deleteExpense: (id: string) => Promise<void>;
   
   // Category Actions
-  addCategory: (name: string) => Promise<void>;
+  addCategory: (name: string, icon?: string) => Promise<void>;
   deleteCategory: (id: string) => Promise<void>;
   
   // Database Backup Actions
@@ -355,11 +355,11 @@ export const useTripStore = create<TripStore>((set, get) => {
       await persist({ expenses: updatedExpenses });
     },
 
-    addCategory: async (name) => {
+    addCategory: async (name, icon) => {
       const newCategory: Category = {
         id: `cat-custom-${Date.now()}`,
         name,
-        icon: '🏷️',
+        icon: icon || '🏷️',
         isCustom: true,
       };
 

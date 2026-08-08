@@ -37,6 +37,7 @@ export interface Expense {
   splitMemberIds: string[]; // members participating in this split
   splitConfig?: Record<string, number>; // memberId -> weight / amount / percentage
   resolvedShares: Record<string, number>; // memberId -> actual split share in baseCurrency
+  receiptImage?: string; // optional compressed base64 JPEG data URL
   createdAt: number;
   updatedAt: number;
 }
