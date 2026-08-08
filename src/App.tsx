@@ -315,7 +315,7 @@ export default function App() {
       setNewExpAmount('');
       setNewExpCategory('');
     }
-  }, [showAddExpense, activeTripId, editingExpenseId, visibleMembers.length]);
+  }, [showAddExpense, activeTripId, editingExpenseId, visibleMembers]);
 
   // Sync group checkboxes when opening add group form
   useEffect(() => {
@@ -345,7 +345,7 @@ export default function App() {
       }
       setNewGroupName(autoName);
     }
-  }, [selectedGroupMembers, isGroupNameAuto, visibleMembers.length]);
+  }, [selectedGroupMembers, isGroupNameAuto, visibleMembers]);
 
   // Form submissions
   const handleCreateTrip = async (e: React.FormEvent) => {
