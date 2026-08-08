@@ -90,19 +90,24 @@ export function ExpenseForm({
   return (
     <div className="modal-backdrop" onClick={onCancel}>
       <form className="modal-sheet" onSubmit={onSubmit} onClick={(e) => e.stopPropagation()}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-        <h4 style={{ fontSize: '18px' }}>{editingExpenseId ? 'Edit Expense' : 'New Expense'}</h4>
-        <button
-          type="button"
-          className="secondary-btn"
-          style={{ padding: '6px 8px' }}
-          aria-label="Close"
-          title="Close"
-          onClick={onCancel}
-        >
-          <IconClose size={16} className="icon-sm" />
-        </button>
-      </div>
+      <header className="app-header" style={{ margin: '-20px -20px 20px', paddingTop: 'max(20px, env(safe-area-inset-top))' }}>
+        <div className="app-header-top">
+          <div className="app-title-group">
+            <span className="app-eyebrow">{trip?.name}</span>
+            <h2 className="app-logo" style={{ fontSize: '22px', color: '#F2ECDC' }}>{editingExpenseId ? 'Edit Expense' : 'New Expense'}</h2>
+          </div>
+          <button
+            type="button"
+            className="secondary-btn"
+            style={{ padding: '7px 8px', color: '#F2ECDC', borderColor: 'rgba(242,236,220,0.28)', background: 'rgba(242,236,220,0.06)', flexShrink: 0 }}
+            aria-label="Close"
+            title="Close"
+            onClick={onCancel}
+          >
+            <IconClose size={16} className="icon-sm" />
+          </button>
+        </div>
+      </header>
 
       <div className="form-group">
         <label className="form-label">Amount ({trip?.baseCurrency})</label>

@@ -16,6 +16,7 @@ import { ExpenseReviewModal } from './components/ExpenseReviewModal';
 import { UndoToasts } from './components/UndoToasts';
 import { NavTabs } from './components/NavTabs';
 import { IconCalendar, IconChevronLeft } from './components/Icons';
+import { formatDateRange } from './utils/dateRange';
 
 export default function App() {
   const {
@@ -877,7 +878,7 @@ export default function App() {
               <div className="app-title-group">
                 <span className="app-eyebrow">
                   <IconCalendar size={12} className="icon-sm" />
-                  {activeTrip?.baseCurrency} · {activeTrip?.startDate} to {activeTrip?.endDate}
+                  {formatDateRange(activeTrip?.startDate || '', activeTrip?.endDate || '')} · {activeTrip?.baseCurrency}
                 </span>
                 <h2 className="app-logo" style={{ fontSize: '24px', color: '#F2ECDC' }}>{activeTrip?.name}</h2>
               </div>
