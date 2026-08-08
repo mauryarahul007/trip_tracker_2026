@@ -67,6 +67,15 @@ export function MembersGroupsTab({
   onDeleteGroup,
   members,
 }: Props) {
+  const otherGroupMemberIds = new Set<string>();
+  visibleTripGroups.forEach((grp) => {
+    if (grp.id !== editingGroupId) {
+      grp.memberIds.forEach((id) => otherGroupMemberIds.add(id));
+    }
+  });
+
+  const availableMembers = visibleMembers.filter((m) => !otherGroupMemberIds.has(m.id));
+
   return (
     <div className="fade-in">
       {showMembersRequiredNotice && (
@@ -198,22 +207,28 @@ export function MembersGroupsTab({
             <div className="form-group">
               <label className="form-label">Group Members</label>
               <div className="input-field" style={{ maxHeight: '150px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px', background: '#fff' }}>
-                {visibleMembers.map((m) => (
-                  <label key={m.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '14px' }}>
-                    <input
-                      type="checkbox"
-                      checked={!!selectedGroupMembers[m.id]}
-                      onChange={(e) => {
-                        setSelectedGroupMembers({
-                          ...selectedGroupMembers,
-                          [m.id]: e.target.checked
-                        });
-                      }}
-                      style={{ width: '16px', height: '16px', accentColor: 'var(--primary-accent)' }}
-                    />
-                    {m.name}
-                  </label>
-                ))}
+                {availableMembers.length === 0 ? (
+                  <p style={{ color: 'var(--text-secondary)', fontSize: '13px', padding: '8px 0' }}>
+                    All active members are already assigned to other groups.
+                  </p>
+                ) : (
+                  availableMembers.map((m) => (
+                    <label key={m.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '14px' }}>
+                      <input
+                        type="checkbox"
+                        checked={!!selectedGroupMembers[m.id]}
+                        onChange={(e) => {
+                          setSelectedGroupMembers({
+                            ...selectedGroupMembers,
+                            [m.id]: e.target.checked
+                          });
+                        }}
+                        style={{ width: '16px', height: '16px', accentColor: 'var(--primary-accent)' }}
+                      />
+                      {m.name}
+                    </label>
+                  ))
+                )}
               </div>
             </div>
 

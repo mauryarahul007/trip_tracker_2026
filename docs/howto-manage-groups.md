@@ -22,7 +22,7 @@ Click the **👥 Members & Groups** tab. Groups live in the **Member Groups** se
 Click **+ Create Group** (hidden if the trip has no active members yet).
 
 - **Group Name** — Automatically generated based on the selected members (e.g., "Alice & Bob" or "Alice, Bob & Charlie") to speed up entry. If you prefer a custom name (like "Family" or "Kids"), you can type it directly. Clearing the input field completely will resume the auto-generation.
-- **Group Members** — check every member who belongs to this group
+- **Group Members** — check every member who belongs to this group. **Note**: A member can only belong to one group at a time. Members who are already part of an existing group will not be shown in the checklist when creating a new group.
 
 Click **Save Group**. If you try to save with zero members checked, an inline error appears under the form and it stays open.
 
