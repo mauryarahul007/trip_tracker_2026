@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useTripStore } from './store/tripStore';
+import { calculateSettlements } from './utils/settlement';
 
 export default function App() {
   const {
@@ -53,6 +54,8 @@ export default function App() {
   const [newExpDate, setNewExpDate] = useState('');
   const [newExpPayer, setNewExpPayer] = useState('');
   const [selectedSplitMembers, setSelectedSplitMembers] = useState<Record<string, boolean>>({});
+  const [newExpSplitMode, setNewExpSplitMode] = useState<'equal' | 'custom' | 'exact' | 'percentage'>('equal');
+  const [newExpSplitConfig, setNewExpSplitConfig] = useState<Record<string, string>>({});
 
   // JSON Import state
   const [importJson, setImportJson] = useState('');
@@ -78,6 +81,11 @@ export default function App() {
     ? (activeTrip.groupIds || []).map((id) => groups[id]).filter(Boolean)
     : [];
 
+  // Settlements and Net balances calculation
+  const { balances, transfers } = activeTrip
+    ? calculateSettlements(activeTrip, members, expenses)
+    : { balances: [], transfers: [] };
+
   // Set default form values when opening forms
   useEffect(() => {
     if (categories.length > 0 && !newExpCategory) {
@@ -97,6 +105,10 @@ export default function App() {
       
       // Default: set first member as payer
       setNewExpPayer(visibleMembers[0].id);
+
+      // Default: reset config inputs
+      setNewExpSplitMode('equal');
+      setNewExpSplitConfig({});
     }
   }, [showAddExpense, activeTripId]);
 
@@ -155,6 +167,36 @@ export default function App() {
       return;
     }
 
+    // Custom config validations
+    const splitConfig: Record<string, number> = {};
+    if (newExpSplitMode !== 'equal') {
+      let sum = 0;
+      for (const id of splitIds) {
+        const valStr = newExpSplitConfig[id] || '';
+        const numVal = parseFloat(valStr);
+        if (isNaN(numVal) || numVal < 0) {
+          alert(`Please enter a valid non-negative number for member ${members[id]?.name || id}.`);
+          return;
+        }
+        splitConfig[id] = numVal;
+        sum += numVal;
+      }
+
+      if (newExpSplitMode === 'exact') {
+        const diff = Math.abs(sum - amountVal);
+        if (diff > 0.02) {
+          alert(`The sum of individual amounts (${sum.toFixed(2)}) must equal the total expense amount (${amountVal.toFixed(2)}).`);
+          return;
+        }
+      } else if (newExpSplitMode === 'percentage') {
+        const diff = Math.abs(sum - 100);
+        if (diff > 0.05) {
+          alert(`The sum of individual percentages (${sum.toFixed(1)}%) must equal 100%.`);
+          return;
+        }
+      }
+    }
+
     await addExpense({
       title: newExpTitle.trim(),
       amount: amountVal,
@@ -162,13 +204,16 @@ export default function App() {
       category: newExpCategory,
       date: newExpDate,
       paidBy: newExpPayer,
-      splitMode: 'equal',
+      splitMode: newExpSplitMode,
       splitMemberIds: splitIds,
+      splitConfig: newExpSplitMode !== 'equal' ? splitConfig : undefined,
     });
 
     setNewExpTitle('');
     setNewExpAmount('');
     setNewExpDate('');
+    setNewExpSplitMode('equal');
+    setNewExpSplitConfig({});
     setShowAddExpense(false);
   };
 
@@ -181,6 +226,27 @@ export default function App() {
       }
     });
     setSelectedSplitMembers(updated);
+  };
+
+  // Record a settlement transfer
+  const handleSettle = async (fromId: string, toId: string, amount: number) => {
+    const fromMember = members[fromId];
+    const toMember = members[toId];
+    if (!fromMember || !toMember || !activeTrip) return;
+
+    if (confirm(`Mark transfer: ${fromMember.name} pays ${toMember.name} ${activeTrip.baseCurrency === 'INR' ? '₹' : activeTrip.baseCurrency} ${amount.toFixed(2)} as settled?`)) {
+      await addExpense({
+        title: `Settlement: ${fromMember.name} ➔ ${toMember.name}`,
+        amount: amount,
+        currency: activeTrip.baseCurrency,
+        category: 'cat-misc',
+        date: new Date().toISOString().split('T')[0],
+        paidBy: fromId, // paid by debtor
+        splitMode: 'exact',
+        splitMemberIds: [toId], // split 100% to creditor
+        splitConfig: { [toId]: amount }
+      });
+    }
   };
 
   const handleImport = async () => {
@@ -476,6 +542,23 @@ export default function App() {
                       </div>
                     </div>
 
+                    <div className="form-group">
+                      <label className="form-label">Split Mode</label>
+                      <select
+                        className="input-field select-field"
+                        value={newExpSplitMode}
+                        onChange={(e) => {
+                          const val = e.target.value as 'equal' | 'custom' | 'exact' | 'percentage';
+                          setNewExpSplitMode(val);
+                        }}
+                      >
+                        <option value="equal">Split Equally</option>
+                        <option value="custom">Custom Weights (e.g. 1, 2, 0.5)</option>
+                        <option value="exact">Exact Amounts ({activeTrip?.baseCurrency})</option>
+                        <option value="percentage">Percentage (100% total)</option>
+                      </select>
+                    </div>
+
                     {/* Checkboxes to select division participants */}
                     <div className="form-group" style={{ marginTop: '8px' }}>
                       <label className="form-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -496,7 +579,10 @@ export default function App() {
                           <button
                             type="button"
                             style={{ background: 'none', border: 'none', color: 'var(--primary-accent)', cursor: 'pointer', fontWeight: 600 }}
-                            onClick={() => setSelectedSplitMembers({})}
+                            onClick={() => {
+                              setSelectedSplitMembers({});
+                              setNewExpSplitConfig({});
+                            }}
                           >
                             Clear All
                           </button>
@@ -521,24 +607,54 @@ export default function App() {
                         </div>
                       )}
 
-                      {/* Individual Member Checklist */}
-                      <div className="input-field" style={{ maxHeight: '150px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '10px', background: '#fff' }}>
-                        {visibleMembers.map((m) => (
-                          <label key={m.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '14px', fontWeight: 500 }}>
-                            <input
-                              type="checkbox"
-                              checked={!!selectedSplitMembers[m.id]}
-                              onChange={(e) => {
-                                setSelectedSplitMembers({
-                                  ...selectedSplitMembers,
-                                  [m.id]: e.target.checked
-                                });
-                              }}
-                              style={{ width: '16px', height: '16px', accentColor: 'var(--primary-accent)' }}
-                            />
-                            {m.name}
-                          </label>
-                        ))}
+                      {/* Individual Member Checklist & Config Inputs */}
+                      <div className="input-field" style={{ maxHeight: '200px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '10px', background: '#fff' }}>
+                        {visibleMembers.map((m) => {
+                          const isChecked = !!selectedSplitMembers[m.id];
+                          return (
+                            <div key={m.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+                              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '14px', fontWeight: 500, flex: 1 }}>
+                                <input
+                                  type="checkbox"
+                                  checked={isChecked}
+                                  onChange={(e) => {
+                                    setSelectedSplitMembers({
+                                      ...selectedSplitMembers,
+                                      [m.id]: e.target.checked
+                                    });
+                                    if (!e.target.checked) {
+                                      const updatedConfig = { ...newExpSplitConfig };
+                                      delete updatedConfig[m.id];
+                                      setNewExpSplitConfig(updatedConfig);
+                                    }
+                                  }}
+                                  style={{ width: '16px', height: '16px', accentColor: 'var(--primary-accent)' }}
+                                />
+                                {m.name}
+                              </label>
+
+                              {isChecked && newExpSplitMode !== 'equal' && (
+                                <input
+                                  type="text"
+                                  required
+                                  placeholder={
+                                    newExpSplitMode === 'custom' ? 'Weight (e.g. 1)' :
+                                    newExpSplitMode === 'exact' ? 'Amount (e.g. 200)' : 'Percent (e.g. 25)'
+                                  }
+                                  className="input-field"
+                                  style={{ padding: '6px 10px', fontSize: '13px', width: '125px', height: '32px' }}
+                                  value={newExpSplitConfig[m.id] || ''}
+                                  onChange={(e) => {
+                                    setNewExpSplitConfig({
+                                      ...newExpSplitConfig,
+                                      [m.id]: e.target.value
+                                    });
+                                  }}
+                                />
+                              )}
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
 
@@ -595,6 +711,72 @@ export default function App() {
                         </div>
                       );
                     })}
+                  </div>
+                )}
+
+                {/* Balances & Minimized Settlements Section */}
+                {activeTrip && visibleMembers.length > 0 && (
+                  <div style={{ marginTop: '32px', borderTop: '1px solid var(--border-color)', paddingTop: '24px' }}>
+                    <h3 style={{ fontSize: '18px', marginBottom: '16px' }}>Balances & Settlements</h3>
+                    
+                    {/* Balances List */}
+                    <div className="glass-card" style={{ marginBottom: '16px' }}>
+                      <h4 style={{ fontSize: '12px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '12px' }}>
+                        Member Balances
+                      </h4>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        {balances.map((b) => {
+                          const isPositive = b.balance > 0.01;
+                          const isNegative = b.balance < -0.01;
+                          const color = isPositive ? 'var(--color-success)' : isNegative ? 'var(--color-danger)' : 'var(--text-secondary)';
+                          const sign = isPositive ? '+' : '';
+                          return (
+                            <div key={b.memberId} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', fontWeight: 500 }}>
+                              <span>{b.name}</span>
+                              <span style={{ color, fontWeight: '700' }}>
+                                {sign}{activeTrip.baseCurrency === 'INR' ? '₹' : activeTrip.baseCurrency} {b.balance.toFixed(2)}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Settlements List */}
+                    <div className="glass-card">
+                      <h4 style={{ fontSize: '12px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '12px' }}>
+                        Settlement Actions (Minimized)
+                      </h4>
+                      {transfers.length === 0 ? (
+                        <p style={{ color: 'var(--color-success)', fontSize: '14px', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          🎉 All settlements complete! No outstanding debts.
+                        </p>
+                      ) : (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                          {transfers.map((t, idx) => {
+                            const fromName = members[t.from]?.name || 'Unknown';
+                            const toName = members[t.to]?.name || 'Unknown';
+                            return (
+                              <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <div style={{ fontSize: '14px', fontWeight: 500 }}>
+                                  <strong>{fromName}</strong> pays <strong>{toName}</strong>
+                                  <div style={{ fontSize: '15px', fontWeight: '700', color: 'var(--color-danger)', marginTop: '2px' }}>
+                                    {activeTrip.baseCurrency === 'INR' ? '₹' : activeTrip.baseCurrency} {t.amount.toFixed(2)}
+                                  </div>
+                                </div>
+                                <button
+                                  className="gradient-btn"
+                                  style={{ padding: '6px 12px', fontSize: '12px', borderRadius: '8px' }}
+                                  onClick={() => handleSettle(t.from, t.to, t.amount)}
+                                >
+                                  Settle Balance
+                                </button>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 )}
               </div>

@@ -230,19 +230,83 @@ export const useTripStore = create<TripStore>((set, get) => {
 
       if (participants.length === 0) return;
 
-      // Equal split among selected members
+      // Calculate resolved shares based on Split Mode
       const resolvedShares: Record<string, number> = {};
-      const splitShare = Number((expenseData.amount / participants.length).toFixed(2));
       
-      participants.forEach((memId) => {
-        resolvedShares[memId] = splitShare;
-      });
+      if (expenseData.splitMode === 'equal') {
+        const splitShare = Number((expenseData.amount / participants.length).toFixed(2));
+        participants.forEach((memId) => {
+          resolvedShares[memId] = splitShare;
+        });
 
-      // Handle minor division rounding adjustment
-      const calculatedSum = splitShare * participants.length;
-      const difference = Number((expenseData.amount - calculatedSum).toFixed(2));
-      if (difference !== 0 && participants[0]) {
-        resolvedShares[participants[0]] = Number((resolvedShares[participants[0]] + difference).toFixed(2));
+        // Handle minor division rounding adjustment
+        const calculatedSum = splitShare * participants.length;
+        const difference = Number((expenseData.amount - calculatedSum).toFixed(2));
+        if (difference !== 0 && participants[0]) {
+          resolvedShares[participants[0]] = Number((resolvedShares[participants[0]] + difference).toFixed(2));
+        }
+      } else if (expenseData.splitMode === 'custom') {
+        const config = expenseData.splitConfig || {};
+        let totalWeight = 0;
+        participants.forEach((id) => {
+          totalWeight += config[id] || 1;
+        });
+
+        if (totalWeight <= 0) {
+          // Fallback to equal split
+          const splitShare = Number((expenseData.amount / participants.length).toFixed(2));
+          participants.forEach((memId) => {
+            resolvedShares[memId] = splitShare;
+          });
+          const calculatedSum = splitShare * participants.length;
+          const difference = Number((expenseData.amount - calculatedSum).toFixed(2));
+          if (difference !== 0 && participants[0]) {
+            resolvedShares[participants[0]] = Number((resolvedShares[participants[0]] + difference).toFixed(2));
+          }
+        } else {
+          let runningSum = 0;
+          participants.forEach((id) => {
+            const weight = config[id] || 1;
+            const share = Number(((weight / totalWeight) * expenseData.amount).toFixed(2));
+            resolvedShares[id] = share;
+            runningSum += share;
+          });
+
+          // Adjust rounding
+          const difference = Number((expenseData.amount - runningSum).toFixed(2));
+          if (difference !== 0 && participants[0]) {
+            resolvedShares[participants[0]] = Number((resolvedShares[participants[0]] + difference).toFixed(2));
+          }
+        }
+      } else if (expenseData.splitMode === 'exact') {
+        const config = expenseData.splitConfig || {};
+        let runningSum = 0;
+        participants.forEach((id) => {
+          const share = Number((config[id] || 0).toFixed(2));
+          resolvedShares[id] = share;
+          runningSum += share;
+        });
+
+        // Adjust rounding if sum is slightly off due to float inputs
+        const difference = Number((expenseData.amount - runningSum).toFixed(2));
+        if (difference !== 0 && participants[0]) {
+          resolvedShares[participants[0]] = Number((resolvedShares[participants[0]] + difference).toFixed(2));
+        }
+      } else if (expenseData.splitMode === 'percentage') {
+        const config = expenseData.splitConfig || {};
+        let runningSum = 0;
+        participants.forEach((id) => {
+          const percentage = config[id] || 0;
+          const share = Number(((percentage / 100) * expenseData.amount).toFixed(2));
+          resolvedShares[id] = share;
+          runningSum += share;
+        });
+
+        // Adjust rounding
+        const difference = Number((expenseData.amount - runningSum).toFixed(2));
+        if (difference !== 0 && participants[0]) {
+          resolvedShares[participants[0]] = Number((resolvedShares[participants[0]] + difference).toFixed(2));
+        }
       }
 
       const newExpense: Expense = {
