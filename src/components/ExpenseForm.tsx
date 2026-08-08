@@ -1,6 +1,7 @@
 import React from 'react';
 import type { Category, Group, Member, Trip } from '../types';
 import { IconCheck, IconAlertCircle } from './Icons';
+import { CategoryIcon } from './CategoryIcon';
 
 type SplitMode = 'equal' | 'custom' | 'exact' | 'percentage';
 
@@ -94,6 +95,25 @@ export function ExpenseForm({
       <h4 style={{ marginBottom: '16px', fontSize: '16px' }}>{editingExpenseId ? 'Edit Expense' : 'New Expense'}</h4>
 
       <div className="form-group">
+        <label className="form-label">Amount ({trip?.baseCurrency})</label>
+        <div className="amount-hero">
+          <span className="amount-hero-symbol">{currencySymbol}</span>
+          <input
+            type="text"
+            inputMode="decimal"
+            required
+            className="amount-hero-input"
+            placeholder="0.00"
+            value={formatAmountDisplay(amount)}
+            onChange={(e) => {
+              const raw = e.target.value.replace(/,/g, '');
+              if (/^\d*\.?\d*$/.test(raw)) setAmount(raw);
+            }}
+          />
+        </div>
+      </div>
+
+      <div className="form-group">
         <label className="form-label">Expense Title</label>
         <input
           type="text"
@@ -102,22 +122,6 @@ export function ExpenseForm({
           placeholder="e.g. Flight Tickets"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-        />
-      </div>
-
-      <div className="form-group">
-        <label className="form-label">Amount ({trip?.baseCurrency})</label>
-        <input
-          type="text"
-          inputMode="decimal"
-          required
-          className="input-field"
-          placeholder="0.00"
-          value={formatAmountDisplay(amount)}
-          onChange={(e) => {
-            const raw = e.target.value.replace(/,/g, '');
-            if (/^\d*\.?\d*$/.test(raw)) setAmount(raw);
-          }}
         />
       </div>
 
@@ -132,7 +136,8 @@ export function ExpenseForm({
               onClick={() => setCategory(c.id)}
               aria-pressed={category === c.id}
             >
-              <span>{c.icon}</span> {c.name}
+              <CategoryIcon categoryId={c.id} fallbackEmoji={c.icon} size={15} />
+              {c.name}
             </button>
           ))}
         </div>
@@ -341,6 +346,17 @@ export function ExpenseForm({
                       });
                     }}
                   />
+                )}
+                {isChecked && (splitMode === 'custom' || splitMode === 'percentage') && splitConfig[m.id] && (
+                  <span className="member-config-equiv">
+                    = {currencySymbol}{(
+                      splitMode === 'percentage'
+                        ? ((parseFloat(splitConfig[m.id]) || 0) / 100) * (parseFloat(amount) || 0)
+                        : splitConfigSum > 0
+                          ? ((parseFloat(splitConfig[m.id]) || 0) / splitConfigSum) * (parseFloat(amount) || 0)
+                          : 0
+                    ).toFixed(2)}
+                  </span>
                 )}
               </div>
             );

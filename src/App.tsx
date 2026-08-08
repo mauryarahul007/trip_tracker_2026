@@ -241,8 +241,6 @@ export default function App() {
     .filter((d) => d.amount > 0)
     .sort((a, b) => b.amount - a.amount);
 
-  const topCategory = categoryData[0] ? `${categoryData[0].icon} ${categoryData[0].name}` : 'N/A';
-
   // Member spend calculations
   const memberSpentMap: Record<string, number> = {};
   visibleMembers.forEach((m) => {
@@ -875,20 +873,26 @@ export default function App() {
         /* Screen 2: Active Trip Dashboard */
         <div className="fade-in" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
           <header className="app-header">
-            <div className="app-title-group">
-              <span className="app-eyebrow">
-                <IconCalendar size={12} className="icon-sm" />
-                {activeTrip?.baseCurrency} · {activeTrip?.startDate} to {activeTrip?.endDate}
-              </span>
-              <h2 className="app-logo" style={{ fontSize: '21px', color: '#F2ECDC' }}>{activeTrip?.name}</h2>
+            <div className="app-header-top">
+              <div className="app-title-group">
+                <span className="app-eyebrow">
+                  <IconCalendar size={12} className="icon-sm" />
+                  {activeTrip?.baseCurrency} · {activeTrip?.startDate} to {activeTrip?.endDate}
+                </span>
+                <h2 className="app-logo" style={{ fontSize: '24px', color: '#F2ECDC' }}>{activeTrip?.name}</h2>
+              </div>
+              <button
+                className="secondary-btn"
+                style={{ padding: '7px 12px', fontSize: '12px', color: '#F2ECDC', borderColor: 'rgba(242,236,220,0.28)', background: 'rgba(242,236,220,0.06)', flexShrink: 0 }}
+                onClick={() => selectTrip(null)}
+              >
+                <IconChevronLeft size={14} className="icon-sm" /> Trips
+              </button>
             </div>
-            <button
-              className="secondary-btn"
-              style={{ padding: '7px 12px', fontSize: '12px', color: '#F2ECDC', borderColor: 'rgba(242,236,220,0.28)', background: 'rgba(242,236,220,0.06)', flexShrink: 0 }}
-              onClick={() => selectTrip(null)}
-            >
-              <IconChevronLeft size={14} className="icon-sm" /> Trips
-            </button>
+            <div className="app-header-stats">
+              <span>{visibleMembers.length} member{visibleMembers.length === 1 ? '' : 's'}</span>
+              <span>{activeTripExpenses.length} expense{activeTripExpenses.length === 1 ? '' : 's'}</span>
+            </div>
           </header>
 
           <main style={{ flex: 1, padding: '20px', overflowY: 'auto' }}>
@@ -1022,7 +1026,6 @@ export default function App() {
                 trip={activeTrip}
                 totalSpent={totalSpent}
                 averageCost={averageCost}
-                topCategory={topCategory}
                 biggestSpender={biggestSpender}
                 hasExpenses={nonSettlementExpenses.length > 0}
                 categoryData={categoryData}

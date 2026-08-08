@@ -1,6 +1,7 @@
 import React from 'react';
 import type { Category } from '../types';
 import { IconDownload, IconUpload, IconCheckCircle, IconAlertCircle } from './Icons';
+import { CategoryIcon } from './CategoryIcon';
 
 const CATEGORY_ICON_PRESETS = ['🍔', '🏨', '✈️', '🎟️', '🛍️', '📦', '🚗', '⛽', '🎬', '🍺', '💊', '🎁', '🧾', '🏥', '🎓', '🐾', '🎵', '🚕'];
 
@@ -55,7 +56,10 @@ export function SettingsTab({
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
           {categories.map((cat) => (
             <div key={cat.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', background: 'rgba(15,23,42,0.02)', borderRadius: 'var(--border-radius-sm)' }}>
-              <span style={{ fontSize: '14px' }}>{cat.icon} {cat.name}</span>
+              <span style={{ fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--primary-accent)' }}>
+                <CategoryIcon categoryId={cat.id} fallbackEmoji={cat.icon} size={16} />
+                <span style={{ color: 'var(--text-primary)' }}>{cat.name}</span>
+              </span>
               {cat.isCustom ? (
                 <button
                   className="secondary-btn"

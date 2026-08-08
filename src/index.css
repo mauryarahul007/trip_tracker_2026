@@ -270,12 +270,26 @@ h1, h2, h3, h4 {
 
 /* Header & Navigation */
 .app-header {
-  padding: 20px 20px 18px 20px;
+  padding: 20px 20px 16px 20px;
+  background-color: var(--text-primary);
+  color: #F2ECDC;
+}
+
+.app-header-top {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  background-color: var(--text-primary);
-  color: #F2ECDC;
+}
+
+.app-header-stats {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-family-mono);
+  font-size: 11.5px;
+  color: #92A2AE;
+  border-top: 1.5px dashed #3C4C58;
+  margin-top: 14px;
+  padding-top: 10px;
 }
 
 .app-title-group {
@@ -578,6 +592,46 @@ h1, h2, h3, h4 {
 .segmented-control button.active {
   background: var(--primary-accent);
   color: #fff;
+}
+
+/* Amount — the hero field of the expense form */
+.amount-hero {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 2px solid var(--primary-accent);
+  border-radius: var(--border-radius-md);
+  background: rgba(31, 110, 104, 0.06);
+  padding: 12px 18px;
+}
+.amount-hero-symbol {
+  font-family: var(--font-family-title);
+  font-size: 26px;
+  font-weight: 600;
+  color: var(--primary-accent);
+  flex-shrink: 0;
+}
+.amount-hero-input {
+  border: none;
+  background: transparent;
+  outline: none;
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  font-family: var(--font-family-mono);
+  font-size: 26px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.amount-hero-input::placeholder {
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+.member-config-equiv {
+  font-family: var(--font-family-mono);
+  font-size: 10.5px;
+  color: var(--text-muted);
 }
 
 /* Ink-stamp status badge */

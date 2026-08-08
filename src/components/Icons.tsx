@@ -145,3 +145,58 @@ export function IconCalendar({ size = 20, className = 'icon' }: IconProps) {
     </svg>
   );
 }
+
+export function IconCatFood({ size = 20, className = 'icon' }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" className={className} {...base}>
+      <path d="M6 2v6a1.5 1.5 0 003 0V2" />
+      <path d="M7.5 2v20" />
+      <path d="M17 2c-1.8 1-2.5 3-2.5 5.5S15.2 12 17 12v10" />
+    </svg>
+  );
+}
+
+export function IconCatStay({ size = 20, className = 'icon' }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" className={className} {...base}>
+      <path d="M4 21V10l8-6 8 6v11" />
+      <path d="M4 21h16" />
+      <path d="M9 21v-6h6v6" />
+    </svg>
+  );
+}
+
+export function IconCatTravel({ size = 20, className = 'icon' }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" className={className} {...base}>
+      <path d="M3 11l18-8-8 18-2-8-8-2z" />
+    </svg>
+  );
+}
+
+export function IconCatActivities({ size = 20, className = 'icon' }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" className={className} {...base}>
+      <path d="M3 20l5-9 3.5 5L15 9l6 11H3z" />
+    </svg>
+  );
+}
+
+export function IconCatShopping({ size = 20, className = 'icon' }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" className={className} {...base}>
+      <path d="M6.5 8h11l-1 12h-9L6.5 8z" />
+      <path d="M9 8V6.5a3 3 0 016 0V8" />
+    </svg>
+  );
+}
+
+export function IconCatMisc({ size = 20, className = 'icon' }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" className={className} {...base}>
+      <path d="M3 7.5l9-4 9 4-9 4-9-4z" />
+      <path d="M3 7.5v9l9 4 9-4v-9" />
+      <path d="M12 11.5v9" />
+    </svg>
+  );
+}

@@ -1,6 +1,7 @@
 import type { Category, Expense, Member, Trip } from '../types';
 import { IconSearch, IconEdit, IconTrash, IconAlertCircle } from './Icons';
 import { SwipeableRow } from './SwipeableRow';
+import { CategoryIcon } from './CategoryIcon';
 
 type Props = {
   trip: Trip | undefined;
@@ -162,8 +163,8 @@ export function ExpenseList({
                         style={{ display: 'flex', gap: '12px', alignItems: 'center', cursor: 'pointer', flex: '1 1 200px', minWidth: 0 }}
                         onClick={() => onReview(exp)}
                       >
-                        <div style={{ flexShrink: 0, fontSize: '21px', width: '38px', height: '38px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-surface-hover)', borderRadius: '50%' }}>
-                          {cat?.icon || '🏷️'}
+                        <div style={{ flexShrink: 0, width: '38px', height: '38px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-surface-hover)', borderRadius: '50%', color: 'var(--primary-accent)' }}>
+                          <CategoryIcon categoryId={cat?.id || ''} fallbackEmoji={cat?.icon || '🏷️'} size={19} />
                         </div>
                         <div style={{ minWidth: 0, display: 'flex', flexDirection: 'column', gap: '3px' }}>
                           <h4 style={{ fontSize: '15px', lineHeight: 1.3, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{exp.title}</h4>

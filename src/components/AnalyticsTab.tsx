@@ -1,4 +1,5 @@
 import type { Trip } from '../types';
+import { CategoryIcon } from './CategoryIcon';
 
 type CategoryDatum = { id: string; name: string; icon: string; amount: number; percentage: number };
 type MemberSpend = { id: string; name: string; amount: number; percentage: number };
@@ -8,7 +9,6 @@ type Props = {
   trip: Trip | undefined;
   totalSpent: number;
   averageCost: number;
-  topCategory: string;
   biggestSpender: string;
   hasExpenses: boolean;
   categoryData: CategoryDatum[];
@@ -21,7 +21,6 @@ export function AnalyticsTab({
   trip,
   totalSpent,
   averageCost,
-  topCategory,
   biggestSpender,
   hasExpenses,
   categoryData,
@@ -30,6 +29,7 @@ export function AnalyticsTab({
   dailySpendData,
 }: Props) {
   const currencySymbol = trip?.baseCurrency === 'INR' ? '₹' : trip?.baseCurrency;
+  const topCategory = categoryData[0];
 
   return (
     <div className="fade-in">
@@ -51,8 +51,15 @@ export function AnalyticsTab({
         </div>
         <div className="glass-card" style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
           <span style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Top Category</span>
-          <strong style={{ fontSize: '16px', color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-            {topCategory}
+          <strong style={{ fontSize: '16px', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px', overflow: 'hidden' }}>
+            {topCategory ? (
+              <>
+                <span style={{ color: 'var(--primary-accent)', flexShrink: 0 }}>
+                  <CategoryIcon categoryId={topCategory.id} fallbackEmoji={topCategory.icon} size={15} />
+                </span>
+                <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{topCategory.name}</span>
+              </>
+            ) : 'N/A'}
           </strong>
         </div>
         <div className="glass-card" style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
@@ -130,8 +137,9 @@ export function AnalyticsTab({
                 {categoryData.map((d, idx) => (
                   <div key={d.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '13px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: getCatColor(d.id, idx) }} />
-                      <span>{d.icon} {d.name}</span>
+                      <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: getCatColor(d.id, idx), flexShrink: 0 }} />
+                      <span style={{ color: 'var(--primary-accent)', display: 'flex' }}><CategoryIcon categoryId={d.id} fallbackEmoji={d.icon} size={14} /></span>
+                      <span>{d.name}</span>
                     </div>
                     <strong style={{ color: 'var(--text-secondary)' }}>
                       {d.percentage.toFixed(0)}%
