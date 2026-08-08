@@ -132,25 +132,25 @@ export function ExpenseList({
                   <div style={{ flexShrink: 0, fontSize: '24px', background: 'rgba(15,23,42,0.03)', padding: '8px', borderRadius: '50%' }}>
                     {cat?.icon || '🏷️'}
                   </div>
-                  <div style={{ minWidth: 0 }}>
-                    <h4 style={{ fontSize: '15px', color: 'var(--primary-accent)', textDecoration: 'underline', textDecorationColor: 'rgba(79, 70, 229, 0.2)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{exp.title}</h4>
-                    <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '2px' }}>
-                      Paid by: <strong>{payer?.name || 'Deleted'}</strong> • {exp.date}
+                  <div style={{ minWidth: 0, display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                    <h4 style={{ fontSize: '15px', lineHeight: 1.3, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{exp.title}</h4>
+                    <p style={{ fontSize: '13px', lineHeight: 1.4, fontWeight: 500, color: 'var(--text-secondary)' }}>
+                      {payer?.name || 'Deleted'} <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}>· {exp.date}</span>
                     </p>
-                    <p style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px', maxWidth: '240px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={splitNames}>
-                      Split with: {splitNames}
+                    <p style={{ fontSize: '12px', lineHeight: 1.4, fontWeight: 400, color: 'var(--text-muted)', maxWidth: '240px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={splitNames}>
+                      with {splitNames}
                     </p>
                   </div>
                 </div>
-                <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'flex-end', gap: '8px', flex: '0 1 auto' }}>
-                  <span style={{ fontSize: '16px', fontWeight: '700', color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
+                <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'flex-end', gap: '10px', flex: '0 1 auto' }}>
+                  <span style={{ fontFamily: 'var(--font-family-title)', fontSize: '17px', fontWeight: '700', color: 'var(--text-primary)', letterSpacing: '-0.01em', whiteSpace: 'nowrap' }}>
                     {currencySymbol} {exp.amount.toFixed(2)}
                   </span>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                     {!exp.title.startsWith('Settlement:') && (
                       <button
                         className="secondary-btn"
-                        style={{ padding: '4px 8px', fontSize: '11px' }}
+                        style={{ padding: '4px 10px', fontSize: '12px' }}
                         onClick={(e) => { e.stopPropagation(); onEdit(exp); }}
                       >
                         Edit
@@ -158,7 +158,7 @@ export function ExpenseList({
                     )}
                     <button
                       className="secondary-btn"
-                      style={{ padding: '4px 8px', fontSize: '11px', color: 'var(--color-danger)', borderColor: 'rgba(225,29,72,0.15)' }}
+                      style={{ padding: '4px 10px', fontSize: '12px', color: 'var(--color-danger)', borderColor: 'rgba(225,29,72,0.15)' }}
                       onClick={(e) => { e.stopPropagation(); onDelete(exp); }}
                     >
                       Delete

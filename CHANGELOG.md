@@ -48,3 +48,24 @@ Eight targeted improvements, implemented and user-validated one at a time (each 
 ### Files touched
 - `src/App.tsx`, `src/index.css`, `src/store/tripStore.ts`, `src/types/index.ts`
 - New: `src/components/ConfirmDialog.tsx`, `src/components/TripsListScreen.tsx`, `src/components/ExpenseForm.tsx`, `src/components/ExpenseList.tsx`, `src/components/BalancesSettlements.tsx`, `src/components/MembersGroupsTab.tsx`, `src/components/AnalyticsTab.tsx`, `src/components/SettingsTab.tsx`, `src/components/ExpenseReviewModal.tsx`, `src/components/UndoToasts.tsx`, `src/components/NavTabs.tsx`, `src/utils/image.ts`
+
+---
+
+## 2026-08-08 (later) — Expense card polish
+
+Follow-up fixes to the expense list card, found after using the app post-ship.
+
+### Layout overflow with large amounts — ✅ signed off
+- The card was a single-row flex with no wrap; a wide amount (e.g. large 6+ digit values) had nowhere to go but push Edit/Delete outside the container — flex items don't shrink below their content width by default.
+- Card now wraps to two rows when needed, the title truncates with ellipsis instead of stretching, and Edit/Delete stack vertically as a compact unit next to the amount instead of side-by-side, so far less horizontal room is needed before anything has to wrap at all.
+
+### Typography cleanup — ✅ signed off
+- The card crammed 5 competing font sizes (11/12/13/15/16px) into three tight lines, plus an underline on the title that read like a stray hyperlink.
+- Title: dropped the accent color + underline, now plain bold text.
+- Payer/date line: collapsed "Paid by: **Rahul** • Aug 8" into "Rahul · Aug 8" — the label was redundant next to the icon and layout.
+- Split line: "Split with: A, B, C" → "with A, B, C".
+- Amount: bumped to 17px and set in the display font (`--font-family-title`) for a distinct stat-like look instead of competing with body text.
+- Edit/Delete buttons: 11px → 12px for legibility and a slightly larger tap target.
+
+### Files touched
+- `src/components/ExpenseList.tsx`
