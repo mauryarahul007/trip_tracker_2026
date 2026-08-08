@@ -33,7 +33,7 @@ Click **+ Add Expense** on the Expenses tab. If you have no members yet, the app
 - **Expense Title** — short description, e.g. "Cab to airport"
 - **Amount** — the total bill in the trip's base currency (e.g. ₹850)
 - **Category** — pick from the dropdown (Food & Dining, Stay & Hotel, Travel & Transport, etc.)
-- **Date** — the date the expense happened
+- **Date** — the date the expense happened (defaults to today's local system date)
 - **Paid By** — the member who physically paid the bill
 
 ### 3. Select who splits the expense

@@ -71,7 +71,17 @@ export default function App() {
   const [newExpTitle, setNewExpTitle] = useState('');
   const [newExpAmount, setNewExpAmount] = useState('');
   const [newExpCategory, setNewExpCategory] = useState('');
-  const [newExpDate, setNewExpDate] = useState('');
+
+  // Get today's date in local YYYY-MM-DD format
+  const getTodayDateString = () => {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  const [newExpDate, setNewExpDate] = useState(getTodayDateString());
   const [newExpPayer, setNewExpPayer] = useState('');
   const [selectedSplitMembers, setSelectedSplitMembers] = useState<Record<string, boolean>>({});
   const [newExpSplitMode, setNewExpSplitMode] = useState<'equal' | 'custom' | 'exact' | 'percentage'>('equal');
@@ -267,7 +277,7 @@ export default function App() {
 
   // Sync split checkboxes and payer selection when opening add expense form
   useEffect(() => {
-    if (showAddExpense && visibleMembers.length > 0) {
+    if (showAddExpense && visibleMembers.length > 0 && !editingExpenseId) {
       // Default: select all active members for split
       const initialSplit: Record<string, boolean> = {};
       visibleMembers.forEach((m) => {
@@ -282,8 +292,11 @@ export default function App() {
       setNewExpSplitMode('equal');
       setNewExpSplitConfig({});
       setExpenseFormError('');
+
+      // Default: set today's date in local YYYY-MM-DD format
+      setNewExpDate(getTodayDateString());
     }
-  }, [showAddExpense, activeTripId]);
+  }, [showAddExpense, activeTripId, editingExpenseId, visibleMembers]);
 
   // Sync group checkboxes when opening add group form
   useEffect(() => {
