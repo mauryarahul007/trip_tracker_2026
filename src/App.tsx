@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useTripStore } from './store/tripStore';
 import { calculateSettlements } from './utils/settlement';
+import type { Expense } from './types';
 
 export default function App() {
   const {
@@ -56,6 +57,7 @@ export default function App() {
   const [selectedSplitMembers, setSelectedSplitMembers] = useState<Record<string, boolean>>({});
   const [newExpSplitMode, setNewExpSplitMode] = useState<'equal' | 'custom' | 'exact' | 'percentage'>('equal');
   const [newExpSplitConfig, setNewExpSplitConfig] = useState<Record<string, string>>({});
+  const [selectedReviewExpense, setSelectedReviewExpense] = useState<Expense | null>(null);
 
   // JSON Import state
   const [importJson, setImportJson] = useState('');
@@ -678,12 +680,15 @@ export default function App() {
                       const splitNames = exp.splitMemberIds.map((id) => members[id]?.name).filter(Boolean).join(', ');
                       return (
                         <div key={exp.id} className="glass-card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px' }}>
-                          <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                          <div 
+                            style={{ display: 'flex', gap: '12px', alignItems: 'center', cursor: 'pointer', flex: 1 }}
+                            onClick={() => setSelectedReviewExpense(exp)}
+                          >
                             <div style={{ fontSize: '24px', background: 'rgba(15,23,42,0.03)', padding: '8px', borderRadius: '50%' }}>
                               {cat?.icon || '🏷️'}
                             </div>
                             <div>
-                              <h4 style={{ fontSize: '15px' }}>{exp.title}</h4>
+                              <h4 style={{ fontSize: '15px', color: 'var(--primary-accent)', textDecoration: 'underline', textDecorationColor: 'rgba(79, 70, 229, 0.2)' }}>{exp.title}</h4>
                               <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '2px' }}>
                                 Paid by: <strong>{payer?.name || 'Deleted'}</strong> • {exp.date}
                               </p>
@@ -1021,6 +1026,148 @@ export default function App() {
               <span>Settings</span>
             </button>
           </nav>
+        </div>
+      )}
+
+      {/* Expense Review Modal Overlay */}
+      {selectedReviewExpense && (
+        <div 
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(15, 23, 42, 0.6)',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            zIndex: 1000,
+            padding: '20px',
+            backdropFilter: 'blur(4px)'
+          }}
+          onClick={() => setSelectedReviewExpense(null)}
+        >
+          <div 
+            className="glass-card fade-in" 
+            style={{
+              width: '100%',
+              maxWidth: '460px',
+              background: '#ffffff',
+              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+              border: '1px solid var(--border-color)',
+              maxHeight: '85vh',
+              overflowY: 'auto'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
+              <div>
+                <span style={{
+                  fontSize: '12px',
+                  fontWeight: 700,
+                  color: 'var(--primary-accent)',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em'
+                }}>
+                  Expense Review
+                </span>
+                <h3 style={{ fontSize: '22px', marginTop: '4px' }}>{selectedReviewExpense.title}</h3>
+              </div>
+              <button 
+                className="secondary-btn" 
+                style={{ padding: '6px 12px', fontSize: '13px' }} 
+                onClick={() => setSelectedReviewExpense(null)}
+              >
+                Close
+              </button>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              {/* Main amount display */}
+              <div style={{
+                background: 'rgba(79, 70, 229, 0.03)',
+                border: '1px dashed rgba(79, 70, 229, 0.15)',
+                borderRadius: 'var(--border-radius-md)',
+                padding: '16px',
+                textAlign: 'center'
+              }}>
+                <span style={{ fontSize: '13px', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
+                  Total Expense
+                </span>
+                <span style={{ fontSize: '32px', fontWeight: '800', color: 'var(--primary-accent)' }}>
+                  {activeTrip?.baseCurrency === 'INR' ? '₹' : activeTrip?.baseCurrency} {selectedReviewExpense.amount.toFixed(2)}
+                </span>
+              </div>
+
+              {/* Basic metadata */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', fontSize: '14px' }}>
+                <div className="glass-card" style={{ padding: '12px', boxShadow: 'none', background: 'rgba(15,23,42,0.01)' }}>
+                  <span style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', display: 'block', marginBottom: '2px' }}>
+                    Paid By
+                  </span>
+                  <strong>{members[selectedReviewExpense.paidBy]?.name || 'Unknown Payer'}</strong>
+                </div>
+                <div className="glass-card" style={{ padding: '12px', boxShadow: 'none', background: 'rgba(15,23,42,0.01)' }}>
+                  <span style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', display: 'block', marginBottom: '2px' }}>
+                    Date & Category
+                  </span>
+                  <span>{selectedReviewExpense.date} • {categories.find(c => c.id === selectedReviewExpense.category)?.name || 'Misc'}</span>
+                </div>
+              </div>
+
+              {/* Split details list */}
+              <div>
+                <h4 style={{
+                  fontSize: '12px',
+                  color: 'var(--text-secondary)',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em',
+                  marginBottom: '10px'
+                }}>
+                  Split Breakdown ({selectedReviewExpense.splitMode} split)
+                </h4>
+                
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  {selectedReviewExpense.splitMemberIds.map((memId: string) => {
+                    const mem = members[memId];
+                    const share = selectedReviewExpense.resolvedShares[memId] || 0;
+                    
+                    // Helper to get split configuration display
+                    let detailLabel = '';
+                    if (selectedReviewExpense.splitMode === 'custom') {
+                      detailLabel = `(Weight: ${selectedReviewExpense.splitConfig?.[memId] ?? 1})`;
+                    } else if (selectedReviewExpense.splitMode === 'percentage') {
+                      detailLabel = `(${selectedReviewExpense.splitConfig?.[memId] ?? 0}%)`;
+                    } else if (selectedReviewExpense.splitMode === 'exact') {
+                      detailLabel = `(Exact)`;
+                    }
+
+                    return (
+                      <div key={memId} style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        fontSize: '14px',
+                        padding: '10px 12px',
+                        background: 'rgba(15, 23, 42, 0.02)',
+                        borderRadius: 'var(--border-radius-sm)',
+                        border: '1px solid var(--border-color)'
+                      }}>
+                        <span>
+                          {mem?.name || 'Deleted Member'}{' '}
+                          <span style={{ color: 'var(--text-muted)', fontSize: '12px' }}>{detailLabel}</span>
+                        </span>
+                        <strong style={{ color: 'var(--text-primary)' }}>
+                          {activeTrip?.baseCurrency === 'INR' ? '₹' : activeTrip?.baseCurrency} {share.toFixed(2)}
+                        </strong>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>
