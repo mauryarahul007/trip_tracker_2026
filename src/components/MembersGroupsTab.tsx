@@ -76,6 +76,17 @@ export function MembersGroupsTab({
 
   const availableMembers = visibleMembers.filter((m) => !otherGroupMemberIds.has(m.id));
 
+  const memberInputRef = React.useRef<HTMLInputElement>(null);
+
+  React.useEffect(() => {
+    if (showAddMember) {
+      const timer = setTimeout(() => {
+        memberInputRef.current?.focus();
+      }, 50);
+      return () => clearTimeout(timer);
+    }
+  }, [showAddMember, editingMemberId]);
+
   return (
     <div className="fade-in">
       {showMembersRequiredNotice && (
@@ -92,38 +103,34 @@ export function MembersGroupsTab({
       {/* 1. Add Members Section */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
         <h3 style={{ fontSize: '18px' }}>Trip Members</h3>
-        {!showAddMember && (
-          <button className="gradient-btn" style={{ padding: '6px 12px', fontSize: '13px' }} onClick={() => setShowAddMember(true)}>
-            + Add Member
-          </button>
-        )}
       </div>
 
-      {showAddMember && (
-        <form className="glass-card fade-in" onSubmit={onAddMember} style={{ marginBottom: '24px' }}>
-          <h4 style={{ marginBottom: '14px', fontSize: '15px' }}>{editingMemberId ? 'Edit Member' : 'New Member'}</h4>
-          <div className="form-group">
-            <label className="form-label">Name</label>
-            <input
-              type="text"
-              required
-              className="input-field"
-              placeholder="Enter full name"
-              value={newMemberName}
-              onChange={(e) => setNewMemberName(e.target.value)}
-            />
-          </div>
-          {memberFormError && (
-            <p style={{ color: 'var(--color-danger)', fontSize: '13px', marginTop: '4px', marginBottom: '8px' }}>{memberFormError}</p>
-          )}
-          <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
-            <button type="submit" className="gradient-btn" style={{ flex: 1, padding: '10px' }}>
-              {editingMemberId ? 'Update' : 'Add'}
-            </button>
+      <form className="glass-card fade-in" onSubmit={onAddMember} style={{ marginBottom: '24px' }}>
+        <h4 style={{ marginBottom: '14px', fontSize: '15px' }}>{editingMemberId ? 'Edit Member' : 'New Member'}</h4>
+        <div className="form-group">
+          <label className="form-label">Name</label>
+          <input
+            ref={memberInputRef}
+            type="text"
+            required
+            className="input-field"
+            placeholder="Enter full name"
+            value={newMemberName}
+            onChange={(e) => setNewMemberName(e.target.value)}
+          />
+        </div>
+        {memberFormError && (
+          <p style={{ color: 'var(--color-danger)', fontSize: '13px', marginTop: '4px', marginBottom: '8px' }}>{memberFormError}</p>
+        )}
+        <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
+          <button type="submit" className="gradient-btn" style={{ flex: 1, padding: '10px' }}>
+            {editingMemberId ? 'Update' : 'Add'}
+          </button>
+          {editingMemberId && (
             <button type="button" className="secondary-btn" style={{ flex: 1, padding: '10px' }} onClick={() => setShowAddMember(false)}>Cancel</button>
-          </div>
-        </form>
-      )}
+          )}
+        </div>
+      </form>
 
       {/* Members list */}
       {activeTripMembers.length === 0 ? (
