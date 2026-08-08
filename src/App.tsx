@@ -35,8 +35,8 @@ export default function App() {
 
   const [showAddMember, setShowAddMember] = useState(false);
   const [newMemberName, setNewMemberName] = useState('');
-  const [newMemberType, setNewMemberType] = useState<'single' | 'couple'>('single');
-  const [newMemberPartner, setNewMemberPartner] = useState('');
+  const [newMemberType, setNewMemberType] = useState<'individual' | 'group'>('individual');
+  const [newMemberHeadCount, setNewMemberHeadCount] = useState(1);
   const [newMemberWeight, setNewMemberWeight] = useState(1);
 
   const [showAddExpense, setShowAddExpense] = useState(false);
@@ -90,17 +90,18 @@ export default function App() {
   const handleAddMember = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newMemberName) return;
+    const finalHeadCount = newMemberType === 'individual' ? 1 : newMemberHeadCount;
     await addMember(
       newMemberName,
       newMemberType,
-      newMemberWeight,
-      newMemberType === 'couple' ? newMemberPartner : undefined
+      finalHeadCount,
+      newMemberWeight
     );
     // Reset
     setNewMemberName('');
-    setNewMemberPartner('');
     setNewMemberWeight(1);
-    setNewMemberType('single');
+    setNewMemberHeadCount(1);
+    setNewMemberType('individual');
     setShowAddMember(false);
   };
 
@@ -515,25 +516,36 @@ export default function App() {
                         className="input-field select-field"
                         value={newMemberType}
                         onChange={(e) => {
-                          const val = e.target.value as 'single' | 'couple';
+                          const val = e.target.value as 'individual' | 'group';
                           setNewMemberType(val);
+                          if (val === 'group') {
+                            setNewMemberHeadCount(2);
+                            setNewMemberWeight(2);
+                          } else {
+                            setNewMemberHeadCount(1);
+                            setNewMemberWeight(1);
+                          }
                         }}
                       >
-                        <option value="single">Single Person (1 Unit)</option>
-                        <option value="couple">Couple (2 Units)</option>
+                        <option value="individual">Individual (1 Person)</option>
+                        <option value="group">Group / Family (N People)</option>
                       </select>
                     </div>
 
-                    {newMemberType === 'couple' && (
+                    {newMemberType === 'group' && (
                       <div className="form-group fade-in">
-                        <label className="form-label">Partner's Name</label>
+                        <label className="form-label">Number of People (Head Count)</label>
                         <input
-                          type="text"
+                          type="number"
+                          min="2"
                           required
                           className="input-field"
-                          placeholder="e.g. Jane Doe"
-                          value={newMemberPartner}
-                          onChange={(e) => setNewMemberPartner(e.target.value)}
+                          value={newMemberHeadCount}
+                          onChange={(e) => {
+                            const count = parseInt(e.target.value) || 2;
+                            setNewMemberHeadCount(count);
+                            setNewMemberWeight(count);
+                          }}
                         />
                       </div>
                     )}
@@ -569,10 +581,10 @@ export default function App() {
                       <div key={member.id} className="glass-card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 16px' }}>
                         <div>
                           <h4 style={{ fontSize: '15px' }}>
-                            {member.name} {member.type === 'couple' && `& ${member.partnerName}`}
+                            {member.name}
                           </h4>
                           <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
-                            Weight: {member.defaultWeight} • {member.type === 'couple' ? 'Couple' : 'Single'}
+                            {member.type === 'group' ? `Group of ${member.headCount}` : 'Individual'} • Weight: {member.defaultWeight}
                           </span>
                         </div>
                         <button

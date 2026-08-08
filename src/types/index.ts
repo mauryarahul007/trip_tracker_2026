@@ -12,10 +12,9 @@ export interface Trip {
 export interface Member {
   id: string;
   name: string;
-  type: 'single' | 'couple';
-  headCount: number;
-  partnerName?: string;
-  defaultWeight: number;
+  type: 'individual' | 'group';
+  headCount: number; // 1 for individual, N for group
+  defaultWeight: number; // defaults to headCount, custom weighting allowed
   archived?: boolean; // soft-delete flag
 }
 

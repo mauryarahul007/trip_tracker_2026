@@ -15,7 +15,7 @@ interface TripStore extends TripState {
   deleteTrip: (id: string) => Promise<void>;
   
   // Member Actions
-  addMember: (name: string, type: 'single' | 'couple', defaultWeight: number, partnerName?: string) => Promise<void>;
+  addMember: (name: string, type: 'individual' | 'group', headCount: number, defaultWeight: number) => Promise<void>;
   toggleArchiveMember: (id: string) => Promise<void>;
   
   // Expense Actions
@@ -133,7 +133,7 @@ export const useTripStore = create<TripStore>((set, get) => {
       });
     },
 
-    addMember: async (name, type, defaultWeight, partnerName) => {
+    addMember: async (name, type, headCount, defaultWeight) => {
       const activeTripId = get().activeTripId;
       if (!activeTripId) return;
 
@@ -142,8 +142,7 @@ export const useTripStore = create<TripStore>((set, get) => {
         id: memberId,
         name,
         type,
-        headCount: type === 'couple' ? 2 : 1,
-        partnerName,
+        headCount,
         defaultWeight,
       };
 
