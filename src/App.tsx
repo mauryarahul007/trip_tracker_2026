@@ -25,6 +25,7 @@ export default function App() {
     updateGroup,
     deleteGroup,
     addExpense,
+    updateExpense,
     deleteExpense,
     exportDatabase,
     importDatabase,
@@ -61,6 +62,11 @@ export default function App() {
   const [newExpSplitMode, setNewExpSplitMode] = useState<'equal' | 'custom' | 'exact' | 'percentage'>('equal');
   const [newExpSplitConfig, setNewExpSplitConfig] = useState<Record<string, string>>({});
   const [selectedReviewExpense, setSelectedReviewExpense] = useState<Expense | null>(null);
+  const [editingExpenseId, setEditingExpenseId] = useState<string | null>(null);
+
+  // Undo delete toast state
+  const [pendingDeleteExpense, setPendingDeleteExpense] = useState<Expense | null>(null);
+  const [undoTimer, setUndoTimer] = useState<ReturnType<typeof setTimeout> | null>(null);
 
   // JSON Import state
   const [importJson, setImportJson] = useState('');
@@ -289,7 +295,7 @@ export default function App() {
       }
     }
 
-    await addExpense({
+    const expensePayload = {
       title: newExpTitle.trim(),
       amount: amountVal,
       currency: activeTrip?.baseCurrency || 'INR',
@@ -299,14 +305,59 @@ export default function App() {
       splitMode: newExpSplitMode,
       splitMemberIds: splitIds,
       splitConfig: newExpSplitMode !== 'equal' ? splitConfig : undefined,
-    });
+    };
 
+    if (editingExpenseId) {
+      await updateExpense(editingExpenseId, expensePayload);
+    } else {
+      await addExpense(expensePayload);
+    }
+
+    setEditingExpenseId(null);
     setNewExpTitle('');
     setNewExpAmount('');
     setNewExpDate('');
     setNewExpSplitMode('equal');
     setNewExpSplitConfig({});
     setShowAddExpense(false);
+  };
+
+  // Opens expense form pre-filled for editing
+  const handleStartEditExpense = (exp: Expense) => {
+    setEditingExpenseId(exp.id);
+    setNewExpTitle(exp.title);
+    setNewExpAmount(String(exp.amount));
+    setNewExpCategory(exp.category);
+    setNewExpDate(exp.date);
+    setNewExpPayer(exp.paidBy);
+    setNewExpSplitMode(exp.splitMode as 'equal' | 'custom' | 'exact' | 'percentage');
+    const initialSplit: Record<string, boolean> = {};
+    exp.splitMemberIds.forEach((id) => { initialSplit[id] = true; });
+    setSelectedSplitMembers(initialSplit);
+    const initialConfig: Record<string, string> = {};
+    if (exp.splitConfig) {
+      Object.entries(exp.splitConfig).forEach(([id, val]) => { initialConfig[id] = String(val); });
+    }
+    setNewExpSplitConfig(initialConfig);
+    setShowAddExpense(true);
+  };
+
+  // Undo-delete: stage the expense, start a 5-second timer
+  const handleDeleteExpense = (exp: Expense) => {
+    // Cancel any prior pending deletion first
+    if (undoTimer) clearTimeout(undoTimer);
+    setPendingDeleteExpense(exp);
+    const timer = setTimeout(() => {
+      deleteExpense(exp.id);
+      setPendingDeleteExpense(null);
+    }, 5000);
+    setUndoTimer(timer);
+  };
+
+  const handleUndoDelete = () => {
+    if (undoTimer) clearTimeout(undoTimer);
+    setUndoTimer(null);
+    setPendingDeleteExpense(null);
   };
 
   // Group quick select toggles for splits
@@ -578,7 +629,7 @@ export default function App() {
                 {/* Add Expense Form Drawer */}
                 {showAddExpense && (
                   <form className="glass-card fade-in" onSubmit={handleAddExpense} style={{ marginBottom: '24px' }}>
-                    <h4 style={{ marginBottom: '16px', fontSize: '16px' }}>New Expense</h4>
+                    <h4 style={{ marginBottom: '16px', fontSize: '16px' }}>{editingExpenseId ? 'Edit Expense' : 'New Expense'}</h4>
 
                     <div className="form-group">
                       <label className="form-label">Expense Title</label>
@@ -763,8 +814,20 @@ export default function App() {
                     </div>
 
                     <div style={{ display: 'flex', gap: '12px', marginTop: '16px' }}>
-                      <button type="submit" className="gradient-btn" style={{ flex: 1 }}>Add Expense</button>
-                      <button type="button" className="secondary-btn" style={{ flex: 1 }} onClick={() => setShowAddExpense(false)}>Cancel</button>
+                      <button type="submit" className="gradient-btn" style={{ flex: 1 }}>
+                        {editingExpenseId ? 'Update Expense' : 'Add Expense'}
+                      </button>
+                      <button
+                        type="button"
+                        className="secondary-btn"
+                        style={{ flex: 1 }}
+                        onClick={() => {
+                          setEditingExpenseId(null);
+                          setShowAddExpense(false);
+                        }}
+                      >
+                        Cancel
+                      </button>
                     </div>
                   </form>
                 )}
@@ -799,18 +862,23 @@ export default function App() {
                               </p>
                             </div>
                           </div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                             <span style={{ fontSize: '16px', fontWeight: '700', color: 'var(--text-primary)' }}>
                               {activeTrip?.baseCurrency === 'INR' ? '₹' : activeTrip?.baseCurrency} {exp.amount.toFixed(2)}
                             </span>
+                            {!exp.title.startsWith('Settlement:') && (
+                              <button
+                                className="secondary-btn"
+                                style={{ padding: '4px 8px', fontSize: '11px' }}
+                                onClick={(e) => { e.stopPropagation(); handleStartEditExpense(exp); }}
+                              >
+                                Edit
+                              </button>
+                            )}
                             <button
                               className="secondary-btn"
                               style={{ padding: '4px 8px', fontSize: '11px', color: 'var(--color-danger)', borderColor: 'rgba(225,29,72,0.15)' }}
-                              onClick={() => {
-                                if (confirm(`Delete "${exp.title}"?`)) {
-                                  deleteExpense(exp.id);
-                                }
-                              }}
+                              onClick={(e) => { e.stopPropagation(); handleDeleteExpense(exp); }}
                             >
                               Delete
                             </button>
@@ -864,22 +932,34 @@ export default function App() {
                           {transfers.map((t, idx) => {
                             const fromName = members[t.from]?.name || 'Unknown';
                             const toName = members[t.to]?.name || 'Unknown';
+                            // Check if this transfer has already been settled
+                            const isSettled = activeTripExpenses.some(
+                              (e) =>
+                                e.title.startsWith('Settlement:') &&
+                                e.paidBy === t.from &&
+                                e.splitMemberIds.includes(t.to) &&
+                                Math.abs(e.amount - t.amount) < 0.02
+                            );
                             return (
                               <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: idx < transfers.length - 1 ? '1px dashed rgba(15,23,42,0.05)' : 'none' }}>
                                 <div style={{ fontSize: '14px' }}>
                                   <strong>{fromName}</strong> owes <strong>{toName}</strong>
                                 </div>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                  <span style={{ fontSize: '14px', fontWeight: '700', color: 'var(--color-danger)' }}>
+                                  <span style={{ fontSize: '14px', fontWeight: '700', color: isSettled ? 'var(--color-success)' : 'var(--color-danger)' }}>
                                     {activeTrip.baseCurrency === 'INR' ? '₹' : activeTrip.baseCurrency} {t.amount.toFixed(2)}
                                   </span>
-                                  <button
-                                    className="gradient-btn"
-                                    style={{ padding: '6px 12px', fontSize: '12px', borderRadius: '8px' }}
-                                    onClick={() => handleSettle(t.from, t.to, t.amount)}
-                                  >
-                                    Settle
-                                  </button>
+                                  {isSettled ? (
+                                    <span style={{ fontSize: '12px', fontWeight: '600', color: 'var(--color-success)', display: 'flex', alignItems: 'center', gap: '4px' }}>✓ Settled</span>
+                                  ) : (
+                                    <button
+                                      className="gradient-btn"
+                                      style={{ padding: '6px 12px', fontSize: '12px', borderRadius: '8px' }}
+                                      onClick={() => handleSettle(t.from, t.to, t.amount)}
+                                    >
+                                      Settle
+                                    </button>
+                                  )}
                                 </div>
                               </div>
                             );
@@ -1543,6 +1623,29 @@ export default function App() {
               </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Global Undo Delete Toast - renders on any tab */}
+      {pendingDeleteExpense && (
+        <div style={{
+          position: 'fixed', bottom: '24px', left: '50%', transform: 'translateX(-50%)',
+          background: 'rgba(15,23,42,0.92)', color: '#fff', borderRadius: '12px',
+          padding: '12px 20px', display: 'flex', alignItems: 'center', gap: '16px',
+          boxShadow: '0 4px 20px rgba(0,0,0,0.25)', zIndex: 9999, fontSize: '14px',
+          backdropFilter: 'blur(8px)', minWidth: '280px'
+        }}>
+          <span>🗑️ <strong>'{pendingDeleteExpense.title}'</strong> deleted</span>
+          <button
+            onClick={handleUndoDelete}
+            style={{
+              background: 'var(--primary-accent)', color: '#fff', border: 'none',
+              borderRadius: '8px', padding: '6px 14px', cursor: 'pointer',
+              fontWeight: '600', fontSize: '13px'
+            }}
+          >
+            Undo
+          </button>
         </div>
       )}
     </div>

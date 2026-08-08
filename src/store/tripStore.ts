@@ -25,6 +25,7 @@ interface TripStore extends TripState {
   
   // Expense Actions
   addExpense: (expense: Omit<Expense, 'id' | 'tripId' | 'resolvedShares' | 'createdAt' | 'updatedAt'>) => Promise<void>;
+  updateExpense: (id: string, expense: Omit<Expense, 'id' | 'tripId' | 'resolvedShares' | 'createdAt' | 'updatedAt'>) => Promise<void>;
   deleteExpense: (id: string) => Promise<void>;
   
   // Category Actions
@@ -44,6 +45,65 @@ const DEFAULT_CATEGORIES: Category[] = [
   { id: 'cat-shopping', name: 'Shopping', icon: '🛍️', isCustom: false },
   { id: 'cat-misc', name: 'Misc & Others', icon: '📦', isCustom: false },
 ];
+
+// Pure helper — resolves exact money shares for each participant
+const resolveShares = (
+  expenseData: Omit<Expense, 'id' | 'tripId' | 'resolvedShares' | 'createdAt' | 'updatedAt'>,
+  participants: string[]
+): Record<string, number> => {
+  const resolvedShares: Record<string, number> = {};
+  const { amount, splitMode, splitConfig, paidBy } = expenseData;
+
+  const applyRounding = (shares: Record<string, number>) => {
+    const sum = Object.values(shares).reduce((a, b) => a + b, 0);
+    const diff = Number((amount - sum).toFixed(2));
+    if (diff !== 0) {
+      const roundTarget = participants.includes(paidBy) ? paidBy : participants[0];
+      if (roundTarget) {
+        shares[roundTarget] = Number((shares[roundTarget] + diff).toFixed(2));
+      }
+    }
+    return shares;
+  };
+
+  if (splitMode === 'equal') {
+    const share = Number((amount / participants.length).toFixed(2));
+    participants.forEach((id) => { resolvedShares[id] = share; });
+    return applyRounding(resolvedShares);
+  }
+
+  if (splitMode === 'custom') {
+    const config = splitConfig || {};
+    const totalWeight = participants.reduce((sum, id) => sum + (config[id] || 1), 0);
+    if (totalWeight <= 0) {
+      const share = Number((amount / participants.length).toFixed(2));
+      participants.forEach((id) => { resolvedShares[id] = share; });
+    } else {
+      participants.forEach((id) => {
+        resolvedShares[id] = Number((((config[id] || 1) / totalWeight) * amount).toFixed(2));
+      });
+    }
+    return applyRounding(resolvedShares);
+  }
+
+  if (splitMode === 'exact') {
+    const config = splitConfig || {};
+    participants.forEach((id) => {
+      resolvedShares[id] = Number((config[id] || 0).toFixed(2));
+    });
+    return applyRounding(resolvedShares);
+  }
+
+  if (splitMode === 'percentage') {
+    const config = splitConfig || {};
+    participants.forEach((id) => {
+      resolvedShares[id] = Number((((config[id] || 0) / 100) * amount).toFixed(2));
+    });
+    return applyRounding(resolvedShares);
+  }
+
+  return resolvedShares;
+};
 
 export const useTripStore = create<TripStore>((set, get) => {
   // Helper to persist state and handle storage errors safely
@@ -241,113 +301,52 @@ export const useTripStore = create<TripStore>((set, get) => {
       const activeTripId = get().activeTripId;
       if (!activeTripId) return;
 
-      const activeTrip = get().trips.find((t) => t.id === activeTripId);
-      if (!activeTrip) return;
-
-      // Filter participant members who are actually active (non-archived)
       const participants = expenseData.splitMemberIds.filter(
         (id) => get().members[id] && !get().members[id].archived
       );
-
       if (participants.length === 0) return;
-
-      // Calculate resolved shares based on Split Mode
-      const resolvedShares: Record<string, number> = {};
-      
-      if (expenseData.splitMode === 'equal') {
-        const splitShare = Number((expenseData.amount / participants.length).toFixed(2));
-        participants.forEach((memId) => {
-          resolvedShares[memId] = splitShare;
-        });
-
-        // Handle minor division rounding adjustment
-        const calculatedSum = splitShare * participants.length;
-        const difference = Number((expenseData.amount - calculatedSum).toFixed(2));
-        if (difference !== 0 && participants[0]) {
-          resolvedShares[participants[0]] = Number((resolvedShares[participants[0]] + difference).toFixed(2));
-        }
-      } else if (expenseData.splitMode === 'custom') {
-        const config = expenseData.splitConfig || {};
-        let totalWeight = 0;
-        participants.forEach((id) => {
-          totalWeight += config[id] || 1;
-        });
-
-        if (totalWeight <= 0) {
-          // Fallback to equal split
-          const splitShare = Number((expenseData.amount / participants.length).toFixed(2));
-          participants.forEach((memId) => {
-            resolvedShares[memId] = splitShare;
-          });
-          const calculatedSum = splitShare * participants.length;
-          const difference = Number((expenseData.amount - calculatedSum).toFixed(2));
-          if (difference !== 0 && participants[0]) {
-            resolvedShares[participants[0]] = Number((resolvedShares[participants[0]] + difference).toFixed(2));
-          }
-        } else {
-          let runningSum = 0;
-          participants.forEach((id) => {
-            const weight = config[id] || 1;
-            const share = Number(((weight / totalWeight) * expenseData.amount).toFixed(2));
-            resolvedShares[id] = share;
-            runningSum += share;
-          });
-
-          // Adjust rounding
-          const difference = Number((expenseData.amount - runningSum).toFixed(2));
-          if (difference !== 0 && participants[0]) {
-            resolvedShares[participants[0]] = Number((resolvedShares[participants[0]] + difference).toFixed(2));
-          }
-        }
-      } else if (expenseData.splitMode === 'exact') {
-        const config = expenseData.splitConfig || {};
-        let runningSum = 0;
-        participants.forEach((id) => {
-          const share = Number((config[id] || 0).toFixed(2));
-          resolvedShares[id] = share;
-          runningSum += share;
-        });
-
-        // Adjust rounding if sum is slightly off due to float inputs
-        const difference = Number((expenseData.amount - runningSum).toFixed(2));
-        if (difference !== 0 && participants[0]) {
-          resolvedShares[participants[0]] = Number((resolvedShares[participants[0]] + difference).toFixed(2));
-        }
-      } else if (expenseData.splitMode === 'percentage') {
-        const config = expenseData.splitConfig || {};
-        let runningSum = 0;
-        participants.forEach((id) => {
-          const percentage = config[id] || 0;
-          const share = Number(((percentage / 100) * expenseData.amount).toFixed(2));
-          resolvedShares[id] = share;
-          runningSum += share;
-        });
-
-        // Adjust rounding
-        const difference = Number((expenseData.amount - runningSum).toFixed(2));
-        if (difference !== 0 && participants[0]) {
-          resolvedShares[participants[0]] = Number((resolvedShares[participants[0]] + difference).toFixed(2));
-        }
-      }
 
       const newExpense: Expense = {
         ...expenseData,
         id: `exp-${Date.now()}`,
         tripId: activeTripId,
-        resolvedShares,
+        resolvedShares: resolveShares(expenseData, participants),
         createdAt: Date.now(),
         updatedAt: Date.now(),
       };
 
       const updatedExpenses = [...get().expenses, newExpense];
-      
       const updatedTrips = get().trips.map((t) => {
-        if (t.id === activeTripId) {
-          return { ...t, updatedAt: Date.now() };
-        }
+        if (t.id === activeTripId) return { ...t, updatedAt: Date.now() };
         return t;
       });
+      await persist({ expenses: updatedExpenses, trips: updatedTrips });
+    },
 
+    updateExpense: async (id, expenseData) => {
+      const activeTripId = get().activeTripId;
+      if (!activeTripId) return;
+
+      const existing = get().expenses.find((e) => e.id === id);
+      if (!existing) return;
+
+      const participants = expenseData.splitMemberIds.filter(
+        (mId) => get().members[mId] && !get().members[mId].archived
+      );
+      if (participants.length === 0) return;
+
+      const updatedExpense: Expense = {
+        ...existing,
+        ...expenseData,
+        resolvedShares: resolveShares(expenseData, participants),
+        updatedAt: Date.now(),
+      };
+
+      const updatedExpenses = get().expenses.map((e) => (e.id === id ? updatedExpense : e));
+      const updatedTrips = get().trips.map((t) => {
+        if (t.id === activeTripId) return { ...t, updatedAt: Date.now() };
+        return t;
+      });
       await persist({ expenses: updatedExpenses, trips: updatedTrips });
     },
 
