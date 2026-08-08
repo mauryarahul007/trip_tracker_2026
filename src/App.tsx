@@ -64,6 +64,7 @@ export default function App() {
   const [newGroupName, setNewGroupName] = useState('');
   const [selectedGroupMembers, setSelectedGroupMembers] = useState<Record<string, boolean>>({});
   const [editingGroupId, setEditingGroupId] = useState<string | null>(null);
+  const [isGroupNameAuto, setIsGroupNameAuto] = useState(true);
 
   // Form states - Expenses
   const [showAddExpense, setShowAddExpense] = useState(false);
@@ -287,10 +288,32 @@ export default function App() {
   // Sync group checkboxes when opening add group form
   useEffect(() => {
     if (showAddGroup) {
-      setSelectedGroupMembers({});
-      setGroupFormError('');
+      if (!editingGroupId) {
+        setSelectedGroupMembers({});
+        setGroupFormError('');
+        setIsGroupNameAuto(true);
+      }
     }
-  }, [showAddGroup]);
+  }, [showAddGroup, editingGroupId]);
+
+  // Auto-generate group name based on selected members
+  useEffect(() => {
+    if (isGroupNameAuto) {
+      const selectedNames = visibleMembers
+        .filter((m) => selectedGroupMembers[m.id])
+        .map((m) => m.name);
+
+      let autoName = '';
+      if (selectedNames.length === 1) {
+        autoName = selectedNames[0];
+      } else if (selectedNames.length === 2) {
+        autoName = `${selectedNames[0]} & ${selectedNames[1]}`;
+      } else if (selectedNames.length > 2) {
+        autoName = `${selectedNames.slice(0, -1).join(', ')} & ${selectedNames[selectedNames.length - 1]}`;
+      }
+      setNewGroupName(autoName);
+    }
+  }, [selectedGroupMembers, isGroupNameAuto, visibleMembers]);
 
   // Form submissions
   const handleCreateTrip = async (e: React.FormEvent) => {
@@ -331,6 +354,15 @@ export default function App() {
     });
   };
 
+  const handleGroupNameChange = (value: string) => {
+    setNewGroupName(value);
+    if (value.trim() === '') {
+      setIsGroupNameAuto(true);
+    } else {
+      setIsGroupNameAuto(false);
+    }
+  };
+
   const handleCreateGroup = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newGroupName.trim()) return;
@@ -349,6 +381,7 @@ export default function App() {
     setSelectedGroupMembers({});
     setEditingGroupId(null);
     setShowAddGroup(false);
+    setIsGroupNameAuto(true);
   };
 
   const handleStartEditGroup = (grp: Group) => {
@@ -359,6 +392,7 @@ export default function App() {
       initialChecked[id] = true;
     });
     setSelectedGroupMembers(initialChecked);
+    setIsGroupNameAuto(false);
     setShowAddGroup(true);
   };
 
@@ -368,6 +402,7 @@ export default function App() {
     setSelectedGroupMembers({});
     setGroupFormError('');
     setShowAddGroup(false);
+    setIsGroupNameAuto(true);
   };
 
   const handleAddExpense = async (e: React.FormEvent) => {
@@ -833,7 +868,7 @@ export default function App() {
                 showAddGroup={showAddGroup}
                 setShowAddGroup={setShowAddGroup}
                 newGroupName={newGroupName}
-                setNewGroupName={setNewGroupName}
+                setNewGroupName={handleGroupNameChange}
                 selectedGroupMembers={selectedGroupMembers}
                 setSelectedGroupMembers={setSelectedGroupMembers}
                 editingGroupId={editingGroupId}
