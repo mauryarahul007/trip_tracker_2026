@@ -92,12 +92,15 @@ interface Expense {
   splitMemberIds: string[]; // members participating in this expense
   splitConfig?: Record<string, number>; // memberId → weight/amount/percentage (not set for "equal")
   resolvedShares: Record<string, number>; // memberId → exact share in baseCurrency (computed at save time)
+  receiptImage?: string; // optional, compressed base64 JPEG data URL
   createdAt: number;
   updatedAt: number;
 }
 ```
 
 **Key design:** `resolvedShares` is computed and stored at save time, not derived at render time. This means editing or archiving members after the fact does not corrupt historical expense data.
+
+**`receiptImage`:** set from an optional file upload on the expense form. Downscaled to a max 1000px dimension and re-encoded as JPEG (quality 0.7) client-side in `src/utils/image.ts` before being stored — keeps IndexedDB entries small even for full camera-resolution photos. Rendered as a thumbnail on the edit form and full-size (click to open in a new tab) in the expense review modal.
 
 **Settlement expenses:** Settlement transfers are recorded as regular expenses with `title.startsWith("Settlement:")`. They are excluded from charts, analytics, and CSV expense lists, but are included in balance calculations.
 
@@ -183,7 +186,7 @@ Defined in `src/store/tripStore.ts`. All actions are async and persist state to 
 
 | Action | Signature | Effect |
 |--------|-----------|--------|
-| `addCategory` | `(name) → void` | Creates custom category |
+| `addCategory` | `(name, icon?) → void` | Creates custom category; `icon` defaults to 🏷️ if omitted |
 | `deleteCategory` | `(id) → void` | Removes custom category only |
 
 ### Backup actions

@@ -46,15 +46,19 @@ Select one of the four modes:
 
 **Equal** — no extra input needed. The amount is divided by the number of checked members. Rounding remainders go to the payer.
 
-**Custom Weight** — a number field appears next to each checked member. Enter relative weights (e.g. 2, 1, 1). Shares are proportional: weight ÷ total weight × amount.
+**Custom Weight** — a number field appears next to each checked member. Enter relative weights (e.g. 2, 1, 1). Shares are proportional: weight ÷ total weight × amount. A running "Total weight" readout updates as you type (informational only — no target to hit).
 
-**Exact Amount** — enter each person's exact share. The sum must equal the total amount (within ₹0.02 tolerance for rounding). The form validates this before saving.
+**Exact Amount** — enter each person's exact share. The sum must equal the total amount (within ₹0.02 tolerance for rounding). A running total (e.g. "₹640.00 / ₹850.00") appears below the checklist, in red until it matches and green with a ✓ once it does — you don't have to submit to find out it's wrong.
 
-**Percentage** — enter each person's percentage. The sum must equal 100% (within 0.05% tolerance).
+**Percentage** — enter each person's percentage. The sum must equal 100% (within 0.05% tolerance). Same live running total, e.g. "82.0 / 100%" turning green at 100%.
 
-### 5. Save the expense
+### 5. Attach a receipt (optional)
 
-Click **Add Expense**. The expense appears in the list immediately.
+Click the **Receipt** file picker and choose a photo. It's compressed client-side before saving, then shown as a small thumbnail with a **Remove** button if you want to swap it out. The full photo is viewable later from the expense's review modal (click any expense in the list), with a click-to-open-full-size link.
+
+### 6. Save the expense
+
+Click **Add Expense**. The expense appears in the list immediately, sorted by date (most recent first).
 
 ---
 
@@ -78,6 +82,18 @@ Click **Undo** within 5 seconds to restore the expense. After 5 seconds it is pe
 
 ---
 
+## Finding an expense
+
+Once a trip has expenses, a search bar and filter row appear above the expense list:
+
+- **Search** — matches expense titles as you type
+- **Category** / **Member** dropdowns — narrow to one category or one member (payer or split participant)
+- **From / To date** — restrict to a date range
+
+Filters combine (all conditions must match). A **Clear** button appears once any filter is active. You can also jump straight to a member's expenses by clicking their row in **Balances & Settlements** — it switches to the Expenses tab with that member's filter already applied.
+
+---
+
 ## Verification
 
 After saving, scroll down to **Balances & Settlements**. The member who paid should show a positive balance ("gets back ₹X"), and participants should show reduced or negative balances ("owes ₹Y").
@@ -92,3 +108,4 @@ After saving, scroll down to **Balances & Settlements**. The member who paid sho
 | "Sum of amounts must equal total" | In Exact mode, make sure individual amounts add up to the total |
 | "Sum of percentages must equal 100%" | In Percentage mode, ensure percentages add up to 100 |
 | A member doesn't appear in the split list | They may be archived — check Members & Groups tab |
+| "Could not process that image" | The receipt photo failed to load/decode — try a different file |

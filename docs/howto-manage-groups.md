@@ -24,7 +24,7 @@ Click **+ Create Group** (hidden if the trip has no active members yet).
 - **Group Name** — e.g. "Rahul & Priya"
 - **Group Members** — check every member who belongs to this group
 
-Click **Save Group**. You'll get an alert and the form will stay open if you try to save with zero members checked.
+Click **Save Group**. If you try to save with zero members checked, an inline error appears under the form and it stays open.
 
 ### 3. Use the group in an expense
 
@@ -48,7 +48,7 @@ Editing a group only changes the group's name/membership going forward — it do
 
 ## Deleting a group
 
-Click **Delete** on a group card, then confirm. This removes the group only — **member records are not affected**, and any expenses that previously used the group's quick-select stay exactly as they were (the group's member list was copied into the expense at save time, not referenced live).
+Click **Delete** on a group card, then confirm in the dialog that appears. The group disappears immediately, but you have **5 seconds to undo** — a toast appears at the bottom of the screen with an **Undo** button. After 5 seconds (or if you don't click Undo) the group is permanently removed — **member records are not affected**, and any expenses that previously used the group's quick-select stay exactly as they were (the group's member list was copied into the expense at save time, not referenced live).
 
 ---
 
@@ -65,7 +65,7 @@ After creating or editing a group, open **+ Add Expense** and confirm the group'
 | "Please select at least one member to add to the group" | Check at least one member's checkbox before saving |
 | **+ Create Group** button is missing | The trip has zero non-archived members — add a member first |
 | Group quick-select doesn't include a member I expect | Archived members are silently skipped by group quick-select, even if they were in the group when it was created |
-| I deleted a group by mistake | Groups aren't versioned — recreate it with **+ Create Group**; no data is lost on existing expenses |
+| I deleted a group by mistake | Click **Undo** on the toast within 5 seconds. After that, groups aren't versioned — recreate it with **+ Create Group**; no data is lost on existing expenses |
 
 ---
 

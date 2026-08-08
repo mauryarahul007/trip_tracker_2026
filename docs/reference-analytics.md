@@ -1,6 +1,6 @@
 # Reference: Charts & Analytics
 
-The **Analytics** tab (`src/App.tsx`, `activeTab === 'analytics'`) computes four stats and three charts entirely client-side from the active trip's expenses. There is no separate analytics module — everything is derived inline during render from `expenses`, `members`, and `categories`.
+The **Analytics** tab (`src/components/AnalyticsTab.tsx`) renders four stats and three charts from props computed in `App.tsx` (`categoryData`, `memberSpentList`, `dailySpendData`, etc.) — there is no separate analytics module, the numbers are derived inline during render from `expenses`, `members`, and `categories`.
 
 All analytics figures exclude settlement transfers: any expense whose `title` starts with `"Settlement:"` is filtered out before any calculation runs (`nonSettlementExpenses`). This keeps "money you actually spent" separate from "money you moved to settle up."
 

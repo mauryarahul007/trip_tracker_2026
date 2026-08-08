@@ -11,7 +11,11 @@ A **mobile-first, offline-first PWA** for splitting trip expenses among friends 
 
 - **Trip management** — create trips with a base currency, start/end dates, and members
 - **Member & group management** — add members, create named groups (couples, kids, etc.) for quick split selection
-- **Expense recording** — log expenses with 4 split modes: equal, custom weight, exact amount, or percentage
+- **Expense recording** — log expenses with 4 split modes: equal, custom weight, exact amount, or percentage, with live running-total feedback as you type
+- **Receipt photos** — attach an optional photo to any expense; auto-compressed client-side before it's saved
+- **Search & filter** — find expenses by title, category, member, or date range; tap any balance to jump straight to that member's expenses
+- **Custom categories** — six built-ins plus your own, with a click-to-pick emoji icon
+- **Undo-delete** — deleting an expense, trip, or group gives you a 5-second undo window before it's gone
 - **Settlement engine** — greedy algorithm minimizes the number of transfers needed to settle all debts
 - **Charts & analytics** — spending breakdown by category, per-member contribution overview
 - **Export to Excel-compatible CSV** — expenses, net balances, and settlement plan in one file
@@ -52,8 +56,21 @@ src/
 ├── services/storage.ts     # IndexedDB persistence via localforage
 ├── utils/settlement.ts     # Greedy settlement minimization algorithm
 ├── utils/csvExport.ts      # Excel-compatible CSV exporter
-├── App.tsx                 # Full application UI (single-file component)
-└── index.css               # Design system (CSS variables, component classes)
+├── utils/image.ts          # Client-side receipt photo compression
+├── App.tsx                 # Owns state/handlers, wires tab components together
+├── components/
+│   ├── TripsListScreen.tsx     # Home screen: trip list + create trip form
+│   ├── ExpenseForm.tsx         # Add/edit expense drawer
+│   ├── ExpenseList.tsx         # Search/filter bar + expense list
+│   ├── BalancesSettlements.tsx # Balances panel + settlement actions
+│   ├── MembersGroupsTab.tsx    # Members & Groups tab
+│   ├── AnalyticsTab.tsx        # Charts & Analytics tab
+│   ├── SettingsTab.tsx         # Categories, CSV export, JSON backup/restore
+│   ├── ExpenseReviewModal.tsx  # Expense detail modal
+│   ├── ConfirmDialog.tsx       # Reusable confirm modal (replaces window.confirm)
+│   ├── UndoToasts.tsx          # Stacked 5s undo-delete toasts
+│   └── NavTabs.tsx             # Bottom tab bar
+└── index.css                # Design system (CSS variables, component classes)
 
 public/
 ├── manifest.json           # PWA manifest
@@ -69,6 +86,7 @@ public/
 | [Getting Started Tutorial](docs/tutorial-getting-started.md) | From install to your first settled trip |
 | [How to Record an Expense](docs/howto-record-expense.md) | Choosing the right split mode, editing, undo-delete |
 | [How to Create and Edit Groups](docs/howto-manage-groups.md) | Named groups for one-click split selection |
+| [How to Manage Categories](docs/howto-manage-categories.md) | Adding and deleting custom expense categories |
 | [How to Back Up and Restore Data](docs/howto-backup-restore.md) | Full-database JSON export/import |
 | [How to Export to Excel](docs/howto-export-csv.md) | Downloading the settlement spreadsheet |
 | [Reference: Data Model](docs/reference-data-model.md) | All types, fields, and constraints |

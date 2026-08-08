@@ -88,7 +88,7 @@ Scroll down to **Balances & Settlements**. You'll see:
 - **Priya** — gets back (paid Dinner, lower weight)
 - **Amit** — owes (equal share Hotel + Dinner)
 
-The **Settlement Actions** panel shows the minimum transfers needed. Click **Settle** next to a transfer to record it as paid. The row changes to **✓ Settled**.
+The **Settlement Actions** panel shows the minimum transfers needed. Click **Settle** next to a transfer, confirm in the dialog that appears, and the row changes to **✓ Settled**.
 
 ---
 
