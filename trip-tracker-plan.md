@@ -15,6 +15,8 @@
 - **PWA first.** One codebase, web and mobile. Native later if needed.
 - **Categories user-editable.** Presets plus custom.
 - **No receipt photos.** Skipped by design.
+- **Auto Group Name Logic.** Group names are automatically formatted based on selected members (e.g. `A & B`, `A, B & C`) with support for custom names.
+- **Default Expense Date.** Today's local system date is selected by default when adding a new expense.
 
 ---
 
