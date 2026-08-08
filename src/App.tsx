@@ -21,6 +21,7 @@ export default function App() {
     addMember,
     toggleArchiveMember,
     createGroup,
+    updateGroup,
     deleteGroup,
     addExpense,
     deleteExpense,
@@ -46,6 +47,7 @@ export default function App() {
   const [showAddGroup, setShowAddGroup] = useState(false);
   const [newGroupName, setNewGroupName] = useState('');
   const [selectedGroupMembers, setSelectedGroupMembers] = useState<Record<string, boolean>>({});
+  const [editingGroupId, setEditingGroupId] = useState<string | null>(null);
 
   // Form states - Expenses
   const [showAddExpense, setShowAddExpense] = useState(false);
@@ -231,9 +233,14 @@ export default function App() {
       alert('Please select at least one member to add to the group.');
       return;
     }
-    await createGroup(newGroupName.trim(), selectedIds);
+    if (editingGroupId) {
+      await updateGroup(editingGroupId, newGroupName.trim(), selectedIds);
+    } else {
+      await createGroup(newGroupName.trim(), selectedIds);
+    }
     setNewGroupName('');
     setSelectedGroupMembers({});
+    setEditingGroupId(null);
     setShowAddGroup(false);
   };
 
@@ -958,7 +965,7 @@ export default function App() {
 
                   {showAddGroup && (
                     <form className="glass-card fade-in" onSubmit={handleCreateGroup} style={{ marginBottom: '24px' }}>
-                      <h4 style={{ marginBottom: '14px', fontSize: '15px' }}>New Group</h4>
+                      <h4 style={{ marginBottom: '14px', fontSize: '15px' }}>{editingGroupId ? 'Edit Group' : 'New Group'}</h4>
                       
                       <div className="form-group">
                         <label className="form-label">Group Name</label>
@@ -973,7 +980,7 @@ export default function App() {
                       </div>
 
                       <div className="form-group">
-                        <label className="form-label">Add Members to Group</label>
+                        <label className="form-label">Group Members</label>
                         <div className="input-field" style={{ maxHeight: '150px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px', background: '#fff' }}>
                           {visibleMembers.map((m) => (
                             <label key={m.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '14px' }}>
@@ -995,8 +1002,22 @@ export default function App() {
                       </div>
 
                       <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
-                        <button type="submit" className="gradient-btn" style={{ flex: 1, padding: '10px' }}>Save Group</button>
-                        <button type="button" className="secondary-btn" style={{ flex: 1, padding: '10px' }} onClick={() => setShowAddGroup(false)}>Cancel</button>
+                        <button type="submit" className="gradient-btn" style={{ flex: 1, padding: '10px' }}>
+                          {editingGroupId ? 'Update Group' : 'Save Group'}
+                        </button>
+                        <button 
+                          type="button" 
+                          className="secondary-btn" 
+                          style={{ flex: 1, padding: '10px' }} 
+                          onClick={() => {
+                            setEditingGroupId(null);
+                            setNewGroupName('');
+                            setSelectedGroupMembers({});
+                            setShowAddGroup(false);
+                          }}
+                        >
+                          Cancel
+                        </button>
                       </div>
                     </form>
                   )}
@@ -1023,17 +1044,35 @@ export default function App() {
                                 Members: {grpMemberNames || 'None'}
                               </p>
                             </div>
-                            <button
-                              className="secondary-btn"
-                              style={{ padding: '4px 10px', fontSize: '11px', color: 'var(--color-danger)', borderColor: 'rgba(225,29,72,0.15)' }}
-                              onClick={() => {
-                                if (confirm(`Delete group "${grp.name}"? (Individual members are NOT deleted)`)) {
-                                  deleteGroup(grp.id);
-                                }
-                              }}
-                            >
-                              Delete
-                            </button>
+                            <div style={{ display: 'flex', gap: '8px' }}>
+                              <button
+                                className="secondary-btn"
+                                style={{ padding: '4px 10px', fontSize: '11px' }}
+                                onClick={() => {
+                                  setEditingGroupId(grp.id);
+                                  setNewGroupName(grp.name);
+                                  const initialChecked: Record<string, boolean> = {};
+                                  grp.memberIds.forEach((id) => {
+                                    initialChecked[id] = true;
+                                  });
+                                  setSelectedGroupMembers(initialChecked);
+                                  setShowAddGroup(true);
+                                }}
+                              >
+                                Edit
+                              </button>
+                              <button
+                                className="secondary-btn"
+                                style={{ padding: '4px 10px', fontSize: '11px', color: 'var(--color-danger)', borderColor: 'rgba(225,29,72,0.15)' }}
+                                onClick={() => {
+                                  if (confirm(`Delete group "${grp.name}"? (Individual members are NOT deleted)`)) {
+                                    deleteGroup(grp.id);
+                                  }
+                                }}
+                              >
+                                Delete
+                              </button>
+                            </div>
                           </div>
                         );
                       })}
