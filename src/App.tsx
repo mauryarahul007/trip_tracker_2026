@@ -6,6 +6,7 @@ export default function App() {
     trips,
     activeTripId,
     members,
+    groups,
     expenses,
     categories,
     initialized,
@@ -17,6 +18,8 @@ export default function App() {
     deleteTrip,
     addMember,
     toggleArchiveMember,
+    createGroup,
+    deleteGroup,
     addExpense,
     deleteExpense,
     exportDatabase,
@@ -26,25 +29,30 @@ export default function App() {
   // Navigation tabs: 'expenses' | 'members' | 'settings'
   const [activeTab, setActiveTab] = useState<'expenses' | 'members' | 'settings'>('expenses');
 
-  // Form states
+  // Form states - Trips
   const [showAddTrip, setShowAddTrip] = useState(false);
   const [newTripName, setNewTripName] = useState('');
   const [newTripStart, setNewTripStart] = useState('');
   const [newTripEnd, setNewTripEnd] = useState('');
   const [newTripCurrency, setNewTripCurrency] = useState('INR');
 
+  // Form states - Members
   const [showAddMember, setShowAddMember] = useState(false);
   const [newMemberName, setNewMemberName] = useState('');
-  const [newMemberType, setNewMemberType] = useState<'individual' | 'group'>('individual');
-  const [newMemberHeadCount, setNewMemberHeadCount] = useState(1);
-  const [newMemberWeight, setNewMemberWeight] = useState(1);
 
+  // Form states - Groups
+  const [showAddGroup, setShowAddGroup] = useState(false);
+  const [newGroupName, setNewGroupName] = useState('');
+  const [selectedGroupMembers, setSelectedGroupMembers] = useState<Record<string, boolean>>({});
+
+  // Form states - Expenses
   const [showAddExpense, setShowAddExpense] = useState(false);
   const [newExpTitle, setNewExpTitle] = useState('');
   const [newExpAmount, setNewExpAmount] = useState('');
   const [newExpCategory, setNewExpCategory] = useState('');
   const [newExpDate, setNewExpDate] = useState('');
   const [newExpPayer, setNewExpPayer] = useState('');
+  const [selectedSplitMembers, setSelectedSplitMembers] = useState<Record<string, boolean>>({});
 
   // JSON Import state
   const [importJson, setImportJson] = useState('');
@@ -56,6 +64,20 @@ export default function App() {
     initialize();
   }, [initialize]);
 
+  const activeTrip = trips.find((t) => t.id === activeTripId);
+  const activeTripExpenses = expenses.filter((e) => e.tripId === activeTripId);
+
+  // Get active trip members and groups
+  const activeTripMembers = activeTrip
+    ? activeTrip.memberIds.map((id) => members[id]).filter(Boolean)
+    : [];
+  const visibleMembers = activeTripMembers.filter((m) => !m.archived);
+  const archivedMembers = activeTripMembers.filter((m) => m.archived);
+
+  const activeTripGroups = activeTrip
+    ? (activeTrip.groupIds || []).map((id) => groups[id]).filter(Boolean)
+    : [];
+
   // Set default form values when opening forms
   useEffect(() => {
     if (categories.length > 0 && !newExpCategory) {
@@ -63,23 +85,33 @@ export default function App() {
     }
   }, [categories, newExpCategory]);
 
-  const activeTrip = trips.find((t) => t.id === activeTripId);
-  const activeTripExpenses = expenses.filter((e) => e.tripId === activeTripId);
+  // Sync split checkboxes and payer selection when opening add expense form
+  useEffect(() => {
+    if (showAddExpense && visibleMembers.length > 0) {
+      // Default: select all active members for split
+      const initialSplit: Record<string, boolean> = {};
+      visibleMembers.forEach((m) => {
+        initialSplit[m.id] = true;
+      });
+      setSelectedSplitMembers(initialSplit);
+      
+      // Default: set first member as payer
+      setNewExpPayer(visibleMembers[0].id);
+    }
+  }, [showAddExpense, activeTripId]);
 
-  // Get active trip members list
-  const activeTripMembers = activeTrip
-    ? activeTrip.memberIds.map((id) => members[id]).filter(Boolean)
-    : [];
-
-  const visibleMembers = activeTripMembers.filter((m) => !m.archived);
-  const archivedMembers = activeTripMembers.filter((m) => m.archived);
+  // Sync group checkboxes when opening add group form
+  useEffect(() => {
+    if (showAddGroup) {
+      setSelectedGroupMembers({});
+    }
+  }, [showAddGroup]);
 
   // Form submissions
   const handleCreateTrip = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTripName || !newTripStart || !newTripEnd) return;
     await createTrip(newTripName, newTripStart, newTripEnd, newTripCurrency);
-    // Reset
     setNewTripName('');
     setNewTripStart('');
     setNewTripEnd('');
@@ -89,48 +121,66 @@ export default function App() {
 
   const handleAddMember = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newMemberName) return;
-    const finalHeadCount = newMemberType === 'individual' ? 1 : newMemberHeadCount;
-    await addMember(
-      newMemberName,
-      newMemberType,
-      finalHeadCount,
-      newMemberWeight
-    );
-    // Reset
+    if (!newMemberName.trim()) return;
+    await addMember(newMemberName.trim());
     setNewMemberName('');
-    setNewMemberWeight(1);
-    setNewMemberHeadCount(1);
-    setNewMemberType('individual');
     setShowAddMember(false);
+  };
+
+  const handleCreateGroup = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newGroupName.trim()) return;
+    const selectedIds = Object.keys(selectedGroupMembers).filter((id) => selectedGroupMembers[id]);
+    if (selectedIds.length === 0) {
+      alert('Please select at least one member to add to the group.');
+      return;
+    }
+    await createGroup(newGroupName.trim(), selectedIds);
+    setNewGroupName('');
+    setSelectedGroupMembers({});
+    setShowAddGroup(false);
   };
 
   const handleAddExpense = async (e: React.FormEvent) => {
     e.preventDefault();
     const amountVal = parseFloat(newExpAmount);
-    if (!newExpTitle || isNaN(amountVal) || amountVal <= 0 || !newExpPayer || !newExpCategory || !newExpDate) {
+    const splitIds = Object.keys(selectedSplitMembers).filter((id) => selectedSplitMembers[id]);
+
+    if (!newExpTitle.trim() || isNaN(amountVal) || amountVal <= 0 || !newExpPayer || !newExpCategory || !newExpDate) {
       alert('Please fill out all required fields with valid entries.');
+      return;
+    }
+    if (splitIds.length === 0) {
+      alert('Please select at least one member for the expense division.');
       return;
     }
 
     await addExpense({
-      title: newExpTitle,
+      title: newExpTitle.trim(),
       amount: amountVal,
       currency: activeTrip?.baseCurrency || 'INR',
       category: newExpCategory,
       date: newExpDate,
       paidBy: newExpPayer,
-      splitMode: 'equal', // default mode for Phase 1
+      splitMode: 'equal',
+      splitMemberIds: splitIds,
     });
 
-    // Reset
     setNewExpTitle('');
     setNewExpAmount('');
     setNewExpDate('');
-    if (activeTripMembers.length > 0) {
-      setNewExpPayer(activeTripMembers[0].id);
-    }
     setShowAddExpense(false);
+  };
+
+  // Group quick select toggles for splits
+  const applyGroupToSplit = (memberIds: string[], checked: boolean) => {
+    const updated = { ...selectedSplitMembers };
+    memberIds.forEach((id) => {
+      if (members[id] && !members[id].archived) {
+        updated[id] = checked;
+      }
+    });
+    setSelectedSplitMembers(updated);
   };
 
   const handleImport = async () => {
@@ -160,7 +210,7 @@ export default function App() {
     URL.revokeObjectURL(url);
   };
 
-  // Loading spinner view
+  // Loading view
   if (!initialized) {
     return (
       <div className="app-container" style={{ justifyContent: 'center', alignItems: 'center' }}>
@@ -169,8 +219,8 @@ export default function App() {
           <div style={{
             width: '40px',
             height: '40px',
-            border: '4px solid rgba(255,255,255,0.1)',
-            borderTopColor: 'var(--primary-accent-light)',
+            border: '4px solid rgba(15, 23, 42, 0.05)',
+            borderTopColor: 'var(--primary-accent)',
             borderRadius: '50%',
             animation: 'spin 1s linear infinite',
             margin: '0 auto'
@@ -187,7 +237,7 @@ export default function App() {
 
   return (
     <div className="app-container">
-      {/* Quota Exceeded / Storage Blocked Error Notification */}
+      {/* Storage Toast Alert */}
       {storageError && (
         <div className="toast-alert">
           <div>
@@ -198,13 +248,13 @@ export default function App() {
         </div>
       )}
 
-      {/* Screen 1: Trips List (if no active trip selected) */}
+      {/* Screen 1: Trips List */}
       {!activeTripId ? (
         <div className="fade-in" style={{ padding: '24px 20px', flex: 1, display: 'flex', flexDirection: 'column' }}>
           <header style={{ marginBottom: '32px' }}>
             <h1 className="app-logo">Trip Tracker 2026</h1>
             <p style={{ color: 'var(--text-secondary)', fontSize: '14px', marginTop: '4px' }}>
-              Offline-first cost splitting & analytics
+              Offline-first cost splitting & groups
             </p>
           </header>
 
@@ -218,7 +268,7 @@ export default function App() {
               )}
             </div>
 
-            {/* Create Trip Form inline */}
+            {/* Create Trip Form */}
             {showAddTrip && (
               <form className="glass-card fade-in" onSubmit={handleCreateTrip} style={{ marginBottom: '24px' }}>
                 <h3 style={{ marginBottom: '16px', fontSize: '18px' }}>Create New Trip</h3>
@@ -302,7 +352,7 @@ export default function App() {
                     </div>
                     <button
                       className="secondary-btn"
-                      style={{ padding: '8px 12px', color: 'var(--color-danger)', borderColor: 'rgba(239,68,68,0.2)' }}
+                      style={{ padding: '8px 12px', color: 'var(--color-danger)', borderColor: 'rgba(225,29,72,0.2)' }}
                       onClick={(e) => {
                         e.stopPropagation();
                         if (confirm(`Are you sure you want to delete "${trip.name}"?`)) {
@@ -338,26 +388,24 @@ export default function App() {
             {activeTab === 'expenses' && (
               <div className="fade-in">
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                  <h3 style={{ fontSize: '18px' }}>Trip Expenses</h3>
+                  <h3 style={{ fontSize: '18px' }}>Expenses</h3>
                   <button
                     className="gradient-btn"
                     style={{ padding: '8px 16px', fontSize: '14px' }}
                     onClick={() => {
-                      if (activeTripMembers.length === 0) {
+                      if (visibleMembers.length === 0) {
                         alert('Please add members to the trip first before recording expenses.');
                         setActiveTab('members');
                         return;
                       }
                       setShowAddExpense(true);
-                      // Pre-select first member
-                      setNewExpPayer(activeTripMembers[0].id);
                     }}
                   >
                     + Add Expense
                   </button>
                 </div>
 
-                {/* Add Expense Drawer/Form */}
+                {/* Add Expense Form Drawer */}
                 {showAddExpense && (
                   <form className="glass-card fade-in" onSubmit={handleAddExpense} style={{ marginBottom: '24px' }}>
                     <h4 style={{ marginBottom: '16px', fontSize: '16px' }}>New Expense</h4>
@@ -368,7 +416,7 @@ export default function App() {
                         type="text"
                         required
                         className="input-field"
-                        placeholder="e.g. Dinner at Airport"
+                        placeholder="e.g. Flight Tickets"
                         value={newExpTitle}
                         onChange={(e) => setNewExpTitle(e.target.value)}
                       />
@@ -428,8 +476,74 @@ export default function App() {
                       </div>
                     </div>
 
-                    <div style={{ display: 'flex', gap: '12px', marginTop: '12px' }}>
-                      <button type="submit" className="gradient-btn" style={{ flex: 1 }}>Add</button>
+                    {/* Checkboxes to select division participants */}
+                    <div className="form-group" style={{ marginTop: '8px' }}>
+                      <label className="form-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span>Division of Expense</span>
+                        <div style={{ display: 'flex', gap: '8px', fontSize: '11px', textTransform: 'none' }}>
+                          <button
+                            type="button"
+                            style={{ background: 'none', border: 'none', color: 'var(--primary-accent)', cursor: 'pointer', fontWeight: 600 }}
+                            onClick={() => {
+                              const allChecked: Record<string, boolean> = {};
+                              visibleMembers.forEach((m) => { allChecked[m.id] = true; });
+                              setSelectedSplitMembers(allChecked);
+                            }}
+                          >
+                            Select All
+                          </button>
+                          <span style={{ color: 'var(--text-muted)' }}>|</span>
+                          <button
+                            type="button"
+                            style={{ background: 'none', border: 'none', color: 'var(--primary-accent)', cursor: 'pointer', fontWeight: 600 }}
+                            onClick={() => setSelectedSplitMembers({})}
+                          >
+                            Clear All
+                          </button>
+                        </div>
+                      </label>
+
+                      {/* Quick Select Group Buttons */}
+                      {activeTripGroups.length > 0 && (
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '8px' }}>
+                          <span style={{ fontSize: '11px', color: 'var(--text-secondary)', alignSelf: 'center', marginRight: '4px' }}>Groups:</span>
+                          {activeTripGroups.map((grp) => (
+                            <button
+                              key={grp.id}
+                              type="button"
+                              className="secondary-btn"
+                              style={{ padding: '4px 8px', fontSize: '11px', borderRadius: '8px' }}
+                              onClick={() => applyGroupToSplit(grp.memberIds, true)}
+                            >
+                              ＋ {grp.name}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Individual Member Checklist */}
+                      <div className="input-field" style={{ maxHeight: '150px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '10px', background: '#fff' }}>
+                        {visibleMembers.map((m) => (
+                          <label key={m.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '14px', fontWeight: 500 }}>
+                            <input
+                              type="checkbox"
+                              checked={!!selectedSplitMembers[m.id]}
+                              onChange={(e) => {
+                                setSelectedSplitMembers({
+                                  ...selectedSplitMembers,
+                                  [m.id]: e.target.checked
+                                });
+                              }}
+                              style={{ width: '16px', height: '16px', accentColor: 'var(--primary-accent)' }}
+                            />
+                            {m.name}
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '12px', marginTop: '16px' }}>
+                      <button type="submit" className="gradient-btn" style={{ flex: 1 }}>Add Expense</button>
                       <button type="button" className="secondary-btn" style={{ flex: 1 }} onClick={() => setShowAddExpense(false)}>Cancel</button>
                     </div>
                   </form>
@@ -445,16 +559,20 @@ export default function App() {
                     {activeTripExpenses.map((exp) => {
                       const payer = members[exp.paidBy];
                       const cat = categories.find((c) => c.id === exp.category);
+                      const splitNames = exp.splitMemberIds.map((id) => members[id]?.name).filter(Boolean).join(', ');
                       return (
                         <div key={exp.id} className="glass-card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px' }}>
                           <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                            <div style={{ fontSize: '24px', background: 'rgba(255,255,255,0.05)', padding: '8px', borderRadius: '50%' }}>
+                            <div style={{ fontSize: '24px', background: 'rgba(15,23,42,0.03)', padding: '8px', borderRadius: '50%' }}>
                               {cat?.icon || '🏷️'}
                             </div>
                             <div>
                               <h4 style={{ fontSize: '15px' }}>{exp.title}</h4>
-                              <p style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
-                                Paid by: {payer?.name || 'Deleted member'} • {exp.date}
+                              <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '2px' }}>
+                                Paid by: <strong>{payer?.name || 'Deleted'}</strong> • {exp.date}
+                              </p>
+                              <p style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px', maxWidth: '240px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={splitNames}>
+                                Split with: {splitNames}
                               </p>
                             </div>
                           </div>
@@ -464,7 +582,7 @@ export default function App() {
                             </span>
                             <button
                               className="secondary-btn"
-                              style={{ padding: '4px 8px', fontSize: '11px', color: 'var(--color-danger)', borderColor: 'rgba(239,68,68,0.15)' }}
+                              style={{ padding: '4px 8px', fontSize: '11px', color: 'var(--color-danger)', borderColor: 'rgba(225,29,72,0.15)' }}
                               onClick={() => {
                                 if (confirm(`Delete "${exp.title}"?`)) {
                                   deleteExpense(exp.id);
@@ -484,112 +602,50 @@ export default function App() {
 
             {activeTab === 'members' && (
               <div className="fade-in">
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                  <h3 style={{ fontSize: '18px' }}>Members</h3>
+                {/* 1. Add Members Section */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                  <h3 style={{ fontSize: '18px' }}>Trip Members</h3>
                   {!showAddMember && (
-                    <button className="gradient-btn" style={{ padding: '8px 16px', fontSize: '14px' }} onClick={() => setShowAddMember(true)}>
+                    <button className="gradient-btn" style={{ padding: '6px 12px', fontSize: '13px' }} onClick={() => setShowAddMember(true)}>
                       + Add Member
                     </button>
                   )}
                 </div>
 
-                {/* Add Member Form */}
                 {showAddMember && (
                   <form className="glass-card fade-in" onSubmit={handleAddMember} style={{ marginBottom: '24px' }}>
-                    <h4 style={{ marginBottom: '16px', fontSize: '16px' }}>New Member</h4>
-
+                    <h4 style={{ marginBottom: '14px', fontSize: '15px' }}>New Member</h4>
                     <div className="form-group">
-                      <label className="form-label">Full Name</label>
+                      <label className="form-label">Name</label>
                       <input
                         type="text"
                         required
                         className="input-field"
-                        placeholder="e.g. John Doe"
+                        placeholder="Enter full name"
                         value={newMemberName}
                         onChange={(e) => setNewMemberName(e.target.value)}
                       />
                     </div>
-
-                    <div className="form-group">
-                      <label className="form-label">Member Type</label>
-                      <select
-                        className="input-field select-field"
-                        value={newMemberType}
-                        onChange={(e) => {
-                          const val = e.target.value as 'individual' | 'group';
-                          setNewMemberType(val);
-                          if (val === 'group') {
-                            setNewMemberHeadCount(2);
-                            setNewMemberWeight(2);
-                          } else {
-                            setNewMemberHeadCount(1);
-                            setNewMemberWeight(1);
-                          }
-                        }}
-                      >
-                        <option value="individual">Individual (1 Person)</option>
-                        <option value="group">Group / Family (N People)</option>
-                      </select>
-                    </div>
-
-                    {newMemberType === 'group' && (
-                      <div className="form-group fade-in">
-                        <label className="form-label">Number of People (Head Count)</label>
-                        <input
-                          type="number"
-                          min="2"
-                          required
-                          className="input-field"
-                          value={newMemberHeadCount}
-                          onChange={(e) => {
-                            const count = parseInt(e.target.value) || 2;
-                            setNewMemberHeadCount(count);
-                            setNewMemberWeight(count);
-                          }}
-                        />
-                      </div>
-                    )}
-
-                    <div className="form-group">
-                      <label className="form-label">Default Share Weight</label>
-                      <input
-                        type="number"
-                        step="0.1"
-                        required
-                        className="input-field"
-                        value={newMemberWeight}
-                        onChange={(e) => setNewMemberWeight(parseFloat(e.target.value) || 1)}
-                      />
-                    </div>
-
-                    <div style={{ display: 'flex', gap: '12px', marginTop: '12px' }}>
-                      <button type="submit" className="gradient-btn" style={{ flex: 1 }}>Add</button>
-                      <button type="button" className="secondary-btn" style={{ flex: 1 }} onClick={() => setShowAddMember(false)}>Cancel</button>
+                    <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
+                      <button type="submit" className="gradient-btn" style={{ flex: 1, padding: '10px' }}>Add</button>
+                      <button type="button" className="secondary-btn" style={{ flex: 1, padding: '10px' }} onClick={() => setShowAddMember(false)}>Cancel</button>
                     </div>
                   </form>
                 )}
 
                 {/* Members list */}
                 {activeTripMembers.length === 0 ? (
-                  <div className="glass-card" style={{ textAlign: 'center', padding: '32px', borderStyle: 'dashed' }}>
-                    <p style={{ color: 'var(--text-secondary)' }}>No members registered yet. Add some to get started.</p>
+                  <div className="glass-card" style={{ textAlign: 'center', padding: '24px', borderStyle: 'dashed', marginBottom: '32px' }}>
+                    <p style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>No members added yet.</p>
                   </div>
                 ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                    {/* Active Members */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '32px' }}>
                     {visibleMembers.map((member) => (
-                      <div key={member.id} className="glass-card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 16px' }}>
-                        <div>
-                          <h4 style={{ fontSize: '15px' }}>
-                            {member.name}
-                          </h4>
-                          <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
-                            {member.type === 'group' ? `Group of ${member.headCount}` : 'Individual'} • Weight: {member.defaultWeight}
-                          </span>
-                        </div>
+                      <div key={member.id} className="glass-card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px' }}>
+                        <span style={{ fontSize: '15px', fontWeight: '500' }}>{member.name}</span>
                         <button
                           className="secondary-btn"
-                          style={{ padding: '6px 12px', fontSize: '12px', color: 'var(--color-warning)', borderColor: 'rgba(245,158,11,0.2)' }}
+                          style={{ padding: '4px 10px', fontSize: '12px', color: 'var(--color-warning)', borderColor: 'rgba(217,119,6,0.2)' }}
                           onClick={() => toggleArchiveMember(member.id)}
                         >
                           Archive
@@ -599,18 +655,16 @@ export default function App() {
 
                     {/* Archived Members */}
                     {archivedMembers.length > 0 && (
-                      <div style={{ marginTop: '24px' }}>
-                        <h4 style={{ fontSize: '13px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '12px' }}>
-                          Archived Members ({archivedMembers.length})
+                      <div style={{ marginTop: '16px' }}>
+                        <h4 style={{ fontSize: '12px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>
+                          Archived ({archivedMembers.length})
                         </h4>
                         {archivedMembers.map((member) => (
-                          <div key={member.id} className="glass-card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 16px', opacity: 0.5, background: 'rgba(255,255,255,0.02)' }}>
-                            <div>
-                              <h4 style={{ fontSize: '14px', textDecoration: 'line-through' }}>{member.name}</h4>
-                            </div>
+                          <div key={member.id} className="glass-card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 16px', opacity: 0.5 }}>
+                            <span style={{ fontSize: '14px', textDecoration: 'line-through' }}>{member.name}</span>
                             <button
                               className="secondary-btn"
-                              style={{ padding: '4px 10px', fontSize: '11px', color: 'var(--text-secondary)' }}
+                              style={{ padding: '3px 8px', fontSize: '11px' }}
                               onClick={() => toggleArchiveMember(member.id)}
                             >
                               Restore
@@ -621,6 +675,102 @@ export default function App() {
                     )}
                   </div>
                 )}
+
+                {/* 2. Group Management Section */}
+                <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '24px', marginTop: '24px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                    <h3 style={{ fontSize: '18px' }}>Member Groups</h3>
+                    {!showAddGroup && visibleMembers.length > 0 && (
+                      <button className="gradient-btn" style={{ padding: '6px 12px', fontSize: '13px' }} onClick={() => setShowAddGroup(true)}>
+                        + Create Group
+                      </button>
+                    )}
+                  </div>
+
+                  {showAddGroup && (
+                    <form className="glass-card fade-in" onSubmit={handleCreateGroup} style={{ marginBottom: '24px' }}>
+                      <h4 style={{ marginBottom: '14px', fontSize: '15px' }}>New Group</h4>
+                      
+                      <div className="form-group">
+                        <label className="form-label">Group Name</label>
+                        <input
+                          type="text"
+                          required
+                          className="input-field"
+                          placeholder="e.g. Couple A & B or Family"
+                          value={newGroupName}
+                          onChange={(e) => setNewGroupName(e.target.value)}
+                        />
+                      </div>
+
+                      <div className="form-group">
+                        <label className="form-label">Add Members to Group</label>
+                        <div className="input-field" style={{ maxHeight: '150px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px', background: '#fff' }}>
+                          {visibleMembers.map((m) => (
+                            <label key={m.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '14px' }}>
+                              <input
+                                type="checkbox"
+                                checked={!!selectedGroupMembers[m.id]}
+                                onChange={(e) => {
+                                  setSelectedGroupMembers({
+                                    ...selectedGroupMembers,
+                                    [m.id]: e.target.checked
+                                  });
+                                }}
+                                style={{ width: '16px', height: '16px', accentColor: 'var(--primary-accent)' }}
+                              />
+                              {m.name}
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
+                        <button type="submit" className="gradient-btn" style={{ flex: 1, padding: '10px' }}>Save Group</button>
+                        <button type="button" className="secondary-btn" style={{ flex: 1, padding: '10px' }} onClick={() => setShowAddGroup(false)}>Cancel</button>
+                      </div>
+                    </form>
+                  )}
+
+                  {/* Groups list */}
+                  {activeTripGroups.length === 0 ? (
+                    <div className="glass-card" style={{ textAlign: 'center', padding: '24px', borderStyle: 'dashed' }}>
+                      <p style={{ color: 'var(--text-secondary)', fontSize: '13px' }}>
+                        No groups created yet. Groups help you quickly select multiple members for expense divisions.
+                      </p>
+                    </div>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                      {activeTripGroups.map((grp) => {
+                        const grpMemberNames = grp.memberIds
+                          .map((id) => members[id]?.name)
+                          .filter(Boolean)
+                          .join(', ');
+                        return (
+                          <div key={grp.id} className="glass-card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 16px' }}>
+                            <div>
+                              <h4 style={{ fontSize: '15px', fontWeight: '600' }}>{grp.name}</h4>
+                              <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '2px' }}>
+                                Members: {grpMemberNames || 'None'}
+                              </p>
+                            </div>
+                            <button
+                              className="secondary-btn"
+                              style={{ padding: '4px 10px', fontSize: '11px', color: 'var(--color-danger)', borderColor: 'rgba(225,29,72,0.15)' }}
+                              onClick={() => {
+                                if (confirm(`Delete group "${grp.name}"? (Individual members are NOT deleted)`)) {
+                                  deleteGroup(grp.id);
+                                }
+                              }}
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
               </div>
             )}
 
@@ -674,7 +824,7 @@ export default function App() {
             )}
           </main>
 
-          {/* Nav Tab Menu */}
+          {/* Navigation Bar */}
           <nav className="nav-tabs">
             <button className={`nav-tab-item ${activeTab === 'expenses' ? 'active' : ''}`} onClick={() => setActiveTab('expenses')}>
               <span className="nav-tab-icon">💸</span>
@@ -682,7 +832,7 @@ export default function App() {
             </button>
             <button className={`nav-tab-item ${activeTab === 'members' ? 'active' : ''}`} onClick={() => setActiveTab('members')}>
               <span className="nav-tab-icon">👥</span>
-              <span>Members</span>
+              <span>Members & Groups</span>
             </button>
             <button className={`nav-tab-item ${activeTab === 'settings' ? 'active' : ''}`} onClick={() => setActiveTab('settings')}>
               <span className="nav-tab-icon">⚙</span>

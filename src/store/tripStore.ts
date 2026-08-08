@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { Trip, Member, Expense, Category, TripState } from '../types';
+import type { Trip, Member, Group, Expense, Category, TripState } from '../types';
 import { storage, StorageError } from '../services/storage';
 
 interface TripStore extends TripState {
@@ -15,8 +15,12 @@ interface TripStore extends TripState {
   deleteTrip: (id: string) => Promise<void>;
   
   // Member Actions
-  addMember: (name: string, type: 'individual' | 'group', headCount: number, defaultWeight: number) => Promise<void>;
+  addMember: (name: string) => Promise<void>;
   toggleArchiveMember: (id: string) => Promise<void>;
+
+  // Group Actions
+  createGroup: (name: string, memberIds: string[]) => Promise<void>;
+  deleteGroup: (id: string) => Promise<void>;
   
   // Expense Actions
   addExpense: (expense: Omit<Expense, 'id' | 'tripId' | 'resolvedShares' | 'createdAt' | 'updatedAt'>) => Promise<void>;
@@ -48,6 +52,7 @@ export const useTripStore = create<TripStore>((set, get) => {
       trips: updatedState.trips ?? currentState.trips,
       activeTripId: updatedState.activeTripId !== undefined ? updatedState.activeTripId : currentState.activeTripId,
       members: updatedState.members ?? currentState.members,
+      groups: updatedState.groups ?? currentState.groups,
       expenses: updatedState.expenses ?? currentState.expenses,
       categories: updatedState.categories ?? currentState.categories,
     };
@@ -69,6 +74,7 @@ export const useTripStore = create<TripStore>((set, get) => {
     trips: [],
     activeTripId: null,
     members: {},
+    groups: {},
     expenses: [],
     categories: [],
     initialized: false,
@@ -82,6 +88,7 @@ export const useTripStore = create<TripStore>((set, get) => {
           trips: loaded.trips || [],
           activeTripId: loaded.activeTripId || null,
           members: loaded.members || {},
+          groups: loaded.groups || {},
           expenses: loaded.expenses || [],
           categories: loaded.categories || DEFAULT_CATEGORIES,
           initialized: true,
@@ -90,9 +97,10 @@ export const useTripStore = create<TripStore>((set, get) => {
         // First run: Seed default categories
         set({
           categories: DEFAULT_CATEGORIES,
+          groups: {},
           initialized: true,
         });
-        await persist({ categories: DEFAULT_CATEGORIES });
+        await persist({ categories: DEFAULT_CATEGORIES, groups: {} });
       }
     },
 
@@ -106,6 +114,7 @@ export const useTripStore = create<TripStore>((set, get) => {
         endDate,
         baseCurrency,
         memberIds: [],
+        groupIds: [],
         createdAt: Date.now(),
         updatedAt: Date.now(),
       };
@@ -133,7 +142,7 @@ export const useTripStore = create<TripStore>((set, get) => {
       });
     },
 
-    addMember: async (name, type, headCount, defaultWeight) => {
+    addMember: async (name) => {
       const activeTripId = get().activeTripId;
       if (!activeTripId) return;
 
@@ -141,9 +150,6 @@ export const useTripStore = create<TripStore>((set, get) => {
       const newMember: Member = {
         id: memberId,
         name,
-        type,
-        headCount,
-        defaultWeight,
       };
 
       const updatedMembers = { ...get().members, [memberId]: newMember };
@@ -169,6 +175,47 @@ export const useTripStore = create<TripStore>((set, get) => {
       await persist({ members: updatedMembers });
     },
 
+    createGroup: async (name, memberIds) => {
+      const activeTripId = get().activeTripId;
+      if (!activeTripId) return;
+
+      const groupId = `grp-${Date.now()}`;
+      const newGroup: Group = {
+        id: groupId,
+        name,
+        memberIds,
+      };
+
+      const updatedGroups = { ...get().groups, [groupId]: newGroup };
+      const updatedTrips = get().trips.map((t) => {
+        if (t.id === activeTripId) {
+          return { ...t, groupIds: [...(t.groupIds || []), groupId], updatedAt: Date.now() };
+        }
+        return t;
+      });
+
+      await persist({ groups: updatedGroups, trips: updatedTrips });
+    },
+
+    deleteGroup: async (groupId) => {
+      const activeTripId = get().activeTripId;
+      if (!activeTripId) return;
+
+      const { [groupId]: _, ...updatedGroups } = get().groups;
+      const updatedTrips = get().trips.map((t) => {
+        if (t.id === activeTripId) {
+          return {
+            ...t,
+            groupIds: (t.groupIds || []).filter((id) => id !== groupId),
+            updatedAt: Date.now(),
+          };
+        }
+        return t;
+      });
+
+      await persist({ groups: updatedGroups, trips: updatedTrips });
+    },
+
     addExpense: async (expenseData) => {
       const activeTripId = get().activeTripId;
       if (!activeTripId) return;
@@ -176,26 +223,26 @@ export const useTripStore = create<TripStore>((set, get) => {
       const activeTrip = get().trips.find((t) => t.id === activeTripId);
       if (!activeTrip) return;
 
-      // Filter active (non-archived) members of the trip for split
-      const activeMembers = activeTrip.memberIds.filter(
+      // Filter participant members who are actually active (non-archived)
+      const participants = expenseData.splitMemberIds.filter(
         (id) => get().members[id] && !get().members[id].archived
       );
 
-      if (activeMembers.length === 0) return;
+      if (participants.length === 0) return;
 
-      // Phase 1 Core Split Logic: Equal Head Split
+      // Equal split among selected members
       const resolvedShares: Record<string, number> = {};
-      const splitShare = Number((expenseData.amount / activeMembers.length).toFixed(2));
+      const splitShare = Number((expenseData.amount / participants.length).toFixed(2));
       
-      activeMembers.forEach((memId) => {
+      participants.forEach((memId) => {
         resolvedShares[memId] = splitShare;
       });
 
       // Handle minor division rounding adjustment
-      const calculatedSum = splitShare * activeMembers.length;
+      const calculatedSum = splitShare * participants.length;
       const difference = Number((expenseData.amount - calculatedSum).toFixed(2));
-      if (difference !== 0 && activeMembers[0]) {
-        resolvedShares[activeMembers[0]] = Number((resolvedShares[activeMembers[0]] + difference).toFixed(2));
+      if (difference !== 0 && participants[0]) {
+        resolvedShares[participants[0]] = Number((resolvedShares[participants[0]] + difference).toFixed(2));
       }
 
       const newExpense: Expense = {
@@ -246,6 +293,7 @@ export const useTripStore = create<TripStore>((set, get) => {
         trips: get().trips,
         activeTripId: get().activeTripId,
         members: get().members,
+        groups: get().groups,
         expenses: get().expenses,
         categories: get().categories,
       };
@@ -260,6 +308,7 @@ export const useTripStore = create<TripStore>((set, get) => {
         if (
           Array.isArray(parsed.trips) && 
           parsed.members && 
+          parsed.groups &&
           Array.isArray(parsed.expenses) &&
           Array.isArray(parsed.categories)
         ) {
@@ -267,6 +316,7 @@ export const useTripStore = create<TripStore>((set, get) => {
             trips: parsed.trips,
             activeTripId: parsed.activeTripId || null,
             members: parsed.members,
+            groups: parsed.groups,
             expenses: parsed.expenses,
             categories: parsed.categories,
           });
