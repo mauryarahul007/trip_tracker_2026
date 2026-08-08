@@ -806,6 +806,7 @@ export default function App() {
                   <BalancesSettlements
                     trip={activeTrip}
                     balances={balances}
+                    groups={visibleTripGroups}
                     transfers={transfers}
                     activeTripExpenses={activeTripExpenses}
                     onMemberClick={handleFilterByMember}

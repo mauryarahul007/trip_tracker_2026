@@ -1,5 +1,22 @@
 # Changelog
 
+## 2026-08-08 (latest) — Group balances: collapsible entry + real internal settlement
+
+### Member Balances now shows one row per group, not per member
+- Previously every group member was listed individually, so a group whose combined balance was zero showed misleading "gets back X" / "owes X" rows for its own members even though nothing needed to happen with the outside world.
+- Groups now render as a single collapsible `👥 Group Name` row; click to expand and see individual members underneath.
+
+### Fixed: group falsely labeled "settled" while members still owed each other
+- A group's combined balance netting to zero only means the group has nothing outstanding with people *outside* the group — it says nothing about whether the group's own members have reconciled with each other.
+- The group row now only says **settled** (green) once its net external balance is zero **and** every member inside it individually has zero balance too. If net-zero externally but members still owe each other, it shows **internal settlement pending** (amber) instead.
+- Expanding a group in that state shows a new "Internal settlement needed" section — a real Settle action (with the same custom-amount input as the main panel) to record who pays whom inside the group. The group flips to settled once that's recorded.
+- Added `calculateGroupInternalTransfers()` to `settlement.ts`, refactored the shared greedy-matching loop out of `calculateSettlements()` so both paths use identical logic. Extended the self-check script with a scenario matching the reported bug (two group members with equal-and-opposite balances) plus the fix verification.
+
+### Files touched
+- `src/utils/settlement.ts`, `src/components/BalancesSettlements.tsx`, `src/App.tsx`
+
+---
+
 ## 2026-08-08 (latest) — Settlement engine: transitive, group, and custom settlements
 
 ### Transitive settlement (already present, verified)

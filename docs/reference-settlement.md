@@ -14,6 +14,11 @@ function calculateSettlements(
   groups: Group[] = []  // optional: merge each group's members into one settlement entity
 ): { balances: MemberBalance[]; transfers: Transfer[] }
 
+// A group's combined balance can be zero while its own members still owe
+// each other. Returns the transfers needed to reconcile just that group's
+// members with each other.
+function calculateGroupInternalTransfers(balances: MemberBalance[], group: Group): Transfer[]
+
 interface MemberBalance {
   memberId: string;
   name: string;
@@ -105,6 +110,20 @@ while debtors and creditors remain:
 This greedy approach is optimal when `N ≤ ~10 nodes`. It may not find the global minimum for larger groups (NP-hard in the general case), but in practice it produces the minimal or near-minimal transfer count for trip sizes.
 
 Because balances are always net (not per-expense), this loop is naturally **transitive**: if A owes B and B owes C by matching amounts, B's net balance cancels to zero and never appears as a node at all — A is matched directly to C.
+
+---
+
+## Group internal settlement
+
+A group node's balance cancelling to zero (Phase 2) only means the group has nothing outstanding with the *rest of the trip* — it says nothing about whether the group's own members have squared up with each other. Two members with equal-and-opposite individual balances (one +50, one −50) produce a net-zero group node with no external transfer, but ₹50 has still never actually moved between them.
+
+`calculateGroupInternalTransfers(balances, group)` runs the same `matchDebtorsToCreditors` loop, scoped to just that one group's members treated as individual nodes (no merging). This is what the "Member Balances" panel uses to decide whether an expanded group is actually done:
+
+```
+fullySettled = |group.balance| < 0.01 AND calculateGroupInternalTransfers(...).length === 0
+```
+
+If the group is net-zero externally but `calculateGroupInternalTransfers` returns transfers, the UI shows **"internal settlement pending"** instead of "settled", and renders those transfers as real Settle actions. Recording one (as a normal `Settlement:` expense between the two real members) reduces both their individual balances toward zero on the next recalculation, same as any other settlement.
 
 ---
 

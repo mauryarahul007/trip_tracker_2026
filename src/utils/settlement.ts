@@ -16,7 +16,7 @@ export interface MemberBalance {
   balance: number; // positive = gets back, negative = owes
 }
 
-interface SettlementNode {
+export interface SettlementNode {
   id: string;
   name: string;
   memberIds: string[];
@@ -25,7 +25,7 @@ interface SettlementNode {
 
 // Groups' members owe nothing to each other for settlement purposes -
 // each group is merged into a single node, netted against everyone else.
-function buildSettlementNodes(balances: MemberBalance[], groups: Group[]): SettlementNode[] {
+export function buildSettlementNodes(balances: MemberBalance[], groups: Group[]): SettlementNode[] {
   const groupOfMember: Record<string, Group> = {};
   groups.forEach((g) => {
     g.memberIds.forEach((mid) => {
@@ -59,6 +59,58 @@ function pickRepresentative(
     const bestBal = balances.find((b) => b.memberId === best)?.balance ?? 0;
     return direction === 'debtor' ? (bal < bestBal ? id : best) : (bal > bestBal ? id : best);
   }, memberIds[0]);
+}
+
+// Greedy debtor/creditor matching shared by the top-level (merged-group)
+// settlement and by per-group internal settlement.
+function matchDebtorsToCreditors(nodes: SettlementNode[], balances: MemberBalance[]): Transfer[] {
+  const debtors = nodes.filter((n) => n.balance < -0.01).map((n) => ({ ...n }));
+  const creditors = nodes.filter((n) => n.balance > 0.01).map((n) => ({ ...n }));
+
+  const transfers: Transfer[] = [];
+
+  while (debtors.length > 0 && creditors.length > 0) {
+    debtors.sort((a, b) => a.balance - b.balance);
+    creditors.sort((a, b) => b.balance - a.balance);
+
+    const debtor = debtors[0];
+    const creditor = creditors[0];
+
+    const amountToSettle = Math.min(-debtor.balance, creditor.balance);
+
+    if (amountToSettle > 0.005) {
+      transfers.push({
+        from: debtor.id,
+        to: creditor.id,
+        fromLabel: debtor.name,
+        toLabel: creditor.name,
+        fromMemberId: pickRepresentative(debtor.memberIds, balances, 'debtor'),
+        toMemberId: pickRepresentative(creditor.memberIds, balances, 'creditor'),
+        amount: Number(amountToSettle.toFixed(2))
+      });
+
+      debtor.balance += amountToSettle;
+      creditor.balance -= amountToSettle;
+    }
+
+    if (Math.abs(debtor.balance) < 0.01) debtors.shift();
+    if (Math.abs(creditor.balance) < 0.01) creditors.shift();
+  }
+
+  return transfers;
+}
+
+// A group's combined balance can net to zero against the rest of the trip
+// while its own members still hold unequal individual balances between
+// themselves (e.g. one member fronted more of the group's shared costs).
+// This computes the transfers needed to reconcile those members with each
+// other specifically - the group isn't truly "settled" until this is empty.
+export function calculateGroupInternalTransfers(balances: MemberBalance[], group: Group): Transfer[] {
+  const memberNodes: SettlementNode[] = group.memberIds.map((mid) => {
+    const b = balances.find((bal) => bal.memberId === mid);
+    return { id: `member:${mid}`, name: b ? b.name : 'Deleted Member', memberIds: [mid], balance: b ? b.balance : 0 };
+  });
+  return matchDebtorsToCreditors(memberNodes, balances);
 }
 
 export function calculateSettlements(
@@ -102,45 +154,7 @@ export function calculateSettlements(
   // 2. Merge group members into single settlement nodes, then greedily
   // match debtor nodes to creditor nodes to minimize transfers.
   const nodes = buildSettlementNodes(balances, groups);
-  const debtors = nodes.filter((n) => n.balance < -0.01).map((n) => ({ ...n }));
-  const creditors = nodes.filter((n) => n.balance > 0.01).map((n) => ({ ...n }));
-
-  const transfers: Transfer[] = [];
-
-  while (debtors.length > 0 && creditors.length > 0) {
-    // Sort debtors ascending (most negative first)
-    debtors.sort((a, b) => a.balance - b.balance);
-    // Sort creditors descending (most positive first)
-    creditors.sort((a, b) => b.balance - a.balance);
-
-    const debtor = debtors[0];
-    const creditor = creditors[0];
-
-    const amountToSettle = Math.min(-debtor.balance, creditor.balance);
-
-    if (amountToSettle > 0.005) {
-      transfers.push({
-        from: debtor.id,
-        to: creditor.id,
-        fromLabel: debtor.name,
-        toLabel: creditor.name,
-        fromMemberId: pickRepresentative(debtor.memberIds, balances, 'debtor'),
-        toMemberId: pickRepresentative(creditor.memberIds, balances, 'creditor'),
-        amount: Number(amountToSettle.toFixed(2))
-      });
-
-      debtor.balance += amountToSettle;
-      creditor.balance -= amountToSettle;
-    }
-
-    // Remove settled members from list
-    if (Math.abs(debtor.balance) < 0.01) {
-      debtors.shift();
-    }
-    if (Math.abs(creditor.balance) < 0.01) {
-      creditors.shift();
-    }
-  }
+  const transfers = matchDebtorsToCreditors(nodes, balances);
 
   return { balances, transfers };
 }
