@@ -391,9 +391,18 @@ export default function App() {
   };
 
   const handleDeleteMember = (member: Member) => {
+    const hasTransactions = activeTripExpenses.some(
+      (e) => e.paidBy === member.id || e.splitMemberIds.includes(member.id)
+    );
+
+    let message = `Are you sure you want to permanently delete member "${member.name}"?`;
+    if (hasTransactions) {
+      message = `This member has recorded transaction entries. Deleting them will redistribute their expenses and split shares equally among the other remaining members of this trip. Are you sure you want to proceed?`;
+    }
+
     setConfirmRequest({
       title: 'Delete member',
-      message: `Are you sure you want to permanently delete duplicate member "${member.name}"?`,
+      message,
       confirmLabel: 'Delete',
       danger: true,
       onConfirm: () => deleteMember(member.id),

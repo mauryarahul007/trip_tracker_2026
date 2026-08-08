@@ -123,43 +123,27 @@ export function MembersGroupsTab({
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '32px' }}>
-          {visibleMembers.map((member) => {
-            const isDuplicate = activeTripMembers.filter(
-              (m) => m.name.toLowerCase().trim() === member.name.toLowerCase().trim()
-            ).length > 1;
-
-            return (
-              <div key={member.id} className="glass-card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px' }}>
-                <span style={{ fontSize: '15px', fontWeight: '500' }}>{member.name}</span>
-                <div style={{ display: 'flex', gap: '8px' }}>
-                  <button
-                    className="secondary-btn"
-                    style={{ padding: '4px 10px', fontSize: '12px' }}
-                    onClick={() => onStartEditMember(member)}
-                  >
-                    Edit
-                  </button>
-                  {isDuplicate ? (
-                    <button
-                      className="secondary-btn"
-                      style={{ padding: '4px 10px', fontSize: '12px', color: 'var(--color-danger)', borderColor: 'rgba(225,29,72,0.15)' }}
-                      onClick={() => onDeleteMember(member)}
-                    >
-                      Delete
-                    </button>
-                  ) : (
-                    <button
-                      className="secondary-btn"
-                      style={{ padding: '4px 10px', fontSize: '12px', color: 'var(--color-warning)', borderColor: 'rgba(217,119,6,0.2)' }}
-                      onClick={() => onToggleArchiveMember(member.id)}
-                    >
-                      Archive
-                    </button>
-                  )}
-                </div>
+          {visibleMembers.map((member) => (
+            <div key={member.id} className="glass-card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px' }}>
+              <span style={{ fontSize: '15px', fontWeight: '500' }}>{member.name}</span>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button
+                  className="secondary-btn"
+                  style={{ padding: '4px 10px', fontSize: '12px' }}
+                  onClick={() => onStartEditMember(member)}
+                >
+                  Edit
+                </button>
+                <button
+                  className="secondary-btn"
+                  style={{ padding: '4px 10px', fontSize: '12px', color: 'var(--color-danger)', borderColor: 'rgba(225,29,72,0.15)' }}
+                  onClick={() => onDeleteMember(member)}
+                >
+                  Delete
+                </button>
               </div>
-            );
-          })}
+            </div>
+          ))}
 
           {/* Archived Members */}
           {archivedMembers.length > 0 && (

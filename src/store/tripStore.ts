@@ -254,9 +254,15 @@ export const useTripStore = create<TripStore>((set, get) => {
       const activeTripId = get().activeTripId;
       if (!activeTripId) return;
 
+      const remainingMembers = get().trips
+        .find((t) => t.id === activeTripId)
+        ?.memberIds.filter((mid) => mid !== id) || [];
+
+      // 1. Remove member record from members map
       const updatedMembers = { ...get().members };
       delete updatedMembers[id];
 
+      // 2. Remove memberId from active trip's memberIds list
       const updatedTrips = get().trips.map((t) => {
         if (t.id === activeTripId) {
           return {
@@ -268,6 +274,7 @@ export const useTripStore = create<TripStore>((set, get) => {
         return t;
       });
 
+      // 3. Remove member from any groups that contain them
       const updatedGroups = { ...get().groups };
       Object.keys(updatedGroups).forEach((gid) => {
         const group = updatedGroups[gid];
@@ -279,7 +286,79 @@ export const useTripStore = create<TripStore>((set, get) => {
         }
       });
 
-      await persist({ members: updatedMembers, trips: updatedTrips, groups: updatedGroups });
+      // 4. Update expenses to redistribute the deleted member's share
+      const updatedExpenses = get().expenses.filter((exp) => {
+        if (exp.tripId !== activeTripId) return true;
+        // If no members left on this trip, clean up all its expenses
+        if (remainingMembers.length === 0) return false;
+        return true;
+      }).map((exp) => {
+        if (exp.tripId !== activeTripId) return exp;
+
+        let needUpdate = false;
+        let paidBy = exp.paidBy;
+        let splitMemberIds = exp.splitMemberIds;
+        let splitMode = exp.splitMode;
+        let splitConfig = exp.splitConfig;
+
+        // If the deleted member was the payer, assign to the first remaining member
+        if (exp.paidBy === id) {
+          needUpdate = true;
+          paidBy = remainingMembers[0] || '';
+        }
+
+        // If the deleted member was in the split, remove them and recalculate
+        if (exp.splitMemberIds.includes(id)) {
+          needUpdate = true;
+          splitMemberIds = exp.splitMemberIds.filter((mid) => mid !== id);
+          
+          // If no split participants are left, default to all remaining members
+          if (splitMemberIds.length === 0) {
+            splitMemberIds = [...remainingMembers];
+          }
+
+          // If the split mode was not equal, reset it to equal because weights/exact shares are invalid now
+          if (exp.splitMode !== 'equal') {
+            splitMode = 'equal';
+            splitConfig = undefined;
+          }
+        }
+
+        if (needUpdate) {
+          const expensePayload = {
+            title: exp.title,
+            amount: exp.amount,
+            currency: exp.currency,
+            category: exp.category,
+            date: exp.date,
+            paidBy,
+            splitMode,
+            splitConfig,
+            splitMemberIds,
+            receiptImage: exp.receiptImage,
+          };
+          const resolvedShares = resolveShares(expensePayload, splitMemberIds);
+
+          return {
+            ...exp,
+            paidBy,
+            splitMemberIds,
+            splitMode,
+            splitConfig,
+            resolvedShares,
+            updatedAt: Date.now(),
+          };
+        }
+
+        return exp;
+      });
+
+      await persist({ 
+        members: updatedMembers, 
+        trips: updatedTrips, 
+        groups: updatedGroups, 
+        expenses: updatedExpenses 
+      });
     },
 
     createGroup: async (name, memberIds) => {
