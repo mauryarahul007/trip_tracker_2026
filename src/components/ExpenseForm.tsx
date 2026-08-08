@@ -105,35 +105,36 @@ export function ExpenseForm({
         />
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-        <div className="form-group">
-          <label className="form-label">Amount ({trip?.baseCurrency})</label>
-          <input
-            type="text"
-            inputMode="decimal"
-            required
-            className="input-field"
-            placeholder="0.00"
-            value={formatAmountDisplay(amount)}
-            onChange={(e) => {
-              const raw = e.target.value.replace(/,/g, '');
-              if (/^\d*\.?\d*$/.test(raw)) setAmount(raw);
-            }}
-          />
-        </div>
-        <div className="form-group">
-          <label className="form-label">Category</label>
-          <select
-            className="input-field select-field"
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
-          >
-            {categories.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.icon} {c.name}
-              </option>
-            ))}
-          </select>
+      <div className="form-group">
+        <label className="form-label">Amount ({trip?.baseCurrency})</label>
+        <input
+          type="text"
+          inputMode="decimal"
+          required
+          className="input-field"
+          placeholder="0.00"
+          value={formatAmountDisplay(amount)}
+          onChange={(e) => {
+            const raw = e.target.value.replace(/,/g, '');
+            if (/^\d*\.?\d*$/.test(raw)) setAmount(raw);
+          }}
+        />
+      </div>
+
+      <div className="form-group">
+        <label className="form-label">Category</label>
+        <div className="badge-row">
+          {categories.map((c) => (
+            <button
+              key={c.id}
+              type="button"
+              className={`category-badge${category === c.id ? ' active' : ''}`}
+              onClick={() => setCategory(c.id)}
+              aria-pressed={category === c.id}
+            >
+              <span>{c.icon}</span> {c.name}
+            </button>
+          ))}
         </div>
       </div>
 
@@ -179,16 +180,12 @@ export function ExpenseForm({
 
       <div className="form-group">
         <label className="form-label">Split Mode</label>
-        <select
-          className="input-field select-field"
-          value={splitMode}
-          onChange={(e) => setSplitMode(e.target.value as SplitMode)}
-        >
-          <option value="equal">Split Equally</option>
-          <option value="custom">Custom Weights (e.g. 1, 2, 0.5)</option>
-          <option value="exact">Exact Amounts ({trip?.baseCurrency})</option>
-          <option value="percentage">Percentage (100% total)</option>
-        </select>
+        <div className="segmented-control">
+          <button type="button" className={splitMode === 'equal' ? 'active' : ''} onClick={() => setSplitMode('equal')}>Equal</button>
+          <button type="button" className={splitMode === 'custom' ? 'active' : ''} onClick={() => setSplitMode('custom')}>Weight</button>
+          <button type="button" className={splitMode === 'exact' ? 'active' : ''} onClick={() => setSplitMode('exact')}>Exact</button>
+          <button type="button" className={splitMode === 'percentage' ? 'active' : ''} onClick={() => setSplitMode('percentage')}>Percent</button>
+        </div>
       </div>
 
       <div className="form-group">

@@ -518,6 +518,68 @@ h1, h2, h3, h4 {
   text-align: center;
 }
 
+/* Category picker — pill badges instead of a dropdown */
+.badge-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.category-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border: 1.5px solid var(--border-color);
+  border-radius: 999px;
+  background: var(--bg-surface);
+  font-family: var(--font-family-body);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: var(--transition-smooth);
+}
+.category-badge:hover {
+  border-color: rgba(31, 110, 104, 0.35);
+}
+.category-badge.active {
+  border-color: var(--primary-accent);
+  background: rgba(31, 110, 104, 0.09);
+  color: var(--primary-accent);
+  font-weight: 600;
+}
+
+/* Split mode — segmented control instead of a dropdown */
+.segmented-control {
+  display: flex;
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--border-radius-sm);
+  overflow: hidden;
+}
+.segmented-control button {
+  flex: 1;
+  padding: 10px 4px;
+  border: none;
+  border-right: 1.5px solid var(--border-color);
+  background: var(--bg-surface);
+  font-family: var(--font-family-body);
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: var(--transition-smooth);
+}
+.segmented-control button:last-child {
+  border-right: none;
+}
+.segmented-control button:hover {
+  background: var(--bg-surface-hover);
+}
+.segmented-control button.active {
+  background: var(--primary-accent);
+  color: #fff;
+}
+
 /* Ink-stamp status badge */
 .stamp-badge {
   display: inline-flex;
