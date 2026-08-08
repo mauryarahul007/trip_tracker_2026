@@ -315,7 +315,12 @@ export default function App() {
       setNewExpAmount('');
       setNewExpCategory('');
     }
-  }, [showAddExpense, activeTripId, editingExpenseId, visibleMembers]);
+    // visibleMembers is intentionally NOT a dependency: it's a fresh array on every
+    // render (activeTripMembers.filter(...) above, not memoized), so including it
+    // makes this effect re-fire on every keystroke while the form is open, silently
+    // wiping the split selection, payer, and split config the user is editing.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showAddExpense, activeTripId, editingExpenseId, visibleMembers.length]);
 
   // Sync group checkboxes when opening add group form
   useEffect(() => {
@@ -345,7 +350,9 @@ export default function App() {
       }
       setNewGroupName(autoName);
     }
-  }, [selectedGroupMembers, isGroupNameAuto, visibleMembers]);
+    // visibleMembers intentionally omitted — see comment on the effect above.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedGroupMembers, isGroupNameAuto, visibleMembers.length]);
 
   // Form submissions
   const handleCreateTrip = async (e: React.FormEvent) => {
