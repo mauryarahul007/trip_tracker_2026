@@ -1,6 +1,8 @@
 import React from 'react';
 import type { Trip } from '../types';
-import { IconCalendar, IconMembers, IconTrash } from './Icons';
+import { IconCalendar, IconMembers, IconTrash, IconEdit } from './Icons';
+import { DateRangePicker } from './DateRangePicker';
+import { formatDateRange } from '../utils/dateRange';
 
 type Props = {
   trips: Trip[];
@@ -14,7 +16,10 @@ type Props = {
   setNewTripEnd: (v: string) => void;
   newTripCurrency: string;
   setNewTripCurrency: (v: string) => void;
+  editingTripId: string | null;
   onCreateTrip: (e: React.FormEvent) => void;
+  onCancelTripForm: () => void;
+  onStartEditTrip: (trip: Trip) => void;
   onSelectTrip: (id: string) => void;
   onDeleteTrip: (trip: Trip) => void;
 };
@@ -31,7 +36,10 @@ export function TripsListScreen({
   setNewTripEnd,
   newTripCurrency,
   setNewTripCurrency,
+  editingTripId,
   onCreateTrip,
+  onCancelTripForm,
+  onStartEditTrip,
   onSelectTrip,
   onDeleteTrip,
 }: Props) {
@@ -54,10 +62,10 @@ export function TripsListScreen({
           )}
         </div>
 
-        {/* Create Trip Form */}
+        {/* Create/Edit Trip Form */}
         {showAddTrip && (
           <form className="glass-card fade-in" onSubmit={onCreateTrip} style={{ marginBottom: '24px' }}>
-            <h3 style={{ marginBottom: '16px', fontSize: '18px' }}>Create New Trip</h3>
+            <h3 style={{ marginBottom: '16px', fontSize: '18px' }}>{editingTripId ? 'Edit Trip' : 'Create New Trip'}</h3>
 
             <div className="form-group">
               <label className="form-label">Trip Name</label>
@@ -71,46 +79,37 @@ export function TripsListScreen({
               />
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-              <div className="form-group">
-                <label className="form-label">Start Date</label>
-                <input
-                  type="date"
-                  required
-                  className="input-field"
-                  value={newTripStart}
-                  onChange={(e) => setNewTripStart(e.target.value)}
-                />
-              </div>
-              <div className="form-group">
-                <label className="form-label">End Date</label>
-                <input
-                  type="date"
-                  required
-                  className="input-field"
-                  value={newTripEnd}
-                  onChange={(e) => setNewTripEnd(e.target.value)}
-                />
-              </div>
+            <div className="form-group">
+              <label className="form-label">Trip Dates</label>
+              <DateRangePicker
+                startDate={newTripStart}
+                endDate={newTripEnd}
+                onSelectStart={setNewTripStart}
+                onSelectEnd={setNewTripEnd}
+              />
             </div>
 
-            <div className="form-group">
-              <label className="form-label">Base Currency</label>
-              <select
-                className="input-field select-field"
-                value={newTripCurrency}
-                onChange={(e) => setNewTripCurrency(e.target.value)}
-              >
-                <option value="INR">INR (₹)</option>
-                <option value="USD">USD ($)</option>
-                <option value="EUR">EUR (€)</option>
-                <option value="GBP">GBP (£)</option>
-              </select>
-            </div>
+            {!editingTripId && (
+              <div className="form-group">
+                <label className="form-label">Base Currency</label>
+                <select
+                  className="input-field select-field"
+                  value={newTripCurrency}
+                  onChange={(e) => setNewTripCurrency(e.target.value)}
+                >
+                  <option value="INR">INR (₹)</option>
+                  <option value="USD">USD ($)</option>
+                  <option value="EUR">EUR (€)</option>
+                  <option value="GBP">GBP (£)</option>
+                </select>
+              </div>
+            )}
 
             <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
-              <button type="submit" className="gradient-btn" style={{ flex: 1 }}>Save Trip</button>
-              <button type="button" className="secondary-btn" style={{ flex: 1 }} onClick={() => setShowAddTrip(false)}>Cancel</button>
+              <button type="submit" className="gradient-btn" style={{ flex: 1 }}>
+                {editingTripId ? 'Update Trip' : 'Save Trip'}
+              </button>
+              <button type="button" className="secondary-btn" style={{ flex: 1 }} onClick={onCancelTripForm}>Cancel</button>
             </div>
           </form>
         )}
@@ -127,27 +126,41 @@ export function TripsListScreen({
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             {trips.map((trip) => (
               <div key={trip.id} className="glass-card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }} onClick={() => onSelectTrip(trip.id)}>
-                <div>
+                <div style={{ minWidth: 0 }}>
                   <h3 style={{ fontSize: '18px', marginBottom: '6px' }}>{trip.name}</h3>
                   <p style={{ fontSize: '13px', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <IconCalendar size={13} className="icon-sm" /> {trip.startDate} to {trip.endDate}
+                    <IconCalendar size={13} className="icon-sm" /> {formatDateRange(trip.startDate, trip.endDate)}
                   </p>
                   <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <IconMembers size={13} className="icon-sm" /> {trip.memberIds.length} members · {trip.baseCurrency}
                   </p>
                 </div>
-                <button
-                  className="secondary-btn"
-                  style={{ padding: '8px', color: 'var(--color-danger)', borderColor: 'rgba(184,69,46,0.2)' }}
-                  aria-label="Delete trip"
-                  title="Delete trip"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onDeleteTrip(trip);
-                  }}
-                >
-                  <IconTrash size={15} className="icon-sm" />
-                </button>
+                <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
+                  <button
+                    className="secondary-btn"
+                    style={{ padding: '8px' }}
+                    aria-label="Edit trip"
+                    title="Edit trip"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onStartEditTrip(trip);
+                    }}
+                  >
+                    <IconEdit size={15} className="icon-sm" />
+                  </button>
+                  <button
+                    className="secondary-btn"
+                    style={{ padding: '8px', color: 'var(--color-danger)', borderColor: 'rgba(184,69,46,0.2)' }}
+                    aria-label="Delete trip"
+                    title="Delete trip"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDeleteTrip(trip);
+                    }}
+                  >
+                    <IconTrash size={15} className="icon-sm" />
+                  </button>
+                </div>
               </div>
             ))}
           </div>

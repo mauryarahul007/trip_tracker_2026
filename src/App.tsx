@@ -31,6 +31,7 @@ export default function App() {
     initialize,
     clearStorageError,
     createTrip,
+    updateTrip,
     selectTrip,
     deleteTrip,
     addMember,
@@ -54,6 +55,7 @@ export default function App() {
 
   // Form states - Trips
   const [showAddTrip, setShowAddTrip] = useState(false);
+  const [editingTripId, setEditingTripId] = useState<string | null>(null);
   const [newTripName, setNewTripName] = useState('');
   const [newTripStart, setNewTripStart] = useState('');
   const [newTripEnd, setNewTripEnd] = useState('');
@@ -357,7 +359,29 @@ export default function App() {
   const handleCreateTrip = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTripName || !newTripStart || !newTripEnd) return;
-    await createTrip(newTripName, newTripStart, newTripEnd, newTripCurrency);
+    if (editingTripId) {
+      await updateTrip(editingTripId, newTripName, newTripStart, newTripEnd);
+    } else {
+      await createTrip(newTripName, newTripStart, newTripEnd, newTripCurrency);
+    }
+    setNewTripName('');
+    setNewTripStart('');
+    setNewTripEnd('');
+    setNewTripCurrency('INR');
+    setEditingTripId(null);
+    setShowAddTrip(false);
+  };
+
+  const handleStartEditTrip = (trip: Trip) => {
+    setEditingTripId(trip.id);
+    setNewTripName(trip.name);
+    setNewTripStart(trip.startDate);
+    setNewTripEnd(trip.endDate);
+    setShowAddTrip(true);
+  };
+
+  const handleCancelTripForm = () => {
+    setEditingTripId(null);
     setNewTripName('');
     setNewTripStart('');
     setNewTripEnd('');
@@ -866,7 +890,10 @@ export default function App() {
           setNewTripEnd={setNewTripEnd}
           newTripCurrency={newTripCurrency}
           setNewTripCurrency={setNewTripCurrency}
+          editingTripId={editingTripId}
           onCreateTrip={handleCreateTrip}
+          onCancelTripForm={handleCancelTripForm}
+          onStartEditTrip={handleStartEditTrip}
           onSelectTrip={(id) => selectTrip(id)}
           onDeleteTrip={handleDeleteTrip}
         />

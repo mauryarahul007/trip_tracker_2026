@@ -137,6 +137,14 @@ export function IconChevronLeft({ size = 20, className = 'icon' }: IconProps) {
   );
 }
 
+export function IconChevronRight({ size = 20, className = 'icon' }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" className={className} {...base}>
+      <path d="M9 5l7 7-7 7" />
+    </svg>
+  );
+}
+
 export function IconCalendar({ size = 20, className = 'icon' }: IconProps) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" className={className} {...base}>

@@ -641,6 +641,96 @@ button, [role="button"], input, select, a {
   color: var(--text-muted);
 }
 
+/* Date-range picker — pick trip start and end in one popover instead of
+   two separate native date inputs. */
+.date-picker-popover {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 30;
+  width: 288px;
+  max-width: calc(100vw - 48px);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-md);
+  box-shadow: 0 10px 25px -5px rgba(28, 42, 56, 0.22);
+  padding: 14px;
+}
+.date-picker-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+.date-picker-nav button {
+  display: flex;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-secondary);
+  padding: 5px;
+  border-radius: var(--border-radius-sm);
+}
+.date-picker-nav button:hover {
+  background: var(--bg-surface-hover);
+}
+.date-picker-nav span {
+  font-family: var(--font-family-title);
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--text-primary);
+}
+.date-picker-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+}
+.date-picker-weekdays span {
+  font-family: var(--font-family-mono);
+  font-size: 10px;
+  color: var(--text-muted);
+  text-align: center;
+  padding-bottom: 6px;
+}
+.date-picker-day {
+  width: 100%;
+  aspect-ratio: 1;
+  border: none;
+  background: none;
+  border-radius: 50%;
+  font-family: var(--font-family-body);
+  font-size: 12.5px;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+.date-picker-day:hover {
+  background: var(--bg-surface-hover);
+}
+.date-picker-day.today {
+  font-weight: 700;
+  color: var(--primary-accent);
+}
+.date-picker-day.in-range {
+  background: rgba(31, 110, 104, 0.10);
+  border-radius: 0;
+}
+.date-picker-day.selected {
+  background: var(--primary-accent);
+  color: #fff;
+  font-weight: 600;
+}
+.date-picker-clear {
+  width: 100%;
+  margin-top: 10px;
+  padding: 8px 0 0;
+  background: none;
+  border: none;
+  border-top: 1px dashed var(--border-color);
+  color: var(--color-danger);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
 /* Ink-stamp status badge */
 .stamp-badge {
   display: inline-flex;

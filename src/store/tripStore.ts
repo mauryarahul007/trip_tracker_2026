@@ -11,6 +11,7 @@ interface TripStore extends TripState {
   
   // Trip Actions
   createTrip: (name: string, startDate: string, endDate: string, baseCurrency: string) => Promise<void>;
+  updateTrip: (id: string, name: string, startDate: string, endDate: string) => Promise<void>;
   selectTrip: (id: string | null) => Promise<void>;
   deleteTrip: (id: string) => Promise<void>;
   
@@ -183,6 +184,13 @@ export const useTripStore = create<TripStore>((set, get) => {
       };
       const updatedTrips = [...get().trips, newTrip];
       await persist({ trips: updatedTrips, activeTripId: newTrip.id });
+    },
+
+    updateTrip: async (id, name, startDate, endDate) => {
+      const updatedTrips = get().trips.map((t) =>
+        t.id === id ? { ...t, name, startDate, endDate, updatedAt: Date.now() } : t
+      );
+      await persist({ trips: updatedTrips });
     },
 
     selectTrip: async (id) => {
