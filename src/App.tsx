@@ -836,12 +836,13 @@ export default function App() {
                           const isPositive = b.balance > 0.01;
                           const isNegative = b.balance < -0.01;
                           const color = isPositive ? 'var(--color-success)' : isNegative ? 'var(--color-danger)' : 'var(--text-secondary)';
-                          const sign = isPositive ? '+' : '';
+                          const absVal = Math.abs(b.balance).toFixed(2);
+                          const currencySymbol = activeTrip.baseCurrency === 'INR' ? '₹' : activeTrip.baseCurrency;
                           return (
-                            <div key={b.memberId} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', fontWeight: 500 }}>
-                              <span>{b.name}</span>
+                            <div key={b.memberId} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '14px', padding: '6px 0' }}>
+                              <span><strong>{b.name}</strong></span>
                               <span style={{ color, fontWeight: '700' }}>
-                                {sign}{activeTrip.baseCurrency === 'INR' ? '₹' : activeTrip.baseCurrency} {b.balance.toFixed(2)}
+                                {isPositive ? `gets back ${currencySymbol}${absVal}` : isNegative ? `owes ${currencySymbol}${absVal}` : 'settled'}
                               </span>
                             </div>
                           );
@@ -859,25 +860,27 @@ export default function App() {
                           🎉 All settlements complete! No outstanding debts.
                         </p>
                       ) : (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                           {transfers.map((t, idx) => {
                             const fromName = members[t.from]?.name || 'Unknown';
                             const toName = members[t.to]?.name || 'Unknown';
                             return (
-                              <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <div style={{ fontSize: '14px', fontWeight: 500 }}>
-                                  <strong>{fromName}</strong> pays <strong>{toName}</strong>
-                                  <div style={{ fontSize: '15px', fontWeight: '700', color: 'var(--color-danger)', marginTop: '2px' }}>
-                                    {activeTrip.baseCurrency === 'INR' ? '₹' : activeTrip.baseCurrency} {t.amount.toFixed(2)}
-                                  </div>
+                              <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: idx < transfers.length - 1 ? '1px dashed rgba(15,23,42,0.05)' : 'none' }}>
+                                <div style={{ fontSize: '14px' }}>
+                                  <strong>{fromName}</strong> owes <strong>{toName}</strong>
                                 </div>
-                                <button
-                                  className="gradient-btn"
-                                  style={{ padding: '6px 12px', fontSize: '12px', borderRadius: '8px' }}
-                                  onClick={() => handleSettle(t.from, t.to, t.amount)}
-                                >
-                                  Settle Balance
-                                </button>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                  <span style={{ fontSize: '14px', fontWeight: '700', color: 'var(--color-danger)' }}>
+                                    {activeTrip.baseCurrency === 'INR' ? '₹' : activeTrip.baseCurrency} {t.amount.toFixed(2)}
+                                  </span>
+                                  <button
+                                    className="gradient-btn"
+                                    style={{ padding: '6px 12px', fontSize: '12px', borderRadius: '8px' }}
+                                    onClick={() => handleSettle(t.from, t.to, t.amount)}
+                                  >
+                                    Settle
+                                  </button>
+                                </div>
                               </div>
                             );
                           })}
