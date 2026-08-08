@@ -225,3 +225,150 @@ One file. One tap. Download to device.
 
 Plan approved. Build not started yet.
 Next step: Phase 1 on your go.
+
+---
+
+## Architecture, Gaps & Security Audit
+
+### 1. Diagrams
+
+#### System Architecture
+```
+  [Mobile / Web UI (PWA)]
+         │
+         ▼
+  [Zustand State Store] ◀──▶ [Split Engine (Pure Utility)]
+         │
+         ▼
+  [Storage Adapter (localForage)]
+         │
+         ▼
+  [IndexedDB Database (Offline Browser Storage)]
+```
+
+#### Data Flow & Shadow Paths (Add Expense)
+```
+  INPUT (Title, Amount, Date, Category, Payer, SplitMode)
+    │
+    ▼
+  [VALIDATION] ────▶ [Empty/Nil Title?] ──▶ Fallback to "Untitled Expense"
+    │          ────▶ [Amount <= 0?]     ──▶ Block (Toast Warning)
+    │          ────▶ [Date Invalid?]    ──▶ Fallback to Current Date
+    │          ────▶ [Category Empty?]  ──▶ Block (Toast Warning)
+    ▼
+  [TRANSFORM] ──▶ Calculate shares based on SplitMode & Weights
+    │
+    ▼
+  [PERSIST] ────▶ Write to IndexedDB ──▶ [QuotaExceeded / SecurityError?]
+    │                                             │
+    │                                             ▼
+    │                                     [RESCUE] ──▶ Warning Toast & Keep Form Open
+    ▼
+  [OUTPUT] ─────▶ UI updates charts, tables, and balances
+```
+
+#### State Machine (Trip States)
+```
+  [ Greenfield ] ──▶ [ ACTIVE ] ──▶ [ ARCHIVED ]
+                        │
+                        ├─▶ Add Member
+                        ├─▶ Add/Edit Expense ──▶ Recalculate Balances
+                        └─▶ Settle Expense
+```
+
+#### Error Flow (Storage Write Failure)
+```
+  [ Operation: Write to DB ]
+              │
+              ├──▶ Success ──▶ [ Done ]
+              │
+              └──▶ QuotaExceededError / SecurityError
+                            │
+                            ▼
+                    [ Log warning ]
+                            │
+                            ▼
+                  [ Show Warning Toast ]
+                            │
+                            ▼
+               [ Keep Edit Form Active ]
+```
+
+### 2. NOT in Scope
+- **Receipt Photo OCR**: Explicitly skipped to focus on fast manual offline entries.
+- **Automatic Cloud Sync**: Deferred to later phases to keep phase 1 lightweight and local-only.
+
+### 3. What Already Exists
+- Greenfield project. No existing code, but standard PWA templates and styling conventions from our global skills will be reused.
+
+### 4. Dream State Delta
+- **Current**: No code or files.
+- **This Plan**: Local-only functional PWA with Category Charts, Excel Export, and Couples Split logic.
+- **12-Month Ideal**: Multi-currency offline PWA synced to a cloud database (Supabase/Firebase) with real-time push updates.
+
+### 5. Error & Rescue Registry
+| METHOD/CODEPATH | WHAT CAN GO WRONG | EXCEPTION CLASS | RESCUED? | RESCUE ACTION | USER SEES |
+|---|---|---|---|---|---|
+| `StorageAdapter#save` | Storage full | `QuotaExceededError` | Y | Toast warning, keep form open | "Storage full. Clean up device space." |
+| `StorageAdapter#save` | Private mode blocking | `SecurityError` | Y | Toast warning, request storage access | "Storage blocked by browser private mode." |
+| `SheetJS#export` | Large dataset OOM | `OutOfMemoryError` | Y | Catch and show alert | "Export failed due to size limit." |
+| `SheetJS#export` | Write blocked | `WritePermissionError` | Y | Alert with instructions | "Browser blocked spreadsheet download." |
+| `Chart#render` | Invalid data | `TypeError` | Y (Error Boundary) | Render fallback component | "Chart failed to load." |
+
+### 6. Failure Modes Registry
+| CODEPATH | FAILURE MODE | RESCUED? | TEST? | USER SEES? | LOGGED? |
+|---|---|---|---|---|---|
+| Service Worker | Aggressive caching blocks update | Y | Y | "New version available. Reload." | Y |
+| Member Deletion | Deleting payer in existing expense | Y | Y | Hidden from new forms, kept in math | Y |
+| Excel Export | Formula injection in title | Y | Y | Clean text values (prefix with `'`) | Y |
+
+### 7. Scope Expansion Decisions
+- **Mode selected**: SELECTIVE_EXPANSION
+- **Accepted**: None (User skipped cherry-picks; proceeding with standard plan baseline).
+- **Deferred to `TODOS.md`**: Dynamic UPI QR codes, Shareable PDF summaries, Split presets, Offline write queue.
+
+### 8. Implementation Tasks
+- [ ] **T1 (P1, human: ~1h / CC: ~10min)** — PWA Lifecycle — Implement service worker update listener with refresh toast UI.
+  - Surfaced by: Section 1 (Architecture Review)
+  - Files: `src/main.tsx`, `vite.config.ts`
+  - Verify: Run build, trigger manual SW update in devtools.
+- [ ] **T2 (P1, human: ~1h / CC: ~10min)** — Storage Layer — Wrap localForage calls in try-catch and display write-error notifications.
+  - Surfaced by: Section 1 (Architecture Review)
+  - Files: `src/services/storage.ts`
+  - Verify: Simulate full storage write failure in devtools.
+- [ ] **T3 (P2, human: ~0.5h / CC: ~5min)** — UI Stability — Build React Error Boundary component and wrap Recharts chart views.
+  - Surfaced by: Section 2 (Error & Rescue Map)
+  - Files: `src/components/ErrorBoundary.tsx`, `src/pages/Analytics.tsx`
+  - Verify: Render chart with invalid data.
+- [ ] **T4 (P2, human: ~0.5h / CC: ~5min)** — Security — Sanitize string cells in Excel export starting with `=`, `+`, `-`, `@`.
+  - Surfaced by: Section 3 (Security Review)
+  - Files: `src/utils/export.ts`
+  - Verify: Export expense titled `=SUM(1,2)` and verify it imports as plain text `'=SUM(1,2)`.
+- [ ] **T5 (P1, human: ~1.5h / CC: ~15min)** — Data Integrity — Add `archived` state to Member model and hide archived members from new inputs.
+  - Surfaced by: Section 4 (Data Edge Cases)
+  - Files: `src/types/index.ts`, `src/store/tripStore.ts`
+  - Verify: Delete a member with expenses, verify they remain in totals but are absent in new payer lists.
+- [ ] **T6 (P2, human: ~1h / CC: ~10min)** — Debuggability — Add JSON database Export/Import buttons in Settings screen.
+  - Surfaced by: Section 8 (Observability)
+  - Files: `src/pages/Settings.tsx`, `src/utils/backup.ts`
+  - Verify: Export backup, clear IndexedDB, import backup, verify complete data restore.
+
+---
+
+## GSTACK REVIEW REPORT
+
+| Metric | Value |
+|---|---|
+| Review | plan-ceo-review |
+| Runs | 1 |
+| Last Run | 2026-08-08 13:25 |
+| Mode | SELECTIVE_EXPANSION |
+| Gaps Found | 6 |
+| Critical Gaps | 0 |
+| Status | clean |
+
+**VERDICT: APPROVED WITH CONCERNS**
+
+The Trip Tracker plan is strong and well-targeted as a PWA-first local expense splitting application. The architecture is sound. However, we have identified 6 architectural and security gaps (aggressive service worker cache lock, storage quota limits, missing chart error boundaries, Excel injection, member deletion, and lack of offline backups) that must be addressed during Phase 1. Six tasks have been added to the build plan to resolve these concerns.
+
+NO UNRESOLVED DECISIONS
