@@ -66,6 +66,7 @@ export default function App() {
       setEditingMemberId(null);
       setNewMemberName('');
     }
+    setMemberFormError('');
     setShowAddMember(val);
   };
 
@@ -132,6 +133,7 @@ export default function App() {
   // Inline form validation errors (replace window.alert)
   const [groupFormError, setGroupFormError] = useState('');
   const [expenseFormError, setExpenseFormError] = useState('');
+  const [memberFormError, setMemberFormError] = useState('');
   const [showMembersRequiredNotice, setShowMembersRequiredNotice] = useState(false);
 
   // Load state on mount
@@ -352,11 +354,27 @@ export default function App() {
 
   const handleAddMember = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newMemberName.trim()) return;
+    const nameTrimmed = newMemberName.trim();
+    if (!nameTrimmed) return;
+
+    const nameLower = nameTrimmed.toLowerCase();
+    const isDuplicateMember = activeTripMembers.some(
+      (m) => m.name.toLowerCase() === nameLower && m.id !== editingMemberId
+    );
+    const isDuplicateGroup = activeTripGroups.some(
+      (g) => g.name.toLowerCase() === nameLower
+    );
+
+    if (isDuplicateMember || isDuplicateGroup) {
+      setMemberFormError('A member or group with this name already exists on this trip.');
+      return;
+    }
+
+    setMemberFormError('');
     if (editingMemberId) {
-      await updateMember(editingMemberId, newMemberName.trim());
+      await updateMember(editingMemberId, nameTrimmed);
     } else {
-      await addMember(newMemberName.trim());
+      await addMember(nameTrimmed);
     }
     setNewMemberName('');
     setEditingMemberId(null);
@@ -367,6 +385,7 @@ export default function App() {
   const handleStartEditMember = (member: Member) => {
     setEditingMemberId(member.id);
     setNewMemberName(member.name);
+    setMemberFormError('');
     setShowAddMember(true);
   };
 
@@ -399,17 +418,33 @@ export default function App() {
 
   const handleCreateGroup = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newGroupName.trim()) return;
+    const nameTrimmed = newGroupName.trim();
+    if (!nameTrimmed) return;
+
     const selectedIds = Object.keys(selectedGroupMembers).filter((id) => selectedGroupMembers[id]);
     if (selectedIds.length === 0) {
       setGroupFormError('Please select at least one member to add to the group.');
       return;
     }
+
+    const nameLower = nameTrimmed.toLowerCase();
+    const isDuplicateMember = activeTripMembers.some(
+      (m) => m.name.toLowerCase() === nameLower
+    );
+    const isDuplicateGroup = activeTripGroups.some(
+      (g) => g.name.toLowerCase() === nameLower && g.id !== editingGroupId
+    );
+
+    if (isDuplicateMember || isDuplicateGroup) {
+      setGroupFormError('A member or group with this name already exists on this trip.');
+      return;
+    }
+
     setGroupFormError('');
     if (editingGroupId) {
-      await updateGroup(editingGroupId, newGroupName.trim(), selectedIds);
+      await updateGroup(editingGroupId, nameTrimmed, selectedIds);
     } else {
-      await createGroup(newGroupName.trim(), selectedIds);
+      await createGroup(nameTrimmed, selectedIds);
     }
     setNewGroupName('');
     setSelectedGroupMembers({});
@@ -900,6 +935,7 @@ export default function App() {
                 onToggleArchiveMember={toggleArchiveMember}
                 editingMemberId={editingMemberId}
                 onStartEditMember={handleStartEditMember}
+                memberFormError={memberFormError}
                 visibleTripGroups={visibleTripGroups}
                 showAddGroup={showAddGroup}
                 setShowAddGroup={setShowAddGroup}

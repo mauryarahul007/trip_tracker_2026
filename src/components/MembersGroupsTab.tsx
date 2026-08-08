@@ -16,6 +16,7 @@ type Props = {
   onToggleArchiveMember: (id: string) => void;
   editingMemberId: string | null;
   onStartEditMember: (member: Member) => void;
+  memberFormError: string;
 
   visibleTripGroups: Group[];
   showAddGroup: boolean;
@@ -48,6 +49,7 @@ export function MembersGroupsTab({
   onToggleArchiveMember,
   editingMemberId,
   onStartEditMember,
+  memberFormError,
   visibleTripGroups,
   showAddGroup,
   setShowAddGroup,
@@ -100,6 +102,9 @@ export function MembersGroupsTab({
               onChange={(e) => setNewMemberName(e.target.value)}
             />
           </div>
+          {memberFormError && (
+            <p style={{ color: 'var(--color-danger)', fontSize: '13px', marginTop: '4px', marginBottom: '8px' }}>{memberFormError}</p>
+          )}
           <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
             <button type="submit" className="gradient-btn" style={{ flex: 1, padding: '10px' }}>
               {editingMemberId ? 'Update' : 'Add'}
