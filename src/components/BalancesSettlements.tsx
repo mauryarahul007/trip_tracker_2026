@@ -52,14 +52,14 @@ type TransferRowProps = {
 function TransferRow({ transfer: t, note, currencySymbol, isSettled, customValue, onCustomChange, onSettle }: TransferRowProps) {
   const settleAmount = parseFloat(customValue) || t.amount;
   return (
-    <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '8px', padding: '10px 0', borderBottom: '1.5px dashed var(--border-color)' }}>
-      <div style={{ fontSize: '14px' }}>
+    <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '8px', padding: '10px 0', borderBottom: '1.5px dashed var(--border-color)' }}>
+      <div style={{ fontSize: '14px', flex: '1 1 auto', minWidth: 0 }}>
         <strong>{t.fromLabel}</strong> owes <strong>{t.toLabel}</strong>
         {note && (
           <span style={{ display: 'block', fontSize: '11px', color: 'var(--text-muted)' }}>{note}</span>
         )}
       </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: 'auto' }}>
         <span className="money" style={{ fontSize: '14px', fontWeight: '600', color: isSettled ? 'var(--color-success)' : 'var(--color-danger)' }}>
           {currencySymbol} {t.amount.toFixed(2)}
         </span>
@@ -179,8 +179,8 @@ export function BalancesSettlements({
                   onClick={() => onMemberClick(n.memberIds[0])}
                   title={`View ${n.name}'s expenses`}
                 >
-                  <span><strong>{n.name}</strong></span>
-                  <span style={{ color: balanceColor(n.balance), fontWeight: '700' }}>
+                  <span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: '1 1 auto' }}><strong>{n.name}</strong></span>
+                  <span style={{ color: balanceColor(n.balance), fontWeight: '700', flexShrink: 0, marginLeft: '8px' }}>
                     {balanceLabel(n.balance, currencySymbol)}
                   </span>
                 </div>
@@ -212,12 +212,12 @@ export function BalancesSettlements({
                   onClick={() => setExpandedGroups({ ...expandedGroups, [n.id]: !isExpanded })}
                   title={`${isExpanded ? 'Collapse' : 'Expand'} ${n.name} group members`}
                 >
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                    <span style={{ display: 'inline-block', width: '10px', color: 'var(--text-muted)' }}>{isExpanded ? '▾' : '▸'}</span>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', minWidth: 0, flex: '1 1 auto' }}>
+                    <span style={{ display: 'inline-block', width: '10px', color: 'var(--text-muted)', flexShrink: 0 }}>{isExpanded ? '▾' : '▸'}</span>
                     <IconMembers size={15} className="icon-sm" />
-                    <strong>{n.name}</strong>
+                    <strong style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>{n.name}</strong>
                   </span>
-                  <span style={{ color: statusColor, fontWeight: '700' }}>
+                  <span style={{ color: statusColor, fontWeight: '700', flexShrink: 0, marginLeft: '8px' }}>
                     {statusLabel}
                   </span>
                 </div>
@@ -234,8 +234,8 @@ export function BalancesSettlements({
                           onClick={() => onMemberClick(mid)}
                           title={`View ${memberBalance.name}'s expenses`}
                         >
-                          <span>{memberBalance.name}</span>
-                          <span style={{ color: balanceColor(memberBalance.balance), fontWeight: '600' }}>
+                          <span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: '1 1 auto' }}>{memberBalance.name}</span>
+                          <span style={{ color: balanceColor(memberBalance.balance), fontWeight: '600', flexShrink: 0, marginLeft: '8px' }}>
                             {balanceLabel(memberBalance.balance, currencySymbol)}
                           </span>
                         </div>

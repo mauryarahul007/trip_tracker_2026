@@ -129,6 +129,13 @@ h1, h2, h3, h4 {
   letter-spacing: -0.01em;
 }
 
+/* Every tappable control skips the mobile browser's ~300ms tap delay /
+   double-tap-to-zoom detection, which otherwise makes custom buttons and
+   role="button" elements feel like they need two touches to register. */
+button, [role="button"], input, select, a {
+  touch-action: manipulation;
+}
+
 /* Amounts & data — tabular mono so digits line up in a column */
 .money, .amount-mono {
   font-family: var(--font-family-mono);

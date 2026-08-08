@@ -10,6 +10,7 @@ type Props = {
   activeTripMembers: Member[];
   activeTripExpenseCount: number;
   filteredExpenses: Expense[];
+  pendingDeleteId?: string;
   hasActiveFilters: boolean;
 
   search: string;
@@ -36,6 +37,7 @@ export function ExpenseList({
   activeTripMembers,
   activeTripExpenseCount,
   filteredExpenses,
+  pendingDeleteId,
   hasActiveFilters,
   search,
   setSearch,
@@ -125,6 +127,7 @@ export function ExpenseList({
       ) : (
         <div className="glass-card" style={{ padding: 0, overflow: 'hidden' }}>
           {filteredExpenses.map((exp, idx) => {
+            const isPending = exp.id === pendingDeleteId;
             const isPayerDeleted = trip ? !trip.memberIds.includes(exp.paidBy) : false;
             const hasDeletedParticipants = trip ? exp.splitMemberIds.some((id) => !trip.memberIds.includes(id)) : false;
             const needsReview = isPayerDeleted || hasDeletedParticipants;
@@ -145,8 +148,12 @@ export function ExpenseList({
             return (
               <div
                 key={exp.id}
+                aria-hidden={isPending}
                 style={{
                   borderBottom: idx < filteredExpenses.length - 1 ? '1.5px dashed var(--border-color)' : 'none',
+                  opacity: isPending ? 0.35 : 1,
+                  pointerEvents: isPending ? 'none' : undefined,
+                  transition: 'opacity 0.25s ease',
                 }}
               >
                 <SwipeableRow onDelete={() => onDelete(exp)}>

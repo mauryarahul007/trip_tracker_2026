@@ -85,7 +85,7 @@ export function SettingsTab({
             <input
               type="text"
               className="input-field"
-              style={{ width: '56px', textAlign: 'center' }}
+              style={{ width: '52px', height: '44px', textAlign: 'center', fontSize: '19px', padding: '0' }}
               placeholder="🏷️"
               maxLength={4}
               value={newCategoryIcon}
@@ -96,10 +96,10 @@ export function SettingsTab({
             />
             {showIconPicker && (
               <div style={{
-                position: 'absolute', top: 'calc(100% + 4px)', left: 0, zIndex: 20,
-                width: '176px', display: 'flex', flexWrap: 'wrap', gap: '4px',
-                padding: '8px', background: '#fff', border: '1px solid var(--border-color)',
-                borderRadius: 'var(--border-radius-sm)', boxShadow: '0 10px 25px -5px rgba(15,23,42,0.15)'
+                position: 'absolute', top: 'calc(100% + 6px)', left: 0, zIndex: 20,
+                width: '204px', display: 'flex', flexWrap: 'wrap', gap: '6px',
+                padding: '10px', background: 'var(--bg-surface)', border: '1px solid var(--border-color)',
+                borderRadius: 'var(--border-radius-md)', boxShadow: '0 10px 25px -5px rgba(28,42,56,0.2)'
               }}>
                 {CATEGORY_ICON_PRESETS.map((icon) => (
                   <button
@@ -110,10 +110,12 @@ export function SettingsTab({
                       setShowIconPicker(false);
                     }}
                     style={{
-                      width: '28px', height: '28px', fontSize: '15px', lineHeight: 1,
-                      borderRadius: '6px', cursor: 'pointer',
-                      border: newCategoryIcon === icon ? '2px solid var(--primary-accent)' : '1px solid transparent',
-                      background: newCategoryIcon === icon ? 'rgba(31,110,104,0.10)' : 'transparent',
+                      width: '32px', height: '32px', fontSize: '16px', lineHeight: 1,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      borderRadius: 'var(--border-radius-sm)', cursor: 'pointer',
+                      transition: 'var(--transition-smooth)',
+                      border: newCategoryIcon === icon ? '2px solid var(--primary-accent)' : '1.5px solid transparent',
+                      background: newCategoryIcon === icon ? 'rgba(31,110,104,0.10)' : 'var(--bg-surface-hover)',
                     }}
                   >
                     {icon}

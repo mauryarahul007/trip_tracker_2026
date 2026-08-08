@@ -954,6 +954,7 @@ export default function App() {
                   activeTripMembers={activeTripMembers}
                   activeTripExpenseCount={activeTripExpenses.length}
                   filteredExpenses={filteredExpenses}
+                  pendingDeleteId={pendingDeleteExpense?.id}
                   hasActiveFilters={hasActiveExpenseFilters}
                   search={expenseSearch}
                   setSearch={setExpenseSearch}

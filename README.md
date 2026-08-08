@@ -93,6 +93,7 @@ public/
 | [Reference: Settlement Algorithm](docs/reference-settlement.md) | How the greedy minimizer works |
 | [Reference: Charts & Analytics](docs/reference-analytics.md) | Formulas behind every stat card and chart |
 | [Reference: Storage Layer](docs/reference-storage.md) | IndexedDB + service worker offline design |
+| [Reference: Design System](docs/reference-design-system.md) | Palette, type, icons, and component patterns |
 | [Explanation: Split Modes](docs/explanation-split-modes.md) | Why four split modes exist and when to use each |
 | [Explanation: Settlement Design](docs/explanation-settlement-design.md) | Trade-offs in debt minimization |
 | [Explanation: Offline Caching](docs/explanation-offline-caching.md) | Why stale-while-revalidate, and what it trades off |
