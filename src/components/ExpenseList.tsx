@@ -124,16 +124,16 @@ export function ExpenseList({
             const cat = categories.find((c) => c.id === exp.category);
             const splitNames = exp.splitMemberIds.map((id) => members[id]?.name).filter(Boolean).join(', ');
             return (
-              <div key={exp.id} className="glass-card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px' }}>
+              <div key={exp.id} className="glass-card" style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', rowGap: '10px', padding: '16px' }}>
                 <div
-                  style={{ display: 'flex', gap: '12px', alignItems: 'center', cursor: 'pointer', flex: 1 }}
+                  style={{ display: 'flex', gap: '12px', alignItems: 'center', cursor: 'pointer', flex: '1 1 200px', minWidth: 0 }}
                   onClick={() => onReview(exp)}
                 >
-                  <div style={{ fontSize: '24px', background: 'rgba(15,23,42,0.03)', padding: '8px', borderRadius: '50%' }}>
+                  <div style={{ flexShrink: 0, fontSize: '24px', background: 'rgba(15,23,42,0.03)', padding: '8px', borderRadius: '50%' }}>
                     {cat?.icon || '🏷️'}
                   </div>
-                  <div>
-                    <h4 style={{ fontSize: '15px', color: 'var(--primary-accent)', textDecoration: 'underline', textDecorationColor: 'rgba(79, 70, 229, 0.2)' }}>{exp.title}</h4>
+                  <div style={{ minWidth: 0 }}>
+                    <h4 style={{ fontSize: '15px', color: 'var(--primary-accent)', textDecoration: 'underline', textDecorationColor: 'rgba(79, 70, 229, 0.2)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{exp.title}</h4>
                     <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '2px' }}>
                       Paid by: <strong>{payer?.name || 'Deleted'}</strong> • {exp.date}
                     </p>
@@ -142,26 +142,28 @@ export function ExpenseList({
                     </p>
                   </div>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span style={{ fontSize: '16px', fontWeight: '700', color: 'var(--text-primary)' }}>
+                <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'flex-end', gap: '8px', flex: '0 1 auto' }}>
+                  <span style={{ fontSize: '16px', fontWeight: '700', color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
                     {currencySymbol} {exp.amount.toFixed(2)}
                   </span>
-                  {!exp.title.startsWith('Settlement:') && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    {!exp.title.startsWith('Settlement:') && (
+                      <button
+                        className="secondary-btn"
+                        style={{ padding: '4px 8px', fontSize: '11px' }}
+                        onClick={(e) => { e.stopPropagation(); onEdit(exp); }}
+                      >
+                        Edit
+                      </button>
+                    )}
                     <button
                       className="secondary-btn"
-                      style={{ padding: '4px 8px', fontSize: '11px' }}
-                      onClick={(e) => { e.stopPropagation(); onEdit(exp); }}
+                      style={{ padding: '4px 8px', fontSize: '11px', color: 'var(--color-danger)', borderColor: 'rgba(225,29,72,0.15)' }}
+                      onClick={(e) => { e.stopPropagation(); onDelete(exp); }}
                     >
-                      Edit
+                      Delete
                     </button>
-                  )}
-                  <button
-                    className="secondary-btn"
-                    style={{ padding: '4px 8px', fontSize: '11px', color: 'var(--color-danger)', borderColor: 'rgba(225,29,72,0.15)' }}
-                    onClick={(e) => { e.stopPropagation(); onDelete(exp); }}
-                  >
-                    Delete
-                  </button>
+                  </div>
                 </div>
               </div>
             );
