@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { Expense, Group, Trip } from '../types';
 import { buildSettlementNodes, calculateGroupInternalTransfers, type MemberBalance, type Transfer } from '../utils/settlement';
 import { IconCheck, IconCheckCircle, IconMembers } from './Icons';
+import { initial } from '../utils/initials';
 
 type Props = {
   trip: Trip;
@@ -94,6 +95,265 @@ function TransferRow({ transfer: t, note, currencySymbol, isSettled, customValue
   );
 }
 
+type GraphProps = {
+  balances: MemberBalance[];
+  groups: Group[];
+  transfers: Transfer[];
+  currencySymbol: string;
+  activeTripExpenses: Expense[];
+};
+
+function DebtFlowGraph({ balances, groups, transfers, currencySymbol, activeTripExpenses }: GraphProps) {
+  const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
+  const [hoveredTransferKey, setHoveredTransferKey] = useState<string | null>(null);
+
+  const debtors = Array.from(new Set(transfers.map((t) => t.from)));
+  const creditors = Array.from(new Set(transfers.map((t) => t.to)));
+
+  const nodes = buildSettlementNodes(balances, groups);
+  const debtorNodes = nodes.filter((n) => debtors.includes(n.id));
+  const creditorNodes = nodes.filter((n) => creditors.includes(n.id));
+
+  // Sizing and layout math
+  const width = 460;
+  const height = 280;
+  const paddingX = 75;
+  const paddingY = 40;
+
+  const xDebtors = paddingX;
+  const xCreditors = width - paddingX;
+
+  const debtorPositions = debtorNodes.reduce<Record<string, number>>((acc, node, index) => {
+    const y = debtorNodes.length === 1
+      ? height / 2
+      : paddingY + index * (height - 2 * paddingY) / (debtorNodes.length - 1);
+    acc[node.id] = y;
+    return acc;
+  }, {});
+
+  const creditorPositions = creditorNodes.reduce<Record<string, number>>((acc, node, index) => {
+    const y = creditorNodes.length === 1
+      ? height / 2
+      : paddingY + index * (height - 2 * paddingY) / (creditorNodes.length - 1);
+    acc[node.id] = y;
+    return acc;
+  }, {});
+
+  const maxAmount = Math.max(...transfers.map((t) => t.amount), 1);
+  const getStrokeWidth = (amount: number) => 1.5 + (amount / maxAmount) * 6.5;
+
+  // Active hover states checks
+  const isAnyHovered = hoveredNodeId !== null || hoveredTransferKey !== null;
+
+  // Find currently active hovered transfer for tooltip
+  const activeTooltipTransfer = hoveredTransferKey
+    ? transfers.find((t) => `${t.from}|${t.to}` === hoveredTransferKey)
+    : null;
+
+  return (
+    <div style={{ position: 'relative' }}>
+      <svg viewBox={`0 0 ${width} ${height}`} className="graph-svg">
+        <defs>
+          <marker
+            id="arrow-default"
+            viewBox="0 0 10 10"
+            refX="23"
+            refY="5"
+            markerWidth="5"
+            markerHeight="5"
+            orient="auto"
+          >
+            <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="rgba(28, 42, 56, 0.4)" />
+          </marker>
+          <marker
+            id="arrow-hovered"
+            viewBox="0 0 10 10"
+            refX="23"
+            refY="5"
+            markerWidth="6"
+            markerHeight="6"
+            orient="auto"
+          >
+            <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="var(--primary-accent)" />
+          </marker>
+        </defs>
+
+        {/* Flows (Paths) */}
+        {transfers.map((t) => {
+          const key = `${t.from}|${t.to}`;
+          const y1 = debtorPositions[t.from];
+          const y2 = creditorPositions[t.to];
+          if (y1 === undefined || y2 === undefined) return null;
+
+          const isSettled = activeTripExpenses.some(
+            (e) =>
+              e.title.startsWith('Settlement:') &&
+              e.paidBy === t.fromMemberId &&
+              e.splitMemberIds.includes(t.toMemberId) &&
+              Math.abs(e.amount - t.amount) < 0.02
+          );
+          const isTransferHovered = hoveredTransferKey === key;
+          const isNodeConnected = hoveredNodeId === t.from || hoveredNodeId === t.to;
+
+          let status: 'highlighted' | 'dimmed' | 'normal' = 'normal';
+          if (isAnyHovered) {
+            if (isTransferHovered || (hoveredNodeId !== null && isNodeConnected)) {
+              status = 'highlighted';
+            } else {
+              status = 'dimmed';
+            }
+          }
+
+          const strokeWidth = getStrokeWidth(t.amount);
+          const controlX = (xDebtors + xCreditors) / 2;
+
+          return (
+            <path
+              key={key}
+              d={`M ${xDebtors} ${y1} C ${controlX} ${y1}, ${controlX} ${y2}, ${xCreditors} ${y2}`}
+              className={`graph-flow-path ${status === 'dimmed' ? 'dimmed' : ''} ${status === 'highlighted' ? 'highlighted' : ''}`}
+              strokeWidth={strokeWidth}
+              strokeDasharray={isSettled ? '4' : undefined}
+              markerEnd={status === 'highlighted' || isTransferHovered ? 'url(#arrow-hovered)' : 'url(#arrow-default)'}
+              onMouseEnter={() => setHoveredTransferKey(key)}
+              onMouseLeave={() => setHoveredTransferKey(null)}
+            />
+          );
+        })}
+
+        {/* Debtor Nodes */}
+        {debtorNodes.map((n) => {
+          const y = debtorPositions[n.id];
+          const isNodeHovered = hoveredNodeId === n.id;
+          const isNodeConnectedToHoveredTransfer = hoveredTransferKey
+            ? hoveredTransferKey.split('|')[0] === n.id
+            : false;
+
+          let status: 'highlighted' | 'dimmed' | 'normal' = 'normal';
+          if (isAnyHovered) {
+            if (isNodeHovered || isNodeConnectedToHoveredTransfer) {
+              status = 'highlighted';
+            } else {
+              status = 'dimmed';
+            }
+          }
+
+          return (
+            <g
+              key={n.id}
+              transform={`translate(${xDebtors}, ${y})`}
+              className={`graph-node ${status === 'dimmed' ? 'dimmed' : ''} ${status === 'highlighted' ? 'highlighted' : ''}`}
+              onMouseEnter={() => setHoveredNodeId(n.id)}
+              onMouseLeave={() => setHoveredNodeId(null)}
+            >
+              <circle r="16" className="graph-node-avatar-circle" />
+              <text className="graph-node-text-avatar">{initial(n.name)}</text>
+              <text
+                x="-22"
+                y="-3"
+                textAnchor="end"
+                className="graph-node-text-name"
+              >
+                {n.name}
+              </text>
+              <text
+                x="-22"
+                y="10"
+                textAnchor="end"
+                className="graph-node-text-bal"
+                fill="var(--color-danger)"
+              >
+                -{currencySymbol}{Math.abs(n.balance).toFixed(2)}
+              </text>
+            </g>
+          );
+        })}
+
+        {/* Creditor Nodes */}
+        {creditorNodes.map((n) => {
+          const y = creditorPositions[n.id];
+          const isNodeHovered = hoveredNodeId === n.id;
+          const isNodeConnectedToHoveredTransfer = hoveredTransferKey
+            ? hoveredTransferKey.split('|')[1] === n.id
+            : false;
+
+          let status: 'highlighted' | 'dimmed' | 'normal' = 'normal';
+          if (isAnyHovered) {
+            if (isNodeHovered || isNodeConnectedToHoveredTransfer) {
+              status = 'highlighted';
+            } else {
+              status = 'dimmed';
+            }
+          }
+
+          return (
+            <g
+              key={n.id}
+              transform={`translate(${xCreditors}, ${y})`}
+              className={`graph-node ${status === 'dimmed' ? 'dimmed' : ''} ${status === 'highlighted' ? 'highlighted' : ''}`}
+              onMouseEnter={() => setHoveredNodeId(n.id)}
+              onMouseLeave={() => setHoveredNodeId(null)}
+            >
+              <circle r="16" className="graph-node-avatar-circle" />
+              <text className="graph-node-text-avatar">{initial(n.name)}</text>
+              <text
+                x="22"
+                y="-3"
+                textAnchor="start"
+                className="graph-node-text-name"
+              >
+                {n.name}
+              </text>
+              <text
+                x="22"
+                y="10"
+                textAnchor="start"
+                className="graph-node-text-bal"
+                fill="var(--color-success)"
+              >
+                +{currencySymbol}{Math.abs(n.balance).toFixed(2)}
+              </text>
+            </g>
+          );
+        })}
+
+        {/* SVG Tooltip */}
+        {activeTooltipTransfer && (() => {
+          const y1 = debtorPositions[activeTooltipTransfer.from];
+          const y2 = creditorPositions[activeTooltipTransfer.to];
+          const centerY = (y1 + y2) / 2;
+          const isSettled = activeTripExpenses.some(
+            (e) =>
+              e.title.startsWith('Settlement:') &&
+              e.paidBy === activeTooltipTransfer.fromMemberId &&
+              e.splitMemberIds.includes(activeTooltipTransfer.toMemberId) &&
+              Math.abs(e.amount - activeTooltipTransfer.amount) < 0.02
+          );
+
+          const tooltipText = `${activeTooltipTransfer.fromLabel} owes ${activeTooltipTransfer.toLabel}: ${currencySymbol}${activeTooltipTransfer.amount.toFixed(2)}${isSettled ? ' (Settled)' : ''}`;
+
+          // Rough width calculation: 6.2px per character
+          const textWidth = Math.max(160, tooltipText.length * 6.2);
+          const rectHeight = 24;
+
+          return (
+            <g transform={`translate(${width / 2}, ${centerY - 22})`} style={{ pointerEvents: 'none' }}>
+              <rect
+                x={-textWidth / 2}
+                y={-rectHeight / 2}
+                width={textWidth}
+                height={rectHeight}
+                className="graph-tooltip-rect"
+              />
+              <text className="graph-tooltip-text">{tooltipText}</text>
+            </g>
+          );
+        })()}
+      </svg>
+    </div>
+  );
+}
+
 export function BalancesSettlements({
   trip,
   balances,
@@ -108,6 +368,7 @@ export function BalancesSettlements({
   const currencySymbol = trip.baseCurrency === 'INR' ? '₹' : trip.baseCurrency;
   const [customAmounts, setCustomAmounts] = useState<Record<string, string>>({});
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
+  const [isGraphExpanded, setIsGraphExpanded] = useState(true);
   const balanceNodes = buildSettlementNodes(balances, groups);
 
   const setCustom = (rowKey: string, v: string) => setCustomAmounts({ ...customAmounts, [rowKey]: v });
@@ -159,10 +420,38 @@ export function BalancesSettlements({
           <span>{balances.length} members</span>
           <span>{transfers.length} transfer{transfers.length === 1 ? '' : 's'} left</span>
         </div>
+    </div>
+
+    {/* Interactive Debt Flow Visualizer */}
+    <div className="glass-card" style={{ marginBottom: '16px' }}>
+      <div className="graph-card-header" onClick={() => setIsGraphExpanded(!isGraphExpanded)}>
+        <h4 style={{ fontSize: '12px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', margin: 0 }}>
+          Interactive Debt Flow Graph
+        </h4>
+        <button type="button" className="graph-toggle-btn">
+          {isGraphExpanded ? 'Collapse ▴' : 'Expand ▾'}
+        </button>
       </div>
 
-      {/* Balances List */}
-      <div className="glass-card" style={{ marginBottom: '16px' }}>
+      {isGraphExpanded && (
+        transfers.length === 0 ? (
+          <p style={{ color: 'var(--color-success)', fontSize: '14px', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '6px', justifyContent: 'center', padding: '24px 0' }}>
+            <IconCheckCircle size={17} className="icon" /> All settlements complete — no debts to show.
+          </p>
+        ) : (
+          <DebtFlowGraph
+            balances={balances}
+            groups={groups}
+            transfers={transfers}
+            currencySymbol={currencySymbol}
+            activeTripExpenses={activeTripExpenses}
+          />
+        )
+      )}
+    </div>
+
+    {/* Balances List */}
+    <div className="glass-card" style={{ marginBottom: '16px' }}>
         <h4 style={{ fontSize: '12px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '12px' }}>
           Member Balances
         </h4>
