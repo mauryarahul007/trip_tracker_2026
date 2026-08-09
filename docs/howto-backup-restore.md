@@ -91,7 +91,35 @@ After a successful import, check the **Trips** home screen — your restored tri
 
 ---
 
+## Diagnostics and Storage Estimate
+
+The Settings page displays diagnostic utilities to monitor connectivity and local storage:
+- **Connection Status:** Displays whether your device is currently **Online** or **Offline**.
+- **Local Disk Usage:** Shows how many bytes/megabytes the app is currently storing in IndexedDB relative to your browser's estimated storage quota.
+
+---
+
+## Seeding Demo Data
+
+If you want to test the app features without manually inputting expenses, you can load mock data:
+1. Open **Settings**.
+2. Under **Quick Seed Demo Data**, click **Load Demo Trip**.
+3. This creates a pre-populated trip named *"Road Trip to Goa ☀️"* with 4 members, custom groups, and 6 diverse expense splits. You'll be automatically redirected to the trip dashboard to view simulated Balances, Settlements, and Charts.
+
+---
+
+## Factory Reset (Clear All Data)
+
+To wipe all data from your device:
+1. Open **Settings**.
+2. Scroll to the bottom and click **Clear All Data** under **Factory Reset**.
+3. Accept the double-confirmation prompt: *"This will permanently delete all trips, members, groups, and expenses. This action cannot be undone."*
+4. All storage is cleared and the app is reset to its factory defaults.
+
+---
+
 ## Related
 
 - [Reference: Storage Layer](reference-storage.md) — where this data lives and how import/export map to `TripState`
 - [Explanation: Offline Caching](explanation-offline-caching.md) — why the app needs a manual backup path instead of cloud sync
+

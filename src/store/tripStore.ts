@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import type { Trip, Member, Group, Expense, Category, TripState } from '../types';
 import { storage, StorageError } from '../services/storage';
+import { generateDemoData } from '../utils/demoSeed';
+
 
 interface TripStore extends TripState {
   initialized: boolean;
@@ -38,6 +40,8 @@ interface TripStore extends TripState {
   // Database Backup Actions
   exportDatabase: () => string;
   importDatabase: (jsonString: string) => Promise<boolean>;
+  clearDatabase: () => Promise<void>;
+  loadDemoTrip: () => Promise<void>;
 }
 
 const DEFAULT_CATEGORIES: Category[] = [
@@ -493,6 +497,36 @@ export const useTripStore = create<TripStore>((set, get) => {
         console.error('Import database JSON parse failure:', e);
         return false;
       }
+    },
+
+    clearDatabase: async () => {
+      await storage.clearAll();
+      set({
+        trips: [],
+        activeTripId: null,
+        members: {},
+        groups: {},
+        expenses: [],
+        categories: DEFAULT_CATEGORIES,
+        storageError: null,
+      });
+    },
+
+    loadDemoTrip: async () => {
+      const { trip, members: newMembers, groups: newGroups, expenses: newExpenses } = generateDemoData();
+
+      const updatedTrips = [...get().trips, trip];
+      const updatedMembers = { ...get().members, ...newMembers };
+      const updatedGroups = { ...get().groups, ...newGroups };
+      const updatedExpenses = [...get().expenses, ...newExpenses];
+
+      await persist({
+        trips: updatedTrips,
+        activeTripId: trip.id,
+        members: updatedMembers,
+        groups: updatedGroups,
+        expenses: updatedExpenses,
+      });
     },
   };
 });

@@ -48,6 +48,8 @@ export default function App() {
     deleteCategory,
     exportDatabase,
     importDatabase,
+    clearDatabase,
+    loadDemoTrip,
   } = useTripStore();
 
   // Navigation tabs: 'expenses' | 'members' | 'analytics' | 'settings'
@@ -851,6 +853,24 @@ export default function App() {
     URL.revokeObjectURL(url);
   };
 
+  const handleClearDatabase = () => {
+    setConfirmRequest({
+      title: 'Clear All Data',
+      message: 'This will permanently delete all trips, members, groups, and expenses. This action cannot be undone. Are you sure you want to proceed?',
+      confirmLabel: 'Clear All',
+      danger: true,
+      onConfirm: async () => {
+        await clearDatabase();
+        setConfirmRequest(null);
+      },
+    });
+  };
+
+  const handleLoadDemoTrip = async () => {
+    await loadDemoTrip();
+    setActiveTab('expenses');
+  };
+
   // Loading view
   if (!initialized) {
     return (
@@ -1096,6 +1116,8 @@ export default function App() {
                 setImportJson={setImportJson}
                 importStatus={importStatus}
                 onImport={handleImport}
+                onClearDatabase={handleClearDatabase}
+                onLoadDemoTrip={handleLoadDemoTrip}
               />
             )}
           </main>

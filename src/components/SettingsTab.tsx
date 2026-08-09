@@ -24,6 +24,8 @@ type Props = {
   setImportJson: (v: string) => void;
   importStatus: 'idle' | 'success' | 'error';
   onImport: () => void;
+  onClearDatabase: () => void;
+  onLoadDemoTrip: () => void;
 };
 
 export function SettingsTab({
@@ -44,10 +46,72 @@ export function SettingsTab({
   setImportJson,
   importStatus,
   onImport,
+  onClearDatabase,
+  onLoadDemoTrip,
 }: Props) {
+  const [isOnline, setIsOnline] = React.useState(navigator.onLine);
+  const [storageEstimate, setStorageEstimate] = React.useState<{ used: number; quota: number } | null>(null);
+
+  React.useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    if (navigator.storage && navigator.storage.estimate) {
+      navigator.storage.estimate().then((estimate) => {
+        setStorageEstimate({
+          used: estimate.usage || 0,
+          quota: estimate.quota || 0,
+        });
+      });
+    }
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
+  const formatBytes = (bytes: number) => {
+    if (bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+  };
+
   return (
     <div className="fade-in">
       <h3 style={{ fontSize: '18px', marginBottom: '20px' }}>Settings & Data Utility</h3>
+
+      {/* Diagnostics Panel */}
+      <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '24px' }}>
+        <h4 style={{ fontSize: '16px' }}>App Connection & Storage</h4>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '13px' }}>
+            <span style={{ color: 'var(--text-secondary)' }}>Connection Status:</span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 500, color: isOnline ? 'var(--color-success)' : 'var(--color-danger)' }}>
+              <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: isOnline ? 'var(--color-success)' : 'var(--color-danger)', display: 'inline-block' }}></span>
+              {isOnline ? 'Online' : 'Offline'}
+            </span>
+          </div>
+          {storageEstimate && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
+                <span style={{ color: 'var(--text-secondary)' }}>Local Disk Usage:</span>
+                <span style={{ fontWeight: 500 }}>
+                  {formatBytes(storageEstimate.used)} of {formatBytes(storageEstimate.quota)}
+                </span>
+              </div>
+              <div style={{ width: '100%', height: '4px', background: 'rgba(15,23,42,0.06)', borderRadius: '2px', overflow: 'hidden' }}>
+                <div style={{ width: `${Math.min(100, (storageEstimate.used / storageEstimate.quota) * 100)}%`, height: '100%', background: 'var(--primary-accent)' }}></div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
 
       {/* Manage Categories */}
       <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '24px' }}>
@@ -189,6 +253,28 @@ export function SettingsTab({
             )}
           </div>
         )}
+      </div>
+
+      {/* Quick Seed Demo Trip */}
+      <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '24px' }}>
+        <h4 style={{ fontSize: '16px' }}>Quick Seed Demo Data</h4>
+        <p style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
+          Populate a mock trip ("Road Trip to Goa") pre-loaded with sample members, custom groups, and 6 diverse expense splits to see the settlement engine and charts in action.
+        </p>
+        <button type="button" className="gradient-btn" style={{ padding: '12px', background: 'var(--secondary-accent)' }} onClick={onLoadDemoTrip}>
+          Load Demo Trip
+        </button>
+      </div>
+
+      {/* Factory Reset */}
+      <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '24px', borderColor: 'rgba(184, 69, 46, 0.25)' }}>
+        <h4 style={{ fontSize: '16px', color: 'var(--color-danger)' }}>Factory Reset</h4>
+        <p style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
+          Wipe all local trips, expenses, members, and custom settings. This will completely clear your browser's IndexedDB for this application. Ensure you have backed up your data if needed.
+        </p>
+        <button type="button" className="gradient-btn" style={{ padding: '12px', background: 'var(--color-danger)' }} onClick={onClearDatabase}>
+          Clear All Data
+        </button>
       </div>
     </div>
   );

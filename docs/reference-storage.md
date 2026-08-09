@@ -56,7 +56,8 @@ Calls `localforage.getItem(key)`. Returns `null` on any failure (safe — the ap
 
 ### clearAll
 
-Calls `localforage.clear()`. Defined for wiping all IndexedDB data for the app, but as of this writing there is no button wired to it in Settings — it's unused by the current UI.
+Calls `localforage.clear()`. Used for wiping all IndexedDB data for the app during a Factory Reset. It is wired to the "Clear All Data" button in the Settings tab, prompting the user with a double-confirmation modal first.
+
 
 ---
 
