@@ -57,9 +57,12 @@ src/
 ├── utils/settlement.ts     # Greedy settlement minimization algorithm
 ├── utils/csvExport.ts      # Excel-compatible CSV exporter
 ├── utils/image.ts          # Client-side receipt photo compression
+├── utils/calendar.ts       # Monthly grid generation and date operations
+├── utils/dateRange.ts      # Trip date-range formatter for app header
+├── utils/initials.ts       # Name avatar initial generator
 ├── App.tsx                 # Owns state/handlers, wires tab components together
 ├── components/
-│   ├── TripsListScreen.tsx     # Home screen: trip list + create trip form
+│   ├── TripsListScreen.tsx     # Home screen: trip list + create/edit trip form
 │   ├── ExpenseForm.tsx         # Add/edit expense drawer
 │   ├── ExpenseList.tsx         # Search/filter bar + expense list
 │   ├── BalancesSettlements.tsx # Balances panel + settlement actions
@@ -69,6 +72,7 @@ src/
 │   ├── ExpenseReviewModal.tsx  # Expense detail modal
 │   ├── ConfirmDialog.tsx       # Reusable confirm modal (replaces window.confirm)
 │   ├── UndoToasts.tsx          # Stacked 5s undo-delete toasts
+│   ├── DateRangePicker.tsx     # Custom inline calendar popover picker
 │   └── NavTabs.tsx             # Bottom tab bar
 └── index.css                # Design system (CSS variables, component classes)
 

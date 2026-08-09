@@ -26,7 +26,7 @@ You'll add an expense with the right split mode for your situation — equal, we
 
 ### 1. Open the expense form
 
-Click **+ Add Expense** on the Expenses tab. If you have no members yet, the app redirects you to add members first.
+Click **+ Add Expense** on the Expenses tab. This opens a modal sheet overlay for entering the expense details. (If you have no members yet, the app redirects you to add members first.)
 
 ### 2. Fill in the basics
 
@@ -38,7 +38,7 @@ Click **+ Add Expense** on the Expenses tab. If you have no members yet, the app
 
 ### 3. Select who splits the expense
 
-Under **Split Among Members**, check each person who participated. Use the **group shortcuts** to check everyone in a named group in one click.
+Under **Split Among Members**, select each participant in the member grid. Use the **group shortcuts** to select everyone in a named group with one click (which replaces your current selection).
 
 ### 4. Choose the split mode
 
@@ -48,7 +48,7 @@ Select one of the four modes:
 
 **Custom Weight** — a number field appears next to each checked member. Enter relative weights (e.g. 2, 1, 1). Shares are proportional: weight ÷ total weight × amount. A running "Total weight" readout updates as you type (informational only — no target to hit).
 
-**Exact Amount** — enter each person's exact share. The sum must equal the total amount (within ₹0.02 tolerance for rounding). A running total (e.g. "₹640.00 / ₹850.00") appears below the checklist, in red until it matches and green with a ✓ once it does — you don't have to submit to find out it's wrong.
+**Exact Amount** — enter each person's exact share. The sum must equal the total amount (within ₹0.02 tolerance for rounding). A running total (e.g. "₹640.00 / ₹850.00") appears below the selection grid, in red until it matches and green with a ✓ once it does — you don't have to submit to find out it's wrong.
 
 **Percentage** — enter each person's percentage. The sum must equal 100% (within 0.05% tolerance). Same live running total, e.g. "82.0 / 100%" turning green at 100%.
 
@@ -104,7 +104,7 @@ After saving, scroll down to **Balances & Settlements**. The member who paid sho
 
 | Problem | Fix |
 |---------|-----|
-| "Please select at least one member" | Check at least one member in the split panel |
+| "Please select at least one member" | Select at least one member in the split grid |
 | "Sum of amounts must equal total" | In Exact mode, make sure individual amounts add up to the total |
 | "Sum of percentages must equal 100%" | In Percentage mode, ensure percentages add up to 100 |
 | A member doesn't appear in the split list | They may be archived — check Members & Groups tab |

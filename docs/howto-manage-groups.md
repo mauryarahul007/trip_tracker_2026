@@ -22,7 +22,7 @@ Click the **👥 Members & Groups** tab. Groups live in the **Member Groups** se
 Click **+ Create Group** (hidden if the trip has no active members yet).
 
 - **Group Name** — Automatically generated based on the selected members (e.g., "Alice & Bob" or "Alice, Bob & Charlie") to speed up entry. If you prefer a custom name (like "Family" or "Kids"), you can type it directly. Clearing the input field completely will resume the auto-generation.
-- **Group Members** — check every member who belongs to this group. **Note**: A member can only belong to one group at a time. Members who are already part of an existing group will not be shown in the checklist when creating a new group.
+- **Group Members** — select every member who belongs to this group in the grid. **Note**: A member can only belong to one group at a time. Members who are already part of an existing group will not be shown in the selection grid when creating a new group.
 
 Click **Save Group**. If you try to save with zero members checked, an inline error appears under the form and it stays open.
 
@@ -34,7 +34,7 @@ Open **+ Add Expense**. In the **Division of Expense** section, if the trip has 
 Groups: ＋ Rahul & Priya   ＋ Kids
 ```
 
-Clicking a group button checks every (non-archived) member in that group for the split. It's **additive only** — it does not uncheck anyone, and it does not toggle off if you click it twice. Deselect individual members manually if the group doesn't exactly match who's splitting this expense.
+Clicking a group button selects every (non-archived) member in that group for the split, replacing any previous selection. Clicking it again (to deselect) unchecks all members of the group. If the group doesn't exactly match who's splitting, you can select/deselect individual members manually in the grid after applying the group template.
 
 ---
 
@@ -62,7 +62,7 @@ After creating or editing a group, open **+ Add Expense** and confirm the group'
 
 | Problem | Fix |
 |---------|-----|
-| "Please select at least one member to add to the group" | Check at least one member's checkbox before saving |
+| "Please select at least one member to add to the group" | Select at least one member's card before saving |
 | **+ Create Group** button is missing | The trip has zero non-archived members — add a member first |
 | Group quick-select doesn't include a member I expect | Archived members are silently skipped by group quick-select, even if they were in the group when it was created |
 | I deleted a group by mistake | Click **Undo** on the toast within 5 seconds. After that, groups aren't versioned — recreate it with **+ Create Group**; no data is lost on existing expenses |

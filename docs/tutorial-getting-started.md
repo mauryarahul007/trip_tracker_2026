@@ -33,7 +33,7 @@ Open [http://localhost:5173](http://localhost:5173). You'll see the Trip Tracker
    - **Start date**: today
    - **End date**: two days from now
    - **Currency**: INR (or your currency)
-3. Click **Create Trip**. The app switches into your new trip.
+3. Click **Save Trip**. The app switches into your new trip.
 
 ---
 

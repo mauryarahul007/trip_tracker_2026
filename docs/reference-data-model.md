@@ -156,6 +156,7 @@ Defined in `src/store/tripStore.ts`. All actions are async and persist state to 
 | Action | Signature | Effect |
 |--------|-----------|--------|
 | `createTrip` | `(name, startDate, endDate, baseCurrency) → void` | Creates trip, sets as active |
+| `updateTrip` | `(id, name, startDate, endDate) → void` | Updates name and dates of an existing trip |
 | `selectTrip` | `(id \| null) → void` | Sets active trip (null = home screen) |
 | `deleteTrip` | `(id) → void` | Removes trip and all its expenses |
 
