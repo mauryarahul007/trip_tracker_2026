@@ -216,7 +216,9 @@ export default function App() {
   const visibleTripGroups = activeTripGroups.filter((g) => g.id !== pendingDeleteGroup?.id);
 
   // Live running sum for exact/percentage split inputs (feedback while typing)
-  const splitSelectedIds = Object.keys(selectedSplitMembers).filter((id) => selectedSplitMembers[id]);
+  const splitSelectedIds = Object.keys(selectedSplitMembers)
+    .filter((id) => selectedSplitMembers[id])
+    .filter((id) => activeTrip?.memberIds.includes(id));
   const splitConfigSum = splitSelectedIds.reduce((sum, id) => sum + (parseFloat(newExpSplitConfig[id] || '') || 0), 0);
   const splitConfigTarget = newExpSplitMode === 'percentage' ? 100 : newExpSplitMode === 'exact' ? (parseFloat(newExpAmount) || 0) : null;
   const splitConfigMatches = splitConfigTarget === null || Math.abs(splitConfigSum - splitConfigTarget) < 0.02;
@@ -579,7 +581,9 @@ export default function App() {
   const handleAddExpense = async (e: React.FormEvent) => {
     e.preventDefault();
     const amountVal = parseFloat(newExpAmount);
-    const splitIds = Object.keys(selectedSplitMembers).filter((id) => selectedSplitMembers[id]);
+    const splitIds = Object.keys(selectedSplitMembers)
+      .filter((id) => selectedSplitMembers[id])
+      .filter((id) => activeTrip?.memberIds.includes(id));
 
     if (!newExpTitle.trim() || isNaN(amountVal) || amountVal <= 0 || !newExpPayer || !newExpCategory || !newExpDate) {
       setExpenseFormError('Please fill out all required fields with valid entries.');
