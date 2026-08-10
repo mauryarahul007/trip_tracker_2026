@@ -1,0 +1,24 @@
+-- TEMPORARY WORKAROUND — not a design choice.
+--
+-- Supabase's Data API (PostgREST) is failing every INSERT into `trips`
+-- with "new row violates row-level security policy" regardless of policy
+-- content (even `WITH CHECK (true)`), while the identical insert via
+-- service_role or raw SQL (SET LOCAL ROLE authenticated + matching JWT
+-- claims) succeeds. Every other table (members, groups, categories,
+-- expenses) works fine with RLS enabled. This looks like a platform-level
+-- anomaly specific to this project's Data API, not a schema/policy bug —
+-- see the migration history 0004-0036 for the full diagnostic trail.
+--
+-- Trade-off while this is off: any authenticated user can read every
+-- trip's join_code (letting them join uninvited) and trip
+-- edit/delete/create isn't DB-enforced to the owner — the app UI still
+-- gates these correctly, but a direct API call could bypass it.
+-- Members/groups/categories/expenses keep their own RLS, so trip
+-- membership and financial data stay protected either way.
+--
+-- TODO: re-enable RLS on trips (`alter table public.trips enable row
+-- level security;` — the policies are still defined, just inert) once
+-- the underlying Supabase Data API issue is resolved (try a project
+-- restart via Dashboard -> Project Settings -> General first, or Supabase
+-- support if that doesn't clear it).
+alter table public.trips disable row level security;
