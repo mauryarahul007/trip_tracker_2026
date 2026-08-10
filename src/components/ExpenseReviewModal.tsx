@@ -1,4 +1,5 @@
 import type { Category, Expense, Member, Trip } from '../types';
+import { IconEdit } from './Icons';
 
 type Props = {
   expense: Expense;
@@ -6,9 +7,11 @@ type Props = {
   categories: Category[];
   trip: Trip | undefined;
   onClose: () => void;
+  onEdit: () => void;
 };
 
-export function ExpenseReviewModal({ expense, members, categories, trip, onClose }: Props) {
+export function ExpenseReviewModal({ expense, members, categories, trip, onClose, onEdit }: Props) {
+  const isSettlement = expense.title.startsWith('Settlement:');
   const currencySymbol = trip?.baseCurrency === 'INR' ? '₹' : trip?.baseCurrency;
 
   return (
@@ -55,13 +58,24 @@ export function ExpenseReviewModal({ expense, members, categories, trip, onClose
             </span>
             <h3 style={{ fontSize: '22px', marginTop: '4px' }}>{expense.title}</h3>
           </div>
-          <button
-            className="secondary-btn"
-            style={{ padding: '6px 12px', fontSize: '13px' }}
-            onClick={onClose}
-          >
-            Close
-          </button>
+          <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
+            {!isSettlement && (
+              <button
+                className="secondary-btn"
+                style={{ padding: '6px 12px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}
+                onClick={onEdit}
+              >
+                <IconEdit size={13} className="icon-sm" /> Edit
+              </button>
+            )}
+            <button
+              className="secondary-btn"
+              style={{ padding: '6px 12px', fontSize: '13px' }}
+              onClick={onClose}
+            >
+              Close
+            </button>
+          </div>
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>

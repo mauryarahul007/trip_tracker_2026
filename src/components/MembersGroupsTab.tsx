@@ -1,7 +1,8 @@
 import React from 'react';
 import type { Group, Member } from '../types';
+import type { MemberBalance } from '../utils/settlement';
 import { initial } from '../utils/initials';
-import { IconCheck } from './Icons';
+import { IconCheck, IconEdit, IconTrash } from './Icons';
 
 type Props = {
   showMembersRequiredNotice: boolean;
@@ -10,6 +11,8 @@ type Props = {
   activeTripMembers: Member[];
   visibleMembers: Member[];
   archivedMembers: Member[];
+  balances: MemberBalance[];
+  currencySymbol: string;
   showAddMember: boolean;
   setShowAddMember: (v: boolean) => void;
   newMemberName: string;
@@ -44,6 +47,8 @@ export function MembersGroupsTab({
   activeTripMembers,
   visibleMembers,
   archivedMembers,
+  balances,
+  currencySymbol,
   showAddMember,
   setShowAddMember,
   newMemberName,
@@ -140,28 +145,53 @@ export function MembersGroupsTab({
           <p style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>No one's on this trip yet. Add the first member to start splitting costs.</p>
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '32px' }}>
-          {visibleMembers.map((member) => (
-            <div key={member.id} className="glass-card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px' }}>
-              <span style={{ fontSize: '15px', fontWeight: '500' }}>{member.name}</span>
-              <div style={{ display: 'flex', gap: '8px' }}>
-                <button
-                  className="secondary-btn"
-                  style={{ padding: '4px 10px', fontSize: '12px' }}
-                  onClick={() => onStartEditMember(member)}
-                >
-                  Edit
-                </button>
-                <button
-                  className="secondary-btn"
-                  style={{ padding: '4px 10px', fontSize: '12px', color: 'var(--color-danger)', borderColor: 'rgba(225,29,72,0.15)' }}
-                  onClick={() => onDeleteMember(member)}
-                >
-                  Delete
-                </button>
+        <div className="luggage-list">
+          {visibleMembers.map((member) => {
+            const balance = balances.find((b) => b.memberId === member.id)?.balance ?? 0;
+            const owes = balance < -0.01;
+            const amtLabel =
+              balance > 0.01
+                ? `owed ${currencySymbol}${balance.toFixed(2)}`
+                : owes
+                ? `owes ${currencySymbol}${Math.abs(balance).toFixed(2)}`
+                : 'settled';
+            return (
+              <div key={member.id} className={`luggage-tag${owes ? ' lt-owe' : ''}`}>
+                <div className="lt-hardware">
+                  <div className="lt-hole" />
+                  <div className="lt-string" />
+                </div>
+                <div className="lt-card">
+                  <div className="lt-status" />
+                  <div className="lt-initials">{initial(member.name)}</div>
+                  <div className="lt-body">
+                    <div className="lt-name">{member.name}</div>
+                    <div className="lt-amt">{amtLabel}</div>
+                  </div>
+                  <div className="lt-actions">
+                    <button
+                      className="secondary-btn"
+                      style={{ padding: '6px' }}
+                      aria-label="Edit member"
+                      title="Edit member"
+                      onClick={() => onStartEditMember(member)}
+                    >
+                      <IconEdit size={14} className="icon-sm" />
+                    </button>
+                    <button
+                      className="secondary-btn"
+                      style={{ padding: '6px', color: 'var(--color-danger)', borderColor: 'rgba(184,69,46,0.2)' }}
+                      aria-label="Delete member"
+                      title="Delete member"
+                      onClick={() => onDeleteMember(member)}
+                    >
+                      <IconTrash size={14} className="icon-sm" />
+                    </button>
+                  </div>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
 
           {/* Archived Members */}
           {archivedMembers.length > 0 && (

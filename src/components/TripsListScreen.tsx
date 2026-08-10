@@ -1,11 +1,14 @@
 import React from 'react';
-import type { Trip } from '../types';
-import { IconCalendar, IconMembers, IconTrash, IconEdit } from './Icons';
+import type { Trip, Member, Expense } from '../types';
+import { IconTrash, IconEdit } from './Icons';
 import { DateRangePicker } from './DateRangePicker';
-import { formatDateRange } from '../utils/dateRange';
+import { formatTripStamp } from '../utils/dateRange';
+import { initial } from '../utils/initials';
 
 type Props = {
   trips: Trip[];
+  members: Record<string, Member>;
+  expenses: Expense[];
   showAddTrip: boolean;
   setShowAddTrip: (show: boolean) => void;
   newTripName: string;
@@ -26,6 +29,8 @@ type Props = {
 
 export function TripsListScreen({
   trips,
+  members,
+  expenses,
   showAddTrip,
   setShowAddTrip,
   newTripName,
@@ -123,46 +128,61 @@ export function TripsListScreen({
             </button>
           </div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            {trips.map((trip) => (
-              <div key={trip.id} className="glass-card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }} onClick={() => onSelectTrip(trip.id)}>
-                <div style={{ minWidth: 0 }}>
-                  <h3 style={{ fontSize: '18px', marginBottom: '6px' }}>{trip.name}</h3>
-                  <p style={{ fontSize: '13px', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <IconCalendar size={13} className="icon-sm" /> {formatDateRange(trip.startDate, trip.endDate)}
-                  </p>
-                  <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <IconMembers size={13} className="icon-sm" /> {trip.memberIds.length} members · {trip.baseCurrency}
-                  </p>
+          <div className="passport-list">
+            {trips.map((trip) => {
+              const stamp = formatTripStamp(trip.startDate, trip.endDate);
+              const tripMembers = trip.memberIds.map((id) => members[id]).filter(Boolean);
+              const shown = tripMembers.slice(0, 3);
+              const overflow = tripMembers.length - shown.length;
+              const expenseCount = expenses.filter((e) => e.tripId === trip.id).length;
+              return (
+                <div key={trip.id} className="passport-card" onClick={() => onSelectTrip(trip.id)}>
+                  <div className="pp-stamp">
+                    <span>{stamp.top}</span>
+                    <span>{stamp.bottom}</span>
+                  </div>
+                  <div className="pp-dest">Trip &middot; {trip.baseCurrency}</div>
+                  <h3 className="pp-name">{trip.name}</h3>
+                  <div className="pp-meta">
+                    {tripMembers.length} member{tripMembers.length === 1 ? '' : 's'} &middot; {expenseCount} expense{expenseCount === 1 ? '' : 's'}
+                  </div>
+                  <div className="pp-foot">
+                    <div className="pp-avatars">
+                      {shown.map((m) => (
+                        <span key={m.id} className="pp-avatar" title={m.name}>{initial(m.name)}</span>
+                      ))}
+                      {overflow > 0 && <span className="pp-avatar pp-avatar-more">+{overflow}</span>}
+                    </div>
+                    <div className="pp-actions">
+                      <button
+                        className="secondary-btn"
+                        style={{ padding: '8px' }}
+                        aria-label="Edit trip"
+                        title="Edit trip"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onStartEditTrip(trip);
+                        }}
+                      >
+                        <IconEdit size={15} className="icon-sm" />
+                      </button>
+                      <button
+                        className="secondary-btn"
+                        style={{ padding: '8px', color: 'var(--color-danger)', borderColor: 'rgba(184,69,46,0.2)' }}
+                        aria-label="Delete trip"
+                        title="Delete trip"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onDeleteTrip(trip);
+                        }}
+                      >
+                        <IconTrash size={15} className="icon-sm" />
+                      </button>
+                    </div>
+                  </div>
                 </div>
-                <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
-                  <button
-                    className="secondary-btn"
-                    style={{ padding: '8px' }}
-                    aria-label="Edit trip"
-                    title="Edit trip"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onStartEditTrip(trip);
-                    }}
-                  >
-                    <IconEdit size={15} className="icon-sm" />
-                  </button>
-                  <button
-                    className="secondary-btn"
-                    style={{ padding: '8px', color: 'var(--color-danger)', borderColor: 'rgba(184,69,46,0.2)' }}
-                    aria-label="Delete trip"
-                    title="Delete trip"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onDeleteTrip(trip);
-                    }}
-                  >
-                    <IconTrash size={15} className="icon-sm" />
-                  </button>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </main>

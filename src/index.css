@@ -47,6 +47,7 @@
   --font-family-mono: 'IBM Plex Mono', 'SF Mono', monospace;
 
   /* Ledger palette — see docs/reference for the full rationale */
+  --bg-page: #EAE2CB; /* outer margin, visible past the centered app column */
   --bg-app: #F2ECDC; /* Canvas — warm ledger paper */
   --bg-surface: #FFFDF6; /* Paper — card fill, one shade lighter than Canvas */
   --bg-surface-hover: #EDE6D3;
@@ -78,6 +79,59 @@
   --transition-smooth: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* "Night flight" — a deliberately designed dark variant, not an inverted
+   filter. Deep navy ink, dimmed brass, settle/stamp kept legible against
+   the dark canvas. Applies when the OS prefers dark and the user hasn't
+   pinned light mode, or when the in-app toggle is set to dark explicitly. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg-page: #0F151D;
+    --bg-app: #141C26;
+    --bg-surface: #1C2733;
+    --bg-surface-hover: #24303D;
+    --border-color: #303D4B;
+    --border-color-focus: rgba(89, 189, 178, 0.4);
+
+    --primary-accent: #59BDB2;
+    --primary-accent-light: #74CFC5;
+    --secondary-accent: #D1A257;
+    --secondary-accent-light: #DDB273;
+
+    --color-success: #4FAE72;
+    --color-danger: #E2735A;
+    --color-warning: #D1A257;
+
+    --text-primary: #EFE7D2;
+    --text-secondary: #A7AFC0;
+    --text-muted: #7C8AA0;
+
+    --glass-shadow: 0 1px 2px rgba(0, 0, 0, 0.35), 0 6px 16px -8px rgba(0, 0, 0, 0.5);
+  }
+}
+:root[data-theme="dark"] {
+  --bg-page: #0F151D;
+  --bg-app: #141C26;
+  --bg-surface: #1C2733;
+  --bg-surface-hover: #24303D;
+  --border-color: #303D4B;
+  --border-color-focus: rgba(89, 189, 178, 0.4);
+
+  --primary-accent: #59BDB2;
+  --primary-accent-light: #74CFC5;
+  --secondary-accent: #D1A257;
+  --secondary-accent-light: #DDB273;
+
+  --color-success: #4FAE72;
+  --color-danger: #E2735A;
+  --color-warning: #D1A257;
+
+  --text-primary: #EFE7D2;
+  --text-secondary: #A7AFC0;
+  --text-muted: #7C8AA0;
+
+  --glass-shadow: 0 1px 2px rgba(0, 0, 0, 0.35), 0 6px 16px -8px rgba(0, 0, 0, 0.5);
+}
+
 * {
   box-sizing: border-box;
   margin: 0;
@@ -86,7 +140,7 @@
 
 body {
   font-family: var(--font-family-body);
-  background-color: #EAE2CB;
+  background-color: var(--bg-page);
   color: var(--text-primary);
   min-height: 100vh;
   overflow-x: hidden;
@@ -471,6 +525,110 @@ button, [role="button"], input, select, a {
   color: var(--text-muted);
 }
 
+/* Trip list — passport pages. Each trip reads as a stamped visa entry
+   rather than a generic elevated card. */
+.passport-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.passport-card {
+  position: relative;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-md);
+  padding: 18px 20px 16px;
+  cursor: pointer;
+  transition: var(--transition-smooth);
+}
+.passport-card:hover {
+  border-color: rgba(31, 110, 104, 0.3);
+}
+.pp-stamp {
+  position: absolute;
+  top: 16px;
+  right: 18px;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 1.5px solid var(--primary-accent);
+  color: var(--primary-accent);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-family-mono);
+  font-size: 8.5px;
+  letter-spacing: 0.02em;
+  line-height: 1.2;
+  transform: rotate(-8deg);
+  opacity: 0.85;
+  text-align: center;
+  flex-shrink: 0;
+}
+.pp-dest {
+  font-family: var(--font-family-mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  padding-right: 64px;
+}
+.pp-name {
+  font-family: var(--font-family-title);
+  font-size: 19px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-top: 3px;
+  line-height: 1.2;
+  padding-right: 64px;
+}
+.pp-meta {
+  font-family: var(--font-family-mono);
+  font-size: 11.5px;
+  color: var(--text-muted);
+  margin-top: 10px;
+}
+.pp-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1.5px dashed var(--border-color);
+}
+.pp-avatars {
+  display: flex;
+}
+.pp-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--text-primary);
+  color: var(--bg-surface);
+  font-family: var(--font-family-title);
+  font-weight: 600;
+  font-size: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid var(--bg-surface);
+  margin-left: -8px;
+  flex-shrink: 0;
+}
+.pp-avatar:first-child {
+  margin-left: 0;
+}
+.pp-avatar.pp-avatar-more {
+  background: var(--bg-surface-hover);
+  color: var(--text-secondary);
+  border-color: var(--border-color);
+}
+.pp-actions {
+  display: flex;
+  gap: 8px;
+}
+
 /* Member selector — avatar-card grid for payer / split-among pickers */
 .member-grid {
   display: grid;
@@ -537,6 +695,102 @@ button, [role="button"], input, select, a {
   font-size: 11.5px;
   height: 26px;
   text-align: center;
+}
+
+/* Trip members list — luggage tags. Each roster entry hangs like a
+   string-tied baggage label; the thread colour is the settle status,
+   so who owes whom reads before the number does. */
+.luggage-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-bottom: 32px;
+}
+.luggage-tag {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.luggage-tag .lt-hardware {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+}
+.luggage-tag .lt-hole {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  border: 1.5px solid var(--text-muted);
+  background: var(--bg-app);
+}
+.luggage-tag .lt-string {
+  width: 1.5px;
+  height: 14px;
+  background: var(--text-muted);
+  opacity: 0.45;
+}
+.luggage-tag .lt-card {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: 1.5px dashed var(--border-color);
+  border-radius: var(--border-radius-sm);
+  background: var(--bg-surface);
+  padding: 10px 14px;
+  position: relative;
+}
+.luggage-tag .lt-status {
+  width: 4px;
+  align-self: stretch;
+  border-radius: 2px;
+  background: var(--color-success);
+  flex-shrink: 0;
+}
+.luggage-tag.lt-owe .lt-status {
+  background: var(--color-danger);
+}
+.luggage-tag .lt-initials {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--text-primary);
+  color: var(--bg-surface);
+  font-family: var(--font-family-title);
+  font-weight: 700;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.luggage-tag .lt-body {
+  flex: 1;
+  min-width: 0;
+}
+.luggage-tag .lt-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.luggage-tag .lt-amt {
+  font-family: var(--font-family-mono);
+  font-size: 11.5px;
+  color: var(--color-success);
+  margin-top: 1px;
+}
+.luggage-tag.lt-owe .lt-amt {
+  color: var(--color-danger);
+}
+.luggage-tag .lt-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
 }
 
 /* Category picker — pill badges instead of a dropdown */
@@ -766,8 +1020,55 @@ button, [role="button"], input, select, a {
   to { opacity: 1; transform: scale(1); }
 }
 
+/* Settled transfer — carbon-copy receipt. A faint duplicate sits behind
+   the front copy, standing in for "your copy" and "their copy" of the
+   same settlement record. */
+.carbon-receipt {
+  position: relative;
+  display: inline-flex;
+}
+.cr-back {
+  position: absolute;
+  inset: 4px -4px -4px 4px;
+  border: 1.5px dashed var(--border-color);
+  border-radius: 7px;
+  background: var(--bg-surface-hover);
+}
+.cr-front {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border: 1.5px solid var(--color-success);
+  border-radius: 7px;
+  padding: 5px 11px;
+  background: var(--bg-surface);
+  color: var(--color-success);
+  animation: carbonPeel 0.45s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.cr-front > span {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.25;
+}
+.cr-amount {
+  font-family: var(--font-family-mono);
+  font-weight: 600;
+  font-size: 12px;
+}
+.cr-caption {
+  font-size: 9.5px;
+  letter-spacing: 0.02em;
+  color: var(--text-muted);
+}
+
+@keyframes carbonPeel {
+  from { opacity: 0; transform: translateY(4px) rotate(-3deg); }
+  to { opacity: 1; transform: translateY(0) rotate(0deg); }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .stamp-badge, .settle-pop { animation: none; }
+  .stamp-badge, .settle-pop, .cr-front { animation: none; }
 }
 
 /* Custom Toast Alerts */
@@ -817,6 +1118,208 @@ button, [role="button"], input, select, a {
   cursor: pointer;
   font-weight: 600;
   font-size: 13px;
+}
+
+/* Undo toasts — postmark stamps instead of a dark snackbar pill, reusing
+   the ink-stamp motif from the boarding-pass status badge. */
+.postmark-toast {
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-md);
+  padding: 9px 16px 9px 10px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 8px 24px -8px rgba(28, 42, 56, 0.3);
+  font-size: 13.5px;
+  min-width: 280px;
+  animation: postmarkIn 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.pm-stamp {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1.5px solid var(--color-danger);
+  color: var(--color-danger);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: rotate(-10deg);
+  opacity: 0.9;
+  flex-shrink: 0;
+}
+.pm-text {
+  flex: 1;
+  min-width: 0;
+}
+.pm-text strong {
+  color: var(--text-primary);
+}
+
+@keyframes postmarkIn {
+  from { opacity: 0; transform: translateY(10px) scale(0.9) rotate(-4deg); }
+  to { opacity: 1; transform: translateY(0) scale(1) rotate(0deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .postmark-toast { animation: none; }
+}
+
+/* Destructive confirm — tap-to-arm, tap-to-confirm wax seal instead of a
+   plain single tap. The armed state pulses to signal it's waiting for the
+   second tap. */
+.wax-seal-btn {
+  position: relative;
+  overflow: hidden;
+}
+.wax-seal-btn .seal-fill {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.22);
+  opacity: 0;
+}
+.wax-seal-btn.sealing .seal-fill {
+  opacity: 1;
+  animation: sealPulse 1s ease-in-out infinite;
+}
+.wax-seal-btn .seal-label {
+  position: relative;
+}
+
+@keyframes sealPulse {
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wax-seal-btn.sealing .seal-fill { animation: none; opacity: 1; }
+}
+
+/* Trip date range trigger — two pins joined by a dashed route line,
+   standing in for departure/return instead of a generic calendar field. */
+.flight-trigger {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  width: 100%;
+  background: var(--bg-surface);
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--border-radius-sm);
+  padding: 10px 14px;
+  cursor: pointer;
+  transition: var(--transition-smooth);
+}
+.flight-trigger:hover {
+  border-color: rgba(31, 110, 104, 0.35);
+}
+.ft-leg {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+}
+.ft-pin {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  border: 1.5px solid var(--text-muted);
+  background: var(--bg-app);
+}
+.ft-pin-filled {
+  background: var(--primary-accent);
+  border-color: var(--primary-accent);
+}
+.ft-date {
+  font-family: var(--font-family-mono);
+  font-size: 10.5px;
+  white-space: nowrap;
+}
+.ft-route {
+  position: relative;
+  flex: 1;
+  min-width: 20px;
+  height: 0;
+  border-top: 1.5px dashed var(--border-color);
+  margin-top: 4px;
+}
+.ft-plane {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--bg-surface);
+  font-size: 11px;
+  line-height: 1;
+  padding: 0 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Empty expense list — a blank ledger page instead of a generic
+   illustration-and-caption pattern. */
+.ledger-empty {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 20px 24px;
+}
+.ledger-rule {
+  border-top: 1.5px dotted var(--border-color);
+  opacity: 0.75;
+}
+.ledger-empty-prompt {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 8px;
+  text-align: center;
+}
+.ledger-empty-prompt p {
+  color: var(--text-secondary);
+  font-size: 14px;
+  max-width: 34ch;
+  margin: 0;
+}
+.ledger-pencil {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border-color);
+  background: var(--bg-app);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  transform: rotate(-8deg);
+  flex-shrink: 0;
+}
+
+/* Appearance toggle — Light / Night flight / System */
+.theme-toggle-row {
+  display: flex;
+  gap: 8px;
+}
+.theme-toggle-btn {
+  flex: 1;
+  padding: 9px 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: var(--bg-surface-hover);
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--border-radius-sm);
+  cursor: pointer;
+  transition: var(--transition-smooth);
+}
+.theme-toggle-btn.active {
+  color: var(--primary-accent);
+  border-color: var(--primary-accent);
+  background: color-mix(in srgb, var(--primary-accent) 12%, var(--bg-surface));
+  font-weight: 600;
 }
 
 @keyframes slideDown {

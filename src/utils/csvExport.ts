@@ -1,5 +1,10 @@
 import type { Trip, Member, Expense, Group } from '../types';
 import { calculateSettlements } from './settlement';
+import { formatDateRange } from './dateRange';
+
+// Dashed rule between sections — the same perforation motif as the
+// boarding-pass card, so a printed export still reads like this app's paper.
+const PERFORATION = '- '.repeat(30).trim();
 
 const safeCell = (str: string): string => {
   // Replace double quotes with double-double quotes for CSV format
@@ -31,6 +36,14 @@ export function exportTripToCSV(
   
   const csvLines: string[] = [];
 
+  // --- HEADER BANNER — reads like the top of a printed itinerary, not a
+  // bare spreadsheet dump. Plain single-cell rows, so it stays valid CSV. ---
+  csvLines.push('TRIP TRACKER — LEDGER EXPORT');
+  csvLines.push(safeCell(`${trip.name} · ${formatDateRange(trip.startDate, trip.endDate)} · ${trip.baseCurrency}`));
+  csvLines.push(`Generated ${new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}`);
+  csvLines.push(PERFORATION);
+  csvLines.push('');
+
   // --- SECTION 1: EXPENSES LIST ---
   csvLines.push('EXPENSES LIST');
   csvLines.push('Date,Title,Category,Amount,Currency,Paid By,Split Mode,Split Members');
@@ -38,7 +51,7 @@ export function exportTripToCSV(
   nonSettlementExpenses.forEach((exp) => {
     const payer = members[exp.paidBy]?.name || 'Deleted';
     const splitNames = exp.splitMemberIds.map((id) => members[id]?.name || 'Deleted').join('; ');
-    
+
     const row = [
       exp.date,
       exp.title,
@@ -49,12 +62,13 @@ export function exportTripToCSV(
       exp.splitMode,
       splitNames
     ];
-    
+
     csvLines.push(row.map(safeCell).join(','));
   });
 
-  csvLines.push(''); // Empty spacer line
-  csvLines.push(''); // Empty spacer line
+  csvLines.push('');
+  csvLines.push(PERFORATION);
+  csvLines.push('');
 
   // --- SECTION 2: MEMBER NET BALANCES ---
   csvLines.push('NET BALANCES');
@@ -63,12 +77,12 @@ export function exportTripToCSV(
   const { balances, transfers } = calculateSettlements(trip, members, expenses, groups);
 
   balances.forEach((b) => {
-    const statusStr = b.balance > 0.01 
-      ? 'Gets Back' 
-      : b.balance < -0.01 
-        ? 'Owes' 
+    const statusStr = b.balance > 0.01
+      ? 'Gets Back'
+      : b.balance < -0.01
+        ? 'Owes'
         : 'Settled';
-        
+
     const row = [
       b.name,
       statusStr,
@@ -77,8 +91,9 @@ export function exportTripToCSV(
     csvLines.push(row.map(safeCell).join(','));
   });
 
-  csvLines.push(''); // Empty spacer line
-  csvLines.push(''); // Empty spacer line
+  csvLines.push('');
+  csvLines.push(PERFORATION);
+  csvLines.push('');
 
   // --- SECTION 3: RECOMMENDED SETTLEMENTS ---
   csvLines.push('RECOMMENDED SETTLEMENTS (MINIMIZED)');
@@ -92,6 +107,10 @@ export function exportTripToCSV(
     ];
     csvLines.push(row.map(safeCell).join(','));
   });
+
+  csvLines.push('');
+  csvLines.push(PERFORATION);
+  csvLines.push('Logged offline, on the device — nothing synced.');
 
   return csvLines.join('\n');
 }
