@@ -5,7 +5,12 @@ import { CategoryIcon } from './CategoryIcon';
 
 const CATEGORY_ICON_PRESETS = ['🍔', '🏨', '✈️', '🎟️', '🛍️', '📦', '🚗', '⛽', '🎬', '🍺', '💊', '🎁', '🧾', '🏥', '🎓', '🐾', '🎵', '🚕'];
 
+type ThemePref = 'light' | 'dark' | 'system';
+
 type Props = {
+  themePref: ThemePref;
+  setThemePref: (v: ThemePref) => void;
+
   categories: Category[];
   onDeleteCategory: (id: string, name: string) => void;
   onAddCategory: (e: React.FormEvent) => void;
@@ -29,6 +34,8 @@ type Props = {
 };
 
 export function SettingsTab({
+  themePref,
+  setThemePref,
   categories,
   onDeleteCategory,
   onAddCategory,
@@ -110,6 +117,30 @@ export function SettingsTab({
               </div>
             </div>
           )}
+        </div>
+      </div>
+
+      {/* Appearance — "night flight" is a deliberately designed dark
+          variant, not an inverted filter, so it gets its own named option
+          rather than a plain on/off switch. */}
+      <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginBottom: '24px' }}>
+        <h4 style={{ fontSize: '16px' }}>Appearance</h4>
+        <div className="theme-toggle-row">
+          {([
+            { value: 'light', label: 'Light' },
+            { value: 'dark', label: 'Night flight' },
+            { value: 'system', label: 'System' },
+          ] as { value: ThemePref; label: string }[]).map((opt) => (
+            <button
+              key={opt.value}
+              type="button"
+              className={`theme-toggle-btn${themePref === opt.value ? ' active' : ''}`}
+              aria-pressed={themePref === opt.value}
+              onClick={() => setThemePref(opt.value)}
+            >
+              {opt.label}
+            </button>
+          ))}
         </div>
       </div>
 
