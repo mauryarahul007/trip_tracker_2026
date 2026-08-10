@@ -26,6 +26,8 @@ jobs:
           # This app is served from the domain root on EC2, not a
           # /trip_tracker_2026/ subpath like the GitHub Pages build.
           VITE_BASE_PATH: /
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
 
       - name: Install SSH key
         uses: webfactory/ssh-agent@v0.9.0
