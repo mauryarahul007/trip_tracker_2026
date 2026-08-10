@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { Expense, Group, Trip } from '../types';
 import { buildSettlementNodes, calculateGroupInternalTransfers, type MemberBalance, type Transfer } from '../utils/settlement';
-import { IconCheck, IconCheckCircle, IconMembers } from './Icons';
+import { IconArrowDownRight, IconArrowUpRight, IconCheck, IconCheckCircle, IconChevronRight, IconEdit, IconMembers } from './Icons';
 
 type Props = {
   trip: Trip;
@@ -30,6 +30,12 @@ function balanceLabel(balance: number, currencySymbol: string): string {
   return 'settled';
 }
 
+// Icon backs up the colour so owes-vs-gets-back doesn't rely on colour alone.
+function BalanceIcon({ balance, settled }: { balance: number; settled?: boolean }) {
+  if (settled || Math.abs(balance) < 0.01) return <IconCheck size={12} className="icon-sm" />;
+  return balance > 0 ? <IconArrowUpRight size={12} className="icon-sm" /> : <IconArrowDownRight size={12} className="icon-sm" />;
+}
+
 function isTransferSettled(t: Transfer, activeTripExpenses: Expense[]): boolean {
   return activeTripExpenses.some(
     (e) =>
@@ -48,11 +54,13 @@ type TransferRowProps = {
   isSettled: boolean;
   canSettle: boolean;
   customValue: string;
+  customOpen: boolean;
+  onToggleCustom: () => void;
   onCustomChange: (v: string) => void;
   onSettle: (fromMemberId: string, toMemberId: string, amount: number, fromLabel: string, toLabel: string) => void;
 };
 
-function TransferRow({ transfer: t, note, currencySymbol, isSettled, canSettle, customValue, onCustomChange, onSettle }: TransferRowProps) {
+function TransferRow({ transfer: t, note, currencySymbol, isSettled, canSettle, customValue, customOpen, onToggleCustom, onCustomChange, onSettle }: TransferRowProps) {
   const settleAmount = parseFloat(customValue) || t.amount;
   return (
     <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '8px', padding: '10px 0', borderBottom: '1.5px dashed var(--border-color)' }}>
@@ -63,12 +71,25 @@ function TransferRow({ transfer: t, note, currencySymbol, isSettled, canSettle, 
         )}
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: 'auto' }}>
-        <span className="money" style={{ fontSize: '14px', fontWeight: '600', color: isSettled ? 'var(--color-success)' : 'var(--color-danger)' }}>
-          {currencySymbol} {t.amount.toFixed(2)}
-        </span>
+        {!isSettled && !customOpen && (
+          <span className="money" style={{ fontSize: '14px', fontWeight: '600', color: 'var(--color-danger)' }}>
+            {currencySymbol} {t.amount.toFixed(2)}
+          </span>
+        )}
         {isSettled ? (
-          <span className="settle-pop" style={{ fontSize: '12px', fontWeight: '600', color: 'var(--color-success)' }}><IconCheck size={14} className="icon-sm" /> Settled</span>
-        ) : canSettle ? (
+          <span className="carbon-receipt" title="Recorded once, kept twice — your copy and theirs now match.">
+            <span className="cr-back" aria-hidden="true" />
+            <span className="cr-front">
+              <IconCheck size={13} className="icon-sm" />
+              <span>
+                <span className="cr-amount">{currencySymbol} {t.amount.toFixed(2)}</span>
+                <span className="cr-caption">your copy &middot; their copy</span>
+              </span>
+            </span>
+          </span>
+        ) : !canSettle ? (
+          <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontStyle: 'italic' }}>Only {t.fromLabel} or {t.toLabel} can settle this</span>
+        ) : customOpen ? (
           <>
             <input
               type="text"
@@ -76,6 +97,7 @@ function TransferRow({ transfer: t, note, currencySymbol, isSettled, canSettle, 
               className="input-field"
               placeholder={t.amount.toFixed(2)}
               title="Custom settlement amount (leave blank to use the suggested amount)"
+              autoFocus
               value={customValue}
               onChange={(e) => {
                 const v = e.target.value;
@@ -90,9 +112,39 @@ function TransferRow({ transfer: t, note, currencySymbol, isSettled, canSettle, 
             >
               Settle
             </button>
+            <button
+              type="button"
+              className="secondary-btn"
+              style={{ padding: '6px 8px' }}
+              aria-label="Cancel custom amount"
+              title="Use the suggested amount instead"
+              onClick={onToggleCustom}
+            >
+              <span style={{ display: 'flex', transform: 'rotate(90deg)' }}>
+                <IconChevronRight size={12} className="icon-sm" />
+              </span>
+            </button>
           </>
         ) : (
-          <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontStyle: 'italic' }}>Only {t.fromLabel} or {t.toLabel} can settle this</span>
+          <>
+            <button
+              className="gradient-btn"
+              style={{ padding: '6px 12px', fontSize: '12px', borderRadius: '8px' }}
+              onClick={() => onSettle(t.fromMemberId, t.toMemberId, t.amount, t.fromLabel, t.toLabel)}
+            >
+              Settle
+            </button>
+            <button
+              type="button"
+              className="secondary-btn"
+              style={{ padding: '6px 8px' }}
+              aria-label="Settle for a different amount"
+              title="Settle for a different amount"
+              onClick={onToggleCustom}
+            >
+              <IconEdit size={12} className="icon-sm" />
+            </button>
+          </>
         )}
       </div>
     </div>
@@ -115,10 +167,12 @@ export function BalancesSettlements({
   const canSettleTransfer = (t: Transfer) => isAdmin || t.fromMemberId === myMemberId || t.toMemberId === myMemberId;
   const currencySymbol = trip.baseCurrency === 'INR' ? '₹' : trip.baseCurrency;
   const [customAmounts, setCustomAmounts] = useState<Record<string, string>>({});
+  const [customOpenKeys, setCustomOpenKeys] = useState<Record<string, boolean>>({});
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
   const balanceNodes = buildSettlementNodes(balances, groups);
 
   const setCustom = (rowKey: string, v: string) => setCustomAmounts({ ...customAmounts, [rowKey]: v });
+  const toggleCustomOpen = (rowKey: string) => setCustomOpenKeys({ ...customOpenKeys, [rowKey]: !customOpenKeys[rowKey] });
 
   const totalOutstanding = transfers.reduce((sum, t) => sum + t.amount, 0);
   const isFullySettled = transfers.length === 0;
@@ -188,7 +242,8 @@ export function BalancesSettlements({
                   title={`View ${n.name}'s expenses`}
                 >
                   <span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: '1 1 auto' }}><strong>{n.name}</strong></span>
-                  <span style={{ color: balanceColor(n.balance), fontWeight: '700', flexShrink: 0, marginLeft: '8px' }}>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', color: balanceColor(n.balance), fontWeight: '700', flexShrink: 0, marginLeft: '8px' }}>
+                    <BalanceIcon balance={n.balance} />
                     {balanceLabel(n.balance, currencySymbol)}
                   </span>
                 </div>
@@ -208,7 +263,7 @@ export function BalancesSettlements({
             const statusColor = fullySettled
               ? 'var(--color-success)'
               : isNetZero
-                ? 'var(--color-warning, #d97706)'
+                ? 'var(--color-warning)'
                 : balanceColor(n.balance);
 
             const isExpanded = !!expandedGroups[n.id];
@@ -221,11 +276,15 @@ export function BalancesSettlements({
                   title={`${isExpanded ? 'Collapse' : 'Expand'} ${n.name} group members`}
                 >
                   <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', minWidth: 0, flex: '1 1 auto' }}>
-                    <span style={{ display: 'inline-block', width: '10px', color: 'var(--text-muted)', flexShrink: 0 }}>{isExpanded ? '▾' : '▸'}</span>
+                    <span style={{ display: 'flex', color: 'var(--text-muted)', flexShrink: 0, transition: 'transform 0.15s ease', transform: isExpanded ? 'rotate(90deg)' : 'none' }}>
+                      <IconChevronRight size={12} className="icon-sm" />
+                    </span>
                     <IconMembers size={15} className="icon-sm" />
                     <strong style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>{n.name}</strong>
                   </span>
-                  <span style={{ color: statusColor, fontWeight: '700', flexShrink: 0, marginLeft: '8px' }}>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', color: statusColor, fontWeight: '700', flexShrink: 0, marginLeft: '8px' }}>
+                    {!isNetZero && <BalanceIcon balance={n.balance} />}
+                    {fullySettled && <BalanceIcon balance={0} settled />}
                     {statusLabel}
                   </span>
                 </div>
@@ -243,7 +302,8 @@ export function BalancesSettlements({
                           title={`View ${memberBalance.name}'s expenses`}
                         >
                           <span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: '1 1 auto' }}>{memberBalance.name}</span>
-                          <span style={{ color: balanceColor(memberBalance.balance), fontWeight: '600', flexShrink: 0, marginLeft: '8px' }}>
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', color: balanceColor(memberBalance.balance), fontWeight: '600', flexShrink: 0, marginLeft: '8px' }}>
+                            <BalanceIcon balance={memberBalance.balance} />
                             {balanceLabel(memberBalance.balance, currencySymbol)}
                           </span>
                         </div>
@@ -266,6 +326,8 @@ export function BalancesSettlements({
                               isSettled={isTransferSettled(it, activeTripExpenses)}
                               canSettle={canSettleTransfer(it)}
                               customValue={customAmounts[rowKey] || ''}
+                              customOpen={!!customOpenKeys[rowKey]}
+                              onToggleCustom={() => toggleCustomOpen(rowKey)}
                               onCustomChange={(v) => setCustom(rowKey, v)}
                               onSettle={onSettle}
                             />
@@ -284,7 +346,7 @@ export function BalancesSettlements({
       {/* Settlements List */}
       <div className="glass-card">
         <h4 style={{ fontSize: '12px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '12px' }}>
-          Settlement Actions (Minimized)
+          Fewest Payments to Clear It
         </h4>
         {transfers.length === 0 ? (
           <p style={{ color: 'var(--color-success)', fontSize: '14px', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -305,6 +367,8 @@ export function BalancesSettlements({
                   isSettled={isTransferSettled(t, activeTripExpenses)}
                   canSettle={canSettleTransfer(t)}
                   customValue={customAmounts[rowKey] || ''}
+                  customOpen={!!customOpenKeys[rowKey]}
+                  onToggleCustom={() => toggleCustomOpen(rowKey)}
                   onCustomChange={(v) => setCustom(rowKey, v)}
                   onSettle={onSettle}
                 />

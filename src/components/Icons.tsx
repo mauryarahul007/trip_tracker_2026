@@ -209,6 +209,22 @@ export function IconCatMisc({ size = 20, className = 'icon' }: IconProps) {
   );
 }
 
+export function IconArrowUpRight({ size = 20, className = 'icon' }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" className={className} {...base}>
+      <path d="M7 17L17 7M9 7h8v8" />
+    </svg>
+  );
+}
+
+export function IconArrowDownRight({ size = 20, className = 'icon' }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" className={className} {...base}>
+      <path d="M7 7l10 10M17 9v8h-8" />
+    </svg>
+  );
+}
+
 export function IconClose({ size = 20, className = 'icon' }: IconProps) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" className={className} {...base}>

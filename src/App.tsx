@@ -61,6 +61,27 @@ export default function App() {
   // Navigation tabs: 'expenses' | 'members' | 'analytics' | 'settings'
   const [activeTab, setActiveTab] = useState<'expenses' | 'members' | 'analytics' | 'settings'>('expenses');
 
+  // Appearance — 'system' follows the OS; 'light'/'dark' pin the "night
+  // flight" variant explicitly. Persisted locally; it's a display
+  // preference, not trip data, so it stays out of the IndexedDB store.
+  type ThemePref = 'light' | 'dark' | 'system';
+  const [themePref, setThemePref] = useState<ThemePref>(() => {
+    const stored = localStorage.getItem('theme-pref');
+    return stored === 'light' || stored === 'dark' ? stored : 'system';
+  });
+
+  useEffect(() => {
+    const root = document.documentElement;
+    if (themePref === 'system') {
+      delete root.dataset.theme;
+      root.style.colorScheme = 'light dark';
+    } else {
+      root.dataset.theme = themePref;
+      root.style.colorScheme = themePref;
+    }
+    localStorage.setItem('theme-pref', themePref);
+  }, [themePref]);
+
   // Form states - Trips
   const [showAddTrip, setShowAddTrip] = useState(false);
   const [editingTripId, setEditingTripId] = useState<string | null>(null);
@@ -210,7 +231,9 @@ export default function App() {
   const myMemberId = activeTripMembers.find((m) => m.linkedUserId === userId)?.id ?? null;
 
   // Live running sum for exact/percentage split inputs (feedback while typing)
-  const splitSelectedIds = Object.keys(selectedSplitMembers).filter((id) => selectedSplitMembers[id]);
+  const splitSelectedIds = Object.keys(selectedSplitMembers)
+    .filter((id) => selectedSplitMembers[id])
+    .filter((id) => activeTrip?.memberIds.includes(id));
   const splitConfigSum = splitSelectedIds.reduce((sum, id) => sum + (parseFloat(newExpSplitConfig[id] || '') || 0), 0);
   const splitConfigTarget = newExpSplitMode === 'percentage' ? 100 : newExpSplitMode === 'exact' ? (parseFloat(newExpAmount) || 0) : null;
   const splitConfigMatches = splitConfigTarget === null || Math.abs(splitConfigSum - splitConfigTarget) < 0.02;
@@ -539,9 +562,10 @@ export default function App() {
     });
     setSelectedGroupMembers(initialChecked);
 
-    const memberNames = grp.memberIds
-      .map((id) => members[id]?.name)
-      .filter(Boolean);
+    const memberNames = visibleMembers
+      .filter((m) => grp.memberIds.includes(m.id))
+      .map((m) => m.name);
+
 
     let expectedAutoName = '';
     if (memberNames.length === 1) {
@@ -573,7 +597,9 @@ export default function App() {
   const handleAddExpense = async (e: React.FormEvent) => {
     e.preventDefault();
     const amountVal = parseFloat(newExpAmount);
-    const splitIds = Object.keys(selectedSplitMembers).filter((id) => selectedSplitMembers[id]);
+    const splitIds = Object.keys(selectedSplitMembers)
+      .filter((id) => selectedSplitMembers[id])
+      .filter((id) => activeTrip?.memberIds.includes(id));
 
     if (!newExpTitle.trim() || isNaN(amountVal) || amountVal <= 0 || !newExpPayer || !newExpCategory || !newExpDate) {
       setExpenseFormError('Please fill out all required fields with valid entries.');
@@ -932,6 +958,8 @@ export default function App() {
       {!activeTripId ? (
         <TripsListScreen
           trips={visibleTrips}
+          members={members}
+          expenses={expenses}
           showAddTrip={showAddTrip}
           setShowAddTrip={setShowAddTrip}
           newTripName={newTripName}
@@ -1088,6 +1116,8 @@ export default function App() {
                 activeTripMembers={activeTripMembers}
                 visibleMembers={visibleMembers}
                 archivedMembers={archivedMembers}
+                balances={balances}
+                currencySymbol={activeTrip ? (activeTrip.baseCurrency === 'INR' ? '₹' : activeTrip.baseCurrency) : ''}
                 showAddMember={showAddMember}
                 setShowAddMember={handleSetShowAddMember}
                 newMemberName={newMemberName}
@@ -1132,6 +1162,8 @@ export default function App() {
 
             {activeTab === 'settings' && (
               <SettingsTab
+                themePref={themePref}
+                setThemePref={setThemePref}
                 categories={categories}
                 onDeleteCategory={handleDeleteCategory}
                 onAddCategory={handleAddCategory}
@@ -1173,6 +1205,11 @@ export default function App() {
           categories={categories}
           trip={activeTrip}
           onClose={() => setSelectedReviewExpense(null)}
+          onEdit={() => {
+            const exp = selectedReviewExpense;
+            setSelectedReviewExpense(null);
+            handleStartEditExpense(exp);
+          }}
         />
       )}
 

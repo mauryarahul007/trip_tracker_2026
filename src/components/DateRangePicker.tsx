@@ -70,12 +70,28 @@ export function DateRangePicker({ startDate, endDate, onSelectStart, onSelectEnd
     >
       <button
         type="button"
-        className="input-field"
-        style={{ display: 'flex', alignItems: 'center', gap: '8px', textAlign: 'left', color: startD ? 'var(--text-primary)' : 'var(--text-muted)', cursor: 'pointer' }}
+        className="flight-trigger"
+        aria-label={triggerLabel}
         onClick={() => setOpen(!open)}
       >
-        <IconCalendar size={16} className="icon-sm" />
-        {triggerLabel}
+        <span className="ft-leg">
+          <span className={`ft-pin${startD ? ' ft-pin-filled' : ''}`} />
+          <span className="ft-date" style={{ color: startD ? 'var(--text-primary)' : 'var(--text-muted)' }}>
+            {startD ? formatSingleDate(startDate) : 'Depart'}
+          </span>
+        </span>
+        <span className="ft-route">
+          <span className="ft-plane" aria-hidden="true">✈️</span>
+        </span>
+        <span className="ft-leg">
+          <span className={`ft-pin${endD ? ' ft-pin-filled' : ''}`} />
+          <span className="ft-date" style={{ color: endD ? 'var(--text-primary)' : 'var(--text-muted)' }}>
+            {endD ? formatSingleDate(endDate) : 'Return'}
+          </span>
+        </span>
+        <span style={{ marginLeft: 'auto', alignSelf: 'center', color: 'var(--text-muted)', display: 'flex', flexShrink: 0 }}>
+          <IconCalendar size={14} className="icon-sm" />
+        </span>
       </button>
 
       {open && (

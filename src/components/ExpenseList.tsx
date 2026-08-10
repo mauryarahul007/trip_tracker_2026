@@ -131,10 +131,19 @@ export function ExpenseList({
 
       {/* Expenses List */}
       {filteredExpenses.length === 0 ? (
-        <div className="glass-card" style={{ textAlign: 'center', padding: '32px', borderStyle: 'dashed' }}>
-          <p style={{ color: 'var(--text-secondary)' }}>
-            {hasActiveFilters ? "Nothing matches those filters — try clearing them." : 'Nothing logged yet. Add the first expense to start the ledger.'}
-          </p>
+        <div className="glass-card ledger-empty" style={{ borderStyle: 'dashed' }}>
+          <div className="ledger-rule" />
+          <div className="ledger-rule" />
+          <div className="ledger-empty-prompt">
+            <span className="ledger-pencil" aria-hidden="true">
+              <IconEdit size={14} className="icon-sm" />
+            </span>
+            <p>
+              {hasActiveFilters ? "Nothing matches those filters — try clearing them." : 'Nothing logged yet. Add the first line to start the ledger.'}
+            </p>
+          </div>
+          <div className="ledger-rule" />
+          <div className="ledger-rule" />
         </div>
       ) : (
         <div className="glass-card" style={{ padding: 0, overflow: 'hidden' }}>

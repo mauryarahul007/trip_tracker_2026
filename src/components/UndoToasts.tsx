@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import type { Expense, Group, Trip } from '../types';
 import { IconTrash } from './Icons';
 
@@ -9,6 +10,18 @@ type Props = {
   pendingDeleteGroup: Group | null;
   onUndoDeleteGroup: () => void;
 };
+
+function PostmarkToast({ message, onUndo }: { message: ReactNode; onUndo: () => void }) {
+  return (
+    <div className="postmark-toast">
+      <span className="pm-stamp" aria-hidden="true">
+        <IconTrash size={14} className="icon-sm" />
+      </span>
+      <span className="pm-text">{message}</span>
+      <button onClick={onUndo} className="undo-toast-btn">Undo</button>
+    </div>
+  );
+}
 
 export function UndoToasts({
   pendingDeleteExpense,
@@ -27,37 +40,22 @@ export function UndoToasts({
       zIndex: 9999
     }}>
       {pendingDeleteExpense && (
-        <div style={{
-          background: 'rgba(28,42,56,0.94)', color: '#fff', borderRadius: '12px',
-          padding: '12px 20px', display: 'flex', alignItems: 'center', gap: '16px',
-          boxShadow: '0 4px 20px rgba(0,0,0,0.25)', fontSize: '14px',
-          backdropFilter: 'blur(8px)', minWidth: '280px'
-        }}>
-          <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><IconTrash size={15} className="icon-sm" /> <strong>'{pendingDeleteExpense.title}'</strong> deleted</span>
-          <button onClick={onUndoDeleteExpense} className="undo-toast-btn">Undo</button>
-        </div>
+        <PostmarkToast
+          message={<><strong>'{pendingDeleteExpense.title}'</strong> deleted</>}
+          onUndo={onUndoDeleteExpense}
+        />
       )}
       {pendingDeleteTrip && (
-        <div style={{
-          background: 'rgba(28,42,56,0.94)', color: '#fff', borderRadius: '12px',
-          padding: '12px 20px', display: 'flex', alignItems: 'center', gap: '16px',
-          boxShadow: '0 4px 20px rgba(0,0,0,0.25)', fontSize: '14px',
-          backdropFilter: 'blur(8px)', minWidth: '280px'
-        }}>
-          <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><IconTrash size={15} className="icon-sm" /> Trip <strong>'{pendingDeleteTrip.name}'</strong> deleted</span>
-          <button onClick={onUndoDeleteTrip} className="undo-toast-btn">Undo</button>
-        </div>
+        <PostmarkToast
+          message={<>Trip <strong>'{pendingDeleteTrip.name}'</strong> deleted</>}
+          onUndo={onUndoDeleteTrip}
+        />
       )}
       {pendingDeleteGroup && (
-        <div style={{
-          background: 'rgba(28,42,56,0.94)', color: '#fff', borderRadius: '12px',
-          padding: '12px 20px', display: 'flex', alignItems: 'center', gap: '16px',
-          boxShadow: '0 4px 20px rgba(0,0,0,0.25)', fontSize: '14px',
-          backdropFilter: 'blur(8px)', minWidth: '280px'
-        }}>
-          <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><IconTrash size={15} className="icon-sm" /> Group <strong>'{pendingDeleteGroup.name}'</strong> deleted</span>
-          <button onClick={onUndoDeleteGroup} className="undo-toast-btn">Undo</button>
-        </div>
+        <PostmarkToast
+          message={<>Group <strong>'{pendingDeleteGroup.name}'</strong> deleted</>}
+          onUndo={onUndoDeleteGroup}
+        />
       )}
     </div>
   );
