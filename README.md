@@ -21,6 +21,9 @@ A **mobile-first, offline-first PWA** for splitting trip expenses among friends 
 - **Export to Excel-compatible CSV** — expenses, net balances, and settlement plan in one file
 - **Offline PWA** — installable on mobile, works without internet (service worker + IndexedDB)
 - **Backup & restore** — full JSON export/import for data portability
+- **Diagnostics & storage stats** — monitor connection status and check IndexedDB disk space usage in settings
+- **Factory reset** — securely wipe all data (trips, expenses, settings) from your device's browser memory
+- **Quick seed demo** — load a simulated Goa road trip with mock members, custom groups, and 6 diverse expense splits to instantly try analytics and settlements
 
 ---
 
@@ -60,6 +63,7 @@ src/
 ├── utils/calendar.ts       # Monthly grid generation and date operations
 ├── utils/dateRange.ts      # Trip date-range formatter for app header
 ├── utils/initials.ts       # Name avatar initial generator
+├── utils/demoSeed.ts       # Goa road trip mock data seeder
 ├── App.tsx                 # Owns state/handlers, wires tab components together
 ├── components/
 │   ├── TripsListScreen.tsx     # Home screen: trip list + create/edit trip form
