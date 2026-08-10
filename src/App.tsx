@@ -547,9 +547,10 @@ export default function App() {
     });
     setSelectedGroupMembers(initialChecked);
 
-    const memberNames = grp.memberIds
-      .map((id) => members[id]?.name)
-      .filter(Boolean);
+    const memberNames = visibleMembers
+      .filter((m) => grp.memberIds.includes(m.id))
+      .map((m) => m.name);
+
 
     let expectedAutoName = '';
     if (memberNames.length === 1) {
