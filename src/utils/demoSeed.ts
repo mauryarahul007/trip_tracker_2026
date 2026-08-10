@@ -1,10 +1,10 @@
 import type { Trip, Member, Group, Expense } from '../types';
 
 export interface DemoData {
-  trip: Trip;
+  trip: Omit<Trip, 'ownerId' | 'joinCode'>;
   members: Record<string, Member>;
   groups: Record<string, Group>;
-  expenses: Expense[];
+  expenses: Omit<Expense, 'isSettlement' | 'createdByUserId'>[];
 }
 
 export function generateDemoData(): DemoData {
@@ -41,7 +41,7 @@ export function generateDemoData(): DemoData {
     },
   };
 
-  const trip: Trip = {
+  const trip: Omit<Trip, 'ownerId' | 'joinCode'> = {
     id: tripId,
     name: 'Road Trip to Goa ☀️',
     startDate: new Date(now - 4 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 4 days ago
@@ -54,7 +54,7 @@ export function generateDemoData(): DemoData {
   };
 
   // Expenses
-  const expenses: Expense[] = [
+  const expenses: Omit<Expense, 'isSettlement' | 'createdByUserId'>[] = [
     {
       id: `exp-goa-1-${now}`,
       tripId,

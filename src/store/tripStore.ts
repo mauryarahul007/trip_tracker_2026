@@ -1,22 +1,48 @@
 import { create } from 'zustand';
-import type { Trip, Member, Group, Expense, Category, TripState } from '../types';
-import { storage, StorageError } from '../services/storage';
+import type { Member, Group, Expense, Category, TripState } from '../types';
+import { supabase } from '../services/supabaseClient';
+import {
+  fetchMyTripGraph,
+  fetchExpensesForTrip,
+  fetchCategoriesForTrip,
+  insertTrip,
+  updateTripRow,
+  deleteTripRow,
+  deleteAllMyTrips,
+  insertMember,
+  updateMemberRow,
+  deleteMemberRow,
+  insertGroup,
+  updateGroupRow,
+  deleteGroupRow,
+  insertCategory,
+  deleteCategoryRow,
+  insertExpense,
+  updateExpenseRow,
+  deleteExpenseRow,
+  insertTripGraph,
+  uploadReceipt,
+  type ExpenseInput,
+} from '../services/tripApi';
 import { generateDemoData } from '../utils/demoSeed';
 
+const LAST_TRIP_KEY = 'trip-tracker-last-trip-id';
 
 interface TripStore extends TripState {
   initialized: boolean;
   storageError: string | null;
-  
+  userId: string | null;
+
   initialize: () => Promise<void>;
+  refreshTrips: () => Promise<void>;
   clearStorageError: () => void;
-  
+
   // Trip Actions
   createTrip: (name: string, startDate: string, endDate: string, baseCurrency: string) => Promise<void>;
   updateTrip: (id: string, name: string, startDate: string, endDate: string) => Promise<void>;
   selectTrip: (id: string | null) => Promise<void>;
   deleteTrip: (id: string) => Promise<void>;
-  
+
   // Member Actions
   addMember: (name: string) => Promise<void>;
   toggleArchiveMember: (id: string) => Promise<void>;
@@ -27,16 +53,16 @@ interface TripStore extends TripState {
   createGroup: (name: string, memberIds: string[]) => Promise<void>;
   updateGroup: (id: string, name: string, memberIds: string[]) => Promise<void>;
   deleteGroup: (id: string) => Promise<void>;
-  
+
   // Expense Actions
-  addExpense: (expense: Omit<Expense, 'id' | 'tripId' | 'resolvedShares' | 'createdAt' | 'updatedAt'>) => Promise<void>;
-  updateExpense: (id: string, expense: Omit<Expense, 'id' | 'tripId' | 'resolvedShares' | 'createdAt' | 'updatedAt'>) => Promise<void>;
+  addExpense: (expense: Omit<Expense, 'id' | 'tripId' | 'resolvedShares' | 'createdAt' | 'updatedAt' | 'isSettlement' | 'createdByUserId'>) => Promise<void>;
+  updateExpense: (id: string, expense: Omit<Expense, 'id' | 'tripId' | 'resolvedShares' | 'createdAt' | 'updatedAt' | 'isSettlement' | 'createdByUserId'>) => Promise<void>;
   deleteExpense: (id: string) => Promise<void>;
-  
+
   // Category Actions
   addCategory: (name: string, icon?: string) => Promise<void>;
   deleteCategory: (id: string) => Promise<void>;
-  
+
   // Database Backup Actions
   exportDatabase: () => string;
   importDatabase: (jsonString: string) => Promise<boolean>;
@@ -44,7 +70,7 @@ interface TripStore extends TripState {
   loadDemoTrip: () => Promise<void>;
 }
 
-const DEFAULT_CATEGORIES: Category[] = [
+export const DEFAULT_CATEGORIES: Category[] = [
   { id: 'cat-food', name: 'Food & Dining', icon: '🍔', isCustom: false },
   { id: 'cat-stay', name: 'Stay & Hotel', icon: '🏨', isCustom: false },
   { id: 'cat-travel', name: 'Travel & Transport', icon: '✈️', isCustom: false },
@@ -55,7 +81,7 @@ const DEFAULT_CATEGORIES: Category[] = [
 
 // Pure helper — resolves exact money shares for each participant
 const resolveShares = (
-  expenseData: Omit<Expense, 'id' | 'tripId' | 'resolvedShares' | 'createdAt' | 'updatedAt'>,
+  expenseData: { amount: number; splitMode: string; splitConfig?: Record<string, number>; paidBy: string },
   participants: string[]
 ): Record<string, number> => {
   const resolvedShares: Record<string, number> = {};
@@ -113,30 +139,29 @@ const resolveShares = (
 };
 
 export const useTripStore = create<TripStore>((set, get) => {
-  // Helper to persist state and handle storage errors safely
-  const persist = async (updatedState: Partial<TripState>) => {
-    const currentState = get();
-    const stateToSave: TripState = {
-      trips: updatedState.trips ?? currentState.trips,
-      activeTripId: updatedState.activeTripId !== undefined ? updatedState.activeTripId : currentState.activeTripId,
-      members: updatedState.members ?? currentState.members,
-      groups: updatedState.groups ?? currentState.groups,
-      expenses: updatedState.expenses ?? currentState.expenses,
-      categories: updatedState.categories ?? currentState.categories,
-    };
-
-    set({ ...stateToSave, storageError: null });
-
-    try {
-      await storage.saveState(stateToSave);
-    } catch (error) {
-      if (error instanceof StorageError) {
-        set({ storageError: error.message });
-      } else {
-        set({ storageError: 'Failed to write data to browser memory.' });
-      }
-    }
+  const setError = (e: unknown) => {
+    console.error('Trip store sync error:', e);
+    set({ storageError: e instanceof Error ? e.message : 'Failed to sync with the server.' });
   };
+
+  const toExpenseInput = (
+    e: Omit<Expense, 'id' | 'tripId' | 'resolvedShares' | 'createdAt' | 'updatedAt' | 'isSettlement' | 'createdByUserId'>,
+    resolvedShares: Record<string, number>,
+    extra?: { id?: string; receiptPath?: string }
+  ): ExpenseInput => ({
+    id: extra?.id,
+    title: e.title,
+    amount: e.amount,
+    currency: e.currency,
+    category: e.category,
+    date: e.date,
+    paidBy: e.paidBy,
+    splitMode: e.splitMode,
+    splitMemberIds: e.splitMemberIds,
+    splitConfig: e.splitConfig,
+    resolvedShares,
+    receiptPath: extra?.receiptPath,
+  });
 
   return {
     trips: [],
@@ -144,318 +169,358 @@ export const useTripStore = create<TripStore>((set, get) => {
     members: {},
     groups: {},
     expenses: [],
-    categories: [],
+    categories: DEFAULT_CATEGORIES,
     initialized: false,
     storageError: null,
+    userId: null,
 
     initialize: async () => {
       if (get().initialized) return;
-      const loaded = await storage.loadState();
-      if (loaded) {
+
+      const { data: { user } } = await supabase.auth.getUser();
+      const userId = user?.id ?? null;
+
+      try {
+        const graph = await fetchMyTripGraph();
+        const lastTripId = localStorage.getItem(LAST_TRIP_KEY);
+        const activeTrip = lastTripId ? graph.trips.find((t) => t.id === lastTripId) : undefined;
+
+        let expenses: Expense[] = [];
+        let categories = DEFAULT_CATEGORIES;
+        if (activeTrip) {
+          const [tripExpenses, customCategories] = await Promise.all([
+            fetchExpensesForTrip(activeTrip.id),
+            fetchCategoriesForTrip(activeTrip.id),
+          ]);
+          expenses = tripExpenses;
+          categories = [...DEFAULT_CATEGORIES, ...customCategories];
+        }
+
         set({
-          trips: loaded.trips || [],
-          activeTripId: loaded.activeTripId || null,
-          members: loaded.members || {},
-          groups: loaded.groups || {},
-          expenses: loaded.expenses || [],
-          categories: loaded.categories || DEFAULT_CATEGORIES,
+          ...graph,
+          activeTripId: activeTrip ? activeTrip.id : null,
+          expenses,
+          categories,
+          userId,
           initialized: true,
         });
-      } else {
-        // First run: Seed default categories
-        set({
-          categories: DEFAULT_CATEGORIES,
-          groups: {},
-          initialized: true,
-        });
-        await persist({ categories: DEFAULT_CATEGORIES, groups: {} });
+      } catch (e) {
+        console.error('Initial trip load failed:', e);
+        set({ userId, initialized: true, storageError: 'Failed to load your trips. Check your connection and reload.' });
+      }
+    },
+
+    // Re-pulls the trip/member/group list without disturbing the active
+    // trip's loaded expenses/categories — used after joining a new trip via
+    // an invite link, since that trip won't be in `trips` yet.
+    refreshTrips: async () => {
+      try {
+        const graph = await fetchMyTripGraph();
+        set({ ...graph, storageError: null });
+      } catch (e) {
+        setError(e);
       }
     },
 
     clearStorageError: () => set({ storageError: null }),
 
     createTrip: async (name, startDate, endDate, baseCurrency) => {
-      const newTrip: Trip = {
-        id: `trip-${Date.now()}`,
-        name,
-        startDate,
-        endDate,
-        baseCurrency,
-        memberIds: [],
-        groupIds: [],
-        createdAt: Date.now(),
-        updatedAt: Date.now(),
-      };
-      const updatedTrips = [...get().trips, newTrip];
-      await persist({ trips: updatedTrips, activeTripId: newTrip.id });
+      const userId = get().userId;
+      if (!userId) return;
+      try {
+        const trip = await insertTrip({ name, startDate, endDate, baseCurrency, ownerId: userId });
+        set((state) => ({ trips: [...state.trips, trip], activeTripId: trip.id, expenses: [], categories: DEFAULT_CATEGORIES, storageError: null }));
+        localStorage.setItem(LAST_TRIP_KEY, trip.id);
+      } catch (e) {
+        setError(e);
+      }
     },
 
     updateTrip: async (id, name, startDate, endDate) => {
-      const updatedTrips = get().trips.map((t) =>
-        t.id === id ? { ...t, name, startDate, endDate, updatedAt: Date.now() } : t
-      );
-      await persist({ trips: updatedTrips });
+      try {
+        await updateTripRow(id, { name, startDate, endDate });
+        set((state) => ({
+          trips: state.trips.map((t) => (t.id === id ? { ...t, name, startDate, endDate, updatedAt: Date.now() } : t)),
+          storageError: null,
+        }));
+      } catch (e) {
+        setError(e);
+      }
     },
 
     selectTrip: async (id) => {
-      await persist({ activeTripId: id });
+      if (id === null) {
+        set({ activeTripId: null, expenses: [], categories: DEFAULT_CATEGORIES });
+        localStorage.removeItem(LAST_TRIP_KEY);
+        return;
+      }
+      set({ activeTripId: id, expenses: [], categories: DEFAULT_CATEGORIES });
+      localStorage.setItem(LAST_TRIP_KEY, id);
+      try {
+        const [expenses, customCategories] = await Promise.all([fetchExpensesForTrip(id), fetchCategoriesForTrip(id)]);
+        set({ expenses, categories: [...DEFAULT_CATEGORIES, ...customCategories], storageError: null });
+      } catch (e) {
+        setError(e);
+      }
     },
 
     deleteTrip: async (id) => {
-      const updatedTrips = get().trips.filter((t) => t.id !== id);
-      // Clean up orphaned expenses for this deleted trip
-      const updatedExpenses = get().expenses.filter((e) => e.tripId !== id);
-      
-      const nextActiveTripId = get().activeTripId === id 
-        ? (updatedTrips[0]?.id || null) 
-        : get().activeTripId;
+      const deletedTrip = get().trips.find((t) => t.id === id);
+      try {
+        await deleteTripRow(id);
+      } catch (e) {
+        setError(e);
+        return;
+      }
 
-      await persist({ 
-        trips: updatedTrips, 
-        expenses: updatedExpenses, 
-        activeTripId: nextActiveTripId 
-      });
+      const wasActive = get().activeTripId === id;
+      const remainingTrips = get().trips.filter((t) => t.id !== id);
+      const updatedMembers = { ...get().members };
+      const updatedGroups = { ...get().groups };
+      deletedTrip?.memberIds.forEach((mid) => delete updatedMembers[mid]);
+      deletedTrip?.groupIds.forEach((gid) => delete updatedGroups[gid]);
+
+      set({ trips: remainingTrips, members: updatedMembers, groups: updatedGroups, storageError: null });
+
+      if (wasActive) {
+        const next = remainingTrips[0];
+        await get().selectTrip(next ? next.id : null);
+      }
     },
 
     addMember: async (name) => {
       const activeTripId = get().activeTripId;
       if (!activeTripId) return;
-
-      const memberId = `mem-${Date.now()}`;
-      const newMember: Member = {
-        id: memberId,
-        name,
-      };
-
-      const updatedMembers = { ...get().members, [memberId]: newMember };
-      const updatedTrips = get().trips.map((t) => {
-        if (t.id === activeTripId) {
-          return { ...t, memberIds: [...t.memberIds, memberId], updatedAt: Date.now() };
-        }
-        return t;
-      });
-
-      await persist({ members: updatedMembers, trips: updatedTrips });
+      try {
+        const member = await insertMember(activeTripId, name);
+        set((state) => ({
+          members: { ...state.members, [member.id]: member },
+          trips: state.trips.map((t) => (t.id === activeTripId ? { ...t, memberIds: [...t.memberIds, member.id], updatedAt: Date.now() } : t)),
+          storageError: null,
+        }));
+      } catch (e) {
+        setError(e);
+      }
     },
 
     toggleArchiveMember: async (id) => {
       const member = get().members[id];
       if (!member) return;
-
-      const updatedMembers = {
-        ...get().members,
-        [id]: { ...member, archived: !member.archived },
-      };
-
-      await persist({ members: updatedMembers });
+      try {
+        await updateMemberRow(id, { archived: !member.archived });
+        set((state) => ({ members: { ...state.members, [id]: { ...member, archived: !member.archived } }, storageError: null }));
+      } catch (e) {
+        setError(e);
+      }
     },
 
     updateMember: async (id, name) => {
       const member = get().members[id];
       if (!member) return;
-
-      const updatedMembers = {
-        ...get().members,
-        [id]: { ...member, name },
-      };
-
-      await persist({ members: updatedMembers });
+      try {
+        await updateMemberRow(id, { name });
+        set((state) => ({ members: { ...state.members, [id]: { ...member, name } }, storageError: null }));
+      } catch (e) {
+        setError(e);
+      }
     },
 
     deleteMember: async (id) => {
       const activeTripId = get().activeTripId;
       if (!activeTripId) return;
 
+      const currentGroups = get().groups;
+      const currentMembers = get().members;
 
+      const groupsToDissolve: string[] = [];
+      const groupsToRename: { id: string; name: string; memberIds: string[] }[] = [];
 
-      // 1. Remove member record from members map
-      const updatedMembers = { ...get().members };
-      delete updatedMembers[id];
+      Object.values(currentGroups).forEach((group) => {
+        if (!group.memberIds.includes(id)) return;
+        const remaining = group.memberIds.filter((mid) => mid !== id);
+        if (remaining.length < 2) {
+          groupsToDissolve.push(group.id);
+        } else {
+          const names = remaining.map((mid) => currentMembers[mid]?.name).filter(Boolean) as string[];
+          let newName = group.name;
+          if (names.length === 2) newName = `${names[0]} & ${names[1]}`;
+          else if (names.length > 2) newName = `${names.slice(0, -1).join(', ')} & ${names[names.length - 1]}`;
+          groupsToRename.push({ id: group.id, name: newName, memberIds: remaining });
+        }
+      });
 
-      // 2. Remove member from any groups that contain them, handle group name updates & dissolution
-      const updatedGroups = { ...get().groups };
-      Object.keys(updatedGroups).forEach((gid) => {
-        const group = updatedGroups[gid];
-        if (group.memberIds.includes(id)) {
-          const remainingGroupMembers = group.memberIds.filter((mid) => mid !== id);
-          
-          if (remainingGroupMembers.length < 2) {
-            // "If there are 2 members in group and one member is deleted, the group should be dissolved"
-            delete updatedGroups[gid];
-          } else {
-            // "If there are 3 members in a group and we delete one member, the group name should be automatically updated to 2 members."
-            const memberNames = remainingGroupMembers.map((mid) => updatedMembers[mid]?.name || get().members[mid]?.name).filter(Boolean);
-            let newGroupName = '';
-            if (memberNames.length === 2) {
-              newGroupName = `${memberNames[0]} & ${memberNames[1]}`;
-            } else if (memberNames.length > 2) {
-              newGroupName = `${memberNames.slice(0, -1).join(', ')} & ${memberNames[memberNames.length - 1]}`;
-            }
+      try {
+        await deleteMemberRow(id); // cascades group_members via FK
+        await Promise.all([
+          ...groupsToDissolve.map((gid) => deleteGroupRow(gid)),
+          ...groupsToRename.map((g) => updateGroupRow(g.id, g.name, g.memberIds)),
+        ]);
 
-            updatedGroups[gid] = {
-              ...group,
-              name: newGroupName || group.name,
-              memberIds: remainingGroupMembers,
+        set((state) => {
+          const updatedMembers = { ...state.members };
+          delete updatedMembers[id];
+
+          const updatedGroups = { ...state.groups };
+          groupsToDissolve.forEach((gid) => delete updatedGroups[gid]);
+          groupsToRename.forEach((g) => {
+            updatedGroups[g.id] = { ...updatedGroups[g.id], name: g.name, memberIds: g.memberIds };
+          });
+
+          const updatedTrips = state.trips.map((t) => {
+            if (t.id !== activeTripId) return t;
+            return {
+              ...t,
+              memberIds: t.memberIds.filter((mid) => mid !== id),
+              groupIds: t.groupIds.filter((gid) => !groupsToDissolve.includes(gid)),
+              updatedAt: Date.now(),
             };
-          }
-        }
-      });
+          });
 
-      // 3. Remove memberId from active trip's memberIds list and update groupIds to filter out dissolved ones
-      const updatedTrips = get().trips.map((t) => {
-        if (t.id === activeTripId) {
-          const filteredGroupIds = (t.groupIds || []).filter((gid) => updatedGroups[gid] !== undefined);
-          return {
-            ...t,
-            memberIds: t.memberIds.filter((mid) => mid !== id),
-            groupIds: filteredGroupIds,
-            updatedAt: Date.now(),
-          };
-        }
-        return t;
-      });
-
-      await persist({ 
-        members: updatedMembers, 
-        trips: updatedTrips, 
-        groups: updatedGroups
-      });
+          return { members: updatedMembers, groups: updatedGroups, trips: updatedTrips, storageError: null };
+        });
+      } catch (e) {
+        setError(e);
+      }
     },
 
     createGroup: async (name, memberIds) => {
       const activeTripId = get().activeTripId;
       if (!activeTripId) return;
-
-      const groupId = `grp-${Date.now()}`;
-      const newGroup: Group = {
-        id: groupId,
-        name,
-        memberIds,
-      };
-
-      const updatedGroups = { ...get().groups, [groupId]: newGroup };
-      const updatedTrips = get().trips.map((t) => {
-        if (t.id === activeTripId) {
-          return { ...t, groupIds: [...(t.groupIds || []), groupId], updatedAt: Date.now() };
-        }
-        return t;
-      });
-
-      await persist({ groups: updatedGroups, trips: updatedTrips });
+      try {
+        const group = await insertGroup(activeTripId, name, memberIds);
+        set((state) => ({
+          groups: { ...state.groups, [group.id]: group },
+          trips: state.trips.map((t) => (t.id === activeTripId ? { ...t, groupIds: [...t.groupIds, group.id], updatedAt: Date.now() } : t)),
+          storageError: null,
+        }));
+      } catch (e) {
+        setError(e);
+      }
     },
 
     updateGroup: async (id, name, memberIds) => {
       const activeTripId = get().activeTripId;
       if (!activeTripId) return;
-
-      const group = get().groups[id];
-      if (!group) return;
-
-      const updatedGroup = { ...group, name, memberIds };
-      const updatedGroups = { ...get().groups, [id]: updatedGroup };
-
-      const updatedTrips = get().trips.map((t) => {
-        if (t.id === activeTripId) {
-          return { ...t, updatedAt: Date.now() };
-        }
-        return t;
-      });
-
-      await persist({ groups: updatedGroups, trips: updatedTrips });
+      try {
+        await updateGroupRow(id, name, memberIds);
+        set((state) => ({
+          groups: { ...state.groups, [id]: { ...state.groups[id], name, memberIds } },
+          trips: state.trips.map((t) => (t.id === activeTripId ? { ...t, updatedAt: Date.now() } : t)),
+          storageError: null,
+        }));
+      } catch (e) {
+        setError(e);
+      }
     },
 
     deleteGroup: async (groupId) => {
       const activeTripId = get().activeTripId;
       if (!activeTripId) return;
-
-      const { [groupId]: _, ...updatedGroups } = get().groups;
-      const updatedTrips = get().trips.map((t) => {
-        if (t.id === activeTripId) {
+      try {
+        await deleteGroupRow(groupId);
+        set((state) => {
+          const { [groupId]: _removed, ...updatedGroups } = state.groups;
           return {
-            ...t,
-            groupIds: (t.groupIds || []).filter((id) => id !== groupId),
-            updatedAt: Date.now(),
+            groups: updatedGroups,
+            trips: state.trips.map((t) =>
+              t.id === activeTripId ? { ...t, groupIds: t.groupIds.filter((id) => id !== groupId), updatedAt: Date.now() } : t
+            ),
+            storageError: null,
           };
-        }
-        return t;
-      });
-
-      await persist({ groups: updatedGroups, trips: updatedTrips });
+        });
+      } catch (e) {
+        setError(e);
+      }
     },
 
     addExpense: async (expenseData) => {
-      const activeTripId = get().activeTripId;
-      if (!activeTripId) return;
+      const tripId = get().activeTripId;
+      const userId = get().userId;
+      if (!tripId || !userId) return;
 
-      const participants = expenseData.splitMemberIds.filter(
-        (id) => get().members[id] && !get().members[id].archived
-      );
+      const participants = expenseData.splitMemberIds.filter((id) => get().members[id] && !get().members[id].archived);
       if (participants.length === 0) return;
 
-      const newExpense: Expense = {
-        ...expenseData,
-        id: `exp-${Date.now()}`,
-        tripId: activeTripId,
-        resolvedShares: resolveShares(expenseData, participants),
-        createdAt: Date.now(),
-        updatedAt: Date.now(),
-      };
-
-      const updatedExpenses = [...get().expenses, newExpense];
-      const updatedTrips = get().trips.map((t) => {
-        if (t.id === activeTripId) return { ...t, updatedAt: Date.now() };
-        return t;
-      });
-      await persist({ expenses: updatedExpenses, trips: updatedTrips });
+      try {
+        const resolvedShares = resolveShares(expenseData, participants);
+        let newId: string | undefined;
+        let receiptPath: string | undefined;
+        if (expenseData.receiptImage) {
+          newId = crypto.randomUUID();
+          receiptPath = await uploadReceipt(tripId, newId, expenseData.receiptImage);
+        }
+        const expense = await insertExpense(tripId, userId, toExpenseInput(expenseData, resolvedShares, { id: newId, receiptPath }));
+        set((state) => ({
+          expenses: [...state.expenses, expense],
+          trips: state.trips.map((t) => (t.id === tripId ? { ...t, updatedAt: Date.now() } : t)),
+          storageError: null,
+        }));
+      } catch (e) {
+        setError(e);
+      }
     },
 
     updateExpense: async (id, expenseData) => {
-      const activeTripId = get().activeTripId;
-      if (!activeTripId) return;
-
+      const tripId = get().activeTripId;
+      if (!tripId) return;
       const existing = get().expenses.find((e) => e.id === id);
       if (!existing) return;
 
-      const participants = expenseData.splitMemberIds.filter(
-        (mId) => get().members[mId] && !get().members[mId].archived
-      );
+      const participants = expenseData.splitMemberIds.filter((mId) => get().members[mId] && !get().members[mId].archived);
       if (participants.length === 0) return;
 
-      const updatedExpense: Expense = {
-        ...existing,
-        ...expenseData,
-        resolvedShares: resolveShares(expenseData, participants),
-        updatedAt: Date.now(),
-      };
-
-      const updatedExpenses = get().expenses.map((e) => (e.id === id ? updatedExpense : e));
-      const updatedTrips = get().trips.map((t) => {
-        if (t.id === activeTripId) return { ...t, updatedAt: Date.now() };
-        return t;
-      });
-      await persist({ expenses: updatedExpenses, trips: updatedTrips });
+      try {
+        const resolvedShares = resolveShares(expenseData, participants);
+        let receiptPath: string | undefined;
+        if (expenseData.receiptImage) {
+          receiptPath = await uploadReceipt(tripId, id, expenseData.receiptImage);
+        }
+        await updateExpenseRow(id, toExpenseInput(expenseData, resolvedShares, { receiptPath }));
+        const updatedExpense: Expense = {
+          ...existing,
+          ...expenseData,
+          resolvedShares,
+          receiptImage: undefined, // transient form preview only — not part of persisted state
+          receiptPath: receiptPath ?? existing.receiptPath,
+          updatedAt: Date.now(),
+        };
+        set((state) => ({
+          expenses: state.expenses.map((e) => (e.id === id ? updatedExpense : e)),
+          trips: state.trips.map((t) => (t.id === tripId ? { ...t, updatedAt: Date.now() } : t)),
+          storageError: null,
+        }));
+      } catch (e) {
+        setError(e);
+      }
     },
 
     deleteExpense: async (id) => {
-      const updatedExpenses = get().expenses.filter((e) => e.id !== id);
-      await persist({ expenses: updatedExpenses });
+      try {
+        await deleteExpenseRow(id);
+        set((state) => ({ expenses: state.expenses.filter((e) => e.id !== id), storageError: null }));
+      } catch (e) {
+        setError(e);
+      }
     },
 
     addCategory: async (name, icon) => {
-      const newCategory: Category = {
-        id: `cat-custom-${Date.now()}`,
-        name,
-        icon: icon || '🏷️',
-        isCustom: true,
-      };
-
-      const updatedCategories = [...get().categories, newCategory];
-      await persist({ categories: updatedCategories });
+      const activeTripId = get().activeTripId;
+      if (!activeTripId) return;
+      try {
+        const category = await insertCategory(activeTripId, name, icon);
+        set((state) => ({ categories: [...state.categories, category], storageError: null }));
+      } catch (e) {
+        setError(e);
+      }
     },
 
     deleteCategory: async (id) => {
-      const updatedCategories = get().categories.filter((c) => c.id !== id);
-      await persist({ categories: updatedCategories });
+      try {
+        await deleteCategoryRow(id);
+        set((state) => ({ categories: state.categories.filter((c) => c.id !== id), storageError: null }));
+      } catch (e) {
+        setError(e);
+      }
     },
 
     exportDatabase: () => {
@@ -471,62 +536,112 @@ export const useTripStore = create<TripStore>((set, get) => {
     },
 
     importDatabase: async (jsonString) => {
+      const userId = get().userId;
+      if (!userId) return false;
+
       try {
         const parsed = JSON.parse(jsonString) as TripState;
-        
-        // Basic schema validation
+
         if (
-          Array.isArray(parsed.trips) && 
-          parsed.members && 
-          parsed.groups &&
-          Array.isArray(parsed.expenses) &&
-          Array.isArray(parsed.categories)
+          !(
+            Array.isArray(parsed.trips) &&
+            parsed.members &&
+            parsed.groups &&
+            Array.isArray(parsed.expenses) &&
+            Array.isArray(parsed.categories)
+          )
         ) {
-          await persist({
-            trips: parsed.trips,
-            activeTripId: parsed.activeTripId || null,
-            members: parsed.members,
-            groups: parsed.groups,
-            expenses: parsed.expenses,
-            categories: parsed.categories,
-          });
-          return true;
+          return false;
         }
-        return false;
+
+        const customCategories = parsed.categories.filter((c) => c.isCustom);
+        let lastTripId: string | null = null;
+
+        for (let i = 0; i < parsed.trips.length; i++) {
+          const trip = parsed.trips[i];
+          const tripMembers: Record<string, Member> = {};
+          trip.memberIds.forEach((id) => {
+            if (parsed.members[id]) tripMembers[id] = parsed.members[id];
+          });
+          const tripGroups: Record<string, Group> = {};
+          (trip.groupIds || []).forEach((id) => {
+            if (parsed.groups[id]) tripGroups[id] = parsed.groups[id];
+          });
+          const tripExpenses = parsed.expenses.filter((e) => e.tripId === trip.id);
+
+          const result = await insertTripGraph(userId, {
+            trip: { name: trip.name, startDate: trip.startDate, endDate: trip.endDate, baseCurrency: trip.baseCurrency },
+            members: tripMembers,
+            groups: tripGroups,
+            categories: i === 0 ? customCategories : undefined,
+            expenses: tripExpenses,
+          });
+          lastTripId = result.trip.id;
+        }
+
+        const graph = await fetchMyTripGraph();
+        let expenses: Expense[] = [];
+        let categories = DEFAULT_CATEGORIES;
+        if (lastTripId) {
+          expenses = await fetchExpensesForTrip(lastTripId);
+          const custom = await fetchCategoriesForTrip(lastTripId);
+          categories = [...DEFAULT_CATEGORIES, ...custom];
+          localStorage.setItem(LAST_TRIP_KEY, lastTripId);
+        }
+
+        set({ ...graph, activeTripId: lastTripId, expenses, categories, storageError: null });
+        return true;
       } catch (e) {
-        console.error('Import database JSON parse failure:', e);
+        console.error('Import database failed:', e);
         return false;
       }
     },
 
     clearDatabase: async () => {
-      await storage.clearAll();
-      set({
-        trips: [],
-        activeTripId: null,
-        members: {},
-        groups: {},
-        expenses: [],
-        categories: DEFAULT_CATEGORIES,
-        storageError: null,
-      });
+      const userId = get().userId;
+      if (!userId) return;
+      try {
+        await deleteAllMyTrips(userId);
+        set({
+          trips: [],
+          activeTripId: null,
+          members: {},
+          groups: {},
+          expenses: [],
+          categories: DEFAULT_CATEGORIES,
+          storageError: null,
+        });
+        localStorage.removeItem(LAST_TRIP_KEY);
+      } catch (e) {
+        setError(e);
+      }
     },
 
     loadDemoTrip: async () => {
-      const { trip, members: newMembers, groups: newGroups, expenses: newExpenses } = generateDemoData();
+      const userId = get().userId;
+      if (!userId) return;
+      try {
+        const demo = generateDemoData();
+        const result = await insertTripGraph(userId, {
+          trip: { name: demo.trip.name, startDate: demo.trip.startDate, endDate: demo.trip.endDate, baseCurrency: demo.trip.baseCurrency },
+          members: demo.members,
+          groups: demo.groups,
+          expenses: demo.expenses,
+        });
 
-      const updatedTrips = [...get().trips, trip];
-      const updatedMembers = { ...get().members, ...newMembers };
-      const updatedGroups = { ...get().groups, ...newGroups };
-      const updatedExpenses = [...get().expenses, ...newExpenses];
-
-      await persist({
-        trips: updatedTrips,
-        activeTripId: trip.id,
-        members: updatedMembers,
-        groups: updatedGroups,
-        expenses: updatedExpenses,
-      });
+        set((state) => ({
+          trips: [...state.trips, result.trip],
+          activeTripId: result.trip.id,
+          members: { ...state.members, ...result.members },
+          groups: { ...state.groups, ...result.groups },
+          expenses: result.expenses,
+          categories: [...DEFAULT_CATEGORIES, ...result.categories],
+          storageError: null,
+        }));
+        localStorage.setItem(LAST_TRIP_KEY, result.trip.id);
+      } catch (e) {
+        setError(e);
+      }
     },
   };
 });

@@ -26,6 +26,10 @@ type Props = {
   onImport: () => void;
   onClearDatabase: () => void;
   onLoadDemoTrip: () => void;
+
+  userEmail: string | null;
+  onSignOut: () => void;
+  isAdmin: boolean;
 };
 
 export function SettingsTab({
@@ -48,6 +52,9 @@ export function SettingsTab({
   onImport,
   onClearDatabase,
   onLoadDemoTrip,
+  userEmail,
+  onSignOut,
+  isAdmin,
 }: Props) {
   const [isOnline, setIsOnline] = React.useState(navigator.onLine);
   const [storageEstimate, setStorageEstimate] = React.useState<{ used: number; quota: number } | null>(null);
@@ -85,6 +92,17 @@ export function SettingsTab({
   return (
     <div className="fade-in">
       <h3 style={{ fontSize: '18px', marginBottom: '20px' }}>Settings & Data Utility</h3>
+
+      {/* Account */}
+      <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '24px' }}>
+        <h4 style={{ fontSize: '16px' }}>Account</h4>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px' }}>
+          <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>{userEmail || 'Signed in'}</span>
+          <button type="button" className="secondary-btn" style={{ padding: '6px 14px', fontSize: '13px' }} onClick={onSignOut}>
+            Sign out
+          </button>
+        </div>
+      </div>
 
       {/* Diagnostics Panel */}
       <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '24px' }}>
@@ -124,7 +142,7 @@ export function SettingsTab({
                 <CategoryIcon categoryId={cat.id} fallbackEmoji={cat.icon} size={16} />
                 <span style={{ color: 'var(--text-primary)' }}>{cat.name}</span>
               </span>
-              {cat.isCustom ? (
+              {cat.isCustom && isAdmin ? (
                 <button
                   className="secondary-btn"
                   style={{ padding: '3px 8px', fontSize: '11px', color: 'var(--color-danger)', borderColor: 'rgba(225,29,72,0.15)' }}
@@ -133,12 +151,17 @@ export function SettingsTab({
                   Delete
                 </button>
               ) : (
-                <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Built-in</span>
+                <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{cat.isCustom ? 'Custom' : 'Built-in'}</span>
               )}
             </div>
           ))}
         </div>
 
+        {!isAdmin && (
+          <p style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Only the trip admin can manage categories.</p>
+        )}
+
+        {isAdmin && (
         <form onSubmit={onAddCategory} style={{ display: 'flex', gap: '8px' }}>
           <div
             style={{ position: 'relative' }}
@@ -199,6 +222,7 @@ export function SettingsTab({
           />
           <button type="submit" className="gradient-btn" style={{ padding: '10px 16px' }}>Add</button>
         </form>
+        )}
       </div>
 
       {/* Excel CSV Exporter */}

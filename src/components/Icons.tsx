@@ -216,3 +216,24 @@ export function IconClose({ size = 20, className = 'icon' }: IconProps) {
     </svg>
   );
 }
+
+export function IconShare({ size = 20, className = 'icon' }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" className={className} {...base}>
+      <circle cx="18" cy="5" r="2.5" />
+      <circle cx="6" cy="12" r="2.5" />
+      <circle cx="18" cy="19" r="2.5" />
+      <line x1="8.3" y1="10.7" x2="15.7" y2="6.3" />
+      <line x1="8.3" y1="13.3" x2="15.7" y2="17.7" />
+    </svg>
+  );
+}
+
+export function IconCopy({ size = 20, className = 'icon' }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" className={className} {...base}>
+      <rect x="9" y="9" width="12" height="12" rx="2" />
+      <path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1" />
+    </svg>
+  );
+}

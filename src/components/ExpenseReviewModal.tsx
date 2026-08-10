@@ -1,4 +1,6 @@
+import { useEffect, useState } from 'react';
 import type { Category, Expense, Member, Trip } from '../types';
+import { getReceiptSignedUrl } from '../services/tripApi';
 
 type Props = {
   expense: Expense;
@@ -10,6 +12,19 @@ type Props = {
 
 export function ExpenseReviewModal({ expense, members, categories, trip, onClose }: Props) {
   const currencySymbol = trip?.baseCurrency === 'INR' ? '₹' : trip?.baseCurrency;
+  const [receiptUrl, setReceiptUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    setReceiptUrl(null);
+    if (!expense.receiptPath) return;
+    let cancelled = false;
+    getReceiptSignedUrl(expense.receiptPath).then((url) => {
+      if (!cancelled) setReceiptUrl(url);
+    }).catch(() => {
+      // Receipt failed to load (deleted from storage, expired, etc.) — silently skip it.
+    });
+    return () => { cancelled = true; };
+  }, [expense.receiptPath]);
 
   return (
     <div
@@ -98,10 +113,10 @@ export function ExpenseReviewModal({ expense, members, categories, trip, onClose
           </div>
 
           {/* Receipt image */}
-          {expense.receiptImage && (
-            <a href={expense.receiptImage} target="_blank" rel="noopener noreferrer">
+          {receiptUrl && (
+            <a href={receiptUrl} target="_blank" rel="noopener noreferrer">
               <img
-                src={expense.receiptImage}
+                src={receiptUrl}
                 alt="Receipt"
                 style={{ width: '100%', maxHeight: '220px', objectFit: 'contain', borderRadius: 'var(--border-radius-md)', border: '1px solid var(--border-color)', background: 'rgba(15,23,42,0.02)' }}
               />

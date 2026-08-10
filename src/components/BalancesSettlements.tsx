@@ -13,6 +13,8 @@ type Props = {
   topCategoryPercentage?: number;
   onMemberClick: (memberId: string) => void;
   onSettle: (fromMemberId: string, toMemberId: string, amount: number, fromLabel: string, toLabel: string) => void;
+  isAdmin: boolean;
+  myMemberId: string | null;
 };
 
 function balanceColor(balance: number): string {
@@ -44,12 +46,13 @@ type TransferRowProps = {
   note?: string;
   currencySymbol: string;
   isSettled: boolean;
+  canSettle: boolean;
   customValue: string;
   onCustomChange: (v: string) => void;
   onSettle: (fromMemberId: string, toMemberId: string, amount: number, fromLabel: string, toLabel: string) => void;
 };
 
-function TransferRow({ transfer: t, note, currencySymbol, isSettled, customValue, onCustomChange, onSettle }: TransferRowProps) {
+function TransferRow({ transfer: t, note, currencySymbol, isSettled, canSettle, customValue, onCustomChange, onSettle }: TransferRowProps) {
   const settleAmount = parseFloat(customValue) || t.amount;
   return (
     <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '8px', padding: '10px 0', borderBottom: '1.5px dashed var(--border-color)' }}>
@@ -65,7 +68,7 @@ function TransferRow({ transfer: t, note, currencySymbol, isSettled, customValue
         </span>
         {isSettled ? (
           <span className="settle-pop" style={{ fontSize: '12px', fontWeight: '600', color: 'var(--color-success)' }}><IconCheck size={14} className="icon-sm" /> Settled</span>
-        ) : (
+        ) : canSettle ? (
           <>
             <input
               type="text"
@@ -88,6 +91,8 @@ function TransferRow({ transfer: t, note, currencySymbol, isSettled, customValue
               Settle
             </button>
           </>
+        ) : (
+          <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontStyle: 'italic' }}>Only {t.fromLabel} or {t.toLabel} can settle this</span>
         )}
       </div>
     </div>
@@ -104,7 +109,10 @@ export function BalancesSettlements({
   topCategoryPercentage,
   onMemberClick,
   onSettle,
+  isAdmin,
+  myMemberId,
 }: Props) {
+  const canSettleTransfer = (t: Transfer) => isAdmin || t.fromMemberId === myMemberId || t.toMemberId === myMemberId;
   const currencySymbol = trip.baseCurrency === 'INR' ? '₹' : trip.baseCurrency;
   const [customAmounts, setCustomAmounts] = useState<Record<string, string>>({});
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
@@ -256,6 +264,7 @@ export function BalancesSettlements({
                               rowKey={rowKey}
                               currencySymbol={currencySymbol}
                               isSettled={isTransferSettled(it, activeTripExpenses)}
+                              canSettle={canSettleTransfer(it)}
                               customValue={customAmounts[rowKey] || ''}
                               onCustomChange={(v) => setCustom(rowKey, v)}
                               onSettle={onSettle}
@@ -294,6 +303,7 @@ export function BalancesSettlements({
                   note={isGroupInvolved ? 'group settlement — combined balance' : undefined}
                   currencySymbol={currencySymbol}
                   isSettled={isTransferSettled(t, activeTripExpenses)}
+                  canSettle={canSettleTransfer(t)}
                   customValue={customAmounts[rowKey] || ''}
                   onCustomChange={(v) => setCustom(rowKey, v)}
                   onSettle={onSettle}

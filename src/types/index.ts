@@ -6,6 +6,8 @@ export interface Trip {
   baseCurrency: string;
   memberIds: string[];
   groupIds: string[]; // List of groups associated with this trip
+  ownerId: string; // admin: full CRUD + can settle any transfer
+  joinCode: string; // shareable code, e.g. "ABC123"
   createdAt: number;
   updatedAt: number;
 }
@@ -14,6 +16,7 @@ export interface Member {
   id: string;
   name: string;
   archived?: boolean; // soft-delete flag
+  linkedUserId?: string | null; // set once this member "claims" their identity via /join
 }
 
 export interface Group {
@@ -37,7 +40,10 @@ export interface Expense {
   splitMemberIds: string[]; // members participating in this split
   splitConfig?: Record<string, number>; // memberId -> weight / amount / percentage
   resolvedShares: Record<string, number>; // memberId -> actual split share in baseCurrency
-  receiptImage?: string; // optional compressed base64 JPEG data URL
+  receiptImage?: string; // client-only: a freshly-captured base64 preview, not yet uploaded
+  receiptPath?: string | null; // Supabase Storage object path once uploaded — resolve via a signed URL to display
+  isSettlement: boolean;
+  createdByUserId: string; // participant edit/delete rights are scoped to this
   createdAt: number;
   updatedAt: number;
 }

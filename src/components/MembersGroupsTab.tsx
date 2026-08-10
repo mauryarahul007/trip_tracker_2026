@@ -36,6 +36,7 @@ type Props = {
   onDeleteGroup: (group: Group) => void;
 
   members: Record<string, Member>;
+  isAdmin: boolean;
 };
 
 export function MembersGroupsTab({
@@ -68,6 +69,7 @@ export function MembersGroupsTab({
   onStartEditGroup,
   onDeleteGroup,
   members,
+  isAdmin,
 }: Props) {
   const otherGroupMemberIds = new Set<string>();
   visibleTripGroups.forEach((grp) => {
@@ -107,32 +109,38 @@ export function MembersGroupsTab({
         <h3 style={{ fontSize: '18px' }}>Trip Members</h3>
       </div>
 
-      <form className="glass-card fade-in" onSubmit={onAddMember} style={{ marginBottom: '24px' }}>
-        <h4 style={{ marginBottom: '14px', fontSize: '15px' }}>{editingMemberId ? 'Edit Member' : 'New Member'}</h4>
-        <div className="form-group">
-          <label className="form-label">Name</label>
-          <input
-            ref={memberInputRef}
-            type="text"
-            required
-            className="input-field"
-            placeholder="Enter full name"
-            value={newMemberName}
-            onChange={(e) => setNewMemberName(e.target.value)}
-          />
-        </div>
-        {memberFormError && (
-          <p style={{ color: 'var(--color-danger)', fontSize: '13px', marginTop: '4px', marginBottom: '8px' }}>{memberFormError}</p>
-        )}
-        <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
-          <button type="submit" className="gradient-btn" style={{ flex: 1, padding: '10px' }}>
-            {editingMemberId ? 'Update' : 'Add'}
-          </button>
-          {editingMemberId && (
-            <button type="button" className="secondary-btn" style={{ flex: 1, padding: '10px' }} onClick={() => setShowAddMember(false)}>Cancel</button>
+      {isAdmin ? (
+        <form className="glass-card fade-in" onSubmit={onAddMember} style={{ marginBottom: '24px' }}>
+          <h4 style={{ marginBottom: '14px', fontSize: '15px' }}>{editingMemberId ? 'Edit Member' : 'New Member'}</h4>
+          <div className="form-group">
+            <label className="form-label">Name</label>
+            <input
+              ref={memberInputRef}
+              type="text"
+              required
+              className="input-field"
+              placeholder="Enter full name"
+              value={newMemberName}
+              onChange={(e) => setNewMemberName(e.target.value)}
+            />
+          </div>
+          {memberFormError && (
+            <p style={{ color: 'var(--color-danger)', fontSize: '13px', marginTop: '4px', marginBottom: '8px' }}>{memberFormError}</p>
           )}
-        </div>
-      </form>
+          <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
+            <button type="submit" className="gradient-btn" style={{ flex: 1, padding: '10px' }}>
+              {editingMemberId ? 'Update' : 'Add'}
+            </button>
+            {editingMemberId && (
+              <button type="button" className="secondary-btn" style={{ flex: 1, padding: '10px' }} onClick={() => setShowAddMember(false)}>Cancel</button>
+            )}
+          </div>
+        </form>
+      ) : (
+        <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '20px' }}>
+          Only the trip admin can add, edit, or remove members and groups.
+        </p>
+      )}
 
       {/* Members list */}
       {activeTripMembers.length === 0 ? (
@@ -144,22 +152,24 @@ export function MembersGroupsTab({
           {visibleMembers.map((member) => (
             <div key={member.id} className="glass-card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px' }}>
               <span style={{ fontSize: '15px', fontWeight: '500' }}>{member.name}</span>
-              <div style={{ display: 'flex', gap: '8px' }}>
-                <button
-                  className="secondary-btn"
-                  style={{ padding: '4px 10px', fontSize: '12px' }}
-                  onClick={() => onStartEditMember(member)}
-                >
-                  Edit
-                </button>
-                <button
-                  className="secondary-btn"
-                  style={{ padding: '4px 10px', fontSize: '12px', color: 'var(--color-danger)', borderColor: 'rgba(225,29,72,0.15)' }}
-                  onClick={() => onDeleteMember(member)}
-                >
-                  Delete
-                </button>
-              </div>
+              {isAdmin && (
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <button
+                    className="secondary-btn"
+                    style={{ padding: '4px 10px', fontSize: '12px' }}
+                    onClick={() => onStartEditMember(member)}
+                  >
+                    Edit
+                  </button>
+                  <button
+                    className="secondary-btn"
+                    style={{ padding: '4px 10px', fontSize: '12px', color: 'var(--color-danger)', borderColor: 'rgba(225,29,72,0.15)' }}
+                    onClick={() => onDeleteMember(member)}
+                  >
+                    Delete
+                  </button>
+                </div>
+              )}
             </div>
           ))}
 
@@ -172,13 +182,15 @@ export function MembersGroupsTab({
               {archivedMembers.map((member) => (
                 <div key={member.id} className="glass-card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 16px', opacity: 0.5 }}>
                   <span style={{ fontSize: '14px', textDecoration: 'line-through' }}>{member.name}</span>
-                  <button
-                    className="secondary-btn"
-                    style={{ padding: '3px 8px', fontSize: '11px' }}
-                    onClick={() => onToggleArchiveMember(member.id)}
-                  >
-                    Restore
-                  </button>
+                  {isAdmin && (
+                    <button
+                      className="secondary-btn"
+                      style={{ padding: '3px 8px', fontSize: '11px' }}
+                      onClick={() => onToggleArchiveMember(member.id)}
+                    >
+                      Restore
+                    </button>
+                  )}
                 </div>
               ))}
             </div>
@@ -190,14 +202,14 @@ export function MembersGroupsTab({
       <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '24px', marginTop: '24px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
           <h3 style={{ fontSize: '18px' }}>Member Groups</h3>
-          {!showAddGroup && visibleMembers.length > 0 && (
+          {isAdmin && !showAddGroup && visibleMembers.length > 0 && (
             <button className="gradient-btn" style={{ padding: '6px 12px', fontSize: '13px' }} onClick={() => setShowAddGroup(true)}>
               + Create Group
             </button>
           )}
         </div>
 
-        {showAddGroup && (
+        {isAdmin && showAddGroup && (
           <form className="glass-card fade-in" onSubmit={onCreateGroup} style={{ marginBottom: '24px' }}>
             <h4 style={{ marginBottom: '14px', fontSize: '15px' }}>{editingGroupId ? 'Edit Group' : 'New Group'}</h4>
 
@@ -297,22 +309,24 @@ export function MembersGroupsTab({
                       Members: {grpMemberNames || 'None'}
                     </p>
                   </div>
-                  <div style={{ display: 'flex', gap: '8px' }}>
-                    <button
-                      className="secondary-btn"
-                      style={{ padding: '4px 10px', fontSize: '11px' }}
-                      onClick={() => onStartEditGroup(grp)}
-                    >
-                      Edit
-                    </button>
-                    <button
-                      className="secondary-btn"
-                      style={{ padding: '4px 10px', fontSize: '11px', color: 'var(--color-danger)', borderColor: 'rgba(225,29,72,0.15)' }}
-                      onClick={() => onDeleteGroup(grp)}
-                    >
-                      Delete
-                    </button>
-                  </div>
+                  {isAdmin && (
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <button
+                        className="secondary-btn"
+                        style={{ padding: '4px 10px', fontSize: '11px' }}
+                        onClick={() => onStartEditGroup(grp)}
+                      >
+                        Edit
+                      </button>
+                      <button
+                        className="secondary-btn"
+                        style={{ padding: '4px 10px', fontSize: '11px', color: 'var(--color-danger)', borderColor: 'rgba(225,29,72,0.15)' }}
+                        onClick={() => onDeleteGroup(grp)}
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  )}
                 </div>
               );
             })}

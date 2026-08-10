@@ -1,0 +1,195 @@
+// Hand-written mirror of supabase/migrations/0001_init.sql.
+// Once a real project exists, prefer regenerating this with:
+//   npx supabase gen types typescript --project-id <ref> > src/types/database.ts
+
+export interface Database {
+  public: {
+    Tables: {
+      profiles: {
+        Row: {
+          id: string;
+          email: string;
+          display_name: string | null;
+          avatar_url: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id: string;
+          email: string;
+          display_name?: string | null;
+          avatar_url?: string | null;
+        };
+        Update: Partial<{
+          display_name: string | null;
+          avatar_url: string | null;
+        }>;
+        Relationships: [];
+      };
+      trips: {
+        Row: {
+          id: string;
+          name: string;
+          start_date: string;
+          end_date: string;
+          base_currency: string;
+          owner_id: string;
+          join_code: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          start_date: string;
+          end_date: string;
+          base_currency?: string;
+          owner_id: string;
+          join_code?: string;
+        };
+        Update: Partial<{
+          name: string;
+          start_date: string;
+          end_date: string;
+          base_currency: string;
+          updated_at: string;
+        }>;
+        Relationships: [];
+      };
+      members: {
+        Row: {
+          id: string;
+          trip_id: string;
+          name: string;
+          archived: boolean;
+          linked_user_id: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          trip_id: string;
+          name: string;
+          archived?: boolean;
+        };
+        Update: Partial<{
+          name: string;
+          archived: boolean;
+          updated_at: string;
+        }>;
+        Relationships: [];
+      };
+      groups: {
+        Row: {
+          id: string;
+          trip_id: string;
+          name: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          trip_id: string;
+          name: string;
+        };
+        Update: Partial<{ name: string; updated_at: string }>;
+        Relationships: [];
+      };
+      group_members: {
+        Row: { group_id: string; member_id: string };
+        Insert: { group_id: string; member_id: string };
+        Update: Partial<{ group_id: string; member_id: string }>;
+        Relationships: [];
+      };
+      categories: {
+        Row: {
+          id: string;
+          trip_id: string;
+          name: string;
+          icon: string | null;
+          is_custom: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          trip_id: string;
+          name: string;
+          icon?: string | null;
+          is_custom?: boolean;
+        };
+        Update: Partial<{ name: string; icon: string | null }>;
+        Relationships: [];
+      };
+      expenses: {
+        Row: {
+          id: string;
+          trip_id: string;
+          title: string;
+          amount: number;
+          currency: string;
+          category: string;
+          date: string;
+          paid_by: string;
+          split_mode: 'equal' | 'equalUnit' | 'custom' | 'exact' | 'percentage';
+          split_member_ids: string[];
+          split_config: Record<string, number> | null;
+          resolved_shares: Record<string, number>;
+          receipt_path: string | null;
+          is_settlement: boolean;
+          created_by_user_id: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          trip_id: string;
+          title: string;
+          amount: number;
+          currency: string;
+          category: string;
+          date: string;
+          paid_by: string;
+          split_mode: 'equal' | 'equalUnit' | 'custom' | 'exact' | 'percentage';
+          split_member_ids: string[];
+          split_config?: Record<string, number> | null;
+          resolved_shares: Record<string, number>;
+          receipt_path?: string | null;
+          is_settlement?: boolean;
+          created_by_user_id: string;
+        };
+        Update: Partial<{
+          title: string;
+          amount: number;
+          currency: string;
+          category: string;
+          date: string;
+          paid_by: string;
+          split_mode: 'equal' | 'equalUnit' | 'custom' | 'exact' | 'percentage';
+          split_member_ids: string[];
+          split_config: Record<string, number> | null;
+          resolved_shares: Record<string, number>;
+          receipt_path: string | null;
+          updated_at: string;
+        }>;
+        Relationships: [];
+      };
+    };
+    Views: Record<string, never>;
+    Functions: {
+      lookup_trip_by_join_code: {
+        Args: { p_code: string };
+        Returns: {
+          trip_id: string;
+          trip_name: string;
+          is_admin: boolean;
+          my_member_id: string | null;
+          member_id: string | null;
+          member_name: string | null;
+        }[];
+      };
+      claim_trip_member: {
+        Args: { p_member_id: string };
+        Returns: boolean;
+      };
+    };
+  };
+}

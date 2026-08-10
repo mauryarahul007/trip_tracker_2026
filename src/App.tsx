@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useTripStore } from './store/tripStore';
+import { useAuthStore } from './store/authStore';
 import { calculateSettlements } from './utils/settlement';
 import type { Expense, Trip, Group, Member } from './types';
 import { exportTripToCSV } from './utils/csvExport';
@@ -15,7 +16,8 @@ import { SettingsTab } from './components/SettingsTab';
 import { ExpenseReviewModal } from './components/ExpenseReviewModal';
 import { UndoToasts } from './components/UndoToasts';
 import { NavTabs } from './components/NavTabs';
-import { IconCalendar, IconChevronLeft } from './components/Icons';
+import { ShareTripModal } from './components/ShareTripModal';
+import { IconCalendar, IconChevronLeft, IconShare } from './components/Icons';
 import { formatDateRange } from './utils/dateRange';
 
 export default function App() {
@@ -51,6 +53,10 @@ export default function App() {
     clearDatabase,
     loadDemoTrip,
   } = useTripStore();
+
+  const userEmail = useAuthStore((s) => s.session?.user.email ?? null);
+  const userId = useAuthStore((s) => s.session?.user.id ?? null);
+  const signOut = useAuthStore((s) => s.signOut);
 
   // Navigation tabs: 'expenses' | 'members' | 'analytics' | 'settings'
   const [activeTab, setActiveTab] = useState<'expenses' | 'members' | 'analytics' | 'settings'>('expenses');
@@ -137,6 +143,9 @@ export default function App() {
   // Confirm dialog (replaces window.confirm)
   const [confirmRequest, setConfirmRequest] = useState<ConfirmRequest | null>(null);
 
+  // Share trip modal
+  const [showShareTrip, setShowShareTrip] = useState(false);
+
   // Inline form validation errors (replace window.alert)
   const [groupFormError, setGroupFormError] = useState('');
   const [expenseFormError, setExpenseFormError] = useState('');
@@ -193,6 +202,12 @@ export default function App() {
     ? (activeTrip.groupIds || []).map((id) => groups[id]).filter(Boolean)
     : [];
   const visibleTripGroups = activeTripGroups.filter((g) => g.id !== pendingDeleteGroup?.id);
+
+  // Permission model: admin = trip creator (full CRUD, can settle anything).
+  // Participant = the member they've claimed via /join (own-expenses only,
+  // can only settle transfers they're the payer or payee of).
+  const isAdmin = !!(activeTrip && userId && activeTrip.ownerId === userId);
+  const myMemberId = activeTripMembers.find((m) => m.linkedUserId === userId)?.id ?? null;
 
   // Live running sum for exact/percentage split inputs (feedback while typing)
   const splitSelectedIds = Object.keys(selectedSplitMembers).filter((id) => selectedSplitMembers[id]);
@@ -678,7 +693,11 @@ export default function App() {
       Object.entries(exp.splitConfig).forEach(([id, val]) => { initialConfig[id] = String(val); });
     }
     setNewExpSplitConfig(initialConfig);
-    setNewExpReceiptImage(exp.receiptImage || '');
+    // Editing doesn't preload an existing receipt into the capture field —
+    // it already lives in Storage; attaching a new photo here replaces it,
+    // leaving it blank leaves the existing one untouched (see ExpenseReviewModal
+    // to view it). Avoids re-uploading a signed URL as if it were a fresh photo.
+    setNewExpReceiptImage('');
     setShowAddExpense(true);
   };
 
@@ -942,13 +961,22 @@ export default function App() {
                 </span>
                 <h2 className="app-logo" style={{ fontSize: '24px', color: '#F2ECDC' }}>{activeTrip?.name}</h2>
               </div>
-              <button
-                className="secondary-btn"
-                style={{ padding: '7px 12px', fontSize: '12px', color: '#F2ECDC', borderColor: 'rgba(242,236,220,0.28)', background: 'rgba(242,236,220,0.06)', flexShrink: 0 }}
-                onClick={() => selectTrip(null)}
-              >
-                <IconChevronLeft size={14} className="icon-sm" /> Trips
-              </button>
+              <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
+                <button
+                  className="secondary-btn"
+                  style={{ padding: '7px 12px', fontSize: '12px', color: '#F2ECDC', borderColor: 'rgba(242,236,220,0.28)', background: 'rgba(242,236,220,0.06)' }}
+                  onClick={() => setShowShareTrip(true)}
+                >
+                  <IconShare size={14} className="icon-sm" /> Share
+                </button>
+                <button
+                  className="secondary-btn"
+                  style={{ padding: '7px 12px', fontSize: '12px', color: '#F2ECDC', borderColor: 'rgba(242,236,220,0.28)', background: 'rgba(242,236,220,0.06)' }}
+                  onClick={() => selectTrip(null)}
+                >
+                  <IconChevronLeft size={14} className="icon-sm" /> Trips
+                </button>
+              </div>
             </div>
             <div className="app-header-stats">
               <span>{visibleMembers.length} member{visibleMembers.length === 1 ? '' : 's'}</span>
@@ -1031,6 +1059,8 @@ export default function App() {
                   onReview={setSelectedReviewExpense}
                   onEdit={handleStartEditExpense}
                   onDelete={handleDeleteExpense}
+                  isAdmin={isAdmin}
+                  userId={userId}
                 />
 
                 {activeTrip && visibleMembers.length > 0 && (
@@ -1044,6 +1074,8 @@ export default function App() {
                     topCategoryPercentage={categoryData[0]?.percentage}
                     onMemberClick={handleFilterByMember}
                     onSettle={handleSettle}
+                    isAdmin={isAdmin}
+                    myMemberId={myMemberId}
                   />
                 )}
               </div>
@@ -1080,6 +1112,7 @@ export default function App() {
                 onStartEditGroup={handleStartEditGroup}
                 onDeleteGroup={handleDeleteGroup}
                 members={members}
+                isAdmin={isAdmin}
               />
             )}
 
@@ -1118,12 +1151,19 @@ export default function App() {
                 onImport={handleImport}
                 onClearDatabase={handleClearDatabase}
                 onLoadDemoTrip={handleLoadDemoTrip}
+                userEmail={userEmail}
+                onSignOut={signOut}
+                isAdmin={isAdmin}
               />
             )}
           </main>
 
           <NavTabs activeTab={activeTab} setActiveTab={setActiveTab} />
         </div>
+      )}
+
+      {showShareTrip && activeTrip && (
+        <ShareTripModal trip={activeTrip} onClose={() => setShowShareTrip(false)} />
       )}
 
       {selectedReviewExpense && (

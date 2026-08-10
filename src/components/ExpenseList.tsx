@@ -3,6 +3,13 @@ import { IconSearch, IconEdit, IconTrash, IconAlertCircle } from './Icons';
 import { SwipeableRow } from './SwipeableRow';
 import { CategoryIcon } from './CategoryIcon';
 
+// Swipe-to-delete is a supplement to the explicit trash button — skip
+// wrapping the row in it at all when the viewer isn't allowed to delete.
+function ConditionalSwipe({ enabled, onDelete, children }: { enabled: boolean; onDelete: () => void; children: React.ReactNode }) {
+  if (!enabled) return <>{children}</>;
+  return <SwipeableRow onDelete={onDelete}>{children}</SwipeableRow>;
+}
+
 type Props = {
   trip: Trip | undefined;
   members: Record<string, Member>;
@@ -28,6 +35,9 @@ type Props = {
   onReview: (exp: Expense) => void;
   onEdit: (exp: Expense) => void;
   onDelete: (exp: Expense) => void;
+
+  isAdmin: boolean;
+  userId: string | null;
 };
 
 export function ExpenseList({
@@ -53,6 +63,8 @@ export function ExpenseList({
   onReview,
   onEdit,
   onDelete,
+  isAdmin,
+  userId,
 }: Props) {
   const currencySymbol = trip?.baseCurrency === 'INR' ? '₹' : trip?.baseCurrency;
 
@@ -128,6 +140,7 @@ export function ExpenseList({
         <div className="glass-card" style={{ padding: 0, overflow: 'hidden' }}>
           {filteredExpenses.map((exp, idx) => {
             const isPending = exp.id === pendingDeleteId;
+            const canManage = isAdmin || exp.createdByUserId === userId;
             const isPayerDeleted = trip ? !trip.memberIds.includes(exp.paidBy) : false;
             const hasDeletedParticipants = trip ? exp.splitMemberIds.some((id) => !trip.memberIds.includes(id)) : false;
             const needsReview = isPayerDeleted || hasDeletedParticipants;
@@ -156,7 +169,7 @@ export function ExpenseList({
                   transition: 'opacity 0.25s ease',
                 }}
               >
-                <SwipeableRow onDelete={() => onDelete(exp)}>
+                <ConditionalSwipe enabled={canManage} onDelete={() => onDelete(exp)}>
                   <div
                     style={{
                       display: 'flex', flexDirection: 'column', gap: '8px',
@@ -190,32 +203,34 @@ export function ExpenseList({
                         <span className="money" style={{ fontSize: '15.5px', fontWeight: '600', color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
                           {currencySymbol} {exp.amount.toFixed(2)}
                         </span>
-                        <div style={{ display: 'flex', gap: '6px' }}>
-                          {!exp.title.startsWith('Settlement:') && (
+                        {canManage && (
+                          <div style={{ display: 'flex', gap: '6px' }}>
+                            {!exp.title.startsWith('Settlement:') && (
+                              <button
+                                className="secondary-btn"
+                                style={{
+                                  padding: '6px 8px',
+                                  color: needsReview ? 'var(--color-warning)' : undefined,
+                                  borderColor: needsReview ? 'rgba(185,138,62,0.35)' : undefined,
+                                }}
+                                aria-label={needsReview ? 'Review expense' : 'Edit expense'}
+                                title={needsReview ? 'Review' : 'Edit'}
+                                onClick={(e) => { e.stopPropagation(); onEdit(exp); }}
+                              >
+                                {needsReview ? <IconAlertCircle size={14} className="icon-sm" /> : <IconEdit size={14} className="icon-sm" />}
+                              </button>
+                            )}
                             <button
                               className="secondary-btn"
-                              style={{
-                                padding: '6px 8px',
-                                color: needsReview ? 'var(--color-warning)' : undefined,
-                                borderColor: needsReview ? 'rgba(185,138,62,0.35)' : undefined,
-                              }}
-                              aria-label={needsReview ? 'Review expense' : 'Edit expense'}
-                              title={needsReview ? 'Review' : 'Edit'}
-                              onClick={(e) => { e.stopPropagation(); onEdit(exp); }}
+                              style={{ padding: '6px 8px', color: 'var(--color-danger)', borderColor: 'rgba(184,69,46,0.25)' }}
+                              aria-label="Delete expense"
+                              title="Delete"
+                              onClick={(e) => { e.stopPropagation(); onDelete(exp); }}
                             >
-                              {needsReview ? <IconAlertCircle size={14} className="icon-sm" /> : <IconEdit size={14} className="icon-sm" />}
+                              <IconTrash size={14} className="icon-sm" />
                             </button>
-                          )}
-                          <button
-                            className="secondary-btn"
-                            style={{ padding: '6px 8px', color: 'var(--color-danger)', borderColor: 'rgba(184,69,46,0.25)' }}
-                            aria-label="Delete expense"
-                            title="Delete"
-                            onClick={(e) => { e.stopPropagation(); onDelete(exp); }}
-                          >
-                            <IconTrash size={14} className="icon-sm" />
-                          </button>
-                        </div>
+                          </div>
+                        )}
                       </div>
                     </div>
                     {needsReview && (
@@ -228,7 +243,7 @@ export function ExpenseList({
                       </div>
                     )}
                   </div>
-                </SwipeableRow>
+                </ConditionalSwipe>
               </div>
             );
           })}
