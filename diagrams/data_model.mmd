@@ -1,0 +1,57 @@
+erDiagram
+    TRIP {
+        string id PK
+        string name
+        string startDate
+        string endDate
+        string baseCurrency
+        string_array memberIds FK
+        string_array groupIds FK
+        int createdAt
+        int updatedAt
+    }
+
+    MEMBER {
+        string id PK
+        string name
+        boolean archived
+    }
+
+    GROUP {
+        string id PK
+        string name
+        string_array memberIds FK
+    }
+
+    EXPENSE {
+        string id PK
+        string tripId FK
+        string title
+        double amount
+        string currency
+        string category FK
+        string date
+        string paidBy FK
+        string splitMode
+        string_array splitMemberIds FK
+        object splitConfig
+        object resolvedShares
+        string receiptImage
+        int createdAt
+        int updatedAt
+    }
+
+    CATEGORY {
+        string id PK
+        string name
+        string icon
+        boolean isCustom
+    }
+
+    TRIP ||--o{ EXPENSE : contains
+    TRIP ||--o{ MEMBER : includes
+    TRIP ||--o{ GROUP : includes
+    MEMBER ||--o{ GROUP : belongs_to
+    MEMBER ||--o{ EXPENSE : pays
+    MEMBER ||--o{ EXPENSE : splits
+    CATEGORY ||--o{ EXPENSE : classifies
