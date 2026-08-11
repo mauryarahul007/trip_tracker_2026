@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { Expense, Group, Trip } from '../types';
 import { buildSettlementNodes, calculateGroupInternalTransfers, type MemberBalance, type Transfer } from '../utils/settlement';
 import { IconArrowDownRight, IconArrowUpRight, IconCheck, IconCheckCircle, IconChevronRight, IconEdit, IconMembers } from './Icons';
+import { getCurrencySymbol } from '../utils/currency';
 
 type Props = {
   trip: Trip;
@@ -165,7 +166,7 @@ export function BalancesSettlements({
   myMemberId,
 }: Props) {
   const canSettleTransfer = (t: Transfer) => isAdmin || t.fromMemberId === myMemberId || t.toMemberId === myMemberId;
-  const currencySymbol = trip.baseCurrency === 'INR' ? '₹' : trip.baseCurrency;
+  const currencySymbol = getCurrencySymbol(trip.baseCurrency);
   const [customAmounts, setCustomAmounts] = useState<Record<string, string>>({});
   const [customOpenKeys, setCustomOpenKeys] = useState<Record<string, boolean>>({});
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});

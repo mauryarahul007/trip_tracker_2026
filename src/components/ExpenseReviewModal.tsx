@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import type { Category, Expense, Member, Trip } from '../types';
 import { getReceiptSignedUrl } from '../services/tripApi';
 import { IconEdit } from './Icons';
+import { getCurrencySymbol } from '../utils/currency';
 
 type Props = {
   expense: Expense;
@@ -14,7 +15,7 @@ type Props = {
 
 export function ExpenseReviewModal({ expense, members, categories, trip, onClose, onEdit }: Props) {
   const isSettlement = expense.title.startsWith('Settlement:');
-  const currencySymbol = trip?.baseCurrency === 'INR' ? '₹' : trip?.baseCurrency;
+  const currencySymbol = getCurrencySymbol(trip?.baseCurrency || '');
   const [receiptUrl, setReceiptUrl] = useState<string | null>(null);
 
   useEffect(() => {

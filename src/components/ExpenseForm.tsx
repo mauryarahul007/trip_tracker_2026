@@ -1,10 +1,20 @@
-import React from 'react';
-import type { Category, Group, Member, Trip } from '../types';
+import React, { useState } from 'react';
+import type { Category, Group, Member, Trip, Expense } from '../types';
 import { IconCheck, IconAlertCircle, IconClose } from './Icons';
 import { CategoryIcon } from './CategoryIcon';
 import { initial } from '../utils/initials';
+import { getCurrencySymbol } from '../utils/currency';
+import { compressImageToDataUrl } from '../utils/image';
 
 type SplitMode = 'equal' | 'custom' | 'exact' | 'percentage';
+
+const getTodayDateString = () => {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, '0');
+  const day = String(today.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
 
 function formatAmountDisplay(raw: string): string {
   if (!raw) return '';
@@ -18,37 +28,19 @@ type Props = {
   visibleMembers: Member[];
   visibleTripGroups: Group[];
   categories: Category[];
-  editingExpenseId: string | null;
-
-  title: string;
-  setTitle: (v: string) => void;
-  amount: string;
-  setAmount: (v: string) => void;
-  category: string;
-  setCategory: (v: string) => void;
-  date: string;
-  setDate: (v: string) => void;
-  payer: string;
-  setPayer: (v: string) => void;
-  splitMode: SplitMode;
-  setSplitMode: (v: SplitMode) => void;
-  splitConfig: Record<string, string>;
-  setSplitConfig: (v: Record<string, string>) => void;
-  selectedSplitMembers: Record<string, boolean>;
-  setSelectedSplitMembers: (v: Record<string, boolean>) => void;
-  receiptImage: string;
-  setReceiptImage: (v: string) => void;
-  receiptProcessing: boolean;
-  formError: string;
-
-  splitSelectedIds: string[];
-  splitConfigSum: number;
-  splitConfigMatches: boolean;
-
-  onSubmit: (e: React.FormEvent) => void;
+  editingExpense: Expense | null;
+  onSave: (expenseData: {
+    title: string;
+    amount: number;
+    category: string;
+    date: string;
+    paidBy: string;
+    splitMode: SplitMode;
+    splitMemberIds: string[];
+    splitConfig?: Record<string, number>;
+    receiptImage?: string;
+  }) => Promise<{ success: boolean; error?: string }>;
   onCancel: () => void;
-  onReceiptFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  onApplyGroupToSplit: (memberIds: string[], checked: boolean) => void;
 };
 
 export function ExpenseForm({
@@ -56,45 +48,152 @@ export function ExpenseForm({
   visibleMembers,
   visibleTripGroups,
   categories,
-  editingExpenseId,
-  title,
-  setTitle,
-  amount,
-  setAmount,
-  category,
-  setCategory,
-  date,
-  setDate,
-  payer,
-  setPayer,
-  splitMode,
-  setSplitMode,
-  splitConfig,
-  setSplitConfig,
-  selectedSplitMembers,
-  setSelectedSplitMembers,
-  receiptImage,
-  setReceiptImage,
-  receiptProcessing,
-  formError,
-  splitSelectedIds,
-  splitConfigSum,
-  splitConfigMatches,
-  onSubmit,
+  editingExpense,
+  onSave,
   onCancel,
-  onReceiptFileChange,
-  onApplyGroupToSplit,
 }: Props) {
-  const currencySymbol = trip?.baseCurrency === 'INR' ? '₹' : trip?.baseCurrency;
+  const currencySymbol = getCurrencySymbol(trip?.baseCurrency || '');
 
+  // Local Form States
+  const [title, setTitle] = useState(editingExpense?.title || '');
+  const [amount, setAmount] = useState(editingExpense ? String(editingExpense.amount) : '');
+  const [category, setCategory] = useState(editingExpense?.category || (categories[0]?.id || ''));
+  const [date, setDate] = useState(editingExpense?.date || getTodayDateString());
+  const [payer, setPayer] = useState(editingExpense?.paidBy || (visibleMembers[0]?.id || ''));
+  const [splitMode, setSplitMode] = useState<SplitMode>((editingExpense?.splitMode as SplitMode) || 'equal');
+  
+  const [selectedSplitMembers, setSelectedSplitMembers] = useState<Record<string, boolean>>(() => {
+    const initialSplit: Record<string, boolean> = {};
+    if (editingExpense) {
+      editingExpense.splitMemberIds.forEach((id) => { initialSplit[id] = true; });
+    } else {
+      visibleMembers.forEach((m) => { initialSplit[m.id] = true; });
+    }
+    return initialSplit;
+  });
+
+  const [splitConfig, setSplitConfig] = useState<Record<string, string>>(() => {
+    const initialConfig: Record<string, string> = {};
+    if (editingExpense?.splitConfig) {
+      Object.entries(editingExpense.splitConfig).forEach(([id, val]) => {
+        initialConfig[id] = String(val);
+      });
+    }
+    return initialConfig;
+  });
+
+  const [receiptImage, setReceiptImage] = useState('');
+  const [receiptProcessing, setReceiptProcessing] = useState(false);
+  const [formError, setFormError] = useState('');
+
+  // Derived Splits States
+  const splitSelectedIds = Object.keys(selectedSplitMembers)
+    .filter((id) => selectedSplitMembers[id])
+    .filter((id) => visibleMembers.some((m) => m.id === id));
+
+  const splitConfigSum = splitSelectedIds.reduce(
+    (sum, id) => sum + (parseFloat(splitConfig[id] || '') || 0),
+    0
+  );
+
+  const splitConfigTarget = splitMode === 'percentage' ? 100 : splitMode === 'exact' ? (parseFloat(amount) || 0) : null;
+  const splitConfigMatches = splitConfigTarget === null || Math.abs(splitConfigSum - splitConfigTarget) < 0.02;
+
+  // Handlers
+  const handleReceiptFileChangeLocal = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    setReceiptProcessing(true);
+    try {
+      const dataUrl = await compressImageToDataUrl(file);
+      setReceiptImage(dataUrl);
+    } catch {
+      setFormError('Could not process that image. Try a different photo.');
+    } finally {
+      setReceiptProcessing(false);
+    }
+  };
+
+  const handleApplyGroupToSplitLocal = (memberIds: string[], checked: boolean) => {
+    const updatedConfig = { ...splitConfig };
+    if (checked) {
+      const updatedSelection: Record<string, boolean> = {};
+      visibleMembers.forEach((m) => {
+        const inGroup = memberIds.includes(m.id);
+        updatedSelection[m.id] = inGroup;
+        if (!inGroup) delete updatedConfig[m.id];
+      });
+      setSelectedSplitMembers(updatedSelection);
+    } else {
+      const updatedSelection = { ...selectedSplitMembers };
+      memberIds.forEach((id) => {
+        updatedSelection[id] = false;
+        delete updatedConfig[id];
+      });
+      setSelectedSplitMembers(updatedSelection);
+    }
+    setSplitConfig(updatedConfig);
+  };
+
+  const handleSubmitLocal = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const amountVal = parseFloat(amount);
+    if (isNaN(amountVal) || amountVal <= 0) {
+      setFormError('Please enter a valid amount greater than 0.');
+      return;
+    }
+
+    if (!title.trim()) {
+      setFormError('Please enter a title for the expense.');
+      return;
+    }
+
+    if (splitSelectedIds.length === 0) {
+      setFormError('Please select at least one member to split the expense with.');
+      return;
+    }
+
+    if (!splitConfigMatches) {
+      const modeLabel = splitMode === 'percentage' ? 'percentages' : 'exact amounts';
+      const targetLabel = splitMode === 'percentage' ? '100%' : `${currencySymbol} ${amountVal.toFixed(2)}`;
+      setFormError(`Split ${modeLabel} sum (${splitConfigSum.toFixed(2)}) must equal ${targetLabel}.`);
+      return;
+    }
+
+    setFormError('');
+
+    const finalSplitConfig: Record<string, number> = {};
+    if (splitMode === 'percentage' || splitMode === 'exact') {
+      splitSelectedIds.forEach((id) => {
+        finalSplitConfig[id] = parseFloat(splitConfig[id] || '') || 0;
+      });
+    }
+
+    const res = await onSave({
+      title: title.trim(),
+      amount: amountVal,
+      category,
+      date,
+      paidBy: payer,
+      splitMode,
+      splitMemberIds: splitSelectedIds,
+      splitConfig: Object.keys(finalSplitConfig).length > 0 ? finalSplitConfig : undefined,
+      receiptImage: receiptImage || undefined,
+    });
+
+    if (!res.success && res.error) {
+      setFormError(res.error);
+    }
+  };
   return (
     <div className="modal-backdrop" onClick={onCancel}>
-      <form className="modal-sheet" onSubmit={onSubmit} onClick={(e) => e.stopPropagation()}>
+      <form className="modal-sheet" onSubmit={handleSubmitLocal} onClick={(e) => e.stopPropagation()}>
       <header className="app-header" style={{ margin: '-20px -20px 20px', paddingTop: 'max(20px, env(safe-area-inset-top))' }}>
         <div className="app-header-top">
           <div className="app-title-group">
             <span className="app-eyebrow">{trip?.name}</span>
-            <h2 className="app-logo" style={{ fontSize: '22px', color: '#F2ECDC' }}>{editingExpenseId ? 'Edit Expense' : 'New Expense'}</h2>
+            <h2 className="app-logo" style={{ fontSize: '22px', color: '#F2ECDC' }}>{editingExpense ? 'Edit Expense' : 'New Expense'}</h2>
           </div>
           <button
             type="button"
@@ -226,7 +325,7 @@ export function ExpenseForm({
             type="file"
             accept="image/*"
             className="input-field"
-            onChange={onReceiptFileChange}
+            onChange={handleReceiptFileChangeLocal}
             disabled={receiptProcessing}
           />
         )}
@@ -294,7 +393,7 @@ export function ExpenseForm({
                 type="button"
                 className="secondary-btn"
                 style={{ padding: '4px 8px', fontSize: '11px', borderRadius: '8px' }}
-                onClick={() => onApplyGroupToSplit(grp.memberIds, true)}
+                onClick={() => handleApplyGroupToSplitLocal(grp.memberIds, true)}
               >
                 ＋ {grp.name}
               </button>
@@ -411,7 +510,7 @@ export function ExpenseForm({
 
       <div style={{ display: 'flex', gap: '12px', marginTop: '16px' }}>
         <button type="submit" className="gradient-btn" style={{ flex: 1 }}>
-          {editingExpenseId ? 'Update Expense' : 'Add Expense'}
+          {editingExpense ? 'Update Expense' : 'Add Expense'}
         </button>
         <button
           type="button"

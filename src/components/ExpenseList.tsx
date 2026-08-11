@@ -1,7 +1,9 @@
+import { useState, useEffect } from 'react';
 import type { Category, Expense, Member, Trip } from '../types';
 import { IconSearch, IconEdit, IconTrash, IconAlertCircle } from './Icons';
 import { SwipeableRow } from './SwipeableRow';
 import { CategoryIcon } from './CategoryIcon';
+import { getCurrencySymbol } from '../utils/currency';
 
 // Swipe-to-delete is a supplement to the explicit trash button — skip
 // wrapping the row in it at all when the viewer isn't allowed to delete.
@@ -32,9 +34,9 @@ type Props = {
   setFilterDateTo: (v: string) => void;
   onClearFilters: () => void;
 
-  onReview: (exp: Expense) => void;
-  onEdit: (exp: Expense) => void;
-  onDelete: (exp: Expense) => void;
+  onReview: (expense: Expense) => void;
+  onEdit: (expense: Expense) => void;
+  onDelete: (expense: Expense) => void;
 
   isAdmin: boolean;
   userId: string | null;
@@ -66,7 +68,30 @@ export function ExpenseList({
   isAdmin,
   userId,
 }: Props) {
-  const currencySymbol = trip?.baseCurrency === 'INR' ? '₹' : trip?.baseCurrency;
+  const currencySymbol = getCurrencySymbol(trip?.baseCurrency || '');
+
+  // 1. Debounce Search Input
+  const [localSearch, setLocalSearch] = useState(search);
+  useEffect(() => {
+    setLocalSearch(search);
+  }, [search]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setSearch(localSearch);
+    }, 200);
+    return () => clearTimeout(timer);
+  }, [localSearch, setSearch]);
+
+  // 2. Pagination State for virtualization
+  const [visibleCount, setVisibleCount] = useState(50);
+  
+  // Reset pagination when filter criteria change
+  useEffect(() => {
+    setVisibleCount(50);
+  }, [trip?.id, filterCategory, filterMember, filterDateFrom, filterDateTo, search]);
+
+  const displayedExpenses = filteredExpenses.slice(0, visibleCount);
 
   return (
     <>
@@ -79,8 +104,8 @@ export function ExpenseList({
               type="text"
               className="input-field"
               placeholder="Search expenses..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              value={localSearch}
+              onChange={(e) => setLocalSearch(e.target.value)}
             />
           </div>
           <select
@@ -147,7 +172,7 @@ export function ExpenseList({
         </div>
       ) : (
         <div className="glass-card" style={{ padding: 0, overflow: 'hidden' }}>
-          {filteredExpenses.map((exp, idx) => {
+          {displayedExpenses.map((exp, idx) => {
             const isPending = exp.id === pendingDeleteId;
             const canManage = isAdmin || exp.createdByUserId === userId;
             const isPayerDeleted = trip ? !trip.memberIds.includes(exp.paidBy) : false;
@@ -172,7 +197,7 @@ export function ExpenseList({
                 key={exp.id}
                 aria-hidden={isPending}
                 style={{
-                  borderBottom: idx < filteredExpenses.length - 1 ? '1.5px dashed var(--border-color)' : 'none',
+                  borderBottom: idx < displayedExpenses.length - 1 ? '1.5px dashed var(--border-color)' : 'none',
                   opacity: isPending ? 0.35 : 1,
                   pointerEvents: isPending ? 'none' : undefined,
                   transition: 'opacity 0.25s ease',
@@ -256,6 +281,19 @@ export function ExpenseList({
               </div>
             );
           })}
+        </div>
+      )}
+
+      {filteredExpenses.length > visibleCount && (
+        <div style={{ display: 'flex', justifyContent: 'center', marginTop: '16px' }}>
+          <button
+            type="button"
+            className="secondary-btn"
+            style={{ width: '100%', padding: '12px' }}
+            onClick={() => setVisibleCount((prev) => prev + 50)}
+          >
+            Load More (showing {visibleCount} of {filteredExpenses.length})
+          </button>
         </div>
       )}
     </>

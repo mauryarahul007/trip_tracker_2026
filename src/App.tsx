@@ -1,10 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useTripStore } from './store/tripStore';
 import { useAuthStore } from './store/authStore';
 import { calculateSettlements } from './utils/settlement';
 import type { Expense, Trip, Group, Member } from './types';
 import { exportTripToCSV } from './utils/csvExport';
-import { compressImageToDataUrl } from './utils/image';
+
+import { getCurrencySymbol } from './utils/currency';
 import { ConfirmDialog, type ConfirmRequest } from './components/ConfirmDialog';
 import { TripsListScreen } from './components/TripsListScreen';
 import { ExpenseForm } from './components/ExpenseForm';
@@ -90,51 +91,36 @@ export default function App() {
   const [newTripEnd, setNewTripEnd] = useState('');
   const [newTripCurrency, setNewTripCurrency] = useState('INR');
 
-  // Form states - Members
-  const [showAddMember, setShowAddMember] = useState(true);
-  const [newMemberName, setNewMemberName] = useState('');
-  const [editingMemberId, setEditingMemberId] = useState<string | null>(null);
+  // PWA Install Prompt State
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
 
-  const handleSetShowAddMember = (val: boolean) => {
-    if (!val) {
-      setEditingMemberId(null);
-      setNewMemberName('');
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e: Event) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    };
+  }, []);
+
+  const handleInstallApp = async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') {
+      setDeferredPrompt(null);
     }
-    setMemberFormError('');
-    setShowAddMember(true);
   };
+
+
 
   // Form states - Groups
-  const [showAddGroup, setShowAddGroup] = useState(false);
-  const [newGroupName, setNewGroupName] = useState('');
-  const [selectedGroupMembers, setSelectedGroupMembers] = useState<Record<string, boolean>>({});
-  const [editingGroupId, setEditingGroupId] = useState<string | null>(null);
-  const [isGroupNameAuto, setIsGroupNameAuto] = useState(true);
-
-  // Form states - Expenses
+  // Form states
   const [showAddExpense, setShowAddExpense] = useState(false);
-  const [newExpTitle, setNewExpTitle] = useState('');
-  const [newExpAmount, setNewExpAmount] = useState('');
-  const [newExpCategory, setNewExpCategory] = useState('');
-
-  // Get today's date in local YYYY-MM-DD format
-  const getTodayDateString = () => {
-    const today = new Date();
-    const year = today.getFullYear();
-    const month = String(today.getMonth() + 1).padStart(2, '0');
-    const day = String(today.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-  };
-
-  const [newExpDate, setNewExpDate] = useState(getTodayDateString());
-  const [newExpPayer, setNewExpPayer] = useState('');
-  const [selectedSplitMembers, setSelectedSplitMembers] = useState<Record<string, boolean>>({});
-  const [newExpSplitMode, setNewExpSplitMode] = useState<'equal' | 'custom' | 'exact' | 'percentage'>('equal');
-  const [newExpSplitConfig, setNewExpSplitConfig] = useState<Record<string, string>>({});
-  const [selectedReviewExpense, setSelectedReviewExpense] = useState<Expense | null>(null);
   const [editingExpenseId, setEditingExpenseId] = useState<string | null>(null);
-  const [newExpReceiptImage, setNewExpReceiptImage] = useState('');
-  const [receiptProcessing, setReceiptProcessing] = useState(false);
+  const [selectedReviewExpense, setSelectedReviewExpense] = useState<Expense | null>(null);
 
   // Expense list search & filters
   const [expenseSearch, setExpenseSearch] = useState('');
@@ -167,10 +153,6 @@ export default function App() {
   // Share trip modal
   const [showShareTrip, setShowShareTrip] = useState(false);
 
-  // Inline form validation errors (replace window.alert)
-  const [groupFormError, setGroupFormError] = useState('');
-  const [expenseFormError, setExpenseFormError] = useState('');
-  const [memberFormError, setMemberFormError] = useState('');
   const [showMembersRequiredNotice, setShowMembersRequiredNotice] = useState(false);
 
   // Load state on mount
@@ -178,8 +160,9 @@ export default function App() {
     initialize();
   }, [initialize]);
 
-  const visibleTrips = trips.filter((t) => t.id !== pendingDeleteTrip?.id);
-  const activeTrip = trips.find((t) => t.id === activeTripId);
+  const visibleTrips = useMemo(() => trips.filter((t) => t.id !== pendingDeleteTrip?.id), [trips, pendingDeleteTrip]);
+  const activeTrip = useMemo(() => trips.find((t) => t.id === activeTripId), [trips, activeTripId]);
+  const editingExpense = useMemo(() => expenses.find((e) => e.id === editingExpenseId) || null, [expenses, editingExpenseId]);
 
   // Reset expense filters when switching trips
   useEffect(() => {
@@ -189,20 +172,28 @@ export default function App() {
     setExpenseFilterDateFrom('');
     setExpenseFilterDateTo('');
   }, [activeTripId]);
-  const activeTripExpenses = expenses
-    .filter((e) => e.tripId === activeTripId)
-    .sort((a, b) => b.date.localeCompare(a.date) || b.createdAt - a.createdAt);
+
+  const activeTripExpenses = useMemo(() => {
+    return expenses
+      .filter((e) => e.tripId === activeTripId)
+      .sort((a, b) => b.date.localeCompare(a.date) || b.createdAt - a.createdAt);
+  }, [expenses, activeTripId]);
 
   // Search + category/member filters, applied only to the visible expense list
-  const filteredExpenses = activeTripExpenses.filter((e) => {
-    if (expenseSearch.trim() && !e.title.toLowerCase().includes(expenseSearch.trim().toLowerCase())) return false;
-    if (expenseFilterCategory && e.category !== expenseFilterCategory) return false;
-    if (expenseFilterMember && e.paidBy !== expenseFilterMember && !e.splitMemberIds.includes(expenseFilterMember)) return false;
-    if (expenseFilterDateFrom && e.date < expenseFilterDateFrom) return false;
-    if (expenseFilterDateTo && e.date > expenseFilterDateTo) return false;
-    return true;
-  });
-  const hasActiveExpenseFilters = !!(expenseSearch || expenseFilterCategory || expenseFilterMember || expenseFilterDateFrom || expenseFilterDateTo);
+  const filteredExpenses = useMemo(() => {
+    return activeTripExpenses.filter((e) => {
+      if (expenseSearch.trim() && !e.title.toLowerCase().includes(expenseSearch.trim().toLowerCase())) return false;
+      if (expenseFilterCategory && e.category !== expenseFilterCategory) return false;
+      if (expenseFilterMember && e.paidBy !== expenseFilterMember && !e.splitMemberIds.includes(expenseFilterMember)) return false;
+      if (expenseFilterDateFrom && e.date < expenseFilterDateFrom) return false;
+      if (expenseFilterDateTo && e.date > expenseFilterDateTo) return false;
+      return true;
+    });
+  }, [activeTripExpenses, expenseSearch, expenseFilterCategory, expenseFilterMember, expenseFilterDateFrom, expenseFilterDateTo]);
+
+  const hasActiveExpenseFilters = useMemo(() => {
+    return !!(expenseSearch || expenseFilterCategory || expenseFilterMember || expenseFilterDateFrom || expenseFilterDateTo);
+  }, [expenseSearch, expenseFilterCategory, expenseFilterMember, expenseFilterDateFrom, expenseFilterDateTo]);
 
   const clearExpenseFilters = () => {
     setExpenseSearch('');
@@ -213,48 +204,60 @@ export default function App() {
   };
 
   // Get active trip members and groups
-  const activeTripMembers = activeTrip
-    ? activeTrip.memberIds.map((id) => members[id]).filter(Boolean)
-    : [];
-  const visibleMembers = activeTripMembers.filter((m) => !m.archived);
-  const archivedMembers = activeTripMembers.filter((m) => m.archived);
+  const activeTripMembers = useMemo(() => {
+    return activeTrip
+      ? activeTrip.memberIds.map((id) => members[id]).filter(Boolean)
+      : [];
+  }, [activeTrip, members]);
 
-  const activeTripGroups = activeTrip
-    ? (activeTrip.groupIds || []).map((id) => groups[id]).filter(Boolean)
-    : [];
-  const visibleTripGroups = activeTripGroups.filter((g) => g.id !== pendingDeleteGroup?.id);
+  const visibleMembers = useMemo(() => activeTripMembers.filter((m) => !m.archived), [activeTripMembers]);
+  const archivedMembers = useMemo(() => activeTripMembers.filter((m) => m.archived), [activeTripMembers]);
+
+  const activeTripGroups = useMemo(() => {
+    return activeTrip
+      ? (activeTrip.groupIds || []).map((id) => groups[id]).filter(Boolean)
+      : [];
+  }, [activeTrip, groups]);
+
+  const visibleTripGroups = useMemo(() => {
+    return activeTripGroups.filter((g) => g.id !== pendingDeleteGroup?.id);
+  }, [activeTripGroups, pendingDeleteGroup]);
 
   // Permission model: admin = trip creator (full CRUD, can settle anything).
   // Participant = the member they've claimed via /join (own-expenses only,
   // can only settle transfers they're the payer or payee of).
-  const isAdmin = !!(activeTrip && userId && activeTrip.ownerId === userId);
-  const myMemberId = activeTripMembers.find((m) => m.linkedUserId === userId)?.id ?? null;
+  const isAdmin = useMemo(() => !!(activeTrip && userId && activeTrip.ownerId === userId), [activeTrip, userId]);
+  const myMemberId = useMemo(() => activeTripMembers.find((m) => m.linkedUserId === userId)?.id ?? null, [activeTripMembers, userId]);
 
-  // Live running sum for exact/percentage split inputs (feedback while typing)
-  const splitSelectedIds = Object.keys(selectedSplitMembers)
-    .filter((id) => selectedSplitMembers[id])
-    .filter((id) => activeTrip?.memberIds.includes(id));
-  const splitConfigSum = splitSelectedIds.reduce((sum, id) => sum + (parseFloat(newExpSplitConfig[id] || '') || 0), 0);
-  const splitConfigTarget = newExpSplitMode === 'percentage' ? 100 : newExpSplitMode === 'exact' ? (parseFloat(newExpAmount) || 0) : null;
-  const splitConfigMatches = splitConfigTarget === null || Math.abs(splitConfigSum - splitConfigTarget) < 0.02;
+
 
   // Settlements and Net balances calculation
-  const { balances, transfers } = activeTrip
-    ? calculateSettlements(activeTrip, members, expenses, visibleTripGroups)
-    : { balances: [], transfers: [] };
+  const { balances, transfers } = useMemo(() => {
+    return activeTrip
+      ? calculateSettlements(activeTrip, members, expenses, visibleTripGroups)
+      : { balances: [], transfers: [] };
+  }, [activeTrip, members, expenses, visibleTripGroups]);
 
   // Filters out settlements to keep expense analytics clean
-  const nonSettlementExpenses = activeTripExpenses.filter((e) => !e.title.startsWith('Settlement:'));
-  const totalSpent = nonSettlementExpenses.reduce((sum, e) => sum + e.amount, 0);
+  const nonSettlementExpenses = useMemo(() => {
+    return activeTripExpenses.filter((e) => !e.title.startsWith('Settlement:'));
+  }, [activeTripExpenses]);
+
+  const totalSpent = useMemo(() => {
+    return nonSettlementExpenses.reduce((sum, e) => sum + e.amount, 0);
+  }, [nonSettlementExpenses]);
 
   // Category breakdown calculations
-  const categoryTotals: Record<string, number> = {};
-  categories.forEach((cat) => {
-    categoryTotals[cat.id] = 0;
-  });
-  nonSettlementExpenses.forEach((exp) => {
-    categoryTotals[exp.category] = (categoryTotals[exp.category] || 0) + exp.amount;
-  });
+  const categoryTotals = useMemo(() => {
+    const totals: Record<string, number> = {};
+    categories.forEach((cat) => {
+      totals[cat.id] = 0;
+    });
+    nonSettlementExpenses.forEach((exp) => {
+      totals[exp.category] = (totals[exp.category] || 0) + exp.amount;
+    });
+    return totals;
+  }, [categories, nonSettlementExpenses]);
 
   const CATEGORY_COLORS: Record<string, string> = {
     'cat-food': '#6366f1', // Indigo
@@ -264,136 +267,86 @@ export default function App() {
     'cat-shopping': '#f59e0b', // Amber
     'cat-misc': '#8b5cf6', // Violet
   };
-  const getCatColor = (id: string, idx: number) => {
+  const getCatColor = (id: string, _idx: number) => {
     if (CATEGORY_COLORS[id]) return CATEGORY_COLORS[id];
-    const fallbacks = ['#ec4899', '#f43f5e', '#84cc16', '#a855f7', '#64748b'];
-    return fallbacks[idx % fallbacks.length];
+    let hash = 0;
+    for (let i = 0; i < id.length; i++) {
+      hash = id.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const hue = Math.abs(hash) % 360;
+    return `hsl(${hue}, 65%, 55%)`;
   };
 
-  const categoryData = Object.entries(categoryTotals)
-    .map(([catId, amount]) => {
-      const cat = categories.find((c) => c.id === catId);
-      return {
-        id: catId,
-        name: cat ? cat.name : 'Other',
-        icon: cat?.icon || '🏷️',
-        amount,
-        percentage: totalSpent > 0 ? (amount / totalSpent) * 100 : 0,
-      };
-    })
-    .filter((d) => d.amount > 0)
-    .sort((a, b) => b.amount - a.amount);
+  const categoryData = useMemo(() => {
+    return Object.entries(categoryTotals)
+      .map(([catId, amount]) => {
+        const cat = categories.find((c) => c.id === catId);
+        return {
+          id: catId,
+          name: cat ? cat.name : 'Other',
+          icon: cat?.icon || '🏷️',
+          amount,
+          percentage: totalSpent > 0 ? (amount / totalSpent) * 100 : 0,
+        };
+      })
+      .filter((d) => d.amount > 0)
+      .sort((a, b) => b.amount - a.amount);
+  }, [categoryTotals, categories, totalSpent]);
 
   // Member spend calculations
-  const memberSpentMap: Record<string, number> = {};
-  visibleMembers.forEach((m) => {
-    memberSpentMap[m.id] = 0;
-  });
-  nonSettlementExpenses.forEach((exp) => {
-    if (memberSpentMap[exp.paidBy] !== undefined) {
-      memberSpentMap[exp.paidBy] += exp.amount;
-    }
-  });
+  const memberSpentMap = useMemo(() => {
+    const spentMap: Record<string, number> = {};
+    visibleMembers.forEach((m) => {
+      spentMap[m.id] = 0;
+    });
+    nonSettlementExpenses.forEach((exp) => {
+      if (spentMap[exp.paidBy] !== undefined) {
+        spentMap[exp.paidBy] += exp.amount;
+      }
+    });
+    return spentMap;
+  }, [visibleMembers, nonSettlementExpenses]);
 
-  const memberSpentList = visibleMembers.map((m) => ({
-    id: m.id,
-    name: m.name,
-    amount: memberSpentMap[m.id] || 0,
-    percentage: totalSpent > 0 ? ((memberSpentMap[m.id] || 0) / totalSpent) * 100 : 0,
-  })).sort((a, b) => b.amount - a.amount);
+  const memberSpentList = useMemo(() => {
+    return visibleMembers.map((m) => ({
+      id: m.id,
+      name: m.name,
+      amount: memberSpentMap[m.id] || 0,
+      percentage: totalSpent > 0 ? ((memberSpentMap[m.id] || 0) / totalSpent) * 100 : 0,
+    })).sort((a, b) => b.amount - a.amount);
+  }, [visibleMembers, memberSpentMap, totalSpent]);
 
-  const biggestSpender = memberSpentList[0] && memberSpentList[0].amount > 0 ? memberSpentList[0].name : 'N/A';
-  const averageCost = visibleMembers.length > 0 ? totalSpent / visibleMembers.length : 0;
+  const biggestSpender = useMemo(() => {
+    return memberSpentList[0] && memberSpentList[0].amount > 0 ? memberSpentList[0].name : 'N/A';
+  }, [memberSpentList]);
+
+  const averageCost = useMemo(() => {
+    return visibleMembers.length > 0 ? totalSpent / visibleMembers.length : 0;
+  }, [visibleMembers.length, totalSpent]);
 
   // Daily spend timeline calculations
-  const dailyTotals: Record<string, number> = {};
-  nonSettlementExpenses.forEach((exp) => {
-    const dateStr = exp.date;
-    dailyTotals[dateStr] = (dailyTotals[dateStr] || 0) + exp.amount;
-  });
+  const dailySpendData = useMemo(() => {
+    const dailyTotals: Record<string, number> = {};
+    nonSettlementExpenses.forEach((exp) => {
+      const dateStr = exp.date;
+      dailyTotals[dateStr] = (dailyTotals[dateStr] || 0) + exp.amount;
+    });
 
-  const sortedDates = Object.keys(dailyTotals).sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
-  const dailySpendData = sortedDates.map((dateStr) => {
-    const dateObj = new Date(dateStr);
-    const formattedDate = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' });
-    return {
-      rawDate: dateStr,
-      dateLabel: formattedDate,
-      amount: dailyTotals[dateStr] || 0,
-    };
-  });
+    const sortedDates = Object.keys(dailyTotals).sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
+    return sortedDates.map((dateStr) => {
+      const dateObj = new Date(dateStr);
+      const formattedDate = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' });
+      return {
+        rawDate: dateStr,
+        dateLabel: formattedDate,
+        amount: dailyTotals[dateStr] || 0,
+      };
+    });
+  }, [nonSettlementExpenses]);
 
-  // Set default form values when opening forms
-  useEffect(() => {
-    if (categories.length > 0 && !newExpCategory) {
-      setNewExpCategory(categories[0].id);
-    }
-  }, [categories, newExpCategory]);
 
-  // Sync split checkboxes and payer selection when opening add expense form
-  useEffect(() => {
-    if (showAddExpense && visibleMembers.length > 0 && !editingExpenseId) {
-      // Default: select all active members for split
-      const initialSplit: Record<string, boolean> = {};
-      visibleMembers.forEach((m) => {
-        initialSplit[m.id] = true;
-      });
-      setSelectedSplitMembers(initialSplit);
 
-      // Default: set first member as payer
-      setNewExpPayer(visibleMembers[0].id);
 
-      // Default: reset config inputs
-      setNewExpSplitMode('equal');
-      setNewExpSplitConfig({});
-      setExpenseFormError('');
-
-      // Default: set today's date in local YYYY-MM-DD format
-      setNewExpDate(getTodayDateString());
-
-      // Default: clear any leftover title/amount/category from a cancelled edit
-      setNewExpTitle('');
-      setNewExpAmount('');
-      setNewExpCategory('');
-    }
-    // visibleMembers is intentionally NOT a dependency: it's a fresh array on every
-    // render (activeTripMembers.filter(...) above, not memoized), so including it
-    // makes this effect re-fire on every keystroke while the form is open, silently
-    // wiping the split selection, payer, and split config the user is editing.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [showAddExpense, activeTripId, editingExpenseId, visibleMembers.length]);
-
-  // Sync group checkboxes when opening add group form
-  useEffect(() => {
-    if (showAddGroup) {
-      if (!editingGroupId) {
-        setSelectedGroupMembers({});
-        setGroupFormError('');
-        setIsGroupNameAuto(true);
-      }
-    }
-  }, [showAddGroup, editingGroupId]);
-
-  // Auto-generate group name based on selected members
-  useEffect(() => {
-    if (isGroupNameAuto) {
-      const selectedNames = visibleMembers
-        .filter((m) => selectedGroupMembers[m.id])
-        .map((m) => m.name);
-
-      let autoName = '';
-      if (selectedNames.length === 1) {
-        autoName = selectedNames[0];
-      } else if (selectedNames.length === 2) {
-        autoName = `${selectedNames[0]} & ${selectedNames[1]}`;
-      } else if (selectedNames.length > 2) {
-        autoName = `${selectedNames.slice(0, -1).join(', ')} & ${selectedNames[selectedNames.length - 1]}`;
-      }
-      setNewGroupName(autoName);
-    }
-    // visibleMembers intentionally omitted — see comment on the effect above.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedGroupMembers, isGroupNameAuto, visibleMembers.length]);
 
   // Form submissions
   const handleCreateTrip = async (e: React.FormEvent) => {
@@ -429,41 +382,29 @@ export default function App() {
     setShowAddTrip(false);
   };
 
-  const handleAddMember = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const nameTrimmed = newMemberName.trim();
-    if (!nameTrimmed) return;
+  const handleSaveMember = async (name: string, id: string | null): Promise<{ success: boolean; error?: string }> => {
+    const nameTrimmed = name.trim();
+    if (!nameTrimmed) return { success: false, error: 'Name cannot be empty.' };
 
     const nameLower = nameTrimmed.toLowerCase();
     const isDuplicateMember = activeTripMembers.some(
-      (m) => m.name.toLowerCase() === nameLower && m.id !== editingMemberId
+      (m) => m.name.toLowerCase() === nameLower && m.id !== id
     );
     const isDuplicateGroup = activeTripGroups.some(
       (g) => g.name.toLowerCase() === nameLower
     );
 
     if (isDuplicateMember || isDuplicateGroup) {
-      setMemberFormError('A member or group with this name already exists on this trip.');
-      return;
+      return { success: false, error: 'A member or group with this name already exists on this trip.' };
     }
 
-    setMemberFormError('');
-    if (editingMemberId) {
-      await updateMember(editingMemberId, nameTrimmed);
+    if (id) {
+      await updateMember(id, nameTrimmed);
     } else {
       await addMember(nameTrimmed);
     }
-    setNewMemberName('');
-    setEditingMemberId(null);
-    setShowAddMember(true);
     setShowMembersRequiredNotice(false);
-  };
-
-  const handleStartEditMember = (member: Member) => {
-    setEditingMemberId(member.id);
-    setNewMemberName(member.name);
-    setMemberFormError('');
-    setShowAddMember(true);
+    return { success: true };
   };
 
   const handleDeleteMember = (member: Member) => {
@@ -507,173 +448,72 @@ export default function App() {
     });
   };
 
-  const handleGroupNameChange = (value: string) => {
-    setNewGroupName(value);
-    if (value.trim() === '') {
-      setIsGroupNameAuto(true);
-    } else {
-      setIsGroupNameAuto(false);
-    }
-  };
-
-  const handleCreateGroup = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const nameTrimmed = newGroupName.trim();
-    if (!nameTrimmed) return;
-
-    const selectedIds = Object.keys(selectedGroupMembers).filter((id) => selectedGroupMembers[id]);
-    if (selectedIds.length === 0) {
-      setGroupFormError('Please select at least one member to add to the group.');
-      return;
-    }
+  const handleSaveGroup = async (name: string, memberIds: string[], id: string | null): Promise<{ success: boolean; error?: string }> => {
+    const nameTrimmed = name.trim();
+    if (!nameTrimmed) return { success: false, error: 'Group name cannot be empty.' };
+    if (memberIds.length === 0) return { success: false, error: 'Please select at least one member to add to the group.' };
 
     const nameLower = nameTrimmed.toLowerCase();
     const isDuplicateMember = activeTripMembers.some(
       (m) => m.name.toLowerCase() === nameLower
     );
     const isDuplicateGroup = activeTripGroups.some(
-      (g) => g.name.toLowerCase() === nameLower && g.id !== editingGroupId
+      (g) => g.name.toLowerCase() === nameLower && g.id !== id
     );
 
     if (isDuplicateMember || isDuplicateGroup) {
-      setGroupFormError('A member or group with this name already exists on this trip.');
-      return;
+      return { success: false, error: 'A member or group with this name already exists on this trip.' };
     }
 
-    setGroupFormError('');
-    if (editingGroupId) {
-      await updateGroup(editingGroupId, nameTrimmed, selectedIds);
+    if (id) {
+      await updateGroup(id, nameTrimmed, memberIds);
     } else {
-      await createGroup(nameTrimmed, selectedIds);
+      await createGroup(nameTrimmed, memberIds);
     }
-    setNewGroupName('');
-    setSelectedGroupMembers({});
-    setEditingGroupId(null);
-    setShowAddGroup(false);
-    setIsGroupNameAuto(true);
+    return { success: true };
   };
 
-  const handleStartEditGroup = (grp: Group) => {
-    setEditingGroupId(grp.id);
-    setNewGroupName(grp.name);
-    const initialChecked: Record<string, boolean> = {};
-    grp.memberIds.forEach((id) => {
-      initialChecked[id] = true;
-    });
-    setSelectedGroupMembers(initialChecked);
+  const handleSaveExpense = async (expenseData: {
+    title: string;
+    amount: number;
+    category: string;
+    date: string;
+    paidBy: string;
+    splitMode: 'equal' | 'custom' | 'exact' | 'percentage';
+    splitMemberIds: string[];
+    splitConfig?: Record<string, number>;
+    receiptImage?: string;
+  }): Promise<{ success: boolean; error?: string }> => {
+    if (!activeTripId) return { success: false, error: 'No active trip' };
+    try {
+      const expensePayload = {
+        title: expenseData.title,
+        amount: expenseData.amount,
+        currency: activeTrip?.baseCurrency || 'INR',
+        category: expenseData.category,
+        date: expenseData.date,
+        paidBy: expenseData.paidBy,
+        splitMode: expenseData.splitMode,
+        splitMemberIds: expenseData.splitMemberIds,
+        splitConfig: expenseData.splitConfig,
+        receiptImage: expenseData.receiptImage,
+      };
 
-    const memberNames = visibleMembers
-      .filter((m) => grp.memberIds.includes(m.id))
-      .map((m) => m.name);
-
-
-    let expectedAutoName = '';
-    if (memberNames.length === 1) {
-      expectedAutoName = memberNames[0];
-    } else if (memberNames.length === 2) {
-      expectedAutoName = `${memberNames[0]} & ${memberNames[1]}`;
-    } else if (memberNames.length > 2) {
-      expectedAutoName = `${memberNames.slice(0, -1).join(', ')} & ${memberNames[memberNames.length - 1]}`;
-    }
-
-    if (grp.name === expectedAutoName || grp.name.trim() === '') {
-      setIsGroupNameAuto(true);
-    } else {
-      setIsGroupNameAuto(false);
-    }
-
-    setShowAddGroup(true);
-  };
-
-  const handleCancelGroupForm = () => {
-    setEditingGroupId(null);
-    setNewGroupName('');
-    setSelectedGroupMembers({});
-    setGroupFormError('');
-    setShowAddGroup(false);
-    setIsGroupNameAuto(true);
-  };
-
-  const handleAddExpense = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const amountVal = parseFloat(newExpAmount);
-    const splitIds = Object.keys(selectedSplitMembers)
-      .filter((id) => selectedSplitMembers[id])
-      .filter((id) => activeTrip?.memberIds.includes(id));
-
-    if (!newExpTitle.trim() || isNaN(amountVal) || amountVal <= 0 || !newExpPayer || !newExpCategory || !newExpDate) {
-      setExpenseFormError('Please fill out all required fields with valid entries.');
-      return;
-    }
-    if (splitIds.length === 0) {
-      setExpenseFormError('Please select at least one member for the expense division.');
-      return;
-    }
-
-    // Custom config validations
-    const splitConfig: Record<string, number> = {};
-    if (newExpSplitMode !== 'equal') {
-      let sum = 0;
-      for (const id of splitIds) {
-        const valStr = newExpSplitConfig[id] || '';
-        const numVal = parseFloat(valStr);
-        if (isNaN(numVal) || numVal < 0) {
-          setExpenseFormError(`Please enter a valid non-negative number for member ${members[id]?.name || id}.`);
-          return;
-        }
-        splitConfig[id] = numVal;
-        sum += numVal;
+      if (editingExpenseId) {
+        await updateExpense(editingExpenseId, expensePayload);
+      } else {
+        await addExpense(expensePayload);
       }
-
-      if (newExpSplitMode === 'exact') {
-        const diff = Math.abs(sum - amountVal);
-        if (diff > 0.02) {
-          setExpenseFormError(`The sum of individual amounts (${sum.toFixed(2)}) must equal the total expense amount (${amountVal.toFixed(2)}).`);
-          return;
-        }
-      } else if (newExpSplitMode === 'percentage') {
-        const diff = Math.abs(sum - 100);
-        if (diff > 0.05) {
-          setExpenseFormError(`The sum of individual percentages (${sum.toFixed(1)}%) must equal 100%.`);
-          return;
-        }
-      }
+      setEditingExpenseId(null);
+      setShowAddExpense(false);
+      return { success: true };
+    } catch {
+      return { success: false, error: 'Failed to save expense.' };
     }
-
-    setExpenseFormError('');
-    const expensePayload = {
-      title: newExpTitle.trim(),
-      amount: amountVal,
-      currency: activeTrip?.baseCurrency || 'INR',
-      category: newExpCategory,
-      date: newExpDate,
-      paidBy: newExpPayer,
-      splitMode: newExpSplitMode,
-      splitMemberIds: splitIds,
-      splitConfig: newExpSplitMode !== 'equal' ? splitConfig : undefined,
-      receiptImage: newExpReceiptImage || undefined,
-    };
-
-    if (editingExpenseId) {
-      await updateExpense(editingExpenseId, expensePayload);
-    } else {
-      await addExpense(expensePayload);
-    }
-
-    setEditingExpenseId(null);
-    setNewExpTitle('');
-    setNewExpAmount('');
-    setNewExpDate('');
-    setNewExpSplitMode('equal');
-    setNewExpSplitConfig({});
-    setNewExpReceiptImage('');
-    setShowAddExpense(false);
   };
 
   const handleCancelExpenseForm = () => {
     setEditingExpenseId(null);
-    setExpenseFormError('');
-    setNewExpReceiptImage('');
     setShowAddExpense(false);
   };
 
@@ -683,49 +523,16 @@ export default function App() {
       setActiveTab('members');
       return;
     }
-    setNewExpReceiptImage('');
+    setEditingExpenseId(null);
     setShowAddExpense(true);
   };
 
-  const handleReceiptFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    e.target.value = '';
-    if (!file) return;
-    setReceiptProcessing(true);
-    try {
-      const dataUrl = await compressImageToDataUrl(file);
-      setNewExpReceiptImage(dataUrl);
-    } catch {
-      setExpenseFormError('Could not process that image. Try a different photo.');
-    } finally {
-      setReceiptProcessing(false);
-    }
-  };
-
-  // Opens expense form pre-filled for editing
   const handleStartEditExpense = (exp: Expense) => {
     setEditingExpenseId(exp.id);
-    setNewExpTitle(exp.title);
-    setNewExpAmount(String(exp.amount));
-    setNewExpCategory(exp.category);
-    setNewExpDate(exp.date);
-    setNewExpPayer(exp.paidBy);
-    setNewExpSplitMode(exp.splitMode as 'equal' | 'custom' | 'exact' | 'percentage');
-    const initialSplit: Record<string, boolean> = {};
-    exp.splitMemberIds.forEach((id) => { initialSplit[id] = true; });
-    setSelectedSplitMembers(initialSplit);
-    const initialConfig: Record<string, string> = {};
-    if (exp.splitConfig) {
-      Object.entries(exp.splitConfig).forEach(([id, val]) => { initialConfig[id] = String(val); });
-    }
-    setNewExpSplitConfig(initialConfig);
-    // Editing doesn't preload an existing receipt into the capture field —
-    // it already lives in Storage; attaching a new photo here replaces it,
-    // leaving it blank leaves the existing one untouched (see ExpenseReviewModal
-    // to view it). Avoids re-uploading a signed URL as if it were a fresh photo.
-    setNewExpReceiptImage('');
     setShowAddExpense(true);
   };
+
+
 
   // Undo-delete: stage the expense, start a 5-second timer
   const handleDeleteExpense = (exp: Expense) => {
@@ -747,21 +554,13 @@ export default function App() {
 
   // Undo-delete: stage the trip, start a 5-second timer
   const handleDeleteTrip = (trip: Trip) => {
-    setConfirmRequest({
-      title: 'Delete trip',
-      message: `Are you sure you want to delete "${trip.name}"? This cannot be undone.`,
-      confirmLabel: 'Delete',
-      danger: true,
-      onConfirm: () => {
-        if (tripUndoTimer) clearTimeout(tripUndoTimer);
-        setPendingDeleteTrip(trip);
-        const timer = setTimeout(() => {
-          deleteTrip(trip.id);
-          setPendingDeleteTrip(null);
-        }, 5000);
-        setTripUndoTimer(timer);
-      },
-    });
+    if (tripUndoTimer) clearTimeout(tripUndoTimer);
+    setPendingDeleteTrip(trip);
+    const timer = setTimeout(() => {
+      deleteTrip(trip.id);
+      setPendingDeleteTrip(null);
+    }, 5000);
+    setTripUndoTimer(timer);
   };
 
   const handleUndoDeleteTrip = () => {
@@ -772,21 +571,13 @@ export default function App() {
 
   // Undo-delete: stage the group, start a 5-second timer
   const handleDeleteGroup = (group: Group) => {
-    setConfirmRequest({
-      title: 'Delete group',
-      message: `Delete group "${group.name}"? (Individual members are NOT deleted)`,
-      confirmLabel: 'Delete',
-      danger: true,
-      onConfirm: () => {
-        if (groupUndoTimer) clearTimeout(groupUndoTimer);
-        setPendingDeleteGroup(group);
-        const timer = setTimeout(() => {
-          deleteGroup(group.id);
-          setPendingDeleteGroup(null);
-        }, 5000);
-        setGroupUndoTimer(timer);
-      },
-    });
+    if (groupUndoTimer) clearTimeout(groupUndoTimer);
+    setPendingDeleteGroup(group);
+    const timer = setTimeout(() => {
+      deleteGroup(group.id);
+      setPendingDeleteGroup(null);
+    }, 5000);
+    setGroupUndoTimer(timer);
   };
 
   const handleUndoDeleteGroup = () => {
@@ -795,29 +586,7 @@ export default function App() {
     setPendingDeleteGroup(null);
   };
 
-  // Group quick select for splits — replaces the current selection with
-  // exactly this group's members, unselecting everyone else, rather than
-  // just adding the group on top of whatever was already checked.
-  const applyGroupToSplit = (memberIds: string[], checked: boolean) => {
-    const updatedConfig = { ...newExpSplitConfig };
-    if (checked) {
-      const updatedSelection: Record<string, boolean> = {};
-      visibleMembers.forEach((m) => {
-        const inGroup = memberIds.includes(m.id);
-        updatedSelection[m.id] = inGroup;
-        if (!inGroup) delete updatedConfig[m.id];
-      });
-      setSelectedSplitMembers(updatedSelection);
-    } else {
-      const updatedSelection = { ...selectedSplitMembers };
-      memberIds.forEach((id) => {
-        updatedSelection[id] = false;
-        delete updatedConfig[id];
-      });
-      setSelectedSplitMembers(updatedSelection);
-    }
-    setNewExpSplitConfig(updatedConfig);
-  };
+
 
   // Record a settlement transfer. fromId/toId are the real member ids that
   // record the ledger entry; fromLabel/toLabel are what the user picked the
@@ -827,7 +596,7 @@ export default function App() {
     const toMember = members[toId];
     if (!fromMember || !toMember || !activeTrip || !(amount > 0)) return;
 
-    const currencySymbol = activeTrip.baseCurrency === 'INR' ? '₹' : activeTrip.baseCurrency;
+    const currencySymbol = getCurrencySymbol(activeTrip.baseCurrency);
     const payerNote = fromLabel !== fromMember.name ? ` (paid by ${fromMember.name})` : '';
     const receiverNote = toLabel !== toMember.name ? ` (received by ${toMember.name})` : '';
     setConfirmRequest({
@@ -979,7 +748,7 @@ export default function App() {
         />
       ) : (
         /* Screen 2: Active Trip Dashboard */
-        <div className="fade-in" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+        <div className="fade-in app-main">
           <header className="app-header">
             <div className="app-header-top">
               <div className="app-title-group">
@@ -1012,9 +781,9 @@ export default function App() {
             </div>
           </header>
 
-          <main style={{ flex: 1, padding: '20px', overflowY: 'auto' }}>
+          <main className="app-main">
             {/* View Switching Tab Content */}
-            {activeTab === 'expenses' && (
+            <div className="tab-pane" style={{ display: activeTab === 'expenses' ? 'block' : 'none' }}>
               <div className="fade-in">
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
                   <h3 style={{ fontSize: '18px' }}>Expenses</h3>
@@ -1033,34 +802,9 @@ export default function App() {
                     visibleMembers={visibleMembers}
                     visibleTripGroups={visibleTripGroups}
                     categories={categories}
-                    editingExpenseId={editingExpenseId}
-                    title={newExpTitle}
-                    setTitle={setNewExpTitle}
-                    amount={newExpAmount}
-                    setAmount={setNewExpAmount}
-                    category={newExpCategory}
-                    setCategory={setNewExpCategory}
-                    date={newExpDate}
-                    setDate={setNewExpDate}
-                    payer={newExpPayer}
-                    setPayer={setNewExpPayer}
-                    splitMode={newExpSplitMode}
-                    setSplitMode={setNewExpSplitMode}
-                    splitConfig={newExpSplitConfig}
-                    setSplitConfig={setNewExpSplitConfig}
-                    selectedSplitMembers={selectedSplitMembers}
-                    setSelectedSplitMembers={setSelectedSplitMembers}
-                    receiptImage={newExpReceiptImage}
-                    setReceiptImage={setNewExpReceiptImage}
-                    receiptProcessing={receiptProcessing}
-                    formError={expenseFormError}
-                    splitSelectedIds={splitSelectedIds}
-                    splitConfigSum={splitConfigSum}
-                    splitConfigMatches={splitConfigMatches}
-                    onSubmit={handleAddExpense}
+                    editingExpense={editingExpense}
+                    onSave={handleSaveExpense}
                     onCancel={handleCancelExpenseForm}
-                    onReceiptFileChange={handleReceiptFileChange}
-                    onApplyGroupToSplit={applyGroupToSplit}
                   />
                 )}
 
@@ -1107,9 +851,9 @@ export default function App() {
                   />
                 )}
               </div>
-            )}
+            </div>
 
-            {activeTab === 'members' && (
+            <div className="tab-pane" style={{ display: activeTab === 'members' ? 'block' : 'none' }}>
               <MembersGroupsTab
                 showMembersRequiredNotice={showMembersRequiredNotice}
                 dismissMembersRequiredNotice={() => setShowMembersRequiredNotice(false)}
@@ -1117,38 +861,21 @@ export default function App() {
                 visibleMembers={visibleMembers}
                 archivedMembers={archivedMembers}
                 balances={balances}
-                currencySymbol={activeTrip ? (activeTrip.baseCurrency === 'INR' ? '₹' : activeTrip.baseCurrency) : ''}
-                showAddMember={showAddMember}
-                setShowAddMember={handleSetShowAddMember}
-                newMemberName={newMemberName}
-                setNewMemberName={setNewMemberName}
-                onAddMember={handleAddMember}
+                currencySymbol={activeTrip ? getCurrencySymbol(activeTrip.baseCurrency) : ''}
                 onToggleArchiveMember={toggleArchiveMember}
-                editingMemberId={editingMemberId}
-                onStartEditMember={handleStartEditMember}
-                memberFormError={memberFormError}
+                onSaveMember={handleSaveMember}
                 onDeleteMember={handleDeleteMember}
                 visibleTripGroups={visibleTripGroups}
-                showAddGroup={showAddGroup}
-                setShowAddGroup={setShowAddGroup}
-                newGroupName={newGroupName}
-                setNewGroupName={handleGroupNameChange}
-                selectedGroupMembers={selectedGroupMembers}
-                setSelectedGroupMembers={setSelectedGroupMembers}
-                editingGroupId={editingGroupId}
-                groupFormError={groupFormError}
-                onCreateGroup={handleCreateGroup}
-                onCancelGroupForm={handleCancelGroupForm}
-                onStartEditGroup={handleStartEditGroup}
+                onSaveGroup={handleSaveGroup}
                 onDeleteGroup={handleDeleteGroup}
                 members={members}
                 isAdmin={isAdmin}
                 tripOwnerId={activeTrip?.ownerId ?? ''}
                 currentUserId={userId}
               />
-            )}
+            </div>
 
-            {activeTab === 'analytics' && (
+            <div className="tab-pane" style={{ display: activeTab === 'analytics' ? 'block' : 'none' }}>
               <AnalyticsTab
                 trip={activeTrip}
                 totalSpent={totalSpent}
@@ -1160,9 +887,9 @@ export default function App() {
                 memberSpentList={memberSpentList}
                 dailySpendData={dailySpendData}
               />
-            )}
+            </div>
 
-            {activeTab === 'settings' && (
+            <div className="tab-pane" style={{ display: activeTab === 'settings' ? 'block' : 'none' }}>
               <SettingsTab
                 themePref={themePref}
                 setThemePref={setThemePref}
@@ -1188,8 +915,10 @@ export default function App() {
                 userEmail={userEmail}
                 onSignOut={signOut}
                 isAdmin={isAdmin}
+                pwaInstallable={!!deferredPrompt}
+                onInstallApp={handleInstallApp}
               />
-            )}
+            </div>
           </main>
 
           <NavTabs activeTab={activeTab} setActiveTab={setActiveTab} />

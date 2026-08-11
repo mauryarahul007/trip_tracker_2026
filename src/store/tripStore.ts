@@ -28,15 +28,24 @@ import { generateDemoData } from '../utils/demoSeed';
 
 const LAST_TRIP_KEY = 'trip-tracker-last-trip-id';
 
+interface SyncQueueItem {
+  id: string;
+  type: 'addExpense' | 'updateExpense' | 'deleteExpense';
+  payload: any;
+}
+
 interface TripStore extends TripState {
   initialized: boolean;
   storageError: string | null;
   userId: string | null;
   userDisplayName: string | null;
+  syncQueue: SyncQueueItem[];
 
   initialize: () => Promise<void>;
   refreshTrips: () => Promise<void>;
   clearStorageError: () => void;
+  processQueue: () => Promise<void>;
+  queueSync: (type: 'addExpense' | 'updateExpense' | 'deleteExpense', payload: any) => void;
 
   // Trip Actions
   createTrip: (name: string, startDate: string, endDate: string, baseCurrency: string) => Promise<void>;
@@ -175,6 +184,7 @@ export const useTripStore = create<TripStore>((set, get) => {
     storageError: null,
     userId: null,
     userDisplayName: null,
+    syncQueue: [],
 
     initialize: async () => {
       if (get().initialized) return;
@@ -186,6 +196,10 @@ export const useTripStore = create<TripStore>((set, get) => {
         (user?.user_metadata?.name as string | undefined) ||
         user?.email?.split('@')[0] ||
         null;
+
+      // Load saved sync queue from localStorage
+      const savedQueue = localStorage.getItem('trip-tracker-sync-queue');
+      const syncQueue = savedQueue ? JSON.parse(savedQueue) : [];
 
       try {
         const graph = await fetchMyTripGraph();
@@ -210,11 +224,28 @@ export const useTripStore = create<TripStore>((set, get) => {
           categories,
           userId,
           userDisplayName,
+          syncQueue,
           initialized: true,
         });
+
+        // Register online sync listener
+        window.addEventListener('online', () => {
+          get().processQueue();
+        });
+
+        // Trigger initial queue sync attempt if online
+        if (syncQueue.length > 0 && navigator.onLine) {
+          get().processQueue();
+        }
       } catch (e) {
         console.error('Initial trip load failed:', e);
-        set({ userId, userDisplayName, initialized: true, storageError: 'Failed to load your trips. Check your connection and reload.' });
+        set({
+          userId,
+          userDisplayName,
+          syncQueue,
+          initialized: true,
+          storageError: 'Failed to load your trips. Check your connection and reload.',
+        });
       }
     },
 
@@ -231,6 +262,62 @@ export const useTripStore = create<TripStore>((set, get) => {
     },
 
     clearStorageError: () => set({ storageError: null }),
+
+    queueSync: (type, payload) => {
+      const newQueue = [...get().syncQueue, { id: crypto.randomUUID(), type, payload }];
+      set({ syncQueue: newQueue });
+      localStorage.setItem('trip-tracker-sync-queue', JSON.stringify(newQueue));
+    },
+
+    processQueue: async () => {
+      if (!navigator.onLine || get().syncQueue.length === 0) return;
+      const queue = [...get().syncQueue];
+      set({ syncQueue: [] });
+      localStorage.removeItem('trip-tracker-sync-queue');
+
+      for (const item of queue) {
+        try {
+          if (item.type === 'addExpense') {
+            const { tempId, expenseData } = item.payload;
+            const tripId = get().activeTripId;
+            const userId = get().userId;
+            if (tripId && userId) {
+              const participants = expenseData.splitMemberIds.filter((id: string) => get().members[id] && !get().members[id].archived);
+              const resolvedShares = resolveShares(expenseData, participants);
+              let receiptPath: string | undefined;
+              if (expenseData.receiptImage) {
+                receiptPath = await uploadReceipt(tripId, tempId, expenseData.receiptImage);
+              }
+              const savedExpense = await insertExpense(tripId, userId, toExpenseInput(expenseData, resolvedShares, { id: tempId, receiptPath }));
+              set((state) => ({
+                expenses: state.expenses.map((e) => (e.id === tempId ? savedExpense : e)),
+                trips: state.trips.map((t) => (t.id === tripId ? { ...t, updatedAt: Date.now() } : t)),
+              }));
+            }
+          } else if (item.type === 'updateExpense') {
+            const { id, expenseData } = item.payload;
+            const tripId = get().activeTripId;
+            if (tripId) {
+              const participants = expenseData.splitMemberIds.filter((mId: string) => get().members[mId] && !get().members[mId].archived);
+              const resolvedShares = resolveShares(expenseData, participants);
+              let receiptPath: string | undefined;
+              if (expenseData.receiptImage) {
+                receiptPath = await uploadReceipt(tripId, id, expenseData.receiptImage);
+              }
+              await updateExpenseRow(id, toExpenseInput(expenseData, resolvedShares, { receiptPath }));
+            }
+          } else if (item.type === 'deleteExpense') {
+            const { id } = item.payload;
+            await deleteExpenseRow(id);
+          }
+        } catch (err) {
+          console.error('Offline sync failed for item:', item, err);
+          const updatedQueue = [...get().syncQueue, item];
+          set({ syncQueue: updatedQueue });
+          localStorage.setItem('trip-tracker-sync-queue', JSON.stringify(updatedQueue));
+        }
+      }
+    },
 
     createTrip: async (name, startDate, endDate, baseCurrency) => {
       const userId = get().userId;
@@ -464,22 +551,58 @@ export const useTripStore = create<TripStore>((set, get) => {
       const participants = expenseData.splitMemberIds.filter((id) => get().members[id] && !get().members[id].archived);
       if (participants.length === 0) return;
 
-      try {
-        const resolvedShares = resolveShares(expenseData, participants);
-        let newId: string | undefined;
+      const resolvedShares = resolveShares(expenseData, participants);
+      const tempId = crypto.randomUUID();
+      const tempExpense: Expense = {
+        id: tempId,
+        tripId,
+        createdByUserId: userId,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+        isSettlement: expenseData.title.startsWith('Settlement:'),
+        title: expenseData.title.trim(),
+        amount: expenseData.amount,
+        currency: expenseData.currency,
+        category: expenseData.category,
+        date: expenseData.date,
+        paidBy: expenseData.paidBy,
+        splitMode: expenseData.splitMode,
+        splitMemberIds: expenseData.splitMemberIds,
+        splitConfig: expenseData.splitConfig,
+        resolvedShares,
+      };
+
+      // Optimistically add the expense
+      set((state) => ({
+        expenses: [...state.expenses, tempExpense].sort((a, b) => b.date.localeCompare(a.date) || b.createdAt - a.createdAt),
+        storageError: null,
+      }));
+
+      const saveAction = async () => {
         let receiptPath: string | undefined;
         if (expenseData.receiptImage) {
-          newId = crypto.randomUUID();
-          receiptPath = await uploadReceipt(tripId, newId, expenseData.receiptImage);
+          receiptPath = await uploadReceipt(tripId, tempId, expenseData.receiptImage);
         }
-        const expense = await insertExpense(tripId, userId, toExpenseInput(expenseData, resolvedShares, { id: newId, receiptPath }));
+        const savedExpense = await insertExpense(tripId, userId, toExpenseInput(expenseData, resolvedShares, { id: tempId, receiptPath }));
+        
         set((state) => ({
-          expenses: [...state.expenses, expense],
+          expenses: state.expenses.map((e) => (e.id === tempId ? savedExpense : e)),
           trips: state.trips.map((t) => (t.id === tripId ? { ...t, updatedAt: Date.now() } : t)),
-          storageError: null,
         }));
-      } catch (e) {
-        setError(e);
+      };
+
+      if (!navigator.onLine) {
+        get().queueSync('addExpense', { tempId, expenseData });
+      } else {
+        try {
+          await saveAction();
+        } catch (e) {
+          // Revert optimistic add
+          set((state) => ({
+            expenses: state.expenses.filter((e) => e.id !== tempId),
+          }));
+          setError(e);
+        }
       }
     },
 
@@ -492,37 +615,70 @@ export const useTripStore = create<TripStore>((set, get) => {
       const participants = expenseData.splitMemberIds.filter((mId) => get().members[mId] && !get().members[mId].archived);
       if (participants.length === 0) return;
 
-      try {
-        const resolvedShares = resolveShares(expenseData, participants);
+      const resolvedShares = resolveShares(expenseData, participants);
+      const updatedExpense: Expense = {
+        ...existing,
+        ...expenseData,
+        resolvedShares,
+        updatedAt: Date.now(),
+      };
+
+      // Optimistic update
+      set((state) => ({
+        expenses: state.expenses.map((e) => (e.id === id ? updatedExpense : e)),
+        storageError: null,
+      }));
+
+      const saveAction = async () => {
         let receiptPath: string | undefined;
         if (expenseData.receiptImage) {
           receiptPath = await uploadReceipt(tripId, id, expenseData.receiptImage);
         }
         await updateExpenseRow(id, toExpenseInput(expenseData, resolvedShares, { receiptPath }));
-        const updatedExpense: Expense = {
-          ...existing,
-          ...expenseData,
-          resolvedShares,
-          receiptImage: undefined, // transient form preview only — not part of persisted state
-          receiptPath: receiptPath ?? existing.receiptPath,
-          updatedAt: Date.now(),
-        };
-        set((state) => ({
-          expenses: state.expenses.map((e) => (e.id === id ? updatedExpense : e)),
-          trips: state.trips.map((t) => (t.id === tripId ? { ...t, updatedAt: Date.now() } : t)),
-          storageError: null,
-        }));
-      } catch (e) {
-        setError(e);
+        if (receiptPath) {
+          set((state) => ({
+            expenses: state.expenses.map((e) => (e.id === id ? { ...updatedExpense, receiptPath } : e)),
+          }));
+        }
+      };
+
+      if (!navigator.onLine) {
+        get().queueSync('updateExpense', { id, expenseData });
+      } else {
+        try {
+          await saveAction();
+        } catch (e) {
+          // Revert optimistic update
+          set((state) => ({
+            expenses: state.expenses.map((e) => (e.id === id ? existing : e)),
+          }));
+          setError(e);
+        }
       }
     },
 
     deleteExpense: async (id) => {
-      try {
-        await deleteExpenseRow(id);
-        set((state) => ({ expenses: state.expenses.filter((e) => e.id !== id), storageError: null }));
-      } catch (e) {
-        setError(e);
+      const existing = get().expenses.find((e) => e.id === id);
+      if (!existing) return;
+
+      // Optimistic delete
+      set((state) => ({
+        expenses: state.expenses.filter((e) => e.id !== id),
+        storageError: null,
+      }));
+
+      if (!navigator.onLine) {
+        get().queueSync('deleteExpense', { id });
+      } else {
+        try {
+          await deleteExpenseRow(id);
+        } catch (e) {
+          // Revert optimistic delete
+          set((state) => ({
+            expenses: [...state.expenses, existing].sort((a, b) => b.date.localeCompare(a.date) || b.createdAt - a.createdAt),
+          }));
+          setError(e);
+        }
       }
     },
 

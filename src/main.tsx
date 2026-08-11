@@ -6,6 +6,7 @@ import App from './App.tsx'
 import { LoginScreen } from './components/LoginScreen'
 import { JoinTripScreen } from './components/JoinTripScreen'
 import { RequireAuth } from './components/RequireAuth'
+import { ErrorBoundary } from './components/ErrorBoundary'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
@@ -16,7 +17,9 @@ createRoot(document.getElementById('root')!).render(
           path="/join/:code"
           element={
             <RequireAuth>
-              <JoinTripScreen />
+              <ErrorBoundary>
+                <JoinTripScreen />
+              </ErrorBoundary>
             </RequireAuth>
           }
         />
@@ -24,7 +27,9 @@ createRoot(document.getElementById('root')!).render(
           path="/*"
           element={
             <RequireAuth>
-              <App />
+              <ErrorBoundary>
+                <App />
+              </ErrorBoundary>
             </RequireAuth>
           }
         />

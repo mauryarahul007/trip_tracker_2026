@@ -35,6 +35,8 @@ type Props = {
   userEmail: string | null;
   onSignOut: () => void;
   isAdmin: boolean;
+  pwaInstallable?: boolean;
+  onInstallApp?: () => void;
 };
 
 export function SettingsTab({
@@ -62,6 +64,8 @@ export function SettingsTab({
   userEmail,
   onSignOut,
   isAdmin,
+  pwaInstallable = false,
+  onInstallApp,
 }: Props) {
   const [isOnline, setIsOnline] = React.useState(navigator.onLine);
   const [storageEstimate, setStorageEstimate] = React.useState<{ used: number; quota: number } | null>(null);
@@ -161,6 +165,18 @@ export function SettingsTab({
           ))}
         </div>
       </div>
+
+      {pwaInstallable && (
+        <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '24px' }}>
+          <h4 style={{ fontSize: '16px' }}>Install App</h4>
+          <p style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
+            Install this ledger onto your home screen for quick, offline-ready access on your device.
+          </p>
+          <button type="button" className="gradient-btn" onClick={onInstallApp}>
+            Install Trip Tracker
+          </button>
+        </div>
+      )}
 
       {/* Manage Categories */}
       <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '24px' }}>
