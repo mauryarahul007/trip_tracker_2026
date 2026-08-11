@@ -13,29 +13,12 @@ type Props = {
   archivedMembers: Member[];
   balances: MemberBalance[];
   currencySymbol: string;
-  showAddMember: boolean;
-  setShowAddMember: (v: boolean) => void;
-  newMemberName: string;
-  setNewMemberName: (v: string) => void;
-  onAddMember: (e: React.FormEvent) => void;
   onToggleArchiveMember: (id: string) => void;
-  editingMemberId: string | null;
-  onStartEditMember: (member: Member) => void;
-  memberFormError: string;
+  onSaveMember: (name: string, id: string | null) => Promise<{ success: boolean; error?: string }>;
   onDeleteMember: (member: Member) => void;
 
   visibleTripGroups: Group[];
-  showAddGroup: boolean;
-  setShowAddGroup: (v: boolean) => void;
-  newGroupName: string;
-  setNewGroupName: (v: string) => void;
-  selectedGroupMembers: Record<string, boolean>;
-  setSelectedGroupMembers: (v: Record<string, boolean>) => void;
-  editingGroupId: string | null;
-  groupFormError: string;
-  onCreateGroup: (e: React.FormEvent) => void;
-  onCancelGroupForm: () => void;
-  onStartEditGroup: (group: Group) => void;
+  onSaveGroup: (name: string, memberIds: string[], id: string | null) => Promise<{ success: boolean; error?: string }>;
   onDeleteGroup: (group: Group) => void;
 
   members: Record<string, Member>;
@@ -52,37 +35,124 @@ export function MembersGroupsTab({
   archivedMembers,
   balances,
   currencySymbol,
-  showAddMember,
-  setShowAddMember,
-  newMemberName,
-  setNewMemberName,
-  onAddMember,
   onToggleArchiveMember,
-  editingMemberId,
-  onStartEditMember,
-  memberFormError,
+  onSaveMember,
   onDeleteMember,
   visibleTripGroups,
-  showAddGroup,
-  setShowAddGroup,
-  newGroupName,
-  setNewGroupName,
-  selectedGroupMembers,
-  setSelectedGroupMembers,
-  editingGroupId,
-  groupFormError,
-  onCreateGroup,
-  onCancelGroupForm,
-  onStartEditGroup,
+  onSaveGroup,
   onDeleteGroup,
   members,
   isAdmin,
   tripOwnerId,
   currentUserId,
 }: Props) {
+  // Member Form State
+  const [newMemberName, setNewMemberName] = React.useState('');
+  const [editingMember, setEditingMember] = React.useState<Member | null>(null);
+  const [memberFormError, setMemberFormError] = React.useState('');
+
+  // Group Form State
+  const [showAddGroup, setShowAddGroup] = React.useState(false);
+  const [newGroupName, setNewGroupName] = React.useState('');
+  const [selectedGroupMembers, setSelectedGroupMembers] = React.useState<Record<string, boolean>>({});
+  const [editingGroup, setEditingGroup] = React.useState<Group | null>(null);
+  const [groupFormError, setGroupFormError] = React.useState('');
+  const [isGroupNameAuto, setIsGroupNameAuto] = React.useState(true);
+
+  // Auto-generate group name based on selected members
+  React.useEffect(() => {
+    if (isGroupNameAuto) {
+      const selectedNames = visibleMembers
+        .filter((m) => selectedGroupMembers[m.id])
+        .map((m) => m.name);
+
+      let autoName = '';
+      if (selectedNames.length === 1) {
+        autoName = selectedNames[0];
+      } else if (selectedNames.length === 2) {
+        autoName = `${selectedNames[0]} & ${selectedNames[1]}`;
+      } else if (selectedNames.length > 2) {
+        autoName = `${selectedNames.slice(0, -1).join(', ')} & ${selectedNames[selectedNames.length - 1]}`;
+      }
+      setNewGroupName(autoName);
+    }
+  }, [selectedGroupMembers, isGroupNameAuto, visibleMembers]);
+
+  // Handlers
+  const handleAddMemberLocal = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const res = await onSaveMember(newMemberName, editingMember ? editingMember.id : null);
+    if (res.success) {
+      setNewMemberName('');
+      setEditingMember(null);
+      setMemberFormError('');
+    } else if (res.error) {
+      setMemberFormError(res.error);
+    }
+  };
+
+  const handleStartEditMemberLocal = (member: Member) => {
+    setEditingMember(member);
+    setNewMemberName(member.name);
+    setMemberFormError('');
+  };
+
+  const handleCancelMemberEditLocal = () => {
+    setNewMemberName('');
+    setEditingMember(null);
+    setMemberFormError('');
+  };
+
+  const handleCreateGroupLocal = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const memberIds = Object.keys(selectedGroupMembers).filter((id) => selectedGroupMembers[id]);
+    const res = await onSaveGroup(newGroupName, memberIds, editingGroup ? editingGroup.id : null);
+    if (res.success) {
+      setNewGroupName('');
+      setSelectedGroupMembers({});
+      setEditingGroup(null);
+      setGroupFormError('');
+      setIsGroupNameAuto(true);
+      setShowAddGroup(false);
+    } else if (res.error) {
+      setGroupFormError(res.error);
+    }
+  };
+
+  const handleStartEditGroupLocal = (group: Group) => {
+    setEditingGroup(group);
+    setNewGroupName(group.name);
+    const checkedMap: Record<string, boolean> = {};
+    group.memberIds.forEach((id) => {
+      checkedMap[id] = true;
+    });
+    setSelectedGroupMembers(checkedMap);
+
+    const selectedNames = visibleMembers
+      .filter((m) => checkedMap[m.id])
+      .map((m) => m.name);
+    let autoName = '';
+    if (selectedNames.length === 1) autoName = selectedNames[0];
+    else if (selectedNames.length === 2) autoName = `${selectedNames[0]} & ${selectedNames[1]}`;
+    else if (selectedNames.length > 2) autoName = `${selectedNames.slice(0, -1).join(', ')} & ${selectedNames[selectedNames.length - 1]}`;
+
+    setIsGroupNameAuto(group.name === autoName);
+    setGroupFormError('');
+    setShowAddGroup(true);
+  };
+
+  const handleCancelGroupFormLocal = () => {
+    setNewGroupName('');
+    setSelectedGroupMembers({});
+    setEditingGroup(null);
+    setGroupFormError('');
+    setIsGroupNameAuto(true);
+    setShowAddGroup(false);
+  };
+
   const otherGroupMemberIds = new Set<string>();
   visibleTripGroups.forEach((grp) => {
-    if (grp.id !== editingGroupId) {
+    if (grp.id !== (editingGroup ? editingGroup.id : null)) {
       grp.memberIds.forEach((id) => otherGroupMemberIds.add(id));
     }
   });
@@ -92,13 +162,13 @@ export function MembersGroupsTab({
   const memberInputRef = React.useRef<HTMLInputElement>(null);
 
   React.useEffect(() => {
-    if (showAddMember) {
+    if (editingMember) {
       const timer = setTimeout(() => {
         memberInputRef.current?.focus();
       }, 50);
       return () => clearTimeout(timer);
     }
-  }, [showAddMember, editingMemberId]);
+  }, [editingMember]);
 
   return (
     <div className="fade-in">
@@ -119,8 +189,8 @@ export function MembersGroupsTab({
       </div>
 
       {isAdmin ? (
-        <form className="glass-card fade-in" onSubmit={onAddMember} style={{ marginBottom: '24px' }}>
-          <h4 style={{ marginBottom: '14px', fontSize: '15px' }}>{editingMemberId ? 'Edit Member' : 'New Member'}</h4>
+        <form className="glass-card fade-in" onSubmit={handleAddMemberLocal} style={{ marginBottom: '24px' }}>
+          <h4 style={{ marginBottom: '14px', fontSize: '15px' }}>{editingMember ? 'Edit Member' : 'New Member'}</h4>
           <div className="form-group">
             <label className="form-label">Name</label>
             <input
@@ -138,10 +208,10 @@ export function MembersGroupsTab({
           )}
           <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
             <button type="submit" className="gradient-btn" style={{ flex: 1, padding: '10px' }}>
-              {editingMemberId ? 'Update' : 'Add'}
+              {editingMember ? 'Update' : 'Add'}
             </button>
-            {editingMemberId && (
-              <button type="button" className="secondary-btn" style={{ flex: 1, padding: '10px' }} onClick={() => setShowAddMember(false)}>Cancel</button>
+            {editingMember && (
+              <button type="button" className="secondary-btn" style={{ flex: 1, padding: '10px' }} onClick={handleCancelMemberEditLocal}>Cancel</button>
             )}
           </div>
         </form>
@@ -199,7 +269,7 @@ export function MembersGroupsTab({
                         style={{ padding: '6px' }}
                         aria-label="Edit member"
                         title="Edit member"
-                        onClick={() => onStartEditMember(member)}
+                        onClick={() => handleStartEditMemberLocal(member)}
                       >
                         <IconEdit size={14} className="icon-sm" />
                       </button>
@@ -256,8 +326,8 @@ export function MembersGroupsTab({
         </div>
 
         {isAdmin && showAddGroup && (
-          <form className="glass-card fade-in" onSubmit={onCreateGroup} style={{ marginBottom: '24px' }}>
-            <h4 style={{ marginBottom: '14px', fontSize: '15px' }}>{editingGroupId ? 'Edit Group' : 'New Group'}</h4>
+          <form className="glass-card fade-in" onSubmit={handleCreateGroupLocal} style={{ marginBottom: '24px' }}>
+            <h4 style={{ marginBottom: '14px', fontSize: '15px' }}>{editingGroup ? 'Edit Group' : 'New Group'}</h4>
 
             <div className="form-group">
               <label className="form-label">Group Name</label>
@@ -267,7 +337,10 @@ export function MembersGroupsTab({
                 className="input-field"
                 placeholder="e.g. Couple A & B or Family"
                 value={newGroupName}
-                onChange={(e) => setNewGroupName(e.target.value)}
+                onChange={(e) => {
+                  setNewGroupName(e.target.value);
+                  setIsGroupNameAuto(false);
+                }}
               />
             </div>
 
@@ -319,13 +392,13 @@ export function MembersGroupsTab({
 
             <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
               <button type="submit" className="gradient-btn" style={{ flex: 1, padding: '10px' }}>
-                {editingGroupId ? 'Update Group' : 'Save Group'}
+                {editingGroup ? 'Update Group' : 'Save Group'}
               </button>
               <button
                 type="button"
                 className="secondary-btn"
                 style={{ flex: 1, padding: '10px' }}
-                onClick={onCancelGroupForm}
+                onClick={handleCancelGroupFormLocal}
               >
                 Cancel
               </button>
@@ -360,7 +433,7 @@ export function MembersGroupsTab({
                       <button
                         className="secondary-btn"
                         style={{ padding: '4px 10px', fontSize: '11px' }}
-                        onClick={() => onStartEditGroup(grp)}
+                        onClick={() => handleStartEditGroupLocal(grp)}
                       >
                         Edit
                       </button>

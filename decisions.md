@@ -78,5 +78,28 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - None. This ensures layout usability and contrast consistency across appearances.
 
+---
+
+## 8. Zustand Store Optimistic Mutations & Local Offline Sync Queue
+* **Context:** Database reads and writes via Supabase API introduced visible network latency, freezing UI states. Offline operation also resulted in total write failure.
+* **Decision:** Implemented optimistic mutations in the Zustand store for expense management, and built a local `localStorage`-backed sync queue (`trip-tracker-sync-queue`).
+* **Pattern/Implementation:**
+  - The UI reflects changes immediately using client-generated temporary IDs.
+  - Operations execute database calls asynchronously and reconcile on success. On failure, prior state is restored.
+  - When offline, actions are queued and automatically synchronized when the window `online` event triggers.
+* **Trade-offs Accepted:**
+  - Optimistic states use temporary IDs. If they need to be referenced by other records (like new group IDs), those references must wait for reconciliation. This is resolved by scoping optimistic updates to expenses.
+
+---
+
+## 9. Form and Modal State Encapsulation
+* **Context:** The main `App.tsx` container was acting as a monolith, holding state variables, validation logic, and input change handlers for multiple unrelated forms (Member, Group, and Expense). This bloated the file to over 1200 lines and caused excessive re-renders.
+* **Decision:** Encapsulate member/group form states locally inside `MembersGroupsTab` and expense form states inside `ExpenseForm`.
+* **Pattern/Implementation:**
+  - The parent component `App.tsx` now passes simple `onSave` promise callbacks.
+  - Derived states (such as running sums, validation states, and checkbox mappings) are computed locally inside each form component.
+* **Trade-offs Accepted:**
+  - Parent component no longer has direct visibility of the current unsaved form inputs, making it harder to display global form progress indicators, but dramatically increasing overall code modularity, readability, and performance.
+
 
 

@@ -1,5 +1,7 @@
+import { useState } from 'react';
 import type { Trip } from '../types';
 import { CategoryIcon } from './CategoryIcon';
+import { getCurrencySymbol } from '../utils/currency';
 
 type CategoryDatum = { id: string; name: string; icon: string; amount: number; percentage: number };
 type MemberSpend = { id: string; name: string; amount: number; percentage: number };
@@ -28,8 +30,9 @@ export function AnalyticsTab({
   memberSpentList,
   dailySpendData,
 }: Props) {
-  const currencySymbol = trip?.baseCurrency === 'INR' ? '₹' : trip?.baseCurrency;
+  const currencySymbol = getCurrencySymbol(trip?.baseCurrency || '');
   const topCategory = categoryData[0];
+  const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
 
   return (
     <div className="fade-in">
@@ -218,37 +221,69 @@ export function AnalyticsTab({
                           />
                         )}
 
-                        {points.map((p, idx) => (
-                          <g key={idx}>
-                            <circle
-                              cx={p.x}
-                              cy={p.y}
-                              r="4"
-                              fill="var(--primary-accent)"
-                              stroke="#ffffff"
-                              strokeWidth="1.5"
-                            />
-                            <text
-                              x={p.x}
-                              y={p.y - 8}
-                              textAnchor="middle"
-                              fontSize="9"
-                              fontWeight="700"
-                              fill="var(--text-primary)"
-                            >
-                              {dailySpendData[idx].amount.toFixed(0)}
-                            </text>
-                            <text
-                              x={p.x}
-                              y="178"
-                              textAnchor="middle"
-                              fontSize="9"
-                              fill="var(--text-secondary)"
-                            >
-                              {dailySpendData[idx].dateLabel}
-                            </text>
-                          </g>
-                        ))}
+                        {points.map((p, idx) => {
+                          const isHovered = hoveredIdx === idx;
+                          const showLabel = dailySpendData.length <= 7 || idx % Math.ceil(dailySpendData.length / 5) === 0 || idx === dailySpendData.length - 1;
+
+                          return (
+                            <g key={idx}>
+                              <rect
+                                x={p.x - 15}
+                                y={30}
+                                width={30}
+                                height={150}
+                                fill="transparent"
+                                style={{ cursor: 'pointer' }}
+                                onMouseEnter={() => setHoveredIdx(idx)}
+                                onMouseLeave={() => setHoveredIdx(null)}
+                                onTouchStart={() => setHoveredIdx(idx)}
+                              />
+                              <circle
+                                cx={p.x}
+                                cy={p.y}
+                                r={isHovered ? "6" : "4"}
+                                fill={isHovered ? "var(--secondary-accent)" : "var(--primary-accent)"}
+                                stroke="#ffffff"
+                                strokeWidth="1.5"
+                                style={{ transition: 'all 0.15s ease-out' }}
+                              />
+                              {(isHovered || dailySpendData.length <= 7) && (
+                                <g>
+                                  <rect
+                                    x={p.x - 22}
+                                    y={p.y - 25}
+                                    width={44}
+                                    height={15}
+                                    rx="3"
+                                    fill="var(--text-primary)"
+                                    opacity="0.9"
+                                  />
+                                  <text
+                                    x={p.x}
+                                    y={p.y - 14}
+                                    textAnchor="middle"
+                                    fontSize="8.5"
+                                    fontWeight="700"
+                                    fill="var(--bg-surface)"
+                                  >
+                                    {dailySpendData[idx].amount.toFixed(0)}
+                                  </text>
+                                </g>
+                              )}
+                              {showLabel && (
+                                <text
+                                  x={p.x}
+                                  y="178"
+                                  textAnchor="middle"
+                                  fontSize="9"
+                                  fill="var(--text-secondary)"
+                                >
+                                  {dailySpendData[idx].dateLabel}
+                                </text>
+                              )}
+                            </g>
+                          );
+                        })}
                       </>
                     );
                   })()}
