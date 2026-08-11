@@ -68,4 +68,15 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - None. This is a logic alignment correction.
 
+---
+
+## 7. Theme-Aware Header Background for Button Visibility
+* **Context:** In the "Night flight" (dark) theme, the application header's background became light cream because it was styled to use `var(--text-primary)`, which flips to a light color in dark modes. Because the header's text and buttons have hardcoded light colors (`#F2ECDC`), they became low-contrast and invisible when dark theme was activated.
+* **Decision:** Introduced a theme-aware `--bg-header` CSS variable that remains dark in both themes (`#1C2A38` in light theme, `#0F151D` in dark theme) and updated `.app-header` to use it in `src/index.css`.
+* **Rationale:**
+  - Keeps the header background dark across all themes to preserve the high-contrast premium aesthetic and visibility of the header action buttons ("Share" and "Trips").
+* **Trade-offs Accepted:**
+  - None. This ensures layout usability and contrast consistency across appearances.
+
+
 
