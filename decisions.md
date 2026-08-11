@@ -68,15 +68,4 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - None. This is a logic alignment correction.
 
----
-
-## 7. Convert RLS Helper Functions to PL/pgSQL & Re-Enable Trips RLS
-* **Context:** Row Level Security (RLS) on the `trips` table was disabled in migration `0037` because inserting a new trip via PostgREST failed with RLS violations during the `.select()` query returned on insert. The root cause was that PostgreSQL inlined the `language sql` helper functions (`is_trip_participant`, etc.) inside the `trips` and `members` policies, causing them to execute under the caller's privileges and trigger a mutually recursive loop (infinite recursion).
-* **Decision:** Re-enable RLS on the `trips` table and convert the helper functions (`is_trip_admin`, `is_trip_participant`, and `my_member_id`) to `language plpgsql` in migration `0038` to prevent query planner inlining and ensure `security definer` executes correctly.
-* **Rationale:**
-  - PL/pgSQL functions are not inlined, which guarantees they run in the `security definer` context (bypassing RLS internally and avoiding recursive policy loops). This allows database-level protection without breaking inserts.
-* **Trade-offs Accepted:**
-  - None. Enforcing RLS on the database is critical for data privacy and security.
-
-
 
