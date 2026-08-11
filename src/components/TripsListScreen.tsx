@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import type { Trip, Member, Expense } from '../types';
 import { IconTrash, IconEdit } from './Icons';
 import { DateRangePicker } from './DateRangePicker';
@@ -48,6 +49,17 @@ export function TripsListScreen({
   onSelectTrip,
   onDeleteTrip,
 }: Props) {
+  const navigate = useNavigate();
+  const [showJoinTrip, setShowJoinTrip] = useState(false);
+  const [joinCode, setJoinCode] = useState('');
+
+  const handleJoinByCode = (e: React.FormEvent) => {
+    e.preventDefault();
+    const code = joinCode.trim();
+    if (!code) return;
+    navigate(`/join/${encodeURIComponent(code)}`);
+  };
+
   return (
     <div className="fade-in" style={{ padding: '24px 20px', flex: 1, display: 'flex', flexDirection: 'column' }}>
       <header style={{ marginBottom: '32px' }}>
@@ -58,14 +70,53 @@ export function TripsListScreen({
       </header>
 
       <main style={{ flex: 1 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', gap: '8px', flexWrap: 'wrap' }}>
           <h2 style={{ fontSize: '20px' }}>Your Trips</h2>
           {!showAddTrip && (
-            <button className="gradient-btn" style={{ padding: '8px 16px', fontSize: '14px' }} onClick={() => setShowAddTrip(true)}>
-              + New Trip
-            </button>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              {!showJoinTrip && (
+                <button className="secondary-btn" style={{ padding: '8px 16px', fontSize: '14px' }} onClick={() => setShowJoinTrip(true)}>
+                  Join a Trip
+                </button>
+              )}
+              <button className="gradient-btn" style={{ padding: '8px 16px', fontSize: '14px' }} onClick={() => setShowAddTrip(true)}>
+                + New Trip
+              </button>
+            </div>
           )}
         </div>
+
+        {/* Join by Code Form */}
+        {showJoinTrip && (
+          <form className="glass-card fade-in" onSubmit={handleJoinByCode} style={{ marginBottom: '24px' }}>
+            <h3 style={{ marginBottom: '16px', fontSize: '18px' }}>Join a Trip</h3>
+            <div className="form-group">
+              <label className="form-label">Invite Code</label>
+              <input
+                type="text"
+                required
+                autoFocus
+                className="input-field"
+                placeholder="e.g. ABC123"
+                value={joinCode}
+                onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
+                style={{ letterSpacing: '0.1em', textTransform: 'uppercase' }}
+                maxLength={6}
+              />
+            </div>
+            <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
+              <button type="submit" className="gradient-btn" style={{ flex: 1 }}>Join</button>
+              <button
+                type="button"
+                className="secondary-btn"
+                style={{ flex: 1 }}
+                onClick={() => { setShowJoinTrip(false); setJoinCode(''); }}
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        )}
 
         {/* Create/Edit Trip Form */}
         {showAddTrip && (
@@ -148,9 +199,13 @@ export function TripsListScreen({
                   </div>
                   <div className="pp-foot">
                     <div className="pp-avatars">
-                      {shown.map((m) => (
-                        <span key={m.id} className="pp-avatar" title={m.name}>{initial(m.name)}</span>
-                      ))}
+                      {shown.map((m) =>
+                        m.avatarUrl ? (
+                          <img key={m.id} src={m.avatarUrl} alt={m.name} title={m.name} className="pp-avatar" referrerPolicy="no-referrer" />
+                        ) : (
+                          <span key={m.id} className="pp-avatar" title={m.name}>{initial(m.name)}</span>
+                        )
+                      )}
                       {overflow > 0 && <span className="pp-avatar pp-avatar-more">+{overflow}</span>}
                     </div>
                     <div className="pp-actions">

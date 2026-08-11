@@ -70,13 +70,23 @@ export interface Database {
           trip_id: string;
           name: string;
           archived?: boolean;
+          linked_user_id?: string;
         };
         Update: Partial<{
           name: string;
           archived: boolean;
+          linked_user_id: string | null;
           updated_at: string;
         }>;
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: 'members_linked_user_id_fkey';
+            columns: ['linked_user_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
       };
       groups: {
         Row: {

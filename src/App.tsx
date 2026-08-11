@@ -1143,6 +1143,8 @@ export default function App() {
                 onDeleteGroup={handleDeleteGroup}
                 members={members}
                 isAdmin={isAdmin}
+                tripOwnerId={activeTrip?.ownerId ?? ''}
+                currentUserId={userId}
               />
             )}
 

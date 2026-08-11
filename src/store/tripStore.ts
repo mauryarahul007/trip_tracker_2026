@@ -32,6 +32,7 @@ interface TripStore extends TripState {
   initialized: boolean;
   storageError: string | null;
   userId: string | null;
+  userDisplayName: string | null;
 
   initialize: () => Promise<void>;
   refreshTrips: () => Promise<void>;
@@ -173,12 +174,18 @@ export const useTripStore = create<TripStore>((set, get) => {
     initialized: false,
     storageError: null,
     userId: null,
+    userDisplayName: null,
 
     initialize: async () => {
       if (get().initialized) return;
 
       const { data: { user } } = await supabase.auth.getUser();
       const userId = user?.id ?? null;
+      const userDisplayName =
+        (user?.user_metadata?.full_name as string | undefined) ||
+        (user?.user_metadata?.name as string | undefined) ||
+        user?.email?.split('@')[0] ||
+        null;
 
       try {
         const graph = await fetchMyTripGraph();
@@ -202,11 +209,12 @@ export const useTripStore = create<TripStore>((set, get) => {
           expenses,
           categories,
           userId,
+          userDisplayName,
           initialized: true,
         });
       } catch (e) {
         console.error('Initial trip load failed:', e);
-        set({ userId, initialized: true, storageError: 'Failed to load your trips. Check your connection and reload.' });
+        set({ userId, userDisplayName, initialized: true, storageError: 'Failed to load your trips. Check your connection and reload.' });
       }
     },
 
@@ -229,7 +237,22 @@ export const useTripStore = create<TripStore>((set, get) => {
       if (!userId) return;
       try {
         const trip = await insertTrip({ name, startDate, endDate, baseCurrency, ownerId: userId });
-        set((state) => ({ trips: [...state.trips, trip], activeTripId: trip.id, expenses: [], categories: DEFAULT_CATEGORIES, storageError: null }));
+
+        // The creator is always the admin — add them as a claimed member
+        // too, so they show up in the members list and can be a payer/
+        // split participant like everyone else.
+        const creatorName = get().userDisplayName || 'Me';
+        const creatorMember = await insertMember(trip.id, creatorName, userId);
+        const tripWithCreator = { ...trip, memberIds: [creatorMember.id] };
+
+        set((state) => ({
+          trips: [...state.trips, tripWithCreator],
+          members: { ...state.members, [creatorMember.id]: creatorMember },
+          activeTripId: trip.id,
+          expenses: [],
+          categories: DEFAULT_CATEGORIES,
+          storageError: null,
+        }));
         localStorage.setItem(LAST_TRIP_KEY, trip.id);
       } catch (e) {
         setError(e);

@@ -40,6 +40,8 @@ type Props = {
 
   members: Record<string, Member>;
   isAdmin: boolean;
+  tripOwnerId: string;
+  currentUserId: string | null;
 };
 
 export function MembersGroupsTab({
@@ -75,6 +77,8 @@ export function MembersGroupsTab({
   onDeleteGroup,
   members,
   isAdmin,
+  tripOwnerId,
+  currentUserId,
 }: Props) {
   const otherGroupMemberIds = new Set<string>();
   visibleTripGroups.forEach((grp) => {
@@ -171,9 +175,21 @@ export function MembersGroupsTab({
                 </div>
                 <div className="lt-card">
                   <div className="lt-status" />
-                  <div className="lt-initials">{initial(member.name)}</div>
+                  {member.avatarUrl ? (
+                    <img src={member.avatarUrl} alt="" className="lt-initials" referrerPolicy="no-referrer" />
+                  ) : (
+                    <div className="lt-initials">{initial(member.name)}</div>
+                  )}
                   <div className="lt-body">
-                    <div className="lt-name">{member.name}</div>
+                    <div className="lt-name" style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap', whiteSpace: 'normal', overflow: 'visible' }}>
+                      {member.name}
+                      {member.linkedUserId === tripOwnerId && (
+                        <span className="member-badge member-badge-admin">Admin</span>
+                      )}
+                      {currentUserId && member.linkedUserId === currentUserId && (
+                        <span className="member-badge member-badge-you">You</span>
+                      )}
+                    </div>
                     <div className="lt-amt">{amtLabel}</div>
                   </div>
                   {isAdmin && (

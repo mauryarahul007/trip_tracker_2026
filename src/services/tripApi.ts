@@ -24,8 +24,14 @@ function mapTrip(row: TripRow, memberIds: string[], groupIds: string[]): Trip {
   };
 }
 
-function mapMember(row: MemberRow): Member {
-  return { id: row.id, name: row.name, archived: row.archived, linkedUserId: row.linked_user_id };
+function mapMember(row: MemberRow & { profile?: { avatar_url: string | null } | null }): Member {
+  return {
+    id: row.id,
+    name: row.name,
+    archived: row.archived,
+    linkedUserId: row.linked_user_id,
+    avatarUrl: row.profile?.avatar_url ?? undefined,
+  };
 }
 
 function mapGroup(row: GroupRow, memberIds: string[]): Group {
@@ -80,7 +86,7 @@ export async function fetchMyTripGraph(): Promise<TripGraph> {
   }
 
   const [membersRes, groupsRes] = await Promise.all([
-    supabase.from('members').select('*').in('trip_id', tripIds),
+    supabase.from('members').select('*, profile:linked_user_id(avatar_url)').in('trip_id', tripIds),
     supabase.from('groups').select('*').in('trip_id', tripIds),
   ]);
   if (membersRes.error) throw membersRes.error;
@@ -181,8 +187,12 @@ export async function deleteAllMyTrips(ownerId: string): Promise<void> {
 // Members
 // ---------------------------------------------------------------------------
 
-export async function insertMember(tripId: string, name: string): Promise<Member> {
-  const { data, error } = await supabase.from('members').insert({ trip_id: tripId, name }).select().single();
+export async function insertMember(tripId: string, name: string, linkedUserId?: string): Promise<Member> {
+  const { data, error } = await supabase
+    .from('members')
+    .insert({ trip_id: tripId, name, ...(linkedUserId ? { linked_user_id: linkedUserId } : {}) })
+    .select('*, profile:linked_user_id(avatar_url)')
+    .single();
   if (error) throw error;
   return mapMember(data);
 }
