@@ -1,0 +1,11 @@
+-- Root cause found and fixed (see 0038): trips' SELECT policy routed
+-- through is_trip_participant()/is_trip_admin(), which each ran their own
+-- separate nested `SELECT ... FROM trips WHERE id = ...` query. For the
+-- RETURNING-clause visibility check on a row from the same INSERT
+-- statement, that nested re-query didn't see the just-inserted row yet
+-- (MVCC snapshot timing within one command) — reported as a generic RLS
+-- violation on the INSERT. Rewriting the check inline against the row
+-- itself (no re-query) fixed it. No other table needed this: their SELECT
+-- policies query `trips` (a different, already-committed table) rather
+-- than re-querying themselves, so they never hit this.
+drop function if exists public.debug_trips_constraints() cascade;
