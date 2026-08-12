@@ -64,90 +64,131 @@ type TransferRowProps = {
 function TransferRow({ transfer: t, note, currencySymbol, isSettled, canSettle, customValue, customOpen, onToggleCustom, onCustomChange, onSettle }: TransferRowProps) {
   const settleAmount = parseFloat(customValue) || t.amount;
   return (
-    <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '8px', padding: '10px 0', borderBottom: '1.5px dashed var(--border-color)' }}>
-      <div style={{ fontSize: '14px', flex: '1 1 auto', minWidth: 0 }}>
-        <strong>{t.fromLabel}</strong> owes <strong>{t.toLabel}</strong>
-        {note && (
-          <span style={{ display: 'block', fontSize: '11px', color: 'var(--text-muted)' }}>{note}</span>
-        )}
-      </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: 'auto' }}>
+    <div style={{
+      padding: '12px 0',
+      borderBottom: '1.5px dashed var(--border-color)',
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '10px'
+    }}>
+      {/* Top Row: Flow of money and Amount */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
+        <div style={{ fontSize: '14px', minWidth: 0, flex: '1 1 auto' }}>
+          <span style={{ color: 'var(--text-primary)', lineHeight: '1.4' }}>
+            <strong style={{ fontWeight: '600' }}>{t.fromLabel}</strong>
+            <span style={{ color: 'var(--text-muted)', margin: '0 8px' }}>➔</span>
+            <strong style={{ fontWeight: '600' }}>{t.toLabel}</strong>
+          </span>
+          {note && (
+            <span style={{ display: 'block', fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>
+              {note}
+            </span>
+          )}
+        </div>
+
+        {/* Amount Display */}
         {!isSettled && !customOpen && (
-          <span className="money" style={{ fontSize: '14px', fontWeight: '600', color: 'var(--color-danger)' }}>
-            {currencySymbol} {t.amount.toFixed(2)}
+          <span className="amount-mono" style={{
+            fontSize: '16px',
+            fontWeight: '700',
+            color: 'var(--color-danger)',
+            whiteSpace: 'nowrap',
+            flexShrink: 0
+          }}>
+            {currencySymbol}{t.amount.toFixed(2)}
           </span>
         )}
-        {isSettled ? (
-          <span className="carbon-receipt" title="Recorded once, kept twice — your copy and theirs now match.">
+
+        {isSettled && (
+          <span className="carbon-receipt" style={{ flexShrink: 0 }} title="Recorded once, kept twice — your copy and theirs now match.">
             <span className="cr-back" aria-hidden="true" />
-            <span className="cr-front">
-              <IconCheck size={13} className="icon-sm" />
+            <span className="cr-front" style={{ padding: '4px 8px' }}>
+              <IconCheck size={12} className="icon-sm" />
               <span>
-                <span className="cr-amount">{currencySymbol} {t.amount.toFixed(2)}</span>
-                <span className="cr-caption">your copy &middot; their copy</span>
+                <span className="cr-amount" style={{ whiteSpace: 'nowrap', fontSize: '12px' }}>{currencySymbol}{t.amount.toFixed(2)}</span>
+                <span className="cr-caption" style={{ fontSize: '9px' }}>your copy &middot; their copy</span>
               </span>
             </span>
           </span>
-        ) : !canSettle ? (
-          <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontStyle: 'italic' }}>Only {t.fromLabel} or {t.toLabel} can settle this</span>
-        ) : customOpen ? (
-          <>
-            <input
-              type="text"
-              inputMode="decimal"
-              className="input-field"
-              placeholder={t.amount.toFixed(2)}
-              title="Custom settlement amount (leave blank to use the suggested amount)"
-              autoFocus
-              value={customValue}
-              onChange={(e) => {
-                const v = e.target.value;
-                if (/^\d*\.?\d*$/.test(v)) onCustomChange(v);
-              }}
-              style={{ width: '90px', padding: '6px 8px', fontSize: '12px', height: '32px' }}
-            />
-            <button
-              className="gradient-btn"
-              style={{ padding: '6px 12px', fontSize: '12px', borderRadius: '8px' }}
-              onClick={() => onSettle(t.fromMemberId, t.toMemberId, settleAmount, t.fromLabel, t.toLabel)}
-            >
-              Settle
-            </button>
-            <button
-              type="button"
-              className="secondary-btn"
-              style={{ padding: '6px 8px' }}
-              aria-label="Cancel custom amount"
-              title="Use the suggested amount instead"
-              onClick={onToggleCustom}
-            >
-              <span style={{ display: 'flex', transform: 'rotate(90deg)' }}>
-                <IconChevronRight size={12} className="icon-sm" />
-              </span>
-            </button>
-          </>
-        ) : (
-          <>
-            <button
-              className="gradient-btn"
-              style={{ padding: '6px 12px', fontSize: '12px', borderRadius: '8px' }}
-              onClick={() => onSettle(t.fromMemberId, t.toMemberId, t.amount, t.fromLabel, t.toLabel)}
-            >
-              Settle
-            </button>
-            <button
-              type="button"
-              className="secondary-btn"
-              style={{ padding: '6px 8px' }}
-              aria-label="Settle for a different amount"
-              title="Settle for a different amount"
-              onClick={onToggleCustom}
-            >
-              <IconEdit size={12} className="icon-sm" />
-            </button>
-          </>
         )}
       </div>
+
+      {/* Bottom Row: Actions or helper message */}
+      {!isSettled && (
+        <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+          {!canSettle ? (
+            <span style={{
+              fontSize: '11px',
+              color: 'var(--text-muted)',
+              fontStyle: 'italic',
+              background: 'rgba(15,23,42,0.03)',
+              padding: '4px 8px',
+              borderRadius: '4px',
+              width: '100%',
+              textAlign: 'left'
+            }}>
+              Only members of either group can record this settlement
+            </span>
+          ) : customOpen ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', width: '100%', justifyContent: 'flex-end' }}>
+              <span style={{ fontSize: '12px', color: 'var(--text-secondary)', marginRight: 'auto' }}>Enter custom amount:</span>
+              <input
+                type="text"
+                inputMode="decimal"
+                className="input-field"
+                placeholder={t.amount.toFixed(2)}
+                title="Custom settlement amount (leave blank to use the suggested amount)"
+                autoFocus
+                value={customValue}
+                onChange={(e) => {
+                   const v = e.target.value;
+                   if (/^\d*\.?\d*$/.test(v)) onCustomChange(v);
+                }}
+                style={{ width: '80px', padding: '4px 8px', fontSize: '12px', height: '28px', margin: 0 }}
+              />
+              <button
+                className="gradient-btn"
+                style={{ padding: '6px 12px', fontSize: '11px', borderRadius: '6px', height: '28px' }}
+                onClick={() => onSettle(t.fromMemberId, t.toMemberId, settleAmount, t.fromLabel, t.toLabel)}
+              >
+                Settle
+              </button>
+              <button
+                type="button"
+                className="secondary-btn"
+                style={{ padding: '6px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                aria-label="Cancel custom amount"
+                title="Use the suggested amount instead"
+                onClick={onToggleCustom}
+              >
+                <span style={{ display: 'flex', transform: 'rotate(90deg)' }}>
+                  <IconChevronRight size={10} className="icon-sm" />
+                </span>
+              </button>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <button
+                className="gradient-btn"
+                style={{ padding: '6px 14px', fontSize: '11px', borderRadius: '6px', height: '28px' }}
+                onClick={() => onSettle(t.fromMemberId, t.toMemberId, t.amount, t.fromLabel, t.toLabel)}
+              >
+                Settle
+              </button>
+              <button
+                type="button"
+                className="secondary-btn"
+                style={{ padding: '6px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                aria-label="Settle for a different amount"
+                title="Settle for a different amount"
+                onClick={onToggleCustom}
+              >
+                <IconEdit size={10} className="icon-sm" />
+              </button>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -268,8 +309,8 @@ export function BalancesSettlements({
                   onClick={() => onMemberClick(n.memberIds[0])}
                   title={`View ${n.name}'s expenses`}
                 >
-                  <span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: '1 1 auto' }}><strong>{n.name}</strong></span>
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', color: balanceColor(n.balance), fontWeight: '700', flexShrink: 0, marginLeft: '8px' }}>
+                  <span style={{ minWidth: 0, flex: '1 1 auto', lineHeight: '1.3', paddingRight: '8px' }}><strong>{n.name}</strong></span>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', color: balanceColor(n.balance), fontWeight: '700', flexShrink: 0, marginLeft: 'auto', whiteSpace: 'nowrap' }}>
                     <BalanceIcon balance={n.balance} />
                     {balanceLabel(n.balance, currencySymbol)}
                   </span>
@@ -302,14 +343,14 @@ export function BalancesSettlements({
                   onClick={() => setExpandedGroups({ ...expandedGroups, [n.id]: !isExpanded })}
                   title={`${isExpanded ? 'Collapse' : 'Expand'} ${n.name} group members`}
                 >
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', minWidth: 0, flex: '1 1 auto' }}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '6px', minWidth: 0, flex: '1 1 auto', paddingRight: '8px' }}>
                     <span style={{ display: 'flex', color: 'var(--text-muted)', flexShrink: 0, transition: 'transform 0.15s ease', transform: isExpanded ? 'rotate(90deg)' : 'none' }}>
                       <IconChevronRight size={12} className="icon-sm" />
                     </span>
                     <IconMembers size={15} className="icon-sm" />
-                    <strong style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>{n.name}</strong>
+                    <strong style={{ minWidth: 0, flex: '1 1 auto', lineHeight: '1.3' }}>{n.name}</strong>
                   </span>
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', color: statusColor, fontWeight: '700', flexShrink: 0, marginLeft: '8px' }}>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', color: statusColor, fontWeight: '700', flexShrink: 0, marginLeft: 'auto', whiteSpace: 'nowrap' }}>
                     {!isNetZero && <BalanceIcon balance={n.balance} />}
                     {fullySettled && <BalanceIcon balance={0} settled />}
                     {statusLabel}
@@ -328,8 +369,8 @@ export function BalancesSettlements({
                           onClick={() => onMemberClick(mid)}
                           title={`View ${memberBalance.name}'s expenses`}
                         >
-                          <span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: '1 1 auto' }}>{memberBalance.name}</span>
-                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', color: balanceColor(memberBalance.balance), fontWeight: '600', flexShrink: 0, marginLeft: '8px' }}>
+                          <span style={{ minWidth: 0, flex: '1 1 auto', lineHeight: '1.3', paddingRight: '8px' }}>{memberBalance.name}</span>
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', color: balanceColor(memberBalance.balance), fontWeight: '600', flexShrink: 0, marginLeft: 'auto', whiteSpace: 'nowrap' }}>
                             <BalanceIcon balance={memberBalance.balance} />
                             {balanceLabel(memberBalance.balance, currencySymbol)}
                           </span>
