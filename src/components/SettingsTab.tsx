@@ -2,27 +2,9 @@ import React, { useState } from 'react';
 import type { Category, Expense } from '../types';
 import { IconDownload } from './Icons';
 import { CategoryIcon } from './CategoryIcon';
-import { serializeCategoryIcon } from '../utils/categoryHelper';
-import * as LucideIcons from 'lucide-react';
 import { OfflinePeerSync } from './OfflinePeerSync';
 
 const CATEGORY_ICON_PRESETS = ['🍔', '🏨', '✈️', '🎟️', '🛍️', '📦', '🚗', '⛽', '🎬', '🍺', '💊', '🎁', '🧾', '🏥', '🎓', '🐾', '🎵', '🚕'];
-
-const PREMIUM_COLORS = [
-  '#1F6E68', // Compass teal
-  '#B98A3E', // Brass gold
-  '#B8452E', // Stamp red
-  '#2C7A4B', // Forest green
-  '#4FAE72', // Emerald green
-  '#3B82F6', // Blue
-  '#8B5CF6', // Purple
-  '#EC4899', // Pink
-];
-
-const PREMIUM_ICONS = [
-  'Compass', 'Utensils', 'Bed', 'Plane', 'Car', 'ShoppingBag',
-  'Coffee', 'Ticket', 'Activity', 'Gift', 'Landmark', 'Camera'
-];
 
 type Props = {
   categories: Category[];
@@ -47,9 +29,6 @@ export function SettingsTab({
   const [newCategoryName, setNewCategoryName] = useState('');
   const [newCategoryIcon, setNewCategoryIcon] = useState('');
   const [showIconPicker, setShowIconPicker] = useState(false);
-  const [selectedColor, setSelectedColor] = useState(PREMIUM_COLORS[0]);
-  const [selectedIconName, setSelectedIconName] = useState(PREMIUM_ICONS[0]);
-  const [creationTab, setCreationTab] = useState<'lucide' | 'emoji'>('lucide');
 
   // Delete & Merge dialog state
   const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null);
@@ -59,15 +38,7 @@ export function SettingsTab({
   const handleAddSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newCategoryName.trim()) return;
-
-    let iconString = '';
-    if (creationTab === 'lucide') {
-      iconString = serializeCategoryIcon(selectedColor, selectedIconName);
-    } else {
-      iconString = newCategoryIcon.trim() || '🏷️';
-    }
-
-    await onAddCategory(newCategoryName.trim(), iconString);
+    await onAddCategory(newCategoryName.trim(), newCategoryIcon.trim() || '🏷️');
     setNewCategoryName('');
     setNewCategoryIcon('');
   };
@@ -134,164 +105,65 @@ export function SettingsTab({
           <div style={{ borderTop: '1px dashed var(--border-color)', paddingTop: '16px', marginTop: '8px' }}>
             <h5 style={{ fontSize: '13px', marginBottom: '12px', color: 'var(--text-secondary)' }}>Add Custom Category</h5>
 
-            <form onSubmit={handleAddSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {/* Creator Tabs */}
-              <div style={{ display: 'flex', borderBottom: '1px solid var(--border-color)', marginBottom: '4px' }}>
-                <button
-                  type="button"
-                  onClick={() => setCreationTab('lucide')}
-                  style={{
-                    flex: 1, padding: '8px', fontSize: '12px', fontWeight: 600, background: 'none', border: 'none',
-                    color: creationTab === 'lucide' ? 'var(--primary-accent)' : 'var(--text-secondary)',
-                    borderBottom: creationTab === 'lucide' ? '2px solid var(--primary-accent)' : '2px solid transparent',
-                    cursor: 'pointer'
-                  }}
-                >
-                  Vector Icon
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setCreationTab('emoji')}
-                  style={{
-                    flex: 1, padding: '8px', fontSize: '12px', fontWeight: 600, background: 'none', border: 'none',
-                    color: creationTab === 'emoji' ? 'var(--primary-accent)' : 'var(--text-secondary)',
-                    borderBottom: creationTab === 'emoji' ? '2px solid var(--primary-accent)' : '2px solid transparent',
-                    cursor: 'pointer'
-                  }}
-                >
-                  Emoji Icon
-                </button>
-              </div>
-
-              {/* Creator Options */}
-              {creationTab === 'lucide' ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', background: 'rgba(15,23,42,0.01)', padding: '12px', borderRadius: 'var(--border-radius-sm)' }}>
-                  {/* Colors Selector */}
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    <span style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Background Color</span>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(8, 1fr)', gap: '6px' }}>
-                      {PREMIUM_COLORS.map((color) => (
-                        <button
-                          key={color}
-                          type="button"
-                          onClick={() => setSelectedColor(color)}
-                          style={{
-                            height: '24px',
-                            backgroundColor: color,
-                            border: selectedColor === color ? '2.5px solid var(--text-primary)' : '1px solid rgba(0,0,0,0.1)',
-                            borderRadius: '50%',
-                            cursor: 'pointer',
-                            boxShadow: selectedColor === color ? '0 0 0 2px var(--bg-surface)' : 'none',
-                            transition: 'var(--transition-smooth)'
-                          }}
-                        />
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Icon Selector */}
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '4px' }}>
-                    <span style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Vector Icon</span>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '8px' }}>
-                      {PREMIUM_ICONS.map((iconName) => {
-                        const LucideIcon = (LucideIcons as any)[iconName];
-                        const isSelected = selectedIconName === iconName;
-                        return (
-                          <button
-                            key={iconName}
-                            type="button"
-                            onClick={() => setSelectedIconName(iconName)}
-                            style={{
-                              aspectRatio: 1,
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              borderRadius: 'var(--border-radius-sm)',
-                              border: isSelected ? '1.5px solid var(--primary-accent)' : '1px solid var(--border-color)',
-                              background: isSelected ? 'rgba(31,110,104,0.08)' : 'var(--bg-surface)',
-                              color: isSelected ? 'var(--primary-accent)' : 'var(--text-secondary)',
-                              cursor: 'pointer',
-                              padding: 0
-                            }}
-                          >
-                            {LucideIcon && <LucideIcon size={16} />}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <div style={{ display: 'flex', gap: '8px' }}>
-                  <div
-                    style={{ position: 'relative' }}
-                    onBlur={(e) => {
-                      if (!e.currentTarget.contains(e.relatedTarget as Node)) setShowIconPicker(false);
-                    }}
-                  >
-                    <input
-                      type="text"
-                      className="input-field"
-                      style={{ width: '52px', height: '44px', textAlign: 'center', fontSize: '19px', padding: '0' }}
-                      placeholder="🏷️"
-                      maxLength={4}
-                      value={newCategoryIcon}
-                      onChange={(e) => setNewCategoryIcon(e.target.value)}
-                      onFocus={() => setShowIconPicker(true)}
-                      aria-label="Category emoji icon"
-                    />
-                    {showIconPicker && (
-                      <div style={{
-                        position: 'absolute', top: 'calc(100% + 6px)', left: 0, zIndex: 20,
-                        width: '204px', display: 'flex', flexWrap: 'wrap', gap: '6px',
-                        padding: '10px', background: 'var(--bg-surface)', border: '1px solid var(--border-color)',
-                        borderRadius: 'var(--border-radius-md)', boxShadow: '0 10px 25px -5px rgba(28,42,56,0.2)'
-                      }}>
-                        {CATEGORY_ICON_PRESETS.map((icon) => (
-                          <button
-                            key={icon}
-                            type="button"
-                            onClick={() => {
-                              setNewCategoryIcon(icon);
-                              setShowIconPicker(false);
-                            }}
-                            style={{
-                              width: '32px',
-                              height: '32px',
-                              fontSize: '16px',
-                              lineHeight: 1,
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              borderRadius: 'var(--border-radius-sm)',
-                              cursor: 'pointer',
-                              border: newCategoryIcon === icon ? '2px solid var(--primary-accent)' : '1.5px solid transparent',
-                              background: newCategoryIcon === icon ? 'rgba(31,110,104,0.10)' : 'var(--bg-surface-hover)',
-                            }}
-                          >
-                            {icon}
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                  <span style={{ alignSelf: 'center', fontSize: '13px', color: 'var(--text-muted)' }}>Pick an emoji or type/paste your own</span>
-                </div>
-              )}
-
-              {/* Text Input & Submit */}
-              <div style={{ display: 'flex', gap: '8px' }}>
+            <form onSubmit={handleAddSubmit} style={{ display: 'flex', gap: '8px' }}>
+              <div
+                style={{ position: 'relative' }}
+                onBlur={(e) => {
+                  if (!e.currentTarget.contains(e.relatedTarget as Node)) setShowIconPicker(false);
+                }}
+              >
                 <input
                   type="text"
-                  required
                   className="input-field"
-                  style={{ flex: 1 }}
-                  placeholder="Category name"
-                  value={newCategoryName}
-                  onChange={(e) => setNewCategoryName(e.target.value)}
+                  style={{ width: '52px', height: '44px', textAlign: 'center', fontSize: '19px', padding: '0' }}
+                  placeholder="🏷️"
+                  maxLength={4}
+                  value={newCategoryIcon}
+                  onChange={(e) => setNewCategoryIcon(e.target.value)}
+                  onFocus={() => setShowIconPicker(true)}
+                  aria-label="Category emoji icon"
+                  title="Pick an emoji or type/paste your own"
                 />
-                <button type="submit" className="gradient-btn" style={{ padding: '10px 16px' }}>Add</button>
+                {showIconPicker && (
+                  <div style={{
+                    position: 'absolute', top: 'calc(100% + 6px)', left: 0, zIndex: 20,
+                    width: '204px', display: 'flex', flexWrap: 'wrap', gap: '6px',
+                    padding: '10px', background: 'var(--bg-surface)', border: '1px solid var(--border-color)',
+                    borderRadius: 'var(--border-radius-md)', boxShadow: '0 10px 25px -5px rgba(28,42,56,0.2)'
+                  }}>
+                    {CATEGORY_ICON_PRESETS.map((icon) => (
+                      <button
+                        key={icon}
+                        type="button"
+                        onClick={() => {
+                          setNewCategoryIcon(icon);
+                          setShowIconPicker(false);
+                        }}
+                        style={{
+                          width: '32px', height: '32px', fontSize: '16px', lineHeight: 1,
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          borderRadius: 'var(--border-radius-sm)', cursor: 'pointer',
+                          transition: 'var(--transition-smooth)',
+                          border: newCategoryIcon === icon ? '2px solid var(--primary-accent)' : '1.5px solid transparent',
+                          background: newCategoryIcon === icon ? 'rgba(31,110,104,0.10)' : 'var(--bg-surface-hover)',
+                        }}
+                      >
+                        {icon}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
+              <input
+                type="text"
+                required
+                className="input-field"
+                style={{ flex: 1 }}
+                placeholder="Category name"
+                value={newCategoryName}
+                onChange={(e) => setNewCategoryName(e.target.value)}
+              />
+              <button type="submit" className="gradient-btn" style={{ padding: '10px 16px' }}>Add</button>
             </form>
           </div>
         )}
