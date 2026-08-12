@@ -1,4 +1,7 @@
+import React from 'react';
 import { IconCatFood, IconCatStay, IconCatTravel, IconCatActivities, IconCatShopping, IconCatMisc } from './Icons';
+import { parseCategoryIcon } from '../utils/categoryHelper';
+import * as LucideIcons from 'lucide-react';
 
 const BUILT_IN_ICONS: Record<string, (props: { size?: number; className?: string }) => React.ReactElement> = {
   'cat-food': IconCatFood,
@@ -16,11 +19,43 @@ type Props = {
   className?: string;
 };
 
-// Built-in categories get the app's line-icon set; custom categories keep
-// whatever emoji the person picked for them in Settings — there's no way
-// to auto-generate a matching line icon for an arbitrary custom category.
 export function CategoryIcon({ categoryId, fallbackEmoji, size = 18, className }: Props) {
-  const Icon = BUILT_IN_ICONS[categoryId];
-  if (Icon) return <Icon size={size} className={className} />;
-  return <span style={{ fontSize: size, lineHeight: 1 }}>{fallbackEmoji || '🏷️'}</span>;
+  // Built-in categories get the app's line-icon set
+  const BuiltInIcon = BUILT_IN_ICONS[categoryId];
+  if (BuiltInIcon) {
+    return <BuiltInIcon size={size} className={className} />;
+  }
+
+  // Custom categories or fallback category icon strings
+  const { color, iconName, isEmoji } = parseCategoryIcon(fallbackEmoji);
+
+  if (isEmoji) {
+    return <span className={className} style={{ fontSize: size, lineHeight: 1 }}>{iconName}</span>;
+  }
+
+  // Look up the Lucide icon dynamically
+  const LucideIcon = (LucideIcons as any)[iconName];
+  if (LucideIcon) {
+    return (
+      <span
+        className={className}
+        style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          width: size + 8,
+          height: size + 8,
+          borderRadius: '50%',
+          backgroundColor: color,
+          color: '#FFFDF6', // warm white
+          flexShrink: 0
+        }}
+      >
+        <LucideIcon size={size - 4} strokeWidth={2.5} />
+      </span>
+    );
+  }
+
+  // Final fallback
+  return <span className={className} style={{ fontSize: size, lineHeight: 1 }}>🏷️</span>;
 }

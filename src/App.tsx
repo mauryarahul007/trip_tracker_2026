@@ -131,10 +131,7 @@ export default function App() {
   const [expenseFilterDateFrom, setExpenseFilterDateFrom] = useState('');
   const [expenseFilterDateTo, setExpenseFilterDateTo] = useState('');
 
-  // Category management (Settings tab)
-  const [newCategoryName, setNewCategoryName] = useState('');
-  const [newCategoryIcon, setNewCategoryIcon] = useState('');
-  const [showIconPicker, setShowIconPicker] = useState(false);
+
 
   // Undo delete toast state
   const [pendingDeleteExpense, setPendingDeleteExpense] = useState<Expense | null>(null);
@@ -433,22 +430,29 @@ export default function App() {
     });
   };
 
-  const handleAddCategory = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newCategoryName.trim()) return;
-    await addCategory(newCategoryName.trim(), newCategoryIcon.trim() || undefined);
-    setNewCategoryName('');
-    setNewCategoryIcon('');
+  const handleAddCategory = async (name: string, icon: string) => {
+    await addCategory(name, icon);
   };
 
-  const handleDeleteCategory = (categoryId: string, categoryName: string) => {
-    setConfirmRequest({
-      title: 'Delete category',
-      message: `Delete category "${categoryName}"? Existing expenses using it will show as "Other".`,
-      confirmLabel: 'Delete',
-      danger: true,
-      onConfirm: () => deleteCategory(categoryId),
-    });
+  const handleDeleteCategory = async (categoryId: string, replacementCategoryId: string | null) => {
+    if (replacementCategoryId) {
+      // Find all expenses in the active trip using the deleted category and update them to replacement category
+      const affectedExpenses = expenses.filter((e) => e.tripId === activeTripId && e.category === categoryId);
+      for (const exp of affectedExpenses) {
+        await updateExpense(exp.id, {
+          title: exp.title,
+          amount: exp.amount,
+          currency: exp.currency,
+          category: replacementCategoryId,
+          date: exp.date,
+          paidBy: exp.paidBy,
+          splitMode: exp.splitMode,
+          splitMemberIds: exp.splitMemberIds,
+          splitConfig: exp.splitConfig,
+        });
+      }
+    }
+    await deleteCategory(categoryId);
   };
 
   const handleSaveGroup = async (name: string, memberIds: string[], id: string | null): Promise<{ success: boolean; error?: string }> => {
@@ -943,14 +947,9 @@ export default function App() {
             <div className="tab-pane" style={{ display: activeTab === 'settings' ? 'block' : 'none' }}>
               <SettingsTab
                 categories={categories}
+                activeTripExpenses={activeTripExpenses}
                 onDeleteCategory={handleDeleteCategory}
                 onAddCategory={handleAddCategory}
-                newCategoryName={newCategoryName}
-                setNewCategoryName={setNewCategoryName}
-                newCategoryIcon={newCategoryIcon}
-                setNewCategoryIcon={setNewCategoryIcon}
-                showIconPicker={showIconPicker}
-                setShowIconPicker={setShowIconPicker}
                 onExportCsv={triggerCsvExport}
                 isAdmin={isAdmin}
                 onOpenGlobalSettings={() => setShowGlobalSettings(true)}

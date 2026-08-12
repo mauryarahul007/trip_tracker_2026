@@ -59,10 +59,108 @@ type TransferRowProps = {
   onToggleCustom: () => void;
   onCustomChange: (v: string) => void;
   onSettle: (fromMemberId: string, toMemberId: string, amount: number, fromLabel: string, toLabel: string) => void;
+  balances: MemberBalance[];
+  groups: Group[];
+  activeTripExpenses: Expense[];
 };
 
-function TransferRow({ transfer: t, note, currencySymbol, isSettled, canSettle, customValue, customOpen, onToggleCustom, onCustomChange, onSettle }: TransferRowProps) {
+interface MemberAuditDetails {
+  memberId: string;
+  name: string;
+  netBalance: number;
+  contributions: {
+    expenseId: string;
+    title: string;
+    date: string;
+    paid: number;
+    owed: number;
+    net: number;
+  }[];
+}
+
+interface NodeAuditDetails {
+  nodeName: string;
+  isGroup: boolean;
+  combinedBalance: number;
+  members: MemberAuditDetails[];
+}
+
+function getAuditDetailsForNode(
+  nodeId: string,
+  nodeName: string,
+  balances: MemberBalance[],
+  groups: Group[],
+  activeTripExpenses: Expense[]
+): NodeAuditDetails {
+  const isGroup = nodeId.startsWith('group:');
+  let memberIds: string[] = [];
+
+  if (isGroup) {
+    const groupId = nodeId.slice('group:'.length);
+    const group = groups.find((g) => g.id === groupId);
+    memberIds = group ? group.memberIds : [];
+  } else {
+    memberIds = [nodeId.slice('member:'.length)];
+  }
+
+  const memberAudits: MemberAuditDetails[] = memberIds.map((mid) => {
+    const name = balances.find((b) => b.memberId === mid)?.name || 'Deleted Member';
+    const netBalance = balances.find((b) => b.memberId === mid)?.balance || 0;
+
+    const contributions = activeTripExpenses
+      .map((exp) => {
+        const paid = exp.paidBy === mid ? exp.amount : 0;
+        const owed = exp.resolvedShares[mid] || 0;
+        return {
+          expenseId: exp.id,
+          title: exp.title,
+          date: exp.date,
+          paid,
+          owed,
+          net: paid - owed
+        };
+      })
+      .filter((c) => Math.abs(c.paid) > 0.01 || Math.abs(c.owed) > 0.01);
+
+    return {
+      memberId: mid,
+      name,
+      netBalance,
+      contributions
+    };
+  });
+
+  const combinedBalance = memberAudits.reduce((sum, m) => sum + m.netBalance, 0);
+
+  return {
+    nodeName,
+    isGroup,
+    combinedBalance,
+    members: memberAudits
+  };
+}
+
+function TransferRow({
+  transfer: t,
+  note,
+  currencySymbol,
+  isSettled,
+  canSettle,
+  customValue,
+  customOpen,
+  onToggleCustom,
+  onCustomChange,
+  onSettle,
+  balances,
+  groups,
+  activeTripExpenses
+}: TransferRowProps) {
   const settleAmount = parseFloat(customValue) || t.amount;
+  const [showAudit, setShowAudit] = useState(false);
+
+  const fromAudit = getAuditDetailsForNode(t.from, t.fromLabel, balances, groups, activeTripExpenses);
+  const toAudit = getAuditDetailsForNode(t.to, t.toLabel, balances, groups, activeTripExpenses);
+
   return (
     <div style={{
       padding: '12px 0',
@@ -112,6 +210,105 @@ function TransferRow({ transfer: t, note, currencySymbol, isSettled, canSettle, 
           </span>
         )}
       </div>
+
+      {/* Audit Trail Button */}
+      <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
+        <button
+          type="button"
+          onClick={() => setShowAudit(!showAudit)}
+          style={{
+            background: 'none',
+            border: 'none',
+            color: 'var(--primary-accent)',
+            fontSize: '11.5px',
+            fontWeight: '600',
+            cursor: 'pointer',
+            padding: '2px 0',
+            textDecoration: 'underline',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '4px'
+          }}
+        >
+          {showAudit ? 'Hide calculation details' : 'Show calculation details'}
+        </button>
+      </div>
+
+      {/* Collapsible Audit Trail breakdown view */}
+      {showAudit && (
+        <div style={{
+          background: 'rgba(15,23,42,0.015)',
+          border: '1px solid var(--border-color)',
+          borderRadius: 'var(--border-radius-sm)',
+          padding: '12px 14px',
+          fontSize: '12px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '10px',
+          marginTop: '2px'
+        }}>
+          <h5 style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', borderBottom: '1px solid var(--border-color)', paddingBottom: '4px', margin: 0 }}>
+            Simplified Settlement Audit Trail
+          </h5>
+
+          {/* Debtor Info */}
+          <div>
+            <strong style={{ color: 'var(--color-danger)' }}>{fromAudit.nodeName} combined debt source:</strong>
+            <div style={{ paddingLeft: '8px', marginTop: '4px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              {fromAudit.members.map((m) => (
+                <div key={m.memberId}>
+                  <span style={{ fontWeight: 600 }}>{m.name} (Individual net: {currencySymbol}{m.netBalance.toFixed(2)})</span>
+                  <ul style={{ margin: '2px 0 0', paddingLeft: '16px', color: 'var(--text-secondary)', listStyleType: 'disc' }}>
+                    {m.contributions.map((c) => (
+                      <li key={c.expenseId} style={{ fontSize: '11px', marginBottom: '2px', lineHeight: '1.4' }}>
+                        "{c.title}": paid {currencySymbol}{c.paid.toFixed(2)}, share {currencySymbol}{c.owed.toFixed(2)} (Net {c.net >= 0 ? '+' : ''}{currencySymbol}{c.net.toFixed(2)})
+                      </li>
+                    ))}
+                    {m.contributions.length === 0 && (
+                      <li style={{ fontSize: '11px', fontStyle: 'italic', color: 'var(--text-muted)' }}>No transactions recorded</li>
+                    )}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Creditor Info */}
+          <div>
+            <strong style={{ color: 'var(--color-success)' }}>{toAudit.nodeName} combined credit source:</strong>
+            <div style={{ paddingLeft: '8px', marginTop: '4px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              {toAudit.members.map((m) => (
+                <div key={m.memberId}>
+                  <span style={{ fontWeight: 600 }}>{m.name} (Individual net: {currencySymbol}{m.netBalance.toFixed(2)})</span>
+                  <ul style={{ margin: '2px 0 0', paddingLeft: '16px', color: 'var(--text-secondary)', listStyleType: 'disc' }}>
+                    {m.contributions.map((c) => (
+                      <li key={c.expenseId} style={{ fontSize: '11px', marginBottom: '2px', lineHeight: '1.4' }}>
+                        "{c.title}": paid {currencySymbol}{c.paid.toFixed(2)}, share {currencySymbol}{c.owed.toFixed(2)} (Net {c.net >= 0 ? '+' : ''}{currencySymbol}{c.net.toFixed(2)})
+                      </li>
+                    ))}
+                    {m.contributions.length === 0 && (
+                      <li style={{ fontSize: '11px', fontStyle: 'italic', color: 'var(--text-muted)' }}>No transactions recorded</li>
+                    )}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Algorithm Explanation */}
+          <div style={{
+            fontSize: '11px',
+            color: 'var(--text-muted)',
+            borderTop: '1px solid var(--border-color)',
+            paddingTop: '6px',
+            marginTop: '2px',
+            fontStyle: 'italic',
+            lineHeight: '1.4'
+          }}>
+            The simplification engine combined and matched these balances ({fromAudit.nodeName}: {currencySymbol}{fromAudit.combinedBalance.toFixed(2)} and {toAudit.nodeName}: {currencySymbol}{toAudit.combinedBalance.toFixed(2)}) to reduce total payment transactions on this trip.
+          </div>
+        </div>
+      )}
 
       {/* Bottom Row: Actions or helper message */}
       {!isSettled && (
@@ -398,6 +595,9 @@ export function BalancesSettlements({
                               onToggleCustom={() => toggleCustomOpen(rowKey)}
                               onCustomChange={(v) => setCustom(rowKey, v)}
                               onSettle={onSettle}
+                              balances={balances}
+                              groups={groups}
+                              activeTripExpenses={activeTripExpenses}
                             />
                           );
                         })}
@@ -439,6 +639,9 @@ export function BalancesSettlements({
                   onToggleCustom={() => toggleCustomOpen(rowKey)}
                   onCustomChange={(v) => setCustom(rowKey, v)}
                   onSettle={onSettle}
+                  balances={balances}
+                  groups={groups}
+                  activeTripExpenses={activeTripExpenses}
                 />
               );
             })}
