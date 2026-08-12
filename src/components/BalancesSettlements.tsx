@@ -165,7 +165,33 @@ export function BalancesSettlements({
   isAdmin,
   myMemberId,
 }: Props) {
-  const canSettleTransfer = (t: Transfer) => isAdmin || t.fromMemberId === myMemberId || t.toMemberId === myMemberId;
+  const canSettleTransfer = (t: Transfer) => {
+    if (isAdmin) return true;
+    if (!myMemberId) return false;
+
+    // Check direct involvement
+    if (t.fromMemberId === myMemberId || t.toMemberId === myMemberId) return true;
+
+    // If the debtor node is a group, any participant of that group can settle
+    if (t.from.startsWith('group:')) {
+      const fromGroupId = t.from.slice('group:'.length);
+      const fromGroup = groups.find((g) => g.id === fromGroupId);
+      if (fromGroup && fromGroup.memberIds.includes(myMemberId)) {
+        return true;
+      }
+    }
+
+    // If the creditor node is a group, any participant of that group can settle
+    if (t.to.startsWith('group:')) {
+      const toGroupId = t.to.slice('group:'.length);
+      const toGroup = groups.find((g) => g.id === toGroupId);
+      if (toGroup && toGroup.memberIds.includes(myMemberId)) {
+        return true;
+      }
+    }
+
+    return false;
+  };
   const currencySymbol = getCurrencySymbol(trip.baseCurrency);
   const [customAmounts, setCustomAmounts] = useState<Record<string, string>>({});
   const [customOpenKeys, setCustomOpenKeys] = useState<Record<string, boolean>>({});
