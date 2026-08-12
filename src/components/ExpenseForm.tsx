@@ -43,6 +43,41 @@ type Props = {
   onCancel: () => void;
 };
 
+const KEYWORD_MAP: Record<string, string[]> = {
+  'cat-food': ['mcdonald', 'starbucks', 'kfc', 'burger', 'pizza', 'food', 'lunch', 'dinner', 'breakfast', 'restaurant', 'cafe', 'coffee', 'grocery', 'supermarket', 'subway', 'bar', 'drink', 'sushi', 'eats', 'swiggy', 'zomato', 'dining'],
+  'cat-stay': ['hotel', 'stay', 'airbnb', 'hostel', 'resort', 'booking', 'motel', 'villa', 'lodge', 'accommodation', 'homestay'],
+  'cat-travel': ['uber', 'taxi', 'flight', 'ticket', 'train', 'bus', 'metro', 'cab', 'airline', 'fuel', 'petrol', 'gas', 'toll', 'parking', 'transport', 'commute', 'rental', 'car', 'travel', 'ola', 'grab', 'bolt', 'lyft', 'aviation', 'diesel'],
+  'cat-activities': ['museum', 'tour', 'activity', 'cinema', 'movie', 'sightseeing', 'safari', 'disney', 'entry', 'concert', 'show', 'theme park', 'park', 'attraction', 'guide', 'diving', 'trek'],
+  'cat-shopping': ['shopping', 'mall', 'store', 'gift', 'souvenir', 'clothes', 'zara', 'h&m', 'amazon', 'target', 'walmart', 'ikea', 'boots', 'market', 'outlet', 'fashion'],
+  'cat-misc': ['misc', 'other', 'fee', 'charge', 'tips', 'cash', 'atm', 'laundry', 'sim', 'data', 'insurance', 'medicine', 'pharmacy', 'hospital', 'telecom', 'topup']
+};
+
+function autoSuggestCategory(titleText: string, categories: Category[]): string | null {
+  const cleanText = titleText.toLowerCase().trim();
+  if (!cleanText) return null;
+
+  for (const [catId, keywords] of Object.entries(KEYWORD_MAP)) {
+    if (categories.some((c) => c.id === catId)) {
+      for (const kw of keywords) {
+        const regex = new RegExp(`\\b${kw}`, 'i');
+        if (regex.test(cleanText)) {
+          return catId;
+        }
+      }
+    }
+  }
+
+  for (const c of categories) {
+    const cleanName = c.name.toLowerCase();
+    const regex = new RegExp(`\\b${cleanName}`, 'i');
+    if (regex.test(cleanText)) {
+      return c.id;
+    }
+  }
+
+  return null;
+}
+
 export function ExpenseForm({
   trip,
   visibleMembers,
@@ -235,7 +270,14 @@ export function ExpenseForm({
           className="input-field"
           placeholder="e.g. Flight Tickets"
           value={title}
-          onChange={(e) => setTitle(e.target.value)}
+          onChange={(e) => {
+            const val = e.target.value;
+            setTitle(val);
+            const suggested = autoSuggestCategory(val, categories);
+            if (suggested) {
+              setCategory(suggested);
+            }
+          }}
         />
       </div>
 
