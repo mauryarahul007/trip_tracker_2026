@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { Trip, Member, Expense } from '../types';
-import { IconTrash, IconEdit } from './Icons';
+import { IconTrash, IconEdit, IconSettings } from './Icons';
 import { DateRangePicker } from './DateRangePicker';
 import { formatTripStamp } from '../utils/dateRange';
 import { initial } from '../utils/initials';
@@ -26,6 +26,7 @@ type Props = {
   onStartEditTrip: (trip: Trip) => void;
   onSelectTrip: (id: string) => void;
   onDeleteTrip: (trip: Trip) => void;
+  onOpenSettings: () => void;
 };
 
 export function TripsListScreen({
@@ -48,6 +49,7 @@ export function TripsListScreen({
   onStartEditTrip,
   onSelectTrip,
   onDeleteTrip,
+  onOpenSettings,
 }: Props) {
   const navigate = useNavigate();
   const [showJoinTrip, setShowJoinTrip] = useState(false);
@@ -62,11 +64,22 @@ export function TripsListScreen({
 
   return (
     <div className="fade-in" style={{ padding: '24px 20px', flex: 1, display: 'flex', flexDirection: 'column' }}>
-      <header style={{ marginBottom: '32px' }}>
-        <h1 className="app-logo">Trip Tracker 2026</h1>
-        <p style={{ color: 'var(--text-secondary)', fontSize: '14px', marginTop: '4px' }}>
-          Offline-first cost splitting & groups
-        </p>
+      <header style={{ marginBottom: '32px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '16px' }}>
+        <div>
+          <h1 className="app-logo">Trip Tracker 2026</h1>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '14px', marginTop: '4px' }}>
+            Offline-first cost splitting & groups
+          </p>
+        </div>
+        <button
+          className="secondary-btn"
+          style={{ padding: '10px', borderRadius: '50%', flexShrink: 0 }}
+          onClick={onOpenSettings}
+          aria-label="App Settings"
+          title="App Settings"
+        >
+          <IconSettings size={18} />
+        </button>
       </header>
 
       <main style={{ flex: 1 }}>
