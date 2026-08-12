@@ -6,6 +6,7 @@ import type { Expense, Trip, Group, Member } from './types';
 import { exportTripToCSV } from './utils/csvExport';
 
 import { getCurrencySymbol } from './utils/currency';
+import { isMissingSupabaseEnv } from './services/supabaseClient';
 import { GlobalSettingsModal } from './components/GlobalSettingsModal';
 import { ConfirmDialog, type ConfirmRequest } from './components/ConfirmDialog';
 import { TripsListScreen } from './components/TripsListScreen';
@@ -707,6 +708,53 @@ export default function App() {
               to { transform: rotate(360deg); }
             }
           `}</style>
+        </div>
+      </div>
+    );
+  }
+
+  if (isMissingSupabaseEnv) {
+    return (
+      <div className="app-container" style={{ justifyContent: 'center', alignItems: 'center', padding: '24px' }}>
+        <div className="glass-card" style={{ maxWidth: '460px', width: '100%', textAlign: 'center', padding: '32px 24px' }}>
+          <div style={{
+            width: '56px',
+            height: '56px',
+            borderRadius: '50%',
+            background: 'var(--color-danger-soft, rgba(239, 68, 68, 0.12))',
+            color: 'var(--color-danger)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            margin: '0 auto 20px',
+            fontSize: '24px'
+          }}>
+            ⚠️
+          </div>
+          <h2 style={{ fontFamily: 'var(--font-family-title)', fontSize: '20px', marginBottom: '12px' }}>
+            Missing API Credentials
+          </h2>
+          <p style={{ fontSize: '14px', color: 'var(--text-secondary)', lineHeight: '1.6', marginBottom: '20px' }}>
+            To run Trip Tracker locally, you must copy <code>.env.example</code> to <code>.env</code> in the project root and fill in your Supabase credentials:
+          </p>
+          <pre style={{
+            background: 'rgba(0,0,0,0.03)',
+            padding: '12px 14px',
+            borderRadius: '8px',
+            textAlign: 'left',
+            fontSize: '12px',
+            fontFamily: 'monospace',
+            overflowX: 'auto',
+            marginBottom: '20px',
+            border: '1.5px solid var(--border-color)',
+            color: 'var(--text-primary)'
+          }}>
+            VITE_SUPABASE_URL=https://your-project.supabase.co
+            {"\n"}VITE_SUPABASE_ANON_KEY=your-anon-key
+          </pre>
+          <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: 0 }}>
+            After saving the <code>.env</code> file, restart your local development server.
+          </p>
         </div>
       </div>
     );
