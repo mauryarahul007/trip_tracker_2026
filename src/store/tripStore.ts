@@ -78,6 +78,13 @@ interface TripStore extends TripState {
   importDatabase: (jsonString: string) => Promise<boolean>;
   clearDatabase: () => Promise<void>;
   loadDemoTrip: () => Promise<void>;
+  applyP2PMergedState: (merged: {
+    expenses: Expense[];
+    categories: Category[];
+    members: Record<string, Member>;
+    groups: Record<string, Group>;
+    syncQueue: any[];
+  }) => Promise<void>;
 }
 
 export const DEFAULT_CATEGORIES: Category[] = [
@@ -821,6 +828,20 @@ export const useTripStore = create<TripStore>((set, get) => {
       } catch (e) {
         setError(e);
       }
+    },
+
+    applyP2PMergedState: async (merged) => {
+      set(() => {
+        localStorage.setItem('trip-tracker-sync-queue', JSON.stringify(merged.syncQueue));
+        return {
+          expenses: merged.expenses,
+          categories: merged.categories,
+          members: merged.members,
+          groups: merged.groups,
+          syncQueue: merged.syncQueue,
+          storageError: null,
+        };
+      });
     },
   };
 });

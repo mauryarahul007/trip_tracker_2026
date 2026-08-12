@@ -4,6 +4,7 @@ import { IconDownload } from './Icons';
 import { CategoryIcon } from './CategoryIcon';
 import { serializeCategoryIcon } from '../utils/categoryHelper';
 import * as LucideIcons from 'lucide-react';
+import { OfflinePeerSync } from './OfflinePeerSync';
 
 const CATEGORY_ICON_PRESETS = ['🍔', '🏨', '✈️', '🎟️', '🛍️', '📦', '🚗', '⛽', '🎬', '🍺', '💊', '🎁', '🧾', '🏥', '🎓', '🐾', '🎵', '🚕'];
 
@@ -53,6 +54,7 @@ export function SettingsTab({
   // Delete & Merge dialog state
   const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null);
   const [mergeTargetId, setMergeTargetId] = useState('');
+  const [showOfflineSync, setShowOfflineSync] = useState(false);
 
   const handleAddSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -316,6 +318,21 @@ export function SettingsTab({
           Open Global Settings
         </button>
       </div>
+
+      {/* P2P Offline WebRTC Sync */}
+      <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '24px' }}>
+        <h4 style={{ fontSize: '16px' }}>Offline Peer Sync</h4>
+        <p style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
+          On a flight, train, or hike with no internet? Sync and merge your trip expenses directly with another nearby device using peer-to-peer visual codes.
+        </p>
+        <button className="gradient-btn" style={{ padding: '12px' }} onClick={() => setShowOfflineSync(true)}>
+          Sync with Offline Peer
+        </button>
+      </div>
+
+      {showOfflineSync && (
+        <OfflinePeerSync onClose={() => setShowOfflineSync(false)} />
+      )}
 
       {/* Merge & Delete Category Dialog */}
       {categoryToDelete && (
