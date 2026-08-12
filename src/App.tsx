@@ -6,6 +6,7 @@ import type { Expense, Trip, Group, Member } from './types';
 import { exportTripToCSV } from './utils/csvExport';
 
 import { getCurrencySymbol } from './utils/currency';
+import { GlobalSettingsModal } from './components/GlobalSettingsModal';
 import { ConfirmDialog, type ConfirmRequest } from './components/ConfirmDialog';
 import { TripsListScreen } from './components/TripsListScreen';
 import { ExpenseForm } from './components/ExpenseForm';
@@ -154,6 +155,7 @@ export default function App() {
   const [showShareTrip, setShowShareTrip] = useState(false);
 
   const [showMembersRequiredNotice, setShowMembersRequiredNotice] = useState(false);
+  const [showGlobalSettings, setShowGlobalSettings] = useState(false);
 
   // Load state on mount
   useEffect(() => {
@@ -745,6 +747,7 @@ export default function App() {
           onStartEditTrip={handleStartEditTrip}
           onSelectTrip={(id) => selectTrip(id)}
           onDeleteTrip={handleDeleteTrip}
+          onOpenSettings={() => setShowGlobalSettings(true)}
         />
       ) : (
         /* Screen 2: Active Trip Dashboard */
@@ -891,8 +894,6 @@ export default function App() {
 
             <div className="tab-pane" style={{ display: activeTab === 'settings' ? 'block' : 'none' }}>
               <SettingsTab
-                themePref={themePref}
-                setThemePref={setThemePref}
                 categories={categories}
                 onDeleteCategory={handleDeleteCategory}
                 onAddCategory={handleAddCategory}
@@ -903,20 +904,8 @@ export default function App() {
                 showIconPicker={showIconPicker}
                 setShowIconPicker={setShowIconPicker}
                 onExportCsv={triggerCsvExport}
-                onExportJson={triggerExport}
-                showImportArea={showImportArea}
-                setShowImportArea={setShowImportArea}
-                importJson={importJson}
-                setImportJson={setImportJson}
-                importStatus={importStatus}
-                onImport={handleImport}
-                onClearDatabase={handleClearDatabase}
-                onLoadDemoTrip={handleLoadDemoTrip}
-                userEmail={userEmail}
-                onSignOut={signOut}
                 isAdmin={isAdmin}
-                pwaInstallable={!!deferredPrompt}
-                onInstallApp={handleInstallApp}
+                onOpenGlobalSettings={() => setShowGlobalSettings(true)}
               />
             </div>
           </main>
@@ -941,6 +930,27 @@ export default function App() {
             setSelectedReviewExpense(null);
             handleStartEditExpense(exp);
           }}
+        />
+      )}
+
+      {showGlobalSettings && (
+        <GlobalSettingsModal
+          onClose={() => setShowGlobalSettings(false)}
+          themePref={themePref}
+          setThemePref={setThemePref}
+          onExportJson={triggerExport}
+          showImportArea={showImportArea}
+          setShowImportArea={setShowImportArea}
+          importJson={importJson}
+          setImportJson={setImportJson}
+          importStatus={importStatus}
+          onImport={handleImport}
+          onClearDatabase={handleClearDatabase}
+          onLoadDemoTrip={handleLoadDemoTrip}
+          userEmail={userEmail}
+          onSignOut={signOut}
+          pwaInstallable={!!deferredPrompt}
+          onInstallApp={handleInstallApp}
         />
       )}
 
