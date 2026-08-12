@@ -85,12 +85,19 @@ export async function fetchMyTripGraph(): Promise<TripGraph> {
     return { trips: [], members: {}, groups: {} };
   }
 
-  const [membersRes, groupsRes] = await Promise.all([
+  const [membersRes, groupsRes, expensesRes] = await Promise.all([
     supabase.from('members').select('*, profile:linked_user_id(avatar_url)').in('trip_id', tripIds),
     supabase.from('groups').select('*').in('trip_id', tripIds),
+    supabase.from('expenses').select('trip_id').in('trip_id', tripIds),
   ]);
   if (membersRes.error) throw membersRes.error;
   if (groupsRes.error) throw groupsRes.error;
+  if (expensesRes.error) throw expensesRes.error;
+
+  const expenseCounts: Record<string, number> = {};
+  (expensesRes.data ?? []).forEach((row) => {
+    expenseCounts[row.trip_id] = (expenseCounts[row.trip_id] || 0) + 1;
+  });
 
   const groupIds = (groupsRes.data ?? []).map((g) => g.id);
   const groupMembersRes = groupIds.length
@@ -116,7 +123,9 @@ export async function fetchMyTripGraph(): Promise<TripGraph> {
   const trips: Trip[] = (tripRows ?? []).map((row) => {
     const memberIds = (membersRes.data ?? []).filter((m) => m.trip_id === row.id).map((m) => m.id);
     const gIds = (groupsRes.data ?? []).filter((g) => g.trip_id === row.id).map((g) => g.id);
-    return mapTrip(row, memberIds, gIds);
+    const trip = mapTrip(row, memberIds, gIds);
+    trip.expenseCount = expenseCounts[row.id] || 0;
+    return trip;
   });
 
   return { trips, members, groups };
@@ -467,7 +476,7 @@ export async function insertTripGraph(ownerId: string, seed: TripGraphSeed): Pro
     expenses = (data ?? []).map(mapExpense);
   }
 
-  const finalTrip: Trip = { ...trip, memberIds: members.map((m) => m.id), groupIds: groups.map((g) => g.id) };
+  const finalTrip: Trip = { ...trip, memberIds: members.map((m) => m.id), groupIds: groups.map((g) => g.id), expenseCount: expenses.length };
   const membersMap: Record<string, Member> = {};
   members.forEach((m) => (membersMap[m.id] = m));
   const groupsMap: Record<string, Group> = {};

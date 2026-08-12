@@ -337,7 +337,7 @@ export const useTripStore = create<TripStore>((set, get) => {
         // split participant like everyone else.
         const creatorName = get().userDisplayName || 'Me';
         const creatorMember = await insertMember(trip.id, creatorName, userId);
-        const tripWithCreator = { ...trip, memberIds: [creatorMember.id] };
+        const tripWithCreator = { ...trip, memberIds: [creatorMember.id], expenseCount: 0 };
 
         set((state) => ({
           trips: [...state.trips, tripWithCreator],
@@ -582,6 +582,7 @@ export const useTripStore = create<TripStore>((set, get) => {
       // Optimistically add the expense
       set((state) => ({
         expenses: [...state.expenses, tempExpense].sort((a, b) => b.date.localeCompare(a.date) || b.createdAt - a.createdAt),
+        trips: state.trips.map((t) => (t.id === tripId ? { ...t, expenseCount: (t.expenseCount || 0) + 1, updatedAt: Date.now() } : t)),
         storageError: null,
       }));
 
@@ -607,6 +608,7 @@ export const useTripStore = create<TripStore>((set, get) => {
           // Revert optimistic add
           set((state) => ({
             expenses: state.expenses.filter((e) => e.id !== tempId),
+            trips: state.trips.map((t) => (t.id === tripId ? { ...t, expenseCount: Math.max(0, (t.expenseCount || 0) - 1), updatedAt: Date.now() } : t)),
           }));
           setError(e);
         }
@@ -671,6 +673,7 @@ export const useTripStore = create<TripStore>((set, get) => {
       // Optimistic delete
       set((state) => ({
         expenses: state.expenses.filter((e) => e.id !== id),
+        trips: state.trips.map((t) => (t.id === existing.tripId ? { ...t, expenseCount: Math.max(0, (t.expenseCount || 0) - 1), updatedAt: Date.now() } : t)),
         storageError: null,
       }));
 
@@ -683,6 +686,7 @@ export const useTripStore = create<TripStore>((set, get) => {
           // Revert optimistic delete
           set((state) => ({
             expenses: [...state.expenses, existing].sort((a, b) => b.date.localeCompare(a.date) || b.createdAt - a.createdAt),
+            trips: state.trips.map((t) => (t.id === existing.tripId ? { ...t, expenseCount: (t.expenseCount || 0) + 1, updatedAt: Date.now() } : t)),
           }));
           setError(e);
         }
@@ -831,13 +835,22 @@ export const useTripStore = create<TripStore>((set, get) => {
     },
 
     applyP2PMergedState: async (merged) => {
-      set(() => {
+      set((state) => {
         localStorage.setItem('trip-tracker-sync-queue', JSON.stringify(merged.syncQueue));
+        const activeTripId = state.activeTripId;
+        const updatedTrips = activeTripId
+          ? state.trips.map((t) =>
+              t.id === activeTripId
+                ? { ...t, expenseCount: merged.expenses.filter((e) => e.tripId === activeTripId).length }
+                : t
+            )
+          : state.trips;
         return {
           expenses: merged.expenses,
           categories: merged.categories,
           members: merged.members,
           groups: merged.groups,
+          trips: updatedTrips,
           syncQueue: merged.syncQueue,
           storageError: null,
         };

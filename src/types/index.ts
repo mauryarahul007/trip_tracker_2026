@@ -10,6 +10,7 @@ export interface Trip {
   joinCode: string; // shareable code, e.g. "ABC123"
   createdAt: number;
   updatedAt: number;
+  expenseCount?: number;
 }
 
 export interface Member {

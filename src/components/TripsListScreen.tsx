@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import type { Trip, Member, Expense } from '../types';
+import type { Trip, Member } from '../types';
 import { IconTrash, IconEdit, IconSettings } from './Icons';
 import { DateRangePicker } from './DateRangePicker';
 import { formatTripStamp } from '../utils/dateRange';
@@ -9,7 +9,6 @@ import { initial } from '../utils/initials';
 type Props = {
   trips: Trip[];
   members: Record<string, Member>;
-  expenses: Expense[];
   showAddTrip: boolean;
   setShowAddTrip: (show: boolean) => void;
   newTripName: string;
@@ -32,7 +31,6 @@ type Props = {
 export function TripsListScreen({
   trips,
   members,
-  expenses,
   showAddTrip,
   setShowAddTrip,
   newTripName,
@@ -198,7 +196,7 @@ export function TripsListScreen({
               const tripMembers = trip.memberIds.map((id) => members[id]).filter(Boolean);
               const shown = tripMembers.slice(0, 3);
               const overflow = tripMembers.length - shown.length;
-              const expenseCount = expenses.filter((e) => e.tripId === trip.id).length;
+              const expenseCount = trip.expenseCount || 0;
               return (
                 <div key={trip.id} className="passport-card" onClick={() => onSelectTrip(trip.id)}>
                   <div className="pp-stamp">

@@ -782,7 +782,6 @@ export default function App() {
         <TripsListScreen
           trips={visibleTrips}
           members={members}
-          expenses={expenses}
           showAddTrip={showAddTrip}
           setShowAddTrip={setShowAddTrip}
           newTripName={newTripName}
