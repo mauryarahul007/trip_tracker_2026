@@ -68,6 +68,8 @@ interface MemberAuditDetails {
   memberId: string;
   name: string;
   netBalance: number;
+  totalPaid: number;
+  totalOwed: number;
   contributions: {
     expenseId: string;
     title: string;
@@ -122,10 +124,15 @@ function getAuditDetailsForNode(
       })
       .filter((c) => Math.abs(c.paid) > 0.01 || Math.abs(c.owed) > 0.01);
 
+    const totalPaid = contributions.reduce((sum, c) => sum + c.paid, 0);
+    const totalOwed = contributions.reduce((sum, c) => sum + c.owed, 0);
+
     return {
       memberId: mid,
       name,
       netBalance,
+      totalPaid,
+      totalOwed,
       contributions
     };
   });
@@ -254,44 +261,56 @@ function TransferRow({
           {/* Debtor Info */}
           <div>
             <strong style={{ color: 'var(--color-danger)' }}>{fromAudit.nodeName} combined debt source:</strong>
-            <div style={{ paddingLeft: '8px', marginTop: '4px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            <div style={{ paddingLeft: '8px', marginTop: '4px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
               {fromAudit.members.map((m) => (
-                <div key={m.memberId}>
-                  <span style={{ fontWeight: 600 }}>{m.name} (Individual net: {currencySymbol}{m.netBalance.toFixed(2)})</span>
-                  <ul style={{ margin: '2px 0 0', paddingLeft: '16px', color: 'var(--text-secondary)', listStyleType: 'disc' }}>
-                    {m.contributions.map((c) => (
-                      <li key={c.expenseId} style={{ fontSize: '11px', marginBottom: '2px', lineHeight: '1.4' }}>
-                        "{c.title}": paid {currencySymbol}{c.paid.toFixed(2)}, share {currencySymbol}{c.owed.toFixed(2)} (Net {c.net >= 0 ? '+' : ''}{currencySymbol}{c.net.toFixed(2)})
-                      </li>
-                    ))}
-                    {m.contributions.length === 0 && (
-                      <li style={{ fontSize: '11px', fontStyle: 'italic', color: 'var(--text-muted)' }}>No transactions recorded</li>
-                    )}
-                  </ul>
+                <div key={m.memberId} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11.5px' }}>
+                  <span>
+                    <span style={{ fontWeight: 600 }}>{m.name}</span>
+                    <span style={{ color: 'var(--text-secondary)' }}>
+                      {' '}(Paid: {currencySymbol}{m.totalPaid.toFixed(2)}, Share: {currencySymbol}{m.totalOwed.toFixed(2)})
+                    </span>
+                  </span>
+                  <span style={{ fontWeight: 600, color: m.netBalance < 0 ? 'var(--color-danger)' : 'var(--color-success)' }}>
+                    {m.netBalance >= 0 ? '+' : ''}{currencySymbol}{m.netBalance.toFixed(2)}
+                  </span>
                 </div>
               ))}
+              {fromAudit.members.length > 1 && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11.5px', borderTop: '1px dashed var(--border-color)', paddingTop: '4px', marginTop: '2px', fontWeight: 600 }}>
+                  <span>Combined Net:</span>
+                  <span style={{ color: fromAudit.combinedBalance < 0 ? 'var(--color-danger)' : 'var(--color-success)' }}>
+                    {fromAudit.combinedBalance >= 0 ? '+' : ''}{currencySymbol}{fromAudit.combinedBalance.toFixed(2)}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
 
           {/* Creditor Info */}
           <div>
             <strong style={{ color: 'var(--color-success)' }}>{toAudit.nodeName} combined credit source:</strong>
-            <div style={{ paddingLeft: '8px', marginTop: '4px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            <div style={{ paddingLeft: '8px', marginTop: '4px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
               {toAudit.members.map((m) => (
-                <div key={m.memberId}>
-                  <span style={{ fontWeight: 600 }}>{m.name} (Individual net: {currencySymbol}{m.netBalance.toFixed(2)})</span>
-                  <ul style={{ margin: '2px 0 0', paddingLeft: '16px', color: 'var(--text-secondary)', listStyleType: 'disc' }}>
-                    {m.contributions.map((c) => (
-                      <li key={c.expenseId} style={{ fontSize: '11px', marginBottom: '2px', lineHeight: '1.4' }}>
-                        "{c.title}": paid {currencySymbol}{c.paid.toFixed(2)}, share {currencySymbol}{c.owed.toFixed(2)} (Net {c.net >= 0 ? '+' : ''}{currencySymbol}{c.net.toFixed(2)})
-                      </li>
-                    ))}
-                    {m.contributions.length === 0 && (
-                      <li style={{ fontSize: '11px', fontStyle: 'italic', color: 'var(--text-muted)' }}>No transactions recorded</li>
-                    )}
-                  </ul>
+                <div key={m.memberId} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11.5px' }}>
+                  <span>
+                    <span style={{ fontWeight: 600 }}>{m.name}</span>
+                    <span style={{ color: 'var(--text-secondary)' }}>
+                      {' '}(Paid: {currencySymbol}{m.totalPaid.toFixed(2)}, Share: {currencySymbol}{m.totalOwed.toFixed(2)})
+                    </span>
+                  </span>
+                  <span style={{ fontWeight: 600, color: m.netBalance < 0 ? 'var(--color-danger)' : 'var(--color-success)' }}>
+                    {m.netBalance >= 0 ? '+' : ''}{currencySymbol}{m.netBalance.toFixed(2)}
+                  </span>
                 </div>
               ))}
+              {toAudit.members.length > 1 && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11.5px', borderTop: '1px dashed var(--border-color)', paddingTop: '4px', marginTop: '2px', fontWeight: 600 }}>
+                  <span>Combined Net:</span>
+                  <span style={{ color: toAudit.combinedBalance < 0 ? 'var(--color-danger)' : 'var(--color-success)' }}>
+                    {toAudit.combinedBalance >= 0 ? '+' : ''}{currencySymbol}{toAudit.combinedBalance.toFixed(2)}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
 
