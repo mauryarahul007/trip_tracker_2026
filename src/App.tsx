@@ -165,6 +165,7 @@ export default function App() {
   const syncQueue = useTripStore((s) => s.syncQueue);
   const sessionExpired = useTripStore((s) => s.sessionExpired);
   const lastBackendSyncedAt = useTripStore((s) => s.lastBackendSyncedAt);
+  const lastModifiedAt = useTripStore((s) => s.lastModifiedAt);
   const processQueue = useTripStore((s) => s.processQueue);
 
   // Load state on mount
@@ -213,9 +214,14 @@ export default function App() {
   const syncStatus: SyncStatus = useMemo(() => {
     if (!isOnline) return 'offline';
     if (sessionExpired) return 'session-expired';
+    // Primary signal is the queue itself, now reliably persisted. This is
+    // a defensive fallback for the case where local data changed without
+    // going through queueSync — compares persisted local vs. last-synced
+    // timestamps directly, rather than trusting one signal alone.
     if (syncQueue.length > 0) return 'out-of-sync';
+    if (lastBackendSyncedAt !== null && lastModifiedAt > lastBackendSyncedAt) return 'out-of-sync';
     return 'synced';
-  }, [isOnline, sessionExpired, syncQueue.length]);
+  }, [isOnline, sessionExpired, syncQueue.length, lastModifiedAt, lastBackendSyncedAt]);
 
   const syncStatusLabel = useMemo(() => {
     if (syncStatus === 'offline') return 'Offline';

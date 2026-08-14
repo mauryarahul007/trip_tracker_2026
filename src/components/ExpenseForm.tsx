@@ -139,8 +139,11 @@ export function ExpenseForm({
     setSplitConfig(updatedConfig);
   };
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const handleSubmitLocal = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return;
     const amountVal = parseFloat(amount);
     if (isNaN(amountVal) || amountVal <= 0) {
       setFormError('Please enter a valid amount greater than 0.');
@@ -173,20 +176,25 @@ export function ExpenseForm({
       });
     }
 
-    const res = await onSave({
-      title: title.trim(),
-      amount: amountVal,
-      category,
-      date,
-      paidBy: payer,
-      splitMode,
-      splitMemberIds: splitSelectedIds,
-      splitConfig: Object.keys(finalSplitConfig).length > 0 ? finalSplitConfig : undefined,
-      receiptImage: receiptImage || undefined,
-    });
+    setIsSubmitting(true);
+    try {
+      const res = await onSave({
+        title: title.trim(),
+        amount: amountVal,
+        category,
+        date,
+        paidBy: payer,
+        splitMode,
+        splitMemberIds: splitSelectedIds,
+        splitConfig: Object.keys(finalSplitConfig).length > 0 ? finalSplitConfig : undefined,
+        receiptImage: receiptImage || undefined,
+      });
 
-    if (!res.success && res.error) {
-      setFormError(res.error);
+      if (!res.success && res.error) {
+        setFormError(res.error);
+      }
+    } finally {
+      setIsSubmitting(false);
     }
   };
   return (
@@ -519,7 +527,7 @@ export function ExpenseForm({
       )}
 
       <div style={{ display: 'flex', gap: '12px', marginTop: '16px' }}>
-        <button type="submit" className="gradient-btn" style={{ flex: 1 }}>
+        <button type="submit" className="gradient-btn" style={{ flex: 1 }} disabled={isSubmitting}>
           {editingExpense ? 'Update Expense' : 'Add Expense'}
         </button>
         <button
@@ -527,6 +535,7 @@ export function ExpenseForm({
           className="secondary-btn"
           style={{ flex: 1 }}
           onClick={onCancel}
+          disabled={isSubmitting}
         >
           Cancel
         </button>

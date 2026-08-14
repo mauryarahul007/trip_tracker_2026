@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 import type { Member, Group, Expense, Category, TripState } from '../types';
 import { supabase } from '../services/supabaseClient';
 import {
@@ -31,8 +32,6 @@ import {
   type ExpenseInput,
 } from '../services/tripApi';
 import { generateDemoData } from '../utils/demoSeed';
-
-const LAST_TRIP_KEY = 'trip-tracker-last-trip-id';
 
 interface SyncQueueItem {
   id: string;
@@ -167,7 +166,44 @@ const resolveShares = (
   return resolvedShares;
 };
 
-export const useTripStore = create<TripStore>((set, get) => {
+// IDs of expenses with a mutation still sitting in the offline queue —
+// addExpense uses a client-generated tempId as payload.id, everything
+// else (update/delete/restore/permanentlyDelete) carries the real id.
+// These must never be silently overwritten by a server refetch, since
+// the server doesn't know about them yet.
+export function collectDirtyExpenseIds(syncQueue: { type: string; payload: any }[]): Set<string> {
+  const ids = new Set<string>();
+  for (const item of syncQueue) {
+    if (item.type === 'addExpense' && item.payload?.tempId) {
+      ids.add(item.payload.tempId);
+    } else if (item.payload?.id) {
+      ids.add(item.payload.id);
+    }
+  }
+  return ids;
+}
+
+// Reconciles a fresh server fetch for one trip against the locally
+// cached (persisted) expense list, without disturbing other trips'
+// cached data and without clobbering locally-dirty rows (pending
+// queue items the server hasn't seen yet).
+export function mergeServerExpenses(
+  localExpenses: Expense[],
+  serverExpenses: Expense[],
+  tripId: string,
+  dirtyIds: Set<string>
+): Expense[] {
+  const otherTrips = localExpenses.filter((e) => e.tripId !== tripId);
+  const localDirtyForTrip = localExpenses.filter((e) => e.tripId === tripId && dirtyIds.has(e.id));
+  const cleanServerForTrip = serverExpenses.filter((e) => !dirtyIds.has(e.id));
+  return [...otherTrips, ...cleanServerForTrip, ...localDirtyForTrip].sort(
+    (a, b) => b.date.localeCompare(a.date) || b.createdAt - a.createdAt
+  );
+}
+
+export const useTripStore = create<TripStore>()(
+  persist(
+    (set, get) => {
   const setError = (e: unknown) => {
     console.error('Trip store sync error:', e);
     set({ storageError: e instanceof Error ? e.message : 'Failed to sync with the server.' });
@@ -192,10 +228,6 @@ export const useTripStore = create<TripStore>((set, get) => {
     receiptPath: extra?.receiptPath,
   });
 
-  // Load last known backend sync timestamp
-  const storedLastBackendSync = localStorage.getItem('trip-tracker-last-backend-sync');
-  const initialLastBackendSync = storedLastBackendSync ? Number(storedLastBackendSync) : null;
-
   return {
     trips: [],
     activeTripId: null,
@@ -209,19 +241,34 @@ export const useTripStore = create<TripStore>((set, get) => {
     userId: null,
     userDisplayName: null,
     syncQueue: [],
-    lastBackendSyncedAt: initialLastBackendSync,
+    lastBackendSyncedAt: null,
     sessionExpired: false,
     lastModifiedAt: Date.now(),
 
     updateLastBackendSyncedAt: (timestamp: number) => {
-      localStorage.setItem('trip-tracker-last-backend-sync', String(timestamp));
       set({ lastBackendSyncedAt: timestamp });
     },
 
+    // Trip data is rehydrated from localStorage (via the zustand `persist`
+    // middleware) synchronously before this ever runs, so there's real
+    // data on screen immediately regardless of connectivity. This only
+    // needs to resolve the current user and, if online, reconcile that
+    // cached data against the server.
     initialize: async () => {
       if (get().initialized) return;
 
-      const { data: { user } } = await supabase.auth.getUser();
+      // Registered unconditionally — a session that starts offline must
+      // still auto-sync the moment connectivity returns, rather than only
+      // wiring this up inside the network-fetch success path below.
+      window.addEventListener('online', () => {
+        get().processQueue();
+      });
+
+      // getSession() reads the persisted local session (no network round
+      // trip) — unlike getUser(), which calls the Auth server and would
+      // hang indefinitely if the app boots while offline.
+      const { data: { session } } = await supabase.auth.getSession();
+      const user = session?.user;
       const userId = user?.id ?? null;
       const userDisplayName =
         (user?.user_metadata?.full_name as string | undefined) ||
@@ -229,44 +276,38 @@ export const useTripStore = create<TripStore>((set, get) => {
         user?.email?.split('@')[0] ||
         null;
 
-      // Load saved sync queue from localStorage
-      const savedQueue = localStorage.getItem('trip-tracker-sync-queue');
-      const syncQueue = savedQueue ? JSON.parse(savedQueue) : [];
+      if (!navigator.onLine) {
+        set({ userId, userDisplayName, initialized: true });
+        return;
+      }
 
       try {
         const graph = await fetchMyTripGraph();
-        const lastTripId = localStorage.getItem(LAST_TRIP_KEY);
-        const activeTrip = lastTripId ? graph.trips.find((t) => t.id === lastTripId) : undefined;
+        const activeTripId = get().activeTripId;
+        const activeTrip = activeTripId ? graph.trips.find((t) => t.id === activeTripId) : undefined;
 
-        let expenses: Expense[] = [];
-        let categories = DEFAULT_CATEGORIES;
         if (activeTrip) {
-          const [tripExpenses, customCategories] = await Promise.all([
+          const [serverExpenses, customCategories] = await Promise.all([
             fetchExpensesForTrip(activeTrip.id),
             fetchCategoriesForTrip(activeTrip.id),
           ]);
-          expenses = tripExpenses;
-          categories = [...DEFAULT_CATEGORIES, ...customCategories];
+          const dirtyIds = collectDirtyExpenseIds(get().syncQueue);
+          set((state) => ({
+            expenses: mergeServerExpenses(state.expenses, serverExpenses, activeTrip.id, dirtyIds),
+            categories: [...DEFAULT_CATEGORIES, ...customCategories],
+          }));
         }
 
         set({
           ...graph,
           activeTripId: activeTrip ? activeTrip.id : null,
-          expenses,
-          categories,
           userId,
           userDisplayName,
-          syncQueue,
           initialized: true,
+          storageError: null,
         });
 
-        // Register online sync listener
-        window.addEventListener('online', () => {
-          get().processQueue();
-        });
-
-        // Trigger initial queue sync attempt if online
-        if (syncQueue.length > 0 && navigator.onLine) {
+        if (get().syncQueue.length > 0) {
           get().processQueue();
         }
       } catch (e) {
@@ -274,7 +315,6 @@ export const useTripStore = create<TripStore>((set, get) => {
         set({
           userId,
           userDisplayName,
-          syncQueue,
           initialized: true,
           storageError: 'Failed to load your trips. Check your connection and reload.',
         });
@@ -298,7 +338,6 @@ export const useTripStore = create<TripStore>((set, get) => {
     queueSync: (type, payload) => {
       const newQueue = [...get().syncQueue, { id: crypto.randomUUID(), type, payload }];
       set({ syncQueue: newQueue, lastModifiedAt: Date.now() });
-      localStorage.setItem('trip-tracker-sync-queue', JSON.stringify(newQueue));
     },
 
 
@@ -323,7 +362,6 @@ export const useTripStore = create<TripStore>((set, get) => {
       if (get().syncQueue.length === 0) return;
       const queue = [...get().syncQueue];
       set({ syncQueue: [] });
-      localStorage.removeItem('trip-tracker-sync-queue');
 
       for (const item of queue) {
         try {
@@ -371,9 +409,7 @@ export const useTripStore = create<TripStore>((set, get) => {
           }
         } catch (err) {
           console.error('Offline sync failed for item:', item, err);
-          const updatedQueue = [...get().syncQueue, item];
-          set({ syncQueue: updatedQueue });
-          localStorage.setItem('trip-tracker-sync-queue', JSON.stringify(updatedQueue));
+          set((state) => ({ syncQueue: [...state.syncQueue, item] }));
         }
       }
 
@@ -399,11 +435,9 @@ export const useTripStore = create<TripStore>((set, get) => {
           trips: [...state.trips, tripWithCreator],
           members: { ...state.members, [creatorMember.id]: creatorMember },
           activeTripId: trip.id,
-          expenses: [],
           categories: DEFAULT_CATEGORIES,
           storageError: null,
         }));
-        localStorage.setItem(LAST_TRIP_KEY, trip.id);
       } catch (e) {
         setError(e);
       }
@@ -423,15 +457,24 @@ export const useTripStore = create<TripStore>((set, get) => {
 
     selectTrip: async (id) => {
       if (id === null) {
-        set({ activeTripId: null, expenses: [], deletedExpenses: [], categories: DEFAULT_CATEGORIES });
-        localStorage.removeItem(LAST_TRIP_KEY);
+        set({ activeTripId: null, deletedExpenses: [] });
         return;
       }
-      set({ activeTripId: id, expenses: [], deletedExpenses: [], categories: DEFAULT_CATEGORIES });
-      localStorage.setItem(LAST_TRIP_KEY, id);
+      // Switch instantly using whatever's cached locally for this trip —
+      // no wipe-then-refetch. If we're offline, this is all we can show,
+      // and it's correct: filtered by tripId downstream, a trip with no
+      // cached data yet just renders empty rather than losing data for a
+      // trip we DO have cached (e.g. switching back to it later).
+      set({ activeTripId: id, deletedExpenses: [] });
+      if (!navigator.onLine) return;
       try {
-        const [expenses, customCategories] = await Promise.all([fetchExpensesForTrip(id), fetchCategoriesForTrip(id)]);
-        set({ expenses, categories: [...DEFAULT_CATEGORIES, ...customCategories], storageError: null });
+        const [serverExpenses, customCategories] = await Promise.all([fetchExpensesForTrip(id), fetchCategoriesForTrip(id)]);
+        const dirtyIds = collectDirtyExpenseIds(get().syncQueue);
+        set((state) => ({
+          expenses: mergeServerExpenses(state.expenses, serverExpenses, id, dirtyIds),
+          categories: [...DEFAULT_CATEGORIES, ...customCategories],
+          storageError: null,
+        }));
       } catch (e) {
         setError(e);
       }
@@ -935,16 +978,21 @@ export const useTripStore = create<TripStore>((set, get) => {
         }
 
         const graph = await fetchMyTripGraph();
-        let expenses: Expense[] = [];
+        let importedExpenses: Expense[] = [];
         let categories = DEFAULT_CATEGORIES;
         if (lastTripId) {
-          expenses = await fetchExpensesForTrip(lastTripId);
+          importedExpenses = await fetchExpensesForTrip(lastTripId);
           const custom = await fetchCategoriesForTrip(lastTripId);
           categories = [...DEFAULT_CATEGORIES, ...custom];
-          localStorage.setItem(LAST_TRIP_KEY, lastTripId);
         }
 
-        set({ ...graph, activeTripId: lastTripId, expenses, categories, storageError: null });
+        set((state) => ({
+          ...graph,
+          activeTripId: lastTripId,
+          expenses: [...state.expenses, ...importedExpenses],
+          categories,
+          storageError: null,
+        }));
         return true;
       } catch (e) {
         console.error('Import database failed:', e);
@@ -963,10 +1011,11 @@ export const useTripStore = create<TripStore>((set, get) => {
           members: {},
           groups: {},
           expenses: [],
+          deletedExpenses: [],
           categories: DEFAULT_CATEGORIES,
+          syncQueue: [],
           storageError: null,
         });
-        localStorage.removeItem(LAST_TRIP_KEY);
       } catch (e) {
         setError(e);
       }
@@ -989,15 +1038,32 @@ export const useTripStore = create<TripStore>((set, get) => {
           activeTripId: result.trip.id,
           members: { ...state.members, ...result.members },
           groups: { ...state.groups, ...result.groups },
-          expenses: result.expenses,
+          expenses: [...state.expenses, ...result.expenses],
           categories: [...DEFAULT_CATEGORIES, ...result.categories],
           storageError: null,
         }));
-        localStorage.setItem(LAST_TRIP_KEY, result.trip.id);
       } catch (e) {
         setError(e);
       }
     },
   };
-});
+    },
+    {
+      name: 'trip-tracker-store-v1',
+      version: 1,
+      partialize: (state) => ({
+        trips: state.trips,
+        activeTripId: state.activeTripId,
+        members: state.members,
+        groups: state.groups,
+        expenses: state.expenses,
+        deletedExpenses: state.deletedExpenses,
+        categories: state.categories,
+        syncQueue: state.syncQueue,
+        lastBackendSyncedAt: state.lastBackendSyncedAt,
+        lastModifiedAt: state.lastModifiedAt,
+      }),
+    }
+  )
+);
 
