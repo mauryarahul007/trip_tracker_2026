@@ -149,6 +149,8 @@ export interface Database {
           receipt_path: string | null;
           is_settlement: boolean;
           created_by_user_id: string;
+          deleted_at: string | null;
+          deleted_by_user_id: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -181,6 +183,8 @@ export interface Database {
           split_config: Record<string, number> | null;
           resolved_shares: Record<string, number>;
           receipt_path: string | null;
+          deleted_at: string | null;
+          deleted_by_user_id: string | null;
           updated_at: string;
         }>;
         Relationships: [];

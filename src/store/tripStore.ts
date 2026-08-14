@@ -21,6 +21,8 @@ import {
   insertExpense,
   updateExpenseRow,
   deleteExpenseRow,
+  restoreExpenseRow,
+  fetchDeletedExpensesForTrip,
   insertTripGraph,
   uploadReceipt,
   invalidatePreviousMembersCache,
@@ -32,7 +34,7 @@ const LAST_TRIP_KEY = 'trip-tracker-last-trip-id';
 
 interface SyncQueueItem {
   id: string;
-  type: 'addExpense' | 'updateExpense' | 'deleteExpense';
+  type: 'addExpense' | 'updateExpense' | 'deleteExpense' | 'restoreExpense';
   payload: any;
 }
 
@@ -50,7 +52,7 @@ interface TripStore extends TripState {
   refreshTrips: () => Promise<void>;
   clearStorageError: () => void;
   processQueue: () => Promise<void>;
-  queueSync: (type: 'addExpense' | 'updateExpense' | 'deleteExpense', payload: any) => void;
+  queueSync: (type: 'addExpense' | 'updateExpense' | 'deleteExpense' | 'restoreExpense', payload: any) => void;
   setP2PSyncEnabled: (enabled: boolean) => void;
   updateLastPeerSyncedAt: (timestamp: number) => void;
 
@@ -76,6 +78,11 @@ interface TripStore extends TripState {
   addExpense: (expense: Omit<Expense, 'id' | 'tripId' | 'resolvedShares' | 'createdAt' | 'updatedAt' | 'isSettlement' | 'createdByUserId'>) => Promise<void>;
   updateExpense: (id: string, expense: Omit<Expense, 'id' | 'tripId' | 'resolvedShares' | 'createdAt' | 'updatedAt' | 'isSettlement' | 'createdByUserId'>) => Promise<void>;
   deleteExpense: (id: string) => Promise<void>;
+
+  // Recycle Bin
+  deletedExpenses: Expense[];
+  fetchDeletedExpenses: () => Promise<void>;
+  restoreExpense: (id: string) => Promise<void>;
 
   // Category Actions
   addCategory: (name: string, icon?: string) => Promise<void>;
@@ -201,6 +208,7 @@ export const useTripStore = create<TripStore>((set, get) => {
     members: {},
     groups: {},
     expenses: [],
+    deletedExpenses: [],
     categories: DEFAULT_CATEGORIES,
     initialized: false,
     storageError: null,
@@ -343,8 +351,11 @@ export const useTripStore = create<TripStore>((set, get) => {
               await updateExpenseRow(id, toExpenseInput(expenseData, resolvedShares, { receiptPath }));
             }
           } else if (item.type === 'deleteExpense') {
+            const { id, userId: deletedByUserId } = item.payload;
+            await deleteExpenseRow(id, deletedByUserId || '');
+          } else if (item.type === 'restoreExpense') {
             const { id } = item.payload;
-            await deleteExpenseRow(id);
+            await restoreExpenseRow(id);
           }
         } catch (err) {
           console.error('Offline sync failed for item:', item, err);
@@ -396,11 +407,11 @@ export const useTripStore = create<TripStore>((set, get) => {
 
     selectTrip: async (id) => {
       if (id === null) {
-        set({ activeTripId: null, expenses: [], categories: DEFAULT_CATEGORIES });
+        set({ activeTripId: null, expenses: [], deletedExpenses: [], categories: DEFAULT_CATEGORIES });
         localStorage.removeItem(LAST_TRIP_KEY);
         return;
       }
-      set({ activeTripId: id, expenses: [], categories: DEFAULT_CATEGORIES });
+      set({ activeTripId: id, expenses: [], deletedExpenses: [], categories: DEFAULT_CATEGORIES });
       localStorage.setItem(LAST_TRIP_KEY, id);
       try {
         const [expenses, customCategories] = await Promise.all([fetchExpensesForTrip(id), fetchCategoriesForTrip(id)]);
@@ -718,24 +729,70 @@ export const useTripStore = create<TripStore>((set, get) => {
     deleteExpense: async (id) => {
       const existing = get().expenses.find((e) => e.id === id);
       if (!existing) return;
+      const userId = get().userId;
+      const deletedExisting: Expense = { ...existing, deletedAt: Date.now(), deletedByUserId: userId };
 
-      // Optimistic delete
+      // Optimistic delete — moves into the recycle bin locally, purged
+      // server-side 24h later (see supabase/migrations/0041).
       set((state) => ({
         expenses: state.expenses.filter((e) => e.id !== id),
+        deletedExpenses: [deletedExisting, ...state.deletedExpenses],
         trips: state.trips.map((t) => (t.id === existing.tripId ? { ...t, expenseCount: Math.max(0, (t.expenseCount || 0) - 1), updatedAt: Date.now() } : t)),
         storageError: null,
       }));
 
       if (!navigator.onLine) {
-        get().queueSync('deleteExpense', { id });
+        get().queueSync('deleteExpense', { id, userId });
       } else {
         try {
-          await deleteExpenseRow(id);
+          await deleteExpenseRow(id, userId || '');
         } catch (e) {
           // Revert optimistic delete
           set((state) => ({
             expenses: [...state.expenses, existing].sort((a, b) => b.date.localeCompare(a.date) || b.createdAt - a.createdAt),
+            deletedExpenses: state.deletedExpenses.filter((e) => e.id !== id),
             trips: state.trips.map((t) => (t.id === existing.tripId ? { ...t, expenseCount: (t.expenseCount || 0) + 1, updatedAt: Date.now() } : t)),
+          }));
+          setError(e);
+        }
+      }
+    },
+
+    fetchDeletedExpenses: async () => {
+      const tripId = get().activeTripId;
+      if (!tripId) return;
+      try {
+        const deletedExpenses = await fetchDeletedExpensesForTrip(tripId);
+        set({ deletedExpenses, storageError: null });
+      } catch (e) {
+        setError(e);
+      }
+    },
+
+    restoreExpense: async (id) => {
+      const existing = get().deletedExpenses.find((e) => e.id === id);
+      if (!existing) return;
+      const restored: Expense = { ...existing, deletedAt: null, deletedByUserId: null };
+
+      // Optimistic restore
+      set((state) => ({
+        deletedExpenses: state.deletedExpenses.filter((e) => e.id !== id),
+        expenses: [...state.expenses, restored].sort((a, b) => b.date.localeCompare(a.date) || b.createdAt - a.createdAt),
+        trips: state.trips.map((t) => (t.id === existing.tripId ? { ...t, expenseCount: (t.expenseCount || 0) + 1, updatedAt: Date.now() } : t)),
+        storageError: null,
+      }));
+
+      if (!navigator.onLine) {
+        get().queueSync('restoreExpense', { id });
+      } else {
+        try {
+          await restoreExpenseRow(id);
+        } catch (e) {
+          // Revert optimistic restore
+          set((state) => ({
+            expenses: state.expenses.filter((e) => e.id !== id),
+            deletedExpenses: [existing, ...state.deletedExpenses],
+            trips: state.trips.map((t) => (t.id === existing.tripId ? { ...t, expenseCount: Math.max(0, (t.expenseCount || 0) - 1), updatedAt: Date.now() } : t)),
           }));
           setError(e);
         }

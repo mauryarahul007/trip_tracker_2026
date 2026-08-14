@@ -47,6 +47,8 @@ export interface Expense {
   receiptPath?: string | null; // Supabase Storage object path once uploaded — resolve via a signed URL to display
   isSettlement: boolean;
   createdByUserId: string; // participant edit/delete rights are scoped to this
+  deletedAt?: number | null; // set when soft-deleted into the recycle bin; purged 24h after
+  deletedByUserId?: string | null;
   createdAt: number;
   updatedAt: number;
 }

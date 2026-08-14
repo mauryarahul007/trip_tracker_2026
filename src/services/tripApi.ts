@@ -60,6 +60,8 @@ function mapExpense(row: ExpenseRow): Expense {
     receiptPath: row.receipt_path ?? undefined,
     isSettlement: row.is_settlement,
     createdByUserId: row.created_by_user_id,
+    deletedAt: row.deleted_at ? new Date(row.deleted_at).getTime() : null,
+    deletedByUserId: row.deleted_by_user_id,
     createdAt: new Date(row.created_at).getTime(),
     updatedAt: new Date(row.updated_at).getTime(),
   };
@@ -143,8 +145,20 @@ export async function fetchExpensesForTrip(tripId: string): Promise<Expense[]> {
     .from('expenses')
     .select('*')
     .eq('trip_id', tripId)
+    .is('deleted_at', null)
     .order('date', { ascending: false })
     .order('created_at', { ascending: false });
+  if (error) throw error;
+  return (data ?? []).map(mapExpense);
+}
+
+export async function fetchDeletedExpensesForTrip(tripId: string): Promise<Expense[]> {
+  const { data, error } = await supabase
+    .from('expenses')
+    .select('*')
+    .eq('trip_id', tripId)
+    .not('deleted_at', 'is', null)
+    .order('deleted_at', { ascending: false });
   if (error) throw error;
   return (data ?? []).map(mapExpense);
 }
@@ -377,8 +391,19 @@ export async function getReceiptSignedUrl(path: string): Promise<string> {
   return data.signedUrl;
 }
 
-export async function deleteExpenseRow(id: string): Promise<void> {
-  const { error } = await supabase.from('expenses').delete().eq('id', id);
+export async function deleteExpenseRow(id: string, deletedByUserId: string): Promise<void> {
+  const { error } = await supabase
+    .from('expenses')
+    .update({ deleted_at: new Date().toISOString(), deleted_by_user_id: deletedByUserId })
+    .eq('id', id);
+  if (error) throw error;
+}
+
+export async function restoreExpenseRow(id: string): Promise<void> {
+  const { error } = await supabase
+    .from('expenses')
+    .update({ deleted_at: null, deleted_by_user_id: null })
+    .eq('id', id);
   if (error) throw error;
 }
 

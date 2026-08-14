@@ -146,4 +146,18 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - Archiving is a direct action with no undo toast, unlike delete. Accepted because it's non-destructive and instantly reversible via Restore, so a timed undo adds no safety value.
 
+---
+
+## 14. Ultra-Compact WebRTC SDP Serialization & Header Sync Status UX
+* **Context:** Offline P2P sync QR codes were unreadable by smartphone camera sensors because full browser WebRTC SDP descriptions (~1.8KB+) generated extremely dense Version 30+ QR matrices with microscopic dots. In addition, the header had duplicate sync triggers (a round sync button and a status message pill).
+* **Decision:**
+  - Packed essential WebRTC DataChannel connection parameters (`ice-ufrag`, `ice-pwd`, stripped hex `fingerprint`, `setup`, `candidates`) into an ultra-compact ~180-char structured payload (`TT1:` prefix).
+  - On the receiver side, reconstructed valid standard RFC 8839 SDP from the compact payload.
+  - Enabled native hardware `useBarCodeDetectorIfSupported` and responsive viewport framing in the camera scanner.
+  - Added a manual copy/paste fallback for camera-restricted environments.
+  - Simplified the header UI by removing the redundant round sync button and keeping only the interactive sync status pill (`🟢 Synced 5m ago` / `🟠 Out of sync`).
+* **Trade-offs Accepted:**
+  - Custom parameter extraction assumes standard DataChannel parameters and strips unnecessary audio/video SDP lines, which is completely sufficient for P2P data exchange and guarantees instantaneous camera scanning across all mobile lenses.
+
+
 

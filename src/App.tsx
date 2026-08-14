@@ -21,7 +21,7 @@ import { UndoToasts } from './components/UndoToasts';
 import { NavTabs } from './components/NavTabs';
 import { ShareTripModal } from './components/ShareTripModal';
 import { OfflinePeerSync } from './components/OfflinePeerSync';
-import { IconCalendar, IconChevronLeft, IconShare, IconSync } from './components/Icons';
+import { IconCalendar, IconChevronLeft, IconShare } from './components/Icons';
 import { formatDateRange } from './utils/dateRange';
 import { useScrollLock } from './utils/useScrollLock';
 
@@ -862,21 +862,6 @@ export default function App() {
                 <h2 className="app-logo" style={{ fontSize: '24px', color: '#F2ECDC' }}>{activeTrip?.name}</h2>
               </div>
               <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexShrink: 0 }}>
-                {p2pSyncEnabled && (
-                  <button
-                    type="button"
-                    className="round-sync-btn"
-                    onClick={() => setShowOfflineSyncModal(true)}
-                    title={isOutOfSync ? `Out of sync — click to sync offline with peer` : `Synced with peer (${lastSyncedLabel})`}
-                    aria-label="Offline Peer Sync"
-                  >
-                    <IconSync size={13} />
-                    <span
-                      className={`sync-badge-dot ${isOutOfSync ? 'out-of-sync' : 'synced'}`}
-                      style={{ position: 'absolute', top: '-1px', right: '-1px' }}
-                    />
-                  </button>
-                )}
                 <button
                   className="secondary-btn"
                   style={{ padding: '7px 12px', fontSize: '12px', color: '#F2ECDC', borderColor: 'rgba(242,236,220,0.28)', background: 'rgba(242,236,220,0.06)' }}

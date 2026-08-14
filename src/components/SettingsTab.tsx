@@ -1,9 +1,19 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import type { Category, Expense } from '../types';
-import { IconDownload } from './Icons';
+import { IconDownload, IconArchive } from './Icons';
 import { CategoryIcon } from './CategoryIcon';
 import { OfflinePeerSync } from './OfflinePeerSync';
 import { useTripStore } from '../store/tripStore';
+
+const RECYCLE_BIN_WINDOW_MS = 24 * 60 * 60 * 1000;
+
+function formatTimeLeft(deletedAt: number): string {
+  const msLeft = deletedAt + RECYCLE_BIN_WINDOW_MS - Date.now();
+  if (msLeft <= 0) return 'purging soon';
+  const hoursLeft = Math.floor(msLeft / (60 * 60 * 1000));
+  if (hoursLeft < 1) return '<1h left';
+  return `${hoursLeft}h left`;
+}
 
 const CATEGORY_ICON_PRESETS = ['🍔', '🏨', '✈️', '🎟️', '🛍️', '📦', '🚗', '⛽', '🎬', '🍺', '💊', '🎁', '🧾', '🏥', '🎓', '🐾', '🎵', '🚕'];
 
@@ -28,6 +38,13 @@ export function SettingsTab({
 }: Props) {
   const p2pSyncEnabled = useTripStore((s) => s.p2pSyncEnabled);
   const setP2PSyncEnabled = useTripStore((s) => s.setP2PSyncEnabled);
+  const deletedExpenses = useTripStore((s) => s.deletedExpenses);
+  const fetchDeletedExpenses = useTripStore((s) => s.fetchDeletedExpenses);
+  const restoreExpense = useTripStore((s) => s.restoreExpense);
+
+  useEffect(() => {
+    fetchDeletedExpenses();
+  }, [fetchDeletedExpenses]);
 
   // Local form states
   const [newCategoryName, setNewCategoryName] = useState('');
@@ -170,6 +187,43 @@ export function SettingsTab({
               />
               <button type="submit" className="gradient-btn" style={{ padding: '10px 16px' }}>Add</button>
             </form>
+          </div>
+        )}
+      </div>
+
+      {/* Recycle Bin */}
+      <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '24px' }}>
+        <h4 style={{ fontSize: '16px' }}>Recycle Bin</h4>
+        {deletedExpenses.length === 0 ? (
+          <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: 0 }}>
+            No deleted expenses. Deleted expenses stay here for 24 hours before being permanently removed.
+          </p>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {deletedExpenses.map((exp) => (
+              <div
+                key={exp.id}
+                style={{
+                  display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px',
+                  padding: '8px 12px', background: 'rgba(15,23,42,0.02)', borderRadius: 'var(--border-radius-sm)',
+                }}
+              >
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ fontSize: '13px', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{exp.title}</div>
+                  <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
+                    {exp.currency} {exp.amount.toFixed(2)} &middot; {exp.deletedAt ? formatTimeLeft(exp.deletedAt) : ''}
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  className="secondary-btn"
+                  style={{ padding: '6px 10px', fontSize: '12px', flexShrink: 0 }}
+                  onClick={() => restoreExpense(exp.id)}
+                >
+                  <IconArchive size={13} className="icon-sm" /> Restore
+                </button>
+              </div>
+            ))}
           </div>
         )}
       </div>

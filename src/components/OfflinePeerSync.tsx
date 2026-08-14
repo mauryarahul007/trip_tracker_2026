@@ -44,6 +44,9 @@ export function OfflinePeerSync({ onClose }: Props) {
   const answerCanvasRef = useRef<HTMLCanvasElement>(null);
   const [offerQrData, setOfferQrData] = useState('');
   const [answerQrData, setAnswerQrData] = useState('');
+  const [copied, setCopied] = useState(false);
+  const [showManualInput, setShowManualInput] = useState(false);
+  const [manualCodeInput, setManualCodeInput] = useState('');
 
   // Scanner State
   const [isScanning, setIsScanning] = useState(false);
@@ -52,7 +55,7 @@ export function OfflinePeerSync({ onClose }: Props) {
   // Render QR offer canvas when offer data is generated
   useEffect(() => {
     if (step === 'host_show_offer' && offerCanvasRef.current && offerQrData) {
-      QRCode.toCanvas(offerCanvasRef.current, offerQrData, { width: 220, margin: 1 }, (err) => {
+      QRCode.toCanvas(offerCanvasRef.current, offerQrData, { width: 260, margin: 2, errorCorrectionLevel: 'L' }, (err) => {
         if (err) console.error('Failed to generate offer QR:', err);
       });
     }
@@ -61,7 +64,7 @@ export function OfflinePeerSync({ onClose }: Props) {
   // Render QR answer canvas when answer data is generated
   useEffect(() => {
     if (step === 'join_show_answer' && answerCanvasRef.current && answerQrData) {
-      QRCode.toCanvas(answerCanvasRef.current, answerQrData, { width: 220, margin: 1 }, (err) => {
+      QRCode.toCanvas(answerCanvasRef.current, answerQrData, { width: 260, margin: 2, errorCorrectionLevel: 'L' }, (err) => {
         if (err) console.error('Failed to generate answer QR:', err);
       });
     }
@@ -287,15 +290,29 @@ export function OfflinePeerSync({ onClose }: Props) {
   // --- CAMERA SCANNER MOUNT & LAUNCH ---
   const startCameraScanner = (scanType: 'offer' | 'answer') => {
     setIsScanning(true);
+    setShowManualInput(false);
+    setManualCodeInput('');
     setTimeout(() => {
       try {
         const html5Qr = new Html5Qrcode('qr-reader');
         html5QrCodeRef.current = html5Qr;
 
+        const config = {
+          fps: 15,
+          qrbox: (viewfinderWidth: number, viewfinderHeight: number) => {
+            const minEdge = Math.min(viewfinderWidth, viewfinderHeight);
+            const edgeSize = Math.max(180, Math.floor(minEdge * 0.82));
+            return { width: edgeSize, height: edgeSize };
+          },
+          experimentalFeatures: {
+            useBarCodeDetectorIfSupported: true,
+          },
+        };
+
         html5Qr
           .start(
             { facingMode: 'environment' },
-            { fps: 10, qrbox: 220 },
+            config,
             (decodedText) => {
               if (scanType === 'offer') {
                 handleOfferScanSuccess(decodedText);
@@ -308,7 +325,6 @@ export function OfflinePeerSync({ onClose }: Props) {
           .catch((e) => {
             console.error('Camera initialization failed:', e);
             setIsScanning(false);
-            alert('Could not start camera feed. Please check camera permissions in your browser.');
           });
       } catch (e) {
         console.error('Scanner start error:', e);
@@ -382,55 +398,126 @@ export function OfflinePeerSync({ onClose }: Props) {
 
         {/* STEP: Host Show Offer QR */}
         {step === 'host_show_offer' && (
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px', textAlign: 'center' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '14px', textAlign: 'center' }}>
             <span style={{ fontSize: '13px', fontWeight: 600 }}>Step 1: Participant scans this code</span>
-            <div style={{ background: '#FFF', padding: '12px', borderRadius: '8px', border: '1px solid var(--border-color)', display: 'flex', justifyContent: 'center' }}>
+            <div style={{ background: '#FFF', padding: '10px', borderRadius: '12px', border: '1px solid var(--border-color)', display: 'flex', justifyContent: 'center', boxShadow: '0 4px 12px rgba(0,0,0,0.06)' }}>
               {offerQrData ? (
-                <canvas ref={offerCanvasRef} style={{ width: '220px', height: '220px' }} />
+                <canvas ref={offerCanvasRef} style={{ width: '260px', height: '260px', display: 'block' }} />
               ) : (
-                <div style={{ width: '220px', height: '220px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>
+                <div style={{ width: '260px', height: '260px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', fontSize: '13px' }}>
                   Generating visual handshake...
                 </div>
               )}
             </div>
-            <p style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+            <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: 0 }}>
               Ask the participant to select "Join / Scan Invite" and point their camera at this QR Code.
             </p>
+
             {offerQrData && (
-              <button
-                type="button"
-                className="gradient-btn"
-                style={{ width: '100%', padding: '10px' }}
-                onClick={() => {
-                  setStep('host_scan_answer');
-                  startCameraScanner('answer');
-                }}
-              >
-                Next: Scan Participant's Answer
-              </button>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }}>
+                <button
+                  type="button"
+                  className="secondary-btn"
+                  style={{ width: '100%', padding: '8px 12px', fontSize: '12.5px' }}
+                  onClick={() => {
+                    navigator.clipboard.writeText(offerQrData);
+                    setCopied(true);
+                    setTimeout(() => setCopied(false), 2000);
+                  }}
+                >
+                  {copied ? '✓ Copied to clipboard' : '📋 Copy Connection Code'}
+                </button>
+                <button
+                  type="button"
+                  className="gradient-btn"
+                  style={{ width: '100%', padding: '10px' }}
+                  onClick={() => {
+                    setStep('host_scan_answer');
+                    startCameraScanner('answer');
+                  }}
+                >
+                  Next: Scan Participant's Answer
+                </button>
+              </div>
             )}
           </div>
         )}
 
         {/* STEP: Host Scan Participant's Answer QR */}
         {step === 'host_scan_answer' && (
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px', textAlign: 'center' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '14px', textAlign: 'center' }}>
             <span style={{ fontSize: '13px', fontWeight: 600 }}>Step 2: Scan the Participant's screen</span>
-            <div style={{ width: '100%', aspectRatio: '1.2', background: '#000', borderRadius: '8px', overflow: 'hidden', position: 'relative' }}>
-              <div id="qr-reader" style={{ width: '100%' }} />
-              {!isScanning && (
-                <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '12px' }}>
-                  Initializing camera scanner...
+
+            {!showManualInput ? (
+              <>
+                <div style={{ width: '100%', aspectRatio: '1.1', background: '#000', borderRadius: '8px', overflow: 'hidden', position: 'relative' }}>
+                  <div id="qr-reader" style={{ width: '100%' }} />
+                  {!isScanning && (
+                    <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '12px', padding: '16px', gap: '8px' }}>
+                      <span>Camera feed not active</span>
+                      <button
+                        type="button"
+                        className="gradient-btn"
+                        style={{ padding: '6px 12px', fontSize: '12px' }}
+                        onClick={() => setShowManualInput(true)}
+                      >
+                        Enter Code Manually
+                      </button>
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
-            <p style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
-              Scan the Answer QR code generated on the Participant's screen to complete the peer handshake.
-            </p>
+                <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: 0 }}>
+                  Scan the Answer QR code generated on the Participant's screen.
+                </p>
+                <button
+                  type="button"
+                  className="secondary-btn"
+                  style={{ width: '100%', padding: '8px 12px', fontSize: '12.5px' }}
+                  onClick={() => {
+                    cleanupScanner();
+                    setShowManualInput(true);
+                  }}
+                >
+                  ⌨️ Paste Code Manually
+                </button>
+              </>
+            ) : (
+              <div className="fade-in" style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                <textarea
+                  className="input-field"
+                  rows={4}
+                  placeholder="Paste the participant's connection code (starts with TT1:)..."
+                  value={manualCodeInput}
+                  onChange={(e) => setManualCodeInput(e.target.value)}
+                  style={{ fontFamily: 'monospace', fontSize: '12px' }}
+                />
+                <button
+                  type="button"
+                  className="gradient-btn"
+                  style={{ width: '100%', padding: '10px' }}
+                  disabled={!manualCodeInput.trim()}
+                  onClick={() => handleAnswerScanSuccess(manualCodeInput.trim())}
+                >
+                  Submit Code
+                </button>
+                <button
+                  type="button"
+                  className="secondary-btn"
+                  style={{ width: '100%', padding: '8px' }}
+                  onClick={() => {
+                    setShowManualInput(false);
+                    startCameraScanner('answer');
+                  }}
+                >
+                  Back to Camera Scanner
+                </button>
+              </div>
+            )}
+
             <button
               type="button"
               className="secondary-btn"
-              style={{ width: '100%', padding: '10px' }}
+              style={{ width: '100%', padding: '8px' }}
               onClick={() => {
                 cleanupScanner();
                 startHostFlow();
@@ -443,23 +530,79 @@ export function OfflinePeerSync({ onClose }: Props) {
 
         {/* STEP: Participant Scan Host's Offer QR */}
         {step === 'join_scan_offer' && (
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px', textAlign: 'center' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '14px', textAlign: 'center' }}>
             <span style={{ fontSize: '13px', fontWeight: 600 }}>Step 1: Scan Host's screen invite</span>
-            <div style={{ width: '100%', aspectRatio: '1.2', background: '#000', borderRadius: '8px', overflow: 'hidden', position: 'relative' }}>
-              <div id="qr-reader" style={{ width: '100%' }} />
-              {!isScanning && (
-                <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '12px' }}>
-                  Initializing camera scanner...
+
+            {!showManualInput ? (
+              <>
+                <div style={{ width: '100%', aspectRatio: '1.1', background: '#000', borderRadius: '8px', overflow: 'hidden', position: 'relative' }}>
+                  <div id="qr-reader" style={{ width: '100%' }} />
+                  {!isScanning && (
+                    <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '12px', padding: '16px', gap: '8px' }}>
+                      <span>Camera feed not active</span>
+                      <button
+                        type="button"
+                        className="gradient-btn"
+                        style={{ padding: '6px 12px', fontSize: '12px' }}
+                        onClick={() => setShowManualInput(true)}
+                      >
+                        Enter Code Manually
+                      </button>
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
-            <p style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
-              Align your camera with the QR code displayed on the Host's screen.
-            </p>
+                <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: 0 }}>
+                  Align your camera with the QR code displayed on the Host's screen.
+                </p>
+                <button
+                  type="button"
+                  className="secondary-btn"
+                  style={{ width: '100%', padding: '8px 12px', fontSize: '12.5px' }}
+                  onClick={() => {
+                    cleanupScanner();
+                    setShowManualInput(true);
+                  }}
+                >
+                  ⌨️ Paste Code Manually
+                </button>
+              </>
+            ) : (
+              <div className="fade-in" style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                <textarea
+                  className="input-field"
+                  rows={4}
+                  placeholder="Paste the host's invite code (starts with TT1:)..."
+                  value={manualCodeInput}
+                  onChange={(e) => setManualCodeInput(e.target.value)}
+                  style={{ fontFamily: 'monospace', fontSize: '12px' }}
+                />
+                <button
+                  type="button"
+                  className="gradient-btn"
+                  style={{ width: '100%', padding: '10px' }}
+                  disabled={!manualCodeInput.trim()}
+                  onClick={() => handleOfferScanSuccess(manualCodeInput.trim())}
+                >
+                  Submit Code
+                </button>
+                <button
+                  type="button"
+                  className="secondary-btn"
+                  style={{ width: '100%', padding: '8px' }}
+                  onClick={() => {
+                    setShowManualInput(false);
+                    startCameraScanner('offer');
+                  }}
+                >
+                  Back to Camera Scanner
+                </button>
+              </div>
+            )}
+
             <button
               type="button"
               className="secondary-btn"
-              style={{ width: '100%', padding: '10px' }}
+              style={{ width: '100%', padding: '8px' }}
               onClick={() => {
                 cleanupScanner();
                 setStep('choose_role');
@@ -472,20 +615,34 @@ export function OfflinePeerSync({ onClose }: Props) {
 
         {/* STEP: Participant Display Answer QR */}
         {step === 'join_show_answer' && (
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px', textAlign: 'center' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '14px', textAlign: 'center' }}>
             <span style={{ fontSize: '13px', fontWeight: 600 }}>Step 2: Host scans your answer</span>
-            <div style={{ background: '#FFF', padding: '12px', borderRadius: '8px', border: '1px solid var(--border-color)', display: 'flex', justifyContent: 'center' }}>
+            <div style={{ background: '#FFF', padding: '10px', borderRadius: '12px', border: '1px solid var(--border-color)', display: 'flex', justifyContent: 'center', boxShadow: '0 4px 12px rgba(0,0,0,0.06)' }}>
               {answerQrData ? (
-                <canvas ref={answerCanvasRef} style={{ width: '220px', height: '220px' }} />
+                <canvas ref={answerCanvasRef} style={{ width: '260px', height: '260px', display: 'block' }} />
               ) : (
-                <div style={{ width: '220px', height: '220px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>
+                <div style={{ width: '260px', height: '260px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', fontSize: '13px' }}>
                   Processing invite offer...
                 </div>
               )}
             </div>
-            <p style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
-              Show this QR code to the Host and ask them to click "Next: Scan Participant's Answer" and scan this code.
+            <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: 0 }}>
+              Show this QR code to the Host and ask them to scan it.
             </p>
+            {answerQrData && (
+              <button
+                type="button"
+                className="secondary-btn"
+                style={{ width: '100%', padding: '8px 12px', fontSize: '12.5px' }}
+                onClick={() => {
+                  navigator.clipboard.writeText(answerQrData);
+                  setCopied(true);
+                  setTimeout(() => setCopied(false), 2000);
+                }}
+              >
+                {copied ? '✓ Copied to clipboard' : '📋 Copy Connection Code'}
+              </button>
+            )}
           </div>
         )}
 
