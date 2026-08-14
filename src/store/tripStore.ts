@@ -89,6 +89,8 @@ interface TripStore extends TripState {
   // Category Actions
   addCategory: (name: string, icon?: string) => Promise<void>;
   deleteCategory: (id: string) => Promise<void>;
+  updateCategoryKeywords: (categoryId: string, keywords: string[]) => Promise<void>;
+  resetCategoryKeywords: (categoryId: string) => Promise<void>;
 
   // Database Backup Actions
   exportDatabase: () => string;
@@ -924,6 +926,26 @@ export const useTripStore = create<TripStore>()(
       } catch (e) {
         setError(e);
       }
+    },
+
+    updateCategoryKeywords: async (categoryId, keywords) => {
+      set((state) => ({
+        categories: state.categories.map((c) =>
+          c.id === categoryId ? { ...c, keywords: keywords.map((k) => k.toLowerCase().trim()).filter(Boolean) } : c
+        ),
+        lastModifiedAt: Date.now(),
+        storageError: null,
+      }));
+    },
+
+    resetCategoryKeywords: async (categoryId) => {
+      set((state) => ({
+        categories: state.categories.map((c) =>
+          c.id === categoryId ? { ...c, keywords: undefined } : c
+        ),
+        lastModifiedAt: Date.now(),
+        storageError: null,
+      }));
     },
 
     exportDatabase: () => {

@@ -218,4 +218,27 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - Multi-level sub-screen navigation adds simple internal view state machine (`activeSubScreen`), but drastically improves mobile usability and eliminates long scroll fatigue.
 
+---
+
+## 19. Expand Auto-Tagging: 200+ Items & Brands with Editable Keyword Rules
+* **Context:** Previously, auto-categorization only matched ~15 basic generic words hardcoded in a static map, missing everyday travel items (milk, maggi, petrol, toll, fastag, beer) and popular travel/dining brands (Swiggy, Zomato, Starbucks, McDonald's, Indigo, Airbnb). Users also could not customize or add auto-tagging keywords for their specific trips or custom categories.
+* **Decision:** Expanded auto-tagging into a curated dataset of 200+ items and global/regional brands across 6 primary travel categories, structured into hardcoded core vs. editable keyword lists, with prioritized **Brand > Item > Category Name** matching.
+* **Pattern/Implementation:**
+  - **Dataset (`categoryKeywords.ts`)**:
+    - *Top 50 Hardcoded Core*: High-frequency brands (Swiggy, Zomato, Starbucks, McDonald's, Uber, Ola, Indigo, Fastag, Airbnb, Zara, etc.) and essential items (milk, maggi, bread, beer, petrol, diesel, toll, hotel, flight, etc.).
+    - *Extended 150+ List*: Mapped across Food, Travel, Stay, Activities, Shopping, and Misc.
+  - **Multi-Tier Matching Engine (`categoryHelper.ts`)**:
+    - Priority 1: Brand Match (word-boundary regex).
+    - Priority 2: Item Match (top 50 items, extended items & category keywords).
+    - Priority 3: Custom Category Name Match.
+    - Priority 4: Default Category Name Match.
+  - **Settings UI (`SettingsView.tsx`)**:
+    - Each category in the Categories sub-screen can be expanded to view its active keyword tags.
+    - Users can add new keyword tags with one tap, remove existing tags, or reset back to default keywords.
+    - Custom keywords are stored in `Category.keywords` and persisted in `useTripStore`.
+* **Trade-offs Accepted:**
+  - Matching runs on every keystroke in `ExpenseForm.tsx` using pre-compiled regex on lightweight string sets, executing in <1ms without impacting typing responsiveness.
+
+
+
 

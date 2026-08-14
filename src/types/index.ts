@@ -58,6 +58,7 @@ export interface Category {
   name: string;
   icon?: string;
   isCustom: boolean;
+  keywords?: string[]; // auto-tagging keywords & brand names
 }
 
 export interface TripState {

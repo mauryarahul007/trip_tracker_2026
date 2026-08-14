@@ -1,19 +1,15 @@
 import type { Category } from '../types';
+import {
+  TOP_50_BRANDS,
+  TOP_50_ITEMS,
+  DEFAULT_EXTENDED_KEYWORDS,
+} from './categoryKeywords';
 
 export interface ParsedCategoryIcon {
   color: string;
   iconName: string;
   isEmoji: boolean;
 }
-
-export const KEYWORD_MAP: Record<string, string[]> = {
-  'cat-food': ['mcdonald', 'starbucks', 'kfc', 'burger', 'pizza', 'food', 'lunch', 'dinner', 'breakfast', 'restaurant', 'cafe', 'coffee', 'grocery', 'supermarket', 'subway', 'bar', 'drink', 'sushi', 'eats', 'swiggy', 'zomato', 'dining'],
-  'cat-stay': ['hotel', 'stay', 'airbnb', 'hostel', 'resort', 'booking', 'motel', 'villa', 'lodge', 'accommodation', 'homestay'],
-  'cat-travel': ['uber', 'taxi', 'flight', 'ticket', 'train', 'bus', 'metro', 'cab', 'airline', 'fuel', 'petrol', 'gas', 'toll', 'parking', 'transport', 'commute', 'rental', 'car', 'travel', 'ola', 'grab', 'bolt', 'lyft', 'aviation', 'diesel'],
-  'cat-activities': ['museum', 'tour', 'activity', 'cinema', 'movie', 'sightseeing', 'safari', 'disney', 'entry', 'concert', 'show', 'theme park', 'park', 'attraction', 'guide', 'diving', 'trek'],
-  'cat-shopping': ['shopping', 'mall', 'store', 'gift', 'souvenir', 'clothes', 'zara', 'h&m', 'amazon', 'target', 'walmart', 'ikea', 'boots', 'market', 'outlet', 'fashion'],
-  'cat-misc': ['misc', 'other', 'fee', 'charge', 'tips', 'cash', 'atm', 'laundry', 'sim', 'data', 'insurance', 'medicine', 'pharmacy', 'hospital', 'telecom', 'topup']
-};
 
 export function parseCategoryIcon(iconString: string | undefined): ParsedCategoryIcon {
   if (!iconString) {
@@ -25,7 +21,7 @@ export function parseCategoryIcon(iconString: string | undefined): ParsedCategor
     return {
       color: color || 'var(--primary-accent)',
       iconName: iconName || 'Compass',
-      isEmoji: false
+      isEmoji: false,
     };
   }
 
@@ -34,14 +30,14 @@ export function parseCategoryIcon(iconString: string | undefined): ParsedCategor
     return {
       color: 'var(--border-color)',
       iconName: iconString,
-      isEmoji: true
+      isEmoji: true,
     };
   }
 
   return {
     color: 'var(--primary-accent)',
     iconName: iconString,
-    isEmoji: false
+    isEmoji: false,
   };
 }
 
@@ -49,45 +45,149 @@ export function serializeCategoryIcon(color: string, iconName: string): string {
   return `${color}:${iconName}`;
 }
 
-export function autoSuggestCategory(titleText: string, categories: Category[]): string | null {
-  const cleanText = titleText.toLowerCase().trim();
-  if (!cleanText) return null;
-
-  // 1. Try matching custom category names first (highest priority)
-  // This ensures custom categories like "Fuel & Oil" match "Fuel" instead of hitting "car" in travel keywords
-  for (const c of categories) {
-    if (c.isCustom) {
-      const cleanName = c.name.toLowerCase().replace(/&/g, ' ').trim();
-      const words = cleanName.split(/\s+/).filter((w) => w.length > 2);
-      for (const word of words) {
-        const regex = new RegExp(`\\b${word}\\b`, 'i');
-        if (regex.test(cleanText)) {
-          return c.id;
-        }
-      }
-    }
+/**
+ * Returns the effective list of keywords for a given category.
+ * If the category has custom keywords configured, returns those;
+ * otherwise falls back to default extended keywords dataset.
+ */
+export function getCategoryKeywords(category: Category): { brands: string[]; items: string[] } {
+  if (category.keywords && category.keywords.length > 0) {
+    // If the category has custom keyword list stored
+    return {
+      brands: [],
+      items: category.keywords,
+    };
   }
 
-  // 2. Try keyword matching
-  for (const [catId, keywords] of Object.entries(KEYWORD_MAP)) {
-    if (categories.some((c) => c.id === catId)) {
-      for (const kw of keywords) {
-        const regex = new RegExp(`\\b${kw}\\b`, 'i');
-        if (regex.test(cleanText)) {
+  const defaultDataset = DEFAULT_EXTENDED_KEYWORDS[category.id];
+  if (defaultDataset) {
+    return defaultDataset;
+  }
+
+  return {
+    brands: [],
+    items: [],
+  };
+}
+
+/**
+ * Escapes regex special characters in a keyword string.
+ */
+function escapeRegExp(string: string): string {
+  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+/**
+ * Helper to test if a keyword matches whole word boundaries in a text string.
+ */
+function keywordMatchesText(keyword: string, text: string): boolean {
+  if (!keyword || !text) return false;
+  const escaped = escapeRegExp(keyword.trim());
+  // Word boundary regex that handles both alphanumeric and punctuation-trimmed words
+  const regex = new RegExp(`(^|\\s|[.,!?;:()/'"\\[\\]])${escaped}($|\\s|[.,!?;:()/'"\\[\\]])`, 'i');
+  return regex.test(text);
+}
+
+/**
+ * Smart Title-to-Category Auto-Tagging
+ *
+ * Matching Priority Order:
+ * 1. Brand Match (Top 50 Brands & Category Brands)
+ * 2. Item Match (Top 50 Items & Category Items / Custom Keywords)
+ * 3. Custom Category Name Match
+ * 4. Default Category Name Match
+ */
+export function autoSuggestCategory(titleText: string, categories: Category[]): string | null {
+  const cleanText = titleText.trim();
+  if (!cleanText) return null;
+
+  const activeCategoryIds = new Set(categories.map((c) => c.id));
+
+  // -------------------------------------------------------------------------
+  // Priority 1: Brand Match (Top 50 Brands & Extended Category Brands)
+  // -------------------------------------------------------------------------
+  // 1a. Check Top 50 Hardcoded Core Brands
+  for (const [catId, brands] of Object.entries(TOP_50_BRANDS)) {
+    if (activeCategoryIds.has(catId)) {
+      for (const brand of brands) {
+        if (keywordMatchesText(brand, cleanText)) {
           return catId;
         }
       }
     }
   }
 
-  // 3. Try matching default category names
+  // 1b. Check Extended Brands
+  for (const [catId, dataset] of Object.entries(DEFAULT_EXTENDED_KEYWORDS)) {
+    if (activeCategoryIds.has(catId)) {
+      for (const brand of dataset.brands) {
+        if (keywordMatchesText(brand, cleanText)) {
+          return catId;
+        }
+      }
+    }
+  }
+
+  // -------------------------------------------------------------------------
+  // Priority 2: Item Match (Top 50 Items, Extended Items & Category Keywords)
+  // -------------------------------------------------------------------------
+  // 2a. Check custom category-specific keywords first if defined
+  for (const cat of categories) {
+    if (cat.keywords && cat.keywords.length > 0) {
+      for (const kw of cat.keywords) {
+        if (keywordMatchesText(kw, cleanText)) {
+          return cat.id;
+        }
+      }
+    }
+  }
+
+  // 2b. Check Top 50 Hardcoded Core Items
+  for (const [catId, items] of Object.entries(TOP_50_ITEMS)) {
+    if (activeCategoryIds.has(catId)) {
+      for (const item of items) {
+        if (keywordMatchesText(item, cleanText)) {
+          return catId;
+        }
+      }
+    }
+  }
+
+  // 2c. Check Extended Items
+  for (const [catId, dataset] of Object.entries(DEFAULT_EXTENDED_KEYWORDS)) {
+    if (activeCategoryIds.has(catId)) {
+      for (const item of dataset.items) {
+        if (keywordMatchesText(item, cleanText)) {
+          return catId;
+        }
+      }
+    }
+  }
+
+  // -------------------------------------------------------------------------
+  // Priority 3: Custom Category Name Match
+  // -------------------------------------------------------------------------
+  for (const c of categories) {
+    if (c.isCustom) {
+      const cleanName = c.name.toLowerCase().replace(/&/g, ' ').trim();
+      const words = cleanName.split(/\s+/).filter((w) => w.length > 2);
+      for (const word of words) {
+        if (keywordMatchesText(word, cleanText)) {
+          return c.id;
+        }
+      }
+    }
+  }
+
+  // -------------------------------------------------------------------------
+  // Priority 4: Default Category Name Match
+  // -------------------------------------------------------------------------
   for (const c of categories) {
     if (!c.isCustom) {
       const cleanName = c.name.toLowerCase().replace(/&/g, ' ').trim();
       const words = cleanName.split(/\s+/).filter((w) => w.length > 2);
       for (const word of words) {
-        const regex = new RegExp(`\\b${word}\\b`, 'i');
-        if (regex.test(cleanText)) {
+        if (keywordMatchesText(word, cleanText)) {
           return c.id;
         }
       }

@@ -21,6 +21,7 @@ import {
 import { CategoryIcon } from './CategoryIcon';
 import { useTripStore } from '../store/tripStore';
 import { formatDateRange } from '../utils/dateRange';
+import { getCategoryKeywords } from '../utils/categoryHelper';
 
 export type ThemePref = 'light' | 'dark' | 'system';
 
@@ -110,6 +111,12 @@ export function SettingsView({
   const restoreExpense = useTripStore((s) => s.restoreExpense);
   const permanentlyDeleteExpense = useTripStore((s) => s.permanentlyDeleteExpense);
   const emptyRecycleBin = useTripStore((s) => s.emptyRecycleBin);
+  const updateCategoryKeywords = useTripStore((s) => s.updateCategoryKeywords);
+  const resetCategoryKeywords = useTripStore((s) => s.resetCategoryKeywords);
+
+  // Category keyword states
+  const [expandedCategoryId, setExpandedCategoryId] = useState<string | null>(null);
+  const [newKeywordInput, setNewKeywordInput] = useState('');
 
   // Connectivity and disk storage
   const [isOnline, setIsOnline] = useState(navigator.onLine);
@@ -208,36 +215,153 @@ export function SettingsView({
         </div>
 
         <div className="settings-group">
-          <div className="settings-group-card" style={{ padding: '8px 0' }}>
-            {categories.map((cat) => (
-              <div
-                key={cat.id}
-                style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  padding: '10px 16px',
-                  borderBottom: '1px solid var(--border-color-subtle, rgba(15,23,42,0.06))',
-                }}
-              >
-                <span style={{ fontSize: '14px', display: 'flex', alignItems: 'center', gap: '10px', color: 'var(--primary-accent)' }}>
-                  <CategoryIcon categoryId={cat.id} fallbackEmoji={cat.icon} size={18} />
-                  <span style={{ color: 'var(--text-primary)', fontWeight: 500 }}>{cat.name}</span>
-                </span>
-                {cat.isCustom && isAdmin ? (
-                  <button
-                    type="button"
-                    className="secondary-btn"
-                    style={{ padding: '3px 8px', fontSize: '11.5px', color: 'var(--color-danger)', borderColor: 'rgba(225,29,72,0.18)' }}
-                    onClick={() => handleDeleteCategoryTrigger(cat)}
+          <div style={{ padding: '0 8px 6px', fontSize: '12.5px', color: 'var(--text-secondary)' }}>
+            Tap any category to view and edit its smart auto-tagging keywords &amp; brands.
+          </div>
+          <div className="settings-group-card" style={{ padding: '4px 0' }}>
+            {categories.map((cat) => {
+              const dataset = getCategoryKeywords(cat);
+              const allKeywords = [...dataset.brands, ...dataset.items];
+              const isExpanded = expandedCategoryId === cat.id;
+
+              return (
+                <div
+                  key={cat.id}
+                  style={{
+                    borderBottom: '1px solid var(--border-color-subtle, rgba(15,23,42,0.06))',
+                  }}
+                >
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      padding: '12px 16px',
+                      cursor: 'pointer',
+                      background: isExpanded ? 'rgba(31,110,104,0.04)' : 'transparent',
+                      transition: 'background 0.15s ease',
+                    }}
+                    onClick={() => setExpandedCategoryId(isExpanded ? null : cat.id)}
                   >
-                    Delete
-                  </button>
-                ) : (
-                  <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{cat.isCustom ? 'Custom' : 'Built-in'}</span>
-                )}
-              </div>
-            ))}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0, flex: 1 }}>
+                      <CategoryIcon categoryId={cat.id} fallbackEmoji={cat.icon} size={18} />
+                      <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+                        <span style={{ color: 'var(--text-primary)', fontWeight: 500, fontSize: '14.5px' }}>{cat.name}</span>
+                        <span style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>
+                          {allKeywords.length} auto-tag keywords {cat.keywords ? '• Custom' : ''}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }} onClick={(e) => e.stopPropagation()}>
+                      <button
+                        type="button"
+                        className="secondary-btn"
+                        style={{ padding: '4px 10px', fontSize: '11.5px' }}
+                        onClick={() => setExpandedCategoryId(isExpanded ? null : cat.id)}
+                      >
+                        {isExpanded ? 'Close Tags' : 'Edit Tags'}
+                      </button>
+                      {cat.isCustom && isAdmin && (
+                        <button
+                          type="button"
+                          className="secondary-btn"
+                          style={{ padding: '4px 8px', fontSize: '11.5px', color: 'var(--color-danger)', borderColor: 'rgba(225,29,72,0.18)' }}
+                          onClick={() => handleDeleteCategoryTrigger(cat)}
+                        >
+                          Delete
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Expanded Keyword Chips & Add form */}
+                  {isExpanded && (
+                    <div className="fade-in" style={{ padding: '12px 16px 16px 16px', background: 'rgba(15,23,42,0.02)', borderTop: '1px dashed var(--border-color)' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                        <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>
+                          Auto-tagging Keywords &amp; Brands ({allKeywords.length}):
+                        </span>
+                        {cat.keywords && (
+                          <button
+                            type="button"
+                            style={{ background: 'transparent', border: 'none', color: 'var(--primary-accent)', fontSize: '11.5px', fontWeight: 600, cursor: 'pointer', padding: '2px 4px' }}
+                            onClick={() => resetCategoryKeywords(cat.id)}
+                          >
+                            Reset to Defaults
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Tag Chips Tray */}
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', maxHeight: '160px', overflowY: 'auto', padding: '6px 2px', marginBottom: '10px' }}>
+                        {allKeywords.map((kw) => (
+                          <span
+                            key={kw}
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '4px',
+                              padding: '3px 8px',
+                              borderRadius: '12px',
+                              fontSize: '11.5px',
+                              background: 'var(--bg-surface)',
+                              border: '1px solid var(--border-color)',
+                              color: 'var(--text-primary)',
+                            }}
+                          >
+                            {kw}
+                            <button
+                              type="button"
+                              style={{
+                                background: 'transparent',
+                                border: 'none',
+                                color: 'var(--text-muted)',
+                                cursor: 'pointer',
+                                padding: '0 2px',
+                                fontSize: '12px',
+                                lineHeight: 1,
+                              }}
+                              onClick={() => {
+                                const updated = allKeywords.filter((k) => k !== kw);
+                                updateCategoryKeywords(cat.id, updated);
+                              }}
+                              title={`Remove "${kw}"`}
+                            >
+                              &times;
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+
+                      {/* Add new keyword form */}
+                      <form
+                        onSubmit={(e) => {
+                          e.preventDefault();
+                          const val = newKeywordInput.trim().toLowerCase();
+                          if (!val || allKeywords.includes(val)) return;
+                          updateCategoryKeywords(cat.id, [...allKeywords, val]);
+                          setNewKeywordInput('');
+                        }}
+                        style={{ display: 'flex', gap: '8px' }}
+                      >
+                        <input
+                          type="text"
+                          className="input-field"
+                          placeholder="Add new keyword or brand (e.g. dosa, uber, petrol)..."
+                          style={{ flex: 1, fontSize: '12px', height: '34px' }}
+                          value={newKeywordInput}
+                          onChange={(e) => setNewKeywordInput(e.target.value)}
+                        />
+                        <button type="submit" className="gradient-btn" style={{ padding: '0 14px', fontSize: '12px', height: '34px' }}>
+                          Add Tag
+                        </button>
+                      </form>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
 
