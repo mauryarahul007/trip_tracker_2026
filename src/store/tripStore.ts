@@ -7,6 +7,7 @@ import {
   fetchCategoriesForTrip,
   insertTrip,
   updateTripRow,
+  archiveTripRow,
   deleteTripRow,
   deleteAllMyTrips,
   insertMember,
@@ -57,6 +58,7 @@ interface TripStore extends TripState {
   createTrip: (name: string, startDate: string, endDate: string, baseCurrency: string) => Promise<void>;
   updateTrip: (id: string, name: string, startDate: string, endDate: string) => Promise<void>;
   selectTrip: (id: string | null) => Promise<void>;
+  archiveTrip: (id: string, archived: boolean) => Promise<void>;
   deleteTrip: (id: string) => Promise<void>;
 
   // Member Actions
@@ -405,6 +407,25 @@ export const useTripStore = create<TripStore>((set, get) => {
         set({ expenses, categories: [...DEFAULT_CATEGORIES, ...customCategories], storageError: null });
       } catch (e) {
         setError(e);
+      }
+    },
+
+    archiveTrip: async (id, archived) => {
+      try {
+        await archiveTripRow(id, archived);
+      } catch (e) {
+        setError(e);
+        return;
+      }
+
+      set((state) => ({
+        trips: state.trips.map((t) => (t.id === id ? { ...t, archived, updatedAt: Date.now() } : t)),
+        storageError: null,
+      }));
+
+      if (archived && get().activeTripId === id) {
+        const next = get().trips.find((t) => t.id !== id && !t.archived);
+        await get().selectTrip(next ? next.id : null);
       }
     },
 

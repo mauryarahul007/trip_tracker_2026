@@ -133,8 +133,17 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - Locking document-level scrolling requires every screen/view to explicitly manage its own inner scroll container. This trade-off was accepted because it guarantees native app parity, eliminates double scrollbars, and preserves per-tab scroll positions.
 
+---
 
-
-
+## 13. Trip Archival
+* **Context:** Trips with no further activity (past trips, cancelled plans) stayed permanently mixed into the main "Your Trips" grid alongside active trips, with no way to tuck them away short of permanent deletion.
+* **Decision:** Add a soft-delete `archived` boolean column on `trips`. Archived trips are hidden from the home screen grid and surfaced instead under **Settings → Archived Trips**, with Restore and permanent Delete actions.
+* **Pattern/Implementation:**
+  - New migration `0040_add_trip_archived.sql` adds `archived boolean not null default false`.
+  - `archiveTrip(id, archived)` store action calls `archiveTripRow` and, if the active trip is archived, deselects it and falls back to the next non-archived trip.
+  - `TripsListScreen` filters `trips` down to non-archived for the grid and gains an Archive button per card.
+  - `GlobalSettingsModal` (shared by both the home-screen gear icon and the in-trip Settings tab) gains an "Archived Trips" panel listing archived trips with Restore/Delete.
+* **Trade-offs Accepted:**
+  - Archiving is a direct action with no undo toast, unlike delete. Accepted because it's non-destructive and instantly reversible via Restore, so a timed undo adds no safety value.
 
 

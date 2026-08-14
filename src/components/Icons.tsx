@@ -77,6 +77,16 @@ export function IconTrash({ size = 20, className = 'icon' }: IconProps) {
   );
 }
 
+export function IconArchive({ size = 20, className = 'icon' }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" className={className} {...base}>
+      <rect x="3" y="4" width="18" height="4" rx="1" />
+      <path d="M5 8v11a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8" />
+      <line x1="10" y1="12.5" x2="14" y2="12.5" />
+    </svg>
+  );
+}
+
 export function IconSearch({ size = 20, className = 'icon' }: IconProps) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" className={className} {...base}>

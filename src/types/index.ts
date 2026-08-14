@@ -11,6 +11,7 @@ export interface Trip {
   createdAt: number;
   updatedAt: number;
   expenseCount?: number;
+  archived?: boolean;
 }
 
 export interface Member {

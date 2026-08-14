@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { Trip, Member } from '../types';
-import { IconTrash, IconEdit, IconSettings } from './Icons';
+import { IconTrash, IconEdit, IconSettings, IconArchive } from './Icons';
 import { DateRangePicker } from './DateRangePicker';
 import { formatTripStamp } from '../utils/dateRange';
 import { initial } from '../utils/initials';
@@ -25,6 +25,7 @@ type Props = {
   onStartEditTrip: (trip: Trip) => void;
   onSelectTrip: (id: string) => void;
   onDeleteTrip: (trip: Trip) => void;
+  onArchiveTrip: (trip: Trip) => void;
   onOpenSettings: () => void;
 };
 
@@ -47,6 +48,7 @@ export function TripsListScreen({
   onStartEditTrip,
   onSelectTrip,
   onDeleteTrip,
+  onArchiveTrip,
   onOpenSettings,
 }: Props) {
   const navigate = useNavigate();
@@ -231,6 +233,18 @@ export function TripsListScreen({
                         }}
                       >
                         <IconEdit size={15} className="icon-sm" />
+                      </button>
+                      <button
+                        className="secondary-btn"
+                        style={{ padding: '8px' }}
+                        aria-label="Archive trip"
+                        title="Archive trip"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onArchiveTrip(trip);
+                        }}
+                      >
+                        <IconArchive size={15} className="icon-sm" />
                       </button>
                       <button
                         className="secondary-btn"

@@ -19,6 +19,7 @@ function mapTrip(row: TripRow, memberIds: string[], groupIds: string[]): Trip {
     joinCode: row.join_code,
     memberIds,
     groupIds,
+    archived: row.archived,
     createdAt: new Date(row.created_at).getTime(),
     updatedAt: new Date(row.updated_at).getTime(),
   };
@@ -178,6 +179,14 @@ export async function updateTripRow(id: string, patch: { name: string; startDate
   const { error } = await supabase
     .from('trips')
     .update({ name: patch.name, start_date: patch.startDate, end_date: patch.endDate, updated_at: new Date().toISOString() })
+    .eq('id', id);
+  if (error) throw error;
+}
+
+export async function archiveTripRow(id: string, archived: boolean): Promise<void> {
+  const { error } = await supabase
+    .from('trips')
+    .update({ archived, updated_at: new Date().toISOString() })
     .eq('id', id);
   if (error) throw error;
 }

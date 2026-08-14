@@ -1,6 +1,8 @@
 import React from 'react';
-import { IconDownload, IconUpload, IconCheckCircle, IconAlertCircle, IconClose } from './Icons';
+import type { Trip } from '../types';
+import { IconDownload, IconUpload, IconCheckCircle, IconAlertCircle, IconClose, IconArchive, IconTrash } from './Icons';
 import { useTripStore } from '../store/tripStore';
+import { formatDateRange } from '../utils/dateRange';
 
 type ThemePref = 'light' | 'dark' | 'system';
 
@@ -19,6 +21,10 @@ type Props = {
   onImport: () => void;
   onClearDatabase: () => void;
   onLoadDemoTrip: () => void;
+
+  archivedTrips: Trip[];
+  onRestoreTrip: (trip: Trip) => void;
+  onDeleteTrip: (trip: Trip) => void;
 
   userEmail: string | null;
   onSignOut: () => void;
@@ -39,6 +45,9 @@ export function GlobalSettingsModal({
   onImport,
   onClearDatabase,
   onLoadDemoTrip,
+  archivedTrips,
+  onRestoreTrip,
+  onDeleteTrip,
   userEmail,
   onSignOut,
   pwaInstallable = false,
@@ -230,6 +239,53 @@ export function GlobalSettingsModal({
             </button>
           </div>
         )}
+
+        {/* Archived Trips */}
+        <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <h4 style={{ fontSize: '15px', fontWeight: 600 }}>Archived Trips</h4>
+          {archivedTrips.length === 0 ? (
+            <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: 0 }}>
+              No archived trips. Archive a trip from the trips list to tuck it away without deleting it.
+            </p>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {archivedTrips.map((trip) => (
+                <div
+                  key={trip.id}
+                  style={{
+                    display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px',
+                    padding: '8px 12px', background: 'rgba(15,23,42,0.02)', borderRadius: 'var(--border-radius-sm)',
+                  }}
+                >
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontSize: '13px', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{trip.name}</div>
+                    <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>{formatDateRange(trip.startDate, trip.endDate)}</div>
+                  </div>
+                  <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
+                    <button
+                      type="button"
+                      className="secondary-btn"
+                      style={{ padding: '6px 10px', fontSize: '12px' }}
+                      onClick={() => onRestoreTrip(trip)}
+                    >
+                      <IconArchive size={13} className="icon-sm" /> Restore
+                    </button>
+                    <button
+                      type="button"
+                      className="secondary-btn"
+                      style={{ padding: '6px', color: 'var(--color-danger)', borderColor: 'rgba(184,69,46,0.2)' }}
+                      aria-label="Delete trip permanently"
+                      title="Delete trip permanently"
+                      onClick={() => onDeleteTrip(trip)}
+                    >
+                      <IconTrash size={13} className="icon-sm" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
 
         {/* Backups */}
         <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>

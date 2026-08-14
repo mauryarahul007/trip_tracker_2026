@@ -43,6 +43,7 @@ export default function App() {
     createTrip,
     updateTrip,
     selectTrip,
+    archiveTrip,
     deleteTrip,
     addMember,
     toggleArchiveMember,
@@ -173,7 +174,11 @@ export default function App() {
     initialize();
   }, [initialize]);
 
-  const visibleTrips = useMemo(() => trips.filter((t) => t.id !== pendingDeleteTrip?.id), [trips, pendingDeleteTrip]);
+  const visibleTrips = useMemo(
+    () => trips.filter((t) => t.id !== pendingDeleteTrip?.id && !t.archived),
+    [trips, pendingDeleteTrip]
+  );
+  const archivedTrips = useMemo(() => trips.filter((t) => t.archived), [trips]);
   const activeTrip = useMemo(() => trips.find((t) => t.id === activeTripId), [trips, activeTripId]);
   const editingExpense = useMemo(() => expenses.find((e) => e.id === editingExpenseId) || null, [expenses, editingExpenseId]);
 
@@ -611,6 +616,14 @@ export default function App() {
     setPendingDeleteTrip(null);
   };
 
+  const handleArchiveTrip = (trip: Trip) => {
+    archiveTrip(trip.id, true);
+  };
+
+  const handleRestoreTrip = (trip: Trip) => {
+    archiveTrip(trip.id, false);
+  };
+
   // Undo-delete: stage the group, start a 5-second timer
   const handleDeleteGroup = (group: Group) => {
     if (groupUndoTimer) clearTimeout(groupUndoTimer);
@@ -833,6 +846,7 @@ export default function App() {
           onStartEditTrip={handleStartEditTrip}
           onSelectTrip={(id) => selectTrip(id)}
           onDeleteTrip={handleDeleteTrip}
+          onArchiveTrip={handleArchiveTrip}
           onOpenSettings={() => setShowGlobalSettings(true)}
         />
       ) : (
@@ -1063,6 +1077,9 @@ export default function App() {
           onImport={handleImport}
           onClearDatabase={handleClearDatabase}
           onLoadDemoTrip={handleLoadDemoTrip}
+          archivedTrips={archivedTrips}
+          onRestoreTrip={handleRestoreTrip}
+          onDeleteTrip={handleDeleteTrip}
           userEmail={userEmail}
           onSignOut={signOut}
           pwaInstallable={!!deferredPrompt}

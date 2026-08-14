@@ -34,6 +34,7 @@ export interface Database {
           base_currency: string;
           owner_id: string;
           join_code: string;
+          archived: boolean;
           created_at: string;
           updated_at: string;
         };
@@ -45,12 +46,14 @@ export interface Database {
           base_currency?: string;
           owner_id: string;
           join_code?: string;
+          archived?: boolean;
         };
         Update: Partial<{
           name: string;
           start_date: string;
           end_date: string;
           base_currency: string;
+          archived: boolean;
           updated_at: string;
         }>;
         Relationships: [];
