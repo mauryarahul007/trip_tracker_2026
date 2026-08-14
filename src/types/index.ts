@@ -30,6 +30,12 @@ export interface Group {
 
 export type SplitMode = 'equal' | 'equalUnit' | 'custom' | 'exact' | 'percentage';
 
+export interface ExpenseLocation {
+  lat: number;
+  lng: number;
+  placeName?: string;
+}
+
 export interface Expense {
   id: string;
   tripId: string;
@@ -47,6 +53,7 @@ export interface Expense {
   receiptPath?: string | null; // Supabase Storage object path once uploaded — resolve via a signed URL to display
   isSettlement: boolean;
   createdByUserId: string; // participant edit/delete rights are scoped to this
+  location?: ExpenseLocation | null; // optional GPS geotag
   deletedAt?: number | null; // set when soft-deleted into the recycle bin; purged 24h after
   deletedByUserId?: string | null;
   createdAt: number;

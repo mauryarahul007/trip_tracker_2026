@@ -1041,6 +1041,8 @@ export default function App() {
                 getCatColor={getCatColor}
                 memberSpentList={memberSpentList}
                 dailySpendData={dailySpendData}
+                expenses={activeTripExpenses}
+                categories={categories}
               />
             </div>
 

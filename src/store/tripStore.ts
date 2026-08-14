@@ -48,6 +48,8 @@ interface TripStore extends TripState {
   lastBackendSyncedAt: number | null;
   sessionExpired: boolean;
   lastModifiedAt: number;
+  enableGeotagging: boolean;
+  setEnableGeotagging: (enabled: boolean) => void;
 
   initialize: () => Promise<void>;
   refreshTrips: () => Promise<void>;
@@ -233,6 +235,7 @@ export const useTripStore = create<TripStore>()(
     splitConfig: e.splitConfig,
     resolvedShares,
     receiptPath: extra?.receiptPath,
+    location: e.location ?? null,
   });
 
   return {
@@ -251,6 +254,11 @@ export const useTripStore = create<TripStore>()(
     lastBackendSyncedAt: null,
     sessionExpired: false,
     lastModifiedAt: Date.now(),
+    enableGeotagging: false,
+
+    setEnableGeotagging: (enabled: boolean) => {
+      set({ enableGeotagging: enabled, lastModifiedAt: Date.now() });
+    },
 
     updateLastBackendSyncedAt: (timestamp: number) => {
       set({ lastBackendSyncedAt: timestamp });
@@ -1089,6 +1097,7 @@ export const useTripStore = create<TripStore>()(
         syncQueue: state.syncQueue,
         lastBackendSyncedAt: state.lastBackendSyncedAt,
         lastModifiedAt: state.lastModifiedAt,
+        enableGeotagging: state.enableGeotagging,
       }),
     }
   )

@@ -239,6 +239,21 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - Matching runs on every keystroke in `ExpenseForm.tsx` using pre-compiled regex on lightweight string sets, executing in <1ms without impacting typing responsiveness.
 
+---
+
+## 20. Expense Geotagging & Analytics Trip Journey Map
+* **Context:** Travelers want to record where expenses happened (e.g., beach shacks, mountain viewpoints, highway tolls, airports) and visualize their entire journey route on a map. However, adding mapping tools could introduce bundle bloat and privacy concerns if GPS is continuously accessed.
+* **Decision:** Implemented an opt-in, privacy-first **Expense Geotagging** engine using native browser geolocation + OpenStreetMap reverse geocoding, and built an interactive **Trip Journey Map** in the Analytics tab.
+* **Pattern/Implementation:**
+  - **Zero-Bloat Geolocation (`geolocation.ts`)**: GPS coordinates are requested strictly on-demand via `navigator.geolocation.getCurrentPosition()`. Reverse geocoding resolves human-readable names via OpenStreetMap Nominatim with memory caching and fallback coordinates when offline.
+  - **Privacy Toggle (`SettingsView.tsx`)**: Geotagging is disabled by default (`enableGeotagging = false`). Users explicitly toggle it on in *Settings -> App & Interface*.
+  - **Expense Form Location Tagging (`ExpenseForm.tsx`)**: When enabled, new expenses auto-tag current location into `{ lat, lng, placeName }`. Users can easily remove or refresh the location badge.
+  - **Expense List Pin Badge (`ExpenseList.tsx`, `ExpenseReviewModal.tsx`)**: Expenses with location display a `📍 Place Name` badge with one-tap link to open coordinates in Google Maps.
+  - **Interactive Analytics Journey Map (`TripJourneyMap.tsx`, `AnalyticsTab.tsx`)**: Plots chronological marker stops with custom category emojis, transaction popups, and a route polyline visualizing the travel path.
+* **Trade-offs Accepted:**
+  - Used Leaflet + OpenStreetMap over Google Maps JavaScript API: avoids paid API billing constraints, restrictive quotas, and heavy external script overhead. Leaflet CSS and assets are bundled efficiently.
+
+
 
 
 

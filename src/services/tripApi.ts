@@ -43,7 +43,7 @@ function mapCategory(row: CategoryRow): Category {
   return { id: row.id, name: row.name, icon: row.icon ?? undefined, isCustom: row.is_custom };
 }
 
-function mapExpense(row: ExpenseRow): Expense {
+function mapExpense(row: ExpenseRow & { location?: any }): Expense {
   return {
     id: row.id,
     tripId: row.trip_id,
@@ -60,6 +60,7 @@ function mapExpense(row: ExpenseRow): Expense {
     receiptPath: row.receipt_path ?? undefined,
     isSettlement: row.is_settlement,
     createdByUserId: row.created_by_user_id,
+    location: row.location ?? undefined,
     deletedAt: row.deleted_at ? new Date(row.deleted_at).getTime() : null,
     deletedByUserId: row.deleted_by_user_id,
     createdAt: new Date(row.created_at).getTime(),
@@ -314,6 +315,7 @@ export interface ExpenseInput {
   splitConfig?: Record<string, number>;
   resolvedShares: Record<string, number>;
   receiptPath?: string; // set only when a new receipt was just uploaded — omit to leave existing untouched
+  location?: import('../types').ExpenseLocation | null;
 }
 
 export async function insertExpense(tripId: string, createdByUserId: string, input: ExpenseInput): Promise<Expense> {
@@ -333,6 +335,7 @@ export async function insertExpense(tripId: string, createdByUserId: string, inp
       split_config: input.splitConfig ?? null,
       resolved_shares: input.resolvedShares,
       receipt_path: input.receiptPath ?? null,
+      location: input.location ?? null,
       is_settlement: input.title.startsWith('Settlement:'),
       created_by_user_id: createdByUserId,
     })
@@ -357,6 +360,7 @@ export async function updateExpenseRow(id: string, input: ExpenseInput): Promise
       split_config: input.splitConfig ?? null,
       resolved_shares: input.resolvedShares,
       updated_at: new Date().toISOString(),
+      ...(input.location !== undefined ? { location: input.location } : {}),
       ...(input.receiptPath ? { receipt_path: input.receiptPath } : {}),
     })
     .eq('id', id);
@@ -521,6 +525,7 @@ export async function insertTripGraph(ownerId: string, seed: TripGraphSeed): Pro
       split_member_ids: remapIds(e.splitMemberIds),
       split_config: e.splitConfig ? remapShares(e.splitConfig) : null,
       resolved_shares: remapShares(e.resolvedShares),
+      location: (e as any).location ?? null,
       is_settlement: e.title.startsWith('Settlement:'),
       created_by_user_id: ownerId,
     }));

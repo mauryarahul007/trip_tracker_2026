@@ -17,6 +17,7 @@ import {
   IconCheckCircle,
   IconChevronRight,
   IconChevronLeft,
+  IconMapPin,
 } from './Icons';
 import { CategoryIcon } from './CategoryIcon';
 import { useTripStore } from '../store/tripStore';
@@ -113,6 +114,8 @@ export function SettingsView({
   const emptyRecycleBin = useTripStore((s) => s.emptyRecycleBin);
   const updateCategoryKeywords = useTripStore((s) => s.updateCategoryKeywords);
   const resetCategoryKeywords = useTripStore((s) => s.resetCategoryKeywords);
+  const enableGeotagging = useTripStore((s) => s.enableGeotagging);
+  const setEnableGeotagging = useTripStore((s) => s.setEnableGeotagging);
 
   // Category keyword states
   const [expandedCategoryId, setExpandedCategoryId] = useState<string | null>(null);
@@ -933,6 +936,54 @@ export function SettingsView({
               <IconChevronRight size={16} />
             </div>
           </button>
+
+          <div className="settings-row-item" style={{ cursor: 'default' }}>
+            <div className="settings-row-left">
+              <div className="settings-squircle squircle-emerald">
+                <IconMapPin size={18} />
+              </div>
+              <div className="settings-row-texts">
+                <span className="settings-row-title">Geotag Expenses</span>
+                <span className="settings-row-subtitle">Attach GPS location &amp; place names to transactions</span>
+              </div>
+            </div>
+            <div className="settings-row-right">
+              <label style={{ position: 'relative', display: 'inline-block', width: '44px', height: '24px', margin: 0, cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={enableGeotagging}
+                  onChange={(e) => setEnableGeotagging(e.target.checked)}
+                  style={{ opacity: 0, width: 0, height: 0, margin: 0 }}
+                />
+                <span
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    backgroundColor: enableGeotagging ? '#00BFA5' : 'var(--border-color)',
+                    transition: '0.2s ease',
+                    borderRadius: '24px',
+                  }}
+                >
+                  <span
+                    style={{
+                      position: 'absolute',
+                      height: '18px',
+                      width: '18px',
+                      left: enableGeotagging ? '23px' : '3px',
+                      bottom: '3px',
+                      backgroundColor: 'white',
+                      transition: '0.2s ease',
+                      borderRadius: '50%',
+                      boxShadow: '0 1px 3px rgba(0,0,0,0.25)',
+                    }}
+                  />
+                </span>
+              </label>
+            </div>
+          </div>
 
           {pwaInstallable && (
             <button

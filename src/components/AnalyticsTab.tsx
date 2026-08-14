@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import type { Trip } from '../types';
+import type { Trip, Expense, Category } from '../types';
 import { CategoryIcon } from './CategoryIcon';
 import { getCurrencySymbol } from '../utils/currency';
+import { TripJourneyMap } from './TripJourneyMap';
 
 type CategoryDatum = { id: string; name: string; icon: string; amount: number; percentage: number };
 type MemberSpend = { id: string; name: string; amount: number; percentage: number };
@@ -17,6 +18,8 @@ type Props = {
   getCatColor: (id: string, idx: number) => string;
   memberSpentList: MemberSpend[];
   dailySpendData: DailySpend[];
+  expenses?: Expense[];
+  categories?: Category[];
 };
 
 export function AnalyticsTab({
@@ -29,6 +32,8 @@ export function AnalyticsTab({
   getCatColor,
   memberSpentList,
   dailySpendData,
+  expenses = [],
+  categories = [],
 }: Props) {
   const currencySymbol = getCurrencySymbol(trip?.baseCurrency || '');
   const topCategory = categoryData[0];
@@ -79,6 +84,8 @@ export function AnalyticsTab({
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          {/* Trip Journey Map */}
+          <TripJourneyMap expenses={expenses} categories={categories} baseCurrency={trip?.baseCurrency || ''} />
 
           {/* 2. Spend by Category SVG Donut Chart */}
           <div className="glass-card">
