@@ -1,7 +1,9 @@
 import React from 'react';
 import { IconDownload, IconUpload, IconCheckCircle, IconAlertCircle, IconClose } from './Icons';
+import { useTripStore } from '../store/tripStore';
 
 type ThemePref = 'light' | 'dark' | 'system';
+
 
 type Props = {
   onClose: () => void;
@@ -42,8 +44,12 @@ export function GlobalSettingsModal({
   pwaInstallable = false,
   onInstallApp,
 }: Props) {
+  const p2pSyncEnabled = useTripStore((s) => s.p2pSyncEnabled);
+  const setP2PSyncEnabled = useTripStore((s) => s.setP2PSyncEnabled);
+
   const [isOnline, setIsOnline] = React.useState(navigator.onLine);
   const [storageEstimate, setStorageEstimate] = React.useState<{ used: number; quota: number } | null>(null);
+
 
   React.useEffect(() => {
     const handleOnline = () => setIsOnline(true);
@@ -199,6 +205,27 @@ export function GlobalSettingsModal({
             ))}
           </div>
         </div>
+
+        {/* Offline Peer Sync Feature Toggle */}
+        <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <div className="toggle-switch-container">
+            <div>
+              <h4 style={{ fontSize: '15px', fontWeight: 600, margin: 0 }}>Offline Peer Sync</h4>
+              <p style={{ fontSize: '12.5px', color: 'var(--text-secondary)', margin: '4px 0 0' }}>
+                Show round sync button in header &amp; enable peer-to-peer offline syncing.
+              </p>
+            </div>
+            <label className="toggle-switch" aria-label="Enable Offline Peer Sync">
+              <input
+                type="checkbox"
+                checked={p2pSyncEnabled}
+                onChange={(e) => setP2PSyncEnabled(e.target.checked)}
+              />
+              <span className="toggle-slider" />
+            </label>
+          </div>
+        </div>
+
 
         {/* PWA Install */}
         {pwaInstallable && (

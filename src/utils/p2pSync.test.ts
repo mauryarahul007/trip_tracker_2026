@@ -165,4 +165,102 @@ describe('P2P State Merger', () => {
     expect(merged.syncQueue).toHaveLength(1);
     expect(merged.syncQueue[0].payload.id).toBe('e1');
   });
+
+  it('enforces financial balance invariant sum(shares) === amount', () => {
+    const stateA: P2PState = {
+      expenses: [
+        {
+          id: 'e1',
+          tripId: 't1',
+          title: 'Dinner with float rounding delta',
+          amount: 100,
+          currency: 'USD',
+          category: 'cat-food',
+          date: '2026-08-12',
+          paidBy: 'm1',
+          splitMode: 'equal',
+          splitMemberIds: ['m1', 'm2', 'm3'],
+          resolvedShares: { m1: 33.33, m2: 33.33, m3: 33.33 }, // Sum = 99.99 (delta of 0.01)
+          createdByUserId: 'u1',
+          createdAt: 1000,
+          updatedAt: 2000,
+          isSettlement: false,
+        },
+      ],
+      categories,
+      members: { ...members, m3: { id: 'm3', name: 'Charlie' } },
+      groups,
+      syncQueue: [],
+    };
+
+    const stateB: P2PState = {
+      expenses: [],
+      categories,
+      members: { ...members, m3: { id: 'm3', name: 'Charlie' } },
+      groups,
+      syncQueue: [],
+    };
+
+    const merged = mergeP2PStates(stateA, stateB);
+    expect(merged.expenses).toHaveLength(1);
+    const exp = merged.expenses[0];
+    const sum = Object.values(exp.resolvedShares).reduce((a, b) => a + b, 0);
+    expect(Number(sum.toFixed(2))).toBe(100);
+    // The delta was attributed to paidBy (m1)
+    expect(exp.resolvedShares.m1).toBe(33.34);
+  });
+
+  it('preserves archived=true status on members during merge', () => {
+    const stateA: P2PState = {
+      expenses: [],
+      categories,
+      members: {
+        m1: { id: 'm1', name: 'Alice', archived: true },
+        m2: { id: 'm2', name: 'Bob', archived: false },
+      },
+      groups,
+      syncQueue: [],
+    };
+
+    const stateB: P2PState = {
+      expenses: [],
+      categories,
+      members: {
+        m1: { id: 'm1', name: 'Alice', archived: false },
+        m2: { id: 'm2', name: 'Bob' },
+      },
+      groups,
+      syncQueue: [],
+    };
+
+    const merged = mergeP2PStates(stateA, stateB);
+    expect(merged.members.m1.archived).toBe(true);
+    expect(merged.members.m2.archived).toBe(false);
+  });
+
+  it('deduplicates group memberIds across peers', () => {
+    const stateA: P2PState = {
+      expenses: [],
+      categories,
+      members,
+      groups: {
+        g1: { id: 'g1', name: 'Friends', memberIds: ['m1', 'm2'] },
+      },
+      syncQueue: [],
+    };
+
+    const stateB: P2PState = {
+      expenses: [],
+      categories,
+      members,
+      groups: {
+        g1: { id: 'g1', name: 'Friends', memberIds: ['m2', 'm3'] },
+      },
+      syncQueue: [],
+    };
+
+    const merged = mergeP2PStates(stateA, stateB);
+    expect(merged.groups.g1.memberIds).toEqual(['m1', 'm2', 'm3']);
+  });
 });
+

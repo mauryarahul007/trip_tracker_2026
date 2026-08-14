@@ -92,14 +92,21 @@ This document logs all meaningful technical decisions, library choices, design p
 
 ---
 
-## 9. Form and Modal State Encapsulation
-* **Context:** The main `App.tsx` container was acting as a monolith, holding state variables, validation logic, and input change handlers for multiple unrelated forms (Member, Group, and Expense). This bloated the file to over 1200 lines and caused excessive re-renders.
-* **Decision:** Encapsulate member/group form states locally inside `MembersGroupsTab` and expense form states inside `ExpenseForm`.
-* **Pattern/Implementation:**
-  - The parent component `App.tsx` now passes simple `onSave` promise callbacks.
-  - Derived states (such as running sums, validation states, and checkbox mappings) are computed locally inside each form component.
+---
+
+## 10. Offline Peer Sync & ACID Data Integrity Architecture
+* **Context:** In travel settings with zero connectivity (flights, remote hikes, abroad without roaming), users need to merge expenses peer-to-peer without centralized servers. Users also need clear visual sync indicators ("Last synced" / "Out of sync") and guarantees that data merges preserve relational and financial consistency.
+* **Decision:**
+  - Implement an optional **Offline Peer Sync** feature toggle in Settings (`p2p_sync_enabled`).
+  - When enabled, render a small round sync button with a sync symbol in the header status bar indicating live sync health (`synced` / `out_of_sync` / `syncing`).
+  - Guarantee **ACID properties** during P2P sync:
+    - **Atomicity:** Snapshot-and-commit merge transactions that apply all entities or fail cleanly without dirty partial writes.
+    - **Consistency:** Maintain financial sum invariants ($\sum \text{shares} = \text{amount}$), foreign key referential integrity, and tombstone priority.
+    - **Isolation:** Non-blocking optimistic UI with deterministic Last-Write-Wins (LWW) conflict resolution.
+    - **Durability:** Synchronous multi-tier storage persistence (`localStorage` sync queue + IndexedDB) committed prior to completion acknowledgment.
 * **Trade-offs Accepted:**
-  - Parent component no longer has direct visibility of the current unsaved form inputs, making it harder to display global form progress indicators, but dramatically increasing overall code modularity, readability, and performance.
+  - LWW conflict resolution means if two users edit the exact same expense title concurrently while offline, the later timestamp overwrites the earlier one without manual three-way diff merging. This was accepted because expense edits are typically discrete (e.g. updating receipt or amount) and full CRDT tree structures would add excessive client complexity.
+
 
 
 

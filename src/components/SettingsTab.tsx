@@ -3,6 +3,7 @@ import type { Category, Expense } from '../types';
 import { IconDownload } from './Icons';
 import { CategoryIcon } from './CategoryIcon';
 import { OfflinePeerSync } from './OfflinePeerSync';
+import { useTripStore } from '../store/tripStore';
 
 const CATEGORY_ICON_PRESETS = ['🍔', '🏨', '✈️', '🎟️', '🛍️', '📦', '🚗', '⛽', '🎬', '🍺', '💊', '🎁', '🧾', '🏥', '🎓', '🐾', '🎵', '🚕'];
 
@@ -25,8 +26,12 @@ export function SettingsTab({
   isAdmin,
   onOpenGlobalSettings,
 }: Props) {
+  const p2pSyncEnabled = useTripStore((s) => s.p2pSyncEnabled);
+  const setP2PSyncEnabled = useTripStore((s) => s.setP2PSyncEnabled);
+
   // Local form states
   const [newCategoryName, setNewCategoryName] = useState('');
+
   const [newCategoryIcon, setNewCategoryIcon] = useState('');
   const [showIconPicker, setShowIconPicker] = useState(false);
 
@@ -193,18 +198,39 @@ export function SettingsTab({
 
       {/* P2P Offline WebRTC Sync */}
       <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '24px' }}>
-        <h4 style={{ fontSize: '16px' }}>Offline Peer Sync</h4>
-        <p style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
-          On a flight, train, or hike with no internet? Sync and merge your trip expenses directly with another nearby device using peer-to-peer visual codes.
-        </p>
-        <button className="gradient-btn" style={{ padding: '12px' }} onClick={() => setShowOfflineSync(true)}>
-          Sync with Offline Peer
-        </button>
+        <div className="toggle-switch-container">
+          <div>
+            <h4 style={{ fontSize: '16px', margin: 0 }}>Offline Peer Sync</h4>
+            <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: '4px 0 0' }}>
+              Show sync button in header &amp; enable air-gapped P2P expense syncing.
+            </p>
+          </div>
+          <label className="toggle-switch" aria-label="Enable Offline Peer Sync">
+            <input
+              type="checkbox"
+              checked={p2pSyncEnabled}
+              onChange={(e) => setP2PSyncEnabled(e.target.checked)}
+            />
+            <span className="toggle-slider" />
+          </label>
+        </div>
+
+        {p2pSyncEnabled && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', borderTop: '1px dashed var(--border-color)', paddingTop: '14px' }}>
+            <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: 0 }}>
+              On a flight, train, or hike with no internet? Sync and merge your trip expenses directly with another nearby device using peer-to-peer visual codes with ACID data integrity.
+            </p>
+            <button className="gradient-btn" style={{ padding: '12px' }} onClick={() => setShowOfflineSync(true)}>
+              Sync with Offline Peer
+            </button>
+          </div>
+        )}
       </div>
 
       {showOfflineSync && (
         <OfflinePeerSync onClose={() => setShowOfflineSync(false)} />
       )}
+
 
       {/* Merge & Delete Category Dialog */}
       {categoryToDelete && (

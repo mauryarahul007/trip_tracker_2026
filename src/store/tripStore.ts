@@ -40,12 +40,17 @@ interface TripStore extends TripState {
   userId: string | null;
   userDisplayName: string | null;
   syncQueue: SyncQueueItem[];
+  p2pSyncEnabled: boolean;
+  lastPeerSyncedAt: number | null;
+  lastModifiedAt: number;
 
   initialize: () => Promise<void>;
   refreshTrips: () => Promise<void>;
   clearStorageError: () => void;
   processQueue: () => Promise<void>;
   queueSync: (type: 'addExpense' | 'updateExpense' | 'deleteExpense', payload: any) => void;
+  setP2PSyncEnabled: (enabled: boolean) => void;
+  updateLastPeerSyncedAt: (timestamp: number) => void;
 
   // Trip Actions
   createTrip: (name: string, startDate: string, endDate: string, baseCurrency: string) => Promise<void>;
@@ -86,6 +91,7 @@ interface TripStore extends TripState {
     syncQueue: any[];
   }) => Promise<void>;
 }
+
 
 export const DEFAULT_CATEGORIES: Category[] = [
   { id: 'cat-food', name: 'Food & Dining', icon: '🍔', isCustom: false },
@@ -180,6 +186,12 @@ export const useTripStore = create<TripStore>((set, get) => {
     receiptPath: extra?.receiptPath,
   });
 
+  // Load saved P2P sync preferences & timestamps
+  const storedP2PEnabled = localStorage.getItem('trip-tracker-p2p-sync-enabled');
+  const initialP2PEnabled = storedP2PEnabled !== null ? storedP2PEnabled === 'true' : true;
+  const storedLastPeerSync = localStorage.getItem('trip-tracker-last-peer-sync');
+  const initialLastPeerSync = storedLastPeerSync ? Number(storedLastPeerSync) : null;
+
   return {
     trips: [],
     activeTripId: null,
@@ -192,6 +204,19 @@ export const useTripStore = create<TripStore>((set, get) => {
     userId: null,
     userDisplayName: null,
     syncQueue: [],
+    p2pSyncEnabled: initialP2PEnabled,
+    lastPeerSyncedAt: initialLastPeerSync,
+    lastModifiedAt: Date.now(),
+
+    setP2PSyncEnabled: (enabled: boolean) => {
+      localStorage.setItem('trip-tracker-p2p-sync-enabled', String(enabled));
+      set({ p2pSyncEnabled: enabled });
+    },
+
+    updateLastPeerSyncedAt: (timestamp: number) => {
+      localStorage.setItem('trip-tracker-last-peer-sync', String(timestamp));
+      set({ lastPeerSyncedAt: timestamp });
+    },
 
     initialize: async () => {
       if (get().initialized) return;
@@ -272,9 +297,10 @@ export const useTripStore = create<TripStore>((set, get) => {
 
     queueSync: (type, payload) => {
       const newQueue = [...get().syncQueue, { id: crypto.randomUUID(), type, payload }];
-      set({ syncQueue: newQueue });
+      set({ syncQueue: newQueue, lastModifiedAt: Date.now() });
       localStorage.setItem('trip-tracker-sync-queue', JSON.stringify(newQueue));
     },
+
 
     processQueue: async () => {
       if (!navigator.onLine || get().syncQueue.length === 0) return;
@@ -835,8 +861,10 @@ export const useTripStore = create<TripStore>((set, get) => {
     },
 
     applyP2PMergedState: async (merged) => {
+      const now = Date.now();
+      localStorage.setItem('trip-tracker-sync-queue', JSON.stringify(merged.syncQueue));
+      localStorage.setItem('trip-tracker-last-peer-sync', String(now));
       set((state) => {
-        localStorage.setItem('trip-tracker-sync-queue', JSON.stringify(merged.syncQueue));
         const activeTripId = state.activeTripId;
         const updatedTrips = activeTripId
           ? state.trips.map((t) =>
@@ -852,9 +880,12 @@ export const useTripStore = create<TripStore>((set, get) => {
           groups: merged.groups,
           trips: updatedTrips,
           syncQueue: merged.syncQueue,
+          lastPeerSyncedAt: now,
+          lastModifiedAt: now,
           storageError: null,
         };
       });
     },
   };
 });
+

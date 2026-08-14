@@ -20,8 +20,12 @@ import { ExpenseReviewModal } from './components/ExpenseReviewModal';
 import { UndoToasts } from './components/UndoToasts';
 import { NavTabs } from './components/NavTabs';
 import { ShareTripModal } from './components/ShareTripModal';
-import { IconCalendar, IconChevronLeft, IconShare } from './components/Icons';
+import { OfflinePeerSync } from './components/OfflinePeerSync';
+import { IconCalendar, IconChevronLeft, IconShare, IconSync } from './components/Icons';
 import { formatDateRange } from './utils/dateRange';
+
+
+
 
 export default function App() {
   const {
@@ -151,9 +155,15 @@ export default function App() {
 
   // Share trip modal
   const [showShareTrip, setShowShareTrip] = useState(false);
+  const [showOfflineSyncModal, setShowOfflineSyncModal] = useState(false);
 
   const [showMembersRequiredNotice, setShowMembersRequiredNotice] = useState(false);
   const [showGlobalSettings, setShowGlobalSettings] = useState(false);
+
+  const p2pSyncEnabled = useTripStore((s) => s.p2pSyncEnabled);
+  const lastPeerSyncedAt = useTripStore((s) => s.lastPeerSyncedAt);
+  const lastModifiedAt = useTripStore((s) => s.lastModifiedAt);
+  const syncQueue = useTripStore((s) => s.syncQueue);
 
   // Load state on mount
   useEffect(() => {
@@ -178,6 +188,28 @@ export default function App() {
       .filter((e) => e.tripId === activeTripId)
       .sort((a, b) => b.date.localeCompare(a.date) || b.createdAt - a.createdAt);
   }, [expenses, activeTripId]);
+
+  // Live Sync Health computation for the status bar
+  const isOutOfSync = useMemo(() => {
+    if (syncQueue.length > 0) return true;
+    if (lastPeerSyncedAt === null) {
+      return activeTripExpenses.length > 0;
+    }
+    return lastModifiedAt > lastPeerSyncedAt;
+  }, [syncQueue.length, lastPeerSyncedAt, activeTripExpenses.length, lastModifiedAt]);
+
+  const lastSyncedLabel = useMemo(() => {
+    if (isOutOfSync) return 'Out of sync';
+    if (!lastPeerSyncedAt) return 'Never synced';
+    const diffMs = Date.now() - lastPeerSyncedAt;
+    const diffMins = Math.floor(diffMs / 60000);
+    if (diffMins < 1) return 'Synced just now';
+    if (diffMins < 60) return `Synced ${diffMins}m ago`;
+    const diffHours = Math.floor(diffMins / 60);
+    if (diffHours < 24) return `Synced ${diffHours}h ago`;
+    return 'Synced yesterday';
+  }, [isOutOfSync, lastPeerSyncedAt]);
+
 
   // Search + category/member filters, applied only to the visible expense list
   const filteredExpenses = useMemo(() => {
@@ -812,7 +844,22 @@ export default function App() {
                 </span>
                 <h2 className="app-logo" style={{ fontSize: '24px', color: '#F2ECDC' }}>{activeTrip?.name}</h2>
               </div>
-              <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexShrink: 0 }}>
+                {p2pSyncEnabled && (
+                  <button
+                    type="button"
+                    className="round-sync-btn"
+                    onClick={() => setShowOfflineSyncModal(true)}
+                    title={isOutOfSync ? `Out of sync — click to sync offline with peer` : `Synced with peer (${lastSyncedLabel})`}
+                    aria-label="Offline Peer Sync"
+                  >
+                    <IconSync size={13} />
+                    <span
+                      className={`sync-badge-dot ${isOutOfSync ? 'out-of-sync' : 'synced'}`}
+                      style={{ position: 'absolute', top: '-1px', right: '-1px' }}
+                    />
+                  </button>
+                )}
                 <button
                   className="secondary-btn"
                   style={{ padding: '7px 12px', fontSize: '12px', color: '#F2ECDC', borderColor: 'rgba(242,236,220,0.28)', background: 'rgba(242,236,220,0.06)' }}
@@ -830,10 +877,25 @@ export default function App() {
               </div>
             </div>
             <div className="app-header-stats">
-              <span>{visibleMembers.length} member{visibleMembers.length === 1 ? '' : 's'}</span>
-              <span>{activeTripExpenses.length} expense{activeTripExpenses.length === 1 ? '' : 's'}</span>
+              <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                <span>{visibleMembers.length} member{visibleMembers.length === 1 ? '' : 's'}</span>
+                <span>{activeTripExpenses.length} expense{activeTripExpenses.length === 1 ? '' : 's'}</span>
+              </div>
+              {p2pSyncEnabled && (
+                <button
+                  type="button"
+                  className="sync-header-pill"
+                  onClick={() => setShowOfflineSyncModal(true)}
+                  title={isOutOfSync ? 'Local changes not yet synced with peer. Click to sync.' : `Last synced: ${lastSyncedLabel}`}
+                  aria-label="Offline Peer Sync Status"
+                >
+                  <span className={`sync-badge-dot ${isOutOfSync ? 'out-of-sync' : 'synced'}`} />
+                  <span>{lastSyncedLabel}</span>
+                </button>
+              )}
             </div>
           </header>
+
 
           <main className="app-main">
             {/* View Switching Tab Content */}
@@ -963,6 +1025,11 @@ export default function App() {
       {showShareTrip && activeTrip && (
         <ShareTripModal trip={activeTrip} onClose={() => setShowShareTrip(false)} />
       )}
+
+      {showOfflineSyncModal && (
+        <OfflinePeerSync onClose={() => setShowOfflineSyncModal(false)} />
+      )}
+
 
       {selectedReviewExpense && (
         <ExpenseReviewModal

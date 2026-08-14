@@ -427,6 +427,133 @@ button, [role="button"], input, select, a {
   border-color: rgba(242, 236, 220, 0.4);
 }
 
+/* Round Sync Button & Live Indicator in Header */
+.sync-header-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: rgba(242, 236, 220, 0.08);
+  border: 1px solid rgba(242, 236, 220, 0.22);
+  border-radius: 20px;
+  padding: 3px 10px 3px 4px;
+  cursor: pointer;
+  transition: var(--transition-smooth);
+  color: #F2ECDC;
+  font-family: var(--font-family-mono);
+  font-size: 11px;
+}
+
+.sync-header-pill:hover {
+  background: rgba(242, 236, 220, 0.16);
+  border-color: rgba(242, 236, 220, 0.45);
+}
+
+.round-sync-btn {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: rgba(242, 236, 220, 0.15);
+  border: 1px solid rgba(242, 236, 220, 0.35);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #F2ECDC;
+  cursor: pointer;
+  transition: var(--transition-smooth);
+  position: relative;
+  flex-shrink: 0;
+  padding: 0;
+}
+
+.round-sync-btn:hover {
+  background: rgba(242, 236, 220, 0.25);
+  transform: scale(1.05);
+}
+
+.round-sync-btn.spin-anim svg {
+  animation: spin 1s linear infinite;
+}
+
+.sync-badge-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.sync-badge-dot.synced {
+  background-color: #10B981;
+  box-shadow: 0 0 6px rgba(16, 185, 129, 0.6);
+}
+
+.sync-badge-dot.out-of-sync {
+  background-color: #F59E0B;
+  box-shadow: 0 0 6px rgba(245, 158, 11, 0.6);
+  animation: pulse-dot 2s infinite ease-in-out;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(1.15); }
+}
+
+/* Modern Toggle Switch */
+.toggle-switch-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+  flex-shrink: 0;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #D1D5DB;
+  transition: 0.25s;
+  border-radius: 24px;
+}
+
+.toggle-slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: 0.25s;
+  border-radius: 50%;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+
+input:checked + .toggle-slider {
+  background-color: var(--primary-accent);
+}
+
+input:checked + .toggle-slider:before {
+  transform: translateX(20px);
+}
+
+
 /* Perforated / dashed rule — the ledger's structural motif, used sparingly */
 .perf-divider {
   border-top: 1.5px dashed var(--border-color);
