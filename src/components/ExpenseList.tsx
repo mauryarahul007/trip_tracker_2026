@@ -95,6 +95,26 @@ export function ExpenseList({
 
   return (
     <>
+      {trip?.frozen && (
+        <div
+          style={{
+            padding: '10px 14px',
+            borderRadius: '10px',
+            background: 'rgba(239, 68, 68, 0.1)',
+            border: '1px solid rgba(239, 68, 68, 0.3)',
+            color: '#EF4444',
+            fontSize: '13px',
+            fontWeight: 500,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            marginBottom: '14px',
+          }}
+        >
+          <IconAlertCircle size={16} /> This trip is currently locked / frozen by Superadmin. Modifications are disabled.
+        </div>
+      )}
+
       {/* Search & Filters */}
       {activeTripExpenseCount > 0 && (
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '16px' }}>

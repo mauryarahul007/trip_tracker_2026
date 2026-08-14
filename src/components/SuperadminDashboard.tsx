@@ -38,6 +38,10 @@ export function SuperadminDashboard({
   const loadDemoTrip = useTripStore((s) => s.loadDemoTrip);
   const updateCategoryKeywords = useTripStore((s) => s.updateCategoryKeywords);
 
+  const freezeTrip = useTripStore((s) => s.freezeTrip);
+  const archiveTrip = useTripStore((s) => s.archiveTrip);
+  const deleteTrip = useTripStore((s) => s.deleteTrip);
+
   const [activeTab, setActiveTab] = useState<'flags' | 'analytics' | 'trips' | 'tools'>('flags');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTagCat, setSelectedTagCat] = useState<string>(categories[0]?.id || 'cat-food');
@@ -424,9 +428,24 @@ export function SuperadminDashboard({
         </div>
       )}
 
-      {/* TAB 3: TRIPS DIRECTORY & AUDIT */}
+      {/* TAB 3: TRIPS DIRECTORY & MODERATION */}
       {activeTab === 'trips' && (
         <div className="fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          {/* Privacy & Governance Notice */}
+          <div
+            style={{
+              padding: '12px 14px',
+              borderRadius: '12px',
+              background: 'rgba(31, 110, 104, 0.08)',
+              border: '1px solid rgba(31, 110, 104, 0.2)',
+              fontSize: '12.5px',
+              color: 'var(--text-primary)',
+              lineHeight: '1.45',
+            }}
+          >
+            <strong>🔒 Privacy &amp; Group Isolation:</strong> All trips and member rosters are private to their respective groups. Normal users manage their own trip members. Superadmins hold emergency controls (Freeze / Archive / Remove) to suspend problematic or spammy activity.
+          </div>
+
           <div className="input-icon-wrap">
             <IconSearch size={16} className="icon" />
             <input
@@ -446,36 +465,103 @@ export function SuperadminDashboard({
               return (
                 <div
                   key={t.id}
-                  className="settings-row"
-                  style={{ borderBottom: idx < filteredTrips.length - 1 ? '1px solid var(--border-color-subtle, rgba(15,23,42,0.06))' : 'none' }}
+                  style={{
+                    padding: '12px 16px',
+                    borderBottom: idx < filteredTrips.length - 1 ? '1px solid var(--border-color-subtle, rgba(15,23,42,0.06))' : 'none',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '10px',
+                  }}
                 >
-                  <div className="settings-row-left">
-                    <div
-                      style={{
-                        width: '36px',
-                        height: '36px',
-                        borderRadius: '10px',
-                        background: 'rgba(31, 110, 104, 0.08)',
-                        color: 'var(--primary-accent)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontSize: '18px',
-                      }}
-                    >
-                      ✈️
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <div
+                        style={{
+                          width: '36px',
+                          height: '36px',
+                          borderRadius: '10px',
+                          background: t.frozen ? 'rgba(239, 68, 68, 0.12)' : 'rgba(31, 110, 104, 0.08)',
+                          color: t.frozen ? '#EF4444' : 'var(--primary-accent)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: '18px',
+                        }}
+                      >
+                        {t.frozen ? '🔒' : '✈️'}
+                      </div>
+                      <div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <span style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)' }}>{t.name}</span>
+                          {t.frozen && (
+                            <span style={{ fontSize: '10px', fontWeight: 700, padding: '1px 6px', borderRadius: '8px', background: '#EF4444', color: '#fff' }}>
+                              FROZEN
+                            </span>
+                          )}
+                          {t.archived && (
+                            <span style={{ fontSize: '10px', fontWeight: 700, padding: '1px 6px', borderRadius: '8px', background: 'var(--text-muted)', color: '#fff' }}>
+                              ARCHIVED
+                            </span>
+                          )}
+                        </div>
+                        <span style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>
+                          {t.startDate} → {t.endDate} · {t.memberIds.length} members · {tripExpenses.length} expenses
+                        </span>
+                      </div>
                     </div>
-                    <div className="settings-row-texts">
-                      <span className="settings-row-title">{t.name}</span>
-                      <span className="settings-row-subtitle">
-                        {t.startDate} → {t.endDate} · {t.memberIds.length} members · {tripExpenses.length} expenses
-                      </span>
-                    </div>
-                  </div>
-                  <div className="settings-row-right">
-                    <strong style={{ fontSize: '13.5px', color: 'var(--text-primary)' }}>
+                    <strong style={{ fontSize: '14px', color: 'var(--text-primary)' }}>
                       {getCurrencySymbol(t.baseCurrency)} {tripTotal.toFixed(2)}
                     </strong>
+                  </div>
+
+                  {/* Superadmin Moderation Action Controls */}
+                  <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', paddingTop: '4px' }}>
+                    <button
+                      type="button"
+                      className="secondary-btn"
+                      style={{
+                        padding: '4px 10px',
+                        fontSize: '11.5px',
+                        fontWeight: 600,
+                        color: t.frozen ? '#10B981' : '#E67E22',
+                        borderColor: t.frozen ? 'rgba(16, 185, 129, 0.3)' : 'rgba(230, 126, 34, 0.3)',
+                      }}
+                      onClick={async () => {
+                        await freezeTrip(t.id, !t.frozen);
+                        setStatusFeedback(t.frozen ? `Unfroze trip "${t.name}"` : `Froze trip "${t.name}" — modifications stopped.`);
+                        setTimeout(() => setStatusFeedback(''), 3000);
+                      }}
+                    >
+                      {t.frozen ? '🔓 Unfreeze Trip' : '🛑 Freeze (Emergency Stop)'}
+                    </button>
+
+                    <button
+                      type="button"
+                      className="secondary-btn"
+                      style={{ padding: '4px 10px', fontSize: '11.5px' }}
+                      onClick={async () => {
+                        await archiveTrip(t.id, !t.archived);
+                        setStatusFeedback(t.archived ? `Restored trip "${t.name}"` : `Archived trip "${t.name}"`);
+                        setTimeout(() => setStatusFeedback(''), 3000);
+                      }}
+                    >
+                      {t.archived ? 'Restore' : 'Archive'}
+                    </button>
+
+                    <button
+                      type="button"
+                      className="secondary-btn"
+                      style={{ padding: '4px 10px', fontSize: '11.5px', color: '#EF4444', borderColor: 'rgba(239, 68, 68, 0.3)' }}
+                      onClick={async () => {
+                        if (window.confirm(`Permanently remove trip "${t.name}" and its transactions?`)) {
+                          await deleteTrip(t.id);
+                          setStatusFeedback(`Deleted trip "${t.name}"`);
+                          setTimeout(() => setStatusFeedback(''), 3000);
+                        }
+                      }}
+                    >
+                      Delete
+                    </button>
                   </div>
                 </div>
               );

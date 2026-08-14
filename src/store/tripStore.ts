@@ -107,6 +107,7 @@ interface TripStore extends TripState {
   updateTrip: (id: string, name: string, startDate: string, endDate: string) => Promise<void>;
   selectTrip: (id: string | null) => Promise<void>;
   archiveTrip: (id: string, archived: boolean) => Promise<void>;
+  freezeTrip: (id: string, frozen: boolean) => Promise<void>;
   deleteTrip: (id: string) => Promise<void>;
 
   // Member Actions
@@ -636,6 +637,13 @@ export const useTripStore = create<TripStore>()(
       }
     },
 
+    freezeTrip: async (id, frozen) => {
+      set((state) => ({
+        trips: state.trips.map((t) => (t.id === id ? { ...t, frozen, updatedAt: Date.now() } : t)),
+        lastModifiedAt: Date.now(),
+      }));
+    },
+
     deleteTrip: async (id) => {
       const deletedTrip = get().trips.find((t) => t.id === id);
       try {
@@ -814,6 +822,12 @@ export const useTripStore = create<TripStore>()(
       const tripId = get().activeTripId;
       const userId = get().userId;
       if (!tripId || !userId) return;
+
+      const activeTrip = get().trips.find((t) => t.id === tripId);
+      if (activeTrip?.frozen && !get().isSuperadmin) {
+        set({ storageError: 'This trip is currently locked / frozen by Superadmin. Modifications are disabled.' });
+        return;
+      }
 
       const participants = expenseData.splitMemberIds.filter((id) => get().members[id] && !get().members[id].archived);
       if (participants.length === 0) return;
