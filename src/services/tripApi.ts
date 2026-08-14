@@ -305,7 +305,10 @@ export async function deleteCategoryRow(id: string): Promise<void> {
 // The DB stores raw GPS coordinates only — never a reverse-geocoded place
 // name. placeName is a client-side display convenience, resolved locally.
 function coordsOnly(location: import('../types').ExpenseLocation | null | undefined): { lat: number; lng: number } | null {
-  if (!location) return null;
+  // An unresolved manual place name (no confirmed coords yet) must never
+  // reach the DB as a location row — omit it entirely rather than writing
+  // the 0,0 placeholder used locally to flag the pending/failed state.
+  if (!location || location.locationUnresolved || location.pendingName) return null;
   return { lat: location.lat, lng: location.lng };
 }
 

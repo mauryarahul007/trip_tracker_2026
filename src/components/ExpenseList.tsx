@@ -227,9 +227,13 @@ export function ExpenseList({
                               {payerName}
                             </span>
                             <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}> · {exp.date}</span>
-                            {exp.location?.placeName && (
+                            {exp.location?.locationUnresolved ? (
+                              <span style={{ color: '#E67E22', fontWeight: 500, fontSize: '11.5px' }}> · ⚠ location not found</span>
+                            ) : exp.location?.pendingName ? (
+                              <span style={{ color: '#E67E22', fontWeight: 500, fontSize: '11.5px' }}> · ⏳ {exp.location.pendingName}</span>
+                            ) : exp.location?.placeName ? (
                               <span style={{ color: '#00BFA5', fontWeight: 500, fontSize: '11.5px' }}> · 📍 {exp.location.placeName}</span>
-                            )}
+                            ) : null}
                           </p>
                           <p style={{ fontSize: '12px', lineHeight: 1.4, fontWeight: 400, color: 'var(--text-muted)', maxWidth: '240px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={splitNames}>
                             with {splitNames}

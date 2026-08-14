@@ -6,7 +6,7 @@ import { initial } from '../utils/initials';
 import { getCurrencySymbol } from '../utils/currency';
 import { compressImageToDataUrl } from '../utils/image';
 import { autoSuggestCategory } from '../utils/categoryHelper';
-import { captureCurrentExpenseLocation } from '../utils/geolocation';
+import { captureCurrentExpenseLocation, searchPlaces } from '../utils/geolocation';
 import { useTripStore } from '../store/tripStore';
 
 type SplitMode = 'equal' | 'custom' | 'exact' | 'percentage';
@@ -96,6 +96,24 @@ export function ExpenseForm({
   const enableGeotagging = useTripStore((s) => s.enableGeotagging);
   const [location, setLocation] = useState<ExpenseLocation | null>(editingExpense?.location || null);
   const [locationLoading, setLocationLoading] = useState(false);
+  const [showPlaceSearch, setShowPlaceSearch] = useState(false);
+  const [placeQuery, setPlaceQuery] = useState('');
+  const [placeResults, setPlaceResults] = useState<{ lat: number; lng: number; placeName: string }[]>([]);
+  const [placeSearching, setPlaceSearching] = useState(false);
+
+  useEffect(() => {
+    if (!showPlaceSearch || !placeQuery.trim()) {
+      setPlaceResults([]);
+      return;
+    }
+    setPlaceSearching(true);
+    const timer = setTimeout(() => {
+      searchPlaces(placeQuery)
+        .then(setPlaceResults)
+        .finally(() => setPlaceSearching(false));
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [placeQuery, showPlaceSearch]);
 
   useEffect(() => {
     if (!editingExpense && enableGeotagging && !location) {
@@ -341,21 +359,98 @@ export function ExpenseForm({
             <span style={{ color: '#00BFA5', display: 'flex', alignItems: 'center' }}><IconMapPin size={15} /></span> Location
           </label>
           {!location && !locationLoading && (
-            <button
-              type="button"
-              className="secondary-btn"
-              style={{ padding: '2px 8px', fontSize: '11.5px', color: '#00BFA5', borderColor: 'rgba(0,191,165,0.3)' }}
-              onClick={async () => {
-                setLocationLoading(true);
-                const loc = await captureCurrentExpenseLocation();
-                if (loc) setLocation(loc);
-                setLocationLoading(false);
-              }}
-            >
-              + Tag Location
-            </button>
+            <div style={{ display: 'flex', gap: '6px' }}>
+              <button
+                type="button"
+                className="secondary-btn"
+                style={{ padding: '2px 8px', fontSize: '11.5px', color: '#00BFA5', borderColor: 'rgba(0,191,165,0.3)' }}
+                onClick={async () => {
+                  setLocationLoading(true);
+                  const loc = await captureCurrentExpenseLocation();
+                  if (loc) setLocation(loc);
+                  setLocationLoading(false);
+                }}
+              >
+                + Tag Location
+              </button>
+              <button
+                type="button"
+                className="secondary-btn"
+                style={{ padding: '2px 8px', fontSize: '11.5px', color: '#00BFA5', borderColor: 'rgba(0,191,165,0.3)' }}
+                onClick={() => setShowPlaceSearch((v) => !v)}
+              >
+                🔍 Search Place
+              </button>
+            </div>
           )}
         </div>
+
+        {!location && !locationLoading && showPlaceSearch && (
+          <div style={{ marginBottom: '8px' }}>
+            <input
+              type="text"
+              className="input-field"
+              placeholder="Type a place name (restaurant, hotel, ...)"
+              value={placeQuery}
+              onChange={(e) => setPlaceQuery(e.target.value)}
+              style={{ fontSize: '13px' }}
+            />
+            {placeSearching && (
+              <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', padding: '4px 0' }}>Searching...</div>
+            )}
+            {!placeSearching && placeResults.length > 0 && (
+              <div style={{ border: '1px solid var(--border)', borderRadius: '8px', marginTop: '4px', overflow: 'hidden' }}>
+                {placeResults.map((r, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => {
+                      setLocation({ lat: r.lat, lng: r.lng, placeName: r.placeName });
+                      setShowPlaceSearch(false);
+                      setPlaceQuery('');
+                      setPlaceResults([]);
+                    }}
+                    style={{
+                      display: 'block',
+                      width: '100%',
+                      textAlign: 'left',
+                      padding: '8px 10px',
+                      fontSize: '12.5px',
+                      background: 'transparent',
+                      border: 'none',
+                      borderBottom: i < placeResults.length - 1 ? '1px solid var(--border)' : 'none',
+                      cursor: 'pointer',
+                      color: 'var(--text-primary)',
+                    }}
+                  >
+                    📍 {r.placeName}
+                  </button>
+                ))}
+              </div>
+            )}
+            {!placeSearching && placeQuery.trim() && (
+              <button
+                type="button"
+                onClick={() => {
+                  setLocation({ lat: 0, lng: 0, placeName: placeQuery.trim(), pendingName: placeQuery.trim() });
+                  setShowPlaceSearch(false);
+                  setPlaceQuery('');
+                  setPlaceResults([]);
+                }}
+                style={{
+                  fontSize: '11.5px',
+                  color: 'var(--text-muted)',
+                  background: 'transparent',
+                  border: 'none',
+                  cursor: 'pointer',
+                  padding: '4px 0',
+                }}
+              >
+                Use "{placeQuery.trim()}" as typed (resolved when back online)
+              </button>
+            )}
+          </div>
+        )}
 
         {locationLoading ? (
           <div style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 0' }}>
@@ -370,13 +465,25 @@ export function ExpenseForm({
               gap: '8px',
               padding: '6px 12px',
               borderRadius: '20px',
-              background: 'rgba(0,191,165,0.08)',
-              border: '1px solid rgba(0,191,165,0.28)',
+              background: location.locationUnresolved
+                ? 'rgba(230,126,34,0.08)'
+                : location.pendingName
+                ? 'rgba(230,126,34,0.06)'
+                : 'rgba(0,191,165,0.08)',
+              border: location.locationUnresolved || location.pendingName
+                ? '1px solid rgba(230,126,34,0.28)'
+                : '1px solid rgba(0,191,165,0.28)',
               fontSize: '12.5px',
               color: 'var(--text-primary)',
             }}
           >
-            <span>📍 {location.placeName || `${location.lat.toFixed(3)}, ${location.lng.toFixed(3)}`}</span>
+            {location.locationUnresolved ? (
+              <span>⚠ "{location.pendingName}" — location not found</span>
+            ) : location.pendingName ? (
+              <span>⏳ {location.pendingName} (resolves when back online)</span>
+            ) : (
+              <span>📍 {location.placeName || `${location.lat.toFixed(3)}, ${location.lng.toFixed(3)}`}</span>
+            )}
             <button
               type="button"
               style={{

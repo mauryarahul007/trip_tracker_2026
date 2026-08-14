@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { Member, Group, Expense, Category, TripState } from '../types';
+import type { Member, Group, Expense, Category, TripState, ExpenseLocation } from '../types';
 import { supabase } from '../services/supabaseClient';
 import {
   fetchMyTripGraph,
@@ -32,18 +32,33 @@ import {
   type ExpenseInput,
 } from '../services/tripApi';
 import { generateDemoData } from '../utils/demoSeed';
-import { reverseGeocode } from '../utils/geolocation';
+import { reverseGeocode, searchPlaces } from '../utils/geolocation';
 
 // Offline capture falls back to a raw-coordinate placeName (see geolocation.ts).
 // Once we're syncing (guaranteed online), upgrade it to a real place name.
 const COORD_FALLBACK_PATTERN = /^-?\d+\.\d+°, -?\d+\.\d+°$/;
 
-async function upgradeOfflinePlaceName(location: { lat: number; lng: number; placeName?: string } | null | undefined) {
-  if (!location || !location.placeName || !COORD_FALLBACK_PATTERN.test(location.placeName)) {
-    return location;
+// A manually typed place name (no coords yet, see ExpenseForm's search-place
+// fallback) or a raw-coordinate placeName captured while offline both need a
+// network round trip to finish resolving. processQueue runs only when online,
+// so this is the one place it's safe to do it.
+export async function resolvePendingLocation(location: ExpenseLocation | null | undefined): Promise<ExpenseLocation | null | undefined> {
+  if (!location) return location;
+
+  if (location.pendingName) {
+    const results = await searchPlaces(location.pendingName);
+    if (results.length > 0) {
+      return { lat: results[0].lat, lng: results[0].lng, placeName: results[0].placeName };
+    }
+    return { ...location, locationUnresolved: true };
   }
-  const placeName = await reverseGeocode(location.lat, location.lng);
-  return { ...location, placeName };
+
+  if (location.placeName && COORD_FALLBACK_PATTERN.test(location.placeName)) {
+    const placeName = await reverseGeocode(location.lat, location.lng);
+    return { ...location, placeName };
+  }
+
+  return location;
 }
 
 interface SyncQueueItem {
@@ -404,7 +419,7 @@ export const useTripStore = create<TripStore>()(
               if (expenseData.receiptImage) {
                 receiptPath = await uploadReceipt(tripId, tempId, expenseData.receiptImage);
               }
-              const location = await upgradeOfflinePlaceName(expenseData.location);
+              const location = await resolvePendingLocation(expenseData.location);
               const savedExpense = await insertExpense(tripId, userId, toExpenseInput({ ...expenseData, location }, resolvedShares, { id: tempId, receiptPath }));
               set((state) => ({
                 expenses: state.expenses.map((e) => (e.id === tempId ? savedExpense : e)),
@@ -421,8 +436,11 @@ export const useTripStore = create<TripStore>()(
               if (expenseData.receiptImage) {
                 receiptPath = await uploadReceipt(tripId, id, expenseData.receiptImage);
               }
-              const location = await upgradeOfflinePlaceName(expenseData.location);
+              const location = await resolvePendingLocation(expenseData.location);
               await updateExpenseRow(id, toExpenseInput({ ...expenseData, location }, resolvedShares, { receiptPath }));
+              set((state) => ({
+                expenses: state.expenses.map((e) => (e.id === id ? { ...e, location: location ?? undefined } : e)),
+              }));
             }
           } else if (item.type === 'deleteExpense') {
             const { id, userId: deletedByUserId } = item.payload;

@@ -266,8 +266,21 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - `100dvh` is supported natively in modern iOS Safari (iOS 15.4+) and all modern mobile browsers. `-webkit-fill-available` and `100%` fallbacks ensure backwards compatibility with older WebKit runtimes.
 
+---
 
-
+## 22. Manual Place Search for Geotagging, and DB Coordinates-Only Storage
+* **Context:** Decision #20's geotagging only auto-captures GPS at the moment an expense is logged — no way to tag a place you're not physically standing at (a restaurant booked for tonight, a stay backfilled from memory). Separately, the DB was found to be storing `location.placeName` (a Nominatim reverse-geocode string) alongside coordinates; the requirement is that the backend must hold GPS coordinates only, never a place name, at any time.
+* **Decision:** Added a manual place-search (typeahead) alongside the existing "Tag Location" GPS button, and enforced coordinates-only storage at the DB write boundary — `placeName` is now purely a client-side display value, never persisted server-side.
+* **Pattern/Implementation:**
+  - **DB coords-only (`tripApi.ts`)**: `coordsOnly()` strips `placeName` (and any unresolved/pending marker) from every insert/update/seed payload before it reaches Supabase. Migration `0043_expense_location_coords_only.sql` scrubbed any `placeName` already synced from #20 and updated the column comment.
+  - **Forward-geocode search (`geolocation.ts`)**: `searchPlaces(query)` calls Nominatim's free `/search` endpoint (same service as the existing `/reverse` call), returns `[]` on offline/timeout/no-match, never throws.
+  - **Typeahead UI (`ExpenseForm.tsx`)**: A "🔍 Search Place" button next to "Tag Location" opens a 500ms-debounced search input. Picking a suggestion sets exact coordinates immediately. Typing a name with no pick (including fully offline) is accepted locally as `{ lat: 0, lng: 0, placeName, pendingName: placeName }` — a `pendingName` marker, not the sentinel coordinates, is the actual signal used everywhere downstream.
+  - **Sync-time resolution (`tripStore.ts`)**: `resolvePendingLocation()` (renamed/extended from the existing `upgradeOfflinePlaceName` coord-fallback upgrader) runs inside `processQueue()`, which only executes when `navigator.onLine` is guaranteed true. A `pendingName` is forward-geocoded there; a raw-coordinate `placeName` from offline GPS capture is still reverse-geocoded there as before. On no match, the location is marked `locationUnresolved: true` instead of being silently dropped.
+  - **Visible failure state**: `coordsOnly()` writes `location: null` to the DB for any `pendingName`/`locationUnresolved` location (never the `0,0` sentinel). The local copy keeps the flag so `ExpenseList.tsx`, `ExpenseReviewModal.tsx`, and `ExpenseForm.tsx` render an amber "⚠ location not found" / "⏳ pending" badge instead of a silently-vanished pin. `TripJourneyMap.tsx` filters these out of the route so `0,0` never plots a false marker.
+* **Trade-offs Accepted:**
+  - Forward-geocode ambiguity is resolved by silently taking Nominatim's top result — no confirmation prompt, since resolution happens in the background during sync, not interactively.
+  - `processQueue`'s existing sequential `for` loop naturally throttles resolution calls well under Nominatim's ~1 req/sec free-tier etiquette, even after a long offline period with many queued items — no extra rate-limiting code needed.
+  - A manually-typed name that never resolves means that expense permanently has no server-side location (by design, since the DB cannot hold a name) — surfaced as a persistent, tappable warning rather than fixed automatically.
 
 
 

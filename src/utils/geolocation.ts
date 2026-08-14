@@ -100,6 +100,47 @@ export async function reverseGeocode(lat: number, lng: number): Promise<string> 
 }
 
 /**
+ * Forward geocoding via Nominatim's free /search endpoint — resolves a typed
+ * place name into coordinates. Returns [] when offline, on network failure,
+ * or when there are no matches; never throws.
+ */
+export async function searchPlaces(query: string): Promise<{ lat: number; lng: number; placeName: string }[]> {
+  const trimmed = query.trim();
+  if (!trimmed || (typeof navigator !== 'undefined' && !navigator.onLine)) {
+    return [];
+  }
+
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 4000);
+
+    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(trimmed)}&addressdetails=1&limit=5`;
+    const res = await fetch(url, {
+      signal: controller.signal,
+      headers: {
+        'Accept': 'application/json',
+      },
+    });
+    clearTimeout(timer);
+
+    if (res.ok) {
+      const data = await res.json();
+      if (Array.isArray(data)) {
+        return data.map((item: any) => ({
+          lat: Number(Number(item.lat).toFixed(6)),
+          lng: Number(Number(item.lon).toFixed(6)),
+          placeName: item.display_name?.split(',').slice(0, 3).join(',').trim() || trimmed,
+        }));
+      }
+    }
+  } catch {
+    // Network failure / timeout / offline
+  }
+
+  return [];
+}
+
+/**
  * Convenience helper: captures GPS location and resolves its reverse geocoded place name.
  */
 export async function captureCurrentExpenseLocation(): Promise<ExpenseLocation | null> {

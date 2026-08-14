@@ -18,7 +18,7 @@ export function TripJourneyMap({ expenses, categories, baseCurrency }: Props) {
 
   // Filter valid geotagged expenses
   const geotaggedExpenses = expenses
-    .filter((e) => !e.deletedAt && e.location && typeof e.location.lat === 'number' && typeof e.location.lng === 'number')
+    .filter((e) => !e.deletedAt && e.location && !e.location.locationUnresolved && !e.location.pendingName && typeof e.location.lat === 'number' && typeof e.location.lng === 'number')
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime() || a.createdAt - b.createdAt);
 
   const categoryMap = new Map(categories.map((c) => [c.id, c]));

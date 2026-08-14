@@ -34,6 +34,12 @@ export interface ExpenseLocation {
   lat: number;
   lng: number;
   placeName?: string;
+  // A manually typed place name not yet resolved to coordinates (set locally,
+  // e.g. while offline). Resolved to lat/lng at sync time; never sent to the DB.
+  pendingName?: string;
+  // Set at sync time when pendingName could not be resolved to coordinates.
+  // Surfaced in the UI — the DB write itself omits location entirely in this case.
+  locationUnresolved?: boolean;
 }
 
 export interface Expense {

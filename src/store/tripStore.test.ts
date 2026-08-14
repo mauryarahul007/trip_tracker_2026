@@ -1,6 +1,13 @@
-import { describe, it, expect } from 'vitest';
-import { collectDirtyExpenseIds, mergeServerExpenses } from './tripStore';
+import { describe, it, expect, vi, afterEach } from 'vitest';
+import { collectDirtyExpenseIds, mergeServerExpenses, resolvePendingLocation } from './tripStore';
 import type { Expense } from '../types';
+
+vi.mock('../utils/geolocation', () => ({
+  searchPlaces: vi.fn(),
+  reverseGeocode: vi.fn(),
+}));
+
+const { searchPlaces, reverseGeocode } = await import('../utils/geolocation');
 
 function makeExpense(overrides: Partial<Expense> & { id: string; tripId: string }): Expense {
   return {
@@ -78,5 +85,43 @@ describe('mergeServerExpenses', () => {
     const merged = mergeServerExpenses(local, server, 'trip-a', new Set(['exp-1']));
     expect(merged).toHaveLength(1);
     expect(merged[0].title).toBe('Edited locally');
+  });
+});
+
+describe('resolvePendingLocation', () => {
+  afterEach(() => {
+    vi.mocked(searchPlaces).mockReset();
+    vi.mocked(reverseGeocode).mockReset();
+  });
+
+  it('resolves a manually typed pending name to coordinates when a match is found', async () => {
+    vi.mocked(searchPlaces).mockResolvedValueOnce([{ lat: 12.34, lng: 56.78, placeName: 'Some Cafe, City' }]);
+    const result = await resolvePendingLocation({ lat: 0, lng: 0, placeName: 'some cafe', pendingName: 'some cafe' });
+    expect(result).toEqual({ lat: 12.34, lng: 56.78, placeName: 'Some Cafe, City' });
+  });
+
+  it('flags locationUnresolved when a pending name has no matches', async () => {
+    vi.mocked(searchPlaces).mockResolvedValueOnce([]);
+    const result = await resolvePendingLocation({ lat: 0, lng: 0, placeName: 'zzzz nonsense', pendingName: 'zzzz nonsense' });
+    expect(result).toEqual({ lat: 0, lng: 0, placeName: 'zzzz nonsense', pendingName: 'zzzz nonsense', locationUnresolved: true });
+  });
+
+  it('upgrades an offline coord-fallback placeName via reverse geocoding', async () => {
+    vi.mocked(reverseGeocode).mockResolvedValueOnce('Real Place Name');
+    const result = await resolvePendingLocation({ lat: 12.345, lng: 67.891, placeName: '12.345°, 67.891°' });
+    expect(result).toEqual({ lat: 12.345, lng: 67.891, placeName: 'Real Place Name' });
+  });
+
+  it('leaves an already-resolved location untouched', async () => {
+    const location = { lat: 1, lng: 2, placeName: 'Already Resolved' };
+    const result = await resolvePendingLocation(location);
+    expect(result).toEqual(location);
+    expect(searchPlaces).not.toHaveBeenCalled();
+    expect(reverseGeocode).not.toHaveBeenCalled();
+  });
+
+  it('passes through null/undefined location unchanged', async () => {
+    expect(await resolvePendingLocation(null)).toBeNull();
+    expect(await resolvePendingLocation(undefined)).toBeUndefined();
   });
 });
