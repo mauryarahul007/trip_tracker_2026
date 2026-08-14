@@ -35,9 +35,17 @@ export function UndoToasts({
 
   return (
     <div style={{
-      position: 'fixed', bottom: '24px', left: '50%', transform: 'translateX(-50%)',
-      display: 'flex', flexDirection: 'column-reverse', gap: '10px', alignItems: 'center',
-      zIndex: 9999
+      position: 'fixed',
+      bottom: 'calc(72px + env(safe-area-inset-bottom, 0px))',
+      left: '50%',
+      transform: 'translateX(-50%)',
+      display: 'flex',
+      flexDirection: 'column-reverse',
+      gap: '10px',
+      alignItems: 'center',
+      zIndex: 9999,
+      maxWidth: 'calc(100vw - 32px)',
+      width: 'max-content',
     }}>
       {pendingDeleteExpense && (
         <PostmarkToast

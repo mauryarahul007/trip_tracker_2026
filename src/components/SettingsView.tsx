@@ -459,23 +459,8 @@ export function SettingsView({
 
         {/* Merge & Delete Category Dialog */}
         {categoryToDelete && (
-          <div
-            style={{
-              position: 'fixed',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              background: 'rgba(15,23,42,0.6)',
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-              zIndex: 1100,
-              padding: '20px',
-              backdropFilter: 'blur(4px)',
-            }}
-          >
-            <div className="glass-card fade-in" style={{ width: '100%', maxWidth: '400px', background: 'var(--bg-surface)', border: '1px solid var(--border-color)' }}>
+          <div className="modal-overlay" onClick={() => setCategoryToDelete(null)}>
+            <div className="glass-card fade-in" style={{ width: '100%', maxWidth: '400px', background: 'var(--bg-surface)', border: '1px solid var(--border-color)' }} onClick={(e) => e.stopPropagation()}>
               <h3 style={{ fontSize: '17px', marginBottom: '10px' }}>Merge and Delete Category</h3>
               <p style={{ fontSize: '13.5px', color: 'var(--text-secondary)', marginBottom: '16px', lineHeight: '1.5' }}>
                 The category <strong>"{categoryToDelete.name}"</strong> is currently used in <strong>{affectedExpensesCount}</strong> expense{affectedExpensesCount === 1 ? '' : 's'}. Select a replacement category to merge these expenses into:

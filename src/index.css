@@ -143,6 +143,7 @@
 
 html {
   height: 100%;
+  height: -webkit-fill-available;
   overscroll-behavior-y: none;
   -webkit-text-size-adjust: 100%;
 }
@@ -151,7 +152,11 @@ body {
   font-family: var(--font-family-body);
   background-color: var(--bg-page);
   color: var(--text-primary);
+  min-height: 100vh;
+  min-height: -webkit-fill-available;
+  min-height: 100dvh;
   height: 100%;
+  height: -webkit-fill-available;
   height: 100dvh;
   margin: 0;
   padding: 0;
@@ -163,6 +168,7 @@ body {
 
 #root {
   height: 100%;
+  height: -webkit-fill-available;
   height: 100dvh;
   display: flex;
   flex-direction: column;
@@ -175,6 +181,7 @@ body {
   width: 100%;
   margin: 0 auto;
   height: 100%;
+  height: -webkit-fill-available;
   height: 100dvh;
   display: flex;
   flex-direction: column;
@@ -355,7 +362,10 @@ button, [role="button"], input, select, a {
 
 /* Header & Navigation */
 .app-header {
-  padding: max(16px, env(safe-area-inset-top, 16px)) 20px 14px 20px;
+  padding-top: calc(14px + env(safe-area-inset-top, 0px));
+  padding-bottom: 14px;
+  padding-left: max(20px, env(safe-area-inset-left, 20px));
+  padding-right: max(20px, env(safe-area-inset-right, 20px));
   background-color: var(--bg-header);
   color: #F2ECDC;
   flex-shrink: 0;
@@ -408,7 +418,10 @@ button, [role="button"], input, select, a {
   display: flex;
   background: var(--bg-surface);
   border-top: 1px solid var(--border-color);
-  padding: 8px 10px max(8px, env(safe-area-inset-bottom, 8px)) 10px;
+  padding-top: 8px;
+  padding-left: max(10px, env(safe-area-inset-left, 10px));
+  padding-right: max(10px, env(safe-area-inset-right, 10px));
+  padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px));
   position: relative;
   flex-shrink: 0;
   z-index: 100;
@@ -1519,19 +1532,23 @@ input:checked + .toggle-slider:before {
   justify-content: center;
   z-index: 1000;
 }
-.modal-sheet {
+.modal-backdrop .modal-sheet {
   width: 100%;
   max-width: 500px;
-  height: 100vh;
+  height: 100%;
+  height: -webkit-fill-available;
   height: 100dvh;
   overflow-y: auto;
   overflow-x: hidden;
   background: var(--bg-surface);
   border-radius: 0;
   padding: 20px;
-  padding-top: max(20px, env(safe-area-inset-top));
-  padding-bottom: max(20px, env(safe-area-inset-bottom));
+  padding-top: calc(16px + env(safe-area-inset-top, 0px));
+  padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+  padding-left: max(20px, env(safe-area-inset-left, 20px));
+  padding-right: max(20px, env(safe-area-inset-right, 20px));
   animation: sheetUp 0.24s cubic-bezier(0.16, 1, 0.3, 1);
+  -webkit-overflow-scrolling: touch;
 }
 @keyframes sheetUp {
   from { opacity: 0; transform: translateY(16px); }
@@ -1574,7 +1591,7 @@ input:checked + .toggle-slider:before {
 .tab-pane {
   flex: 1;
   min-height: 0;
-  padding: 20px 20px 32px 20px;
+  padding: 20px max(20px, env(safe-area-inset-right, 20px)) calc(24px + env(safe-area-inset-bottom, 0px)) max(20px, env(safe-area-inset-left, 20px));
   overflow-y: auto;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
@@ -1586,7 +1603,10 @@ input:checked + .toggle-slider:before {
   overflow-y: auto;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
-  padding: max(24px, env(safe-area-inset-top, 24px)) 20px max(28px, env(safe-area-inset-bottom, 28px)) 20px;
+  padding-top: calc(20px + env(safe-area-inset-top, 0px));
+  padding-bottom: calc(32px + env(safe-area-inset-bottom, 0px));
+  padding-left: max(20px, env(safe-area-inset-left, 20px));
+  padding-right: max(20px, env(safe-area-inset-right, 20px));
 }
 
 .modal-overlay {
@@ -1597,20 +1617,21 @@ input:checked + .toggle-slider:before {
   bottom: 0;
   background: rgba(15, 23, 42, 0.65);
   display: flex;
-  justifyContent: center;
+  justify-content: center;
   align-items: center;
   z-index: 1100;
-  padding: 20px max(20px, env(safe-area-inset-right, 20px)) max(20px, env(safe-area-inset-bottom, 20px)) max(20px, env(safe-area-inset-left, 20px));
+  padding: 20px max(20px, env(safe-area-inset-right, 20px)) calc(20px + env(safe-area-inset-bottom, 0px)) max(20px, env(safe-area-inset-left, 20px));
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
   overscroll-behavior: contain;
   touch-action: pan-y;
 }
 
-.modal-sheet {
+.modal-overlay .modal-sheet {
   width: 100%;
-  max-width: 440px;
+  max-width: 460px;
   max-height: calc(100dvh - 40px);
+  max-height: calc(100% - 40px);
   overflow-y: auto;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;

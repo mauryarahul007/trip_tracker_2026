@@ -253,6 +253,20 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - Used Leaflet + OpenStreetMap over Google Maps JavaScript API: avoids paid API billing constraints, restrictive quotas, and heavy external script overhead. Leaflet CSS and assets are bundled efficiently.
 
+---
+
+## 21. Mobile Safari Viewport Height & Header/Footer Safe Area Optimization
+* **Context:** In Mobile Safari (iOS), `100vh` accounts for the full screen with collapsed browser toolbars, causing content and bottom navigation tabs to be partially obscured behind the Safari dynamic address bar and the iPhone home swipe indicator. In addition, floating toast messages and full-screen forms lacked dynamic safe-area calculation.
+* **Decision:** Replaced static viewport heights with CSS Dynamic Viewport Height (`100dvh`) with `-webkit-fill-available` fallbacks, and applied computed `calc(... + env(safe-area-inset-*))` padding rules across all headers, bottom bars, modals, and floating toasts.
+* **Pattern/Implementation:**
+  - **Dynamic Viewport Unit (`index.css`)**: `html`, `body`, `#root`, `.app-container`, and `.modal-sheet` use `min-height: 100dvh; height: 100dvh; height: -webkit-fill-available;` to smoothly track Safari's collapsible address bar.
+  - **Top Safe Area / Dynamic Island (`.app-header`)**: Uses `padding-top: calc(14px + env(safe-area-inset-top, 0px))` so headers adapt to iPhone notch/Dynamic Island without content clipping.
+  - **Bottom Safe Area / Home Indicator (`.nav-tabs`)**: Uses `padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px))` ensuring tab icons stay cleanly above the iOS home indicator bar and floating Safari navigation.
+  - **Floating Toasts & Action Sheets (`UndoToasts.tsx`, `.modal-overlay`)**: Positioned with `bottom: calc(72px + env(safe-area-inset-bottom, 0px))` ensuring action feedback is never masked by the bottom bar.
+* **Trade-offs Accepted:**
+  - `100dvh` is supported natively in modern iOS Safari (iOS 15.4+) and all modern mobile browsers. `-webkit-fill-available` and `100%` fallbacks ensure backwards compatibility with older WebKit runtimes.
+
+
 
 
 
