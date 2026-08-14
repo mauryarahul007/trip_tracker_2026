@@ -141,21 +141,41 @@
   padding: 0;
 }
 
+html {
+  height: 100%;
+  overscroll-behavior-y: none;
+  -webkit-text-size-adjust: 100%;
+}
+
 body {
   font-family: var(--font-family-body);
   background-color: var(--bg-page);
   color: var(--text-primary);
-  min-height: 100vh;
-  overflow-x: hidden;
+  height: 100%;
+  height: 100dvh;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  overscroll-behavior-y: none;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  height: 100%;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 /* Layout Container */
 .app-container {
   max-width: 500px; /* Centered mobile-first constraint */
+  width: 100%;
   margin: 0 auto;
-  min-height: 100vh;
+  height: 100%;
+  height: 100dvh;
   display: flex;
   flex-direction: column;
   background-color: var(--bg-app);
@@ -163,6 +183,7 @@ body {
   position: relative;
   border-left: 1px solid var(--border-color);
   border-right: 1px solid var(--border-color);
+  overflow: hidden;
 }
 
 /* Ledger card utility (kept the historical class name, restyled as paper stock) */
@@ -334,9 +355,11 @@ button, [role="button"], input, select, a {
 
 /* Header & Navigation */
 .app-header {
-  padding: 20px 20px 16px 20px;
+  padding: max(16px, env(safe-area-inset-top, 16px)) 20px 14px 20px;
   background-color: var(--bg-header);
   color: #F2ECDC;
+  flex-shrink: 0;
+  z-index: 40;
 }
 
 .app-header-top {
@@ -385,9 +408,9 @@ button, [role="button"], input, select, a {
   display: flex;
   background: var(--bg-surface);
   border-top: 1px solid var(--border-color);
-  padding: 8px 10px;
-  position: sticky;
-  bottom: 0;
+  padding: 8px 10px max(8px, env(safe-area-inset-bottom, 8px)) 10px;
+  position: relative;
+  flex-shrink: 0;
   z-index: 100;
 }
 
@@ -1544,22 +1567,9 @@ input:checked + .toggle-slider:before {
 }
 
 /* Layout Utilities */
-.app-container {
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
-  height: 100dvh;
-  background: var(--bg-app);
-  color: var(--text-primary);
-  max-width: 500px;
-  margin: 0 auto;
-  border-left: 1px solid var(--border-color);
-  border-right: 1px solid var(--border-color);
-  position: relative;
-}
-
 .app-main {
   flex: 1;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -1568,6 +1578,47 @@ input:checked + .toggle-slider:before {
 
 .tab-pane {
   flex: 1;
-  padding: 20px;
+  min-height: 0;
+  padding: 20px 20px 32px 20px;
   overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
 }
+
+.trips-screen-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  padding: max(24px, env(safe-area-inset-top, 24px)) 20px max(28px, env(safe-area-inset-bottom, 28px)) 20px;
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(15, 23, 42, 0.65);
+  display: flex;
+  justifyContent: center;
+  align-items: center;
+  z-index: 1100;
+  padding: 20px max(20px, env(safe-area-inset-right, 20px)) max(20px, env(safe-area-inset-bottom, 20px)) max(20px, env(safe-area-inset-left, 20px));
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+}
+
+.modal-sheet {
+  width: 100%;
+  max-width: 440px;
+  max-height: calc(100dvh - 40px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  position: relative;
+}
+

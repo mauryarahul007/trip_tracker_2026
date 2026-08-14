@@ -23,6 +23,7 @@ import { ShareTripModal } from './components/ShareTripModal';
 import { OfflinePeerSync } from './components/OfflinePeerSync';
 import { IconCalendar, IconChevronLeft, IconShare, IconSync } from './components/Icons';
 import { formatDateRange } from './utils/dateRange';
+import { useScrollLock } from './utils/useScrollLock';
 
 
 
@@ -156,9 +157,11 @@ export default function App() {
   // Share trip modal
   const [showShareTrip, setShowShareTrip] = useState(false);
   const [showOfflineSyncModal, setShowOfflineSyncModal] = useState(false);
-
   const [showMembersRequiredNotice, setShowMembersRequiredNotice] = useState(false);
   const [showGlobalSettings, setShowGlobalSettings] = useState(false);
+
+  // Lock background scroll when any modal is active
+  useScrollLock(Boolean(showShareTrip || showOfflineSyncModal || selectedReviewExpense || confirmRequest || showGlobalSettings));
 
   const p2pSyncEnabled = useTripStore((s) => s.p2pSyncEnabled);
   const lastPeerSyncedAt = useTripStore((s) => s.lastPeerSyncedAt);
@@ -834,7 +837,7 @@ export default function App() {
         />
       ) : (
         /* Screen 2: Active Trip Dashboard */
-        <div className="fade-in app-main">
+        <div className="fade-in" style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, overflow: 'hidden' }}>
           <header className="app-header">
             <div className="app-header-top">
               <div className="app-title-group">

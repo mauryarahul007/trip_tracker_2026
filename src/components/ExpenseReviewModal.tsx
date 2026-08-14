@@ -32,32 +32,16 @@ export function ExpenseReviewModal({ expense, members, categories, trip, onClose
 
   return (
     <div
-      style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        background: 'rgba(15, 23, 42, 0.6)',
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        zIndex: 1000,
-        padding: '20px',
-        backdropFilter: 'blur(4px)'
-      }}
+      className="modal-overlay"
       onClick={onClose}
     >
       <div
-        className="glass-card fade-in"
+        className="glass-card fade-in modal-sheet"
         style={{
-          width: '100%',
           maxWidth: '460px',
-          background: '#ffffff',
-          boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+          background: 'var(--bg-surface)',
+          boxShadow: 'var(--glass-shadow)',
           border: '1px solid var(--border-color)',
-          maxHeight: '85vh',
-          overflowY: 'auto'
         }}
         onClick={(e) => e.stopPropagation()}
       >

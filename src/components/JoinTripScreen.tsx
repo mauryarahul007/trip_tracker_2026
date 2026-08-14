@@ -81,26 +81,30 @@ export function JoinTripScreen() {
 
   if (status === 'invalid') {
     return (
-      <div className="fade-in glass-card" style={{ margin: '24px 20px', padding: '24px', textAlign: 'center' }}>
-        <h2 style={{ marginBottom: '8px' }}>Invite not found</h2>
-        <p style={{ color: 'var(--text-secondary)', fontSize: '14px', marginBottom: '20px' }}>
-          This invite code doesn't match any trip. Double-check the link, or ask the trip admin to resend it.
-        </p>
-        <button type="button" className="gradient-btn" onClick={() => navigate('/')}>
-          Go to my trips
-        </button>
+      <div className="app-container" style={{ justifyContent: 'center', alignItems: 'center', padding: '24px 20px' }}>
+        <div className="fade-in glass-card" style={{ width: '100%', maxWidth: '420px', padding: '28px 24px', textAlign: 'center' }}>
+          <h2 style={{ marginBottom: '8px' }}>Invite not found</h2>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '14px', marginBottom: '20px' }}>
+            This invite code doesn't match any trip. Double-check the link, or ask the trip admin to resend it.
+          </p>
+          <button type="button" className="gradient-btn" style={{ width: '100%' }} onClick={() => navigate('/')}>
+            Go to my trips
+          </button>
+        </div>
       </div>
     );
   }
 
   if (status === 'error') {
     return (
-      <div className="fade-in glass-card" style={{ margin: '24px 20px', padding: '24px', textAlign: 'center' }}>
-        <h2 style={{ marginBottom: '8px' }}>Something went wrong</h2>
-        <p style={{ color: 'var(--text-secondary)', fontSize: '14px', marginBottom: '20px' }}>{errorMessage}</p>
-        <button type="button" className="gradient-btn" onClick={load}>
-          Try again
-        </button>
+      <div className="app-container" style={{ justifyContent: 'center', alignItems: 'center', padding: '24px 20px' }}>
+        <div className="fade-in glass-card" style={{ width: '100%', maxWidth: '420px', padding: '28px 24px', textAlign: 'center' }}>
+          <h2 style={{ marginBottom: '8px' }}>Something went wrong</h2>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '14px', marginBottom: '20px' }}>{errorMessage}</p>
+          <button type="button" className="gradient-btn" style={{ width: '100%' }} onClick={load}>
+            Try again
+          </button>
+        </div>
       </div>
     );
   }
@@ -109,55 +113,61 @@ export function JoinTripScreen() {
 
   if (result.isAdmin || result.myMemberId) {
     return (
-      <div className="fade-in glass-card" style={{ margin: '24px 20px', padding: '24px', textAlign: 'center' }}>
-        <div style={{ marginBottom: '8px' }}>
-          <IconCheckCircle size={28} className="icon" />
+      <div className="app-container" style={{ justifyContent: 'center', alignItems: 'center', padding: '24px 20px' }}>
+        <div className="fade-in glass-card" style={{ width: '100%', maxWidth: '420px', padding: '28px 24px', textAlign: 'center' }}>
+          <div style={{ marginBottom: '12px' }}>
+            <IconCheckCircle size={32} className="icon" />
+          </div>
+          <h2 style={{ marginBottom: '8px' }}>You're already in "{result.tripName}"</h2>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '14px', marginBottom: '20px' }}>
+            {result.isAdmin ? "You're the admin of this trip." : "You've already claimed your spot on this trip."}
+          </p>
+          <button type="button" className="gradient-btn" style={{ width: '100%' }} onClick={() => goToTrip(result.tripId)}>
+            Go to trip
+          </button>
         </div>
-        <h2 style={{ marginBottom: '8px' }}>You're already in "{result.tripName}"</h2>
-        <p style={{ color: 'var(--text-secondary)', fontSize: '14px', marginBottom: '20px' }}>
-          {result.isAdmin ? "You're the admin of this trip." : "You've already claimed your spot on this trip."}
-        </p>
-        <button type="button" className="gradient-btn" onClick={() => goToTrip(result.tripId)}>
-          Go to trip
-        </button>
       </div>
     );
   }
 
   if (result.unclaimedMembers.length === 0) {
     return (
-      <div className="fade-in glass-card" style={{ margin: '24px 20px', padding: '24px', textAlign: 'center' }}>
-        <h2 style={{ marginBottom: '8px' }}>Everyone's already joined</h2>
-        <p style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>
-          All members of "{result.tripName}" have already claimed their spot. Ask the trip admin if you think this is a mistake.
-        </p>
+      <div className="app-container" style={{ justifyContent: 'center', alignItems: 'center', padding: '24px 20px' }}>
+        <div className="fade-in glass-card" style={{ width: '100%', maxWidth: '420px', padding: '28px 24px', textAlign: 'center' }}>
+          <h2 style={{ marginBottom: '8px' }}>Everyone's already joined</h2>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>
+            All members of "{result.tripName}" have already claimed their spot. Ask the trip admin if you think this is a mistake.
+          </p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="fade-in" style={{ padding: '24px 20px' }}>
-      <div className="glass-card" style={{ maxWidth: '420px', margin: '0 auto' }}>
-        <h2 style={{ marginBottom: '4px' }}>Join "{result.tripName}"</h2>
-        <p style={{ color: 'var(--text-secondary)', fontSize: '14px', marginBottom: '20px' }}>Which one are you?</p>
+    <div className="app-container" style={{ overflowY: 'auto' }}>
+      <div className="fade-in" style={{ padding: 'max(24px, env(safe-area-inset-top, 24px)) 20px max(24px, env(safe-area-inset-bottom, 24px)) 20px', flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div className="glass-card" style={{ width: '100%', maxWidth: '420px', margin: '0 auto' }}>
+          <h2 style={{ marginBottom: '4px' }}>Join "{result.tripName}"</h2>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '14px', marginBottom: '20px' }}>Which one are you?</p>
 
-        {errorMessage && (
-          <p style={{ color: 'var(--color-danger)', fontSize: '13px', marginBottom: '12px' }}>{errorMessage}</p>
-        )}
+          {errorMessage && (
+            <p style={{ color: 'var(--color-danger)', fontSize: '13px', marginBottom: '12px' }}>{errorMessage}</p>
+          )}
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-          {result.unclaimedMembers.map((member) => (
-            <button
-              key={member.id}
-              type="button"
-              className="secondary-btn"
-              style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '12px 14px', justifyContent: 'flex-start' }}
-              onClick={() => handleClaim(member.id)}
-            >
-              <IconMembers size={16} className="icon-sm" />
-              {member.name}
-            </button>
-          ))}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            {result.unclaimedMembers.map((member) => (
+              <button
+                key={member.id}
+                type="button"
+                className="secondary-btn"
+                style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '12px 14px', justifyContent: 'flex-start' }}
+                onClick={() => handleClaim(member.id)}
+              >
+                <IconMembers size={16} className="icon-sm" />
+                {member.name}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
     </div>

@@ -318,15 +318,19 @@ export function OfflinePeerSync({ onClose }: Props) {
   };
 
   return (
-    <div style={{
-      position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-      background: 'rgba(15, 23, 42, 0.6)', display: 'flex', justifyContent: 'center',
-      alignItems: 'center', zIndex: 1100, padding: '20px', backdropFilter: 'blur(4px)'
-    }}>
-      <div className="glass-card fade-in" style={{
-        width: '100%', maxWidth: '420px', background: '#ffffff',
-        border: '1px solid var(--border-color)', position: 'relative', padding: '24px'
-      }}>
+    <div className="modal-overlay" onClick={onClose}>
+      <div
+        className="glass-card fade-in modal-sheet"
+        style={{
+          maxWidth: '420px',
+          background: 'var(--bg-surface)',
+          boxShadow: 'var(--glass-shadow)',
+          border: '1px solid var(--border-color)',
+          position: 'relative',
+          padding: '24px'
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Close Button */}
         <button
           type="button"

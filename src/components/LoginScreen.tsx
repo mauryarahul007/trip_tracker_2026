@@ -23,24 +23,25 @@ export function LoginScreen() {
   }
 
   return (
-    <div
-      className="fade-in"
-      style={{
-        flex: 1,
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '24px 20px',
-        textAlign: 'center',
-      }}
-    >
-      <h1 className="app-logo" style={{ marginBottom: '8px' }}>
-        Trip Tracker 2026
-      </h1>
-      <p style={{ color: 'var(--text-secondary)', fontSize: '14px', marginBottom: '32px' }}>
-        Sign in to create trips or join one a friend shared with you.
-      </p>
+    <div className="app-container" style={{ justifyContent: 'center', alignItems: 'center' }}>
+      <div
+        className="fade-in"
+        style={{
+          width: '100%',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '24px 20px',
+          textAlign: 'center',
+        }}
+      >
+        <h1 className="app-logo" style={{ marginBottom: '8px' }}>
+          Trip Tracker 2026
+        </h1>
+        <p style={{ color: 'var(--text-secondary)', fontSize: '14px', marginBottom: '32px' }}>
+          Sign in to create trips or join one a friend shared with you.
+        </p>
 
       <div className="glass-card" style={{ width: '100%', maxWidth: '360px', padding: '28px 24px' }}>
         <div
@@ -124,5 +125,6 @@ export function LoginScreen() {
         </p>
       </div>
     </div>
+  </div>
   );
 }

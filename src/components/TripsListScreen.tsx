@@ -61,7 +61,7 @@ export function TripsListScreen({
   };
 
   return (
-    <div className="fade-in" style={{ padding: '24px 20px', flex: 1, display: 'flex', flexDirection: 'column' }}>
+    <div className="fade-in trips-screen-scroll">
       <header style={{ marginBottom: '32px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '16px' }}>
         <div>
           <h1 className="app-logo">Trip Tracker 2026</h1>
