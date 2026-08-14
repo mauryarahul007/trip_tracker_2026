@@ -158,6 +158,8 @@ export default function App() {
   const [showShareTrip, setShowShareTrip] = useState(false);
   const [showMembersRequiredNotice, setShowMembersRequiredNotice] = useState(false);
   const [showGlobalSettings, setShowGlobalSettings] = useState(false);
+  const [bypassEnvWarning, setBypassEnvWarning] = useState(false);
+  const isSuperadmin = useTripStore((s) => s.isSuperadmin);
 
   // Lock background scroll when any modal is active
   useScrollLock(Boolean(showShareTrip || selectedReviewExpense || confirmRequest || showGlobalSettings));
@@ -797,7 +799,7 @@ export default function App() {
     );
   }
 
-  if (isMissingSupabaseEnv) {
+  if (isMissingSupabaseEnv && !bypassEnvWarning && !isSuperadmin) {
     return (
       <div className="app-container" style={{ justifyContent: 'center', alignItems: 'center', padding: '24px' }}>
         <div className="glass-card" style={{ maxWidth: '460px', width: '100%', textAlign: 'center', padding: '32px 24px' }}>
@@ -819,7 +821,7 @@ export default function App() {
             Missing API Credentials
           </h2>
           <p style={{ fontSize: '14px', color: 'var(--text-secondary)', lineHeight: '1.6', marginBottom: '20px' }}>
-            To run Trip Tracker locally, you must copy <code>.env.example</code> to <code>.env</code> in the project root and fill in your Supabase credentials:
+            To connect to remote cloud sync, copy <code>.env.example</code> to <code>.env</code> in the project root and fill in your Supabase credentials:
           </p>
           <pre style={{
             background: 'rgba(0,0,0,0.03)',
@@ -836,9 +838,19 @@ export default function App() {
             VITE_SUPABASE_URL=https://your-project.supabase.co
             {"\n"}VITE_SUPABASE_ANON_KEY=your-anon-key
           </pre>
-          <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: 0 }}>
-            After saving the <code>.env</code> file, restart your local development server.
-          </p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <button
+              type="button"
+              className="primary-btn"
+              onClick={() => setBypassEnvWarning(true)}
+              style={{ width: '100%', padding: '10px 16px' }}
+            >
+              Continue in Offline / Local Mode
+            </button>
+            <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: 0 }}>
+              You can still use all local features, demo trips, and Superadmin tools offline.
+            </p>
+          </div>
         </div>
       </div>
     );
