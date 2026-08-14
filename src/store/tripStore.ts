@@ -748,6 +748,7 @@ export const useTripStore = create<TripStore>()(
         splitMemberIds: expenseData.splitMemberIds,
         splitConfig: expenseData.splitConfig,
         resolvedShares,
+        location: expenseData.location ?? undefined,
       };
 
       // Optimistically add the expense
