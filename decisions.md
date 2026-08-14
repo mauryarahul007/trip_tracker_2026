@@ -148,6 +148,20 @@ This document logs all meaningful technical decisions, library choices, design p
 
 ---
 
+## 15. Recycle Bin for Deleted Expenses (24h Soft-Delete)
+* **Context:** Deleting an expense only had a 5-second undo toast; once that window passed, `deleteExpenseRow` hard-deleted the row from Supabase with no way to recover it.
+* **Decision:** Deleting an expense now soft-deletes it (`deleted_at`/`deleted_by_user_id` timestamp columns) instead of hard-deleting. A **Recycle Bin** panel under the trip's Settings tab lists soft-deleted expenses for review/restore. A `pg_cron` job running hourly inside Postgres permanently purges anything past a 24h grace window.
+* **Pattern/Implementation:**
+  - New migration `0041_add_expense_recycle_bin.sql`: adds `deleted_at`/`deleted_by_user_id` to `expenses`, an index on `(trip_id, deleted_at)`, a `SECURITY DEFINER` `purge_expired_recycle_bin()` function (EXECUTE revoked from `anon`/`authenticated` — only the cron job can invoke it), and a `cron.schedule('purge-recycle-bin', '0 * * * *', ...)` job.
+  - `tripApi.ts`: `deleteExpenseRow`/`restoreExpenseRow` now do `UPDATE deleted_at` instead of `DELETE`; `fetchExpensesForTrip` filters `deleted_at is null`; new `fetchDeletedExpensesForTrip` fetches the inverse.
+  - `tripStore.ts`: new `deletedExpenses` state, `fetchDeletedExpenses`/`restoreExpense` actions, and the offline sync queue gained a `restoreExpense` queueable type alongside the existing `deleteExpense` one (which now maps to the soft-delete call).
+  - The existing 5s undo toast is unchanged and sits in front of this as a fast-path — the recycle bin is the second-chance layer for anyone who misses that window.
+* **Trade-offs Accepted:**
+  - Purge is DB-authoritative via `pg_cron`, not client-triggered, so it keeps working even if the app is never opened — but it means the purge function must never be reachable through the client API (`REVOKE` from `authenticated`/`anon`), since the 24h window is a data-retention guarantee, not just UI.
+  - The Recycle Bin lives per-trip in `SettingsTab.tsx` rather than the account-level `GlobalSettingsModal`, since expenses (unlike trips) are always scoped to one trip.
+
+---
+
 ## 14. Ultra-Compact WebRTC SDP Serialization & Header Sync Status UX
 * **Context:** Offline P2P sync QR codes were unreadable by smartphone camera sensors because full browser WebRTC SDP descriptions (~1.8KB+) generated extremely dense Version 30+ QR matrices with microscopic dots. In addition, the header had duplicate sync triggers (a round sync button and a status message pill).
 * **Decision:**
