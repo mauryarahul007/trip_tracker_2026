@@ -580,9 +580,31 @@ export async function insertTripGraph(ownerId: string, seed: TripGraphSeed): Pro
       is_settlement: e.title.startsWith('Settlement:'),
       created_by_user_id: ownerId,
     }));
-    const { data, error } = await supabase.from('expenses').insert(rows).select();
-    if (error) throw error;
-    expenses = (data ?? []).map(mapExpense);
+    let data: any = null;
+    const { data: insertData, error } = await supabase.from('expenses').insert(rows).select();
+    if (error) {
+      const isLocationColError = error.message?.toLowerCase().includes('location') ||
+        error.details?.toLowerCase().includes('location') ||
+        error.hint?.toLowerCase().includes('location') ||
+        error.code === 'PGRST204';
+
+      if (isLocationColError) {
+        console.warn('Remote Supabase expenses table missing location column; inserting seed expenses without remote location column.');
+        const rowsWithoutLoc = rows.map(({ location: _loc, ...rest }) => rest);
+        const fallbackRes = await supabase.from('expenses').insert(rowsWithoutLoc).select();
+        if (fallbackRes.error) throw fallbackRes.error;
+        data = fallbackRes.data;
+      } else {
+        throw error;
+      }
+    } else {
+      data = insertData;
+    }
+
+    expenses = (data ?? []).map((row: any, i: number) => ({
+      ...mapExpense(row),
+      location: (seed.expenses[i] as any)?.location ?? row.location ?? undefined,
+    }));
   }
 
   const finalTrip: Trip = { ...trip, memberIds: members.map((m) => m.id), groupIds: groups.map((g) => g.id), expenseCount: expenses.length };
