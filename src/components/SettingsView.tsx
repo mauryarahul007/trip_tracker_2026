@@ -70,6 +70,7 @@ interface SettingsViewProps {
   onSignOut?: () => void;
   pwaInstallable?: boolean;
   onInstallApp?: () => void;
+  onOpenSuperadminPortal?: () => void;
 
   // Context
   hasActiveTrip?: boolean;
@@ -102,6 +103,7 @@ export function SettingsView({
   onSignOut,
   pwaInstallable = false,
   onInstallApp,
+  onOpenSuperadminPortal,
   hasActiveTrip = true,
   initialSubScreen = null,
   onClose,
@@ -870,7 +872,7 @@ export function SettingsView({
       {/* Superadmin Active Hero Cockpit Card */}
       {isSuperadmin && (
         <div
-          onClick={() => setSubScreen('superadmin')}
+          onClick={() => (onOpenSuperadminPortal ? onOpenSuperadminPortal() : setSubScreen('superadmin'))}
           style={{
             display: 'flex',
             alignItems: 'center',

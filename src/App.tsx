@@ -20,9 +20,10 @@ import { ExpenseReviewModal } from './components/ExpenseReviewModal';
 import { UndoToasts } from './components/UndoToasts';
 import { NavTabs } from './components/NavTabs';
 import { ShareTripModal } from './components/ShareTripModal';
-import { IconCalendar, IconChevronLeft, IconShare } from './components/Icons';
+import { IconCalendar, IconChevronLeft, IconShare, IconShield } from './components/Icons';
 import { formatDateRange } from './utils/dateRange';
 import { useScrollLock } from './utils/useScrollLock';
+import { AdminPortalLayout } from './components/admin/AdminPortalLayout';
 
 
 
@@ -160,6 +161,7 @@ export default function App() {
   const [showGlobalSettings, setShowGlobalSettings] = useState(false);
   const [bypassEnvWarning, setBypassEnvWarning] = useState(false);
   const isSuperadmin = useTripStore((s) => s.isSuperadmin);
+  const [isTravelerPreview, setIsTravelerPreview] = useState(false);
 
   // Lock background scroll when any modal is active
   useScrollLock(Boolean(showShareTrip || selectedReviewExpense || confirmRequest || showGlobalSettings));
@@ -856,8 +858,50 @@ export default function App() {
     );
   }
 
+  if (isSuperadmin && !isTravelerPreview) {
+    return (
+      <AdminPortalLayout
+        trips={trips}
+        expenses={expenses}
+        members={members}
+        categories={categories}
+        onExitToTravelerApp={() => setIsTravelerPreview(true)}
+      />
+    );
+  }
+
   return (
     <div className="app-container">
+      {/* Superadmin Traveler Preview Top Floating Banner */}
+      {isSuperadmin && isTravelerPreview && (
+        <div
+          style={{
+            position: 'sticky',
+            top: 0,
+            zIndex: 100,
+            background: 'linear-gradient(135deg, #1C2A38, #1F6E68)',
+            color: '#FFFFFF',
+            padding: '10px 16px',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            boxShadow: '0 2px 10px rgba(0,0,0,0.15)',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', fontWeight: 600 }}>
+            <IconShield size={16} /> 👁️ Previewing as Normal Traveler
+          </div>
+          <button
+            type="button"
+            className="primary-btn"
+            style={{ padding: '4px 12px', fontSize: '12px', background: '#10B981' }}
+            onClick={() => setIsTravelerPreview(false)}
+          >
+            ⚡ Return to Superadmin Portal
+          </button>
+        </div>
+      )}
+
       {/* Storage Toast Alert */}
       {storageError && isOnline && (
         <div className="toast-alert">
@@ -1086,6 +1130,7 @@ export default function App() {
                 onSignOut={signOut}
                 pwaInstallable={!!deferredPrompt}
                 onInstallApp={handleInstallApp}
+                onOpenSuperadminPortal={() => setIsTravelerPreview(false)}
               />
             </div>
           </main>

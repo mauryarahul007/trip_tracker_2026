@@ -309,5 +309,21 @@ This document logs all meaningful technical decisions, library choices, design p
 
 ---
 
+## 24. Dedicated Superadmin Management Portal & Multi-Page Administration
+* **Context:** Embedding the administrative cockpit inside the regular customer expense logger caused role confusion. Normal travelers require a minimal customer interface solely focused on logging expenses, group members, and settlements. Superadmin requires a completely separated, dedicated administrative management application with its own top-level navigation and distinct purpose-built screens.
+* **Decision:** Split the user experience into two completely separated shells: the Customer Traveler App and the Dedicated Superadmin Management Portal (`AdminPortalLayout`) containing 4 distinct administrative pages.
+* **Pattern/Implementation:**
+  - **Superadmin Portal Shell (`AdminPortalLayout.tsx`)**: Renders a dedicated administrative workspace upon superadmin login, with its own header, system indicators, traveler preview toggle, and admin logout.
+  - **4 Dedicated Administrative Pages (`src/components/admin/`)**:
+    1. 🚩 **Flags Page (`AdminFlagsPage.tsx`)**: Full-page Feature Flag switchboard with live toggle cards, description, and per-trip/user override selector.
+    2. 📊 **Global Analytics Page (`AdminAnalyticsPage.tsx`)**: High-end cross-trip financial telemetry, multi-trip KPIs, category volume breakdown, spenders leaderboard, and currency distribution.
+    3. 🗂️ **Trips Directory & Governance Page (`AdminTripsPage.tsx`)**: Isolated trip directory, group privacy notice, status badges (Active/Frozen/Archived), Emergency Stop / Kill-switch (`freezeTrip`), and trip deletion.
+    4. ⚙️ **System Tools Page (`AdminToolsPage.tsx`)**: Category & brand keyword rule manager (200+ brand auto-match rules), JSON database export/import backup, and demo dataset seeder.
+  - **Role-Based Root View Switcher (`App.tsx`)**: Checks `isSuperadmin && !isTravelerPreview` to immediately mount `AdminPortalLayout`. Provides an "👁️ Preview Traveler View" switch with a top floating banner to jump back to the Superadmin Portal.
+* **Trade-offs Accepted:**
+  - Kept single SPA bundle with conditional shell rendering instead of multi-app domain partitioning to preserve offline caching and instant switching between administrative and traveler preview modes.
+
+---
+
 
 

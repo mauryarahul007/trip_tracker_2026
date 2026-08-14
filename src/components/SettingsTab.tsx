@@ -9,6 +9,7 @@ type Props = {
   onExportCsv: () => void;
   isAdmin: boolean;
   onOpenGlobalSettings?: () => void;
+  onOpenSuperadminPortal?: () => void;
 
   themePref?: ThemePref;
   setThemePref?: (v: ThemePref) => void;
@@ -55,6 +56,7 @@ export function SettingsTab({
   onSignOut,
   pwaInstallable,
   onInstallApp,
+  onOpenSuperadminPortal,
 }: Props) {
   return (
     <SettingsView
@@ -82,6 +84,7 @@ export function SettingsTab({
       onSignOut={onSignOut}
       pwaInstallable={pwaInstallable}
       onInstallApp={onInstallApp}
+      onOpenSuperadminPortal={onOpenSuperadminPortal}
       hasActiveTrip={true}
     />
   );
