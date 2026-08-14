@@ -22,6 +22,8 @@ import {
   updateExpenseRow,
   deleteExpenseRow,
   restoreExpenseRow,
+  permanentlyDeleteExpenseRow,
+  purgeDeletedExpensesForTrip,
   fetchDeletedExpensesForTrip,
   insertTripGraph,
   uploadReceipt,
@@ -34,7 +36,7 @@ const LAST_TRIP_KEY = 'trip-tracker-last-trip-id';
 
 interface SyncQueueItem {
   id: string;
-  type: 'addExpense' | 'updateExpense' | 'deleteExpense' | 'restoreExpense';
+  type: 'addExpense' | 'updateExpense' | 'deleteExpense' | 'restoreExpense' | 'permanentlyDeleteExpense' | 'emptyRecycleBin';
   payload: any;
 }
 
@@ -52,7 +54,7 @@ interface TripStore extends TripState {
   refreshTrips: () => Promise<void>;
   clearStorageError: () => void;
   processQueue: () => Promise<void>;
-  queueSync: (type: 'addExpense' | 'updateExpense' | 'deleteExpense' | 'restoreExpense', payload: any) => void;
+  queueSync: (type: 'addExpense' | 'updateExpense' | 'deleteExpense' | 'restoreExpense' | 'permanentlyDeleteExpense' | 'emptyRecycleBin', payload: any) => void;
   setP2PSyncEnabled: (enabled: boolean) => void;
   updateLastPeerSyncedAt: (timestamp: number) => void;
 
@@ -83,6 +85,8 @@ interface TripStore extends TripState {
   deletedExpenses: Expense[];
   fetchDeletedExpenses: () => Promise<void>;
   restoreExpense: (id: string) => Promise<void>;
+  permanentlyDeleteExpense: (id: string) => Promise<void>;
+  emptyRecycleBin: () => Promise<void>;
 
   // Category Actions
   addCategory: (name: string, icon?: string) => Promise<void>;
@@ -356,6 +360,12 @@ export const useTripStore = create<TripStore>((set, get) => {
           } else if (item.type === 'restoreExpense') {
             const { id } = item.payload;
             await restoreExpenseRow(id);
+          } else if (item.type === 'permanentlyDeleteExpense') {
+            const { id } = item.payload;
+            await permanentlyDeleteExpenseRow(id);
+          } else if (item.type === 'emptyRecycleBin') {
+            const { tripId } = item.payload;
+            await purgeDeletedExpensesForTrip(tripId);
           }
         } catch (err) {
           console.error('Offline sync failed for item:', item, err);
@@ -794,6 +804,45 @@ export const useTripStore = create<TripStore>((set, get) => {
             deletedExpenses: [existing, ...state.deletedExpenses],
             trips: state.trips.map((t) => (t.id === existing.tripId ? { ...t, expenseCount: Math.max(0, (t.expenseCount || 0) - 1), updatedAt: Date.now() } : t)),
           }));
+          setError(e);
+        }
+      }
+    },
+
+    permanentlyDeleteExpense: async (id) => {
+      const existing = get().deletedExpenses.find((e) => e.id === id);
+      set((state) => ({
+        deletedExpenses: state.deletedExpenses.filter((e) => e.id !== id),
+        storageError: null,
+      }));
+
+      if (!navigator.onLine) {
+        get().queueSync('permanentlyDeleteExpense', { id });
+      } else {
+        try {
+          await permanentlyDeleteExpenseRow(id);
+        } catch (e) {
+          if (existing) {
+            set((state) => ({ deletedExpenses: [existing, ...state.deletedExpenses] }));
+          }
+          setError(e);
+        }
+      }
+    },
+
+    emptyRecycleBin: async () => {
+      const tripId = get().activeTripId;
+      if (!tripId) return;
+      const prevDeleted = get().deletedExpenses;
+      set({ deletedExpenses: [], storageError: null });
+
+      if (!navigator.onLine) {
+        get().queueSync('emptyRecycleBin', { tripId });
+      } else {
+        try {
+          await purgeDeletedExpensesForTrip(tripId);
+        } catch (e) {
+          set({ deletedExpenses: prevDeleted });
           setError(e);
         }
       }

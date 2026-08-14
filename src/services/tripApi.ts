@@ -153,11 +153,13 @@ export async function fetchExpensesForTrip(tripId: string): Promise<Expense[]> {
 }
 
 export async function fetchDeletedExpensesForTrip(tripId: string): Promise<Expense[]> {
+  const cutoffIso = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
   const { data, error } = await supabase
     .from('expenses')
     .select('*')
     .eq('trip_id', tripId)
     .not('deleted_at', 'is', null)
+    .gt('deleted_at', cutoffIso)
     .order('deleted_at', { ascending: false });
   if (error) throw error;
   return (data ?? []).map(mapExpense);
@@ -404,6 +406,23 @@ export async function restoreExpenseRow(id: string): Promise<void> {
     .from('expenses')
     .update({ deleted_at: null, deleted_by_user_id: null })
     .eq('id', id);
+  if (error) throw error;
+}
+
+export async function permanentlyDeleteExpenseRow(id: string): Promise<void> {
+  const { error } = await supabase
+    .from('expenses')
+    .delete()
+    .eq('id', id);
+  if (error) throw error;
+}
+
+export async function purgeDeletedExpensesForTrip(tripId: string): Promise<void> {
+  const { error } = await supabase
+    .from('expenses')
+    .delete()
+    .eq('trip_id', tripId)
+    .not('deleted_at', 'is', null);
   if (error) throw error;
 }
 

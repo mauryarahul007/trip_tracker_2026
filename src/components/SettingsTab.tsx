@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import type { Category, Expense } from '../types';
-import { IconDownload, IconArchive } from './Icons';
+import { IconDownload, IconArchive, IconTrash } from './Icons';
 import { CategoryIcon } from './CategoryIcon';
 import { OfflinePeerSync } from './OfflinePeerSync';
 import { useTripStore } from '../store/tripStore';
@@ -41,6 +41,8 @@ export function SettingsTab({
   const deletedExpenses = useTripStore((s) => s.deletedExpenses);
   const fetchDeletedExpenses = useTripStore((s) => s.fetchDeletedExpenses);
   const restoreExpense = useTripStore((s) => s.restoreExpense);
+  const permanentlyDeleteExpense = useTripStore((s) => s.permanentlyDeleteExpense);
+  const emptyRecycleBin = useTripStore((s) => s.emptyRecycleBin);
 
   useEffect(() => {
     fetchDeletedExpenses();
@@ -193,7 +195,23 @@ export function SettingsTab({
 
       {/* Recycle Bin */}
       <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '24px' }}>
-        <h4 style={{ fontSize: '16px' }}>Recycle Bin</h4>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+          <h4 style={{ fontSize: '16px', margin: 0 }}>Recycle Bin</h4>
+          {deletedExpenses.length > 0 && (
+            <button
+              type="button"
+              className="secondary-btn"
+              style={{ padding: '4px 10px', fontSize: '11.5px', color: 'var(--color-danger)', borderColor: 'rgba(184,69,46,0.2)' }}
+              onClick={() => {
+                if (window.confirm('Permanently delete all expenses in the recycle bin? This cannot be undone.')) {
+                  emptyRecycleBin();
+                }
+              }}
+            >
+              Empty Bin
+            </button>
+          )}
+        </div>
         {deletedExpenses.length === 0 ? (
           <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: 0 }}>
             No deleted expenses. Deleted expenses stay here for 24 hours before being permanently removed.
@@ -214,14 +232,31 @@ export function SettingsTab({
                     {exp.currency} {exp.amount.toFixed(2)} &middot; {exp.deletedAt ? formatTimeLeft(exp.deletedAt) : ''}
                   </div>
                 </div>
-                <button
-                  type="button"
-                  className="secondary-btn"
-                  style={{ padding: '6px 10px', fontSize: '12px', flexShrink: 0 }}
-                  onClick={() => restoreExpense(exp.id)}
-                >
-                  <IconArchive size={13} className="icon-sm" /> Restore
-                </button>
+                <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
+                  <button
+                    type="button"
+                    className="secondary-btn"
+                    style={{ padding: '6px 10px', fontSize: '12px' }}
+                    onClick={() => restoreExpense(exp.id)}
+                    title="Restore expense"
+                  >
+                    <IconArchive size={13} className="icon-sm" /> Restore
+                  </button>
+                  <button
+                    type="button"
+                    className="secondary-btn"
+                    style={{ padding: '6px 8px', fontSize: '12px', color: 'var(--color-danger)', borderColor: 'rgba(184,69,46,0.2)' }}
+                    onClick={() => {
+                      if (window.confirm(`Permanently delete "${exp.title}"? This cannot be undone.`)) {
+                        permanentlyDeleteExpense(exp.id);
+                      }
+                    }}
+                    title="Permanently delete now"
+                    aria-label="Permanently delete"
+                  >
+                    <IconTrash size={13} className="icon-sm" />
+                  </button>
+                </div>
               </div>
             ))}
           </div>

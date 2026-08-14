@@ -579,9 +579,9 @@ export default function App() {
     setShowAddExpense(true);
   };
 
+  const UNDO_DURATION_MS = 2000;
 
-
-  // Undo-delete: stage the expense, start a 5-second timer
+  // Undo-delete: stage the expense, start a 2-second timer
   const handleDeleteExpense = (exp: Expense) => {
     // Cancel any prior pending deletion first
     if (undoTimer) clearTimeout(undoTimer);
@@ -589,7 +589,7 @@ export default function App() {
     const timer = setTimeout(() => {
       deleteExpense(exp.id);
       setPendingDeleteExpense(null);
-    }, 5000);
+    }, UNDO_DURATION_MS);
     setUndoTimer(timer);
   };
 
@@ -599,14 +599,14 @@ export default function App() {
     setPendingDeleteExpense(null);
   };
 
-  // Undo-delete: stage the trip, start a 5-second timer
+  // Undo-delete: stage the trip, start a 2-second timer
   const handleDeleteTrip = (trip: Trip) => {
     if (tripUndoTimer) clearTimeout(tripUndoTimer);
     setPendingDeleteTrip(trip);
     const timer = setTimeout(() => {
       deleteTrip(trip.id);
       setPendingDeleteTrip(null);
-    }, 5000);
+    }, UNDO_DURATION_MS);
     setTripUndoTimer(timer);
   };
 
@@ -624,14 +624,14 @@ export default function App() {
     archiveTrip(trip.id, false);
   };
 
-  // Undo-delete: stage the group, start a 5-second timer
+  // Undo-delete: stage the group, start a 2-second timer
   const handleDeleteGroup = (group: Group) => {
     if (groupUndoTimer) clearTimeout(groupUndoTimer);
     setPendingDeleteGroup(group);
     const timer = setTimeout(() => {
       deleteGroup(group.id);
       setPendingDeleteGroup(null);
-    }, 5000);
+    }, UNDO_DURATION_MS);
     setGroupUndoTimer(timer);
   };
 
