@@ -46,8 +46,8 @@ interface TripStore extends TripState {
   userId: string | null;
   userDisplayName: string | null;
   syncQueue: SyncQueueItem[];
-  p2pSyncEnabled: boolean;
-  lastPeerSyncedAt: number | null;
+  lastBackendSyncedAt: number | null;
+  sessionExpired: boolean;
   lastModifiedAt: number;
 
   initialize: () => Promise<void>;
@@ -55,8 +55,7 @@ interface TripStore extends TripState {
   clearStorageError: () => void;
   processQueue: () => Promise<void>;
   queueSync: (type: 'addExpense' | 'updateExpense' | 'deleteExpense' | 'restoreExpense' | 'permanentlyDeleteExpense' | 'emptyRecycleBin', payload: any) => void;
-  setP2PSyncEnabled: (enabled: boolean) => void;
-  updateLastPeerSyncedAt: (timestamp: number) => void;
+  updateLastBackendSyncedAt: (timestamp: number) => void;
 
   // Trip Actions
   createTrip: (name: string, startDate: string, endDate: string, baseCurrency: string) => Promise<void>;
@@ -97,13 +96,6 @@ interface TripStore extends TripState {
   importDatabase: (jsonString: string) => Promise<boolean>;
   clearDatabase: () => Promise<void>;
   loadDemoTrip: () => Promise<void>;
-  applyP2PMergedState: (merged: {
-    expenses: Expense[];
-    categories: Category[];
-    members: Record<string, Member>;
-    groups: Record<string, Group>;
-    syncQueue: any[];
-  }) => Promise<void>;
 }
 
 
@@ -200,11 +192,9 @@ export const useTripStore = create<TripStore>((set, get) => {
     receiptPath: extra?.receiptPath,
   });
 
-  // Load saved P2P sync preferences & timestamps
-  const storedP2PEnabled = localStorage.getItem('trip-tracker-p2p-sync-enabled');
-  const initialP2PEnabled = storedP2PEnabled !== null ? storedP2PEnabled === 'true' : true;
-  const storedLastPeerSync = localStorage.getItem('trip-tracker-last-peer-sync');
-  const initialLastPeerSync = storedLastPeerSync ? Number(storedLastPeerSync) : null;
+  // Load last known backend sync timestamp
+  const storedLastBackendSync = localStorage.getItem('trip-tracker-last-backend-sync');
+  const initialLastBackendSync = storedLastBackendSync ? Number(storedLastBackendSync) : null;
 
   return {
     trips: [],
@@ -219,18 +209,13 @@ export const useTripStore = create<TripStore>((set, get) => {
     userId: null,
     userDisplayName: null,
     syncQueue: [],
-    p2pSyncEnabled: initialP2PEnabled,
-    lastPeerSyncedAt: initialLastPeerSync,
+    lastBackendSyncedAt: initialLastBackendSync,
+    sessionExpired: false,
     lastModifiedAt: Date.now(),
 
-    setP2PSyncEnabled: (enabled: boolean) => {
-      localStorage.setItem('trip-tracker-p2p-sync-enabled', String(enabled));
-      set({ p2pSyncEnabled: enabled });
-    },
-
-    updateLastPeerSyncedAt: (timestamp: number) => {
-      localStorage.setItem('trip-tracker-last-peer-sync', String(timestamp));
-      set({ lastPeerSyncedAt: timestamp });
+    updateLastBackendSyncedAt: (timestamp: number) => {
+      localStorage.setItem('trip-tracker-last-backend-sync', String(timestamp));
+      set({ lastBackendSyncedAt: timestamp });
     },
 
     initialize: async () => {
@@ -318,7 +303,24 @@ export const useTripStore = create<TripStore>((set, get) => {
 
 
     processQueue: async () => {
-      if (!navigator.onLine || get().syncQueue.length === 0) return;
+      if (!navigator.onLine) return;
+
+      // A device offline longer than the access token's lifetime comes
+      // back with a stale token — retrying queued items against it would
+      // fail identically forever. Refresh (or fail loud) before spending
+      // any retries.
+      const { data: { session } } = await supabase.auth.getSession();
+      const isExpired = !session || (session.expires_at ? session.expires_at * 1000 < Date.now() : false);
+      if (isExpired) {
+        const { data, error } = await supabase.auth.refreshSession();
+        if (error || !data.session) {
+          set({ sessionExpired: true });
+          return;
+        }
+      }
+      set({ sessionExpired: false });
+
+      if (get().syncQueue.length === 0) return;
       const queue = [...get().syncQueue];
       set({ syncQueue: [] });
       localStorage.removeItem('trip-tracker-sync-queue');
@@ -373,6 +375,10 @@ export const useTripStore = create<TripStore>((set, get) => {
           set({ syncQueue: updatedQueue });
           localStorage.setItem('trip-tracker-sync-queue', JSON.stringify(updatedQueue));
         }
+      }
+
+      if (get().syncQueue.length === 0) {
+        get().updateLastBackendSyncedAt(Date.now());
       }
     },
 
@@ -477,6 +483,10 @@ export const useTripStore = create<TripStore>((set, get) => {
     addMember: async (name, linkedUserId) => {
       const activeTripId = get().activeTripId;
       if (!activeTripId) return;
+      if (!navigator.onLine) {
+        set({ storageError: "You're offline — adding members needs a connection. Try again once you're back online." });
+        return;
+      }
       try {
         const member = await insertMember(activeTripId, name, linkedUserId || undefined);
         invalidatePreviousMembersCache();
@@ -987,33 +997,6 @@ export const useTripStore = create<TripStore>((set, get) => {
       } catch (e) {
         setError(e);
       }
-    },
-
-    applyP2PMergedState: async (merged) => {
-      const now = Date.now();
-      localStorage.setItem('trip-tracker-sync-queue', JSON.stringify(merged.syncQueue));
-      localStorage.setItem('trip-tracker-last-peer-sync', String(now));
-      set((state) => {
-        const activeTripId = state.activeTripId;
-        const updatedTrips = activeTripId
-          ? state.trips.map((t) =>
-              t.id === activeTripId
-                ? { ...t, expenseCount: merged.expenses.filter((e) => e.tripId === activeTripId).length }
-                : t
-            )
-          : state.trips;
-        return {
-          expenses: merged.expenses,
-          categories: merged.categories,
-          members: merged.members,
-          groups: merged.groups,
-          trips: updatedTrips,
-          syncQueue: merged.syncQueue,
-          lastPeerSyncedAt: now,
-          lastModifiedAt: now,
-          storageError: null,
-        };
-      });
     },
   };
 });

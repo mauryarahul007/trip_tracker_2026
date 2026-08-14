@@ -20,7 +20,6 @@ import { ExpenseReviewModal } from './components/ExpenseReviewModal';
 import { UndoToasts } from './components/UndoToasts';
 import { NavTabs } from './components/NavTabs';
 import { ShareTripModal } from './components/ShareTripModal';
-import { OfflinePeerSync } from './components/OfflinePeerSync';
 import { IconCalendar, IconChevronLeft, IconShare } from './components/Icons';
 import { formatDateRange } from './utils/dateRange';
 import { useScrollLock } from './utils/useScrollLock';
@@ -157,22 +156,34 @@ export default function App() {
 
   // Share trip modal
   const [showShareTrip, setShowShareTrip] = useState(false);
-  const [showOfflineSyncModal, setShowOfflineSyncModal] = useState(false);
   const [showMembersRequiredNotice, setShowMembersRequiredNotice] = useState(false);
   const [showGlobalSettings, setShowGlobalSettings] = useState(false);
 
   // Lock background scroll when any modal is active
-  useScrollLock(Boolean(showShareTrip || showOfflineSyncModal || selectedReviewExpense || confirmRequest || showGlobalSettings));
+  useScrollLock(Boolean(showShareTrip || selectedReviewExpense || confirmRequest || showGlobalSettings));
 
-  const p2pSyncEnabled = useTripStore((s) => s.p2pSyncEnabled);
-  const lastPeerSyncedAt = useTripStore((s) => s.lastPeerSyncedAt);
-  const lastModifiedAt = useTripStore((s) => s.lastModifiedAt);
   const syncQueue = useTripStore((s) => s.syncQueue);
+  const sessionExpired = useTripStore((s) => s.sessionExpired);
+  const lastBackendSyncedAt = useTripStore((s) => s.lastBackendSyncedAt);
+  const processQueue = useTripStore((s) => s.processQueue);
 
   // Load state on mount
   useEffect(() => {
     initialize();
   }, [initialize]);
+
+  // Track browser connectivity for the backend sync status pill
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
 
   const visibleTrips = useMemo(
     () => trips.filter((t) => t.id !== pendingDeleteTrip?.id && !t.archived),
@@ -197,26 +208,36 @@ export default function App() {
       .sort((a, b) => b.date.localeCompare(a.date) || b.createdAt - a.createdAt);
   }, [expenses, activeTripId]);
 
-  // Live Sync Health computation for the status bar
-  const isOutOfSync = useMemo(() => {
-    if (syncQueue.length > 0) return true;
-    if (lastPeerSyncedAt === null) {
-      return activeTripExpenses.length > 0;
-    }
-    return lastModifiedAt > lastPeerSyncedAt;
-  }, [syncQueue.length, lastPeerSyncedAt, activeTripExpenses.length, lastModifiedAt]);
+  // Device <-> backend sync status for the header pill
+  type SyncStatus = 'offline' | 'session-expired' | 'out-of-sync' | 'synced';
+  const syncStatus: SyncStatus = useMemo(() => {
+    if (!isOnline) return 'offline';
+    if (sessionExpired) return 'session-expired';
+    if (syncQueue.length > 0) return 'out-of-sync';
+    return 'synced';
+  }, [isOnline, sessionExpired, syncQueue.length]);
 
-  const lastSyncedLabel = useMemo(() => {
-    if (isOutOfSync) return 'Out of sync';
-    if (!lastPeerSyncedAt) return 'Never synced';
-    const diffMs = Date.now() - lastPeerSyncedAt;
-    const diffMins = Math.floor(diffMs / 60000);
+  const syncStatusLabel = useMemo(() => {
+    if (syncStatus === 'offline') return 'Offline';
+    if (syncStatus === 'session-expired') return 'Session expired';
+    if (syncStatus === 'out-of-sync') return `Out of sync (${syncQueue.length})`;
+    if (!lastBackendSyncedAt) return 'Synced';
+    const diffMins = Math.floor((Date.now() - lastBackendSyncedAt) / 60000);
     if (diffMins < 1) return 'Synced just now';
     if (diffMins < 60) return `Synced ${diffMins}m ago`;
     const diffHours = Math.floor(diffMins / 60);
     if (diffHours < 24) return `Synced ${diffHours}h ago`;
     return 'Synced yesterday';
-  }, [isOutOfSync, lastPeerSyncedAt]);
+  }, [syncStatus, syncQueue.length, lastBackendSyncedAt]);
+
+  const handleSyncClick = () => {
+    if (syncStatus === 'offline') return;
+    if (syncStatus === 'session-expired') {
+      signOut();
+      return;
+    }
+    processQueue();
+  };
 
 
   // Search + category/member filters, applied only to the visible expense list
@@ -883,18 +904,25 @@ export default function App() {
                 <span>{visibleMembers.length} member{visibleMembers.length === 1 ? '' : 's'}</span>
                 <span>{activeTripExpenses.length} expense{activeTripExpenses.length === 1 ? '' : 's'}</span>
               </div>
-              {p2pSyncEnabled && (
-                <button
-                  type="button"
-                  className="sync-header-pill"
-                  onClick={() => setShowOfflineSyncModal(true)}
-                  title={isOutOfSync ? 'Local changes not yet synced with peer. Click to sync.' : `Last synced: ${lastSyncedLabel}`}
-                  aria-label="Offline Peer Sync Status"
-                >
-                  <span className={`sync-badge-dot ${isOutOfSync ? 'out-of-sync' : 'synced'}`} />
-                  <span>{lastSyncedLabel}</span>
-                </button>
-              )}
+              <button
+                type="button"
+                className="sync-header-pill"
+                onClick={handleSyncClick}
+                disabled={syncStatus === 'offline'}
+                title={
+                  syncStatus === 'offline'
+                    ? 'No connection — changes are saved on this device and will sync once you\'re back online.'
+                    : syncStatus === 'session-expired'
+                    ? 'Your session expired. Tap to sign in again.'
+                    : syncStatus === 'out-of-sync'
+                    ? 'Local changes not yet synced with the server. Tap to sync now.'
+                    : `Last synced: ${syncStatusLabel}`
+                }
+                aria-label="Backend Sync Status"
+              >
+                <span className={`sync-badge-dot ${syncStatus}`} />
+                <span>{syncStatusLabel}</span>
+              </button>
             </div>
           </header>
 
@@ -1028,9 +1056,6 @@ export default function App() {
         <ShareTripModal trip={activeTrip} onClose={() => setShowShareTrip(false)} />
       )}
 
-      {showOfflineSyncModal && (
-        <OfflinePeerSync onClose={() => setShowOfflineSyncModal(false)} />
-      )}
 
 
       {selectedReviewExpense && (

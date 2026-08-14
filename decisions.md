@@ -162,7 +162,7 @@ This document logs all meaningful technical decisions, library choices, design p
 
 ---
 
-## 14. Ultra-Compact WebRTC SDP Serialization & Header Sync Status UX
+## 14. Ultra-Compact WebRTC SDP Serialization & Header Sync Status UX — SUPERSEDED by #16
 * **Context:** Offline P2P sync QR codes were unreadable by smartphone camera sensors because full browser WebRTC SDP descriptions (~1.8KB+) generated extremely dense Version 30+ QR matrices with microscopic dots. In addition, the header had duplicate sync triggers (a round sync button and a status message pill).
 * **Decision:**
   - Packed essential WebRTC DataChannel connection parameters (`ice-ufrag`, `ice-pwd`, stripped hex `fingerprint`, `setup`, `candidates`) into an ultra-compact ~180-char structured payload (`TT1:` prefix).
@@ -172,6 +172,19 @@ This document logs all meaningful technical decisions, library choices, design p
   - Simplified the header UI by removing the redundant round sync button and keeping only the interactive sync status pill (`🟢 Synced 5m ago` / `🟠 Out of sync`).
 * **Trade-offs Accepted:**
   - Custom parameter extraction assumes standard DataChannel parameters and strips unnecessary audio/video SDP lines, which is completely sufficient for P2P data exchange and guarantees instantaneous camera scanning across all mobile lenses.
+* **Superseded:** The `c` (ICE candidates) field was JSON-stringified verbatim, never actually compacted — with 2-4 host candidates typical on mobile dual-stack networks, real payloads ran 400-600+ chars, not ~180. That's what actually made the QR too dense to scan reliably on real Android/iOS hardware, and made the manual fallback code impractically long. Rather than fix candidate compaction, the whole P2P sync feature was removed — see #16.
 
+---
 
+## 16. Removed P2P WebRTC Sync — Replaced with Device↔Backend Sync Status
+* **Context:** The Offline Peer Sync feature (#10, refined in #14) let two devices exchange trip data directly via WebRTC + QR-code SDP handshake, with no server round-trip. In practice it never scanned reliably on either Android or iOS (see #14's supersede note), and it solved a narrow case — two devices permanently unable to reach the internet at all — that doesn't match how this app is actually used (a device offline for a while, then back on normal connectivity). Meanwhile `tripStore.ts` already had a full offline-first local queue (`syncQueue`, `queueSync`, `processQueue`) that optimistically applies expense mutations locally and replays them against Supabase once online — this was already doing most of the work a "device↔backend sync" model needs.
+* **Decision:** Delete the P2P feature entirely. Reframe the existing header status pill around device↔backend sync instead of peer-connection status, using the sync queue that was already there.
+* **Pattern/Implementation:**
+  - Deleted `OfflinePeerSync.tsx`, `webrtcHelper.ts`(+test), `p2pSync.ts`(+test), the `html5-qrcode`/`qrcode` npm dependencies, and the "Offline Peer Sync" toggle cards in `SettingsTab.tsx`/`GlobalSettingsModal.tsx`. Removed `p2pSyncEnabled`, `setP2PSyncEnabled`, `applyP2PMergedState` from `tripStore.ts`; renamed `lastPeerSyncedAt`/`updateLastPeerSyncedAt` → `lastBackendSyncedAt`/`updateLastBackendSyncedAt`.
+  - Header pill (`App.tsx`) now derives a 4-state `syncStatus` — `offline` (no `navigator.onLine`) / `session-expired` / `out-of-sync` (`syncQueue.length > 0`) / `synced` — and clicking it calls `processQueue()` directly (manual sync-on-demand), in addition to the existing auto-fire on the browser `online` event.
+  - **Auth-refresh gap fixed**: `processQueue()` previously had no defense against a stale access token after a long offline stretch (Supabase's `autoRefreshToken` is timer-based, not reconnect-aware, and mobile browsers throttle/suspend JS timers in the background). `processQueue()` now checks `supabase.auth.getSession()` first and calls `refreshSession()` if the token is expired; on refresh failure it sets `sessionExpired` instead of silently retrying every queued item forever against a dead token. Failed queue items were already re-queued on error (pre-existing behavior), so no data loss either way — this just makes the "why is it stuck" case visible and recoverable (tapping the pill while `session-expired` triggers sign-out, routing back to re-auth).
+  - `addMember` now checks `navigator.onLine` up front and sets a clear "you're offline" `storageError` instead of letting the network call throw and surface a generic error — members intentionally don't queue-and-sync like expenses do, since member creation interacts with join codes / RLS / linked-user state that should happen against a live server.
+* **Trade-offs Accepted:**
+  - This model requires both devices to eventually reach Supabase — it cannot merge two devices that are permanently offline relative to each other, which #10's original design targeted. Accepted because that scenario is rare for this app's actual usage pattern (trip-goers with normal phone connectivity, not permanent air-gapped devices), and the P2P implementation never worked reliably enough to justify its complexity.
+  - Bundle size dropped ~390KB (html5-qrcode + qrcode + WebRTC/QR UI code removed) as a side effect.
 

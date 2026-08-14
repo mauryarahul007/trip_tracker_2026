@@ -471,30 +471,14 @@ button, [role="button"], input, select, a {
   border-color: rgba(242, 236, 220, 0.45);
 }
 
-.round-sync-btn {
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  background: rgba(242, 236, 220, 0.15);
-  border: 1px solid rgba(242, 236, 220, 0.35);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  color: #F2ECDC;
-  cursor: pointer;
-  transition: var(--transition-smooth);
-  position: relative;
-  flex-shrink: 0;
-  padding: 0;
+.sync-header-pill:disabled {
+  cursor: default;
+  opacity: 0.7;
 }
 
-.round-sync-btn:hover {
-  background: rgba(242, 236, 220, 0.25);
-  transform: scale(1.05);
-}
-
-.round-sync-btn.spin-anim svg {
-  animation: spin 1s linear infinite;
+.sync-header-pill:disabled:hover {
+  background: rgba(242, 236, 220, 0.08);
+  border-color: rgba(242, 236, 220, 0.22);
 }
 
 .sync-badge-dot {
@@ -513,6 +497,17 @@ button, [role="button"], input, select, a {
 .sync-badge-dot.out-of-sync {
   background-color: #F59E0B;
   box-shadow: 0 0 6px rgba(245, 158, 11, 0.6);
+  animation: pulse-dot 2s infinite ease-in-out;
+}
+
+.sync-badge-dot.offline {
+  background-color: #9CA3AF;
+  box-shadow: 0 0 6px rgba(156, 163, 175, 0.5);
+}
+
+.sync-badge-dot.session-expired {
+  background-color: #EF4444;
+  box-shadow: 0 0 6px rgba(239, 68, 68, 0.6);
   animation: pulse-dot 2s infinite ease-in-out;
 }
 
