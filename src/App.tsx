@@ -1052,7 +1052,24 @@ export default function App() {
                 onAddCategory={handleAddCategory}
                 onExportCsv={triggerCsvExport}
                 isAdmin={isAdmin}
-                onOpenGlobalSettings={() => setShowGlobalSettings(true)}
+                themePref={themePref}
+                setThemePref={setThemePref}
+                onExportJson={triggerExport}
+                showImportArea={showImportArea}
+                setShowImportArea={setShowImportArea}
+                importJson={importJson}
+                setImportJson={setImportJson}
+                importStatus={importStatus}
+                onImport={handleImport}
+                onClearDatabase={handleClearDatabase}
+                onLoadDemoTrip={handleLoadDemoTrip}
+                archivedTrips={archivedTrips}
+                onRestoreTrip={handleRestoreTrip}
+                onDeleteTrip={handleDeleteTrip}
+                userEmail={userEmail}
+                onSignOut={signOut}
+                pwaInstallable={!!deferredPrompt}
+                onInstallApp={handleInstallApp}
               />
             </div>
           </main>

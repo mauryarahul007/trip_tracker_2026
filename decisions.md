@@ -205,3 +205,17 @@ This document logs all meaningful technical decisions, library choices, design p
   - `localStorage`, not IndexedDB — simplest fit given zustand already ships `persist`, no new dependency, and expense-tracking data at realistic scale (thousands of rows of small JSON records, receipts excluded — those live in Supabase Storage, referenced only by path) sits comfortably under localStorage's ~5-10MB synchronous-API limit. Revisit only if usage patterns prove that assumption wrong.
   - The merge logic only special-cases `expenses`, since that's the only entity with an offline-creation path today (`addMember`/`createTrip` have no offline branch and always go straight to network or fail outright) — `trips`/`members`/`groups` are safely blind-replaced on a successful server fetch.
 
+---
+
+## 18. WhatsApp-Style Settings Screen & Navigation Redesign
+* **Context:** The settings surface was previously fragmented between disjointed open card stacks in `SettingsTab.tsx` and a separate `GlobalSettingsModal.tsx`, with paragraphs of descriptive text creating visual clutter. The user requested matching the UX, look, feel, and navigation hierarchy of WhatsApp Settings.
+* **Decision:** Built a unified `SettingsView` component implementing WhatsApp-style inset-grouped list sections, colored squircle icons, profile hero card, and drill-down sub-page navigation.
+* **Pattern/Implementation:**
+  - **Profile Hero Card**: Top profile header displaying initial avatar, display name, email, and real-time connectivity status dot.
+  - **Grouped Setting Rows (`.settings-group-card`)**: Grouped into logical sections (*Trip Preferences*, *App & Interface*, *Data & Backups*, *Account & Reset*) with rounded containers, hairline dividers, colored squircle icons (`.settings-squircle`), titles, descriptive subtitles, and trailing chevrons (`›`) / count badge pills.
+  - **Drill-Down Sub-Screens**: Tapping an item navigates cleanly to a focused sub-screen (*Categories*, *Recycle Bin*, *Appearance*, *Backups*, *Archived Trips*) with a sticky `‹ Settings` back bar, keeping the main settings overview clean and scannable.
+  - **Unified Settings Component**: `SettingsView` is shared between the in-trip Settings tab (`SettingsTab.tsx`) and the global settings sheet (`GlobalSettingsModal.tsx`), guaranteeing total visual and functional parity.
+* **Trade-offs Accepted:**
+  - Multi-level sub-screen navigation adds simple internal view state machine (`activeSubScreen`), but drastically improves mobile usability and eliminates long scroll fatigue.
+
+

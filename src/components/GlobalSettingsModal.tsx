@@ -1,10 +1,7 @@
-import React from 'react';
-import type { Trip } from '../types';
-import { IconDownload, IconUpload, IconCheckCircle, IconAlertCircle, IconClose, IconArchive, IconTrash } from './Icons';
-import { formatDateRange } from '../utils/dateRange';
-
-type ThemePref = 'light' | 'dark' | 'system';
-
+import type { Trip, Category, Expense } from '../types';
+import { IconClose } from './Icons';
+import { SettingsView, type ThemePref } from './SettingsView';
+import { useTripStore } from '../store/tripStore';
 
 type Props = {
   onClose: () => void;
@@ -29,6 +26,14 @@ type Props = {
   onSignOut: () => void;
   pwaInstallable?: boolean;
   onInstallApp?: () => void;
+
+  // Optional trip context if opened while inside a trip
+  categories?: Category[];
+  activeTripExpenses?: Expense[];
+  onAddCategory?: (name: string, icon: string) => Promise<void>;
+  onDeleteCategory?: (categoryId: string, replacementCategoryId: string | null) => Promise<void>;
+  onExportCsv?: () => void;
+  isAdmin?: boolean;
 };
 
 export function GlobalSettingsModal({
@@ -51,304 +56,83 @@ export function GlobalSettingsModal({
   onSignOut,
   pwaInstallable = false,
   onInstallApp,
+  categories,
+  activeTripExpenses,
+  onAddCategory,
+  onDeleteCategory,
+  onExportCsv,
+  isAdmin = true,
 }: Props) {
-  const [isOnline, setIsOnline] = React.useState(navigator.onLine);
-  const [storageEstimate, setStorageEstimate] = React.useState<{ used: number; quota: number } | null>(null);
+  const storeCategories = useTripStore((s) => s.categories);
+  const storeExpenses = useTripStore((s) => s.expenses);
+  const activeTripId = useTripStore((s) => s.activeTripId);
 
-
-  React.useEffect(() => {
-    const handleOnline = () => setIsOnline(true);
-    const handleOffline = () => setIsOnline(false);
-
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-
-    if (navigator.storage && navigator.storage.estimate) {
-      navigator.storage.estimate().then((estimate) => {
-        setStorageEstimate({
-          used: estimate.usage || 0,
-          quota: estimate.quota || 0,
-        });
-      });
-    }
-
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-    };
-  }, []);
-
-  const formatBytes = (bytes: number) => {
-    if (bytes === 0) return '0 B';
-    const k = 1024;
-    const sizes = ['B', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
-  };
+  const effectiveCategories = categories || storeCategories;
+  const effectiveExpenses = activeTripExpenses || storeExpenses.filter((e) => e.tripId === activeTripId);
 
   return (
-    <div
-      className="modal-overlay"
-      onClick={onClose}
-    >
+    <div className="modal-overlay" onClick={onClose}>
       <div
         className="glass-card fade-in modal-sheet"
         style={{
-          maxWidth: '500px',
+          maxWidth: '480px',
           background: 'var(--bg-surface)',
           boxShadow: 'var(--glass-shadow)',
           border: '1px solid var(--border-color)',
           position: 'relative',
           padding: '24px 20px',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '20px',
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        <button
-          type="button"
-          onClick={onClose}
-          aria-label="Close"
-          style={{
-            position: 'absolute',
-            top: '14px',
-            right: '14px',
-            background: 'none',
-            border: 'none',
-            cursor: 'pointer',
-            color: 'var(--text-secondary)',
-          }}
-        >
-          <IconClose size={18} />
-        </button>
-
-        <h3 style={{ fontSize: '18px', marginBottom: '4px', borderBottom: '1px solid var(--border-color)', paddingBottom: '12px' }}>
-          Global Settings & Preferences
-        </h3>
-
-        {/* Account Section */}
-        <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          <h4 style={{ fontSize: '15px', fontWeight: 600 }}>Account</h4>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px' }}>
-            <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>{userEmail || 'Signed in'}</span>
-            <button
-              type="button"
-              className="secondary-btn"
-              style={{ padding: '6px 14px', fontSize: '13px' }}
-              onClick={() => {
-                onSignOut();
-                onClose();
-              }}
-            >
-              Sign out
-            </button>
-          </div>
-        </div>
-
-        {/* Connection & Storage */}
-        <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-          <h4 style={{ fontSize: '15px', fontWeight: 600 }}>App Connection & Storage</h4>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '13px' }}>
-              <span style={{ color: 'var(--text-secondary)' }}>Connection Status:</span>
-              <span style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 500, color: isOnline ? 'var(--color-success)' : 'var(--color-danger)' }}>
-                <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: isOnline ? 'var(--color-success)' : 'var(--color-danger)', display: 'inline-block' }}></span>
-                {isOnline ? 'Online' : 'Offline'}
-              </span>
-            </div>
-            {storageEstimate && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
-                  <span style={{ color: 'var(--text-secondary)' }}>Local Disk Usage:</span>
-                  <span style={{ fontWeight: 500 }}>
-                    {formatBytes(storageEstimate.used)} of {formatBytes(storageEstimate.quota)}
-                  </span>
-                </div>
-                <div style={{ width: '100%', height: '4px', background: 'rgba(15,23,42,0.06)', borderRadius: '2px', overflow: 'hidden' }}>
-                  <div style={{ width: `${Math.min(100, (storageEstimate.used / storageEstimate.quota) * 100)}%`, height: '100%', background: 'var(--primary-accent)' }}></div>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Appearance */}
-        <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          <h4 style={{ fontSize: '15px', fontWeight: 600 }}>Appearance</h4>
-          <div className="theme-toggle-row">
-            {([
-              { value: 'light', label: 'Light' },
-              { value: 'dark', label: 'Night flight' },
-              { value: 'system', label: 'System' },
-            ] as { value: ThemePref; label: string }[]).map((opt) => (
-              <button
-                key={opt.value}
-                type="button"
-                className={`theme-toggle-btn${themePref === opt.value ? ' active' : ''}`}
-                aria-pressed={themePref === opt.value}
-                onClick={() => setThemePref(opt.value)}
-              >
-                {opt.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* PWA Install */}
-        {pwaInstallable && (
-          <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <h4 style={{ fontSize: '15px', fontWeight: 600 }}>Install App</h4>
-            <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: 0 }}>
-              Install this ledger onto your home screen for quick, offline-ready access on your device.
-            </p>
-            <button
-              type="button"
-              className="gradient-btn"
-              onClick={() => {
-                onInstallApp?.();
-                onClose();
-              }}
-            >
-              Install Trip Tracker
-            </button>
-          </div>
-        )}
-
-        {/* Archived Trips */}
-        <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          <h4 style={{ fontSize: '15px', fontWeight: 600 }}>Archived Trips</h4>
-          {archivedTrips.length === 0 ? (
-            <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: 0 }}>
-              No archived trips. Archive a trip from the trips list to tuck it away without deleting it.
-            </p>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {archivedTrips.map((trip) => (
-                <div
-                  key={trip.id}
-                  style={{
-                    display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px',
-                    padding: '8px 12px', background: 'rgba(15,23,42,0.02)', borderRadius: 'var(--border-radius-sm)',
-                  }}
-                >
-                  <div style={{ minWidth: 0 }}>
-                    <div style={{ fontSize: '13px', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{trip.name}</div>
-                    <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>{formatDateRange(trip.startDate, trip.endDate)}</div>
-                  </div>
-                  <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
-                    <button
-                      type="button"
-                      className="secondary-btn"
-                      style={{ padding: '6px 10px', fontSize: '12px' }}
-                      onClick={() => onRestoreTrip(trip)}
-                    >
-                      <IconArchive size={13} className="icon-sm" /> Restore
-                    </button>
-                    <button
-                      type="button"
-                      className="secondary-btn"
-                      style={{ padding: '6px', color: 'var(--color-danger)', borderColor: 'rgba(184,69,46,0.2)' }}
-                      aria-label="Delete trip permanently"
-                      title="Delete trip permanently"
-                      onClick={() => onDeleteTrip(trip)}
-                    >
-                      <IconTrash size={13} className="icon-sm" />
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Backups */}
-        <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-          <h4 style={{ fontSize: '15px', fontWeight: 600 }}>JSON Database Backups</h4>
-          <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: 0 }}>
-            Export your complete local database state to import onto another device or keep as a secure offline backup.
-          </p>
-
-          <div style={{ display: 'flex', gap: '12px' }}>
-            <button className="gradient-btn" style={{ flex: 1, padding: '10px', fontSize: '13px' }} onClick={onExportJson}>
-              <IconDownload size={16} className="icon-sm" /> Export Backup
-            </button>
-            <button className="secondary-btn" style={{ flex: 1, padding: '10px', fontSize: '13px' }} onClick={() => setShowImportArea(!showImportArea)}>
-              <IconUpload size={16} className="icon-sm" /> Import Backup
-            </button>
-          </div>
-
-          {showImportArea && (
-            <div className="fade-in" style={{ marginTop: '6px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              <textarea
-                className="input-field"
-                rows={4}
-                placeholder="Paste backup JSON string here..."
-                style={{ fontFamily: 'monospace', fontSize: '12px' }}
-                value={importJson}
-                onChange={(e) => setImportJson(e.target.value)}
-              />
-              <button
-                className="gradient-btn"
-                style={{ padding: '8px' }}
-                onClick={() => {
-                  onImport();
-                }}
-              >
-                Restore State
-              </button>
-
-              {importStatus === 'success' && (
-                <p style={{ color: 'var(--color-success)', fontSize: '13px', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', margin: 0 }}>
-                  <IconCheckCircle size={15} className="icon-sm" /> Database restored successfully! Reloading...
-                </p>
-              )}
-              {importStatus === 'error' && (
-                <p style={{ color: 'var(--color-danger)', fontSize: '13px', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', margin: 0 }}>
-                  <IconAlertCircle size={15} className="icon-sm" /> Invalid database backup format.
-                </p>
-              )}
-            </div>
-          )}
-        </div>
-
-        {/* Demo Seed */}
-        <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          <h4 style={{ fontSize: '15px', fontWeight: 600 }}>Quick Seed Demo Data</h4>
-          <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: 0 }}>
-            Populate a mock trip ("Road Trip to Goa") pre-loaded with sample members, custom groups, and 6 diverse expense splits.
-          </p>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+          <h2 style={{ fontSize: '18px', fontWeight: 600, margin: 0, color: 'var(--text-primary)' }}>
+            Settings
+          </h2>
           <button
             type="button"
-            className="gradient-btn"
-            style={{ padding: '10px', background: 'var(--secondary-accent)' }}
-            onClick={() => {
-              onLoadDemoTrip();
-              onClose();
+            onClick={onClose}
+            aria-label="Close"
+            style={{
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              color: 'var(--text-secondary)',
+              padding: '4px',
+              borderRadius: '6px',
             }}
           >
-            Load Demo Trip
+            <IconClose size={18} />
           </button>
         </div>
 
-        {/* Factory Reset */}
-        <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', gap: '12px', borderColor: 'rgba(184, 69, 46, 0.25)' }}>
-          <h4 style={{ fontSize: '15px', fontWeight: 600, color: 'var(--color-danger)' }}>Factory Reset</h4>
-          <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: 0 }}>
-            Wipe all local trips, expenses, members, and custom settings. This will completely clear your browser's IndexedDB.
-          </p>
-          <button
-            type="button"
-            className="gradient-btn"
-            style={{ padding: '10px', background: 'var(--color-danger)' }}
-            onClick={() => {
-              onClearDatabase();
-              onClose();
-            }}
-          >
-            Clear All Data
-          </button>
-        </div>
+        <SettingsView
+          categories={effectiveCategories}
+          activeTripExpenses={effectiveExpenses}
+          onAddCategory={onAddCategory || (async () => {})}
+          onDeleteCategory={onDeleteCategory || (async () => {})}
+          onExportCsv={onExportCsv}
+          isAdmin={isAdmin}
+          themePref={themePref}
+          setThemePref={setThemePref}
+          onExportJson={onExportJson}
+          showImportArea={showImportArea}
+          setShowImportArea={setShowImportArea}
+          importJson={importJson}
+          setImportJson={setImportJson}
+          importStatus={importStatus}
+          onImport={onImport}
+          onClearDatabase={onClearDatabase}
+          onLoadDemoTrip={onLoadDemoTrip}
+          archivedTrips={archivedTrips}
+          onRestoreTrip={onRestoreTrip}
+          onDeleteTrip={onDeleteTrip}
+          userEmail={userEmail}
+          onSignOut={onSignOut}
+          pwaInstallable={pwaInstallable}
+          onInstallApp={onInstallApp}
+          hasActiveTrip={Boolean(activeTripId)}
+          onClose={onClose}
+        />
       </div>
     </div>
   );
