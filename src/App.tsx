@@ -414,13 +414,13 @@ export default function App() {
     setShowAddTrip(false);
   };
 
-  const handleSaveMember = async (name: string, id: string | null): Promise<{ success: boolean; error?: string }> => {
+  const handleSaveMember = async (name: string, id: string | null, linkedUserId?: string | null): Promise<{ success: boolean; error?: string }> => {
     const nameTrimmed = name.trim();
     if (!nameTrimmed) return { success: false, error: 'Name cannot be empty.' };
 
     const nameLower = nameTrimmed.toLowerCase();
     const isDuplicateMember = activeTripMembers.some(
-      (m) => m.name.toLowerCase() === nameLower && m.id !== id
+      (m) => (m.name.toLowerCase() === nameLower || (linkedUserId && m.linkedUserId === linkedUserId)) && m.id !== id
     );
     const isDuplicateGroup = activeTripGroups.some(
       (g) => g.name.toLowerCase() === nameLower
@@ -433,7 +433,7 @@ export default function App() {
     if (id) {
       await updateMember(id, nameTrimmed);
     } else {
-      await addMember(nameTrimmed);
+      await addMember(nameTrimmed, linkedUserId);
     }
     setShowMembersRequiredNotice(false);
     return { success: true };

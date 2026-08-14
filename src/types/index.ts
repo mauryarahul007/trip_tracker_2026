@@ -65,3 +65,10 @@ export interface TripState {
   expenses: Expense[];
   categories: Category[];
 }
+
+export interface PreviousMemberSuggestion {
+  name: string;
+  linkedUserId?: string | null;
+  avatarUrl?: string | null;
+}
+

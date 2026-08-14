@@ -107,6 +107,20 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - LWW conflict resolution means if two users edit the exact same expense title concurrently while offline, the later timestamp overwrites the earlier one without manual three-way diff merging. This was accepted because expense edits are typically discrete (e.g. updating receipt or amount) and full CRDT tree structures would add excessive client complexity.
 
+---
+
+## 11. Typeahead Member Suggestions with Fuse.js & Direct Google Account Auto-Linking
+* **Context:** Adding frequent trip companions manually across multiple trips is repetitive. Users also needed a frictionless way for friends with linked Google accounts to immediately see newly created trips on their account trip lists without having to enter shareable join codes.
+* **Decision:** 
+  - Direct database querying of unique previous members across trips accessible to the authenticated user (`owner_id = currentUserId` or participated in).
+  - In-memory caching with session TTL to eliminate redundant network hits.
+  - Client-side fuzzy search using `fuse.js` (`threshold: 0.35`) capped at a maximum of 5 suggestions for fast, typo-tolerant typeahead.
+  - Automatic filtering to exclude members already part of the active trip (by `name` or `linkedUserId`).
+  - Auto-persisting `linked_user_id` upon selecting a suggested member with a linked Google account, immediately granting RLS trip read access.
+* **Trade-offs Accepted:**
+  - In-memory caching per session means newly linked profiles on other devices take up to the cache TTL (2 min) to reflect unless manually refreshed or invalidated on member mutation. This trade-off was accepted to maintain instantaneous typeahead keystroke performance without querying the database on every character.
+
+
 
 
 

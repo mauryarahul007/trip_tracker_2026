@@ -22,6 +22,7 @@ import {
   deleteExpenseRow,
   insertTripGraph,
   uploadReceipt,
+  invalidatePreviousMembersCache,
   type ExpenseInput,
 } from '../services/tripApi';
 import { generateDemoData } from '../utils/demoSeed';
@@ -59,7 +60,7 @@ interface TripStore extends TripState {
   deleteTrip: (id: string) => Promise<void>;
 
   // Member Actions
-  addMember: (name: string) => Promise<void>;
+  addMember: (name: string, linkedUserId?: string | null) => Promise<void>;
   toggleArchiveMember: (id: string) => Promise<void>;
   updateMember: (id: string, name: string) => Promise<void>;
   deleteMember: (id: string) => Promise<void>;
@@ -431,11 +432,12 @@ export const useTripStore = create<TripStore>((set, get) => {
       }
     },
 
-    addMember: async (name) => {
+    addMember: async (name, linkedUserId) => {
       const activeTripId = get().activeTripId;
       if (!activeTripId) return;
       try {
-        const member = await insertMember(activeTripId, name);
+        const member = await insertMember(activeTripId, name, linkedUserId || undefined);
+        invalidatePreviousMembersCache();
         set((state) => ({
           members: { ...state.members, [member.id]: member },
           trips: state.trips.map((t) => (t.id === activeTripId ? { ...t, memberIds: [...t.memberIds, member.id], updatedAt: Date.now() } : t)),

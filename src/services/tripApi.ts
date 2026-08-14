@@ -1,5 +1,5 @@
 import { supabase } from './supabaseClient';
-import type { Category, Expense, Group, Member, SplitMode, Trip } from '../types';
+import type { Category, Expense, Group, Member, PreviousMemberSuggestion, SplitMode, Trip } from '../types';
 import type { Database } from '../types/database';
 
 type TripRow = Database['public']['Tables']['trips']['Row'];
@@ -522,3 +522,84 @@ export async function claimTripMember(memberId: string): Promise<boolean> {
   if (error) throw error;
   return data === true;
 }
+
+// ---------------------------------------------------------------------------
+// Previous Members Typeahead Cache & API
+// ---------------------------------------------------------------------------
+
+let previousMembersCache: { userId: string; timestamp: number; data: PreviousMemberSuggestion[] } | null = null;
+const CACHE_TTL_MS = 2 * 60 * 1000; // 2 minutes
+
+export function invalidatePreviousMembersCache() {
+  previousMembersCache = null;
+}
+
+export async function fetchPreviousTripMembers(userId: string | null | undefined): Promise<PreviousMemberSuggestion[]> {
+  if (!userId) return [];
+
+  const now = Date.now();
+  if (previousMembersCache && previousMembersCache.userId === userId && now - previousMembersCache.timestamp < CACHE_TTL_MS) {
+    return previousMembersCache.data;
+  }
+
+  // Fetch all trips visible to this user
+  const { data: tripsData, error: tripsErr } = await supabase.from('trips').select('id');
+  if (tripsErr) throw tripsErr;
+  if (!tripsData || tripsData.length === 0) {
+    previousMembersCache = { userId, timestamp: now, data: [] };
+    return [];
+  }
+
+  const tripIds = tripsData.map((t) => t.id);
+
+  // Fetch members associated with these trips
+  const { data: membersData, error: membersErr } = await supabase
+    .from('members')
+    .select('name, linked_user_id, profile:linked_user_id(avatar_url, display_name)')
+    .in('trip_id', tripIds);
+
+  if (membersErr) throw membersErr;
+
+  // Deduplicate and prioritize linked Google accounts
+  const memberMap = new Map<string, PreviousMemberSuggestion>();
+
+  (membersData ?? []).forEach((row: any) => {
+    const rawName = (row.profile?.display_name || row.name || '').trim();
+    if (!rawName) return;
+
+    // Exclude the current user themselves
+    if (row.linked_user_id === userId) return;
+
+    const normalizedName = rawName.toLowerCase();
+    const existing = memberMap.get(normalizedName);
+
+    const suggestion: PreviousMemberSuggestion = {
+      name: rawName,
+      linkedUserId: row.linked_user_id || null,
+      avatarUrl: row.profile?.avatar_url || null,
+    };
+
+    if (!existing) {
+      memberMap.set(normalizedName, suggestion);
+    } else {
+      // If the new one has a linked account and the existing one does not, prioritize the linked one
+      if (!existing.linkedUserId && suggestion.linkedUserId) {
+        memberMap.set(normalizedName, suggestion);
+      } else if (!existing.avatarUrl && suggestion.avatarUrl) {
+        existing.avatarUrl = suggestion.avatarUrl;
+      }
+    }
+  });
+
+  // Sort: Google linked members first, then alphabetically
+  const results = Array.from(memberMap.values()).sort((a, b) => {
+    if (Boolean(a.linkedUserId) !== Boolean(b.linkedUserId)) {
+      return a.linkedUserId ? -1 : 1;
+    }
+    return a.name.localeCompare(b.name);
+  });
+
+  previousMembersCache = { userId, timestamp: now, data: results };
+  return results;
+}
+
