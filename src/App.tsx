@@ -560,6 +560,7 @@ export default function App() {
     splitMemberIds: string[];
     splitConfig?: Record<string, number>;
     receiptImage?: string;
+    location?: import('./types').ExpenseLocation | null;
   }): Promise<{ success: boolean; error?: string }> => {
     if (!activeTripId) return { success: false, error: 'No active trip' };
     try {
@@ -574,6 +575,7 @@ export default function App() {
         splitMemberIds: expenseData.splitMemberIds,
         splitConfig: expenseData.splitConfig,
         receiptImage: expenseData.receiptImage,
+        location: expenseData.location,
       };
 
       if (editingExpenseId) {
