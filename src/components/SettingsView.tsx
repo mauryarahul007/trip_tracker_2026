@@ -137,6 +137,9 @@ export function SettingsView({
   // Category keyword states
   const [expandedCategoryId, setExpandedCategoryId] = useState<string | null>(null);
   const [newKeywordInput, setNewKeywordInput] = useState('');
+  const [newCatName, setNewCatName] = useState('');
+  const [newCatIcon, setNewCatIcon] = useState('🏷️');
+  const [showAddCatForm, setShowAddCatForm] = useState(false);
 
   // Connectivity and disk storage
   const [isOnline, setIsOnline] = useState(navigator.onLine);
@@ -245,8 +248,83 @@ export function SettingsView({
             <IconChevronLeft size={18} /> Settings
           </button>
           <h3 className="settings-subscreen-title">Categories &amp; Tags</h3>
-          <div style={{ width: '20px' }} />
+          <button
+            type="button"
+            className="secondary-btn"
+            style={{ fontSize: '12px', padding: '4px 10px', color: 'var(--primary-accent)', borderColor: 'rgba(31, 110, 104, 0.35)' }}
+            onClick={() => setShowAddCatForm(!showAddCatForm)}
+          >
+            {showAddCatForm ? 'Cancel' : '+ Add'}
+          </button>
         </div>
+
+        {/* Add Category Form */}
+        {showAddCatForm && (
+          <div
+            className="glass-card fade-in"
+            style={{ padding: '14px 16px', marginBottom: '14px', border: '1.5px solid rgba(31, 110, 104, 0.35)' }}
+          >
+            <h4 style={{ fontSize: '13.5px', fontWeight: 600, margin: '0 0 10px 0', color: 'var(--text-primary)' }}>
+              Create Custom Category
+            </h4>
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '10px' }}>
+              <div style={{ width: '48px', flexShrink: 0 }}>
+                <input
+                  type="text"
+                  className="input-field"
+                  style={{ textAlign: 'center', fontSize: '18px', padding: '6px 2px' }}
+                  value={newCatIcon}
+                  maxLength={4}
+                  onChange={(e) => setNewCatIcon(e.target.value)}
+                  placeholder="🏷️"
+                />
+              </div>
+              <input
+                type="text"
+                className="input-field"
+                placeholder="Category Name (e.g. Diving, Souvenirs, Fuel)..."
+                value={newCatName}
+                onChange={(e) => setNewCatName(e.target.value)}
+                autoFocus
+              />
+              <button
+                type="button"
+                className="primary-btn"
+                style={{ padding: '6px 14px', fontSize: '13px', flexShrink: 0 }}
+                disabled={!newCatName.trim()}
+                onClick={async () => {
+                  if (!newCatName.trim()) return;
+                  await onAddCategory(newCatName.trim(), newCatIcon || '🏷️');
+                  setNewCatName('');
+                  setNewCatIcon('🏷️');
+                  setShowAddCatForm(false);
+                }}
+              >
+                Save
+              </button>
+            </div>
+            {/* Quick Emoji Presets */}
+            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+              {CATEGORY_ICON_PRESETS.slice(0, 10).map((emoji) => (
+                <button
+                  key={emoji}
+                  type="button"
+                  style={{
+                    background: newCatIcon === emoji ? 'rgba(31, 110, 104, 0.2)' : 'rgba(0,0,0,0.04)',
+                    border: newCatIcon === emoji ? '1px solid var(--primary-accent)' : '1px solid transparent',
+                    borderRadius: '6px',
+                    padding: '2px 6px',
+                    fontSize: '15px',
+                    cursor: 'pointer',
+                  }}
+                  onClick={() => setNewCatIcon(emoji)}
+                >
+                  {emoji}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         <div className="settings-group">
           <div style={{ padding: '0 8px 6px', fontSize: '12.5px', color: 'var(--text-secondary)' }}>

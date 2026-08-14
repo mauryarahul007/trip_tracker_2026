@@ -14,9 +14,14 @@ export function AdminToolsPage({ categories }: Props) {
   const loadDemoTrip = useTripStore((s) => s.loadDemoTrip);
   const updateCategoryKeywords = useTripStore((s) => s.updateCategoryKeywords);
   const resetCategoryKeywords = useTripStore((s) => s.resetCategoryKeywords);
+  const addCategory = useTripStore((s) => s.addCategory);
+  const deleteCategory = useTripStore((s) => s.deleteCategory);
 
   const [selectedCatId, setSelectedCatId] = useState<string>(categories[0]?.id || 'cat-food');
   const [newTagInput, setNewTagInput] = useState('');
+  const [showAddCategoryBox, setShowAddCategoryBox] = useState(false);
+  const [newCatName, setNewCatName] = useState('');
+  const [newCatIcon, setNewCatIcon] = useState('🏷️');
   const [importJsonText, setImportJsonText] = useState('');
   const [showImportArea, setShowImportArea] = useState(false);
   const [toastMsg, setToastMsg] = useState('');
@@ -28,6 +33,26 @@ export function AdminToolsPage({ categories }: Props) {
 
   const activeCategory = categories.find((c) => c.id === selectedCatId) || categories[0];
   const activeKeywords = activeCategory?.keywords || [];
+
+  const handleCreateCategory = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newCatName.trim()) return;
+    await addCategory(newCatName.trim(), newCatIcon || '🏷️');
+    showToast(`Created category "${newCatName.trim()}"`);
+    setNewCatName('');
+    setNewCatIcon('🏷️');
+    setShowAddCategoryBox(false);
+  };
+
+  const handleDeleteCategory = async (catId: string, catName: string) => {
+    if (window.confirm(`Permanently delete custom category "${catName}"?`)) {
+      await deleteCategory(catId);
+      if (selectedCatId === catId) {
+        setSelectedCatId(categories[0]?.id || 'cat-food');
+      }
+      showToast(`Deleted category "${catName}"`);
+    }
+  };
 
   const handleAddTag = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -118,20 +143,80 @@ export function AdminToolsPage({ categories }: Props) {
             </p>
           </div>
 
-          {activeCategory && (
+          <div style={{ display: 'flex', gap: '8px' }}>
             <button
               type="button"
               className="secondary-btn"
-              style={{ fontSize: '11.5px', padding: '4px 10px' }}
-              onClick={() => {
-                resetCategoryKeywords(activeCategory.id);
-                showToast(`Reset keywords for ${activeCategory.name}`);
-              }}
+              style={{ fontSize: '11.5px', padding: '4px 10px', color: 'var(--primary-accent)', borderColor: 'rgba(31, 110, 104, 0.35)' }}
+              onClick={() => setShowAddCategoryBox(!showAddCategoryBox)}
             >
-              Reset {activeCategory.name} Keywords
+              {showAddCategoryBox ? 'Cancel' : '+ New Category'}
             </button>
-          )}
+
+            {activeCategory && (
+              <button
+                type="button"
+                className="secondary-btn"
+                style={{ fontSize: '11.5px', padding: '4px 10px' }}
+                onClick={() => {
+                  resetCategoryKeywords(activeCategory.id);
+                  showToast(`Reset keywords for ${activeCategory.name}`);
+                }}
+              >
+                Reset Keywords
+              </button>
+            )}
+
+            {activeCategory?.isCustom && (
+              <button
+                type="button"
+                className="secondary-btn"
+                style={{ fontSize: '11.5px', padding: '4px 10px', color: '#EF4444', borderColor: 'rgba(239, 68, 68, 0.3)' }}
+                onClick={() => handleDeleteCategory(activeCategory.id, activeCategory.name)}
+              >
+                Delete Category
+              </button>
+            )}
+          </div>
         </div>
+
+        {/* Create Category Box */}
+        {showAddCategoryBox && (
+          <form
+            onSubmit={handleCreateCategory}
+            style={{
+              display: 'flex',
+              gap: '8px',
+              padding: '12px 14px',
+              borderRadius: '10px',
+              background: 'rgba(31, 110, 104, 0.06)',
+              border: '1px solid rgba(31, 110, 104, 0.25)',
+              marginBottom: '16px',
+              alignItems: 'center',
+            }}
+          >
+            <input
+              type="text"
+              className="input-field"
+              style={{ width: '48px', textAlign: 'center', fontSize: '16px' }}
+              value={newCatIcon}
+              maxLength={4}
+              onChange={(e) => setNewCatIcon(e.target.value)}
+              placeholder="🏷️"
+            />
+            <input
+              type="text"
+              className="input-field"
+              placeholder="New Category Name (e.g. Diving, Spa, Gear)..."
+              value={newCatName}
+              onChange={(e) => setNewCatName(e.target.value)}
+              autoFocus
+            />
+            <button type="submit" className="primary-btn" style={{ padding: '6px 14px', fontSize: '12.5px', flexShrink: 0 }}>
+              Create
+            </button>
+          </form>
+        )}
 
         {/* Category Selector Tabs */}
         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '16px' }}>
@@ -142,7 +227,7 @@ export function AdminToolsPage({ categories }: Props) {
               className={`category-badge${selectedCatId === c.id ? ' active' : ''}`}
               onClick={() => setSelectedCatId(c.id)}
             >
-              <span>{c.icon || '🏷️'}</span> {c.name} ({c.keywords?.length || 0})
+              <span>{c.icon || '🏷️'}</span> {c.name} {c.isCustom ? '★' : ''} ({c.keywords?.length || 0})
             </button>
           ))}
         </div>

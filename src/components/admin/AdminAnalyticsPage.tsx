@@ -86,7 +86,7 @@ export function AdminAnalyticsPage({ trips, expenses, members, categories }: Pro
             Total Spend Volume
           </div>
           <div style={{ fontSize: '24px', fontWeight: 700, color: 'var(--primary-accent)', marginTop: '4px' }}>
-            ${totalSpendVolume.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            ₹{totalSpendVolume.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </div>
           <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', marginTop: '2px' }}>
             Across {activeTrips.length} active trips
@@ -113,7 +113,7 @@ export function AdminAnalyticsPage({ trips, expenses, members, categories }: Pro
             {totalTransactionsCount}
           </div>
           <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', marginTop: '2px' }}>
-            Avg ${(totalSpendVolume / Math.max(1, totalTransactionsCount)).toFixed(2)} / tx
+            Avg ₹{(totalSpendVolume / Math.max(1, totalTransactionsCount)).toFixed(2)} / tx
           </div>
         </div>
 
@@ -151,7 +151,7 @@ export function AdminAnalyticsPage({ trips, expenses, members, categories }: Pro
                       {c.icon} <strong>{c.name}</strong>
                     </span>
                     <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
-                      ${c.amount.toFixed(2)} ({c.pct.toFixed(1)}%)
+                      ₹{c.amount.toFixed(2)} ({c.pct.toFixed(1)}%)
                     </span>
                   </div>
                   <div style={{ width: '100%', height: '7px', background: 'rgba(0,0,0,0.06)', borderRadius: '4px', overflow: 'hidden' }}>
@@ -202,7 +202,7 @@ export function AdminAnalyticsPage({ trips, expenses, members, categories }: Pro
                     <span style={{ fontSize: '13.5px', fontWeight: 600, color: 'var(--text-primary)' }}>{s.name}</span>
                   </div>
                   <strong style={{ fontSize: '13.5px', color: 'var(--primary-accent)' }}>
-                    ${s.total.toFixed(2)}
+                    ₹{s.total.toFixed(2)}
                   </strong>
                 </div>
               ))}

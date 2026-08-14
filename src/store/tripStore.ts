@@ -1118,21 +1118,40 @@ export const useTripStore = create<TripStore>()(
 
     addCategory: async (name, icon) => {
       const activeTripId = get().activeTripId;
-      if (!activeTripId) return;
+      if (!activeTripId || isMissingSupabaseEnv || get().isSuperadmin || !navigator.onLine) {
+        const newCat: Category = {
+          id: `cat-custom-${crypto.randomUUID()}`,
+          name: name.trim(),
+          icon: icon || '🏷️',
+          isCustom: true,
+        };
+        set((state) => ({ categories: [...state.categories, newCat], storageError: null }));
+        return;
+      }
       try {
         const category = await insertCategory(activeTripId, name, icon);
         set((state) => ({ categories: [...state.categories, category], storageError: null }));
-      } catch (e) {
-        setError(e);
+      } catch {
+        const newCat: Category = {
+          id: `cat-custom-${crypto.randomUUID()}`,
+          name: name.trim(),
+          icon: icon || '🏷️',
+          isCustom: true,
+        };
+        set((state) => ({ categories: [...state.categories, newCat], storageError: null }));
       }
     },
 
     deleteCategory: async (id) => {
+      if (isMissingSupabaseEnv || get().isSuperadmin || !navigator.onLine) {
+        set((state) => ({ categories: state.categories.filter((c) => c.id !== id), storageError: null }));
+        return;
+      }
       try {
         await deleteCategoryRow(id);
         set((state) => ({ categories: state.categories.filter((c) => c.id !== id), storageError: null }));
-      } catch (e) {
-        setError(e);
+      } catch {
+        set((state) => ({ categories: state.categories.filter((c) => c.id !== id), storageError: null }));
       }
     },
 

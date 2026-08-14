@@ -39,8 +39,12 @@ export function AdminPortalLayout({
       className="app-container"
       style={{
         maxWidth: '960px',
-        padding: '16px 20px 60px 20px',
-        minHeight: '100dvh',
+        height: '100dvh',
+        maxHeight: '100dvh',
+        padding: '16px 20px 0 20px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}
     >
       {/* Superadmin Master Portal Header */}
@@ -199,7 +203,7 @@ export function AdminPortalLayout({
       </nav>
 
       {/* Render Active Dedicated Page */}
-      <main>
+      <main style={{ flex: 1, minHeight: 0, overflowY: 'auto', paddingBottom: '60px', overscrollBehavior: 'contain' }}>
         {activeTab === 'flags' && <AdminFlagsPage trips={trips} members={members} />}
         {activeTab === 'analytics' && (
           <AdminAnalyticsPage
