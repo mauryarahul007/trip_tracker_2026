@@ -763,8 +763,9 @@ export const useTripStore = create<TripStore>()(
         if (expenseData.receiptImage) {
           receiptPath = await uploadReceipt(tripId, tempId, expenseData.receiptImage);
         }
-        const savedExpense = await insertExpense(tripId, userId, toExpenseInput(expenseData, resolvedShares, { id: tempId, receiptPath }));
-        
+        const location = await resolvePendingLocation(expenseData.location);
+        const savedExpense = await insertExpense(tripId, userId, toExpenseInput({ ...expenseData, location }, resolvedShares, { id: tempId, receiptPath }));
+
         set((state) => ({
           expenses: state.expenses.map((e) => (e.id === tempId ? savedExpense : e)),
           trips: state.trips.map((t) => (t.id === tripId ? { ...t, updatedAt: Date.now() } : t)),
@@ -815,12 +816,11 @@ export const useTripStore = create<TripStore>()(
         if (expenseData.receiptImage) {
           receiptPath = await uploadReceipt(tripId, id, expenseData.receiptImage);
         }
-        await updateExpenseRow(id, toExpenseInput(expenseData, resolvedShares, { receiptPath }));
-        if (receiptPath) {
-          set((state) => ({
-            expenses: state.expenses.map((e) => (e.id === id ? { ...updatedExpense, receiptPath } : e)),
-          }));
-        }
+        const location = await resolvePendingLocation(expenseData.location);
+        await updateExpenseRow(id, toExpenseInput({ ...expenseData, location }, resolvedShares, { receiptPath }));
+        set((state) => ({
+          expenses: state.expenses.map((e) => (e.id === id ? { ...updatedExpense, ...(receiptPath ? { receiptPath } : {}), location: location ?? undefined } : e)),
+        }));
       };
 
       if (!navigator.onLine) {
