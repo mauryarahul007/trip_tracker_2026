@@ -282,5 +282,32 @@ This document logs all meaningful technical decisions, library choices, design p
   - `processQueue`'s existing sequential `for` loop naturally throttles resolution calls well under Nominatim's ~1 req/sec free-tier etiquette, even after a long offline period with many queued items — no extra rate-limiting code needed.
   - A manually-typed name that never resolves means that expense permanently has no server-side location (by design, since the DB cannot hold a name) — surfaced as a persistent, tappable warning rather than fixed automatically.
 
+---
+
+## 23. Superadmin Control Cockpit, Global Feature Flags & Minimal User UI
+* **Context:** Regular travelers need an ultra-clean, minimal, distraction-free interface (creating trips, logging expenses with auto-tagging, basic GPS geotagging, adding members, settling balances, viewing active trip analytics, and switching light/dark themes). Advanced developer options, P2P sync diagnostics, 200+ keyword tag rules, database wipes, recycle bin permanent purges, and cross-trip aggregated analytics should be shielded from regular users and managed by a designated Superadmin.
+* **Decision:** Introduced a dual-mode role architecture with a Superadmin Cockpit, a 3-tier Feature Flags engine (Global, Per-Trip, Per-Member), and dedicated Superadmin authentication with authorized phone recovery.
+* **Pattern/Implementation:**
+  - **First Page Dual Login (`LoginScreen.tsx`)**: Displays standard Google Login for regular users and a dedicated "⚡ Super User Login" entry point.
+  - **Superadmin Auth & Phone Recovery (`superadminAuth.ts`, `SuperadminAuthModal.tsx`)**:
+    - Master credentials: `Superadmin@triptracker.com` / `Superadmin@triptracker.com`.
+    - Phone Password Reset: OTP verification dispatched to authorized recovery numbers (`+91 7075762522` and `+91 7977337757`) with masked display.
+  - **3-Tier Feature Flags Switchboard (`featureFlags.ts`, `tripStore.ts`)**:
+    - Flags: `enableGeotagging`, `enableAdvancedLocationSearch`, `enableAdvancedSplits`, `enableP2PSync`, `enableReceiptUpload`, `enableRecycleBin`, `enableKeywordTagging`, `enableDemoSeeding`, `enableMultiTripAnalytics`.
+    - Resolution hierarchy: Superadmin (always ON) -> User Override -> Trip Override -> Global Flag -> Default.
+  - **Minimal Normal User UI (`SettingsView.tsx`, `ExpenseForm.tsx`)**:
+    - Normal users only see core trip preferences, light/night flight/system appearance, basic GPS tagging, and basic active trip analytics.
+    - Complex sub-screens (keyword rule customizer, permanent recycle bin purge, database JSON backups, factory reset) are hidden from normal users.
+  - **Superadmin Cockpit (`SuperadminDashboard.tsx`)**:
+    - Top KPI volume banner across all trips.
+    - Feature Flags Hub with live toggle switches.
+    - Master Cross-Trip Global Analytics (total volume, category distributions, top spenders, currency breakdown).
+    - Trip & Member directory audit.
+    - Advanced database controls (JSON export/import, demo seed, data reset, keyword rule manager).
+* **Trade-offs Accepted:**
+  - Superadmin session state is maintained in persistent Zustand store with phone OTP verification backup, ensuring zero dependency on active internet connection or backend schema updates during offline use.
+
+---
+
 
 

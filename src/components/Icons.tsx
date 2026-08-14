@@ -1,6 +1,7 @@
 type IconProps = {
   size?: number;
   className?: string;
+  style?: React.CSSProperties;
 };
 
 const base = {
@@ -10,6 +11,14 @@ const base = {
   strokeLinecap: 'round' as const,
   strokeLinejoin: 'round' as const,
 };
+
+export function IconShield({ size = 20, className = 'icon', style }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" className={className} style={style} {...base}>
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+    </svg>
+  );
+}
 
 export function IconExpenses({ size = 20, className = 'icon' }: IconProps) {
   return (

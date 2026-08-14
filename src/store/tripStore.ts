@@ -1,6 +1,9 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { Member, Group, Expense, Category, TripState, ExpenseLocation } from '../types';
+import type { FeatureFlagKey } from '../types/admin';
+import { DEFAULT_FEATURE_FLAGS, isFeatureActive } from '../utils/featureFlags';
+import { verifySuperadminCredentials } from '../utils/superadminAuth';
 import { supabase } from '../services/supabaseClient';
 import {
   fetchMyTripGraph,
@@ -78,6 +81,19 @@ interface TripStore extends TripState {
   lastModifiedAt: number;
   enableGeotagging: boolean;
   setEnableGeotagging: (enabled: boolean) => void;
+
+  // Superadmin & Feature Flags
+  isSuperadmin: boolean;
+  featureFlags: Record<FeatureFlagKey, boolean>;
+  tripFlagOverrides: Record<string, Record<string, boolean>>;
+  userFlagOverrides: Record<string, Record<string, boolean>>;
+  unlockSuperadmin: (email?: string, password?: string, skipVerify?: boolean) => boolean;
+  lockSuperadmin: () => void;
+  setFeatureFlag: (key: FeatureFlagKey, value: boolean) => void;
+  setTripFlagOverride: (tripId: string, key: FeatureFlagKey, value: boolean | null) => void;
+  setUserFlagOverride: (userId: string, key: FeatureFlagKey, value: boolean | null) => void;
+  resetFeatureFlags: () => void;
+  isFeatureEnabled: (key: FeatureFlagKey, context?: { tripId?: string; userId?: string }) => boolean;
 
   initialize: () => Promise<void>;
   refreshTrips: () => Promise<void>;
@@ -284,8 +300,81 @@ export const useTripStore = create<TripStore>()(
     lastModifiedAt: Date.now(),
     enableGeotagging: false,
 
+    // Superadmin & Feature Flags
+    isSuperadmin: false,
+    featureFlags: DEFAULT_FEATURE_FLAGS,
+    tripFlagOverrides: {},
+    userFlagOverrides: {},
+
+    unlockSuperadmin: (email?: string, password?: string, skipVerify?: boolean) => {
+      if (skipVerify || verifySuperadminCredentials(email, password)) {
+        set({ isSuperadmin: true, lastModifiedAt: Date.now() });
+        return true;
+      }
+      return false;
+    },
+
+    lockSuperadmin: () => {
+      set({ isSuperadmin: false, lastModifiedAt: Date.now() });
+    },
+
+    setFeatureFlag: (key: FeatureFlagKey, value: boolean) => {
+      set((s) => ({
+        featureFlags: { ...s.featureFlags, [key]: value },
+        lastModifiedAt: Date.now(),
+      }));
+    },
+
+    setTripFlagOverride: (tripId: string, key: FeatureFlagKey, value: boolean | null) => {
+      set((s) => {
+        const existing = { ...(s.tripFlagOverrides[tripId] || {}) };
+        if (value === null) delete existing[key];
+        else existing[key] = value;
+        return {
+          tripFlagOverrides: { ...s.tripFlagOverrides, [tripId]: existing },
+          lastModifiedAt: Date.now(),
+        };
+      });
+    },
+
+    setUserFlagOverride: (userId: string, key: FeatureFlagKey, value: boolean | null) => {
+      set((s) => {
+        const existing = { ...(s.userFlagOverrides[userId] || {}) };
+        if (value === null) delete existing[key];
+        else existing[key] = value;
+        return {
+          userFlagOverrides: { ...s.userFlagOverrides, [userId]: existing },
+          lastModifiedAt: Date.now(),
+        };
+      });
+    },
+
+    resetFeatureFlags: () => {
+      set({
+        featureFlags: DEFAULT_FEATURE_FLAGS,
+        tripFlagOverrides: {},
+        userFlagOverrides: {},
+        lastModifiedAt: Date.now(),
+      });
+    },
+
+    isFeatureEnabled: (key: FeatureFlagKey, context?: { tripId?: string; userId?: string }) => {
+      const s = get();
+      return isFeatureActive(key, s.featureFlags, {
+        isSuperadmin: s.isSuperadmin,
+        tripId: context?.tripId || s.activeTripId || undefined,
+        userId: context?.userId || s.userId || undefined,
+        tripOverrides: s.tripFlagOverrides,
+        userOverrides: s.userFlagOverrides,
+      });
+    },
+
     setEnableGeotagging: (enabled: boolean) => {
-      set({ enableGeotagging: enabled, lastModifiedAt: Date.now() });
+      set((s) => ({
+        enableGeotagging: enabled,
+        featureFlags: { ...s.featureFlags, enableGeotagging: enabled },
+        lastModifiedAt: Date.now(),
+      }));
     },
 
     updateLastBackendSyncedAt: (timestamp: number) => {
@@ -1132,6 +1221,10 @@ export const useTripStore = create<TripStore>()(
         lastBackendSyncedAt: state.lastBackendSyncedAt,
         lastModifiedAt: state.lastModifiedAt,
         enableGeotagging: state.enableGeotagging,
+        isSuperadmin: state.isSuperadmin,
+        featureFlags: state.featureFlags,
+        tripFlagOverrides: state.tripFlagOverrides,
+        userFlagOverrides: state.userFlagOverrides,
       }),
     }
   )
