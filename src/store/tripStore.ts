@@ -1,10 +1,10 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { Member, Group, Expense, Category, TripState, ExpenseLocation } from '../types';
+import type { Trip, Member, Group, Expense, Category, TripState, ExpenseLocation } from '../types';
 import type { FeatureFlagKey } from '../types/admin';
 import { DEFAULT_FEATURE_FLAGS, isFeatureActive } from '../utils/featureFlags';
 import { verifySuperadminCredentials } from '../utils/superadminAuth';
-import { supabase } from '../services/supabaseClient';
+import { supabase, isMissingSupabaseEnv } from '../services/supabaseClient';
 import {
   fetchMyTripGraph,
   fetchExpensesForTrip,
@@ -254,9 +254,9 @@ export const useTripStore = create<TripStore>()(
   persist(
     (set, get) => {
   const setError = (e: unknown) => {
-    // If the device is offline, suppress network errors since offline mode is expected
-    if (!navigator.onLine) {
-      console.warn('Trip store operation offline (deferred/cached):', e);
+    // If offline, missing supabase env, or superadmin, suppress remote server errors
+    if (!navigator.onLine || isMissingSupabaseEnv || get().isSuperadmin) {
+      console.warn('Trip store operation offline / local (cached):', e);
       return;
     }
     console.error('Trip store sync error:', e);
@@ -414,8 +414,8 @@ export const useTripStore = create<TripStore>()(
         user?.email?.split('@')[0] ||
         null;
 
-      if (!navigator.onLine) {
-        set({ userId, userDisplayName, initialized: true });
+      if (!navigator.onLine || isMissingSupabaseEnv || get().isSuperadmin) {
+        set({ userId, userDisplayName, initialized: true, storageError: null });
         return;
       }
 
@@ -454,7 +454,7 @@ export const useTripStore = create<TripStore>()(
           userId,
           userDisplayName,
           initialized: true,
-          storageError: navigator.onLine ? 'Failed to load your trips. Check your connection and reload.' : null,
+          storageError: (navigator.onLine && !isMissingSupabaseEnv && !get().isSuperadmin) ? 'Failed to load your trips. Check your connection and reload.' : null,
         });
       }
     },
@@ -562,8 +562,42 @@ export const useTripStore = create<TripStore>()(
     },
 
     createTrip: async (name, startDate, endDate, baseCurrency) => {
-      const userId = get().userId;
-      if (!userId) return;
+      const userId = get().userId || (get().isSuperadmin ? 'superadmin-root-user-id' : 'guest-traveler-user-id');
+
+      if (isMissingSupabaseEnv || get().isSuperadmin) {
+        const tripId = crypto.randomUUID();
+        const creatorName = get().userDisplayName || (get().isSuperadmin ? 'Super Admin' : 'Me');
+        const creatorMemberId = crypto.randomUUID();
+        const creatorMember: Member = {
+          id: creatorMemberId,
+          name: creatorName,
+          linkedUserId: userId,
+        };
+        const newTrip: Trip = {
+          id: tripId,
+          name,
+          startDate,
+          endDate,
+          baseCurrency,
+          ownerId: userId,
+          joinCode: Math.random().toString(36).substring(2, 8).toUpperCase(),
+          memberIds: [creatorMemberId],
+          groupIds: [],
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+          expenseCount: 0,
+        };
+
+        set((state) => ({
+          trips: [...state.trips, newTrip],
+          members: { ...state.members, [creatorMemberId]: creatorMember },
+          activeTripId: tripId,
+          categories: DEFAULT_CATEGORIES,
+          storageError: null,
+        }));
+        return;
+      }
+
       try {
         const trip = await insertTrip({ name, startDate, endDate, baseCurrency, ownerId: userId });
 
@@ -676,6 +710,18 @@ export const useTripStore = create<TripStore>()(
     addMember: async (name, linkedUserId) => {
       const activeTripId = get().activeTripId;
       if (!activeTripId) return;
+
+      if (isMissingSupabaseEnv || get().isSuperadmin) {
+        const memberId = crypto.randomUUID();
+        const member: Member = { id: memberId, name: name.trim(), linkedUserId: linkedUserId || null };
+        set((state) => ({
+          members: { ...state.members, [memberId]: member },
+          trips: state.trips.map((t) => (t.id === activeTripId ? { ...t, memberIds: [...t.memberIds, memberId], updatedAt: Date.now() } : t)),
+          storageError: null,
+        }));
+        return;
+      }
+
       if (!navigator.onLine) {
         set({ storageError: "You're offline — adding members needs a connection. Try again once you're back online." });
         return;
@@ -880,6 +926,10 @@ export const useTripStore = create<TripStore>()(
         }));
       };
 
+      if (isMissingSupabaseEnv || get().isSuperadmin) {
+        return;
+      }
+
       if (!navigator.onLine) {
         get().queueSync('addExpense', { tempId, expenseData });
       } else {
@@ -918,6 +968,10 @@ export const useTripStore = create<TripStore>()(
         expenses: state.expenses.map((e) => (e.id === id ? updatedExpense : e)),
         storageError: null,
       }));
+
+      if (isMissingSupabaseEnv || get().isSuperadmin) {
+        return;
+      }
 
       const saveAction = async () => {
         let receiptPath: string | undefined;
@@ -960,6 +1014,10 @@ export const useTripStore = create<TripStore>()(
         trips: state.trips.map((t) => (t.id === existing.tripId ? { ...t, expenseCount: Math.max(0, (t.expenseCount || 0) - 1), updatedAt: Date.now() } : t)),
         storageError: null,
       }));
+
+      if (isMissingSupabaseEnv || get().isSuperadmin) {
+        return;
+      }
 
       if (!navigator.onLine) {
         get().queueSync('deleteExpense', { id, userId });
