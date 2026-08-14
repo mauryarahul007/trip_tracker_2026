@@ -2,13 +2,13 @@ import { useState } from 'react';
 import { IconShield, IconClose, IconCheck, IconAlertCircle } from './Icons';
 import {
   SUPERADMIN_EMAIL,
-  SUPERADMIN_PASSWORD,
   RECOVERY_PHONES,
   requestPhoneRecoveryOtp,
   verifyPhoneRecoveryOtp,
   maskPhoneNumber,
 } from '../utils/superadminAuth';
 import { useTripStore } from '../store/tripStore';
+import { useAuthStore } from '../store/authStore';
 
 interface Props {
   isOpen: boolean;
@@ -18,10 +18,11 @@ interface Props {
 
 export function SuperadminAuthModal({ isOpen, onClose, onSuccess }: Props) {
   const unlockSuperadmin = useTripStore((s) => s.unlockSuperadmin);
+  const setSuperadminSession = useAuthStore((s) => s.setSuperadminSession);
 
   const [mode, setMode] = useState<'login' | 'recovery' | 'otp'>('login');
-  const [email, setEmail] = useState(SUPERADMIN_EMAIL);
-  const [password, setPassword] = useState(SUPERADMIN_PASSWORD);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [selectedPhone, setSelectedPhone] = useState<string>(RECOVERY_PHONES[0]);
   const [otp, setOtp] = useState('');
   const [error, setError] = useState('');
@@ -38,6 +39,7 @@ export function SuperadminAuthModal({ isOpen, onClose, onSuccess }: Props) {
     try {
       const ok = unlockSuperadmin(email, password);
       if (ok) {
+        setSuperadminSession(email);
         setSuccessMsg('Superadmin privileges activated!');
         setTimeout(() => {
           onSuccess?.();
@@ -69,6 +71,7 @@ export function SuperadminAuthModal({ isOpen, onClose, onSuccess }: Props) {
     const res = verifyPhoneRecoveryOtp(selectedPhone, otp);
     if (res.success) {
       unlockSuperadmin(undefined, undefined, true); // skip verification on successful OTP
+      setSuperadminSession(SUPERADMIN_EMAIL);
       setSuccessMsg('Phone verified! Superadmin session unlocked.');
       setTimeout(() => {
         onSuccess?.();

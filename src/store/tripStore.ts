@@ -309,7 +309,12 @@ export const useTripStore = create<TripStore>()(
 
     unlockSuperadmin: (email?: string, password?: string, skipVerify?: boolean) => {
       if (skipVerify || verifySuperadminCredentials(email, password)) {
-        set({ isSuperadmin: true, lastModifiedAt: Date.now() });
+        set((s) => ({
+          isSuperadmin: true,
+          userId: s.userId || 'superadmin-root-user-id',
+          userDisplayName: s.userDisplayName || 'Super Admin',
+          lastModifiedAt: Date.now(),
+        }));
         return true;
       }
       return false;

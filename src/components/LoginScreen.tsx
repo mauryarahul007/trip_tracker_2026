@@ -14,6 +14,7 @@ export function LoginScreen() {
   const initialized = useAuthStore((s) => s.initialized);
   const initialize = useAuthStore((s) => s.initialize);
   const signInWithGoogle = useAuthStore((s) => s.signInWithGoogle);
+  const signInAsGuest = useAuthStore((s) => s.signInAsGuest);
   const authError = useAuthStore((s) => s.authError);
   const clearAuthError = useAuthStore((s) => s.clearAuthError);
 
@@ -24,7 +25,7 @@ export function LoginScreen() {
     initialize();
   }, [initialize]);
 
-  if (initialized && session) {
+  if (initialized && (session || isSuperadmin)) {
     return <Navigate to={redirectPath} replace />;
   }
 
@@ -74,17 +75,32 @@ export function LoginScreen() {
                 borderRadius: '8px',
                 background: 'var(--color-danger-soft, rgba(239,68,68,0.12))',
                 color: 'var(--color-danger)',
-                fontSize: '13px',
+                fontSize: '12.5px',
+                textAlign: 'left',
+                lineHeight: '1.4',
               }}
             >
-              {authError}
-              <button
-                type="button"
-                onClick={clearAuthError}
-                style={{ marginLeft: '8px', background: 'none', border: 'none', color: 'inherit', textDecoration: 'underline', cursor: 'pointer' }}
-              >
-                dismiss
-              </button>
+              <div>{authError}</div>
+              <div style={{ marginTop: '8px', display: 'flex', gap: '8px' }}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    signInAsGuest();
+                    navigate(redirectPath, { replace: true });
+                  }}
+                  className="primary-btn"
+                  style={{ padding: '4px 10px', fontSize: '11.5px' }}
+                >
+                  Continue as Guest
+                </button>
+                <button
+                  type="button"
+                  onClick={clearAuthError}
+                  style={{ background: 'none', border: 'none', color: 'inherit', textDecoration: 'underline', cursor: 'pointer', fontSize: '11.5px' }}
+                >
+                  dismiss
+                </button>
+              </div>
             </div>
           )}
 
@@ -127,8 +143,29 @@ export function LoginScreen() {
             <span>Sign in with Google</span>
           </button>
 
+          {/* Quick guest login link */}
+          <div style={{ marginTop: '10px' }}>
+            <button
+              type="button"
+              onClick={() => {
+                signInAsGuest();
+                navigate(redirectPath, { replace: true });
+              }}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                color: 'var(--text-secondary)',
+                fontSize: '12.5px',
+                cursor: 'pointer',
+                textDecoration: 'underline',
+              }}
+            >
+              Continue as Guest Traveler
+            </button>
+          </div>
+
           {/* Divider */}
-          <div style={{ display: 'flex', alignItems: 'center', margin: '20px 0 16px', gap: '10px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', margin: '18px 0 14px', gap: '10px' }}>
             <div style={{ flex: 1, height: '1px', background: 'var(--border-color)' }} />
             <span style={{ fontSize: '11.5px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>or administrative</span>
             <div style={{ flex: 1, height: '1px', background: 'var(--border-color)' }} />
@@ -154,7 +191,7 @@ export function LoginScreen() {
             }}
           >
             <IconShield size={16} />
-            <span>{isSuperadmin ? '⚡ Super User Active (Manage)' : '⚡ Super User Login'}</span>
+            <span>⚡ Super User Login</span>
           </button>
 
           <p style={{ marginTop: '18px', fontSize: '12px', color: 'var(--text-secondary)' }}>
