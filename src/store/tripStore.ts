@@ -205,6 +205,11 @@ export const useTripStore = create<TripStore>()(
   persist(
     (set, get) => {
   const setError = (e: unknown) => {
+    // If the device is offline, suppress network errors since offline mode is expected
+    if (!navigator.onLine) {
+      console.warn('Trip store operation offline (deferred/cached):', e);
+      return;
+    }
     console.error('Trip store sync error:', e);
     set({ storageError: e instanceof Error ? e.message : 'Failed to sync with the server.' });
   };
@@ -311,12 +316,12 @@ export const useTripStore = create<TripStore>()(
           get().processQueue();
         }
       } catch (e) {
-        console.error('Initial trip load failed:', e);
+        console.warn('Initial trip load failed or offline:', e);
         set({
           userId,
           userDisplayName,
           initialized: true,
-          storageError: 'Failed to load your trips. Check your connection and reload.',
+          storageError: navigator.onLine ? 'Failed to load your trips. Check your connection and reload.' : null,
         });
       }
     },

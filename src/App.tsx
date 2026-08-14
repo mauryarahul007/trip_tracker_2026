@@ -845,7 +845,7 @@ export default function App() {
   return (
     <div className="app-container">
       {/* Storage Toast Alert */}
-      {storageError && (
+      {storageError && isOnline && (
         <div className="toast-alert">
           <div>
             <strong style={{ display: 'block', fontSize: '14px', marginBottom: '2px' }}>Storage Error</strong>
