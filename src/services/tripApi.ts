@@ -319,52 +319,103 @@ export interface ExpenseInput {
 }
 
 export async function insertExpense(tripId: string, createdByUserId: string, input: ExpenseInput): Promise<Expense> {
+  const basePayload = {
+    ...(input.id ? { id: input.id } : {}),
+    trip_id: tripId,
+    title: input.title,
+    amount: input.amount,
+    currency: input.currency,
+    category: input.category,
+    date: input.date,
+    paid_by: input.paidBy,
+    split_mode: input.splitMode,
+    split_member_ids: input.splitMemberIds,
+    split_config: input.splitConfig ?? null,
+    resolved_shares: input.resolvedShares,
+    receipt_path: input.receiptPath ?? null,
+    is_settlement: input.title.startsWith('Settlement:'),
+    created_by_user_id: createdByUserId,
+  };
+
+  const payloadWithLoc = {
+    ...basePayload,
+    ...(input.location ? { location: input.location } : {}),
+  };
+
   const { data, error } = await supabase
     .from('expenses')
-    .insert({
-      ...(input.id ? { id: input.id } : {}),
-      trip_id: tripId,
-      title: input.title,
-      amount: input.amount,
-      currency: input.currency,
-      category: input.category,
-      date: input.date,
-      paid_by: input.paidBy,
-      split_mode: input.splitMode,
-      split_member_ids: input.splitMemberIds,
-      split_config: input.splitConfig ?? null,
-      resolved_shares: input.resolvedShares,
-      receipt_path: input.receiptPath ?? null,
-      location: input.location ?? null,
-      is_settlement: input.title.startsWith('Settlement:'),
-      created_by_user_id: createdByUserId,
-    })
+    .insert(payloadWithLoc)
     .select()
     .single();
-  if (error) throw error;
-  return mapExpense(data);
+
+  if (error) {
+    // If the remote Supabase table does not have the 'location' column yet, retry cleanly without it
+    const isLocationColError = error.message?.toLowerCase().includes('location') ||
+      error.details?.toLowerCase().includes('location') ||
+      error.hint?.toLowerCase().includes('location') ||
+      error.code === 'PGRST204';
+
+    if (isLocationColError) {
+      console.warn('Remote Supabase expenses table missing location column; saving without remote location field.');
+      const fallbackRes = await supabase
+        .from('expenses')
+        .insert(basePayload)
+        .select()
+        .single();
+      if (fallbackRes.error) throw fallbackRes.error;
+      const mapped = mapExpense(fallbackRes.data);
+      return { ...mapped, location: input.location ?? undefined };
+    }
+    throw error;
+  }
+
+  const mapped = mapExpense(data);
+  return { ...mapped, location: input.location ?? mapped.location };
 }
 
 export async function updateExpenseRow(id: string, input: ExpenseInput): Promise<void> {
+  const basePayload: any = {
+    title: input.title,
+    amount: input.amount,
+    currency: input.currency,
+    category: input.category,
+    date: input.date,
+    paid_by: input.paidBy,
+    split_mode: input.splitMode,
+    split_member_ids: input.splitMemberIds,
+    split_config: input.splitConfig ?? null,
+    resolved_shares: input.resolvedShares,
+    updated_at: new Date().toISOString(),
+    ...(input.receiptPath ? { receipt_path: input.receiptPath } : {}),
+  };
+
+  const payloadWithLoc = {
+    ...basePayload,
+    ...(input.location !== undefined ? { location: input.location } : {}),
+  };
+
   const { error } = await supabase
     .from('expenses')
-    .update({
-      title: input.title,
-      amount: input.amount,
-      currency: input.currency,
-      category: input.category,
-      date: input.date,
-      paid_by: input.paidBy,
-      split_mode: input.splitMode,
-      split_member_ids: input.splitMemberIds,
-      split_config: input.splitConfig ?? null,
-      resolved_shares: input.resolvedShares,
-      updated_at: new Date().toISOString(),
-      ...(input.location !== undefined ? { location: input.location } : {}),
-      ...(input.receiptPath ? { receipt_path: input.receiptPath } : {}),
-    })
+    .update(payloadWithLoc)
     .eq('id', id);
-  if (error) throw error;
+
+  if (error) {
+    const isLocationColError = error.message?.toLowerCase().includes('location') ||
+      error.details?.toLowerCase().includes('location') ||
+      error.hint?.toLowerCase().includes('location') ||
+      error.code === 'PGRST204';
+
+    if (isLocationColError) {
+      console.warn('Remote Supabase expenses table missing location column; updating without remote location field.');
+      const fallbackRes = await supabase
+        .from('expenses')
+        .update(basePayload)
+        .eq('id', id);
+      if (fallbackRes.error) throw fallbackRes.error;
+      return;
+    }
+    throw error;
+  }
 }
 
 // ---------------------------------------------------------------------------
