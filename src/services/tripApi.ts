@@ -302,6 +302,13 @@ export async function deleteCategoryRow(id: string): Promise<void> {
 // Expenses
 // ---------------------------------------------------------------------------
 
+// The DB stores raw GPS coordinates only — never a reverse-geocoded place
+// name. placeName is a client-side display convenience, resolved locally.
+function coordsOnly(location: import('../types').ExpenseLocation | null | undefined): { lat: number; lng: number } | null {
+  if (!location) return null;
+  return { lat: location.lat, lng: location.lng };
+}
+
 export interface ExpenseInput {
   id?: string; // pre-generated client-side so a receipt can be uploaded before the row exists
   title: string;
@@ -339,7 +346,7 @@ export async function insertExpense(tripId: string, createdByUserId: string, inp
 
   const payloadWithLoc = {
     ...basePayload,
-    ...(input.location ? { location: input.location } : {}),
+    ...(input.location ? { location: coordsOnly(input.location) } : {}),
   };
 
   const { data, error } = await supabase
@@ -391,7 +398,7 @@ export async function updateExpenseRow(id: string, input: ExpenseInput): Promise
 
   const payloadWithLoc = {
     ...basePayload,
-    ...(input.location !== undefined ? { location: input.location } : {}),
+    ...(input.location !== undefined ? { location: coordsOnly(input.location) } : {}),
   };
 
   const { error } = await supabase
@@ -576,7 +583,7 @@ export async function insertTripGraph(ownerId: string, seed: TripGraphSeed): Pro
       split_member_ids: remapIds(e.splitMemberIds),
       split_config: e.splitConfig ? remapShares(e.splitConfig) : null,
       resolved_shares: remapShares(e.resolvedShares),
-      location: (e as any).location ?? null,
+      location: coordsOnly((e as any).location),
       is_settlement: e.title.startsWith('Settlement:'),
       created_by_user_id: ownerId,
     }));
