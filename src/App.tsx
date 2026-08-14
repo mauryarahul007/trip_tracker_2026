@@ -212,21 +212,17 @@ export default function App() {
   // Device <-> backend sync status for the header pill
   type SyncStatus = 'offline' | 'session-expired' | 'out-of-sync' | 'synced';
   const syncStatus: SyncStatus = useMemo(() => {
-    if (!isOnline) return 'offline';
     if (sessionExpired) return 'session-expired';
-    // Primary signal is the queue itself, now reliably persisted. This is
-    // a defensive fallback for the case where local data changed without
-    // going through queueSync — compares persisted local vs. last-synced
-    // timestamps directly, rather than trusting one signal alone.
     if (syncQueue.length > 0) return 'out-of-sync';
+    if (!isOnline) return 'offline';
     if (lastBackendSyncedAt !== null && lastModifiedAt > lastBackendSyncedAt) return 'out-of-sync';
     return 'synced';
   }, [isOnline, sessionExpired, syncQueue.length, lastModifiedAt, lastBackendSyncedAt]);
 
   const syncStatusLabel = useMemo(() => {
-    if (syncStatus === 'offline') return 'Offline';
     if (syncStatus === 'session-expired') return 'Session expired';
     if (syncStatus === 'out-of-sync') return `Out of sync (${syncQueue.length})`;
+    if (syncStatus === 'offline') return 'Offline';
     if (!lastBackendSyncedAt) return 'Synced';
     const diffMins = Math.floor((Date.now() - lastBackendSyncedAt) / 60000);
     if (diffMins < 1) return 'Synced just now';
@@ -236,12 +232,19 @@ export default function App() {
     return 'Synced yesterday';
   }, [syncStatus, syncQueue.length, lastBackendSyncedAt]);
 
+  // Auto-sync pending offline queue whenever network connectivity is restored
+  useEffect(() => {
+    if (isOnline && syncQueue.length > 0) {
+      processQueue();
+    }
+  }, [isOnline, syncQueue.length, processQueue]);
+
   const handleSyncClick = () => {
-    if (syncStatus === 'offline') return;
     if (syncStatus === 'session-expired') {
       signOut();
       return;
     }
+    if (!isOnline) return;
     processQueue();
   };
 
