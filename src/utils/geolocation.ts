@@ -1,14 +1,40 @@
+import { Capacitor } from '@capacitor/core';
+import { Geolocation } from '@capacitor/geolocation';
 import type { ExpenseLocation } from '../types';
 
 const geocodeCache = new Map<string, string>();
 
 /**
- * Gets the device's current GPS position using browser navigator.geolocation.
+ * Gets the device's current GPS position. Uses the Capacitor Geolocation
+ * plugin on native platforms, browser navigator.geolocation on web.
  * Fails safely with null if unsupported, denied, or timed out.
  */
 export async function getCurrentGPSPosition(timeoutMs = 5000): Promise<{ lat: number; lng: number } | null> {
-  if (typeof window === 'undefined' || !navigator?.geolocation) {
+  if (Capacitor.isNativePlatform()) {
+    return getCurrentGPSPositionNative(timeoutMs);
+  }
+  return getCurrentGPSPositionWeb(timeoutMs);
+}
+
+async function getCurrentGPSPositionNative(timeoutMs: number): Promise<{ lat: number; lng: number } | null> {
+  try {
+    const permission = await Geolocation.requestPermissions();
+    if (permission.location !== 'granted' && permission.coarseLocation !== 'granted') {
+      return null;
+    }
+    const position = await Geolocation.getCurrentPosition({ enableHighAccuracy: true, timeout: timeoutMs });
+    return {
+      lat: Number(position.coords.latitude.toFixed(6)),
+      lng: Number(position.coords.longitude.toFixed(6)),
+    };
+  } catch {
     return null;
+  }
+}
+
+function getCurrentGPSPositionWeb(timeoutMs: number): Promise<{ lat: number; lng: number } | null> {
+  if (typeof window === 'undefined' || !navigator?.geolocation) {
+    return Promise.resolve(null);
   }
 
   return new Promise((resolve) => {
