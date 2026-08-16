@@ -10,15 +10,21 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         window = UIWindow(windowScene: windowScene)
         window?.rootViewController = CAPBridgeViewController()
         window?.makeKeyAndVisible()
-
-        SceneDelegateProxy.shared.scene(scene, willConnectTo: session, options: connectionOptions)
     }
 
+    // Forwards OAuth/deep-link redirect URLs (e.g. Google Sign-In callbacks)
+    // to Capacitor's real proxy so plugins listening for .capacitorOpenURL
+    // still receive them under the scene-based (iOS 13+) app lifecycle.
     func scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) {
-        SceneDelegateProxy.shared.scene(scene, openURLContexts: URLContexts)
+        guard let context = URLContexts.first else { return }
+        _ = ApplicationDelegateProxy.shared.application(UIApplication.shared, open: context.url, options: [
+            .sourceApplication: context.options.sourceApplication as Any,
+            .annotation: context.options.annotation as Any,
+            .openInPlace: context.options.openInPlace
+        ])
     }
 
     func scene(_ scene: UIScene, continue userActivity: NSUserActivity) {
-        SceneDelegateProxy.shared.scene(scene, continue: userActivity)
+        _ = ApplicationDelegateProxy.shared.application(UIApplication.shared, continue: userActivity, restorationHandler: { _ in })
     }
 }
