@@ -22,16 +22,25 @@ describe('buildOAuthRedirectUrl', () => {
 });
 
 describe('parseNativeAuthCallback', () => {
-  it('returns the query string portion of a matching callback URL', () => {
+  it('returns code object when given authorization code in callback URL', () => {
     const url = 'com.triptracker.app://auth/callback?code=abc123&state=xyz';
-    expect(parseNativeAuthCallback(url)).toBe('code=abc123&state=xyz');
+    expect(parseNativeAuthCallback(url)).toEqual({
+      type: 'code',
+      codeQuery: '?code=abc123&state=xyz',
+    });
   });
 
-  it('returns null for a URL that does not match the callback scheme', () => {
-    expect(parseNativeAuthCallback('com.triptracker.app://something/else?code=abc123')).toBeNull();
+  it('returns token object when given hash fragment with access_token and refresh_token', () => {
+    const url = 'com.triptracker.app://auth/callback#access_token=token123&refresh_token=refresh456';
+    expect(parseNativeAuthCallback(url)).toEqual({
+      type: 'token',
+      accessToken: 'token123',
+      refreshToken: 'refresh456',
+    });
   });
 
-  it('returns null for an unrelated URL', () => {
+  it('returns null for an unrelated URL or missing credentials', () => {
     expect(parseNativeAuthCallback('https://example.com/?code=abc123')).toBeNull();
+    expect(parseNativeAuthCallback('com.triptracker.app://something/else')).toBeNull();
   });
 });

@@ -18,13 +18,30 @@ export function buildOAuthRedirectUrl(
   return `${origin}${redirectPath}`;
 }
 
-/**
- * Extracts the query string Supabase needs from a deep-link callback URL.
- * Returns null if the URL isn't our registered auth callback.
- */
-export function parseNativeAuthCallback(callbackUrl: string): string | null {
-  if (!callbackUrl.startsWith(`${NATIVE_AUTH_CALLBACK_PREFIX}?`)) {
+export function parseNativeAuthCallback(callbackUrl: string): { type: 'code'; codeQuery: string } | { type: 'token'; accessToken: string; refreshToken: string } | null {
+  if (!callbackUrl.startsWith('com.triptracker.app')) {
     return null;
   }
-  return callbackUrl.slice(`${NATIVE_AUTH_CALLBACK_PREFIX}?`.length);
+
+  // 1. Check for query code (?code=xxx or &code=xxx)
+  if (callbackUrl.includes('?')) {
+    const queryString = callbackUrl.split('?')[1]?.split('#')[0] || '';
+    if (queryString.includes('code=')) {
+      return { type: 'code', codeQuery: `?${queryString}` };
+    }
+  }
+
+  // 2. Check for hash fragment (#access_token=xxx&refresh_token=yyy)
+  if (callbackUrl.includes('#')) {
+    const hashString = callbackUrl.split('#')[1] || '';
+    const params = new URLSearchParams(hashString);
+    const accessToken = params.get('access_token');
+    const refreshToken = params.get('refresh_token');
+    if (accessToken && refreshToken) {
+      return { type: 'token', accessToken, refreshToken };
+    }
+  }
+
+  return null;
 }
+

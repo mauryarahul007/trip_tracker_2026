@@ -40,12 +40,26 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
 
     if (Capacitor.isNativePlatform()) {
       CapacitorApp.addListener('appUrlOpen', async ({ url }) => {
-        const query = parseNativeAuthCallback(url);
-        if (!query) return;
-        await Browser.close();
-        const { error } = await supabase.auth.exchangeCodeForSession(`?${query}`);
-        if (error) {
-          set({ authError: error.message });
+        const res = parseNativeAuthCallback(url);
+        if (!res) return;
+        try {
+          await Browser.close();
+        } catch {
+          // In-app browser may already be closed
+        }
+        if (res.type === 'code') {
+          const { error } = await supabase.auth.exchangeCodeForSession(res.codeQuery);
+          if (error) {
+            set({ authError: error.message });
+          }
+        } else if (res.type === 'token') {
+          const { error } = await supabase.auth.setSession({
+            access_token: res.accessToken,
+            refresh_token: res.refreshToken,
+          });
+          if (error) {
+            set({ authError: error.message });
+          }
         }
       });
     }
