@@ -97,10 +97,12 @@ export function MembersGroupsTab({
   // Determine if a given member has Trip Admin rights
   const isMemberAdmin = React.useCallback(
     (member: Member): boolean => {
+      // The original trip owner is ALWAYS an admin
+      if (isOriginalTripOwner(member)) return true;
       if (adminMemberIds && adminMemberIds.length > 0) {
         return adminMemberIds.includes(member.id);
       }
-      return isOriginalTripOwner(member);
+      return false;
     },
     [adminMemberIds, isOriginalTripOwner]
   );

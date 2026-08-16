@@ -473,12 +473,17 @@ export const useTripStore = create<TripStore>()(
       try {
         const trip = await insertTrip({ name, startDate, endDate, baseCurrency, ownerId: userId });
 
-        // The creator is always the admin — add them as a claimed member
+        // The creator is always the owner and admin — add them as a claimed member
         // too, so they show up in the members list and can be a payer/
         // split participant like everyone else.
         const creatorName = get().userDisplayName || 'Me';
         const creatorMember = await insertMember(trip.id, creatorName, userId);
-        const tripWithCreator = { ...trip, memberIds: [creatorMember.id], expenseCount: 0 };
+        const tripWithCreator = {
+          ...trip,
+          memberIds: [creatorMember.id],
+          adminMemberIds: [creatorMember.id],
+          expenseCount: 0,
+        };
 
         set((state) => ({
           trips: [...state.trips, tripWithCreator],
@@ -586,16 +591,19 @@ export const useTripStore = create<TripStore>()(
           members: { ...state.members, [member.id]: member },
           trips: state.trips.map((t) => {
             if (t.id !== activeTripId) return t;
-            const currentAdmins = t.adminMemberIds ? [...t.adminMemberIds] : [];
-            if (currentAdmins.length === 0 || (linkedUserId && linkedUserId === t.ownerId)) {
-              if (!currentAdmins.includes(member.id)) {
-                currentAdmins.push(member.id);
-              }
+            const currentAdmins = new Set(t.adminMemberIds || []);
+            // Ensure the trip creator/owner is always in currentAdmins
+            if (currentAdmins.size === 0 && t.memberIds.length > 0) {
+              const ownerMemberId = t.memberIds.find((mid) => state.members[mid]?.linkedUserId === t.ownerId) || t.memberIds[0];
+              if (ownerMemberId) currentAdmins.add(ownerMemberId);
+            }
+            if (linkedUserId && linkedUserId === t.ownerId) {
+              currentAdmins.add(member.id);
             }
             return {
               ...t,
               memberIds: [...t.memberIds, member.id],
-              adminMemberIds: currentAdmins,
+              adminMemberIds: Array.from(currentAdmins),
               updatedAt: Date.now(),
             };
           }),

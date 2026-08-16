@@ -24,11 +24,11 @@ describe('Trip Multi-Admin Role Governance & Sole-Admin Protection', () => {
   ];
 
   const isMemberAdmin = (trip: Trip, member: Member): boolean => {
+    if (member.linkedUserId && member.linkedUserId === trip.ownerId) return true;
     if (trip.adminMemberIds && trip.adminMemberIds.length > 0) {
       return trip.adminMemberIds.includes(member.id);
     }
-    if (member.linkedUserId && member.linkedUserId === trip.ownerId) return true;
-    return trip.memberIds[0] === member.id;
+    return false;
   };
 
   it('correctly identifies initial trip creator as admin', () => {
