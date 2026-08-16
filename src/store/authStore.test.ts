@@ -4,17 +4,23 @@ vi.mock('@capacitor/core', () => ({
   Capacitor: { isNativePlatform: () => true },
 }));
 
-const { openMock, closeMock, signInWithOAuthMock } = vi.hoisted(() => ({
+const { openMock, closeMock, signInWithOAuthMock, exchangeCodeForSessionMock, addListenerMock } = vi.hoisted(() => ({
   openMock: vi.fn(),
   closeMock: vi.fn(),
   signInWithOAuthMock: vi.fn().mockResolvedValue({
     data: { url: 'https://accounts.google.com/o/oauth2/mock' },
     error: null,
   }),
+  exchangeCodeForSessionMock: vi.fn().mockResolvedValue({ data: {}, error: null }),
+  addListenerMock: vi.fn(),
 }));
 
 vi.mock('@capacitor/browser', () => ({
   Browser: { open: (...args: unknown[]) => openMock(...args), close: (...args: unknown[]) => closeMock(...args) },
+}));
+
+vi.mock('@capacitor/app', () => ({
+  App: { addListener: (...args: unknown[]) => addListenerMock(...args) },
 }));
 
 vi.mock('../services/supabaseClient', () => ({
@@ -23,7 +29,7 @@ vi.mock('../services/supabaseClient', () => ({
       getSession: vi.fn().mockResolvedValue({ data: { session: null } }),
       onAuthStateChange: vi.fn(),
       signInWithOAuth: signInWithOAuthMock,
-      exchangeCodeForSession: vi.fn().mockResolvedValue({ data: {}, error: null }),
+      exchangeCodeForSession: exchangeCodeForSessionMock,
     },
   },
 }));
@@ -50,5 +56,50 @@ describe('signInWithGoogle on native', () => {
       })
     );
     expect(openMock).toHaveBeenCalledWith({ url: 'https://accounts.google.com/o/oauth2/mock' });
+  });
+});
+
+describe('appUrlOpen listener on native', () => {
+  it('registers an appUrlOpen listener when initialized on a native platform', () => {
+    useAuthStore.getState().initialize();
+
+    expect(addListenerMock).toHaveBeenCalledWith('appUrlOpen', expect.any(Function));
+  });
+
+  it('exchanges the code for a session when the URL matches the callback scheme', async () => {
+    const handler = addListenerMock.mock.calls.find(([event]) => event === 'appUrlOpen')?.[1];
+    expect(handler).toBeDefined();
+    closeMock.mockClear();
+    exchangeCodeForSessionMock.mockClear();
+
+    await handler({ url: 'com.triptracker.app://auth/callback?code=abc123' });
+
+    expect(closeMock).toHaveBeenCalled();
+    expect(exchangeCodeForSessionMock).toHaveBeenCalledWith('?code=abc123');
+  });
+
+  it('ignores a URL that does not match the callback scheme', async () => {
+    const handler = addListenerMock.mock.calls.find(([event]) => event === 'appUrlOpen')?.[1];
+    expect(handler).toBeDefined();
+    closeMock.mockClear();
+    exchangeCodeForSessionMock.mockClear();
+
+    await handler({ url: 'https://example.com/some/other/path' });
+
+    expect(closeMock).not.toHaveBeenCalled();
+    expect(exchangeCodeForSessionMock).not.toHaveBeenCalled();
+  });
+
+  it('sets authError when exchangeCodeForSession fails', async () => {
+    const handler = addListenerMock.mock.calls.find(([event]) => event === 'appUrlOpen')?.[1];
+    expect(handler).toBeDefined();
+    exchangeCodeForSessionMock.mockResolvedValueOnce({
+      data: {},
+      error: { message: 'exchange failed' },
+    });
+
+    await handler({ url: 'com.triptracker.app://auth/callback?code=abc123' });
+
+    expect(useAuthStore.getState().authError).toBe('exchange failed');
   });
 });
