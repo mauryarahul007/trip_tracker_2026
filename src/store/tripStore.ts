@@ -33,6 +33,7 @@ import {
 } from '../services/tripApi';
 import { generateDemoData } from '../utils/demoSeed';
 import { reverseGeocode, searchPlaces } from '../utils/geolocation';
+import { sendPushNotification } from '../services/pushApi';
 
 // Offline capture falls back to a raw-coordinate placeName (see geolocation.ts).
 // Once we're syncing (guaranteed online), upgrade it to a real place name.
@@ -425,6 +426,16 @@ export const useTripStore = create<TripStore>()(
                 expenses: state.expenses.map((e) => (e.id === tempId ? savedExpense : e)),
                 trips: state.trips.map((t) => (t.id === tripId ? { ...t, updatedAt: Date.now() } : t)),
               }));
+
+              const trip = get().trips.find((t) => t.id === tripId);
+              const recipients = Object.values(get().members)
+                .filter((m) => m.linkedUserId && m.linkedUserId !== userId)
+                .map((m) => m.linkedUserId as string);
+              sendPushNotification(
+                recipients,
+                trip?.name || 'Trip Tracker',
+                `${savedExpense.title} — ${savedExpense.currency} ${savedExpense.amount.toFixed(2)} added`
+              );
             }
           } else if (item.type === 'updateExpense') {
             const { id, expenseData } = item.payload;
@@ -770,6 +781,16 @@ export const useTripStore = create<TripStore>()(
           expenses: state.expenses.map((e) => (e.id === tempId ? savedExpense : e)),
           trips: state.trips.map((t) => (t.id === tripId ? { ...t, updatedAt: Date.now() } : t)),
         }));
+
+        const trip = get().trips.find((t) => t.id === tripId);
+        const recipients = Object.values(get().members)
+          .filter((m) => m.linkedUserId && m.linkedUserId !== userId)
+          .map((m) => m.linkedUserId as string);
+        sendPushNotification(
+          recipients,
+          trip?.name || 'Trip Tracker',
+          `${savedExpense.title} — ${savedExpense.currency} ${savedExpense.amount.toFixed(2)} added`
+        );
       };
 
       if (!navigator.onLine) {
