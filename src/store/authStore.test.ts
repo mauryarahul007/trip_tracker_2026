@@ -75,7 +75,7 @@ describe('appUrlOpen listener on native', () => {
     await handler({ url: 'com.triptracker.app://auth/callback?code=abc123' });
 
     expect(closeMock).toHaveBeenCalled();
-    expect(exchangeCodeForSessionMock).toHaveBeenCalledWith('?code=abc123');
+    expect(exchangeCodeForSessionMock).toHaveBeenCalledWith('abc123');
   });
 
   it('ignores a URL that does not match the callback scheme', async () => {

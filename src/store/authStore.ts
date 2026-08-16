@@ -48,17 +48,21 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
           // In-app browser may already be closed
         }
         if (res.type === 'code') {
-          const { error } = await supabase.auth.exchangeCodeForSession(res.codeQuery);
+          const { data, error } = await supabase.auth.exchangeCodeForSession(res.code);
           if (error) {
             set({ authError: error.message });
+          } else if (data?.session) {
+            set({ session: data.session, authError: null });
           }
         } else if (res.type === 'token') {
-          const { error } = await supabase.auth.setSession({
+          const { data, error } = await supabase.auth.setSession({
             access_token: res.accessToken,
             refresh_token: res.refreshToken,
           });
           if (error) {
             set({ authError: error.message });
+          } else if (data?.session) {
+            set({ session: data.session, authError: null });
           }
         }
       });
@@ -74,6 +78,10 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
       provider: 'google',
       options: {
         redirectTo,
+        queryParams: {
+          prompt: 'select_account',
+          access_type: 'offline',
+        },
         ...(isNative ? { skipBrowserRedirect: true } : {}),
       },
     });

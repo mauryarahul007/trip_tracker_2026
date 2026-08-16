@@ -26,7 +26,7 @@ describe('parseNativeAuthCallback', () => {
     const url = 'com.triptracker.app://auth/callback?code=abc123&state=xyz';
     expect(parseNativeAuthCallback(url)).toEqual({
       type: 'code',
-      codeQuery: '?code=abc123&state=xyz',
+      code: 'abc123',
     });
   });
 
