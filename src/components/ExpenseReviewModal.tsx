@@ -118,8 +118,8 @@ export function ExpenseReviewModal({ expense, members, categories, trip, onClose
               style={{
                 padding: '12px 14px',
                 boxShadow: 'none',
-                background: expense.location.locationUnresolved ? 'rgba(230,126,34,0.08)' : 'rgba(0,191,165,0.06)',
-                border: expense.location.locationUnresolved ? '1px solid rgba(230,126,34,0.28)' : '1px solid rgba(0,191,165,0.2)',
+                background: 'rgba(0,191,165,0.06)',
+                border: '1px solid rgba(0,191,165,0.2)',
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
@@ -127,26 +127,22 @@ export function ExpenseReviewModal({ expense, members, categories, trip, onClose
               }}
             >
               <div>
-                <span style={{ fontSize: '11px', color: expense.location.locationUnresolved ? '#E67E22' : '#00BFA5', textTransform: 'uppercase', display: 'block', marginBottom: '2px', fontWeight: 600 }}>
-                  {expense.location.locationUnresolved ? '⚠ Location Not Found' : expense.location.pendingName ? '⏳ Location Pending' : '📍 Geotagged Location'}
+                <span style={{ fontSize: '11px', color: '#00BFA5', textTransform: 'uppercase', display: 'block', marginBottom: '2px', fontWeight: 600 }}>
+                  📍 Geotagged Location
                 </span>
                 <span style={{ fontSize: '13px', fontWeight: 500, color: 'var(--text-primary)' }}>
-                  {expense.location.locationUnresolved || expense.location.pendingName
-                    ? expense.location.pendingName
-                    : expense.location.placeName || `${expense.location.lat.toFixed(4)}, ${expense.location.lng.toFixed(4)}`}
+                  {expense.location.placeName || `${expense.location.lat.toFixed(4)}, ${expense.location.lng.toFixed(4)}`}
                 </span>
               </div>
-              {!expense.location.locationUnresolved && !expense.location.pendingName && (
-                <a
-                  href={`https://www.google.com/maps?q=${expense.location.lat},${expense.location.lng}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="secondary-btn"
-                  style={{ padding: '4px 10px', fontSize: '11.5px', color: '#00BFA5', borderColor: 'rgba(0,191,165,0.3)', flexShrink: 0, textDecoration: 'none' }}
-                >
-                  Maps ↗
-                </a>
-              )}
+              <a
+                href={`https://www.google.com/maps?q=${expense.location.lat},${expense.location.lng}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="secondary-btn"
+                style={{ padding: '4px 10px', fontSize: '11.5px', color: '#00BFA5', borderColor: 'rgba(0,191,165,0.3)', flexShrink: 0, textDecoration: 'none' }}
+              >
+                Maps ↗
+              </a>
             </div>
           )}
 

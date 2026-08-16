@@ -7,9 +7,14 @@ import { LoginScreen } from './components/LoginScreen'
 import { JoinTripScreen } from './components/JoinTripScreen'
 import { RequireAuth } from './components/RequireAuth'
 import { ErrorBoundary } from './components/ErrorBoundary'
+import { UpdateBanner } from './components/UpdateBanner'
+import { registerServiceWorkerUpdateWatcher } from './services/serviceWorker'
+
+registerServiceWorkerUpdateWatcher()
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
+    <UpdateBanner />
     <BrowserRouter basename={import.meta.env.BASE_URL}>
       <Routes>
         <Route path="/login" element={<LoginScreen />} />

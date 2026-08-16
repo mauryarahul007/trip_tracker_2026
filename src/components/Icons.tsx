@@ -30,6 +30,17 @@ export function IconExpenses({ size = 20, className = 'icon' }: IconProps) {
   );
 }
 
+export function IconRefresh({ size = 20, className = 'icon' }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" className={className} {...base}>
+      <path d="M3 12a9 9 0 0 1 15.4-6.4L21 8" />
+      <path d="M21 4v4h-4" />
+      <path d="M21 12a9 9 0 0 1-15.4 6.4L3 16" />
+      <path d="M3 20v-4h4" />
+    </svg>
+  );
+}
+
 export function IconMembers({ size = 20, className = 'icon' }: IconProps) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" className={className} {...base}>
