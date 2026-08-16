@@ -102,18 +102,71 @@ describe('Trip Multi-Admin Role Governance & Sole-Admin Protection', () => {
     expect(res3.allowed).toBe(true);
   });
 
-  it('only allows promoting members who have a linked Google account', () => {
-    const canPromoteToAdmin = (member: Member): boolean => {
-      return Boolean(member.linkedUserId);
+  it('allows promoting any member to Admin regardless of Google link status', () => {
+    const canPromoteToAdmin = (_member: Member): boolean => {
+      return true; // Any member can be made Admin
     };
 
-    // Alex (has linked Google account) can be promoted
+    // Alex (linked) can be promoted
     expect(canPromoteToAdmin(members[1])).toBe(true);
-    // Sarah (unlinked guest) cannot be promoted
-    expect(canPromoteToAdmin(members[2])).toBe(false);
+    // Sarah (unlinked) can also be promoted
+    expect(canPromoteToAdmin(members[2])).toBe(true);
+
+    const tripWithUnlinkedAdmin: Trip = {
+      ...baseTrip,
+      adminMemberIds: ['m-1', 'm-3'],
+    };
+    expect(isMemberAdmin(tripWithUnlinkedAdmin, members[2])).toBe(true);
   });
 
-  it('prevents secondary admins from demoting the original trip creator', () => {
+  it('blocks original admin deletion unless at least one other member is BOTH Google-linked and an Admin', () => {
+    const checkCanDeleteAdminWithGoogle = (trip: Trip, memberToDelete: Member) => {
+      const isTargetAdmin = isMemberAdmin(trip, memberToDelete);
+      if (!isTargetAdmin) return { allowed: true };
+
+      const remainingAdmins = members.filter(
+        (m) => m.id !== memberToDelete.id && isMemberAdmin(trip, m)
+      );
+
+      const remainingGoogleAdmins = remainingAdmins.filter((m) => Boolean(m.linkedUserId));
+
+      if (remainingGoogleAdmins.length === 0) {
+        return {
+          allowed: false,
+          error: 'Must retain at least one other Admin linked to a Google account',
+        };
+      }
+      return { allowed: true };
+    };
+
+    // Case 1: Sole admin -> Rahul tries to delete himself -> blocked!
+    const res1 = checkCanDeleteAdminWithGoogle(baseTrip, members[0]);
+    expect(res1.allowed).toBe(false);
+    expect(res1.error).toBe('Must retain at least one other Admin linked to a Google account');
+
+    // Case 2: Sarah (unlinked) is Admin, but Alex is NOT admin -> Rahul tries to delete himself -> blocked!
+    const tripWithUnlinkedAdmin: Trip = {
+      ...baseTrip,
+      adminMemberIds: ['m-1', 'm-3'],
+    };
+    const res2 = checkCanDeleteAdminWithGoogle(tripWithUnlinkedAdmin, members[0]);
+    expect(res2.allowed).toBe(false);
+    expect(res2.error).toBe('Must retain at least one other Admin linked to a Google account');
+
+    // Case 3: Alex (Google-linked) is NOT admin, only Rahul is admin -> Rahul tries to delete himself -> blocked!
+    const res3 = checkCanDeleteAdminWithGoogle(baseTrip, members[0]);
+    expect(res3.allowed).toBe(false);
+
+    // Case 4: Alex (Google-linked) IS an Admin -> Rahul tries to delete himself -> allowed!
+    const tripWithTwoGoogleAdmins: Trip = {
+      ...baseTrip,
+      adminMemberIds: ['m-1', 'm-2'],
+    };
+    const res4 = checkCanDeleteAdminWithGoogle(tripWithTwoGoogleAdmins, members[0]);
+    expect(res4.allowed).toBe(true);
+  });
+
+  it('prevents secondary admins from demoting or deleting the original trip creator', () => {
     const multiAdminTrip: Trip = {
       ...baseTrip,
       adminMemberIds: ['m-1', 'm-2'],
@@ -129,10 +182,22 @@ describe('Trip Multi-Admin Role Governance & Sole-Admin Protection', () => {
       return currentAdmins.length > 1;
     };
 
+    const canDelete = (callerUserId: string, targetMember: Member) => {
+      if (isOriginalTripOwner(targetMember) && callerUserId !== multiAdminTrip.ownerId) {
+        return false;
+      }
+      return true;
+    };
+
     // Attempting to demote Rahul (original creator) -> forbidden!
     expect(canDemote(members[0])).toBe(false);
     // Attempting to demote Alex (secondary admin) -> allowed!
     expect(canDemote(members[1])).toBe(true);
+
+    // Alex (user-2) trying to delete Rahul (user-1) -> forbidden!
+    expect(canDelete('user-2', members[0])).toBe(false);
+    // Rahul (user-1) deleting Alex (user-2) -> allowed!
+    expect(canDelete('user-1', members[1])).toBe(true);
   });
 
   it('demoting a secondary admin retains original creator and other admins', () => {

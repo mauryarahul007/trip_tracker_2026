@@ -603,51 +603,26 @@ export function MembersGroupsTab({
                     <div className="lt-actions" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                       {onSetMemberAdminRole && (
                         !isMemberAdmin(member) ? (
-                          member.linkedUserId ? (
-                            <button
-                              type="button"
-                              className="secondary-btn"
-                              style={{
-                                padding: '4px 8px',
-                                fontSize: '11px',
-                                color: 'var(--primary-accent)',
-                                borderColor: 'rgba(31, 110, 104, 0.3)',
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                gap: '4px',
-                              }}
-                              title="Make this member a Trip Admin"
-                              onClick={() => onSetMemberAdminRole(member.id, true)}
-                            >
-                              <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm14 3c0 .6-.4 1-1 1H6c-.6 0-1-.4-1-1v-1h14v1z" />
-                              </svg>
-                              Make Admin
-                            </button>
-                          ) : (
-                            <button
-                              type="button"
-                              className="secondary-btn"
-                              disabled
-                              style={{
-                                padding: '4px 8px',
-                                fontSize: '11px',
-                                color: 'var(--text-muted)',
-                                borderColor: 'var(--border-color)',
-                                opacity: 0.5,
-                                cursor: 'not-allowed',
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                gap: '4px',
-                              }}
-                              title="Member must join with a Google account to be made an Admin"
-                            >
-                              <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm14 3c0 .6-.4 1-1 1H6c-.6 0-1-.4-1-1v-1h14v1z" />
-                              </svg>
-                              Make Admin
-                            </button>
-                          )
+                          <button
+                            type="button"
+                            className="secondary-btn"
+                            style={{
+                              padding: '4px 8px',
+                              fontSize: '11px',
+                              color: 'var(--primary-accent)',
+                              borderColor: 'rgba(31, 110, 104, 0.3)',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '4px',
+                            }}
+                            title="Make this member a Trip Admin"
+                            onClick={() => onSetMemberAdminRole(member.id, true)}
+                          >
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
+                              <path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm14 3c0 .6-.4 1-1 1H6c-.6 0-1-.4-1-1v-1h14v1z" />
+                            </svg>
+                            Make Admin
+                          </button>
                         ) : !isOriginalTripOwner(member) && tripAdminCount > 1 ? (
                           <button
                             type="button"

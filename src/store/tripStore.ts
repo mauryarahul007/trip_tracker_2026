@@ -621,10 +621,8 @@ export const useTripStore = create<TripStore>()(
           }
 
           if (isAdmin) {
-            // Only members with a linked Google account can be promoted to Admin
-            if (targetMember.linkedUserId) {
-              currentAdmins.add(memberId);
-            }
+            // Any member can be promoted to Admin
+            currentAdmins.add(memberId);
           } else {
             // Cannot demote the original trip creator / owner
             const isOwner = targetMember.linkedUserId && targetMember.linkedUserId === t.ownerId;

@@ -301,21 +301,21 @@ This document logs all meaningful technical decisions, library choices, design p
 
 ---
 
-## 26. Google-Linked Admin Promotion Requirement & Trip Owner Demotion Immunity
-* **Context:** A security and governance flaw existed where unlinked guest/placeholder personas could be promoted to Admin, and secondary admins promoted by the original trip creator could turn around and demote or delete the original trip creator.
-* **Decision:** Enforced two strict boundaries: (1) Only members with a linked Google account can be promoted to Admin, and (2) The original trip creator (Owner) cannot be demoted or deleted by secondary admins.
+## 26. Unrestricted Admin Promotion, Trip Owner Demotion Immunity & Google-Linked Admin Deletion Guardrail
+* **Context:** Collaborative trip tracking requires that any added member can be granted administrative powers to edit categories, members, and expenses without waiting for them to link Google accounts. However, the original trip creator (Owner) must never be demoted or deleted by secondary admins, and the original owner can only leave/delete their account if another member on the trip is BOTH logged in via Google and an Admin.
+* **Decision:** Implemented unrestricted admin promotion for all members, locked demotion/deletion of the trip creator against secondary admins, and mandated a Google-logged-in Admin for original admin removal.
 * **Pattern/Implementation:**
-  - **Google-Linked Promotion Gate (`MembersGroupsTab.tsx`, `tripStore.ts`)**:
-    - The `Make Admin` action is enabled only for members with `Boolean(member.linkedUserId)`.
-    - Unlinked guest accounts display a disabled button with tooltip: *"Member must join with a Google account to be made an Admin"*.
-    - `tripStore.setMemberAdminRole` enforces `targetMember.linkedUserId` before adding a member to `adminMemberIds`.
+  - **Unrestricted Promotion (`MembersGroupsTab.tsx`, `tripStore.ts`)**:
+    - Any trip member can be made an Admin via `Make Admin`, regardless of whether their Google account is linked yet.
+    - `tripStore.setMemberAdminRole` adds any designated `memberId` to `adminMemberIds`.
   - **Trip Owner Immunity (`MembersGroupsTab.tsx`, `App.tsx`, `tripStore.ts`)**:
     - The original creator (`activeTrip.ownerId`) is badged with 👑 **Owner** and cannot be demoted (no Demote button is shown for the Owner).
     - `tripStore.setMemberAdminRole` ignores demotion requests targeting the trip owner.
     - Secondary admins cannot delete the original trip owner.
-    - If the trip owner decides to self-delete/leave the trip, they must ensure at least one other Google-linked Admin exists on the trip.
+  - **Original Admin Deletion Guardrail (`MembersGroupsTab.tsx`, `App.tsx`)**:
+    - If the original trip creator wishes to self-delete/leave the trip, the system enforces that at least one other member on the trip is **both** an Admin and logged in with a Google account (`isMemberAdmin(m) && Boolean(m.linkedUserId)`).
 * **Trade-offs Accepted:**
-  - Preserves hierarchical ownership while allowing collaborative trip administration.
+  - Preserves hierarchical ownership and guarantees that trips never lose verified ownership while providing full flexibility to promote co-travelers to Admins immediately.
 
 
 
