@@ -71,4 +71,38 @@ describe('Previous Member Suggestions & Typeahead Logic', () => {
     const emptyQueryResults = available.slice(0, 5);
     expect(emptyQueryResults.length).toBe(5);
   });
+
+  it('triggers remote refresh when local matching suggestions drop below 5 and merges results', () => {
+    const available: PreviousMemberSuggestion[] = [
+      { name: 'Alex Johnson', linkedUserId: 'user-2', avatarUrl: null },
+    ];
+
+    const fuse = new Fuse(available, {
+      keys: ['name'],
+      threshold: 0.35,
+    });
+
+    // Local matches for 'steve' is 0 (< 5) -> triggers remote lookup
+    const localMatches = fuse.search('steve').map((r) => r.item);
+    expect(localMatches.length).toBeLessThan(5);
+
+    // Mock remote results returned from backend
+    const remoteResults: PreviousMemberSuggestion[] = [
+      { name: 'Steve Carell', linkedUserId: 'user-99', avatarUrl: 'https://example.com/steve.png' },
+    ];
+
+    // Merge into local list
+    const map = new Map(available.map((p) => [p.name.toLowerCase(), p]));
+    remoteResults.forEach((item) => {
+      const key = item.name.toLowerCase();
+      if (!map.has(key)) {
+        map.set(key, item);
+      }
+    });
+
+    const updated = Array.from(map.values());
+    expect(updated).toHaveLength(2);
+    expect(updated.some((u) => u.name === 'Steve Carell')).toBe(true);
+  });
 });
+

@@ -708,3 +708,69 @@ export async function fetchPreviousTripMembers(userId: string | null | undefined
   return results;
 }
 
+export async function searchRemoteMemberSuggestions(
+  query: string,
+  userId: string | null | undefined
+): Promise<PreviousMemberSuggestion[]> {
+  const trimmed = query.trim();
+  if (!trimmed || !userId) return [];
+
+  try {
+    // 1. Search profiles for Google accounts
+    const { data: profilesData } = await supabase
+      .from('profiles')
+      .select('id, display_name, avatar_url')
+      .ilike('display_name', `%${trimmed}%`)
+      .limit(10);
+
+    // 2. Search all members for previous trip participant names
+    const { data: membersData } = await supabase
+      .from('members')
+      .select('name, linked_user_id, profile:linked_user_id(avatar_url, display_name)')
+      .ilike('name', `%${trimmed}%`)
+      .limit(10);
+
+    const memberMap = new Map<string, PreviousMemberSuggestion>();
+
+    (profilesData ?? []).forEach((p: any) => {
+      const name = (p.display_name || '').trim();
+      if (!name || p.id === userId) return;
+      memberMap.set(name.toLowerCase(), {
+        name,
+        linkedUserId: p.id,
+        avatarUrl: p.avatar_url || null,
+      });
+    });
+
+    (membersData ?? []).forEach((m: any) => {
+      const name = (m.profile?.display_name || m.name || '').trim();
+      if (!name || m.linked_user_id === userId) return;
+      const norm = name.toLowerCase();
+      const existing = memberMap.get(norm);
+      if (!existing) {
+        memberMap.set(norm, {
+          name,
+          linkedUserId: m.linked_user_id || null,
+          avatarUrl: m.profile?.avatar_url || null,
+        });
+      } else if (!existing.linkedUserId && m.linked_user_id) {
+        memberMap.set(norm, {
+          name,
+          linkedUserId: m.linked_user_id,
+          avatarUrl: m.profile?.avatar_url || existing.avatarUrl,
+        });
+      }
+    });
+
+    return Array.from(memberMap.values()).sort((a, b) => {
+      if (Boolean(a.linkedUserId) !== Boolean(b.linkedUserId)) {
+        return a.linkedUserId ? -1 : 1;
+      }
+      return a.name.localeCompare(b.name);
+    });
+  } catch (err) {
+    console.error('Remote member search error:', err);
+    return [];
+  }
+}
+

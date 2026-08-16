@@ -3,7 +3,7 @@ import Fuse from 'fuse.js';
 import type { Group, Member, PreviousMemberSuggestion } from '../types';
 import type { MemberBalance } from '../utils/settlement';
 import { initial } from '../utils/initials';
-import { fetchPreviousTripMembers } from '../services/tripApi';
+import { fetchPreviousTripMembers, searchRemoteMemberSuggestions } from '../services/tripApi';
 import { IconCheck, IconEdit, IconTrash } from './Icons';
 
 type Props = {
@@ -197,6 +197,47 @@ export function MembersGroupsTab({
     }
     return fuse.search(query).map((res) => res.item).slice(0, 5);
   }, [fuse, newMemberName, availablePreviousMembers]);
+
+  // When search query is entered and matching suggestions drop below 5, trigger debounced Supabase query
+  React.useEffect(() => {
+    const query = newMemberName.trim();
+    if (!query || query.length < 2 || !currentUserId) {
+      return;
+    }
+
+    // Check how many local matches we have
+    const localMatches = fuse.search(query).map((res) => res.item);
+    if (localMatches.length >= 5) {
+      return; // Already have 5+ local suggestions
+    }
+
+    const timer = setTimeout(async () => {
+      try {
+        const remoteResults = await searchRemoteMemberSuggestions(query, currentUserId);
+        if (remoteResults.length > 0) {
+          setPreviousMembers((prev) => {
+            const map = new Map(prev.map((p) => [p.name.toLowerCase(), p]));
+            let hasNew = false;
+            remoteResults.forEach((item) => {
+              const key = item.name.toLowerCase();
+              if (!map.has(key)) {
+                map.set(key, item);
+                hasNew = true;
+              } else if (!map.get(key)!.linkedUserId && item.linkedUserId) {
+                map.set(key, item);
+                hasNew = true;
+              }
+            });
+            return hasNew ? Array.from(map.values()) : prev;
+          });
+        }
+      } catch (err) {
+        console.error('Remote suggestion search error:', err);
+      }
+    }, 350);
+
+    return () => clearTimeout(timer);
+  }, [newMemberName, fuse, currentUserId]);
 
   // Group Form State
   const [showAddGroup, setShowAddGroup] = React.useState(false);
