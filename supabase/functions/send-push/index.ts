@@ -13,14 +13,30 @@ interface SendPushRequest {
   data?: Record<string, string>;
 }
 
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
+
+function jsonResponse(body: unknown, status: number): Response {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+  });
+}
+
 Deno.serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: corsHeaders });
+  }
+
   if (req.method !== 'POST') {
-    return new Response(JSON.stringify({ error: 'Method not allowed' }), { status: 405 });
+    return jsonResponse({ error: 'Method not allowed' }, 405);
   }
 
   const authHeader = req.headers.get('Authorization');
   if (!authHeader) {
-    return new Response(JSON.stringify({ error: 'Missing Authorization header' }), { status: 401 });
+    return jsonResponse({ error: 'Missing Authorization header' }, 401);
   }
   const jwt = authHeader.replace('Bearer ', '');
 
@@ -28,18 +44,18 @@ Deno.serve(async (req) => {
   try {
     requestBody = await req.json();
   } catch {
-    return new Response(JSON.stringify({ error: 'Invalid JSON body' }), { status: 400 });
+    return jsonResponse({ error: 'Invalid JSON body' }, 400);
   }
   const { userIds, title, body, data } = requestBody;
   if (!Array.isArray(userIds) || userIds.length === 0 || !title || !body) {
-    return new Response(JSON.stringify({ error: 'userIds, title, and body are required' }), { status: 400 });
+    return jsonResponse({ error: 'userIds, title, and body are required' }, 400);
   }
 
   const supabaseAdmin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
 
   const { data: callerData, error: callerError } = await supabaseAdmin.auth.getUser(jwt);
   if (callerError || !callerData.user) {
-    return new Response(JSON.stringify({ error: 'Invalid session' }), { status: 401 });
+    return jsonResponse({ error: 'Invalid session' }, 401);
   }
   const callerId = callerData.user.id;
 
@@ -50,11 +66,11 @@ Deno.serve(async (req) => {
     .select('trip_id')
     .eq('linked_user_id', callerId);
   if (membershipError) {
-    return new Response(JSON.stringify({ error: membershipError.message }), { status: 500 });
+    return jsonResponse({ error: membershipError.message }, 500);
   }
   const callerTripIds = (callerMemberships || []).map((m) => m.trip_id);
   if (callerTripIds.length === 0) {
-    return new Response(JSON.stringify({ error: 'Caller is not a participant in any trip' }), { status: 403 });
+    return jsonResponse({ error: 'Caller is not a participant in any trip' }, 403);
   }
 
   const { data: recipientMembers, error: recipientError } = await supabaseAdmin
@@ -63,12 +79,12 @@ Deno.serve(async (req) => {
     .in('trip_id', callerTripIds)
     .in('linked_user_id', userIds);
   if (recipientError) {
-    return new Response(JSON.stringify({ error: recipientError.message }), { status: 500 });
+    return jsonResponse({ error: recipientError.message }, 500);
   }
   const allowedUserIds = new Set((recipientMembers || []).map((m) => m.linked_user_id));
   const filteredUserIds = userIds.filter((id) => allowedUserIds.has(id));
   if (filteredUserIds.length === 0) {
-    return new Response(JSON.stringify({ sent: 0, total: 0 }), { status: 200 });
+    return jsonResponse({ sent: 0, total: 0 }, 200);
   }
 
   const { data: tokens, error: tokenError } = await supabaseAdmin
@@ -76,10 +92,10 @@ Deno.serve(async (req) => {
     .select('id, fcm_token')
     .in('user_id', filteredUserIds);
   if (tokenError) {
-    return new Response(JSON.stringify({ error: tokenError.message }), { status: 500 });
+    return jsonResponse({ error: tokenError.message }, 500);
   }
   if (!tokens || tokens.length === 0) {
-    return new Response(JSON.stringify({ sent: 0, total: 0 }), { status: 200 });
+    return jsonResponse({ sent: 0, total: 0 }, 200);
   }
 
   const serviceAccount = JSON.parse(FCM_SERVICE_ACCOUNT_JSON);
@@ -117,5 +133,5 @@ Deno.serve(async (req) => {
     }
   }
 
-  return new Response(JSON.stringify({ sent, total: tokens.length }), { status: 200 });
+  return jsonResponse({ sent, total: tokens.length }, 200);
 });
