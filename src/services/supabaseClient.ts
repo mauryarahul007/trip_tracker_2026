@@ -13,7 +13,10 @@ const activeKey = isMissingSupabaseEnv ? 'dummy-anon-key' : supabaseAnonKey;
 
 export const supabase = createClient<Database>(activeUrl, activeKey, {
   auth: {
-    flowType: 'pkce',
+    // PKCE is required on native (the custom URL scheme callback can't
+    // use the implicit flow) but must stay scoped to native only — web
+    // keeps Supabase's default implicit flow, unchanged.
+    flowType: Capacitor.isNativePlatform() ? 'pkce' : 'implicit',
     detectSessionInUrl: !Capacitor.isNativePlatform(),
   },
 });

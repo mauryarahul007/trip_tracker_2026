@@ -73,7 +73,7 @@ Deno.serve(async (req) => {
 
   const { data: tokens, error: tokenError } = await supabaseAdmin
     .from('device_push_tokens')
-    .select('fcm_token')
+    .select('id, fcm_token')
     .in('user_id', filteredUserIds);
   if (tokenError) {
     return new Response(JSON.stringify({ error: tokenError.message }), { status: 500 });
@@ -90,7 +90,7 @@ Deno.serve(async (req) => {
   const accessToken = await auth.getAccessToken();
 
   let sent = 0;
-  for (const { fcm_token } of tokens) {
+  for (const { id, fcm_token } of tokens) {
     const res = await fetch(
       `https://fcm.googleapis.com/v1/projects/${serviceAccount.project_id}/messages:send`,
       {
@@ -108,7 +108,13 @@ Deno.serve(async (req) => {
         }),
       }
     );
-    if (res.ok) sent++;
+    if (res.ok) {
+      sent++;
+    } else {
+      // Dead token (uninstalled app, rotated token, etc.) — prune it so
+      // it doesn't keep accumulating and wasting future sends.
+      await supabaseAdmin.from('device_push_tokens').delete().eq('id', id);
+    }
   }
 
   return new Response(JSON.stringify({ sent, total: tokens.length }), { status: 200 });
