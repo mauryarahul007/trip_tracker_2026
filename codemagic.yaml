@@ -1,6 +1,6 @@
 workflows:
   android-release:
-    name: Android Release Build
+    name: Android Release Build (APK + AAB)
     max_build_duration: 30
     instance_type: linux_x2
     environment:
@@ -10,6 +10,7 @@ workflows:
       vars:
         VITE_BASE_PATH: "/"
       node: 20
+      java: 17
     triggering:
       events: []
     scripts:
@@ -21,15 +22,45 @@ workflows:
         script: node scripts/sync-native-version.mjs
       - name: Sync Capacitor Android
         script: npx cap sync android
-      - name: Build signed Android App Bundle
+      - name: Build signed Android APK and App Bundle
         script: |
           cd android
-          ./gradlew bundleRelease
+          ./gradlew assembleRelease bundleRelease
     artifacts:
       - android/app/build/outputs/**/*.aab
+      - android/app/build/outputs/**/*.apk
+
+  android-debug:
+    name: Android Debug Build (Universal APK)
+    max_build_duration: 20
+    instance_type: linux_x2
+    environment:
+      groups:
+        - trip_tracker_secrets
+      vars:
+        VITE_BASE_PATH: "/"
+      node: 20
+      java: 17
+    triggering:
+      events: []
+    scripts:
+      - name: Install dependencies
+        script: npm ci
+      - name: Build web assets
+        script: npm run build
+      - name: Sync native version
+        script: node scripts/sync-native-version.mjs
+      - name: Sync Capacitor Android
+        script: npx cap sync android
+      - name: Build Debug APK
+        script: |
+          cd android
+          ./gradlew assembleDebug
+    artifacts:
+      - android/app/build/outputs/**/*.apk
 
   ios-release:
-    name: iOS Release Build
+    name: iOS Release Build (App Store / Ad-Hoc IPA)
     max_build_duration: 60
     instance_type: mac_mini_m2
     integrations:
@@ -55,8 +86,37 @@ workflows:
         script: node scripts/sync-native-version.mjs
       - name: Sync Capacitor iOS
         script: npx cap sync ios
-      - name: Build and sign ipa
+      - name: Build and sign IPA
         script: |
           xcode-project build-ipa --project ios/App/App.xcodeproj --scheme App
     artifacts:
       - ios/App/build/ios/ipa/*.ipa
+
+  ios-simulator:
+    name: iOS Simulator Build (Unsigned .app)
+    max_build_duration: 30
+    instance_type: mac_mini_m2
+    environment:
+      groups:
+        - trip_tracker_secrets
+      vars:
+        VITE_BASE_PATH: "/"
+      node: 20
+      xcode: latest
+    triggering:
+      events: []
+    scripts:
+      - name: Install dependencies
+        script: npm ci
+      - name: Build web assets
+        script: npm run build
+      - name: Sync native version
+        script: node scripts/sync-native-version.mjs
+      - name: Sync Capacitor iOS
+        script: npx cap sync ios
+      - name: Build Simulator App
+        script: |
+          xcodebuild -project ios/App/App.xcodeproj -scheme App -destination 'generic/platform=iOS Simulator' -configuration Debug -derivedDataPath build/ios
+    artifacts:
+      - build/ios/Build/Products/Debug-iphonesimulator/*.app
+
