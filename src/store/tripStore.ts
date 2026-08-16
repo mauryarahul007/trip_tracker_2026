@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { Member, Group, Expense, Category, TripState, ExpenseLocation } from '../types';
+import type { Member, Group, Expense, Category, TripState, ExpenseLocation, Trip } from '../types';
 import { supabase } from '../services/supabaseClient';
 import {
   fetchMyTripGraph,
@@ -33,6 +33,7 @@ import {
 } from '../services/tripApi';
 import { generateDemoData } from '../utils/demoSeed';
 import { reverseGeocode, searchPlaces } from '../utils/geolocation';
+import { sendPushNotification } from '../services/pushApi';
 
 // Offline capture falls back to a raw-coordinate placeName (see geolocation.ts).
 // Once we're syncing (guaranteed online), upgrade it to a real place name.
@@ -214,6 +215,25 @@ export function collectDirtyExpenseIds(syncQueue: { type: string; payload: any }
     }
   }
   return ids;
+}
+
+// Scopes push-notification recipients to the members of ONE trip.
+// `members` (the store's flat Record<string, Member>) spans every trip
+// the user belongs to, not just the active one — filtering it directly
+// (as both addExpense's online save and processQueue's offline replay
+// used to) leaks recipients from unrelated trips. Go through the trip's
+// own memberIds instead, same as `activeTripMembers` does in App.tsx.
+export function getTripNotificationRecipients(
+  trips: Trip[],
+  members: Record<string, Member>,
+  tripId: string,
+  excludeUserId: string
+): string[] {
+  const trip = trips.find((t) => t.id === tripId);
+  return (trip?.memberIds ?? [])
+    .map((id) => members[id])
+    .filter((m): m is Member => !!m && !m.archived && !!m.linkedUserId && m.linkedUserId !== excludeUserId)
+    .map((m) => m.linkedUserId as string);
 }
 
 // Reconciles a fresh server fetch for one trip against the locally
@@ -426,6 +446,14 @@ export const useTripStore = create<TripStore>()(
                 expenses: state.expenses.map((e) => (e.id === tempId ? savedExpense : e)),
                 trips: state.trips.map((t) => (t.id === tripId ? { ...t, updatedAt: Date.now() } : t)),
               }));
+
+              const trip = get().trips.find((t) => t.id === tripId);
+              const recipients = getTripNotificationRecipients(get().trips, get().members, tripId, userId);
+              sendPushNotification(
+                recipients,
+                trip?.name || 'Trip Tracker',
+                `${savedExpense.title} — ${savedExpense.currency} ${savedExpense.amount.toFixed(2)} added`
+              );
             }
           } else if (item.type === 'updateExpense') {
             const { id, expenseData } = item.payload;
@@ -828,6 +856,14 @@ export const useTripStore = create<TripStore>()(
           expenses: state.expenses.map((e) => (e.id === tempId ? savedExpense : e)),
           trips: state.trips.map((t) => (t.id === tripId ? { ...t, updatedAt: Date.now() } : t)),
         }));
+
+        const trip = get().trips.find((t) => t.id === tripId);
+        const recipients = getTripNotificationRecipients(get().trips, get().members, tripId, userId);
+        sendPushNotification(
+          recipients,
+          trip?.name || 'Trip Tracker',
+          `${savedExpense.title} — ${savedExpense.currency} ${savedExpense.amount.toFixed(2)} added`
+        );
       };
 
       if (!navigator.onLine) {

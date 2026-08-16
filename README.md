@@ -143,3 +143,20 @@ All data lives in a single Zustand store, persisted to IndexedDB as one JSON blo
 - **Category** — emoji + label. Six built-in, unlimited custom.
 
 See [Reference: Data Model](docs/reference-data-model.md) for full field-level docs.
+
+---
+
+## Native app builds (Codemagic)
+
+`codemagic.yaml` defines two manually-triggered workflows: `android-release` and `ios-release`.
+Before running either for the first time, in the Codemagic dashboard:
+
+1. Create an environment variable group named `trip_tracker_secrets` containing
+   `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` (same values as the GitHub Actions
+   `deploy-ec2` workflow secrets).
+2. For Android: create an environment variable group named `android_signing` and configure
+   an Android code signing identity in Codemagic's UI — this auto-populates the
+   `CM_KEYSTORE_*` variables `android/app/build.gradle`'s signing config reads.
+3. For iOS: add an App Store Connect API key integration named `codemagic_asc_api_key`
+   (Codemagic dashboard -> Teams -> Integrations -> App Store Connect), using the Apple
+   Developer account's API key.

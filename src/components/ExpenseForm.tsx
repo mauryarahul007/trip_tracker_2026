@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import { Capacitor } from '@capacitor/core';
+import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 import type { Category, Group, Member, Trip, Expense, ExpenseLocation } from '../types';
 import { IconCheck, IconAlertCircle, IconClose, IconMapPin } from './Icons';
 import { CategoryIcon } from './CategoryIcon';
 import { initial } from '../utils/initials';
 import { getCurrencySymbol } from '../utils/currency';
-import { compressImageToDataUrl } from '../utils/image';
+import { compressImageToDataUrl, compressDataUrlToDataUrl } from '../utils/image';
 import { autoSuggestCategory } from '../utils/categoryHelper';
 import { captureCurrentExpenseLocation } from '../utils/geolocation';
 import { useTripStore } from '../store/tripStore';
@@ -132,6 +134,32 @@ export function ExpenseForm({
       setReceiptImage(dataUrl);
     } catch {
       setFormError('Could not process that image. Try a different photo.');
+    } finally {
+      setReceiptProcessing(false);
+    }
+  };
+
+  const handleNativeCameraCapture = async () => {
+    setReceiptProcessing(true);
+    try {
+      const photo = await Camera.getPhoto({
+        quality: 90,
+        resultType: CameraResultType.DataUrl,
+        source: CameraSource.Prompt,
+      });
+      if (photo.dataUrl) {
+        const compressed = await compressDataUrlToDataUrl(photo.dataUrl);
+        setReceiptImage(compressed);
+      }
+    } catch (err) {
+      // The Capacitor Camera plugin rejects with this exact message (both
+      // iOS and Android) when the user backs out of the picker — that's
+      // not an error state, leave receiptImage as-is. Anything else
+      // (permission denial, hardware/decode error) is a real failure.
+      const message = err instanceof Error ? err.message : '';
+      if (message !== 'User cancelled photos app') {
+        setFormError('Could not process that image. Try a different photo.');
+      }
     } finally {
       setReceiptProcessing(false);
     }
@@ -424,6 +452,16 @@ export function ExpenseForm({
               Remove
             </button>
           </div>
+        ) : Capacitor.isNativePlatform() ? (
+          <button
+            type="button"
+            className="secondary-btn"
+            style={{ padding: '8px 14px', fontSize: '13px' }}
+            onClick={handleNativeCameraCapture}
+            disabled={receiptProcessing}
+          >
+            📷 Take or Choose Photo
+          </button>
         ) : (
           <input
             type="file"

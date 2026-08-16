@@ -3,6 +3,8 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { lookupTripByJoinCode, claimTripMember, type JoinLookupResult } from '../services/tripApi';
 import { useTripStore } from '../store/tripStore';
 import { IconMembers, IconCheckCircle } from './Icons';
+import { sendPushNotification } from '../services/pushApi';
+import { supabase } from '../services/supabaseClient';
 
 type Status = 'loading' | 'invalid' | 'ready' | 'claiming' | 'error';
 
@@ -53,6 +55,18 @@ export function JoinTripScreen() {
         setErrorMessage('That member was just claimed by someone else. Pick another.');
         await load();
         return;
+      }
+      if (result) {
+        const joinedMemberName = result.unclaimedMembers.find((m) => m.id === memberId)?.name || 'Someone';
+        const { data: tripMembers } = await supabase
+          .from('members')
+          .select('id, linked_user_id')
+          .eq('trip_id', result.tripId)
+          .not('linked_user_id', 'is', null);
+        const recipients = (tripMembers || [])
+          .filter((m) => m.id !== memberId)
+          .map((m) => m.linked_user_id as string);
+        sendPushNotification(recipients, result.tripName, `${joinedMemberName} joined the trip`);
       }
       if (result) await goToTrip(result.tripId);
     } catch (e) {

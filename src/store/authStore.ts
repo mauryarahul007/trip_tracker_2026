@@ -1,6 +1,11 @@
 import { create } from 'zustand';
 import type { Session } from '@supabase/supabase-js';
+import { Capacitor } from '@capacitor/core';
+import { Browser } from '@capacitor/browser';
+import { App as CapacitorApp } from '@capacitor/app';
 import { supabase } from '../services/supabaseClient';
+import { buildOAuthRedirectUrl, parseNativeAuthCallback } from '../utils/nativeAuth';
+import { registerForPushNotifications, unregisterPushNotifications } from '../services/pushRegistration';
 
 interface AuthStore {
   session: Session | null;
@@ -28,23 +33,56 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
 
     supabase.auth.onAuthStateChange((_event, session) => {
       set({ session });
+      if (session?.user) {
+        registerForPushNotifications(session.user.id);
+      }
     });
+
+    if (Capacitor.isNativePlatform()) {
+      CapacitorApp.addListener('appUrlOpen', async ({ url }) => {
+        const query = parseNativeAuthCallback(url);
+        if (!query) return;
+        await Browser.close();
+        const { error } = await supabase.auth.exchangeCodeForSession(`?${query}`);
+        if (error) {
+          set({ authError: error.message });
+        }
+      });
+    }
   },
 
   signInWithGoogle: async (redirectPath = '/') => {
     set({ authError: null });
-    const { error } = await supabase.auth.signInWithOAuth({
+    const isNative = Capacitor.isNativePlatform();
+    const redirectTo = buildOAuthRedirectUrl(isNative, window.location.origin, redirectPath);
+
+    const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${window.location.origin}${redirectPath}`,
+        redirectTo,
+        ...(isNative ? { skipBrowserRedirect: true } : {}),
       },
     });
+
     if (error) {
       set({ authError: error.message });
+      return;
+    }
+
+    if (isNative && data?.url) {
+      await Browser.open({ url: data.url });
     }
   },
 
   signOut: async () => {
+    const userId = get().session?.user.id;
+    // Must run BEFORE auth.signOut() — device_push_tokens RLS requires
+    // an authenticated session (user_id = auth.uid()), so deleting the
+    // token after deauthenticating would silently match zero rows and
+    // leave the device registered to receive this user's notifications.
+    if (userId) {
+      await unregisterPushNotifications(userId);
+    }
     await supabase.auth.signOut();
     set({ session: null });
   },

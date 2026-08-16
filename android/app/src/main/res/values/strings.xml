@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Trip Tracker 2026</string>
+    <string name="title_activity_main">Trip Tracker 2026</string>
+    <string name="package_name">com.triptracker.app</string>
+    <string name="custom_url_scheme">com.triptracker.app</string>
+</resources>

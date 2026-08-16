@@ -69,7 +69,7 @@ git commit -m "chore: install Capacitor core and add base config"
 
 **Interfaces:**
 - Consumes: `capacitor.config.ts` from Task 1 (appId/appName/webDir).
-- Produces: `android/app/build.gradle` (Android app module, edited in Task 7/8), `ios/App/App/Info.plist` (edited in Task 5/6), `ios/App/App.xcworkspace` (build entry point for Codemagic in Task 8).
+- Produces: `android/app/build.gradle` (Android app module, edited in Task 7/8), `ios/App/App/Info.plist` (edited in Task 5/6), `ios/App/App.xcodeproj` (SPM-based project, no CocoaPods/workspace — build entry point for Codemagic in Task 10; see that task's plan-correction note).
 
 - [ ] **Step 1: Install platform packages**
 
@@ -158,7 +158,7 @@ git commit -m "docs: document VITE_BASE_PATH=/ requirement for native builds"
 - Modify: `ios/App/App/Assets.xcassets/**` (generated icon/splash variants)
 
 **Interfaces:**
-- Consumes: `public/favicon.svg` (existing brand mark) and theme color `#1F6E68` (from `index.html`'s `<meta name="theme-color">` and `public/manifest.json`'s `theme_color`) as the source palette.
+- Consumes: `public/favicon.svg` (existing brand mark — a multicolor purple/blue mark, not a flat theme-colored glyph) and `public/manifest.json`'s `background_color` (`#F2ECDC`, a warm cream — distinct from `theme_color` `#1F6E68`, which tints browser chrome, not icon canvases) as the source palette.
 - Produces: populated native icon/splash asset catalogs — no code-facing interface, this is a one-way asset generation step.
 
 - [ ] **Step 1: Install the asset generator**
@@ -168,21 +168,23 @@ Run: `npm install -D @capacitor/assets`
 - [ ] **Step 2: Rasterize the existing SVG favicon into a 1024x1024 source icon**
 
 Run: `mkdir -p resources`
-Convert `public/favicon.svg` to a 1024x1024 PNG on a `#1F6E68` background and save as `resources/icon.png`. If no local SVG rasterizer (e.g. `rsvg-convert`, `inkscape`, or `sharp` via a one-off Node script) is available in the environment, use `npx sharp-cli` or an equivalent already-available tool — the deliverable is a real 1024x1024 PNG file at this path, not a placeholder.
+Convert `public/favicon.svg` to a 1024x1024 PNG on a `#F2ECDC` background and save as `resources/icon.png`. If no local SVG rasterizer (e.g. `rsvg-convert`, `inkscape`, or `sharp` via a one-off Node script) is available in the environment, use `npx sharp-cli` or an equivalent already-available tool — the deliverable is a real 1024x1024 PNG file at this path, not a placeholder.
 
 - [ ] **Step 3: Create a 2732x2732 splash source**
 
-Save a `#1F6E68`-background, centered version of the same mark as `resources/splash.png` (2732x2732 — Capacitor's asset generator derives all required iOS/Android splash sizes from this single source).
+Save a `#F2ECDC`-background, centered version of the same mark as `resources/splash.png` (2732x2732 — Capacitor's asset generator derives all required iOS/Android splash sizes from this single source).
 
 - [ ] **Step 4: Add a generation script and run it**
 
 In `package.json` scripts, add:
 ```json
-"generate:assets": "capacitor-assets generate"
+"generate:assets": "capacitor-assets generate --android --ios"
 ```
 
+The `--android --ios` scoping is required, not optional: the bare `capacitor-assets generate` also auto-detects `public/manifest.json` as a PWA target and rewrites/deletes existing web PWA icon assets (`public/favicon.svg`, `public/manifest.json`'s icons array) — which would violate this plan's constraint that the existing web build stay unaffected. Scoping to `--android --ios` generates only the native platforms' assets.
+
 Run: `npm run generate:assets`
-Expected: populates `android/app/src/main/res/mipmap-*/` (launcher icons) and `ios/App/App/Assets.xcassets/AppIcon.appiconset/` + `Splash.imageset/` with the full required size matrix.
+Expected: populates `android/app/src/main/res/mipmap-*/` (launcher icons) and `ios/App/App/Assets.xcassets/AppIcon.appiconset/` + `Splash.imageset/` with the full required size matrix. `public/favicon.svg` and `public/manifest.json` must be untouched — verify with `git status public/` showing no changes.
 
 - [ ] **Step 5: Verify generated files exist**
 
@@ -714,7 +716,6 @@ workflows:
         VITE_BASE_PATH: "/"
       node: 20
       xcode: latest
-      cocoapods: default
     triggering:
       events: []
     scripts:
@@ -726,17 +727,16 @@ workflows:
         script: node scripts/sync-native-version.mjs
       - name: Sync Capacitor iOS
         script: npx cap sync ios
-      - name: Install CocoaPods dependencies
-        script: |
-          cd ios/App && pod install
       - name: Build and sign ipa
         script: |
-          xcode-project build-ipa --workspace ios/App/App.xcworkspace --scheme App
+          xcode-project build-ipa --project ios/App/App.xcodeproj --scheme App
     artifacts:
       - ios/App/build/ios/ipa/*.ipa
 ```
 
 `triggering.events: []` on both workflows means neither auto-fires on push — matches the spec's decision to trigger manually ("Start new build" in the Codemagic UI, or a `v*` tag push configured later if the user wants that instead) rather than on every `main` push.
+
+**Plan correction (discovered during Task 2 implementation):** Capacitor 8.5.0's `cap add ios` scaffolds an SPM-based project (`ios/App/CapApp-SPM/Package.swift`), not CocoaPods — there is no `Podfile` and no top-level `ios/App/App.xcworkspace`. The build entry point is `ios/App/App.xcodeproj` directly. The `cocoapods: default` environment key, the "Install CocoaPods dependencies" script step, and the `--workspace ios/App/App.xcworkspace` flag from this task's original text have all been removed/corrected above — see the ledger for the ruling.
 
 - [ ] **Step 2: Document the one-time manual Codemagic setup this file assumes**
 

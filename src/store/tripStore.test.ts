@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { collectDirtyExpenseIds, mergeServerExpenses, resolvePendingLocation } from './tripStore';
-import type { Expense } from '../types';
+import { collectDirtyExpenseIds, mergeServerExpenses, resolvePendingLocation, getTripNotificationRecipients } from './tripStore';
+import type { Expense, Member, Trip } from '../types';
 
 vi.mock('../utils/geolocation', () => ({
   searchPlaces: vi.fn(),
@@ -85,6 +85,70 @@ describe('mergeServerExpenses', () => {
     const merged = mergeServerExpenses(local, server, 'trip-a', new Set(['exp-1']));
     expect(merged).toHaveLength(1);
     expect(merged[0].title).toBe('Edited locally');
+  });
+});
+
+function makeTrip(overrides: Partial<Trip> & { id: string; memberIds: string[] }): Trip {
+  return {
+    name: 'Test trip',
+    startDate: '2026-01-01',
+    endDate: '2026-01-10',
+    baseCurrency: 'INR',
+    groupIds: [],
+    ownerId: 'user-1',
+    joinCode: 'ABC123',
+    createdAt: 1,
+    updatedAt: 1,
+    ...overrides,
+  };
+}
+
+function makeMember(overrides: Partial<Member> & { id: string }): Member {
+  return {
+    name: 'Test member',
+    ...overrides,
+  };
+}
+
+describe('getTripNotificationRecipients', () => {
+  // Regression test for the cross-trip push notification leak: `members`
+  // is a flat map spanning every trip the user belongs to, so recipients
+  // must be scoped through the trip's own memberIds, not filtered
+  // directly off the full members map.
+  it('only includes linked users belonging to the given trip, not other trips', () => {
+    const trips = [
+      makeTrip({ id: 'trip-a', memberIds: ['member-a1', 'member-a2'] }),
+      makeTrip({ id: 'trip-b', memberIds: ['member-b1'] }),
+    ];
+    const members = {
+      'member-a1': makeMember({ id: 'member-a1', linkedUserId: 'user-actor' }), // the actor themself
+      'member-a2': makeMember({ id: 'member-a2', linkedUserId: 'user-trip-a-friend' }),
+      'member-b1': makeMember({ id: 'member-b1', linkedUserId: 'user-trip-b-friend' }),
+    };
+
+    const recipients = getTripNotificationRecipients(trips, members, 'trip-a', 'user-actor');
+
+    expect(recipients).toEqual(['user-trip-a-friend']);
+    expect(recipients).not.toContain('user-trip-b-friend');
+  });
+
+  it('excludes unlinked and archived members, and the acting user', () => {
+    const trips = [makeTrip({ id: 'trip-a', memberIds: ['m1', 'm2', 'm3', 'm4'] })];
+    const members = {
+      m1: makeMember({ id: 'm1', linkedUserId: 'user-actor' }), // acting user
+      m2: makeMember({ id: 'm2', linkedUserId: null }), // unclaimed member
+      m3: makeMember({ id: 'm3', linkedUserId: 'user-archived', archived: true }), // archived
+      m4: makeMember({ id: 'm4', linkedUserId: 'user-valid' }),
+    };
+
+    const recipients = getTripNotificationRecipients(trips, members, 'trip-a', 'user-actor');
+
+    expect(recipients).toEqual(['user-valid']);
+  });
+
+  it('returns an empty array for an unknown trip id', () => {
+    const recipients = getTripNotificationRecipients([], {}, 'missing-trip', 'user-actor');
+    expect(recipients).toEqual([]);
   });
 });
 
