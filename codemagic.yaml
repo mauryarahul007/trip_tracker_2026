@@ -10,7 +10,7 @@ workflows:
       vars:
         VITE_BASE_PATH: "/"
       node: 22
-      java: 17
+      java: 21
     triggering:
       events: []
     scripts:
@@ -40,7 +40,7 @@ workflows:
       vars:
         VITE_BASE_PATH: "/"
       node: 22
-      java: 17
+      java: 21
     triggering:
       events: []
     scripts:
