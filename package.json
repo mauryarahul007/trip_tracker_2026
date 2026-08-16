@@ -9,7 +9,7 @@
     "lint": "oxlint",
     "preview": "vite preview",
     "test": "vitest run",
-    "generate:assets": "capacitor-assets generate"
+    "generate:assets": "capacitor-assets generate --android --ios"
   },
   "dependencies": {
     "@capacitor/android": "^8.5.0",
