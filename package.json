@@ -20,7 +20,7 @@
     "@capacitor/core": "8.2.0",
     "@capacitor/geolocation": "8.2.2",
     "@capacitor/ios": "8.2.0",
-    "@capacitor/push-notifications": "8.1.2",
+    "@capacitor/push-notifications": "8.2.0",
     "@supabase/supabase-js": "^2.112.2",
     "@types/leaflet": "^1.9.22",
     "autoskills": "^0.3.6",
