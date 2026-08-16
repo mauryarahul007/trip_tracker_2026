@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "762323268291",
+    "firebase_url": "https://trip-expense-tracker-472114-default-rtdb.europe-west1.firebasedatabase.app",
+    "project_id": "trip-expense-tracker-472114",
+    "storage_bucket": "trip-expense-tracker-472114.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:762323268291:android:60d57c76d8a70c56492876",
+        "android_client_info": {
+          "package_name": "com.triptracker.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "762323268291-bqire2j4gcakeok9rkr1mevgs4ave7ec.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBBj2dlK6qsYT06_6ujS-0Z_JFV0n9lO0k"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "762323268291-9sfblg0pa6nnmbhj5ec5223ar5e0g6sa.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
