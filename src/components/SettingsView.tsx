@@ -828,7 +828,7 @@ export function SettingsView({
                 width: '7px',
                 height: '7px',
                 borderRadius: '50%',
-                background: isOnline ? '#10B981' : '#9CA3AF',
+                background: isOnline ? 'var(--color-success)' : 'var(--text-muted)',
                 display: 'inline-block',
                 flexShrink: 0,
               }}
@@ -837,6 +837,7 @@ export function SettingsView({
           </div>
         </div>
       </div>
+      <div className="settings-hero-perf" aria-hidden="true" />
 
       {/* Group 1: Trip-Specific Settings (When an active trip is selected) */}
       {hasActiveTrip && (

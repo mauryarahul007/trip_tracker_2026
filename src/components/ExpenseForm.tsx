@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 import type { Category, Group, Member, Trip, Expense, ExpenseLocation } from '../types';
@@ -109,6 +109,23 @@ export function ExpenseForm({
         .finally(() => setLocationLoading(false));
     }
   }, [editingExpense, enableGeotagging]);
+
+  // Moves focus into the sheet for keyboard/screen-reader users without
+  // popping the mobile keyboard open on every mount.
+  const sheetRef = useRef<HTMLFormElement>(null);
+  useEffect(() => {
+    sheetRef.current?.focus();
+  }, []);
+
+  // Backdrop click only dismisses while the form is still untouched — once
+  // the user has entered anything, a stray tap outside the sheet shouldn't
+  // silently discard it (use the explicit Close/Cancel buttons instead).
+  const isFormEmpty =
+    !title.trim() &&
+    !amount &&
+    !receiptImage &&
+    !location &&
+    Object.keys(splitConfig).length === 0;
 
   // Derived Splits States
   const splitSelectedIds = Object.keys(selectedSplitMembers)
@@ -246,13 +263,22 @@ export function ExpenseForm({
     }
   };
   return (
-    <div className="modal-backdrop" onClick={onCancel}>
-      <form className="modal-sheet" onSubmit={handleSubmitLocal} onClick={(e) => e.stopPropagation()}>
+    <div className="modal-backdrop" onClick={isFormEmpty ? onCancel : undefined}>
+      <form
+        ref={sheetRef}
+        tabIndex={-1}
+        className="modal-sheet"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="expense-form-title"
+        onSubmit={handleSubmitLocal}
+        onClick={(e) => e.stopPropagation()}
+      >
       <header className="app-header" style={{ margin: '-20px -20px 20px', paddingTop: 'max(20px, env(safe-area-inset-top))' }}>
         <div className="app-header-top">
           <div className="app-title-group">
             <span className="app-eyebrow">{trip?.name}</span>
-            <h2 className="app-logo" style={{ fontSize: '22px', color: '#F2ECDC' }}>{editingExpense ? 'Edit Expense' : 'New Expense'}</h2>
+            <h2 id="expense-form-title" className="app-logo" style={{ fontSize: '22px', color: '#F2ECDC' }}>{editingExpense ? 'Edit Expense' : 'New Expense'}</h2>
           </div>
           <button
             type="button"
@@ -650,7 +676,7 @@ export function ExpenseForm({
         <p style={{ color: 'var(--color-danger)', fontSize: '13px', marginTop: '12px' }}>{formError}</p>
       )}
 
-      <div style={{ display: 'flex', gap: '12px', marginTop: '16px' }}>
+      <div className="expense-form-actions">
         <button type="submit" className="gradient-btn" style={{ flex: 1 }} disabled={isSubmitting}>
           {editingExpense ? 'Update Expense' : 'Add Expense'}
         </button>

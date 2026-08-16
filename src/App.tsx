@@ -161,7 +161,7 @@ export default function App() {
   const [showGlobalSettings, setShowGlobalSettings] = useState(false);
 
   // Lock background scroll when any modal is active
-  useScrollLock(Boolean(showShareTrip || selectedReviewExpense || confirmRequest || showGlobalSettings));
+  useScrollLock(Boolean(showShareTrip || selectedReviewExpense || confirmRequest || showGlobalSettings || showAddExpense));
 
   const syncQueue = useTripStore((s) => s.syncQueue);
   const sessionExpired = useTripStore((s) => s.sessionExpired);

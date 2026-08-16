@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import type { Trip, Category, Expense } from '../types';
 import { IconClose } from './Icons';
 import { SettingsView, type ThemePref } from './SettingsView';
@@ -70,40 +71,39 @@ export function GlobalSettingsModal({
   const effectiveCategories = categories || storeCategories;
   const effectiveExpenses = activeTripExpenses || storeExpenses.filter((e) => e.tripId === activeTripId);
 
+  const sheetRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    sheetRef.current?.focus();
+  }, []);
+
   return (
-    <div className="modal-overlay" onClick={onClose}>
+    <div className="modal-backdrop" onClick={onClose}>
       <div
-        className="glass-card fade-in modal-sheet"
-        style={{
-          maxWidth: '480px',
-          background: 'var(--bg-surface)',
-          boxShadow: 'var(--glass-shadow)',
-          border: '1px solid var(--border-color)',
-          position: 'relative',
-          padding: '24px 20px',
-        }}
+        ref={sheetRef}
+        tabIndex={-1}
+        className="modal-sheet"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="global-settings-title"
         onClick={(e) => e.stopPropagation()}
       >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-          <h2 style={{ fontSize: '18px', fontWeight: 600, margin: 0, color: 'var(--text-primary)' }}>
-            Settings
-          </h2>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Close"
-            style={{
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              color: 'var(--text-secondary)',
-              padding: '4px',
-              borderRadius: '6px',
-            }}
-          >
-            <IconClose size={18} />
-          </button>
-        </div>
+        <header className="app-header" style={{ margin: '-20px -20px 20px', paddingTop: 'max(20px, env(safe-area-inset-top))' }}>
+          <div className="app-header-top">
+            <div className="app-title-group">
+              <h2 id="global-settings-title" className="app-logo" style={{ fontSize: '22px', color: '#F2ECDC' }}>Settings</h2>
+            </div>
+            <button
+              type="button"
+              className="secondary-btn"
+              style={{ padding: '7px 8px', color: '#F2ECDC', borderColor: 'rgba(242,236,220,0.28)', background: 'rgba(242,236,220,0.06)', flexShrink: 0 }}
+              aria-label="Close"
+              title="Close"
+              onClick={onClose}
+            >
+              <IconClose size={16} className="icon-sm" />
+            </button>
+          </div>
+        </header>
 
         <SettingsView
           categories={effectiveCategories}

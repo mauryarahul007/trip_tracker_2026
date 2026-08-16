@@ -10,13 +10,18 @@ export function useScrollLock(locked: boolean) {
 
     const originalOverflow = document.body.style.overflow;
     const originalTouchAction = document.body.style.touchAction;
+    const originalHtmlOverflow = document.documentElement.style.overflow;
 
     document.body.style.overflow = 'hidden';
     document.body.style.touchAction = 'none';
+    // iOS Safari can still rubber-band the page via <html> even with the
+    // body locked, so lock both.
+    document.documentElement.style.overflow = 'hidden';
 
     return () => {
       document.body.style.overflow = originalOverflow;
       document.body.style.touchAction = originalTouchAction;
+      document.documentElement.style.overflow = originalHtmlOverflow;
     };
   }, [locked]);
 }

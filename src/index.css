@@ -318,17 +318,28 @@ button, [role="button"], input, select, a {
   border-radius: var(--border-radius-sm);
   color: var(--text-primary);
   font-family: var(--font-family-body);
-  font-size: 15px;
+  /* Keep at/above 16px — anything smaller makes iOS Safari auto-zoom the
+     page on focus, which then leaves the layout visibly shifted. */
+  font-size: 16px;
   padding: 12px 16px;
   outline: none;
   transition: var(--transition-smooth);
   width: 100%;
   min-width: 0;
+  max-width: 100%;
 }
 
 .input-field:focus {
   border-color: var(--primary-accent);
   box-shadow: 0 0 0 3px rgba(31, 110, 104, 0.12);
+}
+
+/* iOS Safari gives <input type="date"> shadow parts an intrinsic width that
+   ignores width:100% on narrow containers, pushing the field past its
+   parent's edge. appearance:none lets it size like a normal text input. */
+input[type="date"].input-field {
+  -webkit-appearance: none;
+  appearance: none;
 }
 
 .select-field {
@@ -1555,6 +1566,8 @@ input:checked + .toggle-slider:before {
   height: 100dvh;
   overflow-y: auto;
   overflow-x: hidden;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
   background: var(--bg-surface);
   border-radius: 0;
   padding: 20px;
@@ -1563,7 +1576,6 @@ input:checked + .toggle-slider:before {
   padding-left: max(20px, env(safe-area-inset-left, 20px));
   padding-right: max(20px, env(safe-area-inset-right, 20px));
   animation: sheetUp 0.24s cubic-bezier(0.16, 1, 0.3, 1);
-  -webkit-overflow-scrolling: touch;
 }
 @keyframes sheetUp {
   from { opacity: 0; transform: translateY(16px); }
@@ -1571,6 +1583,22 @@ input:checked + .toggle-slider:before {
 }
 @media (prefers-reduced-motion: reduce) {
   .modal-sheet { animation: none; }
+}
+
+/* Keeps Add/Update Expense reachable without scrolling through the whole
+   form. Sticks to the bottom of .modal-sheet's own scroll port; the
+   negative margin/extra padding let it sit flush with the sheet's bottom
+   edge instead of floating above the sheet's existing safe-area padding. */
+.expense-form-actions {
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
+  display: flex;
+  gap: 12px;
+  margin: 16px 0 calc(-1 * (24px + env(safe-area-inset-bottom, 0px)));
+  padding: 12px 0 calc(12px + env(safe-area-inset-bottom, 0px));
+  background: var(--bg-surface);
+  border-top: 1px solid var(--border-color);
 }
 
 :focus-visible {
@@ -1664,7 +1692,8 @@ input:checked + .toggle-slider:before {
   padding-bottom: 24px;
 }
 
-/* Profile Hero Card */
+/* Profile Hero Card — same flat paper/border language as the boarding-pass
+   and ticket-stub components, not an elevated iOS-style card. */
 .settings-profile-hero {
   display: flex;
   align-items: center;
@@ -1672,11 +1701,35 @@ input:checked + .toggle-slider:before {
   padding: 16px 18px;
   background: var(--bg-surface);
   border: 1px solid var(--border-color);
-  border-radius: 18px;
-  box-shadow: 0 4px 16px -2px rgba(15, 23, 42, 0.05);
+  border-radius: var(--border-radius-md);
+  box-shadow: 0 1px 0 rgba(28, 42, 56, 0.04);
   position: relative;
   overflow: hidden;
 }
+
+/* Perforated tear beneath the hero card — the boarding-pass motif reused as
+   a single, deliberate signature touch rather than on every row. */
+.settings-hero-perf {
+  position: relative;
+  height: 0;
+  border-top: 1.5px dashed var(--border-color);
+  /* .settings-container's flex gap already provides 20px above and below;
+     pull in so the tear sits close under the hero card. */
+  margin: -14px 12px -14px;
+}
+.settings-hero-perf::before,
+.settings-hero-perf::after {
+  content: '';
+  position: absolute;
+  top: -8px;
+  width: 16px;
+  height: 16px;
+  background: var(--bg-surface);
+  border-radius: 50%;
+  border: 1px solid var(--border-color);
+}
+.settings-hero-perf::before { left: -8px; }
+.settings-hero-perf::after { right: -8px; }
 
 .settings-avatar-circle {
   width: 54px;
@@ -1687,9 +1740,9 @@ input:checked + .toggle-slider:before {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: var(--font-family-serif);
+  font-family: var(--font-family-title);
+  font-weight: 700;
   font-size: 20px;
-  font-weight: 600;
   box-shadow: 0 4px 12px rgba(31, 110, 104, 0.25);
   flex-shrink: 0;
 }
@@ -1731,10 +1784,11 @@ input:checked + .toggle-slider:before {
 }
 
 .settings-group-title {
-  font-size: 11.5px;
-  font-weight: 600;
+  font-family: var(--font-family-mono);
+  font-size: 11px;
+  font-weight: 500;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.1em;
   color: var(--text-muted);
   padding: 0 8px;
   margin: 0;
@@ -1743,9 +1797,9 @@ input:checked + .toggle-slider:before {
 .settings-group-card {
   background: var(--bg-surface);
   border: 1px solid var(--border-color);
-  border-radius: 16px;
+  border-radius: var(--border-radius-md);
   overflow: hidden;
-  box-shadow: 0 2px 10px -2px rgba(15, 23, 42, 0.04);
+  box-shadow: 0 1px 0 rgba(28, 42, 56, 0.04);
 }
 
 .settings-row-item {
@@ -1756,7 +1810,7 @@ input:checked + .toggle-slider:before {
   padding: 13px 16px;
   background: transparent;
   border: none;
-  border-bottom: 1px solid var(--border-color-subtle, rgba(15, 23, 42, 0.06));
+  border-bottom: 1px dashed var(--border-color);
   cursor: pointer;
   text-align: left;
   transition: background 0.15s ease;
@@ -1784,52 +1838,39 @@ input:checked + .toggle-slider:before {
   flex: 1;
 }
 
+/* Flat pastel-on-accent circles — the same treatment as the ticket-row
+   category icon — drawn from just the three ledger accents (compass teal,
+   brass, stamp red) instead of nine unrelated gradient hues, grouped by
+   what each row means: info/utility, counted/reversible, destructive. */
 .settings-squircle {
   width: 34px;
   height: 34px;
-  border-radius: 10px;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  color: #ffffff;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
 }
 
-.settings-squircle.squircle-emerald {
-  background: linear-gradient(135deg, #10B981, #059669);
-}
-
-.settings-squircle.squircle-purple {
-  background: linear-gradient(135deg, #8B5CF6, #6D28D9);
-}
-
-.settings-squircle.squircle-amber {
-  background: linear-gradient(135deg, #F59E0B, #D97706);
-}
-
-.settings-squircle.squircle-rose {
-  background: linear-gradient(135deg, #F43F5E, #E11D48);
-}
-
-.settings-squircle.squircle-blue {
-  background: linear-gradient(135deg, #3B82F6, #2563EB);
-}
-
-.settings-squircle.squircle-indigo {
-  background: linear-gradient(135deg, #6366F1, #4F46E5);
-}
-
+.settings-squircle.squircle-emerald,
+.settings-squircle.squircle-purple,
+.settings-squircle.squircle-blue,
+.settings-squircle.squircle-indigo,
 .settings-squircle.squircle-teal {
-  background: linear-gradient(135deg, #14B8A6, #0D9488);
+  background: color-mix(in srgb, var(--primary-accent) 14%, var(--bg-surface));
+  color: var(--primary-accent);
 }
 
+.settings-squircle.squircle-amber,
 .settings-squircle.squircle-slate {
-  background: linear-gradient(135deg, #64748B, #475569);
+  background: color-mix(in srgb, var(--secondary-accent) 16%, var(--bg-surface));
+  color: var(--secondary-accent);
 }
 
+.settings-squircle.squircle-rose,
 .settings-squircle.squircle-red {
-  background: linear-gradient(135deg, #EF4444, #DC2626);
+  background: color-mix(in srgb, var(--color-danger) 14%, var(--bg-surface));
+  color: var(--color-danger);
 }
 
 .settings-row-texts {
@@ -1880,7 +1921,7 @@ input:checked + .toggle-slider:before {
   justify-content: space-between;
   padding-bottom: 14px;
   margin-bottom: 16px;
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1.5px dashed var(--border-color);
 }
 
 .settings-back-btn {
