@@ -458,7 +458,7 @@ export default function App() {
 
   const handleSaveMember = async (name: string, id: string | null, linkedUserId?: string | null): Promise<{ success: boolean; error?: string }> => {
     const nameTrimmed = name.trim();
-    if (!nameTrimmed) return { success: false, error: 'Name cannot be empty.' };
+    if (!nameTrimmed) return { success: false, error: 'Member name cannot be empty.' };
 
     const nameLower = nameTrimmed.toLowerCase();
     const isDuplicateMember = activeTripMembers.some(
@@ -468,14 +468,27 @@ export default function App() {
       (g) => g.name.toLowerCase() === nameLower
     );
 
-    if (isDuplicateMember || isDuplicateGroup) {
-      return { success: false, error: 'A member or group with this name already exists on this trip.' };
+    if (isDuplicateMember) {
+      return { success: false, error: `A member named "${nameTrimmed}" is already added to this trip.` };
+    }
+    if (isDuplicateGroup) {
+      return { success: false, error: `A group named "${nameTrimmed}" already exists on this trip.` };
     }
 
     if (id) {
       await updateMember(id, nameTrimmed);
     } else {
-      await addMember(nameTrimmed, linkedUserId);
+      // If linkedUserId wasn't explicitly passed, look up if an existing member with this name has a linkedUserId
+      let finalLinkedUserId = linkedUserId || null;
+      if (!finalLinkedUserId) {
+        const existingPerson = Object.values(members).find(
+          (m) => m.name.trim().toLowerCase() === nameLower && m.linkedUserId
+        );
+        if (existingPerson && existingPerson.linkedUserId) {
+          finalLinkedUserId = existingPerson.linkedUserId;
+        }
+      }
+      await addMember(nameTrimmed, finalLinkedUserId ?? undefined);
     }
     setShowMembersRequiredNotice(false);
     return { success: true };
