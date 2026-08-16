@@ -609,6 +609,9 @@ export const useTripStore = create<TripStore>()(
     setMemberAdminRole: async (memberId: string, isAdmin: boolean) => {
       const activeTripId = get().activeTripId;
       if (!activeTripId) return;
+      const targetMember = get().members[memberId];
+      if (!targetMember) return;
+
       set((state) => {
         const updatedTrips = state.trips.map((t) => {
           if (t.id !== activeTripId) return t;
@@ -616,11 +619,16 @@ export const useTripStore = create<TripStore>()(
           if (currentAdmins.size === 0 && t.memberIds.length > 0) {
             currentAdmins.add(t.memberIds[0]);
           }
+
           if (isAdmin) {
-            currentAdmins.add(memberId);
+            // Only members with a linked Google account can be promoted to Admin
+            if (targetMember.linkedUserId) {
+              currentAdmins.add(memberId);
+            }
           } else {
-            // Cannot remove the last remaining admin
-            if (currentAdmins.size > 1) {
+            // Cannot demote the original trip creator / owner
+            const isOwner = targetMember.linkedUserId && targetMember.linkedUserId === t.ownerId;
+            if (!isOwner && currentAdmins.size > 1) {
               currentAdmins.delete(memberId);
             }
           }

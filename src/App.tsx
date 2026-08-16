@@ -493,6 +493,19 @@ export default function App() {
   };
 
   const handleDeleteMember = (member: Member) => {
+    // Check if target is the original trip owner and current user is not the owner
+    const isOwner = (activeTrip?.ownerId && member.linkedUserId === activeTrip.ownerId) || (!activeTrip?.ownerId && activeTripMembers[0]?.id === member.id);
+    if (isOwner && userId && activeTrip?.ownerId && userId !== activeTrip.ownerId) {
+      setConfirmRequest({
+        title: 'Cannot delete Trip Owner',
+        message: `"${member.name}" is the creator and owner of this trip. Secondary admins cannot delete the trip owner.`,
+        confirmLabel: 'Understood',
+        danger: false,
+        onConfirm: () => {},
+      });
+      return;
+    }
+
     // Check if this member is an admin on the active trip
     const isTargetAdmin =
       activeTrip?.adminMemberIds && activeTrip.adminMemberIds.length > 0

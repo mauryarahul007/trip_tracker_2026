@@ -102,7 +102,40 @@ describe('Trip Multi-Admin Role Governance & Sole-Admin Protection', () => {
     expect(res3.allowed).toBe(true);
   });
 
-  it('demoting an admin retains remaining admin', () => {
+  it('only allows promoting members who have a linked Google account', () => {
+    const canPromoteToAdmin = (member: Member): boolean => {
+      return Boolean(member.linkedUserId);
+    };
+
+    // Alex (has linked Google account) can be promoted
+    expect(canPromoteToAdmin(members[1])).toBe(true);
+    // Sarah (unlinked guest) cannot be promoted
+    expect(canPromoteToAdmin(members[2])).toBe(false);
+  });
+
+  it('prevents secondary admins from demoting the original trip creator', () => {
+    const multiAdminTrip: Trip = {
+      ...baseTrip,
+      adminMemberIds: ['m-1', 'm-2'],
+    };
+
+    const isOriginalTripOwner = (member: Member) => {
+      return member.linkedUserId === multiAdminTrip.ownerId;
+    };
+
+    const canDemote = (targetMember: Member) => {
+      if (isOriginalTripOwner(targetMember)) return false;
+      const currentAdmins = multiAdminTrip.adminMemberIds || [];
+      return currentAdmins.length > 1;
+    };
+
+    // Attempting to demote Rahul (original creator) -> forbidden!
+    expect(canDemote(members[0])).toBe(false);
+    // Attempting to demote Alex (secondary admin) -> allowed!
+    expect(canDemote(members[1])).toBe(true);
+  });
+
+  it('demoting a secondary admin retains original creator and other admins', () => {
     const multiAdminTrip: Trip = {
       ...baseTrip,
       adminMemberIds: ['m-1', 'm-2'],

@@ -83,27 +83,48 @@ export function MembersGroupsTab({
     };
   }, [currentUserId]);
 
+  // Determine if a member is the primary trip creator/owner
+  const isOriginalTripOwner = React.useCallback(
+    (member: Member): boolean => {
+      if (tripOwnerId && member.linkedUserId) {
+        return member.linkedUserId === tripOwnerId;
+      }
+      return activeTripMembers[0]?.id === member.id;
+    },
+    [tripOwnerId, activeTripMembers]
+  );
+
   // Determine if a given member has Trip Admin rights
   const isMemberAdmin = React.useCallback(
     (member: Member): boolean => {
       if (adminMemberIds && adminMemberIds.length > 0) {
         return adminMemberIds.includes(member.id);
       }
-      if (member.linkedUserId && member.linkedUserId === tripOwnerId) return true;
-      return activeTripMembers[0]?.id === member.id;
+      return isOriginalTripOwner(member);
     },
-    [adminMemberIds, tripOwnerId, activeTripMembers]
+    [adminMemberIds, isOriginalTripOwner]
   );
 
   const tripAdminCount = React.useMemo(() => {
     return activeTripMembers.filter((m) => isMemberAdmin(m)).length;
   }, [activeTripMembers, isMemberAdmin]);
 
-  // Check whether an admin can be deleted (must retain at least 1 Google-linked Admin)
+  // Check whether an admin can be deleted (must retain at least 1 Google-linked Admin; secondary admins cannot delete owner)
   const checkCanDeleteMember = React.useCallback(
     (member: Member): { allowed: boolean; reason?: string } => {
       if (!isMemberAdmin(member)) {
         return { allowed: true };
+      }
+
+      const isOwner = isOriginalTripOwner(member);
+      const isCurrentUserOwner = currentUserId && tripOwnerId && currentUserId === tripOwnerId;
+
+      // Secondary admins cannot delete the original trip creator
+      if (isOwner && !isCurrentUserOwner) {
+        return {
+          allowed: false,
+          reason: `Cannot delete "${member.name}". Only the original Trip Owner can manage their account.`,
+        };
       }
 
       const remainingAdmins = activeTripMembers.filter(
@@ -127,7 +148,7 @@ export function MembersGroupsTab({
 
       return { allowed: true };
     },
-    [isMemberAdmin, activeTripMembers]
+    [isMemberAdmin, isOriginalTripOwner, activeTripMembers, currentUserId, tripOwnerId]
   );
 
   // Click outside to dismiss typeahead dropdown
@@ -553,7 +574,14 @@ export function MembersGroupsTab({
                   <div className="lt-body">
                     <div className="lt-name" style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap', whiteSpace: 'normal', overflow: 'visible' }}>
                       {member.name}
-                      {isMemberAdmin(member) ? (
+                      {isOriginalTripOwner(member) ? (
+                        <span className="member-badge member-badge-admin" title="Trip Creator & Owner">
+                          <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" style={{ flexShrink: 0 }}>
+                            <path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm14 3c0 .6-.4 1-1 1H6c-.6 0-1-.4-1-1v-1h14v1z" />
+                          </svg>
+                          Owner
+                        </span>
+                      ) : isMemberAdmin(member) ? (
                         <span className="member-badge member-badge-admin" title="Trip Admin">
                           <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" style={{ flexShrink: 0 }}>
                             <path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm14 3c0 .6-.4 1-1 1H6c-.6 0-1-.4-1-1v-1h14v1z" />
@@ -575,27 +603,52 @@ export function MembersGroupsTab({
                     <div className="lt-actions" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                       {onSetMemberAdminRole && (
                         !isMemberAdmin(member) ? (
-                          <button
-                            type="button"
-                            className="secondary-btn"
-                            style={{
-                              padding: '4px 8px',
-                              fontSize: '11px',
-                              color: 'var(--primary-accent)',
-                              borderColor: 'rgba(31, 110, 104, 0.3)',
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: '4px',
-                            }}
-                            title="Make this member a Trip Admin"
-                            onClick={() => onSetMemberAdminRole(member.id, true)}
-                          >
-                            <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
-                              <path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm14 3c0 .6-.4 1-1 1H6c-.6 0-1-.4-1-1v-1h14v1z" />
-                            </svg>
-                            Make Admin
-                          </button>
-                        ) : tripAdminCount > 1 ? (
+                          member.linkedUserId ? (
+                            <button
+                              type="button"
+                              className="secondary-btn"
+                              style={{
+                                padding: '4px 8px',
+                                fontSize: '11px',
+                                color: 'var(--primary-accent)',
+                                borderColor: 'rgba(31, 110, 104, 0.3)',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '4px',
+                              }}
+                              title="Make this member a Trip Admin"
+                              onClick={() => onSetMemberAdminRole(member.id, true)}
+                            >
+                              <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm14 3c0 .6-.4 1-1 1H6c-.6 0-1-.4-1-1v-1h14v1z" />
+                              </svg>
+                              Make Admin
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              className="secondary-btn"
+                              disabled
+                              style={{
+                                padding: '4px 8px',
+                                fontSize: '11px',
+                                color: 'var(--text-muted)',
+                                borderColor: 'var(--border-color)',
+                                opacity: 0.5,
+                                cursor: 'not-allowed',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '4px',
+                              }}
+                              title="Member must join with a Google account to be made an Admin"
+                            >
+                              <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm14 3c0 .6-.4 1-1 1H6c-.6 0-1-.4-1-1v-1h14v1z" />
+                              </svg>
+                              Make Admin
+                            </button>
+                          )
+                        ) : !isOriginalTripOwner(member) && tripAdminCount > 1 ? (
                           <button
                             type="button"
                             className="secondary-btn"

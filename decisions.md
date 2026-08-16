@@ -299,6 +299,25 @@ This document logs all meaningful technical decisions, library choices, design p
   - Requiring at least one Google-linked Admin prevents trips from becoming orphaned or controlled solely by unlinked placeholder accounts.
   - Using an array of member IDs (`adminMemberIds`) on `Trip` allows multi-admin permissions to work seamlessly offline, in local store, and across database synchronization without requiring complex relational joins or new database tables.
 
+---
+
+## 26. Google-Linked Admin Promotion Requirement & Trip Owner Demotion Immunity
+* **Context:** A security and governance flaw existed where unlinked guest/placeholder personas could be promoted to Admin, and secondary admins promoted by the original trip creator could turn around and demote or delete the original trip creator.
+* **Decision:** Enforced two strict boundaries: (1) Only members with a linked Google account can be promoted to Admin, and (2) The original trip creator (Owner) cannot be demoted or deleted by secondary admins.
+* **Pattern/Implementation:**
+  - **Google-Linked Promotion Gate (`MembersGroupsTab.tsx`, `tripStore.ts`)**:
+    - The `Make Admin` action is enabled only for members with `Boolean(member.linkedUserId)`.
+    - Unlinked guest accounts display a disabled button with tooltip: *"Member must join with a Google account to be made an Admin"*.
+    - `tripStore.setMemberAdminRole` enforces `targetMember.linkedUserId` before adding a member to `adminMemberIds`.
+  - **Trip Owner Immunity (`MembersGroupsTab.tsx`, `App.tsx`, `tripStore.ts`)**:
+    - The original creator (`activeTrip.ownerId`) is badged with 👑 **Owner** and cannot be demoted (no Demote button is shown for the Owner).
+    - `tripStore.setMemberAdminRole` ignores demotion requests targeting the trip owner.
+    - Secondary admins cannot delete the original trip owner.
+    - If the trip owner decides to self-delete/leave the trip, they must ensure at least one other Google-linked Admin exists on the trip.
+* **Trade-offs Accepted:**
+  - Preserves hierarchical ownership while allowing collaborative trip administration.
+
+
 
 
 
