@@ -358,29 +358,9 @@ export async function insertExpense(tripId: string, createdByUserId: string, inp
     .select()
     .single();
 
-  if (error) {
-    // If the remote Supabase table does not have the 'location' column yet, retry cleanly without it
-    const isLocationColError = error.message?.toLowerCase().includes('location') ||
-      error.details?.toLowerCase().includes('location') ||
-      error.hint?.toLowerCase().includes('location') ||
-      error.code === 'PGRST204';
+  if (error) throw error;
 
-    if (isLocationColError) {
-      console.warn('Remote Supabase expenses table missing location column; saving without remote location field.');
-      const fallbackRes = await supabase
-        .from('expenses')
-        .insert(basePayload)
-        .select()
-        .single();
-      if (fallbackRes.error) throw fallbackRes.error;
-      const mapped = mapExpense(fallbackRes.data);
-      return { ...mapped, location: input.location ?? undefined };
-    }
-    throw error;
-  }
-
-  const mapped = mapExpense(data);
-  return { ...mapped, location: input.location ?? mapped.location };
+  return mapExpense(data);
 }
 
 export async function updateExpenseRow(id: string, input: ExpenseInput): Promise<void> {
@@ -409,23 +389,7 @@ export async function updateExpenseRow(id: string, input: ExpenseInput): Promise
     .update(payloadWithLoc)
     .eq('id', id);
 
-  if (error) {
-    const isLocationColError = error.message?.toLowerCase().includes('location') ||
-      error.details?.toLowerCase().includes('location') ||
-      error.hint?.toLowerCase().includes('location') ||
-      error.code === 'PGRST204';
-
-    if (isLocationColError) {
-      console.warn('Remote Supabase expenses table missing location column; updating without remote location field.');
-      const fallbackRes = await supabase
-        .from('expenses')
-        .update(basePayload)
-        .eq('id', id);
-      if (fallbackRes.error) throw fallbackRes.error;
-      return;
-    }
-    throw error;
-  }
+  if (error) throw error;
 }
 
 // ---------------------------------------------------------------------------
