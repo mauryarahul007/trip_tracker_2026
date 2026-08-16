@@ -1005,6 +1005,7 @@ export default function App() {
                     onSettle={handleSettle}
                     isAdmin={isAdmin}
                     myMemberId={myMemberId}
+                    members={members}
                   />
                 )}
               </div>

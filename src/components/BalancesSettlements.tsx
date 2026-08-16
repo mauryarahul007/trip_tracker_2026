@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import type { Expense, Group, Trip } from '../types';
+import type { Expense, Group, Member, Trip } from '../types';
 import { buildSettlementNodes, calculateGroupInternalTransfers, type MemberBalance, type Transfer } from '../utils/settlement';
 import { IconArrowDownRight, IconArrowUpRight, IconCheck, IconCheckCircle, IconChevronRight, IconEdit, IconMembers } from './Icons';
 import { getCurrencySymbol } from '../utils/currency';
+import { sendPushNotification } from '../services/pushApi';
 
 type Props = {
   trip: Trip;
@@ -16,6 +17,7 @@ type Props = {
   onSettle: (fromMemberId: string, toMemberId: string, amount: number, fromLabel: string, toLabel: string) => void;
   isAdmin: boolean;
   myMemberId: string | null;
+  members: Record<string, Member>;
 };
 
 function balanceColor(balance: number): string {
@@ -62,6 +64,7 @@ type TransferRowProps = {
   balances: MemberBalance[];
   groups: Group[];
   activeTripExpenses: Expense[];
+  members: Record<string, Member>;
 };
 
 interface MemberAuditDetails {
@@ -160,7 +163,8 @@ function TransferRow({
   onSettle,
   balances,
   groups,
-  activeTripExpenses
+  activeTripExpenses,
+  members
 }: TransferRowProps) {
   const settleAmount = parseFloat(customValue) || t.amount;
   const [showAudit, setShowAudit] = useState(false);
@@ -381,6 +385,24 @@ function TransferRow({
                   <IconChevronRight size={10} className="icon-sm" />
                 </span>
               </button>
+              <button
+                type="button"
+                className="secondary-btn"
+                style={{ padding: '6px 10px', fontSize: '12px' }}
+                onClick={() => {
+                  const fromLinkedUserId = members[t.fromMemberId]?.linkedUserId;
+                  if (!fromLinkedUserId) return;
+                  sendPushNotification(
+                    [fromLinkedUserId],
+                    'Settlement reminder',
+                    `You owe ${t.toLabel} ${t.amount.toFixed(2)} for this trip`
+                  );
+                }}
+                disabled={!members[t.fromMemberId]?.linkedUserId}
+                title={members[t.fromMemberId]?.linkedUserId ? 'Send a reminder' : 'This member has no linked account to notify'}
+              >
+                🔔 Remind
+              </button>
             </div>
           ) : (
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -400,6 +422,24 @@ function TransferRow({
                 onClick={onToggleCustom}
               >
                 <IconEdit size={10} className="icon-sm" />
+              </button>
+              <button
+                type="button"
+                className="secondary-btn"
+                style={{ padding: '6px 10px', fontSize: '12px' }}
+                onClick={() => {
+                  const fromLinkedUserId = members[t.fromMemberId]?.linkedUserId;
+                  if (!fromLinkedUserId) return;
+                  sendPushNotification(
+                    [fromLinkedUserId],
+                    'Settlement reminder',
+                    `You owe ${t.toLabel} ${t.amount.toFixed(2)} for this trip`
+                  );
+                }}
+                disabled={!members[t.fromMemberId]?.linkedUserId}
+                title={members[t.fromMemberId]?.linkedUserId ? 'Send a reminder' : 'This member has no linked account to notify'}
+              >
+                🔔 Remind
               </button>
             </div>
           )}
@@ -421,6 +461,7 @@ export function BalancesSettlements({
   onSettle,
   isAdmin,
   myMemberId,
+  members,
 }: Props) {
   const canSettleTransfer = (t: Transfer) => {
     if (isAdmin) return true;
@@ -617,6 +658,7 @@ export function BalancesSettlements({
                               balances={balances}
                               groups={groups}
                               activeTripExpenses={activeTripExpenses}
+                              members={members}
                             />
                           );
                         })}
@@ -661,6 +703,7 @@ export function BalancesSettlements({
                   balances={balances}
                   groups={groups}
                   activeTripExpenses={activeTripExpenses}
+                  members={members}
                 />
               );
             })}
