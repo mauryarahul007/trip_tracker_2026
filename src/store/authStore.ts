@@ -76,10 +76,14 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
 
   signOut: async () => {
     const userId = get().session?.user.id;
-    await supabase.auth.signOut();
+    // Must run BEFORE auth.signOut() — device_push_tokens RLS requires
+    // an authenticated session (user_id = auth.uid()), so deleting the
+    // token after deauthenticating would silently match zero rows and
+    // leave the device registered to receive this user's notifications.
     if (userId) {
       await unregisterPushNotifications(userId);
     }
+    await supabase.auth.signOut();
     set({ session: null });
   },
 
