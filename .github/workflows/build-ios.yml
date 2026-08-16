@@ -1,0 +1,101 @@
+name: Build iOS App
+
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: 'Build Target'
+        required: true
+        default: 'simulator'
+        type: choice
+        options:
+          - simulator
+          - unsigned-ipa
+  push:
+    tags:
+      - 'v*'
+
+concurrency:
+  group: build-ios-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-ios:
+    name: Build iOS (${{ inputs.target || 'simulator' }})
+    runs-on: macos-14
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Select Xcode Version
+        run: sudo xcode-select -switch /Applications/Xcode_15.4.app || true
+
+      - name: Install NPM Dependencies
+        run: npm ci
+
+      - name: Build Web Production Bundle
+        env:
+          VITE_BASE_PATH: /
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+        run: npm run build
+
+      - name: Sync Native Version
+        env:
+          CM_BUILD_NUMBER: ${{ github.run_number }}
+        run: node scripts/sync-native-version.mjs
+
+      - name: Sync Capacitor iOS
+        run: npx cap sync ios
+
+      - name: Build iOS Simulator App (.app)
+        if: ${{ inputs.target == 'simulator' || github.event_name != 'push' && inputs.target == 'simulator' }}
+        run: |
+          xcodebuild \
+            -project ios/App/App.xcodeproj \
+            -scheme App \
+            -destination 'generic/platform=iOS Simulator' \
+            -configuration Debug \
+            -derivedDataPath build/ios \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: Build Unsigned iOS Archive (.ipa)
+        if: ${{ inputs.target == 'unsigned-ipa' || github.event_name == 'push' }}
+        run: |
+          xcodebuild \
+            -project ios/App/App.xcodeproj \
+            -scheme App \
+            -configuration Release \
+            -archivePath build/ios/App.xcarchive \
+            archive \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY=""
+
+      - name: Zip iOS Build Artifacts
+        run: |
+          mkdir -p build/artifacts
+          if [ -d "build/ios/Build/Products/Debug-iphonesimulator/App.app" ]; then
+            cd build/ios/Build/Products/Debug-iphonesimulator
+            zip -r ../../../../../build/artifacts/TripTracker-Simulator.app.zip App.app
+            cd -
+          fi
+          if [ -d "build/ios/App.xcarchive" ]; then
+            cd build/ios
+            zip -r ../artifacts/TripTracker.xcarchive.zip App.xcarchive
+            cd -
+          fi
+
+      - name: Upload iOS Build Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-build-${{ inputs.target || 'simulator' }}-${{ github.run_number }}
+          path: build/artifacts/*
+          retention-days: 14
