@@ -35,6 +35,7 @@ export interface Database {
           owner_id: string;
           join_code: string;
           archived: boolean;
+          frozen: boolean;
           created_at: string;
           updated_at: string;
         };
@@ -47,6 +48,7 @@ export interface Database {
           owner_id: string;
           join_code?: string;
           archived?: boolean;
+          frozen?: boolean;
         };
         Update: Partial<{
           name: string;
@@ -54,6 +56,7 @@ export interface Database {
           end_date: string;
           base_currency: string;
           archived: boolean;
+          frozen: boolean;
           updated_at: string;
         }>;
         Relationships: [];

@@ -12,6 +12,7 @@ import {
   insertTrip,
   updateTripRow,
   archiveTripRow,
+  freezeTripRow,
   deleteTripRow,
   deleteAllMyTrips,
   insertMember,
@@ -89,6 +90,7 @@ interface TripStore extends TripState {
   userFlagOverrides: Record<string, Record<string, boolean>>;
   unlockSuperadmin: (email?: string, password?: string, skipVerify?: boolean) => boolean;
   lockSuperadmin: () => void;
+  setUserIdentity: (userId: string, displayName: string | null) => void;
   setFeatureFlag: (key: FeatureFlagKey, value: boolean) => void;
   setTripFlagOverride: (tripId: string, key: FeatureFlagKey, value: boolean | null) => void;
   setUserFlagOverride: (userId: string, key: FeatureFlagKey, value: boolean | null) => void;
@@ -254,8 +256,10 @@ export const useTripStore = create<TripStore>()(
   persist(
     (set, get) => {
   const setError = (e: unknown) => {
-    // If offline, missing supabase env, or superadmin, suppress remote server errors
-    if (!navigator.onLine || isMissingSupabaseEnv || get().isSuperadmin) {
+    // If offline or missing supabase env, suppress remote server errors.
+    // Superadmin is now a real authenticated session (see 0045_superadmin_identity_and_rls.sql)
+    // and its errors should surface like any other user's.
+    if (!navigator.onLine || isMissingSupabaseEnv) {
       console.warn('Trip store operation offline / local (cached):', e);
       return;
     }
@@ -318,6 +322,10 @@ export const useTripStore = create<TripStore>()(
         return true;
       }
       return false;
+    },
+
+    setUserIdentity: (userId: string, displayName: string | null) => {
+      set({ userId, userDisplayName: displayName, lastModifiedAt: Date.now() });
     },
 
     lockSuperadmin: () => {
@@ -414,7 +422,7 @@ export const useTripStore = create<TripStore>()(
         user?.email?.split('@')[0] ||
         null;
 
-      if (!navigator.onLine || isMissingSupabaseEnv || get().isSuperadmin) {
+      if (!navigator.onLine || isMissingSupabaseEnv) {
         set({ userId, userDisplayName, initialized: true, storageError: null });
         return;
       }
@@ -454,7 +462,7 @@ export const useTripStore = create<TripStore>()(
           userId,
           userDisplayName,
           initialized: true,
-          storageError: (navigator.onLine && !isMissingSupabaseEnv && !get().isSuperadmin) ? 'Failed to load your trips. Check your connection and reload.' : null,
+          storageError: (navigator.onLine && !isMissingSupabaseEnv) ? 'Failed to load your trips. Check your connection and reload.' : null,
         });
       }
     },
@@ -564,7 +572,7 @@ export const useTripStore = create<TripStore>()(
     createTrip: async (name, startDate, endDate, baseCurrency) => {
       const userId = get().userId || (get().isSuperadmin ? 'superadmin-root-user-id' : 'guest-traveler-user-id');
 
-      if (isMissingSupabaseEnv || get().isSuperadmin) {
+      if (isMissingSupabaseEnv) {
         const tripId = crypto.randomUUID();
         const creatorName = get().userDisplayName || (get().isSuperadmin ? 'Super Admin' : 'Me');
         const creatorMemberId = crypto.randomUUID();
@@ -677,9 +685,17 @@ export const useTripStore = create<TripStore>()(
     },
 
     freezeTrip: async (id, frozen) => {
+      try {
+        await freezeTripRow(id, frozen);
+      } catch (e) {
+        setError(e);
+        return;
+      }
+
       set((state) => ({
         trips: state.trips.map((t) => (t.id === id ? { ...t, frozen, updatedAt: Date.now() } : t)),
         lastModifiedAt: Date.now(),
+        storageError: null,
       }));
     },
 
@@ -711,7 +727,7 @@ export const useTripStore = create<TripStore>()(
       const activeTripId = get().activeTripId;
       if (!activeTripId) return;
 
-      if (isMissingSupabaseEnv || get().isSuperadmin) {
+      if (isMissingSupabaseEnv) {
         const memberId = crypto.randomUUID();
         const member: Member = { id: memberId, name: name.trim(), linkedUserId: linkedUserId || null };
         set((state) => ({
@@ -926,7 +942,7 @@ export const useTripStore = create<TripStore>()(
         }));
       };
 
-      if (isMissingSupabaseEnv || get().isSuperadmin) {
+      if (isMissingSupabaseEnv) {
         return;
       }
 
@@ -969,7 +985,7 @@ export const useTripStore = create<TripStore>()(
         storageError: null,
       }));
 
-      if (isMissingSupabaseEnv || get().isSuperadmin) {
+      if (isMissingSupabaseEnv) {
         return;
       }
 
@@ -1015,7 +1031,7 @@ export const useTripStore = create<TripStore>()(
         storageError: null,
       }));
 
-      if (isMissingSupabaseEnv || get().isSuperadmin) {
+      if (isMissingSupabaseEnv) {
         return;
       }
 
@@ -1118,7 +1134,7 @@ export const useTripStore = create<TripStore>()(
 
     addCategory: async (name, icon) => {
       const activeTripId = get().activeTripId;
-      if (!activeTripId || isMissingSupabaseEnv || get().isSuperadmin || !navigator.onLine) {
+      if (!activeTripId || isMissingSupabaseEnv || !navigator.onLine) {
         const newCat: Category = {
           id: `cat-custom-${crypto.randomUUID()}`,
           name: name.trim(),
@@ -1143,7 +1159,7 @@ export const useTripStore = create<TripStore>()(
     },
 
     deleteCategory: async (id) => {
-      if (isMissingSupabaseEnv || get().isSuperadmin || !navigator.onLine) {
+      if (isMissingSupabaseEnv || !navigator.onLine) {
         set((state) => ({ categories: state.categories.filter((c) => c.id !== id), storageError: null }));
         return;
       }

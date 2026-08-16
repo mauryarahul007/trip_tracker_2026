@@ -20,6 +20,7 @@ function mapTrip(row: TripRow, memberIds: string[], groupIds: string[]): Trip {
     memberIds,
     groupIds,
     archived: row.archived,
+    frozen: row.frozen,
     createdAt: new Date(row.created_at).getTime(),
     updatedAt: new Date(row.updated_at).getTime(),
   };
@@ -204,6 +205,14 @@ export async function archiveTripRow(id: string, archived: boolean): Promise<voi
   const { error } = await supabase
     .from('trips')
     .update({ archived, updated_at: new Date().toISOString() })
+    .eq('id', id);
+  if (error) throw error;
+}
+
+export async function freezeTripRow(id: string, frozen: boolean): Promise<void> {
+  const { error } = await supabase
+    .from('trips')
+    .update({ frozen, updated_at: new Date().toISOString() })
     .eq('id', id);
   if (error) throw error;
 }

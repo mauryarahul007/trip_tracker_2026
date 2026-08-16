@@ -101,280 +101,174 @@ export function AdminToolsPage({ categories }: Props) {
   };
 
   return (
-    <div className="fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-      {/* Header */}
-      <div>
-        <h2 style={{ fontSize: '20px', fontWeight: 700, color: 'var(--text-primary)', margin: '0 0 4px 0' }}>
-          ⚙️ System Tools &amp; Operations
-        </h2>
-        <p style={{ fontSize: '13.5px', color: 'var(--text-secondary)', margin: 0 }}>
-          Manage AI &amp; keyword auto-tagging rules, perform full JSON database backups, seed test datasets, or factory reset.
-        </p>
+    <div className="fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+      <div className="ops-page-head">
+        <div>
+          <h2>System Tools</h2>
+          <p>Manage keyword auto-tagging rules, perform full JSON database backups, seed test datasets, or factory reset.</p>
+        </div>
       </div>
 
       {toastMsg && (
-        <div
-          style={{
-            padding: '10px 14px',
-            borderRadius: '10px',
-            background: 'rgba(16, 185, 129, 0.12)',
-            border: '1px solid rgba(16, 185, 129, 0.3)',
-            color: '#10B981',
-            fontSize: '13px',
-            fontWeight: 600,
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-          }}
-        >
-          <IconCheck size={16} /> {toastMsg}
+        <div className="ops-toast">
+          <IconCheck size={14} /> {toastMsg}
         </div>
       )}
 
-      {/* 1. Category & Brand Auto-Tagging Keyword Editor */}
-      <div className="glass-card" style={{ padding: '20px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px', marginBottom: '14px' }}>
-          <div>
-            <h3 style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text-primary)', margin: '0 0 2px 0' }}>
-              🏷️ Category &amp; Brand Auto-Tagging Rule Customizer
-            </h3>
-            <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: 0 }}>
-              200+ built-in brands, airlines, hotels, and merchants auto-match expense descriptions into categories.
-            </p>
-          </div>
-
-          <div style={{ display: 'flex', gap: '8px' }}>
-            <button
-              type="button"
-              className="secondary-btn"
-              style={{ fontSize: '11.5px', padding: '4px 10px', color: 'var(--primary-accent)', borderColor: 'rgba(31, 110, 104, 0.35)' }}
-              onClick={() => setShowAddCategoryBox(!showAddCategoryBox)}
-            >
-              {showAddCategoryBox ? 'Cancel' : '+ New Category'}
-            </button>
-
-            {activeCategory && (
-              <button
-                type="button"
-                className="secondary-btn"
-                style={{ fontSize: '11.5px', padding: '4px 10px' }}
-                onClick={() => {
-                  resetCategoryKeywords(activeCategory.id);
-                  showToast(`Reset keywords for ${activeCategory.name}`);
-                }}
-              >
-                Reset Keywords
+      <div className="ops-tools-grid">
+        <div className="ops-card">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '10px', marginBottom: '4px' }}>
+            <div>
+              <h3 className="ops-section-title">Brand &amp; Keyword Auto-Tagging</h3>
+              <p className="ops-section-sub">200+ merchant rules route expense descriptions into categories.</p>
+            </div>
+            <div style={{ display: 'flex', gap: '6px' }}>
+              <button type="button" className="ops-btn" onClick={() => setShowAddCategoryBox(!showAddCategoryBox)}>
+                {showAddCategoryBox ? 'Cancel' : '+ New Category'}
               </button>
-            )}
-
-            {activeCategory?.isCustom && (
-              <button
-                type="button"
-                className="secondary-btn"
-                style={{ fontSize: '11.5px', padding: '4px 10px', color: '#EF4444', borderColor: 'rgba(239, 68, 68, 0.3)' }}
-                onClick={() => handleDeleteCategory(activeCategory.id, activeCategory.name)}
-              >
-                Delete Category
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* Create Category Box */}
-        {showAddCategoryBox && (
-          <form
-            onSubmit={handleCreateCategory}
-            style={{
-              display: 'flex',
-              gap: '8px',
-              padding: '12px 14px',
-              borderRadius: '10px',
-              background: 'rgba(31, 110, 104, 0.06)',
-              border: '1px solid rgba(31, 110, 104, 0.25)',
-              marginBottom: '16px',
-              alignItems: 'center',
-            }}
-          >
-            <input
-              type="text"
-              className="input-field"
-              style={{ width: '48px', textAlign: 'center', fontSize: '16px' }}
-              value={newCatIcon}
-              maxLength={4}
-              onChange={(e) => setNewCatIcon(e.target.value)}
-              placeholder="🏷️"
-            />
-            <input
-              type="text"
-              className="input-field"
-              placeholder="New Category Name (e.g. Diving, Spa, Gear)..."
-              value={newCatName}
-              onChange={(e) => setNewCatName(e.target.value)}
-              autoFocus
-            />
-            <button type="submit" className="primary-btn" style={{ padding: '6px 14px', fontSize: '12.5px', flexShrink: 0 }}>
-              Create
-            </button>
-          </form>
-        )}
-
-        {/* Category Selector Tabs */}
-        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '16px' }}>
-          {categories.map((c) => (
-            <button
-              key={c.id}
-              type="button"
-              className={`category-badge${selectedCatId === c.id ? ' active' : ''}`}
-              onClick={() => setSelectedCatId(c.id)}
-            >
-              <span>{c.icon || '🏷️'}</span> {c.name} {c.isCustom ? '★' : ''} ({c.keywords?.length || 0})
-            </button>
-          ))}
-        </div>
-
-        {/* Add keyword form */}
-        {activeCategory && (
-          <div>
-            <form onSubmit={handleAddTag} style={{ display: 'flex', gap: '8px', marginBottom: '14px' }}>
-              <input
-                type="text"
-                className="input-field"
-                placeholder={`Add custom brand or keyword for ${activeCategory.name} (e.g. "zomato", "uber", "marriott")...`}
-                value={newTagInput}
-                onChange={(e) => setNewTagInput(e.target.value)}
-              />
-              <button type="submit" className="primary-btn" style={{ padding: '8px 16px', flexShrink: 0 }}>
-                + Add Rule
-              </button>
-            </form>
-
-            {/* Keyword tag clouds */}
-            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', maxHeight: '220px', overflowY: 'auto', padding: '4px 0' }}>
-              {activeKeywords.length === 0 ? (
-                <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>No keywords configured for this category.</span>
-              ) : (
-                activeKeywords.map((kw) => (
-                  <span
-                    key={kw}
-                    style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '5px',
-                      padding: '4px 9px',
-                      borderRadius: '8px',
-                      background: 'rgba(31, 110, 104, 0.08)',
-                      border: '1px solid rgba(31, 110, 104, 0.2)',
-                      fontSize: '12px',
-                      color: 'var(--text-primary)',
-                    }}
-                  >
-                    <span>{kw}</span>
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveTag(kw)}
-                      style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0 2px', color: 'var(--text-muted)' }}
-                      title="Remove keyword rule"
-                    >
-                      &times;
-                    </button>
-                  </span>
-                ))
+              {activeCategory && (
+                <button
+                  type="button"
+                  className="ops-btn"
+                  onClick={() => {
+                    resetCategoryKeywords(activeCategory.id);
+                    showToast(`Reset keywords for ${activeCategory.name}`);
+                  }}
+                >
+                  Reset Keywords
+                </button>
+              )}
+              {activeCategory?.isCustom && (
+                <button
+                  type="button"
+                  className="ops-btn ops-btn-danger"
+                  onClick={() => handleDeleteCategory(activeCategory.id, activeCategory.name)}
+                >
+                  Delete Category
+                </button>
               )}
             </div>
           </div>
-        )}
-      </div>
 
-      {/* 2. Database Backup & Restore Operations */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '16px' }}>
-        {/* Backup & Demo Seeder Card */}
-        <div className="glass-card" style={{ padding: '20px' }}>
-          <h3 style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '6px' }}>
-            💾 Backup &amp; Demo Testing
-          </h3>
-          <p style={{ fontSize: '12.5px', color: 'var(--text-secondary)', marginBottom: '16px' }}>
-            Export or restore full JSON snapshots, or seed a comprehensive sample trip.
-          </p>
+          {showAddCategoryBox && (
+            <form onSubmit={handleCreateCategory} style={{ display: 'flex', gap: '8px', padding: '12px 14px', border: '1px solid var(--line-strong)', borderRadius: '3px', marginBottom: '14px', alignItems: 'center', background: 'var(--bg-inset)' }}>
+              <input
+                type="text"
+                className="ops-input"
+                style={{ width: '52px', textAlign: 'center', fontSize: '16px' }}
+                value={newCatIcon}
+                maxLength={4}
+                onChange={(e) => setNewCatIcon(e.target.value)}
+                placeholder="🏷️"
+              />
+              <input
+                type="text"
+                className="ops-input"
+                placeholder="New category name (e.g. Diving, Spa, Gear)..."
+                value={newCatName}
+                onChange={(e) => setNewCatName(e.target.value)}
+                autoFocus
+              />
+              <button type="submit" className="ops-btn" style={{ flexShrink: 0 }}>Create</button>
+            </form>
+          )}
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            <button
-              type="button"
-              className="primary-btn"
-              style={{ width: '100%', padding: '10px' }}
-              onClick={handleDownloadBackup}
-            >
-              📥 Export Database (JSON Backup)
+          <div className="ops-cat-tabs">
+            {categories.map((c) => (
+              <button
+                key={c.id}
+                type="button"
+                className="ops-cat-tab"
+                data-active={selectedCatId === c.id}
+                onClick={() => setSelectedCatId(c.id)}
+              >
+                {c.icon || '🏷️'} {c.name} {c.isCustom ? '★' : ''} ({c.keywords?.length || 0})
+              </button>
+            ))}
+          </div>
+
+          {activeCategory && (
+            <div>
+              <form onSubmit={handleAddTag} style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
+                <input
+                  type="text"
+                  className="ops-input mono"
+                  placeholder={`Add custom brand or keyword for ${activeCategory.name} (e.g. "zomato", "uber", "marriott")...`}
+                  value={newTagInput}
+                  onChange={(e) => setNewTagInput(e.target.value)}
+                />
+                <button type="submit" className="ops-btn" style={{ flexShrink: 0 }}>+ Add Rule</button>
+              </form>
+
+              <div className="ops-tag-cloud">
+                {activeKeywords.length === 0 ? (
+                  <span style={{ fontSize: '11.5px', color: 'var(--text-tertiary)' }}>No keywords configured for this category.</span>
+                ) : (
+                  activeKeywords.map((kw) => (
+                    <span key={kw} className="ops-tag">
+                      {kw}
+                      <button type="button" onClick={() => handleRemoveTag(kw)} title="Remove keyword rule">&times;</button>
+                    </span>
+                  ))
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="ops-card">
+          <h3 className="ops-section-title">Backup &amp; Demo Data</h3>
+          <p className="ops-section-sub">Export or restore full JSON snapshots.</p>
+          <div className="ops-maint-row">
+            <button type="button" className="ops-maint-btn" onClick={handleDownloadBackup}>
+              <span className="ops-mb-icon">&darr; EXPORT</span>Download JSON Backup
             </button>
-
-            <button
-              type="button"
-              className="secondary-btn"
-              style={{ width: '100%', padding: '10px' }}
-              onClick={() => setShowImportArea(!showImportArea)}
-            >
-              📤 Import / Restore JSON
+            <button type="button" className="ops-maint-btn" onClick={() => setShowImportArea(!showImportArea)}>
+              <span className="ops-mb-icon">&uarr; RESTORE</span>Import / Restore JSON
             </button>
-
             <button
               type="button"
-              className="secondary-btn"
-              style={{ width: '100%', padding: '10px', color: 'var(--primary-accent)', borderColor: 'rgba(31, 110, 104, 0.35)' }}
+              className="ops-maint-btn"
               onClick={async () => {
                 await loadDemoTrip();
                 showToast('Seeded Demo Trip: "Euro Summer 2026" with sample transactions.');
               }}
             >
-              ✨ Seed Demo Dataset ("Euro Summer 2026")
+              <span className="ops-mb-icon">&#9998; SEED</span>Load &quot;Euro Summer 2026&quot; Demo
             </button>
           </div>
 
           {showImportArea && (
             <form onSubmit={handleImportSubmit} style={{ marginTop: '14px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
               <textarea
-                className="input-field"
+                className="ops-input mono"
                 rows={4}
                 placeholder="Paste exported JSON data here..."
                 value={importJsonText}
                 onChange={(e) => setImportJsonText(e.target.value)}
-                style={{ fontFamily: 'monospace', fontSize: '11.5px' }}
               />
-              <button type="submit" className="primary-btn" style={{ padding: '8px' }}>
-                Confirm JSON Restore
-              </button>
+              <button type="submit" className="ops-btn">Confirm JSON Restore</button>
             </form>
           )}
         </div>
 
-        {/* Factory Reset Danger Zone */}
-        <div className="glass-card" style={{ padding: '20px', border: '1.5px solid rgba(239, 68, 68, 0.25)' }}>
-          <h3 style={{ fontSize: '15px', fontWeight: 600, color: '#EF4444', marginBottom: '6px' }}>
-            ⚠️ Danger Zone
-          </h3>
-          <p style={{ fontSize: '12.5px', color: 'var(--text-secondary)', marginBottom: '16px' }}>
-            Irreversible maintenance actions for testing and clearing local state.
-          </p>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            <button
-              type="button"
-              className="secondary-btn"
-              style={{
-                width: '100%',
-                padding: '10px',
-                color: '#EF4444',
-                borderColor: 'rgba(239, 68, 68, 0.4)',
-                background: 'rgba(239, 68, 68, 0.04)',
-              }}
-              onClick={async () => {
-                if (window.confirm('Wipe all local trips and reset database? This cannot be undone.')) {
-                  await clearDatabase();
-                  showToast('Database wiped and reset to clean state.');
-                }
-              }}
-            >
-              <IconTrash size={16} /> Wipe All Trips &amp; Clear Database
-            </button>
+        <div className="ops-card ops-caution">
+          <div className="ops-caution-head">
+            <strong>&#9888; Master Caution &mdash; Danger Zone</strong>
           </div>
+          <p>Irreversible. Wipes every local trip and resets the database cache.</p>
+          <button
+            type="button"
+            className="ops-guard-btn"
+            onClick={async () => {
+              if (window.confirm('Wipe all local trips and reset database? This cannot be undone.')) {
+                await clearDatabase();
+                showToast('Database wiped and reset to clean state.');
+              }
+            }}
+          >
+            <IconTrash size={15} /> Wipe All Trips &amp; Reset
+          </button>
         </div>
       </div>
     </div>

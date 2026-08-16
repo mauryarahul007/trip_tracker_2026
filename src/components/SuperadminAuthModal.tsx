@@ -18,7 +18,24 @@ interface Props {
 
 export function SuperadminAuthModal({ isOpen, onClose, onSuccess }: Props) {
   const unlockSuperadmin = useTripStore((s) => s.unlockSuperadmin);
+  const lockSuperadmin = useTripStore((s) => s.lockSuperadmin);
+  const setUserIdentity = useTripStore((s) => s.setUserIdentity);
   const setSuperadminSession = useAuthStore((s) => s.setSuperadminSession);
+
+  // After a real Supabase sign-in, tripStore's userId must match the real
+  // auth.uid() — writes (createTrip, addExpense, ...) carry it as an FK to
+  // profiles, so the placeholder id unlockSuperadmin sets for offline/demo
+  // mode would violate that FK for any real project.
+  const syncRealIdentity = () => {
+    const session = useAuthStore.getState().session;
+    if (session?.user?.id) {
+      const displayName =
+        (session.user.user_metadata?.full_name as string | undefined) ||
+        (session.user.user_metadata?.name as string | undefined) ||
+        'Super Admin';
+      setUserIdentity(session.user.id, displayName);
+    }
+  };
 
   const [mode, setMode] = useState<'login' | 'recovery' | 'otp'>('login');
   const [email, setEmail] = useState('');
@@ -31,23 +48,30 @@ export function SuperadminAuthModal({ isOpen, onClose, onSuccess }: Props) {
 
   if (!isOpen) return null;
 
-  const handleLoginSubmit = (e: React.FormEvent) => {
+  const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setIsSubmitting(true);
 
     try {
       const ok = unlockSuperadmin(email, password);
-      if (ok) {
-        setSuperadminSession(email);
-        setSuccessMsg('Superadmin privileges activated!');
-        setTimeout(() => {
-          onSuccess?.();
-          onClose();
-        }, 500);
-      } else {
+      if (!ok) {
         setError('Invalid Superadmin credentials. Check email & password or reset via phone.');
+        return;
       }
+      try {
+        await setSuperadminSession(email);
+        syncRealIdentity();
+      } catch (sessionError) {
+        lockSuperadmin();
+        setError(sessionError instanceof Error ? sessionError.message : 'Failed to establish superadmin session.');
+        return;
+      }
+      setSuccessMsg('Superadmin privileges activated!');
+      setTimeout(() => {
+        onSuccess?.();
+        onClose();
+      }, 500);
     } finally {
       setIsSubmitting(false);
     }
@@ -65,21 +89,28 @@ export function SuperadminAuthModal({ isOpen, onClose, onSuccess }: Props) {
     }
   };
 
-  const handleVerifyOtp = (e: React.FormEvent) => {
+  const handleVerifyOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     const res = verifyPhoneRecoveryOtp(selectedPhone, otp);
-    if (res.success) {
-      unlockSuperadmin(undefined, undefined, true); // skip verification on successful OTP
-      setSuperadminSession(SUPERADMIN_EMAIL);
-      setSuccessMsg('Phone verified! Superadmin session unlocked.');
-      setTimeout(() => {
-        onSuccess?.();
-        onClose();
-      }, 500);
-    } else {
+    if (!res.success) {
       setError(res.message || 'Invalid or expired OTP.');
+      return;
     }
+    unlockSuperadmin(undefined, undefined, true); // skip verification on successful OTP
+    try {
+      await setSuperadminSession(SUPERADMIN_EMAIL);
+      syncRealIdentity();
+    } catch (sessionError) {
+      lockSuperadmin();
+      setError(sessionError instanceof Error ? sessionError.message : 'Failed to establish superadmin session.');
+      return;
+    }
+    setSuccessMsg('Phone verified! Superadmin session unlocked.');
+    setTimeout(() => {
+      onSuccess?.();
+      onClose();
+    }, 500);
   };
 
   return (
