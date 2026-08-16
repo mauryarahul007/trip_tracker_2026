@@ -48,6 +48,9 @@ jobs:
       - name: Install NPM Dependencies
         run: npm ci
 
+      - name: Align SPM Plugin Dependencies to 8.2.0
+        run: node scripts/align-spm-versions.mjs
+
       - name: Build Web Production Bundle
         env:
           VITE_BASE_PATH: /
