@@ -58,18 +58,13 @@ create policy "users manage their own device tokens"
   with check (user_id = auth.uid());
 ```
 
-- [ ] **Step 3: Apply the migration**
+- [ ] **Step 3: Applying the migration is a user step, not part of this task**
 
-Run: `npx supabase db push`
-Expected: migration applies with no errors.
+This execution environment has no linked Supabase project and no local Docker/Postgres available (`supabase start` needs Docker, which isn't reachable here) — `npx supabase db push` cannot run against the real project from here, and it shouldn't: applying a migration to a live database is exactly the kind of action that needs the project owner doing it deliberately, not an automated task step. This task's deliverable is the migration *file*, reviewed for correctness by inspection (Step 4) — not an applied migration. The user runs `npx supabase db push` themselves once ready (documented in Task 8).
 
-- [ ] **Step 4: Verify the table exists with RLS enabled**
+- [ ] **Step 4: Verify the migration file by inspection**
 
-Run a query against the project (via `npx supabase db execute` or the Supabase SQL editor):
-```sql
-select relrowsecurity from pg_class where relname = 'device_push_tokens';
-```
-Expected: returns `t` (true).
+Re-read `supabase/migrations/0045_add_device_push_tokens.sql` as written and check it against the existing migrations' conventions (e.g. `supabase/migrations/0044_backfill_creator_as_member.sql` or `0041_add_expense_recycle_bin.sql` for RLS-policy style): correct `create table`/`create index`/RLS syntax, the `unique (user_id, fcm_token)` constraint present, `enable row level security` before the policy, policy `using`/`with check` both reference `auth.uid()`. No live database check is possible in this environment.
 
 - [ ] **Step 5: Commit**
 
@@ -209,21 +204,13 @@ Deno.serve(async (req) => {
 });
 ```
 
-- [ ] **Step 2: Deploy the function**
+- [ ] **Step 2: Deploying the function is a user step, not part of this task**
 
-Run: `npx supabase functions deploy send-push`
-Expected: deploys successfully (the `FCM_SERVICE_ACCOUNT_JSON` secret doesn't need to exist yet for deployment to succeed — it's only read at invocation time, set up in Task 7).
+Same reasoning as Task 1: this environment has no linked Supabase project/CLI session, so `npx supabase functions deploy send-push` cannot run from here, and shouldn't run unattended even if it could — deploying a new backend endpoint is a deliberate user action. This task's deliverable is the function's source code, reviewed by static inspection (Step 3) — not a live deployed function. The user deploys it themselves once ready (documented in Task 8).
 
-- [ ] **Step 3: Smoke-test the authorization check without a real FCM secret**
+- [ ] **Step 3: Verify the function by static inspection**
 
-Run (replacing `<anon-jwt>` with a real logged-in test user's session JWT, obtainable via the browser dev tools `localStorage` Supabase session while logged into the running dev app):
-```bash
-curl -i -X POST 'https://<project-ref>.supabase.co/functions/v1/send-push' \
-  -H "Authorization: Bearer <anon-jwt>" \
-  -H "Content-Type: application/json" \
-  -d '{"userIds": ["00000000-0000-0000-0000-000000000000"], "title": "test", "body": "test"}'
-```
-Expected: `200` with `{"sent":0,"total":0}` (the fake recipient ID isn't a real co-member, filtered out before ever reaching FCM) — proves the endpoint is live and the membership check runs before any FCM call.
+Re-read `supabase/functions/send-push/index.ts` as written. Check: the membership-authorization block runs and can short-circuit (`filteredUserIds.length === 0`) BEFORE any FCM/`GoogleAuth` code executes; every early return produces a valid `Response` object; the Deno/npm import specifiers (`npm:@supabase/supabase-js@2`, `npm:google-auth-library@9`) are syntactically well-formed. No live invocation is possible in this environment — the curl-based smoke test from the original plan draft is deferred to Task 8, once the user has actually deployed the function against their real project.
 
 - [ ] **Step 4: Commit**
 
@@ -608,6 +595,17 @@ git commit -m "docs: document Firebase/APNs one-time setup for push notification
 **Interfaces:**
 - Consumes: Tasks 1–7.
 - Produces: a `decisions.md` entry recording this sub-project.
+
+- [ ] **Step 0: Apply the migration and deploy the function (deferred from Tasks 1-2 — no automated environment could reach the real Supabase project)**
+
+Run: `npx supabase db push`, then `npx supabase functions deploy send-push`. Then smoke-test the authorization check (replacing `<anon-jwt>` with a real logged-in test user's session JWT, obtainable via the browser dev tools `localStorage` Supabase session while logged into the running dev app):
+```bash
+curl -i -X POST 'https://<project-ref>.supabase.co/functions/v1/send-push' \
+  -H "Authorization: Bearer <anon-jwt>" \
+  -H "Content-Type: application/json" \
+  -d '{"userIds": ["00000000-0000-0000-0000-000000000000"], "title": "test", "body": "test"}'
+```
+Expected: `200` with `{"sent":0,"total":0}` (the fake recipient ID isn't a real co-member, filtered out before ever reaching FCM) — proves the endpoint is live and the membership check runs before any FCM call.
 
 - [ ] **Step 1: Confirm the Firebase config files are in place (Task 7 prerequisite)**
 
