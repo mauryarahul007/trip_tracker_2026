@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { Capacitor } from '@capacitor/core';
 import type { Database } from '../types/database';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
@@ -10,4 +11,9 @@ export const isMissingSupabaseEnv = !supabaseUrl || !supabaseAnonKey;
 const activeUrl = isMissingSupabaseEnv ? 'https://dummy-project.supabase.co' : supabaseUrl;
 const activeKey = isMissingSupabaseEnv ? 'dummy-anon-key' : supabaseAnonKey;
 
-export const supabase = createClient<Database>(activeUrl, activeKey);
+export const supabase = createClient<Database>(activeUrl, activeKey, {
+  auth: {
+    flowType: 'pkce',
+    detectSessionInUrl: !Capacitor.isNativePlatform(),
+  },
+});
