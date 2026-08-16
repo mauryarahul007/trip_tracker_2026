@@ -192,6 +192,36 @@ export interface Database {
         }>;
         Relationships: [];
       };
+      device_push_tokens: {
+        Row: {
+          id: string;
+          user_id: string;
+          platform: 'ios' | 'android';
+          fcm_token: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          platform: 'ios' | 'android';
+          fcm_token: string;
+        };
+        Update: Partial<{
+          platform: 'ios' | 'android';
+          fcm_token: string;
+          updated_at: string;
+        }>;
+        Relationships: [
+          {
+            foreignKeyName: 'device_push_tokens_user_id_fkey';
+            columns: ['user_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
     };
     Views: Record<string, never>;
     Functions: {

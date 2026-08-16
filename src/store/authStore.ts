@@ -5,6 +5,7 @@ import { Browser } from '@capacitor/browser';
 import { App as CapacitorApp } from '@capacitor/app';
 import { supabase } from '../services/supabaseClient';
 import { buildOAuthRedirectUrl, parseNativeAuthCallback } from '../utils/nativeAuth';
+import { registerForPushNotifications, unregisterPushNotifications } from '../services/pushRegistration';
 
 interface AuthStore {
   session: Session | null;
@@ -32,6 +33,9 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
 
     supabase.auth.onAuthStateChange((_event, session) => {
       set({ session });
+      if (session?.user) {
+        registerForPushNotifications(session.user.id);
+      }
     });
 
     if (Capacitor.isNativePlatform()) {
@@ -71,7 +75,11 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
   },
 
   signOut: async () => {
+    const userId = get().session?.user.id;
     await supabase.auth.signOut();
+    if (userId) {
+      await unregisterPushNotifications(userId);
+    }
     set({ session: null });
   },
 
