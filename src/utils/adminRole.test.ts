@@ -59,46 +59,47 @@ describe('Trip Multi-Admin Role Governance & Sole-Admin Protection', () => {
     });
   });
 
-  it('blocks sole-admin deletion when only one admin exists', () => {
-    const checkCanDeleteMember = (trip: Trip, memberToDelete: Member) => {
-      const activeAdmins = members.filter((m) => isMemberAdmin(trip, m));
-      const targetIsAdmin = isMemberAdmin(trip, memberToDelete);
+  it('blocks admin deletion when only one admin exists or when no remaining admin is linked to Google', () => {
+    const checkCanDeleteAdminWithGoogle = (trip: Trip, memberToDelete: Member) => {
+      const isTargetAdmin = isMemberAdmin(trip, memberToDelete);
+      if (!isTargetAdmin) return { allowed: true };
 
-      if (targetIsAdmin && activeAdmins.length <= 1) {
-        return { allowed: false, error: 'Cannot delete sole admin' };
+      const remainingAdmins = members.filter(
+        (m) => m.id !== memberToDelete.id && isMemberAdmin(trip, m)
+      );
+
+      const remainingGoogleAdmins = remainingAdmins.filter((m) => Boolean(m.linkedUserId));
+
+      if (remainingGoogleAdmins.length === 0) {
+        return {
+          allowed: false,
+          error: 'Must retain at least one Google-linked Admin',
+        };
       }
       return { allowed: true };
     };
 
-    // Attempting to delete Rahul (the only admin)
-    const resultRahul = checkCanDeleteMember(baseTrip, members[0]);
-    expect(resultRahul.allowed).toBe(false);
-    expect(resultRahul.error).toBe('Cannot delete sole admin');
+    // Sole admin case: Rahul (linked) is only admin -> blocked
+    const res1 = checkCanDeleteAdminWithGoogle(baseTrip, members[0]);
+    expect(res1.allowed).toBe(false);
+    expect(res1.error).toBe('Must retain at least one Google-linked Admin');
 
-    // Attempting to delete non-admin member Alex
-    const resultAlex = checkCanDeleteMember(baseTrip, members[1]);
-    expect(resultAlex.allowed).toBe(true);
-  });
+    // Two admins: Rahul (linked) and Sarah (unlinked) -> Rahul tries to delete himself -> blocked!
+    const tripWithUnlinkedAdmin: Trip = {
+      ...baseTrip,
+      adminMemberIds: ['m-1', 'm-3'],
+    };
+    const res2 = checkCanDeleteAdminWithGoogle(tripWithUnlinkedAdmin, members[0]);
+    expect(res2.allowed).toBe(false);
+    expect(res2.error).toBe('Must retain at least one Google-linked Admin');
 
-  it('permits admin self-deletion when another admin exists', () => {
-    const multiAdminTrip: Trip = {
+    // Two admins: Rahul (linked) and Alex (linked) -> Rahul tries to delete himself -> allowed!
+    const tripWithTwoGoogleAdmins: Trip = {
       ...baseTrip,
       adminMemberIds: ['m-1', 'm-2'],
     };
-
-    const checkCanDeleteMember = (trip: Trip, memberToDelete: Member) => {
-      const activeAdmins = members.filter((m) => isMemberAdmin(trip, m));
-      const targetIsAdmin = isMemberAdmin(trip, memberToDelete);
-
-      if (targetIsAdmin && activeAdmins.length <= 1) {
-        return { allowed: false, error: 'Cannot delete sole admin' };
-      }
-      return { allowed: true };
-    };
-
-    // With 2 admins, Rahul can be deleted
-    const result = checkCanDeleteMember(multiAdminTrip, members[0]);
-    expect(result.allowed).toBe(true);
+    const res3 = checkCanDeleteAdminWithGoogle(tripWithTwoGoogleAdmins, members[0]);
+    expect(res3.allowed).toBe(true);
   });
 
   it('demoting an admin retains remaining admin', () => {

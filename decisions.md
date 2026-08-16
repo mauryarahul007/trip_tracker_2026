@@ -290,12 +290,13 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Pattern/Implementation:**
   - **Data Model (`types/index.ts`)**: Added `adminMemberIds?: string[]` to `Trip`. When a trip is created, the creator / first member is automatically assigned as the initial admin.
   - **Role Badge & Management (`MembersGroupsTab.tsx`)**: Each member card displays a 👑 **Admin** or **Member** badge. Current admins can tap `👑 Make Admin` to promote any member, or `Demote` to remove admin privileges if more than one admin is present. All trip members can be admins simultaneously if desired.
-  - **Sole-Admin Deletion Protection (`App.tsx`, `MembersGroupsTab.tsx`, `tripStore.ts`)**:
-    - When a member is targeted for deletion, the system evaluates if `isMemberAdmin(member)` is true and whether `tripAdmins.length <= 1`.
-    - If they are the sole admin, deletion is prevented with an explicit modal warning: *"You cannot delete the only admin for this trip. Please make another member an admin before removing this admin."*
-    - If another admin exists on the trip, admin deletion is permitted, and their ID is pruned from `adminMemberIds`.
+  - **Sole-Admin & Google-Linked Admin Deletion Protection (`App.tsx`, `MembersGroupsTab.tsx`, `tripStore.ts`)**:
+    - When an admin member is targeted for deletion, the system verifies that there is at least one *other* active Admin who is linked to a Google account (`Boolean(m.linkedUserId)`).
+    - If no other Google-linked admin remains on the trip, deletion is blocked with an explicit modal warning: *"You cannot delete this admin account because a trip must retain at least one Admin linked to a Google account. Please promote a Google-linked member to Admin before removing this admin."*
+    - Once another Google-linked member is promoted to Admin, an admin can safely remove themselves or be deleted.
   - **Permission Resolution (`App.tsx`)**: `isAdmin` dynamically checks if the authenticated user matches `activeTrip.ownerId` OR matches a claimed member profile contained in `activeTrip.adminMemberIds`.
 * **Trade-offs Accepted:**
+  - Requiring at least one Google-linked Admin prevents trips from becoming orphaned or controlled solely by unlinked placeholder accounts.
   - Using an array of member IDs (`adminMemberIds`) on `Trip` allows multi-admin permissions to work seamlessly offline, in local store, and across database synchronization without requiring complex relational joins or new database tables.
 
 

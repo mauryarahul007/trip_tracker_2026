@@ -500,16 +500,26 @@ export default function App() {
         : member.linkedUserId === activeTrip?.ownerId || activeTripMembers[0]?.id === member.id;
 
     if (isTargetAdmin) {
-      const activeAdmins = activeTripMembers.filter((m) =>
-        activeTrip?.adminMemberIds && activeTrip.adminMemberIds.length > 0
+      const remainingAdmins = activeTripMembers.filter((m) => {
+        if (m.id === member.id) return false;
+        return activeTrip?.adminMemberIds && activeTrip.adminMemberIds.length > 0
           ? activeTrip.adminMemberIds.includes(m.id)
-          : m.linkedUserId === activeTrip?.ownerId || activeTripMembers[0]?.id === m.id
-      );
+          : m.linkedUserId === activeTrip?.ownerId || activeTripMembers[0]?.id === m.id;
+      });
 
-      if (activeAdmins.length <= 1) {
+      const remainingGoogleAdmins = remainingAdmins.filter((m) => Boolean(m.linkedUserId));
+
+      if (remainingGoogleAdmins.length === 0) {
+        let msg = `"${member.name}" cannot be deleted because a trip must retain at least one Admin linked to a Google account.`;
+        if (remainingAdmins.length > 0) {
+          msg += ` The other admin ("${remainingAdmins[0].name}") is not linked to a Google account. Please link their Google account or promote a Google-linked member to Admin before removing this admin.`;
+        } else {
+          msg += ` Please promote a Google-linked member to Admin before removing this admin.`;
+        }
+
         setConfirmRequest({
-          title: 'Cannot delete sole admin',
-          message: `"${member.name}" is the only admin for this trip. You cannot delete the only admin. Please make another member an admin before removing this admin.`,
+          title: 'Google-linked Admin required',
+          message: msg,
           confirmLabel: 'Understood',
           danger: false,
           onConfirm: () => {},
