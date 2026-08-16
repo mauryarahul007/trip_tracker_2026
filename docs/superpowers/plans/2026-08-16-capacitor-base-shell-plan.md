@@ -178,11 +178,13 @@ Save a `#F2ECDC`-background, centered version of the same mark as `resources/spl
 
 In `package.json` scripts, add:
 ```json
-"generate:assets": "capacitor-assets generate"
+"generate:assets": "capacitor-assets generate --android --ios"
 ```
 
+The `--android --ios` scoping is required, not optional: the bare `capacitor-assets generate` also auto-detects `public/manifest.json` as a PWA target and rewrites/deletes existing web PWA icon assets (`public/favicon.svg`, `public/manifest.json`'s icons array) — which would violate this plan's constraint that the existing web build stay unaffected. Scoping to `--android --ios` generates only the native platforms' assets.
+
 Run: `npm run generate:assets`
-Expected: populates `android/app/src/main/res/mipmap-*/` (launcher icons) and `ios/App/App/Assets.xcassets/AppIcon.appiconset/` + `Splash.imageset/` with the full required size matrix.
+Expected: populates `android/app/src/main/res/mipmap-*/` (launcher icons) and `ios/App/App/Assets.xcassets/AppIcon.appiconset/` + `Splash.imageset/` with the full required size matrix. `public/favicon.svg` and `public/manifest.json` must be untouched — verify with `git status public/` showing no changes.
 
 - [ ] **Step 5: Verify generated files exist**
 
