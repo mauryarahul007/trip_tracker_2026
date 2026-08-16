@@ -1,3 +1,6 @@
+// NOTE: com.triptracker.app://auth/callback must be added to
+// Supabase Dashboard -> Authentication -> URL Configuration -> Redirect URLs
+// or native sign-in will fail with a redirect_uri_mismatch error.
 const NATIVE_AUTH_CALLBACK_PREFIX = 'com.triptracker.app://auth/callback';
 
 /**
