@@ -282,5 +282,22 @@ This document logs all meaningful technical decisions, library choices, design p
   - `processQueue`'s existing sequential `for` loop naturally throttles resolution calls well under Nominatim's ~1 req/sec free-tier etiquette, even after a long offline period with many queued items — no extra rate-limiting code needed.
   - A manually-typed name that never resolves means that expense permanently has no server-side location (by design, since the DB cannot hold a name) — surfaced as a persistent, tappable warning rather than fixed automatically.
 
+---
+
+## 25. Multi-Admin Trip Governance & Sole-Admin Deletion Protection
+* **Context:** Previously, a trip had a single owner (`ownerId`). Users requested the ability to promote any or all members of a trip to Admin status so multiple co-travelers can manage trip settings, categories, groups, and members. At the same time, the system needed a guardrail to ensure an admin cannot delete themselves if they are the last remaining admin on the trip, which would otherwise leave the trip without any administrator.
+* **Decision:** Extended the trip data model with an array of administrator member IDs (`Trip.adminMemberIds`), enabled admins to promote/demote members directly from the Member Luggage list, and implemented strict sole-admin deletion protection across both UI and store handlers.
+* **Pattern/Implementation:**
+  - **Data Model (`types/index.ts`)**: Added `adminMemberIds?: string[]` to `Trip`. When a trip is created, the creator / first member is automatically assigned as the initial admin.
+  - **Role Badge & Management (`MembersGroupsTab.tsx`)**: Each member card displays a 👑 **Admin** or **Member** badge. Current admins can tap `👑 Make Admin` to promote any member, or `Demote` to remove admin privileges if more than one admin is present. All trip members can be admins simultaneously if desired.
+  - **Sole-Admin Deletion Protection (`App.tsx`, `MembersGroupsTab.tsx`, `tripStore.ts`)**:
+    - When a member is targeted for deletion, the system evaluates if `isMemberAdmin(member)` is true and whether `tripAdmins.length <= 1`.
+    - If they are the sole admin, deletion is prevented with an explicit modal warning: *"You cannot delete the only admin for this trip. Please make another member an admin before removing this admin."*
+    - If another admin exists on the trip, admin deletion is permitted, and their ID is pruned from `adminMemberIds`.
+  - **Permission Resolution (`App.tsx`)**: `isAdmin` dynamically checks if the authenticated user matches `activeTrip.ownerId` OR matches a claimed member profile contained in `activeTrip.adminMemberIds`.
+* **Trade-offs Accepted:**
+  - Using an array of member IDs (`adminMemberIds`) on `Trip` allows multi-admin permissions to work seamlessly offline, in local store, and across database synchronization without requiring complex relational joins or new database tables.
+
+
 
 

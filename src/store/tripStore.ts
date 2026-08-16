@@ -98,6 +98,7 @@ interface TripStore extends TripState {
   toggleArchiveMember: (id: string) => Promise<void>;
   updateMember: (id: string, name: string) => Promise<void>;
   deleteMember: (id: string) => Promise<void>;
+  setMemberAdminRole: (memberId: string, isAdmin: boolean) => Promise<void>;
 
   // Group Actions
   createGroup: (name: string, memberIds: string[]) => Promise<void>;
@@ -583,12 +584,54 @@ export const useTripStore = create<TripStore>()(
         invalidatePreviousMembersCache();
         set((state) => ({
           members: { ...state.members, [member.id]: member },
-          trips: state.trips.map((t) => (t.id === activeTripId ? { ...t, memberIds: [...t.memberIds, member.id], updatedAt: Date.now() } : t)),
+          trips: state.trips.map((t) => {
+            if (t.id !== activeTripId) return t;
+            const currentAdmins = t.adminMemberIds ? [...t.adminMemberIds] : [];
+            if (currentAdmins.length === 0 || (linkedUserId && linkedUserId === t.ownerId)) {
+              if (!currentAdmins.includes(member.id)) {
+                currentAdmins.push(member.id);
+              }
+            }
+            return {
+              ...t,
+              memberIds: [...t.memberIds, member.id],
+              adminMemberIds: currentAdmins,
+              updatedAt: Date.now(),
+            };
+          }),
           storageError: null,
         }));
       } catch (e) {
         setError(e);
       }
+    },
+
+    setMemberAdminRole: async (memberId: string, isAdmin: boolean) => {
+      const activeTripId = get().activeTripId;
+      if (!activeTripId) return;
+      set((state) => {
+        const updatedTrips = state.trips.map((t) => {
+          if (t.id !== activeTripId) return t;
+          const currentAdmins = new Set(t.adminMemberIds || []);
+          if (currentAdmins.size === 0 && t.memberIds.length > 0) {
+            currentAdmins.add(t.memberIds[0]);
+          }
+          if (isAdmin) {
+            currentAdmins.add(memberId);
+          } else {
+            // Cannot remove the last remaining admin
+            if (currentAdmins.size > 1) {
+              currentAdmins.delete(memberId);
+            }
+          }
+          return {
+            ...t,
+            adminMemberIds: Array.from(currentAdmins),
+            updatedAt: Date.now(),
+          };
+        });
+        return { trips: updatedTrips, storageError: null };
+      });
     },
 
     toggleArchiveMember: async (id) => {
@@ -659,6 +702,7 @@ export const useTripStore = create<TripStore>()(
             return {
               ...t,
               memberIds: t.memberIds.filter((mid) => mid !== id),
+              adminMemberIds: (t.adminMemberIds || []).filter((mid) => mid !== id),
               groupIds: t.groupIds.filter((gid) => !groupsToDissolve.includes(gid)),
               updatedAt: Date.now(),
             };

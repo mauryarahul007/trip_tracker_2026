@@ -7,6 +7,7 @@ export interface Trip {
   memberIds: string[];
   groupIds: string[]; // List of groups associated with this trip
   ownerId: string; // admin: full CRUD + can settle any transfer
+  adminMemberIds?: string[]; // list of member IDs who have admin rights on this trip
   joinCode: string; // shareable code, e.g. "ABC123"
   createdAt: number;
   updatedAt: number;

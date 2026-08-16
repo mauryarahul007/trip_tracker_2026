@@ -26,6 +26,8 @@ type Props = {
   members: Record<string, Member>;
   isAdmin: boolean;
   tripOwnerId: string;
+  adminMemberIds?: string[];
+  onSetMemberAdminRole?: (memberId: string, isAdmin: boolean) => Promise<void>;
   currentUserId: string | null;
 };
 
@@ -46,6 +48,8 @@ export function MembersGroupsTab({
   members,
   isAdmin,
   tripOwnerId,
+  adminMemberIds,
+  onSetMemberAdminRole,
   currentUserId,
 }: Props) {
   // Member Form State
@@ -78,6 +82,22 @@ export function MembersGroupsTab({
       isMounted = false;
     };
   }, [currentUserId]);
+
+  // Determine if a given member has Trip Admin rights
+  const isMemberAdmin = React.useCallback(
+    (member: Member): boolean => {
+      if (adminMemberIds && adminMemberIds.length > 0) {
+        return adminMemberIds.includes(member.id);
+      }
+      if (member.linkedUserId && member.linkedUserId === tripOwnerId) return true;
+      return activeTripMembers[0]?.id === member.id;
+    },
+    [adminMemberIds, tripOwnerId, activeTripMembers]
+  );
+
+  const tripAdminCount = React.useMemo(() => {
+    return activeTripMembers.filter((m) => isMemberAdmin(m)).length;
+  }, [activeTripMembers, isMemberAdmin]);
 
   // Click outside to dismiss typeahead dropdown
   React.useEffect(() => {
@@ -502,8 +522,39 @@ export function MembersGroupsTab({
                   <div className="lt-body">
                     <div className="lt-name" style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap', whiteSpace: 'normal', overflow: 'visible' }}>
                       {member.name}
-                      {member.linkedUserId === tripOwnerId && (
-                        <span className="member-badge member-badge-admin">Admin</span>
+                      {isMemberAdmin(member) ? (
+                        <span
+                          className="member-badge member-badge-admin"
+                          style={{
+                            background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.18), rgba(217, 119, 6, 0.28))',
+                            color: '#F59E0B',
+                            border: '1px solid rgba(245, 158, 11, 0.4)',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '3px',
+                            fontWeight: 600,
+                            padding: '2px 7px',
+                            borderRadius: '10px',
+                            fontSize: '11px',
+                          }}
+                          title="Trip Admin"
+                        >
+                          👑 Admin
+                        </span>
+                      ) : (
+                        <span
+                          className="member-badge"
+                          style={{
+                            background: 'rgba(255, 255, 255, 0.05)',
+                            color: 'var(--text-muted)',
+                            border: '1px solid var(--border-color)',
+                            padding: '2px 7px',
+                            borderRadius: '10px',
+                            fontSize: '11px',
+                          }}
+                        >
+                          Member
+                        </span>
                       )}
                       {currentUserId && member.linkedUserId === currentUserId && (
                         <span className="member-badge member-badge-you">You</span>
@@ -512,7 +563,43 @@ export function MembersGroupsTab({
                     <div className="lt-amt">{amtLabel}</div>
                   </div>
                   {isAdmin && (
-                    <div className="lt-actions">
+                    <div className="lt-actions" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      {onSetMemberAdminRole && (
+                        !isMemberAdmin(member) ? (
+                          <button
+                            type="button"
+                            className="secondary-btn"
+                            style={{
+                              padding: '4px 8px',
+                              fontSize: '11px',
+                              color: '#F59E0B',
+                              borderColor: 'rgba(245, 158, 11, 0.3)',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '4px',
+                            }}
+                            title="Make this member a Trip Admin"
+                            onClick={() => onSetMemberAdminRole(member.id, true)}
+                          >
+                            👑 Make Admin
+                          </button>
+                        ) : tripAdminCount > 1 ? (
+                          <button
+                            type="button"
+                            className="secondary-btn"
+                            style={{
+                              padding: '4px 8px',
+                              fontSize: '11px',
+                              color: 'var(--text-muted)',
+                              borderColor: 'var(--border-color)',
+                            }}
+                            title="Demote to Member"
+                            onClick={() => onSetMemberAdminRole(member.id, false)}
+                          >
+                            Demote
+                          </button>
+                        ) : null
+                      )}
                       <button
                         className="secondary-btn"
                         style={{ padding: '6px' }}
@@ -524,9 +611,18 @@ export function MembersGroupsTab({
                       </button>
                       <button
                         className="secondary-btn"
-                        style={{ padding: '6px', color: 'var(--color-danger)', borderColor: 'rgba(184,69,46,0.2)' }}
+                        style={{
+                          padding: '6px',
+                          color: isMemberAdmin(member) && tripAdminCount <= 1 ? 'var(--text-muted)' : 'var(--color-danger)',
+                          borderColor: isMemberAdmin(member) && tripAdminCount <= 1 ? 'var(--border-color)' : 'rgba(184,69,46,0.2)',
+                          opacity: isMemberAdmin(member) && tripAdminCount <= 1 ? 0.6 : 1,
+                        }}
                         aria-label="Delete member"
-                        title="Delete member"
+                        title={
+                          isMemberAdmin(member) && tripAdminCount <= 1
+                            ? 'Cannot delete the only admin. Promote another member to Admin first.'
+                            : 'Delete member'
+                        }
                         onClick={() => onDeleteMember(member)}
                       >
                         <IconTrash size={14} className="icon-sm" />

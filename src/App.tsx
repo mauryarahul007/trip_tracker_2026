@@ -48,6 +48,7 @@ export default function App() {
     toggleArchiveMember,
     updateMember,
     deleteMember,
+    setMemberAdminRole,
     createGroup,
     updateGroup,
     deleteGroup,
@@ -293,10 +294,24 @@ export default function App() {
     return activeTripGroups.filter((g) => g.id !== pendingDeleteGroup?.id);
   }, [activeTripGroups, pendingDeleteGroup]);
 
-  // Permission model: admin = trip creator (full CRUD, can settle anything).
+  // Permission model: admin = trip creator or any member with admin role.
   // Participant = the member they've claimed via /join (own-expenses only,
   // can only settle transfers they're the payer or payee of).
-  const isAdmin = useMemo(() => !!(activeTrip && userId && activeTrip.ownerId === userId), [activeTrip, userId]);
+  const isAdmin = useMemo(() => {
+    if (!activeTrip) return false;
+    if (userId && activeTrip.ownerId === userId) return true;
+    if (userId) {
+      const myMember = activeTripMembers.find((m) => m.linkedUserId === userId);
+      if (myMember && activeTrip.adminMemberIds && activeTrip.adminMemberIds.includes(myMember.id)) {
+        return true;
+      }
+    }
+    // In guest/offline mode or when no admin list is defined yet
+    if (!userId && (!activeTrip.adminMemberIds || activeTrip.adminMemberIds.length === 0)) {
+      return true;
+    }
+    return false;
+  }, [activeTrip, userId, activeTripMembers]);
   const myMemberId = useMemo(() => activeTripMembers.find((m) => m.linkedUserId === userId)?.id ?? null, [activeTripMembers, userId]);
 
 
@@ -478,6 +493,31 @@ export default function App() {
   };
 
   const handleDeleteMember = (member: Member) => {
+    // Check if this member is an admin on the active trip
+    const isTargetAdmin =
+      activeTrip?.adminMemberIds && activeTrip.adminMemberIds.length > 0
+        ? activeTrip.adminMemberIds.includes(member.id)
+        : member.linkedUserId === activeTrip?.ownerId || activeTripMembers[0]?.id === member.id;
+
+    if (isTargetAdmin) {
+      const activeAdmins = activeTripMembers.filter((m) =>
+        activeTrip?.adminMemberIds && activeTrip.adminMemberIds.length > 0
+          ? activeTrip.adminMemberIds.includes(m.id)
+          : m.linkedUserId === activeTrip?.ownerId || activeTripMembers[0]?.id === m.id
+      );
+
+      if (activeAdmins.length <= 1) {
+        setConfirmRequest({
+          title: 'Cannot delete sole admin',
+          message: `"${member.name}" is the only admin for this trip. You cannot delete the only admin. Please make another member an admin before removing this admin.`,
+          confirmLabel: 'Understood',
+          danger: false,
+          onConfirm: () => {},
+        });
+        return;
+      }
+    }
+
     const hasTransactions = activeTripExpenses.some(
       (e) => 
         e.paidBy === member.id || 
@@ -1028,6 +1068,8 @@ export default function App() {
                 members={members}
                 isAdmin={isAdmin}
                 tripOwnerId={activeTrip?.ownerId ?? ''}
+                adminMemberIds={activeTrip?.adminMemberIds}
+                onSetMemberAdminRole={setMemberAdminRole}
                 currentUserId={userId}
               />
             </div>
