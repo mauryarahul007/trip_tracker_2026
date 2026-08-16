@@ -1,0 +1,62 @@
+workflows:
+  android-release:
+    name: Android Release Build
+    max_build_duration: 30
+    instance_type: linux_x2
+    environment:
+      groups:
+        - trip_tracker_secrets
+        - android_signing
+      vars:
+        VITE_BASE_PATH: "/"
+      node: 20
+    triggering:
+      events: []
+    scripts:
+      - name: Install dependencies
+        script: npm ci
+      - name: Build web assets
+        script: npm run build
+      - name: Sync native version
+        script: node scripts/sync-native-version.mjs
+      - name: Sync Capacitor Android
+        script: npx cap sync android
+      - name: Build signed Android App Bundle
+        script: |
+          cd android
+          ./gradlew bundleRelease
+    artifacts:
+      - android/app/build/outputs/**/*.aab
+
+  ios-release:
+    name: iOS Release Build
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+    integrations:
+      app_store_connect: codemagic_asc_api_key
+    environment:
+      groups:
+        - trip_tracker_secrets
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.triptracker.app
+      vars:
+        VITE_BASE_PATH: "/"
+      node: 20
+      xcode: latest
+    triggering:
+      events: []
+    scripts:
+      - name: Install dependencies
+        script: npm ci
+      - name: Build web assets
+        script: npm run build
+      - name: Sync native version
+        script: node scripts/sync-native-version.mjs
+      - name: Sync Capacitor iOS
+        script: npx cap sync ios
+      - name: Build and sign ipa
+        script: |
+          xcode-project build-ipa --project ios/App/App.xcodeproj --scheme App
+    artifacts:
+      - ios/App/build/ios/ipa/*.ipa
