@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { Member, Group, Expense, Category, TripState, ExpenseLocation } from '../types';
+import type { Member, Group, Expense, Category, TripState, ExpenseLocation, Trip } from '../types';
 import { supabase } from '../services/supabaseClient';
 import {
   fetchMyTripGraph,
@@ -216,6 +216,25 @@ export function collectDirtyExpenseIds(syncQueue: { type: string; payload: any }
   return ids;
 }
 
+// Scopes push-notification recipients to the members of ONE trip.
+// `members` (the store's flat Record<string, Member>) spans every trip
+// the user belongs to, not just the active one — filtering it directly
+// (as both addExpense's online save and processQueue's offline replay
+// used to) leaks recipients from unrelated trips. Go through the trip's
+// own memberIds instead, same as `activeTripMembers` does in App.tsx.
+export function getTripNotificationRecipients(
+  trips: Trip[],
+  members: Record<string, Member>,
+  tripId: string,
+  excludeUserId: string
+): string[] {
+  const trip = trips.find((t) => t.id === tripId);
+  return (trip?.memberIds ?? [])
+    .map((id) => members[id])
+    .filter((m): m is Member => !!m && !m.archived && !!m.linkedUserId && m.linkedUserId !== excludeUserId)
+    .map((m) => m.linkedUserId as string);
+}
+
 // Reconciles a fresh server fetch for one trip against the locally
 // cached (persisted) expense list, without disturbing other trips'
 // cached data and without clobbering locally-dirty rows (pending
@@ -428,9 +447,7 @@ export const useTripStore = create<TripStore>()(
               }));
 
               const trip = get().trips.find((t) => t.id === tripId);
-              const recipients = Object.values(get().members)
-                .filter((m) => m.linkedUserId && m.linkedUserId !== userId)
-                .map((m) => m.linkedUserId as string);
+              const recipients = getTripNotificationRecipients(get().trips, get().members, tripId, userId);
               sendPushNotification(
                 recipients,
                 trip?.name || 'Trip Tracker',
@@ -783,9 +800,7 @@ export const useTripStore = create<TripStore>()(
         }));
 
         const trip = get().trips.find((t) => t.id === tripId);
-        const recipients = Object.values(get().members)
-          .filter((m) => m.linkedUserId && m.linkedUserId !== userId)
-          .map((m) => m.linkedUserId as string);
+        const recipients = getTripNotificationRecipients(get().trips, get().members, tripId, userId);
         sendPushNotification(
           recipients,
           trip?.name || 'Trip Tracker',
