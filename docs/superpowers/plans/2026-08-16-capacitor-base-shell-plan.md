@@ -69,7 +69,7 @@ git commit -m "chore: install Capacitor core and add base config"
 
 **Interfaces:**
 - Consumes: `capacitor.config.ts` from Task 1 (appId/appName/webDir).
-- Produces: `android/app/build.gradle` (Android app module, edited in Task 7/8), `ios/App/App/Info.plist` (edited in Task 5/6), `ios/App/App.xcworkspace` (build entry point for Codemagic in Task 8).
+- Produces: `android/app/build.gradle` (Android app module, edited in Task 7/8), `ios/App/App/Info.plist` (edited in Task 5/6), `ios/App/App.xcodeproj` (SPM-based project, no CocoaPods/workspace — build entry point for Codemagic in Task 10; see that task's plan-correction note).
 
 - [ ] **Step 1: Install platform packages**
 
@@ -714,7 +714,6 @@ workflows:
         VITE_BASE_PATH: "/"
       node: 20
       xcode: latest
-      cocoapods: default
     triggering:
       events: []
     scripts:
@@ -726,17 +725,16 @@ workflows:
         script: node scripts/sync-native-version.mjs
       - name: Sync Capacitor iOS
         script: npx cap sync ios
-      - name: Install CocoaPods dependencies
-        script: |
-          cd ios/App && pod install
       - name: Build and sign ipa
         script: |
-          xcode-project build-ipa --workspace ios/App/App.xcworkspace --scheme App
+          xcode-project build-ipa --project ios/App/App.xcodeproj --scheme App
     artifacts:
       - ios/App/build/ios/ipa/*.ipa
 ```
 
 `triggering.events: []` on both workflows means neither auto-fires on push — matches the spec's decision to trigger manually ("Start new build" in the Codemagic UI, or a `v*` tag push configured later if the user wants that instead) rather than on every `main` push.
+
+**Plan correction (discovered during Task 2 implementation):** Capacitor 8.5.0's `cap add ios` scaffolds an SPM-based project (`ios/App/CapApp-SPM/Package.swift`), not CocoaPods — there is no `Podfile` and no top-level `ios/App/App.xcworkspace`. The build entry point is `ios/App/App.xcodeproj` directly. The `cocoapods: default` environment key, the "Install CocoaPods dependencies" script step, and the `--workspace ios/App/App.xcworkspace` flag from this task's original text have all been removed/corrected above — see the ledger for the ruling.
 
 - [ ] **Step 2: Document the one-time manual Codemagic setup this file assumes**
 
