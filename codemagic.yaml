@@ -9,7 +9,7 @@ workflows:
         - android_signing
       vars:
         VITE_BASE_PATH: "/"
-      node: 20
+      node: 22
       java: 17
     triggering:
       events: []
@@ -39,7 +39,7 @@ workflows:
         - trip_tracker_secrets
       vars:
         VITE_BASE_PATH: "/"
-      node: 20
+      node: 22
       java: 17
     triggering:
       events: []
@@ -73,7 +73,7 @@ workflows:
         bundle_identifier: com.triptracker.app
       vars:
         VITE_BASE_PATH: "/"
-      node: 20
+      node: 22
       xcode: latest
     triggering:
       events: []
@@ -101,7 +101,7 @@ workflows:
         - trip_tracker_secrets
       vars:
         VITE_BASE_PATH: "/"
-      node: 20
+      node: 22
       xcode: latest
     triggering:
       events: []
