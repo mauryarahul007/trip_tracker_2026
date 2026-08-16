@@ -158,7 +158,7 @@ git commit -m "docs: document VITE_BASE_PATH=/ requirement for native builds"
 - Modify: `ios/App/App/Assets.xcassets/**` (generated icon/splash variants)
 
 **Interfaces:**
-- Consumes: `public/favicon.svg` (existing brand mark) and theme color `#1F6E68` (from `index.html`'s `<meta name="theme-color">` and `public/manifest.json`'s `theme_color`) as the source palette.
+- Consumes: `public/favicon.svg` (existing brand mark — a multicolor purple/blue mark, not a flat theme-colored glyph) and `public/manifest.json`'s `background_color` (`#F2ECDC`, a warm cream — distinct from `theme_color` `#1F6E68`, which tints browser chrome, not icon canvases) as the source palette.
 - Produces: populated native icon/splash asset catalogs — no code-facing interface, this is a one-way asset generation step.
 
 - [ ] **Step 1: Install the asset generator**
@@ -168,11 +168,11 @@ Run: `npm install -D @capacitor/assets`
 - [ ] **Step 2: Rasterize the existing SVG favicon into a 1024x1024 source icon**
 
 Run: `mkdir -p resources`
-Convert `public/favicon.svg` to a 1024x1024 PNG on a `#1F6E68` background and save as `resources/icon.png`. If no local SVG rasterizer (e.g. `rsvg-convert`, `inkscape`, or `sharp` via a one-off Node script) is available in the environment, use `npx sharp-cli` or an equivalent already-available tool — the deliverable is a real 1024x1024 PNG file at this path, not a placeholder.
+Convert `public/favicon.svg` to a 1024x1024 PNG on a `#F2ECDC` background and save as `resources/icon.png`. If no local SVG rasterizer (e.g. `rsvg-convert`, `inkscape`, or `sharp` via a one-off Node script) is available in the environment, use `npx sharp-cli` or an equivalent already-available tool — the deliverable is a real 1024x1024 PNG file at this path, not a placeholder.
 
 - [ ] **Step 3: Create a 2732x2732 splash source**
 
-Save a `#1F6E68`-background, centered version of the same mark as `resources/splash.png` (2732x2732 — Capacitor's asset generator derives all required iOS/Android splash sizes from this single source).
+Save a `#F2ECDC`-background, centered version of the same mark as `resources/splash.png` (2732x2732 — Capacitor's asset generator derives all required iOS/Android splash sizes from this single source).
 
 - [ ] **Step 4: Add a generation script and run it**
 
