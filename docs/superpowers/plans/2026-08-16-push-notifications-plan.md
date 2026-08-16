@@ -25,9 +25,10 @@
 
 **Files:**
 - Create: `supabase/migrations/0045_add_device_push_tokens.sql`
+- Modify: `src/types/database.ts` (this repo has no live Supabase project to auto-regenerate types from migrations — `database.ts` is hand-maintained and must be updated in the same task as the migration, or `npm run build` breaks for any later task that queries the new table)
 
 **Interfaces:**
-- Produces: `public.device_push_tokens(id, user_id, platform, fcm_token, created_at, updated_at)` — consumed by Task 3 (client upsert) and Task 2 (Edge Function lookup).
+- Produces: `public.device_push_tokens(id, user_id, platform, fcm_token, created_at, updated_at)` — consumed by Task 3 (client upsert) and Task 2 (Edge Function lookup). Also produces the matching `Database['public']['Tables']['device_push_tokens']` TypeScript type in `src/types/database.ts` (Row/Insert/Update/Relationships, following the shape of the file's existing sibling table entries, with a `user_id` → `profiles.id` foreign key), consumed by every later task's TypeScript compilation.
 
 - [ ] **Step 1: Check the latest migration number**
 
@@ -66,10 +67,14 @@ This execution environment has no linked Supabase project and no local Docker/Po
 
 Re-read `supabase/migrations/0045_add_device_push_tokens.sql` as written and check it against the existing migrations' conventions (e.g. `supabase/migrations/0044_backfill_creator_as_member.sql` or `0041_add_expense_recycle_bin.sql` for RLS-policy style): correct `create table`/`create index`/RLS syntax, the `unique (user_id, fcm_token)` constraint present, `enable row level security` before the policy, policy `using`/`with check` both reference `auth.uid()`. No live database check is possible in this environment.
 
+- [ ] **Step 4.5: Add the matching TypeScript type to `src/types/database.ts`**
+
+Read `src/types/database.ts` first — find an existing sibling table entry under `Database['public']['Tables']` (e.g. `categories` or `groups`) to match its exact shape. Add a `device_push_tokens` entry: `Row` (all 6 migration columns), `Insert` (all fields except the ones with SQL defaults: `id`, `created_at`, `updated_at` optional), `Update` (`Partial<{ platform, fcm_token, updated_at }>`), and `Relationships` with one entry for the `user_id` → `public.profiles.id` foreign key. This step exists because this repo has no live Supabase project to auto-generate `database.ts` from migrations — skipping it breaks `npm run build` for Task 3 (discovered during that task's implementation; folded back into this task's text since it belongs with the migration, not scattered into whichever later task happens to need the table first).
+
 - [ ] **Step 5: Commit**
 
 ```bash
-git add supabase/migrations/0045_add_device_push_tokens.sql
+git add supabase/migrations/0045_add_device_push_tokens.sql src/types/database.ts
 git commit -m "feat: add device_push_tokens table for push notification registration"
 ```
 
