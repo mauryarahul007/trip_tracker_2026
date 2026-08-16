@@ -24,3 +24,6 @@ dist-ssr
 *.sln
 *.sw?
 .gstack/
+
+# Git worktrees for isolated agent work
+.worktrees/
