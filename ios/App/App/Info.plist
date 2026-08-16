@@ -66,6 +66,12 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>Trip Tracker uses your camera to attach a photo of a receipt to an expense.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Trip Tracker lets you attach an existing photo of a receipt to an expense.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Trip Tracker can tag the location where an expense happened, only while you're adding it.</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
