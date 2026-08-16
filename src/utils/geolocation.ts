@@ -22,7 +22,38 @@ async function getCurrentGPSPositionNative(timeoutMs: number): Promise<{ lat: nu
     if (permission.location !== 'granted' && permission.coarseLocation !== 'granted') {
       return null;
     }
-    const position = await Geolocation.getCurrentPosition({ enableHighAccuracy: true, timeout: timeoutMs });
+
+    // Don't just trust the plugin to honor its own `timeout` option — race
+    // it against our own timer too, same as the web path, so a hung
+    // native call can't block the caller (awaited synchronously in the
+    // expense form) indefinitely.
+    const position = await new Promise<Awaited<ReturnType<typeof Geolocation.getCurrentPosition>> | null>((resolve) => {
+      let resolved = false;
+      const timer = setTimeout(() => {
+        if (!resolved) {
+          resolved = true;
+          resolve(null);
+        }
+      }, timeoutMs);
+
+      Geolocation.getCurrentPosition({ enableHighAccuracy: true, timeout: timeoutMs })
+        .then((pos) => {
+          if (!resolved) {
+            resolved = true;
+            clearTimeout(timer);
+            resolve(pos);
+          }
+        })
+        .catch(() => {
+          if (!resolved) {
+            resolved = true;
+            clearTimeout(timer);
+            resolve(null);
+          }
+        });
+    });
+
+    if (!position) return null;
     return {
       lat: Number(position.coords.latitude.toFixed(6)),
       lng: Number(position.coords.longitude.toFixed(6)),

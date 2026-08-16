@@ -151,8 +151,15 @@ export function ExpenseForm({
         const compressed = await compressDataUrlToDataUrl(photo.dataUrl);
         setReceiptImage(compressed);
       }
-    } catch {
-      // User cancelled the camera/picker — not an error state, leave receiptImage as-is.
+    } catch (err) {
+      // The Capacitor Camera plugin rejects with this exact message (both
+      // iOS and Android) when the user backs out of the picker — that's
+      // not an error state, leave receiptImage as-is. Anything else
+      // (permission denial, hardware/decode error) is a real failure.
+      const message = err instanceof Error ? err.message : '';
+      if (message !== 'User cancelled photos app') {
+        setFormError('Could not process that image. Try a different photo.');
+      }
     } finally {
       setReceiptProcessing(false);
     }

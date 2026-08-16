@@ -395,7 +395,7 @@ function TransferRow({
                   sendPushNotification(
                     [fromLinkedUserId],
                     'Settlement reminder',
-                    `You owe ${t.toLabel} ${t.amount.toFixed(2)} for this trip`
+                    `You owe ${t.toLabel} ${currencySymbol}${t.amount.toFixed(2)} for this trip`
                   );
                 }}
                 disabled={!members[t.fromMemberId]?.linkedUserId}
@@ -433,7 +433,7 @@ function TransferRow({
                   sendPushNotification(
                     [fromLinkedUserId],
                     'Settlement reminder',
-                    `You owe ${t.toLabel} ${t.amount.toFixed(2)} for this trip`
+                    `You owe ${t.toLabel} ${currencySymbol}${t.amount.toFixed(2)} for this trip`
                   );
                 }}
                 disabled={!members[t.fromMemberId]?.linkedUserId}
