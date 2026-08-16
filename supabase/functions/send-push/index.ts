@@ -127,9 +127,18 @@ Deno.serve(async (req) => {
     if (res.ok) {
       sent++;
     } else {
-      // Dead token (uninstalled app, rotated token, etc.) — prune it so
-      // it doesn't keep accumulating and wasting future sends.
-      await supabaseAdmin.from('device_push_tokens').delete().eq('id', id);
+      const errorBody = await res.json().catch(() => null);
+      const fcmStatus = errorBody?.error?.status;
+      // Only prune tokens FCM has confirmed are dead (uninstalled app,
+      // rotated token, etc). Any other failure — misconfigured
+      // credentials, quota, transient network errors — must NOT delete
+      // the token, or a single bad send wipes out every device's
+      // registration and notifications silently stop working for good.
+      if (fcmStatus === 'UNREGISTERED' || fcmStatus === 'NOT_FOUND') {
+        await supabaseAdmin.from('device_push_tokens').delete().eq('id', id);
+      } else {
+        console.error('FCM send failed for token', id, res.status, errorBody);
+      }
     }
   }
 
