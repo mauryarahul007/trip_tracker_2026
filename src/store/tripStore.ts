@@ -841,11 +841,13 @@ export const useTripStore = create<TripStore>()(
     },
 
     archiveTrip: async (id, archived) => {
-      try {
-        await archiveTripRow(id, archived);
-      } catch (e) {
-        setError(e);
-        return;
+      if (!isMissingSupabaseEnv) {
+        try {
+          await archiveTripRow(id, archived);
+        } catch (e) {
+          setError(e);
+          return;
+        }
       }
 
       set((state) => ({
@@ -860,11 +862,13 @@ export const useTripStore = create<TripStore>()(
     },
 
     freezeTrip: async (id, frozen) => {
-      try {
-        await freezeTripRow(id, frozen);
-      } catch (e) {
-        setError(e);
-        return;
+      if (!isMissingSupabaseEnv) {
+        try {
+          await freezeTripRow(id, frozen);
+        } catch (e) {
+          setError(e);
+          return;
+        }
       }
 
       set((state) => ({
@@ -876,11 +880,13 @@ export const useTripStore = create<TripStore>()(
 
     deleteTrip: async (id) => {
       const deletedTrip = get().trips.find((t) => t.id === id);
-      try {
-        await deleteTripRow(id);
-      } catch (e) {
-        setError(e);
-        return;
+      if (!isMissingSupabaseEnv) {
+        try {
+          await deleteTripRow(id);
+        } catch (e) {
+          setError(e);
+          return;
+        }
       }
 
       const wasActive = get().activeTripId === id;
