@@ -4,7 +4,7 @@ vi.mock('@capacitor/core', () => ({
   Capacitor: { isNativePlatform: () => true },
 }));
 
-const { openMock, closeMock, signInWithOAuthMock, exchangeCodeForSessionMock, addListenerMock } = vi.hoisted(() => ({
+const { openMock, closeMock, signInWithOAuthMock, exchangeCodeForSessionMock, addListenerMock, onAuthStateChangeMock } = vi.hoisted(() => ({
   openMock: vi.fn(),
   closeMock: vi.fn(),
   signInWithOAuthMock: vi.fn().mockResolvedValue({
@@ -13,6 +13,7 @@ const { openMock, closeMock, signInWithOAuthMock, exchangeCodeForSessionMock, ad
   }),
   exchangeCodeForSessionMock: vi.fn().mockResolvedValue({ data: {}, error: null }),
   addListenerMock: vi.fn(),
+  onAuthStateChangeMock: vi.fn(),
 }));
 
 vi.mock('@capacitor/browser', () => ({
@@ -27,7 +28,7 @@ vi.mock('../services/supabaseClient', () => ({
   supabase: {
     auth: {
       getSession: vi.fn().mockResolvedValue({ data: { session: null } }),
-      onAuthStateChange: vi.fn(),
+      onAuthStateChange: onAuthStateChangeMock,
       signInWithOAuth: signInWithOAuthMock,
       exchangeCodeForSession: exchangeCodeForSessionMock,
     },
@@ -101,5 +102,31 @@ describe('appUrlOpen listener on native', () => {
     await handler({ url: 'com.triptracker.app://auth/callback?code=abc123' });
 
     expect(useAuthStore.getState().authError).toBe('exchange failed');
+  });
+});
+
+describe('onAuthStateChange session handling', () => {
+  const mockSession = { user: { id: 'user-1', email: 'a@b.com' } } as any;
+
+  it('ignores a null session on a non-SIGNED_OUT event, keeping the existing session', () => {
+    useAuthStore.getState().initialize();
+    const handler = onAuthStateChangeMock.mock.calls[0]?.[0];
+    expect(handler).toBeDefined();
+
+    useAuthStore.setState({ session: mockSession });
+    handler('TOKEN_REFRESHED', null);
+
+    expect(useAuthStore.getState().session).toBe(mockSession);
+  });
+
+  it('clears the session on an explicit SIGNED_OUT event', () => {
+    useAuthStore.getState().initialize();
+    const handler = onAuthStateChangeMock.mock.calls[0]?.[0];
+    expect(handler).toBeDefined();
+
+    useAuthStore.setState({ session: mockSession });
+    handler('SIGNED_OUT', null);
+
+    expect(useAuthStore.getState().session).toBeNull();
   });
 });
