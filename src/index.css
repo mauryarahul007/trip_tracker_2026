@@ -382,6 +382,137 @@ input[type="date"].input-field {
   padding-left: 40px;
 }
 
+/* Expense search + filter toggle — search stays one row, category/member/
+   date-range are occasional filters buried behind a toggle so the default
+   state is one compact row instead of three wrapped ones. */
+.expense-filters {
+  margin-bottom: 16px;
+}
+.expense-filters-row {
+  display: flex;
+  gap: 8px;
+}
+.expense-search {
+  flex: 1;
+  min-width: 0;
+}
+.filter-toggle-btn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  flex-shrink: 0;
+  background: var(--bg-surface);
+  border: 1px solid #CBBF9E;
+  border-radius: var(--border-radius-sm);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: var(--transition-smooth);
+}
+.filter-toggle-btn:hover {
+  background: var(--bg-surface-hover);
+}
+.filter-toggle-btn.open {
+  background: var(--primary-accent);
+  border-color: var(--primary-accent);
+  color: #FFFDF6;
+}
+.filter-count-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  min-width: 17px;
+  height: 17px;
+  padding: 0 4px;
+  border-radius: 9px;
+  background: var(--secondary-accent);
+  color: #FFFDF6;
+  font-family: var(--font-family-mono);
+  font-size: 10px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 0 2px var(--bg-app);
+}
+.expense-filters-panel {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+  padding: 12px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-md);
+  animation: filterPanelIn 0.16s ease-out;
+}
+@keyframes filterPanelIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.expense-filters-panel .select-field {
+  flex: 1 1 140px;
+  min-width: 0;
+}
+.expense-date-range {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1 1 220px;
+}
+.expense-date-range .input-field {
+  flex: 1;
+  min-width: 0;
+}
+.expense-date-sep {
+  color: var(--text-muted);
+  font-family: var(--font-family-mono);
+  flex-shrink: 0;
+}
+.filter-clear-link {
+  flex-basis: 100%;
+  text-align: center;
+  background: none;
+  border: none;
+  color: var(--color-danger);
+  font-family: var(--font-family-body);
+  font-size: 12.5px;
+  font-weight: 600;
+  padding: 6px;
+  cursor: pointer;
+}
+.filter-clear-link:hover {
+  text-decoration: underline;
+}
+
+/* Compact ghost icon buttons for list-row actions (edit/delete) — plain
+   icon rather than a bordered box, since swipe-to-delete already covers
+   the primary action and a full button chrome reads as heavier than a
+   secondary, occasional action needs. */
+.row-icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  border-radius: var(--border-radius-sm);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: var(--transition-smooth);
+}
+.row-icon-btn:hover {
+  background: var(--bg-surface-hover);
+  color: var(--text-primary);
+}
+.row-icon-btn-danger:hover {
+  background: rgba(184, 69, 46, 0.1);
+  color: var(--color-danger);
+}
+
 /* Header & Navigation */
 .app-header {
   padding-top: calc(14px + var(--safe-top, 0px));

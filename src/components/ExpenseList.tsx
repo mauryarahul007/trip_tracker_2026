@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import type { Category, Expense, Member, Trip } from '../types';
-import { IconSearch, IconEdit, IconTrash, IconAlertCircle } from './Icons';
+import { IconSearch, IconEdit, IconTrash, IconAlertCircle, IconFilter } from './Icons';
 import { SwipeableRow } from './SwipeableRow';
 import { CategoryIcon } from './CategoryIcon';
 import { getCurrencySymbol } from '../utils/currency';
@@ -70,6 +70,13 @@ export function ExpenseList({
 }: Props) {
   const currencySymbol = getCurrencySymbol(trip?.baseCurrency || '');
 
+  // 0. Advanced filters (category/member/date range) stay collapsed by
+  // default — search is the filter people reach for constantly, the rest
+  // are occasional, so burying them behind a toggle keeps the common case
+  // to one compact row instead of three.
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const activeFilterCount = [filterCategory, filterMember, filterDateFrom, filterDateTo].filter(Boolean).length;
+
   // 1. Debounce Search Input
   const [localSearch, setLocalSearch] = useState(search);
   useEffect(() => {
@@ -97,59 +104,74 @@ export function ExpenseList({
     <>
       {/* Search & Filters */}
       {activeTripExpenseCount > 0 && (
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '16px' }}>
-          <div className="input-icon-wrap" style={{ flex: '2 1 160px' }}>
-            <IconSearch size={16} className="icon-sm" />
-            <input
-              type="text"
-              className="input-field"
-              placeholder="Search expenses..."
-              value={localSearch}
-              onChange={(e) => setLocalSearch(e.target.value)}
-            />
-          </div>
-          <select
-            className="input-field select-field"
-            style={{ flex: '1 1 130px' }}
-            value={filterCategory}
-            onChange={(e) => setFilterCategory(e.target.value)}
-          >
-            <option value="">All Categories</option>
-            {categories.map((c) => (
-              <option key={c.id} value={c.id}>{c.icon} {c.name}</option>
-            ))}
-          </select>
-          <select
-            className="input-field select-field"
-            style={{ flex: '1 1 130px' }}
-            value={filterMember}
-            onChange={(e) => setFilterMember(e.target.value)}
-          >
-            <option value="">All Members</option>
-            {activeTripMembers.map((m) => (
-              <option key={m.id} value={m.id}>{m.name}</option>
-            ))}
-          </select>
-          <input
-            type="date"
-            className="input-field"
-            style={{ flex: '1 1 130px' }}
-            value={filterDateFrom}
-            onChange={(e) => setFilterDateFrom(e.target.value)}
-            aria-label="From date"
-          />
-          <input
-            type="date"
-            className="input-field"
-            style={{ flex: '1 1 130px' }}
-            value={filterDateTo}
-            onChange={(e) => setFilterDateTo(e.target.value)}
-            aria-label="To date"
-          />
-          {hasActiveFilters && (
-            <button type="button" className="secondary-btn" onClick={onClearFilters}>
-              Clear
+        <div className="expense-filters">
+          <div className="expense-filters-row">
+            <div className="input-icon-wrap expense-search">
+              <IconSearch size={16} className="icon-sm" />
+              <input
+                type="text"
+                className="input-field"
+                placeholder="Search expenses..."
+                value={localSearch}
+                onChange={(e) => setLocalSearch(e.target.value)}
+              />
+            </div>
+            <button
+              type="button"
+              className={`filter-toggle-btn ${filtersOpen ? 'open' : ''}`}
+              onClick={() => setFiltersOpen((v) => !v)}
+              aria-expanded={filtersOpen}
+              aria-label="Toggle filters"
+            >
+              <IconFilter size={16} className="icon-sm" />
+              {activeFilterCount > 0 && <span className="filter-count-badge">{activeFilterCount}</span>}
             </button>
+          </div>
+          {filtersOpen && (
+            <div className="expense-filters-panel">
+              <select
+                className="input-field select-field"
+                value={filterCategory}
+                onChange={(e) => setFilterCategory(e.target.value)}
+              >
+                <option value="">All Categories</option>
+                {categories.map((c) => (
+                  <option key={c.id} value={c.id}>{c.icon} {c.name}</option>
+                ))}
+              </select>
+              <select
+                className="input-field select-field"
+                value={filterMember}
+                onChange={(e) => setFilterMember(e.target.value)}
+              >
+                <option value="">All Members</option>
+                {activeTripMembers.map((m) => (
+                  <option key={m.id} value={m.id}>{m.name}</option>
+                ))}
+              </select>
+              <div className="expense-date-range">
+                <input
+                  type="date"
+                  className="input-field"
+                  value={filterDateFrom}
+                  onChange={(e) => setFilterDateFrom(e.target.value)}
+                  aria-label="From date"
+                />
+                <span className="expense-date-sep">–</span>
+                <input
+                  type="date"
+                  className="input-field"
+                  value={filterDateTo}
+                  onChange={(e) => setFilterDateTo(e.target.value)}
+                  aria-label="To date"
+                />
+              </div>
+              {hasActiveFilters && (
+                <button type="button" className="filter-clear-link" onClick={onClearFilters}>
+                  Clear all filters
+                </button>
+              )}
+            </div>
           )}
         </div>
       )}
@@ -206,67 +228,60 @@ export function ExpenseList({
                 <ConditionalSwipe enabled={canManage} onDelete={() => onDelete(exp)}>
                   <div
                     style={{
-                      display: 'flex', flexDirection: 'column', gap: '8px',
-                      padding: '14px 16px',
+                      display: 'flex', flexDirection: 'column', gap: '6px',
+                      padding: '10px 14px',
                       borderLeft: needsReview ? '3px solid var(--color-warning)' : 'none',
                       background: needsReview ? 'rgba(185, 138, 62, 0.07)' : undefined,
                     }}
                   >
-                    <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', rowGap: '10px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                       <div
-                        style={{ display: 'flex', gap: '12px', alignItems: 'center', cursor: 'pointer', flex: '1 1 200px', minWidth: 0 }}
+                        style={{ display: 'flex', gap: '10px', alignItems: 'center', cursor: 'pointer', flex: 1, minWidth: 0 }}
                         onClick={() => onReview(exp)}
                       >
-                        <div style={{ flexShrink: 0, width: '38px', height: '38px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-surface-hover)', borderRadius: '50%', color: 'var(--primary-accent)' }}>
-                          <CategoryIcon categoryId={cat?.id || ''} fallbackEmoji={cat?.icon || '🏷️'} size={19} />
+                        <div style={{ flexShrink: 0, width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-surface-hover)', borderRadius: '50%', color: 'var(--primary-accent)' }}>
+                          <CategoryIcon categoryId={cat?.id || ''} fallbackEmoji={cat?.icon || '🏷️'} size={16} />
                         </div>
-                        <div style={{ minWidth: 0, display: 'flex', flexDirection: 'column', gap: '3px' }}>
-                          <h4 style={{ fontSize: '15px', lineHeight: 1.3, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{exp.title}</h4>
-                          <p style={{ fontSize: '13px', lineHeight: 1.4, fontWeight: 500, color: 'var(--text-secondary)' }}>
+                        <div style={{ minWidth: 0, display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                          <h4 style={{ fontSize: '14.5px', lineHeight: 1.3, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{exp.title}</h4>
+                          <p style={{ fontSize: '12.5px', lineHeight: 1.4, fontWeight: 500, color: 'var(--text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                             <span style={isPayerDeleted ? { color: 'var(--color-warning)', fontWeight: 600 } : undefined}>
                               {payerName}
                             </span>
                             <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}> · {exp.date}</span>
                             {exp.location?.placeName ? (
-                              <span style={{ color: '#00BFA5', fontWeight: 500, fontSize: '11.5px' }}> · 📍 {exp.location.placeName}</span>
+                              <span style={{ color: '#00BFA5', fontWeight: 500 }}> · 📍 {exp.location.placeName}</span>
                             ) : null}
-                          </p>
-                          <p style={{ fontSize: '12px', lineHeight: 1.4, fontWeight: 400, color: 'var(--text-muted)', maxWidth: '240px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={splitNames}>
-                            with {splitNames}
+                            <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}> · with {splitNames}</span>
                           </p>
                         </div>
                       </div>
-                      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'flex-end', gap: '10px', flex: '0 1 auto' }}>
-                        <span className="money" style={{ fontSize: '15.5px', fontWeight: '600', color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '2px', flexShrink: 0 }}>
+                        <span className="money" style={{ fontSize: '15px', fontWeight: '600', color: 'var(--text-primary)', whiteSpace: 'nowrap', marginRight: canManage ? '4px' : 0 }}>
                           {currencySymbol} {exp.amount.toFixed(2)}
                         </span>
                         {canManage && (
-                          <div style={{ display: 'flex', gap: '6px' }}>
+                          <>
                             {!exp.title.startsWith('Settlement:') && (
                               <button
-                                className="secondary-btn"
-                                style={{
-                                  padding: '6px 8px',
-                                  color: needsReview ? 'var(--color-warning)' : undefined,
-                                  borderColor: needsReview ? 'rgba(185,138,62,0.35)' : undefined,
-                                }}
+                                className="row-icon-btn"
+                                style={needsReview ? { color: 'var(--color-warning)' } : undefined}
                                 aria-label={needsReview ? 'Review expense' : 'Edit expense'}
                                 title={needsReview ? 'Review' : 'Edit'}
                                 onClick={(e) => { e.stopPropagation(); onEdit(exp); }}
                               >
-                                {needsReview ? <IconAlertCircle size={14} className="icon-sm" /> : <IconEdit size={14} className="icon-sm" />}
+                                {needsReview ? <IconAlertCircle size={15} className="icon-sm" /> : <IconEdit size={15} className="icon-sm" />}
                               </button>
                             )}
                             <button
-                              className="secondary-btn"
-                              style={{ padding: '6px 8px', color: 'var(--color-danger)', borderColor: 'rgba(184,69,46,0.25)' }}
+                              className="row-icon-btn row-icon-btn-danger"
                               aria-label="Delete expense"
                               title="Delete"
                               onClick={(e) => { e.stopPropagation(); onDelete(exp); }}
                             >
-                              <IconTrash size={14} className="icon-sm" />
+                              <IconTrash size={15} className="icon-sm" />
                             </button>
-                          </div>
+                          </>
                         )}
                       </div>
                     </div>
