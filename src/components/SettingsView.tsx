@@ -23,6 +23,7 @@ import { CategoryIcon } from './CategoryIcon';
 import { useTripStore } from '../store/tripStore';
 import { formatDateRange } from '../utils/dateRange';
 import { getCategoryKeywords } from '../utils/categoryHelper';
+import { getAppVersion } from '../utils/appVersion';
 
 export type ThemePref = 'light' | 'dark' | 'system';
 
@@ -124,10 +125,15 @@ export function SettingsView({
   // Connectivity and disk storage
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [storageEstimate, setStorageEstimate] = useState<{ used: number; quota: number } | null>(null);
+  const [appVersion, setAppVersion] = useState<string | null>(null);
 
   useEffect(() => {
     fetchDeletedExpenses();
   }, [fetchDeletedExpenses]);
+
+  useEffect(() => {
+    getAppVersion().then(setAppVersion);
+  }, []);
 
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
@@ -1119,6 +1125,23 @@ export function SettingsView({
               </div>
             </button>
           )}
+        </div>
+      </div>
+
+      <div>
+        <h4 className="settings-group-title">About</h4>
+        <div className="settings-group-card">
+          <div className="settings-row-item" style={{ cursor: 'default' }}>
+            <div className="settings-row-left">
+              <div className="settings-squircle squircle-slate">
+                <IconSmartphone size={18} />
+              </div>
+              <div className="settings-row-texts">
+                <span className="settings-row-title">Trip Tracker 2026</span>
+                <span className="settings-row-subtitle">Version {appVersion ?? '…'}</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

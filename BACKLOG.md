@@ -22,6 +22,19 @@ as the working backlog directly.
   - Phase 3: offline-captured receipt photos now stage in a dedicated
     IndexedDB store (`src/services/offlineReceiptStore.ts`) instead of the
     localStorage JSON blob
+  - Follow-up: `createTrip` and `deleteMember`/`updateMember`/
+    `toggleArchiveMember` also had no offline path (same silent-no-op bug
+    class) — closed
+  - Fixed a root-cause bug found during offline retest: toggling
+    offline/online briefly nulled the Supabase session (a transient
+    token-refresh hiccup, not a real sign-out), which unmounted the whole
+    authenticated app behind the login redirect — looked like every
+    member/group/expense vanishing at once. Now only clears session on an
+    explicit `SIGNED_OUT` event (`src/store/authStore.ts`)
+- App version shown in Settings → About (`src/utils/appVersion.ts`) — real
+  native version/build on Android/iOS via `@capacitor/app`, git commit SHA
+  on web (auto-updates every deploy, no manual version bump needed)
+- Full session writeup: `docs/explanation-navigation-and-offline-fixes.md`
 
 ## Deferred
 
@@ -36,5 +49,4 @@ as the working backlog directly.
 ## From the sheet (untriaged)
 
 - Need to implement bug tracker
-- Implement the app version under settings
 - implement superadmin console
