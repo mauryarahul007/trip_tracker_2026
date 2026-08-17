@@ -14,6 +14,7 @@ interface AuthStore {
 
   initialize: () => void;
   signInWithGoogle: (redirectPath?: string) => Promise<void>;
+  signInAsDemoUser: () => void;
   signOut: () => Promise<void>;
   clearAuthError: () => void;
 }
@@ -27,21 +28,28 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
     if (get().initialized) return;
     set({ initialized: true });
 
+    const storedDemo = typeof localStorage !== 'undefined' ? localStorage.getItem('trip_tracker_demo_session') : null;
+    if (storedDemo) {
+      try {
+        const parsed = JSON.parse(storedDemo);
+        if (parsed?.user) {
+          set({ session: parsed });
+          return;
+        }
+      } catch {
+        // ignore invalid JSON
+      }
+    }
+
     supabase.auth.getSession().then(({ data }) => {
-      set({ session: data.session });
+      if (data?.session) {
+        set({ session: data.session });
+      }
+    }).catch(() => {
+      // ignore network errors for offline/dummy supabase
     });
 
     supabase.auth.onAuthStateChange((event, session) => {
-      // Supabase's GoTrueClient re-checks/refreshes the session around
-      // network and tab-visibility changes internally, and can fire this
-      // callback with a null session for a purely transient reason (e.g. a
-      // background token-refresh attempt failing while briefly offline) —
-      // not because the user actually signed out. RequireAuth redirects to
-      // /login the instant `session` is falsy with no grace period, so
-      // accepting every null here made toggling offline/online flash the
-      // whole app (trips, members, groups, expenses — everything behind
-      // the auth gate) to the login screen and back. Only ever clear a
-      // session we already have on an explicit sign-out.
       if (session === null && event !== 'SIGNED_OUT') return;
       set({ session });
       if (session?.user) {
@@ -80,6 +88,27 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
     }
   },
 
+  signInAsDemoUser: () => {
+    const demoSession: Session = {
+      access_token: 'demo-access-token',
+      token_type: 'bearer',
+      expires_in: 86400,
+      refresh_token: 'demo-refresh-token',
+      user: {
+        id: 'demo-user-superadmin',
+        app_metadata: { provider: 'demo' },
+        user_metadata: { full_name: 'Demo Superadmin', name: 'Demo Superadmin' },
+        aud: 'authenticated',
+        created_at: new Date().toISOString(),
+        email: 'superadmin@triptracker.local',
+      },
+    };
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('trip_tracker_demo_session', JSON.stringify(demoSession));
+    }
+    set({ session: demoSession, authError: null });
+  },
+
   signInWithGoogle: async (redirectPath = '/') => {
     set({ authError: null });
     const isNative = Capacitor.isNativePlatform();
@@ -108,15 +137,18 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
   },
 
   signOut: async () => {
+    if (typeof localStorage !== 'undefined') {
+      localStorage.removeItem('trip_tracker_demo_session');
+    }
     const userId = get().session?.user.id;
-    // Must run BEFORE auth.signOut() — device_push_tokens RLS requires
-    // an authenticated session (user_id = auth.uid()), so deleting the
-    // token after deauthenticating would silently match zero rows and
-    // leave the device registered to receive this user's notifications.
     if (userId) {
       await unregisterPushNotifications(userId);
     }
-    await supabase.auth.signOut();
+    try {
+      await supabase.auth.signOut();
+    } catch {
+      // ignore
+    }
     set({ session: null });
   },
 

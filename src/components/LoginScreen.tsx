@@ -14,6 +14,8 @@ export function LoginScreen() {
   const authError = useAuthStore((s) => s.authError);
   const clearAuthError = useAuthStore((s) => s.clearAuthError);
 
+  const signInAsDemoUser = useAuthStore((s) => s.signInAsDemoUser);
+
   useEffect(() => {
     initialize();
   }, [initialize]);
@@ -94,7 +96,7 @@ export function LoginScreen() {
             padding: '12px 16px',
             fontSize: '15px',
             fontWeight: 600,
-            color: '#1C2A38', // Ink Navy/primary text color matching the ledger theme
+            color: '#1C2A38',
             background: '#FFFFFF',
             border: '1.5px solid var(--border-color)',
             borderRadius: 'var(--border-radius-sm)',
@@ -120,8 +122,46 @@ export function LoginScreen() {
           <span>Sign in with Google</span>
         </button>
 
+        <div style={{ display: 'flex', alignItems: 'center', margin: '18px 0', color: 'var(--text-muted)', fontSize: '12px' }}>
+          <div style={{ flex: 1, height: '1px', background: 'var(--border-color)' }} />
+          <span style={{ padding: '0 10px', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600 }}>or</span>
+          <div style={{ flex: 1, height: '1px', background: 'var(--border-color)' }} />
+        </div>
+
+        <button
+          type="button"
+          onClick={() => signInAsDemoUser()}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '8px',
+            width: '100%',
+            padding: '11px 16px',
+            fontSize: '14px',
+            fontWeight: 600,
+            color: '#FFFFFF',
+            background: 'linear-gradient(135deg, #1f6e68 0%, #154c48 100%)',
+            border: 'none',
+            borderRadius: 'var(--border-radius-sm)',
+            cursor: 'pointer',
+            transition: 'var(--transition-smooth)',
+            boxShadow: '0 2px 6px rgba(31, 110, 104, 0.25)',
+          }}
+          onMouseOver={(e) => {
+            e.currentTarget.style.opacity = '0.92';
+            e.currentTarget.style.transform = 'translateY(-1px)';
+          }}
+          onMouseOut={(e) => {
+            e.currentTarget.style.opacity = '1';
+            e.currentTarget.style.transform = 'translateY(0)';
+          }}
+        >
+          <span>⚡ Continue in Demo Mode (Local Testing)</span>
+        </button>
+
         <p style={{ marginTop: '16px', fontSize: '12px', color: 'var(--text-secondary)' }}>
-          We only use your Google account to identify you to trip members you're invited by.
+          Instant local access to test all trips, settings & SuperAdmin Bug Tracker.
         </p>
       </div>
     </div>

@@ -254,10 +254,27 @@ ${bug.diagnostics?.stackTrace ? `#### Stack Trace\n\`\`\`text\n${bug.diagnostics
   return (
     <div className="subscreen-container" style={{ maxWidth: '840px', margin: '0 auto', paddingBottom: '60px' }}>
       {/* Header */}
-      <div className="subscreen-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-        <button type="button" className="subscreen-back-btn" onClick={onBack}>
-          <IconChevronLeft size={20} />
-          <span>Settings</span>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', gap: '12px' }}>
+        <button
+          type="button"
+          onClick={onBack}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '6px',
+            background: 'var(--bg-card, rgba(255, 255, 255, 0.08))',
+            border: '1px solid var(--border-color, rgba(255, 255, 255, 0.15))',
+            color: 'var(--text-primary)',
+            padding: '8px 14px',
+            borderRadius: '8px',
+            cursor: 'pointer',
+            fontSize: '13px',
+            fontWeight: 500,
+            transition: 'all 0.2s',
+          }}
+        >
+          <IconChevronLeft size={16} />
+          <span>Back</span>
         </button>
         <div style={{ display: 'flex', gap: '8px' }}>
           <button
@@ -267,7 +284,7 @@ ${bug.diagnostics?.stackTrace ? `#### Stack Trace\n\`\`\`text\n${bug.diagnostics
               display: 'flex',
               alignItems: 'center',
               gap: '6px',
-              padding: '6px 12px',
+              padding: '8px 14px',
               borderRadius: '8px',
               border: '1px solid var(--border-color, #cbd5e1)',
               background: 'var(--bg-card, #ffffff)',
@@ -284,7 +301,7 @@ ${bug.diagnostics?.stackTrace ? `#### Stack Trace\n\`\`\`text\n${bug.diagnostics
             className="gradient-btn"
             onClick={() => setShowAddModal(true)}
             style={{
-              padding: '6px 14px',
+              padding: '8px 16px',
               borderRadius: '8px',
               fontSize: '13px',
               fontWeight: 600,

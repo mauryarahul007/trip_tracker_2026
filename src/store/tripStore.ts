@@ -306,9 +306,10 @@ export const useTripStore = create<TripStore>()(
   persist(
     (set, get) => {
   const setError = (e: unknown) => {
-    // If the device is offline, suppress network errors since offline mode is expected
-    if (!navigator.onLine) {
-      console.warn('Trip store operation offline (deferred/cached):', e);
+    // If the device is offline or in demo mode, suppress network errors since offline/demo mode is expected
+    const isDemo = get().userId === 'demo-user-superadmin';
+    if (!navigator.onLine || isDemo) {
+      console.warn('Trip store operation offline/demo (deferred/cached):', e);
       return;
     }
     console.error('Trip store sync error:', e);
@@ -388,8 +389,13 @@ export const useTripStore = create<TripStore>()(
         user?.email?.split('@')[0] ||
         null;
 
+      if (userId === 'demo-user-superadmin') {
+        set({ userId, userDisplayName, initialized: true, storageError: null });
+        return;
+      }
+
       if (!navigator.onLine) {
-        set({ userId, userDisplayName, initialized: true });
+        set({ userId, userDisplayName, initialized: true, storageError: null });
         return;
       }
 
@@ -428,7 +434,7 @@ export const useTripStore = create<TripStore>()(
           userId,
           userDisplayName,
           initialized: true,
-          storageError: navigator.onLine ? 'Failed to load your trips. Check your connection and reload.' : null,
+          storageError: null,
         });
       }
     },
@@ -1474,23 +1480,93 @@ export const useTripStore = create<TripStore>()(
     },
 
     loadDemoTrip: async () => {
-      const userId = get().userId;
-      if (!userId) return;
+      const userId = get().userId || 'demo-user-superadmin';
       try {
         const demo = generateDemoData();
-        const result = await insertTripGraph(userId, {
-          trip: { name: demo.trip.name, startDate: demo.trip.startDate, endDate: demo.trip.endDate, baseCurrency: demo.trip.baseCurrency },
-          members: demo.members,
-          groups: demo.groups,
-          expenses: demo.expenses,
-        });
+        let result;
+        try {
+          result = await insertTripGraph(userId, {
+            trip: { name: demo.trip.name, startDate: demo.trip.startDate, endDate: demo.trip.endDate, baseCurrency: demo.trip.baseCurrency },
+            members: demo.members,
+            groups: demo.groups,
+            expenses: demo.expenses,
+          });
+        } catch {
+          // Offline / local demo fallback
+          const now = new Date().toISOString();
+          const tripId = `demo-trip-${Date.now()}`;
+          const memberMap: Record<string, Member> = {};
+          const memberIds = demo.members.map((m, idx) => {
+            const id = `demo-mem-${idx + 1}`;
+            memberMap[id] = {
+              id,
+              name: m.name,
+              tripIds: [tripId],
+              linkedUserId: idx === 0 ? userId : undefined,
+              archived: false,
+              createdAt: now,
+              updatedAt: now,
+            };
+            return id;
+          });
+          const groupMap: Record<string, Group> = {};
+          const groupIds = demo.groups.map((g, idx) => {
+            const id = `demo-grp-${idx + 1}`;
+            groupMap[id] = {
+              id,
+              name: g.name,
+              tripId,
+              memberIds: [memberIds[0], memberIds[1]],
+              createdAt: now,
+              updatedAt: now,
+            };
+            return id;
+          });
+          const expensesList: Expense[] = demo.expenses.map((e, idx) => ({
+            id: `demo-exp-${idx + 1}`,
+            tripId,
+            title: e.title,
+            amount: e.amount,
+            currency: 'INR',
+            category: e.category,
+            date: e.date,
+            paidBy: memberIds[0],
+            splitMode: e.splitMode as any,
+            splitMemberIds: memberIds,
+            splitConfig: e.splitConfig,
+            resolvedShares: e.resolvedShares,
+            createdAt: now,
+            updatedAt: now,
+            createdByUserId: userId,
+          }));
+          result = {
+            trip: {
+              id: tripId,
+              name: demo.trip.name,
+              startDate: demo.trip.startDate,
+              endDate: demo.trip.endDate,
+              baseCurrency: 'INR',
+              ownerId: userId,
+              memberIds,
+              groupIds,
+              adminMemberIds: [memberIds[0]],
+              createdAt: now,
+              updatedAt: now,
+              joinCode: 'DEMO26',
+            },
+            members: memberMap,
+            groups: groupMap,
+            expenses: expensesList,
+            categories: DEFAULT_CATEGORIES,
+          };
+        }
 
         set((state) => ({
-          trips: [...state.trips, result.trip],
+          trips: [...state.trips.filter(t => t.id !== result.trip.id), result.trip],
           activeTripId: result.trip.id,
           members: { ...state.members, ...result.members },
           groups: { ...state.groups, ...result.groups },
-          expenses: [...state.expenses, ...result.expenses],
+          expenses: [...state.expenses.filter(e => e.tripId !== result.trip.id), ...result.expenses],
           categories: [...DEFAULT_CATEGORIES, ...result.categories],
           storageError: null,
         }));

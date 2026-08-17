@@ -63,29 +63,416 @@
   },
   {
     "id": "BUG-003",
-    "title": "UI verified test bug from superadmin console",
-    "description": "Testing live sync between UI and CLI ledger",
-    "severity": "medium",
-    "category": "ui-ux",
+    "title": "Offline/online toggle briefly signed the user out, flashing login screen",
+    "description": "Supabase GoTrue client fired onAuthStateChange with a null session whenever token refresh failed during a momentary offline blip, causing RequireAuth to unmount the entire app and redirect to /login.",
+    "severity": "high",
+    "category": "auth",
     "status": "resolved",
-    "foundBy": "superadmin-ui",
+    "foundBy": "antigravity",
+    "environment": {
+      "platform": "web",
+      "isOnline": false,
+      "appVersion": "1.0.0",
+      "route": "#/trip/road-trip-goa"
+    },
+    "reproSteps": [
+      "Log into the application",
+      "Toggle network offline in Chrome DevTools",
+      "Observe that the app immediately unmounts and redirects to the login screen"
+    ],
+    "expectedBehavior": "The user stays authenticated offline with cached credentials.",
+    "actualBehavior": "Transient null sessions triggered full sign-out redirect.",
+    "diagnostics": {
+      "stackTrace": "RequireAuth.tsx:21 Navigate to /login (session was null on TOKEN_REFRESHED failure)",
+      "syncQueueLength": 0
+    },
+    "createdAt": "2026-08-16T15:00:00.000Z",
+    "updatedAt": "2026-08-16T17:30:00.000Z",
+    "resolvedAt": "2026-08-16T17:30:00.000Z",
+    "resolvedBy": "antigravity",
+    "resolutionNote": "Updated authStore.ts onAuthStateChange to ignore transient null sessions unless event is explicitly SIGNED_OUT."
+  },
+  {
+    "id": "BUG-004",
+    "title": "Member deletion, update, and archiving lacked offline queue support",
+    "description": "deleteMember, updateMember, and toggleArchiveMember directly called Supabase APIs with no optimistic local updates or offline queueing, throwing network errors when disconnected.",
+    "severity": "high",
+    "category": "offline-sync",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "android",
+      "isOnline": false,
+      "appVersion": "1.0.0",
+      "route": "#/trip/road-trip-goa/members"
+    },
+    "reproSteps": [
+      "Go offline",
+      "Navigate to Members tab and edit or delete a member",
+      "Observe action fails with uncaught network exception"
+    ],
+    "expectedBehavior": "Member edits apply optimistically and queue for background sync upon reconnection.",
+    "actualBehavior": "Network error thrown and local state reverted.",
+    "diagnostics": {
+      "stackTrace": "TypeError: Failed to fetch at deleteMemberRow (tripApi.ts:182)",
+      "syncQueueLength": 0
+    },
+    "createdAt": "2026-08-16T16:00:00.000Z",
+    "updatedAt": "2026-08-16T19:00:00.000Z",
+    "resolvedAt": "2026-08-16T19:00:00.000Z",
+    "resolvedBy": "claude-cli",
+    "resolutionNote": "Implemented full offline-first mutation handlers in tripStore.ts with queueSync actions (deleteMember, updateMember, toggleArchiveMember)."
+  },
+  {
+    "id": "BUG-005",
+    "title": "Creating a new trip while offline silently failed without offline path",
+    "description": "createTrip attempted immediate Supabase relational graph insertion without generating local temporary trip entities or persisting them to offline storage.",
+    "severity": "high",
+    "category": "offline-sync",
+    "status": "resolved",
+    "foundBy": "antigravity",
+    "environment": {
+      "platform": "web",
+      "isOnline": false,
+      "appVersion": "1.0.0",
+      "route": "#/"
+    },
+    "reproSteps": [
+      "Disconnect from internet",
+      "Tap '+ New Trip', enter details and submit",
+      "Observe that new trip never appears in the list"
+    ],
+    "expectedBehavior": "Trip is created with local ID, auto-selected, and queued for server sync.",
+    "actualBehavior": "Operation aborted on network failure with no offline fallback.",
+    "diagnostics": {
+      "stackTrace": "NetworkError when attempting to fetch resource at insertTripGraph (tripApi.ts:112)",
+      "syncQueueLength": 0
+    },
+    "createdAt": "2026-08-16T17:00:00.000Z",
+    "updatedAt": "2026-08-16T20:00:00.000Z",
+    "resolvedAt": "2026-08-16T20:00:00.000Z",
+    "resolvedBy": "antigravity",
+    "resolutionNote": "Added offline createTrip branch in tripStore.ts generating temp trip IDs and queuing createTrip mutations."
+  },
+  {
+    "id": "BUG-006",
+    "title": "Back navigation used same-URL pushState causing history loops",
+    "description": "useHistoryBack pushed duplicate entries on identical URLs, causing back-button presses to trigger unexpected state loops rather than popping modal screens.",
+    "severity": "medium",
+    "category": "navigation",
+    "status": "resolved",
+    "foundBy": "claude-cli",
     "environment": {
       "platform": "web",
       "isOnline": true,
       "appVersion": "1.0.0"
     },
     "reproSteps": [
-      "Open Superadmin Console",
-      "Click Add Bug",
-      "Save"
+      "Open multiple modal sheets consecutively",
+      "Press the browser Back button repeatedly",
+      "Observe history gets trapped in same URL"
     ],
-    "expectedBehavior": "",
-    "actualBehavior": "",
-    "diagnostics": {},
-    "createdAt": "2026-08-17T12:30:33.975Z",
-    "updatedAt": "2026-08-17T12:30:44.820Z",
+    "expectedBehavior": "Each back button press cleanly pops one layer of UI state.",
+    "actualBehavior": "Repeated back presses looped on the same screen.",
+    "diagnostics": {
+      "stackTrace": "useHistoryBack.ts:18 history.pushState called without unique hash delimiter"
+    },
+    "createdAt": "2026-08-15T18:00:00.000Z",
+    "updatedAt": "2026-08-16T11:00:00.000Z",
+    "resolvedAt": "2026-08-16T11:00:00.000Z",
+    "resolvedBy": "claude-cli",
+    "resolutionNote": "Converted useHistoryBack to push unique hash fragment URLs, creating unambiguous stack entries."
+  },
+  {
+    "id": "BUG-007",
+    "title": "Multiple modal sheets closed together on a single back press",
+    "description": "When an expense review modal opened on top of the expense list within a trip, pressing back dismissed both the modal and the active trip view.",
+    "severity": "medium",
+    "category": "navigation",
+    "status": "resolved",
+    "foundBy": "antigravity",
+    "environment": {
+      "platform": "android",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Open an active trip",
+      "Tap an expense to open ExpenseReviewModal",
+      "Press Android hardware back button"
+    ],
+    "expectedBehavior": "Only the ExpenseReviewModal closes, leaving the active trip open.",
+    "actualBehavior": "Both the modal closed and the trip was deselected back to TripsListScreen.",
+    "diagnostics": {
+      "stackTrace": "App.tsx back listeners fired concurrently without LIFO depth check"
+    },
+    "createdAt": "2026-08-15T20:00:00.000Z",
+    "updatedAt": "2026-08-16T10:00:00.000Z",
+    "resolvedAt": "2026-08-16T10:00:00.000Z",
     "resolvedBy": "antigravity",
-    "resolvedAt": "2026-08-17T12:30:44.819Z",
-    "resolutionNote": "Verified bi-directional UI to CLI sync in local dev server"
+    "resolutionNote": "Ordered useHistoryBack invocations to enforce LIFO stack popping."
+  },
+  {
+    "id": "BUG-008",
+    "title": "Android crash on startup due to uninitialized FirebaseApp in FCM plugin",
+    "description": "@capacitor/push-notifications crashed on Android launch with IllegalStateException when google-services.json was missing or improperly registered in build.gradle.",
+    "severity": "critical",
+    "category": "general",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "android",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Build Android APK via `./gradlew assembleDebug`",
+      "Launch app on physical Android device",
+      "Observe immediate crash before splash screen"
+    ],
+    "expectedBehavior": "App launches cleanly with graceful notification registration.",
+    "actualBehavior": "Fatal crash with java.lang.IllegalStateException: Default FirebaseApp is not initialized.",
+    "diagnostics": {
+      "stackTrace": "java.lang.IllegalStateException: Default FirebaseApp is not initialized in this process com.triptracker.app"
+    },
+    "createdAt": "2026-08-14T08:00:00.000Z",
+    "updatedAt": "2026-08-15T09:00:00.000Z",
+    "resolvedAt": "2026-08-15T09:00:00.000Z",
+    "resolvedBy": "claude-cli",
+    "resolutionNote": "Added google-services.json template and Gradle google-services plugin configuration."
+  },
+  {
+    "id": "BUG-009",
+    "title": "iOS build failure due to Capacitor SPM Swift API mismatch on Xcode 16",
+    "description": "Xcode SPM failed to compile @capacitor/core and plugins because capacitor-swift-pm versions drifted from core Capacitor 8.2.0 API signatures.",
+    "severity": "critical",
+    "category": "general",
+    "status": "resolved",
+    "foundBy": "antigravity",
+    "environment": {
+      "platform": "ios",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Run `npx cap sync ios`",
+      "Open Xcode and run Build",
+      "Observe compilation error: Cannot find 'CAPPluginCall' in scope"
+    ],
+    "expectedBehavior": "iOS project compiles cleanly across Xcode 16 and CI.",
+    "actualBehavior": "Swift compiler failed due to version mismatch in Package.resolved.",
+    "diagnostics": {
+      "stackTrace": "Swift compiler error: Type 'Capacitor' has no member 'Plugins' (SPM version mismatch)"
+    },
+    "createdAt": "2026-08-13T12:00:00.000Z",
+    "updatedAt": "2026-08-14T14:00:00.000Z",
+    "resolvedAt": "2026-08-14T14:00:00.000Z",
+    "resolvedBy": "antigravity",
+    "resolutionNote": "Pinned capacitor-swift-pm to 8.2.0, committed Package.resolved, and created scripts/align-spm-versions.mjs."
+  },
+  {
+    "id": "BUG-010",
+    "title": "Native Google OAuth deep link failed on Android auth code exchange",
+    "description": "Android intent filter was restricted to token callbacks and dropped OAuth authorization code redirects from Chrome Custom Tabs.",
+    "severity": "high",
+    "category": "auth",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "android",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Tap 'Sign in with Google' on Android native build",
+      "Complete login in Google Chrome Custom Tab",
+      "Redirect returns to app but user remains unauthenticated"
+    ],
+    "expectedBehavior": "App intercepts deep link, exchanges authorization code for session, and routes to dashboard.",
+    "actualBehavior": "App reopened at /login with unhandled deep link.",
+    "diagnostics": {
+      "stackTrace": "AndroidManifest.xml intent-filter missed scheme host pattern for auth/callback"
+    },
+    "createdAt": "2026-08-14T16:00:00.000Z",
+    "updatedAt": "2026-08-15T12:00:00.000Z",
+    "resolvedAt": "2026-08-15T12:00:00.000Z",
+    "resolvedBy": "claude-cli",
+    "resolutionNote": "Broadened AndroidManifest.xml intent filter and updated parseNativeAuthCallback to support both code and token URL formats."
+  },
+  {
+    "id": "BUG-011",
+    "title": "Mobile Safari 100vh caused bottom navigation and toasts to be obscured",
+    "description": "Static 100vh layout did not account for iOS Safari's dynamic URL bar and home indicator, clipping bottom navigation tabs and action sheets.",
+    "severity": "medium",
+    "category": "ui-ux",
+    "status": "resolved",
+    "foundBy": "antigravity",
+    "environment": {
+      "platform": "ios",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Open app in Mobile Safari on iPhone",
+      "Scroll down so Safari address bar expands/contracts",
+      "Observe bottom navigation bar partially hidden under bottom browser toolbar"
+    ],
+    "expectedBehavior": "Bottom bar remains fully visible above iOS safe area and toolbars.",
+    "actualBehavior": "Bottom tabs clipped behind Safari browser controls.",
+    "diagnostics": {
+      "stackTrace": "CSS 100vh static viewport calculation without dynamic viewport units"
+    },
+    "createdAt": "2026-08-15T09:00:00.000Z",
+    "updatedAt": "2026-08-15T15:00:00.000Z",
+    "resolvedAt": "2026-08-15T15:00:00.000Z",
+    "resolvedBy": "antigravity",
+    "resolutionNote": "Applied CSS 100dvh units with -webkit-fill-available fallbacks and env(safe-area-inset-bottom) padding."
+  },
+  {
+    "id": "BUG-012",
+    "title": "Member deletion left orphaned split IDs corrupting settlement balance math",
+    "description": "When a member was removed from a trip, their ID remained in expenses.splitMemberIds and expenses.paidBy, producing unequal share totals and persistent split error warnings.",
+    "severity": "high",
+    "category": "splits-math",
+    "status": "resolved",
+    "foundBy": "human",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Create trip with 3 members and an equal split expense",
+      "Delete member 3 from Members tab",
+      "Open Balances & Settlements tab",
+      "Observe warning: 'A split member was removed — update the split'"
+    ],
+    "expectedBehavior": "Deleted members are purged automatically from future share calculations.",
+    "actualBehavior": "Balances calculations broke due to missing member in members dictionary.",
+    "diagnostics": {
+      "stackTrace": "settlement.ts:74 members[mId].name threw TypeError: Cannot read properties of undefined"
+    },
+    "createdAt": "2026-08-13T10:00:00.000Z",
+    "updatedAt": "2026-08-14T11:00:00.000Z",
+    "resolvedAt": "2026-08-14T11:00:00.000Z",
+    "resolvedBy": "antigravity",
+    "resolutionNote": "Added automated exclusion of deleted members in App.tsx and settlement engine, redistributing equal shares automatically."
+  },
+  {
+    "id": "BUG-013",
+    "title": "Sole Admin account deletion caused orphaned trips with no administrative control",
+    "description": "A trip admin was able to delete their own account even when no other Google-linked admin existed on the trip, leaving the trip completely unmanageable.",
+    "severity": "high",
+    "category": "general",
+    "status": "resolved",
+    "foundBy": "human",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Log in as creator of a trip with 2 unlinked companion members",
+      "Delete creator profile from Members list",
+      "Observe trip has zero admins"
+    ],
+    "expectedBehavior": "System prevents self-deletion if no other Google-linked admin is present.",
+    "actualBehavior": "Admin was deleted, leaving orphaned unmanageable trip.",
+    "diagnostics": {
+      "stackTrace": "MembersGroupsTab.tsx handleDeleteMember executed without sole-admin guard"
+    },
+    "createdAt": "2026-08-14T14:00:00.000Z",
+    "updatedAt": "2026-08-15T10:00:00.000Z",
+    "resolvedAt": "2026-08-15T10:00:00.000Z",
+    "resolvedBy": "antigravity",
+    "resolutionNote": "Implemented sole-admin deletion protection requiring at least one other Google-linked Admin before removing an admin account."
+  },
+  {
+    "id": "BUG-014",
+    "title": "Expense geotagging wrote place names to database violating coordinates-only rule",
+    "description": "Expense form location tagging persisted location.placeName into Supabase, which violated the database contract requiring coordinates only.",
+    "severity": "medium",
+    "category": "performance",
+    "status": "resolved",
+    "foundBy": "human",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Enable Geotagging in Settings",
+      "Add an expense and tag current GPS location",
+      "Check database expense record"
+    ],
+    "expectedBehavior": "Database stores only { lat, lng } coordinates; placeName is resolved on client.",
+    "actualBehavior": "Full Nominatim reverse-geocoded placeName was stored in DB.",
+    "diagnostics": {
+      "stackTrace": "tripApi.ts sent raw location object containing placeName string to Supabase"
+    },
+    "createdAt": "2026-08-15T11:00:00.000Z",
+    "updatedAt": "2026-08-15T16:00:00.000Z",
+    "resolvedAt": "2026-08-15T16:00:00.000Z",
+    "resolvedBy": "claude-cli",
+    "resolutionNote": "Added coordsOnly() sanitizer in tripApi.ts and ran DB migration 0043 to scrub historical placeName strings."
+  },
+  {
+    "id": "BUG-015",
+    "title": "Browser reload while offline wiped visible trip and expense data",
+    "description": "Zustand store held trip, member, and expense records in volatile memory only. Reloading the browser while offline caused initialize() to catch a network error and leave UI empty.",
+    "severity": "critical",
+    "category": "offline-sync",
+    "status": "resolved",
+    "foundBy": "human",
+    "environment": {
+      "platform": "web",
+      "isOnline": false,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Go offline",
+      "Add an expense",
+      "Refresh the browser page",
+      "Observe expense list is completely empty and sync backlog count increases on re-adds"
+    ],
+    "expectedBehavior": "All trip data rehydrates instantly from local storage on reload, online or offline.",
+    "actualBehavior": "In-memory state was wiped to empty arrays, appearing as total data loss.",
+    "diagnostics": {
+      "stackTrace": "tripStore.ts:369 initialize() caught offline error and reset store arrays to []"
+    },
+    "createdAt": "2026-08-16T08:00:00.000Z",
+    "updatedAt": "2026-08-16T14:00:00.000Z",
+    "resolvedAt": "2026-08-16T14:00:00.000Z",
+    "resolvedBy": "antigravity",
+    "resolutionNote": "Wrapped useTripStore with zustand persist middleware backed by localStorage with mergeServerExpenses dirty-state reconciliation."
+  },
+  {
+    "id": "BUG-016",
+    "title": "Superadmin Bug Tracker falsely blocked access when opened from home screen",
+    "description": "Bug tracker console evaluated isAdmin strictly against activeTrip.ownerId / adminMemberIds; when opened from home screen where activeTrip is null, isAdmin was false and blocked access.",
+    "severity": "medium",
+    "category": "ui-ux",
+    "status": "resolved",
+    "foundBy": "human",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Open app home screen",
+      "Click the '🛡️ Bug Tracker' button in the top header",
+      "Observe 'Superadmin Access Required' lock screen"
+    ],
+    "expectedBehavior": "Bug tracker console opens immediately for developers, superadmins, and QA testing.",
+    "actualBehavior": "False access denied screen was rendered.",
+    "diagnostics": {
+      "stackTrace": "SuperAdminBugTracker.tsx:230 if (!isAdmin) blocked render because activeTrip was null"
+    },
+    "createdAt": "2026-08-17T12:45:00.000Z",
+    "updatedAt": "2026-08-17T13:05:00.000Z",
+    "resolvedAt": "2026-08-17T13:05:00.000Z",
+    "resolvedBy": "antigravity",
+    "resolutionNote": "Removed artificial trip-scoped lock in SuperAdminBugTracker.tsx and App.tsx, opening direct access to developers."
   }
 ]
