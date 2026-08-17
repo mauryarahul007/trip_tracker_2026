@@ -1492,70 +1492,26 @@ export const useTripStore = create<TripStore>()(
             expenses: demo.expenses,
           });
         } catch {
-          // Offline / local demo fallback
-          const now = new Date().toISOString();
-          const tripId = `demo-trip-${Date.now()}`;
-          const memberMap: Record<string, Member> = {};
-          const memberIds = demo.members.map((m, idx) => {
-            const id = `demo-mem-${idx + 1}`;
-            memberMap[id] = {
-              id,
-              name: m.name,
-              tripIds: [tripId],
-              linkedUserId: idx === 0 ? userId : undefined,
-              archived: false,
-              createdAt: now,
-              updatedAt: now,
-            };
-            return id;
-          });
-          const groupMap: Record<string, Group> = {};
-          const groupIds = demo.groups.map((g, idx) => {
-            const id = `demo-grp-${idx + 1}`;
-            groupMap[id] = {
-              id,
-              name: g.name,
-              tripId,
-              memberIds: [memberIds[0], memberIds[1]],
-              createdAt: now,
-              updatedAt: now,
-            };
-            return id;
-          });
-          const expensesList: Expense[] = demo.expenses.map((e, idx) => ({
-            id: `demo-exp-${idx + 1}`,
-            tripId,
-            title: e.title,
-            amount: e.amount,
-            currency: 'INR',
-            category: e.category,
-            date: e.date,
-            paidBy: memberIds[0],
-            splitMode: e.splitMode as any,
-            splitMemberIds: memberIds,
-            splitConfig: e.splitConfig,
-            resolvedShares: e.resolvedShares,
-            createdAt: now,
-            updatedAt: now,
+          // Offline / local demo fallback. demo.trip already carries id,
+          // memberIds, groupIds, createdAt/updatedAt from generateDemoData(),
+          // and demo.expenses[].tripId was baked in against that same id —
+          // only fill in the two owner-scoped fields it's missing.
+          const memberIds = Object.keys(demo.members);
+          const expensesList: Expense[] = demo.expenses.map((e) => ({
+            ...e,
+            isSettlement: false,
             createdByUserId: userId,
           }));
+          const demoTrip: Trip = {
+            ...demo.trip,
+            ownerId: userId,
+            adminMemberIds: [memberIds[0]],
+            joinCode: 'DEMO26',
+          };
           result = {
-            trip: {
-              id: tripId,
-              name: demo.trip.name,
-              startDate: demo.trip.startDate,
-              endDate: demo.trip.endDate,
-              baseCurrency: 'INR',
-              ownerId: userId,
-              memberIds,
-              groupIds,
-              adminMemberIds: [memberIds[0]],
-              createdAt: now,
-              updatedAt: now,
-              joinCode: 'DEMO26',
-            },
-            members: memberMap,
-            groups: groupMap,
+            trip: demoTrip,
+            members: demo.members,
+            groups: demo.groups,
             expenses: expensesList,
             categories: DEFAULT_CATEGORIES,
           };
