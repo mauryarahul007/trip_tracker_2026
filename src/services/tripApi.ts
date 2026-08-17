@@ -176,10 +176,12 @@ export async function insertTrip(input: {
   endDate: string;
   baseCurrency: string;
   ownerId: string;
+  id?: string;
 }): Promise<Trip> {
   const { data, error } = await supabase
     .from('trips')
     .insert({
+      ...(input.id ? { id: input.id } : {}),
       name: input.name,
       start_date: input.startDate,
       end_date: input.endDate,

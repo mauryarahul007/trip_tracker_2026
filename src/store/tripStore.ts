@@ -70,6 +70,7 @@ type SyncQueueItemType =
   | 'restoreExpense'
   | 'permanentlyDeleteExpense'
   | 'emptyRecycleBin'
+  | 'createTrip'
   | 'addMember'
   | 'createGroup'
   | 'updateGroup'
@@ -540,6 +541,14 @@ export const useTripStore = create<TripStore>()(
           } else if (item.type === 'emptyRecycleBin') {
             const { tripId } = item.payload;
             await purgeDeletedExpensesForTrip(tripId);
+          } else if (item.type === 'createTrip') {
+            const { tripTempId, memberTempId, name, startDate, endDate, baseCurrency, ownerId, creatorName } = item.payload;
+            const trip = await insertTrip({ name, startDate, endDate, baseCurrency, ownerId, id: tripTempId });
+            const creatorMember = await insertMember(trip.id, creatorName, ownerId, memberTempId);
+            set((state) => ({
+              trips: state.trips.map((t) => (t.id === tripTempId ? { ...trip, memberIds: [memberTempId], adminMemberIds: [memberTempId], expenseCount: 0 } : t)),
+              members: { ...state.members, [memberTempId]: creatorMember },
+            }));
           } else if (item.type === 'addMember') {
             const { tempId, name, linkedUserId, tripId } = item.payload;
             const member = await insertMember(tripId, name, linkedUserId || undefined, tempId);
@@ -577,30 +586,62 @@ export const useTripStore = create<TripStore>()(
     createTrip: async (name, startDate, endDate, baseCurrency) => {
       const userId = get().userId;
       if (!userId) return;
-      try {
-        const trip = await insertTrip({ name, startDate, endDate, baseCurrency, ownerId: userId });
 
-        // The creator is always the owner and admin — add them as a claimed member
-        // too, so they show up in the members list and can be a payer/
-        // split participant like everyone else.
-        const creatorName = get().userDisplayName || 'Me';
-        const creatorMember = await insertMember(trip.id, creatorName, userId);
-        const tripWithCreator = {
-          ...trip,
-          memberIds: [creatorMember.id],
-          adminMemberIds: [creatorMember.id],
-          expenseCount: 0,
-        };
+      // The creator is always the owner and admin — add them as a claimed
+      // member too, so they show up in the members list and can be a
+      // payer/split participant like everyone else.
+      const creatorName = get().userDisplayName || 'Me';
+      const tripTempId = crypto.randomUUID();
+      const memberTempId = crypto.randomUUID();
+      const previousActiveTripId = get().activeTripId;
 
-        set((state) => ({
-          trips: [...state.trips, tripWithCreator],
-          members: { ...state.members, [creatorMember.id]: creatorMember },
-          activeTripId: trip.id,
-          categories: DEFAULT_CATEGORIES,
-          storageError: null,
-        }));
-      } catch (e) {
-        setError(e);
+      const optimisticMember: Member = { id: memberTempId, name: creatorName, linkedUserId: userId };
+      const optimisticTrip: Trip = {
+        id: tripTempId,
+        name,
+        startDate,
+        endDate,
+        baseCurrency,
+        memberIds: [memberTempId],
+        groupIds: [],
+        ownerId: userId,
+        adminMemberIds: [memberTempId],
+        joinCode: '', // real code assigned server-side once synced
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+        expenseCount: 0,
+      };
+
+      set((state) => ({
+        trips: [...state.trips, optimisticTrip],
+        members: { ...state.members, [memberTempId]: optimisticMember },
+        activeTripId: tripTempId,
+        categories: DEFAULT_CATEGORIES,
+        storageError: null,
+      }));
+
+      if (!navigator.onLine) {
+        get().queueSync('createTrip', { tripTempId, memberTempId, name, startDate, endDate, baseCurrency, ownerId: userId, creatorName });
+      } else {
+        try {
+          const trip = await insertTrip({ name, startDate, endDate, baseCurrency, ownerId: userId, id: tripTempId });
+          const creatorMember = await insertMember(trip.id, creatorName, userId, memberTempId);
+          set((state) => ({
+            trips: state.trips.map((t) => (t.id === tripTempId ? { ...trip, memberIds: [memberTempId], adminMemberIds: [memberTempId], expenseCount: 0 } : t)),
+            members: { ...state.members, [memberTempId]: creatorMember },
+          }));
+        } catch (e) {
+          set((state) => {
+            const updatedMembers = { ...state.members };
+            delete updatedMembers[memberTempId];
+            return {
+              trips: state.trips.filter((t) => t.id !== tripTempId),
+              members: updatedMembers,
+              activeTripId: previousActiveTripId,
+            };
+          });
+          setError(e);
+        }
       }
     },
 
