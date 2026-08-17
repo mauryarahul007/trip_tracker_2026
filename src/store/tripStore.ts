@@ -72,6 +72,9 @@ type SyncQueueItemType =
   | 'emptyRecycleBin'
   | 'createTrip'
   | 'addMember'
+  | 'updateMember'
+  | 'toggleArchiveMember'
+  | 'deleteMember'
   | 'createGroup'
   | 'updateGroup'
   | 'deleteGroup'
@@ -554,6 +557,19 @@ export const useTripStore = create<TripStore>()(
             const member = await insertMember(tripId, name, linkedUserId || undefined, tempId);
             invalidatePreviousMembersCache();
             set((state) => ({ members: { ...state.members, [tempId]: member } }));
+          } else if (item.type === 'updateMember') {
+            const { id, name } = item.payload;
+            await updateMemberRow(id, { name });
+          } else if (item.type === 'toggleArchiveMember') {
+            const { id, archived } = item.payload;
+            await updateMemberRow(id, { archived });
+          } else if (item.type === 'deleteMember') {
+            const { id, groupsToDissolve, groupsToRename } = item.payload;
+            await deleteMemberRow(id);
+            await Promise.all([
+              ...groupsToDissolve.map((gid: string) => deleteGroupRow(gid)),
+              ...groupsToRename.map((g: { id: string; name: string; memberIds: string[] }) => updateGroupRow(g.id, g.name, g.memberIds)),
+            ]);
           } else if (item.type === 'createGroup') {
             const { tempId, name, memberIds, tripId } = item.payload;
             const group = await insertGroup(tripId, name, memberIds, tempId);
@@ -825,22 +841,35 @@ export const useTripStore = create<TripStore>()(
     toggleArchiveMember: async (id) => {
       const member = get().members[id];
       if (!member) return;
-      try {
-        await updateMemberRow(id, { archived: !member.archived });
-        set((state) => ({ members: { ...state.members, [id]: { ...member, archived: !member.archived } }, storageError: null }));
-      } catch (e) {
-        setError(e);
+      const archived = !member.archived;
+      set((state) => ({ members: { ...state.members, [id]: { ...member, archived } }, storageError: null }));
+
+      if (!navigator.onLine) {
+        get().queueSync('toggleArchiveMember', { id, archived });
+      } else {
+        try {
+          await updateMemberRow(id, { archived });
+        } catch (e) {
+          set((state) => ({ members: { ...state.members, [id]: member } }));
+          setError(e);
+        }
       }
     },
 
     updateMember: async (id, name) => {
       const member = get().members[id];
       if (!member) return;
-      try {
-        await updateMemberRow(id, { name });
-        set((state) => ({ members: { ...state.members, [id]: { ...member, name } }, storageError: null }));
-      } catch (e) {
-        setError(e);
+      set((state) => ({ members: { ...state.members, [id]: { ...member, name } }, storageError: null }));
+
+      if (!navigator.onLine) {
+        get().queueSync('updateMember', { id, name });
+      } else {
+        try {
+          await updateMemberRow(id, { name });
+        } catch (e) {
+          set((state) => ({ members: { ...state.members, [id]: member } }));
+          setError(e);
+        }
       }
     },
 
@@ -868,38 +897,64 @@ export const useTripStore = create<TripStore>()(
         }
       });
 
-      try {
-        await deleteMemberRow(id); // cascades group_members via FK
-        await Promise.all([
-          ...groupsToDissolve.map((gid) => deleteGroupRow(gid)),
-          ...groupsToRename.map((g) => updateGroupRow(g.id, g.name, g.memberIds)),
-        ]);
+      // Snapshot for revert on failure — group dissolve/rename is cascaded
+      // client-side above, so an aborted delete must restore exactly the
+      // groups it was about to touch, not just the member.
+      const removedGroupSnapshots = groupsToDissolve.map((gid) => currentGroups[gid]);
+      const renamedGroupSnapshots = groupsToRename.map((g) => currentGroups[g.id]);
+      const removedMember = currentMembers[id];
+      const previousTrip = get().trips.find((t) => t.id === activeTripId);
 
-        set((state) => {
-          const updatedMembers = { ...state.members };
-          delete updatedMembers[id];
+      set((state) => {
+        const updatedMembers = { ...state.members };
+        delete updatedMembers[id];
 
-          const updatedGroups = { ...state.groups };
-          groupsToDissolve.forEach((gid) => delete updatedGroups[gid]);
-          groupsToRename.forEach((g) => {
-            updatedGroups[g.id] = { ...updatedGroups[g.id], name: g.name, memberIds: g.memberIds };
-          });
-
-          const updatedTrips = state.trips.map((t) => {
-            if (t.id !== activeTripId) return t;
-            return {
-              ...t,
-              memberIds: t.memberIds.filter((mid) => mid !== id),
-              adminMemberIds: (t.adminMemberIds || []).filter((mid) => mid !== id),
-              groupIds: t.groupIds.filter((gid) => !groupsToDissolve.includes(gid)),
-              updatedAt: Date.now(),
-            };
-          });
-
-          return { members: updatedMembers, groups: updatedGroups, trips: updatedTrips, storageError: null };
+        const updatedGroups = { ...state.groups };
+        groupsToDissolve.forEach((gid) => delete updatedGroups[gid]);
+        groupsToRename.forEach((g) => {
+          updatedGroups[g.id] = { ...updatedGroups[g.id], name: g.name, memberIds: g.memberIds };
         });
-      } catch (e) {
-        setError(e);
+
+        const updatedTrips = state.trips.map((t) => {
+          if (t.id !== activeTripId) return t;
+          return {
+            ...t,
+            memberIds: t.memberIds.filter((mid) => mid !== id),
+            adminMemberIds: (t.adminMemberIds || []).filter((mid) => mid !== id),
+            groupIds: t.groupIds.filter((gid) => !groupsToDissolve.includes(gid)),
+            updatedAt: Date.now(),
+          };
+        });
+
+        return { members: updatedMembers, groups: updatedGroups, trips: updatedTrips, storageError: null };
+      });
+
+      const revert = () => {
+        set((state) => {
+          const restoredGroups = { ...state.groups };
+          removedGroupSnapshots.forEach((g) => { if (g) restoredGroups[g.id] = g; });
+          renamedGroupSnapshots.forEach((g) => { if (g) restoredGroups[g.id] = g; });
+          return {
+            members: { ...state.members, [id]: removedMember },
+            groups: restoredGroups,
+            trips: state.trips.map((t) => (t.id === activeTripId && previousTrip ? previousTrip : t)),
+          };
+        });
+      };
+
+      if (!navigator.onLine) {
+        get().queueSync('deleteMember', { id, groupsToDissolve, groupsToRename });
+      } else {
+        try {
+          await deleteMemberRow(id); // cascades group_members via FK
+          await Promise.all([
+            ...groupsToDissolve.map((gid) => deleteGroupRow(gid)),
+            ...groupsToRename.map((g) => updateGroupRow(g.id, g.name, g.memberIds)),
+          ]);
+        } catch (e) {
+          revert();
+          setError(e);
+        }
       }
     },
 
