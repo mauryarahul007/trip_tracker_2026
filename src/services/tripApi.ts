@@ -20,6 +20,7 @@ function mapTrip(row: TripRow, memberIds: string[], groupIds: string[]): Trip {
     memberIds,
     groupIds,
     archived: row.archived,
+    frozen: row.frozen,
     createdAt: new Date(row.created_at).getTime(),
     updatedAt: new Date(row.updated_at).getTime(),
   };
@@ -206,6 +207,14 @@ export async function archiveTripRow(id: string, archived: boolean): Promise<voi
   const { error } = await supabase
     .from('trips')
     .update({ archived, updated_at: new Date().toISOString() })
+    .eq('id', id);
+  if (error) throw error;
+}
+
+export async function freezeTripRow(id: string, frozen: boolean): Promise<void> {
+  const { error } = await supabase
+    .from('trips')
+    .update({ frozen, updated_at: new Date().toISOString() })
     .eq('id', id);
   if (error) throw error;
 }
@@ -642,30 +651,32 @@ export function invalidatePreviousMembersCache() {
 }
 
 export async function fetchPreviousTripMembers(userId: string | null | undefined): Promise<PreviousMemberSuggestion[]> {
-  if (!userId) return [];
-
+  const cacheKey = userId || 'anonymous';
   const now = Date.now();
-  if (previousMembersCache && previousMembersCache.userId === userId && now - previousMembersCache.timestamp < CACHE_TTL_MS) {
+  if (previousMembersCache && previousMembersCache.userId === cacheKey && now - previousMembersCache.timestamp < CACHE_TTL_MS) {
     return previousMembersCache.data;
   }
 
-  // Fetch all trips visible to this user
-  const { data: tripsData, error: tripsErr } = await supabase.from('trips').select('id');
-  if (tripsErr) throw tripsErr;
-  if (!tripsData || tripsData.length === 0) {
-    previousMembersCache = { userId, timestamp: now, data: [] };
-    return [];
-  }
+  try {
+    // Fetch all trips visible
+    const { data: tripsData, error: tripsErr } = await supabase.from('trips').select('id');
+    if (tripsErr || !tripsData || tripsData.length === 0) {
+      previousMembersCache = { userId: cacheKey, timestamp: now, data: [] };
+      return [];
+    }
 
-  const tripIds = tripsData.map((t) => t.id);
+    const tripIds = tripsData.map((t) => t.id);
 
-  // Fetch members associated with these trips
-  const { data: membersData, error: membersErr } = await supabase
-    .from('members')
-    .select('name, linked_user_id, profile:linked_user_id(avatar_url, display_name)')
-    .in('trip_id', tripIds);
+    // Fetch members associated with these trips
+    const { data: membersData, error: membersErr } = await supabase
+      .from('members')
+      .select('name, linked_user_id, profile:linked_user_id(avatar_url, display_name)')
+      .in('trip_id', tripIds);
 
-  if (membersErr) throw membersErr;
+    if (membersErr) {
+      previousMembersCache = { userId: cacheKey, timestamp: now, data: [] };
+      return [];
+    }
 
   // Deduplicate and prioritize linked Google accounts
   const memberMap = new Map<string, PreviousMemberSuggestion>();
@@ -706,8 +717,12 @@ export async function fetchPreviousTripMembers(userId: string | null | undefined
     return a.name.localeCompare(b.name);
   });
 
-  previousMembersCache = { userId, timestamp: now, data: results };
-  return results;
+    previousMembersCache = { userId: cacheKey, timestamp: now, data: results };
+    return results;
+  } catch {
+    previousMembersCache = { userId: cacheKey, timestamp: now, data: [] };
+    return [];
+  }
 }
 
 export async function searchRemoteMemberSuggestions(
@@ -775,4 +790,3 @@ export async function searchRemoteMemberSuggestions(
     return [];
   }
 }
-

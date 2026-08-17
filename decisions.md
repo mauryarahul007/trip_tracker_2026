@@ -284,6 +284,47 @@ This document logs all meaningful technical decisions, library choices, design p
 
 ---
 
+## 23. Superadmin Control Cockpit, Global Feature Flags & Minimal User UI
+* **Context:** Regular travelers need an ultra-clean, minimal, distraction-free interface (creating trips, logging expenses with auto-tagging, basic GPS geotagging, adding members, settling balances, viewing active trip analytics, and switching light/dark themes). Advanced developer options, P2P sync diagnostics, 200+ keyword tag rules, database wipes, recycle bin permanent purges, and cross-trip aggregated analytics should be shielded from regular users and managed by a designated Superadmin.
+* **Decision:** Introduced a dual-mode role architecture with a Superadmin Cockpit, a 3-tier Feature Flags engine (Global, Per-Trip, Per-Member), and dedicated Superadmin authentication with authorized phone recovery.
+* **Pattern/Implementation:**
+  - **First Page Dual Login (`LoginScreen.tsx`)**: Displays standard Google Login for regular users and a dedicated "⚡ Super User Login" entry point.
+  - **Superadmin Auth & Phone Recovery (`superadminAuth.ts`, `SuperadminAuthModal.tsx`)**:
+    - Master credentials: `Superadmin@triptracker.com` / `Superadmin@triptracker.com`.
+    - Phone Password Reset: OTP verification dispatched to authorized recovery numbers (`+91 7075762522` and `+91 7977337757`) with masked display.
+  - **3-Tier Feature Flags Switchboard (`featureFlags.ts`, `tripStore.ts`)**:
+    - Flags: `enableGeotagging`, `enableAdvancedLocationSearch`, `enableAdvancedSplits`, `enableP2PSync`, `enableReceiptUpload`, `enableRecycleBin`, `enableKeywordTagging`, `enableDemoSeeding`, `enableMultiTripAnalytics`.
+    - Resolution hierarchy: Superadmin (always ON) -> User Override -> Trip Override -> Global Flag -> Default.
+  - **Minimal Normal User UI (`SettingsView.tsx`, `ExpenseForm.tsx`)**:
+    - Normal users only see core trip preferences, light/night flight/system appearance, basic GPS tagging, and basic active trip analytics.
+    - Complex sub-screens (keyword rule customizer, permanent recycle bin purge, database JSON backups, factory reset) are hidden from normal users.
+  - **Superadmin Cockpit (`SuperadminDashboard.tsx`)**:
+    - Top KPI volume banner across all trips.
+    - Feature Flags Hub with live toggle switches.
+    - Master Cross-Trip Global Analytics (total volume, category distributions, top spenders, currency breakdown).
+    - Trip & Member directory audit.
+    - Advanced database controls (JSON export/import, demo seed, data reset, keyword rule manager).
+* **Trade-offs Accepted:**
+  - Superadmin session state is maintained in persistent Zustand store with phone OTP verification backup, ensuring zero dependency on active internet connection or backend schema updates during offline use.
+
+---
+
+## 24. Dedicated Superadmin Management Portal & Multi-Page Administration
+* **Context:** Embedding the administrative cockpit inside the regular customer expense logger caused role confusion. Normal travelers require a minimal customer interface solely focused on logging expenses, group members, and settlements. Superadmin requires a completely separated, dedicated administrative management application with its own top-level navigation and distinct purpose-built screens.
+* **Decision:** Split the user experience into two completely separated shells: the Customer Traveler App and the Dedicated Superadmin Management Portal (`AdminPortalLayout`) containing 4 distinct administrative pages.
+* **Pattern/Implementation:**
+  - **Superadmin Portal Shell (`AdminPortalLayout.tsx`)**: Renders a dedicated administrative workspace upon superadmin login, with its own header, system indicators, traveler preview toggle, and admin logout.
+  - **4 Dedicated Administrative Pages (`src/components/admin/`)**:
+    1. 🚩 **Flags Page (`AdminFlagsPage.tsx`)**: Full-page Feature Flag switchboard with live toggle cards, description, and per-trip/user override selector.
+    2. 📊 **Global Analytics Page (`AdminAnalyticsPage.tsx`)**: High-end cross-trip financial telemetry, multi-trip KPIs, category volume breakdown, spenders leaderboard, and currency distribution.
+    3. 🗂️ **Trips Directory & Governance Page (`AdminTripsPage.tsx`)**: Isolated trip directory, group privacy notice, status badges (Active/Frozen/Archived), Emergency Stop / Kill-switch (`freezeTrip`), and trip deletion.
+    4. ⚙️ **System Tools Page (`AdminToolsPage.tsx`)**: Category & brand keyword rule manager (200+ brand auto-match rules), JSON database export/import backup, and demo dataset seeder.
+  - **Role-Based Root View Switcher (`App.tsx`)**: Checks `isSuperadmin && !isTravelerPreview` to immediately mount `AdminPortalLayout`. Provides an "👁️ Preview Traveler View" switch with a top floating banner to jump back to the Superadmin Portal.
+* **Trade-offs Accepted:**
+  - Kept single SPA bundle with conditional shell rendering instead of multi-app domain partitioning to preserve offline caching and instant switching between administrative and traveler preview modes.
+
+---
+
 ## 25. Multi-Admin Trip Governance & Sole-Admin Deletion Protection
 * **Context:** Previously, a trip had a single owner (`ownerId`). Users requested the ability to promote any or all members of a trip to Admin status so multiple co-travelers can manage trip settings, categories, groups, and members. At the same time, the system needed a guardrail to ensure an admin cannot delete themselves if they are the last remaining admin on the trip, which would otherwise leave the trip without any administrator.
 * **Decision:** Extended the trip data model with an array of administrator member IDs (`Trip.adminMemberIds`), enabled admins to promote/demote members directly from the Member Luggage list, and implemented strict sole-admin deletion protection across both UI and store handlers.
@@ -330,9 +371,5 @@ This document logs all meaningful technical decisions, library choices, design p
   - **In-App Bug Reporter Modal & ErrorBoundary**: Accessible in Settings and on runtime crashes, offering 1-click export of AI-ready markdown prompts and diagnostic JSON.
 * **Trade-offs Accepted:**
   - Storing bug records directly in the git repository avoids paid third-party dependencies and guarantees tickets remain versioned with the exact code commit, at the minor trade-off of requiring a commit to record resolved bugs.
-
-
-
-
 
 

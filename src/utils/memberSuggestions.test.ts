@@ -104,5 +104,49 @@ describe('Previous Member Suggestions & Typeahead Logic', () => {
     expect(updated).toHaveLength(2);
     expect(updated.some((u) => u.name === 'Steve Carell')).toBe(true);
   });
+
+  it('detects duplicate members in the active trip case-insensitively', () => {
+    const checkDuplicate = (name: string) => {
+      const query = name.trim().toLowerCase();
+      return activeTripMembers.some((m) => m.name.trim().toLowerCase() === query);
+    };
+
+    expect(checkDuplicate('rahul maurya')).toBe(true);
+    expect(checkDuplicate('  RAHUL MAURYA ')).toBe(true);
+    expect(checkDuplicate('Sarah Connor')).toBe(true);
+    expect(checkDuplicate('Alex Johnson')).toBe(false);
+  });
+
+  it('merges remote DB members with local trip store members without duplicate entries', () => {
+    const localStoreMembers: Record<string, Member> = {
+      'm-10': { id: 'm-10', name: 'Michael Scott', linkedUserId: 'user-4' },
+      'm-11': { id: 'm-11', name: 'Stanley Hudson', linkedUserId: 'user-8' },
+    };
+
+    const memberMap = new Map<string, PreviousMemberSuggestion>();
+
+    previousMembers.forEach((pm) => {
+      memberMap.set(pm.name.trim().toLowerCase(), pm);
+    });
+
+    Object.values(localStoreMembers).forEach((m) => {
+      const norm = m.name.trim().toLowerCase();
+      const existing = memberMap.get(norm);
+      if (!existing) {
+        memberMap.set(norm, {
+          name: m.name.trim(),
+          linkedUserId: m.linkedUserId || null,
+          avatarUrl: null,
+        });
+      } else if (!existing.linkedUserId && m.linkedUserId) {
+        existing.linkedUserId = m.linkedUserId;
+      }
+    });
+
+    const merged = Array.from(memberMap.values());
+    // Should include Stanley Hudson and have only one Michael Scott
+    expect(merged.filter((m) => m.name.toLowerCase() === 'michael scott')).toHaveLength(1);
+    expect(merged.some((m) => m.name === 'Stanley Hudson')).toBe(true);
+  });
 });
 

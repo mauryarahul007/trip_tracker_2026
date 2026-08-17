@@ -94,8 +94,13 @@ export function ExpenseForm({
   const [receiptProcessing, setReceiptProcessing] = useState(false);
   const [formError, setFormError] = useState('');
 
+  // Feature Flags & Role Governance
+  const isFeatureEnabled = useTripStore((s) => s.isFeatureEnabled);
+  const enableGeotagging = isFeatureEnabled('enableGeotagging');
+  const enableAdvancedLocationSearch = isFeatureEnabled('enableAdvancedLocationSearch');
+  const enableAdvancedSplits = isFeatureEnabled('enableAdvancedSplits');
+
   // Geotagging
-  const enableGeotagging = useTripStore((s) => s.enableGeotagging);
   const [location, setLocation] = useState<ExpenseLocation | null>(editingExpense?.location || null);
   const [locationLoading, setLocationLoading] = useState(false);
 
@@ -389,81 +394,85 @@ export function ExpenseForm({
         />
       </div>
 
-      <div className="form-group">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-          <label className="form-label" style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span style={{ color: '#00BFA5', display: 'flex', alignItems: 'center' }}><IconMapPin size={15} /></span> Location
-          </label>
-          {!location && !locationLoading && (
-            <button
-              type="button"
-              className="secondary-btn"
-              style={{ padding: '2px 8px', fontSize: '11.5px', color: '#00BFA5', borderColor: 'rgba(0,191,165,0.3)' }}
-              onClick={async () => {
-                setLocationLoading(true);
-                const loc = await captureCurrentExpenseLocation();
-                if (loc) setLocation(loc);
-                setLocationLoading(false);
+      {(enableGeotagging || enableAdvancedLocationSearch || location) && (
+        <div className="form-group">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+            <label className="form-label" style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span style={{ color: '#00BFA5', display: 'flex', alignItems: 'center' }}><IconMapPin size={15} /></span> Location
+            </label>
+            {!location && !locationLoading && (
+              <button
+                type="button"
+                className="secondary-btn"
+                style={{ padding: '2px 8px', fontSize: '11.5px', color: '#00BFA5', borderColor: 'rgba(0,191,165,0.3)' }}
+                onClick={async () => {
+                  setLocationLoading(true);
+                  const loc = await captureCurrentExpenseLocation();
+                  if (loc) setLocation(loc);
+                  setLocationLoading(false);
+                }}
+              >
+                + Tag Location
+              </button>
+            )}
+          </div>
+
+          {locationLoading ? (
+            <div style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 0' }}>
+              <span style={{ display: 'inline-block', width: '12px', height: '12px', borderRadius: '50%', border: '2px solid #00BFA5', borderTopColor: 'transparent', animation: 'spin 0.8s linear infinite' }} />
+              Fetching GPS coordinates...
+            </div>
+          ) : location ? (
+            <div
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '6px 12px',
+                borderRadius: '20px',
+                background: 'rgba(0,191,165,0.08)',
+                border: '1px solid rgba(0,191,165,0.28)',
+                fontSize: '12.5px',
+                color: 'var(--text-primary)',
               }}
             >
-              + Tag Location
-            </button>
+              <span>📍 {location.placeName || `${location.lat.toFixed(3)}, ${location.lng.toFixed(3)}`}</span>
+              <button
+                type="button"
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  color: 'var(--text-muted)',
+                  cursor: 'pointer',
+                  padding: '0 2px',
+                  fontSize: '14px',
+                  lineHeight: 1,
+                }}
+                onClick={() => setLocation(null)}
+                title="Remove location"
+              >
+                &times;
+              </button>
+            </div>
+          ) : (
+            <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+              No GPS location attached.
+            </div>
           )}
         </div>
+      )}
 
-        {locationLoading ? (
-          <div style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 0' }}>
-            <span style={{ display: 'inline-block', width: '12px', height: '12px', borderRadius: '50%', border: '2px solid #00BFA5', borderTopColor: 'transparent', animation: 'spin 0.8s linear infinite' }} />
-            Fetching GPS coordinates...
+      {enableAdvancedSplits && (
+        <div className="form-group">
+          <label className="form-label">Split Mode</label>
+          <div className="segmented-control">
+            <button type="button" className={splitMode === 'equal' ? 'active' : ''} onClick={() => setSplitMode('equal')}>Equal</button>
+            <button type="button" className={splitMode === 'custom' ? 'active' : ''} onClick={() => setSplitMode('custom')}>Weight</button>
+            <button type="button" className={splitMode === 'exact' ? 'active' : ''} onClick={() => setSplitMode('exact')}>Exact</button>
+            <button type="button" className={splitMode === 'percentage' ? 'active' : ''} onClick={() => setSplitMode('percentage')}>Percent</button>
           </div>
-        ) : location ? (
-          <div
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '8px',
-              padding: '6px 12px',
-              borderRadius: '20px',
-              background: 'rgba(0,191,165,0.08)',
-              border: '1px solid rgba(0,191,165,0.28)',
-              fontSize: '12.5px',
-              color: 'var(--text-primary)',
-            }}
-          >
-            <span>📍 {location.placeName || `${location.lat.toFixed(3)}, ${location.lng.toFixed(3)}`}</span>
-            <button
-              type="button"
-              style={{
-                background: 'transparent',
-                border: 'none',
-                color: 'var(--text-muted)',
-                cursor: 'pointer',
-                padding: '0 2px',
-                fontSize: '14px',
-                lineHeight: 1,
-              }}
-              onClick={() => setLocation(null)}
-              title="Remove location"
-            >
-              &times;
-            </button>
-          </div>
-        ) : (
-          <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-            No GPS location attached.
-          </div>
-        )}
-      </div>
-
-      <div className="form-group">
-        <label className="form-label">Split Mode</label>
-        <div className="segmented-control">
-          <button type="button" className={splitMode === 'equal' ? 'active' : ''} onClick={() => setSplitMode('equal')}>Equal</button>
-          <button type="button" className={splitMode === 'custom' ? 'active' : ''} onClick={() => setSplitMode('custom')}>Weight</button>
-          <button type="button" className={splitMode === 'exact' ? 'active' : ''} onClick={() => setSplitMode('exact')}>Exact</button>
-          <button type="button" className={splitMode === 'percentage' ? 'active' : ''} onClick={() => setSplitMode('percentage')}>Percent</button>
         </div>
-      </div>
+      )}
 
       <div className="form-group">
         <label className="form-label">Receipt (optional)</label>

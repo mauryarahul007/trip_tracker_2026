@@ -5,7 +5,15 @@ import type { Database } from '../types/database';
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 
-export const isMissingSupabaseEnv = !supabaseUrl || !supabaseAnonKey;
+export const isMissingSupabaseEnv =
+  !supabaseUrl ||
+  !supabaseAnonKey ||
+  supabaseUrl.includes('dummy-project') ||
+  supabaseUrl.includes('your-project-ref') ||
+  supabaseUrl.includes('your-project.supabase.co') ||
+  supabaseAnonKey === 'dummy-anon-key' ||
+  supabaseAnonKey === 'your-anon-key' ||
+  supabaseAnonKey === 'your-anon-public-key';
 
 // Use dummy client values if variables are missing to prevent import evaluation crash
 const activeUrl = isMissingSupabaseEnv ? 'https://dummy-project.supabase.co' : supabaseUrl;

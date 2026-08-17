@@ -18,6 +18,7 @@ import {
   IconChevronRight,
   IconChevronLeft,
   IconMapPin,
+  IconShield,
 } from './Icons';
 import { CategoryIcon } from './CategoryIcon';
 import { useTripStore } from '../store/tripStore';
@@ -26,10 +27,12 @@ import { getCategoryKeywords } from '../utils/categoryHelper';
 import { getAppVersion } from '../utils/appVersion';
 import { BugReportModal } from './BugReportModal';
 import { SuperAdminBugTracker } from './SuperAdminBugTracker';
+import { SuperadminDashboard } from './SuperadminDashboard';
+import { SuperadminAuthModal } from './SuperadminAuthModal';
 
 export type ThemePref = 'light' | 'dark' | 'system';
 
-type SubScreen = null | 'categories' | 'recycle-bin' | 'appearance' | 'backups' | 'archived-trips' | 'bug-tracker';
+type SubScreen = null | 'categories' | 'recycle-bin' | 'appearance' | 'backups' | 'archived-trips' | 'bug-tracker' | 'superadmin';
 
 const RECYCLE_BIN_WINDOW_MS = 24 * 60 * 60 * 1000;
 
@@ -70,6 +73,7 @@ interface SettingsViewProps {
   onSignOut?: () => void;
   pwaInstallable?: boolean;
   onInstallApp?: () => void;
+  onOpenSuperadminPortal?: () => void;
 
   // Context
   hasActiveTrip?: boolean;
@@ -102,6 +106,7 @@ export function SettingsView({
   onSignOut,
   pwaInstallable = false,
   onInstallApp,
+  onOpenSuperadminPortal,
   hasActiveTrip = true,
   initialSubScreen = null,
   onClose,
@@ -119,19 +124,31 @@ export function SettingsView({
   const resetCategoryKeywords = useTripStore((s) => s.resetCategoryKeywords);
   const enableGeotagging = useTripStore((s) => s.enableGeotagging);
   const setEnableGeotagging = useTripStore((s) => s.setEnableGeotagging);
+  
+  // Superadmin & Feature Flag state
+  const isSuperadmin = useTripStore((s) => s.isSuperadmin);
+  const isFeatureEnabled = useTripStore((s) => s.isFeatureEnabled);
+  const trips = useTripStore((s) => s.trips);
+  const members = useTripStore((s) => s.members);
+  const groups = useTripStore((s) => s.groups);
+  const allExpenses = useTripStore((s) => s.expenses);
+  const activeTripId = useTripStore((s) => s.activeTripId);
+  const activeTrip = trips.find((t) => t.id === activeTripId);
+
+  const [isSuperadminModalOpen, setIsSuperadminModalOpen] = useState(false);
 
   // Category keyword states
   const [expandedCategoryId, setExpandedCategoryId] = useState<string | null>(null);
   const [newKeywordInput, setNewKeywordInput] = useState('');
+  const [newCatName, setNewCatName] = useState('');
+  const [newCatIcon, setNewCatIcon] = useState('🏷️');
+  const [showAddCatForm, setShowAddCatForm] = useState(false);
 
   // Connectivity and disk storage
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [storageEstimate, setStorageEstimate] = useState<{ used: number; quota: number } | null>(null);
   const [appVersion, setAppVersion] = useState<string | null>(null);
   const [showBugModal, setShowBugModal] = useState(false);
-  const activeTripId = useTripStore((s) => s.activeTripId);
-  const trips = useTripStore((s) => s.trips);
-  const activeTrip = trips.find((t) => t.id === activeTripId);
 
   useEffect(() => {
     fetchDeletedExpenses();
@@ -218,6 +235,20 @@ export function SettingsView({
   // Sub-screens
   // -------------------------------------------------------------------------
 
+  if (subScreen === 'superadmin') {
+    return (
+      <SuperadminDashboard
+        onBack={() => setSubScreen(null)}
+        trips={trips}
+        activeTrip={activeTrip}
+        expenses={allExpenses}
+        members={members}
+        groups={groups}
+        categories={categories}
+      />
+    );
+  }
+
   if (subScreen === 'categories') {
     return (
       <div className="fade-in settings-container">
@@ -226,8 +257,83 @@ export function SettingsView({
             <IconChevronLeft size={18} /> Settings
           </button>
           <h3 className="settings-subscreen-title">Categories &amp; Tags</h3>
-          <div style={{ width: '20px' }} />
+          <button
+            type="button"
+            className="secondary-btn"
+            style={{ fontSize: '12px', padding: '4px 10px', color: 'var(--primary-accent)', borderColor: 'rgba(31, 110, 104, 0.35)' }}
+            onClick={() => setShowAddCatForm(!showAddCatForm)}
+          >
+            {showAddCatForm ? 'Cancel' : '+ Add'}
+          </button>
         </div>
+
+        {/* Add Category Form */}
+        {showAddCatForm && (
+          <div
+            className="glass-card fade-in"
+            style={{ padding: '14px 16px', marginBottom: '14px', border: '1.5px solid rgba(31, 110, 104, 0.35)' }}
+          >
+            <h4 style={{ fontSize: '13.5px', fontWeight: 600, margin: '0 0 10px 0', color: 'var(--text-primary)' }}>
+              Create Custom Category
+            </h4>
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '10px' }}>
+              <div style={{ width: '48px', flexShrink: 0 }}>
+                <input
+                  type="text"
+                  className="input-field"
+                  style={{ textAlign: 'center', fontSize: '18px', padding: '6px 2px' }}
+                  value={newCatIcon}
+                  maxLength={4}
+                  onChange={(e) => setNewCatIcon(e.target.value)}
+                  placeholder="🏷️"
+                />
+              </div>
+              <input
+                type="text"
+                className="input-field"
+                placeholder="Category Name (e.g. Diving, Souvenirs, Fuel)..."
+                value={newCatName}
+                onChange={(e) => setNewCatName(e.target.value)}
+                autoFocus
+              />
+              <button
+                type="button"
+                className="primary-btn"
+                style={{ padding: '6px 14px', fontSize: '13px', flexShrink: 0 }}
+                disabled={!newCatName.trim()}
+                onClick={async () => {
+                  if (!newCatName.trim()) return;
+                  await onAddCategory(newCatName.trim(), newCatIcon || '🏷️');
+                  setNewCatName('');
+                  setNewCatIcon('🏷️');
+                  setShowAddCatForm(false);
+                }}
+              >
+                Save
+              </button>
+            </div>
+            {/* Quick Emoji Presets */}
+            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+              {CATEGORY_ICON_PRESETS.slice(0, 10).map((emoji) => (
+                <button
+                  key={emoji}
+                  type="button"
+                  style={{
+                    background: newCatIcon === emoji ? 'rgba(31, 110, 104, 0.2)' : 'rgba(0,0,0,0.04)',
+                    border: newCatIcon === emoji ? '1px solid var(--primary-accent)' : '1px solid transparent',
+                    borderRadius: '6px',
+                    padding: '2px 6px',
+                    fontSize: '15px',
+                    cursor: 'pointer',
+                  }}
+                  onClick={() => setNewCatIcon(emoji)}
+                >
+                  {emoji}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         <div className="settings-group">
           <div style={{ padding: '0 8px 6px', fontSize: '12.5px', color: 'var(--text-secondary)' }}>
@@ -859,43 +965,91 @@ export function SettingsView({
       </div>
       <div className="settings-hero-perf" aria-hidden="true" />
 
+      {/* Superadmin Active Hero Cockpit Card */}
+      {isSuperadmin && (
+        <div
+          onClick={() => (onOpenSuperadminPortal ? onOpenSuperadminPortal() : setSubScreen('superadmin'))}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: '14px 18px',
+            borderRadius: '16px',
+            background: 'linear-gradient(135deg, #1C2A38, #1F6E68)',
+            color: '#FFFFFF',
+            cursor: 'pointer',
+            boxShadow: '0 6px 20px -4px rgba(31, 110, 104, 0.35)',
+            marginBottom: '14px',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div
+              style={{
+                width: '38px',
+                height: '38px',
+                borderRadius: '10px',
+                background: 'linear-gradient(135deg, #10B981, #059669)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#fff',
+              }}
+            >
+              <IconShield size={20} />
+            </div>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <strong style={{ fontSize: '15px' }}>⚡ Superadmin Cockpit</strong>
+                <span style={{ fontSize: '10px', background: '#10B981', color: '#fff', padding: '1px 6px', borderRadius: '10px', fontWeight: 700 }}>ACTIVE</span>
+              </div>
+              <span style={{ fontSize: '12px', color: '#92A2AE' }}>Feature Flags, Global Analytics &amp; Admin Tools</span>
+            </div>
+          </div>
+          <IconChevronRight size={18} style={{ color: '#00BFA5' }} />
+        </div>
+      )}
+
       {/* Group 1: Trip-Specific Settings (When an active trip is selected) */}
       {hasActiveTrip && (
         <div className="settings-group">
           <h4 className="settings-group-title">Trip Preferences</h4>
           <div className="settings-group-card">
-            <button type="button" className="settings-row-item" onClick={() => setSubScreen('categories')}>
-              <div className="settings-row-left">
-                <div className="settings-squircle squircle-purple">
-                  <IconTag size={18} />
+            {(isSuperadmin || isFeatureEnabled('enableKeywordTagging')) && (
+              <button type="button" className="settings-row-item" onClick={() => setSubScreen('categories')}>
+                <div className="settings-row-left">
+                  <div className="settings-squircle squircle-purple">
+                    <IconTag size={18} />
+                  </div>
+                  <div className="settings-row-texts">
+                    <span className="settings-row-title">Categories &amp; Tags</span>
+                    <span className="settings-row-subtitle">{categories.length} active categories</span>
+                  </div>
                 </div>
-                <div className="settings-row-texts">
-                  <span className="settings-row-title">Categories &amp; Tags</span>
-                  <span className="settings-row-subtitle">{categories.length} active categories</span>
+                <div className="settings-row-right">
+                  <IconChevronRight size={16} />
                 </div>
-              </div>
-              <div className="settings-row-right">
-                <IconChevronRight size={16} />
-              </div>
-            </button>
+              </button>
+            )}
 
-            <button type="button" className="settings-row-item" onClick={() => setSubScreen('recycle-bin')}>
-              <div className="settings-row-left">
-                <div className="settings-squircle squircle-rose">
-                  <IconTrash size={18} />
+            {(isSuperadmin || isFeatureEnabled('enableRecycleBin')) && (
+              <button type="button" className="settings-row-item" onClick={() => setSubScreen('recycle-bin')}>
+                <div className="settings-row-left">
+                  <div className="settings-squircle squircle-rose">
+                    <IconTrash size={18} />
+                  </div>
+                  <div className="settings-row-texts">
+                    <span className="settings-row-title">Recycle Bin</span>
+                    <span className="settings-row-subtitle">
+                      {deletedExpenses.length === 0 ? 'Empty (24h retention)' : `${deletedExpenses.length} deleted expense${deletedExpenses.length === 1 ? '' : 's'}`}
+                    </span>
+                  </div>
                 </div>
-                <div className="settings-row-texts">
-                  <span className="settings-row-title">Recycle Bin</span>
-                  <span className="settings-row-subtitle">
-                    {deletedExpenses.length === 0 ? 'Empty (24h retention)' : `${deletedExpenses.length} deleted expense${deletedExpenses.length === 1 ? '' : 's'}`}
-                  </span>
+                <div className="settings-row-right">
+                  {deletedExpenses.length > 0 && <span className="settings-badge-pill">{deletedExpenses.length}</span>}
+                  <IconChevronRight size={16} />
                 </div>
-              </div>
-              <div className="settings-row-right">
-                {deletedExpenses.length > 0 && <span className="settings-badge-pill">{deletedExpenses.length}</span>}
-                <IconChevronRight size={16} />
-              </div>
-            </button>
+              </button>
+            )}
 
             {onExportCsv && (
               <button
@@ -943,53 +1097,55 @@ export function SettingsView({
             </div>
           </button>
 
-          <div className="settings-row-item" style={{ cursor: 'default' }}>
-            <div className="settings-row-left">
-              <div className="settings-squircle squircle-emerald">
-                <IconMapPin size={18} />
+          {(isSuperadmin || isFeatureEnabled('enableGeotagging')) && (
+            <div className="settings-row-item" style={{ cursor: 'default' }}>
+              <div className="settings-row-left">
+                <div className="settings-squircle squircle-emerald">
+                  <IconMapPin size={18} />
+                </div>
+                <div className="settings-row-texts">
+                  <span className="settings-row-title">Geotag Expenses</span>
+                  <span className="settings-row-subtitle">Attach GPS location &amp; place names to transactions</span>
+                </div>
               </div>
-              <div className="settings-row-texts">
-                <span className="settings-row-title">Geotag Expenses</span>
-                <span className="settings-row-subtitle">Attach GPS location &amp; place names to transactions</span>
-              </div>
-            </div>
-            <div className="settings-row-right">
-              <label style={{ position: 'relative', display: 'inline-block', width: '44px', height: '24px', margin: 0, cursor: 'pointer' }}>
-                <input
-                  type="checkbox"
-                  checked={enableGeotagging}
-                  onChange={(e) => setEnableGeotagging(e.target.checked)}
-                  style={{ opacity: 0, width: 0, height: 0, margin: 0 }}
-                />
-                <span
-                  style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    backgroundColor: enableGeotagging ? '#00BFA5' : 'var(--border-color)',
-                    transition: '0.2s ease',
-                    borderRadius: '24px',
-                  }}
-                >
+              <div className="settings-row-right">
+                <label style={{ position: 'relative', display: 'inline-block', width: '44px', height: '24px', margin: 0, cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={enableGeotagging}
+                    onChange={(e) => setEnableGeotagging(e.target.checked)}
+                    style={{ opacity: 0, width: 0, height: 0, margin: 0 }}
+                  />
                   <span
                     style={{
                       position: 'absolute',
-                      height: '18px',
-                      width: '18px',
-                      left: enableGeotagging ? '23px' : '3px',
-                      bottom: '3px',
-                      backgroundColor: 'white',
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      backgroundColor: enableGeotagging ? '#00BFA5' : 'var(--border-color)',
                       transition: '0.2s ease',
-                      borderRadius: '50%',
-                      boxShadow: '0 1px 3px rgba(0,0,0,0.25)',
+                      borderRadius: '24px',
                     }}
-                  />
-                </span>
-              </label>
+                  >
+                    <span
+                      style={{
+                        position: 'absolute',
+                        height: '18px',
+                        width: '18px',
+                        left: enableGeotagging ? '23px' : '3px',
+                        bottom: '3px',
+                        backgroundColor: 'white',
+                        transition: '0.2s ease',
+                        borderRadius: '50%',
+                        boxShadow: '0 1px 3px rgba(0,0,0,0.25)',
+                      }}
+                    />
+                  </span>
+                </label>
+              </div>
             </div>
-          </div>
+          )}
 
           {pwaInstallable && (
             <button
@@ -1017,74 +1173,76 @@ export function SettingsView({
         </div>
       </div>
 
-      {/* Group 3: Data & Storage */}
-      <div className="settings-group">
-        <h4 className="settings-group-title">Data &amp; Backups</h4>
-        <div className="settings-group-card">
-          <button type="button" className="settings-row-item" onClick={() => setSubScreen('archived-trips')}>
-            <div className="settings-row-left">
-              <div className="settings-squircle squircle-slate">
-                <IconArchive size={18} />
-              </div>
-              <div className="settings-row-texts">
-                <span className="settings-row-title">Archived Trips</span>
-                <span className="settings-row-subtitle">
-                  {archivedTrips.length === 0 ? 'No archived trips' : `${archivedTrips.length} archived trip${archivedTrips.length === 1 ? '' : 's'}`}
-                </span>
-              </div>
-            </div>
-            <div className="settings-row-right">
-              {archivedTrips.length > 0 && <span className="settings-badge-pill">{archivedTrips.length}</span>}
-              <IconChevronRight size={16} />
-            </div>
-          </button>
-
-          <button type="button" className="settings-row-item" onClick={() => setSubScreen('backups')}>
-            <div className="settings-row-left">
-              <div className="settings-squircle squircle-indigo">
-                <IconDatabase size={18} />
-              </div>
-              <div className="settings-row-texts">
-                <span className="settings-row-title">Database Backups</span>
-                <span className="settings-row-subtitle">Export/Import JSON database snapshot</span>
-              </div>
-            </div>
-            <div className="settings-row-right">
-              <IconChevronRight size={16} />
-            </div>
-          </button>
-
-          {onLoadDemoTrip && (
-            <button
-              type="button"
-              className="settings-row-item"
-              onClick={() => {
-                if (window.confirm('Populate a sample trip ("Road Trip to Goa") with test members and expenses?')) {
-                  onLoadDemoTrip();
-                  onClose?.();
-                }
-              }}
-            >
+      {/* Group 3: Data & Storage (Superadmin Only or Demo Seeding Flag) */}
+      {isSuperadmin && (
+        <div className="settings-group">
+          <h4 className="settings-group-title">Data &amp; Backups</h4>
+          <div className="settings-group-card">
+            <button type="button" className="settings-row-item" onClick={() => setSubScreen('archived-trips')}>
               <div className="settings-row-left">
-                <div className="settings-squircle squircle-emerald">
-                  <IconSparkles size={18} />
+                <div className="settings-squircle squircle-slate">
+                  <IconArchive size={18} />
                 </div>
                 <div className="settings-row-texts">
-                  <span className="settings-row-title">Seed Demo Data</span>
-                  <span className="settings-row-subtitle">Load sample trip with members &amp; split transactions</span>
+                  <span className="settings-row-title">Archived Trips</span>
+                  <span className="settings-row-subtitle">
+                    {archivedTrips.length === 0 ? 'No archived trips' : `${archivedTrips.length} archived trip${archivedTrips.length === 1 ? '' : 's'}`}
+                  </span>
+                </div>
+              </div>
+              <div className="settings-row-right">
+                {archivedTrips.length > 0 && <span className="settings-badge-pill">{archivedTrips.length}</span>}
+                <IconChevronRight size={16} />
+              </div>
+            </button>
+
+            <button type="button" className="settings-row-item" onClick={() => setSubScreen('backups')}>
+              <div className="settings-row-left">
+                <div className="settings-squircle squircle-indigo">
+                  <IconDatabase size={18} />
+                </div>
+                <div className="settings-row-texts">
+                  <span className="settings-row-title">Database Backups</span>
+                  <span className="settings-row-subtitle">Export/Import JSON database snapshot</span>
                 </div>
               </div>
               <div className="settings-row-right">
                 <IconChevronRight size={16} />
               </div>
             </button>
-          )}
-        </div>
-      </div>
 
-      {/* Group 4: Account & Danger Zone */}
+            {onLoadDemoTrip && (
+              <button
+                type="button"
+                className="settings-row-item"
+                onClick={() => {
+                  if (window.confirm('Populate a sample trip ("Road Trip to Goa") with test members and expenses?')) {
+                    onLoadDemoTrip();
+                    onClose?.();
+                  }
+                }}
+              >
+                <div className="settings-row-left">
+                  <div className="settings-squircle squircle-emerald">
+                    <IconSparkles size={18} />
+                  </div>
+                  <div className="settings-row-texts">
+                    <span className="settings-row-title">Seed Demo Data</span>
+                    <span className="settings-row-subtitle">Load sample trip with members &amp; split transactions</span>
+                  </div>
+                </div>
+                <div className="settings-row-right">
+                  <IconChevronRight size={16} />
+                </div>
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Group 4: Account & Reset */}
       <div className="settings-group">
-        <h4 className="settings-group-title">Account &amp; Reset</h4>
+        <h4 className="settings-group-title">Account</h4>
         <div className="settings-group-card">
           {onSignOut && (
             <button
@@ -1111,7 +1269,7 @@ export function SettingsView({
             </button>
           )}
 
-          {onClearDatabase && (
+          {isSuperadmin && onClearDatabase && (
             <button
               type="button"
               className="settings-row-item"
@@ -1209,6 +1367,40 @@ export function SettingsView({
         isOpen={showBugModal}
         onClose={() => setShowBugModal(false)}
         activeTripInfo={{ id: activeTripId, name: activeTrip?.name || null }}
+      />
+
+      {/* Superadmin Access Link at bottom */}
+      {!isSuperadmin && (
+        <div style={{ textAlign: 'center', marginTop: '24px', marginBottom: '8px' }}>
+          <button
+            type="button"
+            style={{
+              background: 'transparent',
+              border: 'none',
+              color: 'var(--text-muted)',
+              fontSize: '12px',
+              cursor: 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '6px 12px',
+              borderRadius: '8px',
+            }}
+            onClick={() => setIsSuperadminModalOpen(true)}
+          >
+            <IconShield size={13} /> ⚡ Super User Login
+          </button>
+        </div>
+      )}
+
+      {/* Superadmin Auth Modal */}
+      <SuperadminAuthModal
+        isOpen={isSuperadminModalOpen}
+        onClose={() => setIsSuperadminModalOpen(false)}
+        onSuccess={() => {
+          setIsSuperadminModalOpen(false);
+          setSubScreen('superadmin');
+        }}
       />
     </div>
   );

@@ -165,20 +165,74 @@ export function MembersGroupsTab({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  // Merge all database members from Supabase previous members and local trip store members
+  const allDatabaseMembers = React.useMemo(() => {
+    const memberMap = new Map<string, PreviousMemberSuggestion>();
+
+    // 1. From previousMembers (Supabase remote)
+    previousMembers.forEach((pm) => {
+      const norm = pm.name.trim().toLowerCase();
+      if (norm) {
+        memberMap.set(norm, pm);
+      }
+    });
+
+    // 2. From all local members in trip store across all trips
+    Object.values(members).forEach((m) => {
+      const norm = m.name.trim().toLowerCase();
+      if (!norm) return;
+      const existing = memberMap.get(norm);
+      if (!existing) {
+        memberMap.set(norm, {
+          name: m.name.trim(),
+          linkedUserId: m.linkedUserId || null,
+          avatarUrl: null,
+        });
+      } else if (!existing.linkedUserId && m.linkedUserId) {
+        existing.linkedUserId = m.linkedUserId;
+      }
+    });
+
+    return Array.from(memberMap.values());
+  }, [previousMembers, members]);
+
   // Filter out members already in activeTripMembers (by linkedUserId or normalized name)
   const availablePreviousMembers = React.useMemo(() => {
-    const currentNames = new Set(activeTripMembers.map((m) => m.name.trim().toLowerCase()));
+    const currentNames = new Set(
+      activeTripMembers
+        .filter((m) => !editingMember || m.id !== editingMember.id)
+        .map((m) => m.name.trim().toLowerCase())
+    );
     const currentLinkedIds = new Set(
-      activeTripMembers.map((m) => m.linkedUserId).filter((id): id is string => Boolean(id))
+      activeTripMembers
+        .filter((m) => !editingMember || m.id !== editingMember.id)
+        .map((m) => m.linkedUserId)
+        .filter((id): id is string => Boolean(id))
     );
 
-    return previousMembers.filter((pm) => {
+    return allDatabaseMembers.filter((pm) => {
       const norm = pm.name.trim().toLowerCase();
       if (currentNames.has(norm)) return false;
       if (pm.linkedUserId && currentLinkedIds.has(pm.linkedUserId)) return false;
       return true;
     });
-  }, [previousMembers, activeTripMembers]);
+  }, [allDatabaseMembers, activeTripMembers, editingMember]);
+
+  // Real-time check if entered name is already added to active trip
+  const duplicateTripMember = React.useMemo(() => {
+    const query = newMemberName.trim().toLowerCase();
+    if (!query) return null;
+    return activeTripMembers.find(
+      (m) => m.name.trim().toLowerCase() === query && (!editingMember || m.id !== editingMember.id)
+    );
+  }, [newMemberName, activeTripMembers, editingMember]);
+
+  // Real-time check if entered name matches an existing person in DB
+  const matchingExistingPerson = React.useMemo(() => {
+    const query = newMemberName.trim().toLowerCase();
+    if (!query) return null;
+    return availablePreviousMembers.find((pm) => pm.name.trim().toLowerCase() === query);
+  }, [newMemberName, availablePreviousMembers]);
 
   // Fuse.js fuzzy index
   const fuse = React.useMemo(() => {
@@ -193,9 +247,15 @@ export function MembersGroupsTab({
   const filteredSuggestions = React.useMemo(() => {
     const query = newMemberName.trim();
     if (!query) {
-      return availablePreviousMembers.slice(0, 5);
+      return availablePreviousMembers.slice(0, 6);
     }
-    return fuse.search(query).map((res) => res.item).slice(0, 5);
+    const fuzzyResults = fuse.search(query).map((res) => res.item);
+    // If exact prefix/substring match exists, place it on top
+    const exactMatches = availablePreviousMembers.filter((pm) =>
+      pm.name.toLowerCase().includes(query.toLowerCase())
+    );
+    const combined = Array.from(new Set([...exactMatches, ...fuzzyResults]));
+    return combined.slice(0, 6);
   }, [fuse, newMemberName, availablePreviousMembers]);
 
   // When search query is entered and matching suggestions drop below 5, trigger debounced Supabase query
@@ -283,11 +343,20 @@ export function MembersGroupsTab({
 
   const handleAddMemberLocal = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (duplicateTripMember) {
+      setMemberFormError(`A member named "${duplicateTripMember.name}" is already in this trip.`);
+      return;
+    }
+
     setIsDropdownOpen(false);
+    // If exact match exists in DB, automatically inherit their linkedUserId
+    const linkedIdToUse =
+      selectedLinkedUserId || (matchingExistingPerson ? matchingExistingPerson.linkedUserId : null);
+
     const res = await onSaveMember(
       newMemberName,
       editingMember ? editingMember.id : null,
-      editingMember ? undefined : selectedLinkedUserId
+      editingMember ? undefined : linkedIdToUse
     );
     if (res.success) {
       setNewMemberName('');
@@ -566,12 +635,57 @@ export function MembersGroupsTab({
                 })}
               </div>
             )}
+
+            {duplicateTripMember && (
+              <div
+                style={{
+                  marginTop: '6px',
+                  padding: '6px 10px',
+                  borderRadius: '8px',
+                  background: 'rgba(239, 68, 68, 0.12)',
+                  border: '1px solid rgba(239, 68, 68, 0.3)',
+                  color: '#EF4444',
+                  fontSize: '12px',
+                  fontWeight: 600,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                }}
+              >
+                ⚠️ A member named "{duplicateTripMember.name}" is already in this trip.
+              </div>
+            )}
+
+            {!duplicateTripMember && matchingExistingPerson && (
+              <div
+                style={{
+                  marginTop: '6px',
+                  padding: '6px 10px',
+                  borderRadius: '8px',
+                  background: 'rgba(31, 110, 104, 0.1)',
+                  border: '1px solid rgba(31, 110, 104, 0.25)',
+                  color: 'var(--primary-accent)',
+                  fontSize: '12px',
+                  fontWeight: 500,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                }}
+              >
+                ✨ Existing traveler found in database. Auto-linking identity.
+              </div>
+            )}
           </div>
           {memberFormError && (
             <p style={{ color: 'var(--color-danger)', fontSize: '13px', marginTop: '4px', marginBottom: '8px' }}>{memberFormError}</p>
           )}
           <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
-            <button type="submit" className="gradient-btn" style={{ flex: 1, padding: '10px' }}>
+            <button
+              type="submit"
+              className="gradient-btn"
+              style={{ flex: 1, padding: '10px' }}
+              disabled={Boolean(duplicateTripMember)}
+            >
               {editingMember ? 'Update' : 'Add'}
             </button>
             {editingMember && (

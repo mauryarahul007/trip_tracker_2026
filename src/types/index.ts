@@ -13,6 +13,7 @@ export interface Trip {
   updatedAt: number;
   expenseCount?: number;
   archived?: boolean;
+  frozen?: boolean; // emergency kill-switch toggle set by superadmin
 }
 
 export interface Member {

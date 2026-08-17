@@ -1,7 +1,10 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import type { Member, Group, Expense, Category, TripState, ExpenseLocation, Trip } from '../types';
-import { supabase } from '../services/supabaseClient';
+import type { FeatureFlagKey } from '../types/admin';
+import { DEFAULT_FEATURE_FLAGS, isFeatureActive } from '../utils/featureFlags';
+import { verifySuperadminCredentials } from '../utils/superadminAuth';
+import { supabase, isMissingSupabaseEnv } from '../services/supabaseClient';
 import {
   fetchMyTripGraph,
   fetchExpensesForTrip,
@@ -9,6 +12,7 @@ import {
   insertTrip,
   updateTripRow,
   archiveTripRow,
+  freezeTripRow,
   deleteTripRow,
   deleteAllMyTrips,
   insertMember,
@@ -99,6 +103,20 @@ interface TripStore extends TripState {
   enableGeotagging: boolean;
   setEnableGeotagging: (enabled: boolean) => void;
 
+  // Superadmin & Feature Flags
+  isSuperadmin: boolean;
+  featureFlags: Record<FeatureFlagKey, boolean>;
+  tripFlagOverrides: Record<string, Record<string, boolean>>;
+  userFlagOverrides: Record<string, Record<string, boolean>>;
+  unlockSuperadmin: (email?: string, password?: string, skipVerify?: boolean) => boolean;
+  lockSuperadmin: () => void;
+  setUserIdentity: (userId: string, displayName: string | null) => void;
+  setFeatureFlag: (key: FeatureFlagKey, value: boolean) => void;
+  setTripFlagOverride: (tripId: string, key: FeatureFlagKey, value: boolean | null) => void;
+  setUserFlagOverride: (userId: string, key: FeatureFlagKey, value: boolean | null) => void;
+  resetFeatureFlags: () => void;
+  isFeatureEnabled: (key: FeatureFlagKey, context?: { tripId?: string; userId?: string }) => boolean;
+
   initialize: () => Promise<void>;
   refreshTrips: () => Promise<void>;
   clearStorageError: () => void;
@@ -111,6 +129,7 @@ interface TripStore extends TripState {
   updateTrip: (id: string, name: string, startDate: string, endDate: string) => Promise<void>;
   selectTrip: (id: string | null) => Promise<void>;
   archiveTrip: (id: string, archived: boolean) => Promise<void>;
+  freezeTrip: (id: string, frozen: boolean) => Promise<void>;
   deleteTrip: (id: string) => Promise<void>;
 
   // Member Actions
@@ -306,10 +325,13 @@ export const useTripStore = create<TripStore>()(
   persist(
     (set, get) => {
   const setError = (e: unknown) => {
-    // If the device is offline or in demo mode, suppress network errors since offline/demo mode is expected
+    // If the device is offline, Supabase env isn't configured, or we're in
+    // local demo mode, suppress network errors — all three are expected to
+    // run without a reachable backend. A real superadmin session (see
+    // 0045_superadmin_identity_and_rls.sql) surfaces errors like any user.
     const isDemo = get().userId === 'demo-user-superadmin';
-    if (!navigator.onLine || isDemo) {
-      console.warn('Trip store operation offline/demo (deferred/cached):', e);
+    if (!navigator.onLine || isMissingSupabaseEnv || isDemo) {
+      console.warn('Trip store operation offline/demo/local (deferred/cached):', e);
       return;
     }
     console.error('Trip store sync error:', e);
@@ -354,8 +376,90 @@ export const useTripStore = create<TripStore>()(
     lastModifiedAt: Date.now(),
     enableGeotagging: false,
 
+    // Superadmin & Feature Flags
+    isSuperadmin: false,
+    featureFlags: DEFAULT_FEATURE_FLAGS,
+    tripFlagOverrides: {},
+    userFlagOverrides: {},
+
+    unlockSuperadmin: (email?: string, password?: string, skipVerify?: boolean) => {
+      if (skipVerify || verifySuperadminCredentials(email, password)) {
+        set((s) => ({
+          isSuperadmin: true,
+          userId: s.userId || 'superadmin-root-user-id',
+          userDisplayName: s.userDisplayName || 'Super Admin',
+          lastModifiedAt: Date.now(),
+        }));
+        return true;
+      }
+      return false;
+    },
+
+    setUserIdentity: (userId: string, displayName: string | null) => {
+      set({ userId, userDisplayName: displayName, lastModifiedAt: Date.now() });
+    },
+
+    lockSuperadmin: () => {
+      set({ isSuperadmin: false, lastModifiedAt: Date.now() });
+    },
+
+    setFeatureFlag: (key: FeatureFlagKey, value: boolean) => {
+      set((s) => ({
+        featureFlags: { ...s.featureFlags, [key]: value },
+        lastModifiedAt: Date.now(),
+      }));
+    },
+
+    setTripFlagOverride: (tripId: string, key: FeatureFlagKey, value: boolean | null) => {
+      set((s) => {
+        const existing = { ...(s.tripFlagOverrides[tripId] || {}) };
+        if (value === null) delete existing[key];
+        else existing[key] = value;
+        return {
+          tripFlagOverrides: { ...s.tripFlagOverrides, [tripId]: existing },
+          lastModifiedAt: Date.now(),
+        };
+      });
+    },
+
+    setUserFlagOverride: (userId: string, key: FeatureFlagKey, value: boolean | null) => {
+      set((s) => {
+        const existing = { ...(s.userFlagOverrides[userId] || {}) };
+        if (value === null) delete existing[key];
+        else existing[key] = value;
+        return {
+          userFlagOverrides: { ...s.userFlagOverrides, [userId]: existing },
+          lastModifiedAt: Date.now(),
+        };
+      });
+    },
+
+    resetFeatureFlags: () => {
+      set({
+        featureFlags: DEFAULT_FEATURE_FLAGS,
+        tripFlagOverrides: {},
+        userFlagOverrides: {},
+        lastModifiedAt: Date.now(),
+      });
+    },
+
+    isFeatureEnabled: (key: FeatureFlagKey, context?: { tripId?: string; userId?: string }) => {
+      const s = get();
+      return isFeatureActive(key, s.featureFlags, {
+        isSuperadmin: s.isSuperadmin,
+        tripId: context?.tripId || s.activeTripId || undefined,
+        userId: context?.userId || s.userId || undefined,
+        tripOverrides: s.tripFlagOverrides,
+        userOverrides: s.userFlagOverrides,
+      });
+    },
+
     setEnableGeotagging: (enabled: boolean) => {
-      set({ enableGeotagging: enabled, lastModifiedAt: Date.now() });
+      set((s) => ({
+        enableGeotagging: enabled,
+        featureFlags: { ...s.featureFlags, enableGeotagging: enabled },
+        lastModifiedAt: Date.now(),
+      }));
     },
 
     updateLastBackendSyncedAt: (timestamp: number) => {
@@ -389,12 +493,7 @@ export const useTripStore = create<TripStore>()(
         user?.email?.split('@')[0] ||
         null;
 
-      if (userId === 'demo-user-superadmin') {
-        set({ userId, userDisplayName, initialized: true, storageError: null });
-        return;
-      }
-
-      if (!navigator.onLine) {
+      if (userId === 'demo-user-superadmin' || !navigator.onLine || isMissingSupabaseEnv) {
         set({ userId, userDisplayName, initialized: true, storageError: null });
         return;
       }
@@ -434,7 +533,7 @@ export const useTripStore = create<TripStore>()(
           userId,
           userDisplayName,
           initialized: true,
-          storageError: null,
+          storageError: (navigator.onLine && !isMissingSupabaseEnv) ? 'Failed to load your trips. Check your connection and reload.' : null,
         });
       }
     },
@@ -606,8 +705,45 @@ export const useTripStore = create<TripStore>()(
     },
 
     createTrip: async (name, startDate, endDate, baseCurrency) => {
-      const userId = get().userId;
-      if (!userId) return;
+      const userId = get().userId || (get().isSuperadmin ? 'superadmin-root-user-id' : 'guest-traveler-user-id');
+
+      // No real backend to sync against at all — skip the offline sync
+      // queue entirely (it could never flush) and create the trip as a
+      // fully local record, same as the dummy-Supabase fallback elsewhere.
+      if (isMissingSupabaseEnv) {
+        const tripId = crypto.randomUUID();
+        const creatorName = get().userDisplayName || (get().isSuperadmin ? 'Super Admin' : 'Me');
+        const creatorMemberId = crypto.randomUUID();
+        const creatorMember: Member = {
+          id: creatorMemberId,
+          name: creatorName,
+          linkedUserId: userId,
+        };
+        const newTrip: Trip = {
+          id: tripId,
+          name,
+          startDate,
+          endDate,
+          baseCurrency,
+          ownerId: userId,
+          adminMemberIds: [creatorMemberId],
+          joinCode: Math.random().toString(36).substring(2, 8).toUpperCase(),
+          memberIds: [creatorMemberId],
+          groupIds: [],
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+          expenseCount: 0,
+        };
+
+        set((state) => ({
+          trips: [...state.trips, newTrip],
+          members: { ...state.members, [creatorMemberId]: creatorMember },
+          activeTripId: tripId,
+          categories: DEFAULT_CATEGORIES,
+          storageError: null,
+        }));
+        return;
+      }
 
       // The creator is always the owner and admin — add them as a claimed
       // member too, so they show up in the members list and can be a
@@ -723,6 +859,21 @@ export const useTripStore = create<TripStore>()(
       }
     },
 
+    freezeTrip: async (id, frozen) => {
+      try {
+        await freezeTripRow(id, frozen);
+      } catch (e) {
+        setError(e);
+        return;
+      }
+
+      set((state) => ({
+        trips: state.trips.map((t) => (t.id === id ? { ...t, frozen, updatedAt: Date.now() } : t)),
+        lastModifiedAt: Date.now(),
+        storageError: null,
+      }));
+    },
+
     deleteTrip: async (id) => {
       const deletedTrip = get().trips.find((t) => t.id === id);
       try {
@@ -750,6 +901,17 @@ export const useTripStore = create<TripStore>()(
     addMember: async (name, linkedUserId) => {
       const activeTripId = get().activeTripId;
       if (!activeTripId) return;
+
+      if (isMissingSupabaseEnv) {
+        const memberId = crypto.randomUUID();
+        const member: Member = { id: memberId, name: name.trim(), linkedUserId: linkedUserId || null };
+        set((state) => ({
+          members: { ...state.members, [memberId]: member },
+          trips: state.trips.map((t) => (t.id === activeTripId ? { ...t, memberIds: [...t.memberIds, memberId], updatedAt: Date.now() } : t)),
+          storageError: null,
+        }));
+        return;
+      }
 
       const tempId = crypto.randomUUID();
       const optimisticMember: Member = { id: tempId, name, linkedUserId: linkedUserId ?? null };
@@ -1058,6 +1220,12 @@ export const useTripStore = create<TripStore>()(
       const userId = get().userId;
       if (!tripId || !userId) return;
 
+      const activeTrip = get().trips.find((t) => t.id === tripId);
+      if (activeTrip?.frozen && !get().isSuperadmin) {
+        set({ storageError: 'This trip is currently locked / frozen by Superadmin. Modifications are disabled.' });
+        return;
+      }
+
       const participants = expenseData.splitMemberIds.filter((id) => get().members[id] && !get().members[id].archived);
       if (participants.length === 0) return;
 
@@ -1111,6 +1279,10 @@ export const useTripStore = create<TripStore>()(
           `${savedExpense.title} — ${savedExpense.currency} ${savedExpense.amount.toFixed(2)} added`
         );
       };
+
+      if (isMissingSupabaseEnv) {
+        return;
+      }
 
       if (!navigator.onLine) {
         if (expenseData.receiptImage) {
@@ -1166,6 +1338,10 @@ export const useTripStore = create<TripStore>()(
         storageError: null,
       }));
 
+      if (isMissingSupabaseEnv) {
+        return;
+      }
+
       const saveAction = async () => {
         let receiptPath: string | undefined;
         if (expenseData.receiptImage) {
@@ -1218,6 +1394,10 @@ export const useTripStore = create<TripStore>()(
         trips: state.trips.map((t) => (t.id === existing.tripId ? { ...t, expenseCount: Math.max(0, (t.expenseCount || 0) - 1), updatedAt: Date.now() } : t)),
         storageError: null,
       }));
+
+      if (isMissingSupabaseEnv) {
+        return;
+      }
 
       if (!navigator.onLine) {
         get().queueSync('deleteExpense', { id, userId });
@@ -1320,6 +1500,17 @@ export const useTripStore = create<TripStore>()(
       const activeTripId = get().activeTripId;
       if (!activeTripId) return;
 
+      if (isMissingSupabaseEnv) {
+        const newCat: Category = {
+          id: `cat-custom-${crypto.randomUUID()}`,
+          name: name.trim(),
+          icon: icon || '🏷️',
+          isCustom: true,
+        };
+        set((state) => ({ categories: [...state.categories, newCat], storageError: null }));
+        return;
+      }
+
       const tempId = crypto.randomUUID();
       const optimisticCategory: Category = { id: tempId, name, icon, isCustom: true };
       set((state) => ({ categories: [...state.categories, optimisticCategory], storageError: null }));
@@ -1338,6 +1529,11 @@ export const useTripStore = create<TripStore>()(
     },
 
     deleteCategory: async (id) => {
+      if (isMissingSupabaseEnv) {
+        set((state) => ({ categories: state.categories.filter((c) => c.id !== id), storageError: null }));
+        return;
+      }
+
       const existing = get().categories.find((c) => c.id === id);
       if (!existing) return;
       const existingIndex = get().categories.indexOf(existing);
@@ -1553,6 +1749,10 @@ export const useTripStore = create<TripStore>()(
         lastBackendSyncedAt: state.lastBackendSyncedAt,
         lastModifiedAt: state.lastModifiedAt,
         enableGeotagging: state.enableGeotagging,
+        isSuperadmin: state.isSuperadmin,
+        featureFlags: state.featureFlags,
+        tripFlagOverrides: state.tripFlagOverrides,
+        userFlagOverrides: state.userFlagOverrides,
       }),
     }
   )

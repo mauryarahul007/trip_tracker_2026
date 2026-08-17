@@ -21,13 +21,11 @@ import { UndoToasts } from './components/UndoToasts';
 import { NavTabs } from './components/NavTabs';
 import { ShareTripModal } from './components/ShareTripModal';
 import { SuperAdminBugTracker } from './components/SuperAdminBugTracker';
-import { IconCalendar, IconChevronLeft, IconShare } from './components/Icons';
+import { IconCalendar, IconChevronLeft, IconShare, IconShield } from './components/Icons';
 import { formatDateRange } from './utils/dateRange';
 import { useScrollLock } from './utils/useScrollLock';
 import { useHistoryBack } from './utils/useHistoryBack';
-
-// Accounts that always get the Bug Ledger, independent of trip admin status.
-const SUPERADMIN_EMAILS = ['superadmin@triptracker.local'];
+import { AdminPortalLayout } from './components/admin/AdminPortalLayout';
 
 export default function App() {
   const {
@@ -63,14 +61,14 @@ export default function App() {
     importDatabase,
     clearDatabase,
     loadDemoTrip,
+    unlockSuperadmin,
   } = useTripStore();
 
   const userEmail = useAuthStore((s) => s.session?.user.email ?? null);
   const userId = useAuthStore((s) => s.session?.user.id ?? null);
   const session = useAuthStore((s) => s.session);
   const signOut = useAuthStore((s) => s.signOut);
-  const signInAsDemoUser = useAuthStore((s) => s.signInAsDemoUser);
-  const isSuperAdmin = userEmail ? SUPERADMIN_EMAILS.includes(userEmail) : false;
+  const setSuperadminSession = useAuthStore((s) => s.setSuperadminSession);
 
   // Navigation tabs: 'expenses' | 'members' | 'analytics' | 'settings'
   const [activeTab, setActiveTab] = useState<'expenses' | 'members' | 'analytics' | 'settings'>('expenses');
@@ -119,10 +117,17 @@ export default function App() {
   }, []);
 
   // Local dev convenience only (never runs in a production build): skip
-  // login/trip-creation and land straight on the superadmin Bug Ledger.
+  // login and unlock the real superadmin identity (same path SuperadminAuthModal's
+  // OTP-recovery flow uses — unlockSuperadmin(..., skipVerify: true) then a
+  // matching session), landing straight on the Bug Ledger.
   useEffect(() => {
     if (!import.meta.env.DEV) return;
-    if (!session) signInAsDemoUser();
+    if (!useTripStore.getState().isSuperadmin) {
+      unlockSuperadmin(undefined, undefined, true);
+    }
+    if (!session) {
+      setSuperadminSession().catch(() => {});
+    }
     setShowBugTracker(true);
     if (window.location.hash !== '#/bugs') {
       window.location.hash = '#/bugs';
@@ -190,6 +195,9 @@ export default function App() {
   const [showShareTrip, setShowShareTrip] = useState(false);
   const [showMembersRequiredNotice, setShowMembersRequiredNotice] = useState(false);
   const [showGlobalSettings, setShowGlobalSettings] = useState(false);
+  const [bypassEnvWarning, setBypassEnvWarning] = useState(false);
+  const isSuperadmin = useTripStore((s) => s.isSuperadmin);
+  const [isTravelerPreview, setIsTravelerPreview] = useState(false);
 
   // Lock background scroll when any modal is active
   useScrollLock(Boolean(showShareTrip || selectedReviewExpense || confirmRequest || showGlobalSettings || showAddExpense));
@@ -500,7 +508,7 @@ export default function App() {
 
   const handleSaveMember = async (name: string, id: string | null, linkedUserId?: string | null): Promise<{ success: boolean; error?: string }> => {
     const nameTrimmed = name.trim();
-    if (!nameTrimmed) return { success: false, error: 'Name cannot be empty.' };
+    if (!nameTrimmed) return { success: false, error: 'Member name cannot be empty.' };
 
     const nameLower = nameTrimmed.toLowerCase();
     const isDuplicateMember = activeTripMembers.some(
@@ -510,14 +518,27 @@ export default function App() {
       (g) => g.name.toLowerCase() === nameLower
     );
 
-    if (isDuplicateMember || isDuplicateGroup) {
-      return { success: false, error: 'A member or group with this name already exists on this trip.' };
+    if (isDuplicateMember) {
+      return { success: false, error: `A member named "${nameTrimmed}" is already added to this trip.` };
+    }
+    if (isDuplicateGroup) {
+      return { success: false, error: `A group named "${nameTrimmed}" already exists on this trip.` };
     }
 
     if (id) {
       await updateMember(id, nameTrimmed);
     } else {
-      await addMember(nameTrimmed, linkedUserId);
+      // If linkedUserId wasn't explicitly passed, look up if an existing member with this name has a linkedUserId
+      let finalLinkedUserId = linkedUserId || null;
+      if (!finalLinkedUserId) {
+        const existingPerson = Object.values(members).find(
+          (m) => m.name.trim().toLowerCase() === nameLower && m.linkedUserId
+        );
+        if (existingPerson && existingPerson.linkedUserId) {
+          finalLinkedUserId = existingPerson.linkedUserId;
+        }
+      }
+      await addMember(nameTrimmed, finalLinkedUserId ?? undefined);
     }
     setShowMembersRequiredNotice(false);
     return { success: true };
@@ -903,7 +924,7 @@ export default function App() {
     );
   }
 
-  if (isMissingSupabaseEnv) {
+  if (isMissingSupabaseEnv && !bypassEnvWarning && !isSuperadmin) {
     return (
       <div className="app-container" style={{ justifyContent: 'center', alignItems: 'center', padding: '24px' }}>
         <div className="glass-card" style={{ maxWidth: '460px', width: '100%', textAlign: 'center', padding: '32px 24px' }}>
@@ -925,7 +946,7 @@ export default function App() {
             Missing API Credentials
           </h2>
           <p style={{ fontSize: '14px', color: 'var(--text-secondary)', lineHeight: '1.6', marginBottom: '20px' }}>
-            To run Trip Tracker locally, you must copy <code>.env.example</code> to <code>.env</code> in the project root and fill in your Supabase credentials:
+            To connect to remote cloud sync, copy <code>.env.example</code> to <code>.env</code> in the project root and fill in your Supabase credentials:
           </p>
           <pre style={{
             background: 'rgba(0,0,0,0.03)',
@@ -942,16 +963,69 @@ export default function App() {
             VITE_SUPABASE_URL=https://your-project.supabase.co
             {"\n"}VITE_SUPABASE_ANON_KEY=your-anon-key
           </pre>
-          <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: 0 }}>
-            After saving the <code>.env</code> file, restart your local development server.
-          </p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <button
+              type="button"
+              className="primary-btn"
+              onClick={() => setBypassEnvWarning(true)}
+              style={{ width: '100%', padding: '10px 16px' }}
+            >
+              Continue in Offline / Local Mode
+            </button>
+            <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: 0 }}>
+              You can still use all local features, demo trips, and Superadmin tools offline.
+            </p>
+          </div>
         </div>
       </div>
     );
   }
 
+  if (isSuperadmin && !isTravelerPreview && !showBugTracker) {
+    return (
+      <AdminPortalLayout
+        trips={trips}
+        expenses={expenses}
+        members={members}
+        categories={categories}
+        onExitToTravelerApp={() => setIsTravelerPreview(true)}
+        onOpenBugTracker={() => setShowBugTracker(true)}
+      />
+    );
+  }
+
   return (
     <div className="app-container">
+      {/* Superadmin Traveler Preview Top Floating Banner */}
+      {isSuperadmin && isTravelerPreview && (
+        <div
+          style={{
+            position: 'sticky',
+            top: 0,
+            zIndex: 100,
+            background: 'linear-gradient(135deg, #1C2A38, #1F6E68)',
+            color: '#FFFFFF',
+            padding: '10px 16px',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            boxShadow: '0 2px 10px rgba(0,0,0,0.15)',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', fontWeight: 600 }}>
+            <IconShield size={16} /> 👁️ Previewing as Normal Traveler
+          </div>
+          <button
+            type="button"
+            className="primary-btn"
+            style={{ padding: '4px 12px', fontSize: '12px', background: '#10B981' }}
+            onClick={() => setIsTravelerPreview(false)}
+          >
+            ⚡ Return to Superadmin Portal
+          </button>
+        </div>
+      )}
+
       {/* Storage Toast Alert */}
       {storageError && isOnline && (
         <div className="toast-alert">
@@ -973,7 +1047,7 @@ export default function App() {
                 window.location.hash = '#/';
               }
             }}
-            isAdmin={isAdmin || isSuperAdmin}
+            isAdmin={isAdmin || isSuperadmin}
             onRequestConfirm={setConfirmRequest}
           />
         </div>
@@ -1209,6 +1283,7 @@ export default function App() {
                 onSignOut={signOut}
                 pwaInstallable={!!deferredPrompt}
                 onInstallApp={handleInstallApp}
+                onOpenSuperadminPortal={() => setIsTravelerPreview(false)}
               />
             </div>
           </main>

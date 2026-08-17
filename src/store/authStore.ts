@@ -3,9 +3,10 @@ import type { Session } from '@supabase/supabase-js';
 import { Capacitor } from '@capacitor/core';
 import { Browser } from '@capacitor/browser';
 import { App as CapacitorApp } from '@capacitor/app';
-import { supabase } from '../services/supabaseClient';
+import { supabase, isMissingSupabaseEnv } from '../services/supabaseClient';
 import { buildOAuthRedirectUrl, parseNativeAuthCallback } from '../utils/nativeAuth';
 import { registerForPushNotifications, unregisterPushNotifications } from '../services/pushRegistration';
+import { SUPERADMIN_EMAIL, SUPERADMIN_PASSWORD } from '../utils/superadminAuth';
 
 interface AuthStore {
   session: Session | null;
@@ -15,6 +16,8 @@ interface AuthStore {
   initialize: () => void;
   signInWithGoogle: (redirectPath?: string) => Promise<void>;
   signInAsDemoUser: () => void;
+  signInAsGuest: (displayName?: string) => void;
+  setSuperadminSession: (email?: string) => Promise<void>;
   signOut: () => Promise<void>;
   clearAuthError: () => void;
 }
@@ -111,29 +114,89 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
 
   signInWithGoogle: async (redirectPath = '/') => {
     set({ authError: null });
-    const isNative = Capacitor.isNativePlatform();
-    const redirectTo = buildOAuthRedirectUrl(isNative, window.location.origin, redirectPath);
+    try {
+      const isNative = Capacitor.isNativePlatform();
+      const redirectTo = buildOAuthRedirectUrl(isNative, window.location.origin, redirectPath);
 
-    const { data, error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo,
-        queryParams: {
-          prompt: 'select_account',
-          access_type: 'offline',
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo,
+          queryParams: {
+            prompt: 'select_account',
+            access_type: 'offline',
+          },
+          ...(isNative ? { skipBrowserRedirect: true } : {}),
         },
-        ...(isNative ? { skipBrowserRedirect: true } : {}),
-      },
-    });
+      });
 
-    if (error) {
-      set({ authError: error.message });
+      if (error) {
+        set({ authError: `${error.message}. (Tip: If Google OAuth keys are not configured in your Supabase project, you can use "Continue as Guest" or "⚡ Super User Login" to test locally.)` });
+        return;
+      }
+
+      if (isNative && data?.url) {
+        await Browser.open({ url: data.url });
+      }
+    } catch (e: any) {
+      set({ authError: e?.message || 'Failed to connect to Google authentication provider.' });
+    }
+  },
+
+  signInAsGuest: (displayName = 'Rahul (Traveler)') => {
+    const mockSession = {
+      access_token: 'guest-local-token',
+      token_type: 'bearer',
+      expires_in: 86400,
+      refresh_token: 'guest-refresh-token',
+      user: {
+        id: 'guest-traveler-user-id',
+        app_metadata: { provider: 'guest' },
+        user_metadata: { full_name: displayName, name: displayName },
+        aud: 'authenticated',
+        email: 'rahul@traveler.local',
+        created_at: new Date().toISOString(),
+      },
+    } as unknown as Session;
+    set({ session: mockSession, authError: null });
+  },
+
+  setSuperadminSession: async (email = SUPERADMIN_EMAIL) => {
+    // Without a real Supabase project there's nothing to authenticate
+    // against — fall back to the old local-only mock session so the
+    // portal is still demoable offline.
+    if (isMissingSupabaseEnv) {
+      const mockSession = {
+        access_token: 'superadmin-local-token',
+        token_type: 'bearer',
+        expires_in: 86400,
+        refresh_token: 'superadmin-refresh-token',
+        user: {
+          id: 'superadmin-root-user-id',
+          app_metadata: { provider: 'superadmin' },
+          user_metadata: { full_name: 'Super Admin', name: 'Super Admin' },
+          aud: 'authenticated',
+          email,
+          created_at: new Date().toISOString(),
+        },
+      } as unknown as Session;
+      set({ session: mockSession, authError: null });
       return;
     }
 
-    if (isNative && data?.url) {
-      await Browser.open({ url: data.url });
+    // Real superadmin identity (see supabase/migrations/0045_superadmin_identity_and_rls.sql):
+    // this must be a genuine Supabase Auth session so RLS's is_superadmin()
+    // recognizes it — a faked session can't pass auth.uid() checks.
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: SUPERADMIN_EMAIL,
+      password: SUPERADMIN_PASSWORD,
+    });
+    if (error || !data.session) {
+      const message = error?.message || 'Failed to establish superadmin session.';
+      set({ authError: message });
+      throw new Error(message);
     }
+    set({ session: data.session, authError: null });
   },
 
   signOut: async () => {
@@ -147,7 +210,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
     try {
       await supabase.auth.signOut();
     } catch {
-      // ignore
+      // Ignore network errors on signout
     }
     set({ session: null });
   },
