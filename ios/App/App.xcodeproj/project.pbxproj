@@ -19,6 +19,7 @@
 		75224CF9A446E8B640ACF559 /* FirebaseMessaging in Frameworks */ = {isa = PBXBuildFile; productRef = ED962DEC8809FA03286AA339 /* FirebaseMessaging */; };
 		8163085A4E550FCFFDE514C8 /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = 38434F82E5DC36F72F53B286 /* FirebaseCore */; };
 		9582B6832FE993A70072D4E8 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9582B6822FE993A50072D4E8 /* SceneDelegate.swift */; };
+		FECF33DD3E64B0843E1907DB /* MainViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8E8B390F26C986A466508EC /* MainViewController.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -33,6 +34,7 @@
 		50B271D01FEDC1A000F3C39B /* public */ = {isa = PBXFileReference; lastKnownFileType = folder; path = public; sourceTree = "<group>"; };
 		9582B6822FE993A50072D4E8 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
 		958DCC722DB07C7200EA8C5F /* debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = debug.xcconfig; path = ../debug.xcconfig; sourceTree = SOURCE_ROOT; };
+		A8E8B390F26C986A466508EC /* MainViewController.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MainViewController.swift; sourceTree = "<group>"; };
 		DF518C4432429F1F51661A06 /* GoogleService-Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -80,6 +82,7 @@
 				2FAD9762203C412B000D30F8 /* config.xml */,
 				50B271D01FEDC1A000F3C39B /* public */,
 				DF518C4432429F1F51661A06 /* GoogleService-Info.plist */,
+				A8E8B390F26C986A466508EC /* MainViewController.swift */,
 			);
 			path = App;
 			sourceTree = "<group>";
@@ -171,6 +174,7 @@
 			files = (
 				504EC3081FED79650016851F /* AppDelegate.swift in Sources */,
 				9582B6832FE993A70072D4E8 /* SceneDelegate.swift in Sources */,
+				FECF33DD3E64B0843E1907DB /* MainViewController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

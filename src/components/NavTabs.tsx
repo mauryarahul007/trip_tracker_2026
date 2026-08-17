@@ -10,19 +10,19 @@ type Props = {
 export function NavTabs({ activeTab, setActiveTab }: Props) {
   return (
     <nav className="nav-tabs">
-      <button className={`nav-tab-item ${activeTab === 'expenses' ? 'active' : ''}`} onClick={() => setActiveTab('expenses')} aria-label="Expenses">
+      <button data-tab="expenses" className={`nav-tab-item ${activeTab === 'expenses' ? 'active' : ''}`} onClick={() => setActiveTab('expenses')} aria-label="Expenses">
         <span className="nav-tab-icon"><IconExpenses size={26} /></span>
         <span>Expenses</span>
       </button>
-      <button className={`nav-tab-item ${activeTab === 'members' ? 'active' : ''}`} onClick={() => setActiveTab('members')} aria-label="Members & Groups">
+      <button data-tab="members" className={`nav-tab-item ${activeTab === 'members' ? 'active' : ''}`} onClick={() => setActiveTab('members')} aria-label="Members & Groups">
         <span className="nav-tab-icon"><IconMembers size={26} /></span>
         <span>Members</span>
       </button>
-      <button className={`nav-tab-item ${activeTab === 'analytics' ? 'active' : ''}`} onClick={() => setActiveTab('analytics')} aria-label="Analytics">
+      <button data-tab="analytics" className={`nav-tab-item ${activeTab === 'analytics' ? 'active' : ''}`} onClick={() => setActiveTab('analytics')} aria-label="Analytics">
         <span className="nav-tab-icon"><IconAnalytics size={26} /></span>
         <span>Analytics</span>
       </button>
-      <button className={`nav-tab-item ${activeTab === 'settings' ? 'active' : ''}`} onClick={() => setActiveTab('settings')} aria-label="Settings">
+      <button data-tab="settings" className={`nav-tab-item ${activeTab === 'settings' ? 'active' : ''}`} onClick={() => setActiveTab('settings')} aria-label="Settings">
         <span className="nav-tab-icon"><IconSettings size={26} /></span>
         <span>Settings</span>
       </button>

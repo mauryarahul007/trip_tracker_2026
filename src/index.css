@@ -449,6 +449,20 @@ input[type="date"].input-field {
   z-index: 100;
 }
 
+/* Native iOS "Liquid Glass" tab bar: MainViewController.swift renders a
+   genuine native floating pill (UIVisualEffectView + UIGlassEffect on iOS
+   26+, real UIButtons for the icons/labels) on top of the WKWebView —
+   putting a native blur *behind* CSS-rendered icons blurs the icons too,
+   since WKWebView flattens everything into one layer the blur view
+   samples from, so crisp icons over blur requires the icons themselves to
+   be native. This element stays in the DOM (native taps it via .click()
+   to drive the existing React handlers unchanged, and its .active class /
+   data-tab reports state back to native — see nativeShell.ts) but is
+   never visible. */
+html.capacitor-ios .nav-tabs {
+  display: none;
+}
+
 .nav-tab-item {
   flex: 1;
   display: flex;
@@ -1680,6 +1694,14 @@ input:checked + .toggle-slider:before {
   overflow-y: auto;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
+}
+/* .nav-tabs is a floating overlay on iOS (see above) and no longer
+   reserves its own space in flex flow, so content needs this extra
+   clearance or it rests directly under the pill instead of just
+   scrolling behind it. 88px = the pill's 8px bottom margin + 64px height
+   + 16px breathing room above it, matching TabBarGlassMetrics exactly. */
+html.capacitor-ios .tab-pane {
+  padding-bottom: calc(24px + var(--safe-bottom, 0px) + 88px);
 }
 
 .trips-screen-scroll {
