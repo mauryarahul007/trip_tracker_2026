@@ -19,6 +19,7 @@ import {
   IconAlertCircle,
   IconCheckCircle,
 } from './Icons';
+import './admin/ops-deck.css';
 
 type Props = {
   onBack: () => void;
@@ -41,26 +42,26 @@ const CATEGORIES: { value: BugRecord['category']; label: string }[] = [
 ];
 
 const SEVERITIES: { value: BugRecord['severity']; label: string; color: string }[] = [
-  { value: 'critical', label: 'Critical', color: 'var(--color-danger)' },
-  { value: 'high', label: 'High', color: 'var(--secondary-accent)' },
+  { value: 'critical', label: 'Critical', color: 'var(--danger)' },
+  { value: 'high', label: 'High', color: 'var(--amber)' },
   { value: 'medium', label: 'Medium', color: 'var(--text-secondary)' },
-  { value: 'low', label: 'Low', color: 'var(--text-muted)' },
+  { value: 'low', label: 'Low', color: 'var(--text-tertiary)' },
 ];
 
 function severityColor(severity: BugRecord['severity']): string {
-  return SEVERITIES.find((s) => s.value === severity)?.color || 'var(--text-muted)';
+  return SEVERITIES.find((s) => s.value === severity)?.color || 'var(--text-tertiary)';
 }
 
 function statusMeta(status: BugRecord['status']): { label: string; color: string } {
   switch (status) {
     case 'open':
-      return { label: 'Open', color: 'var(--primary-accent)' };
+      return { label: 'Open', color: 'var(--amber)' };
     case 'in_progress':
-      return { label: 'Working', color: 'var(--secondary-accent)' };
+      return { label: 'Working', color: 'var(--cyan)' };
     case 'resolved':
-      return { label: 'Settled', color: 'var(--color-success)' };
+      return { label: 'Settled', color: 'var(--safe)' };
     default:
-      return { label: "Won't Fix", color: 'var(--text-muted)' };
+      return { label: "Won't Fix", color: 'var(--text-tertiary)' };
   }
 }
 
@@ -281,23 +282,25 @@ ${bug.diagnostics?.stackTrace ? `#### Stack Trace\n\`\`\`text\n${bug.diagnostics
 
   if (!isAdmin) {
     return (
-      <div>
-        <div className="settings-subscreen-nav">
-          <button type="button" className="settings-back-btn" onClick={onBack}>
-            <IconChevronLeft size={18} /> Settings
+      <div className="ops-deck" style={{ margin: '-16px -20px', padding: '20px', minHeight: '100%' }}>
+        <div className="ops-page-head">
+          <div>
+            <h2>Bug Ledger</h2>
+            <p>Restricted to superadmins and trip admins for system maintenance.</p>
+          </div>
+          <button type="button" className="ops-btn" onClick={onBack}>
+            <IconChevronLeft size={14} className="icon-sm" /> Settings
           </button>
-          <h3 className="settings-subscreen-title">Bug Ledger</h3>
-          <div style={{ width: '20px' }} />
         </div>
-        <div className="glass-card" style={{ textAlign: 'center', padding: '32px 20px' }}>
-          <span style={{ color: 'var(--secondary-accent)', margin: '0 auto 12px', display: 'inline-block' }}>
+        <div className="ops-card" style={{ textAlign: 'center', padding: '32px 20px' }}>
+          <span style={{ color: 'var(--amber)', margin: '0 auto 12px', display: 'inline-block' }}>
             <IconAlertCircle size={28} className="icon" />
           </span>
-          <h3 style={{ fontSize: '17px', fontWeight: 600, marginBottom: '8px' }}>Superadmin access required</h3>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '13.5px', maxWidth: '360px', margin: '0 auto 20px' }}>
+          <h3 style={{ fontFamily: 'var(--display)', fontSize: '15px', fontWeight: 700, marginBottom: '8px', color: 'var(--text-primary)' }}>Superadmin access required</h3>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '12.5px', maxWidth: '360px', margin: '0 auto 20px' }}>
             The bug ledger is restricted to superadmins and trip admins for system maintenance.
           </p>
-          <button type="button" className="gradient-btn" onClick={onBack}>
+          <button type="button" className="ops-btn ops-btn-primary" onClick={onBack} style={{ padding: '9px 18px' }}>
             Return to Settings
           </button>
         </div>
@@ -306,68 +309,65 @@ ${bug.diagnostics?.stackTrace ? `#### Stack Trace\n\`\`\`text\n${bug.diagnostics
   }
 
   return (
-    <div className="fade-in" style={{ paddingBottom: '40px' }}>
-      <div className="settings-subscreen-nav">
-        <button type="button" className="settings-back-btn" onClick={onBack}>
-          <IconChevronLeft size={18} /> Settings
-        </button>
-        <h3 className="settings-subscreen-title">Bug Ledger</h3>
-        <button type="button" className="settings-back-btn" onClick={loadBugs} title="Sync with the CLI ledger">
-          <IconRefresh size={16} />
-        </button>
+    <div className="ops-deck fade-in" style={{ margin: '-16px -20px', padding: '20px', paddingBottom: '40px', minHeight: '100%' }}>
+      <div className="ops-page-head">
+        <div>
+          <h2>Bug Ledger</h2>
+          <p>Every case found by Antigravity, Claude CLI, or human QA — synced to one ledger.</p>
+        </div>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <button type="button" className="ops-btn" onClick={loadBugs} title="Sync with the CLI ledger">
+            <IconRefresh size={14} className="icon-sm" />
+          </button>
+          <button type="button" className="ops-btn" onClick={onBack}>
+            <IconChevronLeft size={14} className="icon-sm" /> Settings
+          </button>
+        </div>
       </div>
 
-      <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: '0 0 16px' }}>
-        Every case found by Antigravity, Claude CLI, or human QA — synced to one ledger.
-      </p>
-
       {toastMessage && (
-        <div style={{ position: 'fixed', top: 'calc(16px + env(safe-area-inset-top, 0px))', left: '50%', transform: 'translateX(-50%)', zIndex: 1200 }}>
-          <div className="postmark-toast">
-            <span
-              className="pm-stamp"
-              aria-hidden="true"
-              style={{
-                borderColor: toastMessage.tone === 'success' ? 'var(--color-success)' : 'var(--color-danger)',
-                color: toastMessage.tone === 'success' ? 'var(--color-success)' : 'var(--color-danger)',
-              }}
-            >
-              {toastMessage.tone === 'success' ? <IconCheckCircle size={14} className="icon-sm" /> : <IconAlertCircle size={14} className="icon-sm" />}
-            </span>
-            <span className="pm-text">{toastMessage.text}</span>
-          </div>
+        <div
+          className="ops-toast"
+          style={
+            toastMessage.tone === 'danger'
+              ? { background: 'var(--danger-dim)', borderColor: 'rgba(255,107,94,0.35)', color: 'var(--danger)' }
+              : undefined
+          }
+        >
+          {toastMessage.tone === 'success' ? <IconCheckCircle size={14} /> : <IconAlertCircle size={14} />}
+          {toastMessage.text}
         </div>
       )}
 
-      <div className="bug-stat-strip" style={{ marginBottom: '14px' }}>
-        <button type="button" className={`bug-stat${statusFilter === 'all' ? ' active' : ''}`} onClick={() => setStatusFilter('all')}>
+      <div className="ops-stat-row" style={{ marginBottom: '14px' }}>
+        <button type="button" className="ops-stat-btn" data-active={statusFilter === 'all'} onClick={() => setStatusFilter('all')}>
           <span className="n">{stats.total}</span>
           <span className="l">Total</span>
         </button>
-        <button type="button" className={`bug-stat${statusFilter === 'open' ? ' active' : ''}`} onClick={() => setStatusFilter('open')}>
-          <span className="n" style={{ color: 'var(--primary-accent)' }}>{stats.open}</span>
+        <button type="button" className="ops-stat-btn" data-active={statusFilter === 'open'} onClick={() => setStatusFilter('open')}>
+          <span className="n" style={{ color: 'var(--amber)' }}>{stats.open}</span>
           <span className="l">Open</span>
         </button>
-        <button type="button" className={`bug-stat${statusFilter === 'in_progress' ? ' active' : ''}`} onClick={() => setStatusFilter('in_progress')}>
-          <span className="n" style={{ color: 'var(--secondary-accent)' }}>{stats.inProgress}</span>
+        <button type="button" className="ops-stat-btn" data-active={statusFilter === 'in_progress'} onClick={() => setStatusFilter('in_progress')}>
+          <span className="n" style={{ color: 'var(--cyan)' }}>{stats.inProgress}</span>
           <span className="l">Working</span>
         </button>
-        <button type="button" className={`bug-stat${statusFilter === 'resolved' ? ' active' : ''}`} onClick={() => setStatusFilter('resolved')}>
-          <span className="n" style={{ color: 'var(--color-success)' }}>{stats.resolved}</span>
+        <button type="button" className="ops-stat-btn" data-active={statusFilter === 'resolved'} onClick={() => setStatusFilter('resolved')}>
+          <span className="n" style={{ color: 'var(--safe)' }}>{stats.resolved}</span>
           <span className="l">Settled</span>
         </button>
-        <button type="button" className={`bug-stat${statusFilter === 'critical' ? ' active' : ''}`} onClick={() => setStatusFilter('critical')}>
-          <span className="n" style={{ color: 'var(--color-danger)' }}>{stats.critical}</span>
+        <button type="button" className="ops-stat-btn" data-active={statusFilter === 'critical'} onClick={() => setStatusFilter('critical')}>
+          <span className="n" style={{ color: 'var(--danger)' }}>{stats.critical}</span>
           <span className="l">Critical</span>
         </button>
       </div>
 
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginBottom: '14px' }}>
-        <div className="input-icon-wrap" style={{ flex: 1, minWidth: '180px' }}>
-          <IconSearch size={16} className="icon-sm" />
+        <div className="ops-search-wrap" style={{ minWidth: '180px' }}>
+          <IconSearch size={16} />
           <input
             type="text"
-            className="input-field"
+            className="ops-input"
             placeholder="Search case, category, reporter..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -377,7 +377,7 @@ ${bug.diagnostics?.stackTrace ? `#### Stack Trace\n\`\`\`text\n${bug.diagnostics
         <select
           value={categoryFilter}
           onChange={(e) => setCategoryFilter(e.target.value)}
-          className="input-field select-field"
+          className="ops-select"
           style={{ width: 'auto', flex: '0 0 auto' }}
         >
           <option value="all">All categories</option>
@@ -386,28 +386,26 @@ ${bug.diagnostics?.stackTrace ? `#### Stack Trace\n\`\`\`text\n${bug.diagnostics
           ))}
         </select>
 
-        <button type="button" className="secondary-btn" onClick={handleExportJson}>
-          <IconDownload size={15} className="icon-sm" /> Export
+        <button type="button" className="ops-btn" onClick={handleExportJson}>
+          <IconDownload size={14} className="icon-sm" /> Export
         </button>
 
-        <button type="button" className="gradient-btn" onClick={() => setShowAddModal(true)} style={{ marginLeft: 'auto' }}>
-          <IconPlus size={15} className="icon-sm" /> New Case
+        <button type="button" className="ops-btn ops-btn-primary" onClick={() => setShowAddModal(true)} style={{ marginLeft: 'auto' }}>
+          <IconPlus size={14} className="icon-sm" /> New Case
         </button>
       </div>
 
       {loading ? (
-        <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-secondary)', fontSize: '13.5px' }}>
+        <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-secondary)', fontSize: '13px' }}>
           Loading the ledger&hellip;
         </div>
       ) : filteredBugs.length === 0 ? (
-        <div className="ledger-empty-prompt" style={{ padding: '32px 16px' }}>
-          <div className="ledger-pencil">
-            <IconSearch size={15} className="icon-sm" />
-          </div>
-          <p>No cases match. Great sign, or try clearing filters.</p>
+        <div className="ops-card ops-empty-prompt">
+          <IconSearch size={20} className="icon" style={{ color: 'var(--text-tertiary)', marginBottom: '8px' }} />
+          <p style={{ margin: 0 }}>No cases match. Great sign, or try clearing filters.</p>
         </div>
       ) : (
-        <div className="settings-group-card">
+        <div className="ops-bug-list">
           {filteredBugs.map((bug) => {
             const isExpanded = expandedBugId === bug.id;
             const status = statusMeta(bug.status);
@@ -416,32 +414,35 @@ ${bug.diagnostics?.stackTrace ? `#### Stack Trace\n\`\`\`text\n${bug.diagnostics
               <Fragment key={bug.id}>
                 <button
                   type="button"
-                  className="bug-entry"
+                  className="ops-bug-entry"
                   onClick={() => setExpandedBugId(isExpanded ? null : bug.id)}
                   aria-expanded={isExpanded}
                 >
-                  <div className="bug-entry-top">
-                    <span className="bug-case-id">{bug.id}</span>
-                    <span className="stamp-badge" style={{ color: severityColor(bug.severity), fontSize: '10.5px', padding: '1px 8px' }}>
+                  <div className="ops-bug-top">
+                    <span className="ops-bug-id">{bug.id}</span>
+                    <span
+                      className="ops-pill"
+                      style={{ color: severityColor(bug.severity), background: 'var(--bg-inset)' }}
+                    >
                       {SEVERITIES.find((s) => s.value === bug.severity)?.label || bug.severity}
                     </span>
-                    <span className="stamp-badge" style={{ color: status.color, fontSize: '10.5px', padding: '1px 8px', transform: 'rotate(-3deg)' }}>
+                    <span className="ops-pill" style={{ color: status.color, background: 'var(--bg-inset)' }}>
                       {status.label}
                     </span>
                   </div>
-                  <p className="bug-entry-title">{bug.title}</p>
-                  <div className="bug-entry-meta">
-                    <span className="bug-cat">{bug.category}</span>
+                  <p className="ops-bug-title">{bug.title}</p>
+                  <div className="ops-bug-meta">
+                    <span className="cat">{bug.category}</span>
                     {' · found by '}{bug.foundBy}{' · '}{new Date(bug.createdAt).toLocaleDateString()}
                     {bug.environment?.route && ` · ${bug.environment.route}`}
                   </div>
                 </button>
 
                 {isExpanded && (
-                  <div className="bug-case-detail">
+                  <div className="ops-bug-detail">
                     {bug.reproSteps && bug.reproSteps.length > 0 && (
-                      <div className="bug-field">
-                        <span className="form-label">Steps to reproduce</span>
+                      <div className="ops-bug-field">
+                        <span className="ops-bug-label">Steps to reproduce</span>
                         <ol>
                           {bug.reproSteps.map((step, idx) => (
                             <li key={idx}>{step}</li>
@@ -451,33 +452,33 @@ ${bug.diagnostics?.stackTrace ? `#### Stack Trace\n\`\`\`text\n${bug.diagnostics
                     )}
 
                     {(bug.expectedBehavior || bug.actualBehavior) && (
-                      <div className="bug-field" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                      <div className="ops-bug-field" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                         {bug.expectedBehavior && (
                           <div>
-                            <span className="form-label">Expected</span>
-                            <div style={{ fontSize: '12.5px', marginTop: '3px' }}>{bug.expectedBehavior}</div>
+                            <span className="ops-bug-label">Expected</span>
+                            <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>{bug.expectedBehavior}</div>
                           </div>
                         )}
                         {bug.actualBehavior && (
                           <div>
-                            <span className="form-label">Actual</span>
-                            <div style={{ fontSize: '12.5px', marginTop: '3px' }}>{bug.actualBehavior}</div>
+                            <span className="ops-bug-label">Actual</span>
+                            <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>{bug.actualBehavior}</div>
                           </div>
                         )}
                       </div>
                     )}
 
                     {bug.diagnostics?.stackTrace && (
-                      <div className="bug-field">
-                        <span className="form-label">Trace</span>
-                        <div className="bug-stack-block" style={{ marginTop: '4px' }}>{bug.diagnostics.stackTrace}</div>
+                      <div className="ops-bug-field">
+                        <span className="ops-bug-label">Trace</span>
+                        <div className="ops-bug-stack">{bug.diagnostics.stackTrace}</div>
                       </div>
                     )}
 
                     {bug.status === 'resolved' && (
-                      <div className="bug-field bug-resolution-note">
+                      <div className="ops-bug-field ops-bug-resolution">
                         <strong>Resolution:</strong> {bug.resolutionNote || 'Resolved'}
-                        <div style={{ fontSize: '11px', marginTop: '3px', color: 'var(--text-secondary)' }}>
+                        <div style={{ fontSize: '10.5px', marginTop: '3px', color: 'var(--text-secondary)' }}>
                           Settled by {bug.resolvedBy || 'superadmin'} on {bug.resolvedAt ? new Date(bug.resolvedAt).toLocaleDateString() : 'N/A'}
                         </div>
                       </div>
@@ -485,30 +486,35 @@ ${bug.diagnostics?.stackTrace ? `#### Stack Trace\n\`\`\`text\n${bug.diagnostics
 
                     <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '4px' }}>
                       {bug.status === 'open' && (
-                        <button type="button" className="secondary-btn" onClick={() => handleStatusChange(bug, 'in_progress')} style={{ fontSize: '12.5px', padding: '8px 14px' }}>
+                        <button type="button" className="ops-btn" onClick={() => handleStatusChange(bug, 'in_progress')}>
                           Start work
                         </button>
                       )}
 
                       {bug.status !== 'resolved' ? (
-                        <button type="button" className="secondary-btn" onClick={() => handleStatusChange(bug, 'resolved')} style={{ fontSize: '12.5px', padding: '8px 14px', color: 'var(--color-success)', borderColor: 'var(--color-success)' }}>
+                        <button
+                          type="button"
+                          className="ops-btn"
+                          onClick={() => handleStatusChange(bug, 'resolved')}
+                          style={{ color: 'var(--safe)', borderColor: 'rgba(74,222,154,0.4)' }}
+                        >
                           Mark settled
                         </button>
                       ) : (
-                        <button type="button" className="secondary-btn" onClick={() => handleStatusChange(bug, 'open')} style={{ fontSize: '12.5px', padding: '8px 14px' }}>
+                        <button type="button" className="ops-btn" onClick={() => handleStatusChange(bug, 'open')}>
                           Reopen
                         </button>
                       )}
 
-                      <button type="button" className="secondary-btn" onClick={() => handleCopyPrompt(bug)} style={{ fontSize: '12.5px', padding: '8px 14px' }}>
+                      <button type="button" className="ops-btn" onClick={() => handleCopyPrompt(bug)}>
                         <IconCopy size={13} className="icon-sm" /> Copy for AI
                       </button>
 
                       <button
                         type="button"
-                        className="secondary-btn"
+                        className="ops-btn"
                         onClick={() => handleDeleteBug(bug.id)}
-                        style={{ marginLeft: 'auto', padding: '8px 10px', color: 'var(--color-danger)', borderColor: 'var(--color-danger)' }}
+                        style={{ marginLeft: 'auto', color: 'var(--danger)', borderColor: 'rgba(255,107,94,0.4)' }}
                         aria-label={`Delete ${bug.id}`}
                       >
                         <IconTrash size={14} className="icon-sm" />
@@ -523,37 +529,38 @@ ${bug.diagnostics?.stackTrace ? `#### Stack Trace\n\`\`\`text\n${bug.diagnostics
       )}
 
       {showAddModal && (
-        <div className="modal-overlay" onClick={() => setShowAddModal(false)}>
-          <div className="glass-card fade-in modal-sheet" style={{ maxWidth: '520px' }} onClick={(e) => e.stopPropagation()}>
+        <div className="ops-overlay" onClick={() => setShowAddModal(false)}>
+          <div className="ops-sheet fade-in" onClick={(e) => e.stopPropagation()}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <h3 style={{ fontSize: '18px', fontWeight: 700, margin: 0, fontFamily: 'var(--font-family-title)' }}>File a case</h3>
-              <button type="button" onClick={() => setShowAddModal(false)} className="secondary-btn" style={{ padding: '6px 10px' }}>
+              <h3 style={{ fontFamily: 'var(--display)', fontSize: '17px', fontWeight: 700, margin: 0, color: 'var(--text-primary)' }}>File a case</h3>
+              <button type="button" onClick={() => setShowAddModal(false)} className="ops-btn" style={{ padding: '6px 10px' }}>
                 Close
               </button>
             </div>
 
             <form onSubmit={handleCreateBug}>
-              <div className="form-group">
-                <label className="form-label">Case summary *</label>
+              <div className="ops-form-group">
+                <label className="ops-form-label">Case summary *</label>
                 <input
                   type="text"
                   required
-                  className="input-field"
+                  className="ops-input"
                   placeholder="e.g. Offline sync drops member delete transaction"
                   value={newTitle}
                   onChange={(e) => setNewTitle(e.target.value)}
                 />
               </div>
 
-              <div className="form-group">
-                <label className="form-label">Severity</label>
-                <div className="badge-row">
+              <div className="ops-form-group">
+                <label className="ops-form-label">Severity</label>
+                <div className="ops-filter-row" style={{ marginBottom: 0 }}>
                   {SEVERITIES.map((s) => (
                     <button
                       key={s.value}
                       type="button"
-                      className={`category-badge${newSeverity === s.value ? ' active' : ''}`}
-                      style={newSeverity === s.value ? { borderColor: s.color, background: 'transparent', color: s.color } : undefined}
+                      className="ops-chip"
+                      data-active={newSeverity === s.value}
+                      style={newSeverity === s.value ? { borderColor: s.color, color: s.color, background: 'var(--bg-inset)' } : undefined}
                       onClick={() => setNewSeverity(s.value)}
                     >
                       {s.label}
@@ -562,14 +569,15 @@ ${bug.diagnostics?.stackTrace ? `#### Stack Trace\n\`\`\`text\n${bug.diagnostics
                 </div>
               </div>
 
-              <div className="form-group">
-                <label className="form-label">Category</label>
-                <div className="badge-row">
+              <div className="ops-form-group">
+                <label className="ops-form-label">Category</label>
+                <div className="ops-filter-row" style={{ marginBottom: 0 }}>
                   {CATEGORIES.map((c) => (
                     <button
                       key={c.value}
                       type="button"
-                      className={`category-badge${newCategory === c.value ? ' active' : ''}`}
+                      className="ops-chip"
+                      data-active={newCategory === c.value}
                       onClick={() => setNewCategory(c.value)}
                     >
                       {c.label}
@@ -578,22 +586,22 @@ ${bug.diagnostics?.stackTrace ? `#### Stack Trace\n\`\`\`text\n${bug.diagnostics
                 </div>
               </div>
 
-              <div className="form-group">
-                <label className="form-label">What happened</label>
+              <div className="ops-form-group">
+                <label className="ops-form-label">What happened</label>
                 <textarea
                   rows={3}
-                  className="input-field bug-ruled-textarea"
+                  className="ops-input"
                   placeholder="Explain what's breaking and the impact..."
                   value={newDesc}
                   onChange={(e) => setNewDesc(e.target.value)}
                 />
               </div>
 
-              <div className="form-group">
-                <label className="form-label">Steps to reproduce (one per line)</label>
+              <div className="ops-form-group">
+                <label className="ops-form-label">Steps to reproduce (one per line)</label>
                 <textarea
                   rows={2}
-                  className="input-field"
+                  className="ops-input"
                   placeholder={'1. Open app\n2. Add 2 members\n3. Tap delete'}
                   value={newSteps}
                   onChange={(e) => setNewSteps(e.target.value)}
@@ -601,21 +609,21 @@ ${bug.diagnostics?.stackTrace ? `#### Stack Trace\n\`\`\`text\n${bug.diagnostics
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                <div className="form-group">
-                  <label className="form-label">Expected</label>
-                  <input type="text" className="input-field" placeholder="Member deleted successfully" value={newExpected} onChange={(e) => setNewExpected(e.target.value)} />
+                <div className="ops-form-group">
+                  <label className="ops-form-label">Expected</label>
+                  <input type="text" className="ops-input" placeholder="Member deleted successfully" value={newExpected} onChange={(e) => setNewExpected(e.target.value)} />
                 </div>
-                <div className="form-group">
-                  <label className="form-label">Actual</label>
-                  <input type="text" className="input-field" placeholder="Member remains in split balances" value={newActual} onChange={(e) => setNewActual(e.target.value)} />
+                <div className="ops-form-group">
+                  <label className="ops-form-label">Actual</label>
+                  <input type="text" className="ops-input" placeholder="Member remains in split balances" value={newActual} onChange={(e) => setNewActual(e.target.value)} />
                 </div>
               </div>
 
               <div style={{ display: 'flex', gap: '10px', marginTop: '4px' }}>
-                <button type="submit" disabled={isSubmitting} className="gradient-btn" style={{ flex: 1 }}>
+                <button type="submit" disabled={isSubmitting} className="ops-btn ops-btn-primary" style={{ flex: 1, justifyContent: 'center' }}>
                   {isSubmitting ? 'Saving...' : 'Save & sync to ledger'}
                 </button>
-                <button type="button" className="secondary-btn" onClick={() => setShowAddModal(false)}>
+                <button type="button" className="ops-btn" onClick={() => setShowAddModal(false)}>
                   Cancel
                 </button>
               </div>
@@ -625,36 +633,36 @@ ${bug.diagnostics?.stackTrace ? `#### Stack Trace\n\`\`\`text\n${bug.diagnostics
       )}
 
       {resolvingBug && (
-        <div className="modal-overlay" onClick={() => setResolvingBug(null)}>
-          <div className="glass-card fade-in modal-sheet" style={{ maxWidth: '440px' }} onClick={(e) => e.stopPropagation()}>
-            <h3 style={{ fontSize: '17px', fontWeight: 700, margin: '0 0 4px', fontFamily: 'var(--font-family-title)' }}>
+        <div className="ops-overlay" onClick={() => setResolvingBug(null)}>
+          <div className="ops-sheet fade-in" style={{ maxWidth: '440px' }} onClick={(e) => e.stopPropagation()}>
+            <h3 style={{ fontFamily: 'var(--display)', fontSize: '16px', fontWeight: 700, margin: '0 0 4px', color: 'var(--text-primary)' }}>
               Settle {resolvingBug.id}
             </h3>
-            <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: '0 0 16px' }}>
+            <p style={{ fontSize: '12.5px', color: 'var(--text-secondary)', margin: '0 0 16px' }}>
               {resolvingBug.title}
             </p>
 
-            <div className="form-group">
-              <label className="form-label">Fix note / commit reference</label>
+            <div className="ops-form-group">
+              <label className="ops-form-label">Fix note / commit reference</label>
               <input
                 type="text"
-                className="input-field"
+                className="ops-input"
                 placeholder="e.g. Fixed penny distribution in resolveShares inside tripStore.ts"
                 value={resolutionNote}
                 onChange={(e) => setResolutionNote(e.target.value)}
               />
             </div>
 
-            <div className="form-group">
-              <label className="form-label">Settled by</label>
-              <input type="text" className="input-field" value={resolvedByName} onChange={(e) => setResolvedByName(e.target.value)} />
+            <div className="ops-form-group">
+              <label className="ops-form-label">Settled by</label>
+              <input type="text" className="ops-input" value={resolvedByName} onChange={(e) => setResolvedByName(e.target.value)} />
             </div>
 
             <div style={{ display: 'flex', gap: '10px', marginTop: '4px' }}>
-              <button type="button" className="gradient-btn" onClick={handleConfirmResolve} style={{ flex: 1 }}>
+              <button type="button" className="ops-btn ops-btn-primary" onClick={handleConfirmResolve} style={{ flex: 1, justifyContent: 'center' }}>
                 Confirm settlement
               </button>
-              <button type="button" className="secondary-btn" onClick={() => setResolvingBug(null)}>
+              <button type="button" className="ops-btn" onClick={() => setResolvingBug(null)}>
                 Cancel
               </button>
             </div>

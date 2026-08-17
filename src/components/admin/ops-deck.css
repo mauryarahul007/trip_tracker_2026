@@ -385,3 +385,44 @@
 .ops-guard-btn { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 12px; border-radius: 12px; border: 1.5px solid var(--danger); background: rgba(255,107,94,0.1); color: var(--danger); font-size: 11.5px; letter-spacing: 0.02em; cursor: pointer; }
 .ops-guard-btn:hover { background: rgba(255,107,94,0.18); }
 .ops-guard-btn:focus-visible { outline: 2px solid var(--danger); outline-offset: 2px; }
+
+/* ---------- Bug Ledger ---------- */
+.ops-btn-primary { background: var(--amber); border-color: var(--amber); color: #0B0E14; font-weight: 600; }
+.ops-btn-primary:hover { background: #7A6BF0; border-color: #7A6BF0; color: #0B0E14; }
+
+.ops-stat-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
+@media (max-width: 640px) { .ops-stat-row { grid-template-columns: repeat(3, 1fr); } }
+.ops-stat-btn { background: var(--bg-panel); border: 1px solid var(--line); border-radius: 14px; padding: 12px 6px; cursor: pointer; text-align: center; }
+.ops-stat-btn:hover { border-color: var(--line-strong); }
+.ops-stat-btn[data-active="true"] { border-color: var(--amber); background: var(--amber-dim); }
+.ops-stat-btn .n { font-family: var(--mono); font-size: 19px; font-weight: 700; display: block; font-variant-numeric: tabular-nums; }
+.ops-stat-btn .l { font-family: var(--mono); font-size: 9px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-tertiary); margin-top: 2px; display: block; }
+
+.ops-bug-list { background: var(--bg-panel); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
+.ops-bug-entry { display: block; width: 100%; padding: 13px 16px; background: transparent; border: none; border-bottom: 1px solid var(--line); text-align: left; cursor: pointer; color: inherit; font-family: inherit; }
+.ops-bug-entry:last-child { border-bottom: none; }
+.ops-bug-entry:hover { background: var(--bg-panel-raised); }
+.ops-bug-top { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 5px; }
+.ops-bug-id { font-family: var(--mono); font-size: 11px; color: var(--text-tertiary); font-variant-numeric: tabular-nums; }
+.ops-bug-title { font-size: 13px; font-weight: 600; color: var(--text-primary); margin: 0 0 4px; line-height: 1.4; }
+.ops-bug-meta { font-size: 11px; color: var(--text-tertiary); }
+.ops-bug-meta .cat { color: var(--amber); }
+.ops-pill { font-size: 9.5px; font-weight: 700; letter-spacing: 0.02em; padding: 3px 9px; border-radius: 20px; display: inline-block; }
+
+.ops-bug-detail { padding: 14px 16px 16px; border-bottom: 1px solid var(--line); background: var(--bg-void); }
+.ops-bug-detail:last-child { border-bottom: none; }
+.ops-bug-field { margin-bottom: 12px; }
+.ops-bug-field:last-child { margin-bottom: 0; }
+.ops-bug-field ol { margin: 4px 0 0 18px; padding: 0; font-size: 12.5px; color: var(--text-secondary); }
+.ops-bug-field ol li { margin-bottom: 3px; }
+.ops-bug-label { font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-tertiary); display: block; margin-bottom: 3px; }
+.ops-bug-stack { font-family: var(--mono); font-size: 11px; background: var(--bg-inset); border: 1px solid var(--line); border-radius: 10px; padding: 9px 11px; color: var(--text-secondary); white-space: pre-wrap; overflow-x: auto; max-height: 120px; line-height: 1.5; }
+.ops-bug-resolution { background: var(--safe-dim); border-left: 3px solid var(--safe); border-radius: 10px; padding: 10px 12px; font-size: 12px; color: var(--text-primary); }
+
+.ops-empty-prompt { text-align: center; padding: 32px 16px; color: var(--text-tertiary); font-size: 12.5px; }
+
+.ops-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
+.ops-sheet { width: 100%; max-width: 520px; max-height: 90vh; overflow-y: auto; background: var(--bg-panel); border: 1px solid var(--line); border-radius: 16px; padding: 24px; box-shadow: 0 30px 60px -20px rgba(0,0,0,0.6); }
+
+.ops-form-group { margin-bottom: 14px; display: flex; flex-direction: column; gap: 6px; }
+.ops-form-label { font-family: var(--mono); font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-tertiary); }
