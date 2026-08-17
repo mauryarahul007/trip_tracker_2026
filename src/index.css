@@ -1724,7 +1724,9 @@ input:checked + .toggle-slider:before {
   top: -8px;
   width: 16px;
   height: 16px;
-  background: var(--bg-surface);
+  /* Matches .app-container's canvas (--bg-app), not the hero card's paper
+     fill (--bg-surface) — the perf sits below the card, over the canvas. */
+  background: var(--bg-app);
   border-radius: 50%;
   border: 1px solid var(--border-color);
 }

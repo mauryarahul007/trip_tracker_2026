@@ -10,19 +10,34 @@ import { useEffect, useRef } from 'react';
  * `onClose` only fires from an actual back navigation (popstate) — the
  * caller's own close handler already runs for every other close path.
  *
- * One back action must close exactly one thing, deepest first, even when
- * several screens/modals are open at once. A `popstate` event is global —
- * every mounted instance would see the same event — so a single shared
- * stack + one listener decides which instance it belongs to (whichever
- * pushed last), instead of every open instance reacting to it.
+ * Two things mobile browsers need, that a plain `pushState(state, '')`
+ * doesn't give them:
+ *
+ * 1. A real, visibly different URL. Repeated same-URL pushState calls
+ *    (the empty-string url form) are exactly the pattern mobile Chrome's
+ *    history-manipulation heuristics treat as noise and can collapse or
+ *    skip entirely on a back gesture — so it silently fails to close
+ *    anything, or closes more than one thing at once. Pushing a real hash
+ *    fragment per open screen/modal gives the browser a genuine URL change
+ *    to track, so the gesture reliably lands on our entry.
+ *
+ * 2. Self-correction if a gesture still skips more than one entry at once
+ *    (a long/fast swipe can do this on some browsers regardless). Each
+ *    pushed state carries its own stack depth; on popstate we close
+ *    everything deeper than where the browser actually landed, instead of
+ *    assuming exactly one entry was consumed.
  */
 type StackEntry = { onClose: () => void };
 const stack: StackEntry[] = [];
 let listenerAttached = false;
 
-function handlePopState() {
-  const entry = stack.pop();
-  entry?.onClose();
+function handlePopState(event: PopStateEvent) {
+  const state = event.state as { navDepth?: number } | null;
+  const targetDepth = typeof state?.navDepth === 'number' ? state.navDepth : 0;
+  while (stack.length > targetDepth) {
+    const entry = stack.pop();
+    entry?.onClose();
+  }
 }
 
 function ensureListener() {
@@ -42,12 +57,16 @@ export function useHistoryBack(isOpen: boolean, onClose: () => void) {
       const entry: StackEntry = { onClose: () => onCloseRef.current() };
       entryRef.current = entry;
       stack.push(entry);
-      window.history.pushState({ backStack: true }, '');
+      const depth = stack.length;
+      const baseUrl = window.location.pathname + window.location.search;
+      window.history.pushState({ navDepth: depth }, '', `${baseUrl}#nav-${depth}`);
     } else if (!isOpen && entryRef.current) {
+      const idx = stack.indexOf(entryRef.current);
       entryRef.current = null;
-      // Triggers popstate -> handlePopState pops this entry off the stack
-      // and calls its onClose, which is a no-op since we're already closed.
-      window.history.back();
+      if (idx !== -1) {
+        stack.length = idx;
+        window.history.back();
+      }
     }
   }, [isOpen]);
 
@@ -55,7 +74,7 @@ export function useHistoryBack(isOpen: boolean, onClose: () => void) {
     return () => {
       if (!entryRef.current) return;
       const idx = stack.indexOf(entryRef.current);
-      if (idx !== -1) stack.splice(idx, 1);
+      if (idx !== -1) stack.length = idx;
       entryRef.current = null;
     };
   }, []);
