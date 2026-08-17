@@ -48,6 +48,30 @@ export function AdminAnalyticsPage({ trips, expenses, members, categories }: Pro
       .sort((a, b) => b.amount - a.amount);
   }, [activeExpenses, categories, totalSpendVolume]);
 
+  // Daily volume trend for the hero sparkline — sum per date, chronological.
+  const dailyVolume = useMemo(() => {
+    const map: Record<string, number> = {};
+    activeExpenses.forEach((e) => {
+      map[e.date] = (map[e.date] || 0) + e.amount;
+    });
+    return Object.entries(map)
+      .sort((a, b) => a[0].localeCompare(b[0]))
+      .map(([, amount]) => amount);
+  }, [activeExpenses]);
+
+  const sparkPath = useMemo(() => {
+    if (dailyVolume.length < 2) return null;
+    const w = 220;
+    const h = 90;
+    const max = Math.max(...dailyVolume);
+    const min = Math.min(...dailyVolume);
+    const range = max - min || 1;
+    const step = w / (dailyVolume.length - 1);
+    return dailyVolume
+      .map((v, i) => `${i === 0 ? 'M' : 'L'}${(i * step).toFixed(1)},${(h - ((v - min) / range) * h).toFixed(1)}`)
+      .join(' ');
+  }, [dailyVolume]);
+
   const topSpenders = useMemo(() => {
     const map: Record<string, number> = {};
     activeExpenses.forEach((e) => {
@@ -72,14 +96,20 @@ export function AdminAnalyticsPage({ trips, expenses, members, categories }: Pro
         </div>
       </div>
 
-      <div className="ops-kpi-row">
-        <div className="ops-card ops-kpi-card">
-          <div className="ops-kpi-label">Total Volume</div>
-          <div className="ops-kpi-value accent">
-            &#8377;{totalSpendVolume.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-          </div>
-          <div className="ops-kpi-delta">Across {activeTrips.length} active trips</div>
+      <div className="ops-card ops-hero-card">
+        {sparkPath && (
+          <svg className="ops-hero-spark" viewBox="0 0 220 90" preserveAspectRatio="none">
+            <path d={sparkPath} fill="none" stroke="var(--amber)" strokeWidth="2" />
+          </svg>
+        )}
+        <div className="ops-hero-label">Total Volume &middot; All Active Trips</div>
+        <div className="ops-hero-value">
+          &#8377;{totalSpendVolume.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
         </div>
+        <div className="ops-hero-delta">Across {activeTrips.length} active trips</div>
+      </div>
+
+      <div className="ops-kpi-row">
         <div className="ops-card ops-kpi-card">
           <div className="ops-kpi-label">Active Trips</div>
           <div className="ops-kpi-value">{activeTrips.length}</div>
