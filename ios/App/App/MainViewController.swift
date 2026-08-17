@@ -336,21 +336,31 @@ class MainViewController: CAPBridgeViewController, WKScriptMessageHandler {
         titleLabel.font = .systemFont(ofSize: HeaderMetrics.titleExpandedSize, weight: .semibold)
         titleLabel.textColor = HeaderColors.textPrimary
         titleLabel.lineBreakMode = .byTruncatingTail
+        titleLabel.numberOfLines = 1
+        // A long trip name should be the one to truncate under space
+        // pressure — the buttons next to it hold their natural size (set
+        // below) rather than getting squeezed into wrapping.
+        titleLabel.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        eyebrowLabel.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
 
         let titleGroup = UIStackView(arrangedSubviews: [eyebrowLabel, titleLabel])
         titleGroup.axis = .vertical
         titleGroup.spacing = 4
         titleGroup.alignment = .leading
+        titleGroup.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
 
         shareButton.configuration = makeHeaderButtonConfig(title: "Share", systemImage: "square.and.arrow.up")
         shareButton.addTarget(self, action: #selector(shareTapped), for: .touchUpInside)
+        shareButton.setContentCompressionResistancePriority(.required, for: .horizontal)
 
         tripsButton.configuration = makeHeaderButtonConfig(title: "Trips", systemImage: "chevron.left")
         tripsButton.addTarget(self, action: #selector(tripsBackTapped), for: .touchUpInside)
+        tripsButton.setContentCompressionResistancePriority(.required, for: .horizontal)
 
         let buttonsGroup = UIStackView(arrangedSubviews: [shareButton, tripsButton])
         buttonsGroup.axis = .horizontal
         buttonsGroup.spacing = 8
+        buttonsGroup.setContentCompressionResistancePriority(.required, for: .horizontal)
 
         let topRow = UIStackView(arrangedSubviews: [titleGroup, UIView(), buttonsGroup])
         topRow.axis = .horizontal
@@ -417,6 +427,11 @@ class MainViewController: CAPBridgeViewController, WKScriptMessageHandler {
         var config = UIButton.Configuration.plain()
         config.image = UIImage(systemName: systemImage, withConfiguration: UIImage.SymbolConfiguration(pointSize: 12, weight: .semibold))
         config.title = title
+        // Without this, a long trip name squeezing the buttons row makes
+        // the button's own label wrap to two lines ("Shar"/"e") instead of
+        // holding its size — titleLabel is the one that should give up
+        // space (it already truncates), not these.
+        config.titleLineBreakMode = .byTruncatingTail
         config.imagePadding = 5
         config.baseForegroundColor = HeaderColors.textPrimary
         config.background.backgroundColor = HeaderColors.textPrimary.withAlphaComponent(0.06)
