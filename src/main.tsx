@@ -9,8 +9,10 @@ import { RequireAuth } from './components/RequireAuth'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { UpdateBanner } from './components/UpdateBanner'
 import { registerServiceWorkerUpdateWatcher } from './services/serviceWorker'
+import { initNativeShell } from './utils/nativeShell'
 
 registerServiceWorkerUpdateWatcher()
+initNativeShell()
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

@@ -8,6 +8,14 @@ const config: CapacitorConfig = {
   appId: 'com.triptracker.app',
   appName: 'Trip Tracker 2026',
   webDir: 'dist',
+  plugins: {
+    // 'none' hands full control to the manual keyboardWillShow/Hide
+    // handling in main.tsx — letting the native side also resize would
+    // double-compensate against our own padding adjustment.
+    Keyboard: {
+      resize: 'none',
+    },
+  },
 };
 
 export default config;

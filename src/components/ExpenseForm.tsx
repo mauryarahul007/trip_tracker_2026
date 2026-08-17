@@ -267,14 +267,15 @@ export function ExpenseForm({
       <form
         ref={sheetRef}
         tabIndex={-1}
-        className="modal-sheet"
+        className="modal-sheet expense-form-sheet"
         role="dialog"
         aria-modal="true"
         aria-labelledby="expense-form-title"
         onSubmit={handleSubmitLocal}
         onClick={(e) => e.stopPropagation()}
       >
-      <header className="app-header" style={{ margin: '-20px -20px 20px', paddingTop: 'max(20px, env(safe-area-inset-top))' }}>
+      <div className="expense-form-scroll">
+      <header className="app-header" style={{ margin: '-20px -20px 20px', paddingTop: 'max(20px, var(--safe-top, 0px))' }}>
         <div className="app-header-top">
           <div className="app-title-group">
             <span className="app-eyebrow">{trip?.name}</span>
@@ -675,6 +676,7 @@ export function ExpenseForm({
       {formError && (
         <p style={{ color: 'var(--color-danger)', fontSize: '13px', marginTop: '12px' }}>{formError}</p>
       )}
+      </div>
 
       <div className="expense-form-actions">
         <button type="submit" className="gradient-btn" style={{ flex: 1 }} disabled={isSubmitting}>

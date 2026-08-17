@@ -159,7 +159,7 @@ export function JoinTripScreen() {
 
   return (
     <div className="app-container" style={{ overflowY: 'auto' }}>
-      <div className="fade-in" style={{ padding: 'max(24px, env(safe-area-inset-top, 24px)) 20px max(24px, env(safe-area-inset-bottom, 24px)) 20px', flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div className="fade-in" style={{ padding: 'max(24px, var(--safe-top, 24px)) 20px max(24px, var(--safe-bottom, 24px)) 20px', flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div className="glass-card" style={{ width: '100%', maxWidth: '420px', margin: '0 auto' }}>
           <h2 style={{ marginBottom: '4px' }}>Join "{result.tripName}"</h2>
           <p style={{ color: 'var(--text-secondary)', fontSize: '14px', marginBottom: '20px' }}>Which one are you?</p>

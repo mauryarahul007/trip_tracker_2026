@@ -193,6 +193,17 @@ body {
   overflow: hidden;
 }
 
+/* Capacitor's WKWebView has no dynamic toolbar (unlike Mobile Safari, which
+   100dvh above is tuned for). html/body/#root already anchor on
+   height:100% first (see above) — this just stops dvh from overriding
+   that on native, where 100% reliably matches the fixed native window. */
+html.capacitor-native,
+html.capacitor-native body,
+html.capacitor-native #root,
+html.capacitor-native .app-container {
+  height: 100% !important;
+}
+
 /* Ledger card utility (kept the historical class name, restyled as paper stock) */
 .glass-card {
   background: var(--bg-surface);
@@ -373,10 +384,10 @@ input[type="date"].input-field {
 
 /* Header & Navigation */
 .app-header {
-  padding-top: calc(14px + env(safe-area-inset-top, 0px));
+  padding-top: calc(14px + var(--safe-top, 0px));
   padding-bottom: 14px;
-  padding-left: max(20px, env(safe-area-inset-left, 20px));
-  padding-right: max(20px, env(safe-area-inset-right, 20px));
+  padding-left: max(20px, var(--safe-left, 20px));
+  padding-right: max(20px, var(--safe-right, 20px));
   background-color: var(--bg-header);
   color: #F2ECDC;
   flex-shrink: 0;
@@ -430,9 +441,9 @@ input[type="date"].input-field {
   background: var(--bg-surface);
   border-top: 1px solid var(--border-color);
   padding-top: 8px;
-  padding-left: max(10px, env(safe-area-inset-left, 10px));
-  padding-right: max(10px, env(safe-area-inset-right, 10px));
-  padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px));
+  padding-left: max(10px, var(--safe-left, 10px));
+  padding-right: max(10px, var(--safe-right, 10px));
+  padding-bottom: calc(8px + var(--safe-bottom, 0px));
   position: relative;
   flex-shrink: 0;
   z-index: 100;
@@ -443,15 +454,17 @@ input[type="date"].input-field {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
+  justify-content: center;
+  gap: 3px;
   background: none;
   border: none;
   border-radius: var(--border-radius-sm);
   color: var(--text-secondary);
   font-family: var(--font-family-body);
-  font-size: 11px;
+  font-size: 9px;
   font-weight: 600;
-  padding: 8px 4px;
+  white-space: nowrap;
+  padding: 8px 2px;
   cursor: pointer;
   transition: var(--transition-smooth);
 }
@@ -467,6 +480,12 @@ input[type="date"].input-field {
 
 .nav-tab-icon {
   display: flex;
+}
+/* .icon's own width/height: 17px otherwise wins over the size prop passed
+   in NavTabs.tsx, since CSS dimensions override the SVG's own attributes. */
+.nav-tab-icon .icon {
+  width: 26px;
+  height: 26px;
 }
 
 .app-header .secondary-btn:hover {
@@ -1571,10 +1590,10 @@ input:checked + .toggle-slider:before {
   background: var(--bg-surface);
   border-radius: 0;
   padding: 20px;
-  padding-top: calc(16px + env(safe-area-inset-top, 0px));
-  padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px));
-  padding-left: max(20px, env(safe-area-inset-left, 20px));
-  padding-right: max(20px, env(safe-area-inset-right, 20px));
+  padding-top: calc(16px + var(--safe-top, 0px));
+  padding-bottom: calc(24px + var(--safe-bottom, 0px));
+  padding-left: max(20px, var(--safe-left, 20px));
+  padding-right: max(20px, var(--safe-right, 20px));
   animation: sheetUp 0.24s cubic-bezier(0.16, 1, 0.3, 1);
 }
 @keyframes sheetUp {
@@ -1585,20 +1604,43 @@ input:checked + .toggle-slider:before {
   .modal-sheet { animation: none; }
 }
 
-/* Keeps Add/Update Expense reachable without scrolling through the whole
-   form. Sticks to the bottom of .modal-sheet's own scroll port; the
-   negative margin/extra padding let it sit flush with the sheet's bottom
-   edge instead of floating above the sheet's existing safe-area padding. */
+/* Expense form's own sheet is split into a scrolling content area and a
+   footer action bar that's a real (non-sticky) flex item, so Add/Cancel
+   always sit flush against the true bottom of the screen regardless of
+   how much form content there is — sticky positioning only pins once
+   scrolled content reaches it, leaving a gap when content is short. */
+.modal-backdrop .modal-sheet.expense-form-sheet {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 0;
+}
+
+.expense-form-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+  padding: 20px;
+  padding-top: calc(16px + var(--safe-top, 0px));
+  padding-left: max(20px, var(--safe-left, 20px));
+  padding-right: max(20px, var(--safe-right, 20px));
+}
+
 .expense-form-actions {
-  position: sticky;
-  bottom: 0;
-  z-index: 1;
+  flex-shrink: 0;
   display: flex;
   gap: 12px;
-  margin: 16px 0 calc(-1 * (24px + env(safe-area-inset-bottom, 0px)));
-  padding: 12px 0 calc(12px + env(safe-area-inset-bottom, 0px));
+  padding: 12px max(20px, var(--safe-right, 20px)) calc(12px + var(--safe-bottom, 0px)) max(20px, var(--safe-left, 20px));
   background: var(--bg-surface);
   border-top: 1px solid var(--border-color);
+  /* Sits outside the scrollable form content, so it doesn't get pushed up
+     by the padding applied there when the keyboard shows — shift it up
+     directly by the keyboard's own height instead. */
+  margin-bottom: var(--keyboard-height, 0px);
+  transition: margin-bottom 0.25s ease-out;
 }
 
 :focus-visible {
@@ -1634,7 +1676,7 @@ input:checked + .toggle-slider:before {
 .tab-pane {
   flex: 1;
   min-height: 0;
-  padding: 20px max(20px, env(safe-area-inset-right, 20px)) calc(24px + env(safe-area-inset-bottom, 0px)) max(20px, env(safe-area-inset-left, 20px));
+  padding: 20px max(20px, var(--safe-right, 20px)) calc(24px + var(--safe-bottom, 0px)) max(20px, var(--safe-left, 20px));
   overflow-y: auto;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
@@ -1646,10 +1688,10 @@ input:checked + .toggle-slider:before {
   overflow-y: auto;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
-  padding-top: calc(20px + env(safe-area-inset-top, 0px));
-  padding-bottom: calc(32px + env(safe-area-inset-bottom, 0px));
-  padding-left: max(20px, env(safe-area-inset-left, 20px));
-  padding-right: max(20px, env(safe-area-inset-right, 20px));
+  padding-top: calc(20px + var(--safe-top, 0px));
+  padding-bottom: calc(32px + var(--safe-bottom, 0px));
+  padding-left: max(20px, var(--safe-left, 20px));
+  padding-right: max(20px, var(--safe-right, 20px));
 }
 
 .modal-overlay {
@@ -1663,7 +1705,7 @@ input:checked + .toggle-slider:before {
   justify-content: center;
   align-items: center;
   z-index: 1100;
-  padding: 20px max(20px, env(safe-area-inset-right, 20px)) calc(20px + env(safe-area-inset-bottom, 0px)) max(20px, env(safe-area-inset-left, 20px));
+  padding: 20px max(20px, var(--safe-right, 20px)) calc(20px + var(--safe-bottom, 0px)) max(20px, var(--safe-left, 20px));
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
   overscroll-behavior: contain;

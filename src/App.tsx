@@ -1016,18 +1016,6 @@ export default function App() {
                   </button>
                 </div>
 
-                {showAddExpense && (
-                  <ExpenseForm
-                    trip={activeTrip}
-                    visibleMembers={visibleMembers}
-                    visibleTripGroups={visibleTripGroups}
-                    categories={categories}
-                    editingExpense={editingExpense}
-                    onSave={handleSaveExpense}
-                    onCancel={handleCancelExpenseForm}
-                  />
-                )}
-
                 <ExpenseList
                   trip={activeTrip}
                   members={members}
@@ -1146,6 +1134,18 @@ export default function App() {
 
           <NavTabs activeTab={activeTab} setActiveTab={setActiveTab} />
         </div>
+      )}
+
+      {showAddExpense && (
+        <ExpenseForm
+          trip={activeTrip}
+          visibleMembers={visibleMembers}
+          visibleTripGroups={visibleTripGroups}
+          categories={categories}
+          editingExpense={editingExpense}
+          onSave={handleSaveExpense}
+          onCancel={handleCancelExpenseForm}
+        />
       )}
 
       {showShareTrip && activeTrip && (

@@ -87,7 +87,7 @@ export function GlobalSettingsModal({
         aria-labelledby="global-settings-title"
         onClick={(e) => e.stopPropagation()}
       >
-        <header className="app-header" style={{ margin: '-20px -20px 20px', paddingTop: 'max(20px, env(safe-area-inset-top))' }}>
+        <header className="app-header" style={{ margin: '-20px -20px 20px', paddingTop: 'max(20px, var(--safe-top, 0px))' }}>
           <div className="app-header-top">
             <div className="app-title-group">
               <h2 id="global-settings-title" className="app-logo" style={{ fontSize: '22px', color: '#F2ECDC' }}>Settings</h2>
