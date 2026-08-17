@@ -31,7 +31,18 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
       set({ session: data.session });
     });
 
-    supabase.auth.onAuthStateChange((_event, session) => {
+    supabase.auth.onAuthStateChange((event, session) => {
+      // Supabase's GoTrueClient re-checks/refreshes the session around
+      // network and tab-visibility changes internally, and can fire this
+      // callback with a null session for a purely transient reason (e.g. a
+      // background token-refresh attempt failing while briefly offline) —
+      // not because the user actually signed out. RequireAuth redirects to
+      // /login the instant `session` is falsy with no grace period, so
+      // accepting every null here made toggling offline/online flash the
+      // whole app (trips, members, groups, expenses — everything behind
+      // the auth gate) to the login screen and back. Only ever clear a
+      // session we already have on an explicit sign-out.
+      if (session === null && event !== 'SIGNED_OUT') return;
       set({ session });
       if (session?.user) {
         registerForPushNotifications(session.user.id);

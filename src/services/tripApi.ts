@@ -176,10 +176,12 @@ export async function insertTrip(input: {
   endDate: string;
   baseCurrency: string;
   ownerId: string;
+  id?: string;
 }): Promise<Trip> {
   const { data, error } = await supabase
     .from('trips')
     .insert({
+      ...(input.id ? { id: input.id } : {}),
       name: input.name,
       start_date: input.startDate,
       end_date: input.endDate,
@@ -222,10 +224,10 @@ export async function deleteAllMyTrips(ownerId: string): Promise<void> {
 // Members
 // ---------------------------------------------------------------------------
 
-export async function insertMember(tripId: string, name: string, linkedUserId?: string): Promise<Member> {
+export async function insertMember(tripId: string, name: string, linkedUserId?: string, id?: string): Promise<Member> {
   const { data, error } = await supabase
     .from('members')
-    .insert({ trip_id: tripId, name, ...(linkedUserId ? { linked_user_id: linkedUserId } : {}) })
+    .insert({ ...(id ? { id } : {}), trip_id: tripId, name, ...(linkedUserId ? { linked_user_id: linkedUserId } : {}) })
     .select('*, profile:linked_user_id(avatar_url)')
     .single();
   if (error) throw error;
@@ -249,8 +251,8 @@ export async function deleteMemberRow(id: string): Promise<void> {
 // Groups
 // ---------------------------------------------------------------------------
 
-export async function insertGroup(tripId: string, name: string, memberIds: string[]): Promise<Group> {
-  const { data, error } = await supabase.from('groups').insert({ trip_id: tripId, name }).select().single();
+export async function insertGroup(tripId: string, name: string, memberIds: string[], id?: string): Promise<Group> {
+  const { data, error } = await supabase.from('groups').insert({ ...(id ? { id } : {}), trip_id: tripId, name }).select().single();
   if (error) throw error;
   if (memberIds.length) {
     const { error: gmErr } = await supabase
@@ -283,10 +285,10 @@ export async function deleteGroupRow(id: string): Promise<void> {
 // Categories
 // ---------------------------------------------------------------------------
 
-export async function insertCategory(tripId: string, name: string, icon?: string): Promise<Category> {
+export async function insertCategory(tripId: string, name: string, icon?: string, id?: string): Promise<Category> {
   const { data, error } = await supabase
     .from('categories')
-    .insert({ trip_id: tripId, name, icon: icon ?? null, is_custom: true })
+    .insert({ ...(id ? { id } : {}), trip_id: tripId, name, icon: icon ?? null, is_custom: true })
     .select()
     .single();
   if (error) throw error;

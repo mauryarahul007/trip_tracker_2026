@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { persist, createJSONStorage } from 'zustand/middleware';
 import type { Member, Group, Expense, Category, TripState, ExpenseLocation, Trip } from '../types';
 import { supabase } from '../services/supabaseClient';
 import {
@@ -34,6 +34,7 @@ import {
 import { generateDemoData } from '../utils/demoSeed';
 import { reverseGeocode, searchPlaces } from '../utils/geolocation';
 import { sendPushNotification } from '../services/pushApi';
+import { saveOfflineReceipt, getOfflineReceipt, deleteOfflineReceipt } from '../services/offlineReceiptStore';
 
 // Offline capture falls back to a raw-coordinate placeName (see geolocation.ts).
 // Once we're syncing (guaranteed online), upgrade it to a real place name.
@@ -62,9 +63,27 @@ export async function resolvePendingLocation(location: ExpenseLocation | null | 
   return location;
 }
 
+type SyncQueueItemType =
+  | 'addExpense'
+  | 'updateExpense'
+  | 'deleteExpense'
+  | 'restoreExpense'
+  | 'permanentlyDeleteExpense'
+  | 'emptyRecycleBin'
+  | 'createTrip'
+  | 'addMember'
+  | 'updateMember'
+  | 'toggleArchiveMember'
+  | 'deleteMember'
+  | 'createGroup'
+  | 'updateGroup'
+  | 'deleteGroup'
+  | 'addCategory'
+  | 'deleteCategory';
+
 interface SyncQueueItem {
   id: string;
-  type: 'addExpense' | 'updateExpense' | 'deleteExpense' | 'restoreExpense' | 'permanentlyDeleteExpense' | 'emptyRecycleBin';
+  type: SyncQueueItemType;
   payload: any;
 }
 
@@ -84,7 +103,7 @@ interface TripStore extends TripState {
   refreshTrips: () => Promise<void>;
   clearStorageError: () => void;
   processQueue: () => Promise<void>;
-  queueSync: (type: 'addExpense' | 'updateExpense' | 'deleteExpense' | 'restoreExpense' | 'permanentlyDeleteExpense' | 'emptyRecycleBin', payload: any) => void;
+  queueSync: (type: SyncQueueItemType, payload: any) => void;
   updateLastBackendSyncedAt: (timestamp: number) => void;
 
   // Trip Actions
@@ -253,6 +272,35 @@ export function mergeServerExpenses(
     (a, b) => b.date.localeCompare(a.date) || b.createdAt - a.createdAt
   );
 }
+
+// Wraps localStorage so a write failure (most commonly QuotaExceededError,
+// e.g. an offline session queued several receipt photos and blew the
+// origin's storage cap) surfaces to the user instead of silently vanishing
+// — without this, the app would look like it saved an expense that was
+// actually never persisted and is gone on next reload.
+const quotaSafeStorage = {
+  getItem: (name: string) => localStorage.getItem(name),
+  removeItem: (name: string) => localStorage.removeItem(name),
+  setItem: (name: string, value: string) => {
+    try {
+      localStorage.setItem(name, value);
+    } catch (e) {
+      console.error('Failed to persist trip data locally:', e);
+      const message =
+        e instanceof DOMException && e.name === 'QuotaExceededError'
+          ? "Your device's local storage is full — recent changes may not be saved. Free up space or back up your data from Settings."
+          : 'Failed to save your changes locally.';
+      // Guard against re-triggering this same failing write: setting
+      // storageError itself goes through this same storage layer, and an
+      // unconditional set() here would recurse forever on a persistent
+      // quota error. Skipping once the message already matches converges
+      // after exactly one redundant (also-failing, harmless) retry.
+      if (useTripStore.getState().storageError !== message) {
+        useTripStore.setState({ storageError: message });
+      }
+    }
+  },
+};
 
 export const useTripStore = create<TripStore>()(
   persist(
@@ -436,8 +484,16 @@ export const useTripStore = create<TripStore>()(
             if (tripId && userId) {
               const participants = expenseData.splitMemberIds.filter((id: string) => get().members[id] && !get().members[id].archived);
               const resolvedShares = resolveShares(expenseData, participants);
+              // The receipt photo may have been staged in IndexedDB instead
+              // of traveling inline (see addExpense) — only deleted below
+              // once the WHOLE item succeeds, so a later failure in this
+              // same try block (e.g. insertExpense) doesn't lose the photo
+              // on retry.
+              const offlineReceipt = await getOfflineReceipt(tempId);
               let receiptPath: string | undefined;
-              if (expenseData.receiptImage) {
+              if (offlineReceipt) {
+                receiptPath = await uploadReceipt(tripId, tempId, offlineReceipt);
+              } else if (expenseData.receiptImage) {
                 receiptPath = await uploadReceipt(tripId, tempId, expenseData.receiptImage);
               }
               const location = await resolvePendingLocation(expenseData.location);
@@ -446,6 +502,7 @@ export const useTripStore = create<TripStore>()(
                 expenses: state.expenses.map((e) => (e.id === tempId ? savedExpense : e)),
                 trips: state.trips.map((t) => (t.id === tripId ? { ...t, updatedAt: Date.now() } : t)),
               }));
+              if (offlineReceipt) await deleteOfflineReceipt(tempId);
 
               const trip = get().trips.find((t) => t.id === tripId);
               const recipients = getTripNotificationRecipients(get().trips, get().members, tripId, userId);
@@ -461,8 +518,11 @@ export const useTripStore = create<TripStore>()(
             if (tripId) {
               const participants = expenseData.splitMemberIds.filter((mId: string) => get().members[mId] && !get().members[mId].archived);
               const resolvedShares = resolveShares(expenseData, participants);
+              const offlineReceipt = await getOfflineReceipt(id);
               let receiptPath: string | undefined;
-              if (expenseData.receiptImage) {
+              if (offlineReceipt) {
+                receiptPath = await uploadReceipt(tripId, id, offlineReceipt);
+              } else if (expenseData.receiptImage) {
                 receiptPath = await uploadReceipt(tripId, id, expenseData.receiptImage);
               }
               const location = await resolvePendingLocation(expenseData.location);
@@ -470,6 +530,7 @@ export const useTripStore = create<TripStore>()(
               set((state) => ({
                 expenses: state.expenses.map((e) => (e.id === id ? { ...e, location: location ?? undefined } : e)),
               }));
+              if (offlineReceipt) await deleteOfflineReceipt(id);
             }
           } else if (item.type === 'deleteExpense') {
             const { id, userId: deletedByUserId } = item.payload;
@@ -483,6 +544,49 @@ export const useTripStore = create<TripStore>()(
           } else if (item.type === 'emptyRecycleBin') {
             const { tripId } = item.payload;
             await purgeDeletedExpensesForTrip(tripId);
+          } else if (item.type === 'createTrip') {
+            const { tripTempId, memberTempId, name, startDate, endDate, baseCurrency, ownerId, creatorName } = item.payload;
+            const trip = await insertTrip({ name, startDate, endDate, baseCurrency, ownerId, id: tripTempId });
+            const creatorMember = await insertMember(trip.id, creatorName, ownerId, memberTempId);
+            set((state) => ({
+              trips: state.trips.map((t) => (t.id === tripTempId ? { ...trip, memberIds: [memberTempId], adminMemberIds: [memberTempId], expenseCount: 0 } : t)),
+              members: { ...state.members, [memberTempId]: creatorMember },
+            }));
+          } else if (item.type === 'addMember') {
+            const { tempId, name, linkedUserId, tripId } = item.payload;
+            const member = await insertMember(tripId, name, linkedUserId || undefined, tempId);
+            invalidatePreviousMembersCache();
+            set((state) => ({ members: { ...state.members, [tempId]: member } }));
+          } else if (item.type === 'updateMember') {
+            const { id, name } = item.payload;
+            await updateMemberRow(id, { name });
+          } else if (item.type === 'toggleArchiveMember') {
+            const { id, archived } = item.payload;
+            await updateMemberRow(id, { archived });
+          } else if (item.type === 'deleteMember') {
+            const { id, groupsToDissolve, groupsToRename } = item.payload;
+            await deleteMemberRow(id);
+            await Promise.all([
+              ...groupsToDissolve.map((gid: string) => deleteGroupRow(gid)),
+              ...groupsToRename.map((g: { id: string; name: string; memberIds: string[] }) => updateGroupRow(g.id, g.name, g.memberIds)),
+            ]);
+          } else if (item.type === 'createGroup') {
+            const { tempId, name, memberIds, tripId } = item.payload;
+            const group = await insertGroup(tripId, name, memberIds, tempId);
+            set((state) => ({ groups: { ...state.groups, [tempId]: group } }));
+          } else if (item.type === 'updateGroup') {
+            const { id, name, memberIds } = item.payload;
+            await updateGroupRow(id, name, memberIds);
+          } else if (item.type === 'deleteGroup') {
+            const { groupId } = item.payload;
+            await deleteGroupRow(groupId);
+          } else if (item.type === 'addCategory') {
+            const { tempId, name, icon, tripId } = item.payload;
+            const category = await insertCategory(tripId, name, icon, tempId);
+            set((state) => ({ categories: state.categories.map((c) => (c.id === tempId ? category : c)) }));
+          } else if (item.type === 'deleteCategory') {
+            const { id } = item.payload;
+            await deleteCategoryRow(id);
           }
         } catch (err) {
           console.error('Offline sync failed for item:', item, err);
@@ -498,30 +602,62 @@ export const useTripStore = create<TripStore>()(
     createTrip: async (name, startDate, endDate, baseCurrency) => {
       const userId = get().userId;
       if (!userId) return;
-      try {
-        const trip = await insertTrip({ name, startDate, endDate, baseCurrency, ownerId: userId });
 
-        // The creator is always the owner and admin — add them as a claimed member
-        // too, so they show up in the members list and can be a payer/
-        // split participant like everyone else.
-        const creatorName = get().userDisplayName || 'Me';
-        const creatorMember = await insertMember(trip.id, creatorName, userId);
-        const tripWithCreator = {
-          ...trip,
-          memberIds: [creatorMember.id],
-          adminMemberIds: [creatorMember.id],
-          expenseCount: 0,
-        };
+      // The creator is always the owner and admin — add them as a claimed
+      // member too, so they show up in the members list and can be a
+      // payer/split participant like everyone else.
+      const creatorName = get().userDisplayName || 'Me';
+      const tripTempId = crypto.randomUUID();
+      const memberTempId = crypto.randomUUID();
+      const previousActiveTripId = get().activeTripId;
 
-        set((state) => ({
-          trips: [...state.trips, tripWithCreator],
-          members: { ...state.members, [creatorMember.id]: creatorMember },
-          activeTripId: trip.id,
-          categories: DEFAULT_CATEGORIES,
-          storageError: null,
-        }));
-      } catch (e) {
-        setError(e);
+      const optimisticMember: Member = { id: memberTempId, name: creatorName, linkedUserId: userId };
+      const optimisticTrip: Trip = {
+        id: tripTempId,
+        name,
+        startDate,
+        endDate,
+        baseCurrency,
+        memberIds: [memberTempId],
+        groupIds: [],
+        ownerId: userId,
+        adminMemberIds: [memberTempId],
+        joinCode: '', // real code assigned server-side once synced
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+        expenseCount: 0,
+      };
+
+      set((state) => ({
+        trips: [...state.trips, optimisticTrip],
+        members: { ...state.members, [memberTempId]: optimisticMember },
+        activeTripId: tripTempId,
+        categories: DEFAULT_CATEGORIES,
+        storageError: null,
+      }));
+
+      if (!navigator.onLine) {
+        get().queueSync('createTrip', { tripTempId, memberTempId, name, startDate, endDate, baseCurrency, ownerId: userId, creatorName });
+      } else {
+        try {
+          const trip = await insertTrip({ name, startDate, endDate, baseCurrency, ownerId: userId, id: tripTempId });
+          const creatorMember = await insertMember(trip.id, creatorName, userId, memberTempId);
+          set((state) => ({
+            trips: state.trips.map((t) => (t.id === tripTempId ? { ...trip, memberIds: [memberTempId], adminMemberIds: [memberTempId], expenseCount: 0 } : t)),
+            members: { ...state.members, [memberTempId]: creatorMember },
+          }));
+        } catch (e) {
+          set((state) => {
+            const updatedMembers = { ...state.members };
+            delete updatedMembers[memberTempId];
+            return {
+              trips: state.trips.filter((t) => t.id !== tripTempId),
+              members: updatedMembers,
+              activeTripId: previousActiveTripId,
+            };
+          });
+          setError(e);
+        }
       }
     },
 
@@ -608,37 +744,63 @@ export const useTripStore = create<TripStore>()(
     addMember: async (name, linkedUserId) => {
       const activeTripId = get().activeTripId;
       if (!activeTripId) return;
+
+      const tempId = crypto.randomUUID();
+      const optimisticMember: Member = { id: tempId, name, linkedUserId: linkedUserId ?? null };
+
+      // Optimistically add the member — same tempId becomes the real row id
+      // once synced (insertMember passes it through), so nothing downstream
+      // that already references this id (trip.memberIds, etc.) ever needs
+      // to be reconciled.
+      set((state) => ({
+        members: { ...state.members, [tempId]: optimisticMember },
+        trips: state.trips.map((t) => {
+          if (t.id !== activeTripId) return t;
+          const currentAdmins = new Set(t.adminMemberIds || []);
+          // Ensure the trip creator/owner is always in currentAdmins
+          if (currentAdmins.size === 0 && t.memberIds.length > 0) {
+            const ownerMemberId = t.memberIds.find((mid) => state.members[mid]?.linkedUserId === t.ownerId) || t.memberIds[0];
+            if (ownerMemberId) currentAdmins.add(ownerMemberId);
+          }
+          if (linkedUserId && linkedUserId === t.ownerId) {
+            currentAdmins.add(tempId);
+          }
+          return {
+            ...t,
+            memberIds: [...t.memberIds, tempId],
+            adminMemberIds: Array.from(currentAdmins),
+            updatedAt: Date.now(),
+          };
+        }),
+        storageError: null,
+      }));
+
+      const revert = () => {
+        set((state) => {
+          const updatedMembers = { ...state.members };
+          delete updatedMembers[tempId];
+          return {
+            members: updatedMembers,
+            trips: state.trips.map((t) =>
+              t.id === activeTripId
+                ? { ...t, memberIds: t.memberIds.filter((mid) => mid !== tempId), adminMemberIds: (t.adminMemberIds || []).filter((mid) => mid !== tempId) }
+                : t
+            ),
+          };
+        });
+      };
+
       if (!navigator.onLine) {
-        set({ storageError: "You're offline — adding members needs a connection. Try again once you're back online." });
-        return;
-      }
-      try {
-        const member = await insertMember(activeTripId, name, linkedUserId || undefined);
-        invalidatePreviousMembersCache();
-        set((state) => ({
-          members: { ...state.members, [member.id]: member },
-          trips: state.trips.map((t) => {
-            if (t.id !== activeTripId) return t;
-            const currentAdmins = new Set(t.adminMemberIds || []);
-            // Ensure the trip creator/owner is always in currentAdmins
-            if (currentAdmins.size === 0 && t.memberIds.length > 0) {
-              const ownerMemberId = t.memberIds.find((mid) => state.members[mid]?.linkedUserId === t.ownerId) || t.memberIds[0];
-              if (ownerMemberId) currentAdmins.add(ownerMemberId);
-            }
-            if (linkedUserId && linkedUserId === t.ownerId) {
-              currentAdmins.add(member.id);
-            }
-            return {
-              ...t,
-              memberIds: [...t.memberIds, member.id],
-              adminMemberIds: Array.from(currentAdmins),
-              updatedAt: Date.now(),
-            };
-          }),
-          storageError: null,
-        }));
-      } catch (e) {
-        setError(e);
+        get().queueSync('addMember', { tempId, name, linkedUserId: linkedUserId ?? null, tripId: activeTripId });
+      } else {
+        try {
+          const member = await insertMember(activeTripId, name, linkedUserId || undefined, tempId);
+          invalidatePreviousMembersCache();
+          set((state) => ({ members: { ...state.members, [tempId]: member } }));
+        } catch (e) {
+          revert();
+          setError(e);
+        }
       }
     },
 
@@ -679,22 +841,35 @@ export const useTripStore = create<TripStore>()(
     toggleArchiveMember: async (id) => {
       const member = get().members[id];
       if (!member) return;
-      try {
-        await updateMemberRow(id, { archived: !member.archived });
-        set((state) => ({ members: { ...state.members, [id]: { ...member, archived: !member.archived } }, storageError: null }));
-      } catch (e) {
-        setError(e);
+      const archived = !member.archived;
+      set((state) => ({ members: { ...state.members, [id]: { ...member, archived } }, storageError: null }));
+
+      if (!navigator.onLine) {
+        get().queueSync('toggleArchiveMember', { id, archived });
+      } else {
+        try {
+          await updateMemberRow(id, { archived });
+        } catch (e) {
+          set((state) => ({ members: { ...state.members, [id]: member } }));
+          setError(e);
+        }
       }
     },
 
     updateMember: async (id, name) => {
       const member = get().members[id];
       if (!member) return;
-      try {
-        await updateMemberRow(id, { name });
-        set((state) => ({ members: { ...state.members, [id]: { ...member, name } }, storageError: null }));
-      } catch (e) {
-        setError(e);
+      set((state) => ({ members: { ...state.members, [id]: { ...member, name } }, storageError: null }));
+
+      if (!navigator.onLine) {
+        get().queueSync('updateMember', { id, name });
+      } else {
+        try {
+          await updateMemberRow(id, { name });
+        } catch (e) {
+          set((state) => ({ members: { ...state.members, [id]: member } }));
+          setError(e);
+        }
       }
     },
 
@@ -722,88 +897,153 @@ export const useTripStore = create<TripStore>()(
         }
       });
 
-      try {
-        await deleteMemberRow(id); // cascades group_members via FK
-        await Promise.all([
-          ...groupsToDissolve.map((gid) => deleteGroupRow(gid)),
-          ...groupsToRename.map((g) => updateGroupRow(g.id, g.name, g.memberIds)),
-        ]);
+      // Snapshot for revert on failure — group dissolve/rename is cascaded
+      // client-side above, so an aborted delete must restore exactly the
+      // groups it was about to touch, not just the member.
+      const removedGroupSnapshots = groupsToDissolve.map((gid) => currentGroups[gid]);
+      const renamedGroupSnapshots = groupsToRename.map((g) => currentGroups[g.id]);
+      const removedMember = currentMembers[id];
+      const previousTrip = get().trips.find((t) => t.id === activeTripId);
 
-        set((state) => {
-          const updatedMembers = { ...state.members };
-          delete updatedMembers[id];
+      set((state) => {
+        const updatedMembers = { ...state.members };
+        delete updatedMembers[id];
 
-          const updatedGroups = { ...state.groups };
-          groupsToDissolve.forEach((gid) => delete updatedGroups[gid]);
-          groupsToRename.forEach((g) => {
-            updatedGroups[g.id] = { ...updatedGroups[g.id], name: g.name, memberIds: g.memberIds };
-          });
-
-          const updatedTrips = state.trips.map((t) => {
-            if (t.id !== activeTripId) return t;
-            return {
-              ...t,
-              memberIds: t.memberIds.filter((mid) => mid !== id),
-              adminMemberIds: (t.adminMemberIds || []).filter((mid) => mid !== id),
-              groupIds: t.groupIds.filter((gid) => !groupsToDissolve.includes(gid)),
-              updatedAt: Date.now(),
-            };
-          });
-
-          return { members: updatedMembers, groups: updatedGroups, trips: updatedTrips, storageError: null };
+        const updatedGroups = { ...state.groups };
+        groupsToDissolve.forEach((gid) => delete updatedGroups[gid]);
+        groupsToRename.forEach((g) => {
+          updatedGroups[g.id] = { ...updatedGroups[g.id], name: g.name, memberIds: g.memberIds };
         });
-      } catch (e) {
-        setError(e);
+
+        const updatedTrips = state.trips.map((t) => {
+          if (t.id !== activeTripId) return t;
+          return {
+            ...t,
+            memberIds: t.memberIds.filter((mid) => mid !== id),
+            adminMemberIds: (t.adminMemberIds || []).filter((mid) => mid !== id),
+            groupIds: t.groupIds.filter((gid) => !groupsToDissolve.includes(gid)),
+            updatedAt: Date.now(),
+          };
+        });
+
+        return { members: updatedMembers, groups: updatedGroups, trips: updatedTrips, storageError: null };
+      });
+
+      const revert = () => {
+        set((state) => {
+          const restoredGroups = { ...state.groups };
+          removedGroupSnapshots.forEach((g) => { if (g) restoredGroups[g.id] = g; });
+          renamedGroupSnapshots.forEach((g) => { if (g) restoredGroups[g.id] = g; });
+          return {
+            members: { ...state.members, [id]: removedMember },
+            groups: restoredGroups,
+            trips: state.trips.map((t) => (t.id === activeTripId && previousTrip ? previousTrip : t)),
+          };
+        });
+      };
+
+      if (!navigator.onLine) {
+        get().queueSync('deleteMember', { id, groupsToDissolve, groupsToRename });
+      } else {
+        try {
+          await deleteMemberRow(id); // cascades group_members via FK
+          await Promise.all([
+            ...groupsToDissolve.map((gid) => deleteGroupRow(gid)),
+            ...groupsToRename.map((g) => updateGroupRow(g.id, g.name, g.memberIds)),
+          ]);
+        } catch (e) {
+          revert();
+          setError(e);
+        }
       }
     },
 
     createGroup: async (name, memberIds) => {
       const activeTripId = get().activeTripId;
       if (!activeTripId) return;
-      try {
-        const group = await insertGroup(activeTripId, name, memberIds);
-        set((state) => ({
-          groups: { ...state.groups, [group.id]: group },
-          trips: state.trips.map((t) => (t.id === activeTripId ? { ...t, groupIds: [...t.groupIds, group.id], updatedAt: Date.now() } : t)),
-          storageError: null,
-        }));
-      } catch (e) {
-        setError(e);
+
+      const tempId = crypto.randomUUID();
+      const optimisticGroup: Group = { id: tempId, name, memberIds };
+
+      set((state) => ({
+        groups: { ...state.groups, [tempId]: optimisticGroup },
+        trips: state.trips.map((t) => (t.id === activeTripId ? { ...t, groupIds: [...t.groupIds, tempId], updatedAt: Date.now() } : t)),
+        storageError: null,
+      }));
+
+      if (!navigator.onLine) {
+        get().queueSync('createGroup', { tempId, name, memberIds, tripId: activeTripId });
+      } else {
+        try {
+          const group = await insertGroup(activeTripId, name, memberIds, tempId);
+          set((state) => ({ groups: { ...state.groups, [tempId]: group } }));
+        } catch (e) {
+          set((state) => {
+            const updatedGroups = { ...state.groups };
+            delete updatedGroups[tempId];
+            return {
+              groups: updatedGroups,
+              trips: state.trips.map((t) => (t.id === activeTripId ? { ...t, groupIds: t.groupIds.filter((gid) => gid !== tempId) } : t)),
+            };
+          });
+          setError(e);
+        }
       }
     },
 
     updateGroup: async (id, name, memberIds) => {
       const activeTripId = get().activeTripId;
       if (!activeTripId) return;
-      try {
-        await updateGroupRow(id, name, memberIds);
-        set((state) => ({
-          groups: { ...state.groups, [id]: { ...state.groups[id], name, memberIds } },
-          trips: state.trips.map((t) => (t.id === activeTripId ? { ...t, updatedAt: Date.now() } : t)),
-          storageError: null,
-        }));
-      } catch (e) {
-        setError(e);
+      const existing = get().groups[id];
+      if (!existing) return;
+
+      set((state) => ({
+        groups: { ...state.groups, [id]: { ...existing, name, memberIds } },
+        trips: state.trips.map((t) => (t.id === activeTripId ? { ...t, updatedAt: Date.now() } : t)),
+        storageError: null,
+      }));
+
+      if (!navigator.onLine) {
+        get().queueSync('updateGroup', { id, name, memberIds });
+      } else {
+        try {
+          await updateGroupRow(id, name, memberIds);
+        } catch (e) {
+          set((state) => ({ groups: { ...state.groups, [id]: existing } }));
+          setError(e);
+        }
       }
     },
 
     deleteGroup: async (groupId) => {
       const activeTripId = get().activeTripId;
       if (!activeTripId) return;
-      try {
-        await deleteGroupRow(groupId);
-        set((state) => {
-          const { [groupId]: _removed, ...updatedGroups } = state.groups;
-          return {
-            groups: updatedGroups,
-            trips: state.trips.map((t) =>
-              t.id === activeTripId ? { ...t, groupIds: t.groupIds.filter((id) => id !== groupId), updatedAt: Date.now() } : t
-            ),
-            storageError: null,
-          };
-        });
-      } catch (e) {
-        setError(e);
+      const existing = get().groups[groupId];
+      if (!existing) return;
+
+      set((state) => {
+        const { [groupId]: _removed, ...updatedGroups } = state.groups;
+        return {
+          groups: updatedGroups,
+          trips: state.trips.map((t) =>
+            t.id === activeTripId ? { ...t, groupIds: t.groupIds.filter((id) => id !== groupId), updatedAt: Date.now() } : t
+          ),
+          storageError: null,
+        };
+      });
+
+      if (!navigator.onLine) {
+        get().queueSync('deleteGroup', { groupId, tripId: activeTripId });
+      } else {
+        try {
+          await deleteGroupRow(groupId);
+        } catch (e) {
+          set((state) => ({
+            groups: { ...state.groups, [groupId]: existing },
+            trips: state.trips.map((t) => (t.id === activeTripId ? { ...t, groupIds: [...t.groupIds, groupId] } : t)),
+          }));
+          setError(e);
+        }
       }
     },
 
@@ -867,7 +1107,22 @@ export const useTripStore = create<TripStore>()(
       };
 
       if (!navigator.onLine) {
-        get().queueSync('addExpense', { tempId, expenseData });
+        if (expenseData.receiptImage) {
+          // Stage the photo in IndexedDB instead of letting it travel
+          // inline in the persisted syncQueue — see offlineReceiptStore.ts.
+          // Only strip it from the queued payload once staging actually
+          // succeeded; otherwise keep it inline so the photo isn't lost.
+          let staged = false;
+          try {
+            await saveOfflineReceipt(tempId, expenseData.receiptImage);
+            staged = true;
+          } catch (e) {
+            console.error('Failed to stage offline receipt, keeping it inline as a fallback:', e);
+          }
+          get().queueSync('addExpense', { tempId, expenseData: staged ? { ...expenseData, receiptImage: undefined } : expenseData });
+        } else {
+          get().queueSync('addExpense', { tempId, expenseData });
+        }
       } else {
         try {
           await saveAction();
@@ -918,7 +1173,18 @@ export const useTripStore = create<TripStore>()(
       };
 
       if (!navigator.onLine) {
-        get().queueSync('updateExpense', { id, expenseData });
+        if (expenseData.receiptImage) {
+          let staged = false;
+          try {
+            await saveOfflineReceipt(id, expenseData.receiptImage);
+            staged = true;
+          } catch (e) {
+            console.error('Failed to stage offline receipt, keeping it inline as a fallback:', e);
+          }
+          get().queueSync('updateExpense', { id, expenseData: staged ? { ...expenseData, receiptImage: undefined } : expenseData });
+        } else {
+          get().queueSync('updateExpense', { id, expenseData });
+        }
       } else {
         try {
           await saveAction();
@@ -1047,20 +1313,43 @@ export const useTripStore = create<TripStore>()(
     addCategory: async (name, icon) => {
       const activeTripId = get().activeTripId;
       if (!activeTripId) return;
-      try {
-        const category = await insertCategory(activeTripId, name, icon);
-        set((state) => ({ categories: [...state.categories, category], storageError: null }));
-      } catch (e) {
-        setError(e);
+
+      const tempId = crypto.randomUUID();
+      const optimisticCategory: Category = { id: tempId, name, icon, isCustom: true };
+      set((state) => ({ categories: [...state.categories, optimisticCategory], storageError: null }));
+
+      if (!navigator.onLine) {
+        get().queueSync('addCategory', { tempId, name, icon, tripId: activeTripId });
+      } else {
+        try {
+          const category = await insertCategory(activeTripId, name, icon, tempId);
+          set((state) => ({ categories: state.categories.map((c) => (c.id === tempId ? category : c)) }));
+        } catch (e) {
+          set((state) => ({ categories: state.categories.filter((c) => c.id !== tempId) }));
+          setError(e);
+        }
       }
     },
 
     deleteCategory: async (id) => {
-      try {
-        await deleteCategoryRow(id);
-        set((state) => ({ categories: state.categories.filter((c) => c.id !== id), storageError: null }));
-      } catch (e) {
-        setError(e);
+      const existing = get().categories.find((c) => c.id === id);
+      if (!existing) return;
+      const existingIndex = get().categories.indexOf(existing);
+      set((state) => ({ categories: state.categories.filter((c) => c.id !== id), storageError: null }));
+
+      if (!navigator.onLine) {
+        get().queueSync('deleteCategory', { id });
+      } else {
+        try {
+          await deleteCategoryRow(id);
+        } catch (e) {
+          set((state) => {
+            const restored = [...state.categories];
+            restored.splice(existingIndex, 0, existing);
+            return { categories: restored };
+          });
+          setError(e);
+        }
       }
     },
 
@@ -1214,6 +1503,12 @@ export const useTripStore = create<TripStore>()(
     {
       name: 'trip-tracker-store-v1',
       version: 1,
+      storage: createJSONStorage(() => quotaSafeStorage),
+      // No migrations yet — version stays 1. When the persisted shape needs
+      // to change, branch on the `version` argument here to transform old
+      // persisted data before it's merged into the live store, instead of
+      // letting a stale/incompatible shape silently corrupt state.
+      migrate: (persistedState) => persistedState as TripStore,
       partialize: (state) => ({
         trips: state.trips,
         activeTripId: state.activeTripId,
