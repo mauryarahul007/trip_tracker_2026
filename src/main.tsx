@@ -11,8 +11,18 @@ import { RequireAuth } from './components/RequireAuth'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { UpdateBanner } from './components/UpdateBanner'
 import { registerServiceWorkerUpdateWatcher } from './services/serviceWorker'
+import { initAutoBugReporter } from './utils/autoBugReporter'
+import { useAuthStore } from './store/authStore'
 
 registerServiceWorkerUpdateWatcher()
+initAutoBugReporter()
+
+// Local dev convenience only (import.meta.env.DEV is false in a production
+// build): sign in as the demo superadmin before RequireAuth ever checks for
+// a session, so opening the app locally skips the login screen entirely.
+if (import.meta.env.DEV && !useAuthStore.getState().session) {
+  useAuthStore.getState().signInAsDemoUser()
+}
 
 // Android hardware/gesture back button: pop whatever screen/modal pushed a
 // history entry (see useHistoryBack), or exit the app at the root screen.

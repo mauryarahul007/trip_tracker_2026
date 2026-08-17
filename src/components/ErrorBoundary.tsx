@@ -1,5 +1,6 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react';
 import { diagnosticLogger } from '../utils/diagnosticLogger';
+import { autoReportError } from '../utils/autoBugReporter';
 
 type Props = {
   children: ReactNode;
@@ -28,6 +29,7 @@ export class ErrorBoundary extends Component<Props, State> {
     this.setState({ errorInfo });
     diagnosticLogger.log('error', `React Crash: ${error.message}`, errorInfo.componentStack);
     console.error('Uncaught error inside ErrorBoundary:', error, errorInfo);
+    void autoReportError(error.message, error.stack || errorInfo.componentStack || undefined, 'react-crash');
   }
 
   private handleReload = () => {

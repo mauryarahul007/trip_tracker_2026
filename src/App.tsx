@@ -26,8 +26,8 @@ import { formatDateRange } from './utils/dateRange';
 import { useScrollLock } from './utils/useScrollLock';
 import { useHistoryBack } from './utils/useHistoryBack';
 
-
-
+// Accounts that always get the Bug Ledger, independent of trip admin status.
+const SUPERADMIN_EMAILS = ['superadmin@triptracker.local'];
 
 export default function App() {
   const {
@@ -67,7 +67,10 @@ export default function App() {
 
   const userEmail = useAuthStore((s) => s.session?.user.email ?? null);
   const userId = useAuthStore((s) => s.session?.user.id ?? null);
+  const session = useAuthStore((s) => s.session);
   const signOut = useAuthStore((s) => s.signOut);
+  const signInAsDemoUser = useAuthStore((s) => s.signInAsDemoUser);
+  const isSuperAdmin = userEmail ? SUPERADMIN_EMAILS.includes(userEmail) : false;
 
   // Navigation tabs: 'expenses' | 'members' | 'analytics' | 'settings'
   const [activeTab, setActiveTab] = useState<'expenses' | 'members' | 'analytics' | 'settings'>('expenses');
@@ -113,6 +116,18 @@ export default function App() {
     handleHash();
     window.addEventListener('hashchange', handleHash);
     return () => window.removeEventListener('hashchange', handleHash);
+  }, []);
+
+  // Local dev convenience only (never runs in a production build): skip
+  // login/trip-creation and land straight on the superadmin Bug Ledger.
+  useEffect(() => {
+    if (!import.meta.env.DEV) return;
+    if (!session) signInAsDemoUser();
+    setShowBugTracker(true);
+    if (window.location.hash !== '#/bugs') {
+      window.location.hash = '#/bugs';
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // PWA Install Prompt State
@@ -958,7 +973,7 @@ export default function App() {
                 window.location.hash = '#/';
               }
             }}
-            isAdmin={isAdmin}
+            isAdmin={isAdmin || isSuperAdmin}
             onRequestConfirm={setConfirmRequest}
           />
         </div>
