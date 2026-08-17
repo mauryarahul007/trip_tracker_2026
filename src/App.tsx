@@ -23,6 +23,7 @@ import { ShareTripModal } from './components/ShareTripModal';
 import { IconCalendar, IconChevronLeft, IconShare } from './components/Icons';
 import { formatDateRange } from './utils/dateRange';
 import { useScrollLock } from './utils/useScrollLock';
+import { useHistoryBack } from './utils/useHistoryBack';
 
 
 
@@ -834,6 +835,18 @@ export default function App() {
     await loadDemoTrip();
     setActiveTab('expenses');
   };
+
+  // Wire swipe-back gesture, hardware/OS back button, and the browser Back
+  // button to close whichever screen/modal is open, deepest first. Each
+  // pushes its own history entry only while open, so nesting order falls
+  // out of when things were opened rather than the order listed here.
+  useHistoryBack(!!activeTripId, () => selectTrip(null));
+  useHistoryBack(showAddTrip, handleCancelTripForm);
+  useHistoryBack(showAddExpense, handleCancelExpenseForm);
+  useHistoryBack(!!selectedReviewExpense, () => setSelectedReviewExpense(null));
+  useHistoryBack(showShareTrip, () => setShowShareTrip(false));
+  useHistoryBack(showGlobalSettings, () => setShowGlobalSettings(false));
+  useHistoryBack(!!confirmRequest, () => setConfirmRequest(null));
 
   // Loading view
   if (!initialized) {
