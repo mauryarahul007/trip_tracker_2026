@@ -1,0 +1,91 @@
+[
+  {
+    "id": "BUG-001",
+    "title": "Hardware swipe-back gesture blocked by scroll-lock touch-action",
+    "description": "On Android and mobile web, the CSS touch-action: none on the root container prevented the native browser swipe-back gesture from firing.",
+    "severity": "medium",
+    "category": "navigation",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "android",
+      "isOnline": true,
+      "appVersion": "1.0.0",
+      "route": "#/trip/road-trip-goa"
+    },
+    "reproSteps": [
+      "Open any trip on an Android mobile device",
+      "Attempt to swipe from the left edge of the screen to go back",
+      "Observe that the swipe gesture is unresponsive"
+    ],
+    "expectedBehavior": "Native swipe-back navigates back to previous screen smoothly.",
+    "actualBehavior": "Swipe gesture was swallowed by touch-action: none.",
+    "diagnostics": {
+      "stackTrace": "N/A - CSS styling constraint",
+      "syncQueueLength": 0
+    },
+    "createdAt": "2026-08-15T10:00:00.000Z",
+    "updatedAt": "2026-08-16T12:00:00.000Z",
+    "resolvedAt": "2026-08-16T12:00:00.000Z",
+    "resolvedBy": "claude-cli",
+    "resolutionNote": "Fixed in commit by scoping touch-action to individual swipeable rows instead of whole viewport."
+  },
+  {
+    "id": "BUG-002",
+    "title": "Offline-captured receipt photos caused localStorage QuotaExceededError",
+    "description": "Large base64-encoded receipt photos captured while offline filled localStorage beyond the 5MB browser quota.",
+    "severity": "high",
+    "category": "receipts-camera",
+    "status": "resolved",
+    "foundBy": "antigravity",
+    "environment": {
+      "platform": "web",
+      "isOnline": false,
+      "appVersion": "1.0.0",
+      "route": "#/trip/road-trip-goa/expense/new"
+    },
+    "reproSteps": [
+      "Go offline (airplane mode)",
+      "Capture 3 high-resolution receipt images in expense forms",
+      "Save the expenses"
+    ],
+    "expectedBehavior": "Receipt photos stage safely offline without exceeding quota.",
+    "actualBehavior": "localStorage threw QuotaExceededError and dropped subsequent writes.",
+    "diagnostics": {
+      "stackTrace": "DOMException: Failed to execute 'setItem' on 'Storage': Setting the value of 'trip_tracker_state' exceeded the quota.",
+      "syncQueueLength": 3
+    },
+    "createdAt": "2026-08-16T14:30:00.000Z",
+    "updatedAt": "2026-08-16T18:00:00.000Z",
+    "resolvedAt": "2026-08-16T18:00:00.000Z",
+    "resolvedBy": "antigravity",
+    "resolutionNote": "Created dedicated IndexedDB store (offlineReceiptStore.ts) to hold offline photos separately from localStorage state."
+  },
+  {
+    "id": "BUG-003",
+    "title": "UI verified test bug from superadmin console",
+    "description": "Testing live sync between UI and CLI ledger",
+    "severity": "medium",
+    "category": "ui-ux",
+    "status": "resolved",
+    "foundBy": "superadmin-ui",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Open Superadmin Console",
+      "Click Add Bug",
+      "Save"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-08-17T12:30:33.975Z",
+    "updatedAt": "2026-08-17T12:30:44.820Z",
+    "resolvedBy": "antigravity",
+    "resolvedAt": "2026-08-17T12:30:44.819Z",
+    "resolutionNote": "Verified bi-directional UI to CLI sync in local dev server"
+  }
+]

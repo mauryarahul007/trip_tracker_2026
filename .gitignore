@@ -27,3 +27,10 @@ dist-ssr
 
 # Git worktrees for isolated agent work
 .worktrees/
+
+# Hive swarm and local roster state
+hive/
+roster.json
+roster-backups/
+scan.log
+

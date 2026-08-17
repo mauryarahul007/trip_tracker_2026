@@ -20,6 +20,7 @@ import { ExpenseReviewModal } from './components/ExpenseReviewModal';
 import { UndoToasts } from './components/UndoToasts';
 import { NavTabs } from './components/NavTabs';
 import { ShareTripModal } from './components/ShareTripModal';
+import { SuperAdminBugTracker } from './components/SuperAdminBugTracker';
 import { IconCalendar, IconChevronLeft, IconShare } from './components/Icons';
 import { formatDateRange } from './utils/dateRange';
 import { useScrollLock } from './utils/useScrollLock';
@@ -99,6 +100,20 @@ export default function App() {
   const [newTripStart, setNewTripStart] = useState('');
   const [newTripEnd, setNewTripEnd] = useState('');
   const [newTripCurrency, setNewTripCurrency] = useState('INR');
+
+  // Superadmin Bug Tracker full-screen view
+  const [showBugTracker, setShowBugTracker] = useState(false);
+
+  useEffect(() => {
+    const handleHash = () => {
+      if (window.location.hash === '#/bugs' || window.location.hash === '#/bug-tracker') {
+        setShowBugTracker(true);
+      }
+    };
+    handleHash();
+    window.addEventListener('hashchange', handleHash);
+    return () => window.removeEventListener('hashchange', handleHash);
+  }, []);
 
   // PWA Install Prompt State
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
@@ -933,8 +948,21 @@ export default function App() {
         </div>
       )}
 
-      {/* Screen 1: Trips List */}
-      {!activeTripId ? (
+      {/* Full-Screen Superadmin Bug Tracker View */}
+      {showBugTracker ? (
+        <div className="fade-in" style={{ flex: 1, overflowY: 'auto', padding: '16px 20px' }}>
+          <SuperAdminBugTracker
+            onBack={() => {
+              setShowBugTracker(false);
+              if (window.location.hash === '#/bugs' || window.location.hash === '#/bug-tracker') {
+                window.location.hash = '#/';
+              }
+            }}
+            isAdmin={isAdmin}
+          />
+        </div>
+      ) : !activeTripId ? (
+        /* Screen 1: Trips List */
         <TripsListScreen
           trips={visibleTrips}
           members={members}
@@ -956,6 +984,7 @@ export default function App() {
           onDeleteTrip={handleDeleteTrip}
           onArchiveTrip={handleArchiveTrip}
           onOpenSettings={() => setShowGlobalSettings(true)}
+          onOpenBugTracker={() => setShowBugTracker(true)}
         />
       ) : (
         /* Screen 2: Active Trip Dashboard */
@@ -970,6 +999,17 @@ export default function App() {
                 <h2 className="app-logo" style={{ fontSize: '24px', color: '#F2ECDC' }}>{activeTrip?.name}</h2>
               </div>
               <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexShrink: 0 }}>
+                {isAdmin && (
+                  <button
+                    type="button"
+                    className="secondary-btn"
+                    style={{ padding: '7px 10px', fontSize: '12px', color: '#00BFA5', borderColor: 'rgba(0,191,165,0.4)', background: 'rgba(0,191,165,0.12)' }}
+                    onClick={() => setShowBugTracker(true)}
+                    title="Open Superadmin Bug Tracker"
+                  >
+                    🛡️ Bugs
+                  </button>
+                )}
                 <button
                   className="secondary-btn"
                   style={{ padding: '7px 12px', fontSize: '12px', color: '#F2ECDC', borderColor: 'rgba(242,236,220,0.28)', background: 'rgba(242,236,220,0.06)' }}

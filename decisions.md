@@ -317,6 +317,21 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - Preserves hierarchical ownership and guarantees that trips never lose verified ownership while providing full flexibility to promote co-travelers to Admins immediately.
 
+---
+
+## 27. Multi-Agent & In-App Unified Bug Tracking System
+* **Context:** The application is developed, tested, and maintained cooperatively by multiple AI coding assistants (Antigravity, Claude Code CLI / Hive swarm) alongside human developers and QA testers. Bugs discovered during automated runs, manual testing, or runtime exceptions were previously lost across ephemeral chat contexts or untriaged in generic backlogs without structured telemetry or reproduction data.
+* **Decision:** Build a lightweight, offline-first, git-native Bug Tracking System with both CLI (`scripts/bug.mjs`) and in-app diagnostics (`BugReportModal.tsx` and `ErrorBoundary.tsx`).
+* **Pattern/Implementation:**
+  - **Single Source of Truth (`bugs/bugs.json`)**: Machine-readable JSON ledger with structured fields (severity, category, reproduction steps, expected vs actual behavior, telemetry snapshot).
+  - **Auto-Rendered Dashboard (`BUGS.md`)**: Human-readable markdown board with summary metrics, active bug specs, and resolution history, updated automatically on every state transition.
+  - **CLI Workflow (`scripts/bug.mjs` & npm scripts)**: Provides commands (`add`, `list`, `show`, `resolve`, `update`, `sync`, `stats`) for fast programmatic triage by AI agents and terminal users.
+  - **In-App Diagnostic Ring Buffer (`DiagnosticLogger.ts`)**: Maintains an in-memory buffer of recent console logs, uncaught exceptions, storage usage estimates, and sync queue backlog.
+  - **In-App Bug Reporter Modal & ErrorBoundary**: Accessible in Settings and on runtime crashes, offering 1-click export of AI-ready markdown prompts and diagnostic JSON.
+* **Trade-offs Accepted:**
+  - Storing bug records directly in the git repository avoids paid third-party dependencies and guarantees tickets remain versioned with the exact code commit, at the minor trade-off of requiring a commit to record resolved bugs.
+
+
 
 
 

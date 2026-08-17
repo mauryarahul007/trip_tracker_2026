@@ -34,6 +34,8 @@ as the working backlog directly.
 - App version shown in Settings → About (`src/utils/appVersion.ts`) — real
   native version/build on Android/iOS via `@capacitor/app`, git commit SHA
   on web (auto-updates every deploy, no manual version bump needed)
+- Multi-Agent & In-App Unified Bug Tracking System (`scripts/bug.mjs`, `bugs/bugs.json`,
+  `BUGS.md`, `src/components/BugReportModal.tsx`, `docs/howto-bug-tracking.md`)
 - Full session writeup: `docs/explanation-navigation-and-offline-fixes.md`
 
 ## Deferred
@@ -48,5 +50,4 @@ as the working backlog directly.
 
 ## From the sheet (untriaged)
 
-- Need to implement bug tracker
 - implement superadmin console

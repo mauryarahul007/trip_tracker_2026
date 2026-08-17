@@ -9,7 +9,12 @@
     "lint": "oxlint",
     "preview": "vite preview",
     "test": "vitest run",
-    "generate:assets": "capacitor-assets generate --android --ios"
+    "generate:assets": "capacitor-assets generate --android --ios",
+    "bug": "node scripts/bug.mjs",
+    "bug:add": "node scripts/bug.mjs add",
+    "bug:list": "node scripts/bug.mjs list",
+    "bug:resolve": "node scripts/bug.mjs resolve",
+    "bug:sync": "node scripts/bug.mjs sync"
   },
   "dependencies": {
     "@capacitor/android": "8.2.0",

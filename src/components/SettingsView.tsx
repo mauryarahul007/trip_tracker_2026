@@ -24,10 +24,12 @@ import { useTripStore } from '../store/tripStore';
 import { formatDateRange } from '../utils/dateRange';
 import { getCategoryKeywords } from '../utils/categoryHelper';
 import { getAppVersion } from '../utils/appVersion';
+import { BugReportModal } from './BugReportModal';
+import { SuperAdminBugTracker } from './SuperAdminBugTracker';
 
 export type ThemePref = 'light' | 'dark' | 'system';
 
-type SubScreen = null | 'categories' | 'recycle-bin' | 'appearance' | 'backups' | 'archived-trips';
+type SubScreen = null | 'categories' | 'recycle-bin' | 'appearance' | 'backups' | 'archived-trips' | 'bug-tracker';
 
 const RECYCLE_BIN_WINDOW_MS = 24 * 60 * 60 * 1000;
 
@@ -126,6 +128,10 @@ export function SettingsView({
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [storageEstimate, setStorageEstimate] = useState<{ used: number; quota: number } | null>(null);
   const [appVersion, setAppVersion] = useState<string | null>(null);
+  const [showBugModal, setShowBugModal] = useState(false);
+  const activeTripId = useTripStore((s) => s.activeTripId);
+  const trips = useTripStore((s) => s.trips);
+  const activeTrip = trips.find((t) => t.id === activeTripId);
 
   useEffect(() => {
     fetchDeletedExpenses();
@@ -817,6 +823,14 @@ export function SettingsView({
     );
   }
 
+  if (subScreen === 'bug-tracker') {
+    return (
+      <div className="fade-in settings-container">
+        <SuperAdminBugTracker onBack={() => setSubScreen(null)} isAdmin={isAdmin} />
+      </div>
+    );
+  }
+
   // -------------------------------------------------------------------------
   // Main Settings Screen (WhatsApp Inset Grouped Layout)
   // -------------------------------------------------------------------------
@@ -1128,6 +1142,52 @@ export function SettingsView({
         </div>
       </div>
 
+      {/* Group 5: Superadmin Console & Diagnostics */}
+      {isAdmin && (
+        <div className="settings-group">
+          <h4 className="settings-group-title">Superadmin Console</h4>
+          <div className="settings-group-card">
+            <button
+              type="button"
+              className="settings-row-item"
+              onClick={() => setSubScreen('bug-tracker')}
+            >
+              <div className="settings-row-left">
+                <div className="settings-squircle squircle-amber">
+                  <span style={{ fontSize: '16px' }}>🛡️</span>
+                </div>
+                <div className="settings-row-texts">
+                  <span className="settings-row-title">Superadmin Bug Tracker</span>
+                  <span className="settings-row-subtitle">Manage, triage &amp; live-sync bugs with AI agents</span>
+                </div>
+              </div>
+              <div className="settings-row-right">
+                <IconChevronRight size={16} />
+              </div>
+            </button>
+
+            <button
+              type="button"
+              className="settings-row-item"
+              onClick={() => setShowBugModal(true)}
+            >
+              <div className="settings-row-left">
+                <div className="settings-squircle squircle-slate">
+                  <span style={{ fontSize: '16px' }}>🐞</span>
+                </div>
+                <div className="settings-row-texts">
+                  <span className="settings-row-title">Quick Bug Reporter &amp; Telemetry</span>
+                  <span className="settings-row-subtitle">Capture live logs &amp; export report for Claude / Antigravity</span>
+                </div>
+              </div>
+              <div className="settings-row-right">
+                <IconChevronRight size={16} />
+              </div>
+            </button>
+          </div>
+        </div>
+      )}
+
       <div>
         <h4 className="settings-group-title">About</h4>
         <div className="settings-group-card">
@@ -1144,6 +1204,12 @@ export function SettingsView({
           </div>
         </div>
       </div>
+
+      <BugReportModal
+        isOpen={showBugModal}
+        onClose={() => setShowBugModal(false)}
+        activeTripInfo={{ id: activeTripId, name: activeTrip?.name || null }}
+      />
     </div>
   );
 }

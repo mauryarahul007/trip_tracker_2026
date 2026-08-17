@@ -27,6 +27,7 @@ type Props = {
   onDeleteTrip: (trip: Trip) => void;
   onArchiveTrip: (trip: Trip) => void;
   onOpenSettings: () => void;
+  onOpenBugTracker?: () => void;
 };
 
 export function TripsListScreen({
@@ -50,6 +51,7 @@ export function TripsListScreen({
   onDeleteTrip,
   onArchiveTrip,
   onOpenSettings,
+  onOpenBugTracker,
 }: Props) {
   const navigate = useNavigate();
   const [showJoinTrip, setShowJoinTrip] = useState(false);
@@ -64,22 +66,56 @@ export function TripsListScreen({
 
   return (
     <div className="fade-in trips-screen-scroll">
-      <header style={{ marginBottom: '32px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '16px' }}>
+      <header style={{ marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
         <div>
           <h1 className="app-logo">Trip Tracker 2026</h1>
           <p style={{ color: 'var(--text-secondary)', fontSize: '14px', marginTop: '4px' }}>
             Offline-first cost splitting & groups
           </p>
         </div>
-        <button
-          className="secondary-btn"
-          style={{ padding: '10px', borderRadius: '50%', flexShrink: 0 }}
-          onClick={onOpenSettings}
-          aria-label="App Settings"
-          title="App Settings"
-        >
-          <IconSettings size={18} />
-        </button>
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          {onOpenBugTracker && (
+            <button
+              type="button"
+              className="secondary-btn"
+              style={{
+                padding: '8px 14px',
+                fontSize: '13px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                borderRadius: '8px',
+                background: 'rgba(0, 191, 165, 0.08)',
+                borderColor: 'rgba(0, 191, 165, 0.4)',
+                color: 'var(--text-primary)',
+              }}
+              onClick={onOpenBugTracker}
+              aria-label="Superadmin Bug Tracker"
+              title="Superadmin Bug Tracker"
+            >
+              <span>🛡️</span>
+              <strong style={{ color: 'var(--color-primary, #00BFA5)' }}>Bug Tracker</strong>
+            </button>
+          )}
+          <button
+            type="button"
+            className="secondary-btn"
+            style={{
+              padding: '8px 14px',
+              fontSize: '13px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              borderRadius: '8px',
+            }}
+            onClick={onOpenSettings}
+            aria-label="App Settings"
+            title="App Settings"
+          >
+            <IconSettings size={16} />
+            <span>Settings</span>
+          </button>
+        </div>
       </header>
 
       <main style={{ flex: 1 }}>
