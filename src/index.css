@@ -394,6 +394,28 @@ input[type="date"].input-field {
   z-index: 40;
 }
 
+/* Native iOS glass header: MainViewController.swift renders a real
+   translucent, scroll-shrinking header (title/eyebrow/stats/sync
+   pill/buttons all native, tap-forwarded to these — see
+   data-action="share"/"trips-back"/"sync" — the same reasons the tab bar
+   went fully native apply here too: a blur placed behind CSS content
+   blurs that content as well, since WKWebView flattens everything into
+   one layer). .app-header stays in the DOM purely as native's source of
+   truth (content/state read back via nativeShell.ts's headerState
+   message) but is never shown. HeaderMetrics.expandedHeight in
+   MainViewController.swift must match the value below. */
+html.capacitor-ios .app-header {
+  display: none;
+}
+html.capacitor-ios .tab-pane {
+  /* 100px matches the scroll distance that drives the collapse (see
+     nativeShell.ts) so the header finishes shrinking right as content
+     reaches it — the extra +16px is a deliberate permanent buffer so
+     content still gets a bit of breathing room below the collapsed
+     header instead of scrolling flush against it. */
+  padding-top: calc(var(--safe-top, 0px) + 100px + 16px);
+}
+
 .app-header-top {
   display: flex;
   align-items: flex-start;

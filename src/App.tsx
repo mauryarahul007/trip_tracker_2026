@@ -971,6 +971,7 @@ export default function App() {
               </div>
               <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexShrink: 0 }}>
                 <button
+                  data-action="share"
                   className="secondary-btn"
                   style={{ padding: '7px 12px', fontSize: '12px', color: '#F2ECDC', borderColor: 'rgba(242,236,220,0.28)', background: 'rgba(242,236,220,0.06)' }}
                   onClick={() => setShowShareTrip(true)}
@@ -978,6 +979,7 @@ export default function App() {
                   <IconShare size={14} className="icon-sm" /> Share
                 </button>
                 <button
+                  data-action="trips-back"
                   className="secondary-btn"
                   style={{ padding: '7px 12px', fontSize: '12px', color: '#F2ECDC', borderColor: 'rgba(242,236,220,0.28)', background: 'rgba(242,236,220,0.06)' }}
                   onClick={() => selectTrip(null)}
@@ -993,6 +995,7 @@ export default function App() {
               </div>
               <button
                 type="button"
+                data-action="sync"
                 className="sync-header-pill"
                 onClick={handleSyncClick}
                 disabled={syncStatus === 'offline'}

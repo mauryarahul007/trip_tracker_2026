@@ -118,6 +118,119 @@ function setUpNativeTabBarSync(): void {
   window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', sync);
 }
 
+type HeaderState = {
+  visible: boolean;
+  tripName: string;
+  eyebrow: string;
+  memberLabel: string;
+  expenseLabel: string;
+  syncLabel: string;
+  syncStatus: string;
+  theme: 'light' | 'dark';
+};
+
+// Same reasoning as the tab bar: a native blur behind CSS content would
+// blur that content too, so the header's title/eyebrow/stats/sync
+// pill/buttons are all native (MainViewController.swift), tap-forwarded
+// via data-action to the equivalent .app-header buttons. Unlike the tab
+// bar's 4 static icons, this content is rich and frequently changing, so
+// rather than trying to read/diff every individual field, just report the
+// whole header's text content as one state object whenever anything in it
+// changes — simpler and self-correcting if the markup shifts later.
+function setUpNativeHeaderSync(): void {
+  const w = window as unknown as {
+    webkit?: {
+      messageHandlers?: {
+        headerState?: { postMessage(v: HeaderState): void };
+        headerScroll?: { postMessage(v: number): void };
+      };
+    };
+  };
+  const stateMessenger = w.webkit?.messageHandlers?.headerState;
+  const scrollMessenger = w.webkit?.messageHandlers?.headerScroll;
+  if (!stateMessenger || !scrollMessenger) return;
+
+  let lastState = '';
+  const syncState = () => {
+    const header = document.querySelector('.app-header');
+    const state: HeaderState = {
+      visible: !!header,
+      tripName: header?.querySelector('.app-logo')?.textContent?.trim() ?? '',
+      eyebrow: header?.querySelector('.app-eyebrow')?.textContent?.trim() ?? '',
+      memberLabel: header?.querySelectorAll('.app-header-stats span')[0]?.textContent?.trim() ?? '',
+      expenseLabel: header?.querySelectorAll('.app-header-stats span')[1]?.textContent?.trim() ?? '',
+      syncLabel: header?.querySelector('.sync-header-pill span:last-child')?.textContent?.trim() ?? '',
+      syncStatus:
+        Array.from(header?.querySelector('.sync-badge-dot')?.classList ?? []).find((c) => c !== 'sync-badge-dot') ?? 'synced',
+      theme: resolveTheme(),
+    };
+    const key = JSON.stringify(state);
+    if (key === lastState) return;
+    lastState = key;
+    stateMessenger.postMessage(state);
+  };
+
+  syncState();
+  new MutationObserver(syncState).observe(document.body, {
+    childList: true,
+    subtree: true,
+    characterData: true,
+    attributes: true,
+    attributeFilter: ['class', 'data-theme'],
+  });
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', syncState);
+
+  // .tab-pane's own top padding already reserves space for the fully
+  // expanded native header (see html.capacitor-ios .tab-pane in
+  // index.css) — it's a fixed, never-changing value on purpose, so the
+  // native header can simply shrink into that reserved space as it
+  // collapses (its own height animates; the space it no longer visually
+  // fills just reveals scrolled-up content, blurred, behind it) without
+  // any risk of fighting the browser's own scroll-position math the way
+  // adjusting padding-top mid-scroll would.
+  let lastProgress = -1;
+  let pendingProgress: number | null = null;
+  let rafScheduled = false;
+
+  // A scroll event fires far more often than the display can redraw —
+  // posting straight from the handler means every one of those extra
+  // calls still pays a full JS-to-native bridge hop (serialization + a
+  // main-thread dispatch on the Swift side) for a value the previous,
+  // still-unprocessed one already superseded. Coalescing to one post per
+  // animation frame caps that at the screen's actual refresh rate, which
+  // is what was really behind the collapse feeling less than smooth.
+  const flush = () => {
+    rafScheduled = false;
+    if (pendingProgress === null) return;
+    const progress = pendingProgress;
+    pendingProgress = null;
+    if (Math.abs(progress - lastProgress) < 0.01) return;
+    lastProgress = progress;
+    scrollMessenger.postMessage(progress);
+  };
+
+  document.body.addEventListener(
+    'scroll',
+    (e) => {
+      const target = e.target;
+      if (!(target instanceof HTMLElement) || !target.classList.contains('tab-pane')) return;
+      // 100 matches HeaderMetrics.expandedContentHeight in
+      // MainViewController.swift (also html.capacitor-ios .tab-pane's
+      // reserved padding-top) — collapse finishing exactly when that
+      // reserved space is fully scrolled through means content reaches
+      // the header's bottom edge right as it visually finishes
+      // collapsing, not before (a lingering, closing gap) or after
+      // (content flush against it while still "mid-collapse").
+      pendingProgress = Math.max(0, Math.min(1, target.scrollTop / 100));
+      if (!rafScheduled) {
+        rafScheduled = true;
+        requestAnimationFrame(flush);
+      }
+    },
+    true
+  );
+}
+
 export function initNativeShell(): void {
   if (!Capacitor.isNativePlatform()) return;
 
@@ -125,6 +238,7 @@ export function initNativeShell(): void {
   if (Capacitor.getPlatform() === 'ios') {
     document.documentElement.classList.add('capacitor-ios');
     setUpNativeTabBarSync();
+    setUpNativeHeaderSync();
   }
 
   applySafeAreaVars();
