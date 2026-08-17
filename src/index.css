@@ -1952,4 +1952,151 @@ input:checked + .toggle-slider:before {
   margin: 0;
 }
 
+/* ==========================================================================
+   Bug Tracker — Field Ledger
+   Case entries read as ledger rows; severity/status reuse .stamp-badge,
+   the same ink-stamp motif as the boarding-pass settlement status.
+   ========================================================================== */
+.bug-stat-strip {
+  display: flex;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-md);
+  overflow: hidden;
+}
+
+.bug-stat {
+  flex: 1;
+  padding: 10px 4px 11px;
+  text-align: center;
+  background: transparent;
+  border: none;
+  border-right: 1px dashed var(--border-color);
+  cursor: pointer;
+  font-family: inherit;
+  color: inherit;
+  transition: background 0.15s ease;
+}
+.bug-stat:last-child { border-right: none; }
+.bug-stat:hover { background: var(--bg-surface-hover); }
+.bug-stat.active { background: rgba(31, 110, 104, 0.09); }
+
+.bug-stat .n {
+  font-family: var(--font-family-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 18px;
+  font-weight: 600;
+  display: block;
+  color: var(--text-primary);
+}
+
+.bug-stat .l {
+  font-size: 9.5px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.bug-entry {
+  display: block;
+  width: 100%;
+  padding: 13px 14px;
+  background: transparent;
+  border: none;
+  border-bottom: 1px dashed var(--border-color);
+  text-align: left;
+  cursor: pointer;
+  color: inherit;
+  font-family: inherit;
+  transition: background 0.15s ease;
+}
+.bug-entry:last-child { border-bottom: none; }
+.bug-entry:hover { background: rgba(31, 110, 104, 0.04); }
+
+.bug-entry-top {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex-wrap: wrap;
+  margin-bottom: 5px;
+}
+
+.bug-case-id {
+  font-family: var(--font-family-mono);
+  font-size: 11.5px;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.bug-entry-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin: 0 0 4px;
+  line-height: 1.4;
+}
+
+.bug-entry-meta {
+  font-size: 11.5px;
+  color: var(--text-muted);
+}
+.bug-entry-meta .bug-cat {
+  color: var(--primary-accent);
+}
+
+.bug-case-detail {
+  padding: 12px 14px 14px;
+  margin-top: -1px;
+  border-bottom: 1px dashed var(--border-color);
+  background: var(--bg-app);
+}
+.bug-case-detail:last-child { border-bottom: none; }
+
+.bug-field { margin-bottom: 12px; }
+.bug-field:last-child { margin-bottom: 0; }
+.bug-field ol {
+  margin: 4px 0 0 18px;
+  padding: 0;
+  font-size: 13px;
+}
+.bug-field ol li { margin-bottom: 3px; }
+
+.bug-stack-block {
+  font-family: var(--font-family-mono);
+  font-size: 11px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-sm);
+  padding: 9px 11px;
+  color: var(--text-secondary);
+  white-space: pre-wrap;
+  overflow-x: auto;
+  max-height: 120px;
+  line-height: 1.5;
+}
+
+.bug-resolution-note {
+  background: var(--bg-surface);
+  border-left: 3px solid var(--color-success);
+  border-radius: var(--border-radius-sm);
+  padding: 10px 12px;
+  font-size: 12.5px;
+}
+
+textarea.input-field {
+  font-family: var(--font-family-body);
+  resize: vertical;
+  line-height: 1.5;
+}
+
+.bug-ruled-textarea {
+  background-image: repeating-linear-gradient(
+    var(--bg-surface),
+    var(--bg-surface) 22px,
+    var(--border-color) 23px
+  );
+  line-height: 23px;
+  min-height: 69px;
+}
+
 

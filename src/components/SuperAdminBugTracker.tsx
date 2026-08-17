@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { Fragment, useState, useEffect, useMemo } from 'react';
 import {
   fetchBugs,
   createBug,
@@ -7,44 +7,88 @@ import {
   type BugRecord,
 } from '../services/bugApi';
 import { diagnosticLogger } from '../utils/diagnosticLogger';
+import type { ConfirmRequest } from './ConfirmDialog';
 import {
   IconChevronLeft,
   IconRefresh,
   IconTrash,
+  IconSearch,
+  IconPlus,
+  IconCopy,
+  IconDownload,
+  IconAlertCircle,
+  IconCheckCircle,
 } from './Icons';
 
 type Props = {
   onBack: () => void;
   isAdmin?: boolean;
+  onRequestConfirm?: (request: ConfirmRequest) => void;
 };
 
-export function SuperAdminBugTracker({ onBack, isAdmin = true }: Props) {
+type StatusFilter = 'all' | 'open' | 'in_progress' | 'resolved' | 'critical';
+
+const CATEGORIES: { value: BugRecord['category']; label: string }[] = [
+  { value: 'navigation', label: 'Navigation & Routing' },
+  { value: 'splits-math', label: 'Splits & Math' },
+  { value: 'offline-sync', label: 'Offline & Cloud Sync' },
+  { value: 'p2p-sync', label: 'P2P Sync' },
+  { value: 'receipts-camera', label: 'Receipts & Camera' },
+  { value: 'auth', label: 'Auth & Session' },
+  { value: 'ui-ux', label: 'UI / UX' },
+  { value: 'performance', label: 'Performance' },
+  { value: 'general', label: 'General' },
+];
+
+const SEVERITIES: { value: BugRecord['severity']; label: string; color: string }[] = [
+  { value: 'critical', label: 'Critical', color: 'var(--color-danger)' },
+  { value: 'high', label: 'High', color: 'var(--secondary-accent)' },
+  { value: 'medium', label: 'Medium', color: 'var(--text-secondary)' },
+  { value: 'low', label: 'Low', color: 'var(--text-muted)' },
+];
+
+function severityColor(severity: BugRecord['severity']): string {
+  return SEVERITIES.find((s) => s.value === severity)?.color || 'var(--text-muted)';
+}
+
+function statusMeta(status: BugRecord['status']): { label: string; color: string } {
+  switch (status) {
+    case 'open':
+      return { label: 'Open', color: 'var(--primary-accent)' };
+    case 'in_progress':
+      return { label: 'Working', color: 'var(--secondary-accent)' };
+    case 'resolved':
+      return { label: 'Settled', color: 'var(--color-success)' };
+    default:
+      return { label: "Won't Fix", color: 'var(--text-muted)' };
+  }
+}
+
+export function SuperAdminBugTracker({ onBack, isAdmin = true, onRequestConfirm }: Props) {
   const [bugs, setBugs] = useState<BugRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'all' | 'open' | 'in_progress' | 'resolved' | 'critical'>('all');
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [expandedBugId, setExpandedBugId] = useState<string | null>(null);
 
-  // Modals state
   const [showAddModal, setShowAddModal] = useState(false);
   const [resolvingBug, setResolvingBug] = useState<BugRecord | null>(null);
   const [resolutionNote, setResolutionNote] = useState('');
   const [resolvedByName, setResolvedByName] = useState('superadmin');
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [toastMessage, setToastMessage] = useState<{ text: string; tone: 'success' | 'danger' } | null>(null);
 
-  // New bug form state
   const [newTitle, setNewTitle] = useState('');
-  const [newSeverity, setNewSeverity] = useState<'critical' | 'high' | 'medium' | 'low'>('medium');
-  const [newCategory, setNewCategory] = useState<string>('general');
+  const [newSeverity, setNewSeverity] = useState<BugRecord['severity']>('medium');
+  const [newCategory, setNewCategory] = useState<BugRecord['category']>('general');
   const [newDesc, setNewDesc] = useState('');
   const [newSteps, setNewSteps] = useState('');
   const [newExpected, setNewExpected] = useState('');
   const [newActual, setNewActual] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const showToast = (msg: string) => {
-    setToastMessage(msg);
+  const showToast = (text: string, tone: 'success' | 'danger' = 'success') => {
+    setToastMessage({ text, tone });
     setTimeout(() => setToastMessage(null), 3000);
   };
 
@@ -54,7 +98,7 @@ export function SuperAdminBugTracker({ onBack, isAdmin = true }: Props) {
       const data = await fetchBugs();
       setBugs(data);
     } catch {
-      showToast('Error loading bugs');
+      showToast('Could not load the ledger', 'danger');
     } finally {
       setLoading(false);
     }
@@ -64,10 +108,8 @@ export function SuperAdminBugTracker({ onBack, isAdmin = true }: Props) {
     loadBugs();
   }, []);
 
-  // Filtered bugs
   const filteredBugs = useMemo(() => {
     return bugs.filter((bug) => {
-      // Search
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
         const matchesQuery =
@@ -79,20 +121,17 @@ export function SuperAdminBugTracker({ onBack, isAdmin = true }: Props) {
         if (!matchesQuery) return false;
       }
 
-      // Status filter
       if (statusFilter === 'open' && bug.status !== 'open') return false;
       if (statusFilter === 'in_progress' && bug.status !== 'in_progress') return false;
       if (statusFilter === 'resolved' && bug.status !== 'resolved') return false;
       if (statusFilter === 'critical' && bug.severity !== 'critical') return false;
 
-      // Category filter
       if (categoryFilter !== 'all' && bug.category !== categoryFilter) return false;
 
       return true;
     });
   }, [bugs, searchQuery, statusFilter, categoryFilter]);
 
-  // Statistics
   const stats = useMemo(() => {
     const total = bugs.length;
     const open = bugs.filter((b) => b.status === 'open').length;
@@ -105,7 +144,7 @@ export function SuperAdminBugTracker({ onBack, isAdmin = true }: Props) {
   const handleCreateBug = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTitle.trim()) {
-      alert('Please enter a bug title.');
+      showToast('Give the case a summary first', 'danger');
       return;
     }
 
@@ -121,7 +160,7 @@ export function SuperAdminBugTracker({ onBack, isAdmin = true }: Props) {
         title: newTitle.trim(),
         description: newDesc.trim(),
         severity: newSeverity,
-        category: newCategory as any,
+        category: newCategory,
         status: 'open',
         foundBy: 'superadmin',
         reproSteps: stepsArray,
@@ -141,9 +180,11 @@ export function SuperAdminBugTracker({ onBack, isAdmin = true }: Props) {
       setNewSteps('');
       setNewExpected('');
       setNewActual('');
-      showToast(`✅ Created [${created.id}] & synced with CLI ledger!`);
+      setNewSeverity('medium');
+      setNewCategory('general');
+      showToast(`Filed ${created.id} to the ledger`);
     } catch {
-      showToast('❌ Failed to create bug.');
+      showToast('Could not save the case', 'danger');
     } finally {
       setIsSubmitting(false);
     }
@@ -159,7 +200,7 @@ export function SuperAdminBugTracker({ onBack, isAdmin = true }: Props) {
     const updated = await updateBug(bug.id, { status: newStatus });
     if (updated) {
       setBugs((prev) => prev.map((b) => (b.id === bug.id ? updated : b)));
-      showToast(`Updated [${bug.id}] status to ${newStatus.toUpperCase()}`);
+      showToast(`${bug.id} marked ${statusMeta(newStatus).label}`);
     }
   };
 
@@ -175,23 +216,34 @@ export function SuperAdminBugTracker({ onBack, isAdmin = true }: Props) {
     if (updated) {
       setBugs((prev) => prev.map((b) => (b.id === resolvingBug.id ? updated : b)));
       setResolvingBug(null);
-      showToast(`✅ [${resolvingBug.id}] marked as RESOLVED`);
+      showToast(`${resolvingBug.id} settled`);
     }
   };
 
-  const handleDeleteBug = async (id: string) => {
-    if (!window.confirm(`Are you sure you want to delete ${id}? This will remove it from the ledger.`)) {
-      return;
-    }
-    const success = await deleteBug(id);
-    if (success) {
-      setBugs((prev) => prev.filter((b) => b.id !== id));
-      showToast(`🗑️ Deleted [${id}]`);
+  const handleDeleteBug = (id: string) => {
+    const performDelete = async () => {
+      const success = await deleteBug(id);
+      if (success) {
+        setBugs((prev) => prev.filter((b) => b.id !== id));
+        showToast(`${id} removed from the ledger`);
+      }
+    };
+
+    if (onRequestConfirm) {
+      onRequestConfirm({
+        title: 'Delete case',
+        message: `Delete ${id}? This removes it from the ledger for good.`,
+        confirmLabel: 'Delete',
+        danger: true,
+        onConfirm: performDelete,
+      });
+    } else if (window.confirm(`Delete ${id}? This removes it from the ledger.`)) {
+      performDelete();
     }
   };
 
   const handleCopyPrompt = async (bug: BugRecord) => {
-    const md = `### 🐞 Bug Report: [${bug.id}] ${bug.title}
+    const md = `### Bug Report: [${bug.id}] ${bug.title}
 - **Severity**: \`${bug.severity.toUpperCase()}\`
 - **Category**: \`${bug.category}\`
 - **Status**: \`${bug.status}\`
@@ -213,7 +265,7 @@ ${bug.actualBehavior || 'N/A'}
 ${bug.diagnostics?.stackTrace ? `#### Stack Trace\n\`\`\`text\n${bug.diagnostics.stackTrace}\n\`\`\`\n` : ''}
 `;
     await navigator.clipboard.writeText(md);
-    showToast(`📋 Copied AI Prompt for ${bug.id}!`);
+    showToast(`Copied AI prompt for ${bug.id}`);
   };
 
   const handleExportJson = () => {
@@ -224,24 +276,26 @@ ${bug.diagnostics?.stackTrace ? `#### Stack Trace\n\`\`\`text\n${bug.diagnostics
     a.download = `trip-tracker-bugs-${Date.now()}.json`;
     a.click();
     URL.revokeObjectURL(url);
-    showToast('💾 Exported bugs.json');
+    showToast('Exported bugs.json');
   };
 
   if (!isAdmin) {
     return (
-      <div className="subscreen-container">
-        <div className="subscreen-header">
-          <button type="button" className="subscreen-back-btn" onClick={onBack}>
-            <IconChevronLeft size={20} />
-            <span>Settings</span>
+      <div>
+        <div className="settings-subscreen-nav">
+          <button type="button" className="settings-back-btn" onClick={onBack}>
+            <IconChevronLeft size={18} /> Settings
           </button>
-          <h2 className="subscreen-title">Superadmin Bug Tracker</h2>
+          <h3 className="settings-subscreen-title">Bug Ledger</h3>
+          <div style={{ width: '20px' }} />
         </div>
-        <div className="glass-card" style={{ textAlign: 'center', padding: '32px 16px', margin: '24px 0' }}>
-          <div style={{ fontSize: '36px', marginBottom: '12px' }}>🔒</div>
-          <h3 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '8px' }}>Superadmin Access Required</h3>
-          <p style={{ color: 'var(--text-secondary, #64748b)', fontSize: '14px', maxWidth: '380px', margin: '0 auto 20px auto' }}>
-            The Bug Tracker Console is restricted to Superadmins and Trip Admins for system maintenance.
+        <div className="glass-card" style={{ textAlign: 'center', padding: '32px 20px' }}>
+          <span style={{ color: 'var(--secondary-accent)', margin: '0 auto 12px', display: 'inline-block' }}>
+            <IconAlertCircle size={28} className="icon" />
+          </span>
+          <h3 style={{ fontSize: '17px', fontWeight: 600, marginBottom: '8px' }}>Superadmin access required</h3>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '13.5px', maxWidth: '360px', margin: '0 auto 20px' }}>
+            The bug ledger is restricted to superadmins and trip admins for system maintenance.
           </p>
           <button type="button" className="gradient-btn" onClick={onBack}>
             Return to Settings
@@ -252,401 +306,143 @@ ${bug.diagnostics?.stackTrace ? `#### Stack Trace\n\`\`\`text\n${bug.diagnostics
   }
 
   return (
-    <div className="subscreen-container" style={{ maxWidth: '840px', margin: '0 auto', paddingBottom: '60px' }}>
-      {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', gap: '12px' }}>
-        <button
-          type="button"
-          onClick={onBack}
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '6px',
-            background: 'var(--bg-card, rgba(255, 255, 255, 0.08))',
-            border: '1px solid var(--border-color, rgba(255, 255, 255, 0.15))',
-            color: 'var(--text-primary)',
-            padding: '8px 14px',
-            borderRadius: '8px',
-            cursor: 'pointer',
-            fontSize: '13px',
-            fontWeight: 500,
-            transition: 'all 0.2s',
-          }}
-        >
-          <IconChevronLeft size={16} />
-          <span>Back</span>
+    <div className="fade-in" style={{ paddingBottom: '40px' }}>
+      <div className="settings-subscreen-nav">
+        <button type="button" className="settings-back-btn" onClick={onBack}>
+          <IconChevronLeft size={18} /> Settings
         </button>
-        <div style={{ display: 'flex', gap: '8px' }}>
-          <button
-            type="button"
-            onClick={loadBugs}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              padding: '8px 14px',
-              borderRadius: '8px',
-              border: '1px solid var(--border-color, #cbd5e1)',
-              background: 'var(--bg-card, #ffffff)',
-              color: 'inherit',
-              cursor: 'pointer',
-              fontSize: '13px',
-            }}
-          >
-            <IconRefresh size={14} />
-            <span>Sync</span>
-          </button>
-          <button
-            type="button"
-            className="gradient-btn"
-            onClick={() => setShowAddModal(true)}
-            style={{
-              padding: '8px 16px',
-              borderRadius: '8px',
-              fontSize: '13px',
-              fontWeight: 600,
-              cursor: 'pointer',
-              border: 'none',
-            }}
-          >
-            + Add Bug
-          </button>
-        </div>
+        <h3 className="settings-subscreen-title">Bug Ledger</h3>
+        <button type="button" className="settings-back-btn" onClick={loadBugs} title="Sync with the CLI ledger">
+          <IconRefresh size={16} />
+        </button>
       </div>
 
-      <div style={{ marginBottom: '16px' }}>
-        <h2 style={{ fontSize: '22px', fontWeight: 700, margin: '0 0 4px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <span>🛡️</span> Superadmin Bug Console
-        </h2>
-        <p style={{ fontSize: '13px', color: 'var(--text-secondary, #64748b)', margin: 0 }}>
-          Manage, track, and sync all bugs across Antigravity, Claude CLI, and human QA.
-        </p>
-      </div>
+      <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: '0 0 16px' }}>
+        Every case found by Antigravity, Claude CLI, or human QA — synced to one ledger.
+      </p>
 
-      {/* Toast */}
       {toastMessage && (
-        <div
-          style={{
-            padding: '10px 16px',
-            borderRadius: '8px',
-            background: 'var(--color-primary, #00BFA5)',
-            color: '#ffffff',
-            fontSize: '13px',
-            fontWeight: 600,
-            marginBottom: '16px',
-            boxShadow: '0 4px 12px rgba(0, 191, 165, 0.3)',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-          }}
-        >
-          <span>{toastMessage}</span>
+        <div style={{ position: 'fixed', top: 'calc(16px + env(safe-area-inset-top, 0px))', left: '50%', transform: 'translateX(-50%)', zIndex: 1200 }}>
+          <div className="postmark-toast">
+            <span
+              className="pm-stamp"
+              aria-hidden="true"
+              style={{
+                borderColor: toastMessage.tone === 'success' ? 'var(--color-success)' : 'var(--color-danger)',
+                color: toastMessage.tone === 'success' ? 'var(--color-success)' : 'var(--color-danger)',
+              }}
+            >
+              {toastMessage.tone === 'success' ? <IconCheckCircle size={14} className="icon-sm" /> : <IconAlertCircle size={14} className="icon-sm" />}
+            </span>
+            <span className="pm-text">{toastMessage.text}</span>
+          </div>
         </div>
       )}
 
-      {/* KPI Stats Row */}
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))',
-          gap: '10px',
-          marginBottom: '20px',
-        }}
-      >
-        <div
-          className="glass-card"
-          style={{
-            padding: '12px 14px',
-            borderRadius: '12px',
-            cursor: 'pointer',
-            border: statusFilter === 'all' ? '2px solid var(--color-primary, #00BFA5)' : '1px solid var(--border-color, #e2e8f0)',
-          }}
-          onClick={() => setStatusFilter('all')}
-        >
-          <div style={{ fontSize: '12px', color: 'var(--text-secondary, #64748b)', fontWeight: 500 }}>Total Bugs</div>
-          <div style={{ fontSize: '22px', fontWeight: 700, marginTop: '2px' }}>{stats.total}</div>
-        </div>
-
-        <div
-          className="glass-card"
-          style={{
-            padding: '12px 14px',
-            borderRadius: '12px',
-            cursor: 'pointer',
-            border: statusFilter === 'open' ? '2px solid #22c55e' : '1px solid var(--border-color, #e2e8f0)',
-          }}
-          onClick={() => setStatusFilter('open')}
-        >
-          <div style={{ fontSize: '12px', color: '#16a34a', fontWeight: 600 }}>🟢 Open</div>
-          <div style={{ fontSize: '22px', fontWeight: 700, marginTop: '2px', color: '#16a34a' }}>{stats.open}</div>
-        </div>
-
-        <div
-          className="glass-card"
-          style={{
-            padding: '12px 14px',
-            borderRadius: '12px',
-            cursor: 'pointer',
-            border: statusFilter === 'in_progress' ? '2px solid #f59e0b' : '1px solid var(--border-color, #e2e8f0)',
-          }}
-          onClick={() => setStatusFilter('in_progress')}
-        >
-          <div style={{ fontSize: '12px', color: '#d97706', fontWeight: 600 }}>🟡 In Progress</div>
-          <div style={{ fontSize: '22px', fontWeight: 700, marginTop: '2px', color: '#d97706' }}>{stats.inProgress}</div>
-        </div>
-
-        <div
-          className="glass-card"
-          style={{
-            padding: '12px 14px',
-            borderRadius: '12px',
-            cursor: 'pointer',
-            border: statusFilter === 'resolved' ? '2px solid #3b82f6' : '1px solid var(--border-color, #e2e8f0)',
-          }}
-          onClick={() => setStatusFilter('resolved')}
-        >
-          <div style={{ fontSize: '12px', color: '#2563eb', fontWeight: 600 }}>✅ Resolved</div>
-          <div style={{ fontSize: '22px', fontWeight: 700, marginTop: '2px', color: '#2563eb' }}>{stats.resolved}</div>
-        </div>
-
-        <div
-          className="glass-card"
-          style={{
-            padding: '12px 14px',
-            borderRadius: '12px',
-            cursor: 'pointer',
-            border: statusFilter === 'critical' ? '2px solid #ef4444' : '1px solid var(--border-color, #e2e8f0)',
-          }}
-          onClick={() => setStatusFilter('critical')}
-        >
-          <div style={{ fontSize: '12px', color: '#dc2626', fontWeight: 600 }}>🚨 Critical</div>
-          <div style={{ fontSize: '22px', fontWeight: 700, marginTop: '2px', color: '#dc2626' }}>{stats.critical}</div>
-        </div>
+      <div className="bug-stat-strip" style={{ marginBottom: '14px' }}>
+        <button type="button" className={`bug-stat${statusFilter === 'all' ? ' active' : ''}`} onClick={() => setStatusFilter('all')}>
+          <span className="n">{stats.total}</span>
+          <span className="l">Total</span>
+        </button>
+        <button type="button" className={`bug-stat${statusFilter === 'open' ? ' active' : ''}`} onClick={() => setStatusFilter('open')}>
+          <span className="n" style={{ color: 'var(--primary-accent)' }}>{stats.open}</span>
+          <span className="l">Open</span>
+        </button>
+        <button type="button" className={`bug-stat${statusFilter === 'in_progress' ? ' active' : ''}`} onClick={() => setStatusFilter('in_progress')}>
+          <span className="n" style={{ color: 'var(--secondary-accent)' }}>{stats.inProgress}</span>
+          <span className="l">Working</span>
+        </button>
+        <button type="button" className={`bug-stat${statusFilter === 'resolved' ? ' active' : ''}`} onClick={() => setStatusFilter('resolved')}>
+          <span className="n" style={{ color: 'var(--color-success)' }}>{stats.resolved}</span>
+          <span className="l">Settled</span>
+        </button>
+        <button type="button" className={`bug-stat${statusFilter === 'critical' ? ' active' : ''}`} onClick={() => setStatusFilter('critical')}>
+          <span className="n" style={{ color: 'var(--color-danger)' }}>{stats.critical}</span>
+          <span className="l">Critical</span>
+        </button>
       </div>
 
-      {/* Filter and Search Bar */}
-      <div
-        style={{
-          display: 'flex',
-          flexWrap: 'wrap',
-          gap: '10px',
-          alignItems: 'center',
-          marginBottom: '16px',
-        }}
-      >
-        <input
-          type="text"
-          placeholder="🔍 Search bugs by title, ID, category..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          style={{
-            flex: 1,
-            minWidth: '220px',
-            padding: '8px 14px',
-            borderRadius: '8px',
-            border: '1px solid var(--border-color, #cbd5e1)',
-            background: 'var(--bg-input, #ffffff)',
-            color: 'inherit',
-            fontSize: '13px',
-          }}
-        />
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginBottom: '14px' }}>
+        <div className="input-icon-wrap" style={{ flex: 1, minWidth: '180px' }}>
+          <IconSearch size={16} className="icon-sm" />
+          <input
+            type="text"
+            className="input-field"
+            placeholder="Search case, category, reporter..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
 
         <select
           value={categoryFilter}
           onChange={(e) => setCategoryFilter(e.target.value)}
-          style={{
-            padding: '8px 12px',
-            borderRadius: '8px',
-            border: '1px solid var(--border-color, #cbd5e1)',
-            background: 'var(--bg-input, #ffffff)',
-            color: 'inherit',
-            fontSize: '13px',
-          }}
+          className="input-field select-field"
+          style={{ width: 'auto', flex: '0 0 auto' }}
         >
-          <option value="all">All Categories</option>
-          <option value="navigation">Navigation & Routing</option>
-          <option value="splits-math">Splits & Math</option>
-          <option value="offline-sync">Offline & Cloud Sync</option>
-          <option value="p2p-sync">P2P Sync</option>
-          <option value="receipts-camera">Receipts & Camera</option>
-          <option value="auth">Auth & Session</option>
-          <option value="ui-ux">UI / UX</option>
-          <option value="performance">Performance</option>
-          <option value="general">General</option>
+          <option value="all">All categories</option>
+          {CATEGORIES.map((c) => (
+            <option key={c.value} value={c.value}>{c.label}</option>
+          ))}
         </select>
 
-        <button
-          type="button"
-          onClick={handleExportJson}
-          style={{
-            padding: '8px 12px',
-            borderRadius: '8px',
-            border: '1px solid var(--border-color, #cbd5e1)',
-            background: 'var(--bg-card, #ffffff)',
-            color: 'inherit',
-            cursor: 'pointer',
-            fontSize: '13px',
-          }}
-        >
-          💾 Export JSON
+        <button type="button" className="secondary-btn" onClick={handleExportJson}>
+          <IconDownload size={15} className="icon-sm" /> Export
+        </button>
+
+        <button type="button" className="gradient-btn" onClick={() => setShowAddModal(true)} style={{ marginLeft: 'auto' }}>
+          <IconPlus size={15} className="icon-sm" /> New Case
         </button>
       </div>
 
-      {/* Bugs List */}
       {loading ? (
-        <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-secondary, #64748b)' }}>
-          Loading bugs from ledger...
+        <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-secondary)', fontSize: '13.5px' }}>
+          Loading the ledger&hellip;
         </div>
       ) : filteredBugs.length === 0 ? (
-        <div className="glass-card" style={{ textAlign: 'center', padding: '40px 16px', borderRadius: '12px' }}>
-          <div style={{ fontSize: '32px', marginBottom: '8px' }}>🎉</div>
-          <h3 style={{ fontSize: '16px', fontWeight: 600, margin: 0 }}>No bugs found matching criteria</h3>
-          <p style={{ color: 'var(--text-secondary, #64748b)', fontSize: '13px', marginTop: '4px' }}>
-            Great job! You can add a new bug using the "+ Add Bug" button above.
-          </p>
+        <div className="ledger-empty-prompt" style={{ padding: '32px 16px' }}>
+          <div className="ledger-pencil">
+            <IconSearch size={15} className="icon-sm" />
+          </div>
+          <p>No cases match. Great sign, or try clearing filters.</p>
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        <div className="settings-group-card">
           {filteredBugs.map((bug) => {
             const isExpanded = expandedBugId === bug.id;
-            const isCritical = bug.severity === 'critical';
-            const isHigh = bug.severity === 'high';
-
-            const severityBadge = (
-              <span
-                style={{
-                  padding: '2px 8px',
-                  borderRadius: '12px',
-                  fontSize: '11px',
-                  fontWeight: 700,
-                  textTransform: 'uppercase',
-                  background: isCritical
-                    ? 'rgba(239, 68, 68, 0.15)'
-                    : isHigh
-                    ? 'rgba(249, 115, 22, 0.15)'
-                    : bug.severity === 'medium'
-                    ? 'rgba(234, 179, 8, 0.15)'
-                    : 'rgba(148, 163, 184, 0.15)',
-                  color: isCritical
-                    ? '#dc2626'
-                    : isHigh
-                    ? '#ea580c'
-                    : bug.severity === 'medium'
-                    ? '#ca8a04'
-                    : '#64748b',
-                }}
-              >
-                {bug.severity}
-              </span>
-            );
-
-            const statusBadge = (
-              <span
-                style={{
-                  padding: '2px 8px',
-                  borderRadius: '12px',
-                  fontSize: '11px',
-                  fontWeight: 600,
-                  background:
-                    bug.status === 'open'
-                      ? 'rgba(34, 197, 94, 0.15)'
-                      : bug.status === 'in_progress'
-                      ? 'rgba(245, 158, 11, 0.15)'
-                      : 'rgba(59, 130, 246, 0.15)',
-                  color:
-                    bug.status === 'open'
-                      ? '#16a34a'
-                      : bug.status === 'in_progress'
-                      ? '#d97706'
-                      : '#2563eb',
-                }}
-              >
-                {bug.status === 'open' ? '🟢 Open' : bug.status === 'in_progress' ? '🟡 In Progress' : '✅ Resolved'}
-              </span>
-            );
+            const status = statusMeta(bug.status);
 
             return (
-              <div
-                key={bug.id}
-                className="glass-card"
-                style={{
-                  padding: '16px',
-                  borderRadius: '12px',
-                  border: isCritical && bug.status !== 'resolved' ? '1.5px solid #ef4444' : '1px solid var(--border-color, #e2e8f0)',
-                }}
-              >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
-                  <div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', marginBottom: '6px' }}>
-                      <strong style={{ fontFamily: 'var(--font-family-mono, monospace)', color: 'var(--color-primary, #00BFA5)' }}>
-                        {bug.id}
-                      </strong>
-                      {severityBadge}
-                      {statusBadge}
-                      <span style={{ fontSize: '11px', padding: '2px 6px', background: 'rgba(0, 0, 0, 0.04)', borderRadius: '4px', color: 'var(--text-secondary, #64748b)' }}>
-                        📂 {bug.category}
-                      </span>
-                    </div>
-
-                    <h3 style={{ fontSize: '15px', fontWeight: 600, margin: '0 0 6px 0', color: 'inherit' }}>
-                      {bug.title}
-                    </h3>
-                    <p style={{ fontSize: '13px', color: 'var(--text-secondary, #64748b)', margin: 0, lineHeight: 1.4 }}>
-                      {bug.description}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Sub info */}
-                <div
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    marginTop: '12px',
-                    fontSize: '11px',
-                    color: 'var(--text-secondary, #64748b)',
-                    flexWrap: 'wrap',
-                    gap: '8px',
-                  }}
+              <Fragment key={bug.id}>
+                <button
+                  type="button"
+                  className="bug-entry"
+                  onClick={() => setExpandedBugId(isExpanded ? null : bug.id)}
+                  aria-expanded={isExpanded}
                 >
-                  <div>
-                    👤 Found by <strong>{bug.foundBy}</strong> on {new Date(bug.createdAt).toLocaleDateString()}
-                    {bug.environment?.route && ` • Route: ${bug.environment.route}`}
+                  <div className="bug-entry-top">
+                    <span className="bug-case-id">{bug.id}</span>
+                    <span className="stamp-badge" style={{ color: severityColor(bug.severity), fontSize: '10.5px', padding: '1px 8px' }}>
+                      {SEVERITIES.find((s) => s.value === bug.severity)?.label || bug.severity}
+                    </span>
+                    <span className="stamp-badge" style={{ color: status.color, fontSize: '10.5px', padding: '1px 8px', transform: 'rotate(-3deg)' }}>
+                      {status.label}
+                    </span>
                   </div>
-
-                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                    <button
-                      type="button"
-                      onClick={() => setExpandedBugId(isExpanded ? null : bug.id)}
-                      style={{
-                        background: 'none',
-                        border: 'none',
-                        color: 'var(--color-primary, #00BFA5)',
-                        cursor: 'pointer',
-                        fontWeight: 600,
-                        fontSize: '12px',
-                      }}
-                    >
-                      {isExpanded ? '▲ Hide Specs' : '▼ View Specs'}
-                    </button>
+                  <p className="bug-entry-title">{bug.title}</p>
+                  <div className="bug-entry-meta">
+                    <span className="bug-cat">{bug.category}</span>
+                    {' · found by '}{bug.foundBy}{' · '}{new Date(bug.createdAt).toLocaleDateString()}
+                    {bug.environment?.route && ` · ${bug.environment.route}`}
                   </div>
-                </div>
+                </button>
 
-                {/* Expanded Details */}
                 {isExpanded && (
-                  <div
-                    style={{
-                      marginTop: '14px',
-                      paddingTop: '12px',
-                      borderTop: '1px dashed var(--border-color, #e2e8f0)',
-                      fontSize: '13px',
-                    }}
-                  >
+                  <div className="bug-case-detail">
                     {bug.reproSteps && bug.reproSteps.length > 0 && (
-                      <div style={{ marginBottom: '10px' }}>
-                        <strong style={{ fontSize: '12px' }}>Steps to Reproduce:</strong>
-                        <ol style={{ margin: '4px 0 0 0', paddingLeft: '20px', fontSize: '12px' }}>
+                      <div className="bug-field">
+                        <span className="form-label">Steps to reproduce</span>
+                        <ol>
                           {bug.reproSteps.map((step, idx) => (
                             <li key={idx}>{step}</li>
                           ))}
@@ -654,392 +450,172 @@ ${bug.diagnostics?.stackTrace ? `#### Stack Trace\n\`\`\`text\n${bug.diagnostics
                       </div>
                     )}
 
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '10px', fontSize: '12px' }}>
-                      {bug.expectedBehavior && (
-                        <div>
-                          <strong>Expected:</strong> {bug.expectedBehavior}
-                        </div>
-                      )}
-                      {bug.actualBehavior && (
-                        <div>
-                          <strong>Actual:</strong> {bug.actualBehavior}
-                        </div>
-                      )}
-                    </div>
+                    {(bug.expectedBehavior || bug.actualBehavior) && (
+                      <div className="bug-field" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                        {bug.expectedBehavior && (
+                          <div>
+                            <span className="form-label">Expected</span>
+                            <div style={{ fontSize: '12.5px', marginTop: '3px' }}>{bug.expectedBehavior}</div>
+                          </div>
+                        )}
+                        {bug.actualBehavior && (
+                          <div>
+                            <span className="form-label">Actual</span>
+                            <div style={{ fontSize: '12.5px', marginTop: '3px' }}>{bug.actualBehavior}</div>
+                          </div>
+                        )}
+                      </div>
+                    )}
 
                     {bug.diagnostics?.stackTrace && (
-                      <div style={{ marginBottom: '10px' }}>
-                        <strong style={{ fontSize: '12px' }}>Stack / Logs:</strong>
-                        <pre
-                          style={{
-                            background: 'rgba(0, 0, 0, 0.05)',
-                            padding: '8px',
-                            borderRadius: '6px',
-                            fontSize: '11px',
-                            fontFamily: 'var(--font-family-mono, monospace)',
-                            overflowX: 'auto',
-                            maxHeight: '100px',
-                            margin: '4px 0 0 0',
-                          }}
-                        >
-                          {bug.diagnostics.stackTrace}
-                        </pre>
+                      <div className="bug-field">
+                        <span className="form-label">Trace</span>
+                        <div className="bug-stack-block" style={{ marginTop: '4px' }}>{bug.diagnostics.stackTrace}</div>
                       </div>
                     )}
 
                     {bug.status === 'resolved' && (
-                      <div
-                        style={{
-                          background: 'rgba(34, 197, 94, 0.1)',
-                          padding: '8px 12px',
-                          borderRadius: '8px',
-                          marginBottom: '10px',
-                          fontSize: '12px',
-                          color: '#15803d',
-                        }}
-                      >
-                        <strong>✅ Resolution Note:</strong> {bug.resolutionNote || 'Resolved'}
-                        <div style={{ fontSize: '11px', marginTop: '2px', color: '#166534' }}>
-                          Resolved by {bug.resolvedBy || 'superadmin'} on {bug.resolvedAt ? new Date(bug.resolvedAt).toLocaleDateString() : 'N/A'}
+                      <div className="bug-field bug-resolution-note">
+                        <strong>Resolution:</strong> {bug.resolutionNote || 'Resolved'}
+                        <div style={{ fontSize: '11px', marginTop: '3px', color: 'var(--text-secondary)' }}>
+                          Settled by {bug.resolvedBy || 'superadmin'} on {bug.resolvedAt ? new Date(bug.resolvedAt).toLocaleDateString() : 'N/A'}
                         </div>
                       </div>
                     )}
 
-                    {/* Action Bar */}
-                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '12px' }}>
+                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '4px' }}>
                       {bug.status === 'open' && (
-                        <button
-                          type="button"
-                          onClick={() => handleStatusChange(bug, 'in_progress')}
-                          style={{
-                            padding: '6px 12px',
-                            borderRadius: '6px',
-                            border: '1px solid #f59e0b',
-                            background: 'rgba(245, 158, 11, 0.1)',
-                            color: '#d97706',
-                            fontSize: '12px',
-                            fontWeight: 600,
-                            cursor: 'pointer',
-                          }}
-                        >
-                          🟡 Start Work (In Progress)
+                        <button type="button" className="secondary-btn" onClick={() => handleStatusChange(bug, 'in_progress')} style={{ fontSize: '12.5px', padding: '8px 14px' }}>
+                          Start work
                         </button>
                       )}
 
                       {bug.status !== 'resolved' ? (
-                        <button
-                          type="button"
-                          onClick={() => handleStatusChange(bug, 'resolved')}
-                          style={{
-                            padding: '6px 12px',
-                            borderRadius: '6px',
-                            border: '1px solid #22c55e',
-                            background: 'rgba(34, 197, 94, 0.15)',
-                            color: '#15803d',
-                            fontSize: '12px',
-                            fontWeight: 600,
-                            cursor: 'pointer',
-                          }}
-                        >
-                          ✅ Mark Resolved
+                        <button type="button" className="secondary-btn" onClick={() => handleStatusChange(bug, 'resolved')} style={{ fontSize: '12.5px', padding: '8px 14px', color: 'var(--color-success)', borderColor: 'var(--color-success)' }}>
+                          Mark settled
                         </button>
                       ) : (
-                        <button
-                          type="button"
-                          onClick={() => handleStatusChange(bug, 'open')}
-                          style={{
-                            padding: '6px 12px',
-                            borderRadius: '6px',
-                            border: '1px solid var(--border-color, #cbd5e1)',
-                            background: 'var(--bg-card, #ffffff)',
-                            color: 'inherit',
-                            fontSize: '12px',
-                            cursor: 'pointer',
-                          }}
-                        >
-                          🔄 Re-open Bug
+                        <button type="button" className="secondary-btn" onClick={() => handleStatusChange(bug, 'open')} style={{ fontSize: '12.5px', padding: '8px 14px' }}>
+                          Reopen
                         </button>
                       )}
 
-                      <button
-                        type="button"
-                        onClick={() => handleCopyPrompt(bug)}
-                        style={{
-                          padding: '6px 12px',
-                          borderRadius: '6px',
-                          border: '1px solid var(--border-color, #cbd5e1)',
-                          background: 'var(--bg-card, #ffffff)',
-                          color: 'inherit',
-                          fontSize: '12px',
-                          cursor: 'pointer',
-                        }}
-                      >
-                        📋 Copy Prompt for AI
+                      <button type="button" className="secondary-btn" onClick={() => handleCopyPrompt(bug)} style={{ fontSize: '12.5px', padding: '8px 14px' }}>
+                        <IconCopy size={13} className="icon-sm" /> Copy for AI
                       </button>
 
                       <button
                         type="button"
+                        className="secondary-btn"
                         onClick={() => handleDeleteBug(bug.id)}
-                        style={{
-                          marginLeft: 'auto',
-                          padding: '6px 10px',
-                          borderRadius: '6px',
-                          border: '1px solid rgba(239, 68, 68, 0.4)',
-                          background: 'rgba(239, 68, 68, 0.1)',
-                          color: '#dc2626',
-                          fontSize: '12px',
-                          cursor: 'pointer',
-                        }}
+                        style={{ marginLeft: 'auto', padding: '8px 10px', color: 'var(--color-danger)', borderColor: 'var(--color-danger)' }}
+                        aria-label={`Delete ${bug.id}`}
                       >
-                        <IconTrash size={14} />
+                        <IconTrash size={14} className="icon-sm" />
                       </button>
                     </div>
                   </div>
                 )}
-              </div>
+              </Fragment>
             );
           })}
         </div>
       )}
 
-      {/* Add Bug Modal */}
       {showAddModal && (
-        <div
-          className="modal-backdrop"
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.65)',
-            backdropFilter: 'blur(4px)',
-            zIndex: 1000,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '16px',
-          }}
-          onClick={() => setShowAddModal(false)}
-        >
-          <div
-            className="glass-card"
-            style={{
-              width: '100%',
-              maxWidth: '560px',
-              maxHeight: '90vh',
-              overflowY: 'auto',
-              padding: '24px',
-              borderRadius: '16px',
-              background: 'var(--bg-card, #ffffff)',
-              color: 'var(--text-primary, #1e293b)',
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
+        <div className="modal-overlay" onClick={() => setShowAddModal(false)}>
+          <div className="glass-card fade-in modal-sheet" style={{ maxWidth: '520px' }} onClick={(e) => e.stopPropagation()}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <h3 style={{ fontSize: '18px', fontWeight: 700, margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span>🐞</span> File New Bug
-              </h3>
-              <button
-                type="button"
-                onClick={() => setShowAddModal(false)}
-                style={{ background: 'none', border: 'none', fontSize: '20px', cursor: 'pointer', color: 'var(--text-secondary, #64748b)' }}
-              >
-                ✕
+              <h3 style={{ fontSize: '18px', fontWeight: 700, margin: 0, fontFamily: 'var(--font-family-title)' }}>File a case</h3>
+              <button type="button" onClick={() => setShowAddModal(false)} className="secondary-btn" style={{ padding: '6px 10px' }}>
+                Close
               </button>
             </div>
 
-            <form onSubmit={handleCreateBug} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, marginBottom: '4px' }}>
-                  Title *
-                </label>
+            <form onSubmit={handleCreateBug}>
+              <div className="form-group">
+                <label className="form-label">Case summary *</label>
                 <input
                   type="text"
                   required
+                  className="input-field"
                   placeholder="e.g. Offline sync drops member delete transaction"
                   value={newTitle}
                   onChange={(e) => setNewTitle(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '8px 12px',
-                    borderRadius: '8px',
-                    border: '1px solid var(--border-color, #cbd5e1)',
-                    background: 'var(--bg-input, #ffffff)',
-                    color: 'inherit',
-                    fontSize: '13px',
-                    boxSizing: 'border-box',
-                  }}
                 />
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                <div>
-                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, marginBottom: '4px' }}>
-                    Severity
-                  </label>
-                  <select
-                    value={newSeverity}
-                    onChange={(e) => setNewSeverity(e.target.value as any)}
-                    style={{
-                      width: '100%',
-                      padding: '8px 10px',
-                      borderRadius: '8px',
-                      border: '1px solid var(--border-color, #cbd5e1)',
-                      background: 'var(--bg-input, #ffffff)',
-                      color: 'inherit',
-                      fontSize: '13px',
-                    }}
-                  >
-                    <option value="critical">🔴 Critical (Crash / Data loss)</option>
-                    <option value="high">🟠 High (Major feature broken)</option>
-                    <option value="medium">🟡 Medium (Glitch / Math issue)</option>
-                    <option value="low">⚪ Low (Visual / Minor edge case)</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, marginBottom: '4px' }}>
-                    Category
-                  </label>
-                  <select
-                    value={newCategory}
-                    onChange={(e) => setNewCategory(e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: '8px 10px',
-                      borderRadius: '8px',
-                      border: '1px solid var(--border-color, #cbd5e1)',
-                      background: 'var(--bg-input, #ffffff)',
-                      color: 'inherit',
-                      fontSize: '13px',
-                    }}
-                  >
-                    <option value="navigation">Navigation & Routing</option>
-                    <option value="splits-math">Splits & Math</option>
-                    <option value="offline-sync">Offline & Cloud Sync</option>
-                    <option value="p2p-sync">P2P Sync</option>
-                    <option value="receipts-camera">Receipts & Camera</option>
-                    <option value="auth">Auth & Session</option>
-                    <option value="ui-ux">UI / UX</option>
-                    <option value="performance">Performance</option>
-                    <option value="general">General</option>
-                  </select>
+              <div className="form-group">
+                <label className="form-label">Severity</label>
+                <div className="badge-row">
+                  {SEVERITIES.map((s) => (
+                    <button
+                      key={s.value}
+                      type="button"
+                      className={`category-badge${newSeverity === s.value ? ' active' : ''}`}
+                      style={newSeverity === s.value ? { borderColor: s.color, background: 'transparent', color: s.color } : undefined}
+                      onClick={() => setNewSeverity(s.value)}
+                    >
+                      {s.label}
+                    </button>
+                  ))}
                 </div>
               </div>
 
-              <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, marginBottom: '4px' }}>
-                  Description
-                </label>
+              <div className="form-group">
+                <label className="form-label">Category</label>
+                <div className="badge-row">
+                  {CATEGORIES.map((c) => (
+                    <button
+                      key={c.value}
+                      type="button"
+                      className={`category-badge${newCategory === c.value ? ' active' : ''}`}
+                      onClick={() => setNewCategory(c.value)}
+                    >
+                      {c.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">What happened</label>
                 <textarea
                   rows={3}
-                  placeholder="Explain what is breaking and what the impact is..."
+                  className="input-field bug-ruled-textarea"
+                  placeholder="Explain what's breaking and the impact..."
                   value={newDesc}
                   onChange={(e) => setNewDesc(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '8px 12px',
-                    borderRadius: '8px',
-                    border: '1px solid var(--border-color, #cbd5e1)',
-                    background: 'var(--bg-input, #ffffff)',
-                    color: 'inherit',
-                    fontSize: '13px',
-                    boxSizing: 'border-box',
-                    resize: 'vertical',
-                  }}
                 />
               </div>
 
-              <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, marginBottom: '4px' }}>
-                  Reproduction Steps (one per line)
-                </label>
+              <div className="form-group">
+                <label className="form-label">Steps to reproduce (one per line)</label>
                 <textarea
                   rows={2}
-                  placeholder="1. Open app&#10;2. Add 2 members&#10;3. Tap delete"
+                  className="input-field"
+                  placeholder={'1. Open app\n2. Add 2 members\n3. Tap delete'}
                   value={newSteps}
                   onChange={(e) => setNewSteps(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '8px 12px',
-                    borderRadius: '8px',
-                    border: '1px solid var(--border-color, #cbd5e1)',
-                    background: 'var(--bg-input, #ffffff)',
-                    color: 'inherit',
-                    fontSize: '13px',
-                    boxSizing: 'border-box',
-                    resize: 'vertical',
-                  }}
                 />
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                <div>
-                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, marginBottom: '4px' }}>
-                    Expected
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="Member deleted successfully"
-                    value={newExpected}
-                    onChange={(e) => setNewExpected(e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: '6px 10px',
-                      borderRadius: '6px',
-                      border: '1px solid var(--border-color, #cbd5e1)',
-                      background: 'var(--bg-input, #ffffff)',
-                      color: 'inherit',
-                      fontSize: '12px',
-                      boxSizing: 'border-box',
-                    }}
-                  />
+                <div className="form-group">
+                  <label className="form-label">Expected</label>
+                  <input type="text" className="input-field" placeholder="Member deleted successfully" value={newExpected} onChange={(e) => setNewExpected(e.target.value)} />
                 </div>
-                <div>
-                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, marginBottom: '4px' }}>
-                    Actual
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="Member remains in split balances"
-                    value={newActual}
-                    onChange={(e) => setNewActual(e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: '6px 10px',
-                      borderRadius: '6px',
-                      border: '1px solid var(--border-color, #cbd5e1)',
-                      background: 'var(--bg-input, #ffffff)',
-                      color: 'inherit',
-                      fontSize: '12px',
-                      boxSizing: 'border-box',
-                    }}
-                  />
+                <div className="form-group">
+                  <label className="form-label">Actual</label>
+                  <input type="text" className="input-field" placeholder="Member remains in split balances" value={newActual} onChange={(e) => setNewActual(e.target.value)} />
                 </div>
               </div>
 
-              <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="gradient-btn"
-                  style={{ flex: 1, padding: '10px', fontSize: '14px', borderRadius: '8px', cursor: 'pointer' }}
-                >
-                  {isSubmitting ? 'Saving...' : 'Save & Sync Bug to Ledger'}
+              <div style={{ display: 'flex', gap: '10px', marginTop: '4px' }}>
+                <button type="submit" disabled={isSubmitting} className="gradient-btn" style={{ flex: 1 }}>
+                  {isSubmitting ? 'Saving...' : 'Save & sync to ledger'}
                 </button>
-                <button
-                  type="button"
-                  onClick={() => setShowAddModal(false)}
-                  style={{
-                    padding: '10px 16px',
-                    borderRadius: '8px',
-                    border: '1px solid var(--border-color, #cbd5e1)',
-                    background: 'none',
-                    color: 'inherit',
-                    cursor: 'pointer',
-                  }}
-                >
+                <button type="button" className="secondary-btn" onClick={() => setShowAddModal(false)}>
                   Cancel
                 </button>
               </div>
@@ -1048,113 +624,39 @@ ${bug.diagnostics?.stackTrace ? `#### Stack Trace\n\`\`\`text\n${bug.diagnostics
         </div>
       )}
 
-      {/* Resolve Modal */}
       {resolvingBug && (
-        <div
-          className="modal-backdrop"
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.65)',
-            backdropFilter: 'blur(4px)',
-            zIndex: 1000,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '16px',
-          }}
-          onClick={() => setResolvingBug(null)}
-        >
-          <div
-            className="glass-card"
-            style={{
-              width: '100%',
-              maxWidth: '460px',
-              padding: '24px',
-              borderRadius: '16px',
-              background: 'var(--bg-card, #ffffff)',
-              color: 'var(--text-primary, #1e293b)',
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h3 style={{ fontSize: '16px', fontWeight: 700, margin: '0 0 12px 0' }}>
-              ✅ Resolve [{resolvingBug.id}]
+        <div className="modal-overlay" onClick={() => setResolvingBug(null)}>
+          <div className="glass-card fade-in modal-sheet" style={{ maxWidth: '440px' }} onClick={(e) => e.stopPropagation()}>
+            <h3 style={{ fontSize: '17px', fontWeight: 700, margin: '0 0 4px', fontFamily: 'var(--font-family-title)' }}>
+              Settle {resolvingBug.id}
             </h3>
-            <p style={{ fontSize: '13px', color: 'var(--text-secondary, #64748b)', margin: '0 0 16px 0' }}>
+            <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: '0 0 16px' }}>
               {resolvingBug.title}
             </p>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, marginBottom: '4px' }}>
-                  Fix Note / Commit Reference
-                </label>
-                <input
-                  type="text"
-                  placeholder="e.g. Fixed penny distribution in resolveShares inside tripStore.ts"
-                  value={resolutionNote}
-                  onChange={(e) => setResolutionNote(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '8px 12px',
-                    borderRadius: '8px',
-                    border: '1px solid var(--border-color, #cbd5e1)',
-                    background: 'var(--bg-input, #ffffff)',
-                    color: 'inherit',
-                    fontSize: '13px',
-                    boxSizing: 'border-box',
-                  }}
-                />
-              </div>
+            <div className="form-group">
+              <label className="form-label">Fix note / commit reference</label>
+              <input
+                type="text"
+                className="input-field"
+                placeholder="e.g. Fixed penny distribution in resolveShares inside tripStore.ts"
+                value={resolutionNote}
+                onChange={(e) => setResolutionNote(e.target.value)}
+              />
+            </div>
 
-              <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, marginBottom: '4px' }}>
-                  Resolved By
-                </label>
-                <input
-                  type="text"
-                  value={resolvedByName}
-                  onChange={(e) => setResolvedByName(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '8px 12px',
-                    borderRadius: '8px',
-                    border: '1px solid var(--border-color, #cbd5e1)',
-                    background: 'var(--bg-input, #ffffff)',
-                    color: 'inherit',
-                    fontSize: '13px',
-                    boxSizing: 'border-box',
-                  }}
-                />
-              </div>
+            <div className="form-group">
+              <label className="form-label">Settled by</label>
+              <input type="text" className="input-field" value={resolvedByName} onChange={(e) => setResolvedByName(e.target.value)} />
+            </div>
 
-              <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
-                <button
-                  type="button"
-                  className="gradient-btn"
-                  onClick={handleConfirmResolve}
-                  style={{ flex: 1, padding: '10px', fontSize: '14px', borderRadius: '8px', cursor: 'pointer' }}
-                >
-                  Confirm Resolution
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setResolvingBug(null)}
-                  style={{
-                    padding: '10px 16px',
-                    borderRadius: '8px',
-                    border: '1px solid var(--border-color, #cbd5e1)',
-                    background: 'none',
-                    color: 'inherit',
-                    cursor: 'pointer',
-                  }}
-                >
-                  Cancel
-                </button>
-              </div>
+            <div style={{ display: 'flex', gap: '10px', marginTop: '4px' }}>
+              <button type="button" className="gradient-btn" onClick={handleConfirmResolve} style={{ flex: 1 }}>
+                Confirm settlement
+              </button>
+              <button type="button" className="secondary-btn" onClick={() => setResolvingBug(null)}>
+                Cancel
+              </button>
             </div>
           </div>
         </div>

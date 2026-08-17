@@ -959,6 +959,7 @@ export default function App() {
               }
             }}
             isAdmin={isAdmin}
+            onRequestConfirm={setConfirmRequest}
           />
         </div>
       ) : !activeTripId ? (
