@@ -1,7 +1,7 @@
 {
   "name": "trip-tracker-2026",
   "private": true,
-  "version": "1.9.1",
+  "version": "1.9.2",
   "type": "module",
   "scripts": {
     "postinstall": "node scripts/install-git-hooks.mjs",
