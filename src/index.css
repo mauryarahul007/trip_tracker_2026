@@ -299,10 +299,10 @@ button, [role="button"], input, select, a {
   width: 54px;
   height: 54px;
   border-radius: 50%;
-  background: var(--primary-accent);
-  color: #FFFDF6;
-  border: 2px solid rgba(255, 255, 255, 0.45);
-  box-shadow: 0 4px 14px rgba(31, 110, 104, 0.42), 0 2px 6px rgba(28, 42, 56, 0.18);
+  background: var(--bg-header);
+  color: #F2ECDC;
+  border: 2px solid rgba(242, 236, 220, 0.35);
+  box-shadow: 0 4px 14px rgba(28, 42, 56, 0.25), 0 2px 6px rgba(28, 42, 56, 0.15);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -314,43 +314,47 @@ button, [role="button"], input, select, a {
 }
 
 .fab-add-expense:hover {
-  background: var(--primary-accent-light);
+  background: #243445;
   transform: translateY(-2px) scale(1.06);
-  box-shadow: 0 6px 20px rgba(31, 110, 104, 0.55), 0 3px 8px rgba(28, 42, 56, 0.25);
-  border-color: rgba(255, 255, 255, 0.75);
+  box-shadow: 0 6px 20px rgba(28, 42, 56, 0.35), 0 3px 8px rgba(28, 42, 56, 0.2);
+  border-color: rgba(242, 236, 220, 0.65);
 }
 
 .fab-add-expense:active {
   transform: translateY(1px) scale(0.95);
-  box-shadow: 0 2px 8px rgba(31, 110, 104, 0.4), 0 1px 3px rgba(28, 42, 56, 0.2);
+  box-shadow: 0 2px 8px rgba(28, 42, 56, 0.2), 0 1px 3px rgba(28, 42, 56, 0.12);
 }
 
 .fab-add-expense:focus-visible {
-  outline: 2px solid var(--primary-accent);
+  outline: 2px solid var(--border-color-focus);
   outline-offset: 3px;
 }
 
-/* Dark mode adjustment for FAB border & glow */
+/* Dark mode adjustment for FAB */
 :root[data-theme="dark"] .fab-add-expense {
-  border: 2px solid rgba(239, 231, 210, 0.35);
-  box-shadow: 0 4px 16px rgba(89, 189, 178, 0.35), 0 2px 6px rgba(0, 0, 0, 0.4);
-  color: #141C26;
+  background: var(--bg-surface-hover);
+  color: var(--text-primary);
+  border: 2px solid var(--border-color);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5), 0 2px 6px rgba(0, 0, 0, 0.35);
 }
 
 :root[data-theme="dark"] .fab-add-expense:hover {
-  border-color: rgba(239, 231, 210, 0.6);
-  box-shadow: 0 6px 22px rgba(89, 189, 178, 0.48), 0 3px 8px rgba(0, 0, 0, 0.5);
+  background: #2D3D4E;
+  border-color: rgba(239, 231, 210, 0.45);
+  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.65), 0 3px 8px rgba(0, 0, 0, 0.4);
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) .fab-add-expense {
-    border: 2px solid rgba(239, 231, 210, 0.35);
-    box-shadow: 0 4px 16px rgba(89, 189, 178, 0.35), 0 2px 6px rgba(0, 0, 0, 0.4);
-    color: #141C26;
+    background: var(--bg-surface-hover);
+    color: var(--text-primary);
+    border: 2px solid var(--border-color);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5), 0 2px 6px rgba(0, 0, 0, 0.35);
   }
   :root:not([data-theme="light"]) .fab-add-expense:hover {
-    border-color: rgba(239, 231, 210, 0.6);
-    box-shadow: 0 6px 22px rgba(89, 189, 178, 0.48), 0 3px 8px rgba(0, 0, 0, 0.5);
+    background: #2D3D4E;
+    border-color: rgba(239, 231, 210, 0.45);
+    box-shadow: 0 6px 22px rgba(0, 0, 0, 0.65), 0 3px 8px rgba(0, 0, 0, 0.4);
   }
 }
 

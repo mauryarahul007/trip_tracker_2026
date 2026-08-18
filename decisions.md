@@ -324,7 +324,7 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Decision:** Replaced the top-anchored button with a persistent Floating Action Button (FAB) at the bottom-right of the viewport.
 * **Pattern/Implementation:**
   - **Component Structure (`App.tsx`)**: Placed the FAB inside `<main className="app-main">` conditionally rendered only when `activeTab === 'expenses'`.
-  - **Styling & Elevation (`index.css`)**: Styled `.fab-add-expense` with a 54px circular geometry, 2px crisp border, brand teal gradient, shadow elevation, tactile active press state, and dark mode contrast adaptations.
+  - **Styling & Elevation (`index.css`)**: Styled `.fab-add-expense` with a 54px circular geometry, 2px crisp border, Ink Navy in light mode, elevated night-flight surface in dark mode, shadow elevation, tactile active press state, and seamless theme adaptation.
   - **Cross-Platform & Safe Area Adaptations (`index.css`)**:
     - Web / Android: Sits 18px above the bottom navigation bar.
     - iOS Capacitor: Offsets bottom clearance to sit above the native Liquid Glass tab bar (`calc(18px + var(--safe-bottom, 0px) + 76px)`).
