@@ -389,8 +389,24 @@ This document logs all meaningful technical decisions, library choices, design p
     - Explicitly revoked destructive actions (`INSERT`, `UPDATE`, `DELETE`) from `anon` across all application tables.
   - **Client-Side Pre-Validation (`src/utils/image.ts`, `ExpenseForm.tsx`)**:
     - Pre-validates file sizes (`MAX_RECEIPT_FILE_SIZE_BYTES = 5MB`) and MIME types before executing FileReader or compression, rejecting invalid uploads client-side before any network bytes are dispatched.
+---
+
+## 32. Security Hardening Phase 2: Join Code Rate Limiting, Cloudflare Turnstile, and Honeypot Bot Traps
+* **Context:** 6-character alphanumeric trip join codes could be targeted by automated brute-force attacks or scraping bots searching for private trip payloads. Additionally, automated form scrapers could attempt rapid-fire spam submissions on trip creation, join, and expense forms.
+* **Decision:** Implemented database-level attempt tracking with automated lockouts in PostgreSQL, integrated Cloudflare Turnstile anti-bot verification, and embedded honeypot traps in all form surfaces.
+* **Pattern/Implementation:**
+  - **Database Join Code Rate Limiting (`0047_security_hardening_phase2_join_limits.sql`)**:
+    - Created `public.trip_join_attempts` tracking table (completely revoked from direct client access).
+    - Upgraded `lookup_trip_by_join_code` RPC to enforce a max of 5 failed attempts per 15-minute sliding window. Exceeding 5 failures automatically locks the user account out for 15 minutes, returning the exact remaining cooldown duration in seconds.
+    - Valid join code lookups automatically clear any accumulated failure count.
+  - **Live Cooldown UX (`JoinTripScreen.tsx`)**:
+    - Parsed remaining lockout seconds from Supabase errors and rendered an active countdown timer (`Try again in Xm Ys`), disabling submit actions until the security cooldown expires.
+  - **Cloudflare Turnstile Component (`TurnstileWidget.tsx`)**:
+    - Created modular `<TurnstileWidget />` that conditionally activates when `VITE_TURNSTILE_SITE_KEY` is present, providing seamless bot protection without CAPTCHA friction for human travelers.
+  - **Honeypot Form Bot Traps (`ExpenseForm.tsx`, `TripsListScreen.tsx`, `JoinTripScreen.tsx`)**:
+    - Added offscreen decoy fields (`name="trip_join_security_token"`, `name="expense_vendor_code_security"`) that drop automated bot submissions before any network requests are dispatched to Supabase.
 * **Trade-offs Accepted:**
-  - Receipts larger than 5MB must be resized before uploading (handled automatically by the client-side downscaling canvas pipeline).
+  - If a legitimate user mistypes an invite code 5 consecutive times, they must wait 15 minutes or contact their trip admin for the direct invite link.
 
 
 

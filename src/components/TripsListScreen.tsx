@@ -5,6 +5,7 @@ import { IconTrash, IconEdit, IconSettings, IconArchive } from './Icons';
 import { DateRangePicker } from './DateRangePicker';
 import { formatTripStamp } from '../utils/dateRange';
 import { initial } from '../utils/initials';
+import { TurnstileWidget } from './TurnstileWidget';
 
 type Props = {
   trips: Trip[];
@@ -54,12 +55,20 @@ export function TripsListScreen({
   const navigate = useNavigate();
   const [showJoinTrip, setShowJoinTrip] = useState(false);
   const [joinCode, setJoinCode] = useState('');
+  const [honeypotVal, setHoneypotVal] = useState('');
 
   const handleJoinByCode = (e: React.FormEvent) => {
     e.preventDefault();
+    if (honeypotVal) return;
     const code = joinCode.trim();
     if (!code) return;
     navigate(`/join/${encodeURIComponent(code)}`);
+  };
+
+  const handleCreateTripSafe = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (honeypotVal) return;
+    onCreateTrip(e);
   };
 
   return (
@@ -102,6 +111,18 @@ export function TripsListScreen({
         {/* Join by Code Form */}
         {showJoinTrip && (
           <form className="glass-card fade-in" onSubmit={handleJoinByCode} style={{ marginBottom: '24px' }}>
+            {/* Honeypot field for bot trap */}
+            <div style={{ position: 'absolute', left: '-9999px', opacity: 0, pointerEvents: 'none', height: 0, overflow: 'hidden' }} aria-hidden="true">
+              <input
+                type="text"
+                name="trip_join_security_token"
+                tabIndex={-1}
+                autoComplete="off"
+                value={honeypotVal}
+                onChange={(e) => setHoneypotVal(e.target.value)}
+              />
+            </div>
+
             <h3 style={{ marginBottom: '16px', fontSize: '18px' }}>Join a Trip</h3>
             <div className="form-group">
               <label className="form-label">Invite Code</label>
@@ -117,6 +138,9 @@ export function TripsListScreen({
                 maxLength={6}
               />
             </div>
+
+            <TurnstileWidget />
+
             <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
               <button type="submit" className="gradient-btn" style={{ flex: 1 }}>Join</button>
               <button
@@ -133,7 +157,19 @@ export function TripsListScreen({
 
         {/* Create/Edit Trip Form */}
         {showAddTrip && (
-          <form className="glass-card fade-in" onSubmit={onCreateTrip} style={{ marginBottom: '24px' }}>
+          <form className="glass-card fade-in" onSubmit={handleCreateTripSafe} style={{ marginBottom: '24px' }}>
+            {/* Honeypot field for bot trap */}
+            <div style={{ position: 'absolute', left: '-9999px', opacity: 0, pointerEvents: 'none', height: 0, overflow: 'hidden' }} aria-hidden="true">
+              <input
+                type="text"
+                name="trip_create_security_token"
+                tabIndex={-1}
+                autoComplete="off"
+                value={honeypotVal}
+                onChange={(e) => setHoneypotVal(e.target.value)}
+              />
+            </div>
+
             <h3 style={{ marginBottom: '16px', fontSize: '18px' }}>{editingTripId ? 'Edit Trip' : 'Create New Trip'}</h3>
 
             <div className="form-group">

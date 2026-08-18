@@ -2,9 +2,10 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { lookupTripByJoinCode, claimTripMember, type JoinLookupResult } from '../services/tripApi';
 import { useTripStore } from '../store/tripStore';
-import { IconMembers, IconCheckCircle } from './Icons';
+import { IconMembers, IconCheckCircle, IconClock } from './Icons';
 import { sendPushNotification } from '../services/pushApi';
 import { supabase } from '../services/supabaseClient';
+import { TurnstileWidget } from './TurnstileWidget';
 
 type Status = 'loading' | 'invalid' | 'ready' | 'claiming' | 'error';
 
@@ -17,10 +18,28 @@ export function JoinTripScreen() {
   const [status, setStatus] = useState<Status>('loading');
   const [result, setResult] = useState<JoinLookupResult | null>(null);
   const [errorMessage, setErrorMessage] = useState('');
+  const [lockoutSeconds, setLockoutSeconds] = useState<number | null>(null);
+  const [honeypotVal, setHoneypotVal] = useState('');
+
+  // Countdown timer for rate limit cooldown
+  useEffect(() => {
+    if (lockoutSeconds === null || lockoutSeconds <= 0) return;
+    const timer = setInterval(() => {
+      setLockoutSeconds((s) => (s && s > 1 ? s - 1 : null));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [lockoutSeconds]);
 
   const load = async () => {
     if (!code) return;
+    // Honeypot bot trap check
+    if (honeypotVal) {
+      setStatus('invalid');
+      return;
+    }
+
     setStatus('loading');
+    setErrorMessage('');
     try {
       const lookup = await lookupTripByJoinCode(code);
       if (!lookup) {
@@ -30,7 +49,13 @@ export function JoinTripScreen() {
       setResult(lookup);
       setStatus('ready');
     } catch (e) {
-      setErrorMessage(e instanceof Error ? e.message : 'Something went wrong loading this invite.');
+      const msg = e instanceof Error ? e.message : 'Something went wrong loading this invite.';
+      setErrorMessage(msg);
+      // Parse lockout seconds from rate limiter exception if present
+      const match = msg.match(/wait (\d+) seconds/i);
+      if (match) {
+        setLockoutSeconds(parseInt(match[1], 10));
+      }
       setStatus('error');
     }
   };
@@ -47,6 +72,7 @@ export function JoinTripScreen() {
   };
 
   const handleClaim = async (memberId: string) => {
+    if (honeypotVal) return;
     setStatus('claiming');
     try {
       const claimed = await claimTripMember(memberId);
@@ -110,13 +136,43 @@ export function JoinTripScreen() {
   }
 
   if (status === 'error') {
+    const isLocked = lockoutSeconds !== null && lockoutSeconds > 0;
+    const formatCooldown = (sec: number) => {
+      const mins = Math.floor(sec / 60);
+      const s = sec % 60;
+      return mins > 0 ? `${mins}m ${s}s` : `${s}s`;
+    };
+
     return (
       <div className="app-container" style={{ justifyContent: 'center', alignItems: 'center', padding: '24px 20px' }}>
         <div className="fade-in glass-card" style={{ width: '100%', maxWidth: '420px', padding: '28px 24px', textAlign: 'center' }}>
-          <h2 style={{ marginBottom: '8px' }}>Something went wrong</h2>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '14px', marginBottom: '20px' }}>{errorMessage}</p>
-          <button type="button" className="gradient-btn" style={{ width: '100%' }} onClick={load}>
-            Try again
+          {isLocked && (
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '12px', color: 'var(--color-warning)' }}>
+              <IconClock size={32} />
+            </div>
+          )}
+          <h2 style={{ marginBottom: '8px' }}>{isLocked ? 'Cooldown Active' : 'Something went wrong'}</h2>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '14px', marginBottom: '20px' }}>
+            {isLocked
+              ? `Too many incorrect join attempts. For security, please wait ${formatCooldown(lockoutSeconds)} before trying again.`
+              : errorMessage}
+          </p>
+          <button
+            type="button"
+            className="gradient-btn"
+            style={{ width: '100%', opacity: isLocked ? 0.6 : 1 }}
+            disabled={isLocked}
+            onClick={load}
+          >
+            {isLocked ? `Try again in ${formatCooldown(lockoutSeconds)}` : 'Try again'}
+          </button>
+          <button
+            type="button"
+            className="secondary-btn"
+            style={{ width: '100%', marginTop: '10px' }}
+            onClick={() => navigate('/')}
+          >
+            Go to my trips
           </button>
         </div>
       </div>
@@ -161,6 +217,18 @@ export function JoinTripScreen() {
     <div className="app-container" style={{ overflowY: 'auto' }}>
       <div className="fade-in" style={{ padding: 'max(24px, var(--safe-top, 24px)) 20px max(24px, var(--safe-bottom, 24px)) 20px', flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div className="glass-card" style={{ width: '100%', maxWidth: '420px', margin: '0 auto' }}>
+          {/* Honeypot field for automated bot trap */}
+          <div style={{ position: 'absolute', left: '-9999px', opacity: 0, pointerEvents: 'none', height: 0, overflow: 'hidden' }} aria-hidden="true">
+            <input
+              type="text"
+              name="trip_join_security_token"
+              tabIndex={-1}
+              autoComplete="off"
+              value={honeypotVal}
+              onChange={(e) => setHoneypotVal(e.target.value)}
+            />
+          </div>
+
           <h2 style={{ marginBottom: '4px' }}>Join "{result.tripName}"</h2>
           <p style={{ color: 'var(--text-secondary)', fontSize: '14px', marginBottom: '20px' }}>Which one are you?</p>
 
@@ -182,6 +250,8 @@ export function JoinTripScreen() {
               </button>
             ))}
           </div>
+
+          <TurnstileWidget />
         </div>
       </div>
     </div>

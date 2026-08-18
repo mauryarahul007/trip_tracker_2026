@@ -93,6 +93,7 @@ export function ExpenseForm({
   const [receiptImage, setReceiptImage] = useState('');
   const [receiptProcessing, setReceiptProcessing] = useState(false);
   const [formError, setFormError] = useState('');
+  const [honeypotVal, setHoneypotVal] = useState('');
 
   // Geotagging
   const enableGeotagging = useTripStore((s) => s.enableGeotagging);
@@ -208,7 +209,7 @@ export function ExpenseForm({
 
   const handleSubmitLocal = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (isSubmitting) return;
+    if (isSubmitting || honeypotVal) return;
     const amountVal = parseFloat(amount);
     if (isNaN(amountVal) || amountVal <= 0) {
       setFormError('Please enter a valid amount greater than 0.');
@@ -275,6 +276,18 @@ export function ExpenseForm({
         onSubmit={handleSubmitLocal}
         onClick={(e) => e.stopPropagation()}
       >
+      {/* Honeypot field for automated bot trap */}
+      <div style={{ position: 'absolute', left: '-9999px', opacity: 0, pointerEvents: 'none', height: 0, overflow: 'hidden' }} aria-hidden="true">
+        <input
+          type="text"
+          name="expense_vendor_code_security"
+          tabIndex={-1}
+          autoComplete="off"
+          value={honeypotVal}
+          onChange={(e) => setHoneypotVal(e.target.value)}
+        />
+      </div>
+
       <div className="expense-form-scroll">
       <header className="app-header" style={{ margin: '-20px -20px 20px', paddingTop: 'max(20px, var(--safe-top, 0px))' }}>
         <div className="app-header-top">
