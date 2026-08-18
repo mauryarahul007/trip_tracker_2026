@@ -7,12 +7,21 @@
 // Runs post-commit (not prepare-commit-msg) because staging package.json
 // mid-commit races git's own index write; amending after the commit exists
 // is the reliable way to fold the bump in.
-import { readFileSync, writeFileSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { execSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
 const rootDir = join(dirname(fileURLToPath(import.meta.url)), '..');
+const gitDir = execSync('git rev-parse --git-dir', { cwd: rootDir }).toString().trim();
+
+// Rebase/cherry-pick replay commits via this same hook one at a time; the
+// working commit isn't finalized yet during replay, so --amend fails there.
+// Skip and let the operation's own final state stand.
+const inProgressMarkers = ['rebase-merge', 'rebase-apply', 'CHERRY_PICK_HEAD'];
+if (inProgressMarkers.some((marker) => existsSync(join(gitDir, marker)))) {
+  process.exit(0);
+}
 
 const parentCount = execSync('git rev-list --parents -n1 HEAD', { cwd: rootDir })
   .toString()
