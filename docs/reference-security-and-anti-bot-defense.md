@@ -137,6 +137,10 @@ When a rate-limit exception occurs:
 * Can be enabled in any environment by defining `VITE_TURNSTILE_SITE_KEY`.
 * Operates in non-interactive / invisible mode for legitimate human users.
 
+### E. JSON Backup Data Sanitization (`src/utils/backupValidation.ts`)
+* Prevents prototype pollution (`__proto__`, `constructor`) during backup imports.
+* Validates and caps string lengths, dates, positive numeric amounts, and trip counts before persisting to IndexedDB or executing database mutations.
+
 ---
 
 ## 6. Offline-First Resilience During Incidents
@@ -152,3 +156,4 @@ Because Trip Tracker 2026 uses an offline-first storage queue (`localforage` Ind
 
 * **`0046_security_hardening_phase1.sql`**: Storage bucket quotas, image MIME whitelist, PostgreSQL statement timeouts, RLS re-assertion, and anon permission revocation.
 * **`0047_security_hardening_phase2_join_limits.sql`**: `trip_join_attempts` tracking table and 5-attempt brute-force rate limiter with 15-minute sliding lockout.
+* **`0048_security_hardening_phase3_constraints_and_audit.sql`**: Entity field `CHECK` constraints (lengths, positive amounts, valid date ranges) and `security_audit_logs` administrative audit trail.

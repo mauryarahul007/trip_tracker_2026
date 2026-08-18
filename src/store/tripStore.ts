@@ -35,6 +35,7 @@ import { generateDemoData } from '../utils/demoSeed';
 import { reverseGeocode, searchPlaces } from '../utils/geolocation';
 import { sendPushNotification } from '../services/pushApi';
 import { saveOfflineReceipt, getOfflineReceipt, deleteOfflineReceipt } from '../services/offlineReceiptStore';
+import { validateAndSanitizeBackup } from '../utils/backupValidation';
 
 // Offline capture falls back to a raw-coordinate placeName (see geolocation.ts).
 // Once we're syncing (guaranteed online), upgrade it to a real place name.
@@ -1390,20 +1391,12 @@ export const useTripStore = create<TripStore>()(
       if (!userId) return false;
 
       try {
-        const parsed = JSON.parse(jsonString) as TripState;
-
-        if (
-          !(
-            Array.isArray(parsed.trips) &&
-            parsed.members &&
-            parsed.groups &&
-            Array.isArray(parsed.expenses) &&
-            Array.isArray(parsed.categories)
-          )
-        ) {
+        const validation = validateAndSanitizeBackup(jsonString);
+        if (!validation.valid || !validation.sanitizedState) {
           return false;
         }
 
+        const parsed = validation.sanitizedState;
         const customCategories = parsed.categories.filter((c) => c.isCustom);
         let lastTripId: string | null = null;
 

@@ -407,6 +407,26 @@ This document logs all meaningful technical decisions, library choices, design p
     - Added offscreen decoy fields (`name="trip_join_security_token"`, `name="expense_vendor_code_security"`) that drop automated bot submissions before any network requests are dispatched to Supabase.
 * **Trade-offs Accepted:**
   - If a legitimate user mistypes an invite code 5 consecutive times, they must wait 15 minutes or contact their trip admin for the direct invite link.
+---
+
+## 33. Security Hardening Phase 3: Database CHECK Constraints, Audit Logging, CSP, and JSON Sanitization
+* **Context:** Malicious or oversized string payloads could cause database memory bloat or frontend crashes if unbounded. Unvalidated JSON backup imports could introduce prototype pollution or corrupted state into IndexedDB. Cross-site script injections require explicit origin policy restrictions.
+* **Decision:** Implemented database-level `CHECK` constraints on all primary entities, created an administrative security audit log table, defined a strict Content Security Policy in `index.html`, and added backup data validation and sanitization.
+* **Pattern/Implementation:**
+  - **Database CHECK Constraints (`0048_security_hardening_phase3_constraints_and_audit.sql`)**:
+    - `trips`: `length(trim(name)) > 0 and length(name) <= 100`, `start_date <= end_date`, `length(trim(base_currency)) between 2 and 10`.
+    - `members` & `groups`: `length(trim(name)) > 0 and length(name) <= 100`.
+    - `categories`: `length(trim(name)) > 0 and length(name) <= 50`.
+    - `expenses`: `length(trim(title)) > 0 and length(title) <= 200`, `amount > 0 and amount <= 999999999.99`, `length(trim(currency)) between 2 and 10`.
+  - **Security Audit Logs Table & RPC (`0048_security_hardening_phase3_constraints_and_audit.sql`)**:
+    - Created `public.security_audit_logs` table with RLS restricting read access exclusively to trip administrators via `is_trip_admin()`.
+    - Revoked direct client write access, requiring event dispatch through security definer RPC `log_security_event`.
+  - **Content Security Policy (`index.html`)**:
+    - Defined restrictive CSP headers in `index.html` allowing only required origins (Supabase, Leaflet OpenStreetMap tiles, Nominatim geocoding, Cloudflare Turnstile). Added `X-Content-Type-Options: nosniff` and `Referrer-Policy: strict-origin-when-cross-origin`.
+  - **Client-Side JSON Import Sanitizer (`src/utils/backupValidation.ts`)**:
+    - Added prototype pollution protection (`Reflect.deleteProperty`) and bounds validation on imported backups before executing bulk transactions in `tripStore.ts`.
+* **Trade-offs Accepted:**
+  - Strings exceeding max bounds (e.g. titles over 200 characters or names over 100 characters) are trimmed automatically or rejected by the database.
 
 
 
