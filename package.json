@@ -1,9 +1,10 @@
 {
   "name": "trip-tracker-2026",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.2.1",
   "type": "module",
   "scripts": {
+    "postinstall": "node scripts/install-git-hooks.mjs",
     "dev": "vite --host",
     "build": "tsc -b && vite build && node scripts/stampServiceWorker.mjs",
     "lint": "oxlint",
