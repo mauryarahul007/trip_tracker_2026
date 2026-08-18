@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import type { CSSProperties } from 'react';
 import type { Category, Expense, Member, Trip } from '../types';
-import { IconSearch, IconEdit, IconTrash, IconAlertCircle, IconFilter } from './Icons';
+import { IconSearch, IconEdit, IconTrash, IconAlertCircle, IconClose, IconCalendar } from './Icons';
 import { SwipeableRow } from './SwipeableRow';
 import { CategoryIcon } from './CategoryIcon';
 import { getCurrencySymbol } from '../utils/currency';
@@ -86,6 +86,7 @@ type Props = {
 
   isAdmin: boolean;
   userId: string | null;
+  myMemberId?: string | null;
 };
 
 export function ExpenseList({
@@ -113,15 +114,12 @@ export function ExpenseList({
   onDelete,
   isAdmin,
   userId,
+  myMemberId,
 }: Props) {
   const currencySymbol = getCurrencySymbol(trip?.baseCurrency || '');
 
-  // 0. Advanced filters (category/member/date range) stay collapsed by
-  // default — search is the filter people reach for constantly, the rest
-  // are occasional, so burying them behind a toggle keeps the common case
-  // to one compact row instead of three.
-  const [filtersOpen, setFiltersOpen] = useState(false);
-  const activeFilterCount = [filterCategory, filterMember, filterDateFrom, filterDateTo].filter(Boolean).length;
+  const [showDateFilter, setShowDateFilter] = useState(false);
+  const isAllActive = !filterCategory && !filterMember && !filterDateFrom && !filterDateTo;
 
   // 1. Debounce Search Input
   const [localSearch, setLocalSearch] = useState(search);
@@ -151,50 +149,122 @@ export function ExpenseList({
       {/* Search & Filters */}
       {activeTripExpenseCount > 0 && (
         <div className="expense-filters">
-          <div className="expense-filters-row">
-            <div className="input-icon-wrap expense-search">
+          <div className="expense-search-row">
+            <div className="input-icon-wrap expense-search-wrap">
               <IconSearch size={16} className="icon-sm" />
               <input
                 type="text"
-                className="input-field"
-                placeholder="Search expenses..."
+                className="input-field expense-search-input"
+                placeholder="Search expenses by title or note..."
                 value={localSearch}
                 onChange={(e) => setLocalSearch(e.target.value)}
               />
+              {localSearch && (
+                <button
+                  type="button"
+                  className="search-clear-btn"
+                  onClick={() => {
+                    setLocalSearch('');
+                    setSearch('');
+                  }}
+                  aria-label="Clear search"
+                  title="Clear search"
+                >
+                  <IconClose size={14} />
+                </button>
+              )}
             </div>
+          </div>
+
+          {/* WhatsApp-style horizontal quick filter pills */}
+          <div className="filter-chips-track" role="region" aria-label="Quick filters">
             <button
               type="button"
-              className={`filter-toggle-btn ${filtersOpen ? 'open' : ''}`}
-              onClick={() => setFiltersOpen((v) => !v)}
-              aria-expanded={filtersOpen}
-              aria-label="Toggle filters"
+              className={`filter-chip ${isAllActive ? 'active' : ''}`}
+              onClick={onClearFilters}
             >
-              <IconFilter size={16} className="icon-sm" />
-              {activeFilterCount > 0 && <span className="filter-count-badge">{activeFilterCount}</span>}
+              All
             </button>
+
+            {myMemberId && (
+              <button
+                type="button"
+                className={`filter-chip ${filterMember === myMemberId ? 'active' : ''}`}
+                onClick={() => setFilterMember(filterMember === myMemberId ? '' : myMemberId)}
+              >
+                👤 Mine
+              </button>
+            )}
+
+            {/* Category chips */}
+            {categories.map((c) => {
+              const isSelected = filterCategory === c.id;
+              return (
+                <button
+                  key={c.id}
+                  type="button"
+                  className={`filter-chip ${isSelected ? 'active' : ''}`}
+                  onClick={() => setFilterCategory(isSelected ? '' : c.id)}
+                >
+                  <CategoryIcon categoryId={c.id} fallbackEmoji={c.icon} size={13} />
+                  <span>{c.name}</span>
+                </button>
+              );
+            })}
+
+            {/* Member chips (when multiple members exist, exclude myMemberId since that's already in 'Mine') */}
+            {activeTripMembers.length > 1 &&
+              activeTripMembers
+                .filter((m) => m.id !== myMemberId)
+                .map((m) => {
+                  const isSelected = filterMember === m.id;
+                  return (
+                    <button
+                      key={m.id}
+                      type="button"
+                      className={`filter-chip ${isSelected ? 'active' : ''}`}
+                      onClick={() => setFilterMember(isSelected ? '' : m.id)}
+                    >
+                      <ExpenseAvatar member={m} size={15} />
+                      <span>{m.name}</span>
+                    </button>
+                  );
+                })}
+
+            {/* Date filter chip */}
+            <button
+              type="button"
+              className={`filter-chip ${(filterDateFrom || filterDateTo || showDateFilter) ? 'active' : ''}`}
+              onClick={() => setShowDateFilter((v) => !v)}
+              title="Filter by date range"
+            >
+              <IconCalendar size={13} />
+              <span>
+                {filterDateFrom || filterDateTo
+                  ? `${filterDateFrom || 'Start'} – ${filterDateTo || 'End'}`
+                  : 'Dates'}
+              </span>
+            </button>
+
+            {hasActiveFilters && (
+              <button
+                type="button"
+                className="filter-chip filter-chip-clear"
+                onClick={() => {
+                  onClearFilters();
+                  setShowDateFilter(false);
+                }}
+                title="Clear all active filters"
+              >
+                <IconClose size={12} />
+                <span>Clear</span>
+              </button>
+            )}
           </div>
-          {filtersOpen && (
-            <div className="expense-filters-panel">
-              <select
-                className="input-field select-field"
-                value={filterCategory}
-                onChange={(e) => setFilterCategory(e.target.value)}
-              >
-                <option value="">All Categories</option>
-                {categories.map((c) => (
-                  <option key={c.id} value={c.id}>{c.icon} {c.name}</option>
-                ))}
-              </select>
-              <select
-                className="input-field select-field"
-                value={filterMember}
-                onChange={(e) => setFilterMember(e.target.value)}
-              >
-                <option value="">All Members</option>
-                {activeTripMembers.map((m) => (
-                  <option key={m.id} value={m.id}>{m.name}</option>
-                ))}
-              </select>
+
+          {/* Collapsible Date Range Sub-panel */}
+          {showDateFilter && (
+            <div className="filter-date-popup fade-in">
               <div className="expense-date-range">
                 <input
                   type="date"
@@ -212,9 +282,16 @@ export function ExpenseList({
                   aria-label="To date"
                 />
               </div>
-              {hasActiveFilters && (
-                <button type="button" className="filter-clear-link" onClick={onClearFilters}>
-                  Clear all filters
+              {(filterDateFrom || filterDateTo) && (
+                <button
+                  type="button"
+                  className="filter-clear-link"
+                  onClick={() => {
+                    setFilterDateFrom('');
+                    setFilterDateTo('');
+                  }}
+                >
+                  Reset dates
                 </button>
               )}
             </div>

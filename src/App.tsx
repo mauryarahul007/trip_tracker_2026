@@ -1050,6 +1050,7 @@ export default function App() {
                   onDelete={handleDeleteExpense}
                   isAdmin={isAdmin}
                   userId={userId}
+                  myMemberId={myMemberId}
                 />
 
                 {activeTrip && visibleMembers.length > 0 && (

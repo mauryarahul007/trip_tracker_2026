@@ -332,6 +332,22 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - Consumes a minor footprint (54×54px) in the bottom-right corner of the active scroll view, offset by extending bottom padding so underlying content is never obscured.
 
+---
+
+## 28. WhatsApp-Style Search Bar & Horizontal Quick Filter Chips
+* **Context:** The previous expense filtering UI utilized a collapsible toggle button that exposed stacked `<select>` dropdowns and date inputs. This interaction model required 3–4 taps, added vertical layout clutter, and felt cumbersome compared to mobile-first messaging and ledger interfaces (such as WhatsApp's chat list search and filters).
+* **Decision:** Replaced the multi-select dropdown panel with an integrated full-width search bar (with an instant `✕` clear action) and a horizontal, touch-friendly filter chip strip (`All`, `👤 Mine`, dynamic Categories, dynamic Members, and `Dates`).
+* **Pattern/Implementation:**
+  - **Single-Tap Filter Track (`ExpenseList.tsx`)**: Rendered horizontal scrollable chips with one-tap toggle for categories, members, user's own expenses (`myMemberId`), and date range.
+  - **Instant Search Clear (`ExpenseList.tsx`)**: Added a reactive `✕` button inside the search field that debounces and clears the filter string instantly.
+  - **Aesthetics & Theme Alignment (`index.css`)**:
+    - Light Theme: Warm ledger paper chip surfaces ([`var(--bg-surface)`](file:///C:/ProjectsV1/Trip_Tracker_2026/src/index.css#L52)) transitioning to Ink Navy ([`var(--bg-header)`](file:///C:/ProjectsV1/Trip_Tracker_2026/src/index.css#L73)) when active.
+    - Dark Theme: Night flight card surfaces with elevated dark slate chip fill and warm text.
+    - Smooth touch scroll with hidden scrollbars and tactile active state transitions.
+* **Trade-offs Accepted:**
+  - Horizontal scrolling requires users to swipe right to see secondary category/member chips on very small screens, which is significantly faster and less obstructive than opening multi-step dropdown menus.
+
+
 
 
 
