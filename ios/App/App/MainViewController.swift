@@ -461,7 +461,11 @@ class MainViewController: CAPBridgeViewController, WKScriptMessageHandler {
 
     private func applyHeaderState(_ body: [String: Any]) {
         let visible = body["visible"] as? Bool ?? false
-        headerGlass.isHidden = !visible
+        let modalOpen = body["modalOpen"] as? Bool ?? false
+        // Same reasoning as the tab bar: this native layer paints on top
+        // of the whole webview, so a web modal's CSS z-index can't cover
+        // it on its own — hide the header ourselves while one's open.
+        headerGlass.isHidden = !visible || modalOpen
 
         titleLabel.text = body["tripName"] as? String
         eyebrowLabel.text = (body["eyebrow"] as? String)?.uppercased()
@@ -532,11 +536,17 @@ class MainViewController: CAPBridgeViewController, WKScriptMessageHandler {
             let visible = body["visible"] as? Bool ?? false
             let active = body["active"] as? String
             let theme = body["theme"] as? String ?? "light"
+            let modalOpen = body["modalOpen"] as? Bool ?? false
 
             let activeChanged = active != currentActive
             currentTheme = theme
             currentActive = active
-            glassContainer.isHidden = !visible
+            // A web-rendered modal's own CSS z-index can't reach above
+            // this native subview — it sits on top of the whole webview
+            // regardless — so hide the bar ourselves whenever one's open,
+            // or it'd visually cover the modal instead of the other way
+            // around.
+            glassContainer.isHidden = !visible || modalOpen
             applyTheme(theme, active: active)
             positionSelectionIndicator(for: active, animated: activeChanged)
 

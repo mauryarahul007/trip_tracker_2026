@@ -86,11 +86,22 @@ function resolveTheme(): 'light' | 'dark' {
   return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 }
 
+// Native views (the header/tab bar glass) are separate subviews stacked
+// on top of the entire webview, above its whole rendered output — a
+// web-rendered modal's own CSS z-index has no effect on that, it's still
+// just content within the flat layer sitting underneath. Every full-
+// screen modal in the app uses one of these two classes, so both native
+// surfaces hide themselves whenever either is open, letting the modal
+// actually cover everything the way its CSS already intends.
+function isAnyModalOpen(): boolean {
+  return !!document.querySelector('.modal-overlay, .modal-backdrop');
+}
+
 function setUpNativeTabBarSync(): void {
   const w = window as unknown as {
     webkit?: {
       messageHandlers?: {
-        navTabsState?: { postMessage(v: { visible: boolean; active: string | null; theme: 'light' | 'dark' }): void };
+        navTabsState?: { postMessage(v: { visible: boolean; active: string | null; theme: 'light' | 'dark'; modalOpen: boolean }): void };
       };
     };
   };
@@ -101,7 +112,7 @@ function setUpNativeTabBarSync(): void {
   const sync = () => {
     const navTabs = document.querySelector('.nav-tabs');
     const activeEl = navTabs?.querySelector<HTMLElement>('.nav-tab-item.active');
-    const state = { visible: !!navTabs, active: activeEl?.dataset.tab ?? null, theme: resolveTheme() };
+    const state = { visible: !!navTabs, active: activeEl?.dataset.tab ?? null, theme: resolveTheme(), modalOpen: isAnyModalOpen() };
     const key = JSON.stringify(state);
     if (key === last) return;
     last = key;
@@ -127,6 +138,7 @@ type HeaderState = {
   syncLabel: string;
   syncStatus: string;
   theme: 'light' | 'dark';
+  modalOpen: boolean;
 };
 
 // Same reasoning as the tab bar: a native blur behind CSS content would
@@ -163,6 +175,7 @@ function setUpNativeHeaderSync(): void {
       syncStatus:
         Array.from(header?.querySelector('.sync-badge-dot')?.classList ?? []).find((c) => c !== 'sync-badge-dot') ?? 'synced',
       theme: resolveTheme(),
+      modalOpen: isAnyModalOpen(),
     };
     const key = JSON.stringify(state);
     if (key === lastState) return;
