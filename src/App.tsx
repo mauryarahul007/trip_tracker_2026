@@ -20,7 +20,7 @@ import { ExpenseReviewModal } from './components/ExpenseReviewModal';
 import { UndoToasts } from './components/UndoToasts';
 import { NavTabs } from './components/NavTabs';
 import { ShareTripModal } from './components/ShareTripModal';
-import { IconCalendar, IconChevronLeft, IconShare } from './components/Icons';
+import { IconCalendar, IconChevronLeft, IconShare, IconPlus } from './components/Icons';
 import { formatDateRange } from './utils/dateRange';
 import { useScrollLock } from './utils/useScrollLock';
 import { useHistoryBack } from './utils/useHistoryBack';
@@ -1023,13 +1023,6 @@ export default function App() {
               <div className="fade-in">
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
                   <h3 style={{ fontSize: '18px' }}>Expenses</h3>
-                  <button
-                    className="gradient-btn"
-                    style={{ padding: '8px 16px', fontSize: '14px' }}
-                    onClick={handleOpenAddExpense}
-                  >
-                    + Add Expense
-                  </button>
                 </div>
 
                 <ExpenseList
@@ -1146,6 +1139,18 @@ export default function App() {
                 onInstallApp={handleInstallApp}
               />
             </div>
+
+            {activeTab === 'expenses' && (
+              <button
+                type="button"
+                className="fab-add-expense"
+                onClick={handleOpenAddExpense}
+                aria-label="Add Expense"
+                title="Add Expense"
+              >
+                <IconPlus size={24} />
+              </button>
+            )}
           </main>
 
           <NavTabs activeTab={activeTab} setActiveTab={setActiveTab} />

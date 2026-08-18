@@ -317,6 +317,22 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - Preserves hierarchical ownership and guarantees that trips never lose verified ownership while providing full flexibility to promote co-travelers to Admins immediately.
 
+---
+
+## 27. Floating Action Button (FAB) for Adding Expenses
+* **Context:** In the active trip view, the "+ Add Expense" action button was previously anchored inside the scrollable header area at the top of the Expenses tab. When expense logs grew long or on mobile devices where single-thumb interaction operates at the bottom half of the screen, reaching the top button was friction-heavy.
+* **Decision:** Replaced the top-anchored button with a persistent Floating Action Button (FAB) at the bottom-right of the viewport.
+* **Pattern/Implementation:**
+  - **Component Structure (`App.tsx`)**: Placed the FAB inside `<main className="app-main">` conditionally rendered only when `activeTab === 'expenses'`.
+  - **Styling & Elevation (`index.css`)**: Styled `.fab-add-expense` with a 54px circular geometry, 2px crisp border, brand teal gradient, shadow elevation, tactile active press state, and dark mode contrast adaptations.
+  - **Cross-Platform & Safe Area Adaptations (`index.css`)**:
+    - Web / Android: Sits 18px above the bottom navigation bar.
+    - iOS Capacitor: Offsets bottom clearance to sit above the native Liquid Glass tab bar (`calc(18px + var(--safe-bottom, 0px) + 76px)`).
+    - Scroll Clearance: Added `calc(84px + var(--safe-bottom, 0px))` bottom padding to `.tab-pane` so the last transaction or settlement card can be scrolled well past the floating button.
+* **Trade-offs Accepted:**
+  - Consumes a minor footprint (54×54px) in the bottom-right corner of the active scroll view, offset by extending bottom padding so underlying content is never obscured.
+
+
 
 
 

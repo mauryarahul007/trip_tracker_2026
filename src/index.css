@@ -291,6 +291,75 @@ button, [role="button"], input, select, a {
   border-color: rgba(28, 42, 56, 0.22);
 }
 
+/* Floating Action Button (FAB) */
+.fab-add-expense {
+  position: absolute;
+  right: 18px;
+  bottom: 18px;
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  background: var(--primary-accent);
+  color: #FFFDF6;
+  border: 2px solid rgba(255, 255, 255, 0.45);
+  box-shadow: 0 4px 14px rgba(31, 110, 104, 0.42), 0 2px 6px rgba(28, 42, 56, 0.18);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 50;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.fab-add-expense:hover {
+  background: var(--primary-accent-light);
+  transform: translateY(-2px) scale(1.06);
+  box-shadow: 0 6px 20px rgba(31, 110, 104, 0.55), 0 3px 8px rgba(28, 42, 56, 0.25);
+  border-color: rgba(255, 255, 255, 0.75);
+}
+
+.fab-add-expense:active {
+  transform: translateY(1px) scale(0.95);
+  box-shadow: 0 2px 8px rgba(31, 110, 104, 0.4), 0 1px 3px rgba(28, 42, 56, 0.2);
+}
+
+.fab-add-expense:focus-visible {
+  outline: 2px solid var(--primary-accent);
+  outline-offset: 3px;
+}
+
+/* Dark mode adjustment for FAB border & glow */
+:root[data-theme="dark"] .fab-add-expense {
+  border: 2px solid rgba(239, 231, 210, 0.35);
+  box-shadow: 0 4px 16px rgba(89, 189, 178, 0.35), 0 2px 6px rgba(0, 0, 0, 0.4);
+  color: #141C26;
+}
+
+:root[data-theme="dark"] .fab-add-expense:hover {
+  border-color: rgba(239, 231, 210, 0.6);
+  box-shadow: 0 6px 22px rgba(89, 189, 178, 0.48), 0 3px 8px rgba(0, 0, 0, 0.5);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .fab-add-expense {
+    border: 2px solid rgba(239, 231, 210, 0.35);
+    box-shadow: 0 4px 16px rgba(89, 189, 178, 0.35), 0 2px 6px rgba(0, 0, 0, 0.4);
+    color: #141C26;
+  }
+  :root:not([data-theme="light"]) .fab-add-expense:hover {
+    border-color: rgba(239, 231, 210, 0.6);
+    box-shadow: 0 6px 22px rgba(89, 189, 178, 0.48), 0 3px 8px rgba(0, 0, 0, 0.5);
+  }
+}
+
+/* iOS Capacitor Safe Area & Native Liquid Glass Tab Clearance */
+html.capacitor-ios .fab-add-expense {
+  bottom: calc(18px + var(--safe-bottom, 0px) + 76px);
+  right: max(18px, var(--safe-right, 18px));
+}
+
 /* Icon sizing inside buttons/rows */
 .icon {
   width: 17px;
@@ -1848,7 +1917,7 @@ input:checked + .toggle-slider:before {
 .tab-pane {
   flex: 1;
   min-height: 0;
-  padding: 20px max(20px, var(--safe-right, 20px)) calc(24px + var(--safe-bottom, 0px)) max(20px, var(--safe-left, 20px));
+  padding: 20px max(20px, var(--safe-right, 20px)) calc(84px + var(--safe-bottom, 0px)) max(20px, var(--safe-left, 20px));
   overflow-y: auto;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
@@ -1859,7 +1928,7 @@ input:checked + .toggle-slider:before {
    scrolling behind it. 88px = the pill's 8px bottom margin + 64px height
    + 16px breathing room above it, matching TabBarGlassMetrics exactly. */
 html.capacitor-ios .tab-pane {
-  padding-bottom: calc(24px + var(--safe-bottom, 0px) + 88px);
+  padding-bottom: calc(84px + var(--safe-bottom, 0px) + 88px);
 }
 
 .trips-screen-scroll {
