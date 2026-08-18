@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import type { CSSProperties } from 'react';
 import type { Category, Expense, Member, Trip } from '../types';
 import { IconSearch, IconEdit, IconTrash, IconAlertCircle, IconClose, IconCalendar } from './Icons';
@@ -118,8 +118,26 @@ export function ExpenseList({
 }: Props) {
   const currencySymbol = getCurrencySymbol(trip?.baseCurrency || '');
 
+  const filtersRef = useRef<HTMLDivElement>(null);
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [searchFocused, setSearchFocused] = useState(false);
   const [showDateFilter, setShowDateFilter] = useState(false);
   const isAllActive = !filterCategory && !filterMember && !filterDateFrom && !filterDateTo;
+
+  // Scroll listener to reveal quick filter chips when scrolling down past top
+  useEffect(() => {
+    const el = filtersRef.current;
+    const scrollParent = el?.closest('.tab-pane');
+    if (!scrollParent) return;
+
+    const handleScroll = () => {
+      setIsScrolled(scrollParent.scrollTop > 15);
+    };
+
+    handleScroll();
+    scrollParent.addEventListener('scroll', handleScroll, { passive: true });
+    return () => scrollParent.removeEventListener('scroll', handleScroll);
+  }, []);
 
   // 1. Debounce Search Input
   const [localSearch, setLocalSearch] = useState(search);
@@ -133,6 +151,8 @@ export function ExpenseList({
     }, 200);
     return () => clearTimeout(timer);
   }, [localSearch, setSearch]);
+
+  const shouldShowChips = isScrolled || searchFocused || hasActiveFilters || !!localSearch || showDateFilter;
 
   // 2. Pagination State for virtualization
   const [visibleCount, setVisibleCount] = useState(50);
@@ -148,7 +168,7 @@ export function ExpenseList({
     <>
       {/* Search & Filters */}
       {activeTripExpenseCount > 0 && (
-        <div className="expense-filters">
+        <div ref={filtersRef} className="expense-filters">
           <div className="expense-search-row">
             <div className="input-icon-wrap expense-search-wrap">
               <IconSearch size={16} className="icon-sm" />
@@ -157,6 +177,8 @@ export function ExpenseList({
                 className="input-field expense-search-input"
                 placeholder="Search expenses by title or note..."
                 value={localSearch}
+                onFocus={() => setSearchFocused(true)}
+                onBlur={() => setSearchFocused(false)}
                 onChange={(e) => setLocalSearch(e.target.value)}
               />
               {localSearch && (
@@ -176,8 +198,9 @@ export function ExpenseList({
             </div>
           </div>
 
-          {/* WhatsApp-style horizontal quick filter pills */}
-          <div className="filter-chips-track" role="region" aria-label="Quick filters">
+          {/* WhatsApp-style horizontal quick filter pills - revealed on scroll/active */}
+          <div className={`filter-chips-collapse ${shouldShowChips ? 'expanded' : ''}`}>
+            <div className="filter-chips-track" role="region" aria-label="Quick filters">
             <button
               type="button"
               className={`filter-chip ${isAllActive ? 'active' : ''}`}
@@ -261,6 +284,7 @@ export function ExpenseList({
               </button>
             )}
           </div>
+        </div>
 
           {/* Collapsible Date Range Sub-panel */}
           {showDateFilter && (

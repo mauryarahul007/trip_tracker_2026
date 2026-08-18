@@ -347,6 +347,19 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - Horizontal scrolling requires users to swipe right to see secondary category/member chips on very small screens, which is significantly faster and less obstructive than opening multi-step dropdown menus.
 
+---
+
+## 29. Scroll-Revealed Quick Filter Track
+* **Context:** Showing both the search bar and the full filter chip row at the top of the screen at initial rest took unnecessary vertical space away from the first few transaction rows on smaller mobile screens.
+* **Decision:** Hidden the filter chips at initial rest (`scrollTop === 0`), expanding and sliding them into view seamlessly upon scrolling down, focusing search, or when any filter is active.
+* **Pattern/Implementation:**
+  - **Scroll Detection (`ExpenseList.tsx`)**: Attached a passive scroll listener on `.tab-pane` detecting `scrollTop > 15px`.
+  - **Visibility Compound State (`ExpenseList.tsx`)**: Filter chips expand when `isScrolled || searchFocused || hasActiveFilters || !!localSearch || showDateFilter`.
+  - **Animated Collapse & Expansion (`index.css`)**: Styled `.filter-chips-collapse` with `max-height`, `opacity`, `transform: translateY()`, and cubic-bezier easing to slide down smoothly without layout jank.
+* **Trade-offs Accepted:**
+  - First-time users see only the search bar at top-of-page rest, but tapping search, typing, or scrolling instantly expands the full chip bar.
+
+
 
 
 
