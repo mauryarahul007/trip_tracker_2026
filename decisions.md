@@ -375,8 +375,22 @@ This document logs all meaningful technical decisions, library choices, design p
   - **Cross-Platform & Scope Isolation (`index.css`)**:
     - Retained solid `.app-header` defaults for modals (`ExpenseForm`, `GlobalSettingsModal`).
     - Maintained clean compatibility overrides for `html.capacitor-ios` (Swift native shell glass header).
+---
+
+## 31. Security Hardening Phase 1: Storage Quotas, MIME Whitelisting, and Statement Timeouts
+* **Context:** Unauthenticated or bot traffic can potentially flood Supabase storage buckets with arbitrary non-image files or oversized assets, exhausting quotas. Additionally, malicious or runaway nested queries against PostgreSQL could cause database CPU exhaustion.
+* **Decision:** Implemented multi-layer defensive boundaries across Supabase Storage, PostgreSQL roles, and client-side upload pipelines.
+* **Pattern/Implementation:**
+  - **Storage Hardening (`0046_security_hardening_phase1.sql`)**:
+    - Configured `storage.buckets` record for `'receipts'` with strict 5MB limit (`file_size_limit = 5242880`) and allowed MIME whitelist (`image/jpeg`, `image/png`, `image/webp`, `image/heic`, `image/heif`).
+    - Added full CRUD RLS policies on `storage.objects` binding read/write/update/delete strictly to verified trip participants and admins.
+  - **Statement Timeouts for Anti-DDoS (`0046_security_hardening_phase1.sql`)**:
+    - Enforced `statement_timeout = '5000ms'` for authenticated roles and `3000ms` for anonymous roles to immediately terminate runaway/slow-query attacks.
+    - Explicitly revoked destructive actions (`INSERT`, `UPDATE`, `DELETE`) from `anon` across all application tables.
+  - **Client-Side Pre-Validation (`src/utils/image.ts`, `ExpenseForm.tsx`)**:
+    - Pre-validates file sizes (`MAX_RECEIPT_FILE_SIZE_BYTES = 5MB`) and MIME types before executing FileReader or compression, rejecting invalid uploads client-side before any network bytes are dispatched.
 * **Trade-offs Accepted:**
-  - The frosted glass effect relies on `backdrop-filter`, which is supported across all modern browsers (Safari, Chrome, Edge, Firefox). In legacy browsers without `backdrop-filter`, the semi-transparent background color degrades gracefully with solid alpha blending.
+  - Receipts larger than 5MB must be resized before uploading (handled automatically by the client-side downscaling canvas pipeline).
 
 
 

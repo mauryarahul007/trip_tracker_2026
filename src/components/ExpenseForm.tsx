@@ -149,8 +149,9 @@ export function ExpenseForm({
     try {
       const dataUrl = await compressImageToDataUrl(file);
       setReceiptImage(dataUrl);
-    } catch {
-      setFormError('Could not process that image. Try a different photo.');
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Could not process that image. Try a different photo.';
+      setFormError(msg);
     } finally {
       setReceiptProcessing(false);
     }
