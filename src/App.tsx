@@ -960,7 +960,7 @@ export default function App() {
       ) : (
         /* Screen 2: Active Trip Dashboard */
         <div className="fade-in" style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, overflow: 'hidden' }}>
-          <header className="app-header">
+          <header className="app-header trip-dashboard-header">
             <div className="app-header-top">
               <div className="app-title-group">
                 <span className="app-eyebrow">

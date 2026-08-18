@@ -531,11 +531,16 @@ input[type="date"].input-field {
    data-action="share"/"trips-back"/"sync" — the same reasons the tab bar
    went fully native apply here too: a blur placed behind CSS content
    blurs that content as well, since WKWebView flattens everything into
-   one layer). .app-header stays in the DOM purely as native's source of
-   truth (content/state read back via nativeShell.ts's headerState
-   message) but is never shown. HeaderMetrics.expandedHeight in
+   one layer). .trip-dashboard-header stays in the DOM purely as native's
+   source of truth (content/state read back via nativeShell.ts's
+   headerState message) but is never shown.
+   Scoped to .trip-dashboard-header specifically, NOT the shared
+   .app-header class — GlobalSettingsModal and ExpenseForm reuse
+   .app-header purely for its dark-banner styling on their own in-modal
+   headers (which hold their Close button), and hiding those left no way
+   to dismiss the modal. HeaderMetrics.expandedHeight in
    MainViewController.swift must match the value below. */
-html.capacitor-ios .app-header {
+html.capacitor-ios .trip-dashboard-header {
   display: none;
 }
 html.capacitor-ios .tab-pane {

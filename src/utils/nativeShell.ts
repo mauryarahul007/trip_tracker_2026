@@ -164,7 +164,11 @@ function setUpNativeHeaderSync(): void {
 
   let lastState = '';
   const syncState = () => {
-    const header = document.querySelector('.app-header');
+    // Scoped to .trip-dashboard-header, not the shared .app-header class —
+    // GlobalSettingsModal and ExpenseForm reuse .app-header for their own
+    // in-modal headers, and a generic query here could pick up whichever
+    // happens to be first in the DOM instead of the real trip header.
+    const header = document.querySelector('.trip-dashboard-header');
     const state: HeaderState = {
       visible: !!header,
       tripName: header?.querySelector('.app-logo')?.textContent?.trim() ?? '',
