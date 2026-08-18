@@ -357,7 +357,26 @@ This document logs all meaningful technical decisions, library choices, design p
   - **Visibility Compound State (`ExpenseList.tsx`)**: Filter chips expand when `isScrolled || searchFocused || hasActiveFilters || !!localSearch || showDateFilter`.
   - **Animated Collapse & Expansion (`index.css`)**: Styled `.filter-chips-collapse` with `max-height`, `opacity`, `transform: translateY()`, and cubic-bezier easing to slide down smoothly without layout jank.
 * **Trade-offs Accepted:**
-  - First-time users see only the search bar at top-of-page rest, but tapping search, typing, or scrolling instantly expands the full chip bar.
+---
+
+## 30. CSS-Driven Adaptive Disappearing Scroll Header & Glassmorphic Passthrough
+* **Context:** When users scrolled down through long expense lists or dashboard tabs, the header previously remained static and rigid in a separate flex block above `<main>`, while the scrolling container clipped abruptly against the header's hard bottom edge. This created a visual disconnect and wasted vertical screen real estate while scrolling.
+* **Decision:** Implemented a unified scrolling layout where the active trip dashboard header is rendered as an elevated, translucent frosted-glass surface (`backdrop-filter: blur(16px)`). Scrolling cards pass directly underneath the header and gracefully dissolve at the top safe area through a CSS gradient mask, while the header smoothly compacts into a sleek top bar.
+* **Pattern/Implementation:**
+  - **Glassmorphism & Depth Elevation (`index.css`)**:
+    - Created `--bg-header-glass` and `--bg-header-glass-scrolled` theme tokens for light (`rgba(28, 42, 56, 0.82)`) and dark mode (`rgba(15, 21, 29, 0.85)`).
+    - Applied `backdrop-filter: blur(16px) saturate(170%)` with dynamic elevation drop shadows (`box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.45)`).
+  - **Scroll Passthrough & Top-Edge Dissolution (`index.css`)**:
+    - Re-architected `.tab-pane` to extend behind the absolute glass header with `padding-top: calc(126px + var(--safe-top, 0px))` clearance.
+    - Applied a top-edge linear gradient mask (`mask-image: linear-gradient(to bottom, transparent 0px, transparent calc(var(--safe-top, 0px) + 6px), black calc(var(--safe-top, 0px) + 38px), black 100%)`) so scrolling expenses seamlessly dissolve inside the header rather than colliding with the status bar or notch.
+  - **Dynamic Compaction & Smooth Transitions (`App.tsx`, `index.css`)**:
+    - Tracked scroll position on `.tab-pane` using an event-delegated capture listener toggling `.is-scrolled` at `scrollTop > 15px`.
+    - Animated header padding reduction, logo title scaling (from 24px down to 18px), and folded away the eyebrow and stats sub-row (`max-height: 0; opacity: 0; transform: translateY(-8px)`).
+  - **Cross-Platform & Scope Isolation (`index.css`)**:
+    - Retained solid `.app-header` defaults for modals (`ExpenseForm`, `GlobalSettingsModal`).
+    - Maintained clean compatibility overrides for `html.capacitor-ios` (Swift native shell glass header).
+* **Trade-offs Accepted:**
+  - The frosted glass effect relies on `backdrop-filter`, which is supported across all modern browsers (Safari, Chrome, Edge, Firefox). In legacy browsers without `backdrop-filter`, the semi-transparent background color degrades gracefully with solid alpha blending.
 
 
 

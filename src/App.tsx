@@ -205,6 +205,25 @@ export default function App() {
     setExpenseFilterDateTo('');
   }, [activeTripId]);
 
+  // Track scroll on active tab-pane to collapse and compact the glass header
+  const [isHeaderScrolled, setIsHeaderScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = (e: Event) => {
+      const target = e.target;
+      if (target instanceof HTMLElement && target.classList.contains('tab-pane')) {
+        setIsHeaderScrolled(target.scrollTop > 15);
+      }
+    };
+
+    document.addEventListener('scroll', handleScroll, { capture: true, passive: true });
+    return () => document.removeEventListener('scroll', handleScroll, true);
+  }, []);
+
+  useEffect(() => {
+    setIsHeaderScrolled(false);
+  }, [activeTripId, activeTab]);
+
   const activeTripExpenses = useMemo(() => {
     return expenses
       .filter((e) => e.tripId === activeTripId)
@@ -959,8 +978,8 @@ export default function App() {
         />
       ) : (
         /* Screen 2: Active Trip Dashboard */
-        <div className="fade-in" style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, overflow: 'hidden' }}>
-          <header className="app-header trip-dashboard-header">
+        <div className="trip-dashboard-container fade-in">
+          <header className={`app-header trip-dashboard-header ${isHeaderScrolled ? 'is-scrolled' : ''}`}>
             <div className="app-header-top">
               <div className="app-title-group">
                 <span className="app-eyebrow">
