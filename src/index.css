@@ -731,74 +731,196 @@ input[type="date"].input-field {
   left: 0;
   right: 0;
   z-index: 40;
+  padding-top: calc(14px + var(--safe-top, 0px));
+  padding-bottom: 12px;
+  padding-left: max(20px, var(--safe-left, 20px));
+  padding-right: max(20px, var(--safe-right, 20px));
   background-color: var(--bg-header-glass);
-  backdrop-filter: blur(16px) saturate(170%);
-  -webkit-backdrop-filter: blur(16px) saturate(170%);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
   border-bottom: 1px solid rgba(242, 236, 220, 0.08);
-  box-shadow: 0 4px 16px -4px rgba(0, 0, 0, 0.25);
-  transition: padding 0.28s cubic-bezier(0.4, 0, 0.2, 1),
-              background-color 0.28s ease,
-              box-shadow 0.28s ease,
-              border-color 0.28s ease;
+  box-shadow: 0 4px 20px -4px rgba(0, 0, 0, 0.28);
+  transition: padding 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+              background-color 0.35s ease,
+              box-shadow 0.35s ease,
+              border-color 0.35s ease;
+  will-change: padding, background-color, box-shadow;
 }
 
 .trip-dashboard-header.is-scrolled {
   padding-top: calc(9px + var(--safe-top, 0px));
   padding-bottom: 9px;
   background-color: var(--bg-header-glass-scrolled);
-  box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.45), 0 2px 6px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 10px 30px -6px rgba(0, 0, 0, 0.45), 0 2px 8px rgba(0, 0, 0, 0.25);
   border-bottom-color: rgba(242, 236, 220, 0.14);
 }
 
+.trip-dashboard-header .app-header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  min-height: 38px;
+}
+
 .trip-dashboard-header .app-title-group {
-  transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.trip-dashboard-header.is-scrolled .app-title-group {
+  transform: translateY(2px);
+}
+
+.app-title-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
 }
 
 .trip-dashboard-header .app-logo {
-  transition: font-size 0.28s cubic-bezier(0.4, 0, 0.2, 1), line-height 0.28s ease;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin: 0;
+  transform-origin: left center;
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), color 0.2s ease;
 }
 
 .trip-dashboard-header.is-scrolled .app-logo {
-  font-size: 18px !important;
-  line-height: 1.2;
+  transform: scale(0.82) translateY(-1px);
 }
 
 .trip-dashboard-header .app-eyebrow {
-  max-height: 24px;
-  opacity: 1;
-  transform-origin: top left;
-  transition: max-height 0.24s ease, opacity 0.2s ease, margin 0.24s ease, transform 0.24s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11.5px;
+  font-weight: 500;
+  color: rgba(242, 236, 220, 0.65);
+  margin-bottom: 2px;
+  transform-origin: left top;
+  transition: opacity 0.22s ease,
+              transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+              height 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+              margin 0.3s ease;
+  height: 16px;
+  overflow: hidden;
 }
 
 .trip-dashboard-header.is-scrolled .app-eyebrow {
-  max-height: 0;
   opacity: 0;
+  height: 0;
   margin-bottom: 0;
-  transform: translateY(-4px);
+  transform: translateY(-6px) scale(0.92);
   pointer-events: none;
-  overflow: hidden;
+}
+
+.app-title-compact-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(242, 236, 220, 0.8);
+  opacity: 0;
+  transform: translateX(-4px) scale(0.95);
+  pointer-events: none;
+  transition: opacity 0.25s ease, transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.trip-dashboard-header.is-scrolled .app-title-compact-badge {
+  opacity: 1;
+  transform: translateX(0) scale(1);
+  pointer-events: auto;
+}
+
+.compact-badge-sep {
+  color: rgba(242, 236, 220, 0.4);
+}
+
+.compact-badge-currency {
+  color: var(--color-primary-teal, #00BFA5);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  background: rgba(0, 191, 165, 0.14);
+  padding: 1px 6px;
+  border-radius: 4px;
+  border: 1px solid rgba(0, 191, 165, 0.28);
+}
+
+.compact-sync-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  display: inline-block;
+  margin-left: 2px;
+}
+.compact-sync-dot.synced {
+  background-color: #22C55E;
+  box-shadow: 0 0 6px rgba(34, 197, 94, 0.6);
+}
+.compact-sync-dot.out-of-sync {
+  background-color: #F97316;
+  box-shadow: 0 0 6px rgba(249, 115, 22, 0.6);
+}
+.compact-sync-dot.offline {
+  background-color: #94A3B8;
+}
+.compact-sync-dot.session-expired {
+  background-color: #EF4444;
+  box-shadow: 0 0 6px rgba(239, 68, 68, 0.6);
 }
 
 .trip-dashboard-header .app-header-stats {
-  max-height: 48px;
-  opacity: 1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(242, 236, 220, 0.08);
+  font-size: 12px;
+  color: rgba(242, 236, 220, 0.72);
+  transform-origin: top center;
+  transition: opacity 0.2s ease,
+              transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+              height 0.32s cubic-bezier(0.16, 1, 0.3, 1),
+              margin 0.3s ease,
+              padding 0.3s ease,
+              border-color 0.2s ease;
+  height: 28px;
   overflow: hidden;
-  transition: max-height 0.28s cubic-bezier(0.4, 0, 0.2, 1),
-              opacity 0.22s ease,
-              margin-top 0.28s ease,
-              padding-top 0.28s ease,
-              border-color 0.22s ease,
-              transform 0.28s ease;
 }
 
 .trip-dashboard-header.is-scrolled .app-header-stats {
-  max-height: 0;
   opacity: 0;
+  height: 0;
   margin-top: 0;
   padding-top: 0;
   border-top-color: transparent;
-  transform: translateY(-8px);
+  transform: translateY(-8px) scale(0.98);
   pointer-events: none;
+}
+
+.trip-dashboard-header .secondary-btn {
+  transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
+  border-radius: 8px;
+}
+.trip-dashboard-header .secondary-btn:hover {
+  background: rgba(242, 236, 220, 0.14) !important;
+  border-color: rgba(242, 236, 220, 0.45) !important;
+}
+.trip-dashboard-header .secondary-btn:active {
+  transform: scale(0.96);
 }
 
 /* Native iOS glass header: MainViewController.swift renders a real
@@ -2155,8 +2277,8 @@ input:checked + .toggle-slider:before {
   overflow-y: auto;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
-  mask-image: linear-gradient(to bottom, transparent 0px, transparent calc(var(--safe-top, 0px) + 6px), black calc(var(--safe-top, 0px) + 38px), black 100%);
-  -webkit-mask-image: linear-gradient(to bottom, transparent 0px, transparent calc(var(--safe-top, 0px) + 6px), black calc(var(--safe-top, 0px) + 38px), black 100%);
+  mask-image: linear-gradient(to bottom, transparent 0px, transparent calc(var(--safe-top, 0px) + 8px), black calc(var(--safe-top, 0px) + 48px), black 100%);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0px, transparent calc(var(--safe-top, 0px) + 8px), black calc(var(--safe-top, 0px) + 48px), black 100%);
 }
 /* .nav-tabs is a floating overlay on iOS (see above) and no longer
    reserves its own space in flex flow, so content needs this extra

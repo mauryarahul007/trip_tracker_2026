@@ -205,20 +205,44 @@ export default function App() {
     setExpenseFilterDateTo('');
   }, [activeTripId]);
 
-  // Track scroll on active tab-pane to collapse and compact the glass header
+  // Track scroll on active tab-pane with directional hysteresis for smooth fluid header morphing
   const [isHeaderScrolled, setIsHeaderScrolled] = useState(false);
 
   useEffect(() => {
+    let lastScrollTop = 0;
+    let ticking = false;
+
     const handleScroll = (e: Event) => {
       const target = e.target;
-      if (target instanceof HTMLElement && target.classList.contains('tab-pane')) {
-        setIsHeaderScrolled(target.scrollTop > 15);
+      if (!(target instanceof HTMLElement) || !target.classList.contains('tab-pane')) {
+        return;
+      }
+
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          const currentScrollTop = target.scrollTop;
+
+          if (currentScrollTop <= 15) {
+            // Reached the top of the scroll container: always expand
+            setIsHeaderScrolled(false);
+          } else if (currentScrollTop > 45 && !isHeaderScrolled) {
+            // Scrolled down past threshold: smoothly collapse into compact glass mode
+            setIsHeaderScrolled(true);
+          } else if (currentScrollTop < lastScrollTop - 25 && isHeaderScrolled && currentScrollTop < 120) {
+            // Scrolling up near top of page: expand early for a natural fluid feel
+            setIsHeaderScrolled(false);
+          }
+
+          lastScrollTop = Math.max(0, currentScrollTop);
+          ticking = false;
+        });
+        ticking = true;
       }
     };
 
     document.addEventListener('scroll', handleScroll, { capture: true, passive: true });
     return () => document.removeEventListener('scroll', handleScroll, true);
-  }, []);
+  }, [isHeaderScrolled]);
 
   useEffect(() => {
     setIsHeaderScrolled(false);
@@ -986,7 +1010,14 @@ export default function App() {
                   <IconCalendar size={12} className="icon-sm" />
                   {formatDateRange(activeTrip?.startDate || '', activeTrip?.endDate || '')} · {activeTrip?.baseCurrency}
                 </span>
-                <h2 className="app-logo" style={{ fontSize: '24px', color: '#F2ECDC' }}>{activeTrip?.name}</h2>
+                <div className="app-title-row">
+                  <h2 className="app-logo" style={{ color: '#F2ECDC' }}>{activeTrip?.name}</h2>
+                  <span className="app-title-compact-badge" aria-hidden={!isHeaderScrolled}>
+                    <span className="compact-badge-sep">·</span>
+                    <span className="compact-badge-currency">{activeTrip?.baseCurrency}</span>
+                    <span className={`compact-sync-dot ${syncStatus}`} title={syncStatusLabel} />
+                  </span>
+                </div>
               </div>
               <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexShrink: 0 }}>
                 <button

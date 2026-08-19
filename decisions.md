@@ -439,6 +439,26 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - Upgrading pinned third-party actions in the future requires manually updating the commit SHA alongside version comments rather than relying on automatic tag rolling. This trade-off was accepted because it guarantees complete supply chain immutability and protects deployment private keys against upstream repository tampering.
 
+---
+
+## 35. Editorial Fluid Morph Header Architecture with Directional Hysteresis
+* **Context:** When scrolling through transactions, members, analytics, or settings tabs, the header previously shrank via a rigid binary threshold (`scrollTop > 15px`) and CPU-intensive `max-height` transitions. This caused aggressive scroll jitter/flickering near the threshold, layout reflow stutter, and the complete disappearance of the sync status pill.
+* **Decision:** Implemented an **Editorial Fluid Morph** header architecture with GPU-accelerated transforms and directional hysteresis.
+* **Pattern/Implementation:**
+  - **Directional Hysteresis & rAF Scroll Engine (`src/App.tsx`)**:
+    - Replaced the 15px binary check with a directional hysteresis tracker throttled via `window.requestAnimationFrame`.
+    - Expands at the top (`scrollTop <= 15px`), collapses smoothly on deliberate downward scroll (`scrollTop > 45px`), and expands early on upward scrolling near the top (`currentScrollTop < 120px` with 25px upward delta) to eliminate threshold bouncing and jitter.
+  - **Inline Compact Metadata Badge (`src/App.tsx`)**:
+    - Embedded an `.app-title-compact-badge` inside `.app-title-row` holding the currency code and live sync status dot.
+    - Fades and translates in seamlessly when scrolled so crucial connectivity/sync status is never lost.
+  - **GPU-Accelerated Morph & Spring Curves (`src/index.css`)**:
+    - Replaced `max-height` transitions with GPU-accelerated `transform: scale(0.82) translateY(-1px)` and `opacity` transitions using a custom spring curve (`cubic-bezier(0.16, 1, 0.3, 1)`).
+    - Upgraded glassmorphism to `backdrop-filter: blur(20px) saturate(180%)` with deep ambient drop shadows.
+    - Aligned `.tab-pane` linear gradient mask to smoothly dissolve content under the compact header bar.
+* **Trade-offs Accepted:**
+  - Title scaling uses GPU `transform: scale(...)` with `transform-origin: left center` rather than CSS font-size transitions, which guarantees 60/120fps rendering and eliminates layout reflows across all mobile and desktop browsers.
+
+
 
 
 
