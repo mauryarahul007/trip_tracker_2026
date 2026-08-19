@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { useTripStore } from './store/tripStore';
+import { useTripStore, getTripNotificationRecipients } from './store/tripStore';
 import { useAuthStore } from './store/authStore';
 import { calculateSettlements } from './utils/settlement';
 import type { Expense, Trip, Group, Member } from './types';
@@ -543,13 +543,28 @@ export default function App() {
       // Only fires for members added directly with a known account (e.g.
       // picked from a "people you've traveled with before" suggestion) —
       // a bare placeholder member has no linked user to notify yet, and
-      // gets covered separately once they actually join via the trip code.
+      // gets covered separately once they actually join via the trip code
+      // (JoinTripScreen's own member_joined notification already covers
+      // telling the existing members about *that* case).
       if (linkedUserId && activeTripId) {
         sendPushNotification(
           [linkedUserId],
           activeTrip?.name || 'Trip Tracker',
-          `You were added to ${activeTrip?.name || 'a trip'}`,
-          { type: 'member_added' },
+          'member_added',
+          undefined,
+          activeTripId
+        );
+
+        // Everyone else already on the trip should hear about the new
+        // member too, not just the person who added them.
+        const existingRecipients = getTripNotificationRecipients(trips, members, activeTripId, userId || '').filter(
+          (recipientId) => recipientId !== linkedUserId
+        );
+        sendPushNotification(
+          existingRecipients,
+          activeTrip?.name || 'Trip Tracker',
+          'member_added_notice',
+          { memberName: nameTrimmed },
           activeTripId
         );
       }

@@ -62,13 +62,10 @@ export function subscribeToNotifications(userId: string, onInsert: (notification
       'postgres_changes',
       { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${userId}` },
       (payload) => {
-        console.log('[notifications] realtime INSERT received', payload);
         onInsert(mapNotification(payload.new as NotificationRow));
       }
     )
-    .subscribe((status, err) => {
-      console.log('[notifications] realtime channel status:', status, err ?? '');
-    });
+    .subscribe();
 
   return () => {
     supabase.removeChannel(channel);

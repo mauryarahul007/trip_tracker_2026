@@ -10,6 +10,7 @@ import {
   subscribeToNotifications,
 } from '../services/notificationsApi';
 import { showBrowserNotification } from '../utils/webNotifications';
+import { renderNotificationBody } from '../utils/notificationText';
 import { useTripStore } from './tripStore';
 
 interface NotificationsStore {
@@ -55,7 +56,7 @@ export const useNotificationsStore = create<NotificationsStore>((set, get) => ({
         notifications: [notification, ...state.notifications],
         unreadCount: state.unreadCount + 1,
       }));
-      showBrowserNotification(notification.title, notification.body);
+      showBrowserNotification(notification.title, renderNotificationBody(notification));
 
       // Trip list is loaded once at boot with no other live signal for
       // "someone just added you to a trip" (or removed one) — without

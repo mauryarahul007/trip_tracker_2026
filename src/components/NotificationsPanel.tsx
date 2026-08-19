@@ -5,6 +5,7 @@ import { useNotificationsStore } from '../store/notificationsStore';
 import { useTripStore } from '../store/tripStore';
 import { useHistoryBack } from '../utils/useHistoryBack';
 import { getWebNotificationPermission, requestWebNotificationPermission } from '../utils/webNotifications';
+import { renderNotificationBody } from '../utils/notificationText';
 import {
   IconClose,
   IconTrash,
@@ -37,8 +38,12 @@ function getNotificationMeta(type?: string): { icon: React.ReactNode; colorClass
     case 'expense_updated':
       return { icon: <IconEdit size={17} />, colorClass: 'squircle-amber' };
     case 'expense_deleted':
+    case 'trip_deleted':
       return { icon: <IconTrash size={17} />, colorClass: 'squircle-rose' };
+    case 'expense_restored':
+      return { icon: <IconSparkles size={17} />, colorClass: 'squircle-teal' };
     case 'member_added':
+    case 'member_added_notice':
     case 'member_joined':
       return { icon: <IconMembers size={17} />, colorClass: 'squircle-purple' };
     case 'settlement':
@@ -165,8 +170,10 @@ function NotificationCard({
               {/* The event itself (e.g. "Flight tickets — INR 24,745 added") is
                   the useful headline here — notification.title is just the
                   trip name, which the badge right next to it already shows,
-                  so rendering both repeated the same text twice in one row. */}
-              <h4 className="notif-card-title">{notification.body}</h4>
+                  so rendering both repeated the same text twice in one row.
+                  Rendered from type+data rather than a stored sentence — see
+                  src/utils/notificationText.ts. */}
+              <h4 className="notif-card-title">{renderNotificationBody(notification)}</h4>
               {tripName && (
                 <span className={`notif-trip-badge ${isCurrentTrip ? 'current' : 'other'}`}>
                   {tripName}

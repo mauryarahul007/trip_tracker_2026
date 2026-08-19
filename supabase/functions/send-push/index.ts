@@ -10,10 +10,42 @@ const SETTLEMENT_REMINDER_COOLDOWN_HOURS = 24;
 
 interface SendPushRequest {
   userIds: string[];
-  title: string;
-  body: string;
-  data?: Record<string, string>;
+  tripName: string;
+  type: string;
+  params?: Record<string, string>;
   tripId?: string;
+}
+
+// Mirrored in src/utils/notificationText.ts for the in-app panel — kept as
+// two small, independent copies (Deno edge function vs. browser bundle)
+// rather than a shared package, since duplicating one switch statement is
+// far cheaper than a cross-runtime shared module for an app this size.
+// Only this function's output is ever sent to FCM/stored as a push
+// payload; the DB row itself stores type+params, not this rendered text.
+function renderNotification(type: string, tripName: string, params: Record<string, string>): { title: string; body: string } {
+  const title = tripName || 'Trip Tracker';
+  switch (type) {
+    case 'expense_added':
+      return { title, body: `${params.expenseTitle} — ${params.currency} ${params.amount} added` };
+    case 'expense_updated':
+      return { title, body: `${params.expenseTitle} was updated` };
+    case 'expense_deleted':
+      return { title, body: `${params.expenseTitle} was deleted` };
+    case 'expense_restored':
+      return { title, body: `${params.expenseTitle} was restored` };
+    case 'member_added':
+      return { title, body: `You were added to ${tripName || 'a trip'}` };
+    case 'member_added_notice':
+      return { title, body: `${params.memberName} was added to the trip` };
+    case 'member_joined':
+      return { title, body: `${params.memberName} joined the trip` };
+    case 'settlement_reminder':
+      return { title, body: `You owe ${params.toLabel} ${params.currency}${params.amount} for this trip` };
+    case 'trip_deleted':
+      return { title, body: `${tripName || 'A trip'} was deleted` };
+    default:
+      return { title, body: 'You have a new notification' };
+  }
 }
 
 const corsHeaders = {
@@ -63,10 +95,11 @@ async function handleSendPush(req: Request): Promise<Response> {
   } catch {
     return jsonResponse({ error: 'Invalid JSON body' }, 400);
   }
-  const { userIds, title, body, data, tripId } = requestBody;
-  if (!Array.isArray(userIds) || userIds.length === 0 || !title || !body) {
-    return jsonResponse({ error: 'userIds, title, and body are required' }, 400);
+  const { userIds, tripName, type, params, tripId } = requestBody;
+  if (!Array.isArray(userIds) || userIds.length === 0 || !type) {
+    return jsonResponse({ error: 'userIds and type are required' }, 400);
   }
+  const notificationParams = params ?? {};
 
   const supabaseAdmin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
 
@@ -110,14 +143,14 @@ async function handleSendPush(req: Request): Promise<Response> {
   // only this type needs throttling. Checked against the notifications
   // table itself rather than client-side state, since that can't be
   // bypassed by just reloading the page.
-  if (data?.type === 'settlement_reminder' && tripId) {
+  if (type === 'settlement_reminder' && tripId) {
     const cooldownStart = new Date(Date.now() - SETTLEMENT_REMINDER_COOLDOWN_HOURS * 60 * 60 * 1000).toISOString();
     const { data: recentReminders, error: recentError } = await supabaseAdmin
       .from('notifications')
       .select('id')
       .eq('trip_id', tripId)
       .in('user_id', filteredUserIds)
-      .contains('data', { type: 'settlement_reminder', fromMemberId: data.fromMemberId, toMemberId: data.toMemberId })
+      .contains('data', { type: 'settlement_reminder', fromMemberId: notificationParams.fromMemberId, toMemberId: notificationParams.toMemberId })
       .gte('created_at', cooldownStart)
       .limit(1);
     if (recentError) {
@@ -135,13 +168,17 @@ async function handleSendPush(req: Request): Promise<Response> {
   // device — this is what backs the in-app notifications panel (web and
   // native both read from here), while the FCM send below is purely the
   // best-effort "also try to push it to a device right now" path.
+  // title stores just the trip name (an affected value, not a message);
+  // body is intentionally left null — the panel renders display text from
+  // type+data client-side (src/utils/notificationText.ts) instead of
+  // storing the same sentence twice.
   const { error: notificationInsertError } = await supabaseAdmin.from('notifications').insert(
     filteredUserIds.map((userId) => ({
       user_id: userId,
       trip_id: tripId ?? null,
-      title,
-      body,
-      data: data ?? null,
+      title: tripName || 'Trip Tracker',
+      body: null,
+      data: { type, ...notificationParams },
     }))
   );
   if (notificationInsertError) {
@@ -165,6 +202,7 @@ async function handleSendPush(req: Request): Promise<Response> {
     scopes: ['https://www.googleapis.com/auth/firebase.messaging'],
   });
   const accessToken = await auth.getAccessToken();
+  const { title: pushTitle, body: pushBody } = renderNotification(type, tripName, notificationParams);
 
   let sent = 0;
   for (const { id, fcm_token } of tokens) {
@@ -179,8 +217,8 @@ async function handleSendPush(req: Request): Promise<Response> {
         body: JSON.stringify({
           message: {
             token: fcm_token,
-            notification: { title, body },
-            data: data || {},
+            notification: { title: pushTitle, body: pushBody },
+            data: { type, ...notificationParams },
           },
         }),
       }

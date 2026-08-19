@@ -181,12 +181,11 @@ function TransferRow({
     const fromLinkedUserId = members[t.fromMemberId]?.linkedUserId;
     if (!fromLinkedUserId) return;
     setReminderStatus('sending');
-    const resolvedTripName = tripName || 'this trip';
     const result = await sendPushNotification(
       [fromLinkedUserId],
-      `Settlement reminder • ${resolvedTripName}`,
-      `You owe ${t.toLabel} ${currencySymbol}${t.amount.toFixed(2)} for "${resolvedTripName}"`,
-      { type: 'settlement_reminder', fromMemberId: t.fromMemberId, toMemberId: t.toMemberId, tripName: resolvedTripName },
+      tripName || 'Trip Tracker',
+      'settlement_reminder',
+      { toLabel: t.toLabel, amount: t.amount.toFixed(2), currency: currencySymbol, fromMemberId: t.fromMemberId, toMemberId: t.toMemberId },
       tripId
     );
     setReminderStatus(result.ok ? 'sent' : result.rateLimited ? 'rateLimited' : 'idle');

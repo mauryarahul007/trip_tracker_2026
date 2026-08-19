@@ -544,8 +544,8 @@ export const useTripStore = create<TripStore>()(
               sendPushNotification(
                 recipients,
                 trip?.name || 'Trip Tracker',
-                `${savedExpense.title} — ${savedExpense.currency} ${savedExpense.amount.toFixed(2)} added`,
-                { type: 'expense_added' },
+                'expense_added',
+                { expenseTitle: savedExpense.title, amount: savedExpense.amount.toFixed(2), currency: savedExpense.currency },
                 tripId
               );
             }
@@ -766,8 +766,8 @@ export const useTripStore = create<TripStore>()(
       sendPushNotification(
         recipients,
         deletedTrip?.name || 'Trip Tracker',
-        `${deletedTrip?.name || 'A trip'} was deleted`,
-        { type: 'trip_deleted' },
+        'trip_deleted',
+        undefined,
         id
       );
 
@@ -1154,8 +1154,8 @@ export const useTripStore = create<TripStore>()(
         sendPushNotification(
           recipients,
           trip?.name || 'Trip Tracker',
-          `${savedExpense.title} — ${savedExpense.currency} ${savedExpense.amount.toFixed(2)} added`,
-          { type: 'expense_added' },
+          'expense_added',
+          { expenseTitle: savedExpense.title, amount: savedExpense.amount.toFixed(2), currency: savedExpense.currency },
           tripId
         );
       };
@@ -1248,8 +1248,8 @@ export const useTripStore = create<TripStore>()(
           sendPushNotification(
             recipients,
             trip?.name || 'Trip Tracker',
-            `${updatedExpense.title} was updated`,
-            { type: 'expense_updated' },
+            'expense_updated',
+            { expenseTitle: updatedExpense.title },
             tripId
           );
         } catch (e) {
@@ -1287,8 +1287,8 @@ export const useTripStore = create<TripStore>()(
           sendPushNotification(
             recipients,
             trip?.name || 'Trip Tracker',
-            `${existing.title} was deleted`,
-            { type: 'expense_deleted' },
+            'expense_deleted',
+            { expenseTitle: existing.title },
             existing.tripId
           );
         } catch (e) {
@@ -1338,8 +1338,8 @@ export const useTripStore = create<TripStore>()(
           sendPushNotification(
             recipients,
             trip?.name || 'Trip Tracker',
-            `${existing.title} was restored`,
-            { type: 'expense_restored' },
+            'expense_restored',
+            { expenseTitle: existing.title },
             existing.tripId
           );
         } catch (e) {
