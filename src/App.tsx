@@ -23,6 +23,7 @@ import { NavTabs } from './components/NavTabs';
 import { ShareTripModal } from './components/ShareTripModal';
 import { NotificationsPanel } from './components/NotificationsPanel';
 import { NotificationsBellButton } from './components/NotificationsBellButton';
+import { InAppNotificationBanner } from './components/InAppNotificationBanner';
 import { FitHeading } from './components/FitHeading';
 import { IconCalendar, IconChevronLeft, IconShare, IconPlus } from './components/Icons';
 import { formatDateRange } from './utils/dateRange';
@@ -1362,6 +1363,7 @@ export default function App() {
           native too, reached via the "Notifications" row in Settings
           instead of the header bell button there. */}
       <NotificationsPanel onRequestConfirm={setConfirmRequest} />
+      <InAppNotificationBanner />
     </div>
   );
 }

@@ -5,7 +5,7 @@ import { useNotificationsStore } from '../store/notificationsStore';
 import { useTripStore } from '../store/tripStore';
 import { useHistoryBack } from '../utils/useHistoryBack';
 import { getWebNotificationPermission, requestWebNotificationPermission } from '../utils/webNotifications';
-import { renderNotificationBody } from '../utils/notificationText';
+import { renderNotificationBody, getNotificationHeadline } from '../utils/notificationText';
 import {
   IconClose,
   IconTrash,
@@ -31,7 +31,7 @@ function relativeTime(iso: string): string {
   return `${diffDay}d ago`;
 }
 
-function getNotificationMeta(type?: string): { icon: React.ReactNode; colorClass: string } {
+export function getNotificationMeta(type?: string): { icon: React.ReactNode; colorClass: string } {
   switch (type) {
     case 'expense_added':
       return { icon: <IconExpenses size={17} />, colorClass: 'squircle-teal' };
@@ -55,20 +55,6 @@ function getNotificationMeta(type?: string): { icon: React.ReactNode; colorClass
   }
 }
 
-const TYPE_HEADLINES: Record<string, string> = {
-  expense_added: 'Expense Added',
-  expense_updated: 'Expense Updated',
-  expense_deleted: 'Expense Deleted',
-  expense_restored: 'Expense Restored',
-  trip_deleted: 'Trip Deleted',
-  member_added: 'Member Added',
-  member_added_notice: 'Member Added',
-  member_joined: 'Member Joined',
-  settlement_reminder: 'Settlement Reminder',
-  settlement: 'Settlement Updated',
-  settle: 'Settlement Updated',
-};
-
 // headline (short action label) + trip badge + detail body, so the trip
 // name never has to repeat inside the sentence itself. The detail body
 // comes from renderNotificationBody (src/utils/notificationText.ts),
@@ -80,7 +66,7 @@ function getNotificationDisplay(
   resolvedTripName: string | null
 ): { headline: string; badge: string | null; body: string } {
   const type = notification.data?.type;
-  const headline = (type && TYPE_HEADLINES[type]) || 'Notification';
+  const headline = getNotificationHeadline(type);
   const body = renderNotificationBody(notification);
   const badge =
     resolvedTripName && resolvedTripName.toLowerCase() !== headline.toLowerCase() ? resolvedTripName : null;

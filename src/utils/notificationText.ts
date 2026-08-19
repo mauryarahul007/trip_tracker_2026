@@ -1,5 +1,23 @@
 import type { AppNotification } from '../types';
 
+export const NOTIFICATION_TYPE_HEADLINES: Record<string, string> = {
+  expense_added: 'Expense Added',
+  expense_updated: 'Expense Updated',
+  expense_deleted: 'Expense Deleted',
+  expense_restored: 'Expense Restored',
+  trip_deleted: 'Trip Deleted',
+  member_added: 'Member Added',
+  member_added_notice: 'Member Added',
+  member_joined: 'Member Joined',
+  settlement_reminder: 'Settlement Reminder',
+  settlement: 'Settlement Updated',
+  settle: 'Settlement Updated',
+};
+
+export function getNotificationHeadline(type?: string): string {
+  return (type && NOTIFICATION_TYPE_HEADLINES[type]) || 'Notification';
+}
+
 // Mirrored in supabase/functions/send-push/index.ts's renderNotification
 // (Deno, for the FCM push payload) — two small independent copies rather
 // than a shared package across the browser/Deno runtime split, since a

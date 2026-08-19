@@ -2035,6 +2035,55 @@ input:checked + .toggle-slider:before {
   .postmark-toast { animation: none; }
 }
 
+/* In-app notification banner — native's stand-in for a system push banner
+   while the app is foregrounded (see InAppNotificationBanner.tsx). */
+.in-app-notif-banner {
+  position: fixed;
+  top: calc(10px + var(--safe-top, 0px));
+  left: max(12px, var(--safe-left, 12px));
+  right: max(12px, var(--safe-right, 12px));
+  z-index: 10000;
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-md);
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 12px 32px -10px rgba(28, 42, 56, 0.4);
+  cursor: pointer;
+  touch-action: none;
+  transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.2s ease;
+  animation: inAppBannerIn 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.in-app-notif-banner-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+  font-size: 13.5px;
+}
+.in-app-notif-banner-text strong {
+  color: var(--text-primary);
+  font-size: 14px;
+}
+.in-app-notif-banner-text span:last-child {
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@keyframes inAppBannerIn {
+  from { opacity: 0; transform: translateY(-16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .in-app-notif-banner { animation: none; }
+}
+
 /* Destructive confirm — tap-to-arm, tap-to-confirm wax seal instead of a
    plain single tap. The armed state pulses to signal it's waiting for the
    second tap. */

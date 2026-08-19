@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { Capacitor } from '@capacitor/core';
 import type { AppNotification } from '../types';
 import {
   deleteAllNotifications,
@@ -19,6 +20,12 @@ interface NotificationsStore {
   userId: string | null;
   unsubscribe: (() => void) | null;
   isPanelOpen: boolean;
+  // Native has no real push while the app is foregrounded (the free
+  // personal-team dev builds this app is signed with can't hold the APNs
+  // entitlement at all) — this is the in-app banner shown instead,
+  // fed by the same Realtime subscription that drives showBrowserNotification
+  // on web.
+  activeBanner: AppNotification | null;
 
   initialize: (userId: string) => void;
   teardown: () => void;
@@ -30,6 +37,7 @@ interface NotificationsStore {
   clearAll: () => void;
   openPanel: () => void;
   closePanel: () => void;
+  dismissBanner: () => void;
 }
 
 export const useNotificationsStore = create<NotificationsStore>((set, get) => ({
@@ -38,6 +46,7 @@ export const useNotificationsStore = create<NotificationsStore>((set, get) => ({
   userId: null,
   unsubscribe: null,
   isPanelOpen: false,
+  activeBanner: null,
 
   initialize: (userId) => {
     if (get().userId === userId) return;
@@ -56,7 +65,11 @@ export const useNotificationsStore = create<NotificationsStore>((set, get) => ({
         notifications: [notification, ...state.notifications],
         unreadCount: state.unreadCount + 1,
       }));
-      showBrowserNotification(notification.title, renderNotificationBody(notification));
+      if (Capacitor.isNativePlatform()) {
+        set({ activeBanner: notification });
+      } else {
+        showBrowserNotification(notification.title, renderNotificationBody(notification));
+      }
 
       // Trip list is loaded once at boot with no other live signal for
       // "someone just added you to a trip" (or removed one) — without
@@ -154,4 +167,5 @@ export const useNotificationsStore = create<NotificationsStore>((set, get) => ({
 
   openPanel: () => set({ isPanelOpen: true }),
   closePanel: () => set({ isPanelOpen: false }),
+  dismissBanner: () => set({ activeBanner: null }),
 }));
