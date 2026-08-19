@@ -63,16 +63,20 @@ export const useNotificationsStore = create<NotificationsStore>((set, get) => ({
       // this, the change silently doesn't show up until the next full
       // app relaunch.
       const notifType = notification.data?.type;
-      if (notifType === 'member_added' || notifType === 'member_joined' || notifType === 'trip_deleted') {
-        useTripStore.getState().refreshTrips();
-      }
-
-      // If the trip someone just deleted is the one currently open, its
-      // data is gone server-side — leaving the user looking at it would
-      // just mean broken refetches from here on, so back them out to the
-      // trip list instead.
-      if (notifType === 'trip_deleted' && notification.tripId === useTripStore.getState().activeTripId) {
-        useTripStore.getState().selectTrip(null);
+      if (notifType === 'trip_deleted') {
+        const deletedTripId = notification.tripId;
+        const deletedTripName = notification.data?.tripName;
+        useTripStore.setState((state) => ({
+          trips: state.trips.filter(
+            (t) => (deletedTripId ? t.id !== deletedTripId : true) && (deletedTripName ? t.name !== deletedTripName : true)
+          ),
+        }));
+        if (deletedTripId && deletedTripId === useTripStore.getState().activeTripId) {
+          useTripStore.getState().selectTrip(null);
+        }
+        useTripStore.getState().refreshTrips(true);
+      } else if (notifType === 'member_added' || notifType === 'member_joined') {
+        useTripStore.getState().refreshTrips(true);
       }
 
       // Only worth refetching if this is the trip currently open — no

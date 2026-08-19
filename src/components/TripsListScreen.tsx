@@ -7,6 +7,7 @@ import { formatTripStamp } from '../utils/dateRange';
 import { initial } from '../utils/initials';
 import { avatarColorForName } from '../utils/avatarColor';
 import { TurnstileWidget } from './TurnstileWidget';
+import { useTripStore } from '../store/tripStore';
 
 type Props = {
   trips: Trip[];
@@ -54,6 +55,7 @@ export function TripsListScreen({
   onOpenSettings,
 }: Props) {
   const navigate = useNavigate();
+  const userId = useTripStore((s) => s.userId);
   const [showJoinTrip, setShowJoinTrip] = useState(false);
   const [joinCode, setJoinCode] = useState('');
   const [honeypotVal, setHoneypotVal] = useState('');
@@ -283,18 +285,20 @@ export function TripsListScreen({
                       >
                         <IconArchive size={15} className="icon-sm" />
                       </button>
-                      <button
-                        className="secondary-btn"
-                        style={{ padding: '8px', color: 'var(--color-danger)', borderColor: 'rgba(184,69,46,0.2)' }}
-                        aria-label="Delete trip"
-                        title="Delete trip"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onDeleteTrip(trip);
-                        }}
-                      >
-                        <IconTrash size={15} className="icon-sm" />
-                      </button>
+                      {(!trip.ownerId || !userId || trip.ownerId === userId || Boolean(trip.adminMemberIds && trip.memberIds.some((mid) => members[mid]?.linkedUserId === userId && trip.adminMemberIds?.includes(mid)))) && (
+                        <button
+                          className="secondary-btn"
+                          style={{ padding: '8px', color: 'var(--color-danger)', borderColor: 'rgba(184,69,46,0.2)' }}
+                          aria-label="Delete trip"
+                          title="Delete trip"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onDeleteTrip(trip);
+                          }}
+                        >
+                          <IconTrash size={15} className="icon-sm" />
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>

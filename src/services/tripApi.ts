@@ -211,8 +211,11 @@ export async function archiveTripRow(id: string, archived: boolean): Promise<voi
 }
 
 export async function deleteTripRow(id: string): Promise<void> {
-  const { error } = await supabase.from('trips').delete().eq('id', id);
+  const { data, error } = await supabase.from('trips').delete().eq('id', id).select('id');
   if (error) throw error;
+  if (!data || data.length === 0) {
+    throw new Error('Trip could not be deleted: permission denied or trip not found');
+  }
 }
 
 export async function deleteAllMyTrips(ownerId: string): Promise<void> {
