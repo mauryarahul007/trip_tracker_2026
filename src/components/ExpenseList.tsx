@@ -37,6 +37,9 @@ function ExpenseAvatar({ member, size = 22, muted = false }: { member: Member | 
         alt=""
         title={label}
         referrerPolicy="no-referrer"
+        loading="lazy"
+        width={size}
+        height={size}
         style={{ ...commonStyle, objectFit: 'cover' }}
       />
     );
@@ -596,7 +599,7 @@ export function ExpenseList({
                           // since one is destructive and a mis-tap there
                           // isn't recoverable the way a mis-tap elsewhere
                           // would be.
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0 }}>
                             {!exp.title.startsWith('Settlement:') && (
                               <button
                                 className="row-icon-btn"

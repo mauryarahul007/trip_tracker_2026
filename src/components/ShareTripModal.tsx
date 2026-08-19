@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { Trip } from '../types';
 import { IconClose, IconCopy, IconCheck } from './Icons';
 
@@ -16,6 +16,11 @@ export function ShareTripModal({ trip, onClose }: Props) {
   const [copied, setCopied] = useState<'link' | 'code' | null>(null);
   const hasJoinCode = Boolean(trip.joinCode && trip.joinCode.trim().length > 0);
   const joinLink = hasJoinCode ? buildJoinLink(trip.joinCode) : '';
+  const sheetRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    sheetRef.current?.focus();
+  }, []);
 
   const copy = async (value: string, which: 'link' | 'code') => {
     if (!value) return;
@@ -35,6 +40,11 @@ export function ShareTripModal({ trip, onClose }: Props) {
       onClick={onClose}
     >
       <div
+        ref={sheetRef}
+        tabIndex={-1}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="share-trip-title"
         className="glass-card fade-in modal-sheet"
         style={{
           maxWidth: '400px',
@@ -54,7 +64,7 @@ export function ShareTripModal({ trip, onClose }: Props) {
           <IconClose size={18} />
         </button>
 
-        <h3 style={{ fontSize: '17px', marginBottom: '4px' }}>Invite to "{trip.name}"</h3>
+        <h3 id="share-trip-title" style={{ fontSize: '17px', marginBottom: '4px' }}>Invite to "{trip.name}"</h3>
         <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '20px' }}>
           Anyone with this link can sign in and claim their spot as a trip member.
         </p>
@@ -63,7 +73,7 @@ export function ShareTripModal({ trip, onClose }: Props) {
           <div
             style={{
               padding: '16px',
-              borderRadius: '10px',
+              borderRadius: 'var(--border-radius-md)',
               background: 'var(--bg-subtle, rgba(15,23,42,0.04))',
               border: '1px dashed var(--border-color)',
               textAlign: 'center',
@@ -100,7 +110,7 @@ export function ShareTripModal({ trip, onClose }: Props) {
                     letterSpacing: '0.15em',
                     textAlign: 'center',
                     padding: '10px',
-                    borderRadius: '10px',
+                    borderRadius: 'var(--border-radius-md)',
                     background: 'var(--bg-subtle, rgba(15,23,42,0.04))',
                     border: '1px solid var(--border-color)',
                   }}

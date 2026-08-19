@@ -232,14 +232,19 @@ export function TripsListScreen({
           </div>
         ) : (
           <div className="passport-list">
-            {trips.map((trip) => {
+            {trips.map((trip, idx) => {
               const stamp = formatTripStamp(trip.startDate, trip.endDate);
               const tripMembers = trip.memberIds.map((id) => members[id]).filter(Boolean);
               const shown = tripMembers.slice(0, 3);
               const overflow = tripMembers.length - shown.length;
               const expenseCount = trip.expenseCount || 0;
               return (
-                <div key={trip.id} className="passport-card" onClick={() => onSelectTrip(trip.id)}>
+                <div
+                  key={trip.id}
+                  className="passport-card"
+                  style={{ animationDelay: `${Math.min(idx * 30, 300)}ms` }}
+                  onClick={() => onSelectTrip(trip.id)}
+                >
                   <div className="pp-stamp">
                     <span>{stamp.top}</span>
                     <span>{stamp.bottom}</span>
@@ -253,7 +258,7 @@ export function TripsListScreen({
                     <div className="pp-avatars">
                       {shown.map((m) =>
                         m.avatarUrl ? (
-                          <img key={m.id} src={m.avatarUrl} alt={m.name} title={m.name} className="pp-avatar" referrerPolicy="no-referrer" />
+                          <img key={m.id} src={m.avatarUrl} alt={m.name} title={m.name} className="pp-avatar" referrerPolicy="no-referrer" loading="lazy" width={24} height={24} />
                         ) : (
                           <span key={m.id} className="pp-avatar" style={{ background: avatarColorForName(m.name) }} title={m.name}>{initial(m.name)}</span>
                         )

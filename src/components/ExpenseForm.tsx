@@ -504,7 +504,7 @@ export function ExpenseForm({
                 alignItems: 'center',
                 gap: '8px',
                 padding: '6px 12px',
-                borderRadius: '20px',
+                borderRadius: 'var(--border-radius-pill)',
                 background: 'rgba(0,191,165,0.08)',
                 border: '1px solid rgba(0,191,165,0.28)',
                 fontSize: '12.5px',
@@ -728,6 +728,7 @@ export function ExpenseForm({
                 {isChecked && splitMode !== 'equal' && (
                   <input
                     type="text"
+                    inputMode="decimal"
                     placeholder={
                       splitMode === 'custom' ? 'e.g. 1' :
                       splitMode === 'exact' ? 'e.g. 200' : 'e.g. 25'
@@ -793,7 +794,7 @@ export function ExpenseForm({
 
       <div className="expense-form-actions">
         <button type="submit" className="gradient-btn" style={{ flex: 1 }} disabled={isSubmitting}>
-          {editingExpense ? 'Update Expense' : 'Add Expense'}
+          {isSubmitting ? 'Saving…' : editingExpense ? 'Update Expense' : 'Add Expense'}
         </button>
         <button
           type="button"

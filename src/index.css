@@ -68,7 +68,7 @@
   /* Text — Ink navy */
   --text-primary: #1C2A38;
   --text-secondary: #52627A;
-  --text-muted: #8B96A8;
+  --text-muted: #6B7690; /* darkened from #8B96A8 — was ~2.8:1 on --bg-surface, fails WCAG AA */
 
   --bg-header: #1C2A38;
   --bg-header-glass: rgba(28, 42, 56, 0.82);
@@ -83,6 +83,7 @@
   --border-radius-sm: 6px;
   --border-radius-md: 10px;
   --border-radius-lg: 16px;
+  --border-radius-pill: 999px;
 
   --transition-smooth: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -111,7 +112,7 @@
 
     --text-primary: #EFE7D2;
     --text-secondary: #A7AFC0;
-    --text-muted: #7C8AA0;
+    --text-muted: #8B96AE;
 
     --bg-header: #0F151D;
     --bg-header-glass: rgba(15, 21, 29, 0.85);
@@ -143,7 +144,7 @@
 
   --text-primary: #EFE7D2;
   --text-secondary: #A7AFC0;
-  --text-muted: #7C8AA0;
+  --text-muted: #8B96AE;
 
   --bg-header: #0F151D;
   --bg-header-glass: rgba(15, 21, 29, 0.85);
@@ -597,7 +598,7 @@ input[type="date"].input-field {
   align-items: center;
   gap: 6px;
   padding: 6px 13px;
-  border-radius: 18px;
+  border-radius: var(--border-radius-pill);
   font-size: 12.5px;
   font-weight: 500;
   font-family: var(--font-family-body);
@@ -753,8 +754,8 @@ input[type="date"].input-field {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 30px;
-  height: 30px;
+  width: 38px;
+  height: 38px;
   flex-shrink: 0;
   background: none;
   border: none;
@@ -1365,6 +1366,10 @@ input:checked + .toggle-slider:before {
   padding: 18px 20px 16px;
   cursor: pointer;
   transition: var(--transition-smooth);
+  animation: fadeIn 0.35s ease-out both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .passport-card { animation: none; }
 }
 .passport-card:hover {
   border-color: rgba(31, 110, 104, 0.3);
@@ -2015,7 +2020,28 @@ input:checked + .toggle-slider:before {
   box-shadow: 0 8px 24px -8px rgba(28, 42, 56, 0.3);
   font-size: 13.5px;
   min-width: 280px;
+  position: relative;
+  overflow: hidden;
   animation: postmarkIn 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.undo-toast-progress {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 2.5px;
+  background: var(--primary-accent);
+  transform-origin: left;
+  animation-name: undoShrink;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}
+@keyframes undoShrink {
+  from { transform: scaleX(1); }
+  to { transform: scaleX(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .undo-toast-progress { display: none; }
 }
 .pm-stamp {
   width: 32px;
@@ -2269,6 +2295,14 @@ input:checked + .toggle-slider:before {
 
 @media (prefers-reduced-motion: reduce) {
   .fade-in { animation: none; }
+}
+
+/* Global spin keyframe — was previously redefined per spinner instance (or,
+   in ExpenseForm's case, silently assumed without a definition at all, so
+   that spinner never actually spun). Loading spinners are left out of the
+   reduced-motion guard above: the rotation itself is the state they convey. */
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
 /* Full-screen takeover — used for the add/edit expense form. Covers the
@@ -3379,7 +3413,7 @@ html.capacitor-ios .tab-pane {
   padding: 4px 10px;
   font-size: 11.5px;
   font-weight: 600;
-  border-radius: 20px;
+  border-radius: var(--border-radius-pill);
   background: color-mix(in srgb, var(--primary-accent) 8%, var(--bg-surface));
   color: var(--primary-accent);
   border: 1px solid color-mix(in srgb, var(--primary-accent) 22%, transparent);

@@ -1018,7 +1018,7 @@ export function SettingsView({
                     bottom: 0,
                     backgroundColor: enableGeotagging ? '#00BFA5' : 'var(--border-color)',
                     transition: '0.2s ease',
-                    borderRadius: '24px',
+                    borderRadius: 'var(--border-radius-pill)',
                   }}
                 >
                   <span

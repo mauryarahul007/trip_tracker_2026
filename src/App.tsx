@@ -27,6 +27,7 @@ import { InAppNotificationBanner } from './components/InAppNotificationBanner';
 import { FitHeading } from './components/FitHeading';
 import { usePrivacyStore } from './store/privacyStore';
 import { triggerHaptic } from './utils/haptics';
+import { useEscapeKey } from './utils/useEscapeKey';
 import { IconCalendar, IconChevronLeft, IconShare, IconPlus, IconEye, IconEyeOff } from './components/Icons';
 import { formatDateRange } from './utils/dateRange';
 import { useScrollLock } from './utils/useScrollLock';
@@ -110,6 +111,8 @@ export default function App() {
   // (navigator.vibrate replaces any in-flight pattern), so nothing here
   // fights those.
   useEffect(() => {
+    const HAPTIC_COOLDOWN_MS = 80;
+    let lastFired = 0;
     const handleTapFeedback = (e: PointerEvent) => {
       if (e.pointerType === 'mouse') return;
       const target = e.target;
@@ -117,7 +120,11 @@ export default function App() {
       const interactive = target.closest(
         'button:not(:disabled), [role="button"]:not([aria-disabled="true"]), input[type="checkbox"], input[type="radio"]'
       );
-      if (interactive) triggerHaptic('light');
+      if (!interactive) return;
+      const now = Date.now();
+      if (now - lastFired < HAPTIC_COOLDOWN_MS) return;
+      lastFired = now;
+      triggerHaptic('light');
     };
     document.body.addEventListener('pointerdown', handleTapFeedback, { capture: true, passive: true });
     return () => document.body.removeEventListener('pointerdown', handleTapFeedback, true);
@@ -989,6 +996,15 @@ export default function App() {
   useHistoryBack(showGlobalSettings, () => setShowGlobalSettings(false));
   useHistoryBack(!!confirmRequest, () => setConfirmRequest(null));
 
+  // Escape key — the desktop equivalent of the back-gesture wiring above,
+  // for the same set of overlay modals (excludes tab/trip navigation).
+  useEscapeKey(showAddTrip, handleCancelTripForm);
+  useEscapeKey(showAddExpense, handleCancelExpenseForm);
+  useEscapeKey(!!selectedReviewExpense, () => setSelectedReviewExpense(null));
+  useEscapeKey(showShareTrip, () => setShowShareTrip(false));
+  useEscapeKey(showGlobalSettings, () => setShowGlobalSettings(false));
+  useEscapeKey(!!confirmRequest, () => setConfirmRequest(null));
+
   // Loading view
   if (!initialized) {
     return (
@@ -1004,11 +1020,6 @@ export default function App() {
             animation: 'spin 1s linear infinite',
             margin: '0 auto'
           }} />
-          <style>{`
-            @keyframes spin {
-              to { transform: rotate(360deg); }
-            }
-          `}</style>
         </div>
       </div>
     );
@@ -1239,6 +1250,7 @@ export default function App() {
             </div>
 
             <div className="tab-pane" style={{ display: activeTab === 'members' ? 'block' : 'none' }}>
+              <div className="fade-in">
               <MembersGroupsTab
                 showMembersRequiredNotice={showMembersRequiredNotice}
                 dismissMembersRequiredNotice={() => setShowMembersRequiredNotice(false)}
@@ -1260,9 +1272,11 @@ export default function App() {
                 onSetMemberAdminRole={setMemberAdminRole}
                 currentUserId={userId}
               />
+              </div>
             </div>
 
             <div className="tab-pane" style={{ display: activeTab === 'analytics' ? 'block' : 'none' }}>
+              <div className="fade-in">
               <AnalyticsTab
                 trip={activeTrip}
                 totalSpent={totalSpent}
@@ -1276,9 +1290,11 @@ export default function App() {
                 expenses={activeTripExpenses}
                 categories={categories}
               />
+              </div>
             </div>
 
             <div className="tab-pane" style={{ display: activeTab === 'settings' ? 'block' : 'none' }}>
+              <div className="fade-in">
               <SettingsTab
                 categories={categories}
                 activeTripExpenses={activeTripExpenses}
@@ -1306,6 +1322,7 @@ export default function App() {
                 onInstallApp={handleInstallApp}
                 onRequestConfirm={setConfirmRequest}
               />
+              </div>
             </div>
 
             {activeTab === 'expenses' && (
@@ -1396,6 +1413,7 @@ export default function App() {
         onUndoDeleteTrip={handleUndoDeleteTrip}
         pendingDeleteGroup={pendingDeleteGroup}
         onUndoDeleteGroup={handleUndoDeleteGroup}
+        durationMs={UNDO_DURATION_MS}
       />
 
       {confirmRequest && (

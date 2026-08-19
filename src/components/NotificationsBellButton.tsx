@@ -35,7 +35,7 @@ export function NotificationsBellButton() {
             minWidth: '15px',
             height: '15px',
             padding: '0 3px',
-            borderRadius: '999px',
+            borderRadius: 'var(--border-radius-pill)',
             background: 'var(--color-danger)',
             color: '#fff',
             fontSize: '10px',

@@ -395,7 +395,7 @@ function TransferRow({
               />
               <button
                 className="gradient-btn"
-                style={{ padding: '6px 12px', fontSize: '11px', borderRadius: '6px', height: '28px' }}
+                style={{ padding: '6px 12px', fontSize: '11px', borderRadius: 'var(--border-radius-sm)', height: '28px' }}
                 onClick={() => {
                   triggerHaptic('success');
                   onSettle(t.fromMemberId, t.toMemberId, settleAmount, t.fromLabel, t.toLabel);
@@ -430,7 +430,7 @@ function TransferRow({
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
               <button
                 className="gradient-btn"
-                style={{ padding: '6px 14px', fontSize: '11px', borderRadius: '6px', height: '28px' }}
+                style={{ padding: '6px 14px', fontSize: '11px', borderRadius: 'var(--border-radius-sm)', height: '28px' }}
                 onClick={() => {
                   triggerHaptic('success');
                   onSettle(t.fromMemberId, t.toMemberId, t.amount, t.fromLabel, t.toLabel);

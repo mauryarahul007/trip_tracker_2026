@@ -24,6 +24,7 @@ const ARM_MS = 3000;
 export function ConfirmDialog({ request, onCancel }: Props) {
   const [armed, setArmed] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const sheetRef = useRef<HTMLDivElement>(null);
 
   const clearTimer = () => {
     if (timerRef.current) {
@@ -33,6 +34,9 @@ export function ConfirmDialog({ request, onCancel }: Props) {
   };
 
   useEffect(() => clearTimer, []);
+  useEffect(() => {
+    sheetRef.current?.focus();
+  }, []);
 
   const handleConfirm = () => {
     request.onConfirm();
@@ -59,6 +63,11 @@ export function ConfirmDialog({ request, onCancel }: Props) {
       onClick={onCancel}
     >
       <div
+        ref={sheetRef}
+        tabIndex={-1}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="confirm-dialog-title"
         className="glass-card fade-in modal-sheet"
         style={{
           maxWidth: '380px',
@@ -68,7 +77,7 @@ export function ConfirmDialog({ request, onCancel }: Props) {
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        <h3 style={{ fontSize: '17px', marginBottom: '10px' }}>{request.title || 'Please confirm'}</h3>
+        <h3 id="confirm-dialog-title" style={{ fontSize: '17px', marginBottom: '10px' }}>{request.title || 'Please confirm'}</h3>
         <p style={{ fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '20px' }}>{request.message}</p>
         <div style={{ display: 'flex', gap: '12px' }}>
           <button

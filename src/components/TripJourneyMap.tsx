@@ -205,7 +205,7 @@ export function TripJourneyMap({ expenses, categories, baseCurrency }: Props) {
           textAlign: 'center',
           background: 'var(--bg-surface)',
           border: '1px dashed var(--border-color)',
-          borderRadius: '16px',
+          borderRadius: 'var(--border-radius-lg)',
           marginBottom: '20px',
         }}
       >
@@ -241,7 +241,7 @@ export function TripJourneyMap({ expenses, categories, baseCurrency }: Props) {
       className="card"
       style={{
         padding: '0',
-        borderRadius: '16px',
+        borderRadius: 'var(--border-radius-lg)',
         overflow: 'hidden',
         border: '1px solid var(--border-color)',
         marginBottom: '20px',

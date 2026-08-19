@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { Trip, Expense, Category } from '../types';
 import { CategoryIcon } from './CategoryIcon';
 import { getCurrencySymbol } from '../utils/currency';
@@ -42,6 +42,18 @@ export function AnalyticsTab({
   const topCategory = categoryData[0];
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
   const enableGeotagging = useTripStore((s) => s.enableGeotagging);
+
+  // Donut chart animates in from empty on first mount rather than popping in
+  // at full value — two rAFs so the browser paints the 0-state frame before
+  // the transition to the real value is triggered.
+  const [chartFilled, setChartFilled] = useState(false);
+  useEffect(() => {
+    const raf1 = requestAnimationFrame(() => {
+      const raf2 = requestAnimationFrame(() => setChartFilled(true));
+      return () => cancelAnimationFrame(raf2);
+    });
+    return () => cancelAnimationFrame(raf1);
+  }, []);
 
   return (
     <div className="fade-in">
@@ -112,7 +124,7 @@ export function AnalyticsTab({
                     const r = 50;
                     const circ = 2 * Math.PI * r;
                     return categoryData.map((d, idx) => {
-                      const strokeDash = `${(d.percentage / 100) * circ} ${circ}`;
+                      const strokeDash = chartFilled ? `${(d.percentage / 100) * circ} ${circ}` : `0 ${circ}`;
                       const strokeOffset = `${- (accumPercent / 100) * circ}`;
                       accumPercent += d.percentage;
                       return (
@@ -127,7 +139,7 @@ export function AnalyticsTab({
                           strokeDasharray={strokeDash}
                           strokeDashoffset={strokeOffset}
                           transform="rotate(-90 70 70)"
-                          style={{ transition: 'stroke-dashoffset 0.5s ease' }}
+                          style={{ transition: 'stroke-dasharray 0.5s ease, stroke-dashoffset 0.5s ease' }}
                         />
                       );
                     });
@@ -187,7 +199,7 @@ export function AnalyticsTab({
                   </div>
                   <div style={{ width: '100%', height: '8px', background: 'rgba(15,23,42,0.05)', borderRadius: '4px', overflow: 'hidden' }}>
                     <div style={{
-                      width: `${m.percentage}%`,
+                      width: chartFilled ? `${m.percentage}%` : '0%',
                       height: '100%',
                       background: 'var(--primary-accent)',
                       borderRadius: '4px',
@@ -204,7 +216,7 @@ export function AnalyticsTab({
             <div className="glass-card">
               <h4 style={{ fontSize: '14px', marginBottom: '16px', fontWeight: '600' }}>Daily Spending Trend</h4>
               <div style={{ width: '100%', overflowX: 'auto' }}>
-                <svg width="100%" height="200" viewBox="0 0 400 200" preserveAspectRatio="none" style={{ minWidth: '350px' }}>
+                <svg width="100%" height="200" viewBox="0 0 400 200" preserveAspectRatio="none" style={{ minWidth: '350px', opacity: chartFilled ? 1 : 0, transition: 'opacity 0.5s ease' }}>
                   <line x1="30" y1="40" x2="380" y2="40" stroke="var(--border-color)" strokeWidth="1" strokeDasharray="4 4" />
                   <line x1="30" y1="100" x2="380" y2="100" stroke="var(--border-color)" strokeWidth="1" strokeDasharray="4 4" />
                   <line x1="30" y1="160" x2="380" y2="160" stroke="var(--border-color)" strokeWidth="1" />

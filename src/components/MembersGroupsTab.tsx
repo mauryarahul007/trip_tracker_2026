@@ -7,6 +7,7 @@ import { avatarColorForName } from '../utils/avatarColor';
 import { fetchPreviousTripMembers, searchRemoteMemberSuggestions } from '../services/tripApi';
 import { IconCheck, IconEdit, IconTrash } from './Icons';
 import { useHistoryBack } from '../utils/useHistoryBack';
+import { usePrivacyStore, formatMaskedAmount } from '../store/privacyStore';
 
 type Props = {
   showMembersRequiredNotice: boolean;
@@ -54,6 +55,8 @@ export function MembersGroupsTab({
   onSetMemberAdminRole,
   currentUserId,
 }: Props) {
+  const isBlindMode = usePrivacyStore((s) => s.isBlindMode);
+
   // Member Form State
   const [newMemberName, setNewMemberName] = React.useState('');
   const [editingMember, setEditingMember] = React.useState<Member | null>(null);
@@ -481,7 +484,7 @@ export function MembersGroupsTab({
                   backdropFilter: 'blur(16px)',
                   WebkitBackdropFilter: 'blur(16px)',
                   background: 'var(--card-bg, rgba(28, 42, 56, 0.95))',
-                  borderRadius: '10px',
+                  borderRadius: 'var(--border-radius-md)',
                 }}
               >
                 <div
@@ -508,7 +511,7 @@ export function MembersGroupsTab({
                         alignItems: 'center',
                         justifyContent: 'space-between',
                         padding: '8px 10px',
-                        borderRadius: '6px',
+                        borderRadius: 'var(--border-radius-sm)',
                         cursor: 'pointer',
                         backgroundColor: isHighlighted ? 'var(--hover-bg, rgba(255, 255, 255, 0.08))' : 'transparent',
                         transition: 'background-color 0.15s ease',
@@ -612,16 +615,16 @@ export function MembersGroupsTab({
             const owes = balance < -0.01;
             const amtLabel =
               balance > 0.01
-                ? `gets back ${currencySymbol}${balance.toFixed(2)}`
+                ? `gets back ${formatMaskedAmount(balance.toFixed(2), currencySymbol, isBlindMode)}`
                 : owes
-                ? `owes ${currencySymbol}${Math.abs(balance).toFixed(2)}`
+                ? `owes ${formatMaskedAmount(Math.abs(balance).toFixed(2), currencySymbol, isBlindMode)}`
                 : 'settled';
             return (
               <div key={member.id} className={`luggage-tag${owes ? ' lt-owe' : ''}`}>
                 <div className="lt-card">
                   <div className="lt-status" />
                   {member.avatarUrl ? (
-                    <img src={member.avatarUrl} alt="" className="lt-initials" referrerPolicy="no-referrer" />
+                    <img src={member.avatarUrl} alt="" className="lt-initials" referrerPolicy="no-referrer" loading="lazy" />
                   ) : (
                     <div className="lt-initials" style={{ background: avatarColorForName(member.name) }}>{initial(member.name)}</div>
                   )}
@@ -656,7 +659,7 @@ export function MembersGroupsTab({
                       </div>
                     </div>
                     <div className="lt-bottom-row" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', marginTop: '6px', flexWrap: 'wrap' }}>
-                      <div className="lt-amt">{amtLabel}</div>
+                      <div className="lt-amt privacy-blur">{amtLabel}</div>
                       {isAdmin && (
                         <div className="lt-actions" style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
                           {onSetMemberAdminRole && (
