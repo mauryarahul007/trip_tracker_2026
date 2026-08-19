@@ -2763,41 +2763,6 @@ html.capacitor-ios .tab-pane {
   white-space: nowrap;
 }
 
-.notif-header-actions {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  flex-shrink: 0;
-}
-
-.notif-toolbar-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  background: var(--bg-surface-hover);
-  border: 1px solid var(--border-color);
-  color: var(--text-secondary);
-  font-size: 12px;
-  font-weight: 600;
-  padding: 5px 10px;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  white-space: nowrap;
-}
-
-.notif-toolbar-btn:hover {
-  background: color-mix(in srgb, var(--primary-accent) 12%, var(--bg-surface));
-  border-color: var(--primary-accent);
-  color: var(--primary-accent);
-}
-
-.notif-toolbar-btn-danger:hover {
-  background: color-mix(in srgb, var(--color-danger) 12%, var(--bg-surface));
-  border-color: var(--color-danger);
-  color: var(--color-danger);
-}
-
 .notif-close-btn {
   width: 30px;
   height: 30px;
@@ -2820,10 +2785,19 @@ html.capacitor-ios .tab-pane {
   transform: scale(1.05);
 }
 
-/* Multi-Trip Segment Filter (Option C) */
-.notif-filter-container {
+/* Sub-Header Toolbar & Filter Controls Bar */
+.notif-controls-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
   margin-bottom: 12px;
   flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+.notif-controls-spacer {
+  flex: 1;
 }
 
 .notif-filter-tabs {
@@ -2836,16 +2810,15 @@ html.capacitor-ios .tab-pane {
 }
 
 .notif-filter-tab {
-  flex: 1;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  padding: 6px 10px;
-  border-radius: 8px;
+  gap: 5px;
+  padding: 5px 9px;
+  border-radius: 7px;
   background: transparent;
   border: none;
-  font-size: 12px;
+  font-size: 11.5px;
   font-weight: 600;
   color: var(--text-secondary);
   cursor: pointer;
@@ -2864,12 +2837,68 @@ html.capacitor-ios .tab-pane {
 }
 
 .notif-tab-count-badge {
-  font-size: 10.5px;
+  font-size: 10px;
   font-weight: 700;
-  padding: 1px 6px;
-  border-radius: 10px;
+  padding: 1px 5.5px;
+  border-radius: 8px;
   background: color-mix(in srgb, var(--primary-accent) 18%, transparent);
   color: var(--primary-accent);
+}
+
+.notif-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.notif-toolbar-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--bg-surface-hover);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 5px 9px;
+  border-radius: 7px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.notif-toolbar-btn:hover {
+  background: color-mix(in srgb, var(--primary-accent) 12%, var(--bg-surface));
+  border-color: var(--primary-accent);
+  color: var(--primary-accent);
+}
+
+.notif-toolbar-btn-danger:hover {
+  background: color-mix(in srgb, var(--color-danger) 12%, var(--bg-surface));
+  border-color: var(--color-danger);
+  color: var(--color-danger);
+}
+
+.notif-toolbar-btn-text {
+  display: inline-block;
+}
+
+@media (max-width: 480px) {
+  .notif-controls-bar {
+    gap: 8px;
+  }
+  .notif-filter-tabs {
+    width: 100%;
+  }
+  .notif-filter-tab {
+    flex: 1;
+  }
+  .notif-header-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
 }
 
 .notif-alert-banner {

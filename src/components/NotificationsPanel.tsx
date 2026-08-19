@@ -285,7 +285,7 @@ export function NotificationsPanel() {
         aria-labelledby="notifications-panel-title"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
+        {/* Header Top Row */}
         <div className="notif-header">
           <div className="notif-header-left">
             <div className="notif-title-group">
@@ -303,44 +303,20 @@ export function NotificationsPanel() {
             </div>
           </div>
 
-          <div className="notif-header-actions">
-            {displayedUnreadCount > 0 && (
-              <button
-                type="button"
-                className="notif-toolbar-btn"
-                onClick={handleMarkFilteredAsRead}
-                title="Mark as read"
-              >
-                <IconCheck size={13} />
-                <span>Mark read</span>
-              </button>
-            )}
-            {displayedNotifications.length > 0 && (
-              <button
-                type="button"
-                className="notif-toolbar-btn notif-toolbar-btn-danger"
-                onClick={handleClearAll}
-                title="Clear notifications"
-              >
-                <IconTrash size={13} />
-                <span>Clear {tripFilter === 'current' && activeTrip ? 'trip' : 'all'}</span>
-              </button>
-            )}
-            <button
-              type="button"
-              className="notif-close-btn"
-              onClick={closePanel}
-              aria-label="Close notifications"
-              title="Close"
-            >
-              <IconClose size={15} />
-            </button>
-          </div>
+          <button
+            type="button"
+            className="notif-close-btn"
+            onClick={closePanel}
+            aria-label="Close notifications"
+            title="Close"
+          >
+            <IconClose size={15} />
+          </button>
         </div>
 
-        {/* Multi-Trip Segment Filter (Option C) */}
-        {activeTrip && (
-          <div className="notif-filter-container">
+        {/* Sub-Header Toolbar & Filter Controls */}
+        <div className="notif-controls-bar">
+          {activeTrip ? (
             <div className="notif-filter-tabs">
               <button
                 type="button"
@@ -363,8 +339,39 @@ export function NotificationsPanel() {
                 )}
               </button>
             </div>
-          </div>
-        )}
+          ) : (
+            <div className="notif-controls-spacer" />
+          )}
+
+          {(displayedUnreadCount > 0 || displayedNotifications.length > 0) && (
+            <div className="notif-header-actions">
+              {displayedUnreadCount > 0 && (
+                <button
+                  type="button"
+                  className="notif-toolbar-btn"
+                  onClick={handleMarkFilteredAsRead}
+                  title="Mark as read"
+                >
+                  <IconCheck size={13} />
+                  <span className="notif-toolbar-btn-text">Mark read</span>
+                </button>
+              )}
+              {displayedNotifications.length > 0 && (
+                <button
+                  type="button"
+                  className="notif-toolbar-btn notif-toolbar-btn-danger"
+                  onClick={handleClearAll}
+                  title="Clear notifications"
+                >
+                  <IconTrash size={13} />
+                  <span className="notif-toolbar-btn-text">
+                    Clear {tripFilter === 'current' && activeTrip ? 'trip' : 'all'}
+                  </span>
+                </button>
+              )}
+            </div>
+          )}
+        </div>
 
         {/* Web Notification Alert Opt-In Banner */}
         {permission !== 'granted' && (
