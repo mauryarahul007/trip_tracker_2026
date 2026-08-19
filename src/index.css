@@ -2626,50 +2626,75 @@ html.capacitor-ios .tab-pane {
   }
 }
 
-.settings-subscreen-nav {
+.settings-subscreen-nav-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding-bottom: 12px;
-  margin-bottom: 16px;
-  border-bottom: 1px solid var(--border-color);
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  background: var(--bg-surface);
-  padding-top: 4px;
+  margin-bottom: 6px;
+  background: transparent;
 }
 
-.settings-back-btn {
+.settings-subscreen-back-link {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 4px;
   background: rgba(31, 110, 104, 0.08);
-  border: 1px solid rgba(31, 110, 104, 0.2);
+  border: 1px solid rgba(31, 110, 104, 0.18);
   color: var(--primary-accent);
-  font-size: 13.5px;
+  font-size: 13px;
   font-weight: 600;
   cursor: pointer;
-  padding: 6px 12px;
-  border-radius: 8px;
-  transition: all 0.15s ease;
+  padding: 5px 12px 5px 8px;
+  border-radius: 20px;
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
-.settings-back-btn:hover {
-  background: rgba(31, 110, 104, 0.15);
+.settings-subscreen-back-link:hover {
+  background: rgba(31, 110, 104, 0.16);
+  border-color: rgba(31, 110, 104, 0.32);
   transform: translateX(-2px);
 }
 
-.settings-back-btn:active {
-  transform: scale(0.96);
+.settings-subscreen-back-link:active {
+  transform: scale(0.95);
 }
 
-.settings-subscreen-title {
-  font-size: 16.5px;
+.settings-subscreen-action-btn {
+  font-size: 12.5px;
+  font-weight: 600;
+  padding: 5px 12px;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  border: 1px solid transparent;
+}
+
+.settings-subscreen-action-btn.danger {
+  background: rgba(184, 69, 46, 0.1);
+  border-color: rgba(184, 69, 46, 0.25);
+  color: var(--color-danger);
+}
+
+.settings-subscreen-action-btn.danger:hover {
+  background: rgba(184, 69, 46, 0.18);
+}
+
+.settings-subscreen-main-title {
+  font-size: 19px;
   font-weight: 700;
   letter-spacing: -0.01em;
   color: var(--text-primary);
-  margin: 0;
+  margin: 4px 0 3px;
+  font-family: var(--font-family-body);
+}
+
+.settings-subscreen-subtitle {
+  font-size: 12.5px;
+  color: var(--text-secondary);
+  line-height: 1.45;
+  margin: 0 0 16px;
 }
 
 

@@ -231,18 +231,18 @@ export function SettingsView({
   if (subScreen === 'categories') {
     return (
       <div className="settings-container settings-subscreen-enter">
-        <div className="settings-subscreen-nav">
-          <button type="button" className="settings-back-btn" onClick={() => setSubScreen(null)}>
-            <IconChevronLeft size={18} /> Settings
+        <div className="settings-subscreen-nav-header">
+          <button type="button" className="settings-subscreen-back-link" onClick={() => setSubScreen(null)}>
+            <IconChevronLeft size={18} />
+            <span>Settings</span>
           </button>
-          <h3 className="settings-subscreen-title">Categories &amp; Tags</h3>
-          <div style={{ width: '20px' }} />
         </div>
+        <h3 className="settings-subscreen-main-title">Categories &amp; Tags</h3>
+        <p className="settings-subscreen-subtitle">
+          Tap any category to view and edit its smart auto-tagging keywords &amp; brands.
+        </p>
 
         <div className="settings-group">
-          <div style={{ padding: '0 8px 6px', fontSize: '12.5px', color: 'var(--text-secondary)' }}>
-            Tap any category to view and edit its smart auto-tagging keywords &amp; brands.
-          </div>
           <div className="settings-group-card" style={{ padding: '4px 0' }}>
             {categories.map((cat) => {
               const dataset = getCategoryKeywords(cat);
@@ -524,33 +524,31 @@ export function SettingsView({
   if (subScreen === 'recycle-bin') {
     return (
       <div className="settings-container settings-subscreen-enter">
-        <div className="settings-subscreen-nav">
-          <button type="button" className="settings-back-btn" onClick={() => setSubScreen(null)}>
-            <IconChevronLeft size={18} /> Settings
+        <div className="settings-subscreen-nav-header">
+          <button type="button" className="settings-subscreen-back-link" onClick={() => setSubScreen(null)}>
+            <IconChevronLeft size={18} />
+            <span>Settings</span>
           </button>
-          <h3 className="settings-subscreen-title">Recycle Bin</h3>
-          {deletedExpenses.length > 0 ? (
+          {deletedExpenses.length > 0 && (
             <button
               type="button"
-              style={{ background: 'transparent', border: 'none', color: 'var(--color-danger)', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}
+              className="settings-subscreen-action-btn danger"
               onClick={() => {
                 if (window.confirm('Permanently delete all expenses in the recycle bin? This cannot be undone.')) {
                   emptyRecycleBin();
                 }
               }}
             >
-              Empty
+              Empty Bin
             </button>
-          ) : (
-            <div style={{ width: '30px' }} />
           )}
         </div>
+        <h3 className="settings-subscreen-main-title">Recycle Bin</h3>
+        <p className="settings-subscreen-subtitle">
+          Soft-deleted expenses can be restored back to your trip or permanently removed.
+        </p>
 
         <div className="settings-group">
-          <div style={{ padding: '0 8px 6px', fontSize: '12.5px', color: 'var(--text-secondary)' }}>
-            Deleted expenses stay in this bin for 24 hours before being permanently purged.
-          </div>
-
           <div className="settings-group-card">
             {deletedExpenses.length === 0 ? (
               <div style={{ padding: '24px 16px', textAlign: 'center', color: 'var(--text-secondary)', fontSize: '13.5px' }}>
@@ -612,13 +610,16 @@ export function SettingsView({
   if (subScreen === 'appearance') {
     return (
       <div className="settings-container settings-subscreen-enter">
-        <div className="settings-subscreen-nav">
-          <button type="button" className="settings-back-btn" onClick={() => setSubScreen(null)}>
-            <IconChevronLeft size={18} /> Settings
+        <div className="settings-subscreen-nav-header">
+          <button type="button" className="settings-subscreen-back-link" onClick={() => setSubScreen(null)}>
+            <IconChevronLeft size={18} />
+            <span>Settings</span>
           </button>
-          <h3 className="settings-subscreen-title">Appearance</h3>
-          <div style={{ width: '20px' }} />
         </div>
+        <h3 className="settings-subscreen-main-title">Appearance</h3>
+        <p className="settings-subscreen-subtitle">
+          Customize the theme palette and visual appearance for your device.
+        </p>
 
         <div className="settings-group">
           <h4 className="settings-group-title">Theme Palette</h4>
@@ -675,13 +676,16 @@ export function SettingsView({
   if (subScreen === 'archived-trips') {
     return (
       <div className="settings-container settings-subscreen-enter">
-        <div className="settings-subscreen-nav">
-          <button type="button" className="settings-back-btn" onClick={() => setSubScreen(null)}>
-            <IconChevronLeft size={18} /> Settings
+        <div className="settings-subscreen-nav-header">
+          <button type="button" className="settings-subscreen-back-link" onClick={() => setSubScreen(null)}>
+            <IconChevronLeft size={18} />
+            <span>Settings</span>
           </button>
-          <h3 className="settings-subscreen-title">Archived Trips</h3>
-          <div style={{ width: '20px' }} />
         </div>
+        <h3 className="settings-subscreen-main-title">Archived Trips</h3>
+        <p className="settings-subscreen-subtitle">
+          Past trips you've archived. You can restore them anytime or permanently delete them.
+        </p>
 
         <div className="settings-group">
           <div className="settings-group-card">
@@ -738,13 +742,16 @@ export function SettingsView({
   if (subScreen === 'backups') {
     return (
       <div className="settings-container settings-subscreen-enter">
-        <div className="settings-subscreen-nav">
-          <button type="button" className="settings-back-btn" onClick={() => setSubScreen(null)}>
-            <IconChevronLeft size={18} /> Settings
+        <div className="settings-subscreen-nav-header">
+          <button type="button" className="settings-subscreen-back-link" onClick={() => setSubScreen(null)}>
+            <IconChevronLeft size={18} />
+            <span>Settings</span>
           </button>
-          <h3 className="settings-subscreen-title">Database &amp; Backups</h3>
-          <div style={{ width: '20px' }} />
         </div>
+        <h3 className="settings-subscreen-main-title">Database &amp; Backups</h3>
+        <p className="settings-subscreen-subtitle">
+          Manage your local database, sync storage, and export JSON or CSV backups.
+        </p>
 
         {/* Disk usage */}
         {storageEstimate && (
