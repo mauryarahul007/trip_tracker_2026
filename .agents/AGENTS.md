@@ -19,4 +19,11 @@
   - Motivation/context behind each change.
   - Verification & testing status (tests passed, lint status).
 
+## Deployment Target Scope & Defaults
+
+- **Default Scope:** ALL changes made in this codebase are strictly targeted for the **webapp only**.
+- **Native Apps (Android & iOS) Guardrail:** Do NOT apply or deploy changes to the native Android or iOS app wrappers/builds unless and until the user explicitly specifies it.
+- **Push Prompt Protocol:** On each push to GitHub, you may ask the user if they want to deploy the changes for the native mobile apps as well. Otherwise, default is strictly webapp only.
+
+
 
