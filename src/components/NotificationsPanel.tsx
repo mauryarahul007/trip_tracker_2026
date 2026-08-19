@@ -14,6 +14,8 @@ import {
   IconBell,
   IconEdit,
   IconSparkles,
+  IconMail,
+  IconMailOpen,
 } from './Icons';
 
 function relativeTime(iso: string): string {
@@ -52,12 +54,12 @@ const SWIPE_DELETE_THRESHOLD = 75;
 function NotificationCard({
   notification,
   onOpen,
-  onMarkRead,
+  onToggleRead,
   onDelete,
 }: {
   notification: AppNotification;
   onOpen: () => void;
-  onMarkRead: () => void;
+  onToggleRead: () => void;
   onDelete: () => void;
 }) {
   const [dragX, setDragX] = useState(0);
@@ -127,8 +129,24 @@ function NotificationCard({
           transition: dragging ? 'none' : 'transform 0.22s cubic-bezier(0.16, 1, 0.3, 1)',
         }}
       >
-        {/* Left Squircle Avatar */}
-        <div className="notif-avatar-wrap">
+        {/* Left Squircle Avatar with quick Read/Unread click */}
+        <div
+          className="notif-avatar-wrap"
+          onClick={(e) => {
+            e.stopPropagation();
+            onToggleRead();
+          }}
+          title={notification.read ? 'Mark as unread' : 'Mark as read'}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.stopPropagation();
+              e.preventDefault();
+              onToggleRead();
+            }
+          }}
+        >
           <div className={`notif-squircle ${meta.colorClass}`}>
             {meta.icon}
           </div>
@@ -144,19 +162,17 @@ function NotificationCard({
           <p className="notif-card-text">{notification.body}</p>
         </div>
 
-        {/* Hover / Direct Actions for Desktop */}
+        {/* Actions Toolbar for Read/Unread and Delete */}
         <div className="notif-hover-actions" onClick={(e) => e.stopPropagation()}>
-          {!notification.read && (
-            <button
-              type="button"
-              className="notif-row-action-btn"
-              onClick={onMarkRead}
-              title="Mark as read"
-              aria-label="Mark as read"
-            >
-              <IconCheck size={13} />
-            </button>
-          )}
+          <button
+            type="button"
+            className={`notif-row-action-btn ${notification.read ? 'notif-btn-unread' : 'notif-btn-read'}`}
+            onClick={onToggleRead}
+            title={notification.read ? 'Mark as unread' : 'Mark as read'}
+            aria-label={notification.read ? 'Mark as unread' : 'Mark as read'}
+          >
+            {notification.read ? <IconMail size={13} /> : <IconCheck size={13} />}
+          </button>
           <button
             type="button"
             className="notif-row-action-btn danger"
@@ -178,6 +194,7 @@ export function NotificationsPanel() {
   const notifications = useNotificationsStore((s) => s.notifications);
   const unreadCount = useNotificationsStore((s) => s.unreadCount);
   const markAsRead = useNotificationsStore((s) => s.markAsRead);
+  const toggleRead = useNotificationsStore((s) => s.toggleRead);
   const markAllAsRead = useNotificationsStore((s) => s.markAllAsRead);
   const deleteOne = useNotificationsStore((s) => s.deleteOne);
   const clearAll = useNotificationsStore((s) => s.clearAll);
@@ -306,7 +323,7 @@ export function NotificationsPanel() {
                   key={n.id}
                   notification={n}
                   onOpen={() => handleOpenNotification(n)}
-                  onMarkRead={() => markAsRead(n.id)}
+                  onToggleRead={() => toggleRead(n.id)}
                   onDelete={() => deleteOne(n.id)}
                 />
               ))}

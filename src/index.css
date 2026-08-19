@@ -2916,39 +2916,54 @@ html.capacitor-ios .tab-pane {
   display: flex;
   align-items: flex-start;
   gap: 12px;
-  padding: 12px 14px;
+  padding: 13px 15px;
   background: var(--bg-surface);
-  border: 1px solid var(--border-color);
+  border: 1px solid color-mix(in srgb, var(--border-color) 80%, transparent);
   border-radius: 14px;
   cursor: pointer;
-  transition: background-color 0.15s ease, border-color 0.15s ease;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   user-select: none;
   touch-action: pan-y;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
 }
 
 .notif-card:hover {
   background: var(--bg-surface-hover);
+  border-color: color-mix(in srgb, var(--primary-accent) 28%, var(--border-color));
+  box-shadow: 0 4px 14px -2px rgba(28, 42, 56, 0.08);
+  transform: translateY(-1px);
 }
 
 .notif-card.unread {
-  background: color-mix(in srgb, var(--primary-accent) 6%, var(--bg-surface));
-  border-color: color-mix(in srgb, var(--primary-accent) 30%, var(--border-color));
-  border-left: 3.5px solid var(--primary-accent);
+  background: color-mix(in srgb, var(--primary-accent) 5.5%, var(--bg-surface));
+  border: 1px solid color-mix(in srgb, var(--primary-accent) 30%, var(--border-color));
+  box-shadow: 0 2px 10px -2px color-mix(in srgb, var(--primary-accent) 12%, transparent);
+}
+
+.notif-card.unread:hover {
+  border-color: color-mix(in srgb, var(--primary-accent) 45%, var(--border-color));
+  box-shadow: 0 5px 16px -2px color-mix(in srgb, var(--primary-accent) 18%, transparent);
 }
 
 .notif-avatar-wrap {
   position: relative;
   flex-shrink: 0;
   margin-top: 1px;
+  cursor: pointer;
+}
+
+.notif-avatar-wrap:hover .notif-squircle {
+  transform: scale(1.08);
 }
 
 .notif-squircle {
   width: 36px;
   height: 36px;
-  border-radius: 10px;
+  border-radius: 11px;
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .notif-squircle.squircle-teal {
@@ -2985,11 +3000,12 @@ html.capacitor-ios .tab-pane {
   position: absolute;
   top: -2px;
   right: -2px;
-  width: 8px;
-  height: 8px;
+  width: 9px;
+  height: 9px;
   border-radius: 50%;
   background: var(--primary-accent);
-  border: 1.5px solid var(--bg-surface);
+  border: 2px solid var(--bg-surface);
+  box-shadow: 0 0 6px var(--primary-accent);
 }
 
 .notif-body {
@@ -3020,6 +3036,11 @@ html.capacitor-ios .tab-pane {
   color: var(--text-primary);
 }
 
+.notif-card.read .notif-card-text {
+  color: var(--text-secondary);
+  opacity: 0.9;
+}
+
 .notif-time {
   font-size: 11px;
   color: var(--text-muted);
@@ -3041,10 +3062,11 @@ html.capacitor-ios .tab-pane {
 .notif-hover-actions {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 5px;
   opacity: 0;
   transition: opacity 0.15s ease;
   flex-shrink: 0;
+  margin-left: 2px;
 }
 
 .notif-card:hover .notif-hover-actions {
@@ -3058,9 +3080,9 @@ html.capacitor-ios .tab-pane {
 }
 
 .notif-row-action-btn {
-  width: 26px;
-  height: 26px;
-  border-radius: 6px;
+  width: 27px;
+  height: 27px;
+  border-radius: 7px;
   background: var(--bg-surface-hover);
   border: 1px solid var(--border-color);
   color: var(--text-secondary);
@@ -3072,8 +3094,14 @@ html.capacitor-ios .tab-pane {
   padding: 0;
 }
 
-.notif-row-action-btn:hover {
-  background: color-mix(in srgb, var(--primary-accent) 15%, var(--bg-surface));
+.notif-row-action-btn.notif-btn-unread:hover {
+  background: color-mix(in srgb, var(--secondary-accent) 14%, var(--bg-surface));
+  color: var(--secondary-accent);
+  border-color: var(--secondary-accent);
+}
+
+.notif-row-action-btn.notif-btn-read:hover {
+  background: color-mix(in srgb, var(--primary-accent) 14%, var(--bg-surface));
   color: var(--primary-accent);
   border-color: var(--primary-accent);
 }

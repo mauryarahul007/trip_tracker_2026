@@ -6,6 +6,7 @@ import {
   fetchNotifications,
   markAllNotificationsRead,
   markNotificationRead,
+  markNotificationUnread,
   subscribeToNotifications,
 } from '../services/notificationsApi';
 import { showBrowserNotification } from '../utils/webNotifications';
@@ -21,6 +22,8 @@ interface NotificationsStore {
   initialize: (userId: string) => void;
   teardown: () => void;
   markAsRead: (id: string) => void;
+  markAsUnread: (id: string) => void;
+  toggleRead: (id: string) => void;
   markAllAsRead: () => void;
   deleteOne: (id: string) => void;
   clearAll: () => void;
@@ -99,6 +102,26 @@ export const useNotificationsStore = create<NotificationsStore>((set, get) => ({
       unreadCount: Math.max(0, state.unreadCount - 1),
     }));
     markNotificationRead(id).catch((err) => console.error('Failed to mark notification read', err));
+  },
+
+  markAsUnread: (id) => {
+    const target = get().notifications.find((n) => n.id === id);
+    if (!target || !target.read) return;
+    set((state) => ({
+      notifications: state.notifications.map((n) => (n.id === id ? { ...n, read: false } : n)),
+      unreadCount: state.unreadCount + 1,
+    }));
+    markNotificationUnread(id).catch((err) => console.error('Failed to mark notification unread', err));
+  },
+
+  toggleRead: (id) => {
+    const target = get().notifications.find((n) => n.id === id);
+    if (!target) return;
+    if (target.read) {
+      get().markAsUnread(id);
+    } else {
+      get().markAsRead(id);
+    }
   },
 
   markAllAsRead: () => {

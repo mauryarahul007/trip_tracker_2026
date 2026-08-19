@@ -32,6 +32,11 @@ export async function markNotificationRead(id: string): Promise<void> {
   if (error) throw error;
 }
 
+export async function markNotificationUnread(id: string): Promise<void> {
+  const { error } = await supabase.from('notifications').update({ read: false }).eq('id', id);
+  if (error) throw error;
+}
+
 export async function markAllNotificationsRead(userId: string): Promise<void> {
   const { error } = await supabase.from('notifications').update({ read: true }).eq('user_id', userId).eq('read', false);
   if (error) throw error;

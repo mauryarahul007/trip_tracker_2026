@@ -504,12 +504,11 @@ This document logs all meaningful technical decisions, library choices, design p
   - **Toolbar Actions & Clear All (`src/services/notificationsApi.ts`, `src/store/notificationsStore.ts`)**:
     - Added `deleteAllNotifications` database API and `clearAll` store action for one-tap notification purge with safety confirmation.
     - Added clean header toolbar containing `Mark read`, `Clear all`, and `✕` close button.
-  - **Dual Deletion System (Hover + Swipe)**:
-    - Desktop: Hovering over any notification reveals a discrete `✕`/Trash delete button and a `✓` Mark as Read toggle.
-    - Mobile: Fluid spring swipe gesture reveals a red trash background.
-  - **WhatsApp-Style Empty State & Navigation**:
-    - Designed an elegant empty state with glowing sparkles squircle ("You're All Caught Up").
-    - Wired `useHistoryBack(isPanelOpen, closePanel)` for stack-safe back navigation.
+  - **Bidirectional Read & Unread Toggling (`src/services/notificationsApi.ts`, `src/store/notificationsStore.ts`, `src/components/NotificationsPanel.tsx`)**:
+    - Added `markNotificationUnread(id)` API and `toggleRead(id)` / `markAsUnread(id)` store actions.
+    - Embedded `IconMail` (mark unread) and `IconCheck` (mark read) on hover and on interactive squircle click.
+  - **Refined Seamless Border Architecture (`src/index.css`)**:
+    - Replaced asymmetrical heavy border-left with uniform hairline translucent borders, ambient highlight shadows, and jewel dot indicators.
 * **Trade-offs Accepted:**
   - `Clear all` performs an irreversible batch deletion on the Supabase `notifications` table for the user. A confirmation prompt prevents accidental clears.
 
