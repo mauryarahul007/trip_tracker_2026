@@ -222,6 +222,46 @@ export interface Database {
           },
         ];
       };
+      notifications: {
+        Row: {
+          id: string;
+          user_id: string;
+          trip_id: string | null;
+          title: string;
+          body: string;
+          data: Record<string, string> | null;
+          read: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          trip_id?: string | null;
+          title: string;
+          body: string;
+          data?: Record<string, string> | null;
+          read?: boolean;
+        };
+        Update: Partial<{
+          read: boolean;
+        }>;
+        Relationships: [
+          {
+            foreignKeyName: 'notifications_user_id_fkey';
+            columns: ['user_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'notifications_trip_id_fkey';
+            columns: ['trip_id'];
+            isOneToOne: false;
+            referencedRelation: 'trips';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
     };
     Views: Record<string, never>;
     Functions: {

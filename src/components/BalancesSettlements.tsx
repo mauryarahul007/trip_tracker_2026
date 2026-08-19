@@ -52,6 +52,7 @@ function isTransferSettled(t: Transfer, activeTripExpenses: Expense[]): boolean 
 type TransferRowProps = {
   transfer: Transfer;
   rowKey: string;
+  tripId: string;
   note?: string;
   currencySymbol: string;
   isSettled: boolean;
@@ -152,6 +153,7 @@ function getAuditDetailsForNode(
 
 function TransferRow({
   transfer: t,
+  tripId,
   note,
   currencySymbol,
   isSettled,
@@ -168,9 +170,30 @@ function TransferRow({
 }: TransferRowProps) {
   const settleAmount = parseFloat(customValue) || t.amount;
   const [showAudit, setShowAudit] = useState(false);
+  const [reminderStatus, setReminderStatus] = useState<'idle' | 'sending' | 'sent' | 'rateLimited'>('idle');
 
   const fromAudit = getAuditDetailsForNode(t.from, t.fromLabel, balances, groups, activeTripExpenses);
   const toAudit = getAuditDetailsForNode(t.to, t.toLabel, balances, groups, activeTripExpenses);
+
+  const handleRemind = async () => {
+    const fromLinkedUserId = members[t.fromMemberId]?.linkedUserId;
+    if (!fromLinkedUserId) return;
+    setReminderStatus('sending');
+    const result = await sendPushNotification(
+      [fromLinkedUserId],
+      'Settlement reminder',
+      `You owe ${t.toLabel} ${currencySymbol}${t.amount.toFixed(2)} for this trip`,
+      { type: 'settlement_reminder', fromMemberId: t.fromMemberId, toMemberId: t.toMemberId },
+      tripId
+    );
+    setReminderStatus(result.ok ? 'sent' : result.rateLimited ? 'rateLimited' : 'idle');
+  };
+
+  const remindLabel =
+    reminderStatus === 'sending' ? 'Sending…' :
+    reminderStatus === 'sent' ? '✓ Reminded' :
+    reminderStatus === 'rateLimited' ? 'Already reminded today' :
+    '🔔 Remind';
 
   return (
     <div style={{
@@ -389,19 +412,11 @@ function TransferRow({
                 type="button"
                 className="secondary-btn"
                 style={{ padding: '6px 10px', fontSize: '12px' }}
-                onClick={() => {
-                  const fromLinkedUserId = members[t.fromMemberId]?.linkedUserId;
-                  if (!fromLinkedUserId) return;
-                  sendPushNotification(
-                    [fromLinkedUserId],
-                    'Settlement reminder',
-                    `You owe ${t.toLabel} ${currencySymbol}${t.amount.toFixed(2)} for this trip`
-                  );
-                }}
-                disabled={!members[t.fromMemberId]?.linkedUserId}
+                onClick={handleRemind}
+                disabled={!members[t.fromMemberId]?.linkedUserId || reminderStatus === 'sending' || reminderStatus === 'sent' || reminderStatus === 'rateLimited'}
                 title={members[t.fromMemberId]?.linkedUserId ? 'Send a reminder' : 'This member has no linked account to notify'}
               >
-                🔔 Remind
+                {remindLabel}
               </button>
             </div>
           ) : (
@@ -427,19 +442,11 @@ function TransferRow({
                 type="button"
                 className="secondary-btn"
                 style={{ padding: '6px 10px', fontSize: '12px' }}
-                onClick={() => {
-                  const fromLinkedUserId = members[t.fromMemberId]?.linkedUserId;
-                  if (!fromLinkedUserId) return;
-                  sendPushNotification(
-                    [fromLinkedUserId],
-                    'Settlement reminder',
-                    `You owe ${t.toLabel} ${currencySymbol}${t.amount.toFixed(2)} for this trip`
-                  );
-                }}
-                disabled={!members[t.fromMemberId]?.linkedUserId}
+                onClick={handleRemind}
+                disabled={!members[t.fromMemberId]?.linkedUserId || reminderStatus === 'sending' || reminderStatus === 'sent' || reminderStatus === 'rateLimited'}
                 title={members[t.fromMemberId]?.linkedUserId ? 'Send a reminder' : 'This member has no linked account to notify'}
               >
-                🔔 Remind
+                {remindLabel}
               </button>
             </div>
           )}
@@ -647,6 +654,7 @@ export function BalancesSettlements({
                               key={rowKey}
                               transfer={it}
                               rowKey={rowKey}
+                              tripId={trip.id}
                               currencySymbol={currencySymbol}
                               isSettled={isTransferSettled(it, activeTripExpenses)}
                               canSettle={canSettleTransfer(it)}
@@ -691,6 +699,7 @@ export function BalancesSettlements({
                   key={rowKey}
                   transfer={t}
                   rowKey={rowKey}
+                  tripId={trip.id}
                   note={isGroupInvolved ? 'group settlement — combined balance' : undefined}
                   currencySymbol={currencySymbol}
                   isSettled={isTransferSettled(t, activeTripExpenses)}

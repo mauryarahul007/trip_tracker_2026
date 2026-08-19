@@ -7,6 +7,7 @@ import { exportTripToCSV } from './utils/csvExport';
 
 import { getCurrencySymbol } from './utils/currency';
 import { isMissingSupabaseEnv } from './services/supabaseClient';
+import { sendPushNotification } from './services/pushApi';
 import { GlobalSettingsModal } from './components/GlobalSettingsModal';
 import { ConfirmDialog, type ConfirmRequest } from './components/ConfirmDialog';
 import { TripsListScreen } from './components/TripsListScreen';
@@ -20,6 +21,8 @@ import { ExpenseReviewModal } from './components/ExpenseReviewModal';
 import { UndoToasts } from './components/UndoToasts';
 import { NavTabs } from './components/NavTabs';
 import { ShareTripModal } from './components/ShareTripModal';
+import { NotificationsPanel } from './components/NotificationsPanel';
+import { NotificationsBellButton } from './components/NotificationsBellButton';
 import { IconCalendar, IconChevronLeft, IconShare, IconPlus } from './components/Icons';
 import { formatDateRange } from './utils/dateRange';
 import { useScrollLock } from './utils/useScrollLock';
@@ -507,6 +510,19 @@ export default function App() {
       await updateMember(id, nameTrimmed);
     } else {
       await addMember(nameTrimmed, linkedUserId);
+      // Only fires for members added directly with a known account (e.g.
+      // picked from a "people you've traveled with before" suggestion) —
+      // a bare placeholder member has no linked user to notify yet, and
+      // gets covered separately once they actually join via the trip code.
+      if (linkedUserId && activeTripId) {
+        sendPushNotification(
+          [linkedUserId],
+          activeTrip?.name || 'Trip Tracker',
+          `You were added to ${activeTrip?.name || 'a trip'}`,
+          { type: 'member_added' },
+          activeTripId
+        );
+      }
     }
     setShowMembersRequiredNotice(false);
     return { success: true };
@@ -984,11 +1000,12 @@ export default function App() {
               <div className="app-title-group">
                 <span className="app-eyebrow">
                   <IconCalendar size={12} className="icon-sm" />
-                  {formatDateRange(activeTrip?.startDate || '', activeTrip?.endDate || '')} · {activeTrip?.baseCurrency}
+                  {formatDateRange(activeTrip?.startDate || '', activeTrip?.endDate || '')}
                 </span>
                 <h2 className="app-logo" style={{ fontSize: '24px', color: '#F2ECDC' }}>{activeTrip?.name}</h2>
               </div>
               <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexShrink: 0 }}>
+                <NotificationsBellButton />
                 <button
                   data-action="share"
                   className="secondary-btn"
@@ -1242,6 +1259,12 @@ export default function App() {
       {confirmRequest && (
         <ConfirmDialog request={confirmRequest} onCancel={() => setConfirmRequest(null)} />
       )}
+
+      {/* Rendered unconditionally regardless of which screen is active
+          (not nested in the web-only header) so it opens the same way on
+          native too, reached via the "Notifications" row in Settings
+          instead of the header bell button there. */}
+      <NotificationsPanel />
     </div>
   );
 }

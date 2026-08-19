@@ -405,5 +405,14 @@ export function IconFilter({ size = 20, className = 'icon' }: IconProps) {
   );
 }
 
+export function IconBell({ size = 20, className = 'icon' }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" className={className} {...base}>
+      <path d="M6 9a6 6 0 0 1 12 0c0 3.5 1 5.5 2 7H4c1-1.5 2-3.5 2-7z" />
+      <path d="M10 20a2 2 0 0 0 4 0" />
+    </svg>
+  );
+}
+
 
 

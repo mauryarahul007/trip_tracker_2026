@@ -6,11 +6,14 @@ const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const FCM_SERVICE_ACCOUNT_JSON = Deno.env.get('FCM_SERVICE_ACCOUNT_JSON')!;
 
+const SETTLEMENT_REMINDER_COOLDOWN_HOURS = 24;
+
 interface SendPushRequest {
   userIds: string[];
   title: string;
   body: string;
   data?: Record<string, string>;
+  tripId?: string;
 }
 
 const corsHeaders = {
@@ -60,7 +63,7 @@ async function handleSendPush(req: Request): Promise<Response> {
   } catch {
     return jsonResponse({ error: 'Invalid JSON body' }, 400);
   }
-  const { userIds, title, body, data } = requestBody;
+  const { userIds, title, body, data, tripId } = requestBody;
   if (!Array.isArray(userIds) || userIds.length === 0 || !title || !body) {
     return jsonResponse({ error: 'userIds, title, and body are required' }, 400);
   }
@@ -99,6 +102,50 @@ async function handleSendPush(req: Request): Promise<Response> {
   const filteredUserIds = userIds.filter((id) => allowedUserIds.has(id));
   if (filteredUserIds.length === 0) {
     return jsonResponse({ sent: 0, total: 0 }, 200);
+  }
+
+  // Settlement reminders are the one notification type a user triggers
+  // manually and repeatedly against the same target — everything else
+  // (expense added, member added) fires at most once per real event, so
+  // only this type needs throttling. Checked against the notifications
+  // table itself rather than client-side state, since that can't be
+  // bypassed by just reloading the page.
+  if (data?.type === 'settlement_reminder' && tripId) {
+    const cooldownStart = new Date(Date.now() - SETTLEMENT_REMINDER_COOLDOWN_HOURS * 60 * 60 * 1000).toISOString();
+    const { data: recentReminders, error: recentError } = await supabaseAdmin
+      .from('notifications')
+      .select('id')
+      .eq('trip_id', tripId)
+      .in('user_id', filteredUserIds)
+      .contains('data', { type: 'settlement_reminder', fromMemberId: data.fromMemberId, toMemberId: data.toMemberId })
+      .gte('created_at', cooldownStart)
+      .limit(1);
+    if (recentError) {
+      return jsonResponse({ error: recentError.message }, 500);
+    }
+    if (recentReminders && recentReminders.length > 0) {
+      return jsonResponse(
+        { error: `A reminder was already sent within the last ${SETTLEMENT_REMINDER_COOLDOWN_HOURS} hours`, rateLimited: true },
+        429
+      );
+    }
+  }
+
+  // Persisted independently of whether the recipient has a registered
+  // device — this is what backs the in-app notifications panel (web and
+  // native both read from here), while the FCM send below is purely the
+  // best-effort "also try to push it to a device right now" path.
+  const { error: notificationInsertError } = await supabaseAdmin.from('notifications').insert(
+    filteredUserIds.map((userId) => ({
+      user_id: userId,
+      trip_id: tripId ?? null,
+      title,
+      body,
+      data: data ?? null,
+    }))
+  );
+  if (notificationInsertError) {
+    console.error('Failed to insert notification rows', notificationInsertError);
   }
 
   const { data: tokens, error: tokenError } = await supabaseAdmin

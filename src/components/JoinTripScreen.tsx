@@ -92,7 +92,7 @@ export function JoinTripScreen() {
         const recipients = (tripMembers || [])
           .filter((m) => m.id !== memberId)
           .map((m) => m.linked_user_id as string);
-        sendPushNotification(recipients, result.tripName, `${joinedMemberName} joined the trip`);
+        sendPushNotification(recipients, result.tripName, `${joinedMemberName} joined the trip`, undefined, result.tripId);
       }
       if (result) await goToTrip(result.tripId);
     } catch (e) {

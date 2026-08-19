@@ -6,6 +6,7 @@ import { App as CapacitorApp } from '@capacitor/app';
 import { supabase } from '../services/supabaseClient';
 import { buildOAuthRedirectUrl, parseNativeAuthCallback } from '../utils/nativeAuth';
 import { registerForPushNotifications, unregisterPushNotifications } from '../services/pushRegistration';
+import { useNotificationsStore } from './notificationsStore';
 
 interface AuthStore {
   session: Session | null;
@@ -29,6 +30,9 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
 
     supabase.auth.getSession().then(({ data }) => {
       set({ session: data.session });
+      if (data.session?.user) {
+        useNotificationsStore.getState().initialize(data.session.user.id);
+      }
     });
 
     supabase.auth.onAuthStateChange((event, session) => {
@@ -46,6 +50,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
       set({ session });
       if (session?.user) {
         registerForPushNotifications(session.user.id);
+        useNotificationsStore.getState().initialize(session.user.id);
       }
     });
 
@@ -116,6 +121,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
     if (userId) {
       await unregisterPushNotifications(userId);
     }
+    useNotificationsStore.getState().teardown();
     await supabase.auth.signOut();
     set({ session: null });
   },

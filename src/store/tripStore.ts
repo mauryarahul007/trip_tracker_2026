@@ -102,6 +102,7 @@ interface TripStore extends TripState {
 
   initialize: () => Promise<void>;
   refreshTrips: () => Promise<void>;
+  refreshActiveTripExpenses: () => Promise<void>;
   clearStorageError: () => void;
   processQueue: () => Promise<void>;
   queueSync: (type: SyncQueueItemType, payload: any) => void;
@@ -255,6 +256,9 @@ export function getTripNotificationRecipients(
     .filter((m): m is Member => !!m && !m.archived && !!m.linkedUserId && m.linkedUserId !== excludeUserId)
     .map((m) => m.linkedUserId as string);
 }
+
+const TRIPS_REFRESH_MIN_INTERVAL_MS = 30_000;
+let lastTripsRefreshAt = 0;
 
 // Reconciles a fresh server fetch for one trip against the locally
 // cached (persisted) expense list, without disturbing other trips'
@@ -436,11 +440,41 @@ export const useTripStore = create<TripStore>()(
 
     // Re-pulls the trip/member/group list without disturbing the active
     // trip's loaded expenses/categories — used after joining a new trip via
-    // an invite link, since that trip won't be in `trips` yet.
+    // an invite link, since that trip won't be in `trips` yet, and by a
+    // realtime "you were added to a trip" notification. Throttled since a
+    // pull/swipe gesture can trigger this repeatedly in quick succession
+    // and there's rarely anything new within a few seconds of the last
+    // fetch.
     refreshTrips: async () => {
+      const now = Date.now();
+      if (now - lastTripsRefreshAt < TRIPS_REFRESH_MIN_INTERVAL_MS) return;
+      lastTripsRefreshAt = now;
       try {
         const graph = await fetchMyTripGraph();
         set({ ...graph, storageError: null });
+      } catch (e) {
+        setError(e);
+      }
+    },
+
+    // Re-pulls the active trip's expenses/categories — used when a
+    // realtime notification signals someone else changed an expense on
+    // the trip currently being viewed (see notificationsStore.ts), so
+    // that shows up live instead of only after a manual reload.
+    refreshActiveTripExpenses: async () => {
+      const tripId = get().activeTripId;
+      if (!tripId || !navigator.onLine) return;
+      try {
+        const [serverExpenses, customCategories] = await Promise.all([
+          fetchExpensesForTrip(tripId),
+          fetchCategoriesForTrip(tripId),
+        ]);
+        const dirtyIds = collectDirtyExpenseIds(get().syncQueue);
+        set((state) => ({
+          expenses: mergeServerExpenses(state.expenses, serverExpenses, tripId, dirtyIds),
+          categories: [...DEFAULT_CATEGORIES, ...customCategories],
+          storageError: null,
+        }));
       } catch (e) {
         setError(e);
       }
@@ -510,7 +544,9 @@ export const useTripStore = create<TripStore>()(
               sendPushNotification(
                 recipients,
                 trip?.name || 'Trip Tracker',
-                `${savedExpense.title} — ${savedExpense.currency} ${savedExpense.amount.toFixed(2)} added`
+                `${savedExpense.title} — ${savedExpense.currency} ${savedExpense.amount.toFixed(2)} added`,
+                { type: 'expense_added' },
+                tripId
               );
             }
           } else if (item.type === 'updateExpense') {
@@ -1103,7 +1139,9 @@ export const useTripStore = create<TripStore>()(
         sendPushNotification(
           recipients,
           trip?.name || 'Trip Tracker',
-          `${savedExpense.title} — ${savedExpense.currency} ${savedExpense.amount.toFixed(2)} added`
+          `${savedExpense.title} — ${savedExpense.currency} ${savedExpense.amount.toFixed(2)} added`,
+          { type: 'expense_added' },
+          tripId
         );
       };
 
@@ -1189,6 +1227,16 @@ export const useTripStore = create<TripStore>()(
       } else {
         try {
           await saveAction();
+          const userId = get().userId;
+          const trip = get().trips.find((t) => t.id === tripId);
+          const recipients = getTripNotificationRecipients(get().trips, get().members, tripId, userId || '');
+          sendPushNotification(
+            recipients,
+            trip?.name || 'Trip Tracker',
+            `${updatedExpense.title} was updated`,
+            { type: 'expense_updated' },
+            tripId
+          );
         } catch (e) {
           // Revert optimistic update
           set((state) => ({
@@ -1219,6 +1267,15 @@ export const useTripStore = create<TripStore>()(
       } else {
         try {
           await deleteExpenseRow(id, userId || '');
+          const trip = get().trips.find((t) => t.id === existing.tripId);
+          const recipients = getTripNotificationRecipients(get().trips, get().members, existing.tripId, userId || '');
+          sendPushNotification(
+            recipients,
+            trip?.name || 'Trip Tracker',
+            `${existing.title} was deleted`,
+            { type: 'expense_deleted' },
+            existing.tripId
+          );
         } catch (e) {
           // Revert optimistic delete
           set((state) => ({

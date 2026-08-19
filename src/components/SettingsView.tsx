@@ -18,9 +18,11 @@ import {
   IconChevronRight,
   IconChevronLeft,
   IconMapPin,
+  IconBell,
 } from './Icons';
 import { CategoryIcon } from './CategoryIcon';
 import { useTripStore } from '../store/tripStore';
+import { useNotificationsStore } from '../store/notificationsStore';
 import { formatDateRange } from '../utils/dateRange';
 import { getCategoryKeywords } from '../utils/categoryHelper';
 import { getAppVersion } from '../utils/appVersion';
@@ -117,6 +119,8 @@ export function SettingsView({
   const resetCategoryKeywords = useTripStore((s) => s.resetCategoryKeywords);
   const enableGeotagging = useTripStore((s) => s.enableGeotagging);
   const setEnableGeotagging = useTripStore((s) => s.setEnableGeotagging);
+  const unreadNotificationCount = useNotificationsStore((s) => s.unreadCount);
+  const openNotificationsPanel = useNotificationsStore((s) => s.openPanel);
 
   // Category keyword states
   const [expandedCategoryId, setExpandedCategoryId] = useState<string | null>(null);
@@ -913,6 +917,22 @@ export function SettingsView({
       <div className="settings-group">
         <h4 className="settings-group-title">App &amp; Interface</h4>
         <div className="settings-group-card">
+          <button type="button" className="settings-row-item" onClick={openNotificationsPanel}>
+            <div className="settings-row-left">
+              <div className="settings-squircle squircle-teal">
+                <IconBell size={18} />
+              </div>
+              <div className="settings-row-texts">
+                <span className="settings-row-title">Notifications</span>
+                <span className="settings-row-subtitle">{unreadNotificationCount > 0 ? `${unreadNotificationCount} unread` : 'All caught up'}</span>
+              </div>
+            </div>
+            <div className="settings-row-right">
+              {unreadNotificationCount > 0 && <span className="settings-badge-pill">{unreadNotificationCount}</span>}
+              <IconChevronRight size={16} />
+            </div>
+          </button>
+
           <button type="button" className="settings-row-item" onClick={() => setSubScreen('appearance')}>
             <div className="settings-row-left">
               <div className="settings-squircle squircle-amber">
