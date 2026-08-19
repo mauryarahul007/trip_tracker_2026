@@ -155,6 +155,7 @@ function getAuditDetailsForNode(
 function TransferRow({
   transfer: t,
   tripId,
+  tripName,
   note,
   currencySymbol,
   isSettled,
