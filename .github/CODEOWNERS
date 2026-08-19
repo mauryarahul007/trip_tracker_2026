@@ -1,0 +1,8 @@
+# Global default code owner
+* @mauryarahul007
+
+# CI/CD workflows and build configurations require owner review
+/.github/workflows/ @mauryarahul007
+/codemagic.yaml @mauryarahul007
+/.githooks/ @mauryarahul007
+/scripts/ @mauryarahul007
