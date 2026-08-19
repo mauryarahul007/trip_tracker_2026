@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import type { Category, Expense, Trip } from '../types';
+import type { ConfirmRequest } from './ConfirmDialog';
 import {
   IconTag,
   IconTrash,
@@ -76,6 +77,7 @@ interface SettingsViewProps {
   hasActiveTrip?: boolean;
   initialSubScreen?: SubScreen;
   onClose?: () => void;
+  onRequestConfirm?: (req: ConfirmRequest) => void;
 }
 
 export function SettingsView({
@@ -106,6 +108,7 @@ export function SettingsView({
   hasActiveTrip = true,
   initialSubScreen = null,
   onClose,
+  onRequestConfirm,
 }: SettingsViewProps) {
   const [subScreen, setSubScreen] = useState<SubScreen>(initialSubScreen);
 
@@ -202,9 +205,13 @@ export function SettingsView({
       setMergeTargetId(otherCats[0]?.id || '');
       setCategoryToDelete(cat);
     } else {
-      if (window.confirm(`Are you sure you want to delete the category "${cat.name}"?`)) {
-        onDeleteCategory(cat.id, null);
-      }
+      onRequestConfirm?.({
+        title: 'Delete category',
+        message: `Are you sure you want to delete the category "${cat.name}"?`,
+        confirmLabel: 'Delete',
+        danger: true,
+        onConfirm: () => onDeleteCategory(cat.id, null),
+      });
     }
   };
 
@@ -534,9 +541,13 @@ export function SettingsView({
               type="button"
               className="settings-subscreen-action-btn danger"
               onClick={() => {
-                if (window.confirm('Permanently delete all expenses in the recycle bin? This cannot be undone.')) {
-                  emptyRecycleBin();
-                }
+                onRequestConfirm?.({
+                  title: 'Empty Recycle Bin',
+                  message: 'Permanently delete all expenses in the recycle bin? This cannot be undone.',
+                  confirmLabel: 'Empty Bin',
+                  danger: true,
+                  onConfirm: () => emptyRecycleBin(),
+                });
               }}
             >
               Empty Bin
@@ -588,9 +599,13 @@ export function SettingsView({
                       className="secondary-btn"
                       style={{ padding: '6px 8px', fontSize: '12px', color: 'var(--color-danger)', borderColor: 'rgba(184,69,46,0.2)' }}
                       onClick={() => {
-                        if (window.confirm(`Permanently delete "${exp.title}"? This cannot be undone.`)) {
-                          permanentlyDeleteExpense(exp.id);
-                        }
+                        onRequestConfirm?.({
+                          title: 'Delete permanently',
+                          message: `Permanently delete "${exp.title}"? This cannot be undone.`,
+                          confirmLabel: 'Delete',
+                          danger: true,
+                          onConfirm: () => permanentlyDeleteExpense(exp.id),
+                        });
                       }}
                       title="Permanently delete now"
                       aria-label="Permanently delete"
@@ -932,6 +947,10 @@ export function SettingsView({
         </div>
       )}
 
+      {hasActiveTrip && (
+        <p className="settings-scope-note">Everything below applies to your whole account — not just this trip.</p>
+      )}
+
       {/* Group 2: App & Appearance */}
       <div className="settings-group">
         <h4 className="settings-group-title">App &amp; Interface</h4>
@@ -1084,10 +1103,15 @@ export function SettingsView({
               type="button"
               className="settings-row-item"
               onClick={() => {
-                if (window.confirm('Populate a sample trip ("Road Trip to Goa") with test members and expenses?')) {
-                  onLoadDemoTrip();
-                  onClose?.();
-                }
+                onRequestConfirm?.({
+                  title: 'Seed Demo Data',
+                  message: 'Populate a sample trip ("Road Trip to Goa") with test members and expenses?',
+                  confirmLabel: 'Load Demo Trip',
+                  onConfirm: () => {
+                    onLoadDemoTrip();
+                    onClose?.();
+                  },
+                });
               }}
             >
               <div className="settings-row-left">
@@ -1116,10 +1140,15 @@ export function SettingsView({
               type="button"
               className="settings-row-item"
               onClick={() => {
-                if (window.confirm('Sign out of your account on this device?')) {
-                  onSignOut();
-                  onClose?.();
-                }
+                onRequestConfirm?.({
+                  title: 'Sign Out',
+                  message: 'Sign out of your account on this device?',
+                  confirmLabel: 'Sign Out',
+                  onConfirm: () => {
+                    onSignOut();
+                    onClose?.();
+                  },
+                });
               }}
             >
               <div className="settings-row-left">
@@ -1141,14 +1170,11 @@ export function SettingsView({
               type="button"
               className="settings-row-item"
               onClick={() => {
-                if (
-                  window.confirm(
-                    'FACTORY RESET: Are you absolutely sure? This will wipe all local trips, expenses, and settings.'
-                  )
-                ) {
-                  onClearDatabase();
-                  onClose?.();
-                }
+                // onClearDatabase already opens the app's own danger-confirm
+                // dialog (with the two-tap wax-seal pattern) — no separate
+                // confirm here, which used to stack a second, native one on
+                // top of it.
+                onClearDatabase();
               }}
             >
               <div className="settings-row-left">

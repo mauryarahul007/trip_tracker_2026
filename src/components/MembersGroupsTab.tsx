@@ -612,7 +612,7 @@ export function MembersGroupsTab({
             const owes = balance < -0.01;
             const amtLabel =
               balance > 0.01
-                ? `owed ${currencySymbol}${balance.toFixed(2)}`
+                ? `gets back ${currencySymbol}${balance.toFixed(2)}`
                 : owes
                 ? `owes ${currencySymbol}${Math.abs(balance).toFixed(2)}`
                 : 'settled';

@@ -11,6 +11,12 @@ type Props = {
   onUndoDeleteGroup: () => void;
 };
 
+const TOAST_TITLE_MAX = 40;
+
+function truncateForToast(text: string): string {
+  return text.length > TOAST_TITLE_MAX ? `${text.slice(0, TOAST_TITLE_MAX - 1).trimEnd()}…` : text;
+}
+
 function PostmarkToast({ message, onUndo }: { message: ReactNode; onUndo: () => void }) {
   return (
     <div className="postmark-toast">
@@ -49,19 +55,19 @@ export function UndoToasts({
     }}>
       {pendingDeleteExpense && (
         <PostmarkToast
-          message={<><strong>'{pendingDeleteExpense.title}'</strong> deleted</>}
+          message={<><strong>'{truncateForToast(pendingDeleteExpense.title)}'</strong> deleted</>}
           onUndo={onUndoDeleteExpense}
         />
       )}
       {pendingDeleteTrip && (
         <PostmarkToast
-          message={<>Trip <strong>'{pendingDeleteTrip.name}'</strong> deleted</>}
+          message={<>Trip <strong>'{truncateForToast(pendingDeleteTrip.name)}'</strong> deleted</>}
           onUndo={onUndoDeleteTrip}
         />
       )}
       {pendingDeleteGroup && (
         <PostmarkToast
-          message={<>Group <strong>'{pendingDeleteGroup.name}'</strong> deleted</>}
+          message={<>Group <strong>'{truncateForToast(pendingDeleteGroup.name)}'</strong> deleted</>}
           onUndo={onUndoDeleteGroup}
         />
       )}

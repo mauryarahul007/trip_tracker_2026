@@ -327,7 +327,6 @@ export function ExpenseForm({
             type="text"
             inputMode="decimal"
             autoFocus
-            required
             className="amount-hero-input"
             placeholder="0.00"
             value={formatAmountDisplay(amount)}
@@ -343,7 +342,6 @@ export function ExpenseForm({
         <label className="form-label">Expense Title</label>
         <input
           type="text"
-          required
           className="input-field"
           placeholder="e.g. Flight Tickets"
           value={title}
@@ -409,7 +407,6 @@ export function ExpenseForm({
         <label className="form-label">Date</label>
         <input
           type="date"
-          required
           className="input-field"
           value={date}
           onChange={(e) => setDate(e.target.value)}
@@ -647,7 +644,6 @@ export function ExpenseForm({
                 {isChecked && splitMode !== 'equal' && (
                   <input
                     type="text"
-                    required
                     placeholder={
                       splitMode === 'custom' ? 'e.g. 1' :
                       splitMode === 'exact' ? 'e.g. 200' : 'e.g. 25'

@@ -65,6 +65,8 @@ type Props = {
   categories: Category[];
   activeTripMembers: Member[];
   activeTripExpenseCount: number;
+  activeTripExpenses: Expense[];
+  onReviewAffected: (expenseIds: string[]) => void;
   filteredExpenses: Expense[];
   pendingDeleteId?: string;
   hasActiveFilters: boolean;
@@ -96,6 +98,8 @@ export function ExpenseList({
   categories,
   activeTripMembers,
   activeTripExpenseCount,
+  activeTripExpenses,
+  onReviewAffected,
   filteredExpenses,
   pendingDeleteId,
   hasActiveFilters,
@@ -156,9 +160,12 @@ export function ExpenseList({
       return scrollParent.scrollTop <= 0;
     };
 
+    let pullStartX: number | null = null;
     let pullStartY: number | null = null;
-    const startPull = (y: number) => {
-      pullStartY = atTopOfList() ? y : null;
+    const startPull = (x: number, y: number) => {
+      const atTop = atTopOfList();
+      pullStartX = atTop ? x : null;
+      pullStartY = atTop ? y : null;
     };
     const trackPull = (y: number) => {
       if (pullStartY === null) return;
@@ -169,6 +176,7 @@ export function ExpenseList({
       if (y - pullStartY > PULL_REVEAL_THRESHOLD) setRevealOnScroll(true);
     };
     const endPull = () => {
+      pullStartX = null;
       pullStartY = null;
     };
 
@@ -176,11 +184,12 @@ export function ExpenseList({
     // simulation in some browser devtools doesn't dispatch them reliably —
     // native touchstart/touchmove/touchend (what actually fires on a real
     // device) is tracked in parallel as a redundant, more direct path.
-    const handlePointerDown = (e: PointerEvent) => startPull(e.clientY);
+    const handlePointerDown = (e: PointerEvent) => startPull(e.clientX, e.clientY);
     const handlePointerMove = (e: PointerEvent) => trackPull(e.clientY);
     const handleTouchStart = (e: TouchEvent) => {
+      const x = e.touches[0]?.clientX;
       const y = e.touches[0]?.clientY;
-      if (y !== undefined) startPull(y);
+      if (x !== undefined && y !== undefined) startPull(x, y);
     };
     // Must be a non-passive listener: at scrollTop 0, dragging down is
     // exactly the gesture iOS's own rubber-band/overscroll recognizer also
@@ -190,10 +199,23 @@ export function ExpenseList({
     // takeover). preventDefault() while a qualifying pull is in progress
     // keeps the whole gesture in JS, the same way WhatsApp's own
     // pull-to-reveal search bar holds onto it.
+    //
+    // Only claims the gesture once it's clearly more vertical than
+    // horizontal — otherwise a horizontal drag that starts anywhere near
+    // the top of the list (e.g. scrolling the filter chip row, which sits
+    // right there) had its native horizontal scroll silently swallowed by
+    // this preventDefault() as soon as y so much as ticked sideways.
     const handleTouchMove = (e: TouchEvent) => {
+      const x = e.touches[0]?.clientX;
       const y = e.touches[0]?.clientY;
-      if (y === undefined) return;
-      if (pullStartY !== null && atTopOfList() && y >= pullStartY) {
+      if (x === undefined || y === undefined) return;
+      if (
+        pullStartX !== null &&
+        pullStartY !== null &&
+        atTopOfList() &&
+        y >= pullStartY &&
+        Math.abs(y - pullStartY) > Math.abs(x - pullStartX)
+      ) {
         e.preventDefault();
       }
       trackPull(y);
@@ -267,8 +289,36 @@ export function ExpenseList({
 
   const displayedExpenses = filteredExpenses.slice(0, visibleCount);
 
+  // Expenses whose payer and/or split still reference a member who was
+  // later removed from the trip — each one already gets its own inline
+  // warning below, this just offers a way to work through all of them
+  // instead of hunting each one down individually.
+  const affectedExpenseIds = trip
+    ? activeTripExpenses
+        .filter(
+          (e) =>
+            !trip.memberIds.includes(e.paidBy) ||
+            e.splitMemberIds.some((id) => !trip.memberIds.includes(id))
+        )
+        .map((e) => e.id)
+    : [];
+
   return (
     <>
+      {affectedExpenseIds.length > 1 && (
+        <button
+          type="button"
+          className="glass-card expense-review-banner"
+          onClick={() => onReviewAffected(affectedExpenseIds)}
+        >
+          <IconAlertCircle size={16} className="icon-sm" />
+          <span className="expense-review-banner-text">
+            {affectedExpenseIds.length} expenses need review after a member was removed
+          </span>
+          <span className="expense-review-banner-cta">Review them →</span>
+        </button>
+      )}
+
       {/* Search & Filters */}
       {activeTripExpenseCount > 0 && (
         <div ref={filtersRef} className="expense-filters">

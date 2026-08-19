@@ -1,4 +1,5 @@
 import type { Category, Expense, Trip } from '../types';
+import type { ConfirmRequest } from './ConfirmDialog';
 import { SettingsView, type ThemePref } from './SettingsView';
 
 type Props = {
@@ -28,6 +29,7 @@ type Props = {
   onSignOut?: () => void;
   pwaInstallable?: boolean;
   onInstallApp?: () => void;
+  onRequestConfirm?: (req: ConfirmRequest) => void;
 };
 
 export function SettingsTab({
@@ -55,6 +57,7 @@ export function SettingsTab({
   onSignOut,
   pwaInstallable,
   onInstallApp,
+  onRequestConfirm,
 }: Props) {
   return (
     <SettingsView
@@ -82,6 +85,7 @@ export function SettingsTab({
       onSignOut={onSignOut}
       pwaInstallable={pwaInstallable}
       onInstallApp={onInstallApp}
+      onRequestConfirm={onRequestConfirm}
       hasActiveTrip={true}
     />
   );

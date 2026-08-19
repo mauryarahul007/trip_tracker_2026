@@ -46,7 +46,11 @@ export function AnalyticsTab({
       <h3 style={{ fontSize: '18px', marginBottom: '20px' }}>Charts & Analytics</h3>
 
       {/* 1. Key Statistics Cards Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '20px' }}>
+      {/* minmax(0, 1fr), not plain 1fr — a bare 1fr track's minimum size
+          still defaults to its content's min-content width, so the column
+          holding the longer money figures/category name was quietly
+          winning more than half the row instead of splitting evenly. */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: '12px', marginBottom: '20px' }}>
         <div className="glass-card" style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
           <span style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Total Spent</span>
           <strong className="money" style={{ fontSize: '19px', color: 'var(--primary-accent)' }}>

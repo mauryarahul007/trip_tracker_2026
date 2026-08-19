@@ -23,6 +23,7 @@ import { NavTabs } from './components/NavTabs';
 import { ShareTripModal } from './components/ShareTripModal';
 import { NotificationsPanel } from './components/NotificationsPanel';
 import { NotificationsBellButton } from './components/NotificationsBellButton';
+import { FitHeading } from './components/FitHeading';
 import { IconCalendar, IconChevronLeft, IconShare, IconPlus } from './components/Icons';
 import { formatDateRange } from './utils/dateRange';
 import { useScrollLock } from './utils/useScrollLock';
@@ -133,6 +134,11 @@ export default function App() {
   const [showAddExpense, setShowAddExpense] = useState(false);
   const [editingExpenseId, setEditingExpenseId] = useState<string | null>(null);
   const [selectedReviewExpense, setSelectedReviewExpense] = useState<Expense | null>(null);
+  // Queue of expense ids still to review after "Review N affected expenses"
+  // (a member was removed) — save/cancel on the open form advances to the
+  // next id instead of just closing, so the whole batch can be worked
+  // through in one pass instead of hunting each one down individually.
+  const [reviewQueue, setReviewQueue] = useState<string[]>([]);
 
   // Expense list search & filters
   const [expenseSearch, setExpenseSearch] = useState('');
@@ -394,7 +400,7 @@ export default function App() {
   const CATEGORY_COLORS: Record<string, string> = {
     'cat-food': '#6366f1', // Indigo
     'cat-stay': '#3b82f6', // Blue
-    'cat-travel': '#06b6d4', // Cyan
+    'cat-travel': '#db2777', // Pink — was cyan, too close to Stay's blue on the wheel
     'cat-activities': '#10b981', // Emerald
     'cat-shopping': '#f59e0b', // Amber
     'cat-misc': '#8b5cf6', // Violet
@@ -706,8 +712,7 @@ export default function App() {
       } else {
         await addExpense(expensePayload);
       }
-      setEditingExpenseId(null);
-      setShowAddExpense(false);
+      advanceReviewQueueOrClose();
       return { success: true };
     } catch {
       return { success: false, error: 'Failed to save expense.' };
@@ -715,8 +720,21 @@ export default function App() {
   };
 
   const handleCancelExpenseForm = () => {
-    setEditingExpenseId(null);
-    setShowAddExpense(false);
+    advanceReviewQueueOrClose();
+  };
+
+  // Moves to the next expense in the affected-by-a-removed-member review
+  // queue (if one is running), or just closes the form like before.
+  const advanceReviewQueueOrClose = () => {
+    if (reviewQueue.length === 0) {
+      setEditingExpenseId(null);
+      setShowAddExpense(false);
+      return;
+    }
+    const [nextId, ...rest] = reviewQueue;
+    setReviewQueue(rest);
+    setEditingExpenseId(nextId);
+    setShowAddExpense(true);
   };
 
   const handleOpenAddExpense = () => {
@@ -725,12 +743,25 @@ export default function App() {
       setActiveTab('members');
       return;
     }
+    setReviewQueue([]);
     setEditingExpenseId(null);
     setShowAddExpense(true);
   };
 
   const handleStartEditExpense = (exp: Expense) => {
+    setReviewQueue([]);
     setEditingExpenseId(exp.id);
+    setShowAddExpense(true);
+  };
+
+  // Entry point for the "Review N affected expenses" banner — opens the
+  // first expense a removed member touched and queues the rest so save/
+  // cancel walks through them one after another.
+  const handleReviewAffectedExpenses = (expenseIds: string[]) => {
+    if (expenseIds.length === 0) return;
+    const [firstId, ...rest] = expenseIds;
+    setReviewQueue(rest);
+    setEditingExpenseId(firstId);
     setShowAddExpense(true);
   };
 
@@ -754,15 +785,25 @@ export default function App() {
     setPendingDeleteExpense(null);
   };
 
-  // Undo-delete: stage the trip, start a 2-second timer
+  // Deleting a trip takes everyone's members and expenses with it, so it
+  // gets a deliberate confirm step in front of the undo-toast staging below
+  // — the toast is a grace period for a slip, not the only safety net.
   const handleDeleteTrip = (trip: Trip) => {
-    if (tripUndoTimer) clearTimeout(tripUndoTimer);
-    setPendingDeleteTrip(trip);
-    const timer = setTimeout(() => {
-      deleteTrip(trip.id);
-      setPendingDeleteTrip(null);
-    }, UNDO_DURATION_MS);
-    setTripUndoTimer(timer);
+    setConfirmRequest({
+      title: 'Delete trip',
+      message: `Delete "${trip.name}" and all of its members and expenses? You'll have a few seconds to undo right after.`,
+      confirmLabel: 'Delete',
+      danger: true,
+      onConfirm: () => {
+        if (tripUndoTimer) clearTimeout(tripUndoTimer);
+        setPendingDeleteTrip(trip);
+        const timer = setTimeout(() => {
+          deleteTrip(trip.id);
+          setPendingDeleteTrip(null);
+        }, UNDO_DURATION_MS);
+        setTripUndoTimer(timer);
+      },
+    });
   };
 
   const handleUndoDeleteTrip = () => {
@@ -1026,12 +1067,13 @@ export default function App() {
                   {formatDateRange(activeTrip?.startDate || '', activeTrip?.endDate || '')}
                 </span>
                 <div className="app-title-row">
-                  <h2 className="app-logo" style={{ color: '#F2ECDC' }}>{activeTrip?.name}</h2>
-                  <span className="app-title-compact-badge" aria-hidden={!isHeaderScrolled}>
-                    <span className="compact-badge-sep">·</span>
-                    <span className="compact-badge-currency">{activeTrip?.baseCurrency}</span>
-                    <span className={`compact-sync-dot ${syncStatus}`} title={syncStatusLabel} />
-                  </span>
+                  <FitHeading
+                    text={activeTrip?.name || ''}
+                    className="app-logo"
+                    style={{ color: '#F2ECDC' }}
+                    maxFontSize={22}
+                    minFontSize={14}
+                  />
                 </div>
               </div>
               <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexShrink: 0 }}>
@@ -1093,6 +1135,8 @@ export default function App() {
                   categories={categories}
                   activeTripMembers={activeTripMembers}
                   activeTripExpenseCount={activeTripExpenses.length}
+                  activeTripExpenses={activeTripExpenses}
+                  onReviewAffected={handleReviewAffectedExpenses}
                   filteredExpenses={filteredExpenses}
                   pendingDeleteId={pendingDeleteExpense?.id}
                   hasActiveFilters={hasActiveExpenseFilters}
@@ -1200,6 +1244,7 @@ export default function App() {
                 onSignOut={signOut}
                 pwaInstallable={!!deferredPrompt}
                 onInstallApp={handleInstallApp}
+                onRequestConfirm={setConfirmRequest}
               />
             </div>
 
@@ -1222,6 +1267,12 @@ export default function App() {
 
       {showAddExpense && (
         <ExpenseForm
+          // The review queue swaps editingExpenseId while the form stays
+          // mounted (same conditional render slot) — without a key tied to
+          // it, ExpenseForm's fields are seeded from editingExpense only
+          // once via useState initializers, so they'd keep showing the
+          // previous queue item's data instead of resetting for the next one.
+          key={editingExpenseId || 'new'}
           trip={activeTrip}
           visibleMembers={visibleMembers}
           visibleTripGroups={visibleTripGroups}
@@ -1274,6 +1325,7 @@ export default function App() {
           onSignOut={signOut}
           pwaInstallable={!!deferredPrompt}
           onInstallApp={handleInstallApp}
+          onRequestConfirm={setConfirmRequest}
         />
       )}
 
@@ -1294,7 +1346,7 @@ export default function App() {
           (not nested in the web-only header) so it opens the same way on
           native too, reached via the "Notifications" row in Settings
           instead of the header bell button there. */}
-      <NotificationsPanel />
+      <NotificationsPanel onRequestConfirm={setConfirmRequest} />
     </div>
   );
 }

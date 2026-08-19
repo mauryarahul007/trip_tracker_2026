@@ -1,5 +1,6 @@
 import React, { useRef, useState } from 'react';
 import type { AppNotification } from '../types';
+import type { ConfirmRequest } from './ConfirmDialog';
 import { useNotificationsStore } from '../store/notificationsStore';
 import { useTripStore } from '../store/tripStore';
 import { useHistoryBack } from '../utils/useHistoryBack';
@@ -161,7 +162,11 @@ function NotificationCard({
         <div className="notif-body">
           <div className="notif-row-top">
             <div className="notif-title-wrap">
-              <h4 className="notif-card-title">{notification.title}</h4>
+              {/* The event itself (e.g. "Flight tickets — INR 24,745 added") is
+                  the useful headline here — notification.title is just the
+                  trip name, which the badge right next to it already shows,
+                  so rendering both repeated the same text twice in one row. */}
+              <h4 className="notif-card-title">{notification.body}</h4>
               {tripName && (
                 <span className={`notif-trip-badge ${isCurrentTrip ? 'current' : 'other'}`}>
                   {tripName}
@@ -170,7 +175,6 @@ function NotificationCard({
             </div>
             <span className="notif-time">{relativeTime(notification.createdAt)}</span>
           </div>
-          <p className="notif-card-text">{notification.body}</p>
         </div>
 
         {/* Actions Toolbar for Read/Unread and Delete */}
@@ -199,7 +203,11 @@ function NotificationCard({
   );
 }
 
-export function NotificationsPanel() {
+export function NotificationsPanel({
+  onRequestConfirm,
+}: {
+  onRequestConfirm?: (req: ConfirmRequest) => void;
+} = {}) {
   const isPanelOpen = useNotificationsStore((s) => s.isPanelOpen);
   const closePanel = useNotificationsStore((s) => s.closePanel);
   const notifications = useNotificationsStore((s) => s.notifications);
@@ -255,13 +263,21 @@ export function NotificationsPanel() {
 
   const handleClearAll = () => {
     if (tripFilter === 'current' && activeTrip) {
-      if (window.confirm(`Clear all notifications for "${activeTrip.name}"?`)) {
-        displayedNotifications.forEach((n) => deleteOne(n.id));
-      }
+      onRequestConfirm?.({
+        title: 'Clear notifications',
+        message: `Clear all notifications for "${activeTrip.name}"?`,
+        confirmLabel: 'Clear',
+        danger: true,
+        onConfirm: () => displayedNotifications.forEach((n) => deleteOne(n.id)),
+      });
     } else {
-      if (window.confirm('Are you sure you want to clear all notifications across all trips? This cannot be undone.')) {
-        clearAll();
-      }
+      onRequestConfirm?.({
+        title: 'Clear all notifications',
+        message: 'Are you sure you want to clear all notifications across all trips? This cannot be undone.',
+        confirmLabel: 'Clear All',
+        danger: true,
+        onConfirm: () => clearAll(),
+      });
     }
   };
 

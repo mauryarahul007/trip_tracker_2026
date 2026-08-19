@@ -1,11 +1,13 @@
 import { useEffect, useRef } from 'react';
 import type { Trip, Category, Expense } from '../types';
+import type { ConfirmRequest } from './ConfirmDialog';
 import { IconClose } from './Icons';
 import { SettingsView, type ThemePref } from './SettingsView';
 import { useTripStore } from '../store/tripStore';
 
 type Props = {
   onClose: () => void;
+  onRequestConfirm?: (req: ConfirmRequest) => void;
   themePref: ThemePref;
   setThemePref: (v: ThemePref) => void;
 
@@ -39,6 +41,7 @@ type Props = {
 
 export function GlobalSettingsModal({
   onClose,
+  onRequestConfirm,
   themePref,
   setThemePref,
   onExportJson,
@@ -132,6 +135,7 @@ export function GlobalSettingsModal({
           onInstallApp={onInstallApp}
           hasActiveTrip={Boolean(activeTripId)}
           onClose={onClose}
+          onRequestConfirm={onRequestConfirm}
         />
       </div>
     </div>
