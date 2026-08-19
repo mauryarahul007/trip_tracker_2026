@@ -102,6 +102,27 @@ export default function App() {
     localStorage.setItem('theme-pref', themePref);
   }, [themePref]);
 
+  // App-wide micro-haptic tap feedback: fires a light pulse on any real
+  // button/toggle press, everywhere in the app. Interactions that need a
+  // stronger/curated pattern (success, warning, delete...) call
+  // triggerHaptic explicitly in their own handler — that call runs after
+  // this one in the same tick and simply overwrites the light pulse
+  // (navigator.vibrate replaces any in-flight pattern), so nothing here
+  // fights those.
+  useEffect(() => {
+    const handleTapFeedback = (e: PointerEvent) => {
+      if (e.pointerType === 'mouse') return;
+      const target = e.target;
+      if (!(target instanceof Element)) return;
+      const interactive = target.closest(
+        'button:not(:disabled), [role="button"]:not([aria-disabled="true"]), input[type="checkbox"], input[type="radio"]'
+      );
+      if (interactive) triggerHaptic('light');
+    };
+    document.body.addEventListener('pointerdown', handleTapFeedback, { capture: true, passive: true });
+    return () => document.body.removeEventListener('pointerdown', handleTapFeedback, true);
+  }, []);
+
   // Form states - Trips
   const [showAddTrip, setShowAddTrip] = useState(false);
   const [editingTripId, setEditingTripId] = useState<string | null>(null);

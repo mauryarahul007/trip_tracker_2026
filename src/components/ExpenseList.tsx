@@ -8,6 +8,7 @@ import { getCurrencySymbol } from '../utils/currency';
 import { initial } from '../utils/initials';
 import { avatarColorForName } from '../utils/avatarColor';
 import { usePrivacyStore, formatMaskedAmount } from '../store/privacyStore';
+import { triggerHaptic } from '../utils/haptics';
 
 // Swipe-to-delete is a supplement to the explicit trash button — skip
 // wrapping the row in it at all when the viewer isn't allowed to delete.
@@ -544,7 +545,7 @@ export function ExpenseList({
                   >
                     <div
                       style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}
-                      onClick={() => onReview(exp)}
+                      onClick={() => { triggerHaptic('light'); onReview(exp); }}
                     >
                       <CategoryIcon categoryId={cat?.id || ''} fallbackEmoji={cat?.icon || '🏷️'} size={15} />
                       <h4 style={{ flex: 1, minWidth: 0, fontSize: '15px', lineHeight: 1.3, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{exp.title}</h4>
@@ -555,7 +556,7 @@ export function ExpenseList({
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
                       <div
                         style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', minWidth: 0 }}
-                        onClick={() => onReview(exp)}
+                        onClick={() => { triggerHaptic('light'); onReview(exp); }}
                         title={`Paid by ${payerMember?.name || 'a removed member'}`}
                       >
                         <ExpenseAvatar member={payerMember} size={22} muted={isPayerDeleted} />
@@ -602,7 +603,7 @@ export function ExpenseList({
                                 style={needsReview ? { color: 'var(--color-warning)' } : undefined}
                                 aria-label={needsReview ? 'Review expense' : 'Edit expense'}
                                 title={needsReview ? 'Review' : 'Edit'}
-                                onClick={(e) => { e.stopPropagation(); onEdit(exp); }}
+                                onClick={(e) => { e.stopPropagation(); triggerHaptic('light'); onEdit(exp); }}
                               >
                                 {needsReview ? <IconAlertCircle size={15} className="icon-sm" /> : <IconEdit size={15} className="icon-sm" />}
                               </button>
@@ -611,7 +612,7 @@ export function ExpenseList({
                               className="row-icon-btn row-icon-btn-danger"
                               aria-label="Delete expense"
                               title="Delete"
-                              onClick={(e) => { e.stopPropagation(); onDelete(exp); }}
+                              onClick={(e) => { e.stopPropagation(); triggerHaptic('warning'); onDelete(exp); }}
                             >
                               <IconTrash size={15} className="icon-sm" />
                             </button>
