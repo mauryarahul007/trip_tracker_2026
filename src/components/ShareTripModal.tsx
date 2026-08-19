@@ -14,9 +14,11 @@ function buildJoinLink(joinCode: string): string {
 
 export function ShareTripModal({ trip, onClose }: Props) {
   const [copied, setCopied] = useState<'link' | 'code' | null>(null);
-  const joinLink = buildJoinLink(trip.joinCode);
+  const hasJoinCode = Boolean(trip.joinCode && trip.joinCode.trim().length > 0);
+  const joinLink = hasJoinCode ? buildJoinLink(trip.joinCode) : '';
 
   const copy = async (value: string, which: 'link' | 'code') => {
+    if (!value) return;
     try {
       await navigator.clipboard.writeText(value);
       setCopied(which);
@@ -57,39 +59,61 @@ export function ShareTripModal({ trip, onClose }: Props) {
           Anyone with this link can sign in and claim their spot as a trip member.
         </p>
 
-        <div className="form-group">
-          <label className="form-label">Invite link</label>
-          <div style={{ display: 'flex', gap: '8px' }}>
-            <input type="text" readOnly className="input-field" value={joinLink} style={{ flex: 1, fontSize: '13px' }} onFocus={(e) => e.target.select()} />
-            <button type="button" className="secondary-btn" style={{ padding: '0 14px', flexShrink: 0 }} onClick={() => copy(joinLink, 'link')}>
-              {copied === 'link' ? <IconCheck size={16} className="icon-sm" /> : <IconCopy size={16} className="icon-sm" />}
-            </button>
+        {!hasJoinCode ? (
+          <div
+            style={{
+              padding: '16px',
+              borderRadius: '10px',
+              background: 'var(--bg-subtle, rgba(15,23,42,0.04))',
+              border: '1px dashed var(--border-color)',
+              textAlign: 'center',
+              fontSize: '13px',
+              color: 'var(--text-secondary)',
+              lineHeight: '1.5',
+            }}
+          >
+            <p style={{ margin: 0, fontWeight: 600, color: 'var(--text-primary)' }}>Invite code pending sync</p>
+            <p style={{ margin: '4px 0 0', fontSize: '12px' }}>
+              This trip was created while offline. A shareable invite link and join code will be generated automatically once synced online.
+            </p>
           </div>
-        </div>
-
-        <div className="form-group" style={{ marginTop: '16px', marginBottom: 0 }}>
-          <label className="form-label">Or share this code</label>
-          <div style={{ display: 'flex', gap: '8px' }}>
-            <div
-              style={{
-                flex: 1,
-                fontSize: '20px',
-                fontWeight: 700,
-                letterSpacing: '0.15em',
-                textAlign: 'center',
-                padding: '10px',
-                borderRadius: '10px',
-                background: 'var(--bg-subtle, rgba(15,23,42,0.04))',
-                border: '1px solid var(--border-color)',
-              }}
-            >
-              {trip.joinCode}
+        ) : (
+          <>
+            <div className="form-group">
+              <label className="form-label">Invite link</label>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <input type="text" readOnly className="input-field" value={joinLink} style={{ flex: 1, fontSize: '13px' }} onFocus={(e) => e.target.select()} />
+                <button type="button" className="secondary-btn" style={{ padding: '0 14px', flexShrink: 0 }} onClick={() => copy(joinLink, 'link')}>
+                  {copied === 'link' ? <IconCheck size={16} className="icon-sm" /> : <IconCopy size={16} className="icon-sm" />}
+                </button>
+              </div>
             </div>
-            <button type="button" className="secondary-btn" style={{ padding: '0 14px', flexShrink: 0 }} onClick={() => copy(trip.joinCode, 'code')}>
-              {copied === 'code' ? <IconCheck size={16} className="icon-sm" /> : <IconCopy size={16} className="icon-sm" />}
-            </button>
-          </div>
-        </div>
+
+            <div className="form-group" style={{ marginTop: '16px', marginBottom: 0 }}>
+              <label className="form-label">Or share this code</label>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <div
+                  style={{
+                    flex: 1,
+                    fontSize: '20px',
+                    fontWeight: 700,
+                    letterSpacing: '0.15em',
+                    textAlign: 'center',
+                    padding: '10px',
+                    borderRadius: '10px',
+                    background: 'var(--bg-subtle, rgba(15,23,42,0.04))',
+                    border: '1px solid var(--border-color)',
+                  }}
+                >
+                  {trip.joinCode}
+                </div>
+                <button type="button" className="secondary-btn" style={{ padding: '0 14px', flexShrink: 0 }} onClick={() => copy(trip.joinCode, 'code')}>
+                  {copied === 'code' ? <IconCheck size={16} className="icon-sm" /> : <IconCopy size={16} className="icon-sm" />}
+                </button>
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

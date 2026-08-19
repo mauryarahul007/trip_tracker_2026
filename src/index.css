@@ -517,7 +517,8 @@ input[type="date"].input-field {
 
 .expense-search-input {
   width: 100%;
-  padding-right: 34px;
+  padding-left: 36px;
+  padding-right: 38px;
   border-radius: 20px;
   font-size: 13.5px;
   background: var(--bg-surface);
@@ -532,7 +533,9 @@ input[type="date"].input-field {
 
 .search-clear-btn {
   position: absolute;
-  right: 10px;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
   background: none;
   border: none;
   color: var(--text-muted);
@@ -1733,6 +1736,11 @@ input:checked + .toggle-slider:before {
   border-radius: var(--border-radius-md);
   background: rgba(31, 110, 104, 0.06);
   padding: 12px 18px;
+  transition: var(--transition-smooth);
+}
+.amount-hero.amount-hero-error {
+  border-color: var(--color-danger);
+  background: rgba(184, 69, 46, 0.06);
 }
 .amount-hero-symbol {
   font-family: var(--font-family-title);
@@ -1740,6 +1748,10 @@ input:checked + .toggle-slider:before {
   font-weight: 600;
   color: var(--primary-accent);
   flex-shrink: 0;
+  transition: color 0.15s ease;
+}
+.amount-hero.amount-hero-error .amount-hero-symbol {
+  color: var(--color-danger);
 }
 .amount-hero-input {
   border: none;
@@ -2368,7 +2380,7 @@ input:checked + .toggle-slider:before {
 .tab-pane {
   flex: 1;
   min-height: 0;
-  padding: calc(126px + var(--safe-top, 0px)) max(20px, var(--safe-right, 20px)) calc(88px + var(--safe-bottom, 0px)) max(20px, var(--safe-left, 20px));
+  padding: calc(126px + var(--safe-top, 0px)) max(20px, var(--safe-right, 20px)) calc(104px + var(--safe-bottom, 0px)) max(20px, var(--safe-left, 20px));
   overflow-y: auto;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;

@@ -31,3 +31,8 @@ dist-ssr
 # Copied from node_modules/maplibre-gl by scripts/sync-maplibre-worker.mjs
 # (runs on postinstall/predev/prebuild) — regenerated, not source.
 /public/maplibre/
+
+hive/
+roster-backups/
+roster.json
+

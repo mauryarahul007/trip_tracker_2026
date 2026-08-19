@@ -320,7 +320,7 @@ export function ExpenseForm({
 
       <div className="form-group">
         <label className="form-label">Amount ({trip?.baseCurrency})</label>
-        <div className="amount-hero">
+        <div className={`amount-hero ${formError && (!amount || parseFloat(amount) <= 0) ? 'amount-hero-error' : ''}`}>
           <span className="amount-hero-symbol">{currencySymbol}</span>
           <input
             ref={amountInputRef}
@@ -333,9 +333,15 @@ export function ExpenseForm({
             onChange={(e) => {
               const raw = e.target.value.replace(/,/g, '');
               if (/^\d*\.?\d*$/.test(raw)) setAmount(raw);
+              if (formError) setFormError('');
             }}
           />
         </div>
+        {formError && (!amount || parseFloat(amount) <= 0) && (
+          <p style={{ color: 'var(--color-danger)', fontSize: '12px', marginTop: '6px', marginBottom: 0 }}>
+            {formError}
+          </p>
+        )}
       </div>
 
       <div className="form-group">
@@ -348,12 +354,18 @@ export function ExpenseForm({
           onChange={(e) => {
             const val = e.target.value;
             setTitle(val);
+            if (formError) setFormError('');
             const suggested = autoSuggestCategory(val, categories);
             if (suggested) {
               setCategory(suggested);
             }
           }}
         />
+        {formError && !title.trim() && (parseFloat(amount) > 0) && (
+          <p style={{ color: 'var(--color-danger)', fontSize: '12px', marginTop: '6px', marginBottom: 0 }}>
+            {formError}
+          </p>
+        )}
       </div>
 
       <div className="form-group">

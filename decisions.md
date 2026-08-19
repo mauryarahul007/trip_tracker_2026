@@ -557,6 +557,23 @@ This document logs all meaningful technical decisions, library choices, design p
   - Non-owner trip participants cannot delete shared trips (they can archive or leave the trip instead).
   - Historical notifications without structured `data.expenseTitle` are normalized via regex matching against known verb patterns.
 
+---
+
+## 42. Offline Sync Queue Fallback on Network Failure & Form / Share Hardening
+* **Context:**
+  1. In `src/store/tripStore.ts`, when `navigator.onLine` was true but backend requests failed (e.g. captive portal, DNS resolution failure, network hiccup), mutations (adding/updating/deleting expenses, members, groups) caught the error and reverted the optimistic local state, deleting the user's freshly entered data with an error banner.
+  2. When sharing an unsynced or offline-created trip before server sync generated a `joinCode`, `ShareTripModal.tsx` rendered a broken URL `http://.../join/undefined` and an empty share code box.
+  3. Form validation errors in `ExpenseForm.tsx` rendered solely at the bottom of the modal below the split matrix, forcing users to scroll down on shorter mobile screens to see why submitting failed.
+  4. Search clear `X` icon overlapped the 20px curved border radius of `.expense-search-input`.
+  5. The bottom items in `.tab-pane` could partially hide behind the floating `NavTabs` on short mobile screens.
+* **Decision:**
+  1. **Resilient Sync Fallback (`src/store/tripStore.ts`):** Modified all CRUD operations (`addExpense`, `updateExpense`, `deleteExpense`, `addMember`, `createTrip`, `createGroup`, `updateGroup`, `deleteGroup`, `addCategory`, `deleteCategory`) so that when an online API call fails, it logs a warning and enqueues the mutation to `queueSync()`, preserving the user's optimistic local data and automatically synchronizing when connectivity recovers.
+  2. **Unsynced Share State (`src/components/ShareTripModal.tsx`):** Added a defensive `hasJoinCode` check. When a trip has not yet received a server-generated `joinCode`, the modal renders a helpful sync-pending banner and disables the copy actions.
+  3. **Inline Form Validation (`src/components/ExpenseForm.tsx`, `src/index.css`):** Rendered field-specific validation errors directly beneath the Amount and Title input fields, styling `.amount-hero.amount-hero-error` with danger accents for immediate feedback.
+  4. **Search Inset & Mobile Clearance (`src/index.css`):** Adjusted `.expense-search-input` right padding and `.search-clear-btn` positioning to sit inside the curved boundary; increased `.tab-pane` bottom padding to `calc(104px + var(--safe-bottom, 0px))` for full floating nav clearance.
+* **Trade-offs Accepted:**
+  - Network-failed mutations persist locally with temporary IDs and sync in the background upon reconnection, prioritizing zero data loss over immediate server confirmation.
+
 
 
 
