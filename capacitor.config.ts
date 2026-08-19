@@ -21,6 +21,16 @@ const config: CapacitorConfig = {
     CapacitorUpdater: {
       autoUpdate: false,
     },
+    // Without this, iOS delivers a push with zero visible presentation
+    // (no banner/sound/badge) whenever it arrives while the app is in the
+    // foreground — the notification still reaches the JS
+    // pushNotificationReceived listener, it just never becomes visible to
+    // the user, which reads exactly like "server says sent, nothing
+    // shown." Background/killed-app delivery is handled by iOS directly
+    // and is unaffected by this setting.
+    PushNotifications: {
+      presentationOptions: ['badge', 'sound', 'alert'],
+    },
   },
 };
 
