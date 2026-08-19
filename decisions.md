@@ -475,6 +475,25 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - Navigating between secondary tabs pushes lightweight hash history states (`#nav-N`) onto the stack. This guarantees that back gestures unwind intuitively without any unexpected screen leaps or data loss.
 
+---
+
+## 37. Floating Frosted Glass Pill Menu Architecture (Webapp)
+* **Context:** The previous bottom tab bar on the webapp was rendered as a full-width flat opaque bar stuck to the bottom of the viewport. It looked rigid, boxy, and clashed with the modern translucent aesthetic established by the iOS and WhatsApp design systems.
+* **Decision:** Implemented a **Floating Frosted Glass Pill Menu** (`.nav-tabs`) with spring active indicators and translucent backdrop blur.
+* **Pattern/Implementation:**
+  - **Pill Geometry & Glassmorphic Surface (`src/index.css`)**:
+    - Transformed `.nav-tabs` into an elevated floating capsule (`position: absolute; bottom: calc(14px + safe-bottom); left: 50%; transform: translateX(-50%); max-width: 430px; border-radius: 9999px`).
+    - Configured true glassmorphism with `backdrop-filter: blur(24px) saturate(190%)`, multi-layered ambient shadows, and inner rim highlight (`inset 0 1px 1px rgba(255, 255, 255, 0.9)` in light mode, `inset 0 1px 1px rgba(255, 255, 255, 0.08)` in dark mode).
+  - **Spring Active State & Micro-Interactions (`src/index.css`)**:
+    - Styled `.nav-tab-item` with spring easing `cubic-bezier(0.16, 1, 0.3, 1)`.
+    - Active tabs receive a glowing capsule background (`rgba(0, 191, 165, 0.14)`), bold typography, and an icon elevation/scale pop (`scale(1.08) translateY(-1px)`).
+  - **FAB & Content Clearance (`src/index.css`)**:
+    - Re-anchored `.fab-add-expense` at `bottom: calc(78px + safe-bottom)` to hover directly above the right side of the floating glass bar.
+    - Updated `.tab-pane` padding-bottom to `calc(88px + safe-bottom)` and bottom dissolution mask so content scrolls cleanly behind the pill.
+* **Trade-offs Accepted:**
+  - The floating pill occupies floating space over the bottom of the scroll view. Content padding-bottom ensures zero overlap with the final list items and buttons.
+
+
 
 
 
