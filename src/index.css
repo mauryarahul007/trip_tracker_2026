@@ -318,6 +318,17 @@ button, [role="button"], input, select, a {
   outline: none;
   -webkit-tap-highlight-color: transparent;
 }
+/* On iOS, .nav-tabs is display:none (native tab bar replaces it — see
+   html.capacitor-ios .nav-tabs) and no longer reserves its own space in
+   the flex column, so .app-main (this FAB's positioned ancestor) expands
+   to fill that reclaimed space too. bottom:18px would then land the FAB
+   almost exactly where the native floating tab bar renders — and since
+   that's a separate native view painted on top of the entire webview, the
+   FAB would end up invisible/unreachable underneath it. Lift it clear of
+   the tab bar's full footprint (8px margin + 64px height) instead. */
+html.capacitor-ios .fab-add-expense {
+  bottom: calc(84px + var(--safe-bottom, 0px));
+}
 
 .fab-add-expense:hover {
   background: #243445;
