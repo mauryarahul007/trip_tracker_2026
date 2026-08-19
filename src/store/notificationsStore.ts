@@ -62,7 +62,7 @@ export const useNotificationsStore = create<NotificationsStore>((set, get) => ({
       // this, the change silently doesn't show up until the next full
       // app relaunch.
       const notifType = notification.data?.type;
-      if (notifType === 'member_added' || notifType === 'trip_deleted') {
+      if (notifType === 'member_added' || notifType === 'member_joined' || notifType === 'trip_deleted') {
         useTripStore.getState().refreshTrips();
       }
 

@@ -37,7 +37,10 @@ function getNotificationMeta(type?: string): { icon: React.ReactNode; colorClass
     case 'expense_updated':
       return { icon: <IconEdit size={17} />, colorClass: 'squircle-amber' };
     case 'expense_deleted':
+    case 'trip_deleted':
       return { icon: <IconTrash size={17} />, colorClass: 'squircle-rose' };
+    case 'expense_restored':
+      return { icon: <IconSparkles size={17} />, colorClass: 'squircle-emerald' };
     case 'member_added':
     case 'member_joined':
       return { icon: <IconMembers size={17} />, colorClass: 'squircle-purple' };
@@ -48,6 +51,69 @@ function getNotificationMeta(type?: string): { icon: React.ReactNode; colorClass
     default:
       return { icon: <IconBell size={17} />, colorClass: 'squircle-blue' };
   }
+}
+
+function getNotificationDisplay(
+  notification: AppNotification,
+  resolvedTripName: string | null
+): { headline: string; badge: string | null; body: string } {
+  const type = notification.data?.type;
+  const rawTitle = (notification.title || '').trim();
+  const rawBody = (notification.body || '').trim();
+
+  const typeHeadlines: Record<string, string> = {
+    expense_added: 'Expense Added',
+    expense_updated: 'Expense Updated',
+    expense_deleted: 'Expense Deleted',
+    expense_restored: 'Expense Restored',
+    trip_deleted: 'Trip Deleted',
+    member_added: 'Member Added',
+    member_joined: 'Member Joined',
+    settlement_reminder: 'Settlement Reminder',
+    settlement: 'Settlement Updated',
+    settle: 'Settlement Updated',
+  };
+
+  // If push title has "Headline • TripName", extract the clean headline
+  let headline = rawTitle;
+  if (headline.includes('•')) {
+    const parts = headline.split('•').map((s) => s.trim());
+    if (parts[0]) headline = parts[0];
+  }
+
+  // If headline is identical to the tripName (historical data) or generic, use smart action headline
+  const isGenericOrTripName =
+    !headline ||
+    headline.toLowerCase() === 'trip tracker' ||
+    (resolvedTripName && headline.toLowerCase() === resolvedTripName.toLowerCase());
+
+  if (isGenericOrTripName) {
+    if (type && typeHeadlines[type]) {
+      headline = typeHeadlines[type];
+    } else if (rawBody.toLowerCase().includes('was deleted')) {
+      headline = rawBody.toLowerCase().includes('trip') ? 'Trip Deleted' : 'Expense Deleted';
+    } else if (rawBody.toLowerCase().includes('added')) {
+      headline = 'Expense Added';
+    } else if (rawBody.toLowerCase().includes('joined')) {
+      headline = 'Member Joined';
+    } else if (rawBody.toLowerCase().includes('owe')) {
+      headline = 'Settlement Reminder';
+    } else {
+      headline = 'Notification';
+    }
+  }
+
+  let formattedBody = rawBody;
+  if (type === 'trip_deleted' && resolvedTripName && rawBody === `${resolvedTripName} was deleted`) {
+    formattedBody = `"${resolvedTripName}" was deleted`;
+  }
+
+  const badge =
+    resolvedTripName && resolvedTripName.toLowerCase() !== headline.toLowerCase()
+      ? resolvedTripName
+      : null;
+
+  return { headline, badge, body: formattedBody };
 }
 
 const SWIPE_DELETE_THRESHOLD = 75;
@@ -159,23 +225,25 @@ function NotificationCard({
         </div>
 
         {/* Center Content */}
-        <div className="notif-body">
-          <div className="notif-row-top">
-            <div className="notif-title-wrap">
-              {/* The event itself (e.g. "Flight tickets — INR 24,745 added") is
-                  the useful headline here — notification.title is just the
-                  trip name, which the badge right next to it already shows,
-                  so rendering both repeated the same text twice in one row. */}
-              <h4 className="notif-card-title">{notification.body}</h4>
-              {tripName && (
-                <span className={`notif-trip-badge ${isCurrentTrip ? 'current' : 'other'}`}>
-                  {tripName}
-                </span>
-              )}
+        {(() => {
+          const display = getNotificationDisplay(notification, tripName ?? null);
+          return (
+            <div className="notif-body">
+              <div className="notif-row-top">
+                <div className="notif-title-wrap">
+                  <h4 className="notif-card-title">{display.headline}</h4>
+                  {display.badge && (
+                    <span className={`notif-trip-badge ${isCurrentTrip ? 'current' : 'other'}`}>
+                      {display.badge}
+                    </span>
+                  )}
+                </div>
+                <span className="notif-time">{relativeTime(notification.createdAt)}</span>
+              </div>
+              <p className="notif-card-text">{display.body}</p>
             </div>
-            <span className="notif-time">{relativeTime(notification.createdAt)}</span>
-          </div>
-        </div>
+          );
+        })()}
 
         {/* Actions Toolbar for Read/Unread and Delete */}
         <div className="notif-hover-actions" onClick={(e) => e.stopPropagation()}>

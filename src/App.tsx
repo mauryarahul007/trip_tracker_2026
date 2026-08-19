@@ -547,9 +547,9 @@ export default function App() {
       if (linkedUserId && activeTripId) {
         sendPushNotification(
           [linkedUserId],
-          activeTrip?.name || 'Trip Tracker',
-          `You were added to ${activeTrip?.name || 'a trip'}`,
-          { type: 'member_added' },
+          activeTrip?.name ? `Added to ${activeTrip.name}` : 'Added to Trip',
+          `You were added to "${activeTrip?.name || 'a trip'}"`,
+          { type: 'member_added', tripName: activeTrip?.name || '' },
           activeTripId
         );
       }
