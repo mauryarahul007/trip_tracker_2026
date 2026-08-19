@@ -112,11 +112,20 @@ export function ExpenseForm({
     }
   }, [editingExpense, enableGeotagging]);
 
-  // Moves focus into the sheet for keyboard/screen-reader users without
-  // popping the mobile keyboard open on every mount.
   const sheetRef = useRef<HTMLFormElement>(null);
+  const amountInputRef = useRef<HTMLInputElement>(null);
+
   useEffect(() => {
-    sheetRef.current?.focus();
+    // Automatically focus and select the amount field on open so the user can immediately type
+    const timer = setTimeout(() => {
+      if (amountInputRef.current) {
+        amountInputRef.current.focus();
+        amountInputRef.current.select();
+      } else {
+        sheetRef.current?.focus();
+      }
+    }, 50);
+    return () => clearTimeout(timer);
   }, []);
 
   // Backdrop click only dismisses while the form is still untouched — once
@@ -314,8 +323,10 @@ export function ExpenseForm({
         <div className="amount-hero">
           <span className="amount-hero-symbol">{currencySymbol}</span>
           <input
+            ref={amountInputRef}
             type="text"
             inputMode="decimal"
+            autoFocus
             required
             className="amount-hero-input"
             placeholder="0.00"

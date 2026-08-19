@@ -46,7 +46,13 @@ as the working backlog directly.
   reasonable default for this domain, not a bug, just not true WhatsApp
   parity)
 
+## Bug Tracker
+
+| Bug ID | Description | Status | Resolution |
+|---|---|---|---|
+| **BUG-001** | Expense Form does not autofocus amount field when floating `+` button is tapped | **Fixed** | Added `amountInputRef`, auto-focus mount effect, and `autoFocus` prop on amount input. |
+| **BUG-002** | Notifications show across all trips without trip name context or filtering | **Fixed** | Implemented Option C (Hybrid): Added explicit Trip Name pills to all notification cards, a 1-tap `[Current Trip]` vs `[All Trips]` segment filter, and dynamic trip name embedding in settlement reminders. |
+
 ## From the sheet (untriaged)
 
-- Need to implement bug tracker
 - implement superadmin console

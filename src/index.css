@@ -2820,6 +2820,58 @@ html.capacitor-ios .tab-pane {
   transform: scale(1.05);
 }
 
+/* Multi-Trip Segment Filter (Option C) */
+.notif-filter-container {
+  margin-bottom: 12px;
+  flex-shrink: 0;
+}
+
+.notif-filter-tabs {
+  display: flex;
+  background: var(--bg-surface-hover);
+  padding: 3px;
+  border-radius: 10px;
+  border: 1px solid var(--border-color);
+  gap: 3px;
+}
+
+.notif-filter-tab {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: transparent;
+  border: none;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.notif-filter-tab:hover {
+  color: var(--text-primary);
+}
+
+.notif-filter-tab.active {
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.notif-tab-count-badge {
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--primary-accent) 18%, transparent);
+  color: var(--primary-accent);
+}
+
 .notif-alert-banner {
   display: flex;
   align-items: center;
@@ -3146,9 +3198,58 @@ html.capacitor-ios .tab-pane {
   font-size: 13px;
   color: var(--text-secondary);
   line-height: 1.5;
-  max-width: 320px;
+  max-width: 340px;
   margin: 0 auto;
 }
+
+.notif-empty-switch-link {
+  background: none;
+  border: none;
+  color: var(--primary-accent);
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  font-size: inherit;
+  text-decoration: underline;
+  margin-left: 4px;
+}
+
+.notif-empty-switch-link:hover {
+  opacity: 0.85;
+}
+
+/* Trip Name Badging on Card */
+.notif-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+.notif-trip-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 1.5px 6.5px;
+  border-radius: 5px;
+  white-space: nowrap;
+  letter-spacing: -0.01em;
+}
+
+.notif-trip-badge.current {
+  background: color-mix(in srgb, var(--primary-accent) 12%, var(--bg-surface));
+  color: var(--primary-accent);
+  border: 1px solid color-mix(in srgb, var(--primary-accent) 25%, transparent);
+}
+
+.notif-trip-badge.other {
+  background: color-mix(in srgb, var(--secondary-accent) 12%, var(--bg-surface));
+  color: var(--secondary-accent);
+  border: 1px solid color-mix(in srgb, var(--secondary-accent) 25%, transparent);
+}
+
 
 
 

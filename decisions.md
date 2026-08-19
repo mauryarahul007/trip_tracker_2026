@@ -512,6 +512,22 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - `Clear all` performs an irreversible batch deletion on the Supabase `notifications` table for the user. A confirmation prompt prevents accidental clears.
 
+---
+
+## 39. Multi-Trip Notification Scoping (Option C Hybrid) & Expense Autofocus
+* **Context:**
+  1. Users reported that opening the Expense form via the floating `+ Expense` button required an extra manual tap on the amount field to start typing.
+  2. Notifications from older trips appeared in the Notification Center without trip context or scoping, creating ambiguity regarding which trip a settlement or expense notification belonged to.
+* **Decision:**
+  1. Implemented automatic focus and selection (`amountInputRef.current?.focus()`, `autoFocus`) on the amount hero input upon opening `ExpenseForm.tsx`.
+  2. Implemented **Option C (Hybrid Multi-Trip Notification Architecture)**:
+     - Embedded explicit **Trip Name Badges** (`.notif-trip-badge`) on every notification card to provide instant context.
+     - Added a 1-tap **Segment Switcher** (`[Current Trip]` vs `[All Trips]`) in `NotificationsPanel.tsx` with dynamic unread count badges.
+     - Updated `BalancesSettlements.tsx` to include the explicit `tripName` in settlement reminder notification titles and bodies.
+* **Trade-offs Accepted:**
+  - Notifications remain accessible globally across all trips in the `[All Trips]` view while defaulting cleanly to the active trip when inside a trip dashboard.
+
+
 
 
 

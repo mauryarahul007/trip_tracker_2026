@@ -42,6 +42,7 @@ function getNotificationMeta(type?: string): { icon: React.ReactNode; colorClass
       return { icon: <IconMembers size={17} />, colorClass: 'squircle-purple' };
     case 'settlement':
     case 'settle':
+    case 'settlement_reminder':
       return { icon: <IconCheckCircle size={17} />, colorClass: 'squircle-emerald' };
     default:
       return { icon: <IconBell size={17} />, colorClass: 'squircle-blue' };
@@ -52,11 +53,15 @@ const SWIPE_DELETE_THRESHOLD = 75;
 
 function NotificationCard({
   notification,
+  tripName,
+  isCurrentTrip,
   onOpen,
   onToggleRead,
   onDelete,
 }: {
   notification: AppNotification;
+  tripName?: string | null;
+  isCurrentTrip: boolean;
   onOpen: () => void;
   onToggleRead: () => void;
   onDelete: () => void;
@@ -155,7 +160,14 @@ function NotificationCard({
         {/* Center Content */}
         <div className="notif-body">
           <div className="notif-row-top">
-            <h4 className="notif-card-title">{notification.title}</h4>
+            <div className="notif-title-wrap">
+              <h4 className="notif-card-title">{notification.title}</h4>
+              {tripName && (
+                <span className={`notif-trip-badge ${isCurrentTrip ? 'current' : 'other'}`}>
+                  {tripName}
+                </span>
+              )}
+            </div>
             <span className="notif-time">{relativeTime(notification.createdAt)}</span>
           </div>
           <p className="notif-card-text">{notification.body}</p>
@@ -200,10 +212,30 @@ export function NotificationsPanel() {
   const [permission, setPermission] = useState(getWebNotificationPermission());
   const sheetRef = useRef<HTMLDivElement>(null);
 
+  // Multi-Trip Filter State (Option C Hybrid)
+  const activeTripId = useTripStore((s) => s.activeTripId);
+  const trips = useTripStore((s) => s.trips);
+  const activeTrip = trips.find((t) => t.id === activeTripId);
+
+  const [tripFilter, setTripFilter] = useState<'current' | 'all'>(activeTripId ? 'current' : 'all');
+
   // Stack navigation: swipe/browser back closes notifications panel
   useHistoryBack(isPanelOpen, closePanel);
 
   if (!isPanelOpen) return null;
+
+  // Filtered notifications
+  const displayedNotifications =
+    tripFilter === 'current' && activeTripId
+      ? notifications.filter((n) => n.tripId === activeTripId)
+      : notifications;
+
+  const currentTripUnreadCount = activeTripId
+    ? notifications.filter((n) => n.tripId === activeTripId && !n.read).length
+    : 0;
+
+  const displayedUnreadCount =
+    tripFilter === 'current' && activeTripId ? currentTripUnreadCount : unreadCount;
 
   const handleOpenNotification = (n: AppNotification) => {
     markAsRead(n.id);
@@ -213,10 +245,33 @@ export function NotificationsPanel() {
     }
   };
 
-  const handleClearAll = () => {
-    if (window.confirm('Are you sure you want to clear all notifications? This cannot be undone.')) {
-      clearAll();
+  const handleMarkFilteredAsRead = () => {
+    if (tripFilter === 'current' && activeTripId) {
+      displayedNotifications.filter((n) => !n.read).forEach((n) => markAsRead(n.id));
+    } else {
+      markAllAsRead();
     }
+  };
+
+  const handleClearAll = () => {
+    if (tripFilter === 'current' && activeTrip) {
+      if (window.confirm(`Clear all notifications for "${activeTrip.name}"?`)) {
+        displayedNotifications.forEach((n) => deleteOne(n.id));
+      }
+    } else {
+      if (window.confirm('Are you sure you want to clear all notifications across all trips? This cannot be undone.')) {
+        clearAll();
+      }
+    }
+  };
+
+  const getTripNameForNotification = (n: AppNotification): string | null => {
+    if (n.data?.tripName) return n.data.tripName;
+    if (n.tripId) {
+      const matched = trips.find((t) => t.id === n.tripId);
+      return matched?.name || null;
+    }
+    return null;
   };
 
   return (
@@ -240,35 +295,35 @@ export function NotificationsPanel() {
               <h2 id="notifications-panel-title" className="notif-heading">
                 Notifications
               </h2>
-              {unreadCount > 0 && (
+              {displayedUnreadCount > 0 && (
                 <span className="notif-count-badge">
-                  {unreadCount} new
+                  {displayedUnreadCount} new
                 </span>
               )}
             </div>
           </div>
 
           <div className="notif-header-actions">
-            {unreadCount > 0 && (
+            {displayedUnreadCount > 0 && (
               <button
                 type="button"
                 className="notif-toolbar-btn"
-                onClick={markAllAsRead}
-                title="Mark all as read"
+                onClick={handleMarkFilteredAsRead}
+                title="Mark as read"
               >
                 <IconCheck size={13} />
                 <span>Mark read</span>
               </button>
             )}
-            {notifications.length > 0 && (
+            {displayedNotifications.length > 0 && (
               <button
                 type="button"
                 className="notif-toolbar-btn notif-toolbar-btn-danger"
                 onClick={handleClearAll}
-                title="Clear all notifications"
+                title="Clear notifications"
               >
                 <IconTrash size={13} />
-                <span>Clear all</span>
+                <span>Clear {tripFilter === 'current' && activeTrip ? 'trip' : 'all'}</span>
               </button>
             )}
             <button
@@ -282,6 +337,34 @@ export function NotificationsPanel() {
             </button>
           </div>
         </div>
+
+        {/* Multi-Trip Segment Filter (Option C) */}
+        {activeTrip && (
+          <div className="notif-filter-container">
+            <div className="notif-filter-tabs">
+              <button
+                type="button"
+                className={`notif-filter-tab ${tripFilter === 'current' ? 'active' : ''}`}
+                onClick={() => setTripFilter('current')}
+              >
+                <span className="notif-filter-tab-label">Current Trip</span>
+                {currentTripUnreadCount > 0 && (
+                  <span className="notif-tab-count-badge">{currentTripUnreadCount}</span>
+                )}
+              </button>
+              <button
+                type="button"
+                className={`notif-filter-tab ${tripFilter === 'all' ? 'active' : ''}`}
+                onClick={() => setTripFilter('all')}
+              >
+                <span className="notif-filter-tab-label">All Trips</span>
+                {unreadCount > 0 && (
+                  <span className="notif-tab-count-badge">{unreadCount}</span>
+                )}
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Web Notification Alert Opt-In Banner */}
         {permission !== 'granted' && (
@@ -305,27 +388,55 @@ export function NotificationsPanel() {
 
         {/* Content List or Empty State */}
         <div className="notif-content-area">
-          {notifications.length === 0 ? (
+          {displayedNotifications.length === 0 ? (
             <div className="notif-empty-state">
               <div className="notif-empty-icon-wrap">
                 <IconSparkles size={28} />
               </div>
-              <h4 className="notif-empty-title">You're All Caught Up</h4>
+              <h4 className="notif-empty-title">
+                {tripFilter === 'current' && activeTrip
+                  ? `No Notifications for ${activeTrip.name}`
+                  : "You're All Caught Up"}
+              </h4>
               <p className="notif-empty-subtitle">
-                No notifications right now. When friends add expenses, update settlements, or join your trips, you'll see them right here.
+                {tripFilter === 'current' && activeTrip ? (
+                  notifications.length > 0 ? (
+                    <>
+                      There are no notifications in this trip. You have {notifications.length} notification
+                      {notifications.length > 1 ? 's' : ''} in other trips.{' '}
+                      <button
+                        type="button"
+                        onClick={() => setTripFilter('all')}
+                        className="notif-empty-switch-link"
+                      >
+                        View All Trips
+                      </button>
+                    </>
+                  ) : (
+                    'No notifications for this trip right now.'
+                  )
+                ) : (
+                  'No notifications right now. When friends add expenses, update settlements, or join your trips, you\'ll see them right here.'
+                )}
               </p>
             </div>
           ) : (
             <div className="notif-list">
-              {notifications.map((n) => (
-                <NotificationCard
-                  key={n.id}
-                  notification={n}
-                  onOpen={() => handleOpenNotification(n)}
-                  onToggleRead={() => toggleRead(n.id)}
-                  onDelete={() => deleteOne(n.id)}
-                />
-              ))}
+              {displayedNotifications.map((n) => {
+                const tripName = getTripNameForNotification(n);
+                const isCurrentTrip = n.tripId === activeTripId;
+                return (
+                  <NotificationCard
+                    key={n.id}
+                    notification={n}
+                    tripName={tripName}
+                    isCurrentTrip={isCurrentTrip}
+                    onOpen={() => handleOpenNotification(n)}
+                    onToggleRead={() => toggleRead(n.id)}
+                    onDelete={() => deleteOne(n.id)}
+                  />
+                );
+              })}
             </div>
           )}
         </div>

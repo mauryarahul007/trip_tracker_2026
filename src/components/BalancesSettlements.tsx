@@ -53,6 +53,7 @@ type TransferRowProps = {
   transfer: Transfer;
   rowKey: string;
   tripId: string;
+  tripName?: string;
   note?: string;
   currencySymbol: string;
   isSettled: boolean;
@@ -179,11 +180,12 @@ function TransferRow({
     const fromLinkedUserId = members[t.fromMemberId]?.linkedUserId;
     if (!fromLinkedUserId) return;
     setReminderStatus('sending');
+    const resolvedTripName = tripName || 'this trip';
     const result = await sendPushNotification(
       [fromLinkedUserId],
-      'Settlement reminder',
-      `You owe ${t.toLabel} ${currencySymbol}${t.amount.toFixed(2)} for this trip`,
-      { type: 'settlement_reminder', fromMemberId: t.fromMemberId, toMemberId: t.toMemberId },
+      `Settlement reminder • ${resolvedTripName}`,
+      `You owe ${t.toLabel} ${currencySymbol}${t.amount.toFixed(2)} for "${resolvedTripName}"`,
+      { type: 'settlement_reminder', fromMemberId: t.fromMemberId, toMemberId: t.toMemberId, tripName: resolvedTripName },
       tripId
     );
     setReminderStatus(result.ok ? 'sent' : result.rateLimited ? 'rateLimited' : 'idle');
@@ -655,6 +657,7 @@ export function BalancesSettlements({
                               transfer={it}
                               rowKey={rowKey}
                               tripId={trip.id}
+                              tripName={trip.name}
                               currencySymbol={currencySymbol}
                               isSettled={isTransferSettled(it, activeTripExpenses)}
                               canSettle={canSettleTransfer(it)}
@@ -700,6 +703,7 @@ export function BalancesSettlements({
                   transfer={t}
                   rowKey={rowKey}
                   tripId={trip.id}
+                  tripName={trip.name}
                   note={isGroupInvolved ? 'group settlement — combined balance' : undefined}
                   currencySymbol={currencySymbol}
                   isSettled={isTransferSettled(t, activeTripExpenses)}
