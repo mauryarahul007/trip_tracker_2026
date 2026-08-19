@@ -3358,6 +3358,45 @@ html.capacitor-ios .tab-pane {
   border: 1px solid color-mix(in srgb, var(--secondary-accent) 25%, transparent);
 }
 
+/* ==========================================================================
+   Blind Mode & Split Preset Styles
+   ========================================================================== */
+
+.blind-mode-active .privacy-blur {
+  filter: blur(5px);
+  user-select: none;
+  transition: filter 0.2s ease;
+}
+
+.blind-mode-active .privacy-blur:hover {
+  filter: blur(0px);
+}
+
+.split-preset-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  font-size: 11.5px;
+  font-weight: 600;
+  border-radius: 20px;
+  background: color-mix(in srgb, var(--primary-accent) 8%, var(--bg-surface));
+  color: var(--primary-accent);
+  border: 1px solid color-mix(in srgb, var(--primary-accent) 22%, transparent);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.split-preset-chip:hover {
+  background: color-mix(in srgb, var(--primary-accent) 15%, var(--bg-surface));
+  border-color: var(--primary-accent);
+}
+
+.split-preset-chip:active {
+  transform: scale(0.96);
+}
+
+
 
 
 

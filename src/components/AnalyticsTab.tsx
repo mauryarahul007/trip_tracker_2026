@@ -4,6 +4,7 @@ import { CategoryIcon } from './CategoryIcon';
 import { getCurrencySymbol } from '../utils/currency';
 import { TripJourneyMap } from './TripJourneyMap';
 import { useTripStore } from '../store/tripStore';
+import { usePrivacyStore, formatMaskedAmount } from '../store/privacyStore';
 
 type CategoryDatum = { id: string; name: string; icon: string; amount: number; percentage: number };
 type MemberSpend = { id: string; name: string; amount: number; percentage: number };
@@ -37,6 +38,7 @@ export function AnalyticsTab({
   categories = [],
 }: Props) {
   const currencySymbol = getCurrencySymbol(trip?.baseCurrency || '');
+  const isBlindMode = usePrivacyStore((s) => s.isBlindMode);
   const topCategory = categoryData[0];
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
   const enableGeotagging = useTripStore((s) => s.enableGeotagging);
@@ -53,14 +55,14 @@ export function AnalyticsTab({
       <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: '12px', marginBottom: '20px' }}>
         <div className="glass-card" style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
           <span style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Total Spent</span>
-          <strong className="money" style={{ fontSize: '19px', color: 'var(--primary-accent)' }}>
-            {currencySymbol} {totalSpent.toFixed(2)}
+          <strong className="money privacy-blur" style={{ fontSize: '19px', color: 'var(--primary-accent)' }}>
+            {formatMaskedAmount(totalSpent.toFixed(2), currencySymbol, isBlindMode)}
           </strong>
         </div>
         <div className="glass-card" style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
           <span style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Per-Head Cost</span>
-          <strong className="money" style={{ fontSize: '19px', color: 'var(--text-primary)' }}>
-            {currencySymbol} {averageCost.toFixed(2)}
+          <strong className="money privacy-blur" style={{ fontSize: '19px', color: 'var(--text-primary)' }}>
+            {formatMaskedAmount(averageCost.toFixed(2), currencySymbol, isBlindMode)}
           </strong>
         </div>
         <div className="glass-card" style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
@@ -178,8 +180,8 @@ export function AnalyticsTab({
                 <div key={m.id} style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', fontWeight: 500 }}>
                     <span>{m.name}</span>
-                    <span>
-                      {currencySymbol} {m.amount.toFixed(2)}{' '}
+                    <span className="privacy-blur">
+                      {formatMaskedAmount(m.amount.toFixed(2), currencySymbol, isBlindMode)}{' '}
                       <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>({m.percentage.toFixed(0)}%)</span>
                     </span>
                   </div>

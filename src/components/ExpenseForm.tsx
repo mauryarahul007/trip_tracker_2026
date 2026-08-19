@@ -11,6 +11,7 @@ import { compressImageToDataUrl, compressDataUrlToDataUrl } from '../utils/image
 import { autoSuggestCategory } from '../utils/categoryHelper';
 import { captureCurrentExpenseLocation } from '../utils/geolocation';
 import { useTripStore } from '../store/tripStore';
+import { triggerHaptic } from '../utils/haptics';
 
 type SplitMode = 'equal' | 'custom' | 'exact' | 'percentage';
 
@@ -213,6 +214,44 @@ export function ExpenseForm({
       setSelectedSplitMembers(updatedSelection);
     }
     setSplitConfig(updatedConfig);
+  };
+
+  const applyPresetEqualAll = () => {
+    triggerHaptic('light');
+    const allChecked: Record<string, boolean> = {};
+    visibleMembers.forEach((m) => { allChecked[m.id] = true; });
+    setSelectedSplitMembers(allChecked);
+    setSplitConfig({});
+    setSplitMode('equal');
+  };
+
+  const applyPresetPayerFiftyGroup = () => {
+    triggerHaptic('medium');
+    if (!payer) return;
+    const allChecked: Record<string, boolean> = {};
+    const newConfig: Record<string, string> = {};
+    const otherMembers = visibleMembers.filter((m) => m.id !== payer);
+    allChecked[payer] = true;
+    newConfig[payer] = '50';
+    if (otherMembers.length > 0) {
+      const sharePerOther = (50 / otherMembers.length).toFixed(1);
+      otherMembers.forEach((m) => {
+        allChecked[m.id] = true;
+        newConfig[m.id] = sharePerOther;
+      });
+    }
+    setSelectedSplitMembers(allChecked);
+    setSplitConfig(newConfig);
+    setSplitMode('percentage');
+  };
+
+  const applyPresetOnlyPayer = () => {
+    triggerHaptic('warning');
+    if (!payer) return;
+    const selection: Record<string, boolean> = { [payer]: true };
+    setSelectedSplitMembers(selection);
+    setSplitConfig({});
+    setSplitMode('equal');
   };
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -501,10 +540,10 @@ export function ExpenseForm({
       <div className="form-group">
         <label className="form-label">Split Mode</label>
         <div className="segmented-control">
-          <button type="button" className={splitMode === 'equal' ? 'active' : ''} onClick={() => setSplitMode('equal')}>Equal</button>
-          <button type="button" className={splitMode === 'custom' ? 'active' : ''} onClick={() => setSplitMode('custom')}>Weight</button>
-          <button type="button" className={splitMode === 'exact' ? 'active' : ''} onClick={() => setSplitMode('exact')}>Exact</button>
-          <button type="button" className={splitMode === 'percentage' ? 'active' : ''} onClick={() => setSplitMode('percentage')}>Percent</button>
+          <button type="button" className={splitMode === 'equal' ? 'active' : ''} onClick={() => { triggerHaptic('light'); setSplitMode('equal'); }}>Equal</button>
+          <button type="button" className={splitMode === 'custom' ? 'active' : ''} onClick={() => { triggerHaptic('light'); setSplitMode('custom'); }}>Weight</button>
+          <button type="button" className={splitMode === 'exact' ? 'active' : ''} onClick={() => { triggerHaptic('light'); setSplitMode('exact'); }}>Exact</button>
+          <button type="button" className={splitMode === 'percentage' ? 'active' : ''} onClick={() => { triggerHaptic('light'); setSplitMode('percentage'); }}>Percent</button>
         </div>
       </div>
 
@@ -545,6 +584,37 @@ export function ExpenseForm({
         )}
       </div>
 
+      {/* Smart Split Presets Bar */}
+      <div className="form-group" style={{ marginTop: '8px', marginBottom: '8px' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', alignItems: 'center' }}>
+          <span style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: 600, marginRight: '2px' }}>Presets:</span>
+          <button
+            type="button"
+            className="split-preset-chip"
+            onClick={applyPresetEqualAll}
+            title="Split expense equally among all members"
+          >
+            ⚡ Equal All
+          </button>
+          <button
+            type="button"
+            className="split-preset-chip"
+            onClick={applyPresetPayerFiftyGroup}
+            title="Payer pays 50%, remaining members split 50%"
+          >
+            ⚖️ 50% Payer / 50% Group
+          </button>
+          <button
+            type="button"
+            className="split-preset-chip"
+            onClick={applyPresetOnlyPayer}
+            title="Payer pays 100% (personal expense)"
+          >
+            👤 Only Payer
+          </button>
+        </div>
+      </div>
+
       {/* Checkboxes to select division participants */}
       <div className="form-group" style={{ marginTop: '8px' }}>
         <label className="form-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -554,6 +624,7 @@ export function ExpenseForm({
               type="button"
               style={{ background: 'none', border: 'none', color: 'var(--primary-accent)', cursor: 'pointer', fontWeight: 600 }}
               onClick={() => {
+                triggerHaptic('light');
                 const allChecked: Record<string, boolean> = {};
                 visibleMembers.forEach((m) => { allChecked[m.id] = true; });
                 setSelectedSplitMembers(allChecked);
@@ -566,6 +637,7 @@ export function ExpenseForm({
               type="button"
               style={{ background: 'none', border: 'none', color: 'var(--primary-accent)', cursor: 'pointer', fontWeight: 600 }}
               onClick={() => {
+                triggerHaptic('light');
                 setSelectedSplitMembers({});
                 setSplitConfig({});
               }}

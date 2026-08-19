@@ -25,7 +25,9 @@ import { NotificationsPanel } from './components/NotificationsPanel';
 import { NotificationsBellButton } from './components/NotificationsBellButton';
 import { InAppNotificationBanner } from './components/InAppNotificationBanner';
 import { FitHeading } from './components/FitHeading';
-import { IconCalendar, IconChevronLeft, IconShare, IconPlus } from './components/Icons';
+import { usePrivacyStore } from './store/privacyStore';
+import { triggerHaptic } from './utils/haptics';
+import { IconCalendar, IconChevronLeft, IconShare, IconPlus, IconEye, IconEyeOff } from './components/Icons';
 import { formatDateRange } from './utils/dateRange';
 import { useScrollLock } from './utils/useScrollLock';
 import { useHistoryBack } from './utils/useHistoryBack';
@@ -72,6 +74,9 @@ export default function App() {
   const userEmail = useAuthStore((s) => s.session?.user.email ?? null);
   const userId = useAuthStore((s) => s.session?.user.id ?? null);
   const signOut = useAuthStore((s) => s.signOut);
+
+  const isBlindMode = usePrivacyStore((s) => s.isBlindMode);
+  const toggleBlindMode = usePrivacyStore((s) => s.toggleBlindMode);
 
   // Navigation tabs: 'expenses' | 'members' | 'analytics' | 'settings'
   const [activeTab, setActiveTab] = useState<'expenses' | 'members' | 'analytics' | 'settings'>('expenses');
@@ -1036,7 +1041,7 @@ export default function App() {
   }
 
   return (
-    <div className="app-container">
+    <div className={`app-container ${isBlindMode ? 'blind-mode-active' : ''}`}>
       {/* Storage Toast Alert */}
       {storageError && isOnline && (
         <div className="toast-alert">
@@ -1093,6 +1098,24 @@ export default function App() {
                 </div>
               </div>
               <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexShrink: 0 }}>
+                <button
+                  type="button"
+                  className="secondary-btn"
+                  style={{
+                    padding: '7px 8px',
+                    color: isBlindMode ? '#00BFA5' : '#F2ECDC',
+                    borderColor: isBlindMode ? '#00BFA5' : 'rgba(242,236,220,0.28)',
+                    background: isBlindMode ? 'rgba(0,191,165,0.18)' : 'rgba(242,236,220,0.06)'
+                  }}
+                  onClick={() => {
+                    triggerHaptic('light');
+                    toggleBlindMode();
+                  }}
+                  aria-label={isBlindMode ? 'Disable Blind Mode' : 'Enable Blind Mode (Hide amounts)'}
+                  title={isBlindMode ? 'Disable Blind Mode (Show amounts)' : 'Enable Blind Mode (Mask sensitive amounts)'}
+                >
+                  {isBlindMode ? <IconEyeOff size={15} className="icon-sm" /> : <IconEye size={15} className="icon-sm" />}
+                </button>
                 <NotificationsBellButton />
                 <button
                   data-action="share"

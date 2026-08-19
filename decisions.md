@@ -586,6 +586,22 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - Raw HTML tags inside expense titles or reverse geocoding place names will render as literal escaped text rather than HTML formatting, preserving visual text while preventing code execution.
 
+---
+
+## 44. Privacy "Blind Mode" Amount Masking, Micro-Haptics & Smart Split Presets
+* **Context:**
+  1. Users viewing trip expenses or balance totals in public spaces, on shared screens, or taking screenshots needed a privacy option to conceal sensitive financial debts and amounts.
+  2. Touch interaction on mobile web lacked tactile micro-feedback for key user actions (swiping items, marking settlements paid, checking split checkboxes).
+  3. Form entry for custom/percentage split configurations required multiple tedious manual taps to allocate shares across members.
+* **Decision:**
+  1. **Privacy "Blind Mode" (`src/store/privacyStore.ts`, `src/App.tsx`):** Built a persistent Zustand-backed privacy store (`isBlindMode`) with a toggle button in the top app header (`IconEye` / `IconEyeOff`). When active, masks all monetary amounts across headers, expense lists, balance summaries, and analytics charts with formatted `•••••` text and CSS blur effects (`.privacy-blur`).
+  2. **Micro-Haptics Feedback (`src/utils/haptics.ts`):** Created a safe, feature-detected Web Haptics vibration utility (`triggerHaptic`) providing tactile feedback for row swiping (`SwipeableRow.tsx`), settlement confirmations (`BalancesSettlements.tsx`), split mode changes, preset selections, and form submissions (`ExpenseForm.tsx`).
+  3. **Smart Split Presets (`src/components/ExpenseForm.tsx`):** Added 1-tap allocation presets (`⚡ Equal All`, `⚖️ 50% Payer / 50% Group`, `👤 Only Payer`) above the split participant matrix in `ExpenseForm.tsx` to streamline expense allocation for common group scenarios.
+* **Trade-offs Accepted:**
+  - Blind mode preference is saved in local device storage (`localStorage`) as a user-level presentation setting rather than synced to server trip data.
+  - Haptic feedback relies on native browser support (`navigator.vibrate`); on unsupported desktop browsers or devices with vibration disabled, calls degrade gracefully to silent no-ops.
+
+
 
 
 

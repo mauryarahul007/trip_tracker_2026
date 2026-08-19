@@ -7,6 +7,7 @@ import { CategoryIcon } from './CategoryIcon';
 import { getCurrencySymbol } from '../utils/currency';
 import { initial } from '../utils/initials';
 import { avatarColorForName } from '../utils/avatarColor';
+import { usePrivacyStore, formatMaskedAmount } from '../store/privacyStore';
 
 // Swipe-to-delete is a supplement to the explicit trash button — skip
 // wrapping the row in it at all when the viewer isn't allowed to delete.
@@ -122,6 +123,7 @@ export function ExpenseList({
   myMemberId,
 }: Props) {
   const currencySymbol = getCurrencySymbol(trip?.baseCurrency || '');
+  const isBlindMode = usePrivacyStore((s) => s.isBlindMode);
 
   const filtersRef = useRef<HTMLDivElement>(null);
   const [revealOnScroll, setRevealOnScroll] = useState(false);
@@ -546,8 +548,8 @@ export function ExpenseList({
                     >
                       <CategoryIcon categoryId={cat?.id || ''} fallbackEmoji={cat?.icon || '🏷️'} size={15} />
                       <h4 style={{ flex: 1, minWidth: 0, fontSize: '15px', lineHeight: 1.3, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{exp.title}</h4>
-                      <span className="money" style={{ fontSize: '15px', fontWeight: '600', color: 'var(--text-primary)', whiteSpace: 'nowrap', flexShrink: 0 }}>
-                        {currencySymbol} {exp.amount.toFixed(2)}
+                      <span className="money privacy-blur" style={{ fontSize: '15px', fontWeight: '600', color: 'var(--text-primary)', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                        {formatMaskedAmount(exp.amount.toFixed(2), currencySymbol, isBlindMode)}
                       </span>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>

@@ -4,6 +4,8 @@ import { buildSettlementNodes, calculateGroupInternalTransfers, type MemberBalan
 import { IconArrowDownRight, IconArrowUpRight, IconCheck, IconCheckCircle, IconChevronRight, IconEdit, IconMembers } from './Icons';
 import { getCurrencySymbol } from '../utils/currency';
 import { sendPushNotification } from '../services/pushApi';
+import { usePrivacyStore, formatMaskedAmount } from '../store/privacyStore';
+import { triggerHaptic } from '../utils/haptics';
 
 type Props = {
   trip: Trip;
@@ -26,10 +28,10 @@ function balanceColor(balance: number): string {
   return 'var(--text-secondary)';
 }
 
-function balanceLabel(balance: number, currencySymbol: string): string {
-  const absVal = Math.abs(balance).toFixed(2);
-  if (balance > 0.01) return `gets back ${currencySymbol}${absVal}`;
-  if (balance < -0.01) return `owes ${currencySymbol}${absVal}`;
+function balanceLabel(balance: number, currencySymbol: string, isBlindMode: boolean = false): string {
+  const absVal = formatMaskedAmount(Math.abs(balance).toFixed(2), currencySymbol, isBlindMode);
+  if (balance > 0.01) return `gets back ${absVal}`;
+  if (balance < -0.01) return `owes ${absVal}`;
   return 'settled';
 }
 
@@ -394,7 +396,10 @@ function TransferRow({
               <button
                 className="gradient-btn"
                 style={{ padding: '6px 12px', fontSize: '11px', borderRadius: '6px', height: '28px' }}
-                onClick={() => onSettle(t.fromMemberId, t.toMemberId, settleAmount, t.fromLabel, t.toLabel)}
+                onClick={() => {
+                  triggerHaptic('success');
+                  onSettle(t.fromMemberId, t.toMemberId, settleAmount, t.fromLabel, t.toLabel);
+                }}
               >
                 Settle
               </button>
@@ -426,7 +431,10 @@ function TransferRow({
               <button
                 className="gradient-btn"
                 style={{ padding: '6px 14px', fontSize: '11px', borderRadius: '6px', height: '28px' }}
-                onClick={() => onSettle(t.fromMemberId, t.toMemberId, t.amount, t.fromLabel, t.toLabel)}
+                onClick={() => {
+                  triggerHaptic('success');
+                  onSettle(t.fromMemberId, t.toMemberId, t.amount, t.fromLabel, t.toLabel);
+                }}
               >
                 Settle
               </button>
@@ -500,6 +508,7 @@ export function BalancesSettlements({
     return false;
   };
   const currencySymbol = getCurrencySymbol(trip.baseCurrency);
+  const isBlindMode = usePrivacyStore((s) => s.isBlindMode);
   const [customAmounts, setCustomAmounts] = useState<Record<string, string>>({});
   const [customOpenKeys, setCustomOpenKeys] = useState<Record<string, boolean>>({});
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
@@ -538,8 +547,8 @@ export function BalancesSettlements({
         <div className="bp-perf" />
         <div className="bp-body">
           <div className="bp-who">{isFullySettled ? 'Outstanding' : 'Outstanding to settle'}</div>
-          <div className="bp-amount" style={{ color: isFullySettled ? 'var(--color-success)' : 'var(--color-danger)' }}>
-            {currencySymbol} {totalOutstanding.toFixed(2)}
+          <div className="bp-amount privacy-blur" style={{ color: isFullySettled ? 'var(--color-success)' : 'var(--color-danger)' }}>
+            {formatMaskedAmount(totalOutstanding.toFixed(2), currencySymbol, isBlindMode)}
           </div>
           <div className="bp-sub">
             {isFullySettled
@@ -576,9 +585,9 @@ export function BalancesSettlements({
                   title={`View ${n.name}'s expenses`}
                 >
                   <span style={{ minWidth: 0, flex: '1 1 auto', lineHeight: '1.3', paddingRight: '8px' }}><strong>{n.name}</strong></span>
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', color: balanceColor(n.balance), fontWeight: '700', flexShrink: 0, marginLeft: 'auto', whiteSpace: 'nowrap' }}>
+                  <span className="privacy-blur" style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', color: balanceColor(n.balance), fontWeight: '700', flexShrink: 0, marginLeft: 'auto', whiteSpace: 'nowrap' }}>
                     <BalanceIcon balance={n.balance} />
-                    {balanceLabel(n.balance, currencySymbol)}
+                    {balanceLabel(n.balance, currencySymbol, isBlindMode)}
                   </span>
                 </div>
               );
@@ -593,52 +602,49 @@ export function BalancesSettlements({
               ? 'settled'
               : isNetZero
                 ? 'internal settlement pending'
-                : balanceLabel(n.balance, currencySymbol);
+                : balanceLabel(n.balance, currencySymbol, isBlindMode);
             const statusColor = fullySettled
               ? 'var(--color-success)'
               : isNetZero
                 ? 'var(--color-warning)'
                 : balanceColor(n.balance);
+            const isExpanded = !!expandedGroups[groupId];
 
-            const isExpanded = !!expandedGroups[n.id];
             return (
-              <div key={n.id}>
+              <div key={n.id} style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 <div
                   className="balance-row"
                   style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '14px', padding: '6px 4px', borderRadius: '8px', cursor: 'pointer' }}
-                  onClick={() => setExpandedGroups({ ...expandedGroups, [n.id]: !isExpanded })}
-                  title={`${isExpanded ? 'Collapse' : 'Expand'} ${n.name} group members`}
+                  onClick={() => setExpandedGroups({ ...expandedGroups, [groupId]: !isExpanded })}
+                  title="Click to toggle group member breakdown"
                 >
-                  <span style={{ display: 'flex', alignItems: 'center', gap: '6px', minWidth: 0, flex: '1 1 auto', paddingRight: '8px' }}>
-                    <span style={{ display: 'flex', color: 'var(--text-muted)', flexShrink: 0, transition: 'transform 0.15s ease', transform: isExpanded ? 'rotate(90deg)' : 'none' }}>
-                      <IconChevronRight size={12} className="icon-sm" />
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', minWidth: 0, flex: '1 1 auto', lineHeight: '1.3', paddingRight: '8px' }}>
+                    <IconMembers size={14} className="icon-sm" />
+                    <strong>{n.name}</strong>
+                    <span style={{ fontSize: '11px', color: 'var(--text-secondary)', display: 'inline-flex', alignItems: 'center' }}>
+                      <IconChevronRight size={12} className="icon-sm" style={{ transform: isExpanded ? 'rotate(90deg)' : 'none', transition: 'transform 0.15s ease' }} />
                     </span>
-                    <IconMembers size={15} className="icon-sm" />
-                    <strong style={{ minWidth: 0, flex: '1 1 auto', lineHeight: '1.3' }}>{n.name}</strong>
                   </span>
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', color: statusColor, fontWeight: '700', flexShrink: 0, marginLeft: 'auto', whiteSpace: 'nowrap' }}>
-                    {!isNetZero && <BalanceIcon balance={n.balance} />}
-                    {fullySettled && <BalanceIcon balance={0} settled />}
+                  <span className="privacy-blur" style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', color: statusColor, fontWeight: '700', flexShrink: 0, marginLeft: 'auto', whiteSpace: 'nowrap' }}>
+                    <BalanceIcon balance={n.balance} settled={fullySettled} />
                     {statusLabel}
                   </span>
                 </div>
+
                 {isExpanded && (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginLeft: '22px', marginTop: '4px' }}>
-                    {n.memberIds.map((mid) => {
-                      const memberBalance = balances.find((b) => b.memberId === mid);
+                  <div style={{ marginLeft: '16px', paddingLeft: '10px', borderLeft: '2px dashed var(--border-color)', display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '2px', marginBottom: '4px' }}>
+                    {n.memberIds.map((memId) => {
+                      const memberBalance = balances.find((b) => b.memberId === memId);
                       if (!memberBalance) return null;
                       return (
                         <div
-                          key={mid}
-                          className="balance-row"
-                          style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '13px', padding: '4px', borderRadius: '8px', cursor: 'pointer' }}
-                          onClick={() => onMemberClick(mid)}
-                          title={`View ${memberBalance.name}'s expenses`}
+                          key={memId}
+                          style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12.5px', color: 'var(--text-secondary)', padding: '2px 0', cursor: 'pointer' }}
+                          onClick={() => onMemberClick(memId)}
                         >
-                          <span style={{ minWidth: 0, flex: '1 1 auto', lineHeight: '1.3', paddingRight: '8px' }}>{memberBalance.name}</span>
-                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', color: balanceColor(memberBalance.balance), fontWeight: '600', flexShrink: 0, marginLeft: 'auto', whiteSpace: 'nowrap' }}>
-                            <BalanceIcon balance={memberBalance.balance} />
-                            {balanceLabel(memberBalance.balance, currencySymbol)}
+                          <span>{memberBalance.name}</span>
+                          <span className="privacy-blur" style={{ color: balanceColor(memberBalance.balance), fontWeight: 600 }}>
+                            {balanceLabel(memberBalance.balance, currencySymbol, isBlindMode)}
                           </span>
                         </div>
                       );
