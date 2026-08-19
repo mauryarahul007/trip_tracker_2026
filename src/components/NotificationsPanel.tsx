@@ -15,7 +15,6 @@ import {
   IconEdit,
   IconSparkles,
   IconMail,
-  IconMailOpen,
 } from './Icons';
 
 function relativeTime(iso: string): string {
