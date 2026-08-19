@@ -53,19 +53,29 @@ export const useNotificationsStore = create<NotificationsStore>((set, get) => ({
       showBrowserNotification(notification.title, notification.body);
 
       // Trip list is loaded once at boot with no other live signal for
-      // "someone just added you to a trip" — without this, the new trip
-      // silently doesn't show up until the next full app relaunch.
-      if (notification.data?.type === 'member_added') {
+      // "someone just added you to a trip" (or removed one) — without
+      // this, the change silently doesn't show up until the next full
+      // app relaunch.
+      const notifType = notification.data?.type;
+      if (notifType === 'member_added' || notifType === 'trip_deleted') {
         useTripStore.getState().refreshTrips();
+      }
+
+      // If the trip someone just deleted is the one currently open, its
+      // data is gone server-side — leaving the user looking at it would
+      // just mean broken refetches from here on, so back them out to the
+      // trip list instead.
+      if (notifType === 'trip_deleted' && notification.tripId === useTripStore.getState().activeTripId) {
+        useTripStore.getState().selectTrip(null);
       }
 
       // Only worth refetching if this is the trip currently open — no
       // reason to eagerly pull expense data for a trip the user isn't
       // even looking at right now.
-      const expenseChangeTypes = new Set(['expense_added', 'expense_updated', 'expense_deleted']);
+      const expenseChangeTypes = new Set(['expense_added', 'expense_updated', 'expense_deleted', 'expense_restored']);
       if (
         notification.tripId &&
-        expenseChangeTypes.has(notification.data?.type ?? '') &&
+        expenseChangeTypes.has(notifType ?? '') &&
         notification.tripId === useTripStore.getState().activeTripId
       ) {
         useTripStore.getState().refreshActiveTripExpenses();

@@ -756,6 +756,21 @@ export const useTripStore = create<TripStore>()(
 
     deleteTrip: async (id) => {
       const deletedTrip = get().trips.find((t) => t.id === id);
+      // send-push's own permission check needs the trip's members row to
+      // still exist server-side to confirm the caller shares this trip
+      // with each recipient — sending after deleteTripRow (which cascades
+      // to members) would make every recipient fail that check and the
+      // notification would silently go to no one.
+      const userId = get().userId;
+      const recipients = userId ? getTripNotificationRecipients(get().trips, get().members, id, userId) : [];
+      sendPushNotification(
+        recipients,
+        deletedTrip?.name || 'Trip Tracker',
+        `${deletedTrip?.name || 'A trip'} was deleted`,
+        { type: 'trip_deleted' },
+        id
+      );
+
       try {
         await deleteTripRow(id);
       } catch (e) {
@@ -1317,6 +1332,16 @@ export const useTripStore = create<TripStore>()(
       } else {
         try {
           await restoreExpenseRow(id);
+          const userId = get().userId;
+          const trip = get().trips.find((t) => t.id === existing.tripId);
+          const recipients = getTripNotificationRecipients(get().trips, get().members, existing.tripId, userId || '');
+          sendPushNotification(
+            recipients,
+            trip?.name || 'Trip Tracker',
+            `${existing.title} was restored`,
+            { type: 'expense_restored' },
+            existing.tripId
+          );
         } catch (e) {
           // Revert optimistic restore
           set((state) => ({
