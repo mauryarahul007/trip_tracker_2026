@@ -101,7 +101,7 @@ interface TripStore extends TripState {
   setEnableGeotagging: (enabled: boolean) => void;
 
   initialize: () => Promise<void>;
-  refreshTrips: () => Promise<void>;
+  refreshTrips: (force?: boolean) => Promise<void>;
   refreshActiveTripExpenses: () => Promise<void>;
   clearStorageError: () => void;
   processQueue: () => Promise<void>;
@@ -445,9 +445,9 @@ export const useTripStore = create<TripStore>()(
     // pull/swipe gesture can trigger this repeatedly in quick succession
     // and there's rarely anything new within a few seconds of the last
     // fetch.
-    refreshTrips: async () => {
+    refreshTrips: async (force?: boolean) => {
       const now = Date.now();
-      if (now - lastTripsRefreshAt < TRIPS_REFRESH_MIN_INTERVAL_MS) return;
+      if (!force && now - lastTripsRefreshAt < TRIPS_REFRESH_MIN_INTERVAL_MS) return;
       lastTripsRefreshAt = now;
       try {
         const graph = await fetchMyTripGraph();
@@ -756,20 +756,35 @@ export const useTripStore = create<TripStore>()(
 
     deleteTrip: async (id) => {
       const deletedTrip = get().trips.find((t) => t.id === id);
+      const userId = get().userId;
+
+      // Guard: Only trip owner or trip admin can delete a trip
+      if (userId && deletedTrip?.ownerId && deletedTrip.ownerId !== userId) {
+        const myMemberId = deletedTrip.memberIds.find((mid) => get().members[mid]?.linkedUserId === userId);
+        const isTripAdmin = myMemberId && deletedTrip.adminMemberIds?.includes(myMemberId);
+        if (!isTripAdmin) {
+          setError(new Error('Only a trip admin or owner can delete this trip.'));
+          return;
+        }
+      }
+
       // send-push's own permission check needs the trip's members row to
       // still exist server-side to confirm the caller shares this trip
       // with each recipient — sending after deleteTripRow (which cascades
       // to members) would make every recipient fail that check and the
       // notification would silently go to no one.
-      const userId = get().userId;
+      // We omit tripId so Postgres ON DELETE CASCADE will not delete this notification.
       const recipients = userId ? getTripNotificationRecipients(get().trips, get().members, id, userId) : [];
-      sendPushNotification(
-        recipients,
-        deletedTrip?.name || 'Trip Tracker',
-        'trip_deleted',
-        undefined,
-        id
-      );
+      const tripName = deletedTrip?.name || 'A trip';
+      if (recipients.length > 0) {
+        sendPushNotification(
+          recipients,
+          tripName,
+          'trip_deleted',
+          { tripName },
+          undefined
+        );
+      }
 
       try {
         await deleteTripRow(id);

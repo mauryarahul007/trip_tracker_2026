@@ -113,6 +113,8 @@ export function SettingsView({
   const [subScreen, setSubScreen] = useState<SubScreen>(initialSubScreen);
 
   // Store data
+  const userId = useTripStore((s) => s.userId);
+  const members = useTripStore((s) => s.members);
   const userDisplayName = useTripStore((s) => s.userDisplayName);
   const deletedExpenses = useTripStore((s) => s.deletedExpenses);
   const fetchDeletedExpenses = useTripStore((s) => s.fetchDeletedExpenses);
@@ -734,16 +736,18 @@ export function SettingsView({
                     >
                       <IconArchive size={13} className="icon-sm" /> Restore
                     </button>
-                    <button
-                      type="button"
-                      className="secondary-btn"
-                      style={{ padding: '6px', color: 'var(--color-danger)', borderColor: 'rgba(184,69,46,0.2)' }}
-                      aria-label="Delete trip permanently"
-                      title="Delete trip permanently"
-                      onClick={() => onDeleteTrip?.(trip)}
-                    >
-                      <IconTrash size={13} className="icon-sm" />
-                    </button>
+                    {(!trip.ownerId || !userId || trip.ownerId === userId || Boolean(trip.adminMemberIds && trip.memberIds.some((mid) => members[mid]?.linkedUserId === userId && trip.adminMemberIds?.includes(mid)))) && (
+                      <button
+                        type="button"
+                        className="secondary-btn"
+                        style={{ padding: '6px', color: 'var(--color-danger)', borderColor: 'rgba(184,69,46,0.2)' }}
+                        aria-label="Delete trip permanently"
+                        title="Delete trip permanently"
+                        onClick={() => onDeleteTrip?.(trip)}
+                      >
+                        <IconTrash size={13} className="icon-sm" />
+                      </button>
+                    )}
                   </div>
                 </div>
               ))

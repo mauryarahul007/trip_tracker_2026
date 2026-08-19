@@ -61,7 +61,7 @@ export function getNotificationMeta(type?: string): { icon: React.ReactNode; col
 // which renders from type+data for current rows and falls back to the
 // legacy stored sentence for rows written before that existed — this
 // function no longer needs its own text-parsing fallback for that case.
-function getNotificationDisplay(
+export function getNotificationDisplay(
   notification: AppNotification,
   resolvedTripName: string | null
 ): { headline: string; badge: string | null; body: string } {
@@ -273,9 +273,15 @@ export function NotificationsPanel({
 
   const handleOpenNotification = (n: AppNotification) => {
     markAsRead(n.id);
+    if (n.data?.type === 'trip_deleted') {
+      return;
+    }
     if (n.tripId && n.tripId !== useTripStore.getState().activeTripId) {
-      useTripStore.getState().selectTrip(n.tripId);
-      closePanel();
+      const tripExists = trips.some((t) => t.id === n.tripId);
+      if (tripExists) {
+        useTripStore.getState().selectTrip(n.tripId);
+        closePanel();
+      }
     }
   };
 

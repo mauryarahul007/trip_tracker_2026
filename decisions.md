@@ -539,6 +539,25 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - Historical database notification records are normalized dynamically in the UI at render time without requiring retroactive SQL backfills.
 
+---
+
+## 41. Trip Deletion Authority Enforcement, Cascade Isolation & Notification Normalization
+* **Context:**
+  1. Users observed phantom "Trip Deleted" notifications for trips (e.g. "Sikkim Bagpacking") that were still present on their home screen. Non-owner members were presented with the delete button on `TripsListScreen` and `SettingsView`; executing delete dispatched the push notification to recipients before Supabase RLS rejected the deletion (0 rows deleted). Because the trip was not actually deleted, Postgres foreign key cascading did not remove the notification, leaving a permanent "Trip Deleted" record in recipient inboxes while the trip remained on the home page.
+  2. Deleted trip push notifications passed `tripId`, creating a Catch-22: if the trip was deleted, PostgreSQL `ON DELETE CASCADE` wiped the notification from `notifications` table; if the delete failed, the notification survived.
+  3. Expense deleted notifications displayed awkward redundant text (e.g., `"<Long Title>" was...` cut off by line clamping) because the body repeated `"... was deleted"` while the card headline already stated `Expense Deleted`.
+  4. Clicking on a `trip_deleted` notification attempted to select and navigate into a non-existent trip.
+* **Decision:**
+  1. **UI Permission Gates (`TripsListScreen.tsx`, `SettingsView.tsx`):** Guard the "Delete trip" action to only render for authorized trip owners or admins (`isTripAdmin`).
+  2. **Store & API Safeguards (`tripStore.ts`, `tripApi.ts`):** Check owner/admin authorization in `deleteTrip` before dispatching push notifications. Update `deleteTripRow` to verify that rows were deleted via `.select('id')`, throwing if 0 rows were affected.
+  3. **Decouple Trip Deletion Notifications from Foreign Key Cascade (`tripStore.ts`):** Send `trip_deleted` notifications without the relational `tripId` FK (keeping `tripName` in `params.tripName`), preventing Postgres `ON DELETE CASCADE` from deleting the notification when the trip is removed.
+  4. **Clean Action Body Normalization (`notificationText.ts`):** Update `renderNotificationBody()` to extract the pure expense title (and currency/amount if structured in `data`) and strip redundant trailing verbs (`was deleted`, `was updated`, `was restored`, `added`) with robust parsing for legacy notifications.
+  5. **Safe Realtime & Interaction Handling (`notificationsStore.ts`, `NotificationsPanel.tsx`):** Immediately remove deleted trips from Zustand `trips` state upon receiving realtime `trip_deleted` notifications. Prevent `handleOpenNotification` from selecting deleted or non-existent trips.
+* **Trade-offs Accepted:**
+  - Non-owner trip participants cannot delete shared trips (they can archive or leave the trip instead).
+  - Historical notifications without structured `data.expenseTitle` are normalized via regex matching against known verb patterns.
+
+
 
 
 
