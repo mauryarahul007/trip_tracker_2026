@@ -10,11 +10,13 @@
 
 ## Git Push & Commit Protocols
 
-- **Rule:** Whenever code or configuration is committed and pushed to GitHub, you MUST ALWAYS provide a comprehensive, granular **Summary of Changes** in your response.
-- **Detailed Summary Requirements:**
+- **Rule 1 (Git Commit Body):** Whenever code or configuration is committed, the **git commit message body** (commit description/comments pushed to GitHub) MUST contain a granular, file-by-file **Summary of Changes** explaining what changed in each file and why.
+- **Rule 2 (Response Output):** Whenever changes are pushed to GitHub, you MUST ALWAYS provide a comprehensive, granular **Summary of Changes** with clickable file links in your response.
+- **Detailed Summary Requirements (Both in Git Commit Body & Response):**
   - Commit SHA, branch, and remote URL.
-  - Detailed file-by-file breakdown with clickable file links.
+  - Detailed file-by-file breakdown with exact file paths.
   - Explicit explanation of exactly what was modified, added, or deleted in each file.
   - Motivation/context behind each change.
-  - Verification & testing status.
+  - Verification & testing status (tests passed, lint status).
+
 
