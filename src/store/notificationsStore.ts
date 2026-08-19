@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import type { AppNotification } from '../types';
 import {
+  deleteAllNotifications,
   deleteNotification,
   fetchNotifications,
   markAllNotificationsRead,
@@ -22,6 +23,7 @@ interface NotificationsStore {
   markAsRead: (id: string) => void;
   markAllAsRead: () => void;
   deleteOne: (id: string) => void;
+  clearAll: () => void;
   openPanel: () => void;
   closePanel: () => void;
 }
@@ -117,6 +119,13 @@ export const useNotificationsStore = create<NotificationsStore>((set, get) => ({
       unreadCount: target.read ? state.unreadCount : Math.max(0, state.unreadCount - 1),
     }));
     deleteNotification(id).catch((err) => console.error('Failed to delete notification', err));
+  },
+
+  clearAll: () => {
+    const userId = get().userId;
+    if (!userId || get().notifications.length === 0) return;
+    set({ notifications: [], unreadCount: 0 });
+    deleteAllNotifications(userId).catch((err) => console.error('Failed to delete all notifications', err));
   },
 
   openPanel: () => set({ isPanelOpen: true }),

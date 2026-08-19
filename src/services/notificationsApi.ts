@@ -42,6 +42,11 @@ export async function deleteNotification(id: string): Promise<void> {
   if (error) throw error;
 }
 
+export async function deleteAllNotifications(userId: string): Promise<void> {
+  const { error } = await supabase.from('notifications').delete().eq('user_id', userId);
+  if (error) throw error;
+}
+
 // Live inserts while a tab is open — historical notifications (and
 // anything that arrived while offline) are covered separately by
 // fetchNotifications on load.

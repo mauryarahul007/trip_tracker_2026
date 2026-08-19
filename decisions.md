@@ -493,6 +493,27 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - The floating pill occupies floating space over the bottom of the scroll view. Content padding-bottom ensures zero overlap with the final list items and buttons.
 
+---
+
+## 38. Classy Notification Center Architecture & Granular Deletion (Webapp)
+* **Context:** The previous notifications drawer used an oversized dark header banner with negative margin hacks, lacked visual categorization (all rows looked identical with no icon differentiation), had no mechanism for clearing all notifications, and lacked mouse-hover delete actions on desktop.
+* **Decision:** Implemented a full **Classy Notification Center** (`src/components/NotificationsPanel.tsx`) inspired by WhatsApp and Apple iOS Notification Center.
+* **Pattern/Implementation:**
+  - **Categorized Visual Squircles (`src/components/NotificationsPanel.tsx`)**:
+    - Mapped notification types (`expense_added`, `expense_updated`, `expense_deleted`, `member_added`, `settlement`) to theme-colored squircle avatars with emerald unread status dots.
+  - **Toolbar Actions & Clear All (`src/services/notificationsApi.ts`, `src/store/notificationsStore.ts`)**:
+    - Added `deleteAllNotifications` database API and `clearAll` store action for one-tap notification purge with safety confirmation.
+    - Added clean header toolbar containing `Mark read`, `Clear all`, and `✕` close button.
+  - **Dual Deletion System (Hover + Swipe)**:
+    - Desktop: Hovering over any notification reveals a discrete `✕`/Trash delete button and a `✓` Mark as Read toggle.
+    - Mobile: Fluid spring swipe gesture reveals a red trash background.
+  - **WhatsApp-Style Empty State & Navigation**:
+    - Designed an elegant empty state with glowing sparkles squircle ("You're All Caught Up").
+    - Wired `useHistoryBack(isPanelOpen, closePanel)` for stack-safe back navigation.
+* **Trade-offs Accepted:**
+  - `Clear all` performs an irreversible batch deletion on the Supabase `notifications` table for the user. A confirmation prompt prevents accidental clears.
+
+
 
 
 
