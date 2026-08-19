@@ -574,6 +574,19 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - Network-failed mutations persist locally with temporary IDs and sync in the background upon reconnection, prioritizing zero data loss over immediate server confirmation.
 
+---
+
+## 43. MapLibre Popup HTML Injection Sanitization (OWASP A03 / XSS Prevention)
+* **Context:**
+  - In `src/components/TripJourneyMap.tsx`, expense titles and reverse-geocoded place names were interpolated directly into raw HTML template strings and rendered via MapLibre GL's `Popup.setHTML()`.
+  - Because MapLibre GL does not sanitize HTML input passed to `setHTML()`, a trip participant could store crafted script or image onerror payloads in an expense title, triggering stored XSS for other participants upon clicking the map marker pin on the Analytics tab.
+* **Decision:**
+  - Introduced `escapeHtml()` utility to escape `&`, `<`, `>`, `"`, and `'` characters prior to popup HTML generation.
+  - Added unit test suite `src/components/TripJourneyMap.test.ts` to prevent regressions against common XSS injection vectors.
+* **Trade-offs Accepted:**
+  - Raw HTML tags inside expense titles or reverse geocoding place names will render as literal escaped text rather than HTML formatting, preserving visual text while preventing code execution.
+
+
 
 
 

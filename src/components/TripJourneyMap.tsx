@@ -34,6 +34,19 @@ const MAP_STYLE_URL = 'https://tiles.openfreemap.org/styles/liberty';
 const ROUTE_SOURCE_ID = 'trip-route';
 const ROUTE_LAYER_ID = 'trip-route-line';
 
+export function escapeHtml(str: string): string {
+  return str.replace(/[&<>"']/g, (m) => {
+    switch (m) {
+      case '&': return '&amp;';
+      case '<': return '&lt;';
+      case '>': return '&gt;';
+      case '"': return '&quot;';
+      case "'": return '&#39;';
+      default: return m;
+    }
+  });
+}
+
 export function TripJourneyMap({ expenses, categories, baseCurrency }: Props) {
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const mapInstanceRef = useRef<MaplibreMap | null>(null);
@@ -112,18 +125,23 @@ export function TripJourneyMap({ expenses, categories, baseCurrency }: Props) {
         `;
         el.textContent = emoji;
 
+        const safeTitle = escapeHtml(exp.title);
+        const safePlaceName = loc.placeName ? escapeHtml(loc.placeName) : '';
+        const safeCurrency = escapeHtml(currencySymbol);
+        const safeDate = escapeHtml(exp.date);
+
         const popupContent = `
           <div style="font-family: inherit; font-size: 12.5px; color: #1E293B; min-width: 150px;">
             <div style="font-weight: 700; font-size: 14px; margin-bottom: 2px; color: #0F172A;">
-              ${exp.title}
+              ${safeTitle}
             </div>
             <div style="color: #00BFA5; font-weight: 700; font-size: 13.5px; margin-bottom: 4px;">
-              ${currencySymbol} ${exp.amount.toFixed(2)}
+              ${safeCurrency} ${exp.amount.toFixed(2)}
             </div>
             <div style="font-size: 11px; color: #64748B; margin-bottom: 2px;">
-              📅 ${exp.date} • #${idx + 1} Stop
+              📅 ${safeDate} • #${idx + 1} Stop
             </div>
-            ${loc.placeName ? `<div style="font-size: 11px; color: #475569; font-weight: 500;">📍 ${loc.placeName}</div>` : ''}
+            ${safePlaceName ? `<div style="font-size: 11px; color: #475569; font-weight: 500;">📍 ${safePlaceName}</div>` : ''}
           </div>
         `;
 
