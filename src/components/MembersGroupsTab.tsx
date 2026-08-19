@@ -6,6 +6,7 @@ import { initial } from '../utils/initials';
 import { avatarColorForName } from '../utils/avatarColor';
 import { fetchPreviousTripMembers, searchRemoteMemberSuggestions } from '../services/tripApi';
 import { IconCheck, IconEdit, IconTrash } from './Icons';
+import { useHistoryBack } from '../utils/useHistoryBack';
 
 type Props = {
   showMembersRequiredNotice: boolean;
@@ -247,6 +248,19 @@ export function MembersGroupsTab({
   const [editingGroup, setEditingGroup] = React.useState<Group | null>(null);
   const [groupFormError, setGroupFormError] = React.useState('');
   const [isGroupNameAuto, setIsGroupNameAuto] = React.useState(true);
+
+  // Register group modal/form into browser history stack (WhatsApp hierarchical navigation)
+  useHistoryBack(showAddGroup || Boolean(editingGroup), () => {
+    setShowAddGroup(false);
+    setEditingGroup(null);
+    setGroupFormError('');
+  });
+
+  // Register member edit modal/form into browser history stack
+  useHistoryBack(Boolean(editingMember), () => {
+    setEditingMember(null);
+    setMemberFormError('');
+  });
 
   // Auto-generate group name based on selected members
   React.useEffect(() => {

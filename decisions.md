@@ -428,6 +428,75 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - Strings exceeding max bounds (e.g. titles over 200 characters or names over 100 characters) are trimmed automatically or rejected by the database.
 
+---
+
+## 34. CI/CD Pipeline Supply Chain Hardening & Action Pinning
+* **Context:** The Chief Security Officer (CSO) audit identified three actionable security improvements in the CI/CD pipeline: third-party GitHub action `webfactory/ssh-agent` was referenced via a mutable tag (`@v0.9.0`) instead of an immutable commit SHA, deployment credentials (`EC2_HOST`, `EC2_USER`) were expanded directly inside inline bash commands risking parameter injection, and the repository lacked a `CODEOWNERS` protection file for workflow files.
+* **Decision:**
+  - Pinned `webfactory/ssh-agent` in `.github/workflows/deploy-ec2.yml` to its immutable 40-character commit SHA (`dc588b651fe13675774614f8e6a936a468676387`).
+  - Refactored shell execution steps in `deploy-ec2.yml` to inject secret values via the step `env:` context and reference them cleanly as `$EC2_HOST` and `$EC2_USER`.
+  - Created `.github/CODEOWNERS` mandating repository owner review for `.github/workflows/`, `codemagic.yaml`, `.githooks/`, and `scripts/`.
+* **Trade-offs Accepted:**
+  - Upgrading pinned third-party actions in the future requires manually updating the commit SHA alongside version comments rather than relying on automatic tag rolling. This trade-off was accepted because it guarantees complete supply chain immutability and protects deployment private keys against upstream repository tampering.
+
+---
+
+## 35. Editorial Fluid Morph Header Architecture with Directional Hysteresis
+* **Context:** When scrolling through transactions, members, analytics, or settings tabs, the header previously shrank via a rigid binary threshold (`scrollTop > 15px`) and CPU-intensive `max-height` transitions. This caused aggressive scroll jitter/flickering near the threshold, layout reflow stutter, and the complete disappearance of the sync status pill.
+* **Decision:** Implemented an **Editorial Fluid Morph** header architecture with GPU-accelerated transforms and directional hysteresis.
+* **Pattern/Implementation:**
+  - **Directional Hysteresis & rAF Scroll Engine (`src/App.tsx`)**:
+    - Replaced the 15px binary check with a directional hysteresis tracker throttled via `window.requestAnimationFrame`.
+    - Expands at the top (`scrollTop <= 15px`), collapses smoothly on deliberate downward scroll (`scrollTop > 45px`), and expands early on upward scrolling near the top (`currentScrollTop < 120px` with 25px upward delta) to eliminate threshold bouncing and jitter.
+  - **Inline Compact Metadata Badge (`src/App.tsx`)**:
+    - Embedded an `.app-title-compact-badge` inside `.app-title-row` holding the currency code and live sync status dot.
+    - Fades and translates in seamlessly when scrolled so crucial connectivity/sync status is never lost.
+  - **GPU-Accelerated Morph & Spring Curves (`src/index.css`)**:
+    - Replaced `max-height` transitions with GPU-accelerated `transform: scale(0.82) translateY(-1px)` and `opacity` transitions using a custom spring curve (`cubic-bezier(0.16, 1, 0.3, 1)`).
+    - Upgraded glassmorphism to `backdrop-filter: blur(20px) saturate(180%)` with deep ambient drop shadows.
+    - Aligned `.tab-pane` linear gradient mask to smoothly dissolve content under the compact header bar.
+* **Trade-offs Accepted:**
+  - Title scaling uses GPU `transform: scale(...)` with `transform-origin: left center` rather than CSS font-size transitions, which guarantees 60/120fps rendering and eliminates layout reflows across all mobile and desktop browsers.
+
+---
+
+## 36. WhatsApp-Style Hierarchical Stack Navigation & Sub-Screen Drill-Down Management
+* **Context:** In the webapp, opening drill-down sub-screens in Settings (Categories & Tags, Recycle Bin, Appearance, Backups, Archived Trips) or modal drawers in Members/Groups did not push individual history stack entries. As a result, pressing the browser Back button or performing a mobile swipe-back gesture triggered the top-level trip unselection handler (`selectTrip(null)`), ejecting the user completely to the initial home screen.
+* **Decision:** Implemented a full **WhatsApp-style Hierarchical Navigation Stack (LIFO)** where each nested level unwinds in strict reverse order before parent containers or the active trip can close.
+* **Pattern/Implementation:**
+  - **Settings Drill-Down Navigation (`src/components/SettingsView.tsx`)**:
+    - Wired `useHistoryBack` to `subScreen !== null`, ensuring back navigation closes the active sub-screen (Categories, Recycle Bin, etc.) and returns to the Settings overview without exiting the trip.
+    - Wired `useHistoryBack` to `expandedCategoryId !== null`, so open tag editors collapse first on back navigation.
+    - Added `.settings-subscreen-enter` with `@keyframes whatsappSlideIn` for smooth slide transitions.
+  - **Member & Group Drawers (`src/components/MembersGroupsTab.tsx`)**:
+    - Wired `useHistoryBack` to `showAddGroup || Boolean(editingGroup)` and `Boolean(editingMember)`, ensuring open form sheets close back to the members list.
+  - **Tab Level Stack Management (`src/App.tsx`)**:
+    - Wired `useHistoryBack(!!activeTripId && activeTab !== 'expenses', () => setActiveTab('expenses'))`, so backing out from secondary tabs (Members, Analytics, Settings) transitions back to the primary Transactions tab before exiting the trip.
+* **Trade-offs Accepted:**
+  - Navigating between secondary tabs pushes lightweight hash history states (`#nav-N`) onto the stack. This guarantees that back gestures unwind intuitively without any unexpected screen leaps or data loss.
+
+---
+
+## 37. Floating Frosted Glass Pill Menu Architecture (Webapp)
+* **Context:** The previous bottom tab bar on the webapp was rendered as a full-width flat opaque bar stuck to the bottom of the viewport. It looked rigid, boxy, and clashed with the modern translucent aesthetic established by the iOS and WhatsApp design systems.
+* **Decision:** Implemented a **Floating Frosted Glass Pill Menu** (`.nav-tabs`) with spring active indicators and translucent backdrop blur.
+* **Pattern/Implementation:**
+  - **Pill Geometry & Glassmorphic Surface (`src/index.css`)**:
+    - Transformed `.nav-tabs` into an elevated floating capsule (`position: absolute; bottom: calc(14px + safe-bottom); left: 50%; transform: translateX(-50%); max-width: 430px; border-radius: 9999px`).
+    - Configured true glassmorphism with `backdrop-filter: blur(24px) saturate(190%)`, multi-layered ambient shadows, and inner rim highlight (`inset 0 1px 1px rgba(255, 255, 255, 0.9)` in light mode, `inset 0 1px 1px rgba(255, 255, 255, 0.08)` in dark mode).
+  - **Spring Active State & Micro-Interactions (`src/index.css`)**:
+    - Styled `.nav-tab-item` with spring easing `cubic-bezier(0.16, 1, 0.3, 1)`.
+    - Active tabs receive a glowing capsule background (`rgba(0, 191, 165, 0.14)`), bold typography, and an icon elevation/scale pop (`scale(1.08) translateY(-1px)`).
+  - **FAB & Content Clearance (`src/index.css`)**:
+    - Re-anchored `.fab-add-expense` at `bottom: calc(78px + safe-bottom)` to hover directly above the right side of the floating glass bar.
+    - Updated `.tab-pane` padding-bottom to `calc(88px + safe-bottom)` and bottom dissolution mask so content scrolls cleanly behind the pill.
+* **Trade-offs Accepted:**
+  - The floating pill occupies floating space over the bottom of the scroll view. Content padding-bottom ensures zero overlap with the final list items and buttons.
+
+
+
+
+
 
 
 

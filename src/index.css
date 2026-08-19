@@ -74,6 +74,11 @@
   --bg-header-glass: rgba(28, 42, 56, 0.82);
   --bg-header-glass-scrolled: rgba(28, 42, 56, 0.92);
   --glass-shadow: 0 1px 2px rgba(28, 42, 56, 0.04), 0 6px 16px -8px rgba(28, 42, 56, 0.10);
+  --bg-nav-glass: rgba(255, 253, 246, 0.82);
+  --border-nav-glass: rgba(221, 210, 184, 0.65);
+  --shadow-nav-glass: 0 16px 36px -4px rgba(28, 42, 56, 0.16), 0 4px 12px rgba(28, 42, 56, 0.08), inset 0 1px 1px rgba(255, 255, 255, 0.9);
+  --bg-nav-item-active: rgba(31, 110, 104, 0.12);
+  --color-nav-item-active: var(--primary-accent);
   --backdrop-filter: none;
   --border-radius-sm: 6px;
   --border-radius-md: 10px;
@@ -112,6 +117,11 @@
     --bg-header-glass: rgba(15, 21, 29, 0.85);
     --bg-header-glass-scrolled: rgba(15, 21, 29, 0.95);
     --glass-shadow: 0 1px 2px rgba(0, 0, 0, 0.35), 0 6px 16px -8px rgba(0, 0, 0, 0.5);
+    --bg-nav-glass: rgba(20, 28, 38, 0.82);
+    --border-nav-glass: rgba(242, 236, 220, 0.14);
+    --shadow-nav-glass: 0 18px 44px -4px rgba(0, 0, 0, 0.65), 0 4px 16px rgba(0, 0, 0, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.08);
+    --bg-nav-item-active: rgba(0, 191, 165, 0.16);
+    --color-nav-item-active: #00BFA5;
   }
 }
 :root[data-theme="dark"] {
@@ -139,6 +149,11 @@
   --bg-header-glass: rgba(15, 21, 29, 0.85);
   --bg-header-glass-scrolled: rgba(15, 21, 29, 0.95);
   --glass-shadow: 0 1px 2px rgba(0, 0, 0, 0.35), 0 6px 16px -8px rgba(0, 0, 0, 0.5);
+  --bg-nav-glass: rgba(20, 28, 38, 0.82);
+  --border-nav-glass: rgba(242, 236, 220, 0.14);
+  --shadow-nav-glass: 0 18px 44px -4px rgba(0, 0, 0, 0.65), 0 4px 16px rgba(0, 0, 0, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.08);
+  --bg-nav-item-active: rgba(0, 191, 165, 0.16);
+  --color-nav-item-active: #00BFA5;
 }
 
 * {
@@ -300,15 +315,15 @@ button, [role="button"], input, select, a {
 /* Floating Action Button (FAB) */
 .fab-add-expense {
   position: absolute;
-  right: 18px;
-  bottom: 18px;
-  width: 54px;
-  height: 54px;
+  right: 20px;
+  bottom: calc(78px + var(--safe-bottom, 0px));
+  width: 52px;
+  height: 52px;
   border-radius: 50%;
   background: var(--bg-header);
   color: #F2ECDC;
   border: 2px solid rgba(242, 236, 220, 0.35);
-  box-shadow: 0 4px 14px rgba(28, 42, 56, 0.25), 0 2px 6px rgba(28, 42, 56, 0.15);
+  box-shadow: 0 6px 20px rgba(28, 42, 56, 0.3), 0 2px 8px rgba(28, 42, 56, 0.15);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -731,74 +746,196 @@ input[type="date"].input-field {
   left: 0;
   right: 0;
   z-index: 40;
+  padding-top: calc(14px + var(--safe-top, 0px));
+  padding-bottom: 12px;
+  padding-left: max(20px, var(--safe-left, 20px));
+  padding-right: max(20px, var(--safe-right, 20px));
   background-color: var(--bg-header-glass);
-  backdrop-filter: blur(16px) saturate(170%);
-  -webkit-backdrop-filter: blur(16px) saturate(170%);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
   border-bottom: 1px solid rgba(242, 236, 220, 0.08);
-  box-shadow: 0 4px 16px -4px rgba(0, 0, 0, 0.25);
-  transition: padding 0.28s cubic-bezier(0.4, 0, 0.2, 1),
-              background-color 0.28s ease,
-              box-shadow 0.28s ease,
-              border-color 0.28s ease;
+  box-shadow: 0 4px 20px -4px rgba(0, 0, 0, 0.28);
+  transition: padding 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+              background-color 0.35s ease,
+              box-shadow 0.35s ease,
+              border-color 0.35s ease;
+  will-change: padding, background-color, box-shadow;
 }
 
 .trip-dashboard-header.is-scrolled {
   padding-top: calc(9px + var(--safe-top, 0px));
   padding-bottom: 9px;
   background-color: var(--bg-header-glass-scrolled);
-  box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.45), 0 2px 6px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 10px 30px -6px rgba(0, 0, 0, 0.45), 0 2px 8px rgba(0, 0, 0, 0.25);
   border-bottom-color: rgba(242, 236, 220, 0.14);
 }
 
+.trip-dashboard-header .app-header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  min-height: 38px;
+}
+
 .trip-dashboard-header .app-title-group {
-  transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.trip-dashboard-header.is-scrolled .app-title-group {
+  transform: translateY(2px);
+}
+
+.app-title-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
 }
 
 .trip-dashboard-header .app-logo {
-  transition: font-size 0.28s cubic-bezier(0.4, 0, 0.2, 1), line-height 0.28s ease;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin: 0;
+  transform-origin: left center;
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), color 0.2s ease;
 }
 
 .trip-dashboard-header.is-scrolled .app-logo {
-  font-size: 18px !important;
-  line-height: 1.2;
+  transform: scale(0.82) translateY(-1px);
 }
 
 .trip-dashboard-header .app-eyebrow {
-  max-height: 24px;
-  opacity: 1;
-  transform-origin: top left;
-  transition: max-height 0.24s ease, opacity 0.2s ease, margin 0.24s ease, transform 0.24s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11.5px;
+  font-weight: 500;
+  color: rgba(242, 236, 220, 0.65);
+  margin-bottom: 2px;
+  transform-origin: left top;
+  transition: opacity 0.22s ease,
+              transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+              height 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+              margin 0.3s ease;
+  height: 16px;
+  overflow: hidden;
 }
 
 .trip-dashboard-header.is-scrolled .app-eyebrow {
-  max-height: 0;
   opacity: 0;
+  height: 0;
   margin-bottom: 0;
-  transform: translateY(-4px);
+  transform: translateY(-6px) scale(0.92);
   pointer-events: none;
-  overflow: hidden;
+}
+
+.app-title-compact-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(242, 236, 220, 0.8);
+  opacity: 0;
+  transform: translateX(-4px) scale(0.95);
+  pointer-events: none;
+  transition: opacity 0.25s ease, transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.trip-dashboard-header.is-scrolled .app-title-compact-badge {
+  opacity: 1;
+  transform: translateX(0) scale(1);
+  pointer-events: auto;
+}
+
+.compact-badge-sep {
+  color: rgba(242, 236, 220, 0.4);
+}
+
+.compact-badge-currency {
+  color: var(--color-primary-teal, #00BFA5);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  background: rgba(0, 191, 165, 0.14);
+  padding: 1px 6px;
+  border-radius: 4px;
+  border: 1px solid rgba(0, 191, 165, 0.28);
+}
+
+.compact-sync-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  display: inline-block;
+  margin-left: 2px;
+}
+.compact-sync-dot.synced {
+  background-color: #22C55E;
+  box-shadow: 0 0 6px rgba(34, 197, 94, 0.6);
+}
+.compact-sync-dot.out-of-sync {
+  background-color: #F97316;
+  box-shadow: 0 0 6px rgba(249, 115, 22, 0.6);
+}
+.compact-sync-dot.offline {
+  background-color: #94A3B8;
+}
+.compact-sync-dot.session-expired {
+  background-color: #EF4444;
+  box-shadow: 0 0 6px rgba(239, 68, 68, 0.6);
 }
 
 .trip-dashboard-header .app-header-stats {
-  max-height: 48px;
-  opacity: 1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(242, 236, 220, 0.08);
+  font-size: 12px;
+  color: rgba(242, 236, 220, 0.72);
+  transform-origin: top center;
+  transition: opacity 0.2s ease,
+              transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+              height 0.32s cubic-bezier(0.16, 1, 0.3, 1),
+              margin 0.3s ease,
+              padding 0.3s ease,
+              border-color 0.2s ease;
+  height: 28px;
   overflow: hidden;
-  transition: max-height 0.28s cubic-bezier(0.4, 0, 0.2, 1),
-              opacity 0.22s ease,
-              margin-top 0.28s ease,
-              padding-top 0.28s ease,
-              border-color 0.22s ease,
-              transform 0.28s ease;
 }
 
 .trip-dashboard-header.is-scrolled .app-header-stats {
-  max-height: 0;
   opacity: 0;
+  height: 0;
   margin-top: 0;
   padding-top: 0;
   border-top-color: transparent;
-  transform: translateY(-8px);
+  transform: translateY(-8px) scale(0.98);
   pointer-events: none;
+}
+
+.trip-dashboard-header .secondary-btn {
+  transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
+  border-radius: 8px;
+}
+.trip-dashboard-header .secondary-btn:hover {
+  background: rgba(242, 236, 220, 0.14) !important;
+  border-color: rgba(242, 236, 220, 0.45) !important;
+}
+.trip-dashboard-header .secondary-btn:active {
+  transform: scale(0.96);
 }
 
 /* Native iOS glass header: MainViewController.swift renders a real
@@ -886,16 +1023,26 @@ html.capacitor-ios .tab-pane {
 }
 
 .nav-tabs {
+  position: absolute;
+  bottom: calc(14px + var(--safe-bottom, 0px));
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - 32px);
+  max-width: 430px;
+  background: var(--bg-nav-glass);
+  backdrop-filter: blur(24px) saturate(190%);
+  -webkit-backdrop-filter: blur(24px) saturate(190%);
+  border: 1px solid var(--border-nav-glass);
+  border-radius: 9999px;
+  padding: 5px 6px;
+  box-shadow: var(--shadow-nav-glass);
   display: flex;
-  background: var(--bg-surface);
-  border-top: 1px solid var(--border-color);
-  padding-top: 8px;
-  padding-left: max(10px, var(--safe-left, 10px));
-  padding-right: max(10px, var(--safe-right, 10px));
-  padding-bottom: calc(8px + var(--safe-bottom, 0px));
-  position: relative;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
   flex-shrink: 0;
-  z-index: 100;
+  z-index: 50;
+  transition: background-color 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
 }
 
 /* Native iOS "Liquid Glass" tab bar: MainViewController.swift renders a
@@ -918,37 +1065,53 @@ html.capacitor-ios .nav-tabs {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 3px;
-  background: none;
+  gap: 2px;
+  background: transparent;
   border: none;
-  border-radius: var(--border-radius-sm);
+  border-radius: 9999px;
   color: var(--text-secondary);
   font-family: var(--font-family-body);
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 600;
+  letter-spacing: 0.01em;
   white-space: nowrap;
-  padding: 8px 2px;
+  padding: 6px 2px 5px;
   cursor: pointer;
-  transition: var(--transition-smooth);
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .nav-tab-item:hover {
-  background: var(--bg-surface-hover);
+  color: var(--text-primary);
+  background: rgba(125, 125, 125, 0.08);
+}
+
+.nav-tab-item:active {
+  transform: scale(0.95);
 }
 
 .nav-tab-item.active {
-  color: var(--primary-accent);
-  background: rgba(31, 110, 104, 0.09);
+  color: var(--color-nav-item-active);
+  background: var(--bg-nav-item-active);
+  font-weight: 700;
 }
 
 .nav-tab-icon {
   display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
 }
-/* .icon's own width/height: 17px otherwise wins over the size prop passed
-   in NavTabs.tsx, since CSS dimensions override the SVG's own attributes. */
+
+.nav-tab-item.active .nav-tab-icon {
+  transform: translateY(-1px) scale(1.08);
+}
+
 .nav-tab-icon .icon {
-  width: 26px;
-  height: 26px;
+  width: 22px;
+  height: 22px;
 }
 
 .app-header .secondary-btn:hover {
@@ -2151,12 +2314,12 @@ input:checked + .toggle-slider:before {
 .tab-pane {
   flex: 1;
   min-height: 0;
-  padding: calc(126px + var(--safe-top, 0px)) max(20px, var(--safe-right, 20px)) calc(84px + var(--safe-bottom, 0px)) max(20px, var(--safe-left, 20px));
+  padding: calc(126px + var(--safe-top, 0px)) max(20px, var(--safe-right, 20px)) calc(88px + var(--safe-bottom, 0px)) max(20px, var(--safe-left, 20px));
   overflow-y: auto;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
-  mask-image: linear-gradient(to bottom, transparent 0px, transparent calc(var(--safe-top, 0px) + 6px), black calc(var(--safe-top, 0px) + 38px), black 100%);
-  -webkit-mask-image: linear-gradient(to bottom, transparent 0px, transparent calc(var(--safe-top, 0px) + 6px), black calc(var(--safe-top, 0px) + 38px), black 100%);
+  mask-image: linear-gradient(to bottom, transparent 0px, transparent calc(var(--safe-top, 0px) + 8px), black calc(var(--safe-top, 0px) + 48px), black calc(100% - 12px), transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0px, transparent calc(var(--safe-top, 0px) + 8px), black calc(var(--safe-top, 0px) + 48px), black calc(100% - 12px), transparent 100%);
 }
 /* .nav-tabs is a floating overlay on iOS (see above) and no longer
    reserves its own space in flex flow, so content needs this extra
@@ -2446,40 +2609,68 @@ html.capacitor-ios .tab-pane {
   color: var(--primary-accent);
 }
 
-/* Sub-screen Navigation Bar */
+/* WhatsApp-Style Sub-screen Navigation & Transitions */
+.settings-subscreen-enter {
+  animation: whatsappSlideIn 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: transform, opacity;
+}
+
+@keyframes whatsappSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
 .settings-subscreen-nav {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding-bottom: 14px;
+  padding-bottom: 12px;
   margin-bottom: 16px;
-  border-bottom: 1.5px dashed var(--border-color);
+  border-bottom: 1px solid var(--border-color);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--bg-surface);
+  padding-top: 4px;
 }
 
 .settings-back-btn {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  background: transparent;
-  border: none;
+  gap: 5px;
+  background: rgba(31, 110, 104, 0.08);
+  border: 1px solid rgba(31, 110, 104, 0.2);
   color: var(--primary-accent);
-  font-size: 14.5px;
+  font-size: 13.5px;
   font-weight: 600;
   cursor: pointer;
-  padding: 4px 8px 4px 0;
+  padding: 6px 12px;
   border-radius: 8px;
-  transition: opacity 0.15s ease;
+  transition: all 0.15s ease;
 }
 
 .settings-back-btn:hover {
-  opacity: 0.8;
+  background: rgba(31, 110, 104, 0.15);
+  transform: translateX(-2px);
+}
+
+.settings-back-btn:active {
+  transform: scale(0.96);
 }
 
 .settings-subscreen-title {
-  font-size: 16px;
-  font-weight: 600;
+  font-size: 16.5px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
   color: var(--text-primary);
   margin: 0;
 }
+
 
 

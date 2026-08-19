@@ -7,3 +7,23 @@
   - Context of the problem.
   - Selected decision & resolution.
   - Trade-offs accepted.
+
+## Git Push & Commit Protocols
+
+- **Rule 1 (Git Commit Body):** Whenever code or configuration is committed, the **git commit message body** (commit description/comments pushed to GitHub) MUST contain a granular, file-by-file **Summary of Changes** explaining what changed in each file and why.
+- **Rule 2 (Response Output):** Whenever changes are pushed to GitHub, you MUST ALWAYS provide a comprehensive, granular **Summary of Changes** with clickable file links in your response.
+- **Detailed Summary Requirements (Both in Git Commit Body & Response):**
+  - Commit SHA, branch, and remote URL.
+  - Detailed file-by-file breakdown with exact file paths.
+  - Explicit explanation of exactly what was modified, added, or deleted in each file.
+  - Motivation/context behind each change.
+  - Verification & testing status (tests passed, lint status).
+
+## Deployment Target Scope & Defaults
+
+- **Default Scope:** ALL changes made in this codebase are strictly targeted for the **webapp only**.
+- **Native Apps (Android & iOS) Guardrail:** Do NOT apply or deploy changes to the native Android or iOS app wrappers/builds unless and until the user explicitly specifies it.
+- **Push Prompt Protocol:** On each push to GitHub, you may ask the user if they want to deploy the changes for the native mobile apps as well. Otherwise, default is strictly webapp only.
+
+
+
