@@ -2568,40 +2568,68 @@ html.capacitor-ios .tab-pane {
   color: var(--primary-accent);
 }
 
-/* Sub-screen Navigation Bar */
+/* WhatsApp-Style Sub-screen Navigation & Transitions */
+.settings-subscreen-enter {
+  animation: whatsappSlideIn 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: transform, opacity;
+}
+
+@keyframes whatsappSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
 .settings-subscreen-nav {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding-bottom: 14px;
+  padding-bottom: 12px;
   margin-bottom: 16px;
-  border-bottom: 1.5px dashed var(--border-color);
+  border-bottom: 1px solid var(--border-color);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--bg-surface);
+  padding-top: 4px;
 }
 
 .settings-back-btn {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  background: transparent;
-  border: none;
+  gap: 5px;
+  background: rgba(31, 110, 104, 0.08);
+  border: 1px solid rgba(31, 110, 104, 0.2);
   color: var(--primary-accent);
-  font-size: 14.5px;
+  font-size: 13.5px;
   font-weight: 600;
   cursor: pointer;
-  padding: 4px 8px 4px 0;
+  padding: 6px 12px;
   border-radius: 8px;
-  transition: opacity 0.15s ease;
+  transition: all 0.15s ease;
 }
 
 .settings-back-btn:hover {
-  opacity: 0.8;
+  background: rgba(31, 110, 104, 0.15);
+  transform: translateX(-2px);
+}
+
+.settings-back-btn:active {
+  transform: scale(0.96);
 }
 
 .settings-subscreen-title {
-  font-size: 16px;
-  font-weight: 600;
+  font-size: 16.5px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
   color: var(--text-primary);
   margin: 0;
 }
+
 
 

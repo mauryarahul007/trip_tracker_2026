@@ -458,6 +458,24 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - Title scaling uses GPU `transform: scale(...)` with `transform-origin: left center` rather than CSS font-size transitions, which guarantees 60/120fps rendering and eliminates layout reflows across all mobile and desktop browsers.
 
+---
+
+## 36. WhatsApp-Style Hierarchical Stack Navigation & Sub-Screen Drill-Down Management
+* **Context:** In the webapp, opening drill-down sub-screens in Settings (Categories & Tags, Recycle Bin, Appearance, Backups, Archived Trips) or modal drawers in Members/Groups did not push individual history stack entries. As a result, pressing the browser Back button or performing a mobile swipe-back gesture triggered the top-level trip unselection handler (`selectTrip(null)`), ejecting the user completely to the initial home screen.
+* **Decision:** Implemented a full **WhatsApp-style Hierarchical Navigation Stack (LIFO)** where each nested level unwinds in strict reverse order before parent containers or the active trip can close.
+* **Pattern/Implementation:**
+  - **Settings Drill-Down Navigation (`src/components/SettingsView.tsx`)**:
+    - Wired `useHistoryBack` to `subScreen !== null`, ensuring back navigation closes the active sub-screen (Categories, Recycle Bin, etc.) and returns to the Settings overview without exiting the trip.
+    - Wired `useHistoryBack` to `expandedCategoryId !== null`, so open tag editors collapse first on back navigation.
+    - Added `.settings-subscreen-enter` with `@keyframes whatsappSlideIn` for smooth slide transitions.
+  - **Member & Group Drawers (`src/components/MembersGroupsTab.tsx`)**:
+    - Wired `useHistoryBack` to `showAddGroup || Boolean(editingGroup)` and `Boolean(editingMember)`, ensuring open form sheets close back to the members list.
+  - **Tab Level Stack Management (`src/App.tsx`)**:
+    - Wired `useHistoryBack(!!activeTripId && activeTab !== 'expenses', () => setActiveTab('expenses'))`, so backing out from secondary tabs (Members, Analytics, Settings) transitions back to the primary Transactions tab before exiting the trip.
+* **Trade-offs Accepted:**
+  - Navigating between secondary tabs pushes lightweight hash history states (`#nav-N`) onto the stack. This guarantees that back gestures unwind intuitively without any unexpected screen leaps or data loss.
+
+
 
 
 

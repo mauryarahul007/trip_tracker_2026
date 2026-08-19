@@ -24,6 +24,7 @@ import { useTripStore } from '../store/tripStore';
 import { formatDateRange } from '../utils/dateRange';
 import { getCategoryKeywords } from '../utils/categoryHelper';
 import { getAppVersion } from '../utils/appVersion';
+import { useHistoryBack } from '../utils/useHistoryBack';
 
 export type ThemePref = 'light' | 'dark' | 'system';
 
@@ -122,6 +123,17 @@ export function SettingsView({
   const [expandedCategoryId, setExpandedCategoryId] = useState<string | null>(null);
   const [newKeywordInput, setNewKeywordInput] = useState('');
 
+  // Register sub-screen drill-downs into browser history stack (WhatsApp hierarchical navigation)
+  useHistoryBack(subScreen !== null, () => {
+    setSubScreen(null);
+    setExpandedCategoryId(null);
+  });
+
+  // Register expanded category auto-tags drawer into browser history stack
+  useHistoryBack(expandedCategoryId !== null, () => {
+    setExpandedCategoryId(null);
+  });
+
   // Connectivity and disk storage
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [storageEstimate, setStorageEstimate] = useState<{ used: number; quota: number } | null>(null);
@@ -214,7 +226,7 @@ export function SettingsView({
 
   if (subScreen === 'categories') {
     return (
-      <div className="fade-in settings-container">
+      <div className="settings-container settings-subscreen-enter">
         <div className="settings-subscreen-nav">
           <button type="button" className="settings-back-btn" onClick={() => setSubScreen(null)}>
             <IconChevronLeft size={18} /> Settings
@@ -507,7 +519,7 @@ export function SettingsView({
 
   if (subScreen === 'recycle-bin') {
     return (
-      <div className="fade-in settings-container">
+      <div className="settings-container settings-subscreen-enter">
         <div className="settings-subscreen-nav">
           <button type="button" className="settings-back-btn" onClick={() => setSubScreen(null)}>
             <IconChevronLeft size={18} /> Settings
@@ -595,7 +607,7 @@ export function SettingsView({
 
   if (subScreen === 'appearance') {
     return (
-      <div className="fade-in settings-container">
+      <div className="settings-container settings-subscreen-enter">
         <div className="settings-subscreen-nav">
           <button type="button" className="settings-back-btn" onClick={() => setSubScreen(null)}>
             <IconChevronLeft size={18} /> Settings
@@ -658,7 +670,7 @@ export function SettingsView({
 
   if (subScreen === 'archived-trips') {
     return (
-      <div className="fade-in settings-container">
+      <div className="settings-container settings-subscreen-enter">
         <div className="settings-subscreen-nav">
           <button type="button" className="settings-back-btn" onClick={() => setSubScreen(null)}>
             <IconChevronLeft size={18} /> Settings
@@ -721,7 +733,7 @@ export function SettingsView({
 
   if (subScreen === 'backups') {
     return (
-      <div className="fade-in settings-container">
+      <div className="settings-container settings-subscreen-enter">
         <div className="settings-subscreen-nav">
           <button type="button" className="settings-back-btn" onClick={() => setSubScreen(null)}>
             <IconChevronLeft size={18} /> Settings
