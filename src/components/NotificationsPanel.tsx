@@ -41,7 +41,7 @@ function getNotificationMeta(type?: string): { icon: React.ReactNode; colorClass
     case 'trip_deleted':
       return { icon: <IconTrash size={17} />, colorClass: 'squircle-rose' };
     case 'expense_restored':
-      return { icon: <IconSparkles size={17} />, colorClass: 'squircle-teal' };
+      return { icon: <IconSparkles size={17} />, colorClass: 'squircle-emerald' };
     case 'member_added':
     case 'member_added_notice':
     case 'member_joined':
@@ -53,6 +53,39 @@ function getNotificationMeta(type?: string): { icon: React.ReactNode; colorClass
     default:
       return { icon: <IconBell size={17} />, colorClass: 'squircle-blue' };
   }
+}
+
+const TYPE_HEADLINES: Record<string, string> = {
+  expense_added: 'Expense Added',
+  expense_updated: 'Expense Updated',
+  expense_deleted: 'Expense Deleted',
+  expense_restored: 'Expense Restored',
+  trip_deleted: 'Trip Deleted',
+  member_added: 'Member Added',
+  member_added_notice: 'Member Added',
+  member_joined: 'Member Joined',
+  settlement_reminder: 'Settlement Reminder',
+  settlement: 'Settlement Updated',
+  settle: 'Settlement Updated',
+};
+
+// headline (short action label) + trip badge + detail body, so the trip
+// name never has to repeat inside the sentence itself. The detail body
+// comes from renderNotificationBody (src/utils/notificationText.ts),
+// which renders from type+data for current rows and falls back to the
+// legacy stored sentence for rows written before that existed — this
+// function no longer needs its own text-parsing fallback for that case.
+function getNotificationDisplay(
+  notification: AppNotification,
+  resolvedTripName: string | null
+): { headline: string; badge: string | null; body: string } {
+  const type = notification.data?.type;
+  const headline = (type && TYPE_HEADLINES[type]) || 'Notification';
+  const body = renderNotificationBody(notification);
+  const badge =
+    resolvedTripName && resolvedTripName.toLowerCase() !== headline.toLowerCase() ? resolvedTripName : null;
+
+  return { headline, badge, body };
 }
 
 const SWIPE_DELETE_THRESHOLD = 75;
@@ -164,25 +197,25 @@ function NotificationCard({
         </div>
 
         {/* Center Content */}
-        <div className="notif-body">
-          <div className="notif-row-top">
-            <div className="notif-title-wrap">
-              {/* The event itself (e.g. "Flight tickets — INR 24,745 added") is
-                  the useful headline here — notification.title is just the
-                  trip name, which the badge right next to it already shows,
-                  so rendering both repeated the same text twice in one row.
-                  Rendered from type+data rather than a stored sentence — see
-                  src/utils/notificationText.ts. */}
-              <h4 className="notif-card-title">{renderNotificationBody(notification)}</h4>
-              {tripName && (
-                <span className={`notif-trip-badge ${isCurrentTrip ? 'current' : 'other'}`}>
-                  {tripName}
-                </span>
-              )}
+        {(() => {
+          const display = getNotificationDisplay(notification, tripName ?? null);
+          return (
+            <div className="notif-body">
+              <div className="notif-row-top">
+                <div className="notif-title-wrap">
+                  <h4 className="notif-card-title">{display.headline}</h4>
+                  {display.badge && (
+                    <span className={`notif-trip-badge ${isCurrentTrip ? 'current' : 'other'}`}>
+                      {display.badge}
+                    </span>
+                  )}
+                </div>
+                <span className="notif-time">{relativeTime(notification.createdAt)}</span>
+              </div>
+              <p className="notif-card-text">{display.body}</p>
             </div>
-            <span className="notif-time">{relativeTime(notification.createdAt)}</span>
-          </div>
-        </div>
+          );
+        })()}
 
         {/* Actions Toolbar for Read/Unread and Delete */}
         <div className="notif-hover-actions" onClick={(e) => e.stopPropagation()}>

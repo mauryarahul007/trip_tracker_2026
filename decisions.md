@@ -524,8 +524,21 @@ This document logs all meaningful technical decisions, library choices, design p
      - Embedded explicit **Trip Name Badges** (`.notif-trip-badge`) on every notification card to provide instant context.
      - Added a 1-tap **Segment Switcher** (`[Current Trip]` vs `[All Trips]`) in `NotificationsPanel.tsx` with dynamic unread count badges.
      - Updated `BalancesSettlements.tsx` to include the explicit `tripName` in settlement reminder notification titles and bodies.
+---
+
+## 40. Notification Payload Standardization & Smart In-App Display Normalization
+* **Context:**
+  - In-app notification cards were displaying duplicated trip names (e.g. `Himachal 2 [Himachal 2]`) because push payloads previously used the trip name as the `title` while the card also rendered the trip badge.
+  - Event actions (such as deletion, addition, updates) were only present in the body text and could get cut off prematurely by CSS line clamping on long expense descriptions (e.g. `"...was..."`).
+  - Historical notifications recorded past actions (such as deleting a test trip or expense with the same name), creating confusion when a trip with that name was present in the trip list.
+* **Decision:**
+  - Implemented `getNotificationDisplay()` helper in `NotificationsPanel.tsx` to cleanly extract action headlines (`Expense Added`, `Expense Deleted`, `Trip Deleted`, `Member Joined`, `Settlement Reminder`) and deduplicate header badges against trip names for both historical and future notifications.
+  - Expanded `getNotificationMeta()` to support `trip_deleted` (rose trash) and `expense_restored` (emerald sparkles) icons.
+  - Standardized push dispatch payloads across `tripStore.ts`, `App.tsx`, and `JoinTripScreen.tsx` with explicit action headlines and preserved `data.tripName`.
+  - Added `word-break: break-word` and `overflow-wrap: break-word` to `.notif-card-text` to prevent awkward word truncation.
 * **Trade-offs Accepted:**
-  - Notifications remain accessible globally across all trips in the `[All Trips]` view while defaulting cleanly to the active trip when inside a trip dashboard.
+  - Historical database notification records are normalized dynamically in the UI at render time without requiring retroactive SQL backfills.
+
 
 
 
