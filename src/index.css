@@ -318,18 +318,6 @@ button, [role="button"], input, select, a {
   outline: none;
   -webkit-tap-highlight-color: transparent;
 }
-/* On iOS, .nav-tabs is display:none (native tab bar replaces it — see
-   html.capacitor-ios .nav-tabs) and no longer reserves its own space in
-   the flex column, so .app-main (this FAB's positioned ancestor) expands
-   to fill that reclaimed space too. bottom:18px would then land the FAB
-   almost exactly where the native floating tab bar renders — and since
-   that's a separate native view painted on top of the entire webview, the
-   FAB would end up invisible/unreachable underneath it. Lift it clear of
-   the tab bar's full footprint (8px margin + 64px height) instead. */
-html.capacitor-ios .fab-add-expense {
-  bottom: calc(84px + var(--safe-bottom, 0px));
-}
-
 .fab-add-expense:hover {
   background: #243445;
   transform: translateY(-2px) scale(1.06);
@@ -347,30 +335,33 @@ html.capacitor-ios .fab-add-expense {
   outline-offset: 3px;
 }
 
-/* Dark mode adjustment for FAB */
+/* Dark mode adjustment for FAB — the icon uses --color-success (a real
+   green) instead of the neutral cream/text color light mode uses, an
+   intentional inversion: light mode's FAB reads as a solid dark accent,
+   dark mode's reads as a surface tile with a vivid accent-colored icon. */
 :root[data-theme="dark"] .fab-add-expense {
   background: var(--bg-surface-hover);
-  color: var(--text-primary);
+  color: var(--color-success);
   border: 2px solid var(--border-color);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5), 0 2px 6px rgba(0, 0, 0, 0.35);
 }
 
 :root[data-theme="dark"] .fab-add-expense:hover {
   background: #2D3D4E;
-  border-color: rgba(239, 231, 210, 0.45);
+  border-color: rgba(79, 174, 114, 0.45);
   box-shadow: 0 6px 22px rgba(0, 0, 0, 0.65), 0 3px 8px rgba(0, 0, 0, 0.4);
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) .fab-add-expense {
     background: var(--bg-surface-hover);
-    color: var(--text-primary);
+    color: var(--color-success);
     border: 2px solid var(--border-color);
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5), 0 2px 6px rgba(0, 0, 0, 0.35);
   }
   :root:not([data-theme="light"]) .fab-add-expense:hover {
     background: #2D3D4E;
-    border-color: rgba(239, 231, 210, 0.45);
+    border-color: rgba(79, 174, 114, 0.45);
     box-shadow: 0 6px 22px rgba(0, 0, 0, 0.65), 0 3px 8px rgba(0, 0, 0, 0.4);
   }
 }
@@ -875,10 +866,23 @@ html.capacitor-ios .tab-pane {
 }
 
 .app-logo {
+  /* h1/h2 both carry a sizeable default UA margin that nothing in this
+     file resets — at this font size that's ~20px of invisible top+bottom
+     space nobody asked for, stacking with the header's own explicit gaps
+     to read as unexplained "dead space" above/below the title. */
+  margin: 0;
   font-size: 22px;
   font-weight: 600;
   color: var(--text-primary);
   font-family: var(--font-family-title);
+  /* A long trip name wrapping to 2 lines grows the header taller than the
+     fixed space .tab-pane reserves for it (position:absolute, so it just
+     overlaps the content below instead of pushing it down) — most visible
+     right after navigating to a trip with a long name, since the header
+     resets to its expanded height on every trip/tab switch. */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .nav-tabs {
@@ -1255,7 +1259,11 @@ input:checked + .toggle-slider:before {
   height: 24px;
   border-radius: 50%;
   background: var(--text-primary);
-  color: var(--bg-surface);
+  /* Fixed light text — initials avatars get a per-person background color
+     (see avatarColor.ts), not the theme's own surface color, so this
+     can't be theme-driven or it loses contrast in dark mode. Photo
+     avatars and .pp-avatar-more (below) don't rely on this. */
+  color: #FFFDF6;
   font-family: var(--font-family-title);
   font-weight: 600;
   font-size: 10px;
@@ -1313,7 +1321,9 @@ input:checked + .toggle-slider:before {
   font-family: var(--font-family-title);
   font-weight: 600;
   font-size: 14px;
-  color: var(--bg-surface);
+  /* Fixed light text — background is a per-person color (avatarColor.ts)
+     or an accent/danger state color, not the theme's surface color. */
+  color: #FFFDF6;
   background: var(--text-primary);
   flex-shrink: 0;
 }
@@ -1408,7 +1418,11 @@ input:checked + .toggle-slider:before {
   height: 34px;
   border-radius: 50%;
   background: var(--text-primary);
-  color: var(--bg-surface);
+  /* Fixed light text, not theme-driven var(--bg-surface) — the background
+     is now a per-person color from a fixed palette (see avatarColor.ts),
+     not the theme's own surface color, so a dark-mode-only text color
+     would lose contrast against it. */
+  color: #FFFDF6;
   font-family: var(--font-family-title);
   font-weight: 700;
   font-size: 13px;
@@ -1468,6 +1482,8 @@ input:checked + .toggle-slider:before {
   font-size: 11.5px;
   color: var(--color-success);
   margin-top: 1px;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 .luggage-tag.lt-owe .lt-amt {
   color: var(--color-danger);

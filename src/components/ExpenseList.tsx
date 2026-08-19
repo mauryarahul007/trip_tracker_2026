@@ -6,6 +6,7 @@ import { SwipeableRow } from './SwipeableRow';
 import { CategoryIcon } from './CategoryIcon';
 import { getCurrencySymbol } from '../utils/currency';
 import { initial } from '../utils/initials';
+import { avatarColorForName } from '../utils/avatarColor';
 
 // Swipe-to-delete is a supplement to the explicit trash button — skip
 // wrapping the row in it at all when the viewer isn't allowed to delete.
@@ -46,8 +47,8 @@ function ExpenseAvatar({ member, size = 22, muted = false }: { member: Member | 
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        background: muted ? 'var(--text-muted)' : 'var(--text-primary)',
-        color: 'var(--bg-surface)',
+        background: member ? avatarColorForName(label) : 'var(--text-muted)',
+        color: '#FFFDF6',
         fontFamily: 'var(--font-family-title)',
         fontWeight: 700,
         fontSize: Math.round(size * 0.42),
@@ -119,24 +120,126 @@ export function ExpenseList({
   const currencySymbol = getCurrencySymbol(trip?.baseCurrency || '');
 
   const filtersRef = useRef<HTMLDivElement>(null);
-  const [isScrolled, setIsScrolled] = useState(false);
+  const [revealOnScroll, setRevealOnScroll] = useState(false);
   const [searchFocused, setSearchFocused] = useState(false);
   const [showDateFilter, setShowDateFilter] = useState(false);
   const isAllActive = !filterCategory && !filterMember && !filterDateFrom && !filterDateTo;
+  const PULL_REVEAL_THRESHOLD = 36;
 
-  // Scroll listener to reveal quick filter chips when scrolling down past top
+  // Stable state is hidden. Chips only reveal via an actual pull-down
+  // gesture starting from the very top of the list (like Mail's
+  // pull-to-reveal search bar) — not from scroll position or direction
+  // alone, which kept re-showing on ordinary scroll jitter/momentum.
+  // Scrolling away from the top always collapses them again.
   useEffect(() => {
-    const el = filtersRef.current;
-    const scrollParent = el?.closest('.tab-pane');
-    if (!scrollParent) return;
-
-    const handleScroll = () => {
-      setIsScrolled(scrollParent.scrollTop > 15);
+    // Scroll events on an overflow:auto element don't bubble, so a listener
+    // on an ancestor only sees them via the capture phase — mirroring the
+    // header-collapse scroll listener in nativeShell.ts, which uses this
+    // same document.body capture-phase pattern for the same reason.
+    const handleScroll = (e: Event) => {
+      const target = e.target;
+      if (!(target instanceof HTMLElement) || !target.classList.contains('tab-pane')) return;
+      if (filtersRef.current && !target.contains(filtersRef.current)) return;
+      if (target.scrollTop > 15) setRevealOnScroll(false);
     };
 
-    handleScroll();
-    scrollParent.addEventListener('scroll', handleScroll, { passive: true });
-    return () => scrollParent.removeEventListener('scroll', handleScroll);
+    const atTopOfList = () => {
+      // All tabs stay mounted (App.tsx toggles them via display:none, not
+      // unmount), so without this check the Expenses tab-pane's scrollTop
+      // — 0 whenever that tab just hasn't been scrolled, regardless of
+      // which tab is actually on screen — would read as "at top" even
+      // while a completely different tab is visible, making the
+      // preventDefault() below hijack scroll gestures on Members/
+      // Analytics/Settings too.
+      const scrollParent = filtersRef.current?.closest('.tab-pane') as HTMLElement | null;
+      if (!scrollParent || scrollParent.style.display === 'none') return false;
+      return scrollParent.scrollTop <= 0;
+    };
+
+    let pullStartY: number | null = null;
+    const startPull = (y: number) => {
+      pullStartY = atTopOfList() ? y : null;
+    };
+    const trackPull = (y: number) => {
+      if (pullStartY === null) return;
+      if (!atTopOfList()) {
+        pullStartY = null;
+        return;
+      }
+      if (y - pullStartY > PULL_REVEAL_THRESHOLD) setRevealOnScroll(true);
+    };
+    const endPull = () => {
+      pullStartY = null;
+    };
+
+    // Pointer events should cover both touch and mouse drags, but touch
+    // simulation in some browser devtools doesn't dispatch them reliably —
+    // native touchstart/touchmove/touchend (what actually fires on a real
+    // device) is tracked in parallel as a redundant, more direct path.
+    const handlePointerDown = (e: PointerEvent) => startPull(e.clientY);
+    const handlePointerMove = (e: PointerEvent) => trackPull(e.clientY);
+    const handleTouchStart = (e: TouchEvent) => {
+      const y = e.touches[0]?.clientY;
+      if (y !== undefined) startPull(y);
+    };
+    // Must be a non-passive listener: at scrollTop 0, dragging down is
+    // exactly the gesture iOS's own rubber-band/overscroll recognizer also
+    // wants, and once it claims the touch sequence, no further touchmove
+    // events reach this listener at all — matching the observed "works on
+    // the second attempt" (the first drag gets lost to native scroll
+    // takeover). preventDefault() while a qualifying pull is in progress
+    // keeps the whole gesture in JS, the same way WhatsApp's own
+    // pull-to-reveal search bar holds onto it.
+    const handleTouchMove = (e: TouchEvent) => {
+      const y = e.touches[0]?.clientY;
+      if (y === undefined) return;
+      if (pullStartY !== null && atTopOfList() && y >= pullStartY) {
+        e.preventDefault();
+      }
+      trackPull(y);
+    };
+
+    // Trackpad/mouse wheel scrolling never fires pointer/touch events at
+    // all, so the drag gesture above is untestable (and unusable) with a
+    // mouse — this covers the same intent for desktop: scrolling up while
+    // already at the top is the direct equivalent of a pull-down gesture
+    // there.
+    let wheelPull = 0;
+    const handleWheel = (e: WheelEvent) => {
+      if (!atTopOfList()) {
+        wheelPull = 0;
+        return;
+      }
+      if (e.deltaY < 0) {
+        wheelPull += -e.deltaY;
+        if (wheelPull > PULL_REVEAL_THRESHOLD) setRevealOnScroll(true);
+      } else {
+        wheelPull = 0;
+      }
+    };
+
+    document.body.addEventListener('scroll', handleScroll, true);
+    document.body.addEventListener('pointerdown', handlePointerDown, { passive: true });
+    document.body.addEventListener('pointermove', handlePointerMove, { passive: true });
+    document.body.addEventListener('pointerup', endPull, { passive: true });
+    document.body.addEventListener('pointercancel', endPull, { passive: true });
+    document.body.addEventListener('touchstart', handleTouchStart, { passive: true });
+    document.body.addEventListener('touchmove', handleTouchMove, { passive: false });
+    document.body.addEventListener('touchend', endPull, { passive: true });
+    document.body.addEventListener('touchcancel', endPull, { passive: true });
+    document.body.addEventListener('wheel', handleWheel, { passive: true });
+    return () => {
+      document.body.removeEventListener('scroll', handleScroll, true);
+      document.body.removeEventListener('pointerdown', handlePointerDown);
+      document.body.removeEventListener('pointermove', handlePointerMove);
+      document.body.removeEventListener('pointerup', endPull);
+      document.body.removeEventListener('pointercancel', endPull);
+      document.body.removeEventListener('touchstart', handleTouchStart);
+      document.body.removeEventListener('touchmove', handleTouchMove);
+      document.body.removeEventListener('touchend', endPull);
+      document.body.removeEventListener('touchcancel', endPull);
+      document.body.removeEventListener('wheel', handleWheel);
+    };
   }, []);
 
   // 1. Debounce Search Input
@@ -152,7 +255,7 @@ export function ExpenseList({
     return () => clearTimeout(timer);
   }, [localSearch, setSearch]);
 
-  const shouldShowChips = isScrolled || searchFocused || hasActiveFilters || !!localSearch || showDateFilter;
+  const shouldShowChips = revealOnScroll || searchFocused || hasActiveFilters || !!localSearch || showDateFilter;
 
   // 2. Pagination State for virtualization
   const [visibleCount, setVisibleCount] = useState(50);
@@ -219,6 +322,21 @@ export function ExpenseList({
               </button>
             )}
 
+            {/* Date filter chip */}
+            <button
+              type="button"
+              className={`filter-chip ${(filterDateFrom || filterDateTo || showDateFilter) ? 'active' : ''}`}
+              onClick={() => setShowDateFilter((v) => !v)}
+              title="Filter by date range"
+            >
+              <IconCalendar size={13} />
+              <span>
+                {filterDateFrom || filterDateTo
+                  ? `${filterDateFrom || 'Start'} – ${filterDateTo || 'End'}`
+                  : 'Dates'}
+              </span>
+            </button>
+
             {/* Category chips */}
             {categories.map((c) => {
               const isSelected = filterCategory === c.id;
@@ -253,21 +371,6 @@ export function ExpenseList({
                     </button>
                   );
                 })}
-
-            {/* Date filter chip */}
-            <button
-              type="button"
-              className={`filter-chip ${(filterDateFrom || filterDateTo || showDateFilter) ? 'active' : ''}`}
-              onClick={() => setShowDateFilter((v) => !v)}
-              title="Filter by date range"
-            >
-              <IconCalendar size={13} />
-              <span>
-                {filterDateFrom || filterDateTo
-                  ? `${filterDateFrom || 'Start'} – ${filterDateTo || 'End'}`
-                  : 'Dates'}
-              </span>
-            </button>
 
             {hasActiveFilters && (
               <button

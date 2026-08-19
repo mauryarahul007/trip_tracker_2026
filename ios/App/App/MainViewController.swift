@@ -78,6 +78,11 @@ class MainViewController: CAPBridgeViewController, WKScriptMessageHandler {
     private let navTabsStateHandlerName = "navTabsState"
     private let headerStateHandlerName = "headerState"
     private let headerScrollHandlerName = "headerScroll"
+    // Temporary diagnostic channel — WKWebView JS console output doesn't
+    // reach `devicectl --console`/NSLog on its own, so nativeShell.ts posts
+    // window.onerror/unhandledrejection here to make native-only JS
+    // failures visible without a full Safari Web Inspector session.
+    private let nativeLogHandlerName = "nativeLog"
 
     // MARK: Tab bar
 
@@ -121,6 +126,7 @@ class MainViewController: CAPBridgeViewController, WKScriptMessageHandler {
         contentController?.add(self, name: navTabsStateHandlerName)
         contentController?.add(self, name: headerStateHandlerName)
         contentController?.add(self, name: headerScrollHandlerName)
+        contentController?.add(self, name: nativeLogHandlerName)
 
         setUpTabBar()
         setUpHeader()
@@ -131,6 +137,7 @@ class MainViewController: CAPBridgeViewController, WKScriptMessageHandler {
         contentController?.removeScriptMessageHandler(forName: navTabsStateHandlerName)
         contentController?.removeScriptMessageHandler(forName: headerStateHandlerName)
         contentController?.removeScriptMessageHandler(forName: headerScrollHandlerName)
+        contentController?.removeScriptMessageHandler(forName: nativeLogHandlerName)
     }
 
     override func viewDidLayoutSubviews() {
@@ -557,6 +564,13 @@ class MainViewController: CAPBridgeViewController, WKScriptMessageHandler {
         case headerScrollHandlerName:
             guard let progress = message.body as? NSNumber else { return }
             applyHeaderScrollProgress(CGFloat(progress.doubleValue))
+
+        case nativeLogHandlerName:
+            // `print` goes to stdout, which `devicectl --console` actually
+            // captures — NSLog routes through os_log/ASL instead, which
+            // doesn't show up there.
+            print("[JS] \(message.body)")
+            NSLog("[JS] %@", "\(message.body)")
 
         default:
             break

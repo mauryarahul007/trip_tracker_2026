@@ -5,6 +5,7 @@ import { IconTrash, IconEdit, IconSettings, IconArchive } from './Icons';
 import { DateRangePicker } from './DateRangePicker';
 import { formatTripStamp } from '../utils/dateRange';
 import { initial } from '../utils/initials';
+import { avatarColorForName } from '../utils/avatarColor';
 import { TurnstileWidget } from './TurnstileWidget';
 
 type Props = {
@@ -252,7 +253,7 @@ export function TripsListScreen({
                         m.avatarUrl ? (
                           <img key={m.id} src={m.avatarUrl} alt={m.name} title={m.name} className="pp-avatar" referrerPolicy="no-referrer" />
                         ) : (
-                          <span key={m.id} className="pp-avatar" title={m.name}>{initial(m.name)}</span>
+                          <span key={m.id} className="pp-avatar" style={{ background: avatarColorForName(m.name) }} title={m.name}>{initial(m.name)}</span>
                         )
                       )}
                       {overflow > 0 && <span className="pp-avatar pp-avatar-more">+{overflow}</span>}

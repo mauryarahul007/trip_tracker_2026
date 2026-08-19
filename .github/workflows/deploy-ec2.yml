@@ -29,6 +29,17 @@ jobs:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
 
+      # Packages this same build as a live-update bundle for the iOS/Android
+      # app shell (src/utils/liveUpdate.ts), so JS/CSS changes reach
+      # installed apps without an App Store resubmission.
+      - name: Package live-update bundle
+        run: |
+          ./scripts/package-update.sh \
+            "${GITHUB_SHA::7}" \
+            https://trip-tracker.blackmaroon.in/updates \
+            update \
+            dist
+
       - name: Install SSH key
         uses: webfactory/ssh-agent@v0.9.0
         with:
@@ -42,3 +53,12 @@ jobs:
           rsync -avz --delete \
             dist/ \
             ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/var/www/trip-tracker-2026/dist/
+
+      - name: Rsync update bundle to server
+        # Nested inside dist/ (nginx's existing docroot) rather than a
+        # sibling path, so no server/nginx config change is needed for
+        # https://trip-tracker.blackmaroon.in/updates/latest.json to resolve.
+        run: |
+          rsync -avz \
+            update/ \
+            ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/var/www/trip-tracker-2026/dist/updates/

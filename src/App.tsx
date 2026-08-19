@@ -1040,10 +1040,6 @@ export default function App() {
             {/* View Switching Tab Content */}
             <div className="tab-pane" style={{ display: activeTab === 'expenses' ? 'block' : 'none' }}>
               <div className="fade-in">
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                  <h3 style={{ fontSize: '18px' }}>Expenses</h3>
-                </div>
-
                 <ExpenseList
                   trip={activeTrip}
                   members={members}

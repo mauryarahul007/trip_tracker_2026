@@ -34,6 +34,20 @@ Deno.serve(async (req) => {
     return jsonResponse({ error: 'Method not allowed' }, 405);
   }
 
+  // Anything that throws without being caught here falls through to
+  // Deno.serve's own default error response, which has no CORS headers at
+  // all — the browser then reports it as a CORS failure, hiding the real
+  // server-side error (e.g. a missing/malformed FCM_SERVICE_ACCOUNT_JSON
+  // secret throwing on JSON.parse).
+  try {
+    return await handleSendPush(req);
+  } catch (err) {
+    console.error('Unhandled error in send-push', err);
+    return jsonResponse({ error: err instanceof Error ? err.message : 'Internal error' }, 500);
+  }
+});
+
+async function handleSendPush(req: Request): Promise<Response> {
   const authHeader = req.headers.get('Authorization');
   if (!authHeader) {
     return jsonResponse({ error: 'Missing Authorization header' }, 401);
@@ -143,4 +157,4 @@ Deno.serve(async (req) => {
   }
 
   return jsonResponse({ sent, total: tokens.length }, 200);
-});
+}

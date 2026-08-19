@@ -3,6 +3,7 @@ import Fuse from 'fuse.js';
 import type { Group, Member, PreviousMemberSuggestion } from '../types';
 import type { MemberBalance } from '../utils/settlement';
 import { initial } from '../utils/initials';
+import { avatarColorForName } from '../utils/avatarColor';
 import { fetchPreviousTripMembers, searchRemoteMemberSuggestions } from '../services/tripApi';
 import { IconCheck, IconEdit, IconTrash } from './Icons';
 
@@ -430,7 +431,7 @@ export function MembersGroupsTab({
               type="text"
               required
               className="input-field"
-              placeholder="Enter full name"
+              placeholder="Enter member name"
               value={newMemberName}
               autoComplete="off"
               onFocus={() => {
@@ -603,109 +604,118 @@ export function MembersGroupsTab({
                 : 'settled';
             return (
               <div key={member.id} className={`luggage-tag${owes ? ' lt-owe' : ''}`}>
-                <div className="lt-hardware">
-                  <div className="lt-hole" />
-                  <div className="lt-string" />
-                </div>
                 <div className="lt-card">
                   <div className="lt-status" />
                   {member.avatarUrl ? (
                     <img src={member.avatarUrl} alt="" className="lt-initials" referrerPolicy="no-referrer" />
                   ) : (
-                    <div className="lt-initials">{initial(member.name)}</div>
+                    <div className="lt-initials" style={{ background: avatarColorForName(member.name) }}>{initial(member.name)}</div>
                   )}
                   <div className="lt-body">
-                    <div className="lt-name" style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap', whiteSpace: 'normal', overflow: 'visible' }}>
-                      {member.name}
-                      {isMemberAdmin(member) ? (
-                        <span className="member-badge member-badge-admin" title="Trip Admin">
-                          <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" style={{ flexShrink: 0 }}>
-                            <path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm14 3c0 .6-.4 1-1 1H6c-.6 0-1-.4-1-1v-1h14v1z" />
-                          </svg>
-                          Admin
-                        </span>
-                      ) : (
-                        <span className="member-badge member-badge-you" style={{ color: 'var(--text-muted)' }}>
-                          Member
-                        </span>
-                      )}
-                      {currentUserId && member.linkedUserId === currentUserId && (
-                        <span className="member-badge member-badge-you">You</span>
-                      )}
-                    </div>
-                    <div className="lt-amt">{amtLabel}</div>
-                  </div>
-                  {isAdmin && (
-                    <div className="lt-actions" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      {onSetMemberAdminRole && (
-                        !isMemberAdmin(member) ? (
-                          <button
-                            type="button"
-                            className="secondary-btn"
-                            style={{
-                              padding: '4px 8px',
-                              fontSize: '11px',
-                              color: 'var(--primary-accent)',
-                              borderColor: 'rgba(31, 110, 104, 0.3)',
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: '4px',
-                            }}
-                            title="Make this member a Trip Admin"
-                            onClick={() => onSetMemberAdminRole(member.id, true)}
-                          >
-                            <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
+                    {/* Top row: name gets the full row width (ellipsis if
+                        needed) with badges pinned to the top-right corner
+                        instead of sitting inline right after it — freeing
+                        up the row for the name rather than squeezing both
+                        into shared space. Actions move to their own row
+                        below (with the amount) rather than sharing this
+                        row too, for the same reason. */}
+                    <div className="lt-top-row" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+                      <span className="lt-name" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>
+                        {member.name}
+                      </span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+                        {isMemberAdmin(member) ? (
+                          <span className="member-badge member-badge-admin" title="Trip Admin">
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" style={{ flexShrink: 0 }}>
                               <path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm14 3c0 .6-.4 1-1 1H6c-.6 0-1-.4-1-1v-1h14v1z" />
                             </svg>
-                            Make Admin
-                          </button>
-                        ) : !isOriginalTripOwner(member) && tripAdminCount > 1 ? (
-                          <button
-                            type="button"
-                            className="secondary-btn"
-                            style={{
-                              padding: '4px 8px',
-                              fontSize: '11px',
-                              color: 'var(--text-muted)',
-                              borderColor: 'var(--border-color)',
-                            }}
-                            title="Demote to Member"
-                            onClick={() => onSetMemberAdminRole(member.id, false)}
-                          >
-                            Demote
-                          </button>
-                        ) : null
-                      )}
-                      <button
-                        className="secondary-btn"
-                        style={{ padding: '6px' }}
-                        aria-label="Edit member"
-                        title="Edit member"
-                        onClick={() => handleStartEditMemberLocal(member)}
-                      >
-                        <IconEdit size={14} className="icon-sm" />
-                      </button>
-                      {(() => {
-                        const delCheck = checkCanDeleteMember(member);
-                        return (
-                          <button
-                            className="secondary-btn"
-                            style={{
-                              padding: '6px',
-                              color: delCheck.allowed ? 'var(--color-danger)' : 'var(--text-muted)',
-                              borderColor: delCheck.allowed ? 'rgba(184,69,46,0.2)' : 'var(--border-color)',
-                              opacity: delCheck.allowed ? 1 : 0.5,
-                            }}
-                            aria-label="Delete member"
-                            title={delCheck.allowed ? 'Delete member' : delCheck.reason}
-                            onClick={() => onDeleteMember(member)}
-                          >
-                            <IconTrash size={14} className="icon-sm" />
-                          </button>
-                        );
-                      })()}
+                            Admin
+                          </span>
+                        ) : (
+                          <span className="member-badge member-badge-you" style={{ color: 'var(--text-muted)' }}>
+                            Member
+                          </span>
+                        )}
+                        {currentUserId && member.linkedUserId === currentUserId && (
+                          <span className="member-badge member-badge-you">You</span>
+                        )}
+                      </div>
                     </div>
-                  )}
+                    <div className="lt-bottom-row" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', marginTop: '6px', flexWrap: 'wrap' }}>
+                      <div className="lt-amt">{amtLabel}</div>
+                      {isAdmin && (
+                        <div className="lt-actions" style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                          {onSetMemberAdminRole && (
+                            !isMemberAdmin(member) ? (
+                              <button
+                                type="button"
+                                className="secondary-btn"
+                                style={{
+                                  padding: '4px 8px',
+                                  fontSize: '11px',
+                                  color: 'var(--primary-accent)',
+                                  borderColor: 'rgba(31, 110, 104, 0.3)',
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '4px',
+                                }}
+                                title="Make this member a Trip Admin"
+                                onClick={() => onSetMemberAdminRole(member.id, true)}
+                              >
+                                <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
+                                  <path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm14 3c0 .6-.4 1-1 1H6c-.6 0-1-.4-1-1v-1h14v1z" />
+                                </svg>
+                                Make Admin
+                              </button>
+                            ) : !isOriginalTripOwner(member) && tripAdminCount > 1 ? (
+                              <button
+                                type="button"
+                                className="secondary-btn"
+                                style={{
+                                  padding: '4px 8px',
+                                  fontSize: '11px',
+                                  color: 'var(--text-muted)',
+                                  borderColor: 'var(--border-color)',
+                                }}
+                                title="Demote to Member"
+                                onClick={() => onSetMemberAdminRole(member.id, false)}
+                              >
+                                Demote
+                              </button>
+                            ) : null
+                          )}
+                          <button
+                            className="secondary-btn"
+                            style={{ padding: '6px' }}
+                            aria-label="Edit member"
+                            title="Edit member"
+                            onClick={() => handleStartEditMemberLocal(member)}
+                          >
+                            <IconEdit size={14} className="icon-sm" />
+                          </button>
+                          {(() => {
+                            const delCheck = checkCanDeleteMember(member);
+                            return (
+                              <button
+                                className="secondary-btn"
+                                style={{
+                                  padding: '6px',
+                                  color: delCheck.allowed ? 'var(--color-danger)' : 'var(--text-muted)',
+                                  borderColor: delCheck.allowed ? 'rgba(184,69,46,0.2)' : 'var(--border-color)',
+                                  opacity: delCheck.allowed ? 1 : 0.5,
+                                }}
+                                aria-label="Delete member"
+                                title={delCheck.allowed ? 'Delete member' : delCheck.reason}
+                                onClick={() => onDeleteMember(member)}
+                              >
+                                <IconTrash size={14} className="icon-sm" />
+                              </button>
+                            );
+                          })()}
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </div>
             );

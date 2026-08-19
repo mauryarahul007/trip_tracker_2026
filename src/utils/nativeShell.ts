@@ -188,14 +188,6 @@ function setUpNativeHeaderSync(): void {
   };
 
   syncState();
-  new MutationObserver(syncState).observe(document.body, {
-    childList: true,
-    subtree: true,
-    characterData: true,
-    attributes: true,
-    attributeFilter: ['class', 'data-theme'],
-  });
-  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', syncState);
 
   // .tab-pane's own top padding already reserves space for the fully
   // expanded native header (see html.capacitor-ios .tab-pane in
@@ -209,6 +201,14 @@ function setUpNativeHeaderSync(): void {
   let pendingProgress: number | null = null;
   let rafScheduled = false;
 
+  const postProgress = (progress: number) => {
+    pendingProgress = Math.max(0, Math.min(1, progress));
+    if (!rafScheduled) {
+      rafScheduled = true;
+      requestAnimationFrame(flush);
+    }
+  };
+
   // A scroll event fires far more often than the display can redraw —
   // posting straight from the handler means every one of those extra
   // calls still pays a full JS-to-native bridge hop (serialization + a
@@ -216,36 +216,97 @@ function setUpNativeHeaderSync(): void {
   // still-unprocessed one already superseded. Coalescing to one post per
   // animation frame caps that at the screen's actual refresh rate, which
   // is what was really behind the collapse feeling less than smooth.
-  const flush = () => {
+  function flush() {
     rafScheduled = false;
     if (pendingProgress === null) return;
     const progress = pendingProgress;
     pendingProgress = null;
     if (Math.abs(progress - lastProgress) < 0.01) return;
     lastProgress = progress;
-    scrollMessenger.postMessage(progress);
-  };
+    scrollMessenger!.postMessage(progress);
+  }
 
+  // 100 matches HeaderMetrics.expandedContentHeight in
+  // MainViewController.swift (also html.capacitor-ios .tab-pane's
+  // reserved padding-top) — collapse finishing exactly when that reserved
+  // space is fully scrolled through means content reaches the header's
+  // bottom edge right as it visually finishes collapsing, not before (a
+  // lingering, closing gap) or after (content flush against it while
+  // still "mid-collapse").
   document.body.addEventListener(
     'scroll',
     (e) => {
       const target = e.target;
       if (!(target instanceof HTMLElement) || !target.classList.contains('tab-pane')) return;
-      // 100 matches HeaderMetrics.expandedContentHeight in
-      // MainViewController.swift (also html.capacitor-ios .tab-pane's
-      // reserved padding-top) — collapse finishing exactly when that
-      // reserved space is fully scrolled through means content reaches
-      // the header's bottom edge right as it visually finishes
-      // collapsing, not before (a lingering, closing gap) or after
-      // (content flush against it while still "mid-collapse").
-      pendingProgress = Math.max(0, Math.min(1, target.scrollTop / 100));
-      if (!rafScheduled) {
-        rafScheduled = true;
-        requestAnimationFrame(flush);
-      }
+      postProgress(target.scrollTop / 100);
     },
     true
   );
+
+  // Switching tabs toggles a .tab-pane's `display` between none/block
+  // without ever firing a scroll event on it — so without this, the header
+  // just keeps showing whatever collapse state the previously active pane
+  // happened to be scrolled to, mismatched against the freshly-shown
+  // pane's actual scroll position (e.g. staying collapsed over a tab
+  // that's sitting right at its own top). Re-deriving progress from
+  // whichever pane is actually visible every time the DOM changes keeps
+  // the two in sync across tab switches, not just within one.
+  const resyncActivePaneProgress = () => {
+    const panes = document.querySelectorAll<HTMLElement>('.tab-pane');
+    const active = Array.from(panes).find((p) => p.style.display !== 'none');
+    if (active) postProgress(active.scrollTop / 100);
+  };
+
+  resyncActivePaneProgress();
+  new MutationObserver(() => {
+    syncState();
+    resyncActivePaneProgress();
+  }).observe(document.body, {
+    childList: true,
+    subtree: true,
+    characterData: true,
+    attributes: true,
+    attributeFilter: ['class', 'data-theme', 'style'],
+  });
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', syncState);
+}
+
+// Temporary diagnostic bridge — WKWebView's JS console doesn't surface
+// through `devicectl --console`/NSLog on its own, so uncaught errors are
+// forwarded to MainViewController.swift's nativeLog handler (NSLog) to
+// make native-only JS failures visible without a Safari Web Inspector
+// session.
+function setUpNativeErrorLog(): void {
+  const w = window as unknown as {
+    webkit?: { messageHandlers?: { nativeLog?: { postMessage(v: string): void } } };
+  };
+  const messenger = w.webkit?.messageHandlers?.nativeLog;
+  if (!messenger) return;
+
+  window.addEventListener('error', (e) => {
+    messenger.postMessage(`error: ${e.message} @ ${e.filename}:${e.lineno}:${e.colno}\n${e.error?.stack ?? ''}`);
+  });
+  window.addEventListener('unhandledrejection', (e) => {
+    const reason = e.reason;
+    messenger.postMessage(`unhandledrejection: ${reason?.message ?? reason}\n${reason?.stack ?? ''}`);
+  });
+
+  // Libraries like MapLibre report failures (bad tile fetch, style load
+  // failure, WebGL context issues) via console.error/an internal 'error'
+  // event rather than a thrown/rejected exception, so window.onerror alone
+  // misses them — wrapping console directly catches those too.
+  (['error', 'warn'] as const).forEach((level) => {
+    const original = console[level].bind(console);
+    console[level] = (...args: unknown[]) => {
+      original(...args);
+      try {
+        messenger.postMessage(`console.${level}: ${args.map((a) => (a instanceof Error ? a.stack ?? a.message : String(a))).join(' ')}`);
+      } catch {
+        // Non-serializable argument — the original console call above
+        // already happened, nothing more to do.
+      }
+    };
+  });
 }
 
 export function initNativeShell(): void {
@@ -256,6 +317,7 @@ export function initNativeShell(): void {
     document.documentElement.classList.add('capacitor-ios');
     setUpNativeTabBarSync();
     setUpNativeHeaderSync();
+    setUpNativeErrorLog();
   }
 
   applySafeAreaVars();

@@ -12,9 +12,11 @@ import { ErrorBoundary } from './components/ErrorBoundary'
 import { UpdateBanner } from './components/UpdateBanner'
 import { registerServiceWorkerUpdateWatcher } from './services/serviceWorker'
 import { initNativeShell } from './utils/nativeShell'
+import { initLiveUpdates } from './utils/liveUpdate'
 
 registerServiceWorkerUpdateWatcher()
 initNativeShell()
+void initLiveUpdates()
 
 // Android hardware/gesture back button: pop whatever screen/modal pushed a
 // history entry (see useHistoryBack), or exit the app at the root screen.

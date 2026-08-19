@@ -24,6 +24,15 @@ export default defineConfig(({ command }) => ({
   // `npm run dev` always serves from /.
   base: command === 'build' ? (process.env.VITE_BASE_PATH || '/trip_tracker_2026/') : '/',
   plugins: [react()],
+  // maplibre-gl spins up its tile-parsing worker via a relative import that
+  // Vite's dep pre-bundler doesn't rewrite correctly, producing a 404 for
+  // maplibre-gl-worker.mjs from node_modules/.vite/deps at dev time —
+  // excluding it from pre-bundling serves it as native ESM instead, which
+  // resolves the worker correctly. Production builds are unaffected (no
+  // optimizeDeps step there).
+  optimizeDeps: {
+    exclude: ['maplibre-gl'],
+  },
   define: {
     __APP_VERSION__: JSON.stringify(pkgVersion),
     __BUILD_SHA__: JSON.stringify(buildSha),

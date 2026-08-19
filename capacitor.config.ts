@@ -15,6 +15,12 @@ const config: CapacitorConfig = {
     Keyboard: {
       resize: 'none',
     },
+    // We drive update checks ourselves against a self-hosted manifest
+    // (src/utils/liveUpdate.ts) rather than Capgo's hosted backend, so the
+    // plugin's own auto-polling is disabled.
+    CapacitorUpdater: {
+      autoUpdate: false,
+    },
   },
 };
 

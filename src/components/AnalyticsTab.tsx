@@ -3,6 +3,7 @@ import type { Trip, Expense, Category } from '../types';
 import { CategoryIcon } from './CategoryIcon';
 import { getCurrencySymbol } from '../utils/currency';
 import { TripJourneyMap } from './TripJourneyMap';
+import { useTripStore } from '../store/tripStore';
 
 type CategoryDatum = { id: string; name: string; icon: string; amount: number; percentage: number };
 type MemberSpend = { id: string; name: string; amount: number; percentage: number };
@@ -38,6 +39,7 @@ export function AnalyticsTab({
   const currencySymbol = getCurrencySymbol(trip?.baseCurrency || '');
   const topCategory = categoryData[0];
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
+  const enableGeotagging = useTripStore((s) => s.enableGeotagging);
 
   return (
     <div className="fade-in">
@@ -84,8 +86,12 @@ export function AnalyticsTab({
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-          {/* Trip Journey Map */}
-          <TripJourneyMap expenses={expenses} categories={categories} baseCurrency={trip?.baseCurrency || ''} />
+          {/* Trip Journey Map — only when geotagging is actually enabled for
+              this trip; otherwise there's nothing meaningful to plot and no
+              reason to load the map/tile network calls at all. */}
+          {enableGeotagging && (
+            <TripJourneyMap expenses={expenses} categories={categories} baseCurrency={trip?.baseCurrency || ''} />
+          )}
 
           {/* 2. Spend by Category SVG Donut Chart */}
           <div className="glass-card">
