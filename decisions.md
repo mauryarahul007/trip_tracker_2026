@@ -433,7 +433,7 @@ This document logs all meaningful technical decisions, library choices, design p
 ## 34. CI/CD Pipeline Supply Chain Hardening & Action Pinning
 * **Context:** The Chief Security Officer (CSO) audit identified three actionable security improvements in the CI/CD pipeline: third-party GitHub action `webfactory/ssh-agent` was referenced via a mutable tag (`@v0.9.0`) instead of an immutable commit SHA, deployment credentials (`EC2_HOST`, `EC2_USER`) were expanded directly inside inline bash commands risking parameter injection, and the repository lacked a `CODEOWNERS` protection file for workflow files.
 * **Decision:**
-  - Pinned `webfactory/ssh-agent` in `.github/workflows/deploy-ec2.yml` to its immutable 40-character commit SHA (`dcab664a656856c2e391a27e3664d4b17b6a482b`).
+  - Pinned `webfactory/ssh-agent` in `.github/workflows/deploy-ec2.yml` to its immutable 40-character commit SHA (`dc588b651fe13675774614f8e6a936a468676387`).
   - Refactored shell execution steps in `deploy-ec2.yml` to inject secret values via the step `env:` context and reference them cleanly as `$EC2_HOST` and `$EC2_USER`.
   - Created `.github/CODEOWNERS` mandating repository owner review for `.github/workflows/`, `codemagic.yaml`, `.githooks/`, and `scripts/`.
 * **Trade-offs Accepted:**

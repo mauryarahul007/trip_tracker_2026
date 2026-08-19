@@ -41,7 +41,7 @@ jobs:
             dist
 
       - name: Install SSH key
-        uses: webfactory/ssh-agent@dcab664a656856c2e391a27e3664d4b17b6a482b # v0.9.0
+        uses: webfactory/ssh-agent@dc588b651fe13675774614f8e6a936a468676387 # v0.9.0
         with:
           ssh-private-key: ${{ secrets.EC2_SSH_KEY }}
 
