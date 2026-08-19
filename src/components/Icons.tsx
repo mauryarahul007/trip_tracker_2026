@@ -1,6 +1,7 @@
 type IconProps = {
   size?: number;
   className?: string;
+  style?: React.CSSProperties;
 };
 
 const base = {

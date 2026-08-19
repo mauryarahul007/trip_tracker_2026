@@ -621,8 +621,8 @@ export function BalancesSettlements({
                   <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', minWidth: 0, flex: '1 1 auto', lineHeight: '1.3', paddingRight: '8px' }}>
                     <IconMembers size={14} className="icon-sm" />
                     <strong>{n.name}</strong>
-                    <span style={{ fontSize: '11px', color: 'var(--text-secondary)', display: 'inline-flex', alignItems: 'center' }}>
-                      <IconChevronRight size={12} className="icon-sm" style={{ transform: isExpanded ? 'rotate(90deg)' : 'none', transition: 'transform 0.15s ease' }} />
+                    <span style={{ fontSize: '11px', color: 'var(--text-secondary)', display: 'inline-flex', alignItems: 'center', transform: isExpanded ? 'rotate(90deg)' : 'none', transition: 'transform 0.15s ease' }}>
+                      <IconChevronRight size={12} className="icon-sm" />
                     </span>
                   </span>
                   <span className="privacy-blur" style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', color: statusColor, fontWeight: '700', flexShrink: 0, marginLeft: 'auto', whiteSpace: 'nowrap' }}>
