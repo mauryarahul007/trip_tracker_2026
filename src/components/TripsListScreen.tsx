@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { Trip, Member } from '../types';
-import { IconTrash, IconEdit, IconSettings, IconArchive } from './Icons';
+import { IconTrash, IconEdit, IconSettings, IconArchive, IconMapPin } from './Icons';
 import { DateRangePicker } from './DateRangePicker';
 import { formatTripStamp } from '../utils/dateRange';
 import { initial } from '../utils/initials';
@@ -224,11 +224,18 @@ export function TripsListScreen({
 
         {/* Trips List Grid */}
         {trips.length === 0 ? (
-          <div className="glass-card" style={{ textAlign: 'center', padding: '40px 20px', borderStyle: 'dashed' }}>
-            <p style={{ color: 'var(--text-secondary)', marginBottom: '16px' }}>Nothing here yet. Start a trip and add who's coming.</p>
-            <button className="gradient-btn" style={{ margin: '0 auto' }} onClick={() => setShowAddTrip(true)}>
-              Create Your First Trip
-            </button>
+          <div className="glass-card ledger-empty" style={{ borderStyle: 'dashed' }}>
+            <div className="ledger-rule" />
+            <div className="ledger-empty-prompt">
+              <span className="ledger-badge ledger-badge-tilt-right" aria-hidden="true">
+                <IconMapPin size={14} className="icon-sm" />
+              </span>
+              <p>Nothing here yet. Start a trip and add who's coming.</p>
+              <button className="gradient-btn" onClick={() => setShowAddTrip(true)}>
+                Create Your First Trip
+              </button>
+            </div>
+            <div className="ledger-rule" />
           </div>
         ) : (
           <div className="passport-list">

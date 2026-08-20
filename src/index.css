@@ -2240,7 +2240,8 @@ input:checked + .toggle-slider:before {
   max-width: 34ch;
   margin: 0;
 }
-.ledger-pencil {
+.ledger-pencil,
+.ledger-badge {
   width: 30px;
   height: 30px;
   border-radius: 50%;
@@ -2252,6 +2253,9 @@ input:checked + .toggle-slider:before {
   color: var(--text-muted);
   transform: rotate(-8deg);
   flex-shrink: 0;
+}
+.ledger-badge-tilt-right {
+  transform: rotate(8deg);
 }
 
 /* Appearance toggle — Light / Night flight / System */

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { Trip, Expense, Category } from '../types';
 import { CategoryIcon } from './CategoryIcon';
+import { IconAnalytics } from './Icons';
 import { getCurrencySymbol } from '../utils/currency';
 import { TripJourneyMap } from './TripJourneyMap';
 import { useTripStore } from '../store/tripStore';
@@ -99,8 +100,15 @@ export function AnalyticsTab({
       </div>
 
       {!hasExpenses ? (
-        <div className="glass-card" style={{ textAlign: 'center', padding: '40px 20px', borderStyle: 'dashed' }}>
-          <p style={{ color: 'var(--text-secondary)' }}>Log a few expenses and the numbers will show up here.</p>
+        <div className="glass-card ledger-empty" style={{ borderStyle: 'dashed' }}>
+          <div className="ledger-rule" />
+          <div className="ledger-empty-prompt">
+            <span className="ledger-badge" aria-hidden="true">
+              <IconAnalytics size={14} className="icon-sm" />
+            </span>
+            <p>Log a few expenses and the numbers will show up here.</p>
+          </div>
+          <div className="ledger-rule" />
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>

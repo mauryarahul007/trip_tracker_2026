@@ -5,7 +5,7 @@ import type { MemberBalance } from '../utils/settlement';
 import { initial } from '../utils/initials';
 import { avatarColorForName } from '../utils/avatarColor';
 import { fetchPreviousTripMembers, searchRemoteMemberSuggestions } from '../services/tripApi';
-import { IconCheck, IconEdit, IconTrash } from './Icons';
+import { IconCheck, IconEdit, IconTrash, IconMembers, IconTag } from './Icons';
 import { useHistoryBack } from '../utils/useHistoryBack';
 import { usePrivacyStore, formatMaskedAmount } from '../store/privacyStore';
 
@@ -605,8 +605,15 @@ export function MembersGroupsTab({
 
       {/* Members list */}
       {activeTripMembers.length === 0 ? (
-        <div className="glass-card" style={{ textAlign: 'center', padding: '24px', borderStyle: 'dashed', marginBottom: '32px' }}>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>No one's on this trip yet. Add the first member to start splitting costs.</p>
+        <div className="glass-card ledger-empty" style={{ borderStyle: 'dashed', marginBottom: '32px' }}>
+          <div className="ledger-rule" />
+          <div className="ledger-empty-prompt">
+            <span className="ledger-badge" aria-hidden="true">
+              <IconMembers size={14} className="icon-sm" />
+            </span>
+            <p>No one's on this trip yet. Add the first member to start splitting costs.</p>
+          </div>
+          <div className="ledger-rule" />
         </div>
       ) : (
         <div className="luggage-list">
@@ -857,10 +864,15 @@ export function MembersGroupsTab({
 
         {/* Groups list */}
         {visibleTripGroups.length === 0 ? (
-          <div className="glass-card" style={{ textAlign: 'center', padding: '24px', borderStyle: 'dashed' }}>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '13px' }}>
-              No groups yet. Create one to split expenses across a few people in a single tap.
-            </p>
+          <div className="glass-card ledger-empty" style={{ borderStyle: 'dashed' }}>
+            <div className="ledger-rule" />
+            <div className="ledger-empty-prompt">
+              <span className="ledger-badge ledger-badge-tilt-right" aria-hidden="true">
+                <IconTag size={14} className="icon-sm" />
+              </span>
+              <p>No groups yet. Create one to split expenses across a few people in a single tap.</p>
+            </div>
+            <div className="ledger-rule" />
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
