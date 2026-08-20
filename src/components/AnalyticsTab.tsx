@@ -167,7 +167,7 @@ export function AnalyticsTab({
                   pointerEvents: 'none'
                 }}>
                   <span style={{ fontSize: '10px', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: 600 }}>Total</span>
-                  <span style={{ fontSize: '15px', fontWeight: '800', color: 'var(--text-primary)' }}>
+                  <span className="privacy-blur" style={{ fontSize: '15px', fontWeight: '800', color: 'var(--text-primary)' }}>
                     {currencySymbol}
                     {totalSpent > 1000 ? `${(totalSpent / 1000).toFixed(1)}k` : totalSpent.toFixed(0)}
                   </span>
@@ -246,8 +246,8 @@ export function AnalyticsTab({
 
                     return (
                       <>
-                        <text x="25" y="44" textAnchor="end" fontSize="9" fill="var(--text-secondary)">{maxAmount.toFixed(0)}</text>
-                        <text x="25" y="104" textAnchor="end" fontSize="9" fill="var(--text-secondary)">{(maxAmount / 2).toFixed(0)}</text>
+                        <text className="privacy-blur" x="25" y="44" textAnchor="end" fontSize="9" fill="var(--text-secondary)">{maxAmount.toFixed(0)}</text>
+                        <text className="privacy-blur" x="25" y="104" textAnchor="end" fontSize="9" fill="var(--text-secondary)">{(maxAmount / 2).toFixed(0)}</text>
                         <text x="25" y="164" textAnchor="end" fontSize="9" fill="var(--text-secondary)">0</text>
 
                         {points.length > 1 && (
@@ -298,6 +298,7 @@ export function AnalyticsTab({
                                     opacity="0.9"
                                   />
                                   <text
+                                    className="privacy-blur"
                                     x={p.x}
                                     y={p.y - 14}
                                     textAnchor="middle"

@@ -224,7 +224,7 @@ function TransferRow({
 
         {/* Amount Display */}
         {!isSettled && !customOpen && (
-          <span className="amount-mono" style={{
+          <span className="amount-mono privacy-blur" style={{
             fontSize: '16px',
             fontWeight: '700',
             color: 'var(--color-danger)',
@@ -241,7 +241,7 @@ function TransferRow({
             <span className="cr-front" style={{ padding: '4px 8px' }}>
               <IconCheck size={12} className="icon-sm" />
               <span>
-                <span className="cr-amount" style={{ whiteSpace: 'nowrap', fontSize: '12px' }}>{currencySymbol}{t.amount.toFixed(2)}</span>
+                <span className="cr-amount privacy-blur" style={{ whiteSpace: 'nowrap', fontSize: '12px' }}>{currencySymbol}{t.amount.toFixed(2)}</span>
                 <span className="cr-caption" style={{ fontSize: '9px' }}>your copy &middot; their copy</span>
               </span>
             </span>
@@ -297,11 +297,11 @@ function TransferRow({
                 <div key={m.memberId} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11.5px' }}>
                   <span>
                     <span style={{ fontWeight: 600 }}>{m.name}</span>
-                    <span style={{ color: 'var(--text-secondary)' }}>
+                    <span className="privacy-blur" style={{ color: 'var(--text-secondary)' }}>
                       {' '}(Paid: {currencySymbol}{m.totalPaid.toFixed(2)}, Share: {currencySymbol}{m.totalOwed.toFixed(2)})
                     </span>
                   </span>
-                  <span style={{ fontWeight: 600, color: m.netBalance < 0 ? 'var(--color-danger)' : 'var(--color-success)' }}>
+                  <span className="privacy-blur" style={{ fontWeight: 600, color: m.netBalance < 0 ? 'var(--color-danger)' : 'var(--color-success)' }}>
                     {m.netBalance >= 0 ? '+' : ''}{currencySymbol}{m.netBalance.toFixed(2)}
                   </span>
                 </div>
@@ -309,7 +309,7 @@ function TransferRow({
               {fromAudit.members.length > 1 && (
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11.5px', borderTop: '1px dashed var(--border-color)', paddingTop: '4px', marginTop: '2px', fontWeight: 600 }}>
                   <span>Combined Net:</span>
-                  <span style={{ color: fromAudit.combinedBalance < 0 ? 'var(--color-danger)' : 'var(--color-success)' }}>
+                  <span className="privacy-blur" style={{ color: fromAudit.combinedBalance < 0 ? 'var(--color-danger)' : 'var(--color-success)' }}>
                     {fromAudit.combinedBalance >= 0 ? '+' : ''}{currencySymbol}{fromAudit.combinedBalance.toFixed(2)}
                   </span>
                 </div>
@@ -325,11 +325,11 @@ function TransferRow({
                 <div key={m.memberId} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11.5px' }}>
                   <span>
                     <span style={{ fontWeight: 600 }}>{m.name}</span>
-                    <span style={{ color: 'var(--text-secondary)' }}>
+                    <span className="privacy-blur" style={{ color: 'var(--text-secondary)' }}>
                       {' '}(Paid: {currencySymbol}{m.totalPaid.toFixed(2)}, Share: {currencySymbol}{m.totalOwed.toFixed(2)})
                     </span>
                   </span>
-                  <span style={{ fontWeight: 600, color: m.netBalance < 0 ? 'var(--color-danger)' : 'var(--color-success)' }}>
+                  <span className="privacy-blur" style={{ fontWeight: 600, color: m.netBalance < 0 ? 'var(--color-danger)' : 'var(--color-success)' }}>
                     {m.netBalance >= 0 ? '+' : ''}{currencySymbol}{m.netBalance.toFixed(2)}
                   </span>
                 </div>
@@ -337,7 +337,7 @@ function TransferRow({
               {toAudit.members.length > 1 && (
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11.5px', borderTop: '1px dashed var(--border-color)', paddingTop: '4px', marginTop: '2px', fontWeight: 600 }}>
                   <span>Combined Net:</span>
-                  <span style={{ color: toAudit.combinedBalance < 0 ? 'var(--color-danger)' : 'var(--color-success)' }}>
+                  <span className="privacy-blur" style={{ color: toAudit.combinedBalance < 0 ? 'var(--color-danger)' : 'var(--color-success)' }}>
                     {toAudit.combinedBalance >= 0 ? '+' : ''}{currencySymbol}{toAudit.combinedBalance.toFixed(2)}
                   </span>
                 </div>
@@ -355,7 +355,7 @@ function TransferRow({
             fontStyle: 'italic',
             lineHeight: '1.4'
           }}>
-            The simplification engine combined and matched these balances ({fromAudit.nodeName}: {currencySymbol}{fromAudit.combinedBalance.toFixed(2)} and {toAudit.nodeName}: {currencySymbol}{toAudit.combinedBalance.toFixed(2)}) to reduce total payment transactions on this trip.
+            The simplification engine combined and matched these balances ({fromAudit.nodeName}: <span className="privacy-blur">{currencySymbol}{fromAudit.combinedBalance.toFixed(2)}</span> and {toAudit.nodeName}: <span className="privacy-blur">{currencySymbol}{toAudit.combinedBalance.toFixed(2)}</span>) to reduce total payment transactions on this trip.
           </div>
         </div>
       )}

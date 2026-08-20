@@ -135,7 +135,7 @@ export function TripJourneyMap({ expenses, categories, baseCurrency }: Props) {
             <div style="font-weight: 700; font-size: 14px; margin-bottom: 2px; color: #0F172A;">
               ${safeTitle}
             </div>
-            <div style="color: #00BFA5; font-weight: 700; font-size: 13.5px; margin-bottom: 4px;">
+            <div class="privacy-blur" style="color: #00BFA5; font-weight: 700; font-size: 13.5px; margin-bottom: 4px;">
               ${safeCurrency} ${exp.amount.toFixed(2)}
             </div>
             <div style="font-size: 11px; color: #64748B; margin-bottom: 2px;">
@@ -271,7 +271,7 @@ export function TripJourneyMap({ expenses, categories, baseCurrency }: Props) {
           <span className="badge" style={{ background: 'rgba(0,191,165,0.12)', color: '#00BFA5', fontWeight: 600 }}>
             {geotaggedExpenses.length} stops
           </span>
-          <span>• {currencySymbol} {totalGeotaggedSpend.toFixed(0)}</span>
+          <span className="privacy-blur">• {currencySymbol} {totalGeotaggedSpend.toFixed(0)}</span>
         </div>
       </div>
 
