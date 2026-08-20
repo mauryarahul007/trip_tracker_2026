@@ -94,8 +94,21 @@ export function ExpenseForm({
 
   const [receiptImage, setReceiptImage] = useState('');
   const [receiptProcessing, setReceiptProcessing] = useState(false);
+  const [showReceiptSection, setShowReceiptSection] = useState(!!editingExpense?.receiptImage);
   const [formError, setFormError] = useState('');
   const [honeypotVal, setHoneypotVal] = useState('');
+
+  // One-time nudge toward the split presets, shown only on the first-ever
+  // new expense a person creates — dismissed permanently after they see it
+  // once (or use a preset), same plain-localStorage pattern App.tsx uses
+  // for theme-pref rather than pulling in a store for one boolean.
+  const [showPresetsTip, setShowPresetsTip] = useState(
+    () => !editingExpense && !localStorage.getItem('expense-presets-tip-seen')
+  );
+  const dismissPresetsTip = () => {
+    localStorage.setItem('expense-presets-tip-seen', '1');
+    setShowPresetsTip(false);
+  };
 
   // Geotagging
   const enableGeotagging = useTripStore((s) => s.enableGeotagging);
@@ -218,6 +231,7 @@ export function ExpenseForm({
 
   const applyPresetEqualAll = () => {
     triggerHaptic('light');
+    dismissPresetsTip();
     const allChecked: Record<string, boolean> = {};
     visibleMembers.forEach((m) => { allChecked[m.id] = true; });
     setSelectedSplitMembers(allChecked);
@@ -227,6 +241,7 @@ export function ExpenseForm({
 
   const applyPresetPayerFiftyGroup = () => {
     triggerHaptic('medium');
+    dismissPresetsTip();
     if (!payer) return;
     const allChecked: Record<string, boolean> = {};
     const newConfig: Record<string, string> = {};
@@ -247,6 +262,7 @@ export function ExpenseForm({
 
   const applyPresetOnlyPayer = () => {
     triggerHaptic('warning');
+    dismissPresetsTip();
     if (!payer) return;
     const selection: Record<string, boolean> = { [payer]: true };
     setSelectedSplitMembers(selection);
@@ -548,41 +564,87 @@ export function ExpenseForm({
       </div>
 
       <div className="form-group">
-        <label className="form-label">Receipt (optional)</label>
-        {receiptImage ? (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <img
-              src={receiptImage}
-              alt="Receipt preview"
-              style={{ width: '64px', height: '64px', objectFit: 'cover', borderRadius: 'var(--border-radius-sm)', border: '1px solid var(--border-color)' }}
-            />
-            <button type="button" className="secondary-btn" style={{ padding: '6px 12px', fontSize: '12px' }} onClick={() => setReceiptImage('')}>
-              Remove
-            </button>
-          </div>
-        ) : Capacitor.isNativePlatform() ? (
+        {!showReceiptSection && !receiptImage ? (
           <button
             type="button"
             className="secondary-btn"
             style={{ padding: '8px 14px', fontSize: '13px' }}
-            onClick={handleNativeCameraCapture}
-            disabled={receiptProcessing}
+            onClick={() => setShowReceiptSection(true)}
           >
-            📷 Take or Choose Photo
+            + Add Receipt
           </button>
         ) : (
-          <input
-            type="file"
-            accept="image/*"
-            className="input-field"
-            onChange={handleReceiptFileChangeLocal}
-            disabled={receiptProcessing}
-          />
-        )}
-        {receiptProcessing && (
-          <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '4px' }}>Processing image...</p>
+          <>
+            <label className="form-label">Receipt (optional)</label>
+            {receiptImage ? (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <img
+                  src={receiptImage}
+                  alt="Receipt preview"
+                  style={{ width: '64px', height: '64px', objectFit: 'cover', borderRadius: 'var(--border-radius-sm)', border: '1px solid var(--border-color)' }}
+                />
+                <button type="button" className="secondary-btn" style={{ padding: '6px 12px', fontSize: '12px' }} onClick={() => setReceiptImage('')}>
+                  Remove
+                </button>
+              </div>
+            ) : Capacitor.isNativePlatform() ? (
+              <button
+                type="button"
+                className="secondary-btn"
+                style={{ padding: '8px 14px', fontSize: '13px' }}
+                onClick={handleNativeCameraCapture}
+                disabled={receiptProcessing}
+              >
+                📷 Take or Choose Photo
+              </button>
+            ) : (
+              <input
+                type="file"
+                accept="image/*"
+                className="input-field"
+                onChange={handleReceiptFileChangeLocal}
+                disabled={receiptProcessing}
+              />
+            )}
+            {receiptProcessing && (
+              <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '4px' }}>Processing image...</p>
+            )}
+          </>
         )}
       </div>
+
+      {/* One-time tip pointing new users at the presets below, dismissed
+          permanently on first sight or first preset tap. */}
+      {showPresetsTip && (
+        <div
+          className="fade-in"
+          style={{
+            display: 'flex',
+            alignItems: 'flex-start',
+            gap: '8px',
+            marginTop: '8px',
+            padding: '8px 10px',
+            borderRadius: 'var(--border-radius-sm)',
+            background: 'rgba(31,110,104,0.07)',
+            border: '1px solid rgba(31,110,104,0.2)',
+            fontSize: '12px',
+            color: 'var(--text-primary)',
+          }}
+        >
+          <span style={{ flex: 1 }}>
+            <strong>Tip:</strong> use a Preset below for common splits — equal, 50/50, or a personal expense — instead of checking members one by one.
+          </span>
+          <button
+            type="button"
+            onClick={dismissPresetsTip}
+            aria-label="Dismiss tip"
+            title="Dismiss"
+            style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '0 2px', fontSize: '14px', lineHeight: 1, flexShrink: 0 }}
+          >
+            &times;
+          </button>
+        </div>
+      )}
 
       {/* Smart Split Presets Bar */}
       <div className="form-group" style={{ marginTop: '8px', marginBottom: '8px' }}>
