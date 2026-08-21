@@ -12,8 +12,6 @@ on:
           - simulator
           - unsigned-ipa
   push:
-    branches:
-      - main
     tags:
       - 'v*'
 

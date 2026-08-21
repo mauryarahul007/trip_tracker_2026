@@ -12,8 +12,6 @@ on:
           - debug
           - release
   push:
-    branches:
-      - main
     tags:
       - 'v*'
 
