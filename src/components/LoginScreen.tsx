@@ -3,6 +3,7 @@ import { Navigate, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { useTripStore } from '../store/tripStore';
 import { isMissingSupabaseEnv } from '../services/supabaseClient';
+import { fetchAppFlag } from '../services/tripApi';
 import { IconMembers, IconShield } from './Icons';
 import { SuperadminAuthModal } from './SuperadminAuthModal';
 
@@ -24,10 +25,20 @@ export function LoginScreen() {
   const signInAsDemoUser = useAuthStore((s) => s.signInAsDemoUser);
   const isSuperadmin = useTripStore((s) => s.isSuperadmin);
   const [isSuperadminModalOpen, setIsSuperadminModalOpen] = useState(false);
+  const [signInsPaused, setSignInsPaused] = useState(false);
 
   useEffect(() => {
     initialize();
   }, [initialize]);
+
+  // Superadmin-set gate (Ops Deck > Flags > Fleet Controls). Only blocks
+  // new sign-ins here -- superadmin login below is a separate button and
+  // stays open so the gate can always be lifted again.
+  useEffect(() => {
+    fetchAppFlag('signup_gate')
+      .then((v) => setSignInsPaused(v === true))
+      .catch(() => {});
+  }, []);
 
   if (initialized && (session || isSuperadmin)) {
     return <Navigate to={redirectPath} replace />;
@@ -110,9 +121,28 @@ export function LoginScreen() {
             </div>
           )}
 
+          {signInsPaused && (
+            <div
+              role="alert"
+              style={{
+                marginBottom: '16px',
+                padding: '10px 12px',
+                borderRadius: '8px',
+                background: 'var(--color-warning-soft, rgba(245,158,11,0.12))',
+                color: 'var(--color-warning, #b45309)',
+                fontSize: '12.5px',
+                textAlign: 'left',
+                lineHeight: '1.4',
+              }}
+            >
+              New sign-ins are temporarily paused. Please check back shortly.
+            </div>
+          )}
+
           {/* Primary Action: Google Sign In */}
           <button
             type="button"
+            disabled={signInsPaused}
             onClick={() => signInWithGoogle(redirectPath)}
             style={{
               display: 'flex',
@@ -127,15 +157,18 @@ export function LoginScreen() {
               background: '#FFFFFF',
               border: '1.5px solid var(--border-color)',
               borderRadius: 'var(--border-radius-sm)',
-              cursor: 'pointer',
+              cursor: signInsPaused ? 'not-allowed' : 'pointer',
+              opacity: signInsPaused ? 0.5 : 1,
               transition: 'var(--transition-smooth)',
               boxShadow: '0 1px 2px rgba(28, 42, 56, 0.05)',
             }}
             onMouseOver={(e) => {
+              if (signInsPaused) return;
               e.currentTarget.style.background = 'var(--bg-app)';
               e.currentTarget.style.borderColor = 'rgba(31, 110, 104, 0.3)';
             }}
             onMouseOut={(e) => {
+              if (signInsPaused) return;
               e.currentTarget.style.background = '#FFFFFF';
               e.currentTarget.style.borderColor = 'var(--border-color)';
             }}

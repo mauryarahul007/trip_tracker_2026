@@ -1,14 +1,18 @@
 import { useState } from 'react';
-import type { Category } from '../../types';
+import type { Category, Trip, Expense } from '../../types';
 import { useTripStore } from '../../store/tripStore';
 import { useAuthStore } from '../../store/authStore';
+import { purgeRecycleBinOlderThan } from '../../services/tripApi';
+import { exportFleetSummaryToCSV } from '../../utils/csvExport';
 import { IconCheck, IconTrash, IconAlertCircle } from '../Icons';
 
 interface Props {
   categories: Category[];
+  trips: Trip[];
+  expenses: Expense[];
 }
 
-export function AdminToolsPage({ categories }: Props) {
+export function AdminToolsPage({ categories, trips, expenses }: Props) {
   const exportDatabase = useTripStore((s) => s.exportDatabase);
   const importDatabase = useTripStore((s) => s.importDatabase);
   const clearDatabase = useTripStore((s) => s.clearDatabase);
@@ -32,6 +36,9 @@ export function AdminToolsPage({ categories }: Props) {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [passwordError, setPasswordError] = useState('');
   const [isChangingPassword, setIsChangingPassword] = useState(false);
+
+  const [purgeDays, setPurgeDays] = useState('30');
+  const [isPurging, setIsPurging] = useState(false);
 
   const showToast = (msg: string) => {
     setToastMsg(msg);
@@ -108,6 +115,34 @@ export function AdminToolsPage({ categories }: Props) {
     const updated = activeKeywords.filter((k) => k !== tagToRemove);
     await updateCategoryKeywords(activeCategory.id, updated);
     showToast(`Removed keyword "${tagToRemove}"`);
+  };
+
+  const handleExportFleetCSV = () => {
+    const csv = exportFleetSummaryToCSV(trips, expenses);
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `trip-tracker-fleet-summary-${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('Fleet summary CSV exported.');
+  };
+
+  const handlePurgeRecycleBin = async () => {
+    const days = Number(purgeDays) || 30;
+    if (!window.confirm(`Permanently delete every recycled expense older than ${days} days, across all trips? This cannot be undone.`)) {
+      return;
+    }
+    setIsPurging(true);
+    try {
+      const count = await purgeRecycleBinOlderThan(days);
+      showToast(`Purged ${count} expired recycle-bin item${count === 1 ? '' : 's'}.`);
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : 'Purge failed.');
+    } finally {
+      setIsPurging(false);
+    }
   };
 
   const handleDownloadBackup = () => {
@@ -312,6 +347,9 @@ export function AdminToolsPage({ categories }: Props) {
             >
               <span className="ops-mb-icon">&#9998; SEED</span>Load &quot;Euro Summer 2026&quot; Demo
             </button>
+            <button type="button" className="ops-maint-btn" onClick={handleExportFleetCSV}>
+              <span className="ops-mb-icon">&darr; CSV</span>Export Fleet Summary (All Trips)
+            </button>
           </div>
 
           {showImportArea && (
@@ -326,6 +364,27 @@ export function AdminToolsPage({ categories }: Props) {
               <button type="submit" className="ops-btn">Confirm JSON Restore</button>
             </form>
           )}
+        </div>
+
+        <div className="ops-card">
+          <h3 className="ops-section-title">Recycle Bin Purge</h3>
+          <p className="ops-section-sub">
+            Deleted expenses auto-purge on the retention window set in Flags (default 24h). Force an early purge across every trip here.
+          </p>
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+            <input
+              type="number"
+              min={0}
+              className="ops-input"
+              style={{ width: '90px' }}
+              value={purgeDays}
+              onChange={(e) => setPurgeDays(e.target.value)}
+            />
+            <span style={{ fontSize: '12.5px', color: 'var(--text-secondary)' }}>days</span>
+            <button type="button" className="ops-btn ops-btn-danger" disabled={isPurging} onClick={handlePurgeRecycleBin}>
+              {isPurging ? 'Purging...' : 'Purge Now'}
+            </button>
+          </div>
         </div>
 
         <div className="ops-card ops-caution">

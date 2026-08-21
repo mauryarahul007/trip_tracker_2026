@@ -1,11 +1,15 @@
 import { useEffect, useState } from 'react';
 import type { Category, Trip, Expense, Member } from '../../types';
+import type { AdminUserRow, DevicePlatformCount } from '../../types/admin';
+import type { BugRecord } from '../../services/bugApi';
 import { useTripStore } from '../../store/tripStore';
 import { useAuthStore } from '../../store/authStore';
-import { fetchAllExpensesForTrips } from '../../services/tripApi';
+import { fetchAllExpensesForTrips, fetchAllProfilesForAdmin, fetchDevicePlatformCounts } from '../../services/tripApi';
+import { fetchBugs } from '../../services/bugApi';
 import { AdminFlagsPage } from './AdminFlagsPage';
 import { AdminAnalyticsPage } from './AdminAnalyticsPage';
 import { AdminTripsPage } from './AdminTripsPage';
+import { AdminUsersPage } from './AdminUsersPage';
 import { AdminToolsPage } from './AdminToolsPage';
 import './ops-deck.css';
 
@@ -17,13 +21,14 @@ interface Props {
   onOpenBugTracker?: () => void;
 }
 
-export type AdminTab = 'flags' | 'analytics' | 'trips' | 'tools';
+export type AdminTab = 'flags' | 'analytics' | 'trips' | 'users' | 'tools';
 
 const SECTIONS: { id: AdminTab; label: string; code: string }[] = [
   { id: 'flags', label: 'Flags', code: 'SEC.01' },
   { id: 'analytics', label: 'Analytics', code: 'SEC.02' },
   { id: 'trips', label: 'Trips', code: 'SEC.03' },
-  { id: 'tools', label: 'Tools', code: 'SEC.04' },
+  { id: 'users', label: 'Users', code: 'SEC.04' },
+  { id: 'tools', label: 'Tools', code: 'SEC.05' },
 ];
 
 function useUtcClock() {
@@ -50,6 +55,9 @@ export function AdminPortalLayout({
 }: Props) {
   const [activeTab, setActiveTab] = useState<AdminTab>('flags');
   const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [bugs, setBugs] = useState<BugRecord[]>([]);
+  const [users, setUsers] = useState<AdminUserRow[]>([]);
+  const [platformCounts, setPlatformCounts] = useState<DevicePlatformCount[]>([]);
   const lockSuperadmin = useTripStore((s) => s.lockSuperadmin);
   const signOut = useAuthStore((s) => s.signOut);
   const clock = useUtcClock();
@@ -75,6 +83,17 @@ export function AdminPortalLayout({
       cancelled = true;
     };
   }, [trips]);
+
+  const reloadFleetData = () => {
+    fetchBugs().then(setBugs).catch(() => setBugs([]));
+    fetchAllProfilesForAdmin().then(setUsers).catch(() => setUsers([]));
+    fetchDevicePlatformCounts().then(setPlatformCounts).catch(() => setPlatformCounts([]));
+  };
+
+  useEffect(() => {
+    reloadFleetData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleAdminLogout = async () => {
     lockSuperadmin();
@@ -150,10 +169,14 @@ export function AdminPortalLayout({
               expenses={expenses}
               members={members}
               categories={categories}
+              bugs={bugs}
+              users={users}
+              platformCounts={platformCounts}
             />
           )}
           {activeTab === 'trips' && <AdminTripsPage trips={trips} expenses={expenses} />}
-          {activeTab === 'tools' && <AdminToolsPage categories={categories} />}
+          {activeTab === 'users' && <AdminUsersPage users={users} trips={trips} onUsersChanged={reloadFleetData} />}
+          {activeTab === 'tools' && <AdminToolsPage categories={categories} trips={trips} expenses={expenses} />}
         </main>
       </div>
     </div>

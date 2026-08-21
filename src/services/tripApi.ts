@@ -1,6 +1,7 @@
 import { supabase } from './supabaseClient';
 import type { Category, Expense, Group, Member, PreviousMemberSuggestion, SplitMode, Trip } from '../types';
 import type { Database } from '../types/database';
+import type { AdminUserRow, AppConfigKey, DevicePlatformCount } from '../types/admin';
 
 type TripRow = Database['public']['Tables']['trips']['Row'];
 type MemberRow = Database['public']['Tables']['members']['Row'];
@@ -808,4 +809,80 @@ export async function searchRemoteMemberSuggestions(
     console.error('Remote member search error:', err);
     return [];
   }
+}
+
+// ---------------------------------------------------------------------------
+// Ops Deck: user directory, app config, broadcast, recycle-bin purge
+// ---------------------------------------------------------------------------
+
+export async function fetchAllProfilesForAdmin(): Promise<AdminUserRow[]> {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('id, email, display_name, banned, created_at')
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return (data ?? []).map((p) => ({
+    id: p.id,
+    email: p.email,
+    displayName: p.display_name,
+    banned: p.banned,
+    createdAt: p.created_at,
+  }));
+}
+
+export async function setUserBanned(userId: string, banned: boolean): Promise<void> {
+  const { error } = await supabase.rpc('set_user_banned', { p_user_id: userId, p_banned: banned });
+  if (error) throw error;
+}
+
+// One row per device, so a multi-device user counts once per platform they
+// use -- fine for a rough fleet split, not meant to be a unique-user count.
+export async function fetchDevicePlatformCounts(): Promise<DevicePlatformCount[]> {
+  const { data, error } = await supabase.from('device_push_tokens').select('platform');
+  if (error) throw error;
+  const counts: Record<string, number> = {};
+  (data ?? []).forEach((row) => {
+    counts[row.platform] = (counts[row.platform] || 0) + 1;
+  });
+  return Object.entries(counts).map(([platform, count]) => ({ platform: platform as 'ios' | 'android', count }));
+}
+
+export async function fetchAppConfig(): Promise<Partial<Record<AppConfigKey, unknown>>> {
+  const { data, error } = await supabase.rpc('get_app_config');
+  if (error) throw error;
+  const map: Partial<Record<AppConfigKey, unknown>> = {};
+  (data ?? []).forEach((row) => {
+    map[row.key as AppConfigKey] = row.value;
+  });
+  return map;
+}
+
+// Single-key read, works for anon (pre-login) callers too -- used by the
+// login screen (signup_gate) and the app shell (maintenance_mode), neither
+// of which should need the full superadmin-only get_app_config() list.
+export async function fetchAppFlag(key: AppConfigKey): Promise<unknown> {
+  const { data, error } = await supabase.rpc('get_app_flag', { p_key: key });
+  if (error) throw error;
+  return data;
+}
+
+export async function setAppConfigValue(key: AppConfigKey, value: unknown): Promise<void> {
+  const { error } = await supabase.rpc('set_app_config', { p_key: key, p_value: value });
+  if (error) throw error;
+}
+
+export async function broadcastNotification(title: string, body: string, tripId?: string | null): Promise<number> {
+  const { data, error } = await supabase.rpc('broadcast_notification', {
+    p_title: title,
+    p_body: body,
+    p_trip_id: tripId ?? null,
+  });
+  if (error) throw error;
+  return data ?? 0;
+}
+
+export async function purgeRecycleBinOlderThan(days: number): Promise<number> {
+  const { data, error } = await supabase.rpc('purge_recycle_bin_older_than', { p_days: days });
+  if (error) throw error;
+  return data ?? 0;
 }

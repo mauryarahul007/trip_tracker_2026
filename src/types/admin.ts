@@ -47,3 +47,23 @@ export interface TripAuditItem {
   archived: boolean;
   createdAt: number;
 }
+
+export interface AdminUserRow {
+  id: string;
+  email: string;
+  displayName: string | null;
+  banned: boolean;
+  createdAt: string;
+}
+
+export type AppConfigKey =
+  | 'maintenance_mode'
+  | 'signup_gate'
+  | 'join_max_attempts'
+  | 'join_lockout_minutes'
+  | 'recycle_bin_retention_hours';
+
+export interface DevicePlatformCount {
+  platform: 'ios' | 'android';
+  count: number;
+}

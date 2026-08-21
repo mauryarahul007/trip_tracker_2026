@@ -11,6 +11,7 @@ export interface Database {
           email: string;
           display_name: string | null;
           avatar_url: string | null;
+          banned: boolean;
           created_at: string;
         };
         Insert: {
@@ -361,6 +362,25 @@ export interface Database {
         }>;
         Relationships: [];
       };
+      app_config: {
+        Row: {
+          key: string;
+          value: unknown;
+          updated_at: string;
+          updated_by: string | null;
+        };
+        Insert: {
+          key: string;
+          value: unknown;
+          updated_by?: string | null;
+        };
+        Update: Partial<{
+          value: unknown;
+          updated_at: string;
+          updated_by: string | null;
+        }>;
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: {
@@ -435,6 +455,30 @@ export interface Database {
           resolved_by: string | null;
           resolution_note: string | null;
         };
+      };
+      set_user_banned: {
+        Args: { p_user_id: string; p_banned: boolean };
+        Returns: void;
+      };
+      get_app_config: {
+        Args: Record<string, never>;
+        Returns: { key: string; value: unknown; updated_at: string; updated_by: string | null }[];
+      };
+      set_app_config: {
+        Args: { p_key: string; p_value: unknown };
+        Returns: { key: string; value: unknown; updated_at: string; updated_by: string | null };
+      };
+      get_app_flag: {
+        Args: { p_key: string };
+        Returns: unknown;
+      };
+      broadcast_notification: {
+        Args: { p_title: string; p_body: string; p_trip_id?: string | null };
+        Returns: number;
+      };
+      purge_recycle_bin_older_than: {
+        Args: { p_days?: number };
+        Returns: number;
       };
     };
   };

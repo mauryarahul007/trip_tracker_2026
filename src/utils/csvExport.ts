@@ -25,6 +25,38 @@ const safeCell = (str: string): string => {
   return cleaned;
 };
 
+// One row per trip, fleet-wide — an aggregate report for the Ops Deck,
+// distinct from exportTripToCSV's full per-trip ledger below.
+export function exportFleetSummaryToCSV(trips: Trip[], expenses: Expense[]): string {
+  const lines: string[] = [];
+  lines.push('TRIP TRACKER — FLEET SUMMARY');
+  lines.push(`Generated ${new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}`);
+  lines.push(PERFORATION);
+  lines.push(['Trip', 'Status', 'Start', 'End', 'Currency', 'Members', 'Transactions', 'Total Spend'].map(safeCell).join(','));
+
+  trips.forEach((t) => {
+    const tripExpenses = expenses.filter((e) => e.tripId === t.id && !e.title.startsWith('Settlement:'));
+    const total = tripExpenses.reduce((sum, e) => sum + e.amount, 0);
+    const status = t.frozen ? 'Grounded' : t.archived ? 'Archived' : 'Active';
+    lines.push(
+      [
+        t.name,
+        status,
+        t.startDate,
+        t.endDate,
+        t.baseCurrency,
+        String(t.memberIds.length),
+        String(tripExpenses.length),
+        total.toFixed(2),
+      ]
+        .map(safeCell)
+        .join(',')
+    );
+  });
+
+  return lines.join('\n');
+}
+
 export function exportTripToCSV(
   trip: Trip,
   members: Record<string, Member>,

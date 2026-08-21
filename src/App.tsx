@@ -8,6 +8,7 @@ import { exportTripToCSV } from './utils/csvExport';
 import { getCurrencySymbol } from './utils/currency';
 import { isMissingSupabaseEnv } from './services/supabaseClient';
 import { sendPushNotification } from './services/pushApi';
+import { fetchAppFlag } from './services/tripApi';
 import { GlobalSettingsModal } from './components/GlobalSettingsModal';
 import { ConfirmDialog, type ConfirmRequest } from './components/ConfirmDialog';
 import { TripsListScreen } from './components/TripsListScreen';
@@ -238,6 +239,17 @@ export default function App() {
   const [bypassEnvWarning, setBypassEnvWarning] = useState(false);
   const isSuperadmin = useTripStore((s) => s.isSuperadmin);
   const [isTravelerPreview, setIsTravelerPreview] = useState(false);
+
+  // Superadmin-set kill-switch (Ops Deck > Flags > Fleet Controls). Checked
+  // once per load, not polled -- a superadmin flipping it mid-session
+  // affects other users' next load, not their currently-open tab.
+  const [maintenanceMode, setMaintenanceMode] = useState(false);
+  useEffect(() => {
+    if (isSuperadmin) return;
+    fetchAppFlag('maintenance_mode')
+      .then((v) => setMaintenanceMode(v === true))
+      .catch(() => {});
+  }, [isSuperadmin]);
 
   // Lock background scroll when any modal is active
   useScrollLock(Boolean(showShareTrip || selectedReviewExpense || confirmRequest || showGlobalSettings || showAddExpense));
@@ -1125,6 +1137,20 @@ export default function App() {
               You can still use all local features, demo trips, and Superadmin tools offline.
             </p>
           </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (maintenanceMode && !isSuperadmin) {
+    return (
+      <div className="app-container" style={{ justifyContent: 'center', alignItems: 'center', padding: '24px' }}>
+        <div className="glass-card fade-in" style={{ maxWidth: '380px', textAlign: 'center', padding: '32px 24px' }}>
+          <div style={{ fontSize: '32px', marginBottom: '12px' }}>&#128295;</div>
+          <h2 style={{ fontFamily: 'var(--font-family-title)', fontSize: '20px', marginBottom: '10px' }}>Under Maintenance</h2>
+          <p style={{ fontSize: '14px', color: 'var(--text-secondary)', lineHeight: '1.6' }}>
+            Trip Tracker is briefly offline for scheduled maintenance. Your data is safe — please check back shortly.
+          </p>
         </div>
       </div>
     );
