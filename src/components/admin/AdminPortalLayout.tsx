@@ -14,6 +14,7 @@ import {
   fetchSuperadminIds,
 } from '../../services/tripApi';
 import { fetchBugs } from '../../services/bugApi';
+import { IconChevronRight } from '../Icons';
 import { AdminFlagsPage } from './AdminFlagsPage';
 import { AdminAnalyticsPage } from './AdminAnalyticsPage';
 import { AdminTripsPage } from './AdminTripsPage';
@@ -74,6 +75,7 @@ export function AdminPortalLayout({
   const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>([]);
   const [notificationStats, setNotificationStats] = useState<NotificationStats>({ totalCount: 0, readCount: 0, last7dCount: 0 });
   const [recycledCount, setRecycledCount] = useState(0);
+  const [showSectionSwitcher, setShowSectionSwitcher] = useState(false);
   const lockSuperadmin = useTripStore((s) => s.lockSuperadmin);
   const signOut = useAuthStore((s) => s.signOut);
   const clock = useUtcClock();
@@ -119,6 +121,8 @@ export function AdminPortalLayout({
     lockSuperadmin();
     await signOut();
   };
+
+  const currentSection = SECTIONS.find((s) => s.id === activeTab) ?? SECTIONS[0];
 
   return (
     <div className="ops-deck ops-shell">
@@ -169,6 +173,21 @@ export function AdminPortalLayout({
           ))}
         </nav>
 
+        <button
+          type="button"
+          className="ops-section-trigger"
+          aria-haspopup="listbox"
+          aria-expanded={showSectionSwitcher}
+          onClick={() => setShowSectionSwitcher(true)}
+        >
+          <span className="ops-section-trigger-left">
+            <span className="ops-lamp" />
+            <span className="ops-section-trigger-code">{currentSection.code}</span>
+            <span className="ops-section-trigger-label">{currentSection.label}</span>
+          </span>
+          <IconChevronRight size={16} className="ops-section-trigger-chevron" />
+        </button>
+
         <main className="ops-panel">
           {activeTab === 'flags' && <AdminFlagsPage trips={trips} members={members} />}
           {activeTab === 'analytics' && (
@@ -194,6 +213,42 @@ export function AdminPortalLayout({
           {activeTab === 'tools' && <AdminToolsPage categories={categories} trips={trips} expenses={expenses} />}
         </main>
       </div>
+
+      {showSectionSwitcher && (
+        <div className="ops-overlay" onClick={() => setShowSectionSwitcher(false)}>
+          <div className="ops-sheet fade-in" style={{ maxWidth: '360px', padding: '18px' }} onClick={(e) => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+              <h3 style={{ fontFamily: 'var(--display)', fontSize: '15px', fontWeight: 700, margin: 0, color: 'var(--text-primary)' }}>
+                Switch Section
+              </h3>
+              <button type="button" onClick={() => setShowSectionSwitcher(false)} className="ops-btn" style={{ padding: '6px 10px' }}>
+                Close
+              </button>
+            </div>
+            <div className="ops-switcher-list" role="listbox">
+              {SECTIONS.map((s) => (
+                <button
+                  key={s.id}
+                  type="button"
+                  role="option"
+                  aria-selected={activeTab === s.id}
+                  className="ops-switcher-row"
+                  data-current={activeTab === s.id}
+                  onClick={() => {
+                    setActiveTab(s.id);
+                    setShowSectionSwitcher(false);
+                  }}
+                >
+                  <span className="ops-lamp" />
+                  <span className="ops-switcher-row-code">{s.code}</span>
+                  <span className="ops-switcher-row-label">{s.label}</span>
+                  {activeTab === s.id && <span className="ops-switcher-row-current">CURRENT</span>}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

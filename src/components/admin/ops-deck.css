@@ -220,29 +220,68 @@
 .ops-layout { display: grid; grid-template-columns: 176px 1fr; gap: 18px; flex: 1; min-height: 0; overflow: hidden; }
 @media (max-width: 760px) {
   .ops-layout { grid-template-columns: 1fr; }
-  /* A horizontal-scroll pill row hides half the sections off-screen with no
-     hint they're there. A wrapping grid shows every section at once instead
-     -- 6 items fits a clean 2x3 with no scrolling. */
-  .ops-rail {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 6px;
-  }
-  .ops-rail-label { display: none; }
-  .ops-switch-item {
-    flex-direction: column;
+  /* Two prior mobile attempts (horizontal scroll, then a wrapping pill grid)
+     both tried to reflow the sidebar rail itself and both felt bolted-on --
+     a sidebar is a desktop pattern. Below 760px the rail is replaced
+     entirely by .ops-section-trigger + the switcher sheet (see below). */
+  .ops-rail { display: none; }
+}
+
+/* Tappable "current section" status-line, shown only below 760px, that
+   opens a full-screen list of every section -- styled like switching
+   channels on an ops terminal, reusing the same dot+code+label language as
+   the desktop rail items instead of inventing new nav chrome. */
+.ops-section-trigger { display: none; }
+@media (max-width: 760px) {
+  .ops-section-trigger {
+    display: flex;
     align-items: center;
-    justify-content: center;
-    text-align: center;
-    gap: 5px;
-    padding: 12px 6px;
-    min-height: 56px;
+    justify-content: space-between;
+    gap: 10px;
+    width: 100%;
+    padding: 13px 16px;
+    margin-bottom: 14px;
+    background: var(--bg-panel);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    cursor: pointer;
+    color: var(--text-primary);
+    font-family: inherit;
+    flex-shrink: 0;
   }
-  .ops-switch-item .ops-code { display: none; }
+  .ops-section-trigger:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
 }
-@media (max-width: 380px) {
-  .ops-rail { grid-template-columns: repeat(2, 1fr); }
+.ops-section-trigger-left { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.ops-section-trigger .ops-lamp { width: 7px; height: 7px; border-radius: 50%; background: var(--amber); box-shadow: 0 0 8px var(--amber); flex-shrink: 0; }
+.ops-section-trigger-code { font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.1em; color: var(--amber); flex-shrink: 0; }
+.ops-section-trigger-label { font-size: 14px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ops-section-trigger-chevron { color: var(--text-tertiary); flex-shrink: 0; transition: transform 0.15s; transform: rotate(90deg); }
+.ops-section-trigger[aria-expanded="true"] .ops-section-trigger-chevron { transform: rotate(270deg); }
+
+.ops-switcher-list { display: flex; flex-direction: column; gap: 2px; }
+.ops-switcher-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 13px 12px;
+  border-radius: 10px;
+  border: none;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  color: var(--text-secondary);
+  font-family: inherit;
 }
+.ops-switcher-row:hover { background: var(--bg-panel-raised); }
+.ops-switcher-row .ops-lamp { width: 7px; height: 7px; border-radius: 50%; background: var(--text-tertiary); flex-shrink: 0; }
+.ops-switcher-row[data-current="true"] { background: var(--amber-dim); }
+.ops-switcher-row[data-current="true"] .ops-lamp { background: var(--amber); box-shadow: 0 0 8px var(--amber); }
+.ops-switcher-row-code { font-family: var(--mono); font-size: 10px; letter-spacing: 0.06em; color: var(--text-tertiary); width: 48px; flex-shrink: 0; }
+.ops-switcher-row[data-current="true"] .ops-switcher-row-code { color: var(--amber); }
+.ops-switcher-row-label { font-size: 14.5px; font-weight: 500; color: var(--text-primary); flex: 1; }
+.ops-switcher-row[data-current="true"] .ops-switcher-row-label { font-weight: 700; }
+.ops-switcher-row-current { font-family: var(--mono); font-size: 9px; letter-spacing: 0.08em; color: var(--amber); flex-shrink: 0; }
 
 .ops-rail {
   display: flex;
