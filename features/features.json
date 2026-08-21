@@ -1,0 +1,18 @@
+[
+  {
+    "id": "FEAT-001",
+    "title": "Feature Additions Tracker",
+    "description": "Track feature requests and shipped work the same way bugs are tracked -- submit from Settings, triage in the Ops Deck, link to a flag to toggle it live.",
+    "category": "admin",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-08-21T16:34:01.305Z",
+    "updatedAt": "2026-08-21T16:34:01.305Z",
+    "shippedAt": "2026-08-21T16:34:01.305Z",
+    "shippedBy": "claude-cli",
+    "shippedNote": "Parallel system to the Bug Ledger. Migration 0063, featureApi.ts, feature.mjs CLI, FeatureRequestModal.tsx (Settings > Suggest a Feature), AdminFeaturesPage.tsx (Ops Deck Features tab) with flag-linking. Commit 1bf95d6."
+  }
+]
