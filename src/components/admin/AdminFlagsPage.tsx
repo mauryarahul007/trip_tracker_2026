@@ -103,6 +103,7 @@ export function AdminFlagsPage({ trips, members }: Props) {
   const userFlagOverrides = useTripStore((s) => s.userFlagOverrides);
   const setUserFlagOverride = useTripStore((s) => s.setUserFlagOverride);
   const resetFeatureFlags = useTripStore((s) => s.resetFeatureFlags);
+  const loadAllFeatureFlagOverrides = useTripStore((s) => s.loadAllFeatureFlagOverrides);
 
   const [selectedTripId, setSelectedTripId] = useState('');
   const [selectedUserId, setSelectedUserId] = useState('');
@@ -137,6 +138,12 @@ export function AdminFlagsPage({ trips, members }: Props) {
         if (window?.end) setMaintenanceWindowEnd(window.end.slice(0, 16));
       })
       .catch(() => {});
+    // Feature flags/overrides used to be device-local only (zustand
+    // persist) -- this pulls the real, Supabase-backed state (migration
+    // 0064) so the panel reflects what's actually set for every trip and
+    // user, not just whatever this browser last wrote.
+    void loadAllFeatureFlagOverrides();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const saveConfig = async (key: AppConfigKey, value: unknown, label: string) => {

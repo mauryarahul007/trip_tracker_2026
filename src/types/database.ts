@@ -375,6 +375,19 @@ export interface Database {
         Update: never;
         Relationships: [];
       };
+      feature_flag_overrides: {
+        Row: {
+          scope: 'global' | 'trip' | 'user';
+          scope_id: string;
+          flag_key: string;
+          value: boolean;
+          updated_at: string;
+          updated_by: string | null;
+        };
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
       features: {
         Row: {
           id: string;
@@ -558,6 +571,18 @@ export interface Database {
           shipped_note: string | null;
           linked_flag_key: string | null;
         };
+      };
+      get_resolved_feature_flags: {
+        Args: { p_trip_id?: string | null };
+        Returns: { global: Record<string, boolean>; trip: Record<string, boolean>; user: Record<string, boolean> };
+      };
+      get_all_feature_flag_overrides: {
+        Args: Record<string, never>;
+        Returns: { scope: 'global' | 'trip' | 'user'; scope_id: string; flag_key: string; value: boolean; updated_at: string; updated_by: string | null }[];
+      };
+      set_feature_flag_override: {
+        Args: { p_scope: string; p_scope_id: string; p_flag_key: string; p_value: boolean | null };
+        Returns: void;
       };
       get_notification_stats: {
         Args: Record<string, never>;

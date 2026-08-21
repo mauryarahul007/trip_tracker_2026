@@ -3,6 +3,7 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import type { Member, Group, Expense, Category, TripState, ExpenseLocation, Trip } from '../types';
 import type { FeatureFlagKey } from '../types/admin';
 import { DEFAULT_FEATURE_FLAGS, isFeatureActive } from '../utils/featureFlags';
+import { fetchResolvedFeatureFlags, fetchAllFeatureFlagOverrides, setFeatureFlagOverride } from '../services/featureFlagApi';
 import { supabase, isMissingSupabaseEnv } from '../services/supabaseClient';
 import {
   fetchMyTripGraph,
@@ -111,11 +112,20 @@ interface TripStore extends TripState {
   setIsSuperadmin: (value: boolean) => void;
   lockSuperadmin: () => void;
   setUserIdentity: (userId: string, displayName: string | null) => void;
-  setFeatureFlag: (key: FeatureFlagKey, value: boolean) => void;
-  setTripFlagOverride: (tripId: string, key: FeatureFlagKey, value: boolean | null) => void;
-  setUserFlagOverride: (userId: string, key: FeatureFlagKey, value: boolean | null) => void;
-  resetFeatureFlags: () => void;
+  setFeatureFlag: (key: FeatureFlagKey, value: boolean) => Promise<void>;
+  setTripFlagOverride: (tripId: string, key: FeatureFlagKey, value: boolean | null) => Promise<void>;
+  setUserFlagOverride: (userId: string, key: FeatureFlagKey, value: boolean | null) => Promise<void>;
+  resetFeatureFlags: () => Promise<void>;
   isFeatureEnabled: (key: FeatureFlagKey, context?: { tripId?: string; userId?: string }) => boolean;
+  // Pulls this user's resolved flags (global + their trip + their own
+  // overrides) from Supabase -- see migration 0064. featureFlags/
+  // tripFlagOverrides/userFlagOverrides were previously local-only
+  // (zustand persist), so a superadmin toggling a flag on one device
+  // never reached any other device at all.
+  loadFeatureFlags: (tripId?: string | null) => Promise<void>;
+  // Superadmin-only: loads every trip's/user's overrides at once, for the
+  // Ops Deck's Per-Trip/Per-Member override panels.
+  loadAllFeatureFlagOverrides: () => Promise<void>;
 
   initialize: () => Promise<void>;
   refreshTrips: (force?: boolean) => Promise<void>;
@@ -407,14 +417,24 @@ export const useTripStore = create<TripStore>()(
       set({ isSuperadmin: false, lastModifiedAt: Date.now() });
     },
 
-    setFeatureFlag: (key: FeatureFlagKey, value: boolean) => {
+    // Optimistic: local state updates immediately so the Ops Deck toggle
+    // feels instant, then the RPC persists it (migration 0064) so every
+    // other device picks it up next time it calls loadFeatureFlags(). On
+    // RPC failure this deliberately doesn't roll back -- console.error is
+    // enough for an admin-only action the superadmin can just retry.
+    setFeatureFlag: async (key: FeatureFlagKey, value: boolean) => {
       set((s) => ({
         featureFlags: { ...s.featureFlags, [key]: value },
         lastModifiedAt: Date.now(),
       }));
+      try {
+        await setFeatureFlagOverride('global', '', key, value);
+      } catch (e) {
+        console.error('Failed to persist global feature flag:', e);
+      }
     },
 
-    setTripFlagOverride: (tripId: string, key: FeatureFlagKey, value: boolean | null) => {
+    setTripFlagOverride: async (tripId: string, key: FeatureFlagKey, value: boolean | null) => {
       set((s) => {
         const existing = { ...(s.tripFlagOverrides[tripId] || {}) };
         if (value === null) delete existing[key];
@@ -424,9 +444,14 @@ export const useTripStore = create<TripStore>()(
           lastModifiedAt: Date.now(),
         };
       });
+      try {
+        await setFeatureFlagOverride('trip', tripId, key, value);
+      } catch (e) {
+        console.error('Failed to persist trip feature flag override:', e);
+      }
     },
 
-    setUserFlagOverride: (userId: string, key: FeatureFlagKey, value: boolean | null) => {
+    setUserFlagOverride: async (userId: string, key: FeatureFlagKey, value: boolean | null) => {
       set((s) => {
         const existing = { ...(s.userFlagOverrides[userId] || {}) };
         if (value === null) delete existing[key];
@@ -436,15 +461,67 @@ export const useTripStore = create<TripStore>()(
           lastModifiedAt: Date.now(),
         };
       });
+      try {
+        await setFeatureFlagOverride('user', userId, key, value);
+      } catch (e) {
+        console.error('Failed to persist user feature flag override:', e);
+      }
     },
 
-    resetFeatureFlags: () => {
+    resetFeatureFlags: async () => {
       set({
         featureFlags: DEFAULT_FEATURE_FLAGS,
         tripFlagOverrides: {},
         userFlagOverrides: {},
         lastModifiedAt: Date.now(),
       });
+      try {
+        const all = await fetchAllFeatureFlagOverrides();
+        await Promise.all(all.filter((o) => o.scope === 'global').map((o) => setFeatureFlagOverride('global', '', o.flagKey, null)));
+      } catch (e) {
+        console.error('Failed to clear global feature flag overrides:', e);
+      }
+    },
+
+    loadFeatureFlags: async (tripId?: string | null) => {
+      try {
+        const effectiveTripId = tripId !== undefined ? tripId : get().activeTripId;
+        const resolved = await fetchResolvedFeatureFlags(effectiveTripId ?? null);
+        if (!resolved) return;
+        const userId = get().userId;
+        set((s) => ({
+          featureFlags: { ...DEFAULT_FEATURE_FLAGS, ...resolved.global },
+          tripFlagOverrides: effectiveTripId ? { ...s.tripFlagOverrides, [effectiveTripId]: resolved.trip } : s.tripFlagOverrides,
+          userFlagOverrides: userId ? { ...s.userFlagOverrides, [userId]: resolved.user } : s.userFlagOverrides,
+        }));
+      } catch (e) {
+        console.warn('Failed to load feature flags (using cached values):', e);
+      }
+    },
+
+    loadAllFeatureFlagOverrides: async () => {
+      try {
+        const all = await fetchAllFeatureFlagOverrides();
+        const tripFlagOverrides: Record<string, Record<string, boolean>> = {};
+        const userFlagOverrides: Record<string, Record<string, boolean>> = {};
+        let globalFlags: Record<string, boolean> = {};
+        for (const o of all) {
+          if (o.scope === 'global') {
+            globalFlags = { ...globalFlags, [o.flagKey]: o.value };
+          } else if (o.scope === 'trip') {
+            tripFlagOverrides[o.scopeId] = { ...(tripFlagOverrides[o.scopeId] || {}), [o.flagKey]: o.value };
+          } else if (o.scope === 'user') {
+            userFlagOverrides[o.scopeId] = { ...(userFlagOverrides[o.scopeId] || {}), [o.flagKey]: o.value };
+          }
+        }
+        set({
+          featureFlags: { ...DEFAULT_FEATURE_FLAGS, ...globalFlags },
+          tripFlagOverrides,
+          userFlagOverrides,
+        });
+      } catch (e) {
+        console.warn('Failed to load all feature flag overrides:', e);
+      }
     },
 
     isFeatureEnabled: (key: FeatureFlagKey, context?: { tripId?: string; userId?: string }) => {
@@ -527,6 +604,8 @@ export const useTripStore = create<TripStore>()(
           initialized: true,
           storageError: null,
         });
+
+        void get().loadFeatureFlags();
 
         if (get().syncQueue.length > 0) {
           get().processQueue();
@@ -854,6 +933,7 @@ export const useTripStore = create<TripStore>()(
       // trip we DO have cached (e.g. switching back to it later).
       set({ activeTripId: id, deletedExpenses: [] });
       if (!navigator.onLine) return;
+      void get().loadFeatureFlags(id);
       try {
         const [serverExpenses, customCategories] = await Promise.all([fetchExpensesForTrip(id), fetchCategoriesForTrip(id)]);
         const dirtyIds = collectDirtyExpenseIds(get().syncQueue);
