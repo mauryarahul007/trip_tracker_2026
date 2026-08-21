@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import type { Trip, Expense, Member, Category } from '../../types';
-import type { AdminUserRow, DevicePlatformCount } from '../../types/admin';
+import type { AdminUserRow, DevicePlatformCount, NotificationStats } from '../../types/admin';
 import type { BugRecord } from '../../services/bugApi';
 import { getCurrencySymbol } from '../../utils/currency';
 import { calculateSettlements } from '../../utils/settlement';
@@ -13,7 +13,11 @@ interface Props {
   bugs: BugRecord[];
   users: AdminUserRow[];
   platformCounts: DevicePlatformCount[];
+  notificationStats: NotificationStats;
+  recycledCount: number;
 }
+
+const WEEKDAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 const SPLIT_MODE_LABELS: Record<string, string> = {
   equal: 'Equal',
@@ -25,7 +29,7 @@ const SPLIT_MODE_LABELS: Record<string, string> = {
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-export function AdminAnalyticsPage({ trips, expenses, members, categories, bugs, users, platformCounts }: Props) {
+export function AdminAnalyticsPage({ trips, expenses, members, categories, bugs, users, platformCounts, notificationStats, recycledCount }: Props) {
   const activeTrips = trips.filter((t) => !t.archived);
   const activeTripIds = new Set(activeTrips.map((t) => t.id));
   const activeExpenses = expenses.filter((e) => activeTripIds.has(e.tripId) && !e.title.startsWith('Settlement:'));
@@ -213,6 +217,40 @@ export function AdminAnalyticsPage({ trips, expenses, members, categories, bugs,
     const joined = trips.filter((t) => t.memberIds.some((id) => members[id]?.linkedUserId)).length;
     return { generated: trips.length, joined, pct: trips.length > 0 ? (joined / trips.length) * 100 : 0 };
   }, [trips, members]);
+
+  // ---- Retention cohort: of users who signed up 2+ weeks ago, what % have
+  // logged an expense in the last 30 days? ----
+  const retentionCohort = useMemo(() => {
+    const now = Date.now();
+    const eligible = users.filter((u) => now - new Date(u.createdAt).getTime() >= 14 * DAY_MS);
+    const activeUserIds = new Set(expenses.filter((e) => now - e.createdAt <= 30 * DAY_MS).map((e) => e.createdByUserId));
+    const retained = eligible.filter((u) => activeUserIds.has(u.id));
+    return { eligibleCount: eligible.length, retainedCount: retained.length, pct: eligible.length > 0 ? (retained.length / eligible.length) * 100 : 0 };
+  }, [users, expenses]);
+
+  // ---- Activity heatmap: expense volume by day-of-week ----
+  const weekdayActivity = useMemo(() => {
+    const counts = new Array(7).fill(0);
+    activeExpenses.forEach((e) => {
+      counts[new Date(e.createdAt).getDay()] += 1;
+    });
+    return WEEKDAY_LABELS.map((label, i) => ({ label, count: counts[i] }));
+  }, [activeExpenses]);
+  const maxWeekdayCount = Math.max(1, ...weekdayActivity.map((d) => d.count));
+
+  // ---- Auto-crash bug share: what fraction of reports are self-filed crashes vs manual reports ----
+  const crashShare = useMemo(() => {
+    const autoFiled = bugs.filter((b) => b.foundBy === 'auto-crash-handler').length;
+    return { autoFiled, manual: bugs.length - autoFiled, pct: bugs.length > 0 ? (autoFiled / bugs.length) * 100 : 0 };
+  }, [bugs]);
+
+  // ---- Expense edit rate (updatedAt differs from createdAt) ----
+  const editRate = useMemo(() => {
+    const edited = activeExpenses.filter((e) => e.updatedAt > e.createdAt).length;
+    return { edited, pct: activeExpenses.length > 0 ? (edited / activeExpenses.length) * 100 : 0 };
+  }, [activeExpenses]);
+
+  const totalReceiptsUploaded = useMemo(() => activeExpenses.filter((e) => !!e.receiptPath).length, [activeExpenses]);
 
   return (
     <div className="fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
@@ -410,6 +448,79 @@ export function AdminAnalyticsPage({ trips, expenses, members, categories, bugs,
               </div>
             ))
           )}
+        </div>
+      </div>
+
+      <div className="ops-split-row">
+        <div className="ops-card">
+          <h3 className="ops-section-title">Activity by Day of Week</h3>
+          <p className="ops-section-sub">When the fleet actually logs expenses — pick maintenance windows around the quiet days.</p>
+          <div style={{ display: 'flex', alignItems: 'flex-end', gap: '6px', height: '70px', padding: '4px 0' }}>
+            {weekdayActivity.map((d) => (
+              <div key={d.label} title={`${d.label}: ${d.count}`} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
+                <div
+                  style={{
+                    width: '100%',
+                    height: `${Math.max(2, (d.count / maxWeekdayCount) * 56)}px`,
+                    background: 'var(--amber)',
+                    borderRadius: '2px',
+                  }}
+                />
+                <span style={{ fontSize: '9.5px', color: 'var(--text-tertiary)' }}>{d.label}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="ops-card">
+          <h3 className="ops-section-title">Retention &amp; Data Quality</h3>
+          <p className="ops-section-sub">Accounts 2+ weeks old still active, plus how often data gets touched after creation.</p>
+          <div className="ops-leader-row"><span className="ops-leader-name">30-day retention</span><span className="ops-leader-amt">{retentionCohort.retainedCount}/{retentionCohort.eligibleCount} ({retentionCohort.pct.toFixed(0)}%)</span></div>
+          <div className="ops-leader-row"><span className="ops-leader-name">Expenses edited after creation</span><span className="ops-leader-amt">{editRate.pct.toFixed(0)}%</span></div>
+          <div className="ops-leader-row"><span className="ops-leader-name">Currently in recycle bin</span><span className="ops-leader-amt">{recycledCount}</span></div>
+          <div className="ops-leader-row"><span className="ops-leader-name">Receipts uploaded</span><span className="ops-leader-amt">{totalReceiptsUploaded}</span></div>
+        </div>
+      </div>
+
+      <div className="ops-split-row">
+        <div className="ops-card">
+          <h3 className="ops-section-title">Bug Report Origin</h3>
+          <p className="ops-section-sub">Self-filed crashes vs manual "Report a Problem" submissions.</p>
+          <div className="ops-bar-row">
+            <span className="ops-bar-label">Auto-crash-handler</span>
+            <div className="ops-bar-track">
+              <div className="ops-bar-fill" style={{ width: `${crashShare.pct}%` }} />
+            </div>
+            <span className="ops-bar-val">{crashShare.autoFiled} ({crashShare.pct.toFixed(0)}%)</span>
+          </div>
+          <div className="ops-bar-row">
+            <span className="ops-bar-label">Manual reports</span>
+            <div className="ops-bar-track">
+              <div className="ops-bar-fill" style={{ width: `${100 - crashShare.pct}%` }} />
+            </div>
+            <span className="ops-bar-val">{crashShare.manual}</span>
+          </div>
+        </div>
+
+        <div className="ops-card">
+          <h3 className="ops-section-title">Notification Delivery</h3>
+          <p className="ops-section-sub">Aggregate only — no message content leaves the database.</p>
+          <div className="ops-kpi-row" style={{ marginTop: '6px' }}>
+            <div>
+              <div className="ops-kpi-label">Sent (7d)</div>
+              <div className="ops-kpi-value" style={{ fontSize: '22px' }}>{notificationStats.last7dCount}</div>
+            </div>
+            <div>
+              <div className="ops-kpi-label">Total Sent</div>
+              <div className="ops-kpi-value" style={{ fontSize: '22px' }}>{notificationStats.totalCount}</div>
+            </div>
+            <div>
+              <div className="ops-kpi-label">Read Rate</div>
+              <div className="ops-kpi-value" style={{ fontSize: '22px' }}>
+                {notificationStats.totalCount > 0 ? `${((notificationStats.readCount / notificationStats.totalCount) * 100).toFixed(0)}%` : '—'}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 

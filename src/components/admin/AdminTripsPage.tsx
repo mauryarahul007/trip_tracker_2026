@@ -7,9 +7,10 @@ import { IconSearch, IconCheck } from '../Icons';
 interface Props {
   trips: Trip[];
   expenses: Expense[];
+  onInspectTrip?: (tripId: string) => void;
 }
 
-export function AdminTripsPage({ trips, expenses }: Props) {
+export function AdminTripsPage({ trips, expenses, onInspectTrip }: Props) {
   const freezeTrip = useTripStore((s) => s.freezeTrip);
   const archiveTrip = useTripStore((s) => s.archiveTrip);
   const deleteTrip = useTripStore((s) => s.deleteTrip);
@@ -115,6 +116,16 @@ export function AdminTripsPage({ trips, expenses }: Props) {
                       <td className="ops-num-right">{getCurrencySymbol(t.baseCurrency)} {tripTotal.toFixed(2)}</td>
                       <td>
                         <div className="ops-manifest-actions">
+                          {onInspectTrip && (
+                            <button
+                              type="button"
+                              className="ops-mini-btn"
+                              title="Open this trip in the traveler view for support debugging"
+                              onClick={() => onInspectTrip(t.id)}
+                            >
+                              Inspect
+                            </button>
+                          )}
                           <button
                             type="button"
                             className={`ops-mini-btn${t.frozen ? '' : ' ground'}`}

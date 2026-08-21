@@ -113,6 +113,10 @@ export function AdminFlagsPage({ trips, members }: Props) {
   const [joinMaxAttemptsInput, setJoinMaxAttemptsInput] = useState('5');
   const [joinLockoutMinutesInput, setJoinLockoutMinutesInput] = useState('15');
   const [recycleBinHoursInput, setRecycleBinHoursInput] = useState('24');
+  const [expenseCeilingInput, setExpenseCeilingInput] = useState('999999999.99');
+  const [auditRetentionDaysInput, setAuditRetentionDaysInput] = useState('90');
+  const [maintenanceWindowStart, setMaintenanceWindowStart] = useState('');
+  const [maintenanceWindowEnd, setMaintenanceWindowEnd] = useState('');
 
   const showToast = (msg: string) => {
     setToastMsg(msg);
@@ -126,6 +130,11 @@ export function AdminFlagsPage({ trips, members }: Props) {
         if (typeof c.join_max_attempts === 'number') setJoinMaxAttemptsInput(String(c.join_max_attempts));
         if (typeof c.join_lockout_minutes === 'number') setJoinLockoutMinutesInput(String(c.join_lockout_minutes));
         if (typeof c.recycle_bin_retention_hours === 'number') setRecycleBinHoursInput(String(c.recycle_bin_retention_hours));
+        if (typeof c.expense_amount_ceiling === 'number') setExpenseCeilingInput(String(c.expense_amount_ceiling));
+        if (typeof c.audit_log_retention_days === 'number') setAuditRetentionDaysInput(String(c.audit_log_retention_days));
+        const window = c.maintenance_window as { start?: string; end?: string } | undefined;
+        if (window?.start) setMaintenanceWindowStart(window.start.slice(0, 16));
+        if (window?.end) setMaintenanceWindowEnd(window.end.slice(0, 16));
       })
       .catch(() => {});
   }, []);
@@ -193,6 +202,45 @@ export function AdminFlagsPage({ trips, members }: Props) {
             </button>
           </div>
           <div className="ops-flag-desc">Blocks non-superadmin users behind a maintenance screen. Use before a risky migration.</div>
+          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginTop: '10px', alignItems: 'flex-end' }}>
+            <div className="ops-form-group">
+              <label className="ops-form-label">Or schedule a window (start)</label>
+              <input
+                type="datetime-local"
+                className="ops-input"
+                value={maintenanceWindowStart}
+                onChange={(e) => setMaintenanceWindowStart(e.target.value)}
+              />
+            </div>
+            <div className="ops-form-group">
+              <label className="ops-form-label">End</label>
+              <input
+                type="datetime-local"
+                className="ops-input"
+                value={maintenanceWindowEnd}
+                onChange={(e) => setMaintenanceWindowEnd(e.target.value)}
+              />
+            </div>
+            <button
+              type="button"
+              className="ops-btn"
+              disabled={savingKey === 'maintenance_window'}
+              onClick={() =>
+                saveConfig(
+                  'maintenance_window',
+                  maintenanceWindowStart && maintenanceWindowEnd
+                    ? { start: new Date(maintenanceWindowStart).toISOString(), end: new Date(maintenanceWindowEnd).toISOString() }
+                    : null,
+                  'Maintenance window'
+                )
+              }
+            >
+              Save Window
+            </button>
+          </div>
+          <p style={{ fontSize: '10.5px', color: 'var(--text-tertiary)', marginTop: '6px' }}>
+            The app blocks non-superadmins if the toggle above is on, OR the current time falls inside this window — whichever fires first. Leave both fields blank and save to clear the window.
+          </p>
         </div>
 
         <div className="ops-flag-card" style={{ marginTop: '10px' }}>
@@ -279,9 +327,51 @@ export function AdminFlagsPage({ trips, members }: Props) {
               </button>
             </div>
           </div>
+          <div className="ops-form-group">
+            <label className="ops-form-label">Expense Amount Ceiling</label>
+            <div style={{ display: 'flex', gap: '6px' }}>
+              <input
+                type="number"
+                min={0}
+                className="ops-input"
+                style={{ width: '140px' }}
+                value={expenseCeilingInput}
+                onChange={(e) => setExpenseCeilingInput(e.target.value)}
+              />
+              <button
+                type="button"
+                className="ops-btn"
+                disabled={savingKey === 'expense_amount_ceiling'}
+                onClick={() => saveConfig('expense_amount_ceiling', Number(expenseCeilingInput) || 999999999.99, 'Expense amount ceiling')}
+              >
+                Save
+              </button>
+            </div>
+          </div>
+          <div className="ops-form-group">
+            <label className="ops-form-label">Audit Log Retention (days)</label>
+            <div style={{ display: 'flex', gap: '6px' }}>
+              <input
+                type="number"
+                min={1}
+                className="ops-input"
+                style={{ width: '90px' }}
+                value={auditRetentionDaysInput}
+                onChange={(e) => setAuditRetentionDaysInput(e.target.value)}
+              />
+              <button
+                type="button"
+                className="ops-btn"
+                disabled={savingKey === 'audit_log_retention_days'}
+                onClick={() => saveConfig('audit_log_retention_days', Number(auditRetentionDaysInput) || 90, 'Audit log retention')}
+              >
+                Save
+              </button>
+            </div>
+          </div>
         </div>
         <p style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '10px', display: 'flex', alignItems: 'center', gap: '5px' }}>
-          <IconAlertCircle size={12} /> Defaults (5 attempts / 15 min lockout / 24h retention) apply until a value is saved here.
+          <IconAlertCircle size={12} /> Defaults (5 attempts / 15 min lockout / 24h recycle bin / 90 day audit log / no amount ceiling) apply until a value is saved here.
         </p>
       </div>
 

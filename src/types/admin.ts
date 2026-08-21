@@ -58,12 +58,30 @@ export interface AdminUserRow {
 
 export type AppConfigKey =
   | 'maintenance_mode'
+  | 'maintenance_window'
   | 'signup_gate'
   | 'join_max_attempts'
   | 'join_lockout_minutes'
-  | 'recycle_bin_retention_hours';
+  | 'recycle_bin_retention_hours'
+  | 'expense_amount_ceiling'
+  | 'audit_log_retention_days';
 
 export interface DevicePlatformCount {
   platform: 'ios' | 'android';
   count: number;
+}
+
+export interface AuditLogEntry {
+  id: string;
+  tripId: string | null;
+  actorUserId: string | null;
+  action: string;
+  details: unknown;
+  createdAt: string;
+}
+
+export interface NotificationStats {
+  totalCount: number;
+  readCount: number;
+  last7dCount: number;
 }

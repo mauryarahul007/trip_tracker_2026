@@ -362,6 +362,19 @@ export interface Database {
         }>;
         Relationships: [];
       };
+      security_audit_logs: {
+        Row: {
+          id: string;
+          trip_id: string | null;
+          actor_user_id: string | null;
+          action: string;
+          details: unknown;
+          created_at: string;
+        };
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
       app_config: {
         Row: {
           key: string;
@@ -483,6 +496,18 @@ export interface Database {
       get_superadmin_ids: {
         Args: Record<string, never>;
         Returns: string[];
+      };
+      get_notification_stats: {
+        Args: Record<string, never>;
+        Returns: { total_count: number; read_count: number; last_7d_count: number }[];
+      };
+      count_recycled_expenses: {
+        Args: Record<string, never>;
+        Returns: number;
+      };
+      purge_audit_logs_older_than: {
+        Args: { p_days?: number };
+        Returns: number;
       };
     };
   };

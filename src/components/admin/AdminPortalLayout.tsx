@@ -1,15 +1,24 @@
 import { useEffect, useState } from 'react';
 import type { Category, Trip, Expense, Member } from '../../types';
-import type { AdminUserRow, DevicePlatformCount } from '../../types/admin';
+import type { AdminUserRow, AuditLogEntry, DevicePlatformCount, NotificationStats } from '../../types/admin';
 import type { BugRecord } from '../../services/bugApi';
 import { useTripStore } from '../../store/tripStore';
 import { useAuthStore } from '../../store/authStore';
-import { fetchAllExpensesForTrips, fetchAllProfilesForAdmin, fetchDevicePlatformCounts, fetchSuperadminIds } from '../../services/tripApi';
+import {
+  fetchAllExpensesForTrips,
+  fetchAllProfilesForAdmin,
+  fetchAuditLogs,
+  fetchDevicePlatformCounts,
+  fetchNotificationStats,
+  fetchRecycledExpenseCount,
+  fetchSuperadminIds,
+} from '../../services/tripApi';
 import { fetchBugs } from '../../services/bugApi';
 import { AdminFlagsPage } from './AdminFlagsPage';
 import { AdminAnalyticsPage } from './AdminAnalyticsPage';
 import { AdminTripsPage } from './AdminTripsPage';
 import { AdminUsersPage } from './AdminUsersPage';
+import { AdminAuditPage } from './AdminAuditPage';
 import { AdminToolsPage } from './AdminToolsPage';
 import './ops-deck.css';
 
@@ -19,16 +28,18 @@ interface Props {
   categories: Category[];
   onExitToTravelerApp?: () => void;
   onOpenBugTracker?: () => void;
+  onInspectTrip?: (tripId: string) => void;
 }
 
-export type AdminTab = 'flags' | 'analytics' | 'trips' | 'users' | 'tools';
+export type AdminTab = 'flags' | 'analytics' | 'trips' | 'users' | 'audit' | 'tools';
 
 const SECTIONS: { id: AdminTab; label: string; code: string }[] = [
   { id: 'flags', label: 'Flags', code: 'SEC.01' },
   { id: 'analytics', label: 'Analytics', code: 'SEC.02' },
   { id: 'trips', label: 'Trips', code: 'SEC.03' },
   { id: 'users', label: 'Users', code: 'SEC.04' },
-  { id: 'tools', label: 'Tools', code: 'SEC.05' },
+  { id: 'audit', label: 'Audit', code: 'SEC.05' },
+  { id: 'tools', label: 'Tools', code: 'SEC.06' },
 ];
 
 function useUtcClock() {
@@ -52,6 +63,7 @@ export function AdminPortalLayout({
   categories,
   onExitToTravelerApp,
   onOpenBugTracker,
+  onInspectTrip,
 }: Props) {
   const [activeTab, setActiveTab] = useState<AdminTab>('flags');
   const [expenses, setExpenses] = useState<Expense[]>([]);
@@ -59,6 +71,9 @@ export function AdminPortalLayout({
   const [users, setUsers] = useState<AdminUserRow[]>([]);
   const [platformCounts, setPlatformCounts] = useState<DevicePlatformCount[]>([]);
   const [superadminIds, setSuperadminIds] = useState<string[]>([]);
+  const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>([]);
+  const [notificationStats, setNotificationStats] = useState<NotificationStats>({ totalCount: 0, readCount: 0, last7dCount: 0 });
+  const [recycledCount, setRecycledCount] = useState(0);
   const lockSuperadmin = useTripStore((s) => s.lockSuperadmin);
   const signOut = useAuthStore((s) => s.signOut);
   const clock = useUtcClock();
@@ -90,6 +105,9 @@ export function AdminPortalLayout({
     fetchAllProfilesForAdmin().then(setUsers).catch(() => setUsers([]));
     fetchDevicePlatformCounts().then(setPlatformCounts).catch(() => setPlatformCounts([]));
     fetchSuperadminIds().then(setSuperadminIds).catch(() => setSuperadminIds([]));
+    fetchAuditLogs().then(setAuditLogs).catch(() => setAuditLogs([]));
+    fetchNotificationStats().then(setNotificationStats).catch(() => {});
+    fetchRecycledExpenseCount().then(setRecycledCount).catch(() => {});
   };
 
   useEffect(() => {
@@ -174,11 +192,16 @@ export function AdminPortalLayout({
               bugs={bugs}
               users={users}
               platformCounts={platformCounts}
+              notificationStats={notificationStats}
+              recycledCount={recycledCount}
             />
           )}
-          {activeTab === 'trips' && <AdminTripsPage trips={trips} expenses={expenses} />}
+          {activeTab === 'trips' && <AdminTripsPage trips={trips} expenses={expenses} onInspectTrip={onInspectTrip} />}
           {activeTab === 'users' && (
             <AdminUsersPage users={users} trips={trips} superadminIds={superadminIds} onUsersChanged={reloadFleetData} />
+          )}
+          {activeTab === 'audit' && (
+            <AdminAuditPage logs={auditLogs} trips={trips} users={users} onLogsChanged={reloadFleetData} />
           )}
           {activeTab === 'tools' && <AdminToolsPage categories={categories} trips={trips} expenses={expenses} />}
         </main>

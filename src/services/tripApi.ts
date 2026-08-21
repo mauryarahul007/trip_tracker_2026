@@ -1,7 +1,7 @@
 import { supabase } from './supabaseClient';
 import type { Category, Expense, Group, Member, PreviousMemberSuggestion, SplitMode, Trip } from '../types';
 import type { Database } from '../types/database';
-import type { AdminUserRow, AppConfigKey, DevicePlatformCount } from '../types/admin';
+import type { AdminUserRow, AppConfigKey, AuditLogEntry, DevicePlatformCount, NotificationStats } from '../types/admin';
 
 type TripRow = Database['public']['Tables']['trips']['Row'];
 type MemberRow = Database['public']['Tables']['members']['Row'];
@@ -889,6 +889,48 @@ export async function broadcastNotification(title: string, body: string, tripId?
 
 export async function purgeRecycleBinOlderThan(days: number): Promise<number> {
   const { data, error } = await supabase.rpc('purge_recycle_bin_older_than', { p_days: days });
+  if (error) throw error;
+  return data ?? 0;
+}
+
+export async function fetchNotificationStats(): Promise<NotificationStats> {
+  const { data, error } = await supabase.rpc('get_notification_stats');
+  if (error) throw error;
+  const row = data?.[0];
+  return {
+    totalCount: row?.total_count ?? 0,
+    readCount: row?.read_count ?? 0,
+    last7dCount: row?.last_7d_count ?? 0,
+  };
+}
+
+export async function fetchRecycledExpenseCount(): Promise<number> {
+  const { data, error } = await supabase.rpc('count_recycled_expenses');
+  if (error) throw error;
+  return data ?? 0;
+}
+
+// trip_id is null OR is_trip_admin(trip_id) per the RLS policy (0048) --
+// a superadmin's is_trip_admin() bypass means this returns every row.
+export async function fetchAuditLogs(limit = 200): Promise<AuditLogEntry[]> {
+  const { data, error } = await supabase
+    .from('security_audit_logs')
+    .select('id, trip_id, actor_user_id, action, details, created_at')
+    .order('created_at', { ascending: false })
+    .limit(limit);
+  if (error) throw error;
+  return (data ?? []).map((r) => ({
+    id: r.id,
+    tripId: r.trip_id,
+    actorUserId: r.actor_user_id,
+    action: r.action,
+    details: r.details,
+    createdAt: r.created_at,
+  }));
+}
+
+export async function purgeAuditLogsOlderThan(days: number): Promise<number> {
+  const { data, error } = await supabase.rpc('purge_audit_logs_older_than', { p_days: days });
   if (error) throw error;
   return data ?? 0;
 }

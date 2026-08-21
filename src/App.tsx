@@ -274,6 +274,16 @@ export default function App() {
     fetchAppFlag('maintenance_mode')
       .then((v) => setMaintenanceMode(v === true))
       .catch(() => {});
+    fetchAppFlag('maintenance_window')
+      .then((v) => {
+        const w = v as { start?: string; end?: string } | null;
+        if (!w?.start || !w?.end) return;
+        const now = Date.now();
+        if (now >= new Date(w.start).getTime() && now <= new Date(w.end).getTime()) {
+          setMaintenanceMode(true);
+        }
+      })
+      .catch(() => {});
   }, [isSuperadmin]);
 
   // Lock background scroll when any modal is active
@@ -1190,6 +1200,10 @@ export default function App() {
           categories={categories}
           onExitToTravelerApp={() => setIsTravelerPreview(true)}
           onOpenBugTracker={() => setShowBugTracker(true)}
+          onInspectTrip={(tripId) => {
+            void selectTrip(tripId);
+            setIsTravelerPreview(true);
+          }}
         />
       </Suspense>
     );
