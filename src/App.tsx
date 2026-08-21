@@ -61,14 +61,13 @@ export default function App() {
     importDatabase,
     clearDatabase,
     loadDemoTrip,
-    unlockSuperadmin,
   } = useTripStore();
 
   const userEmail = useAuthStore((s) => s.session?.user.email ?? null);
   const userId = useAuthStore((s) => s.session?.user.id ?? null);
   const session = useAuthStore((s) => s.session);
   const signOut = useAuthStore((s) => s.signOut);
-  const setSuperadminSession = useAuthStore((s) => s.setSuperadminSession);
+  const signInSuperadmin = useAuthStore((s) => s.signInSuperadmin);
 
   // Navigation tabs: 'expenses' | 'members' | 'analytics' | 'settings'
   const [activeTab, setActiveTab] = useState<'expenses' | 'members' | 'analytics' | 'settings'>('expenses');
@@ -116,17 +115,16 @@ export default function App() {
     return () => window.removeEventListener('hashchange', handleHash);
   }, []);
 
-  // Local dev convenience only (never runs in a production build): skip
-  // login and unlock the real superadmin identity (same path SuperadminAuthModal's
-  // OTP-recovery flow uses — unlockSuperadmin(..., skipVerify: true) then a
-  // matching session), landing straight on the Bug Ledger.
+  // Local dev convenience only, and only against the dummy/offline Supabase
+  // project (never a real one, never a production build): auto-sign-in as
+  // superadmin so `npm run dev` lands straight on the Bug Ledger without
+  // typing credentials. Against a real project the dev still logs in
+  // manually through the normal Super User Login form — there's no
+  // hardcoded account left to bootstrap from.
   useEffect(() => {
-    if (!import.meta.env.DEV) return;
+    if (!import.meta.env.DEV || !isMissingSupabaseEnv) return;
     if (!useTripStore.getState().isSuperadmin) {
-      unlockSuperadmin(undefined, undefined, true);
-    }
-    if (!session) {
-      setSuperadminSession().catch(() => {});
+      signInSuperadmin('dev@local', 'dev').catch(() => {});
     }
     setShowBugTracker(true);
     if (window.location.hash !== '#/bugs') {
@@ -985,7 +983,6 @@ export default function App() {
     return (
       <AdminPortalLayout
         trips={trips}
-        expenses={expenses}
         members={members}
         categories={categories}
         onExitToTravelerApp={() => setIsTravelerPreview(true)}

@@ -1,12 +1,5 @@
 import { useState } from 'react';
 import { IconShield, IconClose, IconCheck, IconAlertCircle } from './Icons';
-import {
-  SUPERADMIN_EMAIL,
-  RECOVERY_PHONES,
-  requestPhoneRecoveryOtp,
-  verifyPhoneRecoveryOtp,
-  maskPhoneNumber,
-} from '../utils/superadminAuth';
 import { useTripStore } from '../store/tripStore';
 import { useAuthStore } from '../store/authStore';
 
@@ -17,15 +10,14 @@ interface Props {
 }
 
 export function SuperadminAuthModal({ isOpen, onClose, onSuccess }: Props) {
-  const unlockSuperadmin = useTripStore((s) => s.unlockSuperadmin);
-  const lockSuperadmin = useTripStore((s) => s.lockSuperadmin);
   const setUserIdentity = useTripStore((s) => s.setUserIdentity);
-  const setSuperadminSession = useAuthStore((s) => s.setSuperadminSession);
+  const signInSuperadmin = useAuthStore((s) => s.signInSuperadmin);
+  const requestSuperadminPasswordReset = useAuthStore((s) => s.requestSuperadminPasswordReset);
 
   // After a real Supabase sign-in, tripStore's userId must match the real
   // auth.uid() — writes (createTrip, addExpense, ...) carry it as an FK to
-  // profiles, so the placeholder id unlockSuperadmin sets for offline/demo
-  // mode would violate that FK for any real project.
+  // profiles, so the placeholder id used for offline/demo mode would
+  // violate that FK for any real project.
   const syncRealIdentity = () => {
     const session = useAuthStore.getState().session;
     if (session?.user?.id) {
@@ -37,11 +29,9 @@ export function SuperadminAuthModal({ isOpen, onClose, onSuccess }: Props) {
     }
   };
 
-  const [mode, setMode] = useState<'login' | 'recovery' | 'otp'>('login');
+  const [mode, setMode] = useState<'login' | 'forgot'>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [selectedPhone, setSelectedPhone] = useState<string>(RECOVERY_PHONES[0]);
-  const [otp, setOtp] = useState('');
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -52,21 +42,13 @@ export function SuperadminAuthModal({ isOpen, onClose, onSuccess }: Props) {
     e.preventDefault();
     setError('');
     setIsSubmitting(true);
-
     try {
-      const ok = unlockSuperadmin(email, password);
+      const ok = await signInSuperadmin(email, password);
       if (!ok) {
-        setError('Invalid Superadmin credentials. Check email & password or reset via phone.');
+        setError(useAuthStore.getState().authError || 'Invalid email or password.');
         return;
       }
-      try {
-        await setSuperadminSession(email);
-        syncRealIdentity();
-      } catch (sessionError) {
-        lockSuperadmin();
-        setError(sessionError instanceof Error ? sessionError.message : 'Failed to establish superadmin session.');
-        return;
-      }
+      syncRealIdentity();
       setSuccessMsg('Superadmin privileges activated!');
       setTimeout(() => {
         onSuccess?.();
@@ -77,40 +59,20 @@ export function SuperadminAuthModal({ isOpen, onClose, onSuccess }: Props) {
     }
   };
 
-  const handleRequestOtp = (e: React.FormEvent) => {
+  const handleForgotSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    const res = requestPhoneRecoveryOtp(selectedPhone);
-    if (res.success) {
-      setSuccessMsg(res.message);
-      setMode('otp');
-    } else {
-      setError(res.message);
-    }
-  };
-
-  const handleVerifyOtp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-    const res = verifyPhoneRecoveryOtp(selectedPhone, otp);
-    if (!res.success) {
-      setError(res.message || 'Invalid or expired OTP.');
-      return;
-    }
-    unlockSuperadmin(undefined, undefined, true); // skip verification on successful OTP
+    setIsSubmitting(true);
     try {
-      await setSuperadminSession(SUPERADMIN_EMAIL);
-      syncRealIdentity();
-    } catch (sessionError) {
-      lockSuperadmin();
-      setError(sessionError instanceof Error ? sessionError.message : 'Failed to establish superadmin session.');
-      return;
+      const res = await requestSuperadminPasswordReset(email);
+      if (res.success) {
+        setSuccessMsg(res.message);
+      } else {
+        setError(res.message);
+      }
+    } finally {
+      setIsSubmitting(false);
     }
-    setSuccessMsg('Phone verified! Superadmin session unlocked.');
-    setTimeout(() => {
-      onSuccess?.();
-      onClose();
-    }, 500);
   };
 
   return (
@@ -144,10 +106,10 @@ export function SuperadminAuthModal({ isOpen, onClose, onSuccess }: Props) {
             </div>
             <div>
               <h3 style={{ fontSize: '17px', fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>
-                {mode === 'login' ? 'Superadmin Login' : mode === 'recovery' ? 'Password Recovery' : 'Enter Verification OTP'}
+                {mode === 'login' ? 'Superadmin Login' : 'Reset Password'}
               </h3>
               <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-                {mode === 'login' ? 'Master administrative access' : 'Authorized phone verification'}
+                {mode === 'login' ? 'Master administrative access' : "We'll email you a reset link"}
               </span>
             </div>
           </div>
@@ -209,7 +171,7 @@ export function SuperadminAuthModal({ isOpen, onClose, onSuccess }: Props) {
                 className="input-field"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="Superadmin@triptracker.com"
+                placeholder="you@example.com"
               />
             </div>
 
@@ -230,10 +192,10 @@ export function SuperadminAuthModal({ isOpen, onClose, onSuccess }: Props) {
                   onClick={() => {
                     setError('');
                     setSuccessMsg('');
-                    setMode('recovery');
+                    setMode('forgot');
                   }}
                 >
-                  Forgot / Reset via Phone?
+                  Forgot password?
                 </button>
               </div>
               <input
@@ -258,43 +220,18 @@ export function SuperadminAuthModal({ isOpen, onClose, onSuccess }: Props) {
           </form>
         )}
 
-        {mode === 'recovery' && (
-          <form onSubmit={handleRequestOtp}>
-            <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '16px', lineHeight: '1.4' }}>
-              Select one of the registered authorized recovery phone numbers to receive the verification OTP and reset credentials:
-            </p>
-
+        {mode === 'forgot' && (
+          <form onSubmit={handleForgotSubmit}>
             <div className="form-group" style={{ marginBottom: '20px' }}>
-              <label className="form-label">Authorized Recovery Phone</label>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '6px' }}>
-                {RECOVERY_PHONES.map((phone) => (
-                  <label
-                    key={phone}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '10px',
-                      padding: '10px 14px',
-                      borderRadius: '10px',
-                      border: selectedPhone === phone ? '1.5px solid var(--primary-accent)' : '1px solid var(--border-color)',
-                      background: selectedPhone === phone ? 'rgba(31, 110, 104, 0.08)' : 'var(--bg-surface)',
-                      cursor: 'pointer',
-                      fontSize: '13.5px',
-                      fontWeight: selectedPhone === phone ? 600 : 400,
-                      color: 'var(--text-primary)',
-                    }}
-                  >
-                    <input
-                      type="radio"
-                      name="recoveryPhone"
-                      value={phone}
-                      checked={selectedPhone === phone}
-                      onChange={() => setSelectedPhone(phone)}
-                    />
-                    <span>{maskPhoneNumber(phone)} <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>({phone})</span></span>
-                  </label>
-                ))}
-              </div>
+              <label className="form-label">Superadmin Email</label>
+              <input
+                type="email"
+                required
+                className="input-field"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@example.com"
+              />
             </div>
 
             <div style={{ display: 'flex', gap: '10px' }}>
@@ -310,59 +247,8 @@ export function SuperadminAuthModal({ isOpen, onClose, onSuccess }: Props) {
               >
                 Back to Login
               </button>
-              <button
-                type="submit"
-                className="primary-btn"
-                style={{ flex: 1, padding: '10px' }}
-              >
-                Send OTP
-              </button>
-            </div>
-          </form>
-        )}
-
-        {mode === 'otp' && (
-          <form onSubmit={handleVerifyOtp}>
-            <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '14px', lineHeight: '1.4' }}>
-              Enter the 6-digit verification code sent to <strong>{maskPhoneNumber(selectedPhone)}</strong>:
-            </p>
-
-            <div className="form-group" style={{ marginBottom: '20px' }}>
-              <label className="form-label">Verification OTP</label>
-              <input
-                type="text"
-                required
-                maxLength={6}
-                className="input-field"
-                style={{ fontSize: '18px', letterSpacing: '0.25em', textAlign: 'center', fontWeight: 700 }}
-                placeholder="849201"
-                value={otp}
-                onChange={(e) => setOtp(e.target.value)}
-                autoFocus
-              />
-              <span style={{ fontSize: '11.5px', color: 'var(--text-muted)', marginTop: '4px', display: 'block' }}>
-                Default demo OTP: <strong>849201</strong>
-              </span>
-            </div>
-
-            <div style={{ display: 'flex', gap: '10px' }}>
-              <button
-                type="button"
-                className="secondary-btn"
-                style={{ flex: 1, padding: '10px' }}
-                onClick={() => {
-                  setError('');
-                  setMode('recovery');
-                }}
-              >
-                Change Phone
-              </button>
-              <button
-                type="submit"
-                className="primary-btn"
-                style={{ flex: 1, padding: '10px' }}
-              >
-                Verify &amp; Unlock
+              <button type="submit" className="primary-btn" style={{ flex: 1, padding: '10px' }} disabled={isSubmitting}>
+                {isSubmitting ? 'Sending...' : 'Send Reset Link'}
               </button>
             </div>
           </form>

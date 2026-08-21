@@ -154,6 +154,22 @@ export async function fetchExpensesForTrip(tripId: string): Promise<Expense[]> {
   return (data ?? []).map(mapExpense);
 }
 
+// Admin Portal only: fetchMyTripGraph() deliberately fetches just trip_id
+// (a count, not amounts) since the traveler app only ever needs one trip's
+// expenses at a time via fetchExpensesForTrip. Cross-trip analytics needs
+// real rows for every trip the caller can see, which for a superadmin is
+// every trip (RLS via is_superadmin(), see migration 0054).
+export async function fetchAllExpensesForTrips(tripIds: string[]): Promise<Expense[]> {
+  if (tripIds.length === 0) return [];
+  const { data, error } = await supabase
+    .from('expenses')
+    .select('*')
+    .in('trip_id', tripIds)
+    .is('deleted_at', null);
+  if (error) throw error;
+  return (data ?? []).map(mapExpense);
+}
+
 export async function fetchDeletedExpensesForTrip(tripId: string): Promise<Expense[]> {
   const cutoffIso = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
   const { data, error } = await supabase

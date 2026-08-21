@@ -27,7 +27,7 @@ type Props = {
   onRequestConfirm?: (request: ConfirmRequest) => void;
 };
 
-type StatusFilter = 'all' | 'open' | 'in_progress' | 'resolved' | 'critical';
+type StatusFilter = 'all' | 'open' | 'in_progress' | 'resolved' | 'wont_fix' | 'critical';
 
 const CATEGORIES: { value: BugRecord['category']; label: string }[] = [
   { value: 'navigation', label: 'Navigation & Routing' },
@@ -125,6 +125,7 @@ export function SuperAdminBugTracker({ onBack, isAdmin = true, onRequestConfirm 
       if (statusFilter === 'open' && bug.status !== 'open') return false;
       if (statusFilter === 'in_progress' && bug.status !== 'in_progress') return false;
       if (statusFilter === 'resolved' && bug.status !== 'resolved') return false;
+      if (statusFilter === 'wont_fix' && bug.status !== 'wont_fix') return false;
       if (statusFilter === 'critical' && bug.severity !== 'critical') return false;
 
       if (categoryFilter !== 'all' && bug.category !== categoryFilter) return false;
@@ -138,8 +139,9 @@ export function SuperAdminBugTracker({ onBack, isAdmin = true, onRequestConfirm 
     const open = bugs.filter((b) => b.status === 'open').length;
     const inProgress = bugs.filter((b) => b.status === 'in_progress').length;
     const resolved = bugs.filter((b) => b.status === 'resolved').length;
+    const wontFix = bugs.filter((b) => b.status === 'wont_fix').length;
     const critical = bugs.filter((b) => b.severity === 'critical' && b.status !== 'resolved').length;
-    return { total, open, inProgress, resolved, critical };
+    return { total, open, inProgress, resolved, wontFix, critical };
   }, [bugs]);
 
   const handleCreateBug = async (e: React.FormEvent) => {
@@ -191,7 +193,7 @@ export function SuperAdminBugTracker({ onBack, isAdmin = true, onRequestConfirm 
     }
   };
 
-  const handleStatusChange = async (bug: BugRecord, newStatus: 'open' | 'in_progress' | 'resolved') => {
+  const handleStatusChange = async (bug: BugRecord, newStatus: 'open' | 'in_progress' | 'resolved' | 'wont_fix') => {
     if (newStatus === 'resolved') {
       setResolvingBug(bug);
       setResolutionNote(bug.resolutionNote || '');
@@ -356,6 +358,10 @@ ${bug.diagnostics?.stackTrace ? `#### Stack Trace\n\`\`\`text\n${bug.diagnostics
           <span className="n" style={{ color: 'var(--safe)' }}>{stats.resolved}</span>
           <span className="l">Settled</span>
         </button>
+        <button type="button" className="ops-stat-btn" data-active={statusFilter === 'wont_fix'} onClick={() => setStatusFilter('wont_fix')}>
+          <span className="n" style={{ color: 'var(--text-tertiary)' }}>{stats.wontFix}</span>
+          <span className="l">Won't Fix</span>
+        </button>
         <button type="button" className="ops-stat-btn" data-active={statusFilter === 'critical'} onClick={() => setStatusFilter('critical')}>
           <span className="n" style={{ color: 'var(--danger)' }}>{stats.critical}</span>
           <span className="l">Critical</span>
@@ -491,16 +497,28 @@ ${bug.diagnostics?.stackTrace ? `#### Stack Trace\n\`\`\`text\n${bug.diagnostics
                         </button>
                       )}
 
-                      {bug.status !== 'resolved' ? (
+                      {bug.status !== 'resolved' && bug.status !== 'wont_fix' && (
                         <button
                           type="button"
                           className="ops-btn"
                           onClick={() => handleStatusChange(bug, 'resolved')}
-                          style={{ color: 'var(--safe)', borderColor: 'rgba(74,222,154,0.4)' }}
+                          style={{ color: 'var(--safe)', borderColor: 'var(--safe-line)' }}
                         >
                           Mark settled
                         </button>
-                      ) : (
+                      )}
+
+                      {bug.status !== 'resolved' && bug.status !== 'wont_fix' && (
+                        <button
+                          type="button"
+                          className="ops-btn"
+                          onClick={() => handleStatusChange(bug, 'wont_fix')}
+                        >
+                          Won't fix
+                        </button>
+                      )}
+
+                      {(bug.status === 'resolved' || bug.status === 'wont_fix') && (
                         <button type="button" className="ops-btn" onClick={() => handleStatusChange(bug, 'open')}>
                           Reopen
                         </button>

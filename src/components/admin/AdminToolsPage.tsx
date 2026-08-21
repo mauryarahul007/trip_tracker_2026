@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import type { Category } from '../../types';
 import { useTripStore } from '../../store/tripStore';
-import { IconCheck, IconTrash } from '../Icons';
+import { useAuthStore } from '../../store/authStore';
+import { IconCheck, IconTrash, IconAlertCircle } from '../Icons';
 
 interface Props {
   categories: Category[];
@@ -16,6 +17,7 @@ export function AdminToolsPage({ categories }: Props) {
   const resetCategoryKeywords = useTripStore((s) => s.resetCategoryKeywords);
   const addCategory = useTripStore((s) => s.addCategory);
   const deleteCategory = useTripStore((s) => s.deleteCategory);
+  const updateOwnPassword = useAuthStore((s) => s.updateOwnPassword);
 
   const [selectedCatId, setSelectedCatId] = useState<string>(categories[0]?.id || 'cat-food');
   const [newTagInput, setNewTagInput] = useState('');
@@ -26,9 +28,42 @@ export function AdminToolsPage({ categories }: Props) {
   const [showImportArea, setShowImportArea] = useState(false);
   const [toastMsg, setToastMsg] = useState('');
 
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+
   const showToast = (msg: string) => {
     setToastMsg(msg);
     setTimeout(() => setToastMsg(''), 3000);
+  };
+
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPasswordError('');
+
+    if (newPassword.length < 8) {
+      setPasswordError('Password must be at least 8 characters.');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setPasswordError('Passwords do not match.');
+      return;
+    }
+
+    setIsChangingPassword(true);
+    try {
+      const res = await updateOwnPassword(newPassword);
+      if (res.success) {
+        showToast(res.message);
+        setNewPassword('');
+        setConfirmPassword('');
+      } else {
+        setPasswordError(res.message);
+      }
+    } finally {
+      setIsChangingPassword(false);
+    }
   };
 
   const activeCategory = categories.find((c) => c.id === selectedCatId) || categories[0];
@@ -116,6 +151,47 @@ export function AdminToolsPage({ categories }: Props) {
       )}
 
       <div className="ops-tools-grid">
+        <div className="ops-card">
+          <h3 className="ops-section-title">Change Your Password</h3>
+          <p className="ops-section-sub">Updates the password for this superadmin account. You'll stay signed in.</p>
+
+          {passwordError && (
+            <div className="ops-toast" style={{ background: 'var(--danger-dim)', borderColor: 'var(--danger-line)', color: 'var(--danger)', marginBottom: '12px' }}>
+              <IconAlertCircle size={14} /> {passwordError}
+            </div>
+          )}
+
+          <form onSubmit={handleChangePassword} style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxWidth: '340px' }}>
+            <div className="ops-form-group">
+              <label className="ops-form-label">New Password</label>
+              <input
+                type="password"
+                required
+                minLength={8}
+                className="ops-input"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="••••••••••••"
+              />
+            </div>
+            <div className="ops-form-group">
+              <label className="ops-form-label">Confirm New Password</label>
+              <input
+                type="password"
+                required
+                minLength={8}
+                className="ops-input"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="••••••••••••"
+              />
+            </div>
+            <button type="submit" className="ops-btn ops-btn-primary" style={{ alignSelf: 'flex-start' }} disabled={isChangingPassword}>
+              {isChangingPassword ? 'Updating...' : 'Update Password'}
+            </button>
+          </form>
+        </div>
+
         <div className="ops-card">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '10px', marginBottom: '4px' }}>
             <div>

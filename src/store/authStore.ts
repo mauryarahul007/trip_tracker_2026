@@ -6,7 +6,7 @@ import { App as CapacitorApp } from '@capacitor/app';
 import { supabase, isMissingSupabaseEnv } from '../services/supabaseClient';
 import { buildOAuthRedirectUrl, parseNativeAuthCallback } from '../utils/nativeAuth';
 import { registerForPushNotifications, unregisterPushNotifications } from '../services/pushRegistration';
-import { SUPERADMIN_EMAIL, SUPERADMIN_PASSWORD } from '../utils/superadminAuth';
+import { useTripStore } from './tripStore';
 
 interface AuthStore {
   session: Session | null;
@@ -17,7 +17,9 @@ interface AuthStore {
   signInWithGoogle: (redirectPath?: string) => Promise<void>;
   signInAsDemoUser: () => void;
   signInAsGuest: (displayName?: string) => void;
-  setSuperadminSession: (email?: string) => Promise<void>;
+  signInSuperadmin: (email: string, password: string) => Promise<boolean>;
+  requestSuperadminPasswordReset: (email: string) => Promise<{ success: boolean; message: string }>;
+  updateOwnPassword: (newPassword: string) => Promise<{ success: boolean; message: string }>;
   signOut: () => Promise<void>;
   clearAuthError: () => void;
 }
@@ -37,6 +39,14 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
         const parsed = JSON.parse(storedDemo);
         if (parsed?.user) {
           set({ session: parsed });
+          // A demo session is never a real Supabase Auth session -- it
+          // can't back is_superadmin()-gated calls (updateUser, RLS
+          // writes). Any persisted isSuperadmin from a previous real
+          // login doesn't apply here, or the admin UI renders over a
+          // session with nothing real behind it.
+          if (useTripStore.getState().isSuperadmin) {
+            useTripStore.getState().setIsSuperadmin(false);
+          }
           return;
         }
       } catch {
@@ -44,9 +54,27 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
       }
     }
 
-    supabase.auth.getSession().then(({ data }) => {
+    supabase.auth.getSession().then(async ({ data }) => {
       if (data?.session) {
         set({ session: data.session });
+      }
+
+      // A persisted `isSuperadmin=true` (tripStore survives reloads via
+      // IndexedDB) is only trustworthy if today's real session still
+      // passes is_superadmin() -- closes the "flip it in devtools/
+      // localStorage" gap without ever auto-elevating a Google session
+      // that never went through the admin login path in the first place.
+      if (useTripStore.getState().isSuperadmin && !isMissingSupabaseEnv) {
+        if (!data?.session) {
+          useTripStore.getState().setIsSuperadmin(false);
+        } else {
+          try {
+            const { data: verified } = await supabase.rpc('is_superadmin');
+            if (!verified) useTripStore.getState().setIsSuperadmin(false);
+          } catch {
+            useTripStore.getState().setIsSuperadmin(false);
+          }
+        }
       }
     }).catch(() => {
       // ignore network errors for offline/dummy supabase
@@ -161,10 +189,10 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
     set({ session: mockSession, authError: null });
   },
 
-  setSuperadminSession: async (email = SUPERADMIN_EMAIL) => {
+  signInSuperadmin: async (email: string, password: string) => {
     // Without a real Supabase project there's nothing to authenticate
-    // against — fall back to the old local-only mock session so the
-    // portal is still demoable offline.
+    // against — accept any credentials for the local-only mock session so
+    // the portal stays demoable offline (same trust level as Guest/Demo).
     if (isMissingSupabaseEnv) {
       const mockSession = {
         access_token: 'superadmin-local-token',
@@ -181,22 +209,58 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
         },
       } as unknown as Session;
       set({ session: mockSession, authError: null });
-      return;
+      useTripStore.getState().setIsSuperadmin(true);
+      return true;
     }
 
     // Real superadmin identity (see supabase/migrations/0045_superadmin_identity_and_rls.sql):
-    // this must be a genuine Supabase Auth session so RLS's is_superadmin()
-    // recognizes it — a faked session can't pass auth.uid() checks.
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email: SUPERADMIN_EMAIL,
-      password: SUPERADMIN_PASSWORD,
-    });
+    // sign in with whatever the caller typed -- no shared/hardcoded account
+    // -- then require the RLS-side is_superadmin() check to pass before
+    // granting the admin UI. A successful password sign-in alone is not
+    // enough: any registered user could type their own real credentials.
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error || !data.session) {
-      const message = error?.message || 'Failed to establish superadmin session.';
-      set({ authError: message });
-      throw new Error(message);
+      set({ authError: error?.message || 'Invalid email or password.' });
+      return false;
     }
+
+    const { data: verified, error: rpcError } = await supabase.rpc('is_superadmin');
+    if (rpcError || !verified) {
+      await supabase.auth.signOut();
+      set({ session: null, authError: 'This account is not authorized as a superadmin.' });
+      return false;
+    }
+
     set({ session: data.session, authError: null });
+    useTripStore.getState().setIsSuperadmin(true);
+    return true;
+  },
+
+  requestSuperadminPasswordReset: async (email: string) => {
+    if (isMissingSupabaseEnv) {
+      return { success: false, message: 'Password reset needs a real Supabase project configured.' };
+    }
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    if (error) {
+      return { success: false, message: error.message };
+    }
+    return { success: true, message: `If ${email} is registered, a reset link has been sent.` };
+  },
+
+  // Used from inside the Admin Portal (already authenticated) so an admin
+  // can rotate their own password without leaving the session -- separate
+  // from requestSuperadminPasswordReset, which is the logged-out flow.
+  updateOwnPassword: async (newPassword: string) => {
+    if (isMissingSupabaseEnv) {
+      return { success: false, message: 'Password change needs a real Supabase project configured.' };
+    }
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    if (error) {
+      return { success: false, message: error.message };
+    }
+    return { success: true, message: 'Password updated.' };
   },
 
   signOut: async () => {
@@ -212,6 +276,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
     } catch {
       // Ignore network errors on signout
     }
+    useTripStore.getState().setIsSuperadmin(false);
     set({ session: null });
   },
 

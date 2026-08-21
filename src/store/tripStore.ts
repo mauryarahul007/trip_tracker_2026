@@ -3,7 +3,6 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import type { Member, Group, Expense, Category, TripState, ExpenseLocation, Trip } from '../types';
 import type { FeatureFlagKey } from '../types/admin';
 import { DEFAULT_FEATURE_FLAGS, isFeatureActive } from '../utils/featureFlags';
-import { verifySuperadminCredentials } from '../utils/superadminAuth';
 import { supabase, isMissingSupabaseEnv } from '../services/supabaseClient';
 import {
   fetchMyTripGraph,
@@ -108,7 +107,7 @@ interface TripStore extends TripState {
   featureFlags: Record<FeatureFlagKey, boolean>;
   tripFlagOverrides: Record<string, Record<string, boolean>>;
   userFlagOverrides: Record<string, Record<string, boolean>>;
-  unlockSuperadmin: (email?: string, password?: string, skipVerify?: boolean) => boolean;
+  setIsSuperadmin: (value: boolean) => void;
   lockSuperadmin: () => void;
   setUserIdentity: (userId: string, displayName: string | null) => void;
   setFeatureFlag: (key: FeatureFlagKey, value: boolean) => void;
@@ -382,17 +381,17 @@ export const useTripStore = create<TripStore>()(
     tripFlagOverrides: {},
     userFlagOverrides: {},
 
-    unlockSuperadmin: (email?: string, password?: string, skipVerify?: boolean) => {
-      if (skipVerify || verifySuperadminCredentials(email, password)) {
-        set((s) => ({
-          isSuperadmin: true,
-          userId: s.userId || 'superadmin-root-user-id',
-          userDisplayName: s.userDisplayName || 'Super Admin',
-          lastModifiedAt: Date.now(),
-        }));
-        return true;
-      }
-      return false;
+    // Trusts the caller: authStore's signInSuperadmin only calls this after
+    // Supabase's is_superadmin() RPC confirms the real, signed-in session is
+    // in the superadmins table (see supabase/migrations/0045). This store
+    // never verifies credentials itself.
+    setIsSuperadmin: (value: boolean) => {
+      set((s) => ({
+        isSuperadmin: value,
+        userId: value ? s.userId || 'superadmin-root-user-id' : s.userId,
+        userDisplayName: value ? s.userDisplayName || 'Super Admin' : s.userDisplayName,
+        lastModifiedAt: Date.now(),
+      }));
     },
 
     setUserIdentity: (userId: string, displayName: string | null) => {

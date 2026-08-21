@@ -1,37 +1,104 @@
 /* Ops Deck — superadmin portal visual system. Scoped under .ops-deck so it
    never leaks into the traveler app's cream/teal theme.
 
-   "Signal Room" direction: an observability console (Grafana/Datadog
-   register), not a flight-deck. One accent (violet) carries emphasis;
-   mint/coral are reserved strictly for status. Rounded glass cards
-   replace the bracket-cornered relay-panel look. */
+   "Ledger Ops" direction: the same observability-console register (Grafana/
+   Datadog, not a flight-deck) rebuilt on the traveler app's own teal/cream
+   identity, so the Bug Ledger and the Ops Deck read as one product instead
+   of a bolted-on dark theme. One accent (teal) carries emphasis; mint/coral
+   are reserved strictly for status. Responds to the same light/dark/system
+   choice as the rest of the app (data-theme on :root, set in App.tsx). */
 
 .ops-deck {
-  --bg-void: #0B0E14;
-  --bg-panel: #12151D;
-  --bg-panel-raised: #171B25;
-  --bg-inset: rgba(255, 255, 255, 0.03);
-  --line: rgba(255, 255, 255, 0.08);
-  --line-strong: rgba(255, 255, 255, 0.14);
-  --text-primary: #ECEEF5;
-  --text-secondary: #8D93A6;
-  --text-tertiary: #565C6E;
-  --amber: #8B7CF6;
-  --amber-dim: rgba(139, 124, 246, 0.14);
-  --cyan: #8B7CF6;
-  --cyan-dim: rgba(139, 124, 246, 0.14);
-  --safe: #4ADE9A;
-  --safe-dim: rgba(74, 222, 154, 0.14);
-  --danger: #FF6B5E;
-  --danger-dim: rgba(255, 107, 94, 0.14);
+  --bg-void: #F6F3EA;
+  --bg-panel: #FFFFFF;
+  --bg-panel-raised: #FBF8F0;
+  --bg-inset: rgba(28, 42, 56, 0.035);
+  --line: rgba(28, 42, 56, 0.10);
+  --line-strong: rgba(28, 42, 56, 0.18);
+  --text-primary: #1C2A38;
+  --text-secondary: #5B6B72;
+  --text-tertiary: #93A0A6;
+  --amber: #1F6E68;
+  --amber-dim: rgba(31, 110, 104, 0.10);
+  --amber-line: rgba(31, 110, 104, 0.30);
+  --amber-deep: #14504B;
+  --amber-hover: #17544F;
+  --on-amber: #FFFFFF;
+  --cyan: #1F6E68;
+  --cyan-dim: rgba(31, 110, 104, 0.10);
+  --safe: #1FAE73;
+  --safe-dim: rgba(31, 174, 115, 0.12);
+  --safe-line: rgba(31, 174, 115, 0.35);
+  --danger: #B8452E;
+  --danger-dim: rgba(184, 69, 46, 0.12);
+  --danger-line: rgba(184, 69, 46, 0.30);
+  --danger-hover-dim: rgba(184, 69, 46, 0.18);
+  --radial-glow: rgba(31, 110, 104, 0.06);
   --mono: ui-monospace, "SF Mono", "Cascadia Mono", Consolas, "Liberation Mono", monospace;
   --display: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --body: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 
   background: var(--bg-void);
-  background-image: radial-gradient(ellipse 900px 500px at 20% -10%, rgba(139, 124, 246, 0.10), transparent 60%);
+  background-image: radial-gradient(ellipse 900px 500px at 20% -10%, var(--radial-glow), transparent 60%);
   color: var(--text-primary);
   font-family: var(--body);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .ops-deck {
+    --bg-void: #0D1614;
+    --bg-panel: #13201D;
+    --bg-panel-raised: #182924;
+    --bg-inset: rgba(242, 236, 220, 0.035);
+    --line: rgba(242, 236, 220, 0.09);
+    --line-strong: rgba(242, 236, 220, 0.16);
+    --text-primary: #F2ECDC;
+    --text-secondary: #9FB0AA;
+    --text-tertiary: #64766F;
+    --amber: #00BFA5;
+    --amber-dim: rgba(0, 191, 165, 0.14);
+    --amber-line: rgba(0, 191, 165, 0.35);
+    --amber-deep: #0A8E79;
+    --amber-hover: #22D6BA;
+    --on-amber: #0A1512;
+    --cyan: #00BFA5;
+    --cyan-dim: rgba(0, 191, 165, 0.14);
+    --safe: #4ADE9A;
+    --safe-dim: rgba(74, 222, 154, 0.14);
+    --safe-line: rgba(74, 222, 154, 0.35);
+    --danger: #FF6B5E;
+    --danger-dim: rgba(255, 107, 94, 0.14);
+    --danger-line: rgba(255, 107, 94, 0.35);
+    --danger-hover-dim: rgba(255, 107, 94, 0.18);
+    --radial-glow: rgba(0, 191, 165, 0.10);
+  }
+}
+:root[data-theme="dark"] .ops-deck {
+  --bg-void: #0D1614;
+  --bg-panel: #13201D;
+  --bg-panel-raised: #182924;
+  --bg-inset: rgba(242, 236, 220, 0.035);
+  --line: rgba(242, 236, 220, 0.09);
+  --line-strong: rgba(242, 236, 220, 0.16);
+  --text-primary: #F2ECDC;
+  --text-secondary: #9FB0AA;
+  --text-tertiary: #64766F;
+  --amber: #00BFA5;
+  --amber-dim: rgba(0, 191, 165, 0.14);
+  --amber-line: rgba(0, 191, 165, 0.35);
+  --amber-deep: #0A8E79;
+  --amber-hover: #22D6BA;
+  --on-amber: #0A1512;
+  --cyan: #00BFA5;
+  --cyan-dim: rgba(0, 191, 165, 0.14);
+  --safe: #4ADE9A;
+  --safe-dim: rgba(74, 222, 154, 0.14);
+  --safe-line: rgba(74, 222, 154, 0.35);
+  --danger: #FF6B5E;
+  --danger-dim: rgba(255, 107, 94, 0.14);
+  --danger-line: rgba(255, 107, 94, 0.35);
+  --danger-hover-dim: rgba(255, 107, 94, 0.18);
+  --radial-glow: rgba(0, 191, 165, 0.10);
 }
 
 .ops-deck * { box-sizing: border-box; }
@@ -60,7 +127,7 @@
   font-family: var(--display);
   font-weight: 800;
   font-size: 13px;
-  background: linear-gradient(135deg, var(--amber), #5B4FD1);
+  background: linear-gradient(135deg, var(--amber), var(--amber-deep));
   flex-shrink: 0;
 }
 
@@ -117,7 +184,7 @@
 }
 .ops-btn:hover { border-color: var(--amber); color: var(--text-primary); }
 .ops-btn:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
-.ops-btn-danger { border-color: rgba(255,107,94,0.3); color: var(--danger); }
+.ops-btn-danger { border-color: var(--danger-line); color: var(--danger); }
 .ops-btn-danger:hover { border-color: var(--danger); background: var(--danger-dim); color: var(--danger); }
 
 /* ---------- Layout: rail + panel ---------- */
@@ -179,7 +246,7 @@
 .ops-switch-item .ops-lbl { font-size: 12.5px; letter-spacing: 0; font-weight: 500; }
 .ops-switch-item[data-current="true"] .ops-lbl { font-weight: 600; }
 .ops-switch-item .ops-code { font-family: var(--mono); font-size: 9px; color: var(--text-tertiary); display: block; margin-top: 1px; }
-.ops-switch-item[data-current="true"] .ops-code { color: rgba(139,124,246,0.7); }
+.ops-switch-item[data-current="true"] .ops-code { color: var(--amber); }
 
 .ops-panel { min-width: 0; }
 
@@ -200,7 +267,7 @@
   padding: 10px 14px;
   border-radius: 20px;
   background: var(--safe-dim);
-  border: 1px solid rgba(74,222,154,0.35);
+  border: 1px solid var(--safe-line);
   color: var(--safe);
   font-family: var(--mono);
   font-size: 12px;
@@ -316,7 +383,7 @@
 .ops-currency-chip .cnt { font-size: 10.5px; color: var(--text-tertiary); margin-top: 2px; }
 
 /* ---------- Trips (manifest table) ---------- */
-.ops-notice { padding: 12px 14px; border-radius: 12px; background: var(--amber-dim); border: 1px solid rgba(139,124,246,0.3); font-size: 12.5px; color: var(--text-primary); line-height: 1.5; margin-bottom: 14px; }
+.ops-notice { padding: 12px 14px; border-radius: 12px; background: var(--amber-dim); border: 1px solid var(--amber-line); font-size: 12.5px; color: var(--text-primary); line-height: 1.5; margin-bottom: 14px; }
 .ops-notice strong { color: var(--amber); }
 
 .ops-filter-row { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
@@ -377,20 +444,20 @@
 .ops-maint-btn .ops-mb-icon { font-family: var(--mono); color: var(--amber); font-size: 11px; margin-bottom: 4px; display: block; letter-spacing: 0.04em; }
 .ops-maint-btn:focus-visible { outline: 2px solid var(--amber); outline-offset: 1px; }
 
-.ops-caution { border: 1.5px solid rgba(255,107,94,0.4); background: var(--bg-panel); }
+.ops-caution { border: 1.5px solid var(--danger-line); background: var(--bg-panel); }
 .ops-caution-head { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
 .ops-caution-head strong { font-size: 12px; letter-spacing: 0.02em; color: var(--danger); }
 .ops-caution p { font-size: 11.5px; color: var(--text-secondary); margin: 0 0 12px; line-height: 1.5; }
 
-.ops-guard-btn { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 12px; border-radius: 12px; border: 1.5px solid var(--danger); background: rgba(255,107,94,0.1); color: var(--danger); font-size: 11.5px; letter-spacing: 0.02em; cursor: pointer; }
-.ops-guard-btn:hover { background: rgba(255,107,94,0.18); }
+.ops-guard-btn { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 12px; border-radius: 12px; border: 1.5px solid var(--danger); background: var(--danger-dim); color: var(--danger); font-size: 11.5px; letter-spacing: 0.02em; cursor: pointer; }
+.ops-guard-btn:hover { background: var(--danger-hover-dim); }
 .ops-guard-btn:focus-visible { outline: 2px solid var(--danger); outline-offset: 2px; }
 
 /* ---------- Bug Ledger ---------- */
-.ops-btn-primary { background: var(--amber); border-color: var(--amber); color: #0B0E14; font-weight: 600; }
-.ops-btn-primary:hover { background: #7A6BF0; border-color: #7A6BF0; color: #0B0E14; }
+.ops-btn-primary { background: var(--amber); border-color: var(--amber); color: var(--on-amber); font-weight: 600; }
+.ops-btn-primary:hover { background: var(--amber-hover); border-color: var(--amber-hover); color: var(--on-amber); }
 
-.ops-stat-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
+.ops-stat-row { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; }
 @media (max-width: 640px) { .ops-stat-row { grid-template-columns: repeat(3, 1fr); } }
 .ops-stat-btn { background: var(--bg-panel); border: 1px solid var(--line); border-radius: 14px; padding: 12px 6px; cursor: pointer; text-align: center; }
 .ops-stat-btn:hover { border-color: var(--line-strong); }

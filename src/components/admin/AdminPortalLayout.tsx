@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import type { Category, Trip, Expense, Member } from '../../types';
 import { useTripStore } from '../../store/tripStore';
 import { useAuthStore } from '../../store/authStore';
+import { fetchAllExpensesForTrips } from '../../services/tripApi';
 import { AdminFlagsPage } from './AdminFlagsPage';
 import { AdminAnalyticsPage } from './AdminAnalyticsPage';
 import { AdminTripsPage } from './AdminTripsPage';
@@ -10,7 +11,6 @@ import './ops-deck.css';
 
 interface Props {
   trips: Trip[];
-  expenses: Expense[];
   members: Record<string, Member>;
   categories: Category[];
   onExitToTravelerApp?: () => void;
@@ -43,16 +43,38 @@ function useUtcClock() {
 
 export function AdminPortalLayout({
   trips,
-  expenses,
   members,
   categories,
   onExitToTravelerApp,
   onOpenBugTracker,
 }: Props) {
   const [activeTab, setActiveTab] = useState<AdminTab>('flags');
+  const [expenses, setExpenses] = useState<Expense[]>([]);
   const lockSuperadmin = useTripStore((s) => s.lockSuperadmin);
   const signOut = useAuthStore((s) => s.signOut);
   const clock = useUtcClock();
+
+  // The traveler app only ever loads one trip's expenses at a time
+  // (fetchExpensesForTrip); cross-trip analytics needs every trip's real
+  // rows, which RLS now allows for a superadmin (see migration 0054).
+  useEffect(() => {
+    const tripIds = trips.map((t) => t.id);
+    if (tripIds.length === 0) {
+      setExpenses([]);
+      return;
+    }
+    let cancelled = false;
+    fetchAllExpensesForTrips(tripIds)
+      .then((rows) => {
+        if (!cancelled) setExpenses(rows);
+      })
+      .catch(() => {
+        if (!cancelled) setExpenses([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [trips]);
 
   const handleAdminLogout = async () => {
     lockSuperadmin();

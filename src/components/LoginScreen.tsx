@@ -2,8 +2,11 @@ import { useEffect, useState } from 'react';
 import { Navigate, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { useTripStore } from '../store/tripStore';
+import { isMissingSupabaseEnv } from '../services/supabaseClient';
 import { IconMembers, IconShield } from './Icons';
 import { SuperadminAuthModal } from './SuperadminAuthModal';
+
+const showDevFallbacks = import.meta.env.DEV || isMissingSupabaseEnv;
 
 export function LoginScreen() {
   const [searchParams] = useSearchParams();
@@ -83,17 +86,19 @@ export function LoginScreen() {
             >
               <div>{authError}</div>
               <div style={{ marginTop: '8px', display: 'flex', gap: '8px' }}>
-                <button
-                  type="button"
-                  onClick={() => {
-                    signInAsGuest();
-                    navigate(redirectPath, { replace: true });
-                  }}
-                  className="primary-btn"
-                  style={{ padding: '4px 10px', fontSize: '11.5px' }}
-                >
-                  Continue as Guest
-                </button>
+                {showDevFallbacks && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      signInAsGuest();
+                      navigate(redirectPath, { replace: true });
+                    }}
+                    className="primary-btn"
+                    style={{ padding: '4px 10px', fontSize: '11.5px' }}
+                  >
+                    Continue as Guest
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={clearAuthError}
@@ -144,26 +149,28 @@ export function LoginScreen() {
             <span>Sign in with Google</span>
           </button>
 
-          {/* Quick guest login link */}
-          <div style={{ marginTop: '10px' }}>
-            <button
-              type="button"
-              onClick={() => {
-                signInAsGuest();
-                navigate(redirectPath, { replace: true });
-              }}
-              style={{
-                background: 'transparent',
-                border: 'none',
-                color: 'var(--text-secondary)',
-                fontSize: '12.5px',
-                cursor: 'pointer',
-                textDecoration: 'underline',
-              }}
-            >
-              Continue as Guest Traveler
-            </button>
-          </div>
+          {/* Quick guest login link — local dev / no Supabase project only */}
+          {showDevFallbacks && (
+            <div style={{ marginTop: '10px' }}>
+              <button
+                type="button"
+                onClick={() => {
+                  signInAsGuest();
+                  navigate(redirectPath, { replace: true });
+                }}
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  color: 'var(--text-secondary)',
+                  fontSize: '12.5px',
+                  cursor: 'pointer',
+                  textDecoration: 'underline',
+                }}
+              >
+                Continue as Guest Traveler
+              </button>
+            </div>
+          )}
 
           {/* Divider */}
           <div style={{ display: 'flex', alignItems: 'center', margin: '18px 0 14px', gap: '10px' }}>
@@ -196,8 +203,10 @@ export function LoginScreen() {
           </button>
 
           {/* Local dev convenience — instant no-credential session for
-              testing trips/settings. Not a superadmin identity: it doesn't
-              match SUPERADMIN_EMAIL, so it won't unlock the admin portal. */}
+              testing trips/settings. Not a superadmin identity — it never
+              touches the superadmins table, so it won't unlock the admin
+              portal. Hidden outside dev / a real Supabase project. */}
+          {showDevFallbacks && (
           <button
             type="button"
             onClick={() => signInAsDemoUser()}
@@ -221,6 +230,7 @@ export function LoginScreen() {
           >
             <span>Continue in Demo Mode (Local Testing)</span>
           </button>
+          )}
 
           <p style={{ marginTop: '18px', fontSize: '12px', color: 'var(--text-secondary)' }}>
             Normal users can log in with Google to create or join trips.
