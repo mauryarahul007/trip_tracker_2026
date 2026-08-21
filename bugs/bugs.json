@@ -1,334 +1,5 @@
 [
   {
-    "id": "BUG-001",
-    "title": "Hardware swipe-back gesture blocked by scroll-lock touch-action",
-    "description": "On Android and mobile web, the CSS touch-action: none on the root container prevented the native browser swipe-back gesture from firing.",
-    "severity": "medium",
-    "category": "navigation",
-    "status": "resolved",
-    "foundBy": "claude-cli",
-    "environment": {
-      "platform": "android",
-      "isOnline": true,
-      "appVersion": "1.0.0",
-      "route": "#/trip/road-trip-goa"
-    },
-    "reproSteps": [
-      "Open any trip on an Android mobile device",
-      "Attempt to swipe from the left edge of the screen to go back",
-      "Observe that the swipe gesture is unresponsive"
-    ],
-    "expectedBehavior": "Native swipe-back navigates back to previous screen smoothly.",
-    "actualBehavior": "Swipe gesture was swallowed by touch-action: none.",
-    "diagnostics": {
-      "stackTrace": "N/A - CSS styling constraint",
-      "syncQueueLength": 0
-    },
-    "createdAt": "2026-08-15T10:00:00.000Z",
-    "updatedAt": "2026-08-16T12:00:00.000Z",
-    "resolvedAt": "2026-08-16T12:00:00.000Z",
-    "resolvedBy": "claude-cli",
-    "resolutionNote": "Fixed in commit by scoping touch-action to individual swipeable rows instead of whole viewport."
-  },
-  {
-    "id": "BUG-002",
-    "title": "Offline-captured receipt photos caused localStorage QuotaExceededError",
-    "description": "Large base64-encoded receipt photos captured while offline filled localStorage beyond the 5MB browser quota.",
-    "severity": "high",
-    "category": "receipts-camera",
-    "status": "resolved",
-    "foundBy": "antigravity",
-    "environment": {
-      "platform": "web",
-      "isOnline": false,
-      "appVersion": "1.0.0",
-      "route": "#/trip/road-trip-goa/expense/new"
-    },
-    "reproSteps": [
-      "Go offline (airplane mode)",
-      "Capture 3 high-resolution receipt images in expense forms",
-      "Save the expenses"
-    ],
-    "expectedBehavior": "Receipt photos stage safely offline without exceeding quota.",
-    "actualBehavior": "localStorage threw QuotaExceededError and dropped subsequent writes.",
-    "diagnostics": {
-      "stackTrace": "DOMException: Failed to execute 'setItem' on 'Storage': Setting the value of 'trip_tracker_state' exceeded the quota.",
-      "syncQueueLength": 3
-    },
-    "createdAt": "2026-08-16T14:30:00.000Z",
-    "updatedAt": "2026-08-16T18:00:00.000Z",
-    "resolvedAt": "2026-08-16T18:00:00.000Z",
-    "resolvedBy": "antigravity",
-    "resolutionNote": "Created dedicated IndexedDB store (offlineReceiptStore.ts) to hold offline photos separately from localStorage state."
-  },
-  {
-    "id": "BUG-003",
-    "title": "Offline/online toggle briefly signed the user out, flashing login screen",
-    "description": "Supabase GoTrue client fired onAuthStateChange with a null session whenever token refresh failed during a momentary offline blip, causing RequireAuth to unmount the entire app and redirect to /login.",
-    "severity": "high",
-    "category": "auth",
-    "status": "resolved",
-    "foundBy": "antigravity",
-    "environment": {
-      "platform": "web",
-      "isOnline": false,
-      "appVersion": "1.0.0",
-      "route": "#/trip/road-trip-goa"
-    },
-    "reproSteps": [
-      "Log into the application",
-      "Toggle network offline in Chrome DevTools",
-      "Observe that the app immediately unmounts and redirects to the login screen"
-    ],
-    "expectedBehavior": "The user stays authenticated offline with cached credentials.",
-    "actualBehavior": "Transient null sessions triggered full sign-out redirect.",
-    "diagnostics": {
-      "stackTrace": "RequireAuth.tsx:21 Navigate to /login (session was null on TOKEN_REFRESHED failure)",
-      "syncQueueLength": 0
-    },
-    "createdAt": "2026-08-16T15:00:00.000Z",
-    "updatedAt": "2026-08-16T17:30:00.000Z",
-    "resolvedAt": "2026-08-16T17:30:00.000Z",
-    "resolvedBy": "antigravity",
-    "resolutionNote": "Updated authStore.ts onAuthStateChange to ignore transient null sessions unless event is explicitly SIGNED_OUT."
-  },
-  {
-    "id": "BUG-004",
-    "title": "Member deletion, update, and archiving lacked offline queue support",
-    "description": "deleteMember, updateMember, and toggleArchiveMember directly called Supabase APIs with no optimistic local updates or offline queueing, throwing network errors when disconnected.",
-    "severity": "high",
-    "category": "offline-sync",
-    "status": "resolved",
-    "foundBy": "claude-cli",
-    "environment": {
-      "platform": "android",
-      "isOnline": false,
-      "appVersion": "1.0.0",
-      "route": "#/trip/road-trip-goa/members"
-    },
-    "reproSteps": [
-      "Go offline",
-      "Navigate to Members tab and edit or delete a member",
-      "Observe action fails with uncaught network exception"
-    ],
-    "expectedBehavior": "Member edits apply optimistically and queue for background sync upon reconnection.",
-    "actualBehavior": "Network error thrown and local state reverted.",
-    "diagnostics": {
-      "stackTrace": "TypeError: Failed to fetch at deleteMemberRow (tripApi.ts:182)",
-      "syncQueueLength": 0
-    },
-    "createdAt": "2026-08-16T16:00:00.000Z",
-    "updatedAt": "2026-08-16T19:00:00.000Z",
-    "resolvedAt": "2026-08-16T19:00:00.000Z",
-    "resolvedBy": "claude-cli",
-    "resolutionNote": "Implemented full offline-first mutation handlers in tripStore.ts with queueSync actions (deleteMember, updateMember, toggleArchiveMember)."
-  },
-  {
-    "id": "BUG-005",
-    "title": "Creating a new trip while offline silently failed without offline path",
-    "description": "createTrip attempted immediate Supabase relational graph insertion without generating local temporary trip entities or persisting them to offline storage.",
-    "severity": "high",
-    "category": "offline-sync",
-    "status": "resolved",
-    "foundBy": "antigravity",
-    "environment": {
-      "platform": "web",
-      "isOnline": false,
-      "appVersion": "1.0.0",
-      "route": "#/"
-    },
-    "reproSteps": [
-      "Disconnect from internet",
-      "Tap '+ New Trip', enter details and submit",
-      "Observe that new trip never appears in the list"
-    ],
-    "expectedBehavior": "Trip is created with local ID, auto-selected, and queued for server sync.",
-    "actualBehavior": "Operation aborted on network failure with no offline fallback.",
-    "diagnostics": {
-      "stackTrace": "NetworkError when attempting to fetch resource at insertTripGraph (tripApi.ts:112)",
-      "syncQueueLength": 0
-    },
-    "createdAt": "2026-08-16T17:00:00.000Z",
-    "updatedAt": "2026-08-16T20:00:00.000Z",
-    "resolvedAt": "2026-08-16T20:00:00.000Z",
-    "resolvedBy": "antigravity",
-    "resolutionNote": "Added offline createTrip branch in tripStore.ts generating temp trip IDs and queuing createTrip mutations."
-  },
-  {
-    "id": "BUG-006",
-    "title": "Back navigation used same-URL pushState causing history loops",
-    "description": "useHistoryBack pushed duplicate entries on identical URLs, causing back-button presses to trigger unexpected state loops rather than popping modal screens.",
-    "severity": "medium",
-    "category": "navigation",
-    "status": "resolved",
-    "foundBy": "claude-cli",
-    "environment": {
-      "platform": "web",
-      "isOnline": true,
-      "appVersion": "1.0.0"
-    },
-    "reproSteps": [
-      "Open multiple modal sheets consecutively",
-      "Press the browser Back button repeatedly",
-      "Observe history gets trapped in same URL"
-    ],
-    "expectedBehavior": "Each back button press cleanly pops one layer of UI state.",
-    "actualBehavior": "Repeated back presses looped on the same screen.",
-    "diagnostics": {
-      "stackTrace": "useHistoryBack.ts:18 history.pushState called without unique hash delimiter"
-    },
-    "createdAt": "2026-08-15T18:00:00.000Z",
-    "updatedAt": "2026-08-16T11:00:00.000Z",
-    "resolvedAt": "2026-08-16T11:00:00.000Z",
-    "resolvedBy": "claude-cli",
-    "resolutionNote": "Converted useHistoryBack to push unique hash fragment URLs, creating unambiguous stack entries."
-  },
-  {
-    "id": "BUG-007",
-    "title": "Multiple modal sheets closed together on a single back press",
-    "description": "When an expense review modal opened on top of the expense list within a trip, pressing back dismissed both the modal and the active trip view.",
-    "severity": "medium",
-    "category": "navigation",
-    "status": "resolved",
-    "foundBy": "antigravity",
-    "environment": {
-      "platform": "android",
-      "isOnline": true,
-      "appVersion": "1.0.0"
-    },
-    "reproSteps": [
-      "Open an active trip",
-      "Tap an expense to open ExpenseReviewModal",
-      "Press Android hardware back button"
-    ],
-    "expectedBehavior": "Only the ExpenseReviewModal closes, leaving the active trip open.",
-    "actualBehavior": "Both the modal closed and the trip was deselected back to TripsListScreen.",
-    "diagnostics": {
-      "stackTrace": "App.tsx back listeners fired concurrently without LIFO depth check"
-    },
-    "createdAt": "2026-08-15T20:00:00.000Z",
-    "updatedAt": "2026-08-16T10:00:00.000Z",
-    "resolvedAt": "2026-08-16T10:00:00.000Z",
-    "resolvedBy": "antigravity",
-    "resolutionNote": "Ordered useHistoryBack invocations to enforce LIFO stack popping."
-  },
-  {
-    "id": "BUG-008",
-    "title": "Android crash on startup due to uninitialized FirebaseApp in FCM plugin",
-    "description": "@capacitor/push-notifications crashed on Android launch with IllegalStateException when google-services.json was missing or improperly registered in build.gradle.",
-    "severity": "critical",
-    "category": "general",
-    "status": "resolved",
-    "foundBy": "claude-cli",
-    "environment": {
-      "platform": "android",
-      "isOnline": true,
-      "appVersion": "1.0.0"
-    },
-    "reproSteps": [
-      "Build Android APK via `./gradlew assembleDebug`",
-      "Launch app on physical Android device",
-      "Observe immediate crash before splash screen"
-    ],
-    "expectedBehavior": "App launches cleanly with graceful notification registration.",
-    "actualBehavior": "Fatal crash with java.lang.IllegalStateException: Default FirebaseApp is not initialized.",
-    "diagnostics": {
-      "stackTrace": "java.lang.IllegalStateException: Default FirebaseApp is not initialized in this process com.triptracker.app"
-    },
-    "createdAt": "2026-08-14T08:00:00.000Z",
-    "updatedAt": "2026-08-15T09:00:00.000Z",
-    "resolvedAt": "2026-08-15T09:00:00.000Z",
-    "resolvedBy": "claude-cli",
-    "resolutionNote": "Added google-services.json template and Gradle google-services plugin configuration."
-  },
-  {
-    "id": "BUG-009",
-    "title": "iOS build failure due to Capacitor SPM Swift API mismatch on Xcode 16",
-    "description": "Xcode SPM failed to compile @capacitor/core and plugins because capacitor-swift-pm versions drifted from core Capacitor 8.2.0 API signatures.",
-    "severity": "critical",
-    "category": "general",
-    "status": "resolved",
-    "foundBy": "antigravity",
-    "environment": {
-      "platform": "ios",
-      "isOnline": true,
-      "appVersion": "1.0.0"
-    },
-    "reproSteps": [
-      "Run `npx cap sync ios`",
-      "Open Xcode and run Build",
-      "Observe compilation error: Cannot find 'CAPPluginCall' in scope"
-    ],
-    "expectedBehavior": "iOS project compiles cleanly across Xcode 16 and CI.",
-    "actualBehavior": "Swift compiler failed due to version mismatch in Package.resolved.",
-    "diagnostics": {
-      "stackTrace": "Swift compiler error: Type 'Capacitor' has no member 'Plugins' (SPM version mismatch)"
-    },
-    "createdAt": "2026-08-13T12:00:00.000Z",
-    "updatedAt": "2026-08-14T14:00:00.000Z",
-    "resolvedAt": "2026-08-14T14:00:00.000Z",
-    "resolvedBy": "antigravity",
-    "resolutionNote": "Pinned capacitor-swift-pm to 8.2.0, committed Package.resolved, and created scripts/align-spm-versions.mjs."
-  },
-  {
-    "id": "BUG-010",
-    "title": "Native Google OAuth deep link failed on Android auth code exchange",
-    "description": "Android intent filter was restricted to token callbacks and dropped OAuth authorization code redirects from Chrome Custom Tabs.",
-    "severity": "high",
-    "category": "auth",
-    "status": "resolved",
-    "foundBy": "claude-cli",
-    "environment": {
-      "platform": "android",
-      "isOnline": true,
-      "appVersion": "1.0.0"
-    },
-    "reproSteps": [
-      "Tap 'Sign in with Google' on Android native build",
-      "Complete login in Google Chrome Custom Tab",
-      "Redirect returns to app but user remains unauthenticated"
-    ],
-    "expectedBehavior": "App intercepts deep link, exchanges authorization code for session, and routes to dashboard.",
-    "actualBehavior": "App reopened at /login with unhandled deep link.",
-    "diagnostics": {
-      "stackTrace": "AndroidManifest.xml intent-filter missed scheme host pattern for auth/callback"
-    },
-    "createdAt": "2026-08-14T16:00:00.000Z",
-    "updatedAt": "2026-08-15T12:00:00.000Z",
-    "resolvedAt": "2026-08-15T12:00:00.000Z",
-    "resolvedBy": "claude-cli",
-    "resolutionNote": "Broadened AndroidManifest.xml intent filter and updated parseNativeAuthCallback to support both code and token URL formats."
-  },
-  {
-    "id": "BUG-011",
-    "title": "Mobile Safari 100vh caused bottom navigation and toasts to be obscured",
-    "description": "Static 100vh layout did not account for iOS Safari's dynamic URL bar and home indicator, clipping bottom navigation tabs and action sheets.",
-    "severity": "medium",
-    "category": "ui-ux",
-    "status": "resolved",
-    "foundBy": "antigravity",
-    "environment": {
-      "platform": "ios",
-      "isOnline": true,
-      "appVersion": "1.0.0"
-    },
-    "reproSteps": [
-      "Open app in Mobile Safari on iPhone",
-      "Scroll down so Safari address bar expands/contracts",
-      "Observe bottom navigation bar partially hidden under bottom browser toolbar"
-    ],
-    "expectedBehavior": "Bottom bar remains fully visible above iOS safe area and toolbars.",
-    "actualBehavior": "Bottom tabs clipped behind Safari browser controls.",
-    "diagnostics": {
-      "stackTrace": "CSS 100vh static viewport calculation without dynamic viewport units"
-    },
-    "createdAt": "2026-08-15T09:00:00.000Z",
-    "updatedAt": "2026-08-15T15:00:00.000Z",
-    "resolvedAt": "2026-08-15T15:00:00.000Z",
-    "resolvedBy": "antigravity",
-    "resolutionNote": "Applied CSS 100dvh units with -webkit-fill-available fallbacks and env(safe-area-inset-bottom) padding."
-  },
-  {
     "id": "BUG-012",
     "title": "Member deletion left orphaned split IDs corrupting settlement balance math",
     "description": "When a member was removed from a trip, their ID remained in expenses.splitMemberIds and expenses.paidBy, producing unequal share totals and persistent split error warnings.",
@@ -337,8 +8,8 @@
     "status": "resolved",
     "foundBy": "human",
     "environment": {
-      "platform": "web",
       "isOnline": true,
+      "platform": "web",
       "appVersion": "1.0.0"
     },
     "reproSteps": [
@@ -352,11 +23,69 @@
     "diagnostics": {
       "stackTrace": "settlement.ts:74 members[mId].name threw TypeError: Cannot read properties of undefined"
     },
-    "createdAt": "2026-08-13T10:00:00.000Z",
-    "updatedAt": "2026-08-14T11:00:00.000Z",
-    "resolvedAt": "2026-08-14T11:00:00.000Z",
+    "createdAt": "2026-08-13T10:00:00+00:00",
+    "updatedAt": "2026-08-14T11:00:00+00:00",
+    "resolvedAt": "2026-08-14T11:00:00+00:00",
     "resolvedBy": "antigravity",
     "resolutionNote": "Added automated exclusion of deleted members in App.tsx and settlement engine, redistributing equal shares automatically."
+  },
+  {
+    "id": "BUG-009",
+    "title": "iOS build failure due to Capacitor SPM Swift API mismatch on Xcode 16",
+    "description": "Xcode SPM failed to compile @capacitor/core and plugins because capacitor-swift-pm versions drifted from core Capacitor 8.2.0 API signatures.",
+    "severity": "critical",
+    "category": "general",
+    "status": "resolved",
+    "foundBy": "antigravity",
+    "environment": {
+      "isOnline": true,
+      "platform": "ios",
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Run `npx cap sync ios`",
+      "Open Xcode and run Build",
+      "Observe compilation error: Cannot find 'CAPPluginCall' in scope"
+    ],
+    "expectedBehavior": "iOS project compiles cleanly across Xcode 16 and CI.",
+    "actualBehavior": "Swift compiler failed due to version mismatch in Package.resolved.",
+    "diagnostics": {
+      "stackTrace": "Swift compiler error: Type 'Capacitor' has no member 'Plugins' (SPM version mismatch)"
+    },
+    "createdAt": "2026-08-13T12:00:00+00:00",
+    "updatedAt": "2026-08-14T14:00:00+00:00",
+    "resolvedAt": "2026-08-14T14:00:00+00:00",
+    "resolvedBy": "antigravity",
+    "resolutionNote": "Pinned capacitor-swift-pm to 8.2.0, committed Package.resolved, and created scripts/align-spm-versions.mjs."
+  },
+  {
+    "id": "BUG-008",
+    "title": "Android crash on startup due to uninitialized FirebaseApp in FCM plugin",
+    "description": "@capacitor/push-notifications crashed on Android launch with IllegalStateException when google-services.json was missing or improperly registered in build.gradle.",
+    "severity": "critical",
+    "category": "general",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "isOnline": true,
+      "platform": "android",
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Build Android APK via `./gradlew assembleDebug`",
+      "Launch app on physical Android device",
+      "Observe immediate crash before splash screen"
+    ],
+    "expectedBehavior": "App launches cleanly with graceful notification registration.",
+    "actualBehavior": "Fatal crash with java.lang.IllegalStateException: Default FirebaseApp is not initialized.",
+    "diagnostics": {
+      "stackTrace": "java.lang.IllegalStateException: Default FirebaseApp is not initialized in this process com.triptracker.app"
+    },
+    "createdAt": "2026-08-14T08:00:00+00:00",
+    "updatedAt": "2026-08-15T09:00:00+00:00",
+    "resolvedAt": "2026-08-15T09:00:00+00:00",
+    "resolvedBy": "claude-cli",
+    "resolutionNote": "Added google-services.json template and Gradle google-services plugin configuration."
   },
   {
     "id": "BUG-013",
@@ -367,8 +96,8 @@
     "status": "resolved",
     "foundBy": "human",
     "environment": {
-      "platform": "web",
       "isOnline": true,
+      "platform": "web",
       "appVersion": "1.0.0"
     },
     "reproSteps": [
@@ -381,11 +110,100 @@
     "diagnostics": {
       "stackTrace": "MembersGroupsTab.tsx handleDeleteMember executed without sole-admin guard"
     },
-    "createdAt": "2026-08-14T14:00:00.000Z",
-    "updatedAt": "2026-08-15T10:00:00.000Z",
-    "resolvedAt": "2026-08-15T10:00:00.000Z",
+    "createdAt": "2026-08-14T14:00:00+00:00",
+    "updatedAt": "2026-08-15T10:00:00+00:00",
+    "resolvedAt": "2026-08-15T10:00:00+00:00",
     "resolvedBy": "antigravity",
     "resolutionNote": "Implemented sole-admin deletion protection requiring at least one other Google-linked Admin before removing an admin account."
+  },
+  {
+    "id": "BUG-010",
+    "title": "Native Google OAuth deep link failed on Android auth code exchange",
+    "description": "Android intent filter was restricted to token callbacks and dropped OAuth authorization code redirects from Chrome Custom Tabs.",
+    "severity": "high",
+    "category": "auth",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "isOnline": true,
+      "platform": "android",
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Tap 'Sign in with Google' on Android native build",
+      "Complete login in Google Chrome Custom Tab",
+      "Redirect returns to app but user remains unauthenticated"
+    ],
+    "expectedBehavior": "App intercepts deep link, exchanges authorization code for session, and routes to dashboard.",
+    "actualBehavior": "App reopened at /login with unhandled deep link.",
+    "diagnostics": {
+      "stackTrace": "AndroidManifest.xml intent-filter missed scheme host pattern for auth/callback"
+    },
+    "createdAt": "2026-08-14T16:00:00+00:00",
+    "updatedAt": "2026-08-15T12:00:00+00:00",
+    "resolvedAt": "2026-08-15T12:00:00+00:00",
+    "resolvedBy": "claude-cli",
+    "resolutionNote": "Broadened AndroidManifest.xml intent filter and updated parseNativeAuthCallback to support both code and token URL formats."
+  },
+  {
+    "id": "BUG-011",
+    "title": "Mobile Safari 100vh caused bottom navigation and toasts to be obscured",
+    "description": "Static 100vh layout did not account for iOS Safari's dynamic URL bar and home indicator, clipping bottom navigation tabs and action sheets.",
+    "severity": "medium",
+    "category": "ui-ux",
+    "status": "resolved",
+    "foundBy": "antigravity",
+    "environment": {
+      "isOnline": true,
+      "platform": "ios",
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Open app in Mobile Safari on iPhone",
+      "Scroll down so Safari address bar expands/contracts",
+      "Observe bottom navigation bar partially hidden under bottom browser toolbar"
+    ],
+    "expectedBehavior": "Bottom bar remains fully visible above iOS safe area and toolbars.",
+    "actualBehavior": "Bottom tabs clipped behind Safari browser controls.",
+    "diagnostics": {
+      "stackTrace": "CSS 100vh static viewport calculation without dynamic viewport units"
+    },
+    "createdAt": "2026-08-15T09:00:00+00:00",
+    "updatedAt": "2026-08-15T15:00:00+00:00",
+    "resolvedAt": "2026-08-15T15:00:00+00:00",
+    "resolvedBy": "antigravity",
+    "resolutionNote": "Applied CSS 100dvh units with -webkit-fill-available fallbacks and env(safe-area-inset-bottom) padding."
+  },
+  {
+    "id": "BUG-001",
+    "title": "Hardware swipe-back gesture blocked by scroll-lock touch-action",
+    "description": "On Android and mobile web, the CSS touch-action: none on the root container prevented the native browser swipe-back gesture from firing.",
+    "severity": "medium",
+    "category": "navigation",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "route": "#/trip/road-trip-goa",
+      "isOnline": true,
+      "platform": "android",
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Open any trip on an Android mobile device",
+      "Attempt to swipe from the left edge of the screen to go back",
+      "Observe that the swipe gesture is unresponsive"
+    ],
+    "expectedBehavior": "Native swipe-back navigates back to previous screen smoothly.",
+    "actualBehavior": "Swipe gesture was swallowed by touch-action: none.",
+    "diagnostics": {
+      "stackTrace": "N/A - CSS styling constraint",
+      "syncQueueLength": 0
+    },
+    "createdAt": "2026-08-15T10:00:00+00:00",
+    "updatedAt": "2026-08-16T12:00:00+00:00",
+    "resolvedAt": "2026-08-16T12:00:00+00:00",
+    "resolvedBy": "claude-cli",
+    "resolutionNote": "Fixed in commit by scoping touch-action to individual swipeable rows instead of whole viewport."
   },
   {
     "id": "BUG-014",
@@ -396,8 +214,8 @@
     "status": "resolved",
     "foundBy": "human",
     "environment": {
-      "platform": "web",
       "isOnline": true,
+      "platform": "web",
       "appVersion": "1.0.0"
     },
     "reproSteps": [
@@ -410,11 +228,69 @@
     "diagnostics": {
       "stackTrace": "tripApi.ts sent raw location object containing placeName string to Supabase"
     },
-    "createdAt": "2026-08-15T11:00:00.000Z",
-    "updatedAt": "2026-08-15T16:00:00.000Z",
-    "resolvedAt": "2026-08-15T16:00:00.000Z",
+    "createdAt": "2026-08-15T11:00:00+00:00",
+    "updatedAt": "2026-08-15T16:00:00+00:00",
+    "resolvedAt": "2026-08-15T16:00:00+00:00",
     "resolvedBy": "claude-cli",
     "resolutionNote": "Added coordsOnly() sanitizer in tripApi.ts and ran DB migration 0043 to scrub historical placeName strings."
+  },
+  {
+    "id": "BUG-006",
+    "title": "Back navigation used same-URL pushState causing history loops",
+    "description": "useHistoryBack pushed duplicate entries on identical URLs, causing back-button presses to trigger unexpected state loops rather than popping modal screens.",
+    "severity": "medium",
+    "category": "navigation",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "isOnline": true,
+      "platform": "web",
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Open multiple modal sheets consecutively",
+      "Press the browser Back button repeatedly",
+      "Observe history gets trapped in same URL"
+    ],
+    "expectedBehavior": "Each back button press cleanly pops one layer of UI state.",
+    "actualBehavior": "Repeated back presses looped on the same screen.",
+    "diagnostics": {
+      "stackTrace": "useHistoryBack.ts:18 history.pushState called without unique hash delimiter"
+    },
+    "createdAt": "2026-08-15T18:00:00+00:00",
+    "updatedAt": "2026-08-16T11:00:00+00:00",
+    "resolvedAt": "2026-08-16T11:00:00+00:00",
+    "resolvedBy": "claude-cli",
+    "resolutionNote": "Converted useHistoryBack to push unique hash fragment URLs, creating unambiguous stack entries."
+  },
+  {
+    "id": "BUG-007",
+    "title": "Multiple modal sheets closed together on a single back press",
+    "description": "When an expense review modal opened on top of the expense list within a trip, pressing back dismissed both the modal and the active trip view.",
+    "severity": "medium",
+    "category": "navigation",
+    "status": "resolved",
+    "foundBy": "antigravity",
+    "environment": {
+      "isOnline": true,
+      "platform": "android",
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Open an active trip",
+      "Tap an expense to open ExpenseReviewModal",
+      "Press Android hardware back button"
+    ],
+    "expectedBehavior": "Only the ExpenseReviewModal closes, leaving the active trip open.",
+    "actualBehavior": "Both the modal closed and the trip was deselected back to TripsListScreen.",
+    "diagnostics": {
+      "stackTrace": "App.tsx back listeners fired concurrently without LIFO depth check"
+    },
+    "createdAt": "2026-08-15T20:00:00+00:00",
+    "updatedAt": "2026-08-16T10:00:00+00:00",
+    "resolvedAt": "2026-08-16T10:00:00+00:00",
+    "resolvedBy": "antigravity",
+    "resolutionNote": "Ordered useHistoryBack invocations to enforce LIFO stack popping."
   },
   {
     "id": "BUG-015",
@@ -425,8 +301,8 @@
     "status": "resolved",
     "foundBy": "human",
     "environment": {
-      "platform": "web",
       "isOnline": false,
+      "platform": "web",
       "appVersion": "1.0.0"
     },
     "reproSteps": [
@@ -440,11 +316,135 @@
     "diagnostics": {
       "stackTrace": "tripStore.ts:369 initialize() caught offline error and reset store arrays to []"
     },
-    "createdAt": "2026-08-16T08:00:00.000Z",
-    "updatedAt": "2026-08-16T14:00:00.000Z",
-    "resolvedAt": "2026-08-16T14:00:00.000Z",
+    "createdAt": "2026-08-16T08:00:00+00:00",
+    "updatedAt": "2026-08-16T14:00:00+00:00",
+    "resolvedAt": "2026-08-16T14:00:00+00:00",
     "resolvedBy": "antigravity",
     "resolutionNote": "Wrapped useTripStore with zustand persist middleware backed by localStorage with mergeServerExpenses dirty-state reconciliation."
+  },
+  {
+    "id": "BUG-002",
+    "title": "Offline-captured receipt photos caused localStorage QuotaExceededError",
+    "description": "Large base64-encoded receipt photos captured while offline filled localStorage beyond the 5MB browser quota.",
+    "severity": "high",
+    "category": "receipts-camera",
+    "status": "resolved",
+    "foundBy": "antigravity",
+    "environment": {
+      "route": "#/trip/road-trip-goa/expense/new",
+      "isOnline": false,
+      "platform": "web",
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Go offline (airplane mode)",
+      "Capture 3 high-resolution receipt images in expense forms",
+      "Save the expenses"
+    ],
+    "expectedBehavior": "Receipt photos stage safely offline without exceeding quota.",
+    "actualBehavior": "localStorage threw QuotaExceededError and dropped subsequent writes.",
+    "diagnostics": {
+      "stackTrace": "DOMException: Failed to execute 'setItem' on 'Storage': Setting the value of 'trip_tracker_state' exceeded the quota.",
+      "syncQueueLength": 3
+    },
+    "createdAt": "2026-08-16T14:30:00+00:00",
+    "updatedAt": "2026-08-16T18:00:00+00:00",
+    "resolvedAt": "2026-08-16T18:00:00+00:00",
+    "resolvedBy": "antigravity",
+    "resolutionNote": "Created dedicated IndexedDB store (offlineReceiptStore.ts) to hold offline photos separately from localStorage state."
+  },
+  {
+    "id": "BUG-003",
+    "title": "Offline/online toggle briefly signed the user out, flashing login screen",
+    "description": "Supabase GoTrue client fired onAuthStateChange with a null session whenever token refresh failed during a momentary offline blip, causing RequireAuth to unmount the entire app and redirect to /login.",
+    "severity": "high",
+    "category": "auth",
+    "status": "resolved",
+    "foundBy": "antigravity",
+    "environment": {
+      "route": "#/trip/road-trip-goa",
+      "isOnline": false,
+      "platform": "web",
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Log into the application",
+      "Toggle network offline in Chrome DevTools",
+      "Observe that the app immediately unmounts and redirects to the login screen"
+    ],
+    "expectedBehavior": "The user stays authenticated offline with cached credentials.",
+    "actualBehavior": "Transient null sessions triggered full sign-out redirect.",
+    "diagnostics": {
+      "stackTrace": "RequireAuth.tsx:21 Navigate to /login (session was null on TOKEN_REFRESHED failure)",
+      "syncQueueLength": 0
+    },
+    "createdAt": "2026-08-16T15:00:00+00:00",
+    "updatedAt": "2026-08-16T17:30:00+00:00",
+    "resolvedAt": "2026-08-16T17:30:00+00:00",
+    "resolvedBy": "antigravity",
+    "resolutionNote": "Updated authStore.ts onAuthStateChange to ignore transient null sessions unless event is explicitly SIGNED_OUT."
+  },
+  {
+    "id": "BUG-004",
+    "title": "Member deletion, update, and archiving lacked offline queue support",
+    "description": "deleteMember, updateMember, and toggleArchiveMember directly called Supabase APIs with no optimistic local updates or offline queueing, throwing network errors when disconnected.",
+    "severity": "high",
+    "category": "offline-sync",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "route": "#/trip/road-trip-goa/members",
+      "isOnline": false,
+      "platform": "android",
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Go offline",
+      "Navigate to Members tab and edit or delete a member",
+      "Observe action fails with uncaught network exception"
+    ],
+    "expectedBehavior": "Member edits apply optimistically and queue for background sync upon reconnection.",
+    "actualBehavior": "Network error thrown and local state reverted.",
+    "diagnostics": {
+      "stackTrace": "TypeError: Failed to fetch at deleteMemberRow (tripApi.ts:182)",
+      "syncQueueLength": 0
+    },
+    "createdAt": "2026-08-16T16:00:00+00:00",
+    "updatedAt": "2026-08-16T19:00:00+00:00",
+    "resolvedAt": "2026-08-16T19:00:00+00:00",
+    "resolvedBy": "claude-cli",
+    "resolutionNote": "Implemented full offline-first mutation handlers in tripStore.ts with queueSync actions (deleteMember, updateMember, toggleArchiveMember)."
+  },
+  {
+    "id": "BUG-005",
+    "title": "Creating a new trip while offline silently failed without offline path",
+    "description": "createTrip attempted immediate Supabase relational graph insertion without generating local temporary trip entities or persisting them to offline storage.",
+    "severity": "high",
+    "category": "offline-sync",
+    "status": "resolved",
+    "foundBy": "antigravity",
+    "environment": {
+      "route": "#/",
+      "isOnline": false,
+      "platform": "web",
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Disconnect from internet",
+      "Tap '+ New Trip', enter details and submit",
+      "Observe that new trip never appears in the list"
+    ],
+    "expectedBehavior": "Trip is created with local ID, auto-selected, and queued for server sync.",
+    "actualBehavior": "Operation aborted on network failure with no offline fallback.",
+    "diagnostics": {
+      "stackTrace": "NetworkError when attempting to fetch resource at insertTripGraph (tripApi.ts:112)",
+      "syncQueueLength": 0
+    },
+    "createdAt": "2026-08-16T17:00:00+00:00",
+    "updatedAt": "2026-08-16T20:00:00+00:00",
+    "resolvedAt": "2026-08-16T20:00:00+00:00",
+    "resolvedBy": "antigravity",
+    "resolutionNote": "Added offline createTrip branch in tripStore.ts generating temp trip IDs and queuing createTrip mutations."
   },
   {
     "id": "BUG-016",
@@ -455,8 +455,8 @@
     "status": "resolved",
     "foundBy": "human",
     "environment": {
-      "platform": "web",
       "isOnline": true,
+      "platform": "web",
       "appVersion": "1.0.0"
     },
     "reproSteps": [
@@ -469,10 +469,98 @@
     "diagnostics": {
       "stackTrace": "SuperAdminBugTracker.tsx:230 if (!isAdmin) blocked render because activeTrip was null"
     },
-    "createdAt": "2026-08-17T12:45:00.000Z",
-    "updatedAt": "2026-08-17T13:05:00.000Z",
-    "resolvedAt": "2026-08-17T13:05:00.000Z",
+    "createdAt": "2026-08-17T12:45:00+00:00",
+    "updatedAt": "2026-08-17T13:05:00+00:00",
+    "resolvedAt": "2026-08-17T13:05:00+00:00",
     "resolvedBy": "antigravity",
     "resolutionNote": "Removed artificial trip-scoped lock in SuperAdminBugTracker.tsx and App.tsx, opening direct access to developers."
+  },
+  {
+    "id": "BUG-017",
+    "title": "Uncaught TypeError: Cannot read properties of null (reading 'useCallback')",
+    "description": "Automatically captured window error.\n\nTypeError: Cannot read properties of null (reading 'useCallback')\n    at exports.useCallback (http://localhost:5174/node_modules/.vite/deps/react.js?v=45185605:701:30)\n    at useStore (http://localhost:5174/node_modules/.vite/deps/zustand.js?v=d2bfbf05:36:78)\n    at useBoundStore (http://localhost:5174/node_modules/.vite/deps/zustand.js?v=d2bfbf05:42:38)\n    at UpdateBanner (http://localhost:5174/src/components/UpdateBanner.tsx:8:26)\n    at Object.react_stack_bottom_frame (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=e164e122:12864:12)\n    at renderWithHooks (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=e164e122:4211:19)\n    at updateFunctionComponent (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=e164e122:5567:16)\n    at beginWork (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=e164e122:6138:20)\n    at runWithFiberInDEV (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=e164e122:850:66)\n    at performUnitOfWork (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=e164e122:8427:92)",
+    "severity": "critical",
+    "category": "general",
+    "status": "open",
+    "foundBy": "auto-crash-handler",
+    "environment": {
+      "route": "#/",
+      "isOnline": true,
+      "platform": "web",
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [],
+    "expectedBehavior": "App runs without throwing.",
+    "actualBehavior": "Uncaught TypeError: Cannot read properties of null (reading 'useCallback')",
+    "diagnostics": {
+      "stackTrace": "TypeError: Cannot read properties of null (reading 'useCallback')\n    at exports.useCallback (http://localhost:5174/node_modules/.vite/deps/react.js?v=45185605:701:30)\n    at useStore (http://localhost:5174/node_modules/.vite/deps/zustand.js?v=d2bfbf05:36:78)\n    at useBoundStore (http://localhost:5174/node_modules/.vite/deps/zustand.js?v=d2bfbf05:42:38)\n    at UpdateBanner (http://localhost:5174/src/components/UpdateBanner.tsx:8:26)\n    at Object.react_stack_bottom_frame (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=e164e122:12864:12)\n    at renderWithHooks (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=e164e122:4211:19)\n    at updateFunctionComponent (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=e164e122:5567:16)\n    at beginWork (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=e164e122:6138:20)\n    at runWithFiberInDEV (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=e164e122:850:66)\n    at performUnitOfWork (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=e164e122:8427:92)",
+      "consoleLogs": [
+        "[info] DiagnosticLogger initialized",
+        "[error] Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for one of the following reasons:\n1. You might have mismatching versions of React and the renderer (such as React DOM)\n2. You might be breaking the Rules of Hooks\n3. You might have more than one copy of React in the same app\nSee https://react.dev/link/invalid-hook-call for tips about how to debug and fix this problem.",
+        "[error] Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for one of the following reasons:\n1. You might have mismatching versions of React and the renderer (such as React DOM)\n2. You might be breaking the Rules of Hooks\n3. You might have more than one copy of React in the same app\nSee https://react.dev/link/invalid-hook-call for tips about how to debug and fix this problem.",
+        "[error] Runtime Error: Uncaught TypeError: Cannot read properties of null (reading 'useCallback') at http://localhost:5174/node_modules/.vite/deps/react.js?v=45185605:701",
+        "[warn] %s\n\n%s\n An error occurred in the <UpdateBanner> component. Consider adding an error boundary to your tree to customize error handling behavior.\nVisit https://react.dev/link/error-boundaries to learn more about error boundaries."
+      ],
+      "syncQueueLength": 0
+    },
+    "createdAt": "2026-08-21T07:59:10.84566+00:00",
+    "updatedAt": "2026-08-21T07:59:10.84566+00:00"
+  },
+  {
+    "id": "BUG-018",
+    "title": "test bug",
+    "description": "test bug",
+    "severity": "low",
+    "category": "splits-math",
+    "status": "open",
+    "foundBy": "superadmin",
+    "environment": {
+      "route": "",
+      "isOnline": true,
+      "platform": "web",
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {
+      "consoleLogs": [
+        "[info] DiagnosticLogger initialized"
+      ],
+      "syncQueueLength": 0
+    },
+    "createdAt": "2026-08-21T08:01:15.033881+00:00",
+    "updatedAt": "2026-08-21T08:01:15.033881+00:00"
+  },
+  {
+    "id": "BUG-019",
+    "title": "Uncaught TypeError: Cannot read properties of null (reading 'useCallback')",
+    "description": "Automatically captured window error.\n\nTypeError: Cannot read properties of null (reading 'useCallback')\n    at exports.useCallback (http://localhost:5174/node_modules/.vite/deps/react.js?v=43430a51:701:30)\n    at useStore (http://localhost:5174/node_modules/.vite/deps/zustand.js?v=915eb48f:36:78)\n    at useBoundStore (http://localhost:5174/node_modules/.vite/deps/zustand.js?v=915eb48f:42:38)\n    at UpdateBanner (http://localhost:5174/src/components/UpdateBanner.tsx:8:26)\n    at Object.react_stack_bottom_frame (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=c35173d6:12864:12)\n    at renderWithHooks (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=c35173d6:4211:19)\n    at updateFunctionComponent (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=c35173d6:5567:16)\n    at beginWork (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=c35173d6:6138:20)\n    at runWithFiberInDEV (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=c35173d6:850:66)\n    at performUnitOfWork (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=c35173d6:8427:92)",
+    "severity": "critical",
+    "category": "general",
+    "status": "open",
+    "foundBy": "auto-crash-handler",
+    "environment": {
+      "route": "#/",
+      "isOnline": true,
+      "platform": "web",
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [],
+    "expectedBehavior": "App runs without throwing.",
+    "actualBehavior": "Uncaught TypeError: Cannot read properties of null (reading 'useCallback')",
+    "diagnostics": {
+      "stackTrace": "TypeError: Cannot read properties of null (reading 'useCallback')\n    at exports.useCallback (http://localhost:5174/node_modules/.vite/deps/react.js?v=43430a51:701:30)\n    at useStore (http://localhost:5174/node_modules/.vite/deps/zustand.js?v=915eb48f:36:78)\n    at useBoundStore (http://localhost:5174/node_modules/.vite/deps/zustand.js?v=915eb48f:42:38)\n    at UpdateBanner (http://localhost:5174/src/components/UpdateBanner.tsx:8:26)\n    at Object.react_stack_bottom_frame (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=c35173d6:12864:12)\n    at renderWithHooks (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=c35173d6:4211:19)\n    at updateFunctionComponent (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=c35173d6:5567:16)\n    at beginWork (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=c35173d6:6138:20)\n    at runWithFiberInDEV (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=c35173d6:850:66)\n    at performUnitOfWork (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=c35173d6:8427:92)",
+      "consoleLogs": [
+        "[info] DiagnosticLogger initialized",
+        "[error] Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for one of the following reasons:\n1. You might have mismatching versions of React and the renderer (such as React DOM)\n2. You might be breaking the Rules of Hooks\n3. You might have more than one copy of React in the same app\nSee https://react.dev/link/invalid-hook-call for tips about how to debug and fix this problem.",
+        "[error] Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for one of the following reasons:\n1. You might have mismatching versions of React and the renderer (such as React DOM)\n2. You might be breaking the Rules of Hooks\n3. You might have more than one copy of React in the same app\nSee https://react.dev/link/invalid-hook-call for tips about how to debug and fix this problem.",
+        "[error] Runtime Error: Uncaught TypeError: Cannot read properties of null (reading 'useCallback') at http://localhost:5174/node_modules/.vite/deps/react.js?v=43430a51:701",
+        "[warn] %s\n\n%s\n An error occurred in the <UpdateBanner> component. Consider adding an error boundary to your tree to customize error handling behavior.\nVisit https://react.dev/link/error-boundaries to learn more about error boundaries."
+      ],
+      "syncQueueLength": 0
+    },
+    "createdAt": "2026-08-21T08:07:37.629939+00:00",
+    "updatedAt": "2026-08-21T08:07:37.629939+00:00"
   }
 ]

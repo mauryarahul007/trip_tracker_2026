@@ -2,12 +2,12 @@
 
 /**
  * Trip Tracker 2026 - Unified Multi-Agent Bug Tracker CLI
- * 
+ *
  * Supports:
  * - Antigravity AI Agent
  * - Claude CLI (Single sessions & Hive swarm)
  * - Human developers & QA testers
- * 
+ *
  * Usage:
  *   node scripts/bug.mjs add --title "Title" --severity high --category navigation --by antigravity
  *   node scripts/bug.mjs list [--status open] [--severity critical]
@@ -16,6 +16,14 @@
  *   node scripts/bug.mjs update BUG-001 --status in_progress
  *   node scripts/bug.mjs sync
  *   node scripts/bug.mjs stats
+ *
+ * bugs/bugs.json stays the offline, git-tracked source of truth for this
+ * CLI. When SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are set (see
+ * .env.example), every mutating command also mirrors the change into the
+ * same public.bugs table the deployed Bug Ledger UI reads (migration
+ * 0055) -- so a bug filed here shows up there, and `sync` pulls back
+ * anything filed there into this file. Missing/unreachable Supabase never
+ * blocks a local command; it just skips the mirror with a warning.
  */
 
 import fs from 'node:fs';
@@ -27,6 +35,17 @@ const __dirname = path.dirname(__filename);
 const ROOT_DIR = path.resolve(__dirname, '..');
 const BUGS_FILE = path.join(ROOT_DIR, 'bugs', 'bugs.json');
 const BUGS_MD_FILE = path.join(ROOT_DIR, 'BUGS.md');
+
+try {
+  process.loadEnvFile(path.join(ROOT_DIR, '.env'));
+} catch {
+  // No .env (CI, fresh checkout without one) -- Supabase mirror just stays off.
+}
+
+const SUPABASE_URL = process.env.VITE_SUPABASE_URL || '';
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+const SUPABASE_CONFIGURED =
+  Boolean(SUPABASE_URL) && Boolean(SUPABASE_SERVICE_ROLE_KEY) && !SUPABASE_URL.includes('dummy-project');
 
 export const VALID_SEVERITIES = ['critical', 'high', 'medium', 'low'];
 export const VALID_STATUSES = ['open', 'in_progress', 'resolved', 'wont_fix'];
@@ -41,6 +60,105 @@ export const VALID_CATEGORIES = [
   'performance',
   'general'
 ];
+
+// ---------------------------------------------------------------------------
+// Supabase mirror (public.bugs, RLS: superadmin-only via service_role)
+// ---------------------------------------------------------------------------
+
+async function supabaseFetch(pathAndQuery, options = {}) {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1${pathAndQuery}`, {
+    ...options,
+    headers: {
+      apikey: SUPABASE_SERVICE_ROLE_KEY,
+      Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+      'Content-Type': 'application/json',
+      ...(options.headers || {}),
+    },
+  });
+  if (!res.ok) {
+    const body = await res.text().catch(() => '');
+    throw new Error(`Supabase ${options.method || 'GET'} ${pathAndQuery} -> ${res.status}: ${body}`);
+  }
+  const text = await res.text();
+  return text ? JSON.parse(text) : null;
+}
+
+function toDbRow(bug) {
+  return {
+    id: bug.id,
+    title: bug.title,
+    description: bug.description || '',
+    severity: bug.severity,
+    category: bug.category,
+    status: bug.status,
+    found_by: bug.foundBy || 'unknown',
+    environment: bug.environment || {},
+    repro_steps: bug.reproSteps || [],
+    expected_behavior: bug.expectedBehavior || '',
+    actual_behavior: bug.actualBehavior || '',
+    diagnostics: bug.diagnostics || null,
+    created_at: bug.createdAt,
+    updated_at: bug.updatedAt,
+    resolved_at: bug.resolvedAt || null,
+    resolved_by: bug.resolvedBy || null,
+    resolution_note: bug.resolutionNote || null,
+  };
+}
+
+function fromDbRow(row) {
+  return {
+    id: row.id,
+    title: row.title,
+    description: row.description,
+    severity: row.severity,
+    category: row.category,
+    status: row.status,
+    foundBy: row.found_by,
+    environment: row.environment || {},
+    reproSteps: row.repro_steps || [],
+    expectedBehavior: row.expected_behavior || '',
+    actualBehavior: row.actual_behavior || '',
+    diagnostics: row.diagnostics || undefined,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+    resolvedAt: row.resolved_at || undefined,
+    resolvedBy: row.resolved_by || undefined,
+    resolutionNote: row.resolution_note || undefined,
+  };
+}
+
+async function pushBugToSupabase(bug) {
+  if (!SUPABASE_CONFIGURED) return;
+  try {
+    await supabaseFetch('/bugs?on_conflict=id', {
+      method: 'POST',
+      headers: { Prefer: 'resolution=merge-duplicates' },
+      body: JSON.stringify(toDbRow(bug)),
+    });
+  } catch (e) {
+    console.warn(`⚠️  Supabase sync skipped for ${bug.id}: ${e.message}`);
+  }
+}
+
+async function deleteBugFromSupabase(id) {
+  if (!SUPABASE_CONFIGURED) return;
+  try {
+    await supabaseFetch(`/bugs?id=eq.${encodeURIComponent(id)}`, { method: 'DELETE' });
+  } catch (e) {
+    console.warn(`⚠️  Supabase delete-sync skipped for ${id}: ${e.message}`);
+  }
+}
+
+async function fetchAllBugsFromSupabase() {
+  if (!SUPABASE_CONFIGURED) return null;
+  try {
+    const rows = await supabaseFetch('/bugs?select=*');
+    return (rows || []).map(fromDbRow);
+  } catch (e) {
+    console.warn(`⚠️  Could not reach Supabase: ${e.message}`);
+    return null;
+  }
+}
 
 /**
  * Read bugs from storage
@@ -77,7 +195,10 @@ export function writeBugs(bugs, autoSync = true) {
 }
 
 /**
- * Generate next sequential bug ID (BUG-001, BUG-002, ...)
+ * Generate next sequential bug ID (BUG-001, BUG-002, ...). Pure/local-only
+ * -- kept synchronous for scripts/bug.test.ts. handleAdd additionally
+ * checks Supabase so a CLI add can't collide with an id the UI already
+ * used (see getNextBugIdAcrossSources).
  */
 export function getNextBugId(bugs) {
   let maxNum = 0;
@@ -92,6 +213,12 @@ export function getNextBugId(bugs) {
   }
   const nextNum = maxNum + 1;
   return `BUG-${String(nextNum).padStart(3, '0')}`;
+}
+
+async function getNextBugIdAcrossSources(localBugs) {
+  const remoteBugs = await fetchAllBugsFromSupabase();
+  const combined = remoteBugs ? [...localBugs, ...remoteBugs] : localBugs;
+  return getNextBugId(combined);
 }
 
 /**
@@ -184,7 +311,7 @@ export function syncMarkdown(bugs = readBugs()) {
       md += `- **Found By**: \`${b.foundBy}\` on ${new Date(b.createdAt).toLocaleDateString()} (${b.environment?.platform || 'web'})\n`;
       if (b.environment?.route) md += `- **Route**: \`${b.environment.route}\` (Online: \`${b.environment.isOnline}\`)\n`;
       md += `\n**Description**:\n${b.description}\n\n`;
-      
+
       if (b.reproSteps && b.reproSteps.length > 0) {
         md += `**Steps to Reproduce**:\n`;
         b.reproSteps.forEach((s, idx) => {
@@ -192,10 +319,10 @@ export function syncMarkdown(bugs = readBugs()) {
         });
         md += `\n`;
       }
-      
+
       if (b.expectedBehavior) md += `**Expected**: ${b.expectedBehavior}\n\n`;
       if (b.actualBehavior) md += `**Actual**: ${b.actualBehavior}\n\n`;
-      
+
       if (b.diagnostics?.stackTrace && b.diagnostics.stackTrace !== 'N/A') {
         md += `**Diagnostic Trace / Stack**:\n\`\`\`text\n${b.diagnostics.stackTrace}\n\`\`\`\n\n`;
       }
@@ -247,10 +374,9 @@ npm run bug:sync
 // CLI Command Handlers
 // -------------------------------------------------------------
 
-export function handleAdd(flags) {
+export async function handleAdd(flags) {
   const bugs = readBugs();
-  const id = getNextBugId(bugs);
-  
+
   const title = flags.title || flags.t;
   if (!title) {
     console.error('❌ Error: --title is required to add a bug.');
@@ -269,12 +395,13 @@ export function handleAdd(flags) {
     process.exit(1);
   }
 
+  const id = await getNextBugIdAcrossSources(bugs);
   const foundBy = flags.by || process.env.AGENT_NAME || process.env.AGENT_ID || 'antigravity';
   const description = flags.desc || flags.description || title;
   const platform = flags.platform || 'web';
   const route = flags.route || '';
   const isOnline = flags.offline ? false : true;
-  
+
   let reproSteps = [];
   if (flags.steps) {
     reproSteps = flags.steps.includes(';') ? flags.steps.split(';') : flags.steps.split('\n');
@@ -313,13 +440,14 @@ export function handleAdd(flags) {
 
   bugs.push(newBug);
   writeBugs(bugs, true);
+  await pushBugToSupabase(newBug);
 
   console.log(`\n✅ Successfully created bug [${id}]`);
   console.log(`📌 Title:    ${title}`);
   console.log(`⚡ Severity: ${severity.toUpperCase()}`);
   console.log(`📂 Category: ${category}`);
   console.log(`👤 Found By: ${foundBy}`);
-  console.log(`📄 Synced to: BUGS.md\n`);
+  console.log(`📄 Synced to: BUGS.md${SUPABASE_CONFIGURED ? ' + Supabase' : ''}\n`);
   return newBug;
 }
 
@@ -417,7 +545,7 @@ export function handleShow(id) {
   console.log(`======================================================\n`);
 }
 
-export function handleResolve(id, flags) {
+export async function handleResolve(id, flags) {
   if (!id) {
     console.error('❌ Error: Bug ID is required (e.g. BUG-001)');
     process.exit(1);
@@ -439,13 +567,15 @@ export function handleResolve(id, flags) {
   bug.resolutionNote = resolutionNote;
 
   writeBugs(bugs, true);
+  await pushBugToSupabase(bug);
+
   console.log(`\n✅ Marked [${bug.id}] as RESOLVED`);
   console.log(`👤 Resolved By: ${resolvedBy}`);
   console.log(`📝 Fix Note:    ${resolutionNote}`);
-  console.log(`📄 Synced to:   BUGS.md\n`);
+  console.log(`📄 Synced to:   BUGS.md${SUPABASE_CONFIGURED ? ' + Supabase' : ''}\n`);
 }
 
-export function handleUpdate(id, flags) {
+export async function handleUpdate(id, flags) {
   if (!id) {
     console.error('❌ Error: Bug ID is required (e.g. BUG-001)');
     process.exit(1);
@@ -484,11 +614,13 @@ export function handleUpdate(id, flags) {
 
   bug.updatedAt = new Date().toISOString();
   writeBugs(bugs, true);
+  await pushBugToSupabase(bug);
+
   console.log(`\n✅ Updated [${bug.id}]`);
-  console.log(`📄 Synced to: BUGS.md\n`);
+  console.log(`📄 Synced to: BUGS.md${SUPABASE_CONFIGURED ? ' + Supabase' : ''}\n`);
 }
 
-export function handleDelete(id) {
+export async function handleDelete(id) {
   if (!id) {
     console.error('❌ Error: Bug ID is required to delete (e.g. BUG-001)');
     process.exit(1);
@@ -502,8 +634,10 @@ export function handleDelete(id) {
 
   bugs = bugs.filter(b => b.id.toUpperCase() !== id.toUpperCase());
   writeBugs(bugs, true);
+  await deleteBugFromSupabase(id);
+
   console.log(`\n🗑️ Deleted bug [${id}]`);
-  console.log(`📄 Synced to: BUGS.md\n`);
+  console.log(`📄 Synced to: BUGS.md${SUPABASE_CONFIGURED ? ' + Supabase' : ''}\n`);
 }
 
 export function handleStats() {
@@ -522,18 +656,63 @@ export function handleStats() {
   console.log(`-----------------------------------\n`);
 }
 
+/**
+ * Two-way reconciliation with Supabase: remote is authoritative for any id
+ * both sides have (reflects edits made in the UI), any bug that only
+ * exists on one side gets pushed/pulled to the other. No-op, with a
+ * warning, if Supabase isn't configured or unreachable.
+ */
+export async function handleSync() {
+  if (!SUPABASE_CONFIGURED) {
+    syncMarkdown();
+    console.log('✅ Synchronized BUGS.md successfully. (Supabase not configured -- set SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY in .env to sync the shared ledger too.)');
+    return;
+  }
+
+  const localBugs = readBugs();
+  const remoteBugs = await fetchAllBugsFromSupabase();
+  if (remoteBugs === null) {
+    syncMarkdown(localBugs);
+    console.log('✅ Synchronized BUGS.md successfully. (Supabase unreachable -- local file only.)');
+    return;
+  }
+
+  const localById = new Map(localBugs.map((b) => [b.id.toUpperCase(), b]));
+  const remoteById = new Map(remoteBugs.map((b) => [b.id.toUpperCase(), b]));
+
+  const merged = [];
+  for (const [id, remoteBug] of remoteById) {
+    merged.push(remoteBug); // remote wins on shared ids
+    localById.delete(id);
+  }
+  for (const localOnly of localById.values()) {
+    merged.push(localOnly); // keep anything only the file has
+  }
+  merged.sort((a, b) => (a.createdAt || '').localeCompare(b.createdAt || ''));
+
+  writeBugs(merged, true);
+
+  const localOnlyIds = [...localById.keys()];
+  for (const id of localOnlyIds) {
+    const bug = merged.find((b) => b.id.toUpperCase() === id);
+    if (bug) await pushBugToSupabase(bug);
+  }
+
+  console.log(`✅ Synchronized: ${merged.length} bugs (pulled ${remoteBugs.length} from Supabase, pushed ${localOnlyIds.length} local-only). BUGS.md updated.`);
+}
+
 // -------------------------------------------------------------
 // CLI Dispatcher
 // -------------------------------------------------------------
 
-function main() {
+async function main() {
   const args = process.argv.slice(2);
   const command = args[0] || 'list';
   const { flags, positional } = parseArgs(args.slice(1));
 
   switch (command.toLowerCase()) {
     case 'add':
-      handleAdd(flags);
+      await handleAdd(flags);
       break;
     case 'list':
     case 'ls':
@@ -547,18 +726,17 @@ function main() {
     case 'resolve':
     case 'close':
     case 'fix':
-      handleResolve(positional[0], flags);
+      await handleResolve(positional[0], flags);
       break;
     case 'update':
-      handleUpdate(positional[0], flags);
+      await handleUpdate(positional[0], flags);
       break;
     case 'delete':
     case 'rm':
-      handleDelete(positional[0]);
+      await handleDelete(positional[0]);
       break;
     case 'sync':
-      syncMarkdown();
-      console.log('✅ Synchronized BUGS.md successfully.');
+      await handleSync();
       break;
     case 'stats':
       handleStats();
@@ -576,6 +754,9 @@ function main() {
   npm run bug -- delete <BUG-ID>
   npm run bug -- sync
   npm run bug -- stats
+
+Set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in .env to mirror every
+change into the same table the deployed Bug Ledger UI reads.
 `);
       break;
     default:
@@ -590,5 +771,8 @@ function main() {
 
 // Run main if called directly from CLI
 if (process.argv[1] && path.resolve(process.argv[1]) === path.resolve(__filename)) {
-  main();
+  main().catch((err) => {
+    console.error('❌ Unexpected error:', err.message);
+    process.exit(1);
+  });
 }
