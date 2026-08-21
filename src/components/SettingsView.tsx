@@ -20,6 +20,7 @@ import {
   IconChevronLeft,
   IconMapPin,
   IconBell,
+  IconShare,
 } from './Icons';
 import { CategoryIcon } from './CategoryIcon';
 import { useTripStore } from '../store/tripStore';
@@ -78,6 +79,7 @@ interface SettingsViewProps {
   initialSubScreen?: SubScreen;
   onClose?: () => void;
   onRequestConfirm?: (req: ConfirmRequest) => void;
+  onOpenShareTrip?: () => void;
 }
 
 export function SettingsView({
@@ -109,6 +111,7 @@ export function SettingsView({
   initialSubScreen = null,
   onClose,
   onRequestConfirm,
+  onOpenShareTrip,
 }: SettingsViewProps) {
   const [subScreen, setSubScreen] = useState<SubScreen>(initialSubScreen);
 
@@ -892,6 +895,23 @@ export function SettingsView({
         <div className="settings-group">
           <h4 className="settings-group-title">Trip Preferences</h4>
           <div className="settings-group-card">
+            {onOpenShareTrip && (
+              <button type="button" className="settings-row-item" onClick={onOpenShareTrip}>
+                <div className="settings-row-left">
+                  <div className="settings-squircle squircle-teal">
+                    <IconShare size={18} />
+                  </div>
+                  <div className="settings-row-texts">
+                    <span className="settings-row-title">Invite &amp; Share Trip</span>
+                    <span className="settings-row-subtitle">Share the join link or QR code with members</span>
+                  </div>
+                </div>
+                <div className="settings-row-right">
+                  <IconChevronRight size={16} />
+                </div>
+              </button>
+            )}
+
             <button type="button" className="settings-row-item" onClick={() => setSubScreen('categories')}>
               <div className="settings-row-left">
                 <div className="settings-squircle squircle-purple">

@@ -30,6 +30,7 @@ type Props = {
   pwaInstallable?: boolean;
   onInstallApp?: () => void;
   onRequestConfirm?: (req: ConfirmRequest) => void;
+  onOpenShareTrip?: () => void;
 };
 
 export function SettingsTab({
@@ -58,6 +59,7 @@ export function SettingsTab({
   pwaInstallable,
   onInstallApp,
   onRequestConfirm,
+  onOpenShareTrip,
 }: Props) {
   return (
     <SettingsView
@@ -86,6 +88,7 @@ export function SettingsTab({
       pwaInstallable={pwaInstallable}
       onInstallApp={onInstallApp}
       onRequestConfirm={onRequestConfirm}
+      onOpenShareTrip={onOpenShareTrip}
       hasActiveTrip={true}
     />
   );

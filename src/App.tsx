@@ -28,7 +28,7 @@ import { FitHeading } from './components/FitHeading';
 import { usePrivacyStore } from './store/privacyStore';
 import { triggerHaptic } from './utils/haptics';
 import { useEscapeKey } from './utils/useEscapeKey';
-import { IconCalendar, IconChevronLeft, IconShare, IconPlus, IconEye, IconEyeOff } from './components/Icons';
+import { IconCalendar, IconChevronLeft, IconPlus, IconEye, IconEyeOff } from './components/Icons';
 import { formatDateRange } from './utils/dateRange';
 import { useScrollLock } from './utils/useScrollLock';
 import { useHistoryBack } from './utils/useHistoryBack';
@@ -1150,14 +1150,6 @@ export default function App() {
                 </button>
                 <NotificationsBellButton />
                 <button
-                  data-action="share"
-                  className="secondary-btn"
-                  style={{ padding: '7px 12px', fontSize: '12px', color: '#F2ECDC', borderColor: 'rgba(242,236,220,0.28)', background: 'rgba(242,236,220,0.06)' }}
-                  onClick={() => setShowShareTrip(true)}
-                >
-                  <IconShare size={14} className="icon-sm" /> Share
-                </button>
-                <button
                   data-action="trips-back"
                   className="secondary-btn"
                   style={{ padding: '7px 12px', fontSize: '12px', color: '#F2ECDC', borderColor: 'rgba(242,236,220,0.28)', background: 'rgba(242,236,220,0.06)' }}
@@ -1321,6 +1313,7 @@ export default function App() {
                 pwaInstallable={!!deferredPrompt}
                 onInstallApp={handleInstallApp}
                 onRequestConfirm={setConfirmRequest}
+                onOpenShareTrip={() => setShowShareTrip(true)}
               />
               </div>
             </div>
