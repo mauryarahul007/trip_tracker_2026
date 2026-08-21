@@ -1,5 +1,38 @@
 # Changelog
 
+## 2026-08-21 — Superadmin Ops Deck: fleet analytics, mobile support, and a Feature Tracker
+
+### Ops Deck grew from 4 sections to 7
+- **Analytics** gained growth trend, day-of-week activity heatmap, settlement health, split-mode/feature adoption rates, bug-report origin, notification delivery stats (aggregate only, no message content exposed), recycle-bin snapshot count, and platform split.
+- **Users** (new) — full account directory with suspend/restore, enforced via `is_banned()` wired into `is_trip_participant()`/`is_trip_admin()` so it blocks a user everywhere in one gate, mid-session; plus fleet/per-trip broadcast notifications.
+- **Audit** (new) — reads `security_audit_logs` (existed since migration 0048, but nothing ever wrote to it until now — `log_security_event()` is called from every sensitive superadmin RPC).
+- **Features** (new) — see below.
+- **Flags** gained Fleet Controls: maintenance mode (+ scheduled window), paused sign-ins, join-code rate limits, recycle-bin retention hours, expense amount ceiling — all `app_config`-backed instead of hardcoded.
+- **Trips** gained an "Inspect" button (opens a trip in the traveler UI using the superadmin's own already-elevated access — not per-user impersonation, which would need the `service_role` key in the browser).
+
+### The Flags grid was never actually cross-device
+- `featureFlags`/`tripFlagOverrides`/`userFlagOverrides` (the original global-toggle + per-trip + per-member override panel) turned out to be local `zustand persist` state only — a superadmin toggling a flag on one device never reached any other device, ever. It looked correct because the admin's own toggle always reflected back to them.
+- Fixed with a real backend: `feature_flag_overrides` table (scope: global/trip/user) + `get_resolved_feature_flags`/`get_all_feature_flag_overrides`/`set_feature_flag_override` RPCs (migration 0064). Every client now resolves its own flags on load and on trip switch; the Ops Deck loads every trip's/user's overrides for the panel views.
+
+### Feature Additions Tracker
+- A parallel system to the Bug Ledger, same architecture: `public.features` table + `submit_feature_request()` RPC (migration 0063), `scripts/feature.mjs` CLI mirroring `bug.mjs`, `FeatureRequestModal.tsx` ("Suggest a Feature" in Settings, gated behind a new `enableFeatureSuggestions` flag — off by default, enable per-person or globally), and the Ops Deck's Features tab for triage (Requested → Planned → In Progress → Shipped/Won't Do). A request can link to an *existing* flag for a one-click toggle right on its row — it can't retroactively create working on/off control for something nothing in the app checks yet.
+
+### Mobile responsiveness — three attempts, one that worked
+- First pass reflowed the desktop sidebar into a horizontal-scroll pill row: rejected, tabs got cut off with no indication more existed.
+- Second pass reflowed it into a wrapping 3-column grid: also rejected — still felt bolted onto a desktop pattern.
+- Landed on a header-switcher pattern instead (via a `frontend-design` skill review): the current section becomes a tappable status-line, tapping it opens a full-screen list of all sections. A CSS source-order bug (`.ops-rail`'s unconditional `display: flex` overriding its own mobile `display: none`, since it came later in the file) briefly showed both the old rail and the new switcher at once — fixed with the `!important` the original horizontal-scroll version had used for the same reason.
+- Also fixed: the Ops Deck header rendering flush against the Android status bar (never adopted the app-wide `env(safe-area-inset-*)` convention every other screen uses), and scroll position not resetting to top when switching sections.
+- The whole Ops Deck + Bug Ledger were code-split out of the main JS bundle (`React.lazy` + `Suspense`) — travelers who never open either now download neither.
+
+### Two more real bugs, found via user reports
+- The web-only "Enable Live Alerts" notification banner showed (and silently failed to work) on native Android/iOS, because `Notification.requestPermission()` is a no-op there by design (native has its own FCM path) — the banner's render condition didn't account for that.
+- The sync-status pill showed "Out of sync (0)" permanently, on every trip, on web and native — a second, broken staleness check (`lastModifiedAt` vs a `lastBackendSyncedAt` that's only ever refreshed by the offline-queue-drain path, which normal online writes never touch) was fighting the correct one (`syncQueue.length > 0`).
+
+### Files touched
+- `src/components/admin/*` (all 7 pages + `ops-deck.css`), `src/App.tsx`, `src/components/SettingsView.tsx`, `src/components/FeatureRequestModal.tsx`, `src/components/NotificationsPanel.tsx`, `src/store/tripStore.ts`, `src/services/{featureApi,featureFlagApi,tripApi}.ts`, `src/types/{admin,database}.ts`, `scripts/feature.mjs`, `supabase/migrations/0060-0064`, `superadmin.md`, `README.md`
+
+---
+
 ## 2026-08-08 (latest) — Group balances: collapsible entry + real internal settlement
 
 ### Member Balances now shows one row per group, not per member

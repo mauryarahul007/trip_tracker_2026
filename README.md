@@ -40,7 +40,8 @@ A **mobile-first, offline-capable, multi-user** trip-expense splitter. Create a 
 
 ### Trust & safety
 - **Report a Problem** — any user can file a bug report (with an auto-captured diagnostic snapshot: device info, sync queue state, recent console activity) straight from Settings
-- **Superadmin Bug Ledger** — a Supabase-backed, cross-device bug tracker for triaging reports, synced with a CLI (`npm run bug`) for filing/resolving bugs from the terminal
+- **Suggest a Feature** — a lighter-weight companion to Report a Problem, flag-gated (off by default, superadmin turns it on globally, per-trip, or for one person)
+- **Superadmin Ops Deck** — a code-split, mobile-friendly admin portal (see [`superadmin.md`](superadmin.md)) with 7 sections: Flags, fleet Analytics, Trips directory, Users (suspend/broadcast), a security Audit log, the Feature request tracker, and system Tools — all Supabase-backed and synced across every device, with CLIs (`npm run bug`, `npm run feature`) for filing/resolving from the terminal
 - **Security hardening** — RLS on every table, join-code rate limiting, Cloudflare Turnstile + honeypot anti-bot defenses, DB-level constraints, audit logging, and a locked-down CSP (see [Security reference](docs/reference-security-and-anti-bot-defense.md))
 
 ---
@@ -86,8 +87,9 @@ src/
 │   └── privacyStore.ts        # Blind Mode toggle
 ├── services/
 │   ├── supabaseClient.ts      # Supabase client + isMissingSupabaseEnv fallback flag
-│   ├── tripApi.ts             # Trip/expense/member CRUD against Supabase
-│   ├── bugApi.ts              # Bug ledger CRUD (RPC-based for RLS-safe user reports)
+│   ├── tripApi.ts             # Trip/expense/member CRUD + fleet-wide admin fetches
+│   ├── bugApi.ts / featureApi.ts   # Bug Ledger / Feature Tracker CRUD (RPC-based for RLS-safe user submissions)
+│   ├── featureFlagApi.ts      # Cross-device feature flag get/set (migration 0064)
 │   ├── notificationsApi.ts    # Notification fetch/mark-read
 │   ├── pushApi.ts / pushRegistration.ts  # Native push token registration
 │   ├── offlineReceiptStore.ts # IndexedDB queue for receipts captured offline
@@ -102,8 +104,12 @@ src/
 │   ├── MembersGroupsTab.tsx
 │   ├── AnalyticsTab.tsx / TripJourneyMap.tsx
 │   ├── SettingsView.tsx / SettingsTab.tsx / GlobalSettingsModal.tsx   # WhatsApp-style subscreen nav
-│   ├── BugReportModal.tsx          # "Report a Problem" full-screen subscreen
+│   ├── BugReportModal.tsx / FeatureRequestModal.tsx   # Report a Problem / Suggest a Feature
 │   ├── SuperAdminBugTracker.tsx / SuperadminAuthModal.tsx
+│   ├── admin/                      # Code-split superadmin Ops Deck — see superadmin.md
+│   │   ├── AdminPortalLayout.tsx   # Shell, section nav, mobile header switcher
+│   │   └── AdminFlagsPage / AdminAnalyticsPage / AdminTripsPage / AdminUsersPage /
+│   │       AdminAuditPage / AdminFeaturesPage / AdminToolsPage
 │   ├── NotificationsPanel.tsx / NotificationsBellButton.tsx / InAppNotificationBanner.tsx
 │   ├── ShareTripModal.tsx / TurnstileWidget.tsx
 │   ├── ConfirmDialog.tsx           # Reusable confirm modal (2- or 3-way choice)
@@ -113,7 +119,7 @@ src/
 
 android/ ios/                 # Capacitor native shells
 supabase/migrations/          # Ordered SQL migrations (schema, RLS, RPCs)
-scripts/bug.mjs               # CLI: add/list/resolve bugs, synced to Supabase + BUGS.md
+scripts/bug.mjs / feature.mjs # CLIs: add/list/resolve-or-ship, synced to Supabase + BUGS.md/FEATURES.md
 public/
 ├── manifest.json              # PWA manifest
 └── sw.js                      # Service worker (stale-while-revalidate)
@@ -125,6 +131,7 @@ public/
 
 | Doc | What it covers |
 |-----|----------------|
+| [Superadmin Architecture](superadmin.md) | Ops Deck sections, real auth flow, file map |
 | [Getting Started Tutorial](docs/tutorial-getting-started.md) | From install to your first settled trip |
 | [How to Record an Expense](docs/howto-record-expense.md) | Choosing the right split mode, editing, undo-delete |
 | [How to Create and Edit Groups](docs/howto-manage-groups.md) | Named groups for one-click split selection |
@@ -182,6 +189,11 @@ npm run bug:add       # File a bug from the CLI (syncs to Supabase + BUGS.md)
 npm run bug:list      # List tracked bugs
 npm run bug:resolve   # Resolve a bug by ID
 npm run bug:sync      # Reconcile local ledger with Supabase
+
+npm run feature:add   # Log a feature request/shipped item (syncs to Supabase + FEATURES.md)
+npm run feature:list  # List tracked features
+npm run feature:ship  # Mark a feature shipped by ID
+npm run feature:sync  # Reconcile local ledger with Supabase
 ```
 
 ---
@@ -197,6 +209,8 @@ Trip/expense data is scoped per-trip in Supabase Postgres, protected by Row Leve
 - **Category** — emoji + label; six built-in, unlimited custom
 - **Notification** — typed + parameterized (not pre-built sentences), rendered per-viewer
 - **Bug** — severity/category/status, environment snapshot, repro steps, resolution notes
+- **Feature** — category/status (requested → planned → in_progress → shipped/won't-do), optional link to a runtime `FeatureFlagKey`
+- **Feature flag override** — global/trip/user-scoped booleans (superadmin-set, cross-device, resolved client-side by priority: user > trip > global > default)
 
 See [Reference: Data Model](docs/reference-data-model.md) for full field-level docs.
 

@@ -2,6 +2,8 @@
 
 This guide outlines how to use the unified **Bug Tracker** in **Trip Tracker 2026** across **Antigravity AI**, **Claude CLI** (terminal / hive sessions), and **Superadmins / QA testers**.
 
+A parallel system, [**Feature Tracker**](../FEATURES.md), works identically for feature requests instead of defects (`npm run feature:add`/`feature:list`/`feature:ship`, the Ops Deck's Features tab) — see [`superadmin.md`](../superadmin.md), section SEC.06.
+
 ---
 
 ## 🚀 Quick Reference Cheat Sheet
@@ -110,10 +112,11 @@ This automatically updates `bugs/bugs.json` and regenerates `BUGS.md`.
 
 ## 3. Bi-Directional Live Sync Mechanics
 
-When running `npm run dev`, Vite's built-in REST middleware (`/api/bugs`) binds the Superadmin UI directly to the filesystem ledger (`bugs/bugs.json`):
-1. **Any bug added or resolved in the UI** is immediately written to `bugs/bugs.json` and updates `BUGS.md`.
-2. **Any bug added or resolved in the CLI** (`npm run bug:add` / `npm run bug:resolve`) is immediately visible when refreshing or clicking **"Sync"** in the Superadmin UI.
-3. If running offline or without the local dev server, changes fall back safely to `localStorage`.
+The Superadmin UI reads/writes `public.bugs` directly in Supabase (migration 0055 — RLS: any authenticated user can insert via the `report_bug` RPC, only a superadmin can read/manage the ledger). `bugs/bugs.json` + `BUGS.md` are a **separate**, git-tracked ledger for AI/CLI agents working in the repo, kept in sync with the Supabase table by `scripts/bug.mjs`:
+1. **Any bug added or resolved in the UI** lands in Supabase immediately, visible to every device.
+2. **Any bug added or resolved in the CLI** (`npm run bug:add` / `npm run bug:resolve`) mirrors to Supabase too (when `SUPABASE_URL`/`SUPABASE_SERVICE_ROLE_KEY` are set in `.env`), and writes `bugs/bugs.json` + `BUGS.md` locally either way.
+3. Run `npm run bug:sync` to pull anything filed through the UI back into the local ledger — remote wins on a shared id, anything local-only gets pushed up.
+4. If Supabase isn't configured (no `.env` / `isMissingSupabaseEnv`), the app falls back to per-browser `localStorage` — same trust level as the rest of the app's offline dev fallbacks, not synced anywhere.
 
 ---
 
