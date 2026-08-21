@@ -1,11 +1,16 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { collectDirtyExpenseIds, mergeServerExpenses, resolvePendingLocation, getTripNotificationRecipients } from './tripStore';
+import { collectDirtyExpenseIds, mergeServerExpenses, resolvePendingLocation, getTripNotificationRecipients, DEFAULT_CATEGORIES, useTripStore } from './tripStore';
 import type { Expense, Member, Trip } from '../types';
 
 vi.mock('../utils/geolocation', () => ({
   searchPlaces: vi.fn(),
   reverseGeocode: vi.fn(),
 }));
+
+vi.mock('../services/tripApi', async () => {
+  const actual = await vi.importActual<typeof import('../services/tripApi')>('../services/tripApi');
+  return { ...actual, insertTripGraph: vi.fn().mockRejectedValue(new Error('offline')) };
+});
 
 const { searchPlaces, reverseGeocode } = await import('../utils/geolocation');
 
@@ -85,6 +90,18 @@ describe('mergeServerExpenses', () => {
     const merged = mergeServerExpenses(local, server, 'trip-a', new Set(['exp-1']));
     expect(merged).toHaveLength(1);
     expect(merged[0].title).toBe('Edited locally');
+  });
+});
+
+describe('loadDemoTrip', () => {
+  // Regression test: the offline fallback used to reuse DEFAULT_CATEGORIES
+  // as `result.categories`, which the caller then spread on top of
+  // DEFAULT_CATEGORIES again — doubling every category (BUG-030).
+  it('does not duplicate default categories when insertTripGraph fails (offline path)', async () => {
+    await useTripStore.getState().loadDemoTrip();
+    const ids = useTripStore.getState().categories.map((c) => c.id);
+    expect(ids).toEqual([...new Set(ids)]);
+    expect(ids).toHaveLength(DEFAULT_CATEGORIES.length);
   });
 });
 

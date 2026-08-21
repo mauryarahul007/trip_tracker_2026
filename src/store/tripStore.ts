@@ -1804,7 +1804,11 @@ export const useTripStore = create<TripStore>()(
             members: demo.members,
             groups: demo.groups,
             expenses: expensesList,
-            categories: DEFAULT_CATEGORIES,
+            // Caller (below) prepends DEFAULT_CATEGORIES itself — this must
+            // mirror insertTripGraph's success shape (custom categories
+            // only) or defaults get concatenated with defaults and every
+            // category shows twice.
+            categories: [],
           };
         }
 
