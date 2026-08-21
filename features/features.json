@@ -9,10 +9,40 @@
     "environment": {
       "platform": "web"
     },
-    "createdAt": "2026-08-21T16:34:01.305Z",
-    "updatedAt": "2026-08-21T16:34:01.305Z",
-    "shippedAt": "2026-08-21T16:34:01.305Z",
+    "createdAt": "2026-08-21T16:34:01.305+00:00",
+    "updatedAt": "2026-08-21T16:34:01.305+00:00",
+    "shippedAt": "2026-08-21T16:34:01.305+00:00",
     "shippedBy": "claude-cli",
     "shippedNote": "Parallel system to the Bug Ledger. Migration 0063, featureApi.ts, feature.mjs CLI, FeatureRequestModal.tsx (Settings > Suggest a Feature), AdminFeaturesPage.tsx (Ops Deck Features tab) with flag-linking. Commit 1bf95d6."
+  },
+  {
+    "id": "FEAT-002",
+    "title": "Test",
+    "description": "Test",
+    "category": "ui-ux",
+    "status": "requested",
+    "requestedBy": "mauryarahul007@gmail.com",
+    "environment": {
+      "route": "#nav-3",
+      "platform": "web"
+    },
+    "createdAt": "2026-08-21T17:20:12.668106+00:00",
+    "updatedAt": "2026-08-21T17:20:12.668106+00:00"
+  },
+  {
+    "id": "FEAT-003",
+    "title": "Refresh button on Features tab",
+    "description": "Manual refresh on the Ops Deck Features tab instead of needing a full page reload to see a newly submitted request.",
+    "category": "admin",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-08-21T17:24:03.31+00:00",
+    "updatedAt": "2026-08-21T17:24:03.31+00:00",
+    "shippedAt": "2026-08-21T17:24:03.31+00:00",
+    "shippedBy": "claude-cli",
+    "shippedNote": "reloadFleetData now returns a Promise so the button can await + spinner instead of requiring a full page reload. Commit 228c582."
   }
 ]
