@@ -572,8 +572,8 @@
     "status": "resolved",
     "foundBy": "rahul",
     "environment": {
-      "platform": "web",
       "isOnline": true,
+      "platform": "web",
       "appVersion": "1.0.0"
     },
     "reproSteps": [
@@ -583,10 +583,10 @@
     "expectedBehavior": "Report submits and appears in the superadmin bug tracker",
     "actualBehavior": "Submission fails silently / never appears in bug tracker",
     "diagnostics": {},
-    "createdAt": "2026-08-21T09:55:58.596Z",
-    "updatedAt": "2026-08-21T09:56:17.112Z",
+    "createdAt": "2026-08-21T09:55:58.596+00:00",
+    "updatedAt": "2026-08-21T09:56:17.112+00:00",
+    "resolvedAt": "2026-08-21T09:56:17.111+00:00",
     "resolvedBy": "rahul",
-    "resolvedAt": "2026-08-21T09:56:17.111Z",
     "resolutionNote": "Fixed via report_bug() SECURITY DEFINER RPC (migration 0059): id computation and insert now run server-side, bypassing RLS, so normal users no longer need SELECT on bugs. bugApi.ts createBug() now calls supabase.rpc('report_bug', ...). Commit 496306b."
   },
   {
@@ -598,8 +598,8 @@
     "status": "resolved",
     "foundBy": "rahul",
     "environment": {
-      "platform": "web",
       "isOnline": true,
+      "platform": "web",
       "appVersion": "1.0.0"
     },
     "reproSteps": [
@@ -609,10 +609,10 @@
     "expectedBehavior": "User can scroll freely and always reach a way to close/go back",
     "actualBehavior": "Scrolling down gets stuck, close button becomes unreachable",
     "diagnostics": {},
-    "createdAt": "2026-08-21T09:56:03.917Z",
-    "updatedAt": "2026-08-21T09:56:17.596Z",
+    "createdAt": "2026-08-21T09:56:03.917+00:00",
+    "updatedAt": "2026-08-21T09:56:17.596+00:00",
+    "resolvedAt": "2026-08-21T09:56:17.595+00:00",
     "resolvedBy": "rahul",
-    "resolvedAt": "2026-08-21T09:56:17.595Z",
     "resolutionNote": "BugReportModal converted from a modal-overlay popup to a full-screen SettingsView subscreen (settings-subscreen-enter layout), same pattern as other Settings subscreens -- no more trapped scroll. Commit 496306b."
   },
   {
@@ -624,8 +624,8 @@
     "status": "resolved",
     "foundBy": "rahul",
     "environment": {
-      "platform": "web",
       "isOnline": true,
+      "platform": "web",
       "appVersion": "1.0.0"
     },
     "reproSteps": [
@@ -635,11 +635,70 @@
     "expectedBehavior": "Prompted to submit, discard, or keep editing before leaving",
     "actualBehavior": "Draft is silently discarded, no prompt",
     "diagnostics": {},
-    "createdAt": "2026-08-21T09:56:09.961Z",
-    "updatedAt": "2026-08-21T09:56:18.139Z",
+    "createdAt": "2026-08-21T09:56:09.961+00:00",
+    "updatedAt": "2026-08-21T09:56:18.139+00:00",
+    "resolvedAt": "2026-08-21T09:56:18.138+00:00",
     "resolvedBy": "rahul",
-    "resolvedAt": "2026-08-21T09:56:18.138Z",
     "resolutionNote": "Added a back-guard (onRegisterBackGuard) wired through both the on-screen back link and SettingsView's useHistoryBack hardware/browser-back handling. When there's unsent text, a 3-way ConfirmDialog (new tertiaryLabel/onTertiary support) offers Submit & Go Back, Discard & Go Back, or Keep Editing. Commit 496306b."
+  },
+  {
+    "id": "BUG-023",
+    "title": "Test from app",
+    "description": "Test from app",
+    "severity": "critical",
+    "category": "navigation",
+    "status": "resolved",
+    "foundBy": "mauryarahul007@gmail.com",
+    "environment": {
+      "route": "#nav-3",
+      "isOnline": true,
+      "platform": "web",
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Test from app"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {
+      "consoleLogs": [
+        "[info] DiagnosticLogger initialized"
+      ],
+      "activeTripId": "d6e60f68-90ac-4ac3-9388-bff447429c5e",
+      "syncQueueLength": 0
+    },
+    "createdAt": "2026-08-21T10:01:22.101007+00:00",
+    "updatedAt": "2026-08-21T10:53:11.466+00:00",
+    "resolvedAt": "2026-08-21T10:53:11.466+00:00",
+    "resolvedBy": "superadmin",
+    "resolutionNote": "Test"
+  },
+  {
+    "id": "BUG-024",
+    "title": "Failed to update a ServiceWorker for scope ('https://trip-tracker.blackmaroon.in/') with script ('Unknown'): The object is in an invalid sta",
+    "description": "Automatically captured unhandled rejection.\n\nNo stack trace available.",
+    "severity": "critical",
+    "category": "general",
+    "status": "open",
+    "foundBy": "auto-crash-handler",
+    "environment": {
+      "route": "#/",
+      "isOnline": true,
+      "platform": "web",
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [],
+    "expectedBehavior": "App runs without throwing.",
+    "actualBehavior": "Failed to update a ServiceWorker for scope ('https://trip-tracker.blackmaroon.in/') with script ('Unknown'): The object is in an invalid state.",
+    "diagnostics": {
+      "consoleLogs": [
+        "[info] DiagnosticLogger initialized",
+        "[error] Unhandled Promise Rejection: Failed to update a ServiceWorker for scope ('https://trip-tracker.blackmaroon.in/') with script ('Unknown'): The object is in an invalid state."
+      ],
+      "syncQueueLength": 0
+    },
+    "createdAt": "2026-08-21T14:26:01.480804+00:00",
+    "updatedAt": "2026-08-21T14:26:01.480804+00:00"
   },
   {
     "id": "BUG-025",
@@ -650,8 +709,8 @@
     "status": "resolved",
     "foundBy": "mauryarahul007@gmail.com",
     "environment": {
-      "platform": "web",
       "isOnline": true,
+      "platform": "web",
       "appVersion": "1.0.0"
     },
     "reproSteps": [
@@ -661,10 +720,10 @@
     "expectedBehavior": "",
     "actualBehavior": "",
     "diagnostics": {},
-    "createdAt": "2026-08-21T16:16:53.820Z",
-    "updatedAt": "2026-08-21T16:17:04.617Z",
+    "createdAt": "2026-08-21T16:16:53.82+00:00",
+    "updatedAt": "2026-08-21T16:17:04.617+00:00",
+    "resolvedAt": "2026-08-21T16:17:04.616+00:00",
     "resolvedBy": "claude-cli",
-    "resolvedAt": "2026-08-21T16:17:04.616Z",
     "resolutionNote": "Gated the banner on isWebNotificationSupported() in NotificationsPanel.tsx so it only renders in an actual browser tab. Commit 4433bc1."
   },
   {
@@ -676,8 +735,8 @@
     "status": "resolved",
     "foundBy": "mauryarahul007@gmail.com",
     "environment": {
-      "platform": "web",
       "isOnline": true,
+      "platform": "web",
       "appVersion": "1.0.0"
     },
     "reproSteps": [
@@ -687,10 +746,10 @@
     "expectedBehavior": "",
     "actualBehavior": "",
     "diagnostics": {},
-    "createdAt": "2026-08-21T16:16:54.493Z",
-    "updatedAt": "2026-08-21T16:17:05.056Z",
+    "createdAt": "2026-08-21T16:16:54.493+00:00",
+    "updatedAt": "2026-08-21T16:17:05.056+00:00",
+    "resolvedAt": "2026-08-21T16:17:05.055+00:00",
     "resolvedBy": "claude-cli",
-    "resolvedAt": "2026-08-21T16:17:05.055Z",
     "resolutionNote": "Dropped the broken lastModifiedAt/lastBackendSyncedAt comparison from syncStatus in App.tsx -- syncQueue.length is the correct, live signal and was already there. Commit f950404."
   },
   {
@@ -702,8 +761,8 @@
     "status": "resolved",
     "foundBy": "mauryarahul007@gmail.com",
     "environment": {
-      "platform": "web",
       "isOnline": true,
+      "platform": "web",
       "appVersion": "1.0.0"
     },
     "reproSteps": [
@@ -713,10 +772,10 @@
     "expectedBehavior": "",
     "actualBehavior": "",
     "diagnostics": {},
-    "createdAt": "2026-08-21T16:16:55.074Z",
-    "updatedAt": "2026-08-21T16:17:05.461Z",
+    "createdAt": "2026-08-21T16:16:55.074+00:00",
+    "updatedAt": "2026-08-21T16:17:05.461+00:00",
+    "resolvedAt": "2026-08-21T16:17:05.46+00:00",
     "resolvedBy": "claude-cli",
-    "resolvedAt": "2026-08-21T16:17:05.460Z",
     "resolutionNote": "Replaced with a header status-line trigger that opens a full-screen section switcher on tap, reusing the existing dot+code+label rail styling. Also fixed a CSS source-order bug where the desktop rail's unconditional display:flex was overriding its own mobile display:none. Commits 55ab403, 178a638."
   },
   {
@@ -728,8 +787,8 @@
     "status": "resolved",
     "foundBy": "mauryarahul007@gmail.com",
     "environment": {
-      "platform": "web",
       "isOnline": true,
+      "platform": "web",
       "appVersion": "1.0.0"
     },
     "reproSteps": [
@@ -739,10 +798,10 @@
     "expectedBehavior": "",
     "actualBehavior": "",
     "diagnostics": {},
-    "createdAt": "2026-08-21T16:16:55.951Z",
-    "updatedAt": "2026-08-21T16:17:05.843Z",
+    "createdAt": "2026-08-21T16:16:55.951+00:00",
+    "updatedAt": "2026-08-21T16:17:05.843+00:00",
+    "resolvedAt": "2026-08-21T16:17:05.842+00:00",
     "resolvedBy": "claude-cli",
-    "resolvedAt": "2026-08-21T16:17:05.842Z",
     "resolutionNote": "Added the app-wide calc(Npx + var(--safe-top, 0px)) safe-area padding convention to .ops-shell and .ops-panel in ops-deck.css. Commit e433fa8."
   }
 ]
