@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { Category, Trip, Expense, Member } from '../../types';
 import type { AdminUserRow, AuditLogEntry, DevicePlatformCount, NotificationStats } from '../../types/admin';
 import type { BugRecord } from '../../services/bugApi';
@@ -76,6 +76,7 @@ export function AdminPortalLayout({
   const [notificationStats, setNotificationStats] = useState<NotificationStats>({ totalCount: 0, readCount: 0, last7dCount: 0 });
   const [recycledCount, setRecycledCount] = useState(0);
   const [showSectionSwitcher, setShowSectionSwitcher] = useState(false);
+  const panelRef = useRef<HTMLElement>(null);
   const lockSuperadmin = useTripStore((s) => s.lockSuperadmin);
   const signOut = useAuthStore((s) => s.signOut);
   const clock = useUtcClock();
@@ -123,6 +124,13 @@ export function AdminPortalLayout({
   };
 
   const currentSection = SECTIONS.find((s) => s.id === activeTab) ?? SECTIONS[0];
+
+  // Switching sections should land at the top of the new one, not wherever
+  // the scroll happened to be on the previous section's (independently
+  // scrollable) panel.
+  useEffect(() => {
+    panelRef.current?.scrollTo({ top: 0, behavior: 'instant' });
+  }, [activeTab]);
 
   return (
     <div className="ops-deck ops-shell">
@@ -188,7 +196,7 @@ export function AdminPortalLayout({
           <IconChevronRight size={16} className="ops-section-trigger-chevron" />
         </button>
 
-        <main className="ops-panel">
+        <main className="ops-panel" ref={panelRef}>
           {activeTab === 'flags' && <AdminFlagsPage trips={trips} members={members} />}
           {activeTab === 'analytics' && (
             <AdminAnalyticsPage
