@@ -30,6 +30,7 @@ import { formatDateRange } from '../utils/dateRange';
 import { getCategoryKeywords } from '../utils/categoryHelper';
 import { getAppVersion } from '../utils/appVersion';
 import { BugReportModal } from './BugReportModal';
+import { FeatureRequestModal } from './FeatureRequestModal';
 import { SuperadminAuthModal } from './SuperadminAuthModal';
 
 // Superadmin-only, reached only via the gated "Superadmin Console" row
@@ -40,7 +41,7 @@ import { useHistoryBack } from '../utils/useHistoryBack';
 
 export type ThemePref = 'light' | 'dark' | 'system';
 
-type SubScreen = null | 'categories' | 'recycle-bin' | 'appearance' | 'backups' | 'archived-trips' | 'bug-tracker' | 'report-issue';
+type SubScreen = null | 'categories' | 'recycle-bin' | 'appearance' | 'backups' | 'archived-trips' | 'bug-tracker' | 'report-issue' | 'suggest-feature';
 
 const RECYCLE_BIN_WINDOW_MS = 24 * 60 * 60 * 1000;
 
@@ -163,10 +164,20 @@ export function SettingsView({
     reportIssueBackGuardRef.current = guard;
   };
 
+  // Same back-guard pattern for Suggest a Feature.
+  const suggestFeatureBackGuardRef = useRef<(() => void) | null>(null);
+  const setSuggestFeatureBackGuard = (guard: (() => void) | null) => {
+    suggestFeatureBackGuardRef.current = guard;
+  };
+
   // Register sub-screen drill-downs into browser history stack (WhatsApp hierarchical navigation)
   useHistoryBack(subScreen !== null, () => {
     if (subScreen === 'report-issue' && reportIssueBackGuardRef.current) {
       reportIssueBackGuardRef.current();
+      return;
+    }
+    if (subScreen === 'suggest-feature' && suggestFeatureBackGuardRef.current) {
+      suggestFeatureBackGuardRef.current();
       return;
     }
     setSubScreen(null);
@@ -915,6 +926,16 @@ export function SettingsView({
     );
   }
 
+  if (subScreen === 'suggest-feature') {
+    return (
+      <FeatureRequestModal
+        onBack={() => setSubScreen(null)}
+        onRequestConfirm={onRequestConfirm}
+        onRegisterBackGuard={setSuggestFeatureBackGuard}
+      />
+    );
+  }
+
   // -------------------------------------------------------------------------
   // Main Settings Screen (WhatsApp Inset Grouped Layout)
   // -------------------------------------------------------------------------
@@ -1363,6 +1384,24 @@ export function SettingsView({
               <div className="settings-row-texts">
                 <span className="settings-row-title">Report a Problem</span>
                 <span className="settings-row-subtitle">Tell us what went wrong — device details attach automatically</span>
+              </div>
+            </div>
+            <div className="settings-row-right">
+              <IconChevronRight size={16} />
+            </div>
+          </button>
+          <button
+            type="button"
+            className="settings-row-item"
+            onClick={() => setSubScreen('suggest-feature')}
+          >
+            <div className="settings-row-left">
+              <div className="settings-squircle squircle-teal">
+                <span style={{ fontSize: '16px' }}>✨</span>
+              </div>
+              <div className="settings-row-texts">
+                <span className="settings-row-title">Suggest a Feature</span>
+                <span className="settings-row-subtitle">Tell us what would make this app better</span>
               </div>
             </div>
             <div className="settings-row-right">

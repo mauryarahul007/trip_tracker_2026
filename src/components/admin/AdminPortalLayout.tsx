@@ -14,12 +14,14 @@ import {
   fetchSuperadminIds,
 } from '../../services/tripApi';
 import { fetchBugs } from '../../services/bugApi';
+import { fetchFeatures, type FeatureRecord } from '../../services/featureApi';
 import { IconChevronRight } from '../Icons';
 import { AdminFlagsPage } from './AdminFlagsPage';
 import { AdminAnalyticsPage } from './AdminAnalyticsPage';
 import { AdminTripsPage } from './AdminTripsPage';
 import { AdminUsersPage } from './AdminUsersPage';
 import { AdminAuditPage } from './AdminAuditPage';
+import { AdminFeaturesPage } from './AdminFeaturesPage';
 import { AdminToolsPage } from './AdminToolsPage';
 import './ops-deck.css';
 
@@ -32,7 +34,7 @@ interface Props {
   onInspectTrip?: (tripId: string) => void;
 }
 
-export type AdminTab = 'flags' | 'analytics' | 'trips' | 'users' | 'audit' | 'tools';
+export type AdminTab = 'flags' | 'analytics' | 'trips' | 'users' | 'audit' | 'features' | 'tools';
 
 const SECTIONS: { id: AdminTab; label: string; code: string }[] = [
   { id: 'flags', label: 'Flags', code: 'SEC.01' },
@@ -40,7 +42,8 @@ const SECTIONS: { id: AdminTab; label: string; code: string }[] = [
   { id: 'trips', label: 'Trips', code: 'SEC.03' },
   { id: 'users', label: 'Users', code: 'SEC.04' },
   { id: 'audit', label: 'Audit', code: 'SEC.05' },
-  { id: 'tools', label: 'Tools', code: 'SEC.06' },
+  { id: 'features', label: 'Features', code: 'SEC.06' },
+  { id: 'tools', label: 'Tools', code: 'SEC.07' },
 ];
 
 function useUtcClock() {
@@ -75,6 +78,7 @@ export function AdminPortalLayout({
   const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>([]);
   const [notificationStats, setNotificationStats] = useState<NotificationStats>({ totalCount: 0, readCount: 0, last7dCount: 0 });
   const [recycledCount, setRecycledCount] = useState(0);
+  const [features, setFeatures] = useState<FeatureRecord[]>([]);
   const [showSectionSwitcher, setShowSectionSwitcher] = useState(false);
   const panelRef = useRef<HTMLElement>(null);
   const lockSuperadmin = useTripStore((s) => s.lockSuperadmin);
@@ -111,6 +115,7 @@ export function AdminPortalLayout({
     fetchAuditLogs().then(setAuditLogs).catch(() => setAuditLogs([]));
     fetchNotificationStats().then(setNotificationStats).catch(() => {});
     fetchRecycledExpenseCount().then(setRecycledCount).catch(() => {});
+    fetchFeatures().then(setFeatures).catch(() => setFeatures([]));
   };
 
   useEffect(() => {
@@ -218,6 +223,7 @@ export function AdminPortalLayout({
           {activeTab === 'audit' && (
             <AdminAuditPage logs={auditLogs} trips={trips} users={users} onLogsChanged={reloadFleetData} />
           )}
+          {activeTab === 'features' && <AdminFeaturesPage features={features} onFeaturesChanged={reloadFleetData} />}
           {activeTab === 'tools' && <AdminToolsPage categories={categories} trips={trips} expenses={expenses} />}
         </main>
       </div>

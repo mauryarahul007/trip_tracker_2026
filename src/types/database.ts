@@ -375,6 +375,44 @@ export interface Database {
         Update: never;
         Relationships: [];
       };
+      features: {
+        Row: {
+          id: string;
+          title: string;
+          description: string;
+          category: 'ui-ux' | 'analytics' | 'admin' | 'sync' | 'notifications' | 'security' | 'performance' | 'native' | 'general';
+          status: 'requested' | 'planned' | 'in_progress' | 'shipped' | 'wont_do';
+          requested_by: string;
+          environment: Record<string, unknown>;
+          created_at: string;
+          updated_at: string;
+          shipped_at: string | null;
+          shipped_by: string | null;
+          shipped_note: string | null;
+          linked_flag_key: string | null;
+        };
+        Insert: {
+          id: string;
+          title: string;
+          description?: string;
+          category: 'ui-ux' | 'analytics' | 'admin' | 'sync' | 'notifications' | 'security' | 'performance' | 'native' | 'general';
+          status?: 'requested' | 'planned' | 'in_progress' | 'shipped' | 'wont_do';
+          requested_by?: string;
+          environment?: Record<string, unknown>;
+        };
+        Update: Partial<{
+          title: string;
+          description: string;
+          category: 'ui-ux' | 'analytics' | 'admin' | 'sync' | 'notifications' | 'security' | 'performance' | 'native' | 'general';
+          status: 'requested' | 'planned' | 'in_progress' | 'shipped' | 'wont_do';
+          updated_at: string;
+          shipped_at: string | null;
+          shipped_by: string | null;
+          shipped_note: string | null;
+          linked_flag_key: string | null;
+        }>;
+        Relationships: [];
+      };
       app_config: {
         Row: {
           key: string;
@@ -496,6 +534,30 @@ export interface Database {
       get_superadmin_ids: {
         Args: Record<string, never>;
         Returns: string[];
+      };
+      submit_feature_request: {
+        Args: {
+          p_title: string;
+          p_description: string;
+          p_category: string;
+          p_requested_by: string;
+          p_environment: Record<string, unknown>;
+        };
+        Returns: {
+          id: string;
+          title: string;
+          description: string;
+          category: 'ui-ux' | 'analytics' | 'admin' | 'sync' | 'notifications' | 'security' | 'performance' | 'native' | 'general';
+          status: 'requested' | 'planned' | 'in_progress' | 'shipped' | 'wont_do';
+          requested_by: string;
+          environment: Record<string, unknown>;
+          created_at: string;
+          updated_at: string;
+          shipped_at: string | null;
+          shipped_by: string | null;
+          shipped_note: string | null;
+          linked_flag_key: string | null;
+        };
       };
       get_notification_stats: {
         Args: Record<string, never>;
