@@ -332,7 +332,7 @@ export const useTripStore = create<TripStore>()(
     // If the device is offline, Supabase env isn't configured, or we're in
     // local demo mode, suppress network errors — all three are expected to
     // run without a reachable backend. A real superadmin session (see
-    // 0045_superadmin_identity_and_rls.sql) surfaces errors like any user.
+    // 0057_superadmin_identity_and_rls.sql) surfaces errors like any user.
     const isDemo = get().userId === 'demo-user-superadmin';
     if (!navigator.onLine || isMissingSupabaseEnv || isDemo) {
       console.warn('Trip store operation offline/demo/local (deferred/cached):', e);

@@ -1,4 +1,4 @@
--- 0045_superadmin_identity_and_rls.sql wired is_superadmin() into
+-- 0057_superadmin_identity_and_rls.sql wired is_superadmin() into
 -- is_trip_admin(), which every WRITE policy (members/groups/categories/
 -- expenses insert-update-delete, trips update/delete) routes through --
 -- but no READ policy routes through is_trip_admin(). Reads go through

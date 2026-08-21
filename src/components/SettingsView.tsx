@@ -31,13 +31,12 @@ import { getCategoryKeywords } from '../utils/categoryHelper';
 import { getAppVersion } from '../utils/appVersion';
 import { BugReportModal } from './BugReportModal';
 import { SuperAdminBugTracker } from './SuperAdminBugTracker';
-import { SuperadminDashboard } from './SuperadminDashboard';
 import { SuperadminAuthModal } from './SuperadminAuthModal';
 import { useHistoryBack } from '../utils/useHistoryBack';
 
 export type ThemePref = 'light' | 'dark' | 'system';
 
-type SubScreen = null | 'categories' | 'recycle-bin' | 'appearance' | 'backups' | 'archived-trips' | 'bug-tracker' | 'superadmin';
+type SubScreen = null | 'categories' | 'recycle-bin' | 'appearance' | 'backups' | 'archived-trips' | 'bug-tracker';
 
 const RECYCLE_BIN_WINDOW_MS = 24 * 60 * 60 * 1000;
 
@@ -140,8 +139,6 @@ export function SettingsView({
   const isSuperadmin = useTripStore((s) => s.isSuperadmin);
   const isFeatureEnabled = useTripStore((s) => s.isFeatureEnabled);
   const trips = useTripStore((s) => s.trips);
-  const groups = useTripStore((s) => s.groups);
-  const allExpenses = useTripStore((s) => s.expenses);
   const activeTripId = useTripStore((s) => s.activeTripId);
   const activeTrip = trips.find((t) => t.id === activeTripId);
 
@@ -258,20 +255,6 @@ export function SettingsView({
   // -------------------------------------------------------------------------
   // Sub-screens
   // -------------------------------------------------------------------------
-
-  if (subScreen === 'superadmin') {
-    return (
-      <SuperadminDashboard
-        onBack={() => setSubScreen(null)}
-        trips={trips}
-        activeTrip={activeTrip}
-        expenses={allExpenses}
-        members={members}
-        groups={groups}
-        categories={categories}
-      />
-    );
-  }
 
   if (subScreen === 'categories') {
     return (
@@ -934,7 +917,7 @@ export function SettingsView({
       {/* Superadmin Active Hero Cockpit Card */}
       {isSuperadmin && (
         <div
-          onClick={() => (onOpenSuperadminPortal ? onOpenSuperadminPortal() : setSubScreen('superadmin'))}
+          onClick={() => onOpenSuperadminPortal?.()}
           style={{
             display: 'flex',
             alignItems: 'center',
@@ -1405,10 +1388,7 @@ export function SettingsView({
       <SuperadminAuthModal
         isOpen={isSuperadminModalOpen}
         onClose={() => setIsSuperadminModalOpen(false)}
-        onSuccess={() => {
-          setIsSuperadminModalOpen(false);
-          setSubScreen('superadmin');
-        }}
+        onSuccess={() => setIsSuperadminModalOpen(false)}
       />
     </div>
   );

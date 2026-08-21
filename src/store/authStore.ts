@@ -216,7 +216,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
       return true;
     }
 
-    // Real superadmin identity (see supabase/migrations/0045_superadmin_identity_and_rls.sql):
+    // Real superadmin identity (see supabase/migrations/0057_superadmin_identity_and_rls.sql):
     // sign in with whatever the caller typed -- no shared/hardcoded account
     // -- then require the RLS-side is_superadmin() check to pass before
     // granting the admin UI. A successful password sign-in alone is not
