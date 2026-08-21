@@ -881,7 +881,7 @@ export function SettingsView({
   if (subScreen === 'bug-tracker') {
     return (
       <div className="fade-in settings-container">
-        <SuperAdminBugTracker onBack={() => setSubScreen(null)} isAdmin={isAdmin} />
+        <SuperAdminBugTracker onBack={() => setSubScreen(null)} isAdmin={isSuperadmin} />
       </div>
     );
   }
@@ -1291,8 +1291,8 @@ export function SettingsView({
         </div>
       </div>
 
-      {/* Group 5: Superadmin Console & Diagnostics */}
-      {isAdmin && (
+      {/* Group 5: Superadmin Console (superadmin-only) */}
+      {isSuperadmin && (
         <div className="settings-group">
           <h4 className="settings-group-title">Superadmin Console</h4>
           <div className="settings-group-card">
@@ -1314,28 +1314,34 @@ export function SettingsView({
                 <IconChevronRight size={16} />
               </div>
             </button>
-
-            <button
-              type="button"
-              className="settings-row-item"
-              onClick={() => setShowBugModal(true)}
-            >
-              <div className="settings-row-left">
-                <div className="settings-squircle squircle-slate">
-                  <span style={{ fontSize: '16px' }}>🐞</span>
-                </div>
-                <div className="settings-row-texts">
-                  <span className="settings-row-title">Quick Bug Reporter &amp; Telemetry</span>
-                  <span className="settings-row-subtitle">Capture live logs &amp; export report for Claude / Antigravity</span>
-                </div>
-              </div>
-              <div className="settings-row-right">
-                <IconChevronRight size={16} />
-              </div>
-            </button>
           </div>
         </div>
       )}
+
+      {/* Group 6: Support — everyone gets a way to report a problem */}
+      <div className="settings-group">
+        <h4 className="settings-group-title">Support</h4>
+        <div className="settings-group-card">
+          <button
+            type="button"
+            className="settings-row-item"
+            onClick={() => setShowBugModal(true)}
+          >
+            <div className="settings-row-left">
+              <div className="settings-squircle squircle-slate">
+                <span style={{ fontSize: '16px' }}>🐞</span>
+              </div>
+              <div className="settings-row-texts">
+                <span className="settings-row-title">Report a Problem</span>
+                <span className="settings-row-subtitle">Tell us what went wrong — device details attach automatically</span>
+              </div>
+            </div>
+            <div className="settings-row-right">
+              <IconChevronRight size={16} />
+            </div>
+          </button>
+        </div>
+      </div>
 
       <div>
         <h4 className="settings-group-title">About</h4>

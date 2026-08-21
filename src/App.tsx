@@ -1195,7 +1195,7 @@ export default function App() {
                 window.location.hash = '#/';
               }
             }}
-            isAdmin={isAdmin || isSuperadmin}
+            isAdmin={isSuperadmin}
             onRequestConfirm={setConfirmRequest}
           />
         </div>
@@ -1222,7 +1222,7 @@ export default function App() {
           onDeleteTrip={handleDeleteTrip}
           onArchiveTrip={handleArchiveTrip}
           onOpenSettings={() => setShowGlobalSettings(true)}
-          onOpenBugTracker={() => setShowBugTracker(true)}
+          onOpenBugTracker={isSuperadmin ? () => setShowBugTracker(true) : undefined}
         />
       ) : (
         /* Screen 2: Active Trip Dashboard */
@@ -1245,7 +1245,7 @@ export default function App() {
                 </div>
               </div>
               <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexShrink: 0 }}>
-                {isAdmin && (
+                {isSuperadmin && (
                   <button
                     type="button"
                     className="secondary-btn"

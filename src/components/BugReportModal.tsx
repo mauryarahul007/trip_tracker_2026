@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { diagnosticLogger, type DiagnosticSnapshot } from '../utils/diagnosticLogger';
-import { IconClose, IconCopy, IconDownload, IconSparkles } from './Icons';
+import { createBug } from '../services/bugApi';
+import { useAuthStore } from '../store/authStore';
+import { IconClose, IconCopy, IconDownload, IconSparkles, IconCheckCircle, IconAlertCircle } from './Icons';
 
 type Props = {
   isOpen: boolean;
@@ -46,16 +48,64 @@ export function BugReportModal({
   const [snapshot, setSnapshot] = useState<DiagnosticSnapshot | null>(null);
   const [showDiagnostics, setShowDiagnostics] = useState(false);
   const [copiedStatus, setCopiedStatus] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitResult, setSubmitResult] = useState<{ ok: boolean; message: string } | null>(null);
+  const userEmail = useAuthStore((s) => s.session?.user.email ?? null);
 
   useEffect(() => {
     if (isOpen) {
       diagnosticLogger.captureSnapshot(activeTripInfo).then(setSnapshot);
       if (initialTitle) setTitle(initialTitle);
       if (initialError && !description) setDescription(`Error: ${initialError}`);
+      setSubmitResult(null);
     }
   }, [isOpen, activeTripInfo, initialTitle, initialError]);
 
   if (!isOpen) return null;
+
+  const handleSubmitReport = async () => {
+    if (!title.trim()) {
+      setSubmitResult({ ok: false, message: 'Give it a short summary first.' });
+      return;
+    }
+    setIsSubmitting(true);
+    setSubmitResult(null);
+    try {
+      const latestSnapshot = snapshot || (await diagnosticLogger.captureSnapshot(activeTripInfo));
+      await createBug({
+        title: title.trim(),
+        description: description.trim(),
+        severity,
+        category: category as Parameters<typeof createBug>[0]['category'],
+        status: 'open',
+        foundBy: userEmail || 'traveler',
+        environment: {
+          platform: latestSnapshot.platform,
+          isOnline: latestSnapshot.network.isOnline,
+          appVersion: latestSnapshot.appVersion,
+          route: latestSnapshot.state.routeHash,
+        },
+        reproSteps: reproSteps.split('\n').map((s) => s.trim()).filter(Boolean),
+        expectedBehavior,
+        actualBehavior,
+        diagnostics: {
+          consoleLogs: latestSnapshot.recentLogs.map((l) => `[${l.level}] ${l.message}`),
+          syncQueueLength: latestSnapshot.state.syncQueueLength,
+          activeTripId: latestSnapshot.state.activeTripId || undefined,
+        },
+      });
+      setSubmitResult({ ok: true, message: "Thanks — sent to the team." });
+      setTitle('');
+      setDescription('');
+      setReproSteps('');
+      setExpectedBehavior('');
+      setActualBehavior('');
+    } catch {
+      setSubmitResult({ ok: false, message: "Couldn't send that just now. Try again in a bit." });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const handleCopyMarkdown = () => {
     if (!snapshot) return;
@@ -125,7 +175,7 @@ export function BugReportModal({
         </div>
 
         <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: '0 0 16px' }}>
-          Capture live device state and console traces, then export an AI-ready report for Antigravity or Claude CLI.
+          Tell us what went wrong — device state and recent logs are attached automatically to help us track it down.
         </p>
 
         {copiedStatus && (
@@ -264,8 +314,34 @@ export function BugReportModal({
           )}
         </div>
 
+        {submitResult && (
+          <div
+            className="bug-resolution-note"
+            style={{
+              marginBottom: '12px',
+              textAlign: 'center',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px',
+              color: submitResult.ok ? 'var(--color-success)' : 'var(--color-danger)',
+            }}
+          >
+            {submitResult.ok ? <IconCheckCircle size={15} className="icon-sm" /> : <IconAlertCircle size={15} className="icon-sm" />}
+            {submitResult.message}
+          </div>
+        )}
+
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          <button type="button" className="gradient-btn" onClick={handleCopyMarkdown}>
+          <button type="button" className="gradient-btn" onClick={handleSubmitReport} disabled={isSubmitting}>
+            {isSubmitting ? 'Sending...' : 'Submit Report'}
+          </button>
+
+          <p style={{ fontSize: '11.5px', color: 'var(--text-muted)', margin: '2px 0 4px', textAlign: 'center' }}>
+            or hand it to an AI coding agent directly:
+          </p>
+
+          <button type="button" className="secondary-btn" onClick={handleCopyMarkdown}>
             <IconSparkles size={16} className="icon-sm" /> Copy report for AI (Claude / Antigravity)
           </button>
 
