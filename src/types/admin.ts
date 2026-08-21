@@ -7,7 +7,8 @@ export type FeatureFlagKey =
   | 'enableRecycleBin'
   | 'enableKeywordTagging'
   | 'enableDemoSeeding'
-  | 'enableMultiTripAnalytics';
+  | 'enableMultiTripAnalytics'
+  | 'enableFeatureSuggestions';
 
 export interface FeatureFlagMeta {
   key: FeatureFlagKey;

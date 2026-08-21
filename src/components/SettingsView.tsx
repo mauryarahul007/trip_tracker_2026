@@ -1390,6 +1390,7 @@ export function SettingsView({
               <IconChevronRight size={16} />
             </div>
           </button>
+          {(isSuperadmin || isFeatureEnabled('enableFeatureSuggestions')) && (
           <button
             type="button"
             className="settings-row-item"
@@ -1408,6 +1409,7 @@ export function SettingsView({
               <IconChevronRight size={16} />
             </div>
           </button>
+          )}
         </div>
       </div>
 

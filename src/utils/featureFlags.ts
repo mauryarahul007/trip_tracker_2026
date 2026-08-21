@@ -64,6 +64,13 @@ export const FEATURE_FLAGS_META: Record<FeatureFlagKey, FeatureFlagMeta> = {
     category: 'admin',
     defaultEnabledForUsers: false,
   },
+  enableFeatureSuggestions: {
+    key: 'enableFeatureSuggestions',
+    label: 'Suggest a Feature',
+    description: 'Shows "Suggest a Feature" in Settings, letting the traveler submit requests to the Ops Deck. Off by default -- enable per-person via a User Override, or globally once ready for everyone.',
+    category: 'admin',
+    defaultEnabledForUsers: false,
+  },
 };
 
 export const DEFAULT_FEATURE_FLAGS: Record<FeatureFlagKey, boolean> = {
@@ -76,6 +83,7 @@ export const DEFAULT_FEATURE_FLAGS: Record<FeatureFlagKey, boolean> = {
   enableKeywordTagging: false,
   enableDemoSeeding: false,
   enableMultiTripAnalytics: false,
+  enableFeatureSuggestions: false,
 };
 
 export function isFeatureActive(
