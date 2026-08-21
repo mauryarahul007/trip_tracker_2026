@@ -480,6 +480,10 @@ export interface Database {
         Args: { p_days?: number };
         Returns: number;
       };
+      get_superadmin_ids: {
+        Args: Record<string, never>;
+        Returns: string[];
+      };
     };
   };
 }

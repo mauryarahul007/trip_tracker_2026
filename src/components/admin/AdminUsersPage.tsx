@@ -7,10 +7,12 @@ import { IconSearch, IconCheck, IconAlertCircle } from '../Icons';
 interface Props {
   users: AdminUserRow[];
   trips: Trip[];
+  superadminIds: string[];
   onUsersChanged: () => void;
 }
 
-export function AdminUsersPage({ users, trips, onUsersChanged }: Props) {
+export function AdminUsersPage({ users, trips, superadminIds, onUsersChanged }: Props) {
+  const superadminIdSet = new Set(superadminIds);
   const [searchQuery, setSearchQuery] = useState('');
   const [toastMsg, setToastMsg] = useState('');
   const [busyUserId, setBusyUserId] = useState<string | null>(null);
@@ -143,32 +145,39 @@ export function AdminUsersPage({ users, trips, onUsersChanged }: Props) {
                 </tr>
               </thead>
               <tbody>
-                {filteredUsers.map((u) => (
-                  <tr key={u.id}>
-                    <td>
-                      <div className="ops-trip-name">{u.displayName || u.email}</div>
-                      <div className="ops-trip-route">{u.email}</div>
-                    </td>
-                    <td>{new Date(u.createdAt).toLocaleDateString()}</td>
-                    <td>
-                      <span className={`ops-badge ${u.banned ? 'grounded' : 'active'}`}>
-                        {u.banned ? 'Suspended' : 'Active'}
-                      </span>
-                    </td>
-                    <td>
-                      <div className="ops-manifest-actions">
-                        <button
-                          type="button"
-                          className={`ops-mini-btn${u.banned ? '' : ' ground'}`}
-                          disabled={busyUserId === u.id}
-                          onClick={() => handleToggleBan(u)}
-                        >
-                          {u.banned ? 'Restore' : 'Suspend'}
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                {filteredUsers.map((u) => {
+                  const isSuperadmin = superadminIdSet.has(u.id);
+                  return (
+                    <tr key={u.id}>
+                      <td>
+                        <div className="ops-trip-name">
+                          {u.displayName || u.email}
+                          {isSuperadmin && <span className="ops-badge archived" style={{ marginLeft: '8px' }}>Superadmin</span>}
+                        </div>
+                        <div className="ops-trip-route">{u.email}</div>
+                      </td>
+                      <td>{new Date(u.createdAt).toLocaleDateString()}</td>
+                      <td>
+                        <span className={`ops-badge ${u.banned ? 'grounded' : 'active'}`}>
+                          {u.banned ? 'Suspended' : 'Active'}
+                        </span>
+                      </td>
+                      <td>
+                        <div className="ops-manifest-actions">
+                          <button
+                            type="button"
+                            className={`ops-mini-btn${u.banned ? '' : ' ground'}`}
+                            disabled={busyUserId === u.id || isSuperadmin}
+                            title={isSuperadmin ? 'Superadmin accounts cannot be suspended' : undefined}
+                            onClick={() => handleToggleBan(u)}
+                          >
+                            {u.banned ? 'Restore' : 'Suspend'}
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           )}

@@ -4,7 +4,7 @@ import type { AdminUserRow, DevicePlatformCount } from '../../types/admin';
 import type { BugRecord } from '../../services/bugApi';
 import { useTripStore } from '../../store/tripStore';
 import { useAuthStore } from '../../store/authStore';
-import { fetchAllExpensesForTrips, fetchAllProfilesForAdmin, fetchDevicePlatformCounts } from '../../services/tripApi';
+import { fetchAllExpensesForTrips, fetchAllProfilesForAdmin, fetchDevicePlatformCounts, fetchSuperadminIds } from '../../services/tripApi';
 import { fetchBugs } from '../../services/bugApi';
 import { AdminFlagsPage } from './AdminFlagsPage';
 import { AdminAnalyticsPage } from './AdminAnalyticsPage';
@@ -58,6 +58,7 @@ export function AdminPortalLayout({
   const [bugs, setBugs] = useState<BugRecord[]>([]);
   const [users, setUsers] = useState<AdminUserRow[]>([]);
   const [platformCounts, setPlatformCounts] = useState<DevicePlatformCount[]>([]);
+  const [superadminIds, setSuperadminIds] = useState<string[]>([]);
   const lockSuperadmin = useTripStore((s) => s.lockSuperadmin);
   const signOut = useAuthStore((s) => s.signOut);
   const clock = useUtcClock();
@@ -88,6 +89,7 @@ export function AdminPortalLayout({
     fetchBugs().then(setBugs).catch(() => setBugs([]));
     fetchAllProfilesForAdmin().then(setUsers).catch(() => setUsers([]));
     fetchDevicePlatformCounts().then(setPlatformCounts).catch(() => setPlatformCounts([]));
+    fetchSuperadminIds().then(setSuperadminIds).catch(() => setSuperadminIds([]));
   };
 
   useEffect(() => {
@@ -175,7 +177,9 @@ export function AdminPortalLayout({
             />
           )}
           {activeTab === 'trips' && <AdminTripsPage trips={trips} expenses={expenses} />}
-          {activeTab === 'users' && <AdminUsersPage users={users} trips={trips} onUsersChanged={reloadFleetData} />}
+          {activeTab === 'users' && (
+            <AdminUsersPage users={users} trips={trips} superadminIds={superadminIds} onUsersChanged={reloadFleetData} />
+          )}
           {activeTab === 'tools' && <AdminToolsPage categories={categories} trips={trips} expenses={expenses} />}
         </main>
       </div>

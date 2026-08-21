@@ -830,6 +830,12 @@ export async function fetchAllProfilesForAdmin(): Promise<AdminUserRow[]> {
   }));
 }
 
+export async function fetchSuperadminIds(): Promise<string[]> {
+  const { data, error } = await supabase.rpc('get_superadmin_ids');
+  if (error) throw error;
+  return data ?? [];
+}
+
 export async function setUserBanned(userId: string, banned: boolean): Promise<void> {
   const { error } = await supabase.rpc('set_user_banned', { p_user_id: userId, p_banned: banned });
   if (error) throw error;
