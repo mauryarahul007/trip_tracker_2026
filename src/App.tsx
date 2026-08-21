@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, lazy, Suspense } from 'react';
 import { useTripStore, getTripNotificationRecipients } from './store/tripStore';
 import { useAuthStore } from './store/authStore';
 import { calculateSettlements } from './utils/settlement';
@@ -22,7 +22,13 @@ import { ExpenseReviewModal } from './components/ExpenseReviewModal';
 import { UndoToasts } from './components/UndoToasts';
 import { NavTabs } from './components/NavTabs';
 import { ShareTripModal } from './components/ShareTripModal';
-import { SuperAdminBugTracker } from './components/SuperAdminBugTracker';
+// Superadmin-only screens (Ops Deck + Bug Ledger) never load for a normal
+// traveler -- code-split so their combined ~2.4k lines don't inflate the
+// bundle everyone else downloads. RLS still gates the actual data/actions
+// underneath regardless of when the JS arrives.
+const SuperAdminBugTracker = lazy(() =>
+  import('./components/SuperAdminBugTracker').then((m) => ({ default: m.SuperAdminBugTracker }))
+);
 import { NotificationsPanel } from './components/NotificationsPanel';
 import { NotificationsBellButton } from './components/NotificationsBellButton';
 import { InAppNotificationBanner } from './components/InAppNotificationBanner';
@@ -34,7 +40,26 @@ import { IconCalendar, IconChevronLeft, IconPlus, IconEye, IconEyeOff, IconShiel
 import { formatDateRange } from './utils/dateRange';
 import { useScrollLock } from './utils/useScrollLock';
 import { useHistoryBack } from './utils/useHistoryBack';
-import { AdminPortalLayout } from './components/admin/AdminPortalLayout';
+const AdminPortalLayout = lazy(() =>
+  import('./components/admin/AdminPortalLayout').then((m) => ({ default: m.AdminPortalLayout }))
+);
+
+function AdminLoadingFallback() {
+  return (
+    <div className="app-container" style={{ justifyContent: 'center', alignItems: 'center' }}>
+      <div
+        style={{
+          width: '40px',
+          height: '40px',
+          border: '4px solid rgba(15, 23, 42, 0.05)',
+          borderTopColor: 'var(--primary-accent)',
+          borderRadius: '50%',
+          animation: 'spin 1s linear infinite',
+        }}
+      />
+    </div>
+  );
+}
 
 export default function App() {
   const {
@@ -1158,13 +1183,15 @@ export default function App() {
 
   if (isSuperadmin && !isTravelerPreview && !showBugTracker) {
     return (
-      <AdminPortalLayout
-        trips={trips}
-        members={members}
-        categories={categories}
-        onExitToTravelerApp={() => setIsTravelerPreview(true)}
-        onOpenBugTracker={() => setShowBugTracker(true)}
-      />
+      <Suspense fallback={<AdminLoadingFallback />}>
+        <AdminPortalLayout
+          trips={trips}
+          members={members}
+          categories={categories}
+          onExitToTravelerApp={() => setIsTravelerPreview(true)}
+          onOpenBugTracker={() => setShowBugTracker(true)}
+        />
+      </Suspense>
     );
   }
 
@@ -1214,16 +1241,18 @@ export default function App() {
       {/* Full-Screen Superadmin Bug Tracker View */}
       {showBugTracker ? (
         <div className="fade-in" style={{ flex: 1, overflowY: 'auto', padding: '16px 20px' }}>
-          <SuperAdminBugTracker
-            onBack={() => {
-              setShowBugTracker(false);
-              if (window.location.hash === '#/bugs' || window.location.hash === '#/bug-tracker') {
-                window.location.hash = '#/';
-              }
-            }}
-            isAdmin={isSuperadmin}
-            onRequestConfirm={setConfirmRequest}
-          />
+          <Suspense fallback={<AdminLoadingFallback />}>
+            <SuperAdminBugTracker
+              onBack={() => {
+                setShowBugTracker(false);
+                if (window.location.hash === '#/bugs' || window.location.hash === '#/bug-tracker') {
+                  window.location.hash = '#/';
+                }
+              }}
+              isAdmin={isSuperadmin}
+              onRequestConfirm={setConfirmRequest}
+            />
+          </Suspense>
         </div>
       ) : !activeTripId ? (
         /* Screen 1: Trips List */

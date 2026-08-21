@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import type { Category, Expense, Trip } from '../types';
 import type { ConfirmRequest } from './ConfirmDialog';
 import {
@@ -30,8 +30,12 @@ import { formatDateRange } from '../utils/dateRange';
 import { getCategoryKeywords } from '../utils/categoryHelper';
 import { getAppVersion } from '../utils/appVersion';
 import { BugReportModal } from './BugReportModal';
-import { SuperAdminBugTracker } from './SuperAdminBugTracker';
 import { SuperadminAuthModal } from './SuperadminAuthModal';
+
+// Superadmin-only, reached only via the gated "Superadmin Console" row
+// below -- code-split so its ~700 lines don't ship in every traveler's
+// bundle.
+const SuperAdminBugTracker = lazy(() => import('./SuperAdminBugTracker').then((m) => ({ default: m.SuperAdminBugTracker })));
 import { useHistoryBack } from '../utils/useHistoryBack';
 
 export type ThemePref = 'light' | 'dark' | 'system';
@@ -893,7 +897,9 @@ export function SettingsView({
   if (subScreen === 'bug-tracker') {
     return (
       <div className="fade-in settings-container">
-        <SuperAdminBugTracker onBack={() => setSubScreen(null)} isAdmin={isSuperadmin} />
+        <Suspense fallback={null}>
+          <SuperAdminBugTracker onBack={() => setSubScreen(null)} isAdmin={isSuperadmin} />
+        </Suspense>
       </div>
     );
   }
