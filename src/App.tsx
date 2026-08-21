@@ -292,7 +292,6 @@ export default function App() {
   const syncQueue = useTripStore((s) => s.syncQueue);
   const sessionExpired = useTripStore((s) => s.sessionExpired);
   const lastBackendSyncedAt = useTripStore((s) => s.lastBackendSyncedAt);
-  const lastModifiedAt = useTripStore((s) => s.lastModifiedAt);
   const processQueue = useTripStore((s) => s.processQueue);
 
   // Load state on mount
@@ -379,15 +378,25 @@ export default function App() {
       .sort((a, b) => b.date.localeCompare(a.date) || b.createdAt - a.createdAt);
   }, [expenses, activeTripId]);
 
-  // Device <-> backend sync status for the header pill
+  // Device <-> backend sync status for the header pill.
+  //
+  // syncQueue.length is the only live signal here: it's pushed to on every
+  // offline/failed write and drained by processQueue(). lastBackendSyncedAt
+  // is NOT a reliable second signal -- it's only ever refreshed inside
+  // processQueue() when the queue empties, which normal online mutations
+  // never touch (they write directly to Supabase, bypassing the queue
+  // entirely on success). lastModifiedAt, meanwhile, gets bumped by things
+  // as routine as logging in. So once lastBackendSyncedAt was set even
+  // once, any later lastModifiedAt bump would permanently trip a false
+  // "out of sync" even with an empty queue -- which is exactly the "Out of
+  // sync (0)" bug this used to show on every trip.
   type SyncStatus = 'offline' | 'session-expired' | 'out-of-sync' | 'synced';
   const syncStatus: SyncStatus = useMemo(() => {
     if (sessionExpired) return 'session-expired';
     if (syncQueue.length > 0) return 'out-of-sync';
     if (!isOnline) return 'offline';
-    if (lastBackendSyncedAt !== null && lastModifiedAt > lastBackendSyncedAt) return 'out-of-sync';
     return 'synced';
-  }, [isOnline, sessionExpired, syncQueue.length, lastModifiedAt, lastBackendSyncedAt]);
+  }, [isOnline, sessionExpired, syncQueue.length]);
 
   const syncStatusLabel = useMemo(() => {
     if (syncStatus === 'session-expired') return 'Session expired';
