@@ -4,7 +4,7 @@ import type { ConfirmRequest } from './ConfirmDialog';
 import { useNotificationsStore } from '../store/notificationsStore';
 import { useTripStore } from '../store/tripStore';
 import { useHistoryBack } from '../utils/useHistoryBack';
-import { getWebNotificationPermission, requestWebNotificationPermission } from '../utils/webNotifications';
+import { getWebNotificationPermission, isWebNotificationSupported, requestWebNotificationPermission } from '../utils/webNotifications';
 import { renderNotificationBody, getNotificationHeadline } from '../utils/notificationText';
 import {
   IconClose,
@@ -421,8 +421,11 @@ export function NotificationsPanel({
           )}
         </div>
 
-        {/* Web Notification Alert Opt-In Banner */}
-        {permission !== 'granted' && (
+        {/* Web Notification Alert Opt-In Banner -- browser-tab-open fallback
+            only; native (Android/iOS) has its own FCM permission flow via
+            pushRegistration.ts, and Notification.requestPermission() is a
+            silent no-op there, so this must never render on native. */}
+        {isWebNotificationSupported() && permission !== 'granted' && (
           <div className="notif-alert-banner">
             <div className="notif-alert-banner-left">
               <span className="notif-alert-icon">🔔</span>
