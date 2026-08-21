@@ -829,5 +829,31 @@
     "resolvedAt": "2026-08-21T16:51:50.364+00:00",
     "resolvedBy": "claude-cli",
     "resolutionNote": "Migration 0064: feature_flag_overrides table (scope: global/trip/user) + get_resolved_feature_flags/get_all_feature_flag_overrides/set_feature_flag_override RPCs. tripStore.ts now persists and loads flags from Supabase instead of local-only zustand persist state. Commit 6fb9e57."
+  },
+  {
+    "id": "BUG-030",
+    "title": "Superadmin/demo account shows duplicate categories in Tools tab and expense auto-tagging",
+    "description": "loadDemoTrip's offline fallback set result.categories to the full DEFAULT_CATEGORIES list, but the caller (tripStore.ts) always does [...DEFAULT_CATEGORIES, ...result.categories] on top -- the online path (insertTripGraph) only ever returns custom categories, so this only broke the fallback taken by the superadmin/demo-user account (insertTripGraph fails for that fake user id). Every default category appeared twice, in AdminToolsPage's brand-keyword/auto-tagging category list and in ExpenseForm's category picker, since both read the same categories store state.",
+    "severity": "high",
+    "category": "general",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-08-21T19:15:57.929Z",
+    "updatedAt": "2026-08-21T19:16:02.474Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-08-21T19:16:02.473Z",
+    "resolutionNote": "tripStore.ts loadDemoTrip offline-fallback: result.categories now returns [] (matching insertTripGraph's success-path shape of custom-only categories) instead of DEFAULT_CATEGORIES, so the caller's [...DEFAULT_CATEGORIES, ...result.categories] no longer doubles every default category. Added regression test in tripStore.test.ts (loadDemoTrip suite) that mocks insertTripGraph to reject and asserts categories has no duplicate ids -- fails without the fix (12 ids instead of 6), passes with it."
   }
 ]
