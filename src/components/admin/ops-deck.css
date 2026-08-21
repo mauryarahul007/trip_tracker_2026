@@ -224,7 +224,7 @@
      both tried to reflow the sidebar rail itself and both felt bolted-on --
      a sidebar is a desktop pattern. Below 760px the rail is replaced
      entirely by .ops-section-trigger + the switcher sheet (see below). */
-  .ops-rail { display: none; }
+  .ops-rail { display: none !important; }
 }
 
 /* Tappable "current section" status-line, shown only below 760px, that
