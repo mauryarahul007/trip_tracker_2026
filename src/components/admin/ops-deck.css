@@ -220,10 +220,28 @@
 .ops-layout { display: grid; grid-template-columns: 176px 1fr; gap: 18px; flex: 1; min-height: 0; overflow: hidden; }
 @media (max-width: 760px) {
   .ops-layout { grid-template-columns: 1fr; }
-  .ops-rail { flex-direction: row !important; overflow-x: auto; }
+  /* A horizontal-scroll pill row hides half the sections off-screen with no
+     hint they're there. A wrapping grid shows every section at once instead
+     -- 6 items fits a clean 2x3 with no scrolling. */
+  .ops-rail {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+  }
   .ops-rail-label { display: none; }
-  .ops-switch-item { flex-shrink: 0; }
+  .ops-switch-item {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 5px;
+    padding: 12px 6px;
+    min-height: 56px;
+  }
   .ops-switch-item .ops-code { display: none; }
+}
+@media (max-width: 380px) {
+  .ops-rail { grid-template-columns: repeat(2, 1fr); }
 }
 
 .ops-rail {
