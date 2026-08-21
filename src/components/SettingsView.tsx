@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import type { Category, Expense, Trip } from '../types';
 import type { ConfirmRequest } from './ConfirmDialog';
 import {
@@ -36,7 +36,7 @@ import { useHistoryBack } from '../utils/useHistoryBack';
 
 export type ThemePref = 'light' | 'dark' | 'system';
 
-type SubScreen = null | 'categories' | 'recycle-bin' | 'appearance' | 'backups' | 'archived-trips' | 'bug-tracker';
+type SubScreen = null | 'categories' | 'recycle-bin' | 'appearance' | 'backups' | 'archived-trips' | 'bug-tracker' | 'report-issue';
 
 const RECYCLE_BIN_WINDOW_MS = 24 * 60 * 60 * 1000;
 
@@ -150,8 +150,21 @@ export function SettingsView({
   const [expandedCategoryId, setExpandedCategoryId] = useState<string | null>(null);
   const [newKeywordInput, setNewKeywordInput] = useState('');
 
+  // Report a Problem registers a guard here while it has unsubmitted text,
+  // so a hardware/browser back-press can intercept with "go back or submit
+  // first" instead of silently discarding what was typed. null (the
+  // default, and every other subscreen) means back just closes normally.
+  const reportIssueBackGuardRef = useRef<(() => void) | null>(null);
+  const setReportIssueBackGuard = (guard: (() => void) | null) => {
+    reportIssueBackGuardRef.current = guard;
+  };
+
   // Register sub-screen drill-downs into browser history stack (WhatsApp hierarchical navigation)
   useHistoryBack(subScreen !== null, () => {
+    if (subScreen === 'report-issue' && reportIssueBackGuardRef.current) {
+      reportIssueBackGuardRef.current();
+      return;
+    }
     setSubScreen(null);
     setExpandedCategoryId(null);
   });
@@ -165,7 +178,6 @@ export function SettingsView({
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [storageEstimate, setStorageEstimate] = useState<{ used: number; quota: number } | null>(null);
   const [appVersion, setAppVersion] = useState<string | null>(null);
-  const [showBugModal, setShowBugModal] = useState(false);
 
   useEffect(() => {
     fetchDeletedExpenses();
@@ -886,6 +898,17 @@ export function SettingsView({
     );
   }
 
+  if (subScreen === 'report-issue') {
+    return (
+      <BugReportModal
+        onBack={() => setSubScreen(null)}
+        onRequestConfirm={onRequestConfirm}
+        onRegisterBackGuard={setReportIssueBackGuard}
+        activeTripInfo={{ id: activeTripId, name: activeTrip?.name || null }}
+      />
+    );
+  }
+
   // -------------------------------------------------------------------------
   // Main Settings Screen (WhatsApp Inset Grouped Layout)
   // -------------------------------------------------------------------------
@@ -1325,7 +1348,7 @@ export function SettingsView({
           <button
             type="button"
             className="settings-row-item"
-            onClick={() => setShowBugModal(true)}
+            onClick={() => setSubScreen('report-issue')}
           >
             <div className="settings-row-left">
               <div className="settings-squircle squircle-slate">
@@ -1359,12 +1382,6 @@ export function SettingsView({
           </div>
         </div>
       </div>
-
-      <BugReportModal
-        isOpen={showBugModal}
-        onClose={() => setShowBugModal(false)}
-        activeTripInfo={{ id: activeTripId, name: activeTrip?.name || null }}
-      />
 
       {/* Superadmin Access Link at bottom */}
       {!isSuperadmin && (

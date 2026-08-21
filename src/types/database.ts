@@ -383,6 +383,59 @@ export interface Database {
         Args: Record<string, never>;
         Returns: boolean;
       };
+      report_bug: {
+        Args: {
+          p_title: string;
+          p_description: string;
+          p_severity: string;
+          p_category: string;
+          p_found_by: string;
+          p_environment: Record<string, unknown>;
+          p_repro_steps: string[];
+          p_expected_behavior: string;
+          p_actual_behavior: string;
+          p_diagnostics: Record<string, unknown>;
+        };
+        Returns: {
+          id: string;
+          title: string;
+          description: string;
+          severity: 'critical' | 'high' | 'medium' | 'low';
+          category:
+            | 'offline-sync'
+            | 'splits-math'
+            | 'ui-ux'
+            | 'navigation'
+            | 'auth'
+            | 'receipts-camera'
+            | 'p2p-sync'
+            | 'performance'
+            | 'general';
+          status: 'open' | 'in_progress' | 'resolved' | 'wont_fix';
+          found_by: string;
+          environment: {
+            platform: 'web' | 'android' | 'ios';
+            browser?: string;
+            isOnline: boolean;
+            appVersion: string;
+            route?: string;
+          };
+          repro_steps: string[];
+          expected_behavior: string;
+          actual_behavior: string;
+          diagnostics: {
+            stackTrace?: string;
+            consoleLogs?: string[];
+            syncQueueLength?: number;
+            activeTripId?: string;
+          } | null;
+          created_at: string;
+          updated_at: string;
+          resolved_at: string | null;
+          resolved_by: string | null;
+          resolution_note: string | null;
+        };
+      };
     };
   };
 }

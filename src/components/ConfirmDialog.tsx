@@ -6,6 +6,13 @@ export type ConfirmRequest = {
   confirmLabel?: string;
   danger?: boolean;
   onConfirm: () => void;
+  // Optional third way out, distinct from Cancel (stay) and Confirm
+  // (proceed) -- e.g. "Discard & Go Back" alongside "Submit & Go Back"
+  // and a plain Cancel that means "keep editing". Renders as a plain
+  // text link under the two main buttons; omit for the normal 2-choice
+  // dialogs everywhere else.
+  tertiaryLabel?: string;
+  onTertiary?: () => void;
 };
 
 type Props = {
@@ -113,6 +120,29 @@ export function ConfirmDialog({ request, onCancel }: Props) {
           <p style={{ fontSize: '11px', color: 'var(--text-muted)', textAlign: 'center', marginTop: '10px' }}>
             {armed ? 'Tap once more to seal it — this can\'t be undone.' : 'Tap once to arm, tap again to confirm.'}
           </p>
+        )}
+        {request.tertiaryLabel && request.onTertiary && (
+          <button
+            type="button"
+            onClick={() => {
+              request.onTertiary!();
+              onCancel();
+            }}
+            style={{
+              display: 'block',
+              width: '100%',
+              marginTop: '12px',
+              padding: '4px',
+              background: 'transparent',
+              border: 'none',
+              color: 'var(--text-muted)',
+              fontSize: '12.5px',
+              textDecoration: 'underline',
+              cursor: 'pointer',
+            }}
+          >
+            {request.tertiaryLabel}
+          </button>
         )}
       </div>
     </div>

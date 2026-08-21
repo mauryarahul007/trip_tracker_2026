@@ -156,28 +156,22 @@ export async function createBug(bug: Partial<BugRecord>): Promise<BugRecord> {
     return newBug;
   }
 
-  const { data: existingRows, error: idErr } = await supabase.from('bugs').select('id');
-  if (idErr) throw idErr;
-  const id = nextBugId((existingRows ?? []).map((r) => r.id));
-
-  const { data, error } = await supabase
-    .from('bugs')
-    .insert({
-      id,
-      title: bug.title || 'Untitled Bug',
-      description: bug.description || '',
-      severity: bug.severity || 'medium',
-      category: bug.category || 'general',
-      status: bug.status || 'open',
-      found_by: bug.foundBy || 'superadmin-ui',
-      environment,
-      repro_steps: bug.reproSteps || [],
-      expected_behavior: bug.expectedBehavior || '',
-      actual_behavior: bug.actualBehavior || '',
-      diagnostics: bug.diagnostics || {},
-    })
-    .select()
-    .single();
+  // A SECURITY DEFINER RPC, not a direct insert: computing the next BUG-XXX
+  // id and reading the row back after insert both need SELECT on bugs,
+  // which normal (non-superadmin) users don't have -- see migration 0059.
+  // Superadmins go through the same call too; the RPC works for both.
+  const { data, error } = await supabase.rpc('report_bug', {
+    p_title: bug.title || 'Untitled Bug',
+    p_description: bug.description || '',
+    p_severity: bug.severity || 'medium',
+    p_category: bug.category || 'general',
+    p_found_by: bug.foundBy || 'superadmin-ui',
+    p_environment: environment,
+    p_repro_steps: bug.reproSteps || [],
+    p_expected_behavior: bug.expectedBehavior || '',
+    p_actual_behavior: bug.actualBehavior || '',
+    p_diagnostics: bug.diagnostics || {},
+  });
   if (error) throw error;
   return mapRow(data);
 }
