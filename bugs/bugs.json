@@ -803,5 +803,31 @@
     "resolvedAt": "2026-08-21T16:17:05.842+00:00",
     "resolvedBy": "claude-cli",
     "resolutionNote": "Added the app-wide calc(Npx + var(--safe-top, 0px)) safe-area padding convention to .ops-shell and .ops-panel in ops-deck.css. Commit e433fa8."
+  },
+  {
+    "id": "BUG-029",
+    "title": "Feature flags (Flags tab) never reached other devices",
+    "description": "Toggling a flag, per-trip override, or per-member override in the superadmin Ops Deck only ever updated that browser's local storage -- it never reached Supabase, so no other device (including the traveler's phone) ever saw the change.",
+    "severity": "high",
+    "category": "general",
+    "status": "resolved",
+    "foundBy": "mauryarahul007@gmail.com",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-08-21T16:51:43.929Z",
+    "updatedAt": "2026-08-21T16:51:50.365Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-08-21T16:51:50.364Z",
+    "resolutionNote": "Migration 0064: feature_flag_overrides table (scope: global/trip/user) + get_resolved_feature_flags/get_all_feature_flag_overrides/set_feature_flag_override RPCs. tripStore.ts now persists and loads flags from Supabase instead of local-only zustand persist state. Commit 6fb9e57."
   }
 ]

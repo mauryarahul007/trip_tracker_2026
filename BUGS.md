@@ -9,10 +9,10 @@
 
 | Metric | Count | Status Notes |
 | :--- | :--- | :--- |
-| **Total Tracked** | **28** | All recorded bugs across sessions |
+| **Total Tracked** | **29** | All recorded bugs across sessions |
 | **🟢 Open** | **4** | 🚨 **3 CRITICAL**, 0 High |
 | **🟡 In Progress** | **0** | Active investigation or fix |
-| **✅ Resolved** | **24** | Verified & closed |
+| **✅ Resolved** | **25** | Verified & closed |
 | **⚪ Won't Fix** | **0** | Expected behavior / deferred |
 
 ---
@@ -169,6 +169,7 @@ No stack trace available.
 | **BUG-026** | 'Out of sync (0)' status permanently shown on every trip | `offline-sync` | `high` | `mauryarahul007@gmail.com` | `claude-cli` | Dropped the broken lastModifiedAt/lastBackendSyncedAt comparison from syncStatus in App.tsx -- syncQueue.length is the correct, live signal and was already there. Commit f950404. |
 | **BUG-027** | Superadmin Ops Deck section tabs unusable on mobile | `ui-ux` | `medium` | `mauryarahul007@gmail.com` | `claude-cli` | Replaced with a header status-line trigger that opens a full-screen section switcher on tap, reusing the existing dot+code+label rail styling. Also fixed a CSS source-order bug where the desktop rail's unconditional display:flex was overriding its own mobile display:none. Commits 55ab403, 178a638. |
 | **BUG-028** | Ops Deck header rendered under the Android status bar | `ui-ux` | `medium` | `mauryarahul007@gmail.com` | `claude-cli` | Added the app-wide calc(Npx + var(--safe-top, 0px)) safe-area padding convention to .ops-shell and .ops-panel in ops-deck.css. Commit e433fa8. |
+| **BUG-029** | Feature flags (Flags tab) never reached other devices | `general` | `high` | `mauryarahul007@gmail.com` | `claude-cli` | Migration 0064: feature_flag_overrides table (scope: global/trip/user) + get_resolved_feature_flags/get_all_feature_flag_overrides/set_feature_flag_override RPCs. tripStore.ts now persists and loads flags from Supabase instead of local-only zustand persist state. Commit 6fb9e57. |
 
 ---
 
