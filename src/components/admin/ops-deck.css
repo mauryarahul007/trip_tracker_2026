@@ -113,13 +113,18 @@
   margin: 0 auto;
   height: 100dvh;
   max-height: 100dvh;
-  padding: 16px 20px 0 20px;
+  /* Every other screen in the app reserves env(safe-area-inset-*) (exposed
+     as --safe-top/--safe-right/--safe-left, set in nativeShell.ts) so its
+     header clears the native status bar -- this one shipped without it,
+     so on Android (no separate native-header layer like iOS has) the
+     title sat flush against the status bar/notification icons. */
+  padding: calc(16px + var(--safe-top, 0px)) max(20px, var(--safe-right, 20px)) 0 max(20px, var(--safe-left, 20px));
   display: flex;
   flex-direction: column;
   overflow: hidden;
 }
 @media (max-width: 640px) {
-  .ops-shell { padding: 10px 12px 0 12px; }
+  .ops-shell { padding: calc(10px + var(--safe-top, 0px)) max(12px, var(--safe-right, 12px)) 0 max(12px, var(--safe-left, 12px)); }
 }
 
 /* ---------- Status bar ---------- */
@@ -337,8 +342,8 @@
 .ops-switch-item .ops-code { font-family: var(--mono); font-size: 9px; color: var(--text-tertiary); display: block; margin-top: 1px; }
 .ops-switch-item[data-current="true"] .ops-code { color: var(--amber); }
 
-.ops-panel { min-width: 0; overflow-y: auto; padding-bottom: 60px; overscroll-behavior: contain; }
-@media (max-width: 640px) { .ops-panel { padding-bottom: 32px; } }
+.ops-panel { min-width: 0; overflow-y: auto; padding-bottom: calc(60px + var(--safe-bottom, 0px)); overscroll-behavior: contain; }
+@media (max-width: 640px) { .ops-panel { padding-bottom: calc(32px + var(--safe-bottom, 0px)); } }
 
 .ops-page-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 18px; flex-wrap: wrap; }
 .ops-page-head h2 { font-family: var(--display); font-weight: 700; font-size: 19px; letter-spacing: -0.01em; margin: 0 0 4px; color: var(--text-primary); text-wrap: balance; }
