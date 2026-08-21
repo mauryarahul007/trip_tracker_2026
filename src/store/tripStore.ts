@@ -38,6 +38,7 @@ import { generateDemoData } from '../utils/demoSeed';
 import { reverseGeocode, searchPlaces } from '../utils/geolocation';
 import { sendPushNotification } from '../services/pushApi';
 import { saveOfflineReceipt, getOfflineReceipt, deleteOfflineReceipt } from '../services/offlineReceiptStore';
+import { validateAndSanitizeBackup } from '../utils/backupValidation';
 
 // Offline capture falls back to a raw-coordinate placeName (see geolocation.ts).
 // Once we're syncing (guaranteed online), upgrade it to a real place name.
@@ -117,7 +118,8 @@ interface TripStore extends TripState {
   isFeatureEnabled: (key: FeatureFlagKey, context?: { tripId?: string; userId?: string }) => boolean;
 
   initialize: () => Promise<void>;
-  refreshTrips: () => Promise<void>;
+  refreshTrips: (force?: boolean) => Promise<void>;
+  refreshActiveTripExpenses: () => Promise<void>;
   clearStorageError: () => void;
   processQueue: () => Promise<void>;
   queueSync: (type: SyncQueueItemType, payload: any) => void;
@@ -272,6 +274,9 @@ export function getTripNotificationRecipients(
     .filter((m): m is Member => !!m && !m.archived && !!m.linkedUserId && m.linkedUserId !== excludeUserId)
     .map((m) => m.linkedUserId as string);
 }
+
+const TRIPS_REFRESH_MIN_INTERVAL_MS = 30_000;
+let lastTripsRefreshAt = 0;
 
 // Reconciles a fresh server fetch for one trip against the locally
 // cached (persisted) expense list, without disturbing other trips'
@@ -539,11 +544,41 @@ export const useTripStore = create<TripStore>()(
 
     // Re-pulls the trip/member/group list without disturbing the active
     // trip's loaded expenses/categories — used after joining a new trip via
-    // an invite link, since that trip won't be in `trips` yet.
-    refreshTrips: async () => {
+    // an invite link, since that trip won't be in `trips` yet, and by a
+    // realtime "you were added to a trip" notification. Throttled since a
+    // pull/swipe gesture can trigger this repeatedly in quick succession
+    // and there's rarely anything new within a few seconds of the last
+    // fetch.
+    refreshTrips: async (force?: boolean) => {
+      const now = Date.now();
+      if (!force && now - lastTripsRefreshAt < TRIPS_REFRESH_MIN_INTERVAL_MS) return;
+      lastTripsRefreshAt = now;
       try {
         const graph = await fetchMyTripGraph();
         set({ ...graph, storageError: null });
+      } catch (e) {
+        setError(e);
+      }
+    },
+
+    // Re-pulls the active trip's expenses/categories — used when a
+    // realtime notification signals someone else changed an expense on
+    // the trip currently being viewed (see notificationsStore.ts), so
+    // that shows up live instead of only after a manual reload.
+    refreshActiveTripExpenses: async () => {
+      const tripId = get().activeTripId;
+      if (!tripId || !navigator.onLine) return;
+      try {
+        const [serverExpenses, customCategories] = await Promise.all([
+          fetchExpensesForTrip(tripId),
+          fetchCategoriesForTrip(tripId),
+        ]);
+        const dirtyIds = collectDirtyExpenseIds(get().syncQueue);
+        set((state) => ({
+          expenses: mergeServerExpenses(state.expenses, serverExpenses, tripId, dirtyIds),
+          categories: [...DEFAULT_CATEGORIES, ...customCategories],
+          storageError: null,
+        }));
       } catch (e) {
         setError(e);
       }
@@ -613,7 +648,9 @@ export const useTripStore = create<TripStore>()(
               sendPushNotification(
                 recipients,
                 trip?.name || 'Trip Tracker',
-                `${savedExpense.title} — ${savedExpense.currency} ${savedExpense.amount.toFixed(2)} added`
+                'expense_added',
+                { expenseTitle: savedExpense.title, amount: savedExpense.amount.toFixed(2), currency: savedExpense.currency },
+                tripId
               );
             }
           } else if (item.type === 'updateExpense') {
@@ -750,7 +787,6 @@ export const useTripStore = create<TripStore>()(
       const creatorName = get().userDisplayName || 'Me';
       const tripTempId = crypto.randomUUID();
       const memberTempId = crypto.randomUUID();
-      const previousActiveTripId = get().activeTripId;
 
       const optimisticMember: Member = { id: memberTempId, name: creatorName, linkedUserId: userId };
       const optimisticTrip: Trip = {
@@ -788,16 +824,8 @@ export const useTripStore = create<TripStore>()(
             members: { ...state.members, [memberTempId]: creatorMember },
           }));
         } catch (e) {
-          set((state) => {
-            const updatedMembers = { ...state.members };
-            delete updatedMembers[memberTempId];
-            return {
-              trips: state.trips.filter((t) => t.id !== tripTempId),
-              members: updatedMembers,
-              activeTripId: previousActiveTripId,
-            };
-          });
-          setError(e);
+          console.warn('Online createTrip failed, falling back to offline sync queue:', e);
+          get().queueSync('createTrip', { tripTempId, memberTempId, name, startDate, endDate, baseCurrency, ownerId: userId, creatorName });
         }
       }
     },
@@ -879,6 +907,36 @@ export const useTripStore = create<TripStore>()(
 
     deleteTrip: async (id) => {
       const deletedTrip = get().trips.find((t) => t.id === id);
+      const userId = get().userId;
+
+      // Guard: Only trip owner or trip admin can delete a trip
+      if (userId && deletedTrip?.ownerId && deletedTrip.ownerId !== userId) {
+        const myMemberId = deletedTrip.memberIds.find((mid) => get().members[mid]?.linkedUserId === userId);
+        const isTripAdmin = myMemberId && deletedTrip.adminMemberIds?.includes(myMemberId);
+        if (!isTripAdmin) {
+          setError(new Error('Only a trip admin or owner can delete this trip.'));
+          return;
+        }
+      }
+
+      // send-push's own permission check needs the trip's members row to
+      // still exist server-side to confirm the caller shares this trip
+      // with each recipient — sending after deleteTripRow (which cascades
+      // to members) would make every recipient fail that check and the
+      // notification would silently go to no one.
+      // We omit tripId so Postgres ON DELETE CASCADE will not delete this notification.
+      const recipients = userId ? getTripNotificationRecipients(get().trips, get().members, id, userId) : [];
+      const tripName = deletedTrip?.name || 'A trip';
+      if (recipients.length > 0) {
+        sendPushNotification(
+          recipients,
+          tripName,
+          'trip_deleted',
+          { tripName },
+          undefined
+        );
+      }
+
       if (!isMissingSupabaseEnv) {
         try {
           await deleteTripRow(id);
@@ -948,21 +1006,6 @@ export const useTripStore = create<TripStore>()(
         storageError: null,
       }));
 
-      const revert = () => {
-        set((state) => {
-          const updatedMembers = { ...state.members };
-          delete updatedMembers[tempId];
-          return {
-            members: updatedMembers,
-            trips: state.trips.map((t) =>
-              t.id === activeTripId
-                ? { ...t, memberIds: t.memberIds.filter((mid) => mid !== tempId), adminMemberIds: (t.adminMemberIds || []).filter((mid) => mid !== tempId) }
-                : t
-            ),
-          };
-        });
-      };
-
       if (!navigator.onLine) {
         get().queueSync('addMember', { tempId, name, linkedUserId: linkedUserId ?? null, tripId: activeTripId });
       } else {
@@ -971,8 +1014,8 @@ export const useTripStore = create<TripStore>()(
           invalidatePreviousMembersCache();
           set((state) => ({ members: { ...state.members, [tempId]: member } }));
         } catch (e) {
-          revert();
-          setError(e);
+          console.warn('Online addMember failed, falling back to offline sync queue:', e);
+          get().queueSync('addMember', { tempId, name, linkedUserId: linkedUserId ?? null, tripId: activeTripId });
         }
       }
     },
@@ -1023,8 +1066,8 @@ export const useTripStore = create<TripStore>()(
         try {
           await updateMemberRow(id, { archived });
         } catch (e) {
-          set((state) => ({ members: { ...state.members, [id]: member } }));
-          setError(e);
+          console.warn('Online toggleArchiveMember failed, falling back to offline sync queue:', e);
+          get().queueSync('toggleArchiveMember', { id, archived });
         }
       }
     },
@@ -1040,8 +1083,8 @@ export const useTripStore = create<TripStore>()(
         try {
           await updateMemberRow(id, { name });
         } catch (e) {
-          set((state) => ({ members: { ...state.members, [id]: member } }));
-          setError(e);
+          console.warn('Online updateMember failed, falling back to offline sync queue:', e);
+          get().queueSync('updateMember', { id, name });
         }
       }
     },
@@ -1070,14 +1113,7 @@ export const useTripStore = create<TripStore>()(
         }
       });
 
-      // Snapshot for revert on failure — group dissolve/rename is cascaded
-      // client-side above, so an aborted delete must restore exactly the
-      // groups it was about to touch, not just the member.
-      const removedGroupSnapshots = groupsToDissolve.map((gid) => currentGroups[gid]);
-      const renamedGroupSnapshots = groupsToRename.map((g) => currentGroups[g.id]);
-      const removedMember = currentMembers[id];
-      const previousTrip = get().trips.find((t) => t.id === activeTripId);
-
+      // Group dissolve/rename is cascaded client-side
       set((state) => {
         const updatedMembers = { ...state.members };
         delete updatedMembers[id];
@@ -1102,19 +1138,6 @@ export const useTripStore = create<TripStore>()(
         return { members: updatedMembers, groups: updatedGroups, trips: updatedTrips, storageError: null };
       });
 
-      const revert = () => {
-        set((state) => {
-          const restoredGroups = { ...state.groups };
-          removedGroupSnapshots.forEach((g) => { if (g) restoredGroups[g.id] = g; });
-          renamedGroupSnapshots.forEach((g) => { if (g) restoredGroups[g.id] = g; });
-          return {
-            members: { ...state.members, [id]: removedMember },
-            groups: restoredGroups,
-            trips: state.trips.map((t) => (t.id === activeTripId && previousTrip ? previousTrip : t)),
-          };
-        });
-      };
-
       if (!navigator.onLine) {
         get().queueSync('deleteMember', { id, groupsToDissolve, groupsToRename });
       } else {
@@ -1125,8 +1148,8 @@ export const useTripStore = create<TripStore>()(
             ...groupsToRename.map((g) => updateGroupRow(g.id, g.name, g.memberIds)),
           ]);
         } catch (e) {
-          revert();
-          setError(e);
+          console.warn('Online deleteMember failed, falling back to offline sync queue:', e);
+          get().queueSync('deleteMember', { id, groupsToDissolve, groupsToRename });
         }
       }
     },
@@ -1151,15 +1174,8 @@ export const useTripStore = create<TripStore>()(
           const group = await insertGroup(activeTripId, name, memberIds, tempId);
           set((state) => ({ groups: { ...state.groups, [tempId]: group } }));
         } catch (e) {
-          set((state) => {
-            const updatedGroups = { ...state.groups };
-            delete updatedGroups[tempId];
-            return {
-              groups: updatedGroups,
-              trips: state.trips.map((t) => (t.id === activeTripId ? { ...t, groupIds: t.groupIds.filter((gid) => gid !== tempId) } : t)),
-            };
-          });
-          setError(e);
+          console.warn('Online createGroup failed, falling back to offline sync queue:', e);
+          get().queueSync('createGroup', { tempId, name, memberIds, tripId: activeTripId });
         }
       }
     },
@@ -1182,8 +1198,8 @@ export const useTripStore = create<TripStore>()(
         try {
           await updateGroupRow(id, name, memberIds);
         } catch (e) {
-          set((state) => ({ groups: { ...state.groups, [id]: existing } }));
-          setError(e);
+          console.warn('Online updateGroup failed, falling back to offline sync queue:', e);
+          get().queueSync('updateGroup', { id, name, memberIds });
         }
       }
     },
@@ -1211,11 +1227,8 @@ export const useTripStore = create<TripStore>()(
         try {
           await deleteGroupRow(groupId);
         } catch (e) {
-          set((state) => ({
-            groups: { ...state.groups, [groupId]: existing },
-            trips: state.trips.map((t) => (t.id === activeTripId ? { ...t, groupIds: [...t.groupIds, groupId] } : t)),
-          }));
-          setError(e);
+          console.warn('Online deleteGroup failed, falling back to offline sync queue:', e);
+          get().queueSync('deleteGroup', { groupId, tripId: activeTripId });
         }
       }
     },
@@ -1281,7 +1294,9 @@ export const useTripStore = create<TripStore>()(
         sendPushNotification(
           recipients,
           trip?.name || 'Trip Tracker',
-          `${savedExpense.title} — ${savedExpense.currency} ${savedExpense.amount.toFixed(2)} added`
+          'expense_added',
+          { expenseTitle: savedExpense.title, amount: savedExpense.amount.toFixed(2), currency: savedExpense.currency },
+          tripId
         );
       };
 
@@ -1289,33 +1304,27 @@ export const useTripStore = create<TripStore>()(
         return;
       }
 
-      if (!navigator.onLine) {
+      const queueOfflineAdd = async () => {
+        let staged = false;
         if (expenseData.receiptImage) {
-          // Stage the photo in IndexedDB instead of letting it travel
-          // inline in the persisted syncQueue — see offlineReceiptStore.ts.
-          // Only strip it from the queued payload once staging actually
-          // succeeded; otherwise keep it inline so the photo isn't lost.
-          let staged = false;
           try {
             await saveOfflineReceipt(tempId, expenseData.receiptImage);
             staged = true;
           } catch (e) {
             console.error('Failed to stage offline receipt, keeping it inline as a fallback:', e);
           }
-          get().queueSync('addExpense', { tempId, expenseData: staged ? { ...expenseData, receiptImage: undefined } : expenseData });
-        } else {
-          get().queueSync('addExpense', { tempId, expenseData });
         }
+        get().queueSync('addExpense', { tempId, expenseData: staged ? { ...expenseData, receiptImage: undefined } : expenseData });
+      };
+
+      if (!navigator.onLine) {
+        await queueOfflineAdd();
       } else {
         try {
           await saveAction();
         } catch (e) {
-          // Revert optimistic add
-          set((state) => ({
-            expenses: state.expenses.filter((e) => e.id !== tempId),
-            trips: state.trips.map((t) => (t.id === tripId ? { ...t, expenseCount: Math.max(0, (t.expenseCount || 0) - 1), updatedAt: Date.now() } : t)),
-          }));
-          setError(e);
+          console.warn('Online addExpense failed, falling back to offline sync queue:', e);
+          await queueOfflineAdd();
         }
       }
     },
@@ -1359,28 +1368,37 @@ export const useTripStore = create<TripStore>()(
         }));
       };
 
-      if (!navigator.onLine) {
+      const queueOfflineUpdate = async () => {
+        let staged = false;
         if (expenseData.receiptImage) {
-          let staged = false;
           try {
             await saveOfflineReceipt(id, expenseData.receiptImage);
             staged = true;
           } catch (e) {
             console.error('Failed to stage offline receipt, keeping it inline as a fallback:', e);
           }
-          get().queueSync('updateExpense', { id, expenseData: staged ? { ...expenseData, receiptImage: undefined } : expenseData });
-        } else {
-          get().queueSync('updateExpense', { id, expenseData });
         }
+        get().queueSync('updateExpense', { id, expenseData: staged ? { ...expenseData, receiptImage: undefined } : expenseData });
+      };
+
+      if (!navigator.onLine) {
+        await queueOfflineUpdate();
       } else {
         try {
           await saveAction();
+          const userId = get().userId;
+          const trip = get().trips.find((t) => t.id === tripId);
+          const recipients = getTripNotificationRecipients(get().trips, get().members, tripId, userId || '');
+          sendPushNotification(
+            recipients,
+            trip?.name || 'Trip Tracker',
+            'expense_updated',
+            { expenseTitle: updatedExpense.title },
+            tripId
+          );
         } catch (e) {
-          // Revert optimistic update
-          set((state) => ({
-            expenses: state.expenses.map((e) => (e.id === id ? existing : e)),
-          }));
-          setError(e);
+          console.warn('Online updateExpense failed, falling back to offline sync queue:', e);
+          await queueOfflineUpdate();
         }
       }
     },
@@ -1409,14 +1427,18 @@ export const useTripStore = create<TripStore>()(
       } else {
         try {
           await deleteExpenseRow(id, userId || '');
+          const trip = get().trips.find((t) => t.id === existing.tripId);
+          const recipients = getTripNotificationRecipients(get().trips, get().members, existing.tripId, userId || '');
+          sendPushNotification(
+            recipients,
+            trip?.name || 'Trip Tracker',
+            'expense_deleted',
+            { expenseTitle: existing.title },
+            existing.tripId
+          );
         } catch (e) {
-          // Revert optimistic delete
-          set((state) => ({
-            expenses: [...state.expenses, existing].sort((a, b) => b.date.localeCompare(a.date) || b.createdAt - a.createdAt),
-            deletedExpenses: state.deletedExpenses.filter((e) => e.id !== id),
-            trips: state.trips.map((t) => (t.id === existing.tripId ? { ...t, expenseCount: (t.expenseCount || 0) + 1, updatedAt: Date.now() } : t)),
-          }));
-          setError(e);
+          console.warn('Online deleteExpense failed, falling back to offline sync queue:', e);
+          get().queueSync('deleteExpense', { id, userId });
         }
       }
     },
@@ -1450,20 +1472,24 @@ export const useTripStore = create<TripStore>()(
       } else {
         try {
           await restoreExpenseRow(id);
+          const userId = get().userId;
+          const trip = get().trips.find((t) => t.id === existing.tripId);
+          const recipients = getTripNotificationRecipients(get().trips, get().members, existing.tripId, userId || '');
+          sendPushNotification(
+            recipients,
+            trip?.name || 'Trip Tracker',
+            'expense_restored',
+            { expenseTitle: existing.title },
+            existing.tripId
+          );
         } catch (e) {
-          // Revert optimistic restore
-          set((state) => ({
-            expenses: state.expenses.filter((e) => e.id !== id),
-            deletedExpenses: [existing, ...state.deletedExpenses],
-            trips: state.trips.map((t) => (t.id === existing.tripId ? { ...t, expenseCount: Math.max(0, (t.expenseCount || 0) - 1), updatedAt: Date.now() } : t)),
-          }));
-          setError(e);
+          console.warn('Online restoreExpense failed, falling back to offline sync queue:', e);
+          get().queueSync('restoreExpense', { id });
         }
       }
     },
 
     permanentlyDeleteExpense: async (id) => {
-      const existing = get().deletedExpenses.find((e) => e.id === id);
       set((state) => ({
         deletedExpenses: state.deletedExpenses.filter((e) => e.id !== id),
         storageError: null,
@@ -1475,10 +1501,8 @@ export const useTripStore = create<TripStore>()(
         try {
           await permanentlyDeleteExpenseRow(id);
         } catch (e) {
-          if (existing) {
-            set((state) => ({ deletedExpenses: [existing, ...state.deletedExpenses] }));
-          }
-          setError(e);
+          console.warn('Online permanentlyDeleteExpense failed, falling back to offline sync queue:', e);
+          get().queueSync('permanentlyDeleteExpense', { id });
         }
       }
     },
@@ -1486,7 +1510,6 @@ export const useTripStore = create<TripStore>()(
     emptyRecycleBin: async () => {
       const tripId = get().activeTripId;
       if (!tripId) return;
-      const prevDeleted = get().deletedExpenses;
       set({ deletedExpenses: [], storageError: null });
 
       if (!navigator.onLine) {
@@ -1495,8 +1518,8 @@ export const useTripStore = create<TripStore>()(
         try {
           await purgeDeletedExpensesForTrip(tripId);
         } catch (e) {
-          set({ deletedExpenses: prevDeleted });
-          setError(e);
+          console.warn('Online emptyRecycleBin failed, falling back to offline sync queue:', e);
+          get().queueSync('emptyRecycleBin', { tripId });
         }
       }
     },
@@ -1527,8 +1550,8 @@ export const useTripStore = create<TripStore>()(
           const category = await insertCategory(activeTripId, name, icon, tempId);
           set((state) => ({ categories: state.categories.map((c) => (c.id === tempId ? category : c)) }));
         } catch (e) {
-          set((state) => ({ categories: state.categories.filter((c) => c.id !== tempId) }));
-          setError(e);
+          console.warn('Online addCategory failed, falling back to offline sync queue:', e);
+          get().queueSync('addCategory', { tempId, name, icon, tripId: activeTripId });
         }
       }
     },
@@ -1541,7 +1564,6 @@ export const useTripStore = create<TripStore>()(
 
       const existing = get().categories.find((c) => c.id === id);
       if (!existing) return;
-      const existingIndex = get().categories.indexOf(existing);
       set((state) => ({ categories: state.categories.filter((c) => c.id !== id), storageError: null }));
 
       if (!navigator.onLine) {
@@ -1550,12 +1572,8 @@ export const useTripStore = create<TripStore>()(
         try {
           await deleteCategoryRow(id);
         } catch (e) {
-          set((state) => {
-            const restored = [...state.categories];
-            restored.splice(existingIndex, 0, existing);
-            return { categories: restored };
-          });
-          setError(e);
+          console.warn('Online deleteCategory failed, falling back to offline sync queue:', e);
+          get().queueSync('deleteCategory', { id });
         }
       }
     },
@@ -1597,20 +1615,12 @@ export const useTripStore = create<TripStore>()(
       if (!userId) return false;
 
       try {
-        const parsed = JSON.parse(jsonString) as TripState;
-
-        if (
-          !(
-            Array.isArray(parsed.trips) &&
-            parsed.members &&
-            parsed.groups &&
-            Array.isArray(parsed.expenses) &&
-            Array.isArray(parsed.categories)
-          )
-        ) {
+        const validation = validateAndSanitizeBackup(jsonString);
+        if (!validation.valid || !validation.sanitizedState) {
           return false;
         }
 
+        const parsed = validation.sanitizedState;
         const customCategories = parsed.categories.filter((c) => c.isCustom);
         let lastTripId: string | null = null;
 

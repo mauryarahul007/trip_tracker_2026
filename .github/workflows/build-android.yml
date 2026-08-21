@@ -12,6 +12,8 @@ on:
           - debug
           - release
   push:
+    branches:
+      - main
     tags:
       - 'v*'
 
@@ -21,7 +23,7 @@ concurrency:
 
 jobs:
   build-android:
-    name: Build Android (${{ inputs.build_type || 'release' }})
+    name: Build Android (${{ inputs.build_type || (github.ref == 'refs/heads/main' && 'debug') || 'release' }})
     runs-on: ubuntu-latest
 
     steps:
@@ -49,6 +51,7 @@ jobs:
           VITE_BASE_PATH: /
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          VITE_TURNSTILE_SITE_KEY: ${{ secrets.VITE_TURNSTILE_SITE_KEY }}
         run: npm run build
 
       - name: Sync Native Version
@@ -63,13 +66,13 @@ jobs:
         run: chmod +x android/gradlew
 
       - name: Build Debug APK
-        if: ${{ inputs.build_type == 'debug' || github.event_name == 'workflow_dispatch' && inputs.build_type == 'debug' }}
+        if: ${{ inputs.build_type == 'debug' || (github.event_name == 'push' && !startsWith(github.ref, 'refs/tags/')) || (github.event_name == 'workflow_dispatch' && inputs.build_type == 'debug') }}
         run: |
           cd android
           ./gradlew assembleDebug
 
       - name: Build Release APK & Bundle (AAB)
-        if: ${{ inputs.build_type == 'release' || github.event_name == 'push' }}
+        if: ${{ inputs.build_type == 'release' || startsWith(github.ref, 'refs/tags/') }}
         env:
           CM_KEYSTORE_PASSWORD: ${{ secrets.CM_KEYSTORE_PASSWORD }}
           CM_KEY_ALIAS: ${{ secrets.CM_KEY_ALIAS }}

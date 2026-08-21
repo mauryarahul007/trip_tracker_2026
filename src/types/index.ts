@@ -91,3 +91,13 @@ export interface PreviousMemberSuggestion {
   avatarUrl?: string | null;
 }
 
+export interface AppNotification {
+  id: string;
+  tripId: string | null;
+  title: string;
+  body: string;
+  data: Record<string, string> | null;
+  read: boolean;
+  createdAt: string;
+}
+

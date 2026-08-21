@@ -360,6 +360,302 @@ This document logs all meaningful technical decisions, library choices, design p
 
 ---
 
+## 27. Floating Action Button (FAB) for Adding Expenses
+* **Context:** In the active trip view, the "+ Add Expense" action button was previously anchored inside the scrollable header area at the top of the Expenses tab. When expense logs grew long or on mobile devices where single-thumb interaction operates at the bottom half of the screen, reaching the top button was friction-heavy.
+* **Decision:** Replaced the top-anchored button with a persistent Floating Action Button (FAB) at the bottom-right of the viewport.
+* **Pattern/Implementation:**
+  - **Component Structure (`App.tsx`)**: Placed the FAB inside `<main className="app-main">` conditionally rendered only when `activeTab === 'expenses'`.
+  - **Styling & Elevation (`index.css`)**: Styled `.fab-add-expense` with a 54px circular geometry, 2px crisp border, Ink Navy in light mode, elevated night-flight surface in dark mode, shadow elevation, tactile active press state, and seamless theme adaptation.
+  - **Cross-Platform & Safe Area Adaptations (`index.css`)**:
+    - Web / Android: Sits 18px above the bottom navigation bar.
+    - iOS Capacitor: Offsets bottom clearance to sit above the native Liquid Glass tab bar (`calc(18px + var(--safe-bottom, 0px) + 76px)`).
+    - Scroll Clearance: Added `calc(84px + var(--safe-bottom, 0px))` bottom padding to `.tab-pane` so the last transaction or settlement card can be scrolled well past the floating button.
+* **Trade-offs Accepted:**
+  - Consumes a minor footprint (54×54px) in the bottom-right corner of the active scroll view, offset by extending bottom padding so underlying content is never obscured.
+
+---
+
+## 28. WhatsApp-Style Search Bar & Horizontal Quick Filter Chips
+* **Context:** The previous expense filtering UI utilized a collapsible toggle button that exposed stacked `<select>` dropdowns and date inputs. This interaction model required 3–4 taps, added vertical layout clutter, and felt cumbersome compared to mobile-first messaging and ledger interfaces (such as WhatsApp's chat list search and filters).
+* **Decision:** Replaced the multi-select dropdown panel with an integrated full-width search bar (with an instant `✕` clear action) and a horizontal, touch-friendly filter chip strip (`All`, `👤 Mine`, dynamic Categories, dynamic Members, and `Dates`).
+* **Pattern/Implementation:**
+  - **Single-Tap Filter Track (`ExpenseList.tsx`)**: Rendered horizontal scrollable chips with one-tap toggle for categories, members, user's own expenses (`myMemberId`), and date range.
+  - **Instant Search Clear (`ExpenseList.tsx`)**: Added a reactive `✕` button inside the search field that debounces and clears the filter string instantly.
+  - **Aesthetics & Theme Alignment (`index.css`)**:
+    - Light Theme: Warm ledger paper chip surfaces ([`var(--bg-surface)`](file:///C:/ProjectsV1/Trip_Tracker_2026/src/index.css#L52)) transitioning to Ink Navy ([`var(--bg-header)`](file:///C:/ProjectsV1/Trip_Tracker_2026/src/index.css#L73)) when active.
+    - Dark Theme: Night flight card surfaces with elevated dark slate chip fill and warm text.
+    - Smooth touch scroll with hidden scrollbars and tactile active state transitions.
+* **Trade-offs Accepted:**
+  - Horizontal scrolling requires users to swipe right to see secondary category/member chips on very small screens, which is significantly faster and less obstructive than opening multi-step dropdown menus.
+
+---
+
+## 29. Scroll-Revealed Quick Filter Track
+* **Context:** Showing both the search bar and the full filter chip row at the top of the screen at initial rest took unnecessary vertical space away from the first few transaction rows on smaller mobile screens.
+* **Decision:** Hidden the filter chips at initial rest (`scrollTop === 0`), expanding and sliding them into view seamlessly upon scrolling down, focusing search, or when any filter is active.
+* **Pattern/Implementation:**
+  - **Scroll Detection (`ExpenseList.tsx`)**: Attached a passive scroll listener on `.tab-pane` detecting `scrollTop > 15px`.
+  - **Visibility Compound State (`ExpenseList.tsx`)**: Filter chips expand when `isScrolled || searchFocused || hasActiveFilters || !!localSearch || showDateFilter`.
+  - **Animated Collapse & Expansion (`index.css`)**: Styled `.filter-chips-collapse` with `max-height`, `opacity`, `transform: translateY()`, and cubic-bezier easing to slide down smoothly without layout jank.
+* **Trade-offs Accepted:**
+---
+
+## 30. CSS-Driven Adaptive Disappearing Scroll Header & Glassmorphic Passthrough
+* **Context:** When users scrolled down through long expense lists or dashboard tabs, the header previously remained static and rigid in a separate flex block above `<main>`, while the scrolling container clipped abruptly against the header's hard bottom edge. This created a visual disconnect and wasted vertical screen real estate while scrolling.
+* **Decision:** Implemented a unified scrolling layout where the active trip dashboard header is rendered as an elevated, translucent frosted-glass surface (`backdrop-filter: blur(16px)`). Scrolling cards pass directly underneath the header and gracefully dissolve at the top safe area through a CSS gradient mask, while the header smoothly compacts into a sleek top bar.
+* **Pattern/Implementation:**
+  - **Glassmorphism & Depth Elevation (`index.css`)**:
+    - Created `--bg-header-glass` and `--bg-header-glass-scrolled` theme tokens for light (`rgba(28, 42, 56, 0.82)`) and dark mode (`rgba(15, 21, 29, 0.85)`).
+    - Applied `backdrop-filter: blur(16px) saturate(170%)` with dynamic elevation drop shadows (`box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.45)`).
+  - **Scroll Passthrough & Top-Edge Dissolution (`index.css`)**:
+    - Re-architected `.tab-pane` to extend behind the absolute glass header with `padding-top: calc(126px + var(--safe-top, 0px))` clearance.
+    - Applied a top-edge linear gradient mask (`mask-image: linear-gradient(to bottom, transparent 0px, transparent calc(var(--safe-top, 0px) + 6px), black calc(var(--safe-top, 0px) + 38px), black 100%)`) so scrolling expenses seamlessly dissolve inside the header rather than colliding with the status bar or notch.
+  - **Dynamic Compaction & Smooth Transitions (`App.tsx`, `index.css`)**:
+    - Tracked scroll position on `.tab-pane` using an event-delegated capture listener toggling `.is-scrolled` at `scrollTop > 15px`.
+    - Animated header padding reduction, logo title scaling (from 24px down to 18px), and folded away the eyebrow and stats sub-row (`max-height: 0; opacity: 0; transform: translateY(-8px)`).
+  - **Cross-Platform & Scope Isolation (`index.css`)**:
+    - Retained solid `.app-header` defaults for modals (`ExpenseForm`, `GlobalSettingsModal`).
+    - Maintained clean compatibility overrides for `html.capacitor-ios` (Swift native shell glass header).
+---
+
+## 31. Security Hardening Phase 1: Storage Quotas, MIME Whitelisting, and Statement Timeouts
+* **Context:** Unauthenticated or bot traffic can potentially flood Supabase storage buckets with arbitrary non-image files or oversized assets, exhausting quotas. Additionally, malicious or runaway nested queries against PostgreSQL could cause database CPU exhaustion.
+* **Decision:** Implemented multi-layer defensive boundaries across Supabase Storage, PostgreSQL roles, and client-side upload pipelines.
+* **Pattern/Implementation:**
+  - **Storage Hardening (`0046_security_hardening_phase1.sql`)**:
+    - Configured `storage.buckets` record for `'receipts'` with strict 5MB limit (`file_size_limit = 5242880`) and allowed MIME whitelist (`image/jpeg`, `image/png`, `image/webp`, `image/heic`, `image/heif`).
+    - Added full CRUD RLS policies on `storage.objects` binding read/write/update/delete strictly to verified trip participants and admins.
+  - **Statement Timeouts for Anti-DDoS (`0046_security_hardening_phase1.sql`)**:
+    - Enforced `statement_timeout = '5000ms'` for authenticated roles and `3000ms` for anonymous roles to immediately terminate runaway/slow-query attacks.
+    - Explicitly revoked destructive actions (`INSERT`, `UPDATE`, `DELETE`) from `anon` across all application tables.
+  - **Client-Side Pre-Validation (`src/utils/image.ts`, `ExpenseForm.tsx`)**:
+    - Pre-validates file sizes (`MAX_RECEIPT_FILE_SIZE_BYTES = 5MB`) and MIME types before executing FileReader or compression, rejecting invalid uploads client-side before any network bytes are dispatched.
+---
+
+## 32. Security Hardening Phase 2: Join Code Rate Limiting, Cloudflare Turnstile, and Honeypot Bot Traps
+* **Context:** 6-character alphanumeric trip join codes could be targeted by automated brute-force attacks or scraping bots searching for private trip payloads. Additionally, automated form scrapers could attempt rapid-fire spam submissions on trip creation, join, and expense forms.
+* **Decision:** Implemented database-level attempt tracking with automated lockouts in PostgreSQL, integrated Cloudflare Turnstile anti-bot verification, and embedded honeypot traps in all form surfaces.
+* **Pattern/Implementation:**
+  - **Database Join Code Rate Limiting (`0047_security_hardening_phase2_join_limits.sql`)**:
+    - Created `public.trip_join_attempts` tracking table (completely revoked from direct client access).
+    - Upgraded `lookup_trip_by_join_code` RPC to enforce a max of 5 failed attempts per 15-minute sliding window. Exceeding 5 failures automatically locks the user account out for 15 minutes, returning the exact remaining cooldown duration in seconds.
+    - Valid join code lookups automatically clear any accumulated failure count.
+  - **Live Cooldown UX (`JoinTripScreen.tsx`)**:
+    - Parsed remaining lockout seconds from Supabase errors and rendered an active countdown timer (`Try again in Xm Ys`), disabling submit actions until the security cooldown expires.
+  - **Cloudflare Turnstile Component (`TurnstileWidget.tsx`)**:
+    - Created modular `<TurnstileWidget />` that conditionally activates when `VITE_TURNSTILE_SITE_KEY` is present, providing seamless bot protection without CAPTCHA friction for human travelers.
+  - **Honeypot Form Bot Traps (`ExpenseForm.tsx`, `TripsListScreen.tsx`, `JoinTripScreen.tsx`)**:
+    - Added offscreen decoy fields (`name="trip_join_security_token"`, `name="expense_vendor_code_security"`) that drop automated bot submissions before any network requests are dispatched to Supabase.
+* **Trade-offs Accepted:**
+  - If a legitimate user mistypes an invite code 5 consecutive times, they must wait 15 minutes or contact their trip admin for the direct invite link.
+---
+
+## 33. Security Hardening Phase 3: Database CHECK Constraints, Audit Logging, CSP, and JSON Sanitization
+* **Context:** Malicious or oversized string payloads could cause database memory bloat or frontend crashes if unbounded. Unvalidated JSON backup imports could introduce prototype pollution or corrupted state into IndexedDB. Cross-site script injections require explicit origin policy restrictions.
+* **Decision:** Implemented database-level `CHECK` constraints on all primary entities, created an administrative security audit log table, defined a strict Content Security Policy in `index.html`, and added backup data validation and sanitization.
+* **Pattern/Implementation:**
+  - **Database CHECK Constraints (`0048_security_hardening_phase3_constraints_and_audit.sql`)**:
+    - `trips`: `length(trim(name)) > 0 and length(name) <= 100`, `start_date <= end_date`, `length(trim(base_currency)) between 2 and 10`.
+    - `members` & `groups`: `length(trim(name)) > 0 and length(name) <= 100`.
+    - `categories`: `length(trim(name)) > 0 and length(name) <= 50`.
+    - `expenses`: `length(trim(title)) > 0 and length(title) <= 200`, `amount > 0 and amount <= 999999999.99`, `length(trim(currency)) between 2 and 10`.
+  - **Security Audit Logs Table & RPC (`0048_security_hardening_phase3_constraints_and_audit.sql`)**:
+    - Created `public.security_audit_logs` table with RLS restricting read access exclusively to trip administrators via `is_trip_admin()`.
+    - Revoked direct client write access, requiring event dispatch through security definer RPC `log_security_event`.
+  - **Content Security Policy (`index.html`)**:
+    - Defined restrictive CSP headers in `index.html` allowing only required origins (Supabase, Leaflet OpenStreetMap tiles, Nominatim geocoding, Cloudflare Turnstile). Added `X-Content-Type-Options: nosniff` and `Referrer-Policy: strict-origin-when-cross-origin`.
+  - **Client-Side JSON Import Sanitizer (`src/utils/backupValidation.ts`)**:
+    - Added prototype pollution protection (`Reflect.deleteProperty`) and bounds validation on imported backups before executing bulk transactions in `tripStore.ts`.
+* **Trade-offs Accepted:**
+  - Strings exceeding max bounds (e.g. titles over 200 characters or names over 100 characters) are trimmed automatically or rejected by the database.
+
+---
+
+## 34. CI/CD Pipeline Supply Chain Hardening & Action Pinning
+* **Context:** The Chief Security Officer (CSO) audit identified three actionable security improvements in the CI/CD pipeline: third-party GitHub action `webfactory/ssh-agent` was referenced via a mutable tag (`@v0.9.0`) instead of an immutable commit SHA, deployment credentials (`EC2_HOST`, `EC2_USER`) were expanded directly inside inline bash commands risking parameter injection, and the repository lacked a `CODEOWNERS` protection file for workflow files.
+* **Decision:**
+  - Pinned `webfactory/ssh-agent` in `.github/workflows/deploy-ec2.yml` to its immutable 40-character commit SHA (`dc588b651fe13675774614f8e6a936a468676387`).
+  - Refactored shell execution steps in `deploy-ec2.yml` to inject secret values via the step `env:` context and reference them cleanly as `$EC2_HOST` and `$EC2_USER`.
+  - Created `.github/CODEOWNERS` mandating repository owner review for `.github/workflows/`, `codemagic.yaml`, `.githooks/`, and `scripts/`.
+* **Trade-offs Accepted:**
+  - Upgrading pinned third-party actions in the future requires manually updating the commit SHA alongside version comments rather than relying on automatic tag rolling. This trade-off was accepted because it guarantees complete supply chain immutability and protects deployment private keys against upstream repository tampering.
+
+---
+
+## 35. Editorial Fluid Morph Header Architecture with Directional Hysteresis
+* **Context:** When scrolling through transactions, members, analytics, or settings tabs, the header previously shrank via a rigid binary threshold (`scrollTop > 15px`) and CPU-intensive `max-height` transitions. This caused aggressive scroll jitter/flickering near the threshold, layout reflow stutter, and the complete disappearance of the sync status pill.
+* **Decision:** Implemented an **Editorial Fluid Morph** header architecture with GPU-accelerated transforms and directional hysteresis.
+* **Pattern/Implementation:**
+  - **Directional Hysteresis & rAF Scroll Engine (`src/App.tsx`)**:
+    - Replaced the 15px binary check with a directional hysteresis tracker throttled via `window.requestAnimationFrame`.
+    - Expands at the top (`scrollTop <= 15px`), collapses smoothly on deliberate downward scroll (`scrollTop > 45px`), and expands early on upward scrolling near the top (`currentScrollTop < 120px` with 25px upward delta) to eliminate threshold bouncing and jitter.
+  - **Inline Compact Metadata Badge (`src/App.tsx`)**:
+    - Embedded an `.app-title-compact-badge` inside `.app-title-row` holding the currency code and live sync status dot.
+    - Fades and translates in seamlessly when scrolled so crucial connectivity/sync status is never lost.
+  - **GPU-Accelerated Morph & Spring Curves (`src/index.css`)**:
+    - Replaced `max-height` transitions with GPU-accelerated `transform: scale(0.82) translateY(-1px)` and `opacity` transitions using a custom spring curve (`cubic-bezier(0.16, 1, 0.3, 1)`).
+    - Upgraded glassmorphism to `backdrop-filter: blur(20px) saturate(180%)` with deep ambient drop shadows.
+    - Aligned `.tab-pane` linear gradient mask to smoothly dissolve content under the compact header bar.
+* **Trade-offs Accepted:**
+  - Title scaling uses GPU `transform: scale(...)` with `transform-origin: left center` rather than CSS font-size transitions, which guarantees 60/120fps rendering and eliminates layout reflows across all mobile and desktop browsers.
+
+---
+
+## 36. WhatsApp-Style Hierarchical Stack Navigation & Sub-Screen Drill-Down Management
+* **Context:** In the webapp, opening drill-down sub-screens in Settings (Categories & Tags, Recycle Bin, Appearance, Backups, Archived Trips) or modal drawers in Members/Groups did not push individual history stack entries. As a result, pressing the browser Back button or performing a mobile swipe-back gesture triggered the top-level trip unselection handler (`selectTrip(null)`), ejecting the user completely to the initial home screen.
+* **Decision:** Implemented a full **WhatsApp-style Hierarchical Navigation Stack (LIFO)** where each nested level unwinds in strict reverse order before parent containers or the active trip can close.
+* **Pattern/Implementation:**
+  - **Settings Drill-Down Navigation (`src/components/SettingsView.tsx`)**:
+    - Wired `useHistoryBack` to `subScreen !== null`, ensuring back navigation closes the active sub-screen (Categories, Recycle Bin, etc.) and returns to the Settings overview without exiting the trip.
+    - Wired `useHistoryBack` to `expandedCategoryId !== null`, so open tag editors collapse first on back navigation.
+    - Added `.settings-subscreen-enter` with `@keyframes whatsappSlideIn` for smooth slide transitions.
+  - **Member & Group Drawers (`src/components/MembersGroupsTab.tsx`)**:
+    - Wired `useHistoryBack` to `showAddGroup || Boolean(editingGroup)` and `Boolean(editingMember)`, ensuring open form sheets close back to the members list.
+  - **Tab Level Stack Management (`src/App.tsx`)**:
+    - Wired `useHistoryBack(!!activeTripId && activeTab !== 'expenses', () => setActiveTab('expenses'))`, so backing out from secondary tabs (Members, Analytics, Settings) transitions back to the primary Transactions tab before exiting the trip.
+* **Trade-offs Accepted:**
+  - Navigating between secondary tabs pushes lightweight hash history states (`#nav-N`) onto the stack. This guarantees that back gestures unwind intuitively without any unexpected screen leaps or data loss.
+
+---
+
+## 37. Floating Frosted Glass Pill Menu Architecture (Webapp)
+* **Context:** The previous bottom tab bar on the webapp was rendered as a full-width flat opaque bar stuck to the bottom of the viewport. It looked rigid, boxy, and clashed with the modern translucent aesthetic established by the iOS and WhatsApp design systems.
+* **Decision:** Implemented a **Floating Frosted Glass Pill Menu** (`.nav-tabs`) with spring active indicators and translucent backdrop blur.
+* **Pattern/Implementation:**
+  - **Pill Geometry & Glassmorphic Surface (`src/index.css`)**:
+    - Transformed `.nav-tabs` into an elevated floating capsule (`position: absolute; bottom: calc(14px + safe-bottom); left: 50%; transform: translateX(-50%); max-width: 430px; border-radius: 9999px`).
+    - Configured true glassmorphism with `backdrop-filter: blur(24px) saturate(190%)`, multi-layered ambient shadows, and inner rim highlight (`inset 0 1px 1px rgba(255, 255, 255, 0.9)` in light mode, `inset 0 1px 1px rgba(255, 255, 255, 0.08)` in dark mode).
+  - **Spring Active State & Micro-Interactions (`src/index.css`)**:
+    - Styled `.nav-tab-item` with spring easing `cubic-bezier(0.16, 1, 0.3, 1)`.
+    - Active tabs receive a glowing capsule background (`rgba(0, 191, 165, 0.14)`), bold typography, and an icon elevation/scale pop (`scale(1.08) translateY(-1px)`).
+  - **FAB & Content Clearance (`src/index.css`)**:
+    - Re-anchored `.fab-add-expense` at `bottom: calc(78px + safe-bottom)` to hover directly above the right side of the floating glass bar.
+    - Updated `.tab-pane` padding-bottom to `calc(88px + safe-bottom)` and bottom dissolution mask so content scrolls cleanly behind the pill.
+* **Trade-offs Accepted:**
+  - The floating pill occupies floating space over the bottom of the scroll view. Content padding-bottom ensures zero overlap with the final list items and buttons.
+
+---
+
+## 38. Classy Notification Center Architecture & Granular Deletion (Webapp)
+* **Context:** The previous notifications drawer used an oversized dark header banner with negative margin hacks, lacked visual categorization (all rows looked identical with no icon differentiation), had no mechanism for clearing all notifications, and lacked mouse-hover delete actions on desktop.
+* **Decision:** Implemented a full **Classy Notification Center** (`src/components/NotificationsPanel.tsx`) inspired by WhatsApp and Apple iOS Notification Center.
+* **Pattern/Implementation:**
+  - **Categorized Visual Squircles (`src/components/NotificationsPanel.tsx`)**:
+    - Mapped notification types (`expense_added`, `expense_updated`, `expense_deleted`, `member_added`, `settlement`) to theme-colored squircle avatars with emerald unread status dots.
+  - **Toolbar Actions & Clear All (`src/services/notificationsApi.ts`, `src/store/notificationsStore.ts`)**:
+    - Added `deleteAllNotifications` database API and `clearAll` store action for one-tap notification purge with safety confirmation.
+    - Added clean header toolbar containing `Mark read`, `Clear all`, and `✕` close button.
+  - **Bidirectional Read & Unread Toggling (`src/services/notificationsApi.ts`, `src/store/notificationsStore.ts`, `src/components/NotificationsPanel.tsx`)**:
+    - Added `markNotificationUnread(id)` API and `toggleRead(id)` / `markAsUnread(id)` store actions.
+    - Embedded `IconMail` (mark unread) and `IconCheck` (mark read) on hover and on interactive squircle click.
+  - **Refined Seamless Border Architecture (`src/index.css`)**:
+    - Replaced asymmetrical heavy border-left with uniform hairline translucent borders, ambient highlight shadows, and jewel dot indicators.
+* **Trade-offs Accepted:**
+  - `Clear all` performs an irreversible batch deletion on the Supabase `notifications` table for the user. A confirmation prompt prevents accidental clears.
+
+---
+
+## 39. Multi-Trip Notification Scoping (Option C Hybrid) & Expense Autofocus
+* **Context:**
+  1. Users reported that opening the Expense form via the floating `+ Expense` button required an extra manual tap on the amount field to start typing.
+  2. Notifications from older trips appeared in the Notification Center without trip context or scoping, creating ambiguity regarding which trip a settlement or expense notification belonged to.
+* **Decision:**
+  1. Implemented automatic focus and selection (`amountInputRef.current?.focus()`, `autoFocus`) on the amount hero input upon opening `ExpenseForm.tsx`.
+  2. Implemented **Option C (Hybrid Multi-Trip Notification Architecture)**:
+     - Embedded explicit **Trip Name Badges** (`.notif-trip-badge`) on every notification card to provide instant context.
+     - Added a 1-tap **Segment Switcher** (`[Current Trip]` vs `[All Trips]`) in `NotificationsPanel.tsx` with dynamic unread count badges.
+     - Updated `BalancesSettlements.tsx` to include the explicit `tripName` in settlement reminder notification titles and bodies.
+---
+
+## 40. Notification Payload Standardization & Smart In-App Display Normalization
+* **Context:**
+  - In-app notification cards were displaying duplicated trip names (e.g. `Himachal 2 [Himachal 2]`) because push payloads previously used the trip name as the `title` while the card also rendered the trip badge.
+  - Event actions (such as deletion, addition, updates) were only present in the body text and could get cut off prematurely by CSS line clamping on long expense descriptions (e.g. `"...was..."`).
+  - Historical notifications recorded past actions (such as deleting a test trip or expense with the same name), creating confusion when a trip with that name was present in the trip list.
+* **Decision:**
+  - Implemented `getNotificationDisplay()` helper in `NotificationsPanel.tsx` to cleanly extract action headlines (`Expense Added`, `Expense Deleted`, `Trip Deleted`, `Member Joined`, `Settlement Reminder`) and deduplicate header badges against trip names for both historical and future notifications.
+  - Expanded `getNotificationMeta()` to support `trip_deleted` (rose trash) and `expense_restored` (emerald sparkles) icons.
+  - Standardized push dispatch payloads across `tripStore.ts`, `App.tsx`, and `JoinTripScreen.tsx` with explicit action headlines and preserved `data.tripName`.
+  - Added `word-break: break-word` and `overflow-wrap: break-word` to `.notif-card-text` to prevent awkward word truncation.
+* **Trade-offs Accepted:**
+  - Historical database notification records are normalized dynamically in the UI at render time without requiring retroactive SQL backfills.
+
+---
+
+## 41. Trip Deletion Authority Enforcement, Cascade Isolation & Notification Normalization
+* **Context:**
+  1. Users observed phantom "Trip Deleted" notifications for trips (e.g. "Sikkim Bagpacking") that were still present on their home screen. Non-owner members were presented with the delete button on `TripsListScreen` and `SettingsView`; executing delete dispatched the push notification to recipients before Supabase RLS rejected the deletion (0 rows deleted). Because the trip was not actually deleted, Postgres foreign key cascading did not remove the notification, leaving a permanent "Trip Deleted" record in recipient inboxes while the trip remained on the home page.
+  2. Deleted trip push notifications passed `tripId`, creating a Catch-22: if the trip was deleted, PostgreSQL `ON DELETE CASCADE` wiped the notification from `notifications` table; if the delete failed, the notification survived.
+  3. Expense deleted notifications displayed awkward redundant text (e.g., `"<Long Title>" was...` cut off by line clamping) because the body repeated `"... was deleted"` while the card headline already stated `Expense Deleted`.
+  4. Clicking on a `trip_deleted` notification attempted to select and navigate into a non-existent trip.
+* **Decision:**
+  1. **UI Permission Gates (`TripsListScreen.tsx`, `SettingsView.tsx`):** Guard the "Delete trip" action to only render for authorized trip owners or admins (`isTripAdmin`).
+  2. **Store & API Safeguards (`tripStore.ts`, `tripApi.ts`):** Check owner/admin authorization in `deleteTrip` before dispatching push notifications. Update `deleteTripRow` to verify that rows were deleted via `.select('id')`, throwing if 0 rows were affected.
+  3. **Decouple Trip Deletion Notifications from Foreign Key Cascade (`tripStore.ts`):** Send `trip_deleted` notifications without the relational `tripId` FK (keeping `tripName` in `params.tripName`), preventing Postgres `ON DELETE CASCADE` from deleting the notification when the trip is removed.
+  4. **Clean Action Body Normalization (`notificationText.ts`):** Update `renderNotificationBody()` to extract the pure expense title (and currency/amount if structured in `data`) and strip redundant trailing verbs (`was deleted`, `was updated`, `was restored`, `added`) with robust parsing for legacy notifications.
+  5. **Safe Realtime & Interaction Handling (`notificationsStore.ts`, `NotificationsPanel.tsx`):** Immediately remove deleted trips from Zustand `trips` state upon receiving realtime `trip_deleted` notifications. Prevent `handleOpenNotification` from selecting deleted or non-existent trips.
+* **Trade-offs Accepted:**
+  - Non-owner trip participants cannot delete shared trips (they can archive or leave the trip instead).
+  - Historical notifications without structured `data.expenseTitle` are normalized via regex matching against known verb patterns.
+
+---
+
+## 42. Offline Sync Queue Fallback on Network Failure & Form / Share Hardening
+* **Context:**
+  1. In `src/store/tripStore.ts`, when `navigator.onLine` was true but backend requests failed (e.g. captive portal, DNS resolution failure, network hiccup), mutations (adding/updating/deleting expenses, members, groups) caught the error and reverted the optimistic local state, deleting the user's freshly entered data with an error banner.
+  2. When sharing an unsynced or offline-created trip before server sync generated a `joinCode`, `ShareTripModal.tsx` rendered a broken URL `http://.../join/undefined` and an empty share code box.
+  3. Form validation errors in `ExpenseForm.tsx` rendered solely at the bottom of the modal below the split matrix, forcing users to scroll down on shorter mobile screens to see why submitting failed.
+  4. Search clear `X` icon overlapped the 20px curved border radius of `.expense-search-input`.
+  5. The bottom items in `.tab-pane` could partially hide behind the floating `NavTabs` on short mobile screens.
+* **Decision:**
+  1. **Resilient Sync Fallback (`src/store/tripStore.ts`):** Modified all CRUD operations (`addExpense`, `updateExpense`, `deleteExpense`, `addMember`, `createTrip`, `createGroup`, `updateGroup`, `deleteGroup`, `addCategory`, `deleteCategory`) so that when an online API call fails, it logs a warning and enqueues the mutation to `queueSync()`, preserving the user's optimistic local data and automatically synchronizing when connectivity recovers.
+  2. **Unsynced Share State (`src/components/ShareTripModal.tsx`):** Added a defensive `hasJoinCode` check. When a trip has not yet received a server-generated `joinCode`, the modal renders a helpful sync-pending banner and disables the copy actions.
+  3. **Inline Form Validation (`src/components/ExpenseForm.tsx`, `src/index.css`):** Rendered field-specific validation errors directly beneath the Amount and Title input fields, styling `.amount-hero.amount-hero-error` with danger accents for immediate feedback.
+  4. **Search Inset & Mobile Clearance (`src/index.css`):** Adjusted `.expense-search-input` right padding and `.search-clear-btn` positioning to sit inside the curved boundary; increased `.tab-pane` bottom padding to `calc(104px + var(--safe-bottom, 0px))` for full floating nav clearance.
+* **Trade-offs Accepted:**
+  - Network-failed mutations persist locally with temporary IDs and sync in the background upon reconnection, prioritizing zero data loss over immediate server confirmation.
+
+---
+
+## 43. MapLibre Popup HTML Injection Sanitization (OWASP A03 / XSS Prevention)
+* **Context:**
+  - In `src/components/TripJourneyMap.tsx`, expense titles and reverse-geocoded place names were interpolated directly into raw HTML template strings and rendered via MapLibre GL's `Popup.setHTML()`.
+  - Because MapLibre GL does not sanitize HTML input passed to `setHTML()`, a trip participant could store crafted script or image onerror payloads in an expense title, triggering stored XSS for other participants upon clicking the map marker pin on the Analytics tab.
+* **Decision:**
+  - Introduced `escapeHtml()` utility to escape `&`, `<`, `>`, `"`, and `'` characters prior to popup HTML generation.
+  - Added unit test suite `src/components/TripJourneyMap.test.ts` to prevent regressions against common XSS injection vectors.
+* **Trade-offs Accepted:**
+  - Raw HTML tags inside expense titles or reverse geocoding place names will render as literal escaped text rather than HTML formatting, preserving visual text while preventing code execution.
+
+---
+
+## 44. Privacy "Blind Mode" Amount Masking, Micro-Haptics & Smart Split Presets
+* **Context:**
+  1. Users viewing trip expenses or balance totals in public spaces, on shared screens, or taking screenshots needed a privacy option to conceal sensitive financial debts and amounts.
+  2. Touch interaction on mobile web lacked tactile micro-feedback for key user actions (swiping items, marking settlements paid, checking split checkboxes).
+  3. Form entry for custom/percentage split configurations required multiple tedious manual taps to allocate shares across members.
+* **Decision:**
+  1. **Privacy "Blind Mode" (`src/store/privacyStore.ts`, `src/App.tsx`):** Built a persistent Zustand-backed privacy store (`isBlindMode`) with a toggle button in the top app header (`IconEye` / `IconEyeOff`). When active, masks all monetary amounts across headers, expense lists, balance summaries, and analytics charts with formatted `•••••` text and CSS blur effects (`.privacy-blur`).
+  2. **Micro-Haptics Feedback (`src/utils/haptics.ts`):** Created a safe, feature-detected Web Haptics vibration utility (`triggerHaptic`) providing tactile feedback for row swiping (`SwipeableRow.tsx`), settlement confirmations (`BalancesSettlements.tsx`), split mode changes, preset selections, and form submissions (`ExpenseForm.tsx`).
+  3. **Smart Split Presets (`src/components/ExpenseForm.tsx`):** Added 1-tap allocation presets (`⚡ Equal All`, `⚖️ 50% Payer / 50% Group`, `👤 Only Payer`) above the split participant matrix in `ExpenseForm.tsx` to streamline expense allocation for common group scenarios.
+* **Trade-offs Accepted:**
+  - Blind mode preference is saved in local device storage (`localStorage`) as a user-level presentation setting rather than synced to server trip data.
+  - Haptic feedback relies on native browser support (`navigator.vibrate`); on unsupported desktop browsers or devices with vibration disabled, calls degrade gracefully to silent no-ops.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ## 27. Multi-Agent & In-App Unified Bug Tracking System
 * **Context:** The application is developed, tested, and maintained cooperatively by multiple AI coding assistants (Antigravity, Claude Code CLI / Hive swarm) alongside human developers and QA testers. Bugs discovered during automated runs, manual testing, or runtime exceptions were previously lost across ephemeral chat contexts or untriaged in generic backlogs without structured telemetry or reproduction data.
 * **Decision:** Build a lightweight, offline-first, git-native Bug Tracking System with both CLI (`scripts/bug.mjs`) and in-app diagnostics (`BugReportModal.tsx` and `ErrorBoundary.tsx`).

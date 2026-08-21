@@ -10,7 +10,7 @@ export function UpdateBanner() {
     <div
       style={{
         position: 'fixed',
-        top: 'calc(12px + env(safe-area-inset-top, 0px))',
+        top: 'calc(12px + var(--safe-top, 0px))',
         left: '50%',
         transform: 'translateX(-50%)',
         zIndex: 9999,

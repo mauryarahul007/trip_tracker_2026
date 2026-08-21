@@ -7,11 +7,10 @@ create table public.notifications (
   data jsonb,
   read boolean not null default false,
   created_at timestamptz not null default now()
-)
+);
 
-create index notifications_user_id_created_at_idx on public.notifications (user_id, created_at desc)
-
-alter table public.notifications enable row level security
+create index notifications_user_id_created_at_idx on public.notifications (user_id, created_at desc);
+alter table public.notifications enable row level security;
 
 -- Rows are written exclusively by the send-push edge function (service
 -- role, already permission-checks that the caller shares a trip with
@@ -20,10 +19,10 @@ alter table public.notifications enable row level security
 create policy "users read their own notifications"
   on public.notifications for select
   to authenticated
-  using (user_id = auth.uid())
+  using (user_id = auth.uid());
 
 create policy "users update their own notifications"
   on public.notifications for update
   to authenticated
   using (user_id = auth.uid())
-  with check (user_id = auth.uid())
+  with check (user_id = auth.uid());

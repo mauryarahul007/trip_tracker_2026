@@ -89,4 +89,3 @@ revoke insert, update, delete on public.profiles from anon;
 revoke insert, update, delete on public.device_push_tokens from anon;
 
 notify pgrst, 'reload schema';
-

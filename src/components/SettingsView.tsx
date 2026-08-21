@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import type { Category, Expense, Trip } from '../types';
+import type { ConfirmRequest } from './ConfirmDialog';
 import {
   IconTag,
   IconTrash,
@@ -19,9 +20,12 @@ import {
   IconChevronLeft,
   IconMapPin,
   IconShield,
+  IconBell,
+  IconShare,
 } from './Icons';
 import { CategoryIcon } from './CategoryIcon';
 import { useTripStore } from '../store/tripStore';
+import { useNotificationsStore } from '../store/notificationsStore';
 import { formatDateRange } from '../utils/dateRange';
 import { getCategoryKeywords } from '../utils/categoryHelper';
 import { getAppVersion } from '../utils/appVersion';
@@ -29,6 +33,7 @@ import { BugReportModal } from './BugReportModal';
 import { SuperAdminBugTracker } from './SuperAdminBugTracker';
 import { SuperadminDashboard } from './SuperadminDashboard';
 import { SuperadminAuthModal } from './SuperadminAuthModal';
+import { useHistoryBack } from '../utils/useHistoryBack';
 
 export type ThemePref = 'light' | 'dark' | 'system';
 
@@ -79,6 +84,8 @@ interface SettingsViewProps {
   hasActiveTrip?: boolean;
   initialSubScreen?: SubScreen;
   onClose?: () => void;
+  onRequestConfirm?: (req: ConfirmRequest) => void;
+  onOpenShareTrip?: () => void;
 }
 
 export function SettingsView({
@@ -110,10 +117,14 @@ export function SettingsView({
   hasActiveTrip = true,
   initialSubScreen = null,
   onClose,
+  onRequestConfirm,
+  onOpenShareTrip,
 }: SettingsViewProps) {
   const [subScreen, setSubScreen] = useState<SubScreen>(initialSubScreen);
 
   // Store data
+  const userId = useTripStore((s) => s.userId);
+  const members = useTripStore((s) => s.members);
   const userDisplayName = useTripStore((s) => s.userDisplayName);
   const deletedExpenses = useTripStore((s) => s.deletedExpenses);
   const fetchDeletedExpenses = useTripStore((s) => s.fetchDeletedExpenses);
@@ -124,25 +135,34 @@ export function SettingsView({
   const resetCategoryKeywords = useTripStore((s) => s.resetCategoryKeywords);
   const enableGeotagging = useTripStore((s) => s.enableGeotagging);
   const setEnableGeotagging = useTripStore((s) => s.setEnableGeotagging);
-  
+
   // Superadmin & Feature Flag state
   const isSuperadmin = useTripStore((s) => s.isSuperadmin);
   const isFeatureEnabled = useTripStore((s) => s.isFeatureEnabled);
   const trips = useTripStore((s) => s.trips);
-  const members = useTripStore((s) => s.members);
   const groups = useTripStore((s) => s.groups);
   const allExpenses = useTripStore((s) => s.expenses);
   const activeTripId = useTripStore((s) => s.activeTripId);
   const activeTrip = trips.find((t) => t.id === activeTripId);
 
   const [isSuperadminModalOpen, setIsSuperadminModalOpen] = useState(false);
+  const unreadNotificationCount = useNotificationsStore((s) => s.unreadCount);
+  const openNotificationsPanel = useNotificationsStore((s) => s.openPanel);
 
   // Category keyword states
   const [expandedCategoryId, setExpandedCategoryId] = useState<string | null>(null);
   const [newKeywordInput, setNewKeywordInput] = useState('');
-  const [newCatName, setNewCatName] = useState('');
-  const [newCatIcon, setNewCatIcon] = useState('🏷️');
-  const [showAddCatForm, setShowAddCatForm] = useState(false);
+
+  // Register sub-screen drill-downs into browser history stack (WhatsApp hierarchical navigation)
+  useHistoryBack(subScreen !== null, () => {
+    setSubScreen(null);
+    setExpandedCategoryId(null);
+  });
+
+  // Register expanded category auto-tags drawer into browser history stack
+  useHistoryBack(expandedCategoryId !== null, () => {
+    setExpandedCategoryId(null);
+  });
 
   // Connectivity and disk storage
   const [isOnline, setIsOnline] = useState(navigator.onLine);
@@ -209,9 +229,13 @@ export function SettingsView({
       setMergeTargetId(otherCats[0]?.id || '');
       setCategoryToDelete(cat);
     } else {
-      if (window.confirm(`Are you sure you want to delete the category "${cat.name}"?`)) {
-        onDeleteCategory(cat.id, null);
-      }
+      onRequestConfirm?.({
+        title: 'Delete category',
+        message: `Are you sure you want to delete the category "${cat.name}"?`,
+        confirmLabel: 'Delete',
+        danger: true,
+        onConfirm: () => onDeleteCategory(cat.id, null),
+      });
     }
   };
 
@@ -251,94 +275,19 @@ export function SettingsView({
 
   if (subScreen === 'categories') {
     return (
-      <div className="fade-in settings-container">
-        <div className="settings-subscreen-nav">
-          <button type="button" className="settings-back-btn" onClick={() => setSubScreen(null)}>
-            <IconChevronLeft size={18} /> Settings
-          </button>
-          <h3 className="settings-subscreen-title">Categories &amp; Tags</h3>
-          <button
-            type="button"
-            className="secondary-btn"
-            style={{ fontSize: '12px', padding: '4px 10px', color: 'var(--primary-accent)', borderColor: 'rgba(31, 110, 104, 0.35)' }}
-            onClick={() => setShowAddCatForm(!showAddCatForm)}
-          >
-            {showAddCatForm ? 'Cancel' : '+ Add'}
+      <div className="settings-container settings-subscreen-enter">
+        <div className="settings-subscreen-nav-header">
+          <button type="button" className="settings-subscreen-back-link" onClick={() => setSubScreen(null)}>
+            <IconChevronLeft size={18} />
+            <span>Settings</span>
           </button>
         </div>
-
-        {/* Add Category Form */}
-        {showAddCatForm && (
-          <div
-            className="glass-card fade-in"
-            style={{ padding: '14px 16px', marginBottom: '14px', border: '1.5px solid rgba(31, 110, 104, 0.35)' }}
-          >
-            <h4 style={{ fontSize: '13.5px', fontWeight: 600, margin: '0 0 10px 0', color: 'var(--text-primary)' }}>
-              Create Custom Category
-            </h4>
-            <div style={{ display: 'flex', gap: '8px', marginBottom: '10px' }}>
-              <div style={{ width: '48px', flexShrink: 0 }}>
-                <input
-                  type="text"
-                  className="input-field"
-                  style={{ textAlign: 'center', fontSize: '18px', padding: '6px 2px' }}
-                  value={newCatIcon}
-                  maxLength={4}
-                  onChange={(e) => setNewCatIcon(e.target.value)}
-                  placeholder="🏷️"
-                />
-              </div>
-              <input
-                type="text"
-                className="input-field"
-                placeholder="Category Name (e.g. Diving, Souvenirs, Fuel)..."
-                value={newCatName}
-                onChange={(e) => setNewCatName(e.target.value)}
-                autoFocus
-              />
-              <button
-                type="button"
-                className="primary-btn"
-                style={{ padding: '6px 14px', fontSize: '13px', flexShrink: 0 }}
-                disabled={!newCatName.trim()}
-                onClick={async () => {
-                  if (!newCatName.trim()) return;
-                  await onAddCategory(newCatName.trim(), newCatIcon || '🏷️');
-                  setNewCatName('');
-                  setNewCatIcon('🏷️');
-                  setShowAddCatForm(false);
-                }}
-              >
-                Save
-              </button>
-            </div>
-            {/* Quick Emoji Presets */}
-            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-              {CATEGORY_ICON_PRESETS.slice(0, 10).map((emoji) => (
-                <button
-                  key={emoji}
-                  type="button"
-                  style={{
-                    background: newCatIcon === emoji ? 'rgba(31, 110, 104, 0.2)' : 'rgba(0,0,0,0.04)',
-                    border: newCatIcon === emoji ? '1px solid var(--primary-accent)' : '1px solid transparent',
-                    borderRadius: '6px',
-                    padding: '2px 6px',
-                    fontSize: '15px',
-                    cursor: 'pointer',
-                  }}
-                  onClick={() => setNewCatIcon(emoji)}
-                >
-                  {emoji}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
+        <h3 className="settings-subscreen-main-title">Categories &amp; Tags</h3>
+        <p className="settings-subscreen-subtitle">
+          Tap any category to view and edit its smart auto-tagging keywords &amp; brands.
+        </p>
 
         <div className="settings-group">
-          <div style={{ padding: '0 8px 6px', fontSize: '12.5px', color: 'var(--text-secondary)' }}>
-            Tap any category to view and edit its smart auto-tagging keywords &amp; brands.
-          </div>
           <div className="settings-group-card" style={{ padding: '4px 0' }}>
             {categories.map((cat) => {
               const dataset = getCategoryKeywords(cat);
@@ -619,34 +568,36 @@ export function SettingsView({
 
   if (subScreen === 'recycle-bin') {
     return (
-      <div className="fade-in settings-container">
-        <div className="settings-subscreen-nav">
-          <button type="button" className="settings-back-btn" onClick={() => setSubScreen(null)}>
-            <IconChevronLeft size={18} /> Settings
+      <div className="settings-container settings-subscreen-enter">
+        <div className="settings-subscreen-nav-header">
+          <button type="button" className="settings-subscreen-back-link" onClick={() => setSubScreen(null)}>
+            <IconChevronLeft size={18} />
+            <span>Settings</span>
           </button>
-          <h3 className="settings-subscreen-title">Recycle Bin</h3>
-          {deletedExpenses.length > 0 ? (
+          {deletedExpenses.length > 0 && (
             <button
               type="button"
-              style={{ background: 'transparent', border: 'none', color: 'var(--color-danger)', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}
+              className="settings-subscreen-action-btn danger"
               onClick={() => {
-                if (window.confirm('Permanently delete all expenses in the recycle bin? This cannot be undone.')) {
-                  emptyRecycleBin();
-                }
+                onRequestConfirm?.({
+                  title: 'Empty Recycle Bin',
+                  message: 'Permanently delete all expenses in the recycle bin? This cannot be undone.',
+                  confirmLabel: 'Empty Bin',
+                  danger: true,
+                  onConfirm: () => emptyRecycleBin(),
+                });
               }}
             >
-              Empty
+              Empty Bin
             </button>
-          ) : (
-            <div style={{ width: '30px' }} />
           )}
         </div>
+        <h3 className="settings-subscreen-main-title">Recycle Bin</h3>
+        <p className="settings-subscreen-subtitle">
+          Soft-deleted expenses can be restored back to your trip or permanently removed.
+        </p>
 
         <div className="settings-group">
-          <div style={{ padding: '0 8px 6px', fontSize: '12.5px', color: 'var(--text-secondary)' }}>
-            Deleted expenses stay in this bin for 24 hours before being permanently purged.
-          </div>
-
           <div className="settings-group-card">
             {deletedExpenses.length === 0 ? (
               <div style={{ padding: '24px 16px', textAlign: 'center', color: 'var(--text-secondary)', fontSize: '13.5px' }}>
@@ -668,7 +619,7 @@ export function SettingsView({
                   <div style={{ minWidth: 0 }}>
                     <div style={{ fontSize: '14px', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{exp.title}</div>
                     <div style={{ fontSize: '11.5px', color: 'var(--text-secondary)' }}>
-                      {exp.currency} {exp.amount.toFixed(2)} &middot; {exp.deletedAt ? formatTimeLeft(exp.deletedAt) : ''}
+                      <span className="privacy-blur">{exp.currency} {exp.amount.toFixed(2)}</span> &middot; {exp.deletedAt ? formatTimeLeft(exp.deletedAt) : ''}
                     </div>
                   </div>
                   <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
@@ -686,9 +637,13 @@ export function SettingsView({
                       className="secondary-btn"
                       style={{ padding: '6px 8px', fontSize: '12px', color: 'var(--color-danger)', borderColor: 'rgba(184,69,46,0.2)' }}
                       onClick={() => {
-                        if (window.confirm(`Permanently delete "${exp.title}"? This cannot be undone.`)) {
-                          permanentlyDeleteExpense(exp.id);
-                        }
+                        onRequestConfirm?.({
+                          title: 'Delete permanently',
+                          message: `Permanently delete "${exp.title}"? This cannot be undone.`,
+                          confirmLabel: 'Delete',
+                          danger: true,
+                          onConfirm: () => permanentlyDeleteExpense(exp.id),
+                        });
                       }}
                       title="Permanently delete now"
                       aria-label="Permanently delete"
@@ -707,14 +662,17 @@ export function SettingsView({
 
   if (subScreen === 'appearance') {
     return (
-      <div className="fade-in settings-container">
-        <div className="settings-subscreen-nav">
-          <button type="button" className="settings-back-btn" onClick={() => setSubScreen(null)}>
-            <IconChevronLeft size={18} /> Settings
+      <div className="settings-container settings-subscreen-enter">
+        <div className="settings-subscreen-nav-header">
+          <button type="button" className="settings-subscreen-back-link" onClick={() => setSubScreen(null)}>
+            <IconChevronLeft size={18} />
+            <span>Settings</span>
           </button>
-          <h3 className="settings-subscreen-title">Appearance</h3>
-          <div style={{ width: '20px' }} />
         </div>
+        <h3 className="settings-subscreen-main-title">Appearance</h3>
+        <p className="settings-subscreen-subtitle">
+          Customize the theme palette and visual appearance for your device.
+        </p>
 
         <div className="settings-group">
           <h4 className="settings-group-title">Theme Palette</h4>
@@ -770,14 +728,17 @@ export function SettingsView({
 
   if (subScreen === 'archived-trips') {
     return (
-      <div className="fade-in settings-container">
-        <div className="settings-subscreen-nav">
-          <button type="button" className="settings-back-btn" onClick={() => setSubScreen(null)}>
-            <IconChevronLeft size={18} /> Settings
+      <div className="settings-container settings-subscreen-enter">
+        <div className="settings-subscreen-nav-header">
+          <button type="button" className="settings-subscreen-back-link" onClick={() => setSubScreen(null)}>
+            <IconChevronLeft size={18} />
+            <span>Settings</span>
           </button>
-          <h3 className="settings-subscreen-title">Archived Trips</h3>
-          <div style={{ width: '20px' }} />
         </div>
+        <h3 className="settings-subscreen-main-title">Archived Trips</h3>
+        <p className="settings-subscreen-subtitle">
+          Past trips you've archived. You can restore them anytime or permanently delete them.
+        </p>
 
         <div className="settings-group">
           <div className="settings-group-card">
@@ -811,16 +772,18 @@ export function SettingsView({
                     >
                       <IconArchive size={13} className="icon-sm" /> Restore
                     </button>
-                    <button
-                      type="button"
-                      className="secondary-btn"
-                      style={{ padding: '6px', color: 'var(--color-danger)', borderColor: 'rgba(184,69,46,0.2)' }}
-                      aria-label="Delete trip permanently"
-                      title="Delete trip permanently"
-                      onClick={() => onDeleteTrip?.(trip)}
-                    >
-                      <IconTrash size={13} className="icon-sm" />
-                    </button>
+                    {(!trip.ownerId || !userId || trip.ownerId === userId || Boolean(trip.adminMemberIds && trip.memberIds.some((mid) => members[mid]?.linkedUserId === userId && trip.adminMemberIds?.includes(mid)))) && (
+                      <button
+                        type="button"
+                        className="secondary-btn"
+                        style={{ padding: '6px', color: 'var(--color-danger)', borderColor: 'rgba(184,69,46,0.2)' }}
+                        aria-label="Delete trip permanently"
+                        title="Delete trip permanently"
+                        onClick={() => onDeleteTrip?.(trip)}
+                      >
+                        <IconTrash size={13} className="icon-sm" />
+                      </button>
+                    )}
                   </div>
                 </div>
               ))
@@ -833,14 +796,17 @@ export function SettingsView({
 
   if (subScreen === 'backups') {
     return (
-      <div className="fade-in settings-container">
-        <div className="settings-subscreen-nav">
-          <button type="button" className="settings-back-btn" onClick={() => setSubScreen(null)}>
-            <IconChevronLeft size={18} /> Settings
+      <div className="settings-container settings-subscreen-enter">
+        <div className="settings-subscreen-nav-header">
+          <button type="button" className="settings-subscreen-back-link" onClick={() => setSubScreen(null)}>
+            <IconChevronLeft size={18} />
+            <span>Settings</span>
           </button>
-          <h3 className="settings-subscreen-title">Database &amp; Backups</h3>
-          <div style={{ width: '20px' }} />
         </div>
+        <h3 className="settings-subscreen-main-title">Database &amp; Backups</h3>
+        <p className="settings-subscreen-subtitle">
+          Manage your local database, sync storage, and export JSON or CSV backups.
+        </p>
 
         {/* Disk usage */}
         {storageEstimate && (
@@ -1014,6 +980,23 @@ export function SettingsView({
         <div className="settings-group">
           <h4 className="settings-group-title">Trip Preferences</h4>
           <div className="settings-group-card">
+            {onOpenShareTrip && (
+              <button type="button" className="settings-row-item" onClick={onOpenShareTrip}>
+                <div className="settings-row-left">
+                  <div className="settings-squircle squircle-teal">
+                    <IconShare size={18} />
+                  </div>
+                  <div className="settings-row-texts">
+                    <span className="settings-row-title">Invite &amp; Share Trip</span>
+                    <span className="settings-row-subtitle">Share the join link or QR code with members</span>
+                  </div>
+                </div>
+                <div className="settings-row-right">
+                  <IconChevronRight size={16} />
+                </div>
+              </button>
+            )}
+
             {(isSuperadmin || isFeatureEnabled('enableKeywordTagging')) && (
               <button type="button" className="settings-row-item" onClick={() => setSubScreen('categories')}>
                 <div className="settings-row-left">
@@ -1077,10 +1060,30 @@ export function SettingsView({
         </div>
       )}
 
+      {hasActiveTrip && (
+        <p className="settings-scope-note">Everything below applies to your whole account — not just this trip.</p>
+      )}
+
       {/* Group 2: App & Appearance */}
       <div className="settings-group">
         <h4 className="settings-group-title">App &amp; Interface</h4>
         <div className="settings-group-card">
+          <button type="button" className="settings-row-item" onClick={openNotificationsPanel}>
+            <div className="settings-row-left">
+              <div className="settings-squircle squircle-teal">
+                <IconBell size={18} />
+              </div>
+              <div className="settings-row-texts">
+                <span className="settings-row-title">Notifications</span>
+                <span className="settings-row-subtitle">{unreadNotificationCount > 0 ? `${unreadNotificationCount} unread` : 'All caught up'}</span>
+              </div>
+            </div>
+            <div className="settings-row-right">
+              {unreadNotificationCount > 0 && <span className="settings-badge-pill">{unreadNotificationCount}</span>}
+              <IconChevronRight size={16} />
+            </div>
+          </button>
+
           <button type="button" className="settings-row-item" onClick={() => setSubScreen('appearance')}>
             <div className="settings-row-left">
               <div className="settings-squircle squircle-amber">
@@ -1125,7 +1128,7 @@ export function SettingsView({
                       bottom: 0,
                       backgroundColor: enableGeotagging ? '#00BFA5' : 'var(--border-color)',
                       transition: '0.2s ease',
-                      borderRadius: '24px',
+                      borderRadius: 'var(--border-radius-pill)',
                     }}
                   >
                     <span
@@ -1173,86 +1176,94 @@ export function SettingsView({
         </div>
       </div>
 
-      {/* Group 3: Data & Storage (Superadmin Only or Demo Seeding Flag) */}
-      {isSuperadmin && (
-        <div className="settings-group">
-          <h4 className="settings-group-title">Data &amp; Backups</h4>
-          <div className="settings-group-card">
-            <button type="button" className="settings-row-item" onClick={() => setSubScreen('archived-trips')}>
-              <div className="settings-row-left">
-                <div className="settings-squircle squircle-slate">
-                  <IconArchive size={18} />
-                </div>
-                <div className="settings-row-texts">
-                  <span className="settings-row-title">Archived Trips</span>
-                  <span className="settings-row-subtitle">
-                    {archivedTrips.length === 0 ? 'No archived trips' : `${archivedTrips.length} archived trip${archivedTrips.length === 1 ? '' : 's'}`}
-                  </span>
-                </div>
+      {/* Group 3: Data & Storage */}
+      <div className="settings-group">
+        <h4 className="settings-group-title">Data &amp; Backups</h4>
+        <div className="settings-group-card">
+          <button type="button" className="settings-row-item" onClick={() => setSubScreen('archived-trips')}>
+            <div className="settings-row-left">
+              <div className="settings-squircle squircle-slate">
+                <IconArchive size={18} />
               </div>
-              <div className="settings-row-right">
-                {archivedTrips.length > 0 && <span className="settings-badge-pill">{archivedTrips.length}</span>}
-                <IconChevronRight size={16} />
+              <div className="settings-row-texts">
+                <span className="settings-row-title">Archived Trips</span>
+                <span className="settings-row-subtitle">
+                  {archivedTrips.length === 0 ? 'No archived trips' : `${archivedTrips.length} archived trip${archivedTrips.length === 1 ? '' : 's'}`}
+                </span>
               </div>
-            </button>
+            </div>
+            <div className="settings-row-right">
+              {archivedTrips.length > 0 && <span className="settings-badge-pill">{archivedTrips.length}</span>}
+              <IconChevronRight size={16} />
+            </div>
+          </button>
 
-            <button type="button" className="settings-row-item" onClick={() => setSubScreen('backups')}>
-              <div className="settings-row-left">
-                <div className="settings-squircle squircle-indigo">
-                  <IconDatabase size={18} />
-                </div>
-                <div className="settings-row-texts">
-                  <span className="settings-row-title">Database Backups</span>
-                  <span className="settings-row-subtitle">Export/Import JSON database snapshot</span>
-                </div>
+          <button type="button" className="settings-row-item" onClick={() => setSubScreen('backups')}>
+            <div className="settings-row-left">
+              <div className="settings-squircle squircle-indigo">
+                <IconDatabase size={18} />
               </div>
-              <div className="settings-row-right">
-                <IconChevronRight size={16} />
+              <div className="settings-row-texts">
+                <span className="settings-row-title">Database Backups</span>
+                <span className="settings-row-subtitle">Export/Import JSON database snapshot</span>
               </div>
-            </button>
+            </div>
+            <div className="settings-row-right">
+              <IconChevronRight size={16} />
+            </div>
+          </button>
 
-            {onLoadDemoTrip && (
-              <button
-                type="button"
-                className="settings-row-item"
-                onClick={() => {
-                  if (window.confirm('Populate a sample trip ("Road Trip to Goa") with test members and expenses?')) {
+          {onLoadDemoTrip && (
+            <button
+              type="button"
+              className="settings-row-item"
+              onClick={() => {
+                onRequestConfirm?.({
+                  title: 'Seed Demo Data',
+                  message: 'Populate a sample trip ("Road Trip to Goa") with test members and expenses?',
+                  confirmLabel: 'Load Demo Trip',
+                  onConfirm: () => {
                     onLoadDemoTrip();
                     onClose?.();
-                  }
-                }}
-              >
-                <div className="settings-row-left">
-                  <div className="settings-squircle squircle-emerald">
-                    <IconSparkles size={18} />
-                  </div>
-                  <div className="settings-row-texts">
-                    <span className="settings-row-title">Seed Demo Data</span>
-                    <span className="settings-row-subtitle">Load sample trip with members &amp; split transactions</span>
-                  </div>
+                  },
+                });
+              }}
+            >
+              <div className="settings-row-left">
+                <div className="settings-squircle squircle-emerald">
+                  <IconSparkles size={18} />
                 </div>
-                <div className="settings-row-right">
-                  <IconChevronRight size={16} />
+                <div className="settings-row-texts">
+                  <span className="settings-row-title">Seed Demo Data</span>
+                  <span className="settings-row-subtitle">Load sample trip with members &amp; split transactions</span>
                 </div>
-              </button>
-            )}
-          </div>
+              </div>
+              <div className="settings-row-right">
+                <IconChevronRight size={16} />
+              </div>
+            </button>
+          )}
         </div>
-      )}
+      </div>
 
-      {/* Group 4: Account & Reset */}
+      {/* Group 4: Account & Danger Zone */}
       <div className="settings-group">
-        <h4 className="settings-group-title">Account</h4>
+        <h4 className="settings-group-title">Account &amp; Reset</h4>
         <div className="settings-group-card">
           {onSignOut && (
             <button
               type="button"
               className="settings-row-item"
               onClick={() => {
-                if (window.confirm('Sign out of your account on this device?')) {
-                  onSignOut();
-                  onClose?.();
-                }
+                onRequestConfirm?.({
+                  title: 'Sign Out',
+                  message: 'Sign out of your account on this device?',
+                  confirmLabel: 'Sign Out',
+                  onConfirm: () => {
+                    onSignOut();
+                    onClose?.();
+                  },
+                });
               }}
             >
               <div className="settings-row-left">
@@ -1269,19 +1280,16 @@ export function SettingsView({
             </button>
           )}
 
-          {isSuperadmin && onClearDatabase && (
+          {onClearDatabase && (
             <button
               type="button"
               className="settings-row-item"
               onClick={() => {
-                if (
-                  window.confirm(
-                    'FACTORY RESET: Are you absolutely sure? This will wipe all local trips, expenses, and settings.'
-                  )
-                ) {
-                  onClearDatabase();
-                  onClose?.();
-                }
+                // onClearDatabase already opens the app's own danger-confirm
+                // dialog (with the two-tap wax-seal pattern) — no separate
+                // confirm here, which used to stack a second, native one on
+                // top of it.
+                onClearDatabase();
               }}
             >
               <div className="settings-row-left">

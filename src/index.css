@@ -68,14 +68,22 @@
   /* Text — Ink navy */
   --text-primary: #1C2A38;
   --text-secondary: #52627A;
-  --text-muted: #8B96A8;
+  --text-muted: #6B7690; /* darkened from #8B96A8 — was ~2.8:1 on --bg-surface, fails WCAG AA */
 
   --bg-header: #1C2A38;
+  --bg-header-glass: rgba(28, 42, 56, 0.82);
+  --bg-header-glass-scrolled: rgba(28, 42, 56, 0.92);
   --glass-shadow: 0 1px 2px rgba(28, 42, 56, 0.04), 0 6px 16px -8px rgba(28, 42, 56, 0.10);
+  --bg-nav-glass: rgba(255, 253, 246, 0.82);
+  --border-nav-glass: rgba(221, 210, 184, 0.65);
+  --shadow-nav-glass: 0 16px 36px -4px rgba(28, 42, 56, 0.16), 0 4px 12px rgba(28, 42, 56, 0.08), inset 0 1px 1px rgba(255, 255, 255, 0.9);
+  --bg-nav-item-active: rgba(31, 110, 104, 0.12);
+  --color-nav-item-active: var(--primary-accent);
   --backdrop-filter: none;
   --border-radius-sm: 6px;
   --border-radius-md: 10px;
   --border-radius-lg: 16px;
+  --border-radius-pill: 999px;
 
   --transition-smooth: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -104,10 +112,17 @@
 
     --text-primary: #EFE7D2;
     --text-secondary: #A7AFC0;
-    --text-muted: #7C8AA0;
+    --text-muted: #8B96AE;
 
     --bg-header: #0F151D;
+    --bg-header-glass: rgba(15, 21, 29, 0.85);
+    --bg-header-glass-scrolled: rgba(15, 21, 29, 0.95);
     --glass-shadow: 0 1px 2px rgba(0, 0, 0, 0.35), 0 6px 16px -8px rgba(0, 0, 0, 0.5);
+    --bg-nav-glass: rgba(20, 28, 38, 0.82);
+    --border-nav-glass: rgba(242, 236, 220, 0.14);
+    --shadow-nav-glass: 0 18px 44px -4px rgba(0, 0, 0, 0.65), 0 4px 16px rgba(0, 0, 0, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.08);
+    --bg-nav-item-active: rgba(0, 191, 165, 0.16);
+    --color-nav-item-active: #00BFA5;
   }
 }
 :root[data-theme="dark"] {
@@ -129,10 +144,17 @@
 
   --text-primary: #EFE7D2;
   --text-secondary: #A7AFC0;
-  --text-muted: #7C8AA0;
+  --text-muted: #8B96AE;
 
   --bg-header: #0F151D;
+  --bg-header-glass: rgba(15, 21, 29, 0.85);
+  --bg-header-glass-scrolled: rgba(15, 21, 29, 0.95);
   --glass-shadow: 0 1px 2px rgba(0, 0, 0, 0.35), 0 6px 16px -8px rgba(0, 0, 0, 0.5);
+  --bg-nav-glass: rgba(20, 28, 38, 0.82);
+  --border-nav-glass: rgba(242, 236, 220, 0.14);
+  --shadow-nav-glass: 0 18px 44px -4px rgba(0, 0, 0, 0.65), 0 4px 16px rgba(0, 0, 0, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.08);
+  --bg-nav-item-active: rgba(0, 191, 165, 0.16);
+  --color-nav-item-active: #00BFA5;
 }
 
 * {
@@ -191,6 +213,30 @@ body {
   border-left: 1px solid var(--border-color);
   border-right: 1px solid var(--border-color);
   overflow: hidden;
+}
+
+/* Capacitor's WKWebView has no dynamic toolbar (unlike Mobile Safari, which
+   100dvh above is tuned for). html/body/#root already anchor on
+   height:100% first (see above) — this just stops dvh from overriding
+   that on native, where 100% reliably matches the fixed native window. */
+html.capacitor-native,
+html.capacitor-native body,
+html.capacitor-native #root,
+html.capacitor-native .app-container {
+  height: 100% !important;
+}
+
+/* On real desktop widths, let the app use a bit more of the canvas instead
+   of sitting as a fixed 500px column with large empty margins either side.
+   Everything else keeps its mobile-proportioned layout, which is why this
+   stays a modest bump rather than a full desktop redesign. The trip-card
+   grid variant lives with .passport-list further down the file — a media
+   query placed here would lose the cascade to that later, equal-specificity
+   base rule regardless of the condition matching. */
+@media (min-width: 900px) {
+  .app-container {
+    max-width: 640px;
+  }
 }
 
 /* Ledger card utility (kept the historical class name, restyled as paper stock) */
@@ -278,6 +324,81 @@ button, [role="button"], input, select, a {
 .secondary-btn:hover {
   background: var(--bg-surface-hover);
   border-color: rgba(28, 42, 56, 0.22);
+}
+
+/* Floating Action Button (FAB) */
+.fab-add-expense {
+  position: absolute;
+  right: 20px;
+  bottom: calc(78px + var(--safe-bottom, 0px));
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: var(--bg-header);
+  color: #F2ECDC;
+  border: 2px solid rgba(242, 236, 220, 0.35);
+  box-shadow: 0 6px 20px rgba(28, 42, 56, 0.3), 0 2px 8px rgba(28, 42, 56, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 50;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.fab-add-expense:hover {
+  background: #243445;
+  transform: translateY(-2px) scale(1.06);
+  box-shadow: 0 6px 20px rgba(28, 42, 56, 0.35), 0 3px 8px rgba(28, 42, 56, 0.2);
+  border-color: rgba(242, 236, 220, 0.65);
+}
+
+.fab-add-expense:active {
+  transform: translateY(1px) scale(0.95);
+  box-shadow: 0 2px 8px rgba(28, 42, 56, 0.2), 0 1px 3px rgba(28, 42, 56, 0.12);
+}
+
+.fab-add-expense:focus-visible {
+  outline: 2px solid var(--border-color-focus);
+  outline-offset: 3px;
+}
+
+/* Dark mode adjustment for FAB — the icon uses --color-success (a real
+   green) instead of the neutral cream/text color light mode uses, an
+   intentional inversion: light mode's FAB reads as a solid dark accent,
+   dark mode's reads as a surface tile with a vivid accent-colored icon. */
+:root[data-theme="dark"] .fab-add-expense {
+  background: var(--bg-surface-hover);
+  color: var(--color-success);
+  border: 2px solid var(--border-color);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5), 0 2px 6px rgba(0, 0, 0, 0.35);
+}
+
+:root[data-theme="dark"] .fab-add-expense:hover {
+  background: #2D3D4E;
+  border-color: rgba(79, 174, 114, 0.45);
+  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.65), 0 3px 8px rgba(0, 0, 0, 0.4);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .fab-add-expense {
+    background: var(--bg-surface-hover);
+    color: var(--color-success);
+    border: 2px solid var(--border-color);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5), 0 2px 6px rgba(0, 0, 0, 0.35);
+  }
+  :root:not([data-theme="light"]) .fab-add-expense:hover {
+    background: #2D3D4E;
+    border-color: rgba(79, 174, 114, 0.45);
+    box-shadow: 0 6px 22px rgba(0, 0, 0, 0.65), 0 3px 8px rgba(0, 0, 0, 0.4);
+  }
+}
+
+/* iOS Capacitor Safe Area & Native Liquid Glass Tab Clearance */
+html.capacitor-ios .fab-add-expense {
+  bottom: calc(18px + var(--safe-bottom, 0px) + 76px);
+  right: max(18px, var(--safe-right, 18px));
 }
 
 /* Icon sizing inside buttons/rows */
@@ -371,16 +492,477 @@ input[type="date"].input-field {
   padding-left: 40px;
 }
 
+/* Expense search + filter toggle — search stays one row, category/member/
+   date-range are occasional filters buried behind a toggle so the default
+   state is one compact row instead of three wrapped ones. */
+/* WhatsApp-Style Search & Filter Track */
+.expense-filters {
+  margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.expense-search-row {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+}
+
+.expense-search-wrap {
+  flex: 1;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.expense-search-input {
+  width: 100%;
+  padding-left: 36px;
+  padding-right: 38px;
+  border-radius: 20px;
+  font-size: 13.5px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  transition: var(--transition-smooth);
+}
+
+.expense-search-input:focus {
+  border-color: var(--border-color-focus);
+  box-shadow: 0 0 0 3px rgba(31, 110, 104, 0.15);
+}
+
+.search-clear-btn {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: var(--transition-smooth);
+}
+
+.search-clear-btn:hover {
+  color: var(--text-primary);
+  background: var(--bg-surface-hover);
+}
+
+.filter-chips-collapse {
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transform: translateY(-6px);
+  pointer-events: none;
+  transition: max-height 0.28s cubic-bezier(0.4, 0, 0.2, 1),
+              opacity 0.2s ease,
+              transform 0.2s ease,
+              margin 0.2s ease;
+  margin-top: 0;
+}
+
+.filter-chips-collapse.expanded {
+  max-height: 60px;
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+  margin-top: 2px;
+}
+
+.filter-chips-track {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding: 2px 2px 6px 2px;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  scroll-snap-type: x proximity;
+  /* Soft edge fade hints that the chip row scrolls sideways, instead of
+     the last chip clipping hard against the card boundary. */
+  -webkit-mask-image: linear-gradient(to right, transparent 0, #000 14px, #000 calc(100% - 22px), transparent 100%);
+  mask-image: linear-gradient(to right, transparent 0, #000 14px, #000 calc(100% - 22px), transparent 100%);
+}
+
+.filter-chips-track::-webkit-scrollbar {
+  display: none;
+}
+
+.filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 13px;
+  border-radius: var(--border-radius-pill);
+  font-size: 12.5px;
+  font-weight: 500;
+  font-family: var(--font-family-body);
+  white-space: nowrap;
+  flex-shrink: 0;
+  background: var(--bg-surface);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  outline: none;
+  user-select: none;
+  scroll-snap-align: start;
+}
+
+.filter-chip:hover {
+  background: var(--bg-surface-hover);
+  color: var(--text-primary);
+  border-color: rgba(28, 42, 56, 0.25);
+}
+
+.filter-chip:active {
+  transform: scale(0.96);
+}
+
+.filter-chip.active {
+  background: var(--bg-header);
+  color: #F2ECDC;
+  border-color: var(--bg-header);
+  font-weight: 600;
+  box-shadow: 0 1px 4px rgba(28, 42, 56, 0.18);
+}
+
+/* Dark theme active filter chip */
+:root[data-theme="dark"] .filter-chip.active {
+  background: #2D3D4E;
+  color: #EFE7D2;
+  border-color: rgba(239, 231, 210, 0.35);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .filter-chip.active {
+    background: #2D3D4E;
+    color: #EFE7D2;
+    border-color: rgba(239, 231, 210, 0.35);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+  }
+}
+
+.expense-review-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  margin-bottom: 12px;
+  padding: 12px 14px;
+  border-left: 3px solid var(--color-warning);
+  background: rgba(185, 138, 62, 0.09);
+  color: var(--text-primary);
+  font-family: var(--font-family-body);
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.expense-review-banner:hover {
+  background: rgba(185, 138, 62, 0.15);
+}
+.expense-review-banner svg {
+  color: var(--color-warning);
+  flex-shrink: 0;
+}
+.expense-review-banner-text {
+  flex: 1;
+  min-width: 0;
+}
+.expense-review-banner-cta {
+  font-weight: 600;
+  color: var(--color-warning);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.filter-chip-clear {
+  border-style: dashed;
+  color: var(--color-danger);
+  border-color: rgba(184, 69, 46, 0.35);
+  background: rgba(184, 69, 46, 0.05);
+}
+
+.filter-chip-clear:hover {
+  background: rgba(184, 69, 46, 0.12);
+  border-color: var(--color-danger);
+  color: var(--color-danger);
+}
+
+.filter-date-popup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 14px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-md);
+  box-shadow: var(--glass-shadow);
+  animation: filterPanelIn 0.16s ease-out;
+}
+
+@keyframes filterPanelIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.filter-date-popup .expense-date-range {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.filter-date-popup .expense-date-range .input-field {
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+}
+
+.expense-date-sep {
+  color: var(--text-muted);
+  font-family: var(--font-family-mono);
+  flex-shrink: 0;
+}
+
+.filter-clear-link {
+  align-self: flex-end;
+  background: none;
+  border: none;
+  color: var(--color-danger);
+  font-family: var(--font-family-body);
+  font-size: 12px;
+  cursor: pointer;
+  padding: 2px 4px;
+}
+
+.filter-clear-link:hover {
+  text-decoration: underline;
+}
+
+/* Compact ghost icon buttons for list-row actions (edit/delete) — plain
+   icon rather than a bordered box, since swipe-to-delete already covers
+   the primary action and a full button chrome reads as heavier than a
+   secondary, occasional action needs. */
+.row-icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  border-radius: var(--border-radius-sm);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: var(--transition-smooth);
+}
+.row-icon-btn:hover {
+  background: var(--bg-surface-hover);
+  color: var(--text-primary);
+}
+.row-icon-btn-danger:hover {
+  background: rgba(184, 69, 46, 0.1);
+  color: var(--color-danger);
+}
+
 /* Header & Navigation */
 .app-header {
-  padding-top: calc(14px + env(safe-area-inset-top, 0px));
+  padding-top: calc(14px + var(--safe-top, 0px));
   padding-bottom: 14px;
-  padding-left: max(20px, env(safe-area-inset-left, 20px));
-  padding-right: max(20px, env(safe-area-inset-right, 20px));
+  padding-left: max(20px, var(--safe-left, 20px));
+  padding-right: max(20px, var(--safe-right, 20px));
   background-color: var(--bg-header);
   color: #F2ECDC;
   flex-shrink: 0;
   z-index: 40;
+}
+
+/* Dashboard Container & Translucent Glass Header */
+.trip-dashboard-container {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  position: relative;
+}
+
+.trip-dashboard-header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 40;
+  padding-top: calc(14px + var(--safe-top, 0px));
+  padding-bottom: 12px;
+  padding-left: max(20px, var(--safe-left, 20px));
+  padding-right: max(20px, var(--safe-right, 20px));
+  background-color: var(--bg-header-glass);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-bottom: 1px solid rgba(242, 236, 220, 0.08);
+  box-shadow: 0 4px 20px -4px rgba(0, 0, 0, 0.28);
+  transition: padding 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+              background-color 0.35s ease,
+              box-shadow 0.35s ease,
+              border-color 0.35s ease;
+  will-change: padding, background-color, box-shadow;
+}
+
+.trip-dashboard-header.is-scrolled {
+  padding-top: calc(9px + var(--safe-top, 0px));
+  padding-bottom: 9px;
+  background-color: var(--bg-header-glass-scrolled);
+  box-shadow: 0 10px 30px -6px rgba(0, 0, 0, 0.45), 0 2px 8px rgba(0, 0, 0, 0.25);
+  border-bottom-color: rgba(242, 236, 220, 0.14);
+}
+
+.trip-dashboard-header .app-header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  min-height: 38px;
+}
+
+.trip-dashboard-header .app-title-group {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.trip-dashboard-header.is-scrolled .app-title-group {
+  transform: translateY(2px);
+}
+
+.app-title-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+}
+
+.trip-dashboard-header .app-logo {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin: 0;
+  transform-origin: left center;
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), color 0.2s ease;
+}
+
+.trip-dashboard-header.is-scrolled .app-logo {
+  transform: scale(0.82) translateY(-1px);
+}
+
+.trip-dashboard-header .app-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11.5px;
+  font-weight: 500;
+  color: rgba(242, 236, 220, 0.65);
+  margin-bottom: 2px;
+  transform-origin: left top;
+  transition: opacity 0.22s ease,
+              transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+              height 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+              margin 0.3s ease;
+  height: 16px;
+  overflow: hidden;
+}
+
+.trip-dashboard-header.is-scrolled .app-eyebrow {
+  opacity: 0;
+  height: 0;
+  margin-bottom: 0;
+  transform: translateY(-6px) scale(0.92);
+  pointer-events: none;
+}
+
+.trip-dashboard-header .app-header-stats {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(242, 236, 220, 0.08);
+  font-size: 12px;
+  color: rgba(242, 236, 220, 0.72);
+  transform-origin: top center;
+  transition: opacity 0.2s ease,
+              transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+              height 0.32s cubic-bezier(0.16, 1, 0.3, 1),
+              margin 0.3s ease,
+              padding 0.3s ease,
+              border-color 0.2s ease;
+  /* Tall enough for .sync-header-pill's own padding + line-height — it was
+     clipping the pill's bottom edge at 28px on some font/UA metrics. */
+  height: 34px;
+  overflow: hidden;
+}
+
+.trip-dashboard-header.is-scrolled .app-header-stats {
+  opacity: 0;
+  height: 0;
+  margin-top: 0;
+  padding-top: 0;
+  border-top-color: transparent;
+  transform: translateY(-8px) scale(0.98);
+  pointer-events: none;
+}
+
+.trip-dashboard-header .secondary-btn {
+  transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
+  border-radius: 8px;
+}
+.trip-dashboard-header .secondary-btn:hover {
+  background: rgba(242, 236, 220, 0.14) !important;
+  border-color: rgba(242, 236, 220, 0.45) !important;
+}
+.trip-dashboard-header .secondary-btn:active {
+  transform: scale(0.96);
+}
+
+/* Native iOS glass header: MainViewController.swift renders a real
+   translucent, scroll-shrinking header (title/eyebrow/stats/sync
+   pill/buttons all native, tap-forwarded to these — see
+   data-action="share"/"trips-back"/"sync" — the same reasons the tab bar
+   went fully native apply here too: a blur placed behind CSS content
+   blurs that content as well, since WKWebView flattens everything into
+   one layer). .trip-dashboard-header stays in the DOM purely as native's
+   source of truth (content/state read back via nativeShell.ts's
+   headerState message) but is never shown.
+   Scoped to .trip-dashboard-header specifically, NOT the shared
+   .app-header class — GlobalSettingsModal and ExpenseForm reuse
+   .app-header purely for its dark-banner styling on their own in-modal
+   headers (which hold their Close button), and hiding those left no way
+   to dismiss the modal. HeaderMetrics.expandedHeight in
+   MainViewController.swift must match the value below. */
+html.capacitor-ios .trip-dashboard-header {
+  display: none;
+}
+html.capacitor-ios .tab-pane {
+  /* 100px matches the scroll distance that drives the collapse (see
+     nativeShell.ts) so the header finishes shrinking right as content
+     reaches it — the extra +16px is a deliberate permanent buffer so
+     content still gets a bit of breathing room below the collapsed
+     header instead of scrolling flush against it. */
+  padding-top: calc(var(--safe-top, 0px) + 100px + 16px);
+  mask-image: none;
+  -webkit-mask-image: none;
 }
 
 .app-header-top {
@@ -419,23 +1001,60 @@ input[type="date"].input-field {
 }
 
 .app-logo {
+  /* h1/h2 both carry a sizeable default UA margin that nothing in this
+     file resets — at this font size that's ~20px of invisible top+bottom
+     space nobody asked for, stacking with the header's own explicit gaps
+     to read as unexplained "dead space" above/below the title. */
+  margin: 0;
   font-size: 22px;
   font-weight: 600;
   color: var(--text-primary);
   font-family: var(--font-family-title);
+  /* A long trip name wrapping to 2 lines grows the header taller than the
+     fixed space .tab-pane reserves for it (position:absolute, so it just
+     overlaps the content below instead of pushing it down) — most visible
+     right after navigating to a trip with a long name, since the header
+     resets to its expanded height on every trip/tab switch. */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .nav-tabs {
+  position: absolute;
+  bottom: calc(14px + var(--safe-bottom, 0px));
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - 32px);
+  max-width: 430px;
+  background: var(--bg-nav-glass);
+  backdrop-filter: blur(24px) saturate(190%);
+  -webkit-backdrop-filter: blur(24px) saturate(190%);
+  border: 1px solid var(--border-nav-glass);
+  border-radius: 9999px;
+  padding: 5px 6px;
+  box-shadow: var(--shadow-nav-glass);
   display: flex;
-  background: var(--bg-surface);
-  border-top: 1px solid var(--border-color);
-  padding-top: 8px;
-  padding-left: max(10px, env(safe-area-inset-left, 10px));
-  padding-right: max(10px, env(safe-area-inset-right, 10px));
-  padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px));
-  position: relative;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
   flex-shrink: 0;
-  z-index: 100;
+  z-index: 50;
+  transition: background-color 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+/* Native iOS "Liquid Glass" tab bar: MainViewController.swift renders a
+   genuine native floating pill (UIVisualEffectView + UIGlassEffect on iOS
+   26+, real UIButtons for the icons/labels) on top of the WKWebView —
+   putting a native blur *behind* CSS-rendered icons blurs the icons too,
+   since WKWebView flattens everything into one layer the blur view
+   samples from, so crisp icons over blur requires the icons themselves to
+   be native. This element stays in the DOM (native taps it via .click()
+   to drive the existing React handlers unchanged, and its .active class /
+   data-tab reports state back to native — see nativeShell.ts) but is
+   never visible. */
+html.capacitor-ios .nav-tabs {
+  display: none;
 }
 
 .nav-tab-item {
@@ -443,30 +1062,54 @@ input[type="date"].input-field {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
-  background: none;
+  justify-content: center;
+  gap: 2px;
+  background: transparent;
   border: none;
-  border-radius: var(--border-radius-sm);
+  border-radius: 9999px;
   color: var(--text-secondary);
   font-family: var(--font-family-body);
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 600;
-  padding: 8px 4px;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  padding: 6px 2px 5px;
   cursor: pointer;
-  transition: var(--transition-smooth);
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .nav-tab-item:hover {
-  background: var(--bg-surface-hover);
+  color: var(--text-primary);
+  background: rgba(125, 125, 125, 0.08);
+}
+
+.nav-tab-item:active {
+  transform: scale(0.95);
 }
 
 .nav-tab-item.active {
-  color: var(--primary-accent);
-  background: rgba(31, 110, 104, 0.09);
+  color: var(--color-nav-item-active);
+  background: var(--bg-nav-item-active);
+  font-weight: 700;
 }
 
 .nav-tab-icon {
   display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.nav-tab-item.active .nav-tab-icon {
+  transform: translateY(-1px) scale(1.08);
+}
+
+.nav-tab-icon .icon {
+  width: 22px;
+  height: 22px;
 }
 
 .app-header .secondary-btn:hover {
@@ -488,6 +1131,7 @@ input[type="date"].input-field {
   color: #F2ECDC;
   font-family: var(--font-family-mono);
   font-size: 11px;
+  line-height: 1.4;
 }
 
 .sync-header-pill:hover {
@@ -704,6 +1348,16 @@ input:checked + .toggle-slider:before {
   flex-direction: column;
   gap: 14px;
 }
+
+/* Wide enough that a single column of trip cards would waste space —
+   .app-container's own desktop breakpoint is defined earlier in this file. */
+@media (min-width: 900px) {
+  .passport-list {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
 .passport-card {
   position: relative;
   background: var(--bg-surface);
@@ -712,6 +1366,10 @@ input:checked + .toggle-slider:before {
   padding: 18px 20px 16px;
   cursor: pointer;
   transition: var(--transition-smooth);
+  animation: fadeIn 0.35s ease-out both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .passport-card { animation: none; }
 }
 .passport-card:hover {
   border-color: rgba(31, 110, 104, 0.3);
@@ -777,7 +1435,11 @@ input:checked + .toggle-slider:before {
   height: 24px;
   border-radius: 50%;
   background: var(--text-primary);
-  color: var(--bg-surface);
+  /* Fixed light text — initials avatars get a per-person background color
+     (see avatarColor.ts), not the theme's own surface color, so this
+     can't be theme-driven or it loses contrast in dark mode. Photo
+     avatars and .pp-avatar-more (below) don't rely on this. */
+  color: #FFFDF6;
   font-family: var(--font-family-title);
   font-weight: 600;
   font-size: 10px;
@@ -835,7 +1497,9 @@ input:checked + .toggle-slider:before {
   font-family: var(--font-family-title);
   font-weight: 600;
   font-size: 14px;
-  color: var(--bg-surface);
+  /* Fixed light text — background is a per-person color (avatarColor.ts)
+     or an accent/danger state color, not the theme's surface color. */
+  color: #FFFDF6;
   background: var(--text-primary);
   flex-shrink: 0;
 }
@@ -930,7 +1594,11 @@ input:checked + .toggle-slider:before {
   height: 34px;
   border-radius: 50%;
   background: var(--text-primary);
-  color: var(--bg-surface);
+  /* Fixed light text, not theme-driven var(--bg-surface) — the background
+     is now a per-person color from a fixed palette (see avatarColor.ts),
+     not the theme's own surface color, so a dark-mode-only text color
+     would lose contrast against it. */
+  color: #FFFDF6;
   font-family: var(--font-family-title);
   font-weight: 700;
   font-size: 13px;
@@ -990,6 +1658,8 @@ input:checked + .toggle-slider:before {
   font-size: 11.5px;
   color: var(--color-success);
   margin-top: 1px;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 .luggage-tag.lt-owe .lt-amt {
   color: var(--color-danger);
@@ -1071,6 +1741,11 @@ input:checked + .toggle-slider:before {
   border-radius: var(--border-radius-md);
   background: rgba(31, 110, 104, 0.06);
   padding: 12px 18px;
+  transition: var(--transition-smooth);
+}
+.amount-hero.amount-hero-error {
+  border-color: var(--color-danger);
+  background: rgba(184, 69, 46, 0.06);
 }
 .amount-hero-symbol {
   font-family: var(--font-family-title);
@@ -1078,6 +1753,10 @@ input:checked + .toggle-slider:before {
   font-weight: 600;
   color: var(--primary-accent);
   flex-shrink: 0;
+  transition: color 0.15s ease;
+}
+.amount-hero.amount-hero-error .amount-hero-symbol {
+  color: var(--color-danger);
 }
 .amount-hero-input {
   border: none;
@@ -1341,7 +2020,28 @@ input:checked + .toggle-slider:before {
   box-shadow: 0 8px 24px -8px rgba(28, 42, 56, 0.3);
   font-size: 13.5px;
   min-width: 280px;
+  position: relative;
+  overflow: hidden;
   animation: postmarkIn 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.undo-toast-progress {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 2.5px;
+  background: var(--primary-accent);
+  transform-origin: left;
+  animation-name: undoShrink;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}
+@keyframes undoShrink {
+  from { transform: scaleX(1); }
+  to { transform: scaleX(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .undo-toast-progress { display: none; }
 }
 .pm-stamp {
   width: 32px;
@@ -1371,6 +2071,55 @@ input:checked + .toggle-slider:before {
 
 @media (prefers-reduced-motion: reduce) {
   .postmark-toast { animation: none; }
+}
+
+/* In-app notification banner — native's stand-in for a system push banner
+   while the app is foregrounded (see InAppNotificationBanner.tsx). */
+.in-app-notif-banner {
+  position: fixed;
+  top: calc(10px + var(--safe-top, 0px));
+  left: max(12px, var(--safe-left, 12px));
+  right: max(12px, var(--safe-right, 12px));
+  z-index: 10000;
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-md);
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 12px 32px -10px rgba(28, 42, 56, 0.4);
+  cursor: pointer;
+  touch-action: none;
+  transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.2s ease;
+  animation: inAppBannerIn 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.in-app-notif-banner-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+  font-size: 13.5px;
+}
+.in-app-notif-banner-text strong {
+  color: var(--text-primary);
+  font-size: 14px;
+}
+.in-app-notif-banner-text span:last-child {
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@keyframes inAppBannerIn {
+  from { opacity: 0; transform: translateY(-16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .in-app-notif-banner { animation: none; }
 }
 
 /* Destructive confirm — tap-to-arm, tap-to-confirm wax seal instead of a
@@ -1491,7 +2240,8 @@ input:checked + .toggle-slider:before {
   max-width: 34ch;
   margin: 0;
 }
-.ledger-pencil {
+.ledger-pencil,
+.ledger-badge {
   width: 30px;
   height: 30px;
   border-radius: 50%;
@@ -1503,6 +2253,9 @@ input:checked + .toggle-slider:before {
   color: var(--text-muted);
   transform: rotate(-8deg);
   flex-shrink: 0;
+}
+.ledger-badge-tilt-right {
+  transform: rotate(8deg);
 }
 
 /* Appearance toggle — Light / Night flight / System */
@@ -1548,6 +2301,14 @@ input:checked + .toggle-slider:before {
   .fade-in { animation: none; }
 }
 
+/* Global spin keyframe — was previously redefined per spinner instance (or,
+   in ExpenseForm's case, silently assumed without a definition at all, so
+   that spinner never actually spun). Loading spinners are left out of the
+   reduced-motion guard above: the rotation itself is the state they convey. */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
 /* Full-screen takeover — used for the add/edit expense form. Covers the
    entire screen so nothing behind it is visible, not a translucent overlay. */
 .modal-backdrop {
@@ -1571,10 +2332,10 @@ input:checked + .toggle-slider:before {
   background: var(--bg-surface);
   border-radius: 0;
   padding: 20px;
-  padding-top: calc(16px + env(safe-area-inset-top, 0px));
-  padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px));
-  padding-left: max(20px, env(safe-area-inset-left, 20px));
-  padding-right: max(20px, env(safe-area-inset-right, 20px));
+  padding-top: calc(16px + var(--safe-top, 0px));
+  padding-bottom: calc(24px + var(--safe-bottom, 0px));
+  padding-left: max(20px, var(--safe-left, 20px));
+  padding-right: max(20px, var(--safe-right, 20px));
   animation: sheetUp 0.24s cubic-bezier(0.16, 1, 0.3, 1);
 }
 @keyframes sheetUp {
@@ -1585,20 +2346,43 @@ input:checked + .toggle-slider:before {
   .modal-sheet { animation: none; }
 }
 
-/* Keeps Add/Update Expense reachable without scrolling through the whole
-   form. Sticks to the bottom of .modal-sheet's own scroll port; the
-   negative margin/extra padding let it sit flush with the sheet's bottom
-   edge instead of floating above the sheet's existing safe-area padding. */
+/* Expense form's own sheet is split into a scrolling content area and a
+   footer action bar that's a real (non-sticky) flex item, so Add/Cancel
+   always sit flush against the true bottom of the screen regardless of
+   how much form content there is — sticky positioning only pins once
+   scrolled content reaches it, leaving a gap when content is short. */
+.modal-backdrop .modal-sheet.expense-form-sheet {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 0;
+}
+
+.expense-form-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+  padding: 20px;
+  padding-top: calc(16px + var(--safe-top, 0px));
+  padding-left: max(20px, var(--safe-left, 20px));
+  padding-right: max(20px, var(--safe-right, 20px));
+}
+
 .expense-form-actions {
-  position: sticky;
-  bottom: 0;
-  z-index: 1;
+  flex-shrink: 0;
   display: flex;
   gap: 12px;
-  margin: 16px 0 calc(-1 * (24px + env(safe-area-inset-bottom, 0px)));
-  padding: 12px 0 calc(12px + env(safe-area-inset-bottom, 0px));
+  padding: 12px max(20px, var(--safe-right, 20px)) calc(12px + var(--safe-bottom, 0px)) max(20px, var(--safe-left, 20px));
   background: var(--bg-surface);
   border-top: 1px solid var(--border-color);
+  /* Sits outside the scrollable form content, so it doesn't get pushed up
+     by the padding applied there when the keyboard shows — shift it up
+     directly by the keyboard's own height instead. */
+  margin-bottom: var(--keyboard-height, 0px);
+  transition: margin-bottom 0.25s ease-out;
 }
 
 :focus-visible {
@@ -1634,10 +2418,23 @@ input:checked + .toggle-slider:before {
 .tab-pane {
   flex: 1;
   min-height: 0;
-  padding: 20px max(20px, env(safe-area-inset-right, 20px)) calc(24px + env(safe-area-inset-bottom, 0px)) max(20px, env(safe-area-inset-left, 20px));
+  padding: calc(126px + var(--safe-top, 0px)) max(20px, var(--safe-right, 20px)) calc(104px + var(--safe-bottom, 0px)) max(20px, var(--safe-left, 20px));
   overflow-y: auto;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
+  mask-image: linear-gradient(to bottom, transparent 0px, transparent calc(var(--safe-top, 0px) + 8px), black calc(var(--safe-top, 0px) + 48px), black calc(100% - 12px), transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0px, transparent calc(var(--safe-top, 0px) + 8px), black calc(var(--safe-top, 0px) + 48px), black calc(100% - 12px), transparent 100%);
+}
+/* .nav-tabs is a floating overlay on iOS (see above) and no longer
+   reserves its own space in flex flow, so content needs this extra
+   clearance or it rests directly under the pill instead of just
+   scrolling behind it. 88px = the pill's 8px bottom margin + 64px height
+   + 16px breathing room above it, matching TabBarGlassMetrics exactly. */
+html.capacitor-ios .tab-pane {
+  padding-top: calc(var(--safe-top, 0px) + 100px + 16px);
+  padding-bottom: calc(84px + var(--safe-bottom, 0px) + 88px);
+  mask-image: none;
+  -webkit-mask-image: none;
 }
 
 .trips-screen-scroll {
@@ -1646,10 +2443,10 @@ input:checked + .toggle-slider:before {
   overflow-y: auto;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
-  padding-top: calc(20px + env(safe-area-inset-top, 0px));
-  padding-bottom: calc(32px + env(safe-area-inset-bottom, 0px));
-  padding-left: max(20px, env(safe-area-inset-left, 20px));
-  padding-right: max(20px, env(safe-area-inset-right, 20px));
+  padding-top: calc(20px + var(--safe-top, 0px));
+  padding-bottom: calc(32px + var(--safe-bottom, 0px));
+  padding-left: max(20px, var(--safe-left, 20px));
+  padding-right: max(20px, var(--safe-right, 20px));
 }
 
 .modal-overlay {
@@ -1663,7 +2460,7 @@ input:checked + .toggle-slider:before {
   justify-content: center;
   align-items: center;
   z-index: 1100;
-  padding: 20px max(20px, env(safe-area-inset-right, 20px)) calc(20px + env(safe-area-inset-bottom, 0px)) max(20px, env(safe-area-inset-left, 20px));
+  padding: 20px max(20px, var(--safe-right, 20px)) calc(20px + var(--safe-bottom, 0px)) max(20px, var(--safe-left, 20px));
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
   overscroll-behavior: contain;
@@ -1796,6 +2593,15 @@ input:checked + .toggle-slider:before {
   margin: 0;
 }
 
+.settings-scope-note {
+  margin: 2px 8px 4px;
+  padding-top: 14px;
+  border-top: 1px dashed var(--border-color);
+  font-size: 11.5px;
+  color: var(--text-muted);
+  text-align: center;
+}
+
 .settings-group-card {
   background: var(--bg-surface);
   border: 1px solid var(--border-color);
@@ -1916,40 +2722,716 @@ input:checked + .toggle-slider:before {
   color: var(--primary-accent);
 }
 
-/* Sub-screen Navigation Bar */
-.settings-subscreen-nav {
+/* WhatsApp-Style Sub-screen Navigation & Transitions */
+.settings-subscreen-enter {
+  animation: whatsappSlideIn 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: transform, opacity;
+}
+
+@keyframes whatsappSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.settings-subscreen-nav-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding-bottom: 14px;
-  margin-bottom: 16px;
-  border-bottom: 1.5px dashed var(--border-color);
+  margin-bottom: 6px;
+  background: transparent;
 }
 
-.settings-back-btn {
+.settings-subscreen-back-link {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  background: transparent;
-  border: none;
+  background: rgba(31, 110, 104, 0.08);
+  border: 1px solid rgba(31, 110, 104, 0.18);
   color: var(--primary-accent);
-  font-size: 14.5px;
+  font-size: 13px;
   font-weight: 600;
   cursor: pointer;
-  padding: 4px 8px 4px 0;
-  border-radius: 8px;
-  transition: opacity 0.15s ease;
+  padding: 5px 12px 5px 8px;
+  border-radius: 20px;
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
-.settings-back-btn:hover {
-  opacity: 0.8;
+.settings-subscreen-back-link:hover {
+  background: rgba(31, 110, 104, 0.16);
+  border-color: rgba(31, 110, 104, 0.32);
+  transform: translateX(-2px);
 }
 
-.settings-subscreen-title {
-  font-size: 16px;
+.settings-subscreen-back-link:active {
+  transform: scale(0.95);
+}
+
+.settings-subscreen-action-btn {
+  font-size: 12.5px;
   font-weight: 600;
+  padding: 5px 12px;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  border: 1px solid transparent;
+}
+
+.settings-subscreen-action-btn.danger {
+  background: rgba(184, 69, 46, 0.1);
+  border-color: rgba(184, 69, 46, 0.25);
+  color: var(--color-danger);
+}
+
+.settings-subscreen-action-btn.danger:hover {
+  background: rgba(184, 69, 46, 0.18);
+}
+
+.settings-subscreen-main-title {
+  font-size: 19px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
+  margin: 4px 0 3px;
+  font-family: var(--font-family-body);
+}
+
+.settings-subscreen-subtitle {
+  font-size: 12.5px;
+  color: var(--text-secondary);
+  line-height: 1.45;
+  margin: 0 0 16px;
+}
+
+/* =========================================================================
+   Classy Notification Center (WhatsApp & iOS Style)
+   ========================================================================= */
+
+.notif-modal-sheet {
+  max-width: 520px;
+  max-height: 82vh;
+  display: flex;
+  flex-direction: column;
+  padding: 20px 20px 24px;
+}
+
+.notif-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 16px;
+  margin-bottom: 12px;
+  border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
+}
+
+.notif-header-left {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.notif-title-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.notif-bell-icon-badge {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--primary-accent) 14%, var(--bg-surface));
+  color: var(--primary-accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.notif-heading {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
   color: var(--text-primary);
   margin: 0;
+  font-family: var(--font-family-body);
+}
+
+.notif-count-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--primary-accent) 15%, transparent);
+  color: var(--primary-accent);
+  white-space: nowrap;
+}
+
+.notif-close-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--bg-surface-hover);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.notif-close-btn:hover {
+  background: var(--border-color);
+  color: var(--text-primary);
+  transform: scale(1.05);
+}
+
+/* Sub-Header Toolbar & Filter Controls Bar */
+.notif-controls-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 12px;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+.notif-controls-spacer {
+  flex: 1;
+}
+
+.notif-filter-tabs {
+  display: flex;
+  background: var(--bg-surface-hover);
+  padding: 3px;
+  border-radius: 10px;
+  border: 1px solid var(--border-color);
+  gap: 3px;
+}
+
+.notif-filter-tab {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 5px 9px;
+  border-radius: 7px;
+  background: transparent;
+  border: none;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.notif-filter-tab:hover {
+  color: var(--text-primary);
+}
+
+.notif-filter-tab.active {
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.notif-tab-count-badge {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 5.5px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--primary-accent) 18%, transparent);
+  color: var(--primary-accent);
+}
+
+.notif-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.notif-toolbar-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--bg-surface-hover);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 5px 9px;
+  border-radius: 7px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.notif-toolbar-btn:hover {
+  background: color-mix(in srgb, var(--primary-accent) 12%, var(--bg-surface));
+  border-color: var(--primary-accent);
+  color: var(--primary-accent);
+}
+
+.notif-toolbar-btn-danger:hover {
+  background: color-mix(in srgb, var(--color-danger) 12%, var(--bg-surface));
+  border-color: var(--color-danger);
+  color: var(--color-danger);
+}
+
+.notif-toolbar-btn-text {
+  display: inline-block;
+}
+
+@media (max-width: 480px) {
+  .notif-controls-bar {
+    gap: 8px;
+  }
+  .notif-filter-tabs {
+    width: 100%;
+  }
+  .notif-filter-tab {
+    flex: 1;
+  }
+  .notif-header-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+}
+
+.notif-alert-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  margin-bottom: 14px;
+  background: color-mix(in srgb, var(--secondary-accent) 12%, var(--bg-surface));
+  border: 1px solid color-mix(in srgb, var(--secondary-accent) 30%, transparent);
+  border-radius: 12px;
+  flex-shrink: 0;
+}
+
+.notif-alert-banner-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.notif-alert-icon {
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.notif-alert-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.notif-alert-title {
+  font-size: 12.5px;
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.notif-alert-desc {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.notif-alert-enable-btn {
+  background: var(--secondary-accent);
+  color: #fff;
+  border: none;
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 5px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+  flex-shrink: 0;
+}
+
+.notif-alert-enable-btn:hover {
+  opacity: 0.9;
+}
+
+.notif-content-area {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
+.notif-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.notif-swipe-container {
+  position: relative;
+  overflow: hidden;
+  border-radius: 14px;
+}
+
+.notif-swipe-delete-action {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 20px;
+  background: var(--color-danger);
+  color: #fff;
+  border-radius: 14px;
+}
+
+.notif-card {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 13px 15px;
+  background: var(--bg-surface);
+  border: 1px solid color-mix(in srgb, var(--border-color) 80%, transparent);
+  border-radius: 14px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
+  touch-action: pan-y;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+}
+
+.notif-card:hover {
+  background: var(--bg-surface-hover);
+  border-color: color-mix(in srgb, var(--primary-accent) 28%, var(--border-color));
+  box-shadow: 0 4px 14px -2px rgba(28, 42, 56, 0.08);
+  transform: translateY(-1px);
+}
+
+.notif-card.unread {
+  background: color-mix(in srgb, var(--primary-accent) 5.5%, var(--bg-surface));
+  border: 1px solid color-mix(in srgb, var(--primary-accent) 30%, var(--border-color));
+  box-shadow: 0 2px 10px -2px color-mix(in srgb, var(--primary-accent) 12%, transparent);
+}
+
+.notif-card.unread:hover {
+  border-color: color-mix(in srgb, var(--primary-accent) 45%, var(--border-color));
+  box-shadow: 0 5px 16px -2px color-mix(in srgb, var(--primary-accent) 18%, transparent);
+}
+
+.notif-avatar-wrap {
+  position: relative;
+  flex-shrink: 0;
+  margin-top: 1px;
+  cursor: pointer;
+}
+
+.notif-avatar-wrap:hover .notif-squircle {
+  transform: scale(1.08);
+}
+
+.notif-squircle {
+  width: 36px;
+  height: 36px;
+  border-radius: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.notif-squircle.squircle-teal {
+  background: color-mix(in srgb, var(--primary-accent) 14%, var(--bg-surface));
+  color: var(--primary-accent);
+}
+
+.notif-squircle.squircle-amber {
+  background: color-mix(in srgb, var(--secondary-accent) 16%, var(--bg-surface));
+  color: var(--secondary-accent);
+}
+
+.notif-squircle.squircle-rose {
+  background: color-mix(in srgb, var(--color-danger) 14%, var(--bg-surface));
+  color: var(--color-danger);
+}
+
+.notif-squircle.squircle-purple {
+  background: color-mix(in srgb, #8B5CF6 15%, var(--bg-surface));
+  color: #8B5CF6;
+}
+
+.notif-squircle.squircle-emerald {
+  background: color-mix(in srgb, var(--color-success) 15%, var(--bg-surface));
+  color: var(--color-success);
+}
+
+.notif-squircle.squircle-blue {
+  background: color-mix(in srgb, #3B82F6 15%, var(--bg-surface));
+  color: #3B82F6;
+}
+
+.notif-unread-dot {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--primary-accent);
+  border: 2px solid var(--bg-surface);
+  box-shadow: 0 0 6px var(--primary-accent);
+}
+
+.notif-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.notif-row-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 2px;
+}
+
+.notif-card-title {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.notif-card.read .notif-card-title {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.notif-card.read .notif-card-text {
+  color: var(--text-secondary);
+  opacity: 0.9;
+}
+
+.notif-time {
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.notif-card-text {
+  font-size: 12.5px;
+  color: var(--text-secondary);
+  line-height: 1.4;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+.notif-hover-actions {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  flex-shrink: 0;
+  margin-left: 2px;
+}
+
+.notif-card:hover .notif-hover-actions {
+  opacity: 1;
+}
+
+@media (max-width: 640px) {
+  .notif-hover-actions {
+    opacity: 1;
+  }
+}
+
+.notif-row-action-btn {
+  width: 27px;
+  height: 27px;
+  border-radius: 7px;
+  background: var(--bg-surface-hover);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  padding: 0;
+}
+
+.notif-row-action-btn.notif-btn-unread:hover {
+  background: color-mix(in srgb, var(--secondary-accent) 14%, var(--bg-surface));
+  color: var(--secondary-accent);
+  border-color: var(--secondary-accent);
+}
+
+.notif-row-action-btn.notif-btn-read:hover {
+  background: color-mix(in srgb, var(--primary-accent) 14%, var(--bg-surface));
+  color: var(--primary-accent);
+  border-color: var(--primary-accent);
+}
+
+.notif-row-action-btn.danger:hover {
+  background: color-mix(in srgb, var(--color-danger) 15%, var(--bg-surface));
+  color: var(--color-danger);
+  border-color: var(--color-danger);
+}
+
+/* Empty State */
+.notif-empty-state {
+  text-align: center;
+  padding: 48px 24px 36px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.notif-empty-icon-wrap {
+  width: 60px;
+  height: 60px;
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--primary-accent) 12%, var(--bg-surface));
+  color: var(--primary-accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+  box-shadow: 0 4px 16px color-mix(in srgb, var(--primary-accent) 10%, transparent);
+}
+
+.notif-empty-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 6px;
+}
+
+.notif-empty-subtitle {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  max-width: 340px;
+  margin: 0 auto;
+}
+
+.notif-empty-switch-link {
+  background: none;
+  border: none;
+  color: var(--primary-accent);
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  font-size: inherit;
+  text-decoration: underline;
+  margin-left: 4px;
+}
+
+.notif-empty-switch-link:hover {
+  opacity: 0.85;
+}
+
+/* Trip Name Badging on Card */
+.notif-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+.notif-trip-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 1.5px 6.5px;
+  border-radius: 5px;
+  white-space: nowrap;
+  letter-spacing: -0.01em;
+}
+
+.notif-trip-badge.current {
+  background: color-mix(in srgb, var(--primary-accent) 12%, var(--bg-surface));
+  color: var(--primary-accent);
+  border: 1px solid color-mix(in srgb, var(--primary-accent) 25%, transparent);
+}
+
+.notif-trip-badge.other {
+  background: color-mix(in srgb, var(--secondary-accent) 12%, var(--bg-surface));
+  color: var(--secondary-accent);
+  border: 1px solid color-mix(in srgb, var(--secondary-accent) 25%, transparent);
+}
+
+/* ==========================================================================
+   Blind Mode & Split Preset Styles
+   ========================================================================== */
+
+.blind-mode-active .privacy-blur {
+  filter: blur(5px);
+  user-select: none;
+  transition: filter 0.2s ease;
+}
+
+.blind-mode-active .privacy-blur:hover {
+  filter: blur(0px);
+}
+
+.split-preset-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  font-size: 11.5px;
+  font-weight: 600;
+  border-radius: var(--border-radius-pill);
+  background: color-mix(in srgb, var(--primary-accent) 8%, var(--bg-surface));
+  color: var(--primary-accent);
+  border: 1px solid color-mix(in srgb, var(--primary-accent) 22%, transparent);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.split-preset-chip:hover {
+  background: color-mix(in srgb, var(--primary-accent) 15%, var(--bg-surface));
+  border-color: var(--primary-accent);
+}
+
+.split-preset-chip:active {
+  transform: scale(0.96);
 }
 
 /* ==========================================================================
@@ -2098,5 +3580,9 @@ textarea.input-field {
   line-height: 23px;
   min-height: 69px;
 }
+
+
+
+
 
 

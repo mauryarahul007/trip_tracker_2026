@@ -9,6 +9,7 @@
  */
 
 import { supabase, isMissingSupabaseEnv } from './supabaseClient';
+import type { Database } from '../types/database';
 
 export interface BugRecord {
   id: string;
@@ -197,7 +198,7 @@ export async function updateBug(id: string, updates: Partial<BugRecord>): Promis
     return updatedBug;
   }
 
-  const payload: Record<string, unknown> = { updated_at: new Date().toISOString() };
+  const payload: Database['public']['Tables']['bugs']['Update'] = { updated_at: new Date().toISOString() };
   if (updates.status !== undefined) payload.status = updates.status;
   if (updates.severity !== undefined) payload.severity = updates.severity;
   if (updates.category !== undefined) payload.category = updates.category;

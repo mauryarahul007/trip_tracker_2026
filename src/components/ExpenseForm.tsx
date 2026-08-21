@@ -5,11 +5,13 @@ import type { Category, Group, Member, Trip, Expense, ExpenseLocation } from '..
 import { IconCheck, IconAlertCircle, IconClose, IconMapPin } from './Icons';
 import { CategoryIcon } from './CategoryIcon';
 import { initial } from '../utils/initials';
+import { avatarColorForName } from '../utils/avatarColor';
 import { getCurrencySymbol } from '../utils/currency';
 import { compressImageToDataUrl, compressDataUrlToDataUrl } from '../utils/image';
 import { autoSuggestCategory } from '../utils/categoryHelper';
 import { captureCurrentExpenseLocation } from '../utils/geolocation';
 import { useTripStore } from '../store/tripStore';
+import { triggerHaptic } from '../utils/haptics';
 
 type SplitMode = 'equal' | 'custom' | 'exact' | 'percentage';
 
@@ -92,13 +94,26 @@ export function ExpenseForm({
 
   const [receiptImage, setReceiptImage] = useState('');
   const [receiptProcessing, setReceiptProcessing] = useState(false);
+  const [showReceiptSection, setShowReceiptSection] = useState(!!editingExpense?.receiptImage);
   const [formError, setFormError] = useState('');
+  const [honeypotVal, setHoneypotVal] = useState('');
+
+  // One-time nudge toward the split presets, shown only on the first-ever
+  // new expense a person creates — dismissed permanently after they see it
+  // once (or use a preset), same plain-localStorage pattern App.tsx uses
+  // for theme-pref rather than pulling in a store for one boolean.
+  const [showPresetsTip, setShowPresetsTip] = useState(
+    () => !editingExpense && !localStorage.getItem('expense-presets-tip-seen')
+  );
+  const dismissPresetsTip = () => {
+    localStorage.setItem('expense-presets-tip-seen', '1');
+    setShowPresetsTip(false);
+  };
 
   // Feature Flags & Role Governance
   const isFeatureEnabled = useTripStore((s) => s.isFeatureEnabled);
   const enableGeotagging = isFeatureEnabled('enableGeotagging');
   const enableAdvancedLocationSearch = isFeatureEnabled('enableAdvancedLocationSearch');
-  const enableAdvancedSplits = isFeatureEnabled('enableAdvancedSplits');
 
   // Geotagging
   const [location, setLocation] = useState<ExpenseLocation | null>(editingExpense?.location || null);
@@ -115,11 +130,20 @@ export function ExpenseForm({
     }
   }, [editingExpense, enableGeotagging]);
 
-  // Moves focus into the sheet for keyboard/screen-reader users without
-  // popping the mobile keyboard open on every mount.
   const sheetRef = useRef<HTMLFormElement>(null);
+  const amountInputRef = useRef<HTMLInputElement>(null);
+
   useEffect(() => {
-    sheetRef.current?.focus();
+    // Automatically focus and select the amount field on open so the user can immediately type
+    const timer = setTimeout(() => {
+      if (amountInputRef.current) {
+        amountInputRef.current.focus();
+        amountInputRef.current.select();
+      } else {
+        sheetRef.current?.focus();
+      }
+    }, 50);
+    return () => clearTimeout(timer);
   }, []);
 
   // Backdrop click only dismisses while the form is still untouched — once
@@ -154,8 +178,9 @@ export function ExpenseForm({
     try {
       const dataUrl = await compressImageToDataUrl(file);
       setReceiptImage(dataUrl);
-    } catch {
-      setFormError('Could not process that image. Try a different photo.');
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Could not process that image. Try a different photo.';
+      setFormError(msg);
     } finally {
       setReceiptProcessing(false);
     }
@@ -208,11 +233,52 @@ export function ExpenseForm({
     setSplitConfig(updatedConfig);
   };
 
+  const applyPresetEqualAll = () => {
+    triggerHaptic('light');
+    dismissPresetsTip();
+    const allChecked: Record<string, boolean> = {};
+    visibleMembers.forEach((m) => { allChecked[m.id] = true; });
+    setSelectedSplitMembers(allChecked);
+    setSplitConfig({});
+    setSplitMode('equal');
+  };
+
+  const applyPresetPayerFiftyGroup = () => {
+    triggerHaptic('medium');
+    dismissPresetsTip();
+    if (!payer) return;
+    const allChecked: Record<string, boolean> = {};
+    const newConfig: Record<string, string> = {};
+    const otherMembers = visibleMembers.filter((m) => m.id !== payer);
+    allChecked[payer] = true;
+    newConfig[payer] = '50';
+    if (otherMembers.length > 0) {
+      const sharePerOther = (50 / otherMembers.length).toFixed(1);
+      otherMembers.forEach((m) => {
+        allChecked[m.id] = true;
+        newConfig[m.id] = sharePerOther;
+      });
+    }
+    setSelectedSplitMembers(allChecked);
+    setSplitConfig(newConfig);
+    setSplitMode('percentage');
+  };
+
+  const applyPresetOnlyPayer = () => {
+    triggerHaptic('warning');
+    dismissPresetsTip();
+    if (!payer) return;
+    const selection: Record<string, boolean> = { [payer]: true };
+    setSelectedSplitMembers(selection);
+    setSplitConfig({});
+    setSplitMode('equal');
+  };
+
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmitLocal = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (isSubmitting) return;
+    if (isSubmitting || honeypotVal) return;
     const amountVal = parseFloat(amount);
     if (isNaN(amountVal) || amountVal <= 0) {
       setFormError('Please enter a valid amount greater than 0.');
@@ -272,14 +338,27 @@ export function ExpenseForm({
       <form
         ref={sheetRef}
         tabIndex={-1}
-        className="modal-sheet"
+        className="modal-sheet expense-form-sheet"
         role="dialog"
         aria-modal="true"
         aria-labelledby="expense-form-title"
         onSubmit={handleSubmitLocal}
         onClick={(e) => e.stopPropagation()}
       >
-      <header className="app-header" style={{ margin: '-20px -20px 20px', paddingTop: 'max(20px, env(safe-area-inset-top))' }}>
+      {/* Honeypot field for automated bot trap */}
+      <div style={{ position: 'absolute', left: '-9999px', opacity: 0, pointerEvents: 'none', height: 0, overflow: 'hidden' }} aria-hidden="true">
+        <input
+          type="text"
+          name="expense_vendor_code_security"
+          tabIndex={-1}
+          autoComplete="off"
+          value={honeypotVal}
+          onChange={(e) => setHoneypotVal(e.target.value)}
+        />
+      </div>
+
+      <div className="expense-form-scroll">
+      <header className="app-header" style={{ margin: '-20px -20px 20px', paddingTop: 'max(20px, var(--safe-top, 0px))' }}>
         <div className="app-header-top">
           <div className="app-title-group">
             <span className="app-eyebrow">{trip?.name}</span>
@@ -300,40 +379,52 @@ export function ExpenseForm({
 
       <div className="form-group">
         <label className="form-label">Amount ({trip?.baseCurrency})</label>
-        <div className="amount-hero">
+        <div className={`amount-hero ${formError && (!amount || parseFloat(amount) <= 0) ? 'amount-hero-error' : ''}`}>
           <span className="amount-hero-symbol">{currencySymbol}</span>
           <input
+            ref={amountInputRef}
             type="text"
             inputMode="decimal"
-            required
+            autoFocus
             className="amount-hero-input"
             placeholder="0.00"
             value={formatAmountDisplay(amount)}
             onChange={(e) => {
               const raw = e.target.value.replace(/,/g, '');
               if (/^\d*\.?\d*$/.test(raw)) setAmount(raw);
+              if (formError) setFormError('');
             }}
           />
         </div>
+        {formError && (!amount || parseFloat(amount) <= 0) && (
+          <p style={{ color: 'var(--color-danger)', fontSize: '12px', marginTop: '6px', marginBottom: 0 }}>
+            {formError}
+          </p>
+        )}
       </div>
 
       <div className="form-group">
         <label className="form-label">Expense Title</label>
         <input
           type="text"
-          required
           className="input-field"
           placeholder="e.g. Flight Tickets"
           value={title}
           onChange={(e) => {
             const val = e.target.value;
             setTitle(val);
+            if (formError) setFormError('');
             const suggested = autoSuggestCategory(val, categories);
             if (suggested) {
               setCategory(suggested);
             }
           }}
         />
+        {formError && !title.trim() && (parseFloat(amount) > 0) && (
+          <p style={{ color: 'var(--color-danger)', fontSize: '12px', marginTop: '6px', marginBottom: 0 }}>
+            {formError}
+          </p>
+        )}
       </div>
 
       <div className="form-group">
@@ -373,7 +464,7 @@ export function ExpenseForm({
                 onClick={() => setPayer(m.id)}
                 aria-pressed={isSelected}
               >
-                <div className="member-avatar" style={isSelected ? { background: 'var(--primary-accent)' } : undefined}>
+                <div className="member-avatar" style={{ background: isSelected ? 'var(--primary-accent)' : avatarColorForName(m.name) }}>
                   {initial(m.name)}
                 </div>
                 <span className="member-name">{m.name}</span>
@@ -387,20 +478,25 @@ export function ExpenseForm({
         <label className="form-label">Date</label>
         <input
           type="date"
-          required
           className="input-field"
           value={date}
           onChange={(e) => setDate(e.target.value)}
         />
       </div>
 
+      {/* Hidden entirely when the trip's Geotag Expenses setting is off and
+          there's no pre-existing location to display/remove — this is the
+          only thing that can trigger a location-permission prompt, so
+          keeping it out of the DOM keeps that prompt from ever firing
+          unless the setting is on, advanced search is on, or the user
+          explicitly tagged a location. */}
       {(enableGeotagging || enableAdvancedLocationSearch || location) && (
         <div className="form-group">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
             <label className="form-label" style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
               <span style={{ color: '#00BFA5', display: 'flex', alignItems: 'center' }}><IconMapPin size={15} /></span> Location
             </label>
-            {!location && !locationLoading && (
+            {enableGeotagging && !location && !locationLoading && (
               <button
                 type="button"
                 className="secondary-btn"
@@ -429,7 +525,7 @@ export function ExpenseForm({
                 alignItems: 'center',
                 gap: '8px',
                 padding: '6px 12px',
-                borderRadius: '20px',
+                borderRadius: 'var(--border-radius-pill)',
                 background: 'rgba(0,191,165,0.08)',
                 border: '1px solid rgba(0,191,165,0.28)',
                 fontSize: '12.5px',
@@ -462,53 +558,128 @@ export function ExpenseForm({
         </div>
       )}
 
-      {enableAdvancedSplits && (
-        <div className="form-group">
-          <label className="form-label">Split Mode</label>
-          <div className="segmented-control">
-            <button type="button" className={splitMode === 'equal' ? 'active' : ''} onClick={() => setSplitMode('equal')}>Equal</button>
-            <button type="button" className={splitMode === 'custom' ? 'active' : ''} onClick={() => setSplitMode('custom')}>Weight</button>
-            <button type="button" className={splitMode === 'exact' ? 'active' : ''} onClick={() => setSplitMode('exact')}>Exact</button>
-            <button type="button" className={splitMode === 'percentage' ? 'active' : ''} onClick={() => setSplitMode('percentage')}>Percent</button>
-          </div>
+      <div className="form-group">
+        <label className="form-label">Split Mode</label>
+        <div className="segmented-control">
+          <button type="button" className={splitMode === 'equal' ? 'active' : ''} onClick={() => { triggerHaptic('light'); setSplitMode('equal'); }}>Equal</button>
+          <button type="button" className={splitMode === 'custom' ? 'active' : ''} onClick={() => { triggerHaptic('light'); setSplitMode('custom'); }}>Weight</button>
+          <button type="button" className={splitMode === 'exact' ? 'active' : ''} onClick={() => { triggerHaptic('light'); setSplitMode('exact'); }}>Exact</button>
+          <button type="button" className={splitMode === 'percentage' ? 'active' : ''} onClick={() => { triggerHaptic('light'); setSplitMode('percentage'); }}>Percent</button>
         </div>
-      )}
+      </div>
 
       <div className="form-group">
-        <label className="form-label">Receipt (optional)</label>
-        {receiptImage ? (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <img
-              src={receiptImage}
-              alt="Receipt preview"
-              style={{ width: '64px', height: '64px', objectFit: 'cover', borderRadius: 'var(--border-radius-sm)', border: '1px solid var(--border-color)' }}
-            />
-            <button type="button" className="secondary-btn" style={{ padding: '6px 12px', fontSize: '12px' }} onClick={() => setReceiptImage('')}>
-              Remove
-            </button>
-          </div>
-        ) : Capacitor.isNativePlatform() ? (
+        {!showReceiptSection && !receiptImage ? (
           <button
             type="button"
             className="secondary-btn"
             style={{ padding: '8px 14px', fontSize: '13px' }}
-            onClick={handleNativeCameraCapture}
-            disabled={receiptProcessing}
+            onClick={() => setShowReceiptSection(true)}
           >
-            📷 Take or Choose Photo
+            + Add Receipt
           </button>
         ) : (
-          <input
-            type="file"
-            accept="image/*"
-            className="input-field"
-            onChange={handleReceiptFileChangeLocal}
-            disabled={receiptProcessing}
-          />
+          <>
+            <label className="form-label">Receipt (optional)</label>
+            {receiptImage ? (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <img
+                  src={receiptImage}
+                  alt="Receipt preview"
+                  style={{ width: '64px', height: '64px', objectFit: 'cover', borderRadius: 'var(--border-radius-sm)', border: '1px solid var(--border-color)' }}
+                />
+                <button type="button" className="secondary-btn" style={{ padding: '6px 12px', fontSize: '12px' }} onClick={() => setReceiptImage('')}>
+                  Remove
+                </button>
+              </div>
+            ) : Capacitor.isNativePlatform() ? (
+              <button
+                type="button"
+                className="secondary-btn"
+                style={{ padding: '8px 14px', fontSize: '13px' }}
+                onClick={handleNativeCameraCapture}
+                disabled={receiptProcessing}
+              >
+                📷 Take or Choose Photo
+              </button>
+            ) : (
+              <input
+                type="file"
+                accept="image/*"
+                className="input-field"
+                onChange={handleReceiptFileChangeLocal}
+                disabled={receiptProcessing}
+              />
+            )}
+            {receiptProcessing && (
+              <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '4px' }}>Processing image...</p>
+            )}
+          </>
         )}
-        {receiptProcessing && (
-          <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '4px' }}>Processing image...</p>
-        )}
+      </div>
+
+      {/* One-time tip pointing new users at the presets below, dismissed
+          permanently on first sight or first preset tap. */}
+      {showPresetsTip && (
+        <div
+          className="fade-in"
+          style={{
+            display: 'flex',
+            alignItems: 'flex-start',
+            gap: '8px',
+            marginTop: '8px',
+            padding: '8px 10px',
+            borderRadius: 'var(--border-radius-sm)',
+            background: 'rgba(31,110,104,0.07)',
+            border: '1px solid rgba(31,110,104,0.2)',
+            fontSize: '12px',
+            color: 'var(--text-primary)',
+          }}
+        >
+          <span style={{ flex: 1 }}>
+            <strong>Tip:</strong> use a Preset below for common splits — equal, 50/50, or a personal expense — instead of checking members one by one.
+          </span>
+          <button
+            type="button"
+            onClick={dismissPresetsTip}
+            aria-label="Dismiss tip"
+            title="Dismiss"
+            style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '0 2px', fontSize: '14px', lineHeight: 1, flexShrink: 0 }}
+          >
+            &times;
+          </button>
+        </div>
+      )}
+
+      {/* Smart Split Presets Bar */}
+      <div className="form-group" style={{ marginTop: '8px', marginBottom: '8px' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', alignItems: 'center' }}>
+          <span style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: 600, marginRight: '2px' }}>Presets:</span>
+          <button
+            type="button"
+            className="split-preset-chip"
+            onClick={applyPresetEqualAll}
+            title="Split expense equally among all members"
+          >
+            ⚡ Equal All
+          </button>
+          <button
+            type="button"
+            className="split-preset-chip"
+            onClick={applyPresetPayerFiftyGroup}
+            title="Payer pays 50%, remaining members split 50%"
+          >
+            ⚖️ 50% Payer / 50% Group
+          </button>
+          <button
+            type="button"
+            className="split-preset-chip"
+            onClick={applyPresetOnlyPayer}
+            title="Payer pays 100% (personal expense)"
+          >
+            👤 Only Payer
+          </button>
+        </div>
       </div>
 
       {/* Checkboxes to select division participants */}
@@ -520,6 +691,7 @@ export function ExpenseForm({
               type="button"
               style={{ background: 'none', border: 'none', color: 'var(--primary-accent)', cursor: 'pointer', fontWeight: 600 }}
               onClick={() => {
+                triggerHaptic('light');
                 const allChecked: Record<string, boolean> = {};
                 visibleMembers.forEach((m) => { allChecked[m.id] = true; });
                 setSelectedSplitMembers(allChecked);
@@ -532,6 +704,7 @@ export function ExpenseForm({
               type="button"
               style={{ background: 'none', border: 'none', color: 'var(--primary-accent)', cursor: 'pointer', fontWeight: 600 }}
               onClick={() => {
+                triggerHaptic('light');
                 setSelectedSplitMembers({});
                 setSplitConfig({});
               }}
@@ -610,7 +783,7 @@ export function ExpenseForm({
                   }
                 }}
               >
-                <div className="member-avatar">
+                <div className="member-avatar" style={{ background: avatarColorForName(m.name) }}>
                   {initial(m.name)}
                   {isChecked && (
                     <span className="member-check-badge">
@@ -622,7 +795,7 @@ export function ExpenseForm({
                 {isChecked && splitMode !== 'equal' && (
                   <input
                     type="text"
-                    required
+                    inputMode="decimal"
                     placeholder={
                       splitMode === 'custom' ? 'e.g. 1' :
                       splitMode === 'exact' ? 'e.g. 200' : 'e.g. 25'
@@ -684,10 +857,11 @@ export function ExpenseForm({
       {formError && (
         <p style={{ color: 'var(--color-danger)', fontSize: '13px', marginTop: '12px' }}>{formError}</p>
       )}
+      </div>
 
       <div className="expense-form-actions">
         <button type="submit" className="gradient-btn" style={{ flex: 1 }} disabled={isSubmitting}>
-          {editingExpense ? 'Update Expense' : 'Add Expense'}
+          {isSubmitting ? 'Saving…' : editingExpense ? 'Update Expense' : 'Add Expense'}
         </button>
         <button
           type="button"

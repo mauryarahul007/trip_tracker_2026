@@ -7,6 +7,7 @@ import { supabase, isMissingSupabaseEnv } from '../services/supabaseClient';
 import { buildOAuthRedirectUrl, parseNativeAuthCallback } from '../utils/nativeAuth';
 import { registerForPushNotifications, unregisterPushNotifications } from '../services/pushRegistration';
 import { useTripStore } from './tripStore';
+import { useNotificationsStore } from './notificationsStore';
 
 interface AuthStore {
   session: Session | null;
@@ -57,6 +58,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
     supabase.auth.getSession().then(async ({ data }) => {
       if (data?.session) {
         set({ session: data.session });
+        useNotificationsStore.getState().initialize(data.session.user.id);
       }
 
       // A persisted `isSuperadmin=true` (tripStore survives reloads via
@@ -85,6 +87,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
       set({ session });
       if (session?.user) {
         registerForPushNotifications(session.user.id);
+        useNotificationsStore.getState().initialize(session.user.id);
       }
     });
 
@@ -271,6 +274,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
     if (userId) {
       await unregisterPushNotifications(userId);
     }
+    useNotificationsStore.getState().teardown();
     try {
       await supabase.auth.signOut();
     } catch {

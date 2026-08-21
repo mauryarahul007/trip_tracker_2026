@@ -15,9 +15,13 @@ import { registerServiceWorkerUpdateWatcher } from './services/serviceWorker'
 import { initAutoBugReporter } from './utils/autoBugReporter'
 import { useAuthStore } from './store/authStore'
 import { isMissingSupabaseEnv } from './services/supabaseClient'
+import { initNativeShell } from './utils/nativeShell'
+import { initLiveUpdates } from './utils/liveUpdate'
 
 registerServiceWorkerUpdateWatcher()
 initAutoBugReporter()
+initNativeShell()
+void initLiveUpdates()
 
 // Local dev convenience only, and only when there's no real Supabase
 // project to test against: sign in as a demo user before RequireAuth ever

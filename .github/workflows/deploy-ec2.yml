@@ -29,16 +29,44 @@ jobs:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
 
+      # Packages this same build as a live-update bundle for the iOS/Android
+      # app shell (src/utils/liveUpdate.ts), so JS/CSS changes reach
+      # installed apps without an App Store resubmission.
+      - name: Package live-update bundle
+        run: |
+          ./scripts/package-update.sh \
+            "${GITHUB_SHA::7}" \
+            https://trip-tracker.blackmaroon.in/updates \
+            update \
+            dist
+
       - name: Install SSH key
-        uses: webfactory/ssh-agent@v0.9.0
+        uses: webfactory/ssh-agent@dc588b651fe13675774614f8e6a936a468676387 # v0.9.0
         with:
           ssh-private-key: ${{ secrets.EC2_SSH_KEY }}
 
       - name: Trust EC2 host key
-        run: ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
+        env:
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+        run: ssh-keyscan -H "$EC2_HOST" >> ~/.ssh/known_hosts
 
       - name: Rsync dist/ to server
+        env:
+          EC2_USER: ${{ secrets.EC2_USER }}
+          EC2_HOST: ${{ secrets.EC2_HOST }}
         run: |
           rsync -avz --delete \
             dist/ \
-            ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/var/www/trip-tracker-2026/dist/
+            "${EC2_USER}@${EC2_HOST}:/var/www/trip-tracker-2026/dist/"
+
+      - name: Rsync update bundle to server
+        # Nested inside dist/ (nginx's existing docroot) rather than a
+        # sibling path, so no server/nginx config change is needed for
+        # https://trip-tracker.blackmaroon.in/updates/latest.json to resolve.
+        env:
+          EC2_USER: ${{ secrets.EC2_USER }}
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+        run: |
+          rsync -avz \
+            update/ \
+            "${EC2_USER}@${EC2_HOST}:/var/www/trip-tracker-2026/dist/updates/"

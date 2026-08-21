@@ -93,4 +93,3 @@ $$;
 grant execute on function public.log_security_event(uuid, text, jsonb) to authenticated;
 
 notify pgrst, 'reload schema';
-

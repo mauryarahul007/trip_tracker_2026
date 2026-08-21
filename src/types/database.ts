@@ -225,6 +225,142 @@ export interface Database {
           },
         ];
       };
+      notifications: {
+        Row: {
+          id: string;
+          user_id: string;
+          trip_id: string | null;
+          title: string;
+          body: string;
+          data: Record<string, string> | null;
+          read: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          trip_id?: string | null;
+          title: string;
+          body: string;
+          data?: Record<string, string> | null;
+          read?: boolean;
+        };
+        Update: Partial<{
+          read: boolean;
+        }>;
+        Relationships: [
+          {
+            foreignKeyName: 'notifications_user_id_fkey';
+            columns: ['user_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'notifications_trip_id_fkey';
+            columns: ['trip_id'];
+            isOneToOne: false;
+            referencedRelation: 'trips';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      bugs: {
+        Row: {
+          id: string;
+          title: string;
+          description: string;
+          severity: 'critical' | 'high' | 'medium' | 'low';
+          category:
+            | 'offline-sync'
+            | 'splits-math'
+            | 'ui-ux'
+            | 'navigation'
+            | 'auth'
+            | 'receipts-camera'
+            | 'p2p-sync'
+            | 'performance'
+            | 'general';
+          status: 'open' | 'in_progress' | 'resolved' | 'wont_fix';
+          found_by: string;
+          environment: {
+            platform: 'web' | 'android' | 'ios';
+            browser?: string;
+            isOnline: boolean;
+            appVersion: string;
+            route?: string;
+          };
+          repro_steps: string[];
+          expected_behavior: string;
+          actual_behavior: string;
+          diagnostics: {
+            stackTrace?: string;
+            consoleLogs?: string[];
+            syncQueueLength?: number;
+            activeTripId?: string;
+          } | null;
+          created_at: string;
+          updated_at: string;
+          resolved_at: string | null;
+          resolved_by: string | null;
+          resolution_note: string | null;
+        };
+        Insert: {
+          id: string;
+          title: string;
+          description?: string;
+          severity: 'critical' | 'high' | 'medium' | 'low';
+          category:
+            | 'offline-sync'
+            | 'splits-math'
+            | 'ui-ux'
+            | 'navigation'
+            | 'auth'
+            | 'receipts-camera'
+            | 'p2p-sync'
+            | 'performance'
+            | 'general';
+          status?: 'open' | 'in_progress' | 'resolved' | 'wont_fix';
+          found_by?: string;
+          environment?: {
+            platform: 'web' | 'android' | 'ios';
+            browser?: string;
+            isOnline: boolean;
+            appVersion: string;
+            route?: string;
+          };
+          repro_steps?: string[];
+          expected_behavior?: string;
+          actual_behavior?: string;
+          diagnostics?: {
+            stackTrace?: string;
+            consoleLogs?: string[];
+            syncQueueLength?: number;
+            activeTripId?: string;
+          } | null;
+        };
+        Update: Partial<{
+          title: string;
+          description: string;
+          severity: 'critical' | 'high' | 'medium' | 'low';
+          category:
+            | 'offline-sync'
+            | 'splits-math'
+            | 'ui-ux'
+            | 'navigation'
+            | 'auth'
+            | 'receipts-camera'
+            | 'p2p-sync'
+            | 'performance'
+            | 'general';
+          status: 'open' | 'in_progress' | 'resolved' | 'wont_fix';
+          resolved_by: string | null;
+          resolution_note: string | null;
+          resolved_at: string | null;
+          updated_at: string;
+        }>;
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: {
@@ -241,6 +377,10 @@ export interface Database {
       };
       claim_trip_member: {
         Args: { p_member_id: string };
+        Returns: boolean;
+      };
+      is_superadmin: {
+        Args: Record<string, never>;
         Returns: boolean;
       };
     };

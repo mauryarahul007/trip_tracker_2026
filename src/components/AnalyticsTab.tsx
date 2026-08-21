@@ -1,8 +1,11 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { Trip, Expense, Category } from '../types';
 import { CategoryIcon } from './CategoryIcon';
+import { IconAnalytics } from './Icons';
 import { getCurrencySymbol } from '../utils/currency';
 import { TripJourneyMap } from './TripJourneyMap';
+import { useTripStore } from '../store/tripStore';
+import { usePrivacyStore, formatMaskedAmount } from '../store/privacyStore';
 
 type CategoryDatum = { id: string; name: string; icon: string; amount: number; percentage: number };
 type MemberSpend = { id: string; name: string; amount: number; percentage: number };
@@ -36,25 +39,43 @@ export function AnalyticsTab({
   categories = [],
 }: Props) {
   const currencySymbol = getCurrencySymbol(trip?.baseCurrency || '');
+  const isBlindMode = usePrivacyStore((s) => s.isBlindMode);
   const topCategory = categoryData[0];
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
+  const enableGeotagging = useTripStore((s) => s.enableGeotagging);
+
+  // Donut chart animates in from empty on first mount rather than popping in
+  // at full value — two rAFs so the browser paints the 0-state frame before
+  // the transition to the real value is triggered.
+  const [chartFilled, setChartFilled] = useState(false);
+  useEffect(() => {
+    const raf1 = requestAnimationFrame(() => {
+      const raf2 = requestAnimationFrame(() => setChartFilled(true));
+      return () => cancelAnimationFrame(raf2);
+    });
+    return () => cancelAnimationFrame(raf1);
+  }, []);
 
   return (
     <div className="fade-in">
       <h3 style={{ fontSize: '18px', marginBottom: '20px' }}>Charts & Analytics</h3>
 
       {/* 1. Key Statistics Cards Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '20px' }}>
+      {/* minmax(0, 1fr), not plain 1fr — a bare 1fr track's minimum size
+          still defaults to its content's min-content width, so the column
+          holding the longer money figures/category name was quietly
+          winning more than half the row instead of splitting evenly. */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: '12px', marginBottom: '20px' }}>
         <div className="glass-card" style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
           <span style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Total Spent</span>
-          <strong className="money" style={{ fontSize: '19px', color: 'var(--primary-accent)' }}>
-            {currencySymbol} {totalSpent.toFixed(2)}
+          <strong className="money privacy-blur" style={{ fontSize: '19px', color: 'var(--primary-accent)' }}>
+            {formatMaskedAmount(totalSpent.toFixed(2), currencySymbol, isBlindMode)}
           </strong>
         </div>
         <div className="glass-card" style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
           <span style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Per-Head Cost</span>
-          <strong className="money" style={{ fontSize: '19px', color: 'var(--text-primary)' }}>
-            {currencySymbol} {averageCost.toFixed(2)}
+          <strong className="money privacy-blur" style={{ fontSize: '19px', color: 'var(--text-primary)' }}>
+            {formatMaskedAmount(averageCost.toFixed(2), currencySymbol, isBlindMode)}
           </strong>
         </div>
         <div className="glass-card" style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
@@ -79,13 +100,24 @@ export function AnalyticsTab({
       </div>
 
       {!hasExpenses ? (
-        <div className="glass-card" style={{ textAlign: 'center', padding: '40px 20px', borderStyle: 'dashed' }}>
-          <p style={{ color: 'var(--text-secondary)' }}>Log a few expenses and the numbers will show up here.</p>
+        <div className="glass-card ledger-empty" style={{ borderStyle: 'dashed' }}>
+          <div className="ledger-rule" />
+          <div className="ledger-empty-prompt">
+            <span className="ledger-badge" aria-hidden="true">
+              <IconAnalytics size={14} className="icon-sm" />
+            </span>
+            <p>Log a few expenses and the numbers will show up here.</p>
+          </div>
+          <div className="ledger-rule" />
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-          {/* Trip Journey Map */}
-          <TripJourneyMap expenses={expenses} categories={categories} baseCurrency={trip?.baseCurrency || ''} />
+          {/* Trip Journey Map — only when geotagging is actually enabled for
+              this trip; otherwise there's nothing meaningful to plot and no
+              reason to load the map/tile network calls at all. */}
+          {enableGeotagging && (
+            <TripJourneyMap expenses={expenses} categories={categories} baseCurrency={trip?.baseCurrency || ''} />
+          )}
 
           {/* 2. Spend by Category SVG Donut Chart */}
           <div className="glass-card">
@@ -100,7 +132,7 @@ export function AnalyticsTab({
                     const r = 50;
                     const circ = 2 * Math.PI * r;
                     return categoryData.map((d, idx) => {
-                      const strokeDash = `${(d.percentage / 100) * circ} ${circ}`;
+                      const strokeDash = chartFilled ? `${(d.percentage / 100) * circ} ${circ}` : `0 ${circ}`;
                       const strokeOffset = `${- (accumPercent / 100) * circ}`;
                       accumPercent += d.percentage;
                       return (
@@ -115,7 +147,7 @@ export function AnalyticsTab({
                           strokeDasharray={strokeDash}
                           strokeDashoffset={strokeOffset}
                           transform="rotate(-90 70 70)"
-                          style={{ transition: 'stroke-dashoffset 0.5s ease' }}
+                          style={{ transition: 'stroke-dasharray 0.5s ease, stroke-dashoffset 0.5s ease' }}
                         />
                       );
                     });
@@ -135,7 +167,7 @@ export function AnalyticsTab({
                   pointerEvents: 'none'
                 }}>
                   <span style={{ fontSize: '10px', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: 600 }}>Total</span>
-                  <span style={{ fontSize: '15px', fontWeight: '800', color: 'var(--text-primary)' }}>
+                  <span className="privacy-blur" style={{ fontSize: '15px', fontWeight: '800', color: 'var(--text-primary)' }}>
                     {currencySymbol}
                     {totalSpent > 1000 ? `${(totalSpent / 1000).toFixed(1)}k` : totalSpent.toFixed(0)}
                   </span>
@@ -168,14 +200,14 @@ export function AnalyticsTab({
                 <div key={m.id} style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', fontWeight: 500 }}>
                     <span>{m.name}</span>
-                    <span>
-                      {currencySymbol} {m.amount.toFixed(2)}{' '}
+                    <span className="privacy-blur">
+                      {formatMaskedAmount(m.amount.toFixed(2), currencySymbol, isBlindMode)}{' '}
                       <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>({m.percentage.toFixed(0)}%)</span>
                     </span>
                   </div>
                   <div style={{ width: '100%', height: '8px', background: 'rgba(15,23,42,0.05)', borderRadius: '4px', overflow: 'hidden' }}>
                     <div style={{
-                      width: `${m.percentage}%`,
+                      width: chartFilled ? `${m.percentage}%` : '0%',
                       height: '100%',
                       background: 'var(--primary-accent)',
                       borderRadius: '4px',
@@ -192,7 +224,7 @@ export function AnalyticsTab({
             <div className="glass-card">
               <h4 style={{ fontSize: '14px', marginBottom: '16px', fontWeight: '600' }}>Daily Spending Trend</h4>
               <div style={{ width: '100%', overflowX: 'auto' }}>
-                <svg width="100%" height="200" viewBox="0 0 400 200" preserveAspectRatio="none" style={{ minWidth: '350px' }}>
+                <svg width="100%" height="200" viewBox="0 0 400 200" preserveAspectRatio="none" style={{ minWidth: '350px', opacity: chartFilled ? 1 : 0, transition: 'opacity 0.5s ease' }}>
                   <line x1="30" y1="40" x2="380" y2="40" stroke="var(--border-color)" strokeWidth="1" strokeDasharray="4 4" />
                   <line x1="30" y1="100" x2="380" y2="100" stroke="var(--border-color)" strokeWidth="1" strokeDasharray="4 4" />
                   <line x1="30" y1="160" x2="380" y2="160" stroke="var(--border-color)" strokeWidth="1" />
@@ -214,8 +246,8 @@ export function AnalyticsTab({
 
                     return (
                       <>
-                        <text x="25" y="44" textAnchor="end" fontSize="9" fill="var(--text-secondary)">{maxAmount.toFixed(0)}</text>
-                        <text x="25" y="104" textAnchor="end" fontSize="9" fill="var(--text-secondary)">{(maxAmount / 2).toFixed(0)}</text>
+                        <text className="privacy-blur" x="25" y="44" textAnchor="end" fontSize="9" fill="var(--text-secondary)">{maxAmount.toFixed(0)}</text>
+                        <text className="privacy-blur" x="25" y="104" textAnchor="end" fontSize="9" fill="var(--text-secondary)">{(maxAmount / 2).toFixed(0)}</text>
                         <text x="25" y="164" textAnchor="end" fontSize="9" fill="var(--text-secondary)">0</text>
 
                         {points.length > 1 && (
@@ -266,6 +298,7 @@ export function AnalyticsTab({
                                     opacity="0.9"
                                   />
                                   <text
+                                    className="privacy-blur"
                                     x={p.x}
                                     y={p.y - 14}
                                     textAnchor="middle"

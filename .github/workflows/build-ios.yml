@@ -12,6 +12,8 @@ on:
           - simulator
           - unsigned-ipa
   push:
+    branches:
+      - main
     tags:
       - 'v*'
 
@@ -21,7 +23,7 @@ concurrency:
 
 jobs:
   build-ios:
-    name: Build iOS (${{ inputs.target || 'simulator' }})
+    name: Build iOS (${{ inputs.target || (github.ref == 'refs/heads/main' && 'simulator') || 'unsigned-ipa' }})
     runs-on: macos-26
 
     steps:
@@ -60,6 +62,7 @@ jobs:
           VITE_BASE_PATH: /
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          VITE_TURNSTILE_SITE_KEY: ${{ secrets.VITE_TURNSTILE_SITE_KEY }}
         run: npm run build
 
       - name: Sync Native Version
@@ -71,7 +74,7 @@ jobs:
         run: npx cap sync ios
 
       - name: Build iOS Simulator App (.app)
-        if: ${{ inputs.target == 'simulator' || github.event_name != 'push' && inputs.target == 'simulator' }}
+        if: ${{ inputs.target == 'simulator' || (github.event_name == 'push' && !startsWith(github.ref, 'refs/tags/')) || (github.event_name == 'workflow_dispatch' && inputs.target == 'simulator') }}
         run: |
           xcodebuild \
             -project ios/App/App.xcodeproj \
@@ -82,7 +85,7 @@ jobs:
             CODE_SIGNING_ALLOWED=NO
 
       - name: Build Unsigned iOS Archive (.ipa)
-        if: ${{ inputs.target == 'unsigned-ipa' || github.event_name == 'push' }}
+        if: ${{ inputs.target == 'unsigned-ipa' || startsWith(github.ref, 'refs/tags/') }}
         run: |
           xcodebuild \
             -project ios/App/App.xcodeproj \

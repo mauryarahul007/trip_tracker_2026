@@ -28,6 +28,10 @@ dist-ssr
 # Git worktrees for isolated agent work
 .worktrees/
 
+# Copied from node_modules/maplibre-gl by scripts/sync-maplibre-worker.mjs
+# (runs on postinstall/predev/prebuild) — regenerated, not source.
+/public/maplibre/
+
 # Hive swarm and local roster state
 hive/
 roster.json

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { Category, Expense, Member, Trip } from '../types';
 import { getReceiptSignedUrl } from '../services/tripApi';
 import { IconEdit } from './Icons';
@@ -17,6 +17,11 @@ export function ExpenseReviewModal({ expense, members, categories, trip, onClose
   const isSettlement = expense.title.startsWith('Settlement:');
   const currencySymbol = getCurrencySymbol(trip?.baseCurrency || '');
   const [receiptUrl, setReceiptUrl] = useState<string | null>(null);
+  const sheetRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    sheetRef.current?.focus();
+  }, []);
 
   useEffect(() => {
     setReceiptUrl(null);
@@ -36,6 +41,11 @@ export function ExpenseReviewModal({ expense, members, categories, trip, onClose
       onClick={onClose}
     >
       <div
+        ref={sheetRef}
+        tabIndex={-1}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="expense-review-title"
         className="glass-card fade-in modal-sheet"
         style={{
           maxWidth: '460px',
@@ -56,7 +66,7 @@ export function ExpenseReviewModal({ expense, members, categories, trip, onClose
             }}>
               Expense Review
             </span>
-            <h3 style={{ fontSize: '22px', marginTop: '4px' }}>{expense.title}</h3>
+            <h3 id="expense-review-title" style={{ fontSize: '22px', marginTop: '4px' }}>{expense.title}</h3>
           </div>
           <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
             {!isSettlement && (
@@ -96,7 +106,7 @@ export function ExpenseReviewModal({ expense, members, categories, trip, onClose
           </div>
 
           {/* Basic metadata */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', fontSize: '14px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: '12px', fontSize: '14px' }}>
             <div className="glass-card" style={{ padding: '12px', boxShadow: 'none', background: 'rgba(15,23,42,0.01)' }}>
               <span style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', display: 'block', marginBottom: '2px' }}>
                 Paid By

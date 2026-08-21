@@ -23,9 +23,19 @@ function compressDataUrlSource(dataUrl: string): Promise<string> {
   });
 }
 
+export const MAX_RECEIPT_FILE_SIZE_BYTES = 5 * 1024 * 1024; // 5MB limit
+const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif'];
+
 // Downscales and re-encodes an image file to a compact base64 JPEG, so receipt
 // photos don't bloat IndexedDB storage with full camera-resolution originals.
 export function compressImageToDataUrl(file: File): Promise<string> {
+  if (file.size > MAX_RECEIPT_FILE_SIZE_BYTES) {
+    return Promise.reject(new Error('Image file is too large. Maximum size is 5MB.'));
+  }
+  if (file.type && !ALLOWED_IMAGE_TYPES.includes(file.type) && !file.type.startsWith('image/')) {
+    return Promise.reject(new Error('Only image files (JPEG, PNG, WebP) are allowed.'));
+  }
+
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onerror = () => reject(new Error('Failed to read image file.'));

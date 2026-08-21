@@ -106,4 +106,3 @@ $$;
 grant execute on function public.lookup_trip_by_join_code(text) to authenticated;
 
 notify pgrst, 'reload schema';
-

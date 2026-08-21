@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { Trip, Member } from '../types';
-import { IconTrash, IconEdit, IconSettings, IconArchive } from './Icons';
+import { IconTrash, IconEdit, IconSettings, IconArchive, IconMapPin } from './Icons';
 import { DateRangePicker } from './DateRangePicker';
 import { formatTripStamp } from '../utils/dateRange';
 import { initial } from '../utils/initials';
+import { avatarColorForName } from '../utils/avatarColor';
+import { TurnstileWidget } from './TurnstileWidget';
+import { useTripStore } from '../store/tripStore';
 
 type Props = {
   trips: Trip[];
@@ -54,14 +57,23 @@ export function TripsListScreen({
   onOpenBugTracker,
 }: Props) {
   const navigate = useNavigate();
+  const userId = useTripStore((s) => s.userId);
   const [showJoinTrip, setShowJoinTrip] = useState(false);
   const [joinCode, setJoinCode] = useState('');
+  const [honeypotVal, setHoneypotVal] = useState('');
 
   const handleJoinByCode = (e: React.FormEvent) => {
     e.preventDefault();
+    if (honeypotVal) return;
     const code = joinCode.trim();
     if (!code) return;
     navigate(`/join/${encodeURIComponent(code)}`);
+  };
+
+  const handleCreateTripSafe = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (honeypotVal) return;
+    onCreateTrip(e);
   };
 
   return (
@@ -138,6 +150,18 @@ export function TripsListScreen({
         {/* Join by Code Form */}
         {showJoinTrip && (
           <form className="glass-card fade-in" onSubmit={handleJoinByCode} style={{ marginBottom: '24px' }}>
+            {/* Honeypot field for bot trap */}
+            <div style={{ position: 'absolute', left: '-9999px', opacity: 0, pointerEvents: 'none', height: 0, overflow: 'hidden' }} aria-hidden="true">
+              <input
+                type="text"
+                name="trip_join_security_token"
+                tabIndex={-1}
+                autoComplete="off"
+                value={honeypotVal}
+                onChange={(e) => setHoneypotVal(e.target.value)}
+              />
+            </div>
+
             <h3 style={{ marginBottom: '16px', fontSize: '18px' }}>Join a Trip</h3>
             <div className="form-group">
               <label className="form-label">Invite Code</label>
@@ -153,6 +177,9 @@ export function TripsListScreen({
                 maxLength={6}
               />
             </div>
+
+            <TurnstileWidget />
+
             <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
               <button type="submit" className="gradient-btn" style={{ flex: 1 }}>Join</button>
               <button
@@ -169,7 +196,19 @@ export function TripsListScreen({
 
         {/* Create/Edit Trip Form */}
         {showAddTrip && (
-          <form className="glass-card fade-in" onSubmit={onCreateTrip} style={{ marginBottom: '24px' }}>
+          <form className="glass-card fade-in" onSubmit={handleCreateTripSafe} style={{ marginBottom: '24px' }}>
+            {/* Honeypot field for bot trap */}
+            <div style={{ position: 'absolute', left: '-9999px', opacity: 0, pointerEvents: 'none', height: 0, overflow: 'hidden' }} aria-hidden="true">
+              <input
+                type="text"
+                name="trip_create_security_token"
+                tabIndex={-1}
+                autoComplete="off"
+                value={honeypotVal}
+                onChange={(e) => setHoneypotVal(e.target.value)}
+              />
+            </div>
+
             <h3 style={{ marginBottom: '16px', fontSize: '18px' }}>{editingTripId ? 'Edit Trip' : 'Create New Trip'}</h3>
 
             <div className="form-group">
@@ -221,22 +260,34 @@ export function TripsListScreen({
 
         {/* Trips List Grid */}
         {trips.length === 0 ? (
-          <div className="glass-card" style={{ textAlign: 'center', padding: '40px 20px', borderStyle: 'dashed' }}>
-            <p style={{ color: 'var(--text-secondary)', marginBottom: '16px' }}>Nothing here yet. Start a trip and add who's coming.</p>
-            <button className="gradient-btn" style={{ margin: '0 auto' }} onClick={() => setShowAddTrip(true)}>
-              Create Your First Trip
-            </button>
+          <div className="glass-card ledger-empty" style={{ borderStyle: 'dashed' }}>
+            <div className="ledger-rule" />
+            <div className="ledger-empty-prompt">
+              <span className="ledger-badge ledger-badge-tilt-right" aria-hidden="true">
+                <IconMapPin size={14} className="icon-sm" />
+              </span>
+              <p>Nothing here yet. Start a trip and add who's coming.</p>
+              <button className="gradient-btn" onClick={() => setShowAddTrip(true)}>
+                Create Your First Trip
+              </button>
+            </div>
+            <div className="ledger-rule" />
           </div>
         ) : (
           <div className="passport-list">
-            {trips.map((trip) => {
+            {trips.map((trip, idx) => {
               const stamp = formatTripStamp(trip.startDate, trip.endDate);
               const tripMembers = trip.memberIds.map((id) => members[id]).filter(Boolean);
               const shown = tripMembers.slice(0, 3);
               const overflow = tripMembers.length - shown.length;
               const expenseCount = trip.expenseCount || 0;
               return (
-                <div key={trip.id} className="passport-card" onClick={() => onSelectTrip(trip.id)}>
+                <div
+                  key={trip.id}
+                  className="passport-card"
+                  style={{ animationDelay: `${Math.min(idx * 30, 300)}ms` }}
+                  onClick={() => onSelectTrip(trip.id)}
+                >
                   <div className="pp-stamp">
                     <span>{stamp.top}</span>
                     <span>{stamp.bottom}</span>
@@ -250,9 +301,9 @@ export function TripsListScreen({
                     <div className="pp-avatars">
                       {shown.map((m) =>
                         m.avatarUrl ? (
-                          <img key={m.id} src={m.avatarUrl} alt={m.name} title={m.name} className="pp-avatar" referrerPolicy="no-referrer" />
+                          <img key={m.id} src={m.avatarUrl} alt={m.name} title={m.name} className="pp-avatar" referrerPolicy="no-referrer" loading="lazy" width={24} height={24} />
                         ) : (
-                          <span key={m.id} className="pp-avatar" title={m.name}>{initial(m.name)}</span>
+                          <span key={m.id} className="pp-avatar" style={{ background: avatarColorForName(m.name) }} title={m.name}>{initial(m.name)}</span>
                         )
                       )}
                       {overflow > 0 && <span className="pp-avatar pp-avatar-more">+{overflow}</span>}
@@ -282,18 +333,20 @@ export function TripsListScreen({
                       >
                         <IconArchive size={15} className="icon-sm" />
                       </button>
-                      <button
-                        className="secondary-btn"
-                        style={{ padding: '8px', color: 'var(--color-danger)', borderColor: 'rgba(184,69,46,0.2)' }}
-                        aria-label="Delete trip"
-                        title="Delete trip"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onDeleteTrip(trip);
-                        }}
-                      >
-                        <IconTrash size={15} className="icon-sm" />
-                      </button>
+                      {(!trip.ownerId || !userId || trip.ownerId === userId || Boolean(trip.adminMemberIds && trip.memberIds.some((mid) => members[mid]?.linkedUserId === userId && trip.adminMemberIds?.includes(mid)))) && (
+                        <button
+                          className="secondary-btn"
+                          style={{ padding: '8px', color: 'var(--color-danger)', borderColor: 'rgba(184,69,46,0.2)' }}
+                          aria-label="Delete trip"
+                          title="Delete trip"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onDeleteTrip(trip);
+                          }}
+                        >
+                          <IconTrash size={15} className="icon-sm" />
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>

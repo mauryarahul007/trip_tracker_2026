@@ -1,11 +1,13 @@
 import { useEffect, useRef } from 'react';
 import type { Trip, Category, Expense } from '../types';
+import type { ConfirmRequest } from './ConfirmDialog';
 import { IconClose } from './Icons';
 import { SettingsView, type ThemePref } from './SettingsView';
 import { useTripStore } from '../store/tripStore';
 
 type Props = {
   onClose: () => void;
+  onRequestConfirm?: (req: ConfirmRequest) => void;
   themePref: ThemePref;
   setThemePref: (v: ThemePref) => void;
 
@@ -39,6 +41,7 @@ type Props = {
 
 export function GlobalSettingsModal({
   onClose,
+  onRequestConfirm,
   themePref,
   setThemePref,
   onExportJson,
@@ -87,7 +90,7 @@ export function GlobalSettingsModal({
         aria-labelledby="global-settings-title"
         onClick={(e) => e.stopPropagation()}
       >
-        <header className="app-header" style={{ margin: '-20px -20px 20px', paddingTop: 'max(20px, env(safe-area-inset-top))' }}>
+        <header className="app-header" style={{ margin: '-20px -20px 20px', paddingTop: 'max(20px, var(--safe-top, 0px))' }}>
           <div className="app-header-top">
             <div className="app-title-group">
               <h2 id="global-settings-title" className="app-logo" style={{ fontSize: '22px', color: '#F2ECDC' }}>Settings</h2>
@@ -132,6 +135,7 @@ export function GlobalSettingsModal({
           onInstallApp={onInstallApp}
           hasActiveTrip={Boolean(activeTripId)}
           onClose={onClose}
+          onRequestConfirm={onRequestConfirm}
         />
       </div>
     </div>

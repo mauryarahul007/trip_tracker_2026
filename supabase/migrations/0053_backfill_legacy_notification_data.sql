@@ -19,7 +19,7 @@ from (
     and body is not null
 ) matched
 where public.notifications.id = matched.id
-  and matched.m is not null
+  and matched.m is not null;
 
 -- expense_added:
 -- legacy body was `<title> — <currency> <amount> added`.
@@ -37,4 +37,4 @@ from (
     and body is not null
 ) matched
 where public.notifications.id = matched.id
-  and matched.m is not null
+  and matched.m is not null;

@@ -4,6 +4,8 @@ import { buildSettlementNodes, calculateGroupInternalTransfers, type MemberBalan
 import { IconArrowDownRight, IconArrowUpRight, IconCheck, IconCheckCircle, IconChevronRight, IconEdit, IconMembers } from './Icons';
 import { getCurrencySymbol } from '../utils/currency';
 import { sendPushNotification } from '../services/pushApi';
+import { usePrivacyStore, formatMaskedAmount } from '../store/privacyStore';
+import { triggerHaptic } from '../utils/haptics';
 
 type Props = {
   trip: Trip;
@@ -26,10 +28,10 @@ function balanceColor(balance: number): string {
   return 'var(--text-secondary)';
 }
 
-function balanceLabel(balance: number, currencySymbol: string): string {
-  const absVal = Math.abs(balance).toFixed(2);
-  if (balance > 0.01) return `gets back ${currencySymbol}${absVal}`;
-  if (balance < -0.01) return `owes ${currencySymbol}${absVal}`;
+function balanceLabel(balance: number, currencySymbol: string, isBlindMode: boolean = false): string {
+  const absVal = formatMaskedAmount(Math.abs(balance).toFixed(2), currencySymbol, isBlindMode);
+  if (balance > 0.01) return `gets back ${absVal}`;
+  if (balance < -0.01) return `owes ${absVal}`;
   return 'settled';
 }
 
@@ -52,6 +54,8 @@ function isTransferSettled(t: Transfer, activeTripExpenses: Expense[]): boolean 
 type TransferRowProps = {
   transfer: Transfer;
   rowKey: string;
+  tripId: string;
+  tripName?: string;
   note?: string;
   currencySymbol: string;
   isSettled: boolean;
@@ -152,6 +156,8 @@ function getAuditDetailsForNode(
 
 function TransferRow({
   transfer: t,
+  tripId,
+  tripName,
   note,
   currencySymbol,
   isSettled,
@@ -168,9 +174,30 @@ function TransferRow({
 }: TransferRowProps) {
   const settleAmount = parseFloat(customValue) || t.amount;
   const [showAudit, setShowAudit] = useState(false);
+  const [reminderStatus, setReminderStatus] = useState<'idle' | 'sending' | 'sent' | 'rateLimited'>('idle');
 
   const fromAudit = getAuditDetailsForNode(t.from, t.fromLabel, balances, groups, activeTripExpenses);
   const toAudit = getAuditDetailsForNode(t.to, t.toLabel, balances, groups, activeTripExpenses);
+
+  const handleRemind = async () => {
+    const fromLinkedUserId = members[t.fromMemberId]?.linkedUserId;
+    if (!fromLinkedUserId) return;
+    setReminderStatus('sending');
+    const result = await sendPushNotification(
+      [fromLinkedUserId],
+      tripName || 'Trip Tracker',
+      'settlement_reminder',
+      { toLabel: t.toLabel, amount: t.amount.toFixed(2), currency: currencySymbol, fromMemberId: t.fromMemberId, toMemberId: t.toMemberId },
+      tripId
+    );
+    setReminderStatus(result.ok ? 'sent' : result.rateLimited ? 'rateLimited' : 'idle');
+  };
+
+  const remindLabel =
+    reminderStatus === 'sending' ? 'Sending…' :
+    reminderStatus === 'sent' ? '✓ Reminded' :
+    reminderStatus === 'rateLimited' ? 'Already reminded today' :
+    '🔔 Remind';
 
   return (
     <div style={{
@@ -197,7 +224,7 @@ function TransferRow({
 
         {/* Amount Display */}
         {!isSettled && !customOpen && (
-          <span className="amount-mono" style={{
+          <span className="amount-mono privacy-blur" style={{
             fontSize: '16px',
             fontWeight: '700',
             color: 'var(--color-danger)',
@@ -214,7 +241,7 @@ function TransferRow({
             <span className="cr-front" style={{ padding: '4px 8px' }}>
               <IconCheck size={12} className="icon-sm" />
               <span>
-                <span className="cr-amount" style={{ whiteSpace: 'nowrap', fontSize: '12px' }}>{currencySymbol}{t.amount.toFixed(2)}</span>
+                <span className="cr-amount privacy-blur" style={{ whiteSpace: 'nowrap', fontSize: '12px' }}>{currencySymbol}{t.amount.toFixed(2)}</span>
                 <span className="cr-caption" style={{ fontSize: '9px' }}>your copy &middot; their copy</span>
               </span>
             </span>
@@ -270,11 +297,11 @@ function TransferRow({
                 <div key={m.memberId} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11.5px' }}>
                   <span>
                     <span style={{ fontWeight: 600 }}>{m.name}</span>
-                    <span style={{ color: 'var(--text-secondary)' }}>
+                    <span className="privacy-blur" style={{ color: 'var(--text-secondary)' }}>
                       {' '}(Paid: {currencySymbol}{m.totalPaid.toFixed(2)}, Share: {currencySymbol}{m.totalOwed.toFixed(2)})
                     </span>
                   </span>
-                  <span style={{ fontWeight: 600, color: m.netBalance < 0 ? 'var(--color-danger)' : 'var(--color-success)' }}>
+                  <span className="privacy-blur" style={{ fontWeight: 600, color: m.netBalance < 0 ? 'var(--color-danger)' : 'var(--color-success)' }}>
                     {m.netBalance >= 0 ? '+' : ''}{currencySymbol}{m.netBalance.toFixed(2)}
                   </span>
                 </div>
@@ -282,7 +309,7 @@ function TransferRow({
               {fromAudit.members.length > 1 && (
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11.5px', borderTop: '1px dashed var(--border-color)', paddingTop: '4px', marginTop: '2px', fontWeight: 600 }}>
                   <span>Combined Net:</span>
-                  <span style={{ color: fromAudit.combinedBalance < 0 ? 'var(--color-danger)' : 'var(--color-success)' }}>
+                  <span className="privacy-blur" style={{ color: fromAudit.combinedBalance < 0 ? 'var(--color-danger)' : 'var(--color-success)' }}>
                     {fromAudit.combinedBalance >= 0 ? '+' : ''}{currencySymbol}{fromAudit.combinedBalance.toFixed(2)}
                   </span>
                 </div>
@@ -298,11 +325,11 @@ function TransferRow({
                 <div key={m.memberId} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11.5px' }}>
                   <span>
                     <span style={{ fontWeight: 600 }}>{m.name}</span>
-                    <span style={{ color: 'var(--text-secondary)' }}>
+                    <span className="privacy-blur" style={{ color: 'var(--text-secondary)' }}>
                       {' '}(Paid: {currencySymbol}{m.totalPaid.toFixed(2)}, Share: {currencySymbol}{m.totalOwed.toFixed(2)})
                     </span>
                   </span>
-                  <span style={{ fontWeight: 600, color: m.netBalance < 0 ? 'var(--color-danger)' : 'var(--color-success)' }}>
+                  <span className="privacy-blur" style={{ fontWeight: 600, color: m.netBalance < 0 ? 'var(--color-danger)' : 'var(--color-success)' }}>
                     {m.netBalance >= 0 ? '+' : ''}{currencySymbol}{m.netBalance.toFixed(2)}
                   </span>
                 </div>
@@ -310,7 +337,7 @@ function TransferRow({
               {toAudit.members.length > 1 && (
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11.5px', borderTop: '1px dashed var(--border-color)', paddingTop: '4px', marginTop: '2px', fontWeight: 600 }}>
                   <span>Combined Net:</span>
-                  <span style={{ color: toAudit.combinedBalance < 0 ? 'var(--color-danger)' : 'var(--color-success)' }}>
+                  <span className="privacy-blur" style={{ color: toAudit.combinedBalance < 0 ? 'var(--color-danger)' : 'var(--color-success)' }}>
                     {toAudit.combinedBalance >= 0 ? '+' : ''}{currencySymbol}{toAudit.combinedBalance.toFixed(2)}
                   </span>
                 </div>
@@ -328,7 +355,7 @@ function TransferRow({
             fontStyle: 'italic',
             lineHeight: '1.4'
           }}>
-            The simplification engine combined and matched these balances ({fromAudit.nodeName}: {currencySymbol}{fromAudit.combinedBalance.toFixed(2)} and {toAudit.nodeName}: {currencySymbol}{toAudit.combinedBalance.toFixed(2)}) to reduce total payment transactions on this trip.
+            The simplification engine combined and matched these balances ({fromAudit.nodeName}: <span className="privacy-blur">{currencySymbol}{fromAudit.combinedBalance.toFixed(2)}</span> and {toAudit.nodeName}: <span className="privacy-blur">{currencySymbol}{toAudit.combinedBalance.toFixed(2)}</span>) to reduce total payment transactions on this trip.
           </div>
         </div>
       )}
@@ -368,8 +395,11 @@ function TransferRow({
               />
               <button
                 className="gradient-btn"
-                style={{ padding: '6px 12px', fontSize: '11px', borderRadius: '6px', height: '28px' }}
-                onClick={() => onSettle(t.fromMemberId, t.toMemberId, settleAmount, t.fromLabel, t.toLabel)}
+                style={{ padding: '6px 12px', fontSize: '11px', borderRadius: 'var(--border-radius-sm)', height: '28px' }}
+                onClick={() => {
+                  triggerHaptic('success');
+                  onSettle(t.fromMemberId, t.toMemberId, settleAmount, t.fromLabel, t.toLabel);
+                }}
               >
                 Settle
               </button>
@@ -389,27 +419,22 @@ function TransferRow({
                 type="button"
                 className="secondary-btn"
                 style={{ padding: '6px 10px', fontSize: '12px' }}
-                onClick={() => {
-                  const fromLinkedUserId = members[t.fromMemberId]?.linkedUserId;
-                  if (!fromLinkedUserId) return;
-                  sendPushNotification(
-                    [fromLinkedUserId],
-                    'Settlement reminder',
-                    `You owe ${t.toLabel} ${currencySymbol}${t.amount.toFixed(2)} for this trip`
-                  );
-                }}
-                disabled={!members[t.fromMemberId]?.linkedUserId}
+                onClick={handleRemind}
+                disabled={!members[t.fromMemberId]?.linkedUserId || reminderStatus === 'sending' || reminderStatus === 'sent' || reminderStatus === 'rateLimited'}
                 title={members[t.fromMemberId]?.linkedUserId ? 'Send a reminder' : 'This member has no linked account to notify'}
               >
-                🔔 Remind
+                {remindLabel}
               </button>
             </div>
           ) : (
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
               <button
                 className="gradient-btn"
-                style={{ padding: '6px 14px', fontSize: '11px', borderRadius: '6px', height: '28px' }}
-                onClick={() => onSettle(t.fromMemberId, t.toMemberId, t.amount, t.fromLabel, t.toLabel)}
+                style={{ padding: '6px 14px', fontSize: '11px', borderRadius: 'var(--border-radius-sm)', height: '28px' }}
+                onClick={() => {
+                  triggerHaptic('success');
+                  onSettle(t.fromMemberId, t.toMemberId, t.amount, t.fromLabel, t.toLabel);
+                }}
               >
                 Settle
               </button>
@@ -427,19 +452,11 @@ function TransferRow({
                 type="button"
                 className="secondary-btn"
                 style={{ padding: '6px 10px', fontSize: '12px' }}
-                onClick={() => {
-                  const fromLinkedUserId = members[t.fromMemberId]?.linkedUserId;
-                  if (!fromLinkedUserId) return;
-                  sendPushNotification(
-                    [fromLinkedUserId],
-                    'Settlement reminder',
-                    `You owe ${t.toLabel} ${currencySymbol}${t.amount.toFixed(2)} for this trip`
-                  );
-                }}
-                disabled={!members[t.fromMemberId]?.linkedUserId}
+                onClick={handleRemind}
+                disabled={!members[t.fromMemberId]?.linkedUserId || reminderStatus === 'sending' || reminderStatus === 'sent' || reminderStatus === 'rateLimited'}
                 title={members[t.fromMemberId]?.linkedUserId ? 'Send a reminder' : 'This member has no linked account to notify'}
               >
-                🔔 Remind
+                {remindLabel}
               </button>
             </div>
           )}
@@ -491,6 +508,7 @@ export function BalancesSettlements({
     return false;
   };
   const currencySymbol = getCurrencySymbol(trip.baseCurrency);
+  const isBlindMode = usePrivacyStore((s) => s.isBlindMode);
   const [customAmounts, setCustomAmounts] = useState<Record<string, string>>({});
   const [customOpenKeys, setCustomOpenKeys] = useState<Record<string, boolean>>({});
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
@@ -529,8 +547,8 @@ export function BalancesSettlements({
         <div className="bp-perf" />
         <div className="bp-body">
           <div className="bp-who">{isFullySettled ? 'Outstanding' : 'Outstanding to settle'}</div>
-          <div className="bp-amount" style={{ color: isFullySettled ? 'var(--color-success)' : 'var(--color-danger)' }}>
-            {currencySymbol} {totalOutstanding.toFixed(2)}
+          <div className="bp-amount privacy-blur" style={{ color: isFullySettled ? 'var(--color-success)' : 'var(--color-danger)' }}>
+            {formatMaskedAmount(totalOutstanding.toFixed(2), currencySymbol, isBlindMode)}
           </div>
           <div className="bp-sub">
             {isFullySettled
@@ -567,9 +585,9 @@ export function BalancesSettlements({
                   title={`View ${n.name}'s expenses`}
                 >
                   <span style={{ minWidth: 0, flex: '1 1 auto', lineHeight: '1.3', paddingRight: '8px' }}><strong>{n.name}</strong></span>
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', color: balanceColor(n.balance), fontWeight: '700', flexShrink: 0, marginLeft: 'auto', whiteSpace: 'nowrap' }}>
+                  <span className="privacy-blur" style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', color: balanceColor(n.balance), fontWeight: '700', flexShrink: 0, marginLeft: 'auto', whiteSpace: 'nowrap' }}>
                     <BalanceIcon balance={n.balance} />
-                    {balanceLabel(n.balance, currencySymbol)}
+                    {balanceLabel(n.balance, currencySymbol, isBlindMode)}
                   </span>
                 </div>
               );
@@ -584,52 +602,49 @@ export function BalancesSettlements({
               ? 'settled'
               : isNetZero
                 ? 'internal settlement pending'
-                : balanceLabel(n.balance, currencySymbol);
+                : balanceLabel(n.balance, currencySymbol, isBlindMode);
             const statusColor = fullySettled
               ? 'var(--color-success)'
               : isNetZero
                 ? 'var(--color-warning)'
                 : balanceColor(n.balance);
+            const isExpanded = !!expandedGroups[groupId];
 
-            const isExpanded = !!expandedGroups[n.id];
             return (
-              <div key={n.id}>
+              <div key={n.id} style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 <div
                   className="balance-row"
                   style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '14px', padding: '6px 4px', borderRadius: '8px', cursor: 'pointer' }}
-                  onClick={() => setExpandedGroups({ ...expandedGroups, [n.id]: !isExpanded })}
-                  title={`${isExpanded ? 'Collapse' : 'Expand'} ${n.name} group members`}
+                  onClick={() => setExpandedGroups({ ...expandedGroups, [groupId]: !isExpanded })}
+                  title="Click to toggle group member breakdown"
                 >
-                  <span style={{ display: 'flex', alignItems: 'center', gap: '6px', minWidth: 0, flex: '1 1 auto', paddingRight: '8px' }}>
-                    <span style={{ display: 'flex', color: 'var(--text-muted)', flexShrink: 0, transition: 'transform 0.15s ease', transform: isExpanded ? 'rotate(90deg)' : 'none' }}>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', minWidth: 0, flex: '1 1 auto', lineHeight: '1.3', paddingRight: '8px' }}>
+                    <IconMembers size={14} className="icon-sm" />
+                    <strong>{n.name}</strong>
+                    <span style={{ fontSize: '11px', color: 'var(--text-secondary)', display: 'inline-flex', alignItems: 'center', transform: isExpanded ? 'rotate(90deg)' : 'none', transition: 'transform 0.15s ease' }}>
                       <IconChevronRight size={12} className="icon-sm" />
                     </span>
-                    <IconMembers size={15} className="icon-sm" />
-                    <strong style={{ minWidth: 0, flex: '1 1 auto', lineHeight: '1.3' }}>{n.name}</strong>
                   </span>
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', color: statusColor, fontWeight: '700', flexShrink: 0, marginLeft: 'auto', whiteSpace: 'nowrap' }}>
-                    {!isNetZero && <BalanceIcon balance={n.balance} />}
-                    {fullySettled && <BalanceIcon balance={0} settled />}
+                  <span className="privacy-blur" style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', color: statusColor, fontWeight: '700', flexShrink: 0, marginLeft: 'auto', whiteSpace: 'nowrap' }}>
+                    <BalanceIcon balance={n.balance} settled={fullySettled} />
                     {statusLabel}
                   </span>
                 </div>
+
                 {isExpanded && (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginLeft: '22px', marginTop: '4px' }}>
-                    {n.memberIds.map((mid) => {
-                      const memberBalance = balances.find((b) => b.memberId === mid);
+                  <div style={{ marginLeft: '16px', paddingLeft: '10px', borderLeft: '2px dashed var(--border-color)', display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '2px', marginBottom: '4px' }}>
+                    {n.memberIds.map((memId) => {
+                      const memberBalance = balances.find((b) => b.memberId === memId);
                       if (!memberBalance) return null;
                       return (
                         <div
-                          key={mid}
-                          className="balance-row"
-                          style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '13px', padding: '4px', borderRadius: '8px', cursor: 'pointer' }}
-                          onClick={() => onMemberClick(mid)}
-                          title={`View ${memberBalance.name}'s expenses`}
+                          key={memId}
+                          style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12.5px', color: 'var(--text-secondary)', padding: '2px 0', cursor: 'pointer' }}
+                          onClick={() => onMemberClick(memId)}
                         >
-                          <span style={{ minWidth: 0, flex: '1 1 auto', lineHeight: '1.3', paddingRight: '8px' }}>{memberBalance.name}</span>
-                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', color: balanceColor(memberBalance.balance), fontWeight: '600', flexShrink: 0, marginLeft: 'auto', whiteSpace: 'nowrap' }}>
-                            <BalanceIcon balance={memberBalance.balance} />
-                            {balanceLabel(memberBalance.balance, currencySymbol)}
+                          <span>{memberBalance.name}</span>
+                          <span className="privacy-blur" style={{ color: balanceColor(memberBalance.balance), fontWeight: 600 }}>
+                            {balanceLabel(memberBalance.balance, currencySymbol, isBlindMode)}
                           </span>
                         </div>
                       );
@@ -647,6 +662,8 @@ export function BalancesSettlements({
                               key={rowKey}
                               transfer={it}
                               rowKey={rowKey}
+                              tripId={trip.id}
+                              tripName={trip.name}
                               currencySymbol={currencySymbol}
                               isSettled={isTransferSettled(it, activeTripExpenses)}
                               canSettle={canSettleTransfer(it)}
@@ -691,6 +708,8 @@ export function BalancesSettlements({
                   key={rowKey}
                   transfer={t}
                   rowKey={rowKey}
+                  tripId={trip.id}
+                  tripName={trip.name}
                   note={isGroupInvolved ? 'group settlement — combined balance' : undefined}
                   currencySymbol={currencySymbol}
                   isSettled={isTransferSettled(t, activeTripExpenses)}

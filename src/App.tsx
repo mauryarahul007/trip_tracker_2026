@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { useTripStore } from './store/tripStore';
+import { useTripStore, getTripNotificationRecipients } from './store/tripStore';
 import { useAuthStore } from './store/authStore';
 import { calculateSettlements } from './utils/settlement';
 import type { Expense, Trip, Group, Member } from './types';
@@ -7,6 +7,7 @@ import { exportTripToCSV } from './utils/csvExport';
 
 import { getCurrencySymbol } from './utils/currency';
 import { isMissingSupabaseEnv } from './services/supabaseClient';
+import { sendPushNotification } from './services/pushApi';
 import { GlobalSettingsModal } from './components/GlobalSettingsModal';
 import { ConfirmDialog, type ConfirmRequest } from './components/ConfirmDialog';
 import { TripsListScreen } from './components/TripsListScreen';
@@ -21,7 +22,14 @@ import { UndoToasts } from './components/UndoToasts';
 import { NavTabs } from './components/NavTabs';
 import { ShareTripModal } from './components/ShareTripModal';
 import { SuperAdminBugTracker } from './components/SuperAdminBugTracker';
-import { IconCalendar, IconChevronLeft, IconShare, IconShield } from './components/Icons';
+import { NotificationsPanel } from './components/NotificationsPanel';
+import { NotificationsBellButton } from './components/NotificationsBellButton';
+import { InAppNotificationBanner } from './components/InAppNotificationBanner';
+import { FitHeading } from './components/FitHeading';
+import { usePrivacyStore } from './store/privacyStore';
+import { triggerHaptic } from './utils/haptics';
+import { useEscapeKey } from './utils/useEscapeKey';
+import { IconCalendar, IconChevronLeft, IconPlus, IconEye, IconEyeOff, IconShield } from './components/Icons';
 import { formatDateRange } from './utils/dateRange';
 import { useScrollLock } from './utils/useScrollLock';
 import { useHistoryBack } from './utils/useHistoryBack';
@@ -65,9 +73,11 @@ export default function App() {
 
   const userEmail = useAuthStore((s) => s.session?.user.email ?? null);
   const userId = useAuthStore((s) => s.session?.user.id ?? null);
-  const session = useAuthStore((s) => s.session);
   const signOut = useAuthStore((s) => s.signOut);
   const signInSuperadmin = useAuthStore((s) => s.signInSuperadmin);
+
+  const isBlindMode = usePrivacyStore((s) => s.isBlindMode);
+  const toggleBlindMode = usePrivacyStore((s) => s.toggleBlindMode);
 
   // Navigation tabs: 'expenses' | 'members' | 'analytics' | 'settings'
   const [activeTab, setActiveTab] = useState<'expenses' | 'members' | 'analytics' | 'settings'>('expenses');
@@ -92,6 +102,33 @@ export default function App() {
     }
     localStorage.setItem('theme-pref', themePref);
   }, [themePref]);
+
+  // App-wide micro-haptic tap feedback: fires a light pulse on any real
+  // button/toggle press, everywhere in the app. Interactions that need a
+  // stronger/curated pattern (success, warning, delete...) call
+  // triggerHaptic explicitly in their own handler — that call runs after
+  // this one in the same tick and simply overwrites the light pulse
+  // (navigator.vibrate replaces any in-flight pattern), so nothing here
+  // fights those.
+  useEffect(() => {
+    const HAPTIC_COOLDOWN_MS = 80;
+    let lastFired = 0;
+    const handleTapFeedback = (e: PointerEvent) => {
+      if (e.pointerType === 'mouse') return;
+      const target = e.target;
+      if (!(target instanceof Element)) return;
+      const interactive = target.closest(
+        'button:not(:disabled), [role="button"]:not([aria-disabled="true"]), input[type="checkbox"], input[type="radio"]'
+      );
+      if (!interactive) return;
+      const now = Date.now();
+      if (now - lastFired < HAPTIC_COOLDOWN_MS) return;
+      lastFired = now;
+      triggerHaptic('light');
+    };
+    document.body.addEventListener('pointerdown', handleTapFeedback, { capture: true, passive: true });
+    return () => document.body.removeEventListener('pointerdown', handleTapFeedback, true);
+  }, []);
 
   // Form states - Trips
   const [showAddTrip, setShowAddTrip] = useState(false);
@@ -163,6 +200,11 @@ export default function App() {
   const [showAddExpense, setShowAddExpense] = useState(false);
   const [editingExpenseId, setEditingExpenseId] = useState<string | null>(null);
   const [selectedReviewExpense, setSelectedReviewExpense] = useState<Expense | null>(null);
+  // Queue of expense ids still to review after "Review N affected expenses"
+  // (a member was removed) — save/cancel on the open form advances to the
+  // next id instead of just closing, so the whole batch can be worked
+  // through in one pass instead of hunting each one down individually.
+  const [reviewQueue, setReviewQueue] = useState<string[]>([]);
 
   // Expense list search & filters
   const [expenseSearch, setExpenseSearch] = useState('');
@@ -240,6 +282,49 @@ export default function App() {
     setExpenseFilterDateFrom('');
     setExpenseFilterDateTo('');
   }, [activeTripId]);
+
+  // Track scroll on active tab-pane with directional hysteresis for smooth fluid header morphing
+  const [isHeaderScrolled, setIsHeaderScrolled] = useState(false);
+
+  useEffect(() => {
+    let lastScrollTop = 0;
+    let ticking = false;
+
+    const handleScroll = (e: Event) => {
+      const target = e.target;
+      if (!(target instanceof HTMLElement) || !target.classList.contains('tab-pane')) {
+        return;
+      }
+
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          const currentScrollTop = target.scrollTop;
+
+          if (currentScrollTop <= 15) {
+            // Reached the top of the scroll container: always expand
+            setIsHeaderScrolled(false);
+          } else if (currentScrollTop > 45 && !isHeaderScrolled) {
+            // Scrolled down past threshold: smoothly collapse into compact glass mode
+            setIsHeaderScrolled(true);
+          } else if (currentScrollTop < lastScrollTop - 25 && isHeaderScrolled && currentScrollTop < 120) {
+            // Scrolling up near top of page: expand early for a natural fluid feel
+            setIsHeaderScrolled(false);
+          }
+
+          lastScrollTop = Math.max(0, currentScrollTop);
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+
+    document.addEventListener('scroll', handleScroll, { capture: true, passive: true });
+    return () => document.removeEventListener('scroll', handleScroll, true);
+  }, [isHeaderScrolled]);
+
+  useEffect(() => {
+    setIsHeaderScrolled(false);
+  }, [activeTripId, activeTab]);
 
   const activeTripExpenses = useMemo(() => {
     return expenses
@@ -384,7 +469,7 @@ export default function App() {
   const CATEGORY_COLORS: Record<string, string> = {
     'cat-food': '#6366f1', // Indigo
     'cat-stay': '#3b82f6', // Blue
-    'cat-travel': '#06b6d4', // Cyan
+    'cat-travel': '#db2777', // Pink — was cyan, too close to Stay's blue on the wheel
     'cat-activities': '#10b981', // Emerald
     'cat-shopping': '#f59e0b', // Amber
     'cat-misc': '#8b5cf6', // Violet
@@ -537,6 +622,34 @@ export default function App() {
         }
       }
       await addMember(nameTrimmed, finalLinkedUserId ?? undefined);
+      // Only fires for members added directly with a known account (e.g.
+      // picked from a "people you've traveled with before" suggestion) —
+      // a bare placeholder member has no linked user to notify yet, and
+      // gets covered separately once they actually join via the trip code
+      // (JoinTripScreen's own member_joined notification already covers
+      // telling the existing members about *that* case).
+      if (finalLinkedUserId && activeTripId) {
+        sendPushNotification(
+          [finalLinkedUserId],
+          activeTrip?.name || 'Trip Tracker',
+          'member_added',
+          undefined,
+          activeTripId
+        );
+
+        // Everyone else already on the trip should hear about the new
+        // member too, not just the person who added them.
+        const existingRecipients = getTripNotificationRecipients(trips, members, activeTripId, userId || '').filter(
+          (recipientId) => recipientId !== finalLinkedUserId
+        );
+        sendPushNotification(
+          existingRecipients,
+          activeTrip?.name || 'Trip Tracker',
+          'member_added_notice',
+          { memberName: nameTrimmed },
+          activeTripId
+        );
+      }
     }
     setShowMembersRequiredNotice(false);
     return { success: true };
@@ -696,8 +809,7 @@ export default function App() {
       } else {
         await addExpense(expensePayload);
       }
-      setEditingExpenseId(null);
-      setShowAddExpense(false);
+      advanceReviewQueueOrClose();
       return { success: true };
     } catch {
       return { success: false, error: 'Failed to save expense.' };
@@ -705,8 +817,21 @@ export default function App() {
   };
 
   const handleCancelExpenseForm = () => {
-    setEditingExpenseId(null);
-    setShowAddExpense(false);
+    advanceReviewQueueOrClose();
+  };
+
+  // Moves to the next expense in the affected-by-a-removed-member review
+  // queue (if one is running), or just closes the form like before.
+  const advanceReviewQueueOrClose = () => {
+    if (reviewQueue.length === 0) {
+      setEditingExpenseId(null);
+      setShowAddExpense(false);
+      return;
+    }
+    const [nextId, ...rest] = reviewQueue;
+    setReviewQueue(rest);
+    setEditingExpenseId(nextId);
+    setShowAddExpense(true);
   };
 
   const handleOpenAddExpense = () => {
@@ -715,12 +840,25 @@ export default function App() {
       setActiveTab('members');
       return;
     }
+    setReviewQueue([]);
     setEditingExpenseId(null);
     setShowAddExpense(true);
   };
 
   const handleStartEditExpense = (exp: Expense) => {
+    setReviewQueue([]);
     setEditingExpenseId(exp.id);
+    setShowAddExpense(true);
+  };
+
+  // Entry point for the "Review N affected expenses" banner — opens the
+  // first expense a removed member touched and queues the rest so save/
+  // cancel walks through them one after another.
+  const handleReviewAffectedExpenses = (expenseIds: string[]) => {
+    if (expenseIds.length === 0) return;
+    const [firstId, ...rest] = expenseIds;
+    setReviewQueue(rest);
+    setEditingExpenseId(firstId);
     setShowAddExpense(true);
   };
 
@@ -744,15 +882,25 @@ export default function App() {
     setPendingDeleteExpense(null);
   };
 
-  // Undo-delete: stage the trip, start a 2-second timer
+  // Deleting a trip takes everyone's members and expenses with it, so it
+  // gets a deliberate confirm step in front of the undo-toast staging below
+  // — the toast is a grace period for a slip, not the only safety net.
   const handleDeleteTrip = (trip: Trip) => {
-    if (tripUndoTimer) clearTimeout(tripUndoTimer);
-    setPendingDeleteTrip(trip);
-    const timer = setTimeout(() => {
-      deleteTrip(trip.id);
-      setPendingDeleteTrip(null);
-    }, UNDO_DURATION_MS);
-    setTripUndoTimer(timer);
+    setConfirmRequest({
+      title: 'Delete trip',
+      message: `Delete "${trip.name}" and all of its members and expenses? You'll have a few seconds to undo right after.`,
+      confirmLabel: 'Delete',
+      danger: true,
+      onConfirm: () => {
+        if (tripUndoTimer) clearTimeout(tripUndoTimer);
+        setPendingDeleteTrip(trip);
+        const timer = setTimeout(() => {
+          deleteTrip(trip.id);
+          setPendingDeleteTrip(null);
+        }, UNDO_DURATION_MS);
+        setTripUndoTimer(timer);
+      },
+    });
   };
 
   const handleUndoDeleteTrip = () => {
@@ -886,16 +1034,24 @@ export default function App() {
   };
 
   // Wire swipe-back gesture, hardware/OS back button, and the browser Back
-  // button to close whichever screen/modal is open, deepest first. Each
-  // pushes its own history entry only while open, so nesting order falls
-  // out of when things were opened rather than the order listed here.
+  // button to close whichever screen/modal is open, deepest first (WhatsApp LIFO navigation stack).
   useHistoryBack(!!activeTripId, () => selectTrip(null));
+  useHistoryBack(!!activeTripId && activeTab !== 'expenses', () => setActiveTab('expenses'));
   useHistoryBack(showAddTrip, handleCancelTripForm);
   useHistoryBack(showAddExpense, handleCancelExpenseForm);
   useHistoryBack(!!selectedReviewExpense, () => setSelectedReviewExpense(null));
   useHistoryBack(showShareTrip, () => setShowShareTrip(false));
   useHistoryBack(showGlobalSettings, () => setShowGlobalSettings(false));
   useHistoryBack(!!confirmRequest, () => setConfirmRequest(null));
+
+  // Escape key — the desktop equivalent of the back-gesture wiring above,
+  // for the same set of overlay modals (excludes tab/trip navigation).
+  useEscapeKey(showAddTrip, handleCancelTripForm);
+  useEscapeKey(showAddExpense, handleCancelExpenseForm);
+  useEscapeKey(!!selectedReviewExpense, () => setSelectedReviewExpense(null));
+  useEscapeKey(showShareTrip, () => setShowShareTrip(false));
+  useEscapeKey(showGlobalSettings, () => setShowGlobalSettings(false));
+  useEscapeKey(!!confirmRequest, () => setConfirmRequest(null));
 
   // Loading view
   if (!initialized) {
@@ -912,11 +1068,6 @@ export default function App() {
             animation: 'spin 1s linear infinite',
             margin: '0 auto'
           }} />
-          <style>{`
-            @keyframes spin {
-              to { transform: rotate(360deg); }
-            }
-          `}</style>
         </div>
       </div>
     );
@@ -992,7 +1143,7 @@ export default function App() {
   }
 
   return (
-    <div className="app-container">
+    <div className={`app-container ${isBlindMode ? 'blind-mode-active' : ''}`}>
       {/* Superadmin Traveler Preview Top Floating Banner */}
       {isSuperadmin && isTravelerPreview && (
         <div
@@ -1075,15 +1226,23 @@ export default function App() {
         />
       ) : (
         /* Screen 2: Active Trip Dashboard */
-        <div className="fade-in" style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, overflow: 'hidden' }}>
-          <header className="app-header">
+        <div className="trip-dashboard-container fade-in">
+          <header className={`app-header trip-dashboard-header ${isHeaderScrolled ? 'is-scrolled' : ''}`}>
             <div className="app-header-top">
               <div className="app-title-group">
                 <span className="app-eyebrow">
                   <IconCalendar size={12} className="icon-sm" />
-                  {formatDateRange(activeTrip?.startDate || '', activeTrip?.endDate || '')} · {activeTrip?.baseCurrency}
+                  {formatDateRange(activeTrip?.startDate || '', activeTrip?.endDate || '')}
                 </span>
-                <h2 className="app-logo" style={{ fontSize: '24px', color: '#F2ECDC' }}>{activeTrip?.name}</h2>
+                <div className="app-title-row">
+                  <FitHeading
+                    text={activeTrip?.name || ''}
+                    className="app-logo"
+                    style={{ color: '#F2ECDC' }}
+                    maxFontSize={22}
+                    minFontSize={14}
+                  />
+                </div>
               </div>
               <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexShrink: 0 }}>
                 {isAdmin && (
@@ -1098,13 +1257,26 @@ export default function App() {
                   </button>
                 )}
                 <button
+                  type="button"
                   className="secondary-btn"
-                  style={{ padding: '7px 12px', fontSize: '12px', color: '#F2ECDC', borderColor: 'rgba(242,236,220,0.28)', background: 'rgba(242,236,220,0.06)' }}
-                  onClick={() => setShowShareTrip(true)}
+                  style={{
+                    padding: '7px 8px',
+                    color: isBlindMode ? '#00BFA5' : '#F2ECDC',
+                    borderColor: isBlindMode ? '#00BFA5' : 'rgba(242,236,220,0.28)',
+                    background: isBlindMode ? 'rgba(0,191,165,0.18)' : 'rgba(242,236,220,0.06)'
+                  }}
+                  onClick={() => {
+                    triggerHaptic('light');
+                    toggleBlindMode();
+                  }}
+                  aria-label={isBlindMode ? 'Disable Blind Mode' : 'Enable Blind Mode (Hide amounts)'}
+                  title={isBlindMode ? 'Disable Blind Mode (Show amounts)' : 'Enable Blind Mode (Mask sensitive amounts)'}
                 >
-                  <IconShare size={14} className="icon-sm" /> Share
+                  {isBlindMode ? <IconEyeOff size={15} className="icon-sm" /> : <IconEye size={15} className="icon-sm" />}
                 </button>
+                <NotificationsBellButton />
                 <button
+                  data-action="trips-back"
                   className="secondary-btn"
                   style={{ padding: '7px 12px', fontSize: '12px', color: '#F2ECDC', borderColor: 'rgba(242,236,220,0.28)', background: 'rgba(242,236,220,0.06)' }}
                   onClick={() => selectTrip(null)}
@@ -1120,6 +1292,7 @@ export default function App() {
               </div>
               <button
                 type="button"
+                data-action="sync"
                 className="sync-header-pill"
                 onClick={handleSyncClick}
                 disabled={syncStatus === 'offline'}
@@ -1145,35 +1318,14 @@ export default function App() {
             {/* View Switching Tab Content */}
             <div className="tab-pane" style={{ display: activeTab === 'expenses' ? 'block' : 'none' }}>
               <div className="fade-in">
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                  <h3 style={{ fontSize: '18px' }}>Expenses</h3>
-                  <button
-                    className="gradient-btn"
-                    style={{ padding: '8px 16px', fontSize: '14px' }}
-                    onClick={handleOpenAddExpense}
-                  >
-                    + Add Expense
-                  </button>
-                </div>
-
-                {showAddExpense && (
-                  <ExpenseForm
-                    trip={activeTrip}
-                    visibleMembers={visibleMembers}
-                    visibleTripGroups={visibleTripGroups}
-                    categories={categories}
-                    editingExpense={editingExpense}
-                    onSave={handleSaveExpense}
-                    onCancel={handleCancelExpenseForm}
-                  />
-                )}
-
                 <ExpenseList
                   trip={activeTrip}
                   members={members}
                   categories={categories}
                   activeTripMembers={activeTripMembers}
                   activeTripExpenseCount={activeTripExpenses.length}
+                  activeTripExpenses={activeTripExpenses}
+                  onReviewAffected={handleReviewAffectedExpenses}
                   filteredExpenses={filteredExpenses}
                   pendingDeleteId={pendingDeleteExpense?.id}
                   hasActiveFilters={hasActiveExpenseFilters}
@@ -1193,6 +1345,7 @@ export default function App() {
                   onDelete={handleDeleteExpense}
                   isAdmin={isAdmin}
                   userId={userId}
+                  myMemberId={myMemberId}
                 />
 
                 {activeTrip && visibleMembers.length > 0 && (
@@ -1215,6 +1368,7 @@ export default function App() {
             </div>
 
             <div className="tab-pane" style={{ display: activeTab === 'members' ? 'block' : 'none' }}>
+              <div className="fade-in">
               <MembersGroupsTab
                 showMembersRequiredNotice={showMembersRequiredNotice}
                 dismissMembersRequiredNotice={() => setShowMembersRequiredNotice(false)}
@@ -1236,9 +1390,11 @@ export default function App() {
                 onSetMemberAdminRole={setMemberAdminRole}
                 currentUserId={userId}
               />
+              </div>
             </div>
 
             <div className="tab-pane" style={{ display: activeTab === 'analytics' ? 'block' : 'none' }}>
+              <div className="fade-in">
               <AnalyticsTab
                 trip={activeTrip}
                 totalSpent={totalSpent}
@@ -1252,9 +1408,11 @@ export default function App() {
                 expenses={activeTripExpenses}
                 categories={categories}
               />
+              </div>
             </div>
 
             <div className="tab-pane" style={{ display: activeTab === 'settings' ? 'block' : 'none' }}>
+              <div className="fade-in">
               <SettingsTab
                 categories={categories}
                 activeTripExpenses={activeTripExpenses}
@@ -1281,12 +1439,45 @@ export default function App() {
                 pwaInstallable={!!deferredPrompt}
                 onInstallApp={handleInstallApp}
                 onOpenSuperadminPortal={() => setIsTravelerPreview(false)}
+                onRequestConfirm={setConfirmRequest}
+                onOpenShareTrip={() => setShowShareTrip(true)}
               />
+              </div>
             </div>
+
+            {activeTab === 'expenses' && (
+              <button
+                type="button"
+                className="fab-add-expense"
+                onClick={handleOpenAddExpense}
+                aria-label="Add Expense"
+                title="Add Expense"
+              >
+                <IconPlus size={24} />
+              </button>
+            )}
           </main>
 
           <NavTabs activeTab={activeTab} setActiveTab={setActiveTab} />
         </div>
+      )}
+
+      {showAddExpense && (
+        <ExpenseForm
+          // The review queue swaps editingExpenseId while the form stays
+          // mounted (same conditional render slot) — without a key tied to
+          // it, ExpenseForm's fields are seeded from editingExpense only
+          // once via useState initializers, so they'd keep showing the
+          // previous queue item's data instead of resetting for the next one.
+          key={editingExpenseId || 'new'}
+          trip={activeTrip}
+          visibleMembers={visibleMembers}
+          visibleTripGroups={visibleTripGroups}
+          categories={categories}
+          editingExpense={editingExpense}
+          onSave={handleSaveExpense}
+          onCancel={handleCancelExpenseForm}
+        />
       )}
 
       {showShareTrip && activeTrip && (
@@ -1331,6 +1522,7 @@ export default function App() {
           onSignOut={signOut}
           pwaInstallable={!!deferredPrompt}
           onInstallApp={handleInstallApp}
+          onRequestConfirm={setConfirmRequest}
         />
       )}
 
@@ -1341,11 +1533,19 @@ export default function App() {
         onUndoDeleteTrip={handleUndoDeleteTrip}
         pendingDeleteGroup={pendingDeleteGroup}
         onUndoDeleteGroup={handleUndoDeleteGroup}
+        durationMs={UNDO_DURATION_MS}
       />
 
       {confirmRequest && (
         <ConfirmDialog request={confirmRequest} onCancel={() => setConfirmRequest(null)} />
       )}
+
+      {/* Rendered unconditionally regardless of which screen is active
+          (not nested in the web-only header) so it opens the same way on
+          native too, reached via the "Notifications" row in Settings
+          instead of the header bell button there. */}
+      <NotificationsPanel onRequestConfirm={setConfirmRequest} />
+      <InAppNotificationBanner />
     </div>
   );
 }

@@ -1,9 +1,14 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import type { CSSProperties } from 'react';
 import type { Category, Expense, Member, Trip } from '../types';
-import { IconSearch, IconEdit, IconTrash, IconAlertCircle } from './Icons';
+import { IconSearch, IconEdit, IconTrash, IconAlertCircle, IconClose, IconCalendar } from './Icons';
 import { SwipeableRow } from './SwipeableRow';
 import { CategoryIcon } from './CategoryIcon';
 import { getCurrencySymbol } from '../utils/currency';
+import { initial } from '../utils/initials';
+import { avatarColorForName } from '../utils/avatarColor';
+import { usePrivacyStore, formatMaskedAmount } from '../store/privacyStore';
+import { triggerHaptic } from '../utils/haptics';
 
 // Swipe-to-delete is a supplement to the explicit trash button — skip
 // wrapping the row in it at all when the viewer isn't allowed to delete.
@@ -12,12 +17,61 @@ function ConditionalSwipe({ enabled, onDelete, children }: { enabled: boolean; o
   return <SwipeableRow onDelete={onDelete}>{children}</SwipeableRow>;
 }
 
+// Photo when the member has one (from their linked Google account),
+// initials otherwise — same fallback pattern used for member avatars
+// elsewhere in the app (see MembersGroupsTab's .lt-initials).
+function ExpenseAvatar({ member, size = 22, muted = false }: { member: Member | undefined; size?: number; muted?: boolean }) {
+  const label = member?.name || 'Removed member';
+  const commonStyle: CSSProperties = {
+    width: size,
+    height: size,
+    borderRadius: '50%',
+    flexShrink: 0,
+    border: '1.5px solid var(--bg-surface)',
+    opacity: muted ? 0.55 : 1,
+  };
+  if (member?.avatarUrl) {
+    return (
+      <img
+        src={member.avatarUrl}
+        alt=""
+        title={label}
+        referrerPolicy="no-referrer"
+        loading="lazy"
+        width={size}
+        height={size}
+        style={{ ...commonStyle, objectFit: 'cover' }}
+      />
+    );
+  }
+  return (
+    <div
+      title={label}
+      style={{
+        ...commonStyle,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: member ? avatarColorForName(label) : 'var(--text-muted)',
+        color: '#FFFDF6',
+        fontFamily: 'var(--font-family-title)',
+        fontWeight: 700,
+        fontSize: Math.round(size * 0.42),
+      }}
+    >
+      {member ? initial(label) : '?'}
+    </div>
+  );
+}
+
 type Props = {
   trip: Trip | undefined;
   members: Record<string, Member>;
   categories: Category[];
   activeTripMembers: Member[];
   activeTripExpenseCount: number;
+  activeTripExpenses: Expense[];
+  onReviewAffected: (expenseIds: string[]) => void;
   filteredExpenses: Expense[];
   pendingDeleteId?: string;
   hasActiveFilters: boolean;
@@ -40,6 +94,7 @@ type Props = {
 
   isAdmin: boolean;
   userId: string | null;
+  myMemberId?: string | null;
 };
 
 export function ExpenseList({
@@ -48,6 +103,8 @@ export function ExpenseList({
   categories,
   activeTripMembers,
   activeTripExpenseCount,
+  activeTripExpenses,
+  onReviewAffected,
   filteredExpenses,
   pendingDeleteId,
   hasActiveFilters,
@@ -67,8 +124,151 @@ export function ExpenseList({
   onDelete,
   isAdmin,
   userId,
+  myMemberId,
 }: Props) {
   const currencySymbol = getCurrencySymbol(trip?.baseCurrency || '');
+  const isBlindMode = usePrivacyStore((s) => s.isBlindMode);
+
+  const filtersRef = useRef<HTMLDivElement>(null);
+  const [revealOnScroll, setRevealOnScroll] = useState(false);
+  const [searchFocused, setSearchFocused] = useState(false);
+  const [showDateFilter, setShowDateFilter] = useState(false);
+  const isAllActive = !filterCategory && !filterMember && !filterDateFrom && !filterDateTo;
+  const PULL_REVEAL_THRESHOLD = 36;
+
+  // Stable state is hidden. Chips only reveal via an actual pull-down
+  // gesture starting from the very top of the list (like Mail's
+  // pull-to-reveal search bar) — not from scroll position or direction
+  // alone, which kept re-showing on ordinary scroll jitter/momentum.
+  // Scrolling away from the top always collapses them again.
+  useEffect(() => {
+    // Scroll events on an overflow:auto element don't bubble, so a listener
+    // on an ancestor only sees them via the capture phase — mirroring the
+    // header-collapse scroll listener in nativeShell.ts, which uses this
+    // same document.body capture-phase pattern for the same reason.
+    const handleScroll = (e: Event) => {
+      const target = e.target;
+      if (!(target instanceof HTMLElement) || !target.classList.contains('tab-pane')) return;
+      if (filtersRef.current && !target.contains(filtersRef.current)) return;
+      if (target.scrollTop > 15) setRevealOnScroll(false);
+    };
+
+    const atTopOfList = () => {
+      // All tabs stay mounted (App.tsx toggles them via display:none, not
+      // unmount), so without this check the Expenses tab-pane's scrollTop
+      // — 0 whenever that tab just hasn't been scrolled, regardless of
+      // which tab is actually on screen — would read as "at top" even
+      // while a completely different tab is visible, making the
+      // preventDefault() below hijack scroll gestures on Members/
+      // Analytics/Settings too.
+      const scrollParent = filtersRef.current?.closest('.tab-pane') as HTMLElement | null;
+      if (!scrollParent || scrollParent.style.display === 'none') return false;
+      return scrollParent.scrollTop <= 0;
+    };
+
+    let pullStartX: number | null = null;
+    let pullStartY: number | null = null;
+    const startPull = (x: number, y: number) => {
+      const atTop = atTopOfList();
+      pullStartX = atTop ? x : null;
+      pullStartY = atTop ? y : null;
+    };
+    const trackPull = (y: number) => {
+      if (pullStartY === null) return;
+      if (!atTopOfList()) {
+        pullStartY = null;
+        return;
+      }
+      if (y - pullStartY > PULL_REVEAL_THRESHOLD) setRevealOnScroll(true);
+    };
+    const endPull = () => {
+      pullStartX = null;
+      pullStartY = null;
+    };
+
+    // Pointer events should cover both touch and mouse drags, but touch
+    // simulation in some browser devtools doesn't dispatch them reliably —
+    // native touchstart/touchmove/touchend (what actually fires on a real
+    // device) is tracked in parallel as a redundant, more direct path.
+    const handlePointerDown = (e: PointerEvent) => startPull(e.clientX, e.clientY);
+    const handlePointerMove = (e: PointerEvent) => trackPull(e.clientY);
+    const handleTouchStart = (e: TouchEvent) => {
+      const x = e.touches[0]?.clientX;
+      const y = e.touches[0]?.clientY;
+      if (x !== undefined && y !== undefined) startPull(x, y);
+    };
+    // Must be a non-passive listener: at scrollTop 0, dragging down is
+    // exactly the gesture iOS's own rubber-band/overscroll recognizer also
+    // wants, and once it claims the touch sequence, no further touchmove
+    // events reach this listener at all — matching the observed "works on
+    // the second attempt" (the first drag gets lost to native scroll
+    // takeover). preventDefault() while a qualifying pull is in progress
+    // keeps the whole gesture in JS, the same way WhatsApp's own
+    // pull-to-reveal search bar holds onto it.
+    //
+    // Only claims the gesture once it's clearly more vertical than
+    // horizontal — otherwise a horizontal drag that starts anywhere near
+    // the top of the list (e.g. scrolling the filter chip row, which sits
+    // right there) had its native horizontal scroll silently swallowed by
+    // this preventDefault() as soon as y so much as ticked sideways.
+    const handleTouchMove = (e: TouchEvent) => {
+      const x = e.touches[0]?.clientX;
+      const y = e.touches[0]?.clientY;
+      if (x === undefined || y === undefined) return;
+      if (
+        pullStartX !== null &&
+        pullStartY !== null &&
+        atTopOfList() &&
+        y >= pullStartY &&
+        Math.abs(y - pullStartY) > Math.abs(x - pullStartX)
+      ) {
+        e.preventDefault();
+      }
+      trackPull(y);
+    };
+
+    // Trackpad/mouse wheel scrolling never fires pointer/touch events at
+    // all, so the drag gesture above is untestable (and unusable) with a
+    // mouse — this covers the same intent for desktop: scrolling up while
+    // already at the top is the direct equivalent of a pull-down gesture
+    // there.
+    let wheelPull = 0;
+    const handleWheel = (e: WheelEvent) => {
+      if (!atTopOfList()) {
+        wheelPull = 0;
+        return;
+      }
+      if (e.deltaY < 0) {
+        wheelPull += -e.deltaY;
+        if (wheelPull > PULL_REVEAL_THRESHOLD) setRevealOnScroll(true);
+      } else {
+        wheelPull = 0;
+      }
+    };
+
+    document.body.addEventListener('scroll', handleScroll, true);
+    document.body.addEventListener('pointerdown', handlePointerDown, { passive: true });
+    document.body.addEventListener('pointermove', handlePointerMove, { passive: true });
+    document.body.addEventListener('pointerup', endPull, { passive: true });
+    document.body.addEventListener('pointercancel', endPull, { passive: true });
+    document.body.addEventListener('touchstart', handleTouchStart, { passive: true });
+    document.body.addEventListener('touchmove', handleTouchMove, { passive: false });
+    document.body.addEventListener('touchend', endPull, { passive: true });
+    document.body.addEventListener('touchcancel', endPull, { passive: true });
+    document.body.addEventListener('wheel', handleWheel, { passive: true });
+    return () => {
+      document.body.removeEventListener('scroll', handleScroll, true);
+      document.body.removeEventListener('pointerdown', handlePointerDown);
+      document.body.removeEventListener('pointermove', handlePointerMove);
+      document.body.removeEventListener('pointerup', endPull);
+      document.body.removeEventListener('pointercancel', endPull);
+      document.body.removeEventListener('touchstart', handleTouchStart);
+      document.body.removeEventListener('touchmove', handleTouchMove);
+      document.body.removeEventListener('touchend', endPull);
+      document.body.removeEventListener('touchcancel', endPull);
+      document.body.removeEventListener('wheel', handleWheel);
+    };
+  }, []);
 
   // 1. Debounce Search Input
   const [localSearch, setLocalSearch] = useState(search);
@@ -83,6 +283,8 @@ export function ExpenseList({
     return () => clearTimeout(timer);
   }, [localSearch, setSearch]);
 
+  const shouldShowChips = revealOnScroll || searchFocused || hasActiveFilters || !!localSearch || showDateFilter;
+
   // 2. Pagination State for virtualization
   const [visibleCount, setVisibleCount] = useState(50);
   
@@ -92,6 +294,20 @@ export function ExpenseList({
   }, [trip?.id, filterCategory, filterMember, filterDateFrom, filterDateTo, search]);
 
   const displayedExpenses = filteredExpenses.slice(0, visibleCount);
+
+  // Expenses whose payer and/or split still reference a member who was
+  // later removed from the trip — each one already gets its own inline
+  // warning below, this just offers a way to work through all of them
+  // instead of hunting each one down individually.
+  const affectedExpenseIds = trip
+    ? activeTripExpenses
+        .filter(
+          (e) =>
+            !trip.memberIds.includes(e.paidBy) ||
+            e.splitMemberIds.some((id) => !trip.memberIds.includes(id))
+        )
+        .map((e) => e.id)
+    : [];
 
   return (
     <>
@@ -115,61 +331,173 @@ export function ExpenseList({
         </div>
       )}
 
+      {affectedExpenseIds.length > 1 && (
+        <button
+          type="button"
+          className="glass-card expense-review-banner"
+          onClick={() => onReviewAffected(affectedExpenseIds)}
+        >
+          <IconAlertCircle size={16} className="icon-sm" />
+          <span className="expense-review-banner-text">
+            {affectedExpenseIds.length} expenses need review after a member was removed
+          </span>
+          <span className="expense-review-banner-cta">Review them →</span>
+        </button>
+      )}
+
       {/* Search & Filters */}
       {activeTripExpenseCount > 0 && (
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '16px' }}>
-          <div className="input-icon-wrap" style={{ flex: '2 1 160px' }}>
-            <IconSearch size={16} className="icon-sm" />
-            <input
-              type="text"
-              className="input-field"
-              placeholder="Search expenses..."
-              value={localSearch}
-              onChange={(e) => setLocalSearch(e.target.value)}
-            />
+        <div ref={filtersRef} className="expense-filters">
+          <div className="expense-search-row">
+            <div className="input-icon-wrap expense-search-wrap">
+              <IconSearch size={16} className="icon-sm" />
+              <input
+                type="text"
+                className="input-field expense-search-input"
+                placeholder="Search expenses by title or note..."
+                value={localSearch}
+                onFocus={() => setSearchFocused(true)}
+                onBlur={() => setSearchFocused(false)}
+                onChange={(e) => setLocalSearch(e.target.value)}
+              />
+              {localSearch && (
+                <button
+                  type="button"
+                  className="search-clear-btn"
+                  onClick={() => {
+                    setLocalSearch('');
+                    setSearch('');
+                  }}
+                  aria-label="Clear search"
+                  title="Clear search"
+                >
+                  <IconClose size={14} />
+                </button>
+              )}
+            </div>
           </div>
-          <select
-            className="input-field select-field"
-            style={{ flex: '1 1 130px' }}
-            value={filterCategory}
-            onChange={(e) => setFilterCategory(e.target.value)}
-          >
-            <option value="">All Categories</option>
-            {categories.map((c) => (
-              <option key={c.id} value={c.id}>{c.icon} {c.name}</option>
-            ))}
-          </select>
-          <select
-            className="input-field select-field"
-            style={{ flex: '1 1 130px' }}
-            value={filterMember}
-            onChange={(e) => setFilterMember(e.target.value)}
-          >
-            <option value="">All Members</option>
-            {activeTripMembers.map((m) => (
-              <option key={m.id} value={m.id}>{m.name}</option>
-            ))}
-          </select>
-          <input
-            type="date"
-            className="input-field"
-            style={{ flex: '1 1 130px' }}
-            value={filterDateFrom}
-            onChange={(e) => setFilterDateFrom(e.target.value)}
-            aria-label="From date"
-          />
-          <input
-            type="date"
-            className="input-field"
-            style={{ flex: '1 1 130px' }}
-            value={filterDateTo}
-            onChange={(e) => setFilterDateTo(e.target.value)}
-            aria-label="To date"
-          />
-          {hasActiveFilters && (
-            <button type="button" className="secondary-btn" onClick={onClearFilters}>
-              Clear
+
+          {/* WhatsApp-style horizontal quick filter pills - revealed on scroll/active */}
+          <div className={`filter-chips-collapse ${shouldShowChips ? 'expanded' : ''}`}>
+            <div className="filter-chips-track" role="region" aria-label="Quick filters">
+            <button
+              type="button"
+              className={`filter-chip ${isAllActive ? 'active' : ''}`}
+              onClick={onClearFilters}
+            >
+              All
             </button>
+
+            {myMemberId && (
+              <button
+                type="button"
+                className={`filter-chip ${filterMember === myMemberId ? 'active' : ''}`}
+                onClick={() => setFilterMember(filterMember === myMemberId ? '' : myMemberId)}
+              >
+                👤 Mine
+              </button>
+            )}
+
+            {/* Date filter chip */}
+            <button
+              type="button"
+              className={`filter-chip ${(filterDateFrom || filterDateTo || showDateFilter) ? 'active' : ''}`}
+              onClick={() => setShowDateFilter((v) => !v)}
+              title="Filter by date range"
+            >
+              <IconCalendar size={13} />
+              <span>
+                {filterDateFrom || filterDateTo
+                  ? `${filterDateFrom || 'Start'} – ${filterDateTo || 'End'}`
+                  : 'Dates'}
+              </span>
+            </button>
+
+            {/* Category chips */}
+            {categories.map((c) => {
+              const isSelected = filterCategory === c.id;
+              return (
+                <button
+                  key={c.id}
+                  type="button"
+                  className={`filter-chip ${isSelected ? 'active' : ''}`}
+                  onClick={() => setFilterCategory(isSelected ? '' : c.id)}
+                >
+                  <CategoryIcon categoryId={c.id} fallbackEmoji={c.icon} size={13} />
+                  <span>{c.name}</span>
+                </button>
+              );
+            })}
+
+            {/* Member chips (when multiple members exist, exclude myMemberId since that's already in 'Mine') */}
+            {activeTripMembers.length > 1 &&
+              activeTripMembers
+                .filter((m) => m.id !== myMemberId)
+                .map((m) => {
+                  const isSelected = filterMember === m.id;
+                  return (
+                    <button
+                      key={m.id}
+                      type="button"
+                      className={`filter-chip ${isSelected ? 'active' : ''}`}
+                      onClick={() => setFilterMember(isSelected ? '' : m.id)}
+                    >
+                      <ExpenseAvatar member={m} size={15} />
+                      <span>{m.name}</span>
+                    </button>
+                  );
+                })}
+
+            {hasActiveFilters && (
+              <button
+                type="button"
+                className="filter-chip filter-chip-clear"
+                onClick={() => {
+                  onClearFilters();
+                  setShowDateFilter(false);
+                }}
+                title="Clear all active filters"
+              >
+                <IconClose size={12} />
+                <span>Clear</span>
+              </button>
+            )}
+          </div>
+        </div>
+
+          {/* Collapsible Date Range Sub-panel */}
+          {showDateFilter && (
+            <div className="filter-date-popup fade-in">
+              <div className="expense-date-range">
+                <input
+                  type="date"
+                  className="input-field"
+                  value={filterDateFrom}
+                  onChange={(e) => setFilterDateFrom(e.target.value)}
+                  aria-label="From date"
+                />
+                <span className="expense-date-sep">–</span>
+                <input
+                  type="date"
+                  className="input-field"
+                  value={filterDateTo}
+                  onChange={(e) => setFilterDateTo(e.target.value)}
+                  aria-label="To date"
+                />
+              </div>
+              {(filterDateFrom || filterDateTo) && (
+                <button
+                  type="button"
+                  className="filter-clear-link"
+                  onClick={() => {
+                    setFilterDateFrom('');
+                    setFilterDateTo('');
+                  }}
+                >
+                  Reset dates
+                </button>
+              )}
+            </div>
           )}
         </div>
       )}
@@ -198,13 +526,19 @@ export function ExpenseList({
             const isPayerDeleted = trip ? !trip.memberIds.includes(exp.paidBy) : false;
             const hasDeletedParticipants = trip ? exp.splitMemberIds.some((id) => !trip.memberIds.includes(id)) : false;
             const needsReview = isPayerDeleted || hasDeletedParticipants;
-            const payerName = members[exp.paidBy]?.name || 'Unknown (deleted)';
+            const payerMember = members[exp.paidBy];
             const cat = categories.find((c) => c.id === exp.category);
-            const splitNames = exp.splitMemberIds.map((id) => {
-              const m = members[id];
-              if (!m || (trip && !trip.memberIds.includes(id))) return '[Deleted Member]';
-              return m.name;
-            }).join(', ');
+            const splitMembers = exp.splitMemberIds.map((id) => ({ id, member: members[id] }));
+            const visibleSplitMembers = splitMembers.slice(0, 4);
+            const overflowSplitCount = splitMembers.length - visibleSplitMembers.length;
+
+            const expenseDate = new Date(`${exp.date}T00:00:00`);
+            const formattedDate = Number.isNaN(expenseDate.getTime())
+              ? exp.date
+              : expenseDate.toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
+            const formattedTime = exp.createdAt
+              ? new Date(exp.createdAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
+              : null;
 
             const reviewMessage = isPayerDeleted && hasDeletedParticipants
               ? 'Payer and a split member were removed — reassign the payer and update the split.'
@@ -226,65 +560,84 @@ export function ExpenseList({
                 <ConditionalSwipe enabled={canManage} onDelete={() => onDelete(exp)}>
                   <div
                     style={{
-                      display: 'flex', flexDirection: 'column', gap: '8px',
-                      padding: '14px 16px',
+                      display: 'flex', flexDirection: 'column', gap: '6px',
+                      padding: '12px 14px',
                       borderLeft: needsReview ? '3px solid var(--color-warning)' : 'none',
                       background: needsReview ? 'rgba(185, 138, 62, 0.07)' : undefined,
                     }}
                   >
-                    <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', rowGap: '10px' }}>
+                    <div
+                      style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}
+                      onClick={() => { triggerHaptic('light'); onReview(exp); }}
+                    >
+                      <CategoryIcon categoryId={cat?.id || ''} fallbackEmoji={cat?.icon || '🏷️'} size={15} />
+                      <h4 style={{ flex: 1, minWidth: 0, fontSize: '15px', lineHeight: 1.3, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{exp.title}</h4>
+                      <span className="money privacy-blur" style={{ fontSize: '15px', fontWeight: '600', color: 'var(--text-primary)', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                        {formatMaskedAmount(exp.amount.toFixed(2), currencySymbol, isBlindMode)}
+                      </span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
                       <div
-                        style={{ display: 'flex', gap: '12px', alignItems: 'center', cursor: 'pointer', flex: '1 1 200px', minWidth: 0 }}
-                        onClick={() => onReview(exp)}
+                        style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', minWidth: 0 }}
+                        onClick={() => { triggerHaptic('light'); onReview(exp); }}
+                        title={`Paid by ${payerMember?.name || 'a removed member'}`}
                       >
-                        <div style={{ flexShrink: 0, width: '38px', height: '38px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-surface-hover)', borderRadius: '50%', color: 'var(--primary-accent)' }}>
-                          <CategoryIcon categoryId={cat?.id || ''} fallbackEmoji={cat?.icon || '🏷️'} size={19} />
+                        <ExpenseAvatar member={payerMember} size={22} muted={isPayerDeleted} />
+                        <span style={{ color: 'var(--text-muted)', fontSize: '12px', flexShrink: 0 }}>→</span>
+                        <div style={{ display: 'flex', flexShrink: 0 }}>
+                          {visibleSplitMembers.map(({ id, member }, splitIdx) => (
+                            <div key={id} style={{ marginLeft: splitIdx === 0 ? 0 : '-8px' }}>
+                              <ExpenseAvatar member={member} size={20} muted={!member} />
+                            </div>
+                          ))}
+                          {overflowSplitCount > 0 && (
+                            <div
+                              style={{
+                                marginLeft: '-8px', width: '20px', height: '20px', borderRadius: '50%',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                background: 'var(--bg-surface-hover)', color: 'var(--text-secondary)',
+                                fontSize: '9.5px', fontWeight: 700, fontFamily: 'var(--font-family-mono)',
+                                border: '1.5px solid var(--bg-surface)', flexShrink: 0,
+                              }}
+                            >
+                              +{overflowSplitCount}
+                            </div>
+                          )}
                         </div>
-                        <div style={{ minWidth: 0, display: 'flex', flexDirection: 'column', gap: '3px' }}>
-                          <h4 style={{ fontSize: '15px', lineHeight: 1.3, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{exp.title}</h4>
-                          <p style={{ fontSize: '13px', lineHeight: 1.4, fontWeight: 500, color: 'var(--text-secondary)' }}>
-                            <span style={isPayerDeleted ? { color: 'var(--color-warning)', fontWeight: 600 } : undefined}>
-                              {payerName}
-                            </span>
-                            <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}> · {exp.date}</span>
-                            {exp.location?.placeName ? (
-                              <span style={{ color: '#00BFA5', fontWeight: 500, fontSize: '11.5px' }}> · 📍 {exp.location.placeName}</span>
-                            ) : null}
-                          </p>
-                          <p style={{ fontSize: '12px', lineHeight: 1.4, fontWeight: 400, color: 'var(--text-muted)', maxWidth: '240px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={splitNames}>
-                            with {splitNames}
-                          </p>
-                        </div>
+                        {exp.location?.placeName && (
+                          <span style={{ color: '#00BFA5', fontSize: '12px', flexShrink: 0 }} title={exp.location.placeName}>📍</span>
+                        )}
                       </div>
-                      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'flex-end', gap: '10px', flex: '0 1 auto' }}>
-                        <span className="money" style={{ fontSize: '15.5px', fontWeight: '600', color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
-                          {currencySymbol} {exp.amount.toFixed(2)}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
+                        <span style={{ fontSize: '11.5px', lineHeight: 1.4, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
+                          {formattedDate}{formattedTime ? ` · ${formattedTime}` : ''}
                         </span>
                         {canManage && (
-                          <div style={{ display: 'flex', gap: '6px' }}>
+                          // Its own gap, distinct from the date-to-buttons
+                          // gap above — edit and delete sitting right next
+                          // to each other need more separation than that,
+                          // since one is destructive and a mis-tap there
+                          // isn't recoverable the way a mis-tap elsewhere
+                          // would be.
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0 }}>
                             {!exp.title.startsWith('Settlement:') && (
                               <button
-                                className="secondary-btn"
-                                style={{
-                                  padding: '6px 8px',
-                                  color: needsReview ? 'var(--color-warning)' : undefined,
-                                  borderColor: needsReview ? 'rgba(185,138,62,0.35)' : undefined,
-                                }}
+                                className="row-icon-btn"
+                                style={needsReview ? { color: 'var(--color-warning)' } : undefined}
                                 aria-label={needsReview ? 'Review expense' : 'Edit expense'}
                                 title={needsReview ? 'Review' : 'Edit'}
-                                onClick={(e) => { e.stopPropagation(); onEdit(exp); }}
+                                onClick={(e) => { e.stopPropagation(); triggerHaptic('light'); onEdit(exp); }}
                               >
-                                {needsReview ? <IconAlertCircle size={14} className="icon-sm" /> : <IconEdit size={14} className="icon-sm" />}
+                                {needsReview ? <IconAlertCircle size={15} className="icon-sm" /> : <IconEdit size={15} className="icon-sm" />}
                               </button>
                             )}
                             <button
-                              className="secondary-btn"
-                              style={{ padding: '6px 8px', color: 'var(--color-danger)', borderColor: 'rgba(184,69,46,0.25)' }}
+                              className="row-icon-btn row-icon-btn-danger"
                               aria-label="Delete expense"
                               title="Delete"
-                              onClick={(e) => { e.stopPropagation(); onDelete(exp); }}
+                              onClick={(e) => { e.stopPropagation(); triggerHaptic('warning'); onDelete(exp); }}
                             >
-                              <IconTrash size={14} className="icon-sm" />
+                              <IconTrash size={15} className="icon-sm" />
                             </button>
                           </div>
                         )}
