@@ -118,11 +118,11 @@ export function AdminAuditPage({ logs, trips, users, onLogsChanged }: Props) {
               <tbody>
                 {filteredLogs.map((l) => (
                   <tr key={l.id}>
-                    <td style={{ whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }}>{new Date(l.createdAt).toLocaleString()}</td>
-                    <td>{ACTION_LABELS[l.action] || l.action}</td>
-                    <td>{(l.actorUserId && userById.get(l.actorUserId)) || l.actorUserId || '—'}</td>
-                    <td>{(l.tripId && tripNameById.get(l.tripId)) || (l.tripId ? l.tripId : '—')}</td>
-                    <td style={{ fontFamily: 'var(--mono)', fontSize: '11px', color: 'var(--text-tertiary)', maxWidth: '260px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <td data-label="Time" style={{ whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }}>{new Date(l.createdAt).toLocaleString()}</td>
+                    <td data-label="Action">{ACTION_LABELS[l.action] || l.action}</td>
+                    <td data-label="Actor">{(l.actorUserId && userById.get(l.actorUserId)) || l.actorUserId || '—'}</td>
+                    <td data-label="Trip">{(l.tripId && tripNameById.get(l.tripId)) || (l.tripId ? l.tripId : '—')}</td>
+                    <td data-label="Details" style={{ fontFamily: 'var(--mono)', fontSize: '11px', color: 'var(--text-tertiary)', maxWidth: '260px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {l.details ? JSON.stringify(l.details) : ''}
                     </td>
                   </tr>

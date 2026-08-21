@@ -105,6 +105,23 @@
 .ops-deck ::selection { background: var(--amber-dim); color: var(--amber); }
 .ops-deck button { font-family: inherit; }
 
+/* ---------- Shell (outer frame + layout region + scroll panel — previously
+   inline styles in AdminPortalLayout.tsx, which meant they couldn't respond
+   to media queries at all) ---------- */
+.ops-shell {
+  max-width: 1180px;
+  margin: 0 auto;
+  height: 100dvh;
+  max-height: 100dvh;
+  padding: 16px 20px 0 20px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+@media (max-width: 640px) {
+  .ops-shell { padding: 10px 12px 0 12px; }
+}
+
 /* ---------- Status bar ---------- */
 .ops-statusbar {
   display: flex;
@@ -112,6 +129,18 @@
   justify-content: space-between;
   gap: 16px;
   flex-wrap: wrap;
+  padding: 14px 20px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  margin-bottom: 18px;
+  background: linear-gradient(180deg, var(--bg-panel-raised), var(--bg-panel));
+}
+@media (max-width: 640px) {
+  .ops-statusbar { padding: 10px 14px; margin-bottom: 12px; }
+}
+.ops-lamp-text { white-space: nowrap; }
+@media (max-width: 480px) {
+  .ops-lamp-text { display: none; }
 }
 
 .ops-callsign { display: flex; align-items: center; gap: 14px; }
@@ -188,10 +217,13 @@
 .ops-btn-danger:hover { border-color: var(--danger); background: var(--danger-dim); color: var(--danger); }
 
 /* ---------- Layout: rail + panel ---------- */
-.ops-layout { display: grid; grid-template-columns: 176px 1fr; gap: 18px; }
+.ops-layout { display: grid; grid-template-columns: 176px 1fr; gap: 18px; flex: 1; min-height: 0; overflow: hidden; }
 @media (max-width: 760px) {
   .ops-layout { grid-template-columns: 1fr; }
   .ops-rail { flex-direction: row !important; overflow-x: auto; }
+  .ops-rail-label { display: none; }
+  .ops-switch-item { flex-shrink: 0; }
+  .ops-switch-item .ops-code { display: none; }
 }
 
 .ops-rail {
@@ -248,7 +280,8 @@
 .ops-switch-item .ops-code { font-family: var(--mono); font-size: 9px; color: var(--text-tertiary); display: block; margin-top: 1px; }
 .ops-switch-item[data-current="true"] .ops-code { color: var(--amber); }
 
-.ops-panel { min-width: 0; }
+.ops-panel { min-width: 0; overflow-y: auto; padding-bottom: 60px; overscroll-behavior: contain; }
+@media (max-width: 640px) { .ops-panel { padding-bottom: 32px; } }
 
 .ops-page-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 18px; flex-wrap: wrap; }
 .ops-page-head h2 { font-family: var(--display); font-weight: 700; font-size: 19px; letter-spacing: -0.01em; margin: 0 0 4px; color: var(--text-primary); text-wrap: balance; }
@@ -289,6 +322,7 @@
 
 /* ---------- Flags ---------- */
 .ops-flag-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+@media (max-width: 480px) { .ops-flag-grid { grid-template-columns: 1fr; } }
 .ops-flag-card { display: flex; flex-direction: column; gap: 10px; }
 .ops-flag-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
 .ops-flag-name { font-size: 12.5px; font-weight: 600; color: var(--text-primary); }
@@ -426,6 +460,54 @@
 .ops-mini-btn.ground:hover { border-color: var(--danger); color: var(--danger); }
 .ops-mini-btn:focus-visible { outline: 2px solid var(--amber); outline-offset: 1px; }
 .ops-num-right { text-align: right; font-family: var(--mono); font-variant-numeric: tabular-nums; }
+
+/* Table -> card below 600px. Every <td> in a .ops-manifest table carries a
+   data-label attr (empty for the "name" cell, which is already the primary
+   content and needs no synthetic label); this reflows a horizontal-scroll
+   table most people would never think to scroll sideways on a phone into a
+   stack of readable cards instead. */
+@media (max-width: 600px) {
+  .ops-manifest thead { display: none; }
+  .ops-manifest, .ops-manifest tbody, .ops-manifest tr, .ops-manifest td { display: block; width: 100%; }
+  .ops-manifest tr {
+    margin-bottom: 10px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 10px 12px;
+    background: var(--bg-inset);
+  }
+  .ops-manifest tr:last-child { margin-bottom: 0; }
+  .ops-manifest td {
+    border-bottom: none;
+    padding: 6px 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  .ops-manifest td[data-label=""] { display: block; padding-top: 0; }
+  .ops-manifest td[data-label]:not([data-label=""])::before {
+    content: attr(data-label);
+    font-family: var(--mono);
+    font-size: 9.5px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-tertiary);
+    flex-shrink: 0;
+  }
+  .ops-manifest-actions { justify-content: flex-start; flex-wrap: wrap; white-space: normal; }
+  .ops-num-right { text-align: right; }
+}
+
+/* Touch targets: desktop-sized pills are fine with a cursor, cramped with a
+   thumb. Widen the common tappable controls below the tablet breakpoint. */
+@media (max-width: 640px) {
+  .ops-btn, .ops-mini-btn, .ops-chip, .ops-cat-tab, .ops-tristate button {
+    min-height: 40px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+  }
+}
 
 /* ---------- Tools ---------- */
 .ops-tools-grid { display: grid; grid-template-columns: 1fr; gap: 12px; }

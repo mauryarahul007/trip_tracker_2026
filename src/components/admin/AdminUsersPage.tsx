@@ -149,20 +149,20 @@ export function AdminUsersPage({ users, trips, superadminIds, onUsersChanged }: 
                   const isSuperadmin = superadminIdSet.has(u.id);
                   return (
                     <tr key={u.id}>
-                      <td>
+                      <td data-label="">
                         <div className="ops-trip-name">
                           {u.displayName || u.email}
                           {isSuperadmin && <span className="ops-badge archived" style={{ marginLeft: '8px' }}>Superadmin</span>}
                         </div>
                         <div className="ops-trip-route">{u.email}</div>
                       </td>
-                      <td>{new Date(u.createdAt).toLocaleDateString()}</td>
-                      <td>
+                      <td data-label="Joined">{new Date(u.createdAt).toLocaleDateString()}</td>
+                      <td data-label="Status">
                         <span className={`ops-badge ${u.banned ? 'grounded' : 'active'}`}>
                           {u.banned ? 'Suspended' : 'Active'}
                         </span>
                       </td>
-                      <td>
+                      <td data-label="">
                         <div className="ops-manifest-actions">
                           <button
                             type="button"

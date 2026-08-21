@@ -121,20 +121,8 @@ export function AdminPortalLayout({
   };
 
   return (
-    <div
-      className="ops-deck"
-      style={{
-        maxWidth: '1180px',
-        margin: '0 auto',
-        height: '100dvh',
-        maxHeight: '100dvh',
-        padding: '16px 20px 0 20px',
-        display: 'flex',
-        flexDirection: 'column',
-        overflow: 'hidden',
-      }}
-    >
-      <div className="ops-statusbar" style={{ padding: '14px 20px', border: '1px solid var(--line)', borderRadius: '4px', marginBottom: '18px', background: 'linear-gradient(180deg, var(--bg-panel-raised), var(--bg-panel))' }}>
+    <div className="ops-deck ops-shell">
+      <div className="ops-statusbar">
         <div className="ops-callsign">
           <div className="ops-glyph">TT</div>
           <div>
@@ -143,7 +131,7 @@ export function AdminPortalLayout({
           </div>
         </div>
         <div className="ops-status-right">
-          <div className="ops-status-lamp"><span className="ops-dot" /> ALL SYSTEMS NOMINAL</div>
+          <div className="ops-status-lamp"><span className="ops-dot" /> <span className="ops-lamp-text">ALL SYSTEMS NOMINAL</span></div>
           <div style={{ fontFamily: 'var(--mono)', fontSize: '11px', color: 'var(--text-secondary)', fontVariantNumeric: 'tabular-nums' }}>{clock}</div>
           {onOpenBugTracker && (
             <button type="button" className="ops-btn" onClick={onOpenBugTracker}>
@@ -161,7 +149,7 @@ export function AdminPortalLayout({
         </div>
       </div>
 
-      <div className="ops-layout" style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
+      <div className="ops-layout">
         <nav className="ops-rail" aria-label="Ops sections">
           <div className="ops-rail-label">Sections</div>
           {SECTIONS.map((s) => (
@@ -181,7 +169,7 @@ export function AdminPortalLayout({
           ))}
         </nav>
 
-        <main className="ops-panel" style={{ overflowY: 'auto', paddingBottom: '60px', overscrollBehavior: 'contain' }}>
+        <main className="ops-panel">
           {activeTab === 'flags' && <AdminFlagsPage trips={trips} members={members} />}
           {activeTab === 'analytics' && (
             <AdminAnalyticsPage

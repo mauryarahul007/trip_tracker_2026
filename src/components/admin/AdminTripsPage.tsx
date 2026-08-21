@@ -103,18 +103,18 @@ export function AdminTripsPage({ trips, expenses, onInspectTrip }: Props) {
 
                   return (
                     <tr key={t.id}>
-                      <td>
+                      <td data-label="">
                         <div className="ops-trip-name">{t.name}</div>
                         <div className="ops-trip-route">{t.startDate} &rarr; {t.endDate} &middot; {t.baseCurrency}</div>
                       </td>
-                      <td>
+                      <td data-label="Status">
                         <span className={`ops-badge ${status}`}>
                           {status === 'grounded' ? 'Grounded' : status === 'archived' ? 'Archived' : 'Active'}
                         </span>
                       </td>
-                      <td className="ops-num-right">{t.memberIds.length}</td>
-                      <td className="ops-num-right">{getCurrencySymbol(t.baseCurrency)} {tripTotal.toFixed(2)}</td>
-                      <td>
+                      <td className="ops-num-right" data-label="Members">{t.memberIds.length}</td>
+                      <td className="ops-num-right" data-label="Total">{getCurrencySymbol(t.baseCurrency)} {tripTotal.toFixed(2)}</td>
+                      <td data-label="">
                         <div className="ops-manifest-actions">
                           {onInspectTrip && (
                             <button
