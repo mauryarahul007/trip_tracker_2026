@@ -9,10 +9,10 @@
 
 | Metric | Count | Status Notes |
 | :--- | :--- | :--- |
-| **Total Tracked** | **22** | All recorded bugs across sessions |
+| **Total Tracked** | **26** | All recorded bugs across sessions |
 | **🟢 Open** | **3** | 🚨 **2 CRITICAL**, 0 High |
 | **🟡 In Progress** | **0** | Active investigation or fix |
-| **✅ Resolved** | **19** | Verified & closed |
+| **✅ Resolved** | **23** | Verified & closed |
 | **⚪ Won't Fix** | **0** | Expected behavior / deferred |
 
 ---
@@ -146,6 +146,10 @@ TypeError: Cannot read properties of null (reading 'useCallback')
 | **BUG-020** | Report a Problem submit fails for normal users (RLS blocked) | `general` | `high` | `rahul` | `rahul` | Fixed via report_bug() SECURITY DEFINER RPC (migration 0059): id computation and insert now run server-side, bypassing RLS, so normal users no longer need SELECT on bugs. bugApi.ts createBug() now calls supabase.rpc('report_bug', ...). Commit 496306b. |
 | **BUG-021** | Report a Problem popup traps scroll, cannot scroll back up to close | `ui-ux` | `medium` | `rahul` | `rahul` | BugReportModal converted from a modal-overlay popup to a full-screen SettingsView subscreen (settings-subscreen-enter layout), same pattern as other Settings subscreens -- no more trapped scroll. Commit 496306b. |
 | **BUG-022** | Report a Problem back navigation discards unsent draft without confirmation | `ui-ux` | `medium` | `rahul` | `rahul` | Added a back-guard (onRegisterBackGuard) wired through both the on-screen back link and SettingsView's useHistoryBack hardware/browser-back handling. When there's unsent text, a 3-way ConfirmDialog (new tertiaryLabel/onTertiary support) offers Submit & Go Back, Discard & Go Back, or Keep Editing. Commit 496306b. |
+| **BUG-025** | Enable Live Alerts banner shown on native platforms and never works | `ui-ux` | `medium` | `mauryarahul007@gmail.com` | `claude-cli` | Gated the banner on isWebNotificationSupported() in NotificationsPanel.tsx so it only renders in an actual browser tab. Commit 4433bc1. |
+| **BUG-026** | 'Out of sync (0)' status permanently shown on every trip | `offline-sync` | `high` | `mauryarahul007@gmail.com` | `claude-cli` | Dropped the broken lastModifiedAt/lastBackendSyncedAt comparison from syncStatus in App.tsx -- syncQueue.length is the correct, live signal and was already there. Commit f950404. |
+| **BUG-027** | Superadmin Ops Deck section tabs unusable on mobile | `ui-ux` | `medium` | `mauryarahul007@gmail.com` | `claude-cli` | Replaced with a header status-line trigger that opens a full-screen section switcher on tap, reusing the existing dot+code+label rail styling. Also fixed a CSS source-order bug where the desktop rail's unconditional display:flex was overriding its own mobile display:none. Commits 55ab403, 178a638. |
+| **BUG-028** | Ops Deck header rendered under the Android status bar | `ui-ux` | `medium` | `mauryarahul007@gmail.com` | `claude-cli` | Added the app-wide calc(Npx + var(--safe-top, 0px)) safe-area padding convention to .ops-shell and .ops-panel in ops-deck.css. Commit e433fa8. |
 
 ---
 

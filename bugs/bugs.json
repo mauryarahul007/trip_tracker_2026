@@ -640,5 +640,109 @@
     "resolvedBy": "rahul",
     "resolvedAt": "2026-08-21T09:56:18.138Z",
     "resolutionNote": "Added a back-guard (onRegisterBackGuard) wired through both the on-screen back link and SettingsView's useHistoryBack hardware/browser-back handling. When there's unsent text, a 3-way ConfirmDialog (new tertiaryLabel/onTertiary support) offers Submit & Go Back, Discard & Go Back, or Keep Editing. Commit 496306b."
+  },
+  {
+    "id": "BUG-025",
+    "title": "Enable Live Alerts banner shown on native platforms and never works",
+    "description": "Notification panel always showed a web-only 'Enable Live Alerts' permission banner on native Android/iOS, and tapping Enable did nothing -- Notification.requestPermission() is a silent no-op on native, which has its own separate FCM push flow.",
+    "severity": "medium",
+    "category": "ui-ux",
+    "status": "resolved",
+    "foundBy": "mauryarahul007@gmail.com",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-08-21T16:16:53.820Z",
+    "updatedAt": "2026-08-21T16:17:04.617Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-08-21T16:17:04.616Z",
+    "resolutionNote": "Gated the banner on isWebNotificationSupported() in NotificationsPanel.tsx so it only renders in an actual browser tab. Commit 4433bc1."
+  },
+  {
+    "id": "BUG-026",
+    "title": "'Out of sync (0)' status permanently shown on every trip",
+    "description": "Sync status pill showed 'Out of sync (0)' on every trip, on both web and the native app, even with an empty sync queue. Caused by a second, broken staleness check (lastModifiedAt vs lastBackendSyncedAt) alongside the correct syncQueue.length check.",
+    "severity": "high",
+    "category": "offline-sync",
+    "status": "resolved",
+    "foundBy": "mauryarahul007@gmail.com",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-08-21T16:16:54.493Z",
+    "updatedAt": "2026-08-21T16:17:05.056Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-08-21T16:17:05.055Z",
+    "resolutionNote": "Dropped the broken lastModifiedAt/lastBackendSyncedAt comparison from syncStatus in App.tsx -- syncQueue.length is the correct, live signal and was already there. Commit f950404."
+  },
+  {
+    "id": "BUG-027",
+    "title": "Superadmin Ops Deck section tabs unusable on mobile",
+    "description": "Section nav (Flags/Analytics/Trips/Users/Audit/Tools) was a horizontal-scroll pill row on mobile, cutting off tabs with no indication more existed. A follow-up wrapping-grid attempt was also rejected. Resolved with a header-switcher pattern (tap current section, full-screen list opens) after a design-skill review.",
+    "severity": "medium",
+    "category": "ui-ux",
+    "status": "resolved",
+    "foundBy": "mauryarahul007@gmail.com",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-08-21T16:16:55.074Z",
+    "updatedAt": "2026-08-21T16:17:05.461Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-08-21T16:17:05.460Z",
+    "resolutionNote": "Replaced with a header status-line trigger that opens a full-screen section switcher on tap, reusing the existing dot+code+label rail styling. Also fixed a CSS source-order bug where the desktop rail's unconditional display:flex was overriding its own mobile display:none. Commits 55ab403, 178a638."
+  },
+  {
+    "id": "BUG-028",
+    "title": "Ops Deck header rendered under the Android status bar",
+    "description": "Superadmin Ops Deck header sat flush against the native Android status bar/notification icons -- ops-deck.css never adopted the app-wide env(safe-area-inset-*) padding convention every other screen uses.",
+    "severity": "medium",
+    "category": "ui-ux",
+    "status": "resolved",
+    "foundBy": "mauryarahul007@gmail.com",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-08-21T16:16:55.951Z",
+    "updatedAt": "2026-08-21T16:17:05.843Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-08-21T16:17:05.842Z",
+    "resolutionNote": "Added the app-wide calc(Npx + var(--safe-top, 0px)) safe-area padding convention to .ops-shell and .ops-panel in ops-deck.css. Commit e433fa8."
   }
 ]
