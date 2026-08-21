@@ -219,6 +219,9 @@
 .ops-btn:hover { border-color: var(--amber); color: var(--text-primary); }
 .ops-btn:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
 .ops-btn-danger { border-color: var(--danger-line); color: var(--danger); }
+.ops-btn:disabled { opacity: 0.6; cursor: default; }
+.ops-spin { display: inline-block; animation: spin 1s linear infinite; }
+@media (prefers-reduced-motion: reduce) { .ops-spin { animation: none; } }
 .ops-btn-danger:hover { border-color: var(--danger); background: var(--danger-dim); color: var(--danger); }
 
 /* ---------- Layout: rail + panel ---------- */

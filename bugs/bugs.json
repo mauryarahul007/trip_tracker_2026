@@ -813,8 +813,8 @@
     "status": "resolved",
     "foundBy": "mauryarahul007@gmail.com",
     "environment": {
-      "platform": "web",
       "isOnline": true,
+      "platform": "web",
       "appVersion": "1.0.0"
     },
     "reproSteps": [
@@ -824,10 +824,10 @@
     "expectedBehavior": "",
     "actualBehavior": "",
     "diagnostics": {},
-    "createdAt": "2026-08-21T16:51:43.929Z",
-    "updatedAt": "2026-08-21T16:51:50.365Z",
+    "createdAt": "2026-08-21T16:51:43.929+00:00",
+    "updatedAt": "2026-08-21T16:51:50.365+00:00",
+    "resolvedAt": "2026-08-21T16:51:50.364+00:00",
     "resolvedBy": "claude-cli",
-    "resolvedAt": "2026-08-21T16:51:50.364Z",
     "resolutionNote": "Migration 0064: feature_flag_overrides table (scope: global/trip/user) + get_resolved_feature_flags/get_all_feature_flag_overrides/set_feature_flag_override RPCs. tripStore.ts now persists and loads flags from Supabase instead of local-only zustand persist state. Commit 6fb9e57."
   }
 ]

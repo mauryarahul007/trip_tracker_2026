@@ -4,11 +4,11 @@ import { updateFeature } from '../../services/featureApi';
 import type { FeatureFlagKey } from '../../types/admin';
 import { FEATURE_FLAGS_META } from '../../utils/featureFlags';
 import { useTripStore } from '../../store/tripStore';
-import { IconCheck, IconSearch } from '../Icons';
+import { IconCheck, IconRefresh, IconSearch } from '../Icons';
 
 interface Props {
   features: FeatureRecord[];
-  onFeaturesChanged: () => void;
+  onFeaturesChanged: () => void | Promise<void>;
 }
 
 const STATUS_FILTERS = ['active', 'requested', 'planned', 'in_progress', 'shipped', 'wont_do', 'all'] as const;
@@ -29,6 +29,17 @@ export function AdminFeaturesPage({ features, onFeaturesChanged }: Props) {
   const [statusFilter, setStatusFilter] = useState<(typeof STATUS_FILTERS)[number]>('active');
   const [toastMsg, setToastMsg] = useState('');
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      await onFeaturesChanged();
+      showToast('Refreshed.');
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
 
   const showToast = (msg: string) => {
     setToastMsg(msg);
@@ -83,6 +94,9 @@ export function AdminFeaturesPage({ features, onFeaturesChanged }: Props) {
           <h2>Feature Requests</h2>
           <p>What travelers ask for, and what's queued, in progress, or shipped. Link a request to an existing flag to toggle it right here.</p>
         </div>
+        <button type="button" className="ops-btn" disabled={isRefreshing} onClick={() => void handleRefresh()}>
+          <IconRefresh size={13} className={isRefreshing ? 'icon-sm ops-spin' : 'icon-sm'} /> {isRefreshing ? 'Refreshing...' : 'Refresh'}
+        </button>
       </div>
 
       {toastMsg && (

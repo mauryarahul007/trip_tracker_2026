@@ -107,16 +107,20 @@ export function AdminPortalLayout({
     };
   }, [trips]);
 
-  const reloadFleetData = () => {
-    fetchBugs().then(setBugs).catch(() => setBugs([]));
-    fetchAllProfilesForAdmin().then(setUsers).catch(() => setUsers([]));
-    fetchDevicePlatformCounts().then(setPlatformCounts).catch(() => setPlatformCounts([]));
-    fetchSuperadminIds().then(setSuperadminIds).catch(() => setSuperadminIds([]));
-    fetchAuditLogs().then(setAuditLogs).catch(() => setAuditLogs([]));
-    fetchNotificationStats().then(setNotificationStats).catch(() => {});
-    fetchRecycledExpenseCount().then(setRecycledCount).catch(() => {});
-    fetchFeatures().then(setFeatures).catch(() => setFeatures([]));
-  };
+  // Returns a Promise so callers that want to know when a refresh actually
+  // finished (e.g. a manual Refresh button showing a spinner) can await it;
+  // fire-and-forget callers (mutation handlers) are unaffected either way.
+  const reloadFleetData = () =>
+    Promise.all([
+      fetchBugs().then(setBugs).catch(() => setBugs([])),
+      fetchAllProfilesForAdmin().then(setUsers).catch(() => setUsers([])),
+      fetchDevicePlatformCounts().then(setPlatformCounts).catch(() => setPlatformCounts([])),
+      fetchSuperadminIds().then(setSuperadminIds).catch(() => setSuperadminIds([])),
+      fetchAuditLogs().then(setAuditLogs).catch(() => setAuditLogs([])),
+      fetchNotificationStats().then(setNotificationStats).catch(() => {}),
+      fetchRecycledExpenseCount().then(setRecycledCount).catch(() => {}),
+      fetchFeatures().then(setFeatures).catch(() => setFeatures([])),
+    ]).then(() => undefined);
 
   useEffect(() => {
     reloadFleetData();
