@@ -562,5 +562,83 @@
     },
     "createdAt": "2026-08-21T08:07:37.629939+00:00",
     "updatedAt": "2026-08-21T08:07:37.629939+00:00"
+  },
+  {
+    "id": "BUG-020",
+    "title": "Report a Problem submit fails for normal users (RLS blocked)",
+    "description": "Report a Problem in Settings could not submit for normal (non-superadmin) users. The RLS policy only grants SELECT on bugs to superadmins, but createBug() computed the next BUG-XXX id via a SELECT and read the inserted row back via .select().single() -- both silently failed for normal users, causing every submission to collide on BUG-001 or return nothing.",
+    "severity": "high",
+    "category": "general",
+    "status": "resolved",
+    "foundBy": "rahul",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "Report submits and appears in the superadmin bug tracker",
+    "actualBehavior": "Submission fails silently / never appears in bug tracker",
+    "diagnostics": {},
+    "createdAt": "2026-08-21T09:55:58.596Z",
+    "updatedAt": "2026-08-21T09:56:17.112Z",
+    "resolvedBy": "rahul",
+    "resolvedAt": "2026-08-21T09:56:17.111Z",
+    "resolutionNote": "Fixed via report_bug() SECURITY DEFINER RPC (migration 0059): id computation and insert now run server-side, bypassing RLS, so normal users no longer need SELECT on bugs. bugApi.ts createBug() now calls supabase.rpc('report_bug', ...). Commit 496306b."
+  },
+  {
+    "id": "BUG-021",
+    "title": "Report a Problem popup traps scroll, cannot scroll back up to close",
+    "description": "Report a Problem opened as a modal overlay/popup. On longer forms, scrolling down inside the sheet made it impossible to scroll back up to reach the close (X) button, effectively trapping the user in the modal.",
+    "severity": "medium",
+    "category": "ui-ux",
+    "status": "resolved",
+    "foundBy": "rahul",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "User can scroll freely and always reach a way to close/go back",
+    "actualBehavior": "Scrolling down gets stuck, close button becomes unreachable",
+    "diagnostics": {},
+    "createdAt": "2026-08-21T09:56:03.917Z",
+    "updatedAt": "2026-08-21T09:56:17.596Z",
+    "resolvedBy": "rahul",
+    "resolvedAt": "2026-08-21T09:56:17.595Z",
+    "resolutionNote": "BugReportModal converted from a modal-overlay popup to a full-screen SettingsView subscreen (settings-subscreen-enter layout), same pattern as other Settings subscreens -- no more trapped scroll. Commit 496306b."
+  },
+  {
+    "id": "BUG-022",
+    "title": "Report a Problem back navigation discards unsent draft without confirmation",
+    "description": "Pressing back (on-screen or hardware/browser back) while a Report a Problem draft had unsent content silently discarded it with no confirmation. Expected a 3-way choice: submit and go back, discard and go back, or keep editing.",
+    "severity": "medium",
+    "category": "ui-ux",
+    "status": "resolved",
+    "foundBy": "rahul",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "Prompted to submit, discard, or keep editing before leaving",
+    "actualBehavior": "Draft is silently discarded, no prompt",
+    "diagnostics": {},
+    "createdAt": "2026-08-21T09:56:09.961Z",
+    "updatedAt": "2026-08-21T09:56:18.139Z",
+    "resolvedBy": "rahul",
+    "resolvedAt": "2026-08-21T09:56:18.138Z",
+    "resolutionNote": "Added a back-guard (onRegisterBackGuard) wired through both the on-screen back link and SettingsView's useHistoryBack hardware/browser-back handling. When there's unsent text, a 3-way ConfirmDialog (new tertiaryLabel/onTertiary support) offers Submit & Go Back, Discard & Go Back, or Keep Editing. Commit 496306b."
   }
 ]
