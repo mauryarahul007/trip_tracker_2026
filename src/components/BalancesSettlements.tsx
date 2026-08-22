@@ -6,6 +6,7 @@ import { getCurrencySymbol } from '../utils/currency';
 import { sendPushNotification } from '../services/pushApi';
 import { usePrivacyStore, formatMaskedAmount } from '../store/privacyStore';
 import { triggerHaptic } from '../utils/haptics';
+import { BalanceFlowGraph } from './BalanceFlowGraph';
 
 type Props = {
   trip: Trip;
@@ -377,54 +378,76 @@ function TransferRow({
               Only members of either group can record this settlement
             </span>
           ) : customOpen ? (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', width: '100%', justifyContent: 'flex-end' }}>
-              <span style={{ fontSize: '12px', color: 'var(--text-secondary)', marginRight: 'auto' }}>Enter custom amount:</span>
-              <input
-                type="text"
-                inputMode="decimal"
-                className="input-field"
-                placeholder={t.amount.toFixed(2)}
-                title="Custom settlement amount (leave blank to use the suggested amount)"
-                autoFocus
-                value={customValue}
-                onChange={(e) => {
-                   const v = e.target.value;
-                   if (/^\d*\.?\d*$/.test(v)) onCustomChange(v);
-                }}
-                style={{ width: '80px', padding: '4px 8px', fontSize: '12px', height: '28px', margin: 0 }}
-              />
-              <button
-                className="gradient-btn"
-                style={{ padding: '6px 12px', fontSize: '11px', borderRadius: 'var(--border-radius-sm)', height: '28px' }}
-                onClick={() => {
-                  triggerHaptic('success');
-                  onSettle(t.fromMemberId, t.toMemberId, settleAmount, t.fromLabel, t.toLabel);
-                }}
-              >
-                Settle
-              </button>
-              <button
-                type="button"
-                className="secondary-btn"
-                style={{ padding: '6px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                aria-label="Cancel custom amount"
-                title="Use the suggested amount instead"
-                onClick={onToggleCustom}
-              >
-                <span style={{ display: 'flex', transform: 'rotate(90deg)' }}>
-                  <IconChevronRight size={10} className="icon-sm" />
-                </span>
-              </button>
-              <button
-                type="button"
-                className="secondary-btn"
-                style={{ padding: '6px 10px', fontSize: '12px' }}
-                onClick={handleRemind}
-                disabled={!members[t.fromMemberId]?.linkedUserId || reminderStatus === 'sending' || reminderStatus === 'sent' || reminderStatus === 'rateLimited'}
-                title={members[t.fromMemberId]?.linkedUserId ? 'Send a reminder' : 'This member has no linked account to notify'}
-              >
-                {remindLabel}
-              </button>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', width: '100%', justifyContent: 'flex-end' }}>
+                <span style={{ fontSize: '12px', color: 'var(--text-secondary)', marginRight: 'auto' }}>Custom amount:</span>
+                <input
+                  type="text"
+                  inputMode="decimal"
+                  className="input-field"
+                  placeholder={t.amount.toFixed(2)}
+                  title="Custom settlement amount"
+                  autoFocus
+                  value={customValue}
+                  onChange={(e) => {
+                     const v = e.target.value;
+                     if (/^\d*\.?\d*$/.test(v)) onCustomChange(v);
+                  }}
+                  style={{ width: '80px', padding: '4px 8px', fontSize: '12px', height: '28px', margin: 0 }}
+                />
+                <button
+                  className="gradient-btn"
+                  style={{ padding: '6px 12px', fontSize: '11px', borderRadius: 'var(--border-radius-sm)', height: '28px' }}
+                  onClick={() => {
+                    triggerHaptic('success');
+                    onSettle(t.fromMemberId, t.toMemberId, settleAmount, t.fromLabel, t.toLabel);
+                  }}
+                >
+                  Settle
+                </button>
+                <button
+                  type="button"
+                  className="secondary-btn"
+                  style={{ padding: '6px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                  aria-label="Cancel custom amount"
+                  title="Use suggested amount"
+                  onClick={onToggleCustom}
+                >
+                  <span style={{ display: 'flex', transform: 'rotate(90deg)' }}>
+                    <IconChevronRight size={10} className="icon-sm" />
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  className="secondary-btn"
+                  style={{ padding: '6px 10px', fontSize: '12px' }}
+                  onClick={handleRemind}
+                  disabled={!members[t.fromMemberId]?.linkedUserId || reminderStatus === 'sending' || reminderStatus === 'sent' || reminderStatus === 'rateLimited'}
+                  title={members[t.fromMemberId]?.linkedUserId ? 'Send a reminder' : 'This member has no linked account to notify'}
+                >
+                  {remindLabel}
+                </button>
+              </div>
+
+              {/* Partial Settlement Quick Chips & Slider */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+                <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Quick Split:</span>
+                {[25, 50, 75, 100].map((pct) => (
+                  <button
+                    key={pct}
+                    type="button"
+                    className="split-preset-chip"
+                    style={{ fontSize: '10px', padding: '2px 6px' }}
+                    onClick={() => {
+                      triggerHaptic('light');
+                      const amt = Math.round((t.amount * (pct / 100)) * 100) / 100;
+                      onCustomChange(String(amt));
+                    }}
+                  >
+                    {pct}% ({currencySymbol}{Math.round(t.amount * (pct / 100))})
+                  </button>
+                ))}
+              </div>
             </div>
           ) : (
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -512,6 +535,7 @@ export function BalancesSettlements({
   const [customAmounts, setCustomAmounts] = useState<Record<string, string>>({});
   const [customOpenKeys, setCustomOpenKeys] = useState<Record<string, boolean>>({});
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
+  const [settlementViewMode, setSettlementViewMode] = useState<'list' | 'graph'>('list');
   const balanceNodes = buildSettlementNodes(balances, groups);
 
   const setCustom = (rowKey: string, v: string) => setCustomAmounts({ ...customAmounts, [rowKey]: v });
@@ -566,135 +590,145 @@ export function BalancesSettlements({
         </div>
       </div>
 
-      {/* Balances List */}
-      <div className="glass-card" style={{ marginBottom: '16px' }}>
-        <h4 style={{ fontSize: '12px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '12px' }}>
-          Member Balances
-        </h4>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          {balanceNodes.map((n) => {
-            const isGroup = n.id.startsWith('group:');
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '16px' }}>
+        {balanceNodes.map((n) => {
+          const isGroup = n.id.startsWith('group:');
 
-            if (!isGroup) {
-              return (
-                <div
-                  key={n.id}
-                  className="balance-row"
-                  style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '14px', padding: '6px 4px', borderRadius: '8px', cursor: 'pointer' }}
-                  onClick={() => onMemberClick(n.memberIds[0])}
-                  title={`View ${n.name}'s expenses`}
-                >
-                  <span style={{ minWidth: 0, flex: '1 1 auto', lineHeight: '1.3', paddingRight: '8px' }}><strong>{n.name}</strong></span>
-                  <span className="privacy-blur" style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', color: balanceColor(n.balance), fontWeight: '700', flexShrink: 0, marginLeft: 'auto', whiteSpace: 'nowrap' }}>
-                    <BalanceIcon balance={n.balance} />
-                    {balanceLabel(n.balance, currencySymbol, isBlindMode)}
-                  </span>
-                </div>
-              );
-            }
-
-            const groupId = n.id.slice('group:'.length);
-            const groupObj = groups.find((g) => g.id === groupId);
-            const internalTransfers = groupObj ? calculateGroupInternalTransfers(balances, groupObj) : [];
-            const isNetZero = Math.abs(n.balance) < 0.01;
-            const fullySettled = isNetZero && internalTransfers.length === 0;
-            const statusLabel = fullySettled
-              ? 'settled'
-              : isNetZero
-                ? 'internal settlement pending'
-                : balanceLabel(n.balance, currencySymbol, isBlindMode);
-            const statusColor = fullySettled
-              ? 'var(--color-success)'
-              : isNetZero
-                ? 'var(--color-warning)'
-                : balanceColor(n.balance);
-            const isExpanded = !!expandedGroups[groupId];
-
+          if (!isGroup) {
             return (
-              <div key={n.id} style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                <div
-                  className="balance-row"
-                  style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '14px', padding: '6px 4px', borderRadius: '8px', cursor: 'pointer' }}
-                  onClick={() => setExpandedGroups({ ...expandedGroups, [groupId]: !isExpanded })}
-                  title="Click to toggle group member breakdown"
-                >
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', minWidth: 0, flex: '1 1 auto', lineHeight: '1.3', paddingRight: '8px' }}>
-                    <IconMembers size={14} className="icon-sm" />
-                    <strong>{n.name}</strong>
-                    <span style={{ fontSize: '11px', color: 'var(--text-secondary)', display: 'inline-flex', alignItems: 'center', transform: isExpanded ? 'rotate(90deg)' : 'none', transition: 'transform 0.15s ease' }}>
-                      <IconChevronRight size={12} className="icon-sm" />
-                    </span>
-                  </span>
-                  <span className="privacy-blur" style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', color: statusColor, fontWeight: '700', flexShrink: 0, marginLeft: 'auto', whiteSpace: 'nowrap' }}>
-                    <BalanceIcon balance={n.balance} settled={fullySettled} />
-                    {statusLabel}
-                  </span>
-                </div>
-
-                {isExpanded && (
-                  <div style={{ marginLeft: '16px', paddingLeft: '10px', borderLeft: '2px dashed var(--border-color)', display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '2px', marginBottom: '4px' }}>
-                    {n.memberIds.map((memId) => {
-                      const memberBalance = balances.find((b) => b.memberId === memId);
-                      if (!memberBalance) return null;
-                      return (
-                        <div
-                          key={memId}
-                          style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12.5px', color: 'var(--text-secondary)', padding: '2px 0', cursor: 'pointer' }}
-                          onClick={() => onMemberClick(memId)}
-                        >
-                          <span>{memberBalance.name}</span>
-                          <span className="privacy-blur" style={{ color: balanceColor(memberBalance.balance), fontWeight: 600 }}>
-                            {balanceLabel(memberBalance.balance, currencySymbol, isBlindMode)}
-                          </span>
-                        </div>
-                      );
-                    })}
-
-                    {internalTransfers.length > 0 && (
-                      <div style={{ marginTop: '4px', paddingTop: '8px', borderTop: '1px dashed rgba(15,23,42,0.08)' }}>
-                        <span style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                          Internal settlement needed
-                        </span>
-                        {internalTransfers.map((it) => {
-                          const rowKey = `internal:${it.from}|${it.to}`;
-                          return (
-                            <TransferRow
-                              key={rowKey}
-                              transfer={it}
-                              rowKey={rowKey}
-                              tripId={trip.id}
-                              tripName={trip.name}
-                              currencySymbol={currencySymbol}
-                              isSettled={isTransferSettled(it, activeTripExpenses)}
-                              canSettle={canSettleTransfer(it)}
-                              customValue={customAmounts[rowKey] || ''}
-                              customOpen={!!customOpenKeys[rowKey]}
-                              onToggleCustom={() => toggleCustomOpen(rowKey)}
-                              onCustomChange={(v) => setCustom(rowKey, v)}
-                              onSettle={onSettle}
-                              balances={balances}
-                              groups={groups}
-                              activeTripExpenses={activeTripExpenses}
-                              members={members}
-                            />
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
-                )}
+              <div
+                key={n.id}
+                className="balance-row"
+                style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '14px', padding: '6px 4px', borderRadius: '8px', cursor: 'pointer' }}
+                onClick={() => onMemberClick(n.memberIds[0])}
+                title={`View ${n.name}'s expenses`}
+              >
+                <span style={{ minWidth: 0, flex: '1 1 auto', lineHeight: '1.3', paddingRight: '8px' }}><strong>{n.name}</strong></span>
+                <span className="privacy-blur" style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', color: balanceColor(n.balance), fontWeight: '700', flexShrink: 0, marginLeft: 'auto', whiteSpace: 'nowrap' }}>
+                  <BalanceIcon balance={n.balance} />
+                  {balanceLabel(n.balance, currencySymbol, isBlindMode)}
+                </span>
               </div>
             );
-          })}
-        </div>
+          }
+
+          const groupId = n.id.slice('group:'.length);
+          const groupObj = groups.find((g) => g.id === groupId);
+          const internalTransfers = groupObj ? calculateGroupInternalTransfers(balances, groupObj) : [];
+          const isNetZero = Math.abs(n.balance) < 0.01;
+          const fullySettled = isNetZero && internalTransfers.length === 0;
+          const statusLabel = fullySettled
+            ? 'settled'
+            : isNetZero
+              ? 'internal settlement pending'
+              : balanceLabel(n.balance, currencySymbol, isBlindMode);
+          const statusColor = fullySettled
+            ? 'var(--color-success)'
+            : isNetZero
+              ? 'var(--color-warning)'
+              : balanceColor(n.balance);
+          const isExpanded = !!expandedGroups[groupId];
+
+          return (
+            <div key={n.id} style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              <div
+                className="balance-row"
+                style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '14px', padding: '6px 4px', borderRadius: '8px', cursor: 'pointer' }}
+                onClick={() => setExpandedGroups({ ...expandedGroups, [groupId]: !isExpanded })}
+                title="Click to toggle group member breakdown"
+              >
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', minWidth: 0, flex: '1 1 auto', lineHeight: '1.3', paddingRight: '8px' }}>
+                  <IconMembers size={14} className="icon-sm" />
+                  <strong>{n.name}</strong>
+                  <span style={{ fontSize: '11px', color: 'var(--text-secondary)', display: 'inline-flex', alignItems: 'center', transform: isExpanded ? 'rotate(90deg)' : 'none', transition: 'transform 0.15s ease' }}>
+                    <IconChevronRight size={12} className="icon-sm" />
+                  </span>
+                </span>
+                <span className="privacy-blur" style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', color: statusColor, fontWeight: '700', flexShrink: 0, marginLeft: 'auto', whiteSpace: 'nowrap' }}>
+                  <BalanceIcon balance={n.balance} settled={fullySettled} />
+                  {statusLabel}
+                </span>
+              </div>
+
+              {isExpanded && (
+                <div style={{ marginLeft: '16px', paddingLeft: '10px', borderLeft: '2px dashed var(--border-color)', display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '2px', marginBottom: '4px' }}>
+                  {n.memberIds.map((memId) => {
+                    const memberBalance = balances.find((b) => b.memberId === memId);
+                    const bal = memberBalance ? memberBalance.balance : 0;
+                    return (
+                      <div
+                        key={memId}
+                        style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12.5px', padding: '4px 0', cursor: 'pointer' }}
+                        onClick={() => onMemberClick(memId)}
+                        title={`View ${members[memId]?.name || 'Member'}'s expenses`}
+                      >
+                        <span style={{ color: 'var(--text-secondary)' }}>{members[memId]?.name || 'Member'}</span>
+                        <span className="privacy-blur" style={{ color: balanceColor(bal), fontWeight: '600' }}>
+                          {balanceLabel(bal, currencySymbol, isBlindMode)}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
 
-      {/* Settlements List */}
+      {/* Settlements Section with View Switcher */}
       <div className="glass-card">
-        <h4 style={{ fontSize: '12px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '12px' }}>
-          Fewest Payments to Clear It
-        </h4>
-        {transfers.length === 0 ? (
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+          <h4 style={{ fontSize: '12px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', margin: 0 }}>
+            Fewest Payments to Clear It
+          </h4>
+          <div style={{ display: 'flex', gap: '4px', background: 'var(--bg-secondary)', padding: '2px', borderRadius: '16px', border: '1px solid var(--border-color)' }}>
+            <button
+              type="button"
+              className={`pill-chip ${settlementViewMode === 'list' ? 'active' : ''}`}
+              style={{
+                fontSize: '11px',
+                padding: '3px 10px',
+                borderRadius: '12px',
+                border: 'none',
+                background: settlementViewMode === 'list' ? 'var(--primary-accent)' : 'transparent',
+                color: settlementViewMode === 'list' ? '#fff' : 'var(--text-secondary)',
+                cursor: 'pointer',
+                fontWeight: 600
+              }}
+              onClick={() => setSettlementViewMode('list')}
+            >
+              📋 List
+            </button>
+            <button
+              type="button"
+              className={`pill-chip ${settlementViewMode === 'graph' ? 'active' : ''}`}
+              style={{
+                fontSize: '11px',
+                padding: '3px 10px',
+                borderRadius: '12px',
+                border: 'none',
+                background: settlementViewMode === 'graph' ? 'var(--primary-accent)' : 'transparent',
+                color: settlementViewMode === 'graph' ? '#fff' : 'var(--text-secondary)',
+                cursor: 'pointer',
+                fontWeight: 600
+              }}
+              onClick={() => setSettlementViewMode('graph')}
+            >
+              🕸️ Flow Graph
+            </button>
+          </div>
+        </div>
+
+        {settlementViewMode === 'graph' ? (
+          <BalanceFlowGraph
+            transfers={transfers}
+            members={members}
+            currency={trip.baseCurrency}
+            onSettle={onSettle}
+            canSettle={isAdmin || !!myMemberId}
+          />
+        ) : transfers.length === 0 ? (
           <p style={{ color: 'var(--color-success)', fontSize: '14px', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '6px' }}>
             <IconCheckCircle size={17} className="icon" /> All settlements complete — no outstanding debts.
           </p>

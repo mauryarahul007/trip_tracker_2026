@@ -235,7 +235,14 @@ html.capacitor-native .app-container {
    base rule regardless of the condition matching. */
 @media (min-width: 900px) {
   .app-container {
-    max-width: 640px;
+    max-width: 680px;
+  }
+}
+
+@media (min-width: 1200px) {
+  .app-container {
+    max-width: 820px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.14);
   }
 }
 

@@ -36,10 +36,13 @@ import { FitHeading } from './components/FitHeading';
 import { usePrivacyStore } from './store/privacyStore';
 import { triggerHaptic } from './utils/haptics';
 import { useEscapeKey } from './utils/useEscapeKey';
-import { IconCalendar, IconChevronLeft, IconPlus, IconEye, IconEyeOff, IconShield } from './components/Icons';
+import { IconCalendar, IconChevronLeft, IconPlus, IconEye, IconEyeOff, IconShield, IconSearch } from './components/Icons';
 import { formatDateRange } from './utils/dateRange';
 import { useScrollLock } from './utils/useScrollLock';
 import { useHistoryBack } from './utils/useHistoryBack';
+import { CommandPalette } from './components/CommandPalette';
+import { TripWrappedModal } from './components/TripWrappedModal';
+import { usePeerPresence } from './hooks/usePeerPresence';
 import type { AdminTab } from './components/admin/AdminPortalLayout';
 const AdminPortalLayout = lazy(() =>
   import('./components/admin/AdminPortalLayout').then((m) => ({ default: m.AdminPortalLayout }))
@@ -267,6 +270,23 @@ export default function App() {
   const isSuperadmin = useTripStore((s) => s.isSuperadmin);
   const [isTravelerPreview, setIsTravelerPreview] = useState(false);
   const [adminActiveTab, setAdminActiveTab] = useState<AdminTab>('flags');
+
+  // Command Palette & Trip Wrapped States
+  const [showCommandPalette, setShowCommandPalette] = useState(false);
+  const [showTripWrapped, setShowTripWrapped] = useState(false);
+  const activePeers = usePeerPresence(activeTripId);
+
+  // Global Cmd+K / Ctrl+K keyboard shortcut for Command Palette
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setShowCommandPalette((prev) => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   // Superadmin-set kill-switch (Ops Deck > Flags > Fleet Controls). Checked
   // once per load, not polled -- a superadmin flipping it mid-session
@@ -1334,6 +1354,29 @@ export default function App() {
                 <span className="app-eyebrow">
                   <IconCalendar size={12} className="icon-sm" />
                   {formatDateRange(activeTrip?.startDate || '', activeTrip?.endDate || '')}
+                  {(() => {
+                    const todayStr = new Date().toISOString().split('T')[0];
+                    if (!activeTrip?.startDate) return null;
+                    if (activeTrip.startDate > todayStr) {
+                      return (
+                        <span style={{ marginLeft: '6px', padding: '1px 5px', borderRadius: '4px', fontSize: '10px', fontWeight: 700, background: 'rgba(43,168,158,0.2)', color: '#2BA89E' }}>
+                          Upcoming
+                        </span>
+                      );
+                    }
+                    if (activeTrip.endDate < todayStr) {
+                      return (
+                        <span style={{ marginLeft: '6px', padding: '1px 5px', borderRadius: '4px', fontSize: '10px', fontWeight: 700, background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.6)' }}>
+                          Completed
+                        </span>
+                      );
+                    }
+                    return (
+                      <span style={{ marginLeft: '6px', padding: '1px 5px', borderRadius: '4px', fontSize: '10px', fontWeight: 700, background: 'rgba(44,122,75,0.25)', color: '#4FAE72' }}>
+                        Active
+                      </span>
+                    );
+                  })()}
                 </span>
                 <div className="app-title-row">
                   <FitHeading
@@ -1345,12 +1388,12 @@ export default function App() {
                   />
                 </div>
               </div>
-              <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexShrink: 0 }}>
+              <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexShrink: 0 }}>
                 {isSuperadmin && (
                   <button
                     type="button"
                     className="secondary-btn"
-                    style={{ padding: '7px 10px', fontSize: '12px', color: '#00BFA5', borderColor: 'rgba(0,191,165,0.4)', background: 'rgba(0,191,165,0.12)' }}
+                    style={{ padding: '7px 9px', fontSize: '12px', color: '#00BFA5', borderColor: 'rgba(0,191,165,0.4)', background: 'rgba(0,191,165,0.12)' }}
                     onClick={() => setShowBugTracker(true)}
                     title="Open Superadmin Bug Tracker"
                   >
@@ -1375,11 +1418,30 @@ export default function App() {
                 >
                   {isBlindMode ? <IconEyeOff size={15} className="icon-sm" /> : <IconEye size={15} className="icon-sm" />}
                 </button>
+                <button
+                  type="button"
+                  className="secondary-btn"
+                  style={{ padding: '7px 8px', color: '#F2ECDC', borderColor: 'rgba(242,236,220,0.28)', background: 'rgba(242,236,220,0.06)' }}
+                  onClick={() => setShowCommandPalette(true)}
+                  title="Search & Quick Actions (Cmd+K)"
+                  aria-label="Command palette"
+                >
+                  <IconSearch size={15} className="icon-sm" />
+                </button>
+                <button
+                  type="button"
+                  className="secondary-btn"
+                  style={{ padding: '7px 10px', fontSize: '11.5px', color: '#F2ECDC', borderColor: 'rgba(242,236,220,0.28)', background: 'rgba(242,236,220,0.06)' }}
+                  onClick={() => setShowTripWrapped(true)}
+                  title="View Trip Wrapped Story"
+                >
+                  ✨ Wrapped
+                </button>
                 <NotificationsBellButton />
                 <button
                   data-action="trips-back"
                   className="secondary-btn"
-                  style={{ padding: '7px 12px', fontSize: '12px', color: '#F2ECDC', borderColor: 'rgba(242,236,220,0.28)', background: 'rgba(242,236,220,0.06)' }}
+                  style={{ padding: '7px 11px', fontSize: '12px', color: '#F2ECDC', borderColor: 'rgba(242,236,220,0.28)', background: 'rgba(242,236,220,0.06)' }}
                   onClick={() => selectTrip(null)}
                 >
                   <IconChevronLeft size={14} className="icon-sm" /> Trips
@@ -1390,6 +1452,12 @@ export default function App() {
               <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
                 <span>{visibleMembers.length} member{visibleMembers.length === 1 ? '' : 's'}</span>
                 <span>{activeTripExpenses.length} expense{activeTripExpenses.length === 1 ? '' : 's'}</span>
+                {activePeers.length > 0 && (
+                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '3px' }} title={`${activePeers.length} other traveler(s) online`}>
+                    <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#00BFA5', display: 'inline-block' }} />
+                    <span style={{ fontSize: '11px', color: '#00BFA5', fontWeight: 600 }}>{activePeers.length} online</span>
+                  </div>
+                )}
               </div>
               <button
                 type="button"
@@ -1641,6 +1709,42 @@ export default function App() {
 
       {confirmRequest && (
         <ConfirmDialog request={confirmRequest} onCancel={() => setConfirmRequest(null)} />
+      )}
+
+      {/* Command Palette */}
+      <CommandPalette
+        isOpen={showCommandPalette}
+        onClose={() => setShowCommandPalette(false)}
+        trip={activeTrip}
+        expenses={activeTripExpenses}
+        members={visibleMembers}
+        categories={categories}
+        onSelectExpense={(exp) => handleStartEditExpense(exp)}
+        onSelectMember={(mId) => {
+          setExpenseFilterMember(mId);
+          setActiveTab('expenses');
+        }}
+        onNewExpense={handleOpenAddExpense}
+        onOpenWrapped={() => setShowTripWrapped(true)}
+        onOpenSettings={() => setShowGlobalSettings(true)}
+        onSwitchTab={(t) => {
+          if (t === 'balances') {
+            setActiveTab('expenses');
+          } else {
+            setActiveTab(t);
+          }
+        }}
+      />
+
+      {/* Trip Wrapped Story Card Modal */}
+      {showTripWrapped && activeTrip && (
+        <TripWrappedModal
+          trip={activeTrip}
+          expenses={activeTripExpenses}
+          members={visibleMembers}
+          categories={categories}
+          onClose={() => setShowTripWrapped(false)}
+        />
       )}
 
       {/* Rendered unconditionally regardless of which screen is active

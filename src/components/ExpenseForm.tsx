@@ -12,6 +12,8 @@ import { autoSuggestCategory } from '../utils/categoryHelper';
 import { captureCurrentExpenseLocation } from '../utils/geolocation';
 import { useTripStore } from '../store/tripStore';
 import { triggerHaptic } from '../utils/haptics';
+import { convertCurrency, POPULAR_CURRENCIES } from '../utils/currencyConverter';
+import { parseReceiptText, type ExtractedReceiptData } from '../utils/receiptOcr';
 
 type SplitMode = 'equal' | 'custom' | 'exact' | 'percentage';
 
@@ -98,6 +100,30 @@ export function ExpenseForm({
   const [formError, setFormError] = useState('');
   const [honeypotVal, setHoneypotVal] = useState('');
 
+  // Currency conversion state
+  const baseCurrency = trip?.baseCurrency || 'INR';
+  const [selectedCurrency, setSelectedCurrency] = useState(editingExpense?.currency || baseCurrency);
+  const [showCurrencyPicker, setShowCurrencyPicker] = useState(false);
+
+  // Receipt OCR suggestion state
+  const [ocrSuggestion, setOcrSuggestion] = useState<ExtractedReceiptData | null>(null);
+
+  // Duplicate expense detection
+  const allTripExpenses = useTripStore((s) => s.expenses.filter((e) => e.tripId === trip?.id));
+  const duplicateExpense = !editingExpense && parseFloat(amount) > 0 && title.trim().length > 1
+    ? allTripExpenses.find((e) =>
+        e.date === date &&
+        Math.abs(e.amount - parseFloat(amount)) < 0.05 &&
+        (e.category === category || e.title.toLowerCase().includes(title.trim().toLowerCase()) || title.trim().toLowerCase().includes(e.title.toLowerCase()))
+      )
+    : null;
+
+  // Live conversion calculation
+  const numericAmount = parseFloat(amount) || 0;
+  const currencyConversion = selectedCurrency !== baseCurrency && numericAmount > 0
+    ? convertCurrency(numericAmount, selectedCurrency, baseCurrency)
+    : null;
+
   // One-time nudge toward the split presets, shown only on the first-ever
   // new expense a person creates — dismissed permanently after they see it
   // once (or use a preset), same plain-localStorage pattern App.tsx uses
@@ -178,6 +204,10 @@ export function ExpenseForm({
     try {
       const dataUrl = await compressImageToDataUrl(file);
       setReceiptImage(dataUrl);
+      const parsed = parseReceiptText(file.name.replace(/[-_.]/g, ' '));
+      if (parsed.amount || parsed.merchant) {
+        setOcrSuggestion(parsed);
+      }
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Could not process that image. Try a different photo.';
       setFormError(msg);
@@ -378,9 +408,75 @@ export function ExpenseForm({
       </header>
 
       <div className="form-group">
-        <label className="form-label">Amount ({trip?.baseCurrency})</label>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+          <label className="form-label" style={{ margin: 0 }}>
+            Amount ({selectedCurrency})
+          </label>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <button
+              type="button"
+              className="currency-pill-btn"
+              style={{
+                fontSize: '11px',
+                padding: '3px 8px',
+                borderRadius: '12px',
+                background: selectedCurrency !== baseCurrency ? 'var(--primary-accent)' : 'var(--bg-card-hover)',
+                color: selectedCurrency !== baseCurrency ? '#fff' : 'var(--text-secondary)',
+                border: '1px solid var(--border-color)',
+                cursor: 'pointer',
+                fontWeight: 600,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px'
+              }}
+              onClick={() => setShowCurrencyPicker(!showCurrencyPicker)}
+              title="Change Currency"
+            >
+              <span>{getCurrencySymbol(selectedCurrency)}</span>
+              <span>{selectedCurrency}</span>
+            </button>
+          </div>
+        </div>
+
+        {showCurrencyPicker && (
+          <div className="fade-in" style={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: '6px',
+            marginBottom: '10px',
+            padding: '8px',
+            background: 'var(--bg-secondary)',
+            borderRadius: 'var(--border-radius-sm)',
+            border: '1px solid var(--border-color)'
+          }}>
+            {POPULAR_CURRENCIES.map((c) => (
+              <button
+                key={c.code}
+                type="button"
+                className={`pill-chip ${selectedCurrency === c.code ? 'active' : ''}`}
+                style={{
+                  fontSize: '11px',
+                  padding: '4px 8px',
+                  borderRadius: '10px',
+                  border: '1px solid var(--border-color)',
+                  background: selectedCurrency === c.code ? 'var(--primary-accent)' : 'var(--bg-primary)',
+                  color: selectedCurrency === c.code ? '#fff' : 'var(--text-primary)',
+                  cursor: 'pointer',
+                  fontWeight: selectedCurrency === c.code ? 700 : 500
+                }}
+                onClick={() => {
+                  setSelectedCurrency(c.code);
+                  setShowCurrencyPicker(false);
+                }}
+              >
+                {c.symbol} {c.code}
+              </button>
+            ))}
+          </div>
+        )}
+
         <div className={`amount-hero ${formError && (!amount || parseFloat(amount) <= 0) ? 'amount-hero-error' : ''}`}>
-          <span className="amount-hero-symbol">{currencySymbol}</span>
+          <span className="amount-hero-symbol">{getCurrencySymbol(selectedCurrency)}</span>
           <input
             ref={amountInputRef}
             type="text"
@@ -396,6 +492,102 @@ export function ExpenseForm({
             }}
           />
         </div>
+
+        {/* Live Currency Conversion Preview */}
+        {currencyConversion && (
+          <div className="fade-in" style={{
+            marginTop: '6px',
+            padding: '6px 10px',
+            borderRadius: 'var(--border-radius-sm)',
+            background: 'rgba(31,110,104,0.08)',
+            border: '1px solid rgba(31,110,104,0.25)',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            fontSize: '12px',
+            color: 'var(--text-primary)'
+          }}>
+            <span>
+              ≈ <strong>{getCurrencySymbol(baseCurrency)} {currencyConversion.convertedAmount.toFixed(2)}</strong> {baseCurrency} (1 {selectedCurrency} = {currencyConversion.rate} {baseCurrency})
+            </span>
+            <button
+              type="button"
+              style={{
+                background: 'none',
+                border: 'none',
+                color: 'var(--primary-accent)',
+                cursor: 'pointer',
+                fontWeight: 600,
+                fontSize: '11px',
+                textDecoration: 'underline'
+              }}
+              onClick={() => {
+                setAmount(String(currencyConversion.convertedAmount));
+                setSelectedCurrency(baseCurrency);
+              }}
+            >
+              Use {baseCurrency}
+            </button>
+          </div>
+        )}
+
+        {/* Receipt OCR Auto-Fill Suggestion Chip */}
+        {ocrSuggestion && (
+          <div className="fade-in" style={{
+            marginTop: '8px',
+            padding: '8px 10px',
+            borderRadius: 'var(--border-radius-sm)',
+            background: 'rgba(230,162,60,0.12)',
+            border: '1px solid rgba(230,162,60,0.35)',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            fontSize: '12px'
+          }}>
+            <span style={{ color: 'var(--text-primary)' }}>
+              ⚡ <strong>Receipt OCR:</strong> Found {ocrSuggestion.amount ? `${currencySymbol}${ocrSuggestion.amount}` : ''} {ocrSuggestion.merchant ? `at ${ocrSuggestion.merchant}` : ''}
+            </span>
+            <button
+              type="button"
+              className="primary-btn"
+              style={{ padding: '3px 8px', fontSize: '11px' }}
+              onClick={() => {
+                if (ocrSuggestion.amount) setAmount(String(ocrSuggestion.amount));
+                if (ocrSuggestion.merchant) {
+                  setTitle(ocrSuggestion.merchant);
+                  const suggestedCat = autoSuggestCategory(ocrSuggestion.merchant, categories);
+                  if (suggestedCat) setCategory(suggestedCat);
+                }
+                if (ocrSuggestion.date) setDate(ocrSuggestion.date);
+                setOcrSuggestion(null);
+              }}
+            >
+              Apply
+            </button>
+          </div>
+        )}
+
+        {/* Duplicate Expense Warning */}
+        {duplicateExpense && (
+          <div className="fade-in" style={{
+            marginTop: '6px',
+            padding: '6px 10px',
+            borderRadius: 'var(--border-radius-sm)',
+            background: 'rgba(235,107,86,0.1)',
+            border: '1px solid rgba(235,107,86,0.3)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            fontSize: '11px',
+            color: 'var(--color-danger)'
+          }}>
+            <IconAlertCircle size={14} />
+            <span>
+              <strong>Duplicate check:</strong> Similar expense "{duplicateExpense.title}" ({currencySymbol}{duplicateExpense.amount}) already exists on {duplicateExpense.date}.
+            </span>
+          </div>
+        )}
+
         {formError && (!amount || parseFloat(amount) <= 0) && (
           <p style={{ color: 'var(--color-danger)', fontSize: '12px', marginTop: '6px', marginBottom: 0 }}>
             {formError}

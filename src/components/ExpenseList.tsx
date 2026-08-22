@@ -285,6 +285,8 @@ export function ExpenseList({
 
   const shouldShowChips = revealOnScroll || searchFocused || hasActiveFilters || !!localSearch || showDateFilter;
 
+  const [itineraryView, setItineraryView] = useState(false);
+
   // 2. Pagination State for virtualization
   const [visibleCount, setVisibleCount] = useState(50);
   
@@ -382,7 +384,19 @@ export function ExpenseList({
             <div className="filter-chips-track" role="region" aria-label="Quick filters">
             <button
               type="button"
-              className={`filter-chip ${isAllActive ? 'active' : ''}`}
+              className={`filter-chip ${itineraryView ? 'active' : ''}`}
+              onClick={() => {
+                triggerHaptic('light');
+                setItineraryView(!itineraryView);
+              }}
+              title="Toggle Day-by-Day Itinerary breakdown"
+            >
+              📅 {itineraryView ? 'Itinerary' : 'Day-by-Day'}
+            </button>
+
+            <button
+              type="button"
+              className={`filter-chip ${isAllActive && !itineraryView ? 'active' : ''}`}
               onClick={onClearFilters}
             >
               All
@@ -517,6 +531,112 @@ export function ExpenseList({
           </div>
           <div className="ledger-rule" />
           <div className="ledger-rule" />
+        </div>
+      ) : itineraryView ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          {Array.from(new Set(displayedExpenses.map((e) => e.date))).map((dayDate, dayIdx) => {
+            const dayExpenses = displayedExpenses.filter((e) => e.date === dayDate);
+            const dayTotal = dayExpenses.reduce((sum, e) => sum + e.amount, 0);
+            const expDate = new Date(`${dayDate}T00:00:00`);
+            const formattedDayHeader = Number.isNaN(expDate.getTime())
+              ? dayDate
+              : expDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+
+            return (
+              <div key={dayDate} className="glass-card" style={{ padding: 0, overflow: 'hidden' }}>
+                <div style={{
+                  padding: '10px 14px',
+                  background: 'var(--bg-secondary)',
+                  borderBottom: '1px solid var(--border-color)',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{
+                      fontSize: '11px',
+                      fontWeight: 800,
+                      background: 'var(--primary-accent)',
+                      color: '#fff',
+                      padding: '2px 6px',
+                      borderRadius: '4px'
+                    }}>
+                      Day {dayIdx + 1}
+                    </span>
+                    <span style={{ fontSize: '13.5px', fontWeight: 700, color: 'var(--text-primary)' }}>
+                      {formattedDayHeader}
+                    </span>
+                  </div>
+                  <div style={{ fontSize: '13px', fontWeight: 800, color: 'var(--primary-accent)' }}>
+                    {currencySymbol}{dayTotal.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
+                  </div>
+                </div>
+
+                <div>
+                  {dayExpenses.map((exp, idx) => {
+                    const isPending = exp.id === pendingDeleteId;
+                    const canManage = isAdmin || exp.createdByUserId === userId;
+                    const isPayerDeleted = trip ? !trip.memberIds.includes(exp.paidBy) : false;
+                    const hasDeletedParticipants = trip ? exp.splitMemberIds.some((id) => !trip.memberIds.includes(id)) : false;
+                    const needsReview = isPayerDeleted || hasDeletedParticipants;
+                    const payerMember = members[exp.paidBy];
+                    const cat = categories.find((c) => c.id === exp.category);
+
+                    return (
+                      <div
+                        key={exp.id}
+                        aria-hidden={isPending}
+                        style={{
+                          borderBottom: idx < dayExpenses.length - 1 ? '1.5px dashed var(--border-color)' : 'none',
+                          opacity: isPending ? 0.35 : 1,
+                          pointerEvents: isPending ? 'none' : undefined,
+                          transition: 'opacity 0.25s ease',
+                        }}
+                      >
+                        <ConditionalSwipe enabled={canManage} onDelete={() => onDelete(exp)}>
+                          <div
+                            className={`expense-row ${needsReview ? 'needs-review' : ''}`}
+                            onClick={() => (needsReview ? onReview(exp) : onEdit(exp))}
+                            role="button"
+                            tabIndex={0}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                if (needsReview) onReview(exp);
+                                else onEdit(exp);
+                              }
+                            }}
+                          >
+                            <div className="expense-avatar-group">
+                              <CategoryIcon categoryId={exp.category} fallbackEmoji={cat?.icon} size={15} />
+                              <ExpenseAvatar member={payerMember} size={22} muted={!payerMember} />
+                            </div>
+
+                            <div className="expense-details">
+                              <div className="expense-title-row">
+                                <span className="expense-title">{exp.title}</span>
+                              </div>
+                              <div className="expense-meta-row">
+                                <span className="expense-meta-item">{cat?.name || 'General'}</span>
+                                <span className="expense-meta-dot">·</span>
+                                <span className="expense-meta-item">Paid by {payerMember?.name || 'Unknown'}</span>
+                              </div>
+                            </div>
+
+                            <div className="expense-amount-group">
+                              <span className="expense-amount">
+                                {formatMaskedAmount(exp.amount.toFixed(2), currencySymbol, isBlindMode)}
+                              </span>
+                            </div>
+                          </div>
+                        </ConditionalSwipe>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
         </div>
       ) : (
         <div className="glass-card" style={{ padding: 0, overflow: 'hidden' }}>
