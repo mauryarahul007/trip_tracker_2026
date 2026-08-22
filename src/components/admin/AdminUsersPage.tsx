@@ -2,16 +2,18 @@ import { useState } from 'react';
 import type { Trip } from '../../types';
 import type { AdminUserRow } from '../../types/admin';
 import { setUserBanned, broadcastNotification } from '../../services/tripApi';
-import { IconSearch, IconCheck, IconAlertCircle } from '../Icons';
+import { IconSearch, IconCheck, IconAlertCircle, IconRefresh } from '../Icons';
 
 interface Props {
   users: AdminUserRow[];
   trips: Trip[];
   superadminIds: string[];
   onUsersChanged: () => void;
+  onRefresh: () => void | Promise<void>;
+  isRefreshing: boolean;
 }
 
-export function AdminUsersPage({ users, trips, superadminIds, onUsersChanged }: Props) {
+export function AdminUsersPage({ users, trips, superadminIds, onUsersChanged, onRefresh, isRefreshing }: Props) {
   const superadminIdSet = new Set(superadminIds);
   const [searchQuery, setSearchQuery] = useState('');
   const [toastMsg, setToastMsg] = useState('');
@@ -73,6 +75,9 @@ export function AdminUsersPage({ users, trips, superadminIds, onUsersChanged }: 
           <h2>User Directory</h2>
           <p>Every account across the fleet. Suspend an account to lock it out of every trip immediately.</p>
         </div>
+        <button type="button" className="ops-btn" disabled={isRefreshing} onClick={() => void onRefresh()}>
+          <IconRefresh size={13} className={isRefreshing ? 'icon-sm ops-spin' : 'icon-sm'} /> {isRefreshing ? 'Refreshing...' : 'Refresh'}
+        </button>
       </div>
 
       {toastMsg && (

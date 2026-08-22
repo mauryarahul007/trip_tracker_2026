@@ -3,15 +3,17 @@ import type { Trip, Expense } from '../../types';
 import { useTripStore } from '../../store/tripStore';
 import { getCurrencySymbol } from '../../utils/currency';
 import { logSuperadminAction } from '../../services/tripApi';
-import { IconSearch, IconCheck } from '../Icons';
+import { IconSearch, IconCheck, IconRefresh } from '../Icons';
 
 interface Props {
   trips: Trip[];
   expenses: Expense[];
   onInspectTrip?: (tripId: string) => void;
+  onRefresh: () => void | Promise<void>;
+  isRefreshing: boolean;
 }
 
-export function AdminTripsPage({ trips, expenses, onInspectTrip }: Props) {
+export function AdminTripsPage({ trips, expenses, onInspectTrip, onRefresh, isRefreshing }: Props) {
   const freezeTrip = useTripStore((s) => s.freezeTrip);
   const archiveTrip = useTripStore((s) => s.archiveTrip);
   const deleteTrip = useTripStore((s) => s.deleteTrip);
@@ -43,6 +45,9 @@ export function AdminTripsPage({ trips, expenses, onInspectTrip }: Props) {
           <h2>Trips Directory</h2>
           <p>Audit customer trips, inspect group telemetry, or ground rogue activity.</p>
         </div>
+        <button type="button" className="ops-btn" disabled={isRefreshing} onClick={() => void onRefresh()}>
+          <IconRefresh size={13} className={isRefreshing ? 'icon-sm ops-spin' : 'icon-sm'} /> {isRefreshing ? 'Refreshing...' : 'Refresh'}
+        </button>
       </div>
 
       <div className="ops-notice">

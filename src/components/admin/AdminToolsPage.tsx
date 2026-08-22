@@ -4,15 +4,17 @@ import { useTripStore } from '../../store/tripStore';
 import { useAuthStore } from '../../store/authStore';
 import { purgeRecycleBinOlderThan } from '../../services/tripApi';
 import { exportFleetSummaryToCSV } from '../../utils/csvExport';
-import { IconCheck, IconTrash, IconAlertCircle } from '../Icons';
+import { IconCheck, IconTrash, IconAlertCircle, IconRefresh } from '../Icons';
 
 interface Props {
   categories: Category[];
   trips: Trip[];
   expenses: Expense[];
+  onRefresh: () => void | Promise<void>;
+  isRefreshing: boolean;
 }
 
-export function AdminToolsPage({ categories, trips, expenses }: Props) {
+export function AdminToolsPage({ categories, trips, expenses, onRefresh, isRefreshing }: Props) {
   const exportDatabase = useTripStore((s) => s.exportDatabase);
   const importDatabase = useTripStore((s) => s.importDatabase);
   const clearDatabase = useTripStore((s) => s.clearDatabase);
@@ -177,6 +179,9 @@ export function AdminToolsPage({ categories, trips, expenses }: Props) {
           <h2>System Tools</h2>
           <p>Manage keyword auto-tagging rules, perform full JSON database backups, seed test datasets, or factory reset.</p>
         </div>
+        <button type="button" className="ops-btn" disabled={isRefreshing} onClick={() => void onRefresh()}>
+          <IconRefresh size={13} className={isRefreshing ? 'icon-sm ops-spin' : 'icon-sm'} /> {isRefreshing ? 'Refreshing...' : 'Refresh'}
+        </button>
       </div>
 
       {toastMsg && (

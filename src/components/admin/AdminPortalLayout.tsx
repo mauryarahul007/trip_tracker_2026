@@ -83,6 +83,7 @@ export function AdminPortalLayout({
   const [recycledCount, setRecycledCount] = useState(0);
   const [features, setFeatures] = useState<FeatureRecord[]>([]);
   const [showSectionSwitcher, setShowSectionSwitcher] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const panelRef = useRef<HTMLElement>(null);
   const lockSuperadmin = useTripStore((s) => s.lockSuperadmin);
   const signOut = useAuthStore((s) => s.signOut);
@@ -129,6 +130,26 @@ export function AdminPortalLayout({
     reloadFleetData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // On-demand counterpart to the trips-keyed expenses effect above, for the
+  // per-section manual Refresh buttons (Analytics/Trips/Users/Audit/Tools).
+  const reloadExpenses = () => {
+    const tripIds = trips.map((t) => t.id);
+    if (tripIds.length === 0) {
+      setExpenses([]);
+      return Promise.resolve();
+    }
+    return fetchAllExpensesForTrips(tripIds).then(setExpenses).catch(() => setExpenses([]));
+  };
+
+  const handleRefreshAll = async () => {
+    setIsRefreshing(true);
+    try {
+      await Promise.all([reloadFleetData(), reloadExpenses()]);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
 
   const handleAdminLogout = async () => {
     lockSuperadmin();
@@ -221,17 +242,49 @@ export function AdminPortalLayout({
               platformCounts={platformCounts}
               notificationStats={notificationStats}
               recycledCount={recycledCount}
+              onRefresh={handleRefreshAll}
+              isRefreshing={isRefreshing}
             />
           )}
-          {activeTab === 'trips' && <AdminTripsPage trips={trips} expenses={expenses} onInspectTrip={onInspectTrip} />}
+          {activeTab === 'trips' && (
+            <AdminTripsPage
+              trips={trips}
+              expenses={expenses}
+              onInspectTrip={onInspectTrip}
+              onRefresh={handleRefreshAll}
+              isRefreshing={isRefreshing}
+            />
+          )}
           {activeTab === 'users' && (
-            <AdminUsersPage users={users} trips={trips} superadminIds={superadminIds} onUsersChanged={reloadFleetData} />
+            <AdminUsersPage
+              users={users}
+              trips={trips}
+              superadminIds={superadminIds}
+              onUsersChanged={reloadFleetData}
+              onRefresh={handleRefreshAll}
+              isRefreshing={isRefreshing}
+            />
           )}
           {activeTab === 'audit' && (
-            <AdminAuditPage logs={auditLogs} trips={trips} users={users} onLogsChanged={reloadFleetData} />
+            <AdminAuditPage
+              logs={auditLogs}
+              trips={trips}
+              users={users}
+              onLogsChanged={reloadFleetData}
+              onRefresh={handleRefreshAll}
+              isRefreshing={isRefreshing}
+            />
           )}
           {activeTab === 'features' && <AdminFeaturesPage features={features} onFeaturesChanged={reloadFleetData} />}
-          {activeTab === 'tools' && <AdminToolsPage categories={categories} trips={trips} expenses={expenses} />}
+          {activeTab === 'tools' && (
+            <AdminToolsPage
+              categories={categories}
+              trips={trips}
+              expenses={expenses}
+              onRefresh={handleRefreshAll}
+              isRefreshing={isRefreshing}
+            />
+          )}
         </main>
       </div>
 

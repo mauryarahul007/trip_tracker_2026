@@ -4,7 +4,7 @@ import type { AppConfigKey, FeatureFlagKey } from '../../types/admin';
 import { FEATURE_FLAGS_META } from '../../utils/featureFlags';
 import { useTripStore } from '../../store/tripStore';
 import { fetchAppConfig, setAppConfigValue } from '../../services/tripApi';
-import { IconCheck, IconAlertCircle } from '../Icons';
+import { IconCheck, IconAlertCircle, IconRefresh } from '../Icons';
 
 interface Props {
   trips: Trip[];
@@ -118,15 +118,16 @@ export function AdminFlagsPage({ trips, members }: Props) {
   const [auditRetentionDaysInput, setAuditRetentionDaysInput] = useState('90');
   const [maintenanceWindowStart, setMaintenanceWindowStart] = useState('');
   const [maintenanceWindowEnd, setMaintenanceWindowEnd] = useState('');
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const showToast = (msg: string) => {
     setToastMsg(msg);
     setTimeout(() => setToastMsg(''), 2500);
   };
 
-  useEffect(() => {
-    fetchAppConfig()
-      .then((c) => {
+  const loadConfigAndOverrides = () =>
+    Promise.all([
+      fetchAppConfig().then((c) => {
         setConfig(c);
         if (typeof c.join_max_attempts === 'number') setJoinMaxAttemptsInput(String(c.join_max_attempts));
         if (typeof c.join_lockout_minutes === 'number') setJoinLockoutMinutesInput(String(c.join_lockout_minutes));
@@ -136,15 +137,30 @@ export function AdminFlagsPage({ trips, members }: Props) {
         const window = c.maintenance_window as { start?: string; end?: string } | undefined;
         if (window?.start) setMaintenanceWindowStart(window.start.slice(0, 16));
         if (window?.end) setMaintenanceWindowEnd(window.end.slice(0, 16));
-      })
-      .catch(() => {});
-    // Feature flags/overrides used to be device-local only (zustand
-    // persist) -- this pulls the real, Supabase-backed state (migration
-    // 0064) so the panel reflects what's actually set for every trip and
-    // user, not just whatever this browser last wrote.
-    void loadAllFeatureFlagOverrides();
+      }),
+      // Feature flags/overrides used to be device-local only (zustand
+      // persist) -- this pulls the real, Supabase-backed state (migration
+      // 0064) so the panel reflects what's actually set for every trip and
+      // user, not just whatever this browser last wrote.
+      loadAllFeatureFlagOverrides(),
+    ]).then(() => undefined);
+
+  useEffect(() => {
+    loadConfigAndOverrides().catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      await loadConfigAndOverrides();
+      showToast('Refreshed.');
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : 'Refresh failed.');
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
 
   const saveConfig = async (key: AppConfigKey, value: unknown, label: string) => {
     setSavingKey(key);
@@ -169,16 +185,21 @@ export function AdminFlagsPage({ trips, members }: Props) {
           <h2>Feature Flags</h2>
           <p>Live switchboard for every traveler-facing feature. Superadmin always bypasses &mdash; these govern normal users only.</p>
         </div>
-        <button
-          type="button"
-          className="ops-btn"
-          onClick={() => {
-            resetFeatureFlags();
-            showToast('Reset all feature flags to defaults.');
-          }}
-        >
-          Reset to Defaults
-        </button>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <button type="button" className="ops-btn" disabled={isRefreshing} onClick={() => void handleRefresh()}>
+            <IconRefresh size={13} className={isRefreshing ? 'icon-sm ops-spin' : 'icon-sm'} /> {isRefreshing ? 'Refreshing...' : 'Refresh'}
+          </button>
+          <button
+            type="button"
+            className="ops-btn"
+            onClick={() => {
+              resetFeatureFlags();
+              showToast('Reset all feature flags to defaults.');
+            }}
+          >
+            Reset to Defaults
+          </button>
+        </div>
       </div>
 
       {toastMsg && (

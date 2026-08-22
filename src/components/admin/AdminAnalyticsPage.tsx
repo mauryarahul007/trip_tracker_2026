@@ -4,6 +4,7 @@ import type { AdminUserRow, DevicePlatformCount, NotificationStats } from '../..
 import type { BugRecord } from '../../services/bugApi';
 import { getCurrencySymbol } from '../../utils/currency';
 import { calculateSettlements } from '../../utils/settlement';
+import { IconRefresh } from '../Icons';
 
 interface Props {
   trips: Trip[];
@@ -15,6 +16,8 @@ interface Props {
   platformCounts: DevicePlatformCount[];
   notificationStats: NotificationStats;
   recycledCount: number;
+  onRefresh: () => void | Promise<void>;
+  isRefreshing: boolean;
 }
 
 const WEEKDAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -29,7 +32,7 @@ const SPLIT_MODE_LABELS: Record<string, string> = {
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-export function AdminAnalyticsPage({ trips, expenses, members, categories, bugs, users, platformCounts, notificationStats, recycledCount }: Props) {
+export function AdminAnalyticsPage({ trips, expenses, members, categories, bugs, users, platformCounts, notificationStats, recycledCount, onRefresh, isRefreshing }: Props) {
   const activeTrips = trips.filter((t) => !t.archived);
   const activeTripIds = new Set(activeTrips.map((t) => t.id));
   const activeExpenses = expenses.filter((e) => activeTripIds.has(e.tripId) && !e.title.startsWith('Settlement:'));
@@ -259,6 +262,9 @@ export function AdminAnalyticsPage({ trips, expenses, members, categories, bugs,
           <h2>Global Trip Analytics</h2>
           <p>Telemetry, aggregate volume, spending distributions, and category patterns across all trips.</p>
         </div>
+        <button type="button" className="ops-btn" disabled={isRefreshing} onClick={() => void onRefresh()}>
+          <IconRefresh size={13} className={isRefreshing ? 'icon-sm ops-spin' : 'icon-sm'} /> {isRefreshing ? 'Refreshing...' : 'Refresh'}
+        </button>
       </div>
 
       <div className="ops-card ops-hero-card">

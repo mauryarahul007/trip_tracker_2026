@@ -2,13 +2,15 @@ import { useMemo, useState } from 'react';
 import type { Trip } from '../../types';
 import type { AdminUserRow, AuditLogEntry } from '../../types/admin';
 import { purgeAuditLogsOlderThan } from '../../services/tripApi';
-import { IconCheck, IconSearch } from '../Icons';
+import { IconCheck, IconSearch, IconRefresh } from '../Icons';
 
 interface Props {
   logs: AuditLogEntry[];
   trips: Trip[];
   users: AdminUserRow[];
   onLogsChanged: () => void;
+  onRefresh: () => void | Promise<void>;
+  isRefreshing: boolean;
 }
 
 const ACTION_LABELS: Record<string, string> = {
@@ -19,7 +21,7 @@ const ACTION_LABELS: Record<string, string> = {
   set_app_config: 'Config Changed',
 };
 
-export function AdminAuditPage({ logs, trips, users, onLogsChanged }: Props) {
+export function AdminAuditPage({ logs, trips, users, onLogsChanged, onRefresh, isRefreshing }: Props) {
   const [searchQuery, setSearchQuery] = useState('');
   const [purgeDays, setPurgeDays] = useState('90');
   const [isPurging, setIsPurging] = useState(false);
@@ -63,6 +65,9 @@ export function AdminAuditPage({ logs, trips, users, onLogsChanged }: Props) {
           <h2>Security Audit Log</h2>
           <p>Every superadmin action that touches user access or fleet config — suspensions, broadcasts, purges, config changes.</p>
         </div>
+        <button type="button" className="ops-btn" disabled={isRefreshing} onClick={() => void onRefresh()}>
+          <IconRefresh size={13} className={isRefreshing ? 'icon-sm ops-spin' : 'icon-sm'} /> {isRefreshing ? 'Refreshing...' : 'Refresh'}
+        </button>
       </div>
 
       {toastMsg && (
