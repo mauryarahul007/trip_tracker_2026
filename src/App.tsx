@@ -1093,7 +1093,11 @@ export default function App() {
 
   // Wire swipe-back gesture, hardware/OS back button, and the browser Back
   // button to close whichever screen/modal is open, deepest first (WhatsApp LIFO navigation stack).
-  useHistoryBack(!!activeTripId, () => selectTrip(null));
+  useHistoryBack(isSuperadmin && isTravelerPreview, () => {
+    setIsTravelerPreview(false);
+    void selectTrip(null);
+  });
+  useHistoryBack(!!activeTripId && !isTravelerPreview, () => selectTrip(null));
   useHistoryBack(!!activeTripId && activeTab !== 'expenses', () => setActiveTab('expenses'));
   useHistoryBack(showAddTrip, handleCancelTripForm);
   useHistoryBack(showAddExpense, handleCancelExpenseForm);
