@@ -97,12 +97,12 @@ export function GlobalSettingsModal({
         <header className="app-header" style={{ margin: '-20px -20px 20px', paddingTop: 'max(20px, var(--safe-top, 0px))' }}>
           <div className="app-header-top">
             <div className="app-title-group">
-              <h2 id="global-settings-title" className="app-logo" style={{ fontSize: '22px', color: '#F2ECDC' }}>Settings</h2>
+              <h2 id="global-settings-title" className="app-logo" style={{ fontSize: '22px', color: '#FFFFFF' }}>Settings</h2>
             </div>
             <button
               type="button"
               className="secondary-btn"
-              style={{ padding: '7px 8px', color: '#F2ECDC', borderColor: 'rgba(242,236,220,0.28)', background: 'rgba(242,236,220,0.06)', flexShrink: 0 }}
+              style={{ padding: '7px 8px', color: '#FFFFFF', borderColor: 'rgba(255,255,255,0.28)', background: 'rgba(255,255,255,0.1)', flexShrink: 0 }}
               aria-label="Close"
               title="Close"
               onClick={onClose}

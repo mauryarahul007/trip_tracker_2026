@@ -395,12 +395,12 @@ export function ExpenseForm({
         <div className="app-header-top">
           <div className="app-title-group">
             <span className="app-eyebrow">{trip?.name}</span>
-            <h2 id="expense-form-title" className="app-logo" style={{ fontSize: '22px', color: '#F2ECDC' }}>{editingExpense ? 'Edit Expense' : 'New Expense'}</h2>
+            <h2 id="expense-form-title" className="app-logo" style={{ fontSize: '22px', color: '#FFFFFF' }}>{editingExpense ? 'Edit Expense' : 'New Expense'}</h2>
           </div>
           <button
             type="button"
             className="secondary-btn"
-            style={{ padding: '7px 8px', color: '#F2ECDC', borderColor: 'rgba(242,236,220,0.28)', background: 'rgba(242,236,220,0.06)', flexShrink: 0 }}
+            style={{ padding: '7px 8px', color: '#FFFFFF', borderColor: 'rgba(255,255,255,0.28)', background: 'rgba(255,255,255,0.1)', flexShrink: 0 }}
             aria-label="Close"
             title="Close"
             onClick={onCancel}
@@ -502,8 +502,8 @@ export function ExpenseForm({
             marginTop: '6px',
             padding: '6px 10px',
             borderRadius: 'var(--border-radius-sm)',
-            background: 'rgba(31,110,104,0.08)',
-            border: '1px solid rgba(31,110,104,0.25)',
+            background: 'rgba(47,111,237,0.08)',
+            border: '1px solid rgba(47,111,237,0.25)',
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
@@ -655,7 +655,7 @@ export function ExpenseForm({
                 key={m.id}
                 type="button"
                 className="member-card"
-                style={isSelected ? { borderColor: 'var(--primary-accent)', background: 'rgba(31,110,104,0.07)' } : undefined}
+                style={isSelected ? { borderColor: 'var(--primary-accent)', background: 'rgba(47,111,237,0.07)' } : undefined}
                 onClick={() => setPayer(m.id)}
                 aria-pressed={isSelected}
               >
@@ -689,13 +689,13 @@ export function ExpenseForm({
         <div className="form-group">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
             <label className="form-label" style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <span style={{ color: '#00BFA5', display: 'flex', alignItems: 'center' }}><IconMapPin size={15} /></span> Location
+              <span style={{ color: '#17B6A6', display: 'flex', alignItems: 'center' }}><IconMapPin size={15} /></span> Location
             </label>
             {enableGeotagging && !location && !locationLoading && (
               <button
                 type="button"
                 className="secondary-btn"
-                style={{ padding: '2px 8px', fontSize: '11.5px', color: '#00BFA5', borderColor: 'rgba(0,191,165,0.3)' }}
+                style={{ padding: '2px 8px', fontSize: '11.5px', color: '#17B6A6', borderColor: 'rgba(23,182,166,0.3)' }}
                 onClick={async () => {
                   setLocationLoading(true);
                   const loc = await captureCurrentExpenseLocation();
@@ -710,7 +710,7 @@ export function ExpenseForm({
 
           {locationLoading ? (
             <div style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 0' }}>
-              <span style={{ display: 'inline-block', width: '12px', height: '12px', borderRadius: '50%', border: '2px solid #00BFA5', borderTopColor: 'transparent', animation: 'spin 0.8s linear infinite' }} />
+              <span style={{ display: 'inline-block', width: '12px', height: '12px', borderRadius: '50%', border: '2px solid #17B6A6', borderTopColor: 'transparent', animation: 'spin 0.8s linear infinite' }} />
               Fetching GPS coordinates...
             </div>
           ) : location ? (
@@ -721,8 +721,8 @@ export function ExpenseForm({
                 gap: '8px',
                 padding: '6px 12px',
                 borderRadius: 'var(--border-radius-pill)',
-                background: 'rgba(0,191,165,0.08)',
-                border: '1px solid rgba(0,191,165,0.28)',
+                background: 'rgba(23,182,166,0.08)',
+                border: '1px solid rgba(23,182,166,0.28)',
                 fontSize: '12.5px',
                 color: 'var(--text-primary)',
               }}
@@ -825,8 +825,8 @@ export function ExpenseForm({
             marginTop: '8px',
             padding: '8px 10px',
             borderRadius: 'var(--border-radius-sm)',
-            background: 'rgba(31,110,104,0.07)',
-            border: '1px solid rgba(31,110,104,0.2)',
+            background: 'rgba(47,111,237,0.07)',
+            border: '1px solid rgba(47,111,237,0.2)',
             fontSize: '12px',
             color: 'var(--text-primary)',
           }}

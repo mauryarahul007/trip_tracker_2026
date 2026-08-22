@@ -165,7 +165,7 @@ export function LoginScreen() {
             onMouseOver={(e) => {
               if (signInsPaused) return;
               e.currentTarget.style.background = 'var(--bg-app)';
-              e.currentTarget.style.borderColor = 'rgba(31, 110, 104, 0.3)';
+              e.currentTarget.style.borderColor = 'rgba(47, 111, 237, 0.3)';
             }}
             onMouseOut={(e) => {
               if (signInsPaused) return;
@@ -227,8 +227,8 @@ export function LoginScreen() {
               fontSize: '14px',
               fontWeight: 600,
               color: 'var(--primary-accent)',
-              borderColor: 'rgba(31, 110, 104, 0.35)',
-              background: 'rgba(31, 110, 104, 0.05)',
+              borderColor: 'rgba(47, 111, 237, 0.35)',
+              background: 'rgba(47, 111, 237, 0.05)',
             }}
           >
             <IconShield size={16} />

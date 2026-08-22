@@ -17,9 +17,9 @@ export function NotificationsBellButton() {
       className="secondary-btn"
       style={{
         padding: '7px',
-        color: '#F2ECDC',
-        borderColor: 'rgba(242,236,220,0.28)',
-        background: 'rgba(242,236,220,0.06)',
+        color: '#FFFFFF',
+        borderColor: 'rgba(255,255,255,0.28)',
+        background: 'rgba(255,255,255,0.1)',
         position: 'relative',
       }}
       aria-label={unreadCount > 0 ? `Notifications, ${unreadCount} unread` : 'Notifications'}

@@ -97,8 +97,8 @@ export function TripsListScreen({
                 alignItems: 'center',
                 gap: '6px',
                 borderRadius: '8px',
-                background: 'rgba(0, 191, 165, 0.08)',
-                borderColor: 'rgba(0, 191, 165, 0.4)',
+                background: 'rgba(23, 182, 166, 0.08)',
+                borderColor: 'rgba(23, 182, 166, 0.4)',
                 color: 'var(--text-primary)',
               }}
               onClick={onOpenBugTracker}
@@ -106,7 +106,7 @@ export function TripsListScreen({
               title="Superadmin Bug Tracker"
             >
               <span>🛡️</span>
-              <strong style={{ color: 'var(--color-primary, #00BFA5)' }}>Bug Tracker</strong>
+              <strong style={{ color: 'var(--color-primary, #17B6A6)' }}>Bug Tracker</strong>
             </button>
           )}
           <button

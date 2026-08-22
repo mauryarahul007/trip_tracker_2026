@@ -739,7 +739,7 @@ export function ExpenseList({
                           )}
                         </div>
                         {exp.location?.placeName && (
-                          <span style={{ color: '#00BFA5', fontSize: '12px', flexShrink: 0 }} title={exp.location.placeName}>📍</span>
+                          <span style={{ color: '#17B6A6', fontSize: '12px', flexShrink: 0 }} title={exp.location.placeName}>📍</span>
                         )}
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>

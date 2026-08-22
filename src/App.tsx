@@ -1270,7 +1270,7 @@ export default function App() {
             position: 'sticky',
             top: 0,
             zIndex: 100,
-            background: 'linear-gradient(135deg, #1C2A38, #1F6E68)',
+            background: 'linear-gradient(135deg, #2F6FED, #17B6A6)',
             color: '#FFFFFF',
             padding: '10px 16px',
             display: 'flex',
@@ -1382,7 +1382,7 @@ export default function App() {
                   <FitHeading
                     text={activeTrip?.name || ''}
                     className="app-logo"
-                    style={{ color: '#F2ECDC' }}
+                    style={{ color: '#FFFFFF' }}
                     maxFontSize={22}
                     minFontSize={14}
                   />
@@ -1393,7 +1393,7 @@ export default function App() {
                   <button
                     type="button"
                     className="secondary-btn"
-                    style={{ padding: '7px 9px', fontSize: '12px', color: '#00BFA5', borderColor: 'rgba(0,191,165,0.4)', background: 'rgba(0,191,165,0.12)' }}
+                    style={{ padding: '7px 9px', fontSize: '12px', color: '#17B6A6', borderColor: 'rgba(23,182,166,0.4)', background: 'rgba(23,182,166,0.12)' }}
                     onClick={() => setShowBugTracker(true)}
                     title="Open Superadmin Bug Tracker"
                   >
@@ -1405,9 +1405,9 @@ export default function App() {
                   className="secondary-btn"
                   style={{
                     padding: '7px 8px',
-                    color: isBlindMode ? '#00BFA5' : '#F2ECDC',
-                    borderColor: isBlindMode ? '#00BFA5' : 'rgba(242,236,220,0.28)',
-                    background: isBlindMode ? 'rgba(0,191,165,0.18)' : 'rgba(242,236,220,0.06)'
+                    color: isBlindMode ? '#17B6A6' : '#FFFFFF',
+                    borderColor: isBlindMode ? '#17B6A6' : 'rgba(255,255,255,0.28)',
+                    background: isBlindMode ? 'rgba(23,182,166,0.18)' : 'rgba(255,255,255,0.1)'
                   }}
                   onClick={() => {
                     triggerHaptic('light');
@@ -1421,7 +1421,7 @@ export default function App() {
                 <button
                   type="button"
                   className="secondary-btn"
-                  style={{ padding: '7px 8px', color: '#F2ECDC', borderColor: 'rgba(242,236,220,0.28)', background: 'rgba(242,236,220,0.06)' }}
+                  style={{ padding: '7px 8px', color: '#FFFFFF', borderColor: 'rgba(255,255,255,0.28)', background: 'rgba(255,255,255,0.1)' }}
                   onClick={() => setShowCommandPalette(true)}
                   title="Search & Quick Actions (Cmd+K)"
                   aria-label="Command palette"
@@ -1432,7 +1432,7 @@ export default function App() {
                 <button
                   data-action="trips-back"
                   className="secondary-btn"
-                  style={{ padding: '7px 11px', fontSize: '12px', color: '#F2ECDC', borderColor: 'rgba(242,236,220,0.28)', background: 'rgba(242,236,220,0.06)' }}
+                  style={{ padding: '7px 11px', fontSize: '12px', color: '#FFFFFF', borderColor: 'rgba(255,255,255,0.28)', background: 'rgba(255,255,255,0.1)' }}
                   onClick={() => selectTrip(null)}
                 >
                   <IconChevronLeft size={14} className="icon-sm" /> Trips
@@ -1445,8 +1445,8 @@ export default function App() {
                 <span>{activeTripExpenses.length} expense{activeTripExpenses.length === 1 ? '' : 's'}</span>
                 {activePeers.length > 0 && (
                   <div style={{ display: 'inline-flex', alignItems: 'center', gap: '3px' }} title={`${activePeers.length} other traveler(s) online`}>
-                    <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#00BFA5', display: 'inline-block' }} />
-                    <span style={{ fontSize: '11px', color: '#00BFA5', fontWeight: 600 }}>{activePeers.length} online</span>
+                    <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#17B6A6', display: 'inline-block' }} />
+                    <span style={{ fontSize: '11px', color: '#17B6A6', fontWeight: 600 }}>{activePeers.length} online</span>
                   </div>
                 )}
               </div>
