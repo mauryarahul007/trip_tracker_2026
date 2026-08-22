@@ -347,16 +347,16 @@ export function ExpenseList({
         </button>
       )}
 
-      {/* Search & Filters */}
+      {/* Search & View Switcher */}
       {activeTripExpenseCount > 0 && (
         <div ref={filtersRef} className="expense-filters">
-          <div className="expense-search-row">
-            <div className="input-icon-wrap expense-search-wrap">
+          <div className="expense-search-row" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div className="input-icon-wrap expense-search-wrap" style={{ flex: 1 }}>
               <IconSearch size={16} className="icon-sm" />
               <input
                 type="text"
                 className="input-field expense-search-input"
-                placeholder="Search expenses by title or note..."
+                placeholder="Search expenses..."
                 value={localSearch}
                 onFocus={() => setSearchFocused(true)}
                 onBlur={() => setSearchFocused(false)}
@@ -377,107 +377,121 @@ export function ExpenseList({
                 </button>
               )}
             </div>
+
+            {/* Dedicated Ledger vs Day-by-Day View Switcher */}
+            <div className="segmented-view-toggle" role="group" aria-label="View mode">
+              <button
+                type="button"
+                className={`segmented-pill ${!itineraryView ? 'active' : ''}`}
+                onClick={() => {
+                  triggerHaptic('light');
+                  setItineraryView(false);
+                }}
+                title="Ledger List View"
+              >
+                ≡ List
+              </button>
+              <button
+                type="button"
+                className={`segmented-pill ${itineraryView ? 'active' : ''}`}
+                onClick={() => {
+                  triggerHaptic('light');
+                  setItineraryView(true);
+                }}
+                title="Day-by-Day Itinerary View"
+              >
+                📅 Days
+              </button>
+            </div>
           </div>
 
-          {/* WhatsApp-style horizontal quick filter pills - revealed on scroll/active */}
+          {/* Horizontal quick filter pills */}
           <div className={`filter-chips-collapse ${shouldShowChips ? 'expanded' : ''}`}>
             <div className="filter-chips-track" role="region" aria-label="Quick filters">
-            <button
-              type="button"
-              className={`filter-chip ${itineraryView ? 'active' : ''}`}
-              onClick={() => {
-                triggerHaptic('light');
-                setItineraryView(!itineraryView);
-              }}
-              title="Toggle Day-by-Day Itinerary breakdown"
-            >
-              📅 {itineraryView ? 'Itinerary' : 'Day-by-Day'}
-            </button>
-
-            <button
-              type="button"
-              className={`filter-chip ${isAllActive && !itineraryView ? 'active' : ''}`}
-              onClick={onClearFilters}
-            >
-              All
-            </button>
-
-            {myMemberId && (
               <button
                 type="button"
-                className={`filter-chip ${filterMember === myMemberId ? 'active' : ''}`}
-                onClick={() => setFilterMember(filterMember === myMemberId ? '' : myMemberId)}
+                className={`filter-chip ${isAllActive ? 'active' : ''}`}
+                onClick={onClearFilters}
               >
-                👤 Mine
+                All
               </button>
-            )}
 
-            {/* Date filter chip */}
-            <button
-              type="button"
-              className={`filter-chip ${(filterDateFrom || filterDateTo || showDateFilter) ? 'active' : ''}`}
-              onClick={() => setShowDateFilter((v) => !v)}
-              title="Filter by date range"
-            >
-              <IconCalendar size={13} />
-              <span>
-                {filterDateFrom || filterDateTo
-                  ? `${filterDateFrom || 'Start'} – ${filterDateTo || 'End'}`
-                  : 'Dates'}
-              </span>
-            </button>
-
-            {/* Category chips */}
-            {categories.map((c) => {
-              const isSelected = filterCategory === c.id;
-              return (
+              {myMemberId && (
                 <button
-                  key={c.id}
                   type="button"
-                  className={`filter-chip ${isSelected ? 'active' : ''}`}
-                  onClick={() => setFilterCategory(isSelected ? '' : c.id)}
+                  className={`filter-chip ${filterMember === myMemberId ? 'active' : ''}`}
+                  onClick={() => setFilterMember(filterMember === myMemberId ? '' : myMemberId)}
                 >
-                  <CategoryIcon categoryId={c.id} fallbackEmoji={c.icon} size={13} />
-                  <span>{c.name}</span>
+                  👤 Mine
                 </button>
-              );
-            })}
+              )}
 
-            {/* Member chips (when multiple members exist, exclude myMemberId since that's already in 'Mine') */}
-            {activeTripMembers.length > 1 &&
-              activeTripMembers
-                .filter((m) => m.id !== myMemberId)
-                .map((m) => {
-                  const isSelected = filterMember === m.id;
-                  return (
-                    <button
-                      key={m.id}
-                      type="button"
-                      className={`filter-chip ${isSelected ? 'active' : ''}`}
-                      onClick={() => setFilterMember(isSelected ? '' : m.id)}
-                    >
-                      <ExpenseAvatar member={m} size={15} />
-                      <span>{m.name}</span>
-                    </button>
-                  );
-                })}
-
-            {hasActiveFilters && (
+              {/* Date filter chip */}
               <button
                 type="button"
-                className="filter-chip filter-chip-clear"
-                onClick={() => {
-                  onClearFilters();
-                  setShowDateFilter(false);
-                }}
-                title="Clear all active filters"
+                className={`filter-chip ${(filterDateFrom || filterDateTo || showDateFilter) ? 'active' : ''}`}
+                onClick={() => setShowDateFilter((v) => !v)}
+                title="Filter by date range"
               >
-                <IconClose size={12} />
-                <span>Clear</span>
+                <IconCalendar size={13} />
+                <span>
+                  {filterDateFrom || filterDateTo
+                    ? `${filterDateFrom || 'Start'} – ${filterDateTo || 'End'}`
+                    : 'Dates'}
+                </span>
               </button>
-            )}
+
+              {/* Category chips */}
+              {categories.map((c) => {
+                const isSelected = filterCategory === c.id;
+                return (
+                  <button
+                    key={c.id}
+                    type="button"
+                    className={`filter-chip ${isSelected ? 'active' : ''}`}
+                    onClick={() => setFilterCategory(isSelected ? '' : c.id)}
+                  >
+                    <CategoryIcon categoryId={c.id} fallbackEmoji={c.icon} size={13} />
+                    <span>{c.name}</span>
+                  </button>
+                );
+              })}
+
+              {/* Member chips */}
+              {activeTripMembers.length > 1 &&
+                activeTripMembers
+                  .filter((m) => m.id !== myMemberId)
+                  .map((m) => {
+                    const isSelected = filterMember === m.id;
+                    return (
+                      <button
+                        key={m.id}
+                        type="button"
+                        className={`filter-chip ${isSelected ? 'active' : ''}`}
+                        onClick={() => setFilterMember(isSelected ? '' : m.id)}
+                      >
+                        <ExpenseAvatar member={m} size={15} />
+                        <span>{m.name}</span>
+                      </button>
+                    );
+                  })}
+
+              {hasActiveFilters && (
+                <button
+                  type="button"
+                  className="filter-chip filter-chip-clear"
+                  onClick={() => {
+                    onClearFilters();
+                    setShowDateFilter(false);
+                  }}
+                  title="Clear all active filters"
+                >
+                  <IconClose size={12} />
+                  <span>Clear</span>
+                </button>
+              )}
+            </div>
           </div>
-        </div>
 
           {/* Collapsible Date Range Sub-panel */}
           {showDateFilter && (

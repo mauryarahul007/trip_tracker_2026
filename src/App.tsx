@@ -1428,15 +1428,6 @@ export default function App() {
                 >
                   <IconSearch size={15} className="icon-sm" />
                 </button>
-                <button
-                  type="button"
-                  className="secondary-btn"
-                  style={{ padding: '7px 10px', fontSize: '11.5px', color: '#F2ECDC', borderColor: 'rgba(242,236,220,0.28)', background: 'rgba(242,236,220,0.06)' }}
-                  onClick={() => setShowTripWrapped(true)}
-                  title="View Trip Wrapped Story"
-                >
-                  ✨ Wrapped
-                </button>
                 <NotificationsBellButton />
                 <button
                   data-action="trips-back"
@@ -1611,6 +1602,7 @@ export default function App() {
                 onOpenSuperadminPortal={() => setIsTravelerPreview(false)}
                 onRequestConfirm={setConfirmRequest}
                 onOpenShareTrip={() => setShowShareTrip(true)}
+                onOpenTripWrapped={() => setShowTripWrapped(true)}
               />
               </div>
             </div>
@@ -1694,6 +1686,7 @@ export default function App() {
           pwaInstallable={!!deferredPrompt}
           onInstallApp={handleInstallApp}
           onRequestConfirm={setConfirmRequest}
+          onOpenTripWrapped={() => setShowTripWrapped(true)}
         />
       )}
 

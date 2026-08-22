@@ -33,6 +33,7 @@ type Props = {
   onInstallApp?: () => void;
   onRequestConfirm?: (req: ConfirmRequest) => void;
   onOpenShareTrip?: () => void;
+  onOpenTripWrapped?: () => void;
 };
 
 export function SettingsTab({
@@ -64,6 +65,7 @@ export function SettingsTab({
   onOpenSuperadminPortal,
   onRequestConfirm,
   onOpenShareTrip,
+  onOpenTripWrapped,
 }: Props) {
   return (
     <SettingsView
@@ -95,6 +97,7 @@ export function SettingsTab({
       onOpenSuperadminPortal={onOpenSuperadminPortal}
       onRequestConfirm={onRequestConfirm}
       onOpenShareTrip={onOpenShareTrip}
+      onOpenTripWrapped={onOpenTripWrapped}
       hasActiveTrip={true}
     />
   );

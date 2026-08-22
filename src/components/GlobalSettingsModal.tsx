@@ -38,11 +38,13 @@ type Props = {
   onDeleteCategory?: (categoryId: string, replacementCategoryId: string | null) => Promise<void>;
   onExportCsv?: () => void;
   isAdmin?: boolean;
+  onOpenTripWrapped?: () => void;
 };
 
 export function GlobalSettingsModal({
   onClose,
   onRequestConfirm,
+  onOpenTripWrapped,
   themePref,
   setThemePref,
   onExportJson,
@@ -139,6 +141,7 @@ export function GlobalSettingsModal({
           hasActiveTrip={Boolean(activeTripId)}
           onClose={onClose}
           onRequestConfirm={onRequestConfirm}
+          onOpenTripWrapped={onOpenTripWrapped}
         />
       </div>
     </div>

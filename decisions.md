@@ -908,3 +908,20 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - UPI deep link intents open native apps via custom URI schemes on mobile devices. On desktop browsers without registered protocol handlers, the modal provides a dynamic QR code and 1-click URI copy button.
 
+---
+
+## 48. Trip Header Declutter & Expenses Tab Segmented View Switcher
+* **Context:**
+  - Placing the "✨ Wrapped" button directly in the active trip header bar squeezed the trip title on mobile devices.
+  - Mixing the "Day-by-Day" itinerary toggle inside the horizontal scrolling filter chips track caused confusion between view presentation modes and filter categories.
+* **Decision:**
+  - **Trip Wrapped Relocation (`src/App.tsx`, `src/components/SettingsView.tsx`, `src/components/SettingsTab.tsx`, `src/components/GlobalSettingsModal.tsx`):**
+    - Removed Wrapped button from `.app-header-top`, restoring full breathing room to trip titles across mobile viewports.
+    - Added a dedicated "Trip Wrapped (Story Card)" action row in Settings under Trip Preferences with description and direct launcher.
+  - **Expenses Tab Segmented Switcher (`src/components/ExpenseList.tsx`, `src/index.css`):**
+    - Moved the view mode toggle into a dedicated `[ ≡ List | 📅 Days ]` segmented pill control alongside the search bar.
+    - Preserved horizontal filter chips track purely for category, member, and date range filters with smooth gradient edge fade masks.
+* **Trade-offs Accepted:**
+  - Trip Wrapped remains easily accessible through Settings and `Cmd+K` command palette while keeping the primary header lightweight.
+
+

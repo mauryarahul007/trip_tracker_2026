@@ -91,6 +91,7 @@ interface SettingsViewProps {
   onClose?: () => void;
   onRequestConfirm?: (req: ConfirmRequest) => void;
   onOpenShareTrip?: () => void;
+  onOpenTripWrapped?: () => void;
 }
 
 export function SettingsView({
@@ -125,6 +126,7 @@ export function SettingsView({
   onClose,
   onRequestConfirm,
   onOpenShareTrip,
+  onOpenTripWrapped,
 }: SettingsViewProps) {
   const [subScreen, setSubScreen] = useState<SubScreen>(initialSubScreen);
 
@@ -1067,6 +1069,24 @@ export function SettingsView({
         <div className="settings-group">
           <h4 className="settings-group-title">Trip Preferences</h4>
           <div className="settings-group-card">
+            {onOpenTripWrapped && (
+              <button type="button" className="settings-row-item" onClick={onOpenTripWrapped}>
+                <div className="settings-row-left">
+                  <div className="settings-squircle squircle-amber" style={{ background: 'linear-gradient(135deg, #FF6B6B, #FFD93D)', color: '#1A1D20' }}>
+                    <IconSparkles size={18} />
+                  </div>
+                  <div className="settings-row-texts">
+                    <span className="settings-row-title">Trip Wrapped (Story Card)</span>
+                    <span className="settings-row-subtitle">Generate 1080x1920 Instagram Story infographic &amp; superlatives</span>
+                  </div>
+                </div>
+                <div className="settings-row-right">
+                  <span className="settings-badge-pill" style={{ background: 'rgba(255,107,107,0.18)', color: '#FF6B6B', fontWeight: 700 }}>STORY</span>
+                  <IconChevronRight size={16} />
+                </div>
+              </button>
+            )}
+
             {onOpenShareTrip && (
               <button type="button" className="settings-row-item" onClick={onOpenShareTrip}>
                 <div className="settings-row-left">
