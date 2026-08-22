@@ -95,6 +95,10 @@ type Props = {
   isAdmin: boolean;
   userId: string | null;
   myMemberId?: string | null;
+
+  onGoToBalances?: () => void;
+  myNetBalance?: number;
+  totalTripSpent?: number;
 };
 
 export function ExpenseList({
@@ -125,6 +129,9 @@ export function ExpenseList({
   isAdmin,
   userId,
   myMemberId,
+  onGoToBalances,
+  myNetBalance,
+  totalTripSpent,
 }: Props) {
   const currencySymbol = getCurrencySymbol(trip?.baseCurrency || '');
   const isBlindMode = usePrivacyStore((s) => s.isBlindMode);
@@ -285,8 +292,6 @@ export function ExpenseList({
 
   const shouldShowChips = revealOnScroll || searchFocused || hasActiveFilters || !!localSearch || showDateFilter;
 
-  const [itineraryView, setItineraryView] = useState(false);
-
   // 2. Pagination State for virtualization
   const [visibleCount, setVisibleCount] = useState(50);
   
@@ -347,11 +352,47 @@ export function ExpenseList({
         </button>
       )}
 
-      {/* Search & View Switcher */}
+      {/* Sleek Glanceable Balance & Spend Banner */}
+      {myMemberId && typeof myNetBalance === 'number' && (
+        <div
+          className="m3-balance-banner"
+          onClick={onGoToBalances}
+          role="button"
+          tabIndex={0}
+          style={{ cursor: onGoToBalances ? 'pointer' : 'default' }}
+          title={onGoToBalances ? 'Jump to Balances & Settlements' : undefined}
+          onKeyDown={(e) => {
+            if ((e.key === 'Enter' || e.key === ' ') && onGoToBalances) {
+              e.preventDefault();
+              onGoToBalances();
+            }
+          }}
+        >
+          <div className="m3-balance-banner-left">
+            <span style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: 500 }}>
+              Your Balance:
+            </span>
+            <div className={`m3-balance-banner-pill ${myNetBalance > 0.01 ? 'positive' : myNetBalance < -0.01 ? 'negative' : 'neutral'}`}>
+              {myNetBalance > 0.01
+                ? `+${currencySymbol}${myNetBalance.toFixed(2)}`
+                : myNetBalance < -0.01
+                  ? `-${currencySymbol}${Math.abs(myNetBalance).toFixed(2)}`
+                  : 'Settled'}
+            </div>
+          </div>
+          {typeof totalTripSpent === 'number' && (
+            <div className="m3-balance-banner-right">
+              Trip Spent: <strong>{currencySymbol}{totalTripSpent.toLocaleString('en-IN', { maximumFractionDigits: 2 })}</strong>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Search & Quick Filters */}
       {activeTripExpenseCount > 0 && (
         <div ref={filtersRef} className="expense-filters">
-          <div className="expense-search-row" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <div className="input-icon-wrap expense-search-wrap" style={{ flex: 1 }}>
+          <div className="expense-search-row">
+            <div className="input-icon-wrap expense-search-wrap">
               <IconSearch size={16} className="icon-sm" />
               <input
                 type="text"
@@ -377,32 +418,6 @@ export function ExpenseList({
                 </button>
               )}
             </div>
-
-            {/* Dedicated Ledger vs Day-by-Day View Switcher */}
-            <div className="segmented-view-toggle" role="group" aria-label="View mode">
-              <button
-                type="button"
-                className={`segmented-pill ${!itineraryView ? 'active' : ''}`}
-                onClick={() => {
-                  triggerHaptic('light');
-                  setItineraryView(false);
-                }}
-                title="Ledger List View"
-              >
-                ≡ List
-              </button>
-              <button
-                type="button"
-                className={`segmented-pill ${itineraryView ? 'active' : ''}`}
-                onClick={() => {
-                  triggerHaptic('light');
-                  setItineraryView(true);
-                }}
-                title="Day-by-Day Itinerary View"
-              >
-                📅 Days
-              </button>
-            </div>
           </div>
 
           {/* Horizontal quick filter pills */}
@@ -415,122 +430,85 @@ export function ExpenseList({
               >
                 All
               </button>
-
-              {myMemberId && (
+              {categories.map((c) => (
                 <button
+                  key={c.id}
                   type="button"
-                  className={`filter-chip ${filterMember === myMemberId ? 'active' : ''}`}
-                  onClick={() => setFilterMember(filterMember === myMemberId ? '' : myMemberId)}
+                  className={`filter-chip ${filterCategory === c.id ? 'active' : ''}`}
+                  onClick={() => {
+                    triggerHaptic('light');
+                    setFilterCategory(filterCategory === c.id ? '' : c.id);
+                  }}
                 >
-                  👤 Mine
+                  <CategoryIcon categoryId={c.id} fallbackEmoji={c.icon} size={13} />
+                  <span>{c.name}</span>
                 </button>
-              )}
+              ))}
 
-              {/* Date filter chip */}
+              {activeTripMembers.map((m) => (
+                <button
+                  key={m.id}
+                  type="button"
+                  className={`filter-chip ${filterMember === m.id ? 'active' : ''}`}
+                  onClick={() => {
+                    triggerHaptic('light');
+                    setFilterMember(filterMember === m.id ? '' : m.id);
+                  }}
+                >
+                  <ExpenseAvatar member={m} size={15} />
+                  <span>{m.name}</span>
+                </button>
+              ))}
+
               <button
                 type="button"
-                className={`filter-chip ${(filterDateFrom || filterDateTo || showDateFilter) ? 'active' : ''}`}
-                onClick={() => setShowDateFilter((v) => !v)}
-                title="Filter by date range"
+                className={`filter-chip ${filterDateFrom || filterDateTo ? 'active' : ''}`}
+                onClick={() => {
+                  triggerHaptic('light');
+                  setShowDateFilter(!showDateFilter);
+                }}
               >
                 <IconCalendar size={13} />
-                <span>
-                  {filterDateFrom || filterDateTo
-                    ? `${filterDateFrom || 'Start'} – ${filterDateTo || 'End'}`
-                    : 'Dates'}
-                </span>
+                <span>Dates</span>
               </button>
-
-              {/* Category chips */}
-              {categories.map((c) => {
-                const isSelected = filterCategory === c.id;
-                return (
-                  <button
-                    key={c.id}
-                    type="button"
-                    className={`filter-chip ${isSelected ? 'active' : ''}`}
-                    onClick={() => setFilterCategory(isSelected ? '' : c.id)}
-                  >
-                    <CategoryIcon categoryId={c.id} fallbackEmoji={c.icon} size={13} />
-                    <span>{c.name}</span>
-                  </button>
-                );
-              })}
-
-              {/* Member chips */}
-              {activeTripMembers.length > 1 &&
-                activeTripMembers
-                  .filter((m) => m.id !== myMemberId)
-                  .map((m) => {
-                    const isSelected = filterMember === m.id;
-                    return (
-                      <button
-                        key={m.id}
-                        type="button"
-                        className={`filter-chip ${isSelected ? 'active' : ''}`}
-                        onClick={() => setFilterMember(isSelected ? '' : m.id)}
-                      >
-                        <ExpenseAvatar member={m} size={15} />
-                        <span>{m.name}</span>
-                      </button>
-                    );
-                  })}
 
               {hasActiveFilters && (
                 <button
                   type="button"
                   className="filter-chip filter-chip-clear"
-                  onClick={() => {
-                    onClearFilters();
-                    setShowDateFilter(false);
-                  }}
-                  title="Clear all active filters"
+                  onClick={onClearFilters}
                 >
-                  <IconClose size={12} />
-                  <span>Clear</span>
+                  Clear all
                 </button>
               )}
             </div>
           </div>
 
-          {/* Collapsible Date Range Sub-panel */}
           {showDateFilter && (
-            <div className="filter-date-popup fade-in">
-              <div className="expense-date-range">
+            <div className="date-filter-panel glass-card" style={{ marginTop: '8px', padding: '10px' }}>
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                 <input
                   type="date"
                   className="input-field"
                   value={filterDateFrom}
                   onChange={(e) => setFilterDateFrom(e.target.value)}
-                  aria-label="From date"
+                  style={{ fontSize: '12px', padding: '6px' }}
                 />
-                <span className="expense-date-sep">–</span>
+                <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>to</span>
                 <input
                   type="date"
                   className="input-field"
                   value={filterDateTo}
                   onChange={(e) => setFilterDateTo(e.target.value)}
-                  aria-label="To date"
+                  style={{ fontSize: '12px', padding: '6px' }}
                 />
               </div>
-              {(filterDateFrom || filterDateTo) && (
-                <button
-                  type="button"
-                  className="filter-clear-link"
-                  onClick={() => {
-                    setFilterDateFrom('');
-                    setFilterDateTo('');
-                  }}
-                >
-                  Reset dates
-                </button>
-              )}
             </div>
           )}
         </div>
       )}
 
-      {/* Expenses List */}
+      {/* Clean Transaction Feed with Date Dividers */}
       {filteredExpenses.length === 0 ? (
         <div className="glass-card ledger-empty" style={{ borderStyle: 'dashed' }}>
           <div className="ledger-rule" />
@@ -540,117 +518,11 @@ export function ExpenseList({
               <IconEdit size={14} className="icon-sm" />
             </span>
             <p>
-              {hasActiveFilters ? "Nothing matches those filters — try clearing them." : 'Nothing logged yet. Add the first line to start the ledger.'}
+              {hasActiveFilters ? 'Nothing matches those filters — try clearing them.' : 'Nothing logged yet. Add the first line to start the ledger.'}
             </p>
           </div>
           <div className="ledger-rule" />
           <div className="ledger-rule" />
-        </div>
-      ) : itineraryView ? (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          {Array.from(new Set(displayedExpenses.map((e) => e.date))).map((dayDate, dayIdx) => {
-            const dayExpenses = displayedExpenses.filter((e) => e.date === dayDate);
-            const dayTotal = dayExpenses.reduce((sum, e) => sum + e.amount, 0);
-            const expDate = new Date(`${dayDate}T00:00:00`);
-            const formattedDayHeader = Number.isNaN(expDate.getTime())
-              ? dayDate
-              : expDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
-
-            return (
-              <div key={dayDate} className="glass-card" style={{ padding: 0, overflow: 'hidden' }}>
-                <div style={{
-                  padding: '10px 14px',
-                  background: 'var(--bg-secondary)',
-                  borderBottom: '1px solid var(--border-color)',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center'
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span style={{
-                      fontSize: '11px',
-                      fontWeight: 800,
-                      background: 'var(--primary-accent)',
-                      color: '#fff',
-                      padding: '2px 6px',
-                      borderRadius: '4px'
-                    }}>
-                      Day {dayIdx + 1}
-                    </span>
-                    <span style={{ fontSize: '13.5px', fontWeight: 700, color: 'var(--text-primary)' }}>
-                      {formattedDayHeader}
-                    </span>
-                  </div>
-                  <div style={{ fontSize: '13px', fontWeight: 800, color: 'var(--primary-accent)' }}>
-                    {currencySymbol}{dayTotal.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
-                  </div>
-                </div>
-
-                <div>
-                  {dayExpenses.map((exp, idx) => {
-                    const isPending = exp.id === pendingDeleteId;
-                    const canManage = isAdmin || exp.createdByUserId === userId;
-                    const isPayerDeleted = trip ? !trip.memberIds.includes(exp.paidBy) : false;
-                    const hasDeletedParticipants = trip ? exp.splitMemberIds.some((id) => !trip.memberIds.includes(id)) : false;
-                    const needsReview = isPayerDeleted || hasDeletedParticipants;
-                    const payerMember = members[exp.paidBy];
-                    const cat = categories.find((c) => c.id === exp.category);
-
-                    return (
-                      <div
-                        key={exp.id}
-                        aria-hidden={isPending}
-                        style={{
-                          borderBottom: idx < dayExpenses.length - 1 ? '1.5px dashed var(--border-color)' : 'none',
-                          opacity: isPending ? 0.35 : 1,
-                          pointerEvents: isPending ? 'none' : undefined,
-                          transition: 'opacity 0.25s ease',
-                        }}
-                      >
-                        <ConditionalSwipe enabled={canManage} onDelete={() => onDelete(exp)}>
-                          <div
-                            className={`expense-row ${needsReview ? 'needs-review' : ''}`}
-                            onClick={() => (needsReview ? onReview(exp) : onEdit(exp))}
-                            role="button"
-                            tabIndex={0}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter' || e.key === ' ') {
-                                e.preventDefault();
-                                if (needsReview) onReview(exp);
-                                else onEdit(exp);
-                              }
-                            }}
-                          >
-                            <div className="expense-avatar-group">
-                              <CategoryIcon categoryId={exp.category} fallbackEmoji={cat?.icon} size={15} />
-                              <ExpenseAvatar member={payerMember} size={22} muted={!payerMember} />
-                            </div>
-
-                            <div className="expense-details">
-                              <div className="expense-title-row">
-                                <span className="expense-title">{exp.title}</span>
-                              </div>
-                              <div className="expense-meta-row">
-                                <span className="expense-meta-item">{cat?.name || 'General'}</span>
-                                <span className="expense-meta-dot">·</span>
-                                <span className="expense-meta-item">Paid by {payerMember?.name || 'Unknown'}</span>
-                              </div>
-                            </div>
-
-                            <div className="expense-amount-group">
-                              <span className="expense-amount">
-                                {formatMaskedAmount(exp.amount.toFixed(2), currencySymbol, isBlindMode)}
-                              </span>
-                            </div>
-                          </div>
-                        </ConditionalSwipe>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            );
-          })}
         </div>
       ) : (
         <div className="glass-card" style={{ padding: 0, overflow: 'hidden' }}>
@@ -669,10 +541,12 @@ export function ExpenseList({
             const expenseDate = new Date(`${exp.date}T00:00:00`);
             const formattedDate = Number.isNaN(expenseDate.getTime())
               ? exp.date
-              : expenseDate.toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
+              : expenseDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
             const formattedTime = exp.createdAt
               ? new Date(exp.createdAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
               : null;
+
+            const isFirstOfDate = idx === 0 || displayedExpenses[idx - 1].date !== exp.date;
 
             const reviewMessage = isPayerDeleted && hasDeletedParticipants
               ? 'Payer and a split member were removed — reassign the payer and update the split.'
@@ -681,113 +555,132 @@ export function ExpenseList({
                 : 'A split member was removed — update the split.';
 
             return (
-              <div
-                key={exp.id}
-                aria-hidden={isPending}
-                style={{
-                  borderBottom: idx < displayedExpenses.length - 1 ? '1.5px dashed var(--border-color)' : 'none',
-                  opacity: isPending ? 0.35 : 1,
-                  pointerEvents: isPending ? 'none' : undefined,
-                  transition: 'opacity 0.25s ease',
-                }}
-              >
-                <ConditionalSwipe enabled={canManage} onDelete={() => onDelete(exp)}>
-                  <div
-                    style={{
-                      display: 'flex', flexDirection: 'column', gap: '6px',
-                      padding: '12px 14px',
-                      borderLeft: needsReview ? '3px solid var(--color-warning)' : 'none',
-                      background: needsReview ? 'rgba(185, 138, 62, 0.07)' : undefined,
-                    }}
-                  >
+              <div key={exp.id}>
+                {isFirstOfDate && (
+                  <div style={{
+                    padding: '7px 14px',
+                    background: 'var(--bg-secondary)',
+                    borderTop: idx > 0 ? '1px solid var(--border-color)' : 'none',
+                    borderBottom: '1px solid var(--border-color)',
+                    fontSize: '11px',
+                    fontWeight: 700,
+                    color: 'var(--text-muted)',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.04em',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center'
+                  }}>
+                    <span>📅 {formattedDate}</span>
+                  </div>
+                )}
+
+                <div
+                  aria-hidden={isPending}
+                  style={{
+                    borderBottom: idx < displayedExpenses.length - 1 && displayedExpenses[idx + 1].date === exp.date ? '1.5px dashed var(--border-color)' : 'none',
+                    opacity: isPending ? 0.35 : 1,
+                    pointerEvents: isPending ? 'none' : undefined,
+                    transition: 'opacity 0.25s ease',
+                  }}
+                >
+                  <ConditionalSwipe enabled={canManage} onDelete={() => onDelete(exp)}>
                     <div
-                      style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}
-                      onClick={() => { triggerHaptic('light'); onReview(exp); }}
+                      style={{
+                        display: 'flex', flexDirection: 'column', gap: '6px',
+                        padding: '12px 14px',
+                        borderLeft: needsReview ? '3px solid var(--color-warning)' : 'none',
+                        background: needsReview ? 'rgba(185, 138, 62, 0.07)' : undefined,
+                      }}
                     >
-                      <CategoryIcon categoryId={cat?.id || ''} fallbackEmoji={cat?.icon || '🏷️'} size={15} />
-                      <h4 style={{ flex: 1, minWidth: 0, fontSize: '15px', lineHeight: 1.3, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{exp.title}</h4>
-                      <span className="money privacy-blur" style={{ fontSize: '15px', fontWeight: '600', color: 'var(--text-primary)', whiteSpace: 'nowrap', flexShrink: 0 }}>
-                        {formatMaskedAmount(exp.amount.toFixed(2), currencySymbol, isBlindMode)}
-                      </span>
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
                       <div
-                        style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', minWidth: 0 }}
+                        style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}
                         onClick={() => { triggerHaptic('light'); onReview(exp); }}
-                        title={`Paid by ${payerMember?.name || 'a removed member'}`}
                       >
-                        <ExpenseAvatar member={payerMember} size={22} muted={isPayerDeleted} />
-                        <span style={{ color: 'var(--text-muted)', fontSize: '12px', flexShrink: 0 }}>→</span>
-                        <div style={{ display: 'flex', flexShrink: 0 }}>
-                          {visibleSplitMembers.map(({ id, member }, splitIdx) => (
-                            <div key={id} style={{ marginLeft: splitIdx === 0 ? 0 : '-8px' }}>
-                              <ExpenseAvatar member={member} size={20} muted={!member} />
-                            </div>
-                          ))}
-                          {overflowSplitCount > 0 && (
-                            <div
-                              style={{
-                                marginLeft: '-8px', width: '20px', height: '20px', borderRadius: '50%',
-                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                background: 'var(--bg-surface-hover)', color: 'var(--text-secondary)',
-                                fontSize: '9.5px', fontWeight: 700, fontFamily: 'var(--font-family-mono)',
-                                border: '1.5px solid var(--bg-surface)', flexShrink: 0,
-                              }}
-                            >
-                              +{overflowSplitCount}
+                        <CategoryIcon categoryId={cat?.id || ''} fallbackEmoji={cat?.icon || '🏷️'} size={15} />
+                        <h4 style={{ flex: 1, minWidth: 0, fontSize: '15px', lineHeight: 1.3, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', margin: 0 }}>
+                          {exp.title}
+                        </h4>
+                        <span className="money privacy-blur" style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-primary)', whiteSpace: 'nowrap', flexShrink: 0, fontFamily: 'var(--font-family-mono)' }}>
+                          {formatMaskedAmount(exp.amount.toFixed(2), currencySymbol, isBlindMode)}
+                        </span>
+                      </div>
+
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
+                        <div
+                          style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', minWidth: 0 }}
+                          onClick={() => { triggerHaptic('light'); onReview(exp); }}
+                          title={`Paid by ${payerMember?.name || 'a removed member'}`}
+                        >
+                          <ExpenseAvatar member={payerMember} size={22} muted={isPayerDeleted} />
+                          <span style={{ color: 'var(--text-muted)', fontSize: '12px', flexShrink: 0 }}>→</span>
+                          <div style={{ display: 'flex', flexShrink: 0 }}>
+                            {visibleSplitMembers.map(({ id, member }, splitIdx) => (
+                              <div key={id} style={{ marginLeft: splitIdx === 0 ? 0 : '-8px' }}>
+                                <ExpenseAvatar member={member} size={20} muted={!member} />
+                              </div>
+                            ))}
+                            {overflowSplitCount > 0 && (
+                              <div
+                                style={{
+                                  marginLeft: '-8px', width: '20px', height: '20px', borderRadius: '50%',
+                                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                  background: 'var(--bg-surface-hover)', color: 'var(--text-secondary)',
+                                  fontSize: '9.5px', fontWeight: 700, fontFamily: 'var(--font-family-mono)',
+                                  border: '1.5px solid var(--bg-surface)', flexShrink: 0,
+                                }}
+                              >
+                                +{overflowSplitCount}
+                              </div>
+                            )}
+                          </div>
+                          {exp.location?.placeName && (
+                            <span style={{ color: '#0284C7', fontSize: '12px', flexShrink: 0 }} title={exp.location.placeName}>📍</span>
+                          )}
+                        </div>
+
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
+                          <span style={{ fontSize: '11.5px', lineHeight: 1.4, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
+                            {formattedTime || formattedDate}
+                          </span>
+                          {canManage && (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0 }}>
+                              {!exp.title.startsWith('Settlement:') && (
+                                <button
+                                  className="row-icon-btn"
+                                  style={needsReview ? { color: 'var(--color-warning)' } : undefined}
+                                  aria-label={needsReview ? 'Review expense' : 'Edit expense'}
+                                  title={needsReview ? 'Review' : 'Edit'}
+                                  onClick={(e) => { e.stopPropagation(); triggerHaptic('light'); onEdit(exp); }}
+                                >
+                                  {needsReview ? <IconAlertCircle size={15} className="icon-sm" /> : <IconEdit size={15} className="icon-sm" />}
+                                </button>
+                              )}
+                              <button
+                                className="row-icon-btn row-icon-btn-danger"
+                                aria-label="Delete expense"
+                                title="Delete"
+                                onClick={(e) => { e.stopPropagation(); triggerHaptic('warning'); onDelete(exp); }}
+                              >
+                                <IconTrash size={15} className="icon-sm" />
+                              </button>
                             </div>
                           )}
                         </div>
-                        {exp.location?.placeName && (
-                          <span style={{ color: '#17B6A6', fontSize: '12px', flexShrink: 0 }} title={exp.location.placeName}>📍</span>
-                        )}
                       </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
-                        <span style={{ fontSize: '11.5px', lineHeight: 1.4, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
-                          {formattedDate}{formattedTime ? ` · ${formattedTime}` : ''}
-                        </span>
-                        {canManage && (
-                          // Its own gap, distinct from the date-to-buttons
-                          // gap above — edit and delete sitting right next
-                          // to each other need more separation than that,
-                          // since one is destructive and a mis-tap there
-                          // isn't recoverable the way a mis-tap elsewhere
-                          // would be.
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0 }}>
-                            {!exp.title.startsWith('Settlement:') && (
-                              <button
-                                className="row-icon-btn"
-                                style={needsReview ? { color: 'var(--color-warning)' } : undefined}
-                                aria-label={needsReview ? 'Review expense' : 'Edit expense'}
-                                title={needsReview ? 'Review' : 'Edit'}
-                                onClick={(e) => { e.stopPropagation(); triggerHaptic('light'); onEdit(exp); }}
-                              >
-                                {needsReview ? <IconAlertCircle size={15} className="icon-sm" /> : <IconEdit size={15} className="icon-sm" />}
-                              </button>
-                            )}
-                            <button
-                              className="row-icon-btn row-icon-btn-danger"
-                              aria-label="Delete expense"
-                              title="Delete"
-                              onClick={(e) => { e.stopPropagation(); triggerHaptic('warning'); onDelete(exp); }}
-                            >
-                              <IconTrash size={15} className="icon-sm" />
-                            </button>
-                          </div>
-                        )}
-                      </div>
+
+                      {needsReview && (
+                        <div style={{
+                          display: 'flex', alignItems: 'center', gap: '6px',
+                          fontSize: '12px', fontWeight: 500, color: 'var(--color-warning)',
+                        }}>
+                          <IconAlertCircle size={14} className="icon-sm" />
+                          <span>{reviewMessage}</span>
+                        </div>
+                      )}
                     </div>
-                    {needsReview && (
-                      <div style={{
-                        display: 'flex', alignItems: 'center', gap: '6px',
-                        fontSize: '12px', fontWeight: 500, color: 'var(--color-warning)',
-                      }}>
-                        <IconAlertCircle size={14} className="icon-sm" />
-                        <span>{reviewMessage}</span>
-                      </div>
-                    )}
-                  </div>
-                </ConditionalSwipe>
+                  </ConditionalSwipe>
+                </div>
               </div>
             );
           })}

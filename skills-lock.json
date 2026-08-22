@@ -16,6 +16,12 @@
       "sourceType": "autoskills-registry",
       "computedHash": "82fb11a63fb1e35ee2469516ed02d54695f783115b1540c0e783197af4240a3a"
     },
+    "material-design-3-guide": {
+      "source": "shelbeely/shelbeely-agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/material-design-3-guide/SKILL.md",
+      "computedHash": "c6dc380cef73b31d4b0a12ff4adc785ab1ee78ce6904d0a5c872d853fc7656c4"
+    },
     "nodejs-backend-patterns": {
       "source": "wshobson/agents",
       "sourceType": "autoskills-registry",
@@ -50,6 +56,12 @@
       "source": "wshobson/agents",
       "sourceType": "autoskills-registry",
       "computedHash": "5ca0e177c6aaaba1889255691224daafdb7d71f317cc70bede1590d3907ded42"
+    },
+    "ui-ux-pro-max": {
+      "source": "nextlevelbuilder/ui-ux-pro-max-skill",
+      "sourceType": "github",
+      "skillPath": ".claude/skills/ui-ux-pro-max/SKILL.md",
+      "computedHash": "d1de8ff8d228cd4204bf06eb959ef4317d5b927908d9f42765971e33e80c8a7e"
     },
     "vite": {
       "source": "antfu/skills",

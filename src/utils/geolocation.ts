@@ -167,6 +167,35 @@ export async function searchPlaces(query: string): Promise<{ lat: number; lng: n
     return [];
   }
 
+  // Strategy 1: Photon API by Komoot (sub-100ms, open CORS, 0 rate limit)
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 3500);
+
+    const photonUrl = `https://photon.komoot.io/api/?q=${encodeURIComponent(trimmed)}&limit=5`;
+    const res = await fetch(photonUrl, { signal: controller.signal });
+    clearTimeout(timer);
+
+    if (res.ok) {
+      const data = await res.json();
+      if (Array.isArray(data.features) && data.features.length > 0) {
+        return data.features.map((feat: any) => {
+          const [lng, lat] = feat.geometry.coordinates;
+          const p = feat.properties || {};
+          const label = [p.name, p.city || p.state, p.country].filter(Boolean).slice(0, 2).join(', ') || trimmed;
+          return {
+            lat: Number(Number(lat).toFixed(6)),
+            lng: Number(Number(lng).toFixed(6)),
+            placeName: label,
+          };
+        });
+      }
+    }
+  } catch {
+    // Fall back to Nominatim
+  }
+
+  // Strategy 2: Nominatim fallback
   try {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 4000);

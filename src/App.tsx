@@ -2,8 +2,9 @@ import React, { useEffect, useState, useMemo, lazy, Suspense } from 'react';
 import { useTripStore, getTripNotificationRecipients } from './store/tripStore';
 import { useAuthStore } from './store/authStore';
 import { calculateSettlements } from './utils/settlement';
-import type { Expense, Trip, Group, Member } from './types';
+import type { Expense, Trip, Group, Member, TripStop } from './types';
 import { exportTripToCSV } from './utils/csvExport';
+import { fetchPlaceCoverImage } from './services/placeImageService';
 
 import { getCurrencySymbol } from './utils/currency';
 import { isMissingSupabaseEnv } from './services/supabaseClient';
@@ -12,6 +13,8 @@ import { fetchAppFlag } from './services/tripApi';
 import { GlobalSettingsModal } from './components/GlobalSettingsModal';
 import { ConfirmDialog, type ConfirmRequest } from './components/ConfirmDialog';
 import { TripsListScreen } from './components/TripsListScreen';
+import { TripBannerRouteMap } from './components/TripBannerRouteMap';
+import { AmbientPhotoBackdrop } from './components/AmbientPhotoBackdrop';
 import { ExpenseForm } from './components/ExpenseForm';
 import { ExpenseList } from './components/ExpenseList';
 import { BalancesSettlements } from './components/BalancesSettlements';
@@ -164,6 +167,8 @@ export default function App() {
   const [showAddTrip, setShowAddTrip] = useState(false);
   const [editingTripId, setEditingTripId] = useState<string | null>(null);
   const [newTripName, setNewTripName] = useState('');
+  const [newTripDestination, setNewTripDestination] = useState('');
+  const [newTripStops, setNewTripStops] = useState<TripStop[]>([]);
   const [newTripStart, setNewTripStart] = useState('');
   const [newTripEnd, setNewTripEnd] = useState('');
   const [newTripCurrency, setNewTripCurrency] = useState('INR');
@@ -342,6 +347,28 @@ export default function App() {
   const archivedTrips = useMemo(() => trips.filter((t) => t.archived), [trips]);
   const activeTrip = useMemo(() => trips.find((t) => t.id === activeTripId), [trips, activeTripId]);
   const editingExpense = useMemo(() => expenses.find((e) => e.id === editingExpenseId) || null, [expenses, editingExpenseId]);
+
+  // Auto-resolve tourism cover photo for active trip if not already resolved
+  useEffect(() => {
+    if (!activeTrip || activeTrip.coverImageUrl) return;
+    const candidates = [
+      ...(activeTrip.stops?.map((s) => s.name) || []),
+      activeTrip.destination || '',
+      activeTrip.name || '',
+    ].filter(Boolean);
+
+    if (candidates.length === 0) return;
+
+    fetchPlaceCoverImage(candidates)
+      .then((url) => {
+        if (url) {
+          useTripStore.setState((state) => ({
+            trips: state.trips.map((t) => (t.id === activeTrip.id ? { ...t, coverImageUrl: url } : t)),
+          }));
+        }
+      })
+      .catch(() => {});
+  }, [activeTrip?.id, activeTrip?.coverImageUrl, activeTrip?.destination, activeTrip?.stops]);
 
   // Reset expense filters when switching trips
   useEffect(() => {
@@ -524,6 +551,13 @@ export default function App() {
       : { balances: [], transfers: [] };
   }, [activeTrip, members, expenses, visibleTripGroups]);
 
+  const myNetBalance = useMemo(() => {
+    if (!myMemberId) return undefined;
+    const incoming = transfers.filter((t) => t.toMemberId === myMemberId).reduce((sum, t) => sum + t.amount, 0);
+    const outgoing = transfers.filter((t) => t.fromMemberId === myMemberId).reduce((sum, t) => sum + t.amount, 0);
+    return Number((incoming - outgoing).toFixed(2));
+  }, [transfers, myMemberId]);
+
   // Filters out settlements to keep expense analytics clean
   const nonSettlementExpenses = useMemo(() => {
     return activeTripExpenses.filter((e) => !e.title.startsWith('Settlement:'));
@@ -638,12 +672,15 @@ export default function App() {
   const handleCreateTrip = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTripName || !newTripStart || !newTripEnd) return;
+    const cleanStops = newTripStops.filter((s) => s.name.trim().length > 0);
     if (editingTripId) {
-      await updateTrip(editingTripId, newTripName, newTripStart, newTripEnd);
+      await updateTrip(editingTripId, newTripName, newTripStart, newTripEnd, newTripDestination, cleanStops);
     } else {
-      await createTrip(newTripName, newTripStart, newTripEnd, newTripCurrency);
+      await createTrip(newTripName, newTripStart, newTripEnd, newTripCurrency, newTripDestination, cleanStops);
     }
     setNewTripName('');
+    setNewTripDestination('');
+    setNewTripStops([]);
     setNewTripStart('');
     setNewTripEnd('');
     setNewTripCurrency('INR');
@@ -654,6 +691,8 @@ export default function App() {
   const handleStartEditTrip = (trip: Trip) => {
     setEditingTripId(trip.id);
     setNewTripName(trip.name);
+    setNewTripDestination(trip.destination || '');
+    setNewTripStops(trip.stops ? [...trip.stops] : []);
     setNewTripStart(trip.startDate);
     setNewTripEnd(trip.endDate);
     setShowAddTrip(true);
@@ -662,6 +701,8 @@ export default function App() {
   const handleCancelTripForm = () => {
     setEditingTripId(null);
     setNewTripName('');
+    setNewTripDestination('');
+    setNewTripStops([]);
     setNewTripStart('');
     setNewTripEnd('');
     setNewTripCurrency('INR');
@@ -1329,6 +1370,10 @@ export default function App() {
           setShowAddTrip={setShowAddTrip}
           newTripName={newTripName}
           setNewTripName={setNewTripName}
+          newTripDestination={newTripDestination}
+          setNewTripDestination={setNewTripDestination}
+          newTripStops={newTripStops}
+          setNewTripStops={setNewTripStops}
           newTripStart={newTripStart}
           setNewTripStart={setNewTripStart}
           newTripEnd={newTripEnd}
@@ -1347,11 +1392,20 @@ export default function App() {
         />
       ) : (
         /* Screen 2: Active Trip Dashboard */
-        <div className="trip-dashboard-container fade-in">
-          <header className={`app-header trip-dashboard-header ${isHeaderScrolled ? 'is-scrolled' : ''}`}>
-            <div className="app-header-top">
+        <div className="trip-dashboard-container fade-in" style={{ position: 'relative' }}>
+          <AmbientPhotoBackdrop trip={activeTrip ?? null} />
+          <header className={`app-header trip-dashboard-header ${isHeaderScrolled ? 'is-scrolled' : ''}`} style={{ position: 'relative', overflow: 'hidden' }}>
+            {/* Translucent Header Route Map Banner Layer */}
+            {activeTrip && <TripBannerRouteMap trip={activeTrip} />}
+
+            <div className="app-header-top" style={{ position: 'relative', zIndex: 1 }}>
               <div className="app-title-group">
                 <span className="app-eyebrow">
+                  {activeTrip?.destination && (
+                    <span style={{ marginRight: '6px', fontWeight: 600, color: 'var(--primary-accent)' }}>
+                      📍 {activeTrip.destination} &middot;
+                    </span>
+                  )}
                   <IconCalendar size={12} className="icon-sm" />
                   {formatDateRange(activeTrip?.startDate || '', activeTrip?.endDate || '')}
                   {(() => {
@@ -1439,7 +1493,7 @@ export default function App() {
                 </button>
               </div>
             </div>
-            <div className="app-header-stats">
+            <div className="app-header-stats" style={{ position: 'relative', zIndex: 1 }}>
               <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
                 <span>{visibleMembers.length} member{visibleMembers.length === 1 ? '' : 's'}</span>
                 <span>{activeTripExpenses.length} expense{activeTripExpenses.length === 1 ? '' : 's'}</span>
@@ -1471,6 +1525,45 @@ export default function App() {
                 <span>{syncStatusLabel}</span>
               </button>
             </div>
+
+            {/* Route Stops Chips Bar inside Header */}
+            {activeTrip?.stops && activeTrip.stops.length > 0 && (
+              <div
+                style={{
+                  position: 'relative',
+                  zIndex: 1,
+                  display: 'flex',
+                  gap: '6px',
+                  overflowX: 'auto',
+                  marginTop: '8px',
+                  paddingTop: '8px',
+                  borderTop: '1px solid rgba(255, 255, 255, 0.15)',
+                  scrollbarWidth: 'none',
+                }}
+              >
+                {activeTrip.stops.map((stop, sIdx) => (
+                  <span
+                    key={stop.id || sIdx}
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      fontSize: '11px',
+                      fontWeight: 600,
+                      padding: '3px 8px',
+                      borderRadius: '12px',
+                      background: 'rgba(255, 255, 255, 0.18)',
+                      backdropFilter: 'blur(6px)',
+                      color: '#FFFFFF',
+                      whiteSpace: 'nowrap',
+                      flexShrink: 0,
+                    }}
+                  >
+                    <strong style={{ opacity: 0.85 }}>{sIdx + 1}.</strong> {stop.name}
+                  </span>
+                ))}
+              </div>
+            )}
           </header>
 
 
@@ -1506,6 +1599,12 @@ export default function App() {
                   isAdmin={isAdmin}
                   userId={userId}
                   myMemberId={myMemberId}
+                  onGoToBalances={() => {
+                    const el = document.getElementById('balances-section');
+                    if (el) el.scrollIntoView({ behavior: 'smooth' });
+                  }}
+                  myNetBalance={myNetBalance}
+                  totalTripSpent={totalSpent}
                 />
 
                 {activeTrip && visibleMembers.length > 0 && (

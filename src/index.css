@@ -67,46 +67,47 @@
   --font-family-body: 'IBM Plex Sans', -apple-system, sans-serif;
   --font-family-mono: 'IBM Plex Mono', 'SF Mono', monospace;
 
-  /* Skyline Escape palette — blue-to-teal gradient explorer theme */
-  --bg-page: #E4EDFF; /* outer margin, visible past the centered app column */
-  --bg-app: #F5F9FF; /* Canvas */
-  --bg-surface: #FFFFFF; /* Paper — card fill */
-  --bg-surface-hover: #EAF1FF;
-  --border-color: #D7E4FA;
-  --border-color-focus: rgba(47, 111, 237, 0.4);
+  /* 🏔️ Option 2: Alpine Sky & Campfire Orange (MD3 Theme) */
+  --bg-page: #E0F2FE; /* Alpine sky mist */
+  --bg-app: #F0F9FF; /* Alpine cloud canvas */
+  --bg-surface: #FFFFFF; /* Pure White card surface */
+  --bg-surface-hover: #E0F2FE;
+  --border-color: #BAE6FD;
+  --border-color-focus: rgba(2, 132, 199, 0.4);
 
-  /* Skyline blue (brand) & Teal (sparing highlight) */
-  --primary-accent: #2F6FED;
-  --primary-accent-light: #5A8FF5;
-  --secondary-accent: #17B6A6;
-  --secondary-accent-light: #3FCBBD;
+  /* Alpine Sky Blue (Primary) & Deep Sapphire (Container/Secondary) */
+  --primary-accent: #0284C7;
+  --primary-accent-light: #38BDF8;
+  --secondary-accent: #0D5C9E;
+  --secondary-accent-light: #0284C7;
+  --accent-orange: #FF7A00; /* Campfire Electric Orange */
 
-  /* Status colours — deliberately separate from the brand accent */
-  --color-success: #17B6A6; /* Settle */
-  --color-danger: #E0483A; /* Stamp */
-  --color-warning: #E0983A;
+  /* Status colours */
+  --color-success: #10B981; /* Settle / Positive */
+  --color-danger: #EF4444; /* Stamp / Debt */
+  --color-warning: #F59E0B;
 
-  /* Text — deep blue ink */
-  --text-primary: #12203B;
-  --text-secondary: #51607E;
-  --text-muted: #7C8AA8;
+  /* Text — deep navy ink */
+  --text-primary: #0F172A;
+  --text-secondary: #475569;
+  --text-muted: #64748B;
 
-  --bg-header: #2F6FED;
-  --header-gradient: linear-gradient(135deg, rgba(47, 111, 237, 0.88), rgba(23, 182, 166, 0.88));
-  --header-gradient-scrolled: linear-gradient(135deg, rgba(23, 88, 200, 0.95), rgba(15, 140, 128, 0.95));
-  --header-gradient-solid: linear-gradient(135deg, #2F6FED, #17B6A6);
-  --bg-header-glass: rgba(47, 111, 237, 0.82);
-  --bg-header-glass-scrolled: rgba(23, 88, 200, 0.92);
-  --glass-shadow: 0 1px 2px rgba(18, 32, 59, 0.06), 0 6px 16px -8px rgba(18, 32, 59, 0.14);
-  --bg-nav-glass: rgba(255, 255, 255, 0.82);
-  --border-nav-glass: rgba(215, 228, 250, 0.7);
-  --shadow-nav-glass: 0 16px 36px -4px rgba(18, 32, 59, 0.16), 0 4px 12px rgba(18, 32, 59, 0.08), inset 0 1px 1px rgba(255, 255, 255, 0.9);
-  --bg-nav-item-active: rgba(47, 111, 237, 0.12);
+  --bg-header: #0284C7;
+  --header-gradient: linear-gradient(135deg, #0284C7 0%, #0D5C9E 100%);
+  --header-gradient-scrolled: linear-gradient(135deg, #0369A1 0%, #0C4A6E 100%);
+  --header-gradient-solid: linear-gradient(135deg, #0284C7, #0D5C9E);
+  --bg-header-glass: rgba(2, 132, 199, 0.88);
+  --bg-header-glass-scrolled: rgba(13, 92, 158, 0.95);
+  --glass-shadow: 0 1px 3px rgba(13, 92, 158, 0.06), 0 6px 20px -6px rgba(13, 92, 158, 0.12);
+  --bg-nav-glass: rgba(255, 255, 255, 0.88);
+  --border-nav-glass: rgba(186, 230, 253, 0.8);
+  --shadow-nav-glass: 0 16px 36px -4px rgba(13, 92, 158, 0.18), 0 4px 12px rgba(13, 92, 158, 0.08), inset 0 1px 1px rgba(255, 255, 255, 0.9);
+  --bg-nav-item-active: rgba(2, 132, 199, 0.12);
   --color-nav-item-active: var(--primary-accent);
   --backdrop-filter: none;
   --border-radius-sm: 10px;
   --border-radius-md: 14px;
-  --border-radius-lg: 22px;
+  --border-radius-lg: 20px;
   --border-radius-pill: 999px;
 
   --transition-smooth: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
@@ -312,13 +313,13 @@ button, [role="button"], input, select, a {
 
 /* Buttons */
 .gradient-btn {
-  background: var(--primary-accent);
+  background: linear-gradient(135deg, #FF7A00 0%, #EA580C 100%);
   border: none;
   border-radius: var(--border-radius-pill);
-  color: #FFFDF6;
+  color: #FFFFFF;
   font-family: var(--font-family-body);
   font-size: 15px;
-  font-weight: 600;
+  font-weight: 700;
   padding: 13px 22px;
   cursor: pointer;
   transition: var(--transition-smooth);
@@ -326,10 +327,13 @@ button, [role="button"], input, select, a {
   align-items: center;
   justify-content: center;
   gap: 8px;
+  box-shadow: 0 4px 14px rgba(255, 122, 0, 0.28);
 }
 
 .gradient-btn:hover:not(:disabled) {
-  background: var(--primary-accent-light);
+  background: linear-gradient(135deg, #FF8C1A 0%, #F97316 100%);
+  box-shadow: 0 6px 20px rgba(255, 122, 0, 0.38);
+  transform: translateY(-1px);
 }
 
 .gradient-btn:active:not(:disabled) {
@@ -361,6 +365,63 @@ button, [role="button"], input, select, a {
 .secondary-btn:hover {
   background: var(--bg-surface-hover);
   border-color: rgba(28, 42, 56, 0.22);
+}
+
+/* Form Controls & Vertical Rhythm */
+.input-group {
+  margin-bottom: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.input-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+}
+
+.input-field,
+.select-field {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: var(--border-radius-md);
+  border: 1px solid var(--border-color);
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  box-sizing: border-box;
+}
+
+.input-field:focus,
+.select-field:focus {
+  border-color: var(--primary-accent);
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.18);
+}
+
+.input-field::placeholder {
+  color: var(--text-muted);
+  opacity: 0.8;
+}
+
+/* Trip Ambient Translucent Backdrop */
+.trip-ambient-backdrop {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  opacity: 0.10;
+  filter: blur(16px) saturate(1.25);
+  pointer-events: none;
+  z-index: 0;
+  transform: translateZ(0);
+  will-change: opacity, transform;
+  transition: opacity 0.6s ease-in-out;
 }
 
 /* Floating Action Button (FAB) */
@@ -818,6 +879,384 @@ input[type="date"].input-field {
 .filter-clear-link:hover {
   text-decoration: underline;
 }
+
+/* ==========================================================================
+   Minimalist Glanceable Balance Banner & Date Dividers
+   ========================================================================== */
+
+.m3-balance-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-md);
+  margin-bottom: 12px;
+  box-shadow: 0 1px 3px rgba(13, 92, 158, 0.04);
+}
+
+.m3-balance-banner-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.m3-balance-banner-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: var(--border-radius-pill);
+  font-size: 12.5px;
+  font-weight: 700;
+  font-family: var(--font-family-mono);
+}
+
+.m3-balance-banner-pill.positive {
+  background: rgba(16, 185, 129, 0.12);
+  color: #059669;
+}
+
+.m3-balance-banner-pill.negative {
+  background: rgba(239, 68, 68, 0.12);
+  color: #DC2626;
+}
+
+.m3-balance-banner-pill.neutral {
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+}
+
+.m3-balance-banner-right {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.m3-balance-banner-right strong {
+  color: var(--text-primary);
+  font-family: var(--font-family-mono);
+  font-weight: 700;
+}
+
+/* Date Section Dividers in Transaction Feed */
+.expense-date-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 18px 0 10px 0;
+  user-select: none;
+}
+
+.expense-date-divider-line {
+  flex: 1;
+  height: 1px;
+  background: var(--border-color);
+  opacity: 0.6;
+}
+
+.expense-date-divider-label {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 2px 10px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-pill);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+/* Overlapping Member Avatar Stack */
+.avatar-stack {
+  display: inline-flex;
+  align-items: center;
+  flex-direction: row-reverse;
+  justify-content: flex-end;
+}
+
+.avatar-stack-item {
+  margin-left: -7px;
+  border-radius: 50%;
+  border: 2px solid var(--bg-surface);
+  transition: transform 0.15s ease;
+  position: relative;
+}
+
+.avatar-stack-item:hover {
+  transform: translateY(-2px) scale(1.1);
+  z-index: 10;
+}
+
+.avatar-stack-overflow {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  font-size: 9.5px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: -7px;
+  border: 2px solid var(--bg-surface);
+}
+
+/* ==========================================================================
+   Material Design 3 (Material You) Collapsible Day Accordions
+   ========================================================================== */
+
+.m3-accordion-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-md);
+  margin-bottom: 12px;
+  overflow: hidden;
+  transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.m3-accordion-card.expanded {
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.07);
+  border-color: rgba(47, 111, 237, 0.28);
+}
+
+.m3-accordion-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  cursor: pointer;
+  user-select: none;
+  background: var(--bg-surface);
+  transition: background 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.m3-accordion-header:hover {
+  background: var(--bg-surface-hover);
+}
+
+.m3-accordion-title-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.m3-day-badge {
+  font-size: 11px;
+  font-weight: 800;
+  background: var(--primary-accent);
+  color: #FFFFFF;
+  padding: 2px 7px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.m3-day-header-text {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.m3-day-count-badge {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-muted);
+  background: var(--bg-secondary);
+  padding: 2px 6px;
+  border-radius: var(--border-radius-pill);
+  flex-shrink: 0;
+}
+
+.m3-accordion-meta-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.m3-day-subtotal {
+  font-size: 13.5px;
+  font-weight: 800;
+  color: var(--primary-accent);
+  font-family: var(--font-family-mono);
+}
+
+.m3-accordion-chevron {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  transition: transform 0.25s cubic-bezier(0.2, 0, 0, 1);
+}
+
+.m3-accordion-chevron.expanded {
+  transform: rotate(90deg);
+  color: var(--primary-accent);
+}
+
+.m3-accordion-content {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.28s cubic-bezier(0.2, 0, 0, 1);
+  border-top: 1px solid transparent;
+}
+
+.m3-accordion-content.expanded {
+  grid-template-rows: 1fr;
+  border-top-color: var(--border-color);
+}
+
+.m3-accordion-inner {
+  overflow: hidden;
+}
+
+.m3-expand-all-btn {
+  background: none;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-pill);
+  padding: 4px 10px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.m3-expand-all-btn:hover {
+  background: var(--bg-surface-hover);
+  color: var(--text-primary);
+  border-color: rgba(47, 111, 237, 0.3);
+}
+
+/* ==========================================================================
+   WhatsApp-Style Modular Grouped Sections for Balances & Settlements
+   ========================================================================== */
+
+.wa-group-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-md);
+  margin-bottom: 12px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
+}
+
+.wa-group-card:hover {
+  border-color: rgba(2, 132, 199, 0.35);
+}
+
+.wa-group-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 13px 15px;
+  background: var(--bg-surface);
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.15s ease;
+}
+
+.wa-group-header:hover {
+  background: var(--bg-surface-hover);
+}
+
+.wa-group-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.wa-group-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.wa-group-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.wa-group-caption {
+  font-size: 11.5px;
+  color: var(--text-muted);
+  margin-top: 1px;
+}
+
+.wa-list-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 11px 15px;
+  transition: background 0.15s ease;
+}
+
+.wa-list-item:hover {
+  background: var(--bg-surface-hover);
+}
+
+.wa-list-divider {
+  height: 1px;
+  background: var(--border-color);
+  margin-left: 54px;
+  opacity: 0.6;
+}
+
+.wa-btn-orange {
+  background: linear-gradient(135deg, #FF7A00 0%, #EA580C 100%);
+  color: #FFFFFF;
+  border: none;
+  border-radius: var(--border-radius-pill);
+  padding: 6px 13px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.15s ease;
+  box-shadow: 0 2px 6px rgba(255, 122, 0, 0.25);
+  white-space: nowrap;
+}
+
+.wa-btn-orange:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(255, 122, 0, 0.35);
+}
+
+.wa-btn-settled {
+  background: rgba(16, 185, 129, 0.12);
+  color: #059669;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  border-radius: var(--border-radius-pill);
+  padding: 5px 11px;
+  font-size: 11.5px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
 
 /* Compact ghost icon buttons for list-row actions (edit/delete) — plain
    icon rather than a bordered box, since swipe-to-delete already covers

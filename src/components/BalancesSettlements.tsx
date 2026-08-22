@@ -519,8 +519,8 @@ export function BalancesSettlements({
   groups,
   transfers,
   activeTripExpenses,
-  topCategoryName,
-  topCategoryPercentage,
+  topCategoryName: _topCategoryName,
+  topCategoryPercentage: _topCategoryPercentage,
   onMemberClick,
   onSettle,
   isAdmin,
@@ -563,189 +563,257 @@ export function BalancesSettlements({
 
   const isUpiEnabled = useTripStore((s) => s.isFeatureEnabled('enableUpiPayments', { tripId: trip.id }));
   const balanceNodes = buildSettlementNodes(balances, groups);
+  const [isTransfersExpanded, setIsTransfersExpanded] = useState(true);
+  const [isMembersSectionExpanded, setIsMembersSectionExpanded] = useState(false);
 
   const setCustom = (rowKey: string, v: string) => setCustomAmounts({ ...customAmounts, [rowKey]: v });
   const toggleCustomOpen = (rowKey: string) => setCustomOpenKeys({ ...customOpenKeys, [rowKey]: !customOpenKeys[rowKey] });
 
   const totalOutstanding = transfers.reduce((sum, t) => sum + t.amount, 0);
   const isFullySettled = transfers.length === 0;
-  const topTransfer = transfers.length > 0 ? [...transfers].sort((a, b) => b.amount - a.amount)[0] : null;
-  const topTransferShare = topTransfer && totalOutstanding > 0 ? topTransfer.amount / totalOutstanding : 0;
-  const transferIsDominant = transfers.length === 1 || topTransferShare >= 0.5;
-  const categoryIsDominant = !!topCategoryName && (topCategoryPercentage ?? 0) >= 50;
-  const categoryClause = categoryIsDominant ? `, driven by ${topCategoryName} spend` : '';
 
   return (
-    <div style={{ marginTop: '32px', borderTop: '1px solid var(--border-color)', paddingTop: '24px' }}>
-      <h3 style={{ fontSize: '18px', marginBottom: '16px' }}>Balances & Settlements</h3>
-
-      {/* Boarding-pass balance summary */}
-      <div className="boarding-pass">
-        <div className="bp-top">
-          <div>
-            <div className="bp-eyebrow">{trip.name}</div>
-            <div className="bp-title">Balance summary</div>
+    <div id="balances-section" style={{ marginTop: '20px' }}>
+      {/* 1. WhatsApp-Style Suggested Settlements Section */}
+      <div className="wa-group-card">
+        <div
+          className="wa-group-header"
+          onClick={() => {
+            triggerHaptic('light');
+            setIsTransfersExpanded(!isTransfersExpanded);
+          }}
+          role="button"
+          tabIndex={0}
+          aria-expanded={isTransfersExpanded}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              setIsTransfersExpanded(!isTransfersExpanded);
+            }
+          }}
+        >
+          <div className="wa-group-title">
+            <div className="wa-group-icon" style={{ background: isFullySettled ? 'rgba(16, 185, 129, 0.12)' : 'rgba(255, 122, 0, 0.12)', color: isFullySettled ? '#10B981' : '#FF7A00' }}>
+              {isFullySettled ? <IconCheckCircle size={18} /> : <span>⚡</span>}
+            </div>
+            <div>
+              <div className="wa-group-name">Suggested Settlements</div>
+              <div className="wa-group-caption">
+                {isFullySettled ? 'All debts cleared — nothing to pay' : `${transfers.length} payment${transfers.length === 1 ? '' : 's'} to clear all balances`}
+              </div>
+            </div>
           </div>
-          <div className="bp-meta">{trip.baseCurrency}</div>
-          <div className="bp-stamp-pos">
-            <span key={isFullySettled ? 'settled' : 'unsettled'} className="stamp-badge" style={{ color: isFullySettled ? 'var(--color-success)' : 'var(--color-danger)' }}>
-              {isFullySettled && <IconCheckCircle size={14} className="icon-sm" />}
-              {isFullySettled ? 'Settled' : 'Unsettled'}
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span
+              style={{
+                fontSize: '12.5px',
+                fontWeight: 700,
+                fontFamily: 'var(--font-family-mono)',
+                color: isFullySettled ? 'var(--color-success)' : 'var(--accent-orange)',
+              }}
+            >
+              {isFullySettled ? 'Settled' : `${currencySymbol}${totalOutstanding.toLocaleString('en-IN', { maximumFractionDigits: 2 })}`}
+            </span>
+            <span className={`m3-accordion-chevron ${isTransfersExpanded ? 'expanded' : ''}`}>
+              <IconChevronRight size={16} />
             </span>
           </div>
         </div>
-        <div className="bp-perf" />
-        <div className="bp-body">
-          <div className="bp-who">{isFullySettled ? 'Outstanding' : 'Outstanding to settle'}</div>
-          <div className="bp-amount privacy-blur" style={{ color: isFullySettled ? 'var(--color-success)' : 'var(--color-danger)' }}>
-            {formatMaskedAmount(totalOutstanding.toFixed(2), currencySymbol, isBlindMode)}
+
+        {isTransfersExpanded && (
+          <div className="fade-in" style={{ padding: '10px 14px 14px', borderTop: '1px solid var(--border-color)' }}>
+            {transfers.length === 0 ? (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 6px', color: 'var(--color-success)', fontSize: '13.5px', fontWeight: 600 }}>
+                <IconCheckCircle size={18} />
+                <span>Every balance is settled — all set!</span>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {transfers.map((t) => {
+                  const rowKey = `${t.from}|${t.to}`;
+                  const isGroupInvolved = t.from.startsWith('group:') || t.to.startsWith('group:');
+                  return (
+                    <TransferRow
+                      key={rowKey}
+                      transfer={t}
+                      rowKey={rowKey}
+                      tripId={trip.id}
+                      tripName={trip.name}
+                      note={isGroupInvolved ? 'group settlement — combined balance' : undefined}
+                      currencySymbol={currencySymbol}
+                      isSettled={isTransferSettled(t, activeTripExpenses)}
+                      canSettle={canSettleTransfer(t)}
+                      customValue={customAmounts[rowKey] || ''}
+                      customOpen={!!customOpenKeys[rowKey]}
+                      onToggleCustom={() => toggleCustomOpen(rowKey)}
+                      onCustomChange={(v) => setCustom(rowKey, v)}
+                      onSettle={onSettle}
+                      onOpenUpi={(t) => setUpiTargetTransfer(t)}
+                      isUpiEnabled={isUpiEnabled}
+                      balances={balances}
+                      groups={groups}
+                      activeTripExpenses={activeTripExpenses}
+                      members={members}
+                    />
+                  );
+                })}
+              </div>
+            )}
           </div>
-          <div className="bp-sub">
-            {isFullySettled
-              ? 'Every balance is settled — nothing left to pay.'
-              : topTransfer && transferIsDominant
-                ? `${transfers.length > 1 ? 'Mostly ' : ''}${topTransfer.fromLabel} owes ${topTransfer.toLabel}${categoryClause}.`
-                : categoryIsDominant
-                  ? `${transfers.length} transfers to settle, driven mostly by ${topCategoryName} spend.`
-                  : `${transfers.length} transfer${transfers.length === 1 ? '' : 's'} will clear every balance.`}
-          </div>
-        </div>
-        <div className="bp-foot">
-          <span>{balances.length} members</span>
-          <span>{transfers.length} transfer{transfers.length === 1 ? '' : 's'} left</span>
-        </div>
+        )}
       </div>
 
-      {/* Individual & Group Net Balances Breakdown Card */}
-      <div className="glass-card" style={{ marginTop: '16px', padding: '16px' }}>
-        <h4 style={{ fontSize: '12px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 12px 0' }}>
-          Individual & Group Balances
-        </h4>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-          {balanceNodes.map((n) => {
-            const isGroup = n.id.startsWith('group:');
-
-            if (!isGroup) {
-              return (
-                <div
-                  key={n.id}
-                  className="balance-row"
-                  style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '13.5px', padding: '8px 10px', borderRadius: 'var(--border-radius-sm)', background: 'var(--bg-secondary)', cursor: 'pointer' }}
-                  onClick={() => onMemberClick(n.memberIds[0])}
-                  title={`View ${n.name}'s expenses`}
-                >
-                  <span style={{ minWidth: 0, flex: '1 1 auto', lineHeight: '1.3', paddingRight: '8px' }}><strong>{n.name}</strong></span>
-                  <span className="privacy-blur" style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', color: balanceColor(n.balance), fontWeight: '700', flexShrink: 0, marginLeft: 'auto', whiteSpace: 'nowrap' }}>
-                    <BalanceIcon balance={n.balance} />
-                    {balanceLabel(n.balance, currencySymbol, isBlindMode)}
-                  </span>
-                </div>
-              );
+      {/* 2. WhatsApp-Style Member & Group Balances Section */}
+      <div className="wa-group-card">
+        <div
+          className="wa-group-header"
+          onClick={() => {
+            triggerHaptic('light');
+            setIsMembersSectionExpanded(!isMembersSectionExpanded);
+          }}
+          role="button"
+          tabIndex={0}
+          aria-expanded={isMembersSectionExpanded}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              setIsMembersSectionExpanded(!isMembersSectionExpanded);
             }
-
-            const groupId = n.id.slice('group:'.length);
-            const groupObj = groups.find((g) => g.id === groupId);
-            const internalTransfers = groupObj ? calculateGroupInternalTransfers(balances, groupObj) : [];
-            const isNetZero = Math.abs(n.balance) < 0.01;
-            const fullySettled = isNetZero && internalTransfers.length === 0;
-            const statusLabel = fullySettled
-              ? 'settled'
-              : isNetZero
-                ? 'internal settlement pending'
-                : balanceLabel(n.balance, currencySymbol, isBlindMode);
-            const statusColor = fullySettled
-              ? 'var(--color-success)'
-              : isNetZero
-                ? 'var(--color-warning)'
-                : balanceColor(n.balance);
-            const isExpanded = !!expandedGroups[groupId];
-
-            return (
-              <div key={n.id} style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                <div
-                  className="balance-row"
-                  style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '13.5px', padding: '8px 10px', borderRadius: 'var(--border-radius-sm)', background: 'var(--bg-secondary)', cursor: 'pointer' }}
-                  onClick={() => setExpandedGroups({ ...expandedGroups, [groupId]: !isExpanded })}
-                  title="Click to toggle group member breakdown"
-                >
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', minWidth: 0, flex: '1 1 auto', lineHeight: '1.3', paddingRight: '8px' }}>
-                    <IconMembers size={14} className="icon-sm" />
-                    <strong>{n.name}</strong>
-                    <span style={{ fontSize: '11px', color: 'var(--text-secondary)', display: 'inline-flex', alignItems: 'center', transform: isExpanded ? 'rotate(90deg)' : 'none', transition: 'transform 0.15s ease' }}>
-                      <IconChevronRight size={12} className="icon-sm" />
-                    </span>
-                  </span>
-                  <span className="privacy-blur" style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', color: statusColor, fontWeight: '700', flexShrink: 0, marginLeft: 'auto', whiteSpace: 'nowrap' }}>
-                    <BalanceIcon balance={n.balance} settled={fullySettled} />
-                    {statusLabel}
-                  </span>
-                </div>
-
-              {isExpanded && (
-                <div style={{ marginLeft: '16px', paddingLeft: '10px', borderLeft: '2px dashed var(--border-color)', display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '2px', marginBottom: '4px' }}>
-                  {n.memberIds.map((memId) => {
-                    const memberBalance = balances.find((b) => b.memberId === memId);
-                    const bal = memberBalance ? memberBalance.balance : 0;
-                    return (
-                      <div
-                        key={memId}
-                        style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12.5px', padding: '4px 0', cursor: 'pointer' }}
-                        onClick={() => onMemberClick(memId)}
-                        title={`View ${members[memId]?.name || 'Member'}'s expenses`}
-                      >
-                        <span style={{ color: 'var(--text-secondary)' }}>{members[memId]?.name || 'Member'}</span>
-                        <span className="privacy-blur" style={{ color: balanceColor(bal), fontWeight: '600' }}>
-                          {balanceLabel(bal, currencySymbol, isBlindMode)}
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
+          }}
+        >
+          <div className="wa-group-title">
+            <div className="wa-group-icon" style={{ background: 'rgba(2, 132, 199, 0.12)', color: '#0284C7' }}>
+              <IconMembers size={18} />
             </div>
-          );
-        })}
+            <div>
+              <div className="wa-group-name">Member & Group Balances</div>
+              <div className="wa-group-caption">
+                {balances.length} member{balances.length === 1 ? '' : 's'} · Tap to see who owes what
+              </div>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600 }}>
+              {isMembersSectionExpanded ? 'Hide' : 'Show'}
+            </span>
+            <span className={`m3-accordion-chevron ${isMembersSectionExpanded ? 'expanded' : ''}`}>
+              <IconChevronRight size={16} />
+            </span>
+          </div>
         </div>
-      </div>
 
-      {/* Settlements Section */}
-      <div className="glass-card">
-        <h4 style={{ fontSize: '12px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 12px 0' }}>
-          Fewest Payments to Clear It
-        </h4>
+        {isMembersSectionExpanded && (
+          <div className="fade-in" style={{ borderTop: '1px solid var(--border-color)', padding: '6px 0' }}>
+            {balanceNodes.map((n, idx) => {
+              const isGroup = n.id.startsWith('group:');
 
-        {transfers.length === 0 ? (
-          <p style={{ color: 'var(--color-success)', fontSize: '14px', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <IconCheckCircle size={17} className="icon" /> All settlements complete — no outstanding debts.
-          </p>
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            {transfers.map((t) => {
-              const rowKey = `${t.from}|${t.to}`;
-              const isGroupInvolved = t.from.startsWith('group:') || t.to.startsWith('group:');
+              if (!isGroup) {
+                return (
+                  <div key={n.id}>
+                    {idx > 0 && <div className="wa-list-divider" />}
+                    <div
+                      className="wa-list-item"
+                      onClick={() => onMemberClick(n.memberIds[0])}
+                      style={{ cursor: 'pointer' }}
+                      title={`View ${n.name}'s expenses`}
+                    >
+                      <span style={{ fontSize: '13.5px', fontWeight: 600, color: 'var(--text-primary)' }}>
+                        {n.name}
+                      </span>
+                      <span
+                        className="privacy-blur"
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '5px',
+                          color: balanceColor(n.balance),
+                          fontWeight: '700',
+                          fontSize: '13px',
+                          fontFamily: 'var(--font-family-mono)',
+                        }}
+                      >
+                        <BalanceIcon balance={n.balance} />
+                        {balanceLabel(n.balance, currencySymbol, isBlindMode)}
+                      </span>
+                    </div>
+                  </div>
+                );
+              }
+
+              const groupId = n.id.slice('group:'.length);
+              const groupObj = groups.find((g) => g.id === groupId);
+              const internalTransfers = groupObj ? calculateGroupInternalTransfers(balances, groupObj) : [];
+              const isNetZero = Math.abs(n.balance) < 0.01;
+              const fullySettled = isNetZero && internalTransfers.length === 0;
+              const statusLabel = fullySettled
+                ? 'settled'
+                : isNetZero
+                  ? 'internal settlement pending'
+                  : balanceLabel(n.balance, currencySymbol, isBlindMode);
+              const statusColor = fullySettled
+                ? 'var(--color-success)'
+                : isNetZero
+                  ? 'var(--color-warning)'
+                  : balanceColor(n.balance);
+              const isGroupExpanded = !!expandedGroups[groupId];
+
               return (
-                <TransferRow
-                  key={rowKey}
-                  transfer={t}
-                  rowKey={rowKey}
-                  tripId={trip.id}
-                  tripName={trip.name}
-                  note={isGroupInvolved ? 'group settlement — combined balance' : undefined}
-                  currencySymbol={currencySymbol}
-                  isSettled={isTransferSettled(t, activeTripExpenses)}
-                  canSettle={canSettleTransfer(t)}
-                  customValue={customAmounts[rowKey] || ''}
-                  customOpen={!!customOpenKeys[rowKey]}
-                  onToggleCustom={() => toggleCustomOpen(rowKey)}
-                  onCustomChange={(v) => setCustom(rowKey, v)}
-                  onSettle={onSettle}
-                  onOpenUpi={(t) => setUpiTargetTransfer(t)}
-                  isUpiEnabled={isUpiEnabled}
-                  balances={balances}
-                  groups={groups}
-                  activeTripExpenses={activeTripExpenses}
-                  members={members}
-                />
+                <div key={n.id}>
+                  {idx > 0 && <div className="wa-list-divider" />}
+                  <div
+                    className="wa-list-item"
+                    onClick={() => setExpandedGroups({ ...expandedGroups, [groupId]: !isGroupExpanded })}
+                    style={{ cursor: 'pointer' }}
+                    title="Click to toggle group member breakdown"
+                  >
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '13.5px', fontWeight: 600, color: 'var(--text-primary)' }}>
+                      <IconMembers size={14} className="icon-sm" />
+                      {n.name}
+                      <span style={{ fontSize: '11px', color: 'var(--text-secondary)', display: 'inline-flex', alignItems: 'center', transform: isGroupExpanded ? 'rotate(90deg)' : 'none', transition: 'transform 0.15s ease' }}>
+                        <IconChevronRight size={12} className="icon-sm" />
+                      </span>
+                    </span>
+                    <span
+                      className="privacy-blur"
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '5px',
+                        color: statusColor,
+                        fontWeight: '700',
+                        fontSize: '13px',
+                        fontFamily: 'var(--font-family-mono)',
+                      }}
+                    >
+                      <BalanceIcon balance={n.balance} settled={fullySettled} />
+                      {statusLabel}
+                    </span>
+                  </div>
+
+                  {isGroupExpanded && (
+                    <div style={{ marginLeft: '24px', paddingLeft: '12px', borderLeft: '2px solid var(--border-color)', marginBottom: '6px' }}>
+                      {n.memberIds.map((memId) => {
+                        const memberBalance = balances.find((b) => b.memberId === memId);
+                        const bal = memberBalance ? memberBalance.balance : 0;
+                        return (
+                          <div
+                            key={memId}
+                            style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12.5px', padding: '5px 12px', cursor: 'pointer' }}
+                            onClick={() => onMemberClick(memId)}
+                            title={`View ${members[memId]?.name || 'Member'}'s expenses`}
+                          >
+                            <span style={{ color: 'var(--text-secondary)' }}>{members[memId]?.name || 'Member'}</span>
+                            <span className="privacy-blur" style={{ color: balanceColor(bal), fontWeight: '600' }}>
+                              {balanceLabel(bal, currencySymbol, isBlindMode)}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
               );
             })}
           </div>

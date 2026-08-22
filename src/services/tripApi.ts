@@ -1,5 +1,5 @@
 import { supabase } from './supabaseClient';
-import type { Category, Expense, Group, Member, PreviousMemberSuggestion, SplitMode, Trip } from '../types';
+import type { Category, Expense, Group, Member, PreviousMemberSuggestion, SplitMode, Trip, TripStop } from '../types';
 import type { Database } from '../types/database';
 import type { AdminUserRow, AppConfigKey, AuditLogEntry, DevicePlatformCount, NotificationStats } from '../types/admin';
 
@@ -195,6 +195,8 @@ export async function insertTrip(input: {
   baseCurrency: string;
   ownerId: string;
   id?: string;
+  destination?: string;
+  stops?: TripStop[];
 }): Promise<Trip> {
   const { data, error } = await supabase
     .from('trips')
@@ -212,7 +214,7 @@ export async function insertTrip(input: {
   return mapTrip(data, [], []);
 }
 
-export async function updateTripRow(id: string, patch: { name: string; startDate: string; endDate: string }): Promise<void> {
+export async function updateTripRow(id: string, patch: { name: string; startDate: string; endDate: string; destination?: string; stops?: TripStop[] }): Promise<void> {
   const { error } = await supabase
     .from('trips')
     .update({ name: patch.name, start_date: patch.startDate, end_date: patch.endDate, updated_at: new Date().toISOString() })
