@@ -618,65 +618,70 @@ export function BalancesSettlements({
         </div>
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '16px' }}>
-        {balanceNodes.map((n) => {
-          const isGroup = n.id.startsWith('group:');
+      {/* Individual & Group Net Balances Breakdown Card */}
+      <div className="glass-card" style={{ marginTop: '16px', padding: '16px' }}>
+        <h4 style={{ fontSize: '12px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 12px 0' }}>
+          Individual & Group Balances
+        </h4>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+          {balanceNodes.map((n) => {
+            const isGroup = n.id.startsWith('group:');
 
-          if (!isGroup) {
-            return (
-              <div
-                key={n.id}
-                className="balance-row"
-                style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '14px', padding: '6px 4px', borderRadius: '8px', cursor: 'pointer' }}
-                onClick={() => onMemberClick(n.memberIds[0])}
-                title={`View ${n.name}'s expenses`}
-              >
-                <span style={{ minWidth: 0, flex: '1 1 auto', lineHeight: '1.3', paddingRight: '8px' }}><strong>{n.name}</strong></span>
-                <span className="privacy-blur" style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', color: balanceColor(n.balance), fontWeight: '700', flexShrink: 0, marginLeft: 'auto', whiteSpace: 'nowrap' }}>
-                  <BalanceIcon balance={n.balance} />
-                  {balanceLabel(n.balance, currencySymbol, isBlindMode)}
-                </span>
-              </div>
-            );
-          }
-
-          const groupId = n.id.slice('group:'.length);
-          const groupObj = groups.find((g) => g.id === groupId);
-          const internalTransfers = groupObj ? calculateGroupInternalTransfers(balances, groupObj) : [];
-          const isNetZero = Math.abs(n.balance) < 0.01;
-          const fullySettled = isNetZero && internalTransfers.length === 0;
-          const statusLabel = fullySettled
-            ? 'settled'
-            : isNetZero
-              ? 'internal settlement pending'
-              : balanceLabel(n.balance, currencySymbol, isBlindMode);
-          const statusColor = fullySettled
-            ? 'var(--color-success)'
-            : isNetZero
-              ? 'var(--color-warning)'
-              : balanceColor(n.balance);
-          const isExpanded = !!expandedGroups[groupId];
-
-          return (
-            <div key={n.id} style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-              <div
-                className="balance-row"
-                style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '14px', padding: '6px 4px', borderRadius: '8px', cursor: 'pointer' }}
-                onClick={() => setExpandedGroups({ ...expandedGroups, [groupId]: !isExpanded })}
-                title="Click to toggle group member breakdown"
-              >
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', minWidth: 0, flex: '1 1 auto', lineHeight: '1.3', paddingRight: '8px' }}>
-                  <IconMembers size={14} className="icon-sm" />
-                  <strong>{n.name}</strong>
-                  <span style={{ fontSize: '11px', color: 'var(--text-secondary)', display: 'inline-flex', alignItems: 'center', transform: isExpanded ? 'rotate(90deg)' : 'none', transition: 'transform 0.15s ease' }}>
-                    <IconChevronRight size={12} className="icon-sm" />
+            if (!isGroup) {
+              return (
+                <div
+                  key={n.id}
+                  className="balance-row"
+                  style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '13.5px', padding: '8px 10px', borderRadius: 'var(--border-radius-sm)', background: 'var(--bg-secondary)', cursor: 'pointer' }}
+                  onClick={() => onMemberClick(n.memberIds[0])}
+                  title={`View ${n.name}'s expenses`}
+                >
+                  <span style={{ minWidth: 0, flex: '1 1 auto', lineHeight: '1.3', paddingRight: '8px' }}><strong>{n.name}</strong></span>
+                  <span className="privacy-blur" style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', color: balanceColor(n.balance), fontWeight: '700', flexShrink: 0, marginLeft: 'auto', whiteSpace: 'nowrap' }}>
+                    <BalanceIcon balance={n.balance} />
+                    {balanceLabel(n.balance, currencySymbol, isBlindMode)}
                   </span>
-                </span>
-                <span className="privacy-blur" style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', color: statusColor, fontWeight: '700', flexShrink: 0, marginLeft: 'auto', whiteSpace: 'nowrap' }}>
-                  <BalanceIcon balance={n.balance} settled={fullySettled} />
-                  {statusLabel}
-                </span>
-              </div>
+                </div>
+              );
+            }
+
+            const groupId = n.id.slice('group:'.length);
+            const groupObj = groups.find((g) => g.id === groupId);
+            const internalTransfers = groupObj ? calculateGroupInternalTransfers(balances, groupObj) : [];
+            const isNetZero = Math.abs(n.balance) < 0.01;
+            const fullySettled = isNetZero && internalTransfers.length === 0;
+            const statusLabel = fullySettled
+              ? 'settled'
+              : isNetZero
+                ? 'internal settlement pending'
+                : balanceLabel(n.balance, currencySymbol, isBlindMode);
+            const statusColor = fullySettled
+              ? 'var(--color-success)'
+              : isNetZero
+                ? 'var(--color-warning)'
+                : balanceColor(n.balance);
+            const isExpanded = !!expandedGroups[groupId];
+
+            return (
+              <div key={n.id} style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <div
+                  className="balance-row"
+                  style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '13.5px', padding: '8px 10px', borderRadius: 'var(--border-radius-sm)', background: 'var(--bg-secondary)', cursor: 'pointer' }}
+                  onClick={() => setExpandedGroups({ ...expandedGroups, [groupId]: !isExpanded })}
+                  title="Click to toggle group member breakdown"
+                >
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', minWidth: 0, flex: '1 1 auto', lineHeight: '1.3', paddingRight: '8px' }}>
+                    <IconMembers size={14} className="icon-sm" />
+                    <strong>{n.name}</strong>
+                    <span style={{ fontSize: '11px', color: 'var(--text-secondary)', display: 'inline-flex', alignItems: 'center', transform: isExpanded ? 'rotate(90deg)' : 'none', transition: 'transform 0.15s ease' }}>
+                      <IconChevronRight size={12} className="icon-sm" />
+                    </span>
+                  </span>
+                  <span className="privacy-blur" style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', color: statusColor, fontWeight: '700', flexShrink: 0, marginLeft: 'auto', whiteSpace: 'nowrap' }}>
+                    <BalanceIcon balance={n.balance} settled={fullySettled} />
+                    {statusLabel}
+                  </span>
+                </div>
 
               {isExpanded && (
                 <div style={{ marginLeft: '16px', paddingLeft: '10px', borderLeft: '2px dashed var(--border-color)', display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '2px', marginBottom: '4px' }}>
@@ -702,6 +707,7 @@ export function BalancesSettlements({
             </div>
           );
         })}
+        </div>
       </div>
 
       {/* Settlements Section with View Switcher */}

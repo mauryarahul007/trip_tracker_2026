@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 import type { Category, Group, Member, Trip, Expense, ExpenseLocation } from '../types';
@@ -109,7 +109,8 @@ export function ExpenseForm({
   const [ocrSuggestion, setOcrSuggestion] = useState<ExtractedReceiptData | null>(null);
 
   // Duplicate expense detection
-  const allTripExpenses = useTripStore((s) => s.expenses.filter((e) => e.tripId === trip?.id));
+  const expenses = useTripStore((s) => s.expenses);
+  const allTripExpenses = useMemo(() => expenses.filter((e) => e.tripId === trip?.id), [expenses, trip?.id]);
   const duplicateExpense = !editingExpense && parseFloat(amount) > 0 && title.trim().length > 1
     ? allTripExpenses.find((e) =>
         e.date === date &&
@@ -144,9 +145,11 @@ export function ExpenseForm({
   // Geotagging
   const [location, setLocation] = useState<ExpenseLocation | null>(editingExpense?.location || null);
   const [locationLoading, setLocationLoading] = useState(false);
+  const hasAttemptedGeoRef = useRef(false);
 
   useEffect(() => {
-    if (!editingExpense && enableGeotagging && !location) {
+    if (!editingExpense && enableGeotagging && !location && !hasAttemptedGeoRef.current) {
+      hasAttemptedGeoRef.current = true;
       setLocationLoading(true);
       captureCurrentExpenseLocation()
         .then((loc) => {
@@ -154,7 +157,7 @@ export function ExpenseForm({
         })
         .finally(() => setLocationLoading(false));
     }
-  }, [editingExpense, enableGeotagging]);
+  }, [editingExpense, enableGeotagging, location]);
 
   const sheetRef = useRef<HTMLFormElement>(null);
   const amountInputRef = useRef<HTMLInputElement>(null);
