@@ -170,6 +170,25 @@ export function SettingsView({
     suggestFeatureBackGuardRef.current = guard;
   };
 
+  // Import Backup: hidden file input triggered by the "Upload Backup File"
+  // button, so restoring a snapshot doesn't require copy-pasting JSON.
+  const importFileInputRef = useRef<HTMLInputElement>(null);
+  const [importFileError, setImportFileError] = useState<string | null>(null);
+  const handleImportFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    setImportFileError(null);
+    const reader = new FileReader();
+    reader.onload = () => {
+      setImportJson?.(String(reader.result || ''));
+    };
+    reader.onerror = () => {
+      setImportFileError('Could not read that file.');
+    };
+    reader.readAsText(file);
+  };
+
   // Register sub-screen drill-downs into browser history stack (WhatsApp hierarchical navigation)
   useHistoryBack(subScreen !== null, () => {
     if (subScreen === 'report-issue' && reportIssueBackGuardRef.current) {
@@ -870,18 +889,45 @@ export function SettingsView({
 
             {showImportArea && (
               <div className="fade-in" style={{ marginTop: '4px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                <textarea
-                  className="input-field"
-                  rows={4}
-                  placeholder="Paste backup JSON string here..."
-                  style={{ fontFamily: 'var(--font-family-mono)', fontSize: '12px' }}
-                  value={importJson}
-                  onChange={(e) => setImportJson?.(e.target.value)}
+                <input
+                  ref={importFileInputRef}
+                  type="file"
+                  accept="application/json,.json"
+                  onChange={handleImportFileChange}
+                  style={{ display: 'none' }}
                 />
+                <button
+                  type="button"
+                  className="secondary-btn"
+                  style={{ padding: '10px' }}
+                  onClick={() => importFileInputRef.current?.click()}
+                >
+                  <IconUpload size={15} className="icon-sm" /> Choose Backup File...
+                </button>
+                {importJson && (
+                  <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: 0 }}>
+                    Loaded {formatBytes(new Blob([importJson]).size)} of backup data. Review and restore below.
+                  </p>
+                )}
+                {importFileError && (
+                  <p style={{ color: 'var(--color-danger)', fontSize: '13px', margin: 0 }}>{importFileError}</p>
+                )}
+                <details>
+                  <summary style={{ fontSize: '12px', color: 'var(--text-secondary)', cursor: 'pointer' }}>Or paste JSON manually</summary>
+                  <textarea
+                    className="input-field"
+                    rows={4}
+                    placeholder="Paste backup JSON string here..."
+                    style={{ fontFamily: 'var(--font-family-mono)', fontSize: '12px', marginTop: '8px' }}
+                    value={importJson}
+                    onChange={(e) => setImportJson?.(e.target.value)}
+                  />
+                </details>
                 <button
                   type="button"
                   className="gradient-btn"
                   style={{ padding: '8px' }}
+                  disabled={!importJson}
                   onClick={() => onImport?.()}
                 >
                   Restore Snapshot
