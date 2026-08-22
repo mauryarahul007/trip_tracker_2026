@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { FeatureRecord } from '../../services/featureApi';
 import { updateFeature } from '../../services/featureApi';
+import { logSuperadminAction } from '../../services/tripApi';
 import type { FeatureFlagKey } from '../../types/admin';
 import { FEATURE_FLAGS_META } from '../../utils/featureFlags';
 import { useTripStore } from '../../store/tripStore';
@@ -66,6 +67,9 @@ export function AdminFeaturesPage({ features, onFeaturesChanged }: Props) {
         status,
         ...(status === 'shipped' ? { shippedNote: f.shippedNote || 'Shipped' } : {}),
       });
+      void logSuperadminAction(null, 'feature_status_change', { featureId: f.id, status }).catch((err) =>
+        console.error('Audit log failed', err)
+      );
       showToast(`${f.id} marked ${STATUS_LABELS[status] || status}`);
       onFeaturesChanged();
     } catch (err) {
@@ -78,6 +82,9 @@ export function AdminFeaturesPage({ features, onFeaturesChanged }: Props) {
   const handleLinkFlag = async (f: FeatureRecord, key: string) => {
     try {
       await updateFeature(f.id, { linkedFlagKey: key || undefined });
+      void logSuperadminAction(null, 'feature_link_flag', { featureId: f.id, flagKey: key || null }).catch((err) =>
+        console.error('Audit log failed', err)
+      );
       showToast(key ? `Linked ${f.id} to ${key}` : `Unlinked ${f.id}`);
       onFeaturesChanged();
     } catch (err) {

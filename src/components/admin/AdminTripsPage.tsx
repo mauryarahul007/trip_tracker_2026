@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { Trip, Expense } from '../../types';
 import { useTripStore } from '../../store/tripStore';
 import { getCurrencySymbol } from '../../utils/currency';
+import { logSuperadminAction } from '../../services/tripApi';
 import { IconSearch, IconCheck } from '../Icons';
 
 interface Props {
@@ -131,6 +132,9 @@ export function AdminTripsPage({ trips, expenses, onInspectTrip }: Props) {
                             className={`ops-mini-btn${t.frozen ? '' : ' ground'}`}
                             onClick={async () => {
                               await freezeTrip(t.id, !t.frozen);
+                              void logSuperadminAction(t.id, t.frozen ? 'unground_trip' : 'ground_trip', { tripName: t.name }).catch((err) =>
+                                console.error('Audit log failed', err)
+                              );
                               showToast(t.frozen ? `Unfroze trip "${t.name}"` : `Grounded trip "${t.name}" — modifications stopped.`);
                             }}
                           >
@@ -141,6 +145,9 @@ export function AdminTripsPage({ trips, expenses, onInspectTrip }: Props) {
                             className="ops-mini-btn"
                             onClick={async () => {
                               await archiveTrip(t.id, !t.archived);
+                              void logSuperadminAction(t.id, t.archived ? 'restore_trip' : 'archive_trip', { tripName: t.name }).catch((err) =>
+                                console.error('Audit log failed', err)
+                              );
                               showToast(t.archived ? `Restored trip "${t.name}"` : `Archived trip "${t.name}"`);
                             }}
                           >
@@ -152,6 +159,11 @@ export function AdminTripsPage({ trips, expenses, onInspectTrip }: Props) {
                             onClick={async () => {
                               if (window.confirm(`Permanently remove trip "${t.name}" and its expenses? This cannot be undone.`)) {
                                 await deleteTrip(t.id);
+                                // trip_id references trips(id) on delete cascade -- log against
+                                // null (trip no longer exists) with the id/name in details instead.
+                                void logSuperadminAction(null, 'delete_trip', { tripId: t.id, tripName: t.name }).catch((err) =>
+                                  console.error('Audit log failed', err)
+                                );
                                 showToast(`Deleted trip "${t.name}"`);
                               }
                             }}

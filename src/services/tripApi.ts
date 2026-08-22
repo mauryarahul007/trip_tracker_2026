@@ -934,3 +934,17 @@ export async function purgeAuditLogsOlderThan(days: number): Promise<number> {
   if (error) throw error;
   return data ?? 0;
 }
+
+// For actions the superadmin portal performs via plain table writes (trip
+// ground/archive/delete, feature-request edits) that have no dedicated
+// logging RPC of their own -- log_security_event (0048) is grantable to any
+// authenticated user, so the portal calls it directly after the write
+// succeeds instead of needing a new RPC per action.
+export async function logSuperadminAction(
+  tripId: string | null,
+  action: string,
+  details: Record<string, unknown> = {}
+): Promise<void> {
+  const { error } = await supabase.rpc('log_security_event', { p_trip_id: tripId, p_action: action, p_details: details });
+  if (error) throw error;
+}
