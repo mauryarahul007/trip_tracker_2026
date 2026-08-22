@@ -519,37 +519,59 @@ export async function insertTripGraph(ownerId: string, seed: TripGraphSeed): Pro
   let members: Member[] = [];
   const oldMembers = Object.values(seed.members);
   if (oldMembers.length) {
-    const { data, error } = await supabase
-      .from('members')
-      .insert(oldMembers.map((m) => ({ trip_id: trip.id, name: m.name, archived: !!m.archived })))
-      .select();
-    if (error) throw error;
-    members = (data ?? []).map(mapMember);
-    oldMembers.forEach((old, i) => memberIdMap.set(old.id, members[i].id));
+    // Determine which member corresponds to the creator/owner
+    const ownerMemberIndex = oldMembers.findIndex((m) => m.linkedUserId === ownerId);
+    const effectiveOwnerIndex = ownerMemberIndex >= 0 ? ownerMemberIndex : 0;
+
+    // Ensure the owner member is inserted first with linked_user_id so auth.uid()
+    // is immediately a linked participant in the trip for all subsequent RLS checks.
+    const orderedOldMembers = [
+      oldMembers[effectiveOwnerIndex],
+      ...oldMembers.filter((_, i) => i !== effectiveOwnerIndex),
+    ];
+
+    for (let i = 0; i < orderedOldMembers.length; i++) {
+      const old = orderedOldMembers[i];
+      const isOwner = i === 0;
+      const { data, error } = await supabase
+        .from('members')
+        .insert({
+          trip_id: trip.id,
+          name: old.name,
+          archived: !!old.archived,
+          ...(isOwner ? { linked_user_id: ownerId } : {}),
+        })
+        .select()
+        .single();
+      if (error) throw error;
+      const member = mapMember(data);
+      members.push(member);
+      memberIdMap.set(old.id, member.id);
+    }
   }
 
   const groupIdMap = new Map<string, string>();
   let groups: Group[] = [];
   const oldGroups = Object.values(seed.groups);
   if (oldGroups.length) {
-    const { data, error } = await supabase
-      .from('groups')
-      .insert(oldGroups.map((g) => ({ trip_id: trip.id, name: g.name })))
-      .select();
-    if (error) throw error;
-    const rows = data ?? [];
-    oldGroups.forEach((old, i) => groupIdMap.set(old.id, rows[i].id));
+    for (const old of oldGroups) {
+      const { data, error } = await supabase
+        .from('groups')
+        .insert({ trip_id: trip.id, name: old.name })
+        .select()
+        .single();
+      if (error) throw error;
+      groupIdMap.set(old.id, data.id);
 
-    const groupMemberRows = oldGroups.flatMap((old) =>
-      old.memberIds
-        .map((oldMemberId) => ({ group_id: groupIdMap.get(old.id)!, member_id: memberIdMap.get(oldMemberId)! }))
-        .filter((r) => r.member_id)
-    );
-    if (groupMemberRows.length) {
-      const { error: gmErr } = await supabase.from('group_members').insert(groupMemberRows);
-      if (gmErr) throw gmErr;
+      const groupMemberRows = old.memberIds
+        .map((oldMemberId) => ({ group_id: data.id, member_id: memberIdMap.get(oldMemberId)! }))
+        .filter((r) => r.member_id);
+      if (groupMemberRows.length) {
+        const { error: gmErr } = await supabase.from('group_members').insert(groupMemberRows);
+        if (gmErr) throw gmErr;
+      }
+      groups.push(mapGroup(data, old.memberIds.map((mid) => memberIdMap.get(mid)!).filter(Boolean)));
     }
-    groups = rows.map((row, i) => mapGroup(row, oldGroups[i].memberIds.map((mid) => memberIdMap.get(mid)!).filter(Boolean)));
   }
 
   let categories: Category[] = [];
