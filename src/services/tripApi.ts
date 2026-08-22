@@ -565,9 +565,18 @@ export async function insertTripGraph(ownerId: string, seed: TripGraphSeed): Pro
 
   let expenses: Expense[] = [];
   if (seed.expenses.length) {
-    const remapIds = (ids: string[]) => ids.map((id) => memberIdMap.get(id) ?? id);
+    const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    const isValidUuid = (str?: string): boolean => typeof str === 'string' && UUID_REGEX.test(str);
+    const defaultMemberId = members[0]?.id || trip.id;
+    const remapId = (id: string): string => {
+      const mapped = memberIdMap.get(id);
+      if (mapped) return mapped;
+      if (isValidUuid(id)) return id;
+      return defaultMemberId;
+    };
+    const remapIds = (ids: string[]) => (ids || []).map(remapId);
     const remapShares = (shares: Record<string, number>) =>
-      Object.fromEntries(Object.entries(shares).map(([k, v]) => [memberIdMap.get(k) ?? k, v]));
+      Object.fromEntries(Object.entries(shares || {}).map(([k, v]) => [remapId(k), v]));
 
     const rows = seed.expenses.map((e) => ({
       trip_id: trip.id,
@@ -576,7 +585,7 @@ export async function insertTripGraph(ownerId: string, seed: TripGraphSeed): Pro
       currency: e.currency,
       category: e.category,
       date: e.date,
-      paid_by: memberIdMap.get(e.paidBy) ?? e.paidBy,
+      paid_by: memberIdMap.get(e.paidBy) || (isValidUuid(e.paidBy) ? e.paidBy : defaultMemberId),
       split_mode: e.splitMode,
       split_member_ids: remapIds(e.splitMemberIds),
       split_config: e.splitConfig ? remapShares(e.splitConfig) : null,

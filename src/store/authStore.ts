@@ -58,6 +58,13 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
     supabase.auth.getSession().then(async ({ data }) => {
       if (data?.session) {
         set({ session: data.session });
+        const user = data.session.user;
+        const displayName =
+          (user.user_metadata?.full_name as string | undefined) ||
+          (user.user_metadata?.name as string | undefined) ||
+          user.email?.split('@')[0] ||
+          null;
+        useTripStore.getState().setUserIdentity(user.id, displayName);
         useNotificationsStore.getState().initialize(data.session.user.id);
       }
 
@@ -86,6 +93,13 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
       if (session === null && event !== 'SIGNED_OUT') return;
       set({ session });
       if (session?.user) {
+        const user = session.user;
+        const displayName =
+          (user.user_metadata?.full_name as string | undefined) ||
+          (user.user_metadata?.name as string | undefined) ||
+          user.email?.split('@')[0] ||
+          null;
+        useTripStore.getState().setUserIdentity(user.id, displayName);
         registerForPushNotifications(session.user.id);
         useNotificationsStore.getState().initialize(session.user.id);
       }

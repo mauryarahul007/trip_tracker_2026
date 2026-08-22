@@ -175,7 +175,7 @@ interface TripStore extends TripState {
 
   // Database Backup Actions
   exportDatabase: () => string;
-  importDatabase: (jsonString: string) => Promise<boolean>;
+  importDatabase: (jsonString: string) => Promise<{ success: boolean; error?: string }>;
   clearDatabase: () => Promise<void>;
   loadDemoTrip: () => Promise<void>;
 }
@@ -290,9 +290,12 @@ export function getTripNotificationRecipients(
 // owner-scoped (deleteAllMyTrips deletes `where owner_id = userId` only), so
 // a joined trip is never actually removed from the account — re-inserting it
 // here on import would just duplicate it under the importer's ownership.
-// Legacy backups with no ownerId field predate this check and are kept, same
-// as before.
-export function filterTripsOwnedByUser(trips: Trip[], userId: string): Trip[] {
+// When existingTripIds is provided, trips already active in the account are
+// skipped. Otherwise, legacy backups with no ownerId or matching ownerId are kept.
+export function filterTripsOwnedByUser(trips: Trip[], userId: string, existingTripIds?: string[]): Trip[] {
+  if (existingTripIds && existingTripIds.length > 0) {
+    return trips.filter((t) => !existingTripIds.includes(t.id));
+  }
   return trips.filter((t) => !t.ownerId || t.ownerId === userId);
 }
 
@@ -1702,18 +1705,43 @@ export const useTripStore = create<TripStore>()(
     },
 
     importDatabase: async (jsonString) => {
-      const userId = get().userId;
-      if (!userId) return false;
+      let userId = get().userId;
+      if (!userId) {
+        try {
+          const { data: { session } } = await supabase.auth.getSession();
+          if (session?.user?.id) {
+            userId = session.user.id;
+            const displayName =
+              (session.user.user_metadata?.full_name as string | undefined) ||
+              (session.user.user_metadata?.name as string | undefined) ||
+              session.user.email?.split('@')[0] ||
+              null;
+            set({ userId, userDisplayName: displayName });
+          }
+        } catch {
+          // offline fallback
+        }
+      }
+
+      if (!userId) {
+        return { success: false, error: 'Please sign in to restore a database backup.' };
+      }
 
       try {
         const validation = validateAndSanitizeBackup(jsonString);
         if (!validation.valid || !validation.sanitizedState) {
-          return false;
+          return { success: false, error: validation.error || 'Invalid database snapshot format.' };
         }
 
         const parsed = validation.sanitizedState;
         const customCategories = parsed.categories.filter((c) => c.isCustom);
-        const ownedTrips = filterTripsOwnedByUser(parsed.trips, userId);
+        const existingTripIds = get().trips.map((t) => t.id);
+        const ownedTrips = filterTripsOwnedByUser(parsed.trips, userId, existingTripIds);
+
+        if (ownedTrips.length === 0 && parsed.trips.length > 0) {
+          return { success: false, error: 'All trips in this backup already exist in your account.' };
+        }
+
         const previousActiveTripId = get().activeTripId;
         let lastTripId: string | null = null;
 
@@ -1758,10 +1786,11 @@ export const useTripStore = create<TripStore>()(
           categories: categories ?? state.categories,
           storageError: null,
         }));
-        return true;
-      } catch (e) {
+        return { success: true };
+      } catch (e: any) {
         console.error('Import database failed:', e);
-        return false;
+        const msg = e?.message || 'Failed to restore database from snapshot.';
+        return { success: false, error: msg };
       }
     },
 

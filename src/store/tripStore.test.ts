@@ -189,6 +189,15 @@ describe('filterTripsOwnedByUser', () => {
     const result = filterTripsOwnedByUser(trips, 'user-1');
     expect(result.map((t) => t.id)).toEqual(['legacy']);
   });
+
+  it('filters out trips that already exist in active account when existingTripIds is provided', () => {
+    const trips = [
+      makeTrip({ id: 'existing-trip', memberIds: [], ownerId: 'user-1' }),
+      makeTrip({ id: 'new-trip', memberIds: [], ownerId: 'someone-else' }),
+    ];
+    const result = filterTripsOwnedByUser(trips, 'user-1', ['existing-trip']);
+    expect(result.map((t) => t.id)).toEqual(['new-trip']);
+  });
 });
 
 describe('resolvePendingLocation', () => {

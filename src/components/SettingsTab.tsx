@@ -20,6 +20,7 @@ type Props = {
   importJson?: string;
   setImportJson?: (v: string) => void;
   importStatus?: 'idle' | 'pending' | 'success' | 'error';
+  importErrorMessage?: string | null;
   onImport?: (jsonOverride?: string) => void;
   onClearDatabase?: () => void;
   onLoadDemoTrip?: () => void;
@@ -49,6 +50,7 @@ export function SettingsTab({
   importJson,
   setImportJson,
   importStatus,
+  importErrorMessage,
   onImport,
   onClearDatabase,
   onLoadDemoTrip,
@@ -79,6 +81,7 @@ export function SettingsTab({
       importJson={importJson}
       setImportJson={setImportJson}
       importStatus={importStatus}
+      importErrorMessage={importErrorMessage}
       onImport={onImport}
       onClearDatabase={onClearDatabase}
       onLoadDemoTrip={onLoadDemoTrip}

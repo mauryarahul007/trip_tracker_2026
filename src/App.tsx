@@ -254,6 +254,7 @@ export default function App() {
   const [importJson, setImportJson] = useState('');
   const [showImportArea, setShowImportArea] = useState(false);
   const [importStatus, setImportStatus] = useState<'idle' | 'pending' | 'success' | 'error'>('idle');
+  const [importErrorMessage, setImportErrorMessage] = useState<string | null>(null);
 
   // Confirm dialog (replaces window.confirm)
   const [confirmRequest, setConfirmRequest] = useState<ConfirmRequest | null>(null);
@@ -1044,8 +1045,9 @@ export default function App() {
     const json = jsonOverride ?? importJson;
     if (!json) return;
     setImportStatus('pending');
-    const success = await importDatabase(json);
-    if (success) {
+    setImportErrorMessage(null);
+    const result = await importDatabase(json);
+    if (result.success) {
       setImportStatus('success');
       setImportJson('');
       setTimeout(() => {
@@ -1054,7 +1056,11 @@ export default function App() {
       }, 2000);
     } else {
       setImportStatus('error');
-      setTimeout(() => setImportStatus('idle'), 3000);
+      setImportErrorMessage(result.error || 'Invalid database snapshot format.');
+      setTimeout(() => {
+        setImportStatus('idle');
+        setImportErrorMessage(null);
+      }, 4000);
     }
   };
 
@@ -1523,6 +1529,7 @@ export default function App() {
                 importJson={importJson}
                 setImportJson={setImportJson}
                 importStatus={importStatus}
+                importErrorMessage={importErrorMessage}
                 onImport={handleImport}
                 onClearDatabase={handleClearDatabase}
                 onLoadDemoTrip={handleLoadDemoTrip}
@@ -1607,6 +1614,7 @@ export default function App() {
           importJson={importJson}
           setImportJson={setImportJson}
           importStatus={importStatus}
+          importErrorMessage={importErrorMessage}
           onImport={handleImport}
           onClearDatabase={handleClearDatabase}
           onLoadDemoTrip={handleLoadDemoTrip}

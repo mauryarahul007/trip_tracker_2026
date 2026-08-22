@@ -668,4 +668,16 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - Storing bug records directly in the git repository avoids paid third-party dependencies and guarantees tickets remain versioned with the exact code commit, at the minor trade-off of requiring a commit to record resolved bugs.
 
+---
 
+## 45. Database Backup Import Robustness & Descriptive Error Diagnostics
+* **Context:**
+  - When users exported and tried to restore a JSON database backup from Settings, any failure (such as desynchronized user session ID, trips already active, or database insertion anomalies) collapsed into a generic and misleading `"Invalid database snapshot format"` error in the UI.
+  - Furthermore, `filterTripsOwnedByUser` previously discarded any trip where `ownerId !== userId`, causing backups to drop trips when restored onto another device/account, or when the backup contained trips joined from others.
+* **Decision:**
+  1. **Dynamic Session & Identity Resolution (`src/store/authStore.ts`, `src/store/tripStore.ts`):** Ensure user authentication state immediately updates `useTripStore`'s `userId` on all auth lifecycle events and fallback to `supabase.auth.getSession()` during import if uninitialized.
+  2. **Active Trip Deduplication (`filterTripsOwnedByUser`):** Deduplicate against active account trips by `id` rather than blindly dropping non-owned trips, allowing full cross-device and cross-account backup restorations.
+  3. **UUID & Member Mapping Safety (`src/services/tripApi.ts`):** Ensure all mapped `paid_by` and `split_member_ids` entries are validated as proper UUIDs, preventing PostgreSQL type rejection on dangling member references.
+  4. **Structured Error Diagnostics (`src/store/tripStore.ts`, `src/components/SettingsView.tsx`, `src/App.tsx`):** `importDatabase` now returns `{ success: boolean, error?: string }`, and `SettingsView` renders the exact, contextual error message directly to the user.
+* **Trade-offs Accepted:**
+  - Duplicate trip imports are prevented when the trip is already active in the account, alerting the user with `"All trips in this backup already exist in your account."` rather than silently creating duplicate records.

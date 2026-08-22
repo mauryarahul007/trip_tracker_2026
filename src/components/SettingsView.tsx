@@ -72,6 +72,7 @@ interface SettingsViewProps {
   importJson?: string;
   setImportJson?: (v: string) => void;
   importStatus?: 'idle' | 'pending' | 'success' | 'error';
+  importErrorMessage?: string | null;
   onImport?: (jsonOverride?: string) => void;
   onClearDatabase?: () => void;
   onLoadDemoTrip?: () => void;
@@ -107,6 +108,7 @@ export function SettingsView({
   importJson = '',
   setImportJson,
   importStatus = 'idle',
+  importErrorMessage,
   onImport,
   onClearDatabase,
   onLoadDemoTrip,
@@ -946,7 +948,7 @@ export function SettingsView({
                 )}
                 {importStatus === 'error' && (
                   <p style={{ color: 'var(--color-danger)', fontSize: '13px', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', margin: 0 }}>
-                    <IconAlertCircle size={15} className="icon-sm" /> Invalid database snapshot format.
+                    <IconAlertCircle size={15} className="icon-sm" /> {importErrorMessage || 'Invalid database snapshot format.'}
                   </p>
                 )}
               </div>

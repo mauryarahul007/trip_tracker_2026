@@ -162,13 +162,13 @@ export function AdminToolsPage({ categories, trips, expenses, onRefresh, isRefre
   const handleImportSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!importJsonText.trim()) return;
-    const ok = await importDatabase(importJsonText.trim());
-    if (ok) {
+    const result = await importDatabase(importJsonText.trim());
+    if (result.success) {
       setImportJsonText('');
       setShowImportArea(false);
       showToast('Database restored successfully.');
     } else {
-      showToast('Error importing JSON. Check file format.');
+      showToast(result.error || 'Error importing JSON. Check file format.');
     }
   };
 
