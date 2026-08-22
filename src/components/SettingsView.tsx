@@ -71,8 +71,8 @@ interface SettingsViewProps {
   setShowImportArea?: (v: boolean) => void;
   importJson?: string;
   setImportJson?: (v: string) => void;
-  importStatus?: 'idle' | 'success' | 'error';
-  onImport?: () => void;
+  importStatus?: 'idle' | 'pending' | 'success' | 'error';
+  onImport?: (jsonOverride?: string) => void;
   onClearDatabase?: () => void;
   onLoadDemoTrip?: () => void;
   archivedTrips?: Trip[];
@@ -170,8 +170,11 @@ export function SettingsView({
     suggestFeatureBackGuardRef.current = guard;
   };
 
-  // Import Backup: hidden file input triggered by the "Upload Backup File"
-  // button, so restoring a snapshot doesn't require copy-pasting JSON.
+  // Import Backup: hidden file input triggered by the "Choose Backup File"
+  // button. Restores immediately on selection (jsonOverride bypasses the
+  // setImportJson/importJson state round-trip, which wouldn't have
+  // committed yet if we called onImport() right after setImportJson() in
+  // the same tick) -- no separate submit button to miss for this path.
   const importFileInputRef = useRef<HTMLInputElement>(null);
   const [importFileError, setImportFileError] = useState<string | null>(null);
   const handleImportFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -181,7 +184,9 @@ export function SettingsView({
     setImportFileError(null);
     const reader = new FileReader();
     reader.onload = () => {
-      setImportJson?.(String(reader.result || ''));
+      const text = String(reader.result || '');
+      setImportJson?.(text);
+      onImport?.(text);
     };
     reader.onerror = () => {
       setImportFileError('Could not read that file.');
@@ -900,9 +905,10 @@ export function SettingsView({
                   type="button"
                   className="secondary-btn"
                   style={{ padding: '10px' }}
+                  disabled={importStatus === 'pending'}
                   onClick={() => importFileInputRef.current?.click()}
                 >
-                  <IconUpload size={15} className="icon-sm" /> Choose Backup File...
+                  <IconUpload size={15} className="icon-sm" /> {importStatus === 'pending' ? 'Restoring...' : 'Choose Backup File...'}
                 </button>
                 {importJson && (
                   <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: 0 }}>
@@ -927,10 +933,10 @@ export function SettingsView({
                   type="button"
                   className="gradient-btn"
                   style={{ padding: '8px' }}
-                  disabled={!importJson}
+                  disabled={!importJson || importStatus === 'pending'}
                   onClick={() => onImport?.()}
                 >
-                  Restore Snapshot
+                  {importStatus === 'pending' ? 'Restoring...' : 'Restore Snapshot'}
                 </button>
 
                 {importStatus === 'success' && (

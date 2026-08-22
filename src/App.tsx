@@ -253,7 +253,7 @@ export default function App() {
   // JSON Import state
   const [importJson, setImportJson] = useState('');
   const [showImportArea, setShowImportArea] = useState(false);
-  const [importStatus, setImportStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [importStatus, setImportStatus] = useState<'idle' | 'pending' | 'success' | 'error'>('idle');
 
   // Confirm dialog (replaces window.confirm)
   const [confirmRequest, setConfirmRequest] = useState<ConfirmRequest | null>(null);
@@ -1034,9 +1034,17 @@ export default function App() {
     setActiveTab('expenses');
   };
 
-  const handleImport = async () => {
-    if (!importJson) return;
-    const success = await importDatabase(importJson);
+  const handleImport = async (jsonOverride?: string) => {
+    // Reentrancy guard: without this, double-tapping (or an upload firing
+    // while a paste-triggered restore is still in flight) ran importDatabase
+    // twice concurrently, each blindly re-inserting the same trips as fresh
+    // duplicates -- there was no dedup on tripId once the JSON had already
+    // been parsed and handed to insertTripGraph.
+    if (importStatus === 'pending') return;
+    const json = jsonOverride ?? importJson;
+    if (!json) return;
+    setImportStatus('pending');
+    const success = await importDatabase(json);
     if (success) {
       setImportStatus('success');
       setImportJson('');

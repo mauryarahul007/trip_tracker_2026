@@ -19,8 +19,8 @@ type Props = {
   setShowImportArea?: (v: boolean) => void;
   importJson?: string;
   setImportJson?: (v: string) => void;
-  importStatus?: 'idle' | 'success' | 'error';
-  onImport?: () => void;
+  importStatus?: 'idle' | 'pending' | 'success' | 'error';
+  onImport?: (jsonOverride?: string) => void;
   onClearDatabase?: () => void;
   onLoadDemoTrip?: () => void;
   archivedTrips?: Trip[];
