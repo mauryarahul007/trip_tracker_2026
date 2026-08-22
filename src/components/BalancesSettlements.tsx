@@ -5,8 +5,10 @@ import { IconArrowDownRight, IconArrowUpRight, IconCheck, IconCheckCircle, IconC
 import { getCurrencySymbol } from '../utils/currency';
 import { sendPushNotification } from '../services/pushApi';
 import { usePrivacyStore, formatMaskedAmount } from '../store/privacyStore';
+import { useTripStore } from '../store/tripStore';
 import { triggerHaptic } from '../utils/haptics';
 import { BalanceFlowGraph } from './BalanceFlowGraph';
+import { UpiPaymentModal } from './UpiPaymentModal';
 
 type Props = {
   trip: Trip;
@@ -66,6 +68,8 @@ type TransferRowProps = {
   onToggleCustom: () => void;
   onCustomChange: (v: string) => void;
   onSettle: (fromMemberId: string, toMemberId: string, amount: number, fromLabel: string, toLabel: string) => void;
+  onOpenUpi?: (transfer: Transfer) => void;
+  isUpiEnabled?: boolean;
   balances: MemberBalance[];
   groups: Group[];
   activeTripExpenses: Expense[];
@@ -168,6 +172,8 @@ function TransferRow({
   onToggleCustom,
   onCustomChange,
   onSettle,
+  onOpenUpi,
+  isUpiEnabled,
   balances,
   groups,
   activeTripExpenses,
@@ -451,6 +457,25 @@ function TransferRow({
             </div>
           ) : (
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              {isUpiEnabled && canSettle && (
+                <button
+                  type="button"
+                  className="secondary-btn"
+                  style={{
+                    padding: '6px 10px',
+                    fontSize: '11px',
+                    borderRadius: 'var(--border-radius-sm)',
+                    height: '28px',
+                    color: 'var(--primary-accent)',
+                    borderColor: 'var(--primary-accent)',
+                    fontWeight: 700,
+                  }}
+                  onClick={() => onOpenUpi?.(t)}
+                  title="1-Tap UPI Settlement (GPay, PhonePe, Paytm, or Dynamic QR)"
+                >
+                  ⚡ UPI
+                </button>
+              )}
               <button
                 className="gradient-btn"
                 style={{ padding: '6px 14px', fontSize: '11px', borderRadius: 'var(--border-radius-sm)', height: '28px' }}
@@ -536,6 +561,9 @@ export function BalancesSettlements({
   const [customOpenKeys, setCustomOpenKeys] = useState<Record<string, boolean>>({});
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
   const [settlementViewMode, setSettlementViewMode] = useState<'list' | 'graph'>('list');
+  const [upiTargetTransfer, setUpiTargetTransfer] = useState<Transfer | null>(null);
+
+  const isUpiEnabled = useTripStore((s) => s.isFeatureEnabled('enableUpiPayments', { tripId: trip.id }));
   const balanceNodes = buildSettlementNodes(balances, groups);
 
   const setCustom = (rowKey: string, v: string) => setCustomAmounts({ ...customAmounts, [rowKey]: v });
@@ -753,6 +781,8 @@ export function BalancesSettlements({
                   onToggleCustom={() => toggleCustomOpen(rowKey)}
                   onCustomChange={(v) => setCustom(rowKey, v)}
                   onSettle={onSettle}
+                  onOpenUpi={(t) => setUpiTargetTransfer(t)}
+                  isUpiEnabled={isUpiEnabled}
                   balances={balances}
                   groups={groups}
                   activeTripExpenses={activeTripExpenses}
@@ -763,6 +793,29 @@ export function BalancesSettlements({
           </div>
         )}
       </div>
+
+      {/* 1-Tap UPI Payment Deep Link & QR Code Modal */}
+      {upiTargetTransfer && (
+        <UpiPaymentModal
+          fromMember={members[upiTargetTransfer.fromMemberId]}
+          toMember={members[upiTargetTransfer.toMemberId]}
+          amount={parseFloat(customAmounts[`${upiTargetTransfer.from}|${upiTargetTransfer.to}`]) || upiTargetTransfer.amount}
+          currency={trip.baseCurrency}
+          tripName={trip.name}
+          onClose={() => setUpiTargetTransfer(null)}
+          onConfirmSettled={() => {
+            const amt = parseFloat(customAmounts[`${upiTargetTransfer.from}|${upiTargetTransfer.to}`]) || upiTargetTransfer.amount;
+            onSettle(
+              upiTargetTransfer.fromMemberId,
+              upiTargetTransfer.toMemberId,
+              amt,
+              upiTargetTransfer.fromLabel,
+              upiTargetTransfer.toLabel
+            );
+            setUpiTargetTransfer(null);
+          }}
+        />
+      )}
     </div>
   );
 }

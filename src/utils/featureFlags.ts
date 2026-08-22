@@ -71,6 +71,13 @@ export const FEATURE_FLAGS_META: Record<FeatureFlagKey, FeatureFlagMeta> = {
     category: 'admin',
     defaultEnabledForUsers: false,
   },
+  enableUpiPayments: {
+    key: 'enableUpiPayments',
+    label: '1-Tap UPI / Payment App Deep Links (India/Regional)',
+    description: 'Enables 1-tap UPI deep links (GPay, PhonePe, Paytm, BHIM, Cred) and QR code launcher on debt settlements.',
+    category: 'splits',
+    defaultEnabledForUsers: false,
+  },
 };
 
 export const DEFAULT_FEATURE_FLAGS: Record<FeatureFlagKey, boolean> = {
@@ -84,6 +91,7 @@ export const DEFAULT_FEATURE_FLAGS: Record<FeatureFlagKey, boolean> = {
   enableDemoSeeding: false,
   enableMultiTripAnalytics: false,
   enableFeatureSuggestions: false,
+  enableUpiPayments: false,
 };
 
 export function isFeatureActive(

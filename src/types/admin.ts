@@ -8,7 +8,8 @@ export type FeatureFlagKey =
   | 'enableKeywordTagging'
   | 'enableDemoSeeding'
   | 'enableMultiTripAnalytics'
-  | 'enableFeatureSuggestions';
+  | 'enableFeatureSuggestions'
+  | 'enableUpiPayments';
 
 export interface FeatureFlagMeta {
   key: FeatureFlagKey;

@@ -888,3 +888,23 @@ This document logs all meaningful technical decisions, library choices, design p
      - Tracks active travelers viewing the same trip simultaneously and renders online status avatars in the trip header.
 * **Trade-offs Accepted:**
   - Currency conversion rates use offline-first median exchange rates when offline, prioritizing zero latency and reliable offline calculation over sub-second forex volatility.
+
+---
+
+## 47. 1-Tap UPI & Regional Payment Deep Linking (Feature Flag Gated)
+* **Context:**
+  - In India and regional markets, settling group trip expenses manually requires opening external payment apps, copying contact numbers, typing UPI IDs, and entering amounts manually, creating friction and settlement errors.
+  - The feature must be strictly flag-gated under superadmin control (`enableUpiPayments`) for phased rollouts.
+* **Decision:**
+  - **Feature Flag Control (`src/types/admin.ts`, `src/utils/featureFlags.ts`):** Registered `enableUpiPayments` flag in `FEATURE_FLAGS_META` (default `false`), toggled via Ops Deck (`AdminFlagsPage.tsx` / `AdminFeaturesPage.tsx`).
+  - **NPCI UPI Intent Generator (`src/utils/upiLinks.ts`):** Standard `upi://pay?pa=...&pn=...&am=...&cu=INR&tn=...` plus app-specific schemes for Google Pay (`tez://`), PhonePe (`phonepe://`), Paytm (`paytmmp://`), CRED (`cred://`), and BHIM (`bhim://`).
+  - **1-Tap Settlement Modal (`src/components/UpiPaymentModal.tsx`):**
+    - Instant app launch deep links with pre-filled amount, payee, and trip note.
+    - Dynamic QR code generation for on-screen scanning.
+    - 1-click "Mark as Settled" recording the transaction into the trip ledger.
+  - **Balances & Settlements Integration (`src/components/BalancesSettlements.tsx`):**
+    - Conditioned on `useTripStore((s) => s.isFeatureEnabled('enableUpiPayments', { tripId: trip.id }))`.
+    - Only rendered when the superadmin enables the flag.
+* **Trade-offs Accepted:**
+  - UPI deep link intents open native apps via custom URI schemes on mobile devices. On desktop browsers without registered protocol handlers, the modal provides a dynamic QR code and 1-click URI copy button.
+

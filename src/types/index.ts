@@ -22,6 +22,7 @@ export interface Member {
   archived?: boolean; // soft-delete flag
   linkedUserId?: string | null; // set once this member "claims" their identity via /join
   avatarUrl?: string | null; // from the linked account's Google profile, if any
+  upiId?: string | null; // optional UPI ID / VPA for 1-tap debt settlement
 }
 
 export interface Group {
