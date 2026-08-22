@@ -596,6 +596,10 @@ export interface Database {
         Args: { p_days?: number };
         Returns: number;
       };
+      log_security_event: {
+        Args: { p_trip_id: string | null; p_action: string; p_details?: Record<string, unknown> };
+        Returns: void;
+      };
     };
   };
 }
