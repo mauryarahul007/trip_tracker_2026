@@ -285,6 +285,17 @@ export function getTripNotificationRecipients(
     .map((m) => m.linkedUserId as string);
 }
 
+// A restored backup may include trips the importing user only joined (via
+// someone else's join code), not trips they own. Clear All Data / delete is
+// owner-scoped (deleteAllMyTrips deletes `where owner_id = userId` only), so
+// a joined trip is never actually removed from the account — re-inserting it
+// here on import would just duplicate it under the importer's ownership.
+// Legacy backups with no ownerId field predate this check and are kept, same
+// as before.
+export function filterTripsOwnedByUser(trips: Trip[], userId: string): Trip[] {
+  return trips.filter((t) => !t.ownerId || t.ownerId === userId);
+}
+
 const TRIPS_REFRESH_MIN_INTERVAL_MS = 30_000;
 let lastTripsRefreshAt = 0;
 
@@ -1702,10 +1713,12 @@ export const useTripStore = create<TripStore>()(
 
         const parsed = validation.sanitizedState;
         const customCategories = parsed.categories.filter((c) => c.isCustom);
+        const ownedTrips = filterTripsOwnedByUser(parsed.trips, userId);
+        const previousActiveTripId = get().activeTripId;
         let lastTripId: string | null = null;
 
-        for (let i = 0; i < parsed.trips.length; i++) {
-          const trip = parsed.trips[i];
+        for (let i = 0; i < ownedTrips.length; i++) {
+          const trip = ownedTrips[i];
           const tripMembers: Record<string, Member> = {};
           trip.memberIds.forEach((id) => {
             if (parsed.members[id]) tripMembers[id] = parsed.members[id];
@@ -1728,7 +1741,7 @@ export const useTripStore = create<TripStore>()(
 
         const graph = await fetchMyTripGraph();
         let importedExpenses: Expense[] = [];
-        let categories = DEFAULT_CATEGORIES;
+        let categories: Category[] | null = null;
         if (lastTripId) {
           importedExpenses = await fetchExpensesForTrip(lastTripId);
           const custom = await fetchCategoriesForTrip(lastTripId);
@@ -1737,9 +1750,12 @@ export const useTripStore = create<TripStore>()(
 
         set((state) => ({
           ...graph,
-          activeTripId: lastTripId,
+          // Nothing owned by this user was in the backup (e.g. it only
+          // contained a trip they'd joined, not created) -- keep the
+          // current selection instead of clobbering it with null.
+          activeTripId: lastTripId ?? previousActiveTripId,
           expenses: [...state.expenses, ...importedExpenses],
-          categories,
+          categories: categories ?? state.categories,
           storageError: null,
         }));
         return true;

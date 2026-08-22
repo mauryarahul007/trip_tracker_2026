@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { collectDirtyExpenseIds, mergeServerExpenses, resolvePendingLocation, getTripNotificationRecipients, DEFAULT_CATEGORIES, useTripStore } from './tripStore';
+import { collectDirtyExpenseIds, mergeServerExpenses, resolvePendingLocation, getTripNotificationRecipients, filterTripsOwnedByUser, DEFAULT_CATEGORIES, useTripStore } from './tripStore';
 import type { Expense, Member, Trip } from '../types';
 
 vi.mock('../utils/geolocation', () => ({
@@ -166,6 +166,28 @@ describe('getTripNotificationRecipients', () => {
   it('returns an empty array for an unknown trip id', () => {
     const recipients = getTripNotificationRecipients([], {}, 'missing-trip', 'user-actor');
     expect(recipients).toEqual([]);
+  });
+});
+
+describe('filterTripsOwnedByUser', () => {
+  // Regression test: importDatabase used to re-insert every trip in a
+  // backup unconditionally, including trips the importing user had only
+  // joined (not owned). Since Clear All Data / delete is owner-scoped,
+  // those joined trips were never actually gone, so re-importing them
+  // created a duplicate owned by the importer.
+  it('keeps trips owned by the user and drops trips only joined', () => {
+    const trips = [
+      makeTrip({ id: 'owned', memberIds: [], ownerId: 'user-1' }),
+      makeTrip({ id: 'joined', memberIds: [], ownerId: 'someone-else' }),
+    ];
+    const result = filterTripsOwnedByUser(trips, 'user-1');
+    expect(result.map((t) => t.id)).toEqual(['owned']);
+  });
+
+  it('keeps legacy trips with no ownerId field for backward compatibility', () => {
+    const trips = [makeTrip({ id: 'legacy', memberIds: [], ownerId: undefined as unknown as string })];
+    const result = filterTripsOwnedByUser(trips, 'user-1');
+    expect(result.map((t) => t.id)).toEqual(['legacy']);
   });
 });
 
