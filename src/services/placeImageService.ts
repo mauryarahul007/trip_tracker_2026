@@ -8,11 +8,22 @@
 
 const imageCache = new Map<string, string | null>();
 
+// Filenames Wikipedia/Wikivoyage commonly use for non-photo lead images --
+// locator maps, flags, coats of arms, seals, logos, and chart/diagram
+// exports all get uploaded as ordinary PNG/JPG, not just SVG, so extension
+// filtering alone lets plenty of maps through (e.g. a place's Wikivoyage
+// lead image is frequently a "Map-<Country>-<Region>.png").
+const NON_PHOTO_FILENAME_PATTERN = /(^|[_\-/])(map|locator|location|flag[_-]of|coat[_-]of[_-]arms|seal[_-]of|emblem|logo|chart|diagram|graph)([_\-.]|$)/i;
+
 function isPhotoUrl(url?: string): boolean {
   if (!url || typeof url !== 'string') return false;
-  // Exclude SVG flags, icons, maps, or generic diagrams
-  if (url.toLowerCase().endsWith('.svg') || url.toLowerCase().includes('.svg/')) return false;
-  return url.startsWith('http://') || url.startsWith('https://');
+  if (!url.startsWith('http://') && !url.startsWith('https://')) return false;
+  const lower = url.toLowerCase();
+  // Exclude SVG (icons/flags/diagrams are almost always vector) and any
+  // raster image whose filename identifies it as a map/flag/logo/etc.
+  if (lower.endsWith('.svg') || lower.includes('.svg/')) return false;
+  if (NON_PHOTO_FILENAME_PATTERN.test(decodeURIComponent(url))) return false;
+  return true;
 }
 
 /**
@@ -53,6 +64,23 @@ export async function fetchPlaceCoverImage(placeInput: string | string[]): Promi
     if (!cleaned) continue;
 
     try {
+      // 0. Wikivoyage summary -- a travel-guide wiki, so its lead image is
+      // almost always genuine destination photography rather than the
+      // infobox map/flag/coat-of-arms Wikipedia articles often lead with.
+      // Still runs through isPhotoUrl(), since some Wikivoyage articles
+      // (e.g. region overview pages) lead with a locator map too.
+      const voyageUrl = `https://en.wikivoyage.org/api/rest_v1/page/summary/${encodeURIComponent(cleaned.replace(/\s+/g, '_'))}`;
+      const voyageRes = await fetch(voyageUrl, { headers: { 'Accept': 'application/json' } });
+
+      if (voyageRes.ok) {
+        const voyageData = await voyageRes.json();
+        const voyageImg = voyageData.originalimage?.source || voyageData.thumbnail?.source;
+        if (isPhotoUrl(voyageImg)) {
+          imageCache.set(mainKey, voyageImg);
+          return voyageImg;
+        }
+      }
+
       // 1. Direct Wikipedia REST API summary
       const directUrl = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(cleaned.replace(/\s+/g, '_'))}`;
       const directRes = await fetch(directUrl, { headers: { 'Accept': 'application/json' } });
