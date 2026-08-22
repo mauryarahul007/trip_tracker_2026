@@ -7,7 +7,6 @@ import { sendPushNotification } from '../services/pushApi';
 import { usePrivacyStore, formatMaskedAmount } from '../store/privacyStore';
 import { useTripStore } from '../store/tripStore';
 import { triggerHaptic } from '../utils/haptics';
-import { BalanceFlowGraph } from './BalanceFlowGraph';
 import { UpiPaymentModal } from './UpiPaymentModal';
 
 type Props = {
@@ -560,7 +559,6 @@ export function BalancesSettlements({
   const [customAmounts, setCustomAmounts] = useState<Record<string, string>>({});
   const [customOpenKeys, setCustomOpenKeys] = useState<Record<string, boolean>>({});
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
-  const [settlementViewMode, setSettlementViewMode] = useState<'list' | 'graph'>('list');
   const [upiTargetTransfer, setUpiTargetTransfer] = useState<Transfer | null>(null);
 
   const isUpiEnabled = useTripStore((s) => s.isFeatureEnabled('enableUpiPayments', { tripId: trip.id }));
@@ -710,59 +708,13 @@ export function BalancesSettlements({
         </div>
       </div>
 
-      {/* Settlements Section with View Switcher */}
+      {/* Settlements Section */}
       <div className="glass-card">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-          <h4 style={{ fontSize: '12px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', margin: 0 }}>
-            Fewest Payments to Clear It
-          </h4>
-          <div style={{ display: 'flex', gap: '4px', background: 'var(--bg-secondary)', padding: '2px', borderRadius: '16px', border: '1px solid var(--border-color)' }}>
-            <button
-              type="button"
-              className={`pill-chip ${settlementViewMode === 'list' ? 'active' : ''}`}
-              style={{
-                fontSize: '11px',
-                padding: '3px 10px',
-                borderRadius: '12px',
-                border: 'none',
-                background: settlementViewMode === 'list' ? 'var(--primary-accent)' : 'transparent',
-                color: settlementViewMode === 'list' ? '#fff' : 'var(--text-secondary)',
-                cursor: 'pointer',
-                fontWeight: 600
-              }}
-              onClick={() => setSettlementViewMode('list')}
-            >
-              📋 List
-            </button>
-            <button
-              type="button"
-              className={`pill-chip ${settlementViewMode === 'graph' ? 'active' : ''}`}
-              style={{
-                fontSize: '11px',
-                padding: '3px 10px',
-                borderRadius: '12px',
-                border: 'none',
-                background: settlementViewMode === 'graph' ? 'var(--primary-accent)' : 'transparent',
-                color: settlementViewMode === 'graph' ? '#fff' : 'var(--text-secondary)',
-                cursor: 'pointer',
-                fontWeight: 600
-              }}
-              onClick={() => setSettlementViewMode('graph')}
-            >
-              🕸️ Flow Graph
-            </button>
-          </div>
-        </div>
+        <h4 style={{ fontSize: '12px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 12px 0' }}>
+          Fewest Payments to Clear It
+        </h4>
 
-        {settlementViewMode === 'graph' ? (
-          <BalanceFlowGraph
-            transfers={transfers}
-            members={members}
-            currency={trip.baseCurrency}
-            onSettle={onSettle}
-            canSettle={isAdmin || !!myMemberId}
-          />
-        ) : transfers.length === 0 ? (
+        {transfers.length === 0 ? (
           <p style={{ color: 'var(--color-success)', fontSize: '14px', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '6px' }}>
             <IconCheckCircle size={17} className="icon" /> All settlements complete — no outstanding debts.
           </p>
