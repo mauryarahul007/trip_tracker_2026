@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 type Props = {
   text: string;
@@ -10,9 +10,7 @@ type Props = {
 
 // Shrinks the heading's font size — rather than truncating it with an
 // ellipsis — until the full text fits on one line, or minFontSize is hit.
-// Re-measures whenever the text or the surrounding layout's available width
-// changes (e.g. the header's title column getting squeezed by its sibling
-// buttons on a narrow screen).
+// Observes the container parent to avoid ResizeObserver loops and layout thrashing.
 export function FitHeading({ text, className, style, maxFontSize, minFontSize }: Props) {
   const ref = useRef<HTMLHeadingElement>(null);
   const [fontSize, setFontSize] = useState(maxFontSize);
@@ -20,26 +18,66 @@ export function FitHeading({ text, className, style, maxFontSize, minFontSize }:
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
+    const parent = el.parentElement;
+
+    let rafId: number;
 
     const fit = () => {
-      el.style.fontSize = `${maxFontSize}px`;
-      let size = maxFontSize;
-      while (el.scrollWidth > el.clientWidth && size > minFontSize) {
-        size -= 1;
-        el.style.fontSize = `${size}px`;
-      }
-      setFontSize(size);
+      cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(() => {
+        if (!el || !parent) return;
+        const availableWidth = parent.clientWidth;
+        if (availableWidth <= 0) return;
+
+        // Measure text width using an offscreen hidden span
+        const tempSpan = document.createElement('span');
+        tempSpan.style.visibility = 'hidden';
+        tempSpan.style.position = 'absolute';
+        tempSpan.style.whiteSpace = 'nowrap';
+        tempSpan.style.font = window.getComputedStyle(el).font;
+        tempSpan.textContent = text;
+        document.body.appendChild(tempSpan);
+
+        let size = maxFontSize;
+        tempSpan.style.fontSize = `${size}px`;
+        while (tempSpan.offsetWidth > availableWidth && size > minFontSize) {
+          size -= 1;
+          tempSpan.style.fontSize = `${size}px`;
+        }
+        document.body.removeChild(tempSpan);
+
+        setFontSize((prev) => (prev !== size ? size : prev));
+      });
     };
 
     fit();
 
-    const ro = new ResizeObserver(fit);
-    ro.observe(el);
-    return () => ro.disconnect();
+    const ro = new ResizeObserver(() => {
+      fit();
+    });
+
+    if (parent) {
+      ro.observe(parent);
+    }
+
+    return () => {
+      cancelAnimationFrame(rafId);
+      ro.disconnect();
+    };
   }, [text, maxFontSize, minFontSize]);
 
   return (
-    <h2 ref={ref} className={className} style={{ ...style, fontSize: `${fontSize}px` }}>
+    <h2
+      ref={ref}
+      className={className}
+      style={{
+        ...style,
+        fontSize: `${fontSize}px`,
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
+        whiteSpace: 'nowrap',
+      }}
+    >
       {text}
     </h2>
   );

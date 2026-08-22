@@ -96,7 +96,13 @@ export function TripJourneyMap({ expenses, categories, baseCurrency }: Props) {
     // map renders blank until something (like a big pinch-zoom) forces a
     // fresh layout pass. Watching the container and calling resize()
     // whenever its size actually changes is the standard fix.
-    const resizeObserver = new ResizeObserver(() => map.resize());
+    const resizeObserver = new ResizeObserver(() => {
+      requestAnimationFrame(() => {
+        if (mapContainerRef.current) {
+          map.resize();
+        }
+      });
+    });
     resizeObserver.observe(mapContainerRef.current);
 
     const lngLats: [number, number][] = [];
