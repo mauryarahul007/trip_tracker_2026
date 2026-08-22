@@ -188,7 +188,7 @@ export function AdminFlagsPage({ trips, members }: Props) {
       )}
 
       <div className="ops-card">
-        <h3 className="ops-section-title">Fleet Controls</h3>
+        <h3 className="ops-section-title">Access Gates</h3>
         <p className="ops-section-sub">Server-enforced, not device-local — these apply instantly for every user.</p>
 
         <div className="ops-flag-card" style={{ marginTop: '10px' }}>
@@ -269,8 +269,13 @@ export function AdminFlagsPage({ trips, members }: Props) {
           </div>
           <div className="ops-flag-desc">Disables the Google Sign-In and Guest buttons on the login screen. Superadmin login is unaffected.</div>
         </div>
+      </div>
 
-        <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap', marginTop: '16px' }}>
+      <div className="ops-card">
+        <h3 className="ops-section-title">Limits &amp; Retention</h3>
+        <p className="ops-section-sub">Numeric thresholds and retention windows applied server-side.</p>
+
+        <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap', marginTop: '10px' }}>
           <div className="ops-form-group">
             <label className="ops-form-label">Join-Code Max Attempts</label>
             <div style={{ display: 'flex', gap: '6px' }}>
@@ -382,6 +387,11 @@ export function AdminFlagsPage({ trips, members }: Props) {
         </p>
       </div>
 
+      <div>
+        <h3 className="ops-section-title">Feature Flags</h3>
+        <p className="ops-section-sub">Per-flag global toggle, ARMED/SAFED for every traveler.</p>
+      </div>
+
       <div className="ops-flag-grid">
         {flagEntries.map(([key, meta]) => {
           const isEnabled = featureFlags[key] ?? meta.defaultEnabledForUsers;
@@ -410,6 +420,11 @@ export function AdminFlagsPage({ trips, members }: Props) {
             </div>
           );
         })}
+      </div>
+
+      <div>
+        <h3 className="ops-section-title">Overrides</h3>
+        <p className="ops-section-sub">Per-trip or per-member exceptions to the flags above.</p>
       </div>
 
       <div className="ops-override-split">
