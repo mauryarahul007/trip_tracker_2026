@@ -29,6 +29,8 @@ interface Props {
   trips: Trip[];
   members: Record<string, Member>;
   categories: Category[];
+  activeTab: AdminTab;
+  onActiveTabChange: (tab: AdminTab) => void;
   onExitToTravelerApp?: () => void;
   onOpenBugTracker?: () => void;
   onInspectTrip?: (tripId: string) => void;
@@ -65,11 +67,12 @@ export function AdminPortalLayout({
   trips,
   members,
   categories,
+  activeTab,
+  onActiveTabChange,
   onExitToTravelerApp,
   onOpenBugTracker,
   onInspectTrip,
 }: Props) {
-  const [activeTab, setActiveTab] = useState<AdminTab>('flags');
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [bugs, setBugs] = useState<BugRecord[]>([]);
   const [users, setUsers] = useState<AdminUserRow[]>([]);
@@ -179,7 +182,7 @@ export function AdminPortalLayout({
               type="button"
               className="ops-switch-item"
               data-current={activeTab === s.id}
-              onClick={() => setActiveTab(s.id)}
+              onClick={() => onActiveTabChange(s.id)}
             >
               <span className="ops-lamp" />
               <span>
@@ -253,7 +256,7 @@ export function AdminPortalLayout({
                   className="ops-switcher-row"
                   data-current={activeTab === s.id}
                   onClick={() => {
-                    setActiveTab(s.id);
+                    onActiveTabChange(s.id);
                     setShowSectionSwitcher(false);
                   }}
                 >

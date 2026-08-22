@@ -40,6 +40,7 @@ import { IconCalendar, IconChevronLeft, IconPlus, IconEye, IconEyeOff, IconShiel
 import { formatDateRange } from './utils/dateRange';
 import { useScrollLock } from './utils/useScrollLock';
 import { useHistoryBack } from './utils/useHistoryBack';
+import type { AdminTab } from './components/admin/AdminPortalLayout';
 const AdminPortalLayout = lazy(() =>
   import('./components/admin/AdminPortalLayout').then((m) => ({ default: m.AdminPortalLayout }))
 );
@@ -264,6 +265,7 @@ export default function App() {
   const [bypassEnvWarning, setBypassEnvWarning] = useState(false);
   const isSuperadmin = useTripStore((s) => s.isSuperadmin);
   const [isTravelerPreview, setIsTravelerPreview] = useState(false);
+  const [adminActiveTab, setAdminActiveTab] = useState<AdminTab>('flags');
 
   // Superadmin-set kill-switch (Ops Deck > Flags > Fleet Controls). Checked
   // once per load, not polled -- a superadmin flipping it mid-session
@@ -1207,10 +1209,13 @@ export default function App() {
           trips={trips}
           members={members}
           categories={categories}
+          activeTab={adminActiveTab}
+          onActiveTabChange={setAdminActiveTab}
           onExitToTravelerApp={() => setIsTravelerPreview(true)}
           onOpenBugTracker={() => setShowBugTracker(true)}
           onInspectTrip={(tripId) => {
             void selectTrip(tripId);
+            setAdminActiveTab('trips');
             setIsTravelerPreview(true);
           }}
         />
