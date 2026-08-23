@@ -1419,7 +1419,7 @@ export default function App() {
         /* Screen 2: Active Trip Dashboard */
         <div className="trip-dashboard-container fade-in" style={{ position: 'relative' }}>
           <AmbientPhotoBackdrop trip={activeTrip ?? null} />
-          <header ref={headerRef} className={`app-header trip-dashboard-header ${isHeaderScrolled ? 'is-scrolled' : ''}`} style={{ position: 'relative', overflow: 'hidden' }}>
+          <header ref={headerRef} className={`app-header trip-dashboard-header ${isHeaderScrolled ? 'is-scrolled' : ''}`} style={{ overflow: 'hidden' }}>
             {/* Translucent Header Route Map Banner Layer */}
             {activeTrip && <TripBannerRouteMap trip={activeTrip} />}
 
