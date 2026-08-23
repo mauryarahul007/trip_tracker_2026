@@ -137,8 +137,8 @@ interface TripStore extends TripState {
   updateLastBackendSyncedAt: (timestamp: number) => void;
 
   // Trip Actions
-  createTrip: (name: string, startDate: string, endDate: string, baseCurrency: string) => Promise<void>;
-  updateTrip: (id: string, name: string, startDate: string, endDate: string) => Promise<void>;
+  createTrip: (name: string, startDate: string, endDate: string, baseCurrency: string, destination?: string) => Promise<void>;
+  updateTrip: (id: string, name: string, startDate: string, endDate: string, destination?: string) => Promise<void>;
   selectTrip: (id: string | null) => Promise<void>;
   archiveTrip: (id: string, archived: boolean) => Promise<void>;
   freezeTrip: (id: string, frozen: boolean) => Promise<void>;
@@ -780,8 +780,8 @@ export const useTripStore = create<TripStore>()(
             const { tripId } = item.payload;
             await purgeDeletedExpensesForTrip(tripId);
           } else if (item.type === 'createTrip') {
-            const { tripTempId, memberTempId, name, startDate, endDate, baseCurrency, ownerId, creatorName } = item.payload;
-            const trip = await insertTrip({ name, startDate, endDate, baseCurrency, ownerId, id: tripTempId });
+            const { tripTempId, memberTempId, name, startDate, endDate, baseCurrency, destination, ownerId, creatorName } = item.payload;
+            const trip = await insertTrip({ name, startDate, endDate, baseCurrency, destination, ownerId, id: tripTempId });
             const creatorMember = await insertMember(trip.id, creatorName, ownerId, memberTempId);
             set((state) => ({
               trips: state.trips.map((t) => (t.id === tripTempId ? { ...trip, memberIds: [memberTempId], adminMemberIds: [memberTempId], expenseCount: 0 } : t)),
@@ -834,7 +834,7 @@ export const useTripStore = create<TripStore>()(
       }
     },
 
-    createTrip: async (name, startDate, endDate, baseCurrency) => {
+    createTrip: async (name, startDate, endDate, baseCurrency, destination) => {
       const userId = get().userId || (get().isSuperadmin ? 'superadmin-root-user-id' : 'guest-traveler-user-id');
 
       // No real backend to sync against at all — skip the offline sync
@@ -855,6 +855,7 @@ export const useTripStore = create<TripStore>()(
           startDate,
           endDate,
           baseCurrency,
+          destination,
           ownerId: userId,
           adminMemberIds: [creatorMemberId],
           joinCode: Math.random().toString(36).substring(2, 8).toUpperCase(),
@@ -889,6 +890,7 @@ export const useTripStore = create<TripStore>()(
         startDate,
         endDate,
         baseCurrency,
+        destination,
         memberIds: [memberTempId],
         groupIds: [],
         ownerId: userId,
@@ -908,10 +910,10 @@ export const useTripStore = create<TripStore>()(
       }));
 
       if (!navigator.onLine) {
-        get().queueSync('createTrip', { tripTempId, memberTempId, name, startDate, endDate, baseCurrency, ownerId: userId, creatorName });
+        get().queueSync('createTrip', { tripTempId, memberTempId, name, startDate, endDate, baseCurrency, destination, ownerId: userId, creatorName });
       } else {
         try {
-          const trip = await insertTrip({ name, startDate, endDate, baseCurrency, ownerId: userId, id: tripTempId });
+          const trip = await insertTrip({ name, startDate, endDate, baseCurrency, destination, ownerId: userId, id: tripTempId });
           const creatorMember = await insertMember(trip.id, creatorName, userId, memberTempId);
           set((state) => ({
             trips: state.trips.map((t) => (t.id === tripTempId ? { ...trip, memberIds: [memberTempId], adminMemberIds: [memberTempId], expenseCount: 0 } : t)),
@@ -919,16 +921,16 @@ export const useTripStore = create<TripStore>()(
           }));
         } catch (e) {
           console.warn('Online createTrip failed, falling back to offline sync queue:', e);
-          get().queueSync('createTrip', { tripTempId, memberTempId, name, startDate, endDate, baseCurrency, ownerId: userId, creatorName });
+          get().queueSync('createTrip', { tripTempId, memberTempId, name, startDate, endDate, baseCurrency, destination, ownerId: userId, creatorName });
         }
       }
     },
 
-    updateTrip: async (id, name, startDate, endDate) => {
+    updateTrip: async (id, name, startDate, endDate, destination) => {
       try {
-        await updateTripRow(id, { name, startDate, endDate });
+        await updateTripRow(id, { name, startDate, endDate, destination });
         set((state) => ({
-          trips: state.trips.map((t) => (t.id === id ? { ...t, name, startDate, endDate, updatedAt: Date.now() } : t)),
+          trips: state.trips.map((t) => (t.id === id ? { ...t, name, startDate, endDate, destination, updatedAt: Date.now() } : t)),
           storageError: null,
         }));
       } catch (e) {

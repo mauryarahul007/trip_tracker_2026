@@ -4,6 +4,7 @@ export interface Trip {
   startDate: string;
   endDate: string;
   baseCurrency: string;
+  destination?: string; // free-text place name, used for photo lookups
   memberIds: string[];
   groupIds: string[]; // List of groups associated with this trip
   ownerId: string; // admin: full CRUD + can settle any transfer

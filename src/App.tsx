@@ -103,6 +103,8 @@ export default function App() {
 
   const userEmail = useAuthStore((s) => s.session?.user.email ?? null);
   const userId = useAuthStore((s) => s.session?.user.id ?? null);
+  const userAvatarUrl = useAuthStore((s) => s.session?.user.user_metadata?.avatar_url as string | undefined);
+  const userDisplayName = useTripStore((s) => s.userDisplayName);
   const signOut = useAuthStore((s) => s.signOut);
   const signInSuperadmin = useAuthStore((s) => s.signInSuperadmin);
 
@@ -167,6 +169,7 @@ export default function App() {
   const [newTripStart, setNewTripStart] = useState('');
   const [newTripEnd, setNewTripEnd] = useState('');
   const [newTripCurrency, setNewTripCurrency] = useState('INR');
+  const [newTripDestination, setNewTripDestination] = useState('');
 
   // Superadmin Bug Tracker full-screen view
   const [showBugTracker, setShowBugTracker] = useState(false);
@@ -639,14 +642,15 @@ export default function App() {
     e.preventDefault();
     if (!newTripName || !newTripStart || !newTripEnd) return;
     if (editingTripId) {
-      await updateTrip(editingTripId, newTripName, newTripStart, newTripEnd);
+      await updateTrip(editingTripId, newTripName, newTripStart, newTripEnd, newTripDestination.trim() || undefined);
     } else {
-      await createTrip(newTripName, newTripStart, newTripEnd, newTripCurrency);
+      await createTrip(newTripName, newTripStart, newTripEnd, newTripCurrency, newTripDestination.trim() || undefined);
     }
     setNewTripName('');
     setNewTripStart('');
     setNewTripEnd('');
     setNewTripCurrency('INR');
+    setNewTripDestination('');
     setEditingTripId(null);
     setShowAddTrip(false);
   };
@@ -656,6 +660,7 @@ export default function App() {
     setNewTripName(trip.name);
     setNewTripStart(trip.startDate);
     setNewTripEnd(trip.endDate);
+    setNewTripDestination(trip.destination || '');
     setShowAddTrip(true);
   };
 
@@ -665,6 +670,7 @@ export default function App() {
     setNewTripStart('');
     setNewTripEnd('');
     setNewTripCurrency('INR');
+    setNewTripDestination('');
     setShowAddTrip(false);
   };
 
@@ -1343,6 +1349,8 @@ export default function App() {
           setNewTripEnd={setNewTripEnd}
           newTripCurrency={newTripCurrency}
           setNewTripCurrency={setNewTripCurrency}
+          newTripDestination={newTripDestination}
+          setNewTripDestination={setNewTripDestination}
           editingTripId={editingTripId}
           onCreateTrip={handleCreateTrip}
           onCancelTripForm={handleCancelTripForm}
@@ -1352,6 +1360,8 @@ export default function App() {
           onArchiveTrip={handleArchiveTrip}
           onOpenSettings={() => setShowGlobalSettings(true)}
           onOpenBugTracker={isSuperadmin ? () => setShowBugTracker(true) : undefined}
+          userAvatarUrl={userAvatarUrl}
+          userDisplayName={userDisplayName}
         />
       ) : (
         /* Screen 2: Active Trip Dashboard */

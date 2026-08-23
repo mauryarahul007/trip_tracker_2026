@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { Trip, Member } from '../types';
-import { IconSettings, IconArchive, IconMapPin } from './Icons';
+import { IconArchive, IconMapPin } from './Icons';
 import { DateRangePicker } from './DateRangePicker';
 import { formatTripStamp } from '../utils/dateRange';
 import { initial } from '../utils/initials';
@@ -9,6 +9,8 @@ import { avatarColorForName } from '../utils/avatarColor';
 import { TurnstileWidget } from './TurnstileWidget';
 import { useTripStore } from '../store/tripStore';
 import { SwipeableRow } from './SwipeableRow';
+import { TripStack } from './TripStack';
+import { TripSlideLauncher } from './TripSlideLauncher';
 
 type Props = {
   trips: Trip[];
@@ -23,6 +25,8 @@ type Props = {
   setNewTripEnd: (v: string) => void;
   newTripCurrency: string;
   setNewTripCurrency: (v: string) => void;
+  newTripDestination: string;
+  setNewTripDestination: (v: string) => void;
   editingTripId: string | null;
   onCreateTrip: (e: React.FormEvent) => void;
   onCancelTripForm: () => void;
@@ -32,6 +36,8 @@ type Props = {
   onArchiveTrip: (trip: Trip) => void;
   onOpenSettings: () => void;
   onOpenBugTracker?: () => void;
+  userAvatarUrl?: string;
+  userDisplayName?: string | null;
 };
 
 export function TripsListScreen({
@@ -47,6 +53,8 @@ export function TripsListScreen({
   setNewTripEnd,
   newTripCurrency,
   setNewTripCurrency,
+  newTripDestination,
+  setNewTripDestination,
   editingTripId,
   onCreateTrip,
   onCancelTripForm,
@@ -56,12 +64,16 @@ export function TripsListScreen({
   onArchiveTrip,
   onOpenSettings,
   onOpenBugTracker,
+  userAvatarUrl,
+  userDisplayName,
 }: Props) {
   const navigate = useNavigate();
   const userId = useTripStore((s) => s.userId);
   const [showJoinTrip, setShowJoinTrip] = useState(false);
   const [joinCode, setJoinCode] = useState('');
   const [honeypotVal, setHoneypotVal] = useState('');
+  const [showList, setShowList] = useState(false);
+  const stackActive = trips.length >= 2 && !showList && !showAddTrip && !showJoinTrip;
 
   const handleJoinByCode = (e: React.FormEvent) => {
     e.preventDefault();
@@ -79,63 +91,60 @@ export function TripsListScreen({
 
   return (
     <div className="fade-in trips-screen-scroll">
-      <header style={{ marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
-        <div>
+      <header style={{ marginBottom: '24px', display: 'grid', gridTemplateColumns: '40px 1fr 40px', alignItems: 'center', gap: '12px' }}>
+        <button
+          type="button"
+          className="profile-avatar-btn"
+          onClick={onOpenSettings}
+          aria-label="Profile & Settings"
+          title="Profile & Settings"
+        >
+          {userAvatarUrl ? (
+            <img src={userAvatarUrl} alt="" referrerPolicy="no-referrer" loading="lazy" width={40} height={40} />
+          ) : (
+            <span style={{ background: avatarColorForName(userDisplayName || 'Me') }}>
+              {initial(userDisplayName || 'Me')}
+            </span>
+          )}
+        </button>
+        <div style={{ textAlign: 'center' }}>
           <h1 className="app-logo">Trip Tracker 2026</h1>
           <p style={{ color: 'var(--text-secondary)', fontSize: '14px', marginTop: '4px' }}>
             Offline-first cost splitting & groups
           </p>
         </div>
-        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-          {onOpenBugTracker && (
-            <button
-              type="button"
-              className="secondary-btn"
-              style={{
-                padding: '8px 14px',
-                fontSize: '13px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                borderRadius: '8px',
-                background: 'rgba(0, 191, 165, 0.08)',
-                borderColor: 'rgba(0, 191, 165, 0.4)',
-                color: 'var(--text-primary)',
-              }}
-              onClick={onOpenBugTracker}
-              aria-label="Superadmin Bug Tracker"
-              title="Superadmin Bug Tracker"
-            >
-              <span>🛡️</span>
-              <strong style={{ color: 'var(--color-primary, #00BFA5)' }}>Bug Tracker</strong>
-            </button>
-          )}
+        {onOpenBugTracker ? (
           <button
             type="button"
             className="secondary-btn"
             style={{
-              padding: '8px 14px',
-              fontSize: '13px',
+              width: '40px',
+              height: '40px',
+              padding: 0,
               display: 'flex',
               alignItems: 'center',
-              gap: '6px',
-              borderRadius: '8px',
+              justifyContent: 'center',
+              borderRadius: '50%',
+              background: 'rgba(0, 191, 165, 0.08)',
+              borderColor: 'rgba(0, 191, 165, 0.4)',
+              color: 'var(--text-primary)',
             }}
-            onClick={onOpenSettings}
-            aria-label="App Settings"
-            title="App Settings"
+            onClick={onOpenBugTracker}
+            aria-label="Superadmin Bug Tracker"
+            title="Superadmin Bug Tracker"
           >
-            <IconSettings size={16} />
-            <span>Settings</span>
+            <span>🛡️</span>
           </button>
-        </div>
+        ) : (
+          <div aria-hidden="true" />
+        )}
       </header>
 
       <main style={{ flex: 1 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', gap: '8px', flexWrap: 'wrap' }}>
           <h2 style={{ fontSize: '20px' }}>Your Trips</h2>
           {!showAddTrip && (
-            <div style={{ display: 'flex', gap: '8px' }}>
+            <div className={`trip-home-actions${stackActive ? ' stack-active' : ''}`}>
               {!showJoinTrip && (
                 <button className="secondary-btn" style={{ padding: '8px 16px', fontSize: '14px' }} onClick={() => setShowJoinTrip(true)}>
                   Join a Trip
@@ -234,6 +243,17 @@ export function TripsListScreen({
               />
             </div>
 
+            <div className="form-group">
+              <label className="form-label">Destination (optional)</label>
+              <input
+                type="text"
+                className="input-field"
+                placeholder="e.g. Manali, Goa"
+                value={newTripDestination}
+                onChange={(e) => setNewTripDestination(e.target.value)}
+              />
+            </div>
+
             {!editingTripId && (
               <div className="form-group">
                 <label className="form-label">Base Currency</label>
@@ -275,7 +295,36 @@ export function TripsListScreen({
             <div className="ledger-rule" />
           </div>
         ) : (
-          <div className="passport-list">
+          <>
+            {stackActive && (
+              <TripStack
+                trips={trips}
+                members={members}
+                userId={userId}
+                onSelectTrip={onSelectTrip}
+                onStartEditTrip={onStartEditTrip}
+                onDeleteTrip={onDeleteTrip}
+                onArchiveTrip={onArchiveTrip}
+                onShowList={() => setShowList(true)}
+              />
+            )}
+            {stackActive && (
+              <TripSlideLauncher
+                onCreateTrip={() => setShowAddTrip(true)}
+                onJoinTrip={() => setShowJoinTrip(true)}
+              />
+            )}
+            {trips.length >= 2 && showList && (
+              <button
+                type="button"
+                className="trip-stack-viewall"
+                style={{ marginBottom: '14px' }}
+                onClick={() => setShowList(false)}
+              >
+                Back to stack
+              </button>
+            )}
+            <div className={`passport-list ${stackActive ? 'stack-mode' : ''}`}>
             {trips.map((trip, idx) => {
               const stamp = formatTripStamp(trip.startDate, trip.endDate);
               const tripMembers = trip.memberIds.map((id) => members[id]).filter(Boolean);
@@ -293,6 +342,8 @@ export function TripsListScreen({
                   <SwipeableRow
                     onDelete={canDelete ? () => onDeleteTrip(trip) : undefined}
                     onEdit={() => onStartEditTrip(trip)}
+                    reversed
+                    plain
                   >
                     <div style={{ padding: '18px 20px 16px', cursor: 'pointer' }} onClick={() => onSelectTrip(trip.id)}>
                       <div className="pp-stamp">
@@ -335,7 +386,8 @@ export function TripsListScreen({
                 </div>
               );
             })}
-          </div>
+            </div>
+          </>
         )}
       </main>
     </div>

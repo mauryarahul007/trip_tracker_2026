@@ -37,6 +37,7 @@ export interface Database {
           join_code: string;
           archived: boolean;
           frozen: boolean;
+          destination: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -50,6 +51,7 @@ export interface Database {
           join_code?: string;
           archived?: boolean;
           frozen?: boolean;
+          destination?: string | null;
         };
         Update: Partial<{
           name: string;
@@ -58,6 +60,7 @@ export interface Database {
           base_currency: string;
           archived: boolean;
           frozen: boolean;
+          destination: string | null;
           updated_at: string;
         }>;
         Relationships: [];
