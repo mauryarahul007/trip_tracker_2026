@@ -38,6 +38,7 @@ export interface Database {
           archived: boolean;
           frozen: boolean;
           destination: string | null;
+          stops: unknown;
           created_at: string;
           updated_at: string;
         };
@@ -52,6 +53,7 @@ export interface Database {
           archived?: boolean;
           frozen?: boolean;
           destination?: string | null;
+          stops?: unknown;
         };
         Update: Partial<{
           name: string;
@@ -61,6 +63,7 @@ export interface Database {
           archived: boolean;
           frozen: boolean;
           destination: string | null;
+          stops: unknown;
           updated_at: string;
         }>;
         Relationships: [];

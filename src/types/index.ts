@@ -22,7 +22,6 @@ export interface Trip {
   expenseCount?: number;
   archived?: boolean;
   frozen?: boolean; // emergency kill-switch toggle set by superadmin
-  destination?: string; // e.g. "Manali, Himachal", "Goa", "Kyoto, Japan"
   stops?: TripStop[]; // Ordered list of route waypoints / stops
   coverImageUrl?: string; // background cover tourism photo URL
 }

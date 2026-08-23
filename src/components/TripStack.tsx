@@ -23,13 +23,14 @@ type Props = {
   onDeleteTrip: (trip: Trip) => void;
   onArchiveTrip: (trip: Trip) => void;
   onShowList: () => void;
+  onFrontChange?: (trip: Trip | null) => void;
 };
 
 // Cover photo for a card's background. fetchPlaceCoverImage already
 // dedupes/caches by place name at module scope, so mounting this once per
 // peeking card (not just the front one) is effectively free after the
 // first fetch, and doubles as prefetching for whichever card rises next.
-function useTripPhoto(destination?: string): string | null {
+export function useTripPhoto(destination?: string): string | null {
   const [url, setUrl] = useState<string | null>(null);
   useEffect(() => {
     let cancelled = false;
@@ -257,7 +258,7 @@ function StackFrontCard({ trip, members, canDelete, onOpen, onBrowse, onArchive,
   );
 }
 
-export function TripStack({ trips, members, userId, onSelectTrip, onStartEditTrip, onDeleteTrip, onArchiveTrip, onShowList }: Props) {
+export function TripStack({ trips, members, userId, onSelectTrip, onStartEditTrip, onDeleteTrip, onArchiveTrip, onShowList, onFrontChange }: Props) {
   const sortedIds = useMemo(() => [...trips].sort((a, b) => b.updatedAt - a.updatedAt).map((t) => t.id), [trips]);
   const idsKey = sortedIds.join(',');
   const tripsById = useMemo(() => Object.fromEntries(trips.map((t) => [t.id, t])), [trips]);
@@ -270,6 +271,12 @@ export function TripStack({ trips, members, userId, onSelectTrip, onStartEditTri
   const order = manualOrder ?? sortedIds;
   const visible = order.slice(0, PEEK_DEPTH).map((id) => tripsById[id]).filter(Boolean);
   const front = visible[0];
+
+  useEffect(() => {
+    onFrontChange?.(front ?? null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [front?.id]);
+
   if (!front) return null;
 
   const cycleToBack = () => setManualOrder([...order.slice(1), order[0]]);

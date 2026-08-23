@@ -23,7 +23,6 @@ function mapTrip(row: TripRow, memberIds: string[], groupIds: string[]): Trip {
     groupIds,
     archived: row.archived,
     frozen: row.frozen,
-    destination: row.destination ?? undefined,
     stops: Array.isArray(row.stops) ? (row.stops as unknown as TripStop[]) : undefined,
     createdAt: new Date(row.created_at).getTime(),
     updatedAt: new Date(row.updated_at).getTime(),
@@ -199,7 +198,6 @@ export async function insertTrip(input: {
   ownerId: string;
   destination?: string;
   id?: string;
-  destination?: string;
   stops?: TripStop[];
 }): Promise<Trip> {
   const { data, error } = await supabase
@@ -212,6 +210,7 @@ export async function insertTrip(input: {
       base_currency: input.baseCurrency,
       owner_id: input.ownerId,
       destination: input.destination || null,
+      stops: input.stops ?? [],
     })
     .select()
     .single();
@@ -219,7 +218,7 @@ export async function insertTrip(input: {
   return mapTrip(data, [], []);
 }
 
-export async function updateTripRow(id: string, patch: { name: string; startDate: string; endDate: string; destination?: string }): Promise<void> {
+export async function updateTripRow(id: string, patch: { name: string; startDate: string; endDate: string; destination?: string; stops?: TripStop[] }): Promise<void> {
   const { error } = await supabase
     .from('trips')
     .update({
@@ -227,6 +226,7 @@ export async function updateTripRow(id: string, patch: { name: string; startDate
       start_date: patch.startDate,
       end_date: patch.endDate,
       destination: patch.destination || null,
+      stops: patch.stops ?? [],
       updated_at: new Date().toISOString(),
     })
     .eq('id', id);

@@ -1,16 +1,16 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import type { Trip, Member } from '../types';
+import type { Trip, Member, TripStop } from '../types';
 import { IconArchive, IconMapPin } from './Icons';
 import { DateRangePicker } from './DateRangePicker';
 import { formatTripStamp } from '../utils/dateRange';
 import { initial } from '../utils/initials';
 import { avatarColorForName } from '../utils/avatarColor';
-import { TurnstileWidget } from './TurnstileWidget';
 import { useTripStore } from '../store/tripStore';
 import { SwipeableRow } from './SwipeableRow';
 import { TripStack } from './TripStack';
 import { TripSlideLauncher } from './TripSlideLauncher';
+import { HomeAmbientBackdrop } from './HomeAmbientBackdrop';
 
 type Props = {
   trips: Trip[];
@@ -77,6 +77,7 @@ export function TripsListScreen({
   const [joinCode, setJoinCode] = useState('');
   const [honeypotVal, setHoneypotVal] = useState('');
   const [showList, setShowList] = useState(false);
+  const [focusedTrip, setFocusedTrip] = useState<Trip | null>(null);
   const stackActive = trips.length >= 2 && !showList && !showAddTrip && !showJoinTrip;
 
   const handleJoinByCode = (e: React.FormEvent) => {
@@ -103,6 +104,7 @@ export function TripsListScreen({
 
   return (
     <div className="fade-in trips-screen-scroll">
+      <HomeAmbientBackdrop trip={stackActive ? focusedTrip : null} />
       <header style={{ marginBottom: '24px', display: 'grid', gridTemplateColumns: '40px 1fr 40px', alignItems: 'center', gap: '12px' }}>
         <button
           type="button"
@@ -285,32 +287,10 @@ export function TripsListScreen({
                     value={newTripDestination}
                     onChange={(e) => setNewTripDestination(e.target.value)}
                   />
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '4px' }}>
+                  <div style={{ marginTop: '4px' }}>
                     <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
                       Auto-fetches tourism photography & route maps
                     </span>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const firstVal = newTripDestination.trim();
-                        setNewTripStops([
-                          { id: crypto.randomUUID(), name: firstVal || '' },
-                          { id: crypto.randomUUID(), name: '' },
-                        ]);
-                        setNewTripDestination('');
-                      }}
-                      style={{
-                        background: 'none',
-                        border: 'none',
-                        color: 'var(--primary-accent)',
-                        fontSize: '11.5px',
-                        fontWeight: 600,
-                        cursor: 'pointer',
-                        textDecoration: 'underline',
-                      }}
-                    >
-                      + Plan multi-stop route
-                    </button>
                   </div>
                 </div>
               ) : (
@@ -407,17 +387,6 @@ export function TripsListScreen({
               />
             </div>
 
-            <div className="form-group">
-              <label className="form-label">Destination (optional)</label>
-              <input
-                type="text"
-                className="input-field"
-                placeholder="e.g. Manali, Goa"
-                value={newTripDestination}
-                onChange={(e) => setNewTripDestination(e.target.value)}
-              />
-            </div>
-
             {!editingTripId && (
               <div className="form-group">
                 <label className="form-label">Base Currency</label>
@@ -470,6 +439,7 @@ export function TripsListScreen({
                 onDeleteTrip={onDeleteTrip}
                 onArchiveTrip={onArchiveTrip}
                 onShowList={() => setShowList(true)}
+                onFrontChange={setFocusedTrip}
               />
             )}
             {stackActive && (

@@ -8,6 +8,51 @@
 
 const imageCache = new Map<string, string | null>();
 
+// Cards display these around 300-450 CSS px wide; 960px covers 2x retina
+// with headroom, while staying well under an uncapped original (commons
+// originals commonly run 3000-8000px and several MB). Must be one of
+// Wikimedia's fixed standard widths -- direct/hotlinked thumb requests for
+// any other width are rejected with 400 (API-routed requests get silently
+// rounded to the nearest one, but our /thumb/ URLs are direct hotlinks).
+// https://www.mediawiki.org/wiki/Common_thumbnail_sizes
+const THUMB_WIDTH = 960;
+
+// Wikimedia originals live at .../wikipedia/<project>/<h1>/<h2>/<file>.
+// Rewriting to the /thumb/ path asks Wikimedia's own resizer for a
+// pre-scaled, re-encoded copy at THUMB_WIDTH -- not a client-side crop of
+// the full original, so it stays sharp at that size while shrinking the
+// download. Falls through unchanged for URLs that don't match (already a
+// thumb, or an unexpected host).
+//
+// The REST API always appends tracking query params (?utm_source=...), so
+// this matches against the parsed pathname only -- matching the raw URL
+// string let `[^/]+` swallow the query string into "filename", producing a
+// URL with two "?"s that failed to load at all.
+const WIKIMEDIA_ORIGINAL_PATH_PATTERN = /^(\/wikipedia\/[^/]+\/)([0-9a-f])\/([0-9a-f]{2})\/([^/]+)$/i;
+
+function toSizedThumbnail(url: string, width: number = THUMB_WIDTH): string {
+  let parsed: URL;
+  try {
+    parsed = new URL(url);
+  } catch {
+    return url;
+  }
+  if (parsed.hostname !== 'upload.wikimedia.org') return url;
+
+  const match = parsed.pathname.match(WIKIMEDIA_ORIGINAL_PATH_PATTERN);
+  if (!match) return url;
+  const [, prefix, h1, h2, filename] = match;
+  return `${parsed.origin}${prefix}thumb/${h1}/${h2}/${filename}/${width}px-${filename}`;
+}
+
+// Prefer a sized-down copy of the original (consistent, controlled width)
+// over the API's own thumbnail, whose default size varies and is often
+// too small for a retina card background.
+function pickImage(original?: string, thumbnail?: string): string | null {
+  if (original) return toSizedThumbnail(original);
+  return thumbnail ?? null;
+}
+
 // Filenames Wikipedia/Wikivoyage commonly use for non-photo lead images --
 // locator maps, flags, coats of arms, seals, logos, and chart/diagram
 // exports all get uploaded as ordinary PNG/JPG, not just SVG, so extension
@@ -15,7 +60,7 @@ const imageCache = new Map<string, string | null>();
 // lead image is frequently a "Map-<Country>-<Region>.png").
 const NON_PHOTO_FILENAME_PATTERN = /(^|[_\-/])(map|locator|location|flag[_-]of|coat[_-]of[_-]arms|seal[_-]of|emblem|logo|chart|diagram|graph)([_\-.]|$)/i;
 
-function isPhotoUrl(url?: string): boolean {
+function isPhotoUrl(url?: string | null): boolean {
   if (!url || typeof url !== 'string') return false;
   if (!url.startsWith('http://') && !url.startsWith('https://')) return false;
   const lower = url.toLowerCase();
@@ -74,7 +119,7 @@ export async function fetchPlaceCoverImage(placeInput: string | string[]): Promi
 
       if (voyageRes.ok) {
         const voyageData = await voyageRes.json();
-        const voyageImg = voyageData.originalimage?.source || voyageData.thumbnail?.source;
+        const voyageImg = pickImage(voyageData.originalimage?.source, voyageData.thumbnail?.source);
         if (isPhotoUrl(voyageImg)) {
           imageCache.set(mainKey, voyageImg);
           return voyageImg;
@@ -87,7 +132,7 @@ export async function fetchPlaceCoverImage(placeInput: string | string[]): Promi
 
       if (directRes.ok) {
         const data = await directRes.json();
-        const img = data.originalimage?.source || data.thumbnail?.source;
+        const img = pickImage(data.originalimage?.source, data.thumbnail?.source);
         if (isPhotoUrl(img)) {
           imageCache.set(mainKey, img);
           return img;
@@ -95,14 +140,14 @@ export async function fetchPlaceCoverImage(placeInput: string | string[]): Promi
       }
 
       // 2. Wikipedia generator search across top 5 articles with pageimages
-      const genUrl = `https://en.wikipedia.org/w/api.php?action=query&prop=pageimages&format=json&piprop=original|thumbnail&pithumbsize=1200&generator=search&gsrsearch=${encodeURIComponent(cleaned)}&gsrlimit=5&origin=*`;
+      const genUrl = `https://en.wikipedia.org/w/api.php?action=query&prop=pageimages&format=json&piprop=original|thumbnail&pithumbsize=${THUMB_WIDTH}&generator=search&gsrsearch=${encodeURIComponent(cleaned)}&gsrlimit=5&origin=*`;
       const genRes = await fetch(genUrl);
 
       if (genRes.ok) {
         const genData = await genRes.json();
         const pages: any[] = Object.values(genData.query?.pages || {});
         for (const page of pages) {
-          const img = page.original?.source || page.thumbnail?.source;
+          const img = pickImage(page.original?.source, page.thumbnail?.source);
           if (isPhotoUrl(img)) {
             imageCache.set(mainKey, img);
             return img;
@@ -124,7 +169,7 @@ export async function fetchPlaceCoverImage(placeInput: string | string[]): Promi
           const sumRes = await fetch(sumUrl, { headers: { 'Accept': 'application/json' } });
           if (sumRes.ok) {
             const sumData = await sumRes.json();
-            const img = sumData.originalimage?.source || sumData.thumbnail?.source;
+            const img = pickImage(sumData.originalimage?.source, sumData.thumbnail?.source);
             if (isPhotoUrl(img)) {
               imageCache.set(mainKey, img);
               return img;

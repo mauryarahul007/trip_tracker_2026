@@ -13,8 +13,13 @@ import { fetchAppFlag } from './services/tripApi';
 import { GlobalSettingsModal } from './components/GlobalSettingsModal';
 import { ConfirmDialog, type ConfirmRequest } from './components/ConfirmDialog';
 import { TripsListScreen } from './components/TripsListScreen';
-import { TripBannerRouteMap } from './components/TripBannerRouteMap';
-import { AmbientPhotoBackdrop } from './components/AmbientPhotoBackdrop';
+// maplibre-gl is a sizeable dependency (JS + worker + WASM) only needed on
+// the trip dashboard -- code-split so it doesn't load for the trips list
+// or any other screen.
+const TripMapHero = lazy(() =>
+  import('./components/TripMapHero').then((m) => ({ default: m.TripMapHero }))
+);
+import { TripContentSheet } from './components/TripContentSheet';
 import { ExpenseForm } from './components/ExpenseForm';
 import { ExpenseList } from './components/ExpenseList';
 import { BalancesSettlements } from './components/BalancesSettlements';
@@ -694,9 +699,9 @@ export default function App() {
     if (!newTripName || !newTripStart || !newTripEnd) return;
     const cleanStops = newTripStops.filter((s) => s.name.trim().length > 0);
     if (editingTripId) {
-      await updateTrip(editingTripId, newTripName, newTripStart, newTripEnd, newTripDestination.trim() || undefined);
+      await updateTrip(editingTripId, newTripName, newTripStart, newTripEnd, newTripDestination.trim() || undefined, cleanStops);
     } else {
-      await createTrip(newTripName, newTripStart, newTripEnd, newTripCurrency, newTripDestination.trim() || undefined);
+      await createTrip(newTripName, newTripStart, newTripEnd, newTripCurrency, newTripDestination.trim() || undefined, cleanStops);
     }
     setNewTripName('');
     setNewTripDestination('');
@@ -704,7 +709,6 @@ export default function App() {
     setNewTripStart('');
     setNewTripEnd('');
     setNewTripCurrency('INR');
-    setNewTripDestination('');
     setEditingTripId(null);
     setShowAddTrip(false);
   };
@@ -1411,8 +1415,6 @@ export default function App() {
           setNewTripEnd={setNewTripEnd}
           newTripCurrency={newTripCurrency}
           setNewTripCurrency={setNewTripCurrency}
-          newTripDestination={newTripDestination}
-          setNewTripDestination={setNewTripDestination}
           editingTripId={editingTripId}
           onCreateTrip={handleCreateTrip}
           onCancelTripForm={handleCancelTripForm}
@@ -1428,11 +1430,10 @@ export default function App() {
       ) : (
         /* Screen 2: Active Trip Dashboard */
         <div className="trip-dashboard-container fade-in" style={{ position: 'relative' }}>
-          <AmbientPhotoBackdrop trip={activeTrip ?? null} />
+          <Suspense fallback={null}>
+            <TripMapHero trip={activeTrip ?? null} />
+          </Suspense>
           <header ref={headerRef} className={`app-header trip-dashboard-header ${isHeaderScrolled ? 'is-scrolled' : ''}`} style={{ overflow: 'hidden' }}>
-            {/* Translucent Header Route Map Banner Layer */}
-            {activeTrip && <TripBannerRouteMap trip={activeTrip} />}
-
             <div className="app-header-top" style={{ position: 'relative', zIndex: 1 }}>
               <div className="app-title-group">
                 <span className="app-eyebrow">
@@ -1601,11 +1602,28 @@ export default function App() {
             )}
           </header>
 
-
+          <TripContentSheet>
           <main className="app-main">
             {/* View Switching Tab Content */}
             <div className="tab-pane" style={{ display: activeTab === 'expenses' ? 'block' : 'none' }}>
               <div className="fade-in">
+                {activeTrip && visibleMembers.length > 0 && (
+                  <BalancesSettlements
+                    trip={activeTrip}
+                    balances={balances}
+                    groups={visibleTripGroups}
+                    transfers={transfers}
+                    activeTripExpenses={activeTripExpenses}
+                    topCategoryName={categoryData[0]?.name}
+                    topCategoryPercentage={categoryData[0]?.percentage}
+                    onMemberClick={handleFilterByMember}
+                    onSettle={handleSettle}
+                    isAdmin={isAdmin}
+                    myMemberId={myMemberId}
+                    members={members}
+                  />
+                )}
+
                 <ExpenseList
                   trip={activeTrip}
                   members={members}
@@ -1634,23 +1652,6 @@ export default function App() {
                   isAdmin={isAdmin}
                   userId={userId}
                 />
-
-                {activeTrip && visibleMembers.length > 0 && (
-                  <BalancesSettlements
-                    trip={activeTrip}
-                    balances={balances}
-                    groups={visibleTripGroups}
-                    transfers={transfers}
-                    activeTripExpenses={activeTripExpenses}
-                    topCategoryName={categoryData[0]?.name}
-                    topCategoryPercentage={categoryData[0]?.percentage}
-                    onMemberClick={handleFilterByMember}
-                    onSettle={handleSettle}
-                    isAdmin={isAdmin}
-                    myMemberId={myMemberId}
-                    members={members}
-                  />
-                )}
               </div>
             </div>
 
@@ -1746,6 +1747,7 @@ export default function App() {
               </button>
             )}
           </main>
+          </TripContentSheet>
 
           <NavTabs activeTab={activeTab} setActiveTab={setActiveTab} />
         </div>

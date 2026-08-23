@@ -138,8 +138,8 @@ interface TripStore extends TripState {
   updateLastBackendSyncedAt: (timestamp: number) => void;
 
   // Trip Actions
-  createTrip: (name: string, startDate: string, endDate: string, baseCurrency: string, destination?: string) => Promise<void>;
-  updateTrip: (id: string, name: string, startDate: string, endDate: string, destination?: string) => Promise<void>;
+  createTrip: (name: string, startDate: string, endDate: string, baseCurrency: string, destination?: string, stops?: TripStop[]) => Promise<void>;
+  updateTrip: (id: string, name: string, startDate: string, endDate: string, destination?: string, stops?: TripStop[]) => Promise<void>;
   selectTrip: (id: string | null) => Promise<void>;
   archiveTrip: (id: string, archived: boolean) => Promise<void>;
   freezeTrip: (id: string, frozen: boolean) => Promise<void>;
@@ -835,7 +835,7 @@ export const useTripStore = create<TripStore>()(
       }
     },
 
-    createTrip: async (name, startDate, endDate, baseCurrency, destination) => {
+    createTrip: async (name, startDate, endDate, baseCurrency, destination, stops) => {
       const userId = get().userId || (get().isSuperadmin ? 'superadmin-root-user-id' : 'guest-traveler-user-id');
       const cleanDestination = destination?.trim() || (stops && stops.length > 0 ? stops.map((s) => s.name).join(' → ') : undefined);
       const cleanStops = stops && stops.length > 0 ? stops : undefined;
@@ -893,7 +893,6 @@ export const useTripStore = create<TripStore>()(
           startDate,
           endDate,
           baseCurrency,
-          destination,
           ownerId: userId,
           adminMemberIds: [creatorMemberId],
           joinCode: Math.random().toString(36).substring(2, 8).toUpperCase(),
@@ -937,7 +936,6 @@ export const useTripStore = create<TripStore>()(
         startDate,
         endDate,
         baseCurrency,
-        destination,
         memberIds: [memberTempId],
         groupIds: [],
         ownerId: userId,
@@ -969,7 +967,7 @@ export const useTripStore = create<TripStore>()(
         get().queueSync('createTrip', { tripTempId, memberTempId, name, startDate, endDate, baseCurrency, destination, ownerId: userId, creatorName });
       } else {
         try {
-          const trip = await insertTrip({ name, startDate, endDate, baseCurrency, destination, ownerId: userId, id: tripTempId });
+          const trip = await insertTrip({ name, startDate, endDate, baseCurrency, destination: cleanDestination, ownerId: userId, id: tripTempId, stops: cleanStops });
           const creatorMember = await insertMember(trip.id, creatorName, userId, memberTempId);
           set((state) => ({
             trips: state.trips.map((t) => (t.id === tripTempId ? { ...trip, memberIds: [memberTempId], adminMemberIds: [memberTempId], expenseCount: 0, destination: cleanDestination, stops: cleanStops } : t)),
@@ -982,11 +980,13 @@ export const useTripStore = create<TripStore>()(
       }
     },
 
-    updateTrip: async (id, name, startDate, endDate, destination) => {
+    updateTrip: async (id, name, startDate, endDate, destination, stops) => {
+      const cleanDestination = destination?.trim() || (stops && stops.length > 0 ? stops.map((s) => s.name).join(' → ') : undefined);
+      const cleanStops = stops && stops.length > 0 ? stops : undefined;
       try {
-        await updateTripRow(id, { name, startDate, endDate, destination });
+        await updateTripRow(id, { name, startDate, endDate, destination: cleanDestination, stops: cleanStops });
         set((state) => ({
-          trips: state.trips.map((t) => (t.id === id ? { ...t, name, startDate, endDate, destination, updatedAt: Date.now() } : t)),
+          trips: state.trips.map((t) => (t.id === id ? { ...t, name, startDate, endDate, destination: cleanDestination, stops: cleanStops, updatedAt: Date.now() } : t)),
           storageError: null,
         }));
 

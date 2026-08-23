@@ -93,8 +93,11 @@
   --text-muted: #64748B;
 
   --bg-header: #0284C7;
-  --header-gradient: linear-gradient(135deg, #0284C7 0%, #0D5C9E 100%);
-  --header-gradient-scrolled: linear-gradient(135deg, #0369A1 0%, #0C4A6E 100%);
+  /* Translucent -- the trip-dashboard-header sits over the live map
+     backdrop and relies on backdrop-filter blur to frost it; an opaque
+     gradient here would hide the map entirely. */
+  --header-gradient: linear-gradient(135deg, rgba(2, 132, 199, 0.5) 0%, rgba(13, 92, 158, 0.5) 100%);
+  --header-gradient-scrolled: linear-gradient(135deg, rgba(3, 105, 161, 0.72) 0%, rgba(12, 74, 110, 0.72) 100%);
   --header-gradient-solid: linear-gradient(135deg, #0284C7, #0D5C9E);
   --bg-header-glass: rgba(2, 132, 199, 0.88);
   --bg-header-glass-scrolled: rgba(13, 92, 158, 0.95);
@@ -140,8 +143,8 @@
     --text-muted: #8494B8;
 
     --bg-header: #12203F;
-    --header-gradient: linear-gradient(135deg, rgba(35, 74, 156, 0.9), rgba(18, 102, 93, 0.9));
-    --header-gradient-scrolled: linear-gradient(135deg, rgba(20, 48, 110, 0.96), rgba(10, 80, 72, 0.96));
+    --header-gradient: linear-gradient(135deg, rgba(35, 74, 156, 0.5), rgba(18, 102, 93, 0.5));
+    --header-gradient-scrolled: linear-gradient(135deg, rgba(20, 48, 110, 0.72), rgba(10, 80, 72, 0.72));
     --header-gradient-solid: linear-gradient(135deg, #234A9C, #12665D);
     --bg-header-glass: rgba(18, 32, 63, 0.85);
     --bg-header-glass-scrolled: rgba(18, 32, 63, 0.95);
@@ -1603,7 +1606,9 @@ input:checked + .toggle-slider:before {
   letter-spacing: 0.06em;
   text-transform: uppercase;
   font-weight: 700;
-  color: var(--text-muted);
+  /* text-muted on bg-app is ~4.47:1, just under the 4.5:1 AA floor for
+     small text -- text-secondary clears it with room to spare. */
+  color: var(--text-secondary);
   background: none;
   border: none;
   cursor: pointer;
@@ -2874,6 +2879,61 @@ input:checked + .toggle-slider:before {
   position: relative;
 }
 
+/* Continuous full-screen map backdrop -- fixed behind the header and the
+   content sheet, visible in the gap above the sheet's rounded top edge. */
+.trip-map-hero {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+}
+
+/* Foreground content sheet -- rounded top corners over the map backdrop.
+   `top` is set inline by TripContentSheet's drag state: starts at 50% (map
+   half visible) and swipes up to 20% (80% coverage). Its own content (the
+   tab-panes inside) scrolls internally once it overflows. */
+.trip-sheet {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--bg-app);
+  border-radius: 28px 28px 0 0;
+  box-shadow: 0 -16px 40px -10px rgba(0, 0, 0, 0.4), 0 -4px 16px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+  transition: top 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.trip-sheet.dragging {
+  transition: none;
+}
+
+/* Drag handle -- the swipe affordance strip at the sheet's top edge. */
+.trip-sheet-handle {
+  flex-shrink: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 22px;
+  cursor: grab;
+  touch-action: none;
+}
+
+.trip-sheet-handle:active {
+  cursor: grabbing;
+}
+
+.trip-sheet-handle-bar {
+  width: 40px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--text-muted);
+  opacity: 0.35;
+}
+
 .tab-pane {
   flex: 1;
   min-height: 0;
@@ -2902,6 +2962,15 @@ html.capacitor-ios .tab-pane {
   -webkit-mask-image: none;
 }
 
+/* The sheet already clears the header via its own top offset + handle --
+   the tab-pane's usual header-height reservation is dead space in here. */
+.trip-sheet .tab-pane {
+  padding-top: 8px;
+}
+html.capacitor-ios .trip-sheet .tab-pane {
+  padding-top: 8px;
+}
+
 .trips-screen-scroll {
   flex: 1;
   min-height: 0;
@@ -2912,6 +2981,27 @@ html.capacitor-ios .tab-pane {
   padding-bottom: calc(32px + var(--safe-bottom, 0px));
   padding-left: max(20px, var(--safe-left, 20px));
   padding-right: max(20px, var(--safe-right, 20px));
+}
+
+/* Ambient backdrop for whichever trip card is front-of-stack -- fixed
+   behind the home screen (painted first in DOM, so normal-flow content
+   above it in markup naturally layers on top -- no z-index juggling). */
+.home-ambient-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.home-ambient-layer {
+  position: absolute;
+  inset: -20px;
+  background-size: cover;
+  background-position: center;
+  filter: blur(28px) saturate(1.2);
+  transform: scale(1.08);
+  transition: opacity 0.9s ease;
 }
 
 .modal-overlay {
