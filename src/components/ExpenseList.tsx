@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import type { CSSProperties } from 'react';
 import type { Category, Expense, Member, Trip } from '../types';
-import { IconSearch, IconEdit, IconTrash, IconAlertCircle, IconClose, IconCalendar } from './Icons';
+import { IconSearch, IconEdit, IconTrash, IconAlertCircle, IconClose, IconCalendar, IconChevronRight } from './Icons';
 import { SwipeableRow } from './SwipeableRow';
 import { CategoryIcon } from './CategoryIcon';
 import { getCurrencySymbol } from '../utils/currency';
@@ -296,6 +296,36 @@ export function ExpenseList({
   }, [trip?.id, filterCategory, filterMember, filterDateFrom, filterDateTo, search]);
 
   const displayedExpenses = filteredExpenses.slice(0, visibleCount);
+
+  // Group the flat "List" view into per-day sections so a long trip reads
+  // as a scannable list of day totals instead of one endless feed.
+  // Expenses already arrive newest date first, so the first N groups
+  // encountered are the most recent days -- expand those by default,
+  // collapse the rest.
+  const dayGroups = displayedExpenses.reduce<{ date: string; expenses: Expense[] }[]>((groups, exp) => {
+    const lastGroup = groups[groups.length - 1];
+    if (lastGroup && lastGroup.date === exp.date) {
+      lastGroup.expenses.push(exp);
+    } else {
+      groups.push({ date: exp.date, expenses: [exp] });
+    }
+    return groups;
+  }, []);
+
+  const DEFAULT_EXPANDED_DAYS = 2;
+  // Only stores days the user has explicitly toggled away from their
+  // default state -- the default itself (first N groups open, rest
+  // collapsed) is derived fresh from dayGroups every render, so it stays
+  // correct as Load More or filters change which dates are present.
+  const [collapseOverrides, setCollapseOverrides] = useState<Record<string, boolean>>({});
+  const isDayCollapsedByDefault = (groupIndex: number) => groupIndex >= DEFAULT_EXPANDED_DAYS;
+  const isDayCollapsed = (date: string, groupIndex: number) =>
+    collapseOverrides[date] ?? isDayCollapsedByDefault(groupIndex);
+  const toggleDay = (date: string, groupIndex: number) => {
+    triggerHaptic('light');
+    const currentlyCollapsed = isDayCollapsed(date, groupIndex);
+    setCollapseOverrides((prev) => ({ ...prev, [date]: !currentlyCollapsed }));
+  };
 
   // Expenses whose payer and/or split still reference a member who was
   // later removed from the trip — each one already gets its own inline
@@ -653,145 +683,186 @@ export function ExpenseList({
           })}
         </div>
       ) : (
-        <div className="glass-card" style={{ padding: 0, overflow: 'hidden' }}>
-          {displayedExpenses.map((exp, idx) => {
-            const isPending = exp.id === pendingDeleteId;
-            const canManage = isAdmin || exp.createdByUserId === userId;
-            const isPayerDeleted = trip ? !trip.memberIds.includes(exp.paidBy) : false;
-            const hasDeletedParticipants = trip ? exp.splitMemberIds.some((id) => !trip.memberIds.includes(id)) : false;
-            const needsReview = isPayerDeleted || hasDeletedParticipants;
-            const payerMember = members[exp.paidBy];
-            const cat = categories.find((c) => c.id === exp.category);
-            const splitMembers = exp.splitMemberIds.map((id) => ({ id, member: members[id] }));
-            const visibleSplitMembers = splitMembers.slice(0, 4);
-            const overflowSplitCount = splitMembers.length - visibleSplitMembers.length;
-
-            const expenseDate = new Date(`${exp.date}T00:00:00`);
-            const formattedDate = Number.isNaN(expenseDate.getTime())
-              ? exp.date
-              : expenseDate.toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
-            const formattedTime = exp.createdAt
-              ? new Date(exp.createdAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
-              : null;
-
-            const reviewMessage = isPayerDeleted && hasDeletedParticipants
-              ? 'Payer and a split member were removed — reassign the payer and update the split.'
-              : isPayerDeleted
-                ? 'Payer was removed — assign a new payer.'
-                : 'A split member was removed — update the split.';
+        <>
+          {dayGroups.map((group, groupIdx) => {
+            const groupDate = new Date(`${group.date}T00:00:00`);
+            const groupLabel = Number.isNaN(groupDate.getTime())
+              ? group.date
+              : groupDate.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', month: 'short' });
+            const groupTotal = group.expenses.reduce((sum, e) => sum + e.amount, 0);
+            const collapsed = isDayCollapsed(group.date, groupIdx);
 
             return (
-              <div
-                key={exp.id}
-                aria-hidden={isPending}
-                style={{
-                  borderBottom: idx < displayedExpenses.length - 1 ? '1.5px dashed var(--border-color)' : 'none',
-                  opacity: isPending ? 0.35 : 1,
-                  pointerEvents: isPending ? 'none' : undefined,
-                  transition: 'opacity 0.25s ease',
-                }}
-              >
-                <ConditionalSwipe enabled={canManage} onDelete={() => onDelete(exp)}>
-                  <div
-                    style={{
-                      display: 'flex', flexDirection: 'column', gap: '6px',
-                      padding: '12px 14px',
-                      borderLeft: needsReview ? '3px solid var(--color-warning)' : 'none',
-                      background: needsReview ? 'rgba(185, 138, 62, 0.07)' : undefined,
-                    }}
-                  >
+              <div key={group.date} className="glass-card" style={{ padding: 0, overflow: 'hidden', marginBottom: '10px' }}>
+                <div
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => toggleDay(group.date, groupIdx)}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleDay(group.date, groupIdx); } }}
+                  style={{
+                    position: 'sticky', top: 0, zIndex: 2,
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    gap: '10px', padding: '10px 14px', cursor: 'pointer',
+                    background: 'var(--bg-surface-hover)',
+                    borderBottom: collapsed ? 'none' : '1.5px solid var(--border-color)',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
+                    <IconChevronRight
+                      size={15}
+                      className="icon-sm"
+                      style={{ transition: 'transform 0.2s ease', transform: collapsed ? 'rotate(0deg)' : 'rotate(90deg)', flexShrink: 0 }}
+                    />
+                    <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {groupLabel}
+                    </span>
+                  </div>
+                  {collapsed && (
+                    <span style={{ fontSize: '12px', color: 'var(--text-muted)', flexShrink: 0 }}>
+                      {group.expenses.length} · {formatMaskedAmount(groupTotal.toFixed(2), currencySymbol, isBlindMode)}
+                    </span>
+                  )}
+                </div>
+
+                {!collapsed && group.expenses.map((exp, idx) => {
+                  const isPending = exp.id === pendingDeleteId;
+                  const canManage = isAdmin || exp.createdByUserId === userId;
+                  const isPayerDeleted = trip ? !trip.memberIds.includes(exp.paidBy) : false;
+                  const hasDeletedParticipants = trip ? exp.splitMemberIds.some((id) => !trip.memberIds.includes(id)) : false;
+                  const needsReview = isPayerDeleted || hasDeletedParticipants;
+                  const payerMember = members[exp.paidBy];
+                  const cat = categories.find((c) => c.id === exp.category);
+                  const splitMembers = exp.splitMemberIds.map((id) => ({ id, member: members[id] }));
+                  const visibleSplitMembers = splitMembers.slice(0, 4);
+                  const overflowSplitCount = splitMembers.length - visibleSplitMembers.length;
+
+                  const formattedTime = exp.createdAt
+                    ? new Date(exp.createdAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
+                    : null;
+
+                  const reviewMessage = isPayerDeleted && hasDeletedParticipants
+                    ? 'Payer and a split member were removed — reassign the payer and update the split.'
+                    : isPayerDeleted
+                      ? 'Payer was removed — assign a new payer.'
+                      : 'A split member was removed — update the split.';
+
+                  return (
                     <div
-                      style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}
-                      onClick={() => { triggerHaptic('light'); onReview(exp); }}
+                      key={exp.id}
+                      aria-hidden={isPending}
+                      style={{
+                        borderBottom: idx < group.expenses.length - 1 ? '1.5px dashed var(--border-color)' : 'none',
+                        opacity: isPending ? 0.35 : 1,
+                        pointerEvents: isPending ? 'none' : undefined,
+                        transition: 'opacity 0.25s ease',
+                      }}
                     >
-                      <CategoryIcon categoryId={cat?.id || ''} fallbackEmoji={cat?.icon || '🏷️'} size={15} />
-                      <h4 style={{ flex: 1, minWidth: 0, fontSize: '15px', lineHeight: 1.3, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{exp.title}</h4>
-                      <span className="money privacy-blur" style={{ fontSize: '15px', fontWeight: '600', color: 'var(--text-primary)', whiteSpace: 'nowrap', flexShrink: 0 }}>
-                        {formatMaskedAmount(exp.amount.toFixed(2), currencySymbol, isBlindMode)}
-                      </span>
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
-                      <div
-                        style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', minWidth: 0 }}
-                        onClick={() => { triggerHaptic('light'); onReview(exp); }}
-                        title={`Paid by ${payerMember?.name || 'a removed member'}`}
-                      >
-                        <ExpenseAvatar member={payerMember} size={22} muted={isPayerDeleted} />
-                        <span style={{ color: 'var(--text-muted)', fontSize: '12px', flexShrink: 0 }}>→</span>
-                        <div style={{ display: 'flex', flexShrink: 0 }}>
-                          {visibleSplitMembers.map(({ id, member }, splitIdx) => (
-                            <div key={id} style={{ marginLeft: splitIdx === 0 ? 0 : '-8px' }}>
-                              <ExpenseAvatar member={member} size={20} muted={!member} />
-                            </div>
-                          ))}
-                          {overflowSplitCount > 0 && (
+                      <ConditionalSwipe enabled={canManage} onDelete={() => onDelete(exp)}>
+                        <div
+                          style={{
+                            display: 'flex', flexDirection: 'column', gap: '6px',
+                            padding: '12px 14px',
+                            borderLeft: needsReview ? '3px solid var(--color-warning)' : 'none',
+                            background: needsReview ? 'rgba(185, 138, 62, 0.07)' : undefined,
+                          }}
+                        >
+                          <div
+                            style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}
+                            onClick={() => { triggerHaptic('light'); onReview(exp); }}
+                          >
+                            <CategoryIcon categoryId={cat?.id || ''} fallbackEmoji={cat?.icon || '🏷️'} size={15} />
+                            <h4 style={{ flex: 1, minWidth: 0, fontSize: '15px', lineHeight: 1.3, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{exp.title}</h4>
+                            <span className="money privacy-blur" style={{ fontSize: '15px', fontWeight: '600', color: 'var(--text-primary)', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                              {formatMaskedAmount(exp.amount.toFixed(2), currencySymbol, isBlindMode)}
+                            </span>
+                          </div>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
                             <div
-                              style={{
-                                marginLeft: '-8px', width: '20px', height: '20px', borderRadius: '50%',
-                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                background: 'var(--bg-surface-hover)', color: 'var(--text-secondary)',
-                                fontSize: '9.5px', fontWeight: 700, fontFamily: 'var(--font-family-mono)',
-                                border: '1.5px solid var(--bg-surface)', flexShrink: 0,
-                              }}
+                              style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', minWidth: 0 }}
+                              onClick={() => { triggerHaptic('light'); onReview(exp); }}
+                              title={`Paid by ${payerMember?.name || 'a removed member'}`}
                             >
-                              +{overflowSplitCount}
+                              <ExpenseAvatar member={payerMember} size={22} muted={isPayerDeleted} />
+                              <span style={{ color: 'var(--text-muted)', fontSize: '12px', flexShrink: 0 }}>→</span>
+                              <div style={{ display: 'flex', flexShrink: 0 }}>
+                                {visibleSplitMembers.map(({ id, member }, splitIdx) => (
+                                  <div key={id} style={{ marginLeft: splitIdx === 0 ? 0 : '-8px' }}>
+                                    <ExpenseAvatar member={member} size={20} muted={!member} />
+                                  </div>
+                                ))}
+                                {overflowSplitCount > 0 && (
+                                  <div
+                                    style={{
+                                      marginLeft: '-8px', width: '20px', height: '20px', borderRadius: '50%',
+                                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                      background: 'var(--bg-surface-hover)', color: 'var(--text-secondary)',
+                                      fontSize: '9.5px', fontWeight: 700, fontFamily: 'var(--font-family-mono)',
+                                      border: '1.5px solid var(--bg-surface)', flexShrink: 0,
+                                    }}
+                                  >
+                                    +{overflowSplitCount}
+                                  </div>
+                                )}
+                              </div>
+                              {exp.location?.placeName && (
+                                <span style={{ color: '#00BFA5', fontSize: '12px', flexShrink: 0 }} title={exp.location.placeName}>📍</span>
+                              )}
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
+                              {formattedTime && (
+                                <span style={{ fontSize: '11.5px', lineHeight: 1.4, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
+                                  {formattedTime}
+                                </span>
+                              )}
+                              {canManage && (
+                                // Its own gap, distinct from the date-to-buttons
+                                // gap above — edit and delete sitting right next
+                                // to each other need more separation than that,
+                                // since one is destructive and a mis-tap there
+                                // isn't recoverable the way a mis-tap elsewhere
+                                // would be.
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0 }}>
+                                  {!exp.title.startsWith('Settlement:') && (
+                                    <button
+                                      className="row-icon-btn"
+                                      style={needsReview ? { color: 'var(--color-warning)' } : undefined}
+                                      aria-label={needsReview ? 'Review expense' : 'Edit expense'}
+                                      title={needsReview ? 'Review' : 'Edit'}
+                                      onClick={(e) => { e.stopPropagation(); triggerHaptic('light'); onEdit(exp); }}
+                                    >
+                                      {needsReview ? <IconAlertCircle size={15} className="icon-sm" /> : <IconEdit size={15} className="icon-sm" />}
+                                    </button>
+                                  )}
+                                  <button
+                                    className="row-icon-btn row-icon-btn-danger"
+                                    aria-label="Delete expense"
+                                    title="Delete"
+                                    onClick={(e) => { e.stopPropagation(); triggerHaptic('warning'); onDelete(exp); }}
+                                  >
+                                    <IconTrash size={15} className="icon-sm" />
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                          {needsReview && (
+                            <div style={{
+                              display: 'flex', alignItems: 'center', gap: '6px',
+                              fontSize: '12px', fontWeight: 500, color: 'var(--color-warning)',
+                            }}>
+                              <IconAlertCircle size={14} className="icon-sm" />
+                              <span>{reviewMessage}</span>
                             </div>
                           )}
                         </div>
-                        {exp.location?.placeName && (
-                          <span style={{ color: '#00BFA5', fontSize: '12px', flexShrink: 0 }} title={exp.location.placeName}>📍</span>
-                        )}
-                      </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
-                        <span style={{ fontSize: '11.5px', lineHeight: 1.4, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
-                          {formattedDate}{formattedTime ? ` · ${formattedTime}` : ''}
-                        </span>
-                        {canManage && (
-                          // Its own gap, distinct from the date-to-buttons
-                          // gap above — edit and delete sitting right next
-                          // to each other need more separation than that,
-                          // since one is destructive and a mis-tap there
-                          // isn't recoverable the way a mis-tap elsewhere
-                          // would be.
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0 }}>
-                            {!exp.title.startsWith('Settlement:') && (
-                              <button
-                                className="row-icon-btn"
-                                style={needsReview ? { color: 'var(--color-warning)' } : undefined}
-                                aria-label={needsReview ? 'Review expense' : 'Edit expense'}
-                                title={needsReview ? 'Review' : 'Edit'}
-                                onClick={(e) => { e.stopPropagation(); triggerHaptic('light'); onEdit(exp); }}
-                              >
-                                {needsReview ? <IconAlertCircle size={15} className="icon-sm" /> : <IconEdit size={15} className="icon-sm" />}
-                              </button>
-                            )}
-                            <button
-                              className="row-icon-btn row-icon-btn-danger"
-                              aria-label="Delete expense"
-                              title="Delete"
-                              onClick={(e) => { e.stopPropagation(); triggerHaptic('warning'); onDelete(exp); }}
-                            >
-                              <IconTrash size={15} className="icon-sm" />
-                            </button>
-                          </div>
-                        )}
-                      </div>
+                      </ConditionalSwipe>
                     </div>
-                    {needsReview && (
-                      <div style={{
-                        display: 'flex', alignItems: 'center', gap: '6px',
-                        fontSize: '12px', fontWeight: 500, color: 'var(--color-warning)',
-                      }}>
-                        <IconAlertCircle size={14} className="icon-sm" />
-                        <span>{reviewMessage}</span>
-                      </div>
-                    )}
-                  </div>
-                </ConditionalSwipe>
+                  );
+                })}
               </div>
             );
           })}
-        </div>
+        </>
       )}
 
       {filteredExpenses.length > visibleCount && (
