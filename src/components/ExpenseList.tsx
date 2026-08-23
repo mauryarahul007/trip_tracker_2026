@@ -638,10 +638,6 @@ export function ExpenseList({
                   const visibleSplitMembers = splitMembers.slice(0, 4);
                   const overflowSplitCount = splitMembers.length - visibleSplitMembers.length;
 
-                  const formattedTime = exp.createdAt
-                    ? new Date(exp.createdAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
-                    : null;
-
                   const reviewMessage = isPayerDeleted && hasDeletedParticipants
                     ? 'Payer and a split member were removed — reassign the payer and update the split.'
                     : isPayerDeleted
@@ -682,42 +678,35 @@ export function ExpenseList({
                               {formatMaskedAmount(exp.amount.toFixed(2), currencySymbol, isBlindMode)}
                             </span>
                           </div>
-                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
-                            <div
-                              style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', minWidth: 0 }}
-                              onClick={() => { triggerHaptic('light'); onReview(exp); }}
-                              title={`Paid by ${payerMember?.name || 'a removed member'}`}
-                            >
-                              <ExpenseAvatar member={payerMember} size={22} muted={isPayerDeleted} />
-                              <span style={{ color: 'var(--text-muted)', fontSize: '12px', flexShrink: 0 }}>→</span>
-                              <div style={{ display: 'flex', flexShrink: 0 }}>
-                                {visibleSplitMembers.map(({ id, member }, splitIdx) => (
-                                  <div key={id} style={{ marginLeft: splitIdx === 0 ? 0 : '-8px' }}>
-                                    <ExpenseAvatar member={member} size={20} muted={!member} />
-                                  </div>
-                                ))}
-                                {overflowSplitCount > 0 && (
-                                  <div
-                                    style={{
-                                      marginLeft: '-8px', width: '20px', height: '20px', borderRadius: '50%',
-                                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                      background: 'var(--bg-surface-hover)', color: 'var(--text-secondary)',
-                                      fontSize: '9.5px', fontWeight: 700, fontFamily: 'var(--font-family-mono)',
-                                      border: '1.5px solid var(--bg-surface)', flexShrink: 0,
-                                    }}
-                                  >
-                                    +{overflowSplitCount}
-                                  </div>
-                                )}
-                              </div>
-                              {exp.location?.placeName && (
-                                <span style={{ color: '#00BFA5', fontSize: '12px', flexShrink: 0 }} title={exp.location.placeName}>📍</span>
+                          <div
+                            style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', minWidth: 0 }}
+                            onClick={() => { triggerHaptic('light'); onReview(exp); }}
+                            title={`Paid by ${payerMember?.name || 'a removed member'}`}
+                          >
+                            <ExpenseAvatar member={payerMember} size={22} muted={isPayerDeleted} />
+                            <span style={{ color: 'var(--text-muted)', fontSize: '12px', flexShrink: 0 }}>→</span>
+                            <div style={{ display: 'flex', flexShrink: 0 }}>
+                              {visibleSplitMembers.map(({ id, member }, splitIdx) => (
+                                <div key={id} style={{ marginLeft: splitIdx === 0 ? 0 : '-8px' }}>
+                                  <ExpenseAvatar member={member} size={20} muted={!member} />
+                                </div>
+                              ))}
+                              {overflowSplitCount > 0 && (
+                                <div
+                                  style={{
+                                    marginLeft: '-8px', width: '20px', height: '20px', borderRadius: '50%',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    background: 'var(--bg-surface-hover)', color: 'var(--text-secondary)',
+                                    fontSize: '9.5px', fontWeight: 700, fontFamily: 'var(--font-family-mono)',
+                                    border: '1.5px solid var(--bg-surface)', flexShrink: 0,
+                                  }}
+                                >
+                                  +{overflowSplitCount}
+                                </div>
                               )}
                             </div>
-                            {formattedTime && (
-                              <span style={{ fontSize: '11.5px', lineHeight: 1.4, color: 'var(--text-muted)', whiteSpace: 'nowrap', flexShrink: 0 }}>
-                                {formattedTime}
-                              </span>
+                            {exp.location?.placeName && (
+                              <span style={{ color: '#00BFA5', fontSize: '12px', flexShrink: 0 }} title={exp.location.placeName}>📍</span>
                             )}
                           </div>
                           {needsReview && (
