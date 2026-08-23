@@ -576,13 +576,6 @@ export default function App() {
       : { balances: [], transfers: [] };
   }, [activeTrip, members, expenses, visibleTripGroups]);
 
-  const myNetBalance = useMemo(() => {
-    if (!myMemberId) return undefined;
-    const incoming = transfers.filter((t) => t.toMemberId === myMemberId).reduce((sum, t) => sum + t.amount, 0);
-    const outgoing = transfers.filter((t) => t.fromMemberId === myMemberId).reduce((sum, t) => sum + t.amount, 0);
-    return Number((incoming - outgoing).toFixed(2));
-  }, [transfers, myMemberId]);
-
   // Filters out settlements to keep expense analytics clean
   const nonSettlementExpenses = useMemo(() => {
     return activeTripExpenses.filter((e) => !e.title.startsWith('Settlement:'));
@@ -1623,13 +1616,6 @@ export default function App() {
                   onDelete={handleDeleteExpense}
                   isAdmin={isAdmin}
                   userId={userId}
-                  myMemberId={myMemberId}
-                  onGoToBalances={() => {
-                    const el = document.getElementById('balances-section');
-                    if (el) el.scrollIntoView({ behavior: 'smooth' });
-                  }}
-                  myNetBalance={myNetBalance}
-                  totalTripSpent={totalSpent}
                 />
 
                 {activeTrip && visibleMembers.length > 0 && (

@@ -94,11 +94,6 @@ type Props = {
 
   isAdmin: boolean;
   userId: string | null;
-  myMemberId?: string | null;
-
-  onGoToBalances?: () => void;
-  myNetBalance?: number;
-  totalTripSpent?: number;
 };
 
 export function ExpenseList({
@@ -128,10 +123,6 @@ export function ExpenseList({
   onDelete,
   isAdmin,
   userId,
-  myMemberId,
-  onGoToBalances,
-  myNetBalance,
-  totalTripSpent,
 }: Props) {
   const currencySymbol = getCurrencySymbol(trip?.baseCurrency || '');
   const isBlindMode = usePrivacyStore((s) => s.isBlindMode);
@@ -664,43 +655,6 @@ export function ExpenseList({
         </div>
       )}
 
-      {/* Sleek Glanceable Balance & Spend Banner -- moved below the ledger
-          so it summarizes the transactions just shown, instead of sitting
-          above an empty list before any expense exists. */}
-      {myMemberId && typeof myNetBalance === 'number' && (
-        <div
-          className="m3-balance-banner"
-          onClick={onGoToBalances}
-          role="button"
-          tabIndex={0}
-          style={{ cursor: onGoToBalances ? 'pointer' : 'default', marginTop: '16px' }}
-          title={onGoToBalances ? 'Jump to Balances & Settlements' : undefined}
-          onKeyDown={(e) => {
-            if ((e.key === 'Enter' || e.key === ' ') && onGoToBalances) {
-              e.preventDefault();
-              onGoToBalances();
-            }
-          }}
-        >
-          <div className="m3-balance-banner-left">
-            <span style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: 500 }}>
-              Your Balance:
-            </span>
-            <div className={`m3-balance-banner-pill ${myNetBalance > 0.01 ? 'positive' : myNetBalance < -0.01 ? 'negative' : 'neutral'}`}>
-              {myNetBalance > 0.01
-                ? `+${currencySymbol}${myNetBalance.toFixed(2)}`
-                : myNetBalance < -0.01
-                  ? `-${currencySymbol}${Math.abs(myNetBalance).toFixed(2)}`
-                  : 'Settled'}
-            </div>
-          </div>
-          {typeof totalTripSpent === 'number' && (
-            <div className="m3-balance-banner-right">
-              Trip Spent: <strong>{currencySymbol}{totalTripSpent.toLocaleString('en-IN', { maximumFractionDigits: 2 })}</strong>
-            </div>
-          )}
-        </div>
-      )}
     </>
   );
 }
