@@ -324,6 +324,16 @@ export function ExpenseList({
     const currentlyCollapsed = isDayCollapsed(date, groupIndex);
     setCollapseOverrides((prev) => ({ ...prev, [date]: !currentlyCollapsed }));
   };
+  const allDaysExpanded = dayGroups.length > 0 && dayGroups.every((g, idx) => !isDayCollapsed(g.date, idx));
+  const toggleAllDays = () => {
+    triggerHaptic('light');
+    const nextCollapsed = allDaysExpanded;
+    setCollapseOverrides((prev) => {
+      const next = { ...prev };
+      dayGroups.forEach((g) => { next[g.date] = nextCollapsed; });
+      return next;
+    });
+  };
 
   // Expenses whose payer and/or split still reference a member who was
   // later removed from the trip — each one already gets its own inline
@@ -550,6 +560,32 @@ export function ExpenseList({
         </div>
       ) : (
         <>
+          {dayGroups.length > DEFAULT_EXPANDED_DAYS && (
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '8px' }}>
+              <button
+                type="button"
+                onClick={toggleAllDays}
+                aria-label={allDaysExpanded ? 'Collapse all days' : 'Expand all days'}
+                title={allDaysExpanded ? 'Collapse all days' : 'Expand all days'}
+                style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  width: '28px', height: '28px', flexShrink: 0,
+                  background: allDaysExpanded ? 'var(--bg-surface-hover)' : 'var(--bg-surface)',
+                  border: '1px solid var(--border-color)',
+                  borderRadius: 'var(--border-radius-sm)',
+                  color: allDaysExpanded ? 'var(--primary-accent)' : 'var(--text-secondary)',
+                  cursor: 'pointer',
+                  transition: 'background 0.15s ease, color 0.15s ease',
+                }}
+              >
+                <IconChevronRight
+                  size={14}
+                  className="icon-sm"
+                  style={{ transition: 'transform 0.2s ease', transform: allDaysExpanded ? 'rotate(-90deg)' : 'rotate(90deg)' }}
+                />
+              </button>
+            </div>
+          )}
           {dayGroups.map((group, groupIdx) => {
             const groupDate = new Date(`${group.date}T00:00:00`);
             const groupLabel = Number.isNaN(groupDate.getTime())
