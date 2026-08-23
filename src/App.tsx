@@ -831,9 +831,17 @@ export default function App() {
   };
 
   const handleSaveGroup = async (name: string, memberIds: string[], id: string | null): Promise<{ success: boolean; error?: string }> => {
+    // Editing an existing group down to a single member (or none) doesn't
+    // count as an error -- it just means the group no longer makes sense,
+    // so it dissolves instead of blocking the edit that got it there.
+    if (id && memberIds.length < 2) {
+      await deleteGroup(id);
+      return { success: true };
+    }
+
     const nameTrimmed = name.trim();
     if (!nameTrimmed) return { success: false, error: 'Group name cannot be empty.' };
-    if (memberIds.length === 0) return { success: false, error: 'Please select at least one member to add to the group.' };
+    if (memberIds.length < 2) return { success: false, error: 'A group needs at least 2 members.' };
 
     const nameLower = nameTrimmed.toLowerCase();
     const isDuplicateMember = activeTripMembers.some(

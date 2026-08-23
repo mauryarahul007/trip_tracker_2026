@@ -3,6 +3,7 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import type { Member, Group, Expense, Category, TripState, ExpenseLocation, Trip } from '../types';
 import type { FeatureFlagKey } from '../types/admin';
 import { DEFAULT_FEATURE_FLAGS, isFeatureActive } from '../utils/featureFlags';
+import { buildAutoGroupName } from '../utils/groupNaming';
 import { fetchResolvedFeatureFlags, fetchAllFeatureFlagOverrides, setFeatureFlagOverride } from '../services/featureFlagApi';
 import { supabase, isMissingSupabaseEnv } from '../services/supabaseClient';
 import {
@@ -1199,10 +1200,13 @@ export const useTripStore = create<TripStore>()(
         if (remaining.length < 2) {
           groupsToDissolve.push(group.id);
         } else {
-          const names = remaining.map((mid) => currentMembers[mid]?.name).filter(Boolean) as string[];
-          let newName = group.name;
-          if (names.length === 2) newName = `${names[0]} & ${names[1]}`;
-          else if (names.length > 2) newName = `${names.slice(0, -1).join(', ')} & ${names[names.length - 1]}`;
+          // Only follow the removed member out if the name was still
+          // auto-generated -- a manually renamed group (e.g. "Goa Squad")
+          // keeps whatever the admin chose to call it.
+          const previousNames = group.memberIds.map((mid) => currentMembers[mid]?.name).filter(Boolean) as string[];
+          const wasAutoNamed = group.name === buildAutoGroupName(previousNames);
+          const remainingNames = remaining.map((mid) => currentMembers[mid]?.name).filter(Boolean) as string[];
+          const newName = wasAutoNamed ? buildAutoGroupName(remainingNames) : group.name;
           groupsToRename.push({ id: group.id, name: newName, memberIds: remaining });
         }
       });
