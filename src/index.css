@@ -582,42 +582,6 @@ input[type="date"].input-field {
   margin-top: 2px;
 }
 
-/* Segmented View Switcher in Expenses Tab */
-.segmented-view-toggle {
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
-  background: var(--bg-secondary);
-  padding: 3px;
-  border-radius: var(--border-radius-pill);
-  border: 1px solid var(--border-color);
-  flex-shrink: 0;
-}
-
-.segmented-pill {
-  border: none;
-  background: transparent;
-  color: var(--text-secondary);
-  font-size: 11.5px;
-  font-weight: 600;
-  padding: 5px 10px;
-  border-radius: var(--border-radius-pill);
-  cursor: pointer;
-  transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
-  white-space: nowrap;
-  font-family: var(--font-family-body);
-}
-
-.segmented-pill:hover {
-  color: var(--text-primary);
-}
-
-.segmented-pill.active {
-  background: var(--primary-accent);
-  color: #FFFFFF;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
-}
-
 .filter-chips-track {
   display: flex;
   gap: 6px;
