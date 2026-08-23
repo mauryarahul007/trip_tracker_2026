@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo, lazy, Suspense } from 'react';
+import React, { useEffect, useRef, useState, useMemo, lazy, Suspense } from 'react';
 import { useTripStore, getTripNotificationRecipients } from './store/tripStore';
 import { useAuthStore } from './store/authStore';
 import { calculateSettlements } from './utils/settlement';
@@ -381,6 +381,7 @@ export default function App() {
 
   // Track scroll on active tab-pane with directional hysteresis for smooth fluid header morphing
   const [isHeaderScrolled, setIsHeaderScrolled] = useState(false);
+  const headerRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     let lastScrollTop = 0;
@@ -421,6 +422,30 @@ export default function App() {
   useEffect(() => {
     setIsHeaderScrolled(false);
   }, [activeTripId, activeTab]);
+
+  // .tab-pane's padding-top used to be a fixed guess at the floating
+  // header's height. The header is no longer a fixed height -- the
+  // eyebrow's destination text, the "Upcoming"/"Completed" badge, and the
+  // route-stops chip row (added with the multi-stop planner) all vary its
+  // real height, so a hardcoded constant either overlapped the header or
+  // (as reported) left a large dead gap above the content. Measure it and
+  // expose the real number instead of guessing.
+  useEffect(() => {
+    const header = headerRef.current;
+    if (!header) {
+      document.documentElement.style.removeProperty('--trip-header-height');
+      return;
+    }
+
+    const updateHeight = () => {
+      document.documentElement.style.setProperty('--trip-header-height', `${header.offsetHeight}px`);
+    };
+
+    updateHeight();
+    const observer = new ResizeObserver(updateHeight);
+    observer.observe(header);
+    return () => observer.disconnect();
+  }, [activeTripId, activeTab, isHeaderScrolled]);
 
   const activeTripExpenses = useMemo(() => {
     return expenses
@@ -1394,7 +1419,7 @@ export default function App() {
         /* Screen 2: Active Trip Dashboard */
         <div className="trip-dashboard-container fade-in" style={{ position: 'relative' }}>
           <AmbientPhotoBackdrop trip={activeTrip ?? null} />
-          <header className={`app-header trip-dashboard-header ${isHeaderScrolled ? 'is-scrolled' : ''}`} style={{ position: 'relative', overflow: 'hidden' }}>
+          <header ref={headerRef} className={`app-header trip-dashboard-header ${isHeaderScrolled ? 'is-scrolled' : ''}`} style={{ position: 'relative', overflow: 'hidden' }}>
             {/* Translucent Header Route Map Banner Layer */}
             {activeTrip && <TripBannerRouteMap trip={activeTrip} />}
 

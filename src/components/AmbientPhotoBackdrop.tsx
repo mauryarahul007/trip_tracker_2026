@@ -107,8 +107,12 @@ export function AmbientPhotoBackdrop({ trip }: Props) {
               backgroundImage: `url(${photo.url})`,
               backgroundSize: 'cover',
               backgroundPosition: 'center',
-              opacity: isActive ? 0.16 : 0,
-              filter: 'blur(10px) saturate(1.3)',
+              // 0.16 read as a flat color wash against the light Skyline
+              // Escape theme -- the photo was loading successfully but
+              // imperceptible. Bumped enough to actually show the place,
+              // still subdued enough to keep foreground cards legible.
+              opacity: isActive ? 0.5 : 0,
+              filter: 'blur(4px) saturate(1.25)',
               transform: isActive ? 'scale(1.04) translateZ(0)' : 'scale(1.0) translateZ(0)',
               transition: 'opacity 1.4s ease-in-out, transform 8s ease-out',
               willChange: 'opacity, transform',

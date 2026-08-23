@@ -81,6 +81,14 @@ export function TripsListScreen({
   const handleCreateTripSafe = (e: React.FormEvent) => {
     e.preventDefault();
     if (honeypotVal) return;
+    // Dates are required server-side (the trips table's start_date/end_date
+    // columns aren't nullable) -- the form used to label them "Optional"
+    // while silently failing to create the trip if left blank. Block it
+    // here with a clear reason instead of a confusing no-op submit.
+    if (!newTripStart || !newTripEnd) {
+      alert('Please choose a start and end date for the trip.');
+      return;
+    }
     onCreateTrip(e);
   };
 
@@ -372,7 +380,7 @@ export function TripsListScreen({
             </div>
 
             <div className="input-group">
-              <label className="input-label">Dates (Optional)</label>
+              <label className="input-label">Dates *</label>
               <DateRangePicker
                 startDate={newTripStart}
                 endDate={newTripEnd}

@@ -2930,7 +2930,13 @@ input:checked + .toggle-slider:before {
 .tab-pane {
   flex: 1;
   min-height: 0;
-  padding: calc(126px + var(--safe-top, 0px)) max(20px, var(--safe-right, 20px)) calc(104px + var(--safe-bottom, 0px)) max(20px, var(--safe-left, 20px));
+  /* --trip-header-height is measured live off the actual floating header
+     (see App.tsx's ResizeObserver) -- its real height varies with the
+     destination/upcoming-badge eyebrow line and the route-stops chip row,
+     so a fixed guess either overlapped the header or left a dead gap
+     above the content. 126px is the fallback for screens with no active
+     trip header (e.g. before the observer has measured anything). */
+  padding: calc(var(--trip-header-height, 126px) + 12px) max(20px, var(--safe-right, 20px)) calc(104px + var(--safe-bottom, 0px)) max(20px, var(--safe-left, 20px));
   overflow-y: auto;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
