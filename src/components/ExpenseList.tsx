@@ -293,6 +293,36 @@ export function ExpenseList({
 
   const displayedExpenses = filteredExpenses.slice(0, visibleCount);
 
+  // Group into per-day sections so a long trip reads as a scannable list of
+  // day totals instead of one endless feed. Expenses already arrive newest
+  // date first, so the first N groups encountered are the most recent days
+  // -- expand those by default, collapse the rest. Collapsed state is keyed
+  // by date string, not index, so it survives Load More / filter changes.
+  const dayGroups = displayedExpenses.reduce<{ date: string; expenses: Expense[] }[]>((groups, exp) => {
+    const lastGroup = groups[groups.length - 1];
+    if (lastGroup && lastGroup.date === exp.date) {
+      lastGroup.expenses.push(exp);
+    } else {
+      groups.push({ date: exp.date, expenses: [exp] });
+    }
+    return groups;
+  }, []);
+
+  const DEFAULT_EXPANDED_DAYS = 2;
+  // Only stores days the user has explicitly toggled away from their
+  // default state -- the default itself (first N groups open, rest
+  // collapsed) is derived fresh from dayGroups every render, so it stays
+  // correct as Load More or filters change which dates are present.
+  const [collapseOverrides, setCollapseOverrides] = useState<Record<string, boolean>>({});
+  const isDayCollapsedByDefault = (groupIndex: number) => groupIndex >= DEFAULT_EXPANDED_DAYS;
+  const isDayCollapsed = (date: string, groupIndex: number) =>
+    collapseOverrides[date] ?? isDayCollapsedByDefault(groupIndex);
+  const toggleDay = (date: string, groupIndex: number) => {
+    triggerHaptic('light');
+    const currentlyCollapsed = isDayCollapsed(date, groupIndex);
+    setCollapseOverrides((prev) => ({ ...prev, [date]: !currentlyCollapsed }));
+  };
+
   // Expenses whose payer and/or split still reference a member who was
   // later removed from the trip — each one already gets its own inline
   // warning below, this just offers a way to work through all of them
@@ -481,7 +511,59 @@ export function ExpenseList({
         </div>
       ) : (
         <div className="glass-card" style={{ padding: 0, overflow: 'hidden' }}>
-          {displayedExpenses.map((exp, idx) => {
+          {dayGroups.map((group, groupIdx) => {
+            const collapsed = isDayCollapsed(group.date, groupIdx);
+            const groupDate = new Date(`${group.date}T00:00:00`);
+            const formattedGroupDate = Number.isNaN(groupDate.getTime())
+              ? group.date
+              : groupDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+            const dayTotal = group.expenses.reduce((sum, e) => sum + e.amount, 0);
+
+            return (
+              <div key={group.date}>
+                <div
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => toggleDay(group.date, groupIdx)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      toggleDay(group.date, groupIdx);
+                    }
+                  }}
+                  style={{
+                    position: 'sticky',
+                    top: 0,
+                    zIndex: 2,
+                    padding: '7px 14px',
+                    background: 'var(--bg-secondary)',
+                    borderTop: groupIdx > 0 ? '1px solid var(--border-color)' : 'none',
+                    borderBottom: '1px solid var(--border-color)',
+                    fontSize: '11px',
+                    fontWeight: 700,
+                    color: 'var(--text-muted)',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.04em',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span style={{ display: 'inline-block', transition: 'transform 0.15s ease', transform: collapsed ? 'rotate(-90deg)' : 'rotate(0deg)' }}>▾</span>
+                    📅 {formattedGroupDate}
+                  </span>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 600 }}>
+                    {collapsed && (
+                      <span className="amount-mono privacy-blur" style={{ color: 'var(--text-secondary)' }}>
+                        {group.expenses.length} · {formatMaskedAmount(dayTotal.toFixed(2), currencySymbol, isBlindMode)}
+                      </span>
+                    )}
+                  </span>
+                </div>
+
+                {!collapsed && group.expenses.map((exp, idxInGroup) => {
             const isPending = exp.id === pendingDeleteId;
             const canManage = isAdmin || exp.createdByUserId === userId;
             const isPayerDeleted = trip ? !trip.memberIds.includes(exp.paidBy) : false;
@@ -493,15 +575,9 @@ export function ExpenseList({
             const visibleSplitMembers = splitMembers.slice(0, 4);
             const overflowSplitCount = splitMembers.length - visibleSplitMembers.length;
 
-            const expenseDate = new Date(`${exp.date}T00:00:00`);
-            const formattedDate = Number.isNaN(expenseDate.getTime())
-              ? exp.date
-              : expenseDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
             const formattedTime = exp.createdAt
               ? new Date(exp.createdAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
               : null;
-
-            const isFirstOfDate = idx === 0 || displayedExpenses[idx - 1].date !== exp.date;
 
             const reviewMessage = isPayerDeleted && hasDeletedParticipants
               ? 'Payer and a split member were removed — reassign the payer and update the split.'
@@ -511,29 +587,10 @@ export function ExpenseList({
 
             return (
               <div key={exp.id}>
-                {isFirstOfDate && (
-                  <div style={{
-                    padding: '7px 14px',
-                    background: 'var(--bg-secondary)',
-                    borderTop: idx > 0 ? '1px solid var(--border-color)' : 'none',
-                    borderBottom: '1px solid var(--border-color)',
-                    fontSize: '11px',
-                    fontWeight: 700,
-                    color: 'var(--text-muted)',
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.04em',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center'
-                  }}>
-                    <span>📅 {formattedDate}</span>
-                  </div>
-                )}
-
                 <div
                   aria-hidden={isPending}
                   style={{
-                    borderBottom: idx < displayedExpenses.length - 1 && displayedExpenses[idx + 1].date === exp.date ? '1.5px dashed var(--border-color)' : 'none',
+                    borderBottom: idxInGroup < group.expenses.length - 1 ? '1.5px dashed var(--border-color)' : 'none',
                     opacity: isPending ? 0.35 : 1,
                     pointerEvents: isPending ? 'none' : undefined,
                     transition: 'opacity 0.25s ease',
@@ -596,7 +653,7 @@ export function ExpenseList({
 
                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
                           <span style={{ fontSize: '11.5px', lineHeight: 1.4, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
-                            {formattedTime || formattedDate}
+                            {formattedTime || formattedGroupDate}
                           </span>
                           {canManage && (
                             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0 }}>
@@ -636,6 +693,9 @@ export function ExpenseList({
                     </div>
                   </ConditionalSwipe>
                 </div>
+              </div>
+            );
+          })}
               </div>
             );
           })}
