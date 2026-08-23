@@ -1343,8 +1343,7 @@ input:checked + .toggle-slider:before {
   background: var(--bg-surface);
   border: 1px solid var(--border-color);
   border-radius: var(--border-radius-md);
-  padding: 18px 20px 16px;
-  cursor: pointer;
+  overflow: hidden;
   transition: var(--transition-smooth);
   animation: fadeIn 0.35s ease-out both;
 }

@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { Trip, Member } from '../types';
-import { IconTrash, IconEdit, IconSettings, IconArchive, IconMapPin } from './Icons';
+import { IconSettings, IconArchive, IconMapPin } from './Icons';
 import { DateRangePicker } from './DateRangePicker';
 import { formatTripStamp } from '../utils/dateRange';
 import { initial } from '../utils/initials';
 import { avatarColorForName } from '../utils/avatarColor';
 import { TurnstileWidget } from './TurnstileWidget';
 import { useTripStore } from '../store/tripStore';
+import { SwipeableRow } from './SwipeableRow';
 
 type Props = {
   trips: Trip[];
@@ -281,74 +282,56 @@ export function TripsListScreen({
               const shown = tripMembers.slice(0, 3);
               const overflow = tripMembers.length - shown.length;
               const expenseCount = trip.expenseCount || 0;
+              const canDelete = !trip.ownerId || !userId || trip.ownerId === userId ||
+                Boolean(trip.adminMemberIds && trip.memberIds.some((mid) => members[mid]?.linkedUserId === userId && trip.adminMemberIds?.includes(mid)));
               return (
                 <div
                   key={trip.id}
                   className="passport-card"
                   style={{ animationDelay: `${Math.min(idx * 30, 300)}ms` }}
-                  onClick={() => onSelectTrip(trip.id)}
                 >
-                  <div className="pp-stamp">
-                    <span>{stamp.top}</span>
-                    <span>{stamp.bottom}</span>
-                  </div>
-                  <div className="pp-dest">Trip &middot; {trip.baseCurrency}</div>
-                  <h3 className="pp-name">{trip.name}</h3>
-                  <div className="pp-meta">
-                    {tripMembers.length} member{tripMembers.length === 1 ? '' : 's'} &middot; {expenseCount} expense{expenseCount === 1 ? '' : 's'}
-                  </div>
-                  <div className="pp-foot">
-                    <div className="pp-avatars">
-                      {shown.map((m) =>
-                        m.avatarUrl ? (
-                          <img key={m.id} src={m.avatarUrl} alt={m.name} title={m.name} className="pp-avatar" referrerPolicy="no-referrer" loading="lazy" width={24} height={24} />
-                        ) : (
-                          <span key={m.id} className="pp-avatar" style={{ background: avatarColorForName(m.name) }} title={m.name}>{initial(m.name)}</span>
-                        )
-                      )}
-                      {overflow > 0 && <span className="pp-avatar pp-avatar-more">+{overflow}</span>}
+                  <SwipeableRow
+                    onDelete={canDelete ? () => onDeleteTrip(trip) : undefined}
+                    onEdit={() => onStartEditTrip(trip)}
+                  >
+                    <div style={{ padding: '18px 20px 16px', cursor: 'pointer' }} onClick={() => onSelectTrip(trip.id)}>
+                      <div className="pp-stamp">
+                        <span>{stamp.top}</span>
+                        <span>{stamp.bottom}</span>
+                      </div>
+                      <div className="pp-dest">Trip &middot; {trip.baseCurrency}</div>
+                      <h3 className="pp-name">{trip.name}</h3>
+                      <div className="pp-meta">
+                        {tripMembers.length} member{tripMembers.length === 1 ? '' : 's'} &middot; {expenseCount} expense{expenseCount === 1 ? '' : 's'}
+                      </div>
+                      <div className="pp-foot">
+                        <div className="pp-avatars">
+                          {shown.map((m) =>
+                            m.avatarUrl ? (
+                              <img key={m.id} src={m.avatarUrl} alt={m.name} title={m.name} className="pp-avatar" referrerPolicy="no-referrer" loading="lazy" width={24} height={24} />
+                            ) : (
+                              <span key={m.id} className="pp-avatar" style={{ background: avatarColorForName(m.name) }} title={m.name}>{initial(m.name)}</span>
+                            )
+                          )}
+                          {overflow > 0 && <span className="pp-avatar pp-avatar-more">+{overflow}</span>}
+                        </div>
+                        <div className="pp-actions">
+                          <button
+                            className="secondary-btn"
+                            style={{ padding: '8px' }}
+                            aria-label="Archive trip"
+                            title="Archive trip"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onArchiveTrip(trip);
+                            }}
+                          >
+                            <IconArchive size={15} className="icon-sm" />
+                          </button>
+                        </div>
+                      </div>
                     </div>
-                    <div className="pp-actions">
-                      <button
-                        className="secondary-btn"
-                        style={{ padding: '8px' }}
-                        aria-label="Edit trip"
-                        title="Edit trip"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onStartEditTrip(trip);
-                        }}
-                      >
-                        <IconEdit size={15} className="icon-sm" />
-                      </button>
-                      <button
-                        className="secondary-btn"
-                        style={{ padding: '8px' }}
-                        aria-label="Archive trip"
-                        title="Archive trip"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onArchiveTrip(trip);
-                        }}
-                      >
-                        <IconArchive size={15} className="icon-sm" />
-                      </button>
-                      {(!trip.ownerId || !userId || trip.ownerId === userId || Boolean(trip.adminMemberIds && trip.memberIds.some((mid) => members[mid]?.linkedUserId === userId && trip.adminMemberIds?.includes(mid)))) && (
-                        <button
-                          className="secondary-btn"
-                          style={{ padding: '8px', color: 'var(--color-danger)', borderColor: 'rgba(184,69,46,0.2)' }}
-                          aria-label="Delete trip"
-                          title="Delete trip"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onDeleteTrip(trip);
-                          }}
-                        >
-                          <IconTrash size={15} className="icon-sm" />
-                        </button>
-                      )}
-                    </div>
-                  </div>
+                  </SwipeableRow>
                 </div>
               );
             })}

@@ -9,14 +9,15 @@ const prefersReducedMotion =
   typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 
 type Props = {
-  onDelete: () => void;
+  onDelete?: () => void;
   onEdit?: () => void;
   children: React.ReactNode;
 };
 
-// Touch-only swipe: left to delete, right to edit (when onEdit is given).
-// Gated to pointerType 'touch' so mouse/keyboard users are unaffected —
-// they get the same actions via the row's tap-to-review modal instead.
+// Touch-only swipe: left to delete (when onDelete is given), right to edit
+// (when onEdit is given). Gated to pointerType 'touch' so mouse/keyboard
+// users are unaffected — they get the same actions via some other explicit
+// control instead.
 export function SwipeableRow({ onDelete, onEdit, children }: Props) {
   const [dragX, setDragX] = useState(0);
   const [dragging, setDragging] = useState(false);
@@ -35,7 +36,7 @@ export function SwipeableRow({ onDelete, onEdit, children }: Props) {
   const handlePointerMove = (e: React.PointerEvent) => {
     if (!active.current) return;
     const delta = e.clientX - startX.current;
-    if (delta < 0) {
+    if (delta < 0 && onDelete) {
       const nextDragX = Math.max(delta, -MAX_DRAG);
       if (nextDragX < -THRESHOLD && !hapticFired.current) {
         triggerHaptic('medium');
@@ -60,7 +61,7 @@ export function SwipeableRow({ onDelete, onEdit, children }: Props) {
     if (!active.current) return;
     active.current = false;
     setDragging(false);
-    if (dragX < -THRESHOLD) {
+    if (dragX < -THRESHOLD && onDelete) {
       triggerHaptic('warning');
       onDelete();
     } else if (dragX > THRESHOLD && onEdit) {
@@ -72,17 +73,19 @@ export function SwipeableRow({ onDelete, onEdit, children }: Props) {
 
   return (
     <div style={{ position: 'relative', overflow: 'hidden' }}>
-      <div
-        aria-hidden="true"
-        style={{
-          position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'flex-end',
-          gap: '8px', paddingRight: '22px', background: 'var(--color-danger)', color: '#fff',
-          fontSize: '13px', fontWeight: 600,
-          opacity: dragX < 0 ? Math.min(Math.abs(dragX) / THRESHOLD, 1) : 0,
-        }}
-      >
-        <IconTrash size={15} className="icon-sm" /> Release to delete
-      </div>
+      {onDelete && (
+        <div
+          aria-hidden="true"
+          style={{
+            position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'flex-end',
+            gap: '8px', paddingRight: '22px', background: 'var(--color-danger)', color: '#fff',
+            fontSize: '13px', fontWeight: 600,
+            opacity: dragX < 0 ? Math.min(Math.abs(dragX) / THRESHOLD, 1) : 0,
+          }}
+        >
+          <IconTrash size={15} className="icon-sm" /> Release to delete
+        </div>
+      )}
       {onEdit && (
         <div
           aria-hidden="true"
