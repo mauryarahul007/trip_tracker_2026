@@ -5,12 +5,13 @@ const SHEET_EXPANDED_TOP = 20; // vh% -- swiped-up state, 80% coverage
 
 interface Props {
   children: ReactNode;
+  onExpandedChange?: (expanded: boolean) => void;
 }
 
 // Draggable bottom sheet over the map backdrop. Starts covering half the
 // screen; swiping the handle up expands it to 80%, snapping to whichever
 // state is nearer on release.
-export function TripContentSheet({ children }: Props) {
+export function TripContentSheet({ children, onExpandedChange }: Props) {
   const [topPercent, setTopPercent] = useState(SHEET_COLLAPSED_TOP);
   const [isDragging, setIsDragging] = useState(false);
   const dragStartY = useRef(0);
@@ -34,7 +35,9 @@ export function TripContentSheet({ children }: Props) {
     if (!isDragging) return;
     setIsDragging(false);
     const midpoint = (SHEET_COLLAPSED_TOP + SHEET_EXPANDED_TOP) / 2;
-    setTopPercent(topPercent < midpoint ? SHEET_EXPANDED_TOP : SHEET_COLLAPSED_TOP);
+    const expanded = topPercent < midpoint;
+    setTopPercent(expanded ? SHEET_EXPANDED_TOP : SHEET_COLLAPSED_TOP);
+    onExpandedChange?.(expanded);
   };
 
   return (

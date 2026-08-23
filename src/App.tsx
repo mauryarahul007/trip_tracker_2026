@@ -22,6 +22,7 @@ const TripMapHero = lazy(() =>
 import { TripContentSheet } from './components/TripContentSheet';
 import { ExpenseForm } from './components/ExpenseForm';
 import { ExpenseList } from './components/ExpenseList';
+import { TransactionsPreview } from './components/TransactionsPreview';
 import { BalancesSettlements } from './components/BalancesSettlements';
 import { MembersGroupsTab } from './components/MembersGroupsTab';
 import { AnalyticsTab } from './components/AnalyticsTab';
@@ -182,6 +183,7 @@ export default function App() {
 
   // Superadmin Bug Tracker full-screen view
   const [showBugTracker, setShowBugTracker] = useState(false);
+  const [showTransactions, setShowTransactions] = useState(false);
 
   useEffect(() => {
     const handleHash = () => {
@@ -388,6 +390,13 @@ export default function App() {
 
   // Track scroll on active tab-pane with directional hysteresis for smooth fluid header morphing
   const [isHeaderScrolled, setIsHeaderScrolled] = useState(false);
+  // Sampled from the live map pixels behind the header (see TripMapHero) so
+  // header text/chrome stays legible regardless of what's under it.
+  const [headerTone, setHeaderTone] = useState<'light' | 'dark'>('light');
+  // Whether the content sheet is in its expanded (80%) snap state -- lets
+  // the map zoom out slightly to visually "resize" as more of it is
+  // exposed, instead of sitting static underneath the drag.
+  const [sheetExpanded, setSheetExpanded] = useState(false);
   const headerRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
@@ -428,6 +437,7 @@ export default function App() {
 
   useEffect(() => {
     setIsHeaderScrolled(false);
+    setShowTransactions(false);
   }, [activeTripId, activeTab]);
 
   // .tab-pane's padding-top used to be a fixed guess at the floating
@@ -1396,6 +1406,63 @@ export default function App() {
             />
           </Suspense>
         </div>
+      ) : showTransactions && activeTrip ? (
+        /* Full-Screen Transactions View -- pushed from the Summary tab's
+           "View all" link, not its own bottom-nav tab. Reuses ExpenseList
+           unchanged (search/filter/edit/delete/review all still live here). */
+        <div className="fade-in" style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, position: 'relative' }}>
+          <header className="app-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px' }}>
+            <FitHeading text="Transactions" className="app-logo" style={{ color: '#FFFFFF' }} maxFontSize={22} minFontSize={14} />
+            <button
+              type="button"
+              className="secondary-btn"
+              style={{ padding: '7px 11px', fontSize: '12px', color: '#FFFFFF', borderColor: 'rgba(255,255,255,0.28)', background: 'rgba(255,255,255,0.1)', flexShrink: 0 }}
+              onClick={() => setShowTransactions(false)}
+            >
+              <IconChevronLeft size={14} className="icon-sm" /> Summary
+            </button>
+          </header>
+          <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '16px 20px 100px' }}>
+            <ExpenseList
+              trip={activeTrip}
+              members={members}
+              categories={categories}
+              activeTripMembers={activeTripMembers}
+              activeTripExpenseCount={activeTripExpenses.length}
+              activeTripExpenses={activeTripExpenses}
+              onReviewAffected={handleReviewAffectedExpenses}
+              filteredExpenses={filteredExpenses}
+              pendingDeleteId={pendingDeleteExpense?.id}
+              hasActiveFilters={hasActiveExpenseFilters}
+              search={expenseSearch}
+              setSearch={setExpenseSearch}
+              filterCategory={expenseFilterCategory}
+              setFilterCategory={setExpenseFilterCategory}
+              filterMember={expenseFilterMember}
+              setFilterMember={setExpenseFilterMember}
+              filterDateFrom={expenseFilterDateFrom}
+              setFilterDateFrom={setExpenseFilterDateFrom}
+              filterDateTo={expenseFilterDateTo}
+              setFilterDateTo={setExpenseFilterDateTo}
+              onClearFilters={clearExpenseFilters}
+              onReview={setSelectedReviewExpense}
+              onEdit={handleStartEditExpense}
+              onDelete={handleDeleteExpense}
+              isAdmin={isAdmin}
+              userId={userId}
+            />
+          </div>
+          <button
+            type="button"
+            className="fab-add-expense"
+            style={{ bottom: 'calc(20px + var(--safe-bottom, 0px))' }}
+            onClick={handleOpenAddExpense}
+            aria-label="Add Expense"
+            title="Add Expense"
+          >
+            <IconPlus size={24} />
+          </button>
+        </div>
       ) : !activeTripId ? (
         /* Screen 1: Trips List */
         <TripsListScreen
@@ -1431,9 +1498,9 @@ export default function App() {
         /* Screen 2: Active Trip Dashboard */
         <div className="trip-dashboard-container fade-in" style={{ position: 'relative' }}>
           <Suspense fallback={null}>
-            <TripMapHero trip={activeTrip ?? null} />
+            <TripMapHero trip={activeTrip ?? null} sheetExpanded={sheetExpanded} onToneChange={setHeaderTone} />
           </Suspense>
-          <header ref={headerRef} className={`app-header trip-dashboard-header ${isHeaderScrolled ? 'is-scrolled' : ''}`} style={{ overflow: 'hidden' }}>
+          <header ref={headerRef} className={`app-header trip-dashboard-header ${isHeaderScrolled ? 'is-scrolled' : ''} ${headerTone === 'dark' ? 'tone-dark' : ''}`} style={{ overflow: 'hidden' }}>
             <div className="app-header-top" style={{ position: 'relative', zIndex: 1 }}>
               <div className="app-title-group">
                 <span className="app-eyebrow">
@@ -1472,7 +1539,7 @@ export default function App() {
                   <FitHeading
                     text={activeTrip?.name || ''}
                     className="app-logo"
-                    style={{ color: '#FFFFFF' }}
+                    style={{ color: 'var(--header-fg)' }}
                     maxFontSize={22}
                     minFontSize={14}
                   />
@@ -1495,9 +1562,9 @@ export default function App() {
                   className="secondary-btn"
                   style={{
                     padding: '7px 8px',
-                    color: isBlindMode ? '#17B6A6' : '#FFFFFF',
-                    borderColor: isBlindMode ? '#17B6A6' : 'rgba(255,255,255,0.28)',
-                    background: isBlindMode ? 'rgba(23,182,166,0.18)' : 'rgba(255,255,255,0.1)'
+                    color: isBlindMode ? '#17B6A6' : 'var(--header-fg)',
+                    borderColor: isBlindMode ? '#17B6A6' : 'var(--header-fg-border)',
+                    background: isBlindMode ? 'rgba(23,182,166,0.18)' : 'var(--header-fg-soft-bg)'
                   }}
                   onClick={() => {
                     triggerHaptic('light');
@@ -1511,7 +1578,7 @@ export default function App() {
                 <button
                   type="button"
                   className="secondary-btn"
-                  style={{ padding: '7px 8px', color: '#FFFFFF', borderColor: 'rgba(255,255,255,0.28)', background: 'rgba(255,255,255,0.1)' }}
+                  style={{ padding: '7px 8px', color: 'var(--header-fg)', borderColor: 'var(--header-fg-border)', background: 'var(--header-fg-soft-bg)' }}
                   onClick={() => setShowCommandPalette(true)}
                   title="Search & Quick Actions (Cmd+K)"
                   aria-label="Command palette"
@@ -1522,7 +1589,7 @@ export default function App() {
                 <button
                   data-action="trips-back"
                   className="secondary-btn"
-                  style={{ padding: '7px 11px', fontSize: '12px', color: '#FFFFFF', borderColor: 'rgba(255,255,255,0.28)', background: 'rgba(255,255,255,0.1)' }}
+                  style={{ padding: '7px 11px', fontSize: '12px', color: 'var(--header-fg)', borderColor: 'var(--header-fg-border)', background: 'var(--header-fg-soft-bg)' }}
                   onClick={() => selectTrip(null)}
                 >
                   <IconChevronLeft size={14} className="icon-sm" /> Trips
@@ -1573,7 +1640,7 @@ export default function App() {
                   overflowX: 'auto',
                   marginTop: '8px',
                   paddingTop: '8px',
-                  borderTop: '1px solid rgba(255, 255, 255, 0.15)',
+                  borderTop: '1px solid var(--header-fg-border)',
                   scrollbarWidth: 'none',
                 }}
               >
@@ -1588,9 +1655,9 @@ export default function App() {
                       fontWeight: 600,
                       padding: '3px 8px',
                       borderRadius: '12px',
-                      background: 'rgba(255, 255, 255, 0.18)',
+                      background: 'var(--header-fg-soft-bg)',
                       backdropFilter: 'blur(6px)',
-                      color: '#FFFFFF',
+                      color: 'var(--header-fg)',
                       whiteSpace: 'nowrap',
                       flexShrink: 0,
                     }}
@@ -1602,7 +1669,7 @@ export default function App() {
             )}
           </header>
 
-          <TripContentSheet>
+          <TripContentSheet onExpandedChange={setSheetExpanded}>
           <main className="app-main">
             {/* View Switching Tab Content */}
             <div className="tab-pane" style={{ display: activeTab === 'expenses' ? 'block' : 'none' }}>
@@ -1624,33 +1691,10 @@ export default function App() {
                   />
                 )}
 
-                <ExpenseList
+                <TransactionsPreview
                   trip={activeTrip}
-                  members={members}
-                  categories={categories}
-                  activeTripMembers={activeTripMembers}
-                  activeTripExpenseCount={activeTripExpenses.length}
-                  activeTripExpenses={activeTripExpenses}
-                  onReviewAffected={handleReviewAffectedExpenses}
-                  filteredExpenses={filteredExpenses}
-                  pendingDeleteId={pendingDeleteExpense?.id}
-                  hasActiveFilters={hasActiveExpenseFilters}
-                  search={expenseSearch}
-                  setSearch={setExpenseSearch}
-                  filterCategory={expenseFilterCategory}
-                  setFilterCategory={setExpenseFilterCategory}
-                  filterMember={expenseFilterMember}
-                  setFilterMember={setExpenseFilterMember}
-                  filterDateFrom={expenseFilterDateFrom}
-                  setFilterDateFrom={setExpenseFilterDateFrom}
-                  filterDateTo={expenseFilterDateTo}
-                  setFilterDateTo={setExpenseFilterDateTo}
-                  onClearFilters={clearExpenseFilters}
-                  onReview={setSelectedReviewExpense}
-                  onEdit={handleStartEditExpense}
-                  onDelete={handleDeleteExpense}
-                  isAdmin={isAdmin}
-                  userId={userId}
+                  expenses={activeTripExpenses}
+                  onViewAll={() => setShowTransactions(true)}
                 />
               </div>
             </div>

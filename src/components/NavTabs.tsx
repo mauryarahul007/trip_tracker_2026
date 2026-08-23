@@ -16,9 +16,9 @@ export function NavTabs({ activeTab, setActiveTab }: Props) {
 
   return (
     <nav className="nav-tabs">
-      <button data-tab="expenses" className={`nav-tab-item ${activeTab === 'expenses' ? 'active' : ''}`} onClick={() => goTo('expenses')} aria-label="Expenses">
+      <button data-tab="expenses" className={`nav-tab-item ${activeTab === 'expenses' ? 'active' : ''}`} onClick={() => goTo('expenses')} aria-label="Summary">
         <span className="nav-tab-icon"><IconExpenses size={26} /></span>
-        <span>Expenses</span>
+        <span>Summary</span>
       </button>
       <button data-tab="members" className={`nav-tab-item ${activeTab === 'members' ? 'active' : ''}`} onClick={() => goTo('members')} aria-label="Members & Groups">
         <span className="nav-tab-icon"><IconMembers size={26} /></span>
