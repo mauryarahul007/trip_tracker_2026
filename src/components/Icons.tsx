@@ -159,17 +159,17 @@ export function IconAlertCircle({ size = 20, className = 'icon' }: IconProps) {
   );
 }
 
-export function IconChevronLeft({ size = 20, className = 'icon' }: IconProps) {
+export function IconChevronLeft({ size = 20, className = 'icon', style }: IconProps) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" className={className} {...base}>
+    <svg width={size} height={size} viewBox="0 0 24 24" className={className} style={style} {...base}>
       <path d="M15 5l-7 7 7 7" />
     </svg>
   );
 }
 
-export function IconChevronRight({ size = 20, className = 'icon' }: IconProps) {
+export function IconChevronRight({ size = 20, className = 'icon', style }: IconProps) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" className={className} {...base}>
+    <svg width={size} height={size} viewBox="0 0 24 24" className={className} style={style} {...base}>
       <path d="M9 5l7 7-7 7" />
     </svg>
   );

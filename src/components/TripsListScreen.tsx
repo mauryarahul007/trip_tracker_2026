@@ -1,13 +1,16 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import type { Trip, Member, TripStop } from '../types';
-import { IconTrash, IconEdit, IconSettings, IconArchive, IconMapPin } from './Icons';
+import type { Trip, Member } from '../types';
+import { IconArchive, IconMapPin } from './Icons';
 import { DateRangePicker } from './DateRangePicker';
 import { formatTripStamp } from '../utils/dateRange';
 import { initial } from '../utils/initials';
 import { avatarColorForName } from '../utils/avatarColor';
 import { TurnstileWidget } from './TurnstileWidget';
 import { useTripStore } from '../store/tripStore';
+import { SwipeableRow } from './SwipeableRow';
+import { TripStack } from './TripStack';
+import { TripSlideLauncher } from './TripSlideLauncher';
 
 type Props = {
   trips: Trip[];
@@ -35,6 +38,8 @@ type Props = {
   onArchiveTrip: (trip: Trip) => void;
   onOpenSettings: () => void;
   onOpenBugTracker?: () => void;
+  userAvatarUrl?: string;
+  userDisplayName?: string | null;
 };
 
 export function TripsListScreen({
@@ -63,12 +68,16 @@ export function TripsListScreen({
   onArchiveTrip,
   onOpenSettings,
   onOpenBugTracker,
+  userAvatarUrl,
+  userDisplayName,
 }: Props) {
   const navigate = useNavigate();
   const userId = useTripStore((s) => s.userId);
   const [showJoinTrip, setShowJoinTrip] = useState(false);
   const [joinCode, setJoinCode] = useState('');
   const [honeypotVal, setHoneypotVal] = useState('');
+  const [showList, setShowList] = useState(false);
+  const stackActive = trips.length >= 2 && !showList && !showAddTrip && !showJoinTrip;
 
   const handleJoinByCode = (e: React.FormEvent) => {
     e.preventDefault();
@@ -94,61 +103,70 @@ export function TripsListScreen({
 
   return (
     <div className="fade-in trips-screen-scroll">
-      <header style={{ marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
-        <div>
+      <header style={{ marginBottom: '24px', display: 'grid', gridTemplateColumns: '40px 1fr 40px', alignItems: 'center', gap: '12px' }}>
+        <button
+          type="button"
+          className="profile-avatar-btn"
+          onClick={onOpenSettings}
+          aria-label="Profile & Settings"
+          title="Profile & Settings"
+        >
+          {userAvatarUrl ? (
+            <img src={userAvatarUrl} alt="" referrerPolicy="no-referrer" loading="lazy" width={40} height={40} />
+          ) : (
+            <span style={{ background: avatarColorForName(userDisplayName || 'Me') }}>
+              {initial(userDisplayName || 'Me')}
+            </span>
+          )}
+        </button>
+        <div style={{ textAlign: 'center' }}>
           <h1 className="app-logo">Trip Tracker 2026</h1>
           <p style={{ color: 'var(--text-secondary)', fontSize: '14px', marginTop: '4px' }}>
             Offline-first cost splitting & groups
           </p>
         </div>
-        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-          {onOpenBugTracker && (
-            <button
-              type="button"
-              className="secondary-btn"
-              onClick={onOpenBugTracker}
-              title="Open superadmin bug ledger"
-              style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
-            >
-              <span>🐛 Bug Ledger</span>
-            </button>
-          )}
+        {onOpenBugTracker ? (
           <button
             type="button"
             className="secondary-btn"
-            onClick={onOpenSettings}
-            style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
+            style={{
+              width: '40px',
+              height: '40px',
+              padding: 0,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              borderRadius: '50%',
+              background: 'rgba(0, 191, 165, 0.08)',
+              borderColor: 'rgba(0, 191, 165, 0.4)',
+              color: 'var(--text-primary)',
+            }}
+            onClick={onOpenBugTracker}
+            aria-label="Superadmin Bug Tracker"
+            title="Superadmin Bug Tracker"
           >
-            <IconSettings size={16} className="icon-sm" /> Settings
+            <span>🛡️</span>
           </button>
-        </div>
+        ) : (
+          <div aria-hidden="true" />
+        )}
       </header>
 
-      <section>
-        <div className="trips-section-header" style={{ marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
-          <h2 style={{ fontSize: '19px', fontWeight: 700, margin: 0, color: 'var(--text-primary)' }}>Your Trips</h2>
-          <div style={{ display: 'flex', gap: '8px' }}>
-            <button
-              type="button"
-              className="secondary-btn"
-              onClick={() => {
-                setShowJoinTrip(!showJoinTrip);
-                setShowAddTrip(false);
-              }}
-            >
-              Join a Trip
-            </button>
-            <button
-              type="button"
-              className="gradient-btn"
-              onClick={() => {
-                setShowAddTrip(!showAddTrip);
-                setShowJoinTrip(false);
-              }}
-            >
-              + New Trip
-            </button>
-          </div>
+      <main style={{ flex: 1 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', gap: '8px', flexWrap: 'wrap' }}>
+          <h2 style={{ fontSize: '20px' }}>Your Trips</h2>
+          {!showAddTrip && (
+            <div className={`trip-home-actions${stackActive ? ' stack-active' : ''}`}>
+              {!showJoinTrip && (
+                <button className="secondary-btn" style={{ padding: '8px 16px', fontSize: '14px' }} onClick={() => setShowJoinTrip(true)}>
+                  Join a Trip
+                </button>
+              )}
+              <button className="gradient-btn" style={{ padding: '8px 16px', fontSize: '14px' }} onClick={() => setShowAddTrip(true)}>
+                + New Trip
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Join by code collapsible form */}
@@ -389,29 +407,30 @@ export function TripsListScreen({
               />
             </div>
 
-            <div className="input-group">
-              <label className="input-label" htmlFor="new_trip_currency">Base Currency</label>
-              <select
-                id="new_trip_currency"
-                className="select-field"
-                value={newTripCurrency}
-                onChange={(e) => setNewTripCurrency(e.target.value)}
-              >
-                <option value="INR">INR (₹)</option>
-                <option value="USD">USD ($)</option>
-                <option value="EUR">EUR (€)</option>
-                <option value="GBP">GBP (£)</option>
-                <option value="AED">AED (د.إ)</option>
-                <option value="SGD">SGD (S$)</option>
-                <option value="THB">THB (฿)</option>
-                <option value="JPY">JPY (¥)</option>
-              </select>
+            <div className="form-group">
+              <label className="form-label">Destination (optional)</label>
+              <input
+                type="text"
+                className="input-field"
+                placeholder="e.g. Manali, Goa"
+                value={newTripDestination}
+                onChange={(e) => setNewTripDestination(e.target.value)}
+              />
             </div>
 
-            {/* Cloudflare Turnstile Bot Protection */}
             {!editingTripId && (
-              <div style={{ marginBottom: '14px', display: 'flex', justifyContent: 'center' }}>
-                <TurnstileWidget />
+              <div className="form-group">
+                <label className="form-label">Base Currency</label>
+                <select
+                  className="input-field select-field"
+                  value={newTripCurrency}
+                  onChange={(e) => setNewTripCurrency(e.target.value)}
+                >
+                  <option value="INR">INR (₹)</option>
+                  <option value="USD">USD ($)</option>
+                  <option value="EUR">EUR (€)</option>
+                  <option value="GBP">GBP (£)</option>
+                </select>
               </div>
             )}
 
@@ -440,119 +459,101 @@ export function TripsListScreen({
             <div className="ledger-rule" />
           </div>
         ) : (
-          <div className="passport-list">
+          <>
+            {stackActive && (
+              <TripStack
+                trips={trips}
+                members={members}
+                userId={userId}
+                onSelectTrip={onSelectTrip}
+                onStartEditTrip={onStartEditTrip}
+                onDeleteTrip={onDeleteTrip}
+                onArchiveTrip={onArchiveTrip}
+                onShowList={() => setShowList(true)}
+              />
+            )}
+            {stackActive && (
+              <TripSlideLauncher
+                onCreateTrip={() => setShowAddTrip(true)}
+                onJoinTrip={() => setShowJoinTrip(true)}
+              />
+            )}
+            {trips.length >= 2 && showList && (
+              <button
+                type="button"
+                className="trip-stack-viewall"
+                style={{ marginBottom: '14px' }}
+                onClick={() => setShowList(false)}
+              >
+                Back to stack
+              </button>
+            )}
+            <div className={`passport-list ${stackActive ? 'stack-mode' : ''}`}>
             {trips.map((trip, idx) => {
               const stamp = formatTripStamp(trip.startDate, trip.endDate);
               const tripMembers = trip.memberIds.map((id) => members[id]).filter(Boolean);
               const shown = tripMembers.slice(0, 3);
               const overflow = tripMembers.length - shown.length;
               const expenseCount = trip.expenseCount || 0;
+              const canDelete = !trip.ownerId || !userId || trip.ownerId === userId ||
+                Boolean(trip.adminMemberIds && trip.memberIds.some((mid) => members[mid]?.linkedUserId === userId && trip.adminMemberIds?.includes(mid)));
               return (
                 <div
                   key={trip.id}
                   className="passport-card"
                   style={{ animationDelay: `${Math.min(idx * 30, 300)}ms` }}
-                  onClick={() => onSelectTrip(trip.id)}
                 >
-                  <div className="pp-stamp">
-                    <span>{stamp.top}</span>
-                    <span>{stamp.bottom}</span>
-                  </div>
-                  <div className="pp-dest" style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
-                    <span>Trip &middot; {trip.baseCurrency}</span>
-                    {trip.destination && (
-                      <span style={{ color: 'var(--primary-accent)', fontWeight: 600 }}>
-                        &middot; 📍 {trip.destination}
-                      </span>
-                    )}
-                  </div>
-                  <h3 className="pp-name">{trip.name}</h3>
-
-                  {/* Route Stops / Destinations preview on trip card */}
-                  {trip.stops && trip.stops.length > 0 && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexWrap: 'wrap', margin: '4px 0 8px' }}>
-                      {trip.stops.map((stop, sIdx) => (
-                        <span
-                          key={stop.id || sIdx}
-                          style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '3px',
-                            fontSize: '11px',
-                            fontWeight: 600,
-                            padding: '2px 7px',
-                            borderRadius: '10px',
-                            background: sIdx === 0 ? 'rgba(2, 132, 199, 0.12)' : sIdx === trip.stops!.length - 1 ? 'rgba(255, 122, 0, 0.12)' : 'var(--bg-surface-hover)',
-                            color: sIdx === 0 ? '#0284C7' : sIdx === trip.stops!.length - 1 ? '#FF7A00' : 'var(--text-primary)',
-                          }}
-                        >
-                          <span style={{ opacity: 0.7 }}>{sIdx + 1}.</span> {stop.name}
-                        </span>
-                      ))}
+                  <SwipeableRow
+                    onDelete={canDelete ? () => onDeleteTrip(trip) : undefined}
+                    onEdit={() => onStartEditTrip(trip)}
+                    reversed
+                    plain
+                  >
+                    <div style={{ padding: '18px 20px 16px', cursor: 'pointer' }} onClick={() => onSelectTrip(trip.id)}>
+                      <div className="pp-stamp">
+                        <span>{stamp.top}</span>
+                        <span>{stamp.bottom}</span>
+                      </div>
+                      <div className="pp-dest">Trip &middot; {trip.baseCurrency}</div>
+                      <h3 className="pp-name">{trip.name}</h3>
+                      <div className="pp-meta">
+                        {tripMembers.length} member{tripMembers.length === 1 ? '' : 's'} &middot; {expenseCount} expense{expenseCount === 1 ? '' : 's'}
+                      </div>
+                      <div className="pp-foot">
+                        <div className="pp-avatars">
+                          {shown.map((m) =>
+                            m.avatarUrl ? (
+                              <img key={m.id} src={m.avatarUrl} alt={m.name} title={m.name} className="pp-avatar" referrerPolicy="no-referrer" loading="lazy" width={24} height={24} />
+                            ) : (
+                              <span key={m.id} className="pp-avatar" style={{ background: avatarColorForName(m.name) }} title={m.name}>{initial(m.name)}</span>
+                            )
+                          )}
+                          {overflow > 0 && <span className="pp-avatar pp-avatar-more">+{overflow}</span>}
+                        </div>
+                        <div className="pp-actions">
+                          <button
+                            className="secondary-btn"
+                            style={{ padding: '8px' }}
+                            aria-label="Archive trip"
+                            title="Archive trip"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onArchiveTrip(trip);
+                            }}
+                          >
+                            <IconArchive size={15} className="icon-sm" />
+                          </button>
+                        </div>
+                      </div>
                     </div>
-                  )}
-
-                  <div className="pp-meta">
-                    {tripMembers.length} member{tripMembers.length === 1 ? '' : 's'} &middot; {expenseCount} expense{expenseCount === 1 ? '' : 's'}
-                  </div>
-                  <div className="pp-foot">
-                    <div className="pp-avatars">
-                      {shown.map((m) =>
-                        m.avatarUrl ? (
-                          <img key={m.id} src={m.avatarUrl} alt={m.name} title={m.name} className="pp-avatar" referrerPolicy="no-referrer" loading="lazy" width={24} height={24} />
-                        ) : (
-                          <span key={m.id} className="pp-avatar" style={{ background: avatarColorForName(m.name) }} title={m.name}>{initial(m.name)}</span>
-                        )
-                      )}
-                      {overflow > 0 && <span className="pp-avatar pp-avatar-more">+{overflow}</span>}
-                    </div>
-                    <div className="pp-actions">
-                      <button
-                        className="secondary-btn"
-                        style={{ padding: '8px' }}
-                        aria-label="Edit trip"
-                        title="Edit trip"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onStartEditTrip(trip);
-                        }}
-                      >
-                        <IconEdit size={15} className="icon-sm" />
-                      </button>
-                      <button
-                        className="secondary-btn"
-                        style={{ padding: '8px' }}
-                        aria-label="Archive trip"
-                        title="Archive trip"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onArchiveTrip(trip);
-                        }}
-                      >
-                        <IconArchive size={15} className="icon-sm" />
-                      </button>
-                      {(!trip.ownerId || !userId || trip.ownerId === userId || Boolean(trip.adminMemberIds && trip.memberIds.some((mid) => members[mid]?.linkedUserId === userId && trip.adminMemberIds?.includes(mid)))) && (
-                        <button
-                          className="secondary-btn"
-                          style={{ padding: '8px', color: 'var(--color-danger)', borderColor: 'rgba(184,69,46,0.2)' }}
-                          aria-label="Delete trip"
-                          title="Delete trip"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onDeleteTrip(trip);
-                          }}
-                        >
-                          <IconTrash size={15} className="icon-sm" />
-                        </button>
-                      )}
-                    </div>
-                  </div>
+                  </SwipeableRow>
                 </div>
               );
             })}
-          </div>
+            </div>
+          </>
         )}
-      </section>
+      </main>
     </div>
   );
 }

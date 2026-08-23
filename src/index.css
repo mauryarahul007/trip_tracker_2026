@@ -673,42 +673,6 @@ input[type="date"].input-field {
   margin-top: 2px;
 }
 
-/* Segmented View Switcher in Expenses Tab */
-.segmented-view-toggle {
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
-  background: var(--bg-secondary);
-  padding: 3px;
-  border-radius: var(--border-radius-pill);
-  border: 1px solid var(--border-color);
-  flex-shrink: 0;
-}
-
-.segmented-pill {
-  border: none;
-  background: transparent;
-  color: var(--text-secondary);
-  font-size: 11.5px;
-  font-weight: 600;
-  padding: 5px 10px;
-  border-radius: var(--border-radius-pill);
-  cursor: pointer;
-  transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
-  white-space: nowrap;
-  font-family: var(--font-family-body);
-}
-
-.segmented-pill:hover {
-  color: var(--text-primary);
-}
-
-.segmented-pill.active {
-  background: var(--primary-accent);
-  color: #FFFFFF;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
-}
-
 .filter-chips-track {
   display: flex;
   gap: 6px;
@@ -878,477 +842,6 @@ input[type="date"].input-field {
 
 .filter-clear-link:hover {
   text-decoration: underline;
-}
-
-/* ==========================================================================
-   Date Dividers
-   ========================================================================== */
-
-/* Boarding-pass balance summary card — restored from the pre-refactor
-   Balances & Settlements screen. Uses the same semantic tokens as the
-   rest of the app, so it renders in whatever the current theme is
-   (currently Skyline Escape's blue/teal), not the old ledger colors. */
-.boarding-pass {
-  background: var(--bg-surface);
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius-md);
-  overflow: hidden;
-  position: relative;
-  margin-bottom: 16px;
-}
-.bp-top {
-  padding: 16px 20px 14px;
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 12px;
-  position: relative;
-}
-.bp-eyebrow {
-  font-family: var(--font-family-mono);
-  font-size: 10.5px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-}
-.bp-title {
-  font-family: var(--font-family-title);
-  font-size: 17px;
-  font-weight: 600;
-  color: var(--text-primary);
-  margin-top: 2px;
-}
-.bp-meta {
-  font-family: var(--font-family-mono);
-  font-size: 11px;
-  color: var(--text-muted);
-  text-align: right;
-}
-.bp-perf {
-  position: relative;
-  border-top: 1.5px dashed var(--border-color);
-}
-.bp-perf::before, .bp-perf::after {
-  content: "";
-  position: absolute;
-  top: -9px;
-  width: 18px;
-  height: 18px;
-  background: var(--bg-app);
-  border-radius: 50%;
-  border: 1px solid var(--border-color);
-}
-.bp-perf::before { left: -9px; }
-.bp-perf::after { right: -9px; }
-.bp-body {
-  padding: 22px 20px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  gap: 4px;
-  position: relative;
-}
-.bp-who {
-  font-family: var(--font-family-mono);
-  font-size: 10.5px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-}
-.bp-amount {
-  font-family: var(--font-family-title);
-  font-weight: 900;
-  font-size: 36px;
-  line-height: 1.1;
-  font-variant-numeric: tabular-nums;
-}
-.bp-sub {
-  font-size: 13px;
-  color: var(--text-secondary);
-  max-width: 34ch;
-}
-.bp-stamp-pos {
-  position: absolute;
-  bottom: -13px;
-  right: 20px;
-}
-.bp-foot {
-  border-top: 1.5px dashed var(--border-color);
-  padding: 12px 20px 14px;
-  display: flex;
-  justify-content: space-between;
-  font-family: var(--font-family-mono);
-  font-size: 11px;
-  color: var(--text-muted);
-}
-.stamp-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-family: var(--font-family-title);
-  font-style: italic;
-  font-weight: 700;
-  font-size: 12.5px;
-  letter-spacing: 0.03em;
-  border: 2px solid currentColor;
-  border-radius: 5px;
-  padding: 3px 10px;
-  opacity: 0.9;
-  transform: rotate(8deg);
-  animation: stampIn 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
-}
-@keyframes stampIn {
-  from { opacity: 0; transform: scale(1.6) rotate(18deg); }
-  to { opacity: 0.9; transform: scale(1) rotate(8deg); }
-}
-@media (prefers-reduced-motion: reduce) {
-  .stamp-badge { animation: none; }
-}
-
-/* Date Section Dividers in Transaction Feed */
-.expense-date-divider {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin: 18px 0 10px 0;
-  user-select: none;
-}
-
-.expense-date-divider-line {
-  flex: 1;
-  height: 1px;
-  background: var(--border-color);
-  opacity: 0.6;
-}
-
-.expense-date-divider-label {
-  font-size: 11.5px;
-  font-weight: 700;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  padding: 2px 10px;
-  background: var(--bg-surface);
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius-pill);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
-}
-
-/* Overlapping Member Avatar Stack */
-.avatar-stack {
-  display: inline-flex;
-  align-items: center;
-  flex-direction: row-reverse;
-  justify-content: flex-end;
-}
-
-.avatar-stack-item {
-  margin-left: -7px;
-  border-radius: 50%;
-  border: 2px solid var(--bg-surface);
-  transition: transform 0.15s ease;
-  position: relative;
-}
-
-.avatar-stack-item:hover {
-  transform: translateY(-2px) scale(1.1);
-  z-index: 10;
-}
-
-.avatar-stack-overflow {
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  background: var(--bg-secondary);
-  color: var(--text-secondary);
-  font-size: 9.5px;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-left: -7px;
-  border: 2px solid var(--bg-surface);
-}
-
-/* ==========================================================================
-   Material Design 3 (Material You) Collapsible Day Accordions
-   ========================================================================== */
-
-.m3-accordion-card {
-  background: var(--bg-surface);
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius-md);
-  margin-bottom: 12px;
-  overflow: hidden;
-  transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-}
-
-.m3-accordion-card.expanded {
-  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.07);
-  border-color: rgba(47, 111, 237, 0.28);
-}
-
-.m3-accordion-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 12px 14px;
-  cursor: pointer;
-  user-select: none;
-  background: var(--bg-surface);
-  transition: background 0.15s ease;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.m3-accordion-header:hover {
-  background: var(--bg-surface-hover);
-}
-
-.m3-accordion-title-group {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-width: 0;
-}
-
-.m3-day-badge {
-  font-size: 11px;
-  font-weight: 800;
-  background: var(--primary-accent);
-  color: #FFFFFF;
-  padding: 2px 7px;
-  border-radius: 4px;
-  flex-shrink: 0;
-}
-
-.m3-day-header-text {
-  font-size: 13.5px;
-  font-weight: 700;
-  color: var(--text-primary);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.m3-day-count-badge {
-  font-size: 11px;
-  font-weight: 500;
-  color: var(--text-muted);
-  background: var(--bg-secondary);
-  padding: 2px 6px;
-  border-radius: var(--border-radius-pill);
-  flex-shrink: 0;
-}
-
-.m3-accordion-meta-group {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-shrink: 0;
-}
-
-.m3-day-subtotal {
-  font-size: 13.5px;
-  font-weight: 800;
-  color: var(--primary-accent);
-  font-family: var(--font-family-mono);
-}
-
-.m3-accordion-chevron {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--text-muted);
-  transition: transform 0.25s cubic-bezier(0.2, 0, 0, 1);
-}
-
-.m3-accordion-chevron.expanded {
-  transform: rotate(90deg);
-  color: var(--primary-accent);
-}
-
-.m3-accordion-content {
-  display: grid;
-  grid-template-rows: 0fr;
-  transition: grid-template-rows 0.28s cubic-bezier(0.2, 0, 0, 1);
-  border-top: 1px solid transparent;
-}
-
-.m3-accordion-content.expanded {
-  grid-template-rows: 1fr;
-  border-top-color: var(--border-color);
-}
-
-.m3-accordion-inner {
-  overflow: hidden;
-}
-
-.m3-expand-all-btn {
-  background: none;
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius-pill);
-  padding: 4px 10px;
-  font-size: 11.5px;
-  font-weight: 600;
-  color: var(--text-secondary);
-  cursor: pointer;
-  transition: all 0.15s ease;
-  white-space: nowrap;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.m3-expand-all-btn:hover {
-  background: var(--bg-surface-hover);
-  color: var(--text-primary);
-  border-color: rgba(47, 111, 237, 0.3);
-}
-
-/* ==========================================================================
-   WhatsApp-Style Modular Grouped Sections for Balances & Settlements
-   ========================================================================== */
-
-.wa-group-card {
-  background: var(--bg-surface);
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius-md);
-  margin-bottom: 12px;
-  overflow: hidden;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-  transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
-}
-
-.wa-group-card:hover {
-  border-color: rgba(2, 132, 199, 0.35);
-}
-
-.wa-group-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 13px 15px;
-  background: var(--bg-surface);
-  cursor: pointer;
-  user-select: none;
-  transition: background 0.15s ease;
-}
-
-.wa-group-header:hover {
-  background: var(--bg-surface-hover);
-}
-
-.wa-group-title {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-width: 0;
-}
-
-.wa-group-icon {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.wa-group-name {
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--text-primary);
-}
-
-.wa-group-caption {
-  font-size: 11.5px;
-  color: var(--text-muted);
-  margin-top: 1px;
-}
-
-.wa-list-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 11px 15px;
-  transition: background 0.15s ease;
-}
-
-.wa-list-item:hover {
-  background: var(--bg-surface-hover);
-}
-
-.wa-list-divider {
-  height: 1px;
-  background: var(--border-color);
-  margin-left: 54px;
-  opacity: 0.6;
-}
-
-.wa-btn-orange {
-  background: linear-gradient(135deg, #FF7A00 0%, #EA580C 100%);
-  color: #FFFFFF;
-  border: none;
-  border-radius: var(--border-radius-pill);
-  padding: 6px 13px;
-  font-size: 12px;
-  font-weight: 700;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  transition: all 0.15s ease;
-  box-shadow: 0 2px 6px rgba(255, 122, 0, 0.25);
-  white-space: nowrap;
-}
-
-.wa-btn-orange:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 10px rgba(255, 122, 0, 0.35);
-}
-
-.wa-btn-settled {
-  background: rgba(16, 185, 129, 0.12);
-  color: #059669;
-  border: 1px solid rgba(16, 185, 129, 0.3);
-  border-radius: var(--border-radius-pill);
-  padding: 5px 11px;
-  font-size: 11.5px;
-  font-weight: 700;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-}
-
-
-/* Compact ghost icon buttons for list-row actions (edit/delete) — plain
-   icon rather than a bordered box, since swipe-to-delete already covers
-   the primary action and a full button chrome reads as heavier than a
-   secondary, occasional action needs. */
-.row-icon-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 38px;
-  height: 38px;
-  flex-shrink: 0;
-  background: none;
-  border: none;
-  border-radius: var(--border-radius-sm);
-  color: var(--text-secondary);
-  cursor: pointer;
-  transition: var(--transition-smooth);
-}
-.row-icon-btn:hover {
-  background: var(--bg-surface-hover);
-  color: var(--text-primary);
-}
-.row-icon-btn-danger:hover {
-  background: rgba(184, 69, 46, 0.1);
-  color: var(--color-danger);
 }
 
 /* Header & Navigation */
@@ -1936,13 +1429,288 @@ input:checked + .toggle-slider:before {
   }
 }
 
+/* Stack mode replaces this grid with .trip-stack on phones only -- desktop
+   always shows the grid regardless of view mode. */
+.passport-list.stack-mode {
+  display: none;
+}
+@media (min-width: 900px) {
+  .passport-list.stack-mode {
+    display: grid;
+  }
+}
+
+/* Trip stack — a phone/portrait-only alternate to the list above (swipe
+   left/right to browse, swipe up to archive, long-press for edit/delete).
+   Meaningless without a touch drag, so it never shows past the same
+   900px breakpoint the grid above switches on at. */
+.trip-stack {
+  margin-bottom: 4px;
+}
+@media (min-width: 900px) {
+  .trip-stack {
+    display: none;
+  }
+}
+.trip-stack-stage {
+  position: relative;
+  height: min(58vh, 460px);
+  margin-bottom: 14px;
+}
+.stack-card {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--border-radius-md);
+  overflow: hidden;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  box-shadow: 0 10px 24px -14px rgba(0, 0, 0, 0.28);
+}
+.stack-card.depth-0 {
+  z-index: 3;
+}
+.stack-card.depth-1 {
+  z-index: 2;
+  transform: translateY(14px) scale(0.96) rotate(-2.5deg);
+}
+.stack-card.depth-2 {
+  z-index: 1;
+  transform: translateY(26px) scale(0.92) rotate(2deg);
+  opacity: 0.85;
+}
+.stack-card-face {
+  position: relative;
+  height: 100%;
+  padding: 20px 20px 18px;
+  display: flex;
+  flex-direction: column;
+  background-size: cover;
+  background-position: center;
+}
+.stack-card-face.has-photo.tone-light .pp-dest,
+.stack-card-face.has-photo.tone-light .pp-name,
+.stack-card-face.has-photo.tone-light .pp-meta {
+  color: #F2ECDC;
+}
+.stack-card-face.has-photo.tone-light .pp-stamp {
+  border-color: #F2ECDC;
+  color: #F2ECDC;
+}
+.stack-card-face.has-photo.tone-dark .pp-dest,
+.stack-card-face.has-photo.tone-dark .pp-name,
+.stack-card-face.has-photo.tone-dark .pp-meta {
+  color: #1C2A38;
+}
+.stack-card-face.has-photo.tone-dark .pp-stamp {
+  border-color: #1C2A38;
+  color: #1C2A38;
+}
+.stack-card-avatars {
+  margin-top: auto;
+}
+.stack-quick-actions {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 21, 29, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  z-index: 4;
+}
+.stack-qa-btn {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 20px -8px rgba(0, 0, 0, 0.5);
+  cursor: pointer;
+}
+.stack-qa-btn.danger {
+  color: var(--color-danger);
+}
+.trip-stack-viewall {
+  display: block;
+  margin: 0 auto;
+  background: none;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-pill);
+  padding: 8px 18px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+.trip-stack-viewall:hover {
+  background: var(--bg-surface-hover);
+}
+
+/* Slide-to-launch control, replacing the Join/Create header buttons on
+   phones only -- sits below the stack, same 900px cutoff. */
+.trip-launcher {
+  margin: 44px 0 4px;
+}
+@media (min-width: 900px) {
+  .trip-launcher {
+    display: none;
+  }
+}
+.launcher-track {
+  position: relative;
+  width: 100%;
+  max-width: 260px;
+  margin: 0 auto;
+  height: 66px;
+  border-radius: var(--border-radius-pill);
+  background: var(--bg-app);
+  border: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  box-shadow: 0 12px 22px -10px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+.launcher-fill {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 50%;
+  pointer-events: none;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease;
+  opacity: 0;
+}
+.launcher-fill.right {
+  left: 50%;
+  transform-origin: left;
+  background: linear-gradient(90deg, transparent, rgba(31, 110, 104, 0.28));
+}
+.launcher-fill.left {
+  right: 50%;
+  transform-origin: right;
+  background: linear-gradient(270deg, transparent, rgba(184, 69, 46, 0.24));
+}
+.launcher-zone {
+  flex: 1;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  font-family: var(--font-family-mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: var(--text-muted);
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: color 0.2s ease;
+  z-index: 1;
+}
+.launcher-zone.left {
+  justify-content: flex-start;
+  padding-left: 16px;
+}
+.launcher-zone.right {
+  justify-content: flex-end;
+  padding-right: 16px;
+}
+.launcher-zone.left.active {
+  color: var(--color-danger);
+}
+.launcher-zone.right.active {
+  color: var(--primary-accent);
+}
+.launcher-thumb {
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  width: 50px;
+  height: 50px;
+  margin-left: -25px;
+  border-radius: 50%;
+  background: var(--primary-accent);
+  box-shadow:
+    0 8px 16px -6px rgba(0, 0, 0, 0.4),
+    inset 0 2px 2px rgba(255, 255, 255, 0.4),
+    inset 0 -3px 4px rgba(0, 0, 0, 0.25);
+  z-index: 2;
+  cursor: grab;
+}
+.launcher-thumb.left {
+  background: var(--color-danger);
+}
+.launcher-caption {
+  text-align: center;
+  font-family: var(--font-family-mono);
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-top: 8px;
+  letter-spacing: 0.03em;
+}
+
+.profile-avatar-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border-color);
+  padding: 0;
+  overflow: hidden;
+  cursor: pointer;
+  flex-shrink: 0;
+  background: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition-smooth);
+}
+.profile-avatar-btn:hover {
+  border-color: rgba(31, 110, 104, 0.35);
+}
+.profile-avatar-btn img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.profile-avatar-btn span {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-family-title);
+  font-weight: 700;
+  font-size: 15px;
+  color: #FFFDF6;
+}
+
+/* Header Join/Create buttons hide on phones only while the stack + slide
+   launcher below it are the active presentation -- desktop always shows
+   them, and phones fall back to them too whenever the stack itself isn't
+   showing (0/1 trips, or the "View all trips" list). */
+.trip-home-actions {
+  display: flex;
+  gap: 8px;
+}
+.trip-home-actions.stack-active {
+  display: none;
+}
+@media (min-width: 900px) {
+  .trip-home-actions.stack-active {
+    display: flex;
+  }
+}
+
 .passport-card {
   position: relative;
   background: var(--bg-surface);
   border: 1px solid var(--border-color);
   border-radius: var(--border-radius-md);
-  padding: 18px 20px 16px;
-  cursor: pointer;
+  overflow: hidden;
+  box-shadow: 0 10px 24px -14px rgba(0, 0, 0, 0.28);
   transition: var(--transition-smooth);
   animation: fadeIn 0.35s ease-out both;
 }
@@ -1950,7 +1718,8 @@ input:checked + .toggle-slider:before {
   .passport-card { animation: none; }
 }
 .passport-card:hover {
-  border-color: rgba(47, 111, 237, 0.3);
+  border-color: rgba(31, 110, 104, 0.3);
+  box-shadow: 0 14px 28px -14px rgba(0, 0, 0, 0.34);
 }
 .pp-stamp {
   position: absolute;
@@ -2569,8 +2338,98 @@ input:checked + .toggle-slider:before {
   opacity: 1;
 }
 
-.balance-row:hover {
+.m3-accordion-chevron {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  transition: transform 0.25s cubic-bezier(0.2, 0, 0, 1);
+}
+
+.m3-accordion-chevron.expanded {
+  transform: rotate(90deg);
+  color: var(--primary-accent);
+}
+
+/* ==========================================================================
+   WhatsApp-Style Modular Grouped Sections for Balances & Settlements
+   ========================================================================== */
+
+.wa-group-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-md);
+  margin-bottom: 12px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
+}
+
+.wa-group-card:hover {
+  border-color: rgba(2, 132, 199, 0.35);
+}
+
+.wa-group-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 13px 15px;
+  background: var(--bg-surface);
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.15s ease;
+}
+
+.wa-group-header:hover {
   background: var(--bg-surface-hover);
+}
+
+.wa-group-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.wa-group-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.wa-group-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.wa-group-caption {
+  font-size: 11.5px;
+  color: var(--text-muted);
+  margin-top: 1px;
+}
+
+.wa-list-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 11px 15px;
+  transition: background 0.15s ease;
+}
+
+.wa-list-item:hover {
+  background: var(--bg-surface-hover);
+}
+
+.wa-list-divider {
+  height: 1px;
+  background: var(--border-color);
+  margin-left: 54px;
+  opacity: 0.6;
 }
 
 .undo-toast-btn {
@@ -2922,6 +2781,28 @@ input:checked + .toggle-slider:before {
 }
 @media (prefers-reduced-motion: reduce) {
   .modal-sheet { animation: none; }
+}
+
+/* Settings presents as a left-edge nav drawer rather than a centered
+   sheet -- narrower, anchored left, slides in from the edge instead of
+   rising from the bottom. Only affects GlobalSettingsModal; every other
+   .modal-sheet dialog keeps the shared centered/sheetUp treatment. */
+.modal-backdrop.drawer-left {
+  justify-content: flex-start;
+}
+.modal-backdrop .modal-sheet.settings-drawer {
+  max-width: 320px;
+  border-right: 1px solid var(--border-color);
+  border-radius: 0 var(--border-radius-lg, 16px) var(--border-radius-lg, 16px) 0;
+  box-shadow: 12px 0 32px -16px rgba(0, 0, 0, 0.35);
+  animation: drawerSlideIn 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes drawerSlideIn {
+  from { opacity: 0; transform: translateX(-24px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .modal-sheet.settings-drawer { animation: none; }
 }
 
 /* Expense form's own sheet is split into a scrolling content area and a

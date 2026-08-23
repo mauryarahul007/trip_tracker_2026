@@ -106,6 +106,8 @@ export default function App() {
 
   const userEmail = useAuthStore((s) => s.session?.user.email ?? null);
   const userId = useAuthStore((s) => s.session?.user.id ?? null);
+  const userAvatarUrl = useAuthStore((s) => s.session?.user.user_metadata?.avatar_url as string | undefined);
+  const userDisplayName = useTripStore((s) => s.userDisplayName);
   const signOut = useAuthStore((s) => s.signOut);
   const signInSuperadmin = useAuthStore((s) => s.signInSuperadmin);
 
@@ -692,9 +694,9 @@ export default function App() {
     if (!newTripName || !newTripStart || !newTripEnd) return;
     const cleanStops = newTripStops.filter((s) => s.name.trim().length > 0);
     if (editingTripId) {
-      await updateTrip(editingTripId, newTripName, newTripStart, newTripEnd, newTripDestination, cleanStops);
+      await updateTrip(editingTripId, newTripName, newTripStart, newTripEnd, newTripDestination.trim() || undefined);
     } else {
-      await createTrip(newTripName, newTripStart, newTripEnd, newTripCurrency, newTripDestination, cleanStops);
+      await createTrip(newTripName, newTripStart, newTripEnd, newTripCurrency, newTripDestination.trim() || undefined);
     }
     setNewTripName('');
     setNewTripDestination('');
@@ -702,6 +704,7 @@ export default function App() {
     setNewTripStart('');
     setNewTripEnd('');
     setNewTripCurrency('INR');
+    setNewTripDestination('');
     setEditingTripId(null);
     setShowAddTrip(false);
   };
@@ -713,6 +716,7 @@ export default function App() {
     setNewTripStops(trip.stops ? [...trip.stops] : []);
     setNewTripStart(trip.startDate);
     setNewTripEnd(trip.endDate);
+    setNewTripDestination(trip.destination || '');
     setShowAddTrip(true);
   };
 
@@ -724,6 +728,7 @@ export default function App() {
     setNewTripStart('');
     setNewTripEnd('');
     setNewTripCurrency('INR');
+    setNewTripDestination('');
     setShowAddTrip(false);
   };
 
@@ -890,9 +895,17 @@ export default function App() {
   };
 
   const handleSaveGroup = async (name: string, memberIds: string[], id: string | null): Promise<{ success: boolean; error?: string }> => {
+    // Editing an existing group down to a single member (or none) doesn't
+    // count as an error -- it just means the group no longer makes sense,
+    // so it dissolves instead of blocking the edit that got it there.
+    if (id && memberIds.length < 2) {
+      await deleteGroup(id);
+      return { success: true };
+    }
+
     const nameTrimmed = name.trim();
     if (!nameTrimmed) return { success: false, error: 'Group name cannot be empty.' };
-    if (memberIds.length === 0) return { success: false, error: 'Please select at least one member to add to the group.' };
+    if (memberIds.length < 2) return { success: false, error: 'A group needs at least 2 members.' };
 
     const nameLower = nameTrimmed.toLowerCase();
     const isDuplicateMember = activeTripMembers.some(
@@ -1398,6 +1411,8 @@ export default function App() {
           setNewTripEnd={setNewTripEnd}
           newTripCurrency={newTripCurrency}
           setNewTripCurrency={setNewTripCurrency}
+          newTripDestination={newTripDestination}
+          setNewTripDestination={setNewTripDestination}
           editingTripId={editingTripId}
           onCreateTrip={handleCreateTrip}
           onCancelTripForm={handleCancelTripForm}
@@ -1407,6 +1422,8 @@ export default function App() {
           onArchiveTrip={handleArchiveTrip}
           onOpenSettings={() => setShowGlobalSettings(true)}
           onOpenBugTracker={isSuperadmin ? () => setShowBugTracker(true) : undefined}
+          userAvatarUrl={userAvatarUrl}
+          userDisplayName={userDisplayName}
         />
       ) : (
         /* Screen 2: Active Trip Dashboard */
@@ -1764,11 +1781,17 @@ export default function App() {
           members={members}
           categories={categories}
           trip={activeTrip}
+          canManage={isAdmin || selectedReviewExpense.createdByUserId === userId}
           onClose={() => setSelectedReviewExpense(null)}
           onEdit={() => {
             const exp = selectedReviewExpense;
             setSelectedReviewExpense(null);
             handleStartEditExpense(exp);
+          }}
+          onDelete={() => {
+            const exp = selectedReviewExpense;
+            setSelectedReviewExpense(null);
+            handleDeleteExpense(exp);
           }}
         />
       )}

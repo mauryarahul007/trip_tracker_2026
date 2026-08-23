@@ -3,6 +3,7 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import type { Member, Group, Expense, Category, TripState, ExpenseLocation, Trip, TripStop } from '../types';
 import type { FeatureFlagKey } from '../types/admin';
 import { DEFAULT_FEATURE_FLAGS, isFeatureActive } from '../utils/featureFlags';
+import { buildAutoGroupName } from '../utils/groupNaming';
 import { fetchResolvedFeatureFlags, fetchAllFeatureFlagOverrides, setFeatureFlagOverride } from '../services/featureFlagApi';
 import { supabase, isMissingSupabaseEnv } from '../services/supabaseClient';
 import {
@@ -137,8 +138,8 @@ interface TripStore extends TripState {
   updateLastBackendSyncedAt: (timestamp: number) => void;
 
   // Trip Actions
-  createTrip: (name: string, startDate: string, endDate: string, baseCurrency: string, destination?: string, stops?: TripStop[]) => Promise<void>;
-  updateTrip: (id: string, name: string, startDate: string, endDate: string, destination?: string, stops?: TripStop[]) => Promise<void>;
+  createTrip: (name: string, startDate: string, endDate: string, baseCurrency: string, destination?: string) => Promise<void>;
+  updateTrip: (id: string, name: string, startDate: string, endDate: string, destination?: string) => Promise<void>;
   selectTrip: (id: string | null) => Promise<void>;
   archiveTrip: (id: string, archived: boolean) => Promise<void>;
   freezeTrip: (id: string, frozen: boolean) => Promise<void>;
@@ -780,8 +781,8 @@ export const useTripStore = create<TripStore>()(
             const { tripId } = item.payload;
             await purgeDeletedExpensesForTrip(tripId);
           } else if (item.type === 'createTrip') {
-            const { tripTempId, memberTempId, name, startDate, endDate, baseCurrency, ownerId, creatorName } = item.payload;
-            const trip = await insertTrip({ name, startDate, endDate, baseCurrency, ownerId, id: tripTempId });
+            const { tripTempId, memberTempId, name, startDate, endDate, baseCurrency, destination, ownerId, creatorName } = item.payload;
+            const trip = await insertTrip({ name, startDate, endDate, baseCurrency, destination, ownerId, id: tripTempId });
             const creatorMember = await insertMember(trip.id, creatorName, ownerId, memberTempId);
             set((state) => ({
               trips: state.trips.map((t) => (t.id === tripTempId ? { ...trip, memberIds: [memberTempId], adminMemberIds: [memberTempId], expenseCount: 0 } : t)),
@@ -834,7 +835,7 @@ export const useTripStore = create<TripStore>()(
       }
     },
 
-    createTrip: async (name, startDate, endDate, baseCurrency, destination, stops) => {
+    createTrip: async (name, startDate, endDate, baseCurrency, destination) => {
       const userId = get().userId || (get().isSuperadmin ? 'superadmin-root-user-id' : 'guest-traveler-user-id');
       const cleanDestination = destination?.trim() || (stops && stops.length > 0 ? stops.map((s) => s.name).join(' → ') : undefined);
       const cleanStops = stops && stops.length > 0 ? stops : undefined;
@@ -892,6 +893,7 @@ export const useTripStore = create<TripStore>()(
           startDate,
           endDate,
           baseCurrency,
+          destination,
           ownerId: userId,
           adminMemberIds: [creatorMemberId],
           joinCode: Math.random().toString(36).substring(2, 8).toUpperCase(),
@@ -935,6 +937,7 @@ export const useTripStore = create<TripStore>()(
         startDate,
         endDate,
         baseCurrency,
+        destination,
         memberIds: [memberTempId],
         groupIds: [],
         ownerId: userId,
@@ -963,10 +966,10 @@ export const useTripStore = create<TripStore>()(
       }
 
       if (!navigator.onLine) {
-        get().queueSync('createTrip', { tripTempId, memberTempId, name, startDate, endDate, baseCurrency, ownerId: userId, creatorName, destination: cleanDestination, stops: cleanStops });
+        get().queueSync('createTrip', { tripTempId, memberTempId, name, startDate, endDate, baseCurrency, destination, ownerId: userId, creatorName });
       } else {
         try {
-          const trip = await insertTrip({ name, startDate, endDate, baseCurrency, ownerId: userId, id: tripTempId, destination: cleanDestination, stops: cleanStops });
+          const trip = await insertTrip({ name, startDate, endDate, baseCurrency, destination, ownerId: userId, id: tripTempId });
           const creatorMember = await insertMember(trip.id, creatorName, userId, memberTempId);
           set((state) => ({
             trips: state.trips.map((t) => (t.id === tripTempId ? { ...trip, memberIds: [memberTempId], adminMemberIds: [memberTempId], expenseCount: 0, destination: cleanDestination, stops: cleanStops } : t)),
@@ -974,18 +977,16 @@ export const useTripStore = create<TripStore>()(
           }));
         } catch (e) {
           console.warn('Online createTrip failed, falling back to offline sync queue:', e);
-          get().queueSync('createTrip', { tripTempId, memberTempId, name, startDate, endDate, baseCurrency, ownerId: userId, creatorName, destination: cleanDestination, stops: cleanStops });
+          get().queueSync('createTrip', { tripTempId, memberTempId, name, startDate, endDate, baseCurrency, destination, ownerId: userId, creatorName });
         }
       }
     },
 
-    updateTrip: async (id, name, startDate, endDate, destination, stops) => {
-      const cleanDestination = destination?.trim() || (stops && stops.length > 0 ? stops.map((s) => s.name).join(' → ') : undefined);
-      const cleanStops = stops && stops.length > 0 ? stops : undefined;
+    updateTrip: async (id, name, startDate, endDate, destination) => {
       try {
-        await updateTripRow(id, { name, startDate, endDate, destination: cleanDestination, stops: cleanStops });
+        await updateTripRow(id, { name, startDate, endDate, destination });
         set((state) => ({
-          trips: state.trips.map((t) => (t.id === id ? { ...t, name, startDate, endDate, destination: cleanDestination, stops: cleanStops, updatedAt: Date.now() } : t)),
+          trips: state.trips.map((t) => (t.id === id ? { ...t, name, startDate, endDate, destination, updatedAt: Date.now() } : t)),
           storageError: null,
         }));
 
@@ -1288,10 +1289,13 @@ export const useTripStore = create<TripStore>()(
         if (remaining.length < 2) {
           groupsToDissolve.push(group.id);
         } else {
-          const names = remaining.map((mid) => currentMembers[mid]?.name).filter(Boolean) as string[];
-          let newName = group.name;
-          if (names.length === 2) newName = `${names[0]} & ${names[1]}`;
-          else if (names.length > 2) newName = `${names.slice(0, -1).join(', ')} & ${names[names.length - 1]}`;
+          // Only follow the removed member out if the name was still
+          // auto-generated -- a manually renamed group (e.g. "Goa Squad")
+          // keeps whatever the admin chose to call it.
+          const previousNames = group.memberIds.map((mid) => currentMembers[mid]?.name).filter(Boolean) as string[];
+          const wasAutoNamed = group.name === buildAutoGroupName(previousNames);
+          const remainingNames = remaining.map((mid) => currentMembers[mid]?.name).filter(Boolean) as string[];
+          const newName = wasAutoNamed ? buildAutoGroupName(remainingNames) : group.name;
           groupsToRename.push({ id: group.id, name: newName, memberIds: remaining });
         }
       });

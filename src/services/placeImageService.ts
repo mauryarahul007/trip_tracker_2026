@@ -60,7 +60,7 @@ export async function fetchPlaceCoverImage(placeInput: string | string[]): Promi
   }
 
   for (const query of candidates) {
-    const cleaned = query.replace(/[^\w\s,\-]/g, '').trim();
+    const cleaned = query.replace(/[^\w\s,-]/g, '').trim();
     if (!cleaned) continue;
 
     try {

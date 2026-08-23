@@ -8,6 +8,7 @@ import { fetchPreviousTripMembers, searchRemoteMemberSuggestions } from '../serv
 import { IconCheck, IconEdit, IconTrash, IconMembers, IconTag } from './Icons';
 import { useHistoryBack } from '../utils/useHistoryBack';
 import { usePrivacyStore, formatMaskedAmount } from '../store/privacyStore';
+import { buildAutoGroupName } from '../utils/groupNaming';
 
 type Props = {
   showMembersRequiredNotice: boolean;
@@ -331,16 +332,7 @@ export function MembersGroupsTab({
       const selectedNames = visibleMembers
         .filter((m) => selectedGroupMembers[m.id])
         .map((m) => m.name);
-
-      let autoName = '';
-      if (selectedNames.length === 1) {
-        autoName = selectedNames[0];
-      } else if (selectedNames.length === 2) {
-        autoName = `${selectedNames[0]} & ${selectedNames[1]}`;
-      } else if (selectedNames.length > 2) {
-        autoName = `${selectedNames.slice(0, -1).join(', ')} & ${selectedNames[selectedNames.length - 1]}`;
-      }
-      setNewGroupName(autoName);
+      setNewGroupName(buildAutoGroupName(selectedNames));
     }
   }, [selectedGroupMembers, isGroupNameAuto, visibleMembers]);
 
@@ -450,10 +442,7 @@ export function MembersGroupsTab({
     const selectedNames = visibleMembers
       .filter((m) => checkedMap[m.id])
       .map((m) => m.name);
-    let autoName = '';
-    if (selectedNames.length === 1) autoName = selectedNames[0];
-    else if (selectedNames.length === 2) autoName = `${selectedNames[0]} & ${selectedNames[1]}`;
-    else if (selectedNames.length > 2) autoName = `${selectedNames.slice(0, -1).join(', ')} & ${selectedNames[selectedNames.length - 1]}`;
+    const autoName = buildAutoGroupName(selectedNames);
 
     setIsGroupNameAuto(group.name === autoName);
     setGroupFormError('');

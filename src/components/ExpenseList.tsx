@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import type { CSSProperties } from 'react';
 import type { Category, Expense, Member, Trip } from '../types';
-import { IconSearch, IconEdit, IconTrash, IconAlertCircle, IconClose, IconCalendar } from './Icons';
+import { IconSearch, IconEdit, IconAlertCircle, IconClose, IconCalendar, IconChevronRight } from './Icons';
 import { SwipeableRow } from './SwipeableRow';
 import { CategoryIcon } from './CategoryIcon';
 import { getCurrencySymbol } from '../utils/currency';
@@ -12,9 +12,9 @@ import { triggerHaptic } from '../utils/haptics';
 
 // Swipe-to-delete is a supplement to the explicit trash button — skip
 // wrapping the row in it at all when the viewer isn't allowed to delete.
-function ConditionalSwipe({ enabled, onDelete, children }: { enabled: boolean; onDelete: () => void; children: React.ReactNode }) {
+function ConditionalSwipe({ enabled, onDelete, onEdit, children }: { enabled: boolean; onDelete: () => void; onEdit?: () => void; children: React.ReactNode }) {
   if (!enabled) return <>{children}</>;
-  return <SwipeableRow onDelete={onDelete}>{children}</SwipeableRow>;
+  return <SwipeableRow onDelete={onDelete} onEdit={onEdit}>{children}</SwipeableRow>;
 }
 
 // Photo when the member has one (from their linked Google account),
@@ -293,11 +293,11 @@ export function ExpenseList({
 
   const displayedExpenses = filteredExpenses.slice(0, visibleCount);
 
-  // Group into per-day sections so a long trip reads as a scannable list of
-  // day totals instead of one endless feed. Expenses already arrive newest
-  // date first, so the first N groups encountered are the most recent days
-  // -- expand those by default, collapse the rest. Collapsed state is keyed
-  // by date string, not index, so it survives Load More / filter changes.
+  // Group the flat "List" view into per-day sections so a long trip reads
+  // as a scannable list of day totals instead of one endless feed.
+  // Expenses already arrive newest date first, so the first N groups
+  // encountered are the most recent days -- expand those by default,
+  // collapse the rest.
   const dayGroups = displayedExpenses.reduce<{ date: string; expenses: Expense[] }[]>((groups, exp) => {
     const lastGroup = groups[groups.length - 1];
     if (lastGroup && lastGroup.date === exp.date) {
@@ -321,6 +321,16 @@ export function ExpenseList({
     triggerHaptic('light');
     const currentlyCollapsed = isDayCollapsed(date, groupIndex);
     setCollapseOverrides((prev) => ({ ...prev, [date]: !currentlyCollapsed }));
+  };
+  const allDaysExpanded = dayGroups.length > 0 && dayGroups.every((g, idx) => !isDayCollapsed(g.date, idx));
+  const toggleAllDays = () => {
+    triggerHaptic('light');
+    const nextCollapsed = allDaysExpanded;
+    setCollapseOverrides((prev) => {
+      const next = { ...prev };
+      dayGroups.forEach((g) => { next[g.date] = nextCollapsed; });
+      return next;
+    });
   };
 
   // Expenses whose payer and/or split still reference a member who was
@@ -510,196 +520,174 @@ export function ExpenseList({
           <div className="ledger-rule" />
         </div>
       ) : (
-        <div className="glass-card" style={{ padding: 0, overflow: 'hidden' }}>
+        <>
+          {dayGroups.length > DEFAULT_EXPANDED_DAYS && (
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '8px' }}>
+              <button
+                type="button"
+                onClick={toggleAllDays}
+                aria-label={allDaysExpanded ? 'Collapse all days' : 'Expand all days'}
+                title={allDaysExpanded ? 'Collapse all days' : 'Expand all days'}
+                style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  width: '28px', height: '28px', flexShrink: 0,
+                  background: allDaysExpanded ? 'var(--bg-surface-hover)' : 'var(--bg-surface)',
+                  border: '1px solid var(--border-color)',
+                  borderRadius: 'var(--border-radius-sm)',
+                  color: allDaysExpanded ? 'var(--primary-accent)' : 'var(--text-secondary)',
+                  cursor: 'pointer',
+                  transition: 'background 0.15s ease, color 0.15s ease',
+                }}
+              >
+                <IconChevronRight
+                  size={14}
+                  className="icon-sm"
+                  style={{ transition: 'transform 0.2s ease', transform: allDaysExpanded ? 'rotate(-90deg)' : 'rotate(90deg)' }}
+                />
+              </button>
+            </div>
+          )}
           {dayGroups.map((group, groupIdx) => {
-            const collapsed = isDayCollapsed(group.date, groupIdx);
             const groupDate = new Date(`${group.date}T00:00:00`);
-            const formattedGroupDate = Number.isNaN(groupDate.getTime())
+            const groupLabel = Number.isNaN(groupDate.getTime())
               ? group.date
-              : groupDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
-            const dayTotal = group.expenses.reduce((sum, e) => sum + e.amount, 0);
+              : groupDate.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', month: 'short' });
+            const groupTotal = group.expenses.reduce((sum, e) => sum + e.amount, 0);
+            const collapsed = isDayCollapsed(group.date, groupIdx);
 
             return (
-              <div key={group.date}>
+              <div key={group.date} className="glass-card" style={{ padding: 0, overflow: 'hidden', marginBottom: '10px' }}>
                 <div
                   role="button"
                   tabIndex={0}
                   onClick={() => toggleDay(group.date, groupIdx)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault();
-                      toggleDay(group.date, groupIdx);
-                    }
-                  }}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleDay(group.date, groupIdx); } }}
                   style={{
-                    position: 'sticky',
-                    top: 0,
-                    zIndex: 2,
-                    padding: '7px 14px',
-                    background: 'var(--bg-secondary)',
-                    borderTop: groupIdx > 0 ? '1px solid var(--border-color)' : 'none',
-                    borderBottom: '1px solid var(--border-color)',
-                    fontSize: '11px',
-                    fontWeight: 700,
-                    color: 'var(--text-muted)',
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.04em',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    cursor: 'pointer',
+                    position: 'sticky', top: 0, zIndex: 2,
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    gap: '10px', padding: '10px 14px', cursor: 'pointer',
+                    background: 'var(--bg-surface-hover)',
+                    borderBottom: collapsed ? 'none' : '1.5px solid var(--border-color)',
                   }}
                 >
-                  <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <span style={{ display: 'inline-block', transition: 'transform 0.15s ease', transform: collapsed ? 'rotate(-90deg)' : 'rotate(0deg)' }}>▾</span>
-                    📅 {formattedGroupDate}
-                  </span>
-                  <span style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 600 }}>
-                    {collapsed && (
-                      <span className="amount-mono privacy-blur" style={{ color: 'var(--text-secondary)' }}>
-                        {group.expenses.length} · {formatMaskedAmount(dayTotal.toFixed(2), currencySymbol, isBlindMode)}
-                      </span>
-                    )}
-                  </span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
+                    <IconChevronRight
+                      size={15}
+                      className="icon-sm"
+                      style={{ transition: 'transform 0.2s ease', transform: collapsed ? 'rotate(0deg)' : 'rotate(90deg)', flexShrink: 0 }}
+                    />
+                    <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {groupLabel}
+                    </span>
+                  </div>
+                  {collapsed && (
+                    <span style={{ fontSize: '12px', color: 'var(--text-muted)', flexShrink: 0 }}>
+                      {group.expenses.length} · {formatMaskedAmount(groupTotal.toFixed(2), currencySymbol, isBlindMode)}
+                    </span>
+                  )}
                 </div>
 
-                {!collapsed && group.expenses.map((exp, idxInGroup) => {
-            const isPending = exp.id === pendingDeleteId;
-            const canManage = isAdmin || exp.createdByUserId === userId;
-            const isPayerDeleted = trip ? !trip.memberIds.includes(exp.paidBy) : false;
-            const hasDeletedParticipants = trip ? exp.splitMemberIds.some((id) => !trip.memberIds.includes(id)) : false;
-            const needsReview = isPayerDeleted || hasDeletedParticipants;
-            const payerMember = members[exp.paidBy];
-            const cat = categories.find((c) => c.id === exp.category);
-            const splitMembers = exp.splitMemberIds.map((id) => ({ id, member: members[id] }));
-            const visibleSplitMembers = splitMembers.slice(0, 4);
-            const overflowSplitCount = splitMembers.length - visibleSplitMembers.length;
+                {!collapsed && group.expenses.map((exp, idx) => {
+                  const isPending = exp.id === pendingDeleteId;
+                  const canManage = isAdmin || exp.createdByUserId === userId;
+                  const isPayerDeleted = trip ? !trip.memberIds.includes(exp.paidBy) : false;
+                  const hasDeletedParticipants = trip ? exp.splitMemberIds.some((id) => !trip.memberIds.includes(id)) : false;
+                  const needsReview = isPayerDeleted || hasDeletedParticipants;
+                  const payerMember = members[exp.paidBy];
+                  const cat = categories.find((c) => c.id === exp.category);
+                  const splitMembers = exp.splitMemberIds.map((id) => ({ id, member: members[id] }));
+                  const visibleSplitMembers = splitMembers.slice(0, 4);
+                  const overflowSplitCount = splitMembers.length - visibleSplitMembers.length;
 
-            const formattedTime = exp.createdAt
-              ? new Date(exp.createdAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
-              : null;
+                  const reviewMessage = isPayerDeleted && hasDeletedParticipants
+                    ? 'Payer and a split member were removed — reassign the payer and update the split.'
+                    : isPayerDeleted
+                      ? 'Payer was removed — assign a new payer.'
+                      : 'A split member was removed — update the split.';
 
-            const reviewMessage = isPayerDeleted && hasDeletedParticipants
-              ? 'Payer and a split member were removed — reassign the payer and update the split.'
-              : isPayerDeleted
-                ? 'Payer was removed — assign a new payer.'
-                : 'A split member was removed — update the split.';
-
-            return (
-              <div key={exp.id}>
-                <div
-                  aria-hidden={isPending}
-                  style={{
-                    borderBottom: idxInGroup < group.expenses.length - 1 ? '1.5px dashed var(--border-color)' : 'none',
-                    opacity: isPending ? 0.35 : 1,
-                    pointerEvents: isPending ? 'none' : undefined,
-                    transition: 'opacity 0.25s ease',
-                  }}
-                >
-                  <ConditionalSwipe enabled={canManage} onDelete={() => onDelete(exp)}>
+                  return (
                     <div
+                      key={exp.id}
+                      aria-hidden={isPending}
                       style={{
-                        display: 'flex', flexDirection: 'column', gap: '6px',
-                        padding: '12px 14px',
-                        borderLeft: needsReview ? '3px solid var(--color-warning)' : 'none',
-                        background: needsReview ? 'rgba(185, 138, 62, 0.07)' : undefined,
+                        borderBottom: idx < group.expenses.length - 1 ? '1.5px dashed var(--border-color)' : 'none',
+                        opacity: isPending ? 0.35 : 1,
+                        pointerEvents: isPending ? 'none' : undefined,
+                        transition: 'opacity 0.25s ease',
                       }}
                     >
-                      <div
-                        style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}
-                        onClick={() => { triggerHaptic('light'); onReview(exp); }}
+                      <ConditionalSwipe
+                        enabled={canManage}
+                        onDelete={() => onDelete(exp)}
+                        onEdit={exp.title.startsWith('Settlement:') ? undefined : () => onEdit(exp)}
                       >
-                        <CategoryIcon categoryId={cat?.id || ''} fallbackEmoji={cat?.icon || '🏷️'} size={15} />
-                        <h4 style={{ flex: 1, minWidth: 0, fontSize: '15px', lineHeight: 1.3, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', margin: 0 }}>
-                          {exp.title}
-                        </h4>
-                        <span className="money privacy-blur" style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-primary)', whiteSpace: 'nowrap', flexShrink: 0, fontFamily: 'var(--font-family-mono)' }}>
-                          {formatMaskedAmount(exp.amount.toFixed(2), currencySymbol, isBlindMode)}
-                        </span>
-                      </div>
-
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
                         <div
-                          style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', minWidth: 0 }}
-                          onClick={() => { triggerHaptic('light'); onReview(exp); }}
-                          title={`Paid by ${payerMember?.name || 'a removed member'}`}
+                          style={{
+                            display: 'flex', flexDirection: 'column', gap: '6px',
+                            padding: '12px 14px',
+                            borderLeft: needsReview ? '3px solid var(--color-warning)' : 'none',
+                            background: needsReview ? 'rgba(185, 138, 62, 0.07)' : undefined,
+                          }}
                         >
-                          <ExpenseAvatar member={payerMember} size={22} muted={isPayerDeleted} />
-                          <span style={{ color: 'var(--text-muted)', fontSize: '12px', flexShrink: 0 }}>→</span>
-                          <div style={{ display: 'flex', flexShrink: 0 }}>
-                            {visibleSplitMembers.map(({ id, member }, splitIdx) => (
-                              <div key={id} style={{ marginLeft: splitIdx === 0 ? 0 : '-8px' }}>
-                                <ExpenseAvatar member={member} size={20} muted={!member} />
-                              </div>
-                            ))}
-                            {overflowSplitCount > 0 && (
-                              <div
-                                style={{
-                                  marginLeft: '-8px', width: '20px', height: '20px', borderRadius: '50%',
-                                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                  background: 'var(--bg-surface-hover)', color: 'var(--text-secondary)',
-                                  fontSize: '9.5px', fontWeight: 700, fontFamily: 'var(--font-family-mono)',
-                                  border: '1.5px solid var(--bg-surface)', flexShrink: 0,
-                                }}
-                              >
-                                +{overflowSplitCount}
-                              </div>
+                          <div
+                            style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}
+                            onClick={() => { triggerHaptic('light'); onReview(exp); }}
+                          >
+                            <CategoryIcon categoryId={cat?.id || ''} fallbackEmoji={cat?.icon || '🏷️'} size={15} />
+                            <h4 style={{ flex: 1, minWidth: 0, fontSize: '15px', lineHeight: 1.3, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{exp.title}</h4>
+                            <span className="money privacy-blur" style={{ fontSize: '15px', fontWeight: '600', color: 'var(--text-primary)', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                              {formatMaskedAmount(exp.amount.toFixed(2), currencySymbol, isBlindMode)}
+                            </span>
+                          </div>
+                          <div
+                            style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', minWidth: 0 }}
+                            onClick={() => { triggerHaptic('light'); onReview(exp); }}
+                            title={`Paid by ${payerMember?.name || 'a removed member'}`}
+                          >
+                            <ExpenseAvatar member={payerMember} size={22} muted={isPayerDeleted} />
+                            <span style={{ color: 'var(--text-muted)', fontSize: '12px', flexShrink: 0 }}>→</span>
+                            <div style={{ display: 'flex', flexShrink: 0 }}>
+                              {visibleSplitMembers.map(({ id, member }, splitIdx) => (
+                                <div key={id} style={{ marginLeft: splitIdx === 0 ? 0 : '-8px' }}>
+                                  <ExpenseAvatar member={member} size={20} muted={!member} />
+                                </div>
+                              ))}
+                              {overflowSplitCount > 0 && (
+                                <div
+                                  style={{
+                                    marginLeft: '-8px', width: '20px', height: '20px', borderRadius: '50%',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    background: 'var(--bg-surface-hover)', color: 'var(--text-secondary)',
+                                    fontSize: '9.5px', fontWeight: 700, fontFamily: 'var(--font-family-mono)',
+                                    border: '1.5px solid var(--bg-surface)', flexShrink: 0,
+                                  }}
+                                >
+                                  +{overflowSplitCount}
+                                </div>
+                              )}
+                            </div>
+                            {exp.location?.placeName && (
+                              <span style={{ color: '#00BFA5', fontSize: '12px', flexShrink: 0 }} title={exp.location.placeName}>📍</span>
                             )}
                           </div>
-                          {exp.location?.placeName && (
-                            <span style={{ color: '#0284C7', fontSize: '12px', flexShrink: 0 }} title={exp.location.placeName}>📍</span>
-                          )}
-                        </div>
-
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
-                          <span style={{ fontSize: '11.5px', lineHeight: 1.4, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
-                            {formattedTime || formattedGroupDate}
-                          </span>
-                          {canManage && (
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0 }}>
-                              {!exp.title.startsWith('Settlement:') && (
-                                <button
-                                  className="row-icon-btn"
-                                  style={needsReview ? { color: 'var(--color-warning)' } : undefined}
-                                  aria-label={needsReview ? 'Review expense' : 'Edit expense'}
-                                  title={needsReview ? 'Review' : 'Edit'}
-                                  onClick={(e) => { e.stopPropagation(); triggerHaptic('light'); onEdit(exp); }}
-                                >
-                                  {needsReview ? <IconAlertCircle size={15} className="icon-sm" /> : <IconEdit size={15} className="icon-sm" />}
-                                </button>
-                              )}
-                              <button
-                                className="row-icon-btn row-icon-btn-danger"
-                                aria-label="Delete expense"
-                                title="Delete"
-                                onClick={(e) => { e.stopPropagation(); triggerHaptic('warning'); onDelete(exp); }}
-                              >
-                                <IconTrash size={15} className="icon-sm" />
-                              </button>
+                          {needsReview && (
+                            <div style={{
+                              display: 'flex', alignItems: 'center', gap: '6px',
+                              fontSize: '12px', fontWeight: 500, color: 'var(--color-warning)',
+                            }}>
+                              <IconAlertCircle size={14} className="icon-sm" />
+                              <span>{reviewMessage}</span>
                             </div>
                           )}
                         </div>
-                      </div>
-
-                      {needsReview && (
-                        <div style={{
-                          display: 'flex', alignItems: 'center', gap: '6px',
-                          fontSize: '12px', fontWeight: 500, color: 'var(--color-warning)',
-                        }}>
-                          <IconAlertCircle size={14} className="icon-sm" />
-                          <span>{reviewMessage}</span>
-                        </div>
-                      )}
+                      </ConditionalSwipe>
                     </div>
-                  </ConditionalSwipe>
-                </div>
+                  );
+                })}
               </div>
             );
           })}
-              </div>
-            );
-          })}
-        </div>
+        </>
       )}
 
       {filteredExpenses.length > visibleCount && (

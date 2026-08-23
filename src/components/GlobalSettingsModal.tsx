@@ -84,11 +84,11 @@ export function GlobalSettingsModal({
   }, []);
 
   return (
-    <div className="modal-backdrop" onClick={onClose}>
+    <div className="modal-backdrop drawer-left" onClick={onClose}>
       <div
         ref={sheetRef}
         tabIndex={-1}
-        className="modal-sheet"
+        className="modal-sheet settings-drawer"
         role="dialog"
         aria-modal="true"
         aria-labelledby="global-settings-title"

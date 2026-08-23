@@ -560,11 +560,11 @@ export function BalancesSettlements({
   const [customOpenKeys, setCustomOpenKeys] = useState<Record<string, boolean>>({});
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
   const [upiTargetTransfer, setUpiTargetTransfer] = useState<Transfer | null>(null);
+  const [isTransfersExpanded, setIsTransfersExpanded] = useState(true);
+  const [isMembersSectionExpanded, setIsMembersSectionExpanded] = useState(false);
 
   const isUpiEnabled = useTripStore((s) => s.isFeatureEnabled('enableUpiPayments', { tripId: trip.id }));
   const balanceNodes = buildSettlementNodes(balances, groups);
-  const [isTransfersExpanded, setIsTransfersExpanded] = useState(true);
-  const [isMembersSectionExpanded, setIsMembersSectionExpanded] = useState(false);
 
   const setCustom = (rowKey: string, v: string) => setCustomAmounts({ ...customAmounts, [rowKey]: v });
   const toggleCustomOpen = (rowKey: string) => setCustomOpenKeys({ ...customOpenKeys, [rowKey]: !customOpenKeys[rowKey] });

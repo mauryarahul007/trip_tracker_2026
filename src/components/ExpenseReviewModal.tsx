@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { Category, Expense, Member, Trip } from '../types';
 import { getReceiptSignedUrl } from '../services/tripApi';
-import { IconEdit } from './Icons';
+import { IconEdit, IconTrash } from './Icons';
 import { getCurrencySymbol } from '../utils/currency';
 
 type Props = {
@@ -9,11 +9,13 @@ type Props = {
   members: Record<string, Member>;
   categories: Category[];
   trip: Trip | undefined;
+  canManage: boolean;
   onClose: () => void;
   onEdit: () => void;
+  onDelete: () => void;
 };
 
-export function ExpenseReviewModal({ expense, members, categories, trip, onClose, onEdit }: Props) {
+export function ExpenseReviewModal({ expense, members, categories, trip, canManage, onClose, onEdit, onDelete }: Props) {
   const isSettlement = expense.title.startsWith('Settlement:');
   const currencySymbol = getCurrencySymbol(trip?.baseCurrency || '');
   const [receiptUrl, setReceiptUrl] = useState<string | null>(null);
@@ -69,13 +71,22 @@ export function ExpenseReviewModal({ expense, members, categories, trip, onClose
             <h3 id="expense-review-title" style={{ fontSize: '22px', marginTop: '4px' }}>{expense.title}</h3>
           </div>
           <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
-            {!isSettlement && (
+            {canManage && !isSettlement && (
               <button
                 className="secondary-btn"
                 style={{ padding: '6px 12px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}
                 onClick={onEdit}
               >
                 <IconEdit size={13} className="icon-sm" /> Edit
+              </button>
+            )}
+            {canManage && (
+              <button
+                className="secondary-btn"
+                style={{ padding: '6px 12px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--color-danger)', borderColor: 'rgba(184, 69, 46, 0.3)' }}
+                onClick={onDelete}
+              >
+                <IconTrash size={13} className="icon-sm" /> Delete
               </button>
             )}
             <button
