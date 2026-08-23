@@ -1305,22 +1305,24 @@ export function SettingsView({
             </div>
           </button>
 
-          <button type="button" className="settings-row-item" onClick={() => setSubScreen('backups')}>
-            <div className="settings-row-left">
-              <div className="settings-squircle squircle-indigo">
-                <IconDatabase size={18} />
+          {isSuperadmin && (
+            <button type="button" className="settings-row-item" onClick={() => setSubScreen('backups')}>
+              <div className="settings-row-left">
+                <div className="settings-squircle squircle-indigo">
+                  <IconDatabase size={18} />
+                </div>
+                <div className="settings-row-texts">
+                  <span className="settings-row-title">Database Backups</span>
+                  <span className="settings-row-subtitle">Export/Import JSON database snapshot</span>
+                </div>
               </div>
-              <div className="settings-row-texts">
-                <span className="settings-row-title">Database Backups</span>
-                <span className="settings-row-subtitle">Export/Import JSON database snapshot</span>
+              <div className="settings-row-right">
+                <IconChevronRight size={16} />
               </div>
-            </div>
-            <div className="settings-row-right">
-              <IconChevronRight size={16} />
-            </div>
-          </button>
+            </button>
+          )}
 
-          {onLoadDemoTrip && (
+          {isSuperadmin && onLoadDemoTrip && (
             <button
               type="button"
               className="settings-row-item"
@@ -1387,7 +1389,7 @@ export function SettingsView({
             </button>
           )}
 
-          {onClearDatabase && (
+          {isSuperadmin && onClearDatabase && (
             <button
               type="button"
               className="settings-row-item"
