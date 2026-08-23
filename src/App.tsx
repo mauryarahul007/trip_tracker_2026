@@ -1654,11 +1654,17 @@ export default function App() {
           members={members}
           categories={categories}
           trip={activeTrip}
+          canManage={isAdmin || selectedReviewExpense.createdByUserId === userId}
           onClose={() => setSelectedReviewExpense(null)}
           onEdit={() => {
             const exp = selectedReviewExpense;
             setSelectedReviewExpense(null);
             handleStartEditExpense(exp);
+          }}
+          onDelete={() => {
+            const exp = selectedReviewExpense;
+            setSelectedReviewExpense(null);
+            handleDeleteExpense(exp);
           }}
         />
       )}

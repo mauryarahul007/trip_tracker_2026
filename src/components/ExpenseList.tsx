@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import type { CSSProperties } from 'react';
 import type { Category, Expense, Member, Trip } from '../types';
-import { IconSearch, IconEdit, IconTrash, IconAlertCircle, IconClose, IconCalendar, IconChevronRight } from './Icons';
+import { IconSearch, IconEdit, IconAlertCircle, IconClose, IconCalendar, IconChevronRight } from './Icons';
 import { SwipeableRow } from './SwipeableRow';
 import { CategoryIcon } from './CategoryIcon';
 import { getCurrencySymbol } from '../utils/currency';
@@ -12,9 +12,9 @@ import { triggerHaptic } from '../utils/haptics';
 
 // Swipe-to-delete is a supplement to the explicit trash button — skip
 // wrapping the row in it at all when the viewer isn't allowed to delete.
-function ConditionalSwipe({ enabled, onDelete, children }: { enabled: boolean; onDelete: () => void; children: React.ReactNode }) {
+function ConditionalSwipe({ enabled, onDelete, onEdit, children }: { enabled: boolean; onDelete: () => void; onEdit?: () => void; children: React.ReactNode }) {
   if (!enabled) return <>{children}</>;
-  return <SwipeableRow onDelete={onDelete}>{children}</SwipeableRow>;
+  return <SwipeableRow onDelete={onDelete} onEdit={onEdit}>{children}</SwipeableRow>;
 }
 
 // Photo when the member has one (from their linked Google account),
@@ -623,7 +623,11 @@ export function ExpenseList({
                         transition: 'opacity 0.25s ease',
                       }}
                     >
-                      <ConditionalSwipe enabled={canManage} onDelete={() => onDelete(exp)}>
+                      <ConditionalSwipe
+                        enabled={canManage}
+                        onDelete={() => onDelete(exp)}
+                        onEdit={exp.title.startsWith('Settlement:') ? undefined : () => onEdit(exp)}
+                      >
                         <div
                           style={{
                             display: 'flex', flexDirection: 'column', gap: '6px',
@@ -674,42 +678,11 @@ export function ExpenseList({
                                 <span style={{ color: '#00BFA5', fontSize: '12px', flexShrink: 0 }} title={exp.location.placeName}>📍</span>
                               )}
                             </div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
-                              {formattedTime && (
-                                <span style={{ fontSize: '11.5px', lineHeight: 1.4, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
-                                  {formattedTime}
-                                </span>
-                              )}
-                              {canManage && (
-                                // Its own gap, distinct from the date-to-buttons
-                                // gap above — edit and delete sitting right next
-                                // to each other need more separation than that,
-                                // since one is destructive and a mis-tap there
-                                // isn't recoverable the way a mis-tap elsewhere
-                                // would be.
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0 }}>
-                                  {!exp.title.startsWith('Settlement:') && (
-                                    <button
-                                      className="row-icon-btn"
-                                      style={needsReview ? { color: 'var(--color-warning)' } : undefined}
-                                      aria-label={needsReview ? 'Review expense' : 'Edit expense'}
-                                      title={needsReview ? 'Review' : 'Edit'}
-                                      onClick={(e) => { e.stopPropagation(); triggerHaptic('light'); onEdit(exp); }}
-                                    >
-                                      {needsReview ? <IconAlertCircle size={15} className="icon-sm" /> : <IconEdit size={15} className="icon-sm" />}
-                                    </button>
-                                  )}
-                                  <button
-                                    className="row-icon-btn row-icon-btn-danger"
-                                    aria-label="Delete expense"
-                                    title="Delete"
-                                    onClick={(e) => { e.stopPropagation(); triggerHaptic('warning'); onDelete(exp); }}
-                                  >
-                                    <IconTrash size={15} className="icon-sm" />
-                                  </button>
-                                </div>
-                              )}
-                            </div>
+                            {formattedTime && (
+                              <span style={{ fontSize: '11.5px', lineHeight: 1.4, color: 'var(--text-muted)', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                                {formattedTime}
+                              </span>
+                            )}
                           </div>
                           {needsReview && (
                             <div style={{

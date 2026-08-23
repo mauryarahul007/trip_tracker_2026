@@ -753,33 +753,6 @@ input[type="date"].input-field {
   text-decoration: underline;
 }
 
-/* Compact ghost icon buttons for list-row actions (edit/delete) — plain
-   icon rather than a bordered box, since swipe-to-delete already covers
-   the primary action and a full button chrome reads as heavier than a
-   secondary, occasional action needs. */
-.row-icon-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 38px;
-  height: 38px;
-  flex-shrink: 0;
-  background: none;
-  border: none;
-  border-radius: var(--border-radius-sm);
-  color: var(--text-secondary);
-  cursor: pointer;
-  transition: var(--transition-smooth);
-}
-.row-icon-btn:hover {
-  background: var(--bg-surface-hover);
-  color: var(--text-primary);
-}
-.row-icon-btn-danger:hover {
-  background: rgba(184, 69, 46, 0.1);
-  color: var(--color-danger);
-}
-
 /* Header & Navigation */
 .app-header {
   padding-top: calc(14px + var(--safe-top, 0px));
