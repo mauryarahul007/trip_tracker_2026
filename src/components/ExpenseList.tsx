@@ -352,42 +352,6 @@ export function ExpenseList({
         </button>
       )}
 
-      {/* Sleek Glanceable Balance & Spend Banner */}
-      {myMemberId && typeof myNetBalance === 'number' && (
-        <div
-          className="m3-balance-banner"
-          onClick={onGoToBalances}
-          role="button"
-          tabIndex={0}
-          style={{ cursor: onGoToBalances ? 'pointer' : 'default' }}
-          title={onGoToBalances ? 'Jump to Balances & Settlements' : undefined}
-          onKeyDown={(e) => {
-            if ((e.key === 'Enter' || e.key === ' ') && onGoToBalances) {
-              e.preventDefault();
-              onGoToBalances();
-            }
-          }}
-        >
-          <div className="m3-balance-banner-left">
-            <span style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: 500 }}>
-              Your Balance:
-            </span>
-            <div className={`m3-balance-banner-pill ${myNetBalance > 0.01 ? 'positive' : myNetBalance < -0.01 ? 'negative' : 'neutral'}`}>
-              {myNetBalance > 0.01
-                ? `+${currencySymbol}${myNetBalance.toFixed(2)}`
-                : myNetBalance < -0.01
-                  ? `-${currencySymbol}${Math.abs(myNetBalance).toFixed(2)}`
-                  : 'Settled'}
-            </div>
-          </div>
-          {typeof totalTripSpent === 'number' && (
-            <div className="m3-balance-banner-right">
-              Trip Spent: <strong>{currencySymbol}{totalTripSpent.toLocaleString('en-IN', { maximumFractionDigits: 2 })}</strong>
-            </div>
-          )}
-        </div>
-      )}
-
       {/* Search & Quick Filters */}
       {activeTripExpenseCount > 0 && (
         <div ref={filtersRef} className="expense-filters">
@@ -697,6 +661,44 @@ export function ExpenseList({
           >
             Load More (showing {visibleCount} of {filteredExpenses.length})
           </button>
+        </div>
+      )}
+
+      {/* Sleek Glanceable Balance & Spend Banner -- moved below the ledger
+          so it summarizes the transactions just shown, instead of sitting
+          above an empty list before any expense exists. */}
+      {myMemberId && typeof myNetBalance === 'number' && (
+        <div
+          className="m3-balance-banner"
+          onClick={onGoToBalances}
+          role="button"
+          tabIndex={0}
+          style={{ cursor: onGoToBalances ? 'pointer' : 'default', marginTop: '16px' }}
+          title={onGoToBalances ? 'Jump to Balances & Settlements' : undefined}
+          onKeyDown={(e) => {
+            if ((e.key === 'Enter' || e.key === ' ') && onGoToBalances) {
+              e.preventDefault();
+              onGoToBalances();
+            }
+          }}
+        >
+          <div className="m3-balance-banner-left">
+            <span style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: 500 }}>
+              Your Balance:
+            </span>
+            <div className={`m3-balance-banner-pill ${myNetBalance > 0.01 ? 'positive' : myNetBalance < -0.01 ? 'negative' : 'neutral'}`}>
+              {myNetBalance > 0.01
+                ? `+${currencySymbol}${myNetBalance.toFixed(2)}`
+                : myNetBalance < -0.01
+                  ? `-${currencySymbol}${Math.abs(myNetBalance).toFixed(2)}`
+                  : 'Settled'}
+            </div>
+          </div>
+          {typeof totalTripSpent === 'number' && (
+            <div className="m3-balance-banner-right">
+              Trip Spent: <strong>{currencySymbol}{totalTripSpent.toLocaleString('en-IN', { maximumFractionDigits: 2 })}</strong>
+            </div>
+          )}
         </div>
       )}
     </>
