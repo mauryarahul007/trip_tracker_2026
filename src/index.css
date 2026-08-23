@@ -940,6 +940,128 @@ input[type="date"].input-field {
   font-weight: 700;
 }
 
+/* Boarding-pass balance summary card — restored from the pre-refactor
+   Balances & Settlements screen. Uses the same semantic tokens as the
+   rest of the app, so it renders in whatever the current theme is
+   (currently Skyline Escape's blue/teal), not the old ledger colors. */
+.boarding-pass {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-md);
+  overflow: hidden;
+  position: relative;
+  margin-bottom: 16px;
+}
+.bp-top {
+  padding: 16px 20px 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  position: relative;
+}
+.bp-eyebrow {
+  font-family: var(--font-family-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.bp-title {
+  font-family: var(--font-family-title);
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-top: 2px;
+}
+.bp-meta {
+  font-family: var(--font-family-mono);
+  font-size: 11px;
+  color: var(--text-muted);
+  text-align: right;
+}
+.bp-perf {
+  position: relative;
+  border-top: 1.5px dashed var(--border-color);
+}
+.bp-perf::before, .bp-perf::after {
+  content: "";
+  position: absolute;
+  top: -9px;
+  width: 18px;
+  height: 18px;
+  background: var(--bg-app);
+  border-radius: 50%;
+  border: 1px solid var(--border-color);
+}
+.bp-perf::before { left: -9px; }
+.bp-perf::after { right: -9px; }
+.bp-body {
+  padding: 22px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 4px;
+  position: relative;
+}
+.bp-who {
+  font-family: var(--font-family-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.bp-amount {
+  font-family: var(--font-family-title);
+  font-weight: 900;
+  font-size: 36px;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+.bp-sub {
+  font-size: 13px;
+  color: var(--text-secondary);
+  max-width: 34ch;
+}
+.bp-stamp-pos {
+  position: absolute;
+  bottom: -13px;
+  right: 20px;
+}
+.bp-foot {
+  border-top: 1.5px dashed var(--border-color);
+  padding: 12px 20px 14px;
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-family-mono);
+  font-size: 11px;
+  color: var(--text-muted);
+}
+.stamp-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-family-title);
+  font-style: italic;
+  font-weight: 700;
+  font-size: 12.5px;
+  letter-spacing: 0.03em;
+  border: 2px solid currentColor;
+  border-radius: 5px;
+  padding: 3px 10px;
+  opacity: 0.9;
+  transform: rotate(8deg);
+  animation: stampIn 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+@keyframes stampIn {
+  from { opacity: 0; transform: scale(1.6) rotate(18deg); }
+  to { opacity: 0.9; transform: scale(1) rotate(8deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .stamp-badge { animation: none; }
+}
+
 /* Date Section Dividers in Transaction Feed */
 .expense-date-divider {
   display: flex;
