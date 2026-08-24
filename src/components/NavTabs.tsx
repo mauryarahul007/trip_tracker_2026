@@ -1,6 +1,7 @@
+import { useRef } from 'react';
 import { IconExpenses, IconMembers, IconAnalytics, IconSettings, IconPlus } from './Icons';
 import { triggerHaptic } from '../utils/haptics';
-import { FlightAddExpenseTooltip } from './FlightAddExpenseTooltip';
+import { FlightAddExpenseTooltip, STORAGE_KEY } from './FlightAddExpenseTooltip';
 
 type Tab = 'expenses' | 'members' | 'analytics' | 'settings';
 
@@ -13,9 +14,42 @@ type Props = {
 };
 
 export function NavTabs({ activeTab, setActiveTab, onAddExpense, expenseCount, tripDestination }: Props) {
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const longPressFired = useRef(false);
+
   const goTo = (tab: Tab) => {
     if (tab !== activeTab) triggerHaptic('light');
     setActiveTab(tab);
+  };
+
+  const handlePointerDown = () => {
+    longPressFired.current = false;
+    longPressTimer.current = setTimeout(() => {
+      longPressFired.current = true;
+      triggerHaptic('medium');
+      try {
+        if (typeof localStorage !== 'undefined') {
+          localStorage.removeItem(STORAGE_KEY);
+        }
+      } catch {}
+      window.dispatchEvent(new CustomEvent('tt:reset-coachmarks'));
+    }, 450);
+  };
+
+  const clearLongPress = () => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+  };
+
+  const handleFabClick = () => {
+    if (longPressFired.current) {
+      longPressFired.current = false;
+      return;
+    }
+    triggerHaptic('light');
+    onAddExpense();
   };
 
   return (
@@ -37,12 +71,12 @@ export function NavTabs({ activeTab, setActiveTab, onAddExpense, expenseCount, t
         <button
           type="button"
           className="nav-tab-fab"
-          onClick={() => {
-            triggerHaptic('light');
-            onAddExpense();
-          }}
-          aria-label="Add Expense"
-          title="Add Expense"
+          onPointerDown={handlePointerDown}
+          onPointerUp={clearLongPress}
+          onPointerCancel={clearLongPress}
+          onClick={handleFabClick}
+          aria-label="Add Expense (Hold for flight guide)"
+          title="Add Expense (Hold for flight guide)"
         >
           <IconPlus size={24} />
         </button>

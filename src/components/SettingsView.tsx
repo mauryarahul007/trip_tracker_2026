@@ -158,6 +158,18 @@ export function SettingsView({
   // Category keyword states
   const [expandedCategoryId, setExpandedCategoryId] = useState<string | null>(null);
   const [newKeywordInput, setNewKeywordInput] = useState('');
+  const [coachmarkResetStatus, setCoachmarkResetStatus] = useState<string | null>(null);
+
+  const handleResetCoachmarks = () => {
+    try {
+      if (typeof localStorage !== 'undefined') {
+        localStorage.removeItem('tt_flight_add_tooltip_dismissed_v1');
+      }
+    } catch {}
+    window.dispatchEvent(new CustomEvent('tt:reset-coachmarks'));
+    setCoachmarkResetStatus('✓ Reactivated');
+    setTimeout(() => setCoachmarkResetStatus(null), 2500);
+  };
 
   // Report a Problem registers a guard here while it has unsubmitted text,
   // so a hardware/browser back-press can intercept with "go back or submit
@@ -1256,6 +1268,29 @@ export function SettingsView({
               </div>
             </div>
           )}
+
+          <button
+            type="button"
+            className="settings-row-item"
+            onClick={handleResetCoachmarks}
+          >
+            <div className="settings-row-left">
+              <div className="settings-squircle squircle-amber" style={{ background: 'rgba(255, 122, 0, 0.14)', color: '#FF7A00' }}>
+                <span>✈️</span>
+              </div>
+              <div className="settings-row-texts">
+                <span className="settings-row-title">Flight Helper &amp; Coachmarks</span>
+                <span className="settings-row-subtitle">
+                  {coachmarkResetStatus ? 'Onboarding flight tips re-enabled!' : 'Re-enable animated transaction guide on the + button'}
+                </span>
+              </div>
+            </div>
+            <div className="settings-row-right">
+              <span className="settings-badge-pill" style={{ color: coachmarkResetStatus ? 'var(--color-success)' : 'var(--primary-accent)', fontWeight: 600 }}>
+                {coachmarkResetStatus || 'Reset'}
+              </span>
+            </div>
+          </button>
 
           {pwaInstallable && (
             <button

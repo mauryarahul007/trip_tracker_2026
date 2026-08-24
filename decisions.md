@@ -960,6 +960,18 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - Tooltip only auto-prompts on first onboarding before dismissal, maintaining a clean and minimal interface for frequent power users while providing instant discoverability for beginners.
 
+---
+
+## 52. Numberless Spotify-Wrapped Style Trip Story Card
+* **Context:**
+  - The previous Trip Wrapped modal rendered raw financial totals (Total Spend, Average / Person, and exact rupees paid by individuals). Users sharing to Instagram or WhatsApp stories felt uncomfortable sharing private banking numbers and currency metrics publicly.
+* **Decision:**
+  - Redesigned [`src/components/TripWrappedModal.tsx`](file:///c:/ProjectsV1/Trip_Tracker_2026/src/components/TripWrappedModal.tsx) to completely eliminate raw currency and dollar/rupee figures from both the in-modal preview and the 1080x1920 HD Canvas export.
+  - Implemented dynamic **Trip Vibe Archetypes** (e.g. *The Gourmet Pilgrimage*, *The High-Luxe Sanctuary*, *The Fast-Paced Expedition*), **Squad Superlatives** (e.g. *Chief Quartermaster*, *Executive Tasting Officer*, *Transit Navigator*), **Trip Rhythm** (Peak Adventure Day, Trip Pace), and an embossed vector **Passport Stamp Seal**.
+* **Trade-offs Accepted:**
+  - Replaced accounting metrics with qualitative travel badges, creating an engaging, privacy-friendly social asset ready for instant story sharing.
+
+
 
 
 
