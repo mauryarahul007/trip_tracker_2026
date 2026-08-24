@@ -855,5 +855,57 @@
     "resolvedBy": "claude-cli",
     "resolvedAt": "2026-08-21T19:16:02.473Z",
     "resolutionNote": "tripStore.ts loadDemoTrip offline-fallback: result.categories now returns [] (matching insertTripGraph's success-path shape of custom-only categories) instead of DEFAULT_CATEGORIES, so the caller's [...DEFAULT_CATEGORIES, ...result.categories] no longer doubles every default category. Added regression test in tripStore.test.ts (loadDemoTrip suite) that mocks insertTripGraph to reject and asserts categories has no duplicate ids -- fails without the fix (12 ids instead of 6), passes with it."
+  },
+  {
+    "id": "BUG-067",
+    "title": "Mobile canvas solid cyan block fill and text overflow in Trip Wrapped",
+    "description": "Canvas roundRect path collision caused top card to fill with solid cyan on mobile webviews, and route text exceeded container boundary.",
+    "severity": "medium",
+    "category": "ui-ux",
+    "status": "resolved",
+    "foundBy": "user",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-08-24T14:30:16.307Z",
+    "updatedAt": "2026-08-24T14:30:22.424Z",
+    "resolvedBy": "antigravity",
+    "resolvedAt": "2026-08-24T14:30:22.424Z",
+    "resolutionNote": "Replaced native roundRect with drawSafeRoundedRect with explicit beginPath/closePath, added drawSafeWrappedText for multi-line bound protection, and added Night/Light theme switcher."
+  },
+  {
+    "id": "BUG-068",
+    "title": "Home screen card-style deck vertical scroll outside viewport on mobile",
+    "description": "Combined height of header, logo, card stack, view all button, and slide launcher exceeded phone screen height causing awkward page scrolling.",
+    "severity": "medium",
+    "category": "ui-ux",
+    "status": "resolved",
+    "foundBy": "user",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-08-24T14:30:28.657Z",
+    "updatedAt": "2026-08-24T14:30:33.608Z",
+    "resolvedBy": "antigravity",
+    "resolvedAt": "2026-08-24T14:30:33.607Z",
+    "resolutionNote": "Added .stack-viewport-lock with 100dvh lock and flexbox column auto-scaling in index.css (ADR 50)."
   }
 ]

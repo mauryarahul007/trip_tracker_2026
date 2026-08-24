@@ -44,5 +44,37 @@
     "shippedAt": "2026-08-21T17:24:03.31+00:00",
     "shippedBy": "claude-cli",
     "shippedNote": "reloadFleetData now returns a Promise so the button can await + spinner instead of requiring a full page reload. Commit 228c582."
+  },
+  {
+    "id": "FEAT-004",
+    "title": "Flight-themed 3D aerodynamic jetliner coachmark tooltip for expense logging",
+    "description": "3D aerodynamic jetliner with banking physics, navigation beacons, dual engine thrusters, haptics, long-press reactivation on + FAB, and Settings reset row.",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "antigravity",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-08-24T14:30:01.790Z",
+    "updatedAt": "2026-08-24T14:30:01.790Z",
+    "shippedAt": "2026-08-24T14:30:01.790Z",
+    "shippedBy": "antigravity",
+    "shippedNote": "Shipped"
+  },
+  {
+    "id": "FEAT-005",
+    "title": "Numberless Spotify-Wrapped-Style Story Infographic Card",
+    "description": "Qualitative travel archetypes, squad member superlatives, dynamic trip rhythm insights, passport stamp seal, and Night/Light theme switcher.",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "antigravity",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-08-24T14:30:09.207Z",
+    "updatedAt": "2026-08-24T14:30:09.207Z",
+    "shippedAt": "2026-08-24T14:30:09.207Z",
+    "shippedBy": "antigravity",
+    "shippedNote": "Shipped"
   }
 ]

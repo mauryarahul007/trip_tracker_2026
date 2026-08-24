@@ -9,11 +9,11 @@
 
 | Metric | Count |
 | :--- | :--- |
-| **Total Tracked** | **3** |
+| **Total Tracked** | **5** |
 | **💡 Requested** | **1** |
 | **📋 Planned** | **0** |
 | **🟡 In Progress** | **0** |
-| **✅ Shipped** | **2** |
+| **✅ Shipped** | **4** |
 | **⚪ Won't Do** | **0** |
 
 ---
@@ -44,6 +44,8 @@ Test
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | **FEAT-001** | Feature Additions Tracker | `admin` | `claude-cli` | `claude-cli` | Parallel system to the Bug Ledger. Migration 0063, featureApi.ts, feature.mjs CLI, FeatureRequestModal.tsx (Settings > Suggest a Feature), AdminFeaturesPage.tsx (Ops Deck Features tab) with flag-linking. Commit 1bf95d6. |
 | **FEAT-003** | Refresh button on Features tab | `admin` | `claude-cli` | `claude-cli` | reloadFleetData now returns a Promise so the button can await + spinner instead of requiring a full page reload. Commit 228c582. |
+| **FEAT-004** | Flight-themed 3D aerodynamic jetliner coachmark tooltip for expense logging | `ui-ux` | `antigravity` | `antigravity` | Shipped |
+| **FEAT-005** | Numberless Spotify-Wrapped-Style Story Infographic Card | `ui-ux` | `antigravity` | `antigravity` | Shipped |
 
 ---
 
