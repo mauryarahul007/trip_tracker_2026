@@ -21,7 +21,6 @@ interface BoardingPassHeroCardProps {
   topCategoryPercentage?: number;
   currentMember?: Member;
   onOpenSquadBadges?: () => void;
-  onOpenJourneyMap?: () => void;
 }
 
 export function BoardingPassHeroCard({
@@ -37,7 +36,6 @@ export function BoardingPassHeroCard({
   topCategoryName,
   currentMember,
   onOpenSquadBadges,
-  onOpenJourneyMap,
 }: BoardingPassHeroCardProps) {
   const isBlindMode = usePrivacyStore((s) => s.isBlindMode);
   const [isFlipped, setIsFlipped] = useState(false);
@@ -257,32 +255,6 @@ export function BoardingPassHeroCard({
                   title="View Unlocked Squad Achievements"
                 >
                   🏆 SQUAD BADGES
-                </div>
-              )}
-              {onOpenJourneyMap && (
-                <div
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    triggerHaptic('medium');
-                    onOpenJourneyMap();
-                  }}
-                  style={{
-                    background: 'rgba(47, 111, 237, 0.1)',
-                    color: 'var(--primary-accent)',
-                    fontFamily: 'var(--font-family-mono)',
-                    fontSize: '10px',
-                    fontWeight: 700,
-                    padding: '4px 8px',
-                    borderRadius: '8px',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '4px',
-                    border: '1px solid rgba(47, 111, 237, 0.2)',
-                  }}
-                  title="Play Animated Journey Route"
-                >
-                  🗺️ RELIVE
                 </div>
               )}
             </div>
