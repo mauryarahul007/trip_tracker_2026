@@ -178,7 +178,7 @@ export function AdminUsersPage({ users, trips, superadminIds, onUsersChanged, on
                         </div>
                         <div className="ops-trip-route">{u.email}</div>
                       </td>
-                      <td data-label="Joined">{new Date(u.createdAt).toLocaleDateString()}</td>
+                      <td data-label="Joined">{new Date(u.createdAt).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata', day: 'numeric', month: 'short', year: 'numeric' })}</td>
                       <td data-label="Status">
                         <span className={`ops-badge ${u.banned ? 'grounded' : 'active'}`}>
                           {u.banned ? 'Suspended' : 'Active'}

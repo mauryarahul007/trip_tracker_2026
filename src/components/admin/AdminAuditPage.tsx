@@ -123,7 +123,18 @@ export function AdminAuditPage({ logs, trips, users, onLogsChanged, onRefresh, i
               <tbody>
                 {filteredLogs.map((l) => (
                   <tr key={l.id}>
-                    <td data-label="Time" style={{ whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }}>{new Date(l.createdAt).toLocaleString()}</td>
+                    <td data-label="Time" style={{ whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }}>
+                      {new Date(l.createdAt).toLocaleString('en-IN', {
+                        timeZone: 'Asia/Kolkata',
+                        hour12: true,
+                        day: 'numeric',
+                        month: 'short',
+                        year: 'numeric',
+                        hour: 'numeric',
+                        minute: '2-digit',
+                        second: '2-digit',
+                      })}
+                    </td>
                     <td data-label="Action">{ACTION_LABELS[l.action] || l.action}</td>
                     <td data-label="Actor">{(l.actorUserId && userById.get(l.actorUserId)) || l.actorUserId || '—'}</td>
                     <td data-label="Trip">{(l.tripId && tripNameById.get(l.tripId)) || (l.tripId ? l.tripId : '—')}</td>

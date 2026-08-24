@@ -152,7 +152,7 @@ export function AdminFeaturesPage({ features, onFeaturesChanged }: Props) {
                     <span className="ops-switcher-row-code">{f.id}</span>
                   </div>
                   <div className="ops-trip-route">
-                    {f.category} &middot; requested by {f.requestedBy} &middot; {new Date(f.createdAt).toLocaleDateString()}
+                    {f.category} &middot; requested by {f.requestedBy} &middot; {new Date(f.createdAt).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata', day: 'numeric', month: 'short', year: 'numeric' })}
                   </div>
                   {f.description && (
                     <p style={{ fontSize: '12.5px', color: 'var(--text-secondary)', marginTop: '8px' }}>{f.description}</p>

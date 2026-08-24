@@ -48,13 +48,19 @@ const SECTIONS: { id: AdminTab; label: string; code: string }[] = [
   { id: 'tools', label: 'Tools', code: 'SEC.07' },
 ];
 
-function useUtcClock() {
-  const [clock, setClock] = useState('--:--:-- UTC');
+function useIstClock() {
+  const [clock, setClock] = useState('--:--:-- IST');
   useEffect(() => {
-    const pad = (n: number) => String(n).padStart(2, '0');
     const tick = () => {
       const d = new Date();
-      setClock(`${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}:${pad(d.getUTCSeconds())} UTC`);
+      const timeStr = d.toLocaleTimeString('en-IN', {
+        timeZone: 'Asia/Kolkata',
+        hour: 'numeric',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: true,
+      });
+      setClock(`${timeStr} IST`);
     };
     tick();
     const id = setInterval(tick, 1000);
@@ -87,7 +93,7 @@ export function AdminPortalLayout({
   const panelRef = useRef<HTMLElement>(null);
   const lockSuperadmin = useTripStore((s) => s.lockSuperadmin);
   const signOut = useAuthStore((s) => s.signOut);
-  const clock = useUtcClock();
+  const clock = useIstClock();
 
   // The traveler app only ever loads one trip's expenses at a time
   // (fetchExpensesForTrip); cross-trip analytics needs every trip's real
