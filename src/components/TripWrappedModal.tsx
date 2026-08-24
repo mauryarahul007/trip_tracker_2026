@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { Trip, Expense, Member, Category } from '../types';
-import { IconClose, IconDownload, IconCheck, IconShare } from './Icons';
+import { IconClose, IconDownload, IconCheck, IconShare, IconMoon, IconSun } from './Icons';
 import { triggerHaptic } from '../utils/haptics';
 
 export interface TripArchetype {
@@ -28,16 +28,14 @@ export function getTripArchetype(categories: Category[], expenses: Expense[]): T
     return {
       title: 'The Clean Slate Odyssey',
       subtitle: 'A fresh journey waiting for its first great story.',
-      icon: '✈️',
+      icon: '✨',
       tag: 'NEW HORIZONS',
     };
   }
 
-  const categoryCountMap: Record<string, number> = {};
   const categorySpendMap: Record<string, number> = {};
 
   expenses.forEach((e) => {
-    categoryCountMap[e.category] = (categoryCountMap[e.category] || 0) + 1;
     categorySpendMap[e.category] = (categorySpendMap[e.category] || 0) + e.amount;
   });
 
@@ -169,7 +167,7 @@ export function getMemberSuperlatives(
         memberName: m.name,
         title: 'Chief Quartermaster',
         icon: '👑',
-        note: 'Coordinated the crew bookings & kept the trip running like clockwork.',
+        note: 'Coordinated crew logistics & kept the trip moving smoothly.',
       });
       assignedMembers.add(m.id);
     }
@@ -192,7 +190,7 @@ export function getMemberSuperlatives(
         memberName: m.name,
         title: 'Executive Tasting Officer',
         icon: '🍕',
-        note: 'Always found the tastiest cafes, street food & group treats.',
+        note: 'Discovered the best dining, cafes & group treats.',
       });
       assignedMembers.add(m.id);
     }
@@ -224,9 +222,9 @@ export function getMemberSuperlatives(
   // Assign fun honorary badges to remaining members
   const honoraryRoles = [
     { title: 'The Vibe Harmonizer', icon: '✨', note: 'Essential squad energy & seamless split participation.' },
-    { title: 'Chief Morale Officer', icon: '🎉', note: 'Kept the mood electric from sunrise to sunset.' },
-    { title: 'The Spontaneous Trailblazer', icon: '🧭', note: 'Always ready for unplanned detours & hidden spots.' },
-    { title: 'Master of Logistics', icon: '⚡', note: 'Swift, dependable, and locked into every group activity.' },
+    { title: 'Chief Morale Officer', icon: '🎉', note: 'Kept the energy electric from sunrise to sunset.' },
+    { title: 'Spontaneous Trailblazer', icon: '🧭', note: 'Always ready for unplanned detours & hidden gems.' },
+    { title: 'Master of Flow', icon: '⚡', note: 'Swift, dependable, and locked into every group plan.' },
   ];
 
   let roleIdx = 0;
@@ -287,6 +285,43 @@ export function getTripRhythm(expenses: Expense[], trip: Trip): TripRhythm {
   };
 }
 
+// Canvas Safe Rounded Rectangle Helper
+function drawSafeRoundedRect(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  radius: number,
+  fillColor?: string,
+  strokeColor?: string,
+  lineWidth = 1
+) {
+  ctx.save();
+  ctx.beginPath();
+  ctx.moveTo(x + radius, y);
+  ctx.lineTo(x + width - radius, y);
+  ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+  ctx.lineTo(x + width, y + height - radius);
+  ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+  ctx.lineTo(x + radius, y + height);
+  ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+  ctx.lineTo(x, y + radius);
+  ctx.quadraticCurveTo(x, y, x + radius, y);
+  ctx.closePath();
+
+  if (fillColor) {
+    ctx.fillStyle = fillColor;
+    ctx.fill();
+  }
+  if (strokeColor) {
+    ctx.strokeStyle = strokeColor;
+    ctx.lineWidth = lineWidth;
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
 interface TripWrappedModalProps {
   trip: Trip;
   expenses: Expense[];
@@ -304,6 +339,7 @@ export function TripWrappedModal({
 }: TripWrappedModalProps) {
   const [downloading, setDownloading] = useState(false);
   const [shared, setShared] = useState(false);
+  const [themeMode, setThemeMode] = useState<'dark' | 'light'>('dark');
 
   const archetype = getTripArchetype(categories, expenses);
   const superlatives = getMemberSuperlatives(members, expenses, categories);
@@ -317,161 +353,156 @@ export function TripWrappedModal({
     const ctx = canvas.getContext('2d');
     if (!ctx) return null;
 
-    // Background Gradient (Dark Obsidian / Emerald Luxury)
+    const isDark = themeMode === 'dark';
+
+    // 1. Background Luxury Gradient
     const bgGrad = ctx.createLinearGradient(0, 0, 0, 1920);
-    bgGrad.addColorStop(0, '#09151A');
-    bgGrad.addColorStop(0.35, '#0E232A');
-    bgGrad.addColorStop(0.7, '#132E37');
-    bgGrad.addColorStop(1, '#081418');
+    if (isDark) {
+      bgGrad.addColorStop(0, '#060E12');
+      bgGrad.addColorStop(0.3, '#0C1C23');
+      bgGrad.addColorStop(0.7, '#102630');
+      bgGrad.addColorStop(1, '#050B0E');
+    } else {
+      bgGrad.addColorStop(0, '#FAF7EE');
+      bgGrad.addColorStop(0.35, '#F4EDE0');
+      bgGrad.addColorStop(0.75, '#EDE3D2');
+      bgGrad.addColorStop(1, '#E5DAC6');
+    }
     ctx.fillStyle = bgGrad;
     ctx.fillRect(0, 0, 1080, 1920);
 
-    // Glowing Ambient Neon Orbs
-    ctx.beginPath();
-    ctx.arc(950, 240, 380, 0, Math.PI * 2);
-    ctx.fillStyle = 'rgba(63, 203, 189, 0.16)';
-    ctx.fill();
-
-    ctx.beginPath();
-    ctx.arc(100, 1680, 420, 0, Math.PI * 2);
-    ctx.fillStyle = 'rgba(255, 122, 0, 0.14)';
-    ctx.fill();
-
-    ctx.beginPath();
-    ctx.arc(980, 1100, 300, 0, Math.PI * 2);
-    ctx.fillStyle = 'rgba(43, 168, 158, 0.1)';
-    ctx.fill();
-
-    // Top App Branding
-    ctx.font = '700 32px monospace';
-    ctx.fillStyle = '#3FCBBD';
-    ctx.fillText('TRIP TRACKER · 2026', 100, 160);
-
-    ctx.font = '800 68px serif';
-    ctx.fillStyle = '#FFFFFF';
-    ctx.fillText('Trip Wrapped ✨', 100, 245);
-
-    // Header Trip Badge Capsule
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
-    ctx.strokeStyle = 'rgba(63, 203, 189, 0.35)';
-    ctx.lineWidth = 2.5;
-    ctx.roundRect(100, 300, 880, 180, 28);
-    ctx.fill();
-    ctx.stroke();
-
-    ctx.font = '800 48px sans-serif';
-    ctx.fillStyle = '#FFFFFF';
-    ctx.fillText(trip.name, 140, 375);
-
-    ctx.font = '500 28px sans-serif';
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
-    const dateStr = trip.startDate && trip.endDate ? `${trip.startDate} — ${trip.endDate}` : '2026 Journey';
-    ctx.fillText(`${dateStr} · ${members.length} Squad Members`, 140, 435);
-
-    // Section 1: Trip Vibe Identity Card
-    ctx.fillStyle = 'rgba(63, 203, 189, 0.08)';
-    ctx.strokeStyle = 'rgba(63, 203, 189, 0.45)';
-    ctx.lineWidth = 2.5;
-    ctx.roundRect(100, 520, 880, 280, 32);
-    ctx.fill();
-    ctx.stroke();
-
-    // Vibe Tag Pill
-    ctx.fillStyle = '#3FCBBD';
-    ctx.roundRect(140, 560, 240, 44, 22);
-    ctx.fill();
-
-    ctx.font = '800 20px sans-serif';
-    ctx.fillStyle = '#09151A';
-    ctx.fillText(archetype.tag, 165, 590);
-
-    ctx.font = '800 44px sans-serif';
-    ctx.fillStyle = '#FFFFFF';
-    ctx.fillText(`${archetype.icon} ${archetype.title}`, 140, 675);
-
-    ctx.font = '400 28px sans-serif';
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.75)';
-    ctx.fillText(archetype.subtitle, 140, 740);
-
-    // Section 2: Squad Superlatives Card
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.04)';
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
-    ctx.lineWidth = 2;
-    ctx.roundRect(100, 840, 880, 520, 32);
-    ctx.fill();
-    ctx.stroke();
-
-    ctx.font = '800 26px sans-serif';
-    ctx.fillStyle = '#FF9800';
-    ctx.fillText('🎖️ SQUAD SUPERLATIVES', 140, 905);
-
-    // Render Superlative Rows
-    let rowY = 970;
-    superlatives.slice(0, 3).forEach((item) => {
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.06)';
-      ctx.roundRect(140, rowY, 800, 105, 18);
-      ctx.fill();
-
-      ctx.font = '700 32px sans-serif';
-      ctx.fillStyle = '#FFFFFF';
-      ctx.fillText(`${item.icon} ${item.memberName}`, 170, rowY + 45);
-
-      ctx.font = '700 24px sans-serif';
-      ctx.fillStyle = '#3FCBBD';
-      ctx.fillText(item.title, 170, rowY + 82);
-
-      rowY += 125;
-    });
-
-    // Section 3: Trip Rhythm & Energy Signature
-    ctx.fillStyle = 'rgba(255, 122, 0, 0.07)';
-    ctx.strokeStyle = 'rgba(255, 122, 0, 0.35)';
-    ctx.lineWidth = 2;
-    ctx.roundRect(100, 1400, 880, 240, 32);
-    ctx.fill();
-    ctx.stroke();
-
-    ctx.font = '800 24px sans-serif';
-    ctx.fillStyle = '#FF7A00';
-    ctx.fillText('⚡ TRIP RHYTHM & HIGHLIGHTS', 140, 1460);
-
-    ctx.font = '700 34px sans-serif';
-    ctx.fillStyle = '#FFFFFF';
-    ctx.fillText(`🔥 Peak Adventure: ${rhythm.peakDay}`, 140, 1525);
-
-    ctx.font = '400 26px sans-serif';
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.75)';
-    ctx.fillText(`Pace: ${rhythm.pace} · ${rhythm.vibeTag}`, 140, 1585);
-
-    // Embossed Passport Stamp Seal
+    // 2. Soft Ambient Radial Glows (Zero Hard Circles)
     ctx.save();
-    ctx.translate(860, 1720);
-    ctx.rotate(-0.15);
-    ctx.strokeStyle = '#3FCBBD';
-    ctx.lineWidth = 4;
-    ctx.beginPath();
-    ctx.arc(0, 0, 75, 0, Math.PI * 2);
-    ctx.stroke();
+    // Top-right glow
+    const glow1 = ctx.createRadialGradient(920, 260, 20, 920, 260, 480);
+    glow1.addColorStop(0, isDark ? 'rgba(63, 203, 189, 0.22)' : 'rgba(15, 111, 99, 0.16)');
+    glow1.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    ctx.fillStyle = glow1;
+    ctx.fillRect(0, 0, 1080, 1920);
 
-    ctx.beginPath();
-    ctx.arc(0, 0, 67, 0, Math.PI * 2);
-    ctx.stroke();
-
-    ctx.font = '800 18px monospace';
-    ctx.fillStyle = '#3FCBBD';
-    ctx.textAlign = 'center';
-    ctx.fillText('PASSPORT SEAL', 0, -18);
-    ctx.font = '800 26px sans-serif';
-    ctx.fillText('★ 2026 ★', 0, 12);
-    ctx.font = '800 16px monospace';
-    ctx.fillText('MISSION COMPLETE', 0, 36);
+    // Bottom-left glow
+    const glow2 = ctx.createRadialGradient(180, 1650, 20, 180, 1650, 520);
+    glow2.addColorStop(0, isDark ? 'rgba(255, 122, 0, 0.18)' : 'rgba(235, 107, 86, 0.18)');
+    glow2.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    ctx.fillStyle = glow2;
+    ctx.fillRect(0, 0, 1080, 1920);
     ctx.restore();
 
-    // Footer Branding
+    // Theme Color Tokens
+    const primaryAccent = isDark ? '#3FCBBD' : '#0F6F63';
+    const textPrimary = isDark ? '#FFFFFF' : '#142624';
+    const textSecondary = isDark ? 'rgba(255, 255, 255, 0.72)' : 'rgba(20, 38, 36, 0.7)';
+    const cardBg = isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(255, 255, 255, 0.72)';
+    const cardBorder = isDark ? 'rgba(63, 203, 189, 0.3)' : 'rgba(15, 111, 99, 0.25)';
+    const innerRowBg = isDark ? 'rgba(255, 255, 255, 0.06)' : 'rgba(255, 255, 255, 0.85)';
+    const innerRowBorder = isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(15, 111, 99, 0.12)';
+
+    // 3. Top Header Bar
+    ctx.font = '700 28px monospace';
+    ctx.fillStyle = primaryAccent;
+    ctx.fillText('TRIP TRACKER · 2026', 100, 150);
+
+    ctx.font = '800 64px serif';
+    ctx.fillStyle = textPrimary;
+    ctx.fillText('Trip Wrapped ✨', 100, 230);
+
+    // 4. Hero Trip Banner Card
+    drawSafeRoundedRect(ctx, 100, 280, 880, 190, 24, cardBg, cardBorder, 2);
+
+    ctx.font = '800 46px sans-serif';
+    ctx.fillStyle = textPrimary;
+    const cleanTripTitle = trip.name.length > 28 ? `${trip.name.slice(0, 26)}...` : trip.name;
+    ctx.fillText(cleanTripTitle, 145, 355);
+
     ctx.font = '500 26px sans-serif';
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
+    ctx.fillStyle = textSecondary;
+    const dateStr = trip.startDate && trip.endDate ? `${trip.startDate} — ${trip.endDate}` : '2026 Expedition';
+    ctx.fillText(`${dateStr}  ·  ${members.length} Squad Travelers`, 145, 415);
+
+    // 5. Section 1: Trip Vibe Identity Card
+    drawSafeRoundedRect(ctx, 100, 505, 880, 290, 28, isDark ? 'rgba(63, 203, 189, 0.08)' : 'rgba(15, 111, 99, 0.06)', cardBorder, 2);
+
+    // Vibe Tag Pill
+    drawSafeRoundedRect(ctx, 145, 545, 240, 42, 21, primaryAccent);
+    ctx.font = '800 18px sans-serif';
+    ctx.fillStyle = isDark ? '#060E12' : '#FFFFFF';
+    ctx.fillText(archetype.tag, 168, 572);
+
+    ctx.font = '800 42px sans-serif';
+    ctx.fillStyle = textPrimary;
+    ctx.fillText(`${archetype.icon}  ${archetype.title}`, 145, 655);
+
+    ctx.font = '400 26px sans-serif';
+    ctx.fillStyle = textSecondary;
+    ctx.fillText(archetype.subtitle, 145, 720);
+
+    // 6. Section 2: Squad Superlatives Card
+    drawSafeRoundedRect(ctx, 100, 830, 880, 520, 28, cardBg, isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(15, 111, 99, 0.18)', 2);
+
+    ctx.font = '800 24px sans-serif';
+    ctx.fillStyle = isDark ? '#FF9800' : '#D95D00';
+    ctx.fillText('🎖️ SQUAD SUPERLATIVES', 145, 890);
+
+    // Render Superlative Rows
+    let rowY = 930;
+    superlatives.slice(0, 3).forEach((item) => {
+      drawSafeRoundedRect(ctx, 140, rowY, 800, 115, 18, innerRowBg, innerRowBorder, 1.5);
+
+      ctx.font = '700 30px sans-serif';
+      ctx.fillStyle = textPrimary;
+      ctx.fillText(`${item.icon} ${item.memberName}`, 175, rowY + 45);
+
+      ctx.font = '700 24px sans-serif';
+      ctx.fillStyle = primaryAccent;
+      ctx.fillText(item.title, 175, rowY + 84);
+
+      rowY += 135;
+    });
+
+    // 7. Section 3: Trip Rhythm & Highlights
+    drawSafeRoundedRect(ctx, 100, 1385, 880, 240, 28, isDark ? 'rgba(255, 122, 0, 0.08)' : 'rgba(235, 107, 86, 0.08)', isDark ? 'rgba(255, 122, 0, 0.35)' : 'rgba(235, 107, 86, 0.35)', 2);
+
+    ctx.font = '800 22px sans-serif';
+    ctx.fillStyle = isDark ? '#FF7A00' : '#C74800';
+    ctx.fillText('⚡ TRIP RHYTHM & HIGHLIGHTS', 145, 1445);
+
+    ctx.font = '700 32px sans-serif';
+    ctx.fillStyle = textPrimary;
+    ctx.fillText(`🔥 Peak Adventure: ${rhythm.peakDay}`, 145, 1510);
+
+    ctx.font = '400 24px sans-serif';
+    ctx.fillStyle = textSecondary;
+    ctx.fillText(`Pace: ${rhythm.pace} · ${rhythm.vibeTag}`, 145, 1568);
+
+    // 8. Embossed Vector Passport Stamp (Clean Corner Placement)
+    ctx.save();
+    ctx.translate(880, 1715);
+    ctx.rotate(-0.12);
+    ctx.strokeStyle = primaryAccent;
+    ctx.lineWidth = 3.5;
+    ctx.beginPath();
+    ctx.arc(0, 0, 68, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.arc(0, 0, 60, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.font = '800 15px monospace';
+    ctx.fillStyle = primaryAccent;
     ctx.textAlign = 'center';
-    ctx.fillText('Tracked with Trip Tracker · trip-tracker.blackmaroon.in', 540, 1850);
+    ctx.fillText('PASSPORT SEAL', 0, -16);
+    ctx.font = '800 24px sans-serif';
+    ctx.fillText('★ 2026 ★', 0, 10);
+    ctx.font = '800 13px monospace';
+    ctx.fillText('MISSION COMPLETE', 0, 32);
+    ctx.restore();
+
+    // 9. Footer
+    ctx.font = '500 24px sans-serif';
+    ctx.fillStyle = isDark ? 'rgba(255, 255, 255, 0.45)' : 'rgba(20, 38, 36, 0.55)';
+    ctx.textAlign = 'center';
+    ctx.fillText('Tracked with Trip Tracker · trip-tracker.blackmaroon.in', 540, 1855);
 
     return canvas;
   };
@@ -483,7 +514,7 @@ export function TripWrappedModal({
       const canvas = generateCanvas();
       if (!canvas) return;
       const link = document.createElement('a');
-      link.download = `${trip.name.replace(/\s+/g, '_')}_Wrapped_2026.png`;
+      link.download = `${trip.name.replace(/\s+/g, '_')}_Wrapped_${themeMode}_2026.png`;
       link.href = canvas.toDataURL('image/png');
       link.click();
     } finally {
@@ -498,7 +529,7 @@ export function TripWrappedModal({
     if (typeof navigator !== 'undefined' && typeof navigator.share === 'function') {
       canvas.toBlob(async (blob) => {
         if (!blob) return;
-        const file = new File([blob], `${trip.name}_Wrapped.png`, { type: 'image/png' });
+        const file = new File([blob], `${trip.name}_Wrapped_${themeMode}.png`, { type: 'image/png' });
         try {
           await navigator.share({
             title: `${trip.name} - Trip Wrapped`,
@@ -515,6 +546,8 @@ export function TripWrappedModal({
     }
   };
 
+  const isDark = themeMode === 'dark';
+
   return (
     <div className="modal-backdrop" onClick={onClose}>
       <div
@@ -522,39 +555,113 @@ export function TripWrappedModal({
         style={{
           maxWidth: '460px',
           padding: '24px',
-          background: 'linear-gradient(180deg, #09151A 0%, #0D2027 100%)',
-          color: '#F2ECDC',
-          border: '1px solid rgba(63, 203, 189, 0.25)',
+          background: isDark ? 'linear-gradient(180deg, #071115 0%, #0C1E26 100%)' : '#FAF7EE',
+          color: isDark ? '#F2ECDC' : '#142624',
+          border: isDark ? '1px solid rgba(63, 203, 189, 0.3)' : '1px solid rgba(15, 111, 99, 0.25)',
           borderRadius: '24px',
           boxShadow: '0 24px 60px rgba(0,0,0,0.6)',
+          transition: 'background 0.25s ease, color 0.25s ease',
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header Bar */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px' }}>
+        {/* Header Bar with Dark / Light Theme Segment Switcher */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
           <div>
-            <span style={{ fontSize: '11px', color: '#3FCBBD', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+            <span style={{ fontSize: '11px', color: isDark ? '#3FCBBD' : '#0F6F63', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
               Story Infographic
             </span>
-            <h3 style={{ fontSize: '22px', margin: '2px 0 0', color: '#FFFFFF', fontWeight: 800 }}>Trip Wrapped ✨</h3>
+            <h3 style={{ fontSize: '22px', margin: '2px 0 0', color: isDark ? '#FFFFFF' : '#142624', fontWeight: 800 }}>
+              Trip Wrapped ✨
+            </h3>
           </div>
-          <button
-            type="button"
-            className="secondary-btn"
-            style={{ padding: '6px 8px', color: '#F2ECDC', borderColor: 'rgba(255,255,255,0.2)', background: 'transparent' }}
-            onClick={onClose}
-          >
-            <IconClose size={16} />
-          </button>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            {/* Theme Toggle Pills */}
+            <div
+              style={{
+                display: 'flex',
+                background: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(15,111,99,0.1)',
+                borderRadius: '20px',
+                padding: '3px',
+                border: isDark ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(15,111,99,0.15)',
+              }}
+            >
+              <button
+                type="button"
+                onClick={() => {
+                  triggerHaptic('light');
+                  setThemeMode('dark');
+                }}
+                style={{
+                  background: isDark ? '#3FCBBD' : 'transparent',
+                  color: isDark ? '#060E12' : '#0F6F63',
+                  border: 'none',
+                  borderRadius: '16px',
+                  padding: '4px 10px',
+                  fontSize: '12px',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  transition: 'all 0.18s ease',
+                }}
+              >
+                <IconMoon size={13} />
+                <span>Night</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  triggerHaptic('light');
+                  setThemeMode('light');
+                }}
+                style={{
+                  background: !isDark ? '#0F6F63' : 'transparent',
+                  color: !isDark ? '#FFFFFF' : 'rgba(255,255,255,0.6)',
+                  border: 'none',
+                  borderRadius: '16px',
+                  padding: '4px 10px',
+                  fontSize: '12px',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  transition: 'all 0.18s ease',
+                }}
+              >
+                <IconSun size={13} />
+                <span>Light</span>
+              </button>
+            </div>
+
+            <button
+              type="button"
+              className="secondary-btn"
+              style={{
+                padding: '6px 8px',
+                color: isDark ? '#F2ECDC' : '#142624',
+                borderColor: isDark ? 'rgba(255,255,255,0.2)' : 'rgba(15,111,99,0.25)',
+                background: 'transparent',
+              }}
+              onClick={onClose}
+            >
+              <IconClose size={16} />
+            </button>
+          </div>
         </div>
 
-        {/* Live Card Preview (Number-Free) */}
+        {/* Live Card Preview with Matching Theme */}
         <div
           style={{
             padding: '20px',
             borderRadius: '20px',
-            background: 'linear-gradient(155deg, #132A32 0%, #091418 100%)',
-            border: '1px solid rgba(63, 203, 189, 0.35)',
+            background: isDark
+              ? 'linear-gradient(155deg, #10242B 0%, #071115 100%)'
+              : 'linear-gradient(155deg, #FFFFFF 0%, #F5EFE4 100%)',
+            border: isDark ? '1.5px solid rgba(63, 203, 189, 0.35)' : '1.5px solid rgba(15, 111, 99, 0.25)',
+            boxShadow: isDark ? '0 12px 30px rgba(0,0,0,0.4)' : '0 12px 30px rgba(15, 111, 99, 0.08)',
             marginBottom: '20px',
             display: 'flex',
             flexDirection: 'column',
@@ -562,9 +669,9 @@ export function TripWrappedModal({
           }}
         >
           {/* Trip Header Banner */}
-          <div style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '10px' }}>
-            <div style={{ fontSize: '18px', fontWeight: 800, color: '#FFFFFF' }}>{trip.name}</div>
-            <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.6)', marginTop: '2px' }}>
+          <div style={{ borderBottom: isDark ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(15,111,99,0.12)', paddingBottom: '10px' }}>
+            <div style={{ fontSize: '18px', fontWeight: 800, color: isDark ? '#FFFFFF' : '#142624' }}>{trip.name}</div>
+            <div style={{ fontSize: '12px', color: isDark ? 'rgba(255,255,255,0.65)' : 'rgba(20,38,36,0.65)', marginTop: '2px' }}>
               {trip.startDate && trip.endDate ? `${trip.startDate} — ${trip.endDate}` : '2026 Journey'} · {members.length} Travelers
             </div>
           </div>
@@ -572,22 +679,22 @@ export function TripWrappedModal({
           {/* Vibe Persona Card */}
           <div
             style={{
-              background: 'rgba(63, 203, 189, 0.1)',
-              border: '1px solid rgba(63, 203, 189, 0.35)',
+              background: isDark ? 'rgba(63, 203, 189, 0.1)' : 'rgba(15, 111, 99, 0.06)',
+              border: isDark ? '1px solid rgba(63, 203, 189, 0.35)' : '1px solid rgba(15, 111, 99, 0.2)',
               padding: '14px',
               borderRadius: '14px',
             }}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-              <span style={{ fontSize: '10px', fontWeight: 800, letterSpacing: '0.05em', color: '#3FCBBD', textTransform: 'uppercase' }}>
+              <span style={{ fontSize: '10px', fontWeight: 800, letterSpacing: '0.05em', color: isDark ? '#3FCBBD' : '#0F6F63', textTransform: 'uppercase' }}>
                 Trip Vibe Identity
               </span>
               <span
                 style={{
                   fontSize: '9.5px',
                   fontWeight: 700,
-                  background: '#3FCBBD',
-                  color: '#09151A',
+                  background: isDark ? '#3FCBBD' : '#0F6F63',
+                  color: isDark ? '#060E12' : '#FFFFFF',
                   padding: '2px 8px',
                   borderRadius: '10px',
                 }}
@@ -595,10 +702,10 @@ export function TripWrappedModal({
                 {archetype.tag}
               </span>
             </div>
-            <div style={{ fontSize: '16px', fontWeight: 800, color: '#FFFFFF' }}>
+            <div style={{ fontSize: '16px', fontWeight: 800, color: isDark ? '#FFFFFF' : '#142624' }}>
               {archetype.icon} {archetype.title}
             </div>
-            <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.75)', marginTop: '3px', lineHeight: 1.4 }}>
+            <div style={{ fontSize: '12px', color: isDark ? 'rgba(255,255,255,0.75)' : 'rgba(20,38,36,0.75)', marginTop: '3px', lineHeight: 1.4 }}>
               {archetype.subtitle}
             </div>
           </div>
@@ -606,13 +713,13 @@ export function TripWrappedModal({
           {/* Member Superlatives List */}
           <div
             style={{
-              background: 'rgba(255, 255, 255, 0.04)',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
+              background: isDark ? 'rgba(255, 255, 255, 0.04)' : 'rgba(255, 255, 255, 0.65)',
+              border: isDark ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid rgba(15, 111, 99, 0.15)',
               padding: '14px',
               borderRadius: '14px',
             }}
           >
-            <div style={{ fontSize: '11px', color: '#FF9800', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '10px' }}>
+            <div style={{ fontSize: '11px', color: isDark ? '#FF9800' : '#D95D00', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '10px' }}>
               🎖️ Squad Superlatives
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -620,8 +727,9 @@ export function TripWrappedModal({
                 <div
                   key={item.memberName}
                   style={{
-                    background: 'rgba(255, 255, 255, 0.05)',
-                    padding: '8px 12px',
+                    background: isDark ? 'rgba(255, 255, 255, 0.06)' : 'rgba(255, 255, 255, 0.9)',
+                    border: isDark ? '1px solid rgba(255,255,255,0.06)' : '1px solid rgba(15,111,99,0.08)',
+                    padding: '9px 12px',
                     borderRadius: '10px',
                     display: 'flex',
                     justifyContent: 'space-between',
@@ -629,12 +737,14 @@ export function TripWrappedModal({
                   }}
                 >
                   <div>
-                    <span style={{ fontWeight: 700, fontSize: '13.5px', color: '#FFFFFF' }}>
+                    <span style={{ fontWeight: 700, fontSize: '13.5px', color: isDark ? '#FFFFFF' : '#142624' }}>
                       {item.icon} {item.memberName}
                     </span>
-                    <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.65)' }}>{item.note}</div>
+                    <div style={{ fontSize: '11px', color: isDark ? 'rgba(255,255,255,0.65)' : 'rgba(20,38,36,0.65)' }}>
+                      {item.note}
+                    </div>
                   </div>
-                  <span style={{ fontSize: '11.5px', fontWeight: 700, color: '#3FCBBD', flexShrink: 0, marginLeft: '8px' }}>
+                  <span style={{ fontSize: '11.5px', fontWeight: 700, color: isDark ? '#3FCBBD' : '#0F6F63', flexShrink: 0, marginLeft: '8px' }}>
                     {item.title}
                   </span>
                 </div>
@@ -645,8 +755,8 @@ export function TripWrappedModal({
           {/* Trip Rhythm Summary */}
           <div
             style={{
-              background: 'rgba(255, 122, 0, 0.08)',
-              border: '1px solid rgba(255, 122, 0, 0.25)',
+              background: isDark ? 'rgba(255, 122, 0, 0.08)' : 'rgba(235, 107, 86, 0.08)',
+              border: isDark ? '1px solid rgba(255, 122, 0, 0.25)' : '1px solid rgba(235, 107, 86, 0.25)',
               padding: '12px 14px',
               borderRadius: '14px',
               display: 'flex',
@@ -655,16 +765,20 @@ export function TripWrappedModal({
             }}
           >
             <div>
-              <div style={{ fontSize: '11px', color: '#FF7A00', fontWeight: 700, textTransform: 'uppercase' }}>
+              <div style={{ fontSize: '11px', color: isDark ? '#FF7A00' : '#C74800', fontWeight: 700, textTransform: 'uppercase' }}>
                 ⚡ Peak Adventure Day
               </div>
-              <div style={{ fontSize: '13.5px', fontWeight: 700, color: '#FFFFFF', marginTop: '2px' }}>
+              <div style={{ fontSize: '13.5px', fontWeight: 700, color: isDark ? '#FFFFFF' : '#142624', marginTop: '2px' }}>
                 {rhythm.peakDay}
               </div>
             </div>
             <div style={{ textAlign: 'right' }}>
-              <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase' }}>Pace</div>
-              <div style={{ fontSize: '12px', color: '#3FCBBD', fontWeight: 600 }}>{rhythm.pace}</div>
+              <div style={{ fontSize: '10px', color: isDark ? 'rgba(255,255,255,0.5)' : 'rgba(20,38,36,0.5)', textTransform: 'uppercase' }}>
+                Pace
+              </div>
+              <div style={{ fontSize: '12px', color: isDark ? '#3FCBBD' : '#0F6F63', fontWeight: 600 }}>
+                {rhythm.pace}
+              </div>
             </div>
           </div>
         </div>
@@ -677,8 +791,9 @@ export function TripWrappedModal({
             style={{
               flex: 1,
               padding: '12px',
-              color: '#F2ECDC',
-              borderColor: 'rgba(255,255,255,0.25)',
+              color: isDark ? '#F2ECDC' : '#142624',
+              borderColor: isDark ? 'rgba(255,255,255,0.25)' : 'rgba(15,111,99,0.25)',
+              background: isDark ? 'transparent' : 'rgba(255,255,255,0.8)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -690,7 +805,7 @@ export function TripWrappedModal({
             disabled={downloading}
           >
             <IconDownload size={16} />
-            <span>Download PNG</span>
+            <span>Download ({isDark ? 'Dark' : 'Light'})</span>
           </button>
           <button
             type="button"
