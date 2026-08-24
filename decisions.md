@@ -972,10 +972,27 @@ This document logs all meaningful technical decisions, library choices, design p
   - **Front Side:** Faithfully preserves the signature cream Balance Summary ticket (Trip name, Currency, tilted `[ Unsettled ]` / `[ All Settled ✓ ]` ink stamp, dual perforated dashed lines, large `OUTSTANDING TO SETTLE` amount + driver narrative, and member/transfer counts).
   - **Back Side:** Flips 180° to reveal the Flight Boarding Pass with Origin $\rightarrow$ Destination airport codes (`DEL ✈ IXB`), passenger seat, 1-tap join code copy, live ambient destination weather (via [`src/services/weatherService.ts`](file:///c:/ProjectsV1/Trip_Tracker_2026/src/services/weatherService.ts)), and barcode.
   - Built [`src/utils/achievementBadges.ts`](file:///c:/ProjectsV1/Trip_Tracker_2026/src/utils/achievementBadges.ts) and [`src/components/AchievementBadgeModal.tsx`](file:///c:/ProjectsV1/Trip_Tracker_2026/src/components/AchievementBadgeModal.tsx) to award collectible squad enamel pins (*Caffeine Logistics, Midnight Odyssey, Apex Roadrunner, Lightning Settlement*).
-  - Enhanced [`src/components/TripJourneyMap.tsx`](file:///c:/ProjectsV1/Trip_Tracker_2026/src/components/TripJourneyMap.tsx) with **"Relive the Journey 🎬"** floating HUD controls for 60fps route playback.
+## 54. Continuous 60fps Vehicle Flight & Drive Route Simulator (Relive the Journey)
+* **Context:**
+  - The previous route playback mechanism stepped through static waypoint locations with individual camera jumps. Users requested a continuous, realistic travel animation (similar to *Relive* / *TravelBoast*) where an animated vehicle physically drives or flies along the actual road polyline from point to point with live camera tracking and milestone HUD cards.
+* **Decision:**
+  - Implemented continuous 60fps vector path traversal in [`src/components/TripJourneyMap.tsx`](file:///c:/ProjectsV1/Trip_Tracker_2026/src/components/TripJourneyMap.tsx) using `requestAnimationFrame`, hardware-accelerated MapLibre WebGL, and dynamic vector trigonometry.
+* **Pattern/Implementation:**
+  - **Dynamic Bearing & Smooth Path Traversal (`calculateBearing`, `interpolatePath`)**:
+    - Derives micro-coordinates along the OSRM road geometry or waypoint line string.
+    - Continuously computes the vehicle tangent heading angle (`calculateBearing`) and rotates the 3D vehicle marker element in real-time.
+  - **Progressive Glowing Trail & Smooth Camera Follow**:
+    - As the vehicle moves, an illuminated glowing trail layer (`#3FCBBD`) is progressively drawn on the map behind the vehicle using dynamic GeoJSON streaming.
+    - Camera smoothly follows the vehicle with a 38° 3D perspective pitch.
+  - **Milestone Cards & Pause Mechanics**:
+    - When arriving at each intermediate stop, the floating milestone HUD card displays the stop title, amount, category emoji, and location, briefly easing for 1.2s before continuing to the next destination.
+  - **Interactive Controls**:
+    - Mode toggle between `🚗 Drive` and `✈️ Fly`.
+    - Speed selector (`1x` Scenic Cruise, `2x` Express, `3x` Fast Forward).
+    - Progress scrubber tracking 0% to 100% completion.
 * **Trade-offs Accepted:**
-  - Ambient weather is cached for 2 hours in `localStorage` to eliminate API spam and conserve battery.
-  - 3D flip card preserves exact existing balance summary layout without adding visual weight.
+  - 0 KB new external dependencies; executed on-demand with 0% background battery or CPU impact when paused or idle.
+
 
 
 
