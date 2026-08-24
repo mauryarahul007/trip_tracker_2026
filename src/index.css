@@ -1369,24 +1369,104 @@ html.capacitor-ios .nav-tabs {
   to { stroke-dashoffset: 0; }
 }
 
-.flight-airplane-icon {
-  width: 32px;
-  height: 32px;
+/* 3D Origami Aircraft Stage & Jet Emitter */
+.flight-airplane-stage {
+  position: relative;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--primary-accent), var(--accent-orange));
-  color: #FFFFFF;
+  background: radial-gradient(circle at 35% 35%, rgba(63, 203, 189, 0.22), rgba(15, 111, 99, 0.06));
+  border: 1px solid rgba(15, 111, 99, 0.25);
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  box-shadow: 0 4px 12px rgba(15, 111, 99, 0.35);
-  animation: planeHover 2.4s ease-in-out infinite;
+  box-shadow: 0 4px 14px rgba(15, 111, 99, 0.2), inset 0 1px 2px rgba(255, 255, 255, 0.6);
+  perspective: 400px;
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-@keyframes planeHover {
-  0% { transform: translateY(0) rotate(-15deg); }
-  50% { transform: translateY(-3px) rotate(-8deg); }
-  100% { transform: translateY(0) rotate(-15deg); }
+:root[data-theme="dark"] .flight-airplane-stage,
+:root:not([data-theme="light"]) .flight-airplane-stage {
+  background: radial-gradient(circle at 35% 35%, rgba(63, 203, 189, 0.25), rgba(15, 111, 99, 0.12));
+  border-color: rgba(63, 203, 189, 0.35);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4), inset 0 1px 2px rgba(255, 255, 255, 0.15);
+}
+
+.origami-airplane-svg {
+  width: 28px;
+  height: 28px;
+  filter: drop-shadow(0 3px 6px rgba(15, 111, 99, 0.35));
+  animation: planeBank3D 3.4s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+  transform-origin: 50% 60%;
+  transition: transform 0.25s ease, filter 0.25s ease;
+}
+
+.flight-add-tooltip:hover .origami-airplane-svg,
+.flight-add-tooltip:active .origami-airplane-svg {
+  transform: translateY(-2px) rotate(-18deg) scale(1.12);
+  filter: drop-shadow(0 5px 12px rgba(255, 122, 0, 0.5));
+}
+
+@keyframes planeBank3D {
+  0% {
+    transform: translate(0, 0) rotate(-16deg) rotateX(10deg);
+  }
+  30% {
+    transform: translate(1.5px, -3px) rotate(-8deg) rotateX(0deg);
+  }
+  65% {
+    transform: translate(-1.5px, -1px) rotate(-22deg) rotateX(15deg);
+  }
+  100% {
+    transform: translate(0, 0) rotate(-16deg) rotateX(10deg);
+  }
+}
+
+/* Dual Jet Exhaust Vapor Emitters */
+.jet-exhaust-emitter {
+  position: absolute;
+  bottom: 3px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 14px;
+  height: 14px;
+  pointer-events: none;
+}
+
+.exhaust-ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 6px;
+  height: 6px;
+  margin-left: -3px;
+  margin-top: -3px;
+  border-radius: 50%;
+  border: 1.5px solid #FF7A00;
+  box-shadow: 0 0 6px rgba(255, 122, 0, 0.8);
+  opacity: 0;
+  animation: jetExhaustBurst 1.6s ease-out infinite;
+}
+
+.exhaust-ring.ring-2 {
+  animation-delay: 0.8s;
+  border-color: #3FCBBD;
+  box-shadow: 0 0 6px rgba(63, 203, 189, 0.8);
+}
+
+@keyframes jetExhaustBurst {
+  0% {
+    transform: translate(0, 0) scale(0.6);
+    opacity: 0.9;
+  }
+  60% {
+    opacity: 0.4;
+  }
+  100% {
+    transform: translate(-4px, 8px) scale(2.2);
+    opacity: 0;
+  }
 }
 
 .flight-tooltip-content {
@@ -1465,6 +1545,31 @@ html.capacitor-ios .nav-tabs {
   border-top-color: #1A1C20;
 }
 
+/* Directional Runway Beacon Pulse */
+.arrow-beacon-pulse {
+  position: absolute;
+  top: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--primary-accent);
+  box-shadow: 0 0 6px var(--primary-accent);
+  animation: beaconPulse 1.8s ease-in-out infinite;
+}
+
+@keyframes beaconPulse {
+  0%, 100% {
+    opacity: 0.3;
+    transform: translateX(-50%) translateY(0) scale(0.8);
+  }
+  50% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(4px) scale(1.4);
+  }
+}
+
 @keyframes flightFloat {
   0% { transform: translateX(-50%) translateY(0); }
   100% { transform: translateX(-50%) translateY(-5px); }
@@ -1474,7 +1579,13 @@ html.capacitor-ios .nav-tabs {
   .flight-add-tooltip.enter {
     animation: none;
   }
-  .flight-airplane-icon {
+  .origami-airplane-svg {
+    animation: none;
+  }
+  .exhaust-ring {
+    animation: none;
+  }
+  .arrow-beacon-pulse {
     animation: none;
   }
   .flight-contrail-svg .contrail-path {

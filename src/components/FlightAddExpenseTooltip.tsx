@@ -87,10 +87,50 @@ export function FlightAddExpenseTooltip({ onAddExpense, expenseCount = 0, tripDe
         />
       </svg>
 
-      {/* Floating Animated Airplane */}
-      <div className="flight-airplane-icon" aria-hidden="true">
-        <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
-          <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z" />
+      {/* 3D Isometric Aircraft Stage & Jet Emitter */}
+      <div className="flight-airplane-stage" aria-hidden="true">
+        {/* Animated Jet Exhaust Vapor Rings */}
+        <div className="jet-exhaust-emitter">
+          <span className="exhaust-ring ring-1" />
+          <span className="exhaust-ring ring-2" />
+        </div>
+
+        {/* Multi-Faceted 3D Origami Aircraft */}
+        <svg className="origami-airplane-svg" viewBox="0 0 36 36" fill="none">
+          <defs>
+            <linearGradient id="ttWingLeftGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#FFFFFF" />
+              <stop offset="100%" stopColor="#7EE7DC" />
+            </linearGradient>
+            <linearGradient id="ttFuselageGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#0F6F63" />
+              <stop offset="100%" stopColor="#083B34" />
+            </linearGradient>
+            <linearGradient id="ttWingRightGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#3FA396" />
+              <stop offset="100%" stopColor="#0D594F" />
+            </linearGradient>
+            <linearGradient id="ttFinGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#FF9800" />
+              <stop offset="100%" stopColor="#E65100" />
+            </linearGradient>
+          </defs>
+
+          {/* Left Wing Facet */}
+          <polygon points="18,4 3,25 18,21" fill="url(#ttWingLeftGrad)" />
+
+          {/* Right Wing Facet */}
+          <polygon points="18,4 33,25 18,21" fill="url(#ttWingRightGrad)" />
+
+          {/* Fuselage Spine */}
+          <polygon points="18,4 18,29 15,22" fill="url(#ttFuselageGrad)" />
+          <polygon points="18,4 21,22 18,29" fill="url(#ttFuselageGrad)" opacity="0.85" />
+
+          {/* Tail Fin Accent */}
+          <polygon points="18,20 18,28 16.5,27" fill="url(#ttFinGrad)" />
+          
+          {/* Canopy Cockpit Sparkle */}
+          <circle cx="18" cy="11" r="1.5" fill="#FFFFFF" opacity="0.9" />
         </svg>
       </div>
 
@@ -109,7 +149,9 @@ export function FlightAddExpenseTooltip({ onAddExpense, expenseCount = 0, tripDe
         &times;
       </button>
 
-      <div className="flight-tooltip-arrow" aria-hidden="true" />
+      <div className="flight-tooltip-arrow" aria-hidden="true">
+        <span className="arrow-beacon-pulse" />
+      </div>
     </div>
   );
 }
