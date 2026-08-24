@@ -1230,6 +1230,9 @@ export default function App() {
   useHistoryBack(showShareTrip, () => setShowShareTrip(false));
   useHistoryBack(showGlobalSettings, () => setShowGlobalSettings(false));
   useHistoryBack(!!confirmRequest, () => setConfirmRequest(null));
+  useHistoryBack(showTransactions, () => setShowTransactions(false));
+  useHistoryBack(showCommandPalette, () => setShowCommandPalette(false));
+  useHistoryBack(showTripWrapped, () => setShowTripWrapped(false));
 
   // Escape key — the desktop equivalent of the back-gesture wiring above,
   // for the same set of overlay modals (excludes tab/trip navigation).
@@ -1239,6 +1242,8 @@ export default function App() {
   useEscapeKey(showShareTrip, () => setShowShareTrip(false));
   useEscapeKey(showGlobalSettings, () => setShowGlobalSettings(false));
   useEscapeKey(!!confirmRequest, () => setConfirmRequest(null));
+  useEscapeKey(showTransactions, () => setShowTransactions(false));
+  useEscapeKey(showTripWrapped, () => setShowTripWrapped(false));
 
   // Loading view
   if (!initialized) {
