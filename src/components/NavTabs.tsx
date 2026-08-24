@@ -1,5 +1,6 @@
 import { IconExpenses, IconMembers, IconAnalytics, IconSettings, IconPlus } from './Icons';
 import { triggerHaptic } from '../utils/haptics';
+import { FlightAddExpenseTooltip } from './FlightAddExpenseTooltip';
 
 type Tab = 'expenses' | 'members' | 'analytics' | 'settings';
 
@@ -7,9 +8,11 @@ type Props = {
   activeTab: Tab;
   setActiveTab: (tab: Tab) => void;
   onAddExpense: () => void;
+  expenseCount?: number;
+  tripDestination?: string;
 };
 
-export function NavTabs({ activeTab, setActiveTab, onAddExpense }: Props) {
+export function NavTabs({ activeTab, setActiveTab, onAddExpense, expenseCount, tripDestination }: Props) {
   const goTo = (tab: Tab) => {
     if (tab !== activeTab) triggerHaptic('light');
     setActiveTab(tab);
@@ -25,18 +28,25 @@ export function NavTabs({ activeTab, setActiveTab, onAddExpense }: Props) {
         <span className="nav-tab-icon"><IconMembers size={26} /></span>
         <span>Members</span>
       </button>
-      <button
-        type="button"
-        className="nav-tab-fab"
-        onClick={() => {
-          triggerHaptic('light');
-          onAddExpense();
-        }}
-        aria-label="Add Expense"
-        title="Add Expense"
-      >
-        <IconPlus size={24} />
-      </button>
+      <div className="nav-tab-fab-wrap">
+        <FlightAddExpenseTooltip
+          onAddExpense={onAddExpense}
+          expenseCount={expenseCount}
+          tripDestination={tripDestination}
+        />
+        <button
+          type="button"
+          className="nav-tab-fab"
+          onClick={() => {
+            triggerHaptic('light');
+            onAddExpense();
+          }}
+          aria-label="Add Expense"
+          title="Add Expense"
+        >
+          <IconPlus size={24} />
+        </button>
+      </div>
       <button data-tab="analytics" className={`nav-tab-item ${activeTab === 'analytics' ? 'active' : ''}`} onClick={() => goTo('analytics')} aria-label="Analytics">
         <span className="nav-tab-icon"><IconAnalytics size={26} /></span>
         <span>Analytics</span>

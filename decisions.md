@@ -948,6 +948,19 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - Card stage dynamically consumes available viewport height via flexbox rather than fixed pixel heights, ensuring clean scaling across varying phone screen dimensions.
 
+---
+
+## 51. Flight-Themed Coachmark Helper Tooltip on Add Expense Action
+* **Context:**
+  - New users opening a trip often needed visual reassurance and intuitive onboarding for recording their first expense, logging flights, hotel stays, food, or group splits without scanning dense UI text.
+* **Decision:**
+  - Built [`src/components/FlightAddExpenseTooltip.tsx`](file:///c:/ProjectsV1/Trip_Tracker_2026/src/components/FlightAddExpenseTooltip.tsx) anchored above the center navigation `+` button in [`src/components/NavTabs.tsx`](file:///c:/ProjectsV1/Trip_Tracker_2026/src/components/NavTabs.tsx).
+  - Integrated an animated airplane ✈️ gliding along a curved dashed contrail (`contrailFlow` keyframe), frosted-glass backdrop (`backdrop-filter: blur(20px)`), and contextual messaging (*"Ready for takeoff? Tap + to log an expense!"* vs destination-tailored *"Ready for [City]? Log your 1st expense!"*).
+  - Added 1-tap launch into the expense modal with haptic feedback, 1-click `&times;` dismissal, and persistent `localStorage` memory (`tt_flight_add_tooltip_dismissed_v1`) to prevent re-prompting once dismissed.
+* **Trade-offs Accepted:**
+  - Tooltip only auto-prompts on first onboarding before dismissal, maintaining a clean and minimal interface for frequent power users while providing instant discoverability for beginners.
+
+
 
 
 

@@ -1267,11 +1267,20 @@ html.capacitor-ios .nav-tabs {
   transform: translateY(-1px) scale(1.08);
 }
 
+.nav-tab-fab-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: -26px;
+}
+
 .nav-tab-fab {
   flex-shrink: 0;
   width: 50px;
   height: 50px;
-  margin-top: -26px;
+  margin-top: 0;
   border-radius: 50%;
   border: 3px solid var(--bg-app);
   background-image: var(--header-gradient-solid);
@@ -1287,6 +1296,190 @@ html.capacitor-ios .nav-tabs {
 
 .nav-tab-fab:active {
   transform: scale(0.92);
+}
+
+/* ==========================================================================
+   Flight-Themed Coachmark Tooltip for Adding Transactions
+   ========================================================================== */
+.flight-add-tooltip {
+  position: absolute;
+  bottom: calc(100% + 14px);
+  left: 50%;
+  transform: translateX(-50%) translateY(8px) scale(0.94);
+  width: max-content;
+  max-width: min(290px, calc(100vw - 32px));
+  background: var(--bg-surface);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1.5px solid rgba(15, 111, 99, 0.35);
+  border-radius: 16px;
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 16px 36px -8px rgba(0, 0, 0, 0.28), 0 4px 16px rgba(15, 111, 99, 0.16);
+  cursor: pointer;
+  z-index: 60;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.28s cubic-bezier(0.16, 1, 0.3, 1), transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.flight-add-tooltip.enter {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(-50%) translateY(0) scale(1);
+  animation: flightFloat 3.6s ease-in-out infinite alternate;
+}
+
+.flight-add-tooltip.leave {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(-50%) translateY(6px) scale(0.92);
+}
+
+:root[data-theme="dark"] .flight-add-tooltip,
+:root:not([data-theme="light"]) .flight-add-tooltip {
+  background: rgba(26, 28, 32, 0.94);
+  border-color: rgba(63, 203, 189, 0.4);
+  box-shadow: 0 18px 40px -8px rgba(0, 0, 0, 0.55), 0 4px 16px rgba(63, 203, 189, 0.15);
+}
+
+.flight-contrail-svg {
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 140px;
+  height: 20px;
+  color: var(--primary-accent);
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+.flight-contrail-svg .contrail-path {
+  stroke-dasharray: 4 4;
+  animation: contrailFlow 1.8s linear infinite;
+}
+
+@keyframes contrailFlow {
+  from { stroke-dashoffset: 16; }
+  to { stroke-dashoffset: 0; }
+}
+
+.flight-airplane-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary-accent), var(--accent-orange));
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(15, 111, 99, 0.35);
+  animation: planeHover 2.4s ease-in-out infinite;
+}
+
+@keyframes planeHover {
+  0% { transform: translateY(0) rotate(-15deg); }
+  50% { transform: translateY(-3px) rotate(-8deg); }
+  100% { transform: translateY(0) rotate(-15deg); }
+}
+
+.flight-tooltip-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.flight-tooltip-badge {
+  font-family: var(--font-family-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--primary-accent);
+}
+
+.flight-tooltip-text {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1.35;
+  margin: 0;
+  white-space: normal;
+}
+
+.flight-tooltip-close {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 18px;
+  line-height: 1;
+  padding: 4px;
+  margin-left: 2px;
+  cursor: pointer;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.18s ease, transform 0.18s ease;
+  flex-shrink: 0;
+}
+
+.flight-tooltip-close:hover {
+  color: var(--text-primary);
+  transform: scale(1.15);
+}
+
+.flight-tooltip-arrow {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 7px solid transparent;
+  border-right: 7px solid transparent;
+  border-top: 7px solid var(--border-color);
+}
+
+.flight-tooltip-arrow::after {
+  content: '';
+  position: absolute;
+  bottom: 1.5px;
+  left: -6px;
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 6px solid var(--bg-surface);
+}
+
+:root[data-theme="dark"] .flight-tooltip-arrow::after,
+:root:not([data-theme="light"]) .flight-tooltip-arrow::after {
+  border-top-color: #1A1C20;
+}
+
+@keyframes flightFloat {
+  0% { transform: translateX(-50%) translateY(0); }
+  100% { transform: translateX(-50%) translateY(-5px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .flight-add-tooltip.enter {
+    animation: none;
+  }
+  .flight-airplane-icon {
+    animation: none;
+  }
+  .flight-contrail-svg .contrail-path {
+    animation: none;
+  }
 }
 
 .nav-tab-icon .icon {

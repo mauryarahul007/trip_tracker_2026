@@ -1815,7 +1815,13 @@ export default function App() {
           </main>
           </TripContentSheet>
 
-          <NavTabs activeTab={activeTab} setActiveTab={setActiveTab} onAddExpense={handleOpenAddExpense} />
+          <NavTabs
+            activeTab={activeTab}
+            setActiveTab={setActiveTab}
+            onAddExpense={handleOpenAddExpense}
+            expenseCount={activeTripExpenses.length}
+            tripDestination={activeTrip?.destination}
+          />
         </div>
       )}
 
