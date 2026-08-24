@@ -93,4 +93,14 @@ describe('TripWrappedModal helper functions', () => {
     expect(rhythm.peakDay).toBe('Saturday');
     expect(rhythm.vibeTag).toContain('GOA');
   });
+
+  it('handles multiple tied peak adventure days dynamically', () => {
+    const expenses: Expense[] = [
+      createExpense('e-1', 'Sightseeing', 2000, 'm-1', 'cat-food', '2026-08-19'), // Wednesday
+      createExpense('e-2', 'Trek', 4000, 'm-2', 'cat-transit', '2026-08-20'), // Thursday
+    ];
+
+    const rhythm = getTripRhythm(expenses, mockTrip);
+    expect(rhythm.peakDay).toBe('Wednesday & Thursday');
+  });
 });

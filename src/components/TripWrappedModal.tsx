@@ -250,7 +250,7 @@ export function getTripRhythm(expenses: Expense[], trip: Trip): TripRhythm {
     return {
       peakDay: 'Every Day',
       pace: 'Chill & Relaxed',
-      vibeTag: 'SUNSHINE EXPEDITION',
+      vibeTag: trip.destination ? `${trip.destination.toUpperCase()} ADVENTURE` : 'SUNSHINE EXPEDITION',
     };
   }
 
@@ -265,21 +265,34 @@ export function getTripRhythm(expenses: Expense[], trip: Trip): TripRhythm {
     }
   });
 
-  let maxDayIdx = 5; // Default Friday/Saturday
-  let maxDayCount = 0;
+  let maxCount = 0;
+  Object.values(dayCountMap).forEach((count) => {
+    if (count > maxCount) maxCount = count;
+  });
+
+  // Collect all days that share peak activity
+  const topDayNames: string[] = [];
   Object.entries(dayCountMap).forEach(([idxStr, count]) => {
-    const idx = parseInt(idxStr, 10);
-    if (count > maxDayCount) {
-      maxDayCount = count;
-      maxDayIdx = idx;
+    if (count === maxCount) {
+      topDayNames.push(daysOfWeek[parseInt(idxStr, 10)]);
     }
   });
 
-  const peakDayName = daysOfWeek[maxDayIdx] || 'Saturday';
+  let peakDayLabel = 'Saturday';
+  if (topDayNames.length === 1) {
+    peakDayLabel = topDayNames[0];
+  } else if (topDayNames.length === 2) {
+    peakDayLabel = `${topDayNames[0]} & ${topDayNames[1]}`;
+  } else if (topDayNames.length === 3) {
+    peakDayLabel = `${topDayNames[0]}, ${topDayNames[1]} & ${topDayNames[2]}`;
+  } else if (topDayNames.length > 3) {
+    peakDayLabel = `${topDayNames[0]}, ${topDayNames[1]} & more`;
+  }
+
   const pace = expenses.length >= 10 ? 'High-Octane & Action Packed' : 'Scenic, Unrushed & Relaxed';
 
   return {
-    peakDay: peakDayName,
+    peakDay: peakDayLabel,
     pace,
     vibeTag: trip.destination ? `${trip.destination.toUpperCase()} ADVENTURE` : 'CERTIFIED SQUAD JOURNEY',
   };
@@ -320,6 +333,57 @@ function drawSafeRoundedRect(
     ctx.stroke();
   }
   ctx.restore();
+}
+
+// Canvas Multi-Line Text Wrapping Helper with Boundary Protection
+function drawSafeWrappedText(
+  ctx: CanvasRenderingContext2D,
+  text: string,
+  x: number,
+  y: number,
+  maxWidth: number,
+  lineHeight: number,
+  maxLines = 2
+): number {
+  const words = text.split(' ');
+  let line = '';
+  let currentY = y;
+  let linesRendered = 0;
+
+  for (let n = 0; n < words.length; n++) {
+    const testLine = line + (line ? ' ' : '') + words[n];
+    const metrics = ctx.measureText(testLine);
+    if (metrics.width > maxWidth && line) {
+      ctx.fillText(line, x, currentY);
+      line = words[n];
+      currentY += lineHeight;
+      linesRendered++;
+      if (linesRendered >= maxLines - 1 && n < words.length - 1) {
+        // Last line: truncate with ellipsis if necessary
+        let remaining = words.slice(n).join(' ');
+        while (ctx.measureText(remaining + '...').width > maxWidth && remaining.length > 0) {
+          remaining = remaining.slice(0, -1).trim();
+        }
+        ctx.fillText(remaining + '...', x, currentY);
+        return currentY + lineHeight;
+      }
+    } else {
+      line = testLine;
+    }
+  }
+
+  if (line) {
+    let finalLine = line;
+    if (ctx.measureText(finalLine).width > maxWidth) {
+      while (ctx.measureText(finalLine + '...').width > maxWidth && finalLine.length > 0) {
+        finalLine = finalLine.slice(0, -1).trim();
+      }
+      finalLine += '...';
+    }
+    ctx.fillText(finalLine, x, currentY);
+  }
+
+  return currentY + lineHeight;
 }
 
 interface TripWrappedModalProps {
@@ -437,14 +501,14 @@ export function TripWrappedModal({
     ctx.fillText(archetype.subtitle, 145, 720);
 
     // 6. Section 2: Squad Superlatives Card
-    drawSafeRoundedRect(ctx, 100, 830, 880, 520, 28, cardBg, isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(15, 111, 99, 0.18)', 2);
+    drawSafeRoundedRect(ctx, 100, 830, 880, 515, 28, cardBg, isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(15, 111, 99, 0.18)', 2);
 
     ctx.font = '800 24px sans-serif';
     ctx.fillStyle = isDark ? '#FF9800' : '#D95D00';
-    ctx.fillText('🎖️ SQUAD SUPERLATIVES', 145, 890);
+    ctx.fillText('🎖️ SQUAD SUPERLATIVES', 145, 885);
 
     // Render Superlative Rows
-    let rowY = 930;
+    let rowY = 925;
     superlatives.slice(0, 3).forEach((item) => {
       drawSafeRoundedRect(ctx, 140, rowY, 800, 115, 18, innerRowBg, innerRowBorder, 1.5);
 
@@ -456,27 +520,48 @@ export function TripWrappedModal({
       ctx.fillStyle = primaryAccent;
       ctx.fillText(item.title, 175, rowY + 84);
 
-      rowY += 135;
+      rowY += 132;
     });
 
-    // 7. Section 3: Trip Rhythm & Highlights
-    drawSafeRoundedRect(ctx, 100, 1385, 880, 240, 28, isDark ? 'rgba(255, 122, 0, 0.08)' : 'rgba(235, 107, 86, 0.08)', isDark ? 'rgba(255, 122, 0, 0.35)' : 'rgba(235, 107, 86, 0.35)', 2);
+    // 7. Section 3: Trip Rhythm & Highlights (Dynamic Multi-Line Protection)
+    drawSafeRoundedRect(
+      ctx,
+      100,
+      1380,
+      880,
+      270,
+      28,
+      isDark ? 'rgba(255, 122, 0, 0.08)' : 'rgba(235, 107, 86, 0.08)',
+      isDark ? 'rgba(255, 122, 0, 0.35)' : 'rgba(235, 107, 86, 0.35)',
+      2
+    );
 
     ctx.font = '800 22px sans-serif';
     ctx.fillStyle = isDark ? '#FF7A00' : '#C74800';
-    ctx.fillText('⚡ TRIP RHYTHM & HIGHLIGHTS', 145, 1445);
+    ctx.fillText('⚡ TRIP RHYTHM & HIGHLIGHTS', 145, 1435);
 
-    ctx.font = '700 32px sans-serif';
+    // Peak Adventure Days (supports multiple days with dynamic font sizing)
+    const peakTitle = `🔥 Peak Adventure: ${rhythm.peakDay}`;
+    ctx.font = peakTitle.length > 34 ? '700 27px sans-serif' : '700 31px sans-serif';
     ctx.fillStyle = textPrimary;
-    ctx.fillText(`🔥 Peak Adventure: ${rhythm.peakDay}`, 145, 1510);
+    ctx.fillText(peakTitle, 145, 1490);
 
-    ctx.font = '400 24px sans-serif';
+    // Pace & Destination cleanly split into wrapped lines
+    ctx.font = '500 24px sans-serif';
     ctx.fillStyle = textSecondary;
-    ctx.fillText(`Pace: ${rhythm.pace} · ${rhythm.vibeTag}`, 145, 1568);
+    ctx.fillText(`Pace: ${rhythm.pace}`, 145, 1545);
 
-    // 8. Embossed Vector Passport Stamp (Clean Corner Placement)
+    // Route / Destination with safe text wrapping
+    if (trip.destination) {
+      ctx.font = '500 22px sans-serif';
+      ctx.fillStyle = primaryAccent;
+      const cleanDest = `📍 ${trip.destination.toUpperCase()}`;
+      drawSafeWrappedText(ctx, cleanDest, 145, 1595, 790, 28, 1);
+    }
+
+    // 8. Embossed Vector Passport Stamp
     ctx.save();
-    ctx.translate(880, 1715);
+    ctx.translate(880, 1735);
     ctx.rotate(-0.12);
     ctx.strokeStyle = primaryAccent;
     ctx.lineWidth = 3.5;
@@ -502,7 +587,7 @@ export function TripWrappedModal({
     ctx.font = '500 24px sans-serif';
     ctx.fillStyle = isDark ? 'rgba(255, 255, 255, 0.45)' : 'rgba(20, 38, 36, 0.55)';
     ctx.textAlign = 'center';
-    ctx.fillText('Tracked with Trip Tracker · trip-tracker.blackmaroon.in', 540, 1855);
+    ctx.fillText('Tracked with Trip Tracker · trip-tracker.blackmaroon.in', 540, 1865);
 
     return canvas;
   };
@@ -752,7 +837,7 @@ export function TripWrappedModal({
             </div>
           </div>
 
-          {/* Trip Rhythm Summary */}
+          {/* Trip Rhythm Summary with Dynamic Wrapping */}
           <div
             style={{
               background: isDark ? 'rgba(255, 122, 0, 0.08)' : 'rgba(235, 107, 86, 0.08)',
@@ -760,26 +845,45 @@ export function TripWrappedModal({
               padding: '12px 14px',
               borderRadius: '14px',
               display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
+              flexDirection: 'column',
+              gap: '8px',
             }}
           >
-            <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div style={{ fontSize: '11px', color: isDark ? '#FF7A00' : '#C74800', fontWeight: 700, textTransform: 'uppercase' }}>
-                ⚡ Peak Adventure Day
+                ⚡ Peak Adventure Day{rhythm.peakDay.includes('&') || rhythm.peakDay.includes(',') ? 's' : ''}
               </div>
-              <div style={{ fontSize: '13.5px', fontWeight: 700, color: isDark ? '#FFFFFF' : '#142624', marginTop: '2px' }}>
-                {rhythm.peakDay}
-              </div>
-            </div>
-            <div style={{ textAlign: 'right' }}>
-              <div style={{ fontSize: '10px', color: isDark ? 'rgba(255,255,255,0.5)' : 'rgba(20,38,36,0.5)', textTransform: 'uppercase' }}>
-                Pace
-              </div>
-              <div style={{ fontSize: '12px', color: isDark ? '#3FCBBD' : '#0F6F63', fontWeight: 600 }}>
+              <span
+                style={{
+                  fontSize: '11px',
+                  color: isDark ? '#3FCBBD' : '#0F6F63',
+                  fontWeight: 600,
+                  background: isDark ? 'rgba(63, 203, 189, 0.12)' : 'rgba(15, 111, 99, 0.1)',
+                  padding: '2px 8px',
+                  borderRadius: '8px',
+                }}
+              >
                 {rhythm.pace}
-              </div>
+              </span>
             </div>
+
+            <div style={{ fontSize: '14px', fontWeight: 700, color: isDark ? '#FFFFFF' : '#142624' }}>
+              🔥 {rhythm.peakDay}
+            </div>
+
+            {trip.destination && (
+              <div
+                style={{
+                  fontSize: '11.5px',
+                  color: isDark ? '#3FCBBD' : '#0F6F63',
+                  fontWeight: 600,
+                  wordBreak: 'break-word',
+                  overflowWrap: 'anywhere',
+                }}
+              >
+                📍 {trip.destination}
+              </div>
+            )}
           </div>
         </div>
 
