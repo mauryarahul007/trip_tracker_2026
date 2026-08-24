@@ -475,13 +475,60 @@ export function TripWrappedModal({
 
     ctx.font = '800 46px sans-serif';
     ctx.fillStyle = textPrimary;
-    const cleanTripTitle = trip.name.length > 28 ? `${trip.name.slice(0, 26)}...` : trip.name;
+    const cleanTripTitle = trip.name.length > 20 ? `${trip.name.slice(0, 19)}...` : trip.name;
     ctx.fillText(cleanTripTitle, 145, 355);
 
     ctx.font = '500 26px sans-serif';
     ctx.fillStyle = textSecondary;
     const dateStr = trip.startDate && trip.endDate ? `${trip.startDate} — ${trip.endDate}` : '2026 Expedition';
     ctx.fillText(`${dateStr}  ·  ${members.length} Squad Travelers`, 145, 415);
+
+    // Official Diagonal Customs Visa Stamp (Option 1: Overlapping Top-Right Hero Banner)
+    ctx.save();
+    ctx.translate(885, 375);
+    ctx.rotate(-0.2);
+    ctx.globalAlpha = isDark ? 0.9 : 0.85;
+
+    // Outer double ring
+    ctx.strokeStyle = primaryAccent;
+    ctx.lineWidth = 3.5;
+    ctx.beginPath();
+    ctx.arc(0, 0, 84, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Middle dashed customs ring
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([5, 4]);
+    ctx.beginPath();
+    ctx.arc(0, 0, 75, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.setLineDash([]); // reset
+
+    // Inner solid ring
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(0, 0, 68, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Text details inside stamp
+    ctx.font = '800 13px monospace';
+    ctx.fillStyle = primaryAccent;
+    ctx.textAlign = 'center';
+    ctx.fillText('PASSPORT CONTROL', 0, -30);
+
+    ctx.font = '800 28px sans-serif';
+    ctx.fillStyle = isDark ? '#FFFFFF' : primaryAccent;
+    ctx.fillText('★ 2026 ★', 0, 2);
+
+    ctx.font = '800 13px monospace';
+    ctx.fillStyle = primaryAccent;
+    ctx.fillText('MISSION COMPLETE', 0, 26);
+
+    ctx.font = '700 10.5px monospace';
+    ctx.fillStyle = isDark ? 'rgba(255,255,255,0.7)' : 'rgba(15,111,99,0.7)';
+    ctx.fillText('OFFICIALLY VERIFIED', 0, 44);
+
+    ctx.restore();
 
     // 5. Section 1: Trip Vibe Identity Card
     drawSafeRoundedRect(ctx, 100, 505, 880, 290, 28, isDark ? 'rgba(63, 203, 189, 0.08)' : 'rgba(15, 111, 99, 0.06)', cardBorder, 2);
@@ -559,35 +606,11 @@ export function TripWrappedModal({
       drawSafeWrappedText(ctx, cleanDest, 145, 1595, 790, 28, 1);
     }
 
-    // 8. Embossed Vector Passport Stamp
-    ctx.save();
-    ctx.translate(880, 1735);
-    ctx.rotate(-0.12);
-    ctx.strokeStyle = primaryAccent;
-    ctx.lineWidth = 3.5;
-    ctx.beginPath();
-    ctx.arc(0, 0, 68, 0, Math.PI * 2);
-    ctx.stroke();
-
-    ctx.beginPath();
-    ctx.arc(0, 0, 60, 0, Math.PI * 2);
-    ctx.stroke();
-
-    ctx.font = '800 15px monospace';
-    ctx.fillStyle = primaryAccent;
-    ctx.textAlign = 'center';
-    ctx.fillText('PASSPORT SEAL', 0, -16);
-    ctx.font = '800 24px sans-serif';
-    ctx.fillText('★ 2026 ★', 0, 10);
-    ctx.font = '800 13px monospace';
-    ctx.fillText('MISSION COMPLETE', 0, 32);
-    ctx.restore();
-
-    // 9. Footer
+    // 8. Footer
     ctx.font = '500 24px sans-serif';
     ctx.fillStyle = isDark ? 'rgba(255, 255, 255, 0.45)' : 'rgba(20, 38, 36, 0.55)';
     ctx.textAlign = 'center';
-    ctx.fillText('Tracked with Trip Tracker · trip-tracker.blackmaroon.in', 540, 1865);
+    ctx.fillText('Tracked with Trip Tracker · trip-tracker.blackmaroon.in', 540, 1780);
 
     return canvas;
   };
@@ -753,11 +776,47 @@ export function TripWrappedModal({
             gap: '14px',
           }}
         >
-          {/* Trip Header Banner */}
-          <div style={{ borderBottom: isDark ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(15,111,99,0.12)', paddingBottom: '10px' }}>
+          {/* Trip Header Banner with Top-Right Visa Stamp */}
+          <div
+            style={{
+              position: 'relative',
+              borderBottom: isDark ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(15,111,99,0.12)',
+              paddingBottom: '10px',
+              paddingRight: '76px',
+            }}
+          >
             <div style={{ fontSize: '18px', fontWeight: 800, color: isDark ? '#FFFFFF' : '#142624' }}>{trip.name}</div>
             <div style={{ fontSize: '12px', color: isDark ? 'rgba(255,255,255,0.65)' : 'rgba(20,38,36,0.65)', marginTop: '2px' }}>
               {trip.startDate && trip.endDate ? `${trip.startDate} — ${trip.endDate}` : '2026 Journey'} · {members.length} Travelers
+            </div>
+
+            {/* Option 1: Top-Right Customs Visa Stamp */}
+            <div
+              style={{
+                position: 'absolute',
+                right: '0px',
+                top: '-4px',
+                transform: 'rotate(-14deg)',
+                width: '68px',
+                height: '68px',
+                borderRadius: '50%',
+                border: `2px solid ${isDark ? '#3FCBBD' : '#0F6F63'}`,
+                boxShadow: `inset 0 0 0 2px ${isDark ? 'rgba(63,203,189,0.25)' : 'rgba(15,111,99,0.25)'}`,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: isDark ? '#3FCBBD' : '#0F6F63',
+                fontFamily: 'monospace',
+                fontWeight: 800,
+                opacity: 0.88,
+                pointerEvents: 'none',
+                lineHeight: 1.1,
+              }}
+            >
+              <span style={{ fontSize: '6px', letterSpacing: '0.04em' }}>PASSPORT</span>
+              <span style={{ fontSize: '9px', fontWeight: 900, color: isDark ? '#FFFFFF' : '#0F6F63' }}>★ 2026 ★</span>
+              <span style={{ fontSize: '5.5px' }}>VERIFIED</span>
             </div>
           </div>
 
