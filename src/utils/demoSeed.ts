@@ -44,6 +44,7 @@ export function generateDemoData(): DemoData {
   const trip: Omit<Trip, 'ownerId' | 'joinCode'> = {
     id: tripId,
     name: 'Road Trip to Goa ☀️',
+    destination: 'Goa',
     startDate: new Date(now - 4 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 4 days ago
     endDate: new Date(now + 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],   // 2 days from now
     baseCurrency: 'INR',

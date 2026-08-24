@@ -347,10 +347,10 @@ export function AdminToolsPage({ categories, trips, expenses, onRefresh, isRefre
               className="ops-maint-btn"
               onClick={async () => {
                 await loadDemoTrip();
-                showToast('Seeded Demo Trip: "Euro Summer 2026" with sample transactions.');
+                showToast('Seeded Demo Trip: "Road Trip to Goa ☀️" with sample transactions & geotagged route.');
               }}
             >
-              <span className="ops-mb-icon">&#9998; SEED</span>Load &quot;Euro Summer 2026&quot; Demo
+              <span className="ops-mb-icon">&#9998; SEED</span>Load &quot;Road Trip to Goa ☀️&quot; Demo
             </button>
             <button type="button" className="ops-maint-btn" onClick={handleExportFleetCSV}>
               <span className="ops-mb-icon">&darr; CSV</span>Export Fleet Summary (All Trips)

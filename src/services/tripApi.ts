@@ -504,7 +504,7 @@ export async function purgeDeletedExpensesForTrip(tripId: string): Promise<void>
 // ---------------------------------------------------------------------------
 
 export interface TripGraphSeed {
-  trip: Pick<Trip, 'name' | 'startDate' | 'endDate' | 'baseCurrency'>;
+  trip: Pick<Trip, 'name' | 'startDate' | 'endDate' | 'baseCurrency'> & { destination?: string; stops?: TripStop[] };
   members: Record<string, Member>;
   groups: Record<string, Group>;
   categories?: Category[];

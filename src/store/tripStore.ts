@@ -1892,7 +1892,13 @@ export const useTripStore = create<TripStore>()(
         let result;
         try {
           result = await insertTripGraph(userId, {
-            trip: { name: demo.trip.name, startDate: demo.trip.startDate, endDate: demo.trip.endDate, baseCurrency: demo.trip.baseCurrency },
+            trip: {
+              name: demo.trip.name,
+              startDate: demo.trip.startDate,
+              endDate: demo.trip.endDate,
+              baseCurrency: demo.trip.baseCurrency,
+              destination: demo.trip.destination || 'Goa',
+            },
             members: demo.members,
             groups: demo.groups,
             expenses: demo.expenses,
@@ -1934,6 +1940,15 @@ export const useTripStore = create<TripStore>()(
           groups: { ...state.groups, ...result.groups },
           expenses: [...state.expenses.filter(e => e.tripId !== result.trip.id), ...result.expenses],
           categories: [...DEFAULT_CATEGORIES, ...result.categories],
+          enableGeotagging: true,
+          featureFlags: { ...state.featureFlags, enableGeotagging: true },
+          tripFlagOverrides: {
+            ...state.tripFlagOverrides,
+            [result.trip.id]: {
+              ...(state.tripFlagOverrides[result.trip.id] || {}),
+              enableGeotagging: true,
+            },
+          },
           storageError: null,
         }));
       } catch (e) {
