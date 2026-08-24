@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { Trip, Member, TripStop } from '../types';
 import { IconArchive, IconMapPin } from './Icons';
@@ -79,6 +79,15 @@ export function TripsListScreen({
   const [showList, setShowList] = useState(false);
   const [focusedTrip, setFocusedTrip] = useState<Trip | null>(null);
   const stackActive = trips.length >= 2 && !showList && !showAddTrip && !showJoinTrip;
+
+  // First-run vs. "deleted my last trip" both hit trips.length === 0 — flag
+  // per-account once they've ever had a trip so the two states get different
+  // copy instead of onboarding repeating itself forever.
+  const onboardKey = userId ? `tt-onboarded-${userId}` : null;
+  const isFirstRun = trips.length === 0 && !!onboardKey && !localStorage.getItem(onboardKey);
+  useEffect(() => {
+    if (trips.length > 0 && onboardKey) localStorage.setItem(onboardKey, '1');
+  }, [trips.length, onboardKey]);
 
   const handleJoinByCode = (e: React.FormEvent) => {
     e.preventDefault();
@@ -420,7 +429,11 @@ export function TripsListScreen({
               <span className="ledger-badge ledger-badge-tilt-right" aria-hidden="true">
                 <IconMapPin size={14} className="icon-sm" />
               </span>
-              <p>Nothing here yet. Start a trip and add who's coming.</p>
+              {isFirstRun ? (
+                <p>Welcome aboard. A trip holds your <strong>members</strong>, the <strong>expenses</strong> they log, and the <strong>splits</strong> between them — start one to see it come together.</p>
+              ) : (
+                <p>Nothing here yet. Start a trip and add who's coming.</p>
+              )}
               <button className="gradient-btn" onClick={() => setShowAddTrip(true)}>
                 Create Your First Trip
               </button>

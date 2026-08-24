@@ -719,9 +719,11 @@ export function BalancesSettlements({
         {isTransfersExpanded && (
           <div className="fade-in" style={{ padding: '10px 14px 14px', borderTop: '1px solid var(--border-color)' }}>
             {transfers.length === 0 ? (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 6px', color: 'var(--color-success)', fontSize: '13.5px', fontWeight: 600 }}>
-                <IconCheckCircle size={18} />
-                <span>Every balance is settled — all set!</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '12px 6px' }}>
+                <span className="ledger-badge ledger-badge-tilt-right" style={{ color: 'var(--color-success)', borderColor: 'var(--color-success)' }} aria-hidden="true">
+                  <IconCheckCircle size={16} className="icon-sm" />
+                </span>
+                <span style={{ color: 'var(--color-success)', fontSize: '13.5px', fontWeight: 600 }}>Every balance is settled — all set!</span>
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>

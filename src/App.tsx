@@ -57,19 +57,14 @@ const AdminPortalLayout = lazy(() =>
   import('./components/admin/AdminPortalLayout').then((m) => ({ default: m.AdminPortalLayout }))
 );
 
+const IS_MAC = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform);
+
 function AdminLoadingFallback() {
   return (
     <div className="app-container" style={{ justifyContent: 'center', alignItems: 'center' }}>
-      <div
-        style={{
-          width: '40px',
-          height: '40px',
-          border: '4px solid rgba(15, 23, 42, 0.05)',
-          borderTopColor: 'var(--primary-accent)',
-          borderRadius: '50%',
-          animation: 'spin 1s linear infinite',
-        }}
-      />
+      <div className="ledger-loader" role="status" aria-label="Loading">
+        <span className="ledger-loader-mark">TT</span>
+      </div>
     </div>
   );
 }
@@ -1251,15 +1246,9 @@ export default function App() {
       <div className="app-container" style={{ justifyContent: 'center', alignItems: 'center' }}>
         <div style={{ textAlign: 'center' }}>
           <h2 style={{ fontFamily: 'var(--font-family-title)', marginBottom: '16px' }}>Trip Tracker 2026</h2>
-          <div style={{
-            width: '40px',
-            height: '40px',
-            border: '4px solid rgba(15, 23, 42, 0.05)',
-            borderTopColor: 'var(--primary-accent)',
-            borderRadius: '50%',
-            animation: 'spin 1s linear infinite',
-            margin: '0 auto'
-          }} />
+          <div className="ledger-loader" role="status" aria-label="Loading">
+            <span className="ledger-loader-mark">TT</span>
+          </div>
         </div>
       </div>
     );
@@ -1592,12 +1581,13 @@ export default function App() {
                 <button
                   type="button"
                   className="secondary-btn"
-                  style={{ padding: '7px 8px', color: 'var(--header-fg)', borderColor: 'var(--header-fg-border)', background: 'var(--header-fg-soft-bg)' }}
+                  style={{ padding: '7px 8px', display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--header-fg)', borderColor: 'var(--header-fg-border)', background: 'var(--header-fg-soft-bg)' }}
                   onClick={() => setShowCommandPalette(true)}
                   title="Search & Quick Actions (Cmd+K)"
                   aria-label="Command palette"
                 >
                   <IconSearch size={15} className="icon-sm" />
+                  <span className="cmd-k-hint" aria-hidden="true">{IS_MAC ? '⌘K' : 'Ctrl K'}</span>
                 </button>
                 <NotificationsBellButton />
                 <button

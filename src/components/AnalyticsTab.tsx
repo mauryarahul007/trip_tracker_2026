@@ -147,7 +147,7 @@ export function AnalyticsTab({
                           strokeDasharray={strokeDash}
                           strokeDashoffset={strokeOffset}
                           transform="rotate(-90 70 70)"
-                          style={{ transition: 'stroke-dasharray 0.5s ease, stroke-dashoffset 0.5s ease' }}
+                          style={{ transition: 'stroke-dasharray 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), stroke-dashoffset 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)' }}
                         />
                       );
                     });
@@ -211,7 +211,7 @@ export function AnalyticsTab({
                       height: '100%',
                       background: 'var(--primary-accent)',
                       borderRadius: '4px',
-                      transition: 'width 0.4s ease'
+                      transition: 'width 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)'
                     }} />
                   </div>
                 </div>
@@ -224,7 +224,7 @@ export function AnalyticsTab({
             <div className="glass-card">
               <h4 style={{ fontSize: '14px', marginBottom: '16px', fontWeight: '600' }}>Daily Spending Trend</h4>
               <div style={{ width: '100%', overflowX: 'auto' }}>
-                <svg width="100%" height="200" viewBox="0 0 400 200" preserveAspectRatio="none" style={{ minWidth: '350px', opacity: chartFilled ? 1 : 0, transition: 'opacity 0.5s ease' }}>
+                <svg width="100%" height="200" viewBox="0 0 400 200" preserveAspectRatio="none" style={{ minWidth: '350px', opacity: chartFilled ? 1 : 0, transition: 'opacity 0.5s cubic-bezier(0.2, 0.8, 0.2, 1)' }}>
                   <line x1="30" y1="40" x2="380" y2="40" stroke="var(--border-color)" strokeWidth="1" strokeDasharray="4 4" />
                   <line x1="30" y1="100" x2="380" y2="100" stroke="var(--border-color)" strokeWidth="1" strokeDasharray="4 4" />
                   <line x1="30" y1="160" x2="380" y2="160" stroke="var(--border-color)" strokeWidth="1" />
@@ -256,7 +256,7 @@ export function AnalyticsTab({
                             stroke="var(--primary-accent)"
                             strokeWidth="2.5"
                             points={pointsStr}
-                            style={{ transition: 'all 0.5s ease' }}
+                            style={{ transition: 'all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)' }}
                           />
                         )}
 

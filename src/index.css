@@ -398,6 +398,24 @@ button, [role="button"], input, select, a {
   gap: 8px;
 }
 
+/* Cmd+K discoverability hint on the header search/palette button — hidden
+   on touch devices (no keyboard to act on it), shown wherever a real
+   keyboard is likely present. */
+.cmd-k-hint {
+  display: none;
+  padding: 1px 5px;
+  border-radius: 4px;
+  border: 1px solid var(--header-fg-border);
+  font-family: var(--font-family-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  opacity: 0.75;
+}
+@media (hover: hover) and (pointer: fine) {
+  .cmd-k-hint { display: inline-block; }
+}
+
 .secondary-btn:hover {
   background: var(--bg-surface-hover);
   border-color: rgba(28, 42, 56, 0.22);
@@ -2978,7 +2996,7 @@ input:checked + .toggle-slider:before {
   z-index: 10000;
   background: var(--bg-surface);
   color: var(--text-primary);
-  border: 1px solid var(--border-color);
+  border: 1.5px dashed var(--border-color);
   border-radius: var(--border-radius-md);
   padding: 12px 14px;
   display: flex;
@@ -2988,7 +3006,7 @@ input:checked + .toggle-slider:before {
   cursor: pointer;
   touch-action: none;
   transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.2s ease;
-  animation: inAppBannerIn 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: postmarkIn 0.35s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .in-app-notif-banner-text {
   display: flex;
@@ -2999,18 +3017,15 @@ input:checked + .toggle-slider:before {
 }
 .in-app-notif-banner-text strong {
   color: var(--text-primary);
-  font-size: 14px;
+  font-family: var(--font-family-title);
+  font-style: italic;
+  font-size: 15px;
 }
 .in-app-notif-banner-text span:last-child {
   color: var(--text-secondary);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-@keyframes inAppBannerIn {
-  from { opacity: 0; transform: translateY(-16px); }
-  to { opacity: 1; transform: translateY(0); }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -3202,6 +3217,32 @@ input:checked + .toggle-slider:before {
    reduced-motion guard above: the rotation itself is the state they convey. */
 @keyframes spin {
   to { transform: rotate(360deg); }
+}
+
+/* App-boot loader — a rotating customs/postmark ring standing in for the
+   generic spinner, matching the passport-stamp language used elsewhere
+   (TripWrappedModal, stamp-badge). The mark counter-rotates so it reads
+   upright rather than spinning with the ring. */
+.ledger-loader {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: 2px dashed var(--primary-accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+  animation: spin 2.4s linear infinite;
+}
+.ledger-loader-mark {
+  display: inline-block;
+  font-family: var(--font-family-title);
+  font-style: italic;
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.02em;
+  color: var(--primary-accent);
+  animation: spin 2.4s linear infinite reverse;
 }
 
 /* Full-screen takeover — used for the add/edit expense form. Covers the
