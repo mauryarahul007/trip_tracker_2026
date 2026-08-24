@@ -1886,12 +1886,39 @@ export const useTripStore = create<TripStore>()(
     },
 
     loadDemoTrip: async () => {
-      const userId = get().userId || 'demo-user-superadmin';
+      // 1. Resolve real authenticated user ID from Supabase session or state
+      let currentUserId = get().userId;
+      let currentUserDisplayName = get().userDisplayName || 'Rahul';
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user?.id) {
+          currentUserId = session.user.id;
+          currentUserDisplayName =
+            (session.user.user_metadata?.full_name as string | undefined) ||
+            (session.user.user_metadata?.name as string | undefined) ||
+            session.user.email?.split('@')[0] ||
+            currentUserDisplayName;
+        }
+      } catch {}
+
+      const effectiveUserId = currentUserId || 'demo-user-superadmin';
+
       try {
         const demo = generateDemoData();
+        // Link the first member (Rahul / Me) directly to the authenticated user
+        const memberEntries = Object.entries(demo.members);
+        if (memberEntries.length > 0) {
+          const [firstMemberId, firstMember] = memberEntries[0];
+          demo.members[firstMemberId] = {
+            ...firstMember,
+            name: currentUserDisplayName,
+            linkedUserId: effectiveUserId,
+          };
+        }
+
         let result;
         try {
-          result = await insertTripGraph(userId, {
+          result = await insertTripGraph(effectiveUserId, {
             trip: {
               name: demo.trip.name,
               startDate: demo.trip.startDate,
@@ -1912,11 +1939,11 @@ export const useTripStore = create<TripStore>()(
           const expensesList: Expense[] = demo.expenses.map((e) => ({
             ...e,
             isSettlement: false,
-            createdByUserId: userId,
+            createdByUserId: effectiveUserId,
           }));
           const demoTrip: Trip = {
             ...demo.trip,
-            ownerId: userId,
+            ownerId: effectiveUserId,
             adminMemberIds: [memberIds[0]],
             joinCode: 'DEMO26',
           };
