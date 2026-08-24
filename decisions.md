@@ -936,5 +936,18 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - Client-side Wikipedia and Photon queries execute asynchronously with graceful fallbacks (if a city has no photo or offline, UI gracefully preserves standard themes without breaking).
 
+---
+
+## 50. Viewport-Locked Non-Scrollable Card Stack Home Screen
+* **Context:**
+  - In the card-style stack presentation on the home screen (`stackActive`, when 2+ trips exist and user is browsing the deck on mobile), the combination of top header, section title, card stack stage, "View all trips" button, slide launcher, and safe-area margins exceeded mobile viewport heights (e.g. 667px–844px), causing vertical page scroll and disrupting swipe interactions.
+* **Decision:**
+  - Added `.stack-viewport-lock` class to `.trips-screen-scroll` when `stackActive` is active on [`src/components/TripsListScreen.tsx`](file:///c:/ProjectsV1/Trip_Tracker_2026/src/components/TripsListScreen.tsx).
+  - In [`src/index.css`](file:///c:/ProjectsV1/Trip_Tracker_2026/src/index.css), locked the screen container to `height: 100%; height: 100dvh; overflow: hidden; overscroll-behavior: none;` and established a flex column layout with `min-height: 0; flex: 1;` on the stage, tighter proportionate padding, and compact launcher dimensions so all elements (Header, Profile Avatar, Logo, Title, Card Stack Deck, View all button, Slide Launcher) fit natively inside 100% of the viewport with zero vertical scroll.
+  - Preserved standard scrollable behavior for desktop (>=900px) grid mode, list mode (`showList`), and trip create/join forms.
+* **Trade-offs Accepted:**
+  - Card stage dynamically consumes available viewport height via flexbox rather than fixed pixel heights, ensuring clean scaling across varying phone screen dimensions.
+
+
 
 

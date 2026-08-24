@@ -3108,6 +3108,143 @@ html.capacitor-ios .trip-sheet .tab-pane {
   padding-right: max(20px, var(--safe-right, 20px));
 }
 
+.trips-screen-header {
+  margin-bottom: 24px;
+  display: grid;
+  grid-template-columns: 40px 1fr 40px;
+  align-items: center;
+  gap: 12px;
+}
+
+.trips-screen-main {
+  flex: 1;
+}
+
+.trips-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* Stack Mode Viewport Lock — on phones and viewports where the card stack is active,
+   lock the entire screen to 100% viewport height and disable scrolling so everything
+   is viewed directly within the viewport. */
+.trips-screen-scroll.stack-viewport-lock {
+  height: 100%;
+  height: 100dvh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  padding-top: calc(14px + var(--safe-top, 0px));
+  padding-bottom: calc(14px + var(--safe-bottom, 0px));
+  padding-left: max(16px, var(--safe-left, 16px));
+  padding-right: max(16px, var(--safe-right, 16px));
+  overscroll-behavior: none;
+}
+
+.trips-screen-scroll.stack-viewport-lock .trips-screen-header {
+  margin-bottom: 8px;
+  flex-shrink: 0;
+}
+
+.trips-screen-scroll.stack-viewport-lock .trips-screen-header .app-logo {
+  font-size: 20px;
+}
+
+.trips-screen-scroll.stack-viewport-lock .trips-screen-header p {
+  font-size: 12.5px;
+  margin-top: 2px;
+}
+
+.trips-screen-scroll.stack-viewport-lock .trips-screen-main {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.trips-screen-scroll.stack-viewport-lock .trips-section-header {
+  margin-bottom: 6px;
+  flex-shrink: 0;
+}
+
+.trips-screen-scroll.stack-viewport-lock .trips-section-header h2 {
+  font-size: 17px;
+}
+
+.trips-screen-scroll.stack-viewport-lock .trip-stack {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 0;
+}
+
+.trips-screen-scroll.stack-viewport-lock .trip-stack-stage {
+  flex: 1;
+  min-height: 180px;
+  height: auto;
+  margin-bottom: 8px;
+}
+
+.trips-screen-scroll.stack-viewport-lock .trip-stack-viewall {
+  margin: 0 auto;
+  padding: 5px 14px;
+  font-size: 12px;
+  flex-shrink: 0;
+}
+
+.trips-screen-scroll.stack-viewport-lock .trip-launcher {
+  margin: 8px 0 0;
+  flex-shrink: 0;
+}
+
+.trips-screen-scroll.stack-viewport-lock .launcher-track {
+  height: 52px;
+  max-width: 240px;
+}
+
+.trips-screen-scroll.stack-viewport-lock .launcher-thumb {
+  width: 40px;
+  height: 40px;
+  margin-left: -20px;
+  top: 6px;
+}
+
+.trips-screen-scroll.stack-viewport-lock .launcher-caption {
+  margin-top: 3px;
+  font-size: 9.5px;
+}
+
+@media (min-width: 900px) {
+  .trips-screen-scroll.stack-viewport-lock {
+    overflow-y: auto;
+    height: auto;
+    display: block;
+    padding-top: calc(20px + var(--safe-top, 0px));
+    padding-bottom: calc(32px + var(--safe-bottom, 0px));
+    padding-left: max(20px, var(--safe-left, 20px));
+    padding-right: max(20px, var(--safe-right, 20px));
+  }
+
+  .trips-screen-scroll.stack-viewport-lock .trips-screen-header {
+    margin-bottom: 24px;
+  }
+
+  .trips-screen-scroll.stack-viewport-lock .trips-screen-main {
+    display: block;
+    overflow: visible;
+  }
+
+  .trips-screen-scroll.stack-viewport-lock .trips-section-header {
+    margin-bottom: 20px;
+  }
+}
+
 /* Ambient backdrop for whichever trip card is front-of-stack -- fixed
    behind the home screen (painted first in DOM, so normal-flow content
    above it in markup naturally layers on top -- no z-index juggling). */

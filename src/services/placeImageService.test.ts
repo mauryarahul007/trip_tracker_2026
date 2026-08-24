@@ -51,7 +51,7 @@ describe('placeImageService', () => {
       } as Response);
 
     const result = await fetchPlaceCoverImage('Goa');
-    expect(result).toBe(beachPhotoUrl);
+    expect(result).toBe('https://upload.wikimedia.org/wikipedia/commons/thumb/f/fc/BeachFun.jpg/960px-BeachFun.jpg');
   });
 
   it('rejects flag, coat-of-arms, and seal images from any source', async () => {

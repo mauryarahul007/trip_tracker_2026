@@ -103,9 +103,9 @@ export function TripsListScreen({
   };
 
   return (
-    <div className="fade-in trips-screen-scroll">
+    <div className={`fade-in trips-screen-scroll${stackActive ? ' stack-viewport-lock' : ''}`}>
       <HomeAmbientBackdrop trip={stackActive ? focusedTrip : null} />
-      <header style={{ marginBottom: '24px', display: 'grid', gridTemplateColumns: '40px 1fr 40px', alignItems: 'center', gap: '12px' }}>
+      <header className="trips-screen-header">
         <button
           type="button"
           className="profile-avatar-btn"
@@ -154,8 +154,8 @@ export function TripsListScreen({
         )}
       </header>
 
-      <main style={{ flex: 1 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', gap: '8px', flexWrap: 'wrap' }}>
+      <main className={`trips-screen-main${stackActive ? ' stack-main' : ''}`}>
+        <div className="trips-section-header">
           <h2 style={{ fontSize: '20px' }}>Your Trips</h2>
           {!showAddTrip && (
             <div className={`trip-home-actions${stackActive ? ' stack-active' : ''}`}>
