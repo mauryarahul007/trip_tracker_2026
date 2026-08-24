@@ -1714,6 +1714,7 @@ export default function App() {
                     myMemberId={myMemberId}
                     members={members}
                     onOpenSquadBadges={() => setShowAchievements(true)}
+                    onOpenJourneyMap={() => setActiveTab('analytics')}
                   />
                 )}
 
@@ -1765,6 +1766,7 @@ export default function App() {
                 dailySpendData={dailySpendData}
                 expenses={activeTripExpenses}
                 categories={categories}
+                onOpenSquadBadges={() => setShowAchievements(true)}
               />
               </div>
             </div>

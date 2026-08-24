@@ -228,6 +228,49 @@ export function ExpenseReviewModal({ expense, members, categories, trip, canMana
               })}
             </div>
           </div>
+
+          {/* Attached Polaroid Photo / Receipt Card */}
+          {(expense.receiptImage || receiptUrl) && (
+            <div style={{ marginTop: '16px', paddingTop: '14px', borderTop: '1px dashed var(--border-color)' }}>
+              <h4 style={{
+                fontSize: '12px',
+                color: 'var(--text-secondary)',
+                textTransform: 'uppercase',
+                letterSpacing: '0.05em',
+                marginBottom: '10px'
+              }}>
+                📸 Polaroid Memory & Receipt
+              </h4>
+              <div
+                style={{
+                  background: '#FFFFFF',
+                  padding: '10px 10px 18px',
+                  borderRadius: '12px',
+                  boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
+                  border: '1px solid #E2E8F0',
+                  textAlign: 'center',
+                  transform: 'rotate(-1.5deg)',
+                  maxWidth: '240px',
+                  margin: '0 auto',
+                }}
+              >
+                <img
+                  src={expense.receiptImage || receiptUrl || ''}
+                  alt={expense.title}
+                  style={{
+                    width: '100%',
+                    height: '180px',
+                    objectFit: 'cover',
+                    borderRadius: '8px',
+                    display: 'block',
+                  }}
+                />
+                <div style={{ marginTop: '8px', fontFamily: 'var(--font-family-title)', fontStyle: 'italic', fontSize: '13px', color: '#334155' }}>
+                  {expense.title} · {expense.date}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

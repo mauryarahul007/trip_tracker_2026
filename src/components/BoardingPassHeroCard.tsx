@@ -20,8 +20,8 @@ interface BoardingPassHeroCardProps {
   topCategoryName?: string;
   topCategoryPercentage?: number;
   currentMember?: Member;
-  onOpenSquadView?: () => void;
   onOpenSquadBadges?: () => void;
+  onOpenJourneyMap?: () => void;
 }
 
 export function BoardingPassHeroCard({
@@ -37,24 +37,39 @@ export function BoardingPassHeroCard({
   topCategoryName,
   currentMember,
   onOpenSquadBadges,
+  onOpenJourneyMap,
 }: BoardingPassHeroCardProps) {
   const isBlindMode = usePrivacyStore((s) => s.isBlindMode);
   const [isFlipped, setIsFlipped] = useState(false);
   const [copied, setCopied] = useState(false);
   const [weather, setWeather] = useState<WeatherData | null>(null);
 
-  // Fetch weather for trip destination
+  // Editable Route Codes with local persistence
+  const [originCode, setOriginCode] = useState(() => {
+    return localStorage.getItem(`tt_origin_code_${trip.id}`) || 'DEL';
+  });
+  const [destCode, setDestCode] = useState(() => {
+    return (
+      localStorage.getItem(`tt_dest_code_${trip.id}`) ||
+      (trip.destination ? trip.destination.slice(0, 3).toUpperCase() : 'IXB')
+    );
+  });
+  const [editingCode, setEditingCode] = useState<'origin' | 'dest' | null>(null);
+  const [codeInputVal, setCodeInputVal] = useState('');
+
+  // Fetch weather for trip destination or trip name
   useEffect(() => {
     let active = true;
-    if (trip.destination) {
-      getDestinationWeather(trip.destination).then((data) => {
+    const locationQuery = trip.destination || trip.name;
+    if (locationQuery) {
+      getDestinationWeather(locationQuery).then((data) => {
         if (active && data) setWeather(data);
       });
     }
     return () => {
       active = false;
     };
-  }, [trip.destination]);
+  }, [trip.destination, trip.name]);
 
   const categoryClause = categoryIsDominant && topCategoryName ? `, driven by ${topCategoryName} spend` : '';
 
@@ -73,12 +88,30 @@ export function BoardingPassHeroCard({
     }
   };
 
+  const startEditCode = (type: 'origin' | 'dest', e: React.MouseEvent) => {
+    e.stopPropagation();
+    triggerHaptic('light');
+    setEditingCode(type);
+    setCodeInputVal(type === 'origin' ? originCode : destCode);
+  };
+
+  const saveCode = (e: React.FormEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    triggerHaptic('success');
+    const cleaned = codeInputVal.trim().toUpperCase().slice(0, 4) || (editingCode === 'origin' ? 'DEL' : 'ARR');
+    if (editingCode === 'origin') {
+      setOriginCode(cleaned);
+      localStorage.setItem(`tt_origin_code_${trip.id}`, cleaned);
+    } else {
+      setDestCode(cleaned);
+      localStorage.setItem(`tt_dest_code_${trip.id}`, cleaned);
+    }
+    setEditingCode(null);
+  };
+
   const passengerName = currentMember?.name || 'Squad Traveler';
   const seatNumber = '01A';
-
-  // Origin -> Destination abbreviations
-  const originCode = 'DEP';
-  const destCode = trip.destination ? trip.destination.slice(0, 3).toUpperCase() : 'ARR';
 
   return (
     <div className="boarding-pass-flip-container" style={{ perspective: '1200px', marginBottom: '16px' }}>
@@ -192,118 +225,183 @@ export function BoardingPassHeroCard({
           }}
         >
           {/* Top Airline Bar */}
-          <div className="bp-top" style={{ paddingBottom: '10px' }}>
+          <div className="bp-top" style={{ paddingBottom: '8px' }}>
             <div>
               <div className="bp-eyebrow">✈ TRIP TRACKER AIRWAYS · FLIGHT 2026</div>
               <div className="bp-title" style={{ fontSize: '15px' }}>
                 {trip.name}
               </div>
             </div>
-            <div
-              onClick={(e) => {
-                if (onOpenSquadBadges) {
-                  e.stopPropagation();
-                  triggerHaptic('medium');
-                  onOpenSquadBadges();
-                }
-              }}
-              style={{
-                background: 'rgba(15, 111, 99, 0.1)',
-                color: 'var(--primary-accent)',
-                fontFamily: 'var(--font-family-mono)',
-                fontSize: '9.5px',
-                fontWeight: 700,
-                padding: '3px 8px',
-                borderRadius: '6px',
-                textTransform: 'uppercase',
-                letterSpacing: '0.04em',
-                cursor: onOpenSquadBadges ? 'pointer' : 'default',
-              }}
-            >
-              🏆 SQUAD BADGES
+            <div style={{ display: 'flex', gap: '6px' }}>
+              {onOpenSquadBadges && (
+                <div
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    triggerHaptic('medium');
+                    onOpenSquadBadges();
+                  }}
+                  style={{
+                    background: 'rgba(15, 111, 99, 0.12)',
+                    color: 'var(--primary-accent)',
+                    fontFamily: 'var(--font-family-mono)',
+                    fontSize: '10px',
+                    fontWeight: 700,
+                    padding: '4px 8px',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    border: '1px solid rgba(15, 111, 99, 0.2)',
+                  }}
+                  title="View Unlocked Squad Achievements"
+                >
+                  🏆 SQUAD BADGES
+                </div>
+              )}
+              {onOpenJourneyMap && (
+                <div
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    triggerHaptic('medium');
+                    onOpenJourneyMap();
+                  }}
+                  style={{
+                    background: 'rgba(47, 111, 237, 0.1)',
+                    color: 'var(--primary-accent)',
+                    fontFamily: 'var(--font-family-mono)',
+                    fontSize: '10px',
+                    fontWeight: 700,
+                    padding: '4px 8px',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    border: '1px solid rgba(47, 111, 237, 0.2)',
+                  }}
+                  title="Play Animated Journey Route"
+                >
+                  🗺️ RELIVE
+                </div>
+              )}
             </div>
           </div>
 
-          {/* Middle Route Display */}
+          {/* Middle Route Display with 1-Tap Inline Code Editing */}
           <div
             style={{
-              padding: '12px 20px',
+              padding: '10px 18px',
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center',
-              background: 'rgba(31, 27, 20, 0.02)',
+              background: 'rgba(31, 27, 20, 0.03)',
             }}
           >
-            <div style={{ textAlign: 'left' }}>
-              <div style={{ fontSize: '24px', fontWeight: 900, fontFamily: 'var(--font-family-title)', color: '#1F1B14' }}>
-                {originCode}
-              </div>
-              <div style={{ fontSize: '11px', color: 'rgba(31, 27, 20, 0.6)', fontFamily: 'var(--font-family-mono)' }}>
-                {trip.startDate || 'START'}
-              </div>
+            {/* Origin Airport */}
+            <div style={{ textAlign: 'left', position: 'relative' }}>
+              {editingCode === 'origin' ? (
+                <form onSubmit={saveCode} onClick={(e) => e.stopPropagation()} style={{ display: 'flex', gap: '4px' }}>
+                  <input
+                    type="text"
+                    maxLength={4}
+                    value={codeInputVal}
+                    onChange={(e) => setCodeInputVal(e.target.value)}
+                    autoFocus
+                    style={{
+                      width: '60px',
+                      fontSize: '16px',
+                      fontWeight: 800,
+                      textTransform: 'uppercase',
+                      textAlign: 'center',
+                      padding: '2px',
+                      borderRadius: '4px',
+                      border: '2px solid var(--primary-accent)',
+                    }}
+                  />
+                  <button type="submit" style={{ padding: '2px 6px', fontSize: '11px', background: 'var(--primary-accent)', color: '#fff', border: 'none', borderRadius: '4px' }}>✓</button>
+                </form>
+              ) : (
+                <div onClick={(e) => startEditCode('origin', e)} style={{ cursor: 'pointer' }} title="Click to edit Origin Code (e.g. DEL, BOM, NYC)">
+                  <div style={{ fontSize: '24px', fontWeight: 900, fontFamily: 'var(--font-family-title)', color: '#1F1B14', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    {originCode} <span style={{ fontSize: '11px', opacity: 0.4 }}>✏️</span>
+                  </div>
+                  <div style={{ fontSize: '10.5px', color: 'rgba(31, 27, 20, 0.6)', fontFamily: 'var(--font-family-mono)' }}>
+                    {trip.startDate || 'DEPART'}
+                  </div>
+                </div>
+              )}
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px', flex: 1, padding: '0 16px' }}>
+            {/* Flight Dash Route Vector */}
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px', flex: 1, padding: '0 12px' }}>
               <span style={{ fontSize: '14px' }}>✈</span>
               <div style={{ width: '100%', height: '1.5px', borderTop: '1.5px dashed rgba(31, 27, 20, 0.3)' }} />
-              <span style={{ fontSize: '9.5px', color: 'rgba(31, 27, 20, 0.55)', fontFamily: 'var(--font-family-mono)' }}>NON-STOP VOYAGE</span>
+              <span style={{ fontSize: '9px', color: 'rgba(31, 27, 20, 0.55)', fontFamily: 'var(--font-family-mono)' }}>NON-STOP VOYAGE</span>
             </div>
 
-            <div style={{ textAlign: 'right' }}>
-              <div style={{ fontSize: '24px', fontWeight: 900, fontFamily: 'var(--font-family-title)', color: '#1F1B14' }}>
-                {destCode}
-              </div>
-              <div style={{ fontSize: '11px', color: 'rgba(31, 27, 20, 0.6)', fontFamily: 'var(--font-family-mono)' }}>
-                {trip.endDate || 'FINISH'}
-              </div>
+            {/* Destination Airport */}
+            <div style={{ textAlign: 'right', position: 'relative' }}>
+              {editingCode === 'dest' ? (
+                <form onSubmit={saveCode} onClick={(e) => e.stopPropagation()} style={{ display: 'flex', gap: '4px' }}>
+                  <input
+                    type="text"
+                    maxLength={4}
+                    value={codeInputVal}
+                    onChange={(e) => setCodeInputVal(e.target.value)}
+                    autoFocus
+                    style={{
+                      width: '60px',
+                      fontSize: '16px',
+                      fontWeight: 800,
+                      textTransform: 'uppercase',
+                      textAlign: 'center',
+                      padding: '2px',
+                      borderRadius: '4px',
+                      border: '2px solid var(--primary-accent)',
+                    }}
+                  />
+                  <button type="submit" style={{ padding: '2px 6px', fontSize: '11px', background: 'var(--primary-accent)', color: '#fff', border: 'none', borderRadius: '4px' }}>✓</button>
+                </form>
+              ) : (
+                <div onClick={(e) => startEditCode('dest', e)} style={{ cursor: 'pointer' }} title="Click to edit Destination Code (e.g. IXB, GOI, DPS)">
+                  <div style={{ fontSize: '24px', fontWeight: 900, fontFamily: 'var(--font-family-title)', color: '#1F1B14', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '4px' }}>
+                    {destCode} <span style={{ fontSize: '11px', opacity: 0.4 }}>✏️</span>
+                  </div>
+                  <div style={{ fontSize: '10.5px', color: 'rgba(31, 27, 20, 0.6)', fontFamily: 'var(--font-family-mono)' }}>
+                    {trip.endDate || 'RETURN'}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
           {/* Perforated Separator */}
           <div className="bp-perf" />
 
-          {/* Passenger & Live Telemetry Strip */}
-          <div style={{ padding: '10px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          {/* Passenger & Live Telemetry Weather Strip */}
+          <div style={{ padding: '8px 18px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div>
-              <div style={{ fontSize: '9.5px', fontFamily: 'var(--font-family-mono)', color: 'rgba(31, 27, 20, 0.55)', textTransform: 'uppercase' }}>
+              <div style={{ fontSize: '9px', fontFamily: 'var(--font-family-mono)', color: 'rgba(31, 27, 20, 0.55)', textTransform: 'uppercase' }}>
                 PASSENGER · SEAT
               </div>
-              <div style={{ fontSize: '13px', fontWeight: 700, color: '#1F1B14' }}>
+              <div style={{ fontSize: '12.5px', fontWeight: 700, color: '#1F1B14' }}>
                 {passengerName} · {seatNumber}
               </div>
             </div>
 
-            {weather ? (
-              <div style={{ textAlign: 'right' }}>
-                <div style={{ fontSize: '9.5px', fontFamily: 'var(--font-family-mono)', color: 'rgba(31, 27, 20, 0.55)', textTransform: 'uppercase' }}>
-                  DESTINATION WEATHER
-                </div>
-                <div style={{ fontSize: '12.5px', fontWeight: 700, color: 'var(--primary-accent)' }}>
-                  {weather.weatherEmoji} {weather.tempC}°C · {weather.condition}
-                </div>
+            <div style={{ textAlign: 'right' }}>
+              <div style={{ fontSize: '9px', fontFamily: 'var(--font-family-mono)', color: 'rgba(31, 27, 20, 0.55)', textTransform: 'uppercase' }}>
+                DESTINATION WEATHER
               </div>
-            ) : trip.joinCode ? (
-              <div
-                onClick={handleCopyJoinCode}
-                style={{
-                  textAlign: 'right',
-                  cursor: 'pointer',
-                  background: 'rgba(15, 111, 99, 0.08)',
-                  padding: '4px 10px',
-                  borderRadius: '8px',
-                }}
-              >
-                <div style={{ fontSize: '9px', fontFamily: 'var(--font-family-mono)', color: 'var(--primary-accent)', fontWeight: 700 }}>
-                  JOIN CODE {copied ? '✓ COPIED' : '📋 COPY'}
-                </div>
-                <div style={{ fontSize: '12.5px', fontWeight: 800, fontFamily: 'var(--font-family-mono)', color: '#1F1B14' }}>
-                  {trip.joinCode}
-                </div>
+              <div style={{ fontSize: '12px', fontWeight: 800, color: 'var(--primary-accent)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <span>{weather ? weather.weatherEmoji : '🏔️'}</span>
+                <span>{weather ? `${weather.tempC}°C · ${weather.condition}` : 'Loading weather...'}</span>
               </div>
-            ) : null}
+            </div>
           </div>
 
-          {/* Bottom Barcode & Flip Toggle */}
+          {/* Bottom Barcode, Join Code & Flip Toggle */}
           <div
             className="bp-foot"
             style={{
@@ -312,14 +410,19 @@ export function BoardingPassHeroCard({
               alignItems: 'center',
               background: '#F7F0E1',
               borderTop: '1px solid #E6DAC4',
+              padding: '10px 18px',
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ fontFamily: 'monospace', fontSize: '15px', letterSpacing: '2px', color: 'rgba(31, 27, 20, 0.7)' }}>
+            <div
+              onClick={handleCopyJoinCode}
+              style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}
+              title="Click to copy Join Code"
+            >
+              <span style={{ fontFamily: 'monospace', fontSize: '14px', letterSpacing: '2px', color: 'rgba(31, 27, 20, 0.7)' }}>
                 ▌│█║▌║▌║
               </span>
-              <span style={{ fontFamily: 'var(--font-family-mono)', fontSize: '10px', color: 'rgba(31, 27, 20, 0.6)' }}>
-                {trip.joinCode || '2026-PASS'}
+              <span style={{ fontFamily: 'var(--font-family-mono)', fontSize: '10px', color: 'rgba(31, 27, 20, 0.8)', fontWeight: 700 }}>
+                {trip.joinCode ? `${trip.joinCode} ${copied ? '✓ COPIED' : '📋'}` : '2026-PASS'}
               </span>
             </div>
 

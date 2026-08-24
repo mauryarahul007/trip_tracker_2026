@@ -4,7 +4,6 @@ import { CategoryIcon } from './CategoryIcon';
 import { IconAnalytics } from './Icons';
 import { getCurrencySymbol } from '../utils/currency';
 import { TripJourneyMap } from './TripJourneyMap';
-import { useTripStore } from '../store/tripStore';
 import { usePrivacyStore, formatMaskedAmount } from '../store/privacyStore';
 
 type CategoryDatum = { id: string; name: string; icon: string; amount: number; percentage: number };
@@ -23,6 +22,7 @@ type Props = {
   dailySpendData: DailySpend[];
   expenses?: Expense[];
   categories?: Category[];
+  onOpenSquadBadges?: () => void;
 };
 
 export function AnalyticsTab({
@@ -37,17 +37,14 @@ export function AnalyticsTab({
   dailySpendData,
   expenses = [],
   categories = [],
+  onOpenSquadBadges,
 }: Props) {
   const currencySymbol = getCurrencySymbol(trip?.baseCurrency || '');
   const isBlindMode = usePrivacyStore((s) => s.isBlindMode);
   const topCategory = categoryData[0];
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
-  const enableGeotagging = useTripStore((s) => s.enableGeotagging);
-
-  // Donut chart animates in from empty on first mount rather than popping in
-  // at full value — two rAFs so the browser paints the 0-state frame before
-  // the transition to the real value is triggered.
   const [chartFilled, setChartFilled] = useState(false);
+
   useEffect(() => {
     const raf1 = requestAnimationFrame(() => {
       const raf2 = requestAnimationFrame(() => setChartFilled(true));
@@ -58,6 +55,33 @@ export function AnalyticsTab({
 
   return (
     <div className="fade-in">
+      {/* Squad Milestones Banner */}
+      {onOpenSquadBadges && (
+        <div
+          onClick={onOpenSquadBadges}
+          className="glass-card"
+          style={{
+            marginBottom: '16px',
+            padding: '12px 16px',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            cursor: 'pointer',
+            border: '1.5px solid rgba(63, 203, 189, 0.3)',
+            background: 'radial-gradient(circle at 10% 50%, rgba(63, 203, 189, 0.12), var(--bg-surface))',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <span style={{ fontSize: '20px' }}>🏆</span>
+            <div>
+              <div style={{ fontSize: '13.5px', fontWeight: 700, color: 'var(--text-primary)' }}>Squad Milestones & Badges</div>
+              <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>View unlocked expedition pins</div>
+            </div>
+          </div>
+          <span style={{ fontSize: '12px', color: 'var(--primary-accent)', fontWeight: 700 }}>View ›</span>
+        </div>
+      )}
+
       <h3 style={{ fontSize: '18px', marginBottom: '20px' }}>Charts & Analytics</h3>
 
       {/* 1. Key Statistics Cards Grid */}
@@ -112,12 +136,8 @@ export function AnalyticsTab({
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-          {/* Trip Journey Map — only when geotagging is actually enabled for
-              this trip; otherwise there's nothing meaningful to plot and no
-              reason to load the map/tile network calls at all. */}
-          {enableGeotagging && (
-            <TripJourneyMap expenses={expenses} categories={categories} baseCurrency={trip?.baseCurrency || ''} />
-          )}
+          {/* Trip Journey Map & Route Playback */}
+          <TripJourneyMap expenses={expenses} categories={categories} baseCurrency={trip?.baseCurrency || ''} />
 
           {/* 2. Spend by Category SVG Donut Chart */}
           <div className="glass-card">

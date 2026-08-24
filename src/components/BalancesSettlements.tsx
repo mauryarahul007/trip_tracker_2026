@@ -24,6 +24,7 @@ type Props = {
   myMemberId: string | null;
   members: Record<string, Member>;
   onOpenSquadBadges?: () => void;
+  onOpenJourneyMap?: () => void;
 };
 
 function balanceColor(balance: number): string {
@@ -582,6 +583,7 @@ export function BalancesSettlements({
   myMemberId,
   members,
   onOpenSquadBadges,
+  onOpenJourneyMap,
 }: Props) {
   const canSettleTransfer = (t: Transfer) => {
     if (isAdmin) return true;
@@ -649,6 +651,7 @@ export function BalancesSettlements({
         topCategoryPercentage={topCategoryPercentage}
         currentMember={myMemberId ? members[myMemberId] : undefined}
         onOpenSquadBadges={onOpenSquadBadges}
+        onOpenJourneyMap={onOpenJourneyMap}
       />
 
       {/* 1. WhatsApp-Style Suggested Settlements Section */}
