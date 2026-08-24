@@ -45,7 +45,34 @@ export function LoginScreen() {
   }
 
   return (
-    <div className="app-container" style={{ justifyContent: 'center', alignItems: 'center' }}>
+    <div className="app-container" style={{ justifyContent: 'center', alignItems: 'center', position: 'relative' }}>
+      {/* Quiet corner entry point -- fast repeat-access for superadmins,
+          low-key enough that it never competes with the divider +
+          "Super User Login" button below, which stays the discoverable
+          first-time path. */}
+      <button
+        type="button"
+        onClick={() => setIsSuperadminModalOpen(true)}
+        aria-label="Superadmin login"
+        title="Superadmin login"
+        style={{
+          position: 'absolute',
+          top: 'max(16px, var(--safe-top, 16px))',
+          right: '16px',
+          width: '36px',
+          height: '36px',
+          borderRadius: '50%',
+          background: 'rgba(2, 132, 199, 0.08)',
+          border: '1px solid var(--border-color)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          cursor: 'pointer',
+        }}
+      >
+        <IconShield size={16} style={{ color: 'var(--text-secondary)' }} />
+      </button>
+
       <div
         className="fade-in"
         style={{

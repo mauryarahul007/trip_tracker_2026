@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import type { Trip } from '../types';
-import { Map as MaplibreMap, Marker, LngLatBounds, setWorkerUrl } from 'maplibre-gl';
+import { Map as MaplibreMap, Marker, LngLatBounds, GeoJSONSource, setWorkerUrl } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { useResolvedTripStops } from '../hooks/useResolvedTripStops';
 
@@ -9,6 +9,33 @@ setWorkerUrl(`${import.meta.env.BASE_URL}maplibre/maplibre-gl-worker.mjs`);
 const MAP_STYLE_URL = 'https://tiles.openfreemap.org/styles/liberty';
 const ROUTE_SOURCE_ID = 'trip-hero-route';
 const ROUTE_LAYER_ID = 'trip-hero-route-line';
+// Free, keyless routing (same "no API key" convention as the tile source
+// and the Wikipedia/Wikivoyage cover-photo lookups) -- no uptime SLA, so
+// every call site here falls back to the straight-line route on failure.
+const OSRM_ROUTE_URL = 'https://router.project-osrm.org/route/v1/driving/';
+
+// Real road-following geometry between stops, in visit order. Returns null
+// (caller keeps the straight-line fallback already drawn) on any failure --
+// network error, no drivable path between stops, rate limit, etc.
+async function fetchRoadRoute(stops: { lng: number; lat: number }[]): Promise<[number, number][] | null> {
+  try {
+    const coords = stops.map((s) => `${s.lng},${s.lat}`).join(';');
+    const res = await fetch(`${OSRM_ROUTE_URL}${coords}?overview=full&geometries=geojson`);
+    if (!res.ok) return null;
+    const data = await res.json();
+    const geometry = data?.routes?.[0]?.geometry;
+    if (geometry?.type !== 'LineString' || !Array.isArray(geometry.coordinates)) return null;
+    return geometry.coordinates;
+  } catch {
+    return null;
+  }
+}
+
+function getHeaderHeightPx(): number {
+  const raw = getComputedStyle(document.documentElement).getPropertyValue('--trip-header-height').trim();
+  const parsed = parseFloat(raw);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 126;
+}
 
 // Luminance threshold (0-1) above which the sampled map region is bright
 // enough that white header text needs to flip to dark. Same formula/cutoff
@@ -96,16 +123,37 @@ export function TripMapHero({ trip, sheetExpanded, onToneChange }: Props) {
     };
     map.on('idle', updateTone);
 
+    // 'idle' only fires once movement fully settles -- during the sheet's
+    // zoom-out easeTo (see below) that left tone stale for the whole ~450ms
+    // transition, which is exactly the moment users swipe and look at the
+    // header. Sample on 'render' too, throttled, so tone tracks the map
+    // continuously instead of jumping once at the end.
+    let lastRenderSample = 0;
+    const RENDER_SAMPLE_INTERVAL_MS = 200;
+    map.on('render', () => {
+      const now = performance.now();
+      if (now - lastRenderSample < RENDER_SAMPLE_INTERVAL_MS) return;
+      lastRenderSample = now;
+      updateTone();
+    });
+
     map.on('load', () => {
       const bounds = new LngLatBounds();
+      // Fit padding needs real clearance under the floating translucent
+      // header, not a flat guess -- otherwise the top of the route/pins
+      // renders partially hidden behind it on open.
+      const fitPadding = { top: getHeaderHeightPx() + 24, bottom: 48, left: 48, right: 48 };
 
-      // Highlight the route when the trip has multiple stops
+      // Highlight the route when the trip has multiple stops. Straight
+      // line first (instant, always available), then swapped for the real
+      // road-following geometry once OSRM responds -- never leaves the
+      // map blank while waiting on the network.
       if (validStops.length > 1) {
-        const coordinates = validStops.map((s) => [s.lng, s.lat]);
+        const straightCoordinates: [number, number][] = validStops.map((s) => [s.lng, s.lat]);
 
         map.addSource(ROUTE_SOURCE_ID, {
           type: 'geojson',
-          data: { type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates } },
+          data: { type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates: straightCoordinates } },
         });
 
         map.addLayer({
@@ -122,6 +170,27 @@ export function TripMapHero({ trip, sheetExpanded, onToneChange }: Props) {
           source: ROUTE_SOURCE_ID,
           layout: { 'line-join': 'round', 'line-cap': 'round' },
           paint: { 'line-color': '#FF7A00', 'line-width': 3.5, 'line-dasharray': [2, 2] },
+        });
+
+        fetchRoadRoute(validStops).then((roadCoordinates) => {
+          if (!roadCoordinates || !mapInstanceRef.current) return;
+          const source = map.getSource(ROUTE_SOURCE_ID);
+          if (!(source instanceof GeoJSONSource)) return;
+          source.setData({ type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates: roadCoordinates } });
+
+          // Refit over the real path -- a road route can bow well outside
+          // the straight-line box between stops (highway detours, coastal
+          // roads), so every point along it needs to be in view, not just
+          // the stops themselves.
+          const roadBounds = new LngLatBounds();
+          roadCoordinates.forEach((c) => roadBounds.extend(c as [number, number]));
+          if (!roadBounds.isEmpty()) {
+            // The sheet-expand zoom-out cue offsets from whatever zoom
+            // fitBounds lands on -- reset so it's recaptured from THIS
+            // fit, not the earlier straight-line one.
+            baseZoomRef.current = null;
+            map.fitBounds(roadBounds, { padding: fitPadding, maxZoom: 12, duration: 500 });
+          }
         });
       }
 
@@ -149,7 +218,7 @@ export function TripMapHero({ trip, sheetExpanded, onToneChange }: Props) {
       });
 
       if (!bounds.isEmpty()) {
-        map.fitBounds(bounds, { padding: 48, maxZoom: 12, duration: 0 });
+        map.fitBounds(bounds, { padding: fitPadding, maxZoom: 12, duration: 0 });
       }
     });
 

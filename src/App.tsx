@@ -1779,21 +1779,10 @@ export default function App() {
               </div>
             </div>
 
-            {activeTab === 'expenses' && (
-              <button
-                type="button"
-                className="fab-add-expense"
-                onClick={handleOpenAddExpense}
-                aria-label="Add Expense"
-                title="Add Expense"
-              >
-                <IconPlus size={24} />
-              </button>
-            )}
           </main>
           </TripContentSheet>
 
-          <NavTabs activeTab={activeTab} setActiveTab={setActiveTab} />
+          <NavTabs activeTab={activeTab} setActiveTab={setActiveTab} onAddExpense={handleOpenAddExpense} />
         </div>
       )}
 

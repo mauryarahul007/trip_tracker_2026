@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { Trip } from '../../types';
 import type { AdminUserRow } from '../../types/admin';
-import { setUserBanned, broadcastNotification } from '../../services/tripApi';
+import { setUserBanned, deleteUserAccount, broadcastNotification } from '../../services/tripApi';
 import { IconSearch, IconCheck, IconAlertCircle, IconRefresh } from '../Icons';
 
 interface Props {
@@ -47,6 +47,23 @@ export function AdminUsersPage({ users, trips, superadminIds, onUsersChanged, on
       onUsersChanged();
     } catch (err) {
       showToast(err instanceof Error ? err.message : 'Failed to update user.');
+    } finally {
+      setBusyUserId(null);
+    }
+  };
+
+  const handleDeleteUser = async (user: AdminUserRow) => {
+    const typed = window.prompt(
+      `This permanently deletes ${user.email} and every trip they own. This cannot be undone.\n\nType DELETE to confirm.`
+    );
+    if (typed !== 'DELETE') return;
+    setBusyUserId(user.id);
+    try {
+      await deleteUserAccount(user.id);
+      showToast(`Deleted ${user.email}`);
+      onUsersChanged();
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : 'Failed to delete user.');
     } finally {
       setBusyUserId(null);
     }
@@ -177,6 +194,15 @@ export function AdminUsersPage({ users, trips, superadminIds, onUsersChanged, on
                             onClick={() => handleToggleBan(u)}
                           >
                             {u.banned ? 'Restore' : 'Suspend'}
+                          </button>
+                          <button
+                            type="button"
+                            className="ops-mini-btn ground"
+                            disabled={busyUserId === u.id || isSuperadmin}
+                            title={isSuperadmin ? 'Superadmin accounts cannot be deleted' : undefined}
+                            onClick={() => void handleDeleteUser(u)}
+                          >
+                            Delete
                           </button>
                         </div>
                       </td>

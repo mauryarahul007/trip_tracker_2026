@@ -1,4 +1,4 @@
-import { IconExpenses, IconMembers, IconAnalytics, IconSettings } from './Icons';
+import { IconExpenses, IconMembers, IconAnalytics, IconSettings, IconPlus } from './Icons';
 import { triggerHaptic } from '../utils/haptics';
 
 type Tab = 'expenses' | 'members' | 'analytics' | 'settings';
@@ -6,9 +6,10 @@ type Tab = 'expenses' | 'members' | 'analytics' | 'settings';
 type Props = {
   activeTab: Tab;
   setActiveTab: (tab: Tab) => void;
+  onAddExpense: () => void;
 };
 
-export function NavTabs({ activeTab, setActiveTab }: Props) {
+export function NavTabs({ activeTab, setActiveTab, onAddExpense }: Props) {
   const goTo = (tab: Tab) => {
     if (tab !== activeTab) triggerHaptic('light');
     setActiveTab(tab);
@@ -23,6 +24,18 @@ export function NavTabs({ activeTab, setActiveTab }: Props) {
       <button data-tab="members" className={`nav-tab-item ${activeTab === 'members' ? 'active' : ''}`} onClick={() => goTo('members')} aria-label="Members & Groups">
         <span className="nav-tab-icon"><IconMembers size={26} /></span>
         <span>Members</span>
+      </button>
+      <button
+        type="button"
+        className="nav-tab-fab"
+        onClick={() => {
+          triggerHaptic('light');
+          onAddExpense();
+        }}
+        aria-label="Add Expense"
+        title="Add Expense"
+      >
+        <IconPlus size={24} />
       </button>
       <button data-tab="analytics" className={`nav-tab-item ${activeTab === 'analytics' ? 'active' : ''}`} onClick={() => goTo('analytics')} aria-label="Analytics">
         <span className="nav-tab-icon"><IconAnalytics size={26} /></span>

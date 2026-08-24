@@ -38,7 +38,7 @@ import {
 } from '../services/tripApi';
 import { fetchPlaceCoverImage } from '../services/placeImageService';
 import { generateDemoData } from '../utils/demoSeed';
-import { reverseGeocode, searchPlaces } from '../utils/geolocation';
+import { reverseGeocode, searchPlaces, resolveTripStopCoordinates } from '../utils/geolocation';
 import { sendPushNotification } from '../services/pushApi';
 import { saveOfflineReceipt, getOfflineReceipt, deleteOfflineReceipt } from '../services/offlineReceiptStore';
 import { validateAndSanitizeBackup } from '../utils/backupValidation';
@@ -854,20 +854,8 @@ export const useTripStore = create<TripStore>()(
       };
 
       const resolveStopCoordinates = async (targetTripId: string, stopsList: TripStop[]) => {
-        let updated = false;
-        const resolved = await Promise.all(
-          stopsList.map(async (stop) => {
-            if (typeof stop.lat === 'number' && typeof stop.lng === 'number') return stop;
-            try {
-              const results = await searchPlaces(stop.name);
-              if (results.length > 0) {
-                updated = true;
-                return { ...stop, lat: results[0].lat, lng: results[0].lng };
-              }
-            } catch {}
-            return stop;
-          })
-        );
+        const resolved = await resolveTripStopCoordinates(stopsList, { useDeviceLocation: get().enableGeotagging });
+        const updated = resolved.some((s, i) => s.lat !== stopsList[i].lat || s.lng !== stopsList[i].lng);
         if (updated) {
           set((state) => ({
             trips: state.trips.map((t) => (t.id === targetTripId ? { ...t, stops: resolved } : t)),
@@ -1003,18 +991,7 @@ export const useTripStore = create<TripStore>()(
         }
 
         if (cleanStops && cleanStops.length > 0) {
-          Promise.all(
-            cleanStops.map(async (stop) => {
-              if (typeof stop.lat === 'number' && typeof stop.lng === 'number') return stop;
-              try {
-                const results = await searchPlaces(stop.name);
-                if (results.length > 0) {
-                  return { ...stop, lat: results[0].lat, lng: results[0].lng };
-                }
-              } catch {}
-              return stop;
-            })
-          ).then((resolved) => {
+          resolveTripStopCoordinates(cleanStops, { useDeviceLocation: get().enableGeotagging }).then((resolved) => {
             set((state) => ({
               trips: state.trips.map((t) => (t.id === id ? { ...t, stops: resolved } : t)),
             }));

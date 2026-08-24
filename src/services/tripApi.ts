@@ -885,6 +885,11 @@ export async function setUserBanned(userId: string, banned: boolean): Promise<vo
   if (error) throw error;
 }
 
+export async function deleteUserAccount(userId: string): Promise<void> {
+  const { error } = await supabase.rpc('delete_user', { p_user_id: userId });
+  if (error) throw error;
+}
+
 // One row per device, so a multi-device user counts once per platform they
 // use -- fine for a rough fleet split, not meant to be a unique-user count.
 export async function fetchDevicePlatformCounts(): Promise<DevicePlatformCount[]> {

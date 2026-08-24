@@ -92,16 +92,18 @@
   --text-secondary: #475569;
   --text-muted: #64748B;
 
-  --bg-header: #0284C7;
-  /* Translucent -- the trip-dashboard-header sits over the live map
+  --bg-header: #0B4A73;
+  /* Deep navy -> brand teal (matches manifest theme-color #1F6E68) instead
+     of a single blue hue -- reads as a designed gradient, not a flat tint.
+     Translucent -- the trip-dashboard-header sits over the live map
      backdrop and relies on backdrop-filter blur to frost it; an opaque
      gradient here would hide the map entirely. */
-  --header-gradient: linear-gradient(135deg, rgba(2, 132, 199, 0.5) 0%, rgba(13, 92, 158, 0.5) 100%);
-  --header-gradient-scrolled: linear-gradient(135deg, rgba(3, 105, 161, 0.72) 0%, rgba(12, 74, 110, 0.72) 100%);
-  --header-gradient-solid: linear-gradient(135deg, #0284C7, #0D5C9E);
-  --bg-header-glass: rgba(2, 132, 199, 0.88);
-  --bg-header-glass-scrolled: rgba(13, 92, 158, 0.95);
-  --glass-shadow: 0 1px 3px rgba(13, 92, 158, 0.06), 0 6px 20px -6px rgba(13, 92, 158, 0.12);
+  --header-gradient: linear-gradient(135deg, rgba(11, 74, 115, 0.5) 0%, rgba(15, 111, 99, 0.5) 100%);
+  --header-gradient-scrolled: linear-gradient(135deg, rgba(9, 58, 90, 0.74) 0%, rgba(11, 86, 77, 0.74) 100%);
+  --header-gradient-solid: linear-gradient(135deg, #0B4A73, #0F6F63);
+  --bg-header-glass: rgba(11, 74, 115, 0.88);
+  --bg-header-glass-scrolled: rgba(11, 86, 77, 0.95);
+  --glass-shadow: 0 1px 3px rgba(11, 74, 115, 0.06), 0 6px 20px -6px rgba(11, 74, 115, 0.12);
   --bg-nav-glass: rgba(255, 255, 255, 0.88);
   --border-nav-glass: rgba(186, 230, 253, 0.8);
   --shadow-nav-glass: 0 16px 36px -4px rgba(13, 92, 158, 0.18), 0 4px 12px rgba(13, 92, 158, 0.08), inset 0 1px 1px rgba(255, 255, 255, 0.9);
@@ -178,8 +180,8 @@
   --text-muted: #8494B8;
 
   --bg-header: #12203F;
-  --header-gradient: linear-gradient(135deg, rgba(35, 74, 156, 0.9), rgba(18, 102, 93, 0.9));
-  --header-gradient-scrolled: linear-gradient(135deg, rgba(20, 48, 110, 0.96), rgba(10, 80, 72, 0.96));
+  --header-gradient: linear-gradient(135deg, rgba(35, 74, 156, 0.5), rgba(18, 102, 93, 0.5));
+  --header-gradient-scrolled: linear-gradient(135deg, rgba(20, 48, 110, 0.72), rgba(10, 80, 72, 0.72));
   --header-gradient-solid: linear-gradient(135deg, #234A9C, #12665D);
   --bg-header-glass: rgba(18, 32, 63, 0.85);
   --bg-header-glass-scrolled: rgba(18, 32, 63, 0.95);
@@ -907,8 +909,11 @@ input[type="date"].input-field {
   padding-left: max(20px, var(--safe-left, 20px));
   padding-right: max(20px, var(--safe-right, 20px));
   background-image: var(--header-gradient);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  /* Blur alone leaves a still-detailed, high-contrast wash under text on a
+     busy map; a stronger radius smooths it into a softer field the scrim
+     and text-shadow below can actually win against. */
+  backdrop-filter: blur(28px) saturate(180%);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
   border-bottom: 1px solid rgba(255, 255, 255, 0.16);
   box-shadow: 0 4px 20px -4px rgba(0, 0, 0, 0.28);
   transition: padding 0.35s cubic-bezier(0.16, 1, 0.3, 1),
@@ -920,12 +925,15 @@ input[type="date"].input-field {
   /* Default tone: white text/chrome for a dark or unknown map background.
      TripMapHero samples the live map pixels behind the header and flips
      these when the map area there is bright enough that white would wash
-     out (see .tone-dark below). */
+     out (see .tone-dark below). The text-shadow is a second, JS-independent
+     legibility layer -- a dark halo right at the glyph edges that holds up
+     even if the tone sample is wrong or momentarily stale (e.g. mid-swipe). */
   --header-fg: #FFFFFF;
   --header-fg-muted: rgba(255, 255, 255, 0.75);
   --header-fg-border: rgba(255, 255, 255, 0.28);
   --header-fg-soft-bg: rgba(255, 255, 255, 0.1);
   color: var(--header-fg);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.55), 0 1px 10px rgba(0, 0, 0, 0.4);
 }
 
 .trip-dashboard-header.tone-dark {
@@ -933,6 +941,8 @@ input[type="date"].input-field {
   --header-fg-muted: rgba(16, 21, 31, 0.72);
   --header-fg-border: rgba(16, 21, 31, 0.24);
   --header-fg-soft-bg: rgba(16, 21, 31, 0.08);
+  /* Dark text needs a light halo instead. */
+  text-shadow: 0 1px 3px rgba(255, 255, 255, 0.55), 0 1px 8px rgba(255, 255, 255, 0.4);
 }
 
 .trip-dashboard-header.is-scrolled {
@@ -1225,6 +1235,28 @@ html.capacitor-ios .nav-tabs {
   transform: translateY(-1px) scale(1.08);
 }
 
+.nav-tab-fab {
+  flex-shrink: 0;
+  width: 50px;
+  height: 50px;
+  margin-top: -26px;
+  border-radius: 50%;
+  border: 3px solid var(--bg-app);
+  background-image: var(--header-gradient-solid);
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 8px 18px -6px rgba(2, 132, 199, 0.55);
+  transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.nav-tab-fab:active {
+  transform: scale(0.92);
+}
+
 .nav-tab-icon .icon {
   width: 22px;
   height: 22px;
@@ -1365,8 +1397,13 @@ input:checked + .toggle-slider:before {
 
 /* Boarding-pass balance summary — the app's signature element */
 .boarding-pass {
-  background: var(--bg-surface);
-  border: 1px solid var(--border-color);
+  /* Bold gradient hero -- the card users actually settle up from, so it
+     gets the same visual weight as the trip dashboard's map/header
+     treatment. The perforated boarding-pass motif (dashed tear line +
+     punch-hole cutouts) stays; only the fill and text tone change. */
+  background-image: var(--header-gradient-solid);
+  color: #FFFFFF;
+  border: 1px solid transparent;
   border-radius: var(--border-radius-md);
   overflow: hidden;
   position: relative;
@@ -1385,24 +1422,24 @@ input:checked + .toggle-slider:before {
   font-size: 10.5px;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--text-muted);
+  color: rgba(255, 255, 255, 0.75);
 }
 .bp-title {
   font-family: var(--font-family-title);
   font-size: 17px;
   font-weight: 600;
-  color: var(--text-primary);
+  color: #FFFFFF;
   margin-top: 2px;
 }
 .bp-meta {
   font-family: var(--font-family-mono);
   font-size: 11px;
-  color: var(--text-muted);
+  color: rgba(255, 255, 255, 0.75);
   text-align: right;
 }
 .bp-perf {
   position: relative;
-  border-top: 1.5px dashed var(--border-color);
+  border-top: 1.5px dashed rgba(255, 255, 255, 0.35);
 }
 .bp-perf::before, .bp-perf::after {
   content: "";
@@ -1430,7 +1467,7 @@ input:checked + .toggle-slider:before {
   font-size: 10.5px;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--text-muted);
+  color: rgba(255, 255, 255, 0.75);
 }
 .bp-amount {
   font-family: var(--font-family-title);
@@ -1438,10 +1475,13 @@ input:checked + .toggle-slider:before {
   font-size: 36px;
   line-height: 1.1;
   font-variant-numeric: tabular-nums;
+  /* .bp-amount's inline style sets color to --color-success/--color-danger
+     for the settled/unsettled tone -- both already read clearly against
+     this gradient, no override needed here. */
 }
 .bp-sub {
   font-size: 13px;
-  color: var(--text-secondary);
+  color: rgba(255, 255, 255, 0.82);
   max-width: 34ch;
 }
 .bp-stamp-pos {
@@ -1450,13 +1490,13 @@ input:checked + .toggle-slider:before {
   right: 20px;
 }
 .bp-foot {
-  border-top: 1.5px dashed var(--border-color);
+  border-top: 1.5px dashed rgba(255, 255, 255, 0.35);
   padding: 12px 20px 14px;
   display: flex;
   justify-content: space-between;
   font-family: var(--font-family-mono);
   font-size: 11px;
-  color: var(--text-muted);
+  color: rgba(255, 255, 255, 0.75);
 }
 
 /* Trip list — passport pages. Each trip reads as a stamped visa entry

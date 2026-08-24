@@ -530,6 +530,10 @@ export interface Database {
         Args: { p_user_id: string; p_banned: boolean };
         Returns: void;
       };
+      delete_user: {
+        Args: { p_user_id: string };
+        Returns: void;
+      };
       get_app_config: {
         Args: Record<string, never>;
         Returns: { key: string; value: unknown; updated_at: string; updated_by: string | null }[];
