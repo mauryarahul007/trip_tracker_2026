@@ -1357,14 +1357,14 @@ export function SettingsView({
             </button>
           )}
 
-          {isSuperadmin && onLoadDemoTrip && (
+          {onLoadDemoTrip && (
             <button
               type="button"
               className="settings-row-item"
               onClick={() => {
                 onRequestConfirm?.({
                   title: 'Seed Demo Data',
-                  message: 'Populate a sample trip ("Road Trip to Goa") with test members and expenses?',
+                  message: 'Populate a sample trip ("Road Trip to Goa ☀️") with test members, geotagged route, and split transactions?',
                   confirmLabel: 'Load Demo Trip',
                   onConfirm: () => {
                     onLoadDemoTrip();
@@ -1378,8 +1378,8 @@ export function SettingsView({
                   <IconSparkles size={18} />
                 </div>
                 <div className="settings-row-texts">
-                  <span className="settings-row-title">Seed Demo Data</span>
-                  <span className="settings-row-subtitle">Load sample trip with members &amp; split transactions</span>
+                  <span className="settings-row-title">Seed Demo Trip</span>
+                  <span className="settings-row-subtitle">Load sample trip with members, geotags &amp; transactions</span>
                 </div>
               </div>
               <div className="settings-row-right">

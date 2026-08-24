@@ -38,6 +38,7 @@ type Props = {
   onArchiveTrip: (trip: Trip) => void;
   onOpenSettings: () => void;
   onOpenBugTracker?: () => void;
+  onLoadDemoTrip?: () => void;
   userAvatarUrl?: string;
   userDisplayName?: string | null;
 };
@@ -68,6 +69,7 @@ export function TripsListScreen({
   onArchiveTrip,
   onOpenSettings,
   onOpenBugTracker,
+  onLoadDemoTrip,
   userAvatarUrl,
   userDisplayName,
 }: Props) {
@@ -434,9 +436,21 @@ export function TripsListScreen({
               ) : (
                 <p>Nothing here yet. Start a trip and add who's coming.</p>
               )}
-              <button className="gradient-btn" onClick={() => setShowAddTrip(true)}>
-                Create Your First Trip
-              </button>
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'center', marginTop: '12px' }}>
+                <button className="gradient-btn" onClick={() => setShowAddTrip(true)}>
+                  Create Your First Trip
+                </button>
+                {onLoadDemoTrip && (
+                  <button
+                    type="button"
+                    className="secondary-btn"
+                    onClick={onLoadDemoTrip}
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                  >
+                    <span>✨</span> Load Demo Trip
+                  </button>
+                )}
+              </div>
             </div>
             <div className="ledger-rule" />
           </div>

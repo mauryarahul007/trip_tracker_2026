@@ -1492,6 +1492,7 @@ export default function App() {
           onArchiveTrip={handleArchiveTrip}
           onOpenSettings={() => setShowGlobalSettings(true)}
           onOpenBugTracker={isSuperadmin ? () => setShowBugTracker(true) : undefined}
+          onLoadDemoTrip={handleLoadDemoTrip}
           userAvatarUrl={userAvatarUrl}
           userDisplayName={userDisplayName}
         />
