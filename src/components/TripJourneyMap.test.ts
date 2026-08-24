@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { escapeHtml, calculateBearing, interpolatePath } from './TripJourneyMap';
+import { escapeHtml, calculateBearing, createArcPoints } from './TripJourneyMap';
 
 describe('TripJourneyMap Security - escapeHtml', () => {
   it('escapes standard HTML injection tags', () => {
@@ -23,7 +23,7 @@ describe('TripJourneyMap Security - escapeHtml', () => {
   });
 });
 
-describe('TripJourneyMap Physics & Math - calculateBearing & interpolatePath', () => {
+describe('TripJourneyMap Physics & Math - calculateBearing & createArcPoints', () => {
   it('calculates 0 degree bearing for due North', () => {
     const start: [number, number] = [73.83, 15.38];
     const end: [number, number] = [73.83, 15.58]; // moved North
@@ -38,14 +38,21 @@ describe('TripJourneyMap Physics & Math - calculateBearing & interpolatePath', (
     expect(Math.round(bearing)).toBe(90);
   });
 
-  it('interpolates intermediate micro-coordinates smoothly', () => {
-    const points: [number, number][] = [
-      [73.8314, 15.3808],
-      [73.7667, 15.5165],
-    ];
-    const interpolated = interpolatePath(points, 4);
-    expect(interpolated.length).toBe(5); // 1 start + 3 intermediates + 1 end
-    expect(interpolated[0]).toEqual(points[0]);
-    expect(interpolated[interpolated.length - 1]).toEqual(points[1]);
+  it('generates parabolic Bézier arc points for flight mode', () => {
+    const start: [number, number] = [73.8314, 15.3808];
+    const end: [number, number] = [73.7667, 15.5165];
+    const arc = createArcPoints(start, end, true, 20);
+    expect(arc.length).toBe(21);
+    expect(arc[0]).toEqual(start);
+    expect(arc[arc.length - 1]).toEqual(end);
+  });
+
+  it('generates linear drive points for car mode', () => {
+    const start: [number, number] = [73.8314, 15.3808];
+    const end: [number, number] = [73.7667, 15.5165];
+    const drivePoints = createArcPoints(start, end, false, 10);
+    expect(drivePoints.length).toBe(11);
+    expect(drivePoints[0]).toEqual(start);
+    expect(drivePoints[drivePoints.length - 1]).toEqual(end);
   });
 });

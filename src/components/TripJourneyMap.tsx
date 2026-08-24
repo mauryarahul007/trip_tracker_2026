@@ -15,10 +15,10 @@ interface Props {
 }
 
 const MAP_STYLE_URL = 'https://tiles.openfreemap.org/styles/liberty';
-const ROUTE_SOURCE_ID = 'trip-route';
-const ROUTE_LAYER_ID = 'trip-route-line';
-const TRAIL_SOURCE_ID = 'trip-route-trail';
-const TRAIL_LAYER_ID = 'trip-route-trail-line';
+const ACTIVE_LEG_SOURCE_ID = 'active-leg-source';
+const ACTIVE_LEG_LAYER_ID = 'active-leg-layer';
+const ALL_ROUTES_SOURCE_ID = 'all-routes-source';
+const ALL_ROUTES_LAYER_ID = 'all-routes-layer';
 
 export function escapeHtml(str: string): string {
   return str.replace(/[&<>"']/g, (m) => {
@@ -45,22 +45,39 @@ export function calculateBearing(start: [number, number], end: [number, number])
   return (brng + 360) % 360;
 }
 
-export function interpolatePath(points: [number, number][], stepsPerSegment = 8): [number, number][] {
-  if (points.length < 2) return points;
-  const interpolated: [number, number][] = [];
-  for (let i = 0; i < points.length - 1; i++) {
-    const p1 = points[i];
-    const p2 = points[i + 1];
-    interpolated.push(p1);
-    for (let s = 1; s < stepsPerSegment; s++) {
-      const t = s / stepsPerSegment;
-      const lng = p1[0] + (p2[0] - p1[0]) * t;
-      const lat = p1[1] + (p2[1] - p1[1]) * t;
-      interpolated.push([lng, lat]);
+export function createArcPoints(start: [number, number], end: [number, number], isPlane = true, count = 60): [number, number][] {
+  const [lng1, lat1] = start;
+  const [lng2, lat2] = end;
+
+  if (!isPlane) {
+    const points: [number, number][] = [];
+    for (let i = 0; i <= count; i++) {
+      const t = i / count;
+      points.push([lng1 + (lng2 - lng1) * t, lat1 + (lat2 - lat1) * t]);
     }
+    return points;
   }
-  interpolated.push(points[points.length - 1]);
-  return interpolated;
+
+  // Quadratic Bézier flight arc with subtle altitude curve
+  const midLng = (lng1 + lng2) / 2;
+  const midLat = (lat1 + lat2) / 2;
+  const dLng = lng2 - lng1;
+  const dLat = lat2 - lat1;
+
+  const perpLng = -dLat * 0.22;
+  const perpLat = dLng * 0.22;
+  const controlLng = midLng + perpLng;
+  const controlLat = midLat + perpLat;
+
+  const points: [number, number][] = [];
+  for (let i = 0; i <= count; i++) {
+    const t = i / count;
+    const inv = 1 - t;
+    const lng = inv * inv * lng1 + 2 * inv * t * controlLng + t * t * lng2;
+    const lat = inv * inv * lat1 + 2 * inv * t * controlLat + t * t * lat2;
+    points.push([lng, lat]);
+  }
+  return points;
 }
 
 export function TripJourneyMap({ expenses, categories, baseCurrency }: Props) {
@@ -69,19 +86,16 @@ export function TripJourneyMap({ expenses, categories, baseCurrency }: Props) {
   const markersRef = useRef<Marker[]>([]);
   const popupsRef = useRef<Popup[]>([]);
   const vehicleMarkerRef = useRef<Marker | null>(null);
-  const vehicleElementRef = useRef<HTMLDivElement | null>(null);
+  const vehicleElRef = useRef<HTMLDivElement | null>(null);
   const animFrameIdRef = useRef<number | null>(null);
-  const pauseTimerRef = useRef<number | null>(null);
-  const fullPathRef = useRef<[number, number][]>([]);
-  const stopIndexMapRef = useRef<number[]>([]); // maps stop index -> path point index
+  const autoPlayTimerRef = useRef<number | null>(null);
 
   const currencySymbol = getCurrencySymbol(baseCurrency);
 
   const [isPlaying, setIsPlaying] = useState(false);
-  const [playbackSpeed, setPlaybackSpeed] = useState<1 | 2 | 3>(1);
-  const [vehicleType, setVehicleType] = useState<'car' | 'plane'>('car');
-  const [activeStopIdx, setActiveStopIdx] = useState<number>(0);
-  const [currentProgress, setCurrentProgress] = useState<number>(0);
+  const [playbackSpeed, setPlaybackSpeed] = useState<1 | 2>(1);
+  const [vehicleType, setVehicleType] = useState<'plane' | 'car'>('plane');
+  const [activeLegIdx, setActiveLegIdx] = useState<number>(0);
   const [milestoneCard, setMilestoneCard] = useState<Expense | null>(null);
 
   // Filter valid geotagged expenses
@@ -91,7 +105,7 @@ export function TripJourneyMap({ expenses, categories, baseCurrency }: Props) {
 
   const categoryMap = new Map(categories.map((c) => [c.id, c]));
 
-  // Initialize Map and Load Waypoints
+  // Setup Map & Static Markers
   useEffect(() => {
     if (!mapContainerRef.current || geotaggedExpenses.length === 0) {
       markersRef.current.forEach((m) => m.remove());
@@ -120,8 +134,8 @@ export function TripJourneyMap({ expenses, categories, baseCurrency }: Props) {
       container: mapContainerRef.current,
       style: MAP_STYLE_URL,
       center: [firstLoc.lng, firstLoc.lat],
-      zoom: 13,
-      pitch: 35, // 3D driving perspective
+      zoom: 12.5,
+      pitch: 25,
       attributionControl: { compact: true },
     });
     map.addControl(new NavigationControl({ showCompass: false }), 'top-right');
@@ -149,16 +163,15 @@ export function TripJourneyMap({ expenses, categories, baseCurrency }: Props) {
           display: flex;
           align-items: center;
           justify-content: center;
-          width: 34px;
-          height: 34px;
+          width: 32px;
+          height: 32px;
           border-radius: 50%;
           background: #2F6FED;
-          border: 2.5px solid #17B6A6;
-          box-shadow: 0 4px 12px rgba(0,0,0,0.35);
+          border: 2px solid #17B6A6;
+          box-shadow: 0 4px 10px rgba(0,0,0,0.3);
           color: #fff;
-          font-size: 16px;
+          font-size: 15px;
           cursor: pointer;
-          transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
         `;
         el.textContent = emoji;
 
@@ -178,7 +191,7 @@ export function TripJourneyMap({ expenses, categories, baseCurrency }: Props) {
           </div>
         `;
 
-        const popup = new Popup({ offset: 18, closeButton: false }).setHTML(popupContent);
+        const popup = new Popup({ offset: 16, closeButton: false }).setHTML(popupContent);
         popupsRef.current.push(popup);
 
         const marker = new Marker({ element: el })
@@ -189,36 +202,35 @@ export function TripJourneyMap({ expenses, categories, baseCurrency }: Props) {
         markersRef.current.push(marker);
       });
 
-      // Fit bounds nicely
       if (waypoints.length > 1) {
         const bounds = waypoints.reduce((b, coord) => b.extend(coord), new LngLatBounds(waypoints[0], waypoints[0]));
-        map.fitBounds(bounds, { padding: 50, maxZoom: 15, duration: 600 });
+        map.fitBounds(bounds, { padding: 45, maxZoom: 15, duration: 600 });
       }
     };
 
     map.on('load', () => {
       buildMarkers();
 
-      // Create vehicle marker element
+      // Create hardware-accelerated animated vehicle marker
       const vEl = document.createElement('div');
       vEl.style.cssText = `
         display: flex;
         align-items: center;
         justify-content: center;
-        width: 44px;
-        height: 44px;
+        width: 42px;
+        height: 42px;
         border-radius: 50%;
-        background: radial-gradient(circle, #3FCBBD 0%, #0D9488 100%);
-        border: 2.5px solid #FFFFFF;
-        box-shadow: 0 0 16px rgba(63, 203, 189, 0.8), 0 8px 24px rgba(0,0,0,0.4);
-        font-size: 22px;
+        background: radial-gradient(circle, #3FCBBD 0%, #0F766E 100%);
+        border: 2px solid #FFFFFF;
+        box-shadow: 0 0 16px rgba(63, 203, 189, 0.9), 0 6px 18px rgba(0,0,0,0.4);
+        font-size: 20px;
         cursor: grab;
         transform-origin: center center;
-        transition: transform 0.05s linear;
-        z-index: 50;
+        will-change: transform;
+        z-index: 60;
       `;
       vEl.textContent = vehicleType === 'plane' ? '✈️' : '🚗';
-      vehicleElementRef.current = vEl;
+      vehicleElRef.current = vEl;
 
       const vMarker = new Marker({ element: vEl })
         .setLngLat(waypoints[0])
@@ -226,87 +238,51 @@ export function TripJourneyMap({ expenses, categories, baseCurrency }: Props) {
       vehicleMarkerRef.current = vMarker;
 
       if (waypoints.length > 1) {
-        const coordsQuery = waypoints.map((c) => `${c[0]},${c[1]}`).join(';');
-        const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${coordsQuery}?overview=full&geometries=geojson`;
+        // Overall background path connecting all stops
+        map.addSource(ALL_ROUTES_SOURCE_ID, {
+          type: 'geojson',
+          data: {
+            type: 'Feature',
+            properties: {},
+            geometry: { type: 'LineString', coordinates: waypoints },
+          },
+        });
 
-        const setupRouteSources = (rawCoords: [number, number][]) => {
-          const finePath = interpolatePath(rawCoords, 6);
-          fullPathRef.current = finePath;
+        map.addLayer({
+          id: ALL_ROUTES_LAYER_ID,
+          type: 'line',
+          source: ALL_ROUTES_SOURCE_ID,
+          layout: { 'line-join': 'round', 'line-cap': 'round' },
+          paint: {
+            'line-color': '#17B6A6',
+            'line-width': 3,
+            'line-opacity': 0.35,
+            'line-dasharray': [2, 2],
+          },
+        });
 
-          // Map each stop index to the closest path point
-          stopIndexMapRef.current = waypoints.map((wp) => {
-            let closestIdx = 0;
-            let minDist = Infinity;
-            finePath.forEach((pt, pIdx) => {
-              const d = Math.hypot(pt[0] - wp[0], pt[1] - wp[1]);
-              if (d < minDist) {
-                minDist = d;
-                closestIdx = pIdx;
-              }
-            });
-            return closestIdx;
-          });
+        // Active highlighted leg arc
+        const firstArc = createArcPoints(waypoints[0], waypoints[1], vehicleType === 'plane');
+        map.addSource(ACTIVE_LEG_SOURCE_ID, {
+          type: 'geojson',
+          data: {
+            type: 'Feature',
+            properties: {},
+            geometry: { type: 'LineString', coordinates: firstArc },
+          },
+        });
 
-          if (!map.getSource(ROUTE_SOURCE_ID)) {
-            // Background Route Line
-            map.addSource(ROUTE_SOURCE_ID, {
-              type: 'geojson',
-              data: {
-                type: 'Feature',
-                properties: {},
-                geometry: { type: 'LineString', coordinates: finePath },
-              },
-            });
-
-            map.addLayer({
-              id: ROUTE_LAYER_ID,
-              type: 'line',
-              source: ROUTE_SOURCE_ID,
-              layout: { 'line-join': 'round', 'line-cap': 'round' },
-              paint: {
-                'line-color': '#17B6A6',
-                'line-width': 4,
-                'line-opacity': 0.35,
-                'line-dasharray': [2, 2],
-              },
-            });
-
-            // Glowing Dynamic Active Trail
-            map.addSource(TRAIL_SOURCE_ID, {
-              type: 'geojson',
-              data: {
-                type: 'Feature',
-                properties: {},
-                geometry: { type: 'LineString', coordinates: [finePath[0]] },
-              },
-            });
-
-            map.addLayer({
-              id: TRAIL_LAYER_ID,
-              type: 'line',
-              source: TRAIL_SOURCE_ID,
-              layout: { 'line-join': 'round', 'line-cap': 'round' },
-              paint: {
-                'line-color': '#3FCBBD',
-                'line-width': 6,
-                'line-opacity': 0.95,
-              },
-            });
-          }
-        };
-
-        fetch(osrmUrl)
-          .then((res) => res.json())
-          .then((data) => {
-            if (data.routes && data.routes.length > 0 && map.getStyle()) {
-              setupRouteSources(data.routes[0].geometry.coordinates);
-            } else {
-              setupRouteSources(waypoints);
-            }
-          })
-          .catch(() => {
-            if (map.getStyle()) setupRouteSources(waypoints);
-          });
+        map.addLayer({
+          id: ACTIVE_LEG_LAYER_ID,
+          type: 'line',
+          source: ACTIVE_LEG_SOURCE_ID,
+          layout: { 'line-join': 'round', 'line-cap': 'round' },
+          paint: {
+            'line-color': '#3FCBBD',
+            'line-width': 5,
+            'line-opacity': 0.9,
+          },
+        });
       }
     });
 
@@ -315,7 +291,7 @@ export function TripJourneyMap({ expenses, categories, baseCurrency }: Props) {
     return () => {
       resizeObserver.disconnect();
       if (animFrameIdRef.current) cancelAnimationFrame(animFrameIdRef.current);
-      if (pauseTimerRef.current) clearTimeout(pauseTimerRef.current);
+      if (autoPlayTimerRef.current) clearTimeout(autoPlayTimerRef.current);
       if (vehicleMarkerRef.current) vehicleMarkerRef.current.remove();
       markersRef.current.forEach((m) => m.remove());
       markersRef.current = [];
@@ -326,118 +302,143 @@ export function TripJourneyMap({ expenses, categories, baseCurrency }: Props) {
     };
   }, [geotaggedExpenses.length, baseCurrency, vehicleType]);
 
-  // Handle Play / Pause 60fps Route Simulator Loop
-  const stopPlayback = useCallback(() => {
+  // Smooth Point A -> Point B Flight/Drive Animator
+  const animateLeg = useCallback((fromIdx: number, toIdx: number, onComplete?: () => void) => {
+    const map = mapInstanceRef.current;
+    if (!map || geotaggedExpenses.length < 2) return;
+
+    const startLoc = geotaggedExpenses[fromIdx].location!;
+    const endLoc = geotaggedExpenses[toIdx].location!;
+    const startCoord: [number, number] = [startLoc.lng, startLoc.lat];
+    const endCoord: [number, number] = [endLoc.lng, endLoc.lat];
+
+    const isPlane = vehicleType === 'plane';
+    const arc = createArcPoints(startCoord, endCoord, isPlane, 80);
+
+    // Update active leg glowing arc
+    if (map.getSource(ACTIVE_LEG_SOURCE_ID)) {
+      (map.getSource(ACTIVE_LEG_SOURCE_ID) as any).setData({
+        type: 'Feature',
+        properties: {},
+        geometry: { type: 'LineString', coordinates: arc },
+      });
+    }
+
+    // Single hardware-accelerated camera fit for the leg
+    const bounds = new LngLatBounds(startCoord, startCoord).extend(endCoord);
+    const duration = (2200 / playbackSpeed);
+
+    map.fitBounds(bounds, {
+      padding: 65,
+      maxZoom: 15,
+      duration,
+      pitch: 30,
+    });
+
+    const startTime = performance.now();
+
+    const frameStep = (now: number) => {
+      const elapsed = now - startTime;
+      const u = Math.min(1, elapsed / duration);
+
+      // Smooth Quad Ease-in-out
+      const t = u < 0.5 ? 2 * u * u : 1 - Math.pow(-2 * u + 2, 2) / 2;
+
+      // Current point on arc
+      const arcIdx = Math.min(Math.floor(t * (arc.length - 1)), arc.length - 1);
+      const currentPoint = arc[arcIdx];
+      const nextPoint = arc[Math.min(arcIdx + 1, arc.length - 1)];
+
+      const bearing = calculateBearing(currentPoint, nextPoint);
+
+      // Update vehicle marker with pure CSS transform
+      if (vehicleMarkerRef.current) {
+        vehicleMarkerRef.current.setLngLat(currentPoint);
+      }
+      if (vehicleElRef.current) {
+        vehicleElRef.current.style.transform = `rotate(${bearing}deg)`;
+      }
+
+      if (u < 1) {
+        animFrameIdRef.current = requestAnimationFrame(frameStep);
+      } else {
+        // Arrived at destination!
+        triggerHaptic('medium');
+        setActiveLegIdx(toIdx);
+        setMilestoneCard(geotaggedExpenses[toIdx]);
+
+        // Show popup on arrival
+        popupsRef.current.forEach((_p, idx) => {
+          if (idx === toIdx) markersRef.current[idx]?.togglePopup();
+        });
+
+        if (onComplete) onComplete();
+      }
+    };
+
+    animFrameIdRef.current = requestAnimationFrame(frameStep);
+  }, [geotaggedExpenses, vehicleType, playbackSpeed]);
+
+  // Next Leg / Previous Leg Handlers
+  const handleNextLeg = () => {
+    triggerHaptic('light');
+    if (activeLegIdx < geotaggedExpenses.length - 1) {
+      animateLeg(activeLegIdx, activeLegIdx + 1);
+    } else {
+      // Loop around to start
+      animateLeg(activeLegIdx, 0);
+    }
+  };
+
+  const handlePrevLeg = () => {
+    triggerHaptic('light');
+    if (activeLegIdx > 0) {
+      animateLeg(activeLegIdx, activeLegIdx - 1);
+    }
+  };
+
+  // Continuous Auto-Play Sequence
+  const stopAutoPlay = useCallback(() => {
     setIsPlaying(false);
     if (animFrameIdRef.current) {
       cancelAnimationFrame(animFrameIdRef.current);
       animFrameIdRef.current = null;
     }
-    if (pauseTimerRef.current) {
-      clearTimeout(pauseTimerRef.current);
-      pauseTimerRef.current = null;
+    if (autoPlayTimerRef.current) {
+      clearTimeout(autoPlayTimerRef.current);
+      autoPlayTimerRef.current = null;
     }
   }, []);
 
-  const startPlayback = useCallback(() => {
-    const map = mapInstanceRef.current;
-    const path = fullPathRef.current;
-    if (!map || path.length < 2) return;
-
+  const startAutoPlay = useCallback(() => {
+    if (geotaggedExpenses.length < 2) return;
     setIsPlaying(true);
     triggerHaptic('medium');
 
-    let currentPointIdx = 0;
-    const totalPoints = path.length;
-    const stopIndices = stopIndexMapRef.current;
-    let nextStopCheckIdx = 0;
+    let current = activeLegIdx >= geotaggedExpenses.length - 1 ? 0 : activeLegIdx;
 
-    const animateStep = () => {
-      if (currentPointIdx >= totalPoints - 1) {
-        // Reached destination!
-        setCurrentProgress(100);
-        setActiveStopIdx(geotaggedExpenses.length - 1);
-        setMilestoneCard(geotaggedExpenses[geotaggedExpenses.length - 1]);
-        triggerHaptic('heavy');
-        stopPlayback();
+    const playNext = () => {
+      if (current >= geotaggedExpenses.length - 1) {
+        setIsPlaying(false);
         return;
       }
-
-      // Increment point based on playback speed (1x, 2x, 3x)
-      const stepInc = playbackSpeed === 1 ? 1 : playbackSpeed === 2 ? 2 : 3;
-      currentPointIdx = Math.min(currentPointIdx + stepInc, totalPoints - 1);
-
-      const currentCoord = path[currentPointIdx];
-      const nextCoord = path[Math.min(currentPointIdx + 1, totalPoints - 1)];
-
-      // Calculate bearing / direction angle
-      const bearing = calculateBearing(currentCoord, nextCoord);
-
-      // Update vehicle marker position and rotation
-      if (vehicleMarkerRef.current) {
-        vehicleMarkerRef.current.setLngLat(currentCoord);
-      }
-      if (vehicleElementRef.current) {
-        vehicleElementRef.current.style.transform = `rotate(${bearing}deg)`;
-      }
-
-      // Update dynamic trail GeoJSON line
-      if (map.getSource(TRAIL_SOURCE_ID)) {
-        const coveredPath = path.slice(0, currentPointIdx + 1);
-        (map.getSource(TRAIL_SOURCE_ID) as any).setData({
-          type: 'Feature',
-          properties: {},
-          geometry: { type: 'LineString', coordinates: coveredPath },
-        });
-      }
-
-      // Smooth camera chase
-      map.easeTo({
-        center: currentCoord,
-        zoom: 14.5,
-        bearing: bearing * 0.4, // subtle smooth camera follow
-        pitch: 38,
-        duration: 35,
+      const next = current + 1;
+      animateLeg(current, next, () => {
+        current = next;
+        autoPlayTimerRef.current = window.setTimeout(() => {
+          playNext();
+        }, 1400 / playbackSpeed);
       });
-
-      // Update progress percentage
-      const progress = Math.round((currentPointIdx / (totalPoints - 1)) * 100);
-      setCurrentProgress(progress);
-
-      // Check if vehicle arrived at a milestone stop
-      if (nextStopCheckIdx < stopIndices.length && currentPointIdx >= stopIndices[nextStopCheckIdx]) {
-        const stopIdx = nextStopCheckIdx;
-        setActiveStopIdx(stopIdx);
-        const exp = geotaggedExpenses[stopIdx];
-        setMilestoneCard(exp);
-        triggerHaptic('light');
-
-        // Toggle popup for marker
-        popupsRef.current.forEach((_p, idx) => {
-          if (idx === stopIdx) markersRef.current[idx]?.togglePopup();
-        });
-
-        nextStopCheckIdx++;
-
-        // Brief stop pause (1.2s / speed) before continuing next leg
-        const pauseDuration = 1200 / playbackSpeed;
-        pauseTimerRef.current = window.setTimeout(() => {
-          animFrameIdRef.current = requestAnimationFrame(animateStep);
-        }, pauseDuration);
-        return;
-      }
-
-      animFrameIdRef.current = requestAnimationFrame(animateStep);
     };
 
-    animFrameIdRef.current = requestAnimationFrame(animateStep);
-  }, [playbackSpeed, geotaggedExpenses, stopPlayback]);
+    playNext();
+  }, [activeLegIdx, geotaggedExpenses.length, animateLeg, playbackSpeed]);
 
   const handleTogglePlay = () => {
     if (isPlaying) {
-      stopPlayback();
+      stopAutoPlay();
     } else {
-      startPlayback();
+      startAutoPlay();
     }
   };
 
@@ -514,32 +515,13 @@ export function TripJourneyMap({ expenses, categories, baseCurrency }: Props) {
               Animated Route Playback
             </div>
             <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
-              {geotaggedExpenses.length} scenic stops • {currencySymbol} {totalGeotaggedSpend.toFixed(0)}
+              {geotaggedExpenses.length} stops • {currencySymbol} {totalGeotaggedSpend.toFixed(0)}
             </div>
           </div>
         </div>
 
         {/* Vehicle Toggle Pill */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '4px', background: 'var(--bg-card-soft, rgba(0,0,0,0.06))', padding: '3px 6px', borderRadius: '12px' }}>
-          <button
-            type="button"
-            onClick={() => {
-              triggerHaptic('light');
-              setVehicleType('car');
-            }}
-            style={{
-              background: vehicleType === 'car' ? 'var(--primary-accent)' : 'transparent',
-              color: vehicleType === 'car' ? '#FFFFFF' : 'var(--text-secondary)',
-              border: 'none',
-              borderRadius: '8px',
-              padding: '3px 7px',
-              fontSize: '12px',
-              cursor: 'pointer',
-              fontWeight: 700,
-            }}
-          >
-            🚗 Drive
-          </button>
           <button
             type="button"
             onClick={() => {
@@ -551,13 +533,32 @@ export function TripJourneyMap({ expenses, categories, baseCurrency }: Props) {
               color: vehicleType === 'plane' ? '#FFFFFF' : 'var(--text-secondary)',
               border: 'none',
               borderRadius: '8px',
-              padding: '3px 7px',
+              padding: '3px 8px',
               fontSize: '12px',
               cursor: 'pointer',
               fontWeight: 700,
             }}
           >
-            ✈️ Fly
+            ✈️ Flight
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              triggerHaptic('light');
+              setVehicleType('car');
+            }}
+            style={{
+              background: vehicleType === 'car' ? 'var(--primary-accent)' : 'transparent',
+              color: vehicleType === 'car' ? '#FFFFFF' : 'var(--text-secondary)',
+              border: 'none',
+              borderRadius: '8px',
+              padding: '3px 8px',
+              fontSize: '12px',
+              cursor: 'pointer',
+              fontWeight: 700,
+            }}
+          >
+            🚗 Drive
           </button>
         </div>
       </div>
@@ -581,7 +582,7 @@ export function TripJourneyMap({ expenses, categories, baseCurrency }: Props) {
             top: '58px',
             left: '12px',
             right: '12px',
-            background: 'rgba(15, 23, 42, 0.88)',
+            background: 'rgba(15, 23, 42, 0.90)',
             backdropFilter: 'blur(12px)',
             WebkitBackdropFilter: 'blur(12px)',
             border: '1.5px solid rgba(63, 203, 189, 0.4)',
@@ -592,28 +593,28 @@ export function TripJourneyMap({ expenses, categories, baseCurrency }: Props) {
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
-            animation: 'fadeIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
+            animation: 'fadeIn 0.2s ease-out',
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ fontSize: '18px' }}>
+            <span style={{ fontSize: '20px' }}>
               {categoryMap.get(milestoneCard.category)?.icon || '📍'}
             </span>
             <div>
-              <div style={{ fontSize: '12px', fontWeight: 700, color: '#FFFFFF' }}>
-                Stop {activeStopIdx + 1}/{geotaggedExpenses.length}: {milestoneCard.title}
+              <div style={{ fontSize: '12.5px', fontWeight: 700, color: '#FFFFFF' }}>
+                Stop {activeLegIdx + 1} of {geotaggedExpenses.length}: {milestoneCard.title}
               </div>
-              <div style={{ fontSize: '10.5px', color: 'rgba(255,255,255,0.7)' }}>
+              <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.7)' }}>
                 {milestoneCard.location?.placeName || milestoneCard.date}
               </div>
             </div>
           </div>
           <div style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: '12.5px', fontWeight: 700, color: '#3FCBBD' }}>
+            <div style={{ fontSize: '13px', fontWeight: 700, color: '#3FCBBD' }}>
               {currencySymbol} {milestoneCard.amount.toFixed(0)}
             </div>
             <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.5)' }}>
-              {currentProgress}% covered
+              {milestoneCard.date}
             </div>
           </div>
         </div>
@@ -628,8 +629,8 @@ export function TripJourneyMap({ expenses, categories, baseCurrency }: Props) {
             left: '12px',
             right: '12px',
             display: 'flex',
-            flexDirection: 'column',
-            gap: '6px',
+            justifyContent: 'space-between',
+            alignItems: 'center',
             background: 'rgba(15, 23, 42, 0.90)',
             backdropFilter: 'blur(12px)',
             WebkitBackdropFilter: 'blur(12px)',
@@ -640,20 +641,7 @@ export function TripJourneyMap({ expenses, categories, baseCurrency }: Props) {
             boxShadow: '0 10px 30px rgba(0,0,0,0.4)',
           }}
         >
-          {/* Progress Bar Track */}
-          <div style={{ width: '100%', height: '4px', background: 'rgba(255,255,255,0.15)', borderRadius: '2px', overflow: 'hidden' }}>
-            <div
-              style={{
-                width: `${currentProgress}%`,
-                height: '100%',
-                background: 'linear-gradient(90deg, #17B6A6, #3FCBBD)',
-                borderRadius: '2px',
-                transition: 'width 0.1s linear',
-              }}
-            />
-          </div>
-
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '2px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <button
               type="button"
               onClick={handleTogglePlay}
@@ -662,45 +650,83 @@ export function TripJourneyMap({ expenses, categories, baseCurrency }: Props) {
                 color: '#FFFFFF',
                 border: 'none',
                 borderRadius: '10px',
-                padding: '6px 14px',
+                padding: '6px 12px',
                 fontSize: '12px',
                 fontWeight: 700,
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '6px',
+                gap: '5px',
                 boxShadow: '0 4px 12px rgba(23, 182, 166, 0.4)',
               }}
             >
-              <span>{isPlaying ? '⏸ Pause' : '🎬 Relive Journey'}</span>
+              <span>{isPlaying ? '⏸ Pause' : '🎬 Relive'}</span>
             </button>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.8)', fontFamily: 'var(--font-family-mono)' }}>
-                {vehicleType === 'plane' ? '✈️ Flying' : '🚗 Driving'} • {currentProgress}%
-              </span>
+            <button
+              type="button"
+              onClick={handlePrevLeg}
+              disabled={activeLegIdx === 0}
+              style={{
+                background: 'rgba(255,255,255,0.12)',
+                color: '#FFFFFF',
+                border: 'none',
+                borderRadius: '8px',
+                padding: '6px 9px',
+                fontSize: '12px',
+                fontWeight: 700,
+                cursor: activeLegIdx === 0 ? 'not-allowed' : 'pointer',
+                opacity: activeLegIdx === 0 ? 0.4 : 1,
+              }}
+              title="Previous Leg"
+            >
+              ‹
+            </button>
 
-              {/* Speed Switcher */}
-              <button
-                type="button"
-                onClick={() => {
-                  triggerHaptic('light');
-                  setPlaybackSpeed(playbackSpeed === 1 ? 2 : playbackSpeed === 2 ? 3 : 1);
-                }}
-                style={{
-                  background: 'rgba(255,255,255,0.15)',
-                  color: '#FFFFFF',
-                  border: 'none',
-                  borderRadius: '8px',
-                  padding: '4px 8px',
-                  fontSize: '11px',
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                }}
-              >
-                {playbackSpeed}x
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={handleNextLeg}
+              style={{
+                background: 'rgba(255,255,255,0.12)',
+                color: '#FFFFFF',
+                border: 'none',
+                borderRadius: '8px',
+                padding: '6px 9px',
+                fontSize: '12px',
+                fontWeight: 700,
+                cursor: 'pointer',
+              }}
+              title="Next Leg"
+            >
+              {vehicleType === 'plane' ? '✈️ Next ›' : '🚗 Next ›'}
+            </button>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.8)', fontFamily: 'var(--font-family-mono)' }}>
+              Leg {activeLegIdx + 1}/{geotaggedExpenses.length}
+            </span>
+
+            {/* Speed Switcher */}
+            <button
+              type="button"
+              onClick={() => {
+                triggerHaptic('light');
+                setPlaybackSpeed(playbackSpeed === 1 ? 2 : 1);
+              }}
+              style={{
+                background: 'rgba(255,255,255,0.15)',
+                color: '#FFFFFF',
+                border: 'none',
+                borderRadius: '8px',
+                padding: '4px 8px',
+                fontSize: '11px',
+                fontWeight: 700,
+                cursor: 'pointer',
+              }}
+            >
+              {playbackSpeed}x
+            </button>
           </div>
         </div>
       )}
