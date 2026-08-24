@@ -1104,6 +1104,70 @@ export function ExpenseForm({
         </div>
       </div>
 
+      {/* Receipt & Travel Polaroid Attachment */}
+      <div style={{ marginTop: '16px', paddingTop: '14px', borderTop: '1px dashed var(--border-color)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+          <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>
+            📸 Receipt / Travel Photo
+          </span>
+          {receiptImage && (
+            <button
+              type="button"
+              onClick={() => {
+                triggerHaptic('light');
+                setReceiptImage('');
+              }}
+              style={{ background: 'none', border: 'none', color: 'var(--color-danger)', fontSize: '11px', fontWeight: 600, cursor: 'pointer' }}
+            >
+              Remove Photo
+            </button>
+          )}
+        </div>
+
+        {receiptImage ? (
+          <div
+            style={{
+              position: 'relative',
+              width: '100px',
+              height: '100px',
+              borderRadius: '12px',
+              overflow: 'hidden',
+              border: '2px solid var(--primary-accent)',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+            }}
+          >
+            <img src={receiptImage} alt="Receipt preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          </div>
+        ) : (
+          <label
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '8px 14px',
+              borderRadius: '10px',
+              border: '1.5px dashed var(--border-color)',
+              background: 'var(--bg-surface-hover)',
+              fontSize: '12px',
+              fontWeight: 600,
+              color: 'var(--text-primary)',
+              cursor: 'pointer',
+              transition: 'background 0.2s ease',
+            }}
+          >
+            <input
+              type="file"
+              accept="image/*"
+              capture="environment"
+              onChange={handleReceiptFileChangeLocal}
+              style={{ display: 'none' }}
+              disabled={receiptProcessing}
+            />
+            <span>{receiptProcessing ? '⏳ Compressing...' : '＋ Attach Photo / Bill'}</span>
+          </label>
+        )}
+      </div>
+
       {formError && (
         <p style={{ color: 'var(--color-danger)', fontSize: '13px', marginTop: '12px' }}>{formError}</p>
       )}

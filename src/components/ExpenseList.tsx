@@ -634,7 +634,12 @@ export function ExpenseList({
                             onClick={() => { triggerHaptic('light'); onReview(exp); }}
                           >
                             <CategoryIcon categoryId={cat?.id || ''} fallbackEmoji={cat?.icon || '🏷️'} size={15} />
-                            <h4 style={{ flex: 1, minWidth: 0, fontSize: '15px', lineHeight: 1.3, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{exp.title}</h4>
+                            <h4 style={{ flex: 1, minWidth: 0, fontSize: '15px', lineHeight: 1.3, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{exp.title}</span>
+                              {(exp.receiptImage || exp.receiptPath) && (
+                                <span style={{ fontSize: '11px', flexShrink: 0, opacity: 0.85 }} title="Photo receipt attached">📸</span>
+                              )}
+                            </h4>
                             <span className="money privacy-blur" style={{ fontSize: '15px', fontWeight: '600', color: 'var(--text-primary)', whiteSpace: 'nowrap', flexShrink: 0 }}>
                               {formatMaskedAmount(exp.amount.toFixed(2), currencySymbol, isBlindMode)}
                             </span>

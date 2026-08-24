@@ -51,6 +51,7 @@ import { useScrollLock } from './utils/useScrollLock';
 import { useHistoryBack } from './utils/useHistoryBack';
 import { CommandPalette } from './components/CommandPalette';
 import { TripWrappedModal } from './components/TripWrappedModal';
+import { AchievementBadgeModal } from './components/AchievementBadgeModal';
 import { usePeerPresence } from './hooks/usePeerPresence';
 import type { AdminTab } from './components/admin/AdminPortalLayout';
 const AdminPortalLayout = lazy(() =>
@@ -283,6 +284,7 @@ export default function App() {
   // Command Palette & Trip Wrapped States
   const [showCommandPalette, setShowCommandPalette] = useState(false);
   const [showTripWrapped, setShowTripWrapped] = useState(false);
+  const [showAchievements, setShowAchievements] = useState(false);
   const activePeers = usePeerPresence(activeTripId);
 
   // Global Cmd+K / Ctrl+K keyboard shortcut for Command Palette
@@ -1711,6 +1713,7 @@ export default function App() {
                     isAdmin={isAdmin}
                     myMemberId={myMemberId}
                     members={members}
+                    onOpenSquadBadges={() => setShowAchievements(true)}
                   />
                 )}
 
@@ -1934,6 +1937,18 @@ export default function App() {
           members={visibleMembers}
           categories={categories}
           onClose={() => setShowTripWrapped(false)}
+        />
+      )}
+
+      {/* Trip Squad Achievements & Milestones Modal */}
+      {showAchievements && activeTrip && (
+        <AchievementBadgeModal
+          trip={activeTrip}
+          expenses={activeTripExpenses}
+          members={visibleMembers}
+          categories={categories}
+          isFullySettled={transfers.length === 0}
+          onClose={() => setShowAchievements(false)}
         />
       )}
 

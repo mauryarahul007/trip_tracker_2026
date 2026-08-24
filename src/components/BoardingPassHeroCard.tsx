@@ -21,6 +21,7 @@ interface BoardingPassHeroCardProps {
   topCategoryPercentage?: number;
   currentMember?: Member;
   onOpenSquadView?: () => void;
+  onOpenSquadBadges?: () => void;
 }
 
 export function BoardingPassHeroCard({
@@ -35,6 +36,7 @@ export function BoardingPassHeroCard({
   categoryIsDominant,
   topCategoryName,
   currentMember,
+  onOpenSquadBadges,
 }: BoardingPassHeroCardProps) {
   const isBlindMode = usePrivacyStore((s) => s.isBlindMode);
   const [isFlipped, setIsFlipped] = useState(false);
@@ -198,6 +200,13 @@ export function BoardingPassHeroCard({
               </div>
             </div>
             <div
+              onClick={(e) => {
+                if (onOpenSquadBadges) {
+                  e.stopPropagation();
+                  triggerHaptic('medium');
+                  onOpenSquadBadges();
+                }
+              }}
               style={{
                 background: 'rgba(15, 111, 99, 0.1)',
                 color: 'var(--primary-accent)',
@@ -208,9 +217,10 @@ export function BoardingPassHeroCard({
                 borderRadius: '6px',
                 textTransform: 'uppercase',
                 letterSpacing: '0.04em',
+                cursor: onOpenSquadBadges ? 'pointer' : 'default',
               }}
             >
-              FIRST CLASS SQUAD
+              🏆 SQUAD BADGES
             </div>
           </div>
 
