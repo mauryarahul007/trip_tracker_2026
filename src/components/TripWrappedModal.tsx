@@ -470,7 +470,7 @@ export function TripWrappedModal({
     ctx.fillStyle = textPrimary;
     ctx.fillText('Trip Wrapped ✨', 100, 230);
 
-    // 4. Hero Trip Banner Card
+    // 4. Hero Trip Banner Card (Section 1)
     drawSafeRoundedRect(ctx, 100, 280, 880, 195, 24, cardBg, cardBorder, 2);
 
     ctx.font = '800 44px sans-serif';
@@ -483,58 +483,7 @@ export function TripWrappedModal({
     const dateStr = trip.startDate && trip.endDate ? `${trip.startDate} — ${trip.endDate}` : '2026 Expedition';
     ctx.fillText(`${dateStr}  ·  ${members.length} Squad Travelers`, 145, 415);
 
-    // Giant Official Diagonal Customs Visa Stamp (Large Prominent Overlay)
-    ctx.save();
-    ctx.translate(840, 380);
-    ctx.rotate(-0.18);
-    ctx.globalAlpha = isDark ? 0.95 : 0.9;
-
-    // Outer thick solid ring
-    ctx.strokeStyle = primaryAccent;
-    ctx.lineWidth = 5;
-    ctx.beginPath();
-    ctx.arc(0, 0, 135, 0, Math.PI * 2);
-    ctx.stroke();
-
-    // Middle dashed customs ring
-    ctx.lineWidth = 2.5;
-    ctx.setLineDash([7, 5]);
-    ctx.beginPath();
-    ctx.arc(0, 0, 122, 0, Math.PI * 2);
-    ctx.stroke();
-    ctx.setLineDash([]); // reset
-
-    // Inner solid ring
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.arc(0, 0, 110, 0, Math.PI * 2);
-    ctx.stroke();
-
-    // Text details inside giant stamp
-    ctx.font = '800 18px monospace';
-    ctx.fillStyle = primaryAccent;
-    ctx.textAlign = 'center';
-    ctx.fillText('★ PASSPORT CONTROL ★', 0, -48);
-
-    ctx.font = '700 13px monospace';
-    ctx.fillStyle = isDark ? 'rgba(255,255,255,0.8)' : 'rgba(15,111,99,0.8)';
-    ctx.fillText('OFFICIAL ENTRY VISA', 0, -26);
-
-    ctx.font = '900 46px sans-serif';
-    ctx.fillStyle = isDark ? '#FFFFFF' : primaryAccent;
-    ctx.fillText('★ 2026 ★', 0, 16);
-
-    ctx.font = '800 19px monospace';
-    ctx.fillStyle = primaryAccent;
-    ctx.fillText('MISSION COMPLETED', 0, 52);
-
-    ctx.font = '700 13px monospace';
-    ctx.fillStyle = isDark ? 'rgba(255,255,255,0.75)' : 'rgba(15,111,99,0.75)';
-    ctx.fillText('OFFICIALLY VERIFIED', 0, 74);
-
-    ctx.restore();
-
-    // 5. Section 1: Trip Vibe Identity Card
+    // 5. Trip Vibe Identity Card (Section 2)
     drawSafeRoundedRect(ctx, 100, 505, 880, 290, 28, isDark ? 'rgba(63, 203, 189, 0.08)' : 'rgba(15, 111, 99, 0.06)', cardBorder, 2);
 
     // Vibe Tag Pill
@@ -550,6 +499,63 @@ export function TripWrappedModal({
     ctx.font = '400 26px sans-serif';
     ctx.fillStyle = textSecondary;
     ctx.fillText(archetype.subtitle, 145, 720);
+
+    // Colossal Diagonal Customs Visa Stamp (Spanning across BOTH Section 1 & Section 2)
+    ctx.save();
+    ctx.translate(805, 490);
+    ctx.rotate(-0.18);
+    ctx.globalAlpha = isDark ? 0.92 : 0.88;
+
+    // Outer thick solid ring
+    ctx.strokeStyle = primaryAccent;
+    ctx.lineWidth = 6;
+    ctx.beginPath();
+    ctx.arc(0, 0, 195, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Middle dashed customs ring
+    ctx.lineWidth = 3.5;
+    ctx.setLineDash([9, 7]);
+    ctx.beginPath();
+    ctx.arc(0, 0, 180, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.setLineDash([]); // reset
+
+    // Inner solid ring
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.arc(0, 0, 165, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Innermost decorative fine ring
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.arc(0, 0, 152, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Text details inside colossal stamp
+    ctx.font = '800 22px monospace';
+    ctx.fillStyle = primaryAccent;
+    ctx.textAlign = 'center';
+    ctx.fillText('★ PASSPORT CONTROL ★', 0, -82);
+
+    ctx.font = '700 15px monospace';
+    ctx.fillStyle = isDark ? 'rgba(255,255,255,0.85)' : 'rgba(15,111,99,0.85)';
+    ctx.fillText('CUSTOMS & IMMIGRATION', 0, -54);
+
+    ctx.font = '900 68px sans-serif';
+    ctx.fillStyle = isDark ? '#FFFFFF' : primaryAccent;
+    ctx.fillText('★ 2026 ★', 0, 10);
+
+    ctx.font = '800 24px monospace';
+    ctx.fillStyle = primaryAccent;
+    ctx.fillText('MISSION COMPLETED', 0, 62);
+
+    ctx.font = '700 16px monospace';
+    ctx.fillStyle = isDark ? 'rgba(255,255,255,0.8)' : 'rgba(15,111,99,0.8)';
+    ctx.fillText('OFFICIALLY VERIFIED', 0, 94);
+
+    ctx.restore();
 
     // 6. Section 2: Squad Superlatives Card
     drawSafeRoundedRect(ctx, 100, 830, 880, 515, 28, cardBg, isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(15, 111, 99, 0.18)', 2);
@@ -767,6 +773,7 @@ export function TripWrappedModal({
         {/* Live Card Preview with Matching Theme */}
         <div
           style={{
+            position: 'relative',
             padding: '20px',
             borderRadius: '20px',
             background: isDark
@@ -778,50 +785,52 @@ export function TripWrappedModal({
             display: 'flex',
             flexDirection: 'column',
             gap: '14px',
+            overflow: 'hidden',
           }}
         >
-          {/* Trip Header Banner with Top-Right Visa Stamp */}
+          {/* Colossal Customs Visa Stamp Spanning Both Section 1 and Section 2 */}
           <div
             style={{
-              position: 'relative',
+              position: 'absolute',
+              right: '-14px',
+              top: '40px',
+              transform: 'rotate(-13deg)',
+              width: '124px',
+              height: '124px',
+              borderRadius: '50%',
+              border: `3px solid ${isDark ? '#3FCBBD' : '#0F6F63'}`,
+              boxShadow: `inset 0 0 0 2px ${isDark ? 'rgba(63,203,189,0.35)' : 'rgba(15,111,99,0.35)'}`,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: isDark ? '#3FCBBD' : '#0F6F63',
+              fontFamily: 'monospace',
+              fontWeight: 800,
+              opacity: 0.92,
+              pointerEvents: 'none',
+              lineHeight: 1.15,
+              background: isDark ? 'rgba(12,28,35,0.65)' : 'rgba(250,247,238,0.72)',
+              zIndex: 5,
+            }}
+          >
+            <span style={{ fontSize: '7.5px', letterSpacing: '0.04em' }}>★ PASSPORT ★</span>
+            <span style={{ fontSize: '13.5px', fontWeight: 900, color: isDark ? '#FFFFFF' : '#0F6F63', margin: '2px 0' }}>★ 2026 ★</span>
+            <span style={{ fontSize: '7px', letterSpacing: '0.02em' }}>MISSION COMPLETED</span>
+            <span style={{ fontSize: '6px', opacity: 0.8, marginTop: '1px' }}>OFFICIALLY VERIFIED</span>
+          </div>
+
+          {/* Trip Header Banner (Section 1) */}
+          <div
+            style={{
               borderBottom: isDark ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(15,111,99,0.12)',
               paddingBottom: '10px',
-              paddingRight: '76px',
+              paddingRight: '60px',
             }}
           >
             <div style={{ fontSize: '18px', fontWeight: 800, color: isDark ? '#FFFFFF' : '#142624' }}>{trip.name}</div>
             <div style={{ fontSize: '12px', color: isDark ? 'rgba(255,255,255,0.65)' : 'rgba(20,38,36,0.65)', marginTop: '2px' }}>
               {trip.startDate && trip.endDate ? `${trip.startDate} — ${trip.endDate}` : '2026 Journey'} · {members.length} Travelers
-            </div>
-
-            {/* Top-Right Large Prominent Customs Visa Stamp */}
-            <div
-              style={{
-                position: 'absolute',
-                right: '-4px',
-                top: '-8px',
-                transform: 'rotate(-13deg)',
-                width: '88px',
-                height: '88px',
-                borderRadius: '50%',
-                border: `2.5px solid ${isDark ? '#3FCBBD' : '#0F6F63'}`,
-                boxShadow: `inset 0 0 0 2px ${isDark ? 'rgba(63,203,189,0.3)' : 'rgba(15,111,99,0.3)'}`,
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: isDark ? '#3FCBBD' : '#0F6F63',
-                fontFamily: 'monospace',
-                fontWeight: 800,
-                opacity: 0.92,
-                pointerEvents: 'none',
-                lineHeight: 1.15,
-                background: isDark ? 'rgba(12,28,35,0.45)' : 'rgba(250,247,238,0.5)',
-              }}
-            >
-              <span style={{ fontSize: '7px', letterSpacing: '0.04em' }}>★ PASSPORT ★</span>
-              <span style={{ fontSize: '11px', fontWeight: 900, color: isDark ? '#FFFFFF' : '#0F6F63', margin: '1px 0' }}>★ 2026 ★</span>
-              <span style={{ fontSize: '6.5px', letterSpacing: '0.02em' }}>MISSION COMPLETED</span>
             </div>
           </div>
 
