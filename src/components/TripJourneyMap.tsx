@@ -18,7 +18,7 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 // that relationship) — both files are synced verbatim into public/maplibre/
 // (scripts/sync-maplibre-worker.mjs, run on install/build) and referenced
 // here by their fixed, unhashed public path instead.
-setWorkerUrl(`${import.meta.env.BASE_URL}maplibre/maplibre-gl-worker.mjs`);
+setWorkerUrl(`${import.meta.env.BASE_URL}maplibre/maplibre-gl-worker.js`);
 
 interface Props {
   expenses: Expense[];

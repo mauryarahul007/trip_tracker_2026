@@ -4,7 +4,7 @@ import { Map as MaplibreMap, Marker, LngLatBounds, GeoJSONSource, setWorkerUrl }
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { useResolvedTripStops } from '../hooks/useResolvedTripStops';
 
-setWorkerUrl(`${import.meta.env.BASE_URL}maplibre/maplibre-gl-worker.mjs`);
+setWorkerUrl(`${import.meta.env.BASE_URL}maplibre/maplibre-gl-worker.js`);
 
 const MAP_STYLE_URL = 'https://tiles.openfreemap.org/styles/liberty';
 const ROUTE_SOURCE_ID = 'trip-hero-route';
