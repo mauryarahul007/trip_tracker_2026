@@ -1773,6 +1773,18 @@ input:checked + .toggle-slider:before {
   border-top: 1.5px dashed var(--border-color);
 }
 
+/* 3D Flip Card Container & Transitions */
+.boarding-pass-flip-container {
+  perspective: 1200px;
+}
+.boarding-pass-flipper {
+  transform-style: preserve-3d;
+  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.boarding-pass-flipper.flipped {
+  transform: rotateY(180deg);
+}
+
 /* Boarding-pass balance summary — the app's signature element */
 .boarding-pass {
   /* Cream paper ticket, not a bold color hero -- the perforated motif
@@ -1786,6 +1798,7 @@ input:checked + .toggle-slider:before {
   overflow: hidden;
   position: relative;
   margin-bottom: 16px;
+  box-shadow: 0 4px 18px rgba(31, 27, 20, 0.06);
 }
 .bp-top {
   padding: 16px 20px 14px;

@@ -1,23 +1,11 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { Category, Expense } from '../types';
 import { IconMapPin } from './Icons';
 import { getCurrencySymbol } from '../utils/currency';
+import { triggerHaptic } from '../utils/haptics';
 import { Map as MaplibreMap, Marker, Popup, NavigationControl, LngLatBounds, setWorkerUrl } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 
-// MapLibre resolves its worker script via a relative URL next to its own
-// module, which only holds up when that module is served as a standalone
-// file (as Vite's dev server does). The production build bundles
-// everything into one hashed chunk, so that relative path resolves to a
-// URL that doesn't exist — Capacitor's local asset server falls back to
-// serving index.html for it, and the worker fails parsing HTML as JS
-// (silently, with no error surfaced anywhere reachable from the main
-// thread). The worker file also imports a sibling "./maplibre-gl-shared.mjs"
-// by bare relative path, so it can't just be pulled in individually via
-// Vite's `?url` (which copies one file as an opaque hashed blob, breaking
-// that relationship) — both files are synced verbatim into public/maplibre/
-// (scripts/sync-maplibre-worker.mjs, run on install/build) and referenced
-// here by their fixed, unhashed public path instead.
 setWorkerUrl(`${import.meta.env.BASE_URL}maplibre/maplibre-gl-worker.js`);
 
 interface Props {
@@ -26,10 +14,6 @@ interface Props {
   baseCurrency: string;
 }
 
-// Free, unlimited, no-API-key vector tiles. Unlike hotlinking OSM's raster
-// tile server directly (the previous Leaflet setup), this is a CDN built
-// for third-party app traffic and doesn't throttle/rate-limit requests,
-// plus vector+GPU rendering pans/zooms far faster than raster tiles.
 const MAP_STYLE_URL = 'https://tiles.openfreemap.org/styles/liberty';
 const ROUTE_SOURCE_ID = 'trip-route';
 const ROUTE_LAYER_ID = 'trip-route-line';
@@ -51,7 +35,14 @@ export function TripJourneyMap({ expenses, categories, baseCurrency }: Props) {
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const mapInstanceRef = useRef<MaplibreMap | null>(null);
   const markersRef = useRef<Marker[]>([]);
+  const popupsRef = useRef<Popup[]>([]);
+  const playbackMarkerRef = useRef<Marker | null>(null);
+  const animFrameRef = useRef<number | null>(null);
   const currencySymbol = getCurrencySymbol(baseCurrency);
+
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [currentStepIdx, setCurrentStepIdx] = useState(0);
+  const [playbackSpeed, setPlaybackSpeed] = useState<1 | 2>(1);
 
   // Filter valid geotagged expenses
   const geotaggedExpenses = expenses
@@ -74,6 +65,7 @@ export function TripJourneyMap({ expenses, categories, baseCurrency }: Props) {
     // Clean up existing map instance before re-init
     markersRef.current.forEach((m) => m.remove());
     markersRef.current = [];
+    popupsRef.current = [];
     if (mapInstanceRef.current) {
       mapInstanceRef.current.remove();
       mapInstanceRef.current = null;
@@ -89,13 +81,6 @@ export function TripJourneyMap({ expenses, categories, baseCurrency }: Props) {
     });
     map.addControl(new NavigationControl({ showCompass: false }), 'top-right');
 
-    // The Analytics tab is `display:none` until switched to, so on a
-    // first-ever visit the container can still measure 0×0 (or a stale
-    // size) at the exact instant MapLibre reads it to size its WebGL
-    // canvas — tiles then get requested for a degenerate viewport and the
-    // map renders blank until something (like a big pinch-zoom) forces a
-    // fresh layout pass. Watching the container and calling resize()
-    // whenever its size actually changes is the standard fix.
     const resizeObserver = new ResizeObserver(() => {
       requestAnimationFrame(() => {
         if (mapContainerRef.current) {
@@ -138,61 +123,117 @@ export function TripJourneyMap({ expenses, categories, baseCurrency }: Props) {
 
         const popupContent = `
           <div style="font-family: inherit; font-size: 12.5px; color: #1E293B; min-width: 150px;">
-            <div style="font-weight: 700; font-size: 14px; margin-bottom: 2px; color: #0F172A;">
-              ${safeTitle}
+            <div style="font-weight: 700; color: #0F172A; margin-bottom: 2px;">#${idx + 1} ${safeTitle}</div>
+            ${safePlaceName ? `<div style="font-size: 11px; color: #64748B; margin-bottom: 4px;">📍 ${safePlaceName}</div>` : ''}
+            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #E2E8F0; padding-top: 4px; margin-top: 4px;">
+              <span style="font-weight: 600; color: #2F6FED;">${safeCurrency} ${exp.amount.toFixed(2)}</span>
+              <span style="font-size: 10px; color: #94A3B8;">${safeDate}</span>
             </div>
-            <div class="privacy-blur" style="color: #17B6A6; font-weight: 700; font-size: 13.5px; margin-bottom: 4px;">
-              ${safeCurrency} ${exp.amount.toFixed(2)}
-            </div>
-            <div style="font-size: 11px; color: #64748B; margin-bottom: 2px;">
-              📅 ${safeDate} • #${idx + 1} Stop
-            </div>
-            ${safePlaceName ? `<div style="font-size: 11px; color: #475569; font-weight: 500;">📍 ${safePlaceName}</div>` : ''}
           </div>
         `;
 
-        const marker = new Marker({ element: el, anchor: 'center' })
+        const popup = new Popup({ offset: 16, closeButton: false }).setHTML(popupContent);
+        popupsRef.current.push(popup);
+
+        const marker = new Marker({ element: el })
           .setLngLat([loc.lng, loc.lat])
-          .setPopup(new Popup({ offset: 18 }).setHTML(popupContent))
+          .setPopup(popup)
           .addTo(map);
+
         markersRef.current.push(marker);
       });
 
-      // Draw route line if multiple stops
       if (lngLats.length > 1) {
-        map.addSource(ROUTE_SOURCE_ID, {
-          type: 'geojson',
-          data: { type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates: lngLats } },
-        });
-        map.addLayer({
-          id: ROUTE_LAYER_ID,
-          type: 'line',
-          source: ROUTE_SOURCE_ID,
-          layout: { 'line-join': 'round', 'line-cap': 'round' },
-          paint: {
-            'line-color': '#17B6A6',
-            'line-width': 3.5,
-            'line-opacity': 0.85,
-            'line-dasharray': [2, 1.5],
-          },
-        });
-      }
-
-      if (lngLats.length > 0) {
-        const bounds = lngLats.reduce(
-          (b, coord) => b.extend(coord),
-          new LngLatBounds(lngLats[0], lngLats[0])
-        );
-        map.fitBounds(bounds, { padding: 40, maxZoom: 15, duration: 0 });
+        const bounds = lngLats.reduce((b, coord) => b.extend(coord), new LngLatBounds(lngLats[0], lngLats[0]));
+        map.fitBounds(bounds, { padding: 45, maxZoom: 15, duration: 600 });
       }
     };
 
-    map.on('load', buildMarkers);
+    map.on('load', () => {
+      buildMarkers();
+
+      if (lngLats.length > 1) {
+        const coordsQuery = lngLats.map((c) => `${c[0]},${c[1]}`).join(';');
+        const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${coordsQuery}?overview=full&geometries=geojson`;
+
+        fetch(osrmUrl)
+          .then((res) => res.json())
+          .then((data) => {
+            if (data.routes && data.routes.length > 0 && map.getStyle()) {
+              const geometry = data.routes[0].geometry;
+              if (map.getSource(ROUTE_SOURCE_ID)) {
+                (map.getSource(ROUTE_SOURCE_ID) as any).setData({
+                  type: 'Feature',
+                  properties: {},
+                  geometry,
+                });
+              } else {
+                map.addSource(ROUTE_SOURCE_ID, {
+                  type: 'geojson',
+                  data: {
+                    type: 'Feature',
+                    properties: {},
+                    geometry,
+                  },
+                });
+
+                map.addLayer({
+                  id: ROUTE_LAYER_ID,
+                  type: 'line',
+                  source: ROUTE_SOURCE_ID,
+                  layout: {
+                    'line-join': 'round',
+                    'line-cap': 'round',
+                  },
+                  paint: {
+                    'line-color': '#17B6A6',
+                    'line-width': 4,
+                    'line-opacity': 0.85,
+                  },
+                });
+              }
+            }
+          })
+          .catch(() => {
+            if (!map.getSource(ROUTE_SOURCE_ID) && map.getStyle()) {
+              map.addSource(ROUTE_SOURCE_ID, {
+                type: 'geojson',
+                data: {
+                  type: 'Feature',
+                  properties: {},
+                  geometry: {
+                    type: 'LineString',
+                    coordinates: lngLats,
+                  },
+                },
+              });
+
+              map.addLayer({
+                id: ROUTE_LAYER_ID,
+                type: 'line',
+                source: ROUTE_SOURCE_ID,
+                layout: {
+                  'line-join': 'round',
+                  'line-cap': 'round',
+                },
+                paint: {
+                  'line-color': '#17B6A6',
+                  'line-width': 3,
+                  'line-dasharray': [2, 2],
+                  'line-opacity': 0.7,
+                },
+              });
+            }
+          });
+      }
+    });
 
     mapInstanceRef.current = map;
 
     return () => {
       resizeObserver.disconnect();
+      if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
+      if (playbackMarkerRef.current) playbackMarkerRef.current.remove();
       markersRef.current.forEach((m) => m.remove());
       markersRef.current = [];
       if (mapInstanceRef.current) {
@@ -201,6 +242,55 @@ export function TripJourneyMap({ expenses, categories, baseCurrency }: Props) {
       }
     };
   }, [geotaggedExpenses.length, baseCurrency]);
+
+  // Route Playback Animation loop
+  const handleTogglePlayback = () => {
+    triggerHaptic('medium');
+    const map = mapInstanceRef.current;
+    if (!map || geotaggedExpenses.length === 0) return;
+
+    if (isPlaying) {
+      setIsPlaying(false);
+      if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
+      return;
+    }
+
+    setIsPlaying(true);
+    let step = currentStepIdx >= geotaggedExpenses.length ? 0 : currentStepIdx;
+
+    const playNext = () => {
+      if (step >= geotaggedExpenses.length) {
+        setIsPlaying(false);
+        setCurrentStepIdx(0);
+        return;
+      }
+
+      setCurrentStepIdx(step);
+      const exp = geotaggedExpenses[step];
+      const loc = exp.location!;
+
+      map.flyTo({
+        center: [loc.lng, loc.lat],
+        zoom: 14.5,
+        duration: 1200 / playbackSpeed,
+      });
+
+      // Open milestone popup
+      popupsRef.current.forEach((_p, idx) => {
+        if (idx === step) {
+          markersRef.current[idx]?.togglePopup();
+        }
+      });
+
+      triggerHaptic('light');
+
+      step++;
+      const delay = (2200 / playbackSpeed);
+      animFrameRef.current = window.setTimeout(playNext, delay) as any;
+    };
+
+    playNext();
+  };
 
   if (geotaggedExpenses.length === 0) {
     return (
@@ -246,6 +336,7 @@ export function TripJourneyMap({ expenses, categories, baseCurrency }: Props) {
     <div
       className="card"
       style={{
+        position: 'relative',
         padding: '0',
         borderRadius: 'var(--border-radius-lg)',
         overflow: 'hidden',
@@ -286,11 +377,79 @@ export function TripJourneyMap({ expenses, categories, baseCurrency }: Props) {
         ref={mapContainerRef}
         style={{
           width: '100%',
-          height: '280px',
+          height: '290px',
           background: '#E2E8F0',
           zIndex: 1,
         }}
       />
+
+      {/* Floating Route Playback HUD */}
+      {geotaggedExpenses.length > 1 && (
+        <div
+          style={{
+            position: 'absolute',
+            bottom: '12px',
+            left: '12px',
+            right: '12px',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            background: 'rgba(15, 23, 42, 0.82)',
+            backdropFilter: 'blur(10px)',
+            WebkitBackdropFilter: 'blur(10px)',
+            border: '1px solid rgba(255,255,255,0.15)',
+            borderRadius: '16px',
+            padding: '6px 12px',
+            zIndex: 10,
+            boxShadow: '0 8px 24px rgba(0,0,0,0.3)',
+          }}
+        >
+          <button
+            type="button"
+            onClick={handleTogglePlayback}
+            style={{
+              background: isPlaying ? '#FF7A00' : 'var(--primary-accent)',
+              color: '#FFFFFF',
+              border: 'none',
+              borderRadius: '10px',
+              padding: '6px 12px',
+              fontSize: '12px',
+              fontWeight: 700,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+            }}
+          >
+            <span>{isPlaying ? '⏸ Pause' : '🎬 Play Journey'}</span>
+          </button>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.7)', fontFamily: 'var(--font-family-mono)' }}>
+              Stop {currentStepIdx + 1}/{geotaggedExpenses.length}
+            </span>
+            <button
+              type="button"
+              onClick={() => {
+                triggerHaptic('light');
+                setPlaybackSpeed(playbackSpeed === 1 ? 2 : 1);
+              }}
+              style={{
+                background: 'rgba(255,255,255,0.12)',
+                color: '#FFFFFF',
+                border: 'none',
+                borderRadius: '8px',
+                padding: '4px 8px',
+                fontSize: '11px',
+                fontWeight: 700,
+                cursor: 'pointer',
+              }}
+            >
+              {playbackSpeed}x
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

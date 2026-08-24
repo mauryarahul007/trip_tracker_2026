@@ -8,6 +8,7 @@ import { usePrivacyStore, formatMaskedAmount } from '../store/privacyStore';
 import { useTripStore } from '../store/tripStore';
 import { triggerHaptic } from '../utils/haptics';
 import { UpiPaymentModal } from './UpiPaymentModal';
+import { BoardingPassHeroCard } from './BoardingPassHeroCard';
 
 type Props = {
   trip: Trip;
@@ -628,46 +629,24 @@ export function BalancesSettlements({
   const topTransferShare = topTransfer && totalOutstanding > 0 ? topTransfer.amount / totalOutstanding : 0;
   const transferIsDominant = transfers.length === 1 || topTransferShare >= 0.5;
   const categoryIsDominant = !!topCategoryName && (topCategoryPercentage ?? 0) >= 50;
-  const categoryClause = categoryIsDominant ? `, driven by ${topCategoryName} spend` : '';
 
   return (
     <div id="balances-section" style={{ marginTop: '20px' }}>
-      {/* Boarding-pass balance summary */}
-      <div className="boarding-pass">
-        <div className="bp-top">
-          <div>
-            <div className="bp-eyebrow">{trip.name}</div>
-            <div className="bp-title">Balance summary</div>
-          </div>
-          <div className="bp-meta">{trip.baseCurrency}</div>
-          <div className="bp-stamp-pos">
-            <span key={isFullySettled ? 'settled' : 'unsettled'} className="stamp-badge" style={{ color: isFullySettled ? 'var(--color-success)' : 'var(--color-danger)' }}>
-              {isFullySettled && <IconCheckCircle size={14} className="icon-sm" />}
-              {isFullySettled ? 'Settled' : 'Unsettled'}
-            </span>
-          </div>
-        </div>
-        <div className="bp-perf" />
-        <div className="bp-body">
-          <div className="bp-who">{isFullySettled ? 'Outstanding' : 'Outstanding to settle'}</div>
-          <div className="bp-amount privacy-blur" style={{ color: isFullySettled ? 'var(--color-success)' : 'var(--color-danger)' }}>
-            {formatMaskedAmount(totalOutstanding.toFixed(2), currencySymbol, isBlindMode)}
-          </div>
-          <div className="bp-sub">
-            {isFullySettled
-              ? 'Every balance is settled — nothing left to pay.'
-              : topTransfer && transferIsDominant
-                ? `${transfers.length > 1 ? 'Mostly ' : ''}${topTransfer.fromLabel} owes ${topTransfer.toLabel}${categoryClause}.`
-                : categoryIsDominant
-                  ? `${transfers.length} transfers to settle, driven mostly by ${topCategoryName} spend.`
-                  : `${transfers.length} transfer${transfers.length === 1 ? '' : 's'} will clear every balance.`}
-          </div>
-        </div>
-        <div className="bp-foot">
-          <span>{balances.length} members</span>
-          <span>{transfers.length} transfer{transfers.length === 1 ? '' : 's'} left</span>
-        </div>
-      </div>
+      {/* 3D Flip Boarding-pass balance summary */}
+      <BoardingPassHeroCard
+        trip={trip}
+        currencySymbol={currencySymbol}
+        totalOutstanding={totalOutstanding}
+        isFullySettled={isFullySettled}
+        transfers={transfers}
+        balancesCount={balances.length}
+        topTransfer={topTransfer}
+        transferIsDominant={transferIsDominant}
+        categoryIsDominant={categoryIsDominant}
+        topCategoryName={topCategoryName}
+        topCategoryPercentage={topCategoryPercentage}
+        currentMember={myMemberId ? members[myMemberId] : undefined}
+      />
 
       {/* 1. WhatsApp-Style Suggested Settlements Section */}
       <div className="wa-group-card">

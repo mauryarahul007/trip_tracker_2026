@@ -962,14 +962,21 @@ This document logs all meaningful technical decisions, library choices, design p
 
 ---
 
-## 52. Numberless Spotify-Wrapped Style Trip Story Card
+---
+
+## 53. 3D Flip Boarding Pass, Ambient Telemetry & Animated Journey Route Playback
 * **Context:**
-  - The previous Trip Wrapped modal rendered raw financial totals (Total Spend, Average / Person, and exact rupees paid by individuals). Users sharing to Instagram or WhatsApp stories felt uncomfortable sharing private banking numbers and currency metrics publicly.
+  - The trip balance summary card held key financial data (Outstanding debt, driver narrative, and Settled/Unsettled stamps) but lacked travel immersion. Furthermore, users wanted ambient destination telemetry, collectible squad milestones, and an engaging way to visualize their route on the map without cluttering the main screen.
 * **Decision:**
-  - Redesigned [`src/components/TripWrappedModal.tsx`](file:///c:/ProjectsV1/Trip_Tracker_2026/src/components/TripWrappedModal.tsx) to completely eliminate raw currency and dollar/rupee figures from both the in-modal preview and the 1080x1920 HD Canvas export.
-  - Implemented dynamic **Trip Vibe Archetypes** (e.g. *The Gourmet Pilgrimage*, *The High-Luxe Sanctuary*, *The Fast-Paced Expedition*), **Squad Superlatives** (e.g. *Chief Quartermaster*, *Executive Tasting Officer*, *Transit Navigator*), **Trip Rhythm** (Peak Adventure Day, Trip Pace), and an embossed vector **Passport Stamp Seal**.
+  - Implemented [`src/components/BoardingPassHeroCard.tsx`](file:///c:/ProjectsV1/Trip_Tracker_2026/src/components/BoardingPassHeroCard.tsx) with a 3D perspective flip (`perspective: 1200px; transform-style: preserve-3d; transition: transform 0.6s`).
+  - **Front Side:** Faithfully preserves the signature cream Balance Summary ticket (Trip name, Currency, tilted `[ Unsettled ]` / `[ All Settled ✓ ]` ink stamp, dual perforated dashed lines, large `OUTSTANDING TO SETTLE` amount + driver narrative, and member/transfer counts).
+  - **Back Side:** Flips 180° to reveal the Flight Boarding Pass with Origin $\rightarrow$ Destination airport codes (`DEL ✈ IXB`), passenger seat, 1-tap join code copy, live ambient destination weather (via [`src/services/weatherService.ts`](file:///c:/ProjectsV1/Trip_Tracker_2026/src/services/weatherService.ts)), and barcode.
+  - Built [`src/utils/achievementBadges.ts`](file:///c:/ProjectsV1/Trip_Tracker_2026/src/utils/achievementBadges.ts) and [`src/components/AchievementBadgeModal.tsx`](file:///c:/ProjectsV1/Trip_Tracker_2026/src/components/AchievementBadgeModal.tsx) to award collectible squad enamel pins (*Caffeine Logistics, Midnight Odyssey, Apex Roadrunner, Lightning Settlement*).
+  - Enhanced [`src/components/TripJourneyMap.tsx`](file:///c:/ProjectsV1/Trip_Tracker_2026/src/components/TripJourneyMap.tsx) with **"Relive the Journey 🎬"** floating HUD controls for 60fps route playback.
 * **Trade-offs Accepted:**
-  - Replaced accounting metrics with qualitative travel badges, creating an engaging, privacy-friendly social asset ready for instant story sharing.
+  - Ambient weather is cached for 2 hours in `localStorage` to eliminate API spam and conserve battery.
+  - 3D flip card preserves exact existing balance summary layout without adding visual weight.
+
 
 
 
