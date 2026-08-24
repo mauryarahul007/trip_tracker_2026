@@ -35,6 +35,14 @@ export function useResolvedTripStops(
 
     let isMounted = true;
 
+    // Some stops may already have persisted coordinates while others still
+    // need geocoding -- returning that partial mix below lets TripMapHero
+    // render and fit-bounds to an incomplete route (a tight zoom on just
+    // the already-resolved stop) before snapping to the full route once
+    // the rest resolve. Clear to empty for the whole wait instead, so the
+    // map only ever renders once every stop is ready.
+    setResolvedStops([]);
+
     resolveTripStopCoordinates(stopList, { useDeviceLocation: enableGeotagging }).then((finalStops) => {
       if (isMounted) setResolvedStops(finalStops);
     });
