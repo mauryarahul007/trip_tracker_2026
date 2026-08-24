@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { Expense, Group, Member, Trip } from '../types';
 import { buildSettlementNodes, calculateGroupInternalTransfers, type MemberBalance, type Transfer } from '../utils/settlement';
-import { IconArrowDownRight, IconArrowUpRight, IconCheck, IconCheckCircle, IconChevronRight, IconEdit, IconMembers } from './Icons';
+import { IconArrowDownRight, IconArrowUpRight, IconCheck, IconCheckCircle, IconChevronRight, IconEdit, IconMembers, IconShare } from './Icons';
 import { getCurrencySymbol } from '../utils/currency';
 import { sendPushNotification } from '../services/pushApi';
 import { usePrivacyStore, formatMaskedAmount } from '../store/privacyStore';
@@ -204,6 +204,37 @@ function TransferRow({
     reminderStatus === 'sent' ? '✓ Reminded' :
     reminderStatus === 'rateLimited' ? 'Already reminded today' :
     '🔔 Remind';
+
+  const [shareCopied, setShareCopied] = useState(false);
+
+  const handleShareReminder = async () => {
+    triggerHaptic('light');
+    const shareText = `Hey ${t.fromLabel}, just a reminder to settle ${currencySymbol}${settleAmount.toFixed(2)} to ${t.toLabel} for our trip "${tripName || 'Trip'}".`;
+
+    const copyToClipboard = () => {
+      navigator.clipboard.writeText(shareText).then(() => {
+        setShareCopied(true);
+        setTimeout(() => setShareCopied(false), 2000);
+      });
+    };
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'Trip Settlement Reminder',
+          text: shareText,
+        });
+      } catch (err) {
+        if ((err as Error).name !== 'AbortError') {
+          copyToClipboard();
+        }
+      }
+    } else {
+      copyToClipboard();
+      const waUrl = `https://wa.me/?text=${encodeURIComponent(shareText)}`;
+      window.open(waUrl, '_blank');
+    }
+  };
 
   return (
     <div style={{
@@ -422,15 +453,26 @@ function TransferRow({
                     <IconChevronRight size={10} className="icon-sm" />
                   </span>
                 </button>
+                {members[t.fromMemberId]?.linkedUserId && (
+                  <button
+                    type="button"
+                    className="secondary-btn"
+                    style={{ padding: '6px 10px', fontSize: '12px' }}
+                    onClick={handleRemind}
+                    disabled={reminderStatus === 'sending' || reminderStatus === 'sent' || reminderStatus === 'rateLimited'}
+                  >
+                    {remindLabel}
+                  </button>
+                )}
                 <button
                   type="button"
                   className="secondary-btn"
-                  style={{ padding: '6px 10px', fontSize: '12px' }}
-                  onClick={handleRemind}
-                  disabled={!members[t.fromMemberId]?.linkedUserId || reminderStatus === 'sending' || reminderStatus === 'sent' || reminderStatus === 'rateLimited'}
-                  title={members[t.fromMemberId]?.linkedUserId ? 'Send a reminder' : 'This member has no linked account to notify'}
+                  style={{ padding: '6px 10px', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px' }}
+                  onClick={handleShareReminder}
+                  title="Share reminder text via WhatsApp or system share"
                 >
-                  {remindLabel}
+                  <IconShare size={12} className="icon-sm" />
+                  <span>{shareCopied ? 'Copied!' : 'Share'}</span>
                 </button>
               </div>
 
@@ -495,15 +537,26 @@ function TransferRow({
               >
                 <IconEdit size={10} className="icon-sm" />
               </button>
+              {members[t.fromMemberId]?.linkedUserId && (
+                <button
+                  type="button"
+                  className="secondary-btn"
+                  style={{ padding: '6px 10px', fontSize: '12px' }}
+                  onClick={handleRemind}
+                  disabled={reminderStatus === 'sending' || reminderStatus === 'sent' || reminderStatus === 'rateLimited'}
+                >
+                  {remindLabel}
+                </button>
+              )}
               <button
                 type="button"
                 className="secondary-btn"
-                style={{ padding: '6px 10px', fontSize: '12px' }}
-                onClick={handleRemind}
-                disabled={!members[t.fromMemberId]?.linkedUserId || reminderStatus === 'sending' || reminderStatus === 'sent' || reminderStatus === 'rateLimited'}
-                title={members[t.fromMemberId]?.linkedUserId ? 'Send a reminder' : 'This member has no linked account to notify'}
+                style={{ padding: '6px 10px', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px' }}
+                onClick={handleShareReminder}
+                title="Share reminder text via WhatsApp or system share"
               >
-                {remindLabel}
+                <IconShare size={12} className="icon-sm" />
+                <span>{shareCopied ? 'Copied!' : 'Share'}</span>
               </button>
             </div>
           )}

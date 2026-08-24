@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import type { Member } from '../types';
 import { getCurrencySymbol } from '../utils/currency';
 import { generateUpiUri, getQrCodeUrl, isValidUpiId, POPULAR_UPI_APPS } from '../utils/upiLinks';
 import { IconClose } from './Icons';
 import { triggerHaptic } from '../utils/haptics';
+import { useFocusTrap } from '../hooks/useFocusTrap';
 
 interface UpiPaymentModalProps {
   fromMember: Member | undefined;
@@ -27,6 +28,9 @@ export function UpiPaymentModal({
   const [upiId, setUpiId] = useState(toMember?.upiId || '');
   const [copied, setCopied] = useState(false);
   const [showQr, setShowQr] = useState(false);
+
+  const modalRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(modalRef);
 
   const currencySymbol = getCurrencySymbol(currency);
   const payerName = fromMember?.name || 'Payer';
@@ -62,6 +66,7 @@ export function UpiPaymentModal({
   return (
     <div className="modal-backdrop" onClick={onClose}>
       <div
+        ref={modalRef}
         className="modal-card fade-in"
         style={{ maxWidth: '440px', width: '100%', padding: '22px' }}
         onClick={(e) => e.stopPropagation()}

@@ -14,6 +14,7 @@ import { useTripStore } from '../store/tripStore';
 import { triggerHaptic } from '../utils/haptics';
 import { convertCurrency, POPULAR_CURRENCIES } from '../utils/currencyConverter';
 import { parseReceiptText, type ExtractedReceiptData } from '../utils/receiptOcr';
+import { useFocusTrap } from '../hooks/useFocusTrap';
 
 type SplitMode = 'equal' | 'custom' | 'exact' | 'percentage';
 
@@ -108,6 +109,10 @@ export function ExpenseForm({
   // Receipt OCR suggestion state
   const [ocrSuggestion, setOcrSuggestion] = useState<ExtractedReceiptData | null>(null);
 
+  // Duplicate warning interactives state
+  const [ignoredDuplicateId, setIgnoredDuplicateId] = useState<string | null>(null);
+  const [showDuplicateDetails, setShowDuplicateDetails] = useState(false);
+
   // Duplicate expense detection
   const expenses = useTripStore((s) => s.expenses);
   const allTripExpenses = useMemo(() => expenses.filter((e) => e.tripId === trip?.id), [expenses, trip?.id]);
@@ -118,6 +123,11 @@ export function ExpenseForm({
         (e.category === category || e.title.toLowerCase().includes(title.trim().toLowerCase()) || title.trim().toLowerCase().includes(e.title.toLowerCase()))
       )
     : null;
+
+  // Reset details expansion if the duplicate target changes
+  useEffect(() => {
+    setShowDuplicateDetails(false);
+  }, [duplicateExpense?.id]);
 
   // Live conversion calculation
   const numericAmount = parseFloat(amount) || 0;
@@ -161,6 +171,8 @@ export function ExpenseForm({
 
   const sheetRef = useRef<HTMLFormElement>(null);
   const amountInputRef = useRef<HTMLInputElement>(null);
+
+  useFocusTrap(sheetRef, true, true);
 
   useEffect(() => {
     // Automatically focus and select the amount field on open so the user can immediately type
@@ -571,23 +583,66 @@ export function ExpenseForm({
         )}
 
         {/* Duplicate Expense Warning */}
-        {duplicateExpense && (
+        {duplicateExpense && ignoredDuplicateId !== duplicateExpense.id && (
           <div className="fade-in" style={{
             marginTop: '6px',
-            padding: '6px 10px',
+            padding: '8px 10px',
             borderRadius: 'var(--border-radius-sm)',
             background: 'rgba(235,107,86,0.1)',
             border: '1px solid rgba(235,107,86,0.3)',
             display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
+            flexDirection: 'column',
+            gap: '8px',
             fontSize: '11px',
             color: 'var(--color-danger)'
           }}>
-            <IconAlertCircle size={14} />
-            <span>
-              <strong>Duplicate check:</strong> Similar expense "{duplicateExpense.title}" ({currencySymbol}{duplicateExpense.amount}) already exists on {duplicateExpense.date}.
-            </span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', width: '100%' }}>
+              <IconAlertCircle size={14} style={{ flexShrink: 0 }} />
+              <span style={{ marginRight: 'auto' }}>
+                <strong>Duplicate check:</strong> Similar expense found on {duplicateExpense.date}.
+              </span>
+              <button
+                type="button"
+                className="secondary-btn"
+                style={{ padding: '2px 6px', fontSize: '10px', height: '20px', display: 'flex', alignItems: 'center', minWidth: '42px', justifyContent: 'center' }}
+                onClick={() => setShowDuplicateDetails(!showDuplicateDetails)}
+              >
+                {showDuplicateDetails ? 'Hide' : 'Details'}
+              </button>
+              <button
+                type="button"
+                className="secondary-btn"
+                style={{ padding: '2px 6px', fontSize: '10px', height: '20px', display: 'flex', alignItems: 'center', background: 'rgba(235,107,86,0.15)', minWidth: '42px', justifyContent: 'center' }}
+                onClick={() => {
+                  triggerHaptic('light');
+                  setIgnoredDuplicateId(duplicateExpense.id);
+                }}
+              >
+                Ignore
+              </button>
+            </div>
+
+            {showDuplicateDetails && (
+              <div className="fade-in" style={{
+                padding: '8px',
+                background: 'var(--bg-app)',
+                border: '1px solid var(--border-color)',
+                borderRadius: 'var(--border-radius-sm)',
+                color: 'var(--text-secondary)',
+                fontSize: '11px',
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr',
+                gap: '6px'
+              }}>
+                <div>Title: <strong>{duplicateExpense.title}</strong></div>
+                <div>Amount: <strong>{currencySymbol}{duplicateExpense.amount.toFixed(2)}</strong></div>
+                <div>Date: <strong>{duplicateExpense.date}</strong></div>
+                <div>Paid By: <strong>{visibleMembers.find(m => m.id === duplicateExpense.paidBy)?.name || 'Unknown'}</strong></div>
+                <div style={{ gridColumn: 'span 2' }}>
+                  Split mode: <strong>{duplicateExpense.splitMode}</strong> ({duplicateExpense.splitMemberIds.length} members)
+                </div>
+              </div>
+            )}
           </div>
         )}
 
