@@ -725,7 +725,7 @@ export function BalancesSettlements({
           }}
         >
           <div className="wa-group-title">
-            <div className="wa-group-icon" style={{ background: 'rgba(2, 132, 199, 0.12)', color: '#0284C7' }}>
+            <div className="wa-group-icon" style={{ background: 'rgba(15, 111, 99, 0.12)', color: '#0F6F63' }}>
               <IconMembers size={18} />
             </div>
             <div>

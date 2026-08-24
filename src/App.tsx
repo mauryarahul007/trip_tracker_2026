@@ -45,7 +45,7 @@ import { FitHeading } from './components/FitHeading';
 import { usePrivacyStore } from './store/privacyStore';
 import { triggerHaptic } from './utils/haptics';
 import { useEscapeKey } from './utils/useEscapeKey';
-import { IconCalendar, IconChevronLeft, IconPlus, IconEye, IconEyeOff, IconShield, IconSearch } from './components/Icons';
+import { IconCalendar, IconChevronLeft, IconChevronDown, IconChevronUp, IconPlus, IconEye, IconEyeOff, IconShield, IconSearch } from './components/Icons';
 import { formatDateRange } from './utils/dateRange';
 import { useScrollLock } from './utils/useScrollLock';
 import { useHistoryBack } from './utils/useHistoryBack';
@@ -397,6 +397,11 @@ export default function App() {
   // the map zoom out slightly to visually "resize" as more of it is
   // exposed, instead of sitting static underneath the drag.
   const [sheetExpanded, setSheetExpanded] = useState(false);
+  // Route-stops chip row starts collapsed -- it's the least essential
+  // header row (the map already shows the route), so keeping it closed by
+  // default gives the eyebrow date row more breathing room instead of
+  // competing with it for the header's fixed height budget.
+  const [stopsExpanded, setStopsExpanded] = useState(false);
   const headerRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
@@ -1504,11 +1509,12 @@ export default function App() {
             <div className="app-header-top" style={{ position: 'relative', zIndex: 1 }}>
               <div className="app-title-group">
                 <span className="app-eyebrow">
-                  {activeTrip?.destination && (
-                    <span style={{ marginRight: '6px', fontWeight: 600, color: 'var(--primary-accent)' }}>
-                      📍 {activeTrip.destination} &middot;
-                    </span>
-                  )}
+                  {/* Destination used to prefix this row too ("📍 Lachung ·"),
+                      but the route-stops chips below already show every
+                      stop -- that made this line too wide to fit the full
+                      date range and status badge on one line, so both got
+                      clipped by the row's fixed height. Dropped it here;
+                      the date range is the only thing this row needs to say. */}
                   <IconCalendar size={12} className="icon-sm" />
                   {formatDateRange(activeTrip?.startDate || '', activeTrip?.endDate || '')}
                   {(() => {
@@ -1516,20 +1522,23 @@ export default function App() {
                     if (!activeTrip?.startDate) return null;
                     if (activeTrip.startDate > todayStr) {
                       return (
-                        <span style={{ marginLeft: '6px', padding: '1px 5px', borderRadius: '4px', fontSize: '10px', fontWeight: 700, background: 'rgba(43,168,158,0.2)', color: '#2BA89E' }}>
+                        <span className="header-status-badge">
+                          <span className="header-status-dot" style={{ background: '#F0AE5C' }} />
                           Upcoming
                         </span>
                       );
                     }
                     if (activeTrip.endDate < todayStr) {
                       return (
-                        <span style={{ marginLeft: '6px', padding: '1px 5px', borderRadius: '4px', fontSize: '10px', fontWeight: 700, background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.6)' }}>
+                        <span className="header-status-badge">
+                          <span className="header-status-dot" style={{ background: 'var(--header-fg-muted)' }} />
                           Completed
                         </span>
                       );
                     }
                     return (
-                      <span style={{ marginLeft: '6px', padding: '1px 5px', borderRadius: '4px', fontSize: '10px', fontWeight: 700, background: 'rgba(44,122,75,0.25)', color: '#4FAE72' }}>
+                      <span className="header-status-badge">
+                        <span className="header-status-dot" style={{ background: '#4FAE72' }} />
                         Active
                       </span>
                     );
@@ -1629,42 +1638,61 @@ export default function App() {
               </button>
             </div>
 
-            {/* Route Stops Chips Bar inside Header */}
+            {/* Route Stops Chips Bar inside Header -- collapsed by default
+                (see stopsExpanded above), tap to reveal the full list. */}
             {activeTrip?.stops && activeTrip.stops.length > 0 && (
-              <div
-                style={{
-                  position: 'relative',
-                  zIndex: 1,
-                  display: 'flex',
-                  gap: '6px',
-                  overflowX: 'auto',
-                  marginTop: '8px',
-                  paddingTop: '8px',
-                  borderTop: '1px solid var(--header-fg-border)',
-                  scrollbarWidth: 'none',
-                }}
-              >
-                {activeTrip.stops.map((stop, sIdx) => (
-                  <span
-                    key={stop.id || sIdx}
+              <div style={{ position: 'relative', zIndex: 1, marginTop: '8px', paddingTop: '8px', borderTop: '1px solid var(--header-fg-border)' }}>
+                {stopsExpanded ? (
+                  <div style={{ display: 'flex', gap: '6px', overflowX: 'auto', scrollbarWidth: 'none' }}>
+                    {activeTrip.stops.map((stop, sIdx) => (
+                      <span
+                        key={stop.id || sIdx}
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                          fontSize: '11px',
+                          fontWeight: 600,
+                          padding: '3px 8px',
+                          borderRadius: '12px',
+                          background: 'var(--header-fg-soft-bg)',
+                          backdropFilter: 'blur(6px)',
+                          color: 'var(--header-fg)',
+                          whiteSpace: 'nowrap',
+                          flexShrink: 0,
+                        }}
+                      >
+                        <strong style={{ opacity: 0.85 }}>{sIdx + 1}.</strong> {stop.name}
+                      </span>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={() => setStopsExpanded(false)}
+                      style={{
+                        display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                        width: '24px', height: '24px', borderRadius: '50%', flexShrink: 0,
+                        background: 'var(--header-fg-soft-bg)', border: 'none', color: 'var(--header-fg)', cursor: 'pointer',
+                      }}
+                      aria-label="Collapse route stops"
+                    >
+                      <IconChevronUp size={12} className="icon-sm" />
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setStopsExpanded(true)}
                     style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '4px',
-                      fontSize: '11px',
-                      fontWeight: 600,
-                      padding: '3px 8px',
-                      borderRadius: '12px',
-                      background: 'var(--header-fg-soft-bg)',
-                      backdropFilter: 'blur(6px)',
-                      color: 'var(--header-fg)',
-                      whiteSpace: 'nowrap',
-                      flexShrink: 0,
+                      display: 'inline-flex', alignItems: 'center', gap: '5px',
+                      fontSize: '11px', fontWeight: 600, padding: '3px 10px', borderRadius: '12px',
+                      background: 'var(--header-fg-soft-bg)', backdropFilter: 'blur(6px)',
+                      color: 'var(--header-fg)', border: 'none', cursor: 'pointer',
                     }}
                   >
-                    <strong style={{ opacity: 0.85 }}>{sIdx + 1}.</strong> {stop.name}
-                  </span>
-                ))}
+                    {activeTrip.stops.length} stops
+                    <IconChevronDown size={12} className="icon-sm" />
+                  </button>
+                )}
               </div>
             )}
           </header>

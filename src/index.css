@@ -67,47 +67,48 @@
   --font-family-body: 'IBM Plex Sans', -apple-system, sans-serif;
   --font-family-mono: 'IBM Plex Mono', 'SF Mono', monospace;
 
-  /* 🏔️ Option 2: Alpine Sky & Campfire Orange (MD3 Theme) */
-  --bg-page: #E0F2FE; /* Alpine sky mist */
-  --bg-app: #F0F9FF; /* Alpine cloud canvas */
-  --bg-surface: #FFFFFF; /* Pure White card surface */
-  --bg-surface-hover: #E0F2FE;
-  --border-color: #BAE6FD;
-  --border-color-focus: rgba(2, 132, 199, 0.4);
+  /* Neutral gray-scale foundation + one restrained teal accent -- the
+     pattern behind light modes that read well (Linear, Stripe, Notion):
+     a quiet base with a single confident accent, not color painted
+     across large surfaces. */
+  --bg-page: #F4F5F7;
+  --bg-app: #FAFBFC;
+  --bg-surface: #FFFFFF;
+  --bg-surface-hover: #F1F2F4;
+  --border-color: #E4E7EC;
+  --border-color-focus: rgba(15, 111, 99, 0.35);
 
-  /* Alpine Sky Blue (Primary) & Deep Sapphire (Container/Secondary) */
-  --primary-accent: #0284C7;
-  --primary-accent-light: #38BDF8;
-  --secondary-accent: #0D5C9E;
-  --secondary-accent-light: #0284C7;
+  --primary-accent: #0F6F63;
+  --primary-accent-light: #3FA396;
+  --secondary-accent: #16181D;
+  --secondary-accent-light: #3A3D44;
   --accent-orange: #FF7A00; /* Campfire Electric Orange */
 
   /* Status colours */
-  --color-success: #10B981; /* Settle / Positive */
-  --color-danger: #EF4444; /* Stamp / Debt */
-  --color-warning: #F59E0B;
+  --color-success: #16A34A;
+  --color-danger: #DC2626;
+  --color-warning: #D97706;
 
-  /* Text — deep navy ink */
-  --text-primary: #0F172A;
-  --text-secondary: #475569;
-  --text-muted: #64748B;
+  /* Text — near-black, not navy */
+  --text-primary: #16181D;
+  --text-secondary: #55585E;
+  --text-muted: #8A8D93;
 
-  --bg-header: #0B4A73;
-  /* Deep navy -> brand teal (matches manifest theme-color #1F6E68) instead
-     of a single blue hue -- reads as a designed gradient, not a flat tint.
-     Translucent -- the trip-dashboard-header sits over the live map
-     backdrop and relies on backdrop-filter blur to frost it; an opaque
-     gradient here would hide the map entirely. */
-  --header-gradient: linear-gradient(135deg, rgba(11, 74, 115, 0.5) 0%, rgba(15, 111, 99, 0.5) 100%);
-  --header-gradient-scrolled: linear-gradient(135deg, rgba(9, 58, 90, 0.74) 0%, rgba(11, 86, 77, 0.74) 100%);
-  --header-gradient-solid: linear-gradient(135deg, #0B4A73, #0F6F63);
-  --bg-header-glass: rgba(11, 74, 115, 0.88);
-  --bg-header-glass-scrolled: rgba(11, 86, 77, 0.95);
-  --glass-shadow: 0 1px 3px rgba(11, 74, 115, 0.06), 0 6px 20px -6px rgba(11, 74, 115, 0.12);
+  --bg-header: #0F6F63;
+  /* Monochrome teal, restrained -- a signature moment, not the whole
+     screen. Translucent -- the trip-dashboard-header sits over the live
+     map backdrop and relies on backdrop-filter blur to frost it; an
+     opaque gradient here would hide the map entirely. */
+  --header-gradient: linear-gradient(135deg, rgba(15, 111, 99, 0.64) 0%, rgba(11, 83, 72, 0.64) 100%);
+  --header-gradient-scrolled: linear-gradient(135deg, rgba(15, 111, 99, 0.82) 0%, rgba(11, 83, 72, 0.82) 100%);
+  --header-gradient-solid: linear-gradient(135deg, #0F6F63, #0B5348);
+  --bg-header-glass: rgba(15, 111, 99, 0.88);
+  --bg-header-glass-scrolled: rgba(11, 83, 72, 0.95);
+  --glass-shadow: 0 1px 3px rgba(22, 24, 29, 0.06), 0 6px 20px -6px rgba(22, 24, 29, 0.12);
   --bg-nav-glass: rgba(255, 255, 255, 0.88);
-  --border-nav-glass: rgba(186, 230, 253, 0.8);
-  --shadow-nav-glass: 0 16px 36px -4px rgba(13, 92, 158, 0.18), 0 4px 12px rgba(13, 92, 158, 0.08), inset 0 1px 1px rgba(255, 255, 255, 0.9);
-  --bg-nav-item-active: rgba(2, 132, 199, 0.12);
+  --border-nav-glass: rgba(228, 231, 236, 0.9);
+  --shadow-nav-glass: 0 16px 36px -4px rgba(22, 24, 29, 0.18), 0 4px 12px rgba(22, 24, 29, 0.08), inset 0 1px 1px rgba(255, 255, 255, 0.9);
+  --bg-nav-item-active: rgba(15, 111, 99, 0.12);
   --color-nav-item-active: var(--primary-accent);
   --backdrop-filter: none;
   --border-radius-sm: 10px;
@@ -124,73 +125,76 @@
    pinned light mode, or when the in-app toggle is set to dark explicitly. */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg-page: #0A1220;
-    --bg-app: #0F1B30;
-    --bg-surface: #16223B;
-    --bg-surface-hover: #1C2C4A;
-    --border-color: #26365A;
-    --border-color-focus: rgba(127, 166, 255, 0.4);
+    /* Elevated dark grays, not pure black -- depth through layering
+       (page -> app -> surface -> hover) instead of a harsh black/white
+       jump. One accent (the same brand teal, brightened for contrast). */
+    --bg-page: #0D0E10;
+    --bg-app: #131417;
+    --bg-surface: #1A1C20;
+    --bg-surface-hover: #22252A;
+    --border-color: #2A2D33;
+    --border-color-focus: rgba(63, 203, 189, 0.4);
 
-    --primary-accent: #7FA6FF;
-    --primary-accent-light: #9EBBFF;
-    --secondary-accent: #3FCBBD;
-    --secondary-accent-light: #63D8CC;
+    --primary-accent: #3FCBBD;
+    --primary-accent-light: #63D8CC;
+    --secondary-accent: #EDEEF0;
+    --secondary-accent-light: #FFFFFF;
 
-    --color-success: #3FCBBD;
-    --color-danger: #FF7A68;
-    --color-warning: #F0AE5C;
+    --color-success: #34D399;
+    --color-danger: #F87171;
+    --color-warning: #FBBF24;
 
-    --text-primary: #EAF1FF;
-    --text-secondary: #AFC0E0;
-    --text-muted: #8494B8;
+    --text-primary: #EDEEF0;
+    --text-secondary: #A3A6AD;
+    --text-muted: #6B6E76;
 
-    --bg-header: #12203F;
-    --header-gradient: linear-gradient(135deg, rgba(35, 74, 156, 0.5), rgba(18, 102, 93, 0.5));
-    --header-gradient-scrolled: linear-gradient(135deg, rgba(20, 48, 110, 0.72), rgba(10, 80, 72, 0.72));
-    --header-gradient-solid: linear-gradient(135deg, #234A9C, #12665D);
-    --bg-header-glass: rgba(18, 32, 63, 0.85);
-    --bg-header-glass-scrolled: rgba(18, 32, 63, 0.95);
+    --bg-header: #163B36;
+    --header-gradient: linear-gradient(135deg, rgba(63, 203, 189, 0.5) 0%, rgba(22, 59, 54, 0.64) 100%);
+    --header-gradient-scrolled: linear-gradient(135deg, rgba(63, 203, 189, 0.62) 0%, rgba(13, 37, 34, 0.85) 100%);
+    --header-gradient-solid: linear-gradient(135deg, #1F6E68, #0D2522);
+    --bg-header-glass: rgba(22, 59, 54, 0.85);
+    --bg-header-glass-scrolled: rgba(13, 37, 34, 0.95);
     --glass-shadow: 0 1px 2px rgba(0, 0, 0, 0.35), 0 6px 16px -8px rgba(0, 0, 0, 0.5);
-    --bg-nav-glass: rgba(15, 27, 48, 0.82);
-    --border-nav-glass: rgba(210, 225, 255, 0.14);
-    --shadow-nav-glass: 0 18px 44px -4px rgba(0, 0, 0, 0.65), 0 4px 16px rgba(0, 0, 0, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.08);
-    --bg-nav-item-active: rgba(127, 166, 255, 0.16);
-    --color-nav-item-active: #7FA6FF;
+    --bg-nav-glass: rgba(19, 20, 23, 0.82);
+    --border-nav-glass: rgba(237, 238, 240, 0.12);
+    --shadow-nav-glass: 0 18px 44px -4px rgba(0, 0, 0, 0.65), 0 4px 16px rgba(0, 0, 0, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.06);
+    --bg-nav-item-active: rgba(63, 203, 189, 0.16);
+    --color-nav-item-active: #3FCBBD;
   }
 }
 :root[data-theme="dark"] {
-  --bg-page: #0A1220;
-  --bg-app: #0F1B30;
-  --bg-surface: #16223B;
-  --bg-surface-hover: #1C2C4A;
-  --border-color: #26365A;
-  --border-color-focus: rgba(127, 166, 255, 0.4);
+  --bg-page: #0D0E10;
+  --bg-app: #131417;
+  --bg-surface: #1A1C20;
+  --bg-surface-hover: #22252A;
+  --border-color: #2A2D33;
+  --border-color-focus: rgba(63, 203, 189, 0.4);
 
-  --primary-accent: #7FA6FF;
-  --primary-accent-light: #9EBBFF;
-  --secondary-accent: #3FCBBD;
-  --secondary-accent-light: #63D8CC;
+  --primary-accent: #3FCBBD;
+  --primary-accent-light: #63D8CC;
+  --secondary-accent: #EDEEF0;
+  --secondary-accent-light: #FFFFFF;
 
-  --color-success: #3FCBBD;
-  --color-danger: #FF7A68;
-  --color-warning: #F0AE5C;
+  --color-success: #34D399;
+  --color-danger: #F87171;
+  --color-warning: #FBBF24;
 
-  --text-primary: #EAF1FF;
-  --text-secondary: #AFC0E0;
-  --text-muted: #8494B8;
+  --text-primary: #EDEEF0;
+  --text-secondary: #A3A6AD;
+  --text-muted: #6B6E76;
 
-  --bg-header: #12203F;
-  --header-gradient: linear-gradient(135deg, rgba(35, 74, 156, 0.5), rgba(18, 102, 93, 0.5));
-  --header-gradient-scrolled: linear-gradient(135deg, rgba(20, 48, 110, 0.72), rgba(10, 80, 72, 0.72));
-  --header-gradient-solid: linear-gradient(135deg, #234A9C, #12665D);
-  --bg-header-glass: rgba(18, 32, 63, 0.85);
-  --bg-header-glass-scrolled: rgba(18, 32, 63, 0.95);
+  --bg-header: #163B36;
+  --header-gradient: linear-gradient(135deg, rgba(63, 203, 189, 0.5) 0%, rgba(22, 59, 54, 0.64) 100%);
+  --header-gradient-scrolled: linear-gradient(135deg, rgba(63, 203, 189, 0.62) 0%, rgba(13, 37, 34, 0.85) 100%);
+  --header-gradient-solid: linear-gradient(135deg, #1F6E68, #0D2522);
+  --bg-header-glass: rgba(22, 59, 54, 0.85);
+  --bg-header-glass-scrolled: rgba(13, 37, 34, 0.95);
   --glass-shadow: 0 1px 2px rgba(0, 0, 0, 0.35), 0 6px 16px -8px rgba(0, 0, 0, 0.5);
-  --bg-nav-glass: rgba(15, 27, 48, 0.82);
-  --border-nav-glass: rgba(210, 225, 255, 0.14);
-  --shadow-nav-glass: 0 18px 44px -4px rgba(0, 0, 0, 0.65), 0 4px 16px rgba(0, 0, 0, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.08);
-  --bg-nav-item-active: rgba(127, 166, 255, 0.16);
-  --color-nav-item-active: #7FA6FF;
+  --bg-nav-glass: rgba(19, 20, 23, 0.82);
+  --border-nav-glass: rgba(237, 238, 240, 0.12);
+  --shadow-nav-glass: 0 18px 44px -4px rgba(0, 0, 0, 0.65), 0 4px 16px rgba(0, 0, 0, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.06);
+  --bg-nav-item-active: rgba(63, 203, 189, 0.16);
+  --color-nav-item-active: #3FCBBD;
 }
 
 * {
@@ -929,20 +933,20 @@ input[type="date"].input-field {
      legibility layer -- a dark halo right at the glyph edges that holds up
      even if the tone sample is wrong or momentarily stale (e.g. mid-swipe). */
   --header-fg: #FFFFFF;
-  --header-fg-muted: rgba(255, 255, 255, 0.75);
+  --header-fg-muted: rgba(255, 255, 255, 0.88);
   --header-fg-border: rgba(255, 255, 255, 0.28);
   --header-fg-soft-bg: rgba(255, 255, 255, 0.1);
   color: var(--header-fg);
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.55), 0 1px 10px rgba(0, 0, 0, 0.4);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.65), 0 2px 14px rgba(0, 0, 0, 0.5);
 }
 
 .trip-dashboard-header.tone-dark {
   --header-fg: #10151F;
-  --header-fg-muted: rgba(16, 21, 31, 0.72);
+  --header-fg-muted: rgba(16, 21, 31, 0.85);
   --header-fg-border: rgba(16, 21, 31, 0.24);
   --header-fg-soft-bg: rgba(16, 21, 31, 0.08);
   /* Dark text needs a light halo instead. */
-  text-shadow: 0 1px 3px rgba(255, 255, 255, 0.55), 0 1px 8px rgba(255, 255, 255, 0.4);
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.65), 0 2px 14px rgba(255, 255, 255, 0.5);
 }
 
 .trip-dashboard-header.is-scrolled {
@@ -1000,24 +1004,52 @@ input[type="date"].input-field {
   align-items: center;
   gap: 5px;
   font-size: 11.5px;
-  font-weight: 500;
+  font-weight: 600;
   color: var(--header-fg-muted);
   margin-bottom: 2px;
   transform-origin: left top;
   transition: opacity 0.22s ease,
               transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
-              height 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+              max-height 0.3s cubic-bezier(0.16, 1, 0.3, 1),
               margin 0.3s ease;
-  height: 16px;
+  /* A fixed 16px height clipped the actual line box (font metrics + the
+     12px calendar icon run taller than 16px at this font-size), cutting
+     the top off the date text. max-height with headroom fits the real
+     content while still collapsing to 0 on scroll below. */
+  max-height: 24px;
   overflow: hidden;
 }
 
 .trip-dashboard-header.is-scrolled .app-eyebrow {
   opacity: 0;
-  height: 0;
+  max-height: 0;
   margin-bottom: 0;
   transform: translateY(-6px) scale(0.92);
   pointer-events: none;
+}
+
+/* Upcoming/Active/Completed status pill -- uses the same tone-aware
+   header tokens as the rest of the eyebrow row so it stays legible
+   whether the header text is light or dark, instead of a fixed color
+   that can blend into the header's own tint. */
+.header-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 6px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  background: var(--header-fg-soft-bg);
+  border: 1px solid var(--header-fg-border);
+  color: var(--header-fg);
+}
+.header-status-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  flex-shrink: 0;
 }
 
 .trip-dashboard-header .app-header-stats {
@@ -1397,13 +1429,13 @@ input:checked + .toggle-slider:before {
 
 /* Boarding-pass balance summary — the app's signature element */
 .boarding-pass {
-  /* Bold gradient hero -- the card users actually settle up from, so it
-     gets the same visual weight as the trip dashboard's map/header
-     treatment. The perforated boarding-pass motif (dashed tear line +
-     punch-hole cutouts) stays; only the fill and text tone change. */
-  background-image: var(--header-gradient-solid);
-  color: #FFFFFF;
-  border: 1px solid transparent;
+  /* Cream paper ticket, not a bold color hero -- the perforated motif
+     (dashed tear line + punch-hole cutouts) does the visual work, so the
+     fill stays quiet. Fixed cream/ink regardless of theme, like a real
+     printed boarding pass, rather than swapping with light/dark mode. */
+  background: #FFFBF2;
+  color: #1F1B14;
+  border: 1px solid #ECE3D2;
   border-radius: var(--border-radius-md);
   overflow: hidden;
   position: relative;
@@ -1422,24 +1454,24 @@ input:checked + .toggle-slider:before {
   font-size: 10.5px;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.75);
+  color: rgba(31, 27, 20, 0.6);
 }
 .bp-title {
   font-family: var(--font-family-title);
   font-size: 17px;
   font-weight: 600;
-  color: #FFFFFF;
+  color: #1F1B14;
   margin-top: 2px;
 }
 .bp-meta {
   font-family: var(--font-family-mono);
   font-size: 11px;
-  color: rgba(255, 255, 255, 0.75);
+  color: rgba(31, 27, 20, 0.6);
   text-align: right;
 }
 .bp-perf {
   position: relative;
-  border-top: 1.5px dashed rgba(255, 255, 255, 0.35);
+  border-top: 1.5px dashed rgba(31, 27, 20, 0.2);
 }
 .bp-perf::before, .bp-perf::after {
   content: "";
@@ -1467,7 +1499,7 @@ input:checked + .toggle-slider:before {
   font-size: 10.5px;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.75);
+  color: rgba(31, 27, 20, 0.6);
 }
 .bp-amount {
   font-family: var(--font-family-title);
@@ -1481,7 +1513,7 @@ input:checked + .toggle-slider:before {
 }
 .bp-sub {
   font-size: 13px;
-  color: rgba(255, 255, 255, 0.82);
+  color: rgba(31, 27, 20, 0.68);
   max-width: 34ch;
 }
 .bp-stamp-pos {
@@ -1490,13 +1522,13 @@ input:checked + .toggle-slider:before {
   right: 20px;
 }
 .bp-foot {
-  border-top: 1.5px dashed rgba(255, 255, 255, 0.35);
+  border-top: 1.5px dashed rgba(31, 27, 20, 0.2);
   padding: 12px 20px 14px;
   display: flex;
   justify-content: space-between;
   font-family: var(--font-family-mono);
   font-size: 11px;
-  color: rgba(255, 255, 255, 0.75);
+  color: rgba(31, 27, 20, 0.6);
 }
 
 /* Trip list — passport pages. Each trip reads as a stamped visa entry

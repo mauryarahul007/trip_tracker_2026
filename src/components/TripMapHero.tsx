@@ -161,7 +161,7 @@ export function TripMapHero({ trip, sheetExpanded, onToneChange }: Props) {
           type: 'line',
           source: ROUTE_SOURCE_ID,
           layout: { 'line-join': 'round', 'line-cap': 'round' },
-          paint: { 'line-color': '#0284C7', 'line-width': 6, 'line-opacity': 0.6 },
+          paint: { 'line-color': '#0F6F63', 'line-width': 6, 'line-opacity': 0.6 },
         });
 
         map.addLayer({
@@ -199,7 +199,7 @@ export function TripMapHero({ trip, sheetExpanded, onToneChange }: Props) {
 
         const el = document.createElement('div');
         el.style.cssText = `
-          background: ${idx === 0 ? '#0284C7' : idx === validStops.length - 1 ? '#FF7A00' : '#0D5C9E'};
+          background: ${idx === 0 ? '#0F6F63' : idx === validStops.length - 1 ? '#FF7A00' : '#16181D'};
           color: #FFFFFF;
           width: 28px;
           height: 28px;
