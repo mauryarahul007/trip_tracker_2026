@@ -94,7 +94,6 @@ type Props = {
 
   isAdmin: boolean;
   userId: string | null;
-  myMemberId?: string | null;
 };
 
 export function ExpenseList({
@@ -124,7 +123,6 @@ export function ExpenseList({
   onDelete,
   isAdmin,
   userId,
-  myMemberId,
 }: Props) {
   const currencySymbol = getCurrencySymbol(trip?.baseCurrency || '');
   const isBlindMode = usePrivacyStore((s) => s.isBlindMode);
@@ -385,11 +383,11 @@ export function ExpenseList({
         </button>
       )}
 
-      {/* Search & View Switcher */}
+      {/* Search & Quick Filters */}
       {activeTripExpenseCount > 0 && (
         <div ref={filtersRef} className="expense-filters">
-          <div className="expense-search-row" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <div className="input-icon-wrap expense-search-wrap" style={{ flex: 1 }}>
+          <div className="expense-search-row">
+            <div className="input-icon-wrap expense-search-wrap">
               <IconSearch size={16} className="icon-sm" />
               <input
                 type="text"
@@ -427,122 +425,85 @@ export function ExpenseList({
               >
                 All
               </button>
-
-              {myMemberId && (
+              {categories.map((c) => (
                 <button
+                  key={c.id}
                   type="button"
-                  className={`filter-chip ${filterMember === myMemberId ? 'active' : ''}`}
-                  onClick={() => setFilterMember(filterMember === myMemberId ? '' : myMemberId)}
+                  className={`filter-chip ${filterCategory === c.id ? 'active' : ''}`}
+                  onClick={() => {
+                    triggerHaptic('light');
+                    setFilterCategory(filterCategory === c.id ? '' : c.id);
+                  }}
                 >
-                  👤 Mine
+                  <CategoryIcon categoryId={c.id} fallbackEmoji={c.icon} size={13} />
+                  <span>{c.name}</span>
                 </button>
-              )}
+              ))}
 
-              {/* Date filter chip */}
+              {activeTripMembers.map((m) => (
+                <button
+                  key={m.id}
+                  type="button"
+                  className={`filter-chip ${filterMember === m.id ? 'active' : ''}`}
+                  onClick={() => {
+                    triggerHaptic('light');
+                    setFilterMember(filterMember === m.id ? '' : m.id);
+                  }}
+                >
+                  <ExpenseAvatar member={m} size={15} />
+                  <span>{m.name}</span>
+                </button>
+              ))}
+
               <button
                 type="button"
-                className={`filter-chip ${(filterDateFrom || filterDateTo || showDateFilter) ? 'active' : ''}`}
-                onClick={() => setShowDateFilter((v) => !v)}
-                title="Filter by date range"
+                className={`filter-chip ${filterDateFrom || filterDateTo ? 'active' : ''}`}
+                onClick={() => {
+                  triggerHaptic('light');
+                  setShowDateFilter(!showDateFilter);
+                }}
               >
                 <IconCalendar size={13} />
-                <span>
-                  {filterDateFrom || filterDateTo
-                    ? `${filterDateFrom || 'Start'} – ${filterDateTo || 'End'}`
-                    : 'Dates'}
-                </span>
+                <span>Dates</span>
               </button>
-
-              {/* Category chips */}
-              {categories.map((c) => {
-                const isSelected = filterCategory === c.id;
-                return (
-                  <button
-                    key={c.id}
-                    type="button"
-                    className={`filter-chip ${isSelected ? 'active' : ''}`}
-                    onClick={() => setFilterCategory(isSelected ? '' : c.id)}
-                  >
-                    <CategoryIcon categoryId={c.id} fallbackEmoji={c.icon} size={13} />
-                    <span>{c.name}</span>
-                  </button>
-                );
-              })}
-
-              {/* Member chips */}
-              {activeTripMembers.length > 1 &&
-                activeTripMembers
-                  .filter((m) => m.id !== myMemberId)
-                  .map((m) => {
-                    const isSelected = filterMember === m.id;
-                    return (
-                      <button
-                        key={m.id}
-                        type="button"
-                        className={`filter-chip ${isSelected ? 'active' : ''}`}
-                        onClick={() => setFilterMember(isSelected ? '' : m.id)}
-                      >
-                        <ExpenseAvatar member={m} size={15} />
-                        <span>{m.name}</span>
-                      </button>
-                    );
-                  })}
 
               {hasActiveFilters && (
                 <button
                   type="button"
                   className="filter-chip filter-chip-clear"
-                  onClick={() => {
-                    onClearFilters();
-                    setShowDateFilter(false);
-                  }}
-                  title="Clear all active filters"
+                  onClick={onClearFilters}
                 >
-                  <IconClose size={12} />
-                  <span>Clear</span>
+                  Clear all
                 </button>
               )}
             </div>
           </div>
 
-          {/* Collapsible Date Range Sub-panel */}
           {showDateFilter && (
-            <div className="filter-date-popup fade-in">
-              <div className="expense-date-range">
+            <div className="date-filter-panel glass-card" style={{ marginTop: '8px', padding: '10px' }}>
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                 <input
                   type="date"
                   className="input-field"
                   value={filterDateFrom}
                   onChange={(e) => setFilterDateFrom(e.target.value)}
-                  aria-label="From date"
+                  style={{ fontSize: '12px', padding: '6px' }}
                 />
-                <span className="expense-date-sep">–</span>
+                <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>to</span>
                 <input
                   type="date"
                   className="input-field"
                   value={filterDateTo}
                   onChange={(e) => setFilterDateTo(e.target.value)}
-                  aria-label="To date"
+                  style={{ fontSize: '12px', padding: '6px' }}
                 />
               </div>
-              {(filterDateFrom || filterDateTo) && (
-                <button
-                  type="button"
-                  className="filter-clear-link"
-                  onClick={() => {
-                    setFilterDateFrom('');
-                    setFilterDateTo('');
-                  }}
-                >
-                  Reset dates
-                </button>
-              )}
             </div>
           )}
         </div>
       )}
 
-      {/* Expenses List */}
+      {/* Clean Transaction Feed with Date Dividers */}
       {filteredExpenses.length === 0 ? (
         <div className="glass-card ledger-empty" style={{ borderStyle: 'dashed' }}>
           <div className="ledger-rule" />
@@ -552,7 +513,7 @@ export function ExpenseList({
               <IconEdit size={14} className="icon-sm" />
             </span>
             <p>
-              {hasActiveFilters ? "Nothing matches those filters — try clearing them." : 'Nothing logged yet. Add the first line to start the ledger.'}
+              {hasActiveFilters ? 'Nothing matches those filters — try clearing them.' : 'Nothing logged yet. Add the first line to start the ledger.'}
             </p>
           </div>
           <div className="ledger-rule" />
@@ -741,6 +702,7 @@ export function ExpenseList({
           </button>
         </div>
       )}
+
     </>
   );
 }

@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import type { Member, Group, Expense, Category, TripState, ExpenseLocation, Trip } from '../types';
+import type { Member, Group, Expense, Category, TripState, ExpenseLocation, Trip, TripStop } from '../types';
 import type { FeatureFlagKey } from '../types/admin';
 import { DEFAULT_FEATURE_FLAGS, isFeatureActive } from '../utils/featureFlags';
 import { buildAutoGroupName } from '../utils/groupNaming';
@@ -36,8 +36,9 @@ import {
   invalidatePreviousMembersCache,
   type ExpenseInput,
 } from '../services/tripApi';
+import { fetchPlaceCoverImage } from '../services/placeImageService';
 import { generateDemoData } from '../utils/demoSeed';
-import { reverseGeocode, searchPlaces } from '../utils/geolocation';
+import { reverseGeocode, searchPlaces, resolveTripStopCoordinates } from '../utils/geolocation';
 import { sendPushNotification } from '../services/pushApi';
 import { saveOfflineReceipt, getOfflineReceipt, deleteOfflineReceipt } from '../services/offlineReceiptStore';
 import { validateAndSanitizeBackup } from '../utils/backupValidation';
@@ -137,8 +138,8 @@ interface TripStore extends TripState {
   updateLastBackendSyncedAt: (timestamp: number) => void;
 
   // Trip Actions
-  createTrip: (name: string, startDate: string, endDate: string, baseCurrency: string) => Promise<void>;
-  updateTrip: (id: string, name: string, startDate: string, endDate: string) => Promise<void>;
+  createTrip: (name: string, startDate: string, endDate: string, baseCurrency: string, destination?: string, stops?: TripStop[]) => Promise<void>;
+  updateTrip: (id: string, name: string, startDate: string, endDate: string, destination?: string, stops?: TripStop[]) => Promise<void>;
   selectTrip: (id: string | null) => Promise<void>;
   archiveTrip: (id: string, archived: boolean) => Promise<void>;
   freezeTrip: (id: string, frozen: boolean) => Promise<void>;
@@ -780,8 +781,8 @@ export const useTripStore = create<TripStore>()(
             const { tripId } = item.payload;
             await purgeDeletedExpensesForTrip(tripId);
           } else if (item.type === 'createTrip') {
-            const { tripTempId, memberTempId, name, startDate, endDate, baseCurrency, ownerId, creatorName } = item.payload;
-            const trip = await insertTrip({ name, startDate, endDate, baseCurrency, ownerId, id: tripTempId });
+            const { tripTempId, memberTempId, name, startDate, endDate, baseCurrency, destination, ownerId, creatorName } = item.payload;
+            const trip = await insertTrip({ name, startDate, endDate, baseCurrency, destination, ownerId, id: tripTempId });
             const creatorMember = await insertMember(trip.id, creatorName, ownerId, memberTempId);
             set((state) => ({
               trips: state.trips.map((t) => (t.id === tripTempId ? { ...trip, memberIds: [memberTempId], adminMemberIds: [memberTempId], expenseCount: 0 } : t)),
@@ -834,8 +835,33 @@ export const useTripStore = create<TripStore>()(
       }
     },
 
-    createTrip: async (name, startDate, endDate, baseCurrency) => {
+    createTrip: async (name, startDate, endDate, baseCurrency, destination, stops) => {
       const userId = get().userId || (get().isSuperadmin ? 'superadmin-root-user-id' : 'guest-traveler-user-id');
+      const cleanDestination = destination?.trim() || (stops && stops.length > 0 ? stops.map((s) => s.name).join(' → ') : undefined);
+      const cleanStops = stops && stops.length > 0 ? stops : undefined;
+
+      // Asynchronous background cover photo fetcher
+      const triggerCoverFetch = (targetTripId: string, placeQuery: string) => {
+        fetchPlaceCoverImage(placeQuery)
+          .then((coverUrl) => {
+            if (coverUrl) {
+              set((state) => ({
+                trips: state.trips.map((t) => (t.id === targetTripId ? { ...t, coverImageUrl: coverUrl } : t)),
+              }));
+            }
+          })
+          .catch(() => {});
+      };
+
+      const resolveStopCoordinates = async (targetTripId: string, stopsList: TripStop[]) => {
+        const resolved = await resolveTripStopCoordinates(stopsList, { useDeviceLocation: get().enableGeotagging });
+        const updated = resolved.some((s, i) => s.lat !== stopsList[i].lat || s.lng !== stopsList[i].lng);
+        if (updated) {
+          set((state) => ({
+            trips: state.trips.map((t) => (t.id === targetTripId ? { ...t, stops: resolved } : t)),
+          }));
+        }
+      };
 
       // No real backend to sync against at all — skip the offline sync
       // queue entirely (it could never flush) and create the trip as a
@@ -863,6 +889,8 @@ export const useTripStore = create<TripStore>()(
           createdAt: Date.now(),
           updatedAt: Date.now(),
           expenseCount: 0,
+          destination: cleanDestination,
+          stops: cleanStops,
         };
 
         set((state) => ({
@@ -872,6 +900,13 @@ export const useTripStore = create<TripStore>()(
           categories: DEFAULT_CATEGORIES,
           storageError: null,
         }));
+
+        if (cleanDestination || name) {
+          triggerCoverFetch(tripId, cleanDestination || name);
+        }
+        if (cleanStops && cleanStops.length > 0) {
+          resolveStopCoordinates(tripId, cleanStops);
+        }
         return;
       }
 
@@ -897,6 +932,8 @@ export const useTripStore = create<TripStore>()(
         createdAt: Date.now(),
         updatedAt: Date.now(),
         expenseCount: 0,
+        destination: cleanDestination,
+        stops: cleanStops,
       };
 
       set((state) => ({
@@ -907,30 +944,59 @@ export const useTripStore = create<TripStore>()(
         storageError: null,
       }));
 
+      if (cleanDestination || name) {
+        triggerCoverFetch(tripTempId, cleanDestination || name);
+      }
+      if (cleanStops && cleanStops.length > 0) {
+        resolveStopCoordinates(tripTempId, cleanStops);
+      }
+
       if (!navigator.onLine) {
-        get().queueSync('createTrip', { tripTempId, memberTempId, name, startDate, endDate, baseCurrency, ownerId: userId, creatorName });
+        get().queueSync('createTrip', { tripTempId, memberTempId, name, startDate, endDate, baseCurrency, destination, ownerId: userId, creatorName });
       } else {
         try {
-          const trip = await insertTrip({ name, startDate, endDate, baseCurrency, ownerId: userId, id: tripTempId });
+          const trip = await insertTrip({ name, startDate, endDate, baseCurrency, destination: cleanDestination, ownerId: userId, id: tripTempId, stops: cleanStops });
           const creatorMember = await insertMember(trip.id, creatorName, userId, memberTempId);
           set((state) => ({
-            trips: state.trips.map((t) => (t.id === tripTempId ? { ...trip, memberIds: [memberTempId], adminMemberIds: [memberTempId], expenseCount: 0 } : t)),
+            trips: state.trips.map((t) => (t.id === tripTempId ? { ...trip, memberIds: [memberTempId], adminMemberIds: [memberTempId], expenseCount: 0, destination: cleanDestination, stops: cleanStops } : t)),
             members: { ...state.members, [memberTempId]: creatorMember },
           }));
         } catch (e) {
           console.warn('Online createTrip failed, falling back to offline sync queue:', e);
-          get().queueSync('createTrip', { tripTempId, memberTempId, name, startDate, endDate, baseCurrency, ownerId: userId, creatorName });
+          get().queueSync('createTrip', { tripTempId, memberTempId, name, startDate, endDate, baseCurrency, destination, ownerId: userId, creatorName });
         }
       }
     },
 
-    updateTrip: async (id, name, startDate, endDate) => {
+    updateTrip: async (id, name, startDate, endDate, destination, stops) => {
+      const cleanDestination = destination?.trim() || (stops && stops.length > 0 ? stops.map((s) => s.name).join(' → ') : undefined);
+      const cleanStops = stops && stops.length > 0 ? stops : undefined;
       try {
-        await updateTripRow(id, { name, startDate, endDate });
+        await updateTripRow(id, { name, startDate, endDate, destination: cleanDestination, stops: cleanStops });
         set((state) => ({
-          trips: state.trips.map((t) => (t.id === id ? { ...t, name, startDate, endDate, updatedAt: Date.now() } : t)),
+          trips: state.trips.map((t) => (t.id === id ? { ...t, name, startDate, endDate, destination: cleanDestination, stops: cleanStops, updatedAt: Date.now() } : t)),
           storageError: null,
         }));
+
+        if (cleanDestination || name) {
+          fetchPlaceCoverImage(cleanDestination || name)
+            .then((coverUrl) => {
+              if (coverUrl) {
+                set((state) => ({
+                  trips: state.trips.map((t) => (t.id === id ? { ...t, coverImageUrl: coverUrl } : t)),
+                }));
+              }
+            })
+            .catch(() => {});
+        }
+
+        if (cleanStops && cleanStops.length > 0) {
+          resolveTripStopCoordinates(cleanStops, { useDeviceLocation: get().enableGeotagging }).then((resolved) => {
+            set((state) => ({
+              trips: state.trips.map((t) => (t.id === id ? { ...t, stops: resolved } : t)),
+            }));
+          });
+        }
       } catch (e) {
         setError(e);
       }

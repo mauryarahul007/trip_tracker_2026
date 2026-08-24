@@ -5,7 +5,7 @@
 // storing anything — no photo needed, and it stays stable across sessions
 // since it's derived purely from the name.
 const AVATAR_PALETTE = [
-  '#1F6E68', // teal
+  '#2F6FED', // skyline blue
   '#B98A3E', // brass
   '#5B7FBD', // slate blue
   '#8B5FBF', // violet

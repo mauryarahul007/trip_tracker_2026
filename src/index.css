@@ -40,49 +40,80 @@
   font-display: swap;
   src: url('./assets/fonts/plexmono-600.woff2') format('woff2');
 }
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('./assets/fonts/plusjakarta-600.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('./assets/fonts/plusjakarta-700.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url('./assets/fonts/plusjakarta-800.woff2') format('woff2');
+}
 
 :root {
-  --font-family-title: 'Fraunces', 'Iowan Old Style', serif;
+  --font-family-title: 'Plus Jakarta Sans', 'Iowan Old Style', sans-serif;
   --font-family-body: 'IBM Plex Sans', -apple-system, sans-serif;
   --font-family-mono: 'IBM Plex Mono', 'SF Mono', monospace;
 
-  /* Ledger palette — see docs/reference for the full rationale */
-  --bg-page: #EAE2CB; /* outer margin, visible past the centered app column */
-  --bg-app: #F2ECDC; /* Canvas — warm ledger paper */
-  --bg-surface: #FFFDF6; /* Paper — card fill, one shade lighter than Canvas */
-  --bg-surface-hover: #EDE6D3;
-  --border-color: #DDD2B8; /* warm sand line, replaces cold slate */
-  --border-color-focus: rgba(31, 110, 104, 0.4);
+  /* Neutral gray-scale foundation + one restrained teal accent -- the
+     pattern behind light modes that read well (Linear, Stripe, Notion):
+     a quiet base with a single confident accent, not color painted
+     across large surfaces. */
+  --bg-page: #F4F5F7;
+  --bg-app: #FAFBFC;
+  --bg-surface: #FFFFFF;
+  --bg-surface-hover: #F1F2F4;
+  --border-color: #E4E7EC;
+  --border-color-focus: rgba(15, 111, 99, 0.35);
 
-  /* Compass teal (brand) & Brass (sparing highlight) */
-  --primary-accent: #1F6E68;
-  --primary-accent-light: #28857D;
-  --secondary-accent: #B98A3E;
-  --secondary-accent-light: #C79A47;
+  --primary-accent: #0F6F63;
+  --primary-accent-light: #3FA396;
+  --secondary-accent: #16181D;
+  --secondary-accent-light: #3A3D44;
+  --accent-orange: #FF7A00; /* Campfire Electric Orange */
 
-  /* Status colours — deliberately separate from the brand accent */
-  --color-success: #2C7A4B; /* Settle */
-  --color-danger: #B8452E; /* Stamp */
-  --color-warning: #B98A3E; /* Brass doubles as the warning tone */
+  /* Status colours */
+  --color-success: #16A34A;
+  --color-danger: #DC2626;
+  --color-warning: #D97706;
 
-  /* Text — Ink navy */
-  --text-primary: #1C2A38;
-  --text-secondary: #52627A;
-  --text-muted: #6B7690; /* darkened from #8B96A8 — was ~2.8:1 on --bg-surface, fails WCAG AA */
+  /* Text — near-black, not navy */
+  --text-primary: #16181D;
+  --text-secondary: #55585E;
+  --text-muted: #8A8D93;
 
-  --bg-header: #1C2A38;
-  --bg-header-glass: rgba(28, 42, 56, 0.82);
-  --bg-header-glass-scrolled: rgba(28, 42, 56, 0.92);
-  --glass-shadow: 0 1px 2px rgba(28, 42, 56, 0.04), 0 6px 16px -8px rgba(28, 42, 56, 0.10);
-  --bg-nav-glass: rgba(255, 253, 246, 0.82);
-  --border-nav-glass: rgba(221, 210, 184, 0.65);
-  --shadow-nav-glass: 0 16px 36px -4px rgba(28, 42, 56, 0.16), 0 4px 12px rgba(28, 42, 56, 0.08), inset 0 1px 1px rgba(255, 255, 255, 0.9);
-  --bg-nav-item-active: rgba(31, 110, 104, 0.12);
+  --bg-header: #0F6F63;
+  /* Monochrome teal, restrained -- a signature moment, not the whole
+     screen. Translucent -- the trip-dashboard-header sits over the live
+     map backdrop and relies on backdrop-filter blur to frost it; an
+     opaque gradient here would hide the map entirely. */
+  --header-gradient: linear-gradient(135deg, rgba(15, 111, 99, 0.64) 0%, rgba(11, 83, 72, 0.64) 100%);
+  --header-gradient-scrolled: linear-gradient(135deg, rgba(15, 111, 99, 0.82) 0%, rgba(11, 83, 72, 0.82) 100%);
+  --header-gradient-solid: linear-gradient(135deg, #0F6F63, #0B5348);
+  --bg-header-glass: rgba(15, 111, 99, 0.88);
+  --bg-header-glass-scrolled: rgba(11, 83, 72, 0.95);
+  --glass-shadow: 0 1px 3px rgba(22, 24, 29, 0.06), 0 6px 20px -6px rgba(22, 24, 29, 0.12);
+  --bg-nav-glass: rgba(255, 255, 255, 0.88);
+  --border-nav-glass: rgba(228, 231, 236, 0.9);
+  --shadow-nav-glass: 0 16px 36px -4px rgba(22, 24, 29, 0.18), 0 4px 12px rgba(22, 24, 29, 0.08), inset 0 1px 1px rgba(255, 255, 255, 0.9);
+  --bg-nav-item-active: rgba(15, 111, 99, 0.12);
   --color-nav-item-active: var(--primary-accent);
   --backdrop-filter: none;
-  --border-radius-sm: 6px;
-  --border-radius-md: 10px;
-  --border-radius-lg: 16px;
+  --border-radius-sm: 10px;
+  --border-radius-md: 14px;
+  --border-radius-lg: 20px;
   --border-radius-pill: 999px;
 
   --transition-smooth: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
@@ -94,67 +125,76 @@
    pinned light mode, or when the in-app toggle is set to dark explicitly. */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg-page: #0F151D;
-    --bg-app: #141C26;
-    --bg-surface: #1C2733;
-    --bg-surface-hover: #24303D;
-    --border-color: #303D4B;
-    --border-color-focus: rgba(89, 189, 178, 0.4);
+    /* Elevated dark grays, not pure black -- depth through layering
+       (page -> app -> surface -> hover) instead of a harsh black/white
+       jump. One accent (the same brand teal, brightened for contrast). */
+    --bg-page: #0D0E10;
+    --bg-app: #131417;
+    --bg-surface: #1A1C20;
+    --bg-surface-hover: #22252A;
+    --border-color: #2A2D33;
+    --border-color-focus: rgba(63, 203, 189, 0.4);
 
-    --primary-accent: #59BDB2;
-    --primary-accent-light: #74CFC5;
-    --secondary-accent: #D1A257;
-    --secondary-accent-light: #DDB273;
+    --primary-accent: #3FCBBD;
+    --primary-accent-light: #63D8CC;
+    --secondary-accent: #EDEEF0;
+    --secondary-accent-light: #FFFFFF;
 
-    --color-success: #4FAE72;
-    --color-danger: #E2735A;
-    --color-warning: #D1A257;
+    --color-success: #34D399;
+    --color-danger: #F87171;
+    --color-warning: #FBBF24;
 
-    --text-primary: #EFE7D2;
-    --text-secondary: #A7AFC0;
-    --text-muted: #8B96AE;
+    --text-primary: #EDEEF0;
+    --text-secondary: #A3A6AD;
+    --text-muted: #6B6E76;
 
-    --bg-header: #0F151D;
-    --bg-header-glass: rgba(15, 21, 29, 0.85);
-    --bg-header-glass-scrolled: rgba(15, 21, 29, 0.95);
+    --bg-header: #163B36;
+    --header-gradient: linear-gradient(135deg, rgba(63, 203, 189, 0.5) 0%, rgba(22, 59, 54, 0.64) 100%);
+    --header-gradient-scrolled: linear-gradient(135deg, rgba(63, 203, 189, 0.62) 0%, rgba(13, 37, 34, 0.85) 100%);
+    --header-gradient-solid: linear-gradient(135deg, #1F6E68, #0D2522);
+    --bg-header-glass: rgba(22, 59, 54, 0.85);
+    --bg-header-glass-scrolled: rgba(13, 37, 34, 0.95);
     --glass-shadow: 0 1px 2px rgba(0, 0, 0, 0.35), 0 6px 16px -8px rgba(0, 0, 0, 0.5);
-    --bg-nav-glass: rgba(20, 28, 38, 0.82);
-    --border-nav-glass: rgba(242, 236, 220, 0.14);
-    --shadow-nav-glass: 0 18px 44px -4px rgba(0, 0, 0, 0.65), 0 4px 16px rgba(0, 0, 0, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.08);
-    --bg-nav-item-active: rgba(0, 191, 165, 0.16);
-    --color-nav-item-active: #00BFA5;
+    --bg-nav-glass: rgba(19, 20, 23, 0.82);
+    --border-nav-glass: rgba(237, 238, 240, 0.12);
+    --shadow-nav-glass: 0 18px 44px -4px rgba(0, 0, 0, 0.65), 0 4px 16px rgba(0, 0, 0, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.06);
+    --bg-nav-item-active: rgba(63, 203, 189, 0.16);
+    --color-nav-item-active: #3FCBBD;
   }
 }
 :root[data-theme="dark"] {
-  --bg-page: #0F151D;
-  --bg-app: #141C26;
-  --bg-surface: #1C2733;
-  --bg-surface-hover: #24303D;
-  --border-color: #303D4B;
-  --border-color-focus: rgba(89, 189, 178, 0.4);
+  --bg-page: #0D0E10;
+  --bg-app: #131417;
+  --bg-surface: #1A1C20;
+  --bg-surface-hover: #22252A;
+  --border-color: #2A2D33;
+  --border-color-focus: rgba(63, 203, 189, 0.4);
 
-  --primary-accent: #59BDB2;
-  --primary-accent-light: #74CFC5;
-  --secondary-accent: #D1A257;
-  --secondary-accent-light: #DDB273;
+  --primary-accent: #3FCBBD;
+  --primary-accent-light: #63D8CC;
+  --secondary-accent: #EDEEF0;
+  --secondary-accent-light: #FFFFFF;
 
-  --color-success: #4FAE72;
-  --color-danger: #E2735A;
-  --color-warning: #D1A257;
+  --color-success: #34D399;
+  --color-danger: #F87171;
+  --color-warning: #FBBF24;
 
-  --text-primary: #EFE7D2;
-  --text-secondary: #A7AFC0;
-  --text-muted: #8B96AE;
+  --text-primary: #EDEEF0;
+  --text-secondary: #A3A6AD;
+  --text-muted: #6B6E76;
 
-  --bg-header: #0F151D;
-  --bg-header-glass: rgba(15, 21, 29, 0.85);
-  --bg-header-glass-scrolled: rgba(15, 21, 29, 0.95);
+  --bg-header: #163B36;
+  --header-gradient: linear-gradient(135deg, rgba(63, 203, 189, 0.5) 0%, rgba(22, 59, 54, 0.64) 100%);
+  --header-gradient-scrolled: linear-gradient(135deg, rgba(63, 203, 189, 0.62) 0%, rgba(13, 37, 34, 0.85) 100%);
+  --header-gradient-solid: linear-gradient(135deg, #1F6E68, #0D2522);
+  --bg-header-glass: rgba(22, 59, 54, 0.85);
+  --bg-header-glass-scrolled: rgba(13, 37, 34, 0.95);
   --glass-shadow: 0 1px 2px rgba(0, 0, 0, 0.35), 0 6px 16px -8px rgba(0, 0, 0, 0.5);
-  --bg-nav-glass: rgba(20, 28, 38, 0.82);
-  --border-nav-glass: rgba(242, 236, 220, 0.14);
-  --shadow-nav-glass: 0 18px 44px -4px rgba(0, 0, 0, 0.65), 0 4px 16px rgba(0, 0, 0, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.08);
-  --bg-nav-item-active: rgba(0, 191, 165, 0.16);
-  --color-nav-item-active: #00BFA5;
+  --bg-nav-glass: rgba(19, 20, 23, 0.82);
+  --border-nav-glass: rgba(237, 238, 240, 0.12);
+  --shadow-nav-glass: 0 18px 44px -4px rgba(0, 0, 0, 0.65), 0 4px 16px rgba(0, 0, 0, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.06);
+  --bg-nav-item-active: rgba(63, 203, 189, 0.16);
+  --color-nav-item-active: #3FCBBD;
 }
 
 * {
@@ -257,7 +297,34 @@ html.capacitor-native .app-container {
 }
 
 .glass-card:hover {
-  border-color: rgba(31, 110, 104, 0.3);
+  border-color: rgba(47, 111, 237, 0.3);
+}
+
+.transactions-preview-viewall {
+  background: none;
+  border: none;
+  color: var(--primary-accent);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 4px;
+}
+
+.transactions-preview-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  cursor: pointer;
+  border-top: 1px solid var(--border-color);
+  transition: background-color 0.15s ease;
+}
+
+.transactions-preview-row:hover {
+  background: var(--bg-surface-hover);
 }
 
 /* Titles */
@@ -282,13 +349,13 @@ button, [role="button"], input, select, a {
 
 /* Buttons */
 .gradient-btn {
-  background: var(--primary-accent);
+  background: linear-gradient(135deg, #FF7A00 0%, #EA580C 100%);
   border: none;
-  border-radius: var(--border-radius-sm);
-  color: #FFFDF6;
+  border-radius: var(--border-radius-pill);
+  color: #FFFFFF;
   font-family: var(--font-family-body);
   font-size: 15px;
-  font-weight: 600;
+  font-weight: 700;
   padding: 13px 22px;
   cursor: pointer;
   transition: var(--transition-smooth);
@@ -296,10 +363,13 @@ button, [role="button"], input, select, a {
   align-items: center;
   justify-content: center;
   gap: 8px;
+  box-shadow: 0 4px 14px rgba(255, 122, 0, 0.28);
 }
 
 .gradient-btn:hover:not(:disabled) {
-  background: var(--primary-accent-light);
+  background: linear-gradient(135deg, #FF8C1A 0%, #F97316 100%);
+  box-shadow: 0 6px 20px rgba(255, 122, 0, 0.38);
+  transform: translateY(-1px);
 }
 
 .gradient-btn:active:not(:disabled) {
@@ -314,7 +384,7 @@ button, [role="button"], input, select, a {
 .secondary-btn {
   background: transparent;
   border: 1px solid var(--border-color);
-  border-radius: var(--border-radius-sm);
+  border-radius: var(--border-radius-pill);
   color: var(--text-primary);
   font-family: var(--font-family-body);
   font-size: 14px;
@@ -333,6 +403,63 @@ button, [role="button"], input, select, a {
   border-color: rgba(28, 42, 56, 0.22);
 }
 
+/* Form Controls & Vertical Rhythm */
+.input-group {
+  margin-bottom: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.input-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+}
+
+.input-field,
+.select-field {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: var(--border-radius-md);
+  border: 1px solid var(--border-color);
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  box-sizing: border-box;
+}
+
+.input-field:focus,
+.select-field:focus {
+  border-color: var(--primary-accent);
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.18);
+}
+
+.input-field::placeholder {
+  color: var(--text-muted);
+  opacity: 0.8;
+}
+
+/* Trip Ambient Translucent Backdrop */
+.trip-ambient-backdrop {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  opacity: 0.10;
+  filter: blur(16px) saturate(1.25);
+  pointer-events: none;
+  z-index: 0;
+  transform: translateZ(0);
+  will-change: opacity, transform;
+  transition: opacity 0.6s ease-in-out;
+}
+
 /* Floating Action Button (FAB) */
 .fab-add-expense {
   position: absolute;
@@ -341,24 +468,24 @@ button, [role="button"], input, select, a {
   width: 52px;
   height: 52px;
   border-radius: 50%;
-  background: var(--bg-header);
-  color: #F2ECDC;
-  border: 2px solid rgba(242, 236, 220, 0.35);
-  box-shadow: 0 6px 20px rgba(28, 42, 56, 0.3), 0 2px 8px rgba(28, 42, 56, 0.15);
+  background-image: var(--header-gradient-solid);
+  color: #FFFFFF;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  box-shadow: 0 6px 20px rgba(18, 32, 59, 0.3), 0 2px 8px rgba(18, 32, 59, 0.15);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   z-index: 50;
-  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease, filter 0.2s ease, border-color 0.2s ease;
   outline: none;
   -webkit-tap-highlight-color: transparent;
 }
 .fab-add-expense:hover {
-  background: #243445;
+  filter: brightness(1.08);
   transform: translateY(-2px) scale(1.06);
-  box-shadow: 0 6px 20px rgba(28, 42, 56, 0.35), 0 3px 8px rgba(28, 42, 56, 0.2);
-  border-color: rgba(242, 236, 220, 0.65);
+  box-shadow: 0 6px 20px rgba(18, 32, 59, 0.35), 0 3px 8px rgba(18, 32, 59, 0.2);
+  border-color: rgba(255, 255, 255, 0.65);
 }
 
 .fab-add-expense:active {
@@ -459,7 +586,7 @@ html.capacitor-ios .fab-add-expense {
 
 .input-field:focus {
   border-color: var(--primary-accent);
-  box-shadow: 0 0 0 3px rgba(31, 110, 104, 0.12);
+  box-shadow: 0 0 0 3px rgba(47, 111, 237, 0.12);
 }
 
 /* iOS Safari gives <input type="date"> shadow parts an intrinsic width that
@@ -536,7 +663,7 @@ input[type="date"].input-field {
 
 .expense-search-input:focus {
   border-color: var(--border-color-focus);
-  box-shadow: 0 0 0 3px rgba(31, 110, 104, 0.15);
+  box-shadow: 0 0 0 3px rgba(47, 111, 237, 0.15);
 }
 
 .search-clear-btn {
@@ -632,26 +759,26 @@ input[type="date"].input-field {
 }
 
 .filter-chip.active {
-  background: var(--bg-header);
-  color: #F2ECDC;
-  border-color: var(--bg-header);
+  background: var(--primary-accent);
+  color: #FFFFFF;
+  border-color: var(--primary-accent);
   font-weight: 600;
-  box-shadow: 0 1px 4px rgba(28, 42, 56, 0.18);
+  box-shadow: 0 1px 4px rgba(18, 32, 59, 0.24);
 }
 
 /* Dark theme active filter chip */
 :root[data-theme="dark"] .filter-chip.active {
-  background: #2D3D4E;
-  color: #EFE7D2;
-  border-color: rgba(239, 231, 210, 0.35);
+  background: #1D3A6B;
+  color: #EAF1FF;
+  border-color: rgba(127, 166, 255, 0.4);
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) .filter-chip.active {
-    background: #2D3D4E;
-    color: #EFE7D2;
-    border-color: rgba(239, 231, 210, 0.35);
+    background: #1D3A6B;
+    color: #EAF1FF;
+    border-color: rgba(127, 166, 255, 0.4);
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
   }
 }
@@ -759,8 +886,8 @@ input[type="date"].input-field {
   padding-bottom: 14px;
   padding-left: max(20px, var(--safe-left, 20px));
   padding-right: max(20px, var(--safe-right, 20px));
-  background-color: var(--bg-header);
-  color: #F2ECDC;
+  background-image: var(--header-gradient-solid);
+  color: #FFFFFF;
   flex-shrink: 0;
   z-index: 40;
 }
@@ -785,24 +912,49 @@ input[type="date"].input-field {
   padding-bottom: 12px;
   padding-left: max(20px, var(--safe-left, 20px));
   padding-right: max(20px, var(--safe-right, 20px));
-  background-color: var(--bg-header-glass);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  border-bottom: 1px solid rgba(242, 236, 220, 0.08);
+  background-image: var(--header-gradient);
+  /* Blur alone leaves a still-detailed, high-contrast wash under text on a
+     busy map; a stronger radius smooths it into a softer field the scrim
+     and text-shadow below can actually win against. */
+  backdrop-filter: blur(28px) saturate(180%);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.16);
   box-shadow: 0 4px 20px -4px rgba(0, 0, 0, 0.28);
   transition: padding 0.35s cubic-bezier(0.16, 1, 0.3, 1),
               background-color 0.35s ease,
               box-shadow 0.35s ease,
-              border-color 0.35s ease;
+              border-color 0.35s ease,
+              color 0.3s ease;
   will-change: padding, background-color, box-shadow;
+  /* Default tone: white text/chrome for a dark or unknown map background.
+     TripMapHero samples the live map pixels behind the header and flips
+     these when the map area there is bright enough that white would wash
+     out (see .tone-dark below). The text-shadow is a second, JS-independent
+     legibility layer -- a dark halo right at the glyph edges that holds up
+     even if the tone sample is wrong or momentarily stale (e.g. mid-swipe). */
+  --header-fg: #FFFFFF;
+  --header-fg-muted: rgba(255, 255, 255, 0.88);
+  --header-fg-border: rgba(255, 255, 255, 0.28);
+  --header-fg-soft-bg: rgba(255, 255, 255, 0.1);
+  color: var(--header-fg);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.65), 0 2px 14px rgba(0, 0, 0, 0.5);
+}
+
+.trip-dashboard-header.tone-dark {
+  --header-fg: #10151F;
+  --header-fg-muted: rgba(16, 21, 31, 0.85);
+  --header-fg-border: rgba(16, 21, 31, 0.24);
+  --header-fg-soft-bg: rgba(16, 21, 31, 0.08);
+  /* Dark text needs a light halo instead. */
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.65), 0 2px 14px rgba(255, 255, 255, 0.5);
 }
 
 .trip-dashboard-header.is-scrolled {
   padding-top: calc(9px + var(--safe-top, 0px));
   padding-bottom: 9px;
-  background-color: var(--bg-header-glass-scrolled);
+  background-image: var(--header-gradient-scrolled);
   box-shadow: 0 10px 30px -6px rgba(0, 0, 0, 0.45), 0 2px 8px rgba(0, 0, 0, 0.25);
-  border-bottom-color: rgba(242, 236, 220, 0.14);
+  border-bottom-color: rgba(255, 255, 255, 0.22);
 }
 
 .trip-dashboard-header .app-header-top {
@@ -852,24 +1004,52 @@ input[type="date"].input-field {
   align-items: center;
   gap: 5px;
   font-size: 11.5px;
-  font-weight: 500;
-  color: rgba(242, 236, 220, 0.65);
+  font-weight: 600;
+  color: var(--header-fg-muted);
   margin-bottom: 2px;
   transform-origin: left top;
   transition: opacity 0.22s ease,
               transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
-              height 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+              max-height 0.3s cubic-bezier(0.16, 1, 0.3, 1),
               margin 0.3s ease;
-  height: 16px;
+  /* A fixed 16px height clipped the actual line box (font metrics + the
+     12px calendar icon run taller than 16px at this font-size), cutting
+     the top off the date text. max-height with headroom fits the real
+     content while still collapsing to 0 on scroll below. */
+  max-height: 24px;
   overflow: hidden;
 }
 
 .trip-dashboard-header.is-scrolled .app-eyebrow {
   opacity: 0;
-  height: 0;
+  max-height: 0;
   margin-bottom: 0;
   transform: translateY(-6px) scale(0.92);
   pointer-events: none;
+}
+
+/* Upcoming/Active/Completed status pill -- uses the same tone-aware
+   header tokens as the rest of the eyebrow row so it stays legible
+   whether the header text is light or dark, instead of a fixed color
+   that can blend into the header's own tint. */
+.header-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 6px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  background: var(--header-fg-soft-bg);
+  border: 1px solid var(--header-fg-border);
+  color: var(--header-fg);
+}
+.header-status-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  flex-shrink: 0;
 }
 
 .trip-dashboard-header .app-header-stats {
@@ -878,9 +1058,9 @@ input[type="date"].input-field {
   align-items: center;
   margin-top: 10px;
   padding-top: 10px;
-  border-top: 1px solid rgba(242, 236, 220, 0.08);
+  border-top: 1px solid rgba(255, 255, 255, 0.16);
   font-size: 12px;
-  color: rgba(242, 236, 220, 0.72);
+  color: var(--header-fg-muted);
   transform-origin: top center;
   transition: opacity 0.2s ease,
               transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
@@ -906,11 +1086,11 @@ input[type="date"].input-field {
 
 .trip-dashboard-header .secondary-btn {
   transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
-  border-radius: 8px;
+  border-radius: var(--border-radius-pill);
 }
 .trip-dashboard-header .secondary-btn:hover {
-  background: rgba(242, 236, 220, 0.14) !important;
-  border-color: rgba(242, 236, 220, 0.45) !important;
+  background: var(--header-fg-soft-bg) !important;
+  border-color: var(--header-fg-border) !important;
 }
 .trip-dashboard-header .secondary-btn:active {
   transform: scale(0.96);
@@ -1087,14 +1267,36 @@ html.capacitor-ios .nav-tabs {
   transform: translateY(-1px) scale(1.08);
 }
 
+.nav-tab-fab {
+  flex-shrink: 0;
+  width: 50px;
+  height: 50px;
+  margin-top: -26px;
+  border-radius: 50%;
+  border: 3px solid var(--bg-app);
+  background-image: var(--header-gradient-solid);
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 8px 18px -6px rgba(2, 132, 199, 0.55);
+  transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.nav-tab-fab:active {
+  transform: scale(0.92);
+}
+
 .nav-tab-icon .icon {
   width: 22px;
   height: 22px;
 }
 
 .app-header .secondary-btn:hover {
-  background: rgba(242, 236, 220, 0.14);
-  border-color: rgba(242, 236, 220, 0.4);
+  background: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.5);
 }
 
 /* Round Sync Button & Live Indicator in Header */
@@ -1102,21 +1304,21 @@ html.capacitor-ios .nav-tabs {
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  background: rgba(242, 236, 220, 0.08);
-  border: 1px solid rgba(242, 236, 220, 0.22);
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.3);
   border-radius: 20px;
   padding: 3px 10px 3px 4px;
   cursor: pointer;
   transition: var(--transition-smooth);
-  color: #F2ECDC;
+  color: #FFFFFF;
   font-family: var(--font-family-mono);
   font-size: 11px;
   line-height: 1.4;
 }
 
 .sync-header-pill:hover {
-  background: rgba(242, 236, 220, 0.16);
-  border-color: rgba(242, 236, 220, 0.45);
+  background: rgba(255, 255, 255, 0.22);
+  border-color: rgba(255, 255, 255, 0.55);
 }
 
 .sync-header-pill:disabled {
@@ -1125,8 +1327,8 @@ html.capacitor-ios .nav-tabs {
 }
 
 .sync-header-pill:disabled:hover {
-  background: rgba(242, 236, 220, 0.08);
-  border-color: rgba(242, 236, 220, 0.22);
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.3);
 }
 
 .sync-badge-dot {
@@ -1227,8 +1429,13 @@ input:checked + .toggle-slider:before {
 
 /* Boarding-pass balance summary — the app's signature element */
 .boarding-pass {
-  background: var(--bg-surface);
-  border: 1px solid var(--border-color);
+  /* Cream paper ticket, not a bold color hero -- the perforated motif
+     (dashed tear line + punch-hole cutouts) does the visual work, so the
+     fill stays quiet. Fixed cream/ink regardless of theme, like a real
+     printed boarding pass, rather than swapping with light/dark mode. */
+  background: #FFFBF2;
+  color: #1F1B14;
+  border: 1px solid #ECE3D2;
   border-radius: var(--border-radius-md);
   overflow: hidden;
   position: relative;
@@ -1247,24 +1454,24 @@ input:checked + .toggle-slider:before {
   font-size: 10.5px;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--text-muted);
+  color: rgba(31, 27, 20, 0.6);
 }
 .bp-title {
   font-family: var(--font-family-title);
   font-size: 17px;
   font-weight: 600;
-  color: var(--text-primary);
+  color: #1F1B14;
   margin-top: 2px;
 }
 .bp-meta {
   font-family: var(--font-family-mono);
   font-size: 11px;
-  color: var(--text-muted);
+  color: rgba(31, 27, 20, 0.6);
   text-align: right;
 }
 .bp-perf {
   position: relative;
-  border-top: 1.5px dashed var(--border-color);
+  border-top: 1.5px dashed rgba(31, 27, 20, 0.2);
 }
 .bp-perf::before, .bp-perf::after {
   content: "";
@@ -1292,7 +1499,7 @@ input:checked + .toggle-slider:before {
   font-size: 10.5px;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--text-muted);
+  color: rgba(31, 27, 20, 0.6);
 }
 .bp-amount {
   font-family: var(--font-family-title);
@@ -1300,10 +1507,13 @@ input:checked + .toggle-slider:before {
   font-size: 36px;
   line-height: 1.1;
   font-variant-numeric: tabular-nums;
+  /* .bp-amount's inline style sets color to --color-success/--color-danger
+     for the settled/unsettled tone -- both already read clearly against
+     this gradient, no override needed here. */
 }
 .bp-sub {
   font-size: 13px;
-  color: var(--text-secondary);
+  color: rgba(31, 27, 20, 0.68);
   max-width: 34ch;
 }
 .bp-stamp-pos {
@@ -1312,13 +1522,13 @@ input:checked + .toggle-slider:before {
   right: 20px;
 }
 .bp-foot {
-  border-top: 1.5px dashed var(--border-color);
+  border-top: 1.5px dashed rgba(31, 27, 20, 0.2);
   padding: 12px 20px 14px;
   display: flex;
   justify-content: space-between;
   font-family: var(--font-family-mono);
   font-size: 11px;
-  color: var(--text-muted);
+  color: rgba(31, 27, 20, 0.6);
 }
 
 /* Trip list — passport pages. Each trip reads as a stamped visa entry
@@ -1338,12 +1548,299 @@ input:checked + .toggle-slider:before {
   }
 }
 
+/* Stack mode replaces this grid with .trip-stack on phones only -- desktop
+   always shows the grid regardless of view mode. */
+.passport-list.stack-mode {
+  display: none;
+}
+@media (min-width: 900px) {
+  .passport-list.stack-mode {
+    display: grid;
+  }
+}
+
+/* Trip stack — a phone/portrait-only alternate to the list above (swipe
+   left/right to browse, swipe up to archive, long-press for edit/delete).
+   Meaningless without a touch drag, so it never shows past the same
+   900px breakpoint the grid above switches on at. */
+.trip-stack {
+  margin-bottom: 4px;
+}
+@media (min-width: 900px) {
+  .trip-stack {
+    display: none;
+  }
+}
+.trip-stack-stage {
+  position: relative;
+  height: min(58vh, 460px);
+  margin-bottom: 14px;
+}
+.stack-card {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--border-radius-md);
+  overflow: hidden;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  box-shadow: 0 10px 24px -14px rgba(0, 0, 0, 0.28);
+}
+.stack-card.depth-0 {
+  z-index: 3;
+}
+.stack-card.depth-1 {
+  z-index: 2;
+  transform: translateY(14px) scale(0.96) rotate(-2.5deg);
+}
+.stack-card.depth-2 {
+  z-index: 1;
+  transform: translateY(26px) scale(0.92) rotate(2deg);
+  opacity: 0.85;
+}
+.stack-card-face {
+  position: relative;
+  height: 100%;
+  padding: 20px 20px 18px;
+  display: flex;
+  flex-direction: column;
+  background-size: cover;
+  background-position: center;
+}
+.stack-card-face.has-photo.tone-light .pp-dest,
+.stack-card-face.has-photo.tone-light .pp-name,
+.stack-card-face.has-photo.tone-light .pp-meta {
+  color: #F2ECDC;
+}
+.stack-card-face.has-photo.tone-light .pp-stamp {
+  border-color: #F2ECDC;
+  color: #F2ECDC;
+}
+.stack-card-face.has-photo.tone-dark .pp-dest,
+.stack-card-face.has-photo.tone-dark .pp-name,
+.stack-card-face.has-photo.tone-dark .pp-meta {
+  color: #1C2A38;
+}
+.stack-card-face.has-photo.tone-dark .pp-stamp {
+  border-color: #1C2A38;
+  color: #1C2A38;
+}
+.stack-card-avatars {
+  margin-top: auto;
+}
+.stack-quick-actions {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 21, 29, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  z-index: 4;
+}
+.stack-qa-btn {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 20px -8px rgba(0, 0, 0, 0.5);
+  cursor: pointer;
+}
+.stack-qa-btn.danger {
+  color: var(--color-danger);
+}
+.trip-stack-viewall {
+  display: block;
+  margin: 0 auto;
+  background: none;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-pill);
+  padding: 8px 18px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+.trip-stack-viewall:hover {
+  background: var(--bg-surface-hover);
+}
+
+/* Slide-to-launch control, replacing the Join/Create header buttons on
+   phones only -- sits below the stack, same 900px cutoff. */
+.trip-launcher {
+  margin: 44px 0 4px;
+}
+@media (min-width: 900px) {
+  .trip-launcher {
+    display: none;
+  }
+}
+.launcher-track {
+  position: relative;
+  width: 100%;
+  max-width: 260px;
+  margin: 0 auto;
+  height: 66px;
+  border-radius: var(--border-radius-pill);
+  background: var(--bg-app);
+  border: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  box-shadow: 0 12px 22px -10px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+.launcher-fill {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 50%;
+  pointer-events: none;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease;
+  opacity: 0;
+}
+.launcher-fill.right {
+  left: 50%;
+  transform-origin: left;
+  background: linear-gradient(90deg, transparent, rgba(31, 110, 104, 0.28));
+}
+.launcher-fill.left {
+  right: 50%;
+  transform-origin: right;
+  background: linear-gradient(270deg, transparent, rgba(184, 69, 46, 0.24));
+}
+.launcher-zone {
+  flex: 1;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  font-family: var(--font-family-mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-weight: 700;
+  /* text-muted on bg-app is ~4.47:1, just under the 4.5:1 AA floor for
+     small text -- text-secondary clears it with room to spare. */
+  color: var(--text-secondary);
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: color 0.2s ease;
+  z-index: 1;
+}
+.launcher-zone.left {
+  justify-content: flex-start;
+  padding-left: 16px;
+}
+.launcher-zone.right {
+  justify-content: flex-end;
+  padding-right: 16px;
+}
+.launcher-zone.left.active {
+  color: var(--color-danger);
+}
+.launcher-zone.right.active {
+  color: var(--primary-accent);
+}
+.launcher-thumb {
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  width: 50px;
+  height: 50px;
+  margin-left: -25px;
+  border-radius: 50%;
+  background: var(--primary-accent);
+  box-shadow:
+    0 8px 16px -6px rgba(0, 0, 0, 0.4),
+    inset 0 2px 2px rgba(255, 255, 255, 0.4),
+    inset 0 -3px 4px rgba(0, 0, 0, 0.25);
+  z-index: 2;
+  cursor: grab;
+}
+.launcher-thumb.left {
+  background: var(--color-danger);
+}
+/* The thumb only handles touch drags (see TripSlideLauncher's
+   pointerType check) -- on a fine pointer it would otherwise sit on top
+   of the Join/Create buttons with no click handler of its own, creating
+   a dead 50px click zone for mouse/trackpad users. */
+@media (pointer: fine) {
+  .launcher-thumb {
+    pointer-events: none;
+  }
+}
+.launcher-caption {
+  text-align: center;
+  font-family: var(--font-family-mono);
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-top: 8px;
+  letter-spacing: 0.03em;
+}
+
+.profile-avatar-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border-color);
+  padding: 0;
+  overflow: hidden;
+  cursor: pointer;
+  flex-shrink: 0;
+  background: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition-smooth);
+}
+.profile-avatar-btn:hover {
+  border-color: rgba(31, 110, 104, 0.35);
+}
+.profile-avatar-btn img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.profile-avatar-btn span {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-family-title);
+  font-weight: 700;
+  font-size: 15px;
+  color: #FFFDF6;
+}
+
+/* Header Join/Create buttons hide on phones only while the stack + slide
+   launcher below it are the active presentation -- desktop always shows
+   them, and phones fall back to them too whenever the stack itself isn't
+   showing (0/1 trips, or the "View all trips" list). */
+.trip-home-actions {
+  display: flex;
+  gap: 8px;
+}
+.trip-home-actions.stack-active {
+  display: none;
+}
+@media (min-width: 900px) {
+  .trip-home-actions.stack-active {
+    display: flex;
+  }
+}
+
 .passport-card {
   position: relative;
   background: var(--bg-surface);
   border: 1px solid var(--border-color);
   border-radius: var(--border-radius-md);
   overflow: hidden;
+  box-shadow: 0 10px 24px -14px rgba(0, 0, 0, 0.28);
   transition: var(--transition-smooth);
   animation: fadeIn 0.35s ease-out both;
 }
@@ -1352,6 +1849,7 @@ input:checked + .toggle-slider:before {
 }
 .passport-card:hover {
   border-color: rgba(31, 110, 104, 0.3);
+  box-shadow: 0 14px 28px -14px rgba(0, 0, 0, 0.34);
 }
 .pp-stamp {
   position: absolute;
@@ -1463,7 +1961,7 @@ input:checked + .toggle-slider:before {
   text-align: center;
 }
 .member-card:hover {
-  border-color: rgba(31, 110, 104, 0.35);
+  border-color: rgba(47, 111, 237, 0.35);
 }
 .member-avatar {
   position: relative;
@@ -1601,14 +2099,14 @@ input:checked + .toggle-slider:before {
   vertical-align: middle;
 }
 .member-badge-admin {
-  background: rgba(31, 110, 104, 0.12);
+  background: rgba(47, 111, 237, 0.12);
   color: var(--primary-accent);
-  border: 1px solid rgba(31, 110, 104, 0.3);
+  border: 1px solid rgba(47, 111, 237, 0.3);
 }
 [data-theme="dark"] .member-badge-admin {
-  background: rgba(45, 212, 191, 0.14);
-  color: #2dd4bf;
-  border: 1px solid rgba(45, 212, 191, 0.32);
+  background: rgba(63, 203, 189, 0.14);
+  color: #3fcbbd;
+  border: 1px solid rgba(63, 203, 189, 0.32);
 }
 .member-badge-you {
   background: rgba(15, 23, 42, 0.06);
@@ -1671,11 +2169,11 @@ input:checked + .toggle-slider:before {
   transition: var(--transition-smooth);
 }
 .category-badge:hover {
-  border-color: rgba(31, 110, 104, 0.35);
+  border-color: rgba(47, 111, 237, 0.35);
 }
 .category-badge.active {
   border-color: var(--primary-accent);
-  background: rgba(31, 110, 104, 0.09);
+  background: rgba(47, 111, 237, 0.09);
   color: var(--primary-accent);
   font-weight: 600;
 }
@@ -1718,7 +2216,7 @@ input:checked + .toggle-slider:before {
   gap: 8px;
   border: 2px solid var(--primary-accent);
   border-radius: var(--border-radius-md);
-  background: rgba(31, 110, 104, 0.06);
+  background: rgba(47, 111, 237, 0.06);
   padding: 12px 18px;
   transition: var(--transition-smooth);
 }
@@ -1829,7 +2327,7 @@ input:checked + .toggle-slider:before {
   color: var(--primary-accent);
 }
 .date-picker-day.in-range {
-  background: rgba(31, 110, 104, 0.10);
+  background: rgba(47, 111, 237, 0.10);
   border-radius: 0;
 }
 .date-picker-day.selected {
@@ -2236,7 +2734,7 @@ input:checked + .toggle-slider:before {
   transition: var(--transition-smooth);
 }
 .flight-trigger:hover {
-  border-color: rgba(31, 110, 104, 0.35);
+  border-color: rgba(47, 111, 237, 0.35);
 }
 .ft-leg {
   display: flex;
@@ -2415,6 +2913,28 @@ input:checked + .toggle-slider:before {
   .modal-sheet { animation: none; }
 }
 
+/* Settings presents as a left-edge nav drawer rather than a centered
+   sheet -- narrower, anchored left, slides in from the edge instead of
+   rising from the bottom. Only affects GlobalSettingsModal; every other
+   .modal-sheet dialog keeps the shared centered/sheetUp treatment. */
+.modal-backdrop.drawer-left {
+  justify-content: flex-start;
+}
+.modal-backdrop .modal-sheet.settings-drawer {
+  max-width: 320px;
+  border-right: 1px solid var(--border-color);
+  border-radius: 0 var(--border-radius-lg, 16px) var(--border-radius-lg, 16px) 0;
+  box-shadow: 12px 0 32px -16px rgba(0, 0, 0, 0.35);
+  animation: drawerSlideIn 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes drawerSlideIn {
+  from { opacity: 0; transform: translateX(-24px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .modal-sheet.settings-drawer { animation: none; }
+}
+
 /* Expense form's own sheet is split into a scrolling content area and a
    footer action bar that's a real (non-sticky) flex item, so Add/Cancel
    always sit flush against the true bottom of the screen regardless of
@@ -2484,10 +3004,71 @@ input:checked + .toggle-slider:before {
   position: relative;
 }
 
+/* Continuous full-screen map backdrop -- fixed behind the header and the
+   content sheet, visible in the gap above the sheet's rounded top edge. */
+.trip-map-hero {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+}
+
+/* Foreground content sheet -- rounded top corners over the map backdrop.
+   `top` is set inline by TripContentSheet's drag state: starts at 50% (map
+   half visible) and swipes up to 20% (80% coverage). Its own content (the
+   tab-panes inside) scrolls internally once it overflows. */
+.trip-sheet {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--bg-app);
+  border-radius: 28px 28px 0 0;
+  box-shadow: 0 -16px 40px -10px rgba(0, 0, 0, 0.4), 0 -4px 16px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+  transition: top 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.trip-sheet.dragging {
+  transition: none;
+}
+
+/* Drag handle -- the swipe affordance strip at the sheet's top edge. */
+.trip-sheet-handle {
+  flex-shrink: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 22px;
+  cursor: grab;
+  touch-action: none;
+}
+
+.trip-sheet-handle:active {
+  cursor: grabbing;
+}
+
+.trip-sheet-handle-bar {
+  width: 40px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--text-muted);
+  opacity: 0.35;
+}
+
 .tab-pane {
   flex: 1;
   min-height: 0;
-  padding: calc(126px + var(--safe-top, 0px)) max(20px, var(--safe-right, 20px)) calc(104px + var(--safe-bottom, 0px)) max(20px, var(--safe-left, 20px));
+  /* --trip-header-height is measured live off the actual floating header
+     (see App.tsx's ResizeObserver) -- its real height varies with the
+     destination/upcoming-badge eyebrow line and the route-stops chip row,
+     so a fixed guess either overlapped the header or left a dead gap
+     above the content. 126px is the fallback for screens with no active
+     trip header (e.g. before the observer has measured anything). */
+  padding: calc(var(--trip-header-height, 126px) + 12px) max(20px, var(--safe-right, 20px)) calc(104px + var(--safe-bottom, 0px)) max(20px, var(--safe-left, 20px));
   overflow-y: auto;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
@@ -2506,6 +3087,15 @@ html.capacitor-ios .tab-pane {
   -webkit-mask-image: none;
 }
 
+/* The sheet already clears the header via its own top offset + handle --
+   the tab-pane's usual header-height reservation is dead space in here. */
+.trip-sheet .tab-pane {
+  padding-top: 8px;
+}
+html.capacitor-ios .trip-sheet .tab-pane {
+  padding-top: 8px;
+}
+
 .trips-screen-scroll {
   flex: 1;
   min-height: 0;
@@ -2516,6 +3106,27 @@ html.capacitor-ios .tab-pane {
   padding-bottom: calc(32px + var(--safe-bottom, 0px));
   padding-left: max(20px, var(--safe-left, 20px));
   padding-right: max(20px, var(--safe-right, 20px));
+}
+
+/* Ambient backdrop for whichever trip card is front-of-stack -- fixed
+   behind the home screen (painted first in DOM, so normal-flow content
+   above it in markup naturally layers on top -- no z-index juggling). */
+.home-ambient-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.home-ambient-layer {
+  position: absolute;
+  inset: -20px;
+  background-size: cover;
+  background-position: center;
+  filter: blur(6px) saturate(1.2);
+  transform: scale(1.08);
+  transition: opacity 0.9s ease;
 }
 
 .modal-overlay {
@@ -2604,14 +3215,14 @@ html.capacitor-ios .tab-pane {
   height: 54px;
   border-radius: 50%;
   background: linear-gradient(135deg, var(--primary-accent), var(--secondary-accent));
-  color: #F2ECDC;
+  color: #FFFFFF;
   display: flex;
   align-items: center;
   justify-content: center;
   font-family: var(--font-family-title);
   font-weight: 700;
   font-size: 20px;
-  box-shadow: 0 4px 12px rgba(31, 110, 104, 0.25);
+  box-shadow: 0 4px 12px rgba(47, 111, 237, 0.25);
   flex-shrink: 0;
 }
 
@@ -2700,11 +3311,11 @@ html.capacitor-ios .tab-pane {
 }
 
 .settings-row-item:hover {
-  background: rgba(31, 110, 104, 0.04);
+  background: rgba(47, 111, 237, 0.04);
 }
 
 .settings-row-item:active {
-  background: rgba(31, 110, 104, 0.08);
+  background: rgba(47, 111, 237, 0.08);
 }
 
 .settings-row-left {
@@ -2787,7 +3398,7 @@ html.capacitor-ios .tab-pane {
   font-weight: 500;
   padding: 2px 8px;
   border-radius: 12px;
-  background: rgba(31, 110, 104, 0.08);
+  background: rgba(47, 111, 237, 0.08);
   color: var(--primary-accent);
 }
 
@@ -2820,8 +3431,8 @@ html.capacitor-ios .tab-pane {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  background: rgba(31, 110, 104, 0.08);
-  border: 1px solid rgba(31, 110, 104, 0.18);
+  background: rgba(47, 111, 237, 0.08);
+  border: 1px solid rgba(47, 111, 237, 0.18);
   color: var(--primary-accent);
   font-size: 13px;
   font-weight: 600;
@@ -2834,8 +3445,8 @@ html.capacitor-ios .tab-pane {
 }
 
 .settings-subscreen-back-link:hover {
-  background: rgba(31, 110, 104, 0.16);
-  border-color: rgba(31, 110, 104, 0.32);
+  background: rgba(47, 111, 237, 0.16);
+  border-color: rgba(47, 111, 237, 0.32);
   transform: translateX(-2px);
 }
 
@@ -3530,7 +4141,7 @@ html.capacitor-ios .tab-pane {
 }
 .bug-stat:last-child { border-right: none; }
 .bug-stat:hover { background: var(--bg-surface-hover); }
-.bug-stat.active { background: rgba(31, 110, 104, 0.09); }
+.bug-stat.active { background: rgba(47, 111, 237, 0.09); }
 
 .bug-stat .n {
   font-family: var(--font-family-mono);
@@ -3562,7 +4173,7 @@ html.capacitor-ios .tab-pane {
   transition: background 0.15s ease;
 }
 .bug-entry:last-child { border-bottom: none; }
-.bug-entry:hover { background: rgba(31, 110, 104, 0.04); }
+.bug-entry:hover { background: rgba(47, 111, 237, 0.04); }
 
 .bug-entry-top {
   display: flex;

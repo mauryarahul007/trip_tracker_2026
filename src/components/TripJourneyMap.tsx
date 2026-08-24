@@ -122,8 +122,8 @@ export function TripJourneyMap({ expenses, categories, baseCurrency }: Props) {
           width: 32px;
           height: 32px;
           border-radius: 50%;
-          background: #1C2A38;
-          border: 2.5px solid #00BFA5;
+          background: #2F6FED;
+          border: 2.5px solid #17B6A6;
           box-shadow: 0 4px 10px rgba(0,0,0,0.3);
           color: #fff;
           font-size: 15px;
@@ -141,7 +141,7 @@ export function TripJourneyMap({ expenses, categories, baseCurrency }: Props) {
             <div style="font-weight: 700; font-size: 14px; margin-bottom: 2px; color: #0F172A;">
               ${safeTitle}
             </div>
-            <div class="privacy-blur" style="color: #00BFA5; font-weight: 700; font-size: 13.5px; margin-bottom: 4px;">
+            <div class="privacy-blur" style="color: #17B6A6; font-weight: 700; font-size: 13.5px; margin-bottom: 4px;">
               ${safeCurrency} ${exp.amount.toFixed(2)}
             </div>
             <div style="font-size: 11px; color: #64748B; margin-bottom: 2px;">
@@ -170,7 +170,7 @@ export function TripJourneyMap({ expenses, categories, baseCurrency }: Props) {
           source: ROUTE_SOURCE_ID,
           layout: { 'line-join': 'round', 'line-cap': 'round' },
           paint: {
-            'line-color': '#00BFA5',
+            'line-color': '#17B6A6',
             'line-width': 3.5,
             'line-opacity': 0.85,
             'line-dasharray': [2, 1.5],
@@ -220,8 +220,8 @@ export function TripJourneyMap({ expenses, categories, baseCurrency }: Props) {
             width: '48px',
             height: '48px',
             borderRadius: '12px',
-            background: 'rgba(0,191,165,0.1)',
-            color: '#00BFA5',
+            background: 'rgba(23,182,166,0.1)',
+            color: '#17B6A6',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -266,7 +266,7 @@ export function TripJourneyMap({ expenses, categories, baseCurrency }: Props) {
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <span style={{ color: '#00BFA5', display: 'flex', alignItems: 'center' }}>
+          <span style={{ color: '#17B6A6', display: 'flex', alignItems: 'center' }}>
             <IconMapPin size={18} />
           </span>
           <span style={{ fontWeight: 600, fontSize: '14px', color: 'var(--text-primary)' }}>
@@ -274,7 +274,7 @@ export function TripJourneyMap({ expenses, categories, baseCurrency }: Props) {
           </span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11.5px', color: 'var(--text-secondary)' }}>
-          <span className="badge" style={{ background: 'rgba(0,191,165,0.12)', color: '#00BFA5', fontWeight: 600 }}>
+          <span className="badge" style={{ background: 'rgba(23,182,166,0.12)', color: '#17B6A6', fontWeight: 600 }}>
             {geotaggedExpenses.length} stops
           </span>
           <span className="privacy-blur">• {currencySymbol} {totalGeotaggedSpend.toFixed(0)}</span>

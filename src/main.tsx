@@ -18,7 +18,20 @@ import { isMissingSupabaseEnv } from './services/supabaseClient'
 import { initNativeShell } from './utils/nativeShell'
 import { initLiveUpdates } from './utils/liveUpdate'
 
-registerServiceWorkerUpdateWatcher()
+// Dev server rebuilds already give instant fresh code -- registering the
+// SW here too just adds a stale-while-revalidate cache that serves last
+// session's bundle first on every reload, which reads as "my changes
+// aren't showing up" during active development.
+if (import.meta.env.PROD) {
+  registerServiceWorkerUpdateWatcher()
+} else if ('serviceWorker' in navigator) {
+  // Self-heals browsers that already have a dev-registered SW from before
+  // this guard existed -- no manual DevTools "Unregister" step needed,
+  // the next reload just goes straight to the network.
+  navigator.serviceWorker.getRegistrations().then((regs) => {
+    regs.forEach((reg) => reg.unregister())
+  })
+}
 initAutoBugReporter()
 initNativeShell()
 void initLiveUpdates()

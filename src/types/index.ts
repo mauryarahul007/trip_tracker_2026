@@ -1,9 +1,17 @@
+export interface TripStop {
+  id: string;
+  name: string;
+  lat?: number;
+  lng?: number;
+}
+
 export interface Trip {
   id: string;
   name: string;
   startDate: string;
   endDate: string;
   baseCurrency: string;
+  destination?: string; // free-text place name, used for photo lookups
   memberIds: string[];
   groupIds: string[]; // List of groups associated with this trip
   ownerId: string; // admin: full CRUD + can settle any transfer
@@ -14,6 +22,8 @@ export interface Trip {
   expenseCount?: number;
   archived?: boolean;
   frozen?: boolean; // emergency kill-switch toggle set by superadmin
+  stops?: TripStop[]; // Ordered list of route waypoints / stops
+  coverImageUrl?: string; // background cover tourism photo URL
 }
 
 export interface Member {

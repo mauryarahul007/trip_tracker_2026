@@ -910,18 +910,31 @@ This document logs all meaningful technical decisions, library choices, design p
 
 ---
 
-## 48. Trip Header Declutter & Expenses Tab Segmented View Switcher
+## 49. Multi-Stop Route Planner, Translucent Header Map & Ambient Tourism Photography
 * **Context:**
-  - Placing the "✨ Wrapped" button directly in the active trip header bar squeezed the trip title on mobile devices.
-  - Mixing the "Day-by-Day" itinerary toggle inside the horizontal scrolling filter chips track caused confusion between view presentation modes and filter categories.
+  - When creating or editing a trip, users often travel across multiple intermediate destinations (e.g. `Delhi → Manali → Kasol`). Previously, trips only stored a single unstructured text destination string with no route coordinates or visual map representation.
+  - Users wanted a dynamic, translucent ambient background reflecting editorial tourism photography of the places in their trip that gently cycles between the cities, plus an interactive translucent route banner map highlighting all stops and waypoints.
 * **Decision:**
-  - **Trip Wrapped Relocation (`src/App.tsx`, `src/components/SettingsView.tsx`, `src/components/SettingsTab.tsx`, `src/components/GlobalSettingsModal.tsx`):**
-    - Removed Wrapped button from `.app-header-top`, restoring full breathing room to trip titles across mobile viewports.
-    - Added a dedicated "Trip Wrapped (Story Card)" action row in Settings under Trip Preferences with description and direct launcher.
-  - **Expenses Tab Segmented Switcher (`src/components/ExpenseList.tsx`, `src/index.css`):**
-    - Moved the view mode toggle into a dedicated `[ ≡ List | 📅 Days ]` segmented pill control alongside the search bar.
-    - Preserved horizontal filter chips track purely for category, member, and date range filters with smooth gradient edge fade masks.
+  1. **Multi-Stop Route Builder (`src/types/index.ts`, `src/components/TripsListScreen.tsx`):**
+     - Added `TripStop { id: string; name: string; lat?: number; lng?: number; }` and `stops?: TripStop[]` to `Trip`.
+     - Built dynamic Google Maps-style route stop inputs with `+ Add Stop`, remove `✕` buttons, numbered waypoint badges (`1`, `2`, `3`...), and one-click `+ Plan multi-stop route` transition.
+     - Saved stops are permanently stored on trip records and displayed on home page passport cards with numbered stop chips (`[ 1. Delhi ] [ 2. Manali ] [ 3. Kasol ]`).
+  2. **Fast Sub-100ms Geocoding Engine (`src/utils/geolocation.ts`):**
+     - Upgraded `searchPlaces` to use **Photon by Komoot** (OSM-indexed, sub-100ms response time, open CORS, zero rate limits) with Nominatim fallback.
+  3. **Wikipedia & Wikimedia Tourism Photography Engine (`src/services/placeImageService.ts`):**
+     - Decomposes composite route strings into individual candidate cities.
+     - Queries Wikipedia summary endpoints and falls back to media generator search across top 5 articles, filtering out non-photographic SVG logos/flags to return editorial travel photos.
+  4. **Ambient Photo Slideshow Backdrop (`src/components/AmbientPhotoBackdrop.tsx`):**
+     - Fetches and caches photos for every city in the active trip.
+     - Cycles between city photos with a smooth 6.5-second cross-fade animation, soft background blur (`filter: blur(10px)`), and subtle place indicator badge (e.g. `📍 Manali (2/3)`).
+  5. **Translucent Header Route Map Banner (`src/components/TripBannerRouteMap.tsx` & `src/App.tsx`):**
+     - Integrated MapLibre directly inside `.app-header.trip-dashboard-header` as a translucent route backdrop (`opacity: 0.42` with luminosity blend).
+     - Renders glowing geodesic route lines, numbered waypoint markers, smart bounds auto-fitting, and frosted-glass stop chips.
+  6. **Content Security Policy Hardening (`index.html`):**
+     - Updated CSP `connect-src` to allow `https://photon.komoot.io`, `https://en.wikipedia.org`, `https://*.wikipedia.org`, and `https://*.wikimedia.org`.
+     - Updated CSP `img-src` to allow `https://*.wikimedia.org`, `https://upload.wikimedia.org`, and `https://*.wikipedia.org`.
 * **Trade-offs Accepted:**
-  - Trip Wrapped remains easily accessible through Settings and `Cmd+K` command palette while keeping the primary header lightweight.
+  - Client-side Wikipedia and Photon queries execute asynchronously with graceful fallbacks (if a city has no photo or offline, UI gracefully preserves standard themes without breaking).
+
 
 

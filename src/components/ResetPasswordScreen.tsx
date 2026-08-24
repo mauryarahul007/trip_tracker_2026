@@ -52,7 +52,7 @@ export function ResetPasswordScreen() {
               width: '36px',
               height: '36px',
               borderRadius: '10px',
-              background: 'linear-gradient(135deg, #1F6E68, #14B8A6)',
+              background: 'linear-gradient(135deg, #2F6FED, #17B6A6)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',

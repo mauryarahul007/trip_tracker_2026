@@ -346,7 +346,7 @@ export function SettingsView({
                       alignItems: 'center',
                       padding: '12px 16px',
                       cursor: 'pointer',
-                      background: isExpanded ? 'rgba(31,110,104,0.04)' : 'transparent',
+                      background: isExpanded ? 'rgba(47,111,237,0.04)' : 'transparent',
                       transition: 'background 0.15s ease',
                     }}
                     onClick={() => setExpandedCategoryId(isExpanded ? null : cat.id)}
@@ -534,7 +534,7 @@ export function SettingsView({
                             cursor: 'pointer',
                             transition: 'var(--transition-smooth)',
                             border: newCategoryIcon === icon ? '2px solid var(--primary-accent)' : '1.5px solid transparent',
-                            background: newCategoryIcon === icon ? 'rgba(31,110,104,0.10)' : 'var(--bg-surface-hover)',
+                            background: newCategoryIcon === icon ? 'rgba(47,111,237,0.10)' : 'var(--bg-surface-hover)',
                           }}
                         >
                           {icon}
@@ -1030,10 +1030,10 @@ export function SettingsView({
             justifyContent: 'space-between',
             padding: '14px 18px',
             borderRadius: '16px',
-            background: 'linear-gradient(135deg, #1C2A38, #1F6E68)',
+            background: 'linear-gradient(135deg, #2F6FED, #17B6A6)',
             color: '#FFFFFF',
             cursor: 'pointer',
-            boxShadow: '0 6px 20px -4px rgba(31, 110, 104, 0.35)',
+            boxShadow: '0 6px 20px -4px rgba(47, 111, 237, 0.35)',
             marginBottom: '14px',
           }}
         >
@@ -1060,7 +1060,7 @@ export function SettingsView({
               <span style={{ fontSize: '12px', color: '#92A2AE' }}>Feature Flags, Global Analytics &amp; Admin Tools</span>
             </div>
           </div>
-          <IconChevronRight size={18} style={{ color: '#00BFA5' }} />
+          <IconChevronRight size={18} style={{ color: '#17B6A6' }} />
         </div>
       )}
 
@@ -1233,7 +1233,7 @@ export function SettingsView({
                       left: 0,
                       right: 0,
                       bottom: 0,
-                      backgroundColor: enableGeotagging ? '#00BFA5' : 'var(--border-color)',
+                      backgroundColor: enableGeotagging ? '#17B6A6' : 'var(--border-color)',
                       transition: '0.2s ease',
                       borderRadius: 'var(--border-radius-pill)',
                     }}
@@ -1305,22 +1305,24 @@ export function SettingsView({
             </div>
           </button>
 
-          <button type="button" className="settings-row-item" onClick={() => setSubScreen('backups')}>
-            <div className="settings-row-left">
-              <div className="settings-squircle squircle-indigo">
-                <IconDatabase size={18} />
+          {isSuperadmin && (
+            <button type="button" className="settings-row-item" onClick={() => setSubScreen('backups')}>
+              <div className="settings-row-left">
+                <div className="settings-squircle squircle-indigo">
+                  <IconDatabase size={18} />
+                </div>
+                <div className="settings-row-texts">
+                  <span className="settings-row-title">Database Backups</span>
+                  <span className="settings-row-subtitle">Export/Import JSON database snapshot</span>
+                </div>
               </div>
-              <div className="settings-row-texts">
-                <span className="settings-row-title">Database Backups</span>
-                <span className="settings-row-subtitle">Export/Import JSON database snapshot</span>
+              <div className="settings-row-right">
+                <IconChevronRight size={16} />
               </div>
-            </div>
-            <div className="settings-row-right">
-              <IconChevronRight size={16} />
-            </div>
-          </button>
+            </button>
+          )}
 
-          {onLoadDemoTrip && (
+          {isSuperadmin && onLoadDemoTrip && (
             <button
               type="button"
               className="settings-row-item"
@@ -1387,7 +1389,7 @@ export function SettingsView({
             </button>
           )}
 
-          {onClearDatabase && (
+          {isSuperadmin && onClearDatabase && (
             <button
               type="button"
               className="settings-row-item"

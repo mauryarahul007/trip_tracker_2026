@@ -578,9 +578,7 @@ export function BalancesSettlements({
   const categoryClause = categoryIsDominant ? `, driven by ${topCategoryName} spend` : '';
 
   return (
-    <div style={{ marginTop: '32px', borderTop: '1px solid var(--border-color)', paddingTop: '24px' }}>
-      <h3 style={{ fontSize: '18px', marginBottom: '16px' }}>Balances & Settlements</h3>
-
+    <div id="balances-section" style={{ marginTop: '20px' }}>
       {/* Boarding-pass balance summary */}
       <div className="boarding-pass">
         <div className="bp-top">
@@ -727,7 +725,7 @@ export function BalancesSettlements({
           }}
         >
           <div className="wa-group-title">
-            <div className="wa-group-icon" style={{ background: 'rgba(2, 132, 199, 0.12)', color: '#0284C7' }}>
+            <div className="wa-group-icon" style={{ background: 'rgba(15, 111, 99, 0.12)', color: '#0F6F63' }}>
               <IconMembers size={18} />
             </div>
             <div>

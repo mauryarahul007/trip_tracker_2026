@@ -1,5 +1,5 @@
 import { supabase } from './supabaseClient';
-import type { Category, Expense, Group, Member, PreviousMemberSuggestion, SplitMode, Trip } from '../types';
+import type { Category, Expense, Group, Member, PreviousMemberSuggestion, SplitMode, Trip, TripStop } from '../types';
 import type { Database } from '../types/database';
 import type { AdminUserRow, AppConfigKey, AuditLogEntry, DevicePlatformCount, NotificationStats } from '../types/admin';
 
@@ -16,12 +16,14 @@ function mapTrip(row: TripRow, memberIds: string[], groupIds: string[]): Trip {
     startDate: row.start_date,
     endDate: row.end_date,
     baseCurrency: row.base_currency,
+    destination: row.destination ?? undefined,
     ownerId: row.owner_id,
     joinCode: row.join_code,
     memberIds,
     groupIds,
     archived: row.archived,
     frozen: row.frozen,
+    stops: Array.isArray(row.stops) ? (row.stops as unknown as TripStop[]) : undefined,
     createdAt: new Date(row.created_at).getTime(),
     updatedAt: new Date(row.updated_at).getTime(),
   };
@@ -194,7 +196,9 @@ export async function insertTrip(input: {
   endDate: string;
   baseCurrency: string;
   ownerId: string;
+  destination?: string;
   id?: string;
+  stops?: TripStop[];
 }): Promise<Trip> {
   const { data, error } = await supabase
     .from('trips')
@@ -205,6 +209,8 @@ export async function insertTrip(input: {
       end_date: input.endDate,
       base_currency: input.baseCurrency,
       owner_id: input.ownerId,
+      destination: input.destination || null,
+      stops: input.stops ?? [],
     })
     .select()
     .single();
@@ -212,10 +218,17 @@ export async function insertTrip(input: {
   return mapTrip(data, [], []);
 }
 
-export async function updateTripRow(id: string, patch: { name: string; startDate: string; endDate: string }): Promise<void> {
+export async function updateTripRow(id: string, patch: { name: string; startDate: string; endDate: string; destination?: string; stops?: TripStop[] }): Promise<void> {
   const { error } = await supabase
     .from('trips')
-    .update({ name: patch.name, start_date: patch.startDate, end_date: patch.endDate, updated_at: new Date().toISOString() })
+    .update({
+      name: patch.name,
+      start_date: patch.startDate,
+      end_date: patch.endDate,
+      destination: patch.destination || null,
+      stops: patch.stops ?? [],
+      updated_at: new Date().toISOString(),
+    })
     .eq('id', id);
   if (error) throw error;
 }
@@ -869,6 +882,11 @@ export async function fetchSuperadminIds(): Promise<string[]> {
 
 export async function setUserBanned(userId: string, banned: boolean): Promise<void> {
   const { error } = await supabase.rpc('set_user_banned', { p_user_id: userId, p_banned: banned });
+  if (error) throw error;
+}
+
+export async function deleteUserAccount(userId: string): Promise<void> {
+  const { error } = await supabase.rpc('delete_user', { p_user_id: userId });
   if (error) throw error;
 }
 

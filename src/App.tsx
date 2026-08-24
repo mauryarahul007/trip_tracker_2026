@@ -1,9 +1,10 @@
-import React, { useEffect, useState, useMemo, lazy, Suspense } from 'react';
+import React, { useEffect, useRef, useState, useMemo, lazy, Suspense } from 'react';
 import { useTripStore, getTripNotificationRecipients } from './store/tripStore';
 import { useAuthStore } from './store/authStore';
 import { calculateSettlements } from './utils/settlement';
-import type { Expense, Trip, Group, Member } from './types';
+import type { Expense, Trip, Group, Member, TripStop } from './types';
 import { exportTripToCSV } from './utils/csvExport';
+import { fetchPlaceCoverImage } from './services/placeImageService';
 
 import { getCurrencySymbol } from './utils/currency';
 import { isMissingSupabaseEnv } from './services/supabaseClient';
@@ -12,8 +13,16 @@ import { fetchAppFlag } from './services/tripApi';
 import { GlobalSettingsModal } from './components/GlobalSettingsModal';
 import { ConfirmDialog, type ConfirmRequest } from './components/ConfirmDialog';
 import { TripsListScreen } from './components/TripsListScreen';
+// maplibre-gl is a sizeable dependency (JS + worker + WASM) only needed on
+// the trip dashboard -- code-split so it doesn't load for the trips list
+// or any other screen.
+const TripMapHero = lazy(() =>
+  import('./components/TripMapHero').then((m) => ({ default: m.TripMapHero }))
+);
+import { TripContentSheet } from './components/TripContentSheet';
 import { ExpenseForm } from './components/ExpenseForm';
 import { ExpenseList } from './components/ExpenseList';
+import { TransactionsPreview } from './components/TransactionsPreview';
 import { BalancesSettlements } from './components/BalancesSettlements';
 import { MembersGroupsTab } from './components/MembersGroupsTab';
 import { AnalyticsTab } from './components/AnalyticsTab';
@@ -36,7 +45,7 @@ import { FitHeading } from './components/FitHeading';
 import { usePrivacyStore } from './store/privacyStore';
 import { triggerHaptic } from './utils/haptics';
 import { useEscapeKey } from './utils/useEscapeKey';
-import { IconCalendar, IconChevronLeft, IconPlus, IconEye, IconEyeOff, IconShield, IconSearch } from './components/Icons';
+import { IconCalendar, IconChevronLeft, IconChevronDown, IconChevronUp, IconPlus, IconEye, IconEyeOff, IconShield, IconSearch } from './components/Icons';
 import { formatDateRange } from './utils/dateRange';
 import { useScrollLock } from './utils/useScrollLock';
 import { useHistoryBack } from './utils/useHistoryBack';
@@ -103,6 +112,8 @@ export default function App() {
 
   const userEmail = useAuthStore((s) => s.session?.user.email ?? null);
   const userId = useAuthStore((s) => s.session?.user.id ?? null);
+  const userAvatarUrl = useAuthStore((s) => s.session?.user.user_metadata?.avatar_url as string | undefined);
+  const userDisplayName = useTripStore((s) => s.userDisplayName);
   const signOut = useAuthStore((s) => s.signOut);
   const signInSuperadmin = useAuthStore((s) => s.signInSuperadmin);
 
@@ -164,12 +175,15 @@ export default function App() {
   const [showAddTrip, setShowAddTrip] = useState(false);
   const [editingTripId, setEditingTripId] = useState<string | null>(null);
   const [newTripName, setNewTripName] = useState('');
+  const [newTripDestination, setNewTripDestination] = useState('');
+  const [newTripStops, setNewTripStops] = useState<TripStop[]>([]);
   const [newTripStart, setNewTripStart] = useState('');
   const [newTripEnd, setNewTripEnd] = useState('');
   const [newTripCurrency, setNewTripCurrency] = useState('INR');
 
   // Superadmin Bug Tracker full-screen view
   const [showBugTracker, setShowBugTracker] = useState(false);
+  const [showTransactions, setShowTransactions] = useState(false);
 
   useEffect(() => {
     const handleHash = () => {
@@ -343,6 +357,28 @@ export default function App() {
   const activeTrip = useMemo(() => trips.find((t) => t.id === activeTripId), [trips, activeTripId]);
   const editingExpense = useMemo(() => expenses.find((e) => e.id === editingExpenseId) || null, [expenses, editingExpenseId]);
 
+  // Auto-resolve tourism cover photo for active trip if not already resolved
+  useEffect(() => {
+    if (!activeTrip || activeTrip.coverImageUrl) return;
+    const candidates = [
+      ...(activeTrip.stops?.map((s) => s.name) || []),
+      activeTrip.destination || '',
+      activeTrip.name || '',
+    ].filter(Boolean);
+
+    if (candidates.length === 0) return;
+
+    fetchPlaceCoverImage(candidates)
+      .then((url) => {
+        if (url) {
+          useTripStore.setState((state) => ({
+            trips: state.trips.map((t) => (t.id === activeTrip.id ? { ...t, coverImageUrl: url } : t)),
+          }));
+        }
+      })
+      .catch(() => {});
+  }, [activeTrip?.id, activeTrip?.coverImageUrl, activeTrip?.destination, activeTrip?.stops]);
+
   // Reset expense filters when switching trips
   useEffect(() => {
     setExpenseSearch('');
@@ -354,6 +390,19 @@ export default function App() {
 
   // Track scroll on active tab-pane with directional hysteresis for smooth fluid header morphing
   const [isHeaderScrolled, setIsHeaderScrolled] = useState(false);
+  // Sampled from the live map pixels behind the header (see TripMapHero) so
+  // header text/chrome stays legible regardless of what's under it.
+  const [headerTone, setHeaderTone] = useState<'light' | 'dark'>('light');
+  // Whether the content sheet is in its expanded (80%) snap state -- lets
+  // the map zoom out slightly to visually "resize" as more of it is
+  // exposed, instead of sitting static underneath the drag.
+  const [sheetExpanded, setSheetExpanded] = useState(false);
+  // Route-stops chip row starts collapsed -- it's the least essential
+  // header row (the map already shows the route), so keeping it closed by
+  // default gives the eyebrow date row more breathing room instead of
+  // competing with it for the header's fixed height budget.
+  const [stopsExpanded, setStopsExpanded] = useState(false);
+  const headerRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     let lastScrollTop = 0;
@@ -393,7 +442,32 @@ export default function App() {
 
   useEffect(() => {
     setIsHeaderScrolled(false);
+    setShowTransactions(false);
   }, [activeTripId, activeTab]);
+
+  // .tab-pane's padding-top used to be a fixed guess at the floating
+  // header's height. The header is no longer a fixed height -- the
+  // eyebrow's destination text, the "Upcoming"/"Completed" badge, and the
+  // route-stops chip row (added with the multi-stop planner) all vary its
+  // real height, so a hardcoded constant either overlapped the header or
+  // (as reported) left a large dead gap above the content. Measure it and
+  // expose the real number instead of guessing.
+  useEffect(() => {
+    const header = headerRef.current;
+    if (!header) {
+      document.documentElement.style.removeProperty('--trip-header-height');
+      return;
+    }
+
+    const updateHeight = () => {
+      document.documentElement.style.setProperty('--trip-header-height', `${header.offsetHeight}px`);
+    };
+
+    updateHeight();
+    const observer = new ResizeObserver(updateHeight);
+    observer.observe(header);
+    return () => observer.disconnect();
+  }, [activeTripId, activeTab, isHeaderScrolled]);
 
   const activeTripExpenses = useMemo(() => {
     return expenses
@@ -638,12 +712,15 @@ export default function App() {
   const handleCreateTrip = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTripName || !newTripStart || !newTripEnd) return;
+    const cleanStops = newTripStops.filter((s) => s.name.trim().length > 0);
     if (editingTripId) {
-      await updateTrip(editingTripId, newTripName, newTripStart, newTripEnd);
+      await updateTrip(editingTripId, newTripName, newTripStart, newTripEnd, newTripDestination.trim() || undefined, cleanStops);
     } else {
-      await createTrip(newTripName, newTripStart, newTripEnd, newTripCurrency);
+      await createTrip(newTripName, newTripStart, newTripEnd, newTripCurrency, newTripDestination.trim() || undefined, cleanStops);
     }
     setNewTripName('');
+    setNewTripDestination('');
+    setNewTripStops([]);
     setNewTripStart('');
     setNewTripEnd('');
     setNewTripCurrency('INR');
@@ -654,17 +731,23 @@ export default function App() {
   const handleStartEditTrip = (trip: Trip) => {
     setEditingTripId(trip.id);
     setNewTripName(trip.name);
+    setNewTripDestination(trip.destination || '');
+    setNewTripStops(trip.stops ? [...trip.stops] : []);
     setNewTripStart(trip.startDate);
     setNewTripEnd(trip.endDate);
+    setNewTripDestination(trip.destination || '');
     setShowAddTrip(true);
   };
 
   const handleCancelTripForm = () => {
     setEditingTripId(null);
     setNewTripName('');
+    setNewTripDestination('');
+    setNewTripStops([]);
     setNewTripStart('');
     setNewTripEnd('');
     setNewTripCurrency('INR');
+    setNewTripDestination('');
     setShowAddTrip(false);
   };
 
@@ -1278,7 +1361,7 @@ export default function App() {
             position: 'sticky',
             top: 0,
             zIndex: 100,
-            background: 'linear-gradient(135deg, #1C2A38, #1F6E68)',
+            background: 'linear-gradient(135deg, #2F6FED, #17B6A6)',
             color: '#FFFFFF',
             padding: '10px 16px',
             display: 'flex',
@@ -1328,6 +1411,63 @@ export default function App() {
             />
           </Suspense>
         </div>
+      ) : showTransactions && activeTrip ? (
+        /* Full-Screen Transactions View -- pushed from the Summary tab's
+           "View all" link, not its own bottom-nav tab. Reuses ExpenseList
+           unchanged (search/filter/edit/delete/review all still live here). */
+        <div className="fade-in" style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, position: 'relative' }}>
+          <header className="app-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px' }}>
+            <FitHeading text="Transactions" className="app-logo" style={{ color: '#FFFFFF' }} maxFontSize={22} minFontSize={14} />
+            <button
+              type="button"
+              className="secondary-btn"
+              style={{ padding: '7px 11px', fontSize: '12px', color: '#FFFFFF', borderColor: 'rgba(255,255,255,0.28)', background: 'rgba(255,255,255,0.1)', flexShrink: 0 }}
+              onClick={() => setShowTransactions(false)}
+            >
+              <IconChevronLeft size={14} className="icon-sm" /> Summary
+            </button>
+          </header>
+          <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '16px 20px 100px' }}>
+            <ExpenseList
+              trip={activeTrip}
+              members={members}
+              categories={categories}
+              activeTripMembers={activeTripMembers}
+              activeTripExpenseCount={activeTripExpenses.length}
+              activeTripExpenses={activeTripExpenses}
+              onReviewAffected={handleReviewAffectedExpenses}
+              filteredExpenses={filteredExpenses}
+              pendingDeleteId={pendingDeleteExpense?.id}
+              hasActiveFilters={hasActiveExpenseFilters}
+              search={expenseSearch}
+              setSearch={setExpenseSearch}
+              filterCategory={expenseFilterCategory}
+              setFilterCategory={setExpenseFilterCategory}
+              filterMember={expenseFilterMember}
+              setFilterMember={setExpenseFilterMember}
+              filterDateFrom={expenseFilterDateFrom}
+              setFilterDateFrom={setExpenseFilterDateFrom}
+              filterDateTo={expenseFilterDateTo}
+              setFilterDateTo={setExpenseFilterDateTo}
+              onClearFilters={clearExpenseFilters}
+              onReview={setSelectedReviewExpense}
+              onEdit={handleStartEditExpense}
+              onDelete={handleDeleteExpense}
+              isAdmin={isAdmin}
+              userId={userId}
+            />
+          </div>
+          <button
+            type="button"
+            className="fab-add-expense"
+            style={{ bottom: 'calc(20px + var(--safe-bottom, 0px))' }}
+            onClick={handleOpenAddExpense}
+            aria-label="Add Expense"
+            title="Add Expense"
+          >
+            <IconPlus size={24} />
+          </button>
+        </div>
       ) : !activeTripId ? (
         /* Screen 1: Trips List */
         <TripsListScreen
@@ -1337,6 +1477,10 @@ export default function App() {
           setShowAddTrip={setShowAddTrip}
           newTripName={newTripName}
           setNewTripName={setNewTripName}
+          newTripDestination={newTripDestination}
+          setNewTripDestination={setNewTripDestination}
+          newTripStops={newTripStops}
+          setNewTripStops={setNewTripStops}
           newTripStart={newTripStart}
           setNewTripStart={setNewTripStart}
           newTripEnd={newTripEnd}
@@ -1352,14 +1496,25 @@ export default function App() {
           onArchiveTrip={handleArchiveTrip}
           onOpenSettings={() => setShowGlobalSettings(true)}
           onOpenBugTracker={isSuperadmin ? () => setShowBugTracker(true) : undefined}
+          userAvatarUrl={userAvatarUrl}
+          userDisplayName={userDisplayName}
         />
       ) : (
         /* Screen 2: Active Trip Dashboard */
-        <div className="trip-dashboard-container fade-in">
-          <header className={`app-header trip-dashboard-header ${isHeaderScrolled ? 'is-scrolled' : ''}`}>
-            <div className="app-header-top">
+        <div className="trip-dashboard-container fade-in" style={{ position: 'relative' }}>
+          <Suspense fallback={null}>
+            <TripMapHero trip={activeTrip ?? null} sheetExpanded={sheetExpanded} onToneChange={setHeaderTone} />
+          </Suspense>
+          <header ref={headerRef} className={`app-header trip-dashboard-header ${isHeaderScrolled ? 'is-scrolled' : ''} ${headerTone === 'dark' ? 'tone-dark' : ''}`} style={{ overflow: 'hidden' }}>
+            <div className="app-header-top" style={{ position: 'relative', zIndex: 1 }}>
               <div className="app-title-group">
                 <span className="app-eyebrow">
+                  {/* Destination used to prefix this row too ("📍 Lachung ·"),
+                      but the route-stops chips below already show every
+                      stop -- that made this line too wide to fit the full
+                      date range and status badge on one line, so both got
+                      clipped by the row's fixed height. Dropped it here;
+                      the date range is the only thing this row needs to say. */}
                   <IconCalendar size={12} className="icon-sm" />
                   {formatDateRange(activeTrip?.startDate || '', activeTrip?.endDate || '')}
                   {(() => {
@@ -1367,20 +1522,23 @@ export default function App() {
                     if (!activeTrip?.startDate) return null;
                     if (activeTrip.startDate > todayStr) {
                       return (
-                        <span style={{ marginLeft: '6px', padding: '1px 5px', borderRadius: '4px', fontSize: '10px', fontWeight: 700, background: 'rgba(43,168,158,0.2)', color: '#2BA89E' }}>
+                        <span className="header-status-badge">
+                          <span className="header-status-dot" style={{ background: '#F0AE5C' }} />
                           Upcoming
                         </span>
                       );
                     }
                     if (activeTrip.endDate < todayStr) {
                       return (
-                        <span style={{ marginLeft: '6px', padding: '1px 5px', borderRadius: '4px', fontSize: '10px', fontWeight: 700, background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.6)' }}>
+                        <span className="header-status-badge">
+                          <span className="header-status-dot" style={{ background: 'var(--header-fg-muted)' }} />
                           Completed
                         </span>
                       );
                     }
                     return (
-                      <span style={{ marginLeft: '6px', padding: '1px 5px', borderRadius: '4px', fontSize: '10px', fontWeight: 700, background: 'rgba(44,122,75,0.25)', color: '#4FAE72' }}>
+                      <span className="header-status-badge">
+                        <span className="header-status-dot" style={{ background: '#4FAE72' }} />
                         Active
                       </span>
                     );
@@ -1390,7 +1548,7 @@ export default function App() {
                   <FitHeading
                     text={activeTrip?.name || ''}
                     className="app-logo"
-                    style={{ color: '#F2ECDC' }}
+                    style={{ color: 'var(--header-fg)' }}
                     maxFontSize={22}
                     minFontSize={14}
                   />
@@ -1401,7 +1559,7 @@ export default function App() {
                   <button
                     type="button"
                     className="secondary-btn"
-                    style={{ padding: '7px 9px', fontSize: '12px', color: '#00BFA5', borderColor: 'rgba(0,191,165,0.4)', background: 'rgba(0,191,165,0.12)' }}
+                    style={{ padding: '7px 9px', fontSize: '12px', color: '#17B6A6', borderColor: 'rgba(23,182,166,0.4)', background: 'rgba(23,182,166,0.12)' }}
                     onClick={() => setShowBugTracker(true)}
                     title="Open Superadmin Bug Tracker"
                   >
@@ -1413,9 +1571,9 @@ export default function App() {
                   className="secondary-btn"
                   style={{
                     padding: '7px 8px',
-                    color: isBlindMode ? '#00BFA5' : '#F2ECDC',
-                    borderColor: isBlindMode ? '#00BFA5' : 'rgba(242,236,220,0.28)',
-                    background: isBlindMode ? 'rgba(0,191,165,0.18)' : 'rgba(242,236,220,0.06)'
+                    color: isBlindMode ? '#17B6A6' : 'var(--header-fg)',
+                    borderColor: isBlindMode ? '#17B6A6' : 'var(--header-fg-border)',
+                    background: isBlindMode ? 'rgba(23,182,166,0.18)' : 'var(--header-fg-soft-bg)'
                   }}
                   onClick={() => {
                     triggerHaptic('light');
@@ -1429,7 +1587,7 @@ export default function App() {
                 <button
                   type="button"
                   className="secondary-btn"
-                  style={{ padding: '7px 8px', color: '#F2ECDC', borderColor: 'rgba(242,236,220,0.28)', background: 'rgba(242,236,220,0.06)' }}
+                  style={{ padding: '7px 8px', color: 'var(--header-fg)', borderColor: 'var(--header-fg-border)', background: 'var(--header-fg-soft-bg)' }}
                   onClick={() => setShowCommandPalette(true)}
                   title="Search & Quick Actions (Cmd+K)"
                   aria-label="Command palette"
@@ -1440,21 +1598,21 @@ export default function App() {
                 <button
                   data-action="trips-back"
                   className="secondary-btn"
-                  style={{ padding: '7px 11px', fontSize: '12px', color: '#F2ECDC', borderColor: 'rgba(242,236,220,0.28)', background: 'rgba(242,236,220,0.06)' }}
+                  style={{ padding: '7px 11px', fontSize: '12px', color: 'var(--header-fg)', borderColor: 'var(--header-fg-border)', background: 'var(--header-fg-soft-bg)' }}
                   onClick={() => selectTrip(null)}
                 >
                   <IconChevronLeft size={14} className="icon-sm" /> Trips
                 </button>
               </div>
             </div>
-            <div className="app-header-stats">
+            <div className="app-header-stats" style={{ position: 'relative', zIndex: 1 }}>
               <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
                 <span>{visibleMembers.length} member{visibleMembers.length === 1 ? '' : 's'}</span>
                 <span>{activeTripExpenses.length} expense{activeTripExpenses.length === 1 ? '' : 's'}</span>
                 {activePeers.length > 0 && (
                   <div style={{ display: 'inline-flex', alignItems: 'center', gap: '3px' }} title={`${activePeers.length} other traveler(s) online`}>
-                    <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#00BFA5', display: 'inline-block' }} />
-                    <span style={{ fontSize: '11px', color: '#00BFA5', fontWeight: 600 }}>{activePeers.length} online</span>
+                    <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#17B6A6', display: 'inline-block' }} />
+                    <span style={{ fontSize: '11px', color: '#17B6A6', fontWeight: 600 }}>{activePeers.length} online</span>
                   </div>
                 )}
               </div>
@@ -1479,43 +1637,71 @@ export default function App() {
                 <span>{syncStatusLabel}</span>
               </button>
             </div>
+
+            {/* Route Stops Chips Bar inside Header -- collapsed by default
+                (see stopsExpanded above), tap to reveal the full list. */}
+            {activeTrip?.stops && activeTrip.stops.length > 0 && (
+              <div style={{ position: 'relative', zIndex: 1, marginTop: '8px', paddingTop: '8px', borderTop: '1px solid var(--header-fg-border)' }}>
+                {stopsExpanded ? (
+                  <div style={{ display: 'flex', gap: '6px', overflowX: 'auto', scrollbarWidth: 'none' }}>
+                    {activeTrip.stops.map((stop, sIdx) => (
+                      <span
+                        key={stop.id || sIdx}
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                          fontSize: '11px',
+                          fontWeight: 600,
+                          padding: '3px 8px',
+                          borderRadius: '12px',
+                          background: 'var(--header-fg-soft-bg)',
+                          backdropFilter: 'blur(6px)',
+                          color: 'var(--header-fg)',
+                          whiteSpace: 'nowrap',
+                          flexShrink: 0,
+                        }}
+                      >
+                        <strong style={{ opacity: 0.85 }}>{sIdx + 1}.</strong> {stop.name}
+                      </span>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={() => setStopsExpanded(false)}
+                      style={{
+                        display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                        width: '24px', height: '24px', borderRadius: '50%', flexShrink: 0,
+                        background: 'var(--header-fg-soft-bg)', border: 'none', color: 'var(--header-fg)', cursor: 'pointer',
+                      }}
+                      aria-label="Collapse route stops"
+                    >
+                      <IconChevronUp size={12} className="icon-sm" />
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setStopsExpanded(true)}
+                    style={{
+                      display: 'inline-flex', alignItems: 'center', gap: '5px',
+                      fontSize: '11px', fontWeight: 600, padding: '3px 10px', borderRadius: '12px',
+                      background: 'var(--header-fg-soft-bg)', backdropFilter: 'blur(6px)',
+                      color: 'var(--header-fg)', border: 'none', cursor: 'pointer',
+                    }}
+                  >
+                    {activeTrip.stops.length} stops
+                    <IconChevronDown size={12} className="icon-sm" />
+                  </button>
+                )}
+              </div>
+            )}
           </header>
 
-
+          <TripContentSheet onExpandedChange={setSheetExpanded}>
           <main className="app-main">
             {/* View Switching Tab Content */}
             <div className="tab-pane" style={{ display: activeTab === 'expenses' ? 'block' : 'none' }}>
               <div className="fade-in">
-                <ExpenseList
-                  trip={activeTrip}
-                  members={members}
-                  categories={categories}
-                  activeTripMembers={activeTripMembers}
-                  activeTripExpenseCount={activeTripExpenses.length}
-                  activeTripExpenses={activeTripExpenses}
-                  onReviewAffected={handleReviewAffectedExpenses}
-                  filteredExpenses={filteredExpenses}
-                  pendingDeleteId={pendingDeleteExpense?.id}
-                  hasActiveFilters={hasActiveExpenseFilters}
-                  search={expenseSearch}
-                  setSearch={setExpenseSearch}
-                  filterCategory={expenseFilterCategory}
-                  setFilterCategory={setExpenseFilterCategory}
-                  filterMember={expenseFilterMember}
-                  setFilterMember={setExpenseFilterMember}
-                  filterDateFrom={expenseFilterDateFrom}
-                  setFilterDateFrom={setExpenseFilterDateFrom}
-                  filterDateTo={expenseFilterDateTo}
-                  setFilterDateTo={setExpenseFilterDateTo}
-                  onClearFilters={clearExpenseFilters}
-                  onReview={setSelectedReviewExpense}
-                  onEdit={handleStartEditExpense}
-                  onDelete={handleDeleteExpense}
-                  isAdmin={isAdmin}
-                  userId={userId}
-                  myMemberId={myMemberId}
-                />
-
                 {activeTrip && visibleMembers.length > 0 && (
                   <BalancesSettlements
                     trip={activeTrip}
@@ -1532,6 +1718,12 @@ export default function App() {
                     members={members}
                   />
                 )}
+
+                <TransactionsPreview
+                  trip={activeTrip}
+                  expenses={activeTripExpenses}
+                  onViewAll={() => setShowTransactions(true)}
+                />
               </div>
             </div>
 
@@ -1615,20 +1807,10 @@ export default function App() {
               </div>
             </div>
 
-            {activeTab === 'expenses' && (
-              <button
-                type="button"
-                className="fab-add-expense"
-                onClick={handleOpenAddExpense}
-                aria-label="Add Expense"
-                title="Add Expense"
-              >
-                <IconPlus size={24} />
-              </button>
-            )}
           </main>
+          </TripContentSheet>
 
-          <NavTabs activeTab={activeTab} setActiveTab={setActiveTab} />
+          <NavTabs activeTab={activeTab} setActiveTab={setActiveTab} onAddExpense={handleOpenAddExpense} />
         </div>
       )}
 

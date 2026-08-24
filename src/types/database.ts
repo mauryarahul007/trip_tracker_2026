@@ -37,6 +37,8 @@ export interface Database {
           join_code: string;
           archived: boolean;
           frozen: boolean;
+          destination: string | null;
+          stops: unknown;
           created_at: string;
           updated_at: string;
         };
@@ -50,6 +52,8 @@ export interface Database {
           join_code?: string;
           archived?: boolean;
           frozen?: boolean;
+          destination?: string | null;
+          stops?: unknown;
         };
         Update: Partial<{
           name: string;
@@ -58,6 +62,8 @@ export interface Database {
           base_currency: string;
           archived: boolean;
           frozen: boolean;
+          destination: string | null;
+          stops: unknown;
           updated_at: string;
         }>;
         Relationships: [];
@@ -522,6 +528,10 @@ export interface Database {
       };
       set_user_banned: {
         Args: { p_user_id: string; p_banned: boolean };
+        Returns: void;
+      };
+      delete_user: {
+        Args: { p_user_id: string };
         Returns: void;
       };
       get_app_config: {
