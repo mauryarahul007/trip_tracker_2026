@@ -28,7 +28,7 @@ export function TripSlideLauncher({ onCreateTrip, onJoinTrip }: Props) {
     if (!track) return;
     active.current = true;
     startX.current = e.clientX;
-    halfWidth.current = track.offsetWidth / 2 - 30;
+    halfWidth.current = track.offsetWidth / 2 - 40;
     hapticFired.current = false;
     setDragging(true);
   };

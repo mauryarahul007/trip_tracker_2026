@@ -101,9 +101,10 @@ function CardContent({ trip, members }: { trip: Trip; members: Record<string, Me
   );
 }
 
-type FrontCardProps = {
+type CardItemProps = {
   trip: Trip;
   members: Record<string, Member>;
+  idx: number;
   canDelete: boolean;
   onOpen: () => void;
   onBrowse: () => void;
@@ -112,12 +113,18 @@ type FrontCardProps = {
   onDelete: () => void;
 };
 
-// The one interactive card. Left/right swipe browses (non-destructive --
-// the card just rejoins the back of the stack), swipe up archives (reuses
-// the existing, reversible archive action), and a long-press reveals
-// Edit/Delete as explicit targets rather than putting a destructive action
-// on a gesture that's easy to fire by accident while browsing.
-function StackFrontCard({ trip, members, canDelete, onOpen, onBrowse, onArchive, onEdit, onDelete }: FrontCardProps) {
+// Same component for every depth (front and peeking) so React keeps the
+// DOM node when a card rises from depth-1/2 to depth-0 instead of
+// unmounting one component type and mounting another -- that swap was
+// what made the swipe transition look choppy, since a freshly-mounted
+// element can't animate in from nothing. Only the front card (idx 0) is
+// interactive: left/right swipe browses (non-destructive -- the card
+// just rejoins the back of the stack), swipe up archives (reuses the
+// existing, reversible archive action), and a long-press reveals
+// Edit/Delete as explicit targets rather than putting a destructive
+// action on a gesture that's easy to fire by accident while browsing.
+function StackCardItem({ trip, members, idx, canDelete, onOpen, onBrowse, onArchive, onEdit, onDelete }: CardItemProps) {
+  const isFront = idx === 0;
   const [drag, setDrag] = useState({ x: 0, y: 0 });
   const [dragging, setDragging] = useState(false);
   const [exit, setExit] = useState<'left' | 'right' | 'up' | null>(null);
@@ -136,7 +143,7 @@ function StackFrontCard({ trip, members, canDelete, onOpen, onBrowse, onArchive,
   };
 
   const handlePointerDown = (e: React.PointerEvent) => {
-    if (e.pointerType !== 'touch' || quickActionsOpen) return;
+    if (!isFront || e.pointerType !== 'touch' || quickActionsOpen) return;
     active.current = true;
     moved.current = false;
     start.current = { x: e.clientX, y: e.clientY };
@@ -204,21 +211,22 @@ function StackFrontCard({ trip, members, canDelete, onOpen, onBrowse, onArchive,
 
   return (
     <div
-      className="stack-card depth-0"
-      style={{
+      className={`stack-card depth-${idx}`}
+      style={isFront ? {
         transform,
         opacity: exit ? 0 : 1,
-        transition: dragging ? 'none' : 'transform 0.28s cubic-bezier(0.16,1,0.3,1), opacity 0.28s ease',
+        transition: dragging ? 'none' : 'transform 0.32s cubic-bezier(0.16,1,0.3,1), opacity 0.32s cubic-bezier(0.16,1,0.3,1)',
         touchAction: 'pan-y',
-      }}
-      onPointerDown={handlePointerDown}
-      onPointerMove={handlePointerMove}
-      onPointerUp={endDrag}
-      onPointerCancel={endDrag}
-      onClick={handleClick}
+      } : undefined}
+      onPointerDown={isFront ? handlePointerDown : undefined}
+      onPointerMove={isFront ? handlePointerMove : undefined}
+      onPointerUp={isFront ? endDrag : undefined}
+      onPointerCancel={isFront ? endDrag : undefined}
+      onClick={isFront ? handleClick : undefined}
+      aria-hidden={isFront ? undefined : true}
     >
       <CardContent trip={trip} members={members} />
-      {quickActionsOpen && (
+      {isFront && quickActionsOpen && (
         <div
           className="stack-quick-actions"
           onClick={(e) => { e.stopPropagation(); setQuickActionsOpen(false); }}
@@ -288,25 +296,20 @@ export function TripStack({ trips, members, userId, onSelectTrip, onStartEditTri
   return (
     <div className="trip-stack">
       <div className="trip-stack-stage">
-        {visible.map((trip, idx) =>
-          idx === 0 ? (
-            <StackFrontCard
-              key={trip.id}
-              trip={trip}
-              members={members}
-              canDelete={canDelete(trip)}
-              onOpen={() => onSelectTrip(trip.id)}
-              onBrowse={cycleToBack}
-              onArchive={() => { onArchiveTrip(trip); cycleToBack(); }}
-              onEdit={() => onStartEditTrip(trip)}
-              onDelete={() => onDeleteTrip(trip)}
-            />
-          ) : (
-            <div key={trip.id} className={`stack-card depth-${idx}`} aria-hidden="true">
-              <CardContent trip={trip} members={members} />
-            </div>
-          )
-        )}
+        {visible.map((trip, idx) => (
+          <StackCardItem
+            key={trip.id}
+            trip={trip}
+            members={members}
+            idx={idx}
+            canDelete={canDelete(trip)}
+            onOpen={() => onSelectTrip(trip.id)}
+            onBrowse={cycleToBack}
+            onArchive={() => { onArchiveTrip(trip); cycleToBack(); }}
+            onEdit={() => onStartEditTrip(trip)}
+            onDelete={() => onDeleteTrip(trip)}
+          />
+        ))}
       </div>
       <button type="button" className="trip-stack-viewall" onClick={onShowList}>
         View all trips
