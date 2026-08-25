@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { Trip, Expense, Category } from '../types';
 import { CategoryIcon } from './CategoryIcon';
-import { IconAnalytics } from './Icons';
+import { IconAnalytics, IconTrophy } from './Icons';
 import { getCurrencySymbol } from '../utils/currency';
 import { TripJourneyMap } from './TripJourneyMap';
 import { usePrivacyStore, formatMaskedAmount } from '../store/privacyStore';
@@ -72,7 +72,22 @@ export function AnalyticsTab({
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <span style={{ fontSize: '20px' }}>🏆</span>
+            <div
+              style={{
+                width: '30px',
+                height: '30px',
+                borderRadius: '8px',
+                background: 'rgba(217, 119, 6, 0.12)',
+                color: 'var(--color-warning)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+                border: '1px solid rgba(217, 119, 6, 0.22)',
+              }}
+            >
+              <IconTrophy size={15} />
+            </div>
             <div>
               <div style={{ fontSize: '13.5px', fontWeight: 700, color: 'var(--text-primary)' }}>Squad Milestones & Badges</div>
               <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>View unlocked expedition pins</div>

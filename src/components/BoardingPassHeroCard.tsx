@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import type { Trip, Member } from '../types';
 import type { Transfer } from '../utils/settlement';
-import { IconCheckCircle } from './Icons';
+import { IconCheckCircle, IconCatTravel, IconTrophy, IconEdit, IconCopy } from './Icons';
 import { formatMaskedAmount, usePrivacyStore } from '../store/privacyStore';
 import { triggerHaptic } from '../utils/haptics';
 import { getDestinationWeather } from '../services/weatherService';
@@ -225,7 +225,9 @@ export function BoardingPassHeroCard({
           {/* Top Airline Bar */}
           <div className="bp-top" style={{ paddingBottom: '8px' }}>
             <div>
-              <div className="bp-eyebrow">✈ TRIP TRACKER AIRWAYS · FLIGHT 2026</div>
+              <div className="bp-eyebrow" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                <IconCatTravel size={11} /> TRIP TRACKER AIRWAYS · FLIGHT 2026
+              </div>
               <div className="bp-title" style={{ fontSize: '15px' }}>
                 {trip.name}
               </div>
@@ -239,8 +241,8 @@ export function BoardingPassHeroCard({
                     onOpenSquadBadges();
                   }}
                   style={{
-                    background: 'rgba(15, 111, 99, 0.12)',
-                    color: 'var(--primary-accent)',
+                    background: 'rgba(217, 119, 6, 0.12)',
+                    color: 'var(--color-warning)',
                     fontFamily: 'var(--font-family-mono)',
                     fontSize: '10px',
                     fontWeight: 700,
@@ -250,11 +252,11 @@ export function BoardingPassHeroCard({
                     display: 'flex',
                     alignItems: 'center',
                     gap: '4px',
-                    border: '1px solid rgba(15, 111, 99, 0.2)',
+                    border: '1px solid rgba(217, 119, 6, 0.22)',
                   }}
                   title="View Unlocked Squad Achievements"
                 >
-                  🏆 SQUAD BADGES
+                  <IconTrophy size={11} /> SQUAD BADGES
                 </div>
               )}
             </div>
@@ -296,7 +298,7 @@ export function BoardingPassHeroCard({
               ) : (
                 <div onClick={(e) => startEditCode('origin', e)} style={{ cursor: 'pointer' }} title="Click to edit Origin Code (e.g. DEL, BOM, NYC)">
                   <div style={{ fontSize: '24px', fontWeight: 900, fontFamily: 'var(--font-family-title)', color: '#1F1B14', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    {originCode} <span style={{ fontSize: '11px', opacity: 0.4 }}>✏️</span>
+                    {originCode} <IconEdit size={11} style={{ opacity: 0.4 }} />
                   </div>
                   <div style={{ fontSize: '10.5px', color: 'rgba(31, 27, 20, 0.6)', fontFamily: 'var(--font-family-mono)' }}>
                     {trip.startDate || 'DEPART'}
@@ -338,7 +340,7 @@ export function BoardingPassHeroCard({
               ) : (
                 <div onClick={(e) => startEditCode('dest', e)} style={{ cursor: 'pointer' }} title="Click to edit Destination Code (e.g. IXB, GOI, DPS)">
                   <div style={{ fontSize: '24px', fontWeight: 900, fontFamily: 'var(--font-family-title)', color: '#1F1B14', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '4px' }}>
-                    {destCode} <span style={{ fontSize: '11px', opacity: 0.4 }}>✏️</span>
+                    {destCode} <IconEdit size={11} style={{ opacity: 0.4 }} />
                   </div>
                   <div style={{ fontSize: '10.5px', color: 'rgba(31, 27, 20, 0.6)', fontFamily: 'var(--font-family-mono)' }}>
                     {trip.endDate || 'RETURN'}
@@ -393,8 +395,14 @@ export function BoardingPassHeroCard({
               <span style={{ fontFamily: 'monospace', fontSize: '14px', letterSpacing: '2px', color: 'rgba(31, 27, 20, 0.7)' }}>
                 ▌│█║▌║▌║
               </span>
-              <span style={{ fontFamily: 'var(--font-family-mono)', fontSize: '10px', color: 'rgba(31, 27, 20, 0.8)', fontWeight: 700 }}>
-                {trip.joinCode ? `${trip.joinCode} ${copied ? '✓ COPIED' : '📋'}` : '2026-PASS'}
+              <span style={{ fontFamily: 'var(--font-family-mono)', fontSize: '10px', color: 'rgba(31, 27, 20, 0.8)', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                {trip.joinCode ? (
+                  <>
+                    {trip.joinCode} {copied ? '✓ COPIED' : <IconCopy size={11} />}
+                  </>
+                ) : (
+                  '2026-PASS'
+                )}
               </span>
             </div>
 

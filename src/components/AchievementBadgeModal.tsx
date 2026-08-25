@@ -1,6 +1,6 @@
 import type { Trip, Expense, Member, Category } from '../types';
 import { calculateTripAchievements } from '../utils/achievementBadges';
-import { IconClose, IconCheck } from './Icons';
+import { IconClose, IconCheck, IconTrophy } from './Icons';
 import { triggerHaptic } from '../utils/haptics';
 
 interface AchievementBadgeModalProps {
@@ -43,8 +43,8 @@ export function AchievementBadgeModal({
             <div style={{ fontSize: '11px', fontWeight: 800, color: 'var(--primary-accent)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
               Squad Milestones
             </div>
-            <h3 style={{ fontSize: '20px', fontWeight: 800, margin: '2px 0 0', color: 'var(--text-primary)' }}>
-              🏆 Trip Achievements
+            <h3 style={{ fontSize: '20px', fontWeight: 800, margin: '2px 0 0', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <IconTrophy size={18} style={{ color: 'var(--color-warning)' }} /> Trip Achievements
             </h3>
             <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '2px' }}>
               {unlockedCount} of {badges.length} Enamel Pins Unlocked

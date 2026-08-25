@@ -382,6 +382,19 @@ export function IconSparkles({ size = 20, className = 'icon' }: IconProps) {
   );
 }
 
+export function IconTrophy({ size = 20, className = 'icon' }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" className={className} {...base}>
+      <path d="M8 4h8v6a4 4 0 0 1-8 0V4z" />
+      <path d="M8 5H5a3 3 0 0 0 3 5" />
+      <path d="M16 5h3a3 3 0 0 1-3 5" />
+      <path d="M12 14v3" />
+      <path d="M9 21h6" />
+      <path d="M10 17.5h4l.5 3.5h-5z" />
+    </svg>
+  );
+}
+
 export function IconLogOut({ size = 20, className = 'icon' }: IconProps) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" className={className} {...base}>
