@@ -4841,8 +4841,208 @@ textarea.input-field {
   min-height: 69px;
 }
 
+/* ==========================================================================
+   Welcome Screen & 3D Flipping Card Styles
+   ========================================================================== */
 
+.welcome-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: 40px 24px;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  overflow: hidden;
+  box-sizing: border-box;
+}
 
+.welcome-vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at center, rgba(28, 42, 56, 0.35) 0%, rgba(28, 42, 56, 0.7) 100%);
+  z-index: 1;
+}
 
+.welcome-content-top {
+  position: relative;
+  z-index: 2;
+  margin-top: auto;
+  margin-bottom: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 360px;
+}
 
+.welcome-logo-card {
+  background: var(--bg-surface);
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--border-radius-md);
+  padding: 32px 24px;
+  text-align: center;
+  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.22);
+  width: 100%;
+  box-sizing: border-box;
+  animation: welcome-card-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
 
+@keyframes welcome-card-in {
+  from { opacity: 0; transform: translateY(20px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.welcome-logo-badge {
+  width: 54px;
+  height: 54px;
+  margin: 0 auto 16px;
+  border-radius: 50%;
+  background: rgba(31, 110, 104, 0.08);
+  border: 1.5px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.welcome-title {
+  font-family: var(--font-family-title);
+  font-size: 28px;
+  color: var(--text-primary);
+  margin: 0 0 4px;
+  font-weight: 700;
+}
+
+.welcome-subtitle {
+  font-family: var(--font-family-body);
+  font-size: 13.5px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin: 12px 0 0;
+}
+
+.welcome-content-bottom {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+/* iOS Transparent Unlock Slider */
+.unlock-slider-track {
+  position: relative;
+  width: 100%;
+  max-width: 320px;
+  height: 64px;
+  border-radius: 32px;
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  user-select: none;
+  touch-action: none;
+}
+
+.unlock-slider-label {
+  position: absolute;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-family: var(--font-family-body);
+  font-size: 14px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.85);
+  pointer-events: none;
+  z-index: 1;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  background: linear-gradient(90deg, rgba(255,255,255,0.7) 0%, #FFFFFF 50%, rgba(255,255,255,0.7) 100%);
+  background-size: 200% 100%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  animation: unlock-shimmer 2.5s infinite linear;
+}
+
+@keyframes unlock-shimmer {
+  0% { background-position: -100% 0; }
+  100% { background-position: 100% 0; }
+}
+
+.unlock-slider-handle {
+  position: absolute;
+  top: 5px;
+  left: 5px;
+  width: 54px;
+  height: 54px;
+  border-radius: 27px;
+  background: linear-gradient(135deg, var(--secondary-accent, #B98A3E) 0%, #926727 100%);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3), inset 0 1.5px 1.5px rgba(255, 255, 255, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #FFFFFF;
+  cursor: grab;
+  z-index: 2;
+  transition: transform 0.1s ease;
+}
+
+.unlock-slider-handle:active {
+  cursor: grabbing;
+}
+
+/* 3D Perspective Card Container */
+.login-perspective {
+  perspective: 1000px;
+  width: 100%;
+  max-width: 380px;
+  margin: 0 auto;
+}
+
+.login-card-inner {
+  position: relative;
+  width: 100%;
+  height: auto;
+  min-height: 380px;
+  transform-style: preserve-3d;
+  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.login-card-inner.flipped {
+  transform: rotateY(180deg);
+}
+
+/* Common Face Setup */
+.login-face-front,
+.login-face-back {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  border-radius: var(--border-radius-md);
+  border: 1.5px solid var(--border-color);
+  background: var(--bg-surface);
+  box-shadow: 0 12px 32px rgba(28, 42, 56, 0.08);
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  padding: 28px 24px;
+}
+
+/* Back Face pre-flipped */
+.login-face-back {
+  transform: rotateY(180deg);
+}

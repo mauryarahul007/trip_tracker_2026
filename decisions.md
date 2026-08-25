@@ -977,8 +977,34 @@ This document logs all meaningful technical decisions, library choices, design p
   - Complex animation loops on mobile web maps can introduce UI complexity and camera contention. The app requires a fast, clean, and interactive route overview that plots all trip expenses, category waypoints, and connected road paths clearly.
 * **Decision:**
   - Maintained a clean and responsive vector map in [`src/components/TripJourneyMap.tsx`](file:///c:/ProjectsV1/Trip_Tracker_2026/src/components/TripJourneyMap.tsx) featuring category-themed pin markers, tap-to-inspect transaction popups, and OSRM road geometry without intrusive animation controls.
+---
+
+## 55. Material Design 3 / Material-UI Design System for Superadmin Dashboard & Bug Tracker
+* **Context:**
+  - Administrative control and bug tracking interfaces require a modern, expressive Material Design 3 (M3) / Material-UI (MUI) design system, adapted from the visual design language in the reference screenshot (`#1D2A68` Deep Royal Navy navigation rail, `#F4F5FA` soft lavender-tinted canvas, 24px rounded white card containers, soft pastel tonal pills, crisp midnight ink typography, high-contrast dark accents).
+* **Decision:**
+  - Authored comprehensive visual design mockups and detailed specifications for two core administrative platforms with multiple layout versions:
+    1. **Superadmin Dashboard**:
+       - *Version 1 (Executive Overview & Health Hub)*: KPI rounded cards, 30-day telemetry chart, security audit trail table, global tenant selector.
+       - *Version 2 (High-Density Enterprise Command Center)*: Real-time gauge metrics (CPU, RAM, Latency, Error rate), tenant/organization grid, real-time server load heatmap, security threat monitor.
+    2. **Bug & Incident Tracker**:
+       - *Version 1 (Material 3 Triage & Kanban Board)*: 4-column issue pipeline (Backlog, In Progress, In Review, Resolved), severity tags (Critical, High, Medium, Low), error type tags, assignee avatar stacks.
+       - *Version 2 (Diagnostic Split View & Stack Trace Inspector)*: Split view issue list + stack trace diagnostic inspector with syntax highlighting, environment metadata, activity timeline, and quick-action resolution pills.
 * **Trade-offs Accepted:**
-  - Prioritizes instant interactive exploration, fast loading, zero battery drain, and clean typography.
+  - Focused strictly on UI visual mockups, color tokens, layout blueprints, and Material-UI component maps first without touching front-end application code, allowing design alignment before code execution.
+
+---
+
+## 56. Immersive Welcome Screen & 3D Flipping Card Login Flow
+* **Context:**
+  - When the webapp opens and the user is not logged in, there is no landing/welcome screen (just a direct Google sign-in page). There needs to be a welcoming entrance that explains the product value proposition, guides the user with a premium tactile gesture ("Slide to unlock"), and hides administrative/superadmin logins behind a clean interactive reveal.
+* **Decision:**
+  - Added an immersive Welcome Screen featuring a full-viewport atmospheric travel mountain photography background (`travel-bg.jpg`), a centered logo/brand card, and an iOS-style transparent sliding track with frosted glass backdrop blur and spring-back drag physics.
+  - Implemented a 3D Flipping Card using GPU-accelerated CSS `rotateY` transforms. Traveler options (Google Sign-In + Guest Mode) render on the front, while the Superadmin credentials form renders inline on the back face (activated by clicking the corner shield button or the Super User button).
+* **Trade-offs Accepted:**
+  - Background image (`travel-bg.jpg`) increases bundle size by ~840KB. However, this is heavily mitigated because the login screen is a standalone route/code-split view, and a premium visual first impression is worth the initial load latency.
+
+
 
 
 
