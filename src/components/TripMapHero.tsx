@@ -3,6 +3,7 @@ import type { Trip } from '../types';
 import { Map as MaplibreMap, Marker, LngLatBounds, GeoJSONSource, setWorkerUrl } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { useResolvedTripStops } from '../hooks/useResolvedTripStops';
+import { SHEET_COLLAPSED_TOP } from './TripContentSheet';
 
 setWorkerUrl(`${import.meta.env.BASE_URL}maplibre/maplibre-gl-worker.js`);
 
@@ -141,8 +142,18 @@ export function TripMapHero({ trip, sheetExpanded, onToneChange }: Props) {
       const bounds = new LngLatBounds();
       // Fit padding needs real clearance under the floating translucent
       // header, not a flat guess -- otherwise the top of the route/pins
-      // renders partially hidden behind it on open.
-      const fitPadding = { top: getHeaderHeightPx() + 24, bottom: 48, left: 48, right: 48 };
+      // renders partially hidden behind it on open. Bottom clearance has
+      // to match the content sheet's own collapsed position (it starts
+      // covering the bottom SHEET_COLLAPSED_TOP% of the screen on open) --
+      // otherwise fitBounds fits the whole container height and half the
+      // route ends up hidden under the sheet, looking zoomed-in above it.
+      const containerHeight = mapContainerRef.current?.clientHeight ?? window.innerHeight;
+      const fitPadding = {
+        top: getHeaderHeightPx() + 24,
+        bottom: containerHeight * ((100 - SHEET_COLLAPSED_TOP) / 100) + 24,
+        left: 48,
+        right: 48,
+      };
 
       // Highlight the route when the trip has multiple stops. Straight
       // line first (instant, always available), then swapped for the real
@@ -223,10 +234,6 @@ export function TripMapHero({ trip, sheetExpanded, onToneChange }: Props) {
       });
 
       if (!bounds.isEmpty()) {
-        // TEMP DEBUG: confirms whether a stop is carrying a bad saved
-        // lat/lng (skips geocoding entirely) vs. a route-fit race --
-        // remove once the zoomed-in-on-open bug is confirmed fixed.
-        console.log('[TripMapHero] fitBounds stops', validStops.map((s) => ({ name: s.name, lat: s.lat, lng: s.lng })));
         map.fitBounds(bounds, { padding: fitPadding, maxZoom: 12, duration: 0 });
       }
     });

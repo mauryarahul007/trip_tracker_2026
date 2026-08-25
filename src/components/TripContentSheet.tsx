@@ -1,6 +1,9 @@
 import { useRef, useState, useEffect, type PointerEvent, type ReactNode } from 'react';
 
-const SHEET_COLLAPSED_TOP = 50; // vh% -- initial state, map half visible
+// Exported so TripMapHero can size its fitBounds padding to match --
+// the map needs to fit the whole route above wherever the sheet's top
+// edge actually sits, not just this file's own layout.
+export const SHEET_COLLAPSED_TOP = 50; // vh% -- initial state, map half visible
 const SHEET_EXPANDED_TOP = 20; // vh% -- swiped-up state, 80% coverage
 
 interface Props {
