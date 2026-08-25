@@ -101,9 +101,10 @@ export function TripMapHero({ trip, sheetExpanded, onToneChange }: Props) {
       container: mapContainerRef.current,
       style: MAP_STYLE_URL,
       center: [validStops[0].lng, validStops[0].lat],
-      // Single-stop trips skip fitBounds below (nothing to fit), so seed a
-      // sensible city-level zoom here instead of leaving it at a fixed 10
-      // regardless of how many stops there turn out to be.
+      // fitBounds below still runs for single-stop trips (a lone point is a
+      // valid non-empty bounds), but seed a sensible city-level zoom here
+      // for the brief pre-'load' paint instead of a fixed 10 regardless of
+      // how many stops there turn out to be.
       zoom: validStops.length > 1 ? 10 : 12,
       attributionControl: false,
       // Needed to read pixels back out for the header-tone sampler --
