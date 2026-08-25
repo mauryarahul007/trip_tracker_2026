@@ -6,6 +6,7 @@ import { DateRangePicker } from './DateRangePicker';
 import { formatTripStamp } from '../utils/dateRange';
 import { initial } from '../utils/initials';
 import { avatarColorForName } from '../utils/avatarColor';
+import { newId } from '../utils/uuid';
 import { useTripStore } from '../store/tripStore';
 import { SwipeableRow } from './SwipeableRow';
 import { TripStack } from './TripStack';
@@ -260,11 +261,11 @@ export function TripsListScreen({
                 <button
                   type="button"
                   onClick={() => {
-                    const nextId = crypto.randomUUID();
+                    const nextId = newId();
                     if (newTripStops.length === 0) {
                       const firstVal = newTripDestination.trim();
                       setNewTripStops([
-                        { id: crypto.randomUUID(), name: firstVal || '' },
+                        { id: newId(), name: firstVal || '' },
                         { id: nextId, name: '' },
                       ]);
                       setNewTripDestination('');
@@ -369,7 +370,7 @@ export function TripsListScreen({
                     <button
                       type="button"
                       onClick={() => {
-                        const nextId = crypto.randomUUID();
+                        const nextId = newId();
                         setNewTripStops([...newTripStops, { id: nextId, name: '' }]);
                       }}
                       style={{

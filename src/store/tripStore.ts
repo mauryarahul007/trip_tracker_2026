@@ -4,6 +4,7 @@ import type { Member, Group, Expense, Category, TripState, ExpenseLocation, Trip
 import type { FeatureFlagKey } from '../types/admin';
 import { DEFAULT_FEATURE_FLAGS, isFeatureActive } from '../utils/featureFlags';
 import { buildAutoGroupName } from '../utils/groupNaming';
+import { newId } from '../utils/uuid';
 import { fetchResolvedFeatureFlags, fetchAllFeatureFlagOverrides, setFeatureFlagOverride } from '../services/featureFlagApi';
 import { supabase, isMissingSupabaseEnv } from '../services/supabaseClient';
 import {
@@ -682,7 +683,7 @@ export const useTripStore = create<TripStore>()(
     clearStorageError: () => set({ storageError: null }),
 
     queueSync: (type, payload) => {
-      const newQueue = [...get().syncQueue, { id: crypto.randomUUID(), type, payload }];
+      const newQueue = [...get().syncQueue, { id: newId(), type, payload }];
       set({ syncQueue: newQueue, lastModifiedAt: Date.now() });
     },
 
@@ -867,9 +868,9 @@ export const useTripStore = create<TripStore>()(
       // queue entirely (it could never flush) and create the trip as a
       // fully local record, same as the dummy-Supabase fallback elsewhere.
       if (isMissingSupabaseEnv) {
-        const tripId = crypto.randomUUID();
+        const tripId = newId();
         const creatorName = get().userDisplayName || (get().isSuperadmin ? 'Super Admin' : 'Me');
-        const creatorMemberId = crypto.randomUUID();
+        const creatorMemberId = newId();
         const creatorMember: Member = {
           id: creatorMemberId,
           name: creatorName,
@@ -914,8 +915,8 @@ export const useTripStore = create<TripStore>()(
       // member too, so they show up in the members list and can be a
       // payer/split participant like everyone else.
       const creatorName = get().userDisplayName || 'Me';
-      const tripTempId = crypto.randomUUID();
-      const memberTempId = crypto.randomUUID();
+      const tripTempId = newId();
+      const memberTempId = newId();
 
       const optimisticMember: Member = { id: memberTempId, name: creatorName, linkedUserId: userId };
       const optimisticTrip: Trip = {
@@ -1127,7 +1128,7 @@ export const useTripStore = create<TripStore>()(
       if (!activeTripId) return;
 
       if (isMissingSupabaseEnv) {
-        const memberId = crypto.randomUUID();
+        const memberId = newId();
         const member: Member = { id: memberId, name: name.trim(), linkedUserId: linkedUserId || null };
         set((state) => ({
           members: { ...state.members, [memberId]: member },
@@ -1137,7 +1138,7 @@ export const useTripStore = create<TripStore>()(
         return;
       }
 
-      const tempId = crypto.randomUUID();
+      const tempId = newId();
       const optimisticMember: Member = { id: tempId, name, linkedUserId: linkedUserId ?? null };
 
       // Optimistically add the member — same tempId becomes the real row id
@@ -1322,7 +1323,7 @@ export const useTripStore = create<TripStore>()(
       const activeTripId = get().activeTripId;
       if (!activeTripId) return;
 
-      const tempId = crypto.randomUUID();
+      const tempId = newId();
       const optimisticGroup: Group = { id: tempId, name, memberIds };
 
       set((state) => ({
@@ -1412,7 +1413,7 @@ export const useTripStore = create<TripStore>()(
       if (participants.length === 0) return;
 
       const resolvedShares = resolveShares(expenseData, participants);
-      const tempId = crypto.randomUUID();
+      const tempId = newId();
       const tempExpense: Expense = {
         id: tempId,
         tripId,
@@ -1694,7 +1695,7 @@ export const useTripStore = create<TripStore>()(
 
       if (isMissingSupabaseEnv) {
         const newCat: Category = {
-          id: `cat-custom-${crypto.randomUUID()}`,
+          id: `cat-custom-${newId()}`,
           name: name.trim(),
           icon: icon || '🏷️',
           isCustom: true,
@@ -1703,7 +1704,7 @@ export const useTripStore = create<TripStore>()(
         return;
       }
 
-      const tempId = crypto.randomUUID();
+      const tempId = newId();
       const optimisticCategory: Category = { id: tempId, name, icon, isCustom: true };
       set((state) => ({ categories: [...state.categories, optimisticCategory], storageError: null }));
 

@@ -12,11 +12,20 @@ import { diagnosticLogger } from './diagnosticLogger';
 const reportedSignatures = new Set<string>();
 let listenersAttached = false;
 
+// Browser-benign noise that every major crash reporter (Sentry, Bugsnag,
+// etc.) filters by convention: Chrome fires this as a real `error` event
+// even though it never indicates an app defect -- see
+// https://github.com/WICG/resize-observer/issues/38. Filing it as a
+// critical bug just burns ledger signal.
+const IGNORED_MESSAGE_PATTERNS = [/^ResizeObserver loop/i];
+
 export async function autoReportError(
   message: string,
   stack: string | undefined,
   source: 'window-error' | 'unhandled-rejection' | 'react-crash'
 ): Promise<void> {
+  if (IGNORED_MESSAGE_PATTERNS.some((p) => p.test(message))) return;
+
   const signature = message.slice(0, 200);
   if (!signature || reportedSignatures.has(signature)) return;
   reportedSignatures.add(signature);

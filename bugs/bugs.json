@@ -504,7 +504,7 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-08-21T07:59:10.84566+00:00",
-    "updatedAt": "2026-08-25T06:58:46.515Z"
+    "updatedAt": "2026-08-25T06:58:46.515+00:00"
   },
   {
     "id": "BUG-018",
@@ -530,7 +530,7 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-08-21T08:01:15.033881+00:00",
-    "updatedAt": "2026-08-25T06:58:47.585Z"
+    "updatedAt": "2026-08-25T06:58:47.585+00:00"
   },
   {
     "id": "BUG-019",
@@ -561,7 +561,7 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-08-21T08:07:37.629939+00:00",
-    "updatedAt": "2026-08-25T06:58:48.333Z"
+    "updatedAt": "2026-08-25T06:58:48.333+00:00"
   },
   {
     "id": "BUG-020",
@@ -698,9 +698,9 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-08-21T14:26:01.480804+00:00",
-    "updatedAt": "2026-08-25T06:58:53.226Z",
+    "updatedAt": "2026-08-25T06:58:53.226+00:00",
+    "resolvedAt": "2026-08-25T06:58:53.225+00:00",
     "resolvedBy": "claude",
-    "resolvedAt": "2026-08-25T06:58:53.225Z",
     "resolutionNote": "Added .catch(() => {}) to the two unguarded registration.update() calls in serviceWorker.ts (interval timer + visibilitychange listener) that were producing an unhandled promise rejection."
   },
   {
@@ -842,8 +842,8 @@
     "status": "resolved",
     "foundBy": "claude-cli",
     "environment": {
-      "platform": "web",
       "isOnline": true,
+      "platform": "web",
       "appVersion": "1.0.0"
     },
     "reproSteps": [
@@ -853,11 +853,1181 @@
     "expectedBehavior": "",
     "actualBehavior": "",
     "diagnostics": {},
-    "createdAt": "2026-08-21T19:15:57.929Z",
-    "updatedAt": "2026-08-21T19:16:02.474Z",
+    "createdAt": "2026-08-21T19:15:57.929+00:00",
+    "updatedAt": "2026-08-21T19:16:02.474+00:00",
+    "resolvedAt": "2026-08-21T19:16:02.473+00:00",
     "resolvedBy": "claude-cli",
-    "resolvedAt": "2026-08-21T19:16:02.473Z",
     "resolutionNote": "tripStore.ts loadDemoTrip offline-fallback: result.categories now returns [] (matching insertTripGraph's success-path shape of custom-only categories) instead of DEFAULT_CATEGORIES, so the caller's [...DEFAULT_CATEGORIES, ...result.categories] no longer doubles every default category. Added regression test in tripStore.test.ts (loadDemoTrip suite) that mocks insertTripGraph to reject and asserts categories has no duplicate ids -- fails without the fix (12 ids instead of 6), passes with it."
+  },
+  {
+    "id": "BUG-031",
+    "title": "Failed to update a ServiceWorker for scope ('https://trip-tracker.blackmaroon.in/') with script ('https://trip-tracker.blackmaroon.in/sw.js'",
+    "description": "Automatically captured unhandled rejection.\n\nTypeError: Failed to update a ServiceWorker for scope ('https://trip-tracker.blackmaroon.in/') with script ('https://trip-tracker.blackmaroon.in/sw.js'): An unknown error occurred when fetching the script.",
+    "severity": "critical",
+    "category": "general",
+    "status": "resolved",
+    "foundBy": "auto-crash-handler",
+    "environment": {
+      "route": "#/",
+      "isOnline": true,
+      "platform": "web",
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [],
+    "expectedBehavior": "App runs without throwing.",
+    "actualBehavior": "Failed to update a ServiceWorker for scope ('https://trip-tracker.blackmaroon.in/') with script ('https://trip-tracker.blackmaroon.in/sw.js'): An unknown error occurred when fetching the script.",
+    "diagnostics": {
+      "stackTrace": "TypeError: Failed to update a ServiceWorker for scope ('https://trip-tracker.blackmaroon.in/') with script ('https://trip-tracker.blackmaroon.in/sw.js'): An unknown error occurred when fetching the script.",
+      "consoleLogs": [
+        "[info] DiagnosticLogger initialized",
+        "[error] Unhandled Promise Rejection: Failed to update a ServiceWorker for scope ('https://trip-tracker.blackmaroon.in/') with script ('https://trip-tracker.blackmaroon.in/sw.js'): An unknown error occurred when fetching the script."
+      ],
+      "syncQueueLength": 0
+    },
+    "createdAt": "2026-08-22T12:01:59.699171+00:00",
+    "updatedAt": "2026-08-25T07:09:35.999Z",
+    "resolvedBy": "claude",
+    "resolvedAt": "2026-08-25T07:09:35.998Z",
+    "resolutionNote": "Duplicate of BUG-024 -- unguarded registration.update() in serviceWorker.ts threw an unhandled rejection. Fixed by wrapping both call sites (interval timer + visibilitychange listener) in .catch(() => {})."
+  },
+  {
+    "id": "BUG-032",
+    "title": "Failed to update a ServiceWorker for scope ('https://trip-tracker.blackmaroon.in/') with script ('https://trip-tracker.blackmaroon.in/sw.js'",
+    "description": "Automatically captured unhandled rejection.\n\nTypeError: Failed to update a ServiceWorker for scope ('https://trip-tracker.blackmaroon.in/') with script ('https://trip-tracker.blackmaroon.in/sw.js'): An unknown error occurred when fetching the script.",
+    "severity": "critical",
+    "category": "general",
+    "status": "resolved",
+    "foundBy": "auto-crash-handler",
+    "environment": {
+      "route": "#/",
+      "isOnline": true,
+      "platform": "web",
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [],
+    "expectedBehavior": "App runs without throwing.",
+    "actualBehavior": "Failed to update a ServiceWorker for scope ('https://trip-tracker.blackmaroon.in/') with script ('https://trip-tracker.blackmaroon.in/sw.js'): An unknown error occurred when fetching the script.",
+    "diagnostics": {
+      "stackTrace": "TypeError: Failed to update a ServiceWorker for scope ('https://trip-tracker.blackmaroon.in/') with script ('https://trip-tracker.blackmaroon.in/sw.js'): An unknown error occurred when fetching the script.",
+      "consoleLogs": [
+        "[info] DiagnosticLogger initialized",
+        "[error] Unhandled Promise Rejection: Failed to update a ServiceWorker for scope ('https://trip-tracker.blackmaroon.in/') with script ('https://trip-tracker.blackmaroon.in/sw.js'): An unknown error occurred when fetching the script."
+      ],
+      "syncQueueLength": 0
+    },
+    "createdAt": "2026-08-22T12:34:29.557651+00:00",
+    "updatedAt": "2026-08-25T07:09:36.767Z",
+    "resolvedBy": "claude",
+    "resolvedAt": "2026-08-25T07:09:36.766Z",
+    "resolutionNote": "Duplicate of BUG-024 -- unguarded registration.update() in serviceWorker.ts threw an unhandled rejection. Fixed by wrapping both call sites (interval timer + visibilitychange listener) in .catch(() => {})."
+  },
+  {
+    "id": "BUG-033",
+    "title": "Failed to update a ServiceWorker for scope ('https://trip-tracker.blackmaroon.in/') with script ('https://trip-tracker.blackmaroon.in/sw.js'",
+    "description": "Automatically captured unhandled rejection.\n\nTypeError: Failed to update a ServiceWorker for scope ('https://trip-tracker.blackmaroon.in/') with script ('https://trip-tracker.blackmaroon.in/sw.js'): An unknown error occurred when fetching the script.",
+    "severity": "critical",
+    "category": "general",
+    "status": "resolved",
+    "foundBy": "auto-crash-handler",
+    "environment": {
+      "route": "#/",
+      "isOnline": true,
+      "platform": "web",
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [],
+    "expectedBehavior": "App runs without throwing.",
+    "actualBehavior": "Failed to update a ServiceWorker for scope ('https://trip-tracker.blackmaroon.in/') with script ('https://trip-tracker.blackmaroon.in/sw.js'): An unknown error occurred when fetching the script.",
+    "diagnostics": {
+      "stackTrace": "TypeError: Failed to update a ServiceWorker for scope ('https://trip-tracker.blackmaroon.in/') with script ('https://trip-tracker.blackmaroon.in/sw.js'): An unknown error occurred when fetching the script.",
+      "consoleLogs": [
+        "[info] DiagnosticLogger initialized",
+        "[error] Unhandled Promise Rejection: Failed to update a ServiceWorker for scope ('https://trip-tracker.blackmaroon.in/') with script ('https://trip-tracker.blackmaroon.in/sw.js'): An unknown error occurred when fetching the script."
+      ],
+      "syncQueueLength": 0
+    },
+    "createdAt": "2026-08-22T13:53:32.525735+00:00",
+    "updatedAt": "2026-08-25T07:09:37.333Z",
+    "resolvedBy": "claude",
+    "resolvedAt": "2026-08-25T07:09:37.333Z",
+    "resolutionNote": "Duplicate of BUG-024 -- unguarded registration.update() in serviceWorker.ts threw an unhandled rejection. Fixed by wrapping both call sites (interval timer + visibilitychange listener) in .catch(() => {})."
+  },
+  {
+    "id": "BUG-034",
+    "title": "Failed to update a ServiceWorker for scope ('https://trip-tracker.blackmaroon.in/') with script ('https://trip-tracker.blackmaroon.in/sw.js'",
+    "description": "Automatically captured unhandled rejection.\n\nTypeError: Failed to update a ServiceWorker for scope ('https://trip-tracker.blackmaroon.in/') with script ('https://trip-tracker.blackmaroon.in/sw.js'): An unknown error occurred when fetching the script.",
+    "severity": "critical",
+    "category": "general",
+    "status": "resolved",
+    "foundBy": "auto-crash-handler",
+    "environment": {
+      "route": "#nav-1",
+      "isOnline": true,
+      "platform": "web",
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [],
+    "expectedBehavior": "App runs without throwing.",
+    "actualBehavior": "Failed to update a ServiceWorker for scope ('https://trip-tracker.blackmaroon.in/') with script ('https://trip-tracker.blackmaroon.in/sw.js'): An unknown error occurred when fetching the script.",
+    "diagnostics": {
+      "stackTrace": "TypeError: Failed to update a ServiceWorker for scope ('https://trip-tracker.blackmaroon.in/') with script ('https://trip-tracker.blackmaroon.in/sw.js'): An unknown error occurred when fetching the script.",
+      "consoleLogs": [
+        "[info] DiagnosticLogger initialized",
+        "[error] Unhandled Promise Rejection: Failed to update a ServiceWorker for scope ('https://trip-tracker.blackmaroon.in/') with script ('https://trip-tracker.blackmaroon.in/sw.js'): An unknown error occurred when fetching the script."
+      ],
+      "syncQueueLength": 0
+    },
+    "createdAt": "2026-08-22T13:59:49.534541+00:00",
+    "updatedAt": "2026-08-25T07:09:37.816Z",
+    "resolvedBy": "claude",
+    "resolvedAt": "2026-08-25T07:09:37.815Z",
+    "resolutionNote": "Duplicate of BUG-024 -- unguarded registration.update() in serviceWorker.ts threw an unhandled rejection. Fixed by wrapping both call sites (interval timer + visibilitychange listener) in .catch(() => {})."
+  },
+  {
+    "id": "BUG-035",
+    "title": "Failed to update a ServiceWorker for scope ('https://trip-tracker.blackmaroon.in/') with script ('https://trip-tracker.blackmaroon.in/sw.js'",
+    "description": "Automatically captured unhandled rejection.\n\nTypeError: Failed to update a ServiceWorker for scope ('https://trip-tracker.blackmaroon.in/') with script ('https://trip-tracker.blackmaroon.in/sw.js'): An unknown error occurred when fetching the script.",
+    "severity": "critical",
+    "category": "general",
+    "status": "resolved",
+    "foundBy": "auto-crash-handler",
+    "environment": {
+      "route": "#/",
+      "isOnline": true,
+      "platform": "web",
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [],
+    "expectedBehavior": "App runs without throwing.",
+    "actualBehavior": "Failed to update a ServiceWorker for scope ('https://trip-tracker.blackmaroon.in/') with script ('https://trip-tracker.blackmaroon.in/sw.js'): An unknown error occurred when fetching the script.",
+    "diagnostics": {
+      "stackTrace": "TypeError: Failed to update a ServiceWorker for scope ('https://trip-tracker.blackmaroon.in/') with script ('https://trip-tracker.blackmaroon.in/sw.js'): An unknown error occurred when fetching the script.",
+      "consoleLogs": [
+        "[info] DiagnosticLogger initialized",
+        "[error] Unhandled Promise Rejection: Failed to update a ServiceWorker for scope ('https://trip-tracker.blackmaroon.in/') with script ('https://trip-tracker.blackmaroon.in/sw.js'): An unknown error occurred when fetching the script."
+      ],
+      "syncQueueLength": 0
+    },
+    "createdAt": "2026-08-22T16:41:09.562667+00:00",
+    "updatedAt": "2026-08-25T07:09:38.318Z",
+    "resolvedBy": "claude",
+    "resolvedAt": "2026-08-25T07:09:38.317Z",
+    "resolutionNote": "Duplicate of BUG-024 -- unguarded registration.update() in serviceWorker.ts threw an unhandled rejection. Fixed by wrapping both call sites (interval timer + visibilitychange listener) in .catch(() => {})."
+  },
+  {
+    "id": "BUG-036",
+    "title": "Minified React error #185; visit https://react.dev/errors/185 for the full message or use the non-minified dev environment for full errors a",
+    "description": "Automatically captured react crash.\n\nError: Minified React error #185; visit https://react.dev/errors/185 for the full message or use the non-minified dev environment for full errors and additional helpful warnings.\n    at ui (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:9:27498)\n    at ci (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:9:27071)\n    at $o (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:9:52301)\n    at Xo (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:9:52130)\n    at Xc (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:9:91991)\n    at Fl (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:9:107170)\n    at Pl (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:9:107054)\n    at Fl (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:9:107934)\n    at Pl (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:9:107054)\n    at Fl (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:9:107150)",
+    "severity": "critical",
+    "category": "general",
+    "status": "resolved",
+    "foundBy": "auto-crash-handler",
+    "environment": {
+      "route": "#nav-2",
+      "isOnline": true,
+      "platform": "web",
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [],
+    "expectedBehavior": "App runs without throwing.",
+    "actualBehavior": "Minified React error #185; visit https://react.dev/errors/185 for the full message or use the non-minified dev environment for full errors and additional helpful warnings.",
+    "diagnostics": {
+      "stackTrace": "Error: Minified React error #185; visit https://react.dev/errors/185 for the full message or use the non-minified dev environment for full errors and additional helpful warnings.\n    at ui (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:9:27498)\n    at ci (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:9:27071)\n    at $o (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:9:52301)\n    at Xo (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:9:52130)\n    at Xc (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:9:91991)\n    at Fl (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:9:107170)\n    at Pl (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:9:107054)\n    at Fl (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:9:107934)\n    at Pl (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:9:107054)\n    at Fl (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:9:107150)",
+      "consoleLogs": [
+        "[info] DiagnosticLogger initialized",
+        "[error] {}",
+        "[error] React Crash: Minified React error #185; visit https://react.dev/errors/185 for the full message or use the non-minified dev environment for full errors and additional helpful warnings.",
+        "[error] Uncaught error inside ErrorBoundary: {} {\"componentStack\":\"\\n    at Kee (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:63:1493)\\n    at div (<anonymous>)\\n    at A_e (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:889:49770)\\n    at U9 (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:890:28124)\\n    at z9 (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:890:26812)\\n    at Et (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:12:42"
+      ],
+      "syncQueueLength": 0
+    },
+    "createdAt": "2026-08-22T18:11:10.139197+00:00",
+    "updatedAt": "2026-08-25T07:09:47.745Z",
+    "resolvedBy": "claude",
+    "resolvedAt": "2026-08-25T07:09:47.744Z",
+    "resolutionNote": "React error #185 (Maximum update depth exceeded). Root cause: App.tsx's scroll handler unconditionally called setIsHeaderScrolled(false) on every scroll frame when scrollTop<=15, with no guard checking the flag was actually true -- the sibling branches already had this guard, this one didn't. Combined with the header-height ResizeObserver (padding it drives shifts scroll position, which the listener reads as a scroll event), this could thrash. Fixed the missing guard and made the ResizeObserver write skip no-op height values."
+  },
+  {
+    "id": "BUG-037",
+    "title": "Minified React error #185; visit https://react.dev/errors/185 for the full message or use the non-minified dev environment for full errors a",
+    "description": "Automatically captured react crash.\n\nError: Minified React error #185; visit https://react.dev/errors/185 for the full message or use the non-minified dev environment for full errors and additional helpful warnings.\n    at ui (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:9:27498)\n    at ci (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:9:27071)\n    at $o (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:9:52301)\n    at Xo (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:9:52130)\n    at Xc (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:9:91991)\n    at Fl (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:9:107170)\n    at Pl (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:9:107054)\n    at Fl (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:9:107934)\n    at Pl (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:9:107054)\n    at Fl (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:9:107150)",
+    "severity": "critical",
+    "category": "general",
+    "status": "resolved",
+    "foundBy": "auto-crash-handler",
+    "environment": {
+      "route": "#nav-2",
+      "isOnline": true,
+      "platform": "web",
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [],
+    "expectedBehavior": "App runs without throwing.",
+    "actualBehavior": "Minified React error #185; visit https://react.dev/errors/185 for the full message or use the non-minified dev environment for full errors and additional helpful warnings.",
+    "diagnostics": {
+      "stackTrace": "Error: Minified React error #185; visit https://react.dev/errors/185 for the full message or use the non-minified dev environment for full errors and additional helpful warnings.\n    at ui (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:9:27498)\n    at ci (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:9:27071)\n    at $o (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:9:52301)\n    at Xo (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:9:52130)\n    at Xc (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:9:91991)\n    at Fl (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:9:107170)\n    at Pl (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:9:107054)\n    at Fl (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:9:107934)\n    at Pl (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:9:107054)\n    at Fl (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:9:107150)",
+      "consoleLogs": [
+        "[info] DiagnosticLogger initialized",
+        "[error] {}",
+        "[error] React Crash: Minified React error #185; visit https://react.dev/errors/185 for the full message or use the non-minified dev environment for full errors and additional helpful warnings.",
+        "[error] Uncaught error inside ErrorBoundary: {} {\"componentStack\":\"\\n    at Kee (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:63:1493)\\n    at div (<anonymous>)\\n    at A_e (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:889:49770)\\n    at U9 (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:890:28124)\\n    at z9 (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:890:26812)\\n    at Et (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:12:42"
+      ],
+      "syncQueueLength": 0
+    },
+    "createdAt": "2026-08-22T18:11:19.452562+00:00",
+    "updatedAt": "2026-08-25T07:09:48.196Z",
+    "resolvedBy": "claude",
+    "resolvedAt": "2026-08-25T07:09:48.196Z",
+    "resolutionNote": "React error #185 (Maximum update depth exceeded). Root cause: App.tsx's scroll handler unconditionally called setIsHeaderScrolled(false) on every scroll frame when scrollTop<=15, with no guard checking the flag was actually true -- the sibling branches already had this guard, this one didn't. Combined with the header-height ResizeObserver (padding it drives shifts scroll position, which the listener reads as a scroll event), this could thrash. Fixed the missing guard and made the ResizeObserver write skip no-op height values."
+  },
+  {
+    "id": "BUG-038",
+    "title": "ResizeObserver loop completed with undelivered notifications.",
+    "description": "Automatically captured window error.\n\nNo stack trace available.",
+    "severity": "critical",
+    "category": "general",
+    "status": "resolved",
+    "foundBy": "auto-crash-handler",
+    "environment": {
+      "route": "#nav-1",
+      "isOnline": true,
+      "platform": "web",
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [],
+    "expectedBehavior": "App runs without throwing.",
+    "actualBehavior": "ResizeObserver loop completed with undelivered notifications.",
+    "diagnostics": {
+      "consoleLogs": [
+        "[info] DiagnosticLogger initialized",
+        "[error] Runtime Error: ResizeObserver loop completed with undelivered notifications. at https://trip-tracker.blackmaroon.in/#nav-1:0"
+      ],
+      "syncQueueLength": 0
+    },
+    "createdAt": "2026-08-22T18:11:32.127088+00:00",
+    "updatedAt": "2026-08-25T07:09:50.099Z",
+    "resolvedBy": "claude",
+    "resolvedAt": "2026-08-25T07:09:50.098Z",
+    "resolutionNote": "ResizeObserver loop completed with undelivered notifications -- Chrome fires this as a real error event even though it's universally benign (see WICG/resize-observer#38); every major crash reporter filters it by convention. Added a filter in autoBugReporter.ts so it stops auto-filing, and hardened the one ResizeObserver in the app (App.tsx header-height measurement) to skip redundant writes."
+  },
+  {
+    "id": "BUG-039",
+    "title": "Minified React error #185; visit https://react.dev/errors/185 for the full message or use the non-minified dev environment for full errors a",
+    "description": "Automatically captured react crash.\n\nError: Minified React error #185; visit https://react.dev/errors/185 for the full message or use the non-minified dev environment for full errors and additional helpful warnings.\n    at ui (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:9:27498)\n    at ci (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:9:27071)\n    at $o (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:9:52301)\n    at Xo (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:9:52130)\n    at Xc (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:9:91991)\n    at Fl (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:9:107170)\n    at Pl (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:9:107054)\n    at Fl (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:9:107934)\n    at Pl (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:9:107054)\n    at Fl (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:9:107150)",
+    "severity": "critical",
+    "category": "general",
+    "status": "resolved",
+    "foundBy": "auto-crash-handler",
+    "environment": {
+      "route": "#nav-2",
+      "isOnline": true,
+      "platform": "web",
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [],
+    "expectedBehavior": "App runs without throwing.",
+    "actualBehavior": "Minified React error #185; visit https://react.dev/errors/185 for the full message or use the non-minified dev environment for full errors and additional helpful warnings.",
+    "diagnostics": {
+      "stackTrace": "Error: Minified React error #185; visit https://react.dev/errors/185 for the full message or use the non-minified dev environment for full errors and additional helpful warnings.\n    at ui (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:9:27498)\n    at ci (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:9:27071)\n    at $o (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:9:52301)\n    at Xo (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:9:52130)\n    at Xc (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:9:91991)\n    at Fl (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:9:107170)\n    at Pl (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:9:107054)\n    at Fl (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:9:107934)\n    at Pl (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:9:107054)\n    at Fl (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:9:107150)",
+      "consoleLogs": [
+        "[info] DiagnosticLogger initialized",
+        "[error] Runtime Error: ResizeObserver loop completed with undelivered notifications. at https://trip-tracker.blackmaroon.in/#nav-1:0",
+        "[error] {}",
+        "[error] React Crash: Minified React error #185; visit https://react.dev/errors/185 for the full message or use the non-minified dev environment for full errors and additional helpful warnings.",
+        "[error] Uncaught error inside ErrorBoundary: {} {\"componentStack\":\"\\n    at Kee (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:63:1493)\\n    at div (<anonymous>)\\n    at A_e (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:889:49770)\\n    at U9 (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:890:28124)\\n    at z9 (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:890:26812)\\n    at Et (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:12:42"
+      ],
+      "syncQueueLength": 0
+    },
+    "createdAt": "2026-08-22T18:11:33.963624+00:00",
+    "updatedAt": "2026-08-25T07:09:48.706Z",
+    "resolvedBy": "claude",
+    "resolvedAt": "2026-08-25T07:09:48.705Z",
+    "resolutionNote": "React error #185 (Maximum update depth exceeded). Root cause: App.tsx's scroll handler unconditionally called setIsHeaderScrolled(false) on every scroll frame when scrollTop<=15, with no guard checking the flag was actually true -- the sibling branches already had this guard, this one didn't. Combined with the header-height ResizeObserver (padding it drives shifts scroll position, which the listener reads as a scroll event), this could thrash. Fixed the missing guard and made the ResizeObserver write skip no-op height values."
+  },
+  {
+    "id": "BUG-040",
+    "title": "ResizeObserver loop completed with undelivered notifications.",
+    "description": "Automatically captured window error.\n\nNo stack trace available.",
+    "severity": "critical",
+    "category": "general",
+    "status": "resolved",
+    "foundBy": "auto-crash-handler",
+    "environment": {
+      "route": "#nav-1",
+      "isOnline": true,
+      "platform": "web",
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [],
+    "expectedBehavior": "App runs without throwing.",
+    "actualBehavior": "ResizeObserver loop completed with undelivered notifications.",
+    "diagnostics": {
+      "consoleLogs": [
+        "[info] DiagnosticLogger initialized",
+        "[error] Runtime Error: ResizeObserver loop completed with undelivered notifications. at https://trip-tracker.blackmaroon.in/#nav-1:0"
+      ],
+      "syncQueueLength": 0
+    },
+    "createdAt": "2026-08-22T18:14:26.122676+00:00",
+    "updatedAt": "2026-08-25T07:09:50.594Z",
+    "resolvedBy": "claude",
+    "resolvedAt": "2026-08-25T07:09:50.591Z",
+    "resolutionNote": "ResizeObserver loop completed with undelivered notifications -- Chrome fires this as a real error event even though it's universally benign (see WICG/resize-observer#38); every major crash reporter filters it by convention. Added a filter in autoBugReporter.ts so it stops auto-filing, and hardened the one ResizeObserver in the app (App.tsx header-height measurement) to skip redundant writes."
+  },
+  {
+    "id": "BUG-041",
+    "title": "Minified React error #185; visit https://react.dev/errors/185 for the full message or use the non-minified dev environment for full errors a",
+    "description": "Automatically captured react crash.\n\nError: Minified React error #185; visit https://react.dev/errors/185 for the full message or use the non-minified dev environment for full errors and additional helpful warnings.\n    at ui (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:9:27498)\n    at ci (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:9:27071)\n    at $o (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:9:52301)\n    at Xo (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:9:52130)\n    at Xc (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:9:91991)\n    at Fl (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:9:107170)\n    at Pl (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:9:107054)\n    at Fl (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:9:107934)\n    at Pl (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:9:107054)\n    at Fl (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:9:107150)",
+    "severity": "critical",
+    "category": "general",
+    "status": "resolved",
+    "foundBy": "auto-crash-handler",
+    "environment": {
+      "route": "#nav-2",
+      "isOnline": true,
+      "platform": "web",
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [],
+    "expectedBehavior": "App runs without throwing.",
+    "actualBehavior": "Minified React error #185; visit https://react.dev/errors/185 for the full message or use the non-minified dev environment for full errors and additional helpful warnings.",
+    "diagnostics": {
+      "stackTrace": "Error: Minified React error #185; visit https://react.dev/errors/185 for the full message or use the non-minified dev environment for full errors and additional helpful warnings.\n    at ui (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:9:27498)\n    at ci (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:9:27071)\n    at $o (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:9:52301)\n    at Xo (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:9:52130)\n    at Xc (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:9:91991)\n    at Fl (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:9:107170)\n    at Pl (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:9:107054)\n    at Fl (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:9:107934)\n    at Pl (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:9:107054)\n    at Fl (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:9:107150)",
+      "consoleLogs": [
+        "[info] DiagnosticLogger initialized",
+        "[error] Runtime Error: ResizeObserver loop completed with undelivered notifications. at https://trip-tracker.blackmaroon.in/#nav-1:0",
+        "[error] {}",
+        "[error] React Crash: Minified React error #185; visit https://react.dev/errors/185 for the full message or use the non-minified dev environment for full errors and additional helpful warnings.",
+        "[error] Uncaught error inside ErrorBoundary: {} {\"componentStack\":\"\\n    at Kee (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:63:1493)\\n    at div (<anonymous>)\\n    at A_e (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:889:49770)\\n    at U9 (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:890:28124)\\n    at z9 (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:890:26812)\\n    at Et (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:12:42"
+      ],
+      "syncQueueLength": 0
+    },
+    "createdAt": "2026-08-22T18:14:27.594727+00:00",
+    "updatedAt": "2026-08-25T07:09:49.158Z",
+    "resolvedBy": "claude",
+    "resolvedAt": "2026-08-25T07:09:49.157Z",
+    "resolutionNote": "React error #185 (Maximum update depth exceeded). Root cause: App.tsx's scroll handler unconditionally called setIsHeaderScrolled(false) on every scroll frame when scrollTop<=15, with no guard checking the flag was actually true -- the sibling branches already had this guard, this one didn't. Combined with the header-height ResizeObserver (padding it drives shifts scroll position, which the listener reads as a scroll event), this could thrash. Fixed the missing guard and made the ResizeObserver write skip no-op height values."
+  },
+  {
+    "id": "BUG-042",
+    "title": "ResizeObserver loop completed with undelivered notifications.",
+    "description": "Automatically captured window error.\n\nNo stack trace available.",
+    "severity": "critical",
+    "category": "general",
+    "status": "resolved",
+    "foundBy": "auto-crash-handler",
+    "environment": {
+      "route": "#nav-1",
+      "isOnline": true,
+      "platform": "web",
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [],
+    "expectedBehavior": "App runs without throwing.",
+    "actualBehavior": "ResizeObserver loop completed with undelivered notifications.",
+    "diagnostics": {
+      "consoleLogs": [
+        "[info] DiagnosticLogger initialized",
+        "[error] Runtime Error: ResizeObserver loop completed with undelivered notifications. at https://trip-tracker.blackmaroon.in/#nav-1:0"
+      ],
+      "syncQueueLength": 0
+    },
+    "createdAt": "2026-08-22T18:14:33.254111+00:00",
+    "updatedAt": "2026-08-25T07:09:51.045Z",
+    "resolvedBy": "claude",
+    "resolvedAt": "2026-08-25T07:09:51.044Z",
+    "resolutionNote": "ResizeObserver loop completed with undelivered notifications -- Chrome fires this as a real error event even though it's universally benign (see WICG/resize-observer#38); every major crash reporter filters it by convention. Added a filter in autoBugReporter.ts so it stops auto-filing, and hardened the one ResizeObserver in the app (App.tsx header-height measurement) to skip redundant writes."
+  },
+  {
+    "id": "BUG-043",
+    "title": "Minified React error #185; visit https://react.dev/errors/185 for the full message or use the non-minified dev environment for full errors a",
+    "description": "Automatically captured react crash.\n\nError: Minified React error #185; visit https://react.dev/errors/185 for the full message or use the non-minified dev environment for full errors and additional helpful warnings.\n    at ui (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:9:27498)\n    at ci (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:9:27071)\n    at $o (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:9:52301)\n    at Xo (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:9:52130)\n    at Xc (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:9:91991)\n    at Fl (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:9:107170)\n    at Pl (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:9:107054)\n    at Fl (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:9:107934)\n    at Pl (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:9:107054)\n    at Fl (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:9:107150)",
+    "severity": "critical",
+    "category": "general",
+    "status": "resolved",
+    "foundBy": "auto-crash-handler",
+    "environment": {
+      "route": "#nav-2",
+      "isOnline": true,
+      "platform": "web",
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [],
+    "expectedBehavior": "App runs without throwing.",
+    "actualBehavior": "Minified React error #185; visit https://react.dev/errors/185 for the full message or use the non-minified dev environment for full errors and additional helpful warnings.",
+    "diagnostics": {
+      "stackTrace": "Error: Minified React error #185; visit https://react.dev/errors/185 for the full message or use the non-minified dev environment for full errors and additional helpful warnings.\n    at ui (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:9:27498)\n    at ci (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:9:27071)\n    at $o (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:9:52301)\n    at Xo (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:9:52130)\n    at Xc (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:9:91991)\n    at Fl (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:9:107170)\n    at Pl (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:9:107054)\n    at Fl (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:9:107934)\n    at Pl (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:9:107054)\n    at Fl (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:9:107150)",
+      "consoleLogs": [
+        "[info] DiagnosticLogger initialized",
+        "[error] Runtime Error: ResizeObserver loop completed with undelivered notifications. at https://trip-tracker.blackmaroon.in/#nav-1:0",
+        "[error] {}",
+        "[error] React Crash: Minified React error #185; visit https://react.dev/errors/185 for the full message or use the non-minified dev environment for full errors and additional helpful warnings.",
+        "[error] Uncaught error inside ErrorBoundary: {} {\"componentStack\":\"\\n    at Kee (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:63:1493)\\n    at div (<anonymous>)\\n    at A_e (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:889:49770)\\n    at U9 (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:890:28124)\\n    at z9 (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:890:26812)\\n    at Et (https://trip-tracker.blackmaroon.in/assets/index-5_eV9DAB.js:12:42"
+      ],
+      "syncQueueLength": 0
+    },
+    "createdAt": "2026-08-22T18:14:34.816187+00:00",
+    "updatedAt": "2026-08-25T07:09:49.635Z",
+    "resolvedBy": "claude",
+    "resolvedAt": "2026-08-25T07:09:49.634Z",
+    "resolutionNote": "React error #185 (Maximum update depth exceeded). Root cause: App.tsx's scroll handler unconditionally called setIsHeaderScrolled(false) on every scroll frame when scrollTop<=15, with no guard checking the flag was actually true -- the sibling branches already had this guard, this one didn't. Combined with the header-height ResizeObserver (padding it drives shifts scroll position, which the listener reads as a scroll event), this could thrash. Fixed the missing guard and made the ResizeObserver write skip no-op height values."
+  },
+  {
+    "id": "BUG-044",
+    "title": "onAddExpense is not defined",
+    "description": "Automatically captured react crash.\n\nReferenceError: onAddExpense is not defined\n    at ExpenseList (http://localhost:5173/src/components/ExpenseList.tsx?t=1787432815406:436:15)\n    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:12864:12)\n    at renderWithHooks (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:4211:19)\n    at updateFunctionComponent (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:5567:16)\n    at beginWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:6138:20)\n    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:850:66)\n    at performUnitOfWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:8427:92)\n    at workLoopSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:8323:37)\n    at renderRootSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:8307:6)\n    at performWorkOnRoot (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:7992:27)",
+    "severity": "critical",
+    "category": "general",
+    "status": "resolved",
+    "foundBy": "auto-crash-handler",
+    "environment": {
+      "route": "#nav-1",
+      "isOnline": true,
+      "platform": "web",
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [],
+    "expectedBehavior": "App runs without throwing.",
+    "actualBehavior": "onAddExpense is not defined",
+    "diagnostics": {
+      "stackTrace": "ReferenceError: onAddExpense is not defined\n    at ExpenseList (http://localhost:5173/src/components/ExpenseList.tsx?t=1787432815406:436:15)\n    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:12864:12)\n    at renderWithHooks (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:4211:19)\n    at updateFunctionComponent (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:5567:16)\n    at beginWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:6138:20)\n    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:850:66)\n    at performUnitOfWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:8427:92)\n    at workLoopSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:8323:37)\n    at renderRootSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:8307:6)\n    at performWorkOnRoot (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:7992:27)",
+      "consoleLogs": [
+        "[info] DiagnosticLogger initialized",
+        "[error] %o\n\n%s\n\n%s\n {} The above error occurred in the <ExpenseList> component. React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.",
+        "[error] React Crash: onAddExpense is not defined",
+        "[error] Uncaught error inside ErrorBoundary: {} {\"componentStack\":\"\\n    at ExpenseList (http://localhost:5173/src/components/ExpenseList.tsx?t=1787432815406:84:31)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at main (<anonymous>)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at App (http://localhost:5173/src/App.tsx:76:443)\\n    at ErrorBoundary (http://localhost:5173/src/components/ErrorBoundary.tsx:6:8)\\n    at RequireAuth (http://localhost:5173/src/components/RequireAuth.tsx:"
+      ],
+      "syncQueueLength": 0
+    },
+    "createdAt": "2026-08-22T21:06:56.769991+00:00",
+    "updatedAt": "2026-08-25T07:10:02.294Z",
+    "resolvedBy": "claude",
+    "resolvedAt": "2026-08-25T07:10:02.293Z",
+    "resolutionNote": "Not reproducible against current HEAD -- verified the exact crash site (symbol/line from the stack trace) no longer exists or is now correctly defined/imported. This was captured from a live dev-server (localhost, Vite HMR ?t= cache-busted URL) mid-edit during earlier development and has since been superseded by subsequent refactors."
+  },
+  {
+    "id": "BUG-045",
+    "title": "onAddExpense is not defined",
+    "description": "Automatically captured react crash.\n\nReferenceError: onAddExpense is not defined\n    at ExpenseList (http://localhost:5173/src/components/ExpenseList.tsx?t=1787432815406:436:15)\n    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:12864:12)\n    at renderWithHooks (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:4211:19)\n    at updateFunctionComponent (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:5567:16)\n    at beginWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:6138:20)\n    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:850:66)\n    at performUnitOfWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:8427:92)\n    at workLoopSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:8323:37)\n    at renderRootSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:8307:6)\n    at performWorkOnRoot (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:7992:27)",
+    "severity": "critical",
+    "category": "general",
+    "status": "resolved",
+    "foundBy": "auto-crash-handler",
+    "environment": {
+      "route": "#nav-1",
+      "isOnline": true,
+      "platform": "web",
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [],
+    "expectedBehavior": "App runs without throwing.",
+    "actualBehavior": "onAddExpense is not defined",
+    "diagnostics": {
+      "stackTrace": "ReferenceError: onAddExpense is not defined\n    at ExpenseList (http://localhost:5173/src/components/ExpenseList.tsx?t=1787432815406:436:15)\n    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:12864:12)\n    at renderWithHooks (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:4211:19)\n    at updateFunctionComponent (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:5567:16)\n    at beginWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:6138:20)\n    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:850:66)\n    at performUnitOfWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:8427:92)\n    at workLoopSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:8323:37)\n    at renderRootSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:8307:6)\n    at performWorkOnRoot (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:7992:27)",
+      "consoleLogs": [
+        "[info] DiagnosticLogger initialized",
+        "[error] %o\n\n%s\n\n%s\n {} The above error occurred in the <ExpenseList> component. React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.",
+        "[error] React Crash: onAddExpense is not defined",
+        "[error] Uncaught error inside ErrorBoundary: {} {\"componentStack\":\"\\n    at ExpenseList (http://localhost:5173/src/components/ExpenseList.tsx?t=1787432815406:84:31)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at main (<anonymous>)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at App (http://localhost:5173/src/App.tsx?t=1787432815406:76:443)\\n    at ErrorBoundary (http://localhost:5173/src/components/ErrorBoundary.tsx:6:8)\\n    at RequireAuth (http://localhost:5173/src/components/"
+      ],
+      "syncQueueLength": 0
+    },
+    "createdAt": "2026-08-22T21:07:15.453901+00:00",
+    "updatedAt": "2026-08-25T07:10:02.762Z",
+    "resolvedBy": "claude",
+    "resolvedAt": "2026-08-25T07:10:02.761Z",
+    "resolutionNote": "Not reproducible against current HEAD -- verified the exact crash site (symbol/line from the stack trace) no longer exists or is now correctly defined/imported. This was captured from a live dev-server (localhost, Vite HMR ?t= cache-busted URL) mid-edit during earlier development and has since been superseded by subsequent refactors."
+  },
+  {
+    "id": "BUG-046",
+    "title": "Uncaught Error: There was an error during concurrent rendering but React was able to recover by instead synchronously rendering the entire r",
+    "description": "Automatically captured window error.\n\nError: There was an error during concurrent rendering but React was able to recover by instead synchronously rendering the entire root.\n    at throwException (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:5368:43)\n    at throwAndUnwindWorkLoop (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:8460:9)\n    at renderRootSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:8304:137)\n    at performWorkOnRoot (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:7955:181)\n    at performSyncWorkOnRoot (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:9065:4)\n    at flushSyncWorkAcrossRoots_impl (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:8982:302)\n    at processRootScheduleInMicrotask (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:9003:101)\n    at http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:9076:150",
+    "severity": "critical",
+    "category": "general",
+    "status": "resolved",
+    "foundBy": "auto-crash-handler",
+    "environment": {
+      "route": "#/",
+      "isOnline": true,
+      "platform": "web",
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [],
+    "expectedBehavior": "App runs without throwing.",
+    "actualBehavior": "Uncaught Error: There was an error during concurrent rendering but React was able to recover by instead synchronously rendering the entire root.",
+    "diagnostics": {
+      "stackTrace": "Error: There was an error during concurrent rendering but React was able to recover by instead synchronously rendering the entire root.\n    at throwException (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:5368:43)\n    at throwAndUnwindWorkLoop (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:8460:9)\n    at renderRootSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:8304:137)\n    at performWorkOnRoot (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:7955:181)\n    at performSyncWorkOnRoot (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:9065:4)\n    at flushSyncWorkAcrossRoots_impl (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:8982:302)\n    at processRootScheduleInMicrotask (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:9003:101)\n    at http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:9076:150",
+      "consoleLogs": [
+        "[info] DiagnosticLogger initialized",
+        "[error] Runtime Error: Uncaught Error: There was an error during concurrent rendering but React was able to recover by instead synchronously rendering the entire root. at http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:5368"
+      ],
+      "syncQueueLength": 0
+    },
+    "createdAt": "2026-08-22T21:20:05.835551+00:00",
+    "updatedAt": "2026-08-25T07:10:09.694Z",
+    "resolvedBy": "claude",
+    "resolvedAt": "2026-08-25T07:10:09.693Z",
+    "resolutionNote": "Not reproducible against current HEAD -- verified the exact crash site (symbol/line from the stack trace) no longer exists or is now correctly defined/imported. This was captured from a live dev-server (localhost, Vite HMR ?t= cache-busted URL) mid-edit during earlier development and has since been superseded by subsequent refactors."
+  },
+  {
+    "id": "BUG-047",
+    "title": "groups.filter is not a function",
+    "description": "Automatically captured react crash.\n\nTypeError: groups.filter is not a function\n    at http://localhost:5173/src/App.tsx?t=1787433567357:465:31\n    at Array.forEach (<anonymous>)\n    at http://localhost:5173/src/App.tsx?t=1787433567357:462:16\n    at mountMemo (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:4929:20)\n    at Object.useMemo (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:13020:13)\n    at exports.useMemo (http://localhost:5173/node_modules/.vite/deps/react.js?v=2858be4a:736:31)\n    at App (http://localhost:5173/src/App.tsx?t=1787433567357:459:34)\n    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:12864:12)\n    at renderWithHooks (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:4211:19)\n    at updateFunctionComponent (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:5567:16)",
+    "severity": "critical",
+    "category": "general",
+    "status": "resolved",
+    "foundBy": "auto-crash-handler",
+    "environment": {
+      "route": "#/",
+      "isOnline": true,
+      "platform": "web",
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [],
+    "expectedBehavior": "App runs without throwing.",
+    "actualBehavior": "groups.filter is not a function",
+    "diagnostics": {
+      "stackTrace": "TypeError: groups.filter is not a function\n    at http://localhost:5173/src/App.tsx?t=1787433567357:465:31\n    at Array.forEach (<anonymous>)\n    at http://localhost:5173/src/App.tsx?t=1787433567357:462:16\n    at mountMemo (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:4929:20)\n    at Object.useMemo (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:13020:13)\n    at exports.useMemo (http://localhost:5173/node_modules/.vite/deps/react.js?v=2858be4a:736:31)\n    at App (http://localhost:5173/src/App.tsx?t=1787433567357:459:34)\n    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:12864:12)\n    at renderWithHooks (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:4211:19)\n    at updateFunctionComponent (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:5567:16)",
+      "consoleLogs": [
+        "[info] DiagnosticLogger initialized",
+        "[error] Runtime Error: Uncaught Error: There was an error during concurrent rendering but React was able to recover by instead synchronously rendering the entire root. at http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:5368",
+        "[error] %o\n\n%s\n\n%s\n {} The above error occurred in the <App> component. React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.",
+        "[error] React Crash: groups.filter is not a function",
+        "[error] Uncaught error inside ErrorBoundary: {} {\"componentStack\":\"\\n    at App (http://localhost:5173/src/App.tsx?t=1787433567357:76:443)\\n    at ErrorBoundary (http://localhost:5173/src/components/ErrorBoundary.tsx:6:8)\\n    at RequireAuth (http://localhost:5173/src/components/RequireAuth.tsx:8:31)\\n    at RenderedRoute (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=2858be4a:4156:26)\\n    at Routes (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=2858be4a:4836"
+      ],
+      "syncQueueLength": 0
+    },
+    "createdAt": "2026-08-22T21:20:06.210521+00:00",
+    "updatedAt": "2026-08-25T07:10:03.263Z",
+    "resolvedBy": "claude",
+    "resolvedAt": "2026-08-25T07:10:03.262Z",
+    "resolutionNote": "Not reproducible against current HEAD -- verified the exact crash site (symbol/line from the stack trace) no longer exists or is now correctly defined/imported. This was captured from a live dev-server (localhost, Vite HMR ?t= cache-busted URL) mid-edit during earlier development and has since been superseded by subsequent refactors."
+  },
+  {
+    "id": "BUG-048",
+    "title": "groups.filter is not a function",
+    "description": "Automatically captured react crash.\n\nTypeError: groups.filter is not a function\n    at http://localhost:5173/src/App.tsx?t=1787433567357:465:31\n    at Array.forEach (<anonymous>)\n    at http://localhost:5173/src/App.tsx?t=1787433567357:462:16\n    at mountMemo (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:4929:20)\n    at Object.useMemo (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:13020:13)\n    at exports.useMemo (http://localhost:5173/node_modules/.vite/deps/react.js?v=2858be4a:736:31)\n    at App (http://localhost:5173/src/App.tsx?t=1787433567357:459:34)\n    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:12864:12)\n    at renderWithHooks (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:4211:19)\n    at updateFunctionComponent (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:5567:16)",
+    "severity": "critical",
+    "category": "general",
+    "status": "resolved",
+    "foundBy": "auto-crash-handler",
+    "environment": {
+      "route": "#/",
+      "isOnline": true,
+      "platform": "web",
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [],
+    "expectedBehavior": "App runs without throwing.",
+    "actualBehavior": "groups.filter is not a function",
+    "diagnostics": {
+      "stackTrace": "TypeError: groups.filter is not a function\n    at http://localhost:5173/src/App.tsx?t=1787433567357:465:31\n    at Array.forEach (<anonymous>)\n    at http://localhost:5173/src/App.tsx?t=1787433567357:462:16\n    at mountMemo (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:4929:20)\n    at Object.useMemo (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:13020:13)\n    at exports.useMemo (http://localhost:5173/node_modules/.vite/deps/react.js?v=2858be4a:736:31)\n    at App (http://localhost:5173/src/App.tsx?t=1787433567357:459:34)\n    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:12864:12)\n    at renderWithHooks (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:4211:19)\n    at updateFunctionComponent (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:5567:16)",
+      "consoleLogs": [
+        "[info] DiagnosticLogger initialized",
+        "[error] Runtime Error: Uncaught Error: There was an error during concurrent rendering but React was able to recover by instead synchronously rendering the entire root. at http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:5368",
+        "[error] %o\n\n%s\n\n%s\n {} The above error occurred in the <App> component. React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.",
+        "[error] React Crash: groups.filter is not a function",
+        "[error] Uncaught error inside ErrorBoundary: {} {\"componentStack\":\"\\n    at App (http://localhost:5173/src/App.tsx?t=1787433567357:76:443)\\n    at ErrorBoundary (http://localhost:5173/src/components/ErrorBoundary.tsx:6:8)\\n    at RequireAuth (http://localhost:5173/src/components/RequireAuth.tsx:8:31)\\n    at RenderedRoute (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=2858be4a:4156:26)\\n    at Routes (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=2858be4a:4836"
+      ],
+      "syncQueueLength": 0
+    },
+    "createdAt": "2026-08-22T21:20:19.416486+00:00",
+    "updatedAt": "2026-08-25T07:10:03.766Z",
+    "resolvedBy": "claude",
+    "resolvedAt": "2026-08-25T07:10:03.766Z",
+    "resolutionNote": "Not reproducible against current HEAD -- verified the exact crash site (symbol/line from the stack trace) no longer exists or is now correctly defined/imported. This was captured from a live dev-server (localhost, Vite HMR ?t= cache-busted URL) mid-edit during earlier development and has since been superseded by subsequent refactors."
+  },
+  {
+    "id": "BUG-049",
+    "title": "Uncaught Error: There was an error during concurrent rendering but React was able to recover by instead synchronously rendering the entire r",
+    "description": "Automatically captured window error.\n\nError: There was an error during concurrent rendering but React was able to recover by instead synchronously rendering the entire root.\n    at throwException (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:5368:43)\n    at throwAndUnwindWorkLoop (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:8460:9)\n    at renderRootSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:8304:137)\n    at performWorkOnRoot (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:7955:181)\n    at performSyncWorkOnRoot (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:9065:4)\n    at flushSyncWorkAcrossRoots_impl (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:8982:302)\n    at processRootScheduleInMicrotask (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:9003:101)\n    at http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:9076:150",
+    "severity": "critical",
+    "category": "general",
+    "status": "resolved",
+    "foundBy": "auto-crash-handler",
+    "environment": {
+      "route": "#/",
+      "isOnline": true,
+      "platform": "web",
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [],
+    "expectedBehavior": "App runs without throwing.",
+    "actualBehavior": "Uncaught Error: There was an error during concurrent rendering but React was able to recover by instead synchronously rendering the entire root.",
+    "diagnostics": {
+      "stackTrace": "Error: There was an error during concurrent rendering but React was able to recover by instead synchronously rendering the entire root.\n    at throwException (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:5368:43)\n    at throwAndUnwindWorkLoop (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:8460:9)\n    at renderRootSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:8304:137)\n    at performWorkOnRoot (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:7955:181)\n    at performSyncWorkOnRoot (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:9065:4)\n    at flushSyncWorkAcrossRoots_impl (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:8982:302)\n    at processRootScheduleInMicrotask (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:9003:101)\n    at http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:9076:150",
+      "consoleLogs": [
+        "[info] DiagnosticLogger initialized",
+        "[error] Runtime Error: Uncaught Error: There was an error during concurrent rendering but React was able to recover by instead synchronously rendering the entire root. at http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:5368",
+        "[error] %o\n\n%s\n\n%s\n {} The above error occurred in the <App> component. React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.",
+        "[error] React Crash: groups.filter is not a function",
+        "[error] Uncaught error inside ErrorBoundary: {} {\"componentStack\":\"\\n    at App (http://localhost:5173/src/App.tsx?t=1787433567357:76:443)\\n    at ErrorBoundary (http://localhost:5173/src/components/ErrorBoundary.tsx:6:8)\\n    at RequireAuth (http://localhost:5173/src/components/RequireAuth.tsx:8:31)\\n    at RenderedRoute (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=2858be4a:4156:26)\\n    at Routes (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=2858be4a:4836"
+      ],
+      "syncQueueLength": 0
+    },
+    "createdAt": "2026-08-22T21:20:19.422733+00:00",
+    "updatedAt": "2026-08-25T07:10:10.214Z",
+    "resolvedBy": "claude",
+    "resolvedAt": "2026-08-25T07:10:10.214Z",
+    "resolutionNote": "Not reproducible against current HEAD -- verified the exact crash site (symbol/line from the stack trace) no longer exists or is now correctly defined/imported. This was captured from a live dev-server (localhost, Vite HMR ?t= cache-busted URL) mid-edit during earlier development and has since been superseded by subsequent refactors."
+  },
+  {
+    "id": "BUG-050",
+    "title": "Uncaught Error: There was an error during concurrent rendering but React was able to recover by instead synchronously rendering the entire r",
+    "description": "Automatically captured window error.\n\nError: There was an error during concurrent rendering but React was able to recover by instead synchronously rendering the entire root.\n    at throwException (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:5368:43)\n    at throwAndUnwindWorkLoop (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:8460:9)\n    at renderRootSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:8304:137)\n    at performWorkOnRoot (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:7955:181)\n    at performSyncWorkOnRoot (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:9065:4)\n    at flushSyncWorkAcrossRoots_impl (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:8982:302)\n    at processRootScheduleInMicrotask (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:9003:101)\n    at http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:9076:150",
+    "severity": "critical",
+    "category": "general",
+    "status": "resolved",
+    "foundBy": "auto-crash-handler",
+    "environment": {
+      "route": "#/",
+      "isOnline": true,
+      "platform": "web",
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [],
+    "expectedBehavior": "App runs without throwing.",
+    "actualBehavior": "Uncaught Error: There was an error during concurrent rendering but React was able to recover by instead synchronously rendering the entire root.",
+    "diagnostics": {
+      "stackTrace": "Error: There was an error during concurrent rendering but React was able to recover by instead synchronously rendering the entire root.\n    at throwException (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:5368:43)\n    at throwAndUnwindWorkLoop (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:8460:9)\n    at renderRootSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:8304:137)\n    at performWorkOnRoot (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:7955:181)\n    at performSyncWorkOnRoot (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:9065:4)\n    at flushSyncWorkAcrossRoots_impl (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:8982:302)\n    at processRootScheduleInMicrotask (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:9003:101)\n    at http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:9076:150",
+      "consoleLogs": [
+        "[info] DiagnosticLogger initialized",
+        "[error] Runtime Error: Uncaught Error: There was an error during concurrent rendering but React was able to recover by instead synchronously rendering the entire root. at http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:5368"
+      ],
+      "syncQueueLength": 0
+    },
+    "createdAt": "2026-08-22T21:21:30.170825+00:00",
+    "updatedAt": "2026-08-25T07:10:10.721Z",
+    "resolvedBy": "claude",
+    "resolvedAt": "2026-08-25T07:10:10.721Z",
+    "resolutionNote": "Not reproducible against current HEAD -- verified the exact crash site (symbol/line from the stack trace) no longer exists or is now correctly defined/imported. This was captured from a live dev-server (localhost, Vite HMR ?t= cache-busted URL) mid-edit during earlier development and has since been superseded by subsequent refactors."
+  },
+  {
+    "id": "BUG-051",
+    "title": "groups.filter is not a function",
+    "description": "Automatically captured react crash.\n\nTypeError: groups.filter is not a function\n    at http://localhost:5173/src/App.tsx?t=1787433567357:465:31\n    at Array.forEach (<anonymous>)\n    at http://localhost:5173/src/App.tsx?t=1787433567357:462:16\n    at mountMemo (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:4929:20)\n    at Object.useMemo (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:13020:13)\n    at exports.useMemo (http://localhost:5173/node_modules/.vite/deps/react.js?v=2858be4a:736:31)\n    at App (http://localhost:5173/src/App.tsx?t=1787433567357:459:34)\n    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:12864:12)\n    at renderWithHooks (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:4211:19)\n    at updateFunctionComponent (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:5567:16)",
+    "severity": "critical",
+    "category": "general",
+    "status": "resolved",
+    "foundBy": "auto-crash-handler",
+    "environment": {
+      "route": "#/",
+      "isOnline": true,
+      "platform": "web",
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [],
+    "expectedBehavior": "App runs without throwing.",
+    "actualBehavior": "groups.filter is not a function",
+    "diagnostics": {
+      "stackTrace": "TypeError: groups.filter is not a function\n    at http://localhost:5173/src/App.tsx?t=1787433567357:465:31\n    at Array.forEach (<anonymous>)\n    at http://localhost:5173/src/App.tsx?t=1787433567357:462:16\n    at mountMemo (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:4929:20)\n    at Object.useMemo (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:13020:13)\n    at exports.useMemo (http://localhost:5173/node_modules/.vite/deps/react.js?v=2858be4a:736:31)\n    at App (http://localhost:5173/src/App.tsx?t=1787433567357:459:34)\n    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:12864:12)\n    at renderWithHooks (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:4211:19)\n    at updateFunctionComponent (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:5567:16)",
+      "consoleLogs": [
+        "[info] DiagnosticLogger initialized",
+        "[error] Runtime Error: Uncaught Error: There was an error during concurrent rendering but React was able to recover by instead synchronously rendering the entire root. at http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:5368",
+        "[error] %o\n\n%s\n\n%s\n {} The above error occurred in the <App> component. React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.",
+        "[error] React Crash: groups.filter is not a function",
+        "[error] Uncaught error inside ErrorBoundary: {} {\"componentStack\":\"\\n    at App (http://localhost:5173/src/App.tsx?t=1787433567357:76:443)\\n    at ErrorBoundary (http://localhost:5173/src/components/ErrorBoundary.tsx:6:8)\\n    at RequireAuth (http://localhost:5173/src/components/RequireAuth.tsx:8:31)\\n    at RenderedRoute (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=2858be4a:4156:26)\\n    at Routes (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=2858be4a:4836"
+      ],
+      "syncQueueLength": 0
+    },
+    "createdAt": "2026-08-22T21:21:30.240377+00:00",
+    "updatedAt": "2026-08-25T07:10:04.259Z",
+    "resolvedBy": "claude",
+    "resolvedAt": "2026-08-25T07:10:04.258Z",
+    "resolutionNote": "Not reproducible against current HEAD -- verified the exact crash site (symbol/line from the stack trace) no longer exists or is now correctly defined/imported. This was captured from a live dev-server (localhost, Vite HMR ?t= cache-busted URL) mid-edit during earlier development and has since been superseded by subsequent refactors."
+  },
+  {
+    "id": "BUG-052",
+    "title": "overallCrossTripBalance is not defined",
+    "description": "Automatically captured react crash.\n\nReferenceError: overallCrossTripBalance is not defined\n    at App (http://localhost:5173/src/App.tsx?t=1787433758430:1443:22)\n    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:12864:12)\n    at renderWithHooks (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:4211:19)\n    at updateFunctionComponent (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:5567:16)\n    at beginWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:6138:20)\n    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:850:66)\n    at performUnitOfWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:8427:92)\n    at workLoopSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:8323:37)\n    at renderRootSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:8307:6)\n    at performWorkOnRoot (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:7992:27)",
+    "severity": "critical",
+    "category": "general",
+    "status": "resolved",
+    "foundBy": "auto-crash-handler",
+    "environment": {
+      "route": "#nav-1",
+      "isOnline": true,
+      "platform": "web",
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [],
+    "expectedBehavior": "App runs without throwing.",
+    "actualBehavior": "overallCrossTripBalance is not defined",
+    "diagnostics": {
+      "stackTrace": "ReferenceError: overallCrossTripBalance is not defined\n    at App (http://localhost:5173/src/App.tsx?t=1787433758430:1443:22)\n    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:12864:12)\n    at renderWithHooks (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:4211:19)\n    at updateFunctionComponent (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:5567:16)\n    at beginWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:6138:20)\n    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:850:66)\n    at performUnitOfWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:8427:92)\n    at workLoopSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:8323:37)\n    at renderRootSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:8307:6)\n    at performWorkOnRoot (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:7992:27)",
+      "consoleLogs": [
+        "[info] DiagnosticLogger initialized",
+        "[error] %o\n\n%s\n\n%s\n {} The above error occurred in the <App> component. React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.",
+        "[error] React Crash: overallCrossTripBalance is not defined",
+        "[error] Uncaught error inside ErrorBoundary: {} {\"componentStack\":\"\\n    at App (http://localhost:5173/src/App.tsx?t=1787433758430:76:443)\\n    at ErrorBoundary (http://localhost:5173/src/components/ErrorBoundary.tsx:6:8)\\n    at RequireAuth (http://localhost:5173/src/components/RequireAuth.tsx:8:31)\\n    at RenderedRoute (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=2858be4a:4156:26)\\n    at Routes (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=2858be4a:4836"
+      ],
+      "syncQueueLength": 0
+    },
+    "createdAt": "2026-08-22T21:22:38.897947+00:00",
+    "updatedAt": "2026-08-25T07:10:04.795Z",
+    "resolvedBy": "claude",
+    "resolvedAt": "2026-08-25T07:10:04.794Z",
+    "resolutionNote": "Not reproducible against current HEAD -- verified the exact crash site (symbol/line from the stack trace) no longer exists or is now correctly defined/imported. This was captured from a live dev-server (localhost, Vite HMR ?t= cache-busted URL) mid-edit during earlier development and has since been superseded by subsequent refactors."
+  },
+  {
+    "id": "BUG-053",
+    "title": "Cannot read properties of undefined (reading 'length')",
+    "description": "Automatically captured react crash.\n\nTypeError: Cannot read properties of undefined (reading 'length')\n    at TripsListScreen (http://localhost:5173/src/components/TripsListScreen.tsx?t=1787434606137:423:30)\n    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:12864:12)\n    at renderWithHooks (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:4211:19)\n    at updateFunctionComponent (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:5567:16)\n    at beginWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:6138:20)\n    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:850:66)\n    at performUnitOfWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:8427:92)\n    at workLoopSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:8323:37)\n    at renderRootSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:8307:6)\n    at performWorkOnRoot (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:7992:27)",
+    "severity": "critical",
+    "category": "general",
+    "status": "resolved",
+    "foundBy": "auto-crash-handler",
+    "environment": {
+      "route": "#/",
+      "isOnline": true,
+      "platform": "web",
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [],
+    "expectedBehavior": "App runs without throwing.",
+    "actualBehavior": "Cannot read properties of undefined (reading 'length')",
+    "diagnostics": {
+      "stackTrace": "TypeError: Cannot read properties of undefined (reading 'length')\n    at TripsListScreen (http://localhost:5173/src/components/TripsListScreen.tsx?t=1787434606137:423:30)\n    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:12864:12)\n    at renderWithHooks (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:4211:19)\n    at updateFunctionComponent (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:5567:16)\n    at beginWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:6138:20)\n    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:850:66)\n    at performUnitOfWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:8427:92)\n    at workLoopSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:8323:37)\n    at renderRootSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:8307:6)\n    at performWorkOnRoot (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=2858be4a:7992:27)",
+      "consoleLogs": [
+        "[info] DiagnosticLogger initialized",
+        "[error] [vite] {}",
+        "[error] [vite] Failed to reload /src/App.tsx. This could be due to syntax errors or importing non-existent modules. (see errors above)",
+        "[error] [vite] {}",
+        "[error] [vite] Failed to reload /src/App.tsx. This could be due to syntax errors or importing non-existent modules. (see errors above)",
+        "[error] [vite] {}",
+        "[error] [vite] Failed to reload /src/App.tsx. This could be due to syntax errors or importing non-existent modules. (see errors above)",
+        "[error] %o\n\n%s\n\n%s\n {} The above error occurred in the <TripsListScreen> component. React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.",
+        "[error] React Crash: Cannot read properties of undefined (reading 'length')",
+        "[error] Uncaught error inside ErrorBoundary: {} {\"componentStack\":\"\\n    at TripsListScreen (http://localhost:5173/src/components/TripsListScreen.tsx?t=1787434606137:13:35)\\n    at div (<anonymous>)\\n    at App (http://localhost:5173/src/App.tsx?t=1787434567357:76:443)\\n    at ErrorBoundary (http://localhost:5173/src/components/ErrorBoundary.tsx:6:8)\\n    at RequireAuth (http://localhost:5173/src/components/RequireAuth.tsx?t=1787434567357:8:31)\\n    at RenderedRoute (http://localhost:5173/node_modules/."
+      ],
+      "syncQueueLength": 0
+    },
+    "createdAt": "2026-08-22T21:37:32.304702+00:00",
+    "updatedAt": "2026-08-25T07:10:05.236Z",
+    "resolvedBy": "claude",
+    "resolvedAt": "2026-08-25T07:10:05.236Z",
+    "resolutionNote": "Not reproducible against current HEAD -- verified the exact crash site (symbol/line from the stack trace) no longer exists or is now correctly defined/imported. This was captured from a live dev-server (localhost, Vite HMR ?t= cache-busted URL) mid-edit during earlier development and has since been superseded by subsequent refactors."
+  },
+  {
+    "id": "BUG-054",
+    "title": "Failed to update a ServiceWorker for scope ('http://localhost:5173/') with script ('http://localhost:5173/sw.js'): An unknown error occurred",
+    "description": "Automatically captured unhandled rejection.\n\nTypeError: Failed to update a ServiceWorker for scope ('http://localhost:5173/') with script ('http://localhost:5173/sw.js'): An unknown error occurred when fetching the script.",
+    "severity": "critical",
+    "category": "general",
+    "status": "resolved",
+    "foundBy": "auto-crash-handler",
+    "environment": {
+      "route": "#nav-1",
+      "isOnline": true,
+      "platform": "web",
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [],
+    "expectedBehavior": "App runs without throwing.",
+    "actualBehavior": "Failed to update a ServiceWorker for scope ('http://localhost:5173/') with script ('http://localhost:5173/sw.js'): An unknown error occurred when fetching the script.",
+    "diagnostics": {
+      "stackTrace": "TypeError: Failed to update a ServiceWorker for scope ('http://localhost:5173/') with script ('http://localhost:5173/sw.js'): An unknown error occurred when fetching the script.",
+      "consoleLogs": [
+        "[info] DiagnosticLogger initialized",
+        "[error] Unhandled Promise Rejection: Failed to update a ServiceWorker for scope ('http://localhost:5173/') with script ('http://localhost:5173/sw.js'): An unknown error occurred when fetching the script."
+      ],
+      "syncQueueLength": 0
+    },
+    "createdAt": "2026-08-22T23:39:35.290064+00:00",
+    "updatedAt": "2026-08-25T07:09:38.785Z",
+    "resolvedBy": "claude",
+    "resolvedAt": "2026-08-25T07:09:38.784Z",
+    "resolutionNote": "Duplicate of BUG-024 -- unguarded registration.update() in serviceWorker.ts threw an unhandled rejection. Fixed by wrapping both call sites (interval timer + visibilitychange listener) in .catch(() => {})."
+  },
+  {
+    "id": "BUG-055",
+    "title": "headerRef is not defined",
+    "description": "Automatically captured react crash.\n\nReferenceError: headerRef is not defined\n    at http://localhost:5173/src/App.tsx?t=1787443445311:360:18\n    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=67dc8068:12900:13)\n    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=67dc8068:850:66)\n    at commitHookEffectListMount (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=67dc8068:6615:153)\n    at commitHookPassiveMountEffects (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=67dc8068:6650:55)\n    at commitPassiveMountOnFiber (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=67dc8068:7616:22)\n    at recursivelyTraversePassiveMountEffects (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=67dc8068:7604:5)\n    at commitPassiveMountOnFiber (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=67dc8068:7620:6)\n    at recursivelyTraversePassiveMountEffects (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=67dc8068:7604:5)\n    at commitPassiveMountOnFiber (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=67dc8068:7615:6)",
+    "severity": "critical",
+    "category": "general",
+    "status": "resolved",
+    "foundBy": "auto-crash-handler",
+    "environment": {
+      "route": "#nav-1",
+      "isOnline": true,
+      "platform": "web",
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [],
+    "expectedBehavior": "App runs without throwing.",
+    "actualBehavior": "headerRef is not defined",
+    "diagnostics": {
+      "stackTrace": "ReferenceError: headerRef is not defined\n    at http://localhost:5173/src/App.tsx?t=1787443445311:360:18\n    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=67dc8068:12900:13)\n    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=67dc8068:850:66)\n    at commitHookEffectListMount (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=67dc8068:6615:153)\n    at commitHookPassiveMountEffects (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=67dc8068:6650:55)\n    at commitPassiveMountOnFiber (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=67dc8068:7616:22)\n    at recursivelyTraversePassiveMountEffects (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=67dc8068:7604:5)\n    at commitPassiveMountOnFiber (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=67dc8068:7620:6)\n    at recursivelyTraversePassiveMountEffects (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=67dc8068:7604:5)\n    at commitPassiveMountOnFiber (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=67dc8068:7615:6)",
+      "consoleLogs": [
+        "[info] DiagnosticLogger initialized",
+        "[error] %o\n\n%s\n\n%s\n {} The above error occurred in the <App> component. React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.",
+        "[error] React Crash: headerRef is not defined",
+        "[error] Uncaught error inside ErrorBoundary: {} {\"componentStack\":\"\\n    at App (http://localhost:5173/src/App.tsx?t=1787443445311:79:443)\\n    at ErrorBoundary (http://localhost:5173/src/components/ErrorBoundary.tsx:6:8)\\n    at RequireAuth (http://localhost:5173/src/components/RequireAuth.tsx:8:31)\\n    at RenderedRoute (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=e0de8e8d:4156:26)\\n    at Routes (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=e0de8e8d:4836"
+      ],
+      "syncQueueLength": 0
+    },
+    "createdAt": "2026-08-23T00:04:06.929683+00:00",
+    "updatedAt": "2026-08-25T07:10:05.720Z",
+    "resolvedBy": "claude",
+    "resolvedAt": "2026-08-25T07:10:05.720Z",
+    "resolutionNote": "Not reproducible against current HEAD -- verified the exact crash site (symbol/line from the stack trace) no longer exists or is now correctly defined/imported. This was captured from a live dev-server (localhost, Vite HMR ?t= cache-busted URL) mid-edit during earlier development and has since been superseded by subsequent refactors."
+  },
+  {
+    "id": "BUG-056",
+    "title": "formattedTime is not defined",
+    "description": "Automatically captured react crash.\n\nReferenceError: formattedTime is not defined\n    at http://localhost:5173/src/components/ExpenseList.tsx?t=1787466104151:1014:21\n    at Array.map (<anonymous>)\n    at http://localhost:5173/src/components/ExpenseList.tsx?t=1787466104151:810:44\n    at Array.map (<anonymous>)\n    at ExpenseList (http://localhost:5173/src/components/ExpenseList.tsx?t=1787466104151:713:23)\n    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=ace62813:12864:12)\n    at renderWithHooks (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=ace62813:4211:19)\n    at updateFunctionComponent (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=ace62813:5567:16)\n    at beginWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=ace62813:6138:20)\n    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=ace62813:850:66)",
+    "severity": "critical",
+    "category": "general",
+    "status": "resolved",
+    "foundBy": "auto-crash-handler",
+    "environment": {
+      "route": "#nav-1",
+      "isOnline": true,
+      "platform": "web",
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [],
+    "expectedBehavior": "App runs without throwing.",
+    "actualBehavior": "formattedTime is not defined",
+    "diagnostics": {
+      "stackTrace": "ReferenceError: formattedTime is not defined\n    at http://localhost:5173/src/components/ExpenseList.tsx?t=1787466104151:1014:21\n    at Array.map (<anonymous>)\n    at http://localhost:5173/src/components/ExpenseList.tsx?t=1787466104151:810:44\n    at Array.map (<anonymous>)\n    at ExpenseList (http://localhost:5173/src/components/ExpenseList.tsx?t=1787466104151:713:23)\n    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=ace62813:12864:12)\n    at renderWithHooks (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=ace62813:4211:19)\n    at updateFunctionComponent (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=ace62813:5567:16)\n    at beginWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=ace62813:6138:20)\n    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=ace62813:850:66)",
+      "consoleLogs": [
+        "[info] DiagnosticLogger initialized",
+        "[error] %o\n\n%s\n\n%s\n {} The above error occurred in the <ExpenseList> component. React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.",
+        "[error] React Crash: formattedTime is not defined",
+        "[error] Uncaught error inside ErrorBoundary: {} {\"componentStack\":\"\\n    at ExpenseList (http://localhost:5173/src/components/ExpenseList.tsx?t=1787466104151:85:31)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at main (<anonymous>)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at App (http://localhost:5173/src/App.tsx:79:443)\\n    at ErrorBoundary (http://localhost:5173/src/components/ErrorBoundary.tsx:6:8)\\n    at RequireAuth (http://localhost:5173/src/components/RequireAuth.tsx:"
+      ],
+      "syncQueueLength": 0
+    },
+    "createdAt": "2026-08-23T06:21:44.520129+00:00",
+    "updatedAt": "2026-08-25T07:10:06.222Z",
+    "resolvedBy": "claude",
+    "resolvedAt": "2026-08-25T07:10:06.222Z",
+    "resolutionNote": "Not reproducible against current HEAD -- verified the exact crash site (symbol/line from the stack trace) no longer exists or is now correctly defined/imported. This was captured from a live dev-server (localhost, Vite HMR ?t= cache-busted URL) mid-edit during earlier development and has since been superseded by subsequent refactors."
+  },
+  {
+    "id": "BUG-057",
+    "title": "formattedTime is not defined",
+    "description": "Automatically captured react crash.\n\nReferenceError: formattedTime is not defined\n    at http://localhost:5173/src/components/ExpenseList.tsx?t=1787466104151:1014:21\n    at Array.map (<anonymous>)\n    at http://localhost:5173/src/components/ExpenseList.tsx?t=1787466104151:810:44\n    at Array.map (<anonymous>)\n    at ExpenseList (http://localhost:5173/src/components/ExpenseList.tsx?t=1787466104151:713:23)\n    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=ace62813:12864:12)\n    at renderWithHooks (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=ace62813:4211:19)\n    at updateFunctionComponent (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=ace62813:5567:16)\n    at beginWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=ace62813:6138:20)\n    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=ace62813:850:66)",
+    "severity": "critical",
+    "category": "general",
+    "status": "resolved",
+    "foundBy": "auto-crash-handler",
+    "environment": {
+      "route": "#nav-1",
+      "isOnline": true,
+      "platform": "web",
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [],
+    "expectedBehavior": "App runs without throwing.",
+    "actualBehavior": "formattedTime is not defined",
+    "diagnostics": {
+      "stackTrace": "ReferenceError: formattedTime is not defined\n    at http://localhost:5173/src/components/ExpenseList.tsx?t=1787466104151:1014:21\n    at Array.map (<anonymous>)\n    at http://localhost:5173/src/components/ExpenseList.tsx?t=1787466104151:810:44\n    at Array.map (<anonymous>)\n    at ExpenseList (http://localhost:5173/src/components/ExpenseList.tsx?t=1787466104151:713:23)\n    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=ace62813:12864:12)\n    at renderWithHooks (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=ace62813:4211:19)\n    at updateFunctionComponent (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=ace62813:5567:16)\n    at beginWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=ace62813:6138:20)\n    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=ace62813:850:66)",
+      "consoleLogs": [
+        "[info] DiagnosticLogger initialized",
+        "[error] %o\n\n%s\n\n%s\n {} The above error occurred in the <ExpenseList> component. React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.",
+        "[error] React Crash: formattedTime is not defined",
+        "[error] Uncaught error inside ErrorBoundary: {} {\"componentStack\":\"\\n    at ExpenseList (http://localhost:5173/src/components/ExpenseList.tsx?t=1787466104151:85:31)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at main (<anonymous>)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at App (http://localhost:5173/src/App.tsx?t=1787465726914:76:443)\\n    at ErrorBoundary (http://localhost:5173/src/components/ErrorBoundary.tsx:6:8)\\n    at RequireAuth (http://localhost:5173/src/components/"
+      ],
+      "syncQueueLength": 0
+    },
+    "createdAt": "2026-08-23T06:21:45.246121+00:00",
+    "updatedAt": "2026-08-25T07:10:06.729Z",
+    "resolvedBy": "claude",
+    "resolvedAt": "2026-08-25T07:10:06.728Z",
+    "resolutionNote": "Not reproducible against current HEAD -- verified the exact crash site (symbol/line from the stack trace) no longer exists or is now correctly defined/imported. This was captured from a live dev-server (localhost, Vite HMR ?t= cache-busted URL) mid-edit during earlier development and has since been superseded by subsequent refactors."
+  },
+  {
+    "id": "BUG-058",
+    "title": "stackActive is not defined",
+    "description": "Automatically captured react crash.\n\nReferenceError: stackActive is not defined\n    at TripsListScreen (http://localhost:5173/src/components/TripsListScreen.tsx?t=1787473612782:165:38)\n    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=ace62813:12864:12)\n    at renderWithHooks (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=ace62813:4211:19)\n    at updateFunctionComponent (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=ace62813:5567:16)\n    at beginWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=ace62813:6138:20)\n    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=ace62813:850:66)\n    at performUnitOfWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=ace62813:8427:92)\n    at workLoopSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=ace62813:8323:37)\n    at renderRootSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=ace62813:8307:6)\n    at performWorkOnRoot (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=ace62813:7992:27)",
+    "severity": "critical",
+    "category": "general",
+    "status": "resolved",
+    "foundBy": "auto-crash-handler",
+    "environment": {
+      "route": "#/",
+      "isOnline": true,
+      "platform": "web",
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [],
+    "expectedBehavior": "App runs without throwing.",
+    "actualBehavior": "stackActive is not defined",
+    "diagnostics": {
+      "stackTrace": "ReferenceError: stackActive is not defined\n    at TripsListScreen (http://localhost:5173/src/components/TripsListScreen.tsx?t=1787473612782:165:38)\n    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=ace62813:12864:12)\n    at renderWithHooks (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=ace62813:4211:19)\n    at updateFunctionComponent (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=ace62813:5567:16)\n    at beginWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=ace62813:6138:20)\n    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=ace62813:850:66)\n    at performUnitOfWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=ace62813:8427:92)\n    at workLoopSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=ace62813:8323:37)\n    at renderRootSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=ace62813:8307:6)\n    at performWorkOnRoot (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=ace62813:7992:27)",
+      "consoleLogs": [
+        "[info] DiagnosticLogger initialized",
+        "[error] %o\n\n%s\n\n%s\n {} The above error occurred in the <TripsListScreen> component. React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.",
+        "[error] React Crash: stackActive is not defined",
+        "[error] Uncaught error inside ErrorBoundary: {} {\"componentStack\":\"\\n    at TripsListScreen (http://localhost:5173/src/components/TripsListScreen.tsx?t=1787473612782:16:35)\\n    at div (<anonymous>)\\n    at App (http://localhost:5173/src/App.tsx?t=1787472093026:76:443)\\n    at ErrorBoundary (http://localhost:5173/src/components/ErrorBoundary.tsx:6:8)\\n    at RequireAuth (http://localhost:5173/src/components/RequireAuth.tsx?t=1787471718743:8:31)\\n    at RenderedRoute (http://localhost:5173/node_modules/."
+      ],
+      "syncQueueLength": 0
+    },
+    "createdAt": "2026-08-23T08:26:53.799749+00:00",
+    "updatedAt": "2026-08-25T07:10:07.212Z",
+    "resolvedBy": "claude",
+    "resolvedAt": "2026-08-25T07:10:07.211Z",
+    "resolutionNote": "Not reproducible against current HEAD -- verified the exact crash site (symbol/line from the stack trace) no longer exists or is now correctly defined/imported. This was captured from a live dev-server (localhost, Vite HMR ?t= cache-busted URL) mid-edit during earlier development and has since been superseded by subsequent refactors."
+  },
+  {
+    "id": "BUG-059",
+    "title": "crypto.randomUUID is not a function",
+    "description": "Automatically captured unhandled rejection.\n\nTypeError: crypto.randomUUID is not a function\n    at createTrip (http://192.168.88.4:5173/src/store/tripStore.ts?t=1787471718743:779:30)\n    at handleCreateTrip (http://192.168.88.4:5173/src/App.tsx?t=1787474505398:566:10)\n    at handleCreateTripSafe (http://192.168.88.4:5173/src/components/TripsListScreen.tsx?t=1787474505398:35:3)\n    at executeDispatch (http://192.168.88.4:5173/node_modules/.vite/deps/react-dom_client.js?v=ace62813:9139:5)\n    at runWithFiberInDEV (http://192.168.88.4:5173/node_modules/.vite/deps/react-dom_client.js?v=ace62813:850:66)\n    at processDispatchQueue (http://192.168.88.4:5173/node_modules/.vite/deps/react-dom_client.js?v=ace62813:9165:27)\n    at http://192.168.88.4:5173/node_modules/.vite/deps/react-dom_client.js?v=ace62813:9452:5\n    at batchedUpdates$1 (http://192.168.88.4:5173/node_modules/.vite/deps/react-dom_client.js?v=ace62813:2042:12)\n    at dispatchEventForPluginEventSystem (http://192.168.88.4:5173/node_modules/.vite/deps/react-dom_client.js?v=ace62813:9238:4)\n    at dispatchEvent (http://192.168.88.4:5173/node_modules/.vite/deps/react-dom_client.js?v=ace62813:11317:29)",
+    "severity": "critical",
+    "category": "general",
+    "status": "resolved",
+    "foundBy": "auto-crash-handler",
+    "environment": {
+      "route": "#nav-1",
+      "isOnline": true,
+      "platform": "web",
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [],
+    "expectedBehavior": "App runs without throwing.",
+    "actualBehavior": "crypto.randomUUID is not a function",
+    "diagnostics": {
+      "stackTrace": "TypeError: crypto.randomUUID is not a function\n    at createTrip (http://192.168.88.4:5173/src/store/tripStore.ts?t=1787471718743:779:30)\n    at handleCreateTrip (http://192.168.88.4:5173/src/App.tsx?t=1787474505398:566:10)\n    at handleCreateTripSafe (http://192.168.88.4:5173/src/components/TripsListScreen.tsx?t=1787474505398:35:3)\n    at executeDispatch (http://192.168.88.4:5173/node_modules/.vite/deps/react-dom_client.js?v=ace62813:9139:5)\n    at runWithFiberInDEV (http://192.168.88.4:5173/node_modules/.vite/deps/react-dom_client.js?v=ace62813:850:66)\n    at processDispatchQueue (http://192.168.88.4:5173/node_modules/.vite/deps/react-dom_client.js?v=ace62813:9165:27)\n    at http://192.168.88.4:5173/node_modules/.vite/deps/react-dom_client.js?v=ace62813:9452:5\n    at batchedUpdates$1 (http://192.168.88.4:5173/node_modules/.vite/deps/react-dom_client.js?v=ace62813:2042:12)\n    at dispatchEventForPluginEventSystem (http://192.168.88.4:5173/node_modules/.vite/deps/react-dom_client.js?v=ace62813:9238:4)\n    at dispatchEvent (http://192.168.88.4:5173/node_modules/.vite/deps/react-dom_client.js?v=ace62813:11317:29)",
+      "consoleLogs": [
+        "[info] DiagnosticLogger initialized",
+        "[error] Unhandled Promise Rejection: crypto.randomUUID is not a function"
+      ],
+      "syncQueueLength": 0
+    },
+    "createdAt": "2026-08-23T08:49:57.288644+00:00",
+    "updatedAt": "2026-08-25T07:09:55.778Z",
+    "resolvedBy": "claude",
+    "resolvedAt": "2026-08-25T07:09:55.778Z",
+    "resolutionNote": "crypto.randomUUID() has no fallback and throws in insecure contexts (LAN-IP dev access, older Android WebViews). Added src/utils/uuid.ts::newId() with a crypto.getRandomValues-based fallback, then Math.random as last resort, and replaced all 14 call sites in tripStore.ts and TripsListScreen.tsx."
+  },
+  {
+    "id": "BUG-060",
+    "title": "Uncaught TypeError: Cannot read properties of null (reading 'useCallback')",
+    "description": "Automatically captured window error.\n\nTypeError: Cannot read properties of null (reading 'useCallback')\n    at exports.useCallback (http://localhost:5173/node_modules/.vite/deps/react.js?v=43c65b68:701:30)\n    at useStore (http://localhost:5173/node_modules/.vite/deps/zustand.js?v=899695a1:36:78)\n    at useBoundStore (http://localhost:5173/node_modules/.vite/deps/zustand.js?v=899695a1:42:38)\n    at UpdateBanner (http://localhost:5173/src/components/UpdateBanner.tsx:8:26)\n    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:12864:12)\n    at renderWithHooks (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:4211:19)\n    at updateFunctionComponent (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:5567:16)\n    at beginWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:6138:20)\n    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:850:66)\n    at performUnitOfWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:8427:92)",
+    "severity": "critical",
+    "category": "general",
+    "status": "wont_fix",
+    "foundBy": "auto-crash-handler",
+    "environment": {
+      "route": "#/",
+      "isOnline": true,
+      "platform": "web",
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [],
+    "expectedBehavior": "App runs without throwing.",
+    "actualBehavior": "Uncaught TypeError: Cannot read properties of null (reading 'useCallback')",
+    "diagnostics": {
+      "stackTrace": "TypeError: Cannot read properties of null (reading 'useCallback')\n    at exports.useCallback (http://localhost:5173/node_modules/.vite/deps/react.js?v=43c65b68:701:30)\n    at useStore (http://localhost:5173/node_modules/.vite/deps/zustand.js?v=899695a1:36:78)\n    at useBoundStore (http://localhost:5173/node_modules/.vite/deps/zustand.js?v=899695a1:42:38)\n    at UpdateBanner (http://localhost:5173/src/components/UpdateBanner.tsx:8:26)\n    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:12864:12)\n    at renderWithHooks (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:4211:19)\n    at updateFunctionComponent (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:5567:16)\n    at beginWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:6138:20)\n    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:850:66)\n    at performUnitOfWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:8427:92)",
+      "consoleLogs": [
+        "[info] DiagnosticLogger initialized",
+        "[error] Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for one of the following reasons:\n1. You might have mismatching versions of React and the renderer (such as React DOM)\n2. You might be breaking the Rules of Hooks\n3. You might have more than one copy of React in the same app\nSee https://react.dev/link/invalid-hook-call for tips about how to debug and fix this problem.",
+        "[error] Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for one of the following reasons:\n1. You might have mismatching versions of React and the renderer (such as React DOM)\n2. You might be breaking the Rules of Hooks\n3. You might have more than one copy of React in the same app\nSee https://react.dev/link/invalid-hook-call for tips about how to debug and fix this problem.",
+        "[error] Runtime Error: Uncaught TypeError: Cannot read properties of null (reading 'useCallback') at http://localhost:5173/node_modules/.vite/deps/react.js?v=43c65b68:701",
+        "[warn] %s\n\n%s\n An error occurred in the <UpdateBanner> component. Consider adding an error boundary to your tree to customize error handling behavior.\nVisit https://react.dev/link/error-boundaries to learn more about error boundaries."
+      ],
+      "syncQueueLength": 0
+    },
+    "createdAt": "2026-08-23T09:33:31.875754+00:00",
+    "updatedAt": "2026-08-25T07:10:14.550Z"
+  },
+  {
+    "id": "BUG-061",
+    "title": "AmbientPhotoBackdrop is not defined",
+    "description": "Automatically captured react crash.\n\nReferenceError: AmbientPhotoBackdrop is not defined\n    at App (http://localhost:5173/src/App.tsx?t=1787478821677:1536:30)\n    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:12864:12)\n    at renderWithHooks (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:4211:19)\n    at updateFunctionComponent (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:5567:16)\n    at beginWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:6138:20)\n    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:850:66)\n    at performUnitOfWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:8427:92)\n    at workLoopSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:8323:37)\n    at renderRootSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:8307:6)\n    at performWorkOnRoot (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:7992:27)",
+    "severity": "critical",
+    "category": "general",
+    "status": "resolved",
+    "foundBy": "auto-crash-handler",
+    "environment": {
+      "route": "#nav-1",
+      "isOnline": true,
+      "platform": "web",
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [],
+    "expectedBehavior": "App runs without throwing.",
+    "actualBehavior": "AmbientPhotoBackdrop is not defined",
+    "diagnostics": {
+      "stackTrace": "ReferenceError: AmbientPhotoBackdrop is not defined\n    at App (http://localhost:5173/src/App.tsx?t=1787478821677:1536:30)\n    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:12864:12)\n    at renderWithHooks (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:4211:19)\n    at updateFunctionComponent (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:5567:16)\n    at beginWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:6138:20)\n    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:850:66)\n    at performUnitOfWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:8427:92)\n    at workLoopSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:8323:37)\n    at renderRootSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:8307:6)\n    at performWorkOnRoot (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:7992:27)",
+      "consoleLogs": [
+        "[info] DiagnosticLogger initialized",
+        "[error] %o\n\n%s\n\n%s\n {} The above error occurred in the <App> component. React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.",
+        "[error] React Crash: AmbientPhotoBackdrop is not defined",
+        "[error] Uncaught error inside ErrorBoundary: {} {\"componentStack\":\"\\n    at App (http://localhost:5173/src/App.tsx?t=1787478821677:79:443)\\n    at ErrorBoundary (http://localhost:5173/src/components/ErrorBoundary.tsx:6:8)\\n    at RequireAuth (http://localhost:5173/src/components/RequireAuth.tsx:8:31)\\n    at RenderedRoute (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=3a086733:4156:26)\\n    at Routes (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=3a086733:4836"
+      ],
+      "syncQueueLength": 0
+    },
+    "createdAt": "2026-08-23T09:53:41.792186+00:00",
+    "updatedAt": "2026-08-25T07:10:07.647Z",
+    "resolvedBy": "claude",
+    "resolvedAt": "2026-08-25T07:10:07.646Z",
+    "resolutionNote": "Not reproducible against current HEAD -- verified the exact crash site (symbol/line from the stack trace) no longer exists or is now correctly defined/imported. This was captured from a live dev-server (localhost, Vite HMR ?t= cache-busted URL) mid-edit during earlier development and has since been superseded by subsequent refactors."
+  },
+  {
+    "id": "BUG-062",
+    "title": "TripContentSheet is not defined",
+    "description": "Automatically captured react crash.\n\nReferenceError: TripContentSheet is not defined\n    at App (http://localhost:5173/src/App.tsx?t=1787479823745:1936:30)\n    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:12864:12)\n    at renderWithHooks (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:4211:19)\n    at updateFunctionComponent (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:5567:16)\n    at beginWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:6138:20)\n    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:850:66)\n    at performUnitOfWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:8427:92)\n    at workLoopSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:8323:37)\n    at renderRootSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:8307:6)\n    at performWorkOnRoot (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:7992:27)",
+    "severity": "critical",
+    "category": "general",
+    "status": "resolved",
+    "foundBy": "auto-crash-handler",
+    "environment": {
+      "route": "#nav-1",
+      "isOnline": true,
+      "platform": "web",
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [],
+    "expectedBehavior": "App runs without throwing.",
+    "actualBehavior": "TripContentSheet is not defined",
+    "diagnostics": {
+      "stackTrace": "ReferenceError: TripContentSheet is not defined\n    at App (http://localhost:5173/src/App.tsx?t=1787479823745:1936:30)\n    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:12864:12)\n    at renderWithHooks (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:4211:19)\n    at updateFunctionComponent (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:5567:16)\n    at beginWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:6138:20)\n    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:850:66)\n    at performUnitOfWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:8427:92)\n    at workLoopSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:8323:37)\n    at renderRootSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:8307:6)\n    at performWorkOnRoot (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:7992:27)",
+      "consoleLogs": [
+        "[info] DiagnosticLogger initialized",
+        "[error] [vite] Failed to reload /src/App.tsx. This could be due to syntax errors or importing non-existent modules. (see errors above)",
+        "[error] %o\n\n%s\n\n%s\n {} The above error occurred in the <App> component. React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.",
+        "[error] React Crash: TripContentSheet is not defined",
+        "[error] Uncaught error inside ErrorBoundary: {} {\"componentStack\":\"\\n    at App (http://localhost:5173/src/App.tsx?t=1787479823745:78:443)\\n    at ErrorBoundary (http://localhost:5173/src/components/ErrorBoundary.tsx:6:8)\\n    at RequireAuth (http://localhost:5173/src/components/RequireAuth.tsx:8:31)\\n    at RenderedRoute (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=3a086733:4156:26)\\n    at Routes (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=3a086733:4836"
+      ],
+      "syncQueueLength": 0
+    },
+    "createdAt": "2026-08-23T10:10:24.096763+00:00",
+    "updatedAt": "2026-08-25T07:10:08.178Z",
+    "resolvedBy": "claude",
+    "resolvedAt": "2026-08-25T07:10:08.176Z",
+    "resolutionNote": "Not reproducible against current HEAD -- verified the exact crash site (symbol/line from the stack trace) no longer exists or is now correctly defined/imported. This was captured from a live dev-server (localhost, Vite HMR ?t= cache-busted URL) mid-edit during earlier development and has since been superseded by subsequent refactors."
+  },
+  {
+    "id": "BUG-063",
+    "title": "Uncaught TypeError: crypto.randomUUID is not a function",
+    "description": "Automatically captured window error.\n\nTypeError: crypto.randomUUID is not a function\n    at onClick (http://192.168.88.4:5173/src/components/TripsListScreen.tsx:476:23)\n    at executeDispatch (http://192.168.88.4:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:9139:5)\n    at runWithFiberInDEV (http://192.168.88.4:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:850:66)\n    at processDispatchQueue (http://192.168.88.4:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:9165:27)\n    at http://192.168.88.4:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:9452:5\n    at batchedUpdates$1 (http://192.168.88.4:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:2042:12)\n    at dispatchEventForPluginEventSystem (http://192.168.88.4:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:9238:4)\n    at dispatchEvent (http://192.168.88.4:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:11317:29)\n    at dispatchDiscreteEvent (http://192.168.88.4:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:11299:56)",
+    "severity": "critical",
+    "category": "general",
+    "status": "resolved",
+    "foundBy": "auto-crash-handler",
+    "environment": {
+      "route": "#nav-1",
+      "isOnline": true,
+      "platform": "web",
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [],
+    "expectedBehavior": "App runs without throwing.",
+    "actualBehavior": "Uncaught TypeError: crypto.randomUUID is not a function",
+    "diagnostics": {
+      "stackTrace": "TypeError: crypto.randomUUID is not a function\n    at onClick (http://192.168.88.4:5173/src/components/TripsListScreen.tsx:476:23)\n    at executeDispatch (http://192.168.88.4:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:9139:5)\n    at runWithFiberInDEV (http://192.168.88.4:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:850:66)\n    at processDispatchQueue (http://192.168.88.4:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:9165:27)\n    at http://192.168.88.4:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:9452:5\n    at batchedUpdates$1 (http://192.168.88.4:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:2042:12)\n    at dispatchEventForPluginEventSystem (http://192.168.88.4:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:9238:4)\n    at dispatchEvent (http://192.168.88.4:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:11317:29)\n    at dispatchDiscreteEvent (http://192.168.88.4:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:11299:56)",
+      "consoleLogs": [
+        "[info] DiagnosticLogger initialized",
+        "[error] Runtime Error: Uncaught TypeError: crypto.randomUUID is not a function at http://192.168.88.4:5173/src/components/TripsListScreen.tsx:476"
+      ],
+      "syncQueueLength": 0
+    },
+    "createdAt": "2026-08-23T10:20:44.399661+00:00",
+    "updatedAt": "2026-08-25T07:09:56.255Z",
+    "resolvedBy": "claude",
+    "resolvedAt": "2026-08-25T07:09:56.254Z",
+    "resolutionNote": "crypto.randomUUID() has no fallback and throws in insecure contexts (LAN-IP dev access, older Android WebViews). Added src/utils/uuid.ts::newId() with a crypto.getRandomValues-based fallback, then Math.random as last resort, and replaced all 14 call sites in tripStore.ts and TripsListScreen.tsx."
+  },
+  {
+    "id": "BUG-064",
+    "title": "TransactionsPreview is not defined",
+    "description": "Automatically captured react crash.\n\nReferenceError: TransactionsPreview is not defined\n    at App (http://localhost:5173/src/App.tsx?t=1787482085689:1975:44)\n    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:12864:12)\n    at renderWithHooks (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:4211:19)\n    at updateFunctionComponent (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:5567:16)\n    at beginWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:6138:20)\n    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:850:66)\n    at performUnitOfWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:8427:92)\n    at workLoopSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:8323:37)\n    at renderRootSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:8307:6)\n    at performWorkOnRoot (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:7992:27)",
+    "severity": "critical",
+    "category": "general",
+    "status": "resolved",
+    "foundBy": "auto-crash-handler",
+    "environment": {
+      "route": "#nav-1",
+      "isOnline": true,
+      "platform": "web",
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [],
+    "expectedBehavior": "App runs without throwing.",
+    "actualBehavior": "TransactionsPreview is not defined",
+    "diagnostics": {
+      "stackTrace": "ReferenceError: TransactionsPreview is not defined\n    at App (http://localhost:5173/src/App.tsx?t=1787482085689:1975:44)\n    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:12864:12)\n    at renderWithHooks (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:4211:19)\n    at updateFunctionComponent (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:5567:16)\n    at beginWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:6138:20)\n    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:850:66)\n    at performUnitOfWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:8427:92)\n    at workLoopSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:8323:37)\n    at renderRootSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:8307:6)\n    at performWorkOnRoot (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:7992:27)",
+      "consoleLogs": [
+        "[info] DiagnosticLogger initialized",
+        "[error] %o\n\n%s\n\n%s\n {} The above error occurred in the <App> component. React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.",
+        "[error] React Crash: TransactionsPreview is not defined",
+        "[error] Uncaught error inside ErrorBoundary: {} {\"componentStack\":\"\\n    at App (http://localhost:5173/src/App.tsx?t=1787482085689:83:443)\\n    at ErrorBoundary (http://localhost:5173/src/components/ErrorBoundary.tsx:6:8)\\n    at RequireAuth (http://localhost:5173/src/components/RequireAuth.tsx:8:31)\\n    at RenderedRoute (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=3a086733:4156:26)\\n    at Routes (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=3a086733:4836"
+      ],
+      "syncQueueLength": 0
+    },
+    "createdAt": "2026-08-23T10:48:06.286006+00:00",
+    "updatedAt": "2026-08-25T07:10:08.687Z",
+    "resolvedBy": "claude",
+    "resolvedAt": "2026-08-25T07:10:08.687Z",
+    "resolutionNote": "Not reproducible against current HEAD -- verified the exact crash site (symbol/line from the stack trace) no longer exists or is now correctly defined/imported. This was captured from a live dev-server (localhost, Vite HMR ?t= cache-busted URL) mid-edit during earlier development and has since been superseded by subsequent refactors."
+  },
+  {
+    "id": "BUG-065",
+    "title": "Cannot read properties of null (reading 'useState')",
+    "description": "Automatically captured react crash.\n\nTypeError: Cannot read properties of null (reading 'useState')\n    at exports.useState (http://localhost:5173/node_modules/.vite/deps/react.js?v=43c65b68:748:30)\n    at SettingsView (http://localhost:5173/src/components/SettingsView.tsx:51:36)\n    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:12864:12)\n    at renderWithHooks (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:4211:19)\n    at updateFunctionComponent (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:5567:16)\n    at beginWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:6138:20)\n    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:850:66)\n    at performUnitOfWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:8427:92)\n    at workLoopSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:8323:37)\n    at renderRootSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:8307:6)",
+    "severity": "critical",
+    "category": "general",
+    "status": "wont_fix",
+    "foundBy": "auto-crash-handler",
+    "environment": {
+      "route": "#nav-1",
+      "isOnline": true,
+      "platform": "web",
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [],
+    "expectedBehavior": "App runs without throwing.",
+    "actualBehavior": "Cannot read properties of null (reading 'useState')",
+    "diagnostics": {
+      "stackTrace": "TypeError: Cannot read properties of null (reading 'useState')\n    at exports.useState (http://localhost:5173/node_modules/.vite/deps/react.js?v=43c65b68:748:30)\n    at SettingsView (http://localhost:5173/src/components/SettingsView.tsx:51:36)\n    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:12864:12)\n    at renderWithHooks (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:4211:19)\n    at updateFunctionComponent (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:5567:16)\n    at beginWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:6138:20)\n    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:850:66)\n    at performUnitOfWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:8427:92)\n    at workLoopSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:8323:37)\n    at renderRootSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:8307:6)",
+      "consoleLogs": [
+        "[info] DiagnosticLogger initialized",
+        "[error] Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for one of the following reasons:\n1. You might have mismatching versions of React and the renderer (such as React DOM)\n2. You might be breaking the Rules of Hooks\n3. You might have more than one copy of React in the same app\nSee https://react.dev/link/invalid-hook-call for tips about how to debug and fix this problem.",
+        "[error] Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for one of the following reasons:\n1. You might have mismatching versions of React and the renderer (such as React DOM)\n2. You might be breaking the Rules of Hooks\n3. You might have more than one copy of React in the same app\nSee https://react.dev/link/invalid-hook-call for tips about how to debug and fix this problem.",
+        "[error] %o\n\n%s\n\n%s\n {} The above error occurred in the <SettingsView> component. React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.",
+        "[error] React Crash: Cannot read properties of null (reading 'useState')",
+        "[error] Uncaught error inside ErrorBoundary: {} {\"componentStack\":\"\\n    at SettingsView (http://localhost:5173/src/components/SettingsView.tsx:49:32)\\n    at SettingsTab (http://localhost:5173/src/components/SettingsTab.tsx:4:31)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at main (<anonymous>)\\n    at div (<anonymous>)\\n    at TripContentSheet (http://localhost:5173/src/components/TripContentSheet.tsx:10:36)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at App (http://localhost"
+      ],
+      "syncQueueLength": 0
+    },
+    "createdAt": "2026-08-24T06:42:37.284982+00:00",
+    "updatedAt": "2026-08-25T07:10:15.011Z"
+  },
+  {
+    "id": "BUG-066",
+    "title": "IconChevronDown is not defined",
+    "description": "Automatically captured react crash.\n\nReferenceError: IconChevronDown is not defined\n    at App (http://localhost:5173/src/App.tsx?t=1787561850390:2127:35)\n    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:12864:12)\n    at renderWithHooks (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:4211:19)\n    at updateFunctionComponent (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:5567:16)\n    at beginWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:6138:20)\n    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:850:66)\n    at performUnitOfWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:8427:92)\n    at workLoopSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:8323:37)\n    at renderRootSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:8307:6)\n    at performWorkOnRoot (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:7992:27)",
+    "severity": "critical",
+    "category": "general",
+    "status": "resolved",
+    "foundBy": "auto-crash-handler",
+    "environment": {
+      "route": "#nav-1",
+      "isOnline": true,
+      "platform": "web",
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [],
+    "expectedBehavior": "App runs without throwing.",
+    "actualBehavior": "IconChevronDown is not defined",
+    "diagnostics": {
+      "stackTrace": "ReferenceError: IconChevronDown is not defined\n    at App (http://localhost:5173/src/App.tsx?t=1787561850390:2127:35)\n    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:12864:12)\n    at renderWithHooks (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:4211:19)\n    at updateFunctionComponent (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:5567:16)\n    at beginWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:6138:20)\n    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:850:66)\n    at performUnitOfWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:8427:92)\n    at workLoopSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:8323:37)\n    at renderRootSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:8307:6)\n    at performWorkOnRoot (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:7992:27)",
+      "consoleLogs": [
+        "[info] DiagnosticLogger initialized",
+        "[error] %o\n\n%s\n\n%s\n {} The above error occurred in the <App> component. React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.",
+        "[error] React Crash: IconChevronDown is not defined",
+        "[error] Uncaught error inside ErrorBoundary: {} {\"componentStack\":\"\\n    at App (http://localhost:5173/src/App.tsx?t=1787561850390:84:443)\\n    at ErrorBoundary (http://localhost:5173/src/components/ErrorBoundary.tsx:6:8)\\n    at RequireAuth (http://localhost:5173/src/components/RequireAuth.tsx:8:31)\\n    at RenderedRoute (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=3a086733:4156:26)\\n    at Routes (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=3a086733:4836"
+      ],
+      "syncQueueLength": 0
+    },
+    "createdAt": "2026-08-24T08:57:33.303389+00:00",
+    "updatedAt": "2026-08-25T07:10:09.183Z",
+    "resolvedBy": "claude",
+    "resolvedAt": "2026-08-25T07:10:09.183Z",
+    "resolutionNote": "Not reproducible against current HEAD -- verified the exact crash site (symbol/line from the stack trace) no longer exists or is now correctly defined/imported. This was captured from a live dev-server (localhost, Vite HMR ?t= cache-busted URL) mid-edit during earlier development and has since been superseded by subsequent refactors."
   },
   {
     "id": "BUG-067",
@@ -868,8 +2038,8 @@
     "status": "resolved",
     "foundBy": "user",
     "environment": {
-      "platform": "web",
       "isOnline": true,
+      "platform": "web",
       "appVersion": "1.0.0"
     },
     "reproSteps": [
@@ -879,10 +2049,10 @@
     "expectedBehavior": "",
     "actualBehavior": "",
     "diagnostics": {},
-    "createdAt": "2026-08-24T14:30:16.307Z",
-    "updatedAt": "2026-08-24T14:30:22.424Z",
+    "createdAt": "2026-08-24T14:30:16.307+00:00",
+    "updatedAt": "2026-08-24T14:30:22.424+00:00",
+    "resolvedAt": "2026-08-24T14:30:22.424+00:00",
     "resolvedBy": "antigravity",
-    "resolvedAt": "2026-08-24T14:30:22.424Z",
     "resolutionNote": "Replaced native roundRect with drawSafeRoundedRect with explicit beginPath/closePath, added drawSafeWrappedText for multi-line bound protection, and added Night/Light theme switcher."
   },
   {
@@ -894,8 +2064,8 @@
     "status": "resolved",
     "foundBy": "user",
     "environment": {
-      "platform": "web",
       "isOnline": true,
+      "platform": "web",
       "appVersion": "1.0.0"
     },
     "reproSteps": [
@@ -905,10 +2075,10 @@
     "expectedBehavior": "",
     "actualBehavior": "",
     "diagnostics": {},
-    "createdAt": "2026-08-24T14:30:28.657Z",
-    "updatedAt": "2026-08-24T14:30:33.608Z",
+    "createdAt": "2026-08-24T14:30:28.657+00:00",
+    "updatedAt": "2026-08-24T14:30:33.608+00:00",
+    "resolvedAt": "2026-08-24T14:30:33.607+00:00",
     "resolvedBy": "antigravity",
-    "resolvedAt": "2026-08-24T14:30:33.607Z",
     "resolutionNote": "Added .stack-viewport-lock with 100dvh lock and flexbox column auto-scaling in index.css (ADR 50)."
   }
 ]

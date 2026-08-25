@@ -415,7 +415,7 @@ export default function App() {
         window.requestAnimationFrame(() => {
           const currentScrollTop = target.scrollTop;
 
-          if (currentScrollTop <= 15) {
+          if (currentScrollTop <= 15 && isHeaderScrolled) {
             // Reached the top of the scroll container: always expand
             setIsHeaderScrolled(false);
           } else if (currentScrollTop > 45 && !isHeaderScrolled) {
@@ -456,8 +456,17 @@ export default function App() {
       return;
     }
 
+    // Skip the write when the height hasn't actually changed -- the padding
+    // this var drives (index.css) shifts scroll position when it moves,
+    // which the scroll listener above can read as a scroll event, which can
+    // toggle isHeaderScrolled and resize the header again. Only writing on
+    // a real change breaks that feedback cycle instead of letting it thrash.
+    let lastHeight = -1;
     const updateHeight = () => {
-      document.documentElement.style.setProperty('--trip-header-height', `${header.offsetHeight}px`);
+      const next = header.offsetHeight;
+      if (next === lastHeight) return;
+      lastHeight = next;
+      document.documentElement.style.setProperty('--trip-header-height', `${next}px`);
     };
 
     updateHeight();
