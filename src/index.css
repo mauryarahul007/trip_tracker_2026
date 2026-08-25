@@ -2057,10 +2057,17 @@ input:checked + .toggle-slider:before {
   margin: 0 auto;
   height: 84px;
   border-radius: var(--border-radius-pill);
-  background: color-mix(in srgb, var(--bg-app) 70%, transparent);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  border: 1px solid color-mix(in srgb, var(--border-color) 70%, transparent);
+  /* A flat 26% tint alone only stays legible while a trip photo is
+     blurred in behind it (HomeAmbientBackdrop). With no photo yet -- new
+     account, image still loading -- there's nothing behind but the plain
+     page background, so a fixed low dark scrim underneath guarantees the
+     white labels stay readable either way. */
+  background:
+    linear-gradient(rgba(0, 0, 0, 0.16), rgba(0, 0, 0, 0.16)),
+    color-mix(in srgb, var(--bg-app) 26%, transparent);
+  backdrop-filter: blur(22px) saturate(190%);
+  -webkit-backdrop-filter: blur(22px) saturate(190%);
+  border: 1px solid rgba(255, 255, 255, 0.16);
   display: flex;
   align-items: center;
   overflow: hidden;
@@ -2095,9 +2102,11 @@ input:checked + .toggle-slider:before {
   letter-spacing: 0.06em;
   text-transform: uppercase;
   font-weight: 700;
-  /* text-muted on bg-app is ~4.47:1, just under the 4.5:1 AA floor for
-     small text -- text-secondary clears it with room to spare. */
-  color: var(--text-secondary);
+  /* The track is now sheer enough to show the blurred trip photo behind
+     it, so label color can't depend on --text-secondary contrasting
+     against a solid bg-app anymore -- white + shadow reads on any photo. */
+  color: rgba(255, 255, 255, 0.92);
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
   background: none;
   border: none;
   cursor: pointer;
