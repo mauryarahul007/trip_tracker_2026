@@ -12,8 +12,6 @@ interface Props {
   onFeaturesChanged: () => void | Promise<void>;
 }
 
-const STATUS_FILTERS = ['active', 'requested', 'planned', 'in_progress', 'shipped', 'wont_do', 'all'] as const;
-
 const STATUS_LABELS: Record<string, string> = {
   requested: 'Requested',
   planned: 'Planned',
@@ -22,12 +20,20 @@ const STATUS_LABELS: Record<string, string> = {
   wont_do: "Won't Do",
 };
 
+// Requested/Planned+In Progress/Shipped board -- priority reads as column
+// position instead of requiring a status filter chip to see what's queued.
+const BOARD_COLUMNS: { statuses: FeatureRecord['status'][]; label: string; color: string }[] = [
+  { statuses: ['requested'], label: 'Requested', color: 'var(--text-tertiary)' },
+  { statuses: ['planned', 'in_progress'], label: 'Planned', color: 'var(--amber)' },
+  { statuses: ['shipped'], label: 'Shipped', color: 'var(--safe)' },
+];
+
 export function AdminFeaturesPage({ features, onFeaturesChanged }: Props) {
   const featureFlags = useTripStore((s) => s.featureFlags);
   const setFeatureFlag = useTripStore((s) => s.setFeatureFlag);
 
   const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<(typeof STATUS_FILTERS)[number]>('active');
+  const [showWontDo, setShowWontDo] = useState(false);
   const [toastMsg, setToastMsg] = useState('');
   const [busyId, setBusyId] = useState<string | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -48,13 +54,7 @@ export function AdminFeaturesPage({ features, onFeaturesChanged }: Props) {
   };
 
   const filtered = features.filter((f) => {
-    const matchesStatus =
-      statusFilter === 'all'
-        ? true
-        : statusFilter === 'active'
-          ? f.status === 'requested' || f.status === 'planned' || f.status === 'in_progress'
-          : f.status === statusFilter;
-    if (!matchesStatus) return false;
+    if (!showWontDo && f.status === 'wont_do') return false;
     if (!searchQuery.trim()) return true;
     const q = searchQuery.toLowerCase();
     return f.title.toLowerCase().includes(q) || f.description.toLowerCase().includes(q) || f.requestedBy.toLowerCase().includes(q);
@@ -123,13 +123,9 @@ export function AdminFeaturesPage({ features, onFeaturesChanged }: Props) {
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
-        <div className="ops-filter-row" style={{ marginBottom: 0 }}>
-          {STATUS_FILTERS.map((s) => (
-            <button key={s} type="button" className="ops-chip" data-active={statusFilter === s} onClick={() => setStatusFilter(s)}>
-              {s === 'active' ? 'Active' : s === 'all' ? 'All' : STATUS_LABELS[s]}
-            </button>
-          ))}
-        </div>
+        <button type="button" className="ops-chip" data-active={showWontDo} onClick={() => setShowWontDo((v) => !v)}>
+          {showWontDo ? "Hide won't-do" : "Show won't-do"}
+        </button>
       </div>
 
       {filtered.length === 0 ? (
@@ -137,91 +133,154 @@ export function AdminFeaturesPage({ features, onFeaturesChanged }: Props) {
           <div className="ops-empty">No feature requests match.</div>
         </div>
       ) : (
-        filtered.map((f) => {
-          const linkedMeta = f.linkedFlagKey ? FEATURE_FLAGS_META[f.linkedFlagKey as FeatureFlagKey] : undefined;
-          const flagOn = linkedMeta && f.linkedFlagKey ? (featureFlags[f.linkedFlagKey as FeatureFlagKey] ?? linkedMeta.defaultEnabledForUsers) : false;
-          return (
-            <div key={f.id} className="ops-card">
-              <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
-                <div style={{ minWidth: 0 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                    <span className="ops-trip-name">{f.title}</span>
-                    <span className={`ops-badge ${f.status === 'shipped' ? 'active' : f.status === 'wont_do' ? 'archived' : 'grounded'}`}>
-                      {STATUS_LABELS[f.status]}
-                    </span>
-                    <span className="ops-switcher-row-code">{f.id}</span>
-                  </div>
-                  <div className="ops-trip-route">
-                    {f.category} &middot; requested by {f.requestedBy} &middot; {new Date(f.createdAt).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata', day: 'numeric', month: 'short', year: 'numeric' })}
-                  </div>
-                  {f.description && (
-                    <p style={{ fontSize: '12.5px', color: 'var(--text-secondary)', marginTop: '8px' }}>{f.description}</p>
-                  )}
-                  {f.status === 'shipped' && f.shippedNote && (
-                    <p style={{ fontSize: '11.5px', color: 'var(--safe)', marginTop: '6px' }}>
-                      Shipped by {f.shippedBy}: {f.shippedNote}
-                    </p>
-                  )}
+        <div className="ops-feature-board">
+          {BOARD_COLUMNS.map((col) => {
+            const colFeatures = filtered.filter((f) => col.statuses.includes(f.status));
+            return (
+              <div key={col.label}>
+                <div className="ops-feature-col-head">
+                  <span className="dot" style={{ background: col.color }} />
+                  {col.label}
+                  <span className="count">{colFeatures.length}</span>
                 </div>
-                <div className="ops-manifest-actions" style={{ flexWrap: 'wrap' }}>
-                  {f.status !== 'planned' && (
-                    <button type="button" className="ops-mini-btn" disabled={busyId === f.id} onClick={() => handleStatusChange(f, 'planned')}>
-                      Plan
-                    </button>
-                  )}
-                  {f.status !== 'in_progress' && (
-                    <button type="button" className="ops-mini-btn" disabled={busyId === f.id} onClick={() => handleStatusChange(f, 'in_progress')}>
-                      Start
-                    </button>
-                  )}
-                  {f.status !== 'shipped' && (
-                    <button type="button" className="ops-mini-btn" disabled={busyId === f.id} onClick={() => handleStatusChange(f, 'shipped')}>
-                      Ship
-                    </button>
-                  )}
-                  {f.status !== 'wont_do' && (
-                    <button type="button" className="ops-mini-btn ground" disabled={busyId === f.id} onClick={() => handleStatusChange(f, 'wont_do')}>
-                      Won&apos;t Do
-                    </button>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  {colFeatures.length === 0 ? (
+                    <div className="ops-ov-empty">No requests</div>
+                  ) : (
+                    colFeatures.map((f) => (
+                      <FeatureCard
+                        key={f.id}
+                        feature={f}
+                        busy={busyId === f.id}
+                        flagEntries={flagEntries}
+                        featureFlags={featureFlags}
+                        onStatusChange={handleStatusChange}
+                        onLinkFlag={handleLinkFlag}
+                        onToggleFlag={(key, on) => {
+                          setFeatureFlag(key, on);
+                          showToast(`${FEATURE_FLAGS_META[key].label} set to ${on ? 'Enabled' : 'Disabled'}`);
+                        }}
+                      />
+                    ))
                   )}
                 </div>
               </div>
-
-              <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px solid var(--line)', display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-                <select
-                  className="ops-select"
-                  style={{ width: 'auto', minWidth: '220px' }}
-                  value={f.linkedFlagKey || ''}
-                  onChange={(e) => handleLinkFlag(f, e.target.value)}
-                >
-                  <option value="">No linked flag</option>
-                  {flagEntries.map(([key, meta]) => (
-                    <option key={key} value={key}>
-                      {meta.label}
-                    </option>
+            );
+          })}
+          {showWontDo && filtered.some((f) => f.status === 'wont_do') && (
+            <div>
+              <div className="ops-feature-col-head">
+                <span className="dot" style={{ background: 'var(--text-tertiary)' }} />
+                Won&apos;t Do
+                <span className="count">{filtered.filter((f) => f.status === 'wont_do').length}</span>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                {filtered
+                  .filter((f) => f.status === 'wont_do')
+                  .map((f) => (
+                    <FeatureCard
+                      key={f.id}
+                      feature={f}
+                      busy={busyId === f.id}
+                      flagEntries={flagEntries}
+                      featureFlags={featureFlags}
+                      onStatusChange={handleStatusChange}
+                      onLinkFlag={handleLinkFlag}
+                      onToggleFlag={(key, on) => {
+                        setFeatureFlag(key, on);
+                        showToast(`${FEATURE_FLAGS_META[key].label} set to ${on ? 'Enabled' : 'Disabled'}`);
+                      }}
+                    />
                   ))}
-                </select>
-                {linkedMeta && f.linkedFlagKey && (
-                  <button
-                    type="button"
-                    className="ops-relay"
-                    data-on={flagOn}
-                    aria-label={`Toggle ${linkedMeta.label}`}
-                    onClick={() => {
-                      const key = f.linkedFlagKey as FeatureFlagKey;
-                      setFeatureFlag(key, !flagOn);
-                      showToast(`${linkedMeta.label} set to ${!flagOn ? 'Enabled' : 'Disabled'}`);
-                    }}
-                  >
-                    <span className="ops-puck" />
-                  </button>
-                )}
-                {linkedMeta && <span style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>{flagOn ? 'Enabled' : 'Disabled'} for users</span>}
               </div>
             </div>
-          );
-        })
+          )}
+        </div>
       )}
+    </div>
+  );
+}
+
+function FeatureCard({
+  feature: f,
+  busy,
+  flagEntries,
+  featureFlags,
+  onStatusChange,
+  onLinkFlag,
+  onToggleFlag,
+}: {
+  feature: FeatureRecord;
+  busy: boolean;
+  flagEntries: [FeatureFlagKey, (typeof FEATURE_FLAGS_META)[FeatureFlagKey]][];
+  featureFlags: Partial<Record<FeatureFlagKey, boolean>>;
+  onStatusChange: (f: FeatureRecord, status: FeatureRecord['status']) => void;
+  onLinkFlag: (f: FeatureRecord, key: string) => void;
+  onToggleFlag: (key: FeatureFlagKey, on: boolean) => void;
+}) {
+  const linkedMeta = f.linkedFlagKey ? FEATURE_FLAGS_META[f.linkedFlagKey as FeatureFlagKey] : undefined;
+  const flagOn = linkedMeta && f.linkedFlagKey ? (featureFlags[f.linkedFlagKey as FeatureFlagKey] ?? linkedMeta.defaultEnabledForUsers) : false;
+
+  return (
+    <div className="ops-card">
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+        <span className="ops-trip-name">{f.title}</span>
+        <span className="ops-switcher-row-code">{f.id}</span>
+      </div>
+      <div className="ops-trip-route">
+        {f.category} &middot; requested by {f.requestedBy} &middot; {new Date(f.createdAt).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata', day: 'numeric', month: 'short', year: 'numeric' })}
+      </div>
+      {f.description && <p style={{ fontSize: '12.5px', color: 'var(--text-secondary)', marginTop: '8px' }}>{f.description}</p>}
+      {f.status === 'shipped' && f.shippedNote && (
+        <p style={{ fontSize: '11.5px', color: 'var(--safe)', marginTop: '6px' }}>
+          Shipped by {f.shippedBy}: {f.shippedNote}
+        </p>
+      )}
+
+      <div className="ops-manifest-actions" style={{ flexWrap: 'wrap', justifyContent: 'flex-start', marginTop: '10px' }}>
+        {f.status !== 'planned' && (
+          <button type="button" className="ops-mini-btn" disabled={busy} onClick={() => onStatusChange(f, 'planned')}>
+            Plan
+          </button>
+        )}
+        {f.status !== 'in_progress' && (
+          <button type="button" className="ops-mini-btn" disabled={busy} onClick={() => onStatusChange(f, 'in_progress')}>
+            Start
+          </button>
+        )}
+        {f.status !== 'shipped' && (
+          <button type="button" className="ops-mini-btn" disabled={busy} onClick={() => onStatusChange(f, 'shipped')}>
+            Ship
+          </button>
+        )}
+        {f.status !== 'wont_do' && (
+          <button type="button" className="ops-mini-btn ground" disabled={busy} onClick={() => onStatusChange(f, 'wont_do')}>
+            Won&apos;t Do
+          </button>
+        )}
+      </div>
+
+      <div style={{ marginTop: '10px', paddingTop: '10px', borderTop: '1px solid var(--line)', display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+        <select className="ops-select" style={{ width: 'auto', minWidth: '160px' }} value={f.linkedFlagKey || ''} onChange={(e) => onLinkFlag(f, e.target.value)}>
+          <option value="">No linked flag</option>
+          {flagEntries.map(([key, meta]) => (
+            <option key={key} value={key}>
+              {meta.label}
+            </option>
+          ))}
+        </select>
+        {linkedMeta && f.linkedFlagKey && (
+          <button
+            type="button"
+            className="ops-relay"
+            data-on={flagOn}
+            aria-label={`Toggle ${linkedMeta.label}`}
+            onClick={() => onToggleFlag(f.linkedFlagKey as FeatureFlagKey, !flagOn)}
+          >
+            <span className="ops-puck" />
+          </button>
+        )}
+      </div>
     </div>
   );
 }

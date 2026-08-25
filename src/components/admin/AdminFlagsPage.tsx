@@ -4,7 +4,15 @@ import type { AppConfigKey, FeatureFlagKey } from '../../types/admin';
 import { FEATURE_FLAGS_META } from '../../utils/featureFlags';
 import { useTripStore } from '../../store/tripStore';
 import { fetchAppConfig, setAppConfigValue } from '../../services/tripApi';
-import { IconCheck, IconAlertCircle, IconRefresh } from '../Icons';
+import { IconCheck, IconAlertCircle, IconRefresh, IconSearch } from '../Icons';
+
+const FLAG_CATEGORY_LABELS: Record<string, string> = {
+  core: 'Core',
+  geotagging: 'Geotagging',
+  splits: 'Splits',
+  sync: 'Sync',
+  admin: 'Admin',
+};
 
 interface Props {
   trips: Trip[];
@@ -108,6 +116,8 @@ export function AdminFlagsPage({ trips, members }: Props) {
   const [selectedTripId, setSelectedTripId] = useState('');
   const [selectedUserId, setSelectedUserId] = useState('');
   const [toastMsg, setToastMsg] = useState('');
+  const [flagSearch, setFlagSearch] = useState('');
+  const [flagCategoryFilter, setFlagCategoryFilter] = useState<string>('all');
 
   const [config, setConfig] = useState<Partial<Record<AppConfigKey, unknown>>>({});
   const [savingKey, setSavingKey] = useState<AppConfigKey | null>(null);
@@ -177,6 +187,13 @@ export function AdminFlagsPage({ trips, members }: Props) {
 
   const flagEntries = Object.entries(FEATURE_FLAGS_META) as [FeatureFlagKey, typeof FEATURE_FLAGS_META[FeatureFlagKey]][];
   const allMembersList = Object.values(members).filter((m) => !m.archived);
+  const flagCategories = Array.from(new Set(flagEntries.map(([, meta]) => meta.category)));
+  const visibleFlagEntries = flagEntries.filter(([key, meta]) => {
+    if (flagCategoryFilter !== 'all' && meta.category !== flagCategoryFilter) return false;
+    if (!flagSearch.trim()) return true;
+    const q = flagSearch.toLowerCase();
+    return meta.label.toLowerCase().includes(q) || key.toLowerCase().includes(q) || meta.description.toLowerCase().includes(q);
+  });
 
   return (
     <div className="fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
@@ -413,8 +430,34 @@ export function AdminFlagsPage({ trips, members }: Props) {
         <p className="ops-section-sub">Per-flag global toggle, ARMED/SAFED for every traveler.</p>
       </div>
 
+      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+        <div className="ops-search-wrap" style={{ minWidth: '200px', flex: '1 1 200px' }}>
+          <IconSearch size={16} />
+          <input
+            type="text"
+            className="ops-input"
+            placeholder="Search flags by name or key..."
+            value={flagSearch}
+            onChange={(e) => setFlagSearch(e.target.value)}
+          />
+        </div>
+        <div className="ops-filter-row" style={{ marginBottom: 0 }}>
+          <button type="button" className="ops-chip" data-active={flagCategoryFilter === 'all'} onClick={() => setFlagCategoryFilter('all')}>
+            All
+          </button>
+          {flagCategories.map((cat) => (
+            <button key={cat} type="button" className="ops-chip" data-active={flagCategoryFilter === cat} onClick={() => setFlagCategoryFilter(cat)}>
+              {FLAG_CATEGORY_LABELS[cat] || cat}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {visibleFlagEntries.length === 0 ? (
+        <div className="ops-ov-empty">No flags match &ldquo;{flagSearch}&rdquo;.</div>
+      ) : (
       <div className="ops-flag-grid">
-        {flagEntries.map(([key, meta]) => {
+        {visibleFlagEntries.map(([key, meta]) => {
           const isEnabled = featureFlags[key] ?? meta.defaultEnabledForUsers;
           return (
             <div key={key} className="ops-card ops-flag-card">
@@ -437,11 +480,15 @@ export function AdminFlagsPage({ trips, members }: Props) {
                 </button>
               </div>
               <div className="ops-flag-desc">{meta.description}</div>
-              <span className={`ops-state-tag ${isEnabled ? 'on' : 'off'}`}>{isEnabled ? 'ARMED' : 'SAFED'}</span>
+              <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                <span className={`ops-state-tag ${isEnabled ? 'on' : 'off'}`}>{isEnabled ? 'ARMED' : 'SAFED'}</span>
+                <span className="ops-state-tag off">{FLAG_CATEGORY_LABELS[meta.category] || meta.category}</span>
+              </div>
             </div>
           );
         })}
       </div>
+      )}
 
       <div>
         <h3 className="ops-section-title">Overrides</h3>

@@ -279,7 +279,7 @@ export default function App() {
   const [bypassEnvWarning, setBypassEnvWarning] = useState(false);
   const isSuperadmin = useTripStore((s) => s.isSuperadmin);
   const [isTravelerPreview, setIsTravelerPreview] = useState(false);
-  const [adminActiveTab, setAdminActiveTab] = useState<AdminTab>('flags');
+  const [adminActiveTab, setAdminActiveTab] = useState<AdminTab>('command');
 
   // Command Palette & Trip Wrapped States
   const [showCommandPalette, setShowCommandPalette] = useState(false);

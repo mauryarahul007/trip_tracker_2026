@@ -28,6 +28,11 @@ type Props = {
 };
 
 type StatusFilter = 'all' | 'open' | 'in_progress' | 'resolved' | 'wont_fix' | 'critical';
+type SortMode = 'newest' | 'severity' | 'status';
+type ViewMode = 'list' | 'kanban';
+
+const SEVERITY_RANK: Record<BugRecord['severity'], number> = { critical: 0, high: 1, medium: 2, low: 3 };
+const STATUS_RANK: Record<BugRecord['status'], number> = { open: 0, in_progress: 1, resolved: 2, wont_fix: 3 };
 
 const CATEGORIES: { value: BugRecord['category']; label: string }[] = [
   { value: 'navigation', label: 'Navigation & Routing' },
@@ -65,6 +70,111 @@ function statusMeta(status: BugRecord['status']): { label: string; color: string
   }
 }
 
+function BugDetailBody({
+  bug,
+  onStatusChange,
+  onCopyPrompt,
+  onDelete,
+}: {
+  bug: BugRecord;
+  onStatusChange: (bug: BugRecord, status: 'open' | 'in_progress' | 'resolved' | 'wont_fix') => void;
+  onCopyPrompt: (bug: BugRecord) => void;
+  onDelete: (id: string) => void;
+}) {
+  return (
+    <>
+      {bug.reproSteps && bug.reproSteps.length > 0 && (
+        <div className="ops-bug-field">
+          <span className="ops-bug-label">Steps to reproduce</span>
+          <ol>
+            {bug.reproSteps.map((step, idx) => (
+              <li key={idx}>{step}</li>
+            ))}
+          </ol>
+        </div>
+      )}
+
+      {(bug.expectedBehavior || bug.actualBehavior) && (
+        <div className="ops-bug-field" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+          {bug.expectedBehavior && (
+            <div>
+              <span className="ops-bug-label">Expected</span>
+              <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>{bug.expectedBehavior}</div>
+            </div>
+          )}
+          {bug.actualBehavior && (
+            <div>
+              <span className="ops-bug-label">Actual</span>
+              <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>{bug.actualBehavior}</div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {bug.diagnostics?.stackTrace && (
+        <div className="ops-bug-field">
+          <span className="ops-bug-label">Trace</span>
+          <div className="ops-bug-stack">{bug.diagnostics.stackTrace}</div>
+        </div>
+      )}
+
+      {bug.status === 'resolved' && (
+        <div className="ops-bug-field ops-bug-resolution">
+          <strong>Resolution:</strong> {bug.resolutionNote || 'Resolved'}
+          <div style={{ fontSize: '10.5px', marginTop: '3px', color: 'var(--text-secondary)' }}>
+            Settled by {bug.resolvedBy || 'superadmin'} on {bug.resolvedAt ? new Date(bug.resolvedAt).toLocaleDateString() : 'N/A'}
+          </div>
+        </div>
+      )}
+
+      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '4px' }}>
+        {bug.status === 'open' && (
+          <button type="button" className="ops-btn" onClick={() => onStatusChange(bug, 'in_progress')}>
+            Start work
+          </button>
+        )}
+
+        {bug.status !== 'resolved' && bug.status !== 'wont_fix' && (
+          <button
+            type="button"
+            className="ops-btn"
+            onClick={() => onStatusChange(bug, 'resolved')}
+            style={{ color: 'var(--safe)', borderColor: 'var(--safe-line)' }}
+          >
+            Mark settled
+          </button>
+        )}
+
+        {bug.status !== 'resolved' && bug.status !== 'wont_fix' && (
+          <button type="button" className="ops-btn" onClick={() => onStatusChange(bug, 'wont_fix')}>
+            Won't fix
+          </button>
+        )}
+
+        {(bug.status === 'resolved' || bug.status === 'wont_fix') && (
+          <button type="button" className="ops-btn" onClick={() => onStatusChange(bug, 'open')}>
+            Reopen
+          </button>
+        )}
+
+        <button type="button" className="ops-btn" onClick={() => onCopyPrompt(bug)}>
+          <IconCopy size={13} className="icon-sm" /> Copy for AI
+        </button>
+
+        <button
+          type="button"
+          className="ops-btn"
+          onClick={() => onDelete(bug.id)}
+          style={{ marginLeft: 'auto', color: 'var(--danger)', borderColor: 'rgba(255,107,94,0.4)' }}
+          aria-label={`Delete ${bug.id}`}
+        >
+          <IconTrash size={14} className="icon-sm" />
+        </button>
+      </div>
+    </>
+  );
+}
+
 export function SuperAdminBugTracker({ onBack, isAdmin = true, onRequestConfirm }: Props) {
   const [bugs, setBugs] = useState<BugRecord[]>([]);
   const [loading, setLoading] = useState(true);
@@ -72,6 +182,9 @@ export function SuperAdminBugTracker({ onBack, isAdmin = true, onRequestConfirm 
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [expandedBugId, setExpandedBugId] = useState<string | null>(null);
+  const [sortMode, setSortMode] = useState<SortMode>('newest');
+  const [viewMode, setViewMode] = useState<ViewMode>('list');
+  const [drawerBugId, setDrawerBugId] = useState<string | null>(null);
 
   const [showAddModal, setShowAddModal] = useState(false);
   const [resolvingBug, setResolvingBug] = useState<BugRecord | null>(null);
@@ -133,6 +246,16 @@ export function SuperAdminBugTracker({ onBack, isAdmin = true, onRequestConfirm 
       return true;
     });
   }, [bugs, searchQuery, statusFilter, categoryFilter]);
+
+  const sortedBugs = useMemo(() => {
+    if (sortMode === 'newest') return filteredBugs;
+    const sorted = [...filteredBugs];
+    if (sortMode === 'severity') sorted.sort((a, b) => SEVERITY_RANK[a.severity] - SEVERITY_RANK[b.severity]);
+    if (sortMode === 'status') sorted.sort((a, b) => STATUS_RANK[a.status] - STATUS_RANK[b.status]);
+    return sorted;
+  }, [filteredBugs, sortMode]);
+
+  const drawerBug = drawerBugId ? bugs.find((b) => b.id === drawerBugId) || null : null;
 
   const stats = useMemo(() => {
     const total = bugs.length;
@@ -392,6 +515,39 @@ ${bug.diagnostics?.stackTrace ? `#### Stack Trace\n\`\`\`text\n${bug.diagnostics
           ))}
         </select>
 
+        <select
+          value={sortMode}
+          onChange={(e) => setSortMode(e.target.value as SortMode)}
+          className="ops-select"
+          style={{ width: 'auto', flex: '0 0 auto' }}
+          aria-label="Sort cases"
+        >
+          <option value="newest">Sort: Newest</option>
+          <option value="severity">Sort: Severity</option>
+          <option value="status">Sort: Status</option>
+        </select>
+
+        <div style={{ display: 'flex', gap: '2px', background: 'var(--bg-inset)', border: '1px solid var(--line-strong)', borderRadius: '10px', padding: '2px' }}>
+          <button
+            type="button"
+            className="ops-chip"
+            data-active={viewMode === 'list'}
+            style={{ border: 'none', padding: '5px 10px' }}
+            onClick={() => setViewMode('list')}
+          >
+            List
+          </button>
+          <button
+            type="button"
+            className="ops-chip"
+            data-active={viewMode === 'kanban'}
+            style={{ border: 'none', padding: '5px 10px' }}
+            onClick={() => setViewMode('kanban')}
+          >
+            Kanban
+          </button>
+        </div>
+
         <button type="button" className="ops-btn" onClick={handleExportJson}>
           <IconDownload size={14} className="icon-sm" /> Export
         </button>
@@ -405,14 +561,52 @@ ${bug.diagnostics?.stackTrace ? `#### Stack Trace\n\`\`\`text\n${bug.diagnostics
         <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-secondary)', fontSize: '13px' }}>
           Loading the ledger&hellip;
         </div>
-      ) : filteredBugs.length === 0 ? (
+      ) : sortedBugs.length === 0 ? (
         <div className="ops-card ops-empty-prompt">
           <IconSearch size={20} className="icon" style={{ color: 'var(--text-tertiary)', marginBottom: '8px' }} />
           <p style={{ margin: 0 }}>No cases match. Great sign, or try clearing filters.</p>
         </div>
+      ) : viewMode === 'kanban' ? (
+        <div className="ops-kanban">
+          {(
+            [
+              { status: 'open' as const, label: 'Open', color: 'var(--amber)' },
+              { status: 'in_progress' as const, label: 'Working', color: 'var(--cyan)' },
+              { status: 'resolved' as const, label: 'Settled', color: 'var(--safe)' },
+            ]
+          ).map((col) => {
+            const colBugs = sortedBugs.filter((b) => b.status === col.status);
+            return (
+              <div className="ops-kanban-col" key={col.status}>
+                <div className="ops-kanban-col-head">
+                  <span className="dot" style={{ background: col.color }} />
+                  {col.label}
+                  <span className="count">{colBugs.length}</span>
+                </div>
+                {colBugs.length === 0 ? (
+                  <div className="ops-ov-empty">No cases</div>
+                ) : (
+                  colBugs.map((bug) => (
+                    <button
+                      key={bug.id}
+                      type="button"
+                      className="ops-kanban-card"
+                      data-severity={bug.severity}
+                      onClick={() => setDrawerBugId(bug.id)}
+                    >
+                      <span className="ops-bug-id">{bug.id}</span>
+                      <div className="title">{bug.title}</div>
+                      <div className="meta">{bug.category} &middot; {bug.foundBy}</div>
+                    </button>
+                  ))
+                )}
+              </div>
+            );
+          })}
+        </div>
       ) : (
         <div className="ops-bug-list">
-          {filteredBugs.map((bug) => {
+          {sortedBugs.map((bug) => {
             const isExpanded = expandedBugId === bug.id;
             const status = statusMeta(bug.status);
 
@@ -421,6 +615,7 @@ ${bug.diagnostics?.stackTrace ? `#### Stack Trace\n\`\`\`text\n${bug.diagnostics
                 <button
                   type="button"
                   className="ops-bug-entry"
+                  data-severity={bug.severity}
                   onClick={() => setExpandedBugId(isExpanded ? null : bug.id)}
                   aria-expanded={isExpanded}
                 >
@@ -446,98 +641,7 @@ ${bug.diagnostics?.stackTrace ? `#### Stack Trace\n\`\`\`text\n${bug.diagnostics
 
                 {isExpanded && (
                   <div className="ops-bug-detail">
-                    {bug.reproSteps && bug.reproSteps.length > 0 && (
-                      <div className="ops-bug-field">
-                        <span className="ops-bug-label">Steps to reproduce</span>
-                        <ol>
-                          {bug.reproSteps.map((step, idx) => (
-                            <li key={idx}>{step}</li>
-                          ))}
-                        </ol>
-                      </div>
-                    )}
-
-                    {(bug.expectedBehavior || bug.actualBehavior) && (
-                      <div className="ops-bug-field" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                        {bug.expectedBehavior && (
-                          <div>
-                            <span className="ops-bug-label">Expected</span>
-                            <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>{bug.expectedBehavior}</div>
-                          </div>
-                        )}
-                        {bug.actualBehavior && (
-                          <div>
-                            <span className="ops-bug-label">Actual</span>
-                            <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>{bug.actualBehavior}</div>
-                          </div>
-                        )}
-                      </div>
-                    )}
-
-                    {bug.diagnostics?.stackTrace && (
-                      <div className="ops-bug-field">
-                        <span className="ops-bug-label">Trace</span>
-                        <div className="ops-bug-stack">{bug.diagnostics.stackTrace}</div>
-                      </div>
-                    )}
-
-                    {bug.status === 'resolved' && (
-                      <div className="ops-bug-field ops-bug-resolution">
-                        <strong>Resolution:</strong> {bug.resolutionNote || 'Resolved'}
-                        <div style={{ fontSize: '10.5px', marginTop: '3px', color: 'var(--text-secondary)' }}>
-                          Settled by {bug.resolvedBy || 'superadmin'} on {bug.resolvedAt ? new Date(bug.resolvedAt).toLocaleDateString() : 'N/A'}
-                        </div>
-                      </div>
-                    )}
-
-                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '4px' }}>
-                      {bug.status === 'open' && (
-                        <button type="button" className="ops-btn" onClick={() => handleStatusChange(bug, 'in_progress')}>
-                          Start work
-                        </button>
-                      )}
-
-                      {bug.status !== 'resolved' && bug.status !== 'wont_fix' && (
-                        <button
-                          type="button"
-                          className="ops-btn"
-                          onClick={() => handleStatusChange(bug, 'resolved')}
-                          style={{ color: 'var(--safe)', borderColor: 'var(--safe-line)' }}
-                        >
-                          Mark settled
-                        </button>
-                      )}
-
-                      {bug.status !== 'resolved' && bug.status !== 'wont_fix' && (
-                        <button
-                          type="button"
-                          className="ops-btn"
-                          onClick={() => handleStatusChange(bug, 'wont_fix')}
-                        >
-                          Won't fix
-                        </button>
-                      )}
-
-                      {(bug.status === 'resolved' || bug.status === 'wont_fix') && (
-                        <button type="button" className="ops-btn" onClick={() => handleStatusChange(bug, 'open')}>
-                          Reopen
-                        </button>
-                      )}
-
-                      <button type="button" className="ops-btn" onClick={() => handleCopyPrompt(bug)}>
-                        <IconCopy size={13} className="icon-sm" /> Copy for AI
-                      </button>
-
-                      <button
-                        type="button"
-                        className="ops-btn"
-                        onClick={() => handleDeleteBug(bug.id)}
-                        style={{ marginLeft: 'auto', color: 'var(--danger)', borderColor: 'rgba(255,107,94,0.4)' }}
-                        aria-label={`Delete ${bug.id}`}
-                      >
-                        <IconTrash size={14} className="icon-sm" />
-                      </button>
-                    </div>
+                    <BugDetailBody bug={bug} onStatusChange={handleStatusChange} onCopyPrompt={handleCopyPrompt} onDelete={handleDeleteBug} />
                   </div>
                 )}
               </Fragment>
@@ -546,9 +650,28 @@ ${bug.diagnostics?.stackTrace ? `#### Stack Trace\n\`\`\`text\n${bug.diagnostics
         </div>
       )}
 
+      {drawerBug && (
+        <div className="ops-drawer-overlay" onClick={() => setDrawerBugId(null)}>
+          <div className="ops-drawer" onClick={(e) => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '14px', gap: '10px' }}>
+              <div>
+                <span className="ops-bug-id">{drawerBug.id}</span>
+                <h3 style={{ fontFamily: 'var(--display)', fontSize: '16px', fontWeight: 700, margin: '4px 0 0', color: 'var(--text-primary)' }}>{drawerBug.title}</h3>
+              </div>
+              <button type="button" onClick={() => setDrawerBugId(null)} className="ops-btn" style={{ padding: '6px 10px', flexShrink: 0 }}>
+                Close
+              </button>
+            </div>
+            <div className="ops-bug-detail" style={{ padding: 0, border: 'none', background: 'transparent' }}>
+              <BugDetailBody bug={drawerBug} onStatusChange={handleStatusChange} onCopyPrompt={handleCopyPrompt} onDelete={handleDeleteBug} />
+            </div>
+          </div>
+        </div>
+      )}
+
       {showAddModal && (
-        <div className="ops-overlay" onClick={() => setShowAddModal(false)}>
-          <div className="ops-sheet fade-in" onClick={(e) => e.stopPropagation()}>
+        <div className="ops-drawer-overlay" onClick={() => setShowAddModal(false)}>
+          <div className="ops-drawer" onClick={(e) => e.stopPropagation()}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <h3 style={{ fontFamily: 'var(--display)', fontSize: '17px', fontWeight: 700, margin: 0, color: 'var(--text-primary)' }}>File a case</h3>
               <button type="button" onClick={() => setShowAddModal(false)} className="ops-btn" style={{ padding: '6px 10px' }}>
@@ -651,8 +774,8 @@ ${bug.diagnostics?.stackTrace ? `#### Stack Trace\n\`\`\`text\n${bug.diagnostics
       )}
 
       {resolvingBug && (
-        <div className="ops-overlay" onClick={() => setResolvingBug(null)}>
-          <div className="ops-sheet fade-in" style={{ maxWidth: '440px' }} onClick={(e) => e.stopPropagation()}>
+        <div className="ops-drawer-overlay" onClick={() => setResolvingBug(null)}>
+          <div className="ops-drawer" style={{ maxWidth: '420px' }} onClick={(e) => e.stopPropagation()}>
             <h3 style={{ fontFamily: 'var(--display)', fontSize: '16px', fontWeight: 700, margin: '0 0 4px', color: 'var(--text-primary)' }}>
               Settle {resolvingBug.id}
             </h3>

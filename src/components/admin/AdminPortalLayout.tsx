@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { Category, Trip, Expense, Member } from '../../types';
 import type { AdminUserRow, AuditLogEntry, DevicePlatformCount, NotificationStats } from '../../types/admin';
 import type { BugRecord } from '../../services/bugApi';
@@ -15,7 +15,8 @@ import {
 } from '../../services/tripApi';
 import { fetchBugs } from '../../services/bugApi';
 import { fetchFeatures, type FeatureRecord } from '../../services/featureApi';
-import { IconChevronRight } from '../Icons';
+import { IconChevronRight, IconSearch } from '../Icons';
+import { AdminCommandCenterPage } from './AdminCommandCenterPage';
 import { AdminFlagsPage } from './AdminFlagsPage';
 import { AdminAnalyticsPage } from './AdminAnalyticsPage';
 import { AdminTripsPage } from './AdminTripsPage';
@@ -36,17 +37,37 @@ interface Props {
   onInspectTrip?: (tripId: string) => void;
 }
 
-export type AdminTab = 'flags' | 'analytics' | 'trips' | 'users' | 'audit' | 'features' | 'tools';
+export type AdminTab = 'command' | 'flags' | 'analytics' | 'trips' | 'users' | 'audit' | 'features' | 'tools';
 
-const SECTIONS: { id: AdminTab; label: string; code: string }[] = [
-  { id: 'flags', label: 'Flags', code: 'SEC.01' },
-  { id: 'analytics', label: 'Analytics', code: 'SEC.02' },
-  { id: 'trips', label: 'Trips', code: 'SEC.03' },
-  { id: 'users', label: 'Users', code: 'SEC.04' },
-  { id: 'audit', label: 'Audit', code: 'SEC.05' },
-  { id: 'features', label: 'Features', code: 'SEC.06' },
-  { id: 'tools', label: 'Tools', code: 'SEC.07' },
+type Section = { id: AdminTab; label: string; code: string };
+
+// Grouped by what a superadmin is actually doing, not by build order --
+// replaces the previous flat 7-item list where Flags, Analytics and Tools
+// all sat at the same level with no relationship to each other.
+const SECTION_GROUPS: { label: string; items: Section[] }[] = [
+  { label: 'Overview', items: [{ id: 'command', label: 'Command Center', code: 'SEC.00' }] },
+  {
+    label: 'Operations',
+    items: [
+      { id: 'flags', label: 'Flags', code: 'SEC.01' },
+      { id: 'trips', label: 'Trips', code: 'SEC.03' },
+      { id: 'features', label: 'Features', code: 'SEC.06' },
+    ],
+  },
+  {
+    label: 'People',
+    items: [
+      { id: 'users', label: 'Users', code: 'SEC.04' },
+      { id: 'audit', label: 'Audit', code: 'SEC.05' },
+    ],
+  },
+  { label: 'Insights', items: [{ id: 'analytics', label: 'Analytics', code: 'SEC.02' }] },
+  { label: 'System', items: [{ id: 'tools', label: 'Tools', code: 'SEC.07' }] },
 ];
+
+const SECTIONS: Section[] = SECTION_GROUPS.flatMap((g) => g.items);
+
+type JumpResult = { kind: 'Trip' | 'User' | 'Bug'; label: string; sublabel: string; onSelect: () => void };
 
 function useIstClock() {
   const [clock, setClock] = useState('--:--:-- IST');
@@ -171,6 +192,62 @@ export function AdminPortalLayout({
     panelRef.current?.scrollTo({ top: 0, behavior: 'instant' });
   }, [activeTab]);
 
+  // Real fleet-state signal for the top bar lamp, replacing a lamp that
+  // always read "ALL SYSTEMS NOMINAL" regardless of what was actually
+  // happening.
+  const criticalBugCount = bugs.filter((b) => b.severity === 'critical' && b.status !== 'resolved' && b.status !== 'wont_fix').length;
+  const groundedTripCount = trips.filter((t) => t.frozen).length;
+  const health =
+    criticalBugCount > 0
+      ? { ok: false, label: `${criticalBugCount} critical case${criticalBugCount === 1 ? '' : 's'} open` }
+      : groundedTripCount > 0
+        ? { ok: false, label: `${groundedTripCount} trip${groundedTripCount === 1 ? '' : 's'} grounded` }
+        : { ok: true, label: 'All systems nominal' };
+
+  // Global jump search: find a trip, user or bug case by name from
+  // anywhere in the portal instead of picking the right tab first.
+  const [jumpQuery, setJumpQuery] = useState('');
+  const [jumpOpen, setJumpOpen] = useState(false);
+  const jumpResults = useMemo<JumpResult[]>(() => {
+    const q = jumpQuery.trim().toLowerCase();
+    if (!q) return [];
+    const results: JumpResult[] = [];
+    trips
+      .filter((t) => t.name.toLowerCase().includes(q))
+      .slice(0, 4)
+      .forEach((t) =>
+        results.push({
+          kind: 'Trip',
+          label: t.name,
+          sublabel: t.baseCurrency,
+          onSelect: () => onActiveTabChange('trips'),
+        })
+      );
+    users
+      .filter((u) => u.email.toLowerCase().includes(q) || (u.displayName || '').toLowerCase().includes(q))
+      .slice(0, 4)
+      .forEach((u) =>
+        results.push({
+          kind: 'User',
+          label: u.displayName || u.email,
+          sublabel: u.email,
+          onSelect: () => onActiveTabChange('users'),
+        })
+      );
+    bugs
+      .filter((b) => b.id.toLowerCase().includes(q) || b.title.toLowerCase().includes(q))
+      .slice(0, 4)
+      .forEach((b) =>
+        results.push({
+          kind: 'Bug',
+          label: `${b.id} — ${b.title}`,
+          sublabel: b.severity,
+          onSelect: () => onOpenBugTracker?.(),
+        })
+      );
+    return results.slice(0, 8);
+  }, [jumpQuery, trips, users, bugs, onActiveTabChange, onOpenBugTracker]);
+
   return (
     <div className="ops-deck ops-shell">
       <div className="ops-statusbar">
@@ -181,12 +258,60 @@ export function AdminPortalLayout({
             <div className="ops-sub">SUPERADMIN // ROOT ACCESS</div>
           </div>
         </div>
+        <div className="ops-cmdk-wrap">
+          <div className="ops-cmdk">
+            <IconSearch size={15} className="icon-sm" style={{ color: 'var(--text-tertiary)', flexShrink: 0 }} />
+            <input
+              type="text"
+              placeholder="Jump to a trip, user or case..."
+              value={jumpQuery}
+              onChange={(e) => setJumpQuery(e.target.value)}
+              onFocus={() => setJumpOpen(true)}
+              onBlur={() => setTimeout(() => setJumpOpen(false), 120)}
+            />
+          </div>
+          {jumpOpen && jumpQuery.trim() && (
+            <div className="ops-cmdk-results">
+              {jumpResults.length === 0 ? (
+                <div className="ops-cmdk-empty">No trip, user or case matches &ldquo;{jumpQuery}&rdquo;.</div>
+              ) : (
+                jumpResults.map((r, i) => (
+                  <button
+                    key={`${r.kind}-${i}`}
+                    type="button"
+                    className="ops-cmdk-row"
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      r.onSelect();
+                      setJumpQuery('');
+                      setJumpOpen(false);
+                    }}
+                  >
+                    <span className="kind">{r.kind}</span>
+                    <span style={{ minWidth: 0, overflow: 'hidden' }}>
+                      <span style={{ display: 'block', fontSize: '12.5px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.label}</span>
+                      <span style={{ display: 'block', fontSize: '10.5px', color: 'var(--text-tertiary)' }}>{r.sublabel}</span>
+                    </span>
+                  </button>
+                ))
+              )}
+            </div>
+          )}
+        </div>
         <div className="ops-status-right">
-          <div className="ops-status-lamp"><span className="ops-dot" /> <span className="ops-lamp-text">ALL SYSTEMS NOMINAL</span></div>
+          <div className={`ops-health-pill ${health.ok ? 'ok' : 'warn'}`}>
+            <span className="dot" /> <span className="label">{health.label}</span>
+          </div>
           <div style={{ fontFamily: 'var(--mono)', fontSize: '11px', color: 'var(--text-secondary)', fontVariantNumeric: 'tabular-nums' }}>{clock}</div>
           {onOpenBugTracker && (
-            <button type="button" className="ops-btn" onClick={onOpenBugTracker}>
+            <button type="button" className="ops-btn" onClick={onOpenBugTracker} style={{ position: 'relative' }}>
               Bug Ledger
+              {criticalBugCount > 0 && (
+                <span
+                  aria-hidden="true"
+                  style={{ position: 'absolute', top: '-3px', right: '-3px', width: '8px', height: '8px', borderRadius: '50%', background: 'var(--danger)', boxShadow: '0 0 6px var(--danger)' }}
+                />
+              )}
             </button>
           )}
           {onExitToTravelerApp && (
@@ -202,21 +327,26 @@ export function AdminPortalLayout({
 
       <div className="ops-layout">
         <nav className="ops-rail" aria-label="Ops sections">
-          <div className="ops-rail-label">Sections</div>
-          {SECTIONS.map((s) => (
-            <button
-              key={s.id}
-              type="button"
-              className="ops-switch-item"
-              data-current={activeTab === s.id}
-              onClick={() => onActiveTabChange(s.id)}
-            >
-              <span className="ops-lamp" />
-              <span>
-                <span className="ops-lbl">{s.label}</span>
-                <span className="ops-code">{s.code}</span>
-              </span>
-            </button>
+          {SECTION_GROUPS.map((group) => (
+            <div className="ops-rail-group" key={group.label}>
+              <div className="ops-rail-label">{group.label}</div>
+              {group.items.map((s) => (
+                <button
+                  key={s.id}
+                  type="button"
+                  className="ops-switch-item"
+                  data-current={activeTab === s.id}
+                  onClick={() => onActiveTabChange(s.id)}
+                >
+                  <span className="ops-lamp" />
+                  <span>
+                    <span className="ops-lbl">{s.label}</span>
+                    <span className="ops-code">{s.code}</span>
+                  </span>
+                  {s.id === 'tools' && recycledCount > 0 && <span className="ops-rail-item-flag" title={`${recycledCount} item(s) in recycle bin`} />}
+                </button>
+              ))}
+            </div>
           ))}
         </nav>
 
@@ -236,6 +366,20 @@ export function AdminPortalLayout({
         </button>
 
         <main className="ops-panel" ref={panelRef}>
+          {activeTab === 'command' && (
+            <AdminCommandCenterPage
+              trips={trips}
+              bugs={bugs}
+              features={features}
+              users={users}
+              auditLogs={auditLogs}
+              health={health}
+              onNavigate={onActiveTabChange}
+              onOpenBugTracker={onOpenBugTracker}
+              onRefresh={handleRefreshAll}
+              isRefreshing={isRefreshing}
+            />
+          )}
           {activeTab === 'flags' && <AdminFlagsPage trips={trips} members={members} />}
           {activeTab === 'analytics' && (
             <AdminAnalyticsPage
@@ -256,6 +400,7 @@ export function AdminPortalLayout({
             <AdminTripsPage
               trips={trips}
               expenses={expenses}
+              members={members}
               onInspectTrip={onInspectTrip}
               onRefresh={handleRefreshAll}
               isRefreshing={isRefreshing}

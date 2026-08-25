@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import type { Trip, Expense, Member, Category } from '../../types';
 import type { AdminUserRow, DevicePlatformCount, NotificationStats } from '../../types/admin';
 import type { BugRecord } from '../../services/bugApi';
@@ -32,7 +32,20 @@ const SPLIT_MODE_LABELS: Record<string, string> = {
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
+type AnalyticsSubTab = 'overview' | 'financial' | 'engagement' | 'health';
+
+const SUB_TABS: { id: AnalyticsSubTab; label: string }[] = [
+  { id: 'overview', label: 'Overview' },
+  { id: 'financial', label: 'Financial' },
+  { id: 'engagement', label: 'Engagement' },
+  { id: 'health', label: 'Health' },
+];
+
 export function AdminAnalyticsPage({ trips, expenses, members, categories, bugs, users, platformCounts, notificationStats, recycledCount, onRefresh, isRefreshing }: Props) {
+  // The 13 sections below used to sit in one long equal-weight scroll --
+  // grouped into sub-tabs so "what's the bug pulse today" doesn't require
+  // scrolling past 10 unrelated charts to get there.
+  const [subTab, setSubTab] = useState<AnalyticsSubTab>('overview');
   const activeTrips = trips.filter((t) => !t.archived);
   const activeTripIds = new Set(activeTrips.map((t) => t.id));
   const activeExpenses = expenses.filter((e) => activeTripIds.has(e.tripId) && !e.title.startsWith('Settlement:'));
@@ -267,6 +280,16 @@ export function AdminAnalyticsPage({ trips, expenses, members, categories, bugs,
         </button>
       </div>
 
+      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', margin: '2px 0 10px' }}>
+        {SUB_TABS.map((t) => (
+          <button key={t.id} type="button" className="ops-chip" data-active={subTab === t.id} onClick={() => setSubTab(t.id)}>
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      {subTab === 'overview' && (
+      <>
       <div className="ops-card ops-hero-card">
         {sparkPath && (
           <svg className="ops-hero-spark" viewBox="0 0 220 90" preserveAspectRatio="none">
@@ -338,7 +361,11 @@ export function AdminAnalyticsPage({ trips, expenses, members, categories, bugs,
           )}
         </div>
       </div>
+      </>
+      )}
 
+      {subTab === 'engagement' && (
+      <>
       <div className="ops-split-row">
         <div className="ops-card">
           <h3 className="ops-section-title">Split-Mode Adoption</h3>
@@ -384,7 +411,11 @@ export function AdminAnalyticsPage({ trips, expenses, members, categories, bugs,
           </div>
         </div>
       </div>
+      </>
+      )}
 
+      {subTab === 'health' && (
+      <>
       <div className="ops-split-row">
         <div className="ops-card">
           <h3 className="ops-section-title">Signup Growth &middot; Last 14 Days</h3>
@@ -456,7 +487,11 @@ export function AdminAnalyticsPage({ trips, expenses, members, categories, bugs,
           )}
         </div>
       </div>
+      </>
+      )}
 
+      {subTab === 'engagement' && (
+      <>
       <div className="ops-split-row">
         <div className="ops-card">
           <h3 className="ops-section-title">Activity by Day of Week</h3>
@@ -487,7 +522,11 @@ export function AdminAnalyticsPage({ trips, expenses, members, categories, bugs,
           <div className="ops-leader-row"><span className="ops-leader-name">Receipts uploaded</span><span className="ops-leader-amt">{totalReceiptsUploaded}</span></div>
         </div>
       </div>
+      </>
+      )}
 
+      {subTab === 'health' && (
+      <>
       <div className="ops-split-row">
         <div className="ops-card">
           <h3 className="ops-section-title">Bug Report Origin</h3>
@@ -529,7 +568,10 @@ export function AdminAnalyticsPage({ trips, expenses, members, categories, bugs,
           </div>
         </div>
       </div>
+      </>
+      )}
 
+      {subTab === 'financial' && (
       <div className="ops-card">
         <h3 className="ops-section-title">Currency Volume Breakdown</h3>
         <p className="ops-section-sub">&nbsp;</p>
@@ -547,6 +589,7 @@ export function AdminAnalyticsPage({ trips, expenses, members, categories, bugs,
           </div>
         )}
       </div>
+      )}
     </div>
   );
 }

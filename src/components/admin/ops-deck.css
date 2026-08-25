@@ -661,3 +661,125 @@
 
 .ops-form-group { margin-bottom: 14px; display: flex; flex-direction: column; gap: 6px; }
 .ops-form-label { font-family: var(--mono); font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-tertiary); }
+
+/* ---------- Redesign additions (Command Center, grouped rail, bug
+   triage, drawers, danger zones) — appended rather than reshuffling the
+   rules above so this diffs cleanly against the original ops-deck. ---------- */
+
+/* True warning/caution color, separate from --amber (which is actually a
+   blue accent in this theme, not a real amber) -- lets "stale", "pending
+   purge", "caution" states read as genuinely different from the accent. */
+.ops-deck {
+  --warning: #B45309;
+  --warning-dim: rgba(180, 83, 9, 0.12);
+  --warning-line: rgba(180, 83, 9, 0.32);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .ops-deck {
+    --warning: #FBBF24;
+    --warning-dim: rgba(251, 191, 36, 0.16);
+    --warning-line: rgba(251, 191, 36, 0.34);
+  }
+}
+:root[data-theme="dark"] .ops-deck {
+  --warning: #FBBF24;
+  --warning-dim: rgba(251, 191, 36, 0.16);
+  --warning-line: rgba(251, 191, 36, 0.34);
+}
+
+/* Grouped rail: repeatable label + item block, reusing .ops-rail-label /
+   .ops-switch-item per group instead of one flat list. */
+.ops-rail-group + .ops-rail-group { margin-top: 14px; }
+.ops-rail-item-flag { margin-left: auto; width: 6px; height: 6px; border-radius: 50%; background: var(--danger); box-shadow: 0 0 5px var(--danger); flex-shrink: 0; }
+
+/* Status pill in the top bar that reflects real fleet state instead of a
+   hardcoded "nominal" lamp. */
+.ops-health-pill { display: flex; align-items: center; gap: 7px; padding: 6px 12px; border-radius: 20px; font-family: var(--mono); font-size: 10.5px; white-space: nowrap; }
+.ops-health-pill.ok { background: var(--safe-dim); color: var(--safe); border: 1px solid var(--safe-line); }
+.ops-health-pill.warn { background: var(--warning-dim); color: var(--warning); border: 1px solid var(--warning-line); }
+.ops-health-pill .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; box-shadow: 0 0 6px currentColor; }
+@media (max-width: 900px) { .ops-health-pill span.label { display: none; } }
+
+/* Global jump search in the top bar. */
+.ops-cmdk-wrap { position: relative; flex: 1; max-width: 380px; }
+@media (max-width: 900px) { .ops-cmdk-wrap { display: none; } }
+.ops-cmdk { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 11px; background: var(--bg-inset); border: 1px solid var(--line-strong); color: var(--text-primary); font-size: 12.5px; width: 100%; }
+.ops-cmdk input { border: none; background: none; outline: none; color: inherit; font-size: inherit; font-family: inherit; flex: 1; min-width: 0; }
+.ops-cmdk input::placeholder { color: var(--text-tertiary); }
+.ops-cmdk-results { position: absolute; top: calc(100% + 6px); left: 0; right: 0; background: var(--bg-panel); border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 12px 30px -10px rgba(2,132,199,0.3); z-index: 40; max-height: 320px; overflow-y: auto; padding: 6px; }
+.ops-cmdk-row { display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px 10px; border-radius: 8px; border: none; background: transparent; text-align: left; cursor: pointer; color: var(--text-primary); font-family: inherit; }
+.ops-cmdk-row:hover { background: var(--bg-panel-raised); }
+.ops-cmdk-row .kind { font-family: var(--mono); font-size: 9px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-tertiary); flex-shrink: 0; width: 44px; }
+.ops-cmdk-empty { padding: 12px 10px; font-size: 11.5px; color: var(--text-tertiary); }
+
+/* Needs-attention / activity rows on the Command Center page. */
+.ops-attn-row { display: flex; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: var(--bg-panel); }
+.ops-attn-stripe { width: 4px; flex-shrink: 0; }
+.ops-attn-stripe.crit { background: var(--danger); }
+.ops-attn-stripe.warn { background: var(--warning); }
+.ops-attn-row .body { flex: 1; padding: 10px 12px; display: flex; justify-content: space-between; align-items: center; gap: 10px; min-width: 0; }
+.ops-attn-row .body h4 { margin: 0; font-size: 12.5px; font-weight: 600; }
+.ops-attn-row .body p { margin: 2px 0 0; font-size: 10.5px; color: var(--text-tertiary); }
+
+/* Severity stripe on Bug Ledger rows, so triage is scannable without
+   reading each pill. */
+.ops-bug-entry { border-left: 4px solid transparent; }
+.ops-bug-entry[data-severity="critical"] { border-left-color: var(--danger); }
+.ops-bug-entry[data-severity="high"] { border-left-color: var(--warning); }
+.ops-bug-entry[data-severity="medium"] { border-left-color: var(--text-tertiary); }
+.ops-bug-entry[data-severity="low"] { border-left-color: var(--line-strong); }
+
+/* Bug Ledger Kanban board. */
+.ops-kanban { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; align-items: start; }
+@media (max-width: 860px) { .ops-kanban { grid-template-columns: 1fr; } }
+.ops-kanban-col { background: var(--bg-panel-raised); border: 1px solid var(--line); border-radius: 14px; padding: 10px; display: flex; flex-direction: column; gap: 8px; min-height: 80px; }
+.ops-kanban-col-head { display: flex; align-items: center; gap: 8px; padding: 4px 4px 8px; font-size: 11.5px; font-weight: 700; color: var(--text-primary); }
+.ops-kanban-col-head .dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.ops-kanban-col-head .count { margin-left: auto; font-family: var(--mono); font-size: 10px; color: var(--text-tertiary); font-weight: 400; }
+.ops-kanban-card { background: var(--bg-panel); border: 1px solid var(--line); border-left: 3px solid var(--line-strong); border-radius: 10px; padding: 10px 11px; cursor: pointer; text-align: left; }
+.ops-kanban-card:hover { border-color: var(--line-strong); }
+.ops-kanban-card[data-severity="critical"] { border-left-color: var(--danger); }
+.ops-kanban-card[data-severity="high"] { border-left-color: var(--warning); }
+.ops-kanban-card .title { font-size: 12px; font-weight: 600; color: var(--text-primary); margin: 4px 0 0; line-height: 1.4; }
+.ops-kanban-card .meta { font-size: 10px; color: var(--text-tertiary); margin-top: 4px; }
+
+/* Right-side slide-over, used for the Bug Ledger's New Case / Settle
+   panels and the Users broadcast composer, instead of a fixed-width
+   centered dialog. */
+.ops-drawer-overlay { position: fixed; inset: 0; background: rgba(15,23,42,0.5); backdrop-filter: blur(3px); z-index: 1000; display: flex; justify-content: flex-end; }
+.ops-drawer { width: 100%; max-width: 460px; height: 100%; overflow-y: auto; background: var(--bg-panel); border-left: 1px solid var(--line); padding: 22px; box-shadow: -20px 0 50px -20px rgba(2,132,199,0.3); }
+@media (prefers-reduced-motion: no-preference) {
+  .ops-drawer { animation: ops-drawer-in 0.18s ease-out; }
+}
+@keyframes ops-drawer-in { from { transform: translateX(24px); opacity: 0.6; } to { transform: translateX(0); opacity: 1; } }
+
+/* Bulk-selection action bar (Users, Trips). */
+.ops-bulk-bar { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 12px; background: var(--amber-dim); border: 1px solid var(--amber-line); margin-bottom: 12px; font-size: 12px; color: var(--text-primary); }
+.ops-bulk-bar strong { font-variant-numeric: tabular-nums; }
+.ops-bulk-bar .spacer { margin-left: auto; display: flex; gap: 8px; }
+
+/* Sortable table headers. */
+.ops-sort-th { display: inline-flex; align-items: center; gap: 3px; background: none; border: none; padding: 0; font: inherit; color: inherit; letter-spacing: inherit; text-transform: inherit; cursor: pointer; }
+.ops-sort-th:hover { color: var(--text-secondary); }
+.ops-sort-th svg { opacity: 0.5; }
+.ops-sort-th[data-active="true"] svg { opacity: 1; color: var(--amber); }
+
+/* Extra semantic badge variants beyond active/grounded/archived. */
+.ops-badge.caution { color: var(--warning); background: var(--warning-dim); }
+
+/* Sticky filter/search toolbar (Audit log). */
+.ops-sticky-toolbar { position: sticky; top: 0; z-index: 5; background: var(--bg-void); padding: 8px 0; margin: -8px 0 6px; }
+
+/* Danger Zone: collapsed by default, opened on purpose. */
+.ops-danger-zone > summary { list-style: none; cursor: pointer; }
+.ops-danger-zone > summary::-webkit-details-marker { display: none; }
+.ops-danger-zone-trigger { display: flex; align-items: center; gap: 10px; }
+.ops-danger-zone-trigger .chev { margin-left: auto; color: var(--text-tertiary); transition: transform 0.15s; }
+.ops-danger-zone[open] .ops-danger-zone-trigger .chev { transform: rotate(180deg); }
+
+/* Feature Requests kanban columns. */
+.ops-feature-board { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; align-items: start; }
+@media (max-width: 900px) { .ops-feature-board { grid-template-columns: 1fr; } }
+.ops-feature-col-head { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; font-size: 12.5px; font-weight: 700; }
+.ops-feature-col-head .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.ops-feature-col-head .count { margin-left: auto; font-family: var(--mono); font-size: 10.5px; color: var(--text-tertiary); font-weight: 400; }

@@ -41,6 +41,7 @@ export function AdminToolsPage({ categories, trips, expenses, onRefresh, isRefre
 
   const [purgeDays, setPurgeDays] = useState('30');
   const [isPurging, setIsPurging] = useState(false);
+  const [wipeConfirmText, setWipeConfirmText] = useState('');
 
   const showToast = (msg: string) => {
     setToastMsg(msg);
@@ -191,6 +192,7 @@ export function AdminToolsPage({ categories, trips, expenses, onRefresh, isRefre
       )}
 
       <div className="ops-tools-grid">
+        <div className="ops-rail-label" style={{ padding: '0' }}>Account</div>
         <div className="ops-card">
           <h3 className="ops-section-title">Change Your Password</h3>
           <p className="ops-section-sub">Updates the password for this superadmin account. You'll stay signed in.</p>
@@ -232,6 +234,7 @@ export function AdminToolsPage({ categories, trips, expenses, onRefresh, isRefre
           </form>
         </div>
 
+        <div className="ops-rail-label" style={{ padding: '0' }}>Content Ops</div>
         <div className="ops-card">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '10px', marginBottom: '4px' }}>
             <div>
@@ -332,6 +335,7 @@ export function AdminToolsPage({ categories, trips, expenses, onRefresh, isRefre
           )}
         </div>
 
+        <div className="ops-rail-label" style={{ padding: '0' }}>Data</div>
         <div className="ops-card">
           <h3 className="ops-section-title">Backup &amp; Demo Data</h3>
           <p className="ops-section-sub">Export or restore full JSON snapshots.</p>
@@ -392,24 +396,41 @@ export function AdminToolsPage({ categories, trips, expenses, onRefresh, isRefre
           </div>
         </div>
 
-        <div className="ops-card ops-caution">
-          <div className="ops-caution-head">
-            <strong>&#9888; Master Caution &mdash; Danger Zone</strong>
-          </div>
+        <details className="ops-card ops-caution ops-danger-zone">
+          <summary>
+            <div className="ops-caution-head ops-danger-zone-trigger">
+              <strong>&#9888; Master Caution &mdash; Danger Zone</strong>
+              <svg className="chev icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
+            </div>
+          </summary>
           <p>Irreversible. Wipes every local trip and resets the database cache.</p>
+          <div className="ops-form-group">
+            <label className="ops-form-label">Type WIPE to confirm</label>
+            <input
+              type="text"
+              className="ops-input"
+              style={{ maxWidth: '220px' }}
+              value={wipeConfirmText}
+              onChange={(e) => setWipeConfirmText(e.target.value)}
+              placeholder="WIPE"
+            />
+          </div>
           <button
             type="button"
             className="ops-guard-btn"
+            disabled={wipeConfirmText.trim().toUpperCase() !== 'WIPE'}
+            style={wipeConfirmText.trim().toUpperCase() !== 'WIPE' ? { opacity: 0.5, cursor: 'not-allowed' } : undefined}
             onClick={async () => {
-              if (window.confirm('Wipe all local trips and reset database? This cannot be undone.')) {
-                await clearDatabase();
-                showToast('Database wiped and reset to clean state.');
-              }
+              await clearDatabase();
+              setWipeConfirmText('');
+              showToast('Database wiped and reset to clean state.');
             }}
           >
             <IconTrash size={15} /> Wipe All Trips &amp; Reset
           </button>
-        </div>
+        </details>
       </div>
     </div>
   );
