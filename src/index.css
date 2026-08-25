@@ -1324,6 +1324,31 @@ html.capacitor-ios .nav-tabs {
   box-shadow: 0 8px 18px -6px rgba(47, 111, 237, 0.55);
 }
 
+/* Shown instead of Add Expense when a non-admin taps the FAB on the
+   Members tab -- the tap must never silently fall through to a
+   different screen. */
+.nav-tab-fab-denied-hint {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-md);
+  padding: 8px 14px;
+  font-size: 12.5px;
+  font-weight: 600;
+  box-shadow: 0 10px 24px -10px rgba(0, 0, 0, 0.35);
+  z-index: 5;
+  animation: fab-denied-hint-in 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes fab-denied-hint-in {
+  from { opacity: 0; transform: translate(-50%, 4px); }
+  to { opacity: 1; transform: translate(-50%, 0); }
+}
+
 /* ==========================================================================
    Flight-Themed Coachmark Tooltip for Adding Transactions
    ========================================================================== */

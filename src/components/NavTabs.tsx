@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { IconExpenses, IconMembers, IconAnalytics, IconSettings, IconPlus } from './Icons';
 import { triggerHaptic } from '../utils/haptics';
 import { FlightAddExpenseTooltip, STORAGE_KEY } from './FlightAddExpenseTooltip';
@@ -18,6 +18,8 @@ export function NavTabs({ activeTab, setActiveTab, onAddExpense, onAddMember, ex
   const isMembersTab = activeTab === 'members';
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const longPressFired = useRef(false);
+  const [showDeniedHint, setShowDeniedHint] = useState(false);
+  const deniedHintTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const goTo = (tab: Tab) => {
     if (tab !== activeTab) triggerHaptic('light');
@@ -50,12 +52,23 @@ export function NavTabs({ activeTab, setActiveTab, onAddExpense, onAddMember, ex
       longPressFired.current = false;
       return;
     }
-    triggerHaptic('light');
-    if (isMembersTab && onAddMember) {
-      onAddMember();
-    } else {
-      onAddExpense();
+    // On the Members tab the FAB only ever adds a member (or explains why
+    // it can't) -- it must never fall through to Add Expense just because
+    // the viewer isn't an admin.
+    if (isMembersTab) {
+      if (onAddMember) {
+        triggerHaptic('light');
+        onAddMember();
+      } else {
+        triggerHaptic('warning');
+        setShowDeniedHint(true);
+        if (deniedHintTimer.current) clearTimeout(deniedHintTimer.current);
+        deniedHintTimer.current = setTimeout(() => setShowDeniedHint(false), 2200);
+      }
+      return;
     }
+    triggerHaptic('light');
+    onAddExpense();
   };
 
   return (
@@ -79,15 +92,20 @@ export function NavTabs({ activeTab, setActiveTab, onAddExpense, onAddMember, ex
             tripDestination={tripDestination}
           />
         )}
+        {showDeniedHint && (
+          <div className="nav-tab-fab-denied-hint" role="status">
+            Only trip admins can add members
+          </div>
+        )}
         <button
           type="button"
-          className={`nav-tab-fab ${isMembersTab && onAddMember ? 'mode-member' : ''}`}
+          className={`nav-tab-fab ${isMembersTab ? 'mode-member' : ''}`}
           onPointerDown={handlePointerDown}
           onPointerUp={clearLongPress}
           onPointerCancel={clearLongPress}
           onClick={handleFabClick}
-          aria-label={isMembersTab && onAddMember ? 'Add Member' : 'Add Expense (Hold for flight guide)'}
-          title={isMembersTab && onAddMember ? 'Add Member' : 'Add Expense (Hold for flight guide)'}
+          aria-label={isMembersTab ? (onAddMember ? 'Add Member' : 'Add Member (admins only)') : 'Add Expense (Hold for flight guide)'}
+          title={isMembersTab ? (onAddMember ? 'Add Member' : 'Add Member (admins only)') : 'Add Expense (Hold for flight guide)'}
         >
           <IconPlus size={24} />
         </button>
