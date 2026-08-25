@@ -108,13 +108,13 @@ export function AnalyticsTab({
         <div className="glass-card" style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
           <span style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Total Spent</span>
           <strong className="money privacy-blur" style={{ fontSize: '19px', color: 'var(--primary-accent)' }}>
-            {formatMaskedAmount(totalSpent.toFixed(2), currencySymbol, isBlindMode)}
+            {formatMaskedAmount(totalSpent, currencySymbol, isBlindMode)}
           </strong>
         </div>
         <div className="glass-card" style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
           <span style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Per-Head Cost</span>
           <strong className="money privacy-blur" style={{ fontSize: '19px', color: 'var(--text-primary)' }}>
-            {formatMaskedAmount(averageCost.toFixed(2), currencySymbol, isBlindMode)}
+            {formatMaskedAmount(averageCost, currencySymbol, isBlindMode)}
           </strong>
         </div>
         <div className="glass-card" style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
@@ -236,7 +236,7 @@ export function AnalyticsTab({
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', fontWeight: 500 }}>
                     <span>{m.name}</span>
                     <span className="privacy-blur">
-                      {formatMaskedAmount(m.amount.toFixed(2), currencySymbol, isBlindMode)}{' '}
+                      {formatMaskedAmount(m.amount, currencySymbol, isBlindMode)}{' '}
                       <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>({m.percentage.toFixed(0)}%)</span>
                     </span>
                   </div>

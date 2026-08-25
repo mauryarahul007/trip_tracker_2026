@@ -119,6 +119,11 @@ export default function App() {
   // Navigation tabs: 'expenses' | 'members' | 'analytics' | 'settings'
   const [activeTab, setActiveTab] = useState<'expenses' | 'members' | 'analytics' | 'settings'>('expenses');
 
+  // Bumped to tell MembersGroupsTab to open its add-member popup -- the
+  // nav bar's FAB triggers this instead of add-expense while on the
+  // Members tab (see NavTabs' onAddMember).
+  const [addMemberSignal, setAddMemberSignal] = useState(0);
+
   // Appearance — 'system' follows the OS; 'light'/'dark' pin the "night
   // flight" variant explicitly. Persisted locally; it's a display
   // preference, not trip data, so it stays out of the IndexedDB store.
@@ -1757,6 +1762,7 @@ export default function App() {
                 adminMemberIds={activeTrip?.adminMemberIds}
                 onSetMemberAdminRole={setMemberAdminRole}
                 currentUserId={userId}
+                addMemberSignal={addMemberSignal}
               />
               </div>
             </div>
@@ -1823,6 +1829,7 @@ export default function App() {
             activeTab={activeTab}
             setActiveTab={setActiveTab}
             onAddExpense={handleOpenAddExpense}
+            onAddMember={isAdmin ? () => setAddMemberSignal((n) => n + 1) : undefined}
             expenseCount={activeTripExpenses.length}
             tripDestination={activeTrip?.destination}
           />

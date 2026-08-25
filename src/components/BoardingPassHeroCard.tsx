@@ -164,7 +164,7 @@ export function BoardingPassHeroCard({
               className="bp-amount privacy-blur"
               style={{ color: isFullySettled ? 'var(--color-success)' : 'var(--color-danger)' }}
             >
-              {formatMaskedAmount(totalOutstanding.toFixed(2), currencySymbol, isBlindMode)}
+              {formatMaskedAmount(totalOutstanding, currencySymbol, isBlindMode)}
             </div>
             <div className="bp-sub">
               {isFullySettled

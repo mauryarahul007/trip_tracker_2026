@@ -34,9 +34,13 @@ export function formatMaskedAmount(
   if (isBlindMode) {
     return currencySymbol ? `${currencySymbol} •••••` : '•••••';
   }
+  // Callers pass a number here so toLocaleString can add thousands
+  // separators (₹6,850.00, not ₹6850.00) -- a pre-stringified amount
+  // (e.g. amount.toFixed(2)) falls through to the plain-concat branch
+  // below with no locale formatting at all.
   if (typeof amount === 'number') {
     return `${currencySymbol}${amount.toLocaleString(undefined, {
-      minimumFractionDigits: 0,
+      minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     })}`;
   }

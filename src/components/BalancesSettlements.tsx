@@ -33,7 +33,7 @@ function balanceColor(balance: number): string {
 }
 
 function balanceLabel(balance: number, currencySymbol: string, isBlindMode: boolean = false): string {
-  const absVal = formatMaskedAmount(Math.abs(balance).toFixed(2), currencySymbol, isBlindMode);
+  const absVal = formatMaskedAmount(Math.abs(balance), currencySymbol, isBlindMode);
   if (balance > 0.01) return `gets back ${absVal}`;
   if (balance < -0.01) return `owes ${absVal}`;
   return 'settled';
@@ -211,7 +211,7 @@ function TransferRow({
 
   const handleShareReminder = async () => {
     triggerHaptic('light');
-    const shareText = `Hey ${t.fromLabel}, just a reminder to settle ${currencySymbol}${settleAmount.toFixed(2)} to ${t.toLabel} for our trip "${tripName || 'Trip'}".`;
+    const shareText = `Hey ${t.fromLabel}, just a reminder to settle ${currencySymbol}${settleAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} to ${t.toLabel} for our trip "${tripName || 'Trip'}".`;
 
     const copyToClipboard = () => {
       navigator.clipboard.writeText(shareText).then(() => {
@@ -270,7 +270,7 @@ function TransferRow({
             whiteSpace: 'nowrap',
             flexShrink: 0
           }}>
-            {currencySymbol}{t.amount.toFixed(2)}
+            {currencySymbol}{t.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </span>
         )}
 
@@ -337,11 +337,11 @@ function TransferRow({
                   <span>
                     <span style={{ fontWeight: 600 }}>{m.name}</span>
                     <span className="privacy-blur" style={{ color: 'var(--text-secondary)' }}>
-                      {' '}(Paid: {currencySymbol}{m.totalPaid.toFixed(2)}, Share: {currencySymbol}{m.totalOwed.toFixed(2)})
+                      {' '}(Paid: {currencySymbol}{m.totalPaid.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}, Share: {currencySymbol}{m.totalOwed.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })})
                     </span>
                   </span>
                   <span className="privacy-blur" style={{ fontWeight: 600, color: m.netBalance < 0 ? 'var(--color-danger)' : 'var(--color-success)' }}>
-                    {m.netBalance >= 0 ? '+' : ''}{currencySymbol}{m.netBalance.toFixed(2)}
+                    {m.netBalance >= 0 ? '+' : ''}{currencySymbol}{m.netBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </span>
                 </div>
               ))}
@@ -349,7 +349,7 @@ function TransferRow({
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11.5px', borderTop: '1px dashed var(--border-color)', paddingTop: '4px', marginTop: '2px', fontWeight: 600 }}>
                   <span>Combined Net:</span>
                   <span className="privacy-blur" style={{ color: fromAudit.combinedBalance < 0 ? 'var(--color-danger)' : 'var(--color-success)' }}>
-                    {fromAudit.combinedBalance >= 0 ? '+' : ''}{currencySymbol}{fromAudit.combinedBalance.toFixed(2)}
+                    {fromAudit.combinedBalance >= 0 ? '+' : ''}{currencySymbol}{fromAudit.combinedBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </span>
                 </div>
               )}
@@ -365,11 +365,11 @@ function TransferRow({
                   <span>
                     <span style={{ fontWeight: 600 }}>{m.name}</span>
                     <span className="privacy-blur" style={{ color: 'var(--text-secondary)' }}>
-                      {' '}(Paid: {currencySymbol}{m.totalPaid.toFixed(2)}, Share: {currencySymbol}{m.totalOwed.toFixed(2)})
+                      {' '}(Paid: {currencySymbol}{m.totalPaid.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}, Share: {currencySymbol}{m.totalOwed.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })})
                     </span>
                   </span>
                   <span className="privacy-blur" style={{ fontWeight: 600, color: m.netBalance < 0 ? 'var(--color-danger)' : 'var(--color-success)' }}>
-                    {m.netBalance >= 0 ? '+' : ''}{currencySymbol}{m.netBalance.toFixed(2)}
+                    {m.netBalance >= 0 ? '+' : ''}{currencySymbol}{m.netBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </span>
                 </div>
               ))}
@@ -377,7 +377,7 @@ function TransferRow({
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11.5px', borderTop: '1px dashed var(--border-color)', paddingTop: '4px', marginTop: '2px', fontWeight: 600 }}>
                   <span>Combined Net:</span>
                   <span className="privacy-blur" style={{ color: toAudit.combinedBalance < 0 ? 'var(--color-danger)' : 'var(--color-success)' }}>
-                    {toAudit.combinedBalance >= 0 ? '+' : ''}{currencySymbol}{toAudit.combinedBalance.toFixed(2)}
+                    {toAudit.combinedBalance >= 0 ? '+' : ''}{currencySymbol}{toAudit.combinedBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </span>
                 </div>
               )}
@@ -394,7 +394,7 @@ function TransferRow({
             fontStyle: 'italic',
             lineHeight: '1.4'
           }}>
-            The simplification engine combined and matched these balances ({fromAudit.nodeName}: <span className="privacy-blur">{currencySymbol}{fromAudit.combinedBalance.toFixed(2)}</span> and {toAudit.nodeName}: <span className="privacy-blur">{currencySymbol}{toAudit.combinedBalance.toFixed(2)}</span>) to reduce total payment transactions on this trip.
+            The simplification engine combined and matched these balances ({fromAudit.nodeName}: <span className="privacy-blur">{currencySymbol}{fromAudit.combinedBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span> and {toAudit.nodeName}: <span className="privacy-blur">{currencySymbol}{toAudit.combinedBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>) to reduce total payment transactions on this trip.
           </div>
         </div>
       )}

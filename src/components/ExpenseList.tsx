@@ -582,7 +582,7 @@ export function ExpenseList({
                   </div>
                   {collapsed && (
                     <span style={{ fontSize: '12px', color: 'var(--text-muted)', flexShrink: 0 }}>
-                      {group.expenses.length} · {formatMaskedAmount(groupTotal.toFixed(2), currencySymbol, isBlindMode)}
+                      {group.expenses.length} · {formatMaskedAmount(groupTotal, currencySymbol, isBlindMode)}
                     </span>
                   )}
                 </div>
@@ -641,7 +641,7 @@ export function ExpenseList({
                               )}
                             </h4>
                             <span className="money privacy-blur" style={{ fontSize: '15px', fontWeight: '600', color: 'var(--text-primary)', whiteSpace: 'nowrap', flexShrink: 0 }}>
-                              {formatMaskedAmount(exp.amount.toFixed(2), currencySymbol, isBlindMode)}
+                              {formatMaskedAmount(exp.amount, currencySymbol, isBlindMode)}
                             </span>
                           </div>
                           <div

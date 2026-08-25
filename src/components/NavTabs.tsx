@@ -9,11 +9,13 @@ type Props = {
   activeTab: Tab;
   setActiveTab: (tab: Tab) => void;
   onAddExpense: () => void;
+  onAddMember?: () => void;
   expenseCount?: number;
   tripDestination?: string;
 };
 
-export function NavTabs({ activeTab, setActiveTab, onAddExpense, expenseCount, tripDestination }: Props) {
+export function NavTabs({ activeTab, setActiveTab, onAddExpense, onAddMember, expenseCount, tripDestination }: Props) {
+  const isMembersTab = activeTab === 'members';
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const longPressFired = useRef(false);
 
@@ -49,7 +51,11 @@ export function NavTabs({ activeTab, setActiveTab, onAddExpense, expenseCount, t
       return;
     }
     triggerHaptic('light');
-    onAddExpense();
+    if (isMembersTab && onAddMember) {
+      onAddMember();
+    } else {
+      onAddExpense();
+    }
   };
 
   return (
@@ -63,20 +69,25 @@ export function NavTabs({ activeTab, setActiveTab, onAddExpense, expenseCount, t
         <span>Members</span>
       </button>
       <div className="nav-tab-fab-wrap">
-        <FlightAddExpenseTooltip
-          onAddExpense={onAddExpense}
-          expenseCount={expenseCount}
-          tripDestination={tripDestination}
-        />
+        {/* Fixed just above the FAB regardless of scroll position -- confined
+            to the Summary tab so it doesn't sit on top of unrelated content
+            (stat tiles, member rows, settings rows) on the other tabs. */}
+        {activeTab === 'expenses' && (
+          <FlightAddExpenseTooltip
+            onAddExpense={onAddExpense}
+            expenseCount={expenseCount}
+            tripDestination={tripDestination}
+          />
+        )}
         <button
           type="button"
-          className="nav-tab-fab"
+          className={`nav-tab-fab ${isMembersTab && onAddMember ? 'mode-member' : ''}`}
           onPointerDown={handlePointerDown}
           onPointerUp={clearLongPress}
           onPointerCancel={clearLongPress}
           onClick={handleFabClick}
-          aria-label="Add Expense (Hold for flight guide)"
-          title="Add Expense (Hold for flight guide)"
+          aria-label={isMembersTab && onAddMember ? 'Add Member' : 'Add Expense (Hold for flight guide)'}
+          title={isMembersTab && onAddMember ? 'Add Member' : 'Add Expense (Hold for flight guide)'}
         >
           <IconPlus size={24} />
         </button>

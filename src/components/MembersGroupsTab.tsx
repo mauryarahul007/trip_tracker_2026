@@ -1,4 +1,5 @@
 import React from 'react';
+import { createPortal } from 'react-dom';
 import Fuse from 'fuse.js';
 import type { Group, Member, PreviousMemberSuggestion } from '../types';
 import type { MemberBalance } from '../utils/settlement';
@@ -33,6 +34,10 @@ type Props = {
   adminMemberIds?: string[];
   onSetMemberAdminRole?: (memberId: string, isAdmin: boolean) => Promise<void>;
   currentUserId: string | null;
+  // Bumped by the nav bar's FAB when it's tapped while this tab is active
+  // (see NavTabs) -- any change opens the add-member popup, the value
+  // itself is unused.
+  addMemberSignal?: number;
 };
 
 export function MembersGroupsTab({
@@ -55,6 +60,7 @@ export function MembersGroupsTab({
   adminMemberIds,
   onSetMemberAdminRole,
   currentUserId,
+  addMemberSignal,
 }: Props) {
   const isBlindMode = usePrivacyStore((s) => s.isBlindMode);
 
@@ -62,6 +68,10 @@ export function MembersGroupsTab({
   const [newMemberName, setNewMemberName] = React.useState('');
   const [editingMember, setEditingMember] = React.useState<Member | null>(null);
   const [memberFormError, setMemberFormError] = React.useState('');
+  // Add/edit member now renders as a popup instead of an always-inline
+  // form -- the members list is what people open this tab to see, an
+  // empty add-form pushing it below the fold every time was backwards.
+  const [showAddForm, setShowAddForm] = React.useState(false);
   const [previousMembers, setPreviousMembers] = React.useState<PreviousMemberSuggestion[]>([]);
   const [isDropdownOpen, setIsDropdownOpen] = React.useState(false);
   const [highlightedIndex, setHighlightedIndex] = React.useState<number>(-1);
@@ -320,11 +330,31 @@ export function MembersGroupsTab({
     setGroupFormError('');
   });
 
-  // Register member edit modal/form into browser history stack
-  useHistoryBack(Boolean(editingMember), () => {
+  // Register member add/edit popup into browser history stack
+  useHistoryBack(showAddForm, () => {
+    setShowAddForm(false);
     setEditingMember(null);
+    setNewMemberName('');
+    setSelectedLinkedUserId(null);
     setMemberFormError('');
   });
+
+  // FAB on this tab bumps this signal instead of adding an expense (see
+  // NavTabs) -- open the popup fresh, blank, ready to type a name. Tracks
+  // the last-seen value rather than a "skip the first run" flag -- under
+  // StrictMode's dev-only double-invoke of mount effects, a flag that
+  // flips itself off on the first call opens the popup on the SECOND
+  // (still-mount) invocation instead of skipping it.
+  const lastAddSignal = React.useRef(addMemberSignal ?? 0);
+  React.useEffect(() => {
+    if (addMemberSignal === undefined || addMemberSignal === lastAddSignal.current) return;
+    lastAddSignal.current = addMemberSignal;
+    setEditingMember(null);
+    setNewMemberName('');
+    setSelectedLinkedUserId(null);
+    setMemberFormError('');
+    setShowAddForm(true);
+  }, [addMemberSignal]);
 
   // Auto-generate group name based on selected members
   React.useEffect(() => {
@@ -373,6 +403,7 @@ export function MembersGroupsTab({
       setSelectedLinkedUserId(null);
       setEditingMember(null);
       setMemberFormError('');
+      setShowAddForm(false);
     } else if (res.error) {
       setMemberFormError(res.error);
     }
@@ -384,6 +415,7 @@ export function MembersGroupsTab({
     setNewMemberName(member.name);
     setSelectedLinkedUserId(null);
     setMemberFormError('');
+    setShowAddForm(true);
   };
 
   const handleCancelMemberEditLocal = () => {
@@ -392,6 +424,7 @@ export function MembersGroupsTab({
     setSelectedLinkedUserId(null);
     setEditingMember(null);
     setMemberFormError('');
+    setShowAddForm(false);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -470,13 +503,13 @@ export function MembersGroupsTab({
   const memberInputRef = React.useRef<HTMLInputElement>(null);
 
   React.useEffect(() => {
-    if (editingMember) {
+    if (showAddForm) {
       const timer = setTimeout(() => {
         memberInputRef.current?.focus();
       }, 50);
       return () => clearTimeout(timer);
     }
-  }, [editingMember]);
+  }, [showAddForm]);
 
   return (
     <div className="fade-in">
@@ -494,11 +527,40 @@ export function MembersGroupsTab({
       {/* 1. Add Members Section */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
         <h3 style={{ fontSize: '18px' }}>Trip Members</h3>
+        {isAdmin && (
+          <button
+            type="button"
+            className="secondary-btn"
+            style={{ padding: '6px 14px', fontSize: '13px' }}
+            onClick={() => {
+              setEditingMember(null);
+              setNewMemberName('');
+              setSelectedLinkedUserId(null);
+              setMemberFormError('');
+              setShowAddForm(true);
+            }}
+          >
+            + Add Member
+          </button>
+        )}
       </div>
 
-      {isAdmin ? (
-        <form className="glass-card fade-in" onSubmit={handleAddMemberLocal} style={{ marginBottom: '24px' }}>
-          <h4 style={{ marginBottom: '14px', fontSize: '15px' }}>{editingMember ? 'Edit Member' : 'New Member'}</h4>
+      {isAdmin && showAddForm && createPortal(
+        // Portal to <body> -- this tab's content lives inside .tab-pane,
+        // which has its own mask-image (for the scroll-edge fade) that
+        // also clips position:fixed descendants rendered inside it, so a
+        // modal built inline here was rendering invisible above the fold.
+        <div className="modal-overlay" onClick={handleCancelMemberEditLocal}>
+        <form
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="add-member-title"
+          className="glass-card fade-in modal-sheet"
+          onClick={(e) => e.stopPropagation()}
+          onSubmit={handleAddMemberLocal}
+          style={{ marginBottom: '24px' }}
+        >
+          <h4 id="add-member-title" style={{ marginBottom: '14px', fontSize: '15px' }}>{editingMember ? 'Edit Member' : 'New Member'}</h4>
           <div className="form-group" style={{ position: 'relative' }} ref={dropdownRef}>
             <label className="form-label">Name</label>
             <input
@@ -695,15 +757,11 @@ export function MembersGroupsTab({
             >
               {editingMember ? 'Update' : 'Add'}
             </button>
-            {editingMember && (
-              <button type="button" className="secondary-btn" style={{ flex: 1, padding: '10px' }} onClick={handleCancelMemberEditLocal}>Cancel</button>
-            )}
+            <button type="button" className="secondary-btn" style={{ flex: 1, padding: '10px' }} onClick={handleCancelMemberEditLocal}>Cancel</button>
           </div>
         </form>
-      ) : (
-        <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '20px' }}>
-          Only the trip admin can add, edit, or remove members and groups.
-        </p>
+        </div>,
+        document.body
       )}
 
       {/* Members list */}
@@ -725,9 +783,9 @@ export function MembersGroupsTab({
             const owes = balance < -0.01;
             const amtLabel =
               balance > 0.01
-                ? `gets back ${formatMaskedAmount(balance.toFixed(2), currencySymbol, isBlindMode)}`
+                ? `gets back ${formatMaskedAmount(balance, currencySymbol, isBlindMode)}`
                 : owes
-                ? `owes ${formatMaskedAmount(Math.abs(balance).toFixed(2), currencySymbol, isBlindMode)}`
+                ? `owes ${formatMaskedAmount(Math.abs(balance), currencySymbol, isBlindMode)}`
                 : 'settled';
             return (
               <div key={member.id} className={`luggage-tag${owes ? ' lt-owe' : ''}`}>

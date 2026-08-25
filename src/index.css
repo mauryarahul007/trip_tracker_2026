@@ -1316,6 +1316,14 @@ html.capacitor-ios .nav-tabs {
   transform: scale(0.92);
 }
 
+/* Members tab repurposes the FAB to add a member instead of an expense --
+   same "+" glyph (adding a member doesn't need its own icon), but a
+   distinct gradient so the changed meaning is still visible at a glance. */
+.nav-tab-fab.mode-member {
+  background-image: linear-gradient(135deg, var(--primary-accent, #2F6FED), #1E3A8A);
+  box-shadow: 0 8px 18px -6px rgba(47, 111, 237, 0.55);
+}
+
 /* ==========================================================================
    Flight-Themed Coachmark Tooltip for Adding Transactions
    ========================================================================== */
@@ -3624,6 +3632,16 @@ html.capacitor-ios .trip-sheet .tab-pane {
 
   .trips-screen-scroll.stack-viewport-lock .trips-section-header {
     margin-bottom: 20px;
+  }
+
+  /* The mobile-only swipe stack (.trip-stack, above) is already display:none
+     past this breakpoint, but that rule loses to the higher-specificity
+     .stack-viewport-lock overrides above -- which apply at every viewport
+     and never got a desktop entry of their own. Without this, the stack
+     (and its launcher) rendered on top of the desktop grid below it. */
+  .trips-screen-scroll.stack-viewport-lock .trip-stack,
+  .trips-screen-scroll.stack-viewport-lock .trip-launcher {
+    display: none;
   }
 }
 
