@@ -184,6 +184,11 @@ export function TripMapHero({ trip, sheetExpanded, onToneChange }: Props) {
           // the stops themselves.
           const roadBounds = new LngLatBounds();
           roadCoordinates.forEach((c) => roadBounds.extend(c as [number, number]));
+          // Guard against a partial/odd OSRM route (e.g. patchy road coverage
+          // near a stop) silently overriding the correct all-stops fit with
+          // something tighter -- the road bounds can only ever grow, never
+          // shrink, past what the stops themselves already span.
+          validStops.forEach((s) => roadBounds.extend([s.lng, s.lat]));
           if (!roadBounds.isEmpty()) {
             // The sheet-expand zoom-out cue offsets from whatever zoom
             // fitBounds lands on -- reset so it's recaptured from THIS
@@ -218,6 +223,10 @@ export function TripMapHero({ trip, sheetExpanded, onToneChange }: Props) {
       });
 
       if (!bounds.isEmpty()) {
+        // TEMP DEBUG: confirms whether a stop is carrying a bad saved
+        // lat/lng (skips geocoding entirely) vs. a route-fit race --
+        // remove once the zoomed-in-on-open bug is confirmed fixed.
+        console.log('[TripMapHero] fitBounds stops', validStops.map((s) => ({ name: s.name, lat: s.lat, lng: s.lng })));
         map.fitBounds(bounds, { padding: fitPadding, maxZoom: 12, duration: 0 });
       }
     });
