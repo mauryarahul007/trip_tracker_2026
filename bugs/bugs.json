@@ -2080,5 +2080,36 @@
     "resolvedAt": "2026-08-24T14:30:33.607+00:00",
     "resolvedBy": "antigravity",
     "resolutionNote": "Added .stack-viewport-lock with 100dvh lock and flexbox column auto-scaling in index.css (ADR 50)."
+  },
+  {
+    "id": "BUG-069",
+    "title": "Members-tab FAB opened Add Expense for non-admin members instead of blocking or adding a member",
+    "description": "On the Members & Groups tab, tapping the nav bar + button fell through to onAddExpense whenever the viewer was not a trip admin (onAddMember prop was undefined), silently redirecting a member-only user to the Add Expense screen instead of either opening Add Member (admins) or explaining why they cannot.",
+    "severity": "medium",
+    "category": "ui-ux",
+    "status": "resolved",
+    "foundBy": "mauryarahul007@gmail.com",
+    "environment": {
+      "isOnline": true,
+      "platform": "web",
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Join a trip as a non-admin member (invited, not creator/admin)",
+      "Open the trip, go to the Members tab",
+      "Tap the + FAB at the bottom of the screen",
+      "Observe the Add Expense screen opens instead of an Add Member flow or a permission message"
+    ],
+    "expectedBehavior": "On the Members tab, the FAB only ever adds a member (admins) or shows a message explaining that only trip admins can add members (non-admins). It never opens Add Expense.",
+    "actualBehavior": "handleFabClick in NavTabs.tsx called onAddExpense() whenever isMembersTab was true but onAddMember was undefined, so non-admin members were routed to Add Expense.",
+    "diagnostics": {
+      "file": "src/components/NavTabs.tsx",
+      "rootCause": "handleFabClick used \"if (isMembersTab && onAddMember) { onAddMember() } else { onAddExpense() }\" -- the else branch fired for both the non-Members tabs and the Members-tab-without-permission case."
+    },
+    "createdAt": "2026-08-25T15:00:00+00:00",
+    "updatedAt": "2026-08-25T15:00:00+00:00",
+    "resolvedAt": "2026-08-25T15:00:00+00:00",
+    "resolvedBy": "claude-cli",
+    "resolutionNote": "NavTabs.tsx handleFabClick now branches on isMembersTab first: admins get onAddMember(), non-admins get a warning haptic plus a 2.2s \"Only trip admins can add members\" hint bubble, and Add Expense is never called from this tab. FAB also keeps mode-member styling on the Members tab regardless of admin status. Commit 48bf7e6."
   }
 ]

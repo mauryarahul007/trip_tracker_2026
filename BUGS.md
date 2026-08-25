@@ -9,10 +9,10 @@
 
 | Metric | Count | Status Notes |
 | :--- | :--- | :--- |
-| **Total Tracked** | **68** | All recorded bugs across sessions |
+| **Total Tracked** | **69** | All recorded bugs across sessions |
 | **🟢 Open** | **0** | No critical blockers, 0 High |
 | **🟡 In Progress** | **0** | Active investigation or fix |
-| **✅ Resolved** | **63** | Verified & closed |
+| **✅ Resolved** | **64** | Verified & closed |
 | **⚪ Won't Fix** | **5** | Expected behavior / deferred |
 
 ---
@@ -94,6 +94,7 @@
 | **BUG-066** | IconChevronDown is not defined | `general` | `critical` | `auto-crash-handler` | `claude` | Not reproducible against current HEAD -- verified the exact crash site (symbol/line from the stack trace) no longer exists or is now correctly defined/imported. This was captured from a live dev-server (localhost, Vite HMR ?t= cache-busted URL) mid-edit during earlier development and has since been superseded by subsequent refactors. |
 | **BUG-067** | Mobile canvas solid cyan block fill and text overflow in Trip Wrapped | `ui-ux` | `medium` | `user` | `antigravity` | Replaced native roundRect with drawSafeRoundedRect with explicit beginPath/closePath, added drawSafeWrappedText for multi-line bound protection, and added Night/Light theme switcher. |
 | **BUG-068** | Home screen card-style deck vertical scroll outside viewport on mobile | `ui-ux` | `medium` | `user` | `antigravity` | Added .stack-viewport-lock with 100dvh lock and flexbox column auto-scaling in index.css (ADR 50). |
+| **BUG-069** | Members-tab FAB opened Add Expense for non-admin members instead of blocking or adding a member | `ui-ux` | `medium` | `mauryarahul007@gmail.com` | `claude-cli` | NavTabs.tsx handleFabClick now branches on isMembersTab first: admins get onAddMember(), non-admins get a warning haptic plus a 2.2s "Only trip admins can add members" hint bubble, and Add Expense is never called from this tab. FAB also keeps mode-member styling on the Members tab regardless of admin status. Commit 48bf7e6. |
 
 ---
 
