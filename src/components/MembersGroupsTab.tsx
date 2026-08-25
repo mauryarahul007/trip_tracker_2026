@@ -259,11 +259,11 @@ export function MembersGroupsTab({
     });
   }, [availablePreviousMembers]);
 
-  // Top 5 fuzzy matched suggestions or recent members
+  // Top 6 fuzzy matched suggestions, only once user starts typing
   const filteredSuggestions = React.useMemo(() => {
     const query = newMemberName.trim();
     if (!query) {
-      return availablePreviousMembers.slice(0, 6);
+      return [];
     }
     const fuzzyResults = fuse.search(query).map((res) => res.item);
     // If exact prefix/substring match exists, place it on top
