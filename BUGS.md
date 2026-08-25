@@ -10,136 +10,22 @@
 | Metric | Count | Status Notes |
 | :--- | :--- | :--- |
 | **Total Tracked** | **32** | All recorded bugs across sessions |
-| **🟢 Open** | **4** | 🚨 **3 CRITICAL**, 0 High |
+| **🟢 Open** | **0** | No critical blockers, 0 High |
 | **🟡 In Progress** | **0** | Active investigation or fix |
-| **✅ Resolved** | **28** | Verified & closed |
-| **⚪ Won't Fix** | **0** | Expected behavior / deferred |
+| **✅ Resolved** | **29** | Verified & closed |
+| **⚪ Won't Fix** | **3** | Expected behavior / deferred |
 
 ---
 
 ## 🚨 Active Bugs (Open & In Progress)
 
-| ID | Severity | Category | Title | Found By | Status |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| **[BUG-017](#bug-017)** | 🔴 **CRITICAL** | `general` | Uncaught TypeError: Cannot read properties of null (reading 'useCallback') | `auto-crash-handler` | 🟢 Open |
-| **[BUG-018](#bug-018)** | ⚪ Low | `splits-math` | test bug | `superadmin` | 🟢 Open |
-| **[BUG-019](#bug-019)** | 🔴 **CRITICAL** | `general` | Uncaught TypeError: Cannot read properties of null (reading 'useCallback') | `auto-crash-handler` | 🟢 Open |
-| **[BUG-024](#bug-024)** | 🔴 **CRITICAL** | `general` | Failed to update a ServiceWorker for scope ('https://trip-tracker.blackmaroon.in/') with script ('Unknown'): The object is in an invalid sta | `auto-crash-handler` | 🟢 Open |
+*🎉 No active open bugs! Great job team.* 
 
 ---
 
 ## 📖 Detailed Active Bug Specs
 
-### BUG-017: Uncaught TypeError: Cannot read properties of null (reading 'useCallback')
-
-- **Severity**: `CRITICAL` | **Category**: `general` | **Status**: `open`
-- **Found By**: `auto-crash-handler` on 21/8/2026 (web)
-- **Route**: `#/` (Online: `true`)
-
-**Description**:
-Automatically captured window error.
-
-TypeError: Cannot read properties of null (reading 'useCallback')
-    at exports.useCallback (http://localhost:5174/node_modules/.vite/deps/react.js?v=45185605:701:30)
-    at useStore (http://localhost:5174/node_modules/.vite/deps/zustand.js?v=d2bfbf05:36:78)
-    at useBoundStore (http://localhost:5174/node_modules/.vite/deps/zustand.js?v=d2bfbf05:42:38)
-    at UpdateBanner (http://localhost:5174/src/components/UpdateBanner.tsx:8:26)
-    at Object.react_stack_bottom_frame (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=e164e122:12864:12)
-    at renderWithHooks (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=e164e122:4211:19)
-    at updateFunctionComponent (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=e164e122:5567:16)
-    at beginWork (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=e164e122:6138:20)
-    at runWithFiberInDEV (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=e164e122:850:66)
-    at performUnitOfWork (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=e164e122:8427:92)
-
-**Expected**: App runs without throwing.
-
-**Actual**: Uncaught TypeError: Cannot read properties of null (reading 'useCallback')
-
-**Diagnostic Trace / Stack**:
-```text
-TypeError: Cannot read properties of null (reading 'useCallback')
-    at exports.useCallback (http://localhost:5174/node_modules/.vite/deps/react.js?v=45185605:701:30)
-    at useStore (http://localhost:5174/node_modules/.vite/deps/zustand.js?v=d2bfbf05:36:78)
-    at useBoundStore (http://localhost:5174/node_modules/.vite/deps/zustand.js?v=d2bfbf05:42:38)
-    at UpdateBanner (http://localhost:5174/src/components/UpdateBanner.tsx:8:26)
-    at Object.react_stack_bottom_frame (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=e164e122:12864:12)
-    at renderWithHooks (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=e164e122:4211:19)
-    at updateFunctionComponent (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=e164e122:5567:16)
-    at beginWork (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=e164e122:6138:20)
-    at runWithFiberInDEV (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=e164e122:850:66)
-    at performUnitOfWork (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=e164e122:8427:92)
-```
-
----
-
-### BUG-018: test bug
-
-- **Severity**: `LOW` | **Category**: `splits-math` | **Status**: `open`
-- **Found By**: `superadmin` on 21/8/2026 (web)
-
-**Description**:
-test bug
-
----
-
-### BUG-019: Uncaught TypeError: Cannot read properties of null (reading 'useCallback')
-
-- **Severity**: `CRITICAL` | **Category**: `general` | **Status**: `open`
-- **Found By**: `auto-crash-handler` on 21/8/2026 (web)
-- **Route**: `#/` (Online: `true`)
-
-**Description**:
-Automatically captured window error.
-
-TypeError: Cannot read properties of null (reading 'useCallback')
-    at exports.useCallback (http://localhost:5174/node_modules/.vite/deps/react.js?v=43430a51:701:30)
-    at useStore (http://localhost:5174/node_modules/.vite/deps/zustand.js?v=915eb48f:36:78)
-    at useBoundStore (http://localhost:5174/node_modules/.vite/deps/zustand.js?v=915eb48f:42:38)
-    at UpdateBanner (http://localhost:5174/src/components/UpdateBanner.tsx:8:26)
-    at Object.react_stack_bottom_frame (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=c35173d6:12864:12)
-    at renderWithHooks (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=c35173d6:4211:19)
-    at updateFunctionComponent (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=c35173d6:5567:16)
-    at beginWork (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=c35173d6:6138:20)
-    at runWithFiberInDEV (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=c35173d6:850:66)
-    at performUnitOfWork (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=c35173d6:8427:92)
-
-**Expected**: App runs without throwing.
-
-**Actual**: Uncaught TypeError: Cannot read properties of null (reading 'useCallback')
-
-**Diagnostic Trace / Stack**:
-```text
-TypeError: Cannot read properties of null (reading 'useCallback')
-    at exports.useCallback (http://localhost:5174/node_modules/.vite/deps/react.js?v=43430a51:701:30)
-    at useStore (http://localhost:5174/node_modules/.vite/deps/zustand.js?v=915eb48f:36:78)
-    at useBoundStore (http://localhost:5174/node_modules/.vite/deps/zustand.js?v=915eb48f:42:38)
-    at UpdateBanner (http://localhost:5174/src/components/UpdateBanner.tsx:8:26)
-    at Object.react_stack_bottom_frame (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=c35173d6:12864:12)
-    at renderWithHooks (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=c35173d6:4211:19)
-    at updateFunctionComponent (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=c35173d6:5567:16)
-    at beginWork (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=c35173d6:6138:20)
-    at runWithFiberInDEV (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=c35173d6:850:66)
-    at performUnitOfWork (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=c35173d6:8427:92)
-```
-
----
-
-### BUG-024: Failed to update a ServiceWorker for scope ('https://trip-tracker.blackmaroon.in/') with script ('Unknown'): The object is in an invalid sta
-
-- **Severity**: `CRITICAL` | **Category**: `general` | **Status**: `open`
-- **Found By**: `auto-crash-handler` on 21/8/2026 (web)
-- **Route**: `#/` (Online: `true`)
-
-**Description**:
-Automatically captured unhandled rejection.
-
-No stack trace available.
-
-**Expected**: App runs without throwing.
-
-**Actual**: Failed to update a ServiceWorker for scope ('https://trip-tracker.blackmaroon.in/') with script ('Unknown'): The object is in an invalid state.
-
----
+*No active bug details to display.*
 
 ## ✅ Resolved Bugs History
 
@@ -165,6 +51,7 @@ No stack trace available.
 | **BUG-021** | Report a Problem popup traps scroll, cannot scroll back up to close | `ui-ux` | `medium` | `rahul` | `rahul` | BugReportModal converted from a modal-overlay popup to a full-screen SettingsView subscreen (settings-subscreen-enter layout), same pattern as other Settings subscreens -- no more trapped scroll. Commit 496306b. |
 | **BUG-022** | Report a Problem back navigation discards unsent draft without confirmation | `ui-ux` | `medium` | `rahul` | `rahul` | Added a back-guard (onRegisterBackGuard) wired through both the on-screen back link and SettingsView's useHistoryBack hardware/browser-back handling. When there's unsent text, a 3-way ConfirmDialog (new tertiaryLabel/onTertiary support) offers Submit & Go Back, Discard & Go Back, or Keep Editing. Commit 496306b. |
 | **BUG-023** | Test from app | `navigation` | `critical` | `mauryarahul007@gmail.com` | `superadmin` | Test |
+| **BUG-024** | Failed to update a ServiceWorker for scope ('https://trip-tracker.blackmaroon.in/') with script ('Unknown'): The object is in an invalid sta | `general` | `critical` | `auto-crash-handler` | `claude` | Added .catch(() => {}) to the two unguarded registration.update() calls in serviceWorker.ts (interval timer + visibilitychange listener) that were producing an unhandled promise rejection. |
 | **BUG-025** | Enable Live Alerts banner shown on native platforms and never works | `ui-ux` | `medium` | `mauryarahul007@gmail.com` | `claude-cli` | Gated the banner on isWebNotificationSupported() in NotificationsPanel.tsx so it only renders in an actual browser tab. Commit 4433bc1. |
 | **BUG-026** | 'Out of sync (0)' status permanently shown on every trip | `offline-sync` | `high` | `mauryarahul007@gmail.com` | `claude-cli` | Dropped the broken lastModifiedAt/lastBackendSyncedAt comparison from syncStatus in App.tsx -- syncQueue.length is the correct, live signal and was already there. Commit f950404. |
 | **BUG-027** | Superadmin Ops Deck section tabs unusable on mobile | `ui-ux` | `medium` | `mauryarahul007@gmail.com` | `claude-cli` | Replaced with a header status-line trigger that opens a full-screen section switcher on tap, reusing the existing dot+code+label rail styling. Also fixed a CSS source-order bug where the desktop rail's unconditional display:flex was overriding its own mobile display:none. Commits 55ab403, 178a638. |

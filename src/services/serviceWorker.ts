@@ -18,9 +18,10 @@ export function registerServiceWorkerUpdateWatcher(): void {
     navigator.serviceWorker
       .register(`${import.meta.env.BASE_URL}sw.js`)
       .then((registration) => {
-        setInterval(() => registration.update(), UPDATE_CHECK_INTERVAL_MS);
+        const safeUpdate = () => registration.update().catch(() => {});
+        setInterval(safeUpdate, UPDATE_CHECK_INTERVAL_MS);
         document.addEventListener('visibilitychange', () => {
-          if (!document.hidden) registration.update();
+          if (!document.hidden) safeUpdate();
         });
       })
       .catch((err) => console.error('Service Worker registration failed:', err));

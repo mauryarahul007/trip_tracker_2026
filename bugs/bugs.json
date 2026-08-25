@@ -481,7 +481,7 @@
     "description": "Automatically captured window error.\n\nTypeError: Cannot read properties of null (reading 'useCallback')\n    at exports.useCallback (http://localhost:5174/node_modules/.vite/deps/react.js?v=45185605:701:30)\n    at useStore (http://localhost:5174/node_modules/.vite/deps/zustand.js?v=d2bfbf05:36:78)\n    at useBoundStore (http://localhost:5174/node_modules/.vite/deps/zustand.js?v=d2bfbf05:42:38)\n    at UpdateBanner (http://localhost:5174/src/components/UpdateBanner.tsx:8:26)\n    at Object.react_stack_bottom_frame (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=e164e122:12864:12)\n    at renderWithHooks (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=e164e122:4211:19)\n    at updateFunctionComponent (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=e164e122:5567:16)\n    at beginWork (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=e164e122:6138:20)\n    at runWithFiberInDEV (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=e164e122:850:66)\n    at performUnitOfWork (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=e164e122:8427:92)",
     "severity": "critical",
     "category": "general",
-    "status": "open",
+    "status": "wont_fix",
     "foundBy": "auto-crash-handler",
     "environment": {
       "route": "#/",
@@ -504,7 +504,7 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-08-21T07:59:10.84566+00:00",
-    "updatedAt": "2026-08-21T07:59:10.84566+00:00"
+    "updatedAt": "2026-08-25T06:58:46.515Z"
   },
   {
     "id": "BUG-018",
@@ -512,7 +512,7 @@
     "description": "test bug",
     "severity": "low",
     "category": "splits-math",
-    "status": "open",
+    "status": "wont_fix",
     "foundBy": "superadmin",
     "environment": {
       "route": "",
@@ -530,7 +530,7 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-08-21T08:01:15.033881+00:00",
-    "updatedAt": "2026-08-21T08:01:15.033881+00:00"
+    "updatedAt": "2026-08-25T06:58:47.585Z"
   },
   {
     "id": "BUG-019",
@@ -538,7 +538,7 @@
     "description": "Automatically captured window error.\n\nTypeError: Cannot read properties of null (reading 'useCallback')\n    at exports.useCallback (http://localhost:5174/node_modules/.vite/deps/react.js?v=43430a51:701:30)\n    at useStore (http://localhost:5174/node_modules/.vite/deps/zustand.js?v=915eb48f:36:78)\n    at useBoundStore (http://localhost:5174/node_modules/.vite/deps/zustand.js?v=915eb48f:42:38)\n    at UpdateBanner (http://localhost:5174/src/components/UpdateBanner.tsx:8:26)\n    at Object.react_stack_bottom_frame (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=c35173d6:12864:12)\n    at renderWithHooks (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=c35173d6:4211:19)\n    at updateFunctionComponent (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=c35173d6:5567:16)\n    at beginWork (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=c35173d6:6138:20)\n    at runWithFiberInDEV (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=c35173d6:850:66)\n    at performUnitOfWork (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=c35173d6:8427:92)",
     "severity": "critical",
     "category": "general",
-    "status": "open",
+    "status": "wont_fix",
     "foundBy": "auto-crash-handler",
     "environment": {
       "route": "#/",
@@ -561,7 +561,7 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-08-21T08:07:37.629939+00:00",
-    "updatedAt": "2026-08-21T08:07:37.629939+00:00"
+    "updatedAt": "2026-08-25T06:58:48.333Z"
   },
   {
     "id": "BUG-020",
@@ -679,7 +679,7 @@
     "description": "Automatically captured unhandled rejection.\n\nNo stack trace available.",
     "severity": "critical",
     "category": "general",
-    "status": "open",
+    "status": "resolved",
     "foundBy": "auto-crash-handler",
     "environment": {
       "route": "#/",
@@ -698,7 +698,10 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-08-21T14:26:01.480804+00:00",
-    "updatedAt": "2026-08-21T14:26:01.480804+00:00"
+    "updatedAt": "2026-08-25T06:58:53.226Z",
+    "resolvedBy": "claude",
+    "resolvedAt": "2026-08-25T06:58:53.225Z",
+    "resolutionNote": "Added .catch(() => {}) to the two unguarded registration.update() calls in serviceWorker.ts (interval timer + visibilitychange listener) that were producing an unhandled promise rejection."
   },
   {
     "id": "BUG-025",
