@@ -37,6 +37,7 @@ export interface Database {
           join_code: string;
           archived: boolean;
           frozen: boolean;
+          closed: boolean;
           destination: string | null;
           stops: unknown;
           created_at: string;
@@ -52,6 +53,7 @@ export interface Database {
           join_code?: string;
           archived?: boolean;
           frozen?: boolean;
+          closed?: boolean;
           destination?: string | null;
           stops?: unknown;
         };
@@ -62,9 +64,26 @@ export interface Database {
           base_currency: string;
           archived: boolean;
           frozen: boolean;
+          closed: boolean;
           destination: string | null;
           stops: unknown;
           updated_at: string;
+        }>;
+        Relationships: [];
+      };
+      trip_mutes: {
+        Row: {
+          user_id: string;
+          trip_id: string;
+          created_at: string;
+        };
+        Insert: {
+          user_id: string;
+          trip_id: string;
+        };
+        Update: Partial<{
+          user_id: string;
+          trip_id: string;
         }>;
         Relationships: [];
       };

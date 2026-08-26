@@ -625,6 +625,31 @@ export function BalancesSettlements({
   const setCustom = (rowKey: string, v: string) => setCustomAmounts({ ...customAmounts, [rowKey]: v });
   const toggleCustomOpen = (rowKey: string) => setCustomOpenKeys({ ...customOpenKeys, [rowKey]: !customOpenKeys[rowKey] });
 
+  const [remindAllStatus, setRemindAllStatus] = useState<'idle' | 'sending' | 'done'>('idle');
+  const remindableTransfers = transfers.filter((t) => members[t.fromMemberId]?.linkedUserId);
+  const remindableCount = remindableTransfers.length;
+  const handleRemindAll = async () => {
+    triggerHaptic('light');
+    setRemindAllStatus('sending');
+    // Each send is independently best-effort (sendPushNotification never
+    // throws) and the server's 24h-per-pair cooldown still applies per
+    // transfer -- so this just fans out the same single reminder every
+    // row's own button already sends, batched into one tap.
+    await Promise.all(
+      remindableTransfers.map((t) =>
+        sendPushNotification(
+          [members[t.fromMemberId]!.linkedUserId as string],
+          trip.name || 'Trip Tracker',
+          'settlement_reminder',
+          { toLabel: t.toLabel, amount: t.amount.toFixed(2), currency: currencySymbol, fromMemberId: t.fromMemberId, toMemberId: t.toMemberId },
+          trip.id
+        )
+      )
+    );
+    setRemindAllStatus('done');
+    setTimeout(() => setRemindAllStatus('idle'), 3000);
+  };
+
   const totalOutstanding = transfers.reduce((sum, t) => sum + t.amount, 0);
   const isFullySettled = transfers.length === 0;
   const topTransfer = transfers.length > 0 ? [...transfers].sort((a, b) => b.amount - a.amount)[0] : null;
@@ -709,6 +734,17 @@ export function BalancesSettlements({
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {isAdmin && remindableCount >= 2 && (
+                  <button
+                    type="button"
+                    className="secondary-btn"
+                    style={{ alignSelf: 'flex-end', padding: '5px 12px', fontSize: '12px', marginBottom: '2px' }}
+                    disabled={remindAllStatus === 'sending'}
+                    onClick={handleRemindAll}
+                  >
+                    {remindAllStatus === 'sending' ? 'Sending…' : remindAllStatus === 'done' ? '✓ Reminded everyone' : `🔔 Remind all (${remindableCount})`}
+                  </button>
+                )}
                 {transfers.map((t) => {
                   const rowKey = `${t.from}|${t.to}`;
                   const isGroupInvolved = t.from.startsWith('group:') || t.to.startsWith('group:');

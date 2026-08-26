@@ -143,6 +143,8 @@ export function SettingsView({
   const resetCategoryKeywords = useTripStore((s) => s.resetCategoryKeywords);
   const enableGeotagging = useTripStore((s) => s.enableGeotagging);
   const setEnableGeotagging = useTripStore((s) => s.setEnableGeotagging);
+  const closeTrip = useTripStore((s) => s.closeTrip);
+  const setTripMuted = useTripStore((s) => s.setTripMuted);
 
   // Superadmin & Feature Flag state
   const isSuperadmin = useTripStore((s) => s.isSuperadmin);
@@ -150,6 +152,7 @@ export function SettingsView({
   const trips = useTripStore((s) => s.trips);
   const activeTripId = useTripStore((s) => s.activeTripId);
   const activeTrip = trips.find((t) => t.id === activeTripId);
+  const isTripMuted = useTripStore((s) => (activeTripId ? s.isTripMuted(activeTripId) : false));
 
   const [isSuperadminModalOpen, setIsSuperadminModalOpen] = useState(false);
   const unreadNotificationCount = useNotificationsStore((s) => s.unreadCount);
@@ -1389,6 +1392,98 @@ export function SettingsView({
           )}
         </div>
       </div>
+
+      {/* Group 3.5: This Trip -- mute is available to any member (personal
+          preference); Close Trip is admin-only (locks new expenses/members
+          app-wide, see tripStore's addExpense/addMember guards). */}
+      {hasActiveTrip && activeTrip && (
+        <div className="settings-group">
+          <h4 className="settings-group-title">This Trip</h4>
+          <div className="settings-group-card">
+            <div className="settings-row-item" style={{ cursor: 'default' }}>
+              <div className="settings-row-left">
+                <div className="settings-squircle squircle-teal">
+                  <IconBell size={18} />
+                </div>
+                <div className="settings-row-texts">
+                  <span className="settings-row-title">Mute Notifications</span>
+                  <span className="settings-row-subtitle">Stop push alerts for this trip -- still visible in your notifications panel</span>
+                </div>
+              </div>
+              <div className="settings-row-right">
+                <label style={{ position: 'relative', display: 'inline-block', width: '44px', height: '24px', margin: 0, cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={isTripMuted}
+                    onChange={(e) => setTripMuted(activeTrip.id, e.target.checked)}
+                    style={{ opacity: 0, width: 0, height: 0, margin: 0 }}
+                  />
+                  <span
+                    style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      backgroundColor: isTripMuted ? '#17B6A6' : 'var(--border-color)',
+                      transition: '0.2s ease',
+                      borderRadius: 'var(--border-radius-pill)',
+                    }}
+                  >
+                    <span
+                      style={{
+                        position: 'absolute',
+                        height: '18px',
+                        width: '18px',
+                        left: isTripMuted ? '23px' : '3px',
+                        bottom: '3px',
+                        backgroundColor: 'white',
+                        transition: '0.2s ease',
+                        borderRadius: '50%',
+                        boxShadow: '0 1px 3px rgba(0,0,0,0.25)',
+                      }}
+                    />
+                  </span>
+                </label>
+              </div>
+            </div>
+
+            {isAdmin && (
+              <button
+                type="button"
+                className="settings-row-item"
+                onClick={() => {
+                  if (activeTrip.closed) {
+                    closeTrip(activeTrip.id, false);
+                    return;
+                  }
+                  onRequestConfirm?.({
+                    title: 'Close Trip',
+                    message: 'This locks the trip -- no new expenses or members can be added until it\'s reopened. Existing data stays untouched.',
+                    confirmLabel: 'Close Trip',
+                    onConfirm: () => closeTrip(activeTrip.id, true),
+                  });
+                }}
+              >
+                <div className="settings-row-left">
+                  <div className="settings-squircle squircle-amber">
+                    <IconShield size={18} />
+                  </div>
+                  <div className="settings-row-texts">
+                    <span className="settings-row-title">{activeTrip.closed ? 'Reopen Trip' : 'Close Trip'}</span>
+                    <span className="settings-row-subtitle">
+                      {activeTrip.closed ? 'Currently locked -- reopen to allow new expenses/members' : 'Lock this trip once everyone\'s settled up'}
+                    </span>
+                  </div>
+                </div>
+                <div className="settings-row-right">
+                  <IconChevronRight size={16} />
+                </div>
+              </button>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Group 4: Account & Danger Zone */}
       <div className="settings-group">

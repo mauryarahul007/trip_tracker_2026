@@ -156,5 +156,53 @@
     "shippedAt": "2026-08-26T13:12:13.494Z",
     "shippedBy": "claude-cli",
     "shippedNote": "Commit pending push. Files: src/components/ExpenseForm.tsx, ExpenseReviewModal.tsx, ExpenseList.tsx, MembersGroupsTab.tsx, TripsListScreen.tsx, TripStack.tsx, UpiPaymentModal.tsx."
+  },
+  {
+    "id": "FEAT-011",
+    "title": "Close/Reopen Trip lock",
+    "description": "Trip admins can close a trip once everyone's settled up, via Settings -> This Trip. Closed trips block new expenses and new members (mirrors the existing superadmin frozen kill-switch's guard on addExpense) while leaving all existing data untouched and visible. Reopen restores normal editing. New trips.closed boolean column (migration 0069).",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-08-26T13:52:23.456Z",
+    "updatedAt": "2026-08-26T13:52:23.456Z",
+    "shippedAt": "2026-08-26T13:52:23.456Z",
+    "shippedBy": "claude-cli",
+    "shippedNote": "Migration 0069 applied to remote. Files: supabase/migrations/0069_add_trip_closed.sql, src/store/tripStore.ts, src/services/tripApi.ts, src/types/index.ts, src/types/database.ts, src/components/SettingsView.tsx."
+  },
+  {
+    "id": "FEAT-012",
+    "title": "Remind All settlement nudge",
+    "description": "Batch 'Remind all' button above the settlements list (admin-only, 2+ outstanding debtors) fans out the same settlement_reminder push each row's individual Remind button already sends, one tap instead of clicking through every person. Server-side 24h-per-pair cooldown still applies to each, so it can't spam anyone.",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-08-26T13:52:35.710Z",
+    "updatedAt": "2026-08-26T13:52:35.710Z",
+    "shippedAt": "2026-08-26T13:52:35.710Z",
+    "shippedBy": "claude-cli",
+    "shippedNote": "File: src/components/BalancesSettlements.tsx."
+  },
+  {
+    "id": "FEAT-013",
+    "title": "Per-trip push notification mute",
+    "description": "Any member can mute a trip in Settings -> This Trip, suppressing only the FCM push -- the in-app notifications panel row is still written, so muted activity stays visible if they open the app, it just stops pinging their phone. New trip_mutes table (migration 0070, RLS-scoped to the owning user); send-push Edge Function checks it before sending FCM and skips muted recipients.",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-08-26T13:52:43.153Z",
+    "updatedAt": "2026-08-26T13:52:43.153Z",
+    "shippedAt": "2026-08-26T13:52:43.153Z",
+    "shippedBy": "claude-cli",
+    "shippedNote": "Migration 0070 applied to remote, send-push Edge Function redeployed. Files: supabase/migrations/0070_add_trip_mutes.sql, supabase/functions/send-push/index.ts, src/store/tripStore.ts, src/services/tripApi.ts, src/types/database.ts, src/components/SettingsView.tsx."
   }
 ]

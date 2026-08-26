@@ -22,6 +22,7 @@ export interface Trip {
   expenseCount?: number;
   archived?: boolean;
   frozen?: boolean; // emergency kill-switch toggle set by superadmin
+  closed?: boolean; // trip-admin "settled, no more changes" lock -- blocks new expenses/members, unlike archived which is purely organizational
   stops?: TripStop[]; // Ordered list of route waypoints / stops
   coverImageUrl?: string; // background cover tourism photo URL
 }

@@ -185,10 +185,33 @@ async function handleSendPush(req: Request): Promise<Response> {
     console.error('Failed to insert notification rows', notificationInsertError);
   }
 
+  // Trip mute (migration 0070) only suppresses the push -- the in-app
+  // notification row above is written for every filteredUserIds regardless,
+  // so a muted user still sees it in the panel, it just doesn't ping their
+  // phone. Superadmin's `frozen` kill-switch and this are unrelated: mute
+  // is a per-user preference, not a trip-wide toggle.
+  let pushEligibleUserIds = filteredUserIds;
+  if (tripId) {
+    const { data: mutes, error: mutesError } = await supabaseAdmin
+      .from('trip_mutes')
+      .select('user_id')
+      .eq('trip_id', tripId)
+      .in('user_id', filteredUserIds);
+    if (mutesError) {
+      console.error('Failed to load trip mutes, sending push to all recipients', mutesError);
+    } else {
+      const mutedUserIds = new Set((mutes || []).map((m) => m.user_id));
+      pushEligibleUserIds = filteredUserIds.filter((id) => !mutedUserIds.has(id));
+    }
+  }
+  if (pushEligibleUserIds.length === 0) {
+    return jsonResponse({ sent: 0, total: 0 }, 200);
+  }
+
   const { data: tokens, error: tokenError } = await supabaseAdmin
     .from('device_push_tokens')
     .select('id, fcm_token')
-    .in('user_id', filteredUserIds);
+    .in('user_id', pushEligibleUserIds);
   if (tokenError) {
     return jsonResponse({ error: tokenError.message }, 500);
   }

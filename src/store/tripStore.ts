@@ -15,6 +15,9 @@ import {
   updateTripRow,
   archiveTripRow,
   freezeTripRow,
+  closeTripRow,
+  fetchMutedTripIds,
+  setTripMutedRow,
   deleteTripRow,
   deleteAllMyTrips,
   insertMember,
@@ -144,7 +147,14 @@ interface TripStore extends TripState {
   selectTrip: (id: string | null) => Promise<void>;
   archiveTrip: (id: string, archived: boolean) => Promise<void>;
   freezeTrip: (id: string, frozen: boolean) => Promise<void>;
+  closeTrip: (id: string, closed: boolean) => Promise<void>;
   deleteTrip: (id: string) => Promise<void>;
+
+  // Per-user, per-trip push-notification mute (see migration 0070) --
+  // suppresses FCM pushes only, the in-app panel still gets the row.
+  mutedTripIds: Set<string>;
+  isTripMuted: (tripId: string) => boolean;
+  setTripMuted: (tripId: string, muted: boolean) => Promise<void>;
 
   // Member Actions
   addMember: (name: string, linkedUserId?: string | null) => Promise<void>;
@@ -406,6 +416,7 @@ export const useTripStore = create<TripStore>()(
     sessionExpired: false,
     lastModifiedAt: Date.now(),
     enableGeotagging: false,
+    mutedTripIds: new Set<string>(),
 
     // Superadmin & Feature Flags
     isSuperadmin: false,
@@ -622,6 +633,7 @@ export const useTripStore = create<TripStore>()(
         });
 
         void get().loadFeatureFlags();
+        void fetchMutedTripIds(userId).then((ids) => set({ mutedTripIds: new Set(ids) })).catch(() => {});
 
         if (get().syncQueue.length > 0) {
           get().processQueue();
@@ -1066,6 +1078,45 @@ export const useTripStore = create<TripStore>()(
       }));
     },
 
+    closeTrip: async (id, closed) => {
+      if (!isMissingSupabaseEnv) {
+        try {
+          await closeTripRow(id, closed);
+        } catch (e) {
+          setError(e);
+          return;
+        }
+      }
+
+      set((state) => ({
+        trips: state.trips.map((t) => (t.id === id ? { ...t, closed, updatedAt: Date.now() } : t)),
+        lastModifiedAt: Date.now(),
+        storageError: null,
+      }));
+    },
+
+    isTripMuted: (tripId) => get().mutedTripIds.has(tripId),
+
+    setTripMuted: async (tripId, muted) => {
+      const userId = get().userId;
+      if (!userId) return;
+      // Optimistic -- this only gates whether pushes reach the device, so
+      // a failed write just means the next send-push call re-derives the
+      // (unmuted) truth from the DB rather than leaving stale local state.
+      set((state) => {
+        const next = new Set(state.mutedTripIds);
+        if (muted) next.add(tripId); else next.delete(tripId);
+        return { mutedTripIds: next };
+      });
+      if (!isMissingSupabaseEnv) {
+        try {
+          await setTripMutedRow(tripId, userId, muted);
+        } catch (e) {
+          setError(e);
+        }
+      }
+    },
+
     deleteTrip: async (id) => {
       const deletedTrip = get().trips.find((t) => t.id === id);
       const userId = get().userId;
@@ -1125,6 +1176,12 @@ export const useTripStore = create<TripStore>()(
     addMember: async (name, linkedUserId) => {
       const activeTripId = get().activeTripId;
       if (!activeTripId) return;
+
+      const activeTrip = get().trips.find((t) => t.id === activeTripId);
+      if (activeTrip?.closed) {
+        set({ storageError: 'This trip is closed. Reopen it to add members.' });
+        return;
+      }
 
       if (isMissingSupabaseEnv) {
         const memberId = newId();
@@ -1405,6 +1462,10 @@ export const useTripStore = create<TripStore>()(
       const activeTrip = get().trips.find((t) => t.id === tripId);
       if (activeTrip?.frozen && !get().isSuperadmin) {
         set({ storageError: 'This trip is currently locked / frozen by Superadmin. Modifications are disabled.' });
+        return;
+      }
+      if (activeTrip?.closed) {
+        set({ storageError: 'This trip is closed. Reopen it to add expenses.' });
         return;
       }
 

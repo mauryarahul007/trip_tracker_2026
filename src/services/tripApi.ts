@@ -23,6 +23,7 @@ function mapTrip(row: TripRow, memberIds: string[], groupIds: string[]): Trip {
     groupIds,
     archived: row.archived,
     frozen: row.frozen,
+    closed: row.closed,
     stops: Array.isArray(row.stops) ? (row.stops as unknown as TripStop[]) : undefined,
     createdAt: new Date(row.created_at).getTime(),
     updatedAt: new Date(row.updated_at).getTime(),
@@ -247,6 +248,30 @@ export async function freezeTripRow(id: string, frozen: boolean): Promise<void> 
     .update({ frozen, updated_at: new Date().toISOString() })
     .eq('id', id);
   if (error) throw error;
+}
+
+export async function closeTripRow(id: string, closed: boolean): Promise<void> {
+  const { error } = await supabase
+    .from('trips')
+    .update({ closed, updated_at: new Date().toISOString() })
+    .eq('id', id);
+  if (error) throw error;
+}
+
+export async function fetchMutedTripIds(userId: string): Promise<string[]> {
+  const { data, error } = await supabase.from('trip_mutes').select('trip_id').eq('user_id', userId);
+  if (error) throw error;
+  return (data || []).map((row) => row.trip_id);
+}
+
+export async function setTripMutedRow(tripId: string, userId: string, muted: boolean): Promise<void> {
+  if (muted) {
+    const { error } = await supabase.from('trip_mutes').upsert({ trip_id: tripId, user_id: userId });
+    if (error) throw error;
+  } else {
+    const { error } = await supabase.from('trip_mutes').delete().eq('trip_id', tripId).eq('user_id', userId);
+    if (error) throw error;
+  }
 }
 
 export async function deleteTripRow(id: string): Promise<void> {

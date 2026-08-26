@@ -9,11 +9,11 @@
 
 | Metric | Count |
 | :--- | :--- |
-| **Total Tracked** | **10** |
+| **Total Tracked** | **13** |
 | **💡 Requested** | **1** |
 | **📋 Planned** | **0** |
 | **🟡 In Progress** | **0** |
-| **✅ Shipped** | **9** |
+| **✅ Shipped** | **12** |
 | **⚪ Won't Do** | **0** |
 
 ---
@@ -51,6 +51,9 @@ Test
 | **FEAT-008** | Swipe-to-edit/delete on Members tab + tap-to-refresh on trip dashboard | `ui-ux` | `claude-cli` | `claude-cli` | Commit pending push. Files: src/components/MembersGroupsTab.tsx, src/App.tsx, src/index.css (.icon-spin). |
 | **FEAT-009** | Per-tab code splitting for Superadmin Ops Deck | `performance` | `claude-cli` | `claude-cli` | Commit pending push. File: src/components/admin/AdminPortalLayout.tsx. |
 | **FEAT-010** | Async image decoding across all avatars/receipts + accessibility label audit | `performance` | `claude-cli` | `claude-cli` | Commit pending push. Files: src/components/ExpenseForm.tsx, ExpenseReviewModal.tsx, ExpenseList.tsx, MembersGroupsTab.tsx, TripsListScreen.tsx, TripStack.tsx, UpiPaymentModal.tsx. |
+| **FEAT-011** | Close/Reopen Trip lock | `ui-ux` | `claude-cli` | `claude-cli` | Migration 0069 applied to remote. Files: supabase/migrations/0069_add_trip_closed.sql, src/store/tripStore.ts, src/services/tripApi.ts, src/types/index.ts, src/types/database.ts, src/components/SettingsView.tsx. |
+| **FEAT-012** | Remind All settlement nudge | `ui-ux` | `claude-cli` | `claude-cli` | File: src/components/BalancesSettlements.tsx. |
+| **FEAT-013** | Per-trip push notification mute | `ui-ux` | `claude-cli` | `claude-cli` | Migration 0070 applied to remote, send-push Edge Function redeployed. Files: supabase/migrations/0070_add_trip_mutes.sql, supabase/functions/send-push/index.ts, src/store/tripStore.ts, src/services/tripApi.ts, src/types/database.ts, src/components/SettingsView.tsx. |
 
 ---
 
