@@ -76,5 +76,37 @@
     "shippedAt": "2026-08-24T14:30:09.207Z",
     "shippedBy": "antigravity",
     "shippedNote": "Shipped"
+  },
+  {
+    "id": "FEAT-006",
+    "title": "Lightweight UI/UX polish pass: view transitions, content-visibility, reduced-motion, skeleton loader",
+    "description": "Batch of low-cost, resource-light UI/UX enhancements: native View Transitions API crossfade on tab switches (App.tsx, feature-detected with no-op fallback), content-visibility:auto on member and expense list rows to skip offscreen paint work, a global prefers-reduced-motion catch-all covering animations not already individually guarded, a missing :active press state on the base .secondary-btn, and a reusable CSS-only shimmer .skeleton utility replacing the blank white flash in RequireAuth while the session loads. No new dependencies, no JS animation libraries.",
+    "category": "performance",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-08-26T12:55:36.918Z",
+    "updatedAt": "2026-08-26T12:55:36.918Z",
+    "shippedAt": "2026-08-26T12:55:36.918Z",
+    "shippedBy": "claude-cli",
+    "shippedNote": "Commit pending push. Files: src/App.tsx, src/index.css, src/components/RequireAuth.tsx, src/components/ExpenseList.tsx."
+  },
+  {
+    "id": "FEAT-007",
+    "title": "Pending invite badge on Members tab",
+    "description": "Members tab now shows a 'Pending' badge next to a member's name when they haven't claimed their placeholder via the /join trip-code flow yet (member.linkedUserId is unset). No badge once they've joined -- the existing avatar-photo-vs-initials swap already signals that, this only flags the exception. No schema change, purely a render-layer check on the existing linkedUserId field.",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-08-26T12:55:45.085Z",
+    "updatedAt": "2026-08-26T12:55:45.085Z",
+    "shippedAt": "2026-08-26T12:55:45.085Z",
+    "shippedBy": "claude-cli",
+    "shippedNote": "Commit pending push. File: src/components/MembersGroupsTab.tsx, src/index.css (.member-badge-pending)."
   }
 ]

@@ -844,6 +844,11 @@ export function MembersGroupsTab({
                         {currentUserId && member.linkedUserId === currentUserId && (
                           <span className="member-badge member-badge-you">You</span>
                         )}
+                        {!member.linkedUserId && (
+                          <span className="member-badge member-badge-pending" title="Invited, hasn't joined via the trip code yet">
+                            Pending
+                          </span>
+                        )}
                       </div>
                     </div>
                     <div className="lt-bottom-row" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', marginTop: '6px', flexWrap: 'wrap' }}>

@@ -9,11 +9,11 @@
 
 | Metric | Count |
 | :--- | :--- |
-| **Total Tracked** | **5** |
+| **Total Tracked** | **7** |
 | **💡 Requested** | **1** |
 | **📋 Planned** | **0** |
 | **🟡 In Progress** | **0** |
-| **✅ Shipped** | **4** |
+| **✅ Shipped** | **6** |
 | **⚪ Won't Do** | **0** |
 
 ---
@@ -46,6 +46,8 @@ Test
 | **FEAT-003** | Refresh button on Features tab | `admin` | `claude-cli` | `claude-cli` | reloadFleetData now returns a Promise so the button can await + spinner instead of requiring a full page reload. Commit 228c582. |
 | **FEAT-004** | Flight-themed 3D aerodynamic jetliner coachmark tooltip for expense logging | `ui-ux` | `antigravity` | `antigravity` | Shipped |
 | **FEAT-005** | Numberless Spotify-Wrapped-Style Story Infographic Card | `ui-ux` | `antigravity` | `antigravity` | Shipped |
+| **FEAT-006** | Lightweight UI/UX polish pass: view transitions, content-visibility, reduced-motion, skeleton loader | `performance` | `claude-cli` | `claude-cli` | Commit pending push. Files: src/App.tsx, src/index.css, src/components/RequireAuth.tsx, src/components/ExpenseList.tsx. |
+| **FEAT-007** | Pending invite badge on Members tab | `ui-ux` | `claude-cli` | `claude-cli` | Commit pending push. File: src/components/MembersGroupsTab.tsx, src/index.css (.member-badge-pending). |
 
 ---
 

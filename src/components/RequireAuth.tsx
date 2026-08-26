@@ -15,7 +15,12 @@ export function RequireAuth({ children }: { children: ReactNode }) {
   }, [initialize]);
 
   if (!initialized) {
-    return null; // brief flash guard while the session is being read
+    // CSS-only shimmer instead of a blank screen while the session loads.
+    return (
+      <div className="auth-splash">
+        <div className="skeleton" />
+      </div>
+    );
   }
 
   if (!session && !isSuperadmin) {

@@ -119,6 +119,20 @@
   --transition-smooth: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* Global reduced-motion fallback -- collapses every animation/transition
+   duration in one shot instead of hunting down each @keyframes block
+   individually. Existing per-component `animation: none` overrides above
+   still apply on top of this; this just catches whatever isn't already
+   covered. Costs nothing when the user has no motion preference set. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 /* "Night flight" — a deliberately designed dark variant, not an inverted
    filter. Deep navy ink, dimmed brass, settle/stamp kept legible against
    the dark canvas. Applies when the OS prefers dark and the user hasn't
@@ -419,6 +433,10 @@ button, [role="button"], input, select, a {
 .secondary-btn:hover {
   background: var(--bg-surface-hover);
   border-color: rgba(28, 42, 56, 0.22);
+}
+
+.secondary-btn:active {
+  transform: scale(0.96);
 }
 
 /* Form Controls & Vertical Rhythm */
@@ -2434,6 +2452,10 @@ input:checked + .toggle-slider:before {
   display: flex;
   align-items: center;
   gap: 12px;
+  /* Skips layout/paint work for rows scrolled out of view -- cheaper than
+     a virtualized-list library for the roster sizes this app deals with. */
+  content-visibility: auto;
+  contain-intrinsic-size: 0 64px;
 }
 .luggage-tag .lt-hardware {
   display: flex;
@@ -2527,6 +2549,15 @@ input:checked + .toggle-slider:before {
   background: rgba(255, 255, 255, 0.07);
   color: var(--text-secondary);
   border: 1px solid rgba(255, 255, 255, 0.12);
+}
+.member-badge-pending {
+  background: rgba(217, 119, 6, 0.1);
+  color: var(--color-warning);
+  border: 1px solid rgba(217, 119, 6, 0.3);
+}
+[data-theme="dark"] .member-badge-pending {
+  background: rgba(217, 119, 6, 0.16);
+  border: 1px solid rgba(217, 119, 6, 0.35);
 }
 .luggage-tag .lt-body {
   flex: 1;
@@ -3273,6 +3304,42 @@ input:checked + .toggle-slider:before {
 
 @media (prefers-reduced-motion: reduce) {
   .fade-in { animation: none; }
+}
+
+/* Reusable CSS-only shimmer skeleton -- no JS, GPU-cheap (background-position
+   only). Use for any blank-flash-while-loading spot instead of a blank
+   screen or a spinner. */
+.skeleton {
+  border-radius: var(--border-radius-sm);
+  background: linear-gradient(
+    100deg,
+    var(--bg-surface-hover) 30%,
+    var(--border-color) 45%,
+    var(--bg-surface-hover) 60%
+  );
+  background-size: 200% 100%;
+  animation: skeletonShimmer 1.4s ease-in-out infinite;
+}
+@keyframes skeletonShimmer {
+  from { background-position: 150% 0; }
+  to { background-position: -50% 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .skeleton { animation: none; opacity: 0.6; }
+}
+
+.auth-splash {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: var(--bg-page);
+}
+.auth-splash .skeleton {
+  width: 120px;
+  height: 36px;
 }
 
 /* Global spin keyframe — was previously redefined per spinner instance (or,

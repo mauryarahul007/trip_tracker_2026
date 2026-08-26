@@ -1,4 +1,5 @@
-import React, { useEffect, useRef, useState, useMemo, lazy, Suspense } from 'react';
+import React, { useEffect, useRef, useState, useMemo, useCallback, lazy, Suspense } from 'react';
+import { flushSync } from 'react-dom';
 import { useTripStore, getTripNotificationRecipients } from './store/tripStore';
 import { useAuthStore } from './store/authStore';
 import { calculateSettlements } from './utils/settlement';
@@ -117,7 +118,21 @@ export default function App() {
   const toggleBlindMode = usePrivacyStore((s) => s.toggleBlindMode);
 
   // Navigation tabs: 'expenses' | 'members' | 'analytics' | 'settings'
-  const [activeTab, setActiveTab] = useState<'expenses' | 'members' | 'analytics' | 'settings'>('expenses');
+  const [activeTab, setActiveTabRaw] = useState<'expenses' | 'members' | 'analytics' | 'settings'>('expenses');
+
+  // Native crossfade between tabs where supported -- browser-compositor
+  // only, no animation library. flushSync forces the DOM update to happen
+  // synchronously inside the transition callback, which is what the API
+  // needs to capture old/new snapshots correctly with React's batching.
+  const setActiveTab = useCallback((tab: 'expenses' | 'members' | 'analytics' | 'settings') => {
+    if (typeof document.startViewTransition !== 'function') {
+      setActiveTabRaw(tab);
+      return;
+    }
+    document.startViewTransition(() => {
+      flushSync(() => setActiveTabRaw(tab));
+    });
+  }, []);
 
   // Bumped to tell MembersGroupsTab to open its add-member popup -- the
   // nav bar's FAB triggers this instead of add-expense while on the

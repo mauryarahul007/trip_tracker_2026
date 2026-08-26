@@ -614,6 +614,10 @@ export function ExpenseList({
                         opacity: isPending ? 0.35 : 1,
                         pointerEvents: isPending ? 'none' : undefined,
                         transition: 'opacity 0.25s ease',
+                        // Skip layout/paint for off-screen rows -- cheap
+                        // substitute for list virtualization at this scale.
+                        contentVisibility: 'auto',
+                        containIntrinsicSize: '0 84px',
                       }}
                     >
                       <ConditionalSwipe
