@@ -836,6 +836,7 @@ export function ExpenseForm({
                 <img
                   src={receiptImage}
                   alt="Receipt preview"
+                  decoding="async"
                   style={{ width: '64px', height: '64px', objectFit: 'cover', borderRadius: 'var(--border-radius-sm)', border: '1px solid var(--border-color)' }}
                 />
                 <button type="button" className="secondary-btn" style={{ padding: '6px 12px', fontSize: '12px' }} onClick={() => setReceiptImage('')}>
@@ -1136,7 +1137,7 @@ export function ExpenseForm({
               boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
             }}
           >
-            <img src={receiptImage} alt="Receipt preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            <img src={receiptImage} alt="Receipt preview" decoding="async" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           </div>
         ) : (
           <label

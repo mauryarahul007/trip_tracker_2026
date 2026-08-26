@@ -192,6 +192,7 @@ export function UpiPaymentModal({
                 <img
                   src={getQrCodeUrl(generateUpiUri(upiDetails), 200)}
                   alt="UPI QR Code"
+                  decoding="async"
                   style={{ width: '180px', height: '180px', display: 'inline-block' }}
                 />
                 <p style={{ fontSize: '11px', color: '#1c2a38', fontWeight: 600, margin: '6px 0 0' }}>

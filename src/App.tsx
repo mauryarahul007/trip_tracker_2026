@@ -46,7 +46,7 @@ import { FitHeading } from './components/FitHeading';
 import { usePrivacyStore } from './store/privacyStore';
 import { triggerHaptic } from './utils/haptics';
 import { useEscapeKey } from './utils/useEscapeKey';
-import { IconCalendar, IconChevronLeft, IconChevronDown, IconChevronUp, IconPlus, IconEye, IconEyeOff, IconShield, IconSearch } from './components/Icons';
+import { IconCalendar, IconChevronLeft, IconChevronDown, IconChevronUp, IconPlus, IconEye, IconEyeOff, IconShield, IconSearch, IconRefresh } from './components/Icons';
 import { formatDateRange } from './utils/dateRange';
 import { useScrollLock } from './utils/useScrollLock';
 import { useHistoryBack } from './utils/useHistoryBack';
@@ -347,6 +347,18 @@ export default function App() {
   const sessionExpired = useTripStore((s) => s.sessionExpired);
   const lastBackendSyncedAt = useTripStore((s) => s.lastBackendSyncedAt);
   const processQueue = useTripStore((s) => s.processQueue);
+  const refreshActiveTripExpenses = useTripStore((s) => s.refreshActiveTripExpenses);
+  const [isManualRefreshing, setIsManualRefreshing] = useState(false);
+  const handleManualRefresh = async () => {
+    if (isManualRefreshing) return;
+    triggerHaptic('light');
+    setIsManualRefreshing(true);
+    try {
+      await refreshActiveTripExpenses();
+    } finally {
+      setIsManualRefreshing(false);
+    }
+  };
 
   // Load state on mount
   useEffect(() => {
@@ -1620,6 +1632,17 @@ export default function App() {
                 >
                   <IconSearch size={15} className="icon-sm" />
                   <span className="cmd-k-hint" aria-hidden="true">{IS_MAC ? '⌘K' : 'Ctrl K'}</span>
+                </button>
+                <button
+                  type="button"
+                  className="secondary-btn"
+                  style={{ padding: '7px 8px', color: 'var(--header-fg)', borderColor: 'var(--header-fg-border)', background: 'var(--header-fg-soft-bg)' }}
+                  onClick={handleManualRefresh}
+                  disabled={isManualRefreshing}
+                  title="Refresh expenses"
+                  aria-label={isManualRefreshing ? 'Refreshing expenses' : 'Refresh expenses'}
+                >
+                  <IconRefresh size={15} className={isManualRefreshing ? 'icon-sm icon-spin' : 'icon-sm'} />
                 </button>
                 <NotificationsBellButton />
                 <button

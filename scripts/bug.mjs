@@ -250,7 +250,13 @@ function parseArgs(args) {
 /**
  * Sync BUGS.md file from bugs array
  */
-export function syncMarkdown(bugs = readBugs()) {
+/**
+ * Pure markdown render -- no disk I/O. Exists separately from syncMarkdown
+ * so tests can assert on the rendered string without writing over the
+ * real repo-root BUGS.md (syncMarkdown's write target isn't parameterized,
+ * so calling it directly with mock data clobbered the real file).
+ */
+export function renderMarkdown(bugs = readBugs()) {
   const total = bugs.length;
   const openBugs = bugs.filter(b => b.status === 'open');
   const inProgressBugs = bugs.filter(b => b.status === 'in_progress');
@@ -366,6 +372,11 @@ npm run bug:sync
 \`\`\`
 `;
 
+  return md;
+}
+
+export function syncMarkdown(bugs = readBugs()) {
+  const md = renderMarkdown(bugs);
   fs.writeFileSync(BUGS_MD_FILE, md, 'utf-8');
   return md;
 }

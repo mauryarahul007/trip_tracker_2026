@@ -3349,6 +3349,13 @@ input:checked + .toggle-slider:before {
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
+.icon-spin {
+  display: inline-block;
+  animation: spin 1s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .icon-spin { animation: none; }
+}
 
 /* App-boot loader — a rotating customs/postmark ring standing in for the
    generic spinner, matching the passport-stamp language used elsewhere

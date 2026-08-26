@@ -7,6 +7,7 @@ import { initial } from '../utils/initials';
 import { avatarColorForName } from '../utils/avatarColor';
 import { fetchPreviousTripMembers, searchRemoteMemberSuggestions } from '../services/tripApi';
 import { IconCheck, IconEdit, IconTrash, IconMembers, IconTag } from './Icons';
+import { SwipeableRow } from './SwipeableRow';
 import { useHistoryBack } from '../utils/useHistoryBack';
 import { usePrivacyStore, formatMaskedAmount } from '../store/privacyStore';
 import { buildAutoGroupName } from '../utils/groupNaming';
@@ -526,6 +527,8 @@ export function MembersGroupsTab({
         <div className="glass-card" style={{ padding: '12px 16px', marginBottom: '16px', border: '1px dashed var(--color-warning)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span style={{ fontSize: '13px' }}>Please add a member before recording expenses.</span>
           <button
+            type="button"
+            aria-label="Dismiss"
             style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '16px', lineHeight: 1 }}
             onClick={dismissMembersRequiredNotice}
           >
@@ -652,6 +655,7 @@ export function MembersGroupsTab({
                           <img
                             src={suggestion.avatarUrl}
                             alt=""
+                            decoding="async"
                             style={{ width: '28px', height: '28px', borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }}
                             referrerPolicy="no-referrer"
                           />
@@ -807,12 +811,13 @@ export function MembersGroupsTab({
                 : owes
                 ? `owes ${formatMaskedAmount(Math.abs(balance), currencySymbol, isBlindMode)}`
                 : 'settled';
-            return (
+            const delCheck = isAdmin ? checkCanDeleteMember(member) : null;
+            const row = (
               <div key={member.id} className={`luggage-tag${owes ? ' lt-owe' : ''}`}>
                 <div className="lt-card">
                   <div className="lt-status" />
                   {member.avatarUrl ? (
-                    <img src={member.avatarUrl} alt="" className="lt-initials" referrerPolicy="no-referrer" loading="lazy" />
+                    <img src={member.avatarUrl} alt="" className="lt-initials" referrerPolicy="no-referrer" loading="lazy" decoding="async" />
                   ) : (
                     <div className="lt-initials" style={{ background: avatarColorForName(member.name) }}>{initial(member.name)}</div>
                   )}
@@ -903,31 +908,40 @@ export function MembersGroupsTab({
                           >
                             <IconEdit size={14} className="icon-sm" />
                           </button>
-                          {(() => {
-                            const delCheck = checkCanDeleteMember(member);
-                            return (
-                              <button
-                                className="secondary-btn"
-                                style={{
-                                  padding: '6px',
-                                  color: delCheck.allowed ? 'var(--color-danger)' : 'var(--text-muted)',
-                                  borderColor: delCheck.allowed ? 'rgba(184,69,46,0.2)' : 'var(--border-color)',
-                                  opacity: delCheck.allowed ? 1 : 0.5,
-                                }}
-                                aria-label="Delete member"
-                                title={delCheck.allowed ? 'Delete member' : delCheck.reason}
-                                onClick={() => onDeleteMember(member)}
-                              >
-                                <IconTrash size={14} className="icon-sm" />
-                              </button>
-                            );
-                          })()}
+                          <button
+                            className="secondary-btn"
+                            style={{
+                              padding: '6px',
+                              color: delCheck?.allowed ? 'var(--color-danger)' : 'var(--text-muted)',
+                              borderColor: delCheck?.allowed ? 'rgba(184,69,46,0.2)' : 'var(--border-color)',
+                              opacity: delCheck?.allowed ? 1 : 0.5,
+                            }}
+                            aria-label="Delete member"
+                            title={delCheck?.allowed ? 'Delete member' : delCheck?.reason}
+                            onClick={() => onDeleteMember(member)}
+                          >
+                            <IconTrash size={14} className="icon-sm" />
+                          </button>
                         </div>
                       )}
                     </div>
                   </div>
                 </div>
               </div>
+            );
+            // Swipe is a touch-only supplement to the explicit Edit/Delete
+            // buttons above -- skip wrapping non-admin rows in it entirely
+            // (most viewers), same pattern as ExpenseList's ConditionalSwipe.
+            if (!isAdmin) return row;
+            return (
+              <SwipeableRow
+                key={member.id}
+                plain
+                onEdit={() => handleStartEditMemberLocal(member)}
+                onDelete={delCheck?.allowed ? () => onDeleteMember(member) : undefined}
+              >
+                {row}
+              </SwipeableRow>
             );
           })}
 

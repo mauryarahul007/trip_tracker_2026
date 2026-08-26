@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import type { Category, Trip, Expense, Member } from '../../types';
 import type { AdminUserRow, AuditLogEntry, DevicePlatformCount, NotificationStats } from '../../types/admin';
 import type { BugRecord } from '../../services/bugApi';
@@ -16,15 +16,27 @@ import {
 import { fetchBugs } from '../../services/bugApi';
 import { fetchFeatures, type FeatureRecord } from '../../services/featureApi';
 import { IconChevronRight, IconSearch } from '../Icons';
-import { AdminCommandCenterPage } from './AdminCommandCenterPage';
-import { AdminFlagsPage } from './AdminFlagsPage';
-import { AdminAnalyticsPage } from './AdminAnalyticsPage';
-import { AdminTripsPage } from './AdminTripsPage';
-import { AdminUsersPage } from './AdminUsersPage';
-import { AdminAuditPage } from './AdminAuditPage';
-import { AdminFeaturesPage } from './AdminFeaturesPage';
-import { AdminToolsPage } from './AdminToolsPage';
+// Each admin tab only ever renders one at a time (see the activeTab
+// switches in <main> below) -- lazy per sub-page so opening the Ops Deck
+// to check one tab doesn't also download the other seven's code (~2.9k
+// lines combined) up front.
+const AdminCommandCenterPage = lazy(() => import('./AdminCommandCenterPage').then((m) => ({ default: m.AdminCommandCenterPage })));
+const AdminFlagsPage = lazy(() => import('./AdminFlagsPage').then((m) => ({ default: m.AdminFlagsPage })));
+const AdminAnalyticsPage = lazy(() => import('./AdminAnalyticsPage').then((m) => ({ default: m.AdminAnalyticsPage })));
+const AdminTripsPage = lazy(() => import('./AdminTripsPage').then((m) => ({ default: m.AdminTripsPage })));
+const AdminUsersPage = lazy(() => import('./AdminUsersPage').then((m) => ({ default: m.AdminUsersPage })));
+const AdminAuditPage = lazy(() => import('./AdminAuditPage').then((m) => ({ default: m.AdminAuditPage })));
+const AdminFeaturesPage = lazy(() => import('./AdminFeaturesPage').then((m) => ({ default: m.AdminFeaturesPage })));
+const AdminToolsPage = lazy(() => import('./AdminToolsPage').then((m) => ({ default: m.AdminToolsPage })));
 import './ops-deck.css';
+
+function AdminTabLoadingFallback() {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '60px 0' }}>
+      <span className="icon-spin" style={{ width: 24, height: 24, border: '2px solid var(--border-color)', borderTopColor: 'var(--primary-accent)', borderRadius: '50%' }} />
+    </div>
+  );
+}
 
 interface Props {
   trips: Trip[];
@@ -366,6 +378,7 @@ export function AdminPortalLayout({
         </button>
 
         <main className="ops-panel" ref={panelRef}>
+          <Suspense fallback={<AdminTabLoadingFallback />}>
           {activeTab === 'command' && (
             <AdminCommandCenterPage
               trips={trips}
@@ -436,6 +449,7 @@ export function AdminPortalLayout({
               isRefreshing={isRefreshing}
             />
           )}
+          </Suspense>
         </main>
       </div>
 

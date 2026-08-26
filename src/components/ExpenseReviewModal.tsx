@@ -173,6 +173,7 @@ export function ExpenseReviewModal({ expense, members, categories, trip, canMana
               <img
                 src={receiptUrl}
                 alt="Receipt"
+                decoding="async"
                 style={{ width: '100%', maxHeight: '220px', objectFit: 'contain', borderRadius: 'var(--border-radius-md)', border: '1px solid var(--border-color)', background: 'rgba(15,23,42,0.02)' }}
               />
             </a>
@@ -257,6 +258,7 @@ export function ExpenseReviewModal({ expense, members, categories, trip, canMana
                 <img
                   src={expense.receiptImage || receiptUrl || ''}
                   alt={expense.title}
+                  decoding="async"
                   style={{
                     width: '100%',
                     height: '180px',

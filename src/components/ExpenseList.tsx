@@ -38,6 +38,7 @@ function ExpenseAvatar({ member, size = 22, muted = false }: { member: Member | 
         title={label}
         referrerPolicy="no-referrer"
         loading="lazy"
+        decoding="async"
         width={size}
         height={size}
         style={{ ...commonStyle, objectFit: 'cover' }}

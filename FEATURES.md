@@ -9,11 +9,11 @@
 
 | Metric | Count |
 | :--- | :--- |
-| **Total Tracked** | **7** |
+| **Total Tracked** | **10** |
 | **💡 Requested** | **1** |
 | **📋 Planned** | **0** |
 | **🟡 In Progress** | **0** |
-| **✅ Shipped** | **6** |
+| **✅ Shipped** | **9** |
 | **⚪ Won't Do** | **0** |
 
 ---
@@ -48,6 +48,9 @@ Test
 | **FEAT-005** | Numberless Spotify-Wrapped-Style Story Infographic Card | `ui-ux` | `antigravity` | `antigravity` | Shipped |
 | **FEAT-006** | Lightweight UI/UX polish pass: view transitions, content-visibility, reduced-motion, skeleton loader | `performance` | `claude-cli` | `claude-cli` | Commit pending push. Files: src/App.tsx, src/index.css, src/components/RequireAuth.tsx, src/components/ExpenseList.tsx. |
 | **FEAT-007** | Pending invite badge on Members tab | `ui-ux` | `claude-cli` | `claude-cli` | Commit pending push. File: src/components/MembersGroupsTab.tsx, src/index.css (.member-badge-pending). |
+| **FEAT-008** | Swipe-to-edit/delete on Members tab + tap-to-refresh on trip dashboard | `ui-ux` | `claude-cli` | `claude-cli` | Commit pending push. Files: src/components/MembersGroupsTab.tsx, src/App.tsx, src/index.css (.icon-spin). |
+| **FEAT-009** | Per-tab code splitting for Superadmin Ops Deck | `performance` | `claude-cli` | `claude-cli` | Commit pending push. File: src/components/admin/AdminPortalLayout.tsx. |
+| **FEAT-010** | Async image decoding across all avatars/receipts + accessibility label audit | `performance` | `claude-cli` | `claude-cli` | Commit pending push. Files: src/components/ExpenseForm.tsx, ExpenseReviewModal.tsx, ExpenseList.tsx, MembersGroupsTab.tsx, TripsListScreen.tsx, TripStack.tsx, UpiPaymentModal.tsx. |
 
 ---
 

@@ -4,7 +4,7 @@ import {
   VALID_SEVERITIES,
   VALID_STATUSES,
   VALID_CATEGORIES,
-  syncMarkdown
+  renderMarkdown
 } from './bug.mjs';
 
 describe('Bug CLI Engine', () => {
@@ -36,7 +36,7 @@ describe('Bug CLI Engine', () => {
     expect(getNextBugId(bugs)).toBe('BUG-010');
   });
 
-  it('renders markdown table and metrics correctly in syncMarkdown', () => {
+  it('renders markdown table and metrics correctly in renderMarkdown', () => {
     const mockBugs = [
       {
         id: 'BUG-101',
@@ -65,7 +65,7 @@ describe('Bug CLI Engine', () => {
       }
     ];
 
-    const md = syncMarkdown(mockBugs);
+    const md = renderMarkdown(mockBugs);
     expect(md).toContain('# 🐞 Trip Tracker Bug Tracker');
     expect(md).toContain('| **Total Tracked** | **2** |');
     expect(md).toContain('| **🟢 Open** | **1** |');

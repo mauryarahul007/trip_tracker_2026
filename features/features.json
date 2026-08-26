@@ -108,5 +108,53 @@
     "shippedAt": "2026-08-26T12:55:45.085Z",
     "shippedBy": "claude-cli",
     "shippedNote": "Commit pending push. File: src/components/MembersGroupsTab.tsx, src/index.css (.member-badge-pending)."
+  },
+  {
+    "id": "FEAT-008",
+    "title": "Swipe-to-edit/delete on Members tab + tap-to-refresh on trip dashboard",
+    "description": "Members tab admin rows now support swipe-left-delete / swipe-right-edit via the same SwipeableRow component ExpenseList already uses, gated by the existing checkCanDeleteMember permission check; non-admin viewers get no extra listener overhead. Trip dashboard header gained a tap-to-refresh icon (calls the existing refreshActiveTripExpenses) instead of a pull gesture, since the dashboard already has two conflict-avoiding pull-down gesture systems (sheet-collapse drag, filter-chip pull-reveal) that a third gesture would fight.",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-08-26T13:11:57.081Z",
+    "updatedAt": "2026-08-26T13:11:57.081Z",
+    "shippedAt": "2026-08-26T13:11:57.081Z",
+    "shippedBy": "claude-cli",
+    "shippedNote": "Commit pending push. Files: src/components/MembersGroupsTab.tsx, src/App.tsx, src/index.css (.icon-spin)."
+  },
+  {
+    "id": "FEAT-009",
+    "title": "Per-tab code splitting for Superadmin Ops Deck",
+    "description": "The 8 Ops Deck admin sub-pages (Command Center, Flags, Analytics, Trips, Users, Audit, Features, Tools -- ~2.9k lines combined) were all bundled eagerly the moment any admin tab opened, even though only one renders at a time. Converted each to React.lazy + Suspense so opening one tab only downloads that tab's code.",
+    "category": "performance",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-08-26T13:12:05.461Z",
+    "updatedAt": "2026-08-26T13:12:05.461Z",
+    "shippedAt": "2026-08-26T13:12:05.461Z",
+    "shippedBy": "claude-cli",
+    "shippedNote": "Commit pending push. File: src/components/admin/AdminPortalLayout.tsx."
+  },
+  {
+    "id": "FEAT-010",
+    "title": "Async image decoding across all avatars/receipts + accessibility label audit",
+    "description": "Added decoding=\"async\" to all 11 <img> tags app-wide (member avatars, receipt photos in ExpenseForm/ExpenseReviewModal, UPI QR code) so image decode work stays off the main thread during scroll/interaction. Audited Members tab for missing aria-labels on icon-only controls -- found and fixed the members-required-notice dismiss button, which had only a bare '&times;' glyph and no accessible name.",
+    "category": "performance",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-08-26T13:12:13.494Z",
+    "updatedAt": "2026-08-26T13:12:13.494Z",
+    "shippedAt": "2026-08-26T13:12:13.494Z",
+    "shippedBy": "claude-cli",
+    "shippedNote": "Commit pending push. Files: src/components/ExpenseForm.tsx, ExpenseReviewModal.tsx, ExpenseList.tsx, MembersGroupsTab.tsx, TripsListScreen.tsx, TripStack.tsx, UpiPaymentModal.tsx."
   }
 ]
