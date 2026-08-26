@@ -633,7 +633,9 @@ export const useTripStore = create<TripStore>()(
         });
 
         void get().loadFeatureFlags();
-        void fetchMutedTripIds(userId).then((ids) => set({ mutedTripIds: new Set(ids) })).catch(() => {});
+        if (userId) {
+          void fetchMutedTripIds(userId).then((ids) => set({ mutedTripIds: new Set(ids) })).catch(() => {});
+        }
 
         if (get().syncQueue.length > 0) {
           get().processQueue();
