@@ -570,9 +570,10 @@ ${bug.diagnostics?.stackTrace ? `#### Stack Trace\n\`\`\`text\n${bug.diagnostics
         <div className="ops-kanban">
           {(
             [
-              { status: 'open' as const, label: 'Open', color: 'var(--amber)' },
-              { status: 'in_progress' as const, label: 'Working', color: 'var(--cyan)' },
-              { status: 'resolved' as const, label: 'Settled', color: 'var(--safe)' },
+              { status: 'open' as const, label: 'Backlog (Open)', color: 'var(--amber)' },
+              { status: 'in_progress' as const, label: 'Working (In Progress)', color: 'var(--cyan)' },
+              { status: 'resolved' as const, label: 'Settled (Resolved)', color: 'var(--safe)' },
+              { status: 'wont_fix' as const, label: "Won't Fix", color: 'var(--text-tertiary)' },
             ]
           ).map((col) => {
             const colBugs = sortedBugs.filter((b) => b.status === col.status);

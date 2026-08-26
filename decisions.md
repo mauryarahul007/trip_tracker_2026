@@ -1004,6 +1004,22 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - Background image (`travel-bg.jpg`) increases bundle size by ~840KB. However, this is heavily mitigated because the login screen is a standalone route/code-split view, and a premium visual first impression is worth the initial load latency.
 
+---
+
+## 57. Material Design 3 Visual Overhaul for Superadmin Dashboard and Bug Ledger
+* **Context:**
+  - The previous visual theme of the Superadmin portal used highly saturated sky-blue and deep navy shades that felt high-contrast and fatiguing during administrative operations. Additionally, the Bug Ledger lacked a fourth column for "Won't Fix" tickets in its Kanban board view, and stack trace previews lacked proper technical syntax highlighting/developer-oriented dark styling.
+* **Decision:**
+  - Re-designed and overhauled color tokens and layout structures in `ops-deck.css` following Material Design 3 guidelines:
+    - Light Mode uses a calming lavender-gray canvas (`#F4F5FA`), pure white card components with soft shadows (`--card-shadow`), and a solid Deep Royal Navy (`#1D2A68`) navigation rail.
+    - Dark Mode uses a deep obsidian-charcoal canvas (`#12141A`) with slate-navy cards (`#1A1E29`) and soft glowing telemetry area fills.
+  - Upgraded the `SuperAdminBugTracker` Kanban board to a full 4-column issue pipeline, introducing the *Won't Fix* status column next to Open, Working, and Settled statuses.
+  - Refactored the error diagnostic trace box (`.ops-bug-stack`) into a gorgeous developer-styled dark obsidian console block with high-contrast stack logging.
+  - Implemented GPU-accelerated spring curves (`cubic-bezier(0.16, 1, 0.3, 1)`) on `.ops-card` and `.ops-kanban-card` elements for smooth hover rises and clicks.
+* **Trade-offs Accepted:**
+  - In light mode, the navigation rail uses dark background elements while the content page uses light elements. This hybrid contrast creates high spatial clarity and visual anchors, at the expense of pure monochromatic uniformity.
+
+
 
 
 
