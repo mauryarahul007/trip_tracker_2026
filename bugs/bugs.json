@@ -2163,5 +2163,31 @@
     "resolvedBy": "claude-cli",
     "resolvedAt": "2026-08-26T12:45:26.645Z",
     "resolutionNote": "src/components/MembersGroupsTab.tsx: added an 'Add another after this one' checkbox to the New Member form (hidden in edit mode). Unchecked (default) keeps existing close-after-add behavior; checked keeps the popup open, clears the fields, and refocuses the name input so the next member can be typed immediately."
+  },
+  {
+    "id": "BUG-072",
+    "title": "Members tab had duplicate add-member entry point and redundant Edit/Delete buttons after swipe actions shipped",
+    "description": "After swipe-to-edit/delete landed on Members tab rows (reusing SwipeableRow), two redundant controls remained: (1) an in-page '+ Add Member' header button duplicating the bottom-nav FAB, giving two entry points for the same action, and (2) explicit Edit/Delete icon buttons on every row now duplicating the swipe gesture on touch devices, cluttering the row.",
+    "severity": "low",
+    "category": "ui-ux",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "One entry point for adding a member (the bottom-nav FAB). On touch, edit/delete happen via swipe; no redundant icon buttons cluttering the row.",
+    "actualBehavior": "MembersGroupsTab.tsx rendered both a '+ Add Member' button in the section header and per-row Edit/Delete icon buttons unconditionally, even after swipe actions covered the same actions on touch.",
+    "diagnostics": {},
+    "createdAt": "2026-08-26T13:21:45.962Z",
+    "updatedAt": "2026-08-26T13:21:59.057Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-08-26T13:21:59.056Z",
+    "resolutionNote": "MembersGroupsTab.tsx: removed the header '+ Add Member' button (FAB is now the sole entry point). Wrapped the per-row Edit/Delete buttons in .member-row-desktop-actions, hidden on touch via the same (hover: hover) and (pointer: fine) CSS pattern as .cmd-k-hint -- kept visible for mouse/trackpad users who have no swipe gesture."
   }
 ]

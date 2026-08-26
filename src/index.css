@@ -430,6 +430,18 @@ button, [role="button"], input, select, a {
   .cmd-k-hint { display: inline-block; }
 }
 
+/* Member row Edit/Delete buttons -- hidden on touch (swipe-left-delete /
+   swipe-right-edit via SwipeableRow covers it there), shown for mouse/
+   trackpad users who have no swipe gesture available. */
+.member-row-desktop-actions {
+  display: none !important;
+}
+@media (hover: hover) and (pointer: fine) {
+  .member-row-desktop-actions {
+    display: flex !important;
+  }
+}
+
 .secondary-btn:hover {
   background: var(--bg-surface-hover);
   border-color: rgba(28, 42, 56, 0.22);

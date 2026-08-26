@@ -9,10 +9,10 @@
 
 | Metric | Count | Status Notes |
 | :--- | :--- | :--- |
-| **Total Tracked** | **71** | All recorded bugs across sessions |
+| **Total Tracked** | **72** | All recorded bugs across sessions |
 | **🟢 Open** | **0** | No critical blockers, 0 High |
 | **🟡 In Progress** | **0** | Active investigation or fix |
-| **✅ Resolved** | **66** | Verified & closed |
+| **✅ Resolved** | **67** | Verified & closed |
 | **⚪ Won't Fix** | **5** | Expected behavior / deferred |
 
 ---
@@ -97,6 +97,7 @@
 | **BUG-069** | Members-tab FAB opened Add Expense for non-admin members instead of blocking or adding a member | `ui-ux` | `medium` | `mauryarahul007@gmail.com` | `claude-cli` | NavTabs.tsx handleFabClick now branches on isMembersTab first: admins get onAddMember(), non-admins get a warning haptic plus a 2.2s "Only trip admins can add members" hint bubble, and Add Expense is never called from this tab. FAB also keeps mode-member styling on the Members tab regardless of admin status. Commit 48bf7e6. |
 | **BUG-070** | Geotag Expenses toggle in Settings also flipped superadmin master flag, hiding the row | `ui-ux` | `medium` | `claude-cli` | `claude-cli` | src/store/tripStore.ts setEnableGeotagging now only sets the trip-level enableGeotagging value, never touches featureFlags. Master flag stays under exclusive control of setFeatureFlag (superadmin). |
 | **BUG-071** | No way to add multiple trip members in one go without re-tapping the FAB each time | `ui-ux` | `low` | `claude-cli` | `claude-cli` | src/components/MembersGroupsTab.tsx: added an 'Add another after this one' checkbox to the New Member form (hidden in edit mode). Unchecked (default) keeps existing close-after-add behavior; checked keeps the popup open, clears the fields, and refocuses the name input so the next member can be typed immediately. |
+| **BUG-072** | Members tab had duplicate add-member entry point and redundant Edit/Delete buttons after swipe actions shipped | `ui-ux` | `low` | `claude-cli` | `claude-cli` | MembersGroupsTab.tsx: removed the header '+ Add Member' button (FAB is now the sole entry point). Wrapped the per-row Edit/Delete buttons in .member-row-desktop-actions, hidden on touch via the same (hover: hover) and (pointer: fine) CSS pattern as .cmd-k-hint -- kept visible for mouse/trackpad users who have no swipe gesture. |
 
 ---
 

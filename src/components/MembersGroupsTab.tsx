@@ -536,26 +536,10 @@ export function MembersGroupsTab({
           </button>
         </div>
       )}
-      {/* 1. Add Members Section */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+      {/* 1. Add Members Section -- the bottom-nav FAB is the only entry
+          point for adding a member, so no in-page trigger here. */}
+      <div style={{ marginBottom: '16px' }}>
         <h3 style={{ fontSize: '18px' }}>Trip Members</h3>
-        {isAdmin && (
-          <button
-            type="button"
-            className="secondary-btn"
-            style={{ padding: '6px 14px', fontSize: '13px' }}
-            onClick={() => {
-              setEditingMember(null);
-              setNewMemberName('');
-              setSelectedLinkedUserId(null);
-              setMemberFormError('');
-              setAddAnother(false);
-              setShowAddForm(true);
-            }}
-          >
-            + Add Member
-          </button>
-        )}
       </div>
 
       {isAdmin && showAddForm && createPortal(
@@ -899,29 +883,36 @@ export function MembersGroupsTab({
                               </button>
                             ) : null
                           )}
-                          <button
-                            className="secondary-btn"
-                            style={{ padding: '6px' }}
-                            aria-label="Edit member"
-                            title="Edit member"
-                            onClick={() => handleStartEditMemberLocal(member)}
-                          >
-                            <IconEdit size={14} className="icon-sm" />
-                          </button>
-                          <button
-                            className="secondary-btn"
-                            style={{
-                              padding: '6px',
-                              color: delCheck?.allowed ? 'var(--color-danger)' : 'var(--text-muted)',
-                              borderColor: delCheck?.allowed ? 'rgba(184,69,46,0.2)' : 'var(--border-color)',
-                              opacity: delCheck?.allowed ? 1 : 0.5,
-                            }}
-                            aria-label="Delete member"
-                            title={delCheck?.allowed ? 'Delete member' : delCheck?.reason}
-                            onClick={() => onDeleteMember(member)}
-                          >
-                            <IconTrash size={14} className="icon-sm" />
-                          </button>
+                          {/* Swipe (below) is the edit/delete entry point on
+                              touch. Mouse/trackpad users have no swipe gesture,
+                              so these stay as their fallback -- hidden on touch
+                              via CSS, same (hover: hover) and (pointer: fine)
+                              pattern as .cmd-k-hint. */}
+                          <div className="member-row-desktop-actions" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <button
+                              className="secondary-btn"
+                              style={{ padding: '6px' }}
+                              aria-label="Edit member"
+                              title="Edit member"
+                              onClick={() => handleStartEditMemberLocal(member)}
+                            >
+                              <IconEdit size={14} className="icon-sm" />
+                            </button>
+                            <button
+                              className="secondary-btn"
+                              style={{
+                                padding: '6px',
+                                color: delCheck?.allowed ? 'var(--color-danger)' : 'var(--text-muted)',
+                                borderColor: delCheck?.allowed ? 'rgba(184,69,46,0.2)' : 'var(--border-color)',
+                                opacity: delCheck?.allowed ? 1 : 0.5,
+                              }}
+                              aria-label="Delete member"
+                              title={delCheck?.allowed ? 'Delete member' : delCheck?.reason}
+                              onClick={() => onDeleteMember(member)}
+                            >
+                              <IconTrash size={14} className="icon-sm" />
+                            </button>
+                          </div>
                         </div>
                       )}
                     </div>
@@ -929,9 +920,9 @@ export function MembersGroupsTab({
                 </div>
               </div>
             );
-            // Swipe is a touch-only supplement to the explicit Edit/Delete
-            // buttons above -- skip wrapping non-admin rows in it entirely
-            // (most viewers), same pattern as ExpenseList's ConditionalSwipe.
+            // Swipe-left-delete / swipe-right-edit (via SwipeableRow below)
+            // is the entry point on touch; non-admin rows skip the wrapper
+            // entirely, same pattern as ExpenseList's ConditionalSwipe.
             if (!isAdmin) return row;
             return (
               <SwipeableRow
