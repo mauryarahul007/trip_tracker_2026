@@ -2111,5 +2111,57 @@
     "resolvedAt": "2026-08-25T15:00:00+00:00",
     "resolvedBy": "claude-cli",
     "resolutionNote": "NavTabs.tsx handleFabClick now branches on isMembersTab first: admins get onAddMember(), non-admins get a warning haptic plus a 2.2s \"Only trip admins can add members\" hint bubble, and Add Expense is never called from this tab. FAB also keeps mode-member styling on the Members tab regardless of admin status. Commit 48bf7e6."
+  },
+  {
+    "id": "BUG-070",
+    "title": "Geotag Expenses toggle in Settings also flipped superadmin master flag, hiding the row",
+    "description": "Toggling the Geotag Expenses switch in Settings called setEnableGeotagging, which wrote the value into both the trip-level enableGeotagging setting AND featureFlags.enableGeotagging (the superadmin-controlled master flag). Turning it off in Settings therefore also disabled the global feature flag, so the row's own visibility check (isSuperadmin || isFeatureEnabled('enableGeotagging')) went false for non-admin users and the option disappeared from Settings entirely.",
+    "severity": "medium",
+    "category": "ui-ux",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "The Geotag Expenses row's visibility in Settings is controlled only by the superadmin master flag. Switching the user's own toggle on/off never affects whether the row is shown; superadmins always see it.",
+    "actualBehavior": "setEnableGeotagging in src/store/tripStore.ts wrote to both enableGeotagging and featureFlags.enableGeotagging, so a non-admin switching it off lost the row (and the ability to switch it back on) until an admin re-enabled the master flag.",
+    "diagnostics": {},
+    "createdAt": "2026-08-26T12:44:58.145Z",
+    "updatedAt": "2026-08-26T12:45:04.414Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-08-26T12:45:04.413Z",
+    "resolutionNote": "src/store/tripStore.ts setEnableGeotagging now only sets the trip-level enableGeotagging value, never touches featureFlags. Master flag stays under exclusive control of setFeatureFlag (superadmin)."
+  },
+  {
+    "id": "BUG-071",
+    "title": "No way to add multiple trip members in one go without re-tapping the FAB each time",
+    "description": "After the New Member popup correctly started closing on a successful add (commit cfee4b0), adding several members in a row required tapping the + FAB, filling the form, submitting, then repeating the whole open/fill/submit cycle for every single member -- no in-popup way to keep adding without leaving and reopening it.",
+    "severity": "low",
+    "category": "ui-ux",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "User can add several new members back-to-back from the same open popup instead of reopening it via the FAB for every name.",
+    "actualBehavior": "New Member form always closed after a successful add (or, before cfee4b0, never closed at all) -- there was no option to keep it open for a rapid follow-up add.",
+    "diagnostics": {},
+    "createdAt": "2026-08-26T12:45:19.369Z",
+    "updatedAt": "2026-08-26T12:45:26.646Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-08-26T12:45:26.645Z",
+    "resolutionNote": "src/components/MembersGroupsTab.tsx: added an 'Add another after this one' checkbox to the New Member form (hidden in edit mode). Unchecked (default) keeps existing close-after-add behavior; checked keeps the popup open, clears the fields, and refocuses the name input so the next member can be typed immediately."
   }
 ]

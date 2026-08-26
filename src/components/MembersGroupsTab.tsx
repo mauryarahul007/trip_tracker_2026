@@ -72,6 +72,7 @@ export function MembersGroupsTab({
   // form -- the members list is what people open this tab to see, an
   // empty add-form pushing it below the fold every time was backwards.
   const [showAddForm, setShowAddForm] = React.useState(false);
+  const [addAnother, setAddAnother] = React.useState(false);
   const [previousMembers, setPreviousMembers] = React.useState<PreviousMemberSuggestion[]>([]);
   const [isDropdownOpen, setIsDropdownOpen] = React.useState(false);
   const [highlightedIndex, setHighlightedIndex] = React.useState<number>(-1);
@@ -333,6 +334,7 @@ export function MembersGroupsTab({
   // Register member add/edit popup into browser history stack
   useHistoryBack(showAddForm, () => {
     setShowAddForm(false);
+    setAddAnother(false);
     setEditingMember(null);
     setNewMemberName('');
     setSelectedLinkedUserId(null);
@@ -353,6 +355,7 @@ export function MembersGroupsTab({
     setNewMemberName('');
     setSelectedLinkedUserId(null);
     setMemberFormError('');
+    setAddAnother(false);
     setShowAddForm(true);
   }, [addMemberSignal]);
 
@@ -403,7 +406,11 @@ export function MembersGroupsTab({
       setSelectedLinkedUserId(null);
       setEditingMember(null);
       setMemberFormError('');
-      setShowAddForm(false);
+      if (!addAnother) {
+        setShowAddForm(false);
+      } else {
+        memberInputRef.current?.focus();
+      }
     } else if (res.error) {
       setMemberFormError(res.error);
     }
@@ -415,6 +422,7 @@ export function MembersGroupsTab({
     setNewMemberName(member.name);
     setSelectedLinkedUserId(null);
     setMemberFormError('');
+    setAddAnother(false);
     setShowAddForm(true);
   };
 
@@ -424,6 +432,7 @@ export function MembersGroupsTab({
     setSelectedLinkedUserId(null);
     setEditingMember(null);
     setMemberFormError('');
+    setAddAnother(false);
     setShowAddForm(false);
   };
 
@@ -537,6 +546,7 @@ export function MembersGroupsTab({
               setNewMemberName('');
               setSelectedLinkedUserId(null);
               setMemberFormError('');
+              setAddAnother(false);
               setShowAddForm(true);
             }}
           >
@@ -747,6 +757,16 @@ export function MembersGroupsTab({
           </div>
           {memberFormError && (
             <p style={{ color: 'var(--color-danger)', fontSize: '13px', marginTop: '4px', marginBottom: '8px' }}>{memberFormError}</p>
+          )}
+          {!editingMember && (
+            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', marginTop: '4px', cursor: 'pointer', userSelect: 'none' }}>
+              <input
+                type="checkbox"
+                checked={addAnother}
+                onChange={(e) => setAddAnother(e.target.checked)}
+              />
+              Add another after this one
+            </label>
           )}
           <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
             <button

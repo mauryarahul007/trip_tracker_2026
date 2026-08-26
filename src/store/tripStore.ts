@@ -553,11 +553,10 @@ export const useTripStore = create<TripStore>()(
     },
 
     setEnableGeotagging: (enabled: boolean) => {
-      set((s) => ({
+      set({
         enableGeotagging: enabled,
-        featureFlags: { ...s.featureFlags, enableGeotagging: enabled },
         lastModifiedAt: Date.now(),
-      }));
+      });
     },
 
     updateLastBackendSyncedAt: (timestamp: number) => {
