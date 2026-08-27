@@ -278,6 +278,7 @@ export function TripJourneyMap({ expenses, categories, baseCurrency }: Props) {
   return (
     <div
       className="card"
+      data-no-tab-swipe="true"
       style={{
         position: 'relative',
         padding: '0',
@@ -311,7 +312,7 @@ export function TripJourneyMap({ expenses, categories, baseCurrency }: Props) {
           <span className="badge" style={{ background: 'rgba(23,182,166,0.12)', color: '#17B6A6', fontWeight: 600 }}>
             {geotaggedExpenses.length} stops
           </span>
-          <span className="privacy-blur">• {currencySymbol} {totalGeotaggedSpend.toFixed(0)}</span>
+          <span>• {currencySymbol} {totalGeotaggedSpend.toFixed(0)}</span>
         </div>
       </div>
 

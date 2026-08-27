@@ -23,10 +23,9 @@ const TripMapHero = lazy(() =>
 import { TripContentSheet } from './components/TripContentSheet';
 import { ExpenseForm } from './components/ExpenseForm';
 import { ExpenseList } from './components/ExpenseList';
-import { TransactionsPreview } from './components/TransactionsPreview';
 import { BalancesSettlements } from './components/BalancesSettlements';
+import { ExpenseFilterDrawer } from './components/ExpenseFilterDrawer';
 import { MembersGroupsTab } from './components/MembersGroupsTab';
-import { AnalyticsTab } from './components/AnalyticsTab';
 import { SettingsTab } from './components/SettingsTab';
 import { ExpenseReviewModal } from './components/ExpenseReviewModal';
 import { UndoToasts } from './components/UndoToasts';
@@ -43,13 +42,14 @@ import { NotificationsPanel } from './components/NotificationsPanel';
 import { NotificationsBellButton } from './components/NotificationsBellButton';
 import { InAppNotificationBanner } from './components/InAppNotificationBanner';
 import { FitHeading } from './components/FitHeading';
-import { usePrivacyStore } from './store/privacyStore';
 import { triggerHaptic } from './utils/haptics';
 import { useEscapeKey } from './utils/useEscapeKey';
-import { IconCalendar, IconChevronLeft, IconChevronDown, IconChevronUp, IconPlus, IconEye, IconEyeOff, IconShield, IconSearch, IconRefresh } from './components/Icons';
+import { IconCalendar, IconChevronLeft, IconChevronDown, IconChevronUp, IconShield, IconSearch } from './components/Icons';
 import { formatDateRange } from './utils/dateRange';
 import { useScrollLock } from './utils/useScrollLock';
 import { useHistoryBack } from './utils/useHistoryBack';
+import { getCatColor } from './utils/categoryColor';
+import { useTabSwipe } from './utils/useTabSwipe';
 import { CommandPalette } from './components/CommandPalette';
 import { TripWrappedModal } from './components/TripWrappedModal';
 import { AchievementBadgeModal } from './components/AchievementBadgeModal';
@@ -114,17 +114,18 @@ export default function App() {
   const signOut = useAuthStore((s) => s.signOut);
   const signInSuperadmin = useAuthStore((s) => s.signInSuperadmin);
 
-  const isBlindMode = usePrivacyStore((s) => s.isBlindMode);
-  const toggleBlindMode = usePrivacyStore((s) => s.toggleBlindMode);
-
-  // Navigation tabs: 'expenses' | 'members' | 'analytics' | 'settings'
-  const [activeTab, setActiveTabRaw] = useState<'expenses' | 'members' | 'analytics' | 'settings'>('expenses');
+  // Navigation tabs: 'expenses' (Summary) | 'ledger' (day-wise Expenses) | 'members' | 'settings'
+  // Analytics no longer has its own tab -- it moved into Settings.
+  type Tab = 'expenses' | 'ledger' | 'members' | 'settings';
+  const TAB_ORDER = ['expenses', 'ledger', 'members', 'settings'] as const;
+  const [activeTab, setActiveTabRaw] = useState<Tab>('expenses');
+  const mainContentRef = useRef<HTMLElement>(null);
 
   // Native crossfade between tabs where supported -- browser-compositor
   // only, no animation library. flushSync forces the DOM update to happen
   // synchronously inside the transition callback, which is what the API
   // needs to capture old/new snapshots correctly with React's batching.
-  const setActiveTab = useCallback((tab: 'expenses' | 'members' | 'analytics' | 'settings') => {
+  const setActiveTab = useCallback((tab: Tab) => {
     if (typeof document.startViewTransition !== 'function') {
       setActiveTabRaw(tab);
       return;
@@ -133,6 +134,12 @@ export default function App() {
       flushSync(() => setActiveTabRaw(tab));
     });
   }, []);
+
+  // Right-hand-friendly horizontal swipe between the bottom-nav tabs,
+  // WhatsApp-style. Skips gestures that start on a row/map that already
+  // owns horizontal drag (see data-no-tab-swipe in SwipeableRow/TripMapHero/
+  // TripJourneyMap).
+  useTabSwipe(mainContentRef, TAB_ORDER, activeTab, setActiveTab);
 
   // Bumped to tell MembersGroupsTab to open its add-member popup -- the
   // nav bar's FAB triggers this instead of add-expense while on the
@@ -199,7 +206,6 @@ export default function App() {
 
   // Superadmin Bug Tracker full-screen view
   const [showBugTracker, setShowBugTracker] = useState(false);
-  const [showTransactions, setShowTransactions] = useState(false);
 
   useEffect(() => {
     const handleHash = () => {
@@ -272,6 +278,20 @@ export default function App() {
   const [expenseFilterMember, setExpenseFilterMember] = useState('');
   const [expenseFilterDateFrom, setExpenseFilterDateFrom] = useState('');
   const [expenseFilterDateTo, setExpenseFilterDateTo] = useState('');
+  const [expenseFilterAmountMin, setExpenseFilterAmountMin] = useState('');
+  const [expenseFilterAmountMax, setExpenseFilterAmountMax] = useState('');
+  const [expenseFilterRelation, setExpenseFilterRelation] = useState<'' | 'paidByMe' | 'involvesMe'>('');
+  const [expenseFilterLocation, setExpenseFilterLocation] = useState('');
+  // Rendered at the top level (see ExpenseFilterDrawer near the other
+  // full-screen overlays below) rather than inside ExpenseList/TripContentSheet
+  // -- .trip-sheet has overflow:hidden, which clips position:fixed
+  // descendants in-tree, so a full-screen modal nested that deep was
+  // silently cropped to the sheet's own bounds (header/close button gone,
+  // trip hero bleeding through above it). Lifting the state here also means
+  // cross-linking into the ledger can force it closed instead of it
+  // surviving (tab panes stay mounted, just display:none) into a stale
+  // "drawer still open" state on the tab you just navigated to.
+  const [showExpenseFilterDrawer, setShowExpenseFilterDrawer] = useState(false);
 
 
 
@@ -341,7 +361,7 @@ export default function App() {
   }, [isSuperadmin]);
 
   // Lock background scroll when any modal is active
-  useScrollLock(Boolean(showShareTrip || selectedReviewExpense || confirmRequest || showGlobalSettings || showAddExpense));
+  useScrollLock(Boolean(showShareTrip || selectedReviewExpense || confirmRequest || showGlobalSettings || showAddExpense || showExpenseFilterDrawer));
 
   const syncQueue = useTripStore((s) => s.syncQueue);
   const sessionExpired = useTripStore((s) => s.sessionExpired);
@@ -426,6 +446,7 @@ export default function App() {
   // the map zoom out slightly to visually "resize" as more of it is
   // exposed, instead of sitting static underneath the drag.
   const [sheetExpanded, setSheetExpanded] = useState(false);
+  const [sheetFull, setSheetFull] = useState(false);
   // Route-stops chip row starts collapsed -- it's the least essential
   // header row (the map already shows the route), so keeping it closed by
   // default gives the eyebrow date row more breathing room instead of
@@ -471,7 +492,6 @@ export default function App() {
 
   useEffect(() => {
     setIsHeaderScrolled(false);
-    setShowTransactions(false);
   }, [activeTripId, activeTab]);
 
   // .tab-pane's padding-top used to be a fixed guess at the floating
@@ -560,33 +580,11 @@ export default function App() {
     }
     if (!isOnline) return;
     processQueue();
+    void handleManualRefresh();
   };
 
 
   // Search + category/member filters, applied only to the visible expense list
-  const filteredExpenses = useMemo(() => {
-    return activeTripExpenses.filter((e) => {
-      if (expenseSearch.trim() && !e.title.toLowerCase().includes(expenseSearch.trim().toLowerCase())) return false;
-      if (expenseFilterCategory && e.category !== expenseFilterCategory) return false;
-      if (expenseFilterMember && e.paidBy !== expenseFilterMember && !e.splitMemberIds.includes(expenseFilterMember)) return false;
-      if (expenseFilterDateFrom && e.date < expenseFilterDateFrom) return false;
-      if (expenseFilterDateTo && e.date > expenseFilterDateTo) return false;
-      return true;
-    });
-  }, [activeTripExpenses, expenseSearch, expenseFilterCategory, expenseFilterMember, expenseFilterDateFrom, expenseFilterDateTo]);
-
-  const hasActiveExpenseFilters = useMemo(() => {
-    return !!(expenseSearch || expenseFilterCategory || expenseFilterMember || expenseFilterDateFrom || expenseFilterDateTo);
-  }, [expenseSearch, expenseFilterCategory, expenseFilterMember, expenseFilterDateFrom, expenseFilterDateTo]);
-
-  const clearExpenseFilters = () => {
-    setExpenseSearch('');
-    setExpenseFilterCategory('');
-    setExpenseFilterMember('');
-    setExpenseFilterDateFrom('');
-    setExpenseFilterDateTo('');
-  };
-
   // Get active trip members and groups
   const activeTripMembers = useMemo(() => {
     return activeTrip
@@ -627,7 +625,79 @@ export default function App() {
   }, [activeTrip, userId, activeTripMembers]);
   const myMemberId = useMemo(() => activeTripMembers.find((m) => m.linkedUserId === userId)?.id ?? null, [activeTripMembers, userId]);
 
+  const filteredExpenses = useMemo(() => {
+    const min = expenseFilterAmountMin.trim() ? Number(expenseFilterAmountMin) : null;
+    const max = expenseFilterAmountMax.trim() ? Number(expenseFilterAmountMax) : null;
+    return activeTripExpenses.filter((e) => {
+      if (expenseSearch.trim() && !e.title.toLowerCase().includes(expenseSearch.trim().toLowerCase())) return false;
+      if (expenseFilterCategory && e.category !== expenseFilterCategory) return false;
+      if (expenseFilterMember && e.paidBy !== expenseFilterMember && !e.splitMemberIds.includes(expenseFilterMember)) return false;
+      if (expenseFilterDateFrom && e.date < expenseFilterDateFrom) return false;
+      if (expenseFilterDateTo && e.date > expenseFilterDateTo) return false;
+      if (min !== null && !Number.isNaN(min) && e.amount < min) return false;
+      if (max !== null && !Number.isNaN(max) && e.amount > max) return false;
+      if (myMemberId) {
+        if (expenseFilterRelation === 'paidByMe' && e.paidBy !== myMemberId) return false;
+        if (expenseFilterRelation === 'involvesMe' && e.paidBy !== myMemberId && !e.splitMemberIds.includes(myMemberId)) return false;
+      }
+      if (expenseFilterLocation && e.location?.placeName !== expenseFilterLocation) return false;
+      return true;
+    });
+  }, [
+    activeTripExpenses,
+    expenseSearch,
+    expenseFilterCategory,
+    expenseFilterMember,
+    expenseFilterDateFrom,
+    expenseFilterDateTo,
+    expenseFilterAmountMin,
+    expenseFilterAmountMax,
+    expenseFilterRelation,
+    expenseFilterLocation,
+    myMemberId,
+  ]);
 
+  const hasActiveExpenseFilters = useMemo(() => {
+    return !!(
+      expenseSearch ||
+      expenseFilterCategory ||
+      expenseFilterMember ||
+      expenseFilterDateFrom ||
+      expenseFilterDateTo ||
+      expenseFilterAmountMin ||
+      expenseFilterAmountMax ||
+      expenseFilterRelation ||
+      expenseFilterLocation
+    );
+  }, [
+    expenseSearch,
+    expenseFilterCategory,
+    expenseFilterMember,
+    expenseFilterDateFrom,
+    expenseFilterDateTo,
+    expenseFilterAmountMin,
+    expenseFilterAmountMax,
+    expenseFilterRelation,
+    expenseFilterLocation,
+  ]);
+
+  const clearExpenseFilters = () => {
+    setExpenseSearch('');
+    setExpenseFilterCategory('');
+    setExpenseFilterMember('');
+    setExpenseFilterDateFrom('');
+    setExpenseFilterDateTo('');
+    setExpenseFilterAmountMin('');
+    setExpenseFilterAmountMax('');
+    setExpenseFilterRelation('');
+    setExpenseFilterLocation('');
+  };
+
+  const expenseLocations = useMemo(() => {
+    return [...new Set(
+      activeTripExpenses.map((e) => e.location?.placeName).filter((p): p is string => !!p)
+    )];
+  }, [activeTripExpenses]);
 
   // Settlements and Net balances calculation
   const { balances, transfers } = useMemo(() => {
@@ -656,24 +726,6 @@ export default function App() {
     });
     return totals;
   }, [categories, nonSettlementExpenses]);
-
-  const CATEGORY_COLORS: Record<string, string> = {
-    'cat-food': '#6366f1', // Indigo
-    'cat-stay': '#3b82f6', // Blue
-    'cat-travel': '#db2777', // Pink — was cyan, too close to Stay's blue on the wheel
-    'cat-activities': '#10b981', // Emerald
-    'cat-shopping': '#f59e0b', // Amber
-    'cat-misc': '#8b5cf6', // Violet
-  };
-  const getCatColor = (id: string, _idx: number) => {
-    if (CATEGORY_COLORS[id]) return CATEGORY_COLORS[id];
-    let hash = 0;
-    for (let i = 0; i < id.length; i++) {
-      hash = id.charCodeAt(i) + ((hash << 5) - hash);
-    }
-    const hue = Math.abs(hash) % 360;
-    return `hsl(${hue}, 65%, 55%)`;
-  };
 
   const categoryData = useMemo(() => {
     return Object.entries(categoryTotals)
@@ -987,6 +1039,7 @@ export default function App() {
   const handleSaveExpense = async (expenseData: {
     title: string;
     amount: number;
+    currency: string;
     category: string;
     date: string;
     paidBy: string;
@@ -1001,7 +1054,11 @@ export default function App() {
       const expensePayload = {
         title: expenseData.title,
         amount: expenseData.amount,
-        currency: activeTrip?.baseCurrency || 'INR',
+        // Amount arrives already converted to base currency (ExpenseForm's
+        // job); currency here records what the user actually picked so the
+        // Trip Summary page can note "logged in ₹/$/€" instead of every
+        // expense silently claiming the trip's base currency.
+        currency: expenseData.currency || activeTrip?.baseCurrency || 'INR',
         category: expenseData.category,
         date: expenseData.date,
         paidBy: expenseData.paidBy,
@@ -1175,15 +1232,6 @@ export default function App() {
     });
   };
 
-  const handleFilterByMember = (memberId: string) => {
-    setExpenseFilterMember(memberId);
-    setExpenseSearch('');
-    setExpenseFilterCategory('');
-    setExpenseFilterDateFrom('');
-    setExpenseFilterDateTo('');
-    setActiveTab('expenses');
-  };
-
   const handleImport = async (jsonOverride?: string) => {
     // Reentrancy guard: without this, double-tapping (or an upload firing
     // while a paste-triggered restore is still in flight) ran importDatabase
@@ -1264,11 +1312,11 @@ export default function App() {
   useHistoryBack(!!activeTripId && activeTab !== 'expenses', () => setActiveTab('expenses'));
   useHistoryBack(showAddTrip, handleCancelTripForm);
   useHistoryBack(showAddExpense, handleCancelExpenseForm);
+  useHistoryBack(showExpenseFilterDrawer, () => setShowExpenseFilterDrawer(false));
   useHistoryBack(!!selectedReviewExpense, () => setSelectedReviewExpense(null));
   useHistoryBack(showShareTrip, () => setShowShareTrip(false));
   useHistoryBack(showGlobalSettings, () => setShowGlobalSettings(false));
   useHistoryBack(!!confirmRequest, () => setConfirmRequest(null));
-  useHistoryBack(showTransactions, () => setShowTransactions(false));
   useHistoryBack(showCommandPalette, () => setShowCommandPalette(false));
   useHistoryBack(showTripWrapped, () => setShowTripWrapped(false));
 
@@ -1276,11 +1324,11 @@ export default function App() {
   // for the same set of overlay modals (excludes tab/trip navigation).
   useEscapeKey(showAddTrip, handleCancelTripForm);
   useEscapeKey(showAddExpense, handleCancelExpenseForm);
+  useEscapeKey(showExpenseFilterDrawer, () => setShowExpenseFilterDrawer(false));
   useEscapeKey(!!selectedReviewExpense, () => setSelectedReviewExpense(null));
   useEscapeKey(showShareTrip, () => setShowShareTrip(false));
   useEscapeKey(showGlobalSettings, () => setShowGlobalSettings(false));
   useEscapeKey(!!confirmRequest, () => setConfirmRequest(null));
-  useEscapeKey(showTransactions, () => setShowTransactions(false));
   useEscapeKey(showTripWrapped, () => setShowTripWrapped(false));
 
   // Loading view
@@ -1390,7 +1438,7 @@ export default function App() {
   }
 
   return (
-    <div className={`app-container ${isBlindMode ? 'blind-mode-active' : ''}`}>
+    <div className="app-container">
       {/* Superadmin Traveler Preview Top Floating Banner */}
       {isSuperadmin && isTravelerPreview && (
         <div
@@ -1448,63 +1496,6 @@ export default function App() {
             />
           </Suspense>
         </div>
-      ) : showTransactions && activeTrip ? (
-        /* Full-Screen Transactions View -- pushed from the Summary tab's
-           "View all" link, not its own bottom-nav tab. Reuses ExpenseList
-           unchanged (search/filter/edit/delete/review all still live here). */
-        <div className="fade-in" style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, position: 'relative' }}>
-          <header className="app-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px' }}>
-            <FitHeading text="Transactions" className="app-logo" style={{ color: '#FFFFFF' }} maxFontSize={22} minFontSize={14} />
-            <button
-              type="button"
-              className="secondary-btn"
-              style={{ padding: '7px 11px', fontSize: '12px', color: '#FFFFFF', borderColor: 'rgba(255,255,255,0.28)', background: 'rgba(255,255,255,0.1)', flexShrink: 0 }}
-              onClick={() => setShowTransactions(false)}
-            >
-              <IconChevronLeft size={14} className="icon-sm" /> Summary
-            </button>
-          </header>
-          <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '16px 20px 100px' }}>
-            <ExpenseList
-              trip={activeTrip}
-              members={members}
-              categories={categories}
-              activeTripMembers={activeTripMembers}
-              activeTripExpenseCount={activeTripExpenses.length}
-              activeTripExpenses={activeTripExpenses}
-              onReviewAffected={handleReviewAffectedExpenses}
-              filteredExpenses={filteredExpenses}
-              pendingDeleteId={pendingDeleteExpense?.id}
-              hasActiveFilters={hasActiveExpenseFilters}
-              search={expenseSearch}
-              setSearch={setExpenseSearch}
-              filterCategory={expenseFilterCategory}
-              setFilterCategory={setExpenseFilterCategory}
-              filterMember={expenseFilterMember}
-              setFilterMember={setExpenseFilterMember}
-              filterDateFrom={expenseFilterDateFrom}
-              setFilterDateFrom={setExpenseFilterDateFrom}
-              filterDateTo={expenseFilterDateTo}
-              setFilterDateTo={setExpenseFilterDateTo}
-              onClearFilters={clearExpenseFilters}
-              onReview={setSelectedReviewExpense}
-              onEdit={handleStartEditExpense}
-              onDelete={handleDeleteExpense}
-              isAdmin={isAdmin}
-              userId={userId}
-            />
-          </div>
-          <button
-            type="button"
-            className="fab-add-expense"
-            style={{ bottom: 'calc(20px + var(--safe-bottom, 0px))' }}
-            onClick={handleOpenAddExpense}
-            aria-label="Add Expense"
-            title="Add Expense"
-          >
-            <IconPlus size={24} />
-          </button>
-        </div>
       ) : !activeTripId ? (
         /* Screen 1: Trips List */
         <TripsListScreen
@@ -1543,7 +1534,7 @@ export default function App() {
           <Suspense fallback={null}>
             <TripMapHero trip={activeTrip ?? null} sheetExpanded={sheetExpanded} onToneChange={setHeaderTone} />
           </Suspense>
-          <header ref={headerRef} className={`app-header trip-dashboard-header ${isHeaderScrolled ? 'is-scrolled' : ''} ${headerTone === 'dark' ? 'tone-dark' : ''}`} style={{ overflow: 'hidden' }}>
+          <header ref={headerRef} className={`app-header trip-dashboard-header ${isHeaderScrolled ? 'is-scrolled' : ''} ${headerTone === 'dark' ? 'tone-dark' : ''} ${sheetFull ? 'header-hidden' : ''}`} style={{ overflow: 'hidden' }}>
             <div className="app-header-top" style={{ position: 'relative', zIndex: 1 }}>
               <div className="app-title-group">
                 <span className="app-eyebrow">
@@ -1607,24 +1598,6 @@ export default function App() {
                 <button
                   type="button"
                   className="secondary-btn"
-                  style={{
-                    padding: '7px 8px',
-                    color: isBlindMode ? '#17B6A6' : 'var(--header-fg)',
-                    borderColor: isBlindMode ? '#17B6A6' : 'var(--header-fg-border)',
-                    background: isBlindMode ? 'rgba(23,182,166,0.18)' : 'var(--header-fg-soft-bg)'
-                  }}
-                  onClick={() => {
-                    triggerHaptic('light');
-                    toggleBlindMode();
-                  }}
-                  aria-label={isBlindMode ? 'Disable Blind Mode' : 'Enable Blind Mode (Hide amounts)'}
-                  title={isBlindMode ? 'Disable Blind Mode (Show amounts)' : 'Enable Blind Mode (Mask sensitive amounts)'}
-                >
-                  {isBlindMode ? <IconEyeOff size={15} className="icon-sm" /> : <IconEye size={15} className="icon-sm" />}
-                </button>
-                <button
-                  type="button"
-                  className="secondary-btn"
                   style={{ padding: '7px 8px', display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--header-fg)', borderColor: 'var(--header-fg-border)', background: 'var(--header-fg-soft-bg)' }}
                   onClick={() => setShowCommandPalette(true)}
                   title="Search & Quick Actions (Cmd+K)"
@@ -1632,17 +1605,6 @@ export default function App() {
                 >
                   <IconSearch size={15} className="icon-sm" />
                   <span className="cmd-k-hint" aria-hidden="true">{IS_MAC ? '⌘K' : 'Ctrl K'}</span>
-                </button>
-                <button
-                  type="button"
-                  className="secondary-btn"
-                  style={{ padding: '7px 8px', color: 'var(--header-fg)', borderColor: 'var(--header-fg-border)', background: 'var(--header-fg-soft-bg)' }}
-                  onClick={handleManualRefresh}
-                  disabled={isManualRefreshing}
-                  title="Refresh expenses"
-                  aria-label={isManualRefreshing ? 'Refreshing expenses' : 'Refresh expenses'}
-                >
-                  <IconRefresh size={15} className={isManualRefreshing ? 'icon-sm icon-spin' : 'icon-sm'} />
                 </button>
                 <NotificationsBellButton />
                 <button
@@ -1747,8 +1709,8 @@ export default function App() {
             )}
           </header>
 
-          <TripContentSheet onExpandedChange={setSheetExpanded}>
-          <main className="app-main">
+          <TripContentSheet onExpandedChange={setSheetExpanded} onFullChange={setSheetFull}>
+          <main className="app-main" ref={mainContentRef}>
             {/* View Switching Tab Content */}
             <div className="tab-pane" style={{ display: activeTab === 'expenses' ? 'block' : 'none' }}>
               <div className="fade-in">
@@ -1761,20 +1723,18 @@ export default function App() {
                     activeTripExpenses={activeTripExpenses}
                     topCategoryName={categoryData[0]?.name}
                     topCategoryPercentage={categoryData[0]?.percentage}
-                    onMemberClick={handleFilterByMember}
                     onSettle={handleSettle}
                     isAdmin={isAdmin}
                     myMemberId={myMemberId}
                     members={members}
                     onOpenSquadBadges={() => setShowAchievements(true)}
+                    onMemberClick={(memberId) => {
+                      setExpenseFilterMember(memberId);
+                      setShowExpenseFilterDrawer(false);
+                      setActiveTab('ledger');
+                    }}
                   />
                 )}
-
-                <TransactionsPreview
-                  trip={activeTrip}
-                  expenses={activeTripExpenses}
-                  onViewAll={() => setShowTransactions(true)}
-                />
               </div>
             </div>
 
@@ -1805,21 +1765,46 @@ export default function App() {
               </div>
             </div>
 
-            <div className="tab-pane" style={{ display: activeTab === 'analytics' ? 'block' : 'none' }}>
-              <div className="fade-in">
-              <AnalyticsTab
+            <div className="tab-pane" style={{ display: activeTab === 'ledger' ? 'block' : 'none' }}>
+              <div className="fade-in" style={{ paddingBottom: '100px' }}>
+              <ExpenseList
                 trip={activeTrip}
+                members={members}
+                categories={categories}
+                activeTripMembers={activeTripMembers}
+                activeTripExpenseCount={activeTripExpenses.length}
+                activeTripExpenses={activeTripExpenses}
+                onReviewAffected={handleReviewAffectedExpenses}
+                filteredExpenses={filteredExpenses}
+                pendingDeleteId={pendingDeleteExpense?.id}
+                hasActiveFilters={hasActiveExpenseFilters}
                 totalSpent={totalSpent}
                 averageCost={averageCost}
-                biggestSpender={biggestSpender}
-                hasExpenses={nonSettlementExpenses.length > 0}
-                categoryData={categoryData}
+                topCategoryName={categoryData[0]?.name}
+                topCategoryPercentage={categoryData[0]?.percentage}
                 getCatColor={getCatColor}
-                memberSpentList={memberSpentList}
-                dailySpendData={dailySpendData}
-                expenses={activeTripExpenses}
-                categories={categories}
-                onOpenSquadBadges={() => setShowAchievements(true)}
+                search={expenseSearch}
+                setSearch={setExpenseSearch}
+                filterCategory={expenseFilterCategory}
+                setFilterCategory={setExpenseFilterCategory}
+                filterMember={expenseFilterMember}
+                setFilterMember={setExpenseFilterMember}
+                filterDateFrom={expenseFilterDateFrom}
+                setFilterDateFrom={setExpenseFilterDateFrom}
+                filterDateTo={expenseFilterDateTo}
+                setFilterDateTo={setExpenseFilterDateTo}
+                filterAmountMin={expenseFilterAmountMin}
+                filterAmountMax={expenseFilterAmountMax}
+                filterRelation={expenseFilterRelation}
+                filterLocation={expenseFilterLocation}
+                myMemberId={myMemberId}
+                onClearFilters={clearExpenseFilters}
+                onOpenFilters={() => setShowExpenseFilterDrawer(true)}
+                onReview={setSelectedReviewExpense}
+                onEdit={handleStartEditExpense}
+                onDelete={handleDeleteExpense}
+                isAdmin={isAdmin}
+                userId={userId}
               />
               </div>
             </div>
@@ -1856,6 +1841,30 @@ export default function App() {
                 onRequestConfirm={setConfirmRequest}
                 onOpenShareTrip={() => setShowShareTrip(true)}
                 onOpenTripWrapped={() => setShowTripWrapped(true)}
+                analytics={{
+                  trip: activeTrip,
+                  totalSpent,
+                  averageCost,
+                  biggestSpender,
+                  hasExpenses: nonSettlementExpenses.length > 0,
+                  categoryData,
+                  getCatColor,
+                  memberSpentList,
+                  dailySpendData,
+                  expenses: activeTripExpenses,
+                  categories,
+                  onOpenSquadBadges: () => setShowAchievements(true),
+                  onCategoryClick: (catId) => {
+                    setExpenseFilterCategory(catId);
+                    setShowExpenseFilterDrawer(false);
+                    setActiveTab('ledger');
+                  },
+                  onMemberClick: (memberId) => {
+                    setExpenseFilterMember(memberId);
+                    setShowExpenseFilterDrawer(false);
+                    setActiveTab('ledger');
+                  },
+                }}
               />
               </div>
             </div>
@@ -1872,6 +1881,34 @@ export default function App() {
             tripDestination={activeTrip?.destination}
           />
         </div>
+      )}
+
+      {showExpenseFilterDrawer && (
+        <ExpenseFilterDrawer
+          categories={categories}
+          members={activeTripMembers}
+          resultCount={filteredExpenses.length}
+          filterCategory={expenseFilterCategory}
+          setFilterCategory={setExpenseFilterCategory}
+          filterMember={expenseFilterMember}
+          setFilterMember={setExpenseFilterMember}
+          filterDateFrom={expenseFilterDateFrom}
+          setFilterDateFrom={setExpenseFilterDateFrom}
+          filterDateTo={expenseFilterDateTo}
+          setFilterDateTo={setExpenseFilterDateTo}
+          filterAmountMin={expenseFilterAmountMin}
+          setFilterAmountMin={setExpenseFilterAmountMin}
+          filterAmountMax={expenseFilterAmountMax}
+          setFilterAmountMax={setExpenseFilterAmountMax}
+          filterRelation={expenseFilterRelation}
+          setFilterRelation={setExpenseFilterRelation}
+          filterLocation={expenseFilterLocation}
+          setFilterLocation={setExpenseFilterLocation}
+          locations={expenseLocations}
+          showRelationFilters={!!myMemberId}
+          onClearFilters={clearExpenseFilters}
+          onClose={() => setShowExpenseFilterDrawer(false)}
+        />
       )}
 
       {showAddExpense && (

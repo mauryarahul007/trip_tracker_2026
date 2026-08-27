@@ -9,10 +9,10 @@
 
 | Metric | Count | Status Notes |
 | :--- | :--- | :--- |
-| **Total Tracked** | **72** | All recorded bugs across sessions |
+| **Total Tracked** | **80** | All recorded bugs across sessions |
 | **🟢 Open** | **0** | No critical blockers, 0 High |
 | **🟡 In Progress** | **0** | Active investigation or fix |
-| **✅ Resolved** | **67** | Verified & closed |
+| **✅ Resolved** | **75** | Verified & closed |
 | **⚪ Won't Fix** | **5** | Expected behavior / deferred |
 
 ---
@@ -98,6 +98,14 @@
 | **BUG-070** | Geotag Expenses toggle in Settings also flipped superadmin master flag, hiding the row | `ui-ux` | `medium` | `claude-cli` | `claude-cli` | src/store/tripStore.ts setEnableGeotagging now only sets the trip-level enableGeotagging value, never touches featureFlags. Master flag stays under exclusive control of setFeatureFlag (superadmin). |
 | **BUG-071** | No way to add multiple trip members in one go without re-tapping the FAB each time | `ui-ux` | `low` | `claude-cli` | `claude-cli` | src/components/MembersGroupsTab.tsx: added an 'Add another after this one' checkbox to the New Member form (hidden in edit mode). Unchecked (default) keeps existing close-after-add behavior; checked keeps the popup open, clears the fields, and refocuses the name input so the next member can be typed immediately. |
 | **BUG-072** | Members tab had duplicate add-member entry point and redundant Edit/Delete buttons after swipe actions shipped | `ui-ux` | `low` | `claude-cli` | `claude-cli` | MembersGroupsTab.tsx: removed the header '+ Add Member' button (FAB is now the sole entry point). Wrapped the per-row Edit/Delete buttons in .member-row-desktop-actions, hidden on touch via the same (hover: hover) and (pointer: fine) CSS pattern as .cmd-k-hint -- kept visible for mouse/trackpad users who have no swipe gesture. |
+| **BUG-073** | Production build broken: nullable userId passed to fetchMutedTripIds | `general` | `high` | `claude-cli` | `claude-cli` | tripStore.ts: wrapped the fetchMutedTripIds call in an if (userId) guard, skipping the mute-ids fetch when there's no signed-in user instead of passing a possibly-null value. Commit da7c912. |
+| **BUG-090** | Per-member feature-flag overrides showed duplicate names and never actually applied | `general` | `high` | `claude-cli` | `claude-cli` | AdminFlagsPage.tsx: dedup member list by linkedUserId and key the per-member override picker/writes by linkedUserId (matching the server's auth.uid() check) instead of the trip-row member.id. |
+| **BUG-091** | Advanced expense filters were hidden behind an undiscoverable gesture with no back navigation | `navigation` | `medium` | `claude-cli` | `claude-cli` | Replaced the pull-reveal gesture with an explicit Filters button opening a visible full-screen drawer (ExpenseFilterDrawer.tsx), wired to useHistoryBack/useEscapeKey so back/Esc closes the drawer and lands back on Expenses. |
+| **BUG-092** | Filter drawer header/close button clipped, cropped to the bottom sheet's bounds | `ui-ux` | `medium` | `claude-cli` | `claude-cli` | Lifted the filter drawer's render + open/close state from ExpenseList up to App.tsx, rendering it as a sibling of ExpenseForm/ExpenseReviewModal outside TripContentSheet entirely, matching the pattern those unaffected modals already used. |
+| **BUG-093** | Cross-linking from Analytics into the ledger could land on a stale open filter drawer | `navigation` | `medium` | `claude-cli` | `claude-cli` | Filter-drawer open state moved from ExpenseList to App.tsx (same lift as BUG-092); every cross-link handler now explicitly closes it before switching tabs. |
+| **BUG-094** | Expense currency picker was discarded at save, silently corrupting cross-currency totals | `splits-math` | `high` | `claude-cli` | `claude-cli` | ExpenseForm.tsx now always converts to base currency at save time (not gated on the button click) and passes the actually-selected currency through; App.tsx's handleSaveExpense uses that instead of hardcoding the trip's base currency. |
+| **BUG-095** | Blind Mode's privacy-blur left every amount illegible/smudged-looking | `ui-ux` | `medium` | `claude-cli` | `claude-cli` | Removed Blind Mode entirely per product decision: deleted privacyStore.ts, the header eye-icon toggle, every formatMaskedAmount/.privacy-blur usage across 8 files, replaced with a plain formatAmount() in utils/currency.ts. |
+| **BUG-096** | Redundant refresh icon duplicated the 'Synced' pill's tap-to-sync action | `ui-ux` | `low` | `claude-cli` | `claude-cli` | Removed the standalone refresh icon button; merged its refreshActiveTripExpenses() pull into handleSyncClick() so the 'Synced' pill now does both push (processQueue) and pull in one tap. |
 
 ---
 

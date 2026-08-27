@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import type { Trip, Member } from '../types';
 import type { Transfer } from '../utils/settlement';
 import { IconCheckCircle, IconCatTravel, IconTrophy, IconEdit, IconCopy } from './Icons';
-import { formatMaskedAmount, usePrivacyStore } from '../store/privacyStore';
+import { formatAmount } from '../utils/currency';
 import { triggerHaptic } from '../utils/haptics';
 import { getDestinationWeather } from '../services/weatherService';
 import type { WeatherData } from '../services/weatherService';
@@ -37,7 +37,6 @@ export function BoardingPassHeroCard({
   currentMember,
   onOpenSquadBadges,
 }: BoardingPassHeroCardProps) {
-  const isBlindMode = usePrivacyStore((s) => s.isBlindMode);
   const [isFlipped, setIsFlipped] = useState(false);
   const [copied, setCopied] = useState(false);
   const [weather, setWeather] = useState<WeatherData | null>(null);
@@ -161,10 +160,10 @@ export function BoardingPassHeroCard({
           <div className="bp-body">
             <div className="bp-who">{isFullySettled ? 'Outstanding' : 'Outstanding to settle'}</div>
             <div
-              className="bp-amount privacy-blur"
+              className="bp-amount"
               style={{ color: isFullySettled ? 'var(--color-success)' : 'var(--color-danger)' }}
             >
-              {formatMaskedAmount(totalOutstanding, currencySymbol, isBlindMode)}
+              {formatAmount(totalOutstanding, currencySymbol)}
             </div>
             <div className="bp-sub">
               {isFullySettled

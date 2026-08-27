@@ -22,6 +22,18 @@ export function formatDateRange(start: string, end: string): string {
   return `${sDay} ${sMonth} – ${eDay} ${eMonth}`;
 }
 
+// Which day of the trip a date falls on ("Day 1" = tripStartDate), the way
+// travelers actually remember their spending rather than by raw calendar
+// date. Returns null when the expense predates the trip or the dates don't
+// parse, so callers can fall back to a plain date label.
+export function tripDayNumber(tripStartDate: string, date: string): number | null {
+  const start = new Date(`${tripStartDate}T00:00:00`);
+  const d = new Date(`${date}T00:00:00`);
+  if (Number.isNaN(start.getTime()) || Number.isNaN(d.getTime())) return null;
+  const dayNum = Math.round((d.getTime() - start.getTime()) / 86400000) + 1;
+  return dayNum >= 1 ? dayNum : null;
+}
+
 // Two-line postmark text for the trip-list stamp corner, e.g. { top: '12–18', bottom: 'DEC' }
 // or { top: 'DEC', bottom: '– JAN' } when the trip spans a month boundary.
 export function formatTripStamp(start: string, end: string): { top: string; bottom: string } {

@@ -2,9 +2,8 @@ import { useEffect, useState } from 'react';
 import type { Trip, Expense, Category } from '../types';
 import { CategoryIcon } from './CategoryIcon';
 import { IconAnalytics, IconTrophy } from './Icons';
-import { getCurrencySymbol } from '../utils/currency';
+import { getCurrencySymbol, formatAmount } from '../utils/currency';
 import { TripJourneyMap } from './TripJourneyMap';
-import { usePrivacyStore, formatMaskedAmount } from '../store/privacyStore';
 
 type CategoryDatum = { id: string; name: string; icon: string; amount: number; percentage: number };
 type MemberSpend = { id: string; name: string; amount: number; percentage: number };
@@ -23,7 +22,17 @@ type Props = {
   expenses?: Expense[];
   categories?: Category[];
   onOpenSquadBadges?: () => void;
+  // Cross-linking: tapping a category slice/legend row or a member's bar
+  // routes to the ledger pre-filtered instead of duplicating a transaction
+  // list on this page.
+  onCategoryClick?: (categoryId: string) => void;
+  onMemberClick?: (memberId: string) => void;
 };
+
+// Reused by SettingsView so the Analytics section embedded there takes the
+// same bundle of computed values App.tsx already builds, instead of a
+// second, drifting copy of this shape.
+export type AnalyticsTabProps = Props;
 
 export function AnalyticsTab({
   trip,
@@ -38,10 +47,12 @@ export function AnalyticsTab({
   expenses = [],
   categories = [],
   onOpenSquadBadges,
+  onCategoryClick,
+  onMemberClick,
 }: Props) {
   const currencySymbol = getCurrencySymbol(trip?.baseCurrency || '');
-  const isBlindMode = usePrivacyStore((s) => s.isBlindMode);
   const topCategory = categoryData[0];
+  const loggedCurrencies = [...new Set(expenses.map((e) => e.currency).filter(Boolean))];
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
   const [chartFilled, setChartFilled] = useState(false);
 
@@ -107,14 +118,19 @@ export function AnalyticsTab({
       <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: '12px', marginBottom: '20px' }}>
         <div className="glass-card" style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
           <span style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Total Spent</span>
-          <strong className="money privacy-blur" style={{ fontSize: '19px', color: 'var(--primary-accent)' }}>
-            {formatMaskedAmount(totalSpent, currencySymbol, isBlindMode)}
+          <strong className="money" style={{ fontSize: '19px', color: 'var(--primary-accent)' }}>
+            {formatAmount(totalSpent, currencySymbol)}
           </strong>
+          {loggedCurrencies.length > 1 && (
+            <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>
+              converted from {loggedCurrencies.join(', ')}
+            </span>
+          )}
         </div>
         <div className="glass-card" style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
           <span style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Per-Head Cost</span>
-          <strong className="money privacy-blur" style={{ fontSize: '19px', color: 'var(--text-primary)' }}>
-            {formatMaskedAmount(averageCost, currencySymbol, isBlindMode)}
+          <strong className="money" style={{ fontSize: '19px', color: 'var(--text-primary)' }}>
+            {formatAmount(averageCost, currencySymbol)}
           </strong>
         </div>
         <div className="glass-card" style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
@@ -182,7 +198,11 @@ export function AnalyticsTab({
                           strokeDasharray={strokeDash}
                           strokeDashoffset={strokeOffset}
                           transform="rotate(-90 70 70)"
-                          style={{ transition: 'stroke-dasharray 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), stroke-dashoffset 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)' }}
+                          onClick={onCategoryClick ? () => onCategoryClick(d.id) : undefined}
+                          style={{
+                            cursor: onCategoryClick ? 'pointer' : undefined,
+                            transition: 'stroke-dasharray 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), stroke-dashoffset 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                          }}
                         />
                       );
                     });
@@ -202,7 +222,7 @@ export function AnalyticsTab({
                   pointerEvents: 'none'
                 }}>
                   <span style={{ fontSize: '10px', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: 600 }}>Total</span>
-                  <span className="privacy-blur" style={{ fontSize: '15px', fontWeight: '800', color: 'var(--text-primary)' }}>
+                  <span style={{ fontSize: '15px', fontWeight: '800', color: 'var(--text-primary)' }}>
                     {currencySymbol}
                     {totalSpent > 1000 ? `${(totalSpent / 1000).toFixed(1)}k` : totalSpent.toFixed(0)}
                   </span>
@@ -212,7 +232,11 @@ export function AnalyticsTab({
               {/* Legends */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1, minWidth: '150px' }}>
                 {categoryData.map((d, idx) => (
-                  <div key={d.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '13px' }}>
+                  <div
+                    key={d.id}
+                    onClick={onCategoryClick ? () => onCategoryClick(d.id) : undefined}
+                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '13px', cursor: onCategoryClick ? 'pointer' : undefined }}
+                  >
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                       <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: getCatColor(d.id, idx), flexShrink: 0 }} />
                       <span style={{ color: 'var(--primary-accent)', display: 'flex' }}><CategoryIcon categoryId={d.id} fallbackEmoji={d.icon} size={14} /></span>
@@ -232,11 +256,15 @@ export function AnalyticsTab({
             <h4 style={{ fontSize: '14px', marginBottom: '16px', fontWeight: '600' }}>Spend by Member (Paid sums)</h4>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
               {memberSpentList.map((m) => (
-                <div key={m.id} style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <div
+                  key={m.id}
+                  onClick={onMemberClick ? () => onMemberClick(m.id) : undefined}
+                  style={{ display: 'flex', flexDirection: 'column', gap: '4px', cursor: onMemberClick ? 'pointer' : undefined }}
+                >
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', fontWeight: 500 }}>
                     <span>{m.name}</span>
-                    <span className="privacy-blur">
-                      {formatMaskedAmount(m.amount, currencySymbol, isBlindMode)}{' '}
+                    <span>
+                      {formatAmount(m.amount, currencySymbol)}{' '}
                       <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>({m.percentage.toFixed(0)}%)</span>
                     </span>
                   </div>
@@ -281,8 +309,8 @@ export function AnalyticsTab({
 
                     return (
                       <>
-                        <text className="privacy-blur" x="25" y="44" textAnchor="end" fontSize="9" fill="var(--text-secondary)">{maxAmount.toFixed(0)}</text>
-                        <text className="privacy-blur" x="25" y="104" textAnchor="end" fontSize="9" fill="var(--text-secondary)">{(maxAmount / 2).toFixed(0)}</text>
+                        <text x="25" y="44" textAnchor="end" fontSize="9" fill="var(--text-secondary)">{maxAmount.toFixed(0)}</text>
+                        <text x="25" y="104" textAnchor="end" fontSize="9" fill="var(--text-secondary)">{(maxAmount / 2).toFixed(0)}</text>
                         <text x="25" y="164" textAnchor="end" fontSize="9" fill="var(--text-secondary)">0</text>
 
                         {points.length > 1 && (
@@ -333,7 +361,6 @@ export function AnalyticsTab({
                                     opacity="0.9"
                                   />
                                   <text
-                                    className="privacy-blur"
                                     x={p.x}
                                     y={p.y - 14}
                                     textAnchor="middle"

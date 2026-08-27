@@ -29,6 +29,7 @@ function OverridePanel({
   overrides,
   onSetOverride,
   flagEntries,
+  twoState = false,
 }: {
   title: string;
   subtitle: string;
@@ -39,6 +40,9 @@ function OverridePanel({
   overrides: Record<string, boolean> | undefined;
   onSetOverride: (key: FeatureFlagKey, value: boolean | null) => void;
   flagEntries: [FeatureFlagKey, typeof FEATURE_FLAGS_META[FeatureFlagKey]][];
+  // Per-trip overrides drop the "Default" (inherit-global) state entirely --
+  // every flag reads as an explicit Yes/No for that trip, never "unset".
+  twoState?: boolean;
 }) {
   const activeCount = overrides ? Object.keys(overrides).length : 0;
 
@@ -73,23 +77,25 @@ function OverridePanel({
                     data-active={stateStr === 'off'}
                     onClick={() => onSetOverride(key, false)}
                   >
-                    Force Off
+                    {twoState ? 'No' : 'Force Off'}
                   </button>
-                  <button
-                    type="button"
-                    className="neutral"
-                    data-active={stateStr === 'neutral'}
-                    onClick={() => onSetOverride(key, null)}
-                  >
-                    Default
-                  </button>
+                  {!twoState && (
+                    <button
+                      type="button"
+                      className="neutral"
+                      data-active={stateStr === 'neutral'}
+                      onClick={() => onSetOverride(key, null)}
+                    >
+                      Default
+                    </button>
+                  )}
                   <button
                     type="button"
                     className="on"
                     data-active={stateStr === 'on'}
                     onClick={() => onSetOverride(key, true)}
                   >
-                    Force On
+                    {twoState ? 'Yes' : 'Force On'}
                   </button>
                 </div>
               </div>
@@ -186,7 +192,16 @@ export function AdminFlagsPage({ trips, members }: Props) {
   };
 
   const flagEntries = Object.entries(FEATURE_FLAGS_META) as [FeatureFlagKey, typeof FEATURE_FLAGS_META[FeatureFlagKey]][];
-  const allMembersList = Object.values(members).filter((m) => !m.archived);
+  // members is trip-scoped (one row per person per trip) -- a per-user
+  // override only means anything for a linked account (server resolves
+  // it by auth.uid(), not by any single trip's member row id), so
+  // dedupe by linkedUserId to one entry per real person.
+  const claimedMembersById = new Map<string, Member>();
+  for (const m of Object.values(members)) {
+    if (m.archived || !m.linkedUserId) continue;
+    if (!claimedMembersById.has(m.linkedUserId)) claimedMembersById.set(m.linkedUserId, m);
+  }
+  const claimedMembersList = Array.from(claimedMembersById.values());
   const flagCategories = Array.from(new Set(flagEntries.map(([, meta]) => meta.category)));
   const visibleFlagEntries = flagEntries.filter(([key, meta]) => {
     if (flagCategoryFilter !== 'all' && meta.category !== flagCategoryFilter) return false;
@@ -500,9 +515,13 @@ export function AdminFlagsPage({ trips, members }: Props) {
           title="Per-Trip Override"
           subtitle="Force a flag on or off for one trip, ignoring the global switch."
           emptyLabel="Select a trip above to manage its overrides."
+          twoState
           selectedId={selectedTripId}
           onSelect={setSelectedTripId}
-          options={trips.map((t) => ({ value: t.id, label: `${t.name} (${t.baseCurrency})` }))}
+          options={trips.map((t) => {
+            const hasOverride = Boolean(tripFlagOverrides[t.id] && Object.keys(tripFlagOverrides[t.id]).length);
+            return { value: t.id, label: `${t.name} (${t.baseCurrency}) · Overrides: ${hasOverride ? 'Yes' : 'No'}` };
+          })}
           overrides={tripFlagOverrides[selectedTripId]}
           onSetOverride={(key, value) => {
             setTripFlagOverride(selectedTripId, key, value);
@@ -513,11 +532,11 @@ export function AdminFlagsPage({ trips, members }: Props) {
 
         <OverridePanel
           title="Per-Member Override"
-          subtitle="Assign beta access or restrictions to one traveler, across every trip they're in."
+          subtitle="Assign beta access or restrictions to one traveler (linked account required), across every trip they're in."
           emptyLabel="Select a member above to configure individual privileges."
           selectedId={selectedUserId}
           onSelect={setSelectedUserId}
-          options={allMembersList.map((m) => ({ value: m.id, label: `${m.name}${m.linkedUserId ? ' (Claimed)' : ''}` }))}
+          options={claimedMembersList.map((m) => ({ value: m.linkedUserId as string, label: m.name }))}
           overrides={userFlagOverrides[selectedUserId]}
           onSetOverride={(key, value) => {
             setUserFlagOverride(selectedUserId, key, value);

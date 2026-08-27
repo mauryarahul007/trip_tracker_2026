@@ -22,7 +22,9 @@ import {
   IconShield,
   IconBell,
   IconShare,
+  IconAnalytics,
 } from './Icons';
+import { AnalyticsTab, type AnalyticsTabProps } from './AnalyticsTab';
 import { CategoryIcon } from './CategoryIcon';
 import { useTripStore } from '../store/tripStore';
 import { useNotificationsStore } from '../store/notificationsStore';
@@ -41,7 +43,7 @@ import { useHistoryBack } from '../utils/useHistoryBack';
 
 export type ThemePref = 'light' | 'dark' | 'system';
 
-type SubScreen = null | 'categories' | 'recycle-bin' | 'appearance' | 'backups' | 'archived-trips' | 'bug-tracker' | 'report-issue' | 'suggest-feature';
+type SubScreen = null | 'categories' | 'recycle-bin' | 'appearance' | 'backups' | 'archived-trips' | 'bug-tracker' | 'report-issue' | 'suggest-feature' | 'analytics';
 
 const RECYCLE_BIN_WINDOW_MS = 24 * 60 * 60 * 1000;
 
@@ -88,6 +90,10 @@ interface SettingsViewProps {
   // Context
   hasActiveTrip?: boolean;
   initialSubScreen?: SubScreen;
+  // The full Analytics breakdown -- bundled as one prop since it's the
+  // exact set of computed values App.tsx already builds for it, not a
+  // shape SettingsView needs to know the internals of.
+  analytics?: AnalyticsTabProps;
   onClose?: () => void;
   onRequestConfirm?: (req: ConfirmRequest) => void;
   onOpenShareTrip?: () => void;
@@ -127,6 +133,7 @@ export function SettingsView({
   onRequestConfirm,
   onOpenShareTrip,
   onOpenTripWrapped,
+  analytics,
 }: SettingsViewProps) {
   const [subScreen, setSubScreen] = useState<SubScreen>(initialSubScreen);
 
@@ -672,7 +679,7 @@ export function SettingsView({
                   <div style={{ minWidth: 0 }}>
                     <div style={{ fontSize: '14px', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{exp.title}</div>
                     <div style={{ fontSize: '11.5px', color: 'var(--text-secondary)' }}>
-                      <span className="privacy-blur">{exp.currency} {exp.amount.toFixed(2)}</span> &middot; {exp.deletedAt ? formatTimeLeft(exp.deletedAt) : ''}
+                      <span>{exp.currency} {exp.amount.toFixed(2)}</span> &middot; {exp.deletedAt ? formatTimeLeft(exp.deletedAt) : ''}
                     </div>
                   </div>
                   <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
@@ -775,6 +782,22 @@ export function SettingsView({
             ))}
           </div>
         </div>
+      </div>
+    );
+  }
+
+  if (subScreen === 'analytics' && analytics) {
+    return (
+      <div className="settings-container settings-subscreen-enter">
+        <div className="settings-subscreen-nav-header">
+          <button type="button" className="settings-subscreen-back-link" onClick={() => setSubScreen(null)}>
+            <IconChevronLeft size={18} />
+            <span>Settings</span>
+          </button>
+        </div>
+        <h3 className="settings-subscreen-main-title">Analytics</h3>
+        <p className="settings-subscreen-subtitle">Trends and breakdowns for this trip.</p>
+        <AnalyticsTab {...analytics} />
       </div>
     );
   }
@@ -1111,6 +1134,23 @@ export function SettingsView({
                   <div className="settings-row-texts">
                     <span className="settings-row-title">Invite &amp; Share Trip</span>
                     <span className="settings-row-subtitle">Share the join link or QR code with members</span>
+                  </div>
+                </div>
+                <div className="settings-row-right">
+                  <IconChevronRight size={16} />
+                </div>
+              </button>
+            )}
+
+            {analytics && (
+              <button type="button" className="settings-row-item" onClick={() => setSubScreen('analytics')}>
+                <div className="settings-row-left">
+                  <div className="settings-squircle squircle-teal">
+                    <IconAnalytics size={18} />
+                  </div>
+                  <div className="settings-row-texts">
+                    <span className="settings-row-title">Analytics</span>
+                    <span className="settings-row-subtitle">Category breakdowns &amp; trends</span>
                   </div>
                 </div>
                 <div className="settings-row-right">

@@ -678,6 +678,42 @@ input[type="date"].input-field {
    date-range are occasional filters buried behind a toggle so the default
    state is one compact row instead of three wrapped ones. */
 /* WhatsApp-Style Search & Filter Track */
+.expense-stat-strip {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  background: var(--border-color);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-md);
+  overflow: hidden;
+  margin-bottom: 14px;
+}
+
+.expense-stat {
+  background: var(--bg-surface);
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.expense-stat-label {
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.expense-stat-value {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .expense-filters {
   margin-bottom: 16px;
   display: flex;
@@ -734,6 +770,68 @@ input[type="date"].input-field {
 .search-clear-btn:hover {
   color: var(--text-primary);
   background: var(--bg-surface-hover);
+}
+
+.expense-filters-btn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 16px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: var(--transition-smooth);
+}
+
+.expense-filters-btn:hover {
+  border-color: var(--primary-accent);
+  color: var(--primary-accent);
+}
+
+.expense-filters-btn-badge {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent-orange);
+}
+
+.expense-filter-sheet {
+  max-width: 480px;
+  display: flex;
+  flex-direction: column;
+}
+
+.expense-filter-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.expense-filter-footer {
+  display: flex;
+  gap: 10px;
+  margin: 20px -20px -24px;
+  padding: 14px 20px calc(14px + var(--safe-bottom, 0px));
+  border-top: 1px solid var(--border-color);
+  background: var(--bg-surface);
+}
+
+.expense-filter-footer .secondary-btn {
+  flex: 0 0 auto;
+}
+
+.expense-filter-footer .gradient-btn {
+  flex: 1;
 }
 
 .filter-chips-collapse {
@@ -972,8 +1070,9 @@ input[type="date"].input-field {
               background-color 0.35s ease,
               box-shadow 0.35s ease,
               border-color 0.35s ease,
-              color 0.3s ease;
-  will-change: padding, background-color, box-shadow;
+              color 0.3s ease,
+              transform 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: padding, background-color, box-shadow, transform;
   /* Default tone: white text/chrome for a dark or unknown map background.
      TripMapHero samples the live map pixels behind the header and flips
      these when the map area there is bright enough that white would wash
@@ -995,6 +1094,14 @@ input[type="date"].input-field {
   --header-fg-soft-bg: rgba(16, 21, 31, 0.08);
   /* Dark text needs a light halo instead. */
   text-shadow: 0 1px 2px rgba(255, 255, 255, 0.65), 0 2px 14px rgba(255, 255, 255, 0.5);
+}
+
+/* The sheet is a lower z-index than this header, so it slides underneath
+   rather than covering it -- when fully expanded (see .trip-sheet.full),
+   the header has to actually get out of the way instead. */
+.trip-dashboard-header.header-hidden {
+  transform: translateY(-100%);
+  pointer-events: none;
 }
 
 .trip-dashboard-header.is-scrolled {
@@ -2996,6 +3103,56 @@ input:checked + .toggle-slider:before {
   margin-top: 1px;
 }
 
+.settlement-chip-strip {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 12px 15px;
+  scrollbar-width: none;
+}
+.settlement-chip-strip::-webkit-scrollbar {
+  display: none;
+}
+
+.settlement-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  padding: 6px 12px 6px 6px;
+  border-radius: var(--border-radius-pill);
+  background: var(--bg-surface-hover);
+  border: 1px solid var(--border-color);
+}
+
+.settlement-chip-avatar {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: #FFFDF6;
+  font-family: var(--font-family-title);
+  font-weight: 700;
+  font-size: 10.5px;
+}
+
+.settlement-chip-name {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+
+.settlement-chip-amount {
+  font-family: var(--font-family-mono);
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
 .wa-list-item {
   display: flex;
   align-items: center;
@@ -3553,6 +3710,13 @@ input:checked + .toggle-slider:before {
 
 .trip-sheet.dragging {
   transition: none;
+}
+
+/* Fully expanded (Uber-style): the sheet covers the map/header entirely,
+   so the tab-pane no longer needs to reserve space for the floating
+   header underneath it -- give that space back to the content. */
+.trip-sheet.full .tab-pane {
+  padding-top: max(16px, var(--safe-top, 0px));
 }
 
 /* Drag handle -- the swipe affordance strip at the sheet's top edge. */
@@ -4745,16 +4909,6 @@ html.capacitor-ios .trip-sheet .tab-pane {
 /* ==========================================================================
    Blind Mode & Split Preset Styles
    ========================================================================== */
-
-.blind-mode-active .privacy-blur {
-  filter: blur(5px);
-  user-select: none;
-  transition: filter 0.2s ease;
-}
-
-.blind-mode-active .privacy-blur:hover {
-  filter: blur(0px);
-}
 
 .split-preset-chip {
   display: inline-flex;

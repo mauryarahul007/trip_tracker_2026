@@ -1,7 +1,7 @@
 {
   "name": "trip-tracker-2026",
   "private": true,
-  "version": "1.64.1",
+  "version": "1.65.0",
   "type": "module",
   "scripts": {
     "postinstall": "node scripts/install-git-hooks.mjs && node scripts/sync-maplibre-worker.mjs",

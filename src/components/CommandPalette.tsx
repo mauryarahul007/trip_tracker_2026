@@ -16,7 +16,7 @@ interface CommandPaletteProps {
   onNewExpense: () => void;
   onOpenWrapped: () => void;
   onOpenSettings: () => void;
-  onSwitchTab: (tab: 'expenses' | 'balances' | 'analytics' | 'members') => void;
+  onSwitchTab: (tab: 'expenses' | 'balances' | 'settings' | 'members') => void;
 }
 
 export function CommandPalette({
@@ -104,10 +104,10 @@ export function CommandPalette({
       id: 'tab-analytics',
       type: 'tab',
       title: 'View Spending Analytics',
-      subtitle: 'Category graphs & trends',
+      subtitle: 'Category graphs & trends — in Settings',
       icon: <IconCheck size={16} />,
       action: () => {
-        onSwitchTab('analytics');
+        onSwitchTab('settings');
         onClose();
       },
     });

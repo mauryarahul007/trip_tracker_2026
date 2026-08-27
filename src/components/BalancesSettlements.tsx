@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import type { Expense, Group, Member, Trip } from '../types';
-import { buildSettlementNodes, calculateGroupInternalTransfers, type MemberBalance, type Transfer } from '../utils/settlement';
-import { IconArrowDownRight, IconArrowUpRight, IconCheck, IconCheckCircle, IconChevronRight, IconEdit, IconMembers, IconShare } from './Icons';
-import { getCurrencySymbol } from '../utils/currency';
+import type { MemberBalance, Transfer } from '../utils/settlement';
+import { IconCheck, IconCheckCircle, IconChevronRight, IconEdit, IconShare } from './Icons';
+import { getCurrencySymbol, formatAmount } from '../utils/currency';
 import { sendPushNotification } from '../services/pushApi';
-import { usePrivacyStore, formatMaskedAmount } from '../store/privacyStore';
 import { useTripStore } from '../store/tripStore';
+import { avatarColorForName } from '../utils/avatarColor';
+import { initial } from '../utils/initials';
 import { triggerHaptic } from '../utils/haptics';
 import { UpiPaymentModal } from './UpiPaymentModal';
 import { BoardingPassHeroCard } from './BoardingPassHeroCard';
@@ -18,32 +19,15 @@ type Props = {
   activeTripExpenses: Expense[];
   topCategoryName?: string;
   topCategoryPercentage?: number;
-  onMemberClick: (memberId: string) => void;
   onSettle: (fromMemberId: string, toMemberId: string, amount: number, fromLabel: string, toLabel: string) => void;
   isAdmin: boolean;
   myMemberId: string | null;
   members: Record<string, Member>;
   onOpenSquadBadges?: () => void;
+  // Cross-linking: tapping a person's balance routes to the ledger,
+  // pre-filtered to transactions involving them.
+  onMemberClick?: (memberId: string) => void;
 };
-
-function balanceColor(balance: number): string {
-  if (balance > 0.01) return 'var(--color-success)';
-  if (balance < -0.01) return 'var(--color-danger)';
-  return 'var(--text-secondary)';
-}
-
-function balanceLabel(balance: number, currencySymbol: string, isBlindMode: boolean = false): string {
-  const absVal = formatMaskedAmount(Math.abs(balance), currencySymbol, isBlindMode);
-  if (balance > 0.01) return `gets back ${absVal}`;
-  if (balance < -0.01) return `owes ${absVal}`;
-  return 'settled';
-}
-
-// Icon backs up the colour so owes-vs-gets-back doesn't rely on colour alone.
-function BalanceIcon({ balance, settled }: { balance: number; settled?: boolean }) {
-  if (settled || Math.abs(balance) < 0.01) return <IconCheck size={12} className="icon-sm" />;
-  return balance > 0 ? <IconArrowUpRight size={12} className="icon-sm" /> : <IconArrowDownRight size={12} className="icon-sm" />;
-}
 
 function isTransferSettled(t: Transfer, activeTripExpenses: Expense[]): boolean {
   return activeTripExpenses.some(
@@ -62,6 +46,7 @@ type TransferRowProps = {
   tripName?: string;
   note?: string;
   currencySymbol: string;
+  myMemberId: string | null;
   isSettled: boolean;
   canSettle: boolean;
   customValue: string;
@@ -75,6 +60,7 @@ type TransferRowProps = {
   groups: Group[];
   activeTripExpenses: Expense[];
   members: Record<string, Member>;
+  onMemberClick?: (memberId: string) => void;
 };
 
 interface MemberAuditDetails {
@@ -166,6 +152,7 @@ function TransferRow({
   tripName,
   note,
   currencySymbol,
+  myMemberId,
   isSettled,
   canSettle,
   customValue,
@@ -178,7 +165,8 @@ function TransferRow({
   balances,
   groups,
   activeTripExpenses,
-  members
+  members,
+  onMemberClick,
 }: TransferRowProps) {
   const settleAmount = parseFloat(customValue) || t.amount;
   const [showAudit, setShowAudit] = useState(false);
@@ -246,14 +234,28 @@ function TransferRow({
       flexDirection: 'column',
       gap: '10px'
     }}>
-      {/* Top Row: Flow of money and Amount */}
+      {/* Top Row: plain-language sentence and Amount. Personalized to
+          "You"/"you" when the viewer is a direct party -- skipped for a
+          group-merged node since the debt isn't really the individual's. */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
         <div style={{ fontSize: '14px', minWidth: 0, flex: '1 1 auto' }}>
-          <span style={{ color: 'var(--text-primary)', lineHeight: '1.4' }}>
-            <strong style={{ fontWeight: '600' }}>{t.fromLabel}</strong>
-            <span style={{ color: 'var(--text-muted)', margin: '0 8px' }}>➔</span>
-            <strong style={{ fontWeight: '600' }}>{t.toLabel}</strong>
-          </span>
+          {(() => {
+            const isYou = !t.from.startsWith('group:') && t.fromMemberId === myMemberId;
+            const theyAreYou = !t.to.startsWith('group:') && t.toMemberId === myMemberId;
+            const fromText = isYou ? 'You' : t.fromLabel;
+            const toText = theyAreYou ? 'you' : t.toLabel;
+            const verb = isYou ? 'owe' : 'owes';
+            const otherMemberId = isYou ? t.toMemberId : t.fromMemberId;
+            return (
+              <span
+                onClick={onMemberClick ? () => onMemberClick(otherMemberId) : undefined}
+                style={{ color: 'var(--text-primary)', lineHeight: '1.4', cursor: onMemberClick ? 'pointer' : undefined }}
+              >
+                <strong style={{ fontWeight: '600' }}>{fromText}</strong>{' '}{verb}{' '}
+                <strong style={{ fontWeight: '600' }}>{toText}</strong>
+              </span>
+            );
+          })()}
           {note && (
             <span style={{ display: 'block', fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>
               {note}
@@ -263,7 +265,7 @@ function TransferRow({
 
         {/* Amount Display */}
         {!isSettled && !customOpen && (
-          <span className="amount-mono privacy-blur" style={{
+          <span className="amount-mono" style={{
             fontSize: '16px',
             fontWeight: '700',
             color: 'var(--color-danger)',
@@ -280,7 +282,7 @@ function TransferRow({
             <span className="cr-front" style={{ padding: '4px 8px' }}>
               <IconCheck size={12} className="icon-sm" />
               <span>
-                <span className="cr-amount privacy-blur" style={{ whiteSpace: 'nowrap', fontSize: '12px' }}>{currencySymbol}{t.amount.toFixed(2)}</span>
+                <span className="cr-amount" style={{ whiteSpace: 'nowrap', fontSize: '12px' }}>{currencySymbol}{t.amount.toFixed(2)}</span>
                 <span className="cr-caption" style={{ fontSize: '9px' }}>your copy &middot; their copy</span>
               </span>
             </span>
@@ -307,7 +309,7 @@ function TransferRow({
             gap: '4px'
           }}
         >
-          {showAudit ? 'Hide calculation details' : 'Show calculation details'}
+          {showAudit ? 'Hide breakdown' : 'Why?'}
         </button>
       </div>
 
@@ -336,11 +338,11 @@ function TransferRow({
                 <div key={m.memberId} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11.5px' }}>
                   <span>
                     <span style={{ fontWeight: 600 }}>{m.name}</span>
-                    <span className="privacy-blur" style={{ color: 'var(--text-secondary)' }}>
+                    <span style={{ color: 'var(--text-secondary)' }}>
                       {' '}(Paid: {currencySymbol}{m.totalPaid.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}, Share: {currencySymbol}{m.totalOwed.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })})
                     </span>
                   </span>
-                  <span className="privacy-blur" style={{ fontWeight: 600, color: m.netBalance < 0 ? 'var(--color-danger)' : 'var(--color-success)' }}>
+                  <span style={{ fontWeight: 600, color: m.netBalance < 0 ? 'var(--color-danger)' : 'var(--color-success)' }}>
                     {m.netBalance >= 0 ? '+' : ''}{currencySymbol}{m.netBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </span>
                 </div>
@@ -348,7 +350,7 @@ function TransferRow({
               {fromAudit.members.length > 1 && (
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11.5px', borderTop: '1px dashed var(--border-color)', paddingTop: '4px', marginTop: '2px', fontWeight: 600 }}>
                   <span>Combined Net:</span>
-                  <span className="privacy-blur" style={{ color: fromAudit.combinedBalance < 0 ? 'var(--color-danger)' : 'var(--color-success)' }}>
+                  <span style={{ color: fromAudit.combinedBalance < 0 ? 'var(--color-danger)' : 'var(--color-success)' }}>
                     {fromAudit.combinedBalance >= 0 ? '+' : ''}{currencySymbol}{fromAudit.combinedBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </span>
                 </div>
@@ -364,11 +366,11 @@ function TransferRow({
                 <div key={m.memberId} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11.5px' }}>
                   <span>
                     <span style={{ fontWeight: 600 }}>{m.name}</span>
-                    <span className="privacy-blur" style={{ color: 'var(--text-secondary)' }}>
+                    <span style={{ color: 'var(--text-secondary)' }}>
                       {' '}(Paid: {currencySymbol}{m.totalPaid.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}, Share: {currencySymbol}{m.totalOwed.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })})
                     </span>
                   </span>
-                  <span className="privacy-blur" style={{ fontWeight: 600, color: m.netBalance < 0 ? 'var(--color-danger)' : 'var(--color-success)' }}>
+                  <span style={{ fontWeight: 600, color: m.netBalance < 0 ? 'var(--color-danger)' : 'var(--color-success)' }}>
                     {m.netBalance >= 0 ? '+' : ''}{currencySymbol}{m.netBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </span>
                 </div>
@@ -376,7 +378,7 @@ function TransferRow({
               {toAudit.members.length > 1 && (
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11.5px', borderTop: '1px dashed var(--border-color)', paddingTop: '4px', marginTop: '2px', fontWeight: 600 }}>
                   <span>Combined Net:</span>
-                  <span className="privacy-blur" style={{ color: toAudit.combinedBalance < 0 ? 'var(--color-danger)' : 'var(--color-success)' }}>
+                  <span style={{ color: toAudit.combinedBalance < 0 ? 'var(--color-danger)' : 'var(--color-success)' }}>
                     {toAudit.combinedBalance >= 0 ? '+' : ''}{currencySymbol}{toAudit.combinedBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </span>
                 </div>
@@ -394,7 +396,7 @@ function TransferRow({
             fontStyle: 'italic',
             lineHeight: '1.4'
           }}>
-            The simplification engine combined and matched these balances ({fromAudit.nodeName}: <span className="privacy-blur">{currencySymbol}{fromAudit.combinedBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span> and {toAudit.nodeName}: <span className="privacy-blur">{currencySymbol}{toAudit.combinedBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>) to reduce total payment transactions on this trip.
+            The simplification engine combined and matched these balances ({fromAudit.nodeName}: <span>{currencySymbol}{fromAudit.combinedBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span> and {toAudit.nodeName}: <span>{currencySymbol}{toAudit.combinedBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>) to reduce total payment transactions on this trip.
           </div>
         </div>
       )}
@@ -576,12 +578,12 @@ export function BalancesSettlements({
   activeTripExpenses,
   topCategoryName,
   topCategoryPercentage,
-  onMemberClick,
   onSettle,
   isAdmin,
   myMemberId,
   members,
   onOpenSquadBadges,
+  onMemberClick,
 }: Props) {
   const canSettleTransfer = (t: Transfer) => {
     if (isAdmin) return true;
@@ -611,16 +613,12 @@ export function BalancesSettlements({
     return false;
   };
   const currencySymbol = getCurrencySymbol(trip.baseCurrency);
-  const isBlindMode = usePrivacyStore((s) => s.isBlindMode);
   const [customAmounts, setCustomAmounts] = useState<Record<string, string>>({});
   const [customOpenKeys, setCustomOpenKeys] = useState<Record<string, boolean>>({});
-  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
   const [upiTargetTransfer, setUpiTargetTransfer] = useState<Transfer | null>(null);
   const [isTransfersExpanded, setIsTransfersExpanded] = useState(true);
-  const [isMembersSectionExpanded, setIsMembersSectionExpanded] = useState(false);
 
   const isUpiEnabled = useTripStore((s) => s.isFeatureEnabled('enableUpiPayments', { tripId: trip.id }));
-  const balanceNodes = buildSettlementNodes(balances, groups);
 
   const setCustom = (rowKey: string, v: string) => setCustomAmounts({ ...customAmounts, [rowKey]: v });
   const toggleCustomOpen = (rowKey: string) => setCustomOpenKeys({ ...customOpenKeys, [rowKey]: !customOpenKeys[rowKey] });
@@ -699,7 +697,7 @@ export function BalancesSettlements({
               {isFullySettled ? <IconCheckCircle size={18} /> : <span>⚡</span>}
             </div>
             <div>
-              <div className="wa-group-name">Suggested Settlements</div>
+              <div className="wa-group-name">Who owes who</div>
               <div className="wa-group-caption">
                 {isFullySettled ? 'All debts cleared — nothing to pay' : `${transfers.length} payment${transfers.length === 1 ? '' : 's'} to clear all balances`}
               </div>
@@ -722,6 +720,41 @@ export function BalancesSettlements({
             </span>
           </div>
         </div>
+
+        {/* Glance view: one chip per person with a real balance -- avatar
+            initial + a single signed number, colour-coded. This is the
+            thing a layman actually needs; the itemised transfer list below
+            (with settle/UPI actions) is the "how do I fix this" detail,
+            still tucked behind the header toggle. */}
+        {!isFullySettled && (
+          <div className="settlement-chip-strip" style={{ borderTop: '1px solid var(--border-color)' }}>
+            {balances
+              .filter((b) => Math.abs(b.balance) > 0.01)
+              .map((b) => (
+                <div
+                  key={b.memberId}
+                  className="settlement-chip"
+                  onClick={onMemberClick ? () => onMemberClick(b.memberId) : undefined}
+                  style={{ cursor: onMemberClick ? 'pointer' : undefined }}
+                >
+                  <span
+                    className="settlement-chip-avatar"
+                    style={{ background: avatarColorForName(b.name) }}
+                    aria-hidden="true"
+                  >
+                    {initial(b.name)}
+                  </span>
+                  <span className="settlement-chip-name">{b.memberId === myMemberId ? 'You' : b.name}</span>
+                  <span
+                    className="settlement-chip-amount"
+                    style={{ color: b.balance > 0 ? 'var(--color-success)' : 'var(--color-danger)' }}
+                  >
+                    {b.balance > 0 ? '+' : '−'}{formatAmount(Math.abs(b.balance), currencySymbol)}
+                  </span>
+                </div>
+              ))}
+          </div>
+        )}
 
         {isTransfersExpanded && (
           <div className="fade-in" style={{ padding: '10px 14px 14px', borderTop: '1px solid var(--border-color)' }}>
@@ -757,6 +790,7 @@ export function BalancesSettlements({
                       tripName={trip.name}
                       note={isGroupInvolved ? 'group settlement — combined balance' : undefined}
                       currencySymbol={currencySymbol}
+                      myMemberId={myMemberId}
                       isSettled={isTransferSettled(t, activeTripExpenses)}
                       canSettle={canSettleTransfer(t)}
                       customValue={customAmounts[rowKey] || ''}
@@ -770,167 +804,12 @@ export function BalancesSettlements({
                       groups={groups}
                       activeTripExpenses={activeTripExpenses}
                       members={members}
+                      onMemberClick={onMemberClick}
                     />
                   );
                 })}
               </div>
             )}
-          </div>
-        )}
-      </div>
-
-      {/* 2. WhatsApp-Style Member & Group Balances Section */}
-      <div className="wa-group-card">
-        <div
-          className="wa-group-header"
-          onClick={() => {
-            triggerHaptic('light');
-            setIsMembersSectionExpanded(!isMembersSectionExpanded);
-          }}
-          role="button"
-          tabIndex={0}
-          aria-expanded={isMembersSectionExpanded}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              e.preventDefault();
-              setIsMembersSectionExpanded(!isMembersSectionExpanded);
-            }
-          }}
-        >
-          <div className="wa-group-title">
-            <div className="wa-group-icon" style={{ background: 'rgba(15, 111, 99, 0.12)', color: '#0F6F63' }}>
-              <IconMembers size={18} />
-            </div>
-            <div>
-              <div className="wa-group-name">Member & Group Balances</div>
-              <div className="wa-group-caption">
-                {balances.length} member{balances.length === 1 ? '' : 's'} · Tap to see who owes what
-              </div>
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600 }}>
-              {isMembersSectionExpanded ? 'Hide' : 'Show'}
-            </span>
-            <span className={`m3-accordion-chevron ${isMembersSectionExpanded ? 'expanded' : ''}`}>
-              <IconChevronRight size={16} />
-            </span>
-          </div>
-        </div>
-
-        {isMembersSectionExpanded && (
-          <div className="fade-in" style={{ borderTop: '1px solid var(--border-color)', padding: '6px 0' }}>
-            {balanceNodes.map((n, idx) => {
-              const isGroup = n.id.startsWith('group:');
-
-              if (!isGroup) {
-                return (
-                  <div key={n.id}>
-                    {idx > 0 && <div className="wa-list-divider" />}
-                    <div
-                      className="wa-list-item"
-                      onClick={() => onMemberClick(n.memberIds[0])}
-                      style={{ cursor: 'pointer' }}
-                      title={`View ${n.name}'s expenses`}
-                    >
-                      <span style={{ fontSize: '13.5px', fontWeight: 600, color: 'var(--text-primary)' }}>
-                        {n.name}
-                      </span>
-                      <span
-                        className="privacy-blur"
-                        style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '5px',
-                          color: balanceColor(n.balance),
-                          fontWeight: '700',
-                          fontSize: '13px',
-                          fontFamily: 'var(--font-family-mono)',
-                        }}
-                      >
-                        <BalanceIcon balance={n.balance} />
-                        {balanceLabel(n.balance, currencySymbol, isBlindMode)}
-                      </span>
-                    </div>
-                  </div>
-                );
-              }
-
-              const groupId = n.id.slice('group:'.length);
-              const groupObj = groups.find((g) => g.id === groupId);
-              const internalTransfers = groupObj ? calculateGroupInternalTransfers(balances, groupObj) : [];
-              const isNetZero = Math.abs(n.balance) < 0.01;
-              const fullySettled = isNetZero && internalTransfers.length === 0;
-              const statusLabel = fullySettled
-                ? 'settled'
-                : isNetZero
-                  ? 'internal settlement pending'
-                  : balanceLabel(n.balance, currencySymbol, isBlindMode);
-              const statusColor = fullySettled
-                ? 'var(--color-success)'
-                : isNetZero
-                  ? 'var(--color-warning)'
-                  : balanceColor(n.balance);
-              const isGroupExpanded = !!expandedGroups[groupId];
-
-              return (
-                <div key={n.id}>
-                  {idx > 0 && <div className="wa-list-divider" />}
-                  <div
-                    className="wa-list-item"
-                    onClick={() => setExpandedGroups({ ...expandedGroups, [groupId]: !isGroupExpanded })}
-                    style={{ cursor: 'pointer' }}
-                    title="Click to toggle group member breakdown"
-                  >
-                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '13.5px', fontWeight: 600, color: 'var(--text-primary)' }}>
-                      <IconMembers size={14} className="icon-sm" />
-                      {n.name}
-                      <span style={{ fontSize: '11px', color: 'var(--text-secondary)', display: 'inline-flex', alignItems: 'center', transform: isGroupExpanded ? 'rotate(90deg)' : 'none', transition: 'transform 0.15s ease' }}>
-                        <IconChevronRight size={12} className="icon-sm" />
-                      </span>
-                    </span>
-                    <span
-                      className="privacy-blur"
-                      style={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '5px',
-                        color: statusColor,
-                        fontWeight: '700',
-                        fontSize: '13px',
-                        fontFamily: 'var(--font-family-mono)',
-                      }}
-                    >
-                      <BalanceIcon balance={n.balance} settled={fullySettled} />
-                      {statusLabel}
-                    </span>
-                  </div>
-
-                  {isGroupExpanded && (
-                    <div style={{ marginLeft: '24px', paddingLeft: '12px', borderLeft: '2px solid var(--border-color)', marginBottom: '6px' }}>
-                      {n.memberIds.map((memId) => {
-                        const memberBalance = balances.find((b) => b.memberId === memId);
-                        const bal = memberBalance ? memberBalance.balance : 0;
-                        return (
-                          <div
-                            key={memId}
-                            style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12.5px', padding: '5px 12px', cursor: 'pointer' }}
-                            onClick={() => onMemberClick(memId)}
-                            title={`View ${members[memId]?.name || 'Member'}'s expenses`}
-                          >
-                            <span style={{ color: 'var(--text-secondary)' }}>{members[memId]?.name || 'Member'}</span>
-                            <span className="privacy-blur" style={{ color: balanceColor(bal), fontWeight: '600' }}>
-                              {balanceLabel(bal, currencySymbol, isBlindMode)}
-                            </span>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
           </div>
         )}
       </div>

@@ -1,14 +1,14 @@
 import { useState, useEffect, useRef } from 'react';
 import type { CSSProperties } from 'react';
 import type { Category, Expense, Member, Trip } from '../types';
-import { IconSearch, IconEdit, IconAlertCircle, IconClose, IconCalendar, IconChevronRight } from './Icons';
+import { IconSearch, IconEdit, IconAlertCircle, IconClose, IconCalendar, IconChevronRight, IconFilter } from './Icons';
 import { SwipeableRow } from './SwipeableRow';
 import { CategoryIcon } from './CategoryIcon';
-import { getCurrencySymbol } from '../utils/currency';
+import { getCurrencySymbol, formatAmount } from '../utils/currency';
 import { initial } from '../utils/initials';
 import { avatarColorForName } from '../utils/avatarColor';
-import { usePrivacyStore, formatMaskedAmount } from '../store/privacyStore';
 import { triggerHaptic } from '../utils/haptics';
+import { tripDayNumber } from '../utils/dateRange';
 
 // Swipe-to-delete is a supplement to the explicit trash button — skip
 // wrapping the row in it at all when the viewer isn't allowed to delete.
@@ -77,6 +77,14 @@ type Props = {
   pendingDeleteId?: string;
   hasActiveFilters: boolean;
 
+  // Header stat strip -- same aggregate numbers already computed once in
+  // App.tsx for Settings' Analytics section, not recomputed here.
+  totalSpent: number;
+  averageCost: number;
+  topCategoryName?: string;
+  topCategoryPercentage?: number;
+  getCatColor: (id: string, idx: number) => string;
+
   search: string;
   setSearch: (v: string) => void;
   filterCategory: string;
@@ -87,7 +95,13 @@ type Props = {
   setFilterDateFrom: (v: string) => void;
   filterDateTo: string;
   setFilterDateTo: (v: string) => void;
+  filterAmountMin: string;
+  filterAmountMax: string;
+  filterRelation: '' | 'paidByMe' | 'involvesMe';
+  filterLocation: string;
+  myMemberId: string | null;
   onClearFilters: () => void;
+  onOpenFilters: () => void;
 
   onReview: (expense: Expense) => void;
   onEdit: (expense: Expense) => void;
@@ -108,6 +122,11 @@ export function ExpenseList({
   filteredExpenses,
   pendingDeleteId,
   hasActiveFilters,
+  totalSpent,
+  averageCost,
+  topCategoryName,
+  topCategoryPercentage,
+  getCatColor,
   search,
   setSearch,
   filterCategory,
@@ -118,7 +137,13 @@ export function ExpenseList({
   setFilterDateFrom,
   filterDateTo,
   setFilterDateTo,
+  filterAmountMin,
+  filterAmountMax,
+  filterRelation,
+  filterLocation,
+  myMemberId,
   onClearFilters,
+  onOpenFilters,
   onReview,
   onEdit,
   onDelete,
@@ -126,148 +151,10 @@ export function ExpenseList({
   userId,
 }: Props) {
   const currencySymbol = getCurrencySymbol(trip?.baseCurrency || '');
-  const isBlindMode = usePrivacyStore((s) => s.isBlindMode);
 
   const filtersRef = useRef<HTMLDivElement>(null);
-  const [revealOnScroll, setRevealOnScroll] = useState(false);
-  const [searchFocused, setSearchFocused] = useState(false);
   const [showDateFilter, setShowDateFilter] = useState(false);
-  const isAllActive = !filterCategory && !filterMember && !filterDateFrom && !filterDateTo;
-  const PULL_REVEAL_THRESHOLD = 36;
-
-  // Stable state is hidden. Chips only reveal via an actual pull-down
-  // gesture starting from the very top of the list (like Mail's
-  // pull-to-reveal search bar) — not from scroll position or direction
-  // alone, which kept re-showing on ordinary scroll jitter/momentum.
-  // Scrolling away from the top always collapses them again.
-  useEffect(() => {
-    // Scroll events on an overflow:auto element don't bubble, so a listener
-    // on an ancestor only sees them via the capture phase — mirroring the
-    // header-collapse scroll listener in nativeShell.ts, which uses this
-    // same document.body capture-phase pattern for the same reason.
-    const handleScroll = (e: Event) => {
-      const target = e.target;
-      if (!(target instanceof HTMLElement) || !target.classList.contains('tab-pane')) return;
-      if (filtersRef.current && !target.contains(filtersRef.current)) return;
-      if (target.scrollTop > 15) setRevealOnScroll(false);
-    };
-
-    const atTopOfList = () => {
-      // All tabs stay mounted (App.tsx toggles them via display:none, not
-      // unmount), so without this check the Expenses tab-pane's scrollTop
-      // — 0 whenever that tab just hasn't been scrolled, regardless of
-      // which tab is actually on screen — would read as "at top" even
-      // while a completely different tab is visible, making the
-      // preventDefault() below hijack scroll gestures on Members/
-      // Analytics/Settings too.
-      const scrollParent = filtersRef.current?.closest('.tab-pane') as HTMLElement | null;
-      if (!scrollParent || scrollParent.style.display === 'none') return false;
-      return scrollParent.scrollTop <= 0;
-    };
-
-    let pullStartX: number | null = null;
-    let pullStartY: number | null = null;
-    const startPull = (x: number, y: number) => {
-      const atTop = atTopOfList();
-      pullStartX = atTop ? x : null;
-      pullStartY = atTop ? y : null;
-    };
-    const trackPull = (y: number) => {
-      if (pullStartY === null) return;
-      if (!atTopOfList()) {
-        pullStartY = null;
-        return;
-      }
-      if (y - pullStartY > PULL_REVEAL_THRESHOLD) setRevealOnScroll(true);
-    };
-    const endPull = () => {
-      pullStartX = null;
-      pullStartY = null;
-    };
-
-    // Pointer events should cover both touch and mouse drags, but touch
-    // simulation in some browser devtools doesn't dispatch them reliably —
-    // native touchstart/touchmove/touchend (what actually fires on a real
-    // device) is tracked in parallel as a redundant, more direct path.
-    const handlePointerDown = (e: PointerEvent) => startPull(e.clientX, e.clientY);
-    const handlePointerMove = (e: PointerEvent) => trackPull(e.clientY);
-    const handleTouchStart = (e: TouchEvent) => {
-      const x = e.touches[0]?.clientX;
-      const y = e.touches[0]?.clientY;
-      if (x !== undefined && y !== undefined) startPull(x, y);
-    };
-    // Must be a non-passive listener: at scrollTop 0, dragging down is
-    // exactly the gesture iOS's own rubber-band/overscroll recognizer also
-    // wants, and once it claims the touch sequence, no further touchmove
-    // events reach this listener at all — matching the observed "works on
-    // the second attempt" (the first drag gets lost to native scroll
-    // takeover). preventDefault() while a qualifying pull is in progress
-    // keeps the whole gesture in JS, the same way WhatsApp's own
-    // pull-to-reveal search bar holds onto it.
-    //
-    // Only claims the gesture once it's clearly more vertical than
-    // horizontal — otherwise a horizontal drag that starts anywhere near
-    // the top of the list (e.g. scrolling the filter chip row, which sits
-    // right there) had its native horizontal scroll silently swallowed by
-    // this preventDefault() as soon as y so much as ticked sideways.
-    const handleTouchMove = (e: TouchEvent) => {
-      const x = e.touches[0]?.clientX;
-      const y = e.touches[0]?.clientY;
-      if (x === undefined || y === undefined) return;
-      if (
-        pullStartX !== null &&
-        pullStartY !== null &&
-        atTopOfList() &&
-        y >= pullStartY &&
-        Math.abs(y - pullStartY) > Math.abs(x - pullStartX)
-      ) {
-        e.preventDefault();
-      }
-      trackPull(y);
-    };
-
-    // Trackpad/mouse wheel scrolling never fires pointer/touch events at
-    // all, so the drag gesture above is untestable (and unusable) with a
-    // mouse — this covers the same intent for desktop: scrolling up while
-    // already at the top is the direct equivalent of a pull-down gesture
-    // there.
-    let wheelPull = 0;
-    const handleWheel = (e: WheelEvent) => {
-      if (!atTopOfList()) {
-        wheelPull = 0;
-        return;
-      }
-      if (e.deltaY < 0) {
-        wheelPull += -e.deltaY;
-        if (wheelPull > PULL_REVEAL_THRESHOLD) setRevealOnScroll(true);
-      } else {
-        wheelPull = 0;
-      }
-    };
-
-    document.body.addEventListener('scroll', handleScroll, true);
-    document.body.addEventListener('pointerdown', handlePointerDown, { passive: true });
-    document.body.addEventListener('pointermove', handlePointerMove, { passive: true });
-    document.body.addEventListener('pointerup', endPull, { passive: true });
-    document.body.addEventListener('pointercancel', endPull, { passive: true });
-    document.body.addEventListener('touchstart', handleTouchStart, { passive: true });
-    document.body.addEventListener('touchmove', handleTouchMove, { passive: false });
-    document.body.addEventListener('touchend', endPull, { passive: true });
-    document.body.addEventListener('touchcancel', endPull, { passive: true });
-    document.body.addEventListener('wheel', handleWheel, { passive: true });
-    return () => {
-      document.body.removeEventListener('scroll', handleScroll, true);
-      document.body.removeEventListener('pointerdown', handlePointerDown);
-      document.body.removeEventListener('pointermove', handlePointerMove);
-      document.body.removeEventListener('pointerup', endPull);
-      document.body.removeEventListener('pointercancel', endPull);
-      document.body.removeEventListener('touchstart', handleTouchStart);
-      document.body.removeEventListener('touchmove', handleTouchMove);
-      document.body.removeEventListener('touchend', endPull);
-      document.body.removeEventListener('touchcancel', endPull);
-      document.body.removeEventListener('wheel', handleWheel);
-    };
-  }, []);
+  const isAllActive = !filterCategory && !filterMember && !filterDateFrom && !filterDateTo && !filterAmountMin && !filterAmountMax && !filterRelation && !filterLocation;
 
   // 1. Debounce Search Input
   const [localSearch, setLocalSearch] = useState(search);
@@ -282,15 +169,13 @@ export function ExpenseList({
     return () => clearTimeout(timer);
   }, [localSearch, setSearch]);
 
-  const shouldShowChips = revealOnScroll || searchFocused || hasActiveFilters || !!localSearch || showDateFilter;
-
   // 2. Pagination State for virtualization
   const [visibleCount, setVisibleCount] = useState(50);
   
   // Reset pagination when filter criteria change
   useEffect(() => {
     setVisibleCount(50);
-  }, [trip?.id, filterCategory, filterMember, filterDateFrom, filterDateTo, search]);
+  }, [trip?.id, filterCategory, filterMember, filterDateFrom, filterDateTo, search, filterAmountMin, filterAmountMax, filterRelation, filterLocation]);
 
   const displayedExpenses = filteredExpenses.slice(0, visibleCount);
 
@@ -370,6 +255,25 @@ export function ExpenseList({
         </div>
       )}
 
+      {activeTripExpenseCount > 0 && (
+        <div className="expense-stat-strip">
+          <div className="expense-stat">
+            <span className="expense-stat-label">Total spent</span>
+            <span className="expense-stat-value">{formatAmount(totalSpent, currencySymbol)}</span>
+          </div>
+          <div className="expense-stat">
+            <span className="expense-stat-label">Daily average</span>
+            <span className="expense-stat-value">{formatAmount(averageCost, currencySymbol)}</span>
+          </div>
+          {topCategoryName && (
+            <div className="expense-stat">
+              <span className="expense-stat-label">Top category</span>
+              <span className="expense-stat-value">{topCategoryName}{typeof topCategoryPercentage === 'number' ? ` · ${Math.round(topCategoryPercentage)}%` : ''}</span>
+            </div>
+          )}
+        </div>
+      )}
+
       {affectedExpenseIds.length > 1 && (
         <button
           type="button"
@@ -384,7 +288,9 @@ export function ExpenseList({
         </button>
       )}
 
-      {/* Search & Quick Filters */}
+      {/* Search & Filters -- always visible; previously hidden behind an
+          undiscoverable pull-down-from-top gesture with no visual hint it
+          existed, which read as "filtering doesn't work". */}
       {activeTripExpenseCount > 0 && (
         <div ref={filtersRef} className="expense-filters">
           <div className="expense-search-row">
@@ -395,8 +301,6 @@ export function ExpenseList({
                 className="input-field expense-search-input"
                 placeholder="Search expenses..."
                 value={localSearch}
-                onFocus={() => setSearchFocused(true)}
-                onBlur={() => setSearchFocused(false)}
                 onChange={(e) => setLocalSearch(e.target.value)}
               />
               {localSearch && (
@@ -414,10 +318,21 @@ export function ExpenseList({
                 </button>
               )}
             </div>
+            <button
+              type="button"
+              className="expense-filters-btn"
+              onClick={onOpenFilters}
+              aria-label="Advanced filters"
+              title="Advanced filters"
+            >
+              <IconFilter size={16} className="icon-sm" />
+              Filters
+              {hasActiveFilters && <span className="expense-filters-btn-badge" aria-hidden="true" />}
+            </button>
           </div>
 
           {/* Horizontal quick filter pills */}
-          <div className={`filter-chips-collapse ${shouldShowChips ? 'expanded' : ''}`}>
+          <div className="filter-chips-collapse expanded">
             <div className="filter-chips-track" role="region" aria-label="Quick filters">
               <button
                 type="button"
@@ -550,9 +465,11 @@ export function ExpenseList({
           )}
           {dayGroups.map((group, groupIdx) => {
             const groupDate = new Date(`${group.date}T00:00:00`);
-            const groupLabel = Number.isNaN(groupDate.getTime())
+            const dateLabel = Number.isNaN(groupDate.getTime())
               ? group.date
               : groupDate.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', month: 'short' });
+            const dayNum = trip?.startDate ? tripDayNumber(trip.startDate, group.date) : null;
+            const groupLabel = dayNum ? `Day ${dayNum} · ${dateLabel}` : dateLabel;
             const groupTotal = group.expenses.reduce((sum, e) => sum + e.amount, 0);
             const collapsed = isDayCollapsed(group.date, groupIdx);
 
@@ -583,7 +500,7 @@ export function ExpenseList({
                   </div>
                   {collapsed && (
                     <span style={{ fontSize: '12px', color: 'var(--text-muted)', flexShrink: 0 }}>
-                      {group.expenses.length} · {formatMaskedAmount(groupTotal, currencySymbol, isBlindMode)}
+                      {group.expenses.length} · {formatAmount(groupTotal, currencySymbol)}
                     </span>
                   )}
                 </div>
@@ -599,6 +516,11 @@ export function ExpenseList({
                   const splitMembers = exp.splitMemberIds.map((id) => ({ id, member: members[id] }));
                   const visibleSplitMembers = splitMembers.slice(0, 4);
                   const overflowSplitCount = splitMembers.length - visibleSplitMembers.length;
+
+                  // Shown only when it differs from the full amount --
+                  // otherwise it's just noise repeating the line total.
+                  const myShare = myMemberId ? exp.resolvedShares[myMemberId] : undefined;
+                  const showMyShare = typeof myShare === 'number' && Math.abs(myShare - exp.amount) > 0.01;
 
                   const reviewMessage = isPayerDeleted && hasDeletedParticipants
                     ? 'Payer and a split member were removed — reassign the payer and update the split.'
@@ -630,7 +552,7 @@ export function ExpenseList({
                           style={{
                             display: 'flex', flexDirection: 'column', gap: '6px',
                             padding: '12px 14px',
-                            borderLeft: needsReview ? '3px solid var(--color-warning)' : 'none',
+                            borderLeft: `3px solid ${needsReview ? 'var(--color-warning)' : getCatColor(exp.category, 0)}`,
                             background: needsReview ? 'rgba(185, 138, 62, 0.07)' : undefined,
                           }}
                         >
@@ -645,9 +567,16 @@ export function ExpenseList({
                                 <span style={{ fontSize: '11px', flexShrink: 0, opacity: 0.85 }} title="Photo receipt attached">📸</span>
                               )}
                             </h4>
-                            <span className="money privacy-blur" style={{ fontSize: '15px', fontWeight: '600', color: 'var(--text-primary)', whiteSpace: 'nowrap', flexShrink: 0 }}>
-                              {formatMaskedAmount(exp.amount, currencySymbol, isBlindMode)}
-                            </span>
+                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', flexShrink: 0 }}>
+                              <span className="money" style={{ fontSize: '15px', fontWeight: '600', color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
+                                {formatAmount(exp.amount, currencySymbol)}
+                              </span>
+                              {showMyShare && (
+                                <span style={{ fontSize: '11px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
+                                  your share {formatAmount(myShare as number, currencySymbol)}
+                                </span>
+                              )}
+                            </div>
                           </div>
                           <div
                             style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', minWidth: 0 }}

@@ -3,18 +3,8 @@ import { triggerHaptic } from '../utils/haptics';
 
 export const STORAGE_KEY = 'tt_flight_add_tooltip_dismissed_v1';
 
-export function getFlightTooltipMessage(expenseCount: number, tripDestination?: string): { badge: string; text: string } {
-  const destinationLabel = tripDestination ? tripDestination.split(/[→\->,/|]/)[0].trim() : '';
-  if (expenseCount === 0) {
-    return {
-      badge: '✈️ Takeoff',
-      text: destinationLabel ? `Ready for ${destinationLabel}? Log your 1st expense!` : 'Ready for takeoff? Tap + to log an expense!',
-    };
-  }
-  return {
-    badge: '⚡ Quick Add',
-    text: 'Tap + to split flights, stay or food',
-  };
+export function getFlightTooltipMessage(_expenseCount: number, _tripDestination?: string): { badge: string; text: string } {
+  return { badge: '', text: 'Add expense' };
 }
 
 interface Props {
@@ -181,7 +171,6 @@ export function FlightAddExpenseTooltip({ onAddExpense, expenseCount = 0, tripDe
       </div>
 
       <div className="flight-tooltip-content">
-        <span className="flight-tooltip-badge">{message.badge}</span>
         <p className="flight-tooltip-text">{message.text}</p>
       </div>
 

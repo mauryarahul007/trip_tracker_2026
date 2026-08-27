@@ -42,6 +42,7 @@ type Props = {
   onSave: (expenseData: {
     title: string;
     amount: number;
+    currency: string;
     category: string;
     date: string;
     paidBy: string;
@@ -358,9 +359,20 @@ export function ExpenseForm({
 
     setIsSubmitting(true);
     try {
+      // Amount is always persisted in the trip's base currency -- every
+      // other total/balance/settlement calc assumes that. If the user
+      // picked a different currency, convert now rather than trusting them
+      // to have clicked "Use {base}" first (that button was the only path
+      // to a correct save; forgetting it silently saved the foreign number
+      // as if it were base-currency).
+      const finalAmount = selectedCurrency !== baseCurrency && currencyConversion
+        ? currencyConversion.convertedAmount
+        : amountVal;
+
       const res = await onSave({
         title: title.trim(),
-        amount: amountVal,
+        amount: finalAmount,
+        currency: selectedCurrency,
         category,
         date,
         paidBy: payer,

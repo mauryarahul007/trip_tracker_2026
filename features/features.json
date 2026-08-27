@@ -204,5 +204,69 @@
     "shippedAt": "2026-08-26T13:52:43.153Z",
     "shippedBy": "claude-cli",
     "shippedNote": "Migration 0070 applied to remote, send-push Edge Function redeployed. Files: supabase/migrations/0070_add_trip_mutes.sql, supabase/functions/send-push/index.ts, src/store/tripStore.ts, src/services/tripApi.ts, src/types/database.ts, src/components/SettingsView.tsx."
+  },
+  {
+    "id": "FEAT-014",
+    "title": "Expenses restructured into Trip Summary + Itinerary Ledger with advanced filters and cross-linking",
+    "description": "Split the single Expenses surface into a Trip Summary tab (settlement hero, who-owes-who, category/member/trend analytics) and a day-wise Itinerary Ledger tab (Day-N grouping off trip.startDate, Amazon/Myntra-style advanced filter drawer: category/payer/date/amount/location/relation). Analytics content also lives standalone under Settings. Category donut, member bars, and settlement chips/rows cross-link into the ledger pre-filtered instead of duplicating lists.",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-08-27T00:43:07.526Z",
+    "updatedAt": "2026-08-27T00:43:07.526Z",
+    "shippedAt": "2026-08-27T00:43:07.526Z",
+    "shippedBy": "claude-cli",
+    "shippedNote": "Shipped"
+  },
+  {
+    "id": "FEAT-015",
+    "title": "Right-edge swipe navigation between tabs",
+    "description": "App-wide swipe-left/right gesture (useTabSwipe.ts) to move between Expenses/Ledger/Members/Settings tabs, WhatsApp-style, for one-handed navigation. Touch-only, skips elements that already own a horizontal gesture (SwipeableRow rows, map containers) via a data-no-tab-swipe escape hatch.",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-08-27T00:43:15.866Z",
+    "updatedAt": "2026-08-27T00:43:15.866Z",
+    "shippedAt": "2026-08-27T00:43:15.866Z",
+    "shippedBy": "claude-cli",
+    "shippedNote": "Shipped"
+  },
+  {
+    "id": "FEAT-016",
+    "title": "Settlement section simplified: plain-language sentences + at-a-glance balance chips",
+    "description": "'Suggested Settlements' renamed to 'Who owes who'; added an always-visible chip strip (avatar + signed colored amount per person with a live balance) above the itemized settle list; each transfer row now reads as a plain sentence ('You owe Priya') personalized to the viewer instead of an arrow notation; audit-trail toggle shortened to 'Why?' / 'Hide breakdown'.",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-08-27T00:43:29.278Z",
+    "updatedAt": "2026-08-27T00:43:29.278Z",
+    "shippedAt": "2026-08-27T00:43:29.278Z",
+    "shippedBy": "claude-cli",
+    "shippedNote": "Shipped"
+  },
+  {
+    "id": "FEAT-017",
+    "title": "Uber-style full-screen bottom sheet with auto-hiding header",
+    "description": "TripContentSheet gained a third snap point (top:0, was capped at 20vh) reachable by continuing an upward swipe from the list's scroll-top or via the drag handle. When fully expanded the floating trip header slides out of view and the map sits fully behind the sheet, maximizing content area on demand.",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-08-27T00:43:37.879Z",
+    "updatedAt": "2026-08-27T00:43:37.879Z",
+    "shippedAt": "2026-08-27T00:43:37.879Z",
+    "shippedBy": "claude-cli",
+    "shippedNote": "Shipped"
   }
 ]

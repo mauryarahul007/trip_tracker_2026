@@ -1,9 +1,9 @@
 import { useRef, useState } from 'react';
-import { IconExpenses, IconMembers, IconAnalytics, IconSettings, IconPlus } from './Icons';
+import { IconExpenses, IconMembers, IconReceipt, IconSettings, IconPlus } from './Icons';
 import { triggerHaptic } from '../utils/haptics';
 import { FlightAddExpenseTooltip, STORAGE_KEY } from './FlightAddExpenseTooltip';
 
-type Tab = 'expenses' | 'members' | 'analytics' | 'settings';
+type Tab = 'expenses' | 'ledger' | 'members' | 'settings';
 
 type Props = {
   activeTab: Tab;
@@ -77,9 +77,9 @@ export function NavTabs({ activeTab, setActiveTab, onAddExpense, onAddMember, ex
         <span className="nav-tab-icon"><IconExpenses size={26} /></span>
         <span>Summary</span>
       </button>
-      <button data-tab="members" className={`nav-tab-item ${activeTab === 'members' ? 'active' : ''}`} onClick={() => goTo('members')} aria-label="Members & Groups">
-        <span className="nav-tab-icon"><IconMembers size={26} /></span>
-        <span>Members</span>
+      <button data-tab="ledger" className={`nav-tab-item ${activeTab === 'ledger' ? 'active' : ''}`} onClick={() => goTo('ledger')} aria-label="Expenses">
+        <span className="nav-tab-icon"><IconReceipt size={26} /></span>
+        <span>Expenses</span>
       </button>
       <div className="nav-tab-fab-wrap">
         {/* Fixed just above the FAB regardless of scroll position -- confined
@@ -104,15 +104,15 @@ export function NavTabs({ activeTab, setActiveTab, onAddExpense, onAddMember, ex
           onPointerUp={clearLongPress}
           onPointerCancel={clearLongPress}
           onClick={handleFabClick}
-          aria-label={isMembersTab ? (onAddMember ? 'Add Member' : 'Add Member (admins only)') : 'Add Expense (Hold for flight guide)'}
-          title={isMembersTab ? (onAddMember ? 'Add Member' : 'Add Member (admins only)') : 'Add Expense (Hold for flight guide)'}
+          aria-label={isMembersTab ? (onAddMember ? 'Add Member' : 'Add Member (admins only)') : 'Add expense'}
+          title={isMembersTab ? (onAddMember ? 'Add Member' : 'Add Member (admins only)') : 'Add expense'}
         >
           <IconPlus size={24} />
         </button>
       </div>
-      <button data-tab="analytics" className={`nav-tab-item ${activeTab === 'analytics' ? 'active' : ''}`} onClick={() => goTo('analytics')} aria-label="Analytics">
-        <span className="nav-tab-icon"><IconAnalytics size={26} /></span>
-        <span>Analytics</span>
+      <button data-tab="members" className={`nav-tab-item ${activeTab === 'members' ? 'active' : ''}`} onClick={() => goTo('members')} aria-label="Members & Groups">
+        <span className="nav-tab-icon"><IconMembers size={26} /></span>
+        <span>Members</span>
       </button>
       <button data-tab="settings" className={`nav-tab-item ${activeTab === 'settings' ? 'active' : ''}`} onClick={() => goTo('settings')} aria-label="Settings">
         <span className="nav-tab-icon"><IconSettings size={26} /></span>

@@ -2189,5 +2189,213 @@
     "resolvedBy": "claude-cli",
     "resolvedAt": "2026-08-26T13:21:59.056Z",
     "resolutionNote": "MembersGroupsTab.tsx: removed the header '+ Add Member' button (FAB is now the sole entry point). Wrapped the per-row Edit/Delete buttons in .member-row-desktop-actions, hidden on touch via the same (hover: hover) and (pointer: fine) CSS pattern as .cmd-k-hint -- kept visible for mouse/trackpad users who have no swipe gesture."
+  },
+  {
+    "id": "BUG-073",
+    "title": "Production build broken: nullable userId passed to fetchMutedTripIds",
+    "description": "tripStore.ts initialize() called fetchMutedTripIds(userId) where userId is typed string | null (from session?.user?.id ?? null), but fetchMutedTripIds requires a string. tsc -b (the build script's actual typecheck, run via 'npm run build') caught this even though a plain 'npx tsc --noEmit' during development did not, so both GitHub Pages and EC2 deploy workflows failed on the pushed commit.",
+    "severity": "high",
+    "category": "general",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "npm run build succeeds; muted-trip-ids are only fetched when a real signed-in userId exists.",
+    "actualBehavior": "Build failed with TS2345 at tripStore.ts:636, blocking both GitHub Actions deploy workflows (Pages and EC2) on commit b6ef029.",
+    "diagnostics": {},
+    "createdAt": "2026-08-26T13:56:15.479Z",
+    "updatedAt": "2026-08-26T13:56:21.368Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-08-26T13:56:21.367Z",
+    "resolutionNote": "tripStore.ts: wrapped the fetchMutedTripIds call in an if (userId) guard, skipping the mute-ids fetch when there's no signed-in user instead of passing a possibly-null value. Commit da7c912."
+  },
+  {
+    "id": "BUG-090",
+    "title": "Per-member feature-flag overrides showed duplicate names and never actually applied",
+    "description": "AdminFlagsPage.tsx keyed per-member overrides by member.id (trip-row PK), but get_resolved_feature_flags resolves user-scope overrides via scope_id = auth.uid()::text. Every per-member override silently no-op'd, and the same real person appearing as multiple trip-row members rendered as duplicate entries in the picker.",
+    "severity": "high",
+    "category": "general",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-08-27T00:41:15.355Z",
+    "updatedAt": "2026-08-27T00:41:24.401Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-08-27T00:41:24.401Z",
+    "resolutionNote": "AdminFlagsPage.tsx: dedup member list by linkedUserId and key the per-member override picker/writes by linkedUserId (matching the server's auth.uid() check) instead of the trip-row member.id."
+  },
+  {
+    "id": "BUG-091",
+    "title": "Advanced expense filters were hidden behind an undiscoverable gesture with no back navigation",
+    "description": "The expense list's advanced filters (amount range, relation, etc.) only surfaced via an undocumented pull-to-reveal gesture with zero visual affordance, and once opened there was no way back to the Expenses tab short of the OS back button.",
+    "severity": "medium",
+    "category": "navigation",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-08-27T00:41:33.189Z",
+    "updatedAt": "2026-08-27T00:41:40.275Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-08-27T00:41:40.275Z",
+    "resolutionNote": "Replaced the pull-reveal gesture with an explicit Filters button opening a visible full-screen drawer (ExpenseFilterDrawer.tsx), wired to useHistoryBack/useEscapeKey so back/Esc closes the drawer and lands back on Expenses."
+  },
+  {
+    "id": "BUG-092",
+    "title": "Filter drawer header/close button clipped, cropped to the bottom sheet's bounds",
+    "description": "ExpenseFilterDrawer was rendered nested inside TripContentSheet, whose .trip-sheet wrapper has overflow:hidden. That clips position:fixed descendants in real browsers regardless of containing-block rules, so the drawer's full-screen backdrop and header (title + close button) got cropped to the sheet's visible bounds, leaving the trip header/map bleeding through above it.",
+    "severity": "medium",
+    "category": "ui-ux",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-08-27T00:41:48.702Z",
+    "updatedAt": "2026-08-27T00:41:56.652Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-08-27T00:41:56.651Z",
+    "resolutionNote": "Lifted the filter drawer's render + open/close state from ExpenseList up to App.tsx, rendering it as a sibling of ExpenseForm/ExpenseReviewModal outside TripContentSheet entirely, matching the pattern those unaffected modals already used."
+  },
+  {
+    "id": "BUG-093",
+    "title": "Cross-linking from Analytics into the ledger could land on a stale open filter drawer",
+    "description": "Tab panes stay mounted (display:none, not unmounted) when switching tabs, so ExpenseList's local filter-drawer open state survived a tab switch. Tapping a category/member in Analytics to jump into the filtered ledger could land on a leftover open drawer instead of the transaction list if one had been left open earlier.",
+    "severity": "medium",
+    "category": "navigation",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-08-27T00:42:04.651Z",
+    "updatedAt": "2026-08-27T00:42:11.203Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-08-27T00:42:11.202Z",
+    "resolutionNote": "Filter-drawer open state moved from ExpenseList to App.tsx (same lift as BUG-092); every cross-link handler now explicitly closes it before switching tabs."
+  },
+  {
+    "id": "BUG-094",
+    "title": "Expense currency picker was discarded at save, silently corrupting cross-currency totals",
+    "description": "ExpenseForm let a user pick a non-base currency and previewed a live conversion, but the save payload never included the picked currency and App.tsx hardcoded currency to the trip's base currency. Unless the user explicitly clicked 'Use {base}' first, the raw typed number was saved as-is under the base currency, silently corrupting totalSpent/balances for that expense.",
+    "severity": "high",
+    "category": "splits-math",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-08-27T00:42:19.266Z",
+    "updatedAt": "2026-08-27T00:42:25.987Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-08-27T00:42:25.985Z",
+    "resolutionNote": "ExpenseForm.tsx now always converts to base currency at save time (not gated on the button click) and passes the actually-selected currency through; App.tsx's handleSaveExpense uses that instead of hardcoding the trip's base currency."
+  },
+  {
+    "id": "BUG-095",
+    "title": "Blind Mode's privacy-blur left every amount illegible/smudged-looking",
+    "description": "The .privacy-blur CSS filter:blur(5px), toggled by the header eye icon, was left active and blurred amounts across the stat strip, expense rows, Members tab balances, and settlement chips -- reported by the user as text 'smudged and not visible properly'.",
+    "severity": "medium",
+    "category": "ui-ux",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-08-27T00:42:35.183Z",
+    "updatedAt": "2026-08-27T00:42:42.730Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-08-27T00:42:42.729Z",
+    "resolutionNote": "Removed Blind Mode entirely per product decision: deleted privacyStore.ts, the header eye-icon toggle, every formatMaskedAmount/.privacy-blur usage across 8 files, replaced with a plain formatAmount() in utils/currency.ts."
+  },
+  {
+    "id": "BUG-096",
+    "title": "Redundant refresh icon duplicated the 'Synced' pill's tap-to-sync action",
+    "description": "The header carried a separate refresh icon button (pull) alongside the already-clickable 'Synced' status pill (push via processQueue), needlessly crowding the header for functionality the pill could already trigger.",
+    "severity": "low",
+    "category": "ui-ux",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-08-27T00:42:50.644Z",
+    "updatedAt": "2026-08-27T00:42:57.282Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-08-27T00:42:57.281Z",
+    "resolutionNote": "Removed the standalone refresh icon button; merged its refreshActiveTripExpenses() pull into handleSyncClick() so the 'Synced' pill now does both push (processQueue) and pull in one tap."
   }
 ]

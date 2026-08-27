@@ -9,7 +9,7 @@ import { fetchPreviousTripMembers, searchRemoteMemberSuggestions } from '../serv
 import { IconCheck, IconEdit, IconTrash, IconMembers, IconTag } from './Icons';
 import { SwipeableRow } from './SwipeableRow';
 import { useHistoryBack } from '../utils/useHistoryBack';
-import { usePrivacyStore, formatMaskedAmount } from '../store/privacyStore';
+import { formatAmount } from '../utils/currency';
 import { buildAutoGroupName } from '../utils/groupNaming';
 
 type Props = {
@@ -63,8 +63,6 @@ export function MembersGroupsTab({
   currentUserId,
   addMemberSignal,
 }: Props) {
-  const isBlindMode = usePrivacyStore((s) => s.isBlindMode);
-
   // Member Form State
   const [newMemberName, setNewMemberName] = React.useState('');
   const [editingMember, setEditingMember] = React.useState<Member | null>(null);
@@ -791,9 +789,9 @@ export function MembersGroupsTab({
             const owes = balance < -0.01;
             const amtLabel =
               balance > 0.01
-                ? `gets back ${formatMaskedAmount(balance, currencySymbol, isBlindMode)}`
+                ? `gets back ${formatAmount(balance, currencySymbol)}`
                 : owes
-                ? `owes ${formatMaskedAmount(Math.abs(balance), currencySymbol, isBlindMode)}`
+                ? `owes ${formatAmount(Math.abs(balance), currencySymbol)}`
                 : 'settled';
             const delCheck = isAdmin ? checkCanDeleteMember(member) : null;
             const row = (
@@ -841,7 +839,7 @@ export function MembersGroupsTab({
                       </div>
                     </div>
                     <div className="lt-bottom-row" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', marginTop: '6px', flexWrap: 'wrap' }}>
-                      <div className="lt-amt privacy-blur">{amtLabel}</div>
+                      <div className="lt-amt">{amtLabel}</div>
                       {isAdmin && (
                         <div className="lt-actions" style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
                           {onSetMemberAdminRole && (

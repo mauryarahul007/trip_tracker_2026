@@ -85,7 +85,10 @@ export function SwipeableRow({ onDelete, onEdit, children, reversed = false, pla
   const rightIsDelete = rightAction === onDelete;
 
   return (
-    <div style={{ position: 'relative', overflow: 'hidden' }}>
+    // data-no-tab-swipe: this row already owns horizontal touch drags for
+    // its own delete/edit reveal — a page-level swipe-between-tabs gesture
+    // must not also see this drag, or the two fight over the same gesture.
+    <div data-no-tab-swipe="true" style={{ position: 'relative', overflow: 'hidden' }}>
       {leftAction && (
         <div
           aria-hidden="true"

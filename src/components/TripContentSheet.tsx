@@ -5,16 +5,28 @@ import { useRef, useState, useEffect, type PointerEvent, type ReactNode } from '
 // edge actually sits, not just this file's own layout.
 export const SHEET_COLLAPSED_TOP = 50; // vh% -- initial state, map half visible
 const SHEET_EXPANDED_TOP = 20; // vh% -- swiped-up state, 80% coverage
+const SHEET_FULL_TOP = 0; // vh% -- fully expanded, Uber-style: covers the map entirely
+
+const SNAP_POINTS = [SHEET_FULL_TOP, SHEET_EXPANDED_TOP, SHEET_COLLAPSED_TOP];
+function nearestSnapPoint(value: number): number {
+  return SNAP_POINTS.reduce((closest, point) =>
+    Math.abs(point - value) < Math.abs(closest - value) ? point : closest
+  );
+}
 
 interface Props {
   children: ReactNode;
   onExpandedChange?: (expanded: boolean) => void;
+  // Fired when the sheet snaps fully open (covering the map/header entirely)
+  // vs. any other state -- lets the caller hide the floating header, which
+  // otherwise always paints above the sheet regardless of how far it's dragged.
+  onFullChange?: (full: boolean) => void;
 }
 
 // Draggable bottom sheet over the map backdrop. Starts covering half the
 // screen; swiping anywhere up on mobile expands it to 80%, snapping to whichever
 // state is nearer on release. On desktop, dragging is restricted to the handle.
-export function TripContentSheet({ children, onExpandedChange }: Props) {
+export function TripContentSheet({ children, onExpandedChange, onFullChange }: Props) {
   const [topPercent, setTopPercent] = useState(SHEET_COLLAPSED_TOP);
   const [isDragging, setIsDragging] = useState(false);
 
@@ -55,7 +67,7 @@ export function TripContentSheet({ children, onExpandedChange }: Props) {
     if (!isDragging) return;
 
     const deltaPercent = ((e.clientY - dragStartY.current) / window.innerHeight) * 100;
-    const next = Math.min(SHEET_COLLAPSED_TOP, Math.max(SHEET_EXPANDED_TOP, dragStartTop.current + deltaPercent));
+    const next = Math.min(SHEET_COLLAPSED_TOP, Math.max(SHEET_FULL_TOP, dragStartTop.current + deltaPercent));
     updateTopPercent(next);
   };
 
@@ -64,11 +76,10 @@ export function TripContentSheet({ children, onExpandedChange }: Props) {
     if (!isDragging) return;
 
     setIsDragging(false);
-    const midpoint = (SHEET_COLLAPSED_TOP + SHEET_EXPANDED_TOP) / 2;
-    const expanded = liveTopPercentRef.current < midpoint;
-    const finalTop = expanded ? SHEET_EXPANDED_TOP : SHEET_COLLAPSED_TOP;
+    const finalTop = nearestSnapPoint(liveTopPercentRef.current);
     updateTopPercent(finalTop);
-    onExpandedChange?.(expanded);
+    onExpandedChange?.(finalTop !== SHEET_COLLAPSED_TOP);
+    onFullChange?.(finalTop === SHEET_FULL_TOP);
   };
 
   const handlePointerCancel = (e: PointerEvent<HTMLDivElement>) => {
@@ -119,7 +130,7 @@ export function TripContentSheet({ children, onExpandedChange }: Props) {
       if (isDraggingRef.current) {
         e.preventDefault(); // Prevent standard browser scroll
         const deltaPercent = (dy / window.innerHeight) * 100;
-        const next = Math.min(SHEET_COLLAPSED_TOP, Math.max(SHEET_EXPANDED_TOP, dragStartTop.current + deltaPercent));
+        const next = Math.min(SHEET_COLLAPSED_TOP, Math.max(SHEET_FULL_TOP, dragStartTop.current + deltaPercent));
         updateTopPercent(next);
         return;
       }
@@ -129,9 +140,15 @@ export function TripContentSheet({ children, onExpandedChange }: Props) {
         const isScrollAtTop = !scrollContainerRef.current || scrollContainerRef.current.scrollTop <= 0;
         const currentTop = liveTopPercentRef.current;
 
+        // Continuing up past "expanded" (to "full", Uber-style, hiding the
+        // header) or back down from either "expanded" or "full" only
+        // engages once the list itself is scrolled to its top -- otherwise
+        // this hijacks ordinary list scrolling instead of the sheet drag.
         const shouldDrag =
           (currentTop === SHEET_COLLAPSED_TOP && dy < 0) || // Swiping up when collapsed
-          (currentTop === SHEET_EXPANDED_TOP && dy > 0 && isScrollAtTop); // Swiping down when expanded and content scrolled to top
+          (currentTop === SHEET_EXPANDED_TOP && dy < 0 && isScrollAtTop) || // Continue up to full
+          (currentTop === SHEET_EXPANDED_TOP && dy > 0 && isScrollAtTop) || // Back down to collapsed
+          (currentTop === SHEET_FULL_TOP && dy > 0 && isScrollAtTop); // Back down from full
 
         if (shouldDrag) {
           isDraggingRef.current = true;
@@ -147,12 +164,10 @@ export function TripContentSheet({ children, onExpandedChange }: Props) {
       isDraggingRef.current = false;
       setIsDragging(false);
 
-      const currentTop = liveTopPercentRef.current;
-      const midpoint = (SHEET_COLLAPSED_TOP + SHEET_EXPANDED_TOP) / 2;
-      const expanded = currentTop < midpoint;
-      const finalTop = expanded ? SHEET_EXPANDED_TOP : SHEET_COLLAPSED_TOP;
+      const finalTop = nearestSnapPoint(liveTopPercentRef.current);
       updateTopPercent(finalTop);
-      onExpandedChange?.(expanded);
+      onExpandedChange?.(finalTop !== SHEET_COLLAPSED_TOP);
+      onFullChange?.(finalTop === SHEET_FULL_TOP);
     };
 
     el.addEventListener('touchstart', handleTouchStart);
@@ -172,7 +187,7 @@ export function TripContentSheet({ children, onExpandedChange }: Props) {
   return (
     <div
       ref={sheetRef}
-      className={`trip-sheet${isDragging ? ' dragging' : ''}`}
+      className={`trip-sheet${isDragging ? ' dragging' : ''}${topPercent === SHEET_FULL_TOP ? ' full' : ''}`}
       style={{ top: `${topPercent}%` }}
     >
       <div

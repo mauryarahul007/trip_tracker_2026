@@ -9,11 +9,11 @@
 
 | Metric | Count |
 | :--- | :--- |
-| **Total Tracked** | **13** |
+| **Total Tracked** | **17** |
 | **💡 Requested** | **1** |
 | **📋 Planned** | **0** |
 | **🟡 In Progress** | **0** |
-| **✅ Shipped** | **12** |
+| **✅ Shipped** | **16** |
 | **⚪ Won't Do** | **0** |
 
 ---
@@ -54,6 +54,10 @@ Test
 | **FEAT-011** | Close/Reopen Trip lock | `ui-ux` | `claude-cli` | `claude-cli` | Migration 0069 applied to remote. Files: supabase/migrations/0069_add_trip_closed.sql, src/store/tripStore.ts, src/services/tripApi.ts, src/types/index.ts, src/types/database.ts, src/components/SettingsView.tsx. |
 | **FEAT-012** | Remind All settlement nudge | `ui-ux` | `claude-cli` | `claude-cli` | File: src/components/BalancesSettlements.tsx. |
 | **FEAT-013** | Per-trip push notification mute | `ui-ux` | `claude-cli` | `claude-cli` | Migration 0070 applied to remote, send-push Edge Function redeployed. Files: supabase/migrations/0070_add_trip_mutes.sql, supabase/functions/send-push/index.ts, src/store/tripStore.ts, src/services/tripApi.ts, src/types/database.ts, src/components/SettingsView.tsx. |
+| **FEAT-014** | Expenses restructured into Trip Summary + Itinerary Ledger with advanced filters and cross-linking | `ui-ux` | `claude-cli` | `claude-cli` | Shipped |
+| **FEAT-015** | Right-edge swipe navigation between tabs | `ui-ux` | `claude-cli` | `claude-cli` | Shipped |
+| **FEAT-016** | Settlement section simplified: plain-language sentences + at-a-glance balance chips | `ui-ux` | `claude-cli` | `claude-cli` | Shipped |
+| **FEAT-017** | Uber-style full-screen bottom sheet with auto-hiding header | `ui-ux` | `claude-cli` | `claude-cli` | Shipped |
 
 ---
 

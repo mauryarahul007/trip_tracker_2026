@@ -260,7 +260,10 @@ export function TripMapHero({ trip, sheetExpanded, onToneChange }: Props) {
   if (validStops.length === 0) return null;
 
   return (
-    <div className="trip-map-hero">
+    // data-no-tab-swipe: maplibre-gl owns horizontal drag here for its own
+    // pan gesture — a page-level swipe-between-tabs listener must not
+    // compete with the map for the same touch drag.
+    <div className="trip-map-hero" data-no-tab-swipe="true">
       <div ref={mapContainerRef} style={{ width: '100%', height: '100%' }} />
     </div>
   );
