@@ -117,10 +117,12 @@
   --border-radius-sm: 10px;
   --border-radius-md: 14px;
   --border-radius-lg: 20px;
-  --border-radius-pill: 999px;
-
   --transition-smooth: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-spring: cubic-bezier(0.32, 0.72, 0, 1);
+  --ease-decel: cubic-bezier(0.16, 1, 0.3, 1);
+  --transition-spring: transform 0.32s cubic-bezier(0.32, 0.72, 0, 1), opacity 0.22s ease;
 }
+
 
 /* Global reduced-motion fallback -- collapses every animation/transition
    duration in one shot instead of hunting down each @keyframes block
@@ -4023,13 +4025,15 @@ html.capacitor-ios .trip-sheet .tab-pane {
   align-items: center;
   z-index: 1100;
   padding: 20px max(20px, var(--safe-right, 20px)) calc(20px + var(--safe-bottom, 0px)) max(20px, var(--safe-left, 20px));
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   overscroll-behavior: contain;
   touch-action: pan-y;
+  animation: overlayFadeIn 0.22s var(--ease-decel, cubic-bezier(0.16, 1, 0.3, 1)) forwards;
 }
 
-.modal-overlay .modal-sheet {
+.modal-overlay .modal-sheet,
+.modal-backdrop .modal-card {
   width: 100%;
   max-width: 460px;
   max-height: calc(100dvh - 40px);
@@ -4038,7 +4042,43 @@ html.capacitor-ios .trip-sheet .tab-pane {
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
   position: relative;
+  animation: modalSheetSpringUp 0.32s var(--ease-decel, cubic-bezier(0.16, 1, 0.3, 1)) forwards;
 }
+
+@keyframes overlayFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes modalSheetSpringUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Accessible Touch Target Utility (WCAG 2.2 Target Size minimum 44x44px) */
+.touch-target-btn {
+  min-width: 44px;
+  min-height: 44px;
+  position: relative;
+}
+
+.touch-target-btn::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: max(100%, 44px);
+  height: max(100%, 44px);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
 
 /* ==========================================================================
    WhatsApp-Style Settings Design System

@@ -72,6 +72,8 @@ export function DateRangePicker({ startDate, endDate, onSelectStart, onSelectEnd
         type="button"
         className="flight-trigger"
         aria-label={triggerLabel}
+        aria-haspopup="dialog"
+        aria-expanded={open}
         onClick={() => setOpen(!open)}
       >
         <span className="ft-leg">
@@ -95,43 +97,63 @@ export function DateRangePicker({ startDate, endDate, onSelectStart, onSelectEnd
       </button>
 
       {open && (
-        <div className="date-picker-popover">
+        <div
+          className="date-picker-popover"
+          role="dialog"
+          aria-label="Trip dates calendar"
+          onKeyDown={(e) => {
+            if (e.key === 'Escape') setOpen(false);
+          }}
+        >
           <div className="date-picker-nav">
             <button type="button" aria-label="Previous month" onClick={() => goMonth(-1)}>
               <IconChevronLeft size={16} className="icon-sm" />
             </button>
-            <span>{new Date(viewYear, viewMonth, 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</span>
+            <span aria-live="polite" style={{ fontWeight: 600 }}>
+              {new Date(viewYear, viewMonth, 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+            </span>
             <button type="button" aria-label="Next month" onClick={() => goMonth(1)}>
               <IconChevronRight size={16} className="icon-sm" />
             </button>
           </div>
 
-          <div className="date-picker-grid date-picker-weekdays">
-            {WEEKDAYS.map((w) => <span key={w}>{w}</span>)}
+          <div className="date-picker-grid date-picker-weekdays" role="row">
+            {WEEKDAYS.map((w) => (
+              <span key={w} role="columnheader" aria-label={w === 'Su' ? 'Sunday' : w === 'Mo' ? 'Monday' : w === 'Tu' ? 'Tuesday' : w === 'We' ? 'Wednesday' : w === 'Th' ? 'Thursday' : w === 'Fr' ? 'Friday' : 'Saturday'}>
+                {w}
+              </span>
+            ))}
           </div>
 
-          {weeks.map((week, wi) => (
-            <div className="date-picker-grid" key={wi}>
-              {week.map((date, di) => {
-                if (!date) return <span key={di} />;
-                const isStart = isSameDate(date, startD);
-                const isEnd = isSameDate(date, endD);
-                const inRange = startD && rangeEnd && isBetweenExclusive(date, startD, rangeEnd);
-                const isToday = isSameDate(date, today);
-                return (
-                  <button
-                    key={di}
-                    type="button"
-                    className={`date-picker-day${isStart || isEnd ? ' selected' : ''}${inRange ? ' in-range' : ''}${isToday ? ' today' : ''}`}
-                    onClick={() => handleDayClick(date)}
-                    onMouseEnter={() => setHoverDate(date)}
-                  >
-                    {date.getDate()}
-                  </button>
-                );
-              })}
-            </div>
-          ))}
+          <div role="grid" aria-label="Calendar month">
+            {weeks.map((week, wi) => (
+              <div className="date-picker-grid" key={wi} role="row">
+                {week.map((date, di) => {
+                  if (!date) return <span key={di} role="gridcell" aria-hidden="true" />;
+                  const isStart = isSameDate(date, startD);
+                  const isEnd = isSameDate(date, endD);
+                  const inRange = startD && rangeEnd && isBetweenExclusive(date, startD, rangeEnd);
+                  const isToday = isSameDate(date, today);
+                  const fullDateLabel = date.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' });
+                  return (
+                    <button
+                      key={di}
+                      type="button"
+                      role="gridcell"
+                      aria-selected={Boolean(isStart || isEnd || inRange)}
+                      aria-label={`${fullDateLabel}${isStart ? ', trip start date' : ''}${isEnd ? ', trip end date' : ''}${isToday ? ', today' : ''}`}
+                      className={`date-picker-day${isStart || isEnd ? ' selected' : ''}${inRange ? ' in-range' : ''}${isToday ? ' today' : ''}`}
+                      onClick={() => handleDayClick(date)}
+                      onMouseEnter={() => setHoverDate(date)}
+                    >
+                      {date.getDate()}
+                    </button>
+
+                  );
+                })}
+              </div>
+            ))}
+          </div>
 
           {startD && (
             <button
@@ -144,6 +166,7 @@ export function DateRangePicker({ startDate, endDate, onSelectStart, onSelectEnd
           )}
         </div>
       )}
+
     </div>
   );
 }

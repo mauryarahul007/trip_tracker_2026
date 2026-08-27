@@ -20,12 +20,12 @@ function truncateForToast(text: string): string {
 
 function PostmarkToast({ message, onUndo, durationMs }: { message: ReactNode; onUndo: () => void; durationMs: number }) {
   return (
-    <div className="postmark-toast">
+    <div className="postmark-toast" role="status" aria-live="polite">
       <span className="pm-stamp" aria-hidden="true">
         <IconTrash size={14} className="icon-sm" />
       </span>
       <span className="pm-text">{message}</span>
-      <button onClick={onUndo} className="undo-toast-btn">Undo</button>
+      <button onClick={onUndo} className="undo-toast-btn" aria-label="Undo deletion">Undo</button>
       <span className="undo-toast-progress" style={{ animationDuration: `${durationMs}ms` }} aria-hidden="true" />
     </div>
   );
@@ -43,19 +43,24 @@ export function UndoToasts({
   if (!pendingDeleteExpense && !pendingDeleteTrip && !pendingDeleteGroup) return null;
 
   return (
-    <div style={{
-      position: 'fixed',
-      bottom: 'calc(72px + var(--safe-bottom, 0px))',
-      left: '50%',
-      transform: 'translateX(-50%)',
-      display: 'flex',
-      flexDirection: 'column-reverse',
-      gap: '10px',
-      alignItems: 'center',
-      zIndex: 9999,
-      maxWidth: 'calc(100vw - 32px)',
-      width: 'max-content',
-    }}>
+    <div
+      role="region"
+      aria-label="Pending deletion notifications"
+      style={{
+        position: 'fixed',
+        bottom: 'calc(72px + var(--safe-bottom, 0px))',
+        left: '50%',
+        transform: 'translateX(-50%)',
+        display: 'flex',
+        flexDirection: 'column-reverse',
+        gap: '10px',
+        alignItems: 'center',
+        zIndex: 9999,
+        maxWidth: 'calc(100vw - 32px)',
+        width: 'max-content',
+      }}
+    >
+
       {pendingDeleteExpense && (
         <PostmarkToast
           key={pendingDeleteExpense.id}

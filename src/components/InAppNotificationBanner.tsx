@@ -69,7 +69,18 @@ export function InAppNotificationBanner() {
       onPointerUp={handlePointerUp}
       onPointerCancel={handlePointerUp}
       onClick={handleTap}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          handleTap();
+        } else if (e.key === 'Escape') {
+          e.preventDefault();
+          dismissBanner();
+        }
+      }}
+      tabIndex={0}
       role="alert"
+      aria-label={`${headline}: ${body}. Press Enter to view notifications, Escape to dismiss.`}
     >
       <span className={`notif-squircle ${colorClass}`} aria-hidden="true">{icon}</span>
       <span className="in-app-notif-banner-text">
@@ -77,5 +88,6 @@ export function InAppNotificationBanner() {
         <span>{body}</span>
       </span>
     </div>
+
   );
 }

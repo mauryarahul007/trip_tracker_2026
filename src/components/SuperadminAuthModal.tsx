@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { IconShield, IconClose, IconCheck, IconAlertCircle } from './Icons';
 import { useTripStore } from '../store/tripStore';
 import { useAuthStore } from '../store/authStore';
+import { useFocusTrap } from '../hooks/useFocusTrap';
 
 interface Props {
   isOpen: boolean;
@@ -13,6 +14,9 @@ export function SuperadminAuthModal({ isOpen, onClose, onSuccess }: Props) {
   const setUserIdentity = useTripStore((s) => s.setUserIdentity);
   const signInSuperadmin = useAuthStore((s) => s.signInSuperadmin);
   const requestSuperadminPasswordReset = useAuthStore((s) => s.requestSuperadminPasswordReset);
+  const sheetRef = useRef<HTMLDivElement>(null);
+
+  useFocusTrap(sheetRef, isOpen, false, onClose);
 
   // After a real Supabase sign-in, tripStore's userId must match the real
   // auth.uid() — writes (createTrip, addExpense, ...) carry it as an FK to
@@ -78,6 +82,11 @@ export function SuperadminAuthModal({ isOpen, onClose, onSuccess }: Props) {
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div
+        ref={sheetRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="superadmin-dialog-title"
+        tabIndex={-1}
         className="glass-card fade-in modal-sheet"
         style={{
           maxWidth: '420px',
@@ -99,25 +108,40 @@ export function SuperadminAuthModal({ isOpen, onClose, onSuccess }: Props) {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                color: '#fff',
+                color: '#FFF',
+                flexShrink: 0,
               }}
+              aria-hidden="true"
             >
-              <IconShield size={18} />
+              <IconShield size={19} />
             </div>
             <div>
-              <h3 style={{ fontSize: '17px', fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>
-                {mode === 'login' ? 'Superadmin Login' : 'Reset Password'}
+              <h3 id="superadmin-dialog-title" style={{ fontSize: '17px', margin: 0, fontWeight: 700 }}>
+                {mode === 'login' ? 'Super User Login' : 'Reset Super Password'}
               </h3>
-              <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-                {mode === 'login' ? 'Master administrative access' : "We'll email you a reset link"}
-              </span>
+              <p style={{ fontSize: '11px', color: 'var(--text-secondary)', margin: '2px 0 0' }}>
+                {mode === 'login' ? 'Elevated access for system ops & bugledger' : 'Send password recovery link to admin email'}
+              </p>
             </div>
           </div>
           <button
             type="button"
-            className="secondary-btn"
-            style={{ padding: '6px', borderRadius: '50%', border: 'none' }}
+            className="touch-target-btn"
+            style={{
+              background: 'transparent',
+              border: 'none',
+              cursor: 'pointer',
+              color: 'var(--text-muted)',
+              padding: '6px',
+              borderRadius: '6px',
+              minWidth: '44px',
+              minHeight: '44px',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
             onClick={onClose}
+            aria-label="Close dialog"
           >
             <IconClose size={16} />
           </button>

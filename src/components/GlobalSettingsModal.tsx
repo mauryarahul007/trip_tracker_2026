@@ -1,9 +1,10 @@
-import { useEffect, useRef } from 'react';
+import { useRef } from 'react';
 import type { Trip, Category, Expense } from '../types';
 import type { ConfirmRequest } from './ConfirmDialog';
 import { IconClose } from './Icons';
 import { SettingsView, type ThemePref } from './SettingsView';
 import { useTripStore } from '../store/tripStore';
+import { useFocusTrap } from '../hooks/useFocusTrap';
 
 type Props = {
   onClose: () => void;
@@ -79,9 +80,7 @@ export function GlobalSettingsModal({
   const effectiveExpenses = activeTripExpenses || storeExpenses.filter((e) => e.tripId === activeTripId);
 
   const sheetRef = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    sheetRef.current?.focus();
-  }, []);
+  useFocusTrap(sheetRef, true, false, onClose);
 
   return (
     <div className="modal-backdrop drawer-left" onClick={onClose}>
@@ -101,9 +100,9 @@ export function GlobalSettingsModal({
             </div>
             <button
               type="button"
-              className="secondary-btn"
-              style={{ padding: '7px 8px', color: '#FFFFFF', borderColor: 'rgba(255,255,255,0.28)', background: 'rgba(255,255,255,0.1)', flexShrink: 0 }}
-              aria-label="Close"
+              className="secondary-btn touch-target-btn"
+              style={{ minWidth: '44px', minHeight: '44px', padding: '7px 8px', color: '#FFFFFF', borderColor: 'rgba(255,255,255,0.28)', background: 'rgba(255,255,255,0.1)', flexShrink: 0, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
+              aria-label="Close settings"
               title="Close"
               onClick={onClose}
             >
@@ -111,6 +110,7 @@ export function GlobalSettingsModal({
             </button>
           </div>
         </header>
+
 
         <SettingsView
           categories={effectiveCategories}

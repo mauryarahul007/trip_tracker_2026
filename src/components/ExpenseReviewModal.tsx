@@ -1,8 +1,10 @@
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import type { Category, Expense, Member, Trip } from '../types';
 import { getReceiptSignedUrl } from '../services/tripApi';
 import { IconEdit, IconTrash } from './Icons';
 import { getCurrencySymbol } from '../utils/currency';
+import { useFocusTrap } from '../hooks/useFocusTrap';
+
 
 type Props = {
   expense: Expense;
@@ -21,9 +23,8 @@ export function ExpenseReviewModal({ expense, members, categories, trip, canMana
   const [receiptUrl, setReceiptUrl] = useState<string | null>(null);
   const sheetRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    sheetRef.current?.focus();
-  }, []);
+  useFocusTrap(sheetRef, true, false, onClose);
+
 
   useEffect(() => {
     setReceiptUrl(null);

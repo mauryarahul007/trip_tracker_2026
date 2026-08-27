@@ -1019,14 +1019,22 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - In light mode, the navigation rail uses dark background elements while the content page uses light elements. This hybrid contrast creates high spatial clarity and visual anchors, at the expense of pure monochromatic uniformity.
 
+---
 
-
-
-
-
-
-
-
-
-
-
+## 58. Usability, Uber-Grade Spring Motion & WCAG 2.2 Accessibility Overhaul
+* **Context:**
+  - The web application required top-tier consumer travel app smoothness (Uber/Airbnb feel) and full compliance with WCAG 2.2 Level AA/AAA accessibility standards across focus management, custom widgets, live status announcements, touch target sizes, and reduced motion.
+* **Decision:**
+  - **Universal Focus Trapping:** Upgraded `useFocusTrap` to manage active elements, autofocus, keydown trapping, and return focus upon cleanup. Wired across all modal dialogs (`ConfirmDialog`, `ShareTripModal`, `GlobalSettingsModal`, `ExpenseReviewModal`, `NotificationsPanel`, `CommandPalette`, `TripWrappedModal`, `AchievementBadgeModal`, `ConflictResolverModal`, `SuperadminAuthModal`).
+  - **WAI-ARIA Custom Widgets:**
+    - `CommandPalette`: Full combobox/listbox/option pattern with `aria-expanded`, `aria-controls`, and `aria-activedescendant`.
+    - `DateRangePicker`: Calendar grid with `role="grid"`, `role="row"`, `role="gridcell"`, `aria-selected`, and formatted date labels.
+    - `NavTabs`: Tablist pattern (`role="tablist"`, `role="tab"`, `aria-selected`).
+    - `TripContentSheet`: Accessible drag handle button with `aria-expanded` and keyboard controls (Enter/Arrows to cycle snap points).
+    - `UndoToasts` & `InAppNotificationBanner`: Wrapped in `role="status"` / `aria-live="polite"` for automatic screen reader announcements.
+  - **Uber-Grade Motion & Touch Targets:**
+    - Spring deceleration curves (`cubic-bezier(0.32, 0.72, 0, 1)`) and GPU-composited transform transitions across sheets and modal cards.
+    - Guaranteed $\ge 44 \times 44\text{px}$ touch target sizes via `.touch-target-btn` utility.
+    - Strict `prefers-reduced-motion: reduce` overrides dropping transitions to `0.01ms` for motion sensitivity.
+* **Trade-offs Accepted:**
+  - Native browser DOM APIs and CSS properties were chosen over third-party motion libraries (such as Framer Motion or GSAP) to maintain zero runtime bundle overhead and zero extra memory consumption.

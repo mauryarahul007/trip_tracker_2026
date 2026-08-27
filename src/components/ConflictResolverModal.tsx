@@ -1,6 +1,8 @@
+import { useRef } from 'react';
 import type { Expense } from '../types';
 import { IconAlertCircle } from './Icons';
 import { getCurrencySymbol } from '../utils/currency';
+import { useFocusTrap } from '../hooks/useFocusTrap';
 
 interface ConflictResolverModalProps {
   localExpense: Expense;
@@ -20,10 +22,18 @@ export function ConflictResolverModal({
   onClose,
 }: ConflictResolverModalProps) {
   const currencySymbol = getCurrencySymbol(currency);
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  useFocusTrap(cardRef, true, false, onClose);
 
   return (
     <div className="modal-backdrop" onClick={onClose}>
       <div
+        ref={cardRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="conflict-dialog-title"
+        tabIndex={-1}
         className="modal-card fade-in"
         style={{ maxWidth: '500px', width: '100%', padding: '24px' }}
         onClick={(e) => e.stopPropagation()}
@@ -39,16 +49,17 @@ export function ConflictResolverModal({
             alignItems: 'center',
             justifyContent: 'center',
             flexShrink: 0
-          }}>
+          }} aria-hidden="true">
             <IconAlertCircle size={20} />
           </div>
           <div>
-            <h3 style={{ fontSize: '18px', margin: 0 }}>Sync Conflict Detected</h3>
+            <h3 id="conflict-dialog-title" style={{ fontSize: '18px', margin: 0 }}>Sync Conflict Detected</h3>
             <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: '2px 0 0' }}>
               This expense was modified on another device while you were offline.
             </p>
           </div>
         </div>
+
 
         {/* Side-by-Side Comparison */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '20px' }}>

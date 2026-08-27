@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useFocusTrap } from '../hooks/useFocusTrap';
 
 export type ConfirmRequest = {
   message: string;
@@ -33,6 +34,8 @@ export function ConfirmDialog({ request, onCancel }: Props) {
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const sheetRef = useRef<HTMLDivElement>(null);
 
+  useFocusTrap(sheetRef, true, false, onCancel);
+
   const clearTimer = () => {
     if (timerRef.current) {
       clearTimeout(timerRef.current);
@@ -41,9 +44,6 @@ export function ConfirmDialog({ request, onCancel }: Props) {
   };
 
   useEffect(() => clearTimer, []);
-  useEffect(() => {
-    sheetRef.current?.focus();
-  }, []);
 
   const handleConfirm = () => {
     request.onConfirm();
@@ -72,9 +72,10 @@ export function ConfirmDialog({ request, onCancel }: Props) {
       <div
         ref={sheetRef}
         tabIndex={-1}
-        role="dialog"
+        role={request.danger ? 'alertdialog' : 'dialog'}
         aria-modal="true"
         aria-labelledby="confirm-dialog-title"
+        aria-describedby="confirm-dialog-desc"
         className="glass-card fade-in modal-sheet"
         style={{
           maxWidth: '380px',
@@ -85,7 +86,7 @@ export function ConfirmDialog({ request, onCancel }: Props) {
         onClick={(e) => e.stopPropagation()}
       >
         <h3 id="confirm-dialog-title" style={{ fontSize: '17px', marginBottom: '10px' }}>{request.title || 'Please confirm'}</h3>
-        <p style={{ fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '20px' }}>{request.message}</p>
+        <p id="confirm-dialog-desc" style={{ fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '20px' }}>{request.message}</p>
         <div style={{ display: 'flex', gap: '12px' }}>
           <button
             type="button"
@@ -101,6 +102,7 @@ export function ConfirmDialog({ request, onCancel }: Props) {
               className={`gradient-btn wax-seal-btn${armed ? ' sealing' : ''}`}
               style={{ flex: 1, background: 'var(--color-danger)' }}
               onClick={handleDangerClick}
+              aria-label={armed ? 'Tap again to confirm permanent action' : (request.confirmLabel || 'Confirm')}
             >
               <span className="seal-fill" aria-hidden="true" />
               <span className="seal-label">{armed ? 'Tap again to confirm' : (request.confirmLabel || 'Confirm')}</span>
@@ -148,3 +150,4 @@ export function ConfirmDialog({ request, onCancel }: Props) {
     </div>
   );
 }
+

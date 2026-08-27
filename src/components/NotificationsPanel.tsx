@@ -6,6 +6,7 @@ import { useTripStore } from '../store/tripStore';
 import { useHistoryBack } from '../utils/useHistoryBack';
 import { getWebNotificationPermission, isWebNotificationSupported, requestWebNotificationPermission } from '../utils/webNotifications';
 import { renderNotificationBody, getNotificationHeadline } from '../utils/notificationText';
+import { useFocusTrap } from '../hooks/useFocusTrap';
 import {
   IconClose,
   IconTrash,
@@ -18,6 +19,7 @@ import {
   IconSparkles,
   IconMail,
 } from './Icons';
+
 
 function relativeTime(iso: string): string {
   const diffMs = Date.now() - new Date(iso).getTime();
@@ -255,6 +257,7 @@ export function NotificationsPanel({
 
   // Stack navigation: swipe/browser back closes notifications panel
   useHistoryBack(isPanelOpen, closePanel);
+  useFocusTrap(sheetRef, isPanelOpen, false, closePanel);
 
   if (!isPanelOpen) return null;
 
@@ -324,6 +327,7 @@ export function NotificationsPanel({
 
   return (
     <div className="modal-backdrop notif-backdrop" onClick={closePanel}>
+
       <div
         ref={sheetRef}
         tabIndex={-1}
@@ -337,14 +341,14 @@ export function NotificationsPanel({
         <div className="notif-header">
           <div className="notif-header-left">
             <div className="notif-title-group">
-              <div className="notif-bell-icon-badge">
+              <div className="notif-bell-icon-badge" aria-hidden="true">
                 <IconBell size={18} />
               </div>
               <h2 id="notifications-panel-title" className="notif-heading">
                 Notifications
               </h2>
               {displayedUnreadCount > 0 && (
-                <span className="notif-count-badge">
+                <span className="notif-count-badge" aria-label={`${displayedUnreadCount} unread notifications`}>
                   {displayedUnreadCount} new
                 </span>
               )}
@@ -353,7 +357,8 @@ export function NotificationsPanel({
 
           <button
             type="button"
-            className="notif-close-btn"
+            className="notif-close-btn touch-target-btn"
+            style={{ minWidth: '44px', minHeight: '44px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
             onClick={closePanel}
             aria-label="Close notifications"
             title="Close"
@@ -365,9 +370,11 @@ export function NotificationsPanel({
         {/* Sub-Header Toolbar & Filter Controls */}
         <div className="notif-controls-bar">
           {activeTrip ? (
-            <div className="notif-filter-tabs">
+            <div className="notif-filter-tabs" role="tablist" aria-label="Filter notifications">
               <button
                 type="button"
+                role="tab"
+                aria-selected={tripFilter === 'current'}
                 className={`notif-filter-tab ${tripFilter === 'current' ? 'active' : ''}`}
                 onClick={() => setTripFilter('current')}
               >
@@ -378,6 +385,8 @@ export function NotificationsPanel({
               </button>
               <button
                 type="button"
+                role="tab"
+                aria-selected={tripFilter === 'all'}
                 className={`notif-filter-tab ${tripFilter === 'all' ? 'active' : ''}`}
                 onClick={() => setTripFilter('all')}
               >

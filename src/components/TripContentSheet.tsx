@@ -255,25 +255,60 @@ export function TripContentSheet({ children, onExpandedChange, onFullChange }: P
   const cornerProgress = Math.max(0, Math.min(1, (SHEET_EXPANDED_TOP - topPercent) / (SHEET_EXPANDED_TOP - SHEET_FULL_TOP)));
   const cornerRadius = 28 * (1 - cornerProgress);
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      triggerSnapHaptic();
+      const nextTop = topPercent >= SHEET_COLLAPSED_TOP ? SHEET_EXPANDED_TOP : topPercent > SHEET_FULL_TOP ? SHEET_FULL_TOP : SHEET_COLLAPSED_TOP;
+      updateTopPercent(nextTop);
+      onExpandedChange?.(nextTop !== SHEET_COLLAPSED_TOP);
+      onFullChange?.(nextTop === SHEET_FULL_TOP);
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      triggerSnapHaptic();
+      const nextTop = topPercent <= SHEET_EXPANDED_TOP ? SHEET_FULL_TOP : SHEET_EXPANDED_TOP;
+      updateTopPercent(nextTop);
+      onExpandedChange?.(true);
+      onFullChange?.(nextTop === SHEET_FULL_TOP);
+    } else if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      triggerSnapHaptic();
+      const nextTop = topPercent >= SHEET_EXPANDED_TOP ? SHEET_COLLAPSED_TOP : SHEET_EXPANDED_TOP;
+      updateTopPercent(nextTop);
+      onExpandedChange?.(nextTop !== SHEET_COLLAPSED_TOP);
+      onFullChange?.(false);
+    }
+  };
+
+
+
   return (
     <>
       <div className={`trip-sheet-scrim${isDragging ? ' dragging' : ''}`} style={{ opacity: scrimProgress * 0.55 }} />
       <div
         ref={sheetRef}
+        role="region"
+        aria-label="Trip content sheet"
         className={`trip-sheet${isDragging ? ' dragging' : ''}${topPercent === SHEET_FULL_TOP ? ' full' : ''}`}
         style={{ top: `${topPercent}%`, borderRadius: `${cornerRadius}px ${cornerRadius}px 0 0` }}
       >
         <div
-          className="trip-sheet-handle"
+          role="button"
+          tabIndex={0}
+          aria-label="Trip content sheet height control. Press Enter or Arrow Up to expand, Arrow Down to collapse."
+          aria-expanded={topPercent !== SHEET_COLLAPSED_TOP}
+          className="trip-sheet-handle touch-target-btn"
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}
           onPointerCancel={handlePointerCancel}
+          onKeyDown={handleKeyDown}
         >
-          <span className="trip-sheet-handle-bar" />
+          <span className="trip-sheet-handle-bar" aria-hidden="true" />
         </div>
         {children}
       </div>
     </>
   );
 }
+

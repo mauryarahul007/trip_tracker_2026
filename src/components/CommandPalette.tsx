@@ -3,6 +3,7 @@ import type { Trip, Expense, Member, Category } from '../types';
 import { IconSearch, IconPlus, IconMembers, IconSettings, IconCheck, IconCalendar } from './Icons';
 import { getCurrencySymbol } from '../utils/currency';
 import { triggerHaptic } from '../utils/haptics';
+import { useFocusTrap } from '../hooks/useFocusTrap';
 
 interface CommandPaletteProps {
   isOpen: boolean;
@@ -36,7 +37,10 @@ export function CommandPalette({
   const [query, setQuery] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
   const currencySymbol = getCurrencySymbol(trip?.baseCurrency || '');
+
+  useFocusTrap(cardRef, isOpen, false, onClose);
 
   useEffect(() => {
     if (isOpen) {
@@ -183,9 +187,15 @@ export function CommandPalette({
     }
   };
 
+  const selectedItemId = filteredItems[selectedIndex]?.id;
+
   return (
     <div className="modal-backdrop" onClick={onClose} style={{ alignItems: 'flex-start', paddingTop: 'max(80px, 15vh)' }}>
       <div
+        ref={cardRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Quick Command and Search Palette"
         className="modal-card fade-in"
         style={{
           maxWidth: '540px',
@@ -208,10 +218,16 @@ export function CommandPalette({
           borderBottom: '1px solid var(--border-color)',
           background: 'var(--bg-secondary)',
         }}>
-          <IconSearch size={18} style={{ color: 'var(--primary-accent)', flexShrink: 0 }} />
+          <IconSearch size={18} style={{ color: 'var(--primary-accent)', flexShrink: 0 }} aria-hidden="true" />
           <input
             ref={inputRef}
             type="text"
+            role="combobox"
+            aria-expanded="true"
+            aria-autocomplete="list"
+            aria-controls="command-palette-results"
+            aria-activedescendant={selectedItemId}
+            aria-label="Search commands, expenses, or members"
             className="command-palette-input"
             style={{
               flex: 1,
@@ -235,9 +251,14 @@ export function CommandPalette({
         </div>
 
         {/* Results List */}
-        <div style={{ maxHeight: '360px', overflowY: 'auto', padding: '6px' }}>
+        <div
+          id="command-palette-results"
+          role="listbox"
+          aria-label="Command suggestions"
+          style={{ maxHeight: '360px', overflowY: 'auto', padding: '6px' }}
+        >
           {filteredItems.length === 0 ? (
-            <div style={{ padding: '24px 16px', textAlign: 'center', color: 'var(--text-secondary)', fontSize: '13px' }}>
+            <div style={{ padding: '24px 16px', textAlign: 'center', color: 'var(--text-secondary)', fontSize: '13px' }} role="status">
               No matching actions, expenses, or members found for "{query}".
             </div>
           ) : (
@@ -246,6 +267,9 @@ export function CommandPalette({
               return (
                 <div
                   key={item.id}
+                  id={item.id}
+                  role="option"
+                  aria-selected={isSelected}
                   style={{
                     display: 'flex',
                     alignItems: 'center',
@@ -263,31 +287,29 @@ export function CommandPalette({
                   }}
                 >
                   <div style={{
-                    width: '30px',
-                    height: '30px',
+                    width: '32px',
+                    height: '32px',
                     borderRadius: '8px',
-                    background: isSelected ? 'var(--primary-accent)' : 'var(--bg-secondary)',
-                    color: isSelected ? '#fff' : 'var(--text-secondary)',
+                    background: 'var(--bg-secondary)',
+                    border: '1px solid var(--border-color)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
+                    color: 'var(--primary-accent)',
                     flexShrink: 0,
-                  }}>
+                  }} aria-hidden="true">
                     {item.icon}
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: '13.5px', fontWeight: 600, color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                       {item.title}
                     </div>
                     {item.subtitle && (
-                      <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      <div style={{ fontSize: '12px', color: 'var(--text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                         {item.subtitle}
                       </div>
                     )}
                   </div>
-                  {isSelected && (
-                    <span style={{ fontSize: '11px', color: 'var(--primary-accent)', fontWeight: 600 }}>↵ Select</span>
-                  )}
                 </div>
               );
             })

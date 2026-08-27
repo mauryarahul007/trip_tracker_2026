@@ -1,7 +1,9 @@
+import { useRef } from 'react';
 import type { Trip, Expense, Member, Category } from '../types';
 import { calculateTripAchievements } from '../utils/achievementBadges';
 import { IconClose, IconCheck, IconTrophy } from './Icons';
 import { triggerHaptic } from '../utils/haptics';
+import { useFocusTrap } from '../hooks/useFocusTrap';
 
 interface AchievementBadgeModalProps {
   trip: Trip;
@@ -22,10 +24,18 @@ export function AchievementBadgeModal({
 }: AchievementBadgeModalProps) {
   const badges = calculateTripAchievements(trip, expenses, members, categories, isFullySettled);
   const unlockedCount = badges.filter((b) => b.unlocked).length;
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  useFocusTrap(cardRef, true, false, onClose);
 
   return (
     <div className="modal-backdrop" onClick={onClose}>
       <div
+        ref={cardRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="achievements-modal-title"
+        tabIndex={-1}
         className="modal-card fade-in"
         style={{
           maxWidth: '460px',
@@ -43,8 +53,8 @@ export function AchievementBadgeModal({
             <div style={{ fontSize: '11px', fontWeight: 800, color: 'var(--primary-accent)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
               Squad Milestones
             </div>
-            <h3 style={{ fontSize: '20px', fontWeight: 800, margin: '2px 0 0', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <IconTrophy size={18} style={{ color: 'var(--color-warning)' }} /> Trip Achievements
+            <h3 id="achievements-modal-title" style={{ fontSize: '20px', fontWeight: 800, margin: '2px 0 0', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <IconTrophy size={18} style={{ color: 'var(--color-warning)' }} aria-hidden="true" /> Trip Achievements
             </h3>
             <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '2px' }}>
               {unlockedCount} of {badges.length} Enamel Pins Unlocked
@@ -53,8 +63,9 @@ export function AchievementBadgeModal({
 
           <button
             type="button"
-            className="secondary-btn"
-            style={{ padding: '6px 8px' }}
+            className="secondary-btn touch-target-btn"
+            style={{ minWidth: '44px', minHeight: '44px', padding: '6px 8px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
+            aria-label="Close achievements dialog"
             onClick={() => {
               triggerHaptic('light');
               onClose();
@@ -63,6 +74,7 @@ export function AchievementBadgeModal({
             <IconClose size={16} />
           </button>
         </div>
+
 
         {/* Badges List */}
         <div style={{ overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '10px', paddingRight: '2px' }}>

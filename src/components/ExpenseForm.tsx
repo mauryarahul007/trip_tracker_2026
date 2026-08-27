@@ -1182,9 +1182,13 @@ export function ExpenseForm({
       </div>
 
       {formError && (
-        <p style={{ color: 'var(--color-danger)', fontSize: '13px', marginTop: '12px' }}>{formError}</p>
+        <p id="expense-form-error" role="alert" aria-live="assertive" style={{ color: 'var(--color-danger)', fontSize: '13px', marginTop: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <IconAlertCircle size={15} />
+          <span>{formError}</span>
+        </p>
       )}
       </div>
+
 
       <div className="expense-form-actions">
         <button type="submit" className="gradient-btn" style={{ flex: 1 }} disabled={isSubmitting}>

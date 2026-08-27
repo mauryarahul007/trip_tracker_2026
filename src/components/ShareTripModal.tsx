@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import type { Trip } from '../types';
 import { IconClose, IconCopy, IconCheck } from './Icons';
+import { useFocusTrap } from '../hooks/useFocusTrap';
 
 type Props = {
   trip: Trip;
@@ -18,9 +19,7 @@ export function ShareTripModal({ trip, onClose }: Props) {
   const joinLink = hasJoinCode ? buildJoinLink(trip.joinCode) : '';
   const sheetRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    sheetRef.current?.focus();
-  }, []);
+  useFocusTrap(sheetRef, true, false, onClose);
 
   const copy = async (value: string, which: 'link' | 'code') => {
     if (!value) return;
@@ -58,11 +57,13 @@ export function ShareTripModal({ trip, onClose }: Props) {
         <button
           type="button"
           onClick={onClose}
-          aria-label="Close"
-          style={{ position: 'absolute', top: '14px', right: '14px', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)' }}
+          aria-label="Close share dialog"
+          className="touch-target-btn"
+          style={{ position: 'absolute', top: '10px', right: '10px', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', padding: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', minWidth: '44px', minHeight: '44px' }}
         >
           <IconClose size={18} />
         </button>
+
 
         <h3 id="share-trip-title" style={{ fontSize: '17px', marginBottom: '4px' }}>Invite to "{trip.name}"</h3>
         <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '20px' }}>

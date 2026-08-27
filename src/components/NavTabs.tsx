@@ -72,16 +72,32 @@ export function NavTabs({ activeTab, setActiveTab, onAddExpense, onAddMember, ex
   };
 
   return (
-    <nav className="nav-tabs">
-      <button data-tab="expenses" className={`nav-tab-item ${activeTab === 'expenses' ? 'active' : ''}`} onClick={() => goTo('expenses')} aria-label="Summary">
+    <nav className="nav-tabs" role="tablist" aria-label="Trip navigation tabs">
+      <button
+        type="button"
+        role="tab"
+        aria-selected={activeTab === 'expenses'}
+        data-tab="expenses"
+        className={`nav-tab-item ${activeTab === 'expenses' ? 'active' : ''}`}
+        onClick={() => goTo('expenses')}
+        aria-label="Summary"
+      >
         <span className="nav-tab-icon"><IconExpenses size={26} /></span>
         <span>Summary</span>
       </button>
-      <button data-tab="ledger" className={`nav-tab-item ${activeTab === 'ledger' ? 'active' : ''}`} onClick={() => goTo('ledger')} aria-label="Expenses">
+      <button
+        type="button"
+        role="tab"
+        aria-selected={activeTab === 'ledger'}
+        data-tab="ledger"
+        className={`nav-tab-item ${activeTab === 'ledger' ? 'active' : ''}`}
+        onClick={() => goTo('ledger')}
+        aria-label="Expenses"
+      >
         <span className="nav-tab-icon"><IconReceipt size={26} /></span>
         <span>Expenses</span>
       </button>
-      <div className="nav-tab-fab-wrap">
+      <div className="nav-tab-fab-wrap" role="presentation">
         {/* Fixed just above the FAB regardless of scroll position -- confined
             to the Summary tab so it doesn't sit on top of unrelated content
             (stat tiles, member rows, settings rows) on the other tabs. */}
@@ -110,14 +126,31 @@ export function NavTabs({ activeTab, setActiveTab, onAddExpense, onAddMember, ex
           <IconPlus size={24} />
         </button>
       </div>
-      <button data-tab="members" className={`nav-tab-item ${activeTab === 'members' ? 'active' : ''}`} onClick={() => goTo('members')} aria-label="Members & Groups">
+      <button
+        type="button"
+        role="tab"
+        aria-selected={activeTab === 'members'}
+        data-tab="members"
+        className={`nav-tab-item ${activeTab === 'members' ? 'active' : ''}`}
+        onClick={() => goTo('members')}
+        aria-label="Members & Groups"
+      >
         <span className="nav-tab-icon"><IconMembers size={26} /></span>
         <span>Members</span>
       </button>
-      <button data-tab="settings" className={`nav-tab-item ${activeTab === 'settings' ? 'active' : ''}`} onClick={() => goTo('settings')} aria-label="Settings">
+      <button
+        type="button"
+        role="tab"
+        aria-selected={activeTab === 'settings'}
+        data-tab="settings"
+        className={`nav-tab-item ${activeTab === 'settings' ? 'active' : ''}`}
+        onClick={() => goTo('settings')}
+        aria-label="Settings"
+      >
         <span className="nav-tab-icon"><IconSettings size={26} /></span>
         <span>Settings</span>
       </button>
     </nav>
+
   );
 }

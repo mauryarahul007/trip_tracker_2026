@@ -1,7 +1,9 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import type { Trip, Expense, Member, Category } from '../types';
 import { IconClose, IconDownload, IconCheck, IconShare, IconMoon, IconSun } from './Icons';
 import { triggerHaptic } from '../utils/haptics';
+import { useFocusTrap } from '../hooks/useFocusTrap';
+
 
 export interface TripArchetype {
   title: string;
@@ -404,6 +406,10 @@ export function TripWrappedModal({
   const [downloading, setDownloading] = useState(false);
   const [shared, setShared] = useState(false);
   const [themeMode, setThemeMode] = useState<'dark' | 'light'>('dark');
+  const cardRef = useRef<HTMLDivElement | null>(null);
+
+  useFocusTrap(cardRef, true, false, onClose);
+
 
   const archetype = getTripArchetype(categories, expenses);
   const superlatives = getMemberSuperlatives(members, expenses, categories);
@@ -669,6 +675,11 @@ export function TripWrappedModal({
   return (
     <div className="modal-backdrop" onClick={onClose}>
       <div
+        ref={cardRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="trip-wrapped-heading"
+        tabIndex={-1}
         className="modal-card fade-in"
         style={{
           maxWidth: '460px',
@@ -688,10 +699,11 @@ export function TripWrappedModal({
             <span style={{ fontSize: '11px', color: isDark ? '#3FCBBD' : '#0F6F63', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
               Story Infographic
             </span>
-            <h3 style={{ fontSize: '22px', margin: '2px 0 0', color: isDark ? '#FFFFFF' : '#142624', fontWeight: 800 }}>
+            <h3 id="trip-wrapped-heading" style={{ fontSize: '22px', margin: '2px 0 0', color: isDark ? '#FFFFFF' : '#142624', fontWeight: 800 }}>
               Trip Wrapped ✨
             </h3>
           </div>
+
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             {/* Theme Toggle Pills */}
