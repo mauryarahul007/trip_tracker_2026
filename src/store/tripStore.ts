@@ -2024,6 +2024,13 @@ export const useTripStore = create<TripStore>()(
         }
 
         set((state) => ({
+          // Persist the resolved identity used to build this graph -- without
+          // this, state.userId stays whatever it was before (often null),
+          // and setError()'s `userId === 'demo-user-superadmin'` check never
+          // suppresses the inevitable sync failures this demo/local-only ID
+          // scheme produces (non-UUID ids can't be upserted to Postgres).
+          userId: state.userId || effectiveUserId,
+          userDisplayName: state.userDisplayName || currentUserDisplayName,
           trips: [...state.trips.filter(t => t.id !== result.trip.id), result.trip],
           activeTripId: result.trip.id,
           members: { ...state.members, ...result.members },

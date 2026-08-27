@@ -9,8 +9,8 @@
 
 | Metric | Count | Status Notes |
 | :--- | :--- | :--- |
-| **Total Tracked** | **85** | All recorded bugs across sessions |
-| **🟢 Open** | **0** | No critical blockers, 0 High |
+| **Total Tracked** | **86** | All recorded bugs across sessions |
+| **🟢 Open** | **1** | No critical blockers, 0 High |
 | **🟡 In Progress** | **0** | Active investigation or fix |
 | **✅ Resolved** | **80** | Verified & closed |
 | **⚪ Won't Fix** | **5** | Expected behavior / deferred |
@@ -19,13 +19,27 @@
 
 ## 🚨 Active Bugs (Open & In Progress)
 
-*🎉 No active open bugs! Great job team.* 
+| ID | Severity | Category | Title | Found By | Status |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **[BUG-107](#bug-107)** | ⚪ Low | `offline-sync` | Demo Mode shows red Storage Error toast and console errors on every load (non-UUID demo IDs hit Supabase sync) | `claude-cli` | 🟢 Open |
 
 ---
 
 ## 📖 Detailed Active Bug Specs
 
-*No active bug details to display.*
+### BUG-107: Demo Mode shows red Storage Error toast and console errors on every load (non-UUID demo IDs hit Supabase sync)
+
+- **Severity**: `LOW` | **Category**: `offline-sync` | **Status**: `open`
+- **Found By**: `claude-cli` on 27/8/2026 (web)
+
+**Description**:
+Continue in Demo Mode (Local Testing) calls signInAsDemoUser(), which sets a fake session with user.id 'demo-user-superadmin' in authStore only -- it never calls tripStore.setUserIdentity(), so tripStore.state.userId stays null. loadDemoTrip() then falls back to its local-only branch (real Supabase insert fails with no real session) using synthetic non-UUID ids like trip-goa-<timestamp>. Those ids later get swept into the regular background sync and Postgres rejects them: invalid input syntax for type uuid. setError()'s existing isDemo suppression (get().userId === 'demo-user-superadmin') never fires because state.userId was never set to that value -- so every demo session showed a visible red Storage Error toast plus console.error spam instead of the intended silent console.warn.
+
+**Steps to Reproduce**:
+1. Navigate to application
+2. Perform action that triggers bug
+
+---
 
 ## ✅ Resolved Bugs History
 

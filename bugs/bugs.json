@@ -2527,5 +2527,28 @@
     "resolvedBy": "claude-cli",
     "resolvedAt": "2026-08-27T12:56:29.386Z",
     "resolutionNote": "Commit f7503c7: id/htmlFor pairs on 45+ form fields across 15 files, fieldset/legend for button-group labels, aria-label on 3 icon-only dismiss buttons + new .dismiss-glyph-btn (24x24 AA) utility, --color-warning-text/--color-success-text tokens (~4.6-4.8:1) swapped into 5 small-text call sites failing AA contrast in light theme."
+  },
+  {
+    "id": "BUG-107",
+    "title": "Demo Mode shows red Storage Error toast and console errors on every load (non-UUID demo IDs hit Supabase sync)",
+    "description": "Continue in Demo Mode (Local Testing) calls signInAsDemoUser(), which sets a fake session with user.id 'demo-user-superadmin' in authStore only -- it never calls tripStore.setUserIdentity(), so tripStore.state.userId stays null. loadDemoTrip() then falls back to its local-only branch (real Supabase insert fails with no real session) using synthetic non-UUID ids like trip-goa-<timestamp>. Those ids later get swept into the regular background sync and Postgres rejects them: invalid input syntax for type uuid. setError()'s existing isDemo suppression (get().userId === 'demo-user-superadmin') never fires because state.userId was never set to that value -- so every demo session showed a visible red Storage Error toast plus console.error spam instead of the intended silent console.warn.",
+    "severity": "low",
+    "category": "offline-sync",
+    "status": "open",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-08-27T13:09:49.193Z",
+    "updatedAt": "2026-08-27T13:09:49.194Z"
   }
 ]
