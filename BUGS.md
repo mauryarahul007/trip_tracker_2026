@@ -10,36 +10,22 @@
 | Metric | Count | Status Notes |
 | :--- | :--- | :--- |
 | **Total Tracked** | **84** | All recorded bugs across sessions |
-| **🟢 Open** | **1** | No critical blockers, 0 High |
+| **🟢 Open** | **0** | No critical blockers, 0 High |
 | **🟡 In Progress** | **0** | Active investigation or fix |
-| **✅ Resolved** | **78** | Verified & closed |
+| **✅ Resolved** | **79** | Verified & closed |
 | **⚪ Won't Fix** | **5** | Expected behavior / deferred |
 
 ---
 
 ## 🚨 Active Bugs (Open & In Progress)
 
-| ID | Severity | Category | Title | Found By | Status |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| **[BUG-105](#bug-105)** | 🟡 Medium | `ui-ux` | Missing focus traps, focus-visible rings, skip link, and toast live-regions on several UI surfaces | `claude-cli` | 🟢 Open |
+*🎉 No active open bugs! Great job team.* 
 
 ---
 
 ## 📖 Detailed Active Bug Specs
 
-### BUG-105: Missing focus traps, focus-visible rings, skip link, and toast live-regions on several UI surfaces
-
-- **Severity**: `MEDIUM` | **Category**: `ui-ux` | **Status**: `open`
-- **Found By**: `claude-cli` on 27/8/2026 (web)
-
-**Description**:
-WCAG audit found: 5 overlay dialogs (ExpenseFilterDrawer, AdminUsersPage broadcast drawer, SuperAdminBugTracker's 3 drawers) had no keyboard focus trap; .filter-chip and .amount-hero inputs removed outline with no :focus-visible replacement; no skip-to-content link anywhere; UpdateBanner and the App.tsx storage-error toast were not announced to screen readers. Also found 32 duplicate raw cubic-bezier() easing literals never referencing the existing --ease-decel/--ease-spring tokens.
-
-**Steps to Reproduce**:
-1. Navigate to application
-2. Perform action that triggers bug
-
----
+*No active bug details to display.*
 
 ## ✅ Resolved Bugs History
 
@@ -123,6 +109,7 @@ WCAG audit found: 5 overlay dialogs (ExpenseFilterDrawer, AdminUsersPage broadca
 | **BUG-102** | Donut chart click routes to wrong category filter | `ui-ux` | `medium` | `claude-cli` | `claude-cli` | src/components/AnalyticsTab.tsx: changed the per-category donut arc circle's fill from transparent to none, so only the visible stroke ring is hit-tested. |
 | **BUG-103** | Stat-card labels (Total Spent, Daily Average, Top Category) low contrast | `ui-ux` | `medium` | `claude-cli` | `claude-cli` | src/index.css: darkened --text-muted to #6B6E76 (light) and lightened to #8B8E96 (dark, both the media-query and explicit data-theme blocks), clearing 4.5:1 contrast in both themes. Fixed once at the token level so every consumer (Expenses stat strip, Analytics KPI cards, review modal, member details, etc.) benefits without per-component changes. |
 | **BUG-104** | Expense day-groups default to expanded, overloading the Ledger on open | `ui-ux` | `low` | `claude-cli` | `claude-cli` | src/components/ExpenseList.tsx: DEFAULT_EXPANDED_DAYS changed from 2 to 0, so every day-group starts collapsed. |
+| **BUG-105** | Missing focus traps, focus-visible rings, skip link, and toast live-regions on several UI surfaces | `ui-ux` | `medium` | `claude-cli` | `claude-cli` | Commit 725d094: useFocusTrap on 5 overlay dialogs (ExpenseFilterDrawer, AdminUsersPage broadcast drawer, SuperAdminBugTracker x3), :focus-visible/:focus-within on .filter-chip/.amount-hero, skip-to-content link + #main-content targets, aria-live on UpdateBanner + storage-error toast, consolidated 32 duplicate cubic-bezier literals onto --ease-decel/--ease-spring tokens. |
 
 ---
 

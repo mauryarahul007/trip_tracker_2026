@@ -2482,7 +2482,7 @@
     "description": "WCAG audit found: 5 overlay dialogs (ExpenseFilterDrawer, AdminUsersPage broadcast drawer, SuperAdminBugTracker's 3 drawers) had no keyboard focus trap; .filter-chip and .amount-hero inputs removed outline with no :focus-visible replacement; no skip-to-content link anywhere; UpdateBanner and the App.tsx storage-error toast were not announced to screen readers. Also found 32 duplicate raw cubic-bezier() easing literals never referencing the existing --ease-decel/--ease-spring tokens.",
     "severity": "medium",
     "category": "ui-ux",
-    "status": "open",
+    "status": "resolved",
     "foundBy": "claude-cli",
     "environment": {
       "platform": "web",
@@ -2497,6 +2497,9 @@
     "actualBehavior": "",
     "diagnostics": {},
     "createdAt": "2026-08-27T12:35:13.590Z",
-    "updatedAt": "2026-08-27T12:35:13.591Z"
+    "updatedAt": "2026-08-27T12:35:38.665Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-08-27T12:35:38.664Z",
+    "resolutionNote": "Commit 725d094: useFocusTrap on 5 overlay dialogs (ExpenseFilterDrawer, AdminUsersPage broadcast drawer, SuperAdminBugTracker x3), :focus-visible/:focus-within on .filter-chip/.amount-hero, skip-to-content link + #main-content targets, aria-live on UpdateBanner + storage-error toast, consolidated 32 duplicate cubic-bezier literals onto --ease-decel/--ease-spring tokens."
   }
 ]
