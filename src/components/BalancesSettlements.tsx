@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import type { Expense, Group, Member, Trip } from '../types';
 import type { MemberBalance, Transfer } from '../utils/settlement';
 import { IconCheck, IconCheckCircle, IconChevronRight, IconEdit, IconShare } from './Icons';
@@ -10,6 +10,8 @@ import { initial } from '../utils/initials';
 import { triggerHaptic } from '../utils/haptics';
 import { UpiPaymentModal } from './UpiPaymentModal';
 import { BoardingPassHeroCard } from './BoardingPassHeroCard';
+import { StickyBalanceBar } from './StickyBalanceBar';
+
 
 type Props = {
   trip: Trip;
@@ -680,24 +682,64 @@ export function BalancesSettlements({
     setTimeout(() => setRemindAllStatus('idle'), 3000);
   };
 
+  const heroRef = useRef<HTMLDivElement>(null);
+  const [isStickyBarVisible, setIsStickyBarVisible] = useState(false);
+
+  useEffect(() => {
+    const el = heroRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsStickyBarVisible(!entry.isIntersecting);
+      },
+      { threshold: 0.1 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
   const totalOutstanding = transfers.reduce((sum, t) => sum + t.amount, 0);
+  const totalSpent = activeTripExpenses.reduce((sum, e) => sum + e.amount, 0);
   const isFullySettled = transfers.length === 0;
 
+  const myBalanceObj = myMemberId ? balances.find((b) => b.memberId === myMemberId) : null;
+  const myNetBalance = myBalanceObj ? myBalanceObj.balance : 0;
+
+  const handleScrollToTop = () => {
+    const pane = document.querySelector('.tab-pane');
+    if (pane) {
+      pane.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
   return (
-    <div id="balances-section" style={{ marginTop: '20px' }}>
-      {/* 3D Flip Boarding-pass balance summary */}
-      <BoardingPassHeroCard
+    <div id="balances-section">
+      <StickyBalanceBar
         trip={trip}
         currencySymbol={currencySymbol}
-        totalOutstanding={totalOutstanding}
+        totalSpent={totalSpent}
+        myNetBalance={myNetBalance}
         isFullySettled={isFullySettled}
-        transfers={transfers}
-        balancesCount={balances.length}
-        currentMember={myMemberId ? members[myMemberId] : undefined}
-        onOpenSquadBadges={onOpenSquadBadges}
+        isVisible={isStickyBarVisible}
+        onScrollToTop={handleScrollToTop}
       />
 
+      {/* 3D Flip Boarding-pass balance summary */}
+      <div ref={heroRef} style={{ marginTop: '16px' }}>
+        <BoardingPassHeroCard
+          trip={trip}
+          currencySymbol={currencySymbol}
+          totalOutstanding={totalOutstanding}
+          isFullySettled={isFullySettled}
+          transfers={transfers}
+          balancesCount={balances.length}
+          currentMember={myMemberId ? members[myMemberId] : undefined}
+          onOpenSquadBadges={onOpenSquadBadges}
+        />
+      </div>
+
       {/* 1. WhatsApp-Style Suggested Settlements Section */}
+
       <div className="wa-group-card">
         <div
           className="wa-group-header"

@@ -1038,3 +1038,16 @@ This document logs all meaningful technical decisions, library choices, design p
     - Strict `prefers-reduced-motion: reduce` overrides dropping transitions to `0.01ms` for motion sensitivity.
 * **Trade-offs Accepted:**
   - Native browser DOM APIs and CSS properties were chosen over third-party motion libraries (such as Framer Motion or GSAP) to maintain zero runtime bundle overhead and zero extra memory consumption.
+
+---
+
+## 59. Morphing Sticky Balance Micro-Bar (Uber / Revolut-Style Collapsible Header)
+* **Context:**
+  - In consumer travel and ride apps (Uber, Revolut, Apple Maps), browsing long lists (expenses, transactions, settlements) causes top-level hero cards to scroll away, leaving users disconnected from their real-time financial balance. Static pinning of large hero tickets ($\approx 220\text{px}$) consumes excessive screen space on mobile viewports.
+* **Decision:**
+  - Implemented the **Morphing Sticky Micro-Bar** pattern via `StickyBalanceBar` and a zero-overhead `IntersectionObserver`.
+  - When the user scrolls past the Boarding Pass ticket, a frosted glass strip (`position: sticky; top: 0; backdrop-filter: blur(24px)`) glides into place, displaying the trip route, live total spend, personal net balance pill (`Gets back`, `Owes`, or `Settled`), and a tap-to-top quick jump action.
+  - The remaining content (settlements, expense lists, category breakdowns) scrolls fluidly underneath this pinned bar.
+* **Trade-offs Accepted:**
+  - The sticky bar utilizes native CSS `position: sticky` and `IntersectionObserver`, consuming 0% continuous JavaScript CPU polling and preserving smooth 60-120 FPS GPU compositing.
+
