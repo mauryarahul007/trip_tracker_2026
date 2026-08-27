@@ -1452,6 +1452,7 @@ export default function App() {
 
   return (
     <div className="app-container">
+      <a href="#main-content" className="skip-link">Skip to content</a>
       {/* Superadmin Traveler Preview Top Floating Banner */}
       {isSuperadmin && isTravelerPreview && (
         <div
@@ -1484,7 +1485,7 @@ export default function App() {
 
       {/* Storage Toast Alert */}
       {storageError && isOnline && (
-        <div className="toast-alert">
+        <div className="toast-alert" role="alert" aria-live="assertive">
           <div>
             <strong style={{ display: 'block', fontSize: '14px', marginBottom: '2px' }}>Storage Error</strong>
             <span style={{ fontSize: '13px', opacity: 0.9 }}>{storageError}</span>
@@ -1495,7 +1496,7 @@ export default function App() {
 
       {/* Full-Screen Superadmin Bug Tracker View */}
       {showBugTracker ? (
-        <div className="fade-in" style={{ flex: 1, overflowY: 'auto', padding: '16px 20px' }}>
+        <div id="main-content" tabIndex={-1} className="fade-in" style={{ flex: 1, overflowY: 'auto', padding: '16px 20px' }}>
           <Suspense fallback={<AdminLoadingFallback />}>
             <SuperAdminBugTracker
               onBack={() => {
@@ -1543,7 +1544,7 @@ export default function App() {
         />
       ) : (
         /* Screen 2: Active Trip Dashboard */
-        <div className="trip-dashboard-container fade-in" style={{ position: 'relative' }}>
+        <div id="main-content" tabIndex={-1} className="trip-dashboard-container fade-in" style={{ position: 'relative' }}>
           <Suspense fallback={null}>
             <TripMapHero trip={activeTrip ?? null} sheetExpanded={sheetExpanded} onToneChange={setHeaderTone} />
           </Suspense>

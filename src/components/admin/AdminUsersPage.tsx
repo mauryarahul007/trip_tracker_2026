@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import type { Trip } from '../../types';
 import type { AdminUserRow } from '../../types/admin';
 import { setUserBanned, deleteUserAccount, broadcastNotification } from '../../services/tripApi';
 import { IconSearch, IconCheck, IconAlertCircle, IconRefresh } from '../Icons';
+import { useFocusTrap } from '../../hooks/useFocusTrap';
 
 interface Props {
   users: AdminUserRow[];
@@ -25,6 +26,8 @@ export function AdminUsersPage({ users, trips, superadminIds, onUsersChanged, on
   const [isBulkBusy, setIsBulkBusy] = useState(false);
 
   const [showBroadcastDrawer, setShowBroadcastDrawer] = useState(false);
+  const broadcastDrawerRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(broadcastDrawerRef, showBroadcastDrawer, false, () => setShowBroadcastDrawer(false));
   const [broadcastTitle, setBroadcastTitle] = useState('');
   const [broadcastBody, setBroadcastBody] = useState('');
   const [broadcastTripId, setBroadcastTripId] = useState('');
@@ -159,9 +162,17 @@ export function AdminUsersPage({ users, trips, superadminIds, onUsersChanged, on
 
       {showBroadcastDrawer && (
         <div className="ops-drawer-overlay" onClick={() => setShowBroadcastDrawer(false)}>
-          <div className="ops-drawer" onClick={(e) => e.stopPropagation()}>
+          <div
+            ref={broadcastDrawerRef}
+            tabIndex={-1}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="broadcast-drawer-title"
+            className="ops-drawer"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
-              <h3 style={{ fontFamily: 'var(--display)', fontSize: '16px', fontWeight: 700, margin: 0, color: 'var(--text-primary)' }}>Broadcast notification</h3>
+              <h3 id="broadcast-drawer-title" style={{ fontFamily: 'var(--display)', fontSize: '16px', fontWeight: 700, margin: 0, color: 'var(--text-primary)' }}>Broadcast notification</h3>
               <button type="button" onClick={() => setShowBroadcastDrawer(false)} className="ops-btn" style={{ padding: '6px 10px' }}>
                 Close
               </button>

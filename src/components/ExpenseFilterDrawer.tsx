@@ -1,8 +1,9 @@
-import { useEffect, useRef } from 'react';
+import { useRef } from 'react';
 import type { Category, Member } from '../types';
 import { IconClose } from './Icons';
 import { CategoryIcon } from './CategoryIcon';
 import { triggerHaptic } from '../utils/haptics';
+import { useFocusTrap } from '../hooks/useFocusTrap';
 
 type Props = {
   categories: Category[];
@@ -66,9 +67,7 @@ export function ExpenseFilterDrawer({
 }: Props) {
   const sheetRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    sheetRef.current?.focus();
-  }, []);
+  useFocusTrap(sheetRef, true, false, onClose);
 
   const hasAnyFilter = Boolean(
     filterCategory || filterMember || filterDateFrom || filterDateTo || filterAmountMin || filterAmountMax || filterRelation || filterLocation

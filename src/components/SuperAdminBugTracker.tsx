@@ -1,4 +1,5 @@
-import { Fragment, useState, useEffect, useMemo } from 'react';
+import { Fragment, useState, useEffect, useMemo, useRef } from 'react';
+import { useFocusTrap } from '../hooks/useFocusTrap';
 import {
   fetchBugs,
   createBug,
@@ -185,11 +186,18 @@ export function SuperAdminBugTracker({ onBack, isAdmin = true, onRequestConfirm 
   const [sortMode, setSortMode] = useState<SortMode>('newest');
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [drawerBugId, setDrawerBugId] = useState<string | null>(null);
+  const drawerRef = useRef<HTMLDivElement>(null);
+  const addModalRef = useRef<HTMLDivElement>(null);
+  const resolveDrawerRef = useRef<HTMLDivElement>(null);
 
   const [showAddModal, setShowAddModal] = useState(false);
   const [resolvingBug, setResolvingBug] = useState<BugRecord | null>(null);
   const [resolutionNote, setResolutionNote] = useState('');
   const [resolvedByName, setResolvedByName] = useState('superadmin');
+
+  useFocusTrap(drawerRef, Boolean(drawerBugId), false, () => setDrawerBugId(null));
+  useFocusTrap(addModalRef, showAddModal, false, () => setShowAddModal(false));
+  useFocusTrap(resolveDrawerRef, Boolean(resolvingBug), false, () => setResolvingBug(null));
   const [toastMessage, setToastMessage] = useState<{ text: string; tone: 'success' | 'danger' } | null>(null);
 
   const [newTitle, setNewTitle] = useState('');
@@ -653,11 +661,19 @@ ${bug.diagnostics?.stackTrace ? `#### Stack Trace\n\`\`\`text\n${bug.diagnostics
 
       {drawerBug && (
         <div className="ops-drawer-overlay" onClick={() => setDrawerBugId(null)}>
-          <div className="ops-drawer" onClick={(e) => e.stopPropagation()}>
+          <div
+            ref={drawerRef}
+            tabIndex={-1}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="bug-drawer-title"
+            className="ops-drawer"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '14px', gap: '10px' }}>
               <div>
                 <span className="ops-bug-id">{drawerBug.id}</span>
-                <h3 style={{ fontFamily: 'var(--display)', fontSize: '16px', fontWeight: 700, margin: '4px 0 0', color: 'var(--text-primary)' }}>{drawerBug.title}</h3>
+                <h3 id="bug-drawer-title" style={{ fontFamily: 'var(--display)', fontSize: '16px', fontWeight: 700, margin: '4px 0 0', color: 'var(--text-primary)' }}>{drawerBug.title}</h3>
               </div>
               <button type="button" onClick={() => setDrawerBugId(null)} className="ops-btn" style={{ padding: '6px 10px', flexShrink: 0 }}>
                 Close
@@ -672,9 +688,17 @@ ${bug.diagnostics?.stackTrace ? `#### Stack Trace\n\`\`\`text\n${bug.diagnostics
 
       {showAddModal && (
         <div className="ops-drawer-overlay" onClick={() => setShowAddModal(false)}>
-          <div className="ops-drawer" onClick={(e) => e.stopPropagation()}>
+          <div
+            ref={addModalRef}
+            tabIndex={-1}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="add-bug-title"
+            className="ops-drawer"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <h3 style={{ fontFamily: 'var(--display)', fontSize: '17px', fontWeight: 700, margin: 0, color: 'var(--text-primary)' }}>File a case</h3>
+              <h3 id="add-bug-title" style={{ fontFamily: 'var(--display)', fontSize: '17px', fontWeight: 700, margin: 0, color: 'var(--text-primary)' }}>File a case</h3>
               <button type="button" onClick={() => setShowAddModal(false)} className="ops-btn" style={{ padding: '6px 10px' }}>
                 Close
               </button>
@@ -776,8 +800,17 @@ ${bug.diagnostics?.stackTrace ? `#### Stack Trace\n\`\`\`text\n${bug.diagnostics
 
       {resolvingBug && (
         <div className="ops-drawer-overlay" onClick={() => setResolvingBug(null)}>
-          <div className="ops-drawer" style={{ maxWidth: '420px' }} onClick={(e) => e.stopPropagation()}>
-            <h3 style={{ fontFamily: 'var(--display)', fontSize: '16px', fontWeight: 700, margin: '0 0 4px', color: 'var(--text-primary)' }}>
+          <div
+            ref={resolveDrawerRef}
+            tabIndex={-1}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="resolve-bug-title"
+            className="ops-drawer"
+            style={{ maxWidth: '420px' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 id="resolve-bug-title" style={{ fontFamily: 'var(--display)', fontSize: '16px', fontWeight: 700, margin: '0 0 4px', color: 'var(--text-primary)' }}>
               Settle {resolvingBug.id}
             </h3>
             <p style={{ fontSize: '12.5px', color: 'var(--text-secondary)', margin: '0 0 16px' }}>

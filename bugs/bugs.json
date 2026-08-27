@@ -2475,5 +2475,28 @@
     "resolvedBy": "claude-cli",
     "resolvedAt": "2026-08-27T04:35:24.963Z",
     "resolutionNote": "src/components/ExpenseList.tsx: DEFAULT_EXPANDED_DAYS changed from 2 to 0, so every day-group starts collapsed."
+  },
+  {
+    "id": "BUG-105",
+    "title": "Missing focus traps, focus-visible rings, skip link, and toast live-regions on several UI surfaces",
+    "description": "WCAG audit found: 5 overlay dialogs (ExpenseFilterDrawer, AdminUsersPage broadcast drawer, SuperAdminBugTracker's 3 drawers) had no keyboard focus trap; .filter-chip and .amount-hero inputs removed outline with no :focus-visible replacement; no skip-to-content link anywhere; UpdateBanner and the App.tsx storage-error toast were not announced to screen readers. Also found 32 duplicate raw cubic-bezier() easing literals never referencing the existing --ease-decel/--ease-spring tokens.",
+    "severity": "medium",
+    "category": "ui-ux",
+    "status": "open",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-08-27T12:35:13.590Z",
+    "updatedAt": "2026-08-27T12:35:13.591Z"
   }
 ]

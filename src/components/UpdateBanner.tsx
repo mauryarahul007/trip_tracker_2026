@@ -18,7 +18,7 @@ export function UpdateBanner() {
         width: 'max-content',
       }}
     >
-      <div className="postmark-toast">
+      <div className="postmark-toast" role="status" aria-live="polite">
         <span className="pm-stamp" aria-hidden="true" style={{ borderColor: 'var(--primary-accent)', color: 'var(--primary-accent)' }}>
           <IconRefresh size={14} className="icon-sm" />
         </span>

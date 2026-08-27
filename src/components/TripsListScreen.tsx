@@ -115,7 +115,7 @@ export function TripsListScreen({
   };
 
   return (
-    <div className={`fade-in trips-screen-scroll${stackActive ? ' stack-viewport-lock' : ''}`}>
+    <div id="main-content" tabIndex={-1} className={`fade-in trips-screen-scroll${stackActive ? ' stack-viewport-lock' : ''}`}>
       <HomeAmbientBackdrop trip={stackActive ? focusedTrip : null} />
       <header className="trips-screen-header">
         <button

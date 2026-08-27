@@ -9,8 +9,8 @@
 
 | Metric | Count | Status Notes |
 | :--- | :--- | :--- |
-| **Total Tracked** | **83** | All recorded bugs across sessions |
-| **🟢 Open** | **0** | No critical blockers, 0 High |
+| **Total Tracked** | **84** | All recorded bugs across sessions |
+| **🟢 Open** | **1** | No critical blockers, 0 High |
 | **🟡 In Progress** | **0** | Active investigation or fix |
 | **✅ Resolved** | **78** | Verified & closed |
 | **⚪ Won't Fix** | **5** | Expected behavior / deferred |
@@ -19,13 +19,27 @@
 
 ## 🚨 Active Bugs (Open & In Progress)
 
-*🎉 No active open bugs! Great job team.* 
+| ID | Severity | Category | Title | Found By | Status |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **[BUG-105](#bug-105)** | 🟡 Medium | `ui-ux` | Missing focus traps, focus-visible rings, skip link, and toast live-regions on several UI surfaces | `claude-cli` | 🟢 Open |
 
 ---
 
 ## 📖 Detailed Active Bug Specs
 
-*No active bug details to display.*
+### BUG-105: Missing focus traps, focus-visible rings, skip link, and toast live-regions on several UI surfaces
+
+- **Severity**: `MEDIUM` | **Category**: `ui-ux` | **Status**: `open`
+- **Found By**: `claude-cli` on 27/8/2026 (web)
+
+**Description**:
+WCAG audit found: 5 overlay dialogs (ExpenseFilterDrawer, AdminUsersPage broadcast drawer, SuperAdminBugTracker's 3 drawers) had no keyboard focus trap; .filter-chip and .amount-hero inputs removed outline with no :focus-visible replacement; no skip-to-content link anywhere; UpdateBanner and the App.tsx storage-error toast were not announced to screen readers. Also found 32 duplicate raw cubic-bezier() easing literals never referencing the existing --ease-decel/--ease-spring tokens.
+
+**Steps to Reproduce**:
+1. Navigate to application
+2. Perform action that triggers bug
+
+---
 
 ## ✅ Resolved Bugs History
 
