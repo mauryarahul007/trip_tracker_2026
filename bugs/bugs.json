@@ -2534,7 +2534,7 @@
     "description": "Continue in Demo Mode (Local Testing) calls signInAsDemoUser(), which sets a fake session with user.id 'demo-user-superadmin' in authStore only -- it never calls tripStore.setUserIdentity(), so tripStore.state.userId stays null. loadDemoTrip() then falls back to its local-only branch (real Supabase insert fails with no real session) using synthetic non-UUID ids like trip-goa-<timestamp>. Those ids later get swept into the regular background sync and Postgres rejects them: invalid input syntax for type uuid. setError()'s existing isDemo suppression (get().userId === 'demo-user-superadmin') never fires because state.userId was never set to that value -- so every demo session showed a visible red Storage Error toast plus console.error spam instead of the intended silent console.warn.",
     "severity": "low",
     "category": "offline-sync",
-    "status": "open",
+    "status": "resolved",
     "foundBy": "claude-cli",
     "environment": {
       "platform": "web",
@@ -2549,6 +2549,9 @@
     "actualBehavior": "",
     "diagnostics": {},
     "createdAt": "2026-08-27T13:09:49.193Z",
-    "updatedAt": "2026-08-27T13:09:49.194Z"
+    "updatedAt": "2026-08-27T13:10:08.005Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-08-27T13:10:08.005Z",
+    "resolutionNote": "Commit d19e36b: loadDemoTrip() now persists userId/userDisplayName (state.userId || effectiveUserId) so setError()'s isDemo suppression actually fires for the demo-mode cold-start path. Verified via Playwright: console.error+red toast before, console.warn+0 toasts after."
   }
 ]

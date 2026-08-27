@@ -10,36 +10,22 @@
 | Metric | Count | Status Notes |
 | :--- | :--- | :--- |
 | **Total Tracked** | **86** | All recorded bugs across sessions |
-| **🟢 Open** | **1** | No critical blockers, 0 High |
+| **🟢 Open** | **0** | No critical blockers, 0 High |
 | **🟡 In Progress** | **0** | Active investigation or fix |
-| **✅ Resolved** | **80** | Verified & closed |
+| **✅ Resolved** | **81** | Verified & closed |
 | **⚪ Won't Fix** | **5** | Expected behavior / deferred |
 
 ---
 
 ## 🚨 Active Bugs (Open & In Progress)
 
-| ID | Severity | Category | Title | Found By | Status |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| **[BUG-107](#bug-107)** | ⚪ Low | `offline-sync` | Demo Mode shows red Storage Error toast and console errors on every load (non-UUID demo IDs hit Supabase sync) | `claude-cli` | 🟢 Open |
+*🎉 No active open bugs! Great job team.* 
 
 ---
 
 ## 📖 Detailed Active Bug Specs
 
-### BUG-107: Demo Mode shows red Storage Error toast and console errors on every load (non-UUID demo IDs hit Supabase sync)
-
-- **Severity**: `LOW` | **Category**: `offline-sync` | **Status**: `open`
-- **Found By**: `claude-cli` on 27/8/2026 (web)
-
-**Description**:
-Continue in Demo Mode (Local Testing) calls signInAsDemoUser(), which sets a fake session with user.id 'demo-user-superadmin' in authStore only -- it never calls tripStore.setUserIdentity(), so tripStore.state.userId stays null. loadDemoTrip() then falls back to its local-only branch (real Supabase insert fails with no real session) using synthetic non-UUID ids like trip-goa-<timestamp>. Those ids later get swept into the regular background sync and Postgres rejects them: invalid input syntax for type uuid. setError()'s existing isDemo suppression (get().userId === 'demo-user-superadmin') never fires because state.userId was never set to that value -- so every demo session showed a visible red Storage Error toast plus console.error spam instead of the intended silent console.warn.
-
-**Steps to Reproduce**:
-1. Navigate to application
-2. Perform action that triggers bug
-
----
+*No active bug details to display.*
 
 ## ✅ Resolved Bugs History
 
@@ -125,6 +111,7 @@ Continue in Demo Mode (Local Testing) calls signInAsDemoUser(), which sets a fak
 | **BUG-104** | Expense day-groups default to expanded, overloading the Ledger on open | `ui-ux` | `low` | `claude-cli` | `claude-cli` | src/components/ExpenseList.tsx: DEFAULT_EXPANDED_DAYS changed from 2 to 0, so every day-group starts collapsed. |
 | **BUG-105** | Missing focus traps, focus-visible rings, skip link, and toast live-regions on several UI surfaces | `ui-ux` | `medium` | `claude-cli` | `claude-cli` | Commit 725d094: useFocusTrap on 5 overlay dialogs (ExpenseFilterDrawer, AdminUsersPage broadcast drawer, SuperAdminBugTracker x3), :focus-visible/:focus-within on .filter-chip/.amount-hero, skip-to-content link + #main-content targets, aria-live on UpdateBanner + storage-error toast, consolidated 32 duplicate cubic-bezier literals onto --ease-decel/--ease-spring tokens. |
 | **BUG-106** | Form labels not programmatically associated with inputs; icon-only buttons unnamed; warning/success text and dismiss-button touch targets fail WCAG AA | `ui-ux` | `medium` | `claude-cli` | `claude-cli` | Commit f7503c7: id/htmlFor pairs on 45+ form fields across 15 files, fieldset/legend for button-group labels, aria-label on 3 icon-only dismiss buttons + new .dismiss-glyph-btn (24x24 AA) utility, --color-warning-text/--color-success-text tokens (~4.6-4.8:1) swapped into 5 small-text call sites failing AA contrast in light theme. |
+| **BUG-107** | Demo Mode shows red Storage Error toast and console errors on every load (non-UUID demo IDs hit Supabase sync) | `offline-sync` | `low` | `claude-cli` | `claude-cli` | Commit d19e36b: loadDemoTrip() now persists userId/userDisplayName (state.userId || effectiveUserId) so setError()'s isDemo suppression actually fires for the demo-mode cold-start path. Verified via Playwright: console.error+red toast before, console.warn+0 toasts after. |
 
 ---
 
