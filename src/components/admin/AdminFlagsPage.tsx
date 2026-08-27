@@ -264,8 +264,9 @@ export function AdminFlagsPage({ trips, members }: Props) {
           <div className="ops-flag-desc">Blocks non-superadmin users behind a maintenance screen. Use before a risky migration.</div>
           <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginTop: '10px', alignItems: 'flex-end' }}>
             <div className="ops-form-group">
-              <label className="ops-form-label">Or schedule a window (start)</label>
+              <label className="ops-form-label" htmlFor="maintenance-window-start">Or schedule a window (start)</label>
               <input
+                id="maintenance-window-start"
                 type="datetime-local"
                 className="ops-input"
                 value={maintenanceWindowStart}
@@ -273,8 +274,9 @@ export function AdminFlagsPage({ trips, members }: Props) {
               />
             </div>
             <div className="ops-form-group">
-              <label className="ops-form-label">End</label>
+              <label className="ops-form-label" htmlFor="maintenance-window-end">End</label>
               <input
+                id="maintenance-window-end"
                 type="datetime-local"
                 className="ops-input"
                 value={maintenanceWindowEnd}
@@ -330,9 +332,10 @@ export function AdminFlagsPage({ trips, members }: Props) {
 
         <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap', marginTop: '10px' }}>
           <div className="ops-form-group">
-            <label className="ops-form-label">Join-Code Max Attempts</label>
+            <label className="ops-form-label" htmlFor="join-max-attempts">Join-Code Max Attempts</label>
             <div style={{ display: 'flex', gap: '6px' }}>
               <input
+                id="join-max-attempts"
                 type="number"
                 min={1}
                 className="ops-input"
@@ -351,9 +354,10 @@ export function AdminFlagsPage({ trips, members }: Props) {
             </div>
           </div>
           <div className="ops-form-group">
-            <label className="ops-form-label">Join Lockout (minutes)</label>
+            <label className="ops-form-label" htmlFor="join-lockout-minutes">Join Lockout (minutes)</label>
             <div style={{ display: 'flex', gap: '6px' }}>
               <input
+                id="join-lockout-minutes"
                 type="number"
                 min={1}
                 className="ops-input"
@@ -372,9 +376,10 @@ export function AdminFlagsPage({ trips, members }: Props) {
             </div>
           </div>
           <div className="ops-form-group">
-            <label className="ops-form-label">Recycle Bin Retention (hours)</label>
+            <label className="ops-form-label" htmlFor="recycle-bin-hours">Recycle Bin Retention (hours)</label>
             <div style={{ display: 'flex', gap: '6px' }}>
               <input
+                id="recycle-bin-hours"
                 type="number"
                 min={1}
                 className="ops-input"
@@ -393,9 +398,10 @@ export function AdminFlagsPage({ trips, members }: Props) {
             </div>
           </div>
           <div className="ops-form-group">
-            <label className="ops-form-label">Expense Amount Ceiling</label>
+            <label className="ops-form-label" htmlFor="expense-ceiling">Expense Amount Ceiling</label>
             <div style={{ display: 'flex', gap: '6px' }}>
               <input
+                id="expense-ceiling"
                 type="number"
                 min={0}
                 className="ops-input"
@@ -414,9 +420,10 @@ export function AdminFlagsPage({ trips, members }: Props) {
             </div>
           </div>
           <div className="ops-form-group">
-            <label className="ops-form-label">Audit Log Retention (days)</label>
+            <label className="ops-form-label" htmlFor="audit-retention-days">Audit Log Retention (days)</label>
             <div style={{ display: 'flex', gap: '6px' }}>
               <input
+                id="audit-retention-days"
                 type="number"
                 min={1}
                 className="ops-input"

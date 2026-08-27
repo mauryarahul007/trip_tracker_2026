@@ -188,8 +188,9 @@ export function SuperadminAuthModal({ isOpen, onClose, onSuccess }: Props) {
         {mode === 'login' && (
           <form onSubmit={handleLoginSubmit}>
             <div className="form-group" style={{ marginBottom: '14px' }}>
-              <label className="form-label">Superadmin Email</label>
+              <label className="form-label" htmlFor="superadmin-email">Superadmin Email</label>
               <input
+                id="superadmin-email"
                 type="email"
                 required
                 className="input-field"
@@ -201,7 +202,7 @@ export function SuperadminAuthModal({ isOpen, onClose, onSuccess }: Props) {
 
             <div className="form-group" style={{ marginBottom: '18px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <label className="form-label" style={{ margin: 0 }}>Superadmin Password</label>
+                <label className="form-label" style={{ margin: 0 }} htmlFor="superadmin-password">Superadmin Password</label>
                 <button
                   type="button"
                   style={{
@@ -223,6 +224,7 @@ export function SuperadminAuthModal({ isOpen, onClose, onSuccess }: Props) {
                 </button>
               </div>
               <input
+                id="superadmin-password"
                 type="password"
                 required
                 className="input-field"
@@ -247,8 +249,9 @@ export function SuperadminAuthModal({ isOpen, onClose, onSuccess }: Props) {
         {mode === 'forgot' && (
           <form onSubmit={handleForgotSubmit}>
             <div className="form-group" style={{ marginBottom: '20px' }}>
-              <label className="form-label">Superadmin Email</label>
+              <label className="form-label" htmlFor="superadmin-email">Superadmin Email</label>
               <input
+                id="superadmin-email"
                 type="email"
                 required
                 className="input-field"

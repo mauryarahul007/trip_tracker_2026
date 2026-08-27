@@ -758,6 +758,8 @@
 
 .ops-form-group { margin-bottom: 14px; display: flex; flex-direction: column; gap: 6px; }
 .ops-form-label { font-family: var(--mono); font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-tertiary); }
+fieldset.ops-form-group { border: 0; padding: 0; min-inline-size: auto; }
+legend.ops-form-label { padding: 0; width: 100%; }
 
 /* ---------- Redesign additions (Command Center, grouped rail, bug
    triage, drawers, danger zones) — appended rather than reshuffling the

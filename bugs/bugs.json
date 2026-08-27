@@ -2501,5 +2501,28 @@
     "resolvedBy": "claude-cli",
     "resolvedAt": "2026-08-27T12:35:38.664Z",
     "resolutionNote": "Commit 725d094: useFocusTrap on 5 overlay dialogs (ExpenseFilterDrawer, AdminUsersPage broadcast drawer, SuperAdminBugTracker x3), :focus-visible/:focus-within on .filter-chip/.amount-hero, skip-to-content link + #main-content targets, aria-live on UpdateBanner + storage-error toast, consolidated 32 duplicate cubic-bezier literals onto --ease-decel/--ease-spring tokens."
+  },
+  {
+    "id": "BUG-106",
+    "title": "Form labels not programmatically associated with inputs; icon-only buttons unnamed; warning/success text and dismiss-button touch targets fail WCAG AA",
+    "description": "Full WCAG 2.2 audit found: 45+ form fields across 15 files had visually-adjacent <label> text with no htmlFor/id association (screen readers announced nothing on focus) -- BugReportModal, ExpenseForm, FeatureRequestModal, LoginScreen, MembersGroupsTab, ResetPasswordScreen, SettingsView, ShareTripModal, SuperAdminBugTracker, SuperadminAuthModal, TripsListScreen, admin/AdminFlagsPage, admin/AdminToolsPage. Also: 3 icon-only dismiss buttons (App.tsx storage toast, ExpenseForm location-remove, SettingsView keyword-remove) had no accessible name; --color-warning/--color-success text at small sizes measured 3.07:1/3.18:1 in light theme (need 4.5:1) at 5 call sites; those same 3 dismiss buttons had no minimum touch target.",
+    "severity": "medium",
+    "category": "ui-ux",
+    "status": "open",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-08-27T12:56:07.286Z",
+    "updatedAt": "2026-08-27T12:56:07.287Z"
   }
 ]

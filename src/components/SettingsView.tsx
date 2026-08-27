@@ -439,12 +439,12 @@ export function SettingsView({
                             {kw}
                             <button
                               type="button"
+                              className="dismiss-glyph-btn"
                               style={{
                                 background: 'transparent',
                                 border: 'none',
                                 color: 'var(--text-muted)',
                                 cursor: 'pointer',
-                                padding: '0 2px',
                                 fontSize: '12px',
                                 lineHeight: 1,
                               }}
@@ -453,6 +453,7 @@ export function SettingsView({
                                 updateCategoryKeywords(cat.id, updated);
                               }}
                               title={`Remove "${kw}"`}
+                              aria-label={`Remove "${kw}"`}
                             >
                               &times;
                             </button>
@@ -590,8 +591,9 @@ export function SettingsView({
               </p>
 
               <div className="form-group" style={{ marginBottom: '20px' }}>
-                <label className="form-label">Replacement Category</label>
+                <label className="form-label" htmlFor="merge-target-category">Replacement Category</label>
                 <select
+                  id="merge-target-category"
                   className="input-field select-field"
                   value={mergeTargetId}
                   onChange={(e) => setMergeTargetId(e.target.value)}
@@ -978,7 +980,7 @@ export function SettingsView({
                 </button>
 
                 {importStatus === 'success' && (
-                  <p style={{ color: 'var(--color-success)', fontSize: '13px', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', margin: 0 }}>
+                  <p style={{ color: 'var(--color-success-text)', fontSize: '13px', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', margin: 0 }}>
                     <IconCheckCircle size={15} className="icon-sm" /> Database restored successfully!
                   </p>
                 )}

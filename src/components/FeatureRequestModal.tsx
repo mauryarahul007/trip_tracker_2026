@@ -105,8 +105,9 @@ export function FeatureRequestModal({ onBack, onRequestConfirm, onRegisterBackGu
       </p>
 
       <div className="form-group">
-        <label className="form-label">In a sentence *</label>
+        <label className="form-label" htmlFor="feature-title">In a sentence *</label>
         <input
+          id="feature-title"
           type="text"
           className="input-field"
           placeholder="e.g. Let me split a receipt by line item"
@@ -115,8 +116,8 @@ export function FeatureRequestModal({ onBack, onRequestConfirm, onRegisterBackGu
         />
       </div>
 
-      <div className="form-group">
-        <label className="form-label">Category</label>
+      <fieldset className="form-group">
+        <legend className="form-label">Category</legend>
         <div className="badge-row">
           {CATEGORIES.map((c) => (
             <button
@@ -129,11 +130,12 @@ export function FeatureRequestModal({ onBack, onRequestConfirm, onRegisterBackGu
             </button>
           ))}
         </div>
-      </div>
+      </fieldset>
 
       <div className="form-group">
-        <label className="form-label">More detail (optional)</label>
+        <label className="form-label" htmlFor="feature-description">More detail (optional)</label>
         <textarea
+          id="feature-description"
           rows={4}
           className="input-field bug-ruled-textarea"
           placeholder="What problem would this solve? What would it look like?"

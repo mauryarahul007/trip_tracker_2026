@@ -557,8 +557,9 @@ export function MembersGroupsTab({
         >
           <h4 id="add-member-title" style={{ marginBottom: '14px', fontSize: '15px' }}>{editingMember ? 'Edit Member' : 'New Member'}</h4>
           <div className="form-group" style={{ position: 'relative' }} ref={dropdownRef}>
-            <label className="form-label">Name</label>
+            <label className="form-label" htmlFor="member-name">Name</label>
             <input
+              id="member-name"
               ref={memberInputRef}
               type="text"
               required
@@ -975,8 +976,9 @@ export function MembersGroupsTab({
             <h4 style={{ marginBottom: '14px', fontSize: '15px' }}>{editingGroup ? 'Edit Group' : 'New Group'}</h4>
 
             <div className="form-group">
-              <label className="form-label">Group Name</label>
+              <label className="form-label" htmlFor="group-name">Group Name</label>
               <input
+                id="group-name"
                 type="text"
                 required
                 className="input-field"
@@ -990,7 +992,7 @@ export function MembersGroupsTab({
             </div>
 
             <div className="form-group">
-              <label className="form-label">Group Members</label>
+              <span className="form-label">Group Members</span>
               {availableMembers.length === 0 ? (
                 <p style={{ color: 'var(--text-secondary)', fontSize: '13px' }}>
                   All active members are already assigned to other groups.

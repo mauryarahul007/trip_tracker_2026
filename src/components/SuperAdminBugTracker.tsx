@@ -706,8 +706,9 @@ ${bug.diagnostics?.stackTrace ? `#### Stack Trace\n\`\`\`text\n${bug.diagnostics
 
             <form onSubmit={handleCreateBug}>
               <div className="ops-form-group">
-                <label className="ops-form-label">Case summary *</label>
+                <label className="ops-form-label" htmlFor="new-bug-title">Case summary *</label>
                 <input
+                  id="new-bug-title"
                   type="text"
                   required
                   className="ops-input"
@@ -717,8 +718,8 @@ ${bug.diagnostics?.stackTrace ? `#### Stack Trace\n\`\`\`text\n${bug.diagnostics
                 />
               </div>
 
-              <div className="ops-form-group">
-                <label className="ops-form-label">Severity</label>
+              <fieldset className="ops-form-group">
+                <legend className="ops-form-label">Severity</legend>
                 <div className="ops-filter-row" style={{ marginBottom: 0 }}>
                   {SEVERITIES.map((s) => (
                     <button
@@ -733,10 +734,10 @@ ${bug.diagnostics?.stackTrace ? `#### Stack Trace\n\`\`\`text\n${bug.diagnostics
                     </button>
                   ))}
                 </div>
-              </div>
+              </fieldset>
 
-              <div className="ops-form-group">
-                <label className="ops-form-label">Category</label>
+              <fieldset className="ops-form-group">
+                <legend className="ops-form-label">Category</legend>
                 <div className="ops-filter-row" style={{ marginBottom: 0 }}>
                   {CATEGORIES.map((c) => (
                     <button
@@ -750,11 +751,12 @@ ${bug.diagnostics?.stackTrace ? `#### Stack Trace\n\`\`\`text\n${bug.diagnostics
                     </button>
                   ))}
                 </div>
-              </div>
+              </fieldset>
 
               <div className="ops-form-group">
-                <label className="ops-form-label">What happened</label>
+                <label className="ops-form-label" htmlFor="new-bug-desc">What happened</label>
                 <textarea
+                  id="new-bug-desc"
                   rows={3}
                   className="ops-input"
                   placeholder="Explain what's breaking and the impact..."
@@ -764,8 +766,9 @@ ${bug.diagnostics?.stackTrace ? `#### Stack Trace\n\`\`\`text\n${bug.diagnostics
               </div>
 
               <div className="ops-form-group">
-                <label className="ops-form-label">Steps to reproduce (one per line)</label>
+                <label className="ops-form-label" htmlFor="new-bug-steps">Steps to reproduce (one per line)</label>
                 <textarea
+                  id="new-bug-steps"
                   rows={2}
                   className="ops-input"
                   placeholder={'1. Open app\n2. Add 2 members\n3. Tap delete'}
@@ -776,12 +779,12 @@ ${bug.diagnostics?.stackTrace ? `#### Stack Trace\n\`\`\`text\n${bug.diagnostics
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                 <div className="ops-form-group">
-                  <label className="ops-form-label">Expected</label>
-                  <input type="text" className="ops-input" placeholder="Member deleted successfully" value={newExpected} onChange={(e) => setNewExpected(e.target.value)} />
+                  <label className="ops-form-label" htmlFor="new-bug-expected">Expected</label>
+                  <input id="new-bug-expected" type="text" className="ops-input" placeholder="Member deleted successfully" value={newExpected} onChange={(e) => setNewExpected(e.target.value)} />
                 </div>
                 <div className="ops-form-group">
-                  <label className="ops-form-label">Actual</label>
-                  <input type="text" className="ops-input" placeholder="Member remains in split balances" value={newActual} onChange={(e) => setNewActual(e.target.value)} />
+                  <label className="ops-form-label" htmlFor="new-bug-actual">Actual</label>
+                  <input id="new-bug-actual" type="text" className="ops-input" placeholder="Member remains in split balances" value={newActual} onChange={(e) => setNewActual(e.target.value)} />
                 </div>
               </div>
 
@@ -818,8 +821,9 @@ ${bug.diagnostics?.stackTrace ? `#### Stack Trace\n\`\`\`text\n${bug.diagnostics
             </p>
 
             <div className="ops-form-group">
-              <label className="ops-form-label">Fix note / commit reference</label>
+              <label className="ops-form-label" htmlFor="resolve-fix-note">Fix note / commit reference</label>
               <input
+                id="resolve-fix-note"
                 type="text"
                 className="ops-input"
                 placeholder="e.g. Fixed penny distribution in resolveShares inside tripStore.ts"
@@ -829,8 +833,8 @@ ${bug.diagnostics?.stackTrace ? `#### Stack Trace\n\`\`\`text\n${bug.diagnostics
             </div>
 
             <div className="ops-form-group">
-              <label className="ops-form-label">Settled by</label>
-              <input type="text" className="ops-input" value={resolvedByName} onChange={(e) => setResolvedByName(e.target.value)} />
+              <label className="ops-form-label" htmlFor="resolve-settled-by">Settled by</label>
+              <input id="resolve-settled-by" type="text" className="ops-input" value={resolvedByName} onChange={(e) => setResolvedByName(e.target.value)} />
             </div>
 
             <div style={{ display: 'flex', gap: '10px', marginTop: '4px' }}>

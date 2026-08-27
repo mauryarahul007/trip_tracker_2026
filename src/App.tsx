@@ -1490,7 +1490,7 @@ export default function App() {
             <strong style={{ display: 'block', fontSize: '14px', marginBottom: '2px' }}>Storage Error</strong>
             <span style={{ fontSize: '13px', opacity: 0.9 }}>{storageError}</span>
           </div>
-          <button className="toast-close" onClick={clearStorageError}>&times;</button>
+          <button className="toast-close dismiss-glyph-btn" onClick={clearStorageError} aria-label="Dismiss">&times;</button>
         </div>
       )}
 

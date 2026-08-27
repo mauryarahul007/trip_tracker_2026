@@ -9,8 +9,8 @@
 
 | Metric | Count | Status Notes |
 | :--- | :--- | :--- |
-| **Total Tracked** | **84** | All recorded bugs across sessions |
-| **🟢 Open** | **0** | No critical blockers, 0 High |
+| **Total Tracked** | **85** | All recorded bugs across sessions |
+| **🟢 Open** | **1** | No critical blockers, 0 High |
 | **🟡 In Progress** | **0** | Active investigation or fix |
 | **✅ Resolved** | **79** | Verified & closed |
 | **⚪ Won't Fix** | **5** | Expected behavior / deferred |
@@ -19,13 +19,27 @@
 
 ## 🚨 Active Bugs (Open & In Progress)
 
-*🎉 No active open bugs! Great job team.* 
+| ID | Severity | Category | Title | Found By | Status |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **[BUG-106](#bug-106)** | 🟡 Medium | `ui-ux` | Form labels not programmatically associated with inputs; icon-only buttons unnamed; warning/success text and dismiss-button touch targets fail WCAG AA | `claude-cli` | 🟢 Open |
 
 ---
 
 ## 📖 Detailed Active Bug Specs
 
-*No active bug details to display.*
+### BUG-106: Form labels not programmatically associated with inputs; icon-only buttons unnamed; warning/success text and dismiss-button touch targets fail WCAG AA
+
+- **Severity**: `MEDIUM` | **Category**: `ui-ux` | **Status**: `open`
+- **Found By**: `claude-cli` on 27/8/2026 (web)
+
+**Description**:
+Full WCAG 2.2 audit found: 45+ form fields across 15 files had visually-adjacent <label> text with no htmlFor/id association (screen readers announced nothing on focus) -- BugReportModal, ExpenseForm, FeatureRequestModal, LoginScreen, MembersGroupsTab, ResetPasswordScreen, SettingsView, ShareTripModal, SuperAdminBugTracker, SuperadminAuthModal, TripsListScreen, admin/AdminFlagsPage, admin/AdminToolsPage. Also: 3 icon-only dismiss buttons (App.tsx storage toast, ExpenseForm location-remove, SettingsView keyword-remove) had no accessible name; --color-warning/--color-success text at small sizes measured 3.07:1/3.18:1 in light theme (need 4.5:1) at 5 call sites; those same 3 dismiss buttons had no minimum touch target.
+
+**Steps to Reproduce**:
+1. Navigate to application
+2. Perform action that triggers bug
+
+---
 
 ## ✅ Resolved Bugs History
 

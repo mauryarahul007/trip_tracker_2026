@@ -219,8 +219,9 @@ export function BugReportModal({
       )}
 
       <div className="form-group">
-        <label className="form-label">Case summary *</label>
+        <label className="form-label" htmlFor="bug-title">Case summary *</label>
         <input
+          id="bug-title"
           type="text"
           className="input-field"
           placeholder="e.g. Settlement transfer count incorrect when rounding pennies"
@@ -229,8 +230,8 @@ export function BugReportModal({
         />
       </div>
 
-      <div className="form-group">
-        <label className="form-label">Severity</label>
+      <fieldset className="form-group">
+        <legend className="form-label">Severity</legend>
         <div className="badge-row">
           {SEVERITIES.map((s) => (
             <button
@@ -244,10 +245,10 @@ export function BugReportModal({
             </button>
           ))}
         </div>
-      </div>
+      </fieldset>
 
-      <div className="form-group">
-        <label className="form-label">Category</label>
+      <fieldset className="form-group">
+        <legend className="form-label">Category</legend>
         <div className="badge-row">
           {CATEGORIES.map((c) => (
             <button
@@ -260,11 +261,12 @@ export function BugReportModal({
             </button>
           ))}
         </div>
-      </div>
+      </fieldset>
 
       <div className="form-group">
-        <label className="form-label">Description & observed behavior</label>
+        <label className="form-label" htmlFor="bug-description">Description & observed behavior</label>
         <textarea
+          id="bug-description"
           rows={3}
           className="input-field bug-ruled-textarea"
           placeholder="What happened? What error or weird behavior occurred?"
@@ -274,8 +276,9 @@ export function BugReportModal({
       </div>
 
       <div className="form-group">
-        <label className="form-label">Steps to reproduce</label>
+        <label className="form-label" htmlFor="bug-repro-steps">Steps to reproduce</label>
         <textarea
+          id="bug-repro-steps"
           rows={2}
           className="input-field"
           placeholder={'1. Open Goa trip\n2. Add split expense\n3. Tap delete member'}
@@ -286,12 +289,12 @@ export function BugReportModal({
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
         <div className="form-group">
-          <label className="form-label">Expected behavior</label>
-          <input type="text" className="input-field" placeholder="Shares sum to 100%" value={expectedBehavior} onChange={(e) => setExpectedBehavior(e.target.value)} />
+          <label className="form-label" htmlFor="bug-expected">Expected behavior</label>
+          <input id="bug-expected" type="text" className="input-field" placeholder="Shares sum to 100%" value={expectedBehavior} onChange={(e) => setExpectedBehavior(e.target.value)} />
         </div>
         <div className="form-group">
-          <label className="form-label">Actual behavior</label>
-          <input type="text" className="input-field" placeholder="Discrepancy of 0.01 remains" value={actualBehavior} onChange={(e) => setActualBehavior(e.target.value)} />
+          <label className="form-label" htmlFor="bug-actual">Actual behavior</label>
+          <input id="bug-actual" type="text" className="input-field" placeholder="Discrepancy of 0.01 remains" value={actualBehavior} onChange={(e) => setActualBehavior(e.target.value)} />
         </div>
       </div>
 

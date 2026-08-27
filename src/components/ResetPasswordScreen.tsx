@@ -105,8 +105,9 @@ export function ResetPasswordScreen() {
         ) : (
           <form onSubmit={handleSubmit}>
             <div className="form-group" style={{ marginBottom: '14px' }}>
-              <label className="form-label">New Password</label>
+              <label className="form-label" htmlFor="reset-new-password">New Password</label>
               <input
+                id="reset-new-password"
                 type="password"
                 required
                 minLength={8}
@@ -118,8 +119,9 @@ export function ResetPasswordScreen() {
               />
             </div>
             <div className="form-group" style={{ marginBottom: '18px' }}>
-              <label className="form-label">Confirm Password</label>
+              <label className="form-label" htmlFor="reset-confirm-password">Confirm Password</label>
               <input
+                id="reset-confirm-password"
                 type="password"
                 required
                 minLength={8}

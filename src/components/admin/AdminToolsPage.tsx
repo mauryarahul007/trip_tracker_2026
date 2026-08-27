@@ -205,8 +205,9 @@ export function AdminToolsPage({ categories, trips, expenses, onRefresh, isRefre
 
           <form onSubmit={handleChangePassword} style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxWidth: '340px' }}>
             <div className="ops-form-group">
-              <label className="ops-form-label">New Password</label>
+              <label className="ops-form-label" htmlFor="admin-new-password">New Password</label>
               <input
+                id="admin-new-password"
                 type="password"
                 required
                 minLength={8}
@@ -217,8 +218,9 @@ export function AdminToolsPage({ categories, trips, expenses, onRefresh, isRefre
               />
             </div>
             <div className="ops-form-group">
-              <label className="ops-form-label">Confirm New Password</label>
+              <label className="ops-form-label" htmlFor="admin-confirm-password">Confirm New Password</label>
               <input
+                id="admin-confirm-password"
                 type="password"
                 required
                 minLength={8}
@@ -407,8 +409,9 @@ export function AdminToolsPage({ categories, trips, expenses, onRefresh, isRefre
           </summary>
           <p>Irreversible. Wipes every local trip and resets the database cache.</p>
           <div className="ops-form-group">
-            <label className="ops-form-label">Type WIPE to confirm</label>
+            <label className="ops-form-label" htmlFor="wipe-confirm-text">Type WIPE to confirm</label>
             <input
+              id="wipe-confirm-text"
               type="text"
               className="ops-input"
               style={{ maxWidth: '220px' }}

@@ -91,9 +91,9 @@ export function ShareTripModal({ trip, onClose }: Props) {
         ) : (
           <>
             <div className="form-group">
-              <label className="form-label">Invite link</label>
+              <label className="form-label" htmlFor="share-invite-link">Invite link</label>
               <div style={{ display: 'flex', gap: '8px' }}>
-                <input type="text" readOnly className="input-field" value={joinLink} style={{ flex: 1, fontSize: '13px' }} onFocus={(e) => e.target.select()} />
+                <input id="share-invite-link" type="text" readOnly className="input-field" value={joinLink} style={{ flex: 1, fontSize: '13px' }} onFocus={(e) => e.target.select()} />
                 <button type="button" className="secondary-btn" style={{ padding: '0 14px', flexShrink: 0 }} onClick={() => copy(joinLink, 'link')}>
                   {copied === 'link' ? <IconCheck size={16} className="icon-sm" /> : <IconCopy size={16} className="icon-sm" />}
                 </button>
@@ -101,7 +101,7 @@ export function ShareTripModal({ trip, onClose }: Props) {
             </div>
 
             <div className="form-group" style={{ marginTop: '16px', marginBottom: 0 }}>
-              <label className="form-label">Or share this code</label>
+              <span className="form-label">Or share this code</span>
               <div style={{ display: 'flex', gap: '8px' }}>
                 <div
                   style={{

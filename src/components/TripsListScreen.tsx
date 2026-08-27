@@ -401,8 +401,9 @@ export function TripsListScreen({
 
             {!editingTripId && (
               <div className="form-group">
-                <label className="form-label">Base Currency</label>
+                <label className="form-label" htmlFor="new-trip-currency">Base Currency</label>
                 <select
+                  id="new-trip-currency"
                   className="input-field select-field"
                   value={newTripCurrency}
                   onChange={(e) => setNewTripCurrency(e.target.value)}

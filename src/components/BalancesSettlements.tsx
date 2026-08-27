@@ -843,7 +843,7 @@ export function BalancesSettlements({
                 <span className="ledger-badge ledger-badge-tilt-right" style={{ color: 'var(--color-success)', borderColor: 'var(--color-success)' }} aria-hidden="true">
                   <IconCheckCircle size={16} className="icon-sm" />
                 </span>
-                <span style={{ color: 'var(--color-success)', fontSize: '13.5px', fontWeight: 600 }}>Every balance is settled — all set!</span>
+                <span style={{ color: 'var(--color-success-text)', fontSize: '13.5px', fontWeight: 600 }}>Every balance is settled — all set!</span>
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>

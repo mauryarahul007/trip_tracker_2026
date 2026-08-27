@@ -119,7 +119,7 @@ export function AchievementBadgeModal({
                     {b.title}
                   </span>
                   {b.unlocked ? (
-                    <span style={{ fontSize: '10.5px', fontWeight: 700, color: 'var(--color-success)', display: 'flex', alignItems: 'center', gap: '3px' }}>
+                    <span style={{ fontSize: '10.5px', fontWeight: 700, color: 'var(--color-success-text)', display: 'flex', alignItems: 'center', gap: '3px' }}>
                       <IconCheck size={12} /> Unlocked
                     </span>
                   ) : (

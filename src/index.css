@@ -88,6 +88,11 @@
   --color-success: #16A34A;
   --color-danger: #DC2626;
   --color-warning: #D97706;
+  /* Darker text-only variants -- --color-success/--color-warning are tuned
+     for icons/borders (3:1 UI-component minimum) and fail WCAG AA 4.5:1
+     for small body text in the light theme. Use these for text. */
+  --color-success-text: #12843C;
+  --color-warning-text: #AC5F05;
 
   /* Text — near-black, not navy */
   --text-primary: #16181D;
@@ -162,6 +167,8 @@
     --color-success: #34D399;
     --color-danger: #F87171;
     --color-warning: #FBBF24;
+    --color-success-text: #34D399;
+    --color-warning-text: #FBBF24;
 
     --text-primary: #EDEEF0;
     --text-secondary: #A3A6AD;
@@ -199,6 +206,8 @@
   --color-success: #34D399;
   --color-danger: #F87171;
   --color-warning: #FBBF24;
+  --color-success-text: #34D399;
+  --color-warning-text: #FBBF24;
 
   --text-primary: #EDEEF0;
   --text-secondary: #A3A6AD;
@@ -629,6 +638,20 @@ html.capacitor-ios .fab-add-expense {
   flex-direction: column;
   gap: 8px;
   min-width: 0;
+}
+/* Groups of toggle buttons (severity/category pickers, split-mode segmented
+   controls) use <fieldset className="form-group">/<legend className="form-label">
+   instead of <label> -- a label needs one form control to point at, a group
+   of buttons needs a group label. Reset the fieldset/legend UA defaults so
+   they inherit .form-group/.form-label layout instead of a boxed legend. */
+fieldset.form-group {
+  border: 0;
+  padding: 0;
+  min-inline-size: auto;
+}
+legend.form-label {
+  padding: 0;
+  width: 100%;
 }
 
 .form-label {
@@ -4274,6 +4297,17 @@ html.capacitor-ios .trip-sheet .tab-pane {
   height: max(100%, 44px);
   transform: translate(-50%, -50%);
   pointer-events: none;
+}
+
+/* Small inline dismiss glyphs (×) that sit inside tight pills/rows where a
+   44px touch-target-btn would blow out the layout -- WCAG 2.5.8 AA minimum
+   is 24x24, not the 44px "comfortable" AAA figure .touch-target-btn targets. */
+.dismiss-glyph-btn {
+  min-width: 24px;
+  min-height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 

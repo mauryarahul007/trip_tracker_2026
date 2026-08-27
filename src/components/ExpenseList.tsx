@@ -614,7 +614,7 @@ export function ExpenseList({
                           {needsReview && (
                             <div style={{
                               display: 'flex', alignItems: 'center', gap: '6px',
-                              fontSize: '12px', fontWeight: 500, color: 'var(--color-warning)',
+                              fontSize: '12px', fontWeight: 500, color: 'var(--color-warning-text)',
                             }}>
                               <IconAlertCircle size={14} className="icon-sm" />
                               <span>{reviewMessage}</span>

@@ -434,8 +434,9 @@ export function LoginScreen() {
             {adminMode === 'login' ? (
               <form onSubmit={handleAdminLoginSubmit}>
                 <div className="form-group" style={{ marginBottom: '12px' }}>
-                  <label className="form-label">Email</label>
+                  <label className="form-label" htmlFor="admin-email">Email</label>
                   <input
+                    id="admin-email"
                     type="email"
                     required
                     className="input-field"
@@ -447,7 +448,7 @@ export function LoginScreen() {
 
                 <div className="form-group" style={{ marginBottom: '18px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <label className="form-label" style={{ margin: 0 }}>Password</label>
+                    <label className="form-label" style={{ margin: 0 }} htmlFor="admin-password">Password</label>
                     <button
                       type="button"
                       style={{
@@ -469,6 +470,7 @@ export function LoginScreen() {
                     </button>
                   </div>
                   <input
+                    id="admin-password"
                     type="password"
                     required
                     className="input-field"
@@ -491,8 +493,9 @@ export function LoginScreen() {
             ) : (
               <form onSubmit={handleAdminForgotSubmit}>
                 <div className="form-group" style={{ marginBottom: '20px' }}>
-                  <label className="form-label">Email</label>
+                  <label className="form-label" htmlFor="admin-email">Email</label>
                   <input
+                    id="admin-email"
                     type="email"
                     required
                     className="input-field"

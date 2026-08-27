@@ -436,7 +436,7 @@ export function ExpenseForm({
 
       <div className="form-group">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-          <label className="form-label" style={{ margin: 0 }}>
+          <label className="form-label" style={{ margin: 0 }} htmlFor="expense-amount">
             Amount ({selectedCurrency})
           </label>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -505,6 +505,7 @@ export function ExpenseForm({
         <div className={`amount-hero ${formError && (!amount || parseFloat(amount) <= 0) ? 'amount-hero-error' : ''}`}>
           <span className="amount-hero-symbol">{getCurrencySymbol(selectedCurrency)}</span>
           <input
+            id="expense-amount"
             ref={amountInputRef}
             type="text"
             inputMode="decimal"
@@ -666,8 +667,9 @@ export function ExpenseForm({
       </div>
 
       <div className="form-group">
-        <label className="form-label">Expense Title</label>
+        <label className="form-label" htmlFor="expense-title">Expense Title</label>
         <input
+          id="expense-title"
           type="text"
           className="input-field"
           placeholder="e.g. Flight Tickets"
@@ -689,8 +691,8 @@ export function ExpenseForm({
         )}
       </div>
 
-      <div className="form-group">
-        <label className="form-label">Category</label>
+      <fieldset className="form-group">
+        <legend className="form-label">Category</legend>
         <div className="badge-row">
           {categories.map((c) => (
             <button
@@ -705,12 +707,12 @@ export function ExpenseForm({
             </button>
           ))}
         </div>
-      </div>
+      </fieldset>
 
-      <div className="form-group">
-        <label className="form-label">Paid By</label>
+      <fieldset className="form-group">
+        <legend className="form-label">Paid By</legend>
         {payer && !visibleMembers.some((m) => m.id === payer) && (
-          <p style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12.5px', fontWeight: 500, color: 'var(--color-warning)', marginBottom: '4px' }}>
+          <p style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12.5px', fontWeight: 500, color: 'var(--color-warning-text)', marginBottom: '4px' }}>
             <IconAlertCircle size={14} className="icon-sm" /> Previous payer was removed — choose someone new.
           </p>
         )}
@@ -734,11 +736,12 @@ export function ExpenseForm({
             );
           })}
         </div>
-      </div>
+      </fieldset>
 
       <div className="form-group">
-        <label className="form-label">Date</label>
+        <label className="form-label" htmlFor="expense-date">Date</label>
         <input
+          id="expense-date"
           type="date"
           className="input-field"
           value={date}
@@ -755,9 +758,9 @@ export function ExpenseForm({
       {(enableGeotagging || enableAdvancedLocationSearch || location) && (
         <div className="form-group">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-            <label className="form-label" style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span className="form-label" style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
               <span style={{ color: '#17B6A6', display: 'flex', alignItems: 'center' }}><IconMapPin size={15} /></span> Location
-            </label>
+            </span>
             {enableGeotagging && !location && !locationLoading && (
               <button
                 type="button"
@@ -797,17 +800,18 @@ export function ExpenseForm({
               <span>📍 {location.placeName || `${location.lat.toFixed(3)}, ${location.lng.toFixed(3)}`}</span>
               <button
                 type="button"
+                className="dismiss-glyph-btn"
                 style={{
                   background: 'transparent',
                   border: 'none',
                   color: 'var(--text-muted)',
                   cursor: 'pointer',
-                  padding: '0 2px',
                   fontSize: '14px',
                   lineHeight: 1,
                 }}
                 onClick={() => setLocation(null)}
                 title="Remove location"
+                aria-label="Remove location"
               >
                 &times;
               </button>
@@ -820,15 +824,15 @@ export function ExpenseForm({
         </div>
       )}
 
-      <div className="form-group">
-        <label className="form-label">Split Mode</label>
+      <fieldset className="form-group">
+        <legend className="form-label">Split Mode</legend>
         <div className="segmented-control">
           <button type="button" className={splitMode === 'equal' ? 'active' : ''} onClick={() => { triggerHaptic('light'); setSplitMode('equal'); }}>Equal</button>
           <button type="button" className={splitMode === 'custom' ? 'active' : ''} onClick={() => { triggerHaptic('light'); setSplitMode('custom'); }}>Weight</button>
           <button type="button" className={splitMode === 'exact' ? 'active' : ''} onClick={() => { triggerHaptic('light'); setSplitMode('exact'); }}>Exact</button>
           <button type="button" className={splitMode === 'percentage' ? 'active' : ''} onClick={() => { triggerHaptic('light'); setSplitMode('percentage'); }}>Percent</button>
         </div>
-      </div>
+      </fieldset>
 
       <div className="form-group">
         {!showReceiptSection && !receiptImage ? (
@@ -842,7 +846,7 @@ export function ExpenseForm({
           </button>
         ) : (
           <>
-            <label className="form-label">Receipt (optional)</label>
+            <label className="form-label" id="expense-receipt-label">Receipt (optional)</label>
             {receiptImage ? (
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                 <img
@@ -870,6 +874,7 @@ export function ExpenseForm({
                 type="file"
                 accept="image/*"
                 className="input-field"
+                aria-labelledby="expense-receipt-label"
                 onChange={handleReceiptFileChangeLocal}
                 disabled={receiptProcessing}
               />
@@ -947,7 +952,7 @@ export function ExpenseForm({
 
       {/* Checkboxes to select division participants */}
       <div className="form-group" style={{ marginTop: '8px' }}>
-        <label className="form-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div className="form-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span>Division of Expense</span>
           <div style={{ display: 'flex', gap: '8px', fontSize: '11px', textTransform: 'none' }}>
             <button
@@ -975,7 +980,7 @@ export function ExpenseForm({
               Clear All
             </button>
           </div>
-        </label>
+        </div>
 
         {splitMode !== 'equal' && splitSelectedIds.length > 0 && (
           <div style={{
