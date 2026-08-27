@@ -59,21 +59,42 @@ export function getWeatherConditionFromCode(code: number, isDay = true): { emoji
 }
 
 /**
- * Clean place name of trip noise words so geocoding finds the actual city
+ * Clean and extract place name candidates from composite route titles
+ * (e.g. "Meghalaya -> Arunachal Pradesh" => ["Arunachal Pradesh", "Meghalaya"])
  */
-export function cleanPlaceQuery(raw: string): string {
-  if (!raw) return '';
-  return raw
-    .replace(/\b(trip|backpacking|tour|vacation|getaway|holiday|expedition|voyage|2025|2026|2027)\b/gi, '')
-    .replace(/[^a-zA-Z\s,]/g, ' ')
-    .trim();
+export function extractPlaceCandidates(raw: string | string[]): string[] {
+  const inputs = Array.isArray(raw) ? raw : [raw];
+  const candidates: string[] = [];
+
+  for (const input of inputs) {
+    if (!input || typeof input !== 'string') continue;
+    // Split by route delimiters: ->, →, to, comma, slash, dash
+    const segments = input.split(/->|→|\bto\b|,|\/| - /i);
+    // Reverse so destination (last stop) is checked before origin
+    const reversed = segments.slice().reverse();
+    for (const segment of reversed) {
+      const cleaned = segment
+        .replace(/\b(trip|backpacking|tour|vacation|getaway|holiday|expedition|voyage|2025|2026|2027|roadtrip|road\s+trip)\b/gi, '')
+        .replace(/[^a-zA-Z\s]/g, ' ')
+        .trim();
+      if (cleaned.length >= 2 && !candidates.includes(cleaned)) {
+        candidates.push(cleaned);
+      }
+    }
+  }
+
+  return candidates;
 }
 
-export async function fetchDestinationCoordinates(destination: string): Promise<{ lat: number; lon: number } | null> {
-  const query = cleanPlaceQuery(destination) || destination.trim();
+export function cleanPlaceQuery(raw: string): string {
+  const candidates = extractPlaceCandidates(raw);
+  return candidates[0] || raw.trim();
+}
+
+export async function fetchSingleCoordinate(query: string): Promise<{ lat: number; lon: number; name: string } | null> {
   if (!query) return null;
 
-  // 1. Primary: Open-Meteo Geocoding API (ultra-fast, native pairing with weather API)
+  // 1. Primary: Open-Meteo Geocoding API
   try {
     const openMeteoGeoUrl = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=1&language=en&format=json`;
     const res = await fetch(openMeteoGeoUrl, { signal: AbortSignal.timeout(4000) });
@@ -81,7 +102,7 @@ export async function fetchDestinationCoordinates(destination: string): Promise<
       const data = await res.json();
       if (data?.results && data.results.length > 0) {
         const first = data.results[0];
-        return { lat: first.latitude, lon: first.longitude };
+        return { lat: first.latitude, lon: first.longitude, name: first.name || query };
       }
     }
   } catch {
@@ -97,7 +118,8 @@ export async function fetchDestinationCoordinates(destination: string): Promise<
       const data = await res.json();
       if (data?.features?.length > 0) {
         const [lon, lat] = data.features[0].geometry.coordinates;
-        return { lat, lon };
+        const placeName = data.features[0].properties?.name || query;
+        return { lat, lon, name: placeName };
       }
     }
   } catch {
@@ -107,9 +129,24 @@ export async function fetchDestinationCoordinates(destination: string): Promise<
   return null;
 }
 
-export async function getDestinationWeather(destination: string): Promise<WeatherData | null> {
-  if (!destination || destination.trim().length === 0) return null;
-  const cacheKey = `tt_weather_${destination.trim().toLowerCase()}`;
+export async function fetchDestinationCoordinates(destination: string | string[]): Promise<{ lat: number; lon: number; name: string } | null> {
+  const candidates = extractPlaceCandidates(destination);
+  if (candidates.length === 0) return null;
+
+  for (const candidate of candidates) {
+    const coords = await fetchSingleCoordinate(candidate);
+    if (coords) return coords;
+  }
+
+  return null;
+}
+
+export async function getDestinationWeather(destination: string | string[]): Promise<WeatherData | null> {
+  const candidates = extractPlaceCandidates(destination);
+  if (candidates.length === 0) return null;
+
+  const primaryTarget = candidates[0];
+  const cacheKey = `tt_weather_${primaryTarget.toLowerCase().replace(/\s+/g, '_')}`;
 
   // 1. Check local cache
   try {
@@ -124,10 +161,10 @@ export async function getDestinationWeather(destination: string): Promise<Weathe
     // LocalStorage failure
   }
 
-  // 2. Resolve coords
-  const coords = await fetchDestinationCoordinates(destination);
+  // 2. Resolve coords across place candidates
+  const coords = await fetchDestinationCoordinates(candidates);
   if (!coords) {
-    // If geocoding failed, return an ambient default daylight estimate so UI is never blank
+    // Return an ambient daylight estimate if geocoding fails
     const hour = new Date().getHours();
     const isDay = hour >= 6 && hour < 19;
     return {
@@ -137,15 +174,15 @@ export async function getDestinationWeather(destination: string): Promise<Weathe
       weatherEmoji: isDay ? '☀️' : '🌙',
       condition: isDay ? 'Clear Day' : 'Clear Night',
       isDay,
-      city: destination,
+      city: primaryTarget,
       updatedAt: Date.now(),
     };
   }
 
-  // 3. Fetch from Open-Meteo
+  // 3. Fetch from Open-Meteo Current Weather
   try {
     const url = `https://api.open-meteo.com/v1/forecast?latitude=${coords.lat}&longitude=${coords.lon}&current=temperature_2m,weather_code,is_day`;
-    const res = await fetch(url, { signal: AbortSignal.timeout(4000) });
+    const res = await fetch(url, { signal: AbortSignal.timeout(4500) });
     if (!res.ok) throw new Error('Open-Meteo API error');
 
     const data = await res.json();
@@ -165,7 +202,7 @@ export async function getDestinationWeather(destination: string): Promise<Weathe
       weatherEmoji: condition.emoji,
       condition: condition.text,
       isDay,
-      city: destination,
+      city: coords.name || primaryTarget,
       updatedAt: Date.now(),
     };
 
@@ -187,7 +224,7 @@ export async function getDestinationWeather(destination: string): Promise<Weathe
       weatherEmoji: isDay ? '☀️' : '🌙',
       condition: isDay ? 'Clear Day' : 'Clear Night',
       isDay,
-      city: destination,
+      city: coords.name || primaryTarget,
       updatedAt: Date.now(),
     };
   }

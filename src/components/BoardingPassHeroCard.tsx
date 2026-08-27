@@ -45,19 +45,25 @@ export function BoardingPassHeroCard({
   const [editingCode, setEditingCode] = useState<'origin' | 'dest' | null>(null);
   const [codeInputVal, setCodeInputVal] = useState('');
 
-  // Fetch weather for trip destination or trip name
+  // Fetch weather for trip destination, stops, or trip name
   useEffect(() => {
     let active = true;
-    const locationQuery = trip.destination || trip.name;
-    if (locationQuery) {
-      getDestinationWeather(locationQuery).then((data) => {
+    const candidates = [
+      ...(trip.stops?.map((s) => s.name) || []),
+      trip.destination || '',
+      trip.name || '',
+    ].filter(Boolean);
+
+    if (candidates.length > 0) {
+      getDestinationWeather(candidates).then((data) => {
         if (active && data) setWeather(data);
       });
     }
     return () => {
       active = false;
     };
-  }, [trip.destination, trip.name]);
+  }, [trip.destination, trip.name, trip.stops]);
+
 
   const handleFlip = () => {
     triggerHaptic('light');

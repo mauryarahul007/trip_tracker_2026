@@ -690,13 +690,28 @@ export function BalancesSettlements({
     if (!el) return;
     const observer = new IntersectionObserver(
       ([entry]) => {
-        setIsStickyBarVisible(!entry.isIntersecting);
+        const isPast = !entry.isIntersecting && entry.boundingClientRect.top < 80;
+        setIsStickyBarVisible(isPast);
       },
-      { threshold: 0.1 }
+      { threshold: 0 }
     );
     observer.observe(el);
-    return () => observer.disconnect();
+
+    const pane = document.querySelector('.tab-pane');
+    const handlePaneScroll = () => {
+      if (heroRef.current) {
+        const rect = heroRef.current.getBoundingClientRect();
+        setIsStickyBarVisible(rect.bottom <= 60);
+      }
+    };
+    pane?.addEventListener('scroll', handlePaneScroll, { passive: true });
+
+    return () => {
+      observer.disconnect();
+      pane?.removeEventListener('scroll', handlePaneScroll);
+    };
   }, []);
+
 
   const totalOutstanding = transfers.reduce((sum, t) => sum + t.amount, 0);
   const totalSpent = activeTripExpenses.reduce((sum, e) => sum + e.amount, 0);

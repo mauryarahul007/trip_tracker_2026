@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { getWeatherConditionFromCode, getDestinationWeather } from './weatherService';
+import { getWeatherConditionFromCode, getDestinationWeather, extractPlaceCandidates } from './weatherService';
 
 describe('weatherService', () => {
   beforeEach(() => {
@@ -13,8 +13,15 @@ describe('weatherService', () => {
     expect(getWeatherConditionFromCode(95, true)).toEqual({ emoji: '⛈️', text: 'Thunderstorm' });
   });
 
+  it('extracts place candidates from composite multi-stop strings', () => {
+    expect(extractPlaceCandidates('Meghalaya -> Arunachal Pradesh')).toEqual(['Arunachal Pradesh', 'Meghalaya']);
+    expect(extractPlaceCandidates('Delhi to Goa Trip 2026')).toEqual(['Goa', 'Delhi']);
+    expect(extractPlaceCandidates(['Shillong', 'Tawang'])).toEqual(['Shillong', 'Tawang']);
+  });
+
   it('returns null for empty destination', async () => {
     const res = await getDestinationWeather('');
     expect(res).toBeNull();
   });
 });
+

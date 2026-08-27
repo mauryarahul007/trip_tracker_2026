@@ -3842,27 +3842,48 @@ html.capacitor-ios .trip-sheet .tab-pane {
   top: 0;
   left: 0;
   right: 0;
-  z-index: 40;
-  margin: -8px -20px 14px;
-  padding: 7px 16px;
-  background: var(--bg-nav-glass);
-  backdrop-filter: blur(24px) saturate(190%);
-  -webkit-backdrop-filter: blur(24px) saturate(190%);
-  border-bottom: 1px solid var(--border-nav-glass);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  z-index: 60;
+  margin: 0;
+  padding: 0;
+  max-height: 0;
   opacity: 0;
-  transform: translateY(-8px);
+  overflow: hidden;
   pointer-events: none;
-  transition: opacity 0.24s cubic-bezier(0.16, 1, 0.3, 1), transform 0.24s cubic-bezier(0.16, 1, 0.3, 1);
+  visibility: hidden;
+  background: var(--bg-surface);
+  border-bottom: 1.5px solid transparent;
+  box-shadow: none;
+  transition: opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1), transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), max-height 0.22s ease, padding 0.22s ease, margin 0.22s ease;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
 }
 
 .sticky-balance-bar.visible {
   opacity: 1;
-  transform: translateY(0);
+  visibility: visible;
   pointer-events: auto;
+  max-height: 60px;
+  margin: -8px -20px 14px;
+  padding: 9px 16px;
+  background: var(--bg-surface);
+  border-bottom: 1.5px solid var(--border-color);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.14);
 }
+
+:root[data-theme="dark"] .sticky-balance-bar.visible {
+  background: #1A2230;
+  border-bottom: 1.5px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 8px 26px rgba(0, 0, 0, 0.5);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .sticky-balance-bar.visible {
+    background: #1A2230;
+    border-bottom: 1.5px solid rgba(255, 255, 255, 0.14);
+    box-shadow: 0 8px 26px rgba(0, 0, 0, 0.5);
+  }
+}
+
 
 .sticky-balance-inner {
   display: flex;
