@@ -9,11 +9,11 @@
 
 | Metric | Count |
 | :--- | :--- |
-| **Total Tracked** | **17** |
+| **Total Tracked** | **21** |
 | **💡 Requested** | **1** |
 | **📋 Planned** | **0** |
 | **🟡 In Progress** | **0** |
-| **✅ Shipped** | **16** |
+| **✅ Shipped** | **20** |
 | **⚪ Won't Do** | **0** |
 
 ---
@@ -58,6 +58,10 @@ Test
 | **FEAT-015** | Right-edge swipe navigation between tabs | `ui-ux` | `claude-cli` | `claude-cli` | Shipped |
 | **FEAT-016** | Settlement section simplified: plain-language sentences + at-a-glance balance chips | `ui-ux` | `claude-cli` | `claude-cli` | Shipped |
 | **FEAT-017** | Uber-style full-screen bottom sheet with auto-hiding header | `ui-ux` | `claude-cli` | `claude-cli` | Shipped |
+| **FEAT-018** | Drag-tracked tab-swipe navigation | `ui-ux` | `claude-cli` | `claude-cli` | src/utils/useTabSwipe.ts rewritten to expose activePaneStyle/previewTab/previewPaneStyle driven by live drag position instead of a binary swipe-then-snap. |
+| **FEAT-019** | Uber-style bottom sheet motion polish | `ui-ux` | `claude-cli` | `claude-cli` | src/components/TripContentSheet.tsx (velocity fling, scrim, corner-radius, haptics), src/utils/nativeShell.ts + src/App.tsx (status-bar tone sync). Added @capacitor/haptics + @capacitor/status-bar, npx cap sync run for Android/iOS. |
+| **FEAT-020** | Simplified who-owes-who summary card | `ui-ux` | `claude-cli` | `claude-cli` | src/components/BoardingPassHeroCard.tsx, src/components/BalancesSettlements.tsx. |
+| **FEAT-021** | Analytics moved to Summary; geo map split into its own Settings section | `analytics` | `claude-cli` | `claude-cli` | src/App.tsx, src/components/AnalyticsTab.tsx, src/components/SettingsTab.tsx, src/components/SettingsView.tsx. |
 
 ---
 

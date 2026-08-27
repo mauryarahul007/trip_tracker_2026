@@ -1,7 +1,6 @@
 import type { Category, Expense, Trip } from '../types';
 import type { ConfirmRequest } from './ConfirmDialog';
 import { SettingsView, type ThemePref } from './SettingsView';
-import type { AnalyticsTabProps } from './AnalyticsTab';
 
 type Props = {
   categories: Category[];
@@ -35,7 +34,7 @@ type Props = {
   onRequestConfirm?: (req: ConfirmRequest) => void;
   onOpenShareTrip?: () => void;
   onOpenTripWrapped?: () => void;
-  analytics?: AnalyticsTabProps;
+  baseCurrency?: string;
 };
 
 export function SettingsTab({
@@ -68,7 +67,7 @@ export function SettingsTab({
   onRequestConfirm,
   onOpenShareTrip,
   onOpenTripWrapped,
-  analytics,
+  baseCurrency,
 }: Props) {
   return (
     <SettingsView
@@ -102,7 +101,7 @@ export function SettingsTab({
       onOpenShareTrip={onOpenShareTrip}
       onOpenTripWrapped={onOpenTripWrapped}
       hasActiveTrip={true}
-      analytics={analytics}
+      baseCurrency={baseCurrency}
     />
   );
 }

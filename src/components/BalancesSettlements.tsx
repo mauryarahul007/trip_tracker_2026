@@ -17,8 +17,6 @@ type Props = {
   groups: Group[];
   transfers: Transfer[];
   activeTripExpenses: Expense[];
-  topCategoryName?: string;
-  topCategoryPercentage?: number;
   onSettle: (fromMemberId: string, toMemberId: string, amount: number, fromLabel: string, toLabel: string) => void;
   isAdmin: boolean;
   myMemberId: string | null;
@@ -170,6 +168,9 @@ function TransferRow({
 }: TransferRowProps) {
   const settleAmount = parseFloat(customValue) || t.amount;
   const [showAudit, setShowAudit] = useState(false);
+  // Remind/Share/custom-amount tucked behind one tap -- Settle (and UPI, when
+  // available) are the only actions visible by default.
+  const [showMoreActions, setShowMoreActions] = useState(false);
   const [reminderStatus, setReminderStatus] = useState<'idle' | 'sending' | 'sent' | 'rateLimited'>('idle');
 
   const fromAudit = getAuditDetailsForNode(t.from, t.fromLabel, balances, groups, activeTripExpenses);
@@ -290,26 +291,32 @@ function TransferRow({
         )}
       </div>
 
-      {/* Audit Trail Button */}
+      {/* Audit trail trigger -- a quiet info tap, not a prominent CTA; most
+          viewers never need the paid/owed math behind a number. */}
       <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
         <button
           type="button"
           onClick={() => setShowAudit(!showAudit)}
+          aria-expanded={showAudit}
+          aria-label={showAudit ? 'Hide settlement breakdown' : 'Why this amount?'}
+          title={showAudit ? 'Hide settlement breakdown' : 'Why this amount?'}
           style={{
             background: 'none',
-            border: 'none',
-            color: 'var(--primary-accent)',
-            fontSize: '11.5px',
+            border: '1px solid var(--border-color)',
+            color: 'var(--text-muted)',
+            fontSize: '11px',
             fontWeight: '600',
             cursor: 'pointer',
-            padding: '2px 0',
-            textDecoration: 'underline',
+            width: '20px',
+            height: '20px',
+            borderRadius: '50%',
             display: 'flex',
             alignItems: 'center',
-            gap: '4px'
+            justifyContent: 'center',
+            lineHeight: 1,
           }}
         >
-          {showAudit ? 'Hide breakdown' : 'Why?'}
+          ⓘ
         </button>
       </div>
 
@@ -501,67 +508,91 @@ function TransferRow({
               </div>
             </div>
           ) : (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              {isUpiEnabled && canSettle && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '6px' }}>
+                {isUpiEnabled && canSettle && (
+                  <button
+                    type="button"
+                    className="secondary-btn"
+                    style={{
+                      padding: '6px 10px',
+                      fontSize: '11px',
+                      borderRadius: 'var(--border-radius-sm)',
+                      height: '28px',
+                      color: 'var(--primary-accent)',
+                      borderColor: 'var(--primary-accent)',
+                      fontWeight: 700,
+                    }}
+                    onClick={() => onOpenUpi?.(t)}
+                    title="1-Tap UPI Settlement (GPay, PhonePe, Paytm, or Dynamic QR)"
+                  >
+                    ⚡ UPI
+                  </button>
+                )}
                 <button
-                  type="button"
-                  className="secondary-btn"
-                  style={{
-                    padding: '6px 10px',
-                    fontSize: '11px',
-                    borderRadius: 'var(--border-radius-sm)',
-                    height: '28px',
-                    color: 'var(--primary-accent)',
-                    borderColor: 'var(--primary-accent)',
-                    fontWeight: 700,
+                  className="gradient-btn"
+                  style={{ padding: '6px 14px', fontSize: '11px', borderRadius: 'var(--border-radius-sm)', height: '28px' }}
+                  onClick={() => {
+                    triggerHaptic('success');
+                    onSettle(t.fromMemberId, t.toMemberId, t.amount, t.fromLabel, t.toLabel);
                   }}
-                  onClick={() => onOpenUpi?.(t)}
-                  title="1-Tap UPI Settlement (GPay, PhonePe, Paytm, or Dynamic QR)"
                 >
-                  ⚡ UPI
+                  Settle
                 </button>
-              )}
-              <button
-                className="gradient-btn"
-                style={{ padding: '6px 14px', fontSize: '11px', borderRadius: 'var(--border-radius-sm)', height: '28px' }}
-                onClick={() => {
-                  triggerHaptic('success');
-                  onSettle(t.fromMemberId, t.toMemberId, t.amount, t.fromLabel, t.toLabel);
-                }}
-              >
-                Settle
-              </button>
-              <button
-                type="button"
-                className="secondary-btn"
-                style={{ padding: '6px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                aria-label="Settle for a different amount"
-                title="Settle for a different amount"
-                onClick={onToggleCustom}
-              >
-                <IconEdit size={10} className="icon-sm" />
-              </button>
-              {members[t.fromMemberId]?.linkedUserId && (
                 <button
                   type="button"
                   className="secondary-btn"
-                  style={{ padding: '6px 10px', fontSize: '12px' }}
-                  onClick={handleRemind}
-                  disabled={reminderStatus === 'sending' || reminderStatus === 'sent' || reminderStatus === 'rateLimited'}
+                  style={{ padding: '6px', height: '28px', width: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                  aria-label={showMoreActions ? 'Fewer actions' : 'More actions'}
+                  aria-expanded={showMoreActions}
+                  title={showMoreActions ? 'Fewer actions' : 'More actions'}
+                  onClick={() => {
+                    triggerHaptic('light');
+                    setShowMoreActions(!showMoreActions);
+                  }}
                 >
-                  {remindLabel}
+                  ⋯
                 </button>
+              </div>
+
+              {showMoreActions && (
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '6px', flexWrap: 'wrap' }}>
+                  <button
+                    type="button"
+                    className="secondary-btn"
+                    style={{ padding: '6px 10px', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px' }}
+                    aria-label="Settle for a different amount"
+                    onClick={() => {
+                      setShowMoreActions(false);
+                      onToggleCustom();
+                    }}
+                  >
+                    <IconEdit size={10} className="icon-sm" />
+                    <span>Change amount</span>
+                  </button>
+                  {members[t.fromMemberId]?.linkedUserId && (
+                    <button
+                      type="button"
+                      className="secondary-btn"
+                      style={{ padding: '6px 10px', fontSize: '12px' }}
+                      onClick={handleRemind}
+                      disabled={reminderStatus === 'sending' || reminderStatus === 'sent' || reminderStatus === 'rateLimited'}
+                    >
+                      {remindLabel}
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    className="secondary-btn"
+                    style={{ padding: '6px 10px', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px' }}
+                    onClick={handleShareReminder}
+                    title="Share reminder text via WhatsApp or system share"
+                  >
+                    <IconShare size={12} className="icon-sm" />
+                    <span>{shareCopied ? 'Copied!' : 'Share'}</span>
+                  </button>
+                </div>
               )}
-              <button
-                type="button"
-                className="secondary-btn"
-                style={{ padding: '6px 10px', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px' }}
-                onClick={handleShareReminder}
-                title="Share reminder text via WhatsApp or system share"
-              >
-                <IconShare size={12} className="icon-sm" />
-                <span>{shareCopied ? 'Copied!' : 'Share'}</span>
-              </button>
             </div>
           )}
         </div>
@@ -576,8 +607,6 @@ export function BalancesSettlements({
   groups,
   transfers,
   activeTripExpenses,
-  topCategoryName,
-  topCategoryPercentage,
   onSettle,
   isAdmin,
   myMemberId,
@@ -616,7 +645,10 @@ export function BalancesSettlements({
   const [customAmounts, setCustomAmounts] = useState<Record<string, string>>({});
   const [customOpenKeys, setCustomOpenKeys] = useState<Record<string, boolean>>({});
   const [upiTargetTransfer, setUpiTargetTransfer] = useState<Transfer | null>(null);
-  const [isTransfersExpanded, setIsTransfersExpanded] = useState(true);
+  // Collapsed by default -- the chip strip above already answers "who owes
+  // who" at a glance; the itemized settle list is the "how to fix it" detail,
+  // one tap away, same as the day-groups on the Expenses tab.
+  const [isTransfersExpanded, setIsTransfersExpanded] = useState(false);
 
   const isUpiEnabled = useTripStore((s) => s.isFeatureEnabled('enableUpiPayments', { tripId: trip.id }));
 
@@ -650,10 +682,6 @@ export function BalancesSettlements({
 
   const totalOutstanding = transfers.reduce((sum, t) => sum + t.amount, 0);
   const isFullySettled = transfers.length === 0;
-  const topTransfer = transfers.length > 0 ? [...transfers].sort((a, b) => b.amount - a.amount)[0] : null;
-  const topTransferShare = topTransfer && totalOutstanding > 0 ? topTransfer.amount / totalOutstanding : 0;
-  const transferIsDominant = transfers.length === 1 || topTransferShare >= 0.5;
-  const categoryIsDominant = !!topCategoryName && (topCategoryPercentage ?? 0) >= 50;
 
   return (
     <div id="balances-section" style={{ marginTop: '20px' }}>
@@ -665,11 +693,6 @@ export function BalancesSettlements({
         isFullySettled={isFullySettled}
         transfers={transfers}
         balancesCount={balances.length}
-        topTransfer={topTransfer}
-        transferIsDominant={transferIsDominant}
-        categoryIsDominant={categoryIsDominant}
-        topCategoryName={topCategoryName}
-        topCategoryPercentage={topCategoryPercentage}
         currentMember={myMemberId ? members[myMemberId] : undefined}
         onOpenSquadBadges={onOpenSquadBadges}
       />

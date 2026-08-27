@@ -22,9 +22,8 @@ import {
   IconShield,
   IconBell,
   IconShare,
-  IconAnalytics,
 } from './Icons';
-import { AnalyticsTab, type AnalyticsTabProps } from './AnalyticsTab';
+import { TripJourneyMap } from './TripJourneyMap';
 import { CategoryIcon } from './CategoryIcon';
 import { useTripStore } from '../store/tripStore';
 import { useNotificationsStore } from '../store/notificationsStore';
@@ -43,7 +42,7 @@ import { useHistoryBack } from '../utils/useHistoryBack';
 
 export type ThemePref = 'light' | 'dark' | 'system';
 
-type SubScreen = null | 'categories' | 'recycle-bin' | 'appearance' | 'backups' | 'archived-trips' | 'bug-tracker' | 'report-issue' | 'suggest-feature' | 'analytics';
+type SubScreen = null | 'categories' | 'recycle-bin' | 'appearance' | 'backups' | 'archived-trips' | 'bug-tracker' | 'report-issue' | 'suggest-feature' | 'trip-map';
 
 const RECYCLE_BIN_WINDOW_MS = 24 * 60 * 60 * 1000;
 
@@ -90,10 +89,7 @@ interface SettingsViewProps {
   // Context
   hasActiveTrip?: boolean;
   initialSubScreen?: SubScreen;
-  // The full Analytics breakdown -- bundled as one prop since it's the
-  // exact set of computed values App.tsx already builds for it, not a
-  // shape SettingsView needs to know the internals of.
-  analytics?: AnalyticsTabProps;
+  baseCurrency?: string;
   onClose?: () => void;
   onRequestConfirm?: (req: ConfirmRequest) => void;
   onOpenShareTrip?: () => void;
@@ -133,7 +129,7 @@ export function SettingsView({
   onRequestConfirm,
   onOpenShareTrip,
   onOpenTripWrapped,
-  analytics,
+  baseCurrency,
 }: SettingsViewProps) {
   const [subScreen, setSubScreen] = useState<SubScreen>(initialSubScreen);
 
@@ -786,7 +782,7 @@ export function SettingsView({
     );
   }
 
-  if (subScreen === 'analytics' && analytics) {
+  if (subScreen === 'trip-map') {
     return (
       <div className="settings-container settings-subscreen-enter">
         <div className="settings-subscreen-nav-header">
@@ -795,9 +791,9 @@ export function SettingsView({
             <span>Settings</span>
           </button>
         </div>
-        <h3 className="settings-subscreen-main-title">Analytics</h3>
-        <p className="settings-subscreen-subtitle">Trends and breakdowns for this trip.</p>
-        <AnalyticsTab {...analytics} />
+        <h3 className="settings-subscreen-main-title">Trip Map</h3>
+        <p className="settings-subscreen-subtitle">Where the money went, plotted on the map.</p>
+        <TripJourneyMap expenses={activeTripExpenses} categories={categories} baseCurrency={baseCurrency || ''} />
       </div>
     );
   }
@@ -1142,22 +1138,20 @@ export function SettingsView({
               </button>
             )}
 
-            {analytics && (
-              <button type="button" className="settings-row-item" onClick={() => setSubScreen('analytics')}>
-                <div className="settings-row-left">
-                  <div className="settings-squircle squircle-teal">
-                    <IconAnalytics size={18} />
-                  </div>
-                  <div className="settings-row-texts">
-                    <span className="settings-row-title">Analytics</span>
-                    <span className="settings-row-subtitle">Category breakdowns &amp; trends</span>
-                  </div>
+            <button type="button" className="settings-row-item" onClick={() => setSubScreen('trip-map')}>
+              <div className="settings-row-left">
+                <div className="settings-squircle squircle-teal">
+                  <IconMapPin size={18} />
                 </div>
-                <div className="settings-row-right">
-                  <IconChevronRight size={16} />
+                <div className="settings-row-texts">
+                  <span className="settings-row-title">Trip Map</span>
+                  <span className="settings-row-subtitle">Geotagged expenses, plotted &amp; routed</span>
                 </div>
-              </button>
-            )}
+              </div>
+              <div className="settings-row-right">
+                <IconChevronRight size={16} />
+              </div>
+            </button>
 
             {(isSuperadmin || isFeatureEnabled('enableKeywordTagging')) && (
               <button type="button" className="settings-row-item" onClick={() => setSubScreen('categories')}>

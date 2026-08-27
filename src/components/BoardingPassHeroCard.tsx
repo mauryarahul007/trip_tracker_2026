@@ -14,11 +14,6 @@ interface BoardingPassHeroCardProps {
   isFullySettled: boolean;
   transfers: Transfer[];
   balancesCount: number;
-  topTransfer: Transfer | null;
-  transferIsDominant: boolean;
-  categoryIsDominant: boolean;
-  topCategoryName?: string;
-  topCategoryPercentage?: number;
   currentMember?: Member;
   onOpenSquadBadges?: () => void;
 }
@@ -30,10 +25,6 @@ export function BoardingPassHeroCard({
   isFullySettled,
   transfers,
   balancesCount,
-  topTransfer,
-  transferIsDominant,
-  categoryIsDominant,
-  topCategoryName,
   currentMember,
   onOpenSquadBadges,
 }: BoardingPassHeroCardProps) {
@@ -67,8 +58,6 @@ export function BoardingPassHeroCard({
       active = false;
     };
   }, [trip.destination, trip.name]);
-
-  const categoryClause = categoryIsDominant && topCategoryName ? `, driven by ${topCategoryName} spend` : '';
 
   const handleFlip = () => {
     triggerHaptic('light');
@@ -164,15 +153,6 @@ export function BoardingPassHeroCard({
               style={{ color: isFullySettled ? 'var(--color-success)' : 'var(--color-danger)' }}
             >
               {formatAmount(totalOutstanding, currencySymbol)}
-            </div>
-            <div className="bp-sub">
-              {isFullySettled
-                ? 'Every balance is settled — nothing left to pay.'
-                : topTransfer && transferIsDominant
-                ? `${transfers.length > 1 ? 'Mostly ' : ''}${topTransfer.fromLabel} owes ${topTransfer.toLabel}${categoryClause}.`
-                : categoryIsDominant
-                ? `${transfers.length} transfers to settle, driven mostly by ${topCategoryName} spend.`
-                : `${transfers.length} transfer${transfers.length === 1 ? '' : 's'} will clear every balance.`}
             </div>
           </div>
 

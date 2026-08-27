@@ -1,9 +1,8 @@
 import { useEffect, useState } from 'react';
-import type { Trip, Expense, Category } from '../types';
+import type { Trip, Expense } from '../types';
 import { CategoryIcon } from './CategoryIcon';
-import { IconAnalytics, IconTrophy } from './Icons';
+import { IconAnalytics, IconTrophy, IconChevronDown, IconChevronUp } from './Icons';
 import { getCurrencySymbol, formatAmount } from '../utils/currency';
-import { TripJourneyMap } from './TripJourneyMap';
 
 type CategoryDatum = { id: string; name: string; icon: string; amount: number; percentage: number };
 type MemberSpend = { id: string; name: string; amount: number; percentage: number };
@@ -20,7 +19,6 @@ type Props = {
   memberSpentList: MemberSpend[];
   dailySpendData: DailySpend[];
   expenses?: Expense[];
-  categories?: Category[];
   onOpenSquadBadges?: () => void;
   // Cross-linking: tapping a category slice/legend row or a member's bar
   // routes to the ledger pre-filtered instead of duplicating a transaction
@@ -45,7 +43,6 @@ export function AnalyticsTab({
   memberSpentList,
   dailySpendData,
   expenses = [],
-  categories = [],
   onOpenSquadBadges,
   onCategoryClick,
   onMemberClick,
@@ -55,6 +52,7 @@ export function AnalyticsTab({
   const loggedCurrencies = [...new Set(expenses.map((e) => e.currency).filter(Boolean))];
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
   const [chartFilled, setChartFilled] = useState(false);
+  const [showTrends, setShowTrends] = useState(false);
 
   useEffect(() => {
     const raf1 = requestAnimationFrame(() => {
@@ -108,7 +106,7 @@ export function AnalyticsTab({
         </div>
       )}
 
-      <h3 style={{ fontSize: '18px', marginBottom: '20px' }}>Charts & Analytics</h3>
+      <h3 style={{ fontSize: '18px', marginBottom: '20px' }}>At a Glance</h3>
 
       {/* 1. Key Statistics Cards Grid */}
       {/* minmax(0, 1fr), not plain 1fr — a bare 1fr track's minimum size
@@ -167,9 +165,6 @@ export function AnalyticsTab({
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-          {/* Trip Journey Map & Route Playback */}
-          <TripJourneyMap expenses={expenses} categories={categories} baseCurrency={trip?.baseCurrency || ''} />
-
           {/* 2. Spend by Category SVG Donut Chart */}
           <div className="glass-card">
             <h4 style={{ fontSize: '14px', marginBottom: '16px', fontWeight: '600' }}>Spend by Category</h4>
@@ -192,7 +187,7 @@ export function AnalyticsTab({
                           cx="70"
                           cy="70"
                           r={r}
-                          fill="transparent"
+                          fill="none"
                           stroke={getCatColor(d.id, idx)}
                           strokeWidth="12"
                           strokeDasharray={strokeDash}
@@ -251,6 +246,24 @@ export function AnalyticsTab({
             </div>
           </div>
 
+          {/* Summary stays a status page, not a full report -- member split
+              and the daily trend are one tap away instead of always-open. */}
+          <button
+            type="button"
+            onClick={() => setShowTrends(!showTrends)}
+            aria-expanded={showTrends}
+            style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
+              width: '100%', padding: '10px', background: 'none', border: '1px dashed var(--border-color)',
+              borderRadius: 'var(--border-radius-lg)', color: 'var(--text-secondary)', fontSize: '13px', fontWeight: 600, cursor: 'pointer',
+            }}
+          >
+            {showTrends ? 'Hide trends & member split' : 'View trends & member split'}
+            {showTrends ? <IconChevronUp size={14} /> : <IconChevronDown size={14} />}
+          </button>
+
+          {showTrends && (
+          <>
           {/* 3. Spend by Member CSS Bar Chart */}
           <div className="glass-card">
             <h4 style={{ fontSize: '14px', marginBottom: '16px', fontWeight: '600' }}>Spend by Member (Paid sums)</h4>
@@ -392,6 +405,8 @@ export function AnalyticsTab({
                 </svg>
               </div>
             </div>
+          )}
+          </>
           )}
 
         </div>

@@ -1,5 +1,6 @@
 import { Capacitor } from '@capacitor/core';
 import { Keyboard } from '@capacitor/keyboard';
+import { StatusBar, Style } from '@capacitor/status-bar';
 
 // WKWebView reports env(safe-area-inset-*) as 0 on the very first paint and
 // only resolves the real geometry ~500ms later. CSS rules that read env()
@@ -85,6 +86,17 @@ function resolveTheme(): 'light' | 'dark' {
   if (pinned === 'light' || pinned === 'dark') return pinned;
   return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 }
+
+// Matches the sheet/header's own tone logic: headerTone 'dark' means the
+// header switched to dark text because the background behind it (map or,
+// once full, the app surface) is bright -- so the OS status bar icons need
+// to go dark to stay legible on it too, and vice versa. No-ops on web.
+export function syncStatusBarTone(backgroundIsBright: boolean): void {
+  if (!Capacitor.isNativePlatform()) return;
+  void StatusBar.setStyle({ style: backgroundIsBright ? Style.Dark : Style.Light });
+}
+
+export { resolveTheme };
 
 // Native views (the header/tab bar glass) are separate subviews stacked
 // on top of the entire webview, above its whole rendered output — a

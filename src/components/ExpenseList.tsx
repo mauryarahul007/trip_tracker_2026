@@ -194,7 +194,9 @@ export function ExpenseList({
     return groups;
   }, []);
 
-  const DEFAULT_EXPANDED_DAYS = 2;
+  // Every day-group starts collapsed on entering the tab; only the days a
+  // user explicitly expands (via collapseOverrides) open up.
+  const DEFAULT_EXPANDED_DAYS = 0;
   // Only stores days the user has explicitly toggled away from their
   // default state -- the default itself (first N groups open, rest
   // collapsed) is derived fresh from dayGroups every render, so it stays

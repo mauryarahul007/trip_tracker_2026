@@ -268,5 +268,69 @@
     "shippedAt": "2026-08-27T00:43:37.879Z",
     "shippedBy": "claude-cli",
     "shippedNote": "Shipped"
+  },
+  {
+    "id": "FEAT-018",
+    "title": "Drag-tracked tab-swipe navigation",
+    "description": "Replaced the jump-cut tab switch with real finger-tracked swipe navigation between Expenses, Ledger, Members, and Settings tabs -- the incoming/outgoing pane visually follows the drag instead of only reacting on release.",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-08-27T04:35:49.625Z",
+    "updatedAt": "2026-08-27T04:35:56.416Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-08-27T04:35:56.414Z",
+    "shippedNote": "src/utils/useTabSwipe.ts rewritten to expose activePaneStyle/previewTab/previewPaneStyle driven by live drag position instead of a binary swipe-then-snap."
+  },
+  {
+    "id": "FEAT-019",
+    "title": "Uber-style bottom sheet motion polish",
+    "description": "Content sheet gained velocity-based fling snapping, a map-dim scrim proportional to drag progress, corner-radius flattening on reaching full-screen, a native haptic tick on snap, and status-bar icon color synced to whatever's behind it. Haptics/status-bar no-op on web.",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-08-27T04:36:04.244Z",
+    "updatedAt": "2026-08-27T04:36:10.835Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-08-27T04:36:10.834Z",
+    "shippedNote": "src/components/TripContentSheet.tsx (velocity fling, scrim, corner-radius, haptics), src/utils/nativeShell.ts + src/App.tsx (status-bar tone sync). Added @capacitor/haptics + @capacitor/status-bar, npx cap sync run for Android/iOS."
+  },
+  {
+    "id": "FEAT-020",
+    "title": "Simplified who-owes-who summary card",
+    "description": "BoardingPassHeroCard trimmed to drop its auto-generated restating sentence; settlement transfer list collapsed by default; per-transfer actions moved behind a compact more-actions overflow (Change amount / Remind / Share) with the audit breakdown reachable via a small info icon instead of a text link.",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-08-27T04:36:18.578Z",
+    "updatedAt": "2026-08-27T04:36:24.296Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-08-27T04:36:24.295Z",
+    "shippedNote": "src/components/BoardingPassHeroCard.tsx, src/components/BalancesSettlements.tsx."
+  },
+  {
+    "id": "FEAT-021",
+    "title": "Analytics moved to Summary; geo map split into its own Settings section",
+    "description": "Retired the standalone Analytics screen under Settings. KPI cards + category donut now live directly on the Summary tab (member/trend charts behind a disclosure); the geotagged expense route map (TripJourneyMap) is now its own dedicated 'Trip Map' section in Settings, decoupled from the stats.",
+    "category": "analytics",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-08-27T04:36:32.143Z",
+    "updatedAt": "2026-08-27T04:36:38.231Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-08-27T04:36:38.230Z",
+    "shippedNote": "src/App.tsx, src/components/AnalyticsTab.tsx, src/components/SettingsTab.tsx, src/components/SettingsView.tsx."
   }
 ]

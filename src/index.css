@@ -92,7 +92,10 @@
   /* Text — near-black, not navy */
   --text-primary: #16181D;
   --text-secondary: #55585E;
-  --text-muted: #8A8D93;
+  /* Was #8A8D93 -- ~3:1 against --bg-surface, below WCAG AA for the small
+     uppercase labels (stat cards, form eyebrows) that lean on this token.
+     Darkened to clear 4.5:1 while staying visibly dimmer than secondary. */
+  --text-muted: #6B6E76;
 
   --bg-header: #0F6F63;
   /* Monochrome teal, restrained -- a signature moment, not the whole
@@ -160,7 +163,9 @@
 
     --text-primary: #EDEEF0;
     --text-secondary: #A3A6AD;
-    --text-muted: #6B6E76;
+    /* Was #6B6E76 -- ~3.4:1 against --bg-surface here, same AA-contrast gap
+       as the light-mode value above. Lightened to clear 4.5:1. */
+    --text-muted: #8B8E96;
 
     --bg-header: #163B36;
     --header-gradient: linear-gradient(135deg, rgba(63, 203, 189, 0.5) 0%, rgba(22, 59, 54, 0.64) 100%);
@@ -195,7 +200,7 @@
 
   --text-primary: #EDEEF0;
   --text-secondary: #A3A6AD;
-  --text-muted: #6B6E76;
+  --text-muted: #8B8E96;
 
   --bg-header: #163B36;
   --header-gradient: linear-gradient(135deg, rgba(63, 203, 189, 0.5) 0%, rgba(22, 59, 54, 0.64) 100%);
@@ -1066,13 +1071,18 @@ input[type="date"].input-field {
   -webkit-backdrop-filter: blur(28px) saturate(180%);
   border-bottom: 1px solid rgba(255, 255, 255, 0.16);
   box-shadow: 0 4px 20px -4px rgba(0, 0, 0, 0.28);
+  /* This is the "reveal" timing -- used whenever .header-hidden is removed.
+     Deliberately slower and decelerating (arrives), vs. the faster
+     accelerating "hide" timing declared on .header-hidden itself below --
+     an element should get out of the way quicker than it comes back. */
   transition: padding 0.35s cubic-bezier(0.16, 1, 0.3, 1),
               background-color 0.35s ease,
               box-shadow 0.35s ease,
               border-color 0.35s ease,
               color 0.3s ease,
-              transform 0.32s cubic-bezier(0.16, 1, 0.3, 1);
-  will-change: padding, background-color, box-shadow, transform;
+              transform 0.36s cubic-bezier(0.16, 1, 0.3, 1),
+              opacity 0.32s ease-out;
+  will-change: padding, background-color, box-shadow, transform, opacity;
   /* Default tone: white text/chrome for a dark or unknown map background.
      TripMapHero samples the live map pixels behind the header and flips
      these when the map area there is bright enough that white would wash
@@ -1100,8 +1110,21 @@ input[type="date"].input-field {
    rather than covering it -- when fully expanded (see .trip-sheet.full),
    the header has to actually get out of the way instead. */
 .trip-dashboard-header.header-hidden {
+  /* Faster, accelerating "hide" timing -- overrides the base rule's
+     transition above for exactly the properties that fire on the way out,
+     so leaving is quicker than arriving. */
+  transition: transform 0.22s cubic-bezier(0.4, 0, 1, 1),
+              opacity 0.18s ease-in;
   transform: translateY(-100%);
+  opacity: 0;
   pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .trip-dashboard-header,
+  .trip-dashboard-header.header-hidden {
+    transition: none;
+  }
 }
 
 .trip-dashboard-header.is-scrolled {
@@ -3692,6 +3715,27 @@ input:checked + .toggle-slider:before {
    `top` is set inline by TripContentSheet's drag state: starts at 50% (map
    half visible) and swipes up to 20% (80% coverage). Its own content (the
    tab-panes inside) scrolls internally once it overflows. */
+/* Backdrop dim behind the sheet -- opacity is driven inline (0..0.55) by
+   TripContentSheet's continuous drag progress, so the map darkens smoothly
+   as the sheet rises instead of jumping to dim only once "full" is hit.
+   pointer-events:none: it's purely visual, never blocks map interaction. */
+.trip-sheet-scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  background: #000;
+  pointer-events: none;
+  transition: opacity 0.38s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.trip-sheet-scrim.dragging {
+  transition: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .trip-sheet-scrim { transition: none; }
+}
+
 .trip-sheet {
   position: absolute;
   left: 0;
@@ -3705,11 +3749,19 @@ input:checked + .toggle-slider:before {
   border-radius: 28px 28px 0 0;
   box-shadow: 0 -16px 40px -10px rgba(0, 0, 0, 0.4), 0 -4px 16px rgba(0, 0, 0, 0.2);
   overflow: hidden;
-  transition: top 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+  /* Same overshoot curve AnalyticsTab's chart fill-in uses -- a snapping
+     sheet reads more physical with a touch of spring than a flat ease-out.
+     border-radius rides the same curve so the corner-flatten (see the
+     .full rule below) settles in lockstep with the vertical snap. */
+  transition: top 0.38s cubic-bezier(0.34, 1.56, 0.64, 1), border-radius 0.38s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .trip-sheet.dragging {
   transition: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .trip-sheet { transition: none; }
 }
 
 /* Fully expanded (Uber-style): the sheet covers the map/header entirely,

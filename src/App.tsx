@@ -8,6 +8,7 @@ import { exportTripToCSV } from './utils/csvExport';
 import { fetchPlaceCoverImage } from './services/placeImageService';
 
 import { getCurrencySymbol } from './utils/currency';
+import { syncStatusBarTone, resolveTheme } from './utils/nativeShell';
 import { isMissingSupabaseEnv } from './services/supabaseClient';
 import { sendPushNotification } from './services/pushApi';
 import { fetchAppFlag } from './services/tripApi';
@@ -21,6 +22,7 @@ const TripMapHero = lazy(() =>
   import('./components/TripMapHero').then((m) => ({ default: m.TripMapHero }))
 );
 import { TripContentSheet } from './components/TripContentSheet';
+import { AnalyticsTab } from './components/AnalyticsTab';
 import { ExpenseForm } from './components/ExpenseForm';
 import { ExpenseList } from './components/ExpenseList';
 import { BalancesSettlements } from './components/BalancesSettlements';
@@ -139,7 +141,11 @@ export default function App() {
   // WhatsApp-style. Skips gestures that start on a row/map that already
   // owns horizontal drag (see data-no-tab-swipe in SwipeableRow/TripMapHero/
   // TripJourneyMap).
-  useTabSwipe(mainContentRef, TAB_ORDER, activeTab, setActiveTab);
+  // Swipe-completed changes use the raw setter, not setActiveTab's
+  // view-transition crossfade -- the drag itself already animates the
+  // handoff (the pane visually slides into place), so layering a
+  // second, independent crossfade on top would fight it.
+  const tabSwipe = useTabSwipe(mainContentRef, TAB_ORDER, activeTab, setActiveTabRaw);
 
   // Bumped to tell MembersGroupsTab to open its add-member popup -- the
   // nav bar's FAB triggers this instead of add-expense while on the
@@ -447,6 +453,13 @@ export default function App() {
   // exposed, instead of sitting static underneath the drag.
   const [sheetExpanded, setSheetExpanded] = useState(false);
   const [sheetFull, setSheetFull] = useState(false);
+  // Status bar icons need to flip with whatever's actually behind them:
+  // the map's sampled tone while the header's showing, the app surface's
+  // own theme once the sheet goes full-screen over everything.
+  useEffect(() => {
+    const backgroundIsBright = sheetFull ? resolveTheme() === 'light' : headerTone === 'dark';
+    syncStatusBarTone(backgroundIsBright);
+  }, [sheetFull, headerTone]);
   // Route-stops chip row starts collapsed -- it's the least essential
   // header row (the map already shows the route), so keeping it closed by
   // default gives the eyebrow date row more breathing room instead of
@@ -1712,7 +1725,14 @@ export default function App() {
           <TripContentSheet onExpandedChange={setSheetExpanded} onFullChange={setSheetFull}>
           <main className="app-main" ref={mainContentRef}>
             {/* View Switching Tab Content */}
-            <div className="tab-pane" style={{ display: activeTab === 'expenses' ? 'block' : 'none' }}>
+            <div
+              className="tab-pane"
+              style={
+                activeTab === 'expenses' ? { display: 'block', ...tabSwipe.activePaneStyle }
+                : tabSwipe.previewTab === 'expenses' ? { display: 'block', ...tabSwipe.previewPaneStyle }
+                : { display: 'none' }
+              }
+            >
               <div className="fade-in">
                 {activeTrip && visibleMembers.length > 0 && (
                   <BalancesSettlements
@@ -1721,8 +1741,6 @@ export default function App() {
                     groups={visibleTripGroups}
                     transfers={transfers}
                     activeTripExpenses={activeTripExpenses}
-                    topCategoryName={categoryData[0]?.name}
-                    topCategoryPercentage={categoryData[0]?.percentage}
                     onSettle={handleSettle}
                     isAdmin={isAdmin}
                     myMemberId={myMemberId}
@@ -1735,10 +1753,39 @@ export default function App() {
                     }}
                   />
                 )}
+                <AnalyticsTab
+                  trip={activeTrip}
+                  totalSpent={totalSpent}
+                  averageCost={averageCost}
+                  biggestSpender={biggestSpender}
+                  hasExpenses={nonSettlementExpenses.length > 0}
+                  categoryData={categoryData}
+                  getCatColor={getCatColor}
+                  memberSpentList={memberSpentList}
+                  dailySpendData={dailySpendData}
+                  expenses={activeTripExpenses}
+                  onCategoryClick={(catId) => {
+                    setExpenseFilterCategory(catId);
+                    setShowExpenseFilterDrawer(false);
+                    setActiveTab('ledger');
+                  }}
+                  onMemberClick={(memberId) => {
+                    setExpenseFilterMember(memberId);
+                    setShowExpenseFilterDrawer(false);
+                    setActiveTab('ledger');
+                  }}
+                />
               </div>
             </div>
 
-            <div className="tab-pane" style={{ display: activeTab === 'members' ? 'block' : 'none' }}>
+            <div
+              className="tab-pane"
+              style={
+                activeTab === 'members' ? { display: 'block', ...tabSwipe.activePaneStyle }
+                : tabSwipe.previewTab === 'members' ? { display: 'block', ...tabSwipe.previewPaneStyle }
+                : { display: 'none' }
+              }
+            >
               <div className="fade-in">
               <MembersGroupsTab
                 showMembersRequiredNotice={showMembersRequiredNotice}
@@ -1765,7 +1812,14 @@ export default function App() {
               </div>
             </div>
 
-            <div className="tab-pane" style={{ display: activeTab === 'ledger' ? 'block' : 'none' }}>
+            <div
+              className="tab-pane"
+              style={
+                activeTab === 'ledger' ? { display: 'block', ...tabSwipe.activePaneStyle }
+                : tabSwipe.previewTab === 'ledger' ? { display: 'block', ...tabSwipe.previewPaneStyle }
+                : { display: 'none' }
+              }
+            >
               <div className="fade-in" style={{ paddingBottom: '100px' }}>
               <ExpenseList
                 trip={activeTrip}
@@ -1809,7 +1863,14 @@ export default function App() {
               </div>
             </div>
 
-            <div className="tab-pane" style={{ display: activeTab === 'settings' ? 'block' : 'none' }}>
+            <div
+              className="tab-pane"
+              style={
+                activeTab === 'settings' ? { display: 'block', ...tabSwipe.activePaneStyle }
+                : tabSwipe.previewTab === 'settings' ? { display: 'block', ...tabSwipe.previewPaneStyle }
+                : { display: 'none' }
+              }
+            >
               <div className="fade-in">
               <SettingsTab
                 categories={categories}
@@ -1841,30 +1902,7 @@ export default function App() {
                 onRequestConfirm={setConfirmRequest}
                 onOpenShareTrip={() => setShowShareTrip(true)}
                 onOpenTripWrapped={() => setShowTripWrapped(true)}
-                analytics={{
-                  trip: activeTrip,
-                  totalSpent,
-                  averageCost,
-                  biggestSpender,
-                  hasExpenses: nonSettlementExpenses.length > 0,
-                  categoryData,
-                  getCatColor,
-                  memberSpentList,
-                  dailySpendData,
-                  expenses: activeTripExpenses,
-                  categories,
-                  onOpenSquadBadges: () => setShowAchievements(true),
-                  onCategoryClick: (catId) => {
-                    setExpenseFilterCategory(catId);
-                    setShowExpenseFilterDrawer(false);
-                    setActiveTab('ledger');
-                  },
-                  onMemberClick: (memberId) => {
-                    setExpenseFilterMember(memberId);
-                    setShowExpenseFilterDrawer(false);
-                    setActiveTab('ledger');
-                  },
-                }}
+                baseCurrency={activeTrip?.baseCurrency || ''}
               />
               </div>
             </div>

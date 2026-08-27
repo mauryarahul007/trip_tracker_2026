@@ -2397,5 +2397,83 @@
     "resolvedBy": "claude-cli",
     "resolvedAt": "2026-08-27T00:42:57.281Z",
     "resolutionNote": "Removed the standalone refresh icon button; merged its refreshActiveTripExpenses() pull into handleSyncClick() so the 'Synced' pill now does both push (processQueue) and pull in one tap."
+  },
+  {
+    "id": "BUG-102",
+    "title": "Donut chart click routes to wrong category filter",
+    "description": "Category donut arcs used fill=transparent, which is still a painted/hit-testable fill for pointer-events:visiblePainted. Every stacked full-circle arc became fully clickable regardless of its visible stroke, so clicking a slice always resolved to whichever category was painted last, not the one under the cursor.",
+    "severity": "medium",
+    "category": "ui-ux",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "Clicking a category's visible arc/legend routes to the Ledger filtered by that category.",
+    "actualBehavior": "Clicking any category arc always filtered by the topmost-painted category.",
+    "diagnostics": {},
+    "createdAt": "2026-08-27T04:34:47.074Z",
+    "updatedAt": "2026-08-27T04:34:54.123Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-08-27T04:34:54.122Z",
+    "resolutionNote": "src/components/AnalyticsTab.tsx: changed the per-category donut arc circle's fill from transparent to none, so only the visible stroke ring is hit-tested."
+  },
+  {
+    "id": "BUG-103",
+    "title": "Stat-card labels (Total Spent, Daily Average, Top Category) low contrast",
+    "description": "The shared --text-muted design token failed WCAG AA contrast (~3:1 light, ~3.4:1 dark) against its surface in both themes, making uppercase stat labels across the Expenses tab and Analytics KPI cards hard to read.",
+    "severity": "medium",
+    "category": "ui-ux",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "Stat labels are clearly legible in both light and dark mode.",
+    "actualBehavior": "Labels rendered in a washed-out, hard-to-read gray in both themes.",
+    "diagnostics": {},
+    "createdAt": "2026-08-27T04:35:02.658Z",
+    "updatedAt": "2026-08-27T04:35:09.703Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-08-27T04:35:09.702Z",
+    "resolutionNote": "src/index.css: darkened --text-muted to #6B6E76 (light) and lightened to #8B8E96 (dark, both the media-query and explicit data-theme blocks), clearing 4.5:1 contrast in both themes. Fixed once at the token level so every consumer (Expenses stat strip, Analytics KPI cards, review modal, member details, etc.) benefits without per-component changes."
+  },
+  {
+    "id": "BUG-104",
+    "title": "Expense day-groups default to expanded, overloading the Ledger on open",
+    "description": "ExpenseList defaulted the first 2 day-groups to expanded on entering the Expenses/Ledger tab, dumping every transaction from those days on screen at once instead of letting the user drill in.",
+    "severity": "low",
+    "category": "ui-ux",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "Every day-group starts collapsed on entering the tab; the user expands the days they care about.",
+    "actualBehavior": "The first 2 day-groups were expanded by default, showing all their transactions immediately.",
+    "diagnostics": {},
+    "createdAt": "2026-08-27T04:35:18.940Z",
+    "updatedAt": "2026-08-27T04:35:24.965Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-08-27T04:35:24.963Z",
+    "resolutionNote": "src/components/ExpenseList.tsx: DEFAULT_EXPANDED_DAYS changed from 2 to 0, so every day-group starts collapsed."
   }
 ]

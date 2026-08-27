@@ -9,10 +9,10 @@
 
 | Metric | Count | Status Notes |
 | :--- | :--- | :--- |
-| **Total Tracked** | **80** | All recorded bugs across sessions |
+| **Total Tracked** | **83** | All recorded bugs across sessions |
 | **🟢 Open** | **0** | No critical blockers, 0 High |
 | **🟡 In Progress** | **0** | Active investigation or fix |
-| **✅ Resolved** | **75** | Verified & closed |
+| **✅ Resolved** | **78** | Verified & closed |
 | **⚪ Won't Fix** | **5** | Expected behavior / deferred |
 
 ---
@@ -106,6 +106,9 @@
 | **BUG-094** | Expense currency picker was discarded at save, silently corrupting cross-currency totals | `splits-math` | `high` | `claude-cli` | `claude-cli` | ExpenseForm.tsx now always converts to base currency at save time (not gated on the button click) and passes the actually-selected currency through; App.tsx's handleSaveExpense uses that instead of hardcoding the trip's base currency. |
 | **BUG-095** | Blind Mode's privacy-blur left every amount illegible/smudged-looking | `ui-ux` | `medium` | `claude-cli` | `claude-cli` | Removed Blind Mode entirely per product decision: deleted privacyStore.ts, the header eye-icon toggle, every formatMaskedAmount/.privacy-blur usage across 8 files, replaced with a plain formatAmount() in utils/currency.ts. |
 | **BUG-096** | Redundant refresh icon duplicated the 'Synced' pill's tap-to-sync action | `ui-ux` | `low` | `claude-cli` | `claude-cli` | Removed the standalone refresh icon button; merged its refreshActiveTripExpenses() pull into handleSyncClick() so the 'Synced' pill now does both push (processQueue) and pull in one tap. |
+| **BUG-102** | Donut chart click routes to wrong category filter | `ui-ux` | `medium` | `claude-cli` | `claude-cli` | src/components/AnalyticsTab.tsx: changed the per-category donut arc circle's fill from transparent to none, so only the visible stroke ring is hit-tested. |
+| **BUG-103** | Stat-card labels (Total Spent, Daily Average, Top Category) low contrast | `ui-ux` | `medium` | `claude-cli` | `claude-cli` | src/index.css: darkened --text-muted to #6B6E76 (light) and lightened to #8B8E96 (dark, both the media-query and explicit data-theme blocks), clearing 4.5:1 contrast in both themes. Fixed once at the token level so every consumer (Expenses stat strip, Analytics KPI cards, review modal, member details, etc.) benefits without per-component changes. |
+| **BUG-104** | Expense day-groups default to expanded, overloading the Ledger on open | `ui-ux` | `low` | `claude-cli` | `claude-cli` | src/components/ExpenseList.tsx: DEFAULT_EXPANDED_DAYS changed from 2 to 0, so every day-group starts collapsed. |
 
 ---
 
