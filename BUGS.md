@@ -9,8 +9,8 @@
 
 | Metric | Count | Status Notes |
 | :--- | :--- | :--- |
-| **Total Tracked** | **86** | All recorded bugs across sessions |
-| **🟢 Open** | **0** | No critical blockers, 0 High |
+| **Total Tracked** | **87** | All recorded bugs across sessions |
+| **🟢 Open** | **1** | No critical blockers, 1 High |
 | **🟡 In Progress** | **0** | Active investigation or fix |
 | **✅ Resolved** | **81** | Verified & closed |
 | **⚪ Won't Fix** | **5** | Expected behavior / deferred |
@@ -19,13 +19,27 @@
 
 ## 🚨 Active Bugs (Open & In Progress)
 
-*🎉 No active open bugs! Great job team.* 
+| ID | Severity | Category | Title | Found By | Status |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **[BUG-108](#bug-108)** | 🟠 High | `splits-math` | Expense 'needs review' flag reappears after refresh even after reassigning payer/split away from a deleted member | `claude-cli` | 🟢 Open |
 
 ---
 
 ## 📖 Detailed Active Bug Specs
 
-*No active bug details to display.*
+### BUG-108: Expense 'needs review' flag reappears after refresh even after reassigning payer/split away from a deleted member
+
+- **Severity**: `HIGH` | **Category**: `splits-math` | **Status**: `open`
+- **Found By**: `claude-cli` on 27/8/2026 (web)
+
+**Description**:
+updateExpenseRow() (src/services/tripApi.ts) called .update(payload).eq('id', id) with no .select(), so error was null even when the UPDATE policy's WITH CHECK silently rejected the write (0 rows affected). tripStore.updateExpense() saw no exception, never queued the change via queueSync, so collectDirtyExpenseIds() never marked the expense dirty. On next load, initialize() re-fetches server expenses and mergeServerExpenses() takes the (never actually updated) server row over the local optimistic fix for anything not dirty -- silently reverting the fix, and ExpenseList's needsReview recomputes true again off the stale paidBy/splitMemberIds. Root cause traced to two layers: (1) missing rows-affected check in updateExpenseRow, and (2) the live 'admin or original author can update expenses' RLS policy on public.expenses (migration 0018) had a WITH CHECK requiring a non-admin editor to remain payer or a split member on the new row, asymmetric with its own USING clause -- so a non-admin original author fixing their own expense by reassigning payer/split away from themselves (the normal outcome of removing a deleted member) was permanently blocked, not just transiently.
+
+**Steps to Reproduce**:
+1. Navigate to application
+2. Perform action that triggers bug
+
+---
 
 ## ✅ Resolved Bugs History
 

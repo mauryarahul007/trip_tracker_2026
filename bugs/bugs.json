@@ -2553,5 +2553,28 @@
     "resolvedBy": "claude-cli",
     "resolvedAt": "2026-08-27T13:10:08.005Z",
     "resolutionNote": "Commit d19e36b: loadDemoTrip() now persists userId/userDisplayName (state.userId || effectiveUserId) so setError()'s isDemo suppression actually fires for the demo-mode cold-start path. Verified via Playwright: console.error+red toast before, console.warn+0 toasts after."
+  },
+  {
+    "id": "BUG-108",
+    "title": "Expense 'needs review' flag reappears after refresh even after reassigning payer/split away from a deleted member",
+    "description": "updateExpenseRow() (src/services/tripApi.ts) called .update(payload).eq('id', id) with no .select(), so error was null even when the UPDATE policy's WITH CHECK silently rejected the write (0 rows affected). tripStore.updateExpense() saw no exception, never queued the change via queueSync, so collectDirtyExpenseIds() never marked the expense dirty. On next load, initialize() re-fetches server expenses and mergeServerExpenses() takes the (never actually updated) server row over the local optimistic fix for anything not dirty -- silently reverting the fix, and ExpenseList's needsReview recomputes true again off the stale paidBy/splitMemberIds. Root cause traced to two layers: (1) missing rows-affected check in updateExpenseRow, and (2) the live 'admin or original author can update expenses' RLS policy on public.expenses (migration 0018) had a WITH CHECK requiring a non-admin editor to remain payer or a split member on the new row, asymmetric with its own USING clause -- so a non-admin original author fixing their own expense by reassigning payer/split away from themselves (the normal outcome of removing a deleted member) was permanently blocked, not just transiently.",
+    "severity": "high",
+    "category": "splits-math",
+    "status": "open",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-08-27T18:06:03.509Z",
+    "updatedAt": "2026-08-27T18:06:03.510Z"
   }
 ]

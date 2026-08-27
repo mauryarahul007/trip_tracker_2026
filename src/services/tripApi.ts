@@ -453,12 +453,22 @@ export async function updateExpenseRow(id: string, input: ExpenseInput): Promise
     ...(input.location !== undefined ? { location: coordsOnly(input.location) } : {}),
   };
 
-  const { error } = await supabase
+  // .select('id') is required, not cosmetic: without it, a row silently
+  // rejected by the UPDATE policy's WITH CHECK (e.g. RLS blocking a
+  // non-admin editor's edit) comes back as `error: null` with zero rows
+  // touched -- the caller sees "success" for a write that never happened.
+  // The optimistic local state then looks fixed until the next refresh
+  // re-fetches the untouched server row and silently reverts it.
+  const { data, error } = await supabase
     .from('expenses')
     .update(payloadWithLoc)
-    .eq('id', id);
+    .eq('id', id)
+    .select('id');
 
   if (error) throw error;
+  if (!data || data.length === 0) {
+    throw new Error(`Expense update for ${id} affected 0 rows (blocked by a database policy or the expense no longer exists)`);
+  }
 }
 
 // ---------------------------------------------------------------------------
