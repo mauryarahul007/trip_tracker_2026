@@ -10,36 +10,22 @@
 | Metric | Count | Status Notes |
 | :--- | :--- | :--- |
 | **Total Tracked** | **85** | All recorded bugs across sessions |
-| **🟢 Open** | **1** | No critical blockers, 0 High |
+| **🟢 Open** | **0** | No critical blockers, 0 High |
 | **🟡 In Progress** | **0** | Active investigation or fix |
-| **✅ Resolved** | **79** | Verified & closed |
+| **✅ Resolved** | **80** | Verified & closed |
 | **⚪ Won't Fix** | **5** | Expected behavior / deferred |
 
 ---
 
 ## 🚨 Active Bugs (Open & In Progress)
 
-| ID | Severity | Category | Title | Found By | Status |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| **[BUG-106](#bug-106)** | 🟡 Medium | `ui-ux` | Form labels not programmatically associated with inputs; icon-only buttons unnamed; warning/success text and dismiss-button touch targets fail WCAG AA | `claude-cli` | 🟢 Open |
+*🎉 No active open bugs! Great job team.* 
 
 ---
 
 ## 📖 Detailed Active Bug Specs
 
-### BUG-106: Form labels not programmatically associated with inputs; icon-only buttons unnamed; warning/success text and dismiss-button touch targets fail WCAG AA
-
-- **Severity**: `MEDIUM` | **Category**: `ui-ux` | **Status**: `open`
-- **Found By**: `claude-cli` on 27/8/2026 (web)
-
-**Description**:
-Full WCAG 2.2 audit found: 45+ form fields across 15 files had visually-adjacent <label> text with no htmlFor/id association (screen readers announced nothing on focus) -- BugReportModal, ExpenseForm, FeatureRequestModal, LoginScreen, MembersGroupsTab, ResetPasswordScreen, SettingsView, ShareTripModal, SuperAdminBugTracker, SuperadminAuthModal, TripsListScreen, admin/AdminFlagsPage, admin/AdminToolsPage. Also: 3 icon-only dismiss buttons (App.tsx storage toast, ExpenseForm location-remove, SettingsView keyword-remove) had no accessible name; --color-warning/--color-success text at small sizes measured 3.07:1/3.18:1 in light theme (need 4.5:1) at 5 call sites; those same 3 dismiss buttons had no minimum touch target.
-
-**Steps to Reproduce**:
-1. Navigate to application
-2. Perform action that triggers bug
-
----
+*No active bug details to display.*
 
 ## ✅ Resolved Bugs History
 
@@ -124,6 +110,7 @@ Full WCAG 2.2 audit found: 45+ form fields across 15 files had visually-adjacent
 | **BUG-103** | Stat-card labels (Total Spent, Daily Average, Top Category) low contrast | `ui-ux` | `medium` | `claude-cli` | `claude-cli` | src/index.css: darkened --text-muted to #6B6E76 (light) and lightened to #8B8E96 (dark, both the media-query and explicit data-theme blocks), clearing 4.5:1 contrast in both themes. Fixed once at the token level so every consumer (Expenses stat strip, Analytics KPI cards, review modal, member details, etc.) benefits without per-component changes. |
 | **BUG-104** | Expense day-groups default to expanded, overloading the Ledger on open | `ui-ux` | `low` | `claude-cli` | `claude-cli` | src/components/ExpenseList.tsx: DEFAULT_EXPANDED_DAYS changed from 2 to 0, so every day-group starts collapsed. |
 | **BUG-105** | Missing focus traps, focus-visible rings, skip link, and toast live-regions on several UI surfaces | `ui-ux` | `medium` | `claude-cli` | `claude-cli` | Commit 725d094: useFocusTrap on 5 overlay dialogs (ExpenseFilterDrawer, AdminUsersPage broadcast drawer, SuperAdminBugTracker x3), :focus-visible/:focus-within on .filter-chip/.amount-hero, skip-to-content link + #main-content targets, aria-live on UpdateBanner + storage-error toast, consolidated 32 duplicate cubic-bezier literals onto --ease-decel/--ease-spring tokens. |
+| **BUG-106** | Form labels not programmatically associated with inputs; icon-only buttons unnamed; warning/success text and dismiss-button touch targets fail WCAG AA | `ui-ux` | `medium` | `claude-cli` | `claude-cli` | Commit f7503c7: id/htmlFor pairs on 45+ form fields across 15 files, fieldset/legend for button-group labels, aria-label on 3 icon-only dismiss buttons + new .dismiss-glyph-btn (24x24 AA) utility, --color-warning-text/--color-success-text tokens (~4.6-4.8:1) swapped into 5 small-text call sites failing AA contrast in light theme. |
 
 ---
 
