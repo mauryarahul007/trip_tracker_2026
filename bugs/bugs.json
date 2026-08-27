@@ -2560,7 +2560,7 @@
     "description": "updateExpenseRow() (src/services/tripApi.ts) called .update(payload).eq('id', id) with no .select(), so error was null even when the UPDATE policy's WITH CHECK silently rejected the write (0 rows affected). tripStore.updateExpense() saw no exception, never queued the change via queueSync, so collectDirtyExpenseIds() never marked the expense dirty. On next load, initialize() re-fetches server expenses and mergeServerExpenses() takes the (never actually updated) server row over the local optimistic fix for anything not dirty -- silently reverting the fix, and ExpenseList's needsReview recomputes true again off the stale paidBy/splitMemberIds. Root cause traced to two layers: (1) missing rows-affected check in updateExpenseRow, and (2) the live 'admin or original author can update expenses' RLS policy on public.expenses (migration 0018) had a WITH CHECK requiring a non-admin editor to remain payer or a split member on the new row, asymmetric with its own USING clause -- so a non-admin original author fixing their own expense by reassigning payer/split away from themselves (the normal outcome of removing a deleted member) was permanently blocked, not just transiently.",
     "severity": "high",
     "category": "splits-math",
-    "status": "open",
+    "status": "resolved",
     "foundBy": "claude-cli",
     "environment": {
       "platform": "web",
@@ -2575,6 +2575,9 @@
     "actualBehavior": "",
     "diagnostics": {},
     "createdAt": "2026-08-27T18:06:03.509Z",
-    "updatedAt": "2026-08-27T18:06:03.510Z"
+    "updatedAt": "2026-08-27T18:06:27.062Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-08-27T18:06:27.062Z",
+    "resolutionNote": "Commit 1c9e46d + supabase migration 0071 (applied to production via supabase db push, verified live via pg_policy query). updateExpenseRow() now chains .select('id') and throws on 0-rows-affected so a silently-rejected write correctly stays dirty across refresh. RLS WITH CHECK on expenses UPDATE relaxed to match USING (admin-or-creator), dropping the extra 'must remain payer/split-member' requirement that permanently blocked non-admin authors from reassigning their own expense away from themselves. Regression test in src/services/tripApi.test.ts."
   }
 ]

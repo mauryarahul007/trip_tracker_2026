@@ -10,36 +10,22 @@
 | Metric | Count | Status Notes |
 | :--- | :--- | :--- |
 | **Total Tracked** | **87** | All recorded bugs across sessions |
-| **🟢 Open** | **1** | No critical blockers, 1 High |
+| **🟢 Open** | **0** | No critical blockers, 0 High |
 | **🟡 In Progress** | **0** | Active investigation or fix |
-| **✅ Resolved** | **81** | Verified & closed |
+| **✅ Resolved** | **82** | Verified & closed |
 | **⚪ Won't Fix** | **5** | Expected behavior / deferred |
 
 ---
 
 ## 🚨 Active Bugs (Open & In Progress)
 
-| ID | Severity | Category | Title | Found By | Status |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| **[BUG-108](#bug-108)** | 🟠 High | `splits-math` | Expense 'needs review' flag reappears after refresh even after reassigning payer/split away from a deleted member | `claude-cli` | 🟢 Open |
+*🎉 No active open bugs! Great job team.* 
 
 ---
 
 ## 📖 Detailed Active Bug Specs
 
-### BUG-108: Expense 'needs review' flag reappears after refresh even after reassigning payer/split away from a deleted member
-
-- **Severity**: `HIGH` | **Category**: `splits-math` | **Status**: `open`
-- **Found By**: `claude-cli` on 27/8/2026 (web)
-
-**Description**:
-updateExpenseRow() (src/services/tripApi.ts) called .update(payload).eq('id', id) with no .select(), so error was null even when the UPDATE policy's WITH CHECK silently rejected the write (0 rows affected). tripStore.updateExpense() saw no exception, never queued the change via queueSync, so collectDirtyExpenseIds() never marked the expense dirty. On next load, initialize() re-fetches server expenses and mergeServerExpenses() takes the (never actually updated) server row over the local optimistic fix for anything not dirty -- silently reverting the fix, and ExpenseList's needsReview recomputes true again off the stale paidBy/splitMemberIds. Root cause traced to two layers: (1) missing rows-affected check in updateExpenseRow, and (2) the live 'admin or original author can update expenses' RLS policy on public.expenses (migration 0018) had a WITH CHECK requiring a non-admin editor to remain payer or a split member on the new row, asymmetric with its own USING clause -- so a non-admin original author fixing their own expense by reassigning payer/split away from themselves (the normal outcome of removing a deleted member) was permanently blocked, not just transiently.
-
-**Steps to Reproduce**:
-1. Navigate to application
-2. Perform action that triggers bug
-
----
+*No active bug details to display.*
 
 ## ✅ Resolved Bugs History
 
@@ -126,6 +112,7 @@ updateExpenseRow() (src/services/tripApi.ts) called .update(payload).eq('id', id
 | **BUG-105** | Missing focus traps, focus-visible rings, skip link, and toast live-regions on several UI surfaces | `ui-ux` | `medium` | `claude-cli` | `claude-cli` | Commit 725d094: useFocusTrap on 5 overlay dialogs (ExpenseFilterDrawer, AdminUsersPage broadcast drawer, SuperAdminBugTracker x3), :focus-visible/:focus-within on .filter-chip/.amount-hero, skip-to-content link + #main-content targets, aria-live on UpdateBanner + storage-error toast, consolidated 32 duplicate cubic-bezier literals onto --ease-decel/--ease-spring tokens. |
 | **BUG-106** | Form labels not programmatically associated with inputs; icon-only buttons unnamed; warning/success text and dismiss-button touch targets fail WCAG AA | `ui-ux` | `medium` | `claude-cli` | `claude-cli` | Commit f7503c7: id/htmlFor pairs on 45+ form fields across 15 files, fieldset/legend for button-group labels, aria-label on 3 icon-only dismiss buttons + new .dismiss-glyph-btn (24x24 AA) utility, --color-warning-text/--color-success-text tokens (~4.6-4.8:1) swapped into 5 small-text call sites failing AA contrast in light theme. |
 | **BUG-107** | Demo Mode shows red Storage Error toast and console errors on every load (non-UUID demo IDs hit Supabase sync) | `offline-sync` | `low` | `claude-cli` | `claude-cli` | Commit d19e36b: loadDemoTrip() now persists userId/userDisplayName (state.userId || effectiveUserId) so setError()'s isDemo suppression actually fires for the demo-mode cold-start path. Verified via Playwright: console.error+red toast before, console.warn+0 toasts after. |
+| **BUG-108** | Expense 'needs review' flag reappears after refresh even after reassigning payer/split away from a deleted member | `splits-math` | `high` | `claude-cli` | `claude-cli` | Commit 1c9e46d + supabase migration 0071 (applied to production via supabase db push, verified live via pg_policy query). updateExpenseRow() now chains .select('id') and throws on 0-rows-affected so a silently-rejected write correctly stays dirty across refresh. RLS WITH CHECK on expenses UPDATE relaxed to match USING (admin-or-creator), dropping the extra 'must remain payer/split-member' requirement that permanently blocked non-admin authors from reassigning their own expense away from themselves. Regression test in src/services/tripApi.test.ts. |
 
 ---
 
