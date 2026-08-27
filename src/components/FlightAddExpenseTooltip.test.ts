@@ -6,9 +6,10 @@ describe('FlightAddExpenseTooltip', () => {
     expect(STORAGE_KEY).toBe('tt_flight_add_tooltip_dismissed_v1');
   });
 
-  it('always shows a plain "Add expense" message regardless of trip state', () => {
-    expect(getFlightTooltipMessage(0, 'Goa → Mumbai').text).toBe('Add expense');
-    expect(getFlightTooltipMessage(0, '').text).toBe('Add expense');
-    expect(getFlightTooltipMessage(3, 'Paris').text).toBe('Add expense');
+  it('shows contextual text: Add expense on Summary and Expenses, and Add member on Members', () => {
+    expect(getFlightTooltipMessage(0, 'Goa → Mumbai', 'expenses').text).toBe('Add expense');
+    expect(getFlightTooltipMessage(0, '', 'ledger').text).toBe('Add expense');
+    expect(getFlightTooltipMessage(3, 'Paris', 'members').text).toBe('Add member');
   });
+
 });

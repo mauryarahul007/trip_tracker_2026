@@ -98,16 +98,19 @@ export function NavTabs({ activeTab, setActiveTab, onAddExpense, onAddMember, ex
         <span>Expenses</span>
       </button>
       <div className="nav-tab-fab-wrap" role="presentation">
-        {/* Fixed just above the FAB regardless of scroll position -- confined
-            to the Summary tab so it doesn't sit on top of unrelated content
-            (stat tiles, member rows, settings rows) on the other tabs. */}
-        {activeTab === 'expenses' && (
+
+        {/* Renders contextual coachmark: "Add expense" on Summary & Expenses, "Add member" on Members, and hidden on Settings */}
+        {activeTab !== 'settings' && (
           <FlightAddExpenseTooltip
+            activeTab={activeTab}
             onAddExpense={onAddExpense}
+            onAddMember={onAddMember}
             expenseCount={expenseCount}
             tripDestination={tripDestination}
           />
         )}
+
+
         {showDeniedHint && (
           <div className="nav-tab-fab-denied-hint" role="status">
             Only trip admins can add members

@@ -3,17 +3,34 @@ import { triggerHaptic } from '../utils/haptics';
 
 export const STORAGE_KEY = 'tt_flight_add_tooltip_dismissed_v1';
 
-export function getFlightTooltipMessage(_expenseCount: number, _tripDestination?: string): { badge: string; text: string } {
+export type TooltipTab = 'expenses' | 'ledger' | 'members' | 'settings';
+
+export function getFlightTooltipMessage(
+  _expenseCount = 0,
+  _tripDestination?: string,
+  activeTab: TooltipTab = 'expenses'
+): { badge: string; text: string } {
+  if (activeTab === 'members') {
+    return { badge: '', text: 'Add member' };
+  }
   return { badge: '', text: 'Add expense' };
 }
 
 interface Props {
+  activeTab?: TooltipTab;
   onAddExpense: () => void;
+  onAddMember?: () => void;
   expenseCount?: number;
   tripDestination?: string;
 }
 
-export function FlightAddExpenseTooltip({ onAddExpense, expenseCount = 0, tripDestination }: Props) {
+export function FlightAddExpenseTooltip({
+  activeTab = 'expenses',
+  onAddExpense,
+  onAddMember,
+  expenseCount = 0,
+  tripDestination,
+}: Props) {
   const [visible, setVisible] = useState(false);
   const [isDismissed, setIsDismissed] = useState(true);
 
@@ -46,7 +63,7 @@ export function FlightAddExpenseTooltip({ onAddExpense, expenseCount = 0, tripDe
     return () => window.removeEventListener('tt:reset-coachmarks', handleResetEvent);
   }, []);
 
-  if (isDismissed) return null;
+  if (isDismissed || activeTab === 'settings') return null;
 
   const handleDismiss = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -67,10 +84,15 @@ export function FlightAddExpenseTooltip({ onAddExpense, expenseCount = 0, tripDe
   const handleTooltipClick = () => {
     triggerHaptic('medium');
     handleDismiss({ stopPropagation: () => {} } as React.MouseEvent);
-    onAddExpense();
+    if (activeTab === 'members' && onAddMember) {
+      onAddMember();
+    } else {
+      onAddExpense();
+    }
   };
 
-  const message = getFlightTooltipMessage(expenseCount, tripDestination);
+  const message = getFlightTooltipMessage(expenseCount, tripDestination, activeTab);
+
 
   return (
     <div
