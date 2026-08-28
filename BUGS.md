@@ -9,10 +9,10 @@
 
 | Metric | Count | Status Notes |
 | :--- | :--- | :--- |
-| **Total Tracked** | **87** | All recorded bugs across sessions |
+| **Total Tracked** | **88** | All recorded bugs across sessions |
 | **🟢 Open** | **0** | No critical blockers, 0 High |
 | **🟡 In Progress** | **0** | Active investigation or fix |
-| **✅ Resolved** | **82** | Verified & closed |
+| **✅ Resolved** | **83** | Verified & closed |
 | **⚪ Won't Fix** | **5** | Expected behavior / deferred |
 
 ---
@@ -113,6 +113,7 @@
 | **BUG-106** | Form labels not programmatically associated with inputs; icon-only buttons unnamed; warning/success text and dismiss-button touch targets fail WCAG AA | `ui-ux` | `medium` | `claude-cli` | `claude-cli` | Commit f7503c7: id/htmlFor pairs on 45+ form fields across 15 files, fieldset/legend for button-group labels, aria-label on 3 icon-only dismiss buttons + new .dismiss-glyph-btn (24x24 AA) utility, --color-warning-text/--color-success-text tokens (~4.6-4.8:1) swapped into 5 small-text call sites failing AA contrast in light theme. |
 | **BUG-107** | Demo Mode shows red Storage Error toast and console errors on every load (non-UUID demo IDs hit Supabase sync) | `offline-sync` | `low` | `claude-cli` | `claude-cli` | Commit d19e36b: loadDemoTrip() now persists userId/userDisplayName (state.userId || effectiveUserId) so setError()'s isDemo suppression actually fires for the demo-mode cold-start path. Verified via Playwright: console.error+red toast before, console.warn+0 toasts after. |
 | **BUG-108** | Expense 'needs review' flag reappears after refresh even after reassigning payer/split away from a deleted member | `splits-math` | `high` | `claude-cli` | `claude-cli` | Commit 1c9e46d + supabase migration 0071 (applied to production via supabase db push, verified live via pg_policy query). updateExpenseRow() now chains .select('id') and throws on 0-rows-affected so a silently-rejected write correctly stays dirty across refresh. RLS WITH CHECK on expenses UPDATE relaxed to match USING (admin-or-creator), dropping the extra 'must remain payer/split-member' requirement that permanently blocked non-admin authors from reassigning their own expense away from themselves. Regression test in src/services/tripApi.test.ts. |
+| **BUG-109** | Superadmin could not delete a user with expense history, even though suspend worked | `general` | `medium` | `human` | `claude-cli` | Commit 529558d + supabase migration 0072. expenses.created_by_user_id relaxed to nullable with an ON DELETE SET NULL FK (mirroring members.linked_user_id), and delete_user() no longer raises an exception for accounts with expense history -- deleting the auth.users row now anonymizes (nulls out) authorship on their past expenses instead of being blocked. Expense content is untouched; permission checks comparing created_by_user_id = auth.uid() simply stop matching once null, leaving trip admins as the only ones who can still manage the expense. Also guarded AdminAnalyticsPage's retention-cohort active-user Set against null creator ids. |
 
 ---
 

@@ -2579,5 +2579,33 @@
     "resolvedBy": "claude-cli",
     "resolvedAt": "2026-08-27T18:06:27.062Z",
     "resolutionNote": "Commit 1c9e46d + supabase migration 0071 (applied to production via supabase db push, verified live via pg_policy query). updateExpenseRow() now chains .select('id') and throws on 0-rows-affected so a silently-rejected write correctly stays dirty across refresh. RLS WITH CHECK on expenses UPDATE relaxed to match USING (admin-or-creator), dropping the extra 'must remain payer/split-member' requirement that permanently blocked non-admin authors from reassigning their own expense away from themselves. Regression test in src/services/tripApi.test.ts."
+  },
+  {
+    "id": "BUG-109",
+    "title": "Superadmin could not delete a user with expense history, even though suspend worked",
+    "description": "In the Superadmin portal's Users page, suspending a user (setUserBanned) worked, but deleting one (deleteUserAccount -> delete_user RPC) failed with 'This account has expense history and cannot be deleted. Suspend it instead.' The delete_user() function (migration 0068) intentionally raised that exception for any account referenced by expenses.created_by_user_id, since the column was NOT NULL with a plain FK (no cascade) -- a hard delete would otherwise orphan those rows or surface a raw FK violation.",
+    "severity": "medium",
+    "category": "general",
+    "status": "resolved",
+    "foundBy": "human",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Open Superadmin portal > Users",
+      "Pick a user who has logged at least one expense",
+      "Click Delete and type DELETE to confirm",
+      "Observe toast: This account has expense history and cannot be deleted. Suspend it instead."
+    ],
+    "expectedBehavior": "Superadmin can hard-delete a user account that has logged expenses; their past expenses remain intact but lose their creator attribution.",
+    "actualBehavior": "Delete button in AdminUsersPage always failed for any user who had ever logged an expense, with no way to actually remove the account short of suspending it forever.",
+    "diagnostics": {},
+    "createdAt": "2026-08-28T07:21:32.501Z",
+    "updatedAt": "2026-08-28T07:21:39.391Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-08-28T07:21:39.391Z",
+    "resolutionNote": "Commit 529558d + supabase migration 0072. expenses.created_by_user_id relaxed to nullable with an ON DELETE SET NULL FK (mirroring members.linked_user_id), and delete_user() no longer raises an exception for accounts with expense history -- deleting the auth.users row now anonymizes (nulls out) authorship on their past expenses instead of being blocked. Expense content is untouched; permission checks comparing created_by_user_id = auth.uid() simply stop matching once null, leaving trip admins as the only ones who can still manage the expense. Also guarded AdminAnalyticsPage's retention-cohort active-user Set against null creator ids."
   }
 ]

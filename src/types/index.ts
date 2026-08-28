@@ -72,7 +72,7 @@ export interface Expense {
   receiptImage?: string; // client-only: a freshly-captured base64 preview, not yet uploaded
   receiptPath?: string | null; // Supabase Storage object path once uploaded — resolve via a signed URL to display
   isSettlement: boolean;
-  createdByUserId: string; // participant edit/delete rights are scoped to this
+  createdByUserId: string | null; // participant edit/delete rights are scoped to this; null once the creator's account has been deleted
   location?: ExpenseLocation | null; // optional GPS geotag
   deletedAt?: number | null; // set when soft-deleted into the recycle bin; purged 24h after
   deletedByUserId?: string | null;

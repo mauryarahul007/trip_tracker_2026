@@ -177,7 +177,7 @@ export interface Database {
           resolved_shares: Record<string, number>;
           receipt_path: string | null;
           is_settlement: boolean;
-          created_by_user_id: string;
+          created_by_user_id: string | null;
           location?: { lat: number; lng: number; placeName?: string } | null;
           deleted_at: string | null;
           deleted_by_user_id: string | null;
