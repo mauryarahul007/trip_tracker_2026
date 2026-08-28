@@ -885,9 +885,9 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-08-22T12:01:59.699171+00:00",
-    "updatedAt": "2026-08-25T07:09:35.999Z",
+    "updatedAt": "2026-08-25T07:09:35.999+00:00",
+    "resolvedAt": "2026-08-25T07:09:35.998+00:00",
     "resolvedBy": "claude",
-    "resolvedAt": "2026-08-25T07:09:35.998Z",
     "resolutionNote": "Duplicate of BUG-024 -- unguarded registration.update() in serviceWorker.ts threw an unhandled rejection. Fixed by wrapping both call sites (interval timer + visibilitychange listener) in .catch(() => {})."
   },
   {
@@ -916,9 +916,9 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-08-22T12:34:29.557651+00:00",
-    "updatedAt": "2026-08-25T07:09:36.767Z",
+    "updatedAt": "2026-08-25T07:09:36.767+00:00",
+    "resolvedAt": "2026-08-25T07:09:36.766+00:00",
     "resolvedBy": "claude",
-    "resolvedAt": "2026-08-25T07:09:36.766Z",
     "resolutionNote": "Duplicate of BUG-024 -- unguarded registration.update() in serviceWorker.ts threw an unhandled rejection. Fixed by wrapping both call sites (interval timer + visibilitychange listener) in .catch(() => {})."
   },
   {
@@ -947,9 +947,9 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-08-22T13:53:32.525735+00:00",
-    "updatedAt": "2026-08-25T07:09:37.333Z",
+    "updatedAt": "2026-08-25T07:09:37.333+00:00",
+    "resolvedAt": "2026-08-25T07:09:37.333+00:00",
     "resolvedBy": "claude",
-    "resolvedAt": "2026-08-25T07:09:37.333Z",
     "resolutionNote": "Duplicate of BUG-024 -- unguarded registration.update() in serviceWorker.ts threw an unhandled rejection. Fixed by wrapping both call sites (interval timer + visibilitychange listener) in .catch(() => {})."
   },
   {
@@ -978,9 +978,9 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-08-22T13:59:49.534541+00:00",
-    "updatedAt": "2026-08-25T07:09:37.816Z",
+    "updatedAt": "2026-08-25T07:09:37.816+00:00",
+    "resolvedAt": "2026-08-25T07:09:37.815+00:00",
     "resolvedBy": "claude",
-    "resolvedAt": "2026-08-25T07:09:37.815Z",
     "resolutionNote": "Duplicate of BUG-024 -- unguarded registration.update() in serviceWorker.ts threw an unhandled rejection. Fixed by wrapping both call sites (interval timer + visibilitychange listener) in .catch(() => {})."
   },
   {
@@ -1009,9 +1009,9 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-08-22T16:41:09.562667+00:00",
-    "updatedAt": "2026-08-25T07:09:38.318Z",
+    "updatedAt": "2026-08-25T07:09:38.318+00:00",
+    "resolvedAt": "2026-08-25T07:09:38.317+00:00",
     "resolvedBy": "claude",
-    "resolvedAt": "2026-08-25T07:09:38.317Z",
     "resolutionNote": "Duplicate of BUG-024 -- unguarded registration.update() in serviceWorker.ts threw an unhandled rejection. Fixed by wrapping both call sites (interval timer + visibilitychange listener) in .catch(() => {})."
   },
   {
@@ -1042,9 +1042,9 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-08-22T18:11:10.139197+00:00",
-    "updatedAt": "2026-08-25T07:09:47.745Z",
+    "updatedAt": "2026-08-25T07:09:47.745+00:00",
+    "resolvedAt": "2026-08-25T07:09:47.744+00:00",
     "resolvedBy": "claude",
-    "resolvedAt": "2026-08-25T07:09:47.744Z",
     "resolutionNote": "React error #185 (Maximum update depth exceeded). Root cause: App.tsx's scroll handler unconditionally called setIsHeaderScrolled(false) on every scroll frame when scrollTop<=15, with no guard checking the flag was actually true -- the sibling branches already had this guard, this one didn't. Combined with the header-height ResizeObserver (padding it drives shifts scroll position, which the listener reads as a scroll event), this could thrash. Fixed the missing guard and made the ResizeObserver write skip no-op height values."
   },
   {
@@ -1075,9 +1075,9 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-08-22T18:11:19.452562+00:00",
-    "updatedAt": "2026-08-25T07:09:48.196Z",
+    "updatedAt": "2026-08-25T07:09:48.196+00:00",
+    "resolvedAt": "2026-08-25T07:09:48.196+00:00",
     "resolvedBy": "claude",
-    "resolvedAt": "2026-08-25T07:09:48.196Z",
     "resolutionNote": "React error #185 (Maximum update depth exceeded). Root cause: App.tsx's scroll handler unconditionally called setIsHeaderScrolled(false) on every scroll frame when scrollTop<=15, with no guard checking the flag was actually true -- the sibling branches already had this guard, this one didn't. Combined with the header-height ResizeObserver (padding it drives shifts scroll position, which the listener reads as a scroll event), this could thrash. Fixed the missing guard and made the ResizeObserver write skip no-op height values."
   },
   {
@@ -1105,9 +1105,9 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-08-22T18:11:32.127088+00:00",
-    "updatedAt": "2026-08-25T07:09:50.099Z",
+    "updatedAt": "2026-08-25T07:09:50.099+00:00",
+    "resolvedAt": "2026-08-25T07:09:50.098+00:00",
     "resolvedBy": "claude",
-    "resolvedAt": "2026-08-25T07:09:50.098Z",
     "resolutionNote": "ResizeObserver loop completed with undelivered notifications -- Chrome fires this as a real error event even though it's universally benign (see WICG/resize-observer#38); every major crash reporter filters it by convention. Added a filter in autoBugReporter.ts so it stops auto-filing, and hardened the one ResizeObserver in the app (App.tsx header-height measurement) to skip redundant writes."
   },
   {
@@ -1139,9 +1139,9 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-08-22T18:11:33.963624+00:00",
-    "updatedAt": "2026-08-25T07:09:48.706Z",
+    "updatedAt": "2026-08-25T07:09:48.706+00:00",
+    "resolvedAt": "2026-08-25T07:09:48.705+00:00",
     "resolvedBy": "claude",
-    "resolvedAt": "2026-08-25T07:09:48.705Z",
     "resolutionNote": "React error #185 (Maximum update depth exceeded). Root cause: App.tsx's scroll handler unconditionally called setIsHeaderScrolled(false) on every scroll frame when scrollTop<=15, with no guard checking the flag was actually true -- the sibling branches already had this guard, this one didn't. Combined with the header-height ResizeObserver (padding it drives shifts scroll position, which the listener reads as a scroll event), this could thrash. Fixed the missing guard and made the ResizeObserver write skip no-op height values."
   },
   {
@@ -1169,9 +1169,9 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-08-22T18:14:26.122676+00:00",
-    "updatedAt": "2026-08-25T07:09:50.594Z",
+    "updatedAt": "2026-08-25T07:09:50.594+00:00",
+    "resolvedAt": "2026-08-25T07:09:50.591+00:00",
     "resolvedBy": "claude",
-    "resolvedAt": "2026-08-25T07:09:50.591Z",
     "resolutionNote": "ResizeObserver loop completed with undelivered notifications -- Chrome fires this as a real error event even though it's universally benign (see WICG/resize-observer#38); every major crash reporter filters it by convention. Added a filter in autoBugReporter.ts so it stops auto-filing, and hardened the one ResizeObserver in the app (App.tsx header-height measurement) to skip redundant writes."
   },
   {
@@ -1203,9 +1203,9 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-08-22T18:14:27.594727+00:00",
-    "updatedAt": "2026-08-25T07:09:49.158Z",
+    "updatedAt": "2026-08-25T07:09:49.158+00:00",
+    "resolvedAt": "2026-08-25T07:09:49.157+00:00",
     "resolvedBy": "claude",
-    "resolvedAt": "2026-08-25T07:09:49.157Z",
     "resolutionNote": "React error #185 (Maximum update depth exceeded). Root cause: App.tsx's scroll handler unconditionally called setIsHeaderScrolled(false) on every scroll frame when scrollTop<=15, with no guard checking the flag was actually true -- the sibling branches already had this guard, this one didn't. Combined with the header-height ResizeObserver (padding it drives shifts scroll position, which the listener reads as a scroll event), this could thrash. Fixed the missing guard and made the ResizeObserver write skip no-op height values."
   },
   {
@@ -1233,9 +1233,9 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-08-22T18:14:33.254111+00:00",
-    "updatedAt": "2026-08-25T07:09:51.045Z",
+    "updatedAt": "2026-08-25T07:09:51.045+00:00",
+    "resolvedAt": "2026-08-25T07:09:51.044+00:00",
     "resolvedBy": "claude",
-    "resolvedAt": "2026-08-25T07:09:51.044Z",
     "resolutionNote": "ResizeObserver loop completed with undelivered notifications -- Chrome fires this as a real error event even though it's universally benign (see WICG/resize-observer#38); every major crash reporter filters it by convention. Added a filter in autoBugReporter.ts so it stops auto-filing, and hardened the one ResizeObserver in the app (App.tsx header-height measurement) to skip redundant writes."
   },
   {
@@ -1267,9 +1267,9 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-08-22T18:14:34.816187+00:00",
-    "updatedAt": "2026-08-25T07:09:49.635Z",
+    "updatedAt": "2026-08-25T07:09:49.635+00:00",
+    "resolvedAt": "2026-08-25T07:09:49.634+00:00",
     "resolvedBy": "claude",
-    "resolvedAt": "2026-08-25T07:09:49.634Z",
     "resolutionNote": "React error #185 (Maximum update depth exceeded). Root cause: App.tsx's scroll handler unconditionally called setIsHeaderScrolled(false) on every scroll frame when scrollTop<=15, with no guard checking the flag was actually true -- the sibling branches already had this guard, this one didn't. Combined with the header-height ResizeObserver (padding it drives shifts scroll position, which the listener reads as a scroll event), this could thrash. Fixed the missing guard and made the ResizeObserver write skip no-op height values."
   },
   {
@@ -1300,9 +1300,9 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-08-22T21:06:56.769991+00:00",
-    "updatedAt": "2026-08-25T07:10:02.294Z",
+    "updatedAt": "2026-08-25T07:10:02.294+00:00",
+    "resolvedAt": "2026-08-25T07:10:02.293+00:00",
     "resolvedBy": "claude",
-    "resolvedAt": "2026-08-25T07:10:02.293Z",
     "resolutionNote": "Not reproducible against current HEAD -- verified the exact crash site (symbol/line from the stack trace) no longer exists or is now correctly defined/imported. This was captured from a live dev-server (localhost, Vite HMR ?t= cache-busted URL) mid-edit during earlier development and has since been superseded by subsequent refactors."
   },
   {
@@ -1333,9 +1333,9 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-08-22T21:07:15.453901+00:00",
-    "updatedAt": "2026-08-25T07:10:02.762Z",
+    "updatedAt": "2026-08-25T07:10:02.762+00:00",
+    "resolvedAt": "2026-08-25T07:10:02.761+00:00",
     "resolvedBy": "claude",
-    "resolvedAt": "2026-08-25T07:10:02.761Z",
     "resolutionNote": "Not reproducible against current HEAD -- verified the exact crash site (symbol/line from the stack trace) no longer exists or is now correctly defined/imported. This was captured from a live dev-server (localhost, Vite HMR ?t= cache-busted URL) mid-edit during earlier development and has since been superseded by subsequent refactors."
   },
   {
@@ -1364,9 +1364,9 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-08-22T21:20:05.835551+00:00",
-    "updatedAt": "2026-08-25T07:10:09.694Z",
+    "updatedAt": "2026-08-25T07:10:09.694+00:00",
+    "resolvedAt": "2026-08-25T07:10:09.693+00:00",
     "resolvedBy": "claude",
-    "resolvedAt": "2026-08-25T07:10:09.693Z",
     "resolutionNote": "Not reproducible against current HEAD -- verified the exact crash site (symbol/line from the stack trace) no longer exists or is now correctly defined/imported. This was captured from a live dev-server (localhost, Vite HMR ?t= cache-busted URL) mid-edit during earlier development and has since been superseded by subsequent refactors."
   },
   {
@@ -1398,9 +1398,9 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-08-22T21:20:06.210521+00:00",
-    "updatedAt": "2026-08-25T07:10:03.263Z",
+    "updatedAt": "2026-08-25T07:10:03.263+00:00",
+    "resolvedAt": "2026-08-25T07:10:03.262+00:00",
     "resolvedBy": "claude",
-    "resolvedAt": "2026-08-25T07:10:03.262Z",
     "resolutionNote": "Not reproducible against current HEAD -- verified the exact crash site (symbol/line from the stack trace) no longer exists or is now correctly defined/imported. This was captured from a live dev-server (localhost, Vite HMR ?t= cache-busted URL) mid-edit during earlier development and has since been superseded by subsequent refactors."
   },
   {
@@ -1432,9 +1432,9 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-08-22T21:20:19.416486+00:00",
-    "updatedAt": "2026-08-25T07:10:03.766Z",
+    "updatedAt": "2026-08-25T07:10:03.766+00:00",
+    "resolvedAt": "2026-08-25T07:10:03.766+00:00",
     "resolvedBy": "claude",
-    "resolvedAt": "2026-08-25T07:10:03.766Z",
     "resolutionNote": "Not reproducible against current HEAD -- verified the exact crash site (symbol/line from the stack trace) no longer exists or is now correctly defined/imported. This was captured from a live dev-server (localhost, Vite HMR ?t= cache-busted URL) mid-edit during earlier development and has since been superseded by subsequent refactors."
   },
   {
@@ -1466,9 +1466,9 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-08-22T21:20:19.422733+00:00",
-    "updatedAt": "2026-08-25T07:10:10.214Z",
+    "updatedAt": "2026-08-25T07:10:10.214+00:00",
+    "resolvedAt": "2026-08-25T07:10:10.214+00:00",
     "resolvedBy": "claude",
-    "resolvedAt": "2026-08-25T07:10:10.214Z",
     "resolutionNote": "Not reproducible against current HEAD -- verified the exact crash site (symbol/line from the stack trace) no longer exists or is now correctly defined/imported. This was captured from a live dev-server (localhost, Vite HMR ?t= cache-busted URL) mid-edit during earlier development and has since been superseded by subsequent refactors."
   },
   {
@@ -1497,9 +1497,9 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-08-22T21:21:30.170825+00:00",
-    "updatedAt": "2026-08-25T07:10:10.721Z",
+    "updatedAt": "2026-08-25T07:10:10.721+00:00",
+    "resolvedAt": "2026-08-25T07:10:10.721+00:00",
     "resolvedBy": "claude",
-    "resolvedAt": "2026-08-25T07:10:10.721Z",
     "resolutionNote": "Not reproducible against current HEAD -- verified the exact crash site (symbol/line from the stack trace) no longer exists or is now correctly defined/imported. This was captured from a live dev-server (localhost, Vite HMR ?t= cache-busted URL) mid-edit during earlier development and has since been superseded by subsequent refactors."
   },
   {
@@ -1531,9 +1531,9 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-08-22T21:21:30.240377+00:00",
-    "updatedAt": "2026-08-25T07:10:04.259Z",
+    "updatedAt": "2026-08-25T07:10:04.259+00:00",
+    "resolvedAt": "2026-08-25T07:10:04.258+00:00",
     "resolvedBy": "claude",
-    "resolvedAt": "2026-08-25T07:10:04.258Z",
     "resolutionNote": "Not reproducible against current HEAD -- verified the exact crash site (symbol/line from the stack trace) no longer exists or is now correctly defined/imported. This was captured from a live dev-server (localhost, Vite HMR ?t= cache-busted URL) mid-edit during earlier development and has since been superseded by subsequent refactors."
   },
   {
@@ -1564,9 +1564,9 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-08-22T21:22:38.897947+00:00",
-    "updatedAt": "2026-08-25T07:10:04.795Z",
+    "updatedAt": "2026-08-25T07:10:04.795+00:00",
+    "resolvedAt": "2026-08-25T07:10:04.794+00:00",
     "resolvedBy": "claude",
-    "resolvedAt": "2026-08-25T07:10:04.794Z",
     "resolutionNote": "Not reproducible against current HEAD -- verified the exact crash site (symbol/line from the stack trace) no longer exists or is now correctly defined/imported. This was captured from a live dev-server (localhost, Vite HMR ?t= cache-busted URL) mid-edit during earlier development and has since been superseded by subsequent refactors."
   },
   {
@@ -1603,9 +1603,9 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-08-22T21:37:32.304702+00:00",
-    "updatedAt": "2026-08-25T07:10:05.236Z",
+    "updatedAt": "2026-08-25T07:10:05.236+00:00",
+    "resolvedAt": "2026-08-25T07:10:05.236+00:00",
     "resolvedBy": "claude",
-    "resolvedAt": "2026-08-25T07:10:05.236Z",
     "resolutionNote": "Not reproducible against current HEAD -- verified the exact crash site (symbol/line from the stack trace) no longer exists or is now correctly defined/imported. This was captured from a live dev-server (localhost, Vite HMR ?t= cache-busted URL) mid-edit during earlier development and has since been superseded by subsequent refactors."
   },
   {
@@ -1634,9 +1634,9 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-08-22T23:39:35.290064+00:00",
-    "updatedAt": "2026-08-25T07:09:38.785Z",
+    "updatedAt": "2026-08-25T07:09:38.785+00:00",
+    "resolvedAt": "2026-08-25T07:09:38.784+00:00",
     "resolvedBy": "claude",
-    "resolvedAt": "2026-08-25T07:09:38.784Z",
     "resolutionNote": "Duplicate of BUG-024 -- unguarded registration.update() in serviceWorker.ts threw an unhandled rejection. Fixed by wrapping both call sites (interval timer + visibilitychange listener) in .catch(() => {})."
   },
   {
@@ -1667,9 +1667,9 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-08-23T00:04:06.929683+00:00",
-    "updatedAt": "2026-08-25T07:10:05.720Z",
+    "updatedAt": "2026-08-25T07:10:05.72+00:00",
+    "resolvedAt": "2026-08-25T07:10:05.72+00:00",
     "resolvedBy": "claude",
-    "resolvedAt": "2026-08-25T07:10:05.720Z",
     "resolutionNote": "Not reproducible against current HEAD -- verified the exact crash site (symbol/line from the stack trace) no longer exists or is now correctly defined/imported. This was captured from a live dev-server (localhost, Vite HMR ?t= cache-busted URL) mid-edit during earlier development and has since been superseded by subsequent refactors."
   },
   {
@@ -1700,9 +1700,9 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-08-23T06:21:44.520129+00:00",
-    "updatedAt": "2026-08-25T07:10:06.222Z",
+    "updatedAt": "2026-08-25T07:10:06.222+00:00",
+    "resolvedAt": "2026-08-25T07:10:06.222+00:00",
     "resolvedBy": "claude",
-    "resolvedAt": "2026-08-25T07:10:06.222Z",
     "resolutionNote": "Not reproducible against current HEAD -- verified the exact crash site (symbol/line from the stack trace) no longer exists or is now correctly defined/imported. This was captured from a live dev-server (localhost, Vite HMR ?t= cache-busted URL) mid-edit during earlier development and has since been superseded by subsequent refactors."
   },
   {
@@ -1733,9 +1733,9 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-08-23T06:21:45.246121+00:00",
-    "updatedAt": "2026-08-25T07:10:06.729Z",
+    "updatedAt": "2026-08-25T07:10:06.729+00:00",
+    "resolvedAt": "2026-08-25T07:10:06.728+00:00",
     "resolvedBy": "claude",
-    "resolvedAt": "2026-08-25T07:10:06.728Z",
     "resolutionNote": "Not reproducible against current HEAD -- verified the exact crash site (symbol/line from the stack trace) no longer exists or is now correctly defined/imported. This was captured from a live dev-server (localhost, Vite HMR ?t= cache-busted URL) mid-edit during earlier development and has since been superseded by subsequent refactors."
   },
   {
@@ -1766,9 +1766,9 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-08-23T08:26:53.799749+00:00",
-    "updatedAt": "2026-08-25T07:10:07.212Z",
+    "updatedAt": "2026-08-25T07:10:07.212+00:00",
+    "resolvedAt": "2026-08-25T07:10:07.211+00:00",
     "resolvedBy": "claude",
-    "resolvedAt": "2026-08-25T07:10:07.211Z",
     "resolutionNote": "Not reproducible against current HEAD -- verified the exact crash site (symbol/line from the stack trace) no longer exists or is now correctly defined/imported. This was captured from a live dev-server (localhost, Vite HMR ?t= cache-busted URL) mid-edit during earlier development and has since been superseded by subsequent refactors."
   },
   {
@@ -1797,9 +1797,9 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-08-23T08:49:57.288644+00:00",
-    "updatedAt": "2026-08-25T07:09:55.778Z",
+    "updatedAt": "2026-08-25T07:09:55.778+00:00",
+    "resolvedAt": "2026-08-25T07:09:55.778+00:00",
     "resolvedBy": "claude",
-    "resolvedAt": "2026-08-25T07:09:55.778Z",
     "resolutionNote": "crypto.randomUUID() has no fallback and throws in insecure contexts (LAN-IP dev access, older Android WebViews). Added src/utils/uuid.ts::newId() with a crypto.getRandomValues-based fallback, then Math.random as last resort, and replaced all 14 call sites in tripStore.ts and TripsListScreen.tsx."
   },
   {
@@ -1831,7 +1831,7 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-08-23T09:33:31.875754+00:00",
-    "updatedAt": "2026-08-25T07:10:14.550Z"
+    "updatedAt": "2026-08-25T07:10:14.55+00:00"
   },
   {
     "id": "BUG-061",
@@ -1861,9 +1861,9 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-08-23T09:53:41.792186+00:00",
-    "updatedAt": "2026-08-25T07:10:07.647Z",
+    "updatedAt": "2026-08-25T07:10:07.647+00:00",
+    "resolvedAt": "2026-08-25T07:10:07.646+00:00",
     "resolvedBy": "claude",
-    "resolvedAt": "2026-08-25T07:10:07.646Z",
     "resolutionNote": "Not reproducible against current HEAD -- verified the exact crash site (symbol/line from the stack trace) no longer exists or is now correctly defined/imported. This was captured from a live dev-server (localhost, Vite HMR ?t= cache-busted URL) mid-edit during earlier development and has since been superseded by subsequent refactors."
   },
   {
@@ -1895,9 +1895,9 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-08-23T10:10:24.096763+00:00",
-    "updatedAt": "2026-08-25T07:10:08.178Z",
+    "updatedAt": "2026-08-25T07:10:08.178+00:00",
+    "resolvedAt": "2026-08-25T07:10:08.176+00:00",
     "resolvedBy": "claude",
-    "resolvedAt": "2026-08-25T07:10:08.176Z",
     "resolutionNote": "Not reproducible against current HEAD -- verified the exact crash site (symbol/line from the stack trace) no longer exists or is now correctly defined/imported. This was captured from a live dev-server (localhost, Vite HMR ?t= cache-busted URL) mid-edit during earlier development and has since been superseded by subsequent refactors."
   },
   {
@@ -1926,9 +1926,9 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-08-23T10:20:44.399661+00:00",
-    "updatedAt": "2026-08-25T07:09:56.255Z",
+    "updatedAt": "2026-08-25T07:09:56.255+00:00",
+    "resolvedAt": "2026-08-25T07:09:56.254+00:00",
     "resolvedBy": "claude",
-    "resolvedAt": "2026-08-25T07:09:56.254Z",
     "resolutionNote": "crypto.randomUUID() has no fallback and throws in insecure contexts (LAN-IP dev access, older Android WebViews). Added src/utils/uuid.ts::newId() with a crypto.getRandomValues-based fallback, then Math.random as last resort, and replaced all 14 call sites in tripStore.ts and TripsListScreen.tsx."
   },
   {
@@ -1959,9 +1959,9 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-08-23T10:48:06.286006+00:00",
-    "updatedAt": "2026-08-25T07:10:08.687Z",
+    "updatedAt": "2026-08-25T07:10:08.687+00:00",
+    "resolvedAt": "2026-08-25T07:10:08.687+00:00",
     "resolvedBy": "claude",
-    "resolvedAt": "2026-08-25T07:10:08.687Z",
     "resolutionNote": "Not reproducible against current HEAD -- verified the exact crash site (symbol/line from the stack trace) no longer exists or is now correctly defined/imported. This was captured from a live dev-server (localhost, Vite HMR ?t= cache-busted URL) mid-edit during earlier development and has since been superseded by subsequent refactors."
   },
   {
@@ -1994,7 +1994,7 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-08-24T06:42:37.284982+00:00",
-    "updatedAt": "2026-08-25T07:10:15.011Z"
+    "updatedAt": "2026-08-25T07:10:15.011+00:00"
   },
   {
     "id": "BUG-066",
@@ -2024,9 +2024,9 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-08-24T08:57:33.303389+00:00",
-    "updatedAt": "2026-08-25T07:10:09.183Z",
+    "updatedAt": "2026-08-25T07:10:09.183+00:00",
+    "resolvedAt": "2026-08-25T07:10:09.183+00:00",
     "resolvedBy": "claude",
-    "resolvedAt": "2026-08-25T07:10:09.183Z",
     "resolutionNote": "Not reproducible against current HEAD -- verified the exact crash site (symbol/line from the stack trace) no longer exists or is now correctly defined/imported. This was captured from a live dev-server (localhost, Vite HMR ?t= cache-busted URL) mid-edit during earlier development and has since been superseded by subsequent refactors."
   },
   {
@@ -2083,34 +2083,33 @@
   },
   {
     "id": "BUG-069",
-    "title": "Members-tab FAB opened Add Expense for non-admin members instead of blocking or adding a member",
-    "description": "On the Members & Groups tab, tapping the nav bar + button fell through to onAddExpense whenever the viewer was not a trip admin (onAddMember prop was undefined), silently redirecting a member-only user to the Add Expense screen instead of either opening Add Member (admins) or explaining why they cannot.",
-    "severity": "medium",
-    "category": "ui-ux",
-    "status": "resolved",
-    "foundBy": "mauryarahul007@gmail.com",
+    "title": "Importing a module script failed.",
+    "description": "Automatically captured react crash.\n\n\nLazy@unknown:0:0\nSuspense@unknown:0:0\ndiv@unknown:0:0\ndiv@unknown:0:0\nlfe@https://trip-tracker.blackmaroon.in/assets/index-C8rMjbVV.js:876:76331\nU9@\nz9@https://trip-tracker.blackmaroon.in/assets/index-C8rMjbVV.js:877:30396\nCt@https://trip-tracker.blackmaroon.in/assets/index-C8rMjbVV.js:12:4272\nzt@https://trip-tracker.blackmaroon.in/assets/index-C8rMjbVV.js:12:8885\nRt@https://trip-tracker.blackmaroon.in/assets/index-C8rMjbVV.js:12:8023\nTn@https://trip-tracker.blackmaroon.in/assets/index-C8rMjbVV.js:12:18282",
+    "severity": "critical",
+    "category": "general",
+    "status": "open",
+    "foundBy": "auto-crash-handler",
     "environment": {
+      "route": "#nav-1",
       "isOnline": true,
       "platform": "web",
       "appVersion": "1.0.0"
     },
-    "reproSteps": [
-      "Join a trip as a non-admin member (invited, not creator/admin)",
-      "Open the trip, go to the Members tab",
-      "Tap the + FAB at the bottom of the screen",
-      "Observe the Add Expense screen opens instead of an Add Member flow or a permission message"
-    ],
-    "expectedBehavior": "On the Members tab, the FAB only ever adds a member (admins) or shows a message explaining that only trip admins can add members (non-admins). It never opens Add Expense.",
-    "actualBehavior": "handleFabClick in NavTabs.tsx called onAddExpense() whenever isMembersTab was true but onAddMember was undefined, so non-admin members were routed to Add Expense.",
+    "reproSteps": [],
+    "expectedBehavior": "App runs without throwing.",
+    "actualBehavior": "Importing a module script failed.",
     "diagnostics": {
-      "file": "src/components/NavTabs.tsx",
-      "rootCause": "handleFabClick used \"if (isMembersTab && onAddMember) { onAddMember() } else { onAddExpense() }\" -- the else branch fired for both the non-Members tabs and the Members-tab-without-permission case."
+      "stackTrace": "\nLazy@unknown:0:0\nSuspense@unknown:0:0\ndiv@unknown:0:0\ndiv@unknown:0:0\nlfe@https://trip-tracker.blackmaroon.in/assets/index-C8rMjbVV.js:876:76331\nU9@\nz9@https://trip-tracker.blackmaroon.in/assets/index-C8rMjbVV.js:877:30396\nCt@https://trip-tracker.blackmaroon.in/assets/index-C8rMjbVV.js:12:4272\nzt@https://trip-tracker.blackmaroon.in/assets/index-C8rMjbVV.js:12:8885\nRt@https://trip-tracker.blackmaroon.in/assets/index-C8rMjbVV.js:12:8023\nTn@https://trip-tracker.blackmaroon.in/assets/index-C8rMjbVV.js:12:18282",
+      "consoleLogs": [
+        "[info] DiagnosticLogger initialized",
+        "[error] {}",
+        "[error] React Crash: Importing a module script failed.",
+        "[error] Uncaught error inside ErrorBoundary: {} {\"componentStack\":\"\\nLazy@unknown:0:0\\nSuspense@unknown:0:0\\ndiv@unknown:0:0\\ndiv@unknown:0:0\\nlfe@https://trip-tracker.blackmaroon.in/assets/index-C8rMjbVV.js:876:76331\\nU9@\\nz9@https://trip-tracker.blackmaroon.in/assets/index-C8rMjbVV.js:877:30396\\nCt@https://trip-tracker.blackmaroon.in/assets/index-C8rMjbVV.js:12:4272\\nzt@https://trip-tracker.blackmaroon.in/assets/index-C8rMjbVV.js:12:8885\\nRt@https://trip-tracker.blackmaroon.in/assets/index-C8rMjbVV.js"
+      ],
+      "syncQueueLength": 0
     },
-    "createdAt": "2026-08-25T15:00:00+00:00",
-    "updatedAt": "2026-08-25T15:00:00+00:00",
-    "resolvedAt": "2026-08-25T15:00:00+00:00",
-    "resolvedBy": "claude-cli",
-    "resolutionNote": "NavTabs.tsx handleFabClick now branches on isMembersTab first: admins get onAddMember(), non-admins get a warning haptic plus a 2.2s \"Only trip admins can add members\" hint bubble, and Add Expense is never called from this tab. FAB also keeps mode-member styling on the Members tab regardless of admin status. Commit 48bf7e6."
+    "createdAt": "2026-08-26T09:43:15.900412+00:00",
+    "updatedAt": "2026-08-26T09:43:15.900412+00:00"
   },
   {
     "id": "BUG-070",
@@ -2121,8 +2120,8 @@
     "status": "resolved",
     "foundBy": "claude-cli",
     "environment": {
-      "platform": "web",
       "isOnline": true,
+      "platform": "web",
       "appVersion": "1.0.0"
     },
     "reproSteps": [
@@ -2132,10 +2131,10 @@
     "expectedBehavior": "The Geotag Expenses row's visibility in Settings is controlled only by the superadmin master flag. Switching the user's own toggle on/off never affects whether the row is shown; superadmins always see it.",
     "actualBehavior": "setEnableGeotagging in src/store/tripStore.ts wrote to both enableGeotagging and featureFlags.enableGeotagging, so a non-admin switching it off lost the row (and the ability to switch it back on) until an admin re-enabled the master flag.",
     "diagnostics": {},
-    "createdAt": "2026-08-26T12:44:58.145Z",
-    "updatedAt": "2026-08-26T12:45:04.414Z",
+    "createdAt": "2026-08-26T12:44:58.145+00:00",
+    "updatedAt": "2026-08-26T12:45:04.414+00:00",
+    "resolvedAt": "2026-08-26T12:45:04.413+00:00",
     "resolvedBy": "claude-cli",
-    "resolvedAt": "2026-08-26T12:45:04.413Z",
     "resolutionNote": "src/store/tripStore.ts setEnableGeotagging now only sets the trip-level enableGeotagging value, never touches featureFlags. Master flag stays under exclusive control of setFeatureFlag (superadmin)."
   },
   {
@@ -2147,8 +2146,8 @@
     "status": "resolved",
     "foundBy": "claude-cli",
     "environment": {
-      "platform": "web",
       "isOnline": true,
+      "platform": "web",
       "appVersion": "1.0.0"
     },
     "reproSteps": [
@@ -2158,10 +2157,10 @@
     "expectedBehavior": "User can add several new members back-to-back from the same open popup instead of reopening it via the FAB for every name.",
     "actualBehavior": "New Member form always closed after a successful add (or, before cfee4b0, never closed at all) -- there was no option to keep it open for a rapid follow-up add.",
     "diagnostics": {},
-    "createdAt": "2026-08-26T12:45:19.369Z",
-    "updatedAt": "2026-08-26T12:45:26.646Z",
+    "createdAt": "2026-08-26T12:45:19.369+00:00",
+    "updatedAt": "2026-08-26T12:45:26.646+00:00",
+    "resolvedAt": "2026-08-26T12:45:26.645+00:00",
     "resolvedBy": "claude-cli",
-    "resolvedAt": "2026-08-26T12:45:26.645Z",
     "resolutionNote": "src/components/MembersGroupsTab.tsx: added an 'Add another after this one' checkbox to the New Member form (hidden in edit mode). Unchecked (default) keeps existing close-after-add behavior; checked keeps the popup open, clears the fields, and refocuses the name input so the next member can be typed immediately."
   },
   {
@@ -2173,8 +2172,8 @@
     "status": "resolved",
     "foundBy": "claude-cli",
     "environment": {
-      "platform": "web",
       "isOnline": true,
+      "platform": "web",
       "appVersion": "1.0.0"
     },
     "reproSteps": [
@@ -2184,10 +2183,10 @@
     "expectedBehavior": "One entry point for adding a member (the bottom-nav FAB). On touch, edit/delete happen via swipe; no redundant icon buttons cluttering the row.",
     "actualBehavior": "MembersGroupsTab.tsx rendered both a '+ Add Member' button in the section header and per-row Edit/Delete icon buttons unconditionally, even after swipe actions covered the same actions on touch.",
     "diagnostics": {},
-    "createdAt": "2026-08-26T13:21:45.962Z",
-    "updatedAt": "2026-08-26T13:21:59.057Z",
+    "createdAt": "2026-08-26T13:21:45.962+00:00",
+    "updatedAt": "2026-08-26T13:21:59.057+00:00",
+    "resolvedAt": "2026-08-26T13:21:59.056+00:00",
     "resolvedBy": "claude-cli",
-    "resolvedAt": "2026-08-26T13:21:59.056Z",
     "resolutionNote": "MembersGroupsTab.tsx: removed the header '+ Add Member' button (FAB is now the sole entry point). Wrapped the per-row Edit/Delete buttons in .member-row-desktop-actions, hidden on touch via the same (hover: hover) and (pointer: fine) CSS pattern as .cmd-k-hint -- kept visible for mouse/trackpad users who have no swipe gesture."
   },
   {
@@ -2199,8 +2198,8 @@
     "status": "resolved",
     "foundBy": "claude-cli",
     "environment": {
-      "platform": "web",
       "isOnline": true,
+      "platform": "web",
       "appVersion": "1.0.0"
     },
     "reproSteps": [
@@ -2210,11 +2209,660 @@
     "expectedBehavior": "npm run build succeeds; muted-trip-ids are only fetched when a real signed-in userId exists.",
     "actualBehavior": "Build failed with TS2345 at tripStore.ts:636, blocking both GitHub Actions deploy workflows (Pages and EC2) on commit b6ef029.",
     "diagnostics": {},
-    "createdAt": "2026-08-26T13:56:15.479Z",
-    "updatedAt": "2026-08-26T13:56:21.368Z",
+    "createdAt": "2026-08-26T13:56:15.479+00:00",
+    "updatedAt": "2026-08-26T13:56:21.368+00:00",
+    "resolvedAt": "2026-08-26T13:56:21.367+00:00",
     "resolvedBy": "claude-cli",
-    "resolvedAt": "2026-08-26T13:56:21.367Z",
     "resolutionNote": "tripStore.ts: wrapped the fetchMutedTripIds call in an if (userId) guard, skipping the mute-ids fetch when there's no signed-in user instead of passing a possibly-null value. Commit da7c912."
+  },
+  {
+    "id": "BUG-074",
+    "title": "Cannot read properties of null (reading 'useState')",
+    "description": "Automatically captured react crash.\n\nTypeError: Cannot read properties of null (reading 'useState')\n    at exports.useState (http://localhost:5173/node_modules/.vite/deps/react.js?v=2858be4a:748:30)\n    at AdminPortalLayout (http://localhost:5173/src/components/admin/AdminPortalLayout.tsx:74:34)\n    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:12864:12)\n    at renderWithHooks (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:4211:19)\n    at updateFunctionComponent (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:5567:16)\n    at beginWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:6118:628)\n    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:850:66)\n    at performUnitOfWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:8427:92)\n    at workLoopSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:8323:37)\n    at renderRootSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:8307:6)",
+    "severity": "critical",
+    "category": "general",
+    "status": "open",
+    "foundBy": "auto-crash-handler",
+    "environment": {
+      "route": "#/",
+      "isOnline": true,
+      "platform": "web",
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [],
+    "expectedBehavior": "App runs without throwing.",
+    "actualBehavior": "Cannot read properties of null (reading 'useState')",
+    "diagnostics": {
+      "stackTrace": "TypeError: Cannot read properties of null (reading 'useState')\n    at exports.useState (http://localhost:5173/node_modules/.vite/deps/react.js?v=2858be4a:748:30)\n    at AdminPortalLayout (http://localhost:5173/src/components/admin/AdminPortalLayout.tsx:74:34)\n    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:12864:12)\n    at renderWithHooks (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:4211:19)\n    at updateFunctionComponent (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:5567:16)\n    at beginWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:6118:628)\n    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:850:66)\n    at performUnitOfWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:8427:92)\n    at workLoopSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:8323:37)\n    at renderRootSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:8307:6)",
+      "consoleLogs": [
+        "[info] DiagnosticLogger initialized",
+        "[error] Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for one of the following reasons:\n1. You might have mismatching versions of React and the renderer (such as React DOM)\n2. You might be breaking the Rules of Hooks\n3. You might have more than one copy of React in the same app\nSee https://react.dev/link/invalid-hook-call for tips about how to debug and fix this problem.",
+        "[error] Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for one of the following reasons:\n1. You might have mismatching versions of React and the renderer (such as React DOM)\n2. You might be breaking the Rules of Hooks\n3. You might have more than one copy of React in the same app\nSee https://react.dev/link/invalid-hook-call for tips about how to debug and fix this problem.",
+        "[error] Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for one of the following reasons:\n1. You might have mismatching versions of React and the renderer (such as React DOM)\n2. You might be breaking the Rules of Hooks\n3. You might have more than one copy of React in the same app\nSee https://react.dev/link/invalid-hook-call for tips about how to debug and fix this problem.",
+        "[error] Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for one of the following reasons:\n1. You might have mismatching versions of React and the renderer (such as React DOM)\n2. You might be breaking the Rules of Hooks\n3. You might have more than one copy of React in the same app\nSee https://react.dev/link/invalid-hook-call for tips about how to debug and fix this problem.",
+        "[error] %o\n\n%s\n\n%s\n {} The above error occurred in the <AdminPortalLayout> component. React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.",
+        "[error] React Crash: Cannot read properties of null (reading 'useState')",
+        "[error] Uncaught error inside ErrorBoundary: {} {\"componentStack\":\"\\n    at AdminPortalLayout (http://localhost:5173/src/components/admin/AdminPortalLayout.tsx:72:37)\\n    at Suspense (<anonymous>)\\n    at App (http://localhost:5173/src/App.tsx:84:443)\\n    at ErrorBoundary (http://localhost:5173/src/components/ErrorBoundary.tsx:6:8)\\n    at RequireAuth (http://localhost:5173/src/components/RequireAuth.tsx:8:31)\\n    at RenderedRoute (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=3"
+      ],
+      "syncQueueLength": 0
+    },
+    "createdAt": "2026-08-26T22:23:48.694839+00:00",
+    "updatedAt": "2026-08-26T22:23:48.694839+00:00"
+  },
+  {
+    "id": "BUG-075",
+    "title": "Failed to fetch dynamically imported module: http://localhost:5173/src/components/admin/AdminPortalLayout.tsx",
+    "description": "Automatically captured react crash.\n\nTypeError: Failed to fetch dynamically imported module: http://localhost:5173/src/components/admin/AdminPortalLayout.tsx",
+    "severity": "critical",
+    "category": "general",
+    "status": "open",
+    "foundBy": "auto-crash-handler",
+    "environment": {
+      "route": "#/",
+      "isOnline": true,
+      "platform": "web",
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [],
+    "expectedBehavior": "App runs without throwing.",
+    "actualBehavior": "Failed to fetch dynamically imported module: http://localhost:5173/src/components/admin/AdminPortalLayout.tsx",
+    "diagnostics": {
+      "stackTrace": "TypeError: Failed to fetch dynamically imported module: http://localhost:5173/src/components/admin/AdminPortalLayout.tsx",
+      "consoleLogs": [
+        "[info] DiagnosticLogger initialized",
+        "[error] %o\n\n%s\n\n%s\n {} The above error occurred in one of your React components. React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.",
+        "[error] React Crash: Failed to fetch dynamically imported module: http://localhost:5173/src/components/admin/AdminPortalLayout.tsx",
+        "[error] Uncaught error inside ErrorBoundary: {} {\"componentStack\":\"\\n    at Lazy (<anonymous>)\\n    at Suspense (<anonymous>)\\n    at App (http://localhost:5173/src/App.tsx:92:443)\\n    at ErrorBoundary (http://localhost:5173/src/components/ErrorBoundary.tsx:6:8)\\n    at RequireAuth (http://localhost:5173/src/components/RequireAuth.tsx:8:31)\\n    at RenderedRoute (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=b89a0147:4156:26)\\n    at Routes (http://localhost:5173/node_modules/.vit"
+      ],
+      "syncQueueLength": 0
+    },
+    "createdAt": "2026-08-26T22:25:00.232433+00:00",
+    "updatedAt": "2026-08-26T22:25:00.232433+00:00"
+  },
+  {
+    "id": "BUG-076",
+    "title": "Failed to fetch dynamically imported module: http://localhost:5173/src/components/admin/AdminPortalLayout.tsx",
+    "description": "Automatically captured react crash.\n\nTypeError: Failed to fetch dynamically imported module: http://localhost:5173/src/components/admin/AdminPortalLayout.tsx",
+    "severity": "critical",
+    "category": "general",
+    "status": "open",
+    "foundBy": "auto-crash-handler",
+    "environment": {
+      "route": "#/",
+      "isOnline": true,
+      "platform": "web",
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [],
+    "expectedBehavior": "App runs without throwing.",
+    "actualBehavior": "Failed to fetch dynamically imported module: http://localhost:5173/src/components/admin/AdminPortalLayout.tsx",
+    "diagnostics": {
+      "stackTrace": "TypeError: Failed to fetch dynamically imported module: http://localhost:5173/src/components/admin/AdminPortalLayout.tsx",
+      "consoleLogs": [
+        "[info] DiagnosticLogger initialized",
+        "[error] %o\n\n%s\n\n%s\n {} The above error occurred in one of your React components. React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.",
+        "[error] React Crash: Failed to fetch dynamically imported module: http://localhost:5173/src/components/admin/AdminPortalLayout.tsx",
+        "[error] Uncaught error inside ErrorBoundary: {} {\"componentStack\":\"\\n    at Lazy (<anonymous>)\\n    at Suspense (<anonymous>)\\n    at App (http://localhost:5173/src/App.tsx:92:443)\\n    at ErrorBoundary (http://localhost:5173/src/components/ErrorBoundary.tsx:6:8)\\n    at RequireAuth (http://localhost:5173/src/components/RequireAuth.tsx:8:31)\\n    at RenderedRoute (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=b89a0147:4156:26)\\n    at Routes (http://localhost:5173/node_modules/.vit"
+      ],
+      "syncQueueLength": 0
+    },
+    "createdAt": "2026-08-26T22:25:21.0652+00:00",
+    "updatedAt": "2026-08-26T22:25:21.0652+00:00"
+  },
+  {
+    "id": "BUG-077",
+    "title": "showTransactions is not defined",
+    "description": "Automatically captured react crash.\n\nReferenceError: showTransactions is not defined\n    at App (http://localhost:5173/src/App.tsx?t=1787784820310:1127:17)\n    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:12864:12)\n    at renderWithHooks (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:4211:19)\n    at updateFunctionComponent (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:5567:16)\n    at beginWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:6138:20)\n    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:850:66)\n    at performUnitOfWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:8427:92)\n    at workLoopSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:8323:37)\n    at renderRootSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:8307:6)\n    at performWorkOnRoot (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:7992:27)",
+    "severity": "critical",
+    "category": "general",
+    "status": "open",
+    "foundBy": "auto-crash-handler",
+    "environment": {
+      "route": "#/",
+      "isOnline": true,
+      "platform": "web",
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [],
+    "expectedBehavior": "App runs without throwing.",
+    "actualBehavior": "showTransactions is not defined",
+    "diagnostics": {
+      "stackTrace": "ReferenceError: showTransactions is not defined\n    at App (http://localhost:5173/src/App.tsx?t=1787784820310:1127:17)\n    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:12864:12)\n    at renderWithHooks (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:4211:19)\n    at updateFunctionComponent (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:5567:16)\n    at beginWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:6138:20)\n    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:850:66)\n    at performUnitOfWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:8427:92)\n    at workLoopSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:8323:37)\n    at renderRootSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:8307:6)\n    at performWorkOnRoot (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:7992:27)",
+      "consoleLogs": [
+        "[info] DiagnosticLogger initialized",
+        "[error] %o\n\n%s\n\n%s\n {} The above error occurred in the <App> component. React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.",
+        "[error] React Crash: showTransactions is not defined",
+        "[error] Uncaught error inside ErrorBoundary: {} {\"componentStack\":\"\\n    at App (http://localhost:5173/src/App.tsx?t=1787784820310:92:443)\\n    at ErrorBoundary (http://localhost:5173/src/components/ErrorBoundary.tsx:6:8)\\n    at RequireAuth (http://localhost:5173/src/components/RequireAuth.tsx:8:31)\\n    at RenderedRoute (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=b89a0147:4156:26)\\n    at Routes (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=b89a0147:4836"
+      ],
+      "syncQueueLength": 0
+    },
+    "createdAt": "2026-08-26T22:53:41.71052+00:00",
+    "updatedAt": "2026-08-26T22:53:41.71052+00:00"
+  },
+  {
+    "id": "BUG-078",
+    "title": "setShowTransactions is not defined",
+    "description": "Automatically captured react crash.\n\nReferenceError: setShowTransactions is not defined\n    at http://localhost:5173/src/App.tsx?t=1787784834602:409:3\n    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:12900:13)\n    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:850:66)\n    at commitHookEffectListMount (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:6615:153)\n    at commitHookPassiveMountEffects (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:6650:55)\n    at commitPassiveMountOnFiber (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:7616:22)\n    at recursivelyTraversePassiveMountEffects (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:7604:5)\n    at commitPassiveMountOnFiber (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:7620:6)\n    at recursivelyTraversePassiveMountEffects (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:7604:5)\n    at commitPassiveMountOnFiber (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:7615:6)",
+    "severity": "critical",
+    "category": "general",
+    "status": "open",
+    "foundBy": "auto-crash-handler",
+    "environment": {
+      "route": "#/",
+      "isOnline": true,
+      "platform": "web",
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [],
+    "expectedBehavior": "App runs without throwing.",
+    "actualBehavior": "setShowTransactions is not defined",
+    "diagnostics": {
+      "stackTrace": "ReferenceError: setShowTransactions is not defined\n    at http://localhost:5173/src/App.tsx?t=1787784834602:409:3\n    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:12900:13)\n    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:850:66)\n    at commitHookEffectListMount (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:6615:153)\n    at commitHookPassiveMountEffects (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:6650:55)\n    at commitPassiveMountOnFiber (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:7616:22)\n    at recursivelyTraversePassiveMountEffects (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:7604:5)\n    at commitPassiveMountOnFiber (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:7620:6)\n    at recursivelyTraversePassiveMountEffects (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:7604:5)\n    at commitPassiveMountOnFiber (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:7615:6)",
+      "consoleLogs": [
+        "[info] DiagnosticLogger initialized",
+        "[error] %o\n\n%s\n\n%s\n {} The above error occurred in the <App> component. React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.",
+        "[error] React Crash: showTransactions is not defined",
+        "[error] Uncaught error inside ErrorBoundary: {} {\"componentStack\":\"\\n    at App (http://localhost:5173/src/App.tsx?t=1787784820310:92:443)\\n    at ErrorBoundary (http://localhost:5173/src/components/ErrorBoundary.tsx:6:8)\\n    at RequireAuth (http://localhost:5173/src/components/RequireAuth.tsx:8:31)\\n    at RenderedRoute (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=b89a0147:4156:26)\\n    at Routes (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=b89a0147:4836",
+        "[error] %o\n\n%s\n\n%s\n {} The above error occurred in the <App> component. React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.",
+        "[error] React Crash: showTransactions is not defined",
+        "[error] Uncaught error inside ErrorBoundary: {} {\"componentStack\":\"\\n    at App (http://localhost:5173/src/App.tsx?t=1787784828797:92:443)\\n    at ErrorBoundary (http://localhost:5173/src/components/ErrorBoundary.tsx:6:8)\\n    at RequireAuth (http://localhost:5173/src/components/RequireAuth.tsx:8:31)\\n    at RenderedRoute (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=b89a0147:4156:26)\\n    at Routes (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=b89a0147:4836",
+        "[error] %o\n\n%s\n\n%s\n {} The above error occurred in the <App> component. React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.",
+        "[error] React Crash: setShowTransactions is not defined",
+        "[error] Uncaught error inside ErrorBoundary: {} {\"componentStack\":\"\\n    at App (http://localhost:5173/src/App.tsx?t=1787784834602:92:443)\\n    at ErrorBoundary (http://localhost:5173/src/components/ErrorBoundary.tsx:6:8)\\n    at RequireAuth (http://localhost:5173/src/components/RequireAuth.tsx:8:31)\\n    at RenderedRoute (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=b89a0147:4156:26)\\n    at Routes (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=b89a0147:4836"
+      ],
+      "syncQueueLength": 0
+    },
+    "createdAt": "2026-08-26T22:53:54.725821+00:00",
+    "updatedAt": "2026-08-26T22:53:54.725821+00:00"
+  },
+  {
+    "id": "BUG-079",
+    "title": "usePrivacyStore is not defined",
+    "description": "Automatically captured react crash.\n\nReferenceError: usePrivacyStore is not defined\n    at BalancesSettlements (http://localhost:5173/src/components/BalancesSettlements.tsx?t=1787786281726:1062:22)\n    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:12864:12)\n    at renderWithHooks (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:4211:19)\n    at updateFunctionComponent (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:5567:16)\n    at beginWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:6138:20)\n    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:850:66)\n    at performUnitOfWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:8427:92)\n    at workLoopSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:8323:37)\n    at renderRootSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:8307:6)\n    at performWorkOnRoot (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:7992:27)",
+    "severity": "critical",
+    "category": "general",
+    "status": "open",
+    "foundBy": "auto-crash-handler",
+    "environment": {
+      "route": "#nav-1",
+      "isOnline": true,
+      "platform": "web",
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [],
+    "expectedBehavior": "App runs without throwing.",
+    "actualBehavior": "usePrivacyStore is not defined",
+    "diagnostics": {
+      "stackTrace": "ReferenceError: usePrivacyStore is not defined\n    at BalancesSettlements (http://localhost:5173/src/components/BalancesSettlements.tsx?t=1787786281726:1062:22)\n    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:12864:12)\n    at renderWithHooks (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:4211:19)\n    at updateFunctionComponent (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:5567:16)\n    at beginWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:6138:20)\n    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:850:66)\n    at performUnitOfWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:8427:92)\n    at workLoopSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:8323:37)\n    at renderRootSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:8307:6)\n    at performWorkOnRoot (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:7992:27)",
+      "consoleLogs": [
+        "[info] DiagnosticLogger initialized",
+        "[warn] Image \"swimming_pool\" could not be loaded. Please make sure you have added the image before it is needed with map.addImage(), resolved it with map.setMissingStyleImageResolver(), or included it in a \"sprite\" property in your style.",
+        "[warn] Image \"gate\" could not be loaded. Please make sure you have added the image before it is needed with map.addImage(), resolved it with map.setMissingStyleImageResolver(), or included it in a \"sprite\" property in your style.",
+        "[warn] Image \"atm\" could not be loaded. Please make sure you have added the image before it is needed with map.addImage(), resolved it with map.setMissingStyleImageResolver(), or included it in a \"sprite\" property in your style.",
+        "[error] %o\n\n%s\n\n%s\n {} The above error occurred in the <BalancesSettlements> component. React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.",
+        "[error] React Crash: usePrivacyStore is not defined",
+        "[error] Uncaught error inside ErrorBoundary: {} {\"componentStack\":\"\\n    at BalancesSettlements (http://localhost:5173/src/components/BalancesSettlements.tsx?t=1787786281726:1036:39)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at main (<anonymous>)\\n    at div (<anonymous>)\\n    at TripContentSheet (http://localhost:5173/src/components/TripContentSheet.tsx:13:36)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at App (http://localhost:5173/src/App.tsx?t=1787785627872:92:443)\\n    a"
+      ],
+      "syncQueueLength": 0
+    },
+    "createdAt": "2026-08-26T23:18:02.650287+00:00",
+    "updatedAt": "2026-08-26T23:18:02.650287+00:00"
+  },
+  {
+    "id": "BUG-080",
+    "title": "isMembersSectionExpanded is not defined",
+    "description": "Automatically captured react crash.\n\nReferenceError: isMembersSectionExpanded is not defined\n    at BalancesSettlements (http://localhost:5173/src/components/BalancesSettlements.tsx?t=1787786316817:1310:23)\n    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:12864:12)\n    at renderWithHooks (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:4211:19)\n    at updateFunctionComponent (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:5567:16)\n    at beginWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:6138:20)\n    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:850:66)\n    at performUnitOfWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:8427:92)\n    at workLoopSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:8323:37)\n    at renderRootSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:8307:6)\n    at performWorkOnRoot (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:7992:27)",
+    "severity": "critical",
+    "category": "general",
+    "status": "open",
+    "foundBy": "auto-crash-handler",
+    "environment": {
+      "route": "#nav-1",
+      "isOnline": true,
+      "platform": "web",
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [],
+    "expectedBehavior": "App runs without throwing.",
+    "actualBehavior": "isMembersSectionExpanded is not defined",
+    "diagnostics": {
+      "stackTrace": "ReferenceError: isMembersSectionExpanded is not defined\n    at BalancesSettlements (http://localhost:5173/src/components/BalancesSettlements.tsx?t=1787786316817:1310:23)\n    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:12864:12)\n    at renderWithHooks (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:4211:19)\n    at updateFunctionComponent (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:5567:16)\n    at beginWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:6138:20)\n    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:850:66)\n    at performUnitOfWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:8427:92)\n    at workLoopSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:8323:37)\n    at renderRootSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:8307:6)\n    at performWorkOnRoot (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:7992:27)",
+      "consoleLogs": [
+        "[info] DiagnosticLogger initialized",
+        "[warn] Image \"swimming_pool\" could not be loaded. Please make sure you have added the image before it is needed with map.addImage(), resolved it with map.setMissingStyleImageResolver(), or included it in a \"sprite\" property in your style.",
+        "[warn] Image \"gate\" could not be loaded. Please make sure you have added the image before it is needed with map.addImage(), resolved it with map.setMissingStyleImageResolver(), or included it in a \"sprite\" property in your style.",
+        "[warn] Image \"atm\" could not be loaded. Please make sure you have added the image before it is needed with map.addImage(), resolved it with map.setMissingStyleImageResolver(), or included it in a \"sprite\" property in your style.",
+        "[error] %o\n\n%s\n\n%s\n {} The above error occurred in the <BalancesSettlements> component. React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.",
+        "[error] React Crash: usePrivacyStore is not defined",
+        "[error] Uncaught error inside ErrorBoundary: {} {\"componentStack\":\"\\n    at BalancesSettlements (http://localhost:5173/src/components/BalancesSettlements.tsx?t=1787786281726:1036:39)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at main (<anonymous>)\\n    at div (<anonymous>)\\n    at TripContentSheet (http://localhost:5173/src/components/TripContentSheet.tsx:13:36)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at App (http://localhost:5173/src/App.tsx?t=1787785627872:92:443)\\n    a",
+        "[error] %o\n\n%s\n\n%s\n {} The above error occurred in the <BalancesSettlements> component. React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.",
+        "[error] React Crash: usePrivacyStore is not defined",
+        "[error] Uncaught error inside ErrorBoundary: {} {\"componentStack\":\"\\n    at BalancesSettlements (http://localhost:5173/src/components/BalancesSettlements.tsx?t=1787786293171:1036:39)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at main (<anonymous>)\\n    at div (<anonymous>)\\n    at TripContentSheet (http://localhost:5173/src/components/TripContentSheet.tsx:13:36)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at App (http://localhost:5173/src/App.tsx?t=1787785627872:92:443)\\n    a",
+        "[error] %o\n\n%s\n\n%s\n {} The above error occurred in the <BalancesSettlements> component. React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.",
+        "[error] React Crash: usePrivacyStore is not defined",
+        "[error] Uncaught error inside ErrorBoundary: {} {\"componentStack\":\"\\n    at BalancesSettlements (http://localhost:5173/src/components/BalancesSettlements.tsx?t=1787786300840:998:39)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at main (<anonymous>)\\n    at div (<anonymous>)\\n    at TripContentSheet (http://localhost:5173/src/components/TripContentSheet.tsx:13:36)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at App (http://localhost:5173/src/App.tsx?t=1787785627872:92:443)\\n    at",
+        "[error] %o\n\n%s\n\n%s\n {} The above error occurred in the <BalancesSettlements> component. React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.",
+        "[error] React Crash: usePrivacyStore is not defined",
+        "[error] Uncaught error inside ErrorBoundary: {} {\"componentStack\":\"\\n    at BalancesSettlements (http://localhost:5173/src/components/BalancesSettlements.tsx?t=1787786305778:998:39)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at main (<anonymous>)\\n    at div (<anonymous>)\\n    at TripContentSheet (http://localhost:5173/src/components/TripContentSheet.tsx:13:36)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at App (http://localhost:5173/src/App.tsx?t=1787785627872:92:443)\\n    at",
+        "[error] %o\n\n%s\n\n%s\n {} The above error occurred in the <BalancesSettlements> component. React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.",
+        "[error] React Crash: isMembersSectionExpanded is not defined",
+        "[error] Uncaught error inside ErrorBoundary: {} {\"componentStack\":\"\\n    at BalancesSettlements (http://localhost:5173/src/components/BalancesSettlements.tsx?t=1787786316817:998:39)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at main (<anonymous>)\\n    at div (<anonymous>)\\n    at TripContentSheet (http://localhost:5173/src/components/TripContentSheet.tsx:13:36)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at App (http://localhost:5173/src/App.tsx?t=1787785627872:92:443)\\n    at"
+      ],
+      "syncQueueLength": 0
+    },
+    "createdAt": "2026-08-26T23:18:36.843957+00:00",
+    "updatedAt": "2026-08-26T23:18:36.843957+00:00"
+  },
+  {
+    "id": "BUG-081",
+    "title": "filteredExpenses is not defined",
+    "description": "Automatically captured react crash.\n\nReferenceError: filteredExpenses is not defined\n    at App (http://localhost:5173/src/App.tsx?t=1787786479728:2174:12)\n    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:12864:12)\n    at renderWithHooks (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:4211:19)\n    at updateFunctionComponent (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:5567:16)\n    at beginWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:6138:20)\n    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:850:66)\n    at performUnitOfWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:8427:92)\n    at workLoopSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:8323:37)\n    at renderRootSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:8307:6)\n    at performWorkOnRoot (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:7992:27)",
+    "severity": "critical",
+    "category": "general",
+    "status": "open",
+    "foundBy": "auto-crash-handler",
+    "environment": {
+      "route": "#nav-1",
+      "isOnline": true,
+      "platform": "web",
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [],
+    "expectedBehavior": "App runs without throwing.",
+    "actualBehavior": "filteredExpenses is not defined",
+    "diagnostics": {
+      "stackTrace": "ReferenceError: filteredExpenses is not defined\n    at App (http://localhost:5173/src/App.tsx?t=1787786479728:2174:12)\n    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:12864:12)\n    at renderWithHooks (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:4211:19)\n    at updateFunctionComponent (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:5567:16)\n    at beginWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:6138:20)\n    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:850:66)\n    at performUnitOfWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:8427:92)\n    at workLoopSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:8323:37)\n    at renderRootSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:8307:6)\n    at performWorkOnRoot (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:7992:27)",
+      "consoleLogs": [
+        "[info] DiagnosticLogger initialized",
+        "[warn] Image \"swimming_pool\" could not be loaded. Please make sure you have added the image before it is needed with map.addImage(), resolved it with map.setMissingStyleImageResolver(), or included it in a \"sprite\" property in your style.",
+        "[warn] Image \"gate\" could not be loaded. Please make sure you have added the image before it is needed with map.addImage(), resolved it with map.setMissingStyleImageResolver(), or included it in a \"sprite\" property in your style.",
+        "[warn] Image \"atm\" could not be loaded. Please make sure you have added the image before it is needed with map.addImage(), resolved it with map.setMissingStyleImageResolver(), or included it in a \"sprite\" property in your style.",
+        "[error] %o\n\n%s\n\n%s\n {} The above error occurred in the <BalancesSettlements> component. React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.",
+        "[error] React Crash: usePrivacyStore is not defined",
+        "[error] Uncaught error inside ErrorBoundary: {} {\"componentStack\":\"\\n    at BalancesSettlements (http://localhost:5173/src/components/BalancesSettlements.tsx?t=1787786281726:1036:39)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at main (<anonymous>)\\n    at div (<anonymous>)\\n    at TripContentSheet (http://localhost:5173/src/components/TripContentSheet.tsx:13:36)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at App (http://localhost:5173/src/App.tsx?t=1787785627872:92:443)\\n    a",
+        "[error] %o\n\n%s\n\n%s\n {} The above error occurred in the <BalancesSettlements> component. React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.",
+        "[error] React Crash: usePrivacyStore is not defined",
+        "[error] Uncaught error inside ErrorBoundary: {} {\"componentStack\":\"\\n    at BalancesSettlements (http://localhost:5173/src/components/BalancesSettlements.tsx?t=1787786293171:1036:39)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at main (<anonymous>)\\n    at div (<anonymous>)\\n    at TripContentSheet (http://localhost:5173/src/components/TripContentSheet.tsx:13:36)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at App (http://localhost:5173/src/App.tsx?t=1787785627872:92:443)\\n    a",
+        "[error] %o\n\n%s\n\n%s\n {} The above error occurred in the <BalancesSettlements> component. React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.",
+        "[error] React Crash: usePrivacyStore is not defined",
+        "[error] Uncaught error inside ErrorBoundary: {} {\"componentStack\":\"\\n    at BalancesSettlements (http://localhost:5173/src/components/BalancesSettlements.tsx?t=1787786300840:998:39)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at main (<anonymous>)\\n    at div (<anonymous>)\\n    at TripContentSheet (http://localhost:5173/src/components/TripContentSheet.tsx:13:36)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at App (http://localhost:5173/src/App.tsx?t=1787785627872:92:443)\\n    at",
+        "[error] %o\n\n%s\n\n%s\n {} The above error occurred in the <BalancesSettlements> component. React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.",
+        "[error] React Crash: usePrivacyStore is not defined",
+        "[error] Uncaught error inside ErrorBoundary: {} {\"componentStack\":\"\\n    at BalancesSettlements (http://localhost:5173/src/components/BalancesSettlements.tsx?t=1787786305778:998:39)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at main (<anonymous>)\\n    at div (<anonymous>)\\n    at TripContentSheet (http://localhost:5173/src/components/TripContentSheet.tsx:13:36)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at App (http://localhost:5173/src/App.tsx?t=1787785627872:92:443)\\n    at",
+        "[error] %o\n\n%s\n\n%s\n {} The above error occurred in the <BalancesSettlements> component. React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.",
+        "[error] React Crash: isMembersSectionExpanded is not defined",
+        "[error] Uncaught error inside ErrorBoundary: {} {\"componentStack\":\"\\n    at BalancesSettlements (http://localhost:5173/src/components/BalancesSettlements.tsx?t=1787786316817:998:39)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at main (<anonymous>)\\n    at div (<anonymous>)\\n    at TripContentSheet (http://localhost:5173/src/components/TripContentSheet.tsx:13:36)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at App (http://localhost:5173/src/App.tsx?t=1787785627872:92:443)\\n    at",
+        "[error] [vite] Failed to reload /src/components/TransactionsPreview.tsx. This could be due to syntax errors or importing non-existent modules. (see errors above)",
+        "[error] %o\n\n%s\n\n%s\n {} The above error occurred in the <App> component. React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.",
+        "[error] React Crash: filteredExpenses is not defined",
+        "[error] Uncaught error inside ErrorBoundary: {} {\"componentStack\":\"\\n    at App (http://localhost:5173/src/App.tsx?t=1787786479728:91:443)\\n    at ErrorBoundary (http://localhost:5173/src/components/ErrorBoundary.tsx:6:8)\\n    at RequireAuth (http://localhost:5173/src/components/RequireAuth.tsx:8:31)\\n    at RenderedRoute (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=b89a0147:4156:26)\\n    at Routes (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=b89a0147:4836"
+      ],
+      "syncQueueLength": 0
+    },
+    "createdAt": "2026-08-26T23:21:19.754085+00:00",
+    "updatedAt": "2026-08-26T23:21:19.754085+00:00"
+  },
+  {
+    "id": "BUG-082",
+    "title": "getCatColor is not defined",
+    "description": "Automatically captured react crash.\n\nReferenceError: getCatColor is not defined\n    at App (http://localhost:5173/src/App.tsx?t=1787786861843:2291:13)\n    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:12864:12)\n    at renderWithHooks (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:4211:19)\n    at updateFunctionComponent (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:5567:16)\n    at beginWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:6138:20)\n    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:850:66)\n    at performUnitOfWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:8427:92)\n    at workLoopSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:8323:37)\n    at renderRootSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:8307:6)\n    at performWorkOnRoot (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:7992:27)",
+    "severity": "critical",
+    "category": "general",
+    "status": "open",
+    "foundBy": "auto-crash-handler",
+    "environment": {
+      "route": "#nav-1",
+      "isOnline": true,
+      "platform": "web",
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [],
+    "expectedBehavior": "App runs without throwing.",
+    "actualBehavior": "getCatColor is not defined",
+    "diagnostics": {
+      "stackTrace": "ReferenceError: getCatColor is not defined\n    at App (http://localhost:5173/src/App.tsx?t=1787786861843:2291:13)\n    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:12864:12)\n    at renderWithHooks (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:4211:19)\n    at updateFunctionComponent (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:5567:16)\n    at beginWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:6138:20)\n    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:850:66)\n    at performUnitOfWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:8427:92)\n    at workLoopSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:8323:37)\n    at renderRootSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:8307:6)\n    at performWorkOnRoot (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:7992:27)",
+      "consoleLogs": [
+        "[info] DiagnosticLogger initialized",
+        "[warn] Image \"swimming_pool\" could not be loaded. Please make sure you have added the image before it is needed with map.addImage(), resolved it with map.setMissingStyleImageResolver(), or included it in a \"sprite\" property in your style.",
+        "[warn] Image \"gate\" could not be loaded. Please make sure you have added the image before it is needed with map.addImage(), resolved it with map.setMissingStyleImageResolver(), or included it in a \"sprite\" property in your style.",
+        "[warn] Image \"atm\" could not be loaded. Please make sure you have added the image before it is needed with map.addImage(), resolved it with map.setMissingStyleImageResolver(), or included it in a \"sprite\" property in your style.",
+        "[error] %o\n\n%s\n\n%s\n {} The above error occurred in the <BalancesSettlements> component. React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.",
+        "[error] React Crash: usePrivacyStore is not defined",
+        "[error] Uncaught error inside ErrorBoundary: {} {\"componentStack\":\"\\n    at BalancesSettlements (http://localhost:5173/src/components/BalancesSettlements.tsx?t=1787786281726:1036:39)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at main (<anonymous>)\\n    at div (<anonymous>)\\n    at TripContentSheet (http://localhost:5173/src/components/TripContentSheet.tsx:13:36)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at App (http://localhost:5173/src/App.tsx?t=1787785627872:92:443)\\n    a",
+        "[error] %o\n\n%s\n\n%s\n {} The above error occurred in the <BalancesSettlements> component. React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.",
+        "[error] React Crash: usePrivacyStore is not defined",
+        "[error] Uncaught error inside ErrorBoundary: {} {\"componentStack\":\"\\n    at BalancesSettlements (http://localhost:5173/src/components/BalancesSettlements.tsx?t=1787786293171:1036:39)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at main (<anonymous>)\\n    at div (<anonymous>)\\n    at TripContentSheet (http://localhost:5173/src/components/TripContentSheet.tsx:13:36)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at App (http://localhost:5173/src/App.tsx?t=1787785627872:92:443)\\n    a",
+        "[error] %o\n\n%s\n\n%s\n {} The above error occurred in the <BalancesSettlements> component. React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.",
+        "[error] React Crash: usePrivacyStore is not defined",
+        "[error] Uncaught error inside ErrorBoundary: {} {\"componentStack\":\"\\n    at BalancesSettlements (http://localhost:5173/src/components/BalancesSettlements.tsx?t=1787786300840:998:39)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at main (<anonymous>)\\n    at div (<anonymous>)\\n    at TripContentSheet (http://localhost:5173/src/components/TripContentSheet.tsx:13:36)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at App (http://localhost:5173/src/App.tsx?t=1787785627872:92:443)\\n    at",
+        "[error] %o\n\n%s\n\n%s\n {} The above error occurred in the <BalancesSettlements> component. React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.",
+        "[error] React Crash: usePrivacyStore is not defined",
+        "[error] Uncaught error inside ErrorBoundary: {} {\"componentStack\":\"\\n    at BalancesSettlements (http://localhost:5173/src/components/BalancesSettlements.tsx?t=1787786305778:998:39)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at main (<anonymous>)\\n    at div (<anonymous>)\\n    at TripContentSheet (http://localhost:5173/src/components/TripContentSheet.tsx:13:36)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at App (http://localhost:5173/src/App.tsx?t=1787785627872:92:443)\\n    at",
+        "[error] %o\n\n%s\n\n%s\n {} The above error occurred in the <BalancesSettlements> component. React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.",
+        "[error] React Crash: isMembersSectionExpanded is not defined",
+        "[error] Uncaught error inside ErrorBoundary: {} {\"componentStack\":\"\\n    at BalancesSettlements (http://localhost:5173/src/components/BalancesSettlements.tsx?t=1787786316817:998:39)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at main (<anonymous>)\\n    at div (<anonymous>)\\n    at TripContentSheet (http://localhost:5173/src/components/TripContentSheet.tsx:13:36)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at App (http://localhost:5173/src/App.tsx?t=1787785627872:92:443)\\n    at",
+        "[error] [vite] Failed to reload /src/components/TransactionsPreview.tsx. This could be due to syntax errors or importing non-existent modules. (see errors above)",
+        "[error] %o\n\n%s\n\n%s\n {} The above error occurred in the <App> component. React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.",
+        "[error] React Crash: filteredExpenses is not defined",
+        "[error] Uncaught error inside ErrorBoundary: {} {\"componentStack\":\"\\n    at App (http://localhost:5173/src/App.tsx?t=1787786479728:91:443)\\n    at ErrorBoundary (http://localhost:5173/src/components/ErrorBoundary.tsx:6:8)\\n    at RequireAuth (http://localhost:5173/src/components/RequireAuth.tsx:8:31)\\n    at RenderedRoute (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=b89a0147:4156:26)\\n    at Routes (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=b89a0147:4836",
+        "[error] The final argument passed to %s changed size between renders. The order and size of this array must remain constant.\n\nPrevious: %s\nIncoming: %s useEffect [d6e60f68-90ac-4ac3-9388-bff447429c5e, , , , , ] [d6e60f68-90ac-4ac3-9388-bff447429c5e, , , , , , , , ]",
+        "[error] %o\n\n%s\n\n%s\n {} The above error occurred in the <App> component. React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.",
+        "[error] React Crash: getCatColor is not defined",
+        "[error] Uncaught error inside ErrorBoundary: {} {\"componentStack\":\"\\n    at App (http://localhost:5173/src/App.tsx?t=1787786861843:91:443)\\n    at ErrorBoundary (http://localhost:5173/src/components/ErrorBoundary.tsx:6:8)\\n    at RequireAuth (http://localhost:5173/src/components/RequireAuth.tsx:8:31)\\n    at RenderedRoute (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=b89a0147:4156:26)\\n    at Routes (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=b89a0147:4836"
+      ],
+      "syncQueueLength": 0
+    },
+    "createdAt": "2026-08-26T23:27:42.284697+00:00",
+    "updatedAt": "2026-08-26T23:27:42.284697+00:00"
+  },
+  {
+    "id": "BUG-083",
+    "title": "getCatColor is not a function",
+    "description": "Automatically captured react crash.\n\nTypeError: getCatColor is not a function\n    at http://localhost:5173/src/components/ExpenseList.tsx?t=1787786938322:816:74\n    at Array.map (<anonymous>)\n    at http://localhost:5173/src/components/ExpenseList.tsx?t=1787786938322:779:44\n    at Array.map (<anonymous>)\n    at ExpenseList (http://localhost:5173/src/components/ExpenseList.tsx?t=1787786938322:682:23)\n    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:12864:12)\n    at renderWithHooks (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:4211:19)\n    at updateFunctionComponent (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:5567:16)\n    at beginWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:6138:20)\n    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:850:66)",
+    "severity": "critical",
+    "category": "general",
+    "status": "open",
+    "foundBy": "auto-crash-handler",
+    "environment": {
+      "route": "#nav-1",
+      "isOnline": true,
+      "platform": "web",
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [],
+    "expectedBehavior": "App runs without throwing.",
+    "actualBehavior": "getCatColor is not a function",
+    "diagnostics": {
+      "stackTrace": "TypeError: getCatColor is not a function\n    at http://localhost:5173/src/components/ExpenseList.tsx?t=1787786938322:816:74\n    at Array.map (<anonymous>)\n    at http://localhost:5173/src/components/ExpenseList.tsx?t=1787786938322:779:44\n    at Array.map (<anonymous>)\n    at ExpenseList (http://localhost:5173/src/components/ExpenseList.tsx?t=1787786938322:682:23)\n    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:12864:12)\n    at renderWithHooks (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:4211:19)\n    at updateFunctionComponent (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:5567:16)\n    at beginWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:6138:20)\n    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:850:66)",
+      "consoleLogs": [
+        "[info] DiagnosticLogger initialized",
+        "[warn] Image \"swimming_pool\" could not be loaded. Please make sure you have added the image before it is needed with map.addImage(), resolved it with map.setMissingStyleImageResolver(), or included it in a \"sprite\" property in your style.",
+        "[warn] Image \"gate\" could not be loaded. Please make sure you have added the image before it is needed with map.addImage(), resolved it with map.setMissingStyleImageResolver(), or included it in a \"sprite\" property in your style.",
+        "[warn] Image \"atm\" could not be loaded. Please make sure you have added the image before it is needed with map.addImage(), resolved it with map.setMissingStyleImageResolver(), or included it in a \"sprite\" property in your style.",
+        "[error] %o\n\n%s\n\n%s\n {} The above error occurred in the <BalancesSettlements> component. React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.",
+        "[error] React Crash: usePrivacyStore is not defined",
+        "[error] Uncaught error inside ErrorBoundary: {} {\"componentStack\":\"\\n    at BalancesSettlements (http://localhost:5173/src/components/BalancesSettlements.tsx?t=1787786281726:1036:39)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at main (<anonymous>)\\n    at div (<anonymous>)\\n    at TripContentSheet (http://localhost:5173/src/components/TripContentSheet.tsx:13:36)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at App (http://localhost:5173/src/App.tsx?t=1787785627872:92:443)\\n    a",
+        "[error] %o\n\n%s\n\n%s\n {} The above error occurred in the <BalancesSettlements> component. React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.",
+        "[error] React Crash: usePrivacyStore is not defined",
+        "[error] Uncaught error inside ErrorBoundary: {} {\"componentStack\":\"\\n    at BalancesSettlements (http://localhost:5173/src/components/BalancesSettlements.tsx?t=1787786293171:1036:39)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at main (<anonymous>)\\n    at div (<anonymous>)\\n    at TripContentSheet (http://localhost:5173/src/components/TripContentSheet.tsx:13:36)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at App (http://localhost:5173/src/App.tsx?t=1787785627872:92:443)\\n    a",
+        "[error] %o\n\n%s\n\n%s\n {} The above error occurred in the <BalancesSettlements> component. React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.",
+        "[error] React Crash: usePrivacyStore is not defined",
+        "[error] Uncaught error inside ErrorBoundary: {} {\"componentStack\":\"\\n    at BalancesSettlements (http://localhost:5173/src/components/BalancesSettlements.tsx?t=1787786300840:998:39)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at main (<anonymous>)\\n    at div (<anonymous>)\\n    at TripContentSheet (http://localhost:5173/src/components/TripContentSheet.tsx:13:36)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at App (http://localhost:5173/src/App.tsx?t=1787785627872:92:443)\\n    at",
+        "[error] %o\n\n%s\n\n%s\n {} The above error occurred in the <BalancesSettlements> component. React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.",
+        "[error] React Crash: usePrivacyStore is not defined",
+        "[error] Uncaught error inside ErrorBoundary: {} {\"componentStack\":\"\\n    at BalancesSettlements (http://localhost:5173/src/components/BalancesSettlements.tsx?t=1787786305778:998:39)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at main (<anonymous>)\\n    at div (<anonymous>)\\n    at TripContentSheet (http://localhost:5173/src/components/TripContentSheet.tsx:13:36)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at App (http://localhost:5173/src/App.tsx?t=1787785627872:92:443)\\n    at",
+        "[error] %o\n\n%s\n\n%s\n {} The above error occurred in the <BalancesSettlements> component. React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.",
+        "[error] React Crash: isMembersSectionExpanded is not defined",
+        "[error] Uncaught error inside ErrorBoundary: {} {\"componentStack\":\"\\n    at BalancesSettlements (http://localhost:5173/src/components/BalancesSettlements.tsx?t=1787786316817:998:39)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at main (<anonymous>)\\n    at div (<anonymous>)\\n    at TripContentSheet (http://localhost:5173/src/components/TripContentSheet.tsx:13:36)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at App (http://localhost:5173/src/App.tsx?t=1787785627872:92:443)\\n    at",
+        "[error] [vite] Failed to reload /src/components/TransactionsPreview.tsx. This could be due to syntax errors or importing non-existent modules. (see errors above)",
+        "[error] %o\n\n%s\n\n%s\n {} The above error occurred in the <App> component. React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.",
+        "[error] React Crash: filteredExpenses is not defined",
+        "[error] Uncaught error inside ErrorBoundary: {} {\"componentStack\":\"\\n    at App (http://localhost:5173/src/App.tsx?t=1787786479728:91:443)\\n    at ErrorBoundary (http://localhost:5173/src/components/ErrorBoundary.tsx:6:8)\\n    at RequireAuth (http://localhost:5173/src/components/RequireAuth.tsx:8:31)\\n    at RenderedRoute (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=b89a0147:4156:26)\\n    at Routes (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=b89a0147:4836",
+        "[error] The final argument passed to %s changed size between renders. The order and size of this array must remain constant.\n\nPrevious: %s\nIncoming: %s useEffect [d6e60f68-90ac-4ac3-9388-bff447429c5e, , , , , ] [d6e60f68-90ac-4ac3-9388-bff447429c5e, , , , , , , , ]",
+        "[error] %o\n\n%s\n\n%s\n {} The above error occurred in the <App> component. React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.",
+        "[error] React Crash: getCatColor is not defined",
+        "[error] Uncaught error inside ErrorBoundary: {} {\"componentStack\":\"\\n    at App (http://localhost:5173/src/App.tsx?t=1787786861843:91:443)\\n    at ErrorBoundary (http://localhost:5173/src/components/ErrorBoundary.tsx:6:8)\\n    at RequireAuth (http://localhost:5173/src/components/RequireAuth.tsx:8:31)\\n    at RenderedRoute (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=b89a0147:4156:26)\\n    at Routes (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=b89a0147:4836",
+        "[error] %o\n\n%s\n\n%s\n {} The above error occurred in the <ExpenseList> component. React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.",
+        "[error] React Crash: getCatColor is not a function",
+        "[error] Uncaught error inside ErrorBoundary: {} {\"componentStack\":\"\\n    at ExpenseList (http://localhost:5173/src/components/ExpenseList.tsx?t=1787786938322:89:31)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at main (<anonymous>)\\n    at div (<anonymous>)\\n    at TripContentSheet (http://localhost:5173/src/components/TripContentSheet.tsx:13:36)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at App (http://localhost:5173/src/App.tsx?t=1787786871078:92:443)\\n    at ErrorBoundary (h"
+      ],
+      "syncQueueLength": 0
+    },
+    "createdAt": "2026-08-26T23:28:58.863522+00:00",
+    "updatedAt": "2026-08-26T23:28:58.863522+00:00"
+  },
+  {
+    "id": "BUG-084",
+    "title": "analytics is not defined",
+    "description": "Automatically captured react crash.\n\nReferenceError: analytics is not defined\n    at SettingsTab (http://localhost:5173/src/components/SettingsTab.tsx?t=1787788216406:36:3)\n    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:12864:12)\n    at renderWithHooks (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:4211:19)\n    at updateFunctionComponent (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:5567:16)\n    at beginWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:6138:20)\n    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:850:66)\n    at performUnitOfWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:8427:92)\n    at workLoopSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:8323:37)\n    at renderRootSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:8307:6)\n    at performWorkOnRoot (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:7992:27)",
+    "severity": "critical",
+    "category": "general",
+    "status": "open",
+    "foundBy": "auto-crash-handler",
+    "environment": {
+      "route": "#nav-1",
+      "isOnline": true,
+      "platform": "web",
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [],
+    "expectedBehavior": "App runs without throwing.",
+    "actualBehavior": "analytics is not defined",
+    "diagnostics": {
+      "stackTrace": "ReferenceError: analytics is not defined\n    at SettingsTab (http://localhost:5173/src/components/SettingsTab.tsx?t=1787788216406:36:3)\n    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:12864:12)\n    at renderWithHooks (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:4211:19)\n    at updateFunctionComponent (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:5567:16)\n    at beginWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:6138:20)\n    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:850:66)\n    at performUnitOfWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:8427:92)\n    at workLoopSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:8323:37)\n    at renderRootSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:8307:6)\n    at performWorkOnRoot (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:7992:27)",
+      "consoleLogs": [
+        "[error] Uncaught error inside ErrorBoundary: {} {\"componentStack\":\"\\n    at BalancesSettlements (http://localhost:5173/src/components/BalancesSettlements.tsx?t=1787786293171:1036:39)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at main (<anonymous>)\\n    at div (<anonymous>)\\n    at TripContentSheet (http://localhost:5173/src/components/TripContentSheet.tsx:13:36)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at App (http://localhost:5173/src/App.tsx?t=1787785627872:92:443)\\n    a",
+        "[error] %o\n\n%s\n\n%s\n {} The above error occurred in the <BalancesSettlements> component. React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.",
+        "[error] React Crash: usePrivacyStore is not defined",
+        "[error] Uncaught error inside ErrorBoundary: {} {\"componentStack\":\"\\n    at BalancesSettlements (http://localhost:5173/src/components/BalancesSettlements.tsx?t=1787786300840:998:39)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at main (<anonymous>)\\n    at div (<anonymous>)\\n    at TripContentSheet (http://localhost:5173/src/components/TripContentSheet.tsx:13:36)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at App (http://localhost:5173/src/App.tsx?t=1787785627872:92:443)\\n    at",
+        "[error] %o\n\n%s\n\n%s\n {} The above error occurred in the <BalancesSettlements> component. React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.",
+        "[error] React Crash: usePrivacyStore is not defined",
+        "[error] Uncaught error inside ErrorBoundary: {} {\"componentStack\":\"\\n    at BalancesSettlements (http://localhost:5173/src/components/BalancesSettlements.tsx?t=1787786305778:998:39)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at main (<anonymous>)\\n    at div (<anonymous>)\\n    at TripContentSheet (http://localhost:5173/src/components/TripContentSheet.tsx:13:36)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at App (http://localhost:5173/src/App.tsx?t=1787785627872:92:443)\\n    at",
+        "[error] %o\n\n%s\n\n%s\n {} The above error occurred in the <BalancesSettlements> component. React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.",
+        "[error] React Crash: isMembersSectionExpanded is not defined",
+        "[error] Uncaught error inside ErrorBoundary: {} {\"componentStack\":\"\\n    at BalancesSettlements (http://localhost:5173/src/components/BalancesSettlements.tsx?t=1787786316817:998:39)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at main (<anonymous>)\\n    at div (<anonymous>)\\n    at TripContentSheet (http://localhost:5173/src/components/TripContentSheet.tsx:13:36)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at App (http://localhost:5173/src/App.tsx?t=1787785627872:92:443)\\n    at",
+        "[error] [vite] Failed to reload /src/components/TransactionsPreview.tsx. This could be due to syntax errors or importing non-existent modules. (see errors above)",
+        "[error] %o\n\n%s\n\n%s\n {} The above error occurred in the <App> component. React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.",
+        "[error] React Crash: filteredExpenses is not defined",
+        "[error] Uncaught error inside ErrorBoundary: {} {\"componentStack\":\"\\n    at App (http://localhost:5173/src/App.tsx?t=1787786479728:91:443)\\n    at ErrorBoundary (http://localhost:5173/src/components/ErrorBoundary.tsx:6:8)\\n    at RequireAuth (http://localhost:5173/src/components/RequireAuth.tsx:8:31)\\n    at RenderedRoute (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=b89a0147:4156:26)\\n    at Routes (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=b89a0147:4836",
+        "[error] The final argument passed to %s changed size between renders. The order and size of this array must remain constant.\n\nPrevious: %s\nIncoming: %s useEffect [d6e60f68-90ac-4ac3-9388-bff447429c5e, , , , , ] [d6e60f68-90ac-4ac3-9388-bff447429c5e, , , , , , , , ]",
+        "[error] %o\n\n%s\n\n%s\n {} The above error occurred in the <App> component. React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.",
+        "[error] React Crash: getCatColor is not defined",
+        "[error] Uncaught error inside ErrorBoundary: {} {\"componentStack\":\"\\n    at App (http://localhost:5173/src/App.tsx?t=1787786861843:91:443)\\n    at ErrorBoundary (http://localhost:5173/src/components/ErrorBoundary.tsx:6:8)\\n    at RequireAuth (http://localhost:5173/src/components/RequireAuth.tsx:8:31)\\n    at RenderedRoute (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=b89a0147:4156:26)\\n    at Routes (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=b89a0147:4836",
+        "[error] %o\n\n%s\n\n%s\n {} The above error occurred in the <ExpenseList> component. React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.",
+        "[error] React Crash: getCatColor is not a function",
+        "[error] Uncaught error inside ErrorBoundary: {} {\"componentStack\":\"\\n    at ExpenseList (http://localhost:5173/src/components/ExpenseList.tsx?t=1787786938322:89:31)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at main (<anonymous>)\\n    at div (<anonymous>)\\n    at TripContentSheet (http://localhost:5173/src/components/TripContentSheet.tsx:13:36)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at App (http://localhost:5173/src/App.tsx?t=1787786871078:92:443)\\n    at ErrorBoundary (h",
+        "[error] %o\n\n%s\n\n%s\n {} The above error occurred in the <ExpenseList> component. React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.",
+        "[error] React Crash: getCatColor is not a function",
+        "[error] Uncaught error inside ErrorBoundary: {} {\"componentStack\":\"\\n    at ExpenseList (http://localhost:5173/src/components/ExpenseList.tsx?t=1787786946231:89:31)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at main (<anonymous>)\\n    at div (<anonymous>)\\n    at TripContentSheet (http://localhost:5173/src/components/TripContentSheet.tsx:13:36)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at App (http://localhost:5173/src/App.tsx?t=1787786871078:92:443)\\n    at ErrorBoundary (h",
+        "[error] %o\n\n%s\n\n%s\n {} The above error occurred in the <ExpenseList> component. React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.",
+        "[error] React Crash: getCatColor is not a function",
+        "[error] Uncaught error inside ErrorBoundary: {} {\"componentStack\":\"\\n    at ExpenseList (http://localhost:5173/src/components/ExpenseList.tsx?t=1787786954459:89:31)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at main (<anonymous>)\\n    at div (<anonymous>)\\n    at TripContentSheet (http://localhost:5173/src/components/TripContentSheet.tsx:13:36)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at App (http://localhost:5173/src/App.tsx?t=1787786871078:92:443)\\n    at ErrorBoundary (h",
+        "[error] %o\n\n%s\n\n%s\n {} The above error occurred in the <SettingsTab> component. React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.",
+        "[error] React Crash: analytics is not defined",
+        "[error] Uncaught error inside ErrorBoundary: {} {\"componentStack\":\"\\n    at SettingsTab (http://localhost:5173/src/components/SettingsTab.tsx?t=1787788216406:4:31)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at main (<anonymous>)\\n    at div (<anonymous>)\\n    at TripContentSheet (http://localhost:5173/src/components/TripContentSheet.tsx:13:36)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at App (http://localhost:5173/src/App.tsx?t=1787788116698:92:443)\\n    at ErrorBoundary (ht"
+      ],
+      "syncQueueLength": 0
+    },
+    "createdAt": "2026-08-26T23:50:17.887372+00:00",
+    "updatedAt": "2026-08-26T23:50:17.887372+00:00"
+  },
+  {
+    "id": "BUG-085",
+    "title": "useHistoryBack is not defined",
+    "description": "Automatically captured react crash.\n\nReferenceError: useHistoryBack is not defined\n    at ExpenseList (http://localhost:5173/src/components/ExpenseList.tsx?t=1787789087408:99:2)\n    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:12864:12)\n    at renderWithHooks (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:4211:19)\n    at updateFunctionComponent (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:5567:16)\n    at beginWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:6138:20)\n    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:850:66)\n    at performUnitOfWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:8427:92)\n    at workLoopSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:8323:37)\n    at renderRootSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:8307:6)\n    at performWorkOnRoot (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:7992:27)",
+    "severity": "critical",
+    "category": "general",
+    "status": "open",
+    "foundBy": "auto-crash-handler",
+    "environment": {
+      "route": "#nav-2",
+      "isOnline": true,
+      "platform": "web",
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [],
+    "expectedBehavior": "App runs without throwing.",
+    "actualBehavior": "useHistoryBack is not defined",
+    "diagnostics": {
+      "stackTrace": "ReferenceError: useHistoryBack is not defined\n    at ExpenseList (http://localhost:5173/src/components/ExpenseList.tsx?t=1787789087408:99:2)\n    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:12864:12)\n    at renderWithHooks (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:4211:19)\n    at updateFunctionComponent (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:5567:16)\n    at beginWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:6138:20)\n    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:850:66)\n    at performUnitOfWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:8427:92)\n    at workLoopSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:8323:37)\n    at renderRootSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:8307:6)\n    at performWorkOnRoot (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:7992:27)",
+      "consoleLogs": [
+        "[info] DiagnosticLogger initialized",
+        "[warn] Image \"swimming_pool\" could not be loaded. Please make sure you have added the image before it is needed with map.addImage(), resolved it with map.setMissingStyleImageResolver(), or included it in a \"sprite\" property in your style.",
+        "[warn] Image \"gate\" could not be loaded. Please make sure you have added the image before it is needed with map.addImage(), resolved it with map.setMissingStyleImageResolver(), or included it in a \"sprite\" property in your style.",
+        "[warn] Image \"atm\" could not be loaded. Please make sure you have added the image before it is needed with map.addImage(), resolved it with map.setMissingStyleImageResolver(), or included it in a \"sprite\" property in your style.",
+        "[error] %o\n\n%s\n\n%s\n {} The above error occurred in the <ExpenseList> component. React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.",
+        "[error] React Crash: useHistoryBack is not defined",
+        "[error] Uncaught error inside ErrorBoundary: {} {\"componentStack\":\"\\n    at ExpenseList (http://localhost:5173/src/components/ExpenseList.tsx?t=1787789087408:87:31)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at main (<anonymous>)\\n    at div (<anonymous>)\\n    at TripContentSheet (http://localhost:5173/src/components/TripContentSheet.tsx:13:36)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at App (http://localhost:5173/src/App.tsx?t=1787788546408:93:443)\\n    at ErrorBoundary (h"
+      ],
+      "syncQueueLength": 0
+    },
+    "createdAt": "2026-08-27T00:04:48.650033+00:00",
+    "updatedAt": "2026-08-27T00:04:48.650033+00:00"
+  },
+  {
+    "id": "BUG-086",
+    "title": "showFilterDrawer is not defined",
+    "description": "Automatically captured react crash.\n\nReferenceError: showFilterDrawer is not defined\n    at ExpenseList (http://localhost:5173/src/components/ExpenseList.tsx?t=1787789101765:1112:3)\n    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:12864:12)\n    at renderWithHooks (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:4211:19)\n    at updateFunctionComponent (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:5567:16)\n    at beginWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:6138:20)\n    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:850:66)\n    at performUnitOfWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:8427:92)\n    at workLoopSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:8323:37)\n    at renderRootSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:8307:6)\n    at performWorkOnRoot (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:7992:27)",
+    "severity": "critical",
+    "category": "general",
+    "status": "open",
+    "foundBy": "auto-crash-handler",
+    "environment": {
+      "route": "#nav-2",
+      "isOnline": true,
+      "platform": "web",
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [],
+    "expectedBehavior": "App runs without throwing.",
+    "actualBehavior": "showFilterDrawer is not defined",
+    "diagnostics": {
+      "stackTrace": "ReferenceError: showFilterDrawer is not defined\n    at ExpenseList (http://localhost:5173/src/components/ExpenseList.tsx?t=1787789101765:1112:3)\n    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:12864:12)\n    at renderWithHooks (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:4211:19)\n    at updateFunctionComponent (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:5567:16)\n    at beginWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:6138:20)\n    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:850:66)\n    at performUnitOfWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:8427:92)\n    at workLoopSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:8323:37)\n    at renderRootSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:8307:6)\n    at performWorkOnRoot (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:7992:27)",
+      "consoleLogs": [
+        "[info] DiagnosticLogger initialized",
+        "[warn] Image \"swimming_pool\" could not be loaded. Please make sure you have added the image before it is needed with map.addImage(), resolved it with map.setMissingStyleImageResolver(), or included it in a \"sprite\" property in your style.",
+        "[warn] Image \"gate\" could not be loaded. Please make sure you have added the image before it is needed with map.addImage(), resolved it with map.setMissingStyleImageResolver(), or included it in a \"sprite\" property in your style.",
+        "[warn] Image \"atm\" could not be loaded. Please make sure you have added the image before it is needed with map.addImage(), resolved it with map.setMissingStyleImageResolver(), or included it in a \"sprite\" property in your style.",
+        "[error] %o\n\n%s\n\n%s\n {} The above error occurred in the <ExpenseList> component. React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.",
+        "[error] React Crash: useHistoryBack is not defined",
+        "[error] Uncaught error inside ErrorBoundary: {} {\"componentStack\":\"\\n    at ExpenseList (http://localhost:5173/src/components/ExpenseList.tsx?t=1787789087408:87:31)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at main (<anonymous>)\\n    at div (<anonymous>)\\n    at TripContentSheet (http://localhost:5173/src/components/TripContentSheet.tsx:13:36)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at App (http://localhost:5173/src/App.tsx?t=1787788546408:93:443)\\n    at ErrorBoundary (h",
+        "[error] %o\n\n%s\n\n%s\n {} The above error occurred in the <ExpenseList> component. React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.",
+        "[error] React Crash: useHistoryBack is not defined",
+        "[error] Uncaught error inside ErrorBoundary: {} {\"componentStack\":\"\\n    at ExpenseList (http://localhost:5173/src/components/ExpenseList.tsx?t=1787789092846:87:31)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at main (<anonymous>)\\n    at div (<anonymous>)\\n    at TripContentSheet (http://localhost:5173/src/components/TripContentSheet.tsx:13:36)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at App (http://localhost:5173/src/App.tsx?t=1787788546408:93:443)\\n    at ErrorBoundary (h",
+        "[error] %o\n\n%s\n\n%s\n {} The above error occurred in the <ExpenseList> component. React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.",
+        "[error] React Crash: showFilterDrawer is not defined",
+        "[error] Uncaught error inside ErrorBoundary: {} {\"componentStack\":\"\\n    at ExpenseList (http://localhost:5173/src/components/ExpenseList.tsx?t=1787789101765:87:31)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at main (<anonymous>)\\n    at div (<anonymous>)\\n    at TripContentSheet (http://localhost:5173/src/components/TripContentSheet.tsx:13:36)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at App (http://localhost:5173/src/App.tsx?t=1787788546408:93:443)\\n    at ErrorBoundary (h"
+      ],
+      "syncQueueLength": 0
+    },
+    "createdAt": "2026-08-27T00:05:02.070735+00:00",
+    "updatedAt": "2026-08-27T00:05:02.070735+00:00"
+  },
+  {
+    "id": "BUG-087",
+    "title": "usePrivacyStore is not defined",
+    "description": "Automatically captured react crash.\n\nReferenceError: usePrivacyStore is not defined\n    at App (http://localhost:5173/src/App.tsx?t=1787790279440:99:22)\n    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:12864:12)\n    at renderWithHooks (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:4211:19)\n    at updateFunctionComponent (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:5567:16)\n    at beginWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:6138:20)\n    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:850:66)\n    at performUnitOfWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:8427:92)\n    at workLoopSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:8323:37)\n    at renderRootSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:8307:6)\n    at performWorkOnRoot (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:7992:27)",
+    "severity": "critical",
+    "category": "general",
+    "status": "open",
+    "foundBy": "auto-crash-handler",
+    "environment": {
+      "route": "#nav-1",
+      "isOnline": true,
+      "platform": "web",
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [],
+    "expectedBehavior": "App runs without throwing.",
+    "actualBehavior": "usePrivacyStore is not defined",
+    "diagnostics": {
+      "stackTrace": "ReferenceError: usePrivacyStore is not defined\n    at App (http://localhost:5173/src/App.tsx?t=1787790279440:99:22)\n    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:12864:12)\n    at renderWithHooks (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:4211:19)\n    at updateFunctionComponent (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:5567:16)\n    at beginWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:6138:20)\n    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:850:66)\n    at performUnitOfWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:8427:92)\n    at workLoopSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:8323:37)\n    at renderRootSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:8307:6)\n    at performWorkOnRoot (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:7992:27)",
+      "consoleLogs": [
+        "[info] DiagnosticLogger initialized",
+        "[warn] Image \"atm\" could not be loaded. Please make sure you have added the image before it is needed with map.addImage(), resolved it with map.setMissingStyleImageResolver(), or included it in a \"sprite\" property in your style.",
+        "[warn] Image \"swimming_pool\" could not be loaded. Please make sure you have added the image before it is needed with map.addImage(), resolved it with map.setMissingStyleImageResolver(), or included it in a \"sprite\" property in your style.",
+        "[warn] Image \"gate\" could not be loaded. Please make sure you have added the image before it is needed with map.addImage(), resolved it with map.setMissingStyleImageResolver(), or included it in a \"sprite\" property in your style.",
+        "[error] %o\n\n%s\n\n%s\n {} The above error occurred in the <App> component. React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.",
+        "[error] React Crash: usePrivacyStore is not defined",
+        "[error] Uncaught error inside ErrorBoundary: {} {\"componentStack\":\"\\n    at App (http://localhost:5173/src/App.tsx?t=1787790279440:92:443)\\n    at ErrorBoundary (http://localhost:5173/src/components/ErrorBoundary.tsx:6:8)\\n    at RequireAuth (http://localhost:5173/src/components/RequireAuth.tsx:8:31)\\n    at RenderedRoute (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=b89a0147:4156:26)\\n    at Routes (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=b89a0147:4836"
+      ],
+      "syncQueueLength": 0
+    },
+    "createdAt": "2026-08-27T00:24:40.236554+00:00",
+    "updatedAt": "2026-08-27T00:24:40.236554+00:00"
+  },
+  {
+    "id": "BUG-088",
+    "title": "isBlindMode is not defined",
+    "description": "Automatically captured react crash.\n\nReferenceError: isBlindMode is not defined\n    at App (http://localhost:5173/src/App.tsx?t=1787790288410:1457:31)\n    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:12864:12)\n    at renderWithHooks (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:4211:19)\n    at updateFunctionComponent (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:5567:16)\n    at beginWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:6138:20)\n    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:850:66)\n    at performUnitOfWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:8427:92)\n    at workLoopSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:8323:37)\n    at renderRootSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:8307:6)\n    at performWorkOnRoot (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:7992:27)",
+    "severity": "critical",
+    "category": "general",
+    "status": "open",
+    "foundBy": "auto-crash-handler",
+    "environment": {
+      "route": "#nav-1",
+      "isOnline": true,
+      "platform": "web",
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [],
+    "expectedBehavior": "App runs without throwing.",
+    "actualBehavior": "isBlindMode is not defined",
+    "diagnostics": {
+      "stackTrace": "ReferenceError: isBlindMode is not defined\n    at App (http://localhost:5173/src/App.tsx?t=1787790288410:1457:31)\n    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:12864:12)\n    at renderWithHooks (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:4211:19)\n    at updateFunctionComponent (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:5567:16)\n    at beginWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:6138:20)\n    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:850:66)\n    at performUnitOfWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:8427:92)\n    at workLoopSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:8323:37)\n    at renderRootSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:8307:6)\n    at performWorkOnRoot (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:7992:27)",
+      "consoleLogs": [
+        "[info] DiagnosticLogger initialized",
+        "[warn] Image \"atm\" could not be loaded. Please make sure you have added the image before it is needed with map.addImage(), resolved it with map.setMissingStyleImageResolver(), or included it in a \"sprite\" property in your style.",
+        "[warn] Image \"swimming_pool\" could not be loaded. Please make sure you have added the image before it is needed with map.addImage(), resolved it with map.setMissingStyleImageResolver(), or included it in a \"sprite\" property in your style.",
+        "[warn] Image \"gate\" could not be loaded. Please make sure you have added the image before it is needed with map.addImage(), resolved it with map.setMissingStyleImageResolver(), or included it in a \"sprite\" property in your style.",
+        "[error] %o\n\n%s\n\n%s\n {} The above error occurred in the <App> component. React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.",
+        "[error] React Crash: usePrivacyStore is not defined",
+        "[error] Uncaught error inside ErrorBoundary: {} {\"componentStack\":\"\\n    at App (http://localhost:5173/src/App.tsx?t=1787790279440:92:443)\\n    at ErrorBoundary (http://localhost:5173/src/components/ErrorBoundary.tsx:6:8)\\n    at RequireAuth (http://localhost:5173/src/components/RequireAuth.tsx:8:31)\\n    at RenderedRoute (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=b89a0147:4156:26)\\n    at Routes (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=b89a0147:4836",
+        "[error] %o\n\n%s\n\n%s\n {} The above error occurred in the <App> component. React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.",
+        "[error] React Crash: isBlindMode is not defined",
+        "[error] Uncaught error inside ErrorBoundary: {} {\"componentStack\":\"\\n    at App (http://localhost:5173/src/App.tsx?t=1787790288410:92:443)\\n    at ErrorBoundary (http://localhost:5173/src/components/ErrorBoundary.tsx:6:8)\\n    at RequireAuth (http://localhost:5173/src/components/RequireAuth.tsx:8:31)\\n    at RenderedRoute (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=b89a0147:4156:26)\\n    at Routes (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=b89a0147:4836"
+      ],
+      "syncQueueLength": 0
+    },
+    "createdAt": "2026-08-27T00:24:48.761292+00:00",
+    "updatedAt": "2026-08-27T00:24:48.761292+00:00"
+  },
+  {
+    "id": "BUG-089",
+    "title": "formatMaskedAmount is not defined",
+    "description": "Automatically captured react crash.\n\nReferenceError: formatMaskedAmount is not defined\n    at http://localhost:5173/src/components/BalancesSettlements.tsx?t=1787790491388:1209:31\n    at Array.map (<anonymous>)\n    at BalancesSettlements (http://localhost:5173/src/components/BalancesSettlements.tsx?t=1787790491388:1183:67)\n    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:12864:12)\n    at renderWithHooks (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:4211:19)\n    at updateFunctionComponent (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:5567:16)\n    at beginWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:6138:20)\n    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:850:66)\n    at performUnitOfWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:8427:92)\n    at workLoopSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:8323:37)",
+    "severity": "critical",
+    "category": "general",
+    "status": "open",
+    "foundBy": "auto-crash-handler",
+    "environment": {
+      "route": "#nav-1",
+      "isOnline": true,
+      "platform": "web",
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [],
+    "expectedBehavior": "App runs without throwing.",
+    "actualBehavior": "formatMaskedAmount is not defined",
+    "diagnostics": {
+      "stackTrace": "ReferenceError: formatMaskedAmount is not defined\n    at http://localhost:5173/src/components/BalancesSettlements.tsx?t=1787790491388:1209:31\n    at Array.map (<anonymous>)\n    at BalancesSettlements (http://localhost:5173/src/components/BalancesSettlements.tsx?t=1787790491388:1183:67)\n    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:12864:12)\n    at renderWithHooks (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:4211:19)\n    at updateFunctionComponent (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:5567:16)\n    at beginWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:6138:20)\n    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:850:66)\n    at performUnitOfWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:8427:92)\n    at workLoopSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:8323:37)",
+      "consoleLogs": [
+        "[error] %o\n\n%s\n\n%s\n {} The above error occurred in the <BalancesSettlements> component. React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.",
+        "[error] React Crash: usePrivacyStore is not defined",
+        "[error] Uncaught error inside ErrorBoundary: {} {\"componentStack\":\"\\n    at BalancesSettlements (http://localhost:5173/src/components/BalancesSettlements.tsx?t=1787790406631:1002:39)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at main (<anonymous>)\\n    at div (<anonymous>)\\n    at TripContentSheet (http://localhost:5173/src/components/TripContentSheet.tsx?t=1787790149379:22:36)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at App (http://localhost:5173/src/App.tsx?t=178779029385",
+        "[error] %o\n\n%s\n\n%s\n {} The above error occurred in the <BalancesSettlements> component. React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.",
+        "[error] React Crash: usePrivacyStore is not defined",
+        "[error] Uncaught error inside ErrorBoundary: {} {\"componentStack\":\"\\n    at BalancesSettlements (http://localhost:5173/src/components/BalancesSettlements.tsx?t=1787790417619:1002:39)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at main (<anonymous>)\\n    at div (<anonymous>)\\n    at TripContentSheet (http://localhost:5173/src/components/TripContentSheet.tsx?t=1787790149379:22:36)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at App (http://localhost:5173/src/App.tsx?t=178779029385",
+        "[error] %o\n\n%s\n\n%s\n {} The above error occurred in the <BalancesSettlements> component. React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.",
+        "[error] React Crash: usePrivacyStore is not defined",
+        "[error] Uncaught error inside ErrorBoundary: {} {\"componentStack\":\"\\n    at BalancesSettlements (http://localhost:5173/src/components/BalancesSettlements.tsx?t=1787790437471:1002:39)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at main (<anonymous>)\\n    at div (<anonymous>)\\n    at TripContentSheet (http://localhost:5173/src/components/TripContentSheet.tsx?t=1787790149379:22:36)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at App (http://localhost:5173/src/App.tsx?t=178779029385",
+        "[error] %o\n\n%s\n\n%s\n {} The above error occurred in the <BalancesSettlements> component. React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.",
+        "[error] React Crash: usePrivacyStore is not defined",
+        "[error] Uncaught error inside ErrorBoundary: {} {\"componentStack\":\"\\n    at BalancesSettlements (http://localhost:5173/src/components/BalancesSettlements.tsx?t=1787790443225:1002:39)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at main (<anonymous>)\\n    at div (<anonymous>)\\n    at TripContentSheet (http://localhost:5173/src/components/TripContentSheet.tsx?t=1787790149379:22:36)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at App (http://localhost:5173/src/App.tsx?t=178779029385",
+        "[error] %o\n\n%s\n\n%s\n {} The above error occurred in the <BalancesSettlements> component. React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.",
+        "[error] React Crash: usePrivacyStore is not defined",
+        "[error] Uncaught error inside ErrorBoundary: {} {\"componentStack\":\"\\n    at BalancesSettlements (http://localhost:5173/src/components/BalancesSettlements.tsx?t=1787790450421:1000:39)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at main (<anonymous>)\\n    at div (<anonymous>)\\n    at TripContentSheet (http://localhost:5173/src/components/TripContentSheet.tsx?t=1787790149379:22:36)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at App (http://localhost:5173/src/App.tsx?t=178779029385",
+        "[error] %o\n\n%s\n\n%s\n {} The above error occurred in the <BalancesSettlements> component. React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.",
+        "[error] React Crash: usePrivacyStore is not defined",
+        "[error] Uncaught error inside ErrorBoundary: {} {\"componentStack\":\"\\n    at BalancesSettlements (http://localhost:5173/src/components/BalancesSettlements.tsx?t=1787790456344:998:39)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at main (<anonymous>)\\n    at div (<anonymous>)\\n    at TripContentSheet (http://localhost:5173/src/components/TripContentSheet.tsx?t=1787790149379:22:36)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at App (http://localhost:5173/src/App.tsx?t=1787790293852",
+        "[error] %o\n\n%s\n\n%s\n {} The above error occurred in the <BalancesSettlements> component. React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.",
+        "[error] React Crash: usePrivacyStore is not defined",
+        "[error] Uncaught error inside ErrorBoundary: {} {\"componentStack\":\"\\n    at BalancesSettlements (http://localhost:5173/src/components/BalancesSettlements.tsx?t=1787790461561:997:39)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at main (<anonymous>)\\n    at div (<anonymous>)\\n    at TripContentSheet (http://localhost:5173/src/components/TripContentSheet.tsx?t=1787790149379:22:36)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at App (http://localhost:5173/src/App.tsx?t=1787790293852",
+        "[error] %o\n\n%s\n\n%s\n {} The above error occurred in the <BalancesSettlements> component. React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.",
+        "[error] React Crash: usePrivacyStore is not defined",
+        "[error] Uncaught error inside ErrorBoundary: {} {\"componentStack\":\"\\n    at BalancesSettlements (http://localhost:5173/src/components/BalancesSettlements.tsx?t=1787790466713:996:39)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at main (<anonymous>)\\n    at div (<anonymous>)\\n    at TripContentSheet (http://localhost:5173/src/components/TripContentSheet.tsx?t=1787790149379:22:36)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at App (http://localhost:5173/src/App.tsx?t=1787790293852",
+        "[error] %o\n\n%s\n\n%s\n {} The above error occurred in the <BalancesSettlements> component. React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.",
+        "[error] React Crash: usePrivacyStore is not defined",
+        "[error] Uncaught error inside ErrorBoundary: {} {\"componentStack\":\"\\n    at BalancesSettlements (http://localhost:5173/src/components/BalancesSettlements.tsx?t=1787790474051:990:39)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at main (<anonymous>)\\n    at div (<anonymous>)\\n    at TripContentSheet (http://localhost:5173/src/components/TripContentSheet.tsx?t=1787790149379:22:36)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at App (http://localhost:5173/src/App.tsx?t=1787790293852",
+        "[error] %o\n\n%s\n\n%s\n {} The above error occurred in the <BalancesSettlements> component. React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.",
+        "[error] React Crash: formatMaskedAmount is not defined",
+        "[error] Uncaught error inside ErrorBoundary: {} {\"componentStack\":\"\\n    at BalancesSettlements (http://localhost:5173/src/components/BalancesSettlements.tsx?t=1787790491388:990:39)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at main (<anonymous>)\\n    at div (<anonymous>)\\n    at TripContentSheet (http://localhost:5173/src/components/TripContentSheet.tsx?t=1787790149379:22:36)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at App (http://localhost:5173/src/App.tsx?t=1787790293852"
+      ],
+      "syncQueueLength": 0
+    },
+    "createdAt": "2026-08-27T00:28:12.116358+00:00",
+    "updatedAt": "2026-08-27T00:28:12.116358+00:00"
   },
   {
     "id": "BUG-090",
@@ -2225,8 +2873,8 @@
     "status": "resolved",
     "foundBy": "claude-cli",
     "environment": {
-      "platform": "web",
       "isOnline": true,
+      "platform": "web",
       "appVersion": "1.0.0"
     },
     "reproSteps": [
@@ -2236,10 +2884,10 @@
     "expectedBehavior": "",
     "actualBehavior": "",
     "diagnostics": {},
-    "createdAt": "2026-08-27T00:41:15.355Z",
-    "updatedAt": "2026-08-27T00:41:24.401Z",
+    "createdAt": "2026-08-27T00:41:15.355+00:00",
+    "updatedAt": "2026-08-27T00:41:24.401+00:00",
+    "resolvedAt": "2026-08-27T00:41:24.401+00:00",
     "resolvedBy": "claude-cli",
-    "resolvedAt": "2026-08-27T00:41:24.401Z",
     "resolutionNote": "AdminFlagsPage.tsx: dedup member list by linkedUserId and key the per-member override picker/writes by linkedUserId (matching the server's auth.uid() check) instead of the trip-row member.id."
   },
   {
@@ -2251,8 +2899,8 @@
     "status": "resolved",
     "foundBy": "claude-cli",
     "environment": {
-      "platform": "web",
       "isOnline": true,
+      "platform": "web",
       "appVersion": "1.0.0"
     },
     "reproSteps": [
@@ -2262,10 +2910,10 @@
     "expectedBehavior": "",
     "actualBehavior": "",
     "diagnostics": {},
-    "createdAt": "2026-08-27T00:41:33.189Z",
-    "updatedAt": "2026-08-27T00:41:40.275Z",
+    "createdAt": "2026-08-27T00:41:33.189+00:00",
+    "updatedAt": "2026-08-27T00:41:40.275+00:00",
+    "resolvedAt": "2026-08-27T00:41:40.275+00:00",
     "resolvedBy": "claude-cli",
-    "resolvedAt": "2026-08-27T00:41:40.275Z",
     "resolutionNote": "Replaced the pull-reveal gesture with an explicit Filters button opening a visible full-screen drawer (ExpenseFilterDrawer.tsx), wired to useHistoryBack/useEscapeKey so back/Esc closes the drawer and lands back on Expenses."
   },
   {
@@ -2277,8 +2925,8 @@
     "status": "resolved",
     "foundBy": "claude-cli",
     "environment": {
-      "platform": "web",
       "isOnline": true,
+      "platform": "web",
       "appVersion": "1.0.0"
     },
     "reproSteps": [
@@ -2288,10 +2936,10 @@
     "expectedBehavior": "",
     "actualBehavior": "",
     "diagnostics": {},
-    "createdAt": "2026-08-27T00:41:48.702Z",
-    "updatedAt": "2026-08-27T00:41:56.652Z",
+    "createdAt": "2026-08-27T00:41:48.702+00:00",
+    "updatedAt": "2026-08-27T00:41:56.652+00:00",
+    "resolvedAt": "2026-08-27T00:41:56.651+00:00",
     "resolvedBy": "claude-cli",
-    "resolvedAt": "2026-08-27T00:41:56.651Z",
     "resolutionNote": "Lifted the filter drawer's render + open/close state from ExpenseList up to App.tsx, rendering it as a sibling of ExpenseForm/ExpenseReviewModal outside TripContentSheet entirely, matching the pattern those unaffected modals already used."
   },
   {
@@ -2303,8 +2951,8 @@
     "status": "resolved",
     "foundBy": "claude-cli",
     "environment": {
-      "platform": "web",
       "isOnline": true,
+      "platform": "web",
       "appVersion": "1.0.0"
     },
     "reproSteps": [
@@ -2314,10 +2962,10 @@
     "expectedBehavior": "",
     "actualBehavior": "",
     "diagnostics": {},
-    "createdAt": "2026-08-27T00:42:04.651Z",
-    "updatedAt": "2026-08-27T00:42:11.203Z",
+    "createdAt": "2026-08-27T00:42:04.651+00:00",
+    "updatedAt": "2026-08-27T00:42:11.203+00:00",
+    "resolvedAt": "2026-08-27T00:42:11.202+00:00",
     "resolvedBy": "claude-cli",
-    "resolvedAt": "2026-08-27T00:42:11.202Z",
     "resolutionNote": "Filter-drawer open state moved from ExpenseList to App.tsx (same lift as BUG-092); every cross-link handler now explicitly closes it before switching tabs."
   },
   {
@@ -2329,8 +2977,8 @@
     "status": "resolved",
     "foundBy": "claude-cli",
     "environment": {
-      "platform": "web",
       "isOnline": true,
+      "platform": "web",
       "appVersion": "1.0.0"
     },
     "reproSteps": [
@@ -2340,10 +2988,10 @@
     "expectedBehavior": "",
     "actualBehavior": "",
     "diagnostics": {},
-    "createdAt": "2026-08-27T00:42:19.266Z",
-    "updatedAt": "2026-08-27T00:42:25.987Z",
+    "createdAt": "2026-08-27T00:42:19.266+00:00",
+    "updatedAt": "2026-08-27T00:42:25.987+00:00",
+    "resolvedAt": "2026-08-27T00:42:25.985+00:00",
     "resolvedBy": "claude-cli",
-    "resolvedAt": "2026-08-27T00:42:25.985Z",
     "resolutionNote": "ExpenseForm.tsx now always converts to base currency at save time (not gated on the button click) and passes the actually-selected currency through; App.tsx's handleSaveExpense uses that instead of hardcoding the trip's base currency."
   },
   {
@@ -2355,8 +3003,8 @@
     "status": "resolved",
     "foundBy": "claude-cli",
     "environment": {
-      "platform": "web",
       "isOnline": true,
+      "platform": "web",
       "appVersion": "1.0.0"
     },
     "reproSteps": [
@@ -2366,10 +3014,10 @@
     "expectedBehavior": "",
     "actualBehavior": "",
     "diagnostics": {},
-    "createdAt": "2026-08-27T00:42:35.183Z",
-    "updatedAt": "2026-08-27T00:42:42.730Z",
+    "createdAt": "2026-08-27T00:42:35.183+00:00",
+    "updatedAt": "2026-08-27T00:42:42.73+00:00",
+    "resolvedAt": "2026-08-27T00:42:42.729+00:00",
     "resolvedBy": "claude-cli",
-    "resolvedAt": "2026-08-27T00:42:42.729Z",
     "resolutionNote": "Removed Blind Mode entirely per product decision: deleted privacyStore.ts, the header eye-icon toggle, every formatMaskedAmount/.privacy-blur usage across 8 files, replaced with a plain formatAmount() in utils/currency.ts."
   },
   {
@@ -2381,8 +3029,8 @@
     "status": "resolved",
     "foundBy": "claude-cli",
     "environment": {
-      "platform": "web",
       "isOnline": true,
+      "platform": "web",
       "appVersion": "1.0.0"
     },
     "reproSteps": [
@@ -2392,11 +3040,184 @@
     "expectedBehavior": "",
     "actualBehavior": "",
     "diagnostics": {},
-    "createdAt": "2026-08-27T00:42:50.644Z",
-    "updatedAt": "2026-08-27T00:42:57.282Z",
+    "createdAt": "2026-08-27T00:42:50.644+00:00",
+    "updatedAt": "2026-08-27T00:42:57.282+00:00",
+    "resolvedAt": "2026-08-27T00:42:57.281+00:00",
     "resolvedBy": "claude-cli",
-    "resolvedAt": "2026-08-27T00:42:57.281Z",
     "resolutionNote": "Removed the standalone refresh icon button; merged its refreshActiveTripExpenses() pull into handleSyncClick() so the 'Synced' pill now does both push (processQueue) and pull in one tap."
+  },
+  {
+    "id": "BUG-097",
+    "title": "categoryIsDominant is not defined",
+    "description": "Automatically captured react crash.\n\nReferenceError: categoryIsDominant is not defined\n    at BoardingPassHeroCard (http://localhost:5173/src/components/BoardingPassHeroCard.tsx?t=1787802890246:36:25)\n    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=d5bafc93:12864:12)\n    at renderWithHooks (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=d5bafc93:4211:19)\n    at updateFunctionComponent (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=d5bafc93:5567:16)\n    at beginWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=d5bafc93:6138:20)\n    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=d5bafc93:850:66)\n    at performUnitOfWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=d5bafc93:8427:92)\n    at workLoopSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=d5bafc93:8323:37)\n    at renderRootSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=d5bafc93:8307:6)\n    at performWorkOnRoot (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=d5bafc93:7992:27)",
+    "severity": "critical",
+    "category": "general",
+    "status": "open",
+    "foundBy": "auto-crash-handler",
+    "environment": {
+      "route": "#nav-1",
+      "isOnline": true,
+      "platform": "web",
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [],
+    "expectedBehavior": "App runs without throwing.",
+    "actualBehavior": "categoryIsDominant is not defined",
+    "diagnostics": {
+      "stackTrace": "ReferenceError: categoryIsDominant is not defined\n    at BoardingPassHeroCard (http://localhost:5173/src/components/BoardingPassHeroCard.tsx?t=1787802890246:36:25)\n    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=d5bafc93:12864:12)\n    at renderWithHooks (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=d5bafc93:4211:19)\n    at updateFunctionComponent (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=d5bafc93:5567:16)\n    at beginWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=d5bafc93:6138:20)\n    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=d5bafc93:850:66)\n    at performUnitOfWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=d5bafc93:8427:92)\n    at workLoopSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=d5bafc93:8323:37)\n    at renderRootSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=d5bafc93:8307:6)\n    at performWorkOnRoot (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=d5bafc93:7992:27)",
+      "consoleLogs": [
+        "[info] DiagnosticLogger initialized",
+        "[error] %o\n\n%s\n\n%s\n {} The above error occurred in the <BoardingPassHeroCard> component. React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.",
+        "[error] React Crash: categoryIsDominant is not defined",
+        "[error] Uncaught error inside ErrorBoundary: {} {\"componentStack\":\"\\n    at BoardingPassHeroCard (http://localhost:5173/src/components/BoardingPassHeroCard.tsx?t=1787802890246:9:40)\\n    at div (<anonymous>)\\n    at BalancesSettlements (http://localhost:5173/src/components/BalancesSettlements.tsx:990:39)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at main (<anonymous>)\\n    at div (<anonymous>)\\n    at TripContentSheet (http://localhost:5173/src/components/TripContentSheet.tsx:36:36)\\n    a"
+      ],
+      "syncQueueLength": 0
+    },
+    "createdAt": "2026-08-27T03:54:51.695554+00:00",
+    "updatedAt": "2026-08-27T03:54:51.695554+00:00"
+  },
+  {
+    "id": "BUG-098",
+    "title": "topTransfer is not defined",
+    "description": "Automatically captured react crash.\n\nReferenceError: topTransfer is not defined\n    at BoardingPassHeroCard (http://localhost:5173/src/components/BoardingPassHeroCard.tsx?t=1787802897033:181:88)\n    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=d5bafc93:12864:12)\n    at renderWithHooks (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=d5bafc93:4211:19)\n    at updateFunctionComponent (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=d5bafc93:5567:16)\n    at beginWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=d5bafc93:6138:20)\n    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=d5bafc93:850:66)\n    at performUnitOfWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=d5bafc93:8427:92)\n    at workLoopSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=d5bafc93:8323:37)\n    at renderRootSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=d5bafc93:8307:6)\n    at performWorkOnRoot (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=d5bafc93:7992:27)",
+    "severity": "critical",
+    "category": "general",
+    "status": "open",
+    "foundBy": "auto-crash-handler",
+    "environment": {
+      "route": "#nav-1",
+      "isOnline": true,
+      "platform": "web",
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [],
+    "expectedBehavior": "App runs without throwing.",
+    "actualBehavior": "topTransfer is not defined",
+    "diagnostics": {
+      "stackTrace": "ReferenceError: topTransfer is not defined\n    at BoardingPassHeroCard (http://localhost:5173/src/components/BoardingPassHeroCard.tsx?t=1787802897033:181:88)\n    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=d5bafc93:12864:12)\n    at renderWithHooks (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=d5bafc93:4211:19)\n    at updateFunctionComponent (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=d5bafc93:5567:16)\n    at beginWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=d5bafc93:6138:20)\n    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=d5bafc93:850:66)\n    at performUnitOfWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=d5bafc93:8427:92)\n    at workLoopSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=d5bafc93:8323:37)\n    at renderRootSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=d5bafc93:8307:6)\n    at performWorkOnRoot (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=d5bafc93:7992:27)",
+      "consoleLogs": [
+        "[info] DiagnosticLogger initialized",
+        "[error] %o\n\n%s\n\n%s\n {} The above error occurred in the <BoardingPassHeroCard> component. React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.",
+        "[error] React Crash: categoryIsDominant is not defined",
+        "[error] Uncaught error inside ErrorBoundary: {} {\"componentStack\":\"\\n    at BoardingPassHeroCard (http://localhost:5173/src/components/BoardingPassHeroCard.tsx?t=1787802890246:9:40)\\n    at div (<anonymous>)\\n    at BalancesSettlements (http://localhost:5173/src/components/BalancesSettlements.tsx:990:39)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at main (<anonymous>)\\n    at div (<anonymous>)\\n    at TripContentSheet (http://localhost:5173/src/components/TripContentSheet.tsx:36:36)\\n    a",
+        "[error] %o\n\n%s\n\n%s\n {} The above error occurred in the <BoardingPassHeroCard> component. React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.",
+        "[error] React Crash: topTransfer is not defined",
+        "[error] Uncaught error inside ErrorBoundary: {} {\"componentStack\":\"\\n    at BoardingPassHeroCard (http://localhost:5173/src/components/BoardingPassHeroCard.tsx?t=1787802897033:9:40)\\n    at div (<anonymous>)\\n    at BalancesSettlements (http://localhost:5173/src/components/BalancesSettlements.tsx:990:39)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at main (<anonymous>)\\n    at div (<anonymous>)\\n    at TripContentSheet (http://localhost:5173/src/components/TripContentSheet.tsx:36:36)\\n    a"
+      ],
+      "syncQueueLength": 0
+    },
+    "createdAt": "2026-08-27T03:54:56.801416+00:00",
+    "updatedAt": "2026-08-27T03:54:56.801416+00:00"
+  },
+  {
+    "id": "BUG-099",
+    "title": "TripJourneyMap is not defined",
+    "description": "Automatically captured react crash.\n\nReferenceError: TripJourneyMap is not defined\n    at AnalyticsTab (http://localhost:5173/src/components/AnalyticsTab.tsx?t=1787804859092:391:30)\n    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=f297417f:12864:12)\n    at renderWithHooks (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=f297417f:4211:19)\n    at updateFunctionComponent (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=f297417f:5567:16)\n    at beginWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=f297417f:6138:20)\n    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=f297417f:850:66)\n    at performUnitOfWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=f297417f:8427:92)\n    at workLoopSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=f297417f:8323:37)\n    at renderRootSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=f297417f:8307:6)\n    at performWorkOnRoot (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=f297417f:7992:27)",
+    "severity": "critical",
+    "category": "general",
+    "status": "open",
+    "foundBy": "auto-crash-handler",
+    "environment": {
+      "route": "#nav-3",
+      "isOnline": true,
+      "platform": "web",
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [],
+    "expectedBehavior": "App runs without throwing.",
+    "actualBehavior": "TripJourneyMap is not defined",
+    "diagnostics": {
+      "stackTrace": "ReferenceError: TripJourneyMap is not defined\n    at AnalyticsTab (http://localhost:5173/src/components/AnalyticsTab.tsx?t=1787804859092:391:30)\n    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=f297417f:12864:12)\n    at renderWithHooks (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=f297417f:4211:19)\n    at updateFunctionComponent (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=f297417f:5567:16)\n    at beginWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=f297417f:6138:20)\n    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=f297417f:850:66)\n    at performUnitOfWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=f297417f:8427:92)\n    at workLoopSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=f297417f:8323:37)\n    at renderRootSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=f297417f:8307:6)\n    at performWorkOnRoot (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=f297417f:7992:27)",
+      "consoleLogs": [
+        "[info] DiagnosticLogger initialized",
+        "[warn] Image \"atm\" could not be loaded. Please make sure you have added the image before it is needed with map.addImage(), resolved it with map.setMissingStyleImageResolver(), or included it in a \"sprite\" property in your style.",
+        "[warn] Image \"swimming_pool\" could not be loaded. Please make sure you have added the image before it is needed with map.addImage(), resolved it with map.setMissingStyleImageResolver(), or included it in a \"sprite\" property in your style.",
+        "[warn] Image \"gate\" could not be loaded. Please make sure you have added the image before it is needed with map.addImage(), resolved it with map.setMissingStyleImageResolver(), or included it in a \"sprite\" property in your style.",
+        "[error] %o\n\n%s\n\n%s\n {} The above error occurred in the <AnalyticsTab> component. React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.",
+        "[error] React Crash: TripJourneyMap is not defined",
+        "[error] Uncaught error inside ErrorBoundary: {} {\"componentStack\":\"\\n    at AnalyticsTab (http://localhost:5173/src/components/AnalyticsTab.tsx?t=1787804859092:8:32)\\n    at div (<anonymous>)\\n    at SettingsView (http://localhost:5173/src/components/SettingsView.tsx:50:32)\\n    at SettingsTab (http://localhost:5173/src/components/SettingsTab.tsx:4:31)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at main (<anonymous>)\\n    at div (<anonymous>)\\n    at TripContentSheet (http://localhost:5173/"
+      ],
+      "syncQueueLength": 0
+    },
+    "createdAt": "2026-08-27T04:27:40.525775+00:00",
+    "updatedAt": "2026-08-27T04:27:40.525775+00:00"
+  },
+  {
+    "id": "BUG-100",
+    "title": "AnalyticsTab is not defined",
+    "description": "Automatically captured react crash.\n\nReferenceError: AnalyticsTab is not defined\n    at App (http://localhost:5173/src/App.tsx?t=1787804917669:2128:45)\n    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=f297417f:12864:12)\n    at renderWithHooks (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=f297417f:4211:19)\n    at updateFunctionComponent (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=f297417f:5567:16)\n    at beginWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=f297417f:6138:20)\n    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=f297417f:850:66)\n    at performUnitOfWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=f297417f:8427:92)\n    at workLoopSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=f297417f:8323:37)\n    at renderRootSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=f297417f:8307:6)\n    at performWorkOnRoot (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=f297417f:7992:27)",
+    "severity": "critical",
+    "category": "general",
+    "status": "open",
+    "foundBy": "auto-crash-handler",
+    "environment": {
+      "route": "#nav-1",
+      "isOnline": true,
+      "platform": "web",
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [],
+    "expectedBehavior": "App runs without throwing.",
+    "actualBehavior": "AnalyticsTab is not defined",
+    "diagnostics": {
+      "stackTrace": "ReferenceError: AnalyticsTab is not defined\n    at App (http://localhost:5173/src/App.tsx?t=1787804917669:2128:45)\n    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=f297417f:12864:12)\n    at renderWithHooks (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=f297417f:4211:19)\n    at updateFunctionComponent (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=f297417f:5567:16)\n    at beginWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=f297417f:6138:20)\n    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=f297417f:850:66)\n    at performUnitOfWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=f297417f:8427:92)\n    at workLoopSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=f297417f:8323:37)\n    at renderRootSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=f297417f:8307:6)\n    at performWorkOnRoot (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=f297417f:7992:27)",
+      "consoleLogs": [
+        "[info] DiagnosticLogger initialized",
+        "[warn] Image \"atm\" could not be loaded. Please make sure you have added the image before it is needed with map.addImage(), resolved it with map.setMissingStyleImageResolver(), or included it in a \"sprite\" property in your style.",
+        "[warn] Image \"swimming_pool\" could not be loaded. Please make sure you have added the image before it is needed with map.addImage(), resolved it with map.setMissingStyleImageResolver(), or included it in a \"sprite\" property in your style.",
+        "[warn] Image \"gate\" could not be loaded. Please make sure you have added the image before it is needed with map.addImage(), resolved it with map.setMissingStyleImageResolver(), or included it in a \"sprite\" property in your style.",
+        "[error] %o\n\n%s\n\n%s\n {} The above error occurred in the <AnalyticsTab> component. React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.",
+        "[error] React Crash: TripJourneyMap is not defined",
+        "[error] Uncaught error inside ErrorBoundary: {} {\"componentStack\":\"\\n    at AnalyticsTab (http://localhost:5173/src/components/AnalyticsTab.tsx?t=1787804859092:8:32)\\n    at div (<anonymous>)\\n    at SettingsView (http://localhost:5173/src/components/SettingsView.tsx:50:32)\\n    at SettingsTab (http://localhost:5173/src/components/SettingsTab.tsx:4:31)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at main (<anonymous>)\\n    at div (<anonymous>)\\n    at TripContentSheet (http://localhost:5173/",
+        "[error] [vite] Failed to reload /src/components/AnalyticsTab.tsx. This could be due to syntax errors or importing non-existent modules. (see errors above)",
+        "[error] %o\n\n%s\n\n%s\n {} The above error occurred in the <App> component. React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.",
+        "[error] React Crash: AnalyticsTab is not defined",
+        "[error] Uncaught error inside ErrorBoundary: {} {\"componentStack\":\"\\n    at App (http://localhost:5173/src/App.tsx?t=1787804917669:93:443)\\n    at ErrorBoundary (http://localhost:5173/src/components/ErrorBoundary.tsx:6:8)\\n    at RequireAuth (http://localhost:5173/src/components/RequireAuth.tsx:8:31)\\n    at RenderedRoute (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=f297417f:4156:26)\\n    at Routes (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=f297417f:4836"
+      ],
+      "syncQueueLength": 0
+    },
+    "createdAt": "2026-08-27T04:28:37.885335+00:00",
+    "updatedAt": "2026-08-27T04:28:37.885335+00:00"
+  },
+  {
+    "id": "BUG-101",
+    "title": "analytics is not defined",
+    "description": "Automatically captured react crash.\n\nReferenceError: analytics is not defined\n    at SettingsTab (http://localhost:5173/src/components/SettingsTab.tsx?t=1787804952976:36:3)\n    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=f297417f:12864:12)\n    at renderWithHooks (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=f297417f:4211:19)\n    at updateFunctionComponent (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=f297417f:5567:16)\n    at beginWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=f297417f:6138:20)\n    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=f297417f:850:66)\n    at performUnitOfWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=f297417f:8427:92)\n    at workLoopSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=f297417f:8323:37)\n    at renderRootSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=f297417f:8307:6)\n    at performWorkOnRoot (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=f297417f:7992:27)",
+    "severity": "critical",
+    "category": "general",
+    "status": "open",
+    "foundBy": "auto-crash-handler",
+    "environment": {
+      "route": "#nav-1",
+      "isOnline": true,
+      "platform": "web",
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [],
+    "expectedBehavior": "App runs without throwing.",
+    "actualBehavior": "analytics is not defined",
+    "diagnostics": {
+      "stackTrace": "ReferenceError: analytics is not defined\n    at SettingsTab (http://localhost:5173/src/components/SettingsTab.tsx?t=1787804952976:36:3)\n    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=f297417f:12864:12)\n    at renderWithHooks (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=f297417f:4211:19)\n    at updateFunctionComponent (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=f297417f:5567:16)\n    at beginWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=f297417f:6138:20)\n    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=f297417f:850:66)\n    at performUnitOfWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=f297417f:8427:92)\n    at workLoopSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=f297417f:8323:37)\n    at renderRootSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=f297417f:8307:6)\n    at performWorkOnRoot (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=f297417f:7992:27)",
+      "consoleLogs": [
+        "[info] DiagnosticLogger initialized",
+        "[warn] Image \"atm\" could not be loaded. Please make sure you have added the image before it is needed with map.addImage(), resolved it with map.setMissingStyleImageResolver(), or included it in a \"sprite\" property in your style.",
+        "[warn] Image \"swimming_pool\" could not be loaded. Please make sure you have added the image before it is needed with map.addImage(), resolved it with map.setMissingStyleImageResolver(), or included it in a \"sprite\" property in your style.",
+        "[warn] Image \"gate\" could not be loaded. Please make sure you have added the image before it is needed with map.addImage(), resolved it with map.setMissingStyleImageResolver(), or included it in a \"sprite\" property in your style.",
+        "[error] %o\n\n%s\n\n%s\n {} The above error occurred in the <AnalyticsTab> component. React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.",
+        "[error] React Crash: TripJourneyMap is not defined",
+        "[error] Uncaught error inside ErrorBoundary: {} {\"componentStack\":\"\\n    at AnalyticsTab (http://localhost:5173/src/components/AnalyticsTab.tsx?t=1787804859092:8:32)\\n    at div (<anonymous>)\\n    at SettingsView (http://localhost:5173/src/components/SettingsView.tsx:50:32)\\n    at SettingsTab (http://localhost:5173/src/components/SettingsTab.tsx:4:31)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at main (<anonymous>)\\n    at div (<anonymous>)\\n    at TripContentSheet (http://localhost:5173/",
+        "[error] [vite] Failed to reload /src/components/AnalyticsTab.tsx. This could be due to syntax errors or importing non-existent modules. (see errors above)",
+        "[error] %o\n\n%s\n\n%s\n {} The above error occurred in the <App> component. React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.",
+        "[error] React Crash: AnalyticsTab is not defined",
+        "[error] Uncaught error inside ErrorBoundary: {} {\"componentStack\":\"\\n    at App (http://localhost:5173/src/App.tsx?t=1787804917669:93:443)\\n    at ErrorBoundary (http://localhost:5173/src/components/ErrorBoundary.tsx:6:8)\\n    at RequireAuth (http://localhost:5173/src/components/RequireAuth.tsx:8:31)\\n    at RenderedRoute (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=f297417f:4156:26)\\n    at Routes (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=f297417f:4836",
+        "[error] %o\n\n%s\n\n%s\n {} The above error occurred in the <SettingsTab> component. React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.",
+        "[error] React Crash: analytics is not defined",
+        "[error] Uncaught error inside ErrorBoundary: {} {\"componentStack\":\"\\n    at SettingsTab (http://localhost:5173/src/components/SettingsTab.tsx?t=1787804952976:4:31)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at main (<anonymous>)\\n    at div (<anonymous>)\\n    at TripContentSheet (http://localhost:5173/src/components/TripContentSheet.tsx?t=1787804245137:55:36)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at App (http://localhost:5173/src/App.tsx?t=1787804933830:94:443)\\n    at E"
+      ],
+      "syncQueueLength": 0
+    },
+    "createdAt": "2026-08-27T04:29:12.732179+00:00",
+    "updatedAt": "2026-08-27T04:29:12.732179+00:00"
   },
   {
     "id": "BUG-102",
@@ -2407,8 +3228,8 @@
     "status": "resolved",
     "foundBy": "claude-cli",
     "environment": {
-      "platform": "web",
       "isOnline": true,
+      "platform": "web",
       "appVersion": "1.0.0"
     },
     "reproSteps": [
@@ -2418,10 +3239,10 @@
     "expectedBehavior": "Clicking a category's visible arc/legend routes to the Ledger filtered by that category.",
     "actualBehavior": "Clicking any category arc always filtered by the topmost-painted category.",
     "diagnostics": {},
-    "createdAt": "2026-08-27T04:34:47.074Z",
-    "updatedAt": "2026-08-27T04:34:54.123Z",
+    "createdAt": "2026-08-27T04:34:47.074+00:00",
+    "updatedAt": "2026-08-27T04:34:54.123+00:00",
+    "resolvedAt": "2026-08-27T04:34:54.122+00:00",
     "resolvedBy": "claude-cli",
-    "resolvedAt": "2026-08-27T04:34:54.122Z",
     "resolutionNote": "src/components/AnalyticsTab.tsx: changed the per-category donut arc circle's fill from transparent to none, so only the visible stroke ring is hit-tested."
   },
   {
@@ -2433,8 +3254,8 @@
     "status": "resolved",
     "foundBy": "claude-cli",
     "environment": {
-      "platform": "web",
       "isOnline": true,
+      "platform": "web",
       "appVersion": "1.0.0"
     },
     "reproSteps": [
@@ -2444,10 +3265,10 @@
     "expectedBehavior": "Stat labels are clearly legible in both light and dark mode.",
     "actualBehavior": "Labels rendered in a washed-out, hard-to-read gray in both themes.",
     "diagnostics": {},
-    "createdAt": "2026-08-27T04:35:02.658Z",
-    "updatedAt": "2026-08-27T04:35:09.703Z",
+    "createdAt": "2026-08-27T04:35:02.658+00:00",
+    "updatedAt": "2026-08-27T04:35:09.703+00:00",
+    "resolvedAt": "2026-08-27T04:35:09.702+00:00",
     "resolvedBy": "claude-cli",
-    "resolvedAt": "2026-08-27T04:35:09.702Z",
     "resolutionNote": "src/index.css: darkened --text-muted to #6B6E76 (light) and lightened to #8B8E96 (dark, both the media-query and explicit data-theme blocks), clearing 4.5:1 contrast in both themes. Fixed once at the token level so every consumer (Expenses stat strip, Analytics KPI cards, review modal, member details, etc.) benefits without per-component changes."
   },
   {
@@ -2459,8 +3280,8 @@
     "status": "resolved",
     "foundBy": "claude-cli",
     "environment": {
-      "platform": "web",
       "isOnline": true,
+      "platform": "web",
       "appVersion": "1.0.0"
     },
     "reproSteps": [
@@ -2470,10 +3291,10 @@
     "expectedBehavior": "Every day-group starts collapsed on entering the tab; the user expands the days they care about.",
     "actualBehavior": "The first 2 day-groups were expanded by default, showing all their transactions immediately.",
     "diagnostics": {},
-    "createdAt": "2026-08-27T04:35:18.940Z",
-    "updatedAt": "2026-08-27T04:35:24.965Z",
+    "createdAt": "2026-08-27T04:35:18.94+00:00",
+    "updatedAt": "2026-08-27T04:35:24.965+00:00",
+    "resolvedAt": "2026-08-27T04:35:24.963+00:00",
     "resolvedBy": "claude-cli",
-    "resolvedAt": "2026-08-27T04:35:24.963Z",
     "resolutionNote": "src/components/ExpenseList.tsx: DEFAULT_EXPANDED_DAYS changed from 2 to 0, so every day-group starts collapsed."
   },
   {
@@ -2485,8 +3306,8 @@
     "status": "resolved",
     "foundBy": "claude-cli",
     "environment": {
-      "platform": "web",
       "isOnline": true,
+      "platform": "web",
       "appVersion": "1.0.0"
     },
     "reproSteps": [
@@ -2496,10 +3317,10 @@
     "expectedBehavior": "",
     "actualBehavior": "",
     "diagnostics": {},
-    "createdAt": "2026-08-27T12:35:13.590Z",
-    "updatedAt": "2026-08-27T12:35:38.665Z",
+    "createdAt": "2026-08-27T12:35:13.59+00:00",
+    "updatedAt": "2026-08-27T12:35:38.665+00:00",
+    "resolvedAt": "2026-08-27T12:35:38.664+00:00",
     "resolvedBy": "claude-cli",
-    "resolvedAt": "2026-08-27T12:35:38.664Z",
     "resolutionNote": "Commit 725d094: useFocusTrap on 5 overlay dialogs (ExpenseFilterDrawer, AdminUsersPage broadcast drawer, SuperAdminBugTracker x3), :focus-visible/:focus-within on .filter-chip/.amount-hero, skip-to-content link + #main-content targets, aria-live on UpdateBanner + storage-error toast, consolidated 32 duplicate cubic-bezier literals onto --ease-decel/--ease-spring tokens."
   },
   {
@@ -2511,8 +3332,8 @@
     "status": "resolved",
     "foundBy": "claude-cli",
     "environment": {
-      "platform": "web",
       "isOnline": true,
+      "platform": "web",
       "appVersion": "1.0.0"
     },
     "reproSteps": [
@@ -2522,10 +3343,10 @@
     "expectedBehavior": "",
     "actualBehavior": "",
     "diagnostics": {},
-    "createdAt": "2026-08-27T12:56:07.286Z",
-    "updatedAt": "2026-08-27T12:56:29.387Z",
+    "createdAt": "2026-08-27T12:56:07.286+00:00",
+    "updatedAt": "2026-08-27T12:56:29.387+00:00",
+    "resolvedAt": "2026-08-27T12:56:29.386+00:00",
     "resolvedBy": "claude-cli",
-    "resolvedAt": "2026-08-27T12:56:29.386Z",
     "resolutionNote": "Commit f7503c7: id/htmlFor pairs on 45+ form fields across 15 files, fieldset/legend for button-group labels, aria-label on 3 icon-only dismiss buttons + new .dismiss-glyph-btn (24x24 AA) utility, --color-warning-text/--color-success-text tokens (~4.6-4.8:1) swapped into 5 small-text call sites failing AA contrast in light theme."
   },
   {
@@ -2537,8 +3358,8 @@
     "status": "resolved",
     "foundBy": "claude-cli",
     "environment": {
-      "platform": "web",
       "isOnline": true,
+      "platform": "web",
       "appVersion": "1.0.0"
     },
     "reproSteps": [
@@ -2548,10 +3369,10 @@
     "expectedBehavior": "",
     "actualBehavior": "",
     "diagnostics": {},
-    "createdAt": "2026-08-27T13:09:49.193Z",
-    "updatedAt": "2026-08-27T13:10:08.005Z",
+    "createdAt": "2026-08-27T13:09:49.193+00:00",
+    "updatedAt": "2026-08-27T13:10:08.005+00:00",
+    "resolvedAt": "2026-08-27T13:10:08.005+00:00",
     "resolvedBy": "claude-cli",
-    "resolvedAt": "2026-08-27T13:10:08.005Z",
     "resolutionNote": "Commit d19e36b: loadDemoTrip() now persists userId/userDisplayName (state.userId || effectiveUserId) so setError()'s isDemo suppression actually fires for the demo-mode cold-start path. Verified via Playwright: console.error+red toast before, console.warn+0 toasts after."
   },
   {
@@ -2563,8 +3384,8 @@
     "status": "resolved",
     "foundBy": "claude-cli",
     "environment": {
-      "platform": "web",
       "isOnline": true,
+      "platform": "web",
       "appVersion": "1.0.0"
     },
     "reproSteps": [
@@ -2574,10 +3395,10 @@
     "expectedBehavior": "",
     "actualBehavior": "",
     "diagnostics": {},
-    "createdAt": "2026-08-27T18:06:03.509Z",
-    "updatedAt": "2026-08-27T18:06:27.062Z",
+    "createdAt": "2026-08-27T18:06:03.509+00:00",
+    "updatedAt": "2026-08-27T18:06:27.062+00:00",
+    "resolvedAt": "2026-08-27T18:06:27.062+00:00",
     "resolvedBy": "claude-cli",
-    "resolvedAt": "2026-08-27T18:06:27.062Z",
     "resolutionNote": "Commit 1c9e46d + supabase migration 0071 (applied to production via supabase db push, verified live via pg_policy query). updateExpenseRow() now chains .select('id') and throws on 0-rows-affected so a silently-rejected write correctly stays dirty across refresh. RLS WITH CHECK on expenses UPDATE relaxed to match USING (admin-or-creator), dropping the extra 'must remain payer/split-member' requirement that permanently blocked non-admin authors from reassigning their own expense away from themselves. Regression test in src/services/tripApi.test.ts."
   },
   {
@@ -2607,5 +3428,33 @@
     "resolvedBy": "claude-cli",
     "resolvedAt": "2026-08-28T07:21:39.391Z",
     "resolutionNote": "Commit 529558d + supabase migration 0072. expenses.created_by_user_id relaxed to nullable with an ON DELETE SET NULL FK (mirroring members.linked_user_id), and delete_user() no longer raises an exception for accounts with expense history -- deleting the auth.users row now anonymizes (nulls out) authorship on their past expenses instead of being blocked. Expense content is untouched; permission checks comparing created_by_user_id = auth.uid() simply stop matching once null, leaving trip admins as the only ones who can still manage the expense. Also guarded AdminAnalyticsPage's retention-cohort active-user Set against null creator ids."
+  },
+  {
+    "id": "BUG-110",
+    "title": "Superadmin Users tab: Suspend/Delete errors were visually indistinguishable from success",
+    "description": "AdminUsersPage's toast (`.ops-toast`) always rendered with a green checkmark and safe/success styling regardless of whether the message was a success confirmation or a thrown error. Every failure path -- 'Superadmin access required.', 'Cannot suspend/delete a superadmin account.', the (since-fixed) expense-history block, or a network/RLS error -- displayed with the same checkmark, so a failed Suspend or Delete looked identical to a successful one. The same duplicated showToast/.ops-toast pattern with no error state existed in 5 other admin pages (Flags, Trips, Audit, Features, Tools).",
+    "severity": "medium",
+    "category": "general",
+    "status": "resolved",
+    "foundBy": "human",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Open Superadmin portal > Users",
+      "Click Suspend or Delete on a user where the RPC will reject (e.g. not currently a superadmin session, or a blocked case)",
+      "Observe toast renders with a green checkmark just like a successful action",
+      "Refresh the list -- the user's status never actually changed"
+    ],
+    "expectedBehavior": "A failed Suspend/Delete shows a visually distinct error toast (red, alert icon) with the real error message, so the admin knows the action did not happen.",
+    "actualBehavior": "Error and success toasts were styled identically (green check, .ops-toast), making every failure look like a success.",
+    "diagnostics": {},
+    "createdAt": "2026-08-28T10:44:50.689Z",
+    "updatedAt": "2026-08-28T10:44:50.689Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-08-28T10:44:50.689Z",
+    "resolutionNote": "AdminUsersPage.tsx: showToast(msg, isError) now tracks error state; toast renders IconAlertCircle + red '.ops-toast.error' styling (new class in ops-deck.css using existing --danger tokens) with role=\"alert\" on failure vs IconCheck/role=\"status\" on success. All 4 catch blocks (suspend, bulk suspend, delete, broadcast) now pass isError=true. Verified set_user_banned/delete_user RPCs and is_superadmin() work correctly server-side (no drift between deployed functions and migration files; live-tested set_user_banned in a rolled-back transaction as the actual superadmin). Also discovered and deployed migration 0072 (BUG-109's fix), which was committed to the repo but had never been pushed to production -- schema_migrations tracked 0071 as the latest applied version."
   }
 ]

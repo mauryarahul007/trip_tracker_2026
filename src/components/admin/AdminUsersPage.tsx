@@ -20,6 +20,7 @@ export function AdminUsersPage({ users, trips, superadminIds, onUsersChanged, on
   const superadminIdSet = new Set(superadminIds);
   const [searchQuery, setSearchQuery] = useState('');
   const [toastMsg, setToastMsg] = useState('');
+  const [toastIsError, setToastIsError] = useState(false);
   const [busyUserId, setBusyUserId] = useState<string | null>(null);
   const [page, setPage] = useState(0);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -33,8 +34,9 @@ export function AdminUsersPage({ users, trips, superadminIds, onUsersChanged, on
   const [broadcastTripId, setBroadcastTripId] = useState('');
   const [isBroadcasting, setIsBroadcasting] = useState(false);
 
-  const showToast = (msg: string) => {
+  const showToast = (msg: string, isError = false) => {
     setToastMsg(msg);
+    setToastIsError(isError);
     setTimeout(() => setToastMsg(''), 3000);
   };
 
@@ -80,7 +82,7 @@ export function AdminUsersPage({ users, trips, superadminIds, onUsersChanged, on
       setSelectedIds(new Set());
       onUsersChanged();
     } catch (err) {
-      showToast(err instanceof Error ? err.message : 'Bulk update failed.');
+      showToast(err instanceof Error ? err.message : 'Bulk update failed.', true);
     } finally {
       setIsBulkBusy(false);
     }
@@ -97,7 +99,7 @@ export function AdminUsersPage({ users, trips, superadminIds, onUsersChanged, on
       showToast(nextBanned ? `Suspended ${user.email}` : `Restored ${user.email}`);
       onUsersChanged();
     } catch (err) {
-      showToast(err instanceof Error ? err.message : 'Failed to update user.');
+      showToast(err instanceof Error ? err.message : 'Failed to update user.', true);
     } finally {
       setBusyUserId(null);
     }
@@ -114,7 +116,7 @@ export function AdminUsersPage({ users, trips, superadminIds, onUsersChanged, on
       showToast(`Deleted ${user.email}`);
       onUsersChanged();
     } catch (err) {
-      showToast(err instanceof Error ? err.message : 'Failed to delete user.');
+      showToast(err instanceof Error ? err.message : 'Failed to delete user.', true);
     } finally {
       setBusyUserId(null);
     }
@@ -131,7 +133,7 @@ export function AdminUsersPage({ users, trips, superadminIds, onUsersChanged, on
       setBroadcastBody('');
       setShowBroadcastDrawer(false);
     } catch (err) {
-      showToast(err instanceof Error ? err.message : 'Broadcast failed.');
+      showToast(err instanceof Error ? err.message : 'Broadcast failed.', true);
     } finally {
       setIsBroadcasting(false);
     }
@@ -155,8 +157,8 @@ export function AdminUsersPage({ users, trips, superadminIds, onUsersChanged, on
       </div>
 
       {toastMsg && (
-        <div className="ops-toast">
-          <IconCheck size={14} /> {toastMsg}
+        <div className={`ops-toast${toastIsError ? ' error' : ''}`} role={toastIsError ? 'alert' : 'status'}>
+          {toastIsError ? <IconAlertCircle size={14} /> : <IconCheck size={14} />} {toastMsg}
         </div>
       )}
 

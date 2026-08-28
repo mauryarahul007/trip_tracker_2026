@@ -468,6 +468,12 @@
   margin-bottom: 14px;
 }
 
+.ops-toast.error {
+  background: var(--danger-dim);
+  border-color: var(--danger-line);
+  color: var(--danger);
+}
+
 .ops-section-title { font-size: 13px; font-weight: 700; letter-spacing: -0.005em; color: var(--text-primary); margin: 0 0 4px; }
 .ops-section-sub { font-size: 11.5px; color: var(--text-tertiary); margin: 0 0 12px; }
 
