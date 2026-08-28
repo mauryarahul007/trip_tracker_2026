@@ -47,7 +47,14 @@ export function SwipeableRow({ onDelete, onEdit, children, reversed = false, pla
     if (!active.current) return;
     const delta = e.clientX - startX.current;
     if (delta < 0 && leftAction) {
-      const nextDragX = Math.max(delta, -MAX_DRAG);
+      // Elastic rubber banding beyond threshold
+      let nextDragX = delta;
+      if (Math.abs(delta) > THRESHOLD) {
+        const overflow = Math.abs(delta) - THRESHOLD;
+        nextDragX = -(THRESHOLD + overflow * 0.45);
+      }
+      nextDragX = Math.max(nextDragX, -MAX_DRAG);
+
       if (nextDragX < -THRESHOLD && !hapticFired.current) {
         triggerHaptic('medium');
         hapticFired.current = true;
@@ -56,7 +63,14 @@ export function SwipeableRow({ onDelete, onEdit, children, reversed = false, pla
       }
       setDragX(nextDragX);
     } else if (delta > 0 && rightAction) {
-      const nextDragX = Math.min(delta, MAX_DRAG);
+      // Elastic rubber banding beyond threshold
+      let nextDragX = delta;
+      if (delta > THRESHOLD) {
+        const overflow = delta - THRESHOLD;
+        nextDragX = THRESHOLD + overflow * 0.45;
+      }
+      nextDragX = Math.min(nextDragX, MAX_DRAG);
+
       if (nextDragX > THRESHOLD && !hapticFired.current) {
         triggerHaptic('medium');
         hapticFired.current = true;
@@ -83,6 +97,8 @@ export function SwipeableRow({ onDelete, onEdit, children, reversed = false, pla
 
   const leftIsDelete = leftAction === onDelete;
   const rightIsDelete = rightAction === onDelete;
+  const isLeftTriggered = dragX < -THRESHOLD;
+  const isRightTriggered = dragX > THRESHOLD;
 
   return (
     // data-no-tab-swipe: this row already owns horizontal touch drags for
@@ -98,9 +114,13 @@ export function SwipeableRow({ onDelete, onEdit, children, reversed = false, pla
             background: leftIsDelete ? 'var(--color-danger)' : 'var(--color-success)',
             color: '#fff', fontSize: '13px', fontWeight: 600,
             opacity: dragX < 0 ? Math.min(Math.abs(dragX) / THRESHOLD, 1) : 0,
+            transform: `scale(${isLeftTriggered ? 1.05 : 1})`,
+            transition: 'transform 0.18s var(--ease-uber-spring)',
           }}
         >
-          {leftIsDelete ? <IconTrash size={15} className="icon-sm" /> : <IconEdit size={15} className="icon-sm" />}
+          <span style={{ transform: `scale(${isLeftTriggered ? 1.2 : 1})`, transition: 'transform 0.18s var(--ease-uber-spring)', display: 'inline-flex' }}>
+            {leftIsDelete ? <IconTrash size={15} className="icon-sm" /> : <IconEdit size={15} className="icon-sm" />}
+          </span>
           {plain
             ? (leftIsDelete ? 'Delete' : 'Edit')
             : (leftIsDelete ? 'Release to delete' : 'Release to edit')}
@@ -115,9 +135,13 @@ export function SwipeableRow({ onDelete, onEdit, children, reversed = false, pla
             background: rightIsDelete ? 'var(--color-danger)' : 'var(--color-success)',
             color: '#fff', fontSize: '13px', fontWeight: 600,
             opacity: dragX > 0 ? Math.min(dragX / THRESHOLD, 1) : 0,
+            transform: `scale(${isRightTriggered ? 1.05 : 1})`,
+            transition: 'transform 0.18s var(--ease-uber-spring)',
           }}
         >
-          {rightIsDelete ? <IconTrash size={15} className="icon-sm" /> : <IconEdit size={15} className="icon-sm" />}
+          <span style={{ transform: `scale(${isRightTriggered ? 1.2 : 1})`, transition: 'transform 0.18s var(--ease-uber-spring)', display: 'inline-flex' }}>
+            {rightIsDelete ? <IconTrash size={15} className="icon-sm" /> : <IconEdit size={15} className="icon-sm" />}
+          </span>
           {plain
             ? (rightIsDelete ? 'Delete' : 'Edit')
             : (rightIsDelete ? 'Release to delete' : 'Release to edit')}
@@ -130,9 +154,10 @@ export function SwipeableRow({ onDelete, onEdit, children, reversed = false, pla
         onPointerCancel={endDrag}
         style={{
           transform: `translateX(${dragX}px)`,
-          transition: dragging || prefersReducedMotion ? 'none' : 'transform 0.25s ease',
+          transition: dragging || prefersReducedMotion ? 'none' : 'transform 0.32s var(--ease-uber-spring)',
           background: 'var(--bg-surface)',
           touchAction: 'pan-y',
+          willChange: dragging ? 'transform' : undefined,
         }}
       >
         {children}

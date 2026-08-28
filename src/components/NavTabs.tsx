@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect, useLayoutEffect, useCallback } from 'react';
 import { IconExpenses, IconMembers, IconReceipt, IconSettings, IconPlus } from './Icons';
 import { triggerHaptic } from '../utils/haptics';
 import { FlightAddExpenseTooltip, STORAGE_KEY } from './FlightAddExpenseTooltip';
@@ -16,10 +16,33 @@ type Props = {
 
 export function NavTabs({ activeTab, setActiveTab, onAddExpense, onAddMember, expenseCount, tripDestination }: Props) {
   const isMembersTab = activeTab === 'members';
+  const navRef = useRef<HTMLElement | null>(null);
+  const [pillStyle, setPillStyle] = useState<{ left: number; width: number } | null>(null);
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const longPressFired = useRef(false);
   const [showDeniedHint, setShowDeniedHint] = useState(false);
   const deniedHintTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Measure and position the active sliding pill indicator
+  const updatePill = useCallback(() => {
+    if (!navRef.current) return;
+    const activeBtn = navRef.current.querySelector<HTMLButtonElement>(`[data-tab="${activeTab}"]`);
+    if (activeBtn) {
+      setPillStyle({
+        left: activeBtn.offsetLeft,
+        width: activeBtn.offsetWidth,
+      });
+    }
+  }, [activeTab]);
+
+  useLayoutEffect(() => {
+    updatePill();
+  }, [updatePill]);
+
+  useEffect(() => {
+    window.addEventListener('resize', updatePill);
+    return () => window.removeEventListener('resize', updatePill);
+  }, [updatePill]);
 
   const goTo = (tab: Tab) => {
     if (tab !== activeTab) triggerHaptic('light');
@@ -72,7 +95,17 @@ export function NavTabs({ activeTab, setActiveTab, onAddExpense, onAddMember, ex
   };
 
   return (
-    <nav className="nav-tabs" role="tablist" aria-label="Trip navigation tabs">
+    <nav ref={navRef} className="nav-tabs" role="tablist" aria-label="Trip navigation tabs">
+      {pillStyle && (
+        <div
+          className="nav-tabs-pill"
+          style={{
+            left: `${pillStyle.left}px`,
+            width: `${pillStyle.width}px`,
+          }}
+          aria-hidden="true"
+        />
+      )}
       <button
         type="button"
         role="tab"

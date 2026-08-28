@@ -125,6 +125,9 @@
   --transition-smooth: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   --ease-spring: cubic-bezier(0.32, 0.72, 0, 1);
   --ease-decel: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-uber-spring: cubic-bezier(0.18, 0.89, 0.32, 1.12);
+  --ease-fluid-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-bounce-back: cubic-bezier(0.34, 1.4, 0.64, 1);
   --transition-spring: transform 0.32s var(--ease-spring), opacity 0.22s ease;
 }
 
@@ -1429,6 +1432,26 @@ html.capacitor-ios .tab-pane {
   transition: background-color 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
 }
 
+/* Sliding active pill indicator behind the selected tab */
+.nav-tabs-pill {
+  position: absolute;
+  top: 5px;
+  bottom: 5px;
+  border-radius: 9999px;
+  background: var(--bg-nav-item-active);
+  box-shadow: inset 0 0 0 1px rgba(15, 111, 99, 0.15), 0 2px 8px rgba(15, 111, 99, 0.08);
+  transition: left 0.34s var(--ease-uber-spring), width 0.34s var(--ease-uber-spring);
+  pointer-events: none;
+  z-index: 1;
+  will-change: left, width;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nav-tabs-pill {
+    transition: none !important;
+  }
+}
+
 /* Native iOS "Liquid Glass" tab bar: MainViewController.swift renders a
    genuine native floating pill (UIVisualEffectView + UIGlassEffect on iOS
    26+, real UIButtons for the icons/labels) on top of the WKWebView —
@@ -1462,24 +1485,23 @@ html.capacitor-ios .nav-tabs {
   padding: 6px 2px 5px;
   min-height: 48px;
   cursor: pointer;
-  transition: all 0.22s var(--ease-decel);
+  transition: color 0.22s var(--ease-decel), transform 0.18s var(--ease-uber-spring);
   position: relative;
+  z-index: 2;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
 }
 
 .nav-tab-item:hover {
   color: var(--text-primary);
-  background: rgba(125, 125, 125, 0.08);
 }
 
 .nav-tab-item:active {
-  transform: scale(0.95);
+  transform: scale(0.92);
 }
 
 .nav-tab-item.active {
   color: var(--color-nav-item-active);
-  background: var(--bg-nav-item-active);
   font-weight: 700;
 }
 
@@ -1487,11 +1509,15 @@ html.capacitor-ios .nav-tabs {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: transform 0.22s var(--ease-decel);
+  transition: transform 0.24s var(--ease-uber-spring);
 }
 
 .nav-tab-item.active .nav-tab-icon {
-  transform: translateY(-1px) scale(1.08);
+  transform: translateY(-1.5px) scale(1.08);
+}
+
+.nav-tab-item:active .nav-tab-icon {
+  transform: scale(0.9);
 }
 
 .nav-tab-fab-wrap {
@@ -3800,7 +3826,8 @@ input:checked + .toggle-slider:before {
   z-index: 5;
   background: #000;
   pointer-events: none;
-  transition: opacity 0.38s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: opacity 0.38s var(--ease-uber-spring);
+  will-change: opacity;
 }
 
 .trip-sheet-scrim.dragging {
@@ -3824,11 +3851,11 @@ input:checked + .toggle-slider:before {
   border-radius: 28px 28px 0 0;
   box-shadow: 0 -16px 40px -10px rgba(0, 0, 0, 0.4), 0 -4px 16px rgba(0, 0, 0, 0.2);
   overflow: hidden;
-  /* Same overshoot curve AnalyticsTab's chart fill-in uses -- a snapping
-     sheet reads more physical with a touch of spring than a flat ease-out.
-     border-radius rides the same curve so the corner-flatten (see the
-     .full rule below) settles in lockstep with the vertical snap. */
-  transition: top 0.38s cubic-bezier(0.34, 1.56, 0.64, 1), border-radius 0.38s cubic-bezier(0.34, 1.56, 0.64, 1);
+  will-change: top, border-radius;
+  transform: translateZ(0);
+  /* Uber-style spring snap curve -- a snapping sheet reads physical
+     with calibrated spring damping rather than a flat ease-out. */
+  transition: top 0.38s var(--ease-uber-spring), border-radius 0.38s var(--ease-uber-spring);
 }
 
 .trip-sheet.dragging {
@@ -3852,7 +3879,7 @@ input:checked + .toggle-slider:before {
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 22px;
+  height: 24px;
   cursor: grab;
   touch-action: none;
 }
@@ -3867,6 +3894,18 @@ input:checked + .toggle-slider:before {
   border-radius: 2px;
   background: var(--text-muted);
   opacity: 0.35;
+  transition: width 0.2s var(--ease-uber-spring), background 0.2s ease, opacity 0.2s ease, transform 0.2s var(--ease-uber-spring);
+  will-change: width, transform;
+}
+
+.trip-sheet-handle:hover .trip-sheet-handle-bar,
+.trip-sheet-handle:active .trip-sheet-handle-bar,
+.trip-sheet.dragging .trip-sheet-handle-bar {
+  width: 48px;
+  height: 4.5px;
+  opacity: 0.8;
+  background: var(--primary-accent);
+  transform: scaleY(1.1);
 }
 
 .tab-pane {
@@ -5582,10 +5621,76 @@ textarea.input-field {
   cursor: grab;
   z-index: 2;
   transition: transform 0.1s ease;
+  will-change: transform;
 }
 
 .unlock-slider-handle:active {
   cursor: grabbing;
+  transform: scale(1.04);
+}
+
+.unlock-slider-fill {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  border-radius: 32px;
+  background: linear-gradient(90deg, rgba(15, 111, 99, 0.28) 0%, rgba(22, 163, 74, 0.55) 100%);
+  pointer-events: none;
+  z-index: 1;
+  will-change: width;
+}
+
+/* Mobility-grade staggered cascade animation for list items */
+@keyframes cascadeItemIn {
+  0% {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.expense-item-cascade {
+  animation: cascadeItemIn 0.36s var(--ease-uber-spring) both;
+  animation-delay: calc(var(--item-index, 0) * 35ms);
+  will-change: transform, opacity;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .expense-item-cascade {
+    animation: none !important;
+  }
+}
+
+/* Map pin drop keyframes */
+@keyframes markerPinDrop {
+  0% {
+    opacity: 0;
+    transform: translateY(-24px) scale(0.5);
+  }
+  70% {
+    opacity: 1;
+    transform: translateY(3px) scale(1.1);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.map-marker-pin {
+  animation: markerPinDrop 0.45s var(--ease-uber-spring) both;
+  animation-delay: calc(var(--pin-index, 0) * 75ms);
+  will-change: transform, opacity;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .map-marker-pin {
+    animation: none !important;
+  }
 }
 
 /* 3D Perspective Card Container */

@@ -534,6 +534,7 @@ export function ExpenseList({
                     <div
                       key={exp.id}
                       aria-hidden={isPending}
+                      className="expense-item-cascade"
                       style={{
                         borderBottom: idx < group.expenses.length - 1 ? '1.5px dashed var(--border-color)' : 'none',
                         opacity: isPending ? 0.35 : 1,
@@ -543,6 +544,7 @@ export function ExpenseList({
                         // substitute for list virtualization at this scale.
                         contentVisibility: 'auto',
                         containIntrinsicSize: '0 84px',
+                        ['--item-index' as string]: Math.min(idx, 15),
                       }}
                     >
                       <ConditionalSwipe

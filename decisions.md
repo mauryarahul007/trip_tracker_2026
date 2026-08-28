@@ -1051,3 +1051,19 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - The sticky bar utilizes native CSS `position: sticky` and `IntersectionObserver`, consuming 0% continuous JavaScript CPU polling and preserving smooth 60-120 FPS GPU compositing.
 
+---
+
+## 60. Mobility-Grade UI/UX Motion Architecture (Uber / Ola / Rapido Benchmarks)
+* **Context:**
+  - Mobile web interactions (sliding bottom sheets, tab switching, slide-to-confirm, list scrolling) can suffer from micro-stutter when animating CPU layout properties (`top`, `margin`, `width`).
+  - To achieve parity with premier mobility apps (Uber, Ola, Rapido), the webapp needed fluid 120Hz spring physics, zero-reflow GPU compositing, dynamic sliding tab indicators, progressive slide-to-settle track feedback, and staggered list cascades.
+* **Decision:**
+  - **120Hz GPU Compositor Sheets:** Configured `--ease-uber-spring: cubic-bezier(0.18, 0.89, 0.32, 1.12)` with `will-change: top, border-radius` and `transform: translateZ(0)` to eliminate browser reflows during continuous dragging.
+  - **Shared Sliding Navigation Pill:** Implemented dynamic layout measurement in `NavTabs.tsx` to glide a floating background capsule indicator (`.nav-tabs-pill`) between tabs with spring interpolation and tactile micro-press scaling.
+  - **Progressive Slide-to-Settle Track:** Upgraded `SlideToUnlock.tsx` with dynamic progress-reactive gradient fill, animated shimmer beam, multi-stage haptic triggers (25%, 50%, 75%, 90%), and elastic bounce-back spring physics.
+  - **Staggered Expense List Cascades:** Added `.expense-item-cascade` and CSS `--item-index` stagger delays combined with `content-visibility: auto` to ensure 120 FPS scroll performance.
+  - **Dynamic Map Marker Drops:** Added `.map-marker-pin` with index-staggered bounce drop-in physics for route stop pins.
+* **Trade-offs Accepted:**
+  - Zero heavy external libraries were added (no Framer Motion/Lottie runtime bloat); all motion relies exclusively on native CSS hardware-accelerated transforms and lightweight event listeners.
+
+

@@ -215,7 +215,10 @@ export function TripMapHero({ trip, sheetExpanded, onToneChange }: Props) {
         bounds.extend([stop.lng, stop.lat]);
 
         const el = document.createElement('div');
+        el.className = 'map-marker-pin';
+        el.style.setProperty('--pin-index', String(idx));
         el.style.cssText = `
+          --pin-index: ${idx};
           background: ${idx === 0 ? '#0F6F63' : idx === validStops.length - 1 ? '#FF7A00' : '#16181D'};
           color: #FFFFFF;
           width: 28px;
