@@ -74,28 +74,34 @@ function CardContent({ trip, members }: { trip: Trip; members: Record<string, Me
   const tone = useCardTone(photoUrl);
 
   return (
-    <div
-      className={`stack-card-face${photoUrl ? ` has-photo tone-${tone}` : ''}`}
-      style={photoUrl ? { backgroundImage: `linear-gradient(180deg, rgba(15,21,29,0.55) 0%, rgba(15,21,29,0.22) 30%, rgba(15,21,29,0) 55%), url("${photoUrl}")` } : undefined}
-    >
-      <div className="pp-stamp">
-        <span>{stamp.top}</span>
-        <span>{stamp.bottom}</span>
-      </div>
-      <div className="pp-dest">Trip &middot; {trip.baseCurrency}</div>
-      <h3 className="pp-name">{trip.name}</h3>
-      <div className="pp-meta">
-        {tripMembers.length} member{tripMembers.length === 1 ? '' : 's'} &middot; {expenseCount} expense{expenseCount === 1 ? '' : 's'}
-      </div>
-      <div className="pp-avatars stack-card-avatars">
-        {shown.map((m) =>
-          m.avatarUrl ? (
-            <img key={m.id} src={m.avatarUrl} alt={m.name} title={m.name} className="pp-avatar" referrerPolicy="no-referrer" loading="lazy" decoding="async" width={24} height={24} />
-          ) : (
-            <span key={m.id} className="pp-avatar" style={{ background: avatarColorForName(m.name) }} title={m.name}>{initial(m.name)}</span>
-          )
-        )}
-        {overflow > 0 && <span className="pp-avatar pp-avatar-more">+{overflow}</span>}
+    <div className={`stack-card-face${photoUrl ? ` has-photo tone-${tone}` : ''}`}>
+      {photoUrl && (
+        <div
+          key={photoUrl}
+          className="stack-card-photo"
+          style={{ backgroundImage: `linear-gradient(180deg, rgba(15,21,29,0.55) 0%, rgba(15,21,29,0.22) 30%, rgba(15,21,29,0) 55%), url("${photoUrl}")` }}
+        />
+      )}
+      <div className="stack-card-content">
+        <div className="pp-stamp">
+          <span>{stamp.top}</span>
+          <span>{stamp.bottom}</span>
+        </div>
+        <div className="pp-dest">Trip &middot; {trip.baseCurrency}</div>
+        <h3 className="pp-name">{trip.name}</h3>
+        <div className="pp-meta">
+          {tripMembers.length} member{tripMembers.length === 1 ? '' : 's'} &middot; {expenseCount} expense{expenseCount === 1 ? '' : 's'}
+        </div>
+        <div className="pp-avatars stack-card-avatars">
+          {shown.map((m) =>
+            m.avatarUrl ? (
+              <img key={m.id} src={m.avatarUrl} alt={m.name} title={m.name} className="pp-avatar" referrerPolicy="no-referrer" loading="lazy" decoding="async" width={24} height={24} />
+            ) : (
+              <span key={m.id} className="pp-avatar" style={{ background: avatarColorForName(m.name) }} title={m.name}>{initial(m.name)}</span>
+            )
+          )}
+          {overflow > 0 && <span className="pp-avatar pp-avatar-more">+{overflow}</span>}
+        </div>
       </div>
     </div>
   );
@@ -203,6 +209,13 @@ function StackCardItem({ trip, members, idx, canDelete, onOpen, onBrowse, onArch
     onOpen();
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      onOpen();
+    }
+  };
+
   const transform =
     exit === 'left' ? 'translateX(-160%) rotate(-16deg)' :
     exit === 'right' ? 'translateX(160%) rotate(16deg)' :
@@ -223,6 +236,10 @@ function StackCardItem({ trip, members, idx, canDelete, onOpen, onBrowse, onArch
       onPointerUp={isFront ? endDrag : undefined}
       onPointerCancel={isFront ? endDrag : undefined}
       onClick={isFront ? handleClick : undefined}
+      onKeyDown={isFront ? handleKeyDown : undefined}
+      role={isFront ? 'button' : undefined}
+      tabIndex={isFront ? 0 : -1}
+      aria-label={isFront ? `Open trip ${trip.name}` : undefined}
       aria-hidden={isFront ? undefined : true}
     >
       <CardContent trip={trip} members={members} />

@@ -390,6 +390,16 @@ export function ExpenseForm({
       setIsSubmitting(false);
     }
   };
+
+  // Single classification for where formError renders, so amount/title
+  // validation failures show once near their field instead of duplicating
+  // at the bottom -- any error that isn't specifically about amount or
+  // title (split sum, membership, API errors) falls through to the
+  // bottom banner.
+  const isAmountFormError = Boolean(formError) && (!amount || parseFloat(amount) <= 0);
+  const isTitleFormError = Boolean(formError) && !isAmountFormError && !title.trim() && parseFloat(amount) > 0;
+  const isGeneralFormError = Boolean(formError) && !isAmountFormError && !isTitleFormError;
+
   return (
     <div className="modal-backdrop" onClick={isFormEmpty ? onCancel : undefined}>
       <form
@@ -659,7 +669,7 @@ export function ExpenseForm({
           </div>
         )}
 
-        {formError && (!amount || parseFloat(amount) <= 0) && (
+        {isAmountFormError && (
           <p style={{ color: 'var(--color-danger)', fontSize: '12px', marginTop: '6px', marginBottom: 0 }}>
             {formError}
           </p>
@@ -684,7 +694,7 @@ export function ExpenseForm({
             }
           }}
         />
-        {formError && !title.trim() && (parseFloat(amount) > 0) && (
+        {isTitleFormError && (
           <p style={{ color: 'var(--color-danger)', fontSize: '12px', marginTop: '6px', marginBottom: 0 }}>
             {formError}
           </p>
@@ -1186,7 +1196,7 @@ export function ExpenseForm({
         )}
       </div>
 
-      {formError && (
+      {isGeneralFormError && (
         <p id="expense-form-error" role="alert" aria-live="assertive" style={{ color: 'var(--color-danger)', fontSize: '13px', marginTop: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
           <IconAlertCircle size={15} />
           <span>{formError}</span>

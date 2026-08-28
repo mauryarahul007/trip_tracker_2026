@@ -9,6 +9,7 @@ import { fetchPreviousTripMembers, searchRemoteMemberSuggestions } from '../serv
 import { IconCheck, IconEdit, IconTrash, IconMembers, IconTag } from './Icons';
 import { SwipeableRow } from './SwipeableRow';
 import { useHistoryBack } from '../utils/useHistoryBack';
+import { useFocusTrap } from '../hooks/useFocusTrap';
 import { formatAmount } from '../utils/currency';
 import { buildAutoGroupName } from '../utils/groupNaming';
 
@@ -509,6 +510,7 @@ export function MembersGroupsTab({
   const availableMembers = visibleMembers.filter((m) => !otherGroupMemberIds.has(m.id));
 
   const memberInputRef = React.useRef<HTMLInputElement>(null);
+  const memberFormRef = React.useRef<HTMLFormElement>(null);
 
   React.useEffect(() => {
     if (showAddForm) {
@@ -518,6 +520,13 @@ export function MembersGroupsTab({
       return () => clearTimeout(timer);
     }
   }, [showAddForm]);
+
+  // skipAutoFocus: the effect above already places initial focus on the
+  // name input -- this hook only adds Tab-trapping and Escape-to-close.
+  // Passing onEscape as undefined while the dropdown is open lets the
+  // keydown event fall through to handleKeyDown's own Escape handler
+  // (which just closes the dropdown) instead of closing the whole modal.
+  useFocusTrap(memberFormRef, isAdmin && showAddForm, true, isDropdownOpen ? undefined : handleCancelMemberEditLocal);
 
   return (
     <div className="fade-in">
@@ -547,6 +556,7 @@ export function MembersGroupsTab({
         // modal built inline here was rendering invisible above the fold.
         <div className="modal-overlay" onClick={handleCancelMemberEditLocal}>
         <form
+          ref={memberFormRef}
           role="dialog"
           aria-modal="true"
           aria-labelledby="add-member-title"

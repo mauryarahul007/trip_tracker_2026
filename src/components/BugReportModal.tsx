@@ -332,7 +332,7 @@ export function BugReportModal({
 
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
               <span className="form-label">Recent console logs ({snapshot.recentLogs.length})</span>
-              <button type="button" onClick={handleSimulateLog} className="secondary-btn" style={{ padding: '3px 8px', fontSize: '11px' }}>
+              <button type="button" onClick={handleSimulateLog} className="secondary-btn" style={{ padding: '3px 8px', fontSize: '12px' }}>
                 + Test log
               </button>
             </div>
@@ -374,7 +374,7 @@ export function BugReportModal({
           {isSubmitting ? 'Sending...' : 'Submit Report'}
         </button>
 
-        <p style={{ fontSize: '11.5px', color: 'var(--text-muted)', margin: '2px 0 4px', textAlign: 'center' }}>
+        <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '2px 0 4px', textAlign: 'center' }}>
           or hand it to an AI coding agent directly:
         </p>
 

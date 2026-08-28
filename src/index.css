@@ -523,7 +523,7 @@ button, [role="button"], input, select, a {
 
 .input-field::placeholder {
   color: var(--text-muted);
-  opacity: 0.8;
+  opacity: 1;
 }
 
 /* Trip Ambient Translucent Backdrop */
@@ -936,7 +936,7 @@ input[type="date"].input-field {
   color: var(--text-secondary);
   border: 1px solid var(--border-color);
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: var(--transition-smooth);
   outline: none;
   user-select: none;
   scroll-snap-align: start;
@@ -996,7 +996,7 @@ input[type="date"].input-field {
   font-size: 13px;
   text-align: left;
   cursor: pointer;
-  transition: background 0.15s ease;
+  transition: var(--transition-smooth);
 }
 .expense-review-banner:hover {
   background: rgba(185, 138, 62, 0.15);
@@ -1460,6 +1460,7 @@ html.capacitor-ios .nav-tabs {
   letter-spacing: 0.01em;
   white-space: nowrap;
   padding: 6px 2px 5px;
+  min-height: 48px;
   cursor: pointer;
   transition: all 0.22s var(--ease-decel);
   position: relative;
@@ -2201,14 +2202,36 @@ input:checked + .toggle-slider:before {
   transform: translateY(26px) scale(0.92) rotate(2deg);
   opacity: 0.85;
 }
+.stack-card:focus-visible {
+  outline: 3px solid var(--primary-accent);
+  outline-offset: -3px;
+}
 .stack-card-face {
   position: relative;
   height: 100%;
   padding: 20px 20px 18px;
-  display: flex;
-  flex-direction: column;
+}
+.stack-card-photo {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
   background-size: cover;
   background-position: center;
+  opacity: 0;
+  animation: stack-card-photo-in 0.4s ease forwards;
+}
+@keyframes stack-card-photo-in {
+  to { opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .stack-card-photo { animation: none; opacity: 1; }
+}
+.stack-card-content {
+  position: relative;
+  z-index: 1;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 .stack-card-face.has-photo.tone-light .pp-dest,
 .stack-card-face.has-photo.tone-light .pp-name,

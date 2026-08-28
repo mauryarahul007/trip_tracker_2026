@@ -24,7 +24,7 @@ export function SlideToUnlock({ onUnlock }: SlideToUnlockProps) {
   const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
     if (!isDragging || !trackRef.current) return;
     const trackWidth = trackRef.current.clientWidth;
-    const maxDistance = trackWidth - handleWidth - trackPadding;
+    const maxDistance = Math.max(0, trackWidth - handleWidth - trackPadding);
     const currentX = e.clientX - startX.current;
     const clampedX = Math.max(0, Math.min(maxDistance, currentX));
     setSliderX(clampedX);
@@ -36,7 +36,7 @@ export function SlideToUnlock({ onUnlock }: SlideToUnlockProps) {
     e.currentTarget.releasePointerCapture(e.pointerId);
 
     const trackWidth = trackRef.current.clientWidth;
-    const maxDistance = trackWidth - handleWidth - trackPadding;
+    const maxDistance = Math.max(0, trackWidth - handleWidth - trackPadding);
 
     if (sliderX >= maxDistance * 0.85) {
       setSliderX(maxDistance);
@@ -52,6 +52,18 @@ export function SlideToUnlock({ onUnlock }: SlideToUnlockProps) {
     }
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      try {
+        triggerHaptic('medium');
+      } catch {
+        // Safe fallback
+      }
+      onUnlock();
+    }
+  };
+
   return (
     <div
       ref={trackRef}
@@ -62,12 +74,16 @@ export function SlideToUnlock({ onUnlock }: SlideToUnlockProps) {
       </div>
       <div
         className="unlock-slider-handle"
+        role="button"
+        tabIndex={0}
+        aria-label="Open ledger"
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
+        onKeyDown={handleKeyDown}
         style={{
           transform: `translateX(${sliderX}px)`,
-          transition: isDragging ? 'none' : 'transform 0.28s cubic-bezier(0.16, 1, 0.3, 1)',
+          transition: isDragging ? 'none' : 'transform 0.28s var(--ease-decel)',
         }}
       >
         <IconChevronRight size={20} />

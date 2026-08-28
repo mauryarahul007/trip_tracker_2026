@@ -23,7 +23,7 @@ export const StickyBalanceBar = memo(function StickyBalanceBar({
   isVisible,
   onScrollToTop,
 }: StickyBalanceBarProps) {
-  const handleBarClick = () => {
+  const handleScrollToTop = () => {
     triggerHaptic('light');
     onScrollToTop();
   };
@@ -38,7 +38,6 @@ export const StickyBalanceBar = memo(function StickyBalanceBar({
       role="region"
       aria-label="Sticky trip balance summary"
       aria-hidden={!isVisible}
-      onClick={handleBarClick}
     >
       <div className="sticky-balance-inner">
         {/* Left: Destination / Trip Pill */}
@@ -84,10 +83,7 @@ export const StickyBalanceBar = memo(function StickyBalanceBar({
             type="button"
             className="sticky-balance-top-btn"
             aria-label="Scroll back to top"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleBarClick();
-            }}
+            onClick={handleScrollToTop}
           >
             <IconChevronUp size={14} />
           </button>
