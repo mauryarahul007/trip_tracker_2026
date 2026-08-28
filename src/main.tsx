@@ -32,6 +32,17 @@ if (import.meta.env.PROD) {
     regs.forEach((reg) => reg.unregister())
   })
 }
+// A stale cached index.html can point at chunk hashes a fresh deploy no
+// longer serves -- Vite fires this event when a dynamic import 404s for
+// that reason. Reload once to pick up the new chunk map instead of
+// leaving the user stuck on a dead screen; the sessionStorage guard stops
+// a genuinely offline user from being stuck in a reload loop.
+window.addEventListener('vite:preloadError', () => {
+  if (sessionStorage.getItem('vite-preload-reloaded')) return
+  sessionStorage.setItem('vite-preload-reloaded', '1')
+  window.location.reload()
+})
+
 initAutoBugReporter()
 initNativeShell()
 void initLiveUpdates()

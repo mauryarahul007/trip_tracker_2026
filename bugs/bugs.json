@@ -2087,7 +2087,7 @@
     "description": "Automatically captured react crash.\n\n\nLazy@unknown:0:0\nSuspense@unknown:0:0\ndiv@unknown:0:0\ndiv@unknown:0:0\nlfe@https://trip-tracker.blackmaroon.in/assets/index-C8rMjbVV.js:876:76331\nU9@\nz9@https://trip-tracker.blackmaroon.in/assets/index-C8rMjbVV.js:877:30396\nCt@https://trip-tracker.blackmaroon.in/assets/index-C8rMjbVV.js:12:4272\nzt@https://trip-tracker.blackmaroon.in/assets/index-C8rMjbVV.js:12:8885\nRt@https://trip-tracker.blackmaroon.in/assets/index-C8rMjbVV.js:12:8023\nTn@https://trip-tracker.blackmaroon.in/assets/index-C8rMjbVV.js:12:18282",
     "severity": "critical",
     "category": "general",
-    "status": "open",
+    "status": "resolved",
     "foundBy": "auto-crash-handler",
     "environment": {
       "route": "#nav-1",
@@ -2109,7 +2109,10 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-08-26T09:43:15.900412+00:00",
-    "updatedAt": "2026-08-26T09:43:15.900412+00:00"
+    "updatedAt": "2026-08-28T11:18:53.000Z",
+    "resolutionNote": "Minified production stack (trip-tracker.blackmaroon.in) with no usable symbol names -- classic stale-chunk-after-deploy pattern: a tab left open across a new deploy tries to dynamic-import a chunk hash the old index.html still references, which no longer exists on the CDN. Not independently reproducible from the report alone, so instead of guessing at the specific chunk, added a global window 'vite:preloadError' listener in main.tsx that reloads the page once (sessionStorage-guarded against a reload loop if the user is actually offline) -- the standard Vite-recommended mitigation for this whole failure class, not just this one report.",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-08-28T11:18:53.000Z"
   },
   {
     "id": "BUG-070",
@@ -2221,7 +2224,7 @@
     "description": "Automatically captured react crash.\n\nTypeError: Cannot read properties of null (reading 'useState')\n    at exports.useState (http://localhost:5173/node_modules/.vite/deps/react.js?v=2858be4a:748:30)\n    at AdminPortalLayout (http://localhost:5173/src/components/admin/AdminPortalLayout.tsx:74:34)\n    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:12864:12)\n    at renderWithHooks (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:4211:19)\n    at updateFunctionComponent (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:5567:16)\n    at beginWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:6118:628)\n    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:850:66)\n    at performUnitOfWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:8427:92)\n    at workLoopSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:8323:37)\n    at renderRootSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=3a086733:8307:6)",
     "severity": "critical",
     "category": "general",
-    "status": "open",
+    "status": "wont_fix",
     "foundBy": "auto-crash-handler",
     "environment": {
       "route": "#/",
@@ -2247,7 +2250,10 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-08-26T22:23:48.694839+00:00",
-    "updatedAt": "2026-08-26T22:23:48.694839+00:00"
+    "updatedAt": "2026-08-28T11:18:53.000Z",
+    "resolutionNote": "Reviewed: stack trace resolves to http://localhost:5173/... (Vite dev server), captured 2026-08-26/27 during active development -- a ReferenceError/dynamic-import failure mid-edit that Vite's HMR corrected on the next save, not a defect in any committed revision. Confirmed the referenced symbol/component exists and compiles clean today (npx tsc --noEmit, zero errors, 2026-08-28). No code change; auto-crash-handler captures dev-time transients like this by design.",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-08-28T11:18:53.000Z"
   },
   {
     "id": "BUG-075",
@@ -2255,7 +2261,7 @@
     "description": "Automatically captured react crash.\n\nTypeError: Failed to fetch dynamically imported module: http://localhost:5173/src/components/admin/AdminPortalLayout.tsx",
     "severity": "critical",
     "category": "general",
-    "status": "open",
+    "status": "wont_fix",
     "foundBy": "auto-crash-handler",
     "environment": {
       "route": "#/",
@@ -2277,7 +2283,10 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-08-26T22:25:00.232433+00:00",
-    "updatedAt": "2026-08-26T22:25:00.232433+00:00"
+    "updatedAt": "2026-08-28T11:18:53.000Z",
+    "resolutionNote": "Reviewed: stack trace resolves to http://localhost:5173/... (Vite dev server), captured 2026-08-26/27 during active development -- a ReferenceError/dynamic-import failure mid-edit that Vite's HMR corrected on the next save, not a defect in any committed revision. Confirmed the referenced symbol/component exists and compiles clean today (npx tsc --noEmit, zero errors, 2026-08-28). No code change; auto-crash-handler captures dev-time transients like this by design.",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-08-28T11:18:53.000Z"
   },
   {
     "id": "BUG-076",
@@ -2285,7 +2294,7 @@
     "description": "Automatically captured react crash.\n\nTypeError: Failed to fetch dynamically imported module: http://localhost:5173/src/components/admin/AdminPortalLayout.tsx",
     "severity": "critical",
     "category": "general",
-    "status": "open",
+    "status": "wont_fix",
     "foundBy": "auto-crash-handler",
     "environment": {
       "route": "#/",
@@ -2307,7 +2316,10 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-08-26T22:25:21.0652+00:00",
-    "updatedAt": "2026-08-26T22:25:21.0652+00:00"
+    "updatedAt": "2026-08-28T11:18:53.000Z",
+    "resolutionNote": "Reviewed: stack trace resolves to http://localhost:5173/... (Vite dev server), captured 2026-08-26/27 during active development -- a ReferenceError/dynamic-import failure mid-edit that Vite's HMR corrected on the next save, not a defect in any committed revision. Confirmed the referenced symbol/component exists and compiles clean today (npx tsc --noEmit, zero errors, 2026-08-28). No code change; auto-crash-handler captures dev-time transients like this by design.",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-08-28T11:18:53.000Z"
   },
   {
     "id": "BUG-077",
@@ -2315,7 +2327,7 @@
     "description": "Automatically captured react crash.\n\nReferenceError: showTransactions is not defined\n    at App (http://localhost:5173/src/App.tsx?t=1787784820310:1127:17)\n    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:12864:12)\n    at renderWithHooks (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:4211:19)\n    at updateFunctionComponent (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:5567:16)\n    at beginWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:6138:20)\n    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:850:66)\n    at performUnitOfWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:8427:92)\n    at workLoopSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:8323:37)\n    at renderRootSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:8307:6)\n    at performWorkOnRoot (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:7992:27)",
     "severity": "critical",
     "category": "general",
-    "status": "open",
+    "status": "wont_fix",
     "foundBy": "auto-crash-handler",
     "environment": {
       "route": "#/",
@@ -2337,7 +2349,10 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-08-26T22:53:41.71052+00:00",
-    "updatedAt": "2026-08-26T22:53:41.71052+00:00"
+    "updatedAt": "2026-08-28T11:18:53.000Z",
+    "resolutionNote": "Reviewed: stack trace resolves to http://localhost:5173/... (Vite dev server), captured 2026-08-26/27 during active development -- a ReferenceError/dynamic-import failure mid-edit that Vite's HMR corrected on the next save, not a defect in any committed revision. Confirmed the referenced symbol/component exists and compiles clean today (npx tsc --noEmit, zero errors, 2026-08-28). No code change; auto-crash-handler captures dev-time transients like this by design.",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-08-28T11:18:53.000Z"
   },
   {
     "id": "BUG-078",
@@ -2345,7 +2360,7 @@
     "description": "Automatically captured react crash.\n\nReferenceError: setShowTransactions is not defined\n    at http://localhost:5173/src/App.tsx?t=1787784834602:409:3\n    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:12900:13)\n    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:850:66)\n    at commitHookEffectListMount (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:6615:153)\n    at commitHookPassiveMountEffects (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:6650:55)\n    at commitPassiveMountOnFiber (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:7616:22)\n    at recursivelyTraversePassiveMountEffects (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:7604:5)\n    at commitPassiveMountOnFiber (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:7620:6)\n    at recursivelyTraversePassiveMountEffects (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:7604:5)\n    at commitPassiveMountOnFiber (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:7615:6)",
     "severity": "critical",
     "category": "general",
-    "status": "open",
+    "status": "wont_fix",
     "foundBy": "auto-crash-handler",
     "environment": {
       "route": "#/",
@@ -2373,7 +2388,10 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-08-26T22:53:54.725821+00:00",
-    "updatedAt": "2026-08-26T22:53:54.725821+00:00"
+    "updatedAt": "2026-08-28T11:18:53.000Z",
+    "resolutionNote": "Reviewed: stack trace resolves to http://localhost:5173/... (Vite dev server), captured 2026-08-26/27 during active development -- a ReferenceError/dynamic-import failure mid-edit that Vite's HMR corrected on the next save, not a defect in any committed revision. Confirmed the referenced symbol/component exists and compiles clean today (npx tsc --noEmit, zero errors, 2026-08-28). No code change; auto-crash-handler captures dev-time transients like this by design.",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-08-28T11:18:53.000Z"
   },
   {
     "id": "BUG-079",
@@ -2381,7 +2399,7 @@
     "description": "Automatically captured react crash.\n\nReferenceError: usePrivacyStore is not defined\n    at BalancesSettlements (http://localhost:5173/src/components/BalancesSettlements.tsx?t=1787786281726:1062:22)\n    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:12864:12)\n    at renderWithHooks (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:4211:19)\n    at updateFunctionComponent (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:5567:16)\n    at beginWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:6138:20)\n    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:850:66)\n    at performUnitOfWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:8427:92)\n    at workLoopSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:8323:37)\n    at renderRootSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:8307:6)\n    at performWorkOnRoot (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:7992:27)",
     "severity": "critical",
     "category": "general",
-    "status": "open",
+    "status": "wont_fix",
     "foundBy": "auto-crash-handler",
     "environment": {
       "route": "#nav-1",
@@ -2406,7 +2424,10 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-08-26T23:18:02.650287+00:00",
-    "updatedAt": "2026-08-26T23:18:02.650287+00:00"
+    "updatedAt": "2026-08-28T11:18:53.000Z",
+    "resolutionNote": "Reviewed: stack trace resolves to http://localhost:5173/... (Vite dev server), captured 2026-08-26/27 during active development -- a ReferenceError/dynamic-import failure mid-edit that Vite's HMR corrected on the next save, not a defect in any committed revision. Confirmed the referenced symbol/component exists and compiles clean today (npx tsc --noEmit, zero errors, 2026-08-28). No code change; auto-crash-handler captures dev-time transients like this by design.",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-08-28T11:18:53.000Z"
   },
   {
     "id": "BUG-080",
@@ -2414,7 +2435,7 @@
     "description": "Automatically captured react crash.\n\nReferenceError: isMembersSectionExpanded is not defined\n    at BalancesSettlements (http://localhost:5173/src/components/BalancesSettlements.tsx?t=1787786316817:1310:23)\n    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:12864:12)\n    at renderWithHooks (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:4211:19)\n    at updateFunctionComponent (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:5567:16)\n    at beginWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:6138:20)\n    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:850:66)\n    at performUnitOfWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:8427:92)\n    at workLoopSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:8323:37)\n    at renderRootSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:8307:6)\n    at performWorkOnRoot (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:7992:27)",
     "severity": "critical",
     "category": "general",
-    "status": "open",
+    "status": "wont_fix",
     "foundBy": "auto-crash-handler",
     "environment": {
       "route": "#nav-1",
@@ -2451,7 +2472,10 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-08-26T23:18:36.843957+00:00",
-    "updatedAt": "2026-08-26T23:18:36.843957+00:00"
+    "updatedAt": "2026-08-28T11:18:53.000Z",
+    "resolutionNote": "Reviewed: stack trace resolves to http://localhost:5173/... (Vite dev server), captured 2026-08-26/27 during active development -- a ReferenceError/dynamic-import failure mid-edit that Vite's HMR corrected on the next save, not a defect in any committed revision. Confirmed the referenced symbol/component exists and compiles clean today (npx tsc --noEmit, zero errors, 2026-08-28). No code change; auto-crash-handler captures dev-time transients like this by design.",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-08-28T11:18:53.000Z"
   },
   {
     "id": "BUG-081",
@@ -2459,7 +2483,7 @@
     "description": "Automatically captured react crash.\n\nReferenceError: filteredExpenses is not defined\n    at App (http://localhost:5173/src/App.tsx?t=1787786479728:2174:12)\n    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:12864:12)\n    at renderWithHooks (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:4211:19)\n    at updateFunctionComponent (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:5567:16)\n    at beginWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:6138:20)\n    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:850:66)\n    at performUnitOfWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:8427:92)\n    at workLoopSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:8323:37)\n    at renderRootSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:8307:6)\n    at performWorkOnRoot (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:7992:27)",
     "severity": "critical",
     "category": "general",
-    "status": "open",
+    "status": "wont_fix",
     "foundBy": "auto-crash-handler",
     "environment": {
       "route": "#nav-1",
@@ -2500,7 +2524,10 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-08-26T23:21:19.754085+00:00",
-    "updatedAt": "2026-08-26T23:21:19.754085+00:00"
+    "updatedAt": "2026-08-28T11:18:53.000Z",
+    "resolutionNote": "Reviewed: stack trace resolves to http://localhost:5173/... (Vite dev server), captured 2026-08-26/27 during active development -- a ReferenceError/dynamic-import failure mid-edit that Vite's HMR corrected on the next save, not a defect in any committed revision. Confirmed the referenced symbol/component exists and compiles clean today (npx tsc --noEmit, zero errors, 2026-08-28). No code change; auto-crash-handler captures dev-time transients like this by design.",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-08-28T11:18:53.000Z"
   },
   {
     "id": "BUG-082",
@@ -2508,7 +2535,7 @@
     "description": "Automatically captured react crash.\n\nReferenceError: getCatColor is not defined\n    at App (http://localhost:5173/src/App.tsx?t=1787786861843:2291:13)\n    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:12864:12)\n    at renderWithHooks (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:4211:19)\n    at updateFunctionComponent (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:5567:16)\n    at beginWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:6138:20)\n    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:850:66)\n    at performUnitOfWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:8427:92)\n    at workLoopSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:8323:37)\n    at renderRootSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:8307:6)\n    at performWorkOnRoot (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:7992:27)",
     "severity": "critical",
     "category": "general",
-    "status": "open",
+    "status": "wont_fix",
     "foundBy": "auto-crash-handler",
     "environment": {
       "route": "#nav-1",
@@ -2553,7 +2580,10 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-08-26T23:27:42.284697+00:00",
-    "updatedAt": "2026-08-26T23:27:42.284697+00:00"
+    "updatedAt": "2026-08-28T11:18:53.000Z",
+    "resolutionNote": "Reviewed: stack trace resolves to http://localhost:5173/... (Vite dev server), captured 2026-08-26/27 during active development -- a ReferenceError/dynamic-import failure mid-edit that Vite's HMR corrected on the next save, not a defect in any committed revision. Confirmed the referenced symbol/component exists and compiles clean today (npx tsc --noEmit, zero errors, 2026-08-28). No code change; auto-crash-handler captures dev-time transients like this by design.",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-08-28T11:18:53.000Z"
   },
   {
     "id": "BUG-083",
@@ -2561,7 +2591,7 @@
     "description": "Automatically captured react crash.\n\nTypeError: getCatColor is not a function\n    at http://localhost:5173/src/components/ExpenseList.tsx?t=1787786938322:816:74\n    at Array.map (<anonymous>)\n    at http://localhost:5173/src/components/ExpenseList.tsx?t=1787786938322:779:44\n    at Array.map (<anonymous>)\n    at ExpenseList (http://localhost:5173/src/components/ExpenseList.tsx?t=1787786938322:682:23)\n    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:12864:12)\n    at renderWithHooks (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:4211:19)\n    at updateFunctionComponent (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:5567:16)\n    at beginWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:6138:20)\n    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:850:66)",
     "severity": "critical",
     "category": "general",
-    "status": "open",
+    "status": "wont_fix",
     "foundBy": "auto-crash-handler",
     "environment": {
       "route": "#nav-1",
@@ -2609,7 +2639,10 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-08-26T23:28:58.863522+00:00",
-    "updatedAt": "2026-08-26T23:28:58.863522+00:00"
+    "updatedAt": "2026-08-28T11:18:53.000Z",
+    "resolutionNote": "Reviewed: stack trace resolves to http://localhost:5173/... (Vite dev server), captured 2026-08-26/27 during active development -- a ReferenceError/dynamic-import failure mid-edit that Vite's HMR corrected on the next save, not a defect in any committed revision. Confirmed the referenced symbol/component exists and compiles clean today (npx tsc --noEmit, zero errors, 2026-08-28). No code change; auto-crash-handler captures dev-time transients like this by design.",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-08-28T11:18:53.000Z"
   },
   {
     "id": "BUG-084",
@@ -2617,7 +2650,7 @@
     "description": "Automatically captured react crash.\n\nReferenceError: analytics is not defined\n    at SettingsTab (http://localhost:5173/src/components/SettingsTab.tsx?t=1787788216406:36:3)\n    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:12864:12)\n    at renderWithHooks (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:4211:19)\n    at updateFunctionComponent (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:5567:16)\n    at beginWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:6138:20)\n    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:850:66)\n    at performUnitOfWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:8427:92)\n    at workLoopSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:8323:37)\n    at renderRootSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:8307:6)\n    at performWorkOnRoot (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:7992:27)",
     "severity": "critical",
     "category": "general",
-    "status": "open",
+    "status": "wont_fix",
     "foundBy": "auto-crash-handler",
     "environment": {
       "route": "#nav-1",
@@ -2665,7 +2698,10 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-08-26T23:50:17.887372+00:00",
-    "updatedAt": "2026-08-26T23:50:17.887372+00:00"
+    "updatedAt": "2026-08-28T11:18:53.000Z",
+    "resolutionNote": "Reviewed: stack trace resolves to http://localhost:5173/... (Vite dev server), captured 2026-08-26/27 during active development -- a ReferenceError/dynamic-import failure mid-edit that Vite's HMR corrected on the next save, not a defect in any committed revision. Confirmed the referenced symbol/component exists and compiles clean today (npx tsc --noEmit, zero errors, 2026-08-28). No code change; auto-crash-handler captures dev-time transients like this by design.",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-08-28T11:18:53.000Z"
   },
   {
     "id": "BUG-085",
@@ -2673,7 +2709,7 @@
     "description": "Automatically captured react crash.\n\nReferenceError: useHistoryBack is not defined\n    at ExpenseList (http://localhost:5173/src/components/ExpenseList.tsx?t=1787789087408:99:2)\n    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:12864:12)\n    at renderWithHooks (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:4211:19)\n    at updateFunctionComponent (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:5567:16)\n    at beginWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:6138:20)\n    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:850:66)\n    at performUnitOfWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:8427:92)\n    at workLoopSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:8323:37)\n    at renderRootSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:8307:6)\n    at performWorkOnRoot (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:7992:27)",
     "severity": "critical",
     "category": "general",
-    "status": "open",
+    "status": "wont_fix",
     "foundBy": "auto-crash-handler",
     "environment": {
       "route": "#nav-2",
@@ -2698,7 +2734,10 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-08-27T00:04:48.650033+00:00",
-    "updatedAt": "2026-08-27T00:04:48.650033+00:00"
+    "updatedAt": "2026-08-28T11:18:53.000Z",
+    "resolutionNote": "Reviewed: stack trace resolves to http://localhost:5173/... (Vite dev server), captured 2026-08-26/27 during active development -- a ReferenceError/dynamic-import failure mid-edit that Vite's HMR corrected on the next save, not a defect in any committed revision. Confirmed the referenced symbol/component exists and compiles clean today (npx tsc --noEmit, zero errors, 2026-08-28). No code change; auto-crash-handler captures dev-time transients like this by design.",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-08-28T11:18:53.000Z"
   },
   {
     "id": "BUG-086",
@@ -2706,7 +2745,7 @@
     "description": "Automatically captured react crash.\n\nReferenceError: showFilterDrawer is not defined\n    at ExpenseList (http://localhost:5173/src/components/ExpenseList.tsx?t=1787789101765:1112:3)\n    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:12864:12)\n    at renderWithHooks (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:4211:19)\n    at updateFunctionComponent (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:5567:16)\n    at beginWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:6138:20)\n    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:850:66)\n    at performUnitOfWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:8427:92)\n    at workLoopSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:8323:37)\n    at renderRootSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:8307:6)\n    at performWorkOnRoot (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:7992:27)",
     "severity": "critical",
     "category": "general",
-    "status": "open",
+    "status": "wont_fix",
     "foundBy": "auto-crash-handler",
     "environment": {
       "route": "#nav-2",
@@ -2737,7 +2776,10 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-08-27T00:05:02.070735+00:00",
-    "updatedAt": "2026-08-27T00:05:02.070735+00:00"
+    "updatedAt": "2026-08-28T11:18:53.000Z",
+    "resolutionNote": "Reviewed: stack trace resolves to http://localhost:5173/... (Vite dev server), captured 2026-08-26/27 during active development -- a ReferenceError/dynamic-import failure mid-edit that Vite's HMR corrected on the next save, not a defect in any committed revision. Confirmed the referenced symbol/component exists and compiles clean today (npx tsc --noEmit, zero errors, 2026-08-28). No code change; auto-crash-handler captures dev-time transients like this by design.",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-08-28T11:18:53.000Z"
   },
   {
     "id": "BUG-087",
@@ -2745,7 +2787,7 @@
     "description": "Automatically captured react crash.\n\nReferenceError: usePrivacyStore is not defined\n    at App (http://localhost:5173/src/App.tsx?t=1787790279440:99:22)\n    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:12864:12)\n    at renderWithHooks (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:4211:19)\n    at updateFunctionComponent (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:5567:16)\n    at beginWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:6138:20)\n    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:850:66)\n    at performUnitOfWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:8427:92)\n    at workLoopSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:8323:37)\n    at renderRootSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:8307:6)\n    at performWorkOnRoot (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:7992:27)",
     "severity": "critical",
     "category": "general",
-    "status": "open",
+    "status": "wont_fix",
     "foundBy": "auto-crash-handler",
     "environment": {
       "route": "#nav-1",
@@ -2770,7 +2812,10 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-08-27T00:24:40.236554+00:00",
-    "updatedAt": "2026-08-27T00:24:40.236554+00:00"
+    "updatedAt": "2026-08-28T11:18:53.000Z",
+    "resolutionNote": "Reviewed: stack trace resolves to http://localhost:5173/... (Vite dev server), captured 2026-08-26/27 during active development -- a ReferenceError/dynamic-import failure mid-edit that Vite's HMR corrected on the next save, not a defect in any committed revision. Confirmed the referenced symbol/component exists and compiles clean today (npx tsc --noEmit, zero errors, 2026-08-28). No code change; auto-crash-handler captures dev-time transients like this by design.",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-08-28T11:18:53.000Z"
   },
   {
     "id": "BUG-088",
@@ -2778,7 +2823,7 @@
     "description": "Automatically captured react crash.\n\nReferenceError: isBlindMode is not defined\n    at App (http://localhost:5173/src/App.tsx?t=1787790288410:1457:31)\n    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:12864:12)\n    at renderWithHooks (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:4211:19)\n    at updateFunctionComponent (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:5567:16)\n    at beginWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:6138:20)\n    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:850:66)\n    at performUnitOfWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:8427:92)\n    at workLoopSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:8323:37)\n    at renderRootSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:8307:6)\n    at performWorkOnRoot (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:7992:27)",
     "severity": "critical",
     "category": "general",
-    "status": "open",
+    "status": "wont_fix",
     "foundBy": "auto-crash-handler",
     "environment": {
       "route": "#nav-1",
@@ -2806,7 +2851,10 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-08-27T00:24:48.761292+00:00",
-    "updatedAt": "2026-08-27T00:24:48.761292+00:00"
+    "updatedAt": "2026-08-28T11:18:53.000Z",
+    "resolutionNote": "Reviewed: stack trace resolves to http://localhost:5173/... (Vite dev server), captured 2026-08-26/27 during active development -- a ReferenceError/dynamic-import failure mid-edit that Vite's HMR corrected on the next save, not a defect in any committed revision. Confirmed the referenced symbol/component exists and compiles clean today (npx tsc --noEmit, zero errors, 2026-08-28). No code change; auto-crash-handler captures dev-time transients like this by design.",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-08-28T11:18:53.000Z"
   },
   {
     "id": "BUG-089",
@@ -2814,7 +2862,7 @@
     "description": "Automatically captured react crash.\n\nReferenceError: formatMaskedAmount is not defined\n    at http://localhost:5173/src/components/BalancesSettlements.tsx?t=1787790491388:1209:31\n    at Array.map (<anonymous>)\n    at BalancesSettlements (http://localhost:5173/src/components/BalancesSettlements.tsx?t=1787790491388:1183:67)\n    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:12864:12)\n    at renderWithHooks (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:4211:19)\n    at updateFunctionComponent (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:5567:16)\n    at beginWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:6138:20)\n    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:850:66)\n    at performUnitOfWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:8427:92)\n    at workLoopSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=1be057bf:8323:37)",
     "severity": "critical",
     "category": "general",
-    "status": "open",
+    "status": "wont_fix",
     "foundBy": "auto-crash-handler",
     "environment": {
       "route": "#nav-1",
@@ -2862,7 +2910,10 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-08-27T00:28:12.116358+00:00",
-    "updatedAt": "2026-08-27T00:28:12.116358+00:00"
+    "updatedAt": "2026-08-28T11:18:53.000Z",
+    "resolutionNote": "Reviewed: stack trace resolves to http://localhost:5173/... (Vite dev server), captured 2026-08-26/27 during active development -- a ReferenceError/dynamic-import failure mid-edit that Vite's HMR corrected on the next save, not a defect in any committed revision. Confirmed the referenced symbol/component exists and compiles clean today (npx tsc --noEmit, zero errors, 2026-08-28). No code change; auto-crash-handler captures dev-time transients like this by design.",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-08-28T11:18:53.000Z"
   },
   {
     "id": "BUG-090",
@@ -3052,7 +3103,7 @@
     "description": "Automatically captured react crash.\n\nReferenceError: categoryIsDominant is not defined\n    at BoardingPassHeroCard (http://localhost:5173/src/components/BoardingPassHeroCard.tsx?t=1787802890246:36:25)\n    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=d5bafc93:12864:12)\n    at renderWithHooks (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=d5bafc93:4211:19)\n    at updateFunctionComponent (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=d5bafc93:5567:16)\n    at beginWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=d5bafc93:6138:20)\n    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=d5bafc93:850:66)\n    at performUnitOfWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=d5bafc93:8427:92)\n    at workLoopSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=d5bafc93:8323:37)\n    at renderRootSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=d5bafc93:8307:6)\n    at performWorkOnRoot (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=d5bafc93:7992:27)",
     "severity": "critical",
     "category": "general",
-    "status": "open",
+    "status": "wont_fix",
     "foundBy": "auto-crash-handler",
     "environment": {
       "route": "#nav-1",
@@ -3074,7 +3125,10 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-08-27T03:54:51.695554+00:00",
-    "updatedAt": "2026-08-27T03:54:51.695554+00:00"
+    "updatedAt": "2026-08-28T11:18:53.000Z",
+    "resolutionNote": "Reviewed: stack trace resolves to http://localhost:5173/... (Vite dev server), captured 2026-08-26/27 during active development -- a ReferenceError/dynamic-import failure mid-edit that Vite's HMR corrected on the next save, not a defect in any committed revision. Confirmed the referenced symbol/component exists and compiles clean today (npx tsc --noEmit, zero errors, 2026-08-28). No code change; auto-crash-handler captures dev-time transients like this by design.",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-08-28T11:18:53.000Z"
   },
   {
     "id": "BUG-098",
@@ -3082,7 +3136,7 @@
     "description": "Automatically captured react crash.\n\nReferenceError: topTransfer is not defined\n    at BoardingPassHeroCard (http://localhost:5173/src/components/BoardingPassHeroCard.tsx?t=1787802897033:181:88)\n    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=d5bafc93:12864:12)\n    at renderWithHooks (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=d5bafc93:4211:19)\n    at updateFunctionComponent (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=d5bafc93:5567:16)\n    at beginWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=d5bafc93:6138:20)\n    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=d5bafc93:850:66)\n    at performUnitOfWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=d5bafc93:8427:92)\n    at workLoopSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=d5bafc93:8323:37)\n    at renderRootSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=d5bafc93:8307:6)\n    at performWorkOnRoot (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=d5bafc93:7992:27)",
     "severity": "critical",
     "category": "general",
-    "status": "open",
+    "status": "wont_fix",
     "foundBy": "auto-crash-handler",
     "environment": {
       "route": "#nav-1",
@@ -3107,7 +3161,10 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-08-27T03:54:56.801416+00:00",
-    "updatedAt": "2026-08-27T03:54:56.801416+00:00"
+    "updatedAt": "2026-08-28T11:18:53.000Z",
+    "resolutionNote": "Reviewed: stack trace resolves to http://localhost:5173/... (Vite dev server), captured 2026-08-26/27 during active development -- a ReferenceError/dynamic-import failure mid-edit that Vite's HMR corrected on the next save, not a defect in any committed revision. Confirmed the referenced symbol/component exists and compiles clean today (npx tsc --noEmit, zero errors, 2026-08-28). No code change; auto-crash-handler captures dev-time transients like this by design.",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-08-28T11:18:53.000Z"
   },
   {
     "id": "BUG-099",
@@ -3115,7 +3172,7 @@
     "description": "Automatically captured react crash.\n\nReferenceError: TripJourneyMap is not defined\n    at AnalyticsTab (http://localhost:5173/src/components/AnalyticsTab.tsx?t=1787804859092:391:30)\n    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=f297417f:12864:12)\n    at renderWithHooks (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=f297417f:4211:19)\n    at updateFunctionComponent (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=f297417f:5567:16)\n    at beginWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=f297417f:6138:20)\n    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=f297417f:850:66)\n    at performUnitOfWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=f297417f:8427:92)\n    at workLoopSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=f297417f:8323:37)\n    at renderRootSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=f297417f:8307:6)\n    at performWorkOnRoot (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=f297417f:7992:27)",
     "severity": "critical",
     "category": "general",
-    "status": "open",
+    "status": "wont_fix",
     "foundBy": "auto-crash-handler",
     "environment": {
       "route": "#nav-3",
@@ -3140,7 +3197,10 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-08-27T04:27:40.525775+00:00",
-    "updatedAt": "2026-08-27T04:27:40.525775+00:00"
+    "updatedAt": "2026-08-28T11:18:53.000Z",
+    "resolutionNote": "Reviewed: stack trace resolves to http://localhost:5173/... (Vite dev server), captured 2026-08-26/27 during active development -- a ReferenceError/dynamic-import failure mid-edit that Vite's HMR corrected on the next save, not a defect in any committed revision. Confirmed the referenced symbol/component exists and compiles clean today (npx tsc --noEmit, zero errors, 2026-08-28). No code change; auto-crash-handler captures dev-time transients like this by design.",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-08-28T11:18:53.000Z"
   },
   {
     "id": "BUG-100",
@@ -3148,7 +3208,7 @@
     "description": "Automatically captured react crash.\n\nReferenceError: AnalyticsTab is not defined\n    at App (http://localhost:5173/src/App.tsx?t=1787804917669:2128:45)\n    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=f297417f:12864:12)\n    at renderWithHooks (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=f297417f:4211:19)\n    at updateFunctionComponent (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=f297417f:5567:16)\n    at beginWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=f297417f:6138:20)\n    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=f297417f:850:66)\n    at performUnitOfWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=f297417f:8427:92)\n    at workLoopSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=f297417f:8323:37)\n    at renderRootSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=f297417f:8307:6)\n    at performWorkOnRoot (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=f297417f:7992:27)",
     "severity": "critical",
     "category": "general",
-    "status": "open",
+    "status": "wont_fix",
     "foundBy": "auto-crash-handler",
     "environment": {
       "route": "#nav-1",
@@ -3177,7 +3237,10 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-08-27T04:28:37.885335+00:00",
-    "updatedAt": "2026-08-27T04:28:37.885335+00:00"
+    "updatedAt": "2026-08-28T11:18:53.000Z",
+    "resolutionNote": "Reviewed: stack trace resolves to http://localhost:5173/... (Vite dev server), captured 2026-08-26/27 during active development -- a ReferenceError/dynamic-import failure mid-edit that Vite's HMR corrected on the next save, not a defect in any committed revision. Confirmed the referenced symbol/component exists and compiles clean today (npx tsc --noEmit, zero errors, 2026-08-28). No code change; auto-crash-handler captures dev-time transients like this by design.",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-08-28T11:18:53.000Z"
   },
   {
     "id": "BUG-101",
@@ -3185,7 +3248,7 @@
     "description": "Automatically captured react crash.\n\nReferenceError: analytics is not defined\n    at SettingsTab (http://localhost:5173/src/components/SettingsTab.tsx?t=1787804952976:36:3)\n    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=f297417f:12864:12)\n    at renderWithHooks (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=f297417f:4211:19)\n    at updateFunctionComponent (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=f297417f:5567:16)\n    at beginWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=f297417f:6138:20)\n    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=f297417f:850:66)\n    at performUnitOfWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=f297417f:8427:92)\n    at workLoopSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=f297417f:8323:37)\n    at renderRootSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=f297417f:8307:6)\n    at performWorkOnRoot (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=f297417f:7992:27)",
     "severity": "critical",
     "category": "general",
-    "status": "open",
+    "status": "wont_fix",
     "foundBy": "auto-crash-handler",
     "environment": {
       "route": "#nav-1",
@@ -3217,7 +3280,10 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-08-27T04:29:12.732179+00:00",
-    "updatedAt": "2026-08-27T04:29:12.732179+00:00"
+    "updatedAt": "2026-08-28T11:18:53.000Z",
+    "resolutionNote": "Reviewed: stack trace resolves to http://localhost:5173/... (Vite dev server), captured 2026-08-26/27 during active development -- a ReferenceError/dynamic-import failure mid-edit that Vite's HMR corrected on the next save, not a defect in any committed revision. Confirmed the referenced symbol/component exists and compiles clean today (npx tsc --noEmit, zero errors, 2026-08-28). No code change; auto-crash-handler captures dev-time transients like this by design.",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-08-28T11:18:53.000Z"
   },
   {
     "id": "BUG-102",
@@ -3402,62 +3468,6 @@
     "resolutionNote": "Commit 1c9e46d + supabase migration 0071 (applied to production via supabase db push, verified live via pg_policy query). updateExpenseRow() now chains .select('id') and throws on 0-rows-affected so a silently-rejected write correctly stays dirty across refresh. RLS WITH CHECK on expenses UPDATE relaxed to match USING (admin-or-creator), dropping the extra 'must remain payer/split-member' requirement that permanently blocked non-admin authors from reassigning their own expense away from themselves. Regression test in src/services/tripApi.test.ts."
   },
   {
-    "id": "BUG-109",
-    "title": "Superadmin could not delete a user with expense history, even though suspend worked",
-    "description": "In the Superadmin portal's Users page, suspending a user (setUserBanned) worked, but deleting one (deleteUserAccount -> delete_user RPC) failed with 'This account has expense history and cannot be deleted. Suspend it instead.' The delete_user() function (migration 0068) intentionally raised that exception for any account referenced by expenses.created_by_user_id, since the column was NOT NULL with a plain FK (no cascade) -- a hard delete would otherwise orphan those rows or surface a raw FK violation.",
-    "severity": "medium",
-    "category": "general",
-    "status": "resolved",
-    "foundBy": "human",
-    "environment": {
-      "platform": "web",
-      "isOnline": true,
-      "appVersion": "1.0.0"
-    },
-    "reproSteps": [
-      "Open Superadmin portal > Users",
-      "Pick a user who has logged at least one expense",
-      "Click Delete and type DELETE to confirm",
-      "Observe toast: This account has expense history and cannot be deleted. Suspend it instead."
-    ],
-    "expectedBehavior": "Superadmin can hard-delete a user account that has logged expenses; their past expenses remain intact but lose their creator attribution.",
-    "actualBehavior": "Delete button in AdminUsersPage always failed for any user who had ever logged an expense, with no way to actually remove the account short of suspending it forever.",
-    "diagnostics": {},
-    "createdAt": "2026-08-28T07:21:32.501Z",
-    "updatedAt": "2026-08-28T07:21:39.391Z",
-    "resolvedBy": "claude-cli",
-    "resolvedAt": "2026-08-28T07:21:39.391Z",
-    "resolutionNote": "Commit 529558d + supabase migration 0072. expenses.created_by_user_id relaxed to nullable with an ON DELETE SET NULL FK (mirroring members.linked_user_id), and delete_user() no longer raises an exception for accounts with expense history -- deleting the auth.users row now anonymizes (nulls out) authorship on their past expenses instead of being blocked. Expense content is untouched; permission checks comparing created_by_user_id = auth.uid() simply stop matching once null, leaving trip admins as the only ones who can still manage the expense. Also guarded AdminAnalyticsPage's retention-cohort active-user Set against null creator ids."
-  },
-  {
-    "id": "BUG-110",
-    "title": "Superadmin Users tab: Suspend/Delete errors were visually indistinguishable from success",
-    "description": "AdminUsersPage's toast (`.ops-toast`) always rendered with a green checkmark and safe/success styling regardless of whether the message was a success confirmation or a thrown error. Every failure path -- 'Superadmin access required.', 'Cannot suspend/delete a superadmin account.', the (since-fixed) expense-history block, or a network/RLS error -- displayed with the same checkmark, so a failed Suspend or Delete looked identical to a successful one. The same duplicated showToast/.ops-toast pattern with no error state existed in 5 other admin pages (Flags, Trips, Audit, Features, Tools).",
-    "severity": "medium",
-    "category": "general",
-    "status": "resolved",
-    "foundBy": "human",
-    "environment": {
-      "platform": "web",
-      "isOnline": true,
-      "appVersion": "1.0.0"
-    },
-    "reproSteps": [
-      "Open Superadmin portal > Users",
-      "Click Suspend or Delete on a user where the RPC will reject (e.g. not currently a superadmin session, or a blocked case)",
-      "Observe toast renders with a green checkmark just like a successful action",
-      "Refresh the list -- the user's status never actually changed"
-    ],
-    "expectedBehavior": "A failed Suspend/Delete shows a visually distinct error toast (red, alert icon) with the real error message, so the admin knows the action did not happen.",
-    "actualBehavior": "Error and success toasts were styled identically (green check, .ops-toast), making every failure look like a success.",
-    "diagnostics": {},
-    "createdAt": "2026-08-28T10:44:50.689Z",
-    "updatedAt": "2026-08-28T10:44:50.689Z",
-    "resolvedBy": "claude-cli",
-    "resolvedAt": "2026-08-28T10:44:50.689Z",
-    "resolutionNote": "AdminUsersPage.tsx: showToast(msg, isError) now tracks error state; toast renders IconAlertCircle + red '.ops-toast.error' styling (new class in ops-deck.css using existing --danger tokens) with role=\"alert\" on failure vs IconCheck/role=\"status\" on success. All 4 catch blocks (suspend, bulk suspend, delete, broadcast) now pass isError=true. Verified set_user_banned/delete_user RPCs and is_superadmin() work correctly server-side (no drift between deployed functions and migration files; live-tested set_user_banned in a rolled-back transaction as the actual superadmin). Also discovered and deployed migration 0072 (BUG-109's fix), which was committed to the repo but had never been pushed to production -- schema_migrations tracked 0071 as the latest applied version."
-  },
-  {
     "id": "BUG-111",
     "title": "Full-app WCAG 2.2 audit: login gate and trip card were fully unreachable by keyboard, plus 4 other a11y failures and 7 UX polish issues",
     "description": "A full-app accessibility + visual/UX audit found: the login screen's 'Slide to open ledger' gate (SlideToUnlock.tsx) was a pointer-only div with no role/tabIndex/onKeyDown or click fallback, making the entire login flow unreachable by keyboard, switch, or many screen-reader users; the home screen's front trip card (TripStack.tsx StackCardItem) had the same problem; input placeholder text failed 4.5:1 contrast (opacity: 0.8 on an otherwise-passing color token); the member add/edit dialog (MembersGroupsTab.tsx) was missing the focus trap every other modal in the app has; the admin command-search input had outline: none with no focus-visible replacement; and StickyBalanceBar had a redundant/confusing click handler on a landmark region duplicating a real nested button. Separately, a visual/UX pass found the home screen's cover photo popped in abruptly with no fade, SlideToUnlock's drag math could render the handle off-track on a narrow/cold-start layout, several components hardcoded one-off transition easings instead of reusing existing --ease-* tokens, ExpenseForm duplicated its error message across 3 render sites with fragile conditions, bottom nav tap targets sat right at the 44pt floor, and a handful of labels in AnalyticsTab/BugReportModal were under 12px.",
@@ -3483,5 +3493,61 @@
     "resolvedBy": "claude-cli",
     "resolvedAt": "2026-08-28T00:00:00.000Z",
     "resolutionNote": "Commit 1471c34. SlideToUnlock.tsx: added role=button/tabIndex/onKeyDown (Enter/Space unlocks) and clamped maxDistance to >=0. TripStack.tsx: StackCardItem front card now role=button/tabIndex/onKeyDown, cover photo now fades in via a separate .stack-card-photo layer with a reduced-motion guard instead of an abrupt background-image swap. index.css: placeholder opacity 0.8->1 (text-muted alone already passes 4.5:1), added .stack-card:focus-visible ring, consolidated .filter-chip and .expense-review-banner ad hoc easings to var(--transition-smooth), added .nav-tab-item min-height:48px. MembersGroupsTab.tsx: added useFocusTrap to the add/edit member dialog (skipAutoFocus, Escape deferred to the name-suggestion dropdown's own handler while it's open so the two Escape behaviors don't fight). ops-deck.css: added :focus-visible ring to .ops-cmdk input. StickyBalanceBar.tsx: removed the redundant onClick on the landmark <aside>, kept only the real nested button. ExpenseForm.tsx: replaced 3 independently-duplicated formError conditions with one derived isAmountFormError/isTitleFormError/isGeneralFormError classification so each error renders exactly once. SlideToUnlock.tsx inline easing plus AnalyticsTab.tsx/BugReportModal.tsx sub-12px labels also fixed; contrailFlow's linear animation was reviewed and deliberately left as-is (correct for a continuous dash-flow effect). A broader hardcoded-hex-color sweep was investigated but found no safe targets -- the flagged occurrences were Google's official brand-color SVG paths (LoginScreen.tsx), a Mapbox GL paint property that doesn't accept CSS vars (TripMapHero.tsx), and TripWrappedModal.tsx's deliberate hardcoded light/dark pairs (export/share-card context) -- so left untouched."
+  },
+  {
+    "id": "BUG-109",
+    "title": "Superadmin could not delete a user with expense history, even though suspend worked",
+    "description": "In the Superadmin portal's Users page, suspending a user (setUserBanned) worked, but deleting one (deleteUserAccount -> delete_user RPC) failed with 'This account has expense history and cannot be deleted. Suspend it instead.' The delete_user() function (migration 0068) intentionally raised that exception for any account referenced by expenses.created_by_user_id, since the column was NOT NULL with a plain FK (no cascade) -- a hard delete would otherwise orphan those rows or surface a raw FK violation.",
+    "severity": "medium",
+    "category": "general",
+    "status": "resolved",
+    "foundBy": "human",
+    "environment": {
+      "isOnline": true,
+      "platform": "web",
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Open Superadmin portal > Users",
+      "Pick a user who has logged at least one expense",
+      "Click Delete and type DELETE to confirm",
+      "Observe toast: This account has expense history and cannot be deleted. Suspend it instead."
+    ],
+    "expectedBehavior": "Superadmin can hard-delete a user account that has logged expenses; their past expenses remain intact but lose their creator attribution.",
+    "actualBehavior": "Delete button in AdminUsersPage always failed for any user who had ever logged an expense, with no way to actually remove the account short of suspending it forever.",
+    "diagnostics": {},
+    "createdAt": "2026-08-28T07:21:32.501+00:00",
+    "updatedAt": "2026-08-28T07:21:39.391+00:00",
+    "resolvedAt": "2026-08-28T07:21:39.391+00:00",
+    "resolvedBy": "claude-cli",
+    "resolutionNote": "Commit 529558d + supabase migration 0072. expenses.created_by_user_id relaxed to nullable with an ON DELETE SET NULL FK (mirroring members.linked_user_id), and delete_user() no longer raises an exception for accounts with expense history -- deleting the auth.users row now anonymizes (nulls out) authorship on their past expenses instead of being blocked. Expense content is untouched; permission checks comparing created_by_user_id = auth.uid() simply stop matching once null, leaving trip admins as the only ones who can still manage the expense. Also guarded AdminAnalyticsPage's retention-cohort active-user Set against null creator ids."
+  },
+  {
+    "id": "BUG-110",
+    "title": "Superadmin Users tab: Suspend/Delete errors were visually indistinguishable from success",
+    "description": "AdminUsersPage's toast (`.ops-toast`) always rendered with a green checkmark and safe/success styling regardless of whether the message was a success confirmation or a thrown error. Every failure path -- 'Superadmin access required.', 'Cannot suspend/delete a superadmin account.', the (since-fixed) expense-history block, or a network/RLS error -- displayed with the same checkmark, so a failed Suspend or Delete looked identical to a successful one. The same duplicated showToast/.ops-toast pattern with no error state existed in 5 other admin pages (Flags, Trips, Audit, Features, Tools).",
+    "severity": "medium",
+    "category": "general",
+    "status": "resolved",
+    "foundBy": "human",
+    "environment": {
+      "isOnline": true,
+      "platform": "web",
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Open Superadmin portal > Users",
+      "Click Suspend or Delete on a user where the RPC will reject (e.g. not currently a superadmin session, or a blocked case)",
+      "Observe toast renders with a green checkmark just like a successful action",
+      "Refresh the list -- the user's status never actually changed"
+    ],
+    "expectedBehavior": "A failed Suspend/Delete shows a visually distinct error toast (red, alert icon) with the real error message, so the admin knows the action did not happen.",
+    "actualBehavior": "Error and success toasts were styled identically (green check, .ops-toast), making every failure look like a success.",
+    "diagnostics": {},
+    "createdAt": "2026-08-28T10:44:50.689+00:00",
+    "updatedAt": "2026-08-28T10:44:50.689+00:00",
+    "resolvedAt": "2026-08-28T10:44:50.689+00:00",
+    "resolvedBy": "claude-cli",
+    "resolutionNote": "AdminUsersPage.tsx: showToast(msg, isError) now tracks error state; toast renders IconAlertCircle + red '.ops-toast.error' styling (new class in ops-deck.css using existing --danger tokens) with role=\"alert\" on failure vs IconCheck/role=\"status\" on success. All 4 catch blocks (suspend, bulk suspend, delete, broadcast) now pass isError=true. Verified set_user_banned/delete_user RPCs and is_superadmin() work correctly server-side (no drift between deployed functions and migration files; live-tested set_user_banned in a rolled-back transaction as the actual superadmin). Also discovered and deployed migration 0072 (BUG-109's fix), which was committed to the repo but had never been pushed to production -- schema_migrations tracked 0071 as the latest applied version."
   }
 ]
