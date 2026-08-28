@@ -239,7 +239,9 @@ export function AdminAnalyticsPage({ trips, expenses, members, categories, bugs,
   const retentionCohort = useMemo(() => {
     const now = Date.now();
     const eligible = users.filter((u) => now - new Date(u.createdAt).getTime() >= 14 * DAY_MS);
-    const activeUserIds = new Set(expenses.filter((e) => now - e.createdAt <= 30 * DAY_MS).map((e) => e.createdByUserId));
+    const activeUserIds = new Set(
+      expenses.filter((e) => now - e.createdAt <= 30 * DAY_MS && e.createdByUserId).map((e) => e.createdByUserId)
+    );
     const retained = eligible.filter((u) => activeUserIds.has(u.id));
     return { eligibleCount: eligible.length, retainedCount: retained.length, pct: eligible.length > 0 ? (retained.length / eligible.length) * 100 : 0 };
   }, [users, expenses]);
