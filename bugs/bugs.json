@@ -3456,5 +3456,32 @@
     "resolvedBy": "claude-cli",
     "resolvedAt": "2026-08-28T10:44:50.689Z",
     "resolutionNote": "AdminUsersPage.tsx: showToast(msg, isError) now tracks error state; toast renders IconAlertCircle + red '.ops-toast.error' styling (new class in ops-deck.css using existing --danger tokens) with role=\"alert\" on failure vs IconCheck/role=\"status\" on success. All 4 catch blocks (suspend, bulk suspend, delete, broadcast) now pass isError=true. Verified set_user_banned/delete_user RPCs and is_superadmin() work correctly server-side (no drift between deployed functions and migration files; live-tested set_user_banned in a rolled-back transaction as the actual superadmin). Also discovered and deployed migration 0072 (BUG-109's fix), which was committed to the repo but had never been pushed to production -- schema_migrations tracked 0071 as the latest applied version."
+  },
+  {
+    "id": "BUG-111",
+    "title": "Full-app WCAG 2.2 audit: login gate and trip card were fully unreachable by keyboard, plus 4 other a11y failures and 7 UX polish issues",
+    "description": "A full-app accessibility + visual/UX audit found: the login screen's 'Slide to open ledger' gate (SlideToUnlock.tsx) was a pointer-only div with no role/tabIndex/onKeyDown or click fallback, making the entire login flow unreachable by keyboard, switch, or many screen-reader users; the home screen's front trip card (TripStack.tsx StackCardItem) had the same problem; input placeholder text failed 4.5:1 contrast (opacity: 0.8 on an otherwise-passing color token); the member add/edit dialog (MembersGroupsTab.tsx) was missing the focus trap every other modal in the app has; the admin command-search input had outline: none with no focus-visible replacement; and StickyBalanceBar had a redundant/confusing click handler on a landmark region duplicating a real nested button. Separately, a visual/UX pass found the home screen's cover photo popped in abruptly with no fade, SlideToUnlock's drag math could render the handle off-track on a narrow/cold-start layout, several components hardcoded one-off transition easings instead of reusing existing --ease-* tokens, ExpenseForm duplicated its error message across 3 render sites with fragile conditions, bottom nav tap targets sat right at the 44pt floor, and a handful of labels in AnalyticsTab/BugReportModal were under 12px.",
+    "severity": "high",
+    "category": "accessibility",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Open the login screen and try to reach 'Slide to open ledger' using only Tab/Enter -- there was no way to focus or activate it",
+      "On the home screen, Tab to the front trip card and press Enter -- nothing happened, the only working entry point was the separate 'View all trips' button",
+      "Focus any empty input field and compare placeholder text contrast against surrounding body text -- placeholder visibly washed out"
+    ],
+    "expectedBehavior": "Every interactive control (login gate, trip card, dialogs, admin search) is operable by keyboard alone and meets WCAG 2.2 AA contrast/focus-visibility; UI polish (loading feedback, consistent easing, tap targets, error display) matches the rest of the app's design system.",
+    "actualBehavior": "Login and home screen were hard keyboard blockers; several modals/controls had missing or inconsistent focus handling and contrast; assorted UX rough edges (abrupt photo pop-in, duplicated error text, tight tap targets).",
+    "diagnostics": {},
+    "createdAt": "2026-08-28T00:00:00.000Z",
+    "updatedAt": "2026-08-28T00:00:00.000Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-08-28T00:00:00.000Z",
+    "resolutionNote": "Commit 1471c34. SlideToUnlock.tsx: added role=button/tabIndex/onKeyDown (Enter/Space unlocks) and clamped maxDistance to >=0. TripStack.tsx: StackCardItem front card now role=button/tabIndex/onKeyDown, cover photo now fades in via a separate .stack-card-photo layer with a reduced-motion guard instead of an abrupt background-image swap. index.css: placeholder opacity 0.8->1 (text-muted alone already passes 4.5:1), added .stack-card:focus-visible ring, consolidated .filter-chip and .expense-review-banner ad hoc easings to var(--transition-smooth), added .nav-tab-item min-height:48px. MembersGroupsTab.tsx: added useFocusTrap to the add/edit member dialog (skipAutoFocus, Escape deferred to the name-suggestion dropdown's own handler while it's open so the two Escape behaviors don't fight). ops-deck.css: added :focus-visible ring to .ops-cmdk input. StickyBalanceBar.tsx: removed the redundant onClick on the landmark <aside>, kept only the real nested button. ExpenseForm.tsx: replaced 3 independently-duplicated formError conditions with one derived isAmountFormError/isTitleFormError/isGeneralFormError classification so each error renders exactly once. SlideToUnlock.tsx inline easing plus AnalyticsTab.tsx/BugReportModal.tsx sub-12px labels also fixed; contrailFlow's linear animation was reviewed and deliberately left as-is (correct for a continuous dash-flow effect). A broader hardcoded-hex-color sweep was investigated but found no safe targets -- the flagged occurrences were Google's official brand-color SVG paths (LoginScreen.tsx), a Mapbox GL paint property that doesn't accept CSS vars (TripMapHero.tsx), and TripWrappedModal.tsx's deliberate hardcoded light/dark pairs (export/share-card context) -- so left untouched."
   }
 ]
