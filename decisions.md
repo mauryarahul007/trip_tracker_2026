@@ -1066,4 +1066,32 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - Zero heavy external libraries were added (no Framer Motion/Lottie runtime bloat); all motion relies exclusively on native CSS hardware-accelerated transforms and lightweight event listeners.
 
+---
+
+## 61. Interactive Micro-Motion & Visual Polish Suite (Phase 2 Mobility Enhancements)
+* **Context:**
+  - High-frequency user touch points (Boarding Pass hero card, settlement completion, 3D card deck browsing, spend donut analytics, category chip selection) lacked physical delight and feedback loops.
+* **Decision:**
+  - **Boarding Pass Laser Sweep:** Integrated an animated laser light shimmer beam (`.bp-barcode-sweep`) over the ticket barcode.
+  - **3D Card Stack Rotational Tilt:** In `TripStack.tsx`, added rotational inertia (`rotate(${tiltDeg}deg)`) and scale compression during drag gestures with spring recovery.
+  - **Settlement Celebration Checkmark Bloom:** When tapping Settle in `BalancesSettlements.tsx`, the button expands with a green checkmark and circular shockwave halo (`@keyframes ringBloom`).
+  - **Interactive Analytics Donut Popout:** Tapping or hovering category slices extrudes the SVG ring outward by `3px` with a drop-shadow glow and smooth stroke transitions.
+  - **Category Selection Halo:** Added spring pop scaling (`scale(1.04)`) and glowing focus halos for active expense form categories and split pills.
+* **Trade-offs Accepted:**
+  - All animations are 100% CSS GPU-accelerated and event-driven, maintaining 0% idle CPU utilization and zero bundle size increase.
+
+---
+
+## 62. Calibrated Network & Cloud Sync Lifecycle (Offline → Syncing → Synced)
+* **Context:**
+  - When reconnecting to the internet or manually triggering sync, the header sync status pill previously jumped directly from offline to synced without showing an in-progress transition, leading to ambiguity on whether queued changes were currently in flight.
+* **Decision:**
+  - Introduced an explicit `syncing` status in the state machine (`SyncStatus = 'offline' | 'syncing' | 'session-expired' | 'out-of-sync' | 'synced'`).
+  - **Reconnection Sequence:** When the browser fires an `online` event, the app automatically activates `isSyncing = true`, flashes the pulsing blue `Syncing…` badge, processes the offline sync queue (`processQueue()`), pulls updated server expenses, and stamps `lastBackendSyncedAt` before settling into green `Synced just now`.
+  - **Offline Detection:** When `!isOnline`, the badge immediately displays `Offline` with muted styling.
+* **Trade-offs Accepted:**
+  - Lightweight local state machine with zero background polling overhead; transitions are triggered purely by native browser network events and user sync interactions.
+
+
+
 

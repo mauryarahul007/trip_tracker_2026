@@ -216,11 +216,15 @@ function StackCardItem({ trip, members, idx, canDelete, onOpen, onBrowse, onArch
     }
   };
 
+  const dragDistance = Math.sqrt(drag.x * drag.x + drag.y * drag.y);
+  const dragScale = Math.max(0.95, 1 - dragDistance / 2400);
+  const tiltDeg = (drag.x * 0.055).toFixed(2);
+
   const transform =
-    exit === 'left' ? 'translateX(-160%) rotate(-16deg)' :
-    exit === 'right' ? 'translateX(160%) rotate(16deg)' :
-    exit === 'up' ? 'translateY(-140%) scale(0.92)' :
-    `translate(${drag.x}px, ${drag.y}px) rotate(${drag.x / 24}deg)`;
+    exit === 'left' ? 'translateX(-160%) rotate(-18deg) scale(0.9)' :
+    exit === 'right' ? 'translateX(160%) rotate(18deg) scale(0.9)' :
+    exit === 'up' ? 'translateY(-140%) scale(0.9) rotate(2deg)' :
+    `translate(${drag.x}px, ${drag.y}px) rotate(${tiltDeg}deg) scale(${dragScale})`;
 
   return (
     <div
@@ -228,8 +232,12 @@ function StackCardItem({ trip, members, idx, canDelete, onOpen, onBrowse, onArch
       style={isFront ? {
         transform,
         opacity: exit ? 0 : 1,
-        transition: dragging ? 'none' : 'transform 0.32s cubic-bezier(0.16,1,0.3,1), opacity 0.32s cubic-bezier(0.16,1,0.3,1)',
+        transition: dragging ? 'none' : 'transform 0.38s var(--ease-uber-spring), opacity 0.28s ease',
         touchAction: 'pan-y',
+        boxShadow: dragging
+          ? '0 24px 48px -8px rgba(0, 0, 0, 0.38), 0 12px 24px -4px rgba(0, 0, 0, 0.24)'
+          : undefined,
+        willChange: dragging ? 'transform' : undefined,
       } : undefined}
       onPointerDown={isFront ? handlePointerDown : undefined}
       onPointerMove={isFront ? handlePointerMove : undefined}

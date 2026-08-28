@@ -181,6 +181,7 @@ export function AnalyticsTab({
                       const strokeDash = chartFilled ? `${(d.percentage / 100) * circ} ${circ}` : `0 ${circ}`;
                       const strokeOffset = `${- (accumPercent / 100) * circ}`;
                       accumPercent += d.percentage;
+                      const isHovered = hoveredIdx === idx;
                       return (
                         <circle
                           key={d.id}
@@ -189,14 +190,17 @@ export function AnalyticsTab({
                           r={r}
                           fill="none"
                           stroke={getCatColor(d.id, idx)}
-                          strokeWidth="12"
+                          strokeWidth={isHovered ? 15 : 12}
                           strokeDasharray={strokeDash}
                           strokeDashoffset={strokeOffset}
                           transform="rotate(-90 70 70)"
+                          className={isHovered ? 'donut-slice-active' : ''}
                           onClick={onCategoryClick ? () => onCategoryClick(d.id) : undefined}
+                          onMouseEnter={() => setHoveredIdx(idx)}
+                          onMouseLeave={() => setHoveredIdx(null)}
                           style={{
                             cursor: onCategoryClick ? 'pointer' : undefined,
-                            transition: 'stroke-dasharray 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), stroke-dashoffset 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                            transition: 'stroke-dasharray 0.5s var(--ease-uber-spring), stroke-dashoffset 0.5s var(--ease-uber-spring), stroke-width 0.2s var(--ease-uber-spring)',
                           }}
                         />
                       );

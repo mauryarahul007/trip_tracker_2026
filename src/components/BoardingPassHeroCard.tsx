@@ -400,9 +400,11 @@ export function BoardingPassHeroCard({
           >
             <div
               onClick={handleCopyJoinCode}
+              className="bp-barcode-container"
               style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}
               title="Click to copy Join Code"
             >
+              <div className="bp-barcode-sweep" aria-hidden="true" />
               <span style={{ fontFamily: 'monospace', fontSize: '14px', letterSpacing: '2px', color: 'rgba(31, 27, 20, 0.7)' }}>
                 ▌│█║▌║▌║
               </span>

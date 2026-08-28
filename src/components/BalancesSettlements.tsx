@@ -533,9 +533,15 @@ function TransferRow({
                 )}
                 <button
                   className="gradient-btn"
-                  style={{ padding: '6px 14px', fontSize: '11px', borderRadius: 'var(--border-radius-sm)', height: '28px' }}
+                  style={{
+                    padding: '6px 14px',
+                    fontSize: '11px',
+                    borderRadius: 'var(--border-radius-sm)',
+                    height: '28px',
+                    transition: 'transform 0.18s var(--ease-uber-spring)',
+                  }}
                   onClick={() => {
-                    triggerHaptic('success');
+                    triggerHaptic('light');
                     onSettle(t.fromMemberId, t.toMemberId, t.amount, t.fromLabel, t.toLabel);
                   }}
                 >

@@ -391,18 +391,39 @@ export default function App() {
     initialize();
   }, [initialize]);
 
-  // Track browser connectivity for the backend sync status pill
+  // Track browser connectivity and live syncing state for the backend sync status pill
   const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [isSyncing, setIsSyncing] = useState(false);
+
+  const handleOnlineSync = useCallback(async () => {
+    setIsOnline(true);
+    setIsSyncing(true);
+    try {
+      await processQueue();
+      await refreshActiveTripExpenses();
+      useTripStore.getState().updateLastBackendSyncedAt(Date.now());
+    } catch (err) {
+      console.error('Online auto-sync error:', err);
+    } finally {
+      setIsSyncing(false);
+    }
+  }, [processQueue, refreshActiveTripExpenses]);
+
   useEffect(() => {
-    const handleOnline = () => setIsOnline(true);
-    const handleOffline = () => setIsOnline(false);
+    const handleOnline = () => {
+      void handleOnlineSync();
+    };
+    const handleOffline = () => {
+      setIsOnline(false);
+      setIsSyncing(false);
+    };
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
     return () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
     };
-  }, []);
+  }, [handleOnlineSync]);
 
   const visibleTrips = useMemo(
     () => trips.filter((t) => t.id !== pendingDeleteTrip?.id && !t.archived),
@@ -548,28 +569,26 @@ export default function App() {
 
   // Device <-> backend sync status for the header pill.
   //
-  // syncQueue.length is the only live signal here: it's pushed to on every
-  // offline/failed write and drained by processQueue(). lastBackendSyncedAt
-  // is NOT a reliable second signal -- it's only ever refreshed inside
-  // processQueue() when the queue empties, which normal online mutations
-  // never touch (they write directly to Supabase, bypassing the queue
-  // entirely on success). lastModifiedAt, meanwhile, gets bumped by things
-  // as routine as logging in. So once lastBackendSyncedAt was set even
-  // once, any later lastModifiedAt bump would permanently trip a false
-  // "out of sync" even with an empty queue -- which is exactly the "Out of
-  // sync (0)" bug this used to show on every trip.
-  type SyncStatus = 'offline' | 'session-expired' | 'out-of-sync' | 'synced';
+  // Live states:
+  // 1. 'offline': Browser is offline.
+  // 2. 'syncing': Currently executing queue draining or server refresh.
+  // 3. 'session-expired': Auth token expired.
+  // 4. 'out-of-sync': Local changes in queue that couldn't be sent.
+  // 5. 'synced': Connected and up-to-date.
+  type SyncStatus = 'offline' | 'syncing' | 'session-expired' | 'out-of-sync' | 'synced';
   const syncStatus: SyncStatus = useMemo(() => {
+    if (!isOnline) return 'offline';
+    if (isSyncing || isManualRefreshing) return 'syncing';
     if (sessionExpired) return 'session-expired';
     if (syncQueue.length > 0) return 'out-of-sync';
-    if (!isOnline) return 'offline';
     return 'synced';
-  }, [isOnline, sessionExpired, syncQueue.length]);
+  }, [isOnline, isSyncing, isManualRefreshing, sessionExpired, syncQueue.length]);
 
   const syncStatusLabel = useMemo(() => {
+    if (syncStatus === 'offline') return 'Offline';
+    if (syncStatus === 'syncing') return 'Syncing…';
     if (syncStatus === 'session-expired') return 'Session expired';
     if (syncStatus === 'out-of-sync') return `Out of sync (${syncQueue.length})`;
-    if (syncStatus === 'offline') return 'Offline';
     if (!lastBackendSyncedAt) return 'Synced';
     const diffMins = Math.floor((Date.now() - lastBackendSyncedAt) / 60000);
     if (diffMins < 1) return 'Synced just now';
@@ -579,21 +598,21 @@ export default function App() {
     return 'Synced yesterday';
   }, [syncStatus, syncQueue.length, lastBackendSyncedAt]);
 
-  // Auto-sync pending offline queue whenever network connectivity is restored
-  useEffect(() => {
-    if (isOnline && syncQueue.length > 0) {
-      processQueue();
-    }
-  }, [isOnline, syncQueue.length, processQueue]);
-
-  const handleSyncClick = () => {
+  const handleSyncClick = async () => {
     if (syncStatus === 'session-expired') {
       signOut();
       return;
     }
-    if (!isOnline) return;
-    processQueue();
-    void handleManualRefresh();
+    if (!isOnline || isSyncing) return;
+    triggerHaptic('light');
+    setIsSyncing(true);
+    try {
+      await processQueue();
+      await refreshActiveTripExpenses();
+      useTripStore.getState().updateLastBackendSyncedAt(Date.now());
+    } finally {
+      setIsSyncing(false);
+    }
   };
 
 
@@ -1650,7 +1669,9 @@ export default function App() {
                 disabled={syncStatus === 'offline'}
                 title={
                   syncStatus === 'offline'
-                    ? 'No connection — changes are saved on this device and will sync once you\'re back online.'
+                    ? "No connection — changes are saved on this device and will sync once you're back online."
+                    : syncStatus === 'syncing'
+                    ? 'Syncing changes with cloud server…'
                     : syncStatus === 'session-expired'
                     ? 'Your session expired. Tap to sign in again.'
                     : syncStatus === 'out-of-sync'
