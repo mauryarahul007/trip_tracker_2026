@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Trip Tracker — Home (Flutter / Material 3 mockup)</title>
+<style>
+  :root {
+    /* Material 3 tonal palette — teal seed, travel-flavored amber tertiary */
+    --md-primary: #146B64;
+    --md-on-primary: #FFFFFF;
+    --md-primary-container: #A6F2E4;
+    --md-on-primary-container: #00201C;
+
+    --md-secondary: #4A635E;
+    --md-on-secondary: #FFFFFF;
+    --md-secondary-container: #CCE8E1;
+    --md-on-secondary-container: #05201C;
+
+    --md-tertiary: #8A5A1E;
+    --md-tertiary-container: #FFDDB3;
+    --md-on-tertiary-container: #2A1800;
+
+    --md-error: #BA1A1A;
+    --md-error-container: #FFDAD6;
+
+    --md-surface: #F6FBF9;
+    --md-surface-dim: #D6DBD8;
+    --md-surface-container-lowest: #FFFFFF;
+    --md-surface-container-low: #F0F5F2;
+    --md-surface-container: #EAEFEC;
+    --md-surface-container-high: #E4EAE7;
+    --md-surface-container-highest: #DEE4E1;
+
+    --md-on-surface: #171D1B;
+    --md-on-surface-variant: #3F4946;
+    --md-outline: #6F7976;
+    --md-outline-variant: #BFC9C5;
+
+    --shape-xs: 4px;
+    --shape-sm: 8px;
+    --shape-md: 12px;
+    --shape-lg: 16px;
+    --shape-xl: 28px;
+    --shape-full: 999px;
+
+    --elev1: 0 1px 2px rgba(0,0,0,0.30), 0 1px 3px 1px rgba(0,0,0,0.15);
+    --elev2: 0 1px 2px rgba(0,0,0,0.30), 0 2px 6px 2px rgba(0,0,0,0.15);
+    --elev3: 0 1px 3px rgba(0,0,0,0.30), 0 4px 8px 3px rgba(0,0,0,0.15);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    padding: 48px;
+    background: #E7ECEA;
+    font-family: 'Roboto', 'Segoe UI', system-ui, -apple-system, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 40px;
+    flex-wrap: wrap;
+  }
+
+  /* ---------- Phone frame ---------- */
+  .device {
+    width: 412px;
+    height: 915px;
+    background: #0B0F0E;
+    border-radius: 44px;
+    padding: 14px;
+    box-shadow: 0 30px 60px rgba(0,0,0,0.35), 0 8px 20px rgba(0,0,0,0.2);
+    position: relative;
+  }
+  .screen {
+    width: 100%;
+    height: 100%;
+    background: var(--md-surface);
+    border-radius: 32px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+  }
+
+  /* ---------- Status bar ---------- */
+  .status-bar {
+    height: 36px;
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--md-on-surface);
+    background: var(--md-surface);
+  }
+  .status-icons { display: flex; align-items: center; gap: 6px; }
+  .status-icons svg { display: block; }
+
+  /* ---------- Top app bar (Large) ---------- */
+  .top-app-bar {
+    flex: 0 0 auto;
+    padding: 8px 20px 20px;
+    background: var(--md-surface);
+  }
+  .top-app-bar-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .greeting {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--md-on-surface-variant);
+    letter-spacing: 0.1px;
+    margin: 0 0 2px;
+  }
+  .page-title {
+    font-size: 28px;
+    line-height: 36px;
+    font-weight: 400;
+    color: var(--md-on-surface);
+    margin: 0;
+    letter-spacing: 0;
+  }
+  .avatar-badge {
+    width: 40px;
+    height: 40px;
+    border-radius: var(--shape-full);
+    background: linear-gradient(135deg, #F6B676 0%, #E8895A 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #2A1300;
+    font-size: 15px;
+    font-weight: 600;
+    flex: 0 0 auto;
+    box-shadow: var(--elev1);
+  }
+
+  /* ---------- Filter chip row ---------- */
+  .chip-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 16px;
+    overflow-x: auto;
+  }
+  .chip {
+    flex: 0 0 auto;
+    height: 32px;
+    padding: 0 16px;
+    border-radius: var(--shape-sm);
+    border: 1px solid var(--md-outline);
+    display: flex;
+    align-items: center;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--md-on-surface-variant);
+    background: transparent;
+  }
+  .chip.selected {
+    border: none;
+    background: var(--md-secondary-container);
+    color: var(--md-on-secondary-container);
+    padding-left: 12px;
+  }
+  .chip .dot {
+    width: 16px; height: 16px; margin-right: 6px;
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+
+  /* ---------- Scrollable content ---------- */
+  .content {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    padding: 4px 20px 100px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .content::-webkit-scrollbar { width: 0; }
+
+  /* ---------- Trip card ---------- */
+  .trip-card {
+    border-radius: var(--shape-lg);
+    background: var(--md-surface-container-low);
+    box-shadow: var(--elev1);
+    overflow: hidden;
+    position: relative;
+  }
+  .trip-card.pressed {
+    box-shadow: none;
+    background: var(--md-surface-container);
+  }
+  .trip-cover {
+    height: 176px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 14px 16px;
+    color: #FFFFFF;
+  }
+  .trip-cover::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(10,15,14,0) 40%, rgba(10,15,14,0.75) 100%);
+    z-index: 0;
+  }
+  .trip-cover > * { position: relative; z-index: 1; }
+  .trip-cover.cover-beach { background: linear-gradient(160deg, #2E9CA6 0%, #1D6B76 45%, #0C3E4A 100%); }
+  .trip-cover.cover-mountain { background: linear-gradient(160deg, #7A8FA6 0%, #46566E 45%, #1E2536 100%); }
+  .trip-cover.cover-city { background: linear-gradient(160deg, #E08A4C 0%, #B9542F 45%, #5E2418 100%); }
+
+  .trip-status-pill {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    z-index: 2;
+    padding: 5px 12px;
+    border-radius: var(--shape-full);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+  }
+  .trip-status-pill.active {
+    background: var(--md-primary-container);
+    color: var(--md-on-primary-container);
+  }
+  .trip-status-pill.upcoming {
+    background: var(--md-tertiary-container);
+    color: var(--md-on-tertiary-container);
+  }
+
+  .trip-dates {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+    opacity: 0.92;
+    margin-bottom: 2px;
+  }
+  .trip-name {
+    font-size: 22px;
+    line-height: 28px;
+    font-weight: 500;
+    margin: 0;
+  }
+
+  .trip-body {
+    padding: 12px 16px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .trip-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+  .trip-meta-line {
+    font-size: 13px;
+    color: var(--md-on-surface-variant);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .avatar-stack {
+    display: flex;
+  }
+  .avatar-stack .mini-avatar {
+    width: 28px; height: 28px;
+    border-radius: var(--shape-full);
+    border: 2px solid var(--md-surface-container-low);
+    margin-left: -8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 600; color: #fff;
+  }
+  .avatar-stack .mini-avatar:first-child { margin-left: 0; }
+  .avatar-stack .mini-avatar.more {
+    background: var(--md-surface-container-highest);
+    color: var(--md-on-surface-variant);
+  }
+
+  .budget-chip {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+  }
+  .budget-amount {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--md-on-surface);
+  }
+  .budget-label {
+    font-size: 11px;
+    color: var(--md-on-surface-variant);
+  }
+
+  /* ---------- Empty-ish helper: section label ---------- */
+  .section-label {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    color: var(--md-on-surface-variant);
+    margin: 4px 0 -4px;
+  }
+
+  /* ---------- FAB ---------- */
+  .fab {
+    position: absolute;
+    right: 20px;
+    bottom: 96px;
+    height: 56px;
+    padding: 0 20px 0 16px;
+    border-radius: var(--shape-lg);
+    background: var(--md-primary-container);
+    color: var(--md-on-primary-container);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: var(--elev3);
+    font-size: 14px;
+    font-weight: 600;
+    z-index: 5;
+  }
+
+  /* ---------- Bottom navigation ---------- */
+  .nav-bar {
+    flex: 0 0 auto;
+    height: 80px;
+    background: var(--md-surface-container);
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    padding-bottom: 12px;
+    box-shadow: 0 -1px 0 var(--md-outline-variant);
+  }
+  .nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    color: var(--md-on-surface-variant);
+    font-size: 12px;
+    font-weight: 500;
+    width: 64px;
+  }
+  .nav-item .nav-icon-wrap {
+    width: 64px;
+    height: 32px;
+    border-radius: var(--shape-full);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .nav-item.active {
+    color: var(--md-on-surface);
+  }
+  .nav-item.active .nav-icon-wrap {
+    background: var(--md-secondary-container);
+  }
+  .nav-item.active svg { stroke: var(--md-on-secondary-container); }
+  .nav-item svg { stroke: var(--md-on-surface-variant); }
+
+  /* ---------- Home indicator ---------- */
+  .home-indicator {
+    position: absolute;
+    bottom: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 134px;
+    height: 4px;
+    border-radius: var(--shape-full);
+    background: var(--md-on-surface);
+    opacity: 0.35;
+  }
+
+  /* ---------- Annotation panel ---------- */
+  .annotations {
+    width: 340px;
+    background: #FFFFFF;
+    border-radius: 16px;
+    padding: 24px 24px 28px;
+    box-shadow: var(--elev1);
+    color: #1B1B1B;
+  }
+  .annotations h2 {
+    font-size: 16px;
+    margin: 0 0 4px;
+    color: var(--md-primary);
+  }
+  .annotations p.sub {
+    margin: 0 0 18px;
+    font-size: 12px;
+    color: #6B6B6B;
+  }
+  .annotations ul {
+    margin: 0 0 20px;
+    padding-left: 18px;
+    font-size: 13px;
+    line-height: 1.6;
+    color: #333;
+  }
+  .annotations h3 {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #6B6B6B;
+    margin: 18px 0 8px;
+  }
+  .swatch-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 4px; }
+  .swatch { display: flex; flex-direction: column; align-items: center; gap: 4px; width: 56px; }
+  .swatch .chip-color { width: 40px; height: 40px; border-radius: 10px; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.08); }
+  .swatch span { font-size: 9px; color: #666; text-align: center; }
+</style>
+</head>
+<body>
+
+  <div class="device">
+    <div class="screen">
+
+      <!-- Status bar -->
+      <div class="status-bar">
+        <span>9:41</span>
+        <div class="status-icons">
+          <svg width="18" height="12" viewBox="0 0 18 12" fill="none"><path d="M1 9L3 7M5 8L7 4M9 7L11 2M13 6L15 1M17 5V1" stroke="#171D1B" stroke-width="1.4" stroke-linecap="round"/></svg>
+          <svg width="24" height="12" viewBox="0 0 24 12" fill="none"><rect x="1" y="1" width="20" height="10" rx="2.5" stroke="#171D1B" stroke-width="1.2"/><rect x="2.5" y="2.5" width="14" height="7" rx="1.2" fill="#171D1B"/><rect x="22" y="4" width="1.5" height="4" rx="0.7" fill="#171D1B"/></svg>
+        </div>
+      </div>
+
+      <!-- Top app bar -->
+      <div class="top-app-bar">
+        <div class="top-app-bar-row">
+          <div>
+            <p class="greeting">Good afternoon</p>
+            <h1 class="page-title">Your trips</h1>
+          </div>
+          <div class="avatar-badge">RM</div>
+        </div>
+
+        <div class="chip-row">
+          <div class="chip selected">
+            <span class="dot">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8L6.5 11.5L13 4.5" stroke="#05201C" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </span>
+            All trips
+          </div>
+          <div class="chip">Active</div>
+          <div class="chip">Upcoming</div>
+          <div class="chip">Archived</div>
+        </div>
+      </div>
+
+      <!-- Content -->
+      <div class="content">
+
+        <!-- Trip card 1 -->
+        <div class="trip-card">
+          <div class="trip-cover cover-beach">
+            <span class="trip-status-pill active">Active</span>
+            <div class="trip-dates">Aug 22 – Sep 02</div>
+            <h2 class="trip-name">Bali Getaway</h2>
+          </div>
+          <div class="trip-body">
+            <div class="trip-meta">
+              <div class="avatar-stack">
+                <span class="mini-avatar" style="background:#D96B3F;">R</span>
+                <span class="mini-avatar" style="background:#3F7DD9;">A</span>
+                <span class="mini-avatar" style="background:#4FA37B;">S</span>
+                <span class="mini-avatar more">+2</span>
+              </div>
+              <div class="trip-meta-line" style="margin-top:6px;">5 members · 18 expenses</div>
+            </div>
+            <div class="budget-chip">
+              <span class="budget-amount">₹1,42,300</span>
+              <span class="budget-label">spent so far</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Trip card 2 -->
+        <div class="trip-card">
+          <div class="trip-cover cover-mountain">
+            <span class="trip-status-pill upcoming">Upcoming</span>
+            <div class="trip-dates">Oct 10 – Oct 17</div>
+            <h2 class="trip-name">Manali Road Trip</h2>
+          </div>
+          <div class="trip-body">
+            <div class="trip-meta">
+              <div class="avatar-stack">
+                <span class="mini-avatar" style="background:#8A5FBF;">K</span>
+                <span class="mini-avatar" style="background:#D9A23F;">P</span>
+                <span class="mini-avatar" style="background:#3FA9D9;">N</span>
+              </div>
+              <div class="trip-meta-line" style="margin-top:6px;">3 members · 2 expenses</div>
+            </div>
+            <div class="budget-chip">
+              <span class="budget-amount">₹12,000</span>
+              <span class="budget-label">budget set</span>
+            </div>
+          </div>
+        </div>
+
+        <p class="section-label" style="margin-top:8px;">Past trips</p>
+
+        <!-- Trip card 3 (pressed / interaction state demo) -->
+        <div class="trip-card pressed">
+          <div class="trip-cover cover-city" style="filter:saturate(0.55) brightness(0.92);">
+            <div class="trip-dates">Jan 03 – Jan 09</div>
+            <h2 class="trip-name">Tokyo 2026</h2>
+          </div>
+          <div class="trip-body">
+            <div class="trip-meta">
+              <div class="avatar-stack">
+                <span class="mini-avatar" style="background:#D9603F;">R</span>
+                <span class="mini-avatar" style="background:#3F7DD9;">A</span>
+              </div>
+              <div class="trip-meta-line" style="margin-top:6px;">2 members · 34 expenses</div>
+            </div>
+            <div class="budget-chip">
+              <span class="budget-amount">¥286,400</span>
+              <span class="budget-label">total spent</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- FAB -->
+      <div class="fab">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 3V17M3 10H17" stroke="#00201C" stroke-width="2" stroke-linecap="round"/></svg>
+        New trip
+      </div>
+
+      <!-- Bottom nav -->
+      <div class="nav-bar">
+        <div class="nav-item active">
+          <span class="nav-icon-wrap">
+            <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M3 10.5L11 4L19 10.5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.5 9V18H16.5V9" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </span>
+          Trips
+        </div>
+        <div class="nav-item">
+          <span class="nav-icon-wrap">
+            <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M4 18V12M11 18V7M18 18V3" stroke-width="1.8" stroke-linecap="round"/></svg>
+          </span>
+          Stats
+        </div>
+        <div class="nav-item">
+          <span class="nav-icon-wrap">
+            <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="11" r="3.2" stroke-width="1.8"/><path d="M11 2.5V4.5M11 17.5V19.5M19.5 11H17.5M4.5 11H2.5M17 5L15.6 6.4M6.4 15.6L5 17M17 17L15.6 15.6M6.4 6.4L5 5" stroke-width="1.6" stroke-linecap="round"/></svg>
+          </span>
+          Settings
+        </div>
+      </div>
+
+      <div class="home-indicator"></div>
+    </div>
+  </div>
+
+  <!-- Annotation panel explaining the design -->
+  <div class="annotations">
+    <h2>Home — trip cards</h2>
+    <p class="sub">Material 3 mobile mockup · design reference only</p>
+    <ul>
+      <li><strong>Large top app bar</strong> with greeting + profile avatar, filter chips below (M3 assist/filter chip pattern) for All / Active / Upcoming / Archived.</li>
+      <li><strong>Trip cards</strong> use M3 elevated card shape (16dp corners, elev 1) with a full-bleed cover photo, scrim for legible text, status pill (Active/Upcoming), member avatar stack, and a trailing budget figure.</li>
+      <li><strong>Past trips</strong> section demonstrated with a desaturated cover + "pressed" card state (flat elevation) to show the resting/tap style.</li>
+      <li><strong>Extended FAB</strong> ("New trip") floats above the nav bar per M3 guidance — primary create action.</li>
+      <li><strong>Bottom navigation bar</strong> with pill-shaped active indicator (Trips / Stats / Settings), M3 NavigationBar spec.</li>
+    </ul>
+
+    <h3>Color roles (teal seed + amber accent)</h3>
+    <div class="swatch-row">
+      <div class="swatch"><div class="chip-color" style="background:#146B64;"></div><span>Primary</span></div>
+      <div class="swatch"><div class="chip-color" style="background:#A6F2E4;"></div><span>Primary container</span></div>
+      <div class="swatch"><div class="chip-color" style="background:#CCE8E1;"></div><span>Secondary container</span></div>
+      <div class="swatch"><div class="chip-color" style="background:#FFDDB3;"></div><span>Tertiary container</span></div>
+      <div class="swatch"><div class="chip-color" style="background:#F6FBF9;"></div><span>Surface</span></div>
+      <div class="swatch"><div class="chip-color" style="background:#EAEFEC;"></div><span>Surface container</span></div>
+    </div>
+
+    <h3>Open questions</h3>
+    <ul>
+      <li>Cover photos: static placeholder art per trip, or fetched destination photo like current web app's card stack?</li>
+      <li>Currency shown per trip's own base currency (as here) or converted to a home currency?</li>
+      <li>Swipe actions (archive/delete) on the card, or overflow menu only?</li>
+    </ul>
+  </div>
+
+</body>
+</html>
