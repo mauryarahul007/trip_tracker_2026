@@ -4,6 +4,7 @@ import { useTripStore } from '../../store/tripStore';
 import { getCurrencySymbol } from '../../utils/currency';
 import { logSuperadminAction } from '../../services/tripApi';
 import { IconSearch, IconCheck, IconRefresh, IconChevronDown, IconChevronUp } from '../Icons';
+import type { ConfirmRequest } from '../ConfirmDialog';
 
 interface Props {
   trips: Trip[];
@@ -12,11 +13,12 @@ interface Props {
   onInspectTrip?: (tripId: string) => void;
   onRefresh: () => void | Promise<void>;
   isRefreshing: boolean;
+  onRequestConfirm: (req: ConfirmRequest) => void;
 }
 
 type SortKey = 'name' | 'members' | 'volume';
 
-export function AdminTripsPage({ trips, expenses, members, onInspectTrip, onRefresh, isRefreshing }: Props) {
+export function AdminTripsPage({ trips, expenses, members, onInspectTrip, onRefresh, isRefreshing, onRequestConfirm }: Props) {
   const freezeTrip = useTripStore((s) => s.freezeTrip);
   const archiveTrip = useTripStore((s) => s.archiveTrip);
   const deleteTrip = useTripStore((s) => s.deleteTrip);
@@ -74,18 +76,24 @@ export function AdminTripsPage({ trips, expenses, members, onInspectTrip, onRefr
     });
   };
 
-  const handleBulkArchive = async () => {
+  const handleBulkArchive = () => {
     const ids = Array.from(selectedIds);
     if (ids.length === 0) return;
-    if (!window.confirm(`Archive ${ids.length} trip${ids.length === 1 ? '' : 's'}?`)) return;
-    for (const id of ids) {
-      const trip = trips.find((t) => t.id === id);
-      if (!trip || trip.archived) continue;
-      await archiveTrip(id, true);
-      void logSuperadminAction(id, 'archive_trip', { tripName: trip.name }).catch(() => {});
-    }
-    showToast(`Archived ${ids.length} trip${ids.length === 1 ? '' : 's'}.`);
-    setSelectedIds(new Set());
+    onRequestConfirm({
+      title: 'Archive trips',
+      message: `Archive ${ids.length} trip${ids.length === 1 ? '' : 's'}?`,
+      confirmLabel: 'Archive',
+      onConfirm: async () => {
+        for (const id of ids) {
+          const trip = trips.find((t) => t.id === id);
+          if (!trip || trip.archived) continue;
+          await archiveTrip(id, true);
+          void logSuperadminAction(id, 'archive_trip', { tripName: trip.name }).catch(() => {});
+        }
+        showToast(`Archived ${ids.length} trip${ids.length === 1 ? '' : 's'}.`);
+        setSelectedIds(new Set());
+      },
+    });
   };
 
   const handleBulkExport = () => {
@@ -279,16 +287,22 @@ export function AdminTripsPage({ trips, expenses, members, onInspectTrip, onRefr
                           <button
                             type="button"
                             className="ops-mini-btn ground"
-                            onClick={async () => {
-                              if (window.confirm(`Permanently remove trip "${t.name}" and its expenses? This cannot be undone.`)) {
-                                await deleteTrip(t.id);
-                                // trip_id references trips(id) on delete cascade -- log against
-                                // null (trip no longer exists) with the id/name in details instead.
-                                void logSuperadminAction(null, 'delete_trip', { tripId: t.id, tripName: t.name }).catch((err) =>
-                                  console.error('Audit log failed', err)
-                                );
-                                showToast(`Deleted trip "${t.name}"`);
-                              }
+                            onClick={() => {
+                              onRequestConfirm({
+                                title: 'Delete trip',
+                                message: `Permanently remove trip "${t.name}" and its expenses? This cannot be undone.`,
+                                confirmLabel: 'Delete',
+                                danger: true,
+                                onConfirm: async () => {
+                                  await deleteTrip(t.id);
+                                  // trip_id references trips(id) on delete cascade -- log against
+                                  // null (trip no longer exists) with the id/name in details instead.
+                                  void logSuperadminAction(null, 'delete_trip', { tripId: t.id, tripName: t.name }).catch((err) =>
+                                    console.error('Audit log failed', err)
+                                  );
+                                  showToast(`Deleted trip "${t.name}"`);
+                                },
+                              });
                             }}
                           >
                             Delete

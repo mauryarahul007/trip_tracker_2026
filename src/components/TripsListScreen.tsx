@@ -508,7 +508,20 @@ export function TripsListScreen({
                     reversed
                     plain
                   >
-                    <div style={{ padding: '18px 20px 16px', cursor: 'pointer' }} onClick={() => onSelectTrip(trip.id)}>
+                    <div
+                      style={{ padding: '18px 20px 16px', cursor: 'pointer' }}
+                      role="button"
+                      tabIndex={0}
+                      aria-label={`Open trip ${trip.name}`}
+                      onClick={() => onSelectTrip(trip.id)}
+                      onKeyDown={(e) => {
+                        if (e.target !== e.currentTarget) return;
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          onSelectTrip(trip.id);
+                        }
+                      }}
+                    >
                       <div className="pp-stamp">
                         <span>{stamp.top}</span>
                         <span>{stamp.bottom}</span>

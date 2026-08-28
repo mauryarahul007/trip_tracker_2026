@@ -4,6 +4,7 @@ import type { AdminUserRow } from '../../types/admin';
 import { setUserBanned, deleteUserAccount, broadcastNotification } from '../../services/tripApi';
 import { IconSearch, IconCheck, IconAlertCircle, IconRefresh } from '../Icons';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
+import type { ConfirmRequest } from '../ConfirmDialog';
 
 interface Props {
   users: AdminUserRow[];
@@ -12,11 +13,12 @@ interface Props {
   onUsersChanged: () => void;
   onRefresh: () => void | Promise<void>;
   isRefreshing: boolean;
+  onRequestConfirm: (req: ConfirmRequest) => void;
 }
 
 const PAGE_SIZE = 25;
 
-export function AdminUsersPage({ users, trips, superadminIds, onUsersChanged, onRefresh, isRefreshing }: Props) {
+export function AdminUsersPage({ users, trips, superadminIds, onUsersChanged, onRefresh, isRefreshing, onRequestConfirm }: Props) {
   const superadminIdSet = new Set(superadminIds);
   const [searchQuery, setSearchQuery] = useState('');
   const [toastMsg, setToastMsg] = useState('');
@@ -71,10 +73,8 @@ export function AdminUsersPage({ users, trips, superadminIds, onUsersChanged, on
     });
   };
 
-  const handleBulkBan = async (banned: boolean) => {
+  const runBulkBan = async (banned: boolean) => {
     const ids = Array.from(selectedIds);
-    if (ids.length === 0) return;
-    if (banned && !window.confirm(`Suspend ${ids.length} user${ids.length === 1 ? '' : 's'}? They lose access immediately.`)) return;
     setIsBulkBusy(true);
     try {
       await Promise.all(ids.map((id) => setUserBanned(id, banned)));
@@ -88,11 +88,23 @@ export function AdminUsersPage({ users, trips, superadminIds, onUsersChanged, on
     }
   };
 
-  const handleToggleBan = async (user: AdminUserRow) => {
-    const nextBanned = !user.banned;
-    if (nextBanned && !window.confirm(`Suspend ${user.email}? They will lose access to every trip immediately.`)) {
+  const handleBulkBan = (banned: boolean) => {
+    const ids = Array.from(selectedIds);
+    if (ids.length === 0) return;
+    if (banned) {
+      onRequestConfirm({
+        title: 'Suspend users',
+        message: `Suspend ${ids.length} user${ids.length === 1 ? '' : 's'}? They lose access immediately.`,
+        confirmLabel: 'Suspend',
+        danger: true,
+        onConfirm: () => void runBulkBan(true),
+      });
       return;
     }
+    void runBulkBan(false);
+  };
+
+  const runToggleBan = async (user: AdminUserRow, nextBanned: boolean) => {
     setBusyUserId(user.id);
     try {
       await setUserBanned(user.id, nextBanned);
@@ -103,6 +115,21 @@ export function AdminUsersPage({ users, trips, superadminIds, onUsersChanged, on
     } finally {
       setBusyUserId(null);
     }
+  };
+
+  const handleToggleBan = (user: AdminUserRow) => {
+    const nextBanned = !user.banned;
+    if (nextBanned) {
+      onRequestConfirm({
+        title: 'Suspend user',
+        message: `Suspend ${user.email}? They will lose access to every trip immediately.`,
+        confirmLabel: 'Suspend',
+        danger: true,
+        onConfirm: () => void runToggleBan(user, true),
+      });
+      return;
+    }
+    void runToggleBan(user, false);
   };
 
   const handleDeleteUser = async (user: AdminUserRow) => {

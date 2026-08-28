@@ -309,8 +309,8 @@ function TransferRow({
             fontSize: '11px',
             fontWeight: '600',
             cursor: 'pointer',
-            width: '20px',
-            height: '20px',
+            width: '24px',
+            height: '24px',
             borderRadius: '50%',
             display: 'flex',
             alignItems: 'center',
@@ -777,7 +777,7 @@ export function BalancesSettlements({
               {isFullySettled ? <IconCheckCircle size={18} /> : <span>⚡</span>}
             </div>
             <div>
-              <div className="wa-group-name">Who owes who</div>
+              <h2 className="wa-group-name">Who owes who</h2>
               <div className="wa-group-caption">
                 {isFullySettled ? 'All debts cleared — nothing to pay' : `${transfers.length} payment${transfers.length === 1 ? '' : 's'} to clear all balances`}
               </div>

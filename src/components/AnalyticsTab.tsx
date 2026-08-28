@@ -230,6 +230,19 @@ export function AnalyticsTab({
                   <div
                     key={d.id}
                     onClick={onCategoryClick ? () => onCategoryClick(d.id) : undefined}
+                    role={onCategoryClick ? 'button' : undefined}
+                    tabIndex={onCategoryClick ? 0 : undefined}
+                    aria-label={onCategoryClick ? `${d.name}, ${d.percentage.toFixed(0)}%. View details` : undefined}
+                    onKeyDown={
+                      onCategoryClick
+                        ? (e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              e.preventDefault();
+                              onCategoryClick(d.id);
+                            }
+                          }
+                        : undefined
+                    }
                     style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '13px', cursor: onCategoryClick ? 'pointer' : undefined }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>

@@ -105,7 +105,7 @@ export function ExpenseFilterDrawer({
         <div className="expense-filter-body">
           {showRelationFilters && (
             <div className="settings-group">
-              <h4 className="settings-group-title">My expenses</h4>
+              <h3 className="settings-group-title">My expenses</h3>
               <div className="filter-chips-track" style={{ overflowX: 'visible', flexWrap: 'wrap', padding: '2px 0 0' }}>
                 <button
                   type="button"
@@ -132,7 +132,7 @@ export function ExpenseFilterDrawer({
           )}
 
           <div className="settings-group">
-            <h4 className="settings-group-title">Category</h4>
+            <h3 className="settings-group-title">Category</h3>
             <div className="filter-chips-track" style={{ overflowX: 'visible', flexWrap: 'wrap', padding: '2px 0 0' }}>
               {categories.map((c) => (
                 <button
@@ -152,7 +152,7 @@ export function ExpenseFilterDrawer({
           </div>
 
           <div className="settings-group">
-            <h4 className="settings-group-title">Paid by</h4>
+            <h3 className="settings-group-title">Paid by</h3>
             <div className="filter-chips-track" style={{ overflowX: 'visible', flexWrap: 'wrap', padding: '2px 0 0' }}>
               {members.map((m) => (
                 <button
@@ -172,7 +172,7 @@ export function ExpenseFilterDrawer({
 
           {locations.length > 0 && (
             <div className="settings-group">
-              <h4 className="settings-group-title">Location</h4>
+              <h3 className="settings-group-title">Location</h3>
               <div className="filter-chips-track" style={{ overflowX: 'visible', flexWrap: 'wrap', padding: '2px 0 0' }}>
                 {locations.map((loc) => (
                   <button
@@ -192,7 +192,7 @@ export function ExpenseFilterDrawer({
           )}
 
           <div className="settings-group">
-            <h4 className="settings-group-title">Date range</h4>
+            <h3 className="settings-group-title">Date range</h3>
             <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
               <input
                 type="date"
@@ -213,7 +213,7 @@ export function ExpenseFilterDrawer({
           </div>
 
           <div className="settings-group">
-            <h4 className="settings-group-title">Amount range</h4>
+            <h3 className="settings-group-title">Amount range</h3>
             <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
               <input
                 type="number"

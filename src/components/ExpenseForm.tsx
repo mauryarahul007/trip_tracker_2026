@@ -173,7 +173,7 @@ export function ExpenseForm({
   const sheetRef = useRef<HTMLFormElement>(null);
   const amountInputRef = useRef<HTMLInputElement>(null);
 
-  useFocusTrap(sheetRef, true, true);
+  useFocusTrap(sheetRef, true, true, onCancel);
 
   useEffect(() => {
     // Automatically focus and select the amount field on open so the user can immediately type
@@ -1055,6 +1055,7 @@ export function ExpenseForm({
                 aria-pressed={isChecked}
                 onClick={toggle}
                 onKeyDown={(e) => {
+                  if (e.target !== e.currentTarget) return;
                   if (e.key === 'Enter' || e.key === ' ') {
                     e.preventDefault();
                     toggle();
@@ -1079,6 +1080,7 @@ export function ExpenseForm({
                       splitMode === 'exact' ? 'e.g. 200' : 'e.g. 25'
                     }
                     className="input-field member-config-input"
+                    aria-label={`${splitMode === 'custom' ? 'Split share' : splitMode === 'exact' ? 'Exact amount' : 'Percentage'} for ${m.name}`}
                     value={splitConfig[m.id] || ''}
                     onClick={(e) => e.stopPropagation()}
                     onChange={(e) => {

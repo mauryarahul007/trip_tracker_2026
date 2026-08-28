@@ -30,7 +30,7 @@ export function UpiPaymentModal({
   const [showQr, setShowQr] = useState(false);
 
   const modalRef = useRef<HTMLDivElement>(null);
-  useFocusTrap(modalRef);
+  useFocusTrap(modalRef, true, false, onClose);
 
   const currencySymbol = getCurrencySymbol(currency);
   const payerName = fromMember?.name || 'Payer';
@@ -86,6 +86,7 @@ export function UpiPaymentModal({
             className="secondary-btn"
             style={{ padding: '4px 8px', borderRadius: '50%' }}
             onClick={onClose}
+            aria-label="Close"
           >
             <IconClose size={16} />
           </button>

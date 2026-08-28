@@ -39,6 +39,7 @@ import { SuperadminAuthModal } from './SuperadminAuthModal';
 // bundle.
 const SuperAdminBugTracker = lazy(() => import('./SuperAdminBugTracker').then((m) => ({ default: m.SuperAdminBugTracker })));
 import { useHistoryBack } from '../utils/useHistoryBack';
+import { useEscapeKey } from '../utils/useEscapeKey';
 
 export type ThemePref = 'light' | 'dark' | 'system';
 
@@ -216,8 +217,10 @@ export function SettingsView({
     reader.readAsText(file);
   };
 
-  // Register sub-screen drill-downs into browser history stack (WhatsApp hierarchical navigation)
-  useHistoryBack(subScreen !== null, () => {
+  // Shared by both the hardware/browser back button and the Escape key, so
+  // a report/feature draft with unsent text gets the same "confirm before
+  // discarding" guard no matter how the user tries to leave the subscreen.
+  const closeSubScreen = () => {
     if (subScreen === 'report-issue' && reportIssueBackGuardRef.current) {
       reportIssueBackGuardRef.current();
       return;
@@ -228,12 +231,17 @@ export function SettingsView({
     }
     setSubScreen(null);
     setExpandedCategoryId(null);
-  });
+  };
+
+  // Register sub-screen drill-downs into browser history stack (WhatsApp hierarchical navigation)
+  useHistoryBack(subScreen !== null, closeSubScreen);
+  useEscapeKey(subScreen !== null, closeSubScreen);
 
   // Register expanded category auto-tags drawer into browser history stack
   useHistoryBack(expandedCategoryId !== null, () => {
     setExpandedCategoryId(null);
   });
+  useEscapeKey(expandedCategoryId !== null, () => setExpandedCategoryId(null));
 
   // Connectivity and disk storage
   const [isOnline, setIsOnline] = useState(navigator.onLine);
@@ -476,6 +484,7 @@ export function SettingsView({
                           type="text"
                           className="input-field"
                           placeholder="Add new keyword or brand (e.g. dosa, uber, petrol)..."
+                          aria-label={`Add keyword for ${cat.name}`}
                           style={{ flex: 1, fontSize: '12px', height: '34px' }}
                           value={newKeywordInput}
                           onChange={(e) => setNewKeywordInput(e.target.value)}
@@ -964,6 +973,7 @@ export function SettingsView({
                     className="input-field"
                     rows={4}
                     placeholder="Paste backup JSON string here..."
+                    aria-label="Backup JSON data"
                     style={{ fontFamily: 'var(--font-family-mono)', fontSize: '12px', marginTop: '8px' }}
                     value={importJson}
                     onChange={(e) => setImportJson?.(e.target.value)}
@@ -1001,7 +1011,7 @@ export function SettingsView({
     return (
       <div className="fade-in settings-container">
         <Suspense fallback={null}>
-          <SuperAdminBugTracker onBack={() => setSubScreen(null)} isAdmin={isSuperadmin} />
+          <SuperAdminBugTracker onBack={() => setSubScreen(null)} isAdmin={isSuperadmin} onRequestConfirm={onRequestConfirm} />
         </Suspense>
       </div>
     );
@@ -1275,6 +1285,7 @@ export function SettingsView({
                     type="checkbox"
                     checked={enableGeotagging}
                     onChange={(e) => setEnableGeotagging(e.target.checked)}
+                    aria-label="Geotag Expenses"
                     style={{ opacity: 0, width: 0, height: 0, margin: 0 }}
                   />
                   <span
@@ -1452,6 +1463,7 @@ export function SettingsView({
                     type="checkbox"
                     checked={isTripMuted}
                     onChange={(e) => setTripMuted(activeTrip.id, e.target.checked)}
+                    aria-label="Mute Notifications"
                     style={{ opacity: 0, width: 0, height: 0, margin: 0 }}
                   />
                   <span

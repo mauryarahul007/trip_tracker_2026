@@ -3507,5 +3507,31 @@
     "resolvedAt": "2026-08-28T10:44:50.689+00:00",
     "resolvedBy": "claude-cli",
     "resolutionNote": "AdminUsersPage.tsx: showToast(msg, isError) now tracks error state; toast renders IconAlertCircle + red '.ops-toast.error' styling (new class in ops-deck.css using existing --danger tokens) with role=\"alert\" on failure vs IconCheck/role=\"status\" on success. All 4 catch blocks (suspend, bulk suspend, delete, broadcast) now pass isError=true. Verified set_user_banned/delete_user RPCs and is_superadmin() work correctly server-side (no drift between deployed functions and migration files; live-tested set_user_banned in a rolled-back transaction as the actual superadmin). Also discovered and deployed migration 0072 (BUG-109's fix), which was committed to the repo but had never been pushed to production -- schema_migrations tracked 0071 as the latest applied version."
+  },
+  {
+    "id": "BUG-112",
+    "title": "Follow-up WCAG 2.2 pass: keyboard traps on trip/notification cards, unlabeled toggles/inputs, window.confirm() in admin, missing headings",
+    "description": "Follow-up WCAG 2.2 pass: keyboard traps on trip/notification cards, unlabeled toggles/inputs, window.confirm() in admin, missing headings",
+    "severity": "high",
+    "category": "ui-ux",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-08-28T14:32:46.923Z",
+    "updatedAt": "2026-08-28T14:32:58.125Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-08-28T14:32:58.124Z",
+    "resolutionNote": "Follow-up audit after BUG-111: TripsListScreen trip card, NotificationsPanel card, BoardingPassHeroCard origin/dest edit triggers, and AnalyticsTab category legend rows were div-onClick with no role/tabIndex/keydown -- added keyboard support guarded against double-firing from nested controls. Geotag/Mute toggle switches and the ExpenseForm split-amount input had no accessible name -- added aria-label. UpiPaymentModal/TripWrappedModal close buttons and BoardingPassHeroCard glyph-only submit buttons were icon-only with no name -- added aria-label. AdminPortalLayout critical-bug badge and NotificationsPanel unread dot conveyed state by color alone -- added text-equivalent labels. ExpenseForm and UpiPaymentModal did not close on Escape (useFocusTrap called without onEscape) -- wired it. Replaced all 8 window.confirm()/native-dialog call sites in the admin portal (AdminAuditPage, AdminTripsPage x2, AdminUsersPage x2, AdminToolsPage x2, SuperAdminBugTracker) with the app's ConfirmDialog, adding confirmRequest state + rendering to AdminPortalLayout and threading onRequestConfirm through the 4 admin pages. BalancesSettlements 'Who owes who' was a bare div with no heading in the whole screen -- retagged to h2. ExpenseFilterDrawer group titles skipped h2->h4 -- retagged to h3. Bumped the 20x20 'Why this amount?' button to the 24x24 WCAG 2.5.8 minimum. Added aria-label to unlabeled search/filter/paste inputs in SuperAdminBugTracker and SettingsView. Wired Escape key support into SettingsView's bug-report/feature-request subscreens, reusing their existing unsaved-draft confirm guard so Escape gets the same data-loss protection as hardware/browser back. tsc -b and oxlint both clean after all changes."
   }
 ]

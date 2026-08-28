@@ -16,6 +16,7 @@ import {
 import { fetchBugs } from '../../services/bugApi';
 import { fetchFeatures, type FeatureRecord } from '../../services/featureApi';
 import { IconChevronRight, IconSearch } from '../Icons';
+import { ConfirmDialog, type ConfirmRequest } from '../ConfirmDialog';
 // Each admin tab only ever renders one at a time (see the activeTab
 // switches in <main> below) -- lazy per sub-page so opening the Ops Deck
 // to check one tab doesn't also download the other seven's code (~2.9k
@@ -123,6 +124,7 @@ export function AdminPortalLayout({
   const [features, setFeatures] = useState<FeatureRecord[]>([]);
   const [showSectionSwitcher, setShowSectionSwitcher] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [confirmRequest, setConfirmRequest] = useState<ConfirmRequest | null>(null);
   const panelRef = useRef<HTMLElement>(null);
   const lockSuperadmin = useTripStore((s) => s.lockSuperadmin);
   const signOut = useAuthStore((s) => s.signOut);
@@ -316,7 +318,13 @@ export function AdminPortalLayout({
           </div>
           <div style={{ fontFamily: 'var(--mono)', fontSize: '11px', color: 'var(--text-secondary)', fontVariantNumeric: 'tabular-nums' }}>{clock}</div>
           {onOpenBugTracker && (
-            <button type="button" className="ops-btn" onClick={onOpenBugTracker} style={{ position: 'relative' }}>
+            <button
+              type="button"
+              className="ops-btn"
+              onClick={onOpenBugTracker}
+              style={{ position: 'relative' }}
+              aria-label={criticalBugCount > 0 ? `Bug Ledger, ${criticalBugCount} critical case${criticalBugCount === 1 ? '' : 's'} open` : 'Bug Ledger'}
+            >
               Bug Ledger
               {criticalBugCount > 0 && (
                 <span
@@ -417,6 +425,7 @@ export function AdminPortalLayout({
               onInspectTrip={onInspectTrip}
               onRefresh={handleRefreshAll}
               isRefreshing={isRefreshing}
+              onRequestConfirm={setConfirmRequest}
             />
           )}
           {activeTab === 'users' && (
@@ -427,6 +436,7 @@ export function AdminPortalLayout({
               onUsersChanged={reloadFleetData}
               onRefresh={handleRefreshAll}
               isRefreshing={isRefreshing}
+              onRequestConfirm={setConfirmRequest}
             />
           )}
           {activeTab === 'audit' && (
@@ -437,6 +447,7 @@ export function AdminPortalLayout({
               onLogsChanged={reloadFleetData}
               onRefresh={handleRefreshAll}
               isRefreshing={isRefreshing}
+              onRequestConfirm={setConfirmRequest}
             />
           )}
           {activeTab === 'features' && <AdminFeaturesPage features={features} onFeaturesChanged={reloadFleetData} />}
@@ -447,6 +458,7 @@ export function AdminPortalLayout({
               expenses={expenses}
               onRefresh={handleRefreshAll}
               isRefreshing={isRefreshing}
+              onRequestConfirm={setConfirmRequest}
             />
           )}
           </Suspense>
@@ -487,6 +499,10 @@ export function AdminPortalLayout({
             </div>
           </div>
         </div>
+      )}
+
+      {confirmRequest && (
+        <ConfirmDialog request={confirmRequest} onCancel={() => setConfirmRequest(null)} />
       )}
     </div>
   );

@@ -5,6 +5,7 @@ import { useAuthStore } from '../../store/authStore';
 import { purgeRecycleBinOlderThan } from '../../services/tripApi';
 import { exportFleetSummaryToCSV } from '../../utils/csvExport';
 import { IconCheck, IconTrash, IconAlertCircle, IconRefresh } from '../Icons';
+import type { ConfirmRequest } from '../ConfirmDialog';
 
 interface Props {
   categories: Category[];
@@ -12,9 +13,10 @@ interface Props {
   expenses: Expense[];
   onRefresh: () => void | Promise<void>;
   isRefreshing: boolean;
+  onRequestConfirm: (req: ConfirmRequest) => void;
 }
 
-export function AdminToolsPage({ categories, trips, expenses, onRefresh, isRefreshing }: Props) {
+export function AdminToolsPage({ categories, trips, expenses, onRefresh, isRefreshing, onRequestConfirm }: Props) {
   const exportDatabase = useTripStore((s) => s.exportDatabase);
   const importDatabase = useTripStore((s) => s.importDatabase);
   const clearDatabase = useTripStore((s) => s.clearDatabase);
@@ -89,14 +91,20 @@ export function AdminToolsPage({ categories, trips, expenses, onRefresh, isRefre
     setShowAddCategoryBox(false);
   };
 
-  const handleDeleteCategory = async (catId: string, catName: string) => {
-    if (window.confirm(`Permanently delete custom category "${catName}"?`)) {
-      await deleteCategory(catId);
-      if (selectedCatId === catId) {
-        setSelectedCatId(categories[0]?.id || 'cat-food');
-      }
-      showToast(`Deleted category "${catName}"`);
-    }
+  const handleDeleteCategory = (catId: string, catName: string) => {
+    onRequestConfirm({
+      title: 'Delete category',
+      message: `Permanently delete custom category "${catName}"?`,
+      confirmLabel: 'Delete',
+      danger: true,
+      onConfirm: async () => {
+        await deleteCategory(catId);
+        if (selectedCatId === catId) {
+          setSelectedCatId(categories[0]?.id || 'cat-food');
+        }
+        showToast(`Deleted category "${catName}"`);
+      },
+    });
   };
 
   const handleAddTag = async (e: React.FormEvent) => {
@@ -132,20 +140,25 @@ export function AdminToolsPage({ categories, trips, expenses, onRefresh, isRefre
     showToast('Fleet summary CSV exported.');
   };
 
-  const handlePurgeRecycleBin = async () => {
+  const handlePurgeRecycleBin = () => {
     const days = Number(purgeDays) || 30;
-    if (!window.confirm(`Permanently delete every recycled expense older than ${days} days, across all trips? This cannot be undone.`)) {
-      return;
-    }
-    setIsPurging(true);
-    try {
-      const count = await purgeRecycleBinOlderThan(days);
-      showToast(`Purged ${count} expired recycle-bin item${count === 1 ? '' : 's'}.`);
-    } catch (err) {
-      showToast(err instanceof Error ? err.message : 'Purge failed.');
-    } finally {
-      setIsPurging(false);
-    }
+    onRequestConfirm({
+      title: 'Purge recycle bin',
+      message: `Permanently delete every recycled expense older than ${days} days, across all trips? This cannot be undone.`,
+      confirmLabel: 'Purge',
+      danger: true,
+      onConfirm: async () => {
+        setIsPurging(true);
+        try {
+          const count = await purgeRecycleBinOlderThan(days);
+          showToast(`Purged ${count} expired recycle-bin item${count === 1 ? '' : 's'}.`);
+        } catch (err) {
+          showToast(err instanceof Error ? err.message : 'Purge failed.');
+        } finally {
+          setIsPurging(false);
+        }
+      },
+    });
   };
 
   const handleDownloadBackup = () => {

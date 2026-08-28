@@ -4,6 +4,7 @@ import type { AdminUserRow, AuditLogEntry } from '../../types/admin';
 import { purgeAuditLogsOlderThan } from '../../services/tripApi';
 import { formatRelativeTime } from '../../utils/relativeTime';
 import { IconCheck, IconSearch, IconRefresh } from '../Icons';
+import type { ConfirmRequest } from '../ConfirmDialog';
 
 interface Props {
   logs: AuditLogEntry[];
@@ -12,6 +13,7 @@ interface Props {
   onLogsChanged: () => void;
   onRefresh: () => void | Promise<void>;
   isRefreshing: boolean;
+  onRequestConfirm: (req: ConfirmRequest) => void;
 }
 
 const ACTION_LABELS: Record<string, string> = {
@@ -43,7 +45,7 @@ const ACTION_TYPE_FILTERS = [
   { value: 'caution', label: 'Config change' },
 ] as const;
 
-export function AdminAuditPage({ logs, trips, users, onLogsChanged, onRefresh, isRefreshing }: Props) {
+export function AdminAuditPage({ logs, trips, users, onLogsChanged, onRefresh, isRefreshing, onRequestConfirm }: Props) {
   const [searchQuery, setSearchQuery] = useState('');
   const [actionTypeFilter, setActionTypeFilter] = useState<(typeof ACTION_TYPE_FILTERS)[number]['value']>('all');
   const [actorFilter, setActorFilter] = useState<string>('all');
@@ -83,19 +85,26 @@ export function AdminAuditPage({ logs, trips, users, onLogsChanged, onRefresh, i
     return l.action.toLowerCase().includes(q) || actorName.toLowerCase().includes(q) || tripName.toLowerCase().includes(q);
   });
 
-  const handlePurge = async () => {
+  const handlePurge = () => {
     const days = Number(purgeDays) || 90;
-    if (!window.confirm(`Permanently delete every audit log entry older than ${days} days? This cannot be undone.`)) return;
-    setIsPurging(true);
-    try {
-      const count = await purgeAuditLogsOlderThan(days);
-      showToast(`Purged ${count} audit log entr${count === 1 ? 'y' : 'ies'}.`);
-      onLogsChanged();
-    } catch (err) {
-      showToast(err instanceof Error ? err.message : 'Purge failed.');
-    } finally {
-      setIsPurging(false);
-    }
+    onRequestConfirm({
+      title: 'Purge audit logs',
+      message: `Permanently delete every audit log entry older than ${days} days? This cannot be undone.`,
+      confirmLabel: 'Purge',
+      danger: true,
+      onConfirm: async () => {
+        setIsPurging(true);
+        try {
+          const count = await purgeAuditLogsOlderThan(days);
+          showToast(`Purged ${count} audit log entr${count === 1 ? 'y' : 'ies'}.`);
+          onLogsChanged();
+        } catch (err) {
+          showToast(err instanceof Error ? err.message : 'Purge failed.');
+        } finally {
+          setIsPurging(false);
+        }
+      },
+    });
   };
 
   return (

@@ -80,7 +80,7 @@ export function BoardingPassHeroCard({
     }
   };
 
-  const startEditCode = (type: 'origin' | 'dest', e: React.MouseEvent) => {
+  const startEditCode = (type: 'origin' | 'dest', e: React.SyntheticEvent) => {
     e.stopPropagation();
     triggerHaptic('light');
     setEditingCode(type);
@@ -278,10 +278,23 @@ export function BoardingPassHeroCard({
                       border: '2px solid var(--primary-accent)',
                     }}
                   />
-                  <button type="submit" style={{ padding: '2px 6px', fontSize: '11px', background: 'var(--primary-accent)', color: '#fff', border: 'none', borderRadius: '4px' }}>✓</button>
+                  <button type="submit" aria-label="Save airport code" style={{ padding: '2px 6px', fontSize: '11px', background: 'var(--primary-accent)', color: '#fff', border: 'none', borderRadius: '4px' }}>✓</button>
                 </form>
               ) : (
-                <div onClick={(e) => startEditCode('origin', e)} style={{ cursor: 'pointer' }} title="Click to edit Origin Code (e.g. DEL, BOM, NYC)">
+                <div
+                  onClick={(e) => startEditCode('origin', e)}
+                  style={{ cursor: 'pointer' }}
+                  title="Click to edit Origin Code (e.g. DEL, BOM, NYC)"
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`Origin code ${originCode}. Edit`}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      startEditCode('origin', e);
+                    }
+                  }}
+                >
                   <div style={{ fontSize: '24px', fontWeight: 900, fontFamily: 'var(--font-family-title)', color: '#1F1B14', display: 'flex', alignItems: 'center', gap: '4px' }}>
                     {originCode} <IconEdit size={11} style={{ opacity: 0.4 }} />
                   </div>
@@ -320,10 +333,23 @@ export function BoardingPassHeroCard({
                       border: '2px solid var(--primary-accent)',
                     }}
                   />
-                  <button type="submit" style={{ padding: '2px 6px', fontSize: '11px', background: 'var(--primary-accent)', color: '#fff', border: 'none', borderRadius: '4px' }}>✓</button>
+                  <button type="submit" aria-label="Save airport code" style={{ padding: '2px 6px', fontSize: '11px', background: 'var(--primary-accent)', color: '#fff', border: 'none', borderRadius: '4px' }}>✓</button>
                 </form>
               ) : (
-                <div onClick={(e) => startEditCode('dest', e)} style={{ cursor: 'pointer' }} title="Click to edit Destination Code (e.g. IXB, GOI, DPS)">
+                <div
+                  onClick={(e) => startEditCode('dest', e)}
+                  style={{ cursor: 'pointer' }}
+                  title="Click to edit Destination Code (e.g. IXB, GOI, DPS)"
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`Destination code ${destCode}. Edit`}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      startEditCode('dest', e);
+                    }
+                  }}
+                >
                   <div style={{ fontSize: '24px', fontWeight: 900, fontFamily: 'var(--font-family-title)', color: '#1F1B14', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '4px' }}>
                     {destCode} <IconEdit size={11} style={{ opacity: 0.4 }} />
                   </div>

@@ -131,6 +131,7 @@ function NotificationCard({
   };
 
   const meta = getNotificationMeta(notification.data?.type);
+  const display = getNotificationDisplay(notification, tripName ?? null);
 
   return (
     <div className="notif-swipe-container">
@@ -141,8 +142,18 @@ function NotificationCard({
 
       <div
         className={`notif-card ${!notification.read ? 'unread' : 'read'}`}
+        role="button"
+        tabIndex={0}
+        aria-label={`${notification.read ? 'Read' : 'Unread'} notification: ${display.headline}`}
         onClick={() => {
           if (dragX === 0) onOpen();
+        }}
+        onKeyDown={(e) => {
+          if (e.target !== e.currentTarget) return;
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            onOpen();
+          }
         }}
         onTouchStart={(e) => handleStart(e.touches[0].clientX, e.touches[0].clientY)}
         onTouchMove={(e) => {
@@ -168,6 +179,7 @@ function NotificationCard({
             onToggleRead();
           }}
           title={notification.read ? 'Mark as unread' : 'Mark as read'}
+          aria-label={notification.read ? 'Read. Mark as unread' : 'Unread. Mark as read'}
           role="button"
           tabIndex={0}
           onKeyDown={(e) => {
@@ -186,7 +198,6 @@ function NotificationCard({
 
         {/* Center Content */}
         {(() => {
-          const display = getNotificationDisplay(notification, tripName ?? null);
           return (
             <div className="notif-body">
               <div className="notif-row-top">

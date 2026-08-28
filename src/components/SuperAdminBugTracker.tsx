@@ -449,7 +449,7 @@ ${bug.diagnostics?.stackTrace ? `#### Stack Trace\n\`\`\`text\n${bug.diagnostics
           <p>Every case found by Antigravity, Claude CLI, or human QA — synced to one ledger.</p>
         </div>
         <div style={{ display: 'flex', gap: '8px' }}>
-          <button type="button" className="ops-btn" onClick={loadBugs} title="Sync with the CLI ledger">
+          <button type="button" className="ops-btn" onClick={loadBugs} title="Sync with the CLI ledger" aria-label="Sync with the CLI ledger">
             <IconRefresh size={14} className="icon-sm" />
           </button>
           <button type="button" className="ops-btn" onClick={onBack}>
@@ -506,6 +506,7 @@ ${bug.diagnostics?.stackTrace ? `#### Stack Trace\n\`\`\`text\n${bug.diagnostics
             type="text"
             className="ops-input"
             placeholder="Search case, category, reporter..."
+            aria-label="Search cases"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -515,6 +516,7 @@ ${bug.diagnostics?.stackTrace ? `#### Stack Trace\n\`\`\`text\n${bug.diagnostics
           value={categoryFilter}
           onChange={(e) => setCategoryFilter(e.target.value)}
           className="ops-select"
+          aria-label="Filter by category"
           style={{ width: 'auto', flex: '0 0 auto' }}
         >
           <option value="all">All categories</option>

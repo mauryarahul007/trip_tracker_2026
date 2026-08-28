@@ -776,6 +776,7 @@ export function TripWrappedModal({
                 background: 'transparent',
               }}
               onClick={onClose}
+              aria-label="Close"
             >
               <IconClose size={16} />
             </button>
