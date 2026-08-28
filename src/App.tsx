@@ -374,17 +374,6 @@ export default function App() {
   const lastBackendSyncedAt = useTripStore((s) => s.lastBackendSyncedAt);
   const processQueue = useTripStore((s) => s.processQueue);
   const refreshActiveTripExpenses = useTripStore((s) => s.refreshActiveTripExpenses);
-  const [isManualRefreshing, setIsManualRefreshing] = useState(false);
-  const handleManualRefresh = async () => {
-    if (isManualRefreshing) return;
-    triggerHaptic('light');
-    setIsManualRefreshing(true);
-    try {
-      await refreshActiveTripExpenses();
-    } finally {
-      setIsManualRefreshing(false);
-    }
-  };
 
   // Load state on mount
   useEffect(() => {
@@ -578,11 +567,11 @@ export default function App() {
   type SyncStatus = 'offline' | 'syncing' | 'session-expired' | 'out-of-sync' | 'synced';
   const syncStatus: SyncStatus = useMemo(() => {
     if (!isOnline) return 'offline';
-    if (isSyncing || isManualRefreshing) return 'syncing';
+    if (isSyncing) return 'syncing';
     if (sessionExpired) return 'session-expired';
     if (syncQueue.length > 0) return 'out-of-sync';
     return 'synced';
-  }, [isOnline, isSyncing, isManualRefreshing, sessionExpired, syncQueue.length]);
+  }, [isOnline, isSyncing, sessionExpired, syncQueue.length]);
 
   const syncStatusLabel = useMemo(() => {
     if (syncStatus === 'offline') return 'Offline';
