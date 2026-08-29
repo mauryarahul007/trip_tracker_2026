@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import type { Expense, Group, Member, Trip } from '../types';
 import type { MemberBalance, Transfer } from '../utils/settlement';
 import { IconEdit, IconShare } from './Icons';
-import { getCurrencySymbol, formatAmount } from '../utils/currency';
+import { getCurrencySymbol } from '../utils/currency';
 import { sendPushNotification } from '../services/pushApi';
 import { useTripStore } from '../store/tripStore';
 import { avatarColorForName } from '../utils/avatarColor';
