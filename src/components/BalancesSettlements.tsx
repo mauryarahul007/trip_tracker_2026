@@ -19,7 +19,7 @@ type Props = {
   groups: Group[];
   transfers: Transfer[];
   activeTripExpenses: Expense[];
-  onSettle: (fromMemberId: string, toMemberId: string, amount: number, fromLabel: string, toLabel: string) => void;
+  onSettle: (fromMemberId: string, toMemberId: string, amount: number, fromLabel: string, toLabel: string, totalDebt?: number) => void;
   isAdmin: boolean;
   myMemberId: string | null;
   members: Record<string, Member>;
@@ -45,7 +45,7 @@ type TransferRowProps = {
   customOpen: boolean;
   onToggleCustom: () => void;
   onCustomChange: (v: string) => void;
-  onSettle: (fromMemberId: string, toMemberId: string, amount: number, fromLabel: string, toLabel: string) => void;
+  onSettle: (fromMemberId: string, toMemberId: string, amount: number, fromLabel: string, toLabel: string, totalDebt?: number) => void;
   onOpenUpi?: (transfer: Transfer) => void;
   isUpiEnabled?: boolean;
   balances: MemberBalance[];
@@ -436,7 +436,7 @@ function TransferRow({
             type="button"
             onClick={() => {
               triggerHaptic('success');
-              onSettle(t.fromMemberId, t.toMemberId, t.amount, t.fromLabel, t.toLabel);
+              onSettle(t.fromMemberId, t.toMemberId, t.amount, t.fromLabel, t.toLabel, t.amount);
             }}
             className="traveler-settlement-btn-settle"
             style={{
@@ -497,7 +497,9 @@ function TransferRow({
                 style={{ padding: '0 16px', height: '38px', borderRadius: '9999px', fontSize: '12px', fontWeight: 700 }}
                 onClick={() => {
                   triggerHaptic('success');
-                  onSettle(t.fromMemberId, t.toMemberId, settleAmount, t.fromLabel, t.toLabel);
+                  onSettle(t.fromMemberId, t.toMemberId, settleAmount, t.fromLabel, t.toLabel, t.amount);
+                  onToggleCustom();
+                  onCustomChange('');
                 }}
               >
                 Settle {currencySymbol}{settleAmount.toFixed(2)}
@@ -1077,7 +1079,8 @@ export function BalancesSettlements({
               upiTargetTransfer.toMemberId,
               amt,
               upiTargetTransfer.fromLabel,
-              upiTargetTransfer.toLabel
+              upiTargetTransfer.toLabel,
+              upiTargetTransfer.amount
             );
             setUpiTargetTransfer(null);
           }}

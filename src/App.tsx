@@ -1241,7 +1241,14 @@ export default function App() {
   // Record a settlement transfer. fromId/toId are the real member ids that
   // record the ledger entry; fromLabel/toLabel are what the user picked the
   // transfer between (a member name, or a group name for merged settlements).
-  const handleSettle = (fromId: string, toId: string, amount: number, fromLabel: string, toLabel: string) => {
+  const handleSettle = (
+    fromId: string,
+    toId: string,
+    amount: number,
+    fromLabel: string,
+    toLabel: string,
+    totalDebt?: number
+  ) => {
     const fromMember = members[fromId];
     const toMember = members[toId];
     if (!fromMember || !toMember || !activeTrip || !(amount > 0)) return;
@@ -1249,10 +1256,20 @@ export default function App() {
     const currencySymbol = getCurrencySymbol(activeTrip.baseCurrency);
     const payerNote = fromLabel !== fromMember.name ? ` (paid by ${fromMember.name})` : '';
     const receiverNote = toLabel !== toMember.name ? ` (received by ${toMember.name})` : '';
+
+    const isPartial = totalDebt !== undefined && amount < totalDebt - 0.01;
+    const remaining = totalDebt !== undefined ? Math.max(0, totalDebt - amount) : 0;
+
+    const title = isPartial ? 'Confirm partial settlement' : 'Confirm settlement';
+    const message = isPartial
+      ? `You are settling this partially: ${fromLabel} pays ${toLabel} ${currencySymbol}${amount.toFixed(2)} out of ${currencySymbol}${totalDebt.toFixed(2)}${payerNote}${receiverNote}. The remaining ${currencySymbol}${remaining.toFixed(2)} will stay pending to be settled. Do you want to proceed?`
+      : `Mark transfer: ${fromLabel} pays ${toLabel} ${currencySymbol}${amount.toFixed(2)}${payerNote}${receiverNote} as settled?`;
+    const confirmLabel = isPartial ? 'Mark Partial Settlement' : 'Mark Settled';
+
     setConfirmRequest({
-      title: 'Confirm settlement',
-      message: `Mark transfer: ${fromLabel} pays ${toLabel} ${currencySymbol}${amount.toFixed(2)}${payerNote}${receiverNote} as settled?`,
-      confirmLabel: 'Mark Settled',
+      title,
+      message,
+      confirmLabel,
       onConfirm: () => {
         addExpense({
           title: `Settlement: ${fromLabel} ➔ ${toLabel}`,
