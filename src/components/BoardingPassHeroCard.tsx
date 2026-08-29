@@ -7,6 +7,7 @@ import { triggerHaptic } from '../utils/haptics';
 import { getDestinationWeather } from '../services/weatherService';
 import type { WeatherData } from '../services/weatherService';
 import { useAnimatedNumber } from '../hooks/useAnimatedNumber';
+import { parseTripRoute } from '../utils/routeHelper';
 
 interface BoardingPassHeroCardProps {
   trip: Trip;
@@ -113,10 +114,8 @@ export function BoardingPassHeroCard({
 
   const passengerName = currentMember?.name || 'Squad Traveler';
   const isSquadLeader = currentMember?.id === trip.ownerId;
-  const stopsList = trip.stops || [];
-  const startStopName = stopsList.length > 0 ? stopsList[0].name : (trip.destination || 'Origin');
-  const endStopName = stopsList.length > 1 ? stopsList[stopsList.length - 1].name : (trip.destination || 'Destination');
-  const durationLabel = calculateTripDuration(trip.startDate, trip.endDate, stopsList.length);
+  const parsedRoute = parseTripRoute(trip);
+  const durationLabel = calculateTripDuration(trip.startDate, trip.endDate, parsedRoute.allStops.length > 1 ? parsedRoute.allStops.length : undefined);
 
   return (
     <div className="boarding-pass-flip-container" style={{ perspective: '1200px', marginBottom: '16px' }}>
@@ -272,7 +271,7 @@ export function BoardingPassHeroCard({
             }}
           >
             {/* Departure */}
-            <div style={{ textAlign: 'left' }}>
+            <div style={{ textAlign: 'left', minWidth: 0 }}>
               <div style={{ fontSize: '9px', fontFamily: 'var(--font-family-mono)', color: 'rgba(31, 27, 20, 0.55)', textTransform: 'uppercase' }}>
                 DEPARTURE
               </div>
@@ -281,22 +280,21 @@ export function BoardingPassHeroCard({
               </div>
               <div
                 style={{
-                  fontSize: '11px',
-                  color: 'rgba(31, 27, 20, 0.65)',
-                  fontWeight: 500,
+                  fontSize: '11.5px',
+                  color: 'rgba(31, 27, 20, 0.75)',
+                  fontWeight: 600,
                   whiteSpace: 'nowrap',
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
-                  maxWidth: '100px',
                 }}
-                title={startStopName}
+                title={parsedRoute.origin}
               >
-                {startStopName}
+                {parsedRoute.origin}
               </div>
             </div>
 
             {/* Duration Vector */}
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px', padding: '0 8px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px', padding: '0 6px', flexShrink: 0 }}>
               <span
                 style={{
                   fontSize: '10px',
@@ -311,14 +309,14 @@ export function BoardingPassHeroCard({
               >
                 {durationLabel}
               </span>
-              <div style={{ width: '56px', height: '1.5px', borderTop: '1.5px dashed rgba(31, 27, 20, 0.3)', margin: '3px 0' }} />
-              <span style={{ fontSize: '9px', color: 'rgba(31, 27, 20, 0.55)', fontFamily: 'var(--font-family-mono)' }}>
-                {stopsList.length > 1 ? 'Multi-Stop' : 'Direct Route'}
+              <div style={{ width: '50px', height: '1.5px', borderTop: '1.5px dashed rgba(31, 27, 20, 0.3)', margin: '3px 0' }} />
+              <span style={{ fontSize: '9px', color: 'rgba(31, 27, 20, 0.55)', fontFamily: 'var(--font-family-mono)', whiteSpace: 'nowrap' }}>
+                {parsedRoute.isMultiStop ? `${parsedRoute.allStops.length} Stops` : 'Direct Route'}
               </span>
             </div>
 
             {/* Return / Destination */}
-            <div style={{ textAlign: 'right' }}>
+            <div style={{ textAlign: 'right', minWidth: 0 }}>
               <div style={{ fontSize: '9px', fontFamily: 'var(--font-family-mono)', color: 'rgba(31, 27, 20, 0.55)', textTransform: 'uppercase' }}>
                 RETURN
               </div>
@@ -327,18 +325,17 @@ export function BoardingPassHeroCard({
               </div>
               <div
                 style={{
-                  fontSize: '11px',
-                  color: 'rgba(31, 27, 20, 0.65)',
-                  fontWeight: 500,
+                  fontSize: '11.5px',
+                  color: 'rgba(31, 27, 20, 0.75)',
+                  fontWeight: 600,
                   whiteSpace: 'nowrap',
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
-                  maxWidth: '100px',
                   marginLeft: 'auto',
                 }}
-                title={endStopName}
+                title={parsedRoute.destination}
               >
-                {endStopName}
+                {parsedRoute.destination}
               </div>
             </div>
           </div>

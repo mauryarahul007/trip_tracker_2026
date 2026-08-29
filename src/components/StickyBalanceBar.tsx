@@ -4,6 +4,7 @@ import { formatAmount } from '../utils/currency';
 import { triggerHaptic } from '../utils/haptics';
 import { IconCheckCircle, IconChevronUp } from './Icons';
 import { useAnimatedNumber } from '../hooks/useAnimatedNumber';
+import { parseTripRoute } from '../utils/routeHelper';
 
 interface StickyBalanceBarProps {
   trip: Trip;
@@ -15,7 +16,7 @@ interface StickyBalanceBarProps {
   onScrollToTop: () => void;
 }
 
-function getTripDurationLabel(startDate?: string, endDate?: string, stops?: { name: string }[]): string {
+function getTripDurationLabel(startDate?: string, endDate?: string, stopCount?: number): string {
   let daysText = '';
   if (startDate && endDate) {
     try {
@@ -26,11 +27,10 @@ function getTripDurationLabel(startDate?: string, endDate?: string, stops?: { na
       if (days > 0) daysText = `${days}D`;
     } catch {}
   }
-  const stopCount = stops?.length || 0;
-  if (stopCount > 0) {
-    return daysText ? `${daysText} · ${stopCount} Stop${stopCount === 1 ? '' : 's'}` : `${stopCount} Stop${stopCount === 1 ? '' : 's'}`;
+  if (stopCount && stopCount > 1) {
+    return daysText ? `${daysText} · ${stopCount} Stops` : `${stopCount} Stops`;
   }
-  return daysText || 'Route';
+  return daysText || 'Direct';
 }
 
 export const StickyBalanceBar = memo(function StickyBalanceBar({
@@ -42,14 +42,13 @@ export const StickyBalanceBar = memo(function StickyBalanceBar({
   onScrollToTop,
 }: StickyBalanceBarProps) {
   const animatedOutstanding = useAnimatedNumber(totalOutstanding, 280);
+  const route = parseTripRoute(trip);
+  const durationLabel = getTripDurationLabel(trip.startDate, trip.endDate, route.allStops.length > 1 ? route.allStops.length : undefined);
 
   const handleScrollToTop = () => {
     triggerHaptic('light');
     onScrollToTop();
   };
-
-  const destination = trip.destination || trip.name;
-  const durationLabel = getTripDurationLabel(trip.startDate, trip.endDate, trip.stops);
 
   return (
     <aside
@@ -60,11 +59,11 @@ export const StickyBalanceBar = memo(function StickyBalanceBar({
       onClick={handleScrollToTop}
     >
       <div className="mini-bp-capsule">
-        {/* Left Stub: Route / Destination */}
+        {/* Left Stub: Complete Route */}
         <div className="mini-bp-section left">
           <span className="mini-bp-stub-tag">PASS</span>
-          <span className="mini-bp-title" title={destination}>
-            {destination}
+          <span className="mini-bp-title" title={route.fullRoute}>
+            {route.fullRoute}
           </span>
         </div>
 
