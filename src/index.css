@@ -6021,3 +6021,203 @@ textarea.input-field {
   animation-duration: 0.22s;
 }
 
+/* Traveler's Perforation Settlement Cards ("Who Owes Who") */
+.traveler-settlement-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: 24px;
+  padding: 16px 18px;
+  margin-bottom: 12px;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.traveler-settlement-card:hover {
+  box-shadow: var(--shadow-md);
+  border-color: rgba(63, 203, 189, 0.3);
+}
+
+.traveler-settlement-main-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+}
+
+.traveler-settlement-avatar {
+  width: 52px;
+  height: 52px;
+  min-width: 52px;
+  min-height: 52px;
+  border-radius: 50% !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 18px;
+  object-fit: cover;
+  border: 2px solid var(--bg-surface);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  flex-shrink: 0;
+}
+
+.traveler-settlement-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.traveler-settlement-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin: 0;
+}
+
+.traveler-settlement-desc {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.traveler-settlement-amount {
+  font-family: var(--font-family-mono);
+  font-weight: 700;
+  font-size: 15px;
+}
+
+.traveler-settlement-amount.owed {
+  color: var(--primary-accent);
+}
+
+.traveler-settlement-amount.owe {
+  color: var(--accent-orange, #FF7A00);
+}
+
+.traveler-settlement-btn-settle {
+  width: 100%;
+  padding: 12px 20px;
+  background: linear-gradient(135deg, #FF7A00 0%, #EA580C 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: 9999px;
+  font-size: 14px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 4px 14px rgba(255, 122, 0, 0.28);
+  cursor: pointer;
+  transition: transform 0.15s ease, filter 0.15s ease, box-shadow 0.15s ease;
+}
+
+.traveler-settlement-btn-settle:hover {
+  filter: brightness(1.06);
+  box-shadow: 0 6px 20px rgba(255, 122, 0, 0.38);
+}
+
+.traveler-settlement-btn-settle:active {
+  transform: scale(0.98);
+}
+
+.traveler-settlement-btn-settled {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: rgba(16, 185, 129, 0.12);
+  color: var(--color-success);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  border-radius: 9999px;
+  font-size: 13px;
+  font-weight: 600;
+  width: 100%;
+}
+
+.traveler-settlement-audit-btn {
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  border-radius: 50%;
+  border: 1px solid var(--border-color);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+
+.traveler-settlement-audit-btn:hover {
+  color: var(--text-primary);
+  border-color: var(--text-secondary);
+}
+
+.traveler-settlement-actions-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 10px;
+  border-top: 1px solid var(--border-color);
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.traveler-settlement-action-chip {
+  padding: 5px 10px;
+  border-radius: 9999px;
+  font-size: 11.5px;
+  font-weight: 600;
+  background: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.traveler-settlement-action-chip:hover {
+  background: var(--bg-surface-hover);
+  color: var(--text-primary);
+}
+
+.traveler-settlement-action-chip.upi {
+  background: rgba(63, 203, 189, 0.1);
+  color: var(--primary-accent);
+  border-color: rgba(63, 203, 189, 0.3);
+}
+
+.traveler-settlement-audit-panel {
+  margin-top: 8px;
+  padding: 12px 14px;
+  background: rgba(15, 23, 42, 0.03);
+  border-radius: 16px;
+  border: 1px solid var(--border-color);
+  font-size: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+:root[data-theme="dark"] .traveler-settlement-audit-panel {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+

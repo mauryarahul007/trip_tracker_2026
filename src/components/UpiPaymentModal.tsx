@@ -110,11 +110,29 @@ export function UpiPaymentModal({
           </span>
         </div>
 
-        {/* Payee UPI ID Input */}
+        {/* Payee UPI ID Input with 1-Tap Copy */}
         <div style={{ marginBottom: '16px' }}>
-          <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '4px' }}>
-            Receiver's UPI ID / VPA
-          </label>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+            <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>
+              Receiver's UPI ID / VPA
+            </label>
+            {valid && (
+              <button
+                type="button"
+                className="secondary-btn"
+                style={{ padding: '2px 8px', fontSize: '11px', borderRadius: '9999px' }}
+                onClick={() => {
+                  triggerHaptic('light');
+                  navigator.clipboard.writeText(upiId).then(() => {
+                    setCopied(true);
+                    setTimeout(() => setCopied(false), 2000);
+                  });
+                }}
+              >
+                {copied ? '✓ Copied UPI ID' : '📋 Copy UPI ID'}
+              </button>
+            )}
+          </div>
           <input
             type="text"
             className="input-field"
@@ -123,6 +141,7 @@ export function UpiPaymentModal({
             onChange={(e) => setUpiId(e.target.value.trim())}
             style={{
               borderColor: upiId && !valid ? 'var(--color-danger)' : undefined,
+              marginBottom: 0,
             }}
           />
           {upiId && !valid && (
@@ -130,6 +149,22 @@ export function UpiPaymentModal({
               Please enter a valid UPI ID (e.g. username@bank)
             </p>
           )}
+        </div>
+
+        {/* NPCI / Bank Security Note */}
+        <div
+          style={{
+            padding: '10px 12px',
+            borderRadius: '12px',
+            background: 'rgba(255, 122, 0, 0.08)',
+            border: '1px solid rgba(255, 122, 0, 0.2)',
+            fontSize: '11.5px',
+            color: 'var(--text-secondary)',
+            lineHeight: 1.4,
+            marginBottom: '14px',
+          }}
+        >
+          💡 <strong>Tip for P2P UPI:</strong> If GPay/PhonePe shows <em>"Limit exceeded"</em>, it is an NPCI security block against browser auto-fills. Use <strong>Copy UPI ID</strong> or <strong>Scan Dynamic QR</strong> below for instant 100% success.
         </div>
 
         {/* App Launch Options */}
