@@ -141,24 +141,29 @@ export async function fetchDestinationCoordinates(destination: string | string[]
   return null;
 }
 
-export async function getDestinationWeather(destination: string | string[]): Promise<WeatherData | null> {
+export async function getDestinationWeather(
+  destination: string | string[],
+  forceRefresh = false
+): Promise<WeatherData | null> {
   const candidates = extractPlaceCandidates(destination);
   if (candidates.length === 0) return null;
 
   const primaryTarget = candidates[0];
   const cacheKey = `tt_weather_${primaryTarget.toLowerCase().replace(/\s+/g, '_')}`;
 
-  // 1. Check local cache
-  try {
-    const cachedStr = localStorage.getItem(cacheKey);
-    if (cachedStr) {
-      const parsed: WeatherData = JSON.parse(cachedStr);
-      if (Date.now() - parsed.updatedAt < CACHE_TTL_MS) {
-        return parsed;
+  // 1. Check local cache if not forcing refresh
+  if (!forceRefresh) {
+    try {
+      const cachedStr = localStorage.getItem(cacheKey);
+      if (cachedStr) {
+        const parsed: WeatherData = JSON.parse(cachedStr);
+        if (Date.now() - parsed.updatedAt < CACHE_TTL_MS) {
+          return parsed;
+        }
       }
+    } catch {
+      // LocalStorage failure
     }
-  } catch {
-    // LocalStorage failure
   }
 
   // 2. Resolve coords across place candidates
