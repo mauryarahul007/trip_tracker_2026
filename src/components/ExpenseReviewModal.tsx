@@ -100,6 +100,20 @@ export function ExpenseReviewModal({ expense, members, categories, trip, canMana
           </div>
         </div>
 
+        {!canManage && !isSettlement && (
+          <div style={{
+            fontSize: '12.5px',
+            color: 'var(--text-muted)',
+            background: 'rgba(15,23,42,0.03)',
+            border: '1px solid var(--border-color)',
+            borderRadius: 'var(--border-radius-md)',
+            padding: '8px 12px',
+            marginBottom: '16px',
+          }}>
+            You didn't add this expense, so only the trip admin or whoever added it can edit or delete it.
+          </div>
+        )}
+
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           {/* Main amount display */}
           <div style={{
