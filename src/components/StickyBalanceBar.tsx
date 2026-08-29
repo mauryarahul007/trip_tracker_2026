@@ -8,90 +8,102 @@ import { useAnimatedNumber } from '../hooks/useAnimatedNumber';
 interface StickyBalanceBarProps {
   trip: Trip;
   currencySymbol: string;
-  totalSpent: number;
+  totalOutstanding: number;
   myNetBalance: number;
   isFullySettled: boolean;
   isVisible: boolean;
   onScrollToTop: () => void;
 }
 
+function getTripDurationLabel(startDate?: string, endDate?: string, stops?: { name: string }[]): string {
+  let daysText = '';
+  if (startDate && endDate) {
+    try {
+      const s = new Date(startDate);
+      const e = new Date(endDate);
+      const diffMs = e.getTime() - s.getTime();
+      const days = Math.round(diffMs / (1000 * 60 * 60 * 24)) + 1;
+      if (days > 0) daysText = `${days}D`;
+    } catch {}
+  }
+  const stopCount = stops?.length || 0;
+  if (stopCount > 0) {
+    return daysText ? `${daysText} · ${stopCount} Stop${stopCount === 1 ? '' : 's'}` : `${stopCount} Stop${stopCount === 1 ? '' : 's'}`;
+  }
+  return daysText || 'Route';
+}
+
 export const StickyBalanceBar = memo(function StickyBalanceBar({
   trip,
   currencySymbol,
-  totalSpent,
-  myNetBalance,
+  totalOutstanding,
   isFullySettled,
   isVisible,
   onScrollToTop,
 }: StickyBalanceBarProps) {
-  const animatedTotalSpent = useAnimatedNumber(totalSpent, 280);
-  const animatedNetBalance = useAnimatedNumber(myNetBalance, 280);
+  const animatedOutstanding = useAnimatedNumber(totalOutstanding, 280);
 
   const handleScrollToTop = () => {
     triggerHaptic('light');
     onScrollToTop();
   };
 
-  const isOwed = myNetBalance > 0.01;
-  const isOwing = myNetBalance < -0.01;
   const destination = trip.destination || trip.name;
+  const durationLabel = getTripDurationLabel(trip.startDate, trip.endDate, trip.stops);
 
   return (
     <aside
       className={`sticky-balance-bar ${isVisible ? 'visible' : ''}`}
       role="region"
-      aria-label="Sticky trip balance summary"
+      aria-label="Sticky mini boarding pass summary"
       aria-hidden={!isVisible}
+      onClick={handleScrollToTop}
     >
-      <div className="sticky-balance-inner">
-        {/* Left: Destination / Trip Pill */}
-        <div className="sticky-balance-left">
-          <span className="sticky-balance-icon" aria-hidden="true">✈️</span>
-          <span className="sticky-balance-dest" title={destination}>
+      <div className="mini-bp-capsule">
+        {/* Left Stub: Route / Destination */}
+        <div className="mini-bp-section left">
+          <span className="mini-bp-stub-tag">PASS</span>
+          <span className="mini-bp-title" title={destination}>
             {destination}
           </span>
         </div>
 
-        {/* Center: Total Spent */}
-        <div className="sticky-balance-center">
-          <span className="sticky-balance-caption">Total</span>
-          <strong className="sticky-balance-amount">
-            {formatAmount(animatedTotalSpent, currencySymbol)}
-          </strong>
+        {/* Center Stub: Duration & Stops */}
+        <div className="mini-bp-section center">
+          <span className="mini-bp-duration">
+            {durationLabel}
+          </span>
         </div>
 
-        {/* Right: Personal Status / Settle Pill */}
-        <div className="sticky-balance-right">
+        {/* Right Stub: Outstanding Amount / Settle Status */}
+        <div className="mini-bp-section right">
           {isFullySettled ? (
-            <span className="sticky-balance-tag settled">
-              <IconCheckCircle size={12} />
-              <span>Settled</span>
-            </span>
-          ) : isOwed ? (
-            <span className="sticky-balance-tag credit">
-              <span>Gets</span>
-              <strong>+{formatAmount(animatedNetBalance, currencySymbol)}</strong>
-            </span>
-          ) : isOwing ? (
-            <span className="sticky-balance-tag debit">
-              <span>Owes</span>
-              <strong>-{formatAmount(Math.abs(animatedNetBalance), currencySymbol)}</strong>
+            <span className="mini-bp-settled">
+              <IconCheckCircle size={13} />
+              <span>All Settled</span>
             </span>
           ) : (
-            <span className="sticky-balance-tag neutral">
-              <span>Even</span>
-            </span>
+            <div className="mini-bp-amount-wrap">
+              <span className="mini-bp-label">OUTSTANDING</span>
+              <strong className="mini-bp-amount tabular-nums">
+                {formatAmount(animatedOutstanding, currencySymbol)}
+              </strong>
+            </div>
           )}
-
-          <button
-            type="button"
-            className="sticky-balance-top-btn"
-            aria-label="Scroll back to top"
-            onClick={handleScrollToTop}
-          >
-            <IconChevronUp size={14} />
-          </button>
         </div>
+
+        {/* Scroll back to top icon */}
+        <button
+          type="button"
+          className="mini-bp-top-btn"
+          aria-label="Scroll back to Boarding Pass"
+          onClick={(e) => {
+            e.stopPropagation();
+            handleScrollToTop();
+          }}
+        >
+          <IconChevronUp size={14} />
+        </button>
       </div>
     </aside>
   );

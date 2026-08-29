@@ -839,7 +839,6 @@ export function BalancesSettlements({
 
 
   const totalOutstanding = transfers.reduce((sum, t) => sum + t.amount, 0);
-  const totalSpent = activeTripExpenses.reduce((sum, e) => sum + e.amount, 0);
   const isFullySettled = transfers.length === 0;
 
   const myBalanceObj = myMemberId ? balances.find((b) => b.memberId === myMemberId) : null;
@@ -857,7 +856,7 @@ export function BalancesSettlements({
       <StickyBalanceBar
         trip={trip}
         currencySymbol={currencySymbol}
-        totalSpent={totalSpent}
+        totalOutstanding={totalOutstanding}
         myNetBalance={myNetBalance}
         isFullySettled={isFullySettled}
         isVisible={isStickyBarVisible}
