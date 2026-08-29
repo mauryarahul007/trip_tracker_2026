@@ -3533,5 +3533,31 @@
     "resolvedBy": "claude-cli",
     "resolvedAt": "2026-08-28T14:32:58.124Z",
     "resolutionNote": "Follow-up audit after BUG-111: TripsListScreen trip card, NotificationsPanel card, BoardingPassHeroCard origin/dest edit triggers, and AnalyticsTab category legend rows were div-onClick with no role/tabIndex/keydown -- added keyboard support guarded against double-firing from nested controls. Geotag/Mute toggle switches and the ExpenseForm split-amount input had no accessible name -- added aria-label. UpiPaymentModal/TripWrappedModal close buttons and BoardingPassHeroCard glyph-only submit buttons were icon-only with no name -- added aria-label. AdminPortalLayout critical-bug badge and NotificationsPanel unread dot conveyed state by color alone -- added text-equivalent labels. ExpenseForm and UpiPaymentModal did not close on Escape (useFocusTrap called without onEscape) -- wired it. Replaced all 8 window.confirm()/native-dialog call sites in the admin portal (AdminAuditPage, AdminTripsPage x2, AdminUsersPage x2, AdminToolsPage x2, SuperAdminBugTracker) with the app's ConfirmDialog, adding confirmRequest state + rendering to AdminPortalLayout and threading onRequestConfirm through the 4 admin pages. BalancesSettlements 'Who owes who' was a bare div with no heading in the whole screen -- retagged to h2. ExpenseFilterDrawer group titles skipped h2->h4 -- retagged to h3. Bumped the 20x20 'Why this amount?' button to the 24x24 WCAG 2.5.8 minimum. Added aria-label to unlabeled search/filter/paste inputs in SuperAdminBugTracker and SettingsView. Wired Escape key support into SettingsView's bug-report/feature-request subscreens, reusing their existing unsaved-draft confirm guard so Escape gets the same data-loss protection as hardware/browser back. tsc -b and oxlint both clean after all changes. Commit 287ef29."
+  },
+  {
+    "id": "BUG-116",
+    "title": "Expense review banner let non-admin/non-author edits through, causing permanently stuck Out of sync count",
+    "description": "Expense review banner let non-admin/non-author edits through, causing permanently stuck Out of sync count",
+    "severity": "high",
+    "category": "offline-sync",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-08-29T11:52:34.064Z",
+    "updatedAt": "2026-08-29T11:52:59.285Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-08-29T11:52:59.278Z",
+    "resolutionNote": "Commit dd04bb8. ExpenseList.tsx: affectedExpenseIds (the review banner + bulk-review flow) now filters to isAdmin || createdByUserId === userId, matching the per-row swipe-to-edit gate, so it never opens an edit the backend RLS UPDATE policy will reject. tripStore.ts: added isNonRetryableSyncError() -- a write rejected by the DB policy (0 rows affected, detected in tripApi.ts's updateExpenseRow) now drops from syncQueue and sets storageError instead of being requeued forever, so Out of sync no longer sticks after a permission-denied write. Root cause found live: queried the Himachal 2 trip's expenses/members tables directly -- 2 expenses (Travel, Food) still reference a deleted member and were created by the trip owner (Suyog Gadhave), not the signed-in user (rahul maurya), so the edit was always going to be rejected by the existing admin-or-creator RLS policy from BUG-108/migration 0071. Those 2 rows still need the trip admin to fix via the UI; not touched directly since it's a money-affecting edit. Regression test in tripStore.test.ts (isNonRetryableSyncError). tsc --noEmit and full vitest suite clean."
   }
 ]
