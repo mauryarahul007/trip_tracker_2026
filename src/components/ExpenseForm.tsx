@@ -425,6 +425,7 @@ export function ExpenseForm({
       </div>
 
       <div className="expense-form-scroll">
+      <div className="sheet-drag-handle" aria-hidden="true" />
       <header className="app-header" style={{ margin: '-20px -20px 20px', paddingTop: 'max(20px, var(--safe-top, 0px))', viewTransitionName: editingExpense ? 'expense-shared-title' : undefined }}>
         <div className="app-header-top">
           <div className="app-title-group">

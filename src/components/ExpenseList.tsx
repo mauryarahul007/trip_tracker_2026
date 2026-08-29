@@ -340,7 +340,7 @@ export function ExpenseList({
           </div>
 
           {/* Horizontal quick filter pills */}
-          <div className="filter-chips-collapse expanded">
+          <div className="filter-chips-collapse expanded scroll-fade-mask">
             <div className="filter-chips-track" role="region" aria-label="Quick filters">
               <button
                 type="button"

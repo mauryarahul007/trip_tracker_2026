@@ -6220,4 +6220,63 @@ textarea.input-field {
   background: rgba(0, 0, 0, 0.2);
 }
 
+/* ==========================================================================
+   Fluid UI & Native-Feel Motion Utilities (100% GPU Hardware Accelerated)
+   ========================================================================== */
+
+/* 1. Fluid Tab & View Switch Animation */
+.view-transition-fade-slide {
+  animation: viewTransitionFadeSlide 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: opacity, transform;
+}
+
+@keyframes viewTransitionFadeSlide {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 6px, 0);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .view-transition-fade-slide {
+    animation: none !important;
+  }
+}
+
+/* 2. Pull-to-Dismiss / Sheet Drag Handle */
+.sheet-drag-handle {
+  width: 38px;
+  height: 4.5px;
+  border-radius: 9999px;
+  background: var(--border-color);
+  margin: 0 auto 14px auto;
+  opacity: 0.75;
+  flex-shrink: 0;
+  cursor: grab;
+  transition: opacity 0.15s ease, background 0.15s ease;
+}
+
+.sheet-drag-handle:hover,
+.sheet-drag-handle:active {
+  opacity: 1;
+  background: var(--text-muted);
+}
+
+/* 3. Horizontal Scroll Overflow Gradient Fade Mask */
+.scroll-fade-mask {
+  mask-image: linear-gradient(to right, transparent 0%, black 14px, black calc(100% - 14px), transparent 100%);
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, black 14px, black calc(100% - 14px), transparent 100%);
+}
+
+/* 4. Tabular Numbers Numeric Lock for Tickers and Currency */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+
 

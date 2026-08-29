@@ -71,6 +71,7 @@ export function UpiPaymentModal({
         style={{ maxWidth: '440px', width: '100%', padding: '22px' }}
         onClick={(e) => e.stopPropagation()}
       >
+        <div className="sheet-drag-handle" aria-hidden="true" />
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
           <div>

@@ -6,6 +6,7 @@ import { formatAmount } from '../utils/currency';
 import { triggerHaptic } from '../utils/haptics';
 import { getDestinationWeather } from '../services/weatherService';
 import type { WeatherData } from '../services/weatherService';
+import { useAnimatedNumber } from '../hooks/useAnimatedNumber';
 
 interface BoardingPassHeroCardProps {
   trip: Trip;
@@ -62,6 +63,8 @@ export function BoardingPassHeroCard({
   const [copied, setCopied] = useState(false);
   const [weather, setWeather] = useState<WeatherData | null>(null);
   const [isWeatherRefreshing, setIsWeatherRefreshing] = useState(false);
+
+  const animatedTotalOutstanding = useAnimatedNumber(totalOutstanding, 280);
 
   const weatherCandidates = [
     ...(trip.stops?.map((s) => s.name) || []),
@@ -168,7 +171,7 @@ export function BoardingPassHeroCard({
               className="bp-amount"
               style={{ color: isFullySettled ? 'var(--color-success)' : 'var(--color-danger)' }}
             >
-              {formatAmount(totalOutstanding, currencySymbol)}
+              {formatAmount(animatedTotalOutstanding, currencySymbol)}
             </div>
           </div>
 

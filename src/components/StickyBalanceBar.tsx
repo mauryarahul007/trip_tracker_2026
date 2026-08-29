@@ -3,6 +3,7 @@ import type { Trip } from '../types';
 import { formatAmount } from '../utils/currency';
 import { triggerHaptic } from '../utils/haptics';
 import { IconCheckCircle, IconChevronUp } from './Icons';
+import { useAnimatedNumber } from '../hooks/useAnimatedNumber';
 
 interface StickyBalanceBarProps {
   trip: Trip;
@@ -23,6 +24,9 @@ export const StickyBalanceBar = memo(function StickyBalanceBar({
   isVisible,
   onScrollToTop,
 }: StickyBalanceBarProps) {
+  const animatedTotalSpent = useAnimatedNumber(totalSpent, 280);
+  const animatedNetBalance = useAnimatedNumber(myNetBalance, 280);
+
   const handleScrollToTop = () => {
     triggerHaptic('light');
     onScrollToTop();
@@ -52,7 +56,7 @@ export const StickyBalanceBar = memo(function StickyBalanceBar({
         <div className="sticky-balance-center">
           <span className="sticky-balance-caption">Total</span>
           <strong className="sticky-balance-amount">
-            {formatAmount(totalSpent, currencySymbol)}
+            {formatAmount(animatedTotalSpent, currencySymbol)}
           </strong>
         </div>
 
@@ -66,12 +70,12 @@ export const StickyBalanceBar = memo(function StickyBalanceBar({
           ) : isOwed ? (
             <span className="sticky-balance-tag credit">
               <span>Gets</span>
-              <strong>+{formatAmount(myNetBalance, currencySymbol)}</strong>
+              <strong>+{formatAmount(animatedNetBalance, currencySymbol)}</strong>
             </span>
           ) : isOwing ? (
             <span className="sticky-balance-tag debit">
               <span>Owes</span>
-              <strong>-{formatAmount(Math.abs(myNetBalance), currencySymbol)}</strong>
+              <strong>-{formatAmount(Math.abs(animatedNetBalance), currencySymbol)}</strong>
             </span>
           ) : (
             <span className="sticky-balance-tag neutral">
