@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { collectDirtyExpenseIds, mergeServerExpenses, resolvePendingLocation, getTripNotificationRecipients, filterTripsOwnedByUser, DEFAULT_CATEGORIES, useTripStore } from './tripStore';
+import { collectDirtyExpenseIds, mergeServerExpenses, resolvePendingLocation, getTripNotificationRecipients, filterTripsOwnedByUser, isNonRetryableSyncError, DEFAULT_CATEGORIES, useTripStore } from './tripStore';
 import type { Expense, Member, Trip } from '../types';
 
 vi.mock('../utils/geolocation', () => ({
@@ -48,6 +48,18 @@ describe('collectDirtyExpenseIds', () => {
     expect(ids.has('exp-1')).toBe(true);
     expect(ids.has('exp-2')).toBe(true);
     expect(ids.has('exp-3')).toBe(true);
+  });
+});
+
+describe('isNonRetryableSyncError', () => {
+  it('flags an RLS-blocked update as non-retryable', () => {
+    const err = new Error("Expense update for exp-1 affected 0 rows (blocked by a database policy or the expense no longer exists)");
+    expect(isNonRetryableSyncError(err)).toBe(true);
+  });
+
+  it('treats a network/transient error as retryable', () => {
+    expect(isNonRetryableSyncError(new Error('Failed to fetch'))).toBe(false);
+    expect(isNonRetryableSyncError('not an Error instance')).toBe(false);
   });
 });
 

@@ -279,6 +279,14 @@ export function collectDirtyExpenseIds(syncQueue: { type: string; payload: any }
   return ids;
 }
 
+// A sync queue item that failed because the server rejected the write
+// (RLS policy, or the row is gone) fails identically forever -- requeuing
+// it just makes "Out of sync (N)" stick permanently, even across manual
+// syncs. Only requeue errors that are plausibly transient (network, auth).
+export function isNonRetryableSyncError(err: unknown): boolean {
+  return err instanceof Error && err.message.includes('blocked by a database policy');
+}
+
 // Scopes push-notification recipients to the members of ONE trip.
 // `members` (the store's flat Record<string, Member>) spans every trip
 // the user belongs to, not just the active one — filtering it directly
@@ -840,7 +848,11 @@ export const useTripStore = create<TripStore>()(
           }
         } catch (err) {
           console.error('Offline sync failed for item:', item, err);
-          set((state) => ({ syncQueue: [...state.syncQueue, item] }));
+          if (isNonRetryableSyncError(err)) {
+            set({ storageError: "A change couldn't be saved — you may not have permission to edit that expense. Ask the trip admin to fix it." });
+          } else {
+            set((state) => ({ syncQueue: [...state.syncQueue, item] }));
+          }
         }
       }
 

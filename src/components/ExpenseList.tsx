@@ -226,13 +226,17 @@ export function ExpenseList({
   // Expenses whose payer and/or split still reference a member who was
   // later removed from the trip — each one already gets its own inline
   // warning below, this just offers a way to work through all of them
-  // instead of hunting each one down individually.
+  // instead of hunting each one down individually. Scoped to expenses the
+  // current user can actually edit (same rule as the per-row swipe-to-edit
+  // gate) — including ones only an admin/original author can fix would
+  // let this button open an edit that the backend silently rejects.
   const affectedExpenseIds = trip
     ? activeTripExpenses
         .filter(
           (e) =>
-            !trip.memberIds.includes(e.paidBy) ||
-            e.splitMemberIds.some((id) => !trip.memberIds.includes(id))
+            (isAdmin || e.createdByUserId === userId) &&
+            (!trip.memberIds.includes(e.paidBy) ||
+              e.splitMemberIds.some((id) => !trip.memberIds.includes(id)))
         )
         .map((e) => e.id)
     : [];
