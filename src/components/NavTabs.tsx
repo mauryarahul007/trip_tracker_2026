@@ -117,9 +117,6 @@ export function NavTabs({ activeTab, setActiveTab, onAddExpense, onAddMember, ex
       >
         <span className="nav-tab-icon"><IconExpenses size={26} /></span>
         <span>Summary</span>
-        {expenseCount !== undefined && expenseCount > 0 && (
-          <span className="nav-tab-badge" aria-label={`${expenseCount} expenses`}>{expenseCount > 99 ? '99+' : expenseCount}</span>
-        )}
       </button>
       <button
         type="button"
@@ -132,6 +129,9 @@ export function NavTabs({ activeTab, setActiveTab, onAddExpense, onAddMember, ex
       >
         <span className="nav-tab-icon"><IconReceipt size={26} /></span>
         <span>Expenses</span>
+        {expenseCount !== undefined && expenseCount > 0 && (
+          <span className="nav-tab-badge" aria-label={`${expenseCount} expenses`}>{expenseCount > 99 ? '99+' : expenseCount}</span>
+        )}
       </button>
       <div className="nav-tab-fab-wrap" role="presentation">
 
