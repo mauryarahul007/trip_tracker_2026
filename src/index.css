@@ -4026,7 +4026,7 @@ html.capacitor-ios .trip-sheet .tab-pane {
 }
 
 /* ===============================/* ==========================================================================
-   Mini Boarding Pass Sticky Capsule Header (Option 2)
+   Mini Boarding Pass Sticky Capsule Header (Option 2 - Spacious 2-Tier)
    ========================================================================== */
 
 .sticky-balance-bar {
@@ -4052,7 +4052,7 @@ html.capacitor-ios .trip-sheet .tab-pane {
   opacity: 1;
   visibility: visible;
   pointer-events: auto;
-  max-height: 56px;
+  max-height: 68px;
   margin: 0 0 16px 0;
   transform: translate3d(0, 0, 0);
 }
@@ -4061,41 +4061,44 @@ html.capacitor-ios .trip-sheet .tab-pane {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
-  padding: 7px 12px;
-  background: rgba(254, 252, 247, 0.94);
+  gap: 12px;
+  padding: 8px 14px;
+  background: rgba(254, 252, 247, 0.96);
   backdrop-filter: blur(24px) saturate(190%);
   -webkit-backdrop-filter: blur(24px) saturate(190%);
   border: 1px solid var(--border-color);
-  border-radius: 9999px;
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12), 0 1px 4px rgba(0, 0, 0, 0.06);
-  max-width: 480px;
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12), 0 2px 6px rgba(0, 0, 0, 0.05);
+  max-width: 520px;
   margin: 0 auto;
 }
 
 :root[data-theme="dark"] .mini-bp-capsule {
-  background: rgba(26, 28, 32, 0.94);
+  background: rgba(26, 28, 32, 0.96);
   border-color: rgba(255, 255, 255, 0.14);
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.55), 0 2px 8px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) .mini-bp-capsule {
-    background: rgba(26, 28, 32, 0.94);
+    background: rgba(26, 28, 32, 0.96);
     border-color: rgba(255, 255, 255, 0.14);
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.55), 0 2px 8px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), 0 2px 8px rgba(0, 0, 0, 0.3);
   }
 }
 
-.mini-bp-section {
+.mini-bp-left-group {
   display: flex;
-  align-items: center;
-  gap: 6px;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
   min-width: 0;
 }
 
-.mini-bp-section.left {
-  flex: 1;
+.mini-bp-route-line {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   min-width: 0;
 }
 
@@ -4103,7 +4106,7 @@ html.capacitor-ios .trip-sheet .tab-pane {
   font-family: var(--font-family-mono);
   font-size: 9px;
   font-weight: 800;
-  padding: 2px 6px;
+  padding: 1.5px 5px;
   border-radius: 4px;
   background: var(--primary-accent);
   color: #FFFFFF;
@@ -4116,34 +4119,34 @@ html.capacitor-ios .trip-sheet .tab-pane {
   color: var(--primary-accent);
 }
 
-.mini-bp-title {
-  font-size: 12.5px;
+.mini-bp-route-text {
+  font-size: 13px;
   font-weight: 700;
   color: var(--text-primary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  letter-spacing: -0.01em;
 }
 
-.mini-bp-section.center {
-  padding: 0 8px;
-  border-left: 1px dashed var(--border-color);
-  border-right: 1px dashed var(--border-color);
-  flex-shrink: 0;
-}
-
-.mini-bp-duration {
-  font-family: var(--font-family-mono);
-  font-size: 10.5px;
-  font-weight: 700;
-  color: var(--text-secondary);
-  white-space: nowrap;
-}
-
-.mini-bp-section.right {
+.mini-bp-sub-meta {
   display: flex;
   align-items: center;
   gap: 6px;
+  font-size: 10.5px;
+  font-family: var(--font-family-mono);
+  color: var(--text-secondary);
+  line-height: 1;
+}
+
+.mini-bp-dot {
+  opacity: 0.4;
+}
+
+.mini-bp-right-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   flex-shrink: 0;
 }
 
@@ -4151,7 +4154,7 @@ html.capacitor-ios .trip-sheet .tab-pane {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  line-height: 1.1;
+  line-height: 1.15;
 }
 
 .mini-bp-label {
@@ -4165,7 +4168,7 @@ html.capacitor-ios .trip-sheet .tab-pane {
 
 .mini-bp-amount {
   font-family: var(--font-family-mono);
-  font-size: 13px;
+  font-size: 13.5px;
   font-weight: 800;
   color: var(--color-danger);
 }
@@ -4174,14 +4177,14 @@ html.capacitor-ios .trip-sheet .tab-pane {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  font-size: 11.5px;
+  font-size: 12px;
   font-weight: 700;
   color: var(--color-success);
 }
 
 .mini-bp-top-btn {
-  width: 28px;
-  height: 28px;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
   background: var(--bg-surface-hover);
   border: 1px solid var(--border-color);
