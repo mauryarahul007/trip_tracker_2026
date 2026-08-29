@@ -340,8 +340,8 @@ export function ExpenseList({
           </div>
 
           {/* Horizontal quick filter pills */}
-          <div className="filter-chips-collapse expanded scroll-fade-mask">
-            <div className="filter-chips-track" role="region" aria-label="Quick filters">
+          <div className="filter-chips-collapse expanded scroll-fade-mask" data-no-tab-swipe="true">
+            <div className="filter-chips-track" role="region" aria-label="Quick filters" data-no-tab-swipe="true">
               <button
                 type="button"
                 className={`filter-chip ${isAllActive ? 'active' : ''}`}

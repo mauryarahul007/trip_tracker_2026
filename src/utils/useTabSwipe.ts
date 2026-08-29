@@ -76,7 +76,25 @@ export function useTabSwipe<T extends string>(
     const handleTouchStart = (e: TouchEvent) => {
       if (e.touches.length !== 1) return;
       const target = e.target as HTMLElement;
-      if (target.closest('[data-no-tab-swipe]')) return;
+      if (!target) return;
+
+      if (
+        target.closest('[data-no-tab-swipe]') ||
+        target.closest('.filter-chips-track, .filter-chips-collapse, .filter-chips-scroll, [data-horizontal-scroll]')
+      ) return;
+
+      // Dynamically ignore any horizontally scrollable container (e.g. chip strips)
+      let current: HTMLElement | null = target;
+      while (current && current !== el) {
+        if (current.scrollWidth > current.clientWidth + 2) {
+          const overflowX = window.getComputedStyle(current).overflowX;
+          if (overflowX === 'auto' || overflowX === 'scroll') {
+            return;
+          }
+        }
+        current = current.parentElement;
+      }
+
       const touch = e.touches[0];
       touchStartX.current = touch.clientX;
       touchStartY.current = touch.clientY;
