@@ -109,6 +109,7 @@ type Props = {
 
   isAdmin: boolean;
   userId: string | null;
+  activeTransitionSourceId?: string | null;
 };
 
 export function ExpenseList({
@@ -149,6 +150,7 @@ export function ExpenseList({
   onDelete,
   isAdmin,
   userId,
+  activeTransitionSourceId,
 }: Props) {
   const currencySymbol = getCurrencySymbol(trip?.baseCurrency || '');
 
@@ -565,7 +567,7 @@ export function ExpenseList({
                             onClick={() => { triggerHaptic('light'); onReview(exp); }}
                           >
                             <CategoryIcon categoryId={cat?.id || ''} fallbackEmoji={cat?.icon || '🏷️'} size={15} />
-                            <h4 style={{ flex: 1, minWidth: 0, fontSize: '15px', lineHeight: 1.3, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                            <h4 style={{ flex: 1, minWidth: 0, fontSize: '15px', lineHeight: 1.3, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '5px', viewTransitionName: activeTransitionSourceId === exp.id ? 'expense-shared-title' : undefined }}>
                               <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{exp.title}</span>
                               {(exp.receiptImage || exp.receiptPath) && (
                                 <span style={{ fontSize: '11px', flexShrink: 0, opacity: 0.85 }} title="Photo receipt attached">📸</span>

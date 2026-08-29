@@ -12,6 +12,7 @@ import { SwipeableRow } from './SwipeableRow';
 import { TripStack } from './TripStack';
 import { TripSlideLauncher } from './TripSlideLauncher';
 import { HomeAmbientBackdrop } from './HomeAmbientBackdrop';
+import { OnboardingSwipe } from './OnboardingSwipe';
 
 type Props = {
   trips: Trip[];
@@ -88,6 +89,7 @@ export function TripsListScreen({
   // copy instead of onboarding repeating itself forever.
   const onboardKey = userId ? `tt-onboarded-${userId}` : null;
   const isFirstRun = trips.length === 0 && !!onboardKey && !localStorage.getItem(onboardKey);
+  const ONBOARD_STORAGE_SUFFIX = '-tt-onboarded-v1';
   useEffect(() => {
     if (trips.length > 0 && onboardKey) localStorage.setItem(onboardKey, '1');
   }, [trips.length, onboardKey]);
@@ -427,7 +429,7 @@ export function TripsListScreen({
 
         {/* Trips List Grid */}
         {trips.length === 0 ? (
-          <div className="glass-card ledger-empty" style={{ borderStyle: 'dashed' }}>
+          <div className="glass-card ledger-empty" style={{ borderStyle: 'dashed', position: 'relative' }}>
             <div className="ledger-rule" />
             <div className="ledger-empty-prompt">
               <span className="ledger-badge ledger-badge-tilt-right" aria-hidden="true">
@@ -455,6 +457,15 @@ export function TripsListScreen({
               </div>
             </div>
             <div className="ledger-rule" />
+            {isFirstRun && (
+              <OnboardingSwipe
+                userId={userId}
+                onDismiss={() => {
+                  const key = userId ? `tt-${userId}${ONBOARD_STORAGE_SUFFIX}` : null;
+                  if (key) localStorage.setItem(key, '1');
+                }}
+              />
+            )}
           </div>
         ) : (
           <>

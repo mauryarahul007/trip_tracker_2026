@@ -21,10 +21,22 @@ import { TripsListScreen } from './components/TripsListScreen';
 const TripMapHero = lazy(() =>
   import('./components/TripMapHero').then((m) => ({ default: m.TripMapHero }))
 );
+// ExpenseForm is heavy (OCR, geolocation, currency conversion) and only
+// needed when the user taps +/FAB. Lazy-load so the initial bundle skips
+// its ~1,200 lines until actually opened.
+const ExpenseForm = lazy(() =>
+  import('./components/ExpenseForm').then((m) => ({ default: m.ExpenseForm }))
+);
 import { TripContentSheet } from './components/TripContentSheet';
 import { AnalyticsTab } from './components/AnalyticsTab';
-import { ExpenseForm } from './components/ExpenseForm';
 import { ExpenseList } from './components/ExpenseList';
+// Superadmin-only screens (Ops Deck + Bug Ledger) never load for a normal
+// traveler -- code-split so their combined ~2.4k lines don't inflate the
+// bundle everyone else downloads. RLS still gates the actual data/actions
+// underneath regardless of when the JS arrives.
+const SuperAdminBugTracker = lazy(() =>
+  import('./components/SuperAdminBugTracker').then((m) => ({ default: m.SuperAdminBugTracker }))
+);
 import { BalancesSettlements } from './components/BalancesSettlements';
 import { ExpenseFilterDrawer } from './components/ExpenseFilterDrawer';
 import { MembersGroupsTab } from './components/MembersGroupsTab';
@@ -33,20 +45,13 @@ import { ExpenseReviewModal } from './components/ExpenseReviewModal';
 import { UndoToasts } from './components/UndoToasts';
 import { NavTabs } from './components/NavTabs';
 import { ShareTripModal } from './components/ShareTripModal';
-// Superadmin-only screens (Ops Deck + Bug Ledger) never load for a normal
-// traveler -- code-split so their combined ~2.4k lines don't inflate the
-// bundle everyone else downloads. RLS still gates the actual data/actions
-// underneath regardless of when the JS arrives.
-const SuperAdminBugTracker = lazy(() =>
-  import('./components/SuperAdminBugTracker').then((m) => ({ default: m.SuperAdminBugTracker }))
-);
 import { NotificationsPanel } from './components/NotificationsPanel';
 import { NotificationsBellButton } from './components/NotificationsBellButton';
 import { InAppNotificationBanner } from './components/InAppNotificationBanner';
 import { FitHeading } from './components/FitHeading';
 import { triggerHaptic } from './utils/haptics';
 import { useEscapeKey } from './utils/useEscapeKey';
-import { IconCalendar, IconChevronLeft, IconChevronDown, IconChevronUp, IconShield, IconSearch } from './components/Icons';
+import { IconCalendar, IconChevronLeft, IconChevronDown, IconChevronUp, IconShield, IconSearch, IconPlus, IconWallet, IconMapPin, IconCheck, IconMembers } from './components/Icons';
 import { formatDateRange } from './utils/dateRange';
 import { useScrollLock } from './utils/useScrollLock';
 import { useHistoryBack } from './utils/useHistoryBack';
@@ -270,6 +275,7 @@ export default function App() {
   // Form states - Groups
   // Form states
   const [showAddExpense, setShowAddExpense] = useState(false);
+  const [activeTransitionSourceId, setActiveTransitionSourceId] = useState<string | null>(null);
   const [editingExpenseId, setEditingExpenseId] = useState<string | null>(null);
   const [selectedReviewExpense, setSelectedReviewExpense] = useState<Expense | null>(null);
   // Queue of expense ids still to review after "Review N affected expenses"
@@ -1111,12 +1117,14 @@ export default function App() {
   const advanceReviewQueueOrClose = () => {
     if (reviewQueue.length === 0) {
       setEditingExpenseId(null);
+      setActiveTransitionSourceId(null);
       setShowAddExpense(false);
       return;
     }
     const [nextId, ...rest] = reviewQueue;
     setReviewQueue(rest);
     setEditingExpenseId(nextId);
+    setActiveTransitionSourceId(nextId);
     setShowAddExpense(true);
   };
 
@@ -1128,12 +1136,20 @@ export default function App() {
     }
     setReviewQueue([]);
     setEditingExpenseId(null);
+    setActiveTransitionSourceId(null);
     setShowAddExpense(true);
   };
 
   const handleStartEditExpense = (exp: Expense) => {
     setReviewQueue([]);
     setEditingExpenseId(exp.id);
+    setActiveTransitionSourceId(exp.id);
+    if (typeof document.startViewTransition === 'function') {
+      document.startViewTransition(() => {
+        flushSync(() => setShowAddExpense(true));
+      });
+      return;
+    }
     setShowAddExpense(true);
   };
 
@@ -1667,7 +1683,8 @@ export default function App() {
                     ? 'Local changes not yet synced with the server. Tap to sync now.'
                     : `Last synced: ${syncStatusLabel}`
                 }
-                aria-label="Backend Sync Status"
+                aria-label={`Backend Sync Status: ${syncStatusLabel}`}
+                aria-live="polite"
               >
                 <span className={`sync-badge-dot ${syncStatus}`} />
                 <span>{syncStatusLabel}</span>
@@ -1870,6 +1887,7 @@ export default function App() {
                 onDelete={handleDeleteExpense}
                 isAdmin={isAdmin}
                 userId={userId}
+                activeTransitionSourceId={activeTransitionSourceId}
               />
               </div>
             </div>
@@ -1961,21 +1979,24 @@ export default function App() {
       )}
 
       {showAddExpense && (
-        <ExpenseForm
-          // The review queue swaps editingExpenseId while the form stays
-          // mounted (same conditional render slot) — without a key tied to
-          // it, ExpenseForm's fields are seeded from editingExpense only
-          // once via useState initializers, so they'd keep showing the
-          // previous queue item's data instead of resetting for the next one.
-          key={editingExpenseId || 'new'}
-          trip={activeTrip}
-          visibleMembers={visibleMembers}
-          visibleTripGroups={visibleTripGroups}
-          categories={categories}
-          editingExpense={editingExpense}
-          onSave={handleSaveExpense}
-          onCancel={handleCancelExpenseForm}
-        />
+        <Suspense fallback={
+          <div className="modal-backdrop" style={{ background: 'var(--bg-app)' }}>
+            <div className="modal-sheet expense-form-sheet" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
+              <div style={{ width: '32px', height: '32px', borderRadius: '50%', border: '3px solid var(--border-color)', borderTopColor: 'var(--primary-accent)', animation: 'spin 0.8s linear infinite' }} />
+            </div>
+          </div>
+        }>
+          <ExpenseForm
+            key={editingExpenseId || 'new'}
+            trip={activeTrip}
+            visibleMembers={visibleMembers}
+            visibleTripGroups={visibleTripGroups}
+            categories={categories}
+            editingExpense={editingExpense}
+            onSave={handleSaveExpense}
+            onCancel={handleCancelExpenseForm}
+          />
+        </Suspense>
       )}
 
       {showShareTrip && activeTrip && (
@@ -2047,29 +2068,94 @@ export default function App() {
       )}
 
       {/* Command Palette */}
-      <CommandPalette
-        isOpen={showCommandPalette}
-        onClose={() => setShowCommandPalette(false)}
-        trip={activeTrip}
-        expenses={activeTripExpenses}
-        members={visibleMembers}
-        categories={categories}
-        onSelectExpense={(exp) => handleStartEditExpense(exp)}
-        onSelectMember={(mId) => {
-          setExpenseFilterMember(mId);
-          setActiveTab('expenses');
-        }}
-        onNewExpense={handleOpenAddExpense}
-        onOpenWrapped={() => setShowTripWrapped(true)}
-        onOpenSettings={() => setShowGlobalSettings(true)}
-        onSwitchTab={(t) => {
-          if (t === 'balances') {
-            setActiveTab('expenses');
-          } else {
-            setActiveTab(t);
+      {(() => {
+        const suggestions: Array<{
+          id: string;
+          title: string;
+          subtitle?: string;
+          icon: React.ReactNode;
+          action: () => void;
+        }> = [];
+        if (activeTrip) {
+          suggestions.push({
+            id: 'smart-new-expense',
+            title: 'Add expense',
+            subtitle: 'Log a new receipt or payment',
+            icon: <IconPlus size={16} />,
+            action: handleOpenAddExpense,
+          });
+          if (reviewQueue.length > 0) {
+            suggestions.push({
+              id: 'smart-review',
+              title: `Review ${reviewQueue.length} expense${reviewQueue.length > 1 ? 's' : ''}`,
+              subtitle: 'Finish affected-by-removed-member review',
+              icon: <IconCheck size={16} />,
+              action: () => {
+                const first = reviewQueue[0];
+                const rest = reviewQueue.slice(1);
+                setReviewQueue(rest);
+                setEditingExpenseId(first);
+                setShowAddExpense(true);
+              },
+            });
           }
-        }}
-      />
+          if (transfers.length > 0) {
+            suggestions.push({
+              id: 'smart-settle',
+              title: 'Settle balances',
+              subtitle: `${transfers.length} payment${transfers.length > 1 ? 's' : ''} suggested`,
+              icon: <IconWallet size={16} />,
+              action: () => {
+                setActiveTab('expenses');
+              },
+            });
+          }
+          suggestions.push({
+            id: 'smart-analytics',
+            title: 'View analytics',
+            subtitle: 'Spending breakdown & trends',
+            icon: <IconMapPin size={16} />,
+            action: () => {
+              setActiveTab('settings');
+            },
+          });
+          suggestions.push({
+            id: 'smart-members',
+            title: 'Manage members',
+            subtitle: 'Add, remove, or edit members',
+            icon: <IconMembers size={16} />,
+            action: () => {
+              setActiveTab('members');
+            },
+          });
+        }
+        return (
+          <CommandPalette
+            isOpen={showCommandPalette}
+            onClose={() => setShowCommandPalette(false)}
+            trip={activeTrip}
+            expenses={activeTripExpenses}
+            members={visibleMembers}
+            categories={categories}
+            onSelectExpense={(exp) => handleStartEditExpense(exp)}
+            onSelectMember={(mId) => {
+              setExpenseFilterMember(mId);
+              setActiveTab('expenses');
+            }}
+            onNewExpense={handleOpenAddExpense}
+            onOpenWrapped={() => setShowTripWrapped(true)}
+            onOpenSettings={() => setShowGlobalSettings(true)}
+            onSwitchTab={(t) => {
+              if (t === 'balances') {
+                setActiveTab('expenses');
+              } else {
+                setActiveTab(t);
+              }
+            }}
+            smartSuggestions={suggestions}
+          />
+        );
+      })()}
 
       {/* Trip Wrapped Story Card Modal */}
       {showTripWrapped && activeTrip && (

@@ -425,11 +425,11 @@ export function ExpenseForm({
       </div>
 
       <div className="expense-form-scroll">
-      <header className="app-header" style={{ margin: '-20px -20px 20px', paddingTop: 'max(20px, var(--safe-top, 0px))' }}>
+      <header className="app-header" style={{ margin: '-20px -20px 20px', paddingTop: 'max(20px, var(--safe-top, 0px))', viewTransitionName: editingExpense ? 'expense-shared-title' : undefined }}>
         <div className="app-header-top">
           <div className="app-title-group">
             <span className="app-eyebrow">{trip?.name}</span>
-            <h2 id="expense-form-title" className="app-logo" style={{ fontSize: '22px', color: '#FFFFFF' }}>{editingExpense ? 'Edit Expense' : 'New Expense'}</h2>
+            <h2 id="expense-form-title" className="app-logo" style={{ fontSize: '22px', color: '#FFFFFF', viewTransitionName: editingExpense ? 'expense-shared-title' : undefined }}>{editingExpense ? 'Edit Expense' : 'New Expense'}</h2>
           </div>
           <button
             type="button"

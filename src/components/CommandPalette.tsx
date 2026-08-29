@@ -18,6 +18,13 @@ interface CommandPaletteProps {
   onOpenWrapped: () => void;
   onOpenSettings: () => void;
   onSwitchTab: (tab: 'expenses' | 'balances' | 'settings' | 'members') => void;
+  smartSuggestions?: Array<{
+    id: string;
+    title: string;
+    subtitle?: string;
+    icon: React.ReactNode;
+    action: () => void;
+  }>;
 }
 
 export function CommandPalette({
@@ -33,6 +40,7 @@ export function CommandPalette({
   onOpenWrapped,
   onOpenSettings,
   onSwitchTab,
+  smartSuggestions = [],
 }: CommandPaletteProps) {
   const [query, setQuery] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -249,6 +257,53 @@ export function CommandPalette({
             ESC
           </span>
         </div>
+
+        {/* Smart Suggestions (chips) */}
+        {!q && smartSuggestions.length > 0 && (
+          <div style={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: '8px',
+            padding: '10px 12px',
+            borderBottom: '1px solid var(--border-color)',
+          }}>
+            {smartSuggestions.map((s) => (
+              <button
+                key={s.id}
+                type="button"
+                onClick={() => {
+                  triggerHaptic('light');
+                  s.action();
+                  onClose();
+                }}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  padding: '6px 12px',
+                  borderRadius: '999',
+                  border: '1px solid var(--border-color)',
+                  background: 'var(--bg-secondary)',
+                  color: 'var(--text-primary)',
+                  fontSize: '13px',
+                  cursor: 'pointer',
+                  transition: 'background 0.15s ease, border-color 0.15s ease',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'var(--primary-accent-soft, rgba(43,168,158,0.12))';
+                  e.currentTarget.style.borderColor = 'var(--primary-accent)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'var(--bg-secondary)';
+                  e.currentTarget.style.borderColor = 'var(--border-color)';
+                }}
+              >
+                <span aria-hidden="true" style={{ display: 'inline-flex' }}>{s.icon}</span>
+                <span>{s.title}</span>
+              </button>
+            ))}
+          </div>
+        )}
 
         {/* Results List */}
         <div
