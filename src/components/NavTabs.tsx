@@ -1,6 +1,7 @@
 import { useRef, useState, useEffect, useLayoutEffect, useCallback } from 'react';
 import { IconExpenses, IconMembers, IconReceipt, IconSettings, IconPlus } from './Icons';
 import { triggerHaptic } from '../utils/haptics';
+import { withViewTransition } from '../utils/viewTransition';
 import { FlightAddExpenseTooltip, STORAGE_KEY } from './FlightAddExpenseTooltip';
 
 type Tab = 'expenses' | 'ledger' | 'members' | 'settings';
@@ -45,8 +46,9 @@ export function NavTabs({ activeTab, setActiveTab, onAddExpense, onAddMember, ex
   }, [updatePill]);
 
   const goTo = (tab: Tab) => {
-    if (tab !== activeTab) triggerHaptic('light');
-    setActiveTab(tab);
+    if (tab === activeTab) return;
+    triggerHaptic('light');
+    withViewTransition(() => setActiveTab(tab));
   };
 
   const handlePointerDown = () => {

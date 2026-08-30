@@ -134,6 +134,15 @@
   --transition-spring: transform 0.32s var(--ease-spring), opacity 0.22s ease;
 }
 
+/* Native View Transitions (trip select, tab switch -- see utils/viewTransition.ts)
+   use the browser's default crossfade timing unless overridden; align it
+   with the app's own motion language instead of the UA default `ease`. */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 220ms;
+  animation-timing-function: var(--ease-fluid-out);
+}
+
 
 /* Global reduced-motion fallback -- collapses every animation/transition
    duration in one shot instead of hunting down each @keyframes block
@@ -288,7 +297,14 @@ h3 { font-size: clamp(1.1rem, 3vw, 1.4rem); }
 .trip-card,
 .glass-card {
   content-visibility: auto;
-  contain-intrinsic-size: 0 72px;
+  /* "auto" makes the browser remember each element's real rendered size
+     after its first layout and reuse that for future off-screen skips,
+     instead of permanently guessing 72px -- which was tuned for compact
+     rows but wildly undershoots multi-expense day-group cards and forms
+     that also share this rule, causing a visible scrollbar/content jump
+     every time one scrolls into view. 72px stays only as the pre-measure
+     fallback for the very first paint. */
+  contain-intrinsic-size: auto 0px auto 72px;
 }
 
 #root {

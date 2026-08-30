@@ -57,6 +57,7 @@ import { useScrollLock } from './utils/useScrollLock';
 import { useHistoryBack } from './utils/useHistoryBack';
 import { getCatColor } from './utils/categoryColor';
 import { useTabSwipe } from './utils/useTabSwipe';
+import { withViewTransition } from './utils/viewTransition';
 import { CommandPalette } from './components/CommandPalette';
 // TripWrappedModal draws a large 1080x1920 canvas story image and is only
 // needed when the user opens Trip Wrapped, so it's lazy-loaded like ExpenseForm.
@@ -1591,7 +1592,7 @@ export default function App() {
           onCreateTrip={handleCreateTrip}
           onCancelTripForm={handleCancelTripForm}
           onStartEditTrip={handleStartEditTrip}
-          onSelectTrip={(id) => selectTrip(id)}
+          onSelectTrip={(id) => withViewTransition(() => selectTrip(id))}
           onDeleteTrip={handleDeleteTrip}
           onArchiveTrip={handleArchiveTrip}
           onOpenSettings={() => setShowGlobalSettings(true)}
@@ -1683,7 +1684,7 @@ export default function App() {
                   data-action="trips-back"
                   className="secondary-btn"
                   style={{ padding: '7px 11px', fontSize: '12px', color: 'var(--header-fg)', borderColor: 'var(--header-fg-border)', background: 'var(--header-fg-soft-bg)' }}
-                  onClick={() => selectTrip(null)}
+                  onClick={() => withViewTransition(() => selectTrip(null))}
                 >
                   <IconChevronLeft size={14} className="icon-sm" /> Trips
                 </button>

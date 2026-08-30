@@ -20,6 +20,129 @@ interface BoardingPassHeroCardProps {
   onOpenSquadBadges?: () => void;
 }
 
+// Style objects that don't depend on props/state -- hoisted to module scope
+// so React doesn't reallocate them every render, including the six renders
+// a single flip animation triggers (haptic tap -> state change -> 3D
+// transition frames). Only styles that actually vary (settled/unsettled
+// color, weather-refresh spin, etc.) stay inline below.
+const S_FLIP_CONTAINER: React.CSSProperties = { perspective: '1200px', marginBottom: '16px' };
+const S_FLIPPER: React.CSSProperties = {
+  position: 'relative',
+  width: '100%',
+  transformStyle: 'preserve-3d',
+  transition: 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
+};
+const S_FRONT_FACE: React.CSSProperties = {
+  backfaceVisibility: 'hidden',
+  WebkitBackfaceVisibility: 'hidden',
+  cursor: 'pointer',
+  margin: 0,
+};
+const S_FRONT_FOOT: React.CSSProperties = { display: 'flex', justifyContent: 'space-between', alignItems: 'center' };
+// Shared by the front "Itinerary" hint and the back "Flip Balances" hint --
+// same font, size, color, and layout on both faces.
+const S_LINK_HINT: React.CSSProperties = {
+  fontFamily: 'var(--font-family-mono)',
+  fontSize: '11px',
+  color: 'var(--primary-accent)',
+  fontWeight: 600,
+  display: 'inline-flex',
+  alignItems: 'center',
+  gap: '4px',
+};
+const S_BACK_FACE: React.CSSProperties = {
+  position: 'absolute',
+  top: 0,
+  left: 0,
+  width: '100%',
+  height: '100%',
+  backfaceVisibility: 'hidden',
+  WebkitBackfaceVisibility: 'hidden',
+  transform: 'rotateY(180deg)',
+  cursor: 'pointer',
+  margin: 0,
+  display: 'flex',
+  flexDirection: 'column',
+  justifyContent: 'space-between',
+};
+const S_BACK_TOP: React.CSSProperties = { paddingBottom: '8px' };
+const S_BACK_EYEBROW: React.CSSProperties = { display: 'inline-flex', alignItems: 'center', gap: '4px' };
+const S_BACK_TITLE: React.CSSProperties = { fontSize: '15px' };
+const S_BADGE_WRAP: React.CSSProperties = { display: 'flex', gap: '6px' };
+const S_SQUAD_BADGE: React.CSSProperties = {
+  background: 'rgba(217, 119, 6, 0.12)',
+  color: 'var(--color-warning)',
+  fontFamily: 'var(--font-family-mono)',
+  fontSize: '10px',
+  fontWeight: 700,
+  padding: '4px 8px',
+  borderRadius: '8px',
+  cursor: 'pointer',
+  display: 'flex',
+  alignItems: 'center',
+  gap: '4px',
+  border: '1px solid rgba(217, 119, 6, 0.22)',
+};
+const S_ROUTE_GRID: React.CSSProperties = {
+  padding: '10px 18px',
+  display: 'grid',
+  gridTemplateColumns: '1fr auto 1fr',
+  alignItems: 'center',
+  background: 'rgba(31, 27, 20, 0.03)',
+  gap: '8px',
+};
+const S_ROUTE_SIDE_LEFT: React.CSSProperties = { textAlign: 'left', minWidth: 0 };
+const S_ROUTE_SIDE_RIGHT: React.CSSProperties = { textAlign: 'right', minWidth: 0 };
+// Reused by DEPARTURE, RETURN, and TRAVELER & ROLE labels -- identical style.
+const S_MICRO_LABEL: React.CSSProperties = {
+  fontSize: '9px',
+  fontFamily: 'var(--font-family-mono)',
+  color: 'rgba(31, 27, 20, 0.55)',
+  textTransform: 'uppercase',
+};
+// Reused by the departure and return date values -- identical style.
+const S_DATE_VALUE: React.CSSProperties = { fontSize: '15px', fontWeight: 800, color: '#1F1B14', fontFamily: 'var(--font-family-mono)' };
+const S_ORIGIN_TEXT: React.CSSProperties = {
+  fontSize: '11.5px',
+  color: 'rgba(31, 27, 20, 0.75)',
+  fontWeight: 600,
+  whiteSpace: 'nowrap',
+  overflow: 'hidden',
+  textOverflow: 'ellipsis',
+};
+const S_DEST_TEXT: React.CSSProperties = { ...S_ORIGIN_TEXT, marginLeft: 'auto' };
+const S_DURATION_WRAP: React.CSSProperties = { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px', padding: '0 6px', flexShrink: 0 };
+const S_DURATION_PILL: React.CSSProperties = {
+  fontSize: '10px',
+  fontWeight: 700,
+  fontFamily: 'var(--font-family-mono)',
+  color: 'var(--primary-accent)',
+  background: 'rgba(63, 203, 189, 0.15)',
+  padding: '2px 8px',
+  borderRadius: '9999px',
+  whiteSpace: 'nowrap',
+};
+const S_DURATION_DASH: React.CSSProperties = { width: '50px', height: '1.5px', borderTop: '1.5px dashed rgba(31, 27, 20, 0.3)', margin: '3px 0' };
+const S_DURATION_SUBLABEL: React.CSSProperties = { fontSize: '9px', color: 'rgba(31, 27, 20, 0.55)', fontFamily: 'var(--font-family-mono)', whiteSpace: 'nowrap' };
+const S_PASSENGER_WEATHER_ROW: React.CSSProperties = { padding: '8px 18px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' };
+const S_PASSENGER_NAME_ROW: React.CSSProperties = { fontSize: '12.5px', fontWeight: 700, color: '#1F1B14' };
+const S_ROLE_HIGHLIGHT: React.CSSProperties = { color: 'var(--primary-accent)', fontWeight: 600 };
+const S_WEATHER_COL: React.CSSProperties = { textAlign: 'right', minWidth: '150px' };
+const S_WEATHER_LABEL_ROW: React.CSSProperties = { fontSize: '9px', fontFamily: 'var(--font-family-mono)', color: 'rgba(31, 27, 20, 0.55)', textTransform: 'uppercase', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '4px' };
+const S_WEATHER_REFRESH_BTN: React.CSSProperties = { background: 'none', border: 'none', padding: '0 2px', cursor: 'pointer', color: 'var(--primary-accent)', fontSize: '12px', lineHeight: 1 };
+const S_WEATHER_VALUE_ROW: React.CSSProperties = { fontSize: '12px', fontWeight: 800, color: 'var(--primary-accent)', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '4px' };
+const S_BACK_FOOT: React.CSSProperties = {
+  display: 'flex',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+  background: '#F7F0E1',
+  borderTop: '1px solid #E6DAC4',
+  padding: '10px 18px',
+};
+const S_BARCODE_CONTAINER: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' };
+const S_BARCODE_CHARS: React.CSSProperties = { fontFamily: 'monospace', fontSize: '14px', letterSpacing: '2px', color: 'rgba(31, 27, 20, 0.7)' };
+const S_JOINCODE_SPAN: React.CSSProperties = { fontFamily: 'var(--font-family-mono)', fontSize: '10px', color: 'rgba(31, 27, 20, 0.8)', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '4px' };
+
 function formatBoardingDate(dateStr?: string): string {
   if (!dateStr) return '';
   try {
@@ -118,26 +241,16 @@ export function BoardingPassHeroCard({
   const durationLabel = calculateTripDuration(trip.startDate, trip.endDate, parsedRoute.allStops.length > 1 ? parsedRoute.allStops.length : undefined);
 
   return (
-    <div className="boarding-pass-flip-container" style={{ perspective: '1200px', marginBottom: '16px' }}>
+    <div className="boarding-pass-flip-container" style={S_FLIP_CONTAINER}>
       <div
         className={`boarding-pass-flipper ${isFlipped ? 'flipped' : ''}`}
-        style={{
-          position: 'relative',
-          width: '100%',
-          transformStyle: 'preserve-3d',
-          transition: 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
-        }}
+        style={S_FLIPPER}
       >
         {/* ===================== FRONT SIDE: Balance Summary Ticket ===================== */}
         <div
           className="boarding-pass bp-front-face"
           onClick={handleFlip}
-          style={{
-            backfaceVisibility: 'hidden',
-            WebkitBackfaceVisibility: 'hidden',
-            cursor: 'pointer',
-            margin: 0,
-          }}
+          style={S_FRONT_FACE}
         >
           {/* Top Section */}
           <div className="bp-top">
@@ -178,22 +291,12 @@ export function BoardingPassHeroCard({
           <div className="bp-perf" />
 
           {/* Bottom Footer Stub */}
-          <div className="bp-foot" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div className="bp-foot" style={S_FRONT_FOOT}>
             <span>{balancesCount} members</span>
             <span>
               {transfers.length} transfer{transfers.length === 1 ? '' : 's'} left
             </span>
-            <span
-              style={{
-                fontFamily: 'var(--font-family-mono)',
-                fontSize: '11px',
-                color: 'var(--primary-accent)',
-                fontWeight: 600,
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '4px',
-              }}
-            >
+            <span style={S_LINK_HINT}>
               ↻ Itinerary
             </span>
           </div>
@@ -203,33 +306,19 @@ export function BoardingPassHeroCard({
         <div
           className="boarding-pass bp-back-face"
           onClick={handleFlip}
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '100%',
-            backfaceVisibility: 'hidden',
-            WebkitBackfaceVisibility: 'hidden',
-            transform: 'rotateY(180deg)',
-            cursor: 'pointer',
-            margin: 0,
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'space-between',
-          }}
+          style={S_BACK_FACE}
         >
           {/* Top Itinerary Bar */}
-          <div className="bp-top" style={{ paddingBottom: '8px' }}>
+          <div className="bp-top" style={S_BACK_TOP}>
             <div>
-              <div className="bp-eyebrow" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+              <div className="bp-eyebrow" style={S_BACK_EYEBROW}>
                 🧭 TRIP ITINERARY & TELEMETRY
               </div>
-              <div className="bp-title" style={{ fontSize: '15px' }}>
+              <div className="bp-title" style={S_BACK_TITLE}>
                 {trip.name}
               </div>
             </div>
-            <div style={{ display: 'flex', gap: '6px' }}>
+            <div style={S_BADGE_WRAP}>
               {onOpenSquadBadges && (
                 <div
                   onClick={(e) => {
@@ -237,20 +326,7 @@ export function BoardingPassHeroCard({
                     triggerHaptic('medium');
                     onOpenSquadBadges();
                   }}
-                  style={{
-                    background: 'rgba(217, 119, 6, 0.12)',
-                    color: 'var(--color-warning)',
-                    fontFamily: 'var(--font-family-mono)',
-                    fontSize: '10px',
-                    fontWeight: 700,
-                    padding: '4px 8px',
-                    borderRadius: '8px',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '4px',
-                    border: '1px solid rgba(217, 119, 6, 0.22)',
-                  }}
+                  style={S_SQUAD_BADGE}
                   title="View Unlocked Squad Achievements"
                 >
                   <IconTrophy size={11} /> SQUAD BADGES
@@ -260,81 +336,40 @@ export function BoardingPassHeroCard({
           </div>
 
           {/* Middle Route & Dates Grid */}
-          <div
-            style={{
-              padding: '10px 18px',
-              display: 'grid',
-              gridTemplateColumns: '1fr auto 1fr',
-              alignItems: 'center',
-              background: 'rgba(31, 27, 20, 0.03)',
-              gap: '8px',
-            }}
-          >
+          <div style={S_ROUTE_GRID}>
             {/* Departure */}
-            <div style={{ textAlign: 'left', minWidth: 0 }}>
-              <div style={{ fontSize: '9px', fontFamily: 'var(--font-family-mono)', color: 'rgba(31, 27, 20, 0.55)', textTransform: 'uppercase' }}>
+            <div style={S_ROUTE_SIDE_LEFT}>
+              <div style={S_MICRO_LABEL}>
                 DEPARTURE
               </div>
-              <div style={{ fontSize: '15px', fontWeight: 800, color: '#1F1B14', fontFamily: 'var(--font-family-mono)' }}>
+              <div style={S_DATE_VALUE}>
                 {trip.startDate ? formatBoardingDate(trip.startDate) : 'START'}
               </div>
-              <div
-                style={{
-                  fontSize: '11.5px',
-                  color: 'rgba(31, 27, 20, 0.75)',
-                  fontWeight: 600,
-                  whiteSpace: 'nowrap',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                }}
-                title={parsedRoute.origin}
-              >
+              <div style={S_ORIGIN_TEXT} title={parsedRoute.origin}>
                 {parsedRoute.origin}
               </div>
             </div>
 
             {/* Duration Vector */}
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px', padding: '0 6px', flexShrink: 0 }}>
-              <span
-                style={{
-                  fontSize: '10px',
-                  fontWeight: 700,
-                  fontFamily: 'var(--font-family-mono)',
-                  color: 'var(--primary-accent)',
-                  background: 'rgba(63, 203, 189, 0.15)',
-                  padding: '2px 8px',
-                  borderRadius: '9999px',
-                  whiteSpace: 'nowrap',
-                }}
-              >
+            <div style={S_DURATION_WRAP}>
+              <span style={S_DURATION_PILL}>
                 {durationLabel}
               </span>
-              <div style={{ width: '50px', height: '1.5px', borderTop: '1.5px dashed rgba(31, 27, 20, 0.3)', margin: '3px 0' }} />
-              <span style={{ fontSize: '9px', color: 'rgba(31, 27, 20, 0.55)', fontFamily: 'var(--font-family-mono)', whiteSpace: 'nowrap' }}>
+              <div style={S_DURATION_DASH} />
+              <span style={S_DURATION_SUBLABEL}>
                 {parsedRoute.isMultiStop ? `${parsedRoute.allStops.length} Stops` : 'Direct Route'}
               </span>
             </div>
 
             {/* Return / Destination */}
-            <div style={{ textAlign: 'right', minWidth: 0 }}>
-              <div style={{ fontSize: '9px', fontFamily: 'var(--font-family-mono)', color: 'rgba(31, 27, 20, 0.55)', textTransform: 'uppercase' }}>
+            <div style={S_ROUTE_SIDE_RIGHT}>
+              <div style={S_MICRO_LABEL}>
                 RETURN
               </div>
-              <div style={{ fontSize: '15px', fontWeight: 800, color: '#1F1B14', fontFamily: 'var(--font-family-mono)' }}>
+              <div style={S_DATE_VALUE}>
                 {trip.endDate ? formatBoardingDate(trip.endDate) : 'OPEN'}
               </div>
-              <div
-                style={{
-                  fontSize: '11.5px',
-                  color: 'rgba(31, 27, 20, 0.75)',
-                  fontWeight: 600,
-                  whiteSpace: 'nowrap',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  marginLeft: 'auto',
-                }}
-                title={parsedRoute.destination}
-              >
+              <div style={S_DEST_TEXT} title={parsedRoute.destination}>
                 {parsedRoute.destination}
               </div>
             </div>
@@ -344,33 +379,25 @@ export function BoardingPassHeroCard({
           <div className="bp-perf" />
 
           {/* Passenger & Live Telemetry Weather Strip */}
-          <div style={{ padding: '8px 18px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={S_PASSENGER_WEATHER_ROW}>
             <div>
-              <div style={{ fontSize: '9px', fontFamily: 'var(--font-family-mono)', color: 'rgba(31, 27, 20, 0.55)', textTransform: 'uppercase' }}>
+              <div style={S_MICRO_LABEL}>
                 TRAVELER & ROLE
               </div>
-              <div style={{ fontSize: '12.5px', fontWeight: 700, color: '#1F1B14' }}>
-                {passengerName} · <span style={{ color: 'var(--primary-accent)', fontWeight: 600 }}>{isSquadLeader ? 'Leader' : 'Traveler'}</span>
+              <div style={S_PASSENGER_NAME_ROW}>
+                {passengerName} · <span style={S_ROLE_HIGHLIGHT}>{isSquadLeader ? 'Leader' : 'Traveler'}</span>
               </div>
             </div>
 
-            <div style={{ textAlign: 'right' }}>
-              <div style={{ fontSize: '9px', fontFamily: 'var(--font-family-mono)', color: 'rgba(31, 27, 20, 0.55)', textTransform: 'uppercase', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '4px' }}>
+            <div style={S_WEATHER_COL}>
+              <div style={S_WEATHER_LABEL_ROW}>
                 <span>DESTINATION WEATHER</span>
                 <button
                   type="button"
                   onClick={handleRefreshWeather}
                   aria-label="Refresh weather data"
                   title="Refresh weather data"
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    padding: '0 2px',
-                    cursor: 'pointer',
-                    color: 'var(--primary-accent)',
-                    fontSize: '12px',
-                    lineHeight: 1,
-                  }}
+                  style={S_WEATHER_REFRESH_BTN}
                 >
                   <span
                     style={{
@@ -383,7 +410,7 @@ export function BoardingPassHeroCard({
                   </span>
                 </button>
               </div>
-              <div style={{ fontSize: '12px', fontWeight: 800, color: 'var(--primary-accent)', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '4px' }}>
+              <div key={weather ? 'loaded' : 'loading'} className="fade-in" style={S_WEATHER_VALUE_ROW}>
                 <span>{weather ? weather.weatherEmoji : '🏔️'}</span>
                 <span>{weather ? `${weather.tempC}°C · ${weather.condition}` : 'Loading weather...'}</span>
               </div>
@@ -391,28 +418,18 @@ export function BoardingPassHeroCard({
           </div>
 
           {/* Bottom Barcode, Join Code & Flip Toggle */}
-          <div
-            className="bp-foot"
-            style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              background: '#F7F0E1',
-              borderTop: '1px solid #E6DAC4',
-              padding: '10px 18px',
-            }}
-          >
+          <div className="bp-foot" style={S_BACK_FOOT}>
             <div
               onClick={handleCopyJoinCode}
               className="bp-barcode-container"
-              style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}
+              style={S_BARCODE_CONTAINER}
               title="Click to copy Join Code"
             >
               <div className="bp-barcode-sweep" aria-hidden="true" />
-              <span style={{ fontFamily: 'monospace', fontSize: '14px', letterSpacing: '2px', color: 'rgba(31, 27, 20, 0.7)' }}>
+              <span style={S_BARCODE_CHARS}>
                 ▌│█║▌║▌║
               </span>
-              <span style={{ fontFamily: 'var(--font-family-mono)', fontSize: '10px', color: 'rgba(31, 27, 20, 0.8)', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+              <span style={S_JOINCODE_SPAN}>
                 {trip.joinCode ? (
                   <>
                     {trip.joinCode} {copied ? '✓ COPIED' : <IconCopy size={11} />}
@@ -423,17 +440,7 @@ export function BoardingPassHeroCard({
               </span>
             </div>
 
-            <span
-              style={{
-                fontFamily: 'var(--font-family-mono)',
-                fontSize: '11px',
-                color: 'var(--primary-accent)',
-                fontWeight: 600,
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '4px',
-              }}
-            >
+            <span style={S_LINK_HINT}>
               ↻ Flip Balances
             </span>
           </div>
