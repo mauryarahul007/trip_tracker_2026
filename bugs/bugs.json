@@ -3651,7 +3651,7 @@
     "description": "usePullToRefresh called setState on every touchmove, re-rendering the entire screen (trip stack cards, ambient backdrop) 60-120x/sec during the drag, plus the indicator's height was React-state-driven (a layout property). Result: visibly choppy pull-to-refresh gesture on the Trips home screen and the expense Ledger tab.",
     "severity": "medium",
     "category": "ui-ux",
-    "status": "open",
+    "status": "resolved",
     "foundBy": "mauryarahul007@gmail.com",
     "environment": {
       "platform": "web",
@@ -3666,6 +3666,9 @@
     "actualBehavior": "",
     "diagnostics": {},
     "createdAt": "2026-08-30T17:40:21.872Z",
-    "updatedAt": "2026-08-30T17:40:21.873Z"
+    "updatedAt": "2026-08-30T17:40:40.415Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-08-30T17:40:40.414Z",
+    "resolutionNote": "Rewrote usePullToRefresh to write drag distance directly to the indicator DOM node instead of via React state on every touchmove; state now only updates on discrete armed/refreshing transitions. Commit 19d0b1d."
   }
 ]
