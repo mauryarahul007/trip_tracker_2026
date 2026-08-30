@@ -1,5 +1,34 @@
 [
   {
+    "id": "BUG-118",
+    "title": "Trip/Member/Group forms allowed double-submit; date picker leaked keyboard focus",
+    "description": "Create/Edit Trip, Add Member, and Add/Edit Group forms called their async save handler with no isSubmitting guard and no disabled/loading state on the submit button, so a slow connection plus a repeat tap could create duplicate records. Separately, DateRangePicker's popover had no focus trap: Tab could move focus out of the open calendar into the page behind it, and Escape only worked via a local onKeyDown handler instead of the app's shared focus-trap pattern.",
+    "severity": "medium",
+    "category": "ui-ux",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "isOnline": true,
+      "platform": "web",
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Open Create Trip (or Add Member, or Add Group) on a slow/throttled connection",
+      "Fill the form and tap Save/Add multiple times quickly before it resolves",
+      "Observe duplicate records created, or open the Dates calendar and press Tab repeatedly to see focus leave the popover into the page behind it"
+    ],
+    "expectedBehavior": "Submit button disables and shows a saving state during the async save so repeat taps are no-ops; the date picker traps Tab focus like every other modal/popup in the app.",
+    "actualBehavior": "Submit buttons stayed clickable through the async save with no loading feedback; the date picker's Tab key was unconstrained.",
+    "diagnostics": {
+      "stackTrace": "N/A -- missing guard/state, not a runtime error"
+    },
+    "createdAt": "2026-08-30T00:00:00+00:00",
+    "updatedAt": "2026-08-30T00:00:00+00:00",
+    "resolvedAt": "2026-08-30T00:00:00+00:00",
+    "resolvedBy": "claude-cli",
+    "resolutionNote": "Added isSubmitting-guard + disabled-button + \"Saving...\" pattern (matching the one already in ExpenseForm) to TripsListScreen's trip form and MembersGroupsTab's member/group forms. Wired DateRangePicker's popover into the existing useFocusTrap hook, removing the redundant local Escape handler. Commit f6b4d25."
+  },
+  {
     "id": "BUG-117",
     "title": "Create Trip date-range popover clipped by card, unusable to select dates",
     "description": "The trip date-range picker popover rendered inside the Create New Trip .glass-card, which uses content-visibility:auto for scroll perf. That implicitly clips overflowing absolutely-positioned children to the card bounds, cutting the calendar off mid-grid and letting trip cards behind bleed through, making later dates unselectable.",

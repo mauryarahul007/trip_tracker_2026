@@ -9,10 +9,10 @@
 
 | Metric | Count | Status Notes |
 | :--- | :--- | :--- |
-| **Total Tracked** | **114** | All recorded bugs across sessions |
+| **Total Tracked** | **115** | All recorded bugs across sessions |
 | **🟢 Open** | **0** | No critical blockers, 0 High |
 | **🟡 In Progress** | **0** | Active investigation or fix |
-| **✅ Resolved** | **88** | Verified & closed |
+| **✅ Resolved** | **89** | Verified & closed |
 | **⚪ Won't Fix** | **26** | Expected behavior / deferred |
 
 ---
@@ -31,6 +31,7 @@
 
 | ID | Title | Category | Severity | Found By | Resolved By | Fix Note |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| **BUG-118** | Trip/Member/Group forms allowed double-submit; date picker leaked keyboard focus | `ui-ux` | `medium` | `claude-cli` | `claude-cli` | Added isSubmitting-guard + disabled-button + "Saving..." pattern to trip/member/group forms; wired DateRangePicker into the shared useFocusTrap hook. Commit f6b4d25. |
 | **BUG-117** | Create Trip date-range popover clipped by card, unusable to select dates | `ui-ux` | `medium` | `human` | `claude-cli` | Portaled the date-range popover to document.body with fixed positioning computed from the trigger's rect, escaping the .glass-card containment clip. Commit 8e1a4cc. |
 | **BUG-012** | Member deletion left orphaned split IDs corrupting settlement balance math | `splits-math` | `high` | `human` | `antigravity` | Added automated exclusion of deleted members in App.tsx and settlement engine, redistributing equal shares automatically. |
 | **BUG-009** | iOS build failure due to Capacitor SPM Swift API mismatch on Xcode 16 | `general` | `critical` | `antigravity` | `antigravity` | Pinned capacitor-swift-pm to 8.2.0, committed Package.resolved, and created scripts/align-spm-versions.mjs. |
