@@ -9,8 +9,8 @@
 
 | Metric | Count | Status Notes |
 | :--- | :--- | :--- |
-| **Total Tracked** | **116** | All recorded bugs across sessions |
-| **🟢 Open** | **0** | No critical blockers, 0 High |
+| **Total Tracked** | **117** | All recorded bugs across sessions |
+| **🟢 Open** | **1** | No critical blockers, 0 High |
 | **🟡 In Progress** | **0** | Active investigation or fix |
 | **✅ Resolved** | **90** | Verified & closed |
 | **⚪ Won't Fix** | **26** | Expected behavior / deferred |
@@ -19,13 +19,27 @@
 
 ## 🚨 Active Bugs (Open & In Progress)
 
-*🎉 No active open bugs! Great job team.* 
+| ID | Severity | Category | Title | Found By | Status |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **[BUG-122](#bug-122)** | 🟡 Medium | `ui-ux` | Pull-to-refresh animation choppy on Trips list and Ledger | `mauryarahul007@gmail.com` | 🟢 Open |
 
 ---
 
 ## 📖 Detailed Active Bug Specs
 
-*No active bug details to display.*
+### BUG-122: Pull-to-refresh animation choppy on Trips list and Ledger
+
+- **Severity**: `MEDIUM` | **Category**: `ui-ux` | **Status**: `open`
+- **Found By**: `mauryarahul007@gmail.com` on 30/8/2026 (web)
+
+**Description**:
+usePullToRefresh called setState on every touchmove, re-rendering the entire screen (trip stack cards, ambient backdrop) 60-120x/sec during the drag, plus the indicator's height was React-state-driven (a layout property). Result: visibly choppy pull-to-refresh gesture on the Trips home screen and the expense Ledger tab.
+
+**Steps to Reproduce**:
+1. Navigate to application
+2. Perform action that triggers bug
+
+---
 
 ## ✅ Resolved Bugs History
 

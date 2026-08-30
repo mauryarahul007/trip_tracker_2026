@@ -80,7 +80,8 @@ export function TripsListScreen({
   const userId = useTripStore((s) => s.userId);
   const refreshTrips = useTripStore((s) => s.refreshTrips);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const pullToRefresh = usePullToRefresh(scrollContainerRef, () => refreshTrips(true));
+  const ptrIndicatorRef = useRef<HTMLDivElement>(null);
+  const pullToRefresh = usePullToRefresh(scrollContainerRef, ptrIndicatorRef, () => refreshTrips(true));
   const [showJoinTrip, setShowJoinTrip] = useState(false);
   const [joinCode, setJoinCode] = useState('');
   const [honeypotVal, setHoneypotVal] = useState('');
@@ -133,24 +134,14 @@ export function TripsListScreen({
       ref={scrollContainerRef}
       className={`fade-in trips-screen-scroll${stackActive ? ' stack-viewport-lock' : ''}`}
     >
-      {(pullToRefresh.pullDistance > 0 || pullToRefresh.refreshing) && (
-        <div
-          aria-hidden="true"
-          style={{
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            height: `${pullToRefresh.refreshing ? 40 : pullToRefresh.pullDistance}px`,
-            overflow: 'hidden',
-            transition: pullToRefresh.refreshing ? 'height 0.2s ease' : 'none',
-            color: pullToRefresh.armed || pullToRefresh.refreshing ? 'var(--primary-accent)' : 'var(--text-muted)',
-            fontSize: '12px',
-            fontWeight: 600,
-          }}
-        >
-          {pullToRefresh.refreshing ? 'Refreshing…' : pullToRefresh.armed ? 'Release to refresh' : 'Pull to refresh'}
-        </div>
-      )}
+      <div
+        ref={ptrIndicatorRef}
+        aria-hidden="true"
+        className="pull-refresh-indicator"
+        style={{ color: pullToRefresh.armed || pullToRefresh.refreshing ? 'var(--primary-accent)' : 'var(--text-muted)' }}
+      >
+        {pullToRefresh.refreshing ? 'Refreshing…' : pullToRefresh.armed ? 'Release to refresh' : 'Pull to refresh'}
+      </div>
       <HomeAmbientBackdrop trip={stackActive ? focusedTrip : null} />
       <header className="trips-screen-header">
         <button

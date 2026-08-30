@@ -167,7 +167,8 @@ export function ExpenseList({
     paneRef.current = wrapperRef.current?.closest<HTMLElement>('.tab-pane') ?? null;
   }, []);
   const refreshActiveTripExpenses = useTripStore((s) => s.refreshActiveTripExpenses);
-  const pullToRefresh = usePullToRefresh(paneRef, () => refreshActiveTripExpenses());
+  const ptrIndicatorRef = useRef<HTMLDivElement>(null);
+  const pullToRefresh = usePullToRefresh(paneRef, ptrIndicatorRef, () => refreshActiveTripExpenses());
   const expensesLoadingTripId = useTripStore((s) => s.expensesLoadingTripId);
   const isLoadingExpenses = !!trip && expensesLoadingTripId === trip.id;
 
@@ -260,24 +261,14 @@ export function ExpenseList({
 
   return (
     <div ref={wrapperRef}>
-      {(pullToRefresh.pullDistance > 0 || pullToRefresh.refreshing) && (
-        <div
-          aria-hidden="true"
-          style={{
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            height: `${pullToRefresh.refreshing ? 40 : pullToRefresh.pullDistance}px`,
-            overflow: 'hidden',
-            transition: pullToRefresh.refreshing ? 'height 0.2s ease' : 'none',
-            color: pullToRefresh.armed || pullToRefresh.refreshing ? 'var(--primary-accent)' : 'var(--text-muted)',
-            fontSize: '12px',
-            fontWeight: 600,
-          }}
-        >
-          {pullToRefresh.refreshing ? 'Refreshing…' : pullToRefresh.armed ? 'Release to refresh' : 'Pull to refresh'}
-        </div>
-      )}
+      <div
+        ref={ptrIndicatorRef}
+        aria-hidden="true"
+        className="pull-refresh-indicator"
+        style={{ color: pullToRefresh.armed || pullToRefresh.refreshing ? 'var(--primary-accent)' : 'var(--text-muted)' }}
+      >
+        {pullToRefresh.refreshing ? 'Refreshing…' : pullToRefresh.armed ? 'Release to refresh' : 'Pull to refresh'}
+      </div>
       {trip?.frozen && (
         <div
           style={{

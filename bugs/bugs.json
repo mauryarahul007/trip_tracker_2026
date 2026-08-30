@@ -3644,5 +3644,28 @@
     "resolvedBy": "claude-cli",
     "resolvedAt": "2026-08-30T17:28:05.086Z",
     "resolutionNote": "Removed unused Fraunces font; converted layout-thrashing width/margin CSS transitions to transform (also fixed a pre-existing hover double-scale bug on the trip-sheet handle); code-split SettingsTab with a mount-gate to stop maplibre-gl loading for every session. Commit 0b74ca9."
+  },
+  {
+    "id": "BUG-122",
+    "title": "Pull-to-refresh animation choppy on Trips list and Ledger",
+    "description": "usePullToRefresh called setState on every touchmove, re-rendering the entire screen (trip stack cards, ambient backdrop) 60-120x/sec during the drag, plus the indicator's height was React-state-driven (a layout property). Result: visibly choppy pull-to-refresh gesture on the Trips home screen and the expense Ledger tab.",
+    "severity": "medium",
+    "category": "ui-ux",
+    "status": "open",
+    "foundBy": "mauryarahul007@gmail.com",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-08-30T17:40:21.872Z",
+    "updatedAt": "2026-08-30T17:40:21.873Z"
   }
 ]

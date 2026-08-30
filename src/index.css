@@ -526,6 +526,21 @@ button, [role="button"], input, select, a {
   100% { transform: translateY(160px) rotate(540deg); opacity: 0; }
 }
 
+/* Pull-to-refresh indicator -- height is driven imperatively by
+   usePullToRefresh.ts (direct DOM writes during drag, not React state), so
+   this class only supplies the resting default. Never add `height` to this
+   element's React inline style or it will fight the imperative writes on
+   every re-render. */
+.pull-refresh-indicator {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 0;
+  overflow: hidden;
+  font-size: 12px;
+  font-weight: 600;
+}
+
 /* Member row Edit/Delete buttons -- hidden on touch (swipe-left-delete /
    swipe-right-edit via SwipeableRow covers it there), shown for mouse/
    trackpad users who have no swipe gesture available. */
