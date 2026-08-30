@@ -5820,6 +5820,16 @@ textarea.input-field {
   }
 }
 
+.quick-starter-btn:hover {
+  border-color: var(--primary-accent) !important;
+  background: var(--bg-surface-hover) !important;
+  transform: translateY(-1.5px);
+}
+
+.quick-starter-btn:active {
+  transform: scale(0.97);
+}
+
 /* 3D Perspective Card Container */
 .login-perspective {
   perspective: 1000px;

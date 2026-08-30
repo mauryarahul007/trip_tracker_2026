@@ -53,6 +53,7 @@ type Props = {
     location?: ExpenseLocation | null;
   }) => Promise<{ success: boolean; error?: string }>;
   onCancel: () => void;
+  initialTemplate?: { title?: string; category?: string };
 };
 
 
@@ -65,13 +66,17 @@ export function ExpenseForm({
   editingExpense,
   onSave,
   onCancel,
+  initialTemplate,
 }: Props) {
   const currencySymbol = getCurrencySymbol(trip?.baseCurrency || '');
 
   // Local Form States
-  const [title, setTitle] = useState(editingExpense?.title || '');
+  const [title, setTitle] = useState(editingExpense?.title || initialTemplate?.title || '');
   const [amount, setAmount] = useState(editingExpense ? String(editingExpense.amount) : '');
-  const [category, setCategory] = useState(editingExpense?.category || (categories[0]?.id || ''));
+  const [category, setCategory] = useState(
+    editingExpense?.category ||
+    (initialTemplate?.category && categories.some((c) => c.id === initialTemplate.category) ? initialTemplate.category : (categories[0]?.id || ''))
+  );
   const [date, setDate] = useState(editingExpense?.date || getTodayDateString());
   const [payer, setPayer] = useState(editingExpense?.paidBy || (visibleMembers[0]?.id || ''));
   const [splitMode, setSplitMode] = useState<SplitMode>((editingExpense?.splitMode as SplitMode) || 'equal');

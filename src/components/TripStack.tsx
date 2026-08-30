@@ -292,7 +292,18 @@ function StackCardItem({ trip, members, idx, canDelete, onOpen, onBrowse, onArch
 }
 
 export function TripStack({ trips, members, userId, onSelectTrip, onStartEditTrip, onDeleteTrip, onArchiveTrip, onShowList, onFrontChange }: Props) {
-  const sortedIds = useMemo(() => [...trips].sort((a, b) => b.updatedAt - a.updatedAt).map((t) => t.id), [trips]);
+  const sortedIds = useMemo(
+    () =>
+      [...trips]
+        .sort((a, b) => {
+          const dateA = a.startDate || '';
+          const dateB = b.startDate || '';
+          if (dateA && dateB && dateA !== dateB) return dateB.localeCompare(dateA);
+          return (b.updatedAt || b.createdAt || 0) - (a.updatedAt || a.createdAt || 0);
+        })
+        .map((t) => t.id),
+    [trips]
+  );
   const idsKey = sortedIds.join(',');
   const tripsById = useMemo(() => Object.fromEntries(trips.map((t) => [t.id, t])), [trips]);
 

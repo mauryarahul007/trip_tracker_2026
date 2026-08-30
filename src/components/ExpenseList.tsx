@@ -106,10 +106,10 @@ type Props = {
   onReview: (expense: Expense) => void;
   onEdit: (expense: Expense) => void;
   onDelete: (expense: Expense) => void;
-
   isAdmin: boolean;
   userId: string | null;
   activeTransitionSourceId?: string | null;
+  onAddExpense?: (template?: { title?: string; category?: string }) => void;
 };
 
 export function ExpenseList({
@@ -151,6 +151,7 @@ export function ExpenseList({
   isAdmin,
   userId,
   activeTransitionSourceId,
+  onAddExpense,
 }: Props) {
   const currencySymbol = getCurrencySymbol(trip?.baseCurrency || '');
 
@@ -196,8 +197,8 @@ export function ExpenseList({
     return groups;
   }, []);
 
-  // Every day-group starts collapsed on entering the tab; only the days a
-  // user explicitly expands (via collapseOverrides) open up.
+  // Every day-group starts collapsed on entering the tab to keep
+  // the ledger clean and high-level; days expand on tap or toggle.
   const DEFAULT_EXPANDED_DAYS = 0;
   // Only stores days the user has explicitly toggled away from their
   // default state -- the default itself (first N groups open, rest
@@ -427,22 +428,144 @@ export function ExpenseList({
         </div>
       )}
 
-      {/* Clean Transaction Feed with Date Dividers */}
+      {/* Clean Transaction Feed with Date Dividers or Quick Starters */}
       {filteredExpenses.length === 0 ? (
-        <div className="glass-card ledger-empty" style={{ borderStyle: 'dashed' }}>
-          <div className="ledger-rule" />
-          <div className="ledger-rule" />
-          <div className="ledger-empty-prompt">
-            <span className="ledger-pencil" aria-hidden="true">
-              <IconEdit size={14} className="icon-sm" />
-            </span>
-            <p>
-              {hasActiveFilters ? 'Nothing matches those filters — try clearing them.' : 'Nothing logged yet. Add the first line to start the ledger.'}
-            </p>
+        hasActiveFilters ? (
+          <div className="glass-card ledger-empty" style={{ borderStyle: 'dashed' }}>
+            <div className="ledger-rule" />
+            <div className="ledger-rule" />
+            <div className="ledger-empty-prompt">
+              <span className="ledger-pencil" aria-hidden="true">
+                <IconEdit size={14} className="icon-sm" />
+              </span>
+              <p>Nothing matches those filters — try clearing them.</p>
+              <button
+                type="button"
+                className="secondary-btn"
+                style={{ marginTop: '8px', padding: '6px 14px', fontSize: '12px' }}
+                onClick={onClearFilters}
+              >
+                Clear all filters
+              </button>
+            </div>
+            <div className="ledger-rule" />
+            <div className="ledger-rule" />
           </div>
-          <div className="ledger-rule" />
-          <div className="ledger-rule" />
-        </div>
+        ) : (
+          <div
+            className="glass-card"
+            style={{
+              padding: '28px 20px',
+              textAlign: 'center',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '16px',
+              borderRadius: '20px',
+              background: 'linear-gradient(180deg, var(--bg-surface) 0%, rgba(63, 203, 189, 0.05) 100%)',
+              border: '1.5px solid var(--border-color)',
+            }}
+          >
+            <div
+              style={{
+                width: '52px',
+                height: '52px',
+                borderRadius: '50%',
+                background: 'rgba(63, 203, 189, 0.12)',
+                color: 'var(--primary-accent)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '24px',
+                border: '1px solid rgba(63, 203, 189, 0.25)',
+              }}
+            >
+              🧭
+            </div>
+
+            <div>
+              <h3 style={{ fontSize: '16.5px', fontWeight: 700, color: 'var(--text-primary)', margin: '0 0 6px 0' }}>
+                Start Your Expedition Ledger
+              </h3>
+              <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: 0, maxWidth: '300px', lineHeight: 1.4 }}>
+                Log your first group expense or tap a quick template below:
+              </p>
+            </div>
+
+            {/* Quick Starter Cards Grid */}
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr',
+                gap: '8px',
+                width: '100%',
+                maxWidth: '360px',
+              }}
+            >
+              {[
+                { label: 'Flights / Transit', icon: '✈️', title: 'Flight Tickets', catKeyword: 'travel' },
+                { label: 'Stay & Hotel', icon: '🏨', title: 'Hotel Booking', catKeyword: 'stay' },
+                { label: 'Squad Meal', icon: '🍽️', title: 'Group Dinner', catKeyword: 'food' },
+                { label: 'Activities & Entry', icon: '🎟️', title: 'Sightseeing Passes', catKeyword: 'activities' },
+              ].map((template) => {
+                const matchedCat = categories.find((c) =>
+                  c.id.toLowerCase().includes(template.catKeyword) || c.name.toLowerCase().includes(template.catKeyword)
+                );
+                return (
+                  <button
+                    key={template.label}
+                    type="button"
+                    className="quick-starter-btn"
+                    onClick={() => {
+                      triggerHaptic('light');
+                      onAddExpense?.({
+                        title: template.title,
+                        category: matchedCat?.id || categories[0]?.id || '',
+                      });
+                    }}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      padding: '11px 12px',
+                      background: 'var(--bg-surface)',
+                      border: '1.5px solid var(--border-color)',
+                      borderRadius: '12px',
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                      transition: 'transform 0.15s ease, border-color 0.15s ease, background 0.15s ease',
+                    }}
+                  >
+                    <span style={{ fontSize: '16px', flexShrink: 0 }}>{template.icon}</span>
+                    <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {template.label}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {onAddExpense && (
+              <button
+                type="button"
+                className="primary-btn"
+                onClick={() => {
+                  triggerHaptic('light');
+                  onAddExpense();
+                }}
+                style={{
+                  padding: '10px 22px',
+                  fontSize: '13px',
+                  borderRadius: '9999px',
+                  fontWeight: 700,
+                  marginTop: '4px',
+                }}
+              >
+                + Log Custom Expense
+              </button>
+            )}
+          </div>
+        )
       ) : (
         <>
           {dayGroups.length > DEFAULT_EXPANDED_DAYS && (
@@ -524,6 +647,7 @@ export function ExpenseList({
                   const splitMembers = exp.splitMemberIds.map((id) => ({ id, member: members[id] }));
                   const visibleSplitMembers = splitMembers.slice(0, 4);
                   const overflowSplitCount = splitMembers.length - visibleSplitMembers.length;
+                  const categoryAccentColor = needsReview ? 'var(--color-warning)' : getCatColor(exp.category, 0);
 
                   // Shown only when it differs from the full amount --
                   // otherwise it's just noise repeating the line total.
@@ -562,15 +686,29 @@ export function ExpenseList({
                           style={{
                             display: 'flex', flexDirection: 'column', gap: '6px',
                             padding: '12px 14px',
-                            borderLeft: `3px solid ${needsReview ? 'var(--color-warning)' : getCatColor(exp.category, 0)}`,
+                            borderLeft: `3.5px solid ${categoryAccentColor}`,
                             background: needsReview ? 'rgba(185, 138, 62, 0.07)' : undefined,
                           }}
                         >
                           <div
-                            style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}
+                            style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}
                             onClick={() => { triggerHaptic('light'); onReview(exp); }}
                           >
-                            <CategoryIcon categoryId={cat?.id || ''} fallbackEmoji={cat?.icon || '🏷️'} size={15} />
+                            <div
+                              style={{
+                                width: '32px',
+                                height: '32px',
+                                borderRadius: '8px',
+                                background: `${categoryAccentColor}18`,
+                                color: categoryAccentColor,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                flexShrink: 0,
+                              }}
+                            >
+                              <CategoryIcon categoryId={cat?.id || ''} fallbackEmoji={cat?.icon || '🏷️'} size={16} />
+                            </div>
                             <h4 style={{ flex: 1, minWidth: 0, fontSize: '15px', lineHeight: 1.3, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '5px', viewTransitionName: activeTransitionSourceId === exp.id ? 'expense-shared-title' : undefined }}>
                               <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{exp.title}</span>
                               {(exp.receiptImage || exp.receiptPath) && (

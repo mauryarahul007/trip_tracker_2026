@@ -275,6 +275,7 @@ export default function App() {
   // Form states - Groups
   // Form states
   const [showAddExpense, setShowAddExpense] = useState(false);
+  const [expenseTemplate, setExpenseTemplate] = useState<{ title?: string; category?: string } | undefined>(undefined);
   const [activeTransitionSourceId, setActiveTransitionSourceId] = useState<string | null>(null);
   const [editingExpenseId, setEditingExpenseId] = useState<string | null>(null);
   const [selectedReviewExpense, setSelectedReviewExpense] = useState<Expense | null>(null);
@@ -421,7 +422,15 @@ export default function App() {
   }, [handleOnlineSync]);
 
   const visibleTrips = useMemo(
-    () => trips.filter((t) => t.id !== pendingDeleteTrip?.id && !t.archived),
+    () =>
+      trips
+        .filter((t) => t.id !== pendingDeleteTrip?.id && !t.archived)
+        .sort((a, b) => {
+          const dateA = a.startDate || '';
+          const dateB = b.startDate || '';
+          if (dateA && dateB && dateA !== dateB) return dateB.localeCompare(dateA);
+          return (b.updatedAt || b.createdAt || 0) - (a.updatedAt || a.createdAt || 0);
+        }),
     [trips, pendingDeleteTrip]
   );
   const archivedTrips = useMemo(() => trips.filter((t) => t.archived), [trips]);
@@ -1118,6 +1127,7 @@ export default function App() {
     if (reviewQueue.length === 0) {
       setEditingExpenseId(null);
       setActiveTransitionSourceId(null);
+      setExpenseTemplate(undefined);
       setShowAddExpense(false);
       return;
     }
@@ -1125,10 +1135,11 @@ export default function App() {
     setReviewQueue(rest);
     setEditingExpenseId(nextId);
     setActiveTransitionSourceId(nextId);
+    setExpenseTemplate(undefined);
     setShowAddExpense(true);
   };
 
-  const handleOpenAddExpense = () => {
+  const handleOpenAddExpense = (template?: { title?: string; category?: string }) => {
     if (visibleMembers.length === 0) {
       setShowMembersRequiredNotice(true);
       setActiveTab('members');
@@ -1137,6 +1148,7 @@ export default function App() {
     setReviewQueue([]);
     setEditingExpenseId(null);
     setActiveTransitionSourceId(null);
+    setExpenseTemplate(template);
     setShowAddExpense(true);
   };
 
@@ -1144,6 +1156,7 @@ export default function App() {
     setReviewQueue([]);
     setEditingExpenseId(exp.id);
     setActiveTransitionSourceId(exp.id);
+    setExpenseTemplate(undefined);
     if (typeof document.startViewTransition === 'function') {
       document.startViewTransition(() => {
         flushSync(() => setShowAddExpense(true));
@@ -1905,6 +1918,7 @@ export default function App() {
                 isAdmin={isAdmin}
                 userId={userId}
                 activeTransitionSourceId={activeTransitionSourceId}
+                onAddExpense={handleOpenAddExpense}
               />
               </div>
             </div>
@@ -2004,12 +2018,13 @@ export default function App() {
           </div>
         }>
           <ExpenseForm
-            key={editingExpenseId || 'new'}
+            key={editingExpenseId || (expenseTemplate ? `${expenseTemplate.title}-${expenseTemplate.category}` : 'new')}
             trip={activeTrip}
             visibleMembers={visibleMembers}
             visibleTripGroups={visibleTripGroups}
             categories={categories}
             editingExpense={editingExpense}
+            initialTemplate={expenseTemplate}
             onSave={handleSaveExpense}
             onCancel={handleCancelExpenseForm}
           />
