@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { getMonthGrid, toISODate, fromISODate, isSameDate, isBetweenExclusive, formatSingleDate } from '../utils/calendar';
 import { IconCalendar, IconChevronLeft, IconChevronRight } from './Icons';
+import { useFocusTrap } from '../hooks/useFocusTrap';
 
 const WEEKDAYS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
 
@@ -49,6 +50,14 @@ export function DateRangePicker({ startDate, endDate, onSelectStart, onSelectEnd
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [open]);
+
+  // Keyboard-only users could previously Tab straight out of this dialog
+  // into whatever's behind it on the page, and Escape only worked while
+  // focus happened to be inside the popover's own onKeyDown handler. A real
+  // focus trap keeps Tab cycling inside, auto-focuses the first control, and
+  // restores focus to the trigger button on close -- same pattern already
+  // used by every other popup/modal in the app.
+  useFocusTrap(popoverRef, open, false, () => setOpen(false));
 
   const startD = fromISODate(startDate);
   const endD = fromISODate(endDate);
@@ -128,9 +137,6 @@ export function DateRangePicker({ startDate, endDate, onSelectStart, onSelectEnd
           role="dialog"
           aria-label="Trip dates calendar"
           style={{ position: 'fixed', top: popoverPos.top, left: popoverPos.left }}
-          onKeyDown={(e) => {
-            if (e.key === 'Escape') setOpen(false);
-          }}
         >
           <div className="date-picker-nav">
             <button type="button" aria-label="Previous month" onClick={() => goMonth(-1)}>

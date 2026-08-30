@@ -68,6 +68,7 @@ export function MembersGroupsTab({
   const [newMemberName, setNewMemberName] = React.useState('');
   const [editingMember, setEditingMember] = React.useState<Member | null>(null);
   const [memberFormError, setMemberFormError] = React.useState('');
+  const [isSavingMember, setIsSavingMember] = React.useState(false);
   // Add/edit member now renders as a popup instead of an always-inline
   // form -- the members list is what people open this tab to see, an
   // empty add-form pushing it below the fold every time was backwards.
@@ -323,6 +324,7 @@ export function MembersGroupsTab({
   const [editingGroup, setEditingGroup] = React.useState<Group | null>(null);
   const [groupFormError, setGroupFormError] = React.useState('');
   const [isGroupNameAuto, setIsGroupNameAuto] = React.useState(true);
+  const [isSavingGroup, setIsSavingGroup] = React.useState(false);
 
   // Register group modal/form into browser history stack (WhatsApp hierarchical navigation)
   useHistoryBack(showAddGroup || Boolean(editingGroup), () => {
@@ -386,8 +388,8 @@ export function MembersGroupsTab({
 
   const handleAddMemberLocal = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (duplicateTripMember) {
-      setMemberFormError(`A member named "${duplicateTripMember.name}" is already in this trip.`);
+    if (isSavingMember || duplicateTripMember) {
+      if (duplicateTripMember) setMemberFormError(`A member named "${duplicateTripMember.name}" is already in this trip.`);
       return;
     }
 
@@ -396,11 +398,17 @@ export function MembersGroupsTab({
     const linkedIdToUse =
       selectedLinkedUserId || (matchingExistingPerson ? matchingExistingPerson.linkedUserId : null);
 
-    const res = await onSaveMember(
-      newMemberName,
-      editingMember ? editingMember.id : null,
-      editingMember ? undefined : linkedIdToUse
-    );
+    setIsSavingMember(true);
+    let res: { success: boolean; error?: string };
+    try {
+      res = await onSaveMember(
+        newMemberName,
+        editingMember ? editingMember.id : null,
+        editingMember ? undefined : linkedIdToUse
+      );
+    } finally {
+      setIsSavingMember(false);
+    }
     if (res.success) {
       setNewMemberName('');
       setSelectedLinkedUserId(null);
@@ -458,8 +466,15 @@ export function MembersGroupsTab({
 
   const handleCreateGroupLocal = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSavingGroup) return;
     const memberIds = Object.keys(selectedGroupMembers).filter((id) => selectedGroupMembers[id]);
-    const res = await onSaveGroup(newGroupName, memberIds, editingGroup ? editingGroup.id : null);
+    setIsSavingGroup(true);
+    let res: { success: boolean; error?: string };
+    try {
+      res = await onSaveGroup(newGroupName, memberIds, editingGroup ? editingGroup.id : null);
+    } finally {
+      setIsSavingGroup(false);
+    }
     if (res.success) {
       setNewGroupName('');
       setSelectedGroupMembers({});
@@ -770,11 +785,11 @@ export function MembersGroupsTab({
               type="submit"
               className="gradient-btn"
               style={{ flex: 1, padding: '10px' }}
-              disabled={Boolean(duplicateTripMember)}
+              disabled={isSavingMember || Boolean(duplicateTripMember)}
             >
-              {editingMember ? 'Update' : 'Add'}
+              {isSavingMember ? 'Saving…' : editingMember ? 'Update' : 'Add'}
             </button>
-            <button type="button" className="secondary-btn" style={{ flex: 1, padding: '10px' }} onClick={handleCancelMemberEditLocal}>Cancel</button>
+            <button type="button" className="secondary-btn" style={{ flex: 1, padding: '10px' }} onClick={handleCancelMemberEditLocal} disabled={isSavingMember}>Cancel</button>
           </div>
         </form>
         </div>,
@@ -1048,14 +1063,15 @@ export function MembersGroupsTab({
             )}
 
             <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
-              <button type="submit" className="gradient-btn" style={{ flex: 1, padding: '10px' }}>
-                {editingGroup ? 'Update Group' : 'Save Group'}
+              <button type="submit" className="gradient-btn" style={{ flex: 1, padding: '10px' }} disabled={isSavingGroup}>
+                {isSavingGroup ? 'Saving…' : editingGroup ? 'Update Group' : 'Save Group'}
               </button>
               <button
                 type="button"
                 className="secondary-btn"
                 style={{ flex: 1, padding: '10px' }}
                 onClick={handleCancelGroupFormLocal}
+                disabled={isSavingGroup}
               >
                 Cancel
               </button>

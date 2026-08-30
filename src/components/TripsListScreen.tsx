@@ -32,7 +32,7 @@ type Props = {
   newTripCurrency: string;
   setNewTripCurrency: (v: string) => void;
   editingTripId: string | null;
-  onCreateTrip: (e: React.FormEvent) => void;
+  onCreateTrip: (e: React.FormEvent) => void | Promise<void>;
   onCancelTripForm: () => void;
   onStartEditTrip: (trip: Trip) => void;
   onSelectTrip: (id: string) => void;
@@ -82,6 +82,7 @@ export function TripsListScreen({
   const [honeypotVal, setHoneypotVal] = useState('');
   const [showList, setShowList] = useState(false);
   const [focusedTrip, setFocusedTrip] = useState<Trip | null>(null);
+  const [isSavingTrip, setIsSavingTrip] = useState(false);
   const stackActive = trips.length >= 2 && !showList && !showAddTrip && !showJoinTrip;
 
   // First-run vs. "deleted my last trip" both hit trips.length === 0 — flag
@@ -102,9 +103,9 @@ export function TripsListScreen({
     navigate(`/join/${encodeURIComponent(code)}`);
   };
 
-  const handleCreateTripSafe = (e: React.FormEvent) => {
+  const handleCreateTripSafe = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (honeypotVal) return;
+    if (isSavingTrip || honeypotVal) return;
     // Dates are required server-side (the trips table's start_date/end_date
     // columns aren't nullable) -- the form used to label them "Optional"
     // while silently failing to create the trip if left blank. Block it
@@ -113,7 +114,12 @@ export function TripsListScreen({
       alert('Please choose a start and end date for the trip.');
       return;
     }
-    onCreateTrip(e);
+    setIsSavingTrip(true);
+    try {
+      await onCreateTrip(e);
+    } finally {
+      setIsSavingTrip(false);
+    }
   };
 
   return (
@@ -427,10 +433,10 @@ export function TripsListScreen({
             )}
 
             <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
-              <button type="submit" className="gradient-btn" style={{ flex: 1 }}>
-                {editingTripId ? 'Update Trip' : 'Save Trip'}
+              <button type="submit" className="gradient-btn" style={{ flex: 1 }} disabled={isSavingTrip}>
+                {isSavingTrip ? 'Saving…' : editingTripId ? 'Update Trip' : 'Save Trip'}
               </button>
-              <button type="button" className="secondary-btn" style={{ flex: 1 }} onClick={onCancelTripForm}>Cancel</button>
+              <button type="button" className="secondary-btn" style={{ flex: 1 }} onClick={onCancelTripForm} disabled={isSavingTrip}>Cancel</button>
             </div>
           </form>
         )}
