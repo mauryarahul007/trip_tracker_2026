@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 import type { Category, Group, Member, Trip, Expense, ExpenseLocation } from '../types';
-import { IconCheck, IconAlertCircle, IconClose, IconMapPin } from './Icons';
+import { IconCheck, IconAlertCircle, IconClose, IconMapPin, IconMic } from './Icons';
 import { CategoryIcon } from './CategoryIcon';
 import { initial } from '../utils/initials';
 import { avatarColorForName } from '../utils/avatarColor';
@@ -17,6 +17,27 @@ import { parseReceiptText, type ExtractedReceiptData } from '../utils/receiptOcr
 import { useFocusTrap } from '../hooks/useFocusTrap';
 
 type SplitMode = 'equal' | 'custom' | 'exact' | 'percentage';
+
+// Minimal Web Speech API surface -- not in the default TS DOM lib, and
+// vendor-prefixed on most browsers that support it (Chrome/Edge/Safari).
+interface SpeechRecognitionInstance extends EventTarget {
+  lang: string;
+  interimResults: boolean;
+  maxAlternatives: number;
+  start: () => void;
+  stop: () => void;
+  onresult: ((event: { results: ArrayLike<ArrayLike<{ transcript: string }>> }) => void) | null;
+  onerror: (() => void) | null;
+  onend: (() => void) | null;
+}
+
+function getSpeechRecognitionCtor(): (new () => SpeechRecognitionInstance) | null {
+  const w = window as unknown as {
+    SpeechRecognition?: new () => SpeechRecognitionInstance;
+    webkitSpeechRecognition?: new () => SpeechRecognitionInstance;
+  };
+  return w.SpeechRecognition || w.webkitSpeechRecognition || null;
+}
 
 const getTodayDateString = () => {
   const today = new Date();
@@ -72,6 +93,8 @@ export function ExpenseForm({
 
   // Local Form States
   const [title, setTitle] = useState(editingExpense?.title || initialTemplate?.title || '');
+  const [isListening, setIsListening] = useState(false);
+  const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
   const [amount, setAmount] = useState(editingExpense ? String(editingExpense.amount) : '');
   const [category, setCategory] = useState(
     editingExpense?.category ||
@@ -326,6 +349,35 @@ export function ExpenseForm({
   };
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => () => recognitionRef.current?.stop(), []);
+
+  const handleToggleVoiceInput = () => {
+    if (isListening) {
+      recognitionRef.current?.stop();
+      return;
+    }
+    const Ctor = getSpeechRecognitionCtor();
+    if (!Ctor) return;
+    triggerHaptic('light');
+    const recognition = new Ctor();
+    recognition.lang = 'en-IN';
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+    recognition.onresult = (event) => {
+      const transcript = event.results[0]?.[0]?.transcript;
+      if (transcript) {
+        setTitle(transcript);
+        const suggested = autoSuggestCategory(transcript, categories);
+        if (suggested) setCategory(suggested);
+      }
+    };
+    recognition.onerror = () => setIsListening(false);
+    recognition.onend = () => setIsListening(false);
+    recognitionRef.current = recognition;
+    recognition.start();
+    setIsListening(true);
+  };
 
   const handleSubmitLocal = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -684,22 +736,49 @@ export function ExpenseForm({
 
       <div className="form-group">
         <label className="form-label" htmlFor="expense-title">Expense Title</label>
-        <input
-          id="expense-title"
-          type="text"
-          className="input-field"
-          placeholder="e.g. Flight Tickets"
-          value={title}
-          onChange={(e) => {
-            const val = e.target.value;
-            setTitle(val);
-            if (formError) setFormError('');
-            const suggested = autoSuggestCategory(val, categories);
-            if (suggested) {
-              setCategory(suggested);
-            }
-          }}
-        />
+        <div style={{ position: 'relative' }}>
+          <input
+            id="expense-title"
+            type="text"
+            className="input-field"
+            placeholder="e.g. Flight Tickets"
+            value={title}
+            style={getSpeechRecognitionCtor() ? { paddingRight: '40px' } : undefined}
+            onChange={(e) => {
+              const val = e.target.value;
+              setTitle(val);
+              if (formError) setFormError('');
+              const suggested = autoSuggestCategory(val, categories);
+              if (suggested) {
+                setCategory(suggested);
+              }
+            }}
+          />
+          {getSpeechRecognitionCtor() && (
+            <button
+              type="button"
+              onClick={handleToggleVoiceInput}
+              aria-label={isListening ? 'Stop voice input' : 'Fill title by voice'}
+              aria-pressed={isListening}
+              title={isListening ? 'Listening… tap to stop' : 'Speak expense title'}
+              style={{
+                position: 'absolute',
+                right: '6px',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                padding: '6px',
+                display: 'flex',
+                color: isListening ? 'var(--color-danger)' : 'var(--text-muted)',
+                animation: isListening ? 'pulse-dot 1.2s ease-in-out infinite' : undefined,
+              }}
+            >
+              <IconMic size={16} />
+            </button>
+          )}
+        </div>
         {isTitleFormError && (
           <p style={{ color: 'var(--color-danger)', fontSize: '12px', marginTop: '6px', marginBottom: 0 }}>
             {formError}

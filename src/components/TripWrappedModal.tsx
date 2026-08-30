@@ -2,6 +2,7 @@ import { useState, useRef } from 'react';
 import type { Trip, Expense, Member, Category } from '../types';
 import { IconClose, IconDownload, IconCheck, IconShare, IconMoon, IconSun } from './Icons';
 import { triggerHaptic } from '../utils/haptics';
+import { formatAmount, getCurrencySymbol } from '../utils/currency';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 
 
@@ -247,6 +248,23 @@ export function getMemberSuperlatives(
   return superlatives;
 }
 
+export interface MemberSpendEntry {
+  memberName: string;
+  amount: number;
+}
+
+export function getMemberSpendLeaderboard(members: Member[], expenses: Expense[]): MemberSpendEntry[] {
+  const spendMap: Record<string, number> = {};
+  expenses.forEach((e) => {
+    spendMap[e.paidBy] = (spendMap[e.paidBy] || 0) + e.amount;
+  });
+  return members
+    .map((m) => ({ memberName: m.name, amount: spendMap[m.id] || 0 }))
+    .filter((entry) => entry.amount > 0)
+    .sort((a, b) => b.amount - a.amount)
+    .slice(0, 5);
+}
+
 export function getTripRhythm(expenses: Expense[], trip: Trip): TripRhythm {
   if (expenses.length === 0) {
     return {
@@ -414,19 +432,28 @@ export function TripWrappedModal({
   const archetype = getTripArchetype(categories, expenses);
   const superlatives = getMemberSuperlatives(members, expenses, categories);
   const rhythm = getTripRhythm(expenses, trip);
+  const leaderboard = getMemberSpendLeaderboard(members, expenses);
+  const currencySymbol = getCurrencySymbol(trip.baseCurrency);
 
-  // Render 1080x1920 Instagram Story Canvas
+  // Render 1080-wide Instagram Story Canvas. Grown past the standard 1920
+  // tall when there's a leaderboard to fit below Trip Rhythm, since the
+  // sections above are already packed with no spare room -- height scales
+  // with member count so the card never overflows the canvas bottom.
+  const LEADERBOARD_TOP = 1680;
+  const LEADERBOARD_ROW_H = 78;
+  const leaderboardHeight = leaderboard.length > 0 ? 70 + leaderboard.length * LEADERBOARD_ROW_H + 24 : 0;
+  const CANVAS_HEIGHT = leaderboard.length > 0 ? LEADERBOARD_TOP + leaderboardHeight + 160 : 1920;
   const generateCanvas = (): HTMLCanvasElement | null => {
     const canvas = document.createElement('canvas');
     canvas.width = 1080;
-    canvas.height = 1920;
+    canvas.height = CANVAS_HEIGHT;
     const ctx = canvas.getContext('2d');
     if (!ctx) return null;
 
     const isDark = themeMode === 'dark';
 
     // 1. Background Luxury Gradient
-    const bgGrad = ctx.createLinearGradient(0, 0, 0, 1920);
+    const bgGrad = ctx.createLinearGradient(0, 0, 0, CANVAS_HEIGHT);
     if (isDark) {
       bgGrad.addColorStop(0, '#060E12');
       bgGrad.addColorStop(0.3, '#0C1C23');
@@ -439,7 +466,7 @@ export function TripWrappedModal({
       bgGrad.addColorStop(1, '#E5DAC6');
     }
     ctx.fillStyle = bgGrad;
-    ctx.fillRect(0, 0, 1080, 1920);
+    ctx.fillRect(0, 0, 1080, CANVAS_HEIGHT);
 
     // 2. Soft Ambient Radial Glows (Zero Hard Circles)
     ctx.save();
@@ -448,14 +475,14 @@ export function TripWrappedModal({
     glow1.addColorStop(0, isDark ? 'rgba(63, 203, 189, 0.22)' : 'rgba(15, 111, 99, 0.16)');
     glow1.addColorStop(1, 'rgba(0, 0, 0, 0)');
     ctx.fillStyle = glow1;
-    ctx.fillRect(0, 0, 1080, 1920);
+    ctx.fillRect(0, 0, 1080, CANVAS_HEIGHT);
 
     // Bottom-left glow
-    const glow2 = ctx.createRadialGradient(180, 1650, 20, 180, 1650, 520);
+    const glow2 = ctx.createRadialGradient(180, CANVAS_HEIGHT - 270, 20, 180, CANVAS_HEIGHT - 270, 520);
     glow2.addColorStop(0, isDark ? 'rgba(255, 122, 0, 0.18)' : 'rgba(235, 107, 86, 0.18)');
     glow2.addColorStop(1, 'rgba(0, 0, 0, 0)');
     ctx.fillStyle = glow2;
-    ctx.fillRect(0, 0, 1080, 1920);
+    ctx.fillRect(0, 0, 1080, CANVAS_HEIGHT);
     ctx.restore();
 
     // Theme Color Tokens
@@ -622,11 +649,43 @@ export function TripWrappedModal({
       drawSafeWrappedText(ctx, cleanDest, 145, 1595, 790, 28, 1);
     }
 
-    // 8. Footer
+    // 8. Section 4: Top Spenders Leaderboard (only when there's spend to rank)
+    if (leaderboard.length > 0) {
+      const boardTop = LEADERBOARD_TOP;
+      drawSafeRoundedRect(ctx, 100, boardTop, 880, leaderboardHeight, 28, cardBg, cardBorder, 2);
+
+      ctx.textAlign = 'left';
+      ctx.font = '800 24px sans-serif';
+      ctx.fillStyle = isDark ? '#3FCBBD' : '#0F6F63';
+      ctx.fillText('🏆 TOP SPENDERS', 145, boardTop + 48);
+
+      const maxAmount = leaderboard[0].amount || 1;
+      leaderboard.forEach((entry, i) => {
+        const y = boardTop + 90 + i * LEADERBOARD_ROW_H;
+        const barMaxWidth = 620;
+        const barWidth = Math.max(6, (entry.amount / maxAmount) * barMaxWidth);
+
+        ctx.font = '700 26px sans-serif';
+        ctx.fillStyle = textPrimary;
+        const rankPrefix = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i + 1}.`;
+        ctx.fillText(`${rankPrefix} ${entry.memberName}`, 145, y);
+
+        ctx.font = '700 24px sans-serif';
+        ctx.textAlign = 'right';
+        ctx.fillStyle = primaryAccent;
+        ctx.fillText(formatAmount(entry.amount, currencySymbol), 940, y);
+        ctx.textAlign = 'left';
+
+        drawSafeRoundedRect(ctx, 145, y + 14, barMaxWidth, 10, 5, innerRowBg);
+        drawSafeRoundedRect(ctx, 145, y + 14, barWidth, 10, 5, primaryAccent);
+      });
+    }
+
+    // 9. Footer
     ctx.font = '500 24px sans-serif';
     ctx.fillStyle = isDark ? 'rgba(255, 255, 255, 0.45)' : 'rgba(20, 38, 36, 0.55)';
     ctx.textAlign = 'center';
-    ctx.fillText('Tracked with Trip Tracker · trip-tracker.blackmaroon.in', 540, 1780);
+    ctx.fillText('Tracked with Trip Tracker · trip-tracker.blackmaroon.in', 540, CANVAS_HEIGHT - 140);
 
     return canvas;
   };

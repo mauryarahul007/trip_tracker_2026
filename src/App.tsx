@@ -58,7 +58,11 @@ import { useHistoryBack } from './utils/useHistoryBack';
 import { getCatColor } from './utils/categoryColor';
 import { useTabSwipe } from './utils/useTabSwipe';
 import { CommandPalette } from './components/CommandPalette';
-import { TripWrappedModal } from './components/TripWrappedModal';
+// TripWrappedModal draws a large 1080x1920 canvas story image and is only
+// needed when the user opens Trip Wrapped, so it's lazy-loaded like ExpenseForm.
+const TripWrappedModal = lazy(() =>
+  import('./components/TripWrappedModal').then((m) => ({ default: m.TripWrappedModal }))
+);
 import { AchievementBadgeModal } from './components/AchievementBadgeModal';
 import { usePeerPresence } from './hooks/usePeerPresence';
 import type { AdminTab } from './components/admin/AdminPortalLayout';
@@ -2191,13 +2195,21 @@ export default function App() {
 
       {/* Trip Wrapped Story Card Modal */}
       {showTripWrapped && activeTrip && (
-        <TripWrappedModal
-          trip={activeTrip}
-          expenses={activeTripExpenses}
-          members={visibleMembers}
-          categories={categories}
-          onClose={() => setShowTripWrapped(false)}
-        />
+        <Suspense fallback={
+          <div className="modal-backdrop" style={{ background: 'var(--bg-app)' }}>
+            <div className="modal-sheet expense-form-sheet" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
+              <div style={{ width: '32px', height: '32px', borderRadius: '50%', border: '3px solid var(--border-color)', borderTopColor: 'var(--primary-accent)', animation: 'spin 0.8s linear infinite' }} />
+            </div>
+          </div>
+        }>
+          <TripWrappedModal
+            trip={activeTrip}
+            expenses={activeTripExpenses}
+            members={visibleMembers}
+            categories={categories}
+            onClose={() => setShowTripWrapped(false)}
+          />
+        </Suspense>
       )}
 
       {/* Trip Squad Achievements & Milestones Modal */}
