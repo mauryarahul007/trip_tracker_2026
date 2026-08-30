@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { getMonthGrid, toISODate, fromISODate, isSameDate, isBetweenExclusive, formatSingleDate } from '../utils/calendar';
 import { IconCalendar, IconChevronLeft, IconChevronRight } from './Icons';
 
@@ -19,6 +20,35 @@ export function DateRangePicker({ startDate, endDate, onSelectStart, onSelectEnd
   const [viewYear, setViewYear] = useState(initial.getFullYear());
   const [viewMonth, setViewMonth] = useState(initial.getMonth());
   const [hoverDate, setHoverDate] = useState<Date | null>(null);
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  const popoverRef = useRef<HTMLDivElement>(null);
+  const [popoverPos, setPopoverPos] = useState({ top: 0, left: 0 });
+
+  // The trigger sits inside a `.glass-card`, which uses `content-visibility:
+  // auto` for list-scroll performance -- that implicitly clips overflowing
+  // absolutely-positioned children to the card bounds. Portal the popover to
+  // <body> and position it with fixed coords so it isn't cut off.
+  useEffect(() => {
+    if (!open) return;
+    const updatePos = () => {
+      const rect = wrapperRef.current?.getBoundingClientRect();
+      if (rect) setPopoverPos({ top: rect.bottom + 6, left: rect.left });
+    };
+    updatePos();
+    window.addEventListener('resize', updatePos);
+    window.addEventListener('scroll', updatePos, true);
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as Node;
+      if (wrapperRef.current?.contains(target) || popoverRef.current?.contains(target)) return;
+      setOpen(false);
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      window.removeEventListener('resize', updatePos);
+      window.removeEventListener('scroll', updatePos, true);
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [open]);
 
   const startD = fromISODate(startDate);
   const endD = fromISODate(endDate);
@@ -62,12 +92,7 @@ export function DateRangePicker({ startDate, endDate, onSelectStart, onSelectEnd
       : 'Select trip dates';
 
   return (
-    <div
-      style={{ position: 'relative' }}
-      onBlur={(e) => {
-        if (!e.currentTarget.contains(e.relatedTarget as Node)) setOpen(false);
-      }}
-    >
+    <div ref={wrapperRef} style={{ position: 'relative' }}>
       <button
         type="button"
         className="flight-trigger"
@@ -96,11 +121,13 @@ export function DateRangePicker({ startDate, endDate, onSelectStart, onSelectEnd
         </span>
       </button>
 
-      {open && (
+      {open && createPortal(
         <div
+          ref={popoverRef}
           className="date-picker-popover"
           role="dialog"
           aria-label="Trip dates calendar"
+          style={{ position: 'fixed', top: popoverPos.top, left: popoverPos.left }}
           onKeyDown={(e) => {
             if (e.key === 'Escape') setOpen(false);
           }}
@@ -164,7 +191,8 @@ export function DateRangePicker({ startDate, endDate, onSelectStart, onSelectEnd
               Clear dates
             </button>
           )}
-        </div>
+        </div>,
+        document.body
       )}
 
     </div>
