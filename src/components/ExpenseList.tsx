@@ -9,12 +9,14 @@ import { initial } from '../utils/initials';
 import { avatarColorForName } from '../utils/avatarColor';
 import { triggerHaptic } from '../utils/haptics';
 import { tripDayNumber } from '../utils/dateRange';
+import { usePullToRefresh } from '../utils/usePullToRefresh';
+import { useTripStore } from '../store/tripStore';
 
 // Swipe-to-delete is a supplement to the explicit trash button — skip
 // wrapping the row in it at all when the viewer isn't allowed to delete.
 function ConditionalSwipe({ enabled, onDelete, onEdit, children }: { enabled: boolean; onDelete: () => void; onEdit?: () => void; children: React.ReactNode }) {
   if (!enabled) return <>{children}</>;
-  return <SwipeableRow onDelete={onDelete} onEdit={onEdit}>{children}</SwipeableRow>;
+  return <SwipeableRow onDelete={onDelete} onEdit={onEdit} plain>{children}</SwipeableRow>;
 }
 
 // Photo when the member has one (from their linked Google account),
@@ -155,6 +157,20 @@ export function ExpenseList({
 }: Props) {
   const currencySymbol = getCurrencySymbol(trip?.baseCurrency || '');
 
+  // The real scroll container is the ancestor `.tab-pane` (owned by
+  // App.tsx), not this component's own root -- resolved once on mount via
+  // `.closest` so this stays a self-contained addition, no new prop/ref
+  // threaded through the 2000+ line App.tsx.
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  const paneRef = useRef<HTMLElement | null>(null);
+  useEffect(() => {
+    paneRef.current = wrapperRef.current?.closest<HTMLElement>('.tab-pane') ?? null;
+  }, []);
+  const refreshActiveTripExpenses = useTripStore((s) => s.refreshActiveTripExpenses);
+  const pullToRefresh = usePullToRefresh(paneRef, () => refreshActiveTripExpenses());
+  const expensesLoadingTripId = useTripStore((s) => s.expensesLoadingTripId);
+  const isLoadingExpenses = !!trip && expensesLoadingTripId === trip.id;
+
   const filtersRef = useRef<HTMLDivElement>(null);
   const [showDateFilter, setShowDateFilter] = useState(false);
   const isAllActive = !filterCategory && !filterMember && !filterDateFrom && !filterDateTo && !filterAmountMin && !filterAmountMax && !filterRelation && !filterLocation;
@@ -243,7 +259,25 @@ export function ExpenseList({
     : [];
 
   return (
-    <>
+    <div ref={wrapperRef}>
+      {(pullToRefresh.pullDistance > 0 || pullToRefresh.refreshing) && (
+        <div
+          aria-hidden="true"
+          style={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            height: `${pullToRefresh.refreshing ? 40 : pullToRefresh.pullDistance}px`,
+            overflow: 'hidden',
+            transition: pullToRefresh.refreshing ? 'height 0.2s ease' : 'none',
+            color: pullToRefresh.armed || pullToRefresh.refreshing ? 'var(--primary-accent)' : 'var(--text-muted)',
+            fontSize: '12px',
+            fontWeight: 600,
+          }}
+        >
+          {pullToRefresh.refreshing ? 'Refreshing…' : pullToRefresh.armed ? 'Release to refresh' : 'Pull to refresh'}
+        </div>
+      )}
       {trip?.frozen && (
         <div
           style={{
@@ -429,7 +463,13 @@ export function ExpenseList({
       )}
 
       {/* Clean Transaction Feed with Date Dividers or Quick Starters */}
-      {filteredExpenses.length === 0 ? (
+      {filteredExpenses.length === 0 && isLoadingExpenses ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="skeleton" style={{ height: '68px', borderRadius: '14px', opacity: 1 - i * 0.15 }} />
+          ))}
+        </div>
+      ) : filteredExpenses.length === 0 ? (
         hasActiveFilters ? (
           <div className="glass-card ledger-empty" style={{ borderStyle: 'dashed' }}>
             <div className="ledger-rule" />
@@ -790,6 +830,6 @@ export function ExpenseList({
         </div>
       )}
 
-    </>
+    </div>
   );
 }

@@ -1187,6 +1187,11 @@ export function ExpenseForm({
                     ).toFixed(2)}
                   </span>
                 )}
+                {isChecked && splitMode === 'equal' && splitSelectedIds.length > 0 && (
+                  <span className="member-config-equiv">
+                    = {currencySymbol}{((parseFloat(amount) || 0) / splitSelectedIds.length).toFixed(2)}
+                  </span>
+                )}
               </div>
             );
           })}

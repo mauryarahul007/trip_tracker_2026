@@ -1,7 +1,7 @@
 import { useRef, useState, useEffect } from 'react';
 import type { Category, Expense, Member, Trip } from '../types';
 import { getReceiptSignedUrl } from '../services/tripApi';
-import { IconEdit, IconTrash } from './Icons';
+import { IconEdit, IconTrash, IconCopy } from './Icons';
 import { getCurrencySymbol } from '../utils/currency';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 
@@ -15,9 +15,10 @@ type Props = {
   onClose: () => void;
   onEdit: () => void;
   onDelete: () => void;
+  onDuplicate?: () => void;
 };
 
-export function ExpenseReviewModal({ expense, members, categories, trip, canManage, onClose, onEdit, onDelete }: Props) {
+export function ExpenseReviewModal({ expense, members, categories, trip, canManage, onClose, onEdit, onDelete, onDuplicate }: Props) {
   const isSettlement = expense.title.startsWith('Settlement:');
   const currencySymbol = getCurrencySymbol(trip?.baseCurrency || '');
   const [receiptUrl, setReceiptUrl] = useState<string | null>(null);
@@ -79,6 +80,15 @@ export function ExpenseReviewModal({ expense, members, categories, trip, canMana
                 onClick={onEdit}
               >
                 <IconEdit size={13} className="icon-sm" /> Edit
+              </button>
+            )}
+            {canManage && !isSettlement && onDuplicate && (
+              <button
+                className="secondary-btn"
+                style={{ padding: '6px 12px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}
+                onClick={onDuplicate}
+              >
+                <IconCopy size={13} className="icon-sm" /> Duplicate
               </button>
             )}
             {canManage && (

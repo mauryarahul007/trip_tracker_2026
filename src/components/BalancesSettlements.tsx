@@ -11,6 +11,7 @@ import { triggerHaptic } from '../utils/haptics';
 import { UpiPaymentModal } from './UpiPaymentModal';
 import { BoardingPassHeroCard } from './BoardingPassHeroCard';
 import { StickyBalanceBar } from './StickyBalanceBar';
+import { ConfettiBurst } from './ConfettiBurst';
 
 
 type Props = {
@@ -162,6 +163,11 @@ function TransferRow({
   const settleAmount = parseFloat(customValue) || t.amount;
   const [showAudit, setShowAudit] = useState(false);
   const [reminderStatus, setReminderStatus] = useState<'idle' | 'sending' | 'sent' | 'rateLimited'>('idle');
+  const [celebrate, setCelebrate] = useState(false);
+  const fireCelebration = () => {
+    setCelebrate(true);
+    setTimeout(() => setCelebrate(false), 900);
+  };
 
   const fromAudit = getAuditDetailsForNode(t.from, t.fromLabel, balances, groups, activeTripExpenses);
   const toAudit = getAuditDetailsForNode(t.to, t.toLabel, balances, groups, activeTripExpenses);
@@ -239,6 +245,7 @@ function TransferRow({
     <div
       className="traveler-settlement-card"
       style={{
+        position: 'relative',
         background: 'var(--bg-surface)',
         border: '1px solid var(--border-color)',
         borderRadius: '28px',
@@ -251,6 +258,7 @@ function TransferRow({
         transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
       }}
     >
+      <ConfettiBurst active={celebrate} />
       <div
         className="traveler-settlement-main-row"
         style={{
@@ -436,6 +444,7 @@ function TransferRow({
             type="button"
             onClick={() => {
               triggerHaptic('success');
+              fireCelebration();
               onSettle(t.fromMemberId, t.toMemberId, t.amount, t.fromLabel, t.toLabel, t.amount);
             }}
             className="traveler-settlement-btn-settle"
@@ -497,6 +506,7 @@ function TransferRow({
                 style={{ padding: '0 16px', height: '38px', borderRadius: '9999px', fontSize: '12px', fontWeight: 700 }}
                 onClick={() => {
                   triggerHaptic('success');
+                  fireCelebration();
                   onSettle(t.fromMemberId, t.toMemberId, settleAmount, t.fromLabel, t.toLabel, t.amount);
                   onToggleCustom();
                   onCustomChange('');
@@ -844,6 +854,9 @@ export function BalancesSettlements({
   const myBalanceObj = myMemberId ? balances.find((b) => b.memberId === myMemberId) : null;
   const myNetBalance = myBalanceObj ? myBalanceObj.balance : 0;
 
+  const settledMemberCount = balances.filter((b) => Math.abs(b.balance) < 0.01).length;
+  const settledPct = balances.length > 0 ? Math.round((settledMemberCount / balances.length) * 100) : 100;
+
   const handleScrollToTop = () => {
     const pane = document.querySelector('.tab-pane');
     if (pane) {
@@ -931,6 +944,25 @@ export function BalancesSettlements({
           </div>
         </div>
 
+        {!isFullySettled && balances.length > 0 && (
+          <div style={{ padding: '0 4px', marginBottom: '16px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>
+              <span>{settledMemberCount} of {balances.length} settled up</span>
+              <span>{settledPct}%</span>
+            </div>
+            <div style={{ height: '6px', borderRadius: '9999px', background: 'var(--bg-secondary)', overflow: 'hidden' }}>
+              <div
+                style={{
+                  height: '100%',
+                  width: `${settledPct}%`,
+                  borderRadius: '9999px',
+                  background: 'linear-gradient(90deg, var(--primary-accent), var(--color-success))',
+                  transition: 'width 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
+                }}
+              />
+            </div>
+          </div>
+        )}
 
 
         {/* Transfer Cards List with Smart Grouping */}

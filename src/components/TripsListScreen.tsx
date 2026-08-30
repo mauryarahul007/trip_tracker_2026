@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { Trip, Member, TripStop } from '../types';
 import { IconArchive, IconMapPin } from './Icons';
@@ -13,6 +13,7 @@ import { TripStack } from './TripStack';
 import { TripSlideLauncher } from './TripSlideLauncher';
 import { HomeAmbientBackdrop } from './HomeAmbientBackdrop';
 import { OnboardingSwipe } from './OnboardingSwipe';
+import { usePullToRefresh } from '../utils/usePullToRefresh';
 
 type Props = {
   trips: Trip[];
@@ -77,6 +78,9 @@ export function TripsListScreen({
 }: Props) {
   const navigate = useNavigate();
   const userId = useTripStore((s) => s.userId);
+  const refreshTrips = useTripStore((s) => s.refreshTrips);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const pullToRefresh = usePullToRefresh(scrollContainerRef, () => refreshTrips(true));
   const [showJoinTrip, setShowJoinTrip] = useState(false);
   const [joinCode, setJoinCode] = useState('');
   const [honeypotVal, setHoneypotVal] = useState('');
@@ -123,7 +127,30 @@ export function TripsListScreen({
   };
 
   return (
-    <div id="main-content" tabIndex={-1} className={`fade-in trips-screen-scroll${stackActive ? ' stack-viewport-lock' : ''}`}>
+    <div
+      id="main-content"
+      tabIndex={-1}
+      ref={scrollContainerRef}
+      className={`fade-in trips-screen-scroll${stackActive ? ' stack-viewport-lock' : ''}`}
+    >
+      {(pullToRefresh.pullDistance > 0 || pullToRefresh.refreshing) && (
+        <div
+          aria-hidden="true"
+          style={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            height: `${pullToRefresh.refreshing ? 40 : pullToRefresh.pullDistance}px`,
+            overflow: 'hidden',
+            transition: pullToRefresh.refreshing ? 'height 0.2s ease' : 'none',
+            color: pullToRefresh.armed || pullToRefresh.refreshing ? 'var(--primary-accent)' : 'var(--text-muted)',
+            fontSize: '12px',
+            fontWeight: 600,
+          }}
+        >
+          {pullToRefresh.refreshing ? 'Refreshing…' : pullToRefresh.armed ? 'Release to refresh' : 'Pull to refresh'}
+        </div>
+      )}
       <HomeAmbientBackdrop trip={stackActive ? focusedTrip : null} />
       <header className="trips-screen-header">
         <button

@@ -332,5 +332,18 @@
     "shippedBy": "claude-cli",
     "shippedAt": "2026-08-27T04:36:38.230Z",
     "shippedNote": "src/App.tsx, src/components/AnalyticsTab.tsx, src/components/SettingsTab.tsx, src/components/SettingsView.tsx."
+  },
+  {
+    "id": "FEAT-022",
+    "title": "10 UI/UX enhancements: skeleton loaders, pull-to-refresh, edit-undo, settlement confetti + progress, duplicate expense, split preview, empty-state CTAs, category icons, command-palette hint",
+    "description": "Batch of UI/UX polish across the app: swipe-row short labels (plain prop) on ExpenseList; command palette one-time nudge dot; live equal-mode split preview in ExpenseForm; widened category emoji picker; CTA buttons on empty members/groups states; dark-mode token audit (no issues found); settlement confetti burst + percent-settled progress bar in BalancesSettlements/UpiPaymentModal; duplicate-expense action in ExpenseReviewModal; pull-to-refresh on TripsListScreen and ExpenseList via new usePullToRefresh hook; skeleton loading states for app boot and per-trip expense fetch (expensesLoadingTripId in tripStore); optimistic expense-edit undo toast in UndoToasts/App.tsx.",
+    "category": "ui-ux",
+    "status": "requested",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-08-30T16:53:20.946Z",
+    "updatedAt": "2026-08-30T16:53:20.946Z"
   }
 ]

@@ -513,6 +513,33 @@ button, [role="button"], input, select, a {
   .cmd-k-hint { display: inline-block; }
 }
 
+/* One-time "try this" pulse on the command palette button, cleared in
+   localStorage after first open -- see tt-cmdk-hint-seen in App.tsx. */
+.cmd-k-hint-dot {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--primary-accent);
+  box-shadow: 0 0 0 2px var(--bg-surface);
+  animation: cmdKHintPulse 1.8s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .cmd-k-hint-dot { animation: none; }
+}
+@keyframes cmdKHintPulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.3); opacity: 0.6; }
+}
+
+/* Settlement celebration burst -- see ConfettiBurst.tsx. */
+@keyframes confettiFall {
+  0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(160px) rotate(540deg); opacity: 0; }
+}
+
 /* Member row Edit/Delete buttons -- hidden on touch (swipe-left-delete /
    swipe-right-edit via SwipeableRow covers it there), shown for mouse/
    trackpad users who have no swipe gesture available. */

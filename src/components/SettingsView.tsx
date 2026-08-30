@@ -55,7 +55,10 @@ function formatTimeLeft(deletedAt: number): string {
   return `${hoursLeft}h left`;
 }
 
-const CATEGORY_ICON_PRESETS = ['🍔', '🏨', '✈️', '🎟️', '🛍️', '📦', '🚗', '⛽', '🎬', '🍺', '💊', '🎁', '🧾', '🏥', '🎓', '🐾', '🎵', '🚕'];
+const CATEGORY_ICON_PRESETS = [
+  '🍔', '🏨', '✈️', '🎟️', '🛍️', '📦', '🚗', '⛽', '🎬', '🍺', '💊', '🎁', '🧾', '🏥', '🎓', '🐾', '🎵', '🚕',
+  '🏖️', '🗺️', '🧳', '🚆', '🚢', '🚌', '🎫', '🍽️', '☕', '🏔️', '🏛️', '📸', '🛂', '💱',
+];
 
 interface SettingsViewProps {
   categories: Category[];

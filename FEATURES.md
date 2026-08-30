@@ -9,8 +9,8 @@
 
 | Metric | Count |
 | :--- | :--- |
-| **Total Tracked** | **21** |
-| **💡 Requested** | **1** |
+| **Total Tracked** | **22** |
+| **💡 Requested** | **2** |
 | **📋 Planned** | **0** |
 | **🟡 In Progress** | **0** |
 | **✅ Shipped** | **20** |
@@ -23,6 +23,7 @@
 | ID | Category | Title | Requested By | Status |
 | :--- | :--- | :--- | :--- | :--- |
 | **[FEAT-002](#feat-002)** | `ui-ux` | Test | `mauryarahul007@gmail.com` | 💡 Requested |
+| **[FEAT-022](#feat-022)** | `ui-ux` | 10 UI/UX enhancements: skeleton loaders, pull-to-refresh, edit-undo, settlement confetti + progress, duplicate expense, split preview, empty-state CTAs, category icons, command-palette hint | `claude-cli` | 💡 Requested |
 
 ---
 
@@ -35,6 +36,15 @@
 - **Route**: `#nav-3`
 
 Test
+
+---
+
+### FEAT-022: 10 UI/UX enhancements: skeleton loaders, pull-to-refresh, edit-undo, settlement confetti + progress, duplicate expense, split preview, empty-state CTAs, category icons, command-palette hint
+
+- **Category**: `ui-ux` | **Status**: `requested`
+- **Requested By**: `claude-cli` on 30/8/2026 (web)
+
+Batch of UI/UX polish across the app: swipe-row short labels (plain prop) on ExpenseList; command palette one-time nudge dot; live equal-mode split preview in ExpenseForm; widened category emoji picker; CTA buttons on empty members/groups states; dark-mode token audit (no issues found); settlement confetti burst + percent-settled progress bar in BalancesSettlements/UpiPaymentModal; duplicate-expense action in ExpenseReviewModal; pull-to-refresh on TripsListScreen and ExpenseList via new usePullToRefresh hook; skeleton loading states for app boot and per-trip expense fetch (expensesLoadingTripId in tripStore); optimistic expense-edit undo toast in UndoToasts/App.tsx.
 
 ---
 

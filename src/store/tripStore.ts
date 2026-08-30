@@ -101,6 +101,11 @@ interface SyncQueueItem {
 interface TripStore extends TripState {
   initialized: boolean;
   storageError: string | null;
+  // Set to a trip id while that trip's expenses are being (re)fetched from
+  // the server, cleared on both success and failure -- lets ExpenseList
+  // distinguish "genuinely zero expenses" from "cached data hasn't arrived
+  // yet" instead of flashing the empty state during the fetch.
+  expensesLoadingTripId: string | null;
   userId: string | null;
   userDisplayName: string | null;
   syncQueue: SyncQueueItem[];
@@ -417,6 +422,7 @@ export const useTripStore = create<TripStore>()(
     categories: DEFAULT_CATEGORIES,
     initialized: false,
     storageError: null,
+    expensesLoadingTripId: null,
     userId: null,
     userDisplayName: null,
     syncQueue: [],
@@ -685,6 +691,7 @@ export const useTripStore = create<TripStore>()(
     refreshActiveTripExpenses: async () => {
       const tripId = get().activeTripId;
       if (!tripId || !navigator.onLine) return;
+      set({ expensesLoadingTripId: tripId });
       try {
         const [serverExpenses, customCategories] = await Promise.all([
           fetchExpensesForTrip(tripId),
@@ -698,6 +705,8 @@ export const useTripStore = create<TripStore>()(
         }));
       } catch (e) {
         setError(e);
+      } finally {
+        set((state) => (state.expensesLoadingTripId === tripId ? { expensesLoadingTripId: null } : {}));
       }
     },
 
@@ -1041,6 +1050,7 @@ export const useTripStore = create<TripStore>()(
       set({ activeTripId: id, deletedExpenses: [] });
       if (!navigator.onLine) return;
       void get().loadFeatureFlags(id);
+      set({ expensesLoadingTripId: id });
       try {
         const [serverExpenses, customCategories] = await Promise.all([fetchExpensesForTrip(id), fetchCategoriesForTrip(id)]);
         const dirtyIds = collectDirtyExpenseIds(get().syncQueue);
@@ -1051,6 +1061,8 @@ export const useTripStore = create<TripStore>()(
         }));
       } catch (e) {
         setError(e);
+      } finally {
+        set((state) => (state.expensesLoadingTripId === id ? { expensesLoadingTripId: null } : {}));
       }
     },
 

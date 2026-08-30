@@ -5,6 +5,11 @@ import { generateUpiUri, getQrCodeUrl, isValidUpiId, POPULAR_UPI_APPS } from '..
 import { IconClose } from './Icons';
 import { triggerHaptic } from '../utils/haptics';
 import { useFocusTrap } from '../hooks/useFocusTrap';
+import { ConfettiBurst } from './ConfettiBurst';
+
+// How long the confetti burst plays before the modal actually confirms
+// and closes -- matches ConfettiBurst's own animation window.
+const CELEBRATION_MS = 800;
 
 interface UpiPaymentModalProps {
   fromMember: Member | undefined;
@@ -28,6 +33,7 @@ export function UpiPaymentModal({
   const [upiId, setUpiId] = useState(toMember?.upiId || '');
   const [copied, setCopied] = useState(false);
   const [showQr, setShowQr] = useState(false);
+  const [celebrating, setCelebrating] = useState(false);
 
   const modalRef = useRef<HTMLDivElement>(null);
   useFocusTrap(modalRef, true, false, onClose);
@@ -266,14 +272,18 @@ export function UpiPaymentModal({
             type="button"
             className="primary-btn"
             style={{ flex: 1.5 }}
+            disabled={celebrating}
             onClick={() => {
+              if (celebrating) return;
               triggerHaptic('success');
-              onConfirmSettled();
+              setCelebrating(true);
+              setTimeout(onConfirmSettled, CELEBRATION_MS);
             }}
           >
-            ✓ Mark as Settled
+            {celebrating ? '✓ Settled!' : '✓ Mark as Settled'}
           </button>
         </div>
+        <ConfettiBurst active={celebrating} />
       </div>
     </div>
   );

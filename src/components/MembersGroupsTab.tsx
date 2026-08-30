@@ -805,6 +805,11 @@ export function MembersGroupsTab({
               <IconMembers size={14} className="icon-sm" />
             </span>
             <p>No one's on this trip yet. Add the first member to start splitting costs.</p>
+            {isAdmin && (
+              <button type="button" className="gradient-btn" style={{ marginTop: '12px' }} onClick={() => setShowAddForm(true)}>
+                Add First Member
+              </button>
+            )}
           </div>
           <div className="ledger-rule" />
         </div>
@@ -1088,6 +1093,11 @@ export function MembersGroupsTab({
                 <IconTag size={14} className="icon-sm" />
               </span>
               <p>No groups yet. Create one to split expenses across a few people in a single tap.</p>
+              {isAdmin && visibleMembers.length > 0 && (
+                <button type="button" className="gradient-btn" style={{ marginTop: '12px' }} onClick={() => setShowAddGroup(true)}>
+                  Create First Group
+                </button>
+              )}
             </div>
             <div className="ledger-rule" />
           </div>

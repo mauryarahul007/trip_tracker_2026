@@ -320,6 +320,12 @@ export default function App() {
   const [tripUndoTimer, setTripUndoTimer] = useState<ReturnType<typeof setTimeout> | null>(null);
   const [pendingDeleteGroup, setPendingDeleteGroup] = useState<Group | null>(null);
   const [groupUndoTimer, setGroupUndoTimer] = useState<ReturnType<typeof setTimeout> | null>(null);
+  // Undo-edit: unlike delete, the edit is already applied (the form is
+  // closed) -- this snapshot is what undo re-applies via updateExpense to
+  // revert it, going through the same optimistic/offline-queue path as any
+  // other edit.
+  const [pendingEditExpense, setPendingEditExpense] = useState<Expense | null>(null);
+  const [editUndoTimer, setEditUndoTimer] = useState<ReturnType<typeof setTimeout> | null>(null);
 
   // JSON Import state
   const [importJson, setImportJson] = useState('');
@@ -341,6 +347,7 @@ export default function App() {
 
   // Command Palette & Trip Wrapped States
   const [showCommandPalette, setShowCommandPalette] = useState(false);
+  const [showCmdKHint, setShowCmdKHint] = useState(() => !localStorage.getItem('tt-cmdk-hint-seen'));
   const [showTripWrapped, setShowTripWrapped] = useState(false);
   const [showAchievements, setShowAchievements] = useState(false);
   const activePeers = usePeerPresence(activeTripId);
@@ -1111,7 +1118,13 @@ export default function App() {
       };
 
       if (editingExpenseId) {
+        const previousExpense = editingExpense;
         await updateExpense(editingExpenseId, expensePayload);
+        if (previousExpense) {
+          if (editUndoTimer) clearTimeout(editUndoTimer);
+          setPendingEditExpense(previousExpense);
+          setEditUndoTimer(setTimeout(() => setPendingEditExpense(null), UNDO_DURATION_MS));
+        }
       } else {
         await addExpense(expensePayload);
       }
@@ -1171,6 +1184,22 @@ export default function App() {
     setShowAddExpense(true);
   };
 
+  const handleDuplicateExpense = (exp: Expense) => {
+    triggerHaptic('success');
+    addExpense({
+      title: exp.title,
+      amount: exp.amount,
+      currency: exp.currency,
+      category: exp.category,
+      date: new Date().toISOString().split('T')[0],
+      paidBy: exp.paidBy,
+      splitMode: exp.splitMode,
+      splitMemberIds: exp.splitMemberIds,
+      splitConfig: exp.splitConfig,
+      location: exp.location,
+    });
+  };
+
   // Entry point for the "Review N affected expenses" banner — opens the
   // first expense a removed member touched and queues the rest so save/
   // cancel walks through them one after another.
@@ -1200,6 +1229,28 @@ export default function App() {
     if (undoTimer) clearTimeout(undoTimer);
     setUndoTimer(null);
     setPendingDeleteExpense(null);
+  };
+
+  const handleUndoEditExpense = () => {
+    if (editUndoTimer) clearTimeout(editUndoTimer);
+    setEditUndoTimer(null);
+    if (pendingEditExpense) {
+      const exp = pendingEditExpense;
+      updateExpense(exp.id, {
+        title: exp.title,
+        amount: exp.amount,
+        currency: exp.currency,
+        category: exp.category,
+        date: exp.date,
+        paidBy: exp.paidBy,
+        splitMode: exp.splitMode,
+        splitMemberIds: exp.splitMemberIds,
+        splitConfig: exp.splitConfig,
+        receiptPath: exp.receiptPath,
+        location: exp.location,
+      });
+    }
+    setPendingEditExpense(null);
   };
 
   // Deleting a trip takes everyone's members and expenses with it, so it
@@ -1406,11 +1457,13 @@ export default function App() {
   // Loading view
   if (!initialized) {
     return (
-      <div className="app-container" style={{ justifyContent: 'center', alignItems: 'center' }}>
-        <div style={{ textAlign: 'center' }}>
-          <h2 style={{ fontFamily: 'var(--font-family-title)', marginBottom: '16px' }}>Trip Tracker 2026</h2>
-          <div className="ledger-loader" role="status" aria-label="Loading">
-            <span className="ledger-loader-mark">TT</span>
+      <div className="app-container" style={{ justifyContent: 'flex-start', alignItems: 'center', padding: '48px 20px' }}>
+        <div style={{ width: '100%', maxWidth: '420px', textAlign: 'center' }}>
+          <h2 style={{ fontFamily: 'var(--font-family-title)', marginBottom: '24px' }}>Trip Tracker 2026</h2>
+          <div role="status" aria-label="Loading" style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            {[0, 1, 2].map((i) => (
+              <div key={i} className="skeleton" style={{ height: '84px', borderRadius: '20px', opacity: 1 - i * 0.15 }} />
+            ))}
           </div>
         </div>
       </div>
@@ -1671,13 +1724,20 @@ export default function App() {
                 <button
                   type="button"
                   className="secondary-btn"
-                  style={{ padding: '7px 8px', display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--header-fg)', borderColor: 'var(--header-fg-border)', background: 'var(--header-fg-soft-bg)' }}
-                  onClick={() => setShowCommandPalette(true)}
+                  style={{ padding: '7px 8px', display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--header-fg)', borderColor: 'var(--header-fg-border)', background: 'var(--header-fg-soft-bg)', position: 'relative' }}
+                  onClick={() => {
+                    setShowCommandPalette(true);
+                    if (showCmdKHint) {
+                      localStorage.setItem('tt-cmdk-hint-seen', '1');
+                      setShowCmdKHint(false);
+                    }
+                  }}
                   title="Search & Quick Actions (Cmd+K)"
                   aria-label="Command palette"
                 >
                   <IconSearch size={15} className="icon-sm" />
                   <span className="cmd-k-hint" aria-hidden="true">{IS_MAC ? '⌘K' : 'Ctrl K'}</span>
+                  {showCmdKHint && <span className="cmd-k-hint-dot" aria-hidden="true" />}
                 </button>
                 <NotificationsBellButton />
                 <button
@@ -2060,6 +2120,10 @@ export default function App() {
             setSelectedReviewExpense(null);
             handleDeleteExpense(exp);
           }}
+          onDuplicate={() => {
+            handleDuplicateExpense(selectedReviewExpense);
+            setSelectedReviewExpense(null);
+          }}
         />
       )}
 
@@ -2097,6 +2161,8 @@ export default function App() {
         onUndoDeleteTrip={handleUndoDeleteTrip}
         pendingDeleteGroup={pendingDeleteGroup}
         onUndoDeleteGroup={handleUndoDeleteGroup}
+        pendingEditExpense={pendingEditExpense}
+        onUndoEditExpense={handleUndoEditExpense}
         durationMs={UNDO_DURATION_MS}
       />
 
