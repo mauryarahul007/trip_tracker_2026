@@ -954,10 +954,12 @@ export function BalancesSettlements({
               <div
                 style={{
                   height: '100%',
-                  width: `${settledPct}%`,
+                  width: '100%',
                   borderRadius: '9999px',
                   background: 'linear-gradient(90deg, var(--primary-accent), var(--color-success))',
-                  transition: 'width 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
+                  transformOrigin: 'left',
+                  transform: `scaleX(${settledPct / 100})`,
+                  transition: 'transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
                 }}
               />
             </div>

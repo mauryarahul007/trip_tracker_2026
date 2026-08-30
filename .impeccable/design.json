@@ -1,0 +1,108 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-08-30T00:00:00.000Z",
+  "title": "Design System: Trip Tracker 2026",
+  "extensions": {
+    "colorMeta": {
+      "primary": { "role": "primary", "displayName": "Boarding Pass Teal", "canonical": "#0F6F63", "tonalRamp": ["#0A2E29", "#0D4A41", "#0F6F63", "#178679", "#3FA396", "#63D8CC", "#9FEAE0", "#D6F7F1"] },
+      "runway-orange": { "role": "secondary", "displayName": "Runway Orange", "canonical": "#FF7A00", "tonalRamp": ["#5C2A00", "#94440A", "#C4590D", "#EA580C", "#FF7A00", "#FF9A3D", "#FFC08A", "#FFE3C7"] },
+      "ink": { "role": "neutral", "displayName": "Ink", "canonical": "#16181D", "tonalRamp": ["#000000", "#0D0E10", "#16181D", "#3A3D44", "#55585E", "#8B8E96", "#C7C9CE", "#EDEEF0"] }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display / Title", "purpose": "Page and card titles (h1-h4, .app-logo, .pp-name)." },
+      "body": { "displayName": "Body", "purpose": "Default UI copy." },
+      "label": { "displayName": "Label / Mono", "purpose": "Form labels, mono amounts, the destination eyebrow, category chips, timestamps." }
+    },
+    "shadows": [
+      { "name": "shadow-sm", "value": "0 1px 2px rgba(22,24,29,.04), 0 4px 12px -4px rgba(22,24,29,.08)", "purpose": "Default resting card lift." },
+      { "name": "shadow-md", "value": "0 4px 12px rgba(22,24,29,.08), 0 12px 32px -8px rgba(22,24,29,.14)", "purpose": "Hover / raised state." },
+      { "name": "shadow-lg", "value": "0 8px 24px rgba(22,24,29,.12), 0 20px 48px -12px rgba(22,24,29,.2)", "purpose": "Modals and sheets." },
+      { "name": "glass-shadow", "value": "0 1px 3px rgba(22,24,29,.06), 0 6px 20px -6px rgba(22,24,29,.12)", "purpose": "Default .glass-card / popup shadow." }
+    ],
+    "motion": [
+      { "name": "transition-smooth", "value": "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)", "purpose": "Default hover/active state transition." },
+      { "name": "ease-spring", "value": "cubic-bezier(0.32, 0.72, 0, 1)", "purpose": "Springy reveal motion." },
+      { "name": "ease-decel", "value": "cubic-bezier(0.16, 1, 0.3, 1)", "purpose": "Panel / header reveal." },
+      { "name": "ease-uber-spring", "value": "cubic-bezier(0.18, 0.89, 0.32, 1.12)", "purpose": "Nav tab pill slide." },
+      { "name": "ease-bounce-back", "value": "cubic-bezier(0.34, 1.4, 0.64, 1)", "purpose": "Bounce-back confirmation motion." }
+    ],
+    "breakpoints": [
+      { "name": "base", "value": "500px" },
+      { "name": "md", "value": "680px" },
+      { "name": "lg", "value": "820px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The one primary action per screen -- gradient orange fill, pill shape.",
+      "html": "<button class=\"ds-btn-primary\">Settle Up</button>",
+      "css": ".ds-btn-primary { background: linear-gradient(135deg, #FF7A00 0%, #EA580C 100%); color: #ffffff; border: none; border-radius: 9999px; padding: 13px 20px; font-size: 14px; font-weight: 700; font-family: 'IBM Plex Sans', -apple-system, sans-serif; box-shadow: 0 4px 14px rgba(255, 122, 0, 0.28); transition: transform 0.15s ease, filter 0.15s ease; cursor: pointer; } .ds-btn-primary:hover { transform: translateY(-1px); filter: brightness(1.04); } .ds-btn-primary:focus-visible { outline: 2.5px solid #0F6F63; outline-offset: 2px; }"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Transparent-fill outlined button for secondary actions.",
+      "html": "<button class=\"ds-btn-secondary\">Cancel</button>",
+      "css": ".ds-btn-secondary { background: transparent; color: var(--text-primary, #16181D); border: 1px solid var(--border-color, #E4E7EC); border-radius: 9999px; padding: 8px 16px; font-size: 13px; font-weight: 600; font-family: 'IBM Plex Sans', -apple-system, sans-serif; transition: all 0.2s cubic-bezier(0.4,0,0.2,1); cursor: pointer; } .ds-btn-secondary:hover { background: var(--bg-surface-hover, #F1F2F4); } .ds-btn-secondary:focus-visible { outline: 2.5px solid #0F6F63; outline-offset: 2px; }"
+    },
+    {
+      "name": "Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Base surface card -- glass shadow, 1px border, 14px radius.",
+      "html": "<div class=\"ds-card\"><div class=\"ds-card-title\">Goa Trip</div><div class=\"ds-card-sub\">4 members &middot; 12 expenses</div></div>",
+      "css": ".ds-card { background: var(--bg-surface, #FFFFFF); border: 1px solid var(--border-color, #E4E7EC); border-radius: 14px; padding: 18px 20px; box-shadow: 0 1px 3px rgba(22,24,29,.06), 0 6px 20px -6px rgba(22,24,29,.12); font-family: 'IBM Plex Sans', -apple-system, sans-serif; } .ds-card-title { font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 600; font-size: 16px; color: var(--text-primary, #16181D); } .ds-card-sub { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--text-muted, #6B6E76); margin-top: 4px; }"
+    },
+    {
+      "name": "Input Field",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Labeled text input, 16px floor to defeat iOS auto-zoom.",
+      "html": "<label class=\"ds-field\"><span class=\"ds-field-label\">Trip name</span><input class=\"ds-field-input\" type=\"text\" placeholder=\"Goa 2026\" /></label>",
+      "css": ".ds-field { display: block; } .ds-field-label { display: block; font-family: 'IBM Plex Mono', monospace; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-secondary, #55585E); margin-bottom: 6px; } .ds-field-input { width: 100%; box-sizing: border-box; font-size: 16px; padding: 10px 12px; border: 1px solid var(--border-color, #E4E7EC); border-radius: 10px; background: var(--bg-surface, #FFFFFF); color: var(--text-primary, #16181D); font-family: 'IBM Plex Sans', -apple-system, sans-serif; } .ds-field-input:focus { outline: none; border-color: #0F6F63; box-shadow: 0 0 0 3px rgba(15, 111, 99, 0.15); }"
+    },
+    {
+      "name": "Passport Card",
+      "kind": "custom",
+      "refersTo": "passport-card",
+      "description": "Signature trip-list card: circular stamp badge, mono destination eyebrow, dashed ticket-stub footer rule.",
+      "html": "<div class=\"ds-passport\"><span class=\"ds-passport-stamp\"><svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><path d=\"M2 22l3-3m0 0a4 4 0 105-6l-6 6zM17 3l4 4L11 17H7v-4L17 3z\"/></svg></span><div class=\"ds-passport-dest\">Trip &middot; INR</div><div class=\"ds-passport-name\">Goa 2026</div><div class=\"ds-passport-foot\"><span>4 travelers</span><span>12 expenses</span></div></div>",
+      "css": ".ds-passport { position: relative; background: var(--bg-surface, #FFFFFF); border: 1px solid var(--border-color, #E4E7EC); border-radius: 14px; padding: 18px 20px 16px; overflow: hidden; box-shadow: 0 10px 24px -14px rgba(0,0,0,.28); font-family: 'IBM Plex Sans', -apple-system, sans-serif; } .ds-passport-stamp { position: absolute; top: 16px; right: 18px; width: 48px; height: 48px; border-radius: 50%; border: 1.5px solid #0F6F63; color: #0F6F63; display: flex; align-items: center; justify-content: center; } .ds-passport-dest { font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted, #6B6E76); padding-right: 64px; } .ds-passport-name { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 19px; font-weight: 600; color: var(--text-primary, #16181D); margin-top: 3px; padding-right: 64px; } .ds-passport-foot { display: flex; align-items: center; justify-content: space-between; margin-top: 14px; padding-top: 12px; border-top: 1.5px dashed var(--border-color, #E4E7EC); font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--text-secondary, #55585E); }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Boarding Pass",
+    "overview": "Trip Tracker borrows its confidence from travel documents rather than generic SaaS chrome: a passport-style trip card carries a circular stamp badge, a mono uppercase destination eyebrow, and a dashed-rule footer that reads like a ticket stub perforation. This isn't a decorative theme bolted on top -- it's the app's own signature component (.passport-card / .pp-stamp), grounded in what the codebase already builds, not an invented overlay. Everywhere else, the system is a restrained \"Linear/Stripe/Notion\" neutral-gray base: one confident teal accent for structure and trust, one warm orange for the single primary action per screen. A frosted-glass header/nav floats over a live map backdrop on the trip dashboard. The system supports light mode, OS-driven dark mode, and an explicit in-app dark toggle.",
+    "keyCharacteristics": [
+      "Neutral gray-scale foundation, teal for structural/brand elements, orange reserved for the one primary CTA",
+      "A travel-document motif (stamps, mono eyebrows, dashed perforated rules) as the app's recurring signature, not a one-off card",
+      "Frosted glass (backdrop-filter: blur) for floating chrome (header, nav, popups) over content, never for base surfaces",
+      "Money is always monospace with tabular figures, everything else is proportional",
+      "Full light/dark parity -- every token has a dark-mode counterpart, never a light-only afterthought"
+    ],
+    "rules": [
+      { "name": "The One Warm Color Rule", "body": "Orange never competes with itself -- one primary CTA visible at a time. If two actions on screen both feel primary, one of them is wrong.", "section": "colors" },
+      { "name": "The No-Pure-Black Rule", "body": "Dark mode never drops to #000000; the darkest surface (#0D0E10) stays a step above true black so depth layers remain visible.", "section": "colors" },
+      { "name": "The Money-Is-Mono Rule", "body": "Any rendered currency amount uses the mono family with tabular figures -- no exceptions, so a column of amounts always aligns.", "section": "typography" },
+      { "name": "The 16px Input Floor Rule", "body": "Text inputs never render below 16px, even where the surrounding UI runs smaller, specifically to avoid iOS Safari's auto-zoom-on-focus.", "section": "typography" },
+      { "name": "The Glass-For-Chrome Rule", "body": "backdrop-filter: blur is reserved for floating navigational chrome (header, bottom nav, popovers) over scrolling content -- never applied to a base page or card background.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do keep orange to one primary action per screen (The One Warm Color Rule).",
+      "Do render every amount in mono with tabular figures (The Money-Is-Mono Rule).",
+      "Do reuse the passport-card / stamp vocabulary for new travel-document-flavored surfaces before inventing a new card style.",
+      "Do keep dark mode's darkest surface a step above pure black (The No-Pure-Black Rule).",
+      "Do reserve backdrop-filter: blur for floating chrome, not base surfaces (The Glass-For-Chrome Rule)."
+    ],
+    "donts": [
+      "Don't introduce a third accent color family (no purple, no neon) -- the system is intentionally teal + orange only.",
+      "Don't drop interactive text below 16px in form inputs.",
+      "Don't apply frosted glass to a resting card or page background -- it's a chrome-only treatment.",
+      "Don't invent a new pill-radius value; every pill in the system is 9999px."
+    ]
+  }
+}

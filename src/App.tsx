@@ -40,7 +40,13 @@ const SuperAdminBugTracker = lazy(() =>
 import { BalancesSettlements } from './components/BalancesSettlements';
 import { ExpenseFilterDrawer } from './components/ExpenseFilterDrawer';
 import { MembersGroupsTab } from './components/MembersGroupsTab';
-import { SettingsTab } from './components/SettingsTab';
+// SettingsTab pulls in TripJourneyMap, which pulls in maplibre-gl (a large
+// mapping dependency) -- code-split so it doesn't inflate the main bundle
+// that every tab pays for, even though Settings is a primary nav tab (see
+// hasVisitedSettings below for why this needs mount-gating, not just lazy()).
+const SettingsTab = lazy(() =>
+  import('./components/SettingsTab').then((m) => ({ default: m.SettingsTab }))
+);
 import { ExpenseReviewModal } from './components/ExpenseReviewModal';
 import { UndoToasts } from './components/UndoToasts';
 import { NavTabs } from './components/NavTabs';
@@ -132,6 +138,16 @@ export default function App() {
   const TAB_ORDER = ['expenses', 'ledger', 'members', 'settings'] as const;
   const [activeTab, setActiveTabRaw] = useState<Tab>('expenses');
   const mainContentRef = useRef<HTMLElement>(null);
+
+  // Tab panes stay mounted once rendered (display:none swap, not unmount --
+  // see the .tab-pane comment below), so a lazy SettingsTab would suspend on
+  // the very first paint if simply dropped in unconditionally. Gate its
+  // first mount on having actually visited the tab at least once; it then
+  // stays mounted like the other panes.
+  const [hasVisitedSettings, setHasVisitedSettings] = useState(activeTab === 'settings');
+  useEffect(() => {
+    if (activeTab === 'settings') setHasVisitedSettings(true);
+  }, [activeTab]);
 
   // Native crossfade between tabs where supported -- browser-compositor
   // only, no animation library. flushSync forces the DOM update to happen
@@ -1997,6 +2013,8 @@ export default function App() {
               }
             >
               <div className="fade-in">
+              {hasVisitedSettings && (
+              <Suspense fallback={<div className="skeleton" style={{ height: '200px', borderRadius: '14px' }} />}>
               <SettingsTab
                 categories={categories}
                 activeTripExpenses={activeTripExpenses}
@@ -2029,6 +2047,8 @@ export default function App() {
                 onOpenTripWrapped={() => setShowTripWrapped(true)}
                 baseCurrency={activeTrip?.baseCurrency || ''}
               />
+              </Suspense>
+              )}
               </div>
             </div>
 

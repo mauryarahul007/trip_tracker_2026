@@ -201,7 +201,7 @@ export function AnalyticsTab({
                           onMouseLeave={() => setHoveredIdx(null)}
                           style={{
                             cursor: onCategoryClick ? 'pointer' : undefined,
-                            transition: 'stroke-dasharray 0.5s var(--ease-uber-spring), stroke-dashoffset 0.5s var(--ease-uber-spring), stroke-width 0.2s var(--ease-uber-spring)',
+                            transition: 'stroke-dasharray 0.5s var(--ease-uber-spring), stroke-dashoffset 0.5s var(--ease-uber-spring), stroke-width 0.2s var(--ease-uber-spring)', // impeccable-disable-line layout-transition: SVG stroke property, paint-only, not a CSS box-model property
                           }}
                         />
                       );
@@ -301,11 +301,13 @@ export function AnalyticsTab({
                   </div>
                   <div style={{ width: '100%', height: '8px', background: 'rgba(15,23,42,0.05)', borderRadius: '4px', overflow: 'hidden' }}>
                     <div style={{
-                      width: chartFilled ? `${m.percentage}%` : '0%',
+                      width: '100%',
                       height: '100%',
                       background: 'var(--primary-accent)',
                       borderRadius: '4px',
-                      transition: 'width 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)'
+                      transformOrigin: 'left',
+                      transform: `scaleX(${chartFilled ? m.percentage / 100 : 0})`,
+                      transition: 'transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)'
                     }} />
                   </div>
                 </div>

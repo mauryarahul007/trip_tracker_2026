@@ -1,0 +1,14 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "bounce-easing",
+        "value": "cubic-bezier(0.34, 1.56, 0.64, 1)",
+        "createdAt": "2026-08-30T17:20:02.454Z",
+        "reason": "app's own established overshoot/spring motion language (alongside --ease-uber-spring, --ease-bounce-back in DESIGN.md), used deliberately across ~13 reveal/settle moments -- not generic template bounce; verified during /impeccable audit and optimize passes"
+      }
+    ]
+  }
+}

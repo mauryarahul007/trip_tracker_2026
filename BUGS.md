@@ -9,8 +9,8 @@
 
 | Metric | Count | Status Notes |
 | :--- | :--- | :--- |
-| **Total Tracked** | **115** | All recorded bugs across sessions |
-| **🟢 Open** | **0** | No critical blockers, 0 High |
+| **Total Tracked** | **116** | All recorded bugs across sessions |
+| **🟢 Open** | **1** | No critical blockers, 0 High |
 | **🟡 In Progress** | **0** | Active investigation or fix |
 | **✅ Resolved** | **89** | Verified & closed |
 | **⚪ Won't Fix** | **26** | Expected behavior / deferred |
@@ -19,13 +19,27 @@
 
 ## 🚨 Active Bugs (Open & In Progress)
 
-*🎉 No active open bugs! Great job team.* 
+| ID | Severity | Category | Title | Found By | Status |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **[BUG-121](#bug-121)** | 🟡 Medium | `performance` | Unused Fraunces font, layout-thrashing CSS transitions, and unsplit Settings bundle | `claude-cli` | 🟢 Open |
 
 ---
 
 ## 📖 Detailed Active Bug Specs
 
-*No active bug details to display.*
+### BUG-121: Unused Fraunces font, layout-thrashing CSS transitions, and unsplit Settings bundle
+
+- **Severity**: `MEDIUM` | **Category**: `performance` | **Status**: `open`
+- **Found By**: `claude-cli` on 30/8/2026 (web)
+
+**Description**:
+Impeccable audit found: (1) Fraunces font self-hosted but never referenced anywhere outside its own @font-face declaration, ~59KB dead weight. (2) Several CSS transitions animated layout-triggering properties (width/margin) instead of transform, violating the project's own web/performance.md rule -- includes a pre-existing bug where the trip-sheet drag-handle's hover state double-scaled (explicit height plus a separate scaleY on top). (3) SettingsTab was eagerly bundled into the main chunk even though it pulls in TripJourneyMap/maplibre-gl, inflating the bundle every tab pays for.
+
+**Steps to Reproduce**:
+1. Navigate to application
+2. Perform action that triggers bug
+
+---
 
 ## ✅ Resolved Bugs History
 
