@@ -549,6 +549,54 @@ button, [role="button"], input, select, a {
   letter-spacing: -0.01em;
 }
 
+/* Create/Edit Trip form header -- ties the form into the app's own
+   travel-document visual language (boarding pass eyebrow/mono labels,
+   passport-stamp badges) instead of a plain generic form heading. */
+.trip-form-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.trip-form-eyebrow {
+  font-family: var(--font-family-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.trip-form-title {
+  font-family: var(--font-family-title);
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-top: 2px;
+}
+.trip-form-stamp {
+  font-family: var(--font-family-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--primary-accent);
+  border: 1.5px dashed var(--primary-accent);
+  border-radius: 8px;
+  padding: 5px 9px;
+  transform: rotate(-4deg);
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+/* Dashed section divider -- same perforation vocabulary as .bp-perf and
+   .date-picker-clear's dashed border, without the boarding-pass card's
+   edge-notch mechanics (those need overflow:hidden at the card boundary;
+   this divider sits inside a padded card, so a plain dashed rule reads
+   the same "ticket" language without that extra machinery). */
+.trip-form-perf {
+  border: none;
+  border-top: 1.5px dashed var(--border-color);
+  margin: 16px 0;
+}
+
 .input-field,
 .select-field {
   width: 100%;

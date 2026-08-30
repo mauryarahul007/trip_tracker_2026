@@ -225,9 +225,13 @@ export function TripsListScreen({
         {/* Add/Edit trip form */}
         {showAddTrip && (
           <form onSubmit={handleCreateTripSafe} className="glass-card" style={{ marginBottom: '24px', padding: '16px' }}>
-            <h3 style={{ fontSize: '15px', fontWeight: 600, marginBottom: '12px' }}>
-              {editingTripId ? 'Edit Trip' : 'Create New Trip'}
-            </h3>
+            <div className="trip-form-header">
+              <div>
+                <div className="trip-form-eyebrow">TRIP TRACKER · 2026</div>
+                <div className="trip-form-title">{editingTripId ? 'Edit Trip' : 'Create New Trip'}</div>
+              </div>
+              <span className="trip-form-stamp">{editingTripId ? '✎ EDIT' : '✈ NEW'}</span>
+            </div>
             {/* Honeypot field - visually hidden to trap bots */}
             <div style={{ display: 'none' }} aria-hidden="true">
               <label htmlFor="add_trip_name_hp">Leave this empty</label>
@@ -242,7 +246,7 @@ export function TripsListScreen({
               />
             </div>
             <div className="input-group">
-              <label className="input-label" htmlFor="new_trip_name">Trip Name *</label>
+              <label className="form-label" htmlFor="new_trip_name">Trip Name *</label>
               <input
                 id="new_trip_name"
                 type="text"
@@ -254,10 +258,12 @@ export function TripsListScreen({
               />
             </div>
 
+            <div className="trip-form-perf" aria-hidden="true" />
+
             {/* Route Stops / Waypoints Builder */}
             <div className="input-group">
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
-                <label className="input-label" htmlFor="new_trip_destination" style={{ marginBottom: 0 }}>
+                <label className="form-label" htmlFor="new_trip_destination" style={{ marginBottom: 0 }}>
                   Destinations & Stops (Optional)
                 </label>
                 <button
@@ -391,8 +397,10 @@ export function TripsListScreen({
               )}
             </div>
 
+            <div className="trip-form-perf" aria-hidden="true" />
+
             <div className="input-group">
-              <label className="input-label">Dates *</label>
+              <label className="form-label">Dates *</label>
               <DateRangePicker
                 startDate={newTripStart}
                 endDate={newTripEnd}

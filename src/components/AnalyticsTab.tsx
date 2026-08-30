@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useId, useState } from 'react';
 import type { Trip, Expense } from '../types';
 import { CategoryIcon } from './CategoryIcon';
 import { IconAnalytics, IconTrophy, IconChevronDown, IconChevronUp } from './Icons';
@@ -51,6 +51,7 @@ export function AnalyticsTab({
   const topCategory = categoryData[0];
   const loggedCurrencies = [...new Set(expenses.map((e) => e.currency).filter(Boolean))];
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
+  const trendGradientId = useId();
   const [chartFilled, setChartFilled] = useState(false);
   const [showTrends, setShowTrends] = useState(false);
 
@@ -318,6 +319,12 @@ export function AnalyticsTab({
               <h4 style={{ fontSize: '14px', marginBottom: '16px', fontWeight: '600' }}>Daily Spending Trend</h4>
               <div style={{ width: '100%', overflowX: 'auto' }}>
                 <svg width="100%" height="200" viewBox="0 0 400 200" preserveAspectRatio="none" style={{ minWidth: '350px', opacity: chartFilled ? 1 : 0, transition: 'opacity 0.5s cubic-bezier(0.2, 0.8, 0.2, 1)' }}>
+                  <defs>
+                    <linearGradient id={trendGradientId} x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="var(--primary-accent)" stopOpacity="0.25" />
+                      <stop offset="100%" stopColor="var(--primary-accent)" stopOpacity="0" />
+                    </linearGradient>
+                  </defs>
                   <line x1="30" y1="40" x2="380" y2="40" stroke="var(--border-color)" strokeWidth="1" strokeDasharray="4 4" />
                   <line x1="30" y1="100" x2="380" y2="100" stroke="var(--border-color)" strokeWidth="1" strokeDasharray="4 4" />
                   <line x1="30" y1="160" x2="380" y2="160" stroke="var(--border-color)" strokeWidth="1" />
@@ -344,13 +351,20 @@ export function AnalyticsTab({
                         <text x="25" y="164" textAnchor="end" fontSize="9" fill="var(--text-secondary)">0</text>
 
                         {points.length > 1 && (
-                          <polyline
-                            fill="none"
-                            stroke="var(--primary-accent)"
-                            strokeWidth="2.5"
-                            points={pointsStr}
-                            style={{ transition: 'all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)' }}
-                          />
+                          <>
+                            <polygon
+                              fill={`url(#${trendGradientId})`}
+                              points={`${points[0].x},160 ${pointsStr} ${points[points.length - 1].x},160`}
+                              style={{ transition: 'all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)' }}
+                            />
+                            <polyline
+                              fill="none"
+                              stroke="var(--primary-accent)"
+                              strokeWidth="2.5"
+                              points={pointsStr}
+                              style={{ transition: 'all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)' }}
+                            />
+                          </>
                         )}
 
                         {points.map((p, idx) => {
