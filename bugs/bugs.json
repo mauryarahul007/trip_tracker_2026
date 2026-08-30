@@ -1,5 +1,35 @@
 [
   {
+    "id": "BUG-117",
+    "title": "Create Trip date-range popover clipped by card, unusable to select dates",
+    "description": "The trip date-range picker popover rendered inside the Create New Trip .glass-card, which uses content-visibility:auto for scroll perf. That implicitly clips overflowing absolutely-positioned children to the card bounds, cutting the calendar off mid-grid and letting trip cards behind bleed through, making later dates unselectable.",
+    "severity": "medium",
+    "category": "ui-ux",
+    "status": "resolved",
+    "foundBy": "human",
+    "environment": {
+      "isOnline": true,
+      "platform": "web",
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Open Your Trips, click Create New Trip",
+      "Tap the Dates field to open the calendar popover",
+      "Observe calendar cut off partway down, trip cards visible through/behind it",
+      "Attempt to select a date in the later rows"
+    ],
+    "expectedBehavior": "Full calendar popover renders below the Dates field, fully visible and clickable.",
+    "actualBehavior": "Popover clipped to the parent card's bounds due to content-visibility:auto containment; later date rows inaccessible.",
+    "diagnostics": {
+      "stackTrace": "N/A -- CSS containment clipping, not a runtime error"
+    },
+    "createdAt": "2026-08-30T00:00:00+00:00",
+    "updatedAt": "2026-08-30T00:00:00+00:00",
+    "resolvedAt": "2026-08-30T00:00:00+00:00",
+    "resolvedBy": "claude-cli",
+    "resolutionNote": "Portaled the date-range popover to document.body with fixed positioning computed from the trigger's rect, escaping the .glass-card containment clip (same fix pattern already used for the member-add modal in MembersGroupsTab.tsx). Commit 8e1a4cc."
+  },
+  {
     "id": "BUG-012",
     "title": "Member deletion left orphaned split IDs corrupting settlement balance math",
     "description": "When a member was removed from a trip, their ID remained in expenses.splitMemberIds and expenses.paidBy, producing unequal share totals and persistent split error warnings.",
