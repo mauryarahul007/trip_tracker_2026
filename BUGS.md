@@ -10,36 +10,22 @@
 | Metric | Count | Status Notes |
 | :--- | :--- | :--- |
 | **Total Tracked** | **116** | All recorded bugs across sessions |
-| **🟢 Open** | **1** | No critical blockers, 0 High |
+| **🟢 Open** | **0** | No critical blockers, 0 High |
 | **🟡 In Progress** | **0** | Active investigation or fix |
-| **✅ Resolved** | **89** | Verified & closed |
+| **✅ Resolved** | **90** | Verified & closed |
 | **⚪ Won't Fix** | **26** | Expected behavior / deferred |
 
 ---
 
 ## 🚨 Active Bugs (Open & In Progress)
 
-| ID | Severity | Category | Title | Found By | Status |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| **[BUG-121](#bug-121)** | 🟡 Medium | `performance` | Unused Fraunces font, layout-thrashing CSS transitions, and unsplit Settings bundle | `claude-cli` | 🟢 Open |
+*🎉 No active open bugs! Great job team.* 
 
 ---
 
 ## 📖 Detailed Active Bug Specs
 
-### BUG-121: Unused Fraunces font, layout-thrashing CSS transitions, and unsplit Settings bundle
-
-- **Severity**: `MEDIUM` | **Category**: `performance` | **Status**: `open`
-- **Found By**: `claude-cli` on 30/8/2026 (web)
-
-**Description**:
-Impeccable audit found: (1) Fraunces font self-hosted but never referenced anywhere outside its own @font-face declaration, ~59KB dead weight. (2) Several CSS transitions animated layout-triggering properties (width/margin) instead of transform, violating the project's own web/performance.md rule -- includes a pre-existing bug where the trip-sheet drag-handle's hover state double-scaled (explicit height plus a separate scaleY on top). (3) SettingsTab was eagerly bundled into the main chunk even though it pulls in TripJourneyMap/maplibre-gl, inflating the bundle every tab pays for.
-
-**Steps to Reproduce**:
-1. Navigate to application
-2. Perform action that triggers bug
-
----
+*No active bug details to display.*
 
 ## ✅ Resolved Bugs History
 
@@ -134,6 +120,7 @@ Impeccable audit found: (1) Fraunces font self-hosted but never referenced anywh
 | **BUG-110** | Superadmin Users tab: Suspend/Delete errors were visually indistinguishable from success | `general` | `medium` | `human` | `claude-cli` | AdminUsersPage.tsx: showToast(msg, isError) now tracks error state; toast renders IconAlertCircle + red '.ops-toast.error' styling (new class in ops-deck.css using existing --danger tokens) with role="alert" on failure vs IconCheck/role="status" on success. All 4 catch blocks (suspend, bulk suspend, delete, broadcast) now pass isError=true. Verified set_user_banned/delete_user RPCs and is_superadmin() work correctly server-side (no drift between deployed functions and migration files; live-tested set_user_banned in a rolled-back transaction as the actual superadmin). Also discovered and deployed migration 0072 (BUG-109's fix), which was committed to the repo but had never been pushed to production -- schema_migrations tracked 0071 as the latest applied version. |
 | **BUG-112** | Follow-up WCAG 2.2 pass: keyboard traps on trip/notification cards, unlabeled toggles/inputs, window.confirm() in admin, missing headings | `ui-ux` | `high` | `claude-cli` | `claude-cli` | Follow-up audit after BUG-111: TripsListScreen trip card, NotificationsPanel card, BoardingPassHeroCard origin/dest edit triggers, and AnalyticsTab category legend rows were div-onClick with no role/tabIndex/keydown -- added keyboard support guarded against double-firing from nested controls. Geotag/Mute toggle switches and the ExpenseForm split-amount input had no accessible name -- added aria-label. UpiPaymentModal/TripWrappedModal close buttons and BoardingPassHeroCard glyph-only submit buttons were icon-only with no name -- added aria-label. AdminPortalLayout critical-bug badge and NotificationsPanel unread dot conveyed state by color alone -- added text-equivalent labels. ExpenseForm and UpiPaymentModal did not close on Escape (useFocusTrap called without onEscape) -- wired it. Replaced all 8 window.confirm()/native-dialog call sites in the admin portal (AdminAuditPage, AdminTripsPage x2, AdminUsersPage x2, AdminToolsPage x2, SuperAdminBugTracker) with the app's ConfirmDialog, adding confirmRequest state + rendering to AdminPortalLayout and threading onRequestConfirm through the 4 admin pages. BalancesSettlements 'Who owes who' was a bare div with no heading in the whole screen -- retagged to h2. ExpenseFilterDrawer group titles skipped h2->h4 -- retagged to h3. Bumped the 20x20 'Why this amount?' button to the 24x24 WCAG 2.5.8 minimum. Added aria-label to unlabeled search/filter/paste inputs in SuperAdminBugTracker and SettingsView. Wired Escape key support into SettingsView's bug-report/feature-request subscreens, reusing their existing unsaved-draft confirm guard so Escape gets the same data-loss protection as hardware/browser back. tsc -b and oxlint both clean after all changes. Commit 287ef29. |
 | **BUG-116** | Expense review banner let non-admin/non-author edits through, causing permanently stuck Out of sync count | `offline-sync` | `high` | `claude-cli` | `claude-cli` | Commit 60095ad. ExpenseList.tsx: affectedExpenseIds (the review banner + bulk-review flow) now filters to isAdmin || createdByUserId === userId, matching the per-row swipe-to-edit gate, so it never opens an edit the backend RLS UPDATE policy will reject. tripStore.ts: added isNonRetryableSyncError() -- a write rejected by the DB policy (0 rows affected, detected in tripApi.ts's updateExpenseRow) now drops from syncQueue and sets storageError instead of being requeued forever, so Out of sync no longer sticks after a permission-denied write. Root cause found live: queried the Himachal 2 trip's expenses/members tables directly -- 2 expenses (Travel, Food) still reference a deleted member and were created by the trip owner (Suyog Gadhave), not the signed-in user (rahul maurya), so the edit was always going to be rejected by the existing admin-or-creator RLS policy from BUG-108/migration 0071. Those 2 rows still need the trip admin to fix via the UI; not touched directly since it's a money-affecting edit. Regression test in tripStore.test.ts (isNonRetryableSyncError). tsc --noEmit and full vitest suite clean. Follow-up commit ae93e60: ExpenseReviewModal.tsx now shows an inline note ('You didn't add this expense, so only the trip admin or whoever added it can edit or delete it.') in place of the Edit/Delete buttons when canManage is false, instead of silently omitting them. |
+| **BUG-121** | Unused Fraunces font, layout-thrashing CSS transitions, and unsplit Settings bundle | `performance` | `medium` | `claude-cli` | `claude-cli` | Removed unused Fraunces font; converted layout-thrashing width/margin CSS transitions to transform (also fixed a pre-existing hover double-scale bug on the trip-sheet handle); code-split SettingsTab with a mount-gate to stop maplibre-gl loading for every session. Commit 0b74ca9. |
 
 ---
 

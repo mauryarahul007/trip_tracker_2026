@@ -3625,7 +3625,7 @@
     "description": "Impeccable audit found: (1) Fraunces font self-hosted but never referenced anywhere outside its own @font-face declaration, ~59KB dead weight. (2) Several CSS transitions animated layout-triggering properties (width/margin) instead of transform, violating the project's own web/performance.md rule -- includes a pre-existing bug where the trip-sheet drag-handle's hover state double-scaled (explicit height plus a separate scaleY on top). (3) SettingsTab was eagerly bundled into the main chunk even though it pulls in TripJourneyMap/maplibre-gl, inflating the bundle every tab pays for.",
     "severity": "medium",
     "category": "performance",
-    "status": "open",
+    "status": "resolved",
     "foundBy": "claude-cli",
     "environment": {
       "platform": "web",
@@ -3640,6 +3640,9 @@
     "actualBehavior": "",
     "diagnostics": {},
     "createdAt": "2026-08-30T17:27:28.068Z",
-    "updatedAt": "2026-08-30T17:27:28.069Z"
+    "updatedAt": "2026-08-30T17:28:05.086Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-08-30T17:28:05.086Z",
+    "resolutionNote": "Removed unused Fraunces font; converted layout-thrashing width/margin CSS transitions to transform (also fixed a pre-existing hover double-scale bug on the trip-sheet handle); code-split SettingsTab with a mount-gate to stop maplibre-gl loading for every session. Commit 0b74ca9."
   }
 ]
