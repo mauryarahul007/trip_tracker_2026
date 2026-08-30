@@ -5780,13 +5780,42 @@ textarea.input-field {
 }
 
 .map-marker-pin {
+  position: relative;
   animation: markerPinDrop 0.45s var(--ease-uber-spring) both;
   animation-delay: calc(var(--pin-index, 0) * 75ms);
   will-change: transform, opacity;
 }
 
+.map-marker-pin::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 2px solid currentColor;
+  opacity: 0.6;
+  animation: markerPulseRing 2.4s cubic-bezier(0.25, 1, 0.5, 1) infinite;
+  animation-delay: calc(var(--pin-index, 0) * 0.4s);
+  pointer-events: none;
+}
+
+@keyframes markerPulseRing {
+  0% {
+    transform: scale(0.9);
+    opacity: 0.8;
+  }
+  70% {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .map-marker-pin {
+  .map-marker-pin,
+  .map-marker-pin::after {
     animation: none !important;
   }
 }
