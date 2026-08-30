@@ -10,10 +10,10 @@
 | Metric | Count |
 | :--- | :--- |
 | **Total Tracked** | **22** |
-| **💡 Requested** | **2** |
+| **💡 Requested** | **1** |
 | **📋 Planned** | **0** |
 | **🟡 In Progress** | **0** |
-| **✅ Shipped** | **20** |
+| **✅ Shipped** | **21** |
 | **⚪ Won't Do** | **0** |
 
 ---
@@ -23,7 +23,6 @@
 | ID | Category | Title | Requested By | Status |
 | :--- | :--- | :--- | :--- | :--- |
 | **[FEAT-002](#feat-002)** | `ui-ux` | Test | `mauryarahul007@gmail.com` | 💡 Requested |
-| **[FEAT-022](#feat-022)** | `ui-ux` | 10 UI/UX enhancements: skeleton loaders, pull-to-refresh, edit-undo, settlement confetti + progress, duplicate expense, split preview, empty-state CTAs, category icons, command-palette hint | `claude-cli` | 💡 Requested |
 
 ---
 
@@ -36,15 +35,6 @@
 - **Route**: `#nav-3`
 
 Test
-
----
-
-### FEAT-022: 10 UI/UX enhancements: skeleton loaders, pull-to-refresh, edit-undo, settlement confetti + progress, duplicate expense, split preview, empty-state CTAs, category icons, command-palette hint
-
-- **Category**: `ui-ux` | **Status**: `requested`
-- **Requested By**: `claude-cli` on 30/8/2026 (web)
-
-Batch of UI/UX polish across the app: swipe-row short labels (plain prop) on ExpenseList; command palette one-time nudge dot; live equal-mode split preview in ExpenseForm; widened category emoji picker; CTA buttons on empty members/groups states; dark-mode token audit (no issues found); settlement confetti burst + percent-settled progress bar in BalancesSettlements/UpiPaymentModal; duplicate-expense action in ExpenseReviewModal; pull-to-refresh on TripsListScreen and ExpenseList via new usePullToRefresh hook; skeleton loading states for app boot and per-trip expense fetch (expensesLoadingTripId in tripStore); optimistic expense-edit undo toast in UndoToasts/App.tsx.
 
 ---
 
@@ -72,6 +62,7 @@ Batch of UI/UX polish across the app: swipe-row short labels (plain prop) on Exp
 | **FEAT-019** | Uber-style bottom sheet motion polish | `ui-ux` | `claude-cli` | `claude-cli` | src/components/TripContentSheet.tsx (velocity fling, scrim, corner-radius, haptics), src/utils/nativeShell.ts + src/App.tsx (status-bar tone sync). Added @capacitor/haptics + @capacitor/status-bar, npx cap sync run for Android/iOS. |
 | **FEAT-020** | Simplified who-owes-who summary card | `ui-ux` | `claude-cli` | `claude-cli` | src/components/BoardingPassHeroCard.tsx, src/components/BalancesSettlements.tsx. |
 | **FEAT-021** | Analytics moved to Summary; geo map split into its own Settings section | `analytics` | `claude-cli` | `claude-cli` | src/App.tsx, src/components/AnalyticsTab.tsx, src/components/SettingsTab.tsx, src/components/SettingsView.tsx. |
+| **FEAT-022** | 10 UI/UX enhancements: skeleton loaders, pull-to-refresh, edit-undo, settlement confetti + progress, duplicate expense, split preview, empty-state CTAs, category icons, command-palette hint | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit 237b25a |
 
 ---
 
