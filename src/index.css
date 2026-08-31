@@ -4618,15 +4618,15 @@ html.capacitor-ios .trip-sheet .tab-pane {
    and ticket-stub components, not an elevated iOS-style card. */
 /* Profile Hero Card & Cloud Sync Hub */
 .settings-profile-hero {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding: 16px 18px;
+  position: relative;
   background: var(--bg-surface);
   border: 1px solid var(--border-color);
-  border-radius: var(--border-radius-md);
-  box-shadow: 0 1px 0 rgba(28, 42, 56, 0.04);
-  position: relative;
+  border-radius: 20px;
+  padding: 16px 18px 14px;
+  box-shadow: 0 4px 20px -6px rgba(0, 0, 0, 0.12);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
   overflow: hidden;
 }
 
@@ -4636,9 +4636,14 @@ html.capacitor-ios .trip-sheet .tab-pane {
   gap: 14px;
 }
 
+.settings-avatar-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
 .settings-avatar-img {
-  width: 50px;
-  height: 50px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
   object-fit: cover;
   border: 2px solid var(--primary-accent);
@@ -4647,8 +4652,8 @@ html.capacitor-ios .trip-sheet .tab-pane {
 }
 
 .settings-avatar-circle {
-  width: 50px;
-  height: 50px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
   background: linear-gradient(135deg, var(--primary-accent), var(--secondary-accent));
   color: #FFFFFF;
@@ -4662,6 +4667,18 @@ html.capacitor-ios .trip-sheet .tab-pane {
   flex-shrink: 0;
 }
 
+.settings-avatar-online-dot {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--color-success);
+  border: 2px solid var(--bg-surface);
+  box-shadow: 0 0 6px rgba(16, 185, 129, 0.6);
+}
+
 .settings-profile-info {
   flex: 1;
   min-width: 0;
@@ -4670,9 +4687,16 @@ html.capacitor-ios .trip-sheet .tab-pane {
   gap: 2px;
 }
 
+.settings-profile-name-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
 .settings-profile-name {
-  font-size: 16px;
-  font-weight: 600;
+  font-size: 15.5px;
+  font-weight: 700;
   color: var(--text-primary);
   letter-spacing: -0.01em;
   white-space: nowrap;
@@ -4680,22 +4704,99 @@ html.capacitor-ios .trip-sheet .tab-pane {
   text-overflow: ellipsis;
 }
 
+.settings-persona-badge {
+  font-family: var(--font-family-mono);
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  padding: 1px 6px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.settings-persona-badge.traveler {
+  background: rgba(47, 111, 237, 0.12);
+  color: var(--primary-accent);
+  border: 1px solid rgba(47, 111, 237, 0.25);
+}
+
+.settings-persona-badge.superadmin {
+  background: rgba(16, 185, 129, 0.12);
+  color: #10B981;
+  border: 1px solid rgba(16, 185, 129, 0.25);
+}
+
 .settings-profile-email {
-  font-size: 12.5px;
+  font-size: 12px;
+  font-family: var(--font-family-mono);
   color: var(--text-secondary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 }
 
-/* Perforated tear beneath the hero card — the boarding-pass motif reused as
-   a single, deliberate signature touch rather than on every row. */
+.settings-profile-email:hover {
+  color: var(--primary-accent);
+}
+
+/* Frequent Flyer Travel Stats Strip */
+.settings-stat-pills {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  padding: 2px 0;
+}
+
+.settings-stat-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  background: color-mix(in srgb, var(--text-muted) 8%, var(--bg-app));
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  font-family: var(--font-family-mono);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+/* Storage Meter Bar */
+.settings-storage-gauge {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--border-color);
+}
+
+.settings-progress-bar-bg {
+  width: 100%;
+  height: 4px;
+  background: color-mix(in srgb, var(--text-muted) 14%, var(--bg-app));
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.settings-progress-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  background: linear-gradient(90deg, #10B981, #38BDF8);
+  transition: width 0.3s ease;
+}
+
+/* Perforated tear beneath the hero card */
 .settings-hero-perf {
   position: relative;
   height: 0;
   border-top: 1.5px dashed var(--border-color);
-  /* .settings-container's flex gap already provides 20px above and below;
-     pull in so the tear sits close under the hero card. */
   margin: -14px 12px -14px;
 }
 .settings-hero-perf::before,
@@ -4705,8 +4806,6 @@ html.capacitor-ios .trip-sheet .tab-pane {
   top: -8px;
   width: 16px;
   height: 16px;
-  /* Matches .app-container's canvas (--bg-app), not the hero card's paper
-     fill (--bg-surface) — the perf sits below the card, over the canvas. */
   background: var(--bg-app);
   border-radius: 50%;
   border: 1px solid var(--border-color);
@@ -4719,7 +4818,7 @@ html.capacitor-ios .trip-sheet .tab-pane {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding-top: 10px;
+  padding-top: 8px;
   border-top: 1px dashed var(--border-color);
   gap: 8px;
 }
@@ -4797,6 +4896,141 @@ html.capacitor-ios .trip-sheet .tab-pane {
 .settings-sync-now-btn:disabled {
   opacity: 0.7;
   cursor: default;
+}
+
+/* Spotlight Search Bar */
+.settings-search-bar-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.settings-search-icon {
+  position: absolute;
+  left: 12px;
+  color: var(--text-muted);
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.settings-search-input {
+  width: 100%;
+  padding: 8.5px 36px 8.5px 36px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  color: var(--text-primary);
+  font-size: 13px;
+  font-family: inherit;
+  outline: none;
+  transition: all 0.2s var(--ease-decel);
+  box-sizing: border-box;
+}
+
+.settings-search-input:focus {
+  border-color: var(--primary-accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary-accent) 18%, transparent);
+}
+
+.settings-search-clear-btn {
+  position: absolute;
+  right: 10px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--bg-surface-hover);
+  border: 1px solid var(--border-color);
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  cursor: pointer;
+  padding: 0;
+  transition: all 0.15s ease;
+}
+
+.settings-search-clear-btn:hover {
+  background: var(--border-color);
+  color: var(--text-primary);
+}
+
+/* Current Trip Flight Banner in Capsule */
+.settings-trip-flight-banner {
+  padding: 11px 16px;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--primary-accent) 12%, var(--bg-surface)), color-mix(in srgb, var(--secondary-accent) 10%, var(--bg-surface)));
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.settings-trip-flight-title {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.settings-trip-flight-meta {
+  font-size: 11px;
+  font-family: var(--font-family-mono);
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+
+/* Shortcuts Reference Card */
+.settings-shortcuts-card {
+  padding: 12px 14px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  font-size: 12px;
+}
+
+.settings-shortcuts-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+}
+
+.settings-shortcut-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: var(--font-family-mono);
+  font-size: 11px;
+  color: var(--text-muted);
+  padding: 3px 0;
+}
+
+.settings-kbd {
+  padding: 1.5px 6px;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--text-muted) 14%, var(--bg-app));
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  font-size: 10px;
+  font-weight: 600;
+}
+
+/* Empty Search Feedback */
+.settings-empty-search {
+  text-align: center;
+  padding: 36px 16px;
+  color: var(--text-muted);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
 }
 
 /* Current Trip Context Highlight Card */
@@ -4922,9 +5156,9 @@ html.capacitor-ios .trip-sheet .tab-pane {
 .settings-group-card {
   background: var(--bg-surface);
   border: 1px solid var(--border-color);
-  border-radius: var(--border-radius-md);
+  border-radius: 16px;
   overflow: hidden;
-  box-shadow: 0 1px 0 rgba(28, 42, 56, 0.04);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
 }
 
 .settings-row-item {
@@ -4935,16 +5169,12 @@ html.capacitor-ios .trip-sheet .tab-pane {
   padding: 13px 16px;
   background: transparent;
   border: none;
-  border-bottom: 1px dashed var(--border-color);
   cursor: pointer;
   text-align: left;
-  transition: background 0.15s ease;
+  transition: background 0.15s ease, transform 0.15s ease;
   color: inherit;
   font-family: inherit;
-}
-
-.settings-row-item:last-child {
-  border-bottom: none;
+  position: relative;
 }
 
 .settings-row-item:hover {
@@ -4953,6 +5183,19 @@ html.capacitor-ios .trip-sheet .tab-pane {
 
 .settings-row-item:active {
   background: rgba(47, 111, 237, 0.08);
+  transform: scale(0.995);
+}
+
+/* Inset divider separating row items without slicing across icon */
+.settings-row-item:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 64px;
+  right: 0;
+  height: 1px;
+  background: var(--border-color);
+  opacity: 0.6;
 }
 
 .settings-row-left {
@@ -4963,39 +5206,91 @@ html.capacitor-ios .trip-sheet .tab-pane {
   flex: 1;
 }
 
-/* Flat pastel-on-accent circles — the same treatment as the ticket-row
-   category icon — drawn from just the three ledger accents (compass teal,
-   brass, stamp red) instead of nine unrelated gradient hues, grouped by
-   what each row means: info/utility, counted/reversible, destructive. */
+/* Vibrant Semantic Squircles with Soft Ambient Gradients */
 .settings-squircle {
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  border-radius: 11px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  font-size: 16px;
+  transition: transform 0.18s var(--ease-decel), box-shadow 0.18s var(--ease-decel);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
-.settings-squircle.squircle-emerald,
-.settings-squircle.squircle-purple,
-.settings-squircle.squircle-blue,
-.settings-squircle.squircle-indigo,
+.settings-row-item:hover .settings-squircle {
+  transform: scale(1.06);
+}
+
+.settings-squircle.squircle-amber-glow,
+.settings-squircle.squircle-amber {
+  background: linear-gradient(135deg, rgba(255, 179, 71, 0.25), rgba(255, 107, 107, 0.25));
+  color: #FFB347;
+  border: 1px solid rgba(255, 179, 71, 0.35);
+}
+
+.settings-squircle.squircle-blue-glow,
+.settings-squircle.squircle-blue {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.25), rgba(14, 165, 233, 0.25));
+  color: #38BDF8;
+  border: 1px solid rgba(59, 130, 246, 0.35);
+}
+
+.settings-squircle.squircle-indigo-glow,
+.settings-squircle.squircle-indigo {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.25), rgba(139, 92, 246, 0.25));
+  color: #A78BFA;
+  border: 1px solid rgba(99, 102, 241, 0.35);
+}
+
+.settings-squircle.squircle-teal-glow,
 .settings-squircle.squircle-teal {
-  background: color-mix(in srgb, var(--primary-accent) 14%, var(--bg-surface));
-  color: var(--primary-accent);
+  background: linear-gradient(135deg, rgba(20, 184, 166, 0.25), rgba(6, 182, 212, 0.25));
+  color: #2DD4BF;
+  border: 1px solid rgba(20, 184, 166, 0.35);
 }
 
-.settings-squircle.squircle-amber,
+.settings-squircle.squircle-emerald-glow,
+.settings-squircle.squircle-emerald {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.25), rgba(5, 150, 105, 0.25));
+  color: #34D399;
+  border: 1px solid rgba(16, 185, 129, 0.35);
+}
+
+.settings-squircle.squircle-orange-glow {
+  background: linear-gradient(135deg, rgba(249, 115, 22, 0.25), rgba(245, 158, 11, 0.25));
+  color: #FB923C;
+  border: 1px solid rgba(249, 115, 22, 0.35);
+}
+
+.settings-squircle.squircle-purple-glow,
+.settings-squircle.squircle-purple {
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.25), rgba(192, 132, 252, 0.25));
+  color: #C084FC;
+  border: 1px solid rgba(168, 85, 247, 0.35);
+}
+
+.settings-squircle.squircle-slate-glow,
 .settings-squircle.squircle-slate {
-  background: color-mix(in srgb, var(--secondary-accent) 16%, var(--bg-surface));
-  color: var(--secondary-accent);
+  background: linear-gradient(135deg, rgba(100, 116, 139, 0.25), rgba(148, 163, 184, 0.25));
+  color: #94A3B8;
+  border: 1px solid rgba(100, 116, 139, 0.35);
 }
 
-.settings-squircle.squircle-rose,
+.settings-squircle.squircle-rose-glow,
+.settings-squircle.squircle-rose {
+  background: linear-gradient(135deg, rgba(244, 63, 94, 0.25), rgba(251, 113, 133, 0.25));
+  color: #FB7185;
+  border: 1px solid rgba(244, 63, 94, 0.35);
+}
+
+.settings-squircle.squircle-red-glow,
 .settings-squircle.squircle-red {
-  background: color-mix(in srgb, var(--color-danger) 14%, var(--bg-surface));
-  color: var(--color-danger);
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.25), rgba(220, 38, 38, 0.25));
+  color: #F87171;
+  border: 1px solid rgba(239, 68, 68, 0.35);
 }
 
 .settings-row-texts {

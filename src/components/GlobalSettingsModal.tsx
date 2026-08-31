@@ -4,6 +4,7 @@ import type { ConfirmRequest } from './ConfirmDialog';
 import { IconClose } from './Icons';
 import { SettingsView, type ThemePref } from './SettingsView';
 import { useTripStore } from '../store/tripStore';
+import { getAppVersion } from '../utils/appVersion';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 
 type Props = {
@@ -82,6 +83,8 @@ export function GlobalSettingsModal({
   const sheetRef = useRef<HTMLDivElement>(null);
   useFocusTrap(sheetRef, true, false, onClose);
 
+  const appVersion = getAppVersion();
+
   return (
     <div className="modal-backdrop drawer-right" onClick={onClose}>
       <div
@@ -95,18 +98,21 @@ export function GlobalSettingsModal({
       >
         <header className="app-header" style={{ margin: '-20px -20px 20px', paddingTop: 'max(20px, var(--safe-top, 0px))' }}>
           <div className="app-header-top">
-            <div className="app-title-group">
-              <h2 id="global-settings-title" className="app-logo" style={{ fontSize: '22px', color: '#FFFFFF' }}>Settings</h2>
+            <div className="app-title-group" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <h2 id="global-settings-title" className="app-logo" style={{ fontSize: '20px', color: '#FFFFFF' }}>Settings</h2>
+              <span style={{ fontSize: '10.5px', fontFamily: 'var(--font-family-mono)', background: 'rgba(23, 182, 166, 0.2)', color: '#38BDF8', border: '1px solid rgba(56, 189, 248, 0.35)', padding: '1px 7px', borderRadius: '10px', fontWeight: 700 }}>
+                v{appVersion}
+              </span>
             </div>
             <button
               type="button"
               className="secondary-btn touch-target-btn"
-              style={{ minWidth: '44px', minHeight: '44px', padding: '7px 8px', color: '#FFFFFF', borderColor: 'rgba(255,255,255,0.28)', background: 'rgba(255,255,255,0.1)', flexShrink: 0, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
+              style={{ minWidth: '38px', minHeight: '38px', width: '38px', height: '38px', padding: 0, color: '#FFFFFF', borderColor: 'rgba(255,255,255,0.22)', background: 'rgba(255,255,255,0.08)', borderRadius: '50%', flexShrink: 0, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
               aria-label="Close settings"
               title="Close"
               onClick={onClose}
             >
-              <IconClose size={16} className="icon-sm" />
+              <IconClose size={15} className="icon-sm" />
             </button>
           </div>
         </header>

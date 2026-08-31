@@ -1162,4 +1162,42 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - Secondary trip actions require one drill-down tap (`Trip Tools & Story`), but in return the entire settings surface is 65% more compact, instantly readable, and aligned with standard mobile ergonomics.
 
+---
+
+## 67. Enhanced Settings Visual System, Inset Dividers & Micro-Interactions
+* **Context:**
+  - Following the structural WhatsApp inset-group reorganization, the visual styling of the settings drawer needed elevation: row separators sliced across icons, hero cards lacked clear traveler/admin persona identity, and icons lacked visual punch.
+* **Decision:**
+  - **Luxury Traveler Passport ID Card (`SettingsView.tsx`, `index.css`)**:
+    - Added user persona badges (`✈️ TRAVELER` vs `🛡️ ADMIN`) and an active online status pulse ring directly on the avatar wrap.
+    - Added formatted live cloud sync and disk quota gauges with animated 1-tap `Sync Now` triggers.
+  - **iOS Inset Dividers (`index.css`)**:
+    - Replaced full-width border dividers with **inset dividers** using CSS pseudo-elements (`.settings-row-item:not(:last-child)::after`) starting 64px from the left, keeping icon squircles clean and delivering an authentic iOS/WhatsApp native aesthetic.
+  - **Semantic Ambient Glow Squircles (`index.css`, `SettingsView.tsx`)**:
+    - Upgraded squircle icons with soft, semantic ambient gradients (`squircle-amber-glow`, `squircle-blue-glow`, `squircle-indigo-glow`, `squircle-teal-glow`, `squircle-emerald-glow`, `squircle-orange-glow`, `squircle-purple-glow`, `squircle-rose-glow`, `squircle-red-glow`).
+  - **Drawer Header & Version Badge (`GlobalSettingsModal.tsx`)**:
+    - Added an app version chip (`v1.86.0`) and circular touch-target close button to the settings drawer header.
+* **Trade-offs Accepted:**
+  - Subtle gradients and inset dividers are implemented purely in CSS using native tokens, ensuring 0 runtime performance impact.
+
+---
+
+## 68. Settings v2: Spotlight Search, Frequent Flyer Hub & Flight Pass Capsule
+* **Context:**
+  - As features expand, settings can become dense. Travelers need instant discovery of tools without traversing multiple menus, clear insight into their cloud account state, and quick summary metrics for their active trip.
+* **Decision:**
+  - **Spotlight Quick-Search & Cross-Group Filtering (`SettingsView.tsx`, `index.css`)**:
+    - Embedded a sticky search input (`.settings-search-bar-wrap`) with instant debounced substring matching across titles, subtitles, and search aliases (e.g. `dark`, `csv`, `map`, `backup`, `theme`, `alerts`).
+    - Dynamically collapses empty groups during active searches and renders a styled fallback card with a 1-tap "Clear search" action.
+  - **Frequent Flyer Travel Passport ID Card (`SettingsView.tsx`, `index.css`)**:
+    - Upgraded profile hero with real-time stats chips: `✈️ {trips.length} Trips` · `👥 {companions} Companions` · `🔐 E2E Encrypted`.
+    - Added a visual **Storage Gauge Meter** (`.settings-progress-bar-fill`) with gradient progress indicator.
+    - Integrated 1-tap copy action on user email / account UID with micro-toast confirmation.
+  - **Active Trip Flight Pass Capsule (`SettingsView.tsx`, `index.css`)**:
+    - Added an integrated flight header (`.settings-trip-flight-banner`) showing active currency (`INR ₹`), companion count, and expense tally alongside `CLOSED` vs `ACTIVE` status pills.
+  - **Keyboard Shortcuts Quick Reference (`SettingsView.tsx`)**:
+    - Added a subtle pro-tips cheatsheet (`Esc`, `Swipe Right`, `+`) for power users.
+* **Trade-offs Accepted:**
+  - The search query state is kept local to the settings view for instant 0ms latency with no network overhead.
+
 
