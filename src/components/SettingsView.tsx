@@ -46,7 +46,7 @@ import { useEscapeKey } from '../utils/useEscapeKey';
 
 export type ThemePref = 'light' | 'dark' | 'system';
 
-type SubScreen = null | 'categories' | 'recycle-bin' | 'appearance' | 'backups' | 'archived-trips' | 'bug-tracker' | 'report-issue' | 'suggest-feature' | 'trip-map';
+type SubScreen = null | 'trip-tools' | 'categories' | 'recycle-bin' | 'appearance' | 'backups' | 'archived-trips' | 'bug-tracker' | 'report-issue' | 'suggest-feature' | 'trip-map';
 
 const RECYCLE_BIN_WINDOW_MS = 24 * 60 * 60 * 1000;
 
@@ -1068,6 +1068,268 @@ export function SettingsView({
     );
   }
 
+  if (subScreen === 'trip-tools' && activeTrip) {
+    return (
+      <div className="settings-container settings-subscreen-enter">
+        <div className="settings-subscreen-nav-header">
+          <button
+            type="button"
+            className="settings-subscreen-back-link"
+            onClick={() => {
+              triggerHaptic('light');
+              setSubScreen(null);
+            }}
+            aria-label="Back to Settings"
+          >
+            <IconChevronLeft size={18} />
+            <span>Settings</span>
+          </button>
+        </div>
+        <h3 className="settings-subscreen-main-title">Trip Tools &amp; Preferences</h3>
+        <p className="settings-subscreen-subtitle">
+          Manage story cards, interactive maps, categories, and trip-specific notifications.
+        </p>
+
+        <div className="settings-trip-context-card" style={{ margin: '14px 0' }}>
+          <div className="settings-trip-context-header">
+            <span className="settings-trip-context-badge">CURRENT TRIP</span>
+            <span className="settings-trip-context-curr">{activeTrip.baseCurrency}</span>
+          </div>
+          <div className="settings-trip-context-body">
+            <h3 className="settings-trip-context-name">{activeTrip.name}</h3>
+            <div className="settings-trip-context-meta">
+              {activeTrip.destination && (
+                <span className="settings-trip-context-tag">📍 {activeTrip.destination}</span>
+              )}
+              {(activeTrip.startDate || activeTrip.endDate) && (
+                <span className="settings-trip-context-tag">🗓️ {formatDateRange(activeTrip.startDate, activeTrip.endDate)}</span>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div className="settings-group">
+          <h4 className="settings-group-title">Stories &amp; Navigation</h4>
+          <div className="settings-group-card">
+            {onOpenTripWrapped && (
+              <button
+                type="button"
+                className="settings-row-item"
+                onClick={() => {
+                  triggerHaptic('light');
+                  onOpenTripWrapped();
+                }}
+              >
+                <div className="settings-row-left">
+                  <div className="settings-squircle squircle-amber" style={{ background: 'linear-gradient(135deg, #FF6B6B, #FFD93D)', color: '#1A1D20' }}>
+                    <IconSparkles size={18} />
+                  </div>
+                  <div className="settings-row-texts">
+                    <span className="settings-row-title">Trip Wrapped (Story Card)</span>
+                    <span className="settings-row-subtitle">Generate 1080x1920 Instagram Story infographic</span>
+                  </div>
+                </div>
+                <div className="settings-row-right">
+                  <span className="settings-badge-pill" style={{ background: 'rgba(255,107,107,0.18)', color: '#FF6B6B', fontWeight: 700 }}>STORY</span>
+                  <IconChevronRight size={16} />
+                </div>
+              </button>
+            )}
+
+            {onOpenShareTrip && (
+              <button
+                type="button"
+                className="settings-row-item"
+                onClick={() => {
+                  triggerHaptic('light');
+                  onOpenShareTrip();
+                }}
+              >
+                <div className="settings-row-left">
+                  <div className="settings-squircle squircle-teal">
+                    <IconShare size={18} />
+                  </div>
+                  <div className="settings-row-texts">
+                    <span className="settings-row-title">Invite &amp; Share Trip</span>
+                    <span className="settings-row-subtitle">Share join link or QR code with companions</span>
+                  </div>
+                </div>
+                <div className="settings-row-right">
+                  <IconChevronRight size={16} />
+                </div>
+              </button>
+            )}
+
+            <button
+              type="button"
+              className="settings-row-item"
+              onClick={() => {
+                triggerHaptic('light');
+                setSubScreen('trip-map');
+              }}
+            >
+              <div className="settings-row-left">
+                <div className="settings-squircle squircle-teal">
+                  <IconMapPin size={18} />
+                </div>
+                <div className="settings-row-texts">
+                  <span className="settings-row-title">Trip Map</span>
+                  <span className="settings-row-subtitle">Geotagged expenses plotted &amp; routed</span>
+                </div>
+              </div>
+              <div className="settings-row-right">
+                <IconChevronRight size={16} />
+              </div>
+            </button>
+          </div>
+        </div>
+
+        <div className="settings-group">
+          <h4 className="settings-group-title">Organization &amp; Preferences</h4>
+          <div className="settings-group-card">
+            {(isSuperadmin || isFeatureEnabled('enableKeywordTagging')) && (
+              <button
+                type="button"
+                className="settings-row-item"
+                onClick={() => {
+                  triggerHaptic('light');
+                  setSubScreen('categories');
+                }}
+              >
+                <div className="settings-row-left">
+                  <div className="settings-squircle squircle-purple">
+                    <IconTag size={18} />
+                  </div>
+                  <div className="settings-row-texts">
+                    <span className="settings-row-title">Categories &amp; Tags</span>
+                    <span className="settings-row-subtitle">{categories.length} active categories</span>
+                  </div>
+                </div>
+                <div className="settings-row-right">
+                  <IconChevronRight size={16} />
+                </div>
+              </button>
+            )}
+
+            {(isSuperadmin || isFeatureEnabled('enableRecycleBin')) && (
+              <button
+                type="button"
+                className="settings-row-item"
+                onClick={() => {
+                  triggerHaptic('light');
+                  setSubScreen('recycle-bin');
+                }}
+              >
+                <div className="settings-row-left">
+                  <div className="settings-squircle squircle-rose">
+                    <IconTrash size={18} />
+                  </div>
+                  <div className="settings-row-texts">
+                    <span className="settings-row-title">Recycle Bin</span>
+                    <span className="settings-row-subtitle">
+                      {deletedExpenses.length === 0 ? 'Empty (24h retention)' : `${deletedExpenses.length} deleted expense${deletedExpenses.length === 1 ? '' : 's'}`}
+                    </span>
+                  </div>
+                </div>
+                <div className="settings-row-right">
+                  {deletedExpenses.length > 0 && <span className="settings-badge-pill">{deletedExpenses.length}</span>}
+                  <IconChevronRight size={16} />
+                </div>
+              </button>
+            )}
+
+            <div className="settings-row-item" style={{ cursor: 'default' }}>
+              <div className="settings-row-left">
+                <div className="settings-squircle squircle-teal">
+                  <IconBell size={18} />
+                </div>
+                <div className="settings-row-texts">
+                  <span className="settings-row-title">Mute Trip Alerts</span>
+                  <span className="settings-row-subtitle">Silence push notifications for this trip</span>
+                </div>
+              </div>
+              <div className="settings-row-right">
+                <label style={{ position: 'relative', display: 'inline-block', width: '44px', height: '24px', margin: 0, cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={isTripMuted}
+                    onChange={(e) => {
+                      triggerHaptic('light');
+                      setTripMuted(activeTrip.id, e.target.checked);
+                    }}
+                    aria-label="Mute Notifications"
+                    style={{ opacity: 0, width: 0, height: 0, margin: 0 }}
+                  />
+                  <span
+                    style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      backgroundColor: isTripMuted ? '#17B6A6' : 'var(--border-color)',
+                      transition: '0.2s ease',
+                      borderRadius: 'var(--border-radius-pill)',
+                    }}
+                  >
+                    <span
+                      style={{
+                        position: 'absolute',
+                        height: '18px',
+                        width: '18px',
+                        left: isTripMuted ? '23px' : '3px',
+                        bottom: '3px',
+                        backgroundColor: 'white',
+                        transition: '0.2s ease',
+                        borderRadius: '50%',
+                        boxShadow: '0 1px 3px rgba(0,0,0,0.25)',
+                      }}
+                    />
+                  </span>
+                </label>
+              </div>
+            </div>
+
+            {isAdmin && (
+              <button
+                type="button"
+                className="settings-row-item"
+                onClick={() => {
+                  triggerHaptic('light');
+                  if (activeTrip.closed) {
+                    closeTrip(activeTrip.id, false);
+                    return;
+                  }
+                  onRequestConfirm?.({
+                    title: 'Close Trip',
+                    message: 'This locks the trip -- no new expenses or members can be added until it\'s reopened. Existing data stays untouched.',
+                    confirmLabel: 'Close Trip',
+                    onConfirm: () => closeTrip(activeTrip.id, true),
+                  });
+                }}
+              >
+                <div className="settings-row-left">
+                  <div className="settings-squircle squircle-amber">
+                    <IconShield size={18} />
+                  </div>
+                  <div className="settings-row-texts">
+                    <span className="settings-row-title">{activeTrip.closed ? 'Reopen Trip' : 'Close Trip'}</span>
+                    <span className="settings-row-subtitle">
+                      {activeTrip.closed ? 'Currently locked -- reopen to allow new expenses/members' : 'Lock this trip once everyone\'s settled up'}
+                    </span>
+                  </div>
+                </div>
+                <div className="settings-row-right">
+                  <IconChevronRight size={16} />
+                </div>
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // -------------------------------------------------------------------------
   // Main Settings Screen (WhatsApp Inset Grouped Layout)
   // -------------------------------------------------------------------------
@@ -1177,110 +1439,30 @@ export function SettingsView({
       {/* Group 1: Trip-Specific Settings (When an active trip is selected) */}
       {hasActiveTrip && activeTrip && (
         <div className="settings-group">
-          <div className="settings-trip-context-card">
-            <div className="settings-trip-context-header">
-              <span className="settings-trip-context-badge">CURRENT TRIP</span>
-              <span className="settings-trip-context-curr">{activeTrip.baseCurrency}</span>
-            </div>
-            <div className="settings-trip-context-body">
-              <h3 className="settings-trip-context-name">{activeTrip.name}</h3>
-              <div className="settings-trip-context-meta">
-                {activeTrip.destination && (
-                  <span className="settings-trip-context-tag">📍 {activeTrip.destination}</span>
-                )}
-                {(activeTrip.startDate || activeTrip.endDate) && (
-                  <span className="settings-trip-context-tag">🗓️ {formatDateRange(activeTrip.startDate, activeTrip.endDate)}</span>
-                )}
-              </div>
-            </div>
-          </div>
+          <h4 className="settings-group-title">This Trip: {activeTrip.name}</h4>
           <div className="settings-group-card">
-            {onOpenTripWrapped && (
-              <button type="button" className="settings-row-item" onClick={() => { triggerHaptic('light'); onOpenTripWrapped(); }}>
-                <div className="settings-row-left">
-                  <div className="settings-squircle squircle-amber" style={{ background: 'linear-gradient(135deg, #FF6B6B, #FFD93D)', color: '#1A1D20' }}>
-                    <IconSparkles size={18} />
-                  </div>
-                  <div className="settings-row-texts">
-                    <span className="settings-row-title">Trip Wrapped (Story Card)</span>
-                    <span className="settings-row-subtitle">Generate 1080x1920 Instagram Story infographic &amp; superlatives</span>
-                  </div>
-                </div>
-                <div className="settings-row-right">
-                  <span className="settings-badge-pill" style={{ background: 'rgba(255,107,107,0.18)', color: '#FF6B6B', fontWeight: 700 }}>STORY</span>
-                  <IconChevronRight size={16} />
-                </div>
-              </button>
-            )}
-
-            {onOpenShareTrip && (
-              <button type="button" className="settings-row-item" onClick={() => { triggerHaptic('light'); onOpenShareTrip(); }}>
-                <div className="settings-row-left">
-                  <div className="settings-squircle squircle-teal">
-                    <IconShare size={18} />
-                  </div>
-                  <div className="settings-row-texts">
-                    <span className="settings-row-title">Invite &amp; Share Trip</span>
-                    <span className="settings-row-subtitle">Share the join link or QR code with members</span>
-                  </div>
-                </div>
-                <div className="settings-row-right">
-                  <IconChevronRight size={16} />
-                </div>
-              </button>
-            )}
-
-            <button type="button" className="settings-row-item" onClick={() => { triggerHaptic('light'); setSubScreen('trip-map'); }}>
+            <button
+              type="button"
+              className="settings-row-item"
+              onClick={() => {
+                triggerHaptic('light');
+                setSubScreen('trip-tools');
+              }}
+            >
               <div className="settings-row-left">
-                <div className="settings-squircle squircle-teal">
-                  <IconMapPin size={18} />
+                <div className="settings-squircle squircle-amber" style={{ background: 'linear-gradient(135deg, #FF6B6B, #FFD93D)', color: '#1A1D20' }}>
+                  <IconSparkles size={18} />
                 </div>
                 <div className="settings-row-texts">
-                  <span className="settings-row-title">Trip Map</span>
-                  <span className="settings-row-subtitle">Geotagged expenses, plotted &amp; routed</span>
+                  <span className="settings-row-title">Trip Tools &amp; Story</span>
+                  <span className="settings-row-subtitle">Story Card, Map, Categories, Recycle Bin &amp; Mute</span>
                 </div>
               </div>
               <div className="settings-row-right">
+                <span className="settings-badge-pill" style={{ background: 'rgba(255,107,107,0.18)', color: '#FF6B6B', fontWeight: 700 }}>TOOLS</span>
                 <IconChevronRight size={16} />
               </div>
             </button>
-
-            {(isSuperadmin || isFeatureEnabled('enableKeywordTagging')) && (
-              <button type="button" className="settings-row-item" onClick={() => { triggerHaptic('light'); setSubScreen('categories'); }}>
-                <div className="settings-row-left">
-                  <div className="settings-squircle squircle-purple">
-                    <IconTag size={18} />
-                  </div>
-                  <div className="settings-row-texts">
-                    <span className="settings-row-title">Categories &amp; Tags</span>
-                    <span className="settings-row-subtitle">{categories.length} active categories</span>
-                  </div>
-                </div>
-                <div className="settings-row-right">
-                  <IconChevronRight size={16} />
-                </div>
-              </button>
-            )}
-
-            {(isSuperadmin || isFeatureEnabled('enableRecycleBin')) && (
-              <button type="button" className="settings-row-item" onClick={() => { triggerHaptic('light'); setSubScreen('recycle-bin'); }}>
-                <div className="settings-row-left">
-                  <div className="settings-squircle squircle-rose">
-                    <IconTrash size={18} />
-                  </div>
-                  <div className="settings-row-texts">
-                    <span className="settings-row-title">Recycle Bin</span>
-                    <span className="settings-row-subtitle">
-                      {deletedExpenses.length === 0 ? 'Empty (24h retention)' : `${deletedExpenses.length} deleted expense${deletedExpenses.length === 1 ? '' : 's'}`}
-                    </span>
-                  </div>
-                </div>
-                <div className="settings-row-right">
-                  {deletedExpenses.length > 0 && <span className="settings-badge-pill">{deletedExpenses.length}</span>}
-                  <IconChevronRight size={16} />
-                </div>
-              </button>
-            )}
 
             {onExportCsv && (
               <button
@@ -1305,121 +1487,14 @@ export function SettingsView({
                 </div>
               </button>
             )}
-
-            <div className="settings-row-item" style={{ cursor: 'default' }}>
-              <div className="settings-row-left">
-                <div className="settings-squircle squircle-teal">
-                  <IconBell size={18} />
-                </div>
-                <div className="settings-row-texts">
-                  <span className="settings-row-title">Mute Notifications</span>
-                  <span className="settings-row-subtitle">Stop push alerts for this trip</span>
-                </div>
-              </div>
-              <div className="settings-row-right">
-                <label style={{ position: 'relative', display: 'inline-block', width: '44px', height: '24px', margin: 0, cursor: 'pointer' }}>
-                  <input
-                    type="checkbox"
-                    checked={isTripMuted}
-                    onChange={(e) => {
-                      triggerHaptic('light');
-                      setTripMuted(activeTrip.id, e.target.checked);
-                    }}
-                    aria-label="Mute Notifications"
-                    style={{ opacity: 0, width: 0, height: 0, margin: 0 }}
-                  />
-                  <span
-                    style={{
-                      position: 'absolute',
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      bottom: 0,
-                      backgroundColor: isTripMuted ? '#17B6A6' : 'var(--border-color)',
-                      transition: '0.2s ease',
-                      borderRadius: 'var(--border-radius-pill)',
-                    }}
-                  >
-                    <span
-                      style={{
-                        position: 'absolute',
-                        height: '18px',
-                        width: '18px',
-                        left: isTripMuted ? '23px' : '3px',
-                        bottom: '3px',
-                        backgroundColor: 'white',
-                        transition: '0.2s ease',
-                        borderRadius: '50%',
-                        boxShadow: '0 1px 3px rgba(0,0,0,0.25)',
-                      }}
-                    />
-                  </span>
-                </label>
-              </div>
-            </div>
-
-            {isAdmin && (
-              <button
-                type="button"
-                className="settings-row-item"
-                onClick={() => {
-                  triggerHaptic('light');
-                  if (activeTrip.closed) {
-                    closeTrip(activeTrip.id, false);
-                    return;
-                  }
-                  onRequestConfirm?.({
-                    title: 'Close Trip',
-                    message: 'This locks the trip -- no new expenses or members can be added until it\'s reopened. Existing data stays untouched.',
-                    confirmLabel: 'Close Trip',
-                    onConfirm: () => closeTrip(activeTrip.id, true),
-                  });
-                }}
-              >
-                <div className="settings-row-left">
-                  <div className="settings-squircle squircle-amber">
-                    <IconShield size={18} />
-                  </div>
-                  <div className="settings-row-texts">
-                    <span className="settings-row-title">{activeTrip.closed ? 'Reopen Trip' : 'Close Trip'}</span>
-                    <span className="settings-row-subtitle">
-                      {activeTrip.closed ? 'Currently locked -- reopen to allow new expenses/members' : 'Lock this trip once everyone\'s settled up'}
-                    </span>
-                  </div>
-                </div>
-                <div className="settings-row-right">
-                  <IconChevronRight size={16} />
-                </div>
-              </button>
-            )}
           </div>
         </div>
       )}
 
-      {hasActiveTrip && (
-        <p className="settings-scope-note">Everything below applies to your whole account — not just this trip.</p>
-      )}
-
       {/* Group 2: App & Appearance */}
       <div className="settings-group">
-        <h4 className="settings-group-title">App &amp; Interface</h4>
+        <h4 className="settings-group-title">Preferences &amp; Interface</h4>
         <div className="settings-group-card">
-          <button type="button" className="settings-row-item" onClick={() => { triggerHaptic('light'); openNotificationsPanel(); }}>
-            <div className="settings-row-left">
-              <div className="settings-squircle squircle-teal">
-                <IconBell size={18} />
-              </div>
-              <div className="settings-row-texts">
-                <span className="settings-row-title">Notifications</span>
-                <span className="settings-row-subtitle">{unreadNotificationCount > 0 ? `${unreadNotificationCount} unread` : 'All caught up'}</span>
-              </div>
-            </div>
-            <div className="settings-row-right">
-              {unreadNotificationCount > 0 && <span className="settings-badge-pill">{unreadNotificationCount}</span>}
-              <IconChevronRight size={16} />
-            </div>
-          </button>
-
           {/* Inline 3-Way Segmented Theme Switcher */}
           <div className="settings-row-item" style={{ cursor: 'default' }}>
             <div className="settings-row-left">
@@ -1465,6 +1540,22 @@ export function SettingsView({
             </div>
           </div>
 
+          <button type="button" className="settings-row-item" onClick={() => { triggerHaptic('light'); openNotificationsPanel(); }}>
+            <div className="settings-row-left">
+              <div className="settings-squircle squircle-teal">
+                <IconBell size={18} />
+              </div>
+              <div className="settings-row-texts">
+                <span className="settings-row-title">Notifications</span>
+                <span className="settings-row-subtitle">{unreadNotificationCount > 0 ? `${unreadNotificationCount} unread` : 'All caught up'}</span>
+              </div>
+            </div>
+            <div className="settings-row-right">
+              {unreadNotificationCount > 0 && <span className="settings-badge-pill">{unreadNotificationCount}</span>}
+              <IconChevronRight size={16} />
+            </div>
+          </button>
+
           {(isSuperadmin || isFeatureEnabled('enableGeotagging')) && (
             <div className="settings-row-item" style={{ cursor: 'default' }}>
               <div className="settings-row-left">
@@ -1473,7 +1564,7 @@ export function SettingsView({
                 </div>
                 <div className="settings-row-texts">
                   <span className="settings-row-title">Geotag Expenses</span>
-                  <span className="settings-row-subtitle">Attach GPS location &amp; place names to transactions</span>
+                  <span className="settings-row-subtitle">Attach GPS coordinates &amp; place names</span>
                 </div>
               </div>
               <div className="settings-row-right">
@@ -1481,7 +1572,10 @@ export function SettingsView({
                   <input
                     type="checkbox"
                     checked={enableGeotagging}
-                    onChange={(e) => setEnableGeotagging(e.target.checked)}
+                    onChange={(e) => {
+                      triggerHaptic('light');
+                      setEnableGeotagging(e.target.checked);
+                    }}
                     aria-label="Geotag Expenses"
                     style={{ opacity: 0, width: 0, height: 0, margin: 0 }}
                   />
@@ -1526,9 +1620,9 @@ export function SettingsView({
                 <span>✈️</span>
               </div>
               <div className="settings-row-texts">
-                <span className="settings-row-title">Flight Helper &amp; Coachmarks</span>
+                <span className="settings-row-title">Flight Coachmarks</span>
                 <span className="settings-row-subtitle">
-                  {coachmarkResetStatus ? 'Onboarding flight tips re-enabled!' : 'Re-enable animated transaction guide on the + button'}
+                  {coachmarkResetStatus ? 'Onboarding tips re-enabled!' : 'Reset interactive guide on the + button'}
                 </span>
               </div>
             </div>
@@ -1544,6 +1638,7 @@ export function SettingsView({
               type="button"
               className="settings-row-item"
               onClick={() => {
+                triggerHaptic('light');
                 onInstallApp?.();
                 onClose?.();
               }}
@@ -1554,7 +1649,7 @@ export function SettingsView({
                 </div>
                 <div className="settings-row-texts">
                   <span className="settings-row-title">Install App</span>
-                  <span className="settings-row-subtitle">Add Trip Tracker icon to your device home screen</span>
+                  <span className="settings-row-subtitle">Add Trip Tracker to your device home screen</span>
                 </div>
               </div>
               <div className="settings-row-right">
@@ -1569,7 +1664,7 @@ export function SettingsView({
       <div className="settings-group">
         <h4 className="settings-group-title">Data &amp; Backups</h4>
         <div className="settings-group-card">
-          <button type="button" className="settings-row-item" onClick={() => setSubScreen('archived-trips')}>
+          <button type="button" className="settings-row-item" onClick={() => { triggerHaptic('light'); setSubScreen('archived-trips'); }}>
             <div className="settings-row-left">
               <div className="settings-squircle squircle-slate">
                 <IconArchive size={18} />
@@ -1588,7 +1683,7 @@ export function SettingsView({
           </button>
 
           {isSuperadmin && (
-            <button type="button" className="settings-row-item" onClick={() => setSubScreen('backups')}>
+            <button type="button" className="settings-row-item" onClick={() => { triggerHaptic('light'); setSubScreen('backups'); }}>
               <div className="settings-row-left">
                 <div className="settings-squircle squircle-indigo">
                   <IconDatabase size={18} />
@@ -1609,6 +1704,7 @@ export function SettingsView({
               type="button"
               className="settings-row-item"
               onClick={() => {
+                triggerHaptic('light');
                 onRequestConfirm?.({
                   title: 'Seed Demo Data',
                   message: 'Populate a sample trip ("Road Trip to Goa ☀️") with test members, geotagged route, and split transactions?',
@@ -1626,7 +1722,7 @@ export function SettingsView({
                 </div>
                 <div className="settings-row-texts">
                   <span className="settings-row-title">Seed Demo Trip</span>
-                  <span className="settings-row-subtitle">Load sample trip with members, geotags &amp; transactions</span>
+                  <span className="settings-row-subtitle">Sample trip with members, geotags &amp; splits</span>
                 </div>
               </div>
               <div className="settings-row-right">
@@ -1637,17 +1733,77 @@ export function SettingsView({
         </div>
       </div>
 
-
-
-      {/* Group 4: Account & Danger Zone */}
+      {/* Group 4: Help, Account & Support */}
       <div className="settings-group">
-        <h4 className="settings-group-title">Account &amp; Reset</h4>
+        <h4 className="settings-group-title">Help &amp; Account</h4>
         <div className="settings-group-card">
+          <button
+            type="button"
+            className="settings-row-item"
+            onClick={() => { triggerHaptic('light'); setSubScreen('report-issue'); }}
+          >
+            <div className="settings-row-left">
+              <div className="settings-squircle squircle-slate">
+                <span style={{ fontSize: '16px' }}>🐞</span>
+              </div>
+              <div className="settings-row-texts">
+                <span className="settings-row-title">Report a Problem</span>
+                <span className="settings-row-subtitle">Tell us what went wrong — device details attach automatically</span>
+              </div>
+            </div>
+            <div className="settings-row-right">
+              <IconChevronRight size={16} />
+            </div>
+          </button>
+
+          {(isSuperadmin || isFeatureEnabled('enableFeatureSuggestions')) && (
+            <button
+              type="button"
+              className="settings-row-item"
+              onClick={() => { triggerHaptic('light'); setSubScreen('suggest-feature'); }}
+            >
+              <div className="settings-row-left">
+                <div className="settings-squircle squircle-teal">
+                  <span style={{ fontSize: '16px' }}>✨</span>
+                </div>
+                <div className="settings-row-texts">
+                  <span className="settings-row-title">Suggest a Feature</span>
+                  <span className="settings-row-subtitle">Tell us what would make this app better</span>
+                </div>
+              </div>
+              <div className="settings-row-right">
+                <IconChevronRight size={16} />
+              </div>
+            </button>
+          )}
+
+          {isSuperadmin && (
+            <button
+              type="button"
+              className="settings-row-item"
+              onClick={() => { triggerHaptic('light'); setSubScreen('bug-tracker'); }}
+            >
+              <div className="settings-row-left">
+                <div className="settings-squircle squircle-amber">
+                  <span style={{ fontSize: '16px' }}>🛡️</span>
+                </div>
+                <div className="settings-row-texts">
+                  <span className="settings-row-title">Superadmin Bug Tracker</span>
+                  <span className="settings-row-subtitle">Manage, triage &amp; live-sync bugs</span>
+                </div>
+              </div>
+              <div className="settings-row-right">
+                <IconChevronRight size={16} />
+              </div>
+            </button>
+          )}
+
           {onSignOut && (
             <button
               type="button"
               className="settings-row-item"
               onClick={() => {
+                triggerHaptic('light');
                 onRequestConfirm?.({
                   title: 'Sign Out',
                   message: 'Sign out of your account on this device?',
@@ -1678,10 +1834,7 @@ export function SettingsView({
               type="button"
               className="settings-row-item"
               onClick={() => {
-                // onClearDatabase already opens the app's own danger-confirm
-                // dialog (with the two-tap wax-seal pattern) — no separate
-                // confirm here, which used to stack a second, native one on
-                // top of it.
+                triggerHaptic('light');
                 onClearDatabase();
               }}
             >
@@ -1697,78 +1850,6 @@ export function SettingsView({
                 </div>
               </div>
             </button>
-          )}
-        </div>
-      </div>
-
-      {/* Group 5: Superadmin Console (superadmin-only) */}
-      {isSuperadmin && (
-        <div className="settings-group">
-          <h4 className="settings-group-title">Superadmin Console</h4>
-          <div className="settings-group-card">
-            <button
-              type="button"
-              className="settings-row-item"
-              onClick={() => setSubScreen('bug-tracker')}
-            >
-              <div className="settings-row-left">
-                <div className="settings-squircle squircle-amber">
-                  <span style={{ fontSize: '16px' }}>🛡️</span>
-                </div>
-                <div className="settings-row-texts">
-                  <span className="settings-row-title">Superadmin Bug Tracker</span>
-                  <span className="settings-row-subtitle">Manage, triage &amp; live-sync bugs with AI agents</span>
-                </div>
-              </div>
-              <div className="settings-row-right">
-                <IconChevronRight size={16} />
-              </div>
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Group 6: Support — everyone gets a way to report a problem */}
-      <div className="settings-group">
-        <h4 className="settings-group-title">Support</h4>
-        <div className="settings-group-card">
-          <button
-            type="button"
-            className="settings-row-item"
-            onClick={() => setSubScreen('report-issue')}
-          >
-            <div className="settings-row-left">
-              <div className="settings-squircle squircle-slate">
-                <span style={{ fontSize: '16px' }}>🐞</span>
-              </div>
-              <div className="settings-row-texts">
-                <span className="settings-row-title">Report a Problem</span>
-                <span className="settings-row-subtitle">Tell us what went wrong — device details attach automatically</span>
-              </div>
-            </div>
-            <div className="settings-row-right">
-              <IconChevronRight size={16} />
-            </div>
-          </button>
-          {(isSuperadmin || isFeatureEnabled('enableFeatureSuggestions')) && (
-          <button
-            type="button"
-            className="settings-row-item"
-            onClick={() => setSubScreen('suggest-feature')}
-          >
-            <div className="settings-row-left">
-              <div className="settings-squircle squircle-teal">
-                <span style={{ fontSize: '16px' }}>✨</span>
-              </div>
-              <div className="settings-row-texts">
-                <span className="settings-row-title">Suggest a Feature</span>
-                <span className="settings-row-subtitle">Tell us what would make this app better</span>
-              </div>
-            </div>
-            <div className="settings-row-right">
-              <IconChevronRight size={16} />
-            </div>
-          </button>
           )}
         </div>
       </div>
@@ -1792,7 +1873,7 @@ export function SettingsView({
 
       {/* Superadmin Access Link at bottom */}
       {!isSuperadmin && (
-        <div style={{ textAlign: 'center', marginTop: '24px', marginBottom: '8px' }}>
+        <div style={{ textAlign: 'center', marginTop: '20px', marginBottom: '8px' }}>
           <button
             type="button"
             style={{
@@ -1807,7 +1888,10 @@ export function SettingsView({
               padding: '6px 12px',
               borderRadius: '8px',
             }}
-            onClick={() => setIsSuperadminModalOpen(true)}
+            onClick={() => {
+              triggerHaptic('light');
+              setIsSuperadminModalOpen(true);
+            }}
           >
             <IconShield size={13} /> ⚡ Super User Login
           </button>
