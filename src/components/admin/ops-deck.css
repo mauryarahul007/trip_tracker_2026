@@ -977,11 +977,11 @@ legend.ops-form-label { padding: 0; width: 100%; }
 }
 .ops-backdrop-preview-bg {
   position: absolute;
-  inset: -12px;
+  inset: -6px;
   background-size: cover;
   background-position: center;
-  filter: blur(8px) saturate(1.25) brightness(0.85);
-  transform: scale(1.06);
+  filter: blur(2px) saturate(1.15) brightness(0.88);
+  transform: scale(1.02);
 }
 .ops-backdrop-preview-scrim {
   position: absolute;

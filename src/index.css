@@ -7069,13 +7069,13 @@ textarea.input-field {
 
 .login-landing-scenic-bg {
   position: fixed;
-  inset: -15px;
+  inset: -6px;
   background-size: cover;
   background-position: center;
-  filter: blur(8px) saturate(1.25) brightness(0.85);
-  transform: scale(1.05);
+  filter: blur(2px) saturate(1.15) brightness(0.88);
+  transform: scale(1.02);
   pointer-events: none;
-  opacity: 0.94;
+  opacity: 0.96;
   z-index: 0;
   transition: background-image 0.6s ease;
 }
