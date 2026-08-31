@@ -1124,3 +1124,21 @@ This document logs all meaningful technical decisions, library choices, design p
     - Added a dedicated Current Trip Capsule banner when inside an active trip, grouping all trip-scoped controls (Story Card, Invite, Map, Categories, Recycle Bin, CSV Export, Mute Alerts, Close Trip) cleanly away from account-wide preferences.
 * **Trade-offs Accepted:**
   - All gestures and micro-interactions use CSS transforms and lightweight browser touch event listeners with 0 extra dependencies. Subscreens remain accessible for advanced settings while standard operations are reachable directly in 1 tap.
+
+---
+
+## 65. Modernized Dual-Persona Boarding Pass Login Architecture (Webapp)
+* **Context:**
+  - The previous login experience suffered from unnecessary friction: an initial locked welcome screen requiring an iOS-style `SlideToUnlock` drag gesture, a hidden 3D flipping card where Superadmin access was tucked away in a tiny corner icon, and pre-auth clutter offering demo trips before authentication.
+* **Decision:**
+  - **Concept 1: Boarding Pass & Passport Stub Architecture (`src/components/LoginScreen.tsx`, `src/index.css`)**:
+    - Replaced the multi-phase slide-lock and 3D card flip with a single cohesive boarding-pass card featuring perforated ticket notches (`.login-card-notch-left/.right`) and a dashed tear line.
+    - Integrated a prominent **Dual-Persona Segmented Pill Controller** (`✈️ Traveler` vs `🛡️ Superadmin`) at the top stub of the ticket with tactile micro-haptics.
+  - **Frictionless Traveler Entry Point (`src/components/LoginScreen.tsx`)**:
+    - Prominent, brand-accurate **"Continue with Google"** 1-tap OAuth button with spring hover elevation and clear security reassurance (`🔐 Supabase Cloud Auth · End-to-End Encrypted Ledger`).
+    - Moved demo trip prompts off the login screen and placed them directly onto the new traveler empty-state dashboard in `TripsListScreen.tsx` and in Settings.
+  - **Master Operations Cockpit (`src/components/LoginScreen.tsx`)**:
+    - High-contrast, emerald-accented Superadmin credentials form with floating-label email and password inputs, in-place password reset request handling, and automated security role sync.
+* **Trade-offs Accepted:**
+  - The Slide-to-Unlock gate was eliminated in favor of immediate 1-tap sign-in. This dramatically lowers user bounce rates and friction while maintaining a distinctive travel-inspired visual identity.
+

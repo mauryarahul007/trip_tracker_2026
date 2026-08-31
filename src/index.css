@@ -6650,5 +6650,447 @@ textarea.input-field {
   font-feature-settings: "tnum";
 }
 
+/* =========================================================================
+   Boarding Pass & Passport Stub Login Experience (Concept 1)
+   ========================================================================= */
+
+.login-screen-wrap {
+  position: relative;
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px 16px;
+  background: var(--bg-app);
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.login-ambient-mesh {
+  position: fixed;
+  inset: 0;
+  background: 
+    radial-gradient(circle at 18% 18%, rgba(47, 111, 237, 0.16) 0%, transparent 45%),
+    radial-gradient(circle at 82% 82%, rgba(23, 182, 166, 0.12) 0%, transparent 50%),
+    radial-gradient(circle at 50% 50%, rgba(255, 122, 0, 0.04) 0%, transparent 60%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.login-flight-grid {
+  position: fixed;
+  inset: 0;
+  opacity: 0.15;
+  background-image: radial-gradient(var(--text-muted) 1px, transparent 1px);
+  background-size: 28px 28px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.login-boarding-card {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  max-width: 420px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: 24px;
+  box-shadow: 0 24px 64px -12px rgba(0, 0, 0, 0.35), 0 4px 16px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+/* Notches & Perforation */
+.login-card-notch-left,
+.login-card-notch-right {
+  position: absolute;
+  top: 154px;
+  width: 22px;
+  height: 22px;
+  background: var(--bg-app);
+  border-radius: 50%;
+  border: 1px solid var(--border-color);
+  z-index: 20;
+}
+.login-card-notch-left { left: -12px; }
+.login-card-notch-right { right: -12px; }
+
+.login-card-perf-line {
+  position: absolute;
+  top: 164px;
+  left: 14px;
+  right: 14px;
+  height: 0;
+  border-top: 1.5px dashed var(--border-color);
+  z-index: 15;
+}
+
+/* Stub Header */
+.login-stub-header {
+  padding: 22px 22px 28px 22px;
+  background: linear-gradient(180deg, var(--bg-subtle) 0%, transparent 100%);
+}
+
+.login-stub-top-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.login-brand-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.login-brand-icon {
+  font-size: 20px;
+  line-height: 1;
+}
+
+.login-brand-title {
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  color: var(--primary-accent);
+}
+
+.login-brand-edition {
+  font-size: 9.5px;
+  font-weight: 700;
+  font-family: var(--font-family-mono);
+  color: var(--text-muted);
+  letter-spacing: 0.08em;
+}
+
+.login-ticket-stamp {
+  font-family: var(--font-family-mono);
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  letter-spacing: 0.06em;
+}
+
+.login-main-heading {
+  font-size: 21px;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin: 0 0 3px 0;
+  letter-spacing: -0.02em;
+}
+
+.login-main-subheading {
+  font-size: 12.5px;
+  color: var(--text-secondary);
+  margin: 0 0 16px 0;
+  line-height: 1.4;
+}
+
+/* Role Switcher Segmented Pill */
+.login-segmented-pill {
+  display: flex;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-color);
+  border-radius: 9999px;
+  padding: 3.5px;
+  gap: 4px;
+}
+
+.login-pill-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 7.5px 12px;
+  border-radius: 9999px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text-muted);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.login-pill-btn:hover {
+  color: var(--text-primary);
+}
+
+.login-pill-btn.active {
+  color: #FFFFFF;
+  background: var(--primary-accent);
+  box-shadow: 0 3px 10px rgba(47, 111, 237, 0.35);
+}
+
+.login-pill-btn.active-admin {
+  color: #FFFFFF;
+  background: linear-gradient(135deg, #10B981, #059669);
+  box-shadow: 0 3px 10px rgba(16, 185, 129, 0.35);
+}
+
+/* Stub Body */
+.login-stub-body {
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* Google Sign-in Button */
+.login-btn-google {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+  padding: 13px 18px;
+  background: #FFFFFF;
+  color: #1A1F26;
+  font-weight: 700;
+  font-size: 14.5px;
+  border-radius: 14px;
+  border: 1.5px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: pointer;
+}
+
+.login-btn-google:hover:not(:disabled) {
+  transform: translateY(-1.5px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.16);
+  background: #F8FAFC;
+}
+
+.login-btn-google:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.login-btn-google:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.login-google-icon {
+  flex-shrink: 0;
+}
+
+/* Guest Fallback */
+.login-guest-fallback-wrap {
+  text-align: center;
+  margin-top: -4px;
+}
+
+.login-guest-link-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 12.5px;
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 4px 8px;
+  transition: color 0.15s ease;
+}
+
+.login-guest-link-btn:hover {
+  color: var(--primary-accent);
+}
+
+/* Security Seal Footnote */
+.login-security-seal {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border-color);
+  font-family: var(--font-family-mono);
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--text-muted);
+  letter-spacing: 0.06em;
+}
+
+.login-lock-icon {
+  color: var(--text-muted);
+}
+
+/* Admin Banner */
+.login-admin-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  margin-bottom: 2px;
+}
+
+.login-admin-banner-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: rgba(16, 185, 129, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #10B981;
+  flex-shrink: 0;
+}
+
+.login-admin-banner-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #10B981;
+}
+
+.login-admin-banner-sub {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+/* Admin Inputs & Forms */
+.login-form-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.login-input-field {
+  padding: 11px 14px;
+  font-size: 14px;
+  border-radius: 12px;
+}
+
+.login-field-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.login-forgot-link-btn {
+  background: transparent;
+  border: none;
+  color: var(--primary-accent);
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+}
+
+.login-forgot-link-btn:hover {
+  text-decoration: underline;
+}
+
+.login-btn-admin-submit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 12px 16px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #10B981, #059669);
+  color: #FFFFFF;
+  font-size: 14px;
+  font-weight: 700;
+  border: none;
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  margin-top: 4px;
+}
+
+.login-btn-admin-submit:hover:not(:disabled) {
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+}
+
+.login-btn-admin-submit:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.login-btn-admin-submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.login-form-actions-row {
+  display: flex;
+  gap: 10px;
+}
+
+/* Alert Banners */
+.login-alert-banner {
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 12px;
+  line-height: 1.4;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.login-alert-banner.danger {
+  background: var(--color-danger-soft, rgba(239, 68, 68, 0.12));
+  color: var(--color-danger, #EF4444);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+}
+
+.login-alert-banner.warning {
+  background: var(--color-warning-soft, rgba(245, 158, 11, 0.12));
+  color: var(--color-warning, #B45309);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+}
+
+.login-alert-banner.success {
+  background: rgba(16, 185, 129, 0.12);
+  color: #10B981;
+  border: 1px solid rgba(16, 185, 129, 0.25);
+}
+
+.login-alert-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+}
+
+.login-alert-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.login-alert-link-btn {
+  background: var(--primary-accent);
+  color: #FFFFFF;
+  border: none;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.login-alert-dismiss-btn {
+  background: transparent;
+  border: none;
+  color: inherit;
+  font-size: 11px;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+
 
 
