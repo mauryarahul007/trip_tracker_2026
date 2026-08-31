@@ -37,4 +37,5 @@ hive/
 roster.json
 roster-backups/
 scan.log
-
+# Graphify output & cache
+graphify-out/

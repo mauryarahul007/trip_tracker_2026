@@ -40,7 +40,8 @@ const IDLE: PullToRefreshState = { armed: false, refreshing: false };
 export function usePullToRefresh(
   containerRef: RefObject<HTMLElement | null>,
   indicatorRef: RefObject<HTMLElement | null>,
-  onRefresh: () => void | Promise<void>
+  onRefresh: () => void | Promise<void>,
+  enabled = true
 ): PullToRefreshState {
   const [state, setState] = useState<PullToRefreshState>(IDLE);
   const stateRef = useRef(state);
@@ -59,6 +60,11 @@ export function usePullToRefresh(
   };
 
   useEffect(() => {
+    if (!enabled) {
+      setIndicatorHeight(0, false);
+      setState(IDLE);
+      return;
+    }
     const el = containerRef.current;
     if (!el) return;
 
@@ -123,7 +129,7 @@ export function usePullToRefresh(
       el.removeEventListener('touchcancel', handleTouchEnd);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- indicatorRef is a stable ref object, not a reactive dependency
-  }, [containerRef]);
+  }, [containerRef, enabled]);
 
   return state;
 }

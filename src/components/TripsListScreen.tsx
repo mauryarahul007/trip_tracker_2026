@@ -81,7 +81,6 @@ export function TripsListScreen({
   const refreshTrips = useTripStore((s) => s.refreshTrips);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const ptrIndicatorRef = useRef<HTMLDivElement>(null);
-  const pullToRefresh = usePullToRefresh(scrollContainerRef, ptrIndicatorRef, () => refreshTrips(true));
   const [showJoinTrip, setShowJoinTrip] = useState(false);
   const [joinCode, setJoinCode] = useState('');
   const [honeypotVal, setHoneypotVal] = useState('');
@@ -89,6 +88,12 @@ export function TripsListScreen({
   const [focusedTrip, setFocusedTrip] = useState<Trip | null>(null);
   const [isSavingTrip, setIsSavingTrip] = useState(false);
   const stackActive = trips.length >= 2 && !showList && !showAddTrip && !showJoinTrip;
+  const pullToRefresh = usePullToRefresh(
+    scrollContainerRef,
+    ptrIndicatorRef,
+    () => refreshTrips(true),
+    !stackActive
+  );
 
   // First-run vs. "deleted my last trip" both hit trips.length === 0 — flag
   // per-account once they've ever had a trip so the two states get different
@@ -134,37 +139,18 @@ export function TripsListScreen({
       ref={scrollContainerRef}
       className={`fade-in trips-screen-scroll${stackActive ? ' stack-viewport-lock' : ''}`}
     >
-      <div
-        ref={ptrIndicatorRef}
-        aria-hidden="true"
-        className="pull-refresh-indicator"
-        style={{ color: pullToRefresh.armed || pullToRefresh.refreshing ? 'var(--primary-accent)' : 'var(--text-muted)' }}
-      >
-        {pullToRefresh.refreshing ? 'Refreshing…' : pullToRefresh.armed ? 'Release to refresh' : 'Pull to refresh'}
-      </div>
+      {!stackActive && (
+        <div
+          ref={ptrIndicatorRef}
+          aria-hidden="true"
+          className="pull-refresh-indicator"
+          style={{ color: pullToRefresh.armed || pullToRefresh.refreshing ? 'var(--primary-accent)' : 'var(--text-muted)' }}
+        >
+          {pullToRefresh.refreshing ? 'Refreshing…' : pullToRefresh.armed ? 'Release to refresh' : 'Pull to refresh'}
+        </div>
+      )}
       <HomeAmbientBackdrop trip={stackActive ? focusedTrip : null} />
       <header className="trips-screen-header">
-        <button
-          type="button"
-          className="profile-avatar-btn"
-          onClick={onOpenSettings}
-          aria-label="Profile & Settings"
-          title="Profile & Settings"
-        >
-          {userAvatarUrl ? (
-            <img src={userAvatarUrl} alt="" referrerPolicy="no-referrer" loading="lazy" decoding="async" width={40} height={40} />
-          ) : (
-            <span style={{ background: avatarColorForName(userDisplayName || 'Me') }}>
-              {initial(userDisplayName || 'Me')}
-            </span>
-          )}
-        </button>
-        <div style={{ textAlign: 'center' }}>
-          <h1 className="app-logo">Trip Tracker 2026</h1>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '14px', marginTop: '4px' }}>
-            Offline-first cost splitting & groups
-          </p>
-        </div>
         {onOpenBugTracker ? (
           <button
             type="button"
@@ -190,6 +176,27 @@ export function TripsListScreen({
         ) : (
           <div aria-hidden="true" />
         )}
+        <div style={{ textAlign: 'center' }}>
+          <h1 className="app-logo">Trip Tracker 2026</h1>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '14px', marginTop: '4px' }}>
+            Offline-first cost splitting & groups
+          </p>
+        </div>
+        <button
+          type="button"
+          className="profile-avatar-btn"
+          onClick={onOpenSettings}
+          aria-label="Profile & Settings"
+          title="Profile & Settings"
+        >
+          {userAvatarUrl ? (
+            <img src={userAvatarUrl} alt="" referrerPolicy="no-referrer" loading="lazy" decoding="async" width={40} height={40} />
+          ) : (
+            <span style={{ background: avatarColorForName(userDisplayName || 'Me') }}>
+              {initial(userDisplayName || 'Me')}
+            </span>
+          )}
+        </button>
       </header>
 
       <main className={`trips-screen-main${stackActive ? ' stack-main' : ''}`}>

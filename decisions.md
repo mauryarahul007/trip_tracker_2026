@@ -1092,6 +1092,14 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - Lightweight local state machine with zero background polling overhead; transitions are triggered purely by native browser network events and user sync interactions.
 
+---
 
-
-
+## 63. Card Stack Gesture Isolation & Header Profile Avatar Ergonomics
+* **Context:**
+  - On the main trips screen, when multiple trips activated the 3D card stack deck, swiping down on cards caused choppy, stuttering animations. This was caused by `usePullToRefresh` capturing `touchmove` events on the locked container, mutating CSS `height` directly (causing repeated layout reflows), and fighting the card stack's own pointer drag handlers.
+  - Additionally, the user profile avatar button was anchored on the top-left of the header, which is difficult to reach with one hand on modern mobile devices.
+* **Decision:**
+  - **Pull-to-Refresh Gating (`!stackActive`):** Added an `enabled` flag to `usePullToRefresh` and passed `!stackActive` in `TripsListScreen.tsx`. Pull-to-refresh is deactivated and its indicator unmounted while the card stack is active, giving cards 100% exclusive control over swipe gestures without touch conflict or layout reflows. Pull-to-refresh remains fully functional when viewing the scrollable list (`showList === true`) or expense views.
+  - **Right-Aligned Header Profile Avatar (WhatsApp Pattern):** Repositioned the profile avatar button from the left column to the right column of `.trips-screen-header` (`grid-template-columns: 40px 1fr 40px`), aligning with standard single-handed thumb reachability patterns.
+* **Trade-offs Accepted:**
+  - Pull-to-refresh is disabled on the non-scrolling card stack screen. Because trips automatically sync on mount and support optimistic updates, pull-down refresh is unnecessary on a fixed card deck and omitting it delivers buttery smooth 120 FPS card swiping.
