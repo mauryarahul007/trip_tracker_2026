@@ -1200,4 +1200,45 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - The search query state is kept local to the settings view for instant 0ms latency with no network overhead.
 
+---
+
+## 69. Unified Public Landing Portal & Home Photo Deck with Flight Throttle
+* **Context:**
+  - Unauthenticated visitors previously encountered an isolated bare login box that failed to showcase the product's offline, expense splitting, and mapping capabilities. On the home screen, the 3D trip card deck lacked key financial balance cues, pagination context, and the slide launcher lacked intuitive aeronautical visual polish.
+* **Decision:**
+  - **Unified Public Landing & Fast-Pass Login (`LoginScreen.tsx`, `index.css`)**:
+    - Replaced the separate login box with a unified **Public Visitor Landing Portal**:
+      - Cinematic live destination photography background with radial vignette.
+      - 3 Value Proposition Cards: `⚡ 100% Offline-First`, `💰 1-Tap UPI Settlements`, and `🗺️ Interactive Route Maps`.
+      - Fast-action "Continue with Google" sign-in hub.
+      - Inline "Have a 6-digit trip code? Join" input allowing invited friends to jump straight into shared trips.
+      - Segmented toggle to switch into **🛡️ Master Ops Cockpit** for administrative authentication.
+  - **3D Trip Deck with Live Settlement & Destination Pill (`TripStack.tsx`, `index.css`)**:
+    - Added real-time user settlement balance chip on the front card face (`💰 YOU ARE OWED ₹X`, `💸 YOU OWE ₹X`, or `✓ ALL SETTLED UP`).
+    - Added top-right glassmorphic destination pill (`📍 {trip.destination}`).
+    - Enhanced multi-stop gradient scrim with high-contrast text shadows over light and dark photography.
+  - **Trip Pagination Stepper Dots (`TripsListScreen.tsx`, `TripStack.tsx`, `index.css`)**:
+    - Added animated pagination dot indicators (`● ○ ○`) between the card deck and slider.
+    - Supports 1-tap navigation to instantly reorder the stack and focus on any chosen trip.
+  - **Flight Throttle Slider (`TripSlideLauncher.tsx`, `index.css`)**:
+    - Upgraded slide-to-action controller with an **Airplane Throttle Thumb (`✈️`)**, slide-left `🔑 Join` in warm amber, slide-right `Create +` in glowing teal, and dynamic gradient fills.
+* **Trade-offs Accepted:**
+  - All balance calculations on the front card face are memoized and run entirely in-memory using existing Zustand store state for zero network overhead.
+
+---
+
+## 70. Superadmin Landing Page Backdrop Gallery & Crisp Home Ambient Optics
+* **Context:**
+  - The home screen's ambient backdrop used excessive 32px Gaussian blur and an overly diffuse mask, causing scenic travel photography to wash out into white/grey fog. Additionally, administrators had no central tool to customize the public landing page backdrop photo across the fleet.
+* **Decision:**
+  - **Crisp Home Ambient Optics (`index.css`, `HomeAmbientBackdrop.tsx`)**:
+    - Tuned ambient blur down from 32px to 14px with `saturate(1.45)` and `brightness(0.68)`.
+    - Preserves vibrant mountain, ocean, and skyline contours behind the home screen while maintaining soft edge diffusion and high contrast for foreground card text.
+  - **Superadmin Landing Backdrop Gallery (`AdminToolsPage.tsx`, `ops-deck.css`, `types/admin.ts`, `LoginScreen.tsx`)**:
+    - Added `landing_backdrop_url` configuration key into the global system settings.
+    - Added a **Landing Page Cover Gallery** in the Superadmin Ops Deck with 6 curated travel presets (*Tropical Paradise, Swiss Alps, Kyoto Bamboo Forest, Amalfi Coastline, Nordic Aurora, Tokyo Metropolis*), custom URL paste input, file uploader, and live interactive landing page banner preview.
+    - Public `/login` dynamically renders the superadmin-configured backdrop with zero-latency local caching and fallback to default tropical beach.
+* **Trade-offs Accepted:**
+  - Background image URLs are cached in `localStorage` on initial fetch so public visitors experience instantaneous 0ms paint without waiting for Supabase config round-trips.
+
 

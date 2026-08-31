@@ -76,13 +76,13 @@ export function TripSlideLauncher({ onCreateTrip, onJoinTrip }: Props) {
           style={{ opacity: dragX > 0 ? fillRatio : 0, transform: `scaleX(${dragX > 0 ? fillRatio : 0})` }}
         />
         <button type="button" className={`launcher-zone left${dragX < 0 ? ' active' : ''}`} onClick={onJoinTrip}>
-          Join
+          <span>🔑</span> Join
         </button>
         <button type="button" className={`launcher-zone right${dragX > 0 ? ' active' : ''}`} onClick={onCreateTrip}>
-          Create
+          Create <span>+</span>
         </button>
         <div
-          className={`launcher-thumb${dragX < 0 ? ' left' : ''}`}
+          className={`launcher-thumb${dragX < 0 ? ' left' : dragX > 0 ? ' right' : ''}`}
           aria-hidden="true"
           style={{
             transform: `translateX(${dragX}px)`,
@@ -93,9 +93,11 @@ export function TripSlideLauncher({ onCreateTrip, onJoinTrip }: Props) {
           onPointerMove={handlePointerMove}
           onPointerUp={endDrag}
           onPointerCancel={endDrag}
-        />
+        >
+          <span>✈️</span>
+        </div>
       </div>
-      <div className="launcher-caption">slide, or tap either side</div>
+      <div className="launcher-caption">← Slide left to Join · Slide right to Create →</div>
     </div>
   );
 }

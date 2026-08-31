@@ -1,11 +1,50 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { Category, Trip, Expense } from '../../types';
 import { useTripStore } from '../../store/tripStore';
 import { useAuthStore } from '../../store/authStore';
-import { purgeRecycleBinOlderThan } from '../../services/tripApi';
+import { purgeRecycleBinOlderThan, fetchAppFlag, setAppConfigValue } from '../../services/tripApi';
 import { exportFleetSummaryToCSV } from '../../utils/csvExport';
 import { IconCheck, IconTrash, IconAlertCircle, IconRefresh } from '../Icons';
 import type { ConfirmRequest } from '../ConfirmDialog';
+
+export const BACKDROP_PRESETS = [
+  {
+    id: 'tropical-beach',
+    title: 'Tropical Paradise',
+    tag: 'Default',
+    url: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=1000&auto=format&fit=crop',
+  },
+  {
+    id: 'swiss-alps',
+    title: 'Swiss Alps Summit',
+    tag: 'Mountains',
+    url: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=1000&auto=format&fit=crop',
+  },
+  {
+    id: 'kyoto-bamboo',
+    title: 'Kyoto Bamboo Forest',
+    tag: 'Nature',
+    url: 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?q=80&w=1000&auto=format&fit=crop',
+  },
+  {
+    id: 'amalfi-coast',
+    title: 'Amalfi Coastline',
+    tag: 'Coastal',
+    url: 'https://images.unsplash.com/photo-1533105079780-92b9be482077?q=80&w=1000&auto=format&fit=crop',
+  },
+  {
+    id: 'nordic-aurora',
+    title: 'Nordic Aurora Fjords',
+    tag: 'Aurora',
+    url: 'https://images.unsplash.com/photo-1517411032315-54ef2cb783bb?q=80&w=1000&auto=format&fit=crop',
+  },
+  {
+    id: 'tokyo-neon',
+    title: 'Tokyo Metropolis',
+    tag: 'City',
+    url: 'https://images.unsplash.com/photo-1503899036084-c55cdd92da26?q=80&w=1000&auto=format&fit=crop',
+  },
+];
 
 interface Props {
   categories: Category[];
@@ -36,6 +75,22 @@ export function AdminToolsPage({ categories, trips, expenses, onRefresh, isRefre
   const [showImportArea, setShowImportArea] = useState(false);
   const [toastMsg, setToastMsg] = useState('');
 
+  // Landing page backdrop customization state
+  const [activeBackdropUrl, setActiveBackdropUrl] = useState<string>(BACKDROP_PRESETS[0].url);
+  const [customBackdropInput, setCustomBackdropInput] = useState<string>('');
+  const [isSavingBackdrop, setIsSavingBackdrop] = useState<boolean>(false);
+
+  useEffect(() => {
+    fetchAppFlag('landing_backdrop_url')
+      .then((val) => {
+        if (typeof val === 'string' && val.trim()) {
+          setActiveBackdropUrl(val.trim());
+          setCustomBackdropInput(val.trim());
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [passwordError, setPasswordError] = useState('');
@@ -48,6 +103,56 @@ export function AdminToolsPage({ categories, trips, expenses, onRefresh, isRefre
   const showToast = (msg: string) => {
     setToastMsg(msg);
     setTimeout(() => setToastMsg(''), 3000);
+  };
+
+  const handleSelectPreset = (url: string) => {
+    setActiveBackdropUrl(url);
+    setCustomBackdropInput(url);
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const dataUrl = event.target?.result as string;
+      if (dataUrl) {
+        setActiveBackdropUrl(dataUrl);
+        setCustomBackdropInput(dataUrl);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleSaveBackdrop = async () => {
+    const targetUrl = customBackdropInput.trim() || activeBackdropUrl;
+    if (!targetUrl) return;
+    setIsSavingBackdrop(true);
+    try {
+      await setAppConfigValue('landing_backdrop_url', targetUrl);
+      setActiveBackdropUrl(targetUrl);
+      try { localStorage.setItem('tt-landing-bg-cache', targetUrl); } catch {}
+      showToast('Landing page background successfully updated!');
+    } catch (e) {
+      showToast('Failed to save background config.');
+    } finally {
+      setIsSavingBackdrop(false);
+    }
+  };
+
+  const handleResetBackdrop = async () => {
+    setIsSavingBackdrop(true);
+    try {
+      await setAppConfigValue('landing_backdrop_url', null);
+      setActiveBackdropUrl(BACKDROP_PRESETS[0].url);
+      setCustomBackdropInput('');
+      try { localStorage.removeItem('tt-landing-bg-cache'); } catch {}
+      showToast('Landing backdrop reset to Default Tropical Paradise.');
+    } catch (e) {
+      showToast('Failed to reset background config.');
+    } finally {
+      setIsSavingBackdrop(false);
+    }
   };
 
   const handleChangePassword = async (e: React.FormEvent) => {
@@ -247,6 +352,116 @@ export function AdminToolsPage({ categories, trips, expenses, onRefresh, isRefre
               {isChangingPassword ? 'Updating...' : 'Update Password'}
             </button>
           </form>
+        </div>
+
+        <div className="ops-rail-label" style={{ padding: '0' }}>Visuals &amp; Branding</div>
+        <div className="ops-card">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '10px', marginBottom: '4px' }}>
+            <div>
+              <h3 className="ops-section-title">Landing Page Cover Gallery</h3>
+              <p className="ops-section-sub">Select a high-resolution travel preset or upload custom photography for visitor onboarding.</p>
+            </div>
+            <div style={{ display: 'flex', gap: '6px' }}>
+              <button
+                type="button"
+                className="ops-btn"
+                onClick={handleResetBackdrop}
+                disabled={isSavingBackdrop}
+                title="Reset to default tropical beach"
+              >
+                Reset Default
+              </button>
+              <button
+                type="button"
+                className="ops-btn ops-btn-primary"
+                onClick={handleSaveBackdrop}
+                disabled={isSavingBackdrop}
+              >
+                {isSavingBackdrop ? 'Saving...' : 'Apply Background'}
+              </button>
+            </div>
+          </div>
+
+          <div className="ops-gallery-grid">
+            {BACKDROP_PRESETS.map((preset) => {
+              const isSelected = activeBackdropUrl === preset.url;
+              return (
+                <button
+                  key={preset.id}
+                  type="button"
+                  className="ops-gallery-item"
+                  data-selected={isSelected}
+                  onClick={() => handleSelectPreset(preset.url)}
+                  title={`Select ${preset.title}`}
+                >
+                  <div
+                    className="ops-gallery-thumb"
+                    style={{ backgroundImage: `url("${preset.url}")` }}
+                  >
+                    <span className="ops-gallery-tag">{preset.tag}</span>
+                  </div>
+                  <div className="ops-gallery-info">
+                    <span>{preset.title}</span>
+                    {isSelected && <span style={{ color: '#38BDF8', fontSize: '13px' }}>✓</span>}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '10px' }}>
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
+              <input
+                type="url"
+                className="ops-input mono"
+                placeholder="Or paste custom image URL (Unsplash, CDN, Supabase Storage)..."
+                value={customBackdropInput}
+                onChange={(e) => {
+                  setCustomBackdropInput(e.target.value);
+                  if (e.target.value.trim()) setActiveBackdropUrl(e.target.value.trim());
+                }}
+                style={{ flex: 1, minWidth: '240px' }}
+              />
+              <label className="ops-btn" style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
+                <span>📁 Upload Photo</span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileUpload}
+                  style={{ display: 'none' }}
+                />
+              </label>
+            </div>
+
+            {/* Live Landing Preview Banner */}
+            <div className="ops-backdrop-preview-box">
+              <div
+                className="ops-backdrop-preview-bg"
+                style={{ backgroundImage: `url("${activeBackdropUrl}")` }}
+              />
+              <div className="ops-backdrop-preview-scrim" />
+              <div className="ops-backdrop-preview-content">
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '3px 8px', borderRadius: '9999px', background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.2)', fontSize: '10px', color: '#67E8F9', fontFamily: 'var(--font-family-mono)', fontWeight: 700, marginBottom: '4px' }}>
+                  🌴 PARADISE EDITION · 2026
+                </div>
+                <h4 style={{ margin: '0 0 2px 0', fontSize: '16px', fontWeight: 800, textShadow: '0 2px 8px rgba(0,0,0,0.8)' }}>Trip Tracker</h4>
+                <p style={{ margin: '0 0 8px 0', fontSize: '11px', color: '#E2E8F0', opacity: 0.9, textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>
+                  Split costs effortlessly with travel companions anywhere on earth.
+                </p>
+                <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                  <div style={{ padding: '4px 8px', borderRadius: '8px', background: 'rgba(15,23,42,0.7)', border: '1px solid rgba(255,255,255,0.15)', fontSize: '10px', display: 'flex', alignItems: 'center', gap: '4px', backdropFilter: 'blur(10px)' }}>
+                    <span>⚡</span> 100% Offline-First
+                  </div>
+                  <div style={{ padding: '4px 8px', borderRadius: '8px', background: 'rgba(15,23,42,0.7)', border: '1px solid rgba(255,255,255,0.15)', fontSize: '10px', display: 'flex', alignItems: 'center', gap: '4px', backdropFilter: 'blur(10px)' }}>
+                    <span>⚖️</span> Smart Split Engine
+                  </div>
+                  <div style={{ padding: '4px 8px', borderRadius: '8px', background: '#FFFFFF', color: '#0F172A', fontWeight: 700, fontSize: '10px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <span>G</span> Continue with Google
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div className="ops-rail-label" style={{ padding: '0' }}>Content Ops</div>

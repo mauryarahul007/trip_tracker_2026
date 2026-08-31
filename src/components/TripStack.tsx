@@ -7,6 +7,8 @@ import { avatarColorForName } from '../utils/avatarColor';
 import { fetchPlaceCoverImage } from '../services/placeImageService';
 import { getImageLuminance } from '../utils/imageLuminance';
 import { triggerHaptic } from '../utils/haptics';
+import { calculateSettlements } from '../utils/settlement';
+import { useTripStore } from '../store/tripStore';
 
 const PEEK_DEPTH = 3;
 const SWIPE_THRESHOLD = 90;
@@ -24,23 +26,32 @@ type Props = {
   onArchiveTrip: (trip: Trip) => void;
   onShowList: () => void;
   onFrontChange?: (trip: Trip | null) => void;
+  onIndexChange?: (index: number) => void;
+  targetTripId?: string | null;
 };
 
 // Cover photo for a card's background. fetchPlaceCoverImage already
 // dedupes/caches by place name at module scope, so mounting this once per
 // peeking card (not just the front one) is effectively free after the
 // first fetch, and doubles as prefetching for whichever card rises next.
-export function useTripPhoto(destination?: string): string | null {
-  const [url, setUrl] = useState<string | null>(null);
+export function useTripPhoto(destination?: string, coverImageUrl?: string, tripName?: string): string | null {
+  const [url, setUrl] = useState<string | null>(coverImageUrl || null);
   useEffect(() => {
     let cancelled = false;
-    setUrl(null);
-    if (!destination) return;
-    fetchPlaceCoverImage(destination).then((result) => {
+    if (coverImageUrl) {
+      setUrl(coverImageUrl);
+      return;
+    }
+    const query = destination || tripName;
+    if (!query) {
+      setUrl(null);
+      return;
+    }
+    fetchPlaceCoverImage(query).then((result) => {
       if (!cancelled) setUrl(result);
     });
     return () => { cancelled = true; };
-  }, [destination]);
+  }, [destination, coverImageUrl, tripName]);
   return url;
 }
 
@@ -64,14 +75,57 @@ function useCardTone(photoUrl: string | null): 'light' | 'dark' {
   return tone;
 }
 
-function CardContent({ trip, members }: { trip: Trip; members: Record<string, Member> }) {
+function CardContent({ trip, members, userId }: { trip: Trip; members: Record<string, Member>; userId: string | null }) {
   const stamp = formatTripStamp(trip.startDate, trip.endDate);
   const tripMembers = trip.memberIds.map((id) => members[id]).filter(Boolean);
   const shown = tripMembers.slice(0, 3);
   const overflow = tripMembers.length - shown.length;
   const expenseCount = trip.expenseCount || 0;
-  const photoUrl = useTripPhoto(trip.destination);
+  const photoUrl = useTripPhoto(trip.destination, trip.coverImageUrl, trip.name);
   const tone = useCardTone(photoUrl);
+  const expenses = useTripStore((s) => s.expenses);
+  const userDisplayName = useTripStore((s) => s.userDisplayName);
+
+  // Robustly identify current user's member object in this trip
+  const myMember = useMemo(() => {
+    if (!trip.memberIds || trip.memberIds.length === 0) return null;
+    const tripMemberList = trip.memberIds.map((id) => members[id]).filter(Boolean);
+    if (userId) {
+      const byLinked = tripMemberList.find((m) => m.linkedUserId === userId);
+      if (byLinked) return byLinked;
+      if (trip.ownerId === userId) {
+        const ownerM = tripMemberList.find((m) => m.linkedUserId === trip.ownerId);
+        if (ownerM) return ownerM;
+      }
+    }
+    if (userDisplayName) {
+      const nameLower = userDisplayName.trim().toLowerCase();
+      const byName = tripMemberList.find((m) => m.name && m.name.trim().toLowerCase() === nameLower);
+      if (byName) return byName;
+    }
+    return tripMemberList[0] || null;
+  }, [trip, members, userId, userDisplayName]);
+
+  // Compute live user settlement balance for this trip on real-time basis
+  const balanceInfo = useMemo(() => {
+    const activeExpenses = expenses.filter((e) => e.tripId === trip.id && !e.deletedAt);
+    if (activeExpenses.length === 0) {
+      return null;
+    }
+    if (!myMember) {
+      return { amount: 0, status: 'settled' as const };
+    }
+    try {
+      const { balances } = calculateSettlements(trip, members, activeExpenses);
+      const myBal = balances.find((b) => b.memberId === myMember.id);
+      const amount = myBal ? myBal.balance : 0;
+      if (amount > 0.01) return { amount, status: 'owed' as const };
+      if (amount < -0.01) return { amount: Math.abs(amount), status: 'owe' as const };
+      return { amount: 0, status: 'settled' as const };
+    } catch {
+      return null;
+    }
+  }, [trip, expenses, members, myMember]);
 
   return (
     <div className={`stack-card-face${photoUrl ? ` has-photo tone-${tone}` : ''}`}>
@@ -79,20 +133,51 @@ function CardContent({ trip, members }: { trip: Trip; members: Record<string, Me
         <div
           key={photoUrl}
           className="stack-card-photo"
-          style={{ backgroundImage: `linear-gradient(180deg, rgba(15,21,29,0.55) 0%, rgba(15,21,29,0.22) 30%, rgba(15,21,29,0) 55%), url("${photoUrl}")` }}
+          style={{
+            backgroundImage: `linear-gradient(180deg, rgba(7,11,18,0.45) 0%, rgba(7,11,18,0.12) 30%, rgba(7,11,18,0.92) 85%, rgba(7,11,18,0.98) 100%), url("${photoUrl}")`
+          }}
         />
       )}
       <div className="stack-card-content">
-        <div className="pp-stamp">
-          <span>{stamp.top}</span>
-          <span>{stamp.bottom}</span>
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', width: '100%' }}>
+          <div className="pp-stamp">
+            <span>{stamp.top}</span>
+            <span>{stamp.bottom}</span>
+          </div>
+          {trip.destination && (
+            <div className="stack-destination-pill">
+              <span>📍</span> {trip.destination}
+            </div>
+          )}
         </div>
-        <div className="pp-dest">Trip &middot; {trip.baseCurrency}</div>
-        <h3 className="pp-name">{trip.name}</h3>
-        <div className="pp-meta">
-          {tripMembers.length} member{tripMembers.length === 1 ? '' : 's'} &middot; {expenseCount} expense{expenseCount === 1 ? '' : 's'}
+
+        <div style={{ marginTop: 'auto', marginBottom: '8px' }}>
+          {balanceInfo && (
+            <div style={{ marginBottom: '6px' }}>
+              {balanceInfo.status === 'owed' ? (
+                <span className="stack-balance-chip owed">
+                  <span>💰</span> YOU ARE OWED {trip.baseCurrency || 'INR'} {Math.round(balanceInfo.amount).toLocaleString()}
+                </span>
+              ) : balanceInfo.status === 'owe' ? (
+                <span className="stack-balance-chip owe">
+                  <span>💸</span> YOU OWE {trip.baseCurrency || 'INR'} {Math.round(balanceInfo.amount).toLocaleString()}
+                </span>
+              ) : (
+                <span className="stack-balance-chip settled">
+                  <span>✓</span> ALL SETTLED UP
+                </span>
+              )}
+            </div>
+          )}
+
+          <div className="pp-dest">Trip &middot; {trip.baseCurrency}</div>
+          <h3 className="pp-name">{trip.name}</h3>
+          <div className="pp-meta">
+            {tripMembers.length} member{tripMembers.length === 1 ? '' : 's'} &middot; {expenseCount} expense{expenseCount === 1 ? '' : 's'}
+          </div>
         </div>
-        <div className="pp-avatars stack-card-avatars">
+
+        <div className="pp-avatars stack-card-avatars" style={{ marginTop: 0 }}>
           {shown.map((m) =>
             m.avatarUrl ? (
               <img key={m.id} src={m.avatarUrl} alt={m.name} title={m.name} className="pp-avatar" referrerPolicy="no-referrer" loading="lazy" decoding="async" width={24} height={24} />
@@ -110,6 +195,7 @@ function CardContent({ trip, members }: { trip: Trip; members: Record<string, Me
 type CardItemProps = {
   trip: Trip;
   members: Record<string, Member>;
+  userId: string | null;
   idx: number;
   canDelete: boolean;
   onOpen: () => void;
@@ -129,7 +215,7 @@ type CardItemProps = {
 // existing, reversible archive action), and a long-press reveals
 // Edit/Delete as explicit targets rather than putting a destructive
 // action on a gesture that's easy to fire by accident while browsing.
-function StackCardItem({ trip, members, idx, canDelete, onOpen, onBrowse, onArchive, onEdit, onDelete }: CardItemProps) {
+function StackCardItem({ trip, members, userId, idx, canDelete, onOpen, onBrowse, onArchive, onEdit, onDelete }: CardItemProps) {
   const isFront = idx === 0;
   const [drag, setDrag] = useState({ x: 0, y: 0 });
   const [dragging, setDragging] = useState(false);
@@ -250,7 +336,7 @@ function StackCardItem({ trip, members, idx, canDelete, onOpen, onBrowse, onArch
       aria-label={isFront ? `Open trip ${trip.name}` : undefined}
       aria-hidden={isFront ? undefined : true}
     >
-      <CardContent trip={trip} members={members} />
+      <CardContent trip={trip} members={members} userId={userId} />
       {isFront && quickActionsOpen && (
         <div
           className="stack-quick-actions"
@@ -291,7 +377,7 @@ function StackCardItem({ trip, members, idx, canDelete, onOpen, onBrowse, onArch
   );
 }
 
-export function TripStack({ trips, members, userId, onSelectTrip, onStartEditTrip, onDeleteTrip, onArchiveTrip, onShowList, onFrontChange }: Props) {
+export function TripStack({ trips, members, userId, onSelectTrip, onStartEditTrip, onDeleteTrip, onArchiveTrip, onShowList, onFrontChange, onIndexChange, targetTripId }: Props) {
   const sortedIds = useMemo(
     () =>
       [...trips]
@@ -318,8 +404,22 @@ export function TripStack({ trips, members, userId, onSelectTrip, onStartEditTri
 
   useEffect(() => {
     onFrontChange?.(front ?? null);
+    if (front) {
+      const origIdx = sortedIds.indexOf(front.id);
+      if (origIdx >= 0) onIndexChange?.(origIdx);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [front?.id]);
+
+  // Jump to targeted trip if requested from pagination stepper dots
+  useEffect(() => {
+    if (targetTripId && tripsById[targetTripId]) {
+      const idx = order.indexOf(targetTripId);
+      if (idx > 0) {
+        setManualOrder([...order.slice(idx), ...order.slice(0, idx)]);
+      }
+    }
+  }, [targetTripId, order, tripsById]);
 
   if (!front) return null;
 
@@ -337,6 +437,7 @@ export function TripStack({ trips, members, userId, onSelectTrip, onStartEditTri
             key={trip.id}
             trip={trip}
             members={members}
+            userId={userId}
             idx={idx}
             canDelete={canDelete(trip)}
             onOpen={() => onSelectTrip(trip.id)}

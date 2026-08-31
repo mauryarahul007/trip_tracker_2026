@@ -14,6 +14,7 @@ import { TripSlideLauncher } from './TripSlideLauncher';
 import { HomeAmbientBackdrop } from './HomeAmbientBackdrop';
 import { OnboardingSwipe } from './OnboardingSwipe';
 import { usePullToRefresh } from '../utils/usePullToRefresh';
+import { triggerHaptic } from '../utils/haptics';
 
 type Props = {
   trips: Trip[];
@@ -85,9 +86,18 @@ export function TripsListScreen({
   const [joinCode, setJoinCode] = useState('');
   const [honeypotVal, setHoneypotVal] = useState('');
   const [showList, setShowList] = useState(false);
-  const [focusedTrip, setFocusedTrip] = useState<Trip | null>(null);
+  const [focusedTrip, setFocusedTrip] = useState<Trip | null>(() => trips[0] || null);
+  const [frontTripIndex, setFrontTripIndex] = useState(0);
+  const [targetTripId, setTargetTripId] = useState<string | null>(null);
   const [isSavingTrip, setIsSavingTrip] = useState(false);
   const stackActive = trips.length >= 2 && !showList && !showAddTrip && !showJoinTrip;
+
+  useEffect(() => {
+    if (!focusedTrip && trips.length > 0) {
+      setFocusedTrip(trips[0]);
+    }
+  }, [trips, focusedTrip]);
+
   const pullToRefresh = usePullToRefresh(
     scrollContainerRef,
     ptrIndicatorRef,
@@ -149,7 +159,7 @@ export function TripsListScreen({
           {pullToRefresh.refreshing ? 'Refreshing…' : pullToRefresh.armed ? 'Release to refresh' : 'Pull to refresh'}
         </div>
       )}
-      <HomeAmbientBackdrop trip={stackActive ? focusedTrip : null} />
+      <HomeAmbientBackdrop trip={focusedTrip || trips[0] || null} />
       <header className="trips-screen-header">
         {onOpenBugTracker ? (
           <button
@@ -519,7 +529,29 @@ export function TripsListScreen({
                 onArchiveTrip={onArchiveTrip}
                 onShowList={() => setShowList(true)}
                 onFrontChange={setFocusedTrip}
+                onIndexChange={setFrontTripIndex}
+                targetTripId={targetTripId}
               />
+            )}
+            {stackActive && trips.length >= 2 && (
+              <div className="trip-stepper-dots" role="tablist" aria-label="Trip pagination">
+                {trips.map((t, idx) => (
+                  <button
+                    key={t.id}
+                    type="button"
+                    role="tab"
+                    aria-selected={idx === frontTripIndex}
+                    className={`trip-stepper-dot${idx === frontTripIndex ? ' active' : ''}`}
+                    onClick={() => {
+                      triggerHaptic('light');
+                      setFrontTripIndex(idx);
+                      setTargetTripId(t.id);
+                    }}
+                    title={`View ${t.name}`}
+                    aria-label={`View ${t.name}`}
+                  />
+                ))}
+              </div>
             )}
             {stackActive && (
               <TripSlideLauncher

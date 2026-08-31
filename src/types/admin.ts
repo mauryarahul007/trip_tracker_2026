@@ -66,7 +66,8 @@ export type AppConfigKey =
   | 'join_lockout_minutes'
   | 'recycle_bin_retention_hours'
   | 'expense_amount_ceiling'
-  | 'audit_log_retention_days';
+  | 'audit_log_retention_days'
+  | 'landing_backdrop_url';
 
 export interface DevicePlatformCount {
   platform: 'ios' | 'android';

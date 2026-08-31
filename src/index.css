@@ -2410,23 +2410,25 @@ input:checked + .toggle-slider:before {
   display: flex;
   flex-direction: column;
 }
-.stack-card-face.has-photo.tone-light .pp-dest,
-.stack-card-face.has-photo.tone-light .pp-name,
-.stack-card-face.has-photo.tone-light .pp-meta {
-  color: #F2ECDC;
+.stack-card-face.has-photo .pp-dest {
+  color: #67E8F9 !important;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9);
 }
-.stack-card-face.has-photo.tone-light .pp-stamp {
-  border-color: #F2ECDC;
-  color: #F2ECDC;
+.stack-card-face.has-photo .pp-name {
+  color: #FFFFFF !important;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.95), 0 0 2px rgba(0, 0, 0, 0.8);
 }
-.stack-card-face.has-photo.tone-dark .pp-dest,
-.stack-card-face.has-photo.tone-dark .pp-name,
-.stack-card-face.has-photo.tone-dark .pp-meta {
-  color: #1C2A38;
+.stack-card-face.has-photo .pp-meta {
+  color: #E2E8F0 !important;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9);
 }
-.stack-card-face.has-photo.tone-dark .pp-stamp {
-  border-color: #1C2A38;
-  color: #1C2A38;
+.stack-card-face.has-photo .pp-stamp {
+  border-color: rgba(255, 255, 255, 0.4) !important;
+  color: #FFFFFF !important;
+  background: rgba(0, 0, 0, 0.4) !important;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
 }
 .stack-card-avatars {
   margin-top: auto;
@@ -2457,6 +2459,84 @@ input:checked + .toggle-slider:before {
 .stack-qa-btn.danger {
   color: var(--color-danger);
 }
+.stack-destination-pill {
+  background: rgba(15, 23, 42, 0.7);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 9999px;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #38BDF8;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.stack-balance-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3.5px 9px;
+  border-radius: 8px;
+  font-family: var(--font-family-mono);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.stack-balance-chip.owed {
+  background: rgba(16, 185, 129, 0.22);
+  border: 1px solid rgba(16, 185, 129, 0.45);
+  color: #34D399;
+}
+
+.stack-balance-chip.owe {
+  background: rgba(239, 68, 68, 0.22);
+  border: 1px solid rgba(239, 68, 68, 0.45);
+  color: #F87171;
+}
+
+.stack-balance-chip.settled {
+  background: rgba(56, 189, 248, 0.2);
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  color: #38BDF8;
+}
+
+/* Stepper Dots between stack and launcher */
+.trip-stepper-dots {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin: 14px 0 2px;
+  z-index: 1;
+}
+
+.trip-stepper-dot {
+  height: 6px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.22);
+  border: none;
+  padding: 0;
+  width: 6px;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.trip-stepper-dot:hover {
+  background: rgba(255, 255, 255, 0.45);
+}
+
+.trip-stepper-dot.active {
+  width: 22px;
+  background: #38BDF8;
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.7);
+}
+
 .trip-stack-viewall {
   display: block;
   margin: 0 auto;
@@ -2476,7 +2556,7 @@ input:checked + .toggle-slider:before {
 /* Slide-to-launch control, replacing the Join/Create header buttons on
    phones only -- sits below the stack, same 900px cutoff. */
 .trip-launcher {
-  margin: 44px 0 4px;
+  margin: 20px 0 4px;
 }
 @media (min-width: 900px) {
   .trip-launcher {
@@ -2486,25 +2566,22 @@ input:checked + .toggle-slider:before {
 .launcher-track {
   position: relative;
   width: 100%;
-  max-width: 300px;
+  max-width: 320px;
   margin: 0 auto;
-  height: 84px;
-  border-radius: var(--border-radius-pill);
-  /* A flat 26% tint alone only stays legible while a trip photo is
-     blurred in behind it (HomeAmbientBackdrop). With no photo yet -- new
-     account, image still loading -- there's nothing behind but the plain
-     page background, so a fixed low dark scrim underneath guarantees the
-     white labels stay readable either way. */
-  background:
-    linear-gradient(rgba(0, 0, 0, 0.16), rgba(0, 0, 0, 0.16)),
-    color-mix(in srgb, var(--bg-app) 26%, transparent);
-  backdrop-filter: blur(22px) saturate(190%);
-  -webkit-backdrop-filter: blur(22px) saturate(190%);
-  border: 1px solid rgba(255, 255, 255, 0.16);
+  height: 66px;
+  border-radius: 33px;
+  background: rgba(15, 23, 42, 0.78);
+  backdrop-filter: blur(24px) saturate(190%);
+  -webkit-backdrop-filter: blur(24px) saturate(190%);
+  border: 1.5px solid rgba(255, 255, 255, 0.18);
   display: flex;
   align-items: center;
   overflow: hidden;
-  box-shadow: 0 12px 22px -10px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  box-shadow:
+    0 16px 36px -8px rgba(0, 0, 0, 0.65),
+    0 4px 12px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.4);
 }
 .launcher-fill {
   position: absolute;
@@ -2518,12 +2595,12 @@ input:checked + .toggle-slider:before {
 .launcher-fill.right {
   left: 50%;
   transform-origin: left;
-  background: linear-gradient(90deg, transparent, rgba(31, 110, 104, 0.28));
+  background: linear-gradient(90deg, transparent, rgba(20, 184, 166, 0.42));
 }
 .launcher-fill.left {
   right: 50%;
   transform-origin: right;
-  background: linear-gradient(270deg, transparent, rgba(184, 69, 46, 0.24));
+  background: linear-gradient(270deg, transparent, rgba(245, 158, 11, 0.38));
 }
 .launcher-zone {
   flex: 1;
@@ -2531,15 +2608,12 @@ input:checked + .toggle-slider:before {
   display: flex;
   align-items: center;
   font-family: var(--font-family-mono);
-  font-size: 11px;
-  letter-spacing: 0.06em;
+  font-size: 11.5px;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
   font-weight: 700;
-  /* The track is now sheer enough to show the blurred trip photo behind
-     it, so label color can't depend on --text-secondary contrasting
-     against a solid bg-app anymore -- white + shadow reads on any photo. */
-  color: rgba(255, 255, 255, 0.92);
-  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+  color: rgba(255, 255, 255, 0.95);
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
   background: none;
   border: none;
   cursor: pointer;
@@ -2548,44 +2622,54 @@ input:checked + .toggle-slider:before {
 }
 .launcher-zone.left {
   justify-content: flex-start;
-  padding-left: 16px;
+  padding-left: 20px;
+  color: #FBBF24;
 }
 .launcher-zone.right {
   justify-content: flex-end;
-  padding-right: 16px;
+  padding-right: 20px;
+  color: #2DD4BF;
 }
 .launcher-zone.left.active {
-  color: var(--color-danger);
+  color: #F59E0B;
 }
 .launcher-zone.right.active {
-  color: var(--primary-accent);
+  color: #14B8A6;
 }
 .launcher-thumb {
   position: absolute;
-  top: 6px;
+  top: 5px;
   left: 50%;
-  width: 72px;
-  height: 72px;
-  margin-left: -36px;
+  width: 54px;
+  height: 54px;
+  margin-left: -27px;
   border-radius: 50%;
-  background: color-mix(in srgb, var(--primary-accent) 88%, transparent);
-  backdrop-filter: blur(6px) saturate(160%);
-  -webkit-backdrop-filter: blur(6px) saturate(160%);
-  border: 1px solid rgba(255, 255, 255, 0.28);
+  background: linear-gradient(135deg, #0EA5E9, #2563EB);
+  backdrop-filter: blur(8px) saturate(160%);
+  -webkit-backdrop-filter: blur(8px) saturate(160%);
+  border: 2px solid rgba(255, 255, 255, 0.6);
   box-shadow:
-    0 8px 16px -6px rgba(0, 0, 0, 0.4),
-    inset 0 2px 2px rgba(255, 255, 255, 0.45),
-    inset 0 -3px 4px rgba(0, 0, 0, 0.25);
+    0 6px 18px rgba(14, 165, 233, 0.55),
+    inset 0 2px 2px rgba(255, 255, 255, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
   z-index: 2;
   cursor: grab;
 }
 .launcher-thumb.left {
-  background: color-mix(in srgb, var(--color-danger) 88%, transparent);
+  background: linear-gradient(135deg, #F59E0B, #D97706);
+  box-shadow:
+    0 8px 18px -4px rgba(245, 158, 11, 0.5),
+    inset 0 2px 2px rgba(255, 255, 255, 0.45);
 }
-/* The thumb only handles touch drags (see TripSlideLauncher's
-   pointerType check) -- on a fine pointer it would otherwise sit on top
-   of the Join/Create buttons with no click handler of its own, creating
-   a dead 50px click zone for mouse/trackpad users. */
+.launcher-thumb.right {
+  background: linear-gradient(135deg, #10B981, #059669);
+  box-shadow:
+    0 8px 18px -4px rgba(16, 185, 129, 0.5),
+    inset 0 2px 2px rgba(255, 255, 255, 0.45);
+}
 @media (pointer: fine) {
   .launcher-thumb {
     pointer-events: none;
@@ -4511,9 +4595,11 @@ html.capacitor-ios .trip-sheet .tab-pane {
   inset: -20px;
   background-size: cover;
   background-position: center;
-  filter: blur(6px) saturate(1.2);
-  transform: scale(1.08);
-  transition: opacity 0.9s ease;
+  filter: blur(14px) saturate(1.45) brightness(0.68);
+  transform: scale(1.06);
+  transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+  mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.95) 45%, rgba(0, 0, 0, 0.45) 85%, transparent 100%);
+  -webkit-mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.95) 45%, rgba(0, 0, 0, 0.45) 85%, transparent 100%);
 }
 
 .modal-overlay {
@@ -6946,196 +7032,280 @@ textarea.input-field {
 }
 
 /* =========================================================================
-   Boarding Pass & Passport Stub Login Experience (Concept 1)
+   Boarding Pass & Public Landing Experience (Proposal Match)
    ========================================================================= */
 
 .login-screen-wrap {
   position: relative;
   min-height: 100vh;
+  min-height: 100dvh;
   width: 100%;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 20px 16px;
-  background: var(--bg-app);
-  overflow: hidden;
+  padding: 24px 16px 20px;
+  background: #070B12;
+  overflow-x: hidden;
   box-sizing: border-box;
+  color-scheme: dark;
+  --text-primary: #FFFFFF;
+  --text-secondary: #94A3B8;
+  --bg-app: #070B12;
+  --bg-surface: rgba(15, 23, 42, 0.78);
+  --border-color: rgba(255, 255, 255, 0.16);
 }
 
 .login-ambient-mesh {
   position: fixed;
   inset: 0;
-  background: 
-    radial-gradient(circle at 18% 18%, rgba(47, 111, 237, 0.16) 0%, transparent 45%),
-    radial-gradient(circle at 82% 82%, rgba(23, 182, 166, 0.12) 0%, transparent 50%),
-    radial-gradient(circle at 50% 50%, rgba(255, 122, 0, 0.04) 0%, transparent 60%);
+  background:
+    radial-gradient(circle at 50% 8%, rgba(14, 165, 233, 0.32) 0%, transparent 50%),
+    radial-gradient(circle at 50% 88%, rgba(6, 182, 212, 0.25) 0%, transparent 55%),
+    radial-gradient(circle at 90% 40%, rgba(245, 158, 11, 0.12) 0%, transparent 45%);
   pointer-events: none;
-  z-index: 0;
+  z-index: 1;
 }
 
-.login-flight-grid {
+.login-landing-scenic-bg {
   position: fixed;
-  inset: 0;
-  opacity: 0.15;
-  background-image: radial-gradient(var(--text-muted) 1px, transparent 1px);
-  background-size: 28px 28px;
+  inset: -15px;
+  background-size: cover;
+  background-position: center;
+  filter: blur(8px) saturate(1.25) brightness(0.85);
+  transform: scale(1.05);
   pointer-events: none;
+  opacity: 0.94;
   z-index: 0;
+  transition: background-image 0.6s ease;
 }
 
-.login-boarding-card {
+.login-landing-container {
   position: relative;
   z-index: 10;
   width: 100%;
-  max-width: 420px;
-  background: var(--bg-surface);
-  border: 1px solid var(--border-color);
-  border-radius: 24px;
-  box-shadow: 0 24px 64px -12px rgba(0, 0, 0, 0.35), 0 4px 16px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
+  max-width: 390px;
+  min-height: calc(100vh - 48px);
+  min-height: calc(100dvh - 48px);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
   box-sizing: border-box;
 }
 
-/* Notches & Perforation */
-.login-card-notch-left,
-.login-card-notch-right {
-  position: absolute;
-  top: 154px;
-  width: 22px;
-  height: 22px;
-  background: var(--bg-app);
-  border-radius: 50%;
-  border: 1px solid var(--border-color);
-  z-index: 20;
-}
-.login-card-notch-left { left: -12px; }
-.login-card-notch-right { right: -12px; }
-
-.login-card-perf-line {
-  position: absolute;
-  top: 164px;
-  left: 14px;
-  right: 14px;
-  height: 0;
-  border-top: 1.5px dashed var(--border-color);
-  z-index: 15;
+.login-landing-hero {
+  width: 100%;
+  text-align: center;
+  padding-top: 8px;
+  margin-bottom: auto;
 }
 
-/* Stub Header */
-.login-stub-header {
-  padding: 22px 22px 28px 22px;
-  background: linear-gradient(180deg, var(--bg-subtle) 0%, transparent 100%);
-}
-
-.login-stub-top-row {
-  display: flex;
+.login-landing-badge {
+  display: inline-flex;
   align-items: center;
-  justify-content: space-between;
-  margin-bottom: 12px;
-}
-
-.login-brand-group {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.login-brand-icon {
-  font-size: 20px;
-  line-height: 1;
-}
-
-.login-brand-title {
-  font-size: 13px;
-  font-weight: 800;
-  letter-spacing: 0.05em;
-  color: var(--primary-accent);
-}
-
-.login-brand-edition {
-  font-size: 9.5px;
-  font-weight: 700;
-  font-family: var(--font-family-mono);
-  color: var(--text-muted);
-  letter-spacing: 0.08em;
-}
-
-.login-ticket-stamp {
-  font-family: var(--font-family-mono);
-  font-size: 10.5px;
-  font-weight: 700;
-  padding: 3px 8px;
-  border-radius: 6px;
-  background: var(--bg-subtle);
-  border: 1px solid var(--border-color);
-  color: var(--text-secondary);
-  letter-spacing: 0.06em;
-}
-
-.login-main-heading {
-  font-size: 21px;
-  font-weight: 800;
-  color: var(--text-primary);
-  margin: 0 0 3px 0;
-  letter-spacing: -0.02em;
-}
-
-.login-main-subheading {
-  font-size: 12.5px;
-  color: var(--text-secondary);
-  margin: 0 0 16px 0;
-  line-height: 1.4;
-}
-
-/* Role Switcher Segmented Pill */
-.login-segmented-pill {
-  display: flex;
-  background: var(--bg-subtle);
-  border: 1px solid var(--border-color);
+  gap: 6px;
+  padding: 5px 14px;
   border-radius: 9999px;
-  padding: 3.5px;
-  gap: 4px;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #67E8F9;
+  font-size: 11px;
+  font-family: var(--font-family-mono);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+  box-shadow: 0 4px 20px rgba(6, 182, 212, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 
-.login-pill-btn {
-  flex: 1;
+.login-landing-title {
+  font-size: 34px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: #FFFFFF;
+  margin: 0 0 6px 0;
+  text-shadow: 0 4px 24px rgba(0, 0, 0, 0.8), 0 1px 2px rgba(0, 0, 0, 0.9);
+}
+
+.login-landing-subtitle {
+  font-size: 12.5px;
+  color: #E2E8F0;
+  line-height: 1.4;
+  margin: 0;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.7);
+}
+
+/* Feature Highlights Grid/Chips */
+.login-feature-chips {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: auto 0;
+}
+
+.login-feature-chip {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 16px;
+  box-shadow:
+    0 8px 24px -4px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.login-feature-chip:hover {
+  transform: translateY(-1.5px);
+  border-color: rgba(56, 189, 248, 0.4);
+  box-shadow: 0 12px 28px -4px rgba(0, 0, 0, 0.6), 0 0 16px rgba(56, 189, 248, 0.25);
+}
+
+.login-feature-chip-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.08);
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  padding: 7.5px 12px;
-  border-radius: 9999px;
+  font-size: 17px;
+  flex-shrink: 0;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+.login-feature-chip-title {
   font-size: 12.5px;
   font-weight: 700;
-  color: var(--text-muted);
-  background: transparent;
-  border: none;
+  color: #FFFFFF;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+.login-feature-chip-desc {
+  font-size: 11px;
+  color: #CBD5E1;
+  line-height: 1.3;
+}
+
+/* Inline Join by Code Form inside Card */
+.login-inline-join-wrap {
+  display: flex;
+  gap: 8px;
+}
+
+.login-inline-join-input {
+  flex: 1;
+  padding: 10px 12px;
+  font-size: 12px;
+  border-radius: 12px;
+  font-family: var(--font-family-mono);
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: #FFFFFF;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.login-inline-join-input::placeholder {
+  color: #94A3B8;
+}
+
+.login-inline-join-input:focus {
+  outline: none;
+  border-color: #22D3EE;
+  box-shadow: 0 0 12px rgba(34, 211, 238, 0.3);
+}
+
+.login-inline-join-btn {
+  padding: 10px 16px;
+  font-size: 12px;
+  font-weight: 700;
+  font-family: var(--font-family-mono);
+  border-radius: 12px;
+  background: rgba(6, 182, 212, 0.25);
+  border: 1px solid rgba(6, 182, 212, 0.5);
+  color: #67E8F9;
+  box-shadow: 0 0 14px rgba(6, 182, 212, 0.25);
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.15s ease;
 }
 
-.login-pill-btn:hover {
-  color: var(--text-primary);
-}
-
-.login-pill-btn.active {
+.login-inline-join-btn:hover:not(:disabled) {
+  background: rgba(6, 182, 212, 0.4);
+  box-shadow: 0 0 20px rgba(6, 182, 212, 0.5);
   color: #FFFFFF;
-  background: var(--primary-accent);
-  box-shadow: 0 3px 10px rgba(47, 111, 237, 0.35);
 }
 
-.login-pill-btn.active-admin {
-  color: #FFFFFF;
-  background: linear-gradient(135deg, #10B981, #059669);
-  box-shadow: 0 3px 10px rgba(16, 185, 129, 0.35);
+.login-inline-join-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
-/* Stub Body */
-.login-stub-body {
-  padding: 22px;
+.login-flight-grid {
+  display: none;
+}
+
+.landing-glass-card {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  max-width: 390px;
+  margin-top: auto;
+  background: rgba(15, 23, 42, 0.78);
+  backdrop-filter: blur(24px) saturate(200%);
+  -webkit-backdrop-filter: blur(24px) saturate(200%);
+  border: 1.5px solid rgba(255, 255, 255, 0.18);
+  border-radius: 28px;
+  box-shadow:
+    0 24px 60px rgba(0, 0, 0, 0.75),
+    0 0 40px -10px rgba(6, 182, 212, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  padding: 20px;
   display: flex;
   flex-direction: column;
   gap: 14px;
+  box-sizing: border-box;
+}
+
+.landing-glass-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  font-size: 11.5px;
+  color: var(--text-secondary);
+}
+
+.landing-glass-footer-link {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 11.5px;
+  cursor: pointer;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: color 0.15s ease;
+}
+
+.landing-glass-footer-link:hover {
+  color: #FFFFFF;
+}
+
+.landing-admin-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
 }
 
 /* Google Sign-in Button */
@@ -7145,16 +7315,39 @@ textarea.input-field {
   justify-content: center;
   gap: 12px;
   width: 100%;
-  padding: 13px 18px;
+  height: 48px;
   background: #FFFFFF;
-  color: #1A1F26;
+  color: #0F172A;
   font-weight: 700;
-  font-size: 14.5px;
+  font-size: 14px;
   border-radius: 14px;
-  border: 1.5px solid rgba(0, 0, 0, 0.08);
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+  border: none;
+  box-shadow:
+    0 4px 20px rgba(255, 255, 255, 0.22),
+    0 2px 6px rgba(0, 0, 0, 0.2);
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   cursor: pointer;
+}
+
+.login-btn-google:hover:not(:disabled) {
+  transform: translateY(-1.5px);
+  box-shadow:
+    0 6px 24px rgba(255, 255, 255, 0.35),
+    0 2px 8px rgba(0, 0, 0, 0.25);
+  background: #F8FAFC;
+}
+
+.login-btn-google:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.login-btn-google:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.login-google-icon {
+  flex-shrink: 0;
 }
 
 .login-btn-google:hover:not(:disabled) {

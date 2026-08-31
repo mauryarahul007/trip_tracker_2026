@@ -6,7 +6,7 @@ interface Props {
   trip: Trip | null;
 }
 
-const VISIBLE_OPACITY = 0.4;
+const VISIBLE_OPACITY = 0.55;
 
 // Blurred, translucent backdrop behind the home screen showing whichever
 // trip is currently front of the swipe stack. Reuses the same cached photo
@@ -15,7 +15,7 @@ const VISIBLE_OPACITY = 0.4;
 // place to paint the same image. Two stacked layers crossfade on swipe
 // instead of snapping, since background-image itself isn't animatable.
 export function HomeAmbientBackdrop({ trip }: Props) {
-  const photoUrl = useTripPhoto(trip?.destination);
+  const photoUrl = useTripPhoto(trip?.destination, trip?.coverImageUrl, trip?.name);
   const [layers, setLayers] = useState<{ url: string; key: number }[]>([]);
   const nextKey = useRef(0);
 

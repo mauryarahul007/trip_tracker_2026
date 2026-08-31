@@ -1,10 +1,10 @@
-import { useRef } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import type { Trip, Category, Expense } from '../types';
 import type { ConfirmRequest } from './ConfirmDialog';
 import { IconClose } from './Icons';
 import { SettingsView, type ThemePref } from './SettingsView';
 import { useTripStore } from '../store/tripStore';
-import { getAppVersion } from '../utils/appVersion';
+import { getAppVersion, WEB_APP_VERSION } from '../utils/appVersion';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 
 type Props = {
@@ -83,7 +83,10 @@ export function GlobalSettingsModal({
   const sheetRef = useRef<HTMLDivElement>(null);
   useFocusTrap(sheetRef, true, false, onClose);
 
-  const appVersion = getAppVersion();
+  const [appVersion, setAppVersion] = useState<string>(() => `${WEB_APP_VERSION}`);
+  useEffect(() => {
+    getAppVersion().then(setAppVersion).catch(() => {});
+  }, []);
 
   return (
     <div className="modal-backdrop drawer-right" onClick={onClose}>
