@@ -348,5 +348,21 @@
     "shippedBy": "claude-cli",
     "shippedAt": "2026-08-30T16:53:55.813Z",
     "shippedNote": "Shipped in commit 237b25a"
+  },
+  {
+    "id": "FEAT-023",
+    "title": "Passport trip card stamp-press entrance + tap feedback",
+    "description": "Passport trip card stamp-press entrance + tap feedback",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-08-31T15:30:27.836Z",
+    "updatedAt": "2026-08-31T15:30:41.353Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-08-31T15:30:41.352Z",
+    "shippedNote": "Shipped in commit d4633e2"
   }
 ]

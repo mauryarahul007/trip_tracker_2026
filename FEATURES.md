@@ -9,11 +9,11 @@
 
 | Metric | Count |
 | :--- | :--- |
-| **Total Tracked** | **22** |
+| **Total Tracked** | **23** |
 | **💡 Requested** | **1** |
 | **📋 Planned** | **0** |
 | **🟡 In Progress** | **0** |
-| **✅ Shipped** | **21** |
+| **✅ Shipped** | **22** |
 | **⚪ Won't Do** | **0** |
 
 ---
@@ -63,6 +63,7 @@ Test
 | **FEAT-020** | Simplified who-owes-who summary card | `ui-ux` | `claude-cli` | `claude-cli` | src/components/BoardingPassHeroCard.tsx, src/components/BalancesSettlements.tsx. |
 | **FEAT-021** | Analytics moved to Summary; geo map split into its own Settings section | `analytics` | `claude-cli` | `claude-cli` | src/App.tsx, src/components/AnalyticsTab.tsx, src/components/SettingsTab.tsx, src/components/SettingsView.tsx. |
 | **FEAT-022** | 10 UI/UX enhancements: skeleton loaders, pull-to-refresh, edit-undo, settlement confetti + progress, duplicate expense, split preview, empty-state CTAs, category icons, command-palette hint | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit 237b25a |
+| **FEAT-023** | Passport trip card stamp-press entrance + tap feedback | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit d4633e2 |
 
 ---
 
