@@ -2660,7 +2660,8 @@ input:checked + .toggle-slider:before {
   overflow: hidden;
   box-shadow: 0 10px 24px -14px rgba(0, 0, 0, 0.28);
   transition: var(--transition-smooth);
-  animation: fadeIn 0.35s ease-out both;
+  animation: fadeIn 0.35s var(--ease-decel) both;
+  animation-delay: var(--pp-delay, 0ms);
 }
 @media (prefers-reduced-motion: reduce) {
   .passport-card { animation: none; }
@@ -2668,6 +2669,27 @@ input:checked + .toggle-slider:before {
 .passport-card:hover {
   border-color: rgba(31, 110, 104, 0.3);
   box-shadow: 0 14px 28px -14px rgba(0, 0, 0, 0.34);
+}
+/* The actual tappable surface inside SwipeableRow's drag layer -- pressed
+   feedback lives here, not on .passport-card, so it never fights the
+   swipe-to-delete/edit translateX on the sibling wrapper. */
+.pp-tap-surface {
+  transition: transform 0.12s var(--ease-decel);
+}
+.pp-tap-surface:active {
+  transform: scale(0.98);
+}
+@media (prefers-reduced-motion: reduce) {
+  .pp-tap-surface:active { transform: none; }
+}
+/* .passport-card's overflow: hidden (needed to clip the swipe-reveal
+   layers to the rounded corners) also clips the global :focus-visible
+   outline, since that draws outside the border box. An inset ring stays
+   inside instead, so keyboard focus is still visible here. */
+.pp-tap-surface:focus-visible {
+  outline: none;
+  border-radius: var(--border-radius-md);
+  box-shadow: inset 0 0 0 2.5px var(--primary-accent);
 }
 .pp-stamp {
   position: absolute;
@@ -2690,6 +2712,21 @@ input:checked + .toggle-slider:before {
   opacity: 0.85;
   text-align: center;
   flex-shrink: 0;
+}
+/* Passport-list only (not the TripStack's reused .pp-stamp on phones) --
+   the stamp lands a beat after the card itself rises in, like a rubber
+   stamp pressed onto the visa entry. Transform + opacity only. */
+.passport-list .pp-stamp {
+  animation: pp-stamp-press 0.45s var(--ease-uber-spring) both;
+  animation-delay: calc(var(--pp-delay, 0ms) + 160ms);
+}
+@keyframes pp-stamp-press {
+  0% { opacity: 0; transform: scale(2) rotate(10deg); }
+  55% { opacity: 1; transform: scale(0.9) rotate(-12deg); }
+  100% { opacity: 0.85; transform: scale(1) rotate(-8deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .passport-list .pp-stamp { animation: none; }
 }
 .pp-dest {
   font-family: var(--font-family-mono);

@@ -543,7 +543,7 @@ export function TripsListScreen({
                 <div
                   key={trip.id}
                   className="passport-card"
-                  style={{ animationDelay: `${Math.min(idx * 30, 300)}ms` }}
+                  style={{ '--pp-delay': `${Math.min(idx * 30, 300)}ms` } as React.CSSProperties}
                 >
                   <SwipeableRow
                     onDelete={canDelete ? () => onDeleteTrip(trip) : undefined}
@@ -552,6 +552,7 @@ export function TripsListScreen({
                     plain
                   >
                     <div
+                      className="pp-tap-surface"
                       style={{ padding: '18px 20px 16px', cursor: 'pointer' }}
                       role="button"
                       tabIndex={0}
