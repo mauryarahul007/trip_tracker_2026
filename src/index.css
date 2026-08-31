@@ -3922,22 +3922,26 @@ input:checked + .toggle-slider:before {
   .modal-sheet { animation: none; }
 }
 
-/* Settings presents as a left-edge nav drawer rather than a centered
-   sheet -- narrower, anchored left, slides in from the edge instead of
-   rising from the bottom. Only affects GlobalSettingsModal; every other
-   .modal-sheet dialog keeps the shared centered/sheetUp treatment. */
+/* Settings presents as a right-edge nav drawer matching the top-right profile icon --
+   anchored right, slides in from the right edge. Only affects GlobalSettingsModal;
+   every other .modal-sheet dialog keeps the shared centered/sheetUp treatment. */
+.modal-backdrop.drawer-right {
+  justify-content: flex-end;
+}
 .modal-backdrop.drawer-left {
   justify-content: flex-start;
 }
 .modal-backdrop .modal-sheet.settings-drawer {
-  max-width: 320px;
-  border-right: 1px solid var(--border-color);
-  border-radius: 0 var(--border-radius-lg, 16px) var(--border-radius-lg, 16px) 0;
-  box-shadow: 12px 0 32px -16px rgba(0, 0, 0, 0.35);
-  animation: drawerSlideIn 0.28s var(--ease-decel);
+  max-width: min(380px, 92vw);
+  width: 100%;
+  border-left: 1px solid var(--border-color);
+  border-right: none;
+  border-radius: var(--border-radius-lg, 16px) 0 0 var(--border-radius-lg, 16px);
+  box-shadow: -12px 0 32px -16px rgba(0, 0, 0, 0.35);
+  animation: drawerSlideInRight 0.28s var(--ease-decel);
 }
-@keyframes drawerSlideIn {
-  from { opacity: 0; transform: translateX(-24px); }
+@keyframes drawerSlideInRight {
+  from { opacity: 0; transform: translateX(28px); }
   to { opacity: 1; transform: translateX(0); }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -4612,10 +4616,11 @@ html.capacitor-ios .trip-sheet .tab-pane {
 
 /* Profile Hero Card — same flat paper/border language as the boarding-pass
    and ticket-stub components, not an elevated iOS-style card. */
+/* Profile Hero Card & Cloud Sync Hub */
 .settings-profile-hero {
   display: flex;
-  align-items: center;
-  gap: 16px;
+  flex-direction: column;
+  gap: 12px;
   padding: 16px 18px;
   background: var(--bg-surface);
   border: 1px solid var(--border-color);
@@ -4623,6 +4628,64 @@ html.capacitor-ios .trip-sheet .tab-pane {
   box-shadow: 0 1px 0 rgba(28, 42, 56, 0.04);
   position: relative;
   overflow: hidden;
+}
+
+.settings-profile-top {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.settings-avatar-img {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--primary-accent);
+  box-shadow: 0 4px 12px rgba(47, 111, 237, 0.2);
+  flex-shrink: 0;
+}
+
+.settings-avatar-circle {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary-accent), var(--secondary-accent));
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-family-title);
+  font-weight: 700;
+  font-size: 19px;
+  box-shadow: 0 4px 12px rgba(47, 111, 237, 0.22);
+  flex-shrink: 0;
+}
+
+.settings-profile-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.settings-profile-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.settings-profile-email {
+  font-size: 12.5px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* Perforated tear beneath the hero card — the boarding-pass motif reused as
@@ -4651,49 +4714,182 @@ html.capacitor-ios .trip-sheet .tab-pane {
 .settings-hero-perf::before { left: -8px; }
 .settings-hero-perf::after { right: -8px; }
 
-.settings-avatar-circle {
-  width: 54px;
-  height: 54px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, var(--primary-accent), var(--secondary-accent));
-  color: #FFFFFF;
+/* Cloud Sync Hub Bar */
+.settings-sync-hub {
   display: flex;
   align-items: center;
-  justify-content: center;
-  font-family: var(--font-family-title);
-  font-weight: 700;
-  font-size: 20px;
-  box-shadow: 0 4px 12px rgba(47, 111, 237, 0.25);
-  flex-shrink: 0;
+  justify-content: space-between;
+  padding-top: 10px;
+  border-top: 1px dashed var(--border-color);
+  gap: 8px;
 }
 
-.settings-profile-info {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.settings-profile-name {
-  font-size: 16px;
-  font-weight: 600;
-  color: var(--text-primary);
-  letter-spacing: -0.01em;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.settings-profile-status {
-  font-size: 12px;
-  color: var(--text-secondary);
+.settings-sync-status {
   display: flex;
   align-items: center;
   gap: 6px;
   white-space: nowrap;
+  font-size: 11.5px;
+  color: var(--text-secondary);
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.settings-status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: inline-block;
+}
+
+.settings-status-dot.online {
+  background: var(--color-success);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-success) 24%, transparent);
+}
+
+.settings-status-dot.offline {
+  background: var(--text-muted);
+}
+
+.settings-sync-state-text {
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.settings-sync-divider {
+  color: var(--border-color);
+}
+
+.settings-storage-text {
+  color: var(--text-muted);
+  font-family: var(--font-family-mono);
+  font-size: 11px;
+}
+
+.settings-sync-now-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  border: 1px solid color-mix(in srgb, var(--primary-accent) 30%, transparent);
+  background: color-mix(in srgb, var(--primary-accent) 8%, var(--bg-surface));
+  color: var(--primary-accent);
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+}
+
+.settings-sync-now-btn:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--primary-accent) 16%, var(--bg-surface));
+  border-color: var(--primary-accent);
+}
+
+.settings-sync-now-btn:active:not(:disabled) {
+  transform: scale(0.96);
+}
+
+.settings-sync-now-btn:disabled {
+  opacity: 0.7;
+  cursor: default;
+}
+
+/* Current Trip Context Highlight Card */
+.settings-trip-context-card {
+  background: linear-gradient(135deg, color-mix(in srgb, var(--primary-accent) 10%, var(--bg-surface)), color-mix(in srgb, var(--secondary-accent) 8%, var(--bg-surface)));
+  border: 1px solid color-mix(in srgb, var(--primary-accent) 24%, var(--border-color));
+  border-radius: var(--border-radius-md);
+  padding: 12px 14px;
+  margin-bottom: 2px;
+}
+
+.settings-trip-context-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.settings-trip-context-badge {
+  font-family: var(--font-family-mono);
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: var(--primary-accent);
+  color: #FFFFFF;
+}
+
+.settings-trip-context-curr {
+  font-family: var(--font-family-mono);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.settings-trip-context-name {
+  margin: 0 0 4px 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.25;
+}
+
+.settings-trip-context-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.settings-trip-context-tag {
+  font-size: 11.5px;
+  color: var(--text-secondary);
+}
+
+/* Inline 3-Way Segmented Theme Switcher */
+.settings-segmented-theme {
+  display: inline-flex;
+  align-items: center;
+  background: color-mix(in srgb, var(--text-muted) 10%, var(--bg-app));
+  padding: 2.5px;
+  border-radius: 10px;
+  border: 1px solid var(--border-color);
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.settings-seg-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: 7px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 11.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: inherit;
+}
+
+.settings-seg-btn:hover:not(.active) {
+  color: var(--text-primary);
+}
+
+.settings-seg-btn.active {
+  background: var(--bg-surface);
+  color: var(--primary-accent);
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 /* Grouped Inset Cards */

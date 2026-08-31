@@ -83,7 +83,7 @@ export function GlobalSettingsModal({
   useFocusTrap(sheetRef, true, false, onClose);
 
   return (
-    <div className="modal-backdrop drawer-left" onClick={onClose}>
+    <div className="modal-backdrop drawer-right" onClick={onClose}>
       <div
         ref={sheetRef}
         tabIndex={-1}

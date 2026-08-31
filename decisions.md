@@ -1103,3 +1103,24 @@ This document logs all meaningful technical decisions, library choices, design p
   - **Right-Aligned Header Profile Avatar (WhatsApp Pattern):** Repositioned the profile avatar button from the left column to the right column of `.trips-screen-header` (`grid-template-columns: 40px 1fr 40px`), aligning with standard single-handed thumb reachability patterns.
 * **Trade-offs Accepted:**
   - Pull-to-refresh is disabled on the non-scrolling card stack screen. Because trips automatically sync on mount and support optimistic updates, pull-down refresh is unnecessary on a fixed card deck and omitting it delivers buttery smooth 120 FPS card swiping.
+
+---
+
+## 64. Settings Page & Navigation Drawer Modernization (Right-Edge Drawer, Inline Quick Controls & Profile Sync Hub)
+* **Context:**
+  - The Settings page opened as a left-edge drawer, contradicting the new top-right profile icon position and thumb ergonomics.
+  - The appearance theme picker forced users to drill down into a separate subscreen just to choose between Light, Dark, and Auto.
+  - The profile header was static with no quick visibility into offline/online storage size, and lacked an interactive manual sync trigger.
+  - Active trip settings (Mute, Close Trip, Wrapped, Share) were mixed with global settings, and dismissing the drawer required tapping the backdrop or a small close button without gesture support.
+* **Decision:**
+  - **Right-Anchored Navigation Drawer & Swipe-to-Dismiss (`GlobalSettingsModal.tsx`, `index.css`):**
+    - Repositioned the settings drawer to `.drawer-right` with `justify-content: flex-end`, left-side rounded corners (`16px 0 0 16px`), and slide-in from `+28px`.
+    - Integrated native GPU-accelerated touch swipe-right-to-dismiss gesture (`translateX(dx)`) with elastic spring physics, haptic feedback on threshold commit, and smooth exit animation.
+  - **Inline 3-Way Segmented Theme Switcher (`SettingsView.tsx`, `index.css`):**
+    - Replaced the appearance drill-down sub-screen with a 3-button sliding segmented pill (`☀️ Light` · `🌙 Night` · `⚙️ Auto`) directly on the main settings card, enabling 1-tap theme switching with tactile micro-haptics.
+  - **Unified Profile & Cloud Sync Hub (`SettingsView.tsx`, `index.css`):**
+    - Upgraded the profile header with user avatar photo/circle, account email, live storage size indicator, and a 1-tap `Sync Now` button with rotating spinner and success feedback.
+  - **Highlighted Current Trip Context Card (`SettingsView.tsx`, `index.css`):**
+    - Added a dedicated Current Trip Capsule banner when inside an active trip, grouping all trip-scoped controls (Story Card, Invite, Map, Categories, Recycle Bin, CSV Export, Mute Alerts, Close Trip) cleanly away from account-wide preferences.
+* **Trade-offs Accepted:**
+  - All gestures and micro-interactions use CSS transforms and lightweight browser touch event listeners with 0 extra dependencies. Subscreens remain accessible for advanced settings while standard operations are reachable directly in 1 tap.

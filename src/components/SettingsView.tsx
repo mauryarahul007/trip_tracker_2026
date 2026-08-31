@@ -22,14 +22,17 @@ import {
   IconShield,
   IconBell,
   IconShare,
+  IconRefresh,
 } from './Icons';
 import { TripJourneyMap } from './TripJourneyMap';
 import { CategoryIcon } from './CategoryIcon';
 import { useTripStore } from '../store/tripStore';
+import { useAuthStore } from '../store/authStore';
 import { useNotificationsStore } from '../store/notificationsStore';
 import { formatDateRange } from '../utils/dateRange';
 import { getCategoryKeywords } from '../utils/categoryHelper';
 import { getAppVersion } from '../utils/appVersion';
+import { triggerHaptic } from '../utils/haptics';
 import { BugReportModal } from './BugReportModal';
 import { FeatureRequestModal } from './FeatureRequestModal';
 import { SuperadminAuthModal } from './SuperadminAuthModal';
@@ -156,10 +159,33 @@ export function SettingsView({
   // Superadmin & Feature Flag state
   const isSuperadmin = useTripStore((s) => s.isSuperadmin);
   const isFeatureEnabled = useTripStore((s) => s.isFeatureEnabled);
+  const refreshTrips = useTripStore((s) => s.refreshTrips);
   const trips = useTripStore((s) => s.trips);
   const activeTripId = useTripStore((s) => s.activeTripId);
   const activeTrip = trips.find((t) => t.id === activeTripId);
   const isTripMuted = useTripStore((s) => (activeTripId ? s.isTripMuted(activeTripId) : false));
+
+  // User avatar & cloud sync state
+  const userAvatarUrl = useAuthStore((s) => s.session?.user.user_metadata?.avatar_url as string | undefined);
+  const [isManualSyncing, setIsManualSyncing] = useState(false);
+  const [syncFeedback, setSyncFeedback] = useState<string | null>(null);
+
+  const handleManualSync = async () => {
+    if (isManualSyncing) return;
+    setIsManualSyncing(true);
+    triggerHaptic('light');
+    try {
+      await refreshTrips(true);
+      triggerHaptic('success');
+      setSyncFeedback('Synced just now');
+      setTimeout(() => setSyncFeedback(null), 3000);
+    } catch {
+      setSyncFeedback('Sync failed');
+      setTimeout(() => setSyncFeedback(null), 3000);
+    } finally {
+      setIsManualSyncing(false);
+    }
+  };
 
   const [isSuperadminModalOpen, setIsSuperadminModalOpen] = useState(false);
   const unreadNotificationCount = useNotificationsStore((s) => s.unreadCount);
@@ -177,6 +203,7 @@ export function SettingsView({
       }
     } catch {}
     window.dispatchEvent(new CustomEvent('tt:reset-coachmarks'));
+    triggerHaptic('success');
     setCoachmarkResetStatus('✓ Reactivated');
     setTimeout(() => setCoachmarkResetStatus(null), 2500);
   };
@@ -1047,24 +1074,58 @@ export function SettingsView({
 
   return (
     <div className="fade-in settings-container">
-      {/* Profile Hero Banner */}
+      {/* Profile & Cloud Sync Hub */}
       <div className="settings-profile-hero">
-        <div className="settings-avatar-circle">{initialLetter}</div>
-        <div className="settings-profile-info">
-          <div className="settings-profile-name">{displayName}</div>
-          <div className="settings-profile-status">
-            <span
-              style={{
-                width: '7px',
-                height: '7px',
-                borderRadius: '50%',
-                background: isOnline ? 'var(--color-success)' : 'var(--text-muted)',
-                display: 'inline-block',
-                flexShrink: 0,
-              }}
+        <div className="settings-profile-top">
+          {userAvatarUrl ? (
+            <img
+              src={userAvatarUrl}
+              alt=""
+              referrerPolicy="no-referrer"
+              loading="lazy"
+              decoding="async"
+              className="settings-avatar-img"
+              width={50}
+              height={50}
             />
-            {userEmail || (isOnline ? 'Online & Synced' : 'Offline Mode')}
+          ) : (
+            <div className="settings-avatar-circle">{initialLetter}</div>
+          )}
+          <div className="settings-profile-info">
+            <div className="settings-profile-name">{displayName}</div>
+            <div className="settings-profile-email">{userEmail || 'Local Guest Account'}</div>
           </div>
+        </div>
+
+        <div className="settings-sync-hub">
+          <div className="settings-sync-status">
+            <span
+              className={`settings-status-dot${isOnline ? ' online' : ' offline'}`}
+              aria-hidden="true"
+            />
+            <span className="settings-sync-state-text">
+              {isOnline ? (syncFeedback || 'Cloud Synced') : 'Offline Mode'}
+            </span>
+            {storageEstimate && (
+              <>
+                <span className="settings-sync-divider">·</span>
+                <span className="settings-storage-text">{formatBytes(storageEstimate.used)} used</span>
+              </>
+            )}
+          </div>
+          {isOnline && (
+            <button
+              type="button"
+              className="settings-sync-now-btn"
+              onClick={handleManualSync}
+              disabled={isManualSyncing}
+              title="Sync latest data with cloud"
+              aria-label="Sync latest data with cloud"
+            >
+              <IconRefresh size={13} className={isManualSyncing ? 'icon-spin' : ''} />
+              <span>{isManualSyncing ? 'Syncing…' : 'Sync Now'}</span>
+            </button>
+          )}
         </div>
       </div>
       <div className="settings-hero-perf" aria-hidden="true" />
@@ -1114,12 +1175,28 @@ export function SettingsView({
       )}
 
       {/* Group 1: Trip-Specific Settings (When an active trip is selected) */}
-      {hasActiveTrip && (
+      {hasActiveTrip && activeTrip && (
         <div className="settings-group">
-          <h4 className="settings-group-title">Trip Preferences</h4>
+          <div className="settings-trip-context-card">
+            <div className="settings-trip-context-header">
+              <span className="settings-trip-context-badge">CURRENT TRIP</span>
+              <span className="settings-trip-context-curr">{activeTrip.baseCurrency}</span>
+            </div>
+            <div className="settings-trip-context-body">
+              <h3 className="settings-trip-context-name">{activeTrip.name}</h3>
+              <div className="settings-trip-context-meta">
+                {activeTrip.destination && (
+                  <span className="settings-trip-context-tag">📍 {activeTrip.destination}</span>
+                )}
+                {(activeTrip.startDate || activeTrip.endDate) && (
+                  <span className="settings-trip-context-tag">🗓️ {formatDateRange(activeTrip.startDate, activeTrip.endDate)}</span>
+                )}
+              </div>
+            </div>
+          </div>
           <div className="settings-group-card">
             {onOpenTripWrapped && (
-              <button type="button" className="settings-row-item" onClick={onOpenTripWrapped}>
+              <button type="button" className="settings-row-item" onClick={() => { triggerHaptic('light'); onOpenTripWrapped(); }}>
                 <div className="settings-row-left">
                   <div className="settings-squircle squircle-amber" style={{ background: 'linear-gradient(135deg, #FF6B6B, #FFD93D)', color: '#1A1D20' }}>
                     <IconSparkles size={18} />
@@ -1137,7 +1214,7 @@ export function SettingsView({
             )}
 
             {onOpenShareTrip && (
-              <button type="button" className="settings-row-item" onClick={onOpenShareTrip}>
+              <button type="button" className="settings-row-item" onClick={() => { triggerHaptic('light'); onOpenShareTrip(); }}>
                 <div className="settings-row-left">
                   <div className="settings-squircle squircle-teal">
                     <IconShare size={18} />
@@ -1153,7 +1230,7 @@ export function SettingsView({
               </button>
             )}
 
-            <button type="button" className="settings-row-item" onClick={() => setSubScreen('trip-map')}>
+            <button type="button" className="settings-row-item" onClick={() => { triggerHaptic('light'); setSubScreen('trip-map'); }}>
               <div className="settings-row-left">
                 <div className="settings-squircle squircle-teal">
                   <IconMapPin size={18} />
@@ -1169,7 +1246,7 @@ export function SettingsView({
             </button>
 
             {(isSuperadmin || isFeatureEnabled('enableKeywordTagging')) && (
-              <button type="button" className="settings-row-item" onClick={() => setSubScreen('categories')}>
+              <button type="button" className="settings-row-item" onClick={() => { triggerHaptic('light'); setSubScreen('categories'); }}>
                 <div className="settings-row-left">
                   <div className="settings-squircle squircle-purple">
                     <IconTag size={18} />
@@ -1186,7 +1263,7 @@ export function SettingsView({
             )}
 
             {(isSuperadmin || isFeatureEnabled('enableRecycleBin')) && (
-              <button type="button" className="settings-row-item" onClick={() => setSubScreen('recycle-bin')}>
+              <button type="button" className="settings-row-item" onClick={() => { triggerHaptic('light'); setSubScreen('recycle-bin'); }}>
                 <div className="settings-row-left">
                   <div className="settings-squircle squircle-rose">
                     <IconTrash size={18} />
@@ -1210,6 +1287,7 @@ export function SettingsView({
                 type="button"
                 className="settings-row-item"
                 onClick={() => {
+                  triggerHaptic('light');
                   onExportCsv();
                 }}
               >
@@ -1227,6 +1305,93 @@ export function SettingsView({
                 </div>
               </button>
             )}
+
+            <div className="settings-row-item" style={{ cursor: 'default' }}>
+              <div className="settings-row-left">
+                <div className="settings-squircle squircle-teal">
+                  <IconBell size={18} />
+                </div>
+                <div className="settings-row-texts">
+                  <span className="settings-row-title">Mute Notifications</span>
+                  <span className="settings-row-subtitle">Stop push alerts for this trip</span>
+                </div>
+              </div>
+              <div className="settings-row-right">
+                <label style={{ position: 'relative', display: 'inline-block', width: '44px', height: '24px', margin: 0, cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={isTripMuted}
+                    onChange={(e) => {
+                      triggerHaptic('light');
+                      setTripMuted(activeTrip.id, e.target.checked);
+                    }}
+                    aria-label="Mute Notifications"
+                    style={{ opacity: 0, width: 0, height: 0, margin: 0 }}
+                  />
+                  <span
+                    style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      backgroundColor: isTripMuted ? '#17B6A6' : 'var(--border-color)',
+                      transition: '0.2s ease',
+                      borderRadius: 'var(--border-radius-pill)',
+                    }}
+                  >
+                    <span
+                      style={{
+                        position: 'absolute',
+                        height: '18px',
+                        width: '18px',
+                        left: isTripMuted ? '23px' : '3px',
+                        bottom: '3px',
+                        backgroundColor: 'white',
+                        transition: '0.2s ease',
+                        borderRadius: '50%',
+                        boxShadow: '0 1px 3px rgba(0,0,0,0.25)',
+                      }}
+                    />
+                  </span>
+                </label>
+              </div>
+            </div>
+
+            {isAdmin && (
+              <button
+                type="button"
+                className="settings-row-item"
+                onClick={() => {
+                  triggerHaptic('light');
+                  if (activeTrip.closed) {
+                    closeTrip(activeTrip.id, false);
+                    return;
+                  }
+                  onRequestConfirm?.({
+                    title: 'Close Trip',
+                    message: 'This locks the trip -- no new expenses or members can be added until it\'s reopened. Existing data stays untouched.',
+                    confirmLabel: 'Close Trip',
+                    onConfirm: () => closeTrip(activeTrip.id, true),
+                  });
+                }}
+              >
+                <div className="settings-row-left">
+                  <div className="settings-squircle squircle-amber">
+                    <IconShield size={18} />
+                  </div>
+                  <div className="settings-row-texts">
+                    <span className="settings-row-title">{activeTrip.closed ? 'Reopen Trip' : 'Close Trip'}</span>
+                    <span className="settings-row-subtitle">
+                      {activeTrip.closed ? 'Currently locked -- reopen to allow new expenses/members' : 'Lock this trip once everyone\'s settled up'}
+                    </span>
+                  </div>
+                </div>
+                <div className="settings-row-right">
+                  <IconChevronRight size={16} />
+                </div>
+              </button>
+            )}
           </div>
         </div>
       )}
@@ -1239,7 +1404,7 @@ export function SettingsView({
       <div className="settings-group">
         <h4 className="settings-group-title">App &amp; Interface</h4>
         <div className="settings-group-card">
-          <button type="button" className="settings-row-item" onClick={openNotificationsPanel}>
+          <button type="button" className="settings-row-item" onClick={() => { triggerHaptic('light'); openNotificationsPanel(); }}>
             <div className="settings-row-left">
               <div className="settings-squircle squircle-teal">
                 <IconBell size={18} />
@@ -1255,21 +1420,50 @@ export function SettingsView({
             </div>
           </button>
 
-          <button type="button" className="settings-row-item" onClick={() => setSubScreen('appearance')}>
+          {/* Inline 3-Way Segmented Theme Switcher */}
+          <div className="settings-row-item" style={{ cursor: 'default' }}>
             <div className="settings-row-left">
               <div className="settings-squircle squircle-amber">
-                <IconMoon size={18} />
+                {themePref === 'dark' ? <IconMoon size={18} /> : themePref === 'light' ? <IconSun size={18} /> : <IconSmartphone size={18} />}
               </div>
               <div className="settings-row-texts">
                 <span className="settings-row-title">Appearance</span>
                 <span className="settings-row-subtitle">{themeLabel}</span>
               </div>
             </div>
-            <div className="settings-row-right">
-              <span className="settings-badge-pill">{themePref === 'dark' ? 'Night' : themePref === 'light' ? 'Light' : 'Auto'}</span>
-              <IconChevronRight size={16} />
+            <div className="settings-segmented-theme" role="group" aria-label="Theme preference">
+              <button
+                type="button"
+                className={`settings-seg-btn${themePref === 'light' ? ' active' : ''}`}
+                onClick={() => { triggerHaptic('light'); setThemePref('light'); }}
+                title="Light mode"
+                aria-label="Light mode"
+              >
+                <IconSun size={13} />
+                <span>Light</span>
+              </button>
+              <button
+                type="button"
+                className={`settings-seg-btn${themePref === 'dark' ? ' active' : ''}`}
+                onClick={() => { triggerHaptic('light'); setThemePref('dark'); }}
+                title="Night mode"
+                aria-label="Night mode"
+              >
+                <IconMoon size={13} />
+                <span>Night</span>
+              </button>
+              <button
+                type="button"
+                className={`settings-seg-btn${themePref === 'system' ? ' active' : ''}`}
+                onClick={() => { triggerHaptic('light'); setThemePref('system'); }}
+                title="System default"
+                aria-label="System default"
+              >
+                <IconSmartphone size={13} />
+                <span>Auto</span>
+              </button>
             </div>
-          </button>
+          </div>
 
           {(isSuperadmin || isFeatureEnabled('enableGeotagging')) && (
             <div className="settings-row-item" style={{ cursor: 'default' }}>
@@ -1443,98 +1637,7 @@ export function SettingsView({
         </div>
       </div>
 
-      {/* Group 3.5: This Trip -- mute is available to any member (personal
-          preference); Close Trip is admin-only (locks new expenses/members
-          app-wide, see tripStore's addExpense/addMember guards). */}
-      {hasActiveTrip && activeTrip && (
-        <div className="settings-group">
-          <h4 className="settings-group-title">This Trip</h4>
-          <div className="settings-group-card">
-            <div className="settings-row-item" style={{ cursor: 'default' }}>
-              <div className="settings-row-left">
-                <div className="settings-squircle squircle-teal">
-                  <IconBell size={18} />
-                </div>
-                <div className="settings-row-texts">
-                  <span className="settings-row-title">Mute Notifications</span>
-                  <span className="settings-row-subtitle">Stop push alerts for this trip -- still visible in your notifications panel</span>
-                </div>
-              </div>
-              <div className="settings-row-right">
-                <label style={{ position: 'relative', display: 'inline-block', width: '44px', height: '24px', margin: 0, cursor: 'pointer' }}>
-                  <input
-                    type="checkbox"
-                    checked={isTripMuted}
-                    onChange={(e) => setTripMuted(activeTrip.id, e.target.checked)}
-                    aria-label="Mute Notifications"
-                    style={{ opacity: 0, width: 0, height: 0, margin: 0 }}
-                  />
-                  <span
-                    style={{
-                      position: 'absolute',
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      bottom: 0,
-                      backgroundColor: isTripMuted ? '#17B6A6' : 'var(--border-color)',
-                      transition: '0.2s ease',
-                      borderRadius: 'var(--border-radius-pill)',
-                    }}
-                  >
-                    <span
-                      style={{
-                        position: 'absolute',
-                        height: '18px',
-                        width: '18px',
-                        left: isTripMuted ? '23px' : '3px',
-                        bottom: '3px',
-                        backgroundColor: 'white',
-                        transition: '0.2s ease',
-                        borderRadius: '50%',
-                        boxShadow: '0 1px 3px rgba(0,0,0,0.25)',
-                      }}
-                    />
-                  </span>
-                </label>
-              </div>
-            </div>
 
-            {isAdmin && (
-              <button
-                type="button"
-                className="settings-row-item"
-                onClick={() => {
-                  if (activeTrip.closed) {
-                    closeTrip(activeTrip.id, false);
-                    return;
-                  }
-                  onRequestConfirm?.({
-                    title: 'Close Trip',
-                    message: 'This locks the trip -- no new expenses or members can be added until it\'s reopened. Existing data stays untouched.',
-                    confirmLabel: 'Close Trip',
-                    onConfirm: () => closeTrip(activeTrip.id, true),
-                  });
-                }}
-              >
-                <div className="settings-row-left">
-                  <div className="settings-squircle squircle-amber">
-                    <IconShield size={18} />
-                  </div>
-                  <div className="settings-row-texts">
-                    <span className="settings-row-title">{activeTrip.closed ? 'Reopen Trip' : 'Close Trip'}</span>
-                    <span className="settings-row-subtitle">
-                      {activeTrip.closed ? 'Currently locked -- reopen to allow new expenses/members' : 'Lock this trip once everyone\'s settled up'}
-                    </span>
-                  </div>
-                </div>
-                <div className="settings-row-right">
-                  <IconChevronRight size={16} />
-                </div>
-              </button>
-            )}
-          </div>
-        </div>
-      )}
 
       {/* Group 4: Account & Danger Zone */}
       <div className="settings-group">
