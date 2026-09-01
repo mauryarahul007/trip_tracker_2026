@@ -9,8 +9,8 @@
 
 | Metric | Count |
 | :--- | :--- |
-| **Total Tracked** | **23** |
-| **💡 Requested** | **1** |
+| **Total Tracked** | **24** |
+| **💡 Requested** | **2** |
 | **📋 Planned** | **0** |
 | **🟡 In Progress** | **0** |
 | **✅ Shipped** | **22** |
@@ -23,6 +23,7 @@
 | ID | Category | Title | Requested By | Status |
 | :--- | :--- | :--- | :--- | :--- |
 | **[FEAT-002](#feat-002)** | `ui-ux` | Test | `mauryarahul007@gmail.com` | 💡 Requested |
+| **[FEAT-024](#feat-024)** | `admin` | CI pipeline for lint, build, and test on push/PR | `claude-cli` | 💡 Requested |
 
 ---
 
@@ -31,10 +32,19 @@
 ### FEAT-002: Test
 
 - **Category**: `ui-ux` | **Status**: `requested`
-- **Requested By**: `mauryarahul007@gmail.com` on 21/8/2026 (web)
+- **Requested By**: `mauryarahul007@gmail.com` on 8/21/2026 (web)
 - **Route**: `#nav-3`
 
 Test
+
+---
+
+### FEAT-024: CI pipeline for lint, build, and test on push/PR
+
+- **Category**: `admin` | **Status**: `requested`
+- **Requested By**: `claude-cli` on 9/1/2026 (web)
+
+CI pipeline for lint, build, and test on push/PR
 
 ---
 
