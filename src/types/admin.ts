@@ -67,7 +67,8 @@ export type AppConfigKey =
   | 'recycle_bin_retention_hours'
   | 'expense_amount_ceiling'
   | 'audit_log_retention_days'
-  | 'landing_backdrop_url';
+  | 'landing_backdrop_url'
+  | 'ops_webhook_url';
 
 export interface DevicePlatformCount {
   platform: 'ios' | 'android';

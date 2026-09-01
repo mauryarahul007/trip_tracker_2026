@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import type { Trip } from '../../types';
 import type { AdminUserRow, AuditLogEntry } from '../../types/admin';
 import type { BugRecord } from '../../services/bugApi';
@@ -62,9 +62,24 @@ export function AdminCommandCenterPage({ trips, bugs, features, users, auditLogs
     return items;
   }, [criticalBugs, groundedTrips, onOpenBugTracker, onNavigate]);
 
-  const recentActivity = useMemo(() => auditLogs.slice(0, 6), [auditLogs]);
   const userNameById = useMemo(() => new Map(users.map((u) => [u.id, u.displayName || u.email])), [users]);
   const tripNameById = useMemo(() => new Map(trips.map((t) => [t.id, t.name])), [trips]);
+
+  const [activityFilter, setActivityFilter] = useState<'all' | 'security' | 'trip' | 'user' | 'flag'>('all');
+
+  const filteredActivity = useMemo(() => {
+    let list = auditLogs;
+    if (activityFilter === 'security') {
+      list = list.filter((l) => l.action.includes('auth') || l.action.includes('admin') || l.action.includes('wipe') || l.action.includes('purge') || l.action.includes('suspend'));
+    } else if (activityFilter === 'trip') {
+      list = list.filter((l) => l.action.includes('trip') || !!l.tripId);
+    } else if (activityFilter === 'user') {
+      list = list.filter((l) => l.action.includes('user') || l.action.includes('ban') || l.action.includes('broadcast'));
+    } else if (activityFilter === 'flag') {
+      list = list.filter((l) => l.action.includes('flag') || l.action.includes('config'));
+    }
+    return list.slice(0, 8);
+  }, [auditLogs, activityFilter]);
 
   const handleExportBugs = () => {
     const blob = new Blob([JSON.stringify(bugs, null, 2)], { type: 'application/json' });
@@ -138,19 +153,45 @@ export function AdminCommandCenterPage({ trips, bugs, features, users, auditLogs
         </div>
 
         <div className="ops-card">
-          <h3 className="ops-section-title">Recent activity</h3>
-          <p className="ops-section-sub">Live tail of the Audit log.</p>
-          {recentActivity.length === 0 ? (
-            <div className="ops-empty">No audit events recorded yet.</div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '6px' }}>
+            <h3 className="ops-section-title" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span className="ops-live-pulse-dot" /> Live Fleet Stream
+            </h3>
+            <div style={{ display: 'flex', gap: '4px' }}>
+              {(['all', 'security', 'trip', 'user', 'flag'] as const).map((tag) => (
+                <button
+                  key={tag}
+                  type="button"
+                  className="ops-btn"
+                  style={{
+                    padding: '2px 7px',
+                    fontSize: '10.5px',
+                    textTransform: 'uppercase',
+                    background: activityFilter === tag ? 'var(--line-strong)' : 'transparent',
+                    color: activityFilter === tag ? 'var(--text-primary)' : 'var(--text-tertiary)',
+                  }}
+                  onClick={() => setActivityFilter(tag)}
+                >
+                  {tag}
+                </button>
+              ))}
+            </div>
+          </div>
+          <p className="ops-section-sub">Real-time audit &amp; security event telemetry.</p>
+          {filteredActivity.length === 0 ? (
+            <div className="ops-empty">No {activityFilter === 'all' ? '' : activityFilter} events recorded yet.</div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              {recentActivity.map((l) => (
-                <div key={l.id} style={{ fontSize: '11.5px', color: 'var(--text-secondary)', display: 'flex', gap: '8px' }}>
-                  <code className="ops-flag-key" title={new Date(l.createdAt).toLocaleString()} style={{ flexShrink: 0 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {filteredActivity.map((l) => (
+                <div key={l.id} style={{ fontSize: '11.5px', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <code className="ops-flag-key" title={new Date(l.createdAt).toLocaleString()} style={{ flexShrink: 0, fontSize: '10px' }}>
                     {formatRelativeTime(l.createdAt)}
                   </code>
-                  <span>
-                    {(l.actorUserId && userNameById.get(l.actorUserId)) || 'System'} &middot; {humanizeAction(l.action)}
+                  <span style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <strong style={{ color: 'var(--text-primary)', fontWeight: 500 }}>
+                      {(l.actorUserId && userNameById.get(l.actorUserId)) || 'System'}
+                    </strong>
+                    {' '}&middot; {humanizeAction(l.action)}
                     {l.tripId && tripNameById.get(l.tripId) ? ` · ${tripNameById.get(l.tripId)}` : ''}
                   </span>
                 </div>
@@ -158,7 +199,7 @@ export function AdminCommandCenterPage({ trips, bugs, features, users, auditLogs
             </div>
           )}
           <button type="button" className="ops-btn" style={{ width: '100%', justifyContent: 'center', marginTop: '12px' }} onClick={() => onNavigate('audit')}>
-            View full audit log
+            View full audit log &rarr;
           </button>
         </div>
       </div>

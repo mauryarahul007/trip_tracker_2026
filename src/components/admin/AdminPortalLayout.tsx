@@ -80,7 +80,7 @@ const SECTION_GROUPS: { label: string; items: Section[] }[] = [
 
 const SECTIONS: Section[] = SECTION_GROUPS.flatMap((g) => g.items);
 
-type JumpResult = { kind: 'Trip' | 'User' | 'Bug'; label: string; sublabel: string; onSelect: () => void };
+type JumpResult = { kind: 'Section' | 'Action' | 'Trip' | 'User' | 'Bug'; label: string; sublabel: string; onSelect: () => void };
 
 function useIstClock() {
   const [clock, setClock] = useState('--:--:-- IST');
@@ -218,25 +218,72 @@ export function AdminPortalLayout({
         ? { ok: false, label: `${groundedTripCount} trip${groundedTripCount === 1 ? '' : 's'} grounded` }
         : { ok: true, label: 'All systems nominal' };
 
-  // Global jump search: find a trip, user or bug case by name from
-  // anywhere in the portal instead of picking the right tab first.
+  // Global jump search / Command Palette: find a trip, user, bug case, or section
   const [jumpQuery, setJumpQuery] = useState('');
   const [jumpOpen, setJumpOpen] = useState(false);
+  const [jumpIndex, setJumpIndex] = useState(0);
+  const cmdkInputRef = useRef<HTMLInputElement>(null);
+
+  // Global Cmd+K / Ctrl+K keyboard shortcut
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        cmdkInputRef.current?.focus();
+        setJumpOpen(true);
+      }
+      if (e.key === 'Escape') {
+        setJumpOpen(false);
+        cmdkInputRef.current?.blur();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   const jumpResults = useMemo<JumpResult[]>(() => {
     const q = jumpQuery.trim().toLowerCase();
-    if (!q) return [];
     const results: JumpResult[] = [];
+
+    // Section shortcuts
+    SECTIONS
+      .filter((s) => !q || s.label.toLowerCase().includes(q) || s.code.toLowerCase().includes(q))
+      .slice(0, 3)
+      .forEach((s) =>
+        results.push({
+          kind: 'Section',
+          label: `${s.code} · ${s.label}`,
+          sublabel: 'Ops section',
+          onSelect: () => onActiveTabChange(s.id),
+        })
+      );
+
+    if (!q) {
+      // Default quick actions when query is empty
+      results.push({
+        kind: 'Action',
+        label: 'Refresh all fleet data',
+        sublabel: 'Sync all metrics, users & trips',
+        onSelect: () => void handleRefreshAll(),
+      });
+      return results;
+    }
+
     trips
-      .filter((t) => t.name.toLowerCase().includes(q))
+      .filter((t) => t.name.toLowerCase().includes(q) || t.id.toLowerCase().includes(q))
       .slice(0, 4)
       .forEach((t) =>
         results.push({
           kind: 'Trip',
           label: t.name,
-          sublabel: t.baseCurrency,
-          onSelect: () => onActiveTabChange('trips'),
+          sublabel: `${t.baseCurrency} · ${t.archived ? 'Archived' : t.frozen ? 'Grounded' : 'Active'}`,
+          onSelect: () => {
+            onActiveTabChange('trips');
+            if (onInspectTrip) onInspectTrip(t.id);
+          },
         })
       );
+
     users
       .filter((u) => u.email.toLowerCase().includes(q) || (u.displayName || '').toLowerCase().includes(q))
       .slice(0, 4)
@@ -244,23 +291,45 @@ export function AdminPortalLayout({
         results.push({
           kind: 'User',
           label: u.displayName || u.email,
-          sublabel: u.email,
+          sublabel: `${u.email} · ${u.banned ? 'Suspended' : 'Active'}`,
           onSelect: () => onActiveTabChange('users'),
         })
       );
+
     bugs
-      .filter((b) => b.id.toLowerCase().includes(q) || b.title.toLowerCase().includes(q))
+      .filter((b) => b.id.toLowerCase().includes(q) || b.title.toLowerCase().includes(q) || b.category.toLowerCase().includes(q))
       .slice(0, 4)
       .forEach((b) =>
         results.push({
           kind: 'Bug',
           label: `${b.id} — ${b.title}`,
-          sublabel: b.severity,
+          sublabel: `${b.severity.toUpperCase()} · ${b.status}`,
           onSelect: () => onOpenBugTracker?.(),
         })
       );
+
     return results.slice(0, 8);
-  }, [jumpQuery, trips, users, bugs, onActiveTabChange, onOpenBugTracker]);
+  }, [jumpQuery, trips, users, bugs, onActiveTabChange, onOpenBugTracker, onInspectTrip]);
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (!jumpOpen || jumpResults.length === 0) return;
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setJumpIndex((prev) => (prev + 1) % jumpResults.length);
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setJumpIndex((prev) => (prev - 1 + jumpResults.length) % jumpResults.length);
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      const target = jumpResults[jumpIndex] || jumpResults[0];
+      if (target) {
+        target.onSelect();
+        setJumpQuery('');
+        setJumpOpen(false);
+        cmdkInputRef.current?.blur();
+      }
+    }
+  };
 
   return (
     <div className="ops-deck ops-shell">
@@ -273,35 +342,42 @@ export function AdminPortalLayout({
           </div>
         </div>
         <div className="ops-cmdk-wrap">
-          <div className="ops-cmdk">
+          <div className="ops-cmdk" onClick={() => cmdkInputRef.current?.focus()}>
             <IconSearch size={15} className="icon-sm" style={{ color: 'var(--text-tertiary)', flexShrink: 0 }} />
             <input
+              ref={cmdkInputRef}
               type="text"
-              placeholder="Jump to a trip, user or case..."
+              placeholder="Search or jump (⌘K / Ctrl+K)..."
               value={jumpQuery}
-              onChange={(e) => setJumpQuery(e.target.value)}
+              onChange={(e) => {
+                setJumpQuery(e.target.value);
+                setJumpIndex(0);
+              }}
+              onKeyDown={handleKeyDown}
               onFocus={() => setJumpOpen(true)}
-              onBlur={() => setTimeout(() => setJumpOpen(false), 120)}
+              onBlur={() => setTimeout(() => setJumpOpen(false), 200)}
             />
+            <span className="ops-cmdk-kbd">⌘K</span>
           </div>
-          {jumpOpen && jumpQuery.trim() && (
+          {jumpOpen && (
             <div className="ops-cmdk-results">
               {jumpResults.length === 0 ? (
-                <div className="ops-cmdk-empty">No trip, user or case matches &ldquo;{jumpQuery}&rdquo;.</div>
+                <div className="ops-cmdk-empty">No matching trip, user, section or case for &ldquo;{jumpQuery}&rdquo;.</div>
               ) : (
                 jumpResults.map((r, i) => (
                   <button
                     key={`${r.kind}-${i}`}
                     type="button"
-                    className="ops-cmdk-row"
+                    className={`ops-cmdk-row ${i === jumpIndex ? 'selected' : ''}`}
                     onMouseDown={(e) => {
                       e.preventDefault();
                       r.onSelect();
                       setJumpQuery('');
                       setJumpOpen(false);
                     }}
+                    onMouseEnter={() => setJumpIndex(i)}
                   >
-                    <span className="kind">{r.kind}</span>
+                    <span className={`kind kind-${r.kind.toLowerCase()}`}>{r.kind}</span>
                     <span style={{ minWidth: 0, overflow: 'hidden' }}>
                       <span style={{ display: 'block', fontSize: '12.5px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.label}</span>
                       <span style={{ display: 'block', fontSize: '10.5px', color: 'var(--text-tertiary)' }}>{r.sublabel}</span>

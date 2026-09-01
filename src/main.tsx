@@ -1,13 +1,10 @@
-import { StrictMode } from 'react'
+import { StrictMode, lazy, Suspense } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { Capacitor } from '@capacitor/core'
 import { App as CapacitorApp } from '@capacitor/app'
 import './index.css'
 import App from './App.tsx'
-import { LoginScreen } from './components/LoginScreen'
-import { ResetPasswordScreen } from './components/ResetPasswordScreen'
-import { JoinTripScreen } from './components/JoinTripScreen'
 import { RequireAuth } from './components/RequireAuth'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { UpdateBanner } from './components/UpdateBanner'
@@ -17,6 +14,26 @@ import { useAuthStore } from './store/authStore'
 import { isMissingSupabaseEnv } from './services/supabaseClient'
 import { initNativeShell } from './utils/nativeShell'
 import { initLiveUpdates } from './utils/liveUpdate'
+
+const LoginScreen = lazy(() =>
+  import('./components/LoginScreen').then((m) => ({ default: m.LoginScreen }))
+)
+const ResetPasswordScreen = lazy(() =>
+  import('./components/ResetPasswordScreen').then((m) => ({ default: m.ResetPasswordScreen }))
+)
+const JoinTripScreen = lazy(() =>
+  import('./components/JoinTripScreen').then((m) => ({ default: m.JoinTripScreen }))
+)
+
+function RouteLoadingFallback() {
+  return (
+    <div className="app-container" style={{ justifyContent: 'center', alignItems: 'center' }}>
+      <div className="ledger-loader" role="status" aria-label="Loading">
+        <span className="ledger-loader-mark">TT</span>
+      </div>
+    </div>
+  )
+}
 
 // Dev server rebuilds already give instant fresh code -- registering the
 // SW here too just adds a stale-while-revalidate cache that serves last
@@ -74,14 +91,30 @@ createRoot(document.getElementById('root')!).render(
     <UpdateBanner />
     <BrowserRouter basename={import.meta.env.BASE_URL}>
       <Routes>
-        <Route path="/login" element={<LoginScreen />} />
-        <Route path="/reset-password" element={<ResetPasswordScreen />} />
+        <Route
+          path="/login"
+          element={
+            <Suspense fallback={<RouteLoadingFallback />}>
+              <LoginScreen />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/reset-password"
+          element={
+            <Suspense fallback={<RouteLoadingFallback />}>
+              <ResetPasswordScreen />
+            </Suspense>
+          }
+        />
         <Route
           path="/join/:code"
           element={
             <RequireAuth>
               <ErrorBoundary>
-                <JoinTripScreen />
+                <Suspense fallback={<RouteLoadingFallback />}>
+                  <JoinTripScreen />
+                </Suspense>
               </ErrorBoundary>
             </RequireAuth>
           }

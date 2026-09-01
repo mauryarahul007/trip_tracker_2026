@@ -12,10 +12,14 @@ import { syncStatusBarTone, resolveTheme } from './utils/nativeShell';
 import { isMissingSupabaseEnv } from './services/supabaseClient';
 import { sendPushNotification } from './services/pushApi';
 import { fetchAppFlag } from './services/tripApi';
-import { GlobalSettingsModal } from './components/GlobalSettingsModal';
 import { ConfirmDialog, type ConfirmRequest } from './components/ConfirmDialog';
 import { TripsListScreen } from './components/TripsListScreen';
 import { lazyImport } from './utils/lazyImport';
+// Code-split secondary modals and heavy views so initial bundle only ships
+// the critical path for the active trip view.
+const GlobalSettingsModal = lazy(lazyImport(() =>
+  import('./components/GlobalSettingsModal').then((m) => ({ default: m.GlobalSettingsModal }))
+));
 // maplibre-gl is a sizeable dependency (JS + worker + WASM) only needed on
 // the trip dashboard -- code-split so it doesn't load for the trips list
 // or any other screen.
@@ -48,10 +52,14 @@ import { MembersGroupsTab } from './components/MembersGroupsTab';
 const SettingsTab = lazy(lazyImport(() =>
   import('./components/SettingsTab').then((m) => ({ default: m.SettingsTab }))
 ));
-import { ExpenseReviewModal } from './components/ExpenseReviewModal';
+const ExpenseReviewModal = lazy(lazyImport(() =>
+  import('./components/ExpenseReviewModal').then((m) => ({ default: m.ExpenseReviewModal }))
+));
 import { UndoToasts } from './components/UndoToasts';
 import { NavTabs } from './components/NavTabs';
-import { ShareTripModal } from './components/ShareTripModal';
+const ShareTripModal = lazy(lazyImport(() =>
+  import('./components/ShareTripModal').then((m) => ({ default: m.ShareTripModal }))
+));
 import { NotificationsPanel } from './components/NotificationsPanel';
 import { NotificationsBellButton } from './components/NotificationsBellButton';
 import { InAppNotificationBanner } from './components/InAppNotificationBanner';
@@ -71,7 +79,9 @@ import { CommandPalette } from './components/CommandPalette';
 const TripWrappedModal = lazy(lazyImport(() =>
   import('./components/TripWrappedModal').then((m) => ({ default: m.TripWrappedModal }))
 ));
-import { AchievementBadgeModal } from './components/AchievementBadgeModal';
+const AchievementBadgeModal = lazy(lazyImport(() =>
+  import('./components/AchievementBadgeModal').then((m) => ({ default: m.AchievementBadgeModal }))
+));
 import { usePeerPresence } from './hooks/usePeerPresence';
 import type { AdminTab } from './components/admin/AdminPortalLayout';
 const AdminPortalLayout = lazy(lazyImport(() =>
@@ -2119,73 +2129,77 @@ export default function App() {
       )}
 
       {showShareTrip && activeTrip && (
-        <ShareTripModal trip={activeTrip} onClose={() => setShowShareTrip(false)} />
+        <Suspense fallback={null}>
+          <ShareTripModal trip={activeTrip} onClose={() => setShowShareTrip(false)} />
+        </Suspense>
       )}
 
-
-
       {selectedReviewExpense && (
-        <ExpenseReviewModal
-          expense={selectedReviewExpense}
-          members={members}
-          categories={categories}
-          trip={activeTrip}
-          canManage={isAdmin || selectedReviewExpense.createdByUserId === userId}
-          onClose={() => setSelectedReviewExpense(null)}
-          onEdit={() => {
-            const exp = selectedReviewExpense;
-            setSelectedReviewExpense(null);
-            handleStartEditExpense(exp);
-          }}
-          onDelete={() => {
-            const exp = selectedReviewExpense;
-            setSelectedReviewExpense(null);
-            handleDeleteExpense(exp);
-          }}
-          onDuplicate={() => {
-            handleDuplicateExpense(selectedReviewExpense);
-            setSelectedReviewExpense(null);
-          }}
-        />
+        <Suspense fallback={null}>
+          <ExpenseReviewModal
+            expense={selectedReviewExpense}
+            members={members}
+            categories={categories}
+            trip={activeTrip}
+            canManage={isAdmin || selectedReviewExpense.createdByUserId === userId}
+            onClose={() => setSelectedReviewExpense(null)}
+            onEdit={() => {
+              const exp = selectedReviewExpense;
+              setSelectedReviewExpense(null);
+              handleStartEditExpense(exp);
+            }}
+            onDelete={() => {
+              const exp = selectedReviewExpense;
+              setSelectedReviewExpense(null);
+              handleDeleteExpense(exp);
+            }}
+            onDuplicate={() => {
+              handleDuplicateExpense(selectedReviewExpense);
+              setSelectedReviewExpense(null);
+            }}
+          />
+        </Suspense>
       )}
 
       {showGlobalSettings && (
-        <GlobalSettingsModal
-          onClose={() => setShowGlobalSettings(false)}
-          themePref={themePref}
-          setThemePref={setThemePref}
-          onExportJson={triggerExport}
-          showImportArea={showImportArea}
-          setShowImportArea={setShowImportArea}
-          importJson={importJson}
-          setImportJson={setImportJson}
-          importStatus={importStatus}
-          importErrorMessage={importErrorMessage}
-          onImport={handleImport}
-          onClearDatabase={handleClearDatabase}
-          onLoadDemoTrip={handleLoadDemoTrip}
-          archivedTrips={archivedTrips}
-          onRestoreTrip={handleRestoreTrip}
-          onDeleteTrip={handleDeleteTrip}
-          userEmail={userEmail}
-          onSignOut={signOut}
-          pwaInstallable={!!deferredPrompt}
-          onInstallApp={handleInstallApp}
-          onRequestConfirm={setConfirmRequest}
-          onOpenTripWrapped={() => setShowTripWrapped(true)}
-          onOpenShareTrip={() => setShowShareTrip(true)}
-          onNavigateToBalances={() => {
-            setShowGlobalSettings(false);
-            setActiveTab('expenses');
-          }}
-          isAdmin={isAdmin}
-          onExportCsv={triggerCsvExport}
-          baseCurrency={activeTrip ? getCurrencySymbol(activeTrip.baseCurrency) : ''}
-          categories={categories}
-          activeTripExpenses={activeTripExpenses}
-          onAddCategory={handleAddCategory}
-          onDeleteCategory={handleDeleteCategory}
-        />
+        <Suspense fallback={null}>
+          <GlobalSettingsModal
+            onClose={() => setShowGlobalSettings(false)}
+            themePref={themePref}
+            setThemePref={setThemePref}
+            onExportJson={triggerExport}
+            showImportArea={showImportArea}
+            setShowImportArea={setShowImportArea}
+            importJson={importJson}
+            setImportJson={setImportJson}
+            importStatus={importStatus}
+            importErrorMessage={importErrorMessage}
+            onImport={handleImport}
+            onClearDatabase={handleClearDatabase}
+            onLoadDemoTrip={handleLoadDemoTrip}
+            archivedTrips={archivedTrips}
+            onRestoreTrip={handleRestoreTrip}
+            onDeleteTrip={handleDeleteTrip}
+            userEmail={userEmail}
+            onSignOut={signOut}
+            pwaInstallable={!!deferredPrompt}
+            onInstallApp={handleInstallApp}
+            onRequestConfirm={setConfirmRequest}
+            onOpenTripWrapped={() => setShowTripWrapped(true)}
+            onOpenShareTrip={() => setShowShareTrip(true)}
+            onNavigateToBalances={() => {
+              setShowGlobalSettings(false);
+              setActiveTab('expenses');
+            }}
+            isAdmin={isAdmin}
+            onExportCsv={triggerCsvExport}
+            baseCurrency={activeTrip ? getCurrencySymbol(activeTrip.baseCurrency) : ''}
+            categories={categories}
+            activeTripExpenses={activeTripExpenses}
+            onAddCategory={handleAddCategory}
+            onDeleteCategory={handleDeleteCategory}
+          />
+        </Suspense>
       )}
 
       <UndoToasts
@@ -2315,14 +2329,16 @@ export default function App() {
 
       {/* Trip Squad Achievements & Milestones Modal */}
       {showAchievements && activeTrip && (
-        <AchievementBadgeModal
-          trip={activeTrip}
-          expenses={activeTripExpenses}
-          members={visibleMembers}
-          categories={categories}
-          isFullySettled={transfers.length === 0}
-          onClose={() => setShowAchievements(false)}
-        />
+        <Suspense fallback={null}>
+          <AchievementBadgeModal
+            trip={activeTrip}
+            expenses={activeTripExpenses}
+            members={visibleMembers}
+            categories={categories}
+            isFullySettled={transfers.length === 0}
+            onClose={() => setShowAchievements(false)}
+          />
+        </Suspense>
       )}
 
       {/* Rendered unconditionally regardless of which screen is active

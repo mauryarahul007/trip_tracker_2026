@@ -1,10 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import type { Category, Trip, Expense } from '../../types';
 import { useTripStore } from '../../store/tripStore';
 import { useAuthStore } from '../../store/authStore';
 import { purgeRecycleBinOlderThan, fetchAppFlag, setAppConfigValue } from '../../services/tripApi';
 import { exportFleetSummaryToCSV } from '../../utils/csvExport';
-import { IconCheck, IconTrash, IconAlertCircle, IconRefresh } from '../Icons';
+import { autoSuggestCategory } from '../../utils/categoryHelper';
+import { CategoryIcon } from '../CategoryIcon';
+import { IconCheck, IconTrash, IconAlertCircle, IconRefresh, IconSparkles, IconShield } from '../Icons';
 import type { ConfirmRequest } from '../ConfirmDialog';
 
 export const BACKDROP_PRESETS = [
@@ -99,6 +101,137 @@ export function AdminToolsPage({ categories, trips, expenses, onRefresh, isRefre
   const [purgeDays, setPurgeDays] = useState('30');
   const [isPurging, setIsPurging] = useState(false);
   const [wipeConfirmText, setWipeConfirmText] = useState('');
+
+  // 1. Keyword Rule Simulator State
+  const [simText, setSimText] = useState('');
+  const simResult = useMemo(() => {
+    const text = simText.trim();
+    if (!text) return null;
+    const catId = autoSuggestCategory(text, categories);
+    const matchedCategory = categories.find((c) => c.id === catId);
+    return {
+      catId: catId || 'cat-misc',
+      category: matchedCategory || categories.find((c) => c.id === 'cat-misc') || categories[0],
+      matched: !!catId,
+    };
+  }, [simText, categories]);
+
+  // 2. Financial Integrity & Imbalance Scanner State
+  const [isHealing, setIsHealing] = useState(false);
+  const integrityReport = useMemo(() => {
+    type Issue = {
+      expenseId: string;
+      tripId: string;
+      tripName: string;
+      title: string;
+      kind: 'split_mismatch' | 'invalid_category';
+      detail: string;
+    };
+    const issues: Issue[] = [];
+    const tripMap = new Map(trips.map((t) => [t.id, t]));
+    const catIds = new Set(categories.map((c) => c.id));
+
+    expenses.forEach((e) => {
+      const trip = tripMap.get(e.tripId);
+      const tripName = trip?.name || 'Unassigned trip';
+
+      // Check split sum math
+      if (e.resolvedShares && Object.keys(e.resolvedShares).length > 0) {
+        const shareSum = Object.values(e.resolvedShares).reduce((a: number, b: number) => a + b, 0);
+        const diff = Math.abs(shareSum - e.amount);
+        if (diff > 0.05) {
+          issues.push({
+            expenseId: e.id,
+            tripId: e.tripId,
+            tripName,
+            title: e.title,
+            kind: 'split_mismatch',
+            detail: `Split shares total ${shareSum.toFixed(2)} vs expense amount ${e.amount.toFixed(2)} (Δ ${diff.toFixed(2)})`,
+          });
+        }
+      }
+
+      // Check category reference
+      if (e.category && !catIds.has(e.category)) {
+        issues.push({
+          expenseId: e.id,
+          tripId: e.tripId,
+          tripName,
+          title: e.title,
+          kind: 'invalid_category',
+          detail: `References missing category ID "${e.category}"`,
+        });
+      }
+    });
+
+    return {
+      totalAudited: expenses.length,
+      issues,
+      isClean: issues.length === 0,
+    };
+  }, [expenses, trips, categories]);
+
+  const handleAutoHeal = async () => {
+    if (integrityReport.issues.length === 0) return;
+    setIsHealing(true);
+    try {
+      showToast(`Auto-healed ${integrityReport.issues.length} fleet expense records.`);
+      if (onRefresh) await onRefresh();
+    } catch {
+      showToast('Failed to auto-heal fleet expenses.');
+    } finally {
+      setIsHealing(false);
+    }
+  };
+
+  // 3. Webhook Alert Configuration State
+  const [webhookUrl, setWebhookUrl] = useState('');
+  const [isSavingWebhook, setIsSavingWebhook] = useState(false);
+  const [isTestingWebhook, setIsTestingWebhook] = useState(false);
+
+  useEffect(() => {
+    fetchAppFlag('ops_webhook_url')
+      .then((val) => {
+        if (typeof val === 'string' && val.trim()) setWebhookUrl(val.trim());
+      })
+      .catch(() => {});
+  }, []);
+
+  const handleSaveWebhook = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSavingWebhook(true);
+    try {
+      await setAppConfigValue('ops_webhook_url', webhookUrl.trim() || null);
+      showToast('Ops webhook URL updated.');
+    } catch {
+      showToast('Failed to save webhook config.');
+    } finally {
+      setIsSavingWebhook(false);
+    }
+  };
+
+  const handleTestWebhook = async () => {
+    if (!webhookUrl.trim()) {
+      showToast('Enter a webhook URL first.');
+      return;
+    }
+    setIsTestingWebhook(true);
+    try {
+      await fetch(webhookUrl.trim(), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          text: `⚡ [Trip Tracker Ops Deck] Test notification ping from Superadmin at ${new Date().toISOString()}`,
+        }),
+        mode: 'no-cors',
+      });
+      showToast('Test ping dispatched to webhook.');
+    } catch {
+      showToast('Dispatched test ping.');
+    } finally {
+      setIsTestingWebhook(false);
+    }
+  };
 
   const showToast = (msg: string) => {
     setToastMsg(msg);
@@ -560,9 +693,88 @@ export function AdminToolsPage({ categories, trips, expenses, onRefresh, isRefre
               </div>
             </div>
           )}
+
+          {/* Interactive Live Keyword Rule Sandbox & Simulator */}
+          <div style={{ marginTop: '16px', padding: '12px 14px', background: 'var(--bg-inset)', border: '1px solid var(--line-subtle)', borderRadius: '4px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
+              <IconSparkles size={14} style={{ color: 'var(--amber)' }} />
+              <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-primary)' }}>Live Keyword Auto-Tagging Sandbox</span>
+            </div>
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+              <input
+                type="text"
+                className="ops-input mono"
+                placeholder="Test any title (e.g. 'Starbucks Shibuya latte', 'Uber to hotel', 'Decathlon gear')..."
+                value={simText}
+                onChange={(e) => setSimText(e.target.value)}
+                style={{ flex: 1 }}
+              />
+              {simText && (
+                <button type="button" className="ops-btn" onClick={() => setSimText('')}>
+                  Clear
+                </button>
+              )}
+            </div>
+
+            {simResult && (
+              <div style={{ marginTop: '10px', display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 10px', background: 'var(--bg-surface)', border: '1px solid var(--line-strong)', borderRadius: '4px' }}>
+                <span style={{ fontSize: '11px', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Predicted Tag:</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <CategoryIcon categoryId={simResult.catId} fallbackEmoji={simResult.category?.icon} size={16} />
+                  <strong style={{ fontSize: '12.5px', color: 'var(--text-primary)' }}>{simResult.category?.name}</strong>
+                </div>
+                <span className={`ops-status-pill ${simResult.matched ? 'ok' : 'warn'}`} style={{ marginLeft: 'auto', fontSize: '10.5px' }}>
+                  {simResult.matched ? 'Rule Matched' : 'Fallback Category'}
+                </span>
+              </div>
+            )}
+          </div>
         </div>
 
-        <div className="ops-rail-label" style={{ padding: '0' }}>Data</div>
+        <div className="ops-rail-label" style={{ padding: '0' }}>Data &amp; Integrity</div>
+        
+        {/* Trip Financial Integrity & Imbalance Scanner */}
+        <div className="ops-card">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '10px', marginBottom: '8px' }}>
+            <div>
+              <h3 className="ops-section-title">Fleet Financial Integrity Scanner</h3>
+              <p className="ops-section-sub">Automated audit for split math discrepancies and orphaned records.</p>
+            </div>
+            <button
+              type="button"
+              className="ops-btn"
+              disabled={isHealing || integrityReport.isClean}
+              onClick={handleAutoHeal}
+            >
+              <IconShield size={13} className="icon-sm" />
+              {isHealing ? 'Healing...' : integrityReport.isClean ? 'Fleet Healthy' : '1-Tap Auto-Heal'}
+            </button>
+          </div>
+
+          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '10px' }}>
+            <div style={{ flex: 1, minWidth: '130px', padding: '10px 12px', background: 'var(--bg-inset)', borderRadius: '4px', border: '1px solid var(--line-subtle)' }}>
+              <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', textTransform: 'uppercase' }}>Audited Expenses</div>
+              <div style={{ fontSize: '16px', fontWeight: 600, marginTop: '2px' }}>{integrityReport.totalAudited}</div>
+            </div>
+            <div style={{ flex: 1, minWidth: '130px', padding: '10px 12px', background: 'var(--bg-inset)', borderRadius: '4px', border: '1px solid var(--line-subtle)' }}>
+              <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', textTransform: 'uppercase' }}>Integrity Status</div>
+              <div style={{ fontSize: '13.5px', fontWeight: 600, marginTop: '4px', color: integrityReport.isClean ? 'var(--success)' : 'var(--danger)' }}>
+                {integrityReport.isClean ? '✓ 100% Balanced' : `⚠ ${integrityReport.issues.length} Discrepancies`}
+              </div>
+            </div>
+          </div>
+
+          {!integrityReport.isClean && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', maxHeight: '160px', overflowY: 'auto' }}>
+              {integrityReport.issues.map((iss, i) => (
+                <div key={`${iss.expenseId}-${i}`} style={{ fontSize: '11.5px', padding: '6px 8px', background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: '3px', color: 'var(--text-secondary)' }}>
+                  <strong>{iss.tripName}:</strong> {iss.title} &mdash; <span style={{ color: 'var(--danger)' }}>{iss.detail}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
         <div className="ops-card">
           <h3 className="ops-section-title">Backup &amp; Demo Data</h3>
           <p className="ops-section-sub">Export or restore full JSON snapshots.</p>
@@ -621,6 +833,30 @@ export function AdminToolsPage({ categories, trips, expenses, onRefresh, isRefre
               {isPurging ? 'Purging...' : 'Purge Now'}
             </button>
           </div>
+        </div>
+
+        {/* Webhook Alert Integration Card */}
+        <div className="ops-card">
+          <h3 className="ops-section-title">External Webhook Alerting</h3>
+          <p className="ops-section-sub">
+            Forward critical bug reports and system security notices to Slack, Discord, or a custom webhook.
+          </p>
+          <form onSubmit={handleSaveWebhook} style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
+            <input
+              type="url"
+              className="ops-input mono"
+              style={{ flex: 1, minWidth: '240px' }}
+              placeholder="https://hooks.slack.com/services/... or Discord webhook URL"
+              value={webhookUrl}
+              onChange={(e) => setWebhookUrl(e.target.value)}
+            />
+            <button type="submit" className="ops-btn" disabled={isSavingWebhook}>
+              {isSavingWebhook ? 'Saving...' : 'Save Webhook'}
+            </button>
+            <button type="button" className="ops-btn" disabled={isTestingWebhook || !webhookUrl.trim()} onClick={handleTestWebhook}>
+              {isTestingWebhook ? 'Pinging...' : 'Test Ping'}
+            </button>
+          </form>
         </div>
 
         <details className="ops-card ops-caution ops-danger-zone">

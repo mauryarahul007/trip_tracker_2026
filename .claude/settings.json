@@ -23,6 +23,18 @@
           }
         ]
       }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if [ -f graphify-out/graph.json ] && [ ! -f graphify-out/.update-lock ]; then touch graphify-out/.update-lock; graphify update . >graphify-out/.update-last.log 2>&1; rm -f graphify-out/.update-lock; fi; true",
+            "async": true,
+            "statusMessage": "Refreshing knowledge graph (code-only, no LLM)..."
+          }
+        ]
+      }
     ]
   }
 }

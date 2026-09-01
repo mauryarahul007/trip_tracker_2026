@@ -995,3 +995,68 @@ legend.ops-form-label { padding: 0; width: 100%; }
   color: #FFFFFF;
   width: 100%;
 }
+
+/* Command Palette Keyboard Badge & Selection */
+.ops-cmdk-kbd {
+  font-family: var(--font-family-mono, monospace);
+  font-size: 10px;
+  color: var(--text-tertiary);
+  background: var(--bg-inset);
+  border: 1px solid var(--line-subtle);
+  border-radius: 4px;
+  padding: 1px 5px;
+  margin-right: 6px;
+}
+
+.ops-cmdk-row.selected {
+  background: var(--bg-inset);
+  outline: 1px solid var(--line-strong);
+}
+
+.kind-section {
+  background: rgba(99, 102, 241, 0.15);
+  color: #818CF8;
+}
+
+.kind-action {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34D399;
+}
+
+.kind-trip {
+  background: rgba(47, 111, 237, 0.15);
+  color: #60A5FA;
+}
+
+.kind-user {
+  background: rgba(245, 158, 11, 0.15);
+  color: #FBBF24;
+}
+
+.kind-bug {
+  background: rgba(239, 68, 68, 0.15);
+  color: #F87171;
+}
+
+/* Live Stream Pulsing Indicator */
+.ops-live-pulse-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #10B981;
+  box-shadow: 0 0 8px #10B981;
+  display: inline-block;
+  animation: opsPulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes opsPulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.4;
+    transform: scale(0.85);
+  }
+}
+

@@ -25,7 +25,11 @@ import {
   IconRefresh,
   IconSearch,
 } from './Icons';
-import { TripJourneyMap } from './TripJourneyMap';
+// TripJourneyMap pulls in maplibre-gl (~1.5MB minified) -- code-split so it
+// doesn't load unless the user opens the "Trip Map" subscreen.
+const TripJourneyMap = lazy(() =>
+  import('./TripJourneyMap').then((m) => ({ default: m.TripJourneyMap }))
+);
 import { CategoryIcon } from './CategoryIcon';
 import { useTripStore } from '../store/tripStore';
 import { useAuthStore } from '../store/authStore';
@@ -984,7 +988,15 @@ export function SettingsView({
         </div>
         <h3 className="settings-subscreen-main-title">Trip Map</h3>
         <p className="settings-subscreen-subtitle">Where the money went, plotted on the map.</p>
-        <TripJourneyMap expenses={activeTripExpenses} categories={categories} baseCurrency={baseCurrency || ''} />
+        <Suspense
+          fallback={
+            <div className="glass-card" style={{ height: '320px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>
+              Loading map...
+            </div>
+          }
+        >
+          <TripJourneyMap expenses={activeTripExpenses} categories={categories} baseCurrency={baseCurrency || ''} />
+        </Suspense>
       </div>
     );
   }

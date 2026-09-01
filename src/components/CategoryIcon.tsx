@@ -1,7 +1,58 @@
 import React from 'react';
 import { IconCatFood, IconCatStay, IconCatTravel, IconCatActivities, IconCatShopping, IconCatMisc } from './Icons';
 import { parseCategoryIcon } from '../utils/categoryHelper';
-import * as LucideIcons from 'lucide-react';
+import {
+  Compass,
+  Tag,
+  Sparkles,
+  MapPin,
+  Utensils,
+  Plane,
+  Bed,
+  ShoppingBag,
+  DollarSign,
+  Coffee,
+  Car,
+  Fuel,
+  Gift,
+  Music,
+  Heart,
+  Camera,
+  Ticket,
+  FileText,
+  MoreHorizontal,
+  Film,
+  Wine,
+  Landmark,
+  Building,
+  Mountain,
+  Bus,
+  Train,
+  Ship,
+  Briefcase,
+  GraduationCap,
+  Stethoscope,
+  Bike,
+  Shield,
+  Receipt,
+  Palmtree,
+  Trees,
+  Footprints,
+  Key,
+  Sun,
+  Moon,
+  Tv,
+  Dumbbell,
+  Umbrella,
+  Waves,
+  Smartphone,
+  Laptop,
+  CreditCard,
+  Luggage,
+  Pizza,
+  Beer,
+  Tent,
+} from 'lucide-react';
 
 const BUILT_IN_ICONS: Record<string, (props: { size?: number; className?: string }) => React.ReactElement> = {
   'cat-food': IconCatFood,
@@ -10,6 +61,61 @@ const BUILT_IN_ICONS: Record<string, (props: { size?: number; className?: string
   'cat-activities': IconCatActivities,
   'cat-shopping': IconCatShopping,
   'cat-misc': IconCatMisc,
+};
+
+type LucideIconComponent = React.ComponentType<{ size?: number; strokeWidth?: number; className?: string }>;
+
+const LUCIDE_ICON_MAP: Record<string, LucideIconComponent> = {
+  Compass,
+  Tag,
+  Sparkles,
+  MapPin,
+  Utensils,
+  Plane,
+  Bed,
+  ShoppingBag,
+  DollarSign,
+  Coffee,
+  Car,
+  Fuel,
+  Gift,
+  Music,
+  Heart,
+  Camera,
+  Ticket,
+  FileText,
+  MoreHorizontal,
+  Film,
+  Wine,
+  Landmark,
+  Building,
+  Mountain,
+  Bus,
+  Train,
+  Ship,
+  Briefcase,
+  GraduationCap,
+  Stethoscope,
+  Bike,
+  Shield,
+  Receipt,
+  Palmtree,
+  Trees,
+  Footprints,
+  Key,
+  Sun,
+  Moon,
+  Tv,
+  Dumbbell,
+  Umbrella,
+  Waves,
+  Smartphone,
+  Laptop,
+  CreditCard,
+  Luggage,
+  Pizza,
+  Beer,
+  Tent,
 };
 
 type Props = {
@@ -33,8 +139,12 @@ export function CategoryIcon({ categoryId, fallbackEmoji, size = 18, className }
     return <span className={className} style={{ fontSize: size, lineHeight: 1 }}>{iconName}</span>;
   }
 
-  // Look up the Lucide icon dynamically
-  const LucideIcon = (LucideIcons as any)[iconName];
+  // Look up the Lucide icon from the tree-shaken dictionary, fallback to Compass
+  const LucideIcon =
+    LUCIDE_ICON_MAP[iconName] ||
+    LUCIDE_ICON_MAP[iconName.charAt(0).toUpperCase() + iconName.slice(1)] ||
+    Compass;
+
   if (LucideIcon) {
     return (
       <span
@@ -48,7 +158,7 @@ export function CategoryIcon({ categoryId, fallbackEmoji, size = 18, className }
           borderRadius: '50%',
           backgroundColor: color,
           color: '#FFFDF6', // warm white
-          flexShrink: 0
+          flexShrink: 0,
         }}
       >
         <LucideIcon size={size - 4} strokeWidth={2.5} />
