@@ -366,5 +366,18 @@
     "shippedBy": "claude-cli",
     "shippedAt": "2026-08-31T15:30:41.352Z",
     "shippedNote": "Shipped in commit d4633e2"
+  },
+  {
+    "id": "FEAT-024",
+    "title": "CI pipeline for lint, build, and test on push/PR",
+    "description": "CI pipeline for lint, build, and test on push/PR",
+    "category": "admin",
+    "status": "requested",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-09-01T18:27:22.653Z",
+    "updatedAt": "2026-09-01T18:27:22.653Z"
   }
 ]
