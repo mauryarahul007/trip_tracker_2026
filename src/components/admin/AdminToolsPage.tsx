@@ -455,9 +455,6 @@ export function AdminToolsPage({ categories, trips, expenses, onRefresh, isRefre
                   <div style={{ padding: '4px 8px', borderRadius: '8px', background: 'rgba(15,23,42,0.7)', border: '1px solid rgba(255,255,255,0.15)', fontSize: '10px', display: 'flex', alignItems: 'center', gap: '4px', backdropFilter: 'blur(10px)' }}>
                     <span>⚖️</span> Smart Split Engine
                   </div>
-                  <div style={{ padding: '4px 8px', borderRadius: '8px', background: '#FFFFFF', color: '#0F172A', fontWeight: 700, fontSize: '10px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    <span>G</span> Continue with Google
-                  </div>
                 </div>
               </div>
             </div>

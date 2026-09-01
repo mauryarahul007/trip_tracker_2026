@@ -1241,4 +1241,26 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - Background image URLs are cached in `localStorage` on initial fetch so public visitors experience instantaneous 0ms paint without waiting for Supabase config round-trips.
 
+---
+
+## 71. Restore Post-Trip Completion Close & Lock Menu in Settings
+* **Context:**
+  - In commit `b6ef029` (`FEAT-011`), trip administrators were given the ability to close and lock trips once settlements were completed.
+  - During the WhatsApp-style Inset Group settings consolidation (ADR 66, ADR 68), the root trip section was minimized to only show *Trip Tools & Story* and *Excel CSV Export*, moving "Close Trip" into the nested `trip-tools` sub-screen without indexing it in Spotlight search aliases or card descriptions. Travelers attempting to close/finalize their trip post-settlement found the menu missing.
+  - Additionally, `GlobalSettingsModal` was omitting `isAdmin`, `onExportCsv`, `onOpenShareTrip`, and `baseCurrency` props when launching `SettingsView`, causing permissions and action parity discrepancies compared to `SettingsTab`.
+* **Decision:**
+  - **Root Screen Prominent Row (`SettingsView.tsx`)**:
+    - Re-introduced the dedicated **Close Trip / Reopen Trip** row item directly on the root `This Trip: {activeTrip.name}` inset group card.
+    - Active trip state displays an amber shield squircle, title *"Close Trip"*, subtitle *"Lock this trip once everyone's settled up"*, and an `"ACTIVE"` status pill. Closed trip displays an emerald shield squircle, title *"Reopen Trip"*, subtitle *"Currently locked — reopen to allow new expenses/members"*, and a `"LOCKED"` status pill.
+    - Closing prompts the app's standard `ConfirmDialog` to explain the read-only locking effect; reopening restores immediate write access.
+  - **Interactive Flight Pass Status Capsule (`SettingsView.tsx`)**:
+    - Converted the static `[ACTIVE]` / `[CLOSED]` badge inside `.settings-trip-flight-banner` into an accessible 1-tap toggle button for trip administrators with tooltips and haptics.
+  - **Spotlight Search Indexing (`SettingsView.tsx`)**:
+    - Added comprehensive aliases (`close`, `reopen`, `lock`, `unlock`, `complete`, `completed`, `completion`, `settled`, `post trip`, `finish`, `archive trip`) so typing completion or close queries instantly surfaces the action.
+  - **Drawer Modal & Tab Parity (`GlobalSettingsModal.tsx`, `App.tsx`)**:
+    - Forwarded `isAdmin`, `onExportCsv`, `onOpenShareTrip`, and `baseCurrency` to `GlobalSettingsModal`, guaranteeing identical capabilities regardless of how settings is accessed.
+* **Trade-offs Accepted:**
+  - Adding the row item increases the root active-trip card from 2 rows to 3 rows (Tools, Close/Lock, CSV Export), which remains exceptionally compact while eliminating navigation friction for a primary trip lifecycle action.
+
+
 

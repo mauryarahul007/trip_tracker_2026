@@ -41,6 +41,8 @@ type Props = {
   onExportCsv?: () => void;
   isAdmin?: boolean;
   onOpenTripWrapped?: () => void;
+  onOpenShareTrip?: () => void;
+  baseCurrency?: string;
 };
 
 export function GlobalSettingsModal({
@@ -72,6 +74,8 @@ export function GlobalSettingsModal({
   onDeleteCategory,
   onExportCsv,
   isAdmin = true,
+  onOpenShareTrip,
+  baseCurrency,
 }: Props) {
   const storeCategories = useTripStore((s) => s.categories);
   const storeExpenses = useTripStore((s) => s.expenses);
@@ -151,6 +155,8 @@ export function GlobalSettingsModal({
           onClose={onClose}
           onRequestConfirm={onRequestConfirm}
           onOpenTripWrapped={onOpenTripWrapped}
+          onOpenShareTrip={onOpenShareTrip}
+          baseCurrency={baseCurrency}
         />
       </div>
     </div>

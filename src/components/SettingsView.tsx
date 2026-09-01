@@ -166,6 +166,35 @@ export function SettingsView({
   const activeTrip = trips.find((t) => t.id === activeTripId);
   const isTripMuted = useTripStore((s) => (activeTripId ? s.isTripMuted(activeTripId) : false));
 
+  // Determine if current user can manage/close the active trip
+  const isTripAdmin = Boolean(
+    isAdmin ||
+    isSuperadmin ||
+    !userId ||
+    !activeTrip?.ownerId ||
+    activeTrip.ownerId === userId ||
+    (userId && activeTrip.adminMemberIds && activeTrip.memberIds.some((mid) => members[mid]?.linkedUserId === userId && activeTrip.adminMemberIds?.includes(mid)))
+  );
+
+  const handleToggleCloseTrip = () => {
+    if (!activeTrip || !isTripAdmin) return;
+    triggerHaptic('light');
+    if (activeTrip.closed) {
+      closeTrip(activeTrip.id, false);
+      return;
+    }
+    if (onRequestConfirm) {
+      onRequestConfirm({
+        title: 'Close Trip',
+        message: "This locks the trip — no new expenses or members can be added until it's reopened. Existing data stays untouched.",
+        confirmLabel: 'Close Trip',
+        onConfirm: () => closeTrip(activeTrip.id, true),
+      });
+    } else {
+      closeTrip(activeTrip.id, true);
+    }
+  };
+
   // User avatar & cloud sync state
   const userAvatarUrl = useAuthStore((s) => s.session?.user.user_metadata?.avatar_url as string | undefined);
   const [isManualSyncing, setIsManualSyncing] = useState(false);
@@ -1305,36 +1334,34 @@ export function SettingsView({
               </div>
             </div>
 
-            {isAdmin && (
+            {isTripAdmin && (
               <button
                 type="button"
                 className="settings-row-item"
-                onClick={() => {
-                  triggerHaptic('light');
-                  if (activeTrip.closed) {
-                    closeTrip(activeTrip.id, false);
-                    return;
-                  }
-                  onRequestConfirm?.({
-                    title: 'Close Trip',
-                    message: 'This locks the trip -- no new expenses or members can be added until it\'s reopened. Existing data stays untouched.',
-                    confirmLabel: 'Close Trip',
-                    onConfirm: () => closeTrip(activeTrip.id, true),
-                  });
-                }}
+                onClick={handleToggleCloseTrip}
               >
                 <div className="settings-row-left">
-                  <div className="settings-squircle squircle-slate-glow">
+                  <div className={`settings-squircle ${activeTrip.closed ? 'squircle-teal-glow' : 'squircle-amber-glow'}`}>
                     <IconShield size={18} />
                   </div>
                   <div className="settings-row-texts">
                     <span className="settings-row-title">{activeTrip.closed ? 'Reopen Trip' : 'Close Trip'}</span>
                     <span className="settings-row-subtitle">
-                      {activeTrip.closed ? 'Currently locked -- reopen to allow new expenses/members' : 'Lock this trip once everyone\'s settled up'}
+                      {activeTrip.closed ? 'Currently locked — reopen to allow new expenses/members' : 'Lock this trip once everyone\'s settled up'}
                     </span>
                   </div>
                 </div>
                 <div className="settings-row-right">
+                  <span
+                    className="settings-badge-pill"
+                    style={{
+                      background: activeTrip.closed ? 'rgba(239, 68, 68, 0.15)' : 'rgba(245, 158, 11, 0.15)',
+                      color: activeTrip.closed ? '#EF4444' : '#F59E0B',
+                      fontWeight: 700,
+                    }}
+                  >
+                    {activeTrip.closed ? 'LOCKED' : 'ACTIVE'}
+                  </span>
                   <IconChevronRight size={16} />
                 </div>
               </button>
@@ -1355,9 +1382,13 @@ export function SettingsView({
     return text.toLowerCase().includes(q) || keywords.some((k) => k.toLowerCase().includes(q));
   };
 
-  const showTripTools = hasActiveTrip && activeTrip && matchesSearch('Trip Tools & Story', 'story card', 'map', 'categories', 'recycle bin', 'mute', 'close', 'lock');
+  const showTripTools = hasActiveTrip && activeTrip && matchesSearch('Trip Tools & Story', 'story card', 'map', 'categories', 'recycle bin', 'mute');
+  const showCloseTrip = hasActiveTrip && activeTrip && isTripAdmin && matchesSearch(
+    activeTrip.closed ? 'Reopen Trip' : 'Close Trip',
+    'close', 'reopen', 'lock', 'unlock', 'complete', 'completed', 'completion', 'settled', 'post trip', 'finish', 'archive trip'
+  );
   const showCsvExport = hasActiveTrip && activeTrip && onExportCsv && matchesSearch('Excel CSV Export', 'spreadsheet', 'download', 'ledger', 'csv', 'sheets');
-  const showTripGroup = showTripTools || showCsvExport;
+  const showTripGroup = showTripTools || showCloseTrip || showCsvExport;
 
   const showAppearance = matchesSearch('Appearance', 'theme', 'dark', 'light', 'night', 'auto', 'color', 'look');
   const showNotifications = matchesSearch('Notifications', 'alerts', 'unread', 'bell', 'messages');
@@ -1589,20 +1620,30 @@ export function SettingsView({
                   {baseCurrency || activeTrip.baseCurrency || 'INR'} · {(activeTrip.memberIds?.length ?? Object.keys(members).length)} {(activeTrip.memberIds?.length ?? Object.keys(members).length) === 1 ? 'member' : 'members'} · {activeTripExpenses.length} {activeTripExpenses.length === 1 ? 'expense' : 'expenses'}
                 </div>
               </div>
-              <span
+              <button
+                type="button"
+                onClick={handleToggleCloseTrip}
+                disabled={!isTripAdmin}
+                title={isTripAdmin ? (activeTrip.closed ? 'Click to reopen trip' : 'Click to close and lock trip') : undefined}
                 style={{
                   fontSize: '9.5px',
                   fontFamily: 'var(--font-family-mono)',
                   fontWeight: 700,
-                  padding: '2px 7px',
+                  padding: '2px 8px',
                   borderRadius: '12px',
                   background: activeTrip.closed ? 'rgba(239, 68, 68, 0.15)' : 'rgba(16, 185, 129, 0.15)',
                   color: activeTrip.closed ? '#EF4444' : '#10B981',
                   border: `1px solid ${activeTrip.closed ? 'rgba(239, 68, 68, 0.3)' : 'rgba(16, 185, 129, 0.3)'}`,
+                  cursor: isTripAdmin ? 'pointer' : 'default',
+                  transition: 'all 0.15s ease',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '4px',
                 }}
+                aria-label={activeTrip.closed ? 'Trip is closed. Click to reopen.' : 'Trip is active. Click to close.'}
               >
-                {activeTrip.closed ? 'CLOSED' : 'ACTIVE'}
-              </span>
+                <span>{activeTrip.closed ? '🔒 CLOSED' : '🟢 ACTIVE'}</span>
+              </button>
             </div>
 
             {showTripTools && (
@@ -1625,6 +1666,39 @@ export function SettingsView({
                 </div>
                 <div className="settings-row-right">
                   <span className="settings-badge-pill" style={{ background: 'rgba(255,107,107,0.18)', color: '#FF6B6B', fontWeight: 700 }}>TOOLS</span>
+                  <IconChevronRight size={16} />
+                </div>
+              </button>
+            )}
+
+            {showCloseTrip && (
+              <button
+                type="button"
+                className="settings-row-item"
+                onClick={handleToggleCloseTrip}
+              >
+                <div className="settings-row-left">
+                  <div className={`settings-squircle ${activeTrip.closed ? 'squircle-teal-glow' : 'squircle-amber-glow'}`}>
+                    <IconShield size={18} />
+                  </div>
+                  <div className="settings-row-texts">
+                    <span className="settings-row-title">{activeTrip.closed ? 'Reopen Trip' : 'Close Trip'}</span>
+                    <span className="settings-row-subtitle">
+                      {activeTrip.closed ? 'Currently locked — reopen to allow new expenses/members' : 'Lock this trip once everyone\'s settled up'}
+                    </span>
+                  </div>
+                </div>
+                <div className="settings-row-right">
+                  <span
+                    className="settings-badge-pill"
+                    style={{
+                      background: activeTrip.closed ? 'rgba(239, 68, 68, 0.15)' : 'rgba(245, 158, 11, 0.15)',
+                      color: activeTrip.closed ? '#EF4444' : '#F59E0B',
+                      fontWeight: 700,
+                    }}
+                  >
+                    {activeTrip.closed ? 'LOCKED' : 'ACTIVE'}
+                  </span>
                   <IconChevronRight size={16} />
                 </div>
               </button>

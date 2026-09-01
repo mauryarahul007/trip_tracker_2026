@@ -2171,6 +2171,14 @@ export default function App() {
           onInstallApp={handleInstallApp}
           onRequestConfirm={setConfirmRequest}
           onOpenTripWrapped={() => setShowTripWrapped(true)}
+          onOpenShareTrip={() => setShowShareTrip(true)}
+          isAdmin={isAdmin}
+          onExportCsv={triggerCsvExport}
+          baseCurrency={activeTrip ? getCurrencySymbol(activeTrip.baseCurrency) : ''}
+          categories={categories}
+          activeTripExpenses={activeTripExpenses}
+          onAddCategory={handleAddCategory}
+          onDeleteCategory={handleDeleteCategory}
         />
       )}
 
