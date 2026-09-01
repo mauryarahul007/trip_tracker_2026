@@ -9,10 +9,10 @@
 
 | Metric | Count | Status Notes |
 | :--- | :--- | :--- |
-| **Total Tracked** | **117** | All recorded bugs across sessions |
+| **Total Tracked** | **118** | All recorded bugs across sessions |
 | **🟢 Open** | **0** | No critical blockers, 0 High |
 | **🟡 In Progress** | **0** | Active investigation or fix |
-| **✅ Resolved** | **91** | Verified & closed |
+| **✅ Resolved** | **92** | Verified & closed |
 | **⚪ Won't Fix** | **26** | Expected behavior / deferred |
 
 ---
@@ -122,6 +122,7 @@
 | **BUG-116** | Expense review banner let non-admin/non-author edits through, causing permanently stuck Out of sync count | `offline-sync` | `high` | `claude-cli` | `claude-cli` | Commit 60095ad. ExpenseList.tsx: affectedExpenseIds (the review banner + bulk-review flow) now filters to isAdmin || createdByUserId === userId, matching the per-row swipe-to-edit gate, so it never opens an edit the backend RLS UPDATE policy will reject. tripStore.ts: added isNonRetryableSyncError() -- a write rejected by the DB policy (0 rows affected, detected in tripApi.ts's updateExpenseRow) now drops from syncQueue and sets storageError instead of being requeued forever, so Out of sync no longer sticks after a permission-denied write. Root cause found live: queried the Himachal 2 trip's expenses/members tables directly -- 2 expenses (Travel, Food) still reference a deleted member and were created by the trip owner (Suyog Gadhave), not the signed-in user (rahul maurya), so the edit was always going to be rejected by the existing admin-or-creator RLS policy from BUG-108/migration 0071. Those 2 rows still need the trip admin to fix via the UI; not touched directly since it's a money-affecting edit. Regression test in tripStore.test.ts (isNonRetryableSyncError). tsc --noEmit and full vitest suite clean. Follow-up commit ae93e60: ExpenseReviewModal.tsx now shows an inline note ('You didn't add this expense, so only the trip admin or whoever added it can edit or delete it.') in place of the Edit/Delete buttons when canManage is false, instead of silently omitting them. |
 | **BUG-121** | Unused Fraunces font, layout-thrashing CSS transitions, and unsplit Settings bundle | `performance` | `medium` | `claude-cli` | `claude-cli` | Removed unused Fraunces font; converted layout-thrashing width/margin CSS transitions to transform (also fixed a pre-existing hover double-scale bug on the trip-sheet handle); code-split SettingsTab with a mount-gate to stop maplibre-gl loading for every session. Commit 0b74ca9. |
 | **BUG-122** | Pull-to-refresh animation choppy on Trips list and Ledger | `ui-ux` | `medium` | `mauryarahul007@gmail.com` | `claude-cli` | Rewrote usePullToRefresh to write drag distance directly to the indicator DOM node instead of via React state on every touchmove; state now only updates on discrete armed/refreshing transitions. Commit 19d0b1d. |
+| **BUG-137** | Boarding pass ignores dark mode, FAB mode-switch is silent, expense list opens to too much chrome | `ui-ux` | `medium` | `claude-cli` | `claude-cli` | Fixed in commit b0cf7f9: added --bp-* dark tokens for the boarding pass, an Add-member label on the FAB, and a single collapsible chrome toggle for the expense list's stats/chips. |
 
 ---
 

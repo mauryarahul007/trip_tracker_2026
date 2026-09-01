@@ -3670,5 +3670,31 @@
     "resolvedBy": "claude-cli",
     "resolvedAt": "2026-08-30T17:40:40.414Z",
     "resolutionNote": "Rewrote usePullToRefresh to write drag distance directly to the indicator DOM node instead of via React state on every touchmove; state now only updates on discrete armed/refreshing transitions. Commit 19d0b1d."
+  },
+  {
+    "id": "BUG-137",
+    "title": "Boarding pass ignores dark mode, FAB mode-switch is silent, expense list opens to too much chrome",
+    "description": "Three UI consistency gaps found in a design audit: (1) .boarding-pass stayed hardcoded cream/ink even in Night flight dark mode, reading as unfinished next to the ink-black shell. (2) NavTabs' center FAB silently changes from Add Expense to Add Member on the Members tab with only a color hint, no label. (3) ExpenseList stacked stat-strip + search + filter button + chip row unconditionally above the list, four rows of chrome before any content.",
+    "severity": "medium",
+    "category": "ui-ux",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "Boarding pass should have a dark-mode-appropriate paper stock; FAB should name its current action; expense list chrome should be minimal by default.",
+    "actualBehavior": "Boarding pass was frozen cream/ink regardless of theme; FAB gave no textual cue of its mode; stats+chips rendered unconditionally.",
+    "diagnostics": {},
+    "createdAt": "2026-09-01T06:35:54.765Z",
+    "updatedAt": "2026-09-01T06:36:05.504Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-09-01T06:36:05.503Z",
+    "resolutionNote": "Fixed in commit b0cf7f9: added --bp-* dark tokens for the boarding pass, an Add-member label on the FAB, and a single collapsible chrome toggle for the expense list's stats/chips."
   }
 ]
