@@ -1165,3 +1165,437 @@ legend.ops-form-label { padding: 0; width: 100%; }
   }
 }
 
+/* ==========================================================================
+   EXECUTIVE AUDIT TIMELINE & INSPECTOR DESIGN SYSTEM
+   ========================================================================== */
+
+.ops-audit-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.ops-audit-timeline-container {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.ops-audit-timeline-item {
+  position: relative;
+  display: flex;
+  gap: 14px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--line-subtle);
+  transition: background-color 0.18s ease;
+}
+
+.ops-audit-timeline-item:hover {
+  background-color: var(--bg-inset);
+}
+
+.ops-audit-timeline-item:last-child {
+  border-bottom: none;
+}
+
+.ops-audit-icon-node {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  flex-shrink: 0;
+  margin-top: 2px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  border: 1px solid transparent;
+}
+
+.ops-audit-icon-node.node-danger {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.35);
+  color: #F87171;
+}
+
+.ops-audit-icon-node.node-caution {
+  background: rgba(245, 158, 11, 0.15);
+  border-color: rgba(245, 158, 11, 0.35);
+  color: #FBBF24;
+}
+
+.ops-audit-icon-node.node-safe {
+  background: rgba(16, 185, 129, 0.15);
+  border-color: rgba(16, 185, 129, 0.35);
+  color: #34D399;
+}
+
+.ops-audit-icon-node.node-info {
+  background: rgba(59, 130, 246, 0.15);
+  border-color: rgba(59, 130, 246, 0.35);
+  color: #60A5FA;
+}
+
+.ops-audit-icon-node.node-purple {
+  background: rgba(168, 85, 247, 0.15);
+  border-color: rgba(168, 85, 247, 0.35);
+  color: #C084FC;
+}
+
+.ops-audit-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ops-audit-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.ops-audit-actor-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 13px;
+}
+
+.ops-audit-actor-avatar {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--color-primary), #38BDF8);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ops-audit-action-text {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.ops-audit-action-text strong {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.ops-audit-time {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  font-family: var(--font-family-mono, monospace);
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+
+/* Structured Property Inspector Grid */
+.ops-inspector-card {
+  margin-top: 10px;
+  background: var(--bg-surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  overflow: hidden;
+  animation: slideUpFade 0.2s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.ops-inspector-header {
+  padding: 8px 12px;
+  background: var(--bg-inset);
+  border-bottom: 1px solid var(--line-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.ops-inspector-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 8px;
+  padding: 10px 12px;
+}
+
+.ops-inspector-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.ops-inspector-label {
+  font-size: 10px;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 600;
+}
+
+.ops-inspector-val {
+  font-size: 12px;
+  font-family: var(--font-family-mono, monospace);
+  color: var(--text-primary);
+  word-break: break-all;
+}
+
+/* ==========================================================================
+   FEATURE REQUESTS ROADMAP & LINEAR-GRADE KANBAN
+   ========================================================================== */
+
+.ops-roadmap-header {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.ops-velocity-strip {
+  padding: 12px 16px;
+  background: var(--bg-surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ops-velocity-progress {
+  display: flex;
+  height: 8px;
+  border-radius: 4px;
+  overflow: hidden;
+  background: var(--bg-inset);
+  gap: 2px;
+}
+
+.ops-velocity-segment {
+  height: 100%;
+  transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.ops-velocity-segment.seg-requested {
+  background: rgba(148, 163, 184, 0.4);
+}
+
+.ops-velocity-segment.seg-planned {
+  background: #F59E0B;
+}
+
+.ops-velocity-segment.seg-shipped {
+  background: #10B981;
+}
+
+/* View Switcher */
+.ops-view-switcher {
+  display: inline-flex;
+  background: var(--bg-inset);
+  padding: 3px;
+  border-radius: 8px;
+  border: 1px solid var(--line-subtle);
+}
+
+.ops-view-btn {
+  padding: 4px 10px;
+  font-size: 11.5px;
+  font-weight: 600;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.15s ease;
+}
+
+.ops-view-btn.active {
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+/* Linear-Grade Feature Card */
+.ops-feature-item-card {
+  position: relative;
+  background: var(--bg-surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.ops-feature-item-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--line-strong);
+  box-shadow: 0 8px 24px -6px rgba(0, 0, 0, 0.3);
+}
+
+.ops-feature-top-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.ops-feature-id-badge {
+  font-family: var(--font-family-mono, monospace);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-tertiary);
+  background: var(--bg-inset);
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid var(--line-subtle);
+}
+
+.ops-feature-cat-pill {
+  font-size: 10.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 2px 8px;
+  border-radius: 12px;
+  background: rgba(99, 102, 241, 0.15);
+  color: #A5B4FC;
+}
+
+.ops-feature-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1.35;
+}
+
+.ops-feature-desc {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.45;
+}
+
+/* Embedded Runtime Flag Hub */
+.ops-card-flag-hub {
+  padding: 8px 10px;
+  background: var(--bg-inset);
+  border: 1px solid var(--line-subtle);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.ops-card-flag-info {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.ops-card-flag-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+.ops-card-flag-dot.on {
+  background: #10B981;
+  box-shadow: 0 0 6px #10B981;
+}
+
+.ops-card-flag-dot.off {
+  background: var(--text-tertiary);
+}
+
+/* Pipeline Status Stepper */
+.ops-pipeline-stepper {
+  display: flex;
+  background: var(--bg-inset);
+  padding: 2px;
+  border-radius: 6px;
+  gap: 2px;
+}
+
+.ops-step-btn {
+  flex: 1;
+  padding: 4px 6px;
+  font-size: 10.5px;
+  font-weight: 600;
+  border-radius: 4px;
+  border: none;
+  background: transparent;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.15s ease;
+}
+
+.ops-step-btn:hover {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.ops-step-btn.current {
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.ops-shipped-banner {
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  color: #34D399;
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Linear-Grade Dense Table View */
+.ops-dense-feature-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.ops-dense-feature-table th {
+  text-align: left;
+  padding: 10px 14px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-tertiary);
+  border-bottom: 1px solid var(--line);
+  background: var(--bg-inset);
+}
+
+.ops-dense-feature-table td {
+  padding: 12px 14px;
+  font-size: 12.5px;
+  border-bottom: 1px solid var(--line-subtle);
+  color: var(--text-secondary);
+}
+
+.ops-dense-feature-table tr:hover td {
+  background: var(--bg-inset);
+}
+
+

@@ -1,11 +1,11 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import type { FeatureRecord } from '../../services/featureApi';
-import { updateFeature } from '../../services/featureApi';
+import { updateFeature, createFeatureRequest } from '../../services/featureApi';
 import { logSuperadminAction } from '../../services/tripApi';
 import type { FeatureFlagKey } from '../../types/admin';
 import { FEATURE_FLAGS_META } from '../../utils/featureFlags';
 import { useTripStore } from '../../store/tripStore';
-import { IconCheck, IconRefresh, IconSearch } from '../Icons';
+import { IconCheck, IconRefresh, IconSearch, IconPlus, IconX } from '../Icons';
 
 interface Props {
   features: FeatureRecord[];
@@ -20,11 +20,21 @@ const STATUS_LABELS: Record<string, string> = {
   wont_do: "Won't Do",
 };
 
-// Requested/Planned+In Progress/Shipped board -- priority reads as column
-// position instead of requiring a status filter chip to see what's queued.
+const CATEGORY_COLORS: Record<string, { bg: string; text: string }> = {
+  'ui-ux': { bg: 'rgba(168, 85, 247, 0.15)', text: '#C084FC' },
+  analytics: { bg: 'rgba(59, 130, 246, 0.15)', text: '#60A5FA' },
+  admin: { bg: 'rgba(245, 158, 11, 0.15)', text: '#FBBF24' },
+  sync: { bg: 'rgba(20, 184, 166, 0.15)', text: '#2DD4BF' },
+  notifications: { bg: 'rgba(236, 72, 153, 0.15)', text: '#F472B6' },
+  security: { bg: 'rgba(239, 68, 68, 0.15)', text: '#F87171' },
+  performance: { bg: 'rgba(16, 185, 129, 0.15)', text: '#34D399' },
+  native: { bg: 'rgba(99, 102, 241, 0.15)', text: '#818CF8' },
+  general: { bg: 'rgba(148, 163, 184, 0.15)', text: '#94A3B8' },
+};
+
 const BOARD_COLUMNS: { statuses: FeatureRecord['status'][]; label: string; color: string }[] = [
   { statuses: ['requested'], label: 'Requested', color: 'var(--text-tertiary)' },
-  { statuses: ['planned', 'in_progress'], label: 'Planned', color: 'var(--amber)' },
+  { statuses: ['planned', 'in_progress'], label: 'Planned & In Progress', color: 'var(--amber)' },
   { statuses: ['shipped'], label: 'Shipped', color: 'var(--safe)' },
 ];
 
@@ -34,15 +44,24 @@ export function AdminFeaturesPage({ features, onFeaturesChanged }: Props) {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [showWontDo, setShowWontDo] = useState(false);
+  const [viewMode, setViewMode] = useState<'board' | 'table'>('board');
   const [toastMsg, setToastMsg] = useState('');
   const [busyId, setBusyId] = useState<string | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isNewModalOpen, setIsNewModalOpen] = useState(false);
+
+  // New Request Form State
+  const [newTitle, setNewTitle] = useState('');
+  const [newDescription, setNewDescription] = useState('');
+  const [newCategory, setNewCategory] = useState<FeatureRecord['category']>('ui-ux');
+  const [newRequester, setNewRequester] = useState('superadmin');
+  const [isSubmittingNew, setIsSubmittingNew] = useState(false);
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
     try {
       await onFeaturesChanged();
-      showToast('Refreshed.');
+      showToast('Refreshed feature cases.');
     } finally {
       setIsRefreshing(false);
     }
@@ -53,11 +72,22 @@ export function AdminFeaturesPage({ features, onFeaturesChanged }: Props) {
     setTimeout(() => setToastMsg(''), 3000);
   };
 
+  // Roadmap Metrics
+  const metrics = useMemo(() => {
+    const total = features.filter((f) => f.status !== 'wont_do').length || 1;
+    const shipped = features.filter((f) => f.status === 'shipped').length;
+    const planned = features.filter((f) => f.status === 'planned' || f.status === 'in_progress').length;
+    const requested = features.filter((f) => f.status === 'requested').length;
+    const percentShipped = Math.round((shipped / total) * 100);
+
+    return { total, shipped, planned, requested, percentShipped };
+  }, [features]);
+
   const filtered = features.filter((f) => {
     if (!showWontDo && f.status === 'wont_do') return false;
     if (!searchQuery.trim()) return true;
     const q = searchQuery.toLowerCase();
-    return f.title.toLowerCase().includes(q) || f.description.toLowerCase().includes(q) || f.requestedBy.toLowerCase().includes(q);
+    return f.title.toLowerCase().includes(q) || f.description.toLowerCase().includes(q) || f.requestedBy.toLowerCase().includes(q) || f.id.toLowerCase().includes(q);
   });
 
   const handleStatusChange = async (f: FeatureRecord, status: FeatureRecord['status']) => {
@@ -65,7 +95,7 @@ export function AdminFeaturesPage({ features, onFeaturesChanged }: Props) {
     try {
       await updateFeature(f.id, {
         status,
-        ...(status === 'shipped' ? { shippedNote: f.shippedNote || 'Shipped' } : {}),
+        ...(status === 'shipped' ? { shippedNote: f.shippedNote || 'Shipped to production' } : {}),
       });
       void logSuperadminAction(null, 'feature_status_change', { featureId: f.id, status }).catch((err) =>
         console.error('Audit log failed', err)
@@ -92,18 +122,46 @@ export function AdminFeaturesPage({ features, onFeaturesChanged }: Props) {
     }
   };
 
+  const handleCreateRequest = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newTitle.trim()) return;
+    setIsSubmittingNew(true);
+    try {
+      const created = await createFeatureRequest({
+        title: newTitle.trim(),
+        description: newDescription.trim(),
+        category: newCategory,
+        requestedBy: newRequester.trim() || 'superadmin',
+      });
+      showToast(`Created feature case ${created.id}`);
+      setIsNewModalOpen(false);
+      setNewTitle('');
+      setNewDescription('');
+      onFeaturesChanged();
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : 'Failed to create feature request.');
+    } finally {
+      setIsSubmittingNew(false);
+    }
+  };
+
   const flagEntries = Object.entries(FEATURE_FLAGS_META) as [FeatureFlagKey, (typeof FEATURE_FLAGS_META)[FeatureFlagKey]][];
 
   return (
-    <div className="fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+    <div className="fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
       <div className="ops-page-head">
         <div>
-          <h2>Feature Requests</h2>
-          <p>What travelers ask for, and what's queued, in progress, or shipped. Link a request to an existing flag to toggle it right here.</p>
+          <h2>Feature Roadmap &amp; Requests</h2>
+          <p>Linear-grade tracking of traveler feature requests, implementation velocity, and production flag linkages.</p>
         </div>
-        <button type="button" className="ops-btn" disabled={isRefreshing} onClick={() => void handleRefresh()}>
-          <IconRefresh size={13} className={isRefreshing ? 'icon-sm ops-spin' : 'icon-sm'} /> {isRefreshing ? 'Refreshing...' : 'Refresh'}
-        </button>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <button type="button" className="ops-btn ops-btn-primary" onClick={() => setIsNewModalOpen(true)}>
+            <IconPlus size={13} /> Log Request
+          </button>
+          <button type="button" className="ops-btn" disabled={isRefreshing} onClick={() => void handleRefresh()}>
+            <IconRefresh size={13} className={isRefreshing ? 'icon-sm ops-spin' : 'icon-sm'} /> {isRefreshing ? 'Refreshing...' : 'Refresh'}
+          </button>
+        </div>
       </div>
 
       {toastMsg && (
@@ -112,27 +170,82 @@ export function AdminFeaturesPage({ features, onFeaturesChanged }: Props) {
         </div>
       )}
 
+      {/* Roadmap Velocity Progress Strip */}
+      <div className="ops-velocity-strip">
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-primary)' }}>
+              Roadmap Velocity
+            </span>
+            <span className="ops-badge safe">{metrics.percentShipped}% Shipped</span>
+          </div>
+          <div style={{ display: 'flex', gap: '14px', fontSize: '12px', color: 'var(--text-secondary)' }}>
+            <span><strong>{metrics.requested}</strong> Requested</span>
+            <span><strong>{metrics.planned}</strong> In Flight</span>
+            <span><strong>{metrics.shipped}</strong> Shipped</span>
+          </div>
+        </div>
+
+        <div className="ops-velocity-progress" title={`${metrics.percentShipped}% Shipped`}>
+          <div
+            className="ops-velocity-segment seg-shipped"
+            style={{ width: `${(metrics.shipped / metrics.total) * 100}%` }}
+          />
+          <div
+            className="ops-velocity-segment seg-planned"
+            style={{ width: `${(metrics.planned / metrics.total) * 100}%` }}
+          />
+          <div
+            className="ops-velocity-segment seg-requested"
+            style={{ width: `${(metrics.requested / metrics.total) * 100}%` }}
+          />
+        </div>
+      </div>
+
+      {/* Toolbar & View Switcher */}
       <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between' }}>
         <div className="ops-search-wrap">
           <IconSearch size={16} />
           <input
             type="text"
             className="ops-input"
-            placeholder="Search by title, description, or requester..."
+            placeholder="Search by case ID, title, description, or requester..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
-        <button type="button" className="ops-chip" data-active={showWontDo} onClick={() => setShowWontDo((v) => !v)}>
-          {showWontDo ? "Hide won't-do" : "Show won't-do"}
-        </button>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div className="ops-view-switcher">
+            <button
+              type="button"
+              className={`ops-view-btn ${viewMode === 'board' ? 'active' : ''}`}
+              onClick={() => setViewMode('board')}
+            >
+              Kanban
+            </button>
+            <button
+              type="button"
+              className={`ops-view-btn ${viewMode === 'table' ? 'active' : ''}`}
+              onClick={() => setViewMode('table')}
+            >
+              List
+            </button>
+          </div>
+
+          <button type="button" className="ops-chip" data-active={showWontDo} onClick={() => setShowWontDo((v) => !v)}>
+            {showWontDo ? "Hide won't-do" : "Show won't-do"}
+          </button>
+        </div>
       </div>
 
+      {/* Empty State */}
       {filtered.length === 0 ? (
-        <div className="ops-card">
-          <div className="ops-empty">No feature requests match.</div>
+        <div className="ops-card" style={{ padding: '40px' }}>
+          <div className="ops-empty">No feature requests match your filters.</div>
         </div>
-      ) : (
+      ) : viewMode === 'board' ? (
+        /* Kanban Board View */
         <div className="ops-feature-board">
           {BOARD_COLUMNS.map((col) => {
             const colFeatures = filtered.filter((f) => col.statuses.includes(f.status));
@@ -148,7 +261,7 @@ export function AdminFeaturesPage({ features, onFeaturesChanged }: Props) {
                     <div className="ops-ov-empty">No requests</div>
                   ) : (
                     colFeatures.map((f) => (
-                      <FeatureCard
+                      <FeatureKanbanCard
                         key={f.id}
                         feature={f}
                         busy={busyId === f.id}
@@ -178,7 +291,7 @@ export function AdminFeaturesPage({ features, onFeaturesChanged }: Props) {
                 {filtered
                   .filter((f) => f.status === 'wont_do')
                   .map((f) => (
-                    <FeatureCard
+                    <FeatureKanbanCard
                       key={f.id}
                       feature={f}
                       busy={busyId === f.id}
@@ -196,12 +309,197 @@ export function AdminFeaturesPage({ features, onFeaturesChanged }: Props) {
             </div>
           )}
         </div>
+      ) : (
+        /* Linear-Grade Dense List/Table View */
+        <div className="ops-card" style={{ padding: 0, overflow: 'hidden' }}>
+          <div style={{ overflowX: 'auto' }}>
+            <table className="ops-dense-feature-table">
+              <thead>
+                <tr>
+                  <th style={{ width: '90px' }}>Case ID</th>
+                  <th>Title &amp; Category</th>
+                  <th style={{ width: '130px' }}>Status</th>
+                  <th style={{ width: '140px' }}>Requester</th>
+                  <th style={{ width: '220px' }}>Linked Runtime Flag</th>
+                  <th style={{ width: '110px', textAlign: 'right' }}>Workflow</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.map((f) => {
+                  const linkedMeta = f.linkedFlagKey ? FEATURE_FLAGS_META[f.linkedFlagKey as FeatureFlagKey] : undefined;
+                  const flagOn = linkedMeta && f.linkedFlagKey ? (featureFlags[f.linkedFlagKey as FeatureFlagKey] ?? linkedMeta.defaultEnabledForUsers) : false;
+                  const catStyle = CATEGORY_COLORS[f.category] || CATEGORY_COLORS.general;
+
+                  return (
+                    <tr key={f.id}>
+                      <td>
+                        <span className="ops-feature-id-badge">{f.id}</span>
+                      </td>
+                      <td>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                          <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{f.title}</span>
+                          <span
+                            className="ops-feature-cat-pill"
+                            style={{ background: catStyle.bg, color: catStyle.text }}
+                          >
+                            {f.category}
+                          </span>
+                        </div>
+                        {f.description && (
+                          <div style={{ fontSize: '11.5px', color: 'var(--text-tertiary)', marginTop: '2px' }}>
+                            {f.description.slice(0, 80)}{f.description.length > 80 ? '...' : ''}
+                          </div>
+                        )}
+                      </td>
+                      <td>
+                        <span className={`ops-badge ${f.status === 'shipped' ? 'safe' : f.status === 'in_progress' || f.status === 'planned' ? 'caution' : f.status === 'wont_do' ? 'grounded' : 'archived'}`}>
+                          {STATUS_LABELS[f.status] || f.status}
+                        </span>
+                      </td>
+                      <td style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+                        {f.requestedBy}
+                      </td>
+                      <td>
+                        {linkedMeta && f.linkedFlagKey ? (
+                          <div className="ops-card-flag-hub" style={{ padding: '4px 8px' }}>
+                            <div className="ops-card-flag-info">
+                              <span className={`ops-card-flag-dot ${flagOn ? 'on' : 'off'}`} />
+                              <span style={{ fontSize: '11px', fontWeight: 600 }}>{linkedMeta.label}</span>
+                            </div>
+                            <button
+                              type="button"
+                              className="ops-relay"
+                              data-on={flagOn}
+                              aria-label={`Toggle ${linkedMeta.label}`}
+                              onClick={() => {
+                                setFeatureFlag(f.linkedFlagKey as FeatureFlagKey, !flagOn);
+                                showToast(`${linkedMeta.label} set to ${!flagOn ? 'Enabled' : 'Disabled'}`);
+                              }}
+                            >
+                              <span className="ops-puck" />
+                            </button>
+                          </div>
+                        ) : (
+                          <select
+                            className="ops-select"
+                            style={{ width: '100%', fontSize: '11px', padding: '3px 6px' }}
+                            value=""
+                            onChange={(e) => handleLinkFlag(f, e.target.value)}
+                          >
+                            <option value="">+ Link Flag</option>
+                            {flagEntries.map(([key, meta]) => (
+                              <option key={key} value={key}>
+                                {meta.label}
+                              </option>
+                            ))}
+                          </select>
+                        )}
+                      </td>
+                      <td style={{ textAlign: 'right' }}>
+                        <select
+                          className="ops-select"
+                          style={{ width: 'auto', fontSize: '11px', padding: '3px 6px' }}
+                          value={f.status}
+                          disabled={busyId === f.id}
+                          onChange={(e) => handleStatusChange(f, e.target.value as FeatureRecord['status'])}
+                        >
+                          <option value="requested">Requested</option>
+                          <option value="planned">Planned</option>
+                          <option value="in_progress">In Progress</option>
+                          <option value="shipped">Shipped</option>
+                          <option value="wont_do">Won&apos;t Do</option>
+                        </select>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Log New Feature Modal */}
+      {isNewModalOpen && (
+        <div className="ops-modal-backdrop" onClick={() => setIsNewModalOpen(false)}>
+          <div className="ops-modal-card fade-in" style={{ maxWidth: '480px' }} onClick={(e) => e.stopPropagation()}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
+              <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 700 }}>Log Feature Request</h3>
+              <button type="button" className="ops-btn" style={{ padding: '4px' }} onClick={() => setIsNewModalOpen(false)}>
+                <IconX size={14} />
+              </button>
+            </div>
+            <form onSubmit={handleCreateRequest} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <div>
+                <label className="ops-label">Feature Title</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Dynamic Split Weights for Multi-Caravans"
+                  className="ops-input"
+                  value={newTitle}
+                  onChange={(e) => setNewTitle(e.target.value)}
+                />
+              </div>
+
+              <div>
+                <label className="ops-label">Category</label>
+                <select
+                  className="ops-select"
+                  value={newCategory}
+                  onChange={(e) => setNewCategory(e.target.value as FeatureRecord['category'])}
+                >
+                  <option value="ui-ux">UI / UX Design</option>
+                  <option value="analytics">Analytics &amp; Graphs</option>
+                  <option value="sync">Sync &amp; Offline Cache</option>
+                  <option value="notifications">Alerts &amp; Notifications</option>
+                  <option value="security">Security &amp; Auth</option>
+                  <option value="performance">Performance &amp; Bundle</option>
+                  <option value="native">Native Mobile</option>
+                  <option value="admin">Superadmin Ops</option>
+                  <option value="general">General</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="ops-label">Description &amp; Use Case</label>
+                <textarea
+                  rows={3}
+                  placeholder="Detailed traveler context and workflow requirements..."
+                  className="ops-input"
+                  value={newDescription}
+                  onChange={(e) => setNewDescription(e.target.value)}
+                />
+              </div>
+
+              <div>
+                <label className="ops-label">Requested By</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Rahul / traveler email"
+                  className="ops-input"
+                  value={newRequester}
+                  onChange={(e) => setNewRequester(e.target.value)}
+                />
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '6px' }}>
+                <button type="button" className="ops-btn" onClick={() => setIsNewModalOpen(false)}>
+                  Cancel
+                </button>
+                <button type="submit" className="ops-btn ops-btn-primary" disabled={isSubmittingNew || !newTitle.trim()}>
+                  {isSubmittingNew ? 'Creating...' : 'Create Case'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
     </div>
   );
 }
 
-function FeatureCard({
+function FeatureKanbanCard({
   feature: f,
   busy,
   flagEntries,
@@ -218,67 +516,127 @@ function FeatureCard({
   onLinkFlag: (f: FeatureRecord, key: string) => void;
   onToggleFlag: (key: FeatureFlagKey, on: boolean) => void;
 }) {
+  const [isExpanded, setIsExpanded] = useState(false);
   const linkedMeta = f.linkedFlagKey ? FEATURE_FLAGS_META[f.linkedFlagKey as FeatureFlagKey] : undefined;
   const flagOn = linkedMeta && f.linkedFlagKey ? (featureFlags[f.linkedFlagKey as FeatureFlagKey] ?? linkedMeta.defaultEnabledForUsers) : false;
+  const catStyle = CATEGORY_COLORS[f.category] || CATEGORY_COLORS.general;
 
   return (
-    <div className="ops-card">
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-        <span className="ops-trip-name">{f.title}</span>
-        <span className="ops-switcher-row-code">{f.id}</span>
+    <div className="ops-feature-item-card">
+      {/* Top Metadata Row */}
+      <div className="ops-feature-top-meta">
+        <span className="ops-feature-id-badge">{f.id}</span>
+        <span
+          className="ops-feature-cat-pill"
+          style={{ background: catStyle.bg, color: catStyle.text }}
+        >
+          {f.category}
+        </span>
       </div>
-      <div className="ops-trip-route">
-        {f.category} &middot; requested by {f.requestedBy} &middot; {new Date(f.createdAt).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata', day: 'numeric', month: 'short', year: 'numeric' })}
-      </div>
-      {f.description && <p style={{ fontSize: '12.5px', color: 'var(--text-secondary)', marginTop: '8px' }}>{f.description}</p>}
-      {f.status === 'shipped' && f.shippedNote && (
-        <p style={{ fontSize: '11.5px', color: 'var(--safe)', marginTop: '6px' }}>
-          Shipped by {f.shippedBy}: {f.shippedNote}
-        </p>
+
+      {/* Card Title */}
+      <div className="ops-feature-title">{f.title}</div>
+
+      {/* Description Drawer */}
+      {f.description && (
+        <div
+          className="ops-feature-desc"
+          style={{
+            cursor: 'pointer',
+            display: '-webkit-box',
+            WebkitLineClamp: isExpanded ? 'unset' : 2,
+            WebkitBoxOrient: 'vertical',
+            overflow: 'hidden',
+          }}
+          onClick={() => setIsExpanded((v) => !v)}
+          title="Click to toggle full description"
+        >
+          {f.description}
+        </div>
       )}
 
-      <div className="ops-manifest-actions" style={{ flexWrap: 'wrap', justifyContent: 'flex-start', marginTop: '10px' }}>
-        {f.status !== 'planned' && (
-          <button type="button" className="ops-mini-btn" disabled={busy} onClick={() => onStatusChange(f, 'planned')}>
-            Plan
-          </button>
-        )}
-        {f.status !== 'in_progress' && (
-          <button type="button" className="ops-mini-btn" disabled={busy} onClick={() => onStatusChange(f, 'in_progress')}>
-            Start
-          </button>
-        )}
-        {f.status !== 'shipped' && (
-          <button type="button" className="ops-mini-btn" disabled={busy} onClick={() => onStatusChange(f, 'shipped')}>
-            Ship
-          </button>
-        )}
-        {f.status !== 'wont_do' && (
-          <button type="button" className="ops-mini-btn ground" disabled={busy} onClick={() => onStatusChange(f, 'wont_do')}>
-            Won&apos;t Do
-          </button>
-        )}
+      {/* Shipped Release Banner */}
+      {f.status === 'shipped' && (
+        <div className="ops-shipped-banner">
+          <IconCheck size={13} />
+          <span>{f.shippedNote || 'Shipped to production'} {f.shippedBy ? `by ${f.shippedBy}` : ''}</span>
+        </div>
+      )}
+
+      {/* Requester & Date */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '11px', color: 'var(--text-tertiary)' }}>
+        <span>req. by <strong style={{ color: 'var(--text-secondary)' }}>{f.requestedBy}</strong></span>
+        <span>{new Date(f.createdAt).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata', day: 'numeric', month: 'short' })}</span>
       </div>
 
-      <div style={{ marginTop: '10px', paddingTop: '10px', borderTop: '1px solid var(--line)', display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-        <select className="ops-select" style={{ width: 'auto', minWidth: '160px' }} value={f.linkedFlagKey || ''} onChange={(e) => onLinkFlag(f, e.target.value)}>
-          <option value="">No linked flag</option>
-          {flagEntries.map(([key, meta]) => (
-            <option key={key} value={key}>
-              {meta.label}
-            </option>
-          ))}
-        </select>
-        {linkedMeta && f.linkedFlagKey && (
-          <button
-            type="button"
-            className="ops-relay"
-            data-on={flagOn}
-            aria-label={`Toggle ${linkedMeta.label}`}
-            onClick={() => onToggleFlag(f.linkedFlagKey as FeatureFlagKey, !flagOn)}
+      {/* Pipeline Status Stepper */}
+      <div className="ops-pipeline-stepper">
+        <button
+          type="button"
+          className={`ops-step-btn ${f.status === 'requested' ? 'current' : ''}`}
+          disabled={busy}
+          onClick={() => onStatusChange(f, 'requested')}
+        >
+          Req
+        </button>
+        <button
+          type="button"
+          className={`ops-step-btn ${f.status === 'planned' ? 'current' : ''}`}
+          disabled={busy}
+          onClick={() => onStatusChange(f, 'planned')}
+        >
+          Plan
+        </button>
+        <button
+          type="button"
+          className={`ops-step-btn ${f.status === 'in_progress' ? 'current' : ''}`}
+          disabled={busy}
+          onClick={() => onStatusChange(f, 'in_progress')}
+        >
+          Start
+        </button>
+        <button
+          type="button"
+          className={`ops-step-btn ${f.status === 'shipped' ? 'current' : ''}`}
+          disabled={busy}
+          onClick={() => onStatusChange(f, 'shipped')}
+        >
+          Ship
+        </button>
+      </div>
+
+      {/* Embedded Runtime Flag Hub */}
+      <div style={{ marginTop: '2px' }}>
+        {linkedMeta && f.linkedFlagKey ? (
+          <div className="ops-card-flag-hub">
+            <div className="ops-card-flag-info">
+              <span className={`ops-card-flag-dot ${flagOn ? 'on' : 'off'}`} />
+              <span style={{ fontWeight: 600 }}>{linkedMeta.label}</span>
+            </div>
+            <button
+              type="button"
+              className="ops-relay"
+              data-on={flagOn}
+              aria-label={`Toggle ${linkedMeta.label}`}
+              onClick={() => onToggleFlag(f.linkedFlagKey as FeatureFlagKey, !flagOn)}
+            >
+              <span className="ops-puck" />
+            </button>
+          </div>
+        ) : (
+          <select
+            className="ops-select"
+            style={{ width: '100%', fontSize: '11px' }}
+            value=""
+            onChange={(e) => onLinkFlag(f, e.target.value)}
           >
-            <span className="ops-puck" />
-          </button>
+            <option value="">+ Link Toggleable Flag</option>
+            {flagEntries.map(([key, meta]) => (
+              <option key={key} value={key}>
+                {meta.label}
+              </option>
+            ))}
+          </select>
         )}
       </div>
     </div>

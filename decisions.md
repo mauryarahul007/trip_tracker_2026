@@ -1307,12 +1307,26 @@ This document logs all meaningful technical decisions, library choices, design p
     - Replaced fixed 3-column tracks with responsive wrapping `grid-template-columns: repeat(auto-fit, minmax(280px, 1fr))` with `overflow-x: hidden` and `word-break: break-word` on cards, eliminating horizontal scrollbars across all screen widths.
   - **Human-Readable Audit Story Narratives (`AdminAuditPage.tsx`, `ops-deck.css`)**:
     - Implemented `formatAuditNarrative` to transform technical audit payloads into structured English sentences with actor identification, target resource pills, clear action category badges (`User Security`, `Trip Grounded`, `System Config`, `Roadmap`), and an expandable raw JSON drawer.
-  - **Fluid 60 FPS Micro-Interactions & Visual Helpers (`index.css`, `ExpenseForm.tsx`)**:
-    - Added elastic press physics (`active: scale(0.97)`) on all primary buttons, chips, and cards.
-    - Added quick increment chips (`+10`, `+50`, `+100`, `+500`, `Round ↑`) in the Expense Form.
-    - Added an interactive visual split proportion bar for non-equal splits showing real-time balance percentages per member.
+---
+
+## 75. Executive Audit Stream Telemetry & Linear-Grade Feature Roadmap Deck
+* **Context:**
+  - **Audit Log Inspection Experience:** While human-readable narratives were introduced in ADR 74, the Superadmin Security Audit Log lacked high-level telemetry KPIs, visual timeline hierarchy (such as categorized glow node icons and avatar squircles), and a clean property inspector grid for exploring event parameters without copying raw JSON.
+  - **Feature Roadmap & Backlog Tracking:** The Features page lacked backlog velocity metrics (% shipped), view customizability (no Linear-style dense table view), a quick "+ Log Request" superadmin modal, and inline 1-tap flag switching.
+* **Decision:**
+  - **Executive Telemetry & Timeline Stream (`AdminAuditPage.tsx`, `ops-deck.css`)**:
+    - Added a 4-metric executive KPI ribbon (`Total Logged Events`, `Security & Access`, `Config & Flag Changes`, `Active Administrators`).
+    - Redesigned the audit stream into a timeline format with glowing left icon nodes (`node-danger`, `node-caution`, `node-safe`, `node-info`, `node-purple`), actor initial avatars, and entity narrative highlights.
+    - Implemented a structured **Property Inspector Grid** presenting event ID, action code, actor, trip reference, timestamp in IST, and payload diffs alongside a 1-tap **"Copy JSON"** button with copy-feedback toast.
+  - **Linear-Grade Roadmap & Kanban Deck (`AdminFeaturesPage.tsx`, `ops-deck.css`, `Icons.tsx`)**:
+    - Added a multi-segment **Roadmap Velocity Progress Strip** showing backlog completion rate (% Shipped) and category breakdown.
+    - Added a **View Switcher** toggling between responsive **Kanban Board** and **Dense Linear-Style Table View**.
+    - Elevated card anatomy with case ID badge (`FEAT-004`), category tags (`ui-ux`, `analytics`, `security`, `sync`, etc.), requester avatars, expandable descriptions, status pipeline stepper (`Req → Plan → Start → Ship`), and shipped celebration ribbons.
+    - Embedded an **Interactive Flag Hub** allowing superadmins to toggle linked production feature flags directly from the card.
+    - Added a **"+ Log Request" modal** allowing admins to file traveler feature requests directly to `public.features`.
 * **Trade-offs Accepted:**
-  - Audit logs prioritize narrative clarity over dense tabular rows, providing full JSON payloads via a 1-tap expandable drawer for technical verification.
+  - Expanded metadata and inspector grids consume slightly more vertical space, offset by compact list/table view toggles and collapsible inspection drawers.
+
 
 
 
