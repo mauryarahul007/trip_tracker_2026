@@ -34,6 +34,8 @@ import { formatDateRange } from '../utils/dateRange';
 import { getCategoryKeywords } from '../utils/categoryHelper';
 import { getAppVersion } from '../utils/appVersion';
 import { triggerHaptic } from '../utils/haptics';
+import { getCurrencySymbol } from '../utils/currency';
+import { calculateSettlements } from '../utils/settlement';
 import { BugReportModal } from './BugReportModal';
 import { FeatureRequestModal } from './FeatureRequestModal';
 import { SuperadminAuthModal } from './SuperadminAuthModal';
@@ -102,6 +104,7 @@ interface SettingsViewProps {
   onRequestConfirm?: (req: ConfirmRequest) => void;
   onOpenShareTrip?: () => void;
   onOpenTripWrapped?: () => void;
+  onNavigateToBalances?: () => void;
 }
 
 export function SettingsView({
@@ -137,6 +140,7 @@ export function SettingsView({
   onRequestConfirm,
   onOpenShareTrip,
   onOpenTripWrapped,
+  onNavigateToBalances,
   baseCurrency,
 }: SettingsViewProps) {
   const [subScreen, setSubScreen] = useState<SubScreen>(initialSubScreen);
@@ -176,6 +180,28 @@ export function SettingsView({
     (userId && activeTrip.adminMemberIds && activeTrip.memberIds.some((mid) => members[mid]?.linkedUserId === userId && activeTrip.adminMemberIds?.includes(mid)))
   );
 
+  const currencySymbol = getCurrencySymbol(activeTrip?.baseCurrency || baseCurrency || 'INR');
+
+  // Groups and Settlement calculation for active trip
+  const groups = useTripStore((s) => s.groups);
+  const activeTripGroups = React.useMemo(() => {
+    return activeTrip ? (activeTrip.groupIds || []).map((id) => groups[id]).filter(Boolean) : [];
+  }, [activeTrip, groups]);
+
+  const settlementSummary = React.useMemo(() => {
+    if (!activeTrip) return { isFullySettled: true, totalOutstanding: 0, transferCount: 0, unsettledMemberCount: 0 };
+    const { balances, transfers } = calculateSettlements(activeTrip, members, activeTripExpenses, activeTripGroups);
+    const totalOutstanding = transfers.reduce((sum, t) => sum + t.amount, 0);
+    const isFullySettled = transfers.length === 0 || totalOutstanding < 0.01;
+    const unsettledMemberCount = balances.filter((b) => Math.abs(b.balance) >= 0.01).length;
+    return {
+      isFullySettled,
+      totalOutstanding,
+      transferCount: transfers.length,
+      unsettledMemberCount,
+    };
+  }, [activeTrip, members, activeTripExpenses, activeTripGroups]);
+
   const handleToggleCloseTrip = () => {
     if (!activeTrip || !isTripAdmin) return;
     triggerHaptic('light');
@@ -183,17 +209,97 @@ export function SettingsView({
       closeTrip(activeTrip.id, false);
       return;
     }
+
     if (onRequestConfirm) {
-      onRequestConfirm({
-        title: 'Close Trip',
-        message: "This locks the trip — no new expenses or members can be added until it's reopened. Existing data stays untouched.",
-        confirmLabel: 'Close Trip',
-        onConfirm: () => closeTrip(activeTrip.id, true),
-      });
+      if (settlementSummary.isFullySettled) {
+        onRequestConfirm({
+          title: 'Close & Lock Trip',
+          message: "All balances are settled! This locks the trip so no new expenses or members can be added. Existing data remains safe and viewable.",
+          confirmLabel: 'Close Trip',
+          onConfirm: () => closeTrip(activeTrip.id, true),
+        });
+      } else {
+        const formattedAmount = `${currencySymbol}${settlementSummary.totalOutstanding.toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
+        const memberCountText = `${settlementSummary.unsettledMemberCount} member${settlementSummary.unsettledMemberCount === 1 ? '' : 's'}`;
+
+        if (onNavigateToBalances) {
+          onRequestConfirm({
+            title: 'Outstanding Balances Remain',
+            message: `There is still ${formattedAmount} in unsettled balances across ${memberCountText}. We recommend reviewing and settling debts before closing. You can review balances now, or lock the trip if already settled off-app.`,
+            confirmLabel: 'Review & Settle',
+            onConfirm: () => onNavigateToBalances(),
+            tertiaryLabel: 'Close & Lock Anyway',
+            onTertiary: () => closeTrip(activeTrip.id, true),
+          });
+        } else {
+          onRequestConfirm({
+            title: 'Close Trip with Unsettled Balances',
+            message: `There is still ${formattedAmount} in unsettled balances across ${memberCountText}. Are you sure you want to lock this trip?`,
+            confirmLabel: 'Close & Lock Anyway',
+            danger: true,
+            onConfirm: () => closeTrip(activeTrip.id, true),
+          });
+        }
+      }
     } else {
       closeTrip(activeTrip.id, true);
     }
   };
+
+  const closeTripTitle = activeTrip?.closed ? 'Reopen Trip' : 'Close Trip';
+  const closeTripSubtitle = activeTrip?.closed
+    ? 'Currently locked — reopen to allow new expenses/members'
+    : settlementSummary.isFullySettled
+    ? 'All balances settled — lock trip against new edits'
+    : `⚠️ ${currencySymbol}${settlementSummary.totalOutstanding.toLocaleString(undefined, { maximumFractionDigits: 2 })} unsettled (${settlementSummary.unsettledMemberCount} ${settlementSummary.unsettledMemberCount === 1 ? 'member' : 'members'})`;
+
+  const closeTripBadgeText = activeTrip?.closed
+    ? 'LOCKED'
+    : settlementSummary.isFullySettled
+    ? 'SETTLED'
+    : 'UNSETTLED';
+
+  const closeTripBadgeBg = activeTrip?.closed
+    ? 'rgba(239, 68, 68, 0.15)'
+    : settlementSummary.isFullySettled
+    ? 'rgba(16, 185, 129, 0.15)'
+    : 'rgba(245, 158, 11, 0.15)';
+
+  const closeTripBadgeColor = activeTrip?.closed
+    ? '#EF4444'
+    : settlementSummary.isFullySettled
+    ? '#10B981'
+    : '#F59E0B';
+
+  const closeTripSquircleClass = activeTrip?.closed
+    ? 'squircle-teal-glow'
+    : settlementSummary.isFullySettled
+    ? 'squircle-teal-glow'
+    : 'squircle-amber-glow';
+
+  const flightStatusText = activeTrip?.closed
+    ? '🔒 CLOSED'
+    : settlementSummary.isFullySettled
+    ? '🟢 ACTIVE · SETTLED'
+    : '⚠️ ACTIVE · UNSETTLED';
+
+  const flightStatusBg = activeTrip?.closed
+    ? 'rgba(239, 68, 68, 0.15)'
+    : settlementSummary.isFullySettled
+    ? 'rgba(16, 185, 129, 0.15)'
+    : 'rgba(245, 158, 11, 0.15)';
+
+  const flightStatusColor = activeTrip?.closed
+    ? '#EF4444'
+    : settlementSummary.isFullySettled
+    ? '#10B981'
+    : '#F59E0B';
+
+  const flightStatusBorder = activeTrip?.closed
+    ? 'rgba(239, 68, 68, 0.3)'
+    : settlementSummary.isFullySettled
+    ? 'rgba(16, 185, 129, 0.3)'
+    : 'rgba(245, 158, 11, 0.3)';
 
   // User avatar & cloud sync state
   const userAvatarUrl = useAuthStore((s) => s.session?.user.user_metadata?.avatar_url as string | undefined);
@@ -1341,13 +1447,13 @@ export function SettingsView({
                 onClick={handleToggleCloseTrip}
               >
                 <div className="settings-row-left">
-                  <div className={`settings-squircle ${activeTrip.closed ? 'squircle-teal-glow' : 'squircle-amber-glow'}`}>
+                  <div className={`settings-squircle ${closeTripSquircleClass}`}>
                     <IconShield size={18} />
                   </div>
                   <div className="settings-row-texts">
-                    <span className="settings-row-title">{activeTrip.closed ? 'Reopen Trip' : 'Close Trip'}</span>
+                    <span className="settings-row-title">{closeTripTitle}</span>
                     <span className="settings-row-subtitle">
-                      {activeTrip.closed ? 'Currently locked — reopen to allow new expenses/members' : 'Lock this trip once everyone\'s settled up'}
+                      {closeTripSubtitle}
                     </span>
                   </div>
                 </div>
@@ -1355,12 +1461,12 @@ export function SettingsView({
                   <span
                     className="settings-badge-pill"
                     style={{
-                      background: activeTrip.closed ? 'rgba(239, 68, 68, 0.15)' : 'rgba(245, 158, 11, 0.15)',
-                      color: activeTrip.closed ? '#EF4444' : '#F59E0B',
+                      background: closeTripBadgeBg,
+                      color: closeTripBadgeColor,
                       fontWeight: 700,
                     }}
                   >
-                    {activeTrip.closed ? 'LOCKED' : 'ACTIVE'}
+                    {closeTripBadgeText}
                   </span>
                   <IconChevronRight size={16} />
                 </div>
@@ -1385,7 +1491,7 @@ export function SettingsView({
   const showTripTools = hasActiveTrip && activeTrip && matchesSearch('Trip Tools & Story', 'story card', 'map', 'categories', 'recycle bin', 'mute');
   const showCloseTrip = hasActiveTrip && activeTrip && isTripAdmin && matchesSearch(
     activeTrip.closed ? 'Reopen Trip' : 'Close Trip',
-    'close', 'reopen', 'lock', 'unlock', 'complete', 'completed', 'completion', 'settled', 'post trip', 'finish', 'archive trip'
+    'close', 'reopen', 'lock', 'unlock', 'complete', 'completed', 'completion', 'settled', 'unsettled', 'outstanding', 'balances', 'debts', 'post trip', 'finish', 'archive trip'
   );
   const showCsvExport = hasActiveTrip && activeTrip && onExportCsv && matchesSearch('Excel CSV Export', 'spreadsheet', 'download', 'ledger', 'csv', 'sheets');
   const showTripGroup = showTripTools || showCloseTrip || showCsvExport;
@@ -1631,9 +1737,9 @@ export function SettingsView({
                   fontWeight: 700,
                   padding: '2px 8px',
                   borderRadius: '12px',
-                  background: activeTrip.closed ? 'rgba(239, 68, 68, 0.15)' : 'rgba(16, 185, 129, 0.15)',
-                  color: activeTrip.closed ? '#EF4444' : '#10B981',
-                  border: `1px solid ${activeTrip.closed ? 'rgba(239, 68, 68, 0.3)' : 'rgba(16, 185, 129, 0.3)'}`,
+                  background: flightStatusBg,
+                  color: flightStatusColor,
+                  border: `1px solid ${flightStatusBorder}`,
                   cursor: isTripAdmin ? 'pointer' : 'default',
                   transition: 'all 0.15s ease',
                   display: 'inline-flex',
@@ -1642,7 +1748,7 @@ export function SettingsView({
                 }}
                 aria-label={activeTrip.closed ? 'Trip is closed. Click to reopen.' : 'Trip is active. Click to close.'}
               >
-                <span>{activeTrip.closed ? '🔒 CLOSED' : '🟢 ACTIVE'}</span>
+                <span>{flightStatusText}</span>
               </button>
             </div>
 
@@ -1678,13 +1784,13 @@ export function SettingsView({
                 onClick={handleToggleCloseTrip}
               >
                 <div className="settings-row-left">
-                  <div className={`settings-squircle ${activeTrip.closed ? 'squircle-teal-glow' : 'squircle-amber-glow'}`}>
+                  <div className={`settings-squircle ${closeTripSquircleClass}`}>
                     <IconShield size={18} />
                   </div>
                   <div className="settings-row-texts">
-                    <span className="settings-row-title">{activeTrip.closed ? 'Reopen Trip' : 'Close Trip'}</span>
+                    <span className="settings-row-title">{closeTripTitle}</span>
                     <span className="settings-row-subtitle">
-                      {activeTrip.closed ? 'Currently locked — reopen to allow new expenses/members' : 'Lock this trip once everyone\'s settled up'}
+                      {closeTripSubtitle}
                     </span>
                   </div>
                 </div>
@@ -1692,12 +1798,12 @@ export function SettingsView({
                   <span
                     className="settings-badge-pill"
                     style={{
-                      background: activeTrip.closed ? 'rgba(239, 68, 68, 0.15)' : 'rgba(245, 158, 11, 0.15)',
-                      color: activeTrip.closed ? '#EF4444' : '#F59E0B',
+                      background: closeTripBadgeBg,
+                      color: closeTripBadgeColor,
                       fontWeight: 700,
                     }}
                   >
-                    {activeTrip.closed ? 'LOCKED' : 'ACTIVE'}
+                    {closeTripBadgeText}
                   </span>
                   <IconChevronRight size={16} />
                 </div>

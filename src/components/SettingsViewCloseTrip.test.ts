@@ -101,6 +101,10 @@ describe('Trip Close & Lifecycle Settings', () => {
       'completed',
       'completion',
       'settled',
+      'unsettled',
+      'outstanding',
+      'balances',
+      'debts',
       'post trip',
       'finish',
       'archive trip',
@@ -113,7 +117,7 @@ describe('Trip Close & Lifecycle Settings', () => {
     };
 
     // When active, title is 'Close Trip'
-    for (const query of ['complete', 'completion', 'close', 'lock', 'settled', 'post trip', 'finish']) {
+    for (const query of ['complete', 'completion', 'close', 'lock', 'settled', 'unsettled', 'outstanding', 'balances', 'debts', 'post trip', 'finish']) {
       expect(matchesSearch(query, 'Close Trip', searchAliases)).toBe(true);
     }
 
@@ -122,4 +126,68 @@ describe('Trip Close & Lifecycle Settings', () => {
       expect(matchesSearch(query, 'Reopen Trip', searchAliases)).toBe(true);
     }
   });
+
+  it('correctly calculates settlement status and total outstanding balances', async () => {
+    const { calculateSettlements } = await import('../utils/settlement');
+    const members = useTripStore.getState().members;
+
+    // 1. Initial state: no expenses -> fully settled
+    const initialSettlement = calculateSettlements(testTrip, members, []);
+    expect(initialSettlement.transfers.length).toBe(0);
+    const initialOutstanding = initialSettlement.transfers.reduce((s, t) => s + t.amount, 0);
+    expect(initialOutstanding < 0.01).toBe(true);
+
+    // 2. Add expense: Rahul paid 2000 INR split equally between Rahul and Priya (Priya owes Rahul 1000)
+    const expense = {
+      id: 'e1',
+      tripId: testTripId,
+      title: 'Scuba Diving',
+      amount: 2000,
+      currency: 'INR',
+      paidBy: 'm1',
+      splitMemberIds: ['m1', 'm2'],
+      splitMode: 'equal' as const,
+      resolvedShares: { m1: 1000, m2: 1000 },
+      category: 'cat-activities',
+      date: '2026-11-02',
+      isSettlement: false,
+      createdByUserId: 'u1',
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    };
+
+    const unsettledResult = calculateSettlements(testTrip, members, [expense]);
+    expect(unsettledResult.transfers.length).toBe(1);
+    expect(unsettledResult.transfers[0].fromMemberId).toBe('m2');
+    expect(unsettledResult.transfers[0].toMemberId).toBe('m1');
+    expect(unsettledResult.transfers[0].amount).toBe(1000);
+
+    const outstanding = unsettledResult.transfers.reduce((s, t) => s + t.amount, 0);
+    expect(outstanding).toBe(1000);
+
+    // 3. Add settlement payment: Priya pays Rahul 1000 INR -> fully settled again
+    const settlementExpense = {
+      id: 'e2',
+      tripId: testTripId,
+      title: 'Settlement: Priya paid Rahul',
+      amount: 1000,
+      currency: 'INR',
+      paidBy: 'm2',
+      splitMemberIds: ['m1'],
+      splitMode: 'exact' as const,
+      resolvedShares: { m1: 1000 },
+      category: 'cat-settlement',
+      date: '2026-11-03',
+      isSettlement: true,
+      createdByUserId: 'u1',
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    };
+
+    const settledResult = calculateSettlements(testTrip, members, [expense, settlementExpense]);
+    expect(settledResult.transfers.length).toBe(0);
+    const finalOutstanding = settledResult.transfers.reduce((s, t) => s + t.amount, 0);
+    expect(finalOutstanding < 0.01).toBe(true);
+  });
 });
+

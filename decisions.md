@@ -1262,5 +1262,27 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - Adding the row item increases the root active-trip card from 2 rows to 3 rows (Tools, Close/Lock, CSV Export), which remains exceptionally compact while eliminating navigation friction for a primary trip lifecycle action.
 
+---
+
+## 72. Guarded Settlement Checkpoint for Trip Closure Lifecycle
+* **Context:**
+  - Marking a trip as "Closed" blocks new expenses and members. When travelers close a trip while debts are still owed, group members can be left with unfinalized balances.
+  - However, enforcing a strict hard-block (disabling the Close button) creates severe dead-ends in real-world scenarios: forgiven or waived informal debts ("buy me a coffee next time"), cash/off-app payments forgotten by the recipient, unresponsive companions, and floating-point micro-cents. Furthermore, trip admins often need to lock new expense additions *before* settlements begin to freeze the numbers.
+* **Decision:**
+  - **Dynamic Inset Row & Flight Pass States (`SettingsView.tsx`)**:
+    - Evaluates live settlement health via `calculateSettlements(activeTrip, members, activeTripExpenses, activeTripGroups)`.
+    - **Fully Settled**: Displays green `SETTLED` badge pill, emerald squircle glow, and subtitle *"All balances settled — lock trip against new edits"*. Flight Pass capsule displays `🟢 ACTIVE · SETTLED`.
+    - **Unsettled Balances**: Displays amber `UNSETTLED` badge pill, amber squircle glow, and subtitle *"⚠️ {currencySymbol}{amount} unsettled ({count} members)"*. Flight Pass capsule displays `⚠️ ACTIVE · UNSETTLED`.
+  - **Guarded Warning Dialog with Admin Override (`SettingsView.tsx`, `ConfirmDialog.tsx`)**:
+    - When tapped while unsettled, opens an intentional checkpoint dialog:
+      - Primary action: `"Review & Settle"` $\rightarrow$ calls `onNavigateToBalances()` to immediately switch to the Balances & Settlements tab (closing drawer modal if open).
+      - Tertiary action: `"Close & Lock Anyway"` $\rightarrow$ enables the trip administrator to override and freeze the trip for off-app or waived arrangements.
+    - When tapped while fully settled, prompts standard confirmation before locking.
+  - **Spotlight Search Enhancement (`SettingsView.tsx`)**:
+    - Added search keywords `unsettled`, `outstanding`, `balances`, and `debts` so querying debts or settlements immediately surfaces the Close Trip row.
+* **Trade-offs Accepted:**
+  - Allowing the "Close Anyway" override prioritizes real-world flexibility over strict mathematical enforcement, while the prominent amber warning and 1-tap "Review & Settle" primary action prevents accidental closure.
+
+
 
 

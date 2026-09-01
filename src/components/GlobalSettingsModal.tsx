@@ -42,6 +42,7 @@ type Props = {
   isAdmin?: boolean;
   onOpenTripWrapped?: () => void;
   onOpenShareTrip?: () => void;
+  onNavigateToBalances?: () => void;
   baseCurrency?: string;
 };
 
@@ -49,6 +50,7 @@ export function GlobalSettingsModal({
   onClose,
   onRequestConfirm,
   onOpenTripWrapped,
+  onNavigateToBalances,
   themePref,
   setThemePref,
   onExportJson,
@@ -156,6 +158,7 @@ export function GlobalSettingsModal({
           onRequestConfirm={onRequestConfirm}
           onOpenTripWrapped={onOpenTripWrapped}
           onOpenShareTrip={onOpenShareTrip}
+          onNavigateToBalances={onNavigateToBalances}
           baseCurrency={baseCurrency}
         />
       </div>

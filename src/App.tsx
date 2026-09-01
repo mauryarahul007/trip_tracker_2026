@@ -2045,6 +2045,7 @@ export default function App() {
                 onRequestConfirm={setConfirmRequest}
                 onOpenShareTrip={() => setShowShareTrip(true)}
                 onOpenTripWrapped={() => setShowTripWrapped(true)}
+                onNavigateToBalances={() => setActiveTab('expenses')}
                 baseCurrency={activeTrip?.baseCurrency || ''}
               />
               </Suspense>
@@ -2172,6 +2173,10 @@ export default function App() {
           onRequestConfirm={setConfirmRequest}
           onOpenTripWrapped={() => setShowTripWrapped(true)}
           onOpenShareTrip={() => setShowShareTrip(true)}
+          onNavigateToBalances={() => {
+            setShowGlobalSettings(false);
+            setActiveTab('expenses');
+          }}
           isAdmin={isAdmin}
           onExportCsv={triggerCsvExport}
           baseCurrency={activeTrip ? getCurrencySymbol(activeTrip.baseCurrency) : ''}
