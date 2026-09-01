@@ -1,64 +1,5 @@
 [
   {
-    "id": "BUG-118",
-    "title": "Trip/Member/Group forms allowed double-submit; date picker leaked keyboard focus",
-    "description": "Create/Edit Trip, Add Member, and Add/Edit Group forms called their async save handler with no isSubmitting guard and no disabled/loading state on the submit button, so a slow connection plus a repeat tap could create duplicate records. Separately, DateRangePicker's popover had no focus trap: Tab could move focus out of the open calendar into the page behind it, and Escape only worked via a local onKeyDown handler instead of the app's shared focus-trap pattern.",
-    "severity": "medium",
-    "category": "ui-ux",
-    "status": "resolved",
-    "foundBy": "claude-cli",
-    "environment": {
-      "isOnline": true,
-      "platform": "web",
-      "appVersion": "1.0.0"
-    },
-    "reproSteps": [
-      "Open Create Trip (or Add Member, or Add Group) on a slow/throttled connection",
-      "Fill the form and tap Save/Add multiple times quickly before it resolves",
-      "Observe duplicate records created, or open the Dates calendar and press Tab repeatedly to see focus leave the popover into the page behind it"
-    ],
-    "expectedBehavior": "Submit button disables and shows a saving state during the async save so repeat taps are no-ops; the date picker traps Tab focus like every other modal/popup in the app.",
-    "actualBehavior": "Submit buttons stayed clickable through the async save with no loading feedback; the date picker's Tab key was unconstrained.",
-    "diagnostics": {
-      "stackTrace": "N/A -- missing guard/state, not a runtime error"
-    },
-    "createdAt": "2026-08-30T00:00:00+00:00",
-    "updatedAt": "2026-08-30T00:00:00+00:00",
-    "resolvedAt": "2026-08-30T00:00:00+00:00",
-    "resolvedBy": "claude-cli",
-    "resolutionNote": "Added isSubmitting-guard + disabled-button + \"Saving...\" pattern (matching the one already in ExpenseForm) to TripsListScreen's trip form and MembersGroupsTab's member/group forms. Wired DateRangePicker's popover into the existing useFocusTrap hook, removing the redundant local Escape handler. Commit f6b4d25."
-  },
-  {
-    "id": "BUG-117",
-    "title": "Create Trip date-range popover clipped by card, unusable to select dates",
-    "description": "The trip date-range picker popover rendered inside the Create New Trip .glass-card, which uses content-visibility:auto for scroll perf. That implicitly clips overflowing absolutely-positioned children to the card bounds, cutting the calendar off mid-grid and letting trip cards behind bleed through, making later dates unselectable.",
-    "severity": "medium",
-    "category": "ui-ux",
-    "status": "resolved",
-    "foundBy": "human",
-    "environment": {
-      "isOnline": true,
-      "platform": "web",
-      "appVersion": "1.0.0"
-    },
-    "reproSteps": [
-      "Open Your Trips, click Create New Trip",
-      "Tap the Dates field to open the calendar popover",
-      "Observe calendar cut off partway down, trip cards visible through/behind it",
-      "Attempt to select a date in the later rows"
-    ],
-    "expectedBehavior": "Full calendar popover renders below the Dates field, fully visible and clickable.",
-    "actualBehavior": "Popover clipped to the parent card's bounds due to content-visibility:auto containment; later date rows inaccessible.",
-    "diagnostics": {
-      "stackTrace": "N/A -- CSS containment clipping, not a runtime error"
-    },
-    "createdAt": "2026-08-30T00:00:00+00:00",
-    "updatedAt": "2026-08-30T00:00:00+00:00",
-    "resolvedAt": "2026-08-30T00:00:00+00:00",
-    "resolvedBy": "claude-cli",
-    "resolutionNote": "Portaled the date-range popover to document.body with fixed positioning computed from the trigger's rect, escaping the .glass-card containment clip (same fix pattern already used for the member-add modal in MembersGroupsTab.tsx). Commit 8e1a4cc."
-  },
-  {
     "id": "BUG-012",
     "title": "Member deletion left orphaned split IDs corrupting settlement balance math",
     "description": "When a member was removed from a trip, their ID remained in expenses.splitMemberIds and expenses.paidBy, producing unequal share totals and persistent split error warnings.",
@@ -2168,9 +2109,9 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-08-26T09:43:15.900412+00:00",
-    "updatedAt": "2026-08-28T11:20:44.446Z",
+    "updatedAt": "2026-08-28T11:20:44.446+00:00",
+    "resolvedAt": "2026-08-28T11:20:44.446+00:00",
     "resolvedBy": "claude-cli",
-    "resolvedAt": "2026-08-28T11:20:44.446Z",
     "resolutionNote": "Minified production stack (trip-tracker.blackmaroon.in) with no usable symbol names -- classic stale-chunk-after-deploy pattern: a tab left open across a new deploy tries to dynamic-import a chunk hash the old index.html still references, which no longer exists on the CDN. Not independently reproducible from the report alone, so instead of guessing at the specific chunk, added a global window 'vite:preloadError' listener in main.tsx that reloads the page once (sessionStorage-guarded against a reload loop if the user is actually offline) -- the standard Vite-recommended mitigation for this whole failure class, not just this one report. Commit d2198b3."
   },
   {
@@ -2309,7 +2250,7 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-08-26T22:23:48.694839+00:00",
-    "updatedAt": "2026-08-28T11:20:39.196Z",
+    "updatedAt": "2026-08-28T11:20:39.196+00:00",
     "resolutionNote": "Reviewed: stack trace resolves to http://localhost:5173/... (Vite dev server), captured 2026-08-26/27 during active development -- a ReferenceError/dynamic-import failure mid-edit that Vite's HMR corrected on the next save, not a defect in any committed revision. Confirmed the referenced symbol/component exists and compiles clean today (npx tsc --noEmit, zero errors, 2026-08-28). No code change; auto-crash-handler captures dev-time transients like this by design."
   },
   {
@@ -2340,7 +2281,7 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-08-26T22:25:00.232433+00:00",
-    "updatedAt": "2026-08-28T11:20:39.869Z",
+    "updatedAt": "2026-08-28T11:20:39.869+00:00",
     "resolutionNote": "Reviewed: stack trace resolves to http://localhost:5173/... (Vite dev server), captured 2026-08-26/27 during active development -- a ReferenceError/dynamic-import failure mid-edit that Vite's HMR corrected on the next save, not a defect in any committed revision. Confirmed the referenced symbol/component exists and compiles clean today (npx tsc --noEmit, zero errors, 2026-08-28). No code change; auto-crash-handler captures dev-time transients like this by design."
   },
   {
@@ -2371,7 +2312,7 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-08-26T22:25:21.0652+00:00",
-    "updatedAt": "2026-08-28T11:20:40.131Z",
+    "updatedAt": "2026-08-28T11:20:40.131+00:00",
     "resolutionNote": "Reviewed: stack trace resolves to http://localhost:5173/... (Vite dev server), captured 2026-08-26/27 during active development -- a ReferenceError/dynamic-import failure mid-edit that Vite's HMR corrected on the next save, not a defect in any committed revision. Confirmed the referenced symbol/component exists and compiles clean today (npx tsc --noEmit, zero errors, 2026-08-28). No code change; auto-crash-handler captures dev-time transients like this by design."
   },
   {
@@ -2402,7 +2343,7 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-08-26T22:53:41.71052+00:00",
-    "updatedAt": "2026-08-28T11:20:40.346Z",
+    "updatedAt": "2026-08-28T11:20:40.346+00:00",
     "resolutionNote": "Reviewed: stack trace resolves to http://localhost:5173/... (Vite dev server), captured 2026-08-26/27 during active development -- a ReferenceError/dynamic-import failure mid-edit that Vite's HMR corrected on the next save, not a defect in any committed revision. Confirmed the referenced symbol/component exists and compiles clean today (npx tsc --noEmit, zero errors, 2026-08-28). No code change; auto-crash-handler captures dev-time transients like this by design."
   },
   {
@@ -2439,7 +2380,7 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-08-26T22:53:54.725821+00:00",
-    "updatedAt": "2026-08-28T11:20:40.552Z",
+    "updatedAt": "2026-08-28T11:20:40.552+00:00",
     "resolutionNote": "Reviewed: stack trace resolves to http://localhost:5173/... (Vite dev server), captured 2026-08-26/27 during active development -- a ReferenceError/dynamic-import failure mid-edit that Vite's HMR corrected on the next save, not a defect in any committed revision. Confirmed the referenced symbol/component exists and compiles clean today (npx tsc --noEmit, zero errors, 2026-08-28). No code change; auto-crash-handler captures dev-time transients like this by design."
   },
   {
@@ -2473,7 +2414,7 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-08-26T23:18:02.650287+00:00",
-    "updatedAt": "2026-08-28T11:20:40.777Z",
+    "updatedAt": "2026-08-28T11:20:40.777+00:00",
     "resolutionNote": "Reviewed: stack trace resolves to http://localhost:5173/... (Vite dev server), captured 2026-08-26/27 during active development -- a ReferenceError/dynamic-import failure mid-edit that Vite's HMR corrected on the next save, not a defect in any committed revision. Confirmed the referenced symbol/component exists and compiles clean today (npx tsc --noEmit, zero errors, 2026-08-28). No code change; auto-crash-handler captures dev-time transients like this by design."
   },
   {
@@ -2519,7 +2460,7 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-08-26T23:18:36.843957+00:00",
-    "updatedAt": "2026-08-28T11:20:40.969Z",
+    "updatedAt": "2026-08-28T11:20:40.969+00:00",
     "resolutionNote": "Reviewed: stack trace resolves to http://localhost:5173/... (Vite dev server), captured 2026-08-26/27 during active development -- a ReferenceError/dynamic-import failure mid-edit that Vite's HMR corrected on the next save, not a defect in any committed revision. Confirmed the referenced symbol/component exists and compiles clean today (npx tsc --noEmit, zero errors, 2026-08-28). No code change; auto-crash-handler captures dev-time transients like this by design."
   },
   {
@@ -2569,7 +2510,7 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-08-26T23:21:19.754085+00:00",
-    "updatedAt": "2026-08-28T11:20:41.163Z",
+    "updatedAt": "2026-08-28T11:20:41.163+00:00",
     "resolutionNote": "Reviewed: stack trace resolves to http://localhost:5173/... (Vite dev server), captured 2026-08-26/27 during active development -- a ReferenceError/dynamic-import failure mid-edit that Vite's HMR corrected on the next save, not a defect in any committed revision. Confirmed the referenced symbol/component exists and compiles clean today (npx tsc --noEmit, zero errors, 2026-08-28). No code change; auto-crash-handler captures dev-time transients like this by design."
   },
   {
@@ -2623,7 +2564,7 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-08-26T23:27:42.284697+00:00",
-    "updatedAt": "2026-08-28T11:20:41.356Z",
+    "updatedAt": "2026-08-28T11:20:41.356+00:00",
     "resolutionNote": "Reviewed: stack trace resolves to http://localhost:5173/... (Vite dev server), captured 2026-08-26/27 during active development -- a ReferenceError/dynamic-import failure mid-edit that Vite's HMR corrected on the next save, not a defect in any committed revision. Confirmed the referenced symbol/component exists and compiles clean today (npx tsc --noEmit, zero errors, 2026-08-28). No code change; auto-crash-handler captures dev-time transients like this by design."
   },
   {
@@ -2680,7 +2621,7 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-08-26T23:28:58.863522+00:00",
-    "updatedAt": "2026-08-28T11:20:41.560Z",
+    "updatedAt": "2026-08-28T11:20:41.56+00:00",
     "resolutionNote": "Reviewed: stack trace resolves to http://localhost:5173/... (Vite dev server), captured 2026-08-26/27 during active development -- a ReferenceError/dynamic-import failure mid-edit that Vite's HMR corrected on the next save, not a defect in any committed revision. Confirmed the referenced symbol/component exists and compiles clean today (npx tsc --noEmit, zero errors, 2026-08-28). No code change; auto-crash-handler captures dev-time transients like this by design."
   },
   {
@@ -2737,7 +2678,7 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-08-26T23:50:17.887372+00:00",
-    "updatedAt": "2026-08-28T11:20:41.762Z",
+    "updatedAt": "2026-08-28T11:20:41.762+00:00",
     "resolutionNote": "Reviewed: stack trace resolves to http://localhost:5173/... (Vite dev server), captured 2026-08-26/27 during active development -- a ReferenceError/dynamic-import failure mid-edit that Vite's HMR corrected on the next save, not a defect in any committed revision. Confirmed the referenced symbol/component exists and compiles clean today (npx tsc --noEmit, zero errors, 2026-08-28). No code change; auto-crash-handler captures dev-time transients like this by design."
   },
   {
@@ -2771,7 +2712,7 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-08-27T00:04:48.650033+00:00",
-    "updatedAt": "2026-08-28T11:20:42.263Z",
+    "updatedAt": "2026-08-28T11:20:42.263+00:00",
     "resolutionNote": "Reviewed: stack trace resolves to http://localhost:5173/... (Vite dev server), captured 2026-08-26/27 during active development -- a ReferenceError/dynamic-import failure mid-edit that Vite's HMR corrected on the next save, not a defect in any committed revision. Confirmed the referenced symbol/component exists and compiles clean today (npx tsc --noEmit, zero errors, 2026-08-28). No code change; auto-crash-handler captures dev-time transients like this by design."
   },
   {
@@ -2811,7 +2752,7 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-08-27T00:05:02.070735+00:00",
-    "updatedAt": "2026-08-28T11:20:42.451Z",
+    "updatedAt": "2026-08-28T11:20:42.451+00:00",
     "resolutionNote": "Reviewed: stack trace resolves to http://localhost:5173/... (Vite dev server), captured 2026-08-26/27 during active development -- a ReferenceError/dynamic-import failure mid-edit that Vite's HMR corrected on the next save, not a defect in any committed revision. Confirmed the referenced symbol/component exists and compiles clean today (npx tsc --noEmit, zero errors, 2026-08-28). No code change; auto-crash-handler captures dev-time transients like this by design."
   },
   {
@@ -2845,7 +2786,7 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-08-27T00:24:40.236554+00:00",
-    "updatedAt": "2026-08-28T11:20:42.647Z",
+    "updatedAt": "2026-08-28T11:20:42.647+00:00",
     "resolutionNote": "Reviewed: stack trace resolves to http://localhost:5173/... (Vite dev server), captured 2026-08-26/27 during active development -- a ReferenceError/dynamic-import failure mid-edit that Vite's HMR corrected on the next save, not a defect in any committed revision. Confirmed the referenced symbol/component exists and compiles clean today (npx tsc --noEmit, zero errors, 2026-08-28). No code change; auto-crash-handler captures dev-time transients like this by design."
   },
   {
@@ -2882,7 +2823,7 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-08-27T00:24:48.761292+00:00",
-    "updatedAt": "2026-08-28T11:20:42.839Z",
+    "updatedAt": "2026-08-28T11:20:42.839+00:00",
     "resolutionNote": "Reviewed: stack trace resolves to http://localhost:5173/... (Vite dev server), captured 2026-08-26/27 during active development -- a ReferenceError/dynamic-import failure mid-edit that Vite's HMR corrected on the next save, not a defect in any committed revision. Confirmed the referenced symbol/component exists and compiles clean today (npx tsc --noEmit, zero errors, 2026-08-28). No code change; auto-crash-handler captures dev-time transients like this by design."
   },
   {
@@ -2939,7 +2880,7 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-08-27T00:28:12.116358+00:00",
-    "updatedAt": "2026-08-28T11:20:43.021Z",
+    "updatedAt": "2026-08-28T11:20:43.021+00:00",
     "resolutionNote": "Reviewed: stack trace resolves to http://localhost:5173/... (Vite dev server), captured 2026-08-26/27 during active development -- a ReferenceError/dynamic-import failure mid-edit that Vite's HMR corrected on the next save, not a defect in any committed revision. Confirmed the referenced symbol/component exists and compiles clean today (npx tsc --noEmit, zero errors, 2026-08-28). No code change; auto-crash-handler captures dev-time transients like this by design."
   },
   {
@@ -3152,7 +3093,7 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-08-27T03:54:51.695554+00:00",
-    "updatedAt": "2026-08-28T11:20:43.216Z",
+    "updatedAt": "2026-08-28T11:20:43.216+00:00",
     "resolutionNote": "Reviewed: stack trace resolves to http://localhost:5173/... (Vite dev server), captured 2026-08-26/27 during active development -- a ReferenceError/dynamic-import failure mid-edit that Vite's HMR corrected on the next save, not a defect in any committed revision. Confirmed the referenced symbol/component exists and compiles clean today (npx tsc --noEmit, zero errors, 2026-08-28). No code change; auto-crash-handler captures dev-time transients like this by design."
   },
   {
@@ -3186,7 +3127,7 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-08-27T03:54:56.801416+00:00",
-    "updatedAt": "2026-08-28T11:20:43.399Z",
+    "updatedAt": "2026-08-28T11:20:43.399+00:00",
     "resolutionNote": "Reviewed: stack trace resolves to http://localhost:5173/... (Vite dev server), captured 2026-08-26/27 during active development -- a ReferenceError/dynamic-import failure mid-edit that Vite's HMR corrected on the next save, not a defect in any committed revision. Confirmed the referenced symbol/component exists and compiles clean today (npx tsc --noEmit, zero errors, 2026-08-28). No code change; auto-crash-handler captures dev-time transients like this by design."
   },
   {
@@ -3220,7 +3161,7 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-08-27T04:27:40.525775+00:00",
-    "updatedAt": "2026-08-28T11:20:43.582Z",
+    "updatedAt": "2026-08-28T11:20:43.582+00:00",
     "resolutionNote": "Reviewed: stack trace resolves to http://localhost:5173/... (Vite dev server), captured 2026-08-26/27 during active development -- a ReferenceError/dynamic-import failure mid-edit that Vite's HMR corrected on the next save, not a defect in any committed revision. Confirmed the referenced symbol/component exists and compiles clean today (npx tsc --noEmit, zero errors, 2026-08-28). No code change; auto-crash-handler captures dev-time transients like this by design."
   },
   {
@@ -3258,7 +3199,7 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-08-27T04:28:37.885335+00:00",
-    "updatedAt": "2026-08-28T11:20:43.767Z",
+    "updatedAt": "2026-08-28T11:20:43.767+00:00",
     "resolutionNote": "Reviewed: stack trace resolves to http://localhost:5173/... (Vite dev server), captured 2026-08-26/27 during active development -- a ReferenceError/dynamic-import failure mid-edit that Vite's HMR corrected on the next save, not a defect in any committed revision. Confirmed the referenced symbol/component exists and compiles clean today (npx tsc --noEmit, zero errors, 2026-08-28). No code change; auto-crash-handler captures dev-time transients like this by design."
   },
   {
@@ -3299,7 +3240,7 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-08-27T04:29:12.732179+00:00",
-    "updatedAt": "2026-08-28T11:20:43.964Z",
+    "updatedAt": "2026-08-28T11:20:43.964+00:00",
     "resolutionNote": "Reviewed: stack trace resolves to http://localhost:5173/... (Vite dev server), captured 2026-08-26/27 during active development -- a ReferenceError/dynamic-import failure mid-edit that Vite's HMR corrected on the next save, not a defect in any committed revision. Confirmed the referenced symbol/component exists and compiles clean today (npx tsc --noEmit, zero errors, 2026-08-28). No code change; auto-crash-handler captures dev-time transients like this by design."
   },
   {
@@ -3493,8 +3434,8 @@
     "status": "resolved",
     "foundBy": "claude-cli",
     "environment": {
-      "platform": "web",
       "isOnline": true,
+      "platform": "web",
       "appVersion": "1.0.0"
     },
     "reproSteps": [
@@ -3505,10 +3446,10 @@
     "expectedBehavior": "Every interactive control (login gate, trip card, dialogs, admin search) is operable by keyboard alone and meets WCAG 2.2 AA contrast/focus-visibility; UI polish (loading feedback, consistent easing, tap targets, error display) matches the rest of the app's design system.",
     "actualBehavior": "Login and home screen were hard keyboard blockers; several modals/controls had missing or inconsistent focus handling and contrast; assorted UX rough edges (abrupt photo pop-in, duplicated error text, tight tap targets).",
     "diagnostics": {},
-    "createdAt": "2026-08-28T00:00:00.000Z",
-    "updatedAt": "2026-08-28T11:20:44.629Z",
+    "createdAt": "2026-08-28T00:00:00+00:00",
+    "updatedAt": "2026-08-28T11:20:44.629+00:00",
+    "resolvedAt": "2026-08-28T00:00:00+00:00",
     "resolvedBy": "claude-cli",
-    "resolvedAt": "2026-08-28T00:00:00.000Z",
     "resolutionNote": "Commit 1471c34. SlideToUnlock.tsx: added role=button/tabIndex/onKeyDown (Enter/Space unlocks) and clamped maxDistance to >=0. TripStack.tsx: StackCardItem front card now role=button/tabIndex/onKeyDown, cover photo now fades in via a separate .stack-card-photo layer with a reduced-motion guard instead of an abrupt background-image swap. index.css: placeholder opacity 0.8->1 (text-muted alone already passes 4.5:1), added .stack-card:focus-visible ring, consolidated .filter-chip and .expense-review-banner ad hoc easings to var(--transition-smooth), added .nav-tab-item min-height:48px. MembersGroupsTab.tsx: added useFocusTrap to the add/edit member dialog (skipAutoFocus, Escape deferred to the name-suggestion dropdown's own handler while it's open so the two Escape behaviors don't fight). ops-deck.css: added :focus-visible ring to .ops-cmdk input. StickyBalanceBar.tsx: removed the redundant onClick on the landmark <aside>, kept only the real nested button. ExpenseForm.tsx: replaced 3 independently-duplicated formError conditions with one derived isAmountFormError/isTitleFormError/isGeneralFormError classification so each error renders exactly once. SlideToUnlock.tsx inline easing plus AnalyticsTab.tsx/BugReportModal.tsx sub-12px labels also fixed; contrailFlow's linear animation was reviewed and deliberately left as-is (correct for a continuous dash-flow effect). A broader hardcoded-hex-color sweep was investigated but found no safe targets -- the flagged occurrences were Google's official brand-color SVG paths (LoginScreen.tsx), a Mapbox GL paint property that doesn't accept CSS vars (TripMapHero.tsx), and TripWrappedModal.tsx's deliberate hardcoded light/dark pairs (export/share-card context) -- so left untouched."
   },
   {
@@ -3576,8 +3517,8 @@
     "status": "resolved",
     "foundBy": "claude-cli",
     "environment": {
-      "platform": "web",
       "isOnline": true,
+      "platform": "web",
       "appVersion": "1.0.0"
     },
     "reproSteps": [
@@ -3587,11 +3528,110 @@
     "expectedBehavior": "",
     "actualBehavior": "",
     "diagnostics": {},
-    "createdAt": "2026-08-28T14:32:46.923Z",
-    "updatedAt": "2026-08-28T14:32:58.125Z",
+    "createdAt": "2026-08-28T14:32:46.923+00:00",
+    "updatedAt": "2026-08-28T14:32:58.125+00:00",
+    "resolvedAt": "2026-08-28T14:32:58.124+00:00",
     "resolvedBy": "claude-cli",
-    "resolvedAt": "2026-08-28T14:32:58.124Z",
-    "resolutionNote": "Follow-up audit after BUG-111: TripsListScreen trip card, NotificationsPanel card, BoardingPassHeroCard origin/dest edit triggers, and AnalyticsTab category legend rows were div-onClick with no role/tabIndex/keydown -- added keyboard support guarded against double-firing from nested controls. Geotag/Mute toggle switches and the ExpenseForm split-amount input had no accessible name -- added aria-label. UpiPaymentModal/TripWrappedModal close buttons and BoardingPassHeroCard glyph-only submit buttons were icon-only with no name -- added aria-label. AdminPortalLayout critical-bug badge and NotificationsPanel unread dot conveyed state by color alone -- added text-equivalent labels. ExpenseForm and UpiPaymentModal did not close on Escape (useFocusTrap called without onEscape) -- wired it. Replaced all 8 window.confirm()/native-dialog call sites in the admin portal (AdminAuditPage, AdminTripsPage x2, AdminUsersPage x2, AdminToolsPage x2, SuperAdminBugTracker) with the app's ConfirmDialog, adding confirmRequest state + rendering to AdminPortalLayout and threading onRequestConfirm through the 4 admin pages. BalancesSettlements 'Who owes who' was a bare div with no heading in the whole screen -- retagged to h2. ExpenseFilterDrawer group titles skipped h2->h4 -- retagged to h3. Bumped the 20x20 'Why this amount?' button to the 24x24 WCAG 2.5.8 minimum. Added aria-label to unlabeled search/filter/paste inputs in SuperAdminBugTracker and SettingsView. Wired Escape key support into SettingsView's bug-report/feature-request subscreens, reusing their existing unsaved-draft confirm guard so Escape gets the same data-loss protection as hardware/browser back. tsc -b and oxlint both clean after all changes. Commit 287ef29."
+    "resolutionNote": "Follow-up audit after BUG-111: TripsListScreen trip card, NotificationsPanel card, BoardingPassHeroCard origin/dest edit triggers, and AnalyticsTab category legend rows were div-onClick with no role/tabIndex/keydown -- added keyboard support guarded against double-firing from nested controls. Geotag/Mute toggle switches and the ExpenseForm split-amount input had no accessible name -- added aria-label. UpiPaymentModal/TripWrappedModal close buttons and BoardingPassHeroCard glyph-only submit buttons were icon-only with no name -- added aria-label. AdminPortalLayout critical-bug badge and NotificationsPanel unread dot conveyed state by color alone -- added text-equivalent labels. ExpenseForm and UpiPaymentModal did not close on Escape (useFocusTrap called without onEscape) -- wired it. Replaced all 8 window.confirm()/native-dialog call sites in the admin portal (AdminAuditPage, AdminTripsPage x2, AdminUsersPage x2, AdminToolsPage x2, SuperAdminBugTracker) with the app's ConfirmDialog, adding confirmRequest state + rendering to AdminPortalLayout and threading onRequestConfirm through the 4 admin pages. BalancesSettlements 'Who owes who' was a bare div with no heading in the whole screen -- retagged to h2. ExpenseFilterDrawer group titles skipped h2->h4 -- retagged to h3. Bumped the 20x20 'Why this amount?' button to the 24x24 WCAG 2.5.8 minimum. Added aria-label to unlabeled search/filter/paste inputs in SuperAdminBugTracker and SettingsView. Wired Escape key support into SettingsView's bug-report/feature-request subscreens, reusing their existing unsaved-draft confirm guard so Escape gets the same data-loss protection as hardware/browser back. tsc -b and oxlint both clean after all changes."
+  },
+  {
+    "id": "BUG-113",
+    "title": "celebrating is not defined",
+    "description": "Automatically captured react crash.\n\nReferenceError: celebrating is not defined\n    at TransferRow (http://localhost:5174/src/components/BalancesSettlements.tsx?t=1787932189996:900:35)\n    at Object.react_stack_bottom_frame (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=cdeb7f99:12864:12)\n    at renderWithHooks (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=cdeb7f99:4211:19)\n    at updateFunctionComponent (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=cdeb7f99:5567:16)\n    at beginWork (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=cdeb7f99:6138:20)\n    at runWithFiberInDEV (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=cdeb7f99:850:66)\n    at performUnitOfWork (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=cdeb7f99:8427:92)\n    at workLoopSync (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=cdeb7f99:8323:37)\n    at renderRootSync (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=cdeb7f99:8307:6)\n    at performWorkOnRoot (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=cdeb7f99:7992:27)",
+    "severity": "critical",
+    "category": "general",
+    "status": "resolved",
+    "foundBy": "auto-crash-handler",
+    "environment": {
+      "route": "#nav-1",
+      "isOnline": true,
+      "platform": "web",
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [],
+    "expectedBehavior": "App runs without throwing.",
+    "actualBehavior": "celebrating is not defined",
+    "diagnostics": {
+      "stackTrace": "ReferenceError: celebrating is not defined\n    at TransferRow (http://localhost:5174/src/components/BalancesSettlements.tsx?t=1787932189996:900:35)\n    at Object.react_stack_bottom_frame (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=cdeb7f99:12864:12)\n    at renderWithHooks (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=cdeb7f99:4211:19)\n    at updateFunctionComponent (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=cdeb7f99:5567:16)\n    at beginWork (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=cdeb7f99:6138:20)\n    at runWithFiberInDEV (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=cdeb7f99:850:66)\n    at performUnitOfWork (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=cdeb7f99:8427:92)\n    at workLoopSync (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=cdeb7f99:8323:37)\n    at renderRootSync (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=cdeb7f99:8307:6)\n    at performWorkOnRoot (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=cdeb7f99:7992:27)",
+      "consoleLogs": [
+        "[info] DiagnosticLogger initialized",
+        "[error] %o\n\n%s\n\n%s\n {} The above error occurred in the <TransferRow> component. React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.",
+        "[error] React Crash: celebrating is not defined",
+        "[error] Uncaught error inside ErrorBoundary: {} {\"componentStack\":\"\\n    at TransferRow (http://localhost:5174/src/components/BalancesSettlements.tsx?t=1787932189996:62:34)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at BalancesSettlements (http://localhost:5174/src/components/BalancesSettlements.tsx?t=1787932189996:1061:39)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at main (<anonymous>)\\n    at div (<anonymous>)\\n    at Tri"
+      ],
+      "syncQueueLength": 0
+    },
+    "createdAt": "2026-08-28T15:49:50.695326+00:00",
+    "updatedAt": "2026-09-01T06:42:19.113Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-09-01T06:42:19.113Z",
+    "resolutionNote": "Verified fixed by an earlier refactor -- 'celebrating' no longer appears anywhere in BalancesSettlements.tsx or the rest of src/. No code change needed; closing as stale."
+  },
+  {
+    "id": "BUG-114",
+    "title": "isManualRefreshing is not defined",
+    "description": "Automatically captured react crash.\n\nReferenceError: isManualRefreshing is not defined\n    at App (http://localhost:5174/src/App.tsx?t=1787932899240:501:3)\n    at Object.react_stack_bottom_frame (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=cdeb7f99:12864:12)\n    at renderWithHooks (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=cdeb7f99:4211:19)\n    at updateFunctionComponent (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=cdeb7f99:5567:16)\n    at beginWork (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=cdeb7f99:6138:20)\n    at runWithFiberInDEV (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=cdeb7f99:850:66)\n    at performUnitOfWork (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=cdeb7f99:8427:92)\n    at workLoopSync (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=cdeb7f99:8323:37)\n    at renderRootSync (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=cdeb7f99:8307:6)\n    at performWorkOnRoot (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=cdeb7f99:7992:27)",
+    "severity": "critical",
+    "category": "general",
+    "status": "resolved",
+    "foundBy": "auto-crash-handler",
+    "environment": {
+      "route": "#nav-1",
+      "isOnline": true,
+      "platform": "web",
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [],
+    "expectedBehavior": "App runs without throwing.",
+    "actualBehavior": "isManualRefreshing is not defined",
+    "diagnostics": {
+      "stackTrace": "ReferenceError: isManualRefreshing is not defined\n    at App (http://localhost:5174/src/App.tsx?t=1787932899240:501:3)\n    at Object.react_stack_bottom_frame (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=cdeb7f99:12864:12)\n    at renderWithHooks (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=cdeb7f99:4211:19)\n    at updateFunctionComponent (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=cdeb7f99:5567:16)\n    at beginWork (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=cdeb7f99:6138:20)\n    at runWithFiberInDEV (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=cdeb7f99:850:66)\n    at performUnitOfWork (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=cdeb7f99:8427:92)\n    at workLoopSync (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=cdeb7f99:8323:37)\n    at renderRootSync (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=cdeb7f99:8307:6)\n    at performWorkOnRoot (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=cdeb7f99:7992:27)",
+      "consoleLogs": [
+        "[info] DiagnosticLogger initialized",
+        "[error] %o\n\n%s\n\n%s\n {} The above error occurred in the <App> component. React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.",
+        "[error] React Crash: isManualRefreshing is not defined",
+        "[error] Uncaught error inside ErrorBoundary: {} {\"componentStack\":\"\\n    at App (http://localhost:5174/src/App.tsx?t=1787932899240:94:443)\\n    at ErrorBoundary (http://localhost:5174/src/components/ErrorBoundary.tsx:6:8)\\n    at RequireAuth (http://localhost:5174/src/components/RequireAuth.tsx:8:31)\\n    at RenderedRoute (http://localhost:5174/node_modules/.vite/deps/react-router-dom.js?v=cdeb7f99:4156:26)\\n    at Routes (http://localhost:5174/node_modules/.vite/deps/react-router-dom.js?v=cdeb7f99:4836"
+      ],
+      "syncQueueLength": 0
+    },
+    "createdAt": "2026-08-28T16:01:40.771256+00:00",
+    "updatedAt": "2026-09-01T06:42:20.288Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-09-01T06:42:20.287Z",
+    "resolutionNote": "Verified fixed by an earlier refactor -- 'isManualRefreshing' no longer appears anywhere in App.tsx or the rest of src/. No code change needed; closing as stale."
+  },
+  {
+    "id": "BUG-115",
+    "title": "Failed to fetch dynamically imported module: http://localhost:5174/src/components/TripMapHero.tsx",
+    "description": "Automatically captured react crash.\n\nTypeError: Failed to fetch dynamically imported module: http://localhost:5174/src/components/TripMapHero.tsx",
+    "severity": "critical",
+    "category": "general",
+    "status": "resolved",
+    "foundBy": "auto-crash-handler",
+    "environment": {
+      "route": "#nav-1",
+      "isOnline": true,
+      "platform": "web",
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [],
+    "expectedBehavior": "App runs without throwing.",
+    "actualBehavior": "Failed to fetch dynamically imported module: http://localhost:5174/src/components/TripMapHero.tsx",
+    "diagnostics": {
+      "stackTrace": "TypeError: Failed to fetch dynamically imported module: http://localhost:5174/src/components/TripMapHero.tsx",
+      "consoleLogs": [
+        "[info] DiagnosticLogger initialized",
+        "[error] %o\n\n%s\n\n%s\n {} The above error occurred in one of your React components. React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.",
+        "[error] React Crash: Failed to fetch dynamically imported module: http://localhost:5174/src/components/TripMapHero.tsx",
+        "[error] Uncaught error inside ErrorBoundary: {} {\"componentStack\":\"\\n    at Lazy (<anonymous>)\\n    at Suspense (<anonymous>)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at App (http://localhost:5174/src/App.tsx?t=1787932907928:94:443)\\n    at ErrorBoundary (http://localhost:5174/src/components/ErrorBoundary.tsx:6:8)\\n    at RequireAuth (http://localhost:5174/src/components/RequireAuth.tsx:8:31)\\n    at RenderedRoute (http://localhost:5174/node_modules/.vite/deps/react-router-dom.js?v=cdeb7"
+      ],
+      "syncQueueLength": 0
+    },
+    "createdAt": "2026-08-29T07:10:45.572863+00:00",
+    "updatedAt": "2026-09-01T06:42:06.619Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-09-01T06:42:06.619Z",
+    "resolutionNote": "Fixed in commit 8b47dae: React.lazy() dynamic imports now go through the new lazyImport() wrapper, which recovers from a stale/failed chunk fetch with one automatic reload instead of crashing."
   },
   {
     "id": "BUG-116",
@@ -3602,8 +3642,8 @@
     "status": "resolved",
     "foundBy": "claude-cli",
     "environment": {
-      "platform": "web",
       "isOnline": true,
+      "platform": "web",
       "appVersion": "1.0.0"
     },
     "reproSteps": [
@@ -3613,11 +3653,136 @@
     "expectedBehavior": "",
     "actualBehavior": "",
     "diagnostics": {},
-    "createdAt": "2026-08-29T11:52:34.064Z",
-    "updatedAt": "2026-08-29T11:55:32.260Z",
+    "createdAt": "2026-08-29T11:52:34.064+00:00",
+    "updatedAt": "2026-08-29T11:55:32.26+00:00",
+    "resolvedAt": "2026-08-29T11:55:32.259+00:00",
     "resolvedBy": "claude-cli",
-    "resolvedAt": "2026-08-29T11:55:32.259Z",
     "resolutionNote": "Commit 60095ad. ExpenseList.tsx: affectedExpenseIds (the review banner + bulk-review flow) now filters to isAdmin || createdByUserId === userId, matching the per-row swipe-to-edit gate, so it never opens an edit the backend RLS UPDATE policy will reject. tripStore.ts: added isNonRetryableSyncError() -- a write rejected by the DB policy (0 rows affected, detected in tripApi.ts's updateExpenseRow) now drops from syncQueue and sets storageError instead of being requeued forever, so Out of sync no longer sticks after a permission-denied write. Root cause found live: queried the Himachal 2 trip's expenses/members tables directly -- 2 expenses (Travel, Food) still reference a deleted member and were created by the trip owner (Suyog Gadhave), not the signed-in user (rahul maurya), so the edit was always going to be rejected by the existing admin-or-creator RLS policy from BUG-108/migration 0071. Those 2 rows still need the trip admin to fix via the UI; not touched directly since it's a money-affecting edit. Regression test in tripStore.test.ts (isNonRetryableSyncError). tsc --noEmit and full vitest suite clean. Follow-up commit ae93e60: ExpenseReviewModal.tsx now shows an inline note ('You didn't add this expense, so only the trip admin or whoever added it can edit or delete it.') in place of the Edit/Delete buttons when canManage is false, instead of silently omitting them."
+  },
+  {
+    "id": "BUG-117",
+    "title": "Cannot read properties of null (reading 'useRef')",
+    "description": "Automatically captured react crash.\n\nTypeError: Cannot read properties of null (reading 'useRef')\n    at exports.useRef (http://localhost:5173/node_modules/.vite/deps/react.js?v=3a086733:745:30)\n    at TripMapHero (http://localhost:5173/src/components/TripMapHero.tsx:53:26)\n    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=cdeb7f99:12864:12)\n    at renderWithHooks (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=cdeb7f99:4211:19)\n    at updateFunctionComponent (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=cdeb7f99:5567:16)\n    at beginWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=cdeb7f99:6118:628)\n    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=cdeb7f99:850:66)\n    at performUnitOfWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=cdeb7f99:8427:92)\n    at workLoopSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=cdeb7f99:8323:37)\n    at renderRootSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=cdeb7f99:8307:6)",
+    "severity": "critical",
+    "category": "general",
+    "status": "resolved",
+    "foundBy": "auto-crash-handler",
+    "environment": {
+      "route": "#nav-1",
+      "isOnline": true,
+      "platform": "web",
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [],
+    "expectedBehavior": "App runs without throwing.",
+    "actualBehavior": "Cannot read properties of null (reading 'useRef')",
+    "diagnostics": {
+      "stackTrace": "TypeError: Cannot read properties of null (reading 'useRef')\n    at exports.useRef (http://localhost:5173/node_modules/.vite/deps/react.js?v=3a086733:745:30)\n    at TripMapHero (http://localhost:5173/src/components/TripMapHero.tsx:53:26)\n    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=cdeb7f99:12864:12)\n    at renderWithHooks (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=cdeb7f99:4211:19)\n    at updateFunctionComponent (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=cdeb7f99:5567:16)\n    at beginWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=cdeb7f99:6118:628)\n    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=cdeb7f99:850:66)\n    at performUnitOfWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=cdeb7f99:8427:92)\n    at workLoopSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=cdeb7f99:8323:37)\n    at renderRootSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=cdeb7f99:8307:6)",
+      "consoleLogs": [
+        "[info] DiagnosticLogger initialized",
+        "[error] Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for one of the following reasons:\n1. You might have mismatching versions of React and the renderer (such as React DOM)\n2. You might be breaking the Rules of Hooks\n3. You might have more than one copy of React in the same app\nSee https://react.dev/link/invalid-hook-call for tips about how to debug and fix this problem.",
+        "[error] Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for one of the following reasons:\n1. You might have mismatching versions of React and the renderer (such as React DOM)\n2. You might be breaking the Rules of Hooks\n3. You might have more than one copy of React in the same app\nSee https://react.dev/link/invalid-hook-call for tips about how to debug and fix this problem.",
+        "[error] %o\n\n%s\n\n%s\n {} The above error occurred in the <TripMapHero> component. React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.",
+        "[error] React Crash: Cannot read properties of null (reading 'useRef')",
+        "[error] Uncaught error inside ErrorBoundary: {} {\"componentStack\":\"\\n    at TripMapHero (http://localhost:5173/src/components/TripMapHero.tsx:51:31)\\n    at Suspense (<anonymous>)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at App (http://localhost:5173/src/App.tsx:102:443)\\n    at ErrorBoundary (http://localhost:5173/src/components/ErrorBoundary.tsx:6:8)\\n    at RequireAuth (http://localhost:5173/src/components/RequireAuth.tsx:8:31)\\n    at RenderedRoute (http://localhost:5173/node_modules"
+      ],
+      "syncQueueLength": 0
+    },
+    "createdAt": "2026-08-30T09:47:39.226971+00:00",
+    "updatedAt": "2026-09-01T06:42:07.757Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-09-01T06:42:07.756Z",
+    "resolutionNote": "Same failure class as BUG-115 -- a null useRef inside TripMapHero pointing at a broken React instance is the downstream symptom of a dynamic-import chunk load left half-resolved. Fixed in commit 8b47dae via lazyImport(), which reloads once on that failure instead of leaving the module graph partially loaded."
+  },
+  {
+    "id": "BUG-118",
+    "title": "Transition was skipped",
+    "description": "Automatically captured unhandled rejection.\n\nNo stack trace available.",
+    "severity": "critical",
+    "category": "general",
+    "status": "resolved",
+    "foundBy": "auto-crash-handler",
+    "environment": {
+      "route": "#nav-2",
+      "isOnline": true,
+      "platform": "web",
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [],
+    "expectedBehavior": "App runs without throwing.",
+    "actualBehavior": "Transition was skipped",
+    "diagnostics": {
+      "consoleLogs": [
+        "[info] DiagnosticLogger initialized",
+        "[error] Unhandled Promise Rejection: Transition was skipped"
+      ],
+      "syncQueueLength": 0
+    },
+    "createdAt": "2026-08-30T09:49:23.292475+00:00",
+    "updatedAt": "2026-09-01T06:41:39.801Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-09-01T06:41:39.801Z",
+    "resolutionNote": "Fixed in commit 8b47dae: withViewTransition() now attaches .catch() to the transition's ready/finished promises. This was an unhandled rejection, not a crash -- the browser rejects those promises whenever a newer view transition interrupts an older one (rapid tab/trip switching), which is expected behavior, not a failure."
+  },
+  {
+    "id": "BUG-119",
+    "title": "Transition was skipped",
+    "description": "Automatically captured unhandled rejection.\n\nNo stack trace available.",
+    "severity": "critical",
+    "category": "general",
+    "status": "resolved",
+    "foundBy": "auto-crash-handler",
+    "environment": {
+      "route": "#nav-1",
+      "isOnline": true,
+      "platform": "web",
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [],
+    "expectedBehavior": "App runs without throwing.",
+    "actualBehavior": "Transition was skipped",
+    "diagnostics": {
+      "consoleLogs": [
+        "[info] DiagnosticLogger initialized",
+        "[error] Unhandled Promise Rejection: Transition was skipped"
+      ],
+      "syncQueueLength": 0
+    },
+    "createdAt": "2026-08-30T10:54:29.420954+00:00",
+    "updatedAt": "2026-09-01T06:41:41.353Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-09-01T06:41:41.353Z",
+    "resolutionNote": "Fixed in commit 8b47dae: withViewTransition() now attaches .catch() to the transition's ready/finished promises. This was an unhandled rejection, not a crash -- the browser rejects those promises whenever a newer view transition interrupts an older one (rapid tab/trip switching), which is expected behavior, not a failure."
+  },
+  {
+    "id": "BUG-120",
+    "title": "Transition was skipped",
+    "description": "Automatically captured unhandled rejection.\n\nNo stack trace available.",
+    "severity": "critical",
+    "category": "general",
+    "status": "resolved",
+    "foundBy": "auto-crash-handler",
+    "environment": {
+      "route": "#nav-2",
+      "isOnline": true,
+      "platform": "web",
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [],
+    "expectedBehavior": "App runs without throwing.",
+    "actualBehavior": "Transition was skipped",
+    "diagnostics": {
+      "consoleLogs": [
+        "[info] DiagnosticLogger initialized",
+        "[error] Unhandled Promise Rejection: Transition was skipped"
+      ],
+      "syncQueueLength": 0
+    },
+    "createdAt": "2026-08-30T17:01:40.402045+00:00",
+    "updatedAt": "2026-09-01T06:41:42.801Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-09-01T06:41:42.800Z",
+    "resolutionNote": "Fixed in commit 8b47dae: withViewTransition() now attaches .catch() to the transition's ready/finished promises. This was an unhandled rejection, not a crash -- the browser rejects those promises whenever a newer view transition interrupts an older one (rapid tab/trip switching), which is expected behavior, not a failure."
   },
   {
     "id": "BUG-121",
@@ -3628,8 +3793,8 @@
     "status": "resolved",
     "foundBy": "claude-cli",
     "environment": {
-      "platform": "web",
       "isOnline": true,
+      "platform": "web",
       "appVersion": "1.0.0"
     },
     "reproSteps": [
@@ -3639,10 +3804,10 @@
     "expectedBehavior": "",
     "actualBehavior": "",
     "diagnostics": {},
-    "createdAt": "2026-08-30T17:27:28.068Z",
-    "updatedAt": "2026-08-30T17:28:05.086Z",
+    "createdAt": "2026-08-30T17:27:28.068+00:00",
+    "updatedAt": "2026-08-30T17:28:05.086+00:00",
+    "resolvedAt": "2026-08-30T17:28:05.086+00:00",
     "resolvedBy": "claude-cli",
-    "resolvedAt": "2026-08-30T17:28:05.086Z",
     "resolutionNote": "Removed unused Fraunces font; converted layout-thrashing width/margin CSS transitions to transform (also fixed a pre-existing hover double-scale bug on the trip-sheet handle); code-split SettingsTab with a mount-gate to stop maplibre-gl loading for every session. Commit 0b74ca9."
   },
   {
@@ -3654,8 +3819,8 @@
     "status": "resolved",
     "foundBy": "mauryarahul007@gmail.com",
     "environment": {
-      "platform": "web",
       "isOnline": true,
+      "platform": "web",
       "appVersion": "1.0.0"
     },
     "reproSteps": [
@@ -3665,11 +3830,442 @@
     "expectedBehavior": "",
     "actualBehavior": "",
     "diagnostics": {},
-    "createdAt": "2026-08-30T17:40:21.872Z",
-    "updatedAt": "2026-08-30T17:40:40.415Z",
+    "createdAt": "2026-08-30T17:40:21.872+00:00",
+    "updatedAt": "2026-08-30T17:40:40.415+00:00",
+    "resolvedAt": "2026-08-30T17:40:40.414+00:00",
     "resolvedBy": "claude-cli",
-    "resolvedAt": "2026-08-30T17:40:40.414Z",
     "resolutionNote": "Rewrote usePullToRefresh to write drag distance directly to the indicator DOM node instead of via React state on every touchmove; state now only updates on discrete armed/refreshing transitions. Commit 19d0b1d."
+  },
+  {
+    "id": "BUG-123",
+    "title": "Old view transition aborted by new view transition.",
+    "description": "Automatically captured unhandled rejection.\n\nstartViewTransition@[native code]\n@https://trip-tracker.blackmaroon.in/assets/index-CM56Kn23.js:874:274401",
+    "severity": "critical",
+    "category": "general",
+    "status": "resolved",
+    "foundBy": "auto-crash-handler",
+    "environment": {
+      "route": "#nav-1",
+      "isOnline": true,
+      "platform": "web",
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [],
+    "expectedBehavior": "App runs without throwing.",
+    "actualBehavior": "Old view transition aborted by new view transition.",
+    "diagnostics": {
+      "stackTrace": "startViewTransition@[native code]\n@https://trip-tracker.blackmaroon.in/assets/index-CM56Kn23.js:874:274401",
+      "consoleLogs": [
+        "[info] DiagnosticLogger initialized",
+        "[error] Unhandled Promise Rejection: Old view transition aborted by new view transition."
+      ],
+      "syncQueueLength": 0
+    },
+    "createdAt": "2026-08-30T19:12:22.993573+00:00",
+    "updatedAt": "2026-09-01T06:41:44.185Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-09-01T06:41:44.185Z",
+    "resolutionNote": "Fixed in commit 8b47dae: withViewTransition() now attaches .catch() to the transition's ready/finished promises. This was an unhandled rejection, not a crash -- the browser rejects those promises whenever a newer view transition interrupts an older one (rapid tab/trip switching), which is expected behavior, not a failure."
+  },
+  {
+    "id": "BUG-124",
+    "title": "Transition was skipped",
+    "description": "Automatically captured unhandled rejection.\n\nNo stack trace available.",
+    "severity": "critical",
+    "category": "general",
+    "status": "resolved",
+    "foundBy": "auto-crash-handler",
+    "environment": {
+      "route": "#nav-1",
+      "isOnline": true,
+      "platform": "web",
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [],
+    "expectedBehavior": "App runs without throwing.",
+    "actualBehavior": "Transition was skipped",
+    "diagnostics": {
+      "consoleLogs": [
+        "[info] DiagnosticLogger initialized",
+        "[error] Unhandled Promise Rejection: Transition was skipped"
+      ],
+      "syncQueueLength": 0
+    },
+    "createdAt": "2026-08-31T04:55:11.03975+00:00",
+    "updatedAt": "2026-09-01T06:41:45.255Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-09-01T06:41:45.254Z",
+    "resolutionNote": "Fixed in commit 8b47dae: withViewTransition() now attaches .catch() to the transition's ready/finished promises. This was an unhandled rejection, not a crash -- the browser rejects those promises whenever a newer view transition interrupts an older one (rapid tab/trip switching), which is expected behavior, not a failure."
+  },
+  {
+    "id": "BUG-125",
+    "title": "Transition was skipped",
+    "description": "Automatically captured unhandled rejection.\n\nNo stack trace available.",
+    "severity": "critical",
+    "category": "general",
+    "status": "resolved",
+    "foundBy": "auto-crash-handler",
+    "environment": {
+      "route": "#nav-1",
+      "isOnline": true,
+      "platform": "web",
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [],
+    "expectedBehavior": "App runs without throwing.",
+    "actualBehavior": "Transition was skipped",
+    "diagnostics": {
+      "consoleLogs": [
+        "[info] DiagnosticLogger initialized",
+        "[error] Unhandled Promise Rejection: Transition was skipped"
+      ],
+      "syncQueueLength": 0
+    },
+    "createdAt": "2026-08-31T06:12:07.917806+00:00",
+    "updatedAt": "2026-09-01T06:41:46.626Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-09-01T06:41:46.625Z",
+    "resolutionNote": "Fixed in commit 8b47dae: withViewTransition() now attaches .catch() to the transition's ready/finished promises. This was an unhandled rejection, not a crash -- the browser rejects those promises whenever a newer view transition interrupts an older one (rapid tab/trip switching), which is expected behavior, not a failure."
+  },
+  {
+    "id": "BUG-126",
+    "title": "Transition was aborted because of invalid state",
+    "description": "Automatically captured unhandled rejection.\n\nNo stack trace available.",
+    "severity": "critical",
+    "category": "general",
+    "status": "resolved",
+    "foundBy": "auto-crash-handler",
+    "environment": {
+      "route": "#nav-3",
+      "isOnline": true,
+      "platform": "web",
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [],
+    "expectedBehavior": "App runs without throwing.",
+    "actualBehavior": "Transition was aborted because of invalid state",
+    "diagnostics": {
+      "consoleLogs": [
+        "[info] DiagnosticLogger initialized",
+        "[error] Unhandled Promise Rejection: Transition was skipped",
+        "[error] Unhandled Promise Rejection: Transition was skipped",
+        "[error] Unhandled Promise Rejection: Transition was skipped",
+        "[error] Unhandled Promise Rejection: Transition was skipped",
+        "[error] Unhandled Promise Rejection: Transition was aborted because of invalid state"
+      ],
+      "syncQueueLength": 0
+    },
+    "createdAt": "2026-08-31T06:13:19.234209+00:00",
+    "updatedAt": "2026-09-01T06:41:47.811Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-09-01T06:41:47.810Z",
+    "resolutionNote": "Fixed in commit 8b47dae: withViewTransition() now attaches .catch() to the transition's ready/finished promises. This was an unhandled rejection, not a crash -- the browser rejects those promises whenever a newer view transition interrupts an older one (rapid tab/trip switching), which is expected behavior, not a failure."
+  },
+  {
+    "id": "BUG-127",
+    "title": "Transition was skipped",
+    "description": "Automatically captured unhandled rejection.\n\nNo stack trace available.",
+    "severity": "critical",
+    "category": "general",
+    "status": "resolved",
+    "foundBy": "auto-crash-handler",
+    "environment": {
+      "route": "#nav-1",
+      "isOnline": true,
+      "platform": "web",
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [],
+    "expectedBehavior": "App runs without throwing.",
+    "actualBehavior": "Transition was skipped",
+    "diagnostics": {
+      "consoleLogs": [
+        "[info] DiagnosticLogger initialized",
+        "[error] Unhandled Promise Rejection: Transition was skipped"
+      ],
+      "syncQueueLength": 0
+    },
+    "createdAt": "2026-08-31T18:15:44.982728+00:00",
+    "updatedAt": "2026-09-01T06:41:48.891Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-09-01T06:41:48.889Z",
+    "resolutionNote": "Fixed in commit 8b47dae: withViewTransition() now attaches .catch() to the transition's ready/finished promises. This was an unhandled rejection, not a crash -- the browser rejects those promises whenever a newer view transition interrupts an older one (rapid tab/trip switching), which is expected behavior, not a failure."
+  },
+  {
+    "id": "BUG-128",
+    "title": "Transition was skipped",
+    "description": "Automatically captured unhandled rejection.\n\nNo stack trace available.",
+    "severity": "critical",
+    "category": "general",
+    "status": "resolved",
+    "foundBy": "auto-crash-handler",
+    "environment": {
+      "route": "#nav-1",
+      "isOnline": true,
+      "platform": "web",
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [],
+    "expectedBehavior": "App runs without throwing.",
+    "actualBehavior": "Transition was skipped",
+    "diagnostics": {
+      "consoleLogs": [
+        "[info] DiagnosticLogger initialized",
+        "[error] Unhandled Promise Rejection: Transition was skipped"
+      ],
+      "syncQueueLength": 0
+    },
+    "createdAt": "2026-08-31T18:24:07.618357+00:00",
+    "updatedAt": "2026-09-01T06:41:50.002Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-09-01T06:41:50.000Z",
+    "resolutionNote": "Fixed in commit 8b47dae: withViewTransition() now attaches .catch() to the transition's ready/finished promises. This was an unhandled rejection, not a crash -- the browser rejects those promises whenever a newer view transition interrupts an older one (rapid tab/trip switching), which is expected behavior, not a failure."
+  },
+  {
+    "id": "BUG-129",
+    "title": "Transition was skipped",
+    "description": "Automatically captured unhandled rejection.\n\nNo stack trace available.",
+    "severity": "critical",
+    "category": "general",
+    "status": "resolved",
+    "foundBy": "auto-crash-handler",
+    "environment": {
+      "route": "#nav-1",
+      "isOnline": true,
+      "platform": "web",
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [],
+    "expectedBehavior": "App runs without throwing.",
+    "actualBehavior": "Transition was skipped",
+    "diagnostics": {
+      "consoleLogs": [
+        "[info] DiagnosticLogger initialized",
+        "[error] Unhandled Promise Rejection: Transition was skipped"
+      ],
+      "syncQueueLength": 0
+    },
+    "createdAt": "2026-08-31T18:24:39.565584+00:00",
+    "updatedAt": "2026-09-01T06:41:51.202Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-09-01T06:41:51.201Z",
+    "resolutionNote": "Fixed in commit 8b47dae: withViewTransition() now attaches .catch() to the transition's ready/finished promises. This was an unhandled rejection, not a crash -- the browser rejects those promises whenever a newer view transition interrupts an older one (rapid tab/trip switching), which is expected behavior, not a failure."
+  },
+  {
+    "id": "BUG-130",
+    "title": "Transition was skipped",
+    "description": "Automatically captured unhandled rejection.\n\nNo stack trace available.",
+    "severity": "critical",
+    "category": "general",
+    "status": "resolved",
+    "foundBy": "auto-crash-handler",
+    "environment": {
+      "route": "#nav-1",
+      "isOnline": true,
+      "platform": "web",
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [],
+    "expectedBehavior": "App runs without throwing.",
+    "actualBehavior": "Transition was skipped",
+    "diagnostics": {
+      "consoleLogs": [
+        "[info] DiagnosticLogger initialized",
+        "[error] Unhandled Promise Rejection: Transition was skipped"
+      ],
+      "syncQueueLength": 0
+    },
+    "createdAt": "2026-08-31T19:17:08.237715+00:00",
+    "updatedAt": "2026-09-01T06:41:52.419Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-09-01T06:41:52.418Z",
+    "resolutionNote": "Fixed in commit 8b47dae: withViewTransition() now attaches .catch() to the transition's ready/finished promises. This was an unhandled rejection, not a crash -- the browser rejects those promises whenever a newer view transition interrupts an older one (rapid tab/trip switching), which is expected behavior, not a failure."
+  },
+  {
+    "id": "BUG-131",
+    "title": "Transition was skipped",
+    "description": "Automatically captured unhandled rejection.\n\nNo stack trace available.",
+    "severity": "critical",
+    "category": "general",
+    "status": "resolved",
+    "foundBy": "auto-crash-handler",
+    "environment": {
+      "route": "#nav-1",
+      "isOnline": true,
+      "platform": "web",
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [],
+    "expectedBehavior": "App runs without throwing.",
+    "actualBehavior": "Transition was skipped",
+    "diagnostics": {
+      "consoleLogs": [
+        "[info] DiagnosticLogger initialized",
+        "[error] Unhandled Promise Rejection: Transition was skipped"
+      ],
+      "syncQueueLength": 0
+    },
+    "createdAt": "2026-08-31T19:29:03.984017+00:00",
+    "updatedAt": "2026-09-01T06:41:53.620Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-09-01T06:41:53.619Z",
+    "resolutionNote": "Fixed in commit 8b47dae: withViewTransition() now attaches .catch() to the transition's ready/finished promises. This was an unhandled rejection, not a crash -- the browser rejects those promises whenever a newer view transition interrupts an older one (rapid tab/trip switching), which is expected behavior, not a failure."
+  },
+  {
+    "id": "BUG-132",
+    "title": "An unknown Component is an async Client Component. Only Server Components can be async at the moment. This error is often caused by accident",
+    "description": "Automatically captured react crash.\n\nError: An unknown Component is an async Client Component. Only Server Components can be async at the moment. This error is often caused by accidentally adding `'use client'` to a module that was originally written for the server.\n    at trackUsedThenable (http://localhost:5176/node_modules/.vite/deps/react-dom_client.js?v=bafbfa0a:3454:84)\n    at unwrapThenable (http://localhost:5176/node_modules/.vite/deps/react-dom_client.js?v=bafbfa0a:3529:11)\n    at createChild (http://localhost:5176/node_modules/.vite/deps/react-dom_client.js?v=bafbfa0a:3639:146)\n    at reconcileChildrenArray (http://localhost:5176/node_modules/.vite/deps/react-dom_client.js?v=bafbfa0a:3735:63)\n    at reconcileChildFibersImpl (http://localhost:5176/node_modules/.vite/deps/react-dom_client.js?v=bafbfa0a:3840:106)\n    at http://localhost:5176/node_modules/.vite/deps/react-dom_client.js?v=bafbfa0a:3867:28\n    at reconcileChildren (http://localhost:5176/node_modules/.vite/deps/react-dom_client.js?v=bafbfa0a:5384:46)\n    at beginWork (http://localhost:5176/node_modules/.vite/deps/react-dom_client.js?v=bafbfa0a:6198:1569)\n    at runWithFiberInDEV (http://localhost:5176/node_modules/.vite/deps/react-dom_client.js?v=bafbfa0a:850:66)\n    at performUnitOfWork (http://localhost:5176/node_modules/.vite/deps/react-dom_client.js?v=bafbfa0a:8427:92)",
+    "severity": "critical",
+    "category": "general",
+    "status": "resolved",
+    "foundBy": "auto-crash-handler",
+    "environment": {
+      "route": "#/",
+      "isOnline": true,
+      "platform": "web",
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [],
+    "expectedBehavior": "App runs without throwing.",
+    "actualBehavior": "An unknown Component is an async Client Component. Only Server Components can be async at the moment. This error is often caused by accidentally adding `'use client'` to a module that was originally written for the server.",
+    "diagnostics": {
+      "stackTrace": "Error: An unknown Component is an async Client Component. Only Server Components can be async at the moment. This error is often caused by accidentally adding `'use client'` to a module that was originally written for the server.\n    at trackUsedThenable (http://localhost:5176/node_modules/.vite/deps/react-dom_client.js?v=bafbfa0a:3454:84)\n    at unwrapThenable (http://localhost:5176/node_modules/.vite/deps/react-dom_client.js?v=bafbfa0a:3529:11)\n    at createChild (http://localhost:5176/node_modules/.vite/deps/react-dom_client.js?v=bafbfa0a:3639:146)\n    at reconcileChildrenArray (http://localhost:5176/node_modules/.vite/deps/react-dom_client.js?v=bafbfa0a:3735:63)\n    at reconcileChildFibersImpl (http://localhost:5176/node_modules/.vite/deps/react-dom_client.js?v=bafbfa0a:3840:106)\n    at http://localhost:5176/node_modules/.vite/deps/react-dom_client.js?v=bafbfa0a:3867:28\n    at reconcileChildren (http://localhost:5176/node_modules/.vite/deps/react-dom_client.js?v=bafbfa0a:5384:46)\n    at beginWork (http://localhost:5176/node_modules/.vite/deps/react-dom_client.js?v=bafbfa0a:6198:1569)\n    at runWithFiberInDEV (http://localhost:5176/node_modules/.vite/deps/react-dom_client.js?v=bafbfa0a:850:66)\n    at performUnitOfWork (http://localhost:5176/node_modules/.vite/deps/react-dom_client.js?v=bafbfa0a:8427:92)",
+      "consoleLogs": [
+        "[info] DiagnosticLogger initialized",
+        "[error] %o\n\n%s\n\n%s\n {} The above error occurred in the <span> component. React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.",
+        "[error] React Crash: An unknown Component is an async Client Component. Only Server Components can be async at the moment. This error is often caused by accidentally adding `'use client'` to a module that was originally written for the server.",
+        "[error] Uncaught error inside ErrorBoundary: {} {\"componentStack\":\"\\n    at span (<anonymous>)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at header (<anonymous>)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at GlobalSettingsModal (http://localhost:5176/src/components/GlobalSettingsModal.tsx:10:39)\\n    at div (<anonymous>)\\n    at App (http://localhost:5176/src/App.tsx:107:443)\\n    at ErrorBoundary (http://localhost:5176/src/components/ErrorBoundary.tsx:6:8)\\n    at RequireAut"
+      ],
+      "syncQueueLength": 0
+    },
+    "createdAt": "2026-08-31T19:58:40.252373+00:00",
+    "updatedAt": "2026-09-01T06:42:08.854Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-09-01T06:42:08.853Z",
+    "resolutionNote": "Same failure class as BUG-115/117 -- React misreading a stalled/half-resolved lazy import as an async component is a downstream symptom of the same chunk-load race. Fixed in commit 8b47dae via lazyImport()."
+  },
+  {
+    "id": "BUG-133",
+    "title": "An unknown Component is an async Client Component. Only Server Components can be async at the moment. This error is often caused by accident",
+    "description": "Automatically captured react crash.\n\nError: An unknown Component is an async Client Component. Only Server Components can be async at the moment. This error is often caused by accidentally adding `'use client'` to a module that was originally written for the server.\n    at trackUsedThenable (http://localhost:5176/node_modules/.vite/deps/react-dom_client.js?v=bafbfa0a:3454:84)\n    at unwrapThenable (http://localhost:5176/node_modules/.vite/deps/react-dom_client.js?v=bafbfa0a:3529:11)\n    at createChild (http://localhost:5176/node_modules/.vite/deps/react-dom_client.js?v=bafbfa0a:3639:146)\n    at reconcileChildrenArray (http://localhost:5176/node_modules/.vite/deps/react-dom_client.js?v=bafbfa0a:3735:63)\n    at reconcileChildFibersImpl (http://localhost:5176/node_modules/.vite/deps/react-dom_client.js?v=bafbfa0a:3840:106)\n    at http://localhost:5176/node_modules/.vite/deps/react-dom_client.js?v=bafbfa0a:3867:28\n    at reconcileChildren (http://localhost:5176/node_modules/.vite/deps/react-dom_client.js?v=bafbfa0a:5384:46)\n    at beginWork (http://localhost:5176/node_modules/.vite/deps/react-dom_client.js?v=bafbfa0a:6198:1569)\n    at runWithFiberInDEV (http://localhost:5176/node_modules/.vite/deps/react-dom_client.js?v=bafbfa0a:850:66)\n    at performUnitOfWork (http://localhost:5176/node_modules/.vite/deps/react-dom_client.js?v=bafbfa0a:8427:92)",
+    "severity": "critical",
+    "category": "general",
+    "status": "resolved",
+    "foundBy": "auto-crash-handler",
+    "environment": {
+      "route": "#/",
+      "isOnline": true,
+      "platform": "web",
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [],
+    "expectedBehavior": "App runs without throwing.",
+    "actualBehavior": "An unknown Component is an async Client Component. Only Server Components can be async at the moment. This error is often caused by accidentally adding `'use client'` to a module that was originally written for the server.",
+    "diagnostics": {
+      "stackTrace": "Error: An unknown Component is an async Client Component. Only Server Components can be async at the moment. This error is often caused by accidentally adding `'use client'` to a module that was originally written for the server.\n    at trackUsedThenable (http://localhost:5176/node_modules/.vite/deps/react-dom_client.js?v=bafbfa0a:3454:84)\n    at unwrapThenable (http://localhost:5176/node_modules/.vite/deps/react-dom_client.js?v=bafbfa0a:3529:11)\n    at createChild (http://localhost:5176/node_modules/.vite/deps/react-dom_client.js?v=bafbfa0a:3639:146)\n    at reconcileChildrenArray (http://localhost:5176/node_modules/.vite/deps/react-dom_client.js?v=bafbfa0a:3735:63)\n    at reconcileChildFibersImpl (http://localhost:5176/node_modules/.vite/deps/react-dom_client.js?v=bafbfa0a:3840:106)\n    at http://localhost:5176/node_modules/.vite/deps/react-dom_client.js?v=bafbfa0a:3867:28\n    at reconcileChildren (http://localhost:5176/node_modules/.vite/deps/react-dom_client.js?v=bafbfa0a:5384:46)\n    at beginWork (http://localhost:5176/node_modules/.vite/deps/react-dom_client.js?v=bafbfa0a:6198:1569)\n    at runWithFiberInDEV (http://localhost:5176/node_modules/.vite/deps/react-dom_client.js?v=bafbfa0a:850:66)\n    at performUnitOfWork (http://localhost:5176/node_modules/.vite/deps/react-dom_client.js?v=bafbfa0a:8427:92)",
+      "consoleLogs": [
+        "[info] DiagnosticLogger initialized",
+        "[error] %o\n\n%s\n\n%s\n {} The above error occurred in the <span> component. React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.",
+        "[error] React Crash: An unknown Component is an async Client Component. Only Server Components can be async at the moment. This error is often caused by accidentally adding `'use client'` to a module that was originally written for the server.",
+        "[error] Uncaught error inside ErrorBoundary: {} {\"componentStack\":\"\\n    at span (<anonymous>)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at header (<anonymous>)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at GlobalSettingsModal (http://localhost:5176/src/components/GlobalSettingsModal.tsx:10:39)\\n    at div (<anonymous>)\\n    at App (http://localhost:5176/src/App.tsx?t=1788206556276:107:443)\\n    at ErrorBoundary (http://localhost:5176/src/components/ErrorBoundary.tsx:6:8)\\n "
+      ],
+      "syncQueueLength": 0
+    },
+    "createdAt": "2026-08-31T20:02:47.463718+00:00",
+    "updatedAt": "2026-09-01T06:42:09.946Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-09-01T06:42:09.945Z",
+    "resolutionNote": "Duplicate of BUG-132 (same message, same root cause). Fixed in commit 8b47dae via lazyImport()."
+  },
+  {
+    "id": "BUG-134",
+    "title": "Transition was skipped",
+    "description": "Automatically captured unhandled rejection.\n\nNo stack trace available.",
+    "severity": "critical",
+    "category": "general",
+    "status": "resolved",
+    "foundBy": "auto-crash-handler",
+    "environment": {
+      "route": "#nav-1",
+      "isOnline": true,
+      "platform": "web",
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [],
+    "expectedBehavior": "App runs without throwing.",
+    "actualBehavior": "Transition was skipped",
+    "diagnostics": {
+      "consoleLogs": [
+        "[info] DiagnosticLogger initialized",
+        "[error] Unhandled Promise Rejection: Transition was skipped"
+      ],
+      "syncQueueLength": 0
+    },
+    "createdAt": "2026-08-31T20:43:19.293416+00:00",
+    "updatedAt": "2026-09-01T06:41:54.677Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-09-01T06:41:54.676Z",
+    "resolutionNote": "Fixed in commit 8b47dae: withViewTransition() now attaches .catch() to the transition's ready/finished promises. This was an unhandled rejection, not a crash -- the browser rejects those promises whenever a newer view transition interrupts an older one (rapid tab/trip switching), which is expected behavior, not a failure."
+  },
+  {
+    "id": "BUG-135",
+    "title": "Transition was skipped",
+    "description": "Automatically captured unhandled rejection.\n\nNo stack trace available.",
+    "severity": "critical",
+    "category": "general",
+    "status": "resolved",
+    "foundBy": "auto-crash-handler",
+    "environment": {
+      "route": "#nav-1",
+      "isOnline": true,
+      "platform": "web",
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [],
+    "expectedBehavior": "App runs without throwing.",
+    "actualBehavior": "Transition was skipped",
+    "diagnostics": {
+      "consoleLogs": [
+        "[info] DiagnosticLogger initialized",
+        "[error] Unhandled Promise Rejection: Transition was skipped"
+      ],
+      "syncQueueLength": 0
+    },
+    "createdAt": "2026-09-01T04:43:50.073998+00:00",
+    "updatedAt": "2026-09-01T06:41:55.763Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-09-01T06:41:55.762Z",
+    "resolutionNote": "Fixed in commit 8b47dae: withViewTransition() now attaches .catch() to the transition's ready/finished promises. This was an unhandled rejection, not a crash -- the browser rejects those promises whenever a newer view transition interrupts an older one (rapid tab/trip switching), which is expected behavior, not a failure."
+  },
+  {
+    "id": "BUG-136",
+    "title": "Transition was skipped",
+    "description": "Automatically captured unhandled rejection.\n\nNo stack trace available.",
+    "severity": "critical",
+    "category": "general",
+    "status": "resolved",
+    "foundBy": "auto-crash-handler",
+    "environment": {
+      "route": "#nav-2",
+      "isOnline": true,
+      "platform": "web",
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [],
+    "expectedBehavior": "App runs without throwing.",
+    "actualBehavior": "Transition was skipped",
+    "diagnostics": {
+      "consoleLogs": [
+        "[info] DiagnosticLogger initialized",
+        "[error] Unhandled Promise Rejection: Transition was skipped"
+      ],
+      "syncQueueLength": 0
+    },
+    "createdAt": "2026-09-01T06:16:17.345165+00:00",
+    "updatedAt": "2026-09-01T06:41:56.926Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-09-01T06:41:56.925Z",
+    "resolutionNote": "Fixed in commit 8b47dae: withViewTransition() now attaches .catch() to the transition's ready/finished promises. This was an unhandled rejection, not a crash -- the browser rejects those promises whenever a newer view transition interrupts an older one (rapid tab/trip switching), which is expected behavior, not a failure."
   },
   {
     "id": "BUG-137",
@@ -3680,8 +4276,8 @@
     "status": "resolved",
     "foundBy": "claude-cli",
     "environment": {
-      "platform": "web",
       "isOnline": true,
+      "platform": "web",
       "appVersion": "1.0.0"
     },
     "reproSteps": [
@@ -3691,10 +4287,10 @@
     "expectedBehavior": "Boarding pass should have a dark-mode-appropriate paper stock; FAB should name its current action; expense list chrome should be minimal by default.",
     "actualBehavior": "Boarding pass was frozen cream/ink regardless of theme; FAB gave no textual cue of its mode; stats+chips rendered unconditionally.",
     "diagnostics": {},
-    "createdAt": "2026-09-01T06:35:54.765Z",
-    "updatedAt": "2026-09-01T06:36:05.504Z",
+    "createdAt": "2026-09-01T06:35:54.765+00:00",
+    "updatedAt": "2026-09-01T06:36:05.504+00:00",
+    "resolvedAt": "2026-09-01T06:36:05.503+00:00",
     "resolvedBy": "claude-cli",
-    "resolvedAt": "2026-09-01T06:36:05.503Z",
     "resolutionNote": "Fixed in commit b0cf7f9: added --bp-* dark tokens for the boarding pass, an Add-member label on the FAB, and a single collapsible chrome toggle for the expense list's stats/chips."
   }
 ]
