@@ -118,6 +118,23 @@
   --ease-fluid-out: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-bounce-back: cubic-bezier(0.34, 1.4, 0.64, 1);
   --transition-spring: transform 0.32s var(--ease-spring), opacity 0.22s ease;
+
+  /* Boarding-pass paper stock -- deliberately its own palette, not the app's
+     surface/text tokens, so the printed-ticket feel survives theme changes.
+     Still swaps between a light day pass and a dark night pass below,
+     rather than staying frozen cream against an ink-black shell. */
+  --bp-paper: #FFFBF2;
+  --bp-paper-soft: #F7F0E1;
+  --bp-ink: #1F1B14;
+  --bp-ink-strong: rgba(31, 27, 20, 0.75);
+  --bp-ink-mid: rgba(31, 27, 20, 0.68);
+  --bp-ink-soft: rgba(31, 27, 20, 0.6);
+  --bp-ink-softer: rgba(31, 27, 20, 0.55);
+  --bp-ink-faint: rgba(31, 27, 20, 0.22);
+  --bp-tint: rgba(31, 27, 20, 0.03);
+  --bp-line: #ECE3D2;
+  --bp-line-strong: #E6DAC4;
+  --bp-shadow: rgba(31, 27, 20, 0.06);
 }
 
 /* Native View Transitions (trip select, tab switch -- see utils/viewTransition.ts)
@@ -192,6 +209,21 @@
     --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.35), 0 20px 48px -12px rgba(0, 0, 0, 0.55);
     --bg-nav-item-active: rgba(63, 203, 189, 0.16);
     --color-nav-item-active: #3FCBBD;
+
+    /* Night pass -- same printed-ticket idea (perforation, eyebrow, footer
+       stub), its own dark paper stock instead of staying cream. */
+    --bp-paper: #171410;
+    --bp-paper-soft: #211B12;
+    --bp-ink: #F2E8D2;
+    --bp-ink-strong: rgba(242, 232, 210, 0.82);
+    --bp-ink-mid: rgba(242, 232, 210, 0.7);
+    --bp-ink-soft: rgba(242, 232, 210, 0.62);
+    --bp-ink-softer: rgba(242, 232, 210, 0.55);
+    --bp-ink-faint: rgba(242, 232, 210, 0.24);
+    --bp-tint: rgba(242, 232, 210, 0.05);
+    --bp-line: #2E271B;
+    --bp-line-strong: #362D1E;
+    --bp-shadow: rgba(0, 0, 0, 0.35);
   }
 }
 :root[data-theme="dark"] {
@@ -232,6 +264,19 @@
   --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.4), 0 20px 48px -12px rgba(0, 0, 0, 0.6);
   --bg-nav-item-active: rgba(63, 203, 189, 0.16);
   --color-nav-item-active: #3FCBBD;
+
+  --bp-paper: #171410;
+  --bp-paper-soft: #211B12;
+  --bp-ink: #F2E8D2;
+  --bp-ink-strong: rgba(242, 232, 210, 0.82);
+  --bp-ink-mid: rgba(242, 232, 210, 0.7);
+  --bp-ink-soft: rgba(242, 232, 210, 0.62);
+  --bp-ink-softer: rgba(242, 232, 210, 0.55);
+  --bp-ink-faint: rgba(242, 232, 210, 0.24);
+  --bp-tint: rgba(242, 232, 210, 0.05);
+  --bp-line: #2E271B;
+  --bp-line-strong: #362D1E;
+  --bp-shadow: rgba(0, 0, 0, 0.35);
 }
 
 * {
@@ -975,6 +1020,48 @@ input[type="date"].input-field {
   height: 7px;
   border-radius: 50%;
   background: var(--accent-orange);
+}
+
+/* Single disclosure row for the stat strip + quick-filter chips -- both
+   used to render unconditionally above the list, which meant a trip with
+   three expenses opened to more chrome than content. Search stays outside
+   this toggle since it's the one control people reach for immediately;
+   this row stays visible (never a hidden gesture) and forces itself open
+   whenever a filter is already active, so an active filter is never out
+   of sight of its own Clear button. */
+.expense-chrome-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 2px;
+  margin-bottom: 10px;
+  background: none;
+  border: none;
+  border-top: 1px dashed var(--border-color);
+  border-bottom: 1px dashed var(--border-color);
+  cursor: pointer;
+  font-family: var(--font-family-body);
+  color: var(--primary-accent);
+  transition: var(--transition-smooth);
+}
+.expense-chrome-toggle:hover {
+  background: var(--bg-surface-hover);
+}
+.expense-chrome-toggle-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  font-weight: 600;
+}
+.expense-chrome-toggle-total {
+  font-family: var(--font-family-mono);
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--text-muted);
+  white-space: nowrap;
 }
 
 .expense-filter-sheet {
@@ -1724,6 +1811,28 @@ html.capacitor-ios .nav-tabs {
   to { opacity: 1; transform: translate(-50%, 0); }
 }
 
+/* Names the FAB's current action on the Members tab -- see NavTabs.tsx.
+   Smaller and quieter than the denied-hint toast above since this is
+   ambient labeling, not a one-off warning. */
+.nav-tab-fab-mode-label {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  background: var(--secondary-accent);
+  color: var(--bg-app);
+  border-radius: 999px;
+  padding: 3px 9px;
+  font-family: var(--font-family-mono);
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  pointer-events: none;
+  z-index: 4;
+  animation: fab-denied-hint-in 0.18s var(--ease-decel);
+}
+
 /* ==========================================================================
    Flight-Themed Coachmark Tooltip for Adding Transactions
    ========================================================================== */
@@ -2204,20 +2313,20 @@ input:checked + .toggle-slider:before {
   transform: rotateY(180deg);
 }
 
-/* Boarding-pass balance summary — the app's signature element */
+/* Boarding-pass balance summary — the app's signature element. Its own
+   paper-stock palette (--bp-*), not the app's surface/text tokens -- it
+   swaps between a day pass and a night pass with the theme (see the --bp-*
+   token block near the top of this file) rather than staying frozen cream
+   against an ink-black shell. */
 .boarding-pass {
-  /* Cream paper ticket, not a bold color hero -- the perforated motif
-     (dashed tear line + punch-hole cutouts) does the visual work, so the
-     fill stays quiet. Fixed cream/ink regardless of theme, like a real
-     printed boarding pass, rather than swapping with light/dark mode. */
-  background: #FFFBF2;
-  color: #1F1B14;
-  border: 1px solid #ECE3D2;
+  background: var(--bp-paper);
+  color: var(--bp-ink);
+  border: 1px solid var(--bp-line);
   border-radius: var(--border-radius-md);
   overflow: hidden;
   position: relative;
   margin-bottom: 16px;
-  box-shadow: 0 4px 18px rgba(31, 27, 20, 0.06);
+  box-shadow: 0 4px 18px var(--bp-shadow);
 }
 .bp-top {
   padding: 16px 20px 14px;
@@ -2232,24 +2341,24 @@ input:checked + .toggle-slider:before {
   font-size: 10.5px;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: rgba(31, 27, 20, 0.6);
+  color: var(--bp-ink-soft);
 }
 .bp-title {
   font-family: var(--font-family-title);
   font-size: 17px;
   font-weight: 600;
-  color: #1F1B14;
+  color: var(--bp-ink);
   margin-top: 2px;
 }
 .bp-meta {
   font-family: var(--font-family-mono);
   font-size: 11px;
-  color: rgba(31, 27, 20, 0.6);
+  color: var(--bp-ink-soft);
   text-align: right;
 }
 .bp-perf {
   position: relative;
-  border-top: 1.5px dashed rgba(31, 27, 20, 0.2);
+  border-top: 1.5px dashed var(--bp-ink-faint);
 }
 .bp-perf::before, .bp-perf::after {
   content: "";
@@ -2277,7 +2386,7 @@ input:checked + .toggle-slider:before {
   font-size: 10.5px;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: rgba(31, 27, 20, 0.6);
+  color: var(--bp-ink-soft);
 }
 .bp-amount {
   font-family: var(--font-family-title);
@@ -2291,7 +2400,7 @@ input:checked + .toggle-slider:before {
 }
 .bp-sub {
   font-size: 13px;
-  color: rgba(31, 27, 20, 0.68);
+  color: var(--bp-ink-mid);
   max-width: 34ch;
 }
 .bp-stamp-pos {
@@ -2300,13 +2409,13 @@ input:checked + .toggle-slider:before {
   right: 20px;
 }
 .bp-foot {
-  border-top: 1.5px dashed rgba(31, 27, 20, 0.2);
+  border-top: 1.5px dashed var(--bp-ink-faint);
   padding: 12px 20px 14px;
   display: flex;
   justify-content: space-between;
   font-family: var(--font-family-mono);
   font-size: 11px;
-  color: rgba(31, 27, 20, 0.6);
+  color: var(--bp-ink-soft);
 }
 
 /* Trip list — passport pages. Each trip reads as a stamped visa entry

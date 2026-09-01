@@ -88,7 +88,7 @@ const S_ROUTE_GRID: React.CSSProperties = {
   display: 'grid',
   gridTemplateColumns: '1fr auto 1fr',
   alignItems: 'center',
-  background: 'rgba(31, 27, 20, 0.03)',
+  background: 'var(--bp-tint)',
   gap: '8px',
 };
 const S_ROUTE_SIDE_LEFT: React.CSSProperties = { textAlign: 'left', minWidth: 0 };
@@ -97,14 +97,14 @@ const S_ROUTE_SIDE_RIGHT: React.CSSProperties = { textAlign: 'right', minWidth: 
 const S_MICRO_LABEL: React.CSSProperties = {
   fontSize: '9px',
   fontFamily: 'var(--font-family-mono)',
-  color: 'rgba(31, 27, 20, 0.55)',
+  color: 'var(--bp-ink-softer)',
   textTransform: 'uppercase',
 };
 // Reused by the departure and return date values -- identical style.
-const S_DATE_VALUE: React.CSSProperties = { fontSize: '15px', fontWeight: 800, color: '#1F1B14', fontFamily: 'var(--font-family-mono)' };
+const S_DATE_VALUE: React.CSSProperties = { fontSize: '15px', fontWeight: 800, color: 'var(--bp-ink)', fontFamily: 'var(--font-family-mono)' };
 const S_ORIGIN_TEXT: React.CSSProperties = {
   fontSize: '11.5px',
-  color: 'rgba(31, 27, 20, 0.75)',
+  color: 'var(--bp-ink-strong)',
   fontWeight: 600,
   whiteSpace: 'nowrap',
   overflow: 'hidden',
@@ -122,26 +122,26 @@ const S_DURATION_PILL: React.CSSProperties = {
   borderRadius: '9999px',
   whiteSpace: 'nowrap',
 };
-const S_DURATION_DASH: React.CSSProperties = { width: '50px', height: '1.5px', borderTop: '1.5px dashed rgba(31, 27, 20, 0.3)', margin: '3px 0' };
-const S_DURATION_SUBLABEL: React.CSSProperties = { fontSize: '9px', color: 'rgba(31, 27, 20, 0.55)', fontFamily: 'var(--font-family-mono)', whiteSpace: 'nowrap' };
+const S_DURATION_DASH: React.CSSProperties = { width: '50px', height: '1.5px', borderTop: '1.5px dashed var(--bp-ink-faint)', margin: '3px 0' };
+const S_DURATION_SUBLABEL: React.CSSProperties = { fontSize: '9px', color: 'var(--bp-ink-softer)', fontFamily: 'var(--font-family-mono)', whiteSpace: 'nowrap' };
 const S_PASSENGER_WEATHER_ROW: React.CSSProperties = { padding: '8px 18px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' };
-const S_PASSENGER_NAME_ROW: React.CSSProperties = { fontSize: '12.5px', fontWeight: 700, color: '#1F1B14' };
+const S_PASSENGER_NAME_ROW: React.CSSProperties = { fontSize: '12.5px', fontWeight: 700, color: 'var(--bp-ink)' };
 const S_ROLE_HIGHLIGHT: React.CSSProperties = { color: 'var(--primary-accent)', fontWeight: 600 };
 const S_WEATHER_COL: React.CSSProperties = { textAlign: 'right', minWidth: '150px' };
-const S_WEATHER_LABEL_ROW: React.CSSProperties = { fontSize: '9px', fontFamily: 'var(--font-family-mono)', color: 'rgba(31, 27, 20, 0.55)', textTransform: 'uppercase', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '4px' };
+const S_WEATHER_LABEL_ROW: React.CSSProperties = { fontSize: '9px', fontFamily: 'var(--font-family-mono)', color: 'var(--bp-ink-softer)', textTransform: 'uppercase', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '4px' };
 const S_WEATHER_REFRESH_BTN: React.CSSProperties = { background: 'none', border: 'none', padding: '0 2px', cursor: 'pointer', color: 'var(--primary-accent)', fontSize: '12px', lineHeight: 1 };
 const S_WEATHER_VALUE_ROW: React.CSSProperties = { fontSize: '12px', fontWeight: 800, color: 'var(--primary-accent)', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '4px' };
 const S_BACK_FOOT: React.CSSProperties = {
   display: 'flex',
   justifyContent: 'space-between',
   alignItems: 'center',
-  background: '#F7F0E1',
-  borderTop: '1px solid #E6DAC4',
+  background: 'var(--bp-paper-soft)',
+  borderTop: '1px solid var(--bp-line-strong)',
   padding: '10px 18px',
 };
 const S_BARCODE_CONTAINER: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' };
-const S_BARCODE_CHARS: React.CSSProperties = { fontFamily: 'monospace', fontSize: '14px', letterSpacing: '2px', color: 'rgba(31, 27, 20, 0.7)' };
-const S_JOINCODE_SPAN: React.CSSProperties = { fontFamily: 'var(--font-family-mono)', fontSize: '10px', color: 'rgba(31, 27, 20, 0.8)', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '4px' };
+const S_BARCODE_CHARS: React.CSSProperties = { fontFamily: 'monospace', fontSize: '14px', letterSpacing: '2px', color: 'var(--bp-ink-mid)' };
+const S_JOINCODE_SPAN: React.CSSProperties = { fontFamily: 'var(--font-family-mono)', fontSize: '10px', color: 'var(--bp-ink-strong)', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '4px' };
 
 function formatBoardingDate(dateStr?: string): string {
   if (!dateStr) return '';

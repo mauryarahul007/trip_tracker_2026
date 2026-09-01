@@ -176,6 +176,14 @@ export function ExpenseList({
   const [showDateFilter, setShowDateFilter] = useState(false);
   const isAllActive = !filterCategory && !filterMember && !filterDateFrom && !filterDateTo && !filterAmountMin && !filterAmountMax && !filterRelation && !filterLocation;
 
+  // Stats + quick-filter chips default collapsed behind one visible toggle
+  // instead of stacking unconditionally above the list -- a trip with a
+  // handful of expenses used to open to more controls than content. Forced
+  // open whenever a filter is already active so the active state (and its
+  // clear button) is never hidden from the person who set it.
+  const [showChrome, setShowChrome] = useState(false);
+  const chromeExpanded = showChrome || hasActiveFilters;
+
   // 1. Debounce Search Input
   const [localSearch, setLocalSearch] = useState(search);
   useEffect(() => {
@@ -289,25 +297,6 @@ export function ExpenseList({
         </div>
       )}
 
-      {activeTripExpenseCount > 0 && (
-        <div className="expense-stat-strip">
-          <div className="expense-stat">
-            <span className="expense-stat-label">Total spent</span>
-            <span className="expense-stat-value">{formatAmount(totalSpent, currencySymbol)}</span>
-          </div>
-          <div className="expense-stat">
-            <span className="expense-stat-label">Daily average</span>
-            <span className="expense-stat-value">{formatAmount(averageCost, currencySymbol)}</span>
-          </div>
-          {topCategoryName && (
-            <div className="expense-stat">
-              <span className="expense-stat-label">Top category</span>
-              <span className="expense-stat-value">{topCategoryName}{typeof topCategoryPercentage === 'number' ? ` · ${Math.round(topCategoryPercentage)}%` : ''}</span>
-            </div>
-          )}
-        </div>
-      )}
-
       {affectedExpenseIds.length > 1 && (
         <button
           type="button"
@@ -365,90 +354,132 @@ export function ExpenseList({
             </button>
           </div>
 
-          {/* Horizontal quick filter pills */}
-          <div className="filter-chips-collapse expanded scroll-fade-mask" data-no-tab-swipe="true">
-            <div className="filter-chips-track" role="region" aria-label="Quick filters" data-no-tab-swipe="true">
-              <button
-                type="button"
-                className={`filter-chip ${isAllActive ? 'active' : ''}`}
-                onClick={onClearFilters}
-              >
-                All
-              </button>
-              {categories.map((c) => (
-                <button
-                  key={c.id}
-                  type="button"
-                  className={`filter-chip ${filterCategory === c.id ? 'active' : ''}`}
-                  onClick={() => {
-                    triggerHaptic('light');
-                    setFilterCategory(filterCategory === c.id ? '' : c.id);
-                  }}
-                >
-                  <CategoryIcon categoryId={c.id} fallbackEmoji={c.icon} size={13} />
-                  <span>{c.name}</span>
-                </button>
-              ))}
+          <button
+            type="button"
+            className="expense-chrome-toggle"
+            onClick={() => {
+              triggerHaptic('light');
+              setShowChrome((v) => !v);
+            }}
+            aria-expanded={chromeExpanded}
+          >
+            <span className="expense-chrome-toggle-label">
+              <IconChevronRight
+                size={13}
+                className="icon-sm"
+                style={{ transition: 'transform 0.2s ease', transform: chromeExpanded ? 'rotate(90deg)' : 'rotate(0deg)' }}
+              />
+              {chromeExpanded ? 'Hide stats & quick filters' : 'Stats & quick filters'}
+              {hasActiveFilters && <span className="expense-filters-btn-badge" aria-hidden="true" style={{ position: 'static' }} />}
+            </span>
+            <span className="expense-chrome-toggle-total money">{formatAmount(totalSpent, currencySymbol)} total</span>
+          </button>
 
-              {activeTripMembers.map((m) => (
-                <button
-                  key={m.id}
-                  type="button"
-                  className={`filter-chip ${filterMember === m.id ? 'active' : ''}`}
-                  onClick={() => {
-                    triggerHaptic('light');
-                    setFilterMember(filterMember === m.id ? '' : m.id);
-                  }}
-                >
-                  <ExpenseAvatar member={m} size={15} />
-                  <span>{m.name}</span>
-                </button>
-              ))}
-
-              <button
-                type="button"
-                className={`filter-chip ${filterDateFrom || filterDateTo ? 'active' : ''}`}
-                onClick={() => {
-                  triggerHaptic('light');
-                  setShowDateFilter(!showDateFilter);
-                }}
-              >
-                <IconCalendar size={13} />
-                <span>Dates</span>
-              </button>
-
-              {hasActiveFilters && (
-                <button
-                  type="button"
-                  className="filter-chip filter-chip-clear"
-                  onClick={onClearFilters}
-                >
-                  Clear all
-                </button>
-              )}
-            </div>
-          </div>
-
-          {showDateFilter && (
-            <div className="date-filter-panel glass-card" style={{ marginTop: '8px', padding: '10px' }}>
-              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                <input
-                  type="date"
-                  className="input-field"
-                  value={filterDateFrom}
-                  onChange={(e) => setFilterDateFrom(e.target.value)}
-                  style={{ fontSize: '12px', padding: '6px' }}
-                />
-                <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>to</span>
-                <input
-                  type="date"
-                  className="input-field"
-                  value={filterDateTo}
-                  onChange={(e) => setFilterDateTo(e.target.value)}
-                  style={{ fontSize: '12px', padding: '6px' }}
-                />
+          {chromeExpanded && (
+            <>
+              <div className="expense-stat-strip">
+                <div className="expense-stat">
+                  <span className="expense-stat-label">Total spent</span>
+                  <span className="expense-stat-value">{formatAmount(totalSpent, currencySymbol)}</span>
+                </div>
+                <div className="expense-stat">
+                  <span className="expense-stat-label">Daily average</span>
+                  <span className="expense-stat-value">{formatAmount(averageCost, currencySymbol)}</span>
+                </div>
+                {topCategoryName && (
+                  <div className="expense-stat">
+                    <span className="expense-stat-label">Top category</span>
+                    <span className="expense-stat-value">{topCategoryName}{typeof topCategoryPercentage === 'number' ? ` · ${Math.round(topCategoryPercentage)}%` : ''}</span>
+                  </div>
+                )}
               </div>
-            </div>
+
+              {/* Horizontal quick filter pills */}
+              <div className="filter-chips-collapse expanded scroll-fade-mask" data-no-tab-swipe="true">
+                <div className="filter-chips-track" role="region" aria-label="Quick filters" data-no-tab-swipe="true">
+                  <button
+                    type="button"
+                    className={`filter-chip ${isAllActive ? 'active' : ''}`}
+                    onClick={onClearFilters}
+                  >
+                    All
+                  </button>
+                  {categories.map((c) => (
+                    <button
+                      key={c.id}
+                      type="button"
+                      className={`filter-chip ${filterCategory === c.id ? 'active' : ''}`}
+                      onClick={() => {
+                        triggerHaptic('light');
+                        setFilterCategory(filterCategory === c.id ? '' : c.id);
+                      }}
+                    >
+                      <CategoryIcon categoryId={c.id} fallbackEmoji={c.icon} size={13} />
+                      <span>{c.name}</span>
+                    </button>
+                  ))}
+
+                  {activeTripMembers.map((m) => (
+                    <button
+                      key={m.id}
+                      type="button"
+                      className={`filter-chip ${filterMember === m.id ? 'active' : ''}`}
+                      onClick={() => {
+                        triggerHaptic('light');
+                        setFilterMember(filterMember === m.id ? '' : m.id);
+                      }}
+                    >
+                      <ExpenseAvatar member={m} size={15} />
+                      <span>{m.name}</span>
+                    </button>
+                  ))}
+
+                  <button
+                    type="button"
+                    className={`filter-chip ${filterDateFrom || filterDateTo ? 'active' : ''}`}
+                    onClick={() => {
+                      triggerHaptic('light');
+                      setShowDateFilter(!showDateFilter);
+                    }}
+                  >
+                    <IconCalendar size={13} />
+                    <span>Dates</span>
+                  </button>
+
+                  {hasActiveFilters && (
+                    <button
+                      type="button"
+                      className="filter-chip filter-chip-clear"
+                      onClick={onClearFilters}
+                    >
+                      Clear all
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {showDateFilter && (
+                <div className="date-filter-panel glass-card" style={{ marginTop: '8px', padding: '10px' }}>
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                    <input
+                      type="date"
+                      className="input-field"
+                      value={filterDateFrom}
+                      onChange={(e) => setFilterDateFrom(e.target.value)}
+                      style={{ fontSize: '12px', padding: '6px' }}
+                    />
+                    <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>to</span>
+                    <input
+                      type="date"
+                      className="input-field"
+                      value={filterDateTo}
+                      onChange={(e) => setFilterDateTo(e.target.value)}
+                      style={{ fontSize: '12px', padding: '6px' }}
+                    />
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </div>
       )}

@@ -154,6 +154,16 @@ export function NavTabs({ activeTab, setActiveTab, onAddExpense, onAddMember, ex
             Only trip admins can add members
           </div>
         )}
+        {/* The "+" button silently changes meaning on the Members tab (adds
+            a member instead of an expense) with no visible cue beyond a
+            color swap -- name it, so the switch isn't only communicated by
+            hue. Skipped on the denied-hint case above so the two never
+            overlap. */}
+        {isMembersTab && !showDeniedHint && (
+          <div className="nav-tab-fab-mode-label" aria-hidden="true">
+            Add member
+          </div>
+        )}
         <button
           type="button"
           className={`nav-tab-fab ${isMembersTab ? 'mode-member' : ''}`}
