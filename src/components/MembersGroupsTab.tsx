@@ -588,6 +588,7 @@ export function MembersGroupsTab({
               ref={memberInputRef}
               type="text"
               required
+              autoFocus
               className="input-field"
               placeholder="Enter member name"
               value={newMemberName}

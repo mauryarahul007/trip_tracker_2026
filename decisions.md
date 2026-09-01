@@ -1292,10 +1292,28 @@ This document logs all meaningful technical decisions, library choices, design p
     - **Live Keyword Auto-Tagging Sandbox & Simulator**: Real-time test bar inside `AdminToolsPage.tsx` that previews category classification, icon, and match type as the admin types sample expense descriptions.
     - **Fleet Financial Integrity Scanner**: Automated audit tool checking split sums (`sum(resolvedShares) !== amount`), orphaned member records, and missing categories with a "1-Tap Auto-Heal" routine.
     - **Live Fleet Activity Stream**: Real-time telemetry feed on the Command Center with filter chips (`All`, `Security`, `Trips`, `Users`, `Flags`) and live pulsing connection dot.
-    - **External Webhook Alerting**: Configured `ops_webhook_url` in `app_config` for dispatching alerts to Slack/Discord with built-in test ping.
-    - **3-Tier Feature Flag Hierarchy Preserved**: Maintained strict precedence: Superadmin Bypass $\rightarrow$ User Override $\rightarrow$ Trip Override $\rightarrow$ Global Flag.
+---
+
+## 74. UI Smoothness, Focus Polish & Superadmin Readability Enhancements
+* **Context:**
+  - **Focus & Form Aesthetics:** In `ExpenseForm.tsx`, focusing the amount hero field triggered an aggressive double-bordered ring with outline offset. When opening the Add Member modal in `MembersGroupsTab.tsx`, the `Name` field did not immediately acquire focus.
+  - **Superadmin Features Board Layout:** On standard desktop screens and when expanding Won't Do items, `.ops-feature-board` produced horizontal overflow scrollbars due to rigid `repeat(3, 1fr)` column definitions.
+  - **Superadmin Security Audit Log:** Audit log rows presented raw technical action codes (`set_app_config`, `user_suspended`, `ground_trip`) and truncated raw JSON strings without clear English context.
+* **Decision:**
+  - **Refined Hero Amount Focus & Member Autofocus (`index.css`, `ExpenseForm.tsx`, `MembersGroupsTab.tsx`)**:
+    - Replaced the harsh outline ring on `.amount-hero:focus-within` with an ultra-clean, seamless ambient card glow (`box-shadow: 0 0 0 1px var(--primary-accent), 0 4px 16px rgba(47, 111, 237, 0.12)`).
+    - Added `autoFocus` to the `member-name` input in `MembersGroupsTab.tsx` with instant requestAnimationFrame cursor positioning upon opening.
+  - **Zero-Scroll Superadmin Features Board (`ops-deck.css`, `AdminFeaturesPage.tsx`)**:
+    - Replaced fixed 3-column tracks with responsive wrapping `grid-template-columns: repeat(auto-fit, minmax(280px, 1fr))` with `overflow-x: hidden` and `word-break: break-word` on cards, eliminating horizontal scrollbars across all screen widths.
+  - **Human-Readable Audit Story Narratives (`AdminAuditPage.tsx`, `ops-deck.css`)**:
+    - Implemented `formatAuditNarrative` to transform technical audit payloads into structured English sentences with actor identification, target resource pills, clear action category badges (`User Security`, `Trip Grounded`, `System Config`, `Roadmap`), and an expandable raw JSON drawer.
+  - **Fluid 60 FPS Micro-Interactions & Visual Helpers (`index.css`, `ExpenseForm.tsx`)**:
+    - Added elastic press physics (`active: scale(0.97)`) on all primary buttons, chips, and cards.
+    - Added quick increment chips (`+10`, `+50`, `+100`, `+500`, `Round ↑`) in the Expense Form.
+    - Added an interactive visual split proportion bar for non-equal splits showing real-time balance percentages per member.
 * **Trade-offs Accepted:**
-  - Code-splitting modals and routes introduces micro-latency (<50ms over broadband, cached by Service Worker offline) when first opening a rarely used modal, in exchange for saving over 1.4 MB on initial load for every traveler session.
+  - Audit logs prioritize narrative clarity over dense tabular rows, providing full JSON payloads via a 1-tap expandable drawer for technical verification.
+
 
 
 

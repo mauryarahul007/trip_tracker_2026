@@ -589,6 +589,36 @@ export function ExpenseForm({
           />
         </div>
 
+        {/* Quick Amount Increment / Rounding Chips */}
+        <div className="quick-amount-chips">
+          {[10, 50, 100, 500].map((inc) => (
+            <button
+              key={inc}
+              type="button"
+              className="quick-amount-chip"
+              onClick={() => {
+                const current = parseFloat(amount) || 0;
+                setAmount(String(Math.round((current + inc) * 100) / 100));
+                if (formError) setFormError('');
+              }}
+            >
+              +{inc}
+            </button>
+          ))}
+          {parseFloat(amount) > 0 && Math.round(parseFloat(amount)) !== parseFloat(amount) && (
+            <button
+              type="button"
+              className="quick-amount-chip"
+              onClick={() => {
+                const current = parseFloat(amount) || 0;
+                setAmount(String(Math.ceil(current)));
+              }}
+            >
+              Round ↑
+            </button>
+          )}
+        </div>
+
         {/* Live Currency Conversion Preview */}
         {currencyConversion && (
           <div className="fade-in" style={{
@@ -1078,21 +1108,55 @@ export function ExpenseForm({
         </div>
 
         {splitMode !== 'equal' && splitSelectedIds.length > 0 && (
-          <div style={{
-            fontSize: '12px', fontWeight: 600, marginBottom: '8px',
-            display: 'flex', alignItems: 'center', gap: '5px',
-            color: splitMode === 'custom'
-              ? 'var(--text-secondary)'
-              : splitConfigMatches ? 'var(--color-success)' : 'var(--color-danger)'
-          }}>
-            <span>
-              {splitMode === 'percentage'
-                ? `${splitConfigSum.toFixed(1)} / 100%`
-                : splitMode === 'exact'
-                  ? `${currencySymbol}${splitConfigSum.toFixed(2)} / ${currencySymbol}${(parseFloat(amount) || 0).toFixed(2)}`
-                  : `Total weight: ${splitConfigSum.toFixed(2)}`}
-            </span>
-            {splitConfigMatches && (splitMode === 'exact' || splitMode === 'percentage') && <IconCheck size={13} className="icon-sm" />}
+          <div style={{ marginBottom: '10px' }}>
+            <div style={{
+              fontSize: '12px', fontWeight: 600, marginBottom: '6px',
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              color: splitMode === 'custom'
+                ? 'var(--text-secondary)'
+                : splitConfigMatches ? 'var(--color-success)' : 'var(--color-danger)'
+            }}>
+              <span>
+                {splitMode === 'percentage'
+                  ? `${splitConfigSum.toFixed(1)}% / 100%`
+                  : splitMode === 'exact'
+                    ? `${currencySymbol}${splitConfigSum.toFixed(2)} / ${currencySymbol}${(parseFloat(amount) || 0).toFixed(2)}`
+                    : `Total weight: ${splitConfigSum.toFixed(2)}`}
+              </span>
+              {splitConfigMatches && (splitMode === 'exact' || splitMode === 'percentage') && (
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', color: 'var(--color-success)', fontSize: '11px' }}>
+                  <IconCheck size={13} className="icon-sm" /> Balanced
+                </span>
+              )}
+            </div>
+
+            {/* Split Proportion Visual Segmented Bar */}
+            <div className="split-proportion-bar">
+              {splitSelectedIds.map((id) => {
+                const member = visibleMembers.find((m) => m.id === id);
+                const rawVal = parseFloat(splitConfig[id] || '0') || 0;
+                let pct = 0;
+                if (splitMode === 'percentage') {
+                  pct = rawVal;
+                } else if (splitMode === 'exact') {
+                  const tot = parseFloat(amount) || 0;
+                  pct = tot > 0 ? (rawVal / tot) * 100 : 0;
+                } else if (splitMode === 'custom') {
+                  pct = splitConfigSum > 0 ? (rawVal / splitConfigSum) * 100 : (100 / splitSelectedIds.length);
+                }
+                return (
+                  <div
+                    key={id}
+                    className="split-proportion-segment"
+                    style={{
+                      width: `${Math.max(0, Math.min(100, pct))}%`,
+                      backgroundColor: avatarColorForName(member?.name || id),
+                    }}
+                    title={`${member?.name || id}: ${pct.toFixed(1)}%`}
+                  />
+                );
+              })}
+            </div>
           </div>
         )}
 

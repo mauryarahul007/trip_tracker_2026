@@ -137,7 +137,7 @@ export function AdminFeaturesPage({ features, onFeaturesChanged }: Props) {
           {BOARD_COLUMNS.map((col) => {
             const colFeatures = filtered.filter((f) => col.statuses.includes(f.status));
             return (
-              <div key={col.label}>
+              <div key={col.label} className="ops-feature-col">
                 <div className="ops-feature-col-head">
                   <span className="dot" style={{ background: col.color }} />
                   {col.label}
@@ -168,7 +168,7 @@ export function AdminFeaturesPage({ features, onFeaturesChanged }: Props) {
             );
           })}
           {showWontDo && filtered.some((f) => f.status === 'wont_do') && (
-            <div>
+            <div className="ops-feature-col">
               <div className="ops-feature-col-head">
                 <span className="dot" style={{ background: 'var(--text-tertiary)' }} />
                 Won&apos;t Do
