@@ -15,18 +15,19 @@ import { fetchAppFlag } from './services/tripApi';
 import { GlobalSettingsModal } from './components/GlobalSettingsModal';
 import { ConfirmDialog, type ConfirmRequest } from './components/ConfirmDialog';
 import { TripsListScreen } from './components/TripsListScreen';
+import { lazyImport } from './utils/lazyImport';
 // maplibre-gl is a sizeable dependency (JS + worker + WASM) only needed on
 // the trip dashboard -- code-split so it doesn't load for the trips list
 // or any other screen.
-const TripMapHero = lazy(() =>
+const TripMapHero = lazy(lazyImport(() =>
   import('./components/TripMapHero').then((m) => ({ default: m.TripMapHero }))
-);
+));
 // ExpenseForm is heavy (OCR, geolocation, currency conversion) and only
 // needed when the user taps +/FAB. Lazy-load so the initial bundle skips
 // its ~1,200 lines until actually opened.
-const ExpenseForm = lazy(() =>
+const ExpenseForm = lazy(lazyImport(() =>
   import('./components/ExpenseForm').then((m) => ({ default: m.ExpenseForm }))
-);
+));
 import { TripContentSheet } from './components/TripContentSheet';
 import { AnalyticsTab } from './components/AnalyticsTab';
 import { ExpenseList } from './components/ExpenseList';
@@ -34,9 +35,9 @@ import { ExpenseList } from './components/ExpenseList';
 // traveler -- code-split so their combined ~2.4k lines don't inflate the
 // bundle everyone else downloads. RLS still gates the actual data/actions
 // underneath regardless of when the JS arrives.
-const SuperAdminBugTracker = lazy(() =>
+const SuperAdminBugTracker = lazy(lazyImport(() =>
   import('./components/SuperAdminBugTracker').then((m) => ({ default: m.SuperAdminBugTracker }))
-);
+));
 import { BalancesSettlements } from './components/BalancesSettlements';
 import { ExpenseFilterDrawer } from './components/ExpenseFilterDrawer';
 import { MembersGroupsTab } from './components/MembersGroupsTab';
@@ -44,9 +45,9 @@ import { MembersGroupsTab } from './components/MembersGroupsTab';
 // mapping dependency) -- code-split so it doesn't inflate the main bundle
 // that every tab pays for, even though Settings is a primary nav tab (see
 // hasVisitedSettings below for why this needs mount-gating, not just lazy()).
-const SettingsTab = lazy(() =>
+const SettingsTab = lazy(lazyImport(() =>
   import('./components/SettingsTab').then((m) => ({ default: m.SettingsTab }))
-);
+));
 import { ExpenseReviewModal } from './components/ExpenseReviewModal';
 import { UndoToasts } from './components/UndoToasts';
 import { NavTabs } from './components/NavTabs';
@@ -67,15 +68,15 @@ import { withViewTransition } from './utils/viewTransition';
 import { CommandPalette } from './components/CommandPalette';
 // TripWrappedModal draws a large 1080x1920 canvas story image and is only
 // needed when the user opens Trip Wrapped, so it's lazy-loaded like ExpenseForm.
-const TripWrappedModal = lazy(() =>
+const TripWrappedModal = lazy(lazyImport(() =>
   import('./components/TripWrappedModal').then((m) => ({ default: m.TripWrappedModal }))
-);
+));
 import { AchievementBadgeModal } from './components/AchievementBadgeModal';
 import { usePeerPresence } from './hooks/usePeerPresence';
 import type { AdminTab } from './components/admin/AdminPortalLayout';
-const AdminPortalLayout = lazy(() =>
+const AdminPortalLayout = lazy(lazyImport(() =>
   import('./components/admin/AdminPortalLayout').then((m) => ({ default: m.AdminPortalLayout }))
-);
+));
 
 const IS_MAC = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform);
 
