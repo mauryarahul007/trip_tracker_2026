@@ -13,7 +13,8 @@
     "updatedAt": "2026-08-21T16:34:01.305+00:00",
     "shippedAt": "2026-08-21T16:34:01.305+00:00",
     "shippedBy": "claude-cli",
-    "shippedNote": "Parallel system to the Bug Ledger. Migration 0063, featureApi.ts, feature.mjs CLI, FeatureRequestModal.tsx (Settings > Suggest a Feature), AdminFeaturesPage.tsx (Ops Deck Features tab) with flag-linking. Commit 1bf95d6."
+    "shippedNote": "Parallel system to the Bug Ledger. Migration 0063, featureApi.ts, feature.mjs CLI, FeatureRequestModal.tsx (Settings > Suggest a Feature), AdminFeaturesPage.tsx (Ops Deck Features tab) with flag-linking. Commit 1bf95d6.",
+    "linkedFlagKey": "enableFeatureSuggestions"
   },
   {
     "id": "FEAT-002",
@@ -331,7 +332,8 @@
     "updatedAt": "2026-08-27T04:36:38.231Z",
     "shippedBy": "claude-cli",
     "shippedAt": "2026-08-27T04:36:38.230Z",
-    "shippedNote": "src/App.tsx, src/components/AnalyticsTab.tsx, src/components/SettingsTab.tsx, src/components/SettingsView.tsx."
+    "shippedNote": "src/App.tsx, src/components/AnalyticsTab.tsx, src/components/SettingsTab.tsx, src/components/SettingsView.tsx.",
+    "linkedFlagKey": "enableGeotagging"
   },
   {
     "id": "FEAT-022",

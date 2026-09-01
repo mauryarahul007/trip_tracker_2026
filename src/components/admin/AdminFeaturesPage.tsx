@@ -44,11 +44,12 @@ export function AdminFeaturesPage({ features, onFeaturesChanged }: Props) {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [showWontDo, setShowWontDo] = useState(false);
-  const [viewMode, setViewMode] = useState<'board' | 'table'>('board');
+  const [viewMode, setViewMode] = useState<'board' | 'table'>('table');
   const [toastMsg, setToastMsg] = useState('');
   const [busyId, setBusyId] = useState<string | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isNewModalOpen, setIsNewModalOpen] = useState(false);
+  const [linkingFeature, setLinkingFeature] = useState<FeatureRecord | null>(null);
 
   // New Request Form State
   const [newTitle, setNewTitle] = useState('');
@@ -115,7 +116,8 @@ export function AdminFeaturesPage({ features, onFeaturesChanged }: Props) {
       void logSuperadminAction(null, 'feature_link_flag', { featureId: f.id, flagKey: key || null }).catch((err) =>
         console.error('Audit log failed', err)
       );
-      showToast(key ? `Linked ${f.id} to ${key}` : `Unlinked ${f.id}`);
+      showToast(key ? `Linked ${f.id} to ${key}` : `Unlinked flag from ${f.id}`);
+      setLinkingFeature(null);
       onFeaturesChanged();
     } catch (err) {
       showToast(err instanceof Error ? err.message : 'Failed to link flag.');
@@ -219,17 +221,17 @@ export function AdminFeaturesPage({ features, onFeaturesChanged }: Props) {
           <div className="ops-view-switcher">
             <button
               type="button"
-              className={`ops-view-btn ${viewMode === 'board' ? 'active' : ''}`}
-              onClick={() => setViewMode('board')}
-            >
-              Kanban
-            </button>
-            <button
-              type="button"
               className={`ops-view-btn ${viewMode === 'table' ? 'active' : ''}`}
               onClick={() => setViewMode('table')}
             >
               List
+            </button>
+            <button
+              type="button"
+              className={`ops-view-btn ${viewMode === 'board' ? 'active' : ''}`}
+              onClick={() => setViewMode('board')}
+            >
+              Kanban
             </button>
           </div>
 
@@ -244,7 +246,112 @@ export function AdminFeaturesPage({ features, onFeaturesChanged }: Props) {
         <div className="ops-card" style={{ padding: '40px' }}>
           <div className="ops-empty">No feature requests match your filters.</div>
         </div>
-      ) : viewMode === 'board' ? (
+      ) : viewMode === 'table' ? (
+        /* Linear-Grade Dense List/Table View with Sticky Headers */
+        <div className="ops-feature-table-viewport">
+          <table className="ops-dense-feature-table">
+            <thead>
+              <tr>
+                <th style={{ width: '90px' }}>Case ID</th>
+                <th>Title &amp; Category</th>
+                <th style={{ width: '130px' }}>Status</th>
+                <th style={{ width: '140px' }}>Requester</th>
+                <th style={{ width: '220px' }}>Linked Runtime Flag</th>
+                <th style={{ width: '130px', textAlign: 'right' }}>Workflow</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map((f) => {
+                const linkedMeta = f.linkedFlagKey ? FEATURE_FLAGS_META[f.linkedFlagKey as FeatureFlagKey] : undefined;
+                const flagOn = linkedMeta && f.linkedFlagKey ? (featureFlags[f.linkedFlagKey as FeatureFlagKey] ?? linkedMeta.defaultEnabledForUsers) : false;
+                const catStyle = CATEGORY_COLORS[f.category] || CATEGORY_COLORS.general;
+
+                return (
+                  <tr key={f.id}>
+                    <td>
+                      <span className="ops-feature-id-badge">{f.id}</span>
+                    </td>
+                    <td>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                        <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{f.title}</span>
+                        <span
+                          className="ops-feature-cat-pill"
+                          style={{ background: catStyle.bg, color: catStyle.text }}
+                        >
+                          {f.category}
+                        </span>
+                      </div>
+                      {f.description && (
+                        <div style={{ fontSize: '11.5px', color: 'var(--text-tertiary)', marginTop: '3px' }}>
+                          {f.description.slice(0, 85)}{f.description.length > 85 ? '...' : ''}
+                        </div>
+                      )}
+                    </td>
+                    <td>
+                      <span className={`ops-badge ${f.status === 'shipped' ? 'safe' : f.status === 'in_progress' || f.status === 'planned' ? 'caution' : f.status === 'wont_do' ? 'grounded' : 'archived'}`}>
+                        {STATUS_LABELS[f.status] || f.status}
+                      </span>
+                    </td>
+                    <td style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+                      {f.requestedBy}
+                    </td>
+                    <td>
+                      {linkedMeta && f.linkedFlagKey ? (
+                        <div className="ops-card-flag-hub" style={{ padding: '3px 8px' }}>
+                          <div className="ops-card-flag-info">
+                            <span className={`ops-card-flag-dot ${flagOn ? 'on' : 'off'}`} />
+                            <span style={{ fontSize: '11px', fontWeight: 600 }}>{linkedMeta.label}</span>
+                          </div>
+                          <button
+                            type="button"
+                            className="ops-relay"
+                            data-on={flagOn}
+                            aria-label={`Toggle ${linkedMeta.label}`}
+                            onClick={() => {
+                              setFeatureFlag(f.linkedFlagKey as FeatureFlagKey, !flagOn);
+                              showToast(`${linkedMeta.label} set to ${!flagOn ? 'Enabled' : 'Disabled'}`);
+                            }}
+                          >
+                            <span className="ops-puck" />
+                          </button>
+                        </div>
+                      ) : (
+                        <span style={{ color: 'var(--text-tertiary)', fontSize: '12px' }}>—</span>
+                      )}
+                    </td>
+                    <td style={{ textAlign: 'right' }}>
+                      <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', justifyContent: 'flex-end' }}>
+                        <select
+                          className="ops-select"
+                          style={{ width: 'auto', fontSize: '11px', padding: '3px 6px' }}
+                          value={f.status}
+                          disabled={busyId === f.id}
+                          onChange={(e) => handleStatusChange(f, e.target.value as FeatureRecord['status'])}
+                        >
+                          <option value="requested">Requested</option>
+                          <option value="planned">Planned</option>
+                          <option value="in_progress">In Progress</option>
+                          <option value="shipped">Shipped</option>
+                          <option value="wont_do">Won&apos;t Do</option>
+                        </select>
+                        <button
+                          type="button"
+                          className="ops-mini-btn"
+                          style={{ padding: '3px 6px', fontSize: '10.5px' }}
+                          title={f.linkedFlagKey ? 'Change or remove linked flag' : 'Link to a runtime feature flag'}
+                          onClick={() => setLinkingFeature(f)}
+                        >
+                          {f.linkedFlagKey ? 'Flag' : '+Flag'}
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      ) : (
         /* Kanban Board View */
         <div className="ops-feature-board">
           {BOARD_COLUMNS.map((col) => {
@@ -265,10 +372,8 @@ export function AdminFeaturesPage({ features, onFeaturesChanged }: Props) {
                         key={f.id}
                         feature={f}
                         busy={busyId === f.id}
-                        flagEntries={flagEntries}
                         featureFlags={featureFlags}
                         onStatusChange={handleStatusChange}
-                        onLinkFlag={handleLinkFlag}
                         onToggleFlag={(key, on) => {
                           setFeatureFlag(key, on);
                           showToast(`${FEATURE_FLAGS_META[key].label} set to ${on ? 'Enabled' : 'Disabled'}`);
@@ -295,10 +400,8 @@ export function AdminFeaturesPage({ features, onFeaturesChanged }: Props) {
                       key={f.id}
                       feature={f}
                       busy={busyId === f.id}
-                      flagEntries={flagEntries}
                       featureFlags={featureFlags}
                       onStatusChange={handleStatusChange}
-                      onLinkFlag={handleLinkFlag}
                       onToggleFlag={(key, on) => {
                         setFeatureFlag(key, on);
                         showToast(`${FEATURE_FLAGS_META[key].label} set to ${on ? 'Enabled' : 'Disabled'}`);
@@ -309,112 +412,52 @@ export function AdminFeaturesPage({ features, onFeaturesChanged }: Props) {
             </div>
           )}
         </div>
-      ) : (
-        /* Linear-Grade Dense List/Table View */
-        <div className="ops-card" style={{ padding: 0, overflow: 'hidden' }}>
-          <div style={{ overflowX: 'auto' }}>
-            <table className="ops-dense-feature-table">
-              <thead>
-                <tr>
-                  <th style={{ width: '90px' }}>Case ID</th>
-                  <th>Title &amp; Category</th>
-                  <th style={{ width: '130px' }}>Status</th>
-                  <th style={{ width: '140px' }}>Requester</th>
-                  <th style={{ width: '220px' }}>Linked Runtime Flag</th>
-                  <th style={{ width: '110px', textAlign: 'right' }}>Workflow</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map((f) => {
-                  const linkedMeta = f.linkedFlagKey ? FEATURE_FLAGS_META[f.linkedFlagKey as FeatureFlagKey] : undefined;
-                  const flagOn = linkedMeta && f.linkedFlagKey ? (featureFlags[f.linkedFlagKey as FeatureFlagKey] ?? linkedMeta.defaultEnabledForUsers) : false;
-                  const catStyle = CATEGORY_COLORS[f.category] || CATEGORY_COLORS.general;
+      )}
 
-                  return (
-                    <tr key={f.id}>
-                      <td>
-                        <span className="ops-feature-id-badge">{f.id}</span>
-                      </td>
-                      <td>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                          <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{f.title}</span>
-                          <span
-                            className="ops-feature-cat-pill"
-                            style={{ background: catStyle.bg, color: catStyle.text }}
-                          >
-                            {f.category}
-                          </span>
-                        </div>
-                        {f.description && (
-                          <div style={{ fontSize: '11.5px', color: 'var(--text-tertiary)', marginTop: '2px' }}>
-                            {f.description.slice(0, 80)}{f.description.length > 80 ? '...' : ''}
-                          </div>
-                        )}
-                      </td>
-                      <td>
-                        <span className={`ops-badge ${f.status === 'shipped' ? 'safe' : f.status === 'in_progress' || f.status === 'planned' ? 'caution' : f.status === 'wont_do' ? 'grounded' : 'archived'}`}>
-                          {STATUS_LABELS[f.status] || f.status}
-                        </span>
-                      </td>
-                      <td style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
-                        {f.requestedBy}
-                      </td>
-                      <td>
-                        {linkedMeta && f.linkedFlagKey ? (
-                          <div className="ops-card-flag-hub" style={{ padding: '4px 8px' }}>
-                            <div className="ops-card-flag-info">
-                              <span className={`ops-card-flag-dot ${flagOn ? 'on' : 'off'}`} />
-                              <span style={{ fontSize: '11px', fontWeight: 600 }}>{linkedMeta.label}</span>
-                            </div>
-                            <button
-                              type="button"
-                              className="ops-relay"
-                              data-on={flagOn}
-                              aria-label={`Toggle ${linkedMeta.label}`}
-                              onClick={() => {
-                                setFeatureFlag(f.linkedFlagKey as FeatureFlagKey, !flagOn);
-                                showToast(`${linkedMeta.label} set to ${!flagOn ? 'Enabled' : 'Disabled'}`);
-                              }}
-                            >
-                              <span className="ops-puck" />
-                            </button>
-                          </div>
-                        ) : (
-                          <select
-                            className="ops-select"
-                            style={{ width: '100%', fontSize: '11px', padding: '3px 6px' }}
-                            value=""
-                            onChange={(e) => handleLinkFlag(f, e.target.value)}
-                          >
-                            <option value="">+ Link Flag</option>
-                            {flagEntries.map(([key, meta]) => (
-                              <option key={key} value={key}>
-                                {meta.label}
-                              </option>
-                            ))}
-                          </select>
-                        )}
-                      </td>
-                      <td style={{ textAlign: 'right' }}>
-                        <select
-                          className="ops-select"
-                          style={{ width: 'auto', fontSize: '11px', padding: '3px 6px' }}
-                          value={f.status}
-                          disabled={busyId === f.id}
-                          onChange={(e) => handleStatusChange(f, e.target.value as FeatureRecord['status'])}
-                        >
-                          <option value="requested">Requested</option>
-                          <option value="planned">Planned</option>
-                          <option value="in_progress">In Progress</option>
-                          <option value="shipped">Shipped</option>
-                          <option value="wont_do">Won&apos;t Do</option>
-                        </select>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+      {/* Link Flag Modal */}
+      {linkingFeature && (
+        <div className="ops-modal-backdrop" onClick={() => setLinkingFeature(null)}>
+          <div className="ops-modal-card fade-in" style={{ maxWidth: '420px' }} onClick={(e) => e.stopPropagation()}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+              <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 700 }}>
+                Link Flag &middot; {linkingFeature.id}
+              </h3>
+              <button type="button" className="ops-btn" style={{ padding: '4px' }} onClick={() => setLinkingFeature(null)}>
+                <IconX size={14} />
+              </button>
+            </div>
+            <p style={{ fontSize: '12.5px', color: 'var(--text-secondary)', marginBottom: '12px' }}>
+              Select a runtime feature flag to link to <strong>{linkingFeature.title}</strong>, allowing live production toggling.
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <select
+                className="ops-select"
+                defaultValue={linkingFeature.linkedFlagKey || ''}
+                id="link-flag-selector"
+              >
+                <option value="">No linked flag (Unlink)</option>
+                {flagEntries.map(([key, meta]) => (
+                  <option key={key} value={key}>
+                    {meta.label} ({key})
+                  </option>
+                ))}
+              </select>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '6px' }}>
+                <button type="button" className="ops-btn" onClick={() => setLinkingFeature(null)}>
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="ops-btn ops-btn-primary"
+                  onClick={() => {
+                    const sel = (document.getElementById('link-flag-selector') as HTMLSelectElement)?.value;
+                    void handleLinkFlag(linkingFeature, sel);
+                  }}
+                >
+                  Save Linkage
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
@@ -502,18 +545,14 @@ export function AdminFeaturesPage({ features, onFeaturesChanged }: Props) {
 function FeatureKanbanCard({
   feature: f,
   busy,
-  flagEntries,
   featureFlags,
   onStatusChange,
-  onLinkFlag,
   onToggleFlag,
 }: {
   feature: FeatureRecord;
   busy: boolean;
-  flagEntries: [FeatureFlagKey, (typeof FEATURE_FLAGS_META)[FeatureFlagKey]][];
   featureFlags: Partial<Record<FeatureFlagKey, boolean>>;
   onStatusChange: (f: FeatureRecord, status: FeatureRecord['status']) => void;
-  onLinkFlag: (f: FeatureRecord, key: string) => void;
   onToggleFlag: (key: FeatureFlagKey, on: boolean) => void;
 }) {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -605,9 +644,9 @@ function FeatureKanbanCard({
         </button>
       </div>
 
-      {/* Embedded Runtime Flag Hub */}
-      <div style={{ marginTop: '2px' }}>
-        {linkedMeta && f.linkedFlagKey ? (
+      {/* Embedded Runtime Flag Hub (only rendered if linked to an active flag) */}
+      {linkedMeta && f.linkedFlagKey && (
+        <div style={{ marginTop: '2px' }}>
           <div className="ops-card-flag-hub">
             <div className="ops-card-flag-info">
               <span className={`ops-card-flag-dot ${flagOn ? 'on' : 'off'}`} />
@@ -623,22 +662,8 @@ function FeatureKanbanCard({
               <span className="ops-puck" />
             </button>
           </div>
-        ) : (
-          <select
-            className="ops-select"
-            style={{ width: '100%', fontSize: '11px' }}
-            value=""
-            onChange={(e) => onLinkFlag(f, e.target.value)}
-          >
-            <option value="">+ Link Toggleable Flag</option>
-            {flagEntries.map(([key, meta]) => (
-              <option key={key} value={key}>
-                {meta.label}
-              </option>
-            ))}
-          </select>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

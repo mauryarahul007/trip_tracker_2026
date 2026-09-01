@@ -1317,15 +1317,26 @@ This document logs all meaningful technical decisions, library choices, design p
   - **Executive Telemetry & Timeline Stream (`AdminAuditPage.tsx`, `ops-deck.css`)**:
     - Added a 4-metric executive KPI ribbon (`Total Logged Events`, `Security & Access`, `Config & Flag Changes`, `Active Administrators`).
     - Redesigned the audit stream into a timeline format with glowing left icon nodes (`node-danger`, `node-caution`, `node-safe`, `node-info`, `node-purple`), actor initial avatars, and entity narrative highlights.
-    - Implemented a structured **Property Inspector Grid** presenting event ID, action code, actor, trip reference, timestamp in IST, and payload diffs alongside a 1-tap **"Copy JSON"** button with copy-feedback toast.
-  - **Linear-Grade Roadmap & Kanban Deck (`AdminFeaturesPage.tsx`, `ops-deck.css`, `Icons.tsx`)**:
-    - Added a multi-segment **Roadmap Velocity Progress Strip** showing backlog completion rate (% Shipped) and category breakdown.
-    - Added a **View Switcher** toggling between responsive **Kanban Board** and **Dense Linear-Style Table View**.
-    - Elevated card anatomy with case ID badge (`FEAT-004`), category tags (`ui-ux`, `analytics`, `security`, `sync`, etc.), requester avatars, expandable descriptions, status pipeline stepper (`Req → Plan → Start → Ship`), and shipped celebration ribbons.
-    - Embedded an **Interactive Flag Hub** allowing superadmins to toggle linked production feature flags directly from the card.
-    - Added a **"+ Log Request" modal** allowing admins to file traveler feature requests directly to `public.features`.
+---
+
+## 76. Features List View Default, Excel-Like Sticky Viewport & Flag Noise Cleanup
+* **Context:**
+  - **Default Viewport & Scrolling:** When opening the Superadmin Features tab, it defaulted to the Kanban board view rather than the dense List view. Furthermore, scrolling down the table pushed the entire page up, causing the header, roadmap velocity metrics strip, search bar, and table column headers to disappear off-screen.
+  - **Linked Flag Clutter:** Features without an active linked runtime flag displayed unlinked select elements and empty space, cluttering the interface.
+* **Decision:**
+  - **Default List (Table) View (`AdminFeaturesPage.tsx`)**:
+    - Changed default state to `viewMode = 'table'` so the Features tab opens directly into the dense, high-efficiency list.
+  - **Excel-Style Frozen Header & Independent Scrollable Viewport (`ops-deck.css`, `AdminFeaturesPage.tsx`)**:
+    - Introduced `.ops-feature-table-viewport` with `max-height: calc(100vh - 280px)`, `overflow-y: auto`, and custom slim scrollbars.
+    - Set table headers (`<thead> <th>`) to `position: sticky; top: 0; z-index: 10; background: var(--bg-surface-elevated); backdrop-filter: blur(8px)` so top metrics, search filters, and column titles remain frozen while traveler feature rows scroll underneath smoothly.
+  - **Linked Flag Noise Cleanup & Explicit Link Modal (`AdminFeaturesPage.tsx`, `features.json`)**:
+    - Linked `FEAT-001` to `enableFeatureSuggestions` and `FEAT-021` to `enableGeotagging` in `features/features.json`.
+    - In Table view: Only features with active linked flags render the interactive toggle hub capsule; unlinked features cleanly render `—`.
+    - In Kanban view: Removed unlinked select dropdowns from feature cards.
+    - Added an explicit `+Flag` modal triggered from the table workflow column to attach or change flag associations without polluting standard view rows.
 * **Trade-offs Accepted:**
-  - Expanded metadata and inspector grids consume slightly more vertical space, offset by compact list/table view toggles and collapsible inspection drawers.
+  - Table viewport is height-constrained to the viewport height on desktop to keep metrics and filters permanently accessible without page-level scroll hunting.
+
 
 
 

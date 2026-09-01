@@ -1570,32 +1570,60 @@ legend.ops-form-label { padding: 0; width: 100%; }
   gap: 6px;
 }
 
-/* Linear-Grade Dense Table View */
-.ops-dense-feature-table {
+/* Linear-Grade Dense Table View & Sticky Excel-Style Viewport */
+.ops-feature-table-viewport {
   width: 100%;
-  border-collapse: collapse;
+  max-height: calc(100vh - 280px);
+  min-height: 380px;
+  overflow-y: auto;
+  overflow-x: auto;
+  position: relative;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: var(--bg-surface);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
 }
 
-.ops-dense-feature-table th {
+.ops-dense-feature-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.ops-dense-feature-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 10;
   text-align: left;
   padding: 10px 14px;
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: var(--text-tertiary);
+  color: var(--text-secondary);
+  font-weight: 700;
   border-bottom: 1px solid var(--line);
-  background: var(--bg-inset);
+  background: var(--bg-surface-elevated, #162032);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  white-space: nowrap;
 }
 
 .ops-dense-feature-table td {
-  padding: 12px 14px;
+  padding: 10px 14px;
   font-size: 12.5px;
   border-bottom: 1px solid var(--line-subtle);
   color: var(--text-secondary);
+  background: var(--bg-surface);
+  transition: background-color 0.12s ease;
 }
 
 .ops-dense-feature-table tr:hover td {
   background: var(--bg-inset);
 }
+
+.ops-dense-feature-table tr:last-child td {
+  border-bottom: none;
+}
+
 
 
