@@ -296,6 +296,8 @@ export function AdminUsersPage({ users, trips, superadminIds, onUsersChanged, on
               <tbody>
                 {pagedUsers.map((u) => {
                   const isSuperadmin = superadminIdSet.has(u.id);
+                  const userTrips = trips.filter((t) => t.memberIds.includes(u.id));
+
                   return (
                     <tr key={u.id}>
                       <td data-label="">
@@ -310,6 +312,25 @@ export function AdminUsersPage({ users, trips, superadminIds, onUsersChanged, on
                       <td data-label="">
                         <div className="ops-trip-name">{u.displayName || u.email}</div>
                         <div className="ops-trip-route">{u.email}</div>
+                        {userTrips.length > 0 && (
+                          <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginTop: '4px' }}>
+                            {userTrips.slice(0, 3).map((t) => (
+                              <span
+                                key={t.id}
+                                className="ops-badge archived"
+                                style={{ fontSize: '10px', padding: '1px 6px' }}
+                                title={`${t.name} (${t.baseCurrency})`}
+                              >
+                                {t.name}
+                              </span>
+                            ))}
+                            {userTrips.length > 3 && (
+                              <span className="ops-badge archived" style={{ fontSize: '10px', padding: '1px 5px' }}>
+                                +{userTrips.length - 3} more
+                              </span>
+                            )}
+                          </div>
+                        )}
                       </td>
                       <td data-label="Role">
                         <span className={`ops-badge ${isSuperadmin ? 'grounded' : 'archived'}`}>{isSuperadmin ? 'Superadmin' : 'Member'}</span>

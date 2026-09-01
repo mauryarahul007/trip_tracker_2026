@@ -1626,5 +1626,244 @@ legend.ops-form-label { padding: 0; width: 100%; }
   border-bottom: none;
 }
 
+/* ==========================================================================
+   INFRASTRUCTURE LATENCY & SERVICE HEARTBEAT RADAR
+   ========================================================================== */
+.ops-radar-strip {
+  padding: 14px 16px;
+  background: var(--bg-panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+}
+
+.ops-radar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.ops-radar-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 10px;
+}
+
+.ops-radar-card {
+  padding: 10px 12px;
+  background: var(--bg-panel-raised);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  transition: all 0.15s ease;
+}
+
+.ops-radar-card:hover {
+  border-color: var(--line-strong);
+  transform: translateY(-1px);
+}
+
+.ops-radar-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.ops-radar-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--safe);
+  box-shadow: 0 0 6px var(--safe);
+}
+
+.ops-radar-dot.warn {
+  background: #F59E0B;
+  box-shadow: 0 0 6px #F59E0B;
+}
+
+.ops-radar-dot.crit {
+  background: var(--danger);
+  box-shadow: 0 0 6px var(--danger);
+}
+
+.ops-radar-value {
+  font-family: var(--mono);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+/* ==========================================================================
+   TRIP DEEP-INSPECTOR SLIDING DRAWER
+   ========================================================================== */
+.ops-drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 1200;
+  display: flex;
+  justify-content: flex-end;
+  animation: fadeIn 0.2s ease;
+}
+
+.ops-trip-drawer {
+  width: 100%;
+  max-width: 480px;
+  height: 100%;
+  background: var(--bg-panel);
+  border-left: 1px solid var(--line);
+  box-shadow: -10px 0 30px rgba(0, 0, 0, 0.25);
+  display: flex;
+  flex-direction: column;
+  animation: slideLeft 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
+}
+
+@keyframes slideLeft {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+.ops-drawer-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--line);
+  background: var(--bg-panel-raised);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.ops-drawer-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.ops-drawer-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ops-drawer-section-title {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-tertiary);
+}
+
+.ops-member-balance-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 10px;
+  background: var(--bg-panel-raised);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  font-size: 12px;
+}
+
+.ops-member-balance-row .balance-pos {
+  color: var(--safe);
+  font-weight: 700;
+  font-family: var(--mono);
+}
+
+.ops-member-balance-row .balance-neg {
+  color: var(--danger);
+  font-weight: 700;
+  font-family: var(--mono);
+}
+
+.ops-member-balance-row .balance-zero {
+  color: var(--text-tertiary);
+  font-family: var(--mono);
+}
+
+/* ==========================================================================
+   FLOATING BULK ACTIONS DOCK
+   ========================================================================== */
+.ops-bulk-dock {
+  position: sticky;
+  bottom: 16px;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  background: var(--bg-panel-raised);
+  border: 1px solid var(--line-strong);
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  gap: 12px;
+  animation: slideUpFade 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.ops-bulk-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* ==========================================================================
+   STORAGE & ASSET QUOTA TELEMETRY
+   ========================================================================== */
+.ops-storage-gauge {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px 16px;
+  background: var(--bg-panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+
+.ops-storage-bar-track {
+  height: 10px;
+  border-radius: 5px;
+  background: var(--bg-inset);
+  overflow: hidden;
+  display: flex;
+  gap: 2px;
+}
+
+.ops-storage-bar-fill {
+  height: 100%;
+  transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.ops-storage-bar-fill.fill-receipts {
+  background: #3B82F6;
+}
+
+.ops-storage-bar-fill.fill-avatars {
+  background: #10B981;
+}
+
+.ops-storage-bar-fill.fill-maps {
+  background: #F59E0B;
+}
+
+
 
 

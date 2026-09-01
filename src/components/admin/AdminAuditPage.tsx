@@ -180,15 +180,25 @@ export function formatAuditNarrative(
   return { title, subtitle, tag, tagClass, nodeClass, icon, resourceLabel };
 }
 
-const ACTION_TYPE_FILTERS = [
-  { value: 'all', label: 'All actions' },
-  { value: 'danger', label: 'Destructive & Security' },
-  { value: 'caution', label: 'Config & Flags' },
+const ACTION_CATEGORY_FILTERS = [
+  { value: 'all', label: 'All Categories' },
+  { value: 'security', label: 'Security & Access' },
+  { value: 'trip', label: 'Trip State & Locks' },
+  { value: 'flag', label: 'Feature Flags & Config' },
+  { value: 'broadcast', label: 'Broadcast Alerts' },
+] as const;
+
+const DATE_RANGE_FILTERS = [
+  { value: 'all', label: 'All Time' },
+  { value: '24h', label: 'Last 24 Hours' },
+  { value: '7d', label: 'Last 7 Days' },
+  { value: '30d', label: 'Last 30 Days' },
 ] as const;
 
 export function AdminAuditPage({ logs, trips, users, onLogsChanged, onRefresh, isRefreshing, onRequestConfirm }: Props) {
   const [searchQuery, setSearchQuery] = useState('');
-  const [actionTypeFilter, setActionTypeFilter] = useState<(typeof ACTION_TYPE_FILTERS)[number]['value']>('all');
+  const [categoryFilter, setCategoryFilter] = useState<(typeof ACTION_CATEGORY_FILTERS)[number]['value']>('all');
+  const [dateRangeFilter, setDateRangeFilter] = useState<(typeof DATE_RANGE_FILTERS)[number]['value']>('all');
   const [actorFilter, setActorFilter] = useState<string>('all');
   const [purgeDays, setPurgeDays] = useState('90');
   const [isPurging, setIsPurging] = useState(false);
@@ -229,7 +239,6 @@ export function AdminAuditPage({ logs, trips, users, onLogsChanged, onRefresh, i
     });
     return Array.from(counts.entries())
       .sort((a, b) => b[1] - a[1])
-      .slice(0, 5)
       .map(([id]) => id);
   }, [logs]);
 
@@ -246,11 +255,27 @@ export function AdminAuditPage({ logs, trips, users, onLogsChanged, onRefresh, i
   }, [logs, topActors]);
 
   const filteredLogs = logs.filter((l) => {
-    const isDanger = /delete|purge|suspend|ban/i.test(l.action);
-    const isCaution = /config|flag|ground|archive/i.test(l.action);
-    if (actionTypeFilter === 'danger' && !isDanger) return false;
-    if (actionTypeFilter === 'caution' && !isCaution) return false;
+    const isSecurity = /delete|purge|suspend|ban|auth/i.test(l.action);
+    const isTrip = /trip|ground|archive|restore/i.test(l.action) || !!l.tripId;
+    const isFlag = /flag|config|override/i.test(l.action);
+    const isBroadcast = /broadcast|notify/i.test(l.action);
+
+    if (categoryFilter === 'security' && !isSecurity) return false;
+    if (categoryFilter === 'trip' && !isTrip) return false;
+    if (categoryFilter === 'flag' && !isFlag) return false;
+    if (categoryFilter === 'broadcast' && !isBroadcast) return false;
+
     if (actorFilter !== 'all' && l.actorUserId !== actorFilter) return false;
+
+    if (dateRangeFilter !== 'all') {
+      const logTime = new Date(l.createdAt).getTime();
+      const now = Date.now();
+      const diffHours = (now - logTime) / (1000 * 60 * 60);
+      if (dateRangeFilter === '24h' && diffHours > 24) return false;
+      if (dateRangeFilter === '7d' && diffHours > 24 * 7) return false;
+      if (dateRangeFilter === '30d' && diffHours > 24 * 30) return false;
+    }
+
     if (!searchQuery.trim()) return true;
     const q = searchQuery.toLowerCase();
     const actorName = (l.actorUserId && userById.get(l.actorUserId)) || '';
@@ -264,6 +289,35 @@ export function AdminAuditPage({ logs, trips, users, onLogsChanged, onRefresh, i
       narrative.subtitle.toLowerCase().includes(q)
     );
   });
+
+  const handleExportCsv = () => {
+    const headers = ['Timestamp (IST)', 'Event ID', 'Actor', 'Action', 'Trip ID', 'Narrative Title', 'Narrative Subtitle', 'Payload JSON'];
+    const rows = filteredLogs.map((l) => {
+      const actor = (l.actorUserId && userById.get(l.actorUserId)) || l.actorUserId || 'Superadmin';
+      const narrative = formatAuditNarrative(l, tripNameById, userById);
+      const istTime = new Date(l.createdAt).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
+      return [
+        `"${istTime}"`,
+        `"${l.id}"`,
+        `"${actor}"`,
+        `"${l.action}"`,
+        `"${l.tripId || ''}"`,
+        `"${narrative.title.replace(/"/g, '""')}"`,
+        `"${narrative.subtitle.replace(/"/g, '""')}"`,
+        `"${JSON.stringify(l.details || {}).replace(/"/g, '""')}"`,
+      ].join(',');
+    });
+
+    const csvContent = [headers.join(','), ...rows].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `audit-trail-${Date.now()}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast(`Exported ${filteredLogs.length} audit records to CSV.`);
+  };
 
   const handlePurge = () => {
     const days = Number(purgeDays) || 90;
@@ -294,9 +348,14 @@ export function AdminAuditPage({ logs, trips, users, onLogsChanged, onRefresh, i
           <h2>Security &amp; Operations Audit Log</h2>
           <p>Real-time chronological telemetry of all administrative and security actions taken across the fleet.</p>
         </div>
-        <button type="button" className="ops-btn" disabled={isRefreshing} onClick={() => void onRefresh()}>
-          <IconRefresh size={13} className={isRefreshing ? 'icon-sm ops-spin' : 'icon-sm'} /> {isRefreshing ? 'Refreshing...' : 'Refresh'}
-        </button>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <button type="button" className="ops-btn" onClick={handleExportCsv}>
+            Export CSV
+          </button>
+          <button type="button" className="ops-btn" disabled={isRefreshing} onClick={() => void onRefresh()}>
+            <IconRefresh size={13} className={isRefreshing ? 'icon-sm ops-spin' : 'icon-sm'} /> {isRefreshing ? 'Refreshing...' : 'Refresh'}
+          </button>
+        </div>
       </div>
 
       {toastMsg && (
@@ -319,64 +378,87 @@ export function AdminAuditPage({ logs, trips, users, onLogsChanged, onRefresh, i
         </div>
         <div className="ops-card ops-kpi-card">
           <div className="ops-kpi-label">Config &amp; Flag Changes</div>
-          <div className="ops-kpi-value" style={{ color: '#FBBF24' }}>{telemetry.config}</div>
-          <div className="ops-kpi-delta">Parameter adjustments</div>
+          <div className="ops-kpi-value" style={{ color: telemetry.config > 0 ? '#38BDF8' : undefined }}>{telemetry.config}</div>
+          <div className="ops-kpi-delta">Overrides &amp; locks</div>
         </div>
         <div className="ops-card ops-kpi-card">
           <div className="ops-kpi-label">Active Administrators</div>
-          <div className="ops-kpi-value">{telemetry.actorsCount || 1}</div>
-          <div className="ops-kpi-delta">Active superadmins</div>
+          <div className="ops-kpi-value" style={{ color: '#FBBF24' }}>{telemetry.actorsCount || 1}</div>
+          <div className="ops-kpi-delta">Acting operators</div>
         </div>
       </div>
 
-      {/* Filter Toolbar */}
-      <div className="ops-sticky-toolbar">
-        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div className="ops-search-wrap">
-            <IconSearch size={16} />
-            <input
-              type="text"
-              className="ops-input"
-              placeholder="Search narrative stories, actors, actions, or trips..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
-          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+      {/* Multi-Filter Matrix Toolbar */}
+      <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div className="ops-search-wrap" style={{ flex: '1 1 240px' }}>
+          <IconSearch size={16} />
+          <input
+            type="text"
+            className="ops-input"
+            placeholder="Search by action, actor, trip, or narrative..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
+
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
+          <select
+            className="ops-select"
+            style={{ width: 'auto', fontSize: '11.5px', padding: '6px 28px 6px 10px' }}
+            value={categoryFilter}
+            onChange={(e) => setCategoryFilter(e.target.value as any)}
+          >
+            {ACTION_CATEGORY_FILTERS.map((f) => (
+              <option key={f.value} value={f.value}>
+                {f.label}
+              </option>
+            ))}
+          </select>
+
+          <select
+            className="ops-select"
+            style={{ width: 'auto', fontSize: '11.5px', padding: '6px 28px 6px 10px' }}
+            value={dateRangeFilter}
+            onChange={(e) => setDateRangeFilter(e.target.value as any)}
+          >
+            {DATE_RANGE_FILTERS.map((f) => (
+              <option key={f.value} value={f.value}>
+                {f.label}
+              </option>
+            ))}
+          </select>
+
+          {topActors.length > 0 && (
+            <select
+              className="ops-select"
+              style={{ width: 'auto', fontSize: '11.5px', padding: '6px 28px 6px 10px' }}
+              value={actorFilter}
+              onChange={(e) => setActorFilter(e.target.value)}
+            >
+              <option value="all">All Administrators ({topActors.length})</option>
+              {topActors.map((actorId) => (
+                <option key={actorId} value={actorId}>
+                  {userById.get(actorId) || actorId}
+                </option>
+              ))}
+            </select>
+          )}
+
+          <div style={{ display: 'flex', gap: '4px', alignItems: 'center', marginLeft: 'auto' }}>
             <input
               type="number"
               min={1}
               className="ops-input"
-              style={{ width: '80px' }}
+              style={{ width: '65px', padding: '5px 8px', fontSize: '11.5px' }}
               value={purgeDays}
               onChange={(e) => setPurgeDays(e.target.value)}
+              title="Days to retain"
             />
-            <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>days</span>
-            <button type="button" className="ops-btn ops-btn-danger" disabled={isPurging} onClick={handlePurge}>
-              {isPurging ? 'Purging...' : 'Purge Older Than'}
+            <span style={{ fontSize: '11.5px', color: 'var(--text-secondary)' }}>days</span>
+            <button type="button" className="ops-btn ops-btn-danger" style={{ padding: '5px 10px' }} disabled={isPurging} onClick={handlePurge}>
+              {isPurging ? 'Purging...' : 'Purge'}
             </button>
           </div>
-        </div>
-
-        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '10px' }}>
-          {ACTION_TYPE_FILTERS.map((f) => (
-            <button key={f.value} type="button" className="ops-chip" data-active={actionTypeFilter === f.value} onClick={() => setActionTypeFilter(f.value)}>
-              {f.label}
-            </button>
-          ))}
-          {topActors.length > 0 && (
-            <>
-              <span style={{ width: '1px', background: 'var(--line)', margin: '0 2px' }} />
-              <button type="button" className="ops-chip" data-active={actorFilter === 'all'} onClick={() => setActorFilter('all')}>
-                All actors
-              </button>
-              {topActors.map((id) => (
-                <button key={id} type="button" className="ops-chip" data-active={actorFilter === id} onClick={() => setActorFilter(id)}>
-                  {userById.get(id) || id}
-                </button>
-              ))}
-            </>
-          )}
         </div>
       </div>
 

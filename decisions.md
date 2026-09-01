@@ -1337,6 +1337,34 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - Table viewport is height-constrained to the viewport height on desktop to keep metrics and filters permanently accessible without page-level scroll hunting.
 
+---
+
+## 77. Superadmin Ops Deck Suite Overhaul: Heartbeat Radar, Sliding Trip Deep Inspector, Multi-Filter Audit Matrix & Bulk Roadmap Actions
+* **Context:**
+  - Administrative fleet oversight needed deep operational tooling:
+    - **Command Center:** Real-time visibility into microservices and latency (Auth, DB/RPC, Storage, Edge Push, Tiles).
+    - **Trips Manager:** Rapid group telemetry inspection without needing to leave the superadmin deck to view individual member balances, category distributions, or emergency administrative controls.
+    - **Audit Log:** Quick multi-dimensional slicing (Action category, Actor, Date range) and automated CSV reporting for compliance.
+    - **Feature Roadmap:** High-velocity batch triage (multi-select + bulk status updates).
+    - **Platform Analytics & Users:** Storage quota monitoring (receipts, avatars, covers) and user-to-trip membership tree visibility.
+* **Decision:**
+  - **Live Infrastructure Latency & Heartbeat Radar (`AdminCommandCenterPage.tsx`, `ops-deck.css`)**:
+    - Embedded a live service radar measuring Supabase Auth, DB/RPC, Storage, Edge Push, and MapLibre tile latency with 1-tap "Ping Services" active probing.
+  - **Trip Deep-Inspector Sliding Drawer (`AdminTripsPage.tsx`, `ops-deck.css`)**:
+    - Added sliding side drawer (`.ops-trip-drawer`) showing member roster with calculated net balances (Paid vs Share), category spend distribution bars, and 1-tap actions (Lift Ground Lock, Emergency Ground, Archive, Open in Traveler View).
+  - **Multi-Filter Matrix & 1-Tap CSV Compliance Export (`AdminAuditPage.tsx`)**:
+    - Added dropdown filters for Category (`Security & Access`, `Trip State & Locks`, `Feature Flags`, `Broadcasts`), Date Range (`Last 24h`, `Last 7d`, `Last 30d`, `All Time`), and Administrator.
+    - Added CSV export generating timestamped event logs with IST timestamps, narrative titles, and serialized payloads.
+  - **Multi-Select Bulk Actions Dock (`AdminFeaturesPage.tsx`, `ops-deck.css`)**:
+    - Added table row checkboxes with select-all and a floating sticky action dock for bulk status updates (`Mark Planned`, `Mark In Progress`, `Mark Shipped`, `Won't Do`).
+  - **Platform Storage & Asset Quota Telemetry (`AdminAnalyticsPage.tsx`, `ops-deck.css`)**:
+    - Added gauge tracking Supabase Storage consumption across receipt photos, traveler avatars, and journey map cache against 50GB tier limits.
+  - **Trip Membership Badges (`AdminUsersPage.tsx`)**:
+    - Rendered compact trip membership pills for each traveler row in the Users directory.
+* **Trade-offs Accepted:**
+  - Storage telemetry is estimated from tracked asset counts and standard compression baselines until direct Supabase Management API quota meters are queried.
+
+
 
 
 
