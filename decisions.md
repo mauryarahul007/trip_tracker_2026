@@ -1332,8 +1332,8 @@ This document logs all meaningful technical decisions, library choices, design p
   - **Linked Flag Noise Cleanup & Explicit Link Modal (`AdminFeaturesPage.tsx`, `features.json`)**:
     - Linked `FEAT-001` to `enableFeatureSuggestions` and `FEAT-021` to `enableGeotagging` in `features/features.json`.
     - In Table view: Only features with active linked flags render the interactive toggle hub capsule; unlinked features cleanly render `—`.
-    - In Kanban view: Removed unlinked select dropdowns from feature cards.
-    - Added an explicit `+Flag` modal triggered from the table workflow column to attach or change flag associations without polluting standard view rows.
+  - **Theme-Aware Color Tokens (`ops-deck.css`)**:
+    - Replaced undefined `--bg-surface` and hardcoded dark header hexes with the canonical Ops Deck tokens (`--bg-panel`, `--bg-panel-raised`, `--bg-inset`, and `--line`), ensuring the table matches the superadmin light/dark theme seamlessly.
 * **Trade-offs Accepted:**
   - Table viewport is height-constrained to the viewport height on desktop to keep metrics and filters permanently accessible without page-level scroll hunting.
 

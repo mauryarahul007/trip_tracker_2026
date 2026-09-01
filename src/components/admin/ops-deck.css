@@ -1302,7 +1302,7 @@ legend.ops-form-label { padding: 0; width: 100%; }
 /* Structured Property Inspector Grid */
 .ops-inspector-card {
   margin-top: 10px;
-  background: var(--bg-surface);
+  background: var(--bg-panel);
   border: 1px solid var(--line);
   border-radius: 8px;
   overflow: hidden;
@@ -1363,7 +1363,7 @@ legend.ops-form-label { padding: 0; width: 100%; }
 
 .ops-velocity-strip {
   padding: 12px 16px;
-  background: var(--bg-surface);
+  background: var(--bg-panel);
   border: 1px solid var(--line);
   border-radius: 12px;
   display: flex;
@@ -1422,15 +1422,15 @@ legend.ops-form-label { padding: 0; width: 100%; }
 }
 
 .ops-view-btn.active {
-  background: var(--bg-surface);
+  background: var(--bg-panel);
   color: var(--text-primary);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 /* Linear-Grade Feature Card */
 .ops-feature-item-card {
   position: relative;
-  background: var(--bg-surface);
+  background: var(--bg-panel);
   border: 1px solid var(--line);
   border-radius: 12px;
   padding: 14px;
@@ -1438,13 +1438,13 @@ legend.ops-form-label { padding: 0; width: 100%; }
   flex-direction: column;
   gap: 10px;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
 }
 
 .ops-feature-item-card:hover {
   transform: translateY(-2px);
   border-color: var(--line-strong);
-  box-shadow: 0 8px 24px -6px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 8px 24px -6px rgba(0, 0, 0, 0.15);
 }
 
 .ops-feature-top-meta {
@@ -1473,7 +1473,7 @@ legend.ops-form-label { padding: 0; width: 100%; }
   padding: 2px 8px;
   border-radius: 12px;
   background: rgba(99, 102, 241, 0.15);
-  color: #A5B4FC;
+  color: #818CF8;
 }
 
 .ops-feature-title {
@@ -1549,13 +1549,13 @@ legend.ops-form-label { padding: 0; width: 100%; }
 
 .ops-step-btn:hover {
   color: var(--text-primary);
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(0, 0, 0, 0.04);
 }
 
 .ops-step-btn.current {
-  background: var(--bg-surface);
+  background: var(--bg-panel);
   color: var(--text-primary);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .ops-shipped-banner {
@@ -1563,7 +1563,7 @@ legend.ops-form-label { padding: 0; width: 100%; }
   border-radius: 6px;
   background: rgba(16, 185, 129, 0.1);
   border: 1px solid rgba(16, 185, 129, 0.25);
-  color: #34D399;
+  color: var(--safe);
   font-size: 11px;
   display: flex;
   align-items: center;
@@ -1580,14 +1580,15 @@ legend.ops-form-label { padding: 0; width: 100%; }
   position: relative;
   border-radius: 12px;
   border: 1px solid var(--line);
-  background: var(--bg-surface);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  background: var(--bg-panel);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
 }
 
 .ops-dense-feature-table {
   width: 100%;
   border-collapse: separate;
   border-spacing: 0;
+  background: var(--bg-panel);
 }
 
 .ops-dense-feature-table thead th {
@@ -1596,25 +1597,25 @@ legend.ops-form-label { padding: 0; width: 100%; }
   z-index: 10;
   text-align: left;
   padding: 10px 14px;
-  font-size: 11px;
+  font-family: var(--mono);
+  font-size: 10px;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--text-secondary);
-  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--text-tertiary);
+  font-weight: 600;
   border-bottom: 1px solid var(--line);
-  background: var(--bg-surface-elevated, #162032);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background: var(--bg-panel-raised);
   white-space: nowrap;
 }
 
 .ops-dense-feature-table td {
   padding: 10px 14px;
-  font-size: 12.5px;
-  border-bottom: 1px solid var(--line-subtle);
-  color: var(--text-secondary);
-  background: var(--bg-surface);
+  font-size: 12px;
+  border-bottom: 1px solid var(--line);
+  color: var(--text-primary);
+  background: var(--bg-panel);
   transition: background-color 0.12s ease;
+  vertical-align: middle;
 }
 
 .ops-dense-feature-table tr:hover td {
