@@ -9,11 +9,11 @@
 
 | Metric | Count |
 | :--- | :--- |
-| **Total Tracked** | **24** |
+| **Total Tracked** | **25** |
 | **💡 Requested** | **2** |
 | **📋 Planned** | **0** |
 | **🟡 In Progress** | **0** |
-| **✅ Shipped** | **22** |
+| **✅ Shipped** | **23** |
 | **⚪ Won't Do** | **0** |
 
 ---
@@ -32,7 +32,7 @@
 ### FEAT-002: Test
 
 - **Category**: `ui-ux` | **Status**: `requested`
-- **Requested By**: `mauryarahul007@gmail.com` on 8/21/2026 (web)
+- **Requested By**: `mauryarahul007@gmail.com` on 21/8/2026 (web)
 - **Route**: `#nav-3`
 
 Test
@@ -42,7 +42,7 @@ Test
 ### FEAT-024: CI pipeline for lint, build, and test on push/PR
 
 - **Category**: `admin` | **Status**: `requested`
-- **Requested By**: `claude-cli` on 9/1/2026 (web)
+- **Requested By**: `claude-cli` on 1/9/2026 (web)
 
 CI pipeline for lint, build, and test on push/PR
 
@@ -74,6 +74,7 @@ CI pipeline for lint, build, and test on push/PR
 | **FEAT-021** | Analytics moved to Summary; geo map split into its own Settings section | `analytics` | `claude-cli` | `claude-cli` | src/App.tsx, src/components/AnalyticsTab.tsx, src/components/SettingsTab.tsx, src/components/SettingsView.tsx. |
 | **FEAT-022** | 10 UI/UX enhancements: skeleton loaders, pull-to-refresh, edit-undo, settlement confetti + progress, duplicate expense, split preview, empty-state CTAs, category icons, command-palette hint | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit 237b25a |
 | **FEAT-023** | Passport trip card stamp-press entrance + tap feedback | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit d4633e2 |
+| **FEAT-025** | Trip stack: gesture feedback and depth polish | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commits (this session): directional commit-preview badge, rubber-band drag resistance, prefers-reduced-motion support, staggered quick-actions entrance, long-press progress ring, depth-2 blur cue, idle sway on peek cards, and derived exit-timing constants. See TripStack.tsx + index.css. |
 
 ---
 

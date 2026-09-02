@@ -2487,10 +2487,38 @@ input:checked + .toggle-slider:before {
   z-index: 1;
   transform: translateY(26px) scale(0.92) rotate(2deg);
   opacity: 0.85;
+  /* Blur on top of the opacity dip sells "further back in the stack"
+     instead of just "faded". */
+  filter: blur(1.4px) brightness(0.88);
 }
 .stack-card:focus-visible {
   outline: 3px solid var(--primary-accent);
   outline-offset: -3px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .stack-card { transition: none; }
+  .stack-card-sway { animation: none !important; }
+}
+/* Idle sway -- a hairline ambient rock on the two peek cards so the stack
+   reads as physically stacked, not a paused screenshot. Front card
+   (depth-0) is excluded: it's the interactive one, and unsolicited motion
+   there while a user is about to touch it reads as jitter, not life.
+   Different duration/delay per depth keeps the two out of phase. */
+.stack-card-sway {
+  height: 100%;
+  transform-origin: 50% 60%;
+}
+.stack-card.depth-1 .stack-card-sway {
+  animation: stack-card-sway 8.5s ease-in-out infinite;
+  animation-delay: -2.4s;
+}
+.stack-card.depth-2 .stack-card-sway {
+  animation: stack-card-sway 6.4s ease-in-out infinite;
+  animation-delay: -4.1s;
+}
+@keyframes stack-card-sway {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-1.5px) rotate(0.5deg); }
 }
 .stack-card-face {
   position: relative;
@@ -2567,6 +2595,92 @@ input:checked + .toggle-slider:before {
 }
 .stack-qa-btn.danger {
   color: var(--color-danger);
+}
+/* Quick-actions entrance: fade the scrim in, scale each button up with a
+   short stagger, instead of the menu snapping into place on long-press. */
+.stack-quick-actions {
+  animation: stack-qa-scrim-in 0.18s ease both;
+}
+.stack-qa-btn {
+  opacity: 0;
+  transform: scale(0.6) translateY(6px);
+  animation: stack-qa-btn-in 0.32s var(--ease-uber-spring) forwards;
+}
+.stack-qa-btn:nth-child(1) { animation-delay: 0.02s; }
+.stack-qa-btn:nth-child(2) { animation-delay: 0.07s; }
+.stack-qa-btn:nth-child(3) { animation-delay: 0.12s; }
+@keyframes stack-qa-scrim-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes stack-qa-btn-in {
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .stack-quick-actions, .stack-qa-btn {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Directional commit-preview badge -- tells the user what a release will
+   do (browse vs. archive) before they let go, fading/arming in as the
+   drag crosses SWIPE_THRESHOLD. Position/opacity/scale are driven inline
+   per-frame from JS; only the small settle easing lives here. */
+.stack-swipe-badge {
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  z-index: 5;
+  padding: 6px 13px;
+  border-radius: 9999px;
+  font-family: var(--font-family-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  pointer-events: none;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: transform 0.12s ease;
+}
+.stack-swipe-badge.browse {
+  background: rgba(56, 189, 248, 0.24);
+  border: 1px solid rgba(56, 189, 248, 0.55);
+  color: #7DD3FC;
+}
+.stack-swipe-badge.archive {
+  background: rgba(52, 211, 153, 0.24);
+  border: 1px solid rgba(52, 211, 153, 0.55);
+  color: #6EE7B7;
+}
+@media (prefers-reduced-motion: reduce) {
+  .stack-swipe-badge { transition: none; }
+}
+
+/* Long-press progress ring -- fills over LONG_PRESS_MS so the hold reads
+   as building toward the quick-actions menu instead of a dead pause. */
+.stack-hold-ring {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease;
+}
+.stack-hold-ring svg {
+  transform: rotate(-90deg);
+  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.5));
+}
+.stack-hold-ring circle.track {
+  stroke: rgba(255, 255, 255, 0.16);
+}
+.stack-hold-ring circle.fill {
+  stroke: var(--primary-accent);
+  transition: stroke-dashoffset 0.05s linear;
 }
 .stack-destination-pill {
   background: rgba(15, 23, 42, 0.7);

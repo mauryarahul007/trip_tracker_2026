@@ -15,6 +15,30 @@ const SWIPE_THRESHOLD = 90;
 const LONG_PRESS_MS = 450;
 const JITTER = 10;
 const BRIGHT_LUMINANCE_THRESHOLD = 0.55;
+// Front card's spring-back/exit transition duration -- EXIT_COMMIT_MS is
+// derived from this instead of being a second hand-picked number, so the
+// two can't drift out of sync the way a bare "260" and a bare "0.38s" in
+// two different files could.
+const EXIT_TRANSITION_MS = 380;
+// Fires late enough into the exit spring (~68%) that the card is already
+// most of the way off-canvas before the stack reorders underneath it.
+const EXIT_COMMIT_MS = Math.round(EXIT_TRANSITION_MS * 0.68);
+const RING_RADIUS = 30;
+const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
+
+const prefersReducedMotion =
+  typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+
+// Beyond `threshold`, extra drag distance is damped instead of following
+// the finger 1:1 -- same elastic idea SwipeableRow already uses, so a
+// stray drag doesn't send the card sailing off past the point a release
+// would commit it anyway.
+function rubberBand(d: number, threshold: number = SWIPE_THRESHOLD): number {
+  if (Math.abs(d) <= threshold) return d;
+  const sign = d < 0 ? -1 : 1;
+  const overflow = Math.abs(d) - threshold;
+  return sign * (threshold + overflow * 0.45);
+}
 
 type Props = {
   trips: Trip[]; // 2+ trips, any order -- this component sorts by recency itself
@@ -226,11 +250,45 @@ function StackCardItem({ trip, members, userId, idx, canDelete, onOpen, onBrowse
   const moved = useRef(false);
   const gestureFired = useRef(false); // suppresses the click that follows a drag or long-press
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const ringRef = useRef<HTMLDivElement>(null);
+  const ringCircleRef = useRef<SVGCircleElement>(null);
+  const holdRaf = useRef<number | null>(null);
+  const holdStart = useRef(0);
 
   const clearLongPress = () => {
     if (longPressTimer.current) {
       clearTimeout(longPressTimer.current);
       longPressTimer.current = null;
+    }
+  };
+
+  // Fills the long-press ring over LONG_PRESS_MS so the hold reads as
+  // building toward something instead of a dead pause before the menu
+  // appears. Written straight to the DOM node every frame rather than
+  // through React state, so a ~450ms hold doesn't cost 25+ re-renders.
+  const startHoldRing = () => {
+    if (prefersReducedMotion || !ringRef.current || !ringCircleRef.current) return;
+    ringRef.current.style.opacity = '1';
+    holdStart.current = performance.now();
+    const tick = () => {
+      const t = Math.min(1, (performance.now() - holdStart.current) / LONG_PRESS_MS);
+      if (ringCircleRef.current) ringCircleRef.current.style.strokeDashoffset = String(RING_CIRCUMFERENCE * (1 - t));
+      if (t < 1) holdRaf.current = requestAnimationFrame(tick);
+    };
+    holdRaf.current = requestAnimationFrame(tick);
+  };
+
+  const stopHoldRing = (completed: boolean) => {
+    if (holdRaf.current) {
+      cancelAnimationFrame(holdRaf.current);
+      holdRaf.current = null;
+    }
+    if (!ringRef.current || !ringCircleRef.current) return;
+    if (!completed) {
+      ringRef.current.style.opacity = '0';
+      ringCircleRef.current.style.strokeDashoffset = String(RING_CIRCUMFERENCE);
+    } else {
+      setTimeout(() => { if (ringRef.current) ringRef.current.style.opacity = '0'; }, 150);
     }
   };
 
@@ -240,10 +298,12 @@ function StackCardItem({ trip, members, userId, idx, canDelete, onOpen, onBrowse
     moved.current = false;
     start.current = { x: e.clientX, y: e.clientY };
     setDragging(true);
+    startHoldRing();
     longPressTimer.current = setTimeout(() => {
       if (!moved.current) {
         triggerHaptic('medium');
         gestureFired.current = true;
+        stopHoldRing(true);
         setQuickActionsOpen(true);
         active.current = false;
         setDrag({ x: 0, y: 0 });
@@ -257,6 +317,7 @@ function StackCardItem({ trip, members, userId, idx, canDelete, onOpen, onBrowse
     const dx = e.clientX - start.current.x;
     const dy = e.clientY - start.current.y;
     if (Math.abs(dx) > JITTER || Math.abs(dy) > JITTER) {
+      if (!moved.current) stopHoldRing(false);
       moved.current = true;
       clearLongPress();
     }
@@ -267,6 +328,7 @@ function StackCardItem({ trip, members, userId, idx, canDelete, onOpen, onBrowse
     if (!active.current) return;
     active.current = false;
     clearLongPress();
+    stopHoldRing(false);
     setDragging(false);
 
     const { x, y } = drag;
@@ -274,14 +336,14 @@ function StackCardItem({ trip, members, userId, idx, canDelete, onOpen, onBrowse
       gestureFired.current = true;
       triggerHaptic('light');
       setExit(x > 0 ? 'right' : 'left');
-      setTimeout(onBrowse, 260);
+      setTimeout(onBrowse, EXIT_COMMIT_MS);
       return;
     }
     if (y < -SWIPE_THRESHOLD && Math.abs(y) > Math.abs(x)) {
       gestureFired.current = true;
       triggerHaptic('success');
       setExit('up');
-      setTimeout(onArchive, 260);
+      setTimeout(onArchive, EXIT_COMMIT_MS);
       return;
     }
     setDrag({ x: 0, y: 0 });
@@ -302,15 +364,29 @@ function StackCardItem({ trip, members, userId, idx, canDelete, onOpen, onBrowse
     }
   };
 
-  const dragDistance = Math.sqrt(drag.x * drag.x + drag.y * drag.y);
-  const dragScale = Math.max(0.95, 1 - dragDistance / 2400);
-  const tiltDeg = (drag.x * 0.055).toFixed(2);
+  // Visually damp beyond the swipe threshold (rubberBand) so the card
+  // stays near the frame during an overlong drag; the raw drag.x/drag.y
+  // (undamped) still drive the actual commit decision in endDrag above.
+  const renderX = rubberBand(drag.x);
+  const renderY = drag.y < 0 ? -rubberBand(-drag.y) : rubberBand(drag.y);
+  const tiltDeg = (renderX * 0.055).toFixed(2);
 
   const transform =
     exit === 'left' ? 'translateX(-160%) rotate(-18deg) scale(0.9)' :
     exit === 'right' ? 'translateX(160%) rotate(18deg) scale(0.9)' :
     exit === 'up' ? 'translateY(-140%) scale(0.9) rotate(2deg)' :
-    `translate(${drag.x}px, ${drag.y}px) rotate(${tiltDeg}deg) scale(${dragScale})`;
+    `translate(${renderX}px, ${renderY}px) rotate(${tiltDeg}deg)`;
+
+  // Directional commit-preview badge: tells the user what a release will
+  // do before they let go, fading/arming in as the drag crosses threshold.
+  const badgeHoriz = Math.abs(drag.x) > Math.abs(drag.y);
+  const badgeDist = badgeHoriz ? Math.abs(drag.x) : Math.abs(drag.y);
+  const badgeArmed = badgeDist > SWIPE_THRESHOLD;
+  const badgeProgress = Math.min(1, badgeDist / SWIPE_THRESHOLD);
+  const badgeKind: 'browse' | 'archive' | null =
+    !dragging || exit ? null :
+    badgeHoriz && Math.abs(drag.x) > 6 ? 'browse' :
+    drag.y < -6 ? 'archive' : null;
 
   return (
     <div
@@ -318,7 +394,9 @@ function StackCardItem({ trip, members, userId, idx, canDelete, onOpen, onBrowse
       style={isFront ? {
         transform,
         opacity: exit ? 0 : 1,
-        transition: dragging ? 'none' : 'transform 0.38s var(--ease-uber-spring), opacity 0.28s ease',
+        transition: dragging || prefersReducedMotion
+          ? 'none'
+          : `transform ${EXIT_TRANSITION_MS}ms var(--ease-uber-spring), opacity 0.28s ease`,
         touchAction: 'pan-y',
         boxShadow: dragging
           ? '0 24px 48px -8px rgba(0, 0, 0, 0.38), 0 12px 24px -4px rgba(0, 0, 0, 0.24)'
@@ -336,7 +414,38 @@ function StackCardItem({ trip, members, userId, idx, canDelete, onOpen, onBrowse
       aria-label={isFront ? `Open trip ${trip.name}` : undefined}
       aria-hidden={isFront ? undefined : true}
     >
-      <CardContent trip={trip} members={members} userId={userId} />
+      {/* Idle sway (peek cards only, see CSS) sits on this wrapper, not
+          .stack-card itself, so it layers on top of the depth-position
+          transform instead of fighting it. */}
+      <div className="stack-card-sway">
+        <CardContent trip={trip} members={members} userId={userId} />
+      </div>
+      {isFront && badgeKind && (
+        <div
+          className={`stack-swipe-badge ${badgeKind}`}
+          style={{
+            opacity: badgeProgress,
+            transform: `translate(-50%, ${(-6 + badgeProgress * 6).toFixed(1)}px) scale(${(0.85 + badgeProgress * (badgeArmed ? 0.2 : 0.1)).toFixed(2)})`,
+          }}
+        >
+          {badgeKind === 'browse' ? (drag.x < 0 ? '← Browse' : 'Browse →') : '↑ Archive'}
+        </div>
+      )}
+      {isFront && (
+        <div className="stack-hold-ring" ref={ringRef} aria-hidden="true">
+          <svg width="72" height="72" viewBox="0 0 72 72">
+            <circle className="track" cx={36} cy={36} r={RING_RADIUS} fill="none" strokeWidth={4} />
+            <circle
+              ref={ringCircleRef}
+              className="fill"
+              cx={36} cy={36} r={RING_RADIUS} fill="none" strokeWidth={4}
+              strokeDasharray={RING_CIRCUMFERENCE}
+              strokeDashoffset={RING_CIRCUMFERENCE}
+              strokeLinecap="round"
+            />
+          </svg>
+        </div>
+      )}
       {isFront && quickActionsOpen && (
         <div
           className="stack-quick-actions"

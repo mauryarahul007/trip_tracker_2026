@@ -379,5 +379,21 @@
     },
     "createdAt": "2026-09-01T18:27:22.653Z",
     "updatedAt": "2026-09-01T18:27:22.653Z"
+  },
+  {
+    "id": "FEAT-025",
+    "title": "Trip stack: gesture feedback and depth polish",
+    "description": "Trip stack: gesture feedback and depth polish",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-09-02T17:18:17.207Z",
+    "updatedAt": "2026-09-02T17:18:28.640Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-09-02T17:18:28.639Z",
+    "shippedNote": "Shipped in commits (this session): directional commit-preview badge, rubber-band drag resistance, prefers-reduced-motion support, staggered quick-actions entrance, long-press progress ring, depth-2 blur cue, idle sway on peek cards, and derived exit-timing constants. See TripStack.tsx + index.css."
   }
 ]
