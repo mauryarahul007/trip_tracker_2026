@@ -534,14 +534,14 @@ export function TripsListScreen({
               />
             )}
             {stackActive && trips.length >= 2 && (
-              <div className="trip-stepper-dots" role="tablist" aria-label="Trip pagination">
+              <div className="trip-stepper-dots trip-stepper-track" role="tablist" aria-label="Trip pagination">
                 {trips.map((t, idx) => (
                   <button
                     key={t.id}
                     type="button"
                     role="tab"
                     aria-selected={idx === frontTripIndex}
-                    className={`trip-stepper-dot${idx === frontTripIndex ? ' active' : ''}`}
+                    className={`trip-stepper-dot trip-stepper-pill${idx === frontTripIndex ? ' active' : ''}`}
                     onClick={() => {
                       triggerHaptic('light');
                       setFrontTripIndex(idx);

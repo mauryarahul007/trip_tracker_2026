@@ -2462,6 +2462,8 @@ input:checked + .toggle-slider:before {
   position: relative;
   height: min(58vh, 460px);
   margin-bottom: 14px;
+  perspective: 1200px;
+  perspective-origin: 50% 35%;
 }
 .stack-card {
   position: absolute;
@@ -2469,12 +2471,27 @@ input:checked + .toggle-slider:before {
   border-radius: var(--border-radius-md);
   overflow: hidden;
   background: var(--bg-surface);
-  border: 1px solid var(--border-color);
-  box-shadow: 0 10px 24px -14px rgba(0, 0, 0, 0.28);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 
+    0 16px 36px -12px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.06) inset;
+  transform-style: preserve-3d;
   /* Governs the depth-1/depth-2 peek cards rising into place after a
      swipe. The front card (depth-0) sets its own inline transition while
      dragging/exiting, which overrides this. */
-  transition: transform 0.34s var(--ease-decel), opacity 0.34s var(--ease-decel);
+  transition: transform 0.34s var(--ease-decel), opacity 0.34s var(--ease-decel), filter 0.34s var(--ease-decel);
+}
+/* Specular light sweep on top edge */
+.stack-card::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.45) 50%, rgba(255, 255, 255, 0) 100%);
+  pointer-events: none;
+  z-index: 4;
 }
 .stack-card.depth-0 {
   z-index: 3;
@@ -2711,26 +2728,75 @@ input:checked + .toggle-slider:before {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
+.stack-status-pill {
+  font-family: var(--font-family-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 3px 9px;
+  border-radius: 9999px;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+}
+
+.stack-status-pill.ongoing {
+  background: rgba(56, 189, 248, 0.18);
+  border: 1px solid rgba(56, 189, 248, 0.5);
+  color: #7DD3FC;
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.25);
+}
+
+.stack-status-pill.upcoming {
+  background: rgba(251, 191, 36, 0.16);
+  border: 1px solid rgba(251, 191, 36, 0.45);
+  color: #FDE68A;
+  box-shadow: 0 0 10px rgba(251, 191, 36, 0.2);
+}
+
+.stack-balance-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-family: var(--font-family-mono);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
 .stack-balance-chip.owed {
-  background: rgba(16, 185, 129, 0.22);
+  background: rgba(16, 185, 129, 0.18);
   border: 1px solid rgba(16, 185, 129, 0.45);
   color: #34D399;
+  box-shadow: 0 0 14px -2px rgba(52, 211, 153, 0.3);
 }
 
 .stack-balance-chip.owe {
-  background: rgba(239, 68, 68, 0.22);
+  background: rgba(239, 68, 68, 0.18);
   border: 1px solid rgba(239, 68, 68, 0.45);
   color: #F87171;
+  box-shadow: 0 0 14px -2px rgba(248, 113, 113, 0.3);
 }
 
 .stack-balance-chip.settled {
-  background: rgba(56, 189, 248, 0.2);
-  border: 1px solid rgba(56, 189, 248, 0.4);
+  background: rgba(56, 189, 248, 0.16);
+  border: 1px solid rgba(56, 189, 248, 0.35);
   color: #38BDF8;
 }
 
-/* Stepper Dots between stack and launcher */
-.trip-stepper-dots {
+/* Stepper Dots & Fluid Morphing Pill between stack and launcher */
+.trip-stepper-dots,
+.trip-stepper-track {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2739,25 +2805,28 @@ input:checked + .toggle-slider:before {
   z-index: 1;
 }
 
-.trip-stepper-dot {
+.trip-stepper-dot,
+.trip-stepper-pill {
   height: 6px;
-  border-radius: 3px;
+  border-radius: 9999px;
   background: rgba(255, 255, 255, 0.22);
   border: none;
   padding: 0;
   width: 6px;
   cursor: pointer;
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: width 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.25s ease, box-shadow 0.25s ease;
 }
 
-.trip-stepper-dot:hover {
+.trip-stepper-dot:hover,
+.trip-stepper-pill:hover {
   background: rgba(255, 255, 255, 0.45);
 }
 
-.trip-stepper-dot.active {
-  width: 22px;
+.trip-stepper-dot.active,
+.trip-stepper-pill.active {
+  width: 24px;
   background: #38BDF8;
-  box-shadow: 0 0 10px rgba(56, 189, 248, 0.7);
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.75);
 }
 
 .trip-stack-viewall {

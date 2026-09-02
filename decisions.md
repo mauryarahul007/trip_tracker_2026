@@ -1371,8 +1371,30 @@ This document logs all meaningful technical decisions, library choices, design p
     - Excluded newly submitted IDs from duplicate matching and bypassed the check entirely while `isSubmitting` is true.
   - **Member Suggestion Selection Modal Lifecycle (`MembersGroupsTab.tsx`):**
     - Aligned `handleSelectSuggestion` with `handleAddMemberLocal` by guarding with `isSavingMember`, respecting `addAnother` (closing modal on single add, refocusing input on batch add), and resetting editing state cleanly.
+---
+
+## 79. Trip Card Stack Motion & Spatial Evolution: Reactive Deck Escalation, Velocity Flicks, 3D Perspective & Fluid Stepper
+* **Context:**
+  - On mobile viewports, the trip card stack previously felt static during active drag gestures: underlying cards (`depth-1` and `depth-2`) did not react until the front card exited, swiping required reaching a rigid 90px displacement regardless of touch speed, cards lacked realistic 3D spatial perspective, and pagination was represented by basic circular dots.
+* **Decision:**
+  - **Reactive Deck Escalation Physics (`TripStack.tsx`):**
+    - Coordinated real-time `dragRatio` from the active card to peeking layers. As the front card is pulled, `depth-1` proactively straightens from `-2.5°` to `0°`, expands from `0.96` to `1.0` scale, and sheds its depth-of-field blur with zero transition delay during direct touch.
+    - `depth-2` shifts upward into `depth-1` position with progressive brightness and opacity adjustments.
+  - **Velocity-Aware Momentum & Flick Commitment (`TripStack.tsx`):**
+    - Implemented high-frequency pointer velocity tracking $(\Delta X / \Delta t)$ over a sliding 8ms window.
+    - Flicks with velocity $> 0.48\text{px/ms}$ commit the swipe immediately even on short travel distances ($\ge 28\text{px}$), resolving the issue where quick thumb flicks failed to trigger card cycling.
+  - **3D Spatial Perspective & Tactile Shadows (`TripStack.tsx`, `index.css`):**
+    - Added `perspective: 1200px` and `perspective-origin: 50% 35%` on the stage.
+    - Front card computes compound 3D tilt: `rotateY` (horizontal axis) and `rotateX` (vertical axis).
+    - Added specular acrylic top-edge highlight (`.stack-card::after`) and softened ambient elevation shadows.
+  - **Contextual Status Chips & Luminous Balance Badges (`TripStack.tsx`, `index.css`):**
+    - Introduced date-aware trip badges (`ONGOING · DAY N` or `IN N DAYS`).
+    - Added atmospheric neon box-shadow glows to financial status pills (Emerald for owed, Coral for owe).
+  - **Morphing Fluid Pagination Stepper (`TripsListScreen.tsx`, `index.css`):**
+    - Upgraded circular pagination dots into an iOS-style adaptive fluid pill that expands smoothly to a 24px capsule with a custom cubic-bezier spring as cards cycle.
 * **Trade-offs Accepted:**
-  - Fast repetitive manual inputs of identically priced items on the exact same date within the same form mount session are not flagged against each other until the second item is opened in a new form sheet. This ensures zero false positives during standard creation.
+  - Real-time `dragRatio` state triggers re-renders on the stack container during active drags. Because the stack is strictly capped to 3 visible DOM elements (`PEEK_DEPTH = 3`), DOM mutations are negligible and run reliably at 60fps/120fps.
+
 
 
 

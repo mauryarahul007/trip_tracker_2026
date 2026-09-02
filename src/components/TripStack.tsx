@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { Member, Trip } from '../types';
 import { IconArchive, IconEdit, IconTrash } from './Icons';
-import { formatTripStamp } from '../utils/dateRange';
+import { formatTripStamp, tripDayNumber } from '../utils/dateRange';
 import { initial } from '../utils/initials';
 import { avatarColorForName } from '../utils/avatarColor';
 import { fetchPlaceCoverImage } from '../services/placeImageService';
@@ -28,6 +28,23 @@ const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
 
 const prefersReducedMotion =
   typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+
+// Compute contextual status badge (Ongoing / Upcoming) for card header
+function getTripStatusBadge(startDate?: string, endDate?: string): { label: string; kind: 'ongoing' | 'upcoming' } | null {
+  if (!startDate || !endDate) return null;
+  const todayStr = new Date().toISOString().split('T')[0];
+  if (todayStr >= startDate && todayStr <= endDate) {
+    const day = tripDayNumber(startDate, todayStr);
+    return { label: day ? `ONGOING · DAY ${day}` : 'ONGOING', kind: 'ongoing' };
+  }
+  if (todayStr < startDate) {
+    const s = new Date(`${startDate}T00:00:00`).getTime();
+    const t = new Date(`${todayStr}T00:00:00`).getTime();
+    const diffDays = Math.ceil((s - t) / 86400000);
+    return { label: diffDays === 1 ? 'STARTS TOMORROW' : `IN ${diffDays} DAYS`, kind: 'upcoming' };
+  }
+  return null;
+}
 
 // Beyond `threshold`, extra drag distance is damped instead of following
 // the finger 1:1 -- same elastic idea SwipeableRow already uses, so a
@@ -151,6 +168,11 @@ function CardContent({ trip, members, userId }: { trip: Trip; members: Record<st
     }
   }, [trip, expenses, members, myMember]);
 
+  const statusBadge = useMemo(
+    () => getTripStatusBadge(trip.startDate, trip.endDate),
+    [trip.startDate, trip.endDate]
+  );
+
   return (
     <div className={`stack-card-face${photoUrl ? ` has-photo tone-${tone}` : ''}`}>
       {photoUrl && (
@@ -163,16 +185,23 @@ function CardContent({ trip, members, userId }: { trip: Trip; members: Record<st
         />
       )}
       <div className="stack-card-content">
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', width: '100%' }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', width: '100%', gap: '8px' }}>
           <div className="pp-stamp">
             <span>{stamp.top}</span>
             <span>{stamp.bottom}</span>
           </div>
-          {trip.destination && (
-            <div className="stack-destination-pill">
-              <span>📍</span> {trip.destination}
-            </div>
-          )}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '6px' }}>
+            {trip.destination && (
+              <div className="stack-destination-pill">
+                <span>📍</span> {trip.destination}
+              </div>
+            )}
+            {statusBadge && (
+              <span className={`stack-status-pill ${statusBadge.kind}`}>
+                {statusBadge.kind === 'ongoing' ? '● ' : '⏱ '}{statusBadge.label}
+              </span>
+            )}
+          </div>
         </div>
 
         <div style={{ marginTop: 'auto', marginBottom: '8px' }}>
@@ -222,6 +251,8 @@ type CardItemProps = {
   userId: string | null;
   idx: number;
   canDelete: boolean;
+  dragProgress?: number;
+  onDragProgress?: (ratio: number, dragX: number) => void;
   onOpen: () => void;
   onBrowse: () => void;
   onArchive: () => void;
@@ -239,7 +270,7 @@ type CardItemProps = {
 // existing, reversible archive action), and a long-press reveals
 // Edit/Delete as explicit targets rather than putting a destructive
 // action on a gesture that's easy to fire by accident while browsing.
-function StackCardItem({ trip, members, userId, idx, canDelete, onOpen, onBrowse, onArchive, onEdit, onDelete }: CardItemProps) {
+function StackCardItem({ trip, members, userId, idx, canDelete, dragProgress, onDragProgress, onOpen, onBrowse, onArchive, onEdit, onDelete }: CardItemProps) {
   const isFront = idx === 0;
   const [drag, setDrag] = useState({ x: 0, y: 0 });
   const [dragging, setDragging] = useState(false);
@@ -254,6 +285,8 @@ function StackCardItem({ trip, members, userId, idx, canDelete, onOpen, onBrowse
   const ringCircleRef = useRef<SVGCircleElement>(null);
   const holdRaf = useRef<number | null>(null);
   const holdStart = useRef(0);
+  const lastPointer = useRef<{ x: number; y: number; time: number }>({ x: 0, y: 0, time: 0 });
+  const velocity = useRef<{ vx: number; vy: number }>({ vx: 0, vy: 0 });
 
   const clearLongPress = () => {
     if (longPressTimer.current) {
@@ -297,6 +330,8 @@ function StackCardItem({ trip, members, userId, idx, canDelete, onOpen, onBrowse
     active.current = true;
     moved.current = false;
     start.current = { x: e.clientX, y: e.clientY };
+    lastPointer.current = { x: e.clientX, y: e.clientY, time: performance.now() };
+    velocity.current = { vx: 0, vy: 0 };
     setDragging(true);
     startHoldRing();
     longPressTimer.current = setTimeout(() => {
@@ -308,12 +343,22 @@ function StackCardItem({ trip, members, userId, idx, canDelete, onOpen, onBrowse
         active.current = false;
         setDrag({ x: 0, y: 0 });
         setDragging(false);
+        onDragProgress?.(0, 0);
       }
     }, LONG_PRESS_MS);
   };
 
   const handlePointerMove = (e: React.PointerEvent) => {
     if (!active.current) return;
+    const now = performance.now();
+    const dt = now - lastPointer.current.time;
+    if (dt > 8) {
+      velocity.current = {
+        vx: (e.clientX - lastPointer.current.x) / dt,
+        vy: (e.clientY - lastPointer.current.y) / dt,
+      };
+      lastPointer.current = { x: e.clientX, y: e.clientY, time: now };
+    }
     const dx = e.clientX - start.current.x;
     const dy = e.clientY - start.current.y;
     if (Math.abs(dx) > JITTER || Math.abs(dy) > JITTER) {
@@ -322,6 +367,7 @@ function StackCardItem({ trip, members, userId, idx, canDelete, onOpen, onBrowse
       clearLongPress();
     }
     setDrag({ x: dx, y: dy });
+    onDragProgress?.(Math.min(1, Math.abs(dx) / SWIPE_THRESHOLD), dx);
   };
 
   const endDrag = () => {
@@ -330,16 +376,28 @@ function StackCardItem({ trip, members, userId, idx, canDelete, onOpen, onBrowse
     clearLongPress();
     stopHoldRing(false);
     setDragging(false);
+    onDragProgress?.(0, 0);
 
     const { x, y } = drag;
-    if (Math.abs(x) > Math.abs(y) && Math.abs(x) > SWIPE_THRESHOLD) {
+    const { vx, vy } = velocity.current;
+
+    // Velocity-assisted flick (natural quick throw) or distance-based commit
+    const isHorizFlick = Math.abs(vx) > 0.48 && Math.abs(x) > 28;
+    const isHorizThreshold = Math.abs(x) > Math.abs(y) && Math.abs(x) > SWIPE_THRESHOLD;
+
+    if (isHorizFlick || isHorizThreshold) {
       gestureFired.current = true;
       triggerHaptic('light');
-      setExit(x > 0 ? 'right' : 'left');
+      const dir = isHorizFlick ? (vx > 0 ? 'right' : 'left') : (x > 0 ? 'right' : 'left');
+      setExit(dir);
       setTimeout(onBrowse, EXIT_COMMIT_MS);
       return;
     }
-    if (y < -SWIPE_THRESHOLD && Math.abs(y) > Math.abs(x)) {
+
+    const isUpFlick = vy < -0.48 && y < -28;
+    const isUpThreshold = y < -SWIPE_THRESHOLD && Math.abs(y) > Math.abs(x);
+
+    if (isUpFlick || isUpThreshold) {
       gestureFired.current = true;
       triggerHaptic('success');
       setExit('up');
@@ -370,23 +428,58 @@ function StackCardItem({ trip, members, userId, idx, canDelete, onOpen, onBrowse
   const renderX = rubberBand(drag.x);
   const renderY = drag.y < 0 ? -rubberBand(-drag.y) : rubberBand(drag.y);
   const tiltDeg = (renderX * 0.055).toFixed(2);
+  const rotateY = (renderX * 0.038).toFixed(2);
+  const rotateX = (-renderY * 0.032).toFixed(2);
 
   const transform =
     exit === 'left' ? 'translateX(-160%) rotate(-18deg) scale(0.9)' :
     exit === 'right' ? 'translateX(160%) rotate(18deg) scale(0.9)' :
     exit === 'up' ? 'translateY(-140%) scale(0.9) rotate(2deg)' :
-    `translate(${renderX}px, ${renderY}px) rotate(${tiltDeg}deg)`;
+    `translate3d(${renderX}px, ${renderY}px, 0) rotate(${tiltDeg}deg) rotateY(${rotateY}deg) rotateX(${rotateX}deg)`;
 
   // Directional commit-preview badge: tells the user what a release will
   // do before they let go, fading/arming in as the drag crosses threshold.
   const badgeHoriz = Math.abs(drag.x) > Math.abs(drag.y);
   const badgeDist = badgeHoriz ? Math.abs(drag.x) : Math.abs(drag.y);
-  const badgeArmed = badgeDist > SWIPE_THRESHOLD;
+  const badgeArmed = badgeDist > SWIPE_THRESHOLD || Math.abs(velocity.current.vx) > 0.45;
   const badgeProgress = Math.min(1, badgeDist / SWIPE_THRESHOLD);
   const badgeKind: 'browse' | 'archive' | null =
     !dragging || exit ? null :
     badgeHoriz && Math.abs(drag.x) > 6 ? 'browse' :
     drag.y < -6 ? 'archive' : null;
+
+  // Real-time reactive escalation for cards at depth-1 and depth-2
+  let peekStyle: React.CSSProperties | undefined = undefined;
+  if (!isFront) {
+    if (idx === 1) {
+      const p = dragProgress || 0;
+      const dy = 14 - p * 14;
+      const s = 0.96 + p * 0.04;
+      const r = -2.5 + p * 2.5;
+      const blurVal = Math.max(0, 0.7 * (1 - p * 1.5));
+      peekStyle = {
+        transform: `translate3d(0, ${dy.toFixed(1)}px, 0) scale(${s.toFixed(3)}) rotate(${r.toFixed(2)}deg)`,
+        filter: blurVal > 0.05 ? `blur(${blurVal.toFixed(1)}px)` : 'none',
+        transition: p > 0 || prefersReducedMotion ? 'none' : 'transform 0.34s var(--ease-decel), filter 0.34s var(--ease-decel)',
+        willChange: p > 0 ? 'transform, filter' : undefined,
+      };
+    } else if (idx === 2) {
+      const p = dragProgress || 0;
+      const dy = 26 - p * 12;
+      const s = 0.92 + p * 0.04;
+      const r = 2 - p * 4.5;
+      const blurVal = Math.max(0, 1.4 - p * 0.7);
+      const bright = 0.88 + p * 0.08;
+      const op = 0.85 + p * 0.11;
+      peekStyle = {
+        transform: `translate3d(0, ${dy.toFixed(1)}px, 0) scale(${s.toFixed(3)}) rotate(${r.toFixed(2)}deg)`,
+        filter: `blur(${blurVal.toFixed(1)}px) brightness(${bright.toFixed(2)})`,
+        opacity: op,
+        transition: p > 0 || prefersReducedMotion ? 'none' : 'transform 0.34s var(--ease-decel), opacity 0.34s var(--ease-decel), filter 0.34s var(--ease-decel)',
+        willChange: p > 0 ? 'transform, opacity, filter' : undefined,
+      };
+    }
+  }
 
   return (
     <div
@@ -399,10 +492,10 @@ function StackCardItem({ trip, members, userId, idx, canDelete, onOpen, onBrowse
           : `transform ${EXIT_TRANSITION_MS}ms var(--ease-uber-spring), opacity 0.28s ease`,
         touchAction: 'pan-y',
         boxShadow: dragging
-          ? '0 24px 48px -8px rgba(0, 0, 0, 0.38), 0 12px 24px -4px rgba(0, 0, 0, 0.24)'
+          ? '0 28px 56px -10px rgba(0, 0, 0, 0.45), 0 16px 28px -6px rgba(0, 0, 0, 0.3)'
           : undefined,
         willChange: dragging ? 'transform' : undefined,
-      } : undefined}
+      } : peekStyle}
       onPointerDown={isFront ? handlePointerDown : undefined}
       onPointerMove={isFront ? handlePointerMove : undefined}
       onPointerUp={isFront ? endDrag : undefined}
@@ -505,6 +598,7 @@ export function TripStack({ trips, members, userId, onSelectTrip, onStartEditTri
   // Cycling the stack (browse) reorders locally; any real change to the
   // trip set or its recency order resets back to the fresh sort.
   const [manualOrder, setManualOrder] = useState<string[] | null>(null);
+  const [dragRatio, setDragRatio] = useState(0);
   useEffect(() => { setManualOrder(null); }, [idsKey]);
 
   const order = manualOrder ?? sortedIds;
@@ -549,6 +643,8 @@ export function TripStack({ trips, members, userId, onSelectTrip, onStartEditTri
             userId={userId}
             idx={idx}
             canDelete={canDelete(trip)}
+            dragProgress={dragRatio}
+            onDragProgress={idx === 0 ? (ratio) => setDragRatio(ratio) : undefined}
             onOpen={() => onSelectTrip(trip.id)}
             onBrowse={cycleToBack}
             onArchive={() => { onArchiveTrip(trip); cycleToBack(); }}
