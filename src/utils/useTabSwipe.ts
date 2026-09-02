@@ -14,6 +14,11 @@ const COMMIT_RATIO = 0.28;
 // A fast flick commits even short of COMMIT_RATIO, same idea as a native
 // page-view swiper -- px/ms.
 const FLICK_VELOCITY = 0.5;
+// A touch starting within this many px of the container's left/right edge
+// still arms the page swipe even over a row that normally owns horizontal
+// drag (data-no-tab-swipe="row") -- lets tab navigation coexist with
+// SwipeableRow's full-width delete/edit gesture instead of losing to it.
+export const EDGE_ZONE_PX = 28;
 const SETTLE_MS = 260;
 const SETTLE_EASE = 'cubic-bezier(0.16, 1, 0.3, 1)';
 
@@ -77,9 +82,20 @@ export function useTabSwipe<T extends string>(
       if (e.touches.length !== 1) return;
       const target = e.target as HTMLElement;
       if (!target) return;
+      const startTouch = e.touches[0];
+
+      const noSwipeEl = target.closest('[data-no-tab-swipe]') as HTMLElement | null;
+      if (noSwipeEl) {
+        // "row" opt-outs (SwipeableRow) still yield to an edge-zone start so
+        // page swipe stays reachable; other opt-outs (maps, etc.) are a hard
+        // block regardless of start position.
+        const rect = el.getBoundingClientRect();
+        const inEdgeZone =
+          startTouch.clientX - rect.left <= EDGE_ZONE_PX || rect.right - startTouch.clientX <= EDGE_ZONE_PX;
+        if (noSwipeEl.getAttribute('data-no-tab-swipe') !== 'row' || !inEdgeZone) return;
+      }
 
       if (
-        target.closest('[data-no-tab-swipe]') ||
         target.closest('.filter-chips-track, .filter-chips-collapse, .filter-chips-scroll, [data-horizontal-scroll]')
       ) return;
 
@@ -95,9 +111,8 @@ export function useTabSwipe<T extends string>(
         current = current.parentElement;
       }
 
-      const touch = e.touches[0];
-      touchStartX.current = touch.clientX;
-      touchStartY.current = touch.clientY;
+      touchStartX.current = startTouch.clientX;
+      touchStartY.current = startTouch.clientY;
       startTime.current = performance.now();
       containerWidth.current = el.clientWidth || 1;
       isDraggingRef.current = false;

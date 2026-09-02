@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react';
 import { IconTrash, IconEdit } from './Icons';
 import { triggerHaptic } from '../utils/haptics';
+import { EDGE_ZONE_PX } from '../utils/useTabSwipe';
 
 const THRESHOLD = 84;
 const MAX_DRAG = 120;
@@ -37,6 +38,11 @@ export function SwipeableRow({ onDelete, onEdit, children, reversed = false, pla
 
   const handlePointerDown = (e: React.PointerEvent) => {
     if (e.pointerType !== 'touch') return;
+    // Edge-zone starts belong to useTabSwipe's page navigation instead --
+    // otherwise this row and the page swipe would both track the same
+    // physical touch and fight over it. Keep EDGE_ZONE_PX in sync with
+    // useTabSwipe.ts.
+    if (e.clientX <= EDGE_ZONE_PX || e.clientX >= window.innerWidth - EDGE_ZONE_PX) return;
     active.current = true;
     startX.current = e.clientX;
     hapticFired.current = false;
@@ -101,10 +107,11 @@ export function SwipeableRow({ onDelete, onEdit, children, reversed = false, pla
   const isRightTriggered = dragX > THRESHOLD;
 
   return (
-    // data-no-tab-swipe: this row already owns horizontal touch drags for
-    // its own delete/edit reveal — a page-level swipe-between-tabs gesture
-    // must not also see this drag, or the two fight over the same gesture.
-    <div data-no-tab-swipe="true" style={{ position: 'relative', overflow: 'hidden' }}>
+    // data-no-tab-swipe="row": this row already owns horizontal touch drags
+    // for its own delete/edit reveal — a page-level swipe-between-tabs
+    // gesture must not also see this drag except near the screen edge,
+    // where useTabSwipe still arms tab navigation (see EDGE_ZONE_PX there).
+    <div data-no-tab-swipe="row" style={{ position: 'relative', overflow: 'hidden' }}>
       {leftAction && (
         <div
           aria-hidden="true"
