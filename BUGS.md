@@ -9,10 +9,10 @@
 
 | Metric | Count | Status Notes |
 | :--- | :--- | :--- |
-| **Total Tracked** | **137** | All recorded bugs across sessions |
+| **Total Tracked** | **138** | All recorded bugs across sessions |
 | **🟢 Open** | **0** | No critical blockers, 0 High |
 | **🟡 In Progress** | **0** | Active investigation or fix |
-| **✅ Resolved** | **111** | Verified & closed |
+| **✅ Resolved** | **112** | Verified & closed |
 | **⚪ Won't Fix** | **26** | Expected behavior / deferred |
 
 ---
@@ -142,6 +142,7 @@
 | **BUG-135** | Transition was skipped | `general` | `critical` | `auto-crash-handler` | `claude-cli` | Fixed in commit 8b47dae: withViewTransition() now attaches .catch() to the transition's ready/finished promises. This was an unhandled rejection, not a crash -- the browser rejects those promises whenever a newer view transition interrupts an older one (rapid tab/trip switching), which is expected behavior, not a failure. |
 | **BUG-136** | Transition was skipped | `general` | `critical` | `auto-crash-handler` | `claude-cli` | Fixed in commit 8b47dae: withViewTransition() now attaches .catch() to the transition's ready/finished promises. This was an unhandled rejection, not a crash -- the browser rejects those promises whenever a newer view transition interrupts an older one (rapid tab/trip switching), which is expected behavior, not a failure. |
 | **BUG-137** | Boarding pass ignores dark mode, FAB mode-switch is silent, expense list opens to too much chrome | `ui-ux` | `medium` | `claude-cli` | `claude-cli` | Fixed in commit b0cf7f9: added --bp-* dark tokens for the boarding pass, an Add-member label on the FAB, and a single collapsible chrome toggle for the expense list's stats/chips. |
+| **BUG-138** | List-row swipe swallows page-swipe navigation on Members/Expenses | `ui-ux` | `medium` | `claude-cli` | `claude-cli` | Fixed in commit 20223bd: SwipeableRow's data-no-tab-swipe opt-out narrowed to a 'row' variant, and useTabSwipe now arms page-swipe when the touch starts within EDGE_ZONE_PX (28px) of the screen edge, even over a row. SwipeableRow itself also refuses to start its own drag in that same edge zone so the two gestures don't fight over one touch. |
 
 ---
 

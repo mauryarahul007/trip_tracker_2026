@@ -4292,5 +4292,31 @@
     "resolvedAt": "2026-09-01T06:36:05.503+00:00",
     "resolvedBy": "claude-cli",
     "resolutionNote": "Fixed in commit b0cf7f9: added --bp-* dark tokens for the boarding pass, an Add-member label on the FAB, and a single collapsible chrome toggle for the expense list's stats/chips."
+  },
+  {
+    "id": "BUG-138",
+    "title": "List-row swipe swallows page-swipe navigation on Members/Expenses",
+    "description": "List-row swipe swallows page-swipe navigation on Members/Expenses",
+    "severity": "medium",
+    "category": "ui-ux",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-09-02T16:52:25.236Z",
+    "updatedAt": "2026-09-02T16:52:32.115Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-09-02T16:52:32.114Z",
+    "resolutionNote": "Fixed in commit 20223bd: SwipeableRow's data-no-tab-swipe opt-out narrowed to a 'row' variant, and useTabSwipe now arms page-swipe when the touch starts within EDGE_ZONE_PX (28px) of the screen edge, even over a row. SwipeableRow itself also refuses to start its own drag in that same edge zone so the two gestures don't fight over one touch."
   }
 ]
