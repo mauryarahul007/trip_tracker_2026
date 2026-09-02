@@ -141,12 +141,21 @@ export function ExpenseForm({
   // Duplicate warning interactives state
   const [ignoredDuplicateId, setIgnoredDuplicateId] = useState<string | null>(null);
   const [showDuplicateDetails, setShowDuplicateDetails] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Duplicate expense detection
   const expenses = useTripStore((s) => s.expenses);
   const allTripExpenses = useMemo(() => expenses.filter((e) => e.tripId === trip?.id), [expenses, trip?.id]);
-  const duplicateExpense = !editingExpense && parseFloat(amount) > 0 && title.trim().length > 1
+
+  // Snapshot initial expense IDs on mount so we never match against newly submitted/optimistic items
+  const initialExpenseIdsRef = useRef<Set<string> | null>(null);
+  if (!initialExpenseIdsRef.current) {
+    initialExpenseIdsRef.current = new Set(allTripExpenses.map((e) => e.id));
+  }
+
+  const duplicateExpense = !isSubmitting && !editingExpense && parseFloat(amount) > 0 && title.trim().length > 1
     ? allTripExpenses.find((e) =>
+        initialExpenseIdsRef.current?.has(e.id) &&
         e.date === date &&
         Math.abs(e.amount - parseFloat(amount)) < 0.05 &&
         (e.category === category || e.title.toLowerCase().includes(title.trim().toLowerCase()) || title.trim().toLowerCase().includes(e.title.toLowerCase()))
@@ -347,8 +356,6 @@ export function ExpenseForm({
     setSplitConfig({});
     setSplitMode('equal');
   };
-
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => () => recognitionRef.current?.stop(), []);
 

@@ -373,14 +373,27 @@ export function MembersGroupsTab({
 
   // Handlers
   const handleSelectSuggestion = async (suggestion: PreviousMemberSuggestion) => {
+    if (isSavingMember) return;
     setIsDropdownOpen(false);
     setHighlightedIndex(-1);
     setMemberFormError('');
-    const res = await onSaveMember(suggestion.name, null, suggestion.linkedUserId || null);
+    setIsSavingMember(true);
+    let res: { success: boolean; error?: string };
+    try {
+      res = await onSaveMember(suggestion.name, null, suggestion.linkedUserId || null);
+    } finally {
+      setIsSavingMember(false);
+    }
     if (res.success) {
       setNewMemberName('');
       setSelectedLinkedUserId(null);
+      setEditingMember(null);
       setMemberFormError('');
+      if (!addAnother) {
+        setShowAddForm(false);
+      } else {
+        memberInputRef.current?.focus();
+      }
     } else if (res.error) {
       setMemberFormError(res.error);
     }

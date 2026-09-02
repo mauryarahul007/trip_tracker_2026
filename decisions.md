@@ -1359,10 +1359,21 @@ This document logs all meaningful technical decisions, library choices, design p
     - Added table row checkboxes with select-all and a floating sticky action dock for bulk status updates (`Mark Planned`, `Mark In Progress`, `Mark Shipped`, `Won't Do`).
   - **Platform Storage & Asset Quota Telemetry (`AdminAnalyticsPage.tsx`, `ops-deck.css`)**:
     - Added gauge tracking Supabase Storage consumption across receipt photos, traveler avatars, and journey map cache against 50GB tier limits.
-  - **Trip Membership Badges (`AdminUsersPage.tsx`)**:
-    - Rendered compact trip membership pills for each traveler row in the Users directory.
+---
+
+## 78. Duplicate Expense Mount Snapshot Guard & Add Member Suggestion Modal Lifecycle Parity
+* **Context:**
+  - **Duplicate Expense False Warning:** When adding a new expense, the store optimistically adds the record to `expenses` for instant local feedback before network resolution. Because `ExpenseForm` was subscribed to `expenses`, it re-rendered before unmounting. The duplicate detection logic matched the newly created optimistic record against the form itself, causing a brief false duplicate warning to flash on screen before closing.
+  - **Add Member Suggestion Popup Remaining Open:** When selecting a cached/Google suggestion from the dropdown, `handleSelectSuggestion` saved the member but omitted modal closure and ignored `addAnother`, leaving the popup open with an empty input field. Meanwhile, typing a new name manually closed the popup when `addAnother` was false.
+* **Decision:**
+  - **Duplicate Expense Guard (`ExpenseForm.tsx`):**
+    - Captured a snapshot of existing expense IDs on form mount (`initialExpenseIdsRef`).
+    - Excluded newly submitted IDs from duplicate matching and bypassed the check entirely while `isSubmitting` is true.
+  - **Member Suggestion Selection Modal Lifecycle (`MembersGroupsTab.tsx`):**
+    - Aligned `handleSelectSuggestion` with `handleAddMemberLocal` by guarding with `isSavingMember`, respecting `addAnother` (closing modal on single add, refocusing input on batch add), and resetting editing state cleanly.
 * **Trade-offs Accepted:**
-  - Storage telemetry is estimated from tracked asset counts and standard compression baselines until direct Supabase Management API quota meters are queried.
+  - Fast repetitive manual inputs of identically priced items on the exact same date within the same form mount session are not flagged against each other until the second item is opened in a new form sheet. This ensures zero false positives during standard creation.
+
 
 
 
