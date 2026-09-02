@@ -1392,8 +1392,27 @@ This document logs all meaningful technical decisions, library choices, design p
     - Added atmospheric neon box-shadow glows to financial status pills (Emerald for owed, Coral for owe).
   - **Morphing Fluid Pagination Stepper (`TripsListScreen.tsx`, `index.css`):**
     - Upgraded circular pagination dots into an iOS-style adaptive fluid pill that expands smoothly to a 24px capsule with a custom cubic-bezier spring as cards cycle.
+---
+
+## 80. Trip Card Stack Mini-Dashboard, 3D Flip, Live Weather, Quick Expense, Itinerary Progress, and Vapor Trail
+* **Context:**
+  - Navigating to a trip was previously required just to log an expense or check recent spending. Furthermore, trip cards lacked temporal progress indicators, destination ambient weather context, or lightweight ledger previews.
+* **Decision:**
+  - **Quick "+ Expense" Shortcut (`TripStack.tsx`, `TripsListScreen.tsx`, `App.tsx`):**
+    - Added a direct "+ Expense" chip on the front card and in the long-press menu, immediately opening `ExpenseForm` with the trip pre-selected in 1 tap from home.
+  - **3D Card Flip Mini-Dashboard (`TripStack.tsx`, `index.css`):**
+    - Implemented hardware-accelerated 3D coin flip (`rotateY: 180deg`) using `backface-visibility: hidden` to reveal the reverse ledger snapshot: top 3 recent transactions, category distribution bar, and direct log button with zero repaint/reflow.
+  - **Live Destination Weather Badge (`TripStack.tsx`, `index.css`):**
+    - Integrated with existing `weatherService.ts` to display ambient weather (`☀️ 28°C · Goa`) on the front card with 2-hour offline localStorage caching.
+  - **Itinerary Progression Bar (`TripStack.tsx`, `index.css`):**
+    - Rendered a glowing 3px gradient progress bar along the bottom edge of ongoing cards based on elapsed dates.
+  - **Slide-Launcher Contrail & Magnetic Snapping (`TripSlideLauncher.tsx`, `index.css`):**
+    - Added an illuminated vapor trail, plane pitch angle rotation, and magnetic notch feedback with haptic tick.
+  - **Mobile Gyroscope Parallax Sheen (`TripStack.tsx`):**
+    - Throttled device orientation tilt to requestAnimationFrame, clamped to ±3.5°, with automatic reduced-motion fallback.
 * **Trade-offs Accepted:**
-  - Real-time `dragRatio` state triggers re-renders on the stack container during active drags. Because the stack is strictly capped to 3 visible DOM elements (`PEEK_DEPTH = 3`), DOM mutations are negligible and run reliably at 60fps/120fps.
+  - Weather fetching is strictly confined to the front card's destination on mount/cache expiry, avoiding redundant network requests for peeking cards.
+
 
 
 

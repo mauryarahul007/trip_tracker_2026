@@ -1673,6 +1673,10 @@ export default function App() {
           onCancelTripForm={handleCancelTripForm}
           onStartEditTrip={handleStartEditTrip}
           onSelectTrip={(id) => withViewTransition(() => selectTrip(id))}
+          onQuickAddExpense={(trip) => {
+            selectTrip(trip.id);
+            setShowAddExpense(true);
+          }}
           onDeleteTrip={handleDeleteTrip}
           onArchiveTrip={handleArchiveTrip}
           onOpenSettings={() => setShowGlobalSettings(true)}

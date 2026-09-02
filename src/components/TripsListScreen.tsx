@@ -38,6 +38,7 @@ type Props = {
   onCancelTripForm: () => void;
   onStartEditTrip: (trip: Trip) => void;
   onSelectTrip: (id: string) => void;
+  onQuickAddExpense?: (trip: Trip) => void;
   onDeleteTrip: (trip: Trip) => void;
   onArchiveTrip: (trip: Trip) => void;
   onOpenSettings: () => void;
@@ -69,6 +70,7 @@ export function TripsListScreen({
   onCancelTripForm,
   onStartEditTrip,
   onSelectTrip,
+  onQuickAddExpense,
   onDeleteTrip,
   onArchiveTrip,
   onOpenSettings,
@@ -524,6 +526,10 @@ export function TripsListScreen({
                 members={members}
                 userId={userId}
                 onSelectTrip={onSelectTrip}
+                onQuickAddExpense={onQuickAddExpense ? (tripId) => {
+                  const t = trips.find((x) => x.id === tripId);
+                  if (t) onQuickAddExpense(t);
+                } : undefined}
                 onStartEditTrip={onStartEditTrip}
                 onDeleteTrip={onDeleteTrip}
                 onArchiveTrip={onArchiveTrip}

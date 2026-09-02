@@ -36,8 +36,16 @@ export function TripSlideLauncher({ onCreateTrip, onJoinTrip }: Props) {
   const handlePointerMove = (e: React.PointerEvent) => {
     if (!active.current) return;
     const delta = e.clientX - startX.current;
-    const clamped = Math.max(-halfWidth.current, Math.min(halfWidth.current, delta));
     const threshold = halfWidth.current * THRESHOLD_RATIO;
+    let clamped = Math.max(-halfWidth.current, Math.min(halfWidth.current, delta));
+
+    // Magnetic notch feel: gentle pull as thumb enters threshold commitment zone
+    if (Math.abs(clamped) >= threshold - 8 && Math.abs(clamped) <= threshold + 12) {
+      const sign = clamped > 0 ? 1 : -1;
+      const distFromThreshold = Math.abs(clamped) - threshold;
+      clamped = sign * (threshold + distFromThreshold * 0.5);
+    }
+
     if (Math.abs(clamped) > threshold && !hapticFired.current) {
       triggerHaptic('medium');
       hapticFired.current = true;
@@ -63,6 +71,7 @@ export function TripSlideLauncher({ onCreateTrip, onJoinTrip }: Props) {
   };
 
   const fillRatio = halfWidth.current > 0 ? Math.min(1, Math.abs(dragX) / halfWidth.current) : 0;
+  const planePitch = Math.max(-14, Math.min(14, dragX * 0.12));
 
   return (
     <div className="trip-launcher">
@@ -75,6 +84,19 @@ export function TripSlideLauncher({ onCreateTrip, onJoinTrip }: Props) {
           className="launcher-fill right"
           style={{ opacity: dragX > 0 ? fillRatio : 0, transform: `scaleX(${dragX > 0 ? fillRatio : 0})` }}
         />
+
+        {/* Dynamic Jet Contrail / Vapor Stream */}
+        {dragX !== 0 && (
+          <div
+            className={`launcher-vapor-trail ${dragX > 0 ? 'to-right' : 'to-left'}`}
+            style={{
+              width: `${Math.abs(dragX)}px`,
+              transform: dragX > 0 ? 'translateX(0)' : `translateX(${dragX}px)`,
+              opacity: Math.min(1, Math.abs(dragX) / (halfWidth.current * 0.45)),
+            }}
+          />
+        )}
+
         <button type="button" className={`launcher-zone left${dragX < 0 ? ' active' : ''}`} onClick={onJoinTrip}>
           <span>🔑</span> Join
         </button>
@@ -85,7 +107,7 @@ export function TripSlideLauncher({ onCreateTrip, onJoinTrip }: Props) {
           className={`launcher-thumb${dragX < 0 ? ' left' : dragX > 0 ? ' right' : ''}`}
           aria-hidden="true"
           style={{
-            transform: `translateX(${dragX}px)`,
+            transform: `translateX(${dragX}px) rotate(${planePitch}deg)`,
             transition: dragging ? 'none' : 'transform 0.32s cubic-bezier(0.16,1,0.3,1), background 0.2s ease',
             touchAction: 'pan-y',
           }}
