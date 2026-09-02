@@ -4318,5 +4318,31 @@
     "resolvedBy": "claude-cli",
     "resolvedAt": "2026-09-02T16:52:32.114Z",
     "resolutionNote": "Fixed in commit 20223bd: SwipeableRow's data-no-tab-swipe opt-out narrowed to a 'row' variant, and useTabSwipe now arms page-swipe when the touch starts within EDGE_ZONE_PX (28px) of the screen edge, even over a row. SwipeableRow itself also refuses to start its own drag in that same edge zone so the two gestures don't fight over one touch."
+  },
+  {
+    "id": "BUG-139",
+    "title": "CI failing: Node 20 lacks global navigator/native WebSocket needed by Supabase realtime-js and geolocation test",
+    "description": "CI failing: Node 20 lacks global navigator/native WebSocket needed by Supabase realtime-js and geolocation test",
+    "severity": "high",
+    "category": "general",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-09-02T17:27:10.039Z",
+    "updatedAt": "2026-09-02T17:27:25.009Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-09-02T17:27:25.008Z",
+    "resolutionNote": "Fixed in commit f7889ab: bumped node-version from 20 to 22 in ci.yml, deploy-ec2.yml, and deploy-pages.yml to match the already-Node-22 build-android/build-ios workflows. Node 22 has stable global navigator and native WebSocket support, which Supabase realtime-js's SupabaseClient constructor and geolocation.test.ts both need. Verified locally: 27/27 test files, 126/126 tests pass."
   }
 ]
