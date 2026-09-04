@@ -9,11 +9,11 @@
 
 | Metric | Count |
 | :--- | :--- |
-| **Total Tracked** | **25** |
+| **Total Tracked** | **28** |
 | **💡 Requested** | **2** |
 | **📋 Planned** | **0** |
 | **🟡 In Progress** | **0** |
-| **✅ Shipped** | **23** |
+| **✅ Shipped** | **26** |
 | **⚪ Won't Do** | **0** |
 
 ---
@@ -75,6 +75,9 @@ CI pipeline for lint, build, and test on push/PR
 | **FEAT-022** | 10 UI/UX enhancements: skeleton loaders, pull-to-refresh, edit-undo, settlement confetti + progress, duplicate expense, split preview, empty-state CTAs, category icons, command-palette hint | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit 237b25a |
 | **FEAT-023** | Passport trip card stamp-press entrance + tap feedback | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit d4633e2 |
 | **FEAT-025** | Trip stack: gesture feedback and depth polish | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commits (this session): directional commit-preview badge, rubber-band drag resistance, prefers-reduced-motion support, staggered quick-actions entrance, long-press progress ring, depth-2 blur cue, idle sway on peek cards, and derived exit-timing constants. See TripStack.tsx + index.css. |
+| **FEAT-026** | Prefetch lazy-loaded modal chunks on hover/press intent | `performance` | `claude` | `claude` | Implemented in NavTabs.tsx (prefetchExpenseForm / prefetchSettingsTab on onMouseEnter/onPointerDown). |
+| **FEAT-027** | Merge trip-card countdown badge into the destination/weather pill | `ui-ux` | `mauryarahul007@gmail.com` | `claude` | Implemented in TripStack.tsx (CardContent header) commit f1f2345. |
+| **FEAT-028** | Apple-style Version/Build split -- stop auto-bumping marketing version on every commit | `admin` | `mauryarahul007@gmail.com` | `claude-cli` | Removed .githooks/post-commit auto-bump entirely (it also did a git commit --amend on every commit). scripts/bump-version.mjs is now a manual major/minor/patch CLI. vite.config.ts injects __BUILD_NUMBER__ (git rev-list --count HEAD) replacing __BUILD_SHA__. appVersion.ts and SettingsView.tsx display Version (Build). sync-native-version.mjs local fallback also uses commit count. Reset package.json version to 2.0.0 to mark the cutover. Commit 1241bc3. |
 
 ---
 

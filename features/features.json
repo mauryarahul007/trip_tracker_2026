@@ -13,8 +13,7 @@
     "updatedAt": "2026-08-21T16:34:01.305+00:00",
     "shippedAt": "2026-08-21T16:34:01.305+00:00",
     "shippedBy": "claude-cli",
-    "shippedNote": "Parallel system to the Bug Ledger. Migration 0063, featureApi.ts, feature.mjs CLI, FeatureRequestModal.tsx (Settings > Suggest a Feature), AdminFeaturesPage.tsx (Ops Deck Features tab) with flag-linking. Commit 1bf95d6.",
-    "linkedFlagKey": "enableFeatureSuggestions"
+    "shippedNote": "Parallel system to the Bug Ledger. Migration 0063, featureApi.ts, feature.mjs CLI, FeatureRequestModal.tsx (Settings > Suggest a Feature), AdminFeaturesPage.tsx (Ops Deck Features tab) with flag-linking. Commit 1bf95d6."
   },
   {
     "id": "FEAT-002",
@@ -28,7 +27,7 @@
       "platform": "web"
     },
     "createdAt": "2026-08-21T17:20:12.668106+00:00",
-    "updatedAt": "2026-08-21T17:20:12.668106+00:00"
+    "updatedAt": "2026-08-21T18:25:26.809+00:00"
   },
   {
     "id": "FEAT-003",
@@ -56,9 +55,9 @@
     "environment": {
       "platform": "web"
     },
-    "createdAt": "2026-08-24T14:30:01.790Z",
-    "updatedAt": "2026-08-24T14:30:01.790Z",
-    "shippedAt": "2026-08-24T14:30:01.790Z",
+    "createdAt": "2026-08-24T14:30:01.79+00:00",
+    "updatedAt": "2026-08-24T14:30:01.79+00:00",
+    "shippedAt": "2026-08-24T14:30:01.79+00:00",
     "shippedBy": "antigravity",
     "shippedNote": "Shipped"
   },
@@ -72,9 +71,9 @@
     "environment": {
       "platform": "web"
     },
-    "createdAt": "2026-08-24T14:30:09.207Z",
-    "updatedAt": "2026-08-24T14:30:09.207Z",
-    "shippedAt": "2026-08-24T14:30:09.207Z",
+    "createdAt": "2026-08-24T14:30:09.207+00:00",
+    "updatedAt": "2026-08-24T14:30:09.207+00:00",
+    "shippedAt": "2026-08-24T14:30:09.207+00:00",
     "shippedBy": "antigravity",
     "shippedNote": "Shipped"
   },
@@ -88,9 +87,9 @@
     "environment": {
       "platform": "web"
     },
-    "createdAt": "2026-08-26T12:55:36.918Z",
-    "updatedAt": "2026-08-26T12:55:36.918Z",
-    "shippedAt": "2026-08-26T12:55:36.918Z",
+    "createdAt": "2026-08-26T12:55:36.918+00:00",
+    "updatedAt": "2026-08-26T12:55:36.918+00:00",
+    "shippedAt": "2026-08-26T12:55:36.918+00:00",
     "shippedBy": "claude-cli",
     "shippedNote": "Commit pending push. Files: src/App.tsx, src/index.css, src/components/RequireAuth.tsx, src/components/ExpenseList.tsx."
   },
@@ -104,9 +103,9 @@
     "environment": {
       "platform": "web"
     },
-    "createdAt": "2026-08-26T12:55:45.085Z",
-    "updatedAt": "2026-08-26T12:55:45.085Z",
-    "shippedAt": "2026-08-26T12:55:45.085Z",
+    "createdAt": "2026-08-26T12:55:45.085+00:00",
+    "updatedAt": "2026-08-26T12:55:45.085+00:00",
+    "shippedAt": "2026-08-26T12:55:45.085+00:00",
     "shippedBy": "claude-cli",
     "shippedNote": "Commit pending push. File: src/components/MembersGroupsTab.tsx, src/index.css (.member-badge-pending)."
   },
@@ -120,9 +119,9 @@
     "environment": {
       "platform": "web"
     },
-    "createdAt": "2026-08-26T13:11:57.081Z",
-    "updatedAt": "2026-08-26T13:11:57.081Z",
-    "shippedAt": "2026-08-26T13:11:57.081Z",
+    "createdAt": "2026-08-26T13:11:57.081+00:00",
+    "updatedAt": "2026-08-26T13:11:57.081+00:00",
+    "shippedAt": "2026-08-26T13:11:57.081+00:00",
     "shippedBy": "claude-cli",
     "shippedNote": "Commit pending push. Files: src/components/MembersGroupsTab.tsx, src/App.tsx, src/index.css (.icon-spin)."
   },
@@ -136,9 +135,9 @@
     "environment": {
       "platform": "web"
     },
-    "createdAt": "2026-08-26T13:12:05.461Z",
-    "updatedAt": "2026-08-26T13:12:05.461Z",
-    "shippedAt": "2026-08-26T13:12:05.461Z",
+    "createdAt": "2026-08-26T13:12:05.461+00:00",
+    "updatedAt": "2026-08-26T13:12:05.461+00:00",
+    "shippedAt": "2026-08-26T13:12:05.461+00:00",
     "shippedBy": "claude-cli",
     "shippedNote": "Commit pending push. File: src/components/admin/AdminPortalLayout.tsx."
   },
@@ -152,9 +151,9 @@
     "environment": {
       "platform": "web"
     },
-    "createdAt": "2026-08-26T13:12:13.494Z",
-    "updatedAt": "2026-08-26T13:12:13.494Z",
-    "shippedAt": "2026-08-26T13:12:13.494Z",
+    "createdAt": "2026-08-26T13:12:13.494+00:00",
+    "updatedAt": "2026-08-26T13:12:13.494+00:00",
+    "shippedAt": "2026-08-26T13:12:13.494+00:00",
     "shippedBy": "claude-cli",
     "shippedNote": "Commit pending push. Files: src/components/ExpenseForm.tsx, ExpenseReviewModal.tsx, ExpenseList.tsx, MembersGroupsTab.tsx, TripsListScreen.tsx, TripStack.tsx, UpiPaymentModal.tsx."
   },
@@ -168,9 +167,9 @@
     "environment": {
       "platform": "web"
     },
-    "createdAt": "2026-08-26T13:52:23.456Z",
-    "updatedAt": "2026-08-26T13:52:23.456Z",
-    "shippedAt": "2026-08-26T13:52:23.456Z",
+    "createdAt": "2026-08-26T13:52:23.456+00:00",
+    "updatedAt": "2026-08-26T13:52:23.456+00:00",
+    "shippedAt": "2026-08-26T13:52:23.456+00:00",
     "shippedBy": "claude-cli",
     "shippedNote": "Migration 0069 applied to remote. Files: supabase/migrations/0069_add_trip_closed.sql, src/store/tripStore.ts, src/services/tripApi.ts, src/types/index.ts, src/types/database.ts, src/components/SettingsView.tsx."
   },
@@ -184,9 +183,9 @@
     "environment": {
       "platform": "web"
     },
-    "createdAt": "2026-08-26T13:52:35.710Z",
-    "updatedAt": "2026-08-26T13:52:35.710Z",
-    "shippedAt": "2026-08-26T13:52:35.710Z",
+    "createdAt": "2026-08-26T13:52:35.71+00:00",
+    "updatedAt": "2026-08-26T13:52:35.71+00:00",
+    "shippedAt": "2026-08-26T13:52:35.71+00:00",
     "shippedBy": "claude-cli",
     "shippedNote": "File: src/components/BalancesSettlements.tsx."
   },
@@ -200,9 +199,9 @@
     "environment": {
       "platform": "web"
     },
-    "createdAt": "2026-08-26T13:52:43.153Z",
-    "updatedAt": "2026-08-26T13:52:43.153Z",
-    "shippedAt": "2026-08-26T13:52:43.153Z",
+    "createdAt": "2026-08-26T13:52:43.153+00:00",
+    "updatedAt": "2026-08-26T13:52:43.153+00:00",
+    "shippedAt": "2026-08-26T13:52:43.153+00:00",
     "shippedBy": "claude-cli",
     "shippedNote": "Migration 0070 applied to remote, send-push Edge Function redeployed. Files: supabase/migrations/0070_add_trip_mutes.sql, supabase/functions/send-push/index.ts, src/store/tripStore.ts, src/services/tripApi.ts, src/types/database.ts, src/components/SettingsView.tsx."
   },
@@ -216,9 +215,9 @@
     "environment": {
       "platform": "web"
     },
-    "createdAt": "2026-08-27T00:43:07.526Z",
-    "updatedAt": "2026-08-27T00:43:07.526Z",
-    "shippedAt": "2026-08-27T00:43:07.526Z",
+    "createdAt": "2026-08-27T00:43:07.526+00:00",
+    "updatedAt": "2026-08-27T00:43:07.526+00:00",
+    "shippedAt": "2026-08-27T00:43:07.526+00:00",
     "shippedBy": "claude-cli",
     "shippedNote": "Shipped"
   },
@@ -232,9 +231,9 @@
     "environment": {
       "platform": "web"
     },
-    "createdAt": "2026-08-27T00:43:15.866Z",
-    "updatedAt": "2026-08-27T00:43:15.866Z",
-    "shippedAt": "2026-08-27T00:43:15.866Z",
+    "createdAt": "2026-08-27T00:43:15.866+00:00",
+    "updatedAt": "2026-08-27T00:43:15.866+00:00",
+    "shippedAt": "2026-08-27T00:43:15.866+00:00",
     "shippedBy": "claude-cli",
     "shippedNote": "Shipped"
   },
@@ -248,9 +247,9 @@
     "environment": {
       "platform": "web"
     },
-    "createdAt": "2026-08-27T00:43:29.278Z",
-    "updatedAt": "2026-08-27T00:43:29.278Z",
-    "shippedAt": "2026-08-27T00:43:29.278Z",
+    "createdAt": "2026-08-27T00:43:29.278+00:00",
+    "updatedAt": "2026-08-27T00:43:29.278+00:00",
+    "shippedAt": "2026-08-27T00:43:29.278+00:00",
     "shippedBy": "claude-cli",
     "shippedNote": "Shipped"
   },
@@ -264,9 +263,9 @@
     "environment": {
       "platform": "web"
     },
-    "createdAt": "2026-08-27T00:43:37.879Z",
-    "updatedAt": "2026-08-27T00:43:37.879Z",
-    "shippedAt": "2026-08-27T00:43:37.879Z",
+    "createdAt": "2026-08-27T00:43:37.879+00:00",
+    "updatedAt": "2026-08-27T00:43:37.879+00:00",
+    "shippedAt": "2026-08-27T00:43:37.879+00:00",
     "shippedBy": "claude-cli",
     "shippedNote": "Shipped"
   },
@@ -280,10 +279,10 @@
     "environment": {
       "platform": "web"
     },
-    "createdAt": "2026-08-27T04:35:49.625Z",
-    "updatedAt": "2026-08-27T04:35:56.416Z",
+    "createdAt": "2026-08-27T04:35:49.625+00:00",
+    "updatedAt": "2026-08-27T04:35:56.416+00:00",
+    "shippedAt": "2026-08-27T04:35:56.414+00:00",
     "shippedBy": "claude-cli",
-    "shippedAt": "2026-08-27T04:35:56.414Z",
     "shippedNote": "src/utils/useTabSwipe.ts rewritten to expose activePaneStyle/previewTab/previewPaneStyle driven by live drag position instead of a binary swipe-then-snap."
   },
   {
@@ -296,10 +295,10 @@
     "environment": {
       "platform": "web"
     },
-    "createdAt": "2026-08-27T04:36:04.244Z",
-    "updatedAt": "2026-08-27T04:36:10.835Z",
+    "createdAt": "2026-08-27T04:36:04.244+00:00",
+    "updatedAt": "2026-08-27T04:36:10.835+00:00",
+    "shippedAt": "2026-08-27T04:36:10.834+00:00",
     "shippedBy": "claude-cli",
-    "shippedAt": "2026-08-27T04:36:10.834Z",
     "shippedNote": "src/components/TripContentSheet.tsx (velocity fling, scrim, corner-radius, haptics), src/utils/nativeShell.ts + src/App.tsx (status-bar tone sync). Added @capacitor/haptics + @capacitor/status-bar, npx cap sync run for Android/iOS."
   },
   {
@@ -312,10 +311,10 @@
     "environment": {
       "platform": "web"
     },
-    "createdAt": "2026-08-27T04:36:18.578Z",
-    "updatedAt": "2026-08-27T04:36:24.296Z",
+    "createdAt": "2026-08-27T04:36:18.578+00:00",
+    "updatedAt": "2026-08-27T04:36:24.296+00:00",
+    "shippedAt": "2026-08-27T04:36:24.295+00:00",
     "shippedBy": "claude-cli",
-    "shippedAt": "2026-08-27T04:36:24.295Z",
     "shippedNote": "src/components/BoardingPassHeroCard.tsx, src/components/BalancesSettlements.tsx."
   },
   {
@@ -328,12 +327,11 @@
     "environment": {
       "platform": "web"
     },
-    "createdAt": "2026-08-27T04:36:32.143Z",
-    "updatedAt": "2026-08-27T04:36:38.231Z",
+    "createdAt": "2026-08-27T04:36:32.143+00:00",
+    "updatedAt": "2026-08-27T04:36:38.231+00:00",
+    "shippedAt": "2026-08-27T04:36:38.23+00:00",
     "shippedBy": "claude-cli",
-    "shippedAt": "2026-08-27T04:36:38.230Z",
-    "shippedNote": "src/App.tsx, src/components/AnalyticsTab.tsx, src/components/SettingsTab.tsx, src/components/SettingsView.tsx.",
-    "linkedFlagKey": "enableGeotagging"
+    "shippedNote": "src/App.tsx, src/components/AnalyticsTab.tsx, src/components/SettingsTab.tsx, src/components/SettingsView.tsx."
   },
   {
     "id": "FEAT-022",
@@ -345,10 +343,10 @@
     "environment": {
       "platform": "web"
     },
-    "createdAt": "2026-08-30T16:53:20.946Z",
-    "updatedAt": "2026-08-30T16:53:55.814Z",
+    "createdAt": "2026-08-30T16:53:20.946+00:00",
+    "updatedAt": "2026-08-30T16:53:55.814+00:00",
+    "shippedAt": "2026-08-30T16:53:55.813+00:00",
     "shippedBy": "claude-cli",
-    "shippedAt": "2026-08-30T16:53:55.813Z",
     "shippedNote": "Shipped in commit 237b25a"
   },
   {
@@ -361,10 +359,10 @@
     "environment": {
       "platform": "web"
     },
-    "createdAt": "2026-08-31T15:30:27.836Z",
-    "updatedAt": "2026-08-31T15:30:41.353Z",
+    "createdAt": "2026-08-31T15:30:27.836+00:00",
+    "updatedAt": "2026-08-31T15:30:41.353+00:00",
+    "shippedAt": "2026-08-31T15:30:41.352+00:00",
     "shippedBy": "claude-cli",
-    "shippedAt": "2026-08-31T15:30:41.352Z",
     "shippedNote": "Shipped in commit d4633e2"
   },
   {
@@ -390,10 +388,58 @@
     "environment": {
       "platform": "web"
     },
-    "createdAt": "2026-09-02T17:18:17.207Z",
-    "updatedAt": "2026-09-02T17:18:28.640Z",
+    "createdAt": "2026-09-02T17:18:17.207+00:00",
+    "updatedAt": "2026-09-02T17:18:28.64+00:00",
+    "shippedAt": "2026-09-02T17:18:28.639+00:00",
     "shippedBy": "claude-cli",
-    "shippedAt": "2026-09-02T17:18:28.639Z",
     "shippedNote": "Shipped in commits (this session): directional commit-preview badge, rubber-band drag resistance, prefers-reduced-motion support, staggered quick-actions entrance, long-press progress ring, depth-2 blur cue, idle sway on peek cards, and derived exit-timing constants. See TripStack.tsx + index.css."
+  },
+  {
+    "id": "FEAT-026",
+    "title": "Prefetch lazy-loaded modal chunks on hover/press intent",
+    "description": "ExpenseForm and SettingsTab are code-split (React.lazy). Hovering or pressing the \"+\" FAB / Settings tab now fires a matching import() ahead of the click, warming the chunk cache so the modal opens without a network+eval stall on first use.",
+    "category": "performance",
+    "status": "shipped",
+    "requestedBy": "claude",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-09-04T06:34:58.744418+00:00",
+    "updatedAt": "2026-09-04T06:34:58.744418+00:00",
+    "shippedAt": "2026-09-04T06:34:58.744418+00:00",
+    "shippedBy": "claude",
+    "shippedNote": "Implemented in NavTabs.tsx (prefetchExpenseForm / prefetchSettingsTab on onMouseEnter/onPointerDown)."
+  },
+  {
+    "id": "FEAT-027",
+    "title": "Merge trip-card countdown badge into the destination/weather pill",
+    "description": "The \"IN X DAYS\" / \"ONGOING\" status badge floated as its own separate pill above the destination + weather pill on the home trip-stack card, reading as disconnected and oddly positioned. Merged all three into one pill: countdown dot+label, then destination, then live weather, separated by middots.",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "mauryarahul007@gmail.com",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-09-04T06:34:59.010817+00:00",
+    "updatedAt": "2026-09-04T06:34:59.010817+00:00",
+    "shippedAt": "2026-09-04T06:34:59.010817+00:00",
+    "shippedBy": "claude",
+    "shippedNote": "Implemented in TripStack.tsx (CardContent header) commit f1f2345."
+  },
+  {
+    "id": "FEAT-028",
+    "title": "Apple-style Version/Build split -- stop auto-bumping marketing version on every commit",
+    "description": "package.json version was auto-bumped on every commit via a post-commit hook, climbing to 1.106.3 with no meaningful signal. Switched to the two-tier scheme Apple uses: a stable marketing version (package.json, manually bumped via npm run release:major|minor|patch) paired with an auto-incrementing build number (git commit count, zero maintenance). Settings screens now show Version 2.0.0 (147) instead of 1.106.3 (72156f8).",
+    "category": "admin",
+    "status": "shipped",
+    "requestedBy": "mauryarahul007@gmail.com",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-09-04T13:59:51.949Z",
+    "updatedAt": "2026-09-04T13:59:58.680Z",
+    "shippedAt": "2026-09-04T13:59:58.679Z",
+    "shippedBy": "claude-cli",
+    "shippedNote": "Removed .githooks/post-commit auto-bump entirely (it also did a git commit --amend on every commit). scripts/bump-version.mjs is now a manual major/minor/patch CLI. vite.config.ts injects __BUILD_NUMBER__ (git rev-list --count HEAD) replacing __BUILD_SHA__. appVersion.ts and SettingsView.tsx display Version (Build). sync-native-version.mjs local fallback also uses commit count. Reset package.json version to 2.0.0 to mark the cutover. Commit 1241bc3."
   }
 ]
