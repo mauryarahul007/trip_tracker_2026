@@ -357,6 +357,19 @@ export function ExpenseForm({
     setSplitMode('equal');
   };
 
+  const applyPresetExcludePayer = () => {
+    triggerHaptic('medium');
+    dismissPresetsTip();
+    if (!payer) return;
+    const selection: Record<string, boolean> = {};
+    visibleMembers.forEach((m) => {
+      selection[m.id] = m.id !== payer;
+    });
+    setSelectedSplitMembers(selection);
+    setSplitConfig({});
+    setSplitMode('equal');
+  };
+
   useEffect(() => () => recognitionRef.current?.stop(), []);
 
   const handleToggleVoiceInput = () => {
@@ -1078,6 +1091,14 @@ export function ExpenseForm({
             title="Payer pays 100% (personal expense)"
           >
             👤 Only Payer
+          </button>
+          <button
+            type="button"
+            className="split-preset-chip"
+            onClick={applyPresetExcludePayer}
+            title="Split equally among everyone except the payer"
+          >
+            🚫 Exclude Payer
           </button>
         </div>
       </div>

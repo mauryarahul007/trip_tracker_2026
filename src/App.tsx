@@ -433,10 +433,14 @@ export default function App() {
   const handleOnlineSync = useCallback(async () => {
     setIsOnline(true);
     setIsSyncing(true);
+    const queuedCount = useTripStore.getState().syncQueue.length;
     try {
       await processQueue();
       await refreshActiveTripExpenses();
       useTripStore.getState().updateLastBackendSyncedAt(Date.now());
+      if (queuedCount > 0) {
+        triggerHaptic('success');
+      }
     } catch (err) {
       console.error('Online auto-sync error:', err);
     } finally {
@@ -628,7 +632,7 @@ export default function App() {
   }, [isOnline, isSyncing, sessionExpired, syncQueue.length]);
 
   const syncStatusLabel = useMemo(() => {
-    if (syncStatus === 'offline') return 'Offline';
+    if (syncStatus === 'offline') return syncQueue.length > 0 ? `Offline (${syncQueue.length} queued)` : 'Offline';
     if (syncStatus === 'syncing') return 'Syncing…';
     if (syncStatus === 'session-expired') return 'Session expired';
     if (syncStatus === 'out-of-sync') return `Out of sync (${syncQueue.length})`;
@@ -1681,6 +1685,7 @@ export default function App() {
           onArchiveTrip={handleArchiveTrip}
           onOpenSettings={() => setShowGlobalSettings(true)}
           onOpenBugTracker={isSuperadmin ? () => setShowBugTracker(true) : undefined}
+          onOpenCommandPalette={() => setShowCommandPalette(true)}
           onLoadDemoTrip={handleLoadDemoTrip}
           userAvatarUrl={userAvatarUrl}
           userDisplayName={userDisplayName}
@@ -2289,9 +2294,18 @@ export default function App() {
             isOpen={showCommandPalette}
             onClose={() => setShowCommandPalette(false)}
             trip={activeTrip}
+            trips={trips}
             expenses={activeTripExpenses}
             members={visibleMembers}
             categories={categories}
+            onSelectTrip={(id) => withViewTransition(() => selectTrip(id))}
+            onCreateTrip={() => {
+              if (activeTripId) {
+                selectTrip(null).then(() => setShowAddTrip(true));
+              } else {
+                setShowAddTrip(true);
+              }
+            }}
             onSelectExpense={(exp) => handleStartEditExpense(exp)}
             onSelectMember={(mId) => {
               setExpenseFilterMember(mId);

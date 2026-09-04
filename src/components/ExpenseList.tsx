@@ -5,6 +5,7 @@ import { IconSearch, IconEdit, IconAlertCircle, IconClose, IconCalendar, IconChe
 import { SwipeableRow } from './SwipeableRow';
 import { CategoryIcon } from './CategoryIcon';
 import { getCurrencySymbol, formatAmount } from '../utils/currency';
+import { convertCurrency } from '../utils/currencyConverter';
 import { initial } from '../utils/initials';
 import { avatarColorForName } from '../utils/avatarColor';
 import { triggerHaptic } from '../utils/haptics';
@@ -171,6 +172,16 @@ export function ExpenseList({
   const pullToRefresh = usePullToRefresh(paneRef, ptrIndicatorRef, () => refreshActiveTripExpenses());
   const expensesLoadingTripId = useTripStore((s) => s.expensesLoadingTripId);
   const isLoadingExpenses = !!trip && expensesLoadingTripId === trip.id;
+  const [toggledCurrencyExpenseIds, setToggledCurrencyExpenseIds] = useState<Record<string, boolean>>({});
+
+  const handleToggleExpenseCurrency = (e: React.MouseEvent, expenseId: string) => {
+    e.stopPropagation();
+    triggerHaptic('light');
+    setToggledCurrencyExpenseIds((prev) => ({
+      ...prev,
+      [expenseId]: !prev[expenseId],
+    }));
+  };
 
   const filtersRef = useRef<HTMLDivElement>(null);
   const [showDateFilter, setShowDateFilter] = useState(false);
@@ -777,16 +788,59 @@ export function ExpenseList({
                                 <span style={{ fontSize: '11px', flexShrink: 0, opacity: 0.85 }} title="Photo receipt attached">📸</span>
                               )}
                             </h4>
-                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', flexShrink: 0 }}>
-                              <span className="money" style={{ fontSize: '15px', fontWeight: '600', color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
-                                {formatAmount(exp.amount, currencySymbol)}
-                              </span>
-                              {showMyShare && (
-                                <span style={{ fontSize: '11px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
-                                  your share {formatAmount(myShare as number, currencySymbol)}
-                                </span>
-                              )}
-                            </div>
+                            {(() => {
+                              const isForeign = Boolean(
+                                exp.currency &&
+                                trip?.baseCurrency &&
+                                exp.currency.trim().toUpperCase() !== trip.baseCurrency.trim().toUpperCase()
+                              );
+                              const isShowingForeign = isForeign && !!toggledCurrencyExpenseIds[exp.id];
+                              const convertedForeign = isForeign
+                                ? convertCurrency(exp.amount, trip?.baseCurrency || 'INR', exp.currency)
+                                : null;
+                              const displayAmount = isShowingForeign && convertedForeign
+                                ? convertedForeign.convertedAmount
+                                : exp.amount;
+                              const displaySymbol = isShowingForeign
+                                ? getCurrencySymbol(exp.currency)
+                                : currencySymbol;
+
+                              return (
+                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', flexShrink: 0 }}>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                    <span className="money" style={{ fontSize: '15px', fontWeight: '600', color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
+                                      {formatAmount(displayAmount, displaySymbol)}
+                                    </span>
+                                    {isForeign && (
+                                      <button
+                                        type="button"
+                                        onClick={(e) => handleToggleExpenseCurrency(e, exp.id)}
+                                        aria-label={`Switch between ${trip?.baseCurrency} and ${exp.currency}`}
+                                        title={`Logged in ${exp.currency}. Tap to toggle between ${trip?.baseCurrency} and ${exp.currency}`}
+                                        style={{
+                                          background: isShowingForeign ? 'var(--primary-accent)' : 'rgba(255,255,255,0.08)',
+                                          color: isShowingForeign ? '#fff' : 'var(--text-muted)',
+                                          border: '1px solid var(--border-color)',
+                                          borderRadius: '8px',
+                                          fontSize: '10px',
+                                          fontWeight: 700,
+                                          padding: '1px 5px',
+                                          cursor: 'pointer',
+                                          lineHeight: 1.2,
+                                        }}
+                                      >
+                                        {isShowingForeign ? exp.currency : `⇄ ${exp.currency}`}
+                                      </button>
+                                    )}
+                                  </div>
+                                  {showMyShare && (
+                                    <span style={{ fontSize: '11px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
+                                      your share {formatAmount(myShare as number, currencySymbol)}
+                                    </span>
+                                  )}
+                                </div>
+                              );
+                            })()}
                           </div>
                           <div
                             style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', minWidth: 0 }}

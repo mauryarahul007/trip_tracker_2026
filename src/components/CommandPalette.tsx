@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import type { Trip, Expense, Member, Category } from '../types';
-import { IconSearch, IconPlus, IconMembers, IconSettings, IconCheck, IconCalendar } from './Icons';
+import { IconSearch, IconPlus, IconMembers, IconSettings, IconCheck, IconCalendar, IconMapPin } from './Icons';
 import { getCurrencySymbol } from '../utils/currency';
 import { triggerHaptic } from '../utils/haptics';
 import { useFocusTrap } from '../hooks/useFocusTrap';
@@ -9,12 +9,15 @@ interface CommandPaletteProps {
   isOpen: boolean;
   onClose: () => void;
   trip?: Trip;
+  trips?: Trip[];
   expenses: Expense[];
   members: Member[];
   categories: Category[];
   onSelectExpense: (expense: Expense) => void;
   onSelectMember: (memberId: string) => void;
+  onSelectTrip?: (tripId: string) => void;
   onNewExpense: () => void;
+  onCreateTrip?: () => void;
   onOpenWrapped: () => void;
   onOpenSettings: () => void;
   onSwitchTab: (tab: 'expenses' | 'balances' | 'settings' | 'members') => void;
@@ -31,12 +34,15 @@ export function CommandPalette({
   isOpen,
   onClose,
   trip,
+  trips = [],
   expenses,
   members,
   categories,
   onSelectExpense,
   onSelectMember,
+  onSelectTrip,
   onNewExpense,
+  onCreateTrip,
   onOpenWrapped,
   onOpenSettings,
   onSwitchTab,
@@ -65,7 +71,7 @@ export function CommandPalette({
   // Build searchable items
   interface CommandItem {
     id: string;
-    type: 'action' | 'expense' | 'member' | 'tab';
+    type: 'action' | 'expense' | 'member' | 'tab' | 'trip';
     title: string;
     subtitle?: string;
     icon: React.ReactNode;
@@ -74,11 +80,44 @@ export function CommandPalette({
 
   const items: CommandItem[] = [];
 
+  // Create Trip Action
+  if (onCreateTrip) {
+    items.push({
+      id: 'act-new-trip',
+      type: 'action',
+      title: 'Create New Trip',
+      subtitle: 'Start a new trip ledger or expedition',
+      icon: <IconPlus size={16} />,
+      action: () => {
+        onCreateTrip();
+        onClose();
+      },
+    });
+  }
+
+  // Matching Trips
+  if (trips.length > 0) {
+    trips.forEach((t) => {
+      const isCurrent = trip?.id === t.id;
+      items.push({
+        id: `trip-${t.id}`,
+        type: 'trip',
+        title: t.name,
+        subtitle: `${t.destination || 'Expedition'} · ${t.baseCurrency}${isCurrent ? ' (Active)' : ''}`,
+        icon: <IconMapPin size={16} />,
+        action: () => {
+          if (onSelectTrip) onSelectTrip(t.id);
+          onClose();
+        },
+      });
+    });
+  }
+
   // Actions
   items.push({
     id: 'act-new-exp',
     type: 'action',
-    title: 'Add New Expense',
+    title: trip ? `Add New Expense in ${trip.name}` : 'Add New Expense',
     subtitle: 'Create a new receipt or shared payment',
     icon: <IconPlus size={16} />,
     action: () => {

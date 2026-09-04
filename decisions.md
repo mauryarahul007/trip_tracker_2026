@@ -1485,6 +1485,33 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - Non-application skill directories are excluded from the main webapp linter pass, ensuring production CI runs with zero false-positive blockers.
 
+---
+
+## 85. High-Performance Fluidity, Universal Spotlight & Traveler Ergonomics
+* **Context:**
+  - Navigating into a trip or logging an expense previously waited for heavy chunks (`ExpenseForm`, `TripMapHero`) to fetch over the network on demand.
+  - Large expense ledgers suffered from offscreen DOM layout churn during fast scrolling.
+  - Finding a trip, past transaction, or quick action required manual multi-step navigation.
+  - Splitting expenses among groups required repetitive checkbox toggling when the payer was excluded.
+  - Viewing foreign expenses required mental math or external exchange calculators.
+  - Working in low-connectivity areas lacked subtle feedback on queued offline mutations.
+* **Decision:**
+  - **Speculative Idle Route Preloading (`modulePreload.ts`, `TripsListScreen.tsx`):**
+    - Prefetches lazy-loaded route modules (`ExpenseForm`, `TripMapHero`) during browser idle moments via `requestIdleCallback` (with timeout fallback). Eliminates open-trip and add-expense loading latencies with zero main-thread jank.
+  - **CSS Rendering Containment (`index.css`):**
+    - Extended `content-visibility: auto` and `contain-intrinsic-size` to `.expense-item-cascade`, enabling the browser engine to skip offscreen rendering passes for long expedition ledgers.
+  - **Universal Traveler Spotlight (`CommandPalette.tsx`, `TripsListScreen.tsx`, `App.tsx`):**
+    - Upgraded `CommandPalette` to operate across the entire application (both on the Home screen and inside active trips). Added universal trip search and instant jump, trip creation, and search trigger button in the Home header beside bug tracker.
+  - **Smart Split "Exclude Payer" Preset (`ExpenseForm.tsx`):**
+    - Added a 1-tap `🚫 Exclude Payer` preset chip to automatically divide expenses among all group members while keeping the paying member excluded.
+  - **One-Tap Foreign Currency Toggle (`ExpenseList.tsx`):**
+    - For transactions logged in a foreign currency differing from the trip's base currency, added an interactive conversion pill that toggles instantly between the base currency amount and original transaction currency.
+  - **Subtle Offline Queue Status Pill (`TripsListScreen.tsx`, `App.tsx`):**
+    - Display queued offline mutations count (e.g. `☁️ 2 queued`) in the Home greeting and header sync pill, accompanied by haptic feedback when connectivity is restored and the queue is drained.
+* **Trade-offs Accepted:**
+  - Currency conversion on the ledger row uses client-side cached exchange rates for instant 0ms toggling without network latency.
+
+
 
 
 

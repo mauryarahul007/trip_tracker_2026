@@ -324,6 +324,7 @@ h3 { font-size: clamp(1.1rem, 3vw, 1.4rem); }
 
 /* Performance: skip off-screen layout/paint for list rows */
 .expense-row,
+.expense-item-cascade,
 .member-row,
 .trip-card,
 .glass-card {

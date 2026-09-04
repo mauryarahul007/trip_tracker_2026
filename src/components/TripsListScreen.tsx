@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { Trip, Member, TripStop } from '../types';
-import { IconArchive, IconMapPin } from './Icons';
+import { IconArchive, IconMapPin, IconSearch } from './Icons';
 import { DateRangePicker } from './DateRangePicker';
 import { formatTripStamp } from '../utils/dateRange';
 import { initial } from '../utils/initials';
@@ -15,6 +15,7 @@ import { HomeAmbientBackdrop } from './HomeAmbientBackdrop';
 import { OnboardingSwipe } from './OnboardingSwipe';
 import { usePullToRefresh } from '../utils/usePullToRefresh';
 import { triggerHaptic } from '../utils/haptics';
+import { preloadModule } from '../utils/modulePreload';
 
 type Props = {
   trips: Trip[];
@@ -43,6 +44,7 @@ type Props = {
   onArchiveTrip: (trip: Trip) => void;
   onOpenSettings: () => void;
   onOpenBugTracker?: () => void;
+  onOpenCommandPalette?: () => void;
   onLoadDemoTrip?: () => void;
   userAvatarUrl?: string;
   userDisplayName?: string | null;
@@ -82,6 +84,7 @@ export function TripsListScreen({
   onArchiveTrip,
   onOpenSettings,
   onOpenBugTracker,
+  onOpenCommandPalette,
   onLoadDemoTrip,
   userAvatarUrl,
   userDisplayName,
@@ -89,6 +92,7 @@ export function TripsListScreen({
   const navigate = useNavigate();
   const userId = useTripStore((s) => s.userId);
   const refreshTrips = useTripStore((s) => s.refreshTrips);
+  const syncQueue = useTripStore((s) => s.syncQueue);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const ptrIndicatorRef = useRef<HTMLDivElement>(null);
   const stepperTrackRef = useRef<HTMLDivElement>(null);
@@ -103,6 +107,11 @@ export function TripsListScreen({
   const [isSavingTrip, setIsSavingTrip] = useState(false);
   // Enables full luxury hero spotlight even with 1 trip
   const stackActive = trips.length >= 1 && !showList && !showAddTrip && !showJoinTrip;
+
+  useEffect(() => {
+    preloadModule(() => import('./ExpenseForm'));
+    preloadModule(() => import('./TripMapHero'));
+  }, []);
 
   const handleStepperScrub = (clientX: number) => {
     const track = stepperTrackRef.current;
@@ -208,31 +217,55 @@ export function TripsListScreen({
       )}
       <HomeAmbientBackdrop trip={focusedTrip || trips[0] || null} />
       <header className="trips-screen-header">
-        {onOpenBugTracker ? (
-          <button
-            type="button"
-            className="secondary-btn"
-            style={{
-              width: '40px',
-              height: '40px',
-              padding: 0,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              borderRadius: '50%',
-              background: 'rgba(0, 191, 165, 0.08)',
-              borderColor: 'rgba(0, 191, 165, 0.4)',
-              color: 'var(--text-primary)',
-            }}
-            onClick={onOpenBugTracker}
-            aria-label="Superadmin Bug Tracker"
-            title="Superadmin Bug Tracker"
-          >
-            <span>🛡️</span>
-          </button>
-        ) : (
-          <div aria-hidden="true" />
-        )}
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          {onOpenCommandPalette && (
+            <button
+              type="button"
+              className="secondary-btn"
+              style={{
+                width: '40px',
+                height: '40px',
+                padding: 0,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                borderRadius: '50%',
+                background: 'rgba(255, 255, 255, 0.06)',
+                borderColor: 'var(--border-color)',
+                color: 'var(--text-secondary)',
+              }}
+              onClick={onOpenCommandPalette}
+              aria-label="Search & Quick Actions (Cmd+K)"
+              title="Search & Quick Actions (Cmd+K / Ctrl+K)"
+            >
+              <IconSearch size={16} />
+            </button>
+          )}
+          {onOpenBugTracker && (
+            <button
+              type="button"
+              className="secondary-btn"
+              style={{
+                width: '40px',
+                height: '40px',
+                padding: 0,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                borderRadius: '50%',
+                background: 'rgba(0, 191, 165, 0.08)',
+                borderColor: 'rgba(0, 191, 165, 0.4)',
+                color: 'var(--text-primary)',
+              }}
+              onClick={onOpenBugTracker}
+              aria-label="Superadmin Bug Tracker"
+              title="Superadmin Bug Tracker"
+            >
+              <span>🛡️</span>
+            </button>
+          )}
+          {!onOpenCommandPalette && !onOpenBugTracker && <div aria-hidden="true" />}
+        </div>
         <div style={{ textAlign: 'center' }}>
           <h1 className="app-logo">Trip Tracker 2026</h1>
           <p className="home-adaptive-greeting" style={{ color: 'var(--text-secondary)', fontSize: '13.5px', marginTop: '4px' }}>
@@ -241,6 +274,14 @@ export function TripsListScreen({
               <>
                 <span style={{ margin: '0 6px', opacity: 0.4 }}>&middot;</span>
                 <span className="home-expeditions-count">{trips.length} {trips.length === 1 ? 'Expedition' : 'Expeditions'}</span>
+              </>
+            )}
+            {typeof navigator !== 'undefined' && (!navigator.onLine || syncQueue.length > 0) && (
+              <>
+                <span style={{ margin: '0 6px', opacity: 0.4 }}>&middot;</span>
+                <span style={{ color: '#F0AE5C', fontSize: '12px', fontWeight: 600 }}>
+                  ☁️ {!navigator.onLine ? (syncQueue.length > 0 ? `${syncQueue.length} queued` : 'Offline') : 'Syncing…'}
+                </span>
               </>
             )}
           </p>
