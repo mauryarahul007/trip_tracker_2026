@@ -1,11 +1,12 @@
 import { useState, useRef } from 'react';
 import type { Member } from '../types';
 import { getCurrencySymbol } from '../utils/currency';
-import { generateUpiUri, getQrCodeUrl, isValidUpiId, POPULAR_UPI_APPS } from '../utils/upiLinks';
+import { generateUpiUri, isValidUpiId, POPULAR_UPI_APPS } from '../utils/upiLinks';
 import { IconClose } from './Icons';
 import { triggerHaptic } from '../utils/haptics';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { ConfettiBurst } from './ConfettiBurst';
+import { QrCodeView } from './QrCodeView';
 
 // How long the confetti burst plays before the modal actually confirms
 // and closes -- matches ConfettiBurst's own animation window.
@@ -228,17 +229,20 @@ export function UpiPaymentModal({
                 textAlign: 'center',
                 padding: '14px',
                 background: '#ffffff',
-                borderRadius: 'var(--border-radius-sm)',
+                borderRadius: '16px',
                 marginBottom: '16px',
-                border: '1px solid var(--border-color)'
+                border: '1px solid var(--border-color)',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center'
               }}>
-                <img
-                  src={getQrCodeUrl(generateUpiUri(upiDetails), 200)}
-                  alt="UPI QR Code"
-                  decoding="async"
-                  style={{ width: '180px', height: '180px', display: 'inline-block' }}
+                <QrCodeView
+                  value={generateUpiUri(upiDetails)}
+                  size={180}
+                  alt="UPI Payment QR Code"
                 />
-                <p style={{ fontSize: '11px', color: '#1c2a38', fontWeight: 600, margin: '6px 0 0' }}>
+                <p style={{ fontSize: '11px', color: '#1c2a38', fontWeight: 600, margin: '8px 0 0' }}>
                   Scan with any UPI App (GPay, PhonePe, Paytm, BHIM)
                 </p>
               </div>

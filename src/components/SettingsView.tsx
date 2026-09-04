@@ -29,7 +29,9 @@ import {
   IconPieChart,
   IconCheck,
   IconCopy,
+  IconClose,
 } from './Icons';
+import { QrCodeView } from './QrCodeView';
 // TripJourneyMap pulls in maplibre-gl (~1.5MB minified) -- code-split so it
 // doesn't load unless the user opens the "Trip Map" subscreen.
 const TripJourneyMap = lazy(() =>
@@ -45,7 +47,6 @@ import { getAppVersion } from '../utils/appVersion';
 import { triggerHaptic, getHapticPreference, setHapticPreference, type HapticPreference } from '../utils/haptics';
 import { getCurrencySymbol } from '../utils/currency';
 import { calculateSettlements } from '../utils/settlement';
-import { getQrCodeUrl } from '../utils/upiLinks';
 import { BugReportModal } from './BugReportModal';
 import { FeatureRequestModal } from './FeatureRequestModal';
 import { SuperadminAuthModal } from './SuperadminAuthModal';
@@ -2840,65 +2841,83 @@ export function SettingsView({
             aria-modal="true"
             aria-label="Trip and Profile QR Code"
           >
+            {/* Top-Right Dismiss Button */}
+            <button
+              type="button"
+              className="settings-qr-close-btn"
+              onClick={() => {
+                triggerHaptic('light');
+                setIsQrModalOpen(false);
+              }}
+              aria-label="Close QR Code dialog"
+            >
+              <IconClose size={16} />
+            </button>
+
+            {/* Profile Avatar with Plane Badge */}
             <div className="settings-qr-avatar-container">
               {userAvatarUrl ? (
                 <img
                   src={userAvatarUrl}
                   alt=""
                   className="settings-avatar-img"
-                  style={{ width: '56px', height: '56px', borderWidth: '3px' }}
+                  style={{ width: '58px', height: '58px', borderWidth: '3px' }}
                 />
               ) : (
-                <div className="settings-avatar-circle" style={{ width: '56px', height: '56px', fontSize: '22px' }}>
+                <div className="settings-avatar-circle" style={{ width: '58px', height: '58px', fontSize: '24px' }}>
                   {initialLetter}
                 </div>
               )}
-              <span className="settings-qr-badge-icon">✈️</span>
+              <span className="settings-qr-badge-icon" title="Explorer">✈️</span>
             </div>
 
+            {/* Profile Name & Tagline */}
             <div className="settings-qr-card-header">
-              <strong style={{ fontSize: '16px', color: 'var(--text-primary)' }}>{displayName}</strong>
-              <span style={{ fontSize: '12px', color: 'var(--text-secondary)', fontStyle: 'italic' }}>
-                “{statusTagline}”
-              </span>
+              <h3 className="settings-qr-display-name">{displayName}</h3>
+              {statusTagline && (
+                <span className="settings-qr-status-tagline">
+                  “{statusTagline}”
+                </span>
+              )}
               {activeTrip && (
-                <div className="settings-qr-trip-title">
-                  🌴 {activeTrip.name}
+                <div className="settings-qr-trip-pill">
+                  <span className="settings-qr-trip-pill-icon">🌴</span>
+                  <span className="settings-qr-trip-pill-name">{activeTrip.name}</span>
                 </div>
               )}
             </div>
 
+            {/* Scannable Client-Side Offline QR Box */}
             <div className="settings-qr-frame-box">
-              <img
-                src={getQrCodeUrl(tripInviteLink, 240)}
-                alt="Trip Invite QR Code"
-                className="settings-qr-img"
-                width={210}
-                height={210}
+              <QrCodeView
+                value={tripInviteLink}
+                size={210}
+                alt={`Trip Invite QR Code for ${activeTrip?.name || 'Trip Tracker'}`}
               />
             </div>
 
             <p className="settings-qr-hint">
               {activeTrip
-                ? `Scan with any phone camera to instantly join "${activeTrip.name}"`
-                : 'Scan with any phone camera to open Trip Tracker'}
+                ? `Scan with any phone camera or QR scanner to instantly join "${activeTrip.name}"`
+                : 'Scan with any phone camera or QR scanner to open Trip Tracker'}
             </p>
 
+            {/* Redesigned Actions: Copy Link & Share Link */}
             <div className="settings-qr-btn-group">
               <button
                 type="button"
-                className="secondary-btn"
-                style={{ flex: 1, padding: '8px 12px', fontSize: '12px', justifyContent: 'center' }}
+                className={`settings-qr-action-btn settings-qr-btn-copy${copiedInvite ? ' is-copied' : ''}`}
                 onClick={handleCopyInviteLink}
+                aria-label={copiedInvite ? 'Link copied' : 'Copy invite link'}
               >
                 {copiedInvite ? (
                   <>
-                    <IconCheck size={14} style={{ color: 'var(--color-success)' }} />
-                    <span style={{ color: 'var(--color-success)', fontWeight: 600 }}>Copied!</span>
+                    <IconCheck size={16} className="settings-qr-btn-icon" />
+                    <span>Copied!</span>
                   </>
                 ) : (
                   <>
-                    <IconCopy size={14} />
+                    <IconCopy size={16} className="settings-qr-btn-icon" />
                     <span>Copy Link</span>
                   </>
                 )}
@@ -2906,20 +2925,22 @@ export function SettingsView({
 
               <button
                 type="button"
-                className="primary-btn"
-                style={{ flex: 1, padding: '8px 12px', fontSize: '12px', justifyContent: 'center' }}
+                className="settings-qr-action-btn settings-qr-btn-share"
                 onClick={handleShareInviteLink}
+                aria-label="Share trip invite link"
               >
-                <IconShare size={14} />
+                <IconShare size={16} className="settings-qr-btn-icon" />
                 <span>Share Link</span>
               </button>
             </div>
 
             <button
               type="button"
-              className="settings-subscreen-back-link"
-              style={{ marginTop: '10px', fontSize: '12px', padding: '4px 18px' }}
-              onClick={() => setIsQrModalOpen(false)}
+              className="settings-qr-done-btn"
+              onClick={() => {
+                triggerHaptic('light');
+                setIsQrModalOpen(false);
+              }}
             >
               Done
             </button>

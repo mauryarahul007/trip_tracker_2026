@@ -1569,6 +1569,28 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - Storage breakdown approximates receipt image sizes based on stored receipt paths and client records to ensure 0ms instantaneous loading without waiting for heavy file scans.
 
+---
+
+## 88. Client-Side Offline QR Code Engine & Elevated Action Sheet Redesign
+* **Context:**
+  - On mobile networks and production environments (`trip-tracker.blackmaroon.in`), relying on external third-party QR generation APIs (like `api.qrserver.com`) caused broken image failures due to network latency, adblockers, DNS anomalies, and restrictive CSP image sources.
+  - The "Copy Link" and "Share Link" action buttons in the profile QR modal lacked visual polish, using basic rectangular buttons with stark borders and cramped typography that degraded user experience.
+  - Profile name and status tagline headers lacked clean visual hierarchy, causing text cramping on small mobile screens.
+* **Decision:**
+  - **Zero-Network Client-Side QR Engine (`src/utils/qrGenerator.ts`, `src/components/QrCodeView.tsx`):**
+    - Integrated high-performance offline QR generation using `qrcode` with retina-crisp 2x oversampling, in-memory caching (`Map`), and smooth spinner loading fallback.
+    - Upgraded both `SettingsView.tsx` (Trip Invite QR) and `UpiPaymentModal.tsx` (UPI settlement QR) to use `<QrCodeView />`, completely eliminating network reliance and ensuring 100% offline reliability.
+  - **Elevated WhatsApp-Style Action Sheet & Button Redesign (`SettingsView.tsx`, `src/index.css`):**
+    - Redesigned the QR card with `border-radius: 28px`, deep ambient drop shadows, and an accessible top-right `✕` dismiss button.
+    - Restructured text hierarchy: bold 17px traveler display name, italicized subtitle tagline, and a dedicated emerald trip badge (`🌴 North East trip`).
+    - Overhauled action buttons with modern tactile styling:
+      - "Copy Link": Interactive glass card button with 1.5px subtle border, icon badge, active scale feedback, and animated emerald "Copied!" checkmark state.
+      - "Share Link": High-contrast WhatsApp-inspired gradient button (`linear-gradient(135deg, #25D366, #128C7E)`), crisp white typography, and vibrant drop glow.
+      - "Done": Centered capsule pill button with fluid hover/active states.
+* **Trade-offs Accepted:**
+  - Minimal bundle size addition for `qrcode` in exchange for complete zero-network offline resilience and guaranteed scannability under all connectivity conditions.
+
+
 
 
 

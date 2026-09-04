@@ -6311,92 +6311,251 @@ html.capacitor-ios .trip-sheet .tab-pane {
 .settings-qr-modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.65);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background: rgba(0, 0, 0, 0.72);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   z-index: 9999;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 16px;
+  padding: 18px;
   animation: fadeIn 0.2s ease forwards;
 }
 
 .settings-qr-card {
   background: var(--bg-surface);
   border: 1px solid var(--border-color);
-  border-radius: 24px;
-  padding: 24px 20px 20px;
+  border-radius: 28px;
+  padding: 28px 22px 22px;
   width: 100%;
   max-width: 360px;
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
-  box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 24px 60px -12px rgba(0, 0, 0, 0.45), 0 0 0 1px color-mix(in srgb, var(--border-color) 45%, transparent);
   position: relative;
   animation: whatsappSlideIn 0.25s var(--ease-decel) forwards;
 }
 
+.settings-qr-close-btn {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--text-muted) 12%, transparent);
+  color: var(--text-secondary);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  z-index: 2;
+}
+
+.settings-qr-close-btn:hover {
+  background: color-mix(in srgb, var(--text-muted) 22%, transparent);
+  color: var(--text-primary);
+  transform: scale(1.05);
+}
+
+.settings-qr-close-btn:active {
+  transform: scale(0.92);
+}
+
 .settings-qr-avatar-container {
   position: relative;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
 }
 
 .settings-qr-badge-icon {
   position: absolute;
   bottom: -2px;
   right: -2px;
-  background: var(--primary-accent);
+  background: linear-gradient(135deg, #10B981, #059669);
   color: #fff;
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 10px;
-  border: 2px solid var(--bg-surface);
+  font-size: 11px;
+  border: 2.5px solid var(--bg-surface);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
+}
+
+.settings-qr-card-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  width: 100%;
+}
+
+.settings-qr-display-name {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.settings-qr-status-tagline {
+  font-size: 12.5px;
+  color: var(--text-secondary);
+  font-style: italic;
+  line-height: 1.35;
+  max-width: 290px;
+  margin: 0;
+}
+
+.settings-qr-trip-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  padding: 5px 14px;
+  border-radius: 9999px;
+  background: color-mix(in srgb, var(--primary-accent) 12%, var(--bg-app));
+  border: 1px solid color-mix(in srgb, var(--primary-accent) 26%, transparent);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+}
+
+.settings-qr-trip-pill-icon {
+  font-size: 14px;
+  line-height: 1;
+}
+
+.settings-qr-trip-pill-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 220px;
 }
 
 .settings-qr-frame-box {
   background: #FFFFFF;
   padding: 14px;
-  border-radius: 18px;
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12);
-  margin: 14px 0 10px;
+  border-radius: 22px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12), inset 0 0 0 1px rgba(0, 0, 0, 0.05);
+  margin: 16px 0 12px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   position: relative;
 }
 
-.settings-qr-img {
-  width: 210px;
-  height: 210px;
-  display: block;
-  image-rendering: pixelated;
-}
-
-.settings-qr-trip-title {
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--text-primary);
-  margin-top: 2px;
-}
-
 .settings-qr-hint {
   font-size: 12px;
   color: var(--text-secondary);
-  line-height: 1.4;
-  margin-bottom: 8px;
+  line-height: 1.45;
+  margin: 0 0 14px;
+  max-width: 280px;
 }
 
 .settings-qr-btn-group {
-  display: flex;
-  gap: 8px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
   width: 100%;
-  margin-top: 6px;
+  margin-top: 4px;
+}
+
+.settings-qr-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
+  border: none;
+  outline: none;
+}
+
+.settings-qr-btn-icon {
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+.settings-qr-btn-copy {
+  background: color-mix(in srgb, var(--bg-card) 95%, var(--text-primary));
+  color: var(--text-primary);
+  border: 1.5px solid color-mix(in srgb, var(--border-color) 80%, transparent);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+}
+
+.settings-qr-btn-copy:hover {
+  background: color-mix(in srgb, var(--primary-accent) 8%, var(--bg-card));
+  border-color: var(--primary-accent);
+}
+
+.settings-qr-btn-copy:hover .settings-qr-btn-icon {
+  transform: scale(1.1);
+}
+
+.settings-qr-btn-copy:active {
+  transform: scale(0.97);
+}
+
+.settings-qr-btn-copy.is-copied {
+  background: color-mix(in srgb, #10b981 14%, var(--bg-card));
+  border-color: #10b981;
+  color: #10b981;
+}
+
+.settings-qr-btn-share {
+  background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+  color: #FFFFFF;
+  border: none;
+  box-shadow: 0 4px 14px rgba(37, 211, 102, 0.38);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+}
+
+.settings-qr-btn-share:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(37, 211, 102, 0.48);
+}
+
+.settings-qr-btn-share:hover .settings-qr-btn-icon {
+  transform: scale(1.12);
+}
+
+.settings-qr-btn-share:active {
+  transform: scale(0.97);
+}
+
+.settings-qr-done-btn {
+  margin-top: 14px;
+  padding: 8px 28px;
+  border-radius: 9999px;
+  background: color-mix(in srgb, var(--text-muted) 12%, transparent);
+  border: 1px solid transparent;
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.settings-qr-done-btn:hover {
+  background: color-mix(in srgb, var(--text-muted) 20%, transparent);
+  color: var(--text-primary);
+}
+
+.settings-qr-done-btn:active {
+  transform: scale(0.96);
 }
 
 /* WhatsApp-Style Storage Visualizer */
