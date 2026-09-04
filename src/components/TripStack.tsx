@@ -883,10 +883,6 @@ export function TripStack({
     }
   }, [targetTripId, order, tripsById]);
 
-  if (!front) return null;
-
-  const cycleToBack = () => setManualOrder([...order.slice(1), order[0]]);
-
   const [peekPreview, setPeekPreview] = useState(false);
   const effectiveDragProgress = peekPreview ? 0.85 : dragRatio;
 
@@ -895,8 +891,12 @@ export function TripStack({
     setTimeout(() => setPeekPreview(false), 700);
   };
 
-  const frontPhotoUrl = useTripPhoto(front.destination, front.coverImageUrl, front.name);
+  const frontPhotoUrl = useTripPhoto(front?.destination, front?.coverImageUrl, front?.name);
   const frontGlowColor = useAmbientGlowColor(frontPhotoUrl);
+
+  if (!front) return null;
+
+  const cycleToBack = () => setManualOrder([...order.slice(1), order[0]]);
 
   const canDelete = (trip: Trip) =>
     !trip.ownerId || !userId || trip.ownerId === userId ||

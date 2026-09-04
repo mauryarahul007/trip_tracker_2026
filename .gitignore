@@ -39,3 +39,7 @@ roster-backups/
 scan.log
 # Graphify output & cache
 graphify-out/
+
+# Memory palace / Chroma local vector store
+palace/
+hallways.json

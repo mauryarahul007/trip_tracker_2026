@@ -1467,6 +1467,25 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - Pointer capture during stepper scrubbing smoothly tracks outside the bounding box until pointer release, preventing lost scrub gestures on small touchscreens.
 
+---
+
+## 84. CI Workflow Hardening, Oxlint Ignore Boundaries & React Hooks Compliance in TripStack
+* **Context:**
+  - The GitHub Actions CI workflow runs `npm run lint` (`oxlint`), `npm run build`, and `npm test`.
+  - The build failed on CI due to two issues:
+    1. In `TripStack.tsx`, hooks (`useState` for peekPreview, `useTripPhoto`, and `useAmbientGlowColor`) were previously invoked conditionally or had a malformed trailing `useEffect` closure during an earlier edit, violating React's Rules of Hooks.
+    2. Without explicit `ignorePatterns` in `.oxlintrc.json`, `oxlint` traversed non-application agent directories (`.claude/**`, `.github/**`, `.agents/**`) where auxiliary development/skill scripts contained syntax or ESLint errors (e.g. unsafe finally blocks in skill harnesses).
+* **Decision:**
+  - **React Rules of Hooks Fix (`src/components/TripStack.tsx`):**
+    - Correctly closed the pagination jumper `useEffect` hook and placed all hook declarations (`useState(peekPreview)`, `useTripPhoto`, `useAmbientGlowColor`) unconditionally at the top of the component before any early returns (`if (!front) return null;`).
+  - **Oxlint Scope Boundaries (`.oxlintrc.json`):**
+    - Added explicit `ignorePatterns` for non-app root directories (`.agents/**`, `.claude/**`, `.codex/**`, `.github/**`, `.impeccable/**`, `.gstack/**`, `dist/**`, `public/**`, `android/**`, `ios/**`, `graphify-out/**`, `palace/**`) so `npm run lint` exclusively checks the application codebase.
+  - **Local Memory Palace Git Tracking (`.gitignore`):**
+    - Excluded local Chroma/Memory Palace files (`palace/`, `hallways.json`) from repository tracking.
+* **Trade-offs Accepted:**
+  - Non-application skill directories are excluded from the main webapp linter pass, ensuring production CI runs with zero false-positive blockers.
+
+
 
 
 

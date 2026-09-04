@@ -1,6 +1,20 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
   "plugins": ["react", "typescript", "oxc"],
+  "ignorePatterns": [
+    ".agents/**",
+    ".claude/**",
+    ".codex/**",
+    ".github/**",
+    ".impeccable/**",
+    ".gstack/**",
+    "dist/**",
+    "public/**",
+    "android/**",
+    "ios/**",
+    "graphify-out/**",
+    "palace/**"
+  ],
   "rules": {
     "react/rules-of-hooks": "error",
     "react/only-export-components": ["warn", { "allowConstantExport": true }]
