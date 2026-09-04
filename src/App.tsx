@@ -66,7 +66,7 @@ import { InAppNotificationBanner } from './components/InAppNotificationBanner';
 import { FitHeading } from './components/FitHeading';
 import { triggerHaptic } from './utils/haptics';
 import { useEscapeKey } from './utils/useEscapeKey';
-import { IconCalendar, IconChevronLeft, IconChevronDown, IconChevronUp, IconShield, IconSearch, IconPlus, IconWallet, IconMapPin, IconCheck, IconMembers } from './components/Icons';
+import { IconCalendar, IconChevronLeft, IconChevronDown, IconChevronUp, IconShield, IconSearch, IconPlus, IconWallet, IconMapPin, IconCheck, IconMembers, IconClose } from './components/Icons';
 import { formatDateRange } from './utils/dateRange';
 import { useScrollLock } from './utils/useScrollLock';
 import { useHistoryBack } from './utils/useHistoryBack';
@@ -377,19 +377,89 @@ export default function App() {
   const [showCmdKHint, setShowCmdKHint] = useState(() => !localStorage.getItem('tt-cmdk-hint-seen'));
   const [showTripWrapped, setShowTripWrapped] = useState(false);
   const [showAchievements, setShowAchievements] = useState(false);
+  const [showShortcutsModal, setShowShortcutsModal] = useState(false);
   const activePeers = usePeerPresence(activeTripId);
 
-  // Global Cmd+K / Ctrl+K keyboard shortcut for Command Palette
+  // Global Traveler Keyboard Shortcuts (Cmd+K, N for expense, 1-4 tabs, / search, ? help)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // 1. Universal Cmd+K / Ctrl+K
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
         setShowCommandPalette((prev) => !prev);
+        return;
+      }
+
+      // If user is inside an input, textarea, or contentEditable, don't hijack alphanumeric keys
+      const target = e.target as HTMLElement | null;
+      const isInputActive =
+        target &&
+        (target.tagName === 'INPUT' ||
+          target.tagName === 'TEXTAREA' ||
+          target.tagName === 'SELECT' ||
+          target.isContentEditable);
+
+      if (isInputActive) return;
+
+      // Without modifiers (no Alt, Ctrl, Cmd):
+      if (!e.metaKey && !e.ctrlKey && !e.altKey) {
+        // '?' shows Keyboard Shortcuts cheatsheet
+        if (e.key === '?') {
+          e.preventDefault();
+          setShowShortcutsModal((prev) => !prev);
+          return;
+        }
+
+        // '/' focuses search bar or opens command palette
+        if (e.key === '/') {
+          e.preventDefault();
+          const searchEl = document.querySelector<HTMLInputElement>('input[type="search"], input[placeholder*="Search"]');
+          if (searchEl) {
+            searchEl.focus();
+            searchEl.select();
+          } else {
+            setShowCommandPalette(true);
+          }
+          return;
+        }
+
+        // Inside an active trip:
+        if (activeTripId && !showAddExpense && !showCommandPalette) {
+          // 'N' or 'n' opens new expense form
+          if (e.key.toLowerCase() === 'n') {
+            e.preventDefault();
+            setShowAddExpense(true);
+            return;
+          }
+
+          // 1-4 switch tabs
+          if (e.key === '1') {
+            e.preventDefault();
+            setActiveTab('expenses');
+            return;
+          }
+          if (e.key === '2') {
+            e.preventDefault();
+            setActiveTab('ledger');
+            return;
+          }
+          if (e.key === '3') {
+            e.preventDefault();
+            setActiveTab('members');
+            return;
+          }
+          if (e.key === '4') {
+            e.preventDefault();
+            setActiveTab('settings');
+            return;
+          }
+        }
       }
     };
+
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
+  }, [activeTripId, showAddExpense, showCommandPalette, setActiveTab]);
 
   // Superadmin-set kill-switch (Ops Deck > Flags > Fleet Controls). Checked
   // once per load, not polled -- a superadmin flipping it mid-session
@@ -1473,6 +1543,7 @@ export default function App() {
   useHistoryBack(!!confirmRequest, () => setConfirmRequest(null));
   useHistoryBack(showCommandPalette, () => setShowCommandPalette(false));
   useHistoryBack(showTripWrapped, () => setShowTripWrapped(false));
+  useHistoryBack(showShortcutsModal, () => setShowShortcutsModal(false));
 
   // Escape key — the desktop equivalent of the back-gesture wiring above,
   // for the same set of overlay modals (excludes tab/trip navigation).
@@ -1484,6 +1555,8 @@ export default function App() {
   useEscapeKey(showGlobalSettings, () => setShowGlobalSettings(false));
   useEscapeKey(!!confirmRequest, () => setConfirmRequest(null));
   useEscapeKey(showTripWrapped, () => setShowTripWrapped(false));
+  useEscapeKey(showCommandPalette, () => setShowCommandPalette(false));
+  useEscapeKey(showShortcutsModal, () => setShowShortcutsModal(false));
 
   // Loading view
   if (!initialized) {
@@ -2357,6 +2430,89 @@ export default function App() {
             onClose={() => setShowAchievements(false)}
           />
         </Suspense>
+      )}
+
+      {/* Keyboard Shortcuts Modal */}
+      {showShortcutsModal && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="Keyboard Shortcuts"
+          className="modal-overlay"
+          onClick={() => setShowShortcutsModal(false)}
+          style={{ zIndex: 12000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+        >
+          <div
+            className="glass-card fade-in"
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              maxWidth: '440px',
+              width: '90%',
+              padding: '20px',
+              background: 'var(--bg-app)',
+              border: '1px solid var(--border-color)',
+              borderRadius: 'var(--border-radius-md)',
+              boxShadow: '0 12px 36px rgba(0,0,0,0.3)',
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ fontSize: '18px' }}>⌨️</span>
+                <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)' }}>
+                  Keyboard Shortcuts
+                </h3>
+              </div>
+              <button
+                type="button"
+                className="secondary-btn"
+                style={{ padding: '4px 6px' }}
+                onClick={() => setShowShortcutsModal(false)}
+                aria-label="Close"
+              >
+                <IconClose size={16} />
+              </button>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '13px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ color: 'var(--text-secondary)' }}>Universal Search & Switcher</span>
+                <kbd style={{ padding: '2px 8px', background: 'var(--bg-surface)', border: '1px solid var(--border-color)', borderRadius: '6px', fontSize: '11px', fontWeight: 600 }}>⌘K / Ctrl+K</kbd>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ color: 'var(--text-secondary)' }}>Log New Expense</span>
+                <kbd style={{ padding: '2px 8px', background: 'var(--bg-surface)', border: '1px solid var(--border-color)', borderRadius: '6px', fontSize: '11px', fontWeight: 600 }}>N</kbd>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ color: 'var(--text-secondary)' }}>Focus Search Bar</span>
+                <kbd style={{ padding: '2px 8px', background: 'var(--bg-surface)', border: '1px solid var(--border-color)', borderRadius: '6px', fontSize: '11px', fontWeight: 600 }}>/</kbd>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ color: 'var(--text-secondary)' }}>Switch to Expenses Tab</span>
+                <kbd style={{ padding: '2px 8px', background: 'var(--bg-surface)', border: '1px solid var(--border-color)', borderRadius: '6px', fontSize: '11px', fontWeight: 600 }}>1</kbd>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ color: 'var(--text-secondary)' }}>Switch to Balances Tab</span>
+                <kbd style={{ padding: '2px 8px', background: 'var(--bg-surface)', border: '1px solid var(--border-color)', borderRadius: '6px', fontSize: '11px', fontWeight: 600 }}>2</kbd>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ color: 'var(--text-secondary)' }}>Switch to Members Tab</span>
+                <kbd style={{ padding: '2px 8px', background: 'var(--bg-surface)', border: '1px solid var(--border-color)', borderRadius: '6px', fontSize: '11px', fontWeight: 600 }}>3</kbd>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ color: 'var(--text-secondary)' }}>Switch to Settings Tab</span>
+                <kbd style={{ padding: '2px 8px', background: 'var(--bg-surface)', border: '1px solid var(--border-color)', borderRadius: '6px', fontSize: '11px', fontWeight: 600 }}>4</kbd>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ color: 'var(--text-secondary)' }}>Close Dialog / Modal</span>
+                <kbd style={{ padding: '2px 8px', background: 'var(--bg-surface)', border: '1px solid var(--border-color)', borderRadius: '6px', fontSize: '11px', fontWeight: 600 }}>Esc</kbd>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ color: 'var(--text-secondary)' }}>Show this help card</span>
+                <kbd style={{ padding: '2px 8px', background: 'var(--bg-surface)', border: '1px solid var(--border-color)', borderRadius: '6px', fontSize: '11px', fontWeight: 600 }}>?</kbd>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Rendered unconditionally regardless of which screen is active

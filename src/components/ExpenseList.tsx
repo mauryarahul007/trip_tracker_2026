@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import type { CSSProperties } from 'react';
 import type { Category, Expense, Member, Trip } from '../types';
 import { IconSearch, IconEdit, IconAlertCircle, IconClose, IconCalendar, IconChevronRight, IconFilter } from './Icons';
@@ -232,6 +232,12 @@ export function ExpenseList({
     }
     return groups;
   }, []);
+
+  const avgDailySpend = useMemo(() => {
+    if (dayGroups.length === 0) return 0;
+    const total = dayGroups.reduce((acc, g) => acc + g.expenses.reduce((s, e) => s + e.amount, 0), 0);
+    return total / dayGroups.length;
+  }, [dayGroups]);
 
   // Every day-group starts collapsed on entering the tab to keep
   // the ledger clean and high-level; days expand on tap or toggle.
@@ -641,30 +647,38 @@ export function ExpenseList({
         )
       ) : (
         <>
-          {dayGroups.length > DEFAULT_EXPANDED_DAYS && (
-            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '8px' }}>
-              <button
-                type="button"
-                onClick={toggleAllDays}
-                aria-label={allDaysExpanded ? 'Collapse all days' : 'Expand all days'}
-                title={allDaysExpanded ? 'Collapse all days' : 'Expand all days'}
-                style={{
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  width: '28px', height: '28px', flexShrink: 0,
-                  background: allDaysExpanded ? 'var(--bg-surface-hover)' : 'var(--bg-surface)',
-                  border: '1px solid var(--border-color)',
-                  borderRadius: 'var(--border-radius-sm)',
-                  color: allDaysExpanded ? 'var(--primary-accent)' : 'var(--text-secondary)',
-                  cursor: 'pointer',
-                  transition: 'background 0.15s ease, color 0.15s ease',
-                }}
-              >
-                <IconChevronRight
-                  size={14}
-                  className="icon-sm"
-                  style={{ transition: 'transform 0.2s ease', transform: allDaysExpanded ? 'rotate(-90deg)' : 'rotate(90deg)' }}
-                />
-              </button>
+          {dayGroups.length > 0 && (
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', padding: '0 4px' }}>
+              <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                {dayGroups.length} {dayGroups.length === 1 ? 'day' : 'days'} {avgDailySpend > 0 ? `· Avg ${formatAmount(avgDailySpend, currencySymbol)}/day` : ''}
+              </span>
+              {dayGroups.length > 1 && (
+                <button
+                  type="button"
+                  onClick={toggleAllDays}
+                  aria-label={allDaysExpanded ? 'Collapse all days' : 'Expand all days'}
+                  title={allDaysExpanded ? 'Collapse all days' : 'Expand all days'}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: '4px',
+                    padding: '3px 8px',
+                    fontSize: '11px',
+                    fontWeight: 600,
+                    background: allDaysExpanded ? 'var(--bg-surface-hover)' : 'var(--bg-surface)',
+                    border: '1px solid var(--border-color)',
+                    borderRadius: '12px',
+                    color: allDaysExpanded ? 'var(--primary-accent)' : 'var(--text-secondary)',
+                    cursor: 'pointer',
+                    transition: 'background 0.15s ease, color 0.15s ease',
+                  }}
+                >
+                  <IconChevronRight
+                    size={12}
+                    className="icon-sm"
+                    style={{ transition: 'transform 0.2s ease', transform: allDaysExpanded ? 'rotate(-90deg)' : 'rotate(90deg)' }}
+                  />
+                  <span>{allDaysExpanded ? 'Collapse All' : 'Expand All'}</span>
+                </button>
+              )}
             </div>
           )}
           {dayGroups.map((group, groupIdx) => {
@@ -676,6 +690,7 @@ export function ExpenseList({
             const groupLabel = dayNum ? `Day ${dayNum} · ${dateLabel}` : dateLabel;
             const groupTotal = group.expenses.reduce((sum, e) => sum + e.amount, 0);
             const collapsed = isDayCollapsed(group.date, groupIdx);
+            const isHighBurn = avgDailySpend > 0 && groupTotal > avgDailySpend * 1.5 && group.expenses.length > 1;
 
             return (
               <div key={group.date} className="glass-card" style={{ padding: 0, overflow: 'hidden', marginBottom: '10px' }}>
@@ -702,11 +717,40 @@ export function ExpenseList({
                       {groupLabel}
                     </span>
                   </div>
-                  {collapsed && (
-                    <span style={{ fontSize: '12px', color: 'var(--text-muted)', flexShrink: 0 }}>
-                      {group.expenses.length} · {formatAmount(groupTotal, currencySymbol)}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+                    {isHighBurn && (
+                      <span
+                        style={{
+                          fontSize: '10px',
+                          fontWeight: 700,
+                          padding: '1px 5px',
+                          borderRadius: '8px',
+                          background: 'rgba(239, 68, 68, 0.15)',
+                          color: 'var(--color-danger, #ef4444)',
+                          border: '1px solid rgba(239, 68, 68, 0.3)',
+                        }}
+                        title="High spending day (> 1.5x average daily spend)"
+                      >
+                        🔥 Burn
+                      </span>
+                    )}
+                    <span
+                      style={{
+                        fontSize: '12px',
+                        fontWeight: 600,
+                        color: 'var(--text-primary)',
+                        background: 'var(--bg-card)',
+                        padding: '2px 8px',
+                        borderRadius: '12px',
+                        border: '1px solid var(--border-color)',
+                      }}
+                    >
+                      {formatAmount(groupTotal, currencySymbol)}
                     </span>
-                  )}
+                    <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                      {group.expenses.length}
+                    </span>
+                  </div>
                 </div>
 
                 {!collapsed && group.expenses.map((exp, idx) => {

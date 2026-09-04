@@ -1,4 +1,4 @@
-import type { Category } from '../types';
+import type { Category, Expense } from '../types';
 import {
   TOP_50_BRANDS,
   TOP_50_ITEMS,
@@ -92,16 +92,40 @@ function keywordMatchesText(keyword: string, text: string): boolean {
  * Smart Title-to-Category Auto-Tagging
  *
  * Matching Priority Order:
+ * 0. Trip History Memory (Matches previous identical or similar expenses in this trip)
  * 1. Brand Match (Top 50 Brands & Category Brands)
  * 2. Item Match (Top 50 Items & Category Items / Custom Keywords)
  * 3. Custom Category Name Match
  * 4. Default Category Name Match
  */
-export function autoSuggestCategory(titleText: string, categories: Category[]): string | null {
+export function autoSuggestCategory(
+  titleText: string,
+  categories: Category[],
+  historicalExpenses?: Expense[]
+): string | null {
   const cleanText = titleText.trim();
   if (!cleanText) return null;
 
   const activeCategoryIds = new Set(categories.map((c) => c.id));
+
+  // -------------------------------------------------------------------------
+  // Priority 0: Historical Trip Memory
+  // -------------------------------------------------------------------------
+  if (historicalExpenses && historicalExpenses.length > 0) {
+    const lowerClean = cleanText.toLowerCase();
+    for (const exp of historicalExpenses) {
+      if (exp.category && activeCategoryIds.has(exp.category)) {
+        const expTitle = exp.title.trim().toLowerCase();
+        if (
+          expTitle === lowerClean ||
+          (lowerClean.length >= 3 && expTitle.includes(lowerClean)) ||
+          (expTitle.length >= 3 && lowerClean.includes(expTitle))
+        ) {
+          return exp.category;
+        }
+      }
+    }
+  }
 
   // -------------------------------------------------------------------------
   // Priority 1: Brand Match (Top 50 Brands & Extended Category Brands)

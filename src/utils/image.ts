@@ -1,5 +1,7 @@
-const MAX_DIMENSION = 1000;
-const JPEG_QUALITY = 0.7;
+import { compressImageFile, MAX_COMPRESS_FILE_SIZE_BYTES } from './imageCompressor';
+
+const MAX_DIMENSION = 1200;
+const JPEG_QUALITY = 0.75;
 
 function compressDataUrlSource(dataUrl: string): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -16,6 +18,8 @@ function compressDataUrlSource(dataUrl: string): Promise<string> {
         reject(new Error('Canvas not supported.'));
         return;
       }
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
       ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
       resolve(canvas.toDataURL('image/jpeg', JPEG_QUALITY));
     };
@@ -23,26 +27,24 @@ function compressDataUrlSource(dataUrl: string): Promise<string> {
   });
 }
 
-export const MAX_RECEIPT_FILE_SIZE_BYTES = 5 * 1024 * 1024; // 5MB limit
+export const MAX_RECEIPT_FILE_SIZE_BYTES = MAX_COMPRESS_FILE_SIZE_BYTES; // 25MB limit for high-res camera captures
 const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif'];
 
-// Downscales and re-encodes an image file to a compact base64 JPEG, so receipt
+// Downscales and re-encodes an image file to a compact base64 JPEG/WebP, so receipt
 // photos don't bloat IndexedDB storage with full camera-resolution originals.
 export function compressImageToDataUrl(file: File): Promise<string> {
   if (file.size > MAX_RECEIPT_FILE_SIZE_BYTES) {
-    return Promise.reject(new Error('Image file is too large. Maximum size is 5MB.'));
+    return Promise.reject(new Error('Image file is too large. Maximum size is 25MB.'));
   }
   if (file.type && !ALLOWED_IMAGE_TYPES.includes(file.type) && !file.type.startsWith('image/')) {
     return Promise.reject(new Error('Only image files (JPEG, PNG, WebP) are allowed.'));
   }
 
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onerror = () => reject(new Error('Failed to read image file.'));
-    reader.onload = () => {
-      compressDataUrlSource(reader.result as string).then(resolve).catch(reject);
-    };
-    reader.readAsDataURL(file);
+  return compressImageFile(file, {
+    maxWidth: MAX_DIMENSION,
+    maxHeight: MAX_DIMENSION,
+    quality: JPEG_QUALITY,
+    mimeType: 'image/jpeg',
   });
 }
 

@@ -9,6 +9,7 @@ import { avatarColorForName } from '../utils/avatarColor';
 import { getCurrencySymbol } from '../utils/currency';
 import { compressImageToDataUrl, compressDataUrlToDataUrl } from '../utils/image';
 import { autoSuggestCategory } from '../utils/categoryHelper';
+import { parseQuickExpense } from '../utils/expenseQuickParser';
 import { captureCurrentExpenseLocation } from '../utils/geolocation';
 import { useTripStore } from '../store/tripStore';
 import { triggerHaptic } from '../utils/haptics';
@@ -138,6 +139,11 @@ export function ExpenseForm({
   // Receipt OCR suggestion state
   const [ocrSuggestion, setOcrSuggestion] = useState<ExtractedReceiptData | null>(null);
 
+  // Quick Fill state & Smart Category Auto-Predictor feedback
+  const [quickInput, setQuickInput] = useState('');
+  const [showQuickFill, setShowQuickFill] = useState(false);
+  const [autoSelectedCategoryName, setAutoSelectedCategoryName] = useState<string | null>(null);
+
   // Duplicate warning interactives state
   const [ignoredDuplicateId, setIgnoredDuplicateId] = useState<string | null>(null);
   const [showDuplicateDetails, setShowDuplicateDetails] = useState(false);
@@ -249,6 +255,30 @@ export function ExpenseForm({
   const splitConfigMatches = splitConfigTarget === null || Math.abs(splitConfigSum - splitConfigTarget) < 0.02;
 
   // Handlers
+  const handleApplyQuickFill = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!quickInput.trim()) return;
+    const parsed = parseQuickExpense(quickInput, categories, allTripExpenses);
+    if (parsed) {
+      triggerHaptic('medium');
+      if (parsed.amount !== null && parsed.amount > 0) {
+        setAmount(String(parsed.amount));
+      }
+      if (parsed.currency && POPULAR_CURRENCIES.some((c) => c.code === parsed.currency)) {
+        setSelectedCurrency(parsed.currency);
+      }
+      if (parsed.title) {
+        setTitle(parsed.title);
+      }
+      if (parsed.categoryId) {
+        setCategory(parsed.categoryId);
+        setAutoSelectedCategoryName(parsed.categoryName || null);
+      }
+      setQuickInput('');
+      setShowQuickFill(false);
+    }
+  };
+
   const handleReceiptFileChangeLocal = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     e.target.value = '';
@@ -388,8 +418,12 @@ export function ExpenseForm({
       const transcript = event.results[0]?.[0]?.transcript;
       if (transcript) {
         setTitle(transcript);
-        const suggested = autoSuggestCategory(transcript, categories);
-        if (suggested) setCategory(suggested);
+        const suggested = autoSuggestCategory(transcript, categories, allTripExpenses);
+        if (suggested) {
+          setCategory(suggested);
+          const foundCat = categories.find((c) => c.id === suggested);
+          setAutoSelectedCategoryName(foundCat?.name || null);
+        }
       }
     };
     recognition.onerror = () => setIsListening(false);
@@ -521,6 +555,88 @@ export function ExpenseForm({
           </button>
         </div>
       </header>
+
+      {!editingExpense && (
+        <div style={{ marginBottom: '14px' }}>
+          {!showQuickFill ? (
+            <button
+              type="button"
+              onClick={() => {
+                triggerHaptic('light');
+                setShowQuickFill(true);
+              }}
+              className="pill-chip"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '6px 12px',
+                fontSize: '12px',
+                fontWeight: 600,
+                background: 'rgba(var(--primary-accent-rgb, 59, 130, 246), 0.1)',
+                color: 'var(--primary-accent)',
+                border: '1px dashed var(--primary-accent)',
+                borderRadius: '20px',
+                cursor: 'pointer',
+              }}
+            >
+              <span>⚡ Quick Fill</span>
+              <span style={{ fontSize: '11px', opacity: 0.8, fontWeight: 400 }}>e.g. "Dinner 1450 food" or "Uber 350"</span>
+            </button>
+          ) : (
+            <div
+              className="fade-in"
+              style={{
+                padding: '10px 12px',
+                background: 'var(--bg-secondary)',
+                borderRadius: 'var(--border-radius-md)',
+                border: '1px solid var(--primary-accent)',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '8px',
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--primary-accent)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  ⚡ Smart Quick Fill
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setShowQuickFill(false)}
+                  style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '2px' }}
+                >
+                  <IconClose size={14} />
+                </button>
+              </div>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <input
+                  type="text"
+                  className="input-field"
+                  style={{ fontSize: '13px', padding: '8px 10px', flex: 1 }}
+                  placeholder='e.g. "Dinner 1450 food" or "Uber to airport 420"'
+                  value={quickInput}
+                  onChange={(e) => setQuickInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleApplyQuickFill();
+                    }
+                  }}
+                  autoFocus
+                />
+                <button
+                  type="button"
+                  className="primary-btn"
+                  style={{ padding: '0 14px', fontSize: '12px', height: '38px', flexShrink: 0 }}
+                  onClick={() => handleApplyQuickFill()}
+                >
+                  Fill
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="form-group">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
@@ -701,8 +817,12 @@ export function ExpenseForm({
                 if (ocrSuggestion.amount) setAmount(String(ocrSuggestion.amount));
                 if (ocrSuggestion.merchant) {
                   setTitle(ocrSuggestion.merchant);
-                  const suggestedCat = autoSuggestCategory(ocrSuggestion.merchant, categories);
-                  if (suggestedCat) setCategory(suggestedCat);
+                  const suggestedCat = autoSuggestCategory(ocrSuggestion.merchant, categories, allTripExpenses);
+                  if (suggestedCat) {
+                    setCategory(suggestedCat);
+                    const foundCat = categories.find((c) => c.id === suggestedCat);
+                    setAutoSelectedCategoryName(foundCat?.name || null);
+                  }
                 }
                 if (ocrSuggestion.date) setDate(ocrSuggestion.date);
                 setOcrSuggestion(null);
@@ -798,9 +918,11 @@ export function ExpenseForm({
               const val = e.target.value;
               setTitle(val);
               if (formError) setFormError('');
-              const suggested = autoSuggestCategory(val, categories);
+              const suggested = autoSuggestCategory(val, categories, allTripExpenses);
               if (suggested) {
                 setCategory(suggested);
+                const foundCat = categories.find((c) => c.id === suggested);
+                setAutoSelectedCategoryName(foundCat?.name || null);
               }
             }}
           />
@@ -829,6 +951,11 @@ export function ExpenseForm({
             </button>
           )}
         </div>
+        {autoSelectedCategoryName && (
+          <div className="fade-in" style={{ marginTop: '5px', fontSize: '11px', color: 'var(--primary-accent)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <span>✨ Auto-selected: <strong>{autoSelectedCategoryName}</strong></span>
+          </div>
+        )}
         {isTitleFormError && (
           <p style={{ color: 'var(--color-danger)', fontSize: '12px', marginTop: '6px', marginBottom: 0 }}>
             {formError}

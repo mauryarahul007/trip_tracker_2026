@@ -80,6 +80,30 @@ describe('Category Auto-Suggestion & 200+ Keywords Engine', () => {
     expect(dataset.items).toContain('milk');
   });
 
+  it('matches historical trip expenses as Priority 0', () => {
+    const historicalExpenses = [
+      {
+        id: 'exp-1',
+        tripId: 't-1',
+        title: 'Baga Creek Shack',
+        amount: 500,
+        currency: 'INR',
+        category: 'cat-food',
+        date: '2026-08-12',
+        paidBy: 'm-1',
+        splitMode: 'equal' as const,
+        splitMemberIds: ['m-1'],
+        resolvedShares: { 'm-1': 500 },
+        isSettlement: false,
+        createdByUserId: 'u-1',
+        createdAt: 1,
+        updatedAt: 1,
+      },
+    ];
+
+    expect(autoSuggestCategory('Baga Creek Shack lunch', categories, historicalExpenses)).toBe('cat-food');
+  });
+
   it('returns null if no keywords or category names match', () => {
     expect(autoSuggestCategory('Unrelated mysterious expenditure #42', categories)).toBeNull();
   });
