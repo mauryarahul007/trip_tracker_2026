@@ -4366,9 +4366,9 @@
     "actualBehavior": "",
     "diagnostics": {},
     "createdAt": "2026-09-04T05:59:17.150Z",
-    "updatedAt": "2026-09-04T06:08:14.644Z",
+    "updatedAt": "2026-09-04T06:16:43.038Z",
     "resolvedBy": "claude-cli",
-    "resolvedAt": "2026-09-04T06:08:14.643Z",
-    "resolutionNote": "Root cause was CSP, not the flex clipping fixed in 920ad18 (that was real but secondary): index.html's connect-src allowlist never included geocoding-api.open-meteo.com or api.open-meteo.com, so both the geocoding and forecast fetches were silently blocked by the browser -- weather never had data to render regardless of CSS. Fixed in commit 5c2504b: added both domains to CSP. Also hardened the countdown badge further in the same commit: label text is now uniform near-white instead of colored, since small colored text over a blurred photo backdrop can't guarantee contrast."
+    "resolvedAt": "2026-09-04T06:16:43.037Z",
+    "resolutionNote": "Actual root cause was the service worker (public/sw.js), not the CSP alone: its fetch handler treated index.html (the app shell, which carries the CSP header) with stale-while-revalidate -- always serve the cached copy instantly, revalidate in background -- and CACHE_NAME never changes between deploys, so there was no signal to ever prompt a reload. Users could stay on an arbitrarily old cached shell (and therefore an old CSP) indefinitely. Fixed in commit 17b4443: navigation requests (the shell) now go network-first with cache fallback for offline; hashed static assets keep the fast SWR path since a stale one can't be referenced by a fresh shell. Requires one full close-and-reopen (or hard refresh) of the site to pick up the new service worker and shell -- confirmed via GH Actions CI/EC2/Pages all green on commits 5c2504b (CSP + badge) and 17b4443 (SW fix)."
   }
 ]
