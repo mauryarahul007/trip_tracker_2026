@@ -4396,5 +4396,31 @@
     "resolvedBy": "claude-cli",
     "resolvedAt": "2026-09-04T06:33:11.162Z",
     "resolutionNote": "getTripStatusBadge and getItineraryProgress (src/components/TripStack.tsx) computed today's date via new Date().toISOString().split('T')[0], which is the UTC calendar date, not the viewer's local date. For IST (UTC+5:30), that's already tomorrow's UTC date after 6:30pm local, so trip status (past/ongoing/upcoming) and the countdown badge could misclassify depending on time of day. Fixed in commit f1f2345: added localDateStr() using toLocaleDateString('en-CA') (YYYY-MM-DD in local timezone) and swapped both call sites to use it."
+  },
+  {
+    "id": "BUG-142",
+    "title": "Destination name crushed to 2-3 chars in merged trip-card pill",
+    "description": "Destination name crushed to 2-3 chars in merged trip-card pill",
+    "severity": "medium",
+    "category": "ui-ux",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-09-04T06:43:47.815Z",
+    "updatedAt": "2026-09-04T06:43:48.196Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-09-04T06:43:48.195Z",
+    "resolutionNote": "Merging countdown + destination + weather into one pill (f1f2345) left .stack-caption-dest as the only flex-shrink segment against .stack-unified-header's max-width:65%, so with three segments competing even short names like 'Meghalaya' got squeezed to 'Meghal...'. Fixed in commit 9a24804: max-width now reserves exactly the round date stamp's footprint (calc(100% - 76px)) instead of an arbitrary 65%, and .stack-caption-dest got a 56px min-width floor so short names never collapse; ellipsis remains as a real fallback for genuinely long multi-stop routes."
   }
 ]
