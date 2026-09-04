@@ -9,10 +9,10 @@
 
 | Metric | Count | Status Notes |
 | :--- | :--- | :--- |
-| **Total Tracked** | **142** | All recorded bugs across sessions |
+| **Total Tracked** | **143** | All recorded bugs across sessions |
 | **🟢 Open** | **0** | No critical blockers, 0 High |
 | **🟡 In Progress** | **0** | Active investigation or fix |
-| **✅ Resolved** | **116** | Verified & closed |
+| **✅ Resolved** | **117** | Verified & closed |
 | **⚪ Won't Fix** | **26** | Expected behavior / deferred |
 
 ---
@@ -37,6 +37,7 @@
 | **BUG-013** | Sole Admin account deletion caused orphaned trips with no administrative control | `general` | `high` | `human` | `antigravity` | Implemented sole-admin deletion protection requiring at least one other Google-linked Admin before removing an admin account. |
 | **BUG-010** | Native Google OAuth deep link failed on Android auth code exchange | `auth` | `high` | `claude-cli` | `claude-cli` | Broadened AndroidManifest.xml intent filter and updated parseNativeAuthCallback to support both code and token URL formats. |
 | **BUG-011** | Mobile Safari 100vh caused bottom navigation and toasts to be obscured | `ui-ux` | `medium` | `antigravity` | `antigravity` | Applied CSS 100dvh units with -webkit-fill-available fallbacks and env(safe-area-inset-bottom) padding. |
+| **BUG-143** | iOS Safari bottom nav bar floats above a black gap instead of sitting flush at viewport bottom | `ui-ux` | `medium` | `mauryarahul007@gmail.com` | `claude-cli` | Added applyViewportHeightVar() in nativeShell.ts driving --app-vh off visualViewport (100dvh freezes stale on iOS Safari since the doc is overflow:hidden and never gets the scroll trigger dvh needs to recompute). Swapped index.css's fixed-height chain to var(--app-vh, 100dvh). Also unguarded applySafeAreaVars() from the Capacitor-only check. Commit 72156f8. |
 | **BUG-001** | Hardware swipe-back gesture blocked by scroll-lock touch-action | `navigation` | `medium` | `claude-cli` | `claude-cli` | Fixed in commit by scoping touch-action to individual swipeable rows instead of whole viewport. |
 | **BUG-014** | Expense geotagging wrote place names to database violating coordinates-only rule | `performance` | `medium` | `human` | `claude-cli` | Added coordsOnly() sanitizer in tripApi.ts and ran DB migration 0043 to scrub historical placeName strings. |
 | **BUG-006** | Back navigation used same-URL pushState causing history loops | `navigation` | `medium` | `claude-cli` | `claude-cli` | Converted useHistoryBack to push unique hash fragment URLs, creating unambiguous stack entries. |

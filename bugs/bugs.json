@@ -4422,5 +4422,35 @@
     "resolvedBy": "claude-cli",
     "resolvedAt": "2026-09-04T06:53:11.018Z",
     "resolutionNote": "The 9a24804 fix (calc(100% - 76px) max-width + 56px min-width on destination) helped short names but wasn't enough for a genuinely long multi-stop route ('Gangtok -> Lachung -> Pelling') sharing one pill with the countdown badge and weather -- three segments always competing for one row meant it kept truncating. Real fix in commit 6968303: split back into two stacked pills -- countdown badge on its own row, destination + weather pill below it, so destination only shares its row with weather (not weather + badge) and gets far more width. Confirmed against the actual reported multi-stop route."
+  },
+  {
+    "id": "BUG-143",
+    "title": "iOS Safari bottom nav bar floats above a black gap instead of sitting flush at viewport bottom",
+    "description": "On iOS Safari, .nav-tabs (position:absolute inside .app-container) rendered with a large empty gap between it and Safari browser chrome, while Android rendered correctly. Root cause: 100dvh freezes at the chrome height present on first paint on iOS Safari and never recomputes, because that recalculation is scroll-driven and html/body/.app-container are intentionally overflow:hidden (decisions.md #12), so the outer document never scrolls and Safari never gets the trigger to re-measure. Regression-adjacent to BUG-011 (same 100dvh mechanism, different failure mode of the same WebKit quirk).",
+    "severity": "medium",
+    "category": "ui-ux",
+    "status": "resolved",
+    "foundBy": "mauryarahul007@gmail.com",
+    "environment": {
+      "isOnline": true,
+      "platform": "ios",
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "On an iPhone, scan a trip QR code from another app (e.g. camera) so it opens fresh in mobile Safari",
+      "Land on any trip screen (e.g. Members tab)",
+      "Observe the floating bottom nav pill sits well above Safari's own toolbar, with a black gap between them",
+      "Compare against Android Chrome, which renders the nav flush at the true viewport bottom"
+    ],
+    "expectedBehavior": "Bottom nav bar renders identically flush against the visible viewport bottom on iOS Safari and Android Chrome.",
+    "actualBehavior": ".app-container (height:100dvh) rendered shorter than the actual visible viewport on iOS Safari, leaving unstyled background between the nav bar and the browser chrome.",
+    "diagnostics": {
+      "note": "No thrown error -- purely a WebKit 100dvh recompute bug. Confirmed via code inspection: no JS-driven viewport height fallback existed; body/html locked overflow:hidden per decisions.md #12 removes the scroll trigger dvh needs to recompute on iOS Safari."
+    },
+    "createdAt": "2026-09-04T13:47:08.000Z",
+    "updatedAt": "2026-09-04T13:47:08.000Z",
+    "resolvedAt": "2026-09-04T13:47:08.000Z",
+    "resolvedBy": "claude-cli",
+    "resolutionNote": "Added applyViewportHeightVar() in src/utils/nativeShell.ts, driving CSS var --app-vh off window.visualViewport (fires resize/scroll independent of document scroll, unlike frozen 100dvh). Swapped the fixed-height chain in src/index.css (body, #root, .app-container, .modal-sheet, .trips-screen-scroll.stack-viewport-lock) from bare 100dvh to height: var(--app-vh, 100dvh), keeping 100dvh as the pre-JS/no-JS fallback. Also unguarded applySafeAreaVars() from the Capacitor-native-only check so --safe-bottom resolves on plain mobile Safari too, not just the native app shell. Commit 72156f8."
   }
 ]
