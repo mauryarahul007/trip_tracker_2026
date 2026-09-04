@@ -1446,6 +1446,28 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - Weather without geocoded coordinates gracefully renders `null` rather than a guessed daylight fallback, ensuring accurate information integrity.
 
+---
+
+## 83. Advanced Touch Ergonomics, Velocity Flick Physics & Single-Trip Spotlight
+* **Context:**
+  - The pagination stepper dots required discrete, individual taps, which felt rigid compared to modern fluid carousel scrubbers.
+  - Card swiping relied solely on distance threshold ($>90\text{px}$), failing to respond to quick, energetic flicks.
+  - When users had only 1 trip, the app dropped back to a plain flat list card, missing out on the luxury ambient spotlight.
+* **Decision:**
+  - **Continuous Stepper Touch Scrubber (`TripsListScreen.tsx`, `index.css`):**
+    - Enabled pointer scrubbing across `.trip-stepper-dots` so sliding horizontally across the track scrubs through cards with haptic ticks (`triggerHaptic('light')`).
+  - **Velocity-Flick Inertia Physics (`TripStack.tsx`):**
+    - Calculated release velocity ($v = \Delta x / \Delta t$) over a 100ms pointer buffer. Quick flicks ($|v| > 0.42\text{ px/ms}$) commit dismissal immediately with exit duration dynamically scaled to flick speed.
+  - **Single-Trip Hero Spotlight (`TripsListScreen.tsx`, `TripStack.tsx`):**
+    - Enabled `stackActive` when `trips.length >= 1`, presenting single-trip accounts in full hero spotlight (ambient backlight, destination photography, and real-time weather) while keeping horizontal cycling disabled.
+  - **Time-of-Day Adaptive Greeting (`TripsListScreen.tsx`, `index.css`):**
+    - Subtly replaced static subheadings with personalized local greetings (*"Good morning/afternoon/evening, [Name]"*) and an expedition counter badge.
+  - **Micro-Gesture Peek Preview (`TripStack.tsx`, `index.css`):**
+    - Dragging downward ($dy > 8\text{px}$) or rapid double-tapping briefly escalates the card behind into full clarity (`↓ Peek Next`) before settling smoothly back.
+* **Trade-offs Accepted:**
+  - Pointer capture during stepper scrubbing smoothly tracks outside the bounding box until pointer release, preventing lost scrub gestures on small touchscreens.
+
+
 
 
 

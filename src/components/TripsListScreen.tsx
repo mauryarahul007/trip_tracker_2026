@@ -48,6 +48,13 @@ type Props = {
   userDisplayName?: string | null;
 };
 
+function getTimeGreeting(): string {
+  const hour = new Date().getHours();
+  if (hour >= 5 && hour < 12) return 'Good morning';
+  if (hour >= 12 && hour < 17) return 'Good afternoon';
+  return 'Good evening';
+}
+
 export function TripsListScreen({
   trips,
   members,
@@ -84,6 +91,8 @@ export function TripsListScreen({
   const refreshTrips = useTripStore((s) => s.refreshTrips);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const ptrIndicatorRef = useRef<HTMLDivElement>(null);
+  const stepperTrackRef = useRef<HTMLDivElement>(null);
+  const [isScrubbing, setIsScrubbing] = useState(false);
   const [showJoinTrip, setShowJoinTrip] = useState(false);
   const [joinCode, setJoinCode] = useState('');
   const [honeypotVal, setHoneypotVal] = useState('');
@@ -92,7 +101,43 @@ export function TripsListScreen({
   const [frontTripIndex, setFrontTripIndex] = useState(0);
   const [targetTripId, setTargetTripId] = useState<string | null>(null);
   const [isSavingTrip, setIsSavingTrip] = useState(false);
-  const stackActive = trips.length >= 2 && !showList && !showAddTrip && !showJoinTrip;
+  // Enables full luxury hero spotlight even with 1 trip
+  const stackActive = trips.length >= 1 && !showList && !showAddTrip && !showJoinTrip;
+
+  const handleStepperScrub = (clientX: number) => {
+    const track = stepperTrackRef.current;
+    if (!track || trips.length < 2) return;
+    const rect = track.getBoundingClientRect();
+    const x = Math.max(0, Math.min(rect.width, clientX - rect.left));
+    const ratio = x / rect.width;
+    const newIndex = Math.min(trips.length - 1, Math.floor(ratio * trips.length));
+    if (newIndex !== frontTripIndex) {
+      triggerHaptic('light');
+      setFrontTripIndex(newIndex);
+      setTargetTripId(trips[newIndex].id);
+    }
+  };
+
+  const handleStepperPointerDown = (e: React.PointerEvent) => {
+    setIsScrubbing(true);
+    (e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId);
+    handleStepperScrub(e.clientX);
+  };
+
+  const handleStepperPointerMove = (e: React.PointerEvent) => {
+    if (!isScrubbing) return;
+    handleStepperScrub(e.clientX);
+  };
+
+  const handleStepperPointerUp = (e: React.PointerEvent) => {
+    if (!isScrubbing) return;
+    setIsScrubbing(false);
+    try {
+      (e.currentTarget as HTMLElement).releasePointerCapture?.(e.pointerId);
+    } catch {
+      // ignore
+    }
+  };
 
   useEffect(() => {
     if (!focusedTrip && trips.length > 0) {
@@ -190,8 +235,14 @@ export function TripsListScreen({
         )}
         <div style={{ textAlign: 'center' }}>
           <h1 className="app-logo">Trip Tracker 2026</h1>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '14px', marginTop: '4px' }}>
-            Offline-first cost splitting & groups
+          <p className="home-adaptive-greeting" style={{ color: 'var(--text-secondary)', fontSize: '13.5px', marginTop: '4px' }}>
+            <span>{getTimeGreeting()}{userDisplayName ? `, ${userDisplayName.split(' ')[0]}` : ''}</span>
+            {trips.length > 0 && (
+              <>
+                <span style={{ margin: '0 6px', opacity: 0.4 }}>&middot;</span>
+                <span className="home-expeditions-count">{trips.length} {trips.length === 1 ? 'Expedition' : 'Expeditions'}</span>
+              </>
+            )}
           </p>
         </div>
         <button
@@ -540,7 +591,16 @@ export function TripsListScreen({
               />
             )}
             {stackActive && trips.length >= 2 && (
-              <div className="trip-stepper-dots trip-stepper-track" role="tablist" aria-label="Trip pagination">
+              <div
+                ref={stepperTrackRef}
+                className={`trip-stepper-dots trip-stepper-track${isScrubbing ? ' scrubbing' : ''}`}
+                role="tablist"
+                aria-label="Trip pagination"
+                onPointerDown={handleStepperPointerDown}
+                onPointerMove={handleStepperPointerMove}
+                onPointerUp={handleStepperPointerUp}
+                onPointerCancel={handleStepperPointerUp}
+              >
                 {trips.map((t, idx) => (
                   <button
                     key={t.id}

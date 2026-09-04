@@ -435,9 +435,11 @@ type CardItemProps = {
   members: Record<string, Member>;
   userId: string | null;
   idx: number;
+  totalTrips: number;
   canDelete: boolean;
   dragProgress?: number;
   onDragProgress?: (ratio: number, dragX: number) => void;
+  onPeekPreview?: () => void;
   onOpen: () => void;
   onQuickAddExpense?: (tripId: string) => void;
   onBrowse: () => void;
@@ -461,9 +463,11 @@ function StackCardItem({
   members,
   userId,
   idx,
+  totalTrips,
   canDelete,
   dragProgress,
   onDragProgress,
+  onPeekPreview,
   onOpen,
   onQuickAddExpense,
   onBrowse,
@@ -487,6 +491,7 @@ function StackCardItem({
   const holdStart = useRef(0);
   const lastPointer = useRef<{ x: number; y: number; time: number }>({ x: 0, y: 0, time: 0 });
   const velocity = useRef<{ vx: number; vy: number }>({ vx: 0, vy: 0 });
+  const lastTapRef = useRef(0);
 
   const clearLongPress = () => {
     if (longPressTimer.current) {
@@ -527,10 +532,24 @@ function StackCardItem({
 
   const handlePointerDown = (e: React.PointerEvent) => {
     if (!isFront || e.pointerType !== 'touch' || quickActionsOpen) return;
+    const now = performance.now();
+
+    // Double-tap peek micro-gesture: rapidly double-tapping peeks the next card
+    if (totalTrips > 1 && now - lastTapRef.current < 280) {
+      lastTapRef.current = 0;
+      clearLongPress();
+      stopHoldRing(false);
+      triggerHaptic('light');
+      gestureFired.current = true;
+      onPeekPreview?.();
+      return;
+    }
+    lastTapRef.current = now;
+
     active.current = true;
     moved.current = false;
     start.current = { x: e.clientX, y: e.clientY };
-    lastPointer.current = { x: e.clientX, y: e.clientY, time: performance.now() };
+    lastPointer.current = { x: e.clientX, y: e.clientY, time: now };
     velocity.current = { vx: 0, vy: 0 };
     setDragging(true);
     startHoldRing();
@@ -566,8 +585,10 @@ function StackCardItem({
       moved.current = true;
       clearLongPress();
     }
-    setDrag({ x: dx, y: dy });
-    onDragProgress?.(Math.min(1, Math.abs(dx) / SWIPE_THRESHOLD), dx);
+    // Damp horizontal drag if there's only 1 trip in the deck
+    const effectiveDx = totalTrips < 2 ? dx * 0.25 : dx;
+    setDrag({ x: effectiveDx, y: dy });
+    onDragProgress?.(Math.min(1, Math.max(Math.abs(effectiveDx), Math.max(0, dy * 1.5)) / SWIPE_THRESHOLD), effectiveDx);
   };
 
   const endDrag = () => {
@@ -580,28 +601,33 @@ function StackCardItem({
 
     const { x, y } = drag;
     const { vx, vy } = velocity.current;
+    const canSwipe = totalTrips >= 2;
 
     // Velocity-assisted flick (natural quick throw) or distance-based commit
-    const isHorizFlick = Math.abs(vx) > 0.48 && Math.abs(x) > 28;
-    const isHorizThreshold = Math.abs(x) > Math.abs(y) && Math.abs(x) > SWIPE_THRESHOLD;
+    const isHorizFlick = canSwipe && Math.abs(vx) > 0.42 && Math.abs(x) > 24;
+    const isHorizThreshold = canSwipe && Math.abs(x) > Math.abs(y) && Math.abs(x) > SWIPE_THRESHOLD;
 
     if (isHorizFlick || isHorizThreshold) {
       gestureFired.current = true;
       triggerHaptic('light');
       const dir = isHorizFlick ? (vx > 0 ? 'right' : 'left') : (x > 0 ? 'right' : 'left');
       setExit(dir);
-      setTimeout(onBrowse, EXIT_COMMIT_MS);
+      const flickSpeed = Math.max(1, Math.abs(vx));
+      const dynamicCommitMs = Math.max(160, Math.min(EXIT_COMMIT_MS, Math.round(EXIT_COMMIT_MS / (flickSpeed * 0.9))));
+      setTimeout(onBrowse, dynamicCommitMs);
       return;
     }
 
-    const isUpFlick = vy < -0.48 && y < -28;
+    const isUpFlick = vy < -0.42 && y < -24;
     const isUpThreshold = y < -SWIPE_THRESHOLD && Math.abs(y) > Math.abs(x);
 
     if (isUpFlick || isUpThreshold) {
       gestureFired.current = true;
       triggerHaptic('success');
       setExit('up');
-      setTimeout(onArchive, EXIT_COMMIT_MS);
+      const flickSpeed = Math.max(1, Math.abs(vy));
+      const dynamicCommitMs = Math.max(160, Math.min(EXIT_COMMIT_MS, Math.round(EXIT_COMMIT_MS / (flickSpeed * 0.9))));
+      setTimeout(onArchive, dynamicCommitMs);
       return;
     }
     setDrag({ x: 0, y: 0 });
@@ -643,10 +669,11 @@ function StackCardItem({
   const badgeDist = badgeHoriz ? Math.abs(drag.x) : Math.abs(drag.y);
   const badgeArmed = badgeDist > SWIPE_THRESHOLD || Math.abs(velocity.current.vx) > 0.45;
   const badgeProgress = Math.min(1, badgeDist / SWIPE_THRESHOLD);
-  const badgeKind: 'browse' | 'archive' | null =
+  const badgeKind: 'browse' | 'archive' | 'peek' | null =
     !dragging || exit ? null :
-    badgeHoriz && Math.abs(drag.x) > 6 ? 'browse' :
-    drag.y < -6 ? 'archive' : null;
+    totalTrips >= 2 && badgeHoriz && Math.abs(drag.x) > 6 ? 'browse' :
+    drag.y < -6 ? 'archive' :
+    totalTrips >= 2 && drag.y > 8 ? 'peek' : null;
 
   // Real-time reactive escalation for cards at depth-1 and depth-2
   let peekStyle: React.CSSProperties | undefined = undefined;
@@ -728,7 +755,8 @@ function StackCardItem({
             transform: `translate(-50%, ${(-6 + badgeProgress * 6).toFixed(1)}px) scale(${(0.85 + badgeProgress * (badgeArmed ? 0.2 : 0.1)).toFixed(2)})`,
           }}
         >
-          {badgeKind === 'browse' ? (drag.x < 0 ? '← Browse' : 'Browse →') : '↑ Archive'}
+          {badgeKind === 'browse' ? (drag.x < 0 ? '← Browse' : 'Browse →') :
+           badgeKind === 'archive' ? '↑ Archive' : '↓ Peek Next'}
         </div>
       )}
       {isFront && (
@@ -859,6 +887,14 @@ export function TripStack({
 
   const cycleToBack = () => setManualOrder([...order.slice(1), order[0]]);
 
+  const [peekPreview, setPeekPreview] = useState(false);
+  const effectiveDragProgress = peekPreview ? 0.85 : dragRatio;
+
+  const handlePeekPreview = () => {
+    setPeekPreview(true);
+    setTimeout(() => setPeekPreview(false), 700);
+  };
+
   const frontPhotoUrl = useTripPhoto(front.destination, front.coverImageUrl, front.name);
   const frontGlowColor = useAmbientGlowColor(frontPhotoUrl);
 
@@ -885,9 +921,11 @@ export function TripStack({
             members={members}
             userId={userId}
             idx={idx}
+            totalTrips={trips.length}
             canDelete={canDelete(trip)}
-            dragProgress={dragRatio}
+            dragProgress={effectiveDragProgress}
             onDragProgress={idx === 0 ? (ratio) => setDragRatio(ratio) : undefined}
+            onPeekPreview={handlePeekPreview}
             onOpen={() => onSelectTrip(trip.id)}
             onQuickAddExpense={onQuickAddExpense}
             onBrowse={cycleToBack}
@@ -897,9 +935,11 @@ export function TripStack({
           />
         ))}
       </div>
-      <button type="button" className="trip-stack-viewall" onClick={onShowList}>
-        View all trips
-      </button>
+      {trips.length >= 2 && (
+        <button type="button" className="trip-stack-viewall" onClick={onShowList}>
+          View all trips
+        </button>
+      )}
     </div>
   );
 }

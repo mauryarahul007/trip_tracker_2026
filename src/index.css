@@ -2872,6 +2872,11 @@ input:checked + .toggle-slider:before {
   border: 1px solid rgba(52, 211, 153, 0.55);
   color: #6EE7B7;
 }
+.stack-swipe-badge.peek {
+  background: rgba(167, 139, 250, 0.24);
+  border: 1px solid rgba(167, 139, 250, 0.55);
+  color: #C4B5FD;
+}
 @media (prefers-reduced-motion: reduce) {
   .stack-swipe-badge { transition: none; }
 }
@@ -3028,6 +3033,37 @@ input:checked + .toggle-slider:before {
   width: 24px;
   background: #38BDF8;
   box-shadow: 0 0 12px rgba(56, 189, 248, 0.75);
+}
+
+.trip-stepper-dots.scrubbing {
+  cursor: grabbing;
+}
+.trip-stepper-dots.scrubbing .trip-stepper-dot {
+  transform: scale(1.2);
+}
+.trip-stepper-dots.scrubbing .trip-stepper-dot.active {
+  transform: scale(1.15);
+  box-shadow: 0 0 16px rgba(56, 189, 248, 0.95);
+}
+
+.home-adaptive-greeting {
+  font-size: 13.5px;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.home-expeditions-count {
+  color: #38BDF8;
+  font-family: var(--font-family-mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.28);
+  padding: 1px 7px;
+  border-radius: 9999px;
 }
 
 .trip-stack-viewall {
