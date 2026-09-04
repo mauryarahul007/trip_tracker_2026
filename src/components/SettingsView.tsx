@@ -28,6 +28,7 @@ import {
   IconQrCode,
   IconVibrate,
   IconPieChart,
+  IconUser,
   IconCheck,
   IconCopy,
   IconClose,
@@ -61,7 +62,7 @@ import { useEscapeKey } from '../utils/useEscapeKey';
 
 export type ThemePref = 'light' | 'dark' | 'system';
 
-type SubScreen = null | 'trip-tools' | 'categories' | 'recycle-bin' | 'appearance' | 'backups' | 'archived-trips' | 'bug-tracker' | 'report-issue' | 'suggest-feature' | 'trip-map' | 'storage-data';
+type SubScreen = null | 'trip-tools' | 'categories' | 'recycle-bin' | 'appearance' | 'backups' | 'archived-trips' | 'bug-tracker' | 'report-issue' | 'suggest-feature' | 'trip-map' | 'storage-data' | 'trip-settings' | 'preferences' | 'data-menu' | 'help-account' | 'about';
 
 
 const RECYCLE_BIN_WINDOW_MS = 24 * 60 * 60 * 1000;
@@ -1889,6 +1890,747 @@ export function SettingsView({
 
   const hasAnyResults = showTripGroup || showPreferencesGroup || showDataGroup || showHelpGroup || showAbout;
 
+  if (subScreen === 'trip-settings' && activeTrip) {
+    return (
+      <div className="settings-container settings-subscreen-enter">
+        <div className="settings-subscreen-nav-header">
+          <button type="button" className="settings-subscreen-back-link" onClick={() => setSubScreen(null)}>
+            <IconChevronLeft size={18} />
+            <span>Settings</span>
+          </button>
+        </div>
+        <h3 className="settings-subscreen-main-title">This Trip: {activeTrip.name}</h3>
+        <p className="settings-subscreen-subtitle">
+          Manage this trip's status, tools, and exports.
+        </p>
+
+        <div className="settings-group">
+          <div className="settings-group-card">
+            {/* Integrated Flight Pass Banner */}
+            <div className="settings-trip-flight-banner">
+              <div>
+                <div className="settings-trip-flight-title">
+                  <span>🌴</span> {activeTrip.name}
+                </div>
+                <div className="settings-trip-flight-meta">
+                  {baseCurrency || activeTrip.baseCurrency || 'INR'} · {(activeTrip.memberIds?.length ?? Object.keys(members).length)} {(activeTrip.memberIds?.length ?? Object.keys(members).length) === 1 ? 'member' : 'members'} · {activeTripExpenses.length} {activeTripExpenses.length === 1 ? 'expense' : 'expenses'}
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={handleToggleCloseTrip}
+                disabled={!isTripAdmin}
+                title={isTripAdmin ? (activeTrip.closed ? 'Click to reopen trip' : 'Click to close and lock trip') : undefined}
+                style={{
+                  fontSize: '9.5px',
+                  fontFamily: 'var(--font-family-mono)',
+                  fontWeight: 700,
+                  padding: '2px 8px',
+                  borderRadius: '12px',
+                  background: flightStatusBg,
+                  color: flightStatusColor,
+                  border: `1px solid ${flightStatusBorder}`,
+                  cursor: isTripAdmin ? 'pointer' : 'default',
+                  transition: 'all 0.15s ease',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                }}
+                aria-label={activeTrip.closed ? 'Trip is closed. Click to reopen.' : 'Trip is active. Click to close.'}
+              >
+                <span>{flightStatusText}</span>
+              </button>
+            </div>
+
+            {showTripTools && (
+              <button
+                type="button"
+                className="settings-row-item"
+                onClick={() => {
+                  triggerHaptic('light');
+                  setSubScreen('trip-tools');
+                }}
+              >
+                <div className="settings-row-left">
+                  <div className="settings-squircle squircle-amber-glow">
+                    <IconSparkles size={18} />
+                  </div>
+                  <div className="settings-row-texts">
+                    <span className="settings-row-title">Trip Tools &amp; Story</span>
+                    <span className="settings-row-subtitle">Story Card, Map, Categories, Recycle Bin &amp; Mute</span>
+                  </div>
+                </div>
+                <div className="settings-row-right">
+                  <span className="settings-badge-pill" style={{ background: 'rgba(56, 189, 248, 0.14)', color: '#0284C7', fontWeight: 600 }}>
+                    {categories.length} categories
+                  </span>
+                  <IconChevronRight size={16} />
+                </div>
+              </button>
+            )}
+
+            {showCloseTrip && (
+              <button
+                type="button"
+                className="settings-row-item"
+                onClick={handleToggleCloseTrip}
+              >
+                <div className="settings-row-left">
+                  <div className={`settings-squircle ${closeTripSquircleClass}`}>
+                    <IconShield size={18} />
+                  </div>
+                  <div className="settings-row-texts">
+                    <span className="settings-row-title">{closeTripTitle}</span>
+                    <span className="settings-row-subtitle">
+                      {closeTripSubtitle}
+                    </span>
+                  </div>
+                </div>
+                <div className="settings-row-right">
+                  <span
+                    className="settings-badge-pill"
+                    style={{
+                      background: closeTripBadgeBg,
+                      color: closeTripBadgeColor,
+                      fontWeight: 700,
+                    }}
+                  >
+                    {closeTripBadgeText}
+                  </span>
+                  <IconChevronRight size={16} />
+                </div>
+              </button>
+            )}
+
+            {showCsvExport && (
+              <button
+                type="button"
+                className="settings-row-item"
+                onClick={() => {
+                  triggerHaptic('light');
+                  onExportCsv();
+                }}
+              >
+                <div className="settings-row-left">
+                  <div className="settings-squircle squircle-emerald-glow">
+                    <IconFileSpreadsheet size={18} />
+                  </div>
+                  <div className="settings-row-texts">
+                    <span className="settings-row-title">Excel CSV Export</span>
+                    <span className="settings-row-subtitle">Download settlement ledger &amp; expense breakdown</span>
+                  </div>
+                </div>
+                <div className="settings-row-right">
+                  <IconDownload size={16} />
+                </div>
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (subScreen === 'preferences') {
+    return (
+      <div className="settings-container settings-subscreen-enter">
+        <div className="settings-subscreen-nav-header">
+          <button type="button" className="settings-subscreen-back-link" onClick={() => setSubScreen(null)}>
+            <IconChevronLeft size={18} />
+            <span>Settings</span>
+          </button>
+        </div>
+        <h3 className="settings-subscreen-main-title">Preferences &amp; Interface</h3>
+        <p className="settings-subscreen-subtitle">
+          Appearance, haptics, notifications, and other app-wide preferences.
+        </p>
+
+        <div className="settings-group">
+          <div className="settings-group-card">
+            {/* Inline 3-Way Segmented Theme Switcher */}
+            {showAppearance && (
+              <div className="settings-row-item" style={{ cursor: 'default' }}>
+                <div className="settings-row-left">
+                  <div className="settings-squircle squircle-orange-glow">
+                    {themePref === 'dark' ? <IconMoon size={18} /> : themePref === 'light' ? <IconSun size={18} /> : <IconSmartphone size={18} />}
+                  </div>
+                  <div className="settings-row-texts">
+                    <span className="settings-row-title">Appearance</span>
+                    <span className="settings-row-subtitle">{themeLabel}</span>
+                  </div>
+                </div>
+                <div className="settings-segmented-theme" role="group" aria-label="Theme preference">
+                  <button
+                    type="button"
+                    className={`settings-seg-btn${themePref === 'light' ? ' active' : ''}`}
+                    onClick={() => { triggerHaptic('light'); setThemePref('light'); }}
+                    title="Light mode"
+                    aria-label="Light mode"
+                  >
+                    <IconSun size={13} />
+                    <span>Light</span>
+                  </button>
+                  <button
+                    type="button"
+                    className={`settings-seg-btn${themePref === 'dark' ? ' active' : ''}`}
+                    onClick={() => { triggerHaptic('light'); setThemePref('dark'); }}
+                    title="Night mode"
+                    aria-label="Night mode"
+                  >
+                    <IconMoon size={13} />
+                    <span>Night</span>
+                  </button>
+                  <button
+                    type="button"
+                    className={`settings-seg-btn${themePref === 'system' ? ' active' : ''}`}
+                    onClick={() => { triggerHaptic('light'); setThemePref('system'); }}
+                    title="System default"
+                    aria-label="System default"
+                  >
+                    <IconSmartphone size={13} />
+                    <span>Auto</span>
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Tactile Haptics 3-Way Segmented Switcher */}
+            {showHaptics && (
+              <div className="settings-row-item" style={{ cursor: 'default' }}>
+                <div className="settings-row-left">
+                  <div className="settings-squircle squircle-purple-glow">
+                    <IconVibrate size={18} />
+                  </div>
+                  <div className="settings-row-texts">
+                    <span className="settings-row-title">Tactile Haptics</span>
+                    <span className="settings-row-subtitle">
+                      {hapticPref === 'off'
+                        ? 'Vibration disabled'
+                        : hapticPref === 'subtle'
+                        ? 'Gentle micro-taps'
+                        : 'Standard button clicks'}
+                    </span>
+                  </div>
+                </div>
+                <div className="settings-segmented-theme" role="group" aria-label="Haptic feedback preference">
+                  <button
+                    type="button"
+                    className={`settings-seg-btn${hapticPref === 'standard' ? ' active' : ''}`}
+                    onClick={() => handleSetHapticPref('standard')}
+                    title="Standard vibration"
+                    aria-label="Standard vibration"
+                  >
+                    <span>Standard</span>
+                  </button>
+                  <button
+                    type="button"
+                    className={`settings-seg-btn${hapticPref === 'subtle' ? ' active' : ''}`}
+                    onClick={() => handleSetHapticPref('subtle')}
+                    title="Subtle micro vibration"
+                    aria-label="Subtle vibration"
+                  >
+                    <span>Subtle</span>
+                  </button>
+                  <button
+                    type="button"
+                    className={`settings-seg-btn${hapticPref === 'off' ? ' active' : ''}`}
+                    onClick={() => handleSetHapticPref('off')}
+                    title="Disable tactile vibration"
+                    aria-label="Disable vibration"
+                  >
+                    <span>Off</span>
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {showNotifications && (
+              <button type="button" className="settings-row-item" onClick={() => { triggerHaptic('light'); openNotificationsPanel(); }}>
+                <div className="settings-row-left">
+                  <div className="settings-squircle squircle-teal-glow">
+                    <IconBell size={18} />
+                  </div>
+                  <div className="settings-row-texts">
+                    <span className="settings-row-title">Notifications</span>
+                    <span className="settings-row-subtitle">{unreadNotificationCount > 0 ? `${unreadNotificationCount} unread` : 'All caught up'}</span>
+                  </div>
+                </div>
+                <div className="settings-row-right">
+                  <span className="settings-badge-pill" style={{ fontWeight: 600 }}>
+                    {unreadNotificationCount > 0 ? `${unreadNotificationCount} unread` : 'Quiet'}
+                  </span>
+                  <IconChevronRight size={16} />
+                </div>
+              </button>
+            )}
+
+            {showGeotag && (
+              <div className="settings-row-item" style={{ cursor: 'default' }}>
+                <div className="settings-row-left">
+                  <div className="settings-squircle squircle-emerald-glow">
+                    <IconMapPin size={18} />
+                  </div>
+                  <div className="settings-row-texts">
+                    <span className="settings-row-title">Geotag Expenses</span>
+                    <span className="settings-row-subtitle">Attach GPS coordinates &amp; place names</span>
+                  </div>
+                </div>
+                <div className="settings-row-right" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span className="settings-badge-pill" style={{ fontWeight: 600, fontSize: '10px' }}>
+                    {enableGeotagging ? 'ACTIVE' : 'OFF'}
+                  </span>
+                  <label style={{ position: 'relative', display: 'inline-block', width: '44px', height: '24px', margin: 0, cursor: 'pointer' }}>
+                    <input
+                      type="checkbox"
+                      checked={enableGeotagging}
+                      onChange={(e) => {
+                        triggerHaptic('light');
+                        setEnableGeotagging(e.target.checked);
+                      }}
+                      aria-label="Geotag Expenses"
+                      style={{ opacity: 0, width: 0, height: 0, margin: 0 }}
+                    />
+                    <span
+                      style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        backgroundColor: enableGeotagging ? '#17B6A6' : 'var(--border-color)',
+                        transition: '0.2s ease',
+                        borderRadius: 'var(--border-radius-pill)',
+                      }}
+                    >
+                      <span
+                        style={{
+                          position: 'absolute',
+                          height: '18px',
+                          width: '18px',
+                          left: enableGeotagging ? '23px' : '3px',
+                          bottom: '3px',
+                          backgroundColor: 'white',
+                          transition: '0.2s ease',
+                          borderRadius: '50%',
+                          boxShadow: '0 1px 3px rgba(0,0,0,0.25)',
+                        }}
+                      />
+                    </span>
+                  </label>
+                </div>
+              </div>
+            )}
+
+            {showCoachmarks && (
+              <button
+                type="button"
+                className="settings-row-item"
+                onClick={handleResetCoachmarks}
+              >
+                <div className="settings-row-left">
+                  <div className="settings-squircle squircle-amber-glow">
+                    <span>✈️</span>
+                  </div>
+                  <div className="settings-row-texts">
+                    <span className="settings-row-title">Flight Coachmarks</span>
+                    <span className="settings-row-subtitle">
+                      {coachmarkResetStatus ? 'Onboarding tips re-enabled!' : 'Reset interactive guide on the + button'}
+                    </span>
+                  </div>
+                </div>
+                <div className="settings-row-right">
+                  <span className="settings-badge-pill" style={{ color: coachmarkResetStatus ? 'var(--color-success)' : 'var(--primary-accent)', fontWeight: 600 }}>
+                    {coachmarkResetStatus || 'Reset'}
+                  </span>
+                </div>
+              </button>
+            )}
+
+            {showInstall && (
+              <button
+                type="button"
+                className="settings-row-item"
+                onClick={() => {
+                  triggerHaptic('light');
+                  onInstallApp?.();
+                  onClose?.();
+                }}
+              >
+                <div className="settings-row-left">
+                  <div className="settings-squircle squircle-teal-glow">
+                    <IconSmartphone size={18} />
+                  </div>
+                  <div className="settings-row-texts">
+                    <span className="settings-row-title">Install App</span>
+                    <span className="settings-row-subtitle">Add Trip Tracker to your device home screen</span>
+                  </div>
+                </div>
+                <div className="settings-row-right">
+                  <IconDownload size={16} />
+                </div>
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (subScreen === 'data-menu') {
+    return (
+      <div className="settings-container settings-subscreen-enter">
+        <div className="settings-subscreen-nav-header">
+          <button type="button" className="settings-subscreen-back-link" onClick={() => setSubScreen(null)}>
+            <IconChevronLeft size={18} />
+            <span>Settings</span>
+          </button>
+        </div>
+        <h3 className="settings-subscreen-main-title">Data &amp; Backups</h3>
+        <p className="settings-subscreen-subtitle">
+          Storage usage, archived trips, and database snapshots.
+        </p>
+
+        <div className="settings-group">
+          <div className="settings-group-card">
+            {/* Dedicated WhatsApp Storage & Data row */}
+            {showStorageManager && (
+              <button
+                type="button"
+                className="settings-row-item"
+                onClick={() => {
+                  triggerHaptic('light');
+                  setSubScreen('storage-data');
+                }}
+              >
+                <div className="settings-row-left">
+                  <div className="settings-squircle squircle-amber-glow">
+                    <IconPieChart size={18} />
+                  </div>
+                  <div className="settings-row-texts">
+                    <span className="settings-row-title">Storage and Data</span>
+                    <span className="settings-row-subtitle">
+                      Receipts media, ledgers &amp; cache visualizer
+                    </span>
+                  </div>
+                </div>
+                <div className="settings-row-right">
+                  <span className="settings-badge-pill" style={{ fontWeight: 600 }}>
+                    {storageEstimate ? formatBytes(storageEstimate.used) : 'Local'}
+                  </span>
+                  <IconChevronRight size={16} />
+                </div>
+              </button>
+            )}
+
+            {showArchived && (
+              <button type="button" className="settings-row-item" onClick={() => { triggerHaptic('light'); setSubScreen('archived-trips'); }}>
+                <div className="settings-row-left">
+                  <div className="settings-squircle squircle-slate-glow">
+                    <IconArchive size={18} />
+                  </div>
+                  <div className="settings-row-texts">
+                    <span className="settings-row-title">Archived Trips</span>
+                    <span className="settings-row-subtitle">
+                      {archivedTrips.length === 0 ? 'No archived trips' : `${archivedTrips.length} archived trip${archivedTrips.length === 1 ? '' : 's'}`}
+                    </span>
+                  </div>
+                </div>
+                <div className="settings-row-right">
+                  {archivedTrips.length > 0 && <span className="settings-badge-pill">{archivedTrips.length}</span>}
+                  <IconChevronRight size={16} />
+                </div>
+              </button>
+            )}
+
+            {showBackups && (
+              <button type="button" className="settings-row-item" onClick={() => { triggerHaptic('light'); setSubScreen('backups'); }}>
+                <div className="settings-row-left">
+                  <div className="settings-squircle squircle-indigo-glow">
+                    <IconDatabase size={18} />
+                  </div>
+                  <div className="settings-row-texts">
+                    <span className="settings-row-title">Database Backups</span>
+                    <span className="settings-row-subtitle">Export/Import JSON database snapshot</span>
+                  </div>
+                </div>
+                <div className="settings-row-right">
+                  <span className="settings-badge-pill">JSON</span>
+                  <IconChevronRight size={16} />
+                </div>
+              </button>
+            )}
+
+            {showDemoTrip && (
+              <button
+                type="button"
+                className="settings-row-item"
+                onClick={() => {
+                  triggerHaptic('light');
+                  onRequestConfirm?.({
+                    title: 'Seed Demo Data',
+                    message: 'Populate a sample trip ("Road Trip to Goa ☀️") with test members, geotagged route, and split transactions?',
+                    confirmLabel: 'Load Demo Trip',
+                    onConfirm: () => {
+                      onLoadDemoTrip();
+                      onClose?.();
+                    },
+                  });
+                }}
+              >
+                <div className="settings-row-left">
+                  <div className="settings-squircle squircle-emerald-glow">
+                    <IconSparkles size={18} />
+                  </div>
+                  <div className="settings-row-texts">
+                    <span className="settings-row-title">Seed Demo Trip</span>
+                    <span className="settings-row-subtitle">Sample trip with members, geotags &amp; splits</span>
+                  </div>
+                </div>
+                <div className="settings-row-right">
+                  <IconChevronRight size={16} />
+                </div>
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (subScreen === 'help-account') {
+    return (
+      <div className="settings-container settings-subscreen-enter">
+        <div className="settings-subscreen-nav-header">
+          <button type="button" className="settings-subscreen-back-link" onClick={() => setSubScreen(null)}>
+            <IconChevronLeft size={18} />
+            <span>Settings</span>
+          </button>
+        </div>
+        <h3 className="settings-subscreen-main-title">Help &amp; Account</h3>
+        <p className="settings-subscreen-subtitle">
+          Get support, share feedback, or manage your account.
+        </p>
+
+        <div className="settings-group">
+          <div className="settings-group-card">
+            {showReportProblem && (
+              <button
+                type="button"
+                className="settings-row-item"
+                onClick={() => { triggerHaptic('light'); setSubScreen('report-issue'); }}
+              >
+                <div className="settings-row-left">
+                  <div className="settings-squircle squircle-rose-glow">
+                    <span style={{ fontSize: '16px' }}>🐞</span>
+                  </div>
+                  <div className="settings-row-texts">
+                    <span className="settings-row-title">Report a Problem</span>
+                    <span className="settings-row-subtitle">Tell us what went wrong — device details attach automatically</span>
+                  </div>
+                </div>
+                <div className="settings-row-right">
+                  <IconChevronRight size={16} />
+                </div>
+              </button>
+            )}
+
+            {showSuggestFeature && (
+              <button
+                type="button"
+                className="settings-row-item"
+                onClick={() => { triggerHaptic('light'); setSubScreen('suggest-feature'); }}
+              >
+                <div className="settings-row-left">
+                  <div className="settings-squircle squircle-teal-glow">
+                    <span style={{ fontSize: '16px' }}>✨</span>
+                  </div>
+                  <div className="settings-row-texts">
+                    <span className="settings-row-title">Suggest a Feature</span>
+                    <span className="settings-row-subtitle">Tell us what would make this app better</span>
+                  </div>
+                </div>
+                <div className="settings-row-right">
+                  <IconChevronRight size={16} />
+                </div>
+              </button>
+            )}
+
+            {showBugTracker && (
+              <button
+                type="button"
+                className="settings-row-item"
+                onClick={() => { triggerHaptic('light'); setSubScreen('bug-tracker'); }}
+              >
+                <div className="settings-row-left">
+                  <div className="settings-squircle squircle-amber-glow">
+                    <span style={{ fontSize: '16px' }}>🛡️</span>
+                  </div>
+                  <div className="settings-row-texts">
+                    <span className="settings-row-title">Superadmin Bug Tracker</span>
+                    <span className="settings-row-subtitle">Manage, triage &amp; live-sync bugs</span>
+                  </div>
+                </div>
+                <div className="settings-row-right">
+                  <IconChevronRight size={16} />
+                </div>
+              </button>
+            )}
+
+            {showSignOut && (
+              <button
+                type="button"
+                className="settings-row-item"
+                onClick={() => {
+                  triggerHaptic('light');
+                  onRequestConfirm?.({
+                    title: 'Sign Out',
+                    message: 'Sign out of your account on this device?',
+                    confirmLabel: 'Sign Out',
+                    onConfirm: () => {
+                      onSignOut();
+                      onClose?.();
+                    },
+                  });
+                }}
+              >
+                <div className="settings-row-left">
+                  <div className="settings-squircle squircle-red-glow">
+                    <IconLogOut size={18} />
+                  </div>
+                  <div className="settings-row-texts">
+                    <span className="settings-row-title" style={{ color: 'var(--color-danger)' }}>
+                      Sign Out
+                    </span>
+                    <span className="settings-row-subtitle">Disconnect active session from Supabase</span>
+                  </div>
+                </div>
+              </button>
+            )}
+
+            {showClearData && (
+              <button
+                type="button"
+                className="settings-row-item"
+                onClick={() => {
+                  triggerHaptic('light');
+                  onClearDatabase();
+                }}
+              >
+                <div className="settings-row-left">
+                  <div className="settings-squircle squircle-red-glow">
+                    <IconAlertCircle size={18} />
+                  </div>
+                  <div className="settings-row-texts">
+                    <span className="settings-row-title" style={{ color: 'var(--color-danger)' }}>
+                      Clear All Data
+                    </span>
+                    <span className="settings-row-subtitle">Wipe all local trips and reset storage</span>
+                  </div>
+                </div>
+              </button>
+            )}
+
+            {showDeleteAccount && (
+              <button
+                type="button"
+                className="settings-row-item"
+                onClick={() => {
+                  triggerHaptic('warning');
+                  onDeleteAccount!();
+                }}
+              >
+                <div className="settings-row-left">
+                  <div className="settings-squircle squircle-red-glow">
+                    <IconAlertCircle size={18} />
+                  </div>
+                  <div className="settings-row-texts">
+                    <span className="settings-row-title" style={{ color: 'var(--color-danger)' }}>
+                      Delete Account
+                    </span>
+                    <span className="settings-row-subtitle">Permanently delete your account and owned trips</span>
+                  </div>
+                </div>
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (subScreen === 'about') {
+    return (
+      <div className="settings-container settings-subscreen-enter">
+        <div className="settings-subscreen-nav-header">
+          <button type="button" className="settings-subscreen-back-link" onClick={() => setSubScreen(null)}>
+            <IconChevronLeft size={18} />
+            <span>Settings</span>
+          </button>
+        </div>
+        <h3 className="settings-subscreen-main-title">About &amp; Legal</h3>
+        <p className="settings-subscreen-subtitle">
+          App version and legal documents.
+        </p>
+
+        <div className="settings-group">
+          <h4 className="settings-group-title">About</h4>
+          <div className="settings-group-card">
+            <div className="settings-row-item" style={{ cursor: 'default' }}>
+              <div className="settings-row-left">
+                <div className="settings-squircle squircle-slate-glow">
+                  <IconSmartphone size={18} />
+                </div>
+                <div className="settings-row-texts">
+                  <span className="settings-row-title">Trip Tracker 2026</span>
+                  <span className="settings-row-subtitle">Version {appVersion ?? WEB_APP_VERSION} · Web Edition</span>
+                </div>
+              </div>
+              <div className="settings-row-right">
+                <span className="settings-badge-pill" style={{ background: 'rgba(16, 185, 129, 0.12)', color: '#10B981', fontWeight: 700 }}>
+                  STABLE
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="settings-group">
+          <h4 className="settings-group-title">Legal</h4>
+          <div className="settings-group-card">
+            <button type="button" className="settings-row-item" onClick={() => navigate('/privacy')}>
+              <div className="settings-row-left">
+                <div className="settings-squircle squircle-slate-glow">
+                  <IconShield size={18} />
+                </div>
+                <div className="settings-row-texts">
+                  <span className="settings-row-title">Privacy Policy</span>
+                  <span className="settings-row-subtitle">What we collect and why</span>
+                </div>
+              </div>
+              <div className="settings-row-right">
+                <IconChevronRight size={16} />
+              </div>
+            </button>
+            <button type="button" className="settings-row-item" onClick={() => navigate('/terms')}>
+              <div className="settings-row-left">
+                <div className="settings-squircle squircle-slate-glow">
+                  <IconFileSpreadsheet size={18} />
+                </div>
+                <div className="settings-row-texts">
+                  <span className="settings-row-title">Terms of Service</span>
+                  <span className="settings-row-subtitle">Rules for using Trip Tracker</span>
+                </div>
+              </div>
+              <div className="settings-row-right">
+                <IconChevronRight size={16} />
+              </div>
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="fade-in settings-container">
       {/* Spotlight Search Header */}
@@ -2159,677 +2901,115 @@ export function SettingsView({
         </div>
       )}
 
-      {/* Group 1: Trip-Specific Settings (When an active trip is selected) */}
+      {/* Group 1: Trip-Specific Settings (When an active trip is selected) -- collapsed into one menu row, full content in the 'trip-settings' subscreen */}
       {showTripGroup && activeTrip && (
         <div className="settings-group">
-          <h4 className="settings-group-title">This Trip: {activeTrip.name}</h4>
           <div className="settings-group-card">
-            {/* Integrated Flight Pass Banner */}
-            <div className="settings-trip-flight-banner">
-              <div>
-                <div className="settings-trip-flight-title">
-                  <span>🌴</span> {activeTrip.name}
-                </div>
-                <div className="settings-trip-flight-meta">
-                  {baseCurrency || activeTrip.baseCurrency || 'INR'} · {(activeTrip.memberIds?.length ?? Object.keys(members).length)} {(activeTrip.memberIds?.length ?? Object.keys(members).length) === 1 ? 'member' : 'members'} · {activeTripExpenses.length} {activeTripExpenses.length === 1 ? 'expense' : 'expenses'}
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={handleToggleCloseTrip}
-                disabled={!isTripAdmin}
-                title={isTripAdmin ? (activeTrip.closed ? 'Click to reopen trip' : 'Click to close and lock trip') : undefined}
-                style={{
-                  fontSize: '9.5px',
-                  fontFamily: 'var(--font-family-mono)',
-                  fontWeight: 700,
-                  padding: '2px 8px',
-                  borderRadius: '12px',
-                  background: flightStatusBg,
-                  color: flightStatusColor,
-                  border: `1px solid ${flightStatusBorder}`,
-                  cursor: isTripAdmin ? 'pointer' : 'default',
-                  transition: 'all 0.15s ease',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '4px',
-                }}
-                aria-label={activeTrip.closed ? 'Trip is closed. Click to reopen.' : 'Trip is active. Click to close.'}
-              >
-                <span>{flightStatusText}</span>
-              </button>
-            </div>
-
-            {showTripTools && (
-              <button
-                type="button"
-                className="settings-row-item"
-                onClick={() => {
-                  triggerHaptic('light');
-                  setSubScreen('trip-tools');
-                }}
-              >
-                <div className="settings-row-left">
-                  <div className="settings-squircle squircle-amber-glow">
-                    <IconSparkles size={18} />
-                  </div>
-                  <div className="settings-row-texts">
-                    <span className="settings-row-title">Trip Tools &amp; Story</span>
-                    <span className="settings-row-subtitle">Story Card, Map, Categories, Recycle Bin &amp; Mute</span>
-                  </div>
-                </div>
-                <div className="settings-row-right">
-                  <span className="settings-badge-pill" style={{ background: 'rgba(56, 189, 248, 0.14)', color: '#0284C7', fontWeight: 600 }}>
-                    {categories.length} categories
-                  </span>
-                  <IconChevronRight size={16} />
-                </div>
-              </button>
-            )}
-
-            {showCloseTrip && (
-              <button
-                type="button"
-                className="settings-row-item"
-                onClick={handleToggleCloseTrip}
-              >
-                <div className="settings-row-left">
-                  <div className={`settings-squircle ${closeTripSquircleClass}`}>
-                    <IconShield size={18} />
-                  </div>
-                  <div className="settings-row-texts">
-                    <span className="settings-row-title">{closeTripTitle}</span>
-                    <span className="settings-row-subtitle">
-                      {closeTripSubtitle}
-                    </span>
-                  </div>
-                </div>
-                <div className="settings-row-right">
-                  <span
-                    className="settings-badge-pill"
-                    style={{
-                      background: closeTripBadgeBg,
-                      color: closeTripBadgeColor,
-                      fontWeight: 700,
-                    }}
-                  >
-                    {closeTripBadgeText}
-                  </span>
-                  <IconChevronRight size={16} />
-                </div>
-              </button>
-            )}
-
-            {showCsvExport && (
-              <button
-                type="button"
-                className="settings-row-item"
-                onClick={() => {
-                  triggerHaptic('light');
-                  onExportCsv();
-                }}
-              >
-                <div className="settings-row-left">
-                  <div className="settings-squircle squircle-emerald-glow">
-                    <IconFileSpreadsheet size={18} />
-                  </div>
-                  <div className="settings-row-texts">
-                    <span className="settings-row-title">Excel CSV Export</span>
-                    <span className="settings-row-subtitle">Download settlement ledger &amp; expense breakdown</span>
-                  </div>
-                </div>
-                <div className="settings-row-right">
-                  <IconDownload size={16} />
-                </div>
-              </button>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Group 2: App & Appearance */}
-      {showPreferencesGroup && (
-        <div className="settings-group">
-          <h4 className="settings-group-title">Preferences &amp; Interface</h4>
-          <div className="settings-group-card">
-            {/* Inline 3-Way Segmented Theme Switcher */}
-            {showAppearance && (
-              <div className="settings-row-item" style={{ cursor: 'default' }}>
-                <div className="settings-row-left">
-                  <div className="settings-squircle squircle-orange-glow">
-                    {themePref === 'dark' ? <IconMoon size={18} /> : themePref === 'light' ? <IconSun size={18} /> : <IconSmartphone size={18} />}
-                  </div>
-                  <div className="settings-row-texts">
-                    <span className="settings-row-title">Appearance</span>
-                    <span className="settings-row-subtitle">{themeLabel}</span>
-                  </div>
-                </div>
-                <div className="settings-segmented-theme" role="group" aria-label="Theme preference">
-                  <button
-                    type="button"
-                    className={`settings-seg-btn${themePref === 'light' ? ' active' : ''}`}
-                    onClick={() => { triggerHaptic('light'); setThemePref('light'); }}
-                    title="Light mode"
-                    aria-label="Light mode"
-                  >
-                    <IconSun size={13} />
-                    <span>Light</span>
-                  </button>
-                  <button
-                    type="button"
-                    className={`settings-seg-btn${themePref === 'dark' ? ' active' : ''}`}
-                    onClick={() => { triggerHaptic('light'); setThemePref('dark'); }}
-                    title="Night mode"
-                    aria-label="Night mode"
-                  >
-                    <IconMoon size={13} />
-                    <span>Night</span>
-                  </button>
-                  <button
-                    type="button"
-                    className={`settings-seg-btn${themePref === 'system' ? ' active' : ''}`}
-                    onClick={() => { triggerHaptic('light'); setThemePref('system'); }}
-                    title="System default"
-                    aria-label="System default"
-                  >
-                    <IconSmartphone size={13} />
-                    <span>Auto</span>
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* Tactile Haptics 3-Way Segmented Switcher */}
-            {showHaptics && (
-              <div className="settings-row-item" style={{ cursor: 'default' }}>
-                <div className="settings-row-left">
-                  <div className="settings-squircle squircle-purple-glow">
-                    <IconVibrate size={18} />
-                  </div>
-                  <div className="settings-row-texts">
-                    <span className="settings-row-title">Tactile Haptics</span>
-                    <span className="settings-row-subtitle">
-                      {hapticPref === 'off'
-                        ? 'Vibration disabled'
-                        : hapticPref === 'subtle'
-                        ? 'Gentle micro-taps'
-                        : 'Standard button clicks'}
-                    </span>
-                  </div>
-                </div>
-                <div className="settings-segmented-theme" role="group" aria-label="Haptic feedback preference">
-                  <button
-                    type="button"
-                    className={`settings-seg-btn${hapticPref === 'standard' ? ' active' : ''}`}
-                    onClick={() => handleSetHapticPref('standard')}
-                    title="Standard vibration"
-                    aria-label="Standard vibration"
-                  >
-                    <span>Standard</span>
-                  </button>
-                  <button
-                    type="button"
-                    className={`settings-seg-btn${hapticPref === 'subtle' ? ' active' : ''}`}
-                    onClick={() => handleSetHapticPref('subtle')}
-                    title="Subtle micro vibration"
-                    aria-label="Subtle vibration"
-                  >
-                    <span>Subtle</span>
-                  </button>
-                  <button
-                    type="button"
-                    className={`settings-seg-btn${hapticPref === 'off' ? ' active' : ''}`}
-                    onClick={() => handleSetHapticPref('off')}
-                    title="Disable tactile vibration"
-                    aria-label="Disable vibration"
-                  >
-                    <span>Off</span>
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {showNotifications && (
-              <button type="button" className="settings-row-item" onClick={() => { triggerHaptic('light'); openNotificationsPanel(); }}>
-                <div className="settings-row-left">
-                  <div className="settings-squircle squircle-teal-glow">
-                    <IconBell size={18} />
-                  </div>
-                  <div className="settings-row-texts">
-                    <span className="settings-row-title">Notifications</span>
-                    <span className="settings-row-subtitle">{unreadNotificationCount > 0 ? `${unreadNotificationCount} unread` : 'All caught up'}</span>
-                  </div>
-                </div>
-                <div className="settings-row-right">
-                  <span className="settings-badge-pill" style={{ fontWeight: 600 }}>
-                    {unreadNotificationCount > 0 ? `${unreadNotificationCount} unread` : 'Quiet'}
-                  </span>
-                  <IconChevronRight size={16} />
-                </div>
-              </button>
-            )}
-
-            {showGeotag && (
-              <div className="settings-row-item" style={{ cursor: 'default' }}>
-                <div className="settings-row-left">
-                  <div className="settings-squircle squircle-emerald-glow">
-                    <IconMapPin size={18} />
-                  </div>
-                  <div className="settings-row-texts">
-                    <span className="settings-row-title">Geotag Expenses</span>
-                    <span className="settings-row-subtitle">Attach GPS coordinates &amp; place names</span>
-                  </div>
-                </div>
-                <div className="settings-row-right" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span className="settings-badge-pill" style={{ fontWeight: 600, fontSize: '10px' }}>
-                    {enableGeotagging ? 'ACTIVE' : 'OFF'}
-                  </span>
-                  <label style={{ position: 'relative', display: 'inline-block', width: '44px', height: '24px', margin: 0, cursor: 'pointer' }}>
-                    <input
-                      type="checkbox"
-                      checked={enableGeotagging}
-                      onChange={(e) => {
-                        triggerHaptic('light');
-                        setEnableGeotagging(e.target.checked);
-                      }}
-                      aria-label="Geotag Expenses"
-                      style={{ opacity: 0, width: 0, height: 0, margin: 0 }}
-                    />
-                    <span
-                      style={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        backgroundColor: enableGeotagging ? '#17B6A6' : 'var(--border-color)',
-                        transition: '0.2s ease',
-                        borderRadius: 'var(--border-radius-pill)',
-                      }}
-                    >
-                      <span
-                        style={{
-                          position: 'absolute',
-                          height: '18px',
-                          width: '18px',
-                          left: enableGeotagging ? '23px' : '3px',
-                          bottom: '3px',
-                          backgroundColor: 'white',
-                          transition: '0.2s ease',
-                          borderRadius: '50%',
-                          boxShadow: '0 1px 3px rgba(0,0,0,0.25)',
-                        }}
-                      />
-                    </span>
-                  </label>
-                </div>
-              </div>
-            )}
-
-            {showCoachmarks && (
-              <button
-                type="button"
-                className="settings-row-item"
-                onClick={handleResetCoachmarks}
-              >
-                <div className="settings-row-left">
-                  <div className="settings-squircle squircle-amber-glow">
-                    <span>✈️</span>
-                  </div>
-                  <div className="settings-row-texts">
-                    <span className="settings-row-title">Flight Coachmarks</span>
-                    <span className="settings-row-subtitle">
-                      {coachmarkResetStatus ? 'Onboarding tips re-enabled!' : 'Reset interactive guide on the + button'}
-                    </span>
-                  </div>
-                </div>
-                <div className="settings-row-right">
-                  <span className="settings-badge-pill" style={{ color: coachmarkResetStatus ? 'var(--color-success)' : 'var(--primary-accent)', fontWeight: 600 }}>
-                    {coachmarkResetStatus || 'Reset'}
-                  </span>
-                </div>
-              </button>
-            )}
-
-            {showInstall && (
-              <button
-                type="button"
-                className="settings-row-item"
-                onClick={() => {
-                  triggerHaptic('light');
-                  onInstallApp?.();
-                  onClose?.();
-                }}
-              >
-                <div className="settings-row-left">
-                  <div className="settings-squircle squircle-teal-glow">
-                    <IconSmartphone size={18} />
-                  </div>
-                  <div className="settings-row-texts">
-                    <span className="settings-row-title">Install App</span>
-                    <span className="settings-row-subtitle">Add Trip Tracker to your device home screen</span>
-                  </div>
-                </div>
-                <div className="settings-row-right">
-                  <IconDownload size={16} />
-                </div>
-              </button>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Group 3: Data & Storage */}
-      {showDataGroup && (
-        <div className="settings-group">
-          <h4 className="settings-group-title">Data &amp; Backups</h4>
-          <div className="settings-group-card">
-            {/* Dedicated WhatsApp Storage & Data row */}
-            {showStorageManager && (
-              <button
-                type="button"
-                className="settings-row-item"
-                onClick={() => {
-                  triggerHaptic('light');
-                  setSubScreen('storage-data');
-                }}
-              >
-                <div className="settings-row-left">
-                  <div className="settings-squircle squircle-amber-glow">
-                    <IconPieChart size={18} />
-                  </div>
-                  <div className="settings-row-texts">
-                    <span className="settings-row-title">Storage and Data</span>
-                    <span className="settings-row-subtitle">
-                      Receipts media, ledgers &amp; cache visualizer
-                    </span>
-                  </div>
-                </div>
-                <div className="settings-row-right">
-                  <span className="settings-badge-pill" style={{ fontWeight: 600 }}>
-                    {storageEstimate ? formatBytes(storageEstimate.used) : 'Local'}
-                  </span>
-                  <IconChevronRight size={16} />
-                </div>
-              </button>
-            )}
-
-            {showArchived && (
-              <button type="button" className="settings-row-item" onClick={() => { triggerHaptic('light'); setSubScreen('archived-trips'); }}>
-                <div className="settings-row-left">
-                  <div className="settings-squircle squircle-slate-glow">
-                    <IconArchive size={18} />
-                  </div>
-                  <div className="settings-row-texts">
-                    <span className="settings-row-title">Archived Trips</span>
-                    <span className="settings-row-subtitle">
-                      {archivedTrips.length === 0 ? 'No archived trips' : `${archivedTrips.length} archived trip${archivedTrips.length === 1 ? '' : 's'}`}
-                    </span>
-                  </div>
-                </div>
-                <div className="settings-row-right">
-                  {archivedTrips.length > 0 && <span className="settings-badge-pill">{archivedTrips.length}</span>}
-                  <IconChevronRight size={16} />
-                </div>
-              </button>
-            )}
-
-            {showBackups && (
-              <button type="button" className="settings-row-item" onClick={() => { triggerHaptic('light'); setSubScreen('backups'); }}>
-                <div className="settings-row-left">
-                  <div className="settings-squircle squircle-indigo-glow">
-                    <IconDatabase size={18} />
-                  </div>
-                  <div className="settings-row-texts">
-                    <span className="settings-row-title">Database Backups</span>
-                    <span className="settings-row-subtitle">Export/Import JSON database snapshot</span>
-                  </div>
-                </div>
-                <div className="settings-row-right">
-                  <span className="settings-badge-pill">JSON</span>
-                  <IconChevronRight size={16} />
-                </div>
-              </button>
-            )}
-
-            {showDemoTrip && (
-              <button
-                type="button"
-                className="settings-row-item"
-                onClick={() => {
-                  triggerHaptic('light');
-                  onRequestConfirm?.({
-                    title: 'Seed Demo Data',
-                    message: 'Populate a sample trip ("Road Trip to Goa ☀️") with test members, geotagged route, and split transactions?',
-                    confirmLabel: 'Load Demo Trip',
-                    onConfirm: () => {
-                      onLoadDemoTrip();
-                      onClose?.();
-                    },
-                  });
-                }}
-              >
-                <div className="settings-row-left">
-                  <div className="settings-squircle squircle-emerald-glow">
-                    <IconSparkles size={18} />
-                  </div>
-                  <div className="settings-row-texts">
-                    <span className="settings-row-title">Seed Demo Trip</span>
-                    <span className="settings-row-subtitle">Sample trip with members, geotags &amp; splits</span>
-                  </div>
-                </div>
-                <div className="settings-row-right">
-                  <IconChevronRight size={16} />
-                </div>
-              </button>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Group 4: Help, Account & Support */}
-      {showHelpGroup && (
-        <div className="settings-group">
-          <h4 className="settings-group-title">Help &amp; Account</h4>
-          <div className="settings-group-card">
-            {showReportProblem && (
-              <button
-                type="button"
-                className="settings-row-item"
-                onClick={() => { triggerHaptic('light'); setSubScreen('report-issue'); }}
-              >
-                <div className="settings-row-left">
-                  <div className="settings-squircle squircle-rose-glow">
-                    <span style={{ fontSize: '16px' }}>🐞</span>
-                  </div>
-                  <div className="settings-row-texts">
-                    <span className="settings-row-title">Report a Problem</span>
-                    <span className="settings-row-subtitle">Tell us what went wrong — device details attach automatically</span>
-                  </div>
-                </div>
-                <div className="settings-row-right">
-                  <IconChevronRight size={16} />
-                </div>
-              </button>
-            )}
-
-            {showSuggestFeature && (
-              <button
-                type="button"
-                className="settings-row-item"
-                onClick={() => { triggerHaptic('light'); setSubScreen('suggest-feature'); }}
-              >
-                <div className="settings-row-left">
-                  <div className="settings-squircle squircle-teal-glow">
-                    <span style={{ fontSize: '16px' }}>✨</span>
-                  </div>
-                  <div className="settings-row-texts">
-                    <span className="settings-row-title">Suggest a Feature</span>
-                    <span className="settings-row-subtitle">Tell us what would make this app better</span>
-                  </div>
-                </div>
-                <div className="settings-row-right">
-                  <IconChevronRight size={16} />
-                </div>
-              </button>
-            )}
-
-            {showBugTracker && (
-              <button
-                type="button"
-                className="settings-row-item"
-                onClick={() => { triggerHaptic('light'); setSubScreen('bug-tracker'); }}
-              >
-                <div className="settings-row-left">
-                  <div className="settings-squircle squircle-amber-glow">
-                    <span style={{ fontSize: '16px' }}>🛡️</span>
-                  </div>
-                  <div className="settings-row-texts">
-                    <span className="settings-row-title">Superadmin Bug Tracker</span>
-                    <span className="settings-row-subtitle">Manage, triage &amp; live-sync bugs</span>
-                  </div>
-                </div>
-                <div className="settings-row-right">
-                  <IconChevronRight size={16} />
-                </div>
-              </button>
-            )}
-
-            {showSignOut && (
-              <button
-                type="button"
-                className="settings-row-item"
-                onClick={() => {
-                  triggerHaptic('light');
-                  onRequestConfirm?.({
-                    title: 'Sign Out',
-                    message: 'Sign out of your account on this device?',
-                    confirmLabel: 'Sign Out',
-                    onConfirm: () => {
-                      onSignOut();
-                      onClose?.();
-                    },
-                  });
-                }}
-              >
-                <div className="settings-row-left">
-                  <div className="settings-squircle squircle-red-glow">
-                    <IconLogOut size={18} />
-                  </div>
-                  <div className="settings-row-texts">
-                    <span className="settings-row-title" style={{ color: 'var(--color-danger)' }}>
-                      Sign Out
-                    </span>
-                    <span className="settings-row-subtitle">Disconnect active session from Supabase</span>
-                  </div>
-                </div>
-              </button>
-            )}
-
-            {showClearData && (
-              <button
-                type="button"
-                className="settings-row-item"
-                onClick={() => {
-                  triggerHaptic('light');
-                  onClearDatabase();
-                }}
-              >
-                <div className="settings-row-left">
-                  <div className="settings-squircle squircle-red-glow">
-                    <IconAlertCircle size={18} />
-                  </div>
-                  <div className="settings-row-texts">
-                    <span className="settings-row-title" style={{ color: 'var(--color-danger)' }}>
-                      Clear All Data
-                    </span>
-                    <span className="settings-row-subtitle">Wipe all local trips and reset storage</span>
-                  </div>
-                </div>
-              </button>
-            )}
-
-            {showDeleteAccount && (
-              <button
-                type="button"
-                className="settings-row-item"
-                onClick={() => {
-                  triggerHaptic('warning');
-                  onDeleteAccount!();
-                }}
-              >
-                <div className="settings-row-left">
-                  <div className="settings-squircle squircle-red-glow">
-                    <IconAlertCircle size={18} />
-                  </div>
-                  <div className="settings-row-texts">
-                    <span className="settings-row-title" style={{ color: 'var(--color-danger)' }}>
-                      Delete Account
-                    </span>
-                    <span className="settings-row-subtitle">Permanently delete your account and owned trips</span>
-                  </div>
-                </div>
-              </button>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* About Section */}
-      {showAbout && (
-        <div>
-          <h4 className="settings-group-title">About</h4>
-          <div className="settings-group-card">
-            <div className="settings-row-item" style={{ cursor: 'default' }}>
+            <button type="button" className="settings-row-item" onClick={() => { triggerHaptic('light'); setSubScreen('trip-settings'); }}>
               <div className="settings-row-left">
-                <div className="settings-squircle squircle-slate-glow">
-                  <IconSmartphone size={18} />
+                <div className="settings-squircle squircle-emerald-glow">
+                  <span>🌴</span>
                 </div>
                 <div className="settings-row-texts">
-                  <span className="settings-row-title">Trip Tracker 2026</span>
-                  <span className="settings-row-subtitle">Version {appVersion ?? WEB_APP_VERSION} · Web Edition</span>
-                </div>
-              </div>
-              <div className="settings-row-right">
-                <span className="settings-badge-pill" style={{ background: 'rgba(16, 185, 129, 0.12)', color: '#10B981', fontWeight: 700 }}>
-                  STABLE
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Legal Section */}
-      {showAbout && (
-        <div>
-          <h4 className="settings-group-title">Legal</h4>
-          <div className="settings-group-card">
-            <button type="button" className="settings-row-item" onClick={() => navigate('/privacy')}>
-              <div className="settings-row-left">
-                <div className="settings-squircle squircle-slate-glow">
-                  <IconShield size={18} />
-                </div>
-                <div className="settings-row-texts">
-                  <span className="settings-row-title">Privacy Policy</span>
-                  <span className="settings-row-subtitle">What we collect and why</span>
+                  <span className="settings-row-title">This Trip: {activeTrip.name}</span>
+                  <span className="settings-row-subtitle">Status, tools &amp; exports</span>
                 </div>
               </div>
               <div className="settings-row-right">
                 <IconChevronRight size={16} />
               </div>
             </button>
-            <button type="button" className="settings-row-item" onClick={() => navigate('/terms')}>
+          </div>
+        </div>
+      )}
+
+      {/* Group 2: App & Appearance -- collapsed into one menu row, full content in the 'preferences' subscreen */}
+      {showPreferencesGroup && (
+        <div className="settings-group">
+          <div className="settings-group-card">
+            <button type="button" className="settings-row-item" onClick={() => { triggerHaptic('light'); setSubScreen('preferences'); }}>
               <div className="settings-row-left">
-                <div className="settings-squircle squircle-slate-glow">
-                  <IconFileSpreadsheet size={18} />
+                <div className="settings-squircle squircle-orange-glow">
+                  {themePref === 'dark' ? <IconMoon size={18} /> : themePref === 'light' ? <IconSun size={18} /> : <IconSmartphone size={18} />}
                 </div>
                 <div className="settings-row-texts">
-                  <span className="settings-row-title">Terms of Service</span>
-                  <span className="settings-row-subtitle">Rules for using Trip Tracker</span>
+                  <span className="settings-row-title">Preferences &amp; Interface</span>
+                  <span className="settings-row-subtitle">Appearance, haptics, notifications &amp; more</span>
                 </div>
               </div>
               <div className="settings-row-right">
+                <IconChevronRight size={16} />
+              </div>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Group 3: Data & Storage -- collapsed into one menu row, full content in the 'data-menu' subscreen */}
+      {showDataGroup && (
+        <div className="settings-group">
+          <div className="settings-group-card">
+            <button type="button" className="settings-row-item" onClick={() => { triggerHaptic('light'); setSubScreen('data-menu'); }}>
+              <div className="settings-row-left">
+                <div className="settings-squircle squircle-amber-glow">
+                  <IconPieChart size={18} />
+                </div>
+                <div className="settings-row-texts">
+                  <span className="settings-row-title">Data &amp; Backups</span>
+                  <span className="settings-row-subtitle">Storage, archived trips &amp; backups</span>
+                </div>
+              </div>
+              <div className="settings-row-right">
+                <span className="settings-badge-pill" style={{ fontWeight: 600 }}>
+                  {storageEstimate ? formatBytes(storageEstimate.used) : 'Local'}
+                </span>
+                <IconChevronRight size={16} />
+              </div>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Group 4: Help, Account & Support -- collapsed into one menu row, full content in the 'help-account' subscreen */}
+      {showHelpGroup && (
+        <div className="settings-group">
+          <div className="settings-group-card">
+            <button type="button" className="settings-row-item" onClick={() => { triggerHaptic('light'); setSubScreen('help-account'); }}>
+              <div className="settings-row-left">
+                <div className="settings-squircle squircle-rose-glow">
+                  <IconUser size={18} />
+                </div>
+                <div className="settings-row-texts">
+                  <span className="settings-row-title">Help &amp; Account</span>
+                  <span className="settings-row-subtitle">Support, feedback &amp; account controls</span>
+                </div>
+              </div>
+              <div className="settings-row-right">
+                <IconChevronRight size={16} />
+              </div>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* About & Legal -- collapsed into one menu row, full content in the 'about' subscreen */}
+      {showAbout && (
+        <div>
+          <div className="settings-group-card">
+            <button type="button" className="settings-row-item" onClick={() => { triggerHaptic('light'); setSubScreen('about'); }}>
+              <div className="settings-row-left">
+                <div className="settings-squircle squircle-slate-glow">
+                  <IconSmartphone size={18} />
+                </div>
+                <div className="settings-row-texts">
+                  <span className="settings-row-title">About &amp; Legal</span>
+                  <span className="settings-row-subtitle">Version {appVersion ?? WEB_APP_VERSION} · Privacy &amp; Terms</span>
+                </div>
+              </div>
+              <div className="settings-row-right">
+                <span className="settings-badge-pill" style={{ background: 'rgba(16, 185, 129, 0.12)', color: '#10B981', fontWeight: 700 }}>
+                  STABLE
+                </span>
                 <IconChevronRight size={16} />
               </div>
             </button>
