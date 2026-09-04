@@ -4418,9 +4418,9 @@
     "actualBehavior": "",
     "diagnostics": {},
     "createdAt": "2026-09-04T06:43:47.815Z",
-    "updatedAt": "2026-09-04T06:43:48.196Z",
+    "updatedAt": "2026-09-04T06:53:11.018Z",
     "resolvedBy": "claude-cli",
-    "resolvedAt": "2026-09-04T06:43:48.195Z",
-    "resolutionNote": "Merging countdown + destination + weather into one pill (f1f2345) left .stack-caption-dest as the only flex-shrink segment against .stack-unified-header's max-width:65%, so with three segments competing even short names like 'Meghalaya' got squeezed to 'Meghal...'. Fixed in commit 9a24804: max-width now reserves exactly the round date stamp's footprint (calc(100% - 76px)) instead of an arbitrary 65%, and .stack-caption-dest got a 56px min-width floor so short names never collapse; ellipsis remains as a real fallback for genuinely long multi-stop routes."
+    "resolvedAt": "2026-09-04T06:53:11.018Z",
+    "resolutionNote": "The 9a24804 fix (calc(100% - 76px) max-width + 56px min-width on destination) helped short names but wasn't enough for a genuinely long multi-stop route ('Gangtok -> Lachung -> Pelling') sharing one pill with the countdown badge and weather -- three segments always competing for one row meant it kept truncating. Real fix in commit 6968303: split back into two stacked pills -- countdown badge on its own row, destination + weather pill below it, so destination only shares its row with weather (not weather + badge) and gets far more width. Confirmed against the actual reported multi-stop route."
   }
 ]
