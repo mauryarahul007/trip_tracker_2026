@@ -30,9 +30,20 @@ const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
 const prefersReducedMotion =
   typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 
+// toISOString() reports the UTC calendar date, which drifts a day off the
+// user's actual local date for roughly a third of the day depending on
+// timezone (e.g. IST is UTC+5:30 -- after 6:30pm local, toISOString() is
+// already on tomorrow's UTC date). That mismatch fed straight into the
+// upcoming/ongoing/past classification below, so trips could misclassify
+// depending on what time of day (and where) the viewer happened to load
+// the card. en-CA formats as YYYY-MM-DD in the *local* timezone.
+function localDateStr(d: Date = new Date()): string {
+  return d.toLocaleDateString('en-CA');
+}
+
 function getItineraryProgress(startDate?: string, endDate?: string): number | null {
   if (!startDate || !endDate) return null;
-  const todayStr = new Date().toISOString().split('T')[0];
+  const todayStr = localDateStr();
   if (todayStr < startDate || todayStr > endDate) return null;
   const start = new Date(`${startDate}T00:00:00`).getTime();
   const end = new Date(`${endDate}T23:59:59`).getTime();
@@ -138,7 +149,7 @@ function useAmbientGlowColor(photoUrl: string | null): string | null {
 // Compute contextual status badge (Ongoing / Upcoming) for card header
 function getTripStatusBadge(startDate?: string, endDate?: string): { label: string; kind: 'ongoing' | 'upcoming' } | null {
   if (!startDate || !endDate) return null;
-  const todayStr = new Date().toISOString().split('T')[0];
+  const todayStr = localDateStr();
   if (todayStr >= startDate && todayStr <= endDate) {
     const day = tripDayNumber(startDate, todayStr);
     return { label: day ? `ONGOING · DAY ${day}` : 'ONGOING', kind: 'ongoing' };
@@ -318,14 +329,7 @@ function CardContent({
           </div>
 
           <div className="stack-unified-header">
-            {statusBadge && (
-              <span className={`stack-status-dot-indicator ${statusBadge.kind}`} title={statusBadge.label}>
-                <span className="stack-status-live-dot" />
-                <span className="stack-status-label">{statusBadge.label}</span>
-              </span>
-            )}
-
-            {(trip.destination || weather) && (
+            {(statusBadge || trip.destination || weather) && (
               <div
                 className={`stack-header-caption${isRefreshing ? ' refreshing' : ''}`}
                 onClick={(e) => {
@@ -343,8 +347,15 @@ function CardContent({
                     refreshWeather();
                   }
                 }}
-                title={weather ? `Live: ${weather.condition} in ${weather.city}. Tap to refresh.` : trip.destination}
+                title={weather ? `Live: ${weather.condition} in ${weather.city}. Tap to refresh.` : (statusBadge?.label || trip.destination)}
               >
+                {statusBadge && (
+                  <span className={`stack-status-dot-indicator ${statusBadge.kind}`} title={statusBadge.label}>
+                    <span className="stack-status-live-dot" />
+                    <span className="stack-status-label">{statusBadge.label}</span>
+                  </span>
+                )}
+                {statusBadge && (trip.destination || weather) && <span className="stack-header-sep">&middot;</span>}
                 {trip.destination && (
                   <span className="stack-caption-dest">{trip.destination}</span>
                 )}
