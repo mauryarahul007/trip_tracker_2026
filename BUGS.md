@@ -9,10 +9,10 @@
 
 | Metric | Count | Status Notes |
 | :--- | :--- | :--- |
-| **Total Tracked** | **139** | All recorded bugs across sessions |
+| **Total Tracked** | **140** | All recorded bugs across sessions |
 | **🟢 Open** | **0** | No critical blockers, 0 High |
 | **🟡 In Progress** | **0** | Active investigation or fix |
-| **✅ Resolved** | **113** | Verified & closed |
+| **✅ Resolved** | **114** | Verified & closed |
 | **⚪ Won't Fix** | **26** | Expected behavior / deferred |
 
 ---
@@ -144,6 +144,7 @@
 | **BUG-137** | Boarding pass ignores dark mode, FAB mode-switch is silent, expense list opens to too much chrome | `ui-ux` | `medium` | `claude-cli` | `claude-cli` | Fixed in commit b0cf7f9: added --bp-* dark tokens for the boarding pass, an Add-member label on the FAB, and a single collapsible chrome toggle for the expense list's stats/chips. |
 | **BUG-138** | List-row swipe swallows page-swipe navigation on Members/Expenses | `ui-ux` | `medium` | `claude-cli` | `claude-cli` | Fixed in commit 20223bd: SwipeableRow's data-no-tab-swipe opt-out narrowed to a 'row' variant, and useTabSwipe now arms page-swipe when the touch starts within EDGE_ZONE_PX (28px) of the screen edge, even over a row. SwipeableRow itself also refuses to start its own drag in that same edge zone so the two gestures don't fight over one touch. |
 | **BUG-139** | CI failing: Node 20 lacks global navigator/native WebSocket needed by Supabase realtime-js and geolocation test | `general` | `high` | `claude-cli` | `claude-cli` | Fixed in commit f7889ab: bumped node-version from 20 to 22 in ci.yml, deploy-ec2.yml, and deploy-pages.yml to match the already-Node-22 build-android/build-ios workflows. Node 22 has stable global navigator and native WebSocket support, which Supabase realtime-js's SupabaseClient constructor and geolocation.test.ts both need. Verified locally: 27/27 test files, 126/126 tests pass. |
+| **BUG-140** | Weather clipped off trip-stack card; IN X DAYS badge unreadable over bright photo | `ui-ux` | `medium` | `claude-cli` | `claude-cli` | Fixed in commit 920ad18: header flex chain lacked min-width:0, so a long destination string pushed the weather span off-card instead of truncating -- destination now ellipsis-truncates (flex:1 1 auto; min-width:0) and weather is pinned flex:0 0 auto so it always renders in full. The IN X DAYS countdown badge was bare cyan text directly over the cover photo; gave .stack-status-dot-indicator the same dark glass pill background as the destination/weather badge for real contrast. |
 
 ---
 
