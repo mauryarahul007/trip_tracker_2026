@@ -2575,6 +2575,7 @@ input:checked + .toggle-slider:before {
   align-items: flex-end;
   gap: 5px;
   max-width: 65%;
+  min-width: 0;
 }
 
 .stack-status-dot-indicator {
@@ -2586,6 +2587,14 @@ input:checked + .toggle-slider:before {
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
+  background: rgba(15, 23, 42, 0.68);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 9999px;
+  padding: 4px 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+  max-width: 100%;
 }
 
 .stack-status-dot-indicator.ongoing {
@@ -2626,6 +2635,7 @@ input:checked + .toggle-slider:before {
   transition: all 0.2s ease;
   white-space: nowrap;
   max-width: 100%;
+  min-width: 0;
   user-select: none;
 }
 
@@ -2645,11 +2655,14 @@ input:checked + .toggle-slider:before {
   letter-spacing: -0.01em;
   overflow: hidden;
   text-overflow: ellipsis;
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 .stack-header-sep {
   color: rgba(255, 255, 255, 0.35);
   font-weight: 400;
+  flex: 0 0 auto;
 }
 
 .stack-caption-weather {
@@ -2660,6 +2673,7 @@ input:checked + .toggle-slider:before {
   font-weight: 700;
   color: #FDE047;
   font-size: 10.5px;
+  flex: 0 0 auto;
 }
 
 .weather-emoji-icon.spin {
