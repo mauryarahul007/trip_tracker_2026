@@ -1424,6 +1424,29 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - Users can no longer flip the card on the home screen for an inline ledger summary; opening the trip details remains the clean, dedicated path for viewing expenses, settlements, and analytics.
 
+---
+
+## 82. Realtime Weather Engine & Crisp Home UI Polish
+* **Context:**
+  - The Home UI cards had three separate wrapping pill boxes in the top right (weather, destination, status) causing visual clutter and layout fragmentation on mobile screens.
+  - The weather service previously returned a hardcoded dummy fallback (`22°C Clear Day`) on geocoding misses and cached it for 2 hours, preventing real live conditions from showing, and lacked multi-stop candidate handling and accent normalization.
+  - Settled trips displayed a heavy, high-contrast banner even when no debts were actionable.
+* **Decision:**
+  - **Realtime Weather SWR Engine (`weatherService.ts`, `TripStack.tsx`):**
+    - Implemented Stale-While-Revalidate (SWR): instantaneous 0ms display of cached conditions with background live revalidation from Open-Meteo when older than 20 minutes.
+    - Added `visibilitychange` and `window.onfocus` listeners to automatically check fresh weather when users switch back to the app or tab.
+    - Added tap-to-refresh on the weather caption with a subtle spin icon and haptic confirmation.
+    - Eliminated fake 22°C fallbacks, purges legacy dummy cache entries, normalizes Unicode accents (*São Paulo*, *München*), strips filler words (*weekend in*, *with friends*), and supports `trip.stops`.
+  - **Unified Magazine Header Caption (`TripStack.tsx`, `index.css`):**
+    - Replaced the three wrapping pill boxes with a single, calm editorial caption (`Goa · ☀️ 28°C`) and a glowing live pulse dot for trip status.
+  - **Ambient Photo Backlight Glow (`TripStack.tsx`, `imageLuminance.ts`, `index.css`):**
+    - Extracted dominant image color via a 24x24 canvas sampler cached in memory, casting an ethereal GPU-accelerated radial backlight behind the active card with zero DOM chrome.
+  - **Smart Balance Progressive Disclosure (`TripStack.tsx`, `index.css`):**
+    - Auto-hides the loud banner when a trip is completely settled, cleanly embedding `Trip · INR · ✓ Settled` into the subtitle. Actionable debts (`YOU ARE OWED...` / `YOU OWE...`) remain prominently badged.
+* **Trade-offs Accepted:**
+  - Weather without geocoded coordinates gracefully renders `null` rather than a guessed daylight fallback, ensuring accurate information integrity.
+
+
 
 
 

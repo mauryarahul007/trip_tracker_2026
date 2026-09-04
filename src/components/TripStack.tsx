@@ -1,15 +1,15 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { Member, Trip } from '../types';
 import { IconArchive, IconEdit, IconTrash } from './Icons';
 import { formatTripStamp, tripDayNumber } from '../utils/dateRange';
 import { initial } from '../utils/initials';
 import { avatarColorForName } from '../utils/avatarColor';
 import { fetchPlaceCoverImage } from '../services/placeImageService';
-import { getImageLuminance } from '../utils/imageLuminance';
+import { getImageLuminance, getImageDominantColor } from '../utils/imageLuminance';
 import { triggerHaptic } from '../utils/haptics';
 import { calculateSettlements } from '../utils/settlement';
 import { useTripStore } from '../store/tripStore';
-import { getDestinationWeather, type WeatherData } from '../services/weatherService';
+import { getDestinationWeatherRealtime, type WeatherData } from '../services/weatherService';
 
 const PEEK_DEPTH = 3;
 const SWIPE_THRESHOLD = 90;
@@ -42,30 +42,97 @@ function getItineraryProgress(startDate?: string, endDate?: string): number | nu
   return Math.min(100, Math.max(0, Math.round(progress)));
 }
 
-// Lightweight destination weather hook with 2-hour offline localStorage caching
-export function useDestinationWeather(destination?: string, tripName?: string, isFront: boolean = false): WeatherData | null {
+// Real-Time destination weather hook with SWR & tab-focus revalidation
+export function useDestinationWeather(
+  destination?: string,
+  tripName?: string,
+  stops?: string[],
+  isFront: boolean = false
+): {
+  weather: WeatherData | null;
+  isRefreshing: boolean;
+  refresh: () => Promise<void>;
+} {
   const [weather, setWeather] = useState<WeatherData | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const candidates = useMemo(() => {
+    return [
+      ...(stops || []),
+      destination || '',
+      tripName || '',
+    ].filter(Boolean);
+  }, [stops, destination, tripName]);
+
+  const candidatesKey = candidates.join('||');
+
+  const fetchWeather = useCallback(async (force = false) => {
+    if (candidates.length === 0) return;
+    if (force) setIsRefreshing(true);
+    try {
+      const data = await getDestinationWeatherRealtime(
+        candidates,
+        (liveData) => {
+          setWeather(liveData);
+        },
+        force
+      );
+      if (data) {
+        setWeather(data);
+      }
+    } finally {
+      if (force) {
+        setTimeout(() => setIsRefreshing(false), 500);
+      }
+    }
+  }, [candidatesKey]);
 
   useEffect(() => {
-    if (!isFront) return;
-    const place = destination || tripName;
-    if (!place) return;
-
+    if (!isFront || candidates.length === 0) return;
     let cancelled = false;
-    getDestinationWeather(place)
-      .then((data) => {
-        if (!cancelled && data) {
-          setWeather(data);
-        }
-      })
-      .catch(() => {});
+    fetchWeather(false);
+
+    // Revalidate when user re-enters app / browser tab
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible' && !cancelled) {
+        fetchWeather(false);
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+    window.addEventListener('focus', handleVisibility);
 
     return () => {
       cancelled = true;
+      document.removeEventListener('visibilitychange', handleVisibility);
+      window.removeEventListener('focus', handleVisibility);
     };
-  }, [destination, tripName, isFront]);
+  }, [isFront, candidatesKey, fetchWeather]);
 
-  return weather;
+  const refresh = useCallback(async () => {
+    triggerHaptic('light');
+    await fetchWeather(true);
+  }, [fetchWeather]);
+
+  return { weather, isRefreshing, refresh };
+}
+
+// Samples dominant color from cover photo for ambient radial backlighting
+function useAmbientGlowColor(photoUrl: string | null): string | null {
+  const [glowColor, setGlowColor] = useState<string | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    if (!photoUrl) {
+      setGlowColor(null);
+      return;
+    }
+    getImageDominantColor(photoUrl).then((color) => {
+      if (!cancelled && color) {
+        setGlowColor(color);
+      }
+    });
+    return () => { cancelled = true; };
+  }, [photoUrl]);
+  return glowColor;
 }
 
 // Compute contextual status badge (Ongoing / Upcoming) for card header
@@ -178,7 +245,8 @@ function CardContent({
   const tone = useCardTone(photoUrl);
   const expenses = useTripStore((s) => s.expenses);
   const userDisplayName = useTripStore((s) => s.userDisplayName);
-  const weather = useDestinationWeather(trip.destination, trip.name, isFront);
+  const stopNames = useMemo(() => trip.stops?.map((s) => s.name).filter(Boolean), [trip.stops]);
+  const { weather, isRefreshing, refresh: refreshWeather } = useDestinationWeather(trip.destination, trip.name, stopNames, isFront);
 
   // Robustly identify current user's member object in this trip
   const myMember = useMemo(() => {
@@ -243,54 +311,79 @@ function CardContent({
         />
       )}
       <div className="stack-card-content">
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', width: '100%', gap: '8px' }}>
+        <div className="stack-card-top-bar">
           <div className="pp-stamp">
             <span>{stamp.top}</span>
             <span>{stamp.bottom}</span>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '6px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-              {weather && (
-                <div className="stack-weather-pill" title={`${weather.condition} in ${weather.city}`}>
-                  <span>{weather.weatherEmoji}</span> {weather.tempC}&deg;C
-                </div>
-              )}
-              {trip.destination && (
-                <div className="stack-destination-pill">
-                  <span>📍</span> {trip.destination}
-                </div>
-              )}
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              {statusBadge && (
-                <span className={`stack-status-pill ${statusBadge.kind}`}>
-                  {statusBadge.kind === 'ongoing' ? '● ' : '⏱ '}{statusBadge.label}
-                </span>
-              )}
-            </div>
+
+          <div className="stack-unified-header">
+            {statusBadge && (
+              <span className={`stack-status-dot-indicator ${statusBadge.kind}`} title={statusBadge.label}>
+                <span className="stack-status-live-dot" />
+                <span className="stack-status-label">{statusBadge.label}</span>
+              </span>
+            )}
+
+            {(trip.destination || weather) && (
+              <div
+                className={`stack-header-caption${isRefreshing ? ' refreshing' : ''}`}
+                onClick={(e) => {
+                  if (weather) {
+                    e.stopPropagation();
+                    refreshWeather();
+                  }
+                }}
+                role={weather ? 'button' : undefined}
+                tabIndex={weather ? 0 : undefined}
+                onKeyDown={(e) => {
+                  if (weather && (e.key === 'Enter' || e.key === ' ')) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    refreshWeather();
+                  }
+                }}
+                title={weather ? `Live: ${weather.condition} in ${weather.city}. Tap to refresh.` : trip.destination}
+              >
+                {trip.destination && (
+                  <span className="stack-caption-dest">{trip.destination}</span>
+                )}
+                {trip.destination && weather && <span className="stack-header-sep">&middot;</span>}
+                {weather && (
+                  <span className="stack-caption-weather">
+                    <span className={`weather-emoji-icon${isRefreshing ? ' spin' : ''}`}>{weather.weatherEmoji}</span>
+                    <span>{weather.tempC}&deg;C</span>
+                  </span>
+                )}
+              </div>
+            )}
           </div>
         </div>
 
         <div style={{ marginTop: 'auto', marginBottom: '8px' }}>
-          {balanceInfo && (
+          {balanceInfo && (balanceInfo.status === 'owed' || balanceInfo.status === 'owe') && (
             <div style={{ marginBottom: '6px' }}>
               {balanceInfo.status === 'owed' ? (
                 <span className="stack-balance-chip owed">
                   <span>💰</span> YOU ARE OWED {trip.baseCurrency || 'INR'} {Math.round(balanceInfo.amount).toLocaleString()}
                 </span>
-              ) : balanceInfo.status === 'owe' ? (
+              ) : (
                 <span className="stack-balance-chip owe">
                   <span>💸</span> YOU OWE {trip.baseCurrency || 'INR'} {Math.round(balanceInfo.amount).toLocaleString()}
-                </span>
-              ) : (
-                <span className="stack-balance-chip settled">
-                  <span>✓</span> ALL SETTLED UP
                 </span>
               )}
             </div>
           )}
 
-          <div className="pp-dest">Trip &middot; {trip.baseCurrency}</div>
+          <div className="pp-dest">
+            Trip &middot; {trip.baseCurrency}
+            {balanceInfo?.status === 'settled' && (
+              <>
+                <span className="stack-settled-dot"> &middot; </span>
+                <span className="stack-settled-sub">✓ Settled</span>
+              </>
+            )}
+          </div>
           <h3 className="pp-name">{trip.name}</h3>
           <div className="pp-meta">
             {tripMembers.length} member{tripMembers.length === 1 ? '' : 's'} &middot; {expenseCount} expense{expenseCount === 1 ? '' : 's'}
@@ -766,6 +859,9 @@ export function TripStack({
 
   const cycleToBack = () => setManualOrder([...order.slice(1), order[0]]);
 
+  const frontPhotoUrl = useTripPhoto(front.destination, front.coverImageUrl, front.name);
+  const frontGlowColor = useAmbientGlowColor(frontPhotoUrl);
+
   const canDelete = (trip: Trip) =>
     !trip.ownerId || !userId || trip.ownerId === userId ||
     Boolean(trip.adminMemberIds && trip.memberIds.some((mid) => members[mid]?.linkedUserId === userId && trip.adminMemberIds?.includes(mid)));
@@ -773,6 +869,15 @@ export function TripStack({
   return (
     <div className="trip-stack">
       <div className="trip-stack-stage">
+        {frontGlowColor && (
+          <div
+            className="stack-ambient-glow"
+            style={{
+              background: `radial-gradient(ellipse 75% 55% at 50% 32%, ${frontGlowColor} 0%, transparent 75%)`,
+            }}
+            aria-hidden="true"
+          />
+        )}
         {visible.map((trip, idx) => (
           <StackCardItem
             key={trip.id}

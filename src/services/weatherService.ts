@@ -1,12 +1,13 @@
 /**
  * Ambient Weather Service
  * Lightweight, zero-dependency destination weather and daylight indicator using Open-Meteo REST API.
- * Features 2-hour offline localStorage caching.
+ * Features Real-Time Stale-While-Revalidate (SWR) caching (20 min fresh, 24h offline fallback).
  */
 
 export interface WeatherData {
   tempC: number;
   tempF: number;
+  apparentTempC?: number;
   weatherCode: number;
   weatherEmoji: string;
   condition: string;
@@ -15,7 +16,8 @@ export interface WeatherData {
   updatedAt: number;
 }
 
-const CACHE_TTL_MS = 2 * 60 * 60 * 1000; // 2 hours
+const REALTIME_TTL_MS = 20 * 60 * 1000; // 20 minutes for live freshness
+const MAX_OFFLINE_CACHE_MS = 24 * 60 * 60 * 1000; // 24 hours offline fallback
 
 export function getWeatherConditionFromCode(code: number, isDay = true): { emoji: string; text: string } {
   switch (code) {
@@ -59,8 +61,9 @@ export function getWeatherConditionFromCode(code: number, isDay = true): { emoji
 }
 
 /**
- * Clean and extract place name candidates from composite route titles
- * (e.g. "Meghalaya -> Arunachal Pradesh" => ["Arunachal Pradesh", "Meghalaya"])
+ * Clean and extract place name candidates from composite route titles,
+ * normalizing accents and stripping colloquial trip filler words.
+ * (e.g. "Weekend in München -> Goa with Friends" => ["Goa", "Munchen"])
  */
 export function extractPlaceCandidates(raw: string | string[]): string[] {
   const inputs = Array.isArray(raw) ? raw : [raw];
@@ -68,17 +71,32 @@ export function extractPlaceCandidates(raw: string | string[]): string[] {
 
   for (const input of inputs) {
     if (!input || typeof input !== 'string') continue;
-    // Split by route delimiters: ->, →, to, comma, slash, dash
-    const segments = input.split(/->|→|\bto\b|,|\/| - /i);
-    // Reverse so destination (last stop) is checked before origin
+
+    // Normalize accents (e.g. München -> Munchen, São Paulo -> Sao Paulo)
+    const normalized = input.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
+    // Split by route delimiters: ->, →, to, comma, slash, dash, &
+    const segments = normalized.split(/->|→|\bto\b|,|\/| - |&/i);
     const reversed = segments.slice().reverse();
+
     for (const segment of reversed) {
       const cleaned = segment
-        .replace(/\b(trip|backpacking|tour|vacation|getaway|holiday|expedition|voyage|2025|2026|2027|roadtrip|road\s+trip)\b/gi, '')
+        .replace(/\b(trip|backpacking|tour|vacation|getaway|holiday|expedition|voyage|202[0-9]|roadtrip|road\s+trip|with\s+friends|with\s+family|friends|family|weekend|visit|exploring|explore|in|at|with)\b/gi, ' ')
         .replace(/[^a-zA-Z\s]/g, ' ')
+        .replace(/\s+/g, ' ')
         .trim();
+
       if (cleaned.length >= 2 && !candidates.includes(cleaned)) {
         candidates.push(cleaned);
+      }
+
+      // If prefixed by directional words (North/South/East/West), also add base name (e.g. "North Goa" -> "Goa")
+      const directionalMatch = cleaned.match(/^(?:north|south|east|west|central)\s+([a-zA-Z\s]+)$/i);
+      if (directionalMatch && directionalMatch[1]) {
+        const baseName = directionalMatch[1].trim();
+        if (baseName.length >= 2 && !candidates.includes(baseName)) {
+          candidates.push(baseName);
+        }
       }
     }
   }
@@ -89,6 +107,24 @@ export function extractPlaceCandidates(raw: string | string[]): string[] {
 export function cleanPlaceQuery(raw: string): string {
   const candidates = extractPlaceCandidates(raw);
   return candidates[0] || raw.trim();
+}
+
+function getStorage(): Storage | null {
+  try {
+    if (typeof window !== 'undefined' && window.localStorage) return window.localStorage;
+    if (typeof localStorage !== 'undefined') return localStorage;
+  } catch {
+    return null;
+  }
+  return null;
+}
+
+/**
+ * Detect and discard bogus legacy weather entries that used hardcoded 22°C Clear Day
+ */
+function isBogusWeather(data: WeatherData | null): boolean {
+  if (!data) return true;
+  return data.weatherCode === 0 && data.tempC === 22 && data.condition === 'Clear Day' && data.tempF === 72;
 }
 
 export async function fetchSingleCoordinate(query: string): Promise<{ lat: number; lon: number; name: string } | null> {
@@ -106,7 +142,7 @@ export async function fetchSingleCoordinate(query: string): Promise<{ lat: numbe
       }
     }
   } catch {
-    // Fallback to secondary
+    // Network / timeout
   }
 
   // 2. Secondary: Photon Komoot OSM API
@@ -123,7 +159,7 @@ export async function fetchSingleCoordinate(query: string): Promise<{ lat: numbe
       }
     }
   } catch {
-    // Network or timeout
+    // Fallback failed
   }
 
   return null;
@@ -141,8 +177,48 @@ export async function fetchDestinationCoordinates(destination: string | string[]
   return null;
 }
 
-export async function getDestinationWeather(
+async function fetchLiveWeatherFromCoords(coords: { lat: number; lon: number; name: string }, targetName: string): Promise<WeatherData | null> {
+  try {
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${coords.lat}&longitude=${coords.lon}&current=temperature_2m,apparent_temperature,weather_code,is_day`;
+    const res = await fetch(url, { signal: AbortSignal.timeout(4500) });
+    if (!res.ok) throw new Error('Open-Meteo API error');
+
+    const data = await res.json();
+    const current = data?.current;
+    if (!current) throw new Error('No current weather payload');
+
+    const tempC = Math.round(current.temperature_2m);
+    const tempF = Math.round((tempC * 9) / 5 + 32);
+    const apparentTempC = current.apparent_temperature !== undefined ? Math.round(current.apparent_temperature) : undefined;
+    const weatherCode = current.weather_code ?? 0;
+    const isDay = current.is_day !== 0;
+    const condition = getWeatherConditionFromCode(weatherCode, isDay);
+
+    return {
+      tempC,
+      tempF,
+      apparentTempC,
+      weatherCode,
+      weatherEmoji: condition.emoji,
+      condition: condition.text,
+      isDay,
+      city: coords.name || targetName,
+      updatedAt: Date.now(),
+    };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Real-Time Weather Check with SWR (Stale-While-Revalidate).
+ * - Immediately returns cached data if available (0ms layout lag).
+ * - Silently triggers a background refresh if cache is older than 20 minutes (or forced).
+ * - Calls `onLiveUpdate` with fresh data when network returns.
+ */
+export async function getDestinationWeatherRealtime(
   destination: string | string[],
+  onLiveUpdate?: (data: WeatherData) => void,
   forceRefresh = false
 ): Promise<WeatherData | null> {
   const candidates = extractPlaceCandidates(destination);
@@ -151,86 +227,63 @@ export async function getDestinationWeather(
   const primaryTarget = candidates[0];
   const cacheKey = `tt_weather_${primaryTarget.toLowerCase().replace(/\s+/g, '_')}`;
 
-  // 1. Check local cache if not forcing refresh
-  if (!forceRefresh) {
-    try {
-      const cachedStr = localStorage.getItem(cacheKey);
-      if (cachedStr) {
-        const parsed: WeatherData = JSON.parse(cachedStr);
-        if (Date.now() - parsed.updatedAt < CACHE_TTL_MS) {
-          return parsed;
-        }
-      }
-    } catch {
-      // LocalStorage failure
-    }
-  }
-
-  // 2. Resolve coords across place candidates
-  const coords = await fetchDestinationCoordinates(candidates);
-  if (!coords) {
-    // Return an ambient daylight estimate if geocoding fails
-    const hour = new Date().getHours();
-    const isDay = hour >= 6 && hour < 19;
-    return {
-      tempC: 22,
-      tempF: 72,
-      weatherCode: 0,
-      weatherEmoji: isDay ? '☀️' : '🌙',
-      condition: isDay ? 'Clear Day' : 'Clear Night',
-      isDay,
-      city: primaryTarget,
-      updatedAt: Date.now(),
-    };
-  }
-
-  // 3. Fetch from Open-Meteo Current Weather
+  const storage = getStorage();
+  let cachedData: WeatherData | null = null;
   try {
-    const url = `https://api.open-meteo.com/v1/forecast?latitude=${coords.lat}&longitude=${coords.lon}&current=temperature_2m,weather_code,is_day`;
-    const res = await fetch(url, { signal: AbortSignal.timeout(4500) });
-    if (!res.ok) throw new Error('Open-Meteo API error');
-
-    const data = await res.json();
-    const current = data?.current;
-    if (!current) throw new Error('No current weather');
-
-    const tempC = Math.round(current.temperature_2m);
-    const tempF = Math.round((tempC * 9) / 5 + 32);
-    const weatherCode = current.weather_code ?? 0;
-    const isDay = current.is_day !== 0;
-    const condition = getWeatherConditionFromCode(weatherCode, isDay);
-
-    const weatherData: WeatherData = {
-      tempC,
-      tempF,
-      weatherCode,
-      weatherEmoji: condition.emoji,
-      condition: condition.text,
-      isDay,
-      city: coords.name || primaryTarget,
-      updatedAt: Date.now(),
-    };
-
-    // Save to cache
-    try {
-      localStorage.setItem(cacheKey, JSON.stringify(weatherData));
-    } catch {
-      // ignore
+    const cachedStr = storage?.getItem(cacheKey);
+    if (cachedStr) {
+      const parsed: WeatherData = JSON.parse(cachedStr);
+      if (isBogusWeather(parsed)) {
+        storage?.removeItem(cacheKey);
+      } else if (Date.now() - parsed.updatedAt < MAX_OFFLINE_CACHE_MS) {
+        cachedData = parsed;
+      }
     }
-
-    return weatherData;
   } catch {
-    const hour = new Date().getHours();
-    const isDay = hour >= 6 && hour < 19;
-    return {
-      tempC: 22,
-      tempF: 72,
-      weatherCode: 0,
-      weatherEmoji: isDay ? '☀️' : '🌙',
-      condition: isDay ? 'Clear Day' : 'Clear Night',
-      isDay,
-      city: coords.name || primaryTarget,
-      updatedAt: Date.now(),
-    };
+    // Storage access error
   }
+
+  const isCacheFresh = cachedData && (Date.now() - cachedData.updatedAt < REALTIME_TTL_MS);
+
+  // Background fetcher function
+  const executeLiveFetch = async (): Promise<WeatherData | null> => {
+    const coords = await fetchDestinationCoordinates(candidates);
+    if (!coords) return null;
+
+    const fresh = await fetchLiveWeatherFromCoords(coords, primaryTarget);
+    if (fresh) {
+      try {
+        storage?.setItem(cacheKey, JSON.stringify(fresh));
+      } catch {
+        // ignore storage error
+      }
+      onLiveUpdate?.(fresh);
+      return fresh;
+    }
+    return null;
+  };
+
+  if (!forceRefresh && isCacheFresh) {
+    return cachedData;
+  }
+
+  if (cachedData && !forceRefresh) {
+    // SWR: Return cached immediately, revalidate live in background
+    executeLiveFetch().catch(() => {});
+    return cachedData;
+  }
+
+  // No cache or forced refresh: await live fetch
+  const fresh = await executeLiveFetch();
+  return fresh || cachedData || null;
+}
+
+/**
+ * Convenience backward-compatible wrapper
+ */
+export async function getDestinationWeather(
+  destination: string | string[],
+  forceRefresh = false
+): Promise<WeatherData | null> {
+  return getDestinationWeatherRealtime(destination, undefined, forceRefresh);
 }

@@ -2543,6 +2543,145 @@ input:checked + .toggle-slider:before {
   padding: 20px 20px 18px;
 }
 
+/* Ambient radial backlight behind the active card stack */
+.stack-ambient-glow {
+  position: absolute;
+  top: -24px;
+  left: -20px;
+  right: -20px;
+  bottom: 12px;
+  pointer-events: none;
+  z-index: 0;
+  filter: blur(48px);
+  -webkit-filter: blur(48px);
+  opacity: 0.35;
+  transform: translate3d(0, 0, 0);
+  transition: opacity 0.5s ease, background 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  border-radius: 40px;
+}
+
+/* Card top bar and unified header */
+.stack-card-top-bar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  width: 100%;
+  gap: 12px;
+}
+
+.stack-unified-header {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 5px;
+  max-width: 65%;
+}
+
+.stack-status-dot-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-family-mono);
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.stack-status-dot-indicator.ongoing {
+  color: #34D399;
+}
+
+.stack-status-dot-indicator.upcoming {
+  color: #38BDF8;
+}
+
+.stack-status-live-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 8px currentColor;
+  animation: stack-pulse-dot 2.2s infinite ease-in-out;
+}
+
+@keyframes stack-pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.45; transform: scale(0.85); }
+}
+
+.stack-header-caption {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(15, 23, 42, 0.68);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 9999px;
+  padding: 4px 11px;
+  font-size: 11px;
+  color: #F8FAFC;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  max-width: 100%;
+  user-select: none;
+}
+
+.stack-header-caption[role="button"] {
+  cursor: pointer;
+}
+
+.stack-header-caption[role="button"]:hover {
+  background: rgba(15, 23, 42, 0.85);
+  border-color: rgba(56, 189, 248, 0.45);
+  transform: translateY(-0.5px);
+}
+
+.stack-caption-dest {
+  font-weight: 600;
+  color: #F1F5F9;
+  letter-spacing: -0.01em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.stack-header-sep {
+  color: rgba(255, 255, 255, 0.35);
+  font-weight: 400;
+}
+
+.stack-caption-weather {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--font-family-mono);
+  font-weight: 700;
+  color: #FDE047;
+  font-size: 10.5px;
+}
+
+.weather-emoji-icon.spin {
+  display: inline-block;
+  animation: weather-spin 0.6s linear infinite;
+}
+
+@keyframes weather-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.stack-settled-dot {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.stack-settled-sub {
+  color: #34D399 !important;
+  font-weight: 600;
+  font-size: 11px;
+}
+
 /* Weather Pill */
 .stack-weather-pill {
   background: rgba(15, 23, 42, 0.72);
@@ -2563,8 +2702,8 @@ input:checked + .toggle-slider:before {
 
 /* Quick Add Expense Chip on Front Card */
 .stack-quick-add-chip {
-  background: rgba(56, 189, 248, 0.2);
-  border: 1px solid rgba(56, 189, 248, 0.5);
+  background: rgba(56, 189, 248, 0.18);
+  border: 1px solid rgba(56, 189, 248, 0.45);
   color: #7DD3FC;
   font-size: 11px;
   font-weight: 700;
@@ -2576,12 +2715,12 @@ input:checked + .toggle-slider:before {
   cursor: pointer;
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  box-shadow: 0 0 12px rgba(56, 189, 248, 0.3);
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.25);
   transition: all 0.18s ease;
 }
 .stack-quick-add-chip:hover {
-  background: rgba(56, 189, 248, 0.32);
-  transform: scale(1.04);
+  background: rgba(56, 189, 248, 0.3);
+  transform: scale(1.03);
 }
 
 /* Ambient Itinerary Progress Bar along bottom rim of card */
