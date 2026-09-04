@@ -9,10 +9,10 @@
 
 | Metric | Count | Status Notes |
 | :--- | :--- | :--- |
-| **Total Tracked** | **140** | All recorded bugs across sessions |
+| **Total Tracked** | **141** | All recorded bugs across sessions |
 | **🟢 Open** | **0** | No critical blockers, 0 High |
 | **🟡 In Progress** | **0** | Active investigation or fix |
-| **✅ Resolved** | **114** | Verified & closed |
+| **✅ Resolved** | **115** | Verified & closed |
 | **⚪ Won't Fix** | **26** | Expected behavior / deferred |
 
 ---
@@ -145,6 +145,7 @@
 | **BUG-138** | List-row swipe swallows page-swipe navigation on Members/Expenses | `ui-ux` | `medium` | `claude-cli` | `claude-cli` | Fixed in commit 20223bd: SwipeableRow's data-no-tab-swipe opt-out narrowed to a 'row' variant, and useTabSwipe now arms page-swipe when the touch starts within EDGE_ZONE_PX (28px) of the screen edge, even over a row. SwipeableRow itself also refuses to start its own drag in that same edge zone so the two gestures don't fight over one touch. |
 | **BUG-139** | CI failing: Node 20 lacks global navigator/native WebSocket needed by Supabase realtime-js and geolocation test | `general` | `high` | `claude-cli` | `claude-cli` | Fixed in commit f7889ab: bumped node-version from 20 to 22 in ci.yml, deploy-ec2.yml, and deploy-pages.yml to match the already-Node-22 build-android/build-ios workflows. Node 22 has stable global navigator and native WebSocket support, which Supabase realtime-js's SupabaseClient constructor and geolocation.test.ts both need. Verified locally: 27/27 test files, 126/126 tests pass. |
 | **BUG-140** | Weather clipped off trip-stack card; IN X DAYS badge unreadable over bright photo | `ui-ux` | `medium` | `claude-cli` | `claude-cli` | Actual root cause was the service worker (public/sw.js), not the CSP alone: its fetch handler treated index.html (the app shell, which carries the CSP header) with stale-while-revalidate -- always serve the cached copy instantly, revalidate in background -- and CACHE_NAME never changes between deploys, so there was no signal to ever prompt a reload. Users could stay on an arbitrarily old cached shell (and therefore an old CSP) indefinitely. Fixed in commit 17b4443: navigation requests (the shell) now go network-first with cache fallback for offline; hashed static assets keep the fast SWR path since a stale one can't be referenced by a fresh shell. Requires one full close-and-reopen (or hard refresh) of the site to pick up the new service worker and shell -- confirmed via GH Actions CI/EC2/Pages all green on commits 5c2504b (CSP + badge) and 17b4443 (SW fix). |
+| **BUG-141** | Trip status badge (IN X DAYS / ONGOING) misclassifies using UTC date instead of local date | `ui-ux` | `medium` | `claude-cli` | `claude-cli` | getTripStatusBadge and getItineraryProgress (src/components/TripStack.tsx) computed today's date via new Date().toISOString().split('T')[0], which is the UTC calendar date, not the viewer's local date. For IST (UTC+5:30), that's already tomorrow's UTC date after 6:30pm local, so trip status (past/ongoing/upcoming) and the countdown badge could misclassify depending on time of day. Fixed in commit f1f2345: added localDateStr() using toLocaleDateString('en-CA') (YYYY-MM-DD in local timezone) and swapped both call sites to use it. |
 
 ---
 
