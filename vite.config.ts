@@ -5,9 +5,12 @@ import { readFileSync } from 'node:fs'
 
 const pkgVersion = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf8')).version
 
-let buildSha = 'dev'
+// Apple-style Version/Build split: pkgVersion is the stable marketing
+// version (bumped manually via `npm run release:*`), buildNumber is the
+// commit count -- auto-incrementing, unique per commit, zero maintenance.
+let buildNumber = 'dev'
 try {
-  buildSha = execSync('git rev-parse --short HEAD').toString().trim()
+  buildNumber = execSync('git rev-list --count HEAD').toString().trim()
 } catch {
   // no git available — keep the 'dev' fallback
 }
@@ -27,6 +30,6 @@ export default defineConfig(({ command }) => ({
   },
   define: {
     __APP_VERSION__: JSON.stringify(pkgVersion),
-    __BUILD_SHA__: JSON.stringify(buildSha),
+    __BUILD_NUMBER__: JSON.stringify(buildNumber),
   },
 }))

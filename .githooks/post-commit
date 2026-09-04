@@ -1,9 +1,0 @@
-#!/bin/sh
-# Auto version bump — see scripts/bump-version.mjs
-# post-commit (not prepare-commit-msg) so the bump is guaranteed to land: it
-# amends the commit that was just made, instead of racing git's own index
-# write mid-commit (which silently lost the bump on Windows).
-if [ -n "$SKIP_VERSION_BUMP" ]; then
-  exit 0
-fi
-node "$(dirname "$0")/../scripts/bump-version.mjs"

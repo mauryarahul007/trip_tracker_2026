@@ -1,7 +1,7 @@
 {
   "name": "trip-tracker-2026",
   "private": true,
-  "version": "1.106.3",
+  "version": "2.0.0",
   "type": "module",
   "scripts": {
     "postinstall": "node scripts/install-git-hooks.mjs && node scripts/sync-maplibre-worker.mjs",
@@ -22,7 +22,10 @@
     "feature:add": "node scripts/feature.mjs add",
     "feature:list": "node scripts/feature.mjs list",
     "feature:ship": "node scripts/feature.mjs ship",
-    "feature:sync": "node scripts/feature.mjs sync"
+    "feature:sync": "node scripts/feature.mjs sync",
+    "release:major": "node scripts/bump-version.mjs major",
+    "release:minor": "node scripts/bump-version.mjs minor",
+    "release:patch": "node scripts/bump-version.mjs patch"
   },
   "dependencies": {
     "@capacitor/android": "8.2.0",

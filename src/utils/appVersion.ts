@@ -1,12 +1,15 @@
 import { Capacitor } from '@capacitor/core';
 import { App as CapacitorApp } from '@capacitor/app';
 
-// Native (Android/iOS): read the real installed app version/build, already
-// kept in sync with package.json + the CI build number by
-// scripts/sync-native-version.mjs. Web: __APP_VERSION__/__BUILD_SHA__ are
-// injected at build time (see vite.config.ts) — the commit SHA means this
-// changes on every real deploy with no manual version bump required.
-export const WEB_APP_VERSION = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '1.87.0';
+// Apple-style Version/Build split: WEB_APP_VERSION is a stable marketing
+// version, bumped manually via `npm run release:major|minor|patch` (see
+// scripts/bump-version.mjs) -- not on every commit. The build number next
+// to it is the commit count (__BUILD_NUMBER__, injected by vite.config.ts),
+// so individual builds stay traceable without the marketing version moving
+// every time. Native (Android/iOS) mirrors this via CapacitorApp.getInfo()
+// (version/build), kept in sync with package.json + the CI build number by
+// scripts/sync-native-version.mjs.
+export const WEB_APP_VERSION = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '1.0.0';
 
 export async function getAppVersion(): Promise<string> {
   if (Capacitor.isNativePlatform()) {
@@ -17,5 +20,5 @@ export async function getAppVersion(): Promise<string> {
       // fall through to the web build identifiers below
     }
   }
-  return `${__APP_VERSION__} (${__BUILD_SHA__})`;
+  return `${__APP_VERSION__} (${__BUILD_NUMBER__})`;
 }

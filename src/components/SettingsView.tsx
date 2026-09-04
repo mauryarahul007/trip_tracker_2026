@@ -43,7 +43,7 @@ import { useAuthStore } from '../store/authStore';
 import { useNotificationsStore } from '../store/notificationsStore';
 import { formatDateRange } from '../utils/dateRange';
 import { getCategoryKeywords } from '../utils/categoryHelper';
-import { getAppVersion } from '../utils/appVersion';
+import { getAppVersion, WEB_APP_VERSION } from '../utils/appVersion';
 import { triggerHaptic, getHapticPreference, setHapticPreference, type HapticPreference } from '../utils/haptics';
 import { getCurrencySymbol } from '../utils/currency';
 import { calculateSettlements } from '../utils/settlement';
@@ -2759,7 +2759,7 @@ export function SettingsView({
                 </div>
                 <div className="settings-row-texts">
                   <span className="settings-row-title">Trip Tracker 2026</span>
-                  <span className="settings-row-subtitle">Version {appVersion ?? '1.104.1'} · Web Edition</span>
+                  <span className="settings-row-subtitle">Version {appVersion ?? WEB_APP_VERSION} · Web Edition</span>
                 </div>
               </div>
               <div className="settings-row-right">
