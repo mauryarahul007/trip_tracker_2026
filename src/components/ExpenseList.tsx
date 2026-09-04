@@ -233,10 +233,16 @@ export function ExpenseList({
     return groups;
   }, []);
 
+  const isActualExpense = (e: Expense) => !e.isSettlement && !e.title.startsWith('Settlement:');
+
   const avgDailySpend = useMemo(() => {
-    if (dayGroups.length === 0) return 0;
-    const total = dayGroups.reduce((acc, g) => acc + g.expenses.reduce((s, e) => s + e.amount, 0), 0);
-    return total / dayGroups.length;
+    // Only calculate average daily spend across actual expenses, excluding debt settlements
+    const dailyTotals = dayGroups
+      .map((g) => g.expenses.filter(isActualExpense).reduce((sum, e) => sum + e.amount, 0))
+      .filter((tot) => tot > 0);
+    if (dailyTotals.length === 0) return 0;
+    const total = dailyTotals.reduce((acc, t) => acc + t, 0);
+    return total / dailyTotals.length;
   }, [dayGroups]);
 
   // Every day-group starts collapsed on entering the tab to keep
@@ -688,9 +694,13 @@ export function ExpenseList({
               : groupDate.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', month: 'short' });
             const dayNum = trip?.startDate ? tripDayNumber(trip.startDate, group.date) : null;
             const groupLabel = dayNum ? `Day ${dayNum} · ${dateLabel}` : dateLabel;
-            const groupTotal = group.expenses.reduce((sum, e) => sum + e.amount, 0);
+            const actualExpenses = group.expenses.filter(isActualExpense);
+            const settlements = group.expenses.filter((e) => !isActualExpense(e));
+            const groupExpenseTotal = actualExpenses.reduce((sum, e) => sum + e.amount, 0);
+            const settlementsTotal = settlements.reduce((sum, e) => sum + e.amount, 0);
             const collapsed = isDayCollapsed(group.date, groupIdx);
-            const isHighBurn = avgDailySpend > 0 && groupTotal > avgDailySpend * 1.5 && group.expenses.length > 1;
+            // Burn indicator strictly measures real expense burn rate against daily averages (never debt settlements)
+            const isHighBurn = avgDailySpend > 0 && groupExpenseTotal > avgDailySpend * 1.5 && actualExpenses.length > 1;
 
             return (
               <div key={group.date} className="glass-card" style={{ padding: 0, overflow: 'hidden', marginBottom: '10px' }}>
@@ -734,21 +744,52 @@ export function ExpenseList({
                         🔥 Burn
                       </span>
                     )}
-                    <span
-                      style={{
-                        fontSize: '12px',
-                        fontWeight: 600,
-                        color: 'var(--text-primary)',
-                        background: 'var(--bg-card)',
-                        padding: '2px 8px',
-                        borderRadius: '12px',
-                        border: '1px solid var(--border-color)',
-                      }}
-                    >
-                      {formatAmount(groupTotal, currencySymbol)}
-                    </span>
+                    {groupExpenseTotal > 0 ? (
+                      <span
+                        style={{
+                          fontSize: '12px',
+                          fontWeight: 600,
+                          color: 'var(--text-primary)',
+                          background: 'var(--bg-card)',
+                          padding: '2px 8px',
+                          borderRadius: '12px',
+                          border: '1px solid var(--border-color)',
+                        }}
+                      >
+                        {formatAmount(groupExpenseTotal, currencySymbol)}
+                      </span>
+                    ) : settlementsTotal > 0 ? (
+                      <span
+                        style={{
+                          fontSize: '11px',
+                          fontWeight: 500,
+                          color: 'var(--text-muted)',
+                          background: 'var(--bg-card)',
+                          padding: '2px 7px',
+                          borderRadius: '10px',
+                          border: '1px solid var(--border-color)',
+                        }}
+                      >
+                        {formatAmount(settlementsTotal, currencySymbol)} settled
+                      </span>
+                    ) : (
+                      <span
+                        style={{
+                          fontSize: '12px',
+                          fontWeight: 600,
+                          color: 'var(--text-primary)',
+                          background: 'var(--bg-card)',
+                          padding: '2px 8px',
+                          borderRadius: '12px',
+                          border: '1px solid var(--border-color)',
+                        }}
+                      >
+                        {formatAmount(0, currencySymbol)}
+                      </span>
+                    )}
                     <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-                      {group.expenses.length}
+                      {actualExpenses.length > 0 ? actualExpenses.length : settlements.length}
+                      {actualExpenses.length > 0 && settlements.length > 0 ? ` (+${settlements.length}s)` : ''}
                     </span>
                   </div>
                 </div>

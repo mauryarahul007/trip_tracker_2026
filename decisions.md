@@ -1532,7 +1532,8 @@ This document logs all meaningful technical decisions, library choices, design p
     - Added subtle visual feedback (`✨ Auto-selected: Food & Dining`) when a category is predicted.
   - **Day-by-Day Expense Grouping & Daily Burn Subtotals (`ExpenseList.tsx`):**
     - Rendered daily totals and expense counts permanently on sticky day headers in both expanded and collapsed views.
-    - Computed average daily spend (`avgDailySpend`) across the expedition; days exceeding 1.5x average run-rate dynamically receive a `🔥 Burn` indicator.
+    - Excluded debt settlements (`isSettlement` or `Settlement:`) from daily expenditure subtotals and average burn rate calculations (`avgDailySpend`). Settlements represent debt reimbursements rather than new expedition spending; days with settlements cleanly indicate settled amounts without triggering false `🔥 Burn` alarms.
+    - Days with real spending exceeding 1.5x average run-rate dynamically receive a `🔥 Burn` indicator.
     - Added an informative `Expand All / Collapse All` control summarizing total expedition days and average daily burn.
   - **Traveler Keyboard Shortcuts & Fast Escaping (`App.tsx`):**
     - Implemented global hotkeys active when not typing inside text inputs: `N` to log a new expense, `1–4` to switch trip tabs, `/` to focus the search bar, `Esc` to dismiss dialogs, and `?` to summon a clean keyboard shortcuts card.
