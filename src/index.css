@@ -2587,7 +2587,7 @@ input:checked + .toggle-slider:before {
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  background: rgba(15, 23, 42, 0.68);
+  background: rgba(8, 12, 20, 0.82);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.16);
@@ -2595,6 +2595,14 @@ input:checked + .toggle-slider:before {
   padding: 4px 10px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
   max-width: 100%;
+}
+
+/* Text stays a uniform, always-legible near-white regardless of photo
+   brightness -- only the accent dot (currentColor) carries the kind
+   color, since colored small text over a blurred photo backdrop can't
+   guarantee contrast the way a solid near-white can. */
+.stack-status-label {
+  color: #F8FAFC;
 }
 
 .stack-status-dot-indicator.ongoing {
