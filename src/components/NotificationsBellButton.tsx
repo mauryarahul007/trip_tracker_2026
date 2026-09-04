@@ -14,38 +14,13 @@ export function NotificationsBellButton() {
   return (
     <button
       type="button"
-      className="secondary-btn"
-      style={{
-        padding: '7px',
-        color: '#FFFFFF',
-        borderColor: 'rgba(255,255,255,0.28)',
-        background: 'rgba(255,255,255,0.1)',
-        position: 'relative',
-      }}
+      className="header-action-circle-btn"
       aria-label={unreadCount > 0 ? `Notifications, ${unreadCount} unread` : 'Notifications'}
       onClick={openPanel}
     >
-      <IconBell size={15} className="icon-sm" />
+      <IconBell size={16} />
       {unreadCount > 0 && (
-        <span
-          style={{
-            position: 'absolute',
-            top: '-3px',
-            right: '-3px',
-            minWidth: '15px',
-            height: '15px',
-            padding: '0 3px',
-            borderRadius: 'var(--border-radius-pill)',
-            background: 'var(--color-danger)',
-            color: '#fff',
-            fontSize: '10px',
-            fontWeight: 700,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            lineHeight: 1,
-          }}
-        >
+        <span className="header-action-badge">
           {unreadCount > 9 ? '9+' : unreadCount}
         </span>
       )}

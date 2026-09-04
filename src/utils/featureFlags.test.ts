@@ -15,11 +15,21 @@ describe('featureFlags', () => {
     });
   });
 
-  it('superadmin always bypasses all feature flag restrictions', () => {
+  it('superadmin bypasses feature restrictions for normal capabilities', () => {
     const flags = { ...DEFAULT_FEATURE_FLAGS, enableGeotagging: false, enableP2PSync: false };
     expect(isFeatureActive('enableGeotagging', flags, { isSuperadmin: true })).toBe(true);
     expect(isFeatureActive('enableP2PSync', flags, { isSuperadmin: true })).toBe(true);
     expect(isFeatureActive('enableAdvancedLocationSearch', flags, { isSuperadmin: true })).toBe(true);
+  });
+
+  it('strict-toggle flags (demo seeding, feature suggestions) respect explicit toggle state even for superadmin', () => {
+    const flagsOff = { ...DEFAULT_FEATURE_FLAGS, enableDemoSeeding: false, enableFeatureSuggestions: false };
+    expect(isFeatureActive('enableDemoSeeding', flagsOff, { isSuperadmin: true })).toBe(false);
+    expect(isFeatureActive('enableFeatureSuggestions', flagsOff, { isSuperadmin: true })).toBe(false);
+
+    const flagsOn = { ...DEFAULT_FEATURE_FLAGS, enableDemoSeeding: true, enableFeatureSuggestions: true };
+    expect(isFeatureActive('enableDemoSeeding', flagsOn, { isSuperadmin: true })).toBe(true);
+    expect(isFeatureActive('enableFeatureSuggestions', flagsOn, { isSuperadmin: true })).toBe(true);
   });
 
   it('resolves global flags for regular users', () => {

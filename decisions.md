@@ -1590,6 +1590,185 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - Minimal bundle size addition for `qrcode` in exchange for complete zero-network offline resilience and guaranteed scannability under all connectivity conditions.
 
+---
+
+## 89. WhatsApp Design Harmonization: Grouped Inset Settings, 3-Dots Overflow Menu & Native Action Sheets
+* **Context:**
+  - On mobile browsers (Safari on iOS, Chrome on Android), settings sub-screens lacked visual consistency; individual screens used mixed card structures and lacked uniform indented row dividers (`margin-left: 56px`), causing visual clutter.
+  - In active trips, the top header bar suffered from icon congestion on narrow mobile viewports (iPhone SE / compact Android devices) with multiple secondary actions competing for limited space.
+  - Secondary trip management actions (Edit, Quick Add, Archive, Delete) on the home list relied solely on swipeable gestures with limited discovery on mobile touchscreens.
+* **Decision:**
+  - **Standardized Inset Settings Architecture (`SettingsCell.tsx`, `SettingsSection.tsx`, `SettingsView.tsx`):**
+    - Extracted modular, zero-dependency `SettingsCell` and `SettingsSection` components implementing WhatsApp's exact grouped card aesthetic.
+    - Added native indented hairline dividers (`left: 64px`) that separate row items without cutting across squircle icon badges.
+    - Unified main settings and sub-screens (`trip-settings`, `data-menu`, `help-account`, `about`) under the consistent inset card pattern with smooth hardware-accelerated horizontal slide transitions.
+  - **WhatsApp-Style Header Overflow Menu (`OverflowMenu.tsx`, `App.tsx`):**
+    - Introduced a 3-dots anchored popup menu (`IconMoreVertical`) in the active trip header for secondary actions (Share QR, Export CSV, Trip Wrapped, Route Stops toggle, Trip Settings, Superadmin Bug Tracker).
+    - Reduced header clutter on mobile viewports, giving the expedition title and primary controls maximum room.
+  - **Native Bottom Action Sheet (`ActionSheet.tsx`, `TripsListScreen.tsx`, `src/index.css`):**
+    - Created a lightweight mobile-first action sheet with top drag pill handle, frosted glass backdrop blur, spring decel slide up (`cubic-bezier(0.32, 0.72, 0, 1)`), drag-down gesture dismissal, and safe-area bottom elevation (`calc(16px + var(--safe-bottom))`).
+    - Added a direct 3-dots options button on passport trip cards providing immediate, discoverable access to Open, Quick Add Expense, Edit Details, Archive, and Delete.
+  - **Cross-Platform Mobile Touch Parity:**
+    - Applied universal `touch-action: manipulation` and `-webkit-tap-highlight-color: transparent` across all interactive buttons, eliminating 300ms mobile tap delays and gray flashes.
+* **Trade-offs Accepted:**
+  - Zero heavy third-party animation libraries or UI frameworks were added; all transitions, sheets, and menus use GPU-accelerated CSS (`translate3d`, `opacity`) to ensure 60/120fps smoothness without bundle bloat.
+
+---
+
+## 90. Strict-Toggle Feature Flags Linking in Settings & Empty States
+* **Context:**
+  - `enableDemoSeeding` and `enableFeatureSuggestions` in the Superadmin Cockpit were previously bypassed for superadmin sessions because `isFeatureActive` unconditionally returned `true` whenever `context?.isSuperadmin` was set.
+  - Furthermore, `SettingsView.tsx` lacked a feature flag check for `enableDemoSeeding` (rendering "Seed Demo Trip" whenever `onLoadDemoTrip` was passed) and bypassed `enableFeatureSuggestions` via `(isSuperadmin || isFeatureEnabled('enableFeatureSuggestions'))`.
+  - This prevented administrators from verifying, toggling off, or controlling the visibility of demo data seeding and feature request entry points.
+* **Decision:**
+  - **Exempt Strict-Toggle Flags from Superadmin Bypass (`featureFlags.ts`):**
+    - Designated `enableDemoSeeding` and `enableFeatureSuggestions` as strict UI toggle flags in `isFeatureActive`. Even when accessed by a superadmin, their activation status strictly follows explicit global flag state, trip overrides, and user overrides.
+  - **Strictly Link Settings UI Controls (`SettingsView.tsx`):**
+    - Gated "Seed Demo Trip" in Settings under `isFeatureEnabled('enableDemoSeeding')`.
+    - Restricted "Suggest a Feature" under the Help & Account section strictly to `isFeatureEnabled('enableFeatureSuggestions')`, removing the unconditional superadmin bypass.
+  - **Gate Empty State Demo Seeding (`TripsListScreen.tsx`):**
+    - Linked the "Load Demo Trip" button on the empty trips state screen to `isFeatureEnabled('enableDemoSeeding')`.
+---
+
+## 91. Active Trip Header Layout Upgrade & WhatsApp-Style Tap Title Action Sheet
+* **Context:**
+  - On narrow mobile viewports, placing a 3-dots overflow button next to Search, Notifications Bell, and `< Trips` in the active trip header crowded the right side, consuming >65% of the screen width and squeezing the trip title and date range into a narrow overlapping column.
+  - The dropdown menu rendered from the 3-dots button suffered from vertical clipping caused by the header's `overflow: hidden` styling, preventing users from seeing all menu items.
+  - Many of the actions in the dropdown menu duplicated entries already accessible in the bottom navigation's Settings tab.
+* **Decision:**
+  - **Remove 3-Dots Button from Active Trip Header (`App.tsx`):**
+    - Eliminated the crowded 3-dots header button, restoring generous horizontal breathing room for the trip title and status dates.
+    - Preserved the right-thumb navigation ergonomics by keeping the `< Trips` button at the far right edge alongside Search and Notifications.
+  - **WhatsApp-Style Interactive Trip Title Banner (`App.tsx`, `index.css`):**
+    - Transformed the `app-title-group` into an accessible, tactile interactive button with an ambient chevron indicator (`app-title-chevron-badge`).
+    - Tapping the trip title banner opens the native bottom `ActionSheet`.
+  - **Bottom Action Sheet for Trip Actions (`ActionSheet.tsx`, `App.tsx`):**
+    - Completely resolved clipping by rendering the actions inside the portal-based mobile bottom sheet.
+    - Curated high-value trip shortcuts: Share Trip & QR Code, Export to CSV, Trip Wrapped & Badges, Route Stops toggle, Full Trip Settings, and Switch Trip.
+* **Trade-offs Accepted:**
+  - Secondary trip actions are now accessed by tapping the trip header banner rather than a dedicated 3-dots icon, following the standard WhatsApp group/chat info interaction model.
+
+---
+
+## 92. Collaborative Checklist & Travel Notes as 5th Bottom Navigation Tab
+* **Context:**
+  - With Trip Settings & Details accessible in 1 tap from the top Trip Title Action Sheet and Command Palette, retaining a dedicated 5th bottom tab for "Settings" was redundant and underutilized valuable mobile screen real estate.
+  - Traveling groups repeatedly need shared access to packing essentials, travel permits, and critical group notes (e.g. hotel Wi-Fi passwords, flight/train PNRs, driver phone numbers, entry gate codes).
+* **Decision:**
+  - **Collaborative Checklist & Travel Notes Tab (`ChecklistNotesTab.tsx`):**
+    - Replaced the 5th tab button in `NavTabs.tsx` with a dual-mode collaborative dashboard (`IconClipboardList`), labeled "Notes".
+    - Mode 1: **Interactive Checklist** with progress tracking, category filtering (`Packing`, `Documents`, `Medical`, `General`), member assignment pills, one-tap checkboxes with haptics, and a quick "Pre-fill Travel Essentials" button.
+    - Mode 2: **Shared Travel Notes** with instant 1-tap clipboard copy (`IconCopy`), category tagging (`Wi-Fi`, `Hotel`, `Transport`, `Contact`, `General`), pin-to-top support, and modal add/edit.
+  - **Zero-Table Offline-First Schema (`0076_add_trip_checklist_and_notes.sql`, `tripApi.ts`, `tripStore.ts`):**
+    - Implemented `checklist` and `notes` as JSONB columns on `public.trips`. This seamlessly inherits existing trip participant RLS security policies, works synchronously offline via Zustand local persistence, and broadcasts instant updates to all trip peers.
+  - **Seamless Navigation & Shortcuts (`App.tsx`):**
+    - Updated `TAB_ORDER` to `['expenses', 'ledger', 'members', 'notes']`, preserving WhatsApp-style horizontal swipe navigation between the 4 bottom tabs.
+    - Mapped keyboard shortcut `4` to switch to Notes.
+    - ActionSheet's "Trip Settings & Details" opens the complete `GlobalSettingsModal` directly.
+* **Trade-offs Accepted:**
+  - Full app settings and admin database tools are now opened via the Trip Title Action Sheet or Command Palette instead of a persistent bottom tab, prioritizing daily in-trip group utility.
+
+---
+
+## 93. Header Action Sheet Menu Reliability & Navigation Decoupling
+* **Context:**
+  - After introducing the WhatsApp-style bottom Action Sheet triggered from the trip title chevron, menu items (Trip Wrapped, Trip Settings & Details, View Route Stops, Switch to Another Trip) were not executing as expected, while only direct downloads (CSV export) and uncoupled modals functioned properly.
+  - Three key interaction bugs were identified:
+    1. **History Back Collision (`useHistoryBack`):** Registering `useHistoryBack` on the temporary action sheet meant closing the sheet triggered `window.history.back()`. When an item simultaneously opened a target modal (like `TripWrappedModal` or `GlobalSettingsModal`), the incoming `popstate` event popped the newly opened modal's history entry and immediately closed it.
+    2. **Pointer Drag Threshold Suppression:** The pointer move handler on the sheet card set `dragOffset` on any vertical delta > 0. Touch jitter (1–2px) between pointer down and up triggered a style transform that caused mobile and desktop browsers to treat the tap as a drag gesture, suppressing the child button's `click` event.
+    3. **Admin Check Crash in `SettingsView.tsx`:** When `adminMemberIds` was an empty array `[]` (truthy in JS), checking `activeTrip.memberIds.some(...)` threw `TypeError: Cannot read properties of undefined (reading 'some')` if `memberIds` was undefined.
+* **Decision:**
+  - **Remove Action Sheet History Push:** Decoupled `showTripActionSheet` from `useHistoryBack`. The action sheet relies cleanly on backdrop taps, swipe-to-dismiss, and the Escape key, eliminating the asynchronous `popstate` collision with target modals.
+  - **Button Tap Protection & Drag Threshold (`ActionSheet.tsx`):** Added an 8px movement deadzone for pointer drags and explicitly ignored drag starts on `.wa-action-sheet-item` and `.wa-action-sheet-cancel-btn`. Deferred item actions by 10ms to ensure clean sheet dismissal before target transitions.
+  - **Direct Settings & Trip Switch Navigation (`App.tsx`):**
+    - "Trip Settings & Details" transitions directly to `activeTab = 'settings'`, allowing users to review trip configurations with the header back button returning to `expenses`.
+    - "Switch to Another Trip" sets `activeTab = 'expenses'` and triggers `withViewTransition(() => selectTrip(null))` cleanly.
+    - "View Route Stops" toggles stops and scrolls smoothly to the top route itinerary.
+  - **Defensive Admin Guard (`SettingsView.tsx`):** Guarded `adminMemberIds?.length && memberIds?.some(...)` with optional chaining.
+* **Trade-offs Accepted:**
+  - The action sheet itself does not consume a browser history slot, which is standard for contextual menus/dropdowns and eliminates popstate race conditions.
+
+---
+
+## 94. Persistent Compact Sticky Header on Full Sheet Expansion
+* **Context:**
+  - When the bottom content sheet was dragged or scrolled up to full screen (`top: 0%`, `sheetFull`), the header had `.header-hidden` applied (`transform: translateY(-100%)` and `opacity: 0`).
+  - While originally designed to maximize vertical space for the map and list, this completely removed the Trip Title Dropdown Menu, Quick Search, Notifications, and `< Trips` Back button, leaving the user with no access to Settings, Trip Wrapped, or trip navigation unless they dragged the sheet down first.
+* **Decision:**
+  - **Eliminate `.header-hidden`:** Replaced the hide transition with `.is-scrolled` and `.sheet-full` when `sheetFull` is active.
+  - **Compact Sticky Top Bar (`index.css`):**
+    - The header remains pinned at `z-index: 40` with frosted glass backdrop (`backdrop-filter: blur(28px) saturate(180%)`).
+    - The date range and route chips collapse away, keeping the header at a slim ~56px height.
+    - The Trip Title + Dropdown Chevron, Search, Notifications Bell, and `< Trips` Back Button remain 100% visible and interactive.
+  - **Content Clearance (`.trip-sheet.full .tab-pane`):** Added `padding-top: calc(58px + var(--safe-top, 0px))` so content starts cleanly below the compact header and scrolls smoothly underneath.
+* **Trade-offs Accepted:**
+  - The full-screen sheet leaves ~56px at the top for the compact header instead of expanding to `0px`, preserving constant access to core trip actions and navigation.
+
+---
+
+## 95. Relocate Trip Wrapped and Achievements Badges to Settings Menu and Cleanse Header Dropdown
+* **Context:**
+  - The header dropdown (`ActionSheet`) previously contained "Trip Wrapped & Badges", competing with primary operational trip actions (Share Trip, Export CSV, Route Stops, Trip Settings).
+  - While "Trip Wrapped (Story Card)" existed inside a sub-tier ("Trip Tools & Preferences"), "Trip Squad Badges & Milestones" was not surfaced in Settings, and neither was accessible directly in 1 tap from "This Trip: {name}".
+* **Decision:**
+  - **Surfaced Badges & Milestones in Settings (`SettingsView.tsx`):**
+    - Added `onOpenAchievements` prop to `SettingsViewProps`, `SettingsTab.tsx`, and `GlobalSettingsModal.tsx`, wired to `setShowAchievements(true)` in `App.tsx`.
+    - Added `SettingsCell` for both "Trip Wrapped (Story Card)" and "Trip Squad Badges & Milestones" directly in `subScreen === 'trip-settings'` ("This Trip: {name}"), giving users 1-tap access upon opening Trip Settings.
+    - Also added "Trip Squad Badges & Milestones" to `subScreen === 'trip-tools'` ("Trip Tools & Preferences") with `IconTrophy`.
+    - Expanded Settings search index to match `wrapped`, `badges`, `milestones`, and `achievements`.
+  - **Streamline Header Action Sheet (`App.tsx`):**
+    - Removed `{ id: 'wrapped', label: 'Trip Wrapped & Badges', ... }` from `showTripActionSheet` items array.
+    - Header dropdown now cleanly focuses on operational utilities: Share QR, Export CSV, Toggle Route Stops, Trip Settings, and Switch Trip.
+* **Trade-offs Accepted:**
+    - Travelers access Wrapped infographics and milestone badges via the Settings tab or "This Trip" menu rather than the quick header dropdown, keeping the header action sheet compact and utility-focused.
+
+---
+
+## 96. Compact Sticky Header UI & Visual Polish (Unified Circular Actions, Frosted Title Pill & Clean Stops Collapse)
+* **Context:**
+  - When the bottom sheet was expanded to full screen, the compact sticky header presented multiple visual defects:
+    1. Low contrast on the trip title: `tone-dark` map sampling bled through, causing near-black text on a dark teal glass backdrop.
+    2. Dangling route stops pill: The route stops bar was clipped horizontally in half ("3 stops v") at the bottom of the header.
+    3. Disjointed action button shapes: The search button and notification bell used rectangular styling (`.secondary-btn`) with crowded text, while the back button was circular (`.header-back-btn`).
+    4. Search hint indicator: The `.cmd-k-hint-dot` had a stark white ring shadow (`var(--bg-surface)`) that looked like a floating green circle above the button.
+* **Decision:**
+  - **High-Contrast Dark Glass Header (`index.css`):**
+    - Enforced `--header-fg: #FFFFFF !important` in `.sheet-full` and `.is-scrolled` so trip title, chevron, and icons remain crystal clear on the frosted emerald glass background.
+    - Set ergonomic compact padding (`padding-top: calc(8px + var(--safe-top, 0px)); padding-bottom: 8px;`).
+  - **Interactive Frosted Title Pill (`index.css`):**
+    - Rendered `.app-title-row` as an interactive frosted glass pill badge (`border-radius: 20px`, `background: rgba(255, 255, 255, 0.10)`, subtle 1px border) with the chevron nestled inside. This gives travelers an intuitive visual affordance that the title is an interactive dropdown menu.
+  - **Unified 36px Circular Action Buttons (`App.tsx`, `NotificationsBellButton.tsx`, `index.css`):**
+    - Refactored Search, Notifications Bell, and Back Button to share the `.header-action-circle-btn` component class (36px × 36px circular glass buttons with 1px translucent border and subtle hover/active scale physics).
+    - Anchored the unread badge and search hint dot cleanly with tone-matched border rings (`border: 2px solid rgba(11, 83, 72, 0.95)`), eliminating clipping and misplaced halo artifacts.
+  - **Clean Route Stops Collapse (`App.tsx`, `index.css`):**
+    - Encapsulated route stops in `.app-header-stops` with CSS transitions, automatically collapsing to `max-height: 0; opacity: 0; padding: 0; margin: 0;` in compact mode so no partial pills peek out.
+* **Trade-offs Accepted:**
+  - Keyboard shortcut text (`⌘K` / `Ctrl K`) inside the search button is hidden in compact mode in favor of the clean 36px icon circle; the shortcut is preserved via the button's native tooltip.
+
+---
+
+## 97. Full Trip Title Scaling & Compact Header Layout Optimization
+* **Context:**
+  - In the compact sticky header (scrolled view and expanded bottom sheet), the trip title was getting truncated prematurely with an ellipsis on mobile viewports (e.g. "Sikkim Bagpacking" rendered clipped as "Sikkim Bagpack...").
+  - Subsequent layout inspection revealed that the dropdown chevron badge sat inline next to the text leaving the entire right side of the pill empty, while `FitHeading` was erroneously parsing CSS `max-width: 100%` as `100px` via `parseFloat()`, clamping the available text width to ~58px and shrinking font sizes down to 11px.
+* **Decision:**
+  - **Right-Anchored Dropdown Chevron Badge (`index.css`):**
+    - Configured `.trip-dashboard-header.is-scrolled .app-title-row` with `display: flex; justify-content: space-between; width: 100%;`.
+    - Added `margin-left: auto; flex-shrink: 0;` to `.app-title-chevron-badge` with dedicated 22px × 22px frosted circular pill styling, anchoring it flush to the right edge of the title pill immediately adjacent to the Search button.
+  - **Remaining-Space Allocation for Trip Title (`index.css`, `App.tsx`):**
+    - Gave `.app-logo` `flex: 1 1 auto; min-width: 0; text-align: left;` to occupy all remaining width inside the pill between the left padding (12px) and right chevron badge (22px).
+    - Set `maxFontSize={isHeaderScrolled || sheetFull ? 18 : 22}`, giving titles a crisp 18px ceiling instead of an overly small 16px cap.
+  - **Pixel-Only `maxWidth` Guard in FitHeading (`FitHeading.tsx`):**
+    - Guarded `parentStyles.maxWidth` parsing by checking `rawMaxWidth.endsWith('px')`, preventing percentage strings like `"100%"` from being evaluated as 100px.
+    - Used `parent.clientWidth` directly as `containerWidth` when available.
+  - **Native Typography Sizing without Scale Distortion (`index.css`):**
+    - Replaced `transform: scale(0.82)` with `transform: none` on `.app-logo` in compact states, ensuring layout metrics align 1:1 with computed font sizes.
+  - **Optimized Compact Header Spacing (`index.css`):**
+    - Reduced compact header horizontal padding to `max(12px, var(--safe-left, 12px))`, saving 16px of horizontal space.
+    - Reduced compact action buttons to 34px with 6px gap and 8px header gap, saving 14px+.
+* **Trade-offs Accepted:**
+  - The dropdown trigger icon stays anchored on the right side of the pill regardless of title length, matching standard mobile navigation search/selector bars.
+
 
 
 

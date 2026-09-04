@@ -35,6 +35,7 @@ type Props = {
   onRequestConfirm?: (req: ConfirmRequest) => void;
   onOpenShareTrip?: () => void;
   onOpenTripWrapped?: () => void;
+  onOpenAchievements?: () => void;
   onNavigateToBalances?: () => void;
   baseCurrency?: string;
 };
@@ -70,6 +71,7 @@ export function SettingsTab({
   onRequestConfirm,
   onOpenShareTrip,
   onOpenTripWrapped,
+  onOpenAchievements,
   onNavigateToBalances,
   baseCurrency,
 }: Props) {
@@ -105,6 +107,7 @@ export function SettingsTab({
       onRequestConfirm={onRequestConfirm}
       onOpenShareTrip={onOpenShareTrip}
       onOpenTripWrapped={onOpenTripWrapped}
+      onOpenAchievements={onOpenAchievements}
       onNavigateToBalances={onNavigateToBalances}
       hasActiveTrip={true}
       baseCurrency={baseCurrency}

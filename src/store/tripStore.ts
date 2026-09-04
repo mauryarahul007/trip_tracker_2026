@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import type { Member, Group, Expense, Category, TripState, ExpenseLocation, Trip, TripStop } from '../types';
+import type { Member, Group, Expense, Category, TripState, ExpenseLocation, Trip, TripStop, ChecklistItem, TripNote } from '../types';
 import type { FeatureFlagKey } from '../types/admin';
 import { DEFAULT_FEATURE_FLAGS, isFeatureActive } from '../utils/featureFlags';
 import { buildAutoGroupName } from '../utils/groupNaming';
@@ -13,6 +13,8 @@ import {
   fetchCategoriesForTrip,
   insertTrip,
   updateTripRow,
+  updateTripChecklist,
+  updateTripNotes,
   archiveTripRow,
   freezeTripRow,
   closeTripRow,
@@ -154,6 +156,15 @@ interface TripStore extends TripState {
   freezeTrip: (id: string, frozen: boolean) => Promise<void>;
   closeTrip: (id: string, closed: boolean) => Promise<void>;
   deleteTrip: (id: string) => Promise<void>;
+
+  // Checklist & Notes Actions
+  addChecklistItem: (tripId: string, item: Omit<ChecklistItem, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
+  toggleChecklistItem: (tripId: string, itemId: string) => Promise<void>;
+  updateChecklistItem: (tripId: string, itemId: string, patch: Partial<Omit<ChecklistItem, 'id' | 'createdAt'>>) => Promise<void>;
+  deleteChecklistItem: (tripId: string, itemId: string) => Promise<void>;
+  addTripNote: (tripId: string, note: Omit<TripNote, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
+  updateTripNote: (tripId: string, noteId: string, patch: Partial<Omit<TripNote, 'id' | 'createdAt'>>) => Promise<void>;
+  deleteTripNote: (tripId: string, noteId: string) => Promise<void>;
 
   // Per-user, per-trip push-notification mute (see migration 0070) --
   // suppresses FCM pushes only, the in-app panel still gets the row.
@@ -1196,6 +1207,181 @@ export const useTripStore = create<TripStore>()(
       if (wasActive) {
         const next = remainingTrips[0];
         await get().selectTrip(next ? next.id : null);
+      }
+    },
+
+    addChecklistItem: async (tripId, itemData) => {
+      const id = newId();
+      const now = Date.now();
+      const newItem: ChecklistItem = {
+        id,
+        ...itemData,
+        createdAt: now,
+        updatedAt: now,
+      };
+
+      const currentTrip = get().trips.find((t) => t.id === tripId);
+      const currentList = currentTrip?.checklist || [];
+      const updatedList = [newItem, ...currentList];
+
+      set((state) => ({
+        trips: state.trips.map((t) => (t.id === tripId ? { ...t, checklist: updatedList, updatedAt: now } : t)),
+        lastModifiedAt: now,
+      }));
+
+      if (!isMissingSupabaseEnv) {
+        try {
+          await updateTripChecklist(tripId, updatedList);
+        } catch (e) {
+          console.warn('Failed to sync checklist item to backend:', e);
+        }
+      }
+    },
+
+    toggleChecklistItem: async (tripId, itemId) => {
+      const currentTrip = get().trips.find((t) => t.id === tripId);
+      const currentList = currentTrip?.checklist || [];
+      const now = Date.now();
+      const currentUserId = get().userId;
+      const currentMemberId = currentUserId ? Object.values(get().members).find((m) => m.linkedUserId === currentUserId)?.id : undefined;
+
+      const updatedList = currentList.map((item) => {
+        if (item.id === itemId) {
+          const nextCompleted = !item.completed;
+          return {
+            ...item,
+            completed: nextCompleted,
+            completedAt: nextCompleted ? new Date().toISOString() : undefined,
+            completedByMemberId: nextCompleted ? (currentMemberId || 'self') : null,
+            updatedAt: now,
+          };
+        }
+        return item;
+      });
+
+      set((state) => ({
+        trips: state.trips.map((t) => (t.id === tripId ? { ...t, checklist: updatedList, updatedAt: now } : t)),
+        lastModifiedAt: now,
+      }));
+
+      if (!isMissingSupabaseEnv) {
+        try {
+          await updateTripChecklist(tripId, updatedList);
+        } catch (e) {
+          console.warn('Failed to sync checklist toggle to backend:', e);
+        }
+      }
+    },
+
+    updateChecklistItem: async (tripId, itemId, patch) => {
+      const currentTrip = get().trips.find((t) => t.id === tripId);
+      const currentList = currentTrip?.checklist || [];
+      const now = Date.now();
+
+      const updatedList = currentList.map((item) => (item.id === itemId ? { ...item, ...patch, updatedAt: now } : item));
+
+      set((state) => ({
+        trips: state.trips.map((t) => (t.id === tripId ? { ...t, checklist: updatedList, updatedAt: now } : t)),
+        lastModifiedAt: now,
+      }));
+
+      if (!isMissingSupabaseEnv) {
+        try {
+          await updateTripChecklist(tripId, updatedList);
+        } catch (e) {
+          console.warn('Failed to sync checklist update to backend:', e);
+        }
+      }
+    },
+
+    deleteChecklistItem: async (tripId, itemId) => {
+      const currentTrip = get().trips.find((t) => t.id === tripId);
+      const currentList = currentTrip?.checklist || [];
+      const now = Date.now();
+
+      const updatedList = currentList.filter((item) => item.id !== itemId);
+
+      set((state) => ({
+        trips: state.trips.map((t) => (t.id === tripId ? { ...t, checklist: updatedList, updatedAt: now } : t)),
+        lastModifiedAt: now,
+      }));
+
+      if (!isMissingSupabaseEnv) {
+        try {
+          await updateTripChecklist(tripId, updatedList);
+        } catch (e) {
+          console.warn('Failed to sync checklist deletion to backend:', e);
+        }
+      }
+    },
+
+    addTripNote: async (tripId, noteData) => {
+      const id = newId();
+      const now = Date.now();
+      const newNote: TripNote = {
+        id,
+        ...noteData,
+        createdAt: now,
+        updatedAt: now,
+      };
+
+      const currentTrip = get().trips.find((t) => t.id === tripId);
+      const currentNotes = currentTrip?.notes || [];
+      const updatedNotes = [newNote, ...currentNotes];
+
+      set((state) => ({
+        trips: state.trips.map((t) => (t.id === tripId ? { ...t, notes: updatedNotes, updatedAt: now } : t)),
+        lastModifiedAt: now,
+      }));
+
+      if (!isMissingSupabaseEnv) {
+        try {
+          await updateTripNotes(tripId, updatedNotes);
+        } catch (e) {
+          console.warn('Failed to sync trip note to backend:', e);
+        }
+      }
+    },
+
+    updateTripNote: async (tripId, noteId, patch) => {
+      const currentTrip = get().trips.find((t) => t.id === tripId);
+      const currentNotes = currentTrip?.notes || [];
+      const now = Date.now();
+
+      const updatedNotes = currentNotes.map((note) => (note.id === noteId ? { ...note, ...patch, updatedAt: now } : note));
+
+      set((state) => ({
+        trips: state.trips.map((t) => (t.id === tripId ? { ...t, notes: updatedNotes, updatedAt: now } : t)),
+        lastModifiedAt: now,
+      }));
+
+      if (!isMissingSupabaseEnv) {
+        try {
+          await updateTripNotes(tripId, updatedNotes);
+        } catch (e) {
+          console.warn('Failed to sync trip note update to backend:', e);
+        }
+      }
+    },
+
+    deleteTripNote: async (tripId, noteId) => {
+      const currentTrip = get().trips.find((t) => t.id === tripId);
+      const currentNotes = currentTrip?.notes || [];
+      const now = Date.now();
+
+      const updatedNotes = currentNotes.filter((note) => note.id !== noteId);
+
+      set((state) => ({
+        trips: state.trips.map((t) => (t.id === tripId ? { ...t, notes: updatedNotes, updatedAt: now } : t)),
+        lastModifiedAt: now,
+      }));
+
+      if (!isMissingSupabaseEnv) {
+        try {
+          await updateTripNotes(tripId, updatedNotes);
+        } catch (e) {
+          console.warn('Failed to sync trip note deletion to backend:', e);
+        }
       }
     },
 

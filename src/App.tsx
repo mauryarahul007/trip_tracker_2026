@@ -66,12 +66,14 @@ import { InAppNotificationBanner } from './components/InAppNotificationBanner';
 import { FitHeading } from './components/FitHeading';
 import { triggerHaptic } from './utils/haptics';
 import { useEscapeKey } from './utils/useEscapeKey';
-import { IconCalendar, IconChevronLeft, IconChevronDown, IconChevronUp, IconShield, IconSearch, IconPlus, IconWallet, IconMapPin, IconCheck, IconMembers, IconClose } from './components/Icons';
+import { IconCalendar, IconChevronLeft, IconChevronDown, IconChevronUp, IconShield, IconSearch, IconPlus, IconWallet, IconMapPin, IconCheck, IconMembers, IconClose, IconShare, IconFileSpreadsheet, IconSettings } from './components/Icons';
+import { ActionSheet } from './components/common/ActionSheet';
 import { formatDateRange } from './utils/dateRange';
 import { useScrollLock } from './utils/useScrollLock';
 import { useHistoryBack } from './utils/useHistoryBack';
 import { getCatColor } from './utils/categoryColor';
 import { useTabSwipe } from './utils/useTabSwipe';
+import { ChecklistNotesTab } from './components/ChecklistNotesTab';
 import { withViewTransition } from './utils/viewTransition';
 import { CommandPalette } from './components/CommandPalette';
 // TripWrappedModal draws a large 1080x1920 canvas story image and is only
@@ -88,7 +90,6 @@ const AdminPortalLayout = lazy(lazyImport(() =>
   import('./components/admin/AdminPortalLayout').then((m) => ({ default: m.AdminPortalLayout }))
 ));
 
-const IS_MAC = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform);
 
 function AdminLoadingFallback() {
   return (
@@ -144,10 +145,9 @@ export default function App() {
   const deleteOwnAccount = useAuthStore((s) => s.deleteOwnAccount);
   const signInSuperadmin = useAuthStore((s) => s.signInSuperadmin);
 
-  // Navigation tabs: 'expenses' (Summary) | 'ledger' (day-wise Expenses) | 'members' | 'settings'
-  // Analytics no longer has its own tab -- it moved into Settings.
-  type Tab = 'expenses' | 'ledger' | 'members' | 'settings';
-  const TAB_ORDER = ['expenses', 'ledger', 'members', 'settings'] as const;
+  // Navigation tabs: 'expenses' (Summary) | 'ledger' (day-wise Expenses) | 'members' | 'notes' | 'settings'
+  type Tab = 'expenses' | 'ledger' | 'members' | 'notes' | 'settings';
+  const TAB_ORDER = ['expenses', 'ledger', 'members', 'notes'] as const;
   const [activeTab, setActiveTabRaw] = useState<Tab>('expenses');
   const mainContentRef = useRef<HTMLElement>(null);
 
@@ -377,6 +377,7 @@ export default function App() {
   const [showCommandPalette, setShowCommandPalette] = useState(false);
   const [showCmdKHint, setShowCmdKHint] = useState(() => !localStorage.getItem('tt-cmdk-hint-seen'));
   const [showTripWrapped, setShowTripWrapped] = useState(false);
+  const [showTripActionSheet, setShowTripActionSheet] = useState(false);
   const [showAchievements, setShowAchievements] = useState(false);
   const [showShortcutsModal, setShowShortcutsModal] = useState(false);
   const activePeers = usePeerPresence(activeTripId);
@@ -451,7 +452,7 @@ export default function App() {
           }
           if (e.key === '4') {
             e.preventDefault();
-            setActiveTab('settings');
+            setActiveTab('notes');
             return;
           }
         }
@@ -484,7 +485,7 @@ export default function App() {
   }, [isSuperadmin]);
 
   // Lock background scroll when any modal is active
-  useScrollLock(Boolean(showShareTrip || selectedReviewExpense || confirmRequest || showGlobalSettings || showAddExpense || showExpenseFilterDrawer));
+  useScrollLock(Boolean(showTripActionSheet || showShareTrip || showTripWrapped || selectedReviewExpense || confirmRequest || showGlobalSettings || showAddExpense || showExpenseFilterDrawer));
 
   const syncQueue = useTripStore((s) => s.syncQueue);
   const sessionExpired = useTripStore((s) => s.sessionExpired);
@@ -1575,6 +1576,7 @@ export default function App() {
   useEscapeKey(showExpenseFilterDrawer, () => setShowExpenseFilterDrawer(false));
   useEscapeKey(!!selectedReviewExpense, () => setSelectedReviewExpense(null));
   useEscapeKey(showShareTrip, () => setShowShareTrip(false));
+  useEscapeKey(showTripActionSheet, () => setShowTripActionSheet(false));
   useEscapeKey(showGlobalSettings, () => setShowGlobalSettings(false));
   useEscapeKey(!!confirmRequest, () => setConfirmRequest(null));
   useEscapeKey(showTripWrapped, () => setShowTripWrapped(false));
@@ -1792,9 +1794,15 @@ export default function App() {
           <Suspense fallback={null}>
             <TripMapHero trip={activeTrip ?? null} sheetExpanded={sheetExpanded} onToneChange={setHeaderTone} />
           </Suspense>
-          <header ref={headerRef} className={`app-header trip-dashboard-header ${isHeaderScrolled ? 'is-scrolled' : ''} ${headerTone === 'dark' ? 'tone-dark' : ''} ${sheetFull ? 'header-hidden' : ''}`} style={{ overflow: 'hidden' }}>
+          <header ref={headerRef} className={`app-header trip-dashboard-header ${isHeaderScrolled || sheetFull ? 'is-scrolled' : ''} ${headerTone === 'dark' ? 'tone-dark' : ''} ${sheetFull ? 'sheet-full' : ''}`} style={{ overflow: 'hidden' }}>
             <div className="app-header-top" style={{ position: 'relative', zIndex: 1 }}>
-              <div className="app-title-group">
+              <button
+                type="button"
+                className="app-title-group app-title-btn"
+                onClick={() => setShowTripActionSheet(true)}
+                aria-label={`${activeTrip?.name || 'Trip'} options and details`}
+                title="Tap for trip options & actions"
+              >
                 <span className="app-eyebrow">
                   {/* Destination used to prefix this row too ("📍 Lachung ·"),
                       but the route-stops chips below already show every
@@ -1836,27 +1844,29 @@ export default function App() {
                     text={activeTrip?.name || ''}
                     className="app-logo"
                     style={{ color: 'var(--header-fg)' }}
-                    maxFontSize={22}
-                    minFontSize={14}
+                    maxFontSize={isHeaderScrolled || sheetFull ? 18 : 22}
+                    minFontSize={11}
                   />
+                  <span className="app-title-chevron-badge" aria-hidden="true">
+                    <IconChevronDown size={13} />
+                  </span>
                 </div>
-              </div>
-              <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexShrink: 0 }}>
+              </button>
+              <div className="header-action-group">
                 {isSuperadmin && (
                   <button
                     type="button"
-                    className="secondary-btn"
-                    style={{ padding: '7px 9px', fontSize: '12px', color: '#17B6A6', borderColor: 'rgba(23,182,166,0.4)', background: 'rgba(23,182,166,0.12)' }}
+                    className="header-action-circle-btn superadmin-action-btn"
                     onClick={() => setShowBugTracker(true)}
                     title="Open Superadmin Bug Tracker"
+                    aria-label="Superadmin Bug Tracker"
                   >
-                    🛡️ Bugs
+                    🛡️
                   </button>
                 )}
                 <button
                   type="button"
-                  className="secondary-btn"
-                  style={{ padding: '7px 8px', display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--header-fg)', borderColor: 'var(--header-fg-border)', background: 'var(--header-fg-soft-bg)', position: 'relative' }}
+                  className="header-action-circle-btn"
                   onClick={() => {
                     setShowCommandPalette(true);
                     if (showCmdKHint) {
@@ -1867,18 +1877,25 @@ export default function App() {
                   title="Search & Quick Actions (Cmd+K)"
                   aria-label="Command palette"
                 >
-                  <IconSearch size={15} className="icon-sm" />
-                  <span className="cmd-k-hint" aria-hidden="true">{IS_MAC ? '⌘K' : 'Ctrl K'}</span>
-                  {showCmdKHint && <span className="cmd-k-hint-dot" aria-hidden="true" />}
+                  <IconSearch size={15} />
+                  {showCmdKHint && <span className="header-badge-dot" aria-hidden="true" />}
                 </button>
                 <NotificationsBellButton />
                 <button
+                  type="button"
                   data-action="trips-back"
-                  className="secondary-btn"
-                  style={{ padding: '7px 11px', fontSize: '12px', color: 'var(--header-fg)', borderColor: 'var(--header-fg-border)', background: 'var(--header-fg-soft-bg)' }}
-                  onClick={() => withViewTransition(() => selectTrip(null))}
+                  className="header-action-circle-btn header-back-btn"
+                  onClick={() => {
+                    if (activeTab !== 'expenses') {
+                      setActiveTab('expenses');
+                    } else {
+                      withViewTransition(() => selectTrip(null));
+                    }
+                  }}
+                  aria-label={activeTab !== 'expenses' ? 'Back to Trip Summary' : 'Back to All Trips'}
+                  title={activeTab !== 'expenses' ? 'Back to Trip Summary' : 'Back to All Trips'}
                 >
-                  <IconChevronLeft size={14} className="icon-sm" /> Trips
+                  <IconChevronLeft size={16} />
                 </button>
               </div>
             </div>
@@ -1921,7 +1938,7 @@ export default function App() {
             {/* Route Stops Chips Bar inside Header -- collapsed by default
                 (see stopsExpanded above), tap to reveal the full list. */}
             {activeTrip?.stops && activeTrip.stops.length > 0 && (
-              <div style={{ position: 'relative', zIndex: 1, marginTop: '8px', paddingTop: '8px', borderTop: '1px solid var(--header-fg-border)' }}>
+              <div className="app-header-stops" style={{ position: 'relative', zIndex: 1 }}>
                 {stopsExpanded ? (
                   <div style={{ display: 'flex', gap: '6px', overflowX: 'auto', scrollbarWidth: 'none' }}>
                     {activeTrip.stops.map((stop, sIdx) => (
@@ -2123,6 +2140,24 @@ export default function App() {
             <div
               className="tab-pane"
               style={
+                activeTab === 'notes' ? { display: 'block', ...tabSwipe.activePaneStyle }
+                : tabSwipe.previewTab === 'notes' ? { display: 'block', ...tabSwipe.previewPaneStyle }
+                : { display: 'none' }
+              }
+            >
+              <div className="fade-in">
+                {activeTrip && (
+                  <ChecklistNotesTab
+                    trip={activeTrip}
+                    members={visibleMembers}
+                  />
+                )}
+              </div>
+            </div>
+
+            <div
+              className="tab-pane"
+              style={
                 activeTab === 'settings' ? { display: 'block', ...tabSwipe.activePaneStyle }
                 : tabSwipe.previewTab === 'settings' ? { display: 'block', ...tabSwipe.previewPaneStyle }
                 : { display: 'none' }
@@ -2162,6 +2197,7 @@ export default function App() {
                 onRequestConfirm={setConfirmRequest}
                 onOpenShareTrip={() => setShowShareTrip(true)}
                 onOpenTripWrapped={() => setShowTripWrapped(true)}
+                onOpenAchievements={() => setShowAchievements(true)}
                 onNavigateToBalances={() => setActiveTab('expenses')}
                 baseCurrency={activeTrip?.baseCurrency || ''}
               />
@@ -2240,6 +2276,79 @@ export default function App() {
         </Suspense>
       )}
 
+      {showTripActionSheet && activeTrip && (
+        <ActionSheet
+          isOpen={showTripActionSheet}
+          onClose={() => setShowTripActionSheet(false)}
+          title={activeTrip.name}
+          description={`${formatDateRange(activeTrip.startDate || '', activeTrip.endDate || '')} · ${visibleMembers.length} member${visibleMembers.length === 1 ? '' : 's'} · ${activeTripExpenses.length} expense${activeTripExpenses.length === 1 ? '' : 's'}`}
+          items={[
+            {
+              id: 'share',
+              label: 'Share Trip & QR Code',
+              subtitle: 'Invite travelers with join code or scannable QR',
+              icon: <IconShare size={18} />,
+              onClick: () => setShowShareTrip(true),
+            },
+            {
+              id: 'export-csv',
+              label: 'Export to Excel CSV',
+              subtitle: 'Download complete transaction and balance ledger',
+              icon: <IconFileSpreadsheet size={18} />,
+              onClick: () => triggerCsvExport(),
+            },
+            ...(activeTrip.stops && activeTrip.stops.length > 0
+              ? [
+                  {
+                    id: 'stops',
+                    label: stopsExpanded ? 'Hide Route Stops' : `View ${activeTrip.stops.length} Route Stops`,
+                    subtitle: 'Toggle journey stops and map itinerary pins',
+                    icon: <IconMapPin size={18} />,
+                    onClick: () => {
+                      setActiveTab('expenses');
+                      setStopsExpanded((prev) => !prev);
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    },
+                  },
+                ]
+              : []),
+            {
+              id: 'settings',
+              label: 'Trip Settings & Details',
+              subtitle: 'Manage members, base currency, and trip status',
+              icon: <IconSettings size={18} />,
+              onClick: () => {
+                setHasVisitedSettings(true);
+                setActiveTab('settings');
+              },
+            },
+            ...(isSuperadmin
+              ? [
+                  {
+                    id: 'superadmin-bugs',
+                    label: 'Superadmin Bug Tracker',
+                    subtitle: 'Open developer triage and defect ledger',
+                    icon: <IconShield size={18} />,
+                    onClick: () => setShowBugTracker(true),
+                  },
+                ]
+              : []),
+            {
+              id: 'switch-trip',
+              label: 'Switch to Another Trip',
+              subtitle: 'Return to your passport trips list',
+              icon: <IconChevronLeft size={18} />,
+              onClick: () => {
+                setActiveTab('expenses');
+                withViewTransition(() => {
+                  void selectTrip(null);
+                });
+              },
+            },
+          ]}
+        />
+      )}
+
       {selectedReviewExpense && (
         <Suspense fallback={null}>
           <ExpenseReviewModal
@@ -2293,6 +2402,7 @@ export default function App() {
             onInstallApp={handleInstallApp}
             onRequestConfirm={setConfirmRequest}
             onOpenTripWrapped={() => setShowTripWrapped(true)}
+            onOpenAchievements={() => setShowAchievements(true)}
             onOpenShareTrip={() => setShowShareTrip(true)}
             onNavigateToBalances={() => {
               setShowGlobalSettings(false);
@@ -2524,7 +2634,7 @@ export default function App() {
                 <kbd style={{ padding: '2px 8px', background: 'var(--bg-surface)', border: '1px solid var(--border-color)', borderRadius: '6px', fontSize: '11px', fontWeight: 600 }}>3</kbd>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ color: 'var(--text-secondary)' }}>Switch to Settings Tab</span>
+                <span style={{ color: 'var(--text-secondary)' }}>Switch to Notes & Checklist Tab</span>
                 <kbd style={{ padding: '2px 8px', background: 'var(--bg-surface)', border: '1px solid var(--border-color)', borderRadius: '6px', fontSize: '11px', fontWeight: 600 }}>4</kbd>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

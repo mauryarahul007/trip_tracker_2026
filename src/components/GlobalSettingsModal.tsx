@@ -42,6 +42,7 @@ type Props = {
   onExportCsv?: () => void;
   isAdmin?: boolean;
   onOpenTripWrapped?: () => void;
+  onOpenAchievements?: () => void;
   onOpenShareTrip?: () => void;
   onNavigateToBalances?: () => void;
   baseCurrency?: string;
@@ -51,6 +52,7 @@ export function GlobalSettingsModal({
   onClose,
   onRequestConfirm,
   onOpenTripWrapped,
+  onOpenAchievements,
   onNavigateToBalances,
   themePref,
   setThemePref,
@@ -160,6 +162,7 @@ export function GlobalSettingsModal({
           onClose={onClose}
           onRequestConfirm={onRequestConfirm}
           onOpenTripWrapped={onOpenTripWrapped}
+          onOpenAchievements={onOpenAchievements}
           onOpenShareTrip={onOpenShareTrip}
           onNavigateToBalances={onNavigateToBalances}
           baseCurrency={baseCurrency}

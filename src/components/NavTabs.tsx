@@ -1,10 +1,10 @@
 import { useRef, useState, useEffect, useLayoutEffect, useCallback } from 'react';
-import { IconExpenses, IconMembers, IconReceipt, IconSettings, IconPlus } from './Icons';
+import { IconExpenses, IconMembers, IconReceipt, IconClipboardList, IconPlus } from './Icons';
 import { triggerHaptic } from '../utils/haptics';
 import { withViewTransition } from '../utils/viewTransition';
 import { FlightAddExpenseTooltip, STORAGE_KEY } from './FlightAddExpenseTooltip';
 
-type Tab = 'expenses' | 'ledger' | 'members' | 'settings';
+type Tab = 'expenses' | 'ledger' | 'members' | 'notes' | 'settings';
 
 type Props = {
   activeTab: Tab;
@@ -57,9 +57,6 @@ export function NavTabs({ activeTab, setActiveTab, onAddExpense, onAddMember, ex
   // firing this more than once is harmless.
   const prefetchExpenseForm = () => {
     import('./ExpenseForm');
-  };
-  const prefetchSettingsTab = () => {
-    import('./SettingsTab');
   };
 
   const handlePointerDown = () => {
@@ -149,8 +146,8 @@ export function NavTabs({ activeTab, setActiveTab, onAddExpense, onAddMember, ex
       </button>
       <div className="nav-tab-fab-wrap" role="presentation">
 
-        {/* Renders contextual coachmark: "Add expense" on Summary & Expenses, "Add member" on Members, and hidden on Settings */}
-        {activeTab !== 'settings' && (
+        {/* Renders contextual coachmark: "Add expense" on Summary & Expenses, "Add member" on Members, and hidden on Settings/Notes */}
+        {activeTab !== 'settings' && activeTab !== 'notes' && (
           <FlightAddExpenseTooltip
             activeTab={activeTab}
             onAddExpense={onAddExpense}
@@ -205,16 +202,14 @@ export function NavTabs({ activeTab, setActiveTab, onAddExpense, onAddMember, ex
       <button
         type="button"
         role="tab"
-        aria-selected={activeTab === 'settings'}
-        data-tab="settings"
-        className={`nav-tab-item ${activeTab === 'settings' ? 'active' : ''}`}
-        onClick={() => goTo('settings')}
-        onMouseEnter={prefetchSettingsTab}
-        onPointerDown={prefetchSettingsTab}
-        aria-label="Settings"
+        aria-selected={activeTab === 'notes'}
+        data-tab="notes"
+        className={`nav-tab-item ${activeTab === 'notes' ? 'active' : ''}`}
+        onClick={() => goTo('notes')}
+        aria-label="Notes & Checklist"
       >
-        <span className="nav-tab-icon"><IconSettings size={26} /></span>
-        <span>Settings</span>
+        <span className="nav-tab-icon"><IconClipboardList size={26} /></span>
+        <span>Notes</span>
       </button>
     </nav>
 

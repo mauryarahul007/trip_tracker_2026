@@ -1377,18 +1377,26 @@ input[type="date"].input-field {
   text-shadow: 0 1px 2px rgba(255, 255, 255, 0.65), 0 2px 14px rgba(255, 255, 255, 0.5);
 }
 
-/* The sheet is a lower z-index than this header, so it slides underneath
-   rather than covering it -- when fully expanded (see .trip-sheet.full),
-   the header has to actually get out of the way instead. */
-.trip-dashboard-header.header-hidden {
-  /* Faster, accelerating "hide" timing -- overrides the base rule's
-     transition above for exactly the properties that fire on the way out,
-     so leaving is quicker than arriving. */
-  transition: transform 0.22s cubic-bezier(0.4, 0, 1, 1),
-              opacity 0.18s ease-in;
-  transform: translateY(-100%);
-  opacity: 0;
-  pointer-events: none;
+/* When the bottom content sheet is fully expanded or scrolled, the header smoothly transitions
+   into a sleek compact sticky glass bar with pure white contrast, ensuring the trip title dropdown,
+   search, notifications, and back buttons remain 100% accessible with crystal clarity. */
+.trip-dashboard-header.sheet-full,
+.trip-dashboard-header.is-scrolled {
+  --header-fg: #FFFFFF !important;
+  --header-fg-muted: rgba(255, 255, 255, 0.85) !important;
+  --header-fg-border: rgba(255, 255, 255, 0.22) !important;
+  --header-fg-soft-bg: rgba(255, 255, 255, 0.12) !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6) !important;
+  padding-top: calc(8px + var(--safe-top, 0px));
+  padding-bottom: 8px;
+  padding-left: max(12px, var(--safe-left, 12px));
+  padding-right: max(12px, var(--safe-right, 12px));
+  background-image: var(--header-gradient-scrolled);
+  background-color: rgba(11, 83, 72, 0.92);
+  backdrop-filter: blur(28px) saturate(190%);
+  -webkit-backdrop-filter: blur(28px) saturate(190%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 8px 30px -4px rgba(0, 0, 0, 0.35), 0 2px 6px rgba(0, 0, 0, 0.2);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1396,14 +1404,6 @@ input[type="date"].input-field {
   .trip-dashboard-header.header-hidden {
     transition: none;
   }
-}
-
-.trip-dashboard-header.is-scrolled {
-  padding-top: calc(9px + var(--safe-top, 0px));
-  padding-bottom: 9px;
-  background-image: var(--header-gradient-scrolled);
-  box-shadow: 0 10px 30px -6px rgba(0, 0, 0, 0.45), 0 2px 8px rgba(0, 0, 0, 0.25);
-  border-bottom-color: rgba(255, 255, 255, 0.22);
 }
 
 .trip-dashboard-header .app-header-top {
@@ -1414,11 +1414,194 @@ input[type="date"].input-field {
   min-height: 38px;
 }
 
+.trip-dashboard-header.is-scrolled .app-header-top,
+.trip-dashboard-header.sheet-full .app-header-top {
+  gap: 8px;
+}
+
 .trip-dashboard-header .app-title-group {
   display: flex;
   flex-direction: column;
   min-width: 0;
   transition: transform 0.35s var(--ease-decel);
+}
+
+.trip-dashboard-header button.app-title-group,
+.app-title-btn {
+  background: transparent;
+  border: none;
+  padding: 0;
+  margin: 0;
+  text-align: left;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  border-radius: 8px;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.trip-dashboard-header button.app-title-group:active {
+  transform: scale(0.985);
+  opacity: 0.9;
+}
+
+.trip-dashboard-header button.app-title-group:hover .app-title-chevron-badge,
+.trip-dashboard-header button.app-title-group:focus-visible .app-title-chevron-badge {
+  background: var(--header-fg-soft-bg, rgba(255, 255, 255, 0.24));
+  transform: translateY(1px);
+}
+
+.app-title-chevron-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--header-fg-soft-bg, rgba(255, 255, 255, 0.14));
+  color: var(--header-fg);
+  margin-left: 6px;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+  align-self: center;
+}
+
+/* Compact Pill Badge for Trip Title in Scrolled/Full State */
+.trip-dashboard-header.is-scrolled .app-title-row,
+.trip-dashboard-header.sheet-full .app-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  box-sizing: border-box;
+  gap: 8px;
+  padding: 5px 6px 5px 12px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.10);
+  border: 1px solid rgba(255, 255, 255, 0.20);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  max-width: 100%;
+  min-width: 0;
+}
+
+.trip-dashboard-header.is-scrolled button.app-title-group:hover .app-title-row,
+.trip-dashboard-header.sheet-full button.app-title-group:hover .app-title-row {
+  background: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.32);
+  transform: translateY(-1px);
+}
+
+.trip-dashboard-header.is-scrolled button.app-title-group:active .app-title-row,
+.trip-dashboard-header.sheet-full button.app-title-group:active .app-title-row {
+  transform: scale(0.97);
+}
+
+.trip-dashboard-header.is-scrolled .app-title-chevron-badge,
+.trip-dashboard-header.sheet-full .app-title-chevron-badge {
+  background: rgba(255, 255, 255, 0.22);
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+/* Unified Action Circle Buttons */
+.header-action-group {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.trip-dashboard-header.is-scrolled .header-action-group,
+.trip-dashboard-header.sheet-full .header-action-group {
+  gap: 6px;
+}
+
+.trip-dashboard-header.is-scrolled .header-action-circle-btn,
+.trip-dashboard-header.sheet-full .header-action-circle-btn {
+  width: 34px;
+  height: 34px;
+}
+
+.header-action-circle-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid var(--header-fg-border, rgba(255, 255, 255, 0.22));
+  background: var(--header-fg-soft-bg, rgba(255, 255, 255, 0.12));
+  color: var(--header-fg, #FFFFFF);
+  cursor: pointer;
+  padding: 0;
+  flex-shrink: 0;
+  position: relative;
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.header-action-circle-btn:hover {
+  background: rgba(255, 255, 255, 0.22);
+  border-color: rgba(255, 255, 255, 0.35);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+.header-action-circle-btn:active {
+  transform: scale(0.92);
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.header-action-circle-btn.superadmin-action-btn {
+  color: #38BDF8;
+  border-color: rgba(56, 189, 248, 0.35);
+  background: rgba(56, 189, 248, 0.12);
+}
+
+.header-action-badge {
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  min-width: 17px;
+  height: 17px;
+  padding: 0 4px;
+  border-radius: 10px;
+  background: #EF4444;
+  color: #FFFFFF;
+  font-size: 10px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  border: 2px solid rgba(11, 83, 72, 0.95);
+  box-shadow: 0 2px 5px rgba(239, 68, 68, 0.5);
+  pointer-events: none;
+}
+
+.header-badge-dot {
+  position: absolute;
+  top: 1px;
+  right: 1px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #17B6A6;
+  border: 2px solid rgba(11, 83, 72, 0.95);
+  box-shadow: 0 0 6px #17B6A6;
+  animation: cmdKHintPulse 1.8s ease-in-out infinite;
 }
 
 .trip-dashboard-header.is-scrolled .app-title-group {
@@ -1427,9 +1610,10 @@ input[type="date"].input-field {
 
 .app-title-row {
   display: flex;
-  align-items: baseline;
-  gap: 8px;
+  align-items: center;
+  gap: 6px;
   min-width: 0;
+  flex: 1 1 auto;
 }
 
 .trip-dashboard-header .app-logo {
@@ -1444,8 +1628,12 @@ input[type="date"].input-field {
   transition: transform 0.35s var(--ease-decel), color 0.2s ease;
 }
 
-.trip-dashboard-header.is-scrolled .app-logo {
-  transform: scale(0.82) translateY(-1px);
+.trip-dashboard-header.is-scrolled .app-logo,
+.trip-dashboard-header.sheet-full .app-logo {
+  transform: none;
+  flex: 1 1 auto;
+  min-width: 0;
+  text-align: left;
 }
 
 .trip-dashboard-header .app-eyebrow {
@@ -1529,6 +1717,32 @@ input[type="date"].input-field {
   margin-top: 0;
   padding-top: 0;
   border-top-color: transparent;
+  transform: translateY(-8px) scale(0.98);
+  pointer-events: none;
+}
+
+.trip-dashboard-header .app-header-stops {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--header-fg-border, rgba(255, 255, 255, 0.16));
+  transform-origin: top center;
+  transition: opacity 0.2s ease,
+              transform 0.3s var(--ease-decel),
+              max-height 0.32s var(--ease-decel),
+              margin 0.3s ease,
+              padding 0.3s ease,
+              border-color 0.2s ease;
+  max-height: 48px;
+  overflow: hidden;
+}
+
+.trip-dashboard-header.is-scrolled .app-header-stops,
+.trip-dashboard-header.sheet-full .app-header-stops {
+  opacity: 0;
+  max-height: 0;
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+  border-top-color: transparent !important;
   transform: translateY(-8px) scale(0.98);
   pointer-events: none;
 }
@@ -4850,11 +5064,11 @@ input:checked + .toggle-slider:before {
   .trip-sheet { transition: none; }
 }
 
-/* Fully expanded (Uber-style): the sheet covers the map/header entirely,
-   so the tab-pane no longer needs to reserve space for the floating
-   header underneath it -- give that space back to the content. */
+/* Fully expanded: the sheet covers the map, while the compact frosted header
+   sits pinned at the top -- reserve clearance so content starts cleanly below
+   the header and scrolls underneath it. */
 .trip-sheet.full .tab-pane {
-  padding-top: max(16px, var(--safe-top, 0px));
+  padding-top: calc(58px + var(--safe-top, 0px));
 }
 
 /* Drag handle -- the swipe affordance strip at the sheet's top edge. */
@@ -6194,6 +6408,371 @@ html.capacitor-ios .trip-sheet .tab-pane {
   color: var(--text-secondary);
   line-height: 1.45;
   margin: 0 0 16px;
+}
+
+/* WhatsApp-Style Inset Dividers & Cell Details */
+.settings-row-item.with-inset-divider:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 64px;
+  right: 0;
+  height: 1px;
+  background: var(--border-color);
+  opacity: 0.65;
+  pointer-events: none;
+}
+
+.settings-row-item.no-divider::after {
+  display: none !important;
+}
+
+.settings-cell-value {
+  font-size: 13px;
+  color: var(--text-muted);
+  font-weight: 500;
+  max-width: 120px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.settings-cell-chevron {
+  color: var(--text-muted);
+  opacity: 0.6;
+  flex-shrink: 0;
+  transition: transform 0.15s ease;
+}
+
+.settings-row-item:hover .settings-cell-chevron {
+  opacity: 1;
+  transform: translateX(2px);
+}
+
+.settings-group-desc {
+  font-size: 12px;
+  color: var(--text-muted);
+  padding: 0 8px;
+  margin: -2px 0 2px;
+}
+
+/* WhatsApp-Style 3-Dots Overflow Menu */
+.wa-overflow-container {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.wa-overflow-trigger-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1px solid var(--header-fg-border, var(--border-color));
+  background: var(--header-fg-soft-bg, rgba(255, 255, 255, 0.08));
+  color: var(--header-fg, var(--text-primary));
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.15s ease, background 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+  padding: 0;
+}
+
+.wa-overflow-trigger-btn:active {
+  transform: scale(0.92);
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.wa-overflow-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  min-width: 210px;
+  max-width: 280px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  box-shadow: 0 12px 32px -4px rgba(0, 0, 0, 0.28), 0 0 0 1px rgba(255, 255, 255, 0.05);
+  padding: 6px;
+  z-index: 1200;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.wa-overflow-dropdown.wa-menu-align-right {
+  right: 0;
+  transform-origin: top right;
+}
+
+.wa-overflow-dropdown.wa-menu-align-left {
+  left: 0;
+  transform-origin: top left;
+}
+
+.wa-menu-enter {
+  animation: waMenuScaleIn 0.16s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes waMenuScaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.92) translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.wa-overflow-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: 9px;
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  font-size: 13.5px;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+  transition: background 0.12s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.wa-overflow-item:hover {
+  background: color-mix(in srgb, var(--primary-accent) 10%, transparent);
+}
+
+.wa-overflow-item:active {
+  background: color-mix(in srgb, var(--primary-accent) 18%, transparent);
+  transform: scale(0.985);
+}
+
+.wa-overflow-item.destructive {
+  color: var(--color-danger, #EF4444);
+}
+
+.wa-overflow-item.destructive:hover {
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.wa-overflow-item-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.wa-overflow-item.destructive .wa-overflow-item-icon {
+  color: var(--color-danger, #EF4444);
+}
+
+.wa-overflow-item-label {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.wa-overflow-item-badge {
+  font-size: 10.5px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--primary-accent) 15%, transparent);
+  color: var(--primary-accent);
+}
+
+.wa-overflow-divider {
+  height: 1px;
+  background: var(--border-color);
+  margin: 4px 6px;
+  opacity: 0.6;
+}
+
+/* WhatsApp-Style Bottom Action Sheet */
+.wa-action-sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  animation: waFadeIn 0.2s ease forwards;
+  touch-action: pan-y;
+  overscroll-behavior: contain;
+}
+
+@keyframes waFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.wa-action-sheet-card {
+  background: var(--bg-surface);
+  border-top: 1px solid var(--border-color);
+  border-radius: 24px 24px 0 0;
+  padding: 10px 16px calc(16px + var(--safe-bottom, 0px));
+  max-height: 85vh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.3);
+  width: 100%;
+  max-width: 540px;
+  margin: 0 auto;
+  touch-action: pan-y;
+  will-change: transform;
+}
+
+.wa-sheet-enter {
+  animation: waSheetSlideUp 0.26s cubic-bezier(0.32, 0.72, 0, 1) forwards;
+}
+
+@keyframes waSheetSlideUp {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+.wa-action-sheet-handle-wrap {
+  display: flex;
+  justify-content: center;
+  padding: 4px 0 10px;
+  cursor: grab;
+}
+
+.wa-action-sheet-drag-pill {
+  width: 38px;
+  height: 4.5px;
+  border-radius: 9999px;
+  background: var(--border-color);
+  opacity: 0.8;
+}
+
+.wa-action-sheet-header {
+  padding: 2px 8px 12px;
+  text-align: center;
+  border-bottom: 1px solid var(--border-color);
+  margin-bottom: 6px;
+}
+
+.wa-action-sheet-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 2px;
+}
+
+.wa-action-sheet-desc {
+  font-size: 12.5px;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.wa-action-sheet-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.wa-action-sheet-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+  transition: background 0.12s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.wa-action-sheet-item:hover {
+  background: color-mix(in srgb, var(--primary-accent) 8%, var(--bg-surface));
+}
+
+.wa-action-sheet-item:active {
+  background: color-mix(in srgb, var(--primary-accent) 14%, var(--bg-surface));
+  transform: scale(0.99);
+}
+
+.wa-action-sheet-item.destructive {
+  color: var(--color-danger, #EF4444);
+}
+
+.wa-action-sheet-item.destructive:hover {
+  background: rgba(239, 68, 68, 0.08);
+}
+
+.wa-action-sheet-item-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  color: var(--primary-accent);
+  flex-shrink: 0;
+}
+
+.wa-action-sheet-item.destructive .wa-action-sheet-item-icon {
+  color: var(--color-danger, #EF4444);
+}
+
+.wa-action-sheet-item-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.wa-action-sheet-item-label {
+  font-size: 14.5px;
+  font-weight: 500;
+}
+
+.wa-action-sheet-item-subtitle {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.wa-action-sheet-cancel-wrap {
+  margin-top: 10px;
+  padding-top: 6px;
+}
+
+.wa-action-sheet-cancel-btn {
+  width: 100%;
+  padding: 12px;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--text-muted) 10%, var(--bg-surface));
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  font-size: 14.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.wa-action-sheet-cancel-btn:active {
+  background: color-mix(in srgb, var(--text-muted) 18%, var(--bg-surface));
+  transform: scale(0.99);
 }
 
 /* WhatsApp-Style Profile QR Button & Tagline */
@@ -8802,6 +9381,938 @@ textarea.input-field {
 }
 .legal-page-body strong { color: var(--text-primary); font-weight: 700; }
 
+/* ==========================================================================
+   Checklist & Travel Notes Tab
+   ========================================================================== */
+.checklist-notes-tab-root {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding-bottom: 84px;
+}
 
+.tab-segmented-header {
+  display: flex;
+  justify-content: center;
+  margin-top: 4px;
+  margin-bottom: 6px;
+}
 
+.tab-segmented-control {
+  display: inline-flex;
+  background: var(--bg-surface-hover);
+  padding: 4px;
+  border-radius: var(--border-radius-md);
+  border: 1px solid var(--border-color);
+  gap: 4px;
+  width: 100%;
+  max-width: 440px;
+}
 
+.tab-segment-btn {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: var(--border-radius-sm);
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  font-family: var(--font-family-title);
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition-smooth);
+}
+
+.tab-segment-btn.active {
+  background: var(--bg-surface);
+  color: var(--primary-accent);
+  box-shadow: var(--shadow-sm);
+}
+
+.segment-badge {
+  font-family: var(--font-family-mono);
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: rgba(15, 111, 99, 0.12);
+  color: var(--primary-accent);
+}
+
+/* Checklist Progress Card */
+.checklist-progress-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-md);
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  box-shadow: var(--shadow-sm);
+}
+
+.checklist-progress-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.checklist-progress-title {
+  font-family: var(--font-family-title);
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.checklist-progress-subtitle {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.checklist-progress-percent {
+  font-family: var(--font-family-mono);
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--primary-accent);
+}
+
+.checklist-progress-bar-track {
+  height: 7px;
+  background: var(--bg-surface-hover);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.checklist-progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--primary-accent) 0%, var(--primary-accent-light) 100%);
+  border-radius: 999px;
+  transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Category Filter Scroll */
+.checklist-category-scroll,
+.notes-category-scroll {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 2px 2px 8px;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.checklist-category-scroll::-webkit-scrollbar,
+.notes-category-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.category-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-surface);
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: var(--transition-smooth);
+}
+
+.category-pill:hover {
+  background: var(--bg-surface-hover);
+}
+
+.category-pill.active {
+  background: var(--primary-accent);
+  color: #FFFFFF;
+  border-color: var(--primary-accent);
+  box-shadow: 0 2px 8px rgba(15, 111, 99, 0.25);
+}
+
+.category-pill-icon {
+  font-size: 0.9rem;
+}
+
+.category-pill-count {
+  font-family: var(--font-family-mono);
+  font-size: 0.72rem;
+  padding: 1px 5px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.08);
+}
+
+.category-pill.active .category-pill-count {
+  background: rgba(255, 255, 255, 0.25);
+  color: #FFFFFF;
+}
+
+/* Quick Add Bar */
+.checklist-quick-add {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-md);
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-shadow: var(--shadow-sm);
+}
+
+.quick-add-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.quick-add-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  font-size: 0.92rem;
+  color: var(--text-primary);
+  outline: none;
+  font-family: inherit;
+}
+
+.quick-add-input::placeholder {
+  color: var(--text-muted);
+}
+
+.quick-add-submit-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--primary-accent);
+  color: #FFFFFF;
+  border: none;
+  border-radius: var(--border-radius-sm);
+  padding: 6px 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition-smooth);
+}
+
+.quick-add-submit-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.quick-add-options {
+  display: flex;
+  gap: 8px;
+  border-top: 1px solid var(--border-color);
+  padding-top: 8px;
+}
+
+.quick-add-select {
+  background: var(--bg-surface-hover);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-sm);
+  padding: 4px 8px;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  outline: none;
+  cursor: pointer;
+}
+
+/* Items List */
+.checklist-items-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.checklist-item-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-sm);
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transition: var(--transition-smooth);
+}
+
+.checklist-item-card:hover {
+  border-color: rgba(15, 111, 99, 0.28);
+}
+
+.checklist-item-card.completed {
+  opacity: 0.65;
+  background: var(--bg-surface-hover);
+}
+
+.checklist-checkbox {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid var(--border-color);
+  background: transparent;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #FFFFFF;
+  flex-shrink: 0;
+  transition: var(--transition-smooth);
+  padding: 0;
+}
+
+.checklist-checkbox.checked {
+  background: var(--color-success);
+  border-color: var(--color-success);
+}
+
+.checklist-item-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  cursor: pointer;
+  min-width: 0;
+}
+
+.checklist-item-text {
+  font-size: 0.92rem;
+  color: var(--text-primary);
+  word-break: break-word;
+  transition: var(--transition-smooth);
+}
+
+.checklist-item-text.strikethrough {
+  text-decoration: line-through;
+  color: var(--text-muted);
+}
+
+.checklist-item-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.item-cat-badge {
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: var(--bg-surface-hover);
+  color: var(--text-muted);
+}
+
+.item-cat-badge.cat-packing { background: rgba(59, 130, 246, 0.1); color: #2563EB; }
+.item-cat-badge.cat-documents { background: rgba(234, 88, 12, 0.1); color: #C2410C; }
+.item-cat-badge.cat-medical { background: rgba(220, 38, 38, 0.1); color: #DC2626; }
+.item-cat-badge.cat-general { background: rgba(15, 111, 99, 0.1); color: var(--primary-accent); }
+
+.item-assignee-badge {
+  font-size: 0.72rem;
+  font-weight: 500;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.05);
+  color: var(--text-secondary);
+}
+
+.checklist-delete-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 6px;
+  border-radius: var(--border-radius-sm);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition-smooth);
+  opacity: 0.5;
+}
+
+.checklist-item-card:hover .checklist-delete-btn {
+  opacity: 1;
+}
+
+.checklist-delete-btn:hover {
+  color: var(--color-danger);
+  background: rgba(220, 38, 38, 0.1);
+}
+
+/* Empty State */
+.checklist-empty-state {
+  text-align: center;
+  padding: 36px 20px;
+  background: var(--bg-surface);
+  border: 1px dashed var(--border-color);
+  border-radius: var(--border-radius-md);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.empty-state-icon {
+  font-size: 2.2rem;
+  margin-bottom: 4px;
+}
+
+.empty-state-title {
+  font-family: var(--font-family-title);
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.empty-state-desc {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  max-width: 320px;
+  line-height: 1.5;
+}
+
+.seed-defaults-btn {
+  margin-top: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(15, 111, 99, 0.1);
+  color: var(--primary-accent);
+  border: 1px solid rgba(15, 111, 99, 0.25);
+  border-radius: 999px;
+  padding: 8px 16px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition-smooth);
+}
+
+.seed-defaults-btn:hover {
+  background: rgba(15, 111, 99, 0.18);
+}
+
+/* Travel Notes */
+.notes-container {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.notes-action-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.add-note-primary-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--primary-accent);
+  color: #FFFFFF;
+  border: none;
+  border-radius: 999px;
+  padding: 7px 14px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: var(--transition-smooth);
+  box-shadow: 0 2px 6px rgba(15, 111, 99, 0.25);
+  flex-shrink: 0;
+}
+
+.add-note-primary-btn:hover {
+  background: var(--primary-accent-light);
+}
+
+.notes-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+@media (min-width: 600px) {
+  .notes-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.trip-note-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-md);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  box-shadow: var(--shadow-sm);
+  position: relative;
+  transition: var(--transition-smooth);
+}
+
+.trip-note-card.is-pinned {
+  border-color: rgba(255, 122, 0, 0.35);
+  background: linear-gradient(180deg, rgba(255, 122, 0, 0.03) 0%, var(--bg-surface) 30%);
+}
+
+.note-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.note-card-title-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.note-category-tag {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: var(--bg-surface-hover);
+  color: var(--text-secondary);
+}
+
+.note-pinned-pill {
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 6px;
+  background: rgba(255, 122, 0, 0.12);
+  color: var(--accent-orange);
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.note-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.note-icon-action-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 5px;
+  border-radius: var(--border-radius-sm);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition-smooth);
+}
+
+.note-icon-action-btn:hover {
+  background: var(--bg-surface-hover);
+  color: var(--text-primary);
+}
+
+.note-icon-action-btn.active-pin {
+  color: var(--accent-orange);
+}
+
+.note-icon-action-btn.delete-action:hover {
+  color: var(--color-danger);
+  background: rgba(220, 38, 38, 0.1);
+}
+
+.note-title {
+  font-family: var(--font-family-title);
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+  line-height: 1.35;
+}
+
+.note-content-box {
+  background: var(--bg-surface-hover);
+  border-radius: var(--border-radius-sm);
+  padding: 10px 12px;
+  border: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+.note-content-text {
+  font-family: var(--font-family-mono);
+  font-size: 0.85rem;
+  color: var(--text-primary);
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  line-height: 1.5;
+}
+
+.note-card-footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: auto;
+  padding-top: 4px;
+}
+
+.note-copy-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-sm);
+  padding: 5px 10px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: var(--transition-smooth);
+}
+
+.note-copy-btn:hover {
+  background: var(--bg-surface-hover);
+  color: var(--text-primary);
+}
+
+.note-copy-btn.copied {
+  background: rgba(22, 163, 74, 0.1);
+  color: var(--color-success);
+  border-color: rgba(22, 163, 74, 0.3);
+}
+
+/* Travel Note Modal */
+.note-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.72);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 16px;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.note-modal-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-lg);
+  box-shadow: 0 20px 48px -12px rgba(15, 23, 42, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.05);
+  max-width: 460px;
+  width: 100%;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: scaleUp 0.22s var(--ease-spring);
+  box-sizing: border-box;
+}
+
+.note-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.note-modal-header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.note-modal-eyebrow {
+  font-family: var(--font-family-mono);
+  font-size: 10.5px;
+  font-weight: 800;
+  color: var(--primary-accent);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.note-modal-title {
+  font-family: var(--font-family-title);
+  font-size: 1.18rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.note-modal-close-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid var(--border-color);
+  background: var(--bg-surface-hover);
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: var(--transition-smooth);
+  flex-shrink: 0;
+}
+
+.note-modal-close-btn:hover {
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  border-color: var(--primary-accent);
+}
+
+.note-modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.note-modal-field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.note-modal-field-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.note-modal-label {
+  font-family: var(--font-family-mono);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.note-modal-char-hint {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.note-category-picker {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.note-cat-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-surface-hover);
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition-smooth);
+}
+
+.note-cat-chip:hover {
+  background: var(--bg-surface);
+  border-color: var(--primary-accent);
+}
+
+.note-cat-chip.active {
+  background: rgba(15, 111, 99, 0.12);
+  color: var(--primary-accent);
+  border-color: var(--primary-accent);
+  box-shadow: 0 2px 6px rgba(15, 111, 99, 0.15);
+}
+
+.note-modal-input {
+  background: var(--bg-surface);
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--border-radius-sm);
+  padding: 11px 14px;
+  font-size: 0.95rem;
+  color: var(--text-primary);
+  outline: none;
+  font-family: inherit;
+  transition: var(--transition-smooth);
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.note-modal-input:focus {
+  border-color: var(--primary-accent);
+  box-shadow: 0 0 0 3px rgba(15, 111, 99, 0.14);
+}
+
+.note-modal-textarea {
+  background: var(--bg-surface-hover);
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--border-radius-sm);
+  padding: 12px 14px;
+  font-family: var(--font-family-mono);
+  font-size: 0.88rem;
+  line-height: 1.55;
+  color: var(--text-primary);
+  outline: none;
+  resize: vertical;
+  min-height: 110px;
+  transition: var(--transition-smooth);
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.note-modal-textarea:focus {
+  background: var(--bg-surface);
+  border-color: var(--primary-accent);
+  box-shadow: 0 0 0 3px rgba(15, 111, 99, 0.14);
+}
+
+.note-pin-toggle-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: var(--border-radius-sm);
+  border: 1px solid var(--border-color);
+  background: var(--bg-surface-hover);
+  cursor: pointer;
+  transition: var(--transition-smooth);
+  user-select: none;
+}
+
+.note-pin-toggle-card:hover {
+  background: var(--bg-surface);
+  border-color: rgba(255, 122, 0, 0.4);
+}
+
+.note-pin-toggle-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.note-pin-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: rgba(255, 122, 0, 0.12);
+  color: var(--accent-orange);
+  flex-shrink: 0;
+}
+
+.note-pin-title {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.note-pin-desc {
+  font-size: 0.76rem;
+  color: var(--text-muted);
+}
+
+.note-custom-toggle {
+  width: 44px;
+  height: 24px;
+  border-radius: 999px;
+  background: var(--border-color);
+  position: relative;
+  transition: background 0.2s ease;
+  flex-shrink: 0;
+}
+
+.note-custom-toggle.active {
+  background: var(--accent-orange);
+}
+
+.note-custom-toggle-thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #FFFFFF;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.note-custom-toggle.active .note-custom-toggle-thumb {
+  transform: translateX(20px);
+}
+
+.note-modal-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 6px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border-color);
+}
+
+.note-modal-cancel-btn {
+  padding: 10px 18px;
+  border-radius: var(--border-radius-sm);
+  border: 1px solid var(--border-color);
+  background: var(--bg-surface);
+  color: var(--text-secondary);
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition-smooth);
+}
+
+.note-modal-cancel-btn:hover {
+  background: var(--bg-surface-hover);
+  color: var(--text-primary);
+}
+
+.note-modal-submit-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 22px;
+  border-radius: var(--border-radius-sm);
+  border: none;
+  background: var(--primary-accent);
+  color: #FFFFFF;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: var(--transition-smooth);
+  box-shadow: 0 4px 14px rgba(15, 111, 99, 0.28);
+}
+
+.note-modal-submit-btn:hover:not(:disabled) {
+  background: var(--primary-accent-light);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(15, 111, 99, 0.38);
+}
+
+.note-modal-submit-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}

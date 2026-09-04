@@ -105,8 +105,12 @@ export function isFeatureActive(
     userOverrides?: Record<string, Record<string, boolean>>;
   }
 ): boolean {
-  // Superadmin always has full access to all features
-  if (context?.isSuperadmin) {
+  // Strict-toggle flags that directly govern visibility in Settings/UI
+  // must respect their explicit flag state and not be unconditionally bypassed by superadmin
+  const isStrictToggleFlag = key === 'enableDemoSeeding' || key === 'enableFeatureSuggestions';
+
+  // Superadmin always has full access to all other features
+  if (!isStrictToggleFlag && context?.isSuperadmin) {
     return true;
   }
 

@@ -5,6 +5,31 @@ export interface TripStop {
   lng?: number;
 }
 
+export interface ChecklistItem {
+  id: string;
+  text: string;
+  completed: boolean;
+  category?: 'packing' | 'prep' | 'documents' | 'medical' | 'general';
+  assignedTo?: string; // assignee name or member ID
+  assignedToMemberId?: string | null;
+  completedByMemberId?: string | null;
+  completedAt?: string;
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface TripNote {
+  id: string;
+  title: string;
+  content: string; // Hotel Wi-Fi, PNRs, cab contacts, etc.
+  category?: 'wifi' | 'stay' | 'transport' | 'contact' | 'general';
+  colorTag?: 'teal' | 'amber' | 'blue' | 'rose' | 'slate';
+  pinned?: boolean;
+  isPinned?: boolean;
+  createdAt: number;
+  updatedAt: number;
+}
+
 export interface Trip {
   id: string;
   name: string;
@@ -25,6 +50,8 @@ export interface Trip {
   closed?: boolean; // trip-admin "settled, no more changes" lock -- blocks new expenses/members, unlike archived which is purely organizational
   stops?: TripStop[]; // Ordered list of route waypoints / stops
   coverImageUrl?: string; // background cover tourism photo URL
+  checklist?: ChecklistItem[]; // Collaborative packing list and tasks
+  notes?: TripNote[]; // Collaborative travel notes, Wi-Fi, PNRs
 }
 
 export interface Member {

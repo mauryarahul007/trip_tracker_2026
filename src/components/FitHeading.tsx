@@ -26,7 +26,38 @@ export function FitHeading({ text, className, style, maxFontSize, minFontSize }:
       cancelAnimationFrame(rafId);
       rafId = requestAnimationFrame(() => {
         if (!el || !parent) return;
-        const availableWidth = parent.clientWidth;
+        let siblingsWidth = 0;
+        for (const child of Array.from(parent.children)) {
+          if (child !== el) {
+            siblingsWidth += (child as HTMLElement).offsetWidth || 0;
+          }
+        }
+        const parentStyles = window.getComputedStyle(parent);
+        const gap = parseFloat(parentStyles.gap) || 0;
+        const paddingLeft = parseFloat(parentStyles.paddingLeft) || 0;
+        const paddingRight = parseFloat(parentStyles.paddingRight) || 0;
+
+        // Container width: prefer parent.clientWidth (e.g. .app-title-row pill width)
+        // or grandparent.clientWidth if parent has not yet finished layout.
+        const grandparent = parent.parentElement;
+        let containerWidth = parent.clientWidth > 0
+          ? parent.clientWidth
+          : (grandparent && grandparent.clientWidth > 0 ? grandparent.clientWidth : 0);
+
+        // Only clamp by parentStyles.maxWidth if it is an explicit pixel value (e.g. '240px')
+        // and NOT a percentage string (e.g. '100%') which parseFloat parses as 100.
+        const rawMaxWidth = parentStyles.maxWidth;
+        if (rawMaxWidth && rawMaxWidth.endsWith('px')) {
+          const pxVal = parseFloat(rawMaxWidth);
+          if (!isNaN(pxVal) && pxVal > 0 && pxVal < containerWidth) {
+            containerWidth = pxVal;
+          }
+        }
+
+        const availableWidth = Math.max(
+          0,
+          containerWidth - siblingsWidth - gap - paddingLeft - paddingRight
+        );
         if (availableWidth <= 0) return;
 
         // Measure text width using an offscreen hidden span
@@ -34,7 +65,11 @@ export function FitHeading({ text, className, style, maxFontSize, minFontSize }:
         tempSpan.style.visibility = 'hidden';
         tempSpan.style.position = 'absolute';
         tempSpan.style.whiteSpace = 'nowrap';
-        tempSpan.style.font = window.getComputedStyle(el).font;
+        const computed = window.getComputedStyle(el);
+        tempSpan.style.fontFamily = computed.fontFamily;
+        tempSpan.style.fontWeight = computed.fontWeight;
+        tempSpan.style.letterSpacing = computed.letterSpacing;
+        tempSpan.style.textTransform = computed.textTransform;
         tempSpan.textContent = text;
         document.body.appendChild(tempSpan);
 
@@ -58,6 +93,9 @@ export function FitHeading({ text, className, style, maxFontSize, minFontSize }:
 
     if (parent) {
       ro.observe(parent);
+      if (parent.parentElement) {
+        ro.observe(parent.parentElement);
+      }
     }
 
     return () => {

@@ -1,7 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { Trip, Member, TripStop } from '../types';
-import { IconArchive, IconMapPin, IconSearch } from './Icons';
+import { IconArchive, IconMapPin, IconSearch, IconMoreVertical, IconPlus, IconEdit, IconTrash } from './Icons';
+import { ActionSheet } from './common/ActionSheet';
 import { DateRangePicker } from './DateRangePicker';
 import { formatTripStamp } from '../utils/dateRange';
 import { initial } from '../utils/initials';
@@ -93,6 +94,7 @@ export function TripsListScreen({
   const userId = useTripStore((s) => s.userId);
   const refreshTrips = useTripStore((s) => s.refreshTrips);
   const syncQueue = useTripStore((s) => s.syncQueue);
+  const isFeatureEnabled = useTripStore((s) => s.isFeatureEnabled);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const ptrIndicatorRef = useRef<HTMLDivElement>(null);
   const stepperTrackRef = useRef<HTMLDivElement>(null);
@@ -105,6 +107,7 @@ export function TripsListScreen({
   const [frontTripIndex, setFrontTripIndex] = useState(0);
   const [targetTripId, setTargetTripId] = useState<string | null>(null);
   const [isSavingTrip, setIsSavingTrip] = useState(false);
+  const [actionSheetTrip, setActionSheetTrip] = useState<Trip | null>(null);
   // Enables full luxury hero spotlight even with 1 trip
   const stackActive = trips.length >= 1 && !showList && !showAddTrip && !showJoinTrip;
 
@@ -587,7 +590,7 @@ export function TripsListScreen({
                 <button className="gradient-btn" onClick={() => setShowAddTrip(true)}>
                   Create Your First Trip
                 </button>
-                {onLoadDemoTrip && (
+                {onLoadDemoTrip && isFeatureEnabled('enableDemoSeeding') && (
                   <button
                     type="button"
                     className="secondary-btn"
@@ -732,8 +735,22 @@ export function TripsListScreen({
                           )}
                           {overflow > 0 && <span className="pp-avatar pp-avatar-more">+{overflow}</span>}
                         </div>
-                        <div className="pp-actions">
+                        <div className="pp-actions" style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
                           <button
+                            type="button"
+                            className="secondary-btn"
+                            style={{ padding: '8px' }}
+                            aria-label="Trip options"
+                            title="Trip options"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setActionSheetTrip(trip);
+                            }}
+                          >
+                            <IconMoreVertical size={15} className="icon-sm" />
+                          </button>
+                          <button
+                            type="button"
                             className="secondary-btn"
                             style={{ padding: '8px' }}
                             aria-label="Archive trip"
@@ -756,6 +773,56 @@ export function TripsListScreen({
           </>
         )}
       </main>
+
+      {actionSheetTrip && (
+        <ActionSheet
+          isOpen={Boolean(actionSheetTrip)}
+          onClose={() => setActionSheetTrip(null)}
+          title={actionSheetTrip.name}
+          description={`${actionSheetTrip.destination || 'Expedition'} · ${actionSheetTrip.baseCurrency}`}
+          items={[
+            {
+              id: 'open',
+              label: 'Open Expedition',
+              subtitle: 'View dashboard, balances & expenses',
+              onClick: () => onSelectTrip(actionSheetTrip.id),
+            },
+            ...(onQuickAddExpense
+              ? [
+                  {
+                    id: 'quick-add',
+                    label: 'Add Expense',
+                    icon: <IconPlus size={18} />,
+                    onClick: () => onQuickAddExpense(actionSheetTrip),
+                  },
+                ]
+              : []),
+            {
+              id: 'edit',
+              label: 'Edit Trip Details',
+              icon: <IconEdit size={18} />,
+              onClick: () => onStartEditTrip(actionSheetTrip),
+            },
+            {
+              id: 'archive',
+              label: 'Archive Trip',
+              icon: <IconArchive size={18} />,
+              onClick: () => onArchiveTrip(actionSheetTrip),
+            },
+            ...(userId && actionSheetTrip.ownerId === userId
+              ? [
+                  {
+                    id: 'delete',
+                    label: 'Delete Trip',
+                    icon: <IconTrash size={18} />,
+                    destructive: true,
+                    onClick: () => onDeleteTrip(actionSheetTrip),
+                  },
+                ]
+              : []),
+          ]}
+        />
+      )}
     </div>
   );
 }

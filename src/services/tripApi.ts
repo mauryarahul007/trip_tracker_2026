@@ -1,9 +1,9 @@
 import { supabase } from './supabaseClient';
-import type { Category, Expense, Group, Member, PreviousMemberSuggestion, SplitMode, Trip, TripStop } from '../types';
+import type { Category, ChecklistItem, Expense, Group, Member, PreviousMemberSuggestion, SplitMode, Trip, TripNote, TripStop } from '../types';
 import type { Database } from '../types/database';
 import type { AdminUserRow, AppConfigKey, AuditLogEntry, DevicePlatformCount, NotificationStats } from '../types/admin';
 
-type TripRow = Database['public']['Tables']['trips']['Row'];
+type TripRow = Database['public']['Tables']['trips']['Row'] & { checklist?: unknown; notes?: unknown };
 type MemberRow = Database['public']['Tables']['members']['Row'];
 type GroupRow = Database['public']['Tables']['groups']['Row'];
 type CategoryRow = Database['public']['Tables']['categories']['Row'];
@@ -25,6 +25,8 @@ function mapTrip(row: TripRow, memberIds: string[], groupIds: string[]): Trip {
     frozen: row.frozen,
     closed: row.closed,
     stops: Array.isArray(row.stops) ? (row.stops as unknown as TripStop[]) : undefined,
+    checklist: Array.isArray(row.checklist) ? (row.checklist as unknown as ChecklistItem[]) : undefined,
+    notes: Array.isArray(row.notes) ? (row.notes as unknown as TripNote[]) : undefined,
     createdAt: new Date(row.created_at).getTime(),
     updatedAt: new Date(row.updated_at).getTime(),
   };
@@ -230,6 +232,28 @@ export async function updateTripRow(id: string, patch: { name: string; startDate
       stops: patch.stops ?? [],
       updated_at: new Date().toISOString(),
     })
+    .eq('id', id);
+  if (error) throw error;
+}
+
+export async function updateTripChecklist(id: string, checklist: ChecklistItem[]): Promise<void> {
+  const { error } = await supabase
+    .from('trips')
+    .update({
+      checklist,
+      updated_at: new Date().toISOString(),
+    } as any)
+    .eq('id', id);
+  if (error) throw error;
+}
+
+export async function updateTripNotes(id: string, notes: TripNote[]): Promise<void> {
+  const { error } = await supabase
+    .from('trips')
+    .update({
+      notes,
+      updated_at: new Date().toISOString(),
+    } as any)
     .eq('id', id);
   if (error) throw error;
 }
