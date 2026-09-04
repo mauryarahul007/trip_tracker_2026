@@ -329,7 +329,18 @@ function CardContent({
           </div>
 
           <div className="stack-unified-header">
-            {(statusBadge || trip.destination || weather) && (
+            {/* Own row: a multi-stop route ("Gangtok -> Lachung -> Pelling")
+                needs real width, and sharing one pill with the countdown
+                badge left it with almost none. Splitting into two stacked
+                pills gives destination+weather nearly the full row instead
+                of fighting the badge for space. */}
+            {statusBadge && (
+              <span className={`stack-status-dot-indicator ${statusBadge.kind}`} title={statusBadge.label}>
+                <span className="stack-status-live-dot" />
+                <span className="stack-status-label">{statusBadge.label}</span>
+              </span>
+            )}
+            {(trip.destination || weather) && (
               <div
                 className={`stack-header-caption${isRefreshing ? ' refreshing' : ''}`}
                 onClick={(e) => {
@@ -347,15 +358,8 @@ function CardContent({
                     refreshWeather();
                   }
                 }}
-                title={weather ? `Live: ${weather.condition} in ${weather.city}. Tap to refresh.` : (statusBadge?.label || trip.destination)}
+                title={weather ? `Live: ${weather.condition} in ${weather.city}. Tap to refresh.` : trip.destination}
               >
-                {statusBadge && (
-                  <span className={`stack-status-dot-indicator ${statusBadge.kind}`} title={statusBadge.label}>
-                    <span className="stack-status-live-dot" />
-                    <span className="stack-status-label">{statusBadge.label}</span>
-                  </span>
-                )}
-                {statusBadge && (trip.destination || weather) && <span className="stack-header-sep">&middot;</span>}
                 {trip.destination && (
                   <span className="stack-caption-dest">{trip.destination}</span>
                 )}
