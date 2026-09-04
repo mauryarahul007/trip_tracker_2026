@@ -51,7 +51,19 @@ export function NavTabs({ activeTab, setActiveTab, onAddExpense, onAddMember, ex
     withViewTransition(() => setActiveTab(tab));
   };
 
+  // Warms the ExpenseForm/SettingsTab lazy chunk on hover/press intent, so
+  // the click that actually opens them doesn't pay the network+eval cost.
+  // The browser dedupes repeat import() calls to the same module, so
+  // firing this more than once is harmless.
+  const prefetchExpenseForm = () => {
+    import('./ExpenseForm');
+  };
+  const prefetchSettingsTab = () => {
+    import('./SettingsTab');
+  };
+
   const handlePointerDown = () => {
+    if (!isMembersTab) prefetchExpenseForm();
     longPressFired.current = false;
     longPressTimer.current = setTimeout(() => {
       longPressFired.current = true;
@@ -170,6 +182,7 @@ export function NavTabs({ activeTab, setActiveTab, onAddExpense, onAddMember, ex
           onPointerDown={handlePointerDown}
           onPointerUp={clearLongPress}
           onPointerCancel={clearLongPress}
+          onMouseEnter={isMembersTab ? undefined : prefetchExpenseForm}
           onClick={handleFabClick}
           aria-label={isMembersTab ? (onAddMember ? 'Add Member' : 'Add Member (admins only)') : 'Add expense'}
           title={isMembersTab ? (onAddMember ? 'Add Member' : 'Add Member (admins only)') : 'Add expense'}
@@ -196,6 +209,8 @@ export function NavTabs({ activeTab, setActiveTab, onAddExpense, onAddMember, ex
         data-tab="settings"
         className={`nav-tab-item ${activeTab === 'settings' ? 'active' : ''}`}
         onClick={() => goTo('settings')}
+        onMouseEnter={prefetchSettingsTab}
+        onPointerDown={prefetchSettingsTab}
         aria-label="Settings"
       >
         <span className="nav-tab-icon"><IconSettings size={26} /></span>
