@@ -29,6 +29,7 @@ type Props = {
   onDeleteTrip?: (trip: Trip) => void;
   userEmail?: string | null;
   onSignOut?: () => void;
+  onDeleteAccount?: () => void;
   pwaInstallable?: boolean;
   onInstallApp?: () => void;
   onRequestConfirm?: (req: ConfirmRequest) => void;
@@ -62,6 +63,7 @@ export function SettingsTab({
   onDeleteTrip,
   userEmail,
   onSignOut,
+  onDeleteAccount,
   pwaInstallable,
   onInstallApp,
   onOpenSuperadminPortal,
@@ -96,6 +98,7 @@ export function SettingsTab({
       onDeleteTrip={onDeleteTrip}
       userEmail={userEmail}
       onSignOut={onSignOut}
+      onDeleteAccount={onDeleteAccount}
       pwaInstallable={pwaInstallable}
       onInstallApp={onInstallApp}
       onOpenSuperadminPortal={onOpenSuperadminPortal}

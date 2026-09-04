@@ -141,6 +141,7 @@ export default function App() {
   const userAvatarUrl = useAuthStore((s) => s.session?.user.user_metadata?.avatar_url as string | undefined);
   const userDisplayName = useTripStore((s) => s.userDisplayName);
   const signOut = useAuthStore((s) => s.signOut);
+  const deleteOwnAccount = useAuthStore((s) => s.deleteOwnAccount);
   const signInSuperadmin = useAuthStore((s) => s.signInSuperadmin);
 
   // Navigation tabs: 'expenses' (Summary) | 'ledger' (day-wise Expenses) | 'members' | 'settings'
@@ -1521,6 +1522,28 @@ export default function App() {
     });
   };
 
+  const handleDeleteAccount = () => {
+    setConfirmRequest({
+      title: 'Delete Account',
+      message:
+        'This permanently deletes your account and every trip you own -- including trips shared with other members, who will lose them too. Trips you belong to but don\'t own are unaffected. This cannot be undone.',
+      confirmLabel: 'Delete My Account',
+      danger: true,
+      onConfirm: async () => {
+        const result = await deleteOwnAccount();
+        setConfirmRequest(null);
+        if (!result.success) {
+          setConfirmRequest({
+            title: 'Couldn\'t Delete Account',
+            message: result.message,
+            confirmLabel: 'OK',
+            onConfirm: () => setConfirmRequest(null),
+          });
+        }
+      },
+    });
+  };
+
   const handleLoadDemoTrip = async () => {
     await loadDemoTrip();
     setActiveTab('expenses');
@@ -2132,6 +2155,7 @@ export default function App() {
                 onDeleteTrip={handleDeleteTrip}
                 userEmail={userEmail}
                 onSignOut={signOut}
+                onDeleteAccount={handleDeleteAccount}
                 pwaInstallable={!!deferredPrompt}
                 onInstallApp={handleInstallApp}
                 onOpenSuperadminPortal={() => setIsTravelerPreview(false)}
@@ -2264,6 +2288,7 @@ export default function App() {
             onDeleteTrip={handleDeleteTrip}
             userEmail={userEmail}
             onSignOut={signOut}
+            onDeleteAccount={handleDeleteAccount}
             pwaInstallable={!!deferredPrompt}
             onInstallApp={handleInstallApp}
             onRequestConfirm={setConfirmRequest}

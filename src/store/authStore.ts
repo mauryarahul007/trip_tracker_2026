@@ -22,6 +22,7 @@ interface AuthStore {
   requestSuperadminPasswordReset: (email: string) => Promise<{ success: boolean; message: string }>;
   updateOwnPassword: (newPassword: string) => Promise<{ success: boolean; message: string }>;
   signOut: () => Promise<void>;
+  deleteOwnAccount: () => Promise<{ success: boolean; message: string }>;
   clearAuthError: () => void;
 }
 
@@ -278,6 +279,41 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
       return { success: false, message: error.message };
     }
     return { success: true, message: 'Password updated.' };
+  },
+
+  // Self-service deletion (Apple Guideline 5.1.1 / Google Play policy) --
+  // distinct from the superadmin-only delete_user RPC (0068, 0072), which
+  // explicitly blocks self-delete. See 0075_delete_own_account.sql: this
+  // cascades to delete every trip the caller owns, including ones shared
+  // with other members -- the confirmation UI is responsible for warning
+  // about that before this is ever called.
+  deleteOwnAccount: async () => {
+    if (isMissingSupabaseEnv) {
+      return { success: false, message: 'Account deletion needs a real Supabase project configured.' };
+    }
+    const { error } = await supabase.rpc('delete_own_account');
+    if (error) {
+      return { success: false, message: error.message };
+    }
+
+    const userId = get().session?.user.id;
+    if (userId) {
+      await unregisterPushNotifications(userId);
+    }
+    useNotificationsStore.getState().teardown();
+    await useTripStore.getState().clearDatabase();
+    if (typeof localStorage !== 'undefined') {
+      localStorage.removeItem('trip_tracker_demo_session');
+    }
+    try {
+      await supabase.auth.signOut();
+    } catch {
+      // Account row is already gone server-side; a signout network error
+      // here doesn't change that.
+    }
+    useTripStore.getState().setIsSuperadmin(false);
+    set({ session: null });
+    return { success: true, message: 'Your account and owned trips have been deleted.' };
   },
 
   signOut: async () => {

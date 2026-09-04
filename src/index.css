@@ -8705,6 +8705,103 @@ textarea.input-field {
   cursor: pointer;
 }
 
+/* =========================================================================
+   Legal Pages (Privacy Policy / Terms of Service)
+   Standalone unauthenticated routes -- see main.tsx /privacy, /terms.
+   ========================================================================= */
+.legal-page {
+  min-height: 100vh;
+  min-height: 100dvh;
+  height: var(--app-vh, 100dvh);
+  overflow-y: auto;
+  background: var(--bg-page);
+  color: var(--text-primary);
+  font-family: var(--font-family-body);
+  -webkit-overflow-scrolling: touch;
+}
+
+.legal-page-inner {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: max(24px, var(--safe-top, 0px)) 24px calc(64px + var(--safe-bottom, 0px));
+}
+
+.legal-page-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 28px;
+}
+
+.legal-page-back {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-family: var(--font-family-body);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 6px 6px 6px 0;
+}
+.legal-page-back:hover { color: var(--primary-accent); }
+
+.legal-page-brand {
+  font-family: var(--font-family-title);
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--primary-accent);
+  text-decoration: none;
+}
+
+.legal-page-title {
+  font-family: var(--font-family-title);
+  font-size: clamp(1.6rem, 1.3rem + 1.2vw, 2.1rem);
+  font-weight: 700;
+  margin: 0 0 8px;
+}
+
+.legal-page-updated {
+  font-family: var(--font-family-mono);
+  font-size: 12px;
+  color: var(--text-muted);
+  margin: 0 0 32px;
+}
+
+.legal-page-body section {
+  margin-bottom: 28px;
+}
+.legal-page-body h2 {
+  font-family: var(--font-family-title);
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 10px;
+}
+.legal-page-body p {
+  font-size: 14.5px;
+  line-height: 1.65;
+  color: var(--text-secondary);
+  margin: 0 0 12px;
+}
+.legal-page-body p:last-child { margin-bottom: 0; }
+.legal-page-body ul {
+  margin: 0 0 12px;
+  padding-left: 20px;
+  color: var(--text-secondary);
+  font-size: 14.5px;
+  line-height: 1.65;
+}
+.legal-page-body li { margin-bottom: 6px; }
+.legal-page-body a {
+  color: var(--primary-accent);
+  text-decoration: underline;
+  text-decoration-color: rgba(15, 111, 99, 0.35);
+}
+.legal-page-body strong { color: var(--text-primary); font-weight: 700; }
+
 
 
 

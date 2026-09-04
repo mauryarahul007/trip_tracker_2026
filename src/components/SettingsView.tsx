@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, lazy, Suspense } from 'react';
+import { useNavigate } from 'react-router-dom';
 import type { Category, Expense, Trip } from '../types';
 import type { ConfirmRequest } from './ConfirmDialog';
 import {
@@ -104,6 +105,7 @@ interface SettingsViewProps {
   onDeleteTrip?: (trip: Trip) => void;
   userEmail?: string | null;
   onSignOut?: () => void;
+  onDeleteAccount?: () => void;
   pwaInstallable?: boolean;
   onInstallApp?: () => void;
   onOpenSuperadminPortal?: () => void;
@@ -143,6 +145,7 @@ export function SettingsView({
   onDeleteTrip,
   userEmail,
   onSignOut,
+  onDeleteAccount,
   pwaInstallable = false,
   onInstallApp,
   onOpenSuperadminPortal,
@@ -548,6 +551,7 @@ export function SettingsView({
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [storageEstimate, setStorageEstimate] = useState<{ used: number; quota: number } | null>(null);
   const [appVersion, setAppVersion] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   // Partitioned Storage breakdown (Receipts vs Database vs System Cache)
   const storageBreakdown = React.useMemo(() => {
@@ -1878,7 +1882,8 @@ export function SettingsView({
   const showBugTracker = isSuperadmin && matchesSearch('Superadmin Bug Tracker', 'triage', 'sync', 'cases', 'cockpit');
   const showSignOut = onSignOut && matchesSearch('Sign Out', 'logout', 'session', 'disconnect', 'account');
   const showClearData = isSuperadmin && onClearDatabase && matchesSearch('Clear All Data', 'reset', 'wipe', 'delete', 'danger');
-  const showHelpGroup = showReportProblem || showSuggestFeature || showBugTracker || showSignOut || showClearData;
+  const showDeleteAccount = onDeleteAccount && matchesSearch('Delete Account', 'remove', 'erase', 'danger', 'privacy');
+  const showHelpGroup = showReportProblem || showSuggestFeature || showBugTracker || showSignOut || showClearData || showDeleteAccount;
 
   const showAbout = matchesSearch('Trip Tracker 2026', 'version', 'about', 'build', 'app');
 
@@ -2743,6 +2748,29 @@ export function SettingsView({
                 </div>
               </button>
             )}
+
+            {showDeleteAccount && (
+              <button
+                type="button"
+                className="settings-row-item"
+                onClick={() => {
+                  triggerHaptic('warning');
+                  onDeleteAccount!();
+                }}
+              >
+                <div className="settings-row-left">
+                  <div className="settings-squircle squircle-red-glow">
+                    <IconAlertCircle size={18} />
+                  </div>
+                  <div className="settings-row-texts">
+                    <span className="settings-row-title" style={{ color: 'var(--color-danger)' }}>
+                      Delete Account
+                    </span>
+                    <span className="settings-row-subtitle">Permanently delete your account and owned trips</span>
+                  </div>
+                </div>
+              </button>
+            )}
           </div>
         </div>
       )}
@@ -2768,6 +2796,43 @@ export function SettingsView({
                 </span>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Legal Section */}
+      {showAbout && (
+        <div>
+          <h4 className="settings-group-title">Legal</h4>
+          <div className="settings-group-card">
+            <button type="button" className="settings-row-item" onClick={() => navigate('/privacy')}>
+              <div className="settings-row-left">
+                <div className="settings-squircle squircle-slate-glow">
+                  <IconShield size={18} />
+                </div>
+                <div className="settings-row-texts">
+                  <span className="settings-row-title">Privacy Policy</span>
+                  <span className="settings-row-subtitle">What we collect and why</span>
+                </div>
+              </div>
+              <div className="settings-row-right">
+                <IconChevronRight size={16} />
+              </div>
+            </button>
+            <button type="button" className="settings-row-item" onClick={() => navigate('/terms')}>
+              <div className="settings-row-left">
+                <div className="settings-squircle squircle-slate-glow">
+                  <IconFileSpreadsheet size={18} />
+                </div>
+                <div className="settings-row-texts">
+                  <span className="settings-row-title">Terms of Service</span>
+                  <span className="settings-row-subtitle">Rules for using Trip Tracker</span>
+                </div>
+              </div>
+              <div className="settings-row-right">
+                <IconChevronRight size={16} />
+              </div>
+            </button>
           </div>
         </div>
       )}

@@ -553,6 +553,10 @@ export interface Database {
         Args: { p_user_id: string };
         Returns: void;
       };
+      delete_own_account: {
+        Args: Record<string, never>;
+        Returns: void;
+      };
       get_app_config: {
         Args: Record<string, never>;
         Returns: { key: string; value: unknown; updated_at: string; updated_by: string | null }[];

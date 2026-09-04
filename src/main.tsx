@@ -24,6 +24,15 @@ const ResetPasswordScreen = lazy(() =>
 const JoinTripScreen = lazy(() =>
   import('./components/JoinTripScreen').then((m) => ({ default: m.JoinTripScreen }))
 )
+const PrivacyPolicyPage = lazy(() =>
+  import('./components/PrivacyPolicyPage').then((m) => ({ default: m.PrivacyPolicyPage }))
+)
+const TermsOfServicePage = lazy(() =>
+  import('./components/TermsOfServicePage').then((m) => ({ default: m.TermsOfServicePage }))
+)
+const DeleteAccountPage = lazy(() =>
+  import('./components/DeleteAccountPage').then((m) => ({ default: m.DeleteAccountPage }))
+)
 
 function RouteLoadingFallback() {
   return (
@@ -104,6 +113,30 @@ createRoot(document.getElementById('root')!).render(
           element={
             <Suspense fallback={<RouteLoadingFallback />}>
               <ResetPasswordScreen />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/privacy"
+          element={
+            <Suspense fallback={<RouteLoadingFallback />}>
+              <PrivacyPolicyPage />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/terms"
+          element={
+            <Suspense fallback={<RouteLoadingFallback />}>
+              <TermsOfServicePage />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/delete-account"
+          element={
+            <Suspense fallback={<RouteLoadingFallback />}>
+              <DeleteAccountPage />
             </Suspense>
           }
         />
