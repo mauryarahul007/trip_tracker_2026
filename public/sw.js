@@ -39,6 +39,31 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // The app shell (index.html) carries the CSP header and references the
+  // current content-hashed JS/CSS bundle -- SWR's "serve cached instantly,
+  // revalidate in background" means a stale shell can stick around
+  // indefinitely with no visible prompt to reload (CACHE_NAME doesn't
+  // change per deploy, so there's nothing to trigger the update-available
+  // banner). Navigation requests go network-first instead; hashed static
+  // assets stay on the fast SWR path below since a stale one can't be
+  // referenced by a fresh shell anyway.
+  const isNavigation = event.request.mode === 'navigate' ||
+    (event.request.headers.get('accept') || '').includes('text/html');
+
+  if (isNavigation) {
+    event.respondWith(
+      fetch(event.request)
+        .then((networkResponse) => {
+          if (networkResponse.status === 200) {
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, networkResponse.clone()));
+          }
+          return networkResponse;
+        })
+        .catch(() => caches.open(CACHE_NAME).then((cache) => cache.match(event.request)))
+    );
+    return;
+  }
+
   event.respondWith(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.match(event.request).then((cachedResponse) => {
