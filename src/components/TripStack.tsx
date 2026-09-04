@@ -30,26 +30,6 @@ const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
 const prefersReducedMotion =
   typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 
-const CAT_EMOJI: Record<string, string> = {
-  'cat-food': '🍔',
-  'cat-stay': '🏨',
-  'cat-travel': '✈️',
-  'cat-activities': '🎟️',
-  'cat-shopping': '🛍️',
-  'cat-misc': '📦',
-  'food': '🍔',
-  'stay': '🏨',
-  'travel': '✈️',
-  'activities': '🎟️',
-  'shopping': '🛍️',
-  'misc': '📦',
-};
-
-function categoryEmoji(category?: string): string {
-  if (!category) return '💳';
-  return CAT_EMOJI[category] || CAT_EMOJI[category.toLowerCase()] || '💳';
-}
-
 function getItineraryProgress(startDate?: string, endDate?: string): number | null {
   if (!startDate || !endDate) return null;
   const todayStr = new Date().toISOString().split('T')[0];
@@ -60,43 +40,6 @@ function getItineraryProgress(startDate?: string, endDate?: string): number | nu
   if (now < start || now > end) return null;
   const progress = ((now - start) / (end - start)) * 100;
   return Math.min(100, Math.max(0, Math.round(progress)));
-}
-
-// Low-overhead device tilt hook for subtle holographic foil perspective
-function useDeviceTilt(enabled: boolean) {
-  const [tilt, setTilt] = useState({ x: 0, y: 0 });
-  const rafRef = useRef<number | null>(null);
-
-  useEffect(() => {
-    if (!enabled || prefersReducedMotion || typeof window === 'undefined' || !window.DeviceOrientationEvent) {
-      return;
-    }
-
-    const handleOrientation = (e: DeviceOrientationEvent) => {
-      if (e.gamma === null || e.beta === null) return;
-      if (rafRef.current !== null) return;
-
-      rafRef.current = requestAnimationFrame(() => {
-        rafRef.current = null;
-        const clampedGamma = Math.max(-25, Math.min(25, e.gamma || 0));
-        const clampedBeta = Math.max(15, Math.min(65, e.beta || 40)) - 40;
-        const tx = (clampedGamma / 25) * 3;
-        const ty = -(clampedBeta / 25) * 3;
-        setTilt({ x: Number(tx.toFixed(2)), y: Number(ty.toFixed(2)) });
-      });
-    };
-
-    window.addEventListener('deviceorientation', handleOrientation, { passive: true });
-    return () => {
-      window.removeEventListener('deviceorientation', handleOrientation);
-      if (rafRef.current !== null) {
-        cancelAnimationFrame(rafRef.current);
-        rafRef.current = null;
-      }
-    };
-  }, [enabled]);
-
-  return tilt;
 }
 
 // Lightweight destination weather hook with 2-hour offline localStorage caching
@@ -218,14 +161,12 @@ function CardContent({
   members,
   userId,
   isFront = false,
-  onFlip,
   onQuickAddExpense,
 }: {
   trip: Trip;
   members: Record<string, Member>;
   userId: string | null;
   isFront?: boolean;
-  onFlip?: () => void;
   onQuickAddExpense?: (tripId: string) => void;
 }) {
   const stamp = formatTripStamp(trip.startDate, trip.endDate);
@@ -326,21 +267,6 @@ function CardContent({
                   {statusBadge.kind === 'ongoing' ? '● ' : '⏱ '}{statusBadge.label}
                 </span>
               )}
-              {isFront && onFlip && (
-                <button
-                  type="button"
-                  className="stack-flip-icon-btn"
-                  title="Flip to view ledger snapshot"
-                  aria-label="Flip card to ledger"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    triggerHaptic('light');
-                    onFlip();
-                  }}
-                >
-                  <span>🔄</span>
-                </button>
-              )}
             </div>
           </div>
         </div>
@@ -411,132 +337,6 @@ function CardContent({
   );
 }
 
-function CardBackContent({
-  trip,
-  members,
-  onFlipBack,
-  onQuickAddExpense,
-}: {
-  trip: Trip;
-  members: Record<string, Member>;
-  onFlipBack: () => void;
-  onQuickAddExpense?: (tripId: string) => void;
-}) {
-  const allExpenses = useTripStore((s) => s.expenses);
-  const tripExpenses = useMemo(
-    () => (allExpenses || []).filter((e) => e.tripId === trip.id && !e.deletedAt),
-    [allExpenses, trip.id]
-  );
-
-  const recentExpenses = useMemo(
-    () =>
-      [...tripExpenses]
-        .sort((a, b) => (b.date || '').localeCompare(a.date || '') || (b.createdAt || 0) - (a.createdAt || 0))
-        .slice(0, 3),
-    [tripExpenses]
-  );
-
-  const categoryBreakdown = useMemo(() => {
-    const counts: Record<string, number> = {};
-    let total = 0;
-    for (const exp of tripExpenses) {
-      const cat = exp.category || 'cat-misc';
-      counts[cat] = (counts[cat] || 0) + exp.amount;
-      total += exp.amount;
-    }
-    return { counts, total };
-  }, [tripExpenses]);
-
-  return (
-    <div className="stack-card-back">
-      <div className="stack-back-header">
-        <div className="stack-back-title">
-          <span>📜</span>
-          <div>
-            <div className="stack-back-heading">Ledger Snapshot</div>
-            <div className="stack-back-sub">{trip.name}</div>
-          </div>
-        </div>
-        <button
-          type="button"
-          className="stack-back-close"
-          onClick={(e) => {
-            e.stopPropagation();
-            triggerHaptic('light');
-            onFlipBack();
-          }}
-          title="Flip back to card cover"
-          aria-label="Flip back"
-        >
-          ✕
-        </button>
-      </div>
-
-      {categoryBreakdown.total > 0 && (
-        <div className="stack-cat-section">
-          <div className="stack-cat-bar">
-            {Object.entries(categoryBreakdown.counts).map(([cat, amt]) => {
-              const pct = (amt / categoryBreakdown.total) * 100;
-              return (
-                <div
-                  key={cat}
-                  className={`stack-cat-seg ${cat}`}
-                  style={{ width: `${pct}%` }}
-                  title={`${cat}: ${trip.baseCurrency || 'INR'} ${Math.round(amt).toLocaleString()} (${Math.round(pct)}%)`}
-                />
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      <div className="stack-recent-expenses">
-        {recentExpenses.length === 0 ? (
-          <div className="stack-no-expenses">
-            <span>✨</span> No expenses logged yet
-          </div>
-        ) : (
-          recentExpenses.map((exp) => {
-            const payer = members[exp.paidBy];
-            return (
-              <div key={exp.id} className="stack-recent-row">
-                <div className="stack-recent-left">
-                  <span className="stack-exp-icon">{categoryEmoji(exp.category)}</span>
-                  <div className="stack-exp-info">
-                    <div className="stack-exp-title">{exp.title}</div>
-                    <div className="stack-exp-sub">
-                      {payer?.name || 'Member'} &middot; {exp.date || 'Recent'}
-                    </div>
-                  </div>
-                </div>
-                <div className="stack-exp-amount">
-                  {trip.baseCurrency || 'INR'} {Math.round(exp.amount).toLocaleString()}
-                </div>
-              </div>
-            );
-          })
-        )}
-      </div>
-
-      <div className="stack-back-footer">
-        {onQuickAddExpense && (
-          <button
-            type="button"
-            className="stack-back-action-btn"
-            onClick={(e) => {
-              e.stopPropagation();
-              triggerHaptic('medium');
-              onQuickAddExpense(trip.id);
-            }}
-          >
-            <span>+</span> Log Expense
-          </button>
-        )}
-      </div>
-    </div>
-  );
-}
-
 type CardItemProps = {
   trip: Trip;
   members: Record<string, Member>;
@@ -583,7 +383,6 @@ function StackCardItem({
   const [dragging, setDragging] = useState(false);
   const [exit, setExit] = useState<'left' | 'right' | 'up' | null>(null);
   const [quickActionsOpen, setQuickActionsOpen] = useState(false);
-  const [isFlipped, setIsFlipped] = useState(false);
   const active = useRef(false);
   const start = useRef({ x: 0, y: 0 });
   const moved = useRef(false);
@@ -595,14 +394,6 @@ function StackCardItem({
   const holdStart = useRef(0);
   const lastPointer = useRef<{ x: number; y: number; time: number }>({ x: 0, y: 0, time: 0 });
   const velocity = useRef<{ vx: number; vy: number }>({ vx: 0, vy: 0 });
-
-  // Reset flip if trip changes or card moves out of front
-  useEffect(() => {
-    setIsFlipped(false);
-  }, [trip.id, isFront]);
-
-  // Subtle gyroscope parallax tilt when phone is held idle
-  const deviceTilt = useDeviceTilt(isFront && !dragging && !quickActionsOpen && !isFlipped);
 
   const clearLongPress = () => {
     if (longPressTimer.current) {
@@ -744,8 +535,8 @@ function StackCardItem({
   const renderX = rubberBand(drag.x);
   const renderY = drag.y < 0 ? -rubberBand(-drag.y) : rubberBand(drag.y);
   const tiltDeg = (renderX * 0.055).toFixed(2);
-  const rotateY = (renderX * 0.038 + (isFront && !dragging ? deviceTilt.x : 0)).toFixed(2);
-  const rotateX = (-renderY * 0.032 + (isFront && !dragging ? deviceTilt.y : 0)).toFixed(2);
+  const rotateY = (renderX * 0.038).toFixed(2);
+  const rotateX = (-renderY * 0.032).toFixed(2);
 
   const transform =
     exit === 'left' ? 'translateX(-160%) rotate(-18deg) scale(0.9)' :
@@ -799,7 +590,7 @@ function StackCardItem({
 
   return (
     <div
-      className={`stack-card depth-${idx}${isFlipped ? ' is-flipped' : ''}`}
+      className={`stack-card depth-${idx}`}
       style={isFront ? {
         transform,
         opacity: exit ? 0 : 1,
@@ -823,29 +614,17 @@ function StackCardItem({
       aria-label={isFront ? `Open trip ${trip.name}` : undefined}
       aria-hidden={isFront ? undefined : true}
     >
-      <div className="stack-card-inner">
-        <div className="stack-card-flipper-face front">
-          <div className="stack-card-sway">
-            <CardContent
-              trip={trip}
-              members={members}
-              userId={userId}
-              isFront={isFront}
-              onFlip={isFront ? () => setIsFlipped(true) : undefined}
-              onQuickAddExpense={isFront ? onQuickAddExpense : undefined}
-            />
-          </div>
-        </div>
-        {isFront && (
-          <div className="stack-card-flipper-face back">
-            <CardBackContent
-              trip={trip}
-              members={members}
-              onFlipBack={() => setIsFlipped(false)}
-              onQuickAddExpense={onQuickAddExpense}
-            />
-          </div>
-        )}
+      {/* Idle sway (peek cards only, see CSS) sits on this wrapper, not
+          .stack-card itself, so it layers on top of the depth-position
+          transform instead of fighting it. */}
+      <div className="stack-card-sway">
+        <CardContent
+          trip={trip}
+          members={members}
+          userId={userId}
+          isFront={isFront}
+          onQuickAddExpense={isFront ? onQuickAddExpense : undefined}
+        />
       </div>
 
       {isFront && badgeKind && (
@@ -890,15 +669,6 @@ function StackCardItem({
               <span style={{ fontSize: '18px', fontWeight: 800 }}>+</span>
             </button>
           )}
-          <button
-            type="button"
-            className="stack-qa-btn"
-            aria-label="Flip card"
-            title="Flip to ledger snapshot"
-            onClick={(e) => { e.stopPropagation(); setQuickActionsOpen(false); setIsFlipped(true); }}
-          >
-            <span>🔄</span>
-          </button>
           <button
             type="button"
             className="stack-qa-btn"

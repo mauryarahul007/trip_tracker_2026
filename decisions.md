@@ -1413,6 +1413,18 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - Weather fetching is strictly confined to the front card's destination on mount/cache expiry, avoiding redundant network requests for peeking cards.
 
+---
+
+## 81. Revert 3D Card Flip Mini-Dashboard from Home Screen
+* **Context:**
+  - The 3D flip interaction and reverse-side mini-ledger dashboard on the front trip card felt visually overwhelming and added excessive interaction complexity to the primary home stack browsing experience.
+* **Decision:**
+  - Revert the 3D coin flip mechanic, `stack-card-inner` flipper container, reverse ledger snapshot (`CardBackContent`), flip toggle icon buttons, and device orientation gyroscope sheen from `TripStack.tsx` and `src/index.css`.
+  - Retain the non-intrusive ambient card features: live destination weather pill, direct "+ Expense" shortcut chip, bottom-rim itinerary progress track, and the slide launcher dynamic vapor trail and magnetic snapping.
+* **Trade-offs Accepted:**
+  - Users can no longer flip the card on the home screen for an inline ledger summary; opening the trip details remains the clean, dedicated path for viewing expenses, settlements, and analytics.
+
+
 
 
 
