@@ -2571,7 +2571,12 @@ input:checked + .toggle-slider:before {
 
 .stack-unified-header {
   display: flex;
-  max-width: 65%;
+  /* Only the round date stamp (48px, offset 18px from the right) shares
+     this row -- it's absolutely positioned, so reserve just its footprint
+     instead of an arbitrary percentage. 65% was starving the destination
+     text down to 2-3 visible characters once the countdown badge and
+     weather joined it in one pill. */
+  max-width: calc(100% - 76px);
   min-width: 0;
 }
 
@@ -2657,7 +2662,7 @@ input:checked + .toggle-slider:before {
   overflow: hidden;
   text-overflow: ellipsis;
   flex: 1 1 auto;
-  min-width: 0;
+  min-width: 56px;
 }
 
 .stack-header-sep {
