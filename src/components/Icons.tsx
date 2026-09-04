@@ -540,8 +540,38 @@ export function IconX({ size = 20, className = 'icon', style }: IconProps) {
   );
 }
 
+export function IconQrCode({ size = 20, className = 'icon' }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" className={className} {...base}>
+      <rect x="3" y="3" width="7" height="7" rx="1" />
+      <rect x="14" y="3" width="7" height="7" rx="1" />
+      <rect x="3" y="14" width="7" height="7" rx="1" />
+      <rect x="14" y="14" width="3" height="3" />
+      <rect x="18" y="14" width="3" height="3" />
+      <rect x="14" y="18" width="3" height="3" />
+      <rect x="18" y="18" width="3" height="3" />
+      <rect x="5.5" y="5.5" width="2" height="2" fill="currentColor" />
+      <rect x="16.5" y="5.5" width="2" height="2" fill="currentColor" />
+      <rect x="5.5" y="16.5" width="2" height="2" fill="currentColor" />
+    </svg>
+  );
+}
 
+export function IconVibrate({ size = 20, className = 'icon' }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" className={className} {...base}>
+      <rect x="8" y="5" width="8" height="14" rx="2" />
+      <path d="M4 8l-2 4 2 4" />
+      <path d="M20 8l2 4-2 4" />
+    </svg>
+  );
+}
 
-
-
-
+export function IconPieChart({ size = 20, className = 'icon' }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" className={className} {...base}>
+      <path d="M21.21 15.89A10 10 0 1 1 8 2.83" />
+      <path d="M22 12A10 10 0 0 0 12 2v10z" />
+    </svg>
+  );
+}

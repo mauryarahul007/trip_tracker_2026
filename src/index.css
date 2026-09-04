@@ -6184,6 +6184,285 @@ html.capacitor-ios .trip-sheet .tab-pane {
   margin: 0 0 16px;
 }
 
+/* WhatsApp-Style Profile QR Button & Tagline */
+.settings-profile-qr-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--primary-accent) 12%, var(--bg-surface));
+  border: 1px solid color-mix(in srgb, var(--primary-accent) 28%, transparent);
+  color: var(--primary-accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.2s var(--ease-decel);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.settings-profile-qr-btn:hover {
+  background: color-mix(in srgb, var(--primary-accent) 22%, var(--bg-surface));
+  transform: scale(1.06);
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--primary-accent) 30%, transparent);
+}
+
+.settings-profile-qr-btn:active {
+  transform: scale(0.95);
+}
+
+.settings-profile-status-bar {
+  width: 100%;
+  margin-top: 2px;
+}
+
+.settings-profile-status-text {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  background: color-mix(in srgb, var(--text-muted) 8%, var(--bg-app));
+  padding: 3.5px 10px;
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  max-width: 100%;
+}
+
+.settings-profile-status-text:hover {
+  background: color-mix(in srgb, var(--primary-accent) 8%, var(--bg-surface));
+  border-color: color-mix(in srgb, var(--primary-accent) 30%, transparent);
+  color: var(--text-primary);
+}
+
+.settings-status-quote {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-style: italic;
+}
+
+.settings-status-edit-hint {
+  font-size: 11px;
+  color: var(--primary-accent);
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.settings-status-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: color-mix(in srgb, var(--text-muted) 6%, var(--bg-app));
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  margin-top: 2px;
+}
+
+.settings-status-input {
+  width: 100%;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  font-size: 12.5px;
+  outline: none;
+}
+
+.settings-status-input:focus {
+  border-color: var(--primary-accent);
+}
+
+.settings-status-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.settings-status-preset-pill {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 2px 7px;
+  font-size: 11px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+.settings-status-preset-pill:hover {
+  background: color-mix(in srgb, var(--primary-accent) 12%, var(--bg-surface));
+  color: var(--primary-accent);
+  border-color: var(--primary-accent);
+}
+
+.settings-status-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+/* WhatsApp-Style Shareable QR Modal */
+.settings-qr-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  animation: fadeIn 0.2s ease forwards;
+}
+
+.settings-qr-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: 24px;
+  padding: 24px 20px 20px;
+  width: 100%;
+  max-width: 360px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.35);
+  position: relative;
+  animation: whatsappSlideIn 0.25s var(--ease-decel) forwards;
+}
+
+.settings-qr-avatar-container {
+  position: relative;
+  margin-bottom: 6px;
+}
+
+.settings-qr-badge-icon {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  background: var(--primary-accent);
+  color: #fff;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  border: 2px solid var(--bg-surface);
+}
+
+.settings-qr-frame-box {
+  background: #FFFFFF;
+  padding: 14px;
+  border-radius: 18px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12);
+  margin: 14px 0 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.settings-qr-img {
+  width: 210px;
+  height: 210px;
+  display: block;
+  image-rendering: pixelated;
+}
+
+.settings-qr-trip-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-top: 2px;
+}
+
+.settings-qr-hint {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.4;
+  margin-bottom: 8px;
+}
+
+.settings-qr-btn-group {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+  margin-top: 6px;
+}
+
+/* WhatsApp-Style Storage Visualizer */
+.settings-storage-segmented-bar {
+  display: flex;
+  width: 100%;
+  height: 12px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--text-muted) 14%, var(--bg-app));
+  margin: 14px 0 12px;
+  gap: 1.5px;
+}
+
+.storage-seg {
+  height: 100%;
+  transition: width 0.35s ease;
+  min-width: 4px;
+}
+
+.storage-seg.media { background: #38BDF8; }
+.storage-seg.database { background: #34D399; }
+.storage-seg.cache { background: #F59E0B; }
+
+.settings-storage-legend-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 16px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+}
+
+.settings-storage-legend-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+  color: var(--text-primary);
+}
+
+.settings-storage-legend-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.settings-storage-color-dot {
+  width: 11px;
+  height: 11px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.settings-storage-color-dot.media { background: #38BDF8; }
+.settings-storage-color-dot.database { background: #34D399; }
+.settings-storage-color-dot.cache { background: #F59E0B; }
+
+.settings-storage-val-badge {
+  font-family: var(--font-family-mono);
+  font-size: 12px;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
 /* =========================================================================
    Classy Notification Center (WhatsApp & iOS Style)
    ========================================================================= */

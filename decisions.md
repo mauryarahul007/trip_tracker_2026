@@ -1540,6 +1540,36 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - WhatsApp settlement ping deep-linking was explicitly deferred for future implementation alongside direct payment options.
 
+---
+
+## 87. WhatsApp-Style Settings Overhaul, Storage Visualizer & Shareable QR System
+* **Context:**
+  - The previous Settings screen had basic list rows with inconsistent visual weights, lacked zero-click context previews, had no visual storage breakdown for receipt photos and offline cache, and offered no user-configurable control over micro-haptic tactile intensity.
+  - Travelers frequently share trips and connect companions on mobile devices; generating and scanning a high-contrast QR code directly from the profile header is significantly faster than typing or copying URLs.
+* **Decision:**
+  - **WhatsApp Profile Header & Shareable QR Code (`SettingsView.tsx`, `Icons.tsx`, `index.css`):**
+    - Enhanced the profile hero with an avatar, display name, account status badge, and an editable WhatsApp-style status tagline (e.g., `"Exploring Tokyo 🗼"`, `"Beach mode activated 🏖️"`, `"Road trip vibes 🚗"`) persisted in localStorage with 1-tap presets and custom typing.
+    - Added an interactive QR code squircle button in the profile header that opens a WhatsApp-style modal displaying a scannable Trip Invite QR Code (`api.qrserver.com`), trip title, "Copy Link", and "Share Link" buttons with full browser history stack back-navigation integration (`useHistoryBack` & `useEscapeKey`).
+  - **Color-Coded Squircles & Grouped Card Architecture (`SettingsView.tsx`, `index.css`):**
+    - Grouped settings into distinct rounded cards with WhatsApp-aligned color themes:
+      - 🔵 This Trip (Tools & Story, CSV Export, Close & Lock Trip)
+      - 🟠 Preferences & Interface (Appearance, Tactile Haptics, Notifications, Geotag, Coachmarks, App Install)
+      - 🟡 Storage & Data (Storage Visualizer, Archived Trips, Database Backups, Demo Trip)
+      - 🩵 Diagnostics & Support (Report a Problem, Suggest a Feature, Superadmin Bug Tracker)
+      - 🔴 Account & Danger Zone (Sign Out, Clear All Data)
+  - **Visual Storage & Data Manager (`SettingsView.tsx`, `index.css`):**
+    - Added a dedicated `storage-data` subscreen with a 3-segment proportional visualizer: Receipts & Media (Blue), Trip Ledgers & Database (Green), and System/Offline Cache (Amber).
+    - Integrated itemized legend metrics calculating receipt counts, total trip records, and estimated cache footprint.
+    - Added a 1-tap "Free Up Cache Storage" button that flushes temporary CacheStorage assets and immediately recalculates browser disk estimates with haptic confirmation.
+  - **User-Configurable Tactile Haptic Intensity (`haptics.ts`, `SettingsView.tsx`, `index.css`):**
+    - Upgraded `haptics.ts` with `HapticPreference` (`'standard'` | `'subtle'` | `'off'`), stored in localStorage (`tt_haptic_preference`).
+    - Added an inline 3-way segmented control in Settings providing real-time tactile vibration feedback on selection and scaling vibration durations (e.g. 50% reduction on subtle, complete mute on off).
+  - **Real-Time Live Value Previews on Rows (`SettingsView.tsx`):**
+    - Every row now features a zero-click context badge on the right side: active theme (`Night mode` / `Light` / `Auto`), active haptics level, category counts, unread notification count or `Quiet`, active geotag state (`ACTIVE` / `OFF`), and storage utilization (`X.X MB`).
+* **Trade-offs Accepted:**
+  - Storage breakdown approximates receipt image sizes based on stored receipt paths and client records to ensure 0ms instantaneous loading without waiting for heavy file scans.
+
+
 
 
 
