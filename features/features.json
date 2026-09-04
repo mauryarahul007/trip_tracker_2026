@@ -441,5 +441,21 @@
     "shippedAt": "2026-09-04T13:59:58.679Z",
     "shippedBy": "claude-cli",
     "shippedNote": "Removed .githooks/post-commit auto-bump entirely (it also did a git commit --amend on every commit). scripts/bump-version.mjs is now a manual major/minor/patch CLI. vite.config.ts injects __BUILD_NUMBER__ (git rev-list --count HEAD) replacing __BUILD_SHA__. appVersion.ts and SettingsView.tsx display Version (Build). sync-native-version.mjs local fallback also uses commit count. Reset package.json version to 2.0.0 to mark the cutover. Commit 1241bc3."
+  },
+  {
+    "id": "FEAT-029",
+    "title": "Privacy Policy, Terms of Service, and self-service account deletion",
+    "description": "Public /privacy and /terms pages covering the app's real data surface (Google OAuth, receipt photos, geotagging, push, offline storage, named third parties, Google Limited Use statement, 13+ age, India DPDP language). Self-service account deletion required by Apple Guideline 5.1.1 and Google Play policy: delete_own_account() RPC (migration 0075), Settings > Delete Account in-app path, and a public /delete-account web resource usable without an active session.",
+    "category": "admin",
+    "status": "shipped",
+    "requestedBy": "mauryarahul007@gmail.com",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-09-04T14:25:55.862Z",
+    "updatedAt": "2026-09-04T14:26:02.466Z",
+    "shippedAt": "2026-09-04T14:26:02.465Z",
+    "shippedBy": "claude-cli",
+    "shippedNote": "src/components/PrivacyPolicyPage.tsx, TermsOfServicePage.tsx, LegalPageLayout.tsx, DeleteAccountPage.tsx. supabase/migrations/0075_delete_own_account.sql applied to remote. authStore.deleteOwnAccount(), Settings > Legal + Delete Account rows threaded through SettingsView/SettingsTab/GlobalSettingsModal/App.tsx. Routes /privacy, /terms, /delete-account (public, outside RequireAuth). Commit 901cd1a."
   }
 ]

@@ -9,11 +9,11 @@
 
 | Metric | Count |
 | :--- | :--- |
-| **Total Tracked** | **28** |
+| **Total Tracked** | **29** |
 | **💡 Requested** | **2** |
 | **📋 Planned** | **0** |
 | **🟡 In Progress** | **0** |
-| **✅ Shipped** | **26** |
+| **✅ Shipped** | **27** |
 | **⚪ Won't Do** | **0** |
 
 ---
@@ -78,6 +78,7 @@ CI pipeline for lint, build, and test on push/PR
 | **FEAT-026** | Prefetch lazy-loaded modal chunks on hover/press intent | `performance` | `claude` | `claude` | Implemented in NavTabs.tsx (prefetchExpenseForm / prefetchSettingsTab on onMouseEnter/onPointerDown). |
 | **FEAT-027** | Merge trip-card countdown badge into the destination/weather pill | `ui-ux` | `mauryarahul007@gmail.com` | `claude` | Implemented in TripStack.tsx (CardContent header) commit f1f2345. |
 | **FEAT-028** | Apple-style Version/Build split -- stop auto-bumping marketing version on every commit | `admin` | `mauryarahul007@gmail.com` | `claude-cli` | Removed .githooks/post-commit auto-bump entirely (it also did a git commit --amend on every commit). scripts/bump-version.mjs is now a manual major/minor/patch CLI. vite.config.ts injects __BUILD_NUMBER__ (git rev-list --count HEAD) replacing __BUILD_SHA__. appVersion.ts and SettingsView.tsx display Version (Build). sync-native-version.mjs local fallback also uses commit count. Reset package.json version to 2.0.0 to mark the cutover. Commit 1241bc3. |
+| **FEAT-029** | Privacy Policy, Terms of Service, and self-service account deletion | `admin` | `mauryarahul007@gmail.com` | `claude-cli` | src/components/PrivacyPolicyPage.tsx, TermsOfServicePage.tsx, LegalPageLayout.tsx, DeleteAccountPage.tsx. supabase/migrations/0075_delete_own_account.sql applied to remote. authStore.deleteOwnAccount(), Settings > Legal + Delete Account rows threaded through SettingsView/SettingsTab/GlobalSettingsModal/App.tsx. Routes /privacy, /terms, /delete-account (public, outside RequireAuth). Commit 901cd1a. |
 
 ---
 
