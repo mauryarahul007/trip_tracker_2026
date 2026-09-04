@@ -23,6 +23,28 @@ function applySafeAreaVars(): void {
   probe.remove();
 }
 
+// index.css's html/#root/.app-container anchors read --app-vh as their
+// height source (falling back to 100dvh before this runs). visualViewport
+// fires resize/scroll independent of document scroll, so it converges to
+// the real visible height on iOS Safari where bare 100dvh freezes stale
+// (see applySafeAreaVars comment above -- same root cause: this app's
+// document is intentionally overflow:hidden per decisions.md #12, so
+// Safari never gets the scroll-driven trigger dvh needs to recompute).
+function applyViewportHeightVar(): void {
+  const vv = window.visualViewport;
+  const setVar = () => {
+    document.documentElement.style.setProperty('--app-vh', `${vv?.height ?? window.innerHeight}px`);
+  };
+  setVar();
+  if (vv) {
+    vv.addEventListener('resize', setVar);
+    vv.addEventListener('scroll', setVar);
+  } else {
+    window.addEventListener('resize', setVar);
+  }
+  window.addEventListener('orientationchange', setVar);
+}
+
 function findScrollParent(el: HTMLElement): HTMLElement | null {
   let node = el.parentElement;
   while (node) {
@@ -322,6 +344,14 @@ function setUpNativeErrorLog(): void {
 }
 
 export function initNativeShell(): void {
+  // Safe-area insets and the --app-vh viewport-height fix apply on every
+  // platform (plain mobile Safari included), not just the Capacitor shell
+  // -- hoisted above the native-only early return below.
+  applySafeAreaVars();
+  setTimeout(applySafeAreaVars, 600);
+  window.addEventListener('resize', applySafeAreaVars);
+  applyViewportHeightVar();
+
   if (!Capacitor.isNativePlatform()) return;
 
   document.documentElement.classList.add('capacitor-native');
@@ -331,10 +361,6 @@ export function initNativeShell(): void {
     setUpNativeHeaderSync();
     setUpNativeErrorLog();
   }
-
-  applySafeAreaVars();
-  setTimeout(applySafeAreaVars, 600);
-  window.addEventListener('resize', applySafeAreaVars);
 
   setUpKeyboardAvoidance();
 }
