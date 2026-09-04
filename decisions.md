@@ -1769,6 +1769,17 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - The dropdown trigger icon stays anchored on the right side of the pill regardless of title length, matching standard mobile navigation search/selector bars.
 
+---
+
+## 98. v3.0.0 Major Milestone Release Cut
+* **Context:**
+  - With the landing of the Trip Checklists & Notes suite, 5th bottom navigation tab, WhatsApp-inspired design system (`SettingsCell`, `SettingsSection`, `OverflowMenu`, `ActionSheet`), active trip header overhaul, and dynamic title scaling engine, the application has undergone a comprehensive functional and aesthetic transformation.
+* **Decision:**
+  - Bump marketing version from `2.0.0` to `3.0.0` in `package.json` using `npm run release:major`.
+  - Retain Apple-style Version/Build split (`src/utils/appVersion.ts`), where marketing version reflects macro product milestones (`3.0.0`) while the build number dynamically tracks individual commits via `git rev-list --count HEAD` (`3.0.0 (533)`).
+* **Trade-offs Accepted:**
+  - Major version bump signals significant functional enhancement and visual architectural modernization across web application surfaces.
+
 
 
 
