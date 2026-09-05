@@ -2383,19 +2383,6 @@ export default function App() {
                       setShowRouteModal(true);
                     },
                   },
-                  {
-                    id: 'toggle-header-stops',
-                    label: stopsExpanded ? 'Hide Header Route Bar' : 'Show Header Route Bar',
-                    subtitle: stopsExpanded ? 'Collapse stops chips below header' : 'Pin stops chips directly under header',
-                    icon: <IconMapPin size={18} />,
-                    onClick: () => {
-                      setStopsExpanded((prev) => !prev);
-                      const tabPane = document.querySelector('.tab-pane.active') || document.querySelector('.tab-pane');
-                      if (tabPane) {
-                        tabPane.scrollTo({ top: 0, behavior: 'smooth' });
-                      }
-                    },
-                  },
                 ]
               : []),
             {

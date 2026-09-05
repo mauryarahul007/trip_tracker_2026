@@ -2078,6 +2078,19 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - When the flag is disabled globally, travelers do not see biometric options. SuperAdmins can enable the flag globally or target specific trips/users using overrides in the Ops Deck.
 
+---
+
+## 114. Streamlining Trip Action Sheet Dropdown by Removing Redundant Route Bar Toggle (v3.1.2)
+* **Context:**
+  - When viewing an active trip with stops, the header bar directly presents an interactive expand/collapse toggle badge (e.g. `X stops ⌄` / `⌃`) right below the trip dates.
+  - The bottom ActionSheet menu (opened by tapping the header trip title) contained an entry `Show Header Route Bar` / `Hide Header Route Bar` which duplicated this existing header toggle, adding unnecessary menu height and clutter.
+* **Decision:**
+  - Removed the `toggle-header-stops` option from the bottom ActionSheet menu in `App.tsx`.
+  - Retained the `route-modal` option (`View X Route Stops & Map`) to provide instant access to the detailed itinerary and waypoint map modal.
+* **Trade-offs Accepted:**
+  - Travelers expand or collapse the header route stops directly from the header badge, matching standard mobile navigation heuristics.
+
+
 
 
 
