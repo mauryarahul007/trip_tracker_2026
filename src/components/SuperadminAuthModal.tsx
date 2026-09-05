@@ -1,8 +1,10 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { IconShield, IconClose, IconCheck, IconAlertCircle } from './Icons';
 import { useTripStore } from '../store/tripStore';
 import { useAuthStore } from '../store/authStore';
 import { useFocusTrap } from '../hooks/useFocusTrap';
+import { isBiometricAvailable, verifyBiometricCredential } from '../utils/webAuthn';
+import { triggerHaptic } from '../utils/haptics';
 
 interface Props {
   isOpen: boolean;
@@ -39,6 +41,37 @@ export function SuperadminAuthModal({ isOpen, onClose, onSuccess }: Props) {
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [bioAvailable, setBioAvailable] = useState(false);
+
+  useEffect(() => {
+    isBiometricAvailable().then(setBioAvailable);
+  }, []);
+
+  const handleBiometricUnlock = async () => {
+    setError('');
+    setIsSubmitting(true);
+    triggerHaptic('light');
+    try {
+      const res = await verifyBiometricCredential();
+      if (res.success) {
+        useTripStore.getState().setIsSuperadmin(true);
+        triggerHaptic('success');
+        setSuccessMsg('Biometric verification passed! Privileges activated.');
+        setTimeout(() => {
+          onSuccess?.();
+          onClose();
+        }, 500);
+      } else {
+        triggerHaptic('heavy');
+        setError(res.error || 'Biometric verification failed.');
+      }
+    } catch {
+      triggerHaptic('heavy');
+      setError('Biometric verification error.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -146,6 +179,47 @@ export function SuperadminAuthModal({ isOpen, onClose, onSuccess }: Props) {
             <IconClose size={16} />
           </button>
         </div>
+
+        {bioAvailable && mode === 'login' && (
+          <div style={{ marginBottom: '16px' }}>
+            <button
+              type="button"
+              onClick={handleBiometricUnlock}
+              disabled={isSubmitting}
+              className="primary-btn"
+              style={{
+                width: '100%',
+                padding: '10px 14px',
+                fontSize: '13px',
+                fontWeight: 600,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+                background: 'linear-gradient(135deg, #1F6E68, #14B8A6)',
+                border: 'none',
+                borderRadius: '10px',
+                cursor: isSubmitting ? 'wait' : 'pointer',
+              }}
+            >
+              <span>🔐 Quick Unlock with Biometrics</span>
+            </button>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                margin: '14px 0 6px',
+                color: 'var(--text-muted)',
+                fontSize: '11px',
+              }}
+            >
+              <div style={{ flex: 1, height: '1px', background: 'var(--border-color)' }} />
+              <span>or sign in with password</span>
+              <div style={{ flex: 1, height: '1px', background: 'var(--border-color)' }} />
+            </div>
+          </div>
+        )}
 
         {error && (
           <div

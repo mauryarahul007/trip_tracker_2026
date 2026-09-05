@@ -43,6 +43,13 @@ const TripJourneyMap = lazy(() =>
   import('./TripJourneyMap').then((m) => ({ default: m.TripJourneyMap }))
 );
 import { CategoryIcon } from './CategoryIcon';
+import {
+  isBiometricAvailable,
+  isBiometricEnrolled,
+  registerBiometricCredential,
+  setBiometricEnrolled,
+  lockSession,
+} from '../utils/webAuthn';
 import { useTripStore } from '../store/tripStore';
 import { useAuthStore } from '../store/authStore';
 import { useNotificationsStore } from '../store/notificationsStore';
@@ -200,6 +207,44 @@ export function SettingsView({
     activeTrip.ownerId === userId ||
     (userId && Boolean(activeTrip.adminMemberIds?.length) && Boolean(activeTrip.memberIds?.some((mid) => members[mid]?.linkedUserId === userId && activeTrip.adminMemberIds?.includes(mid))))
   );
+
+  // Biometric App Lock state
+  const [bioAvailable, setBioAvailable] = useState(false);
+  const [bioEnrolled, setBioEnrolled] = useState(false);
+  const [bioLoading, setBioLoading] = useState(false);
+
+  useEffect(() => {
+    isBiometricAvailable().then((avail) => {
+      setBioAvailable(avail);
+      if (avail && userId) {
+        setBioEnrolled(isBiometricEnrolled(userId));
+      }
+    });
+  }, [userId]);
+
+  const handleToggleBiometric = async (enable: boolean) => {
+    if (!userId) return;
+    triggerHaptic('light');
+    setBioLoading(true);
+    try {
+      if (enable) {
+        const res = await registerBiometricCredential(userId, userDisplayName);
+        if (res.success) {
+          setBioEnrolled(true);
+          triggerHaptic('success');
+        } else {
+          triggerHaptic('heavy');
+          alert(res.error || 'Failed to enroll biometrics on this device.');
+        }
+      } else {
+        setBiometricEnrolled(userId, false);
+        setBioEnrolled(false);
+        triggerHaptic('light');
+      }
+    } finally {
+      setBioLoading(false);
+    }
+  };
 
   const currencySymbol = getCurrencySymbol(activeTrip?.baseCurrency || baseCurrency || 'INR');
 
@@ -2215,6 +2260,87 @@ export function SettingsView({
                           height: '18px',
                           width: '18px',
                           left: enableGeotagging ? '23px' : '3px',
+                          bottom: '3px',
+                          backgroundColor: 'white',
+                          transition: '0.2s ease',
+                          borderRadius: '50%',
+                          boxShadow: '0 1px 3px rgba(0,0,0,0.25)',
+                        }}
+                      />
+                    </span>
+                  </label>
+                </div>
+              </div>
+            )}
+
+            {/* Biometric Screen Lock Toggle */}
+            {bioAvailable && userId && (
+              <div className="settings-row-item" style={{ cursor: 'default' }}>
+                <div className="settings-row-left">
+                  <div className="settings-squircle squircle-blue-glow">
+                    <IconShield size={18} />
+                  </div>
+                  <div className="settings-row-texts">
+                    <span className="settings-row-title">Biometric App Lock</span>
+                    <span className="settings-row-subtitle">
+                      {bioEnrolled ? 'Protected by Touch ID / Face ID' : 'Require biometric unlock on launch'}
+                    </span>
+                  </div>
+                </div>
+                <div className="settings-row-right" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  {bioEnrolled && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        triggerHaptic('medium');
+                        lockSession();
+                        window.location.reload();
+                      }}
+                      className="pill-chip"
+                      style={{
+                        padding: '4px 10px',
+                        fontSize: '11px',
+                        fontWeight: 600,
+                        background: 'rgba(239, 68, 68, 0.12)',
+                        color: '#ef4444',
+                        border: '1px solid rgba(239, 68, 68, 0.3)',
+                        borderRadius: '12px',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      Lock Now
+                    </button>
+                  )}
+                  <span className="settings-badge-pill" style={{ fontWeight: 600, fontSize: '10px' }}>
+                    {bioEnrolled ? 'ON' : 'OFF'}
+                  </span>
+                  <label style={{ position: 'relative', display: 'inline-block', width: '44px', height: '24px', margin: 0, cursor: bioLoading ? 'wait' : 'pointer' }}>
+                    <input
+                      type="checkbox"
+                      checked={bioEnrolled}
+                      disabled={bioLoading}
+                      onChange={(e) => handleToggleBiometric(e.target.checked)}
+                      aria-label="Biometric App Lock"
+                      style={{ opacity: 0, width: 0, height: 0, margin: 0 }}
+                    />
+                    <span
+                      style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        backgroundColor: bioEnrolled ? 'var(--primary-accent)' : 'var(--border-color)',
+                        transition: '0.2s ease',
+                        borderRadius: 'var(--border-radius-pill)',
+                      }}
+                    >
+                      <span
+                        style={{
+                          position: 'absolute',
+                          height: '18px',
+                          width: '18px',
+                          left: bioEnrolled ? '23px' : '3px',
                           bottom: '3px',
                           backgroundColor: 'white',
                           transition: '0.2s ease',

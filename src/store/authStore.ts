@@ -5,6 +5,7 @@ import { Browser } from '@capacitor/browser';
 import { App as CapacitorApp } from '@capacitor/app';
 import { supabase, isMissingSupabaseEnv } from '../services/supabaseClient';
 import { buildOAuthRedirectUrl, parseNativeAuthCallback } from '../utils/nativeAuth';
+import { lockSession } from '../utils/webAuthn';
 import { registerForPushNotifications, unregisterPushNotifications } from '../services/pushRegistration';
 import { useTripStore } from './tripStore';
 import { useNotificationsStore } from './notificationsStore';
@@ -317,6 +318,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
   },
 
   signOut: async () => {
+    lockSession();
     if (typeof localStorage !== 'undefined') {
       localStorage.removeItem('trip_tracker_demo_session');
     }

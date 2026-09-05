@@ -2027,6 +2027,40 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - First tap on Members or Notes now pays a one-time chunk fetch (skeleton placeholder shown via `Suspense`), same trade-off already accepted for Settings; outweighed by ~2,300 fewer lines in the bundle every trip-open pays regardless of whether those tabs are ever visited.
 
+---
+
+## 112. Seamless Webapp Upgrades: 120 FPS Rendering, Pointerdown Prefetching, Draft Auto-Recovery, Tactile Pull-to-Sync, and WebAuthn Biometrics (v3.1.0)
+* **Context:**
+  - Modern web standards provide capabilities that match or exceed native mobile fluidity when combined with GPU optimization and modern browser primitives:
+    1. Long scrollable lists (100+ expenses, checklists, travel notes) incur CPU layout calculation costs for off-screen DOM nodes.
+    2. Lazy-loaded modal dialogs and secondary screens (Command Palette, Trip Route, Share Trip, Trip Wrapped) previously initiated code chunk fetches only *after* click/tap completion (200-300ms network delay).
+    3. Tab switching and expense sheet transitions can feel abruptly cut without seamless compositor morphing.
+    4. Navigating away from or accidentally closing the Expense Form caused travelers to lose partially typed receipts, titles, amounts, and custom splits.
+    5. Pull-to-refresh indicators on the home screen and expense list were plain text with no tactile feedback or visual progress during drags.
+    6. Users with sensitive travel expense ledgers lacked a local device biometric lock (Touch ID, Face ID, Windows Hello) to protect their session when leaving the browser open, and SuperAdmins had to repeatedly enter lengthy passwords on trusted personal devices.
+* **Decision:**
+  - **120 FPS Zero-Jank Virtualization (`index.css`):**
+    - Added `content-visibility: auto` with `contain-intrinsic-size` estimation to `.expense-item-cascade`, `.checklist-swipe-wrapper`, and `.note-swipe-wrapper`. Off-screen DOM elements skip painting and layout passes while preserving natural scrollbar physics.
+  - **0ms Pointerdown / Hover Prefetching (`NavTabs.tsx`, `App.tsx`):**
+    - Attached pre-warming triggers to `onPointerDown` and `onMouseEnter` on tab buttons, header shortcuts, and menu items to preload code chunks ~100-200ms before user `click` completion.
+  - **Native Morph Transitions (`index.css`):**
+    - Configured CSS rules for `::view-transition-old(root)` and `::view-transition-new(root)` pairing with the `withViewTransition` helper for smooth hardware-composited crossfades with reduced-motion support.
+  - **Expense Form Draft Auto-Recovery (`ExpenseForm.tsx`):**
+    - Implemented debounced `sessionStorage` draft persistence for new expenses.
+    - If accidentally closed or interrupted, re-opening immediately restores form fields with a dismissible "Restored unsaved draft" banner and "Discard" action. Drafts are safely purged on successful expense submission.
+  - **Elastic Tactile Pull-to-Sync (`PullToRefreshIndicator.tsx`, `usePullToRefresh.ts`, `index.css`, `TripsListScreen.tsx`, `ExpenseList.tsx`):**
+    - Created a frosted-glass iOS-style pull indicator component (`.ptr-pill`) displaying dynamic sync rotation, state expansion, and spring recovery.
+    - Emits subtle tactile haptic pulses (`triggerHaptic('medium')`) upon crossing the commit threshold and orchestrates parallel syncing across local queues and Supabase trips/expenses.
+  - **WebAuthn Biometric App Lock & Superadmin Quick-Unlock (`webAuthn.ts`, `BiometricLockOverlay.tsx`, `SettingsView.tsx`, `SuperadminAuthModal.tsx`, `App.tsx`):**
+    - Integrated standard W3C Web Authentication API (`PublicKeyCredential`) using local platform authenticators (Face ID, Touch ID, Windows Hello). 0 KB external bundle overhead.
+    - Added "Biometric App Lock" toggle in Settings with a "Lock Now" capability and session unlock tracking via `sessionStorage`.
+    - Added glassmorphic `BiometricLockOverlay` on website launch when biometric lock is active, with fallback to account sign-out.
+    - Integrated 1-tap biometric quick-unlock in `SuperadminAuthModal` for verified administrators on trusted hardware.
+* **Trade-offs Accepted:**
+  - Standard WebAuthn platform authenticators require user-presence interaction; fallback pathways to Google login and master passwords remain available for all edge cases.
+  - All additions strictly target the webapp without touching native mobile app wrapper builds.
+
+
 
 
 

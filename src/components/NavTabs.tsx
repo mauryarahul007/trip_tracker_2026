@@ -105,6 +105,13 @@ export function NavTabs({ activeTab, setActiveTab, onAddExpense, onAddMember, ex
     onAddExpense();
   };
 
+  const prefetchMembers = () => {
+    import('./MembersGroupsTab');
+  };
+  const prefetchNotes = () => {
+    import('./ChecklistNotesTab');
+  };
+
   return (
     <nav ref={navRef} className="nav-tabs" role="tablist" aria-label="Trip navigation tabs">
       {pillStyle && (
@@ -193,6 +200,8 @@ export function NavTabs({ activeTab, setActiveTab, onAddExpense, onAddMember, ex
         aria-selected={activeTab === 'members'}
         data-tab="members"
         className={`nav-tab-item ${activeTab === 'members' ? 'active' : ''}`}
+        onPointerDown={prefetchMembers}
+        onMouseEnter={prefetchMembers}
         onClick={() => goTo('members')}
         aria-label="Members & Groups"
       >
@@ -205,6 +214,8 @@ export function NavTabs({ activeTab, setActiveTab, onAddExpense, onAddMember, ex
         aria-selected={activeTab === 'notes'}
         data-tab="notes"
         className={`nav-tab-item ${activeTab === 'notes' ? 'active' : ''}`}
+        onPointerDown={prefetchNotes}
+        onMouseEnter={prefetchNotes}
         onClick={() => goTo('notes')}
         aria-label="Notes & Checklist"
       >

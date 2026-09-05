@@ -11,6 +11,7 @@ import { avatarColorForName } from '../utils/avatarColor';
 import { triggerHaptic } from '../utils/haptics';
 import { tripDayNumber } from '../utils/dateRange';
 import { usePullToRefresh } from '../utils/usePullToRefresh';
+import { PullToRefreshIndicator } from './PullToRefreshIndicator';
 import { useTripStore } from '../store/tripStore';
 
 // Swipe-to-delete is a supplement to the explicit trash button — skip
@@ -292,14 +293,7 @@ export function ExpenseList({
 
   return (
     <div ref={wrapperRef}>
-      <div
-        ref={ptrIndicatorRef}
-        aria-hidden="true"
-        className="pull-refresh-indicator"
-        style={{ color: pullToRefresh.armed || pullToRefresh.refreshing ? 'var(--primary-accent)' : 'var(--text-muted)' }}
-      >
-        {pullToRefresh.refreshing ? 'Refreshing…' : pullToRefresh.armed ? 'Release to refresh' : 'Pull to refresh'}
-      </div>
+      <PullToRefreshIndicator ref={ptrIndicatorRef} state={pullToRefresh} />
       {trip?.frozen && (
         <div
           style={{

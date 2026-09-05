@@ -15,6 +15,7 @@ import { TripSlideLauncher } from './TripSlideLauncher';
 import { HomeAmbientBackdrop } from './HomeAmbientBackdrop';
 import { OnboardingSwipe } from './OnboardingSwipe';
 import { usePullToRefresh } from '../utils/usePullToRefresh';
+import { PullToRefreshIndicator } from './PullToRefreshIndicator';
 import { triggerHaptic } from '../utils/haptics';
 import { preloadModule } from '../utils/modulePreload';
 
@@ -209,14 +210,7 @@ export function TripsListScreen({
       className={`fade-in trips-screen-scroll${stackActive ? ' stack-viewport-lock' : ''}`}
     >
       {!stackActive && (
-        <div
-          ref={ptrIndicatorRef}
-          aria-hidden="true"
-          className="pull-refresh-indicator"
-          style={{ color: pullToRefresh.armed || pullToRefresh.refreshing ? 'var(--primary-accent)' : 'var(--text-muted)' }}
-        >
-          {pullToRefresh.refreshing ? 'Refreshing…' : pullToRefresh.armed ? 'Release to refresh' : 'Pull to refresh'}
-        </div>
+        <PullToRefreshIndicator ref={ptrIndicatorRef} state={pullToRefresh} />
       )}
       <HomeAmbientBackdrop trip={focusedTrip || trips[0] || null} />
       <header className="trips-screen-header">

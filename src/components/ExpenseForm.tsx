@@ -149,6 +149,65 @@ export function ExpenseForm({
   const [showDuplicateDetails, setShowDuplicateDetails] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Draft auto-recovery via sessionStorage
+  const DRAFT_KEY = trip ? `tt_draft_expense_${trip.id}` : 'tt_draft_expense_default';
+  const [isDraftRestored, setIsDraftRestored] = useState(false);
+
+  useEffect(() => {
+    if (editingExpense) return;
+    try {
+      const raw = sessionStorage.getItem(DRAFT_KEY);
+      if (raw) {
+        const draft = JSON.parse(raw);
+        if (draft.title && !initialTemplate?.title) setTitle(draft.title);
+        if (draft.amount) setAmount(draft.amount);
+        if (draft.category && categories.some((c) => c.id === draft.category)) setCategory(draft.category);
+        if (draft.date) setDate(draft.date);
+        if (draft.payer && visibleMembers.some((m) => m.id === draft.payer)) setPayer(draft.payer);
+        if (draft.splitMode) setSplitMode(draft.splitMode);
+        if (draft.selectedSplitMembers) setSelectedSplitMembers(draft.selectedSplitMembers);
+        if (draft.splitConfig) setSplitConfig(draft.splitConfig);
+        setIsDraftRestored(true);
+      }
+    } catch {}
+  }, []);
+
+  useEffect(() => {
+    if (editingExpense) return;
+    const timer = setTimeout(() => {
+      try {
+        if (title.trim() || amount.trim()) {
+          const draft = {
+            title,
+            amount,
+            category,
+            date,
+            payer,
+            splitMode,
+            selectedSplitMembers,
+            splitConfig,
+          };
+          sessionStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+        }
+      } catch {}
+    }, 350);
+    return () => clearTimeout(timer);
+  }, [title, amount, category, date, payer, splitMode, selectedSplitMembers, splitConfig, editingExpense, DRAFT_KEY]);
+
+  const handleDiscardDraft = () => {
+    try {
+      sessionStorage.removeItem(DRAFT_KEY);
+    } catch {}
+    setTitle('');
+    setAmount('');
+    setCategory(categories[0]?.id || '');
+    setDate(getTodayDateString());
+    setPayer(visibleMembers[0]?.id || '');
+    setSplitMode('equal');
+    setIsDraftRestored(false);
+    triggerHaptic('light');
+  };
+
   // Duplicate expense detection
   const expenses = useTripStore((s) => s.expenses);
   const allTripExpenses = useMemo(() => expenses.filter((e) => e.tripId === trip?.id), [expenses, trip?.id]);
@@ -496,6 +555,10 @@ export function ExpenseForm({
 
       if (!res.success && res.error) {
         setFormError(res.error);
+      } else if (res.success) {
+        try {
+          sessionStorage.removeItem(DRAFT_KEY);
+        } catch {}
       }
     } finally {
       setIsSubmitting(false);
@@ -555,6 +618,44 @@ export function ExpenseForm({
           </button>
         </div>
       </header>
+
+      {isDraftRestored && !editingExpense && (
+        <div
+          className="fade-in"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            background: 'rgba(59, 130, 246, 0.12)',
+            border: '1px solid rgba(59, 130, 246, 0.3)',
+            borderRadius: '10px',
+            padding: '8px 12px',
+            marginBottom: '14px',
+            fontSize: '12px',
+            color: 'var(--text-primary)',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontSize: '14px' }}>📝</span>
+            <span>Restored unsaved draft from your last session</span>
+          </div>
+          <button
+            type="button"
+            onClick={handleDiscardDraft}
+            style={{
+              background: 'transparent',
+              border: 'none',
+              color: '#ef4444',
+              cursor: 'pointer',
+              fontWeight: 600,
+              fontSize: '12px',
+              padding: '2px 6px',
+            }}
+          >
+            Discard
+          </button>
+        </div>
+      )}
 
       {!editingExpense && (
         <div style={{ marginBottom: '14px' }}>

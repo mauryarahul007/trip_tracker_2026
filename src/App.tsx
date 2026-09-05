@@ -105,6 +105,13 @@ import type { AdminTab } from './components/admin/AdminPortalLayout';
 const AdminPortalLayout = lazy(lazyImport(() =>
   import('./components/admin/AdminPortalLayout').then((m) => ({ default: m.AdminPortalLayout }))
 ));
+import { BiometricLockOverlay } from './components/BiometricLockOverlay';
+import {
+  isBiometricAvailable,
+  isBiometricEnrolled,
+  isSessionUnlocked,
+  registerBiometricCredential,
+} from './utils/webAuthn';
 
 
 function AdminLoadingFallback() {
@@ -160,6 +167,29 @@ export default function App() {
   const signOut = useAuthStore((s) => s.signOut);
   const deleteOwnAccount = useAuthStore((s) => s.deleteOwnAccount);
   const signInSuperadmin = useAuthStore((s) => s.signInSuperadmin);
+
+  // Biometric App Lock & Prompt State
+  const [isScreenLocked, setIsScreenLocked] = useState<boolean>(false);
+  const [showBioEnrollPrompt, setShowBioEnrollPrompt] = useState(false);
+
+  useEffect(() => {
+    if (!userId) {
+      setIsScreenLocked(false);
+      return;
+    }
+    if (isBiometricEnrolled(userId) && !isSessionUnlocked()) {
+      setIsScreenLocked(true);
+    } else if (!isBiometricEnrolled(userId)) {
+      isBiometricAvailable().then((avail) => {
+        if (avail) {
+          const dismissed = localStorage.getItem(`tt_bio_prompt_dismissed_${userId}`);
+          if (!dismissed) {
+            setShowBioEnrollPrompt(true);
+          }
+        }
+      });
+    }
+  }, [userId]);
 
   // Navigation tabs: 'expenses' (Summary) | 'ledger' (day-wise Expenses) | 'members' | 'notes' | 'settings'
   type Tab = 'expenses' | 'ledger' | 'members' | 'notes' | 'settings';
@@ -1825,6 +1855,15 @@ export default function App() {
               <button
                 type="button"
                 className="app-title-group app-title-btn"
+                onPointerDown={() => {
+                  import('./components/ShareTripModal');
+                  import('./components/TripRouteModal');
+                  import('./components/TripWrappedModal');
+                }}
+                onMouseEnter={() => {
+                  import('./components/ShareTripModal');
+                  import('./components/TripRouteModal');
+                }}
                 onClick={() => setShowTripActionSheet(true)}
                 aria-label={`${activeTrip?.name || 'Trip'} options and details`}
                 title="Tap for trip options & actions"
@@ -1893,6 +1932,8 @@ export default function App() {
                 <button
                   type="button"
                   className="header-action-circle-btn"
+                  onPointerDown={() => { import('./components/CommandPalette'); }}
+                  onMouseEnter={() => { import('./components/CommandPalette'); }}
                   onClick={() => {
                     setShowCommandPalette(true);
                     if (showCmdKHint) {
@@ -2712,6 +2753,87 @@ export default function App() {
           instead of the header bell button there. */}
       <NotificationsPanel onRequestConfirm={setConfirmRequest} />
       <InAppNotificationBanner />
+
+      {/* Biometric Fullscreen Lock Overlay */}
+      {isScreenLocked && userId && (
+        <BiometricLockOverlay
+          userId={userId}
+          userDisplayName={userDisplayName}
+          onUnlocked={() => {
+            setIsScreenLocked(false);
+          }}
+        />
+      )}
+
+      {/* Biometric Enrollment Suggestion Prompt */}
+      {showBioEnrollPrompt && userId && (
+        <div
+          className="fade-in"
+          style={{
+            position: 'fixed',
+            bottom: 'max(84px, calc(var(--safe-bottom, 0px) + 76px))',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 1000,
+            maxWidth: '440px',
+            width: 'calc(100% - 32px)',
+            background: 'var(--bg-surface)',
+            border: '1px solid var(--primary-accent)',
+            borderRadius: '16px',
+            padding: '12px 16px',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '12px',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <span style={{ fontSize: '20px' }}>🔐</span>
+            <div>
+              <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>
+                Enable Fingerprint / Face ID
+              </div>
+              <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
+                Faster, secure 1-tap unlock on this device
+              </div>
+            </div>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <button
+              type="button"
+              className="primary-btn"
+              style={{ padding: '6px 12px', fontSize: '12px' }}
+              onClick={async () => {
+                triggerHaptic('light');
+                const res = await registerBiometricCredential(userId, userDisplayName);
+                if (res.success) {
+                  triggerHaptic('success');
+                  setShowBioEnrollPrompt(false);
+                } else if (res.error) {
+                  triggerHaptic('heavy');
+                  alert(res.error);
+                }
+              }}
+            >
+              Enable
+            </button>
+            <button
+              type="button"
+              className="secondary-btn"
+              style={{ padding: '6px 8px', fontSize: '12px' }}
+              onClick={() => {
+                triggerHaptic('light');
+                localStorage.setItem(`tt_bio_prompt_dismissed_${userId}`, '1');
+                setShowBioEnrollPrompt(false);
+              }}
+              aria-label="Dismiss"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
