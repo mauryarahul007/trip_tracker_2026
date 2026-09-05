@@ -489,5 +489,21 @@
     "shippedBy": "agent",
     "shippedAt": "2026-09-05T15:12:38.264Z",
     "shippedNote": "Code-split CommandPalette import in App.tsx via lazy()+Suspense, matching pattern used for other secondary modals. Chunk now loads only on first Ctrl+K open instead of app startup."
+  },
+  {
+    "id": "FEAT-032",
+    "title": "Lazy-load Members and Notes tabs to cut initial bundle",
+    "description": "Lazy-load Members and Notes tabs to cut initial bundle",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "agent",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-09-05T15:19:57.638Z",
+    "updatedAt": "2026-09-05T15:20:04.621Z",
+    "shippedBy": "agent",
+    "shippedAt": "2026-09-05T15:20:04.619Z",
+    "shippedNote": "Code-split MembersGroupsTab and ChecklistNotesTab in App.tsx via lazy()+Suspense, gated on hasVisitedMembers/hasVisitedNotes flags -- same pattern already used for SettingsTab/hasVisitedSettings. ~2,300 combined lines no longer ship until the user taps those tabs. Left AnalyticsTab eager since it shares the default landing tab with Balances."
   }
 ]

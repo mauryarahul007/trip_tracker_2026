@@ -2015,6 +2015,18 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - First `Ctrl+K` press now pays a one-time chunk fetch instead of the palette being instantly ready; negligible on a cached PWA and outweighed by the smaller initial bundle every session pays regardless of whether the palette is ever opened.
 
+---
+
+## 111. Code-Split the Members and Notes Tabs (FEAT-032)
+* **Context:**
+  - Trip tab panes (`expenses`/`ledger`/`members`/`notes`/`settings`) stay mounted once rendered via a `display: none` swap rather than unmounting, so that swipe-between-tabs and scroll position survive tab switches (see the `.tab-pane` comments in `App.tsx`). `MembersGroupsTab` (1,159 lines) and `ChecklistNotesTab` (1,183 lines) were imported eagerly, so opening any trip shipped ~2,300 lines of tab code the user might never look at.
+  - `SettingsTab` already solved this exact problem: because panes stay mounted, a naive `lazy()` import would suspend on first paint. It's gated on a `hasVisitedSettings` flag (`useState(activeTab === 'settings')`, set `true` the first time that tab is visited) so the lazy component only mounts after an actual visit, then stays mounted like the other panes.
+* **Decision:**
+  - Applied the same `hasVisited<Tab>` + `lazy(lazyImport(...))` + `Suspense` pattern to `MembersGroupsTab` (`hasVisitedMembers`) and `ChecklistNotesTab` (`hasVisitedNotes`).
+  - Left `AnalyticsTab` eager: it renders inside the `expenses` pane, the default `activeTab` on trip open, so lazy-loading it would only add Suspense latency to the very first paint with no bundle-size win.
+* **Trade-offs Accepted:**
+  - First tap on Members or Notes now pays a one-time chunk fetch (skeleton placeholder shown via `Suspense`), same trade-off already accepted for Settings; outweighed by ~2,300 fewer lines in the bundle every trip-open pays regardless of whether those tabs are ever visited.
+
 
 
 

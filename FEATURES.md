@@ -9,11 +9,11 @@
 
 | Metric | Count |
 | :--- | :--- |
-| **Total Tracked** | **31** |
+| **Total Tracked** | **32** |
 | **💡 Requested** | **2** |
 | **📋 Planned** | **0** |
 | **🟡 In Progress** | **0** |
-| **✅ Shipped** | **29** |
+| **✅ Shipped** | **30** |
 | **⚪ Won't Do** | **0** |
 
 ---
@@ -81,6 +81,7 @@ CI pipeline for lint, build, and test on push/PR
 | **FEAT-029** | Privacy Policy, Terms of Service, and self-service account deletion | `admin` | `mauryarahul007@gmail.com` | `claude-cli` | src/components/PrivacyPolicyPage.tsx, TermsOfServicePage.tsx, LegalPageLayout.tsx, DeleteAccountPage.tsx. supabase/migrations/0075_delete_own_account.sql applied to remote. authStore.deleteOwnAccount(), Settings > Legal + Delete Account rows threaded through SettingsView/SettingsTab/GlobalSettingsModal/App.tsx. Routes /privacy, /terms, /delete-account (public, outside RequireAuth). Commit 901cd1a. |
 | **FEAT-030** | WhatsApp-style Settings menu -- collapse main list into tappable subpages | `ui-ux` | `mauryarahul007@gmail.com` | `claude-cli` | src/components/SettingsView.tsx: 5 inline group cards collapsed into summary rows, content moved to new subscreens (trip-settings, preferences, data-menu, help-account, about). Build, typecheck, and full test suite (148 tests) all green. Commit 90eecfb. |
 | **FEAT-031** | Lazy-load CommandPalette (Ctrl+K) to cut initial bundle | `ui-ux` | `agent` | `agent` | Code-split CommandPalette import in App.tsx via lazy()+Suspense, matching pattern used for other secondary modals. Chunk now loads only on first Ctrl+K open instead of app startup. |
+| **FEAT-032** | Lazy-load Members and Notes tabs to cut initial bundle | `ui-ux` | `agent` | `agent` | Code-split MembersGroupsTab and ChecklistNotesTab in App.tsx via lazy()+Suspense, gated on hasVisitedMembers/hasVisitedNotes flags -- same pattern already used for SettingsTab/hasVisitedSettings. ~2,300 combined lines no longer ship until the user taps those tabs. Left AnalyticsTab eager since it shares the default landing tab with Balances. |
 
 ---
 

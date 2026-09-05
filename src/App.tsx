@@ -44,7 +44,12 @@ const SuperAdminBugTracker = lazy(lazyImport(() =>
 ));
 import { BalancesSettlements } from './components/BalancesSettlements';
 import { ExpenseFilterDrawer } from './components/ExpenseFilterDrawer';
-import { MembersGroupsTab } from './components/MembersGroupsTab';
+// MembersGroupsTab (1,159 lines) stays mounted once visited (display:none
+// swap, see .tab-pane below) -- code-split and gate its first mount on
+// hasVisitedMembers, same pattern as SettingsTab/hasVisitedSettings above.
+const MembersGroupsTab = lazy(lazyImport(() =>
+  import('./components/MembersGroupsTab').then((m) => ({ default: m.MembersGroupsTab }))
+));
 // SettingsTab pulls in TripJourneyMap, which pulls in maplibre-gl (a large
 // mapping dependency) -- code-split so it doesn't inflate the main bundle
 // that every tab pays for, even though Settings is a primary nav tab (see
@@ -73,7 +78,11 @@ import { useScrollLock } from './utils/useScrollLock';
 import { useHistoryBack } from './utils/useHistoryBack';
 import { getCatColor } from './utils/categoryColor';
 import { useTabSwipe } from './utils/useTabSwipe';
-import { ChecklistNotesTab } from './components/ChecklistNotesTab';
+// ChecklistNotesTab (1,183 lines) stays mounted once visited -- code-split
+// and gate on hasVisitedNotes, same pattern as MembersGroupsTab above.
+const ChecklistNotesTab = lazy(lazyImport(() =>
+  import('./components/ChecklistNotesTab').then((m) => ({ default: m.ChecklistNotesTab }))
+));
 import { withViewTransition } from './utils/viewTransition';
 // CommandPalette (Ctrl+K) is only needed once the user opens it -- code-split
 // like the other secondary modals so it doesn't ship in the initial bundle.
@@ -164,8 +173,12 @@ export default function App() {
   // first mount on having actually visited the tab at least once; it then
   // stays mounted like the other panes.
   const [hasVisitedSettings, setHasVisitedSettings] = useState(activeTab === 'settings');
+  const [hasVisitedMembers, setHasVisitedMembers] = useState(activeTab === 'members');
+  const [hasVisitedNotes, setHasVisitedNotes] = useState(activeTab === 'notes');
   useEffect(() => {
     if (activeTab === 'settings') setHasVisitedSettings(true);
+    if (activeTab === 'members') setHasVisitedMembers(true);
+    if (activeTab === 'notes') setHasVisitedNotes(true);
   }, [activeTab]);
 
   // Native crossfade between tabs where supported -- browser-compositor
@@ -2072,6 +2085,8 @@ export default function App() {
               }
             >
               <div className="fade-in">
+              {hasVisitedMembers && (
+              <Suspense fallback={<div className="skeleton" style={{ height: '200px', borderRadius: '14px' }} />}>
               <MembersGroupsTab
                 showMembersRequiredNotice={showMembersRequiredNotice}
                 dismissMembersRequiredNotice={() => setShowMembersRequiredNotice(false)}
@@ -2094,6 +2109,8 @@ export default function App() {
                 currentUserId={userId}
                 addMemberSignal={addMemberSignal}
               />
+              </Suspense>
+              )}
               </div>
             </div>
 
@@ -2159,11 +2176,13 @@ export default function App() {
               }
             >
               <div className="fade-in">
-                {activeTrip && (
+                {activeTrip && hasVisitedNotes && (
+                  <Suspense fallback={<div className="skeleton" style={{ height: '200px', borderRadius: '14px' }} />}>
                   <ChecklistNotesTab
                     trip={activeTrip}
                     members={visibleMembers}
                   />
+                  </Suspense>
                 )}
               </div>
             </div>
