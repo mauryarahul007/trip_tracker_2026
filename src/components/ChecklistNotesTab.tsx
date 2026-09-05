@@ -527,7 +527,6 @@ export function ChecklistNotesTab({ trip, members }: Props) {
                   <SwipeableRow
                     key={note.id}
                     plain
-                    allowMouseDrag
                     borderRadius="var(--border-radius-md)"
                     className="note-swipe-wrapper"
                     onEdit={() => handleOpenEditNoteModal(note)}

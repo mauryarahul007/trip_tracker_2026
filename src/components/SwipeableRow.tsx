@@ -18,23 +18,21 @@ type Props = {
   reversed?: boolean;
   // Short "Delete"/"Edit" label instead of the full "Release to..." phrasing.
   plain?: boolean;
-  // Allows dragging via mouse pointer on desktop in addition to touch
-  allowMouseDrag?: boolean;
   className?: string;
   style?: React.CSSProperties;
   borderRadius?: string | number;
 };
 
-// Touch & gesture swipe: left to delete (when onDelete is given), right to edit
-// (when onEdit is given) -- or the other way around with `reversed`. Supports
-// touch interactions by default, and optional desktop mouse dragging when allowMouseDrag is enabled.
+// Touch-only swipe: left to delete (when onDelete is given), right to edit
+// (when onEdit is given) -- or the other way around with `reversed`. Gated
+// to pointerType 'touch' so mouse/keyboard users are unaffected — they get
+// the same actions via some other explicit control instead.
 export function SwipeableRow({
   onDelete,
   onEdit,
   children,
   reversed = false,
   plain = false,
-  allowMouseDrag = false,
   className,
   style,
   borderRadius,
@@ -52,9 +50,7 @@ export function SwipeableRow({
   const rightAction = reversed ? onDelete : onEdit;
 
   const handlePointerDown = (e: React.PointerEvent) => {
-    const isTouch = e.pointerType === 'touch';
-    if (!isTouch && !allowMouseDrag) return;
-    if (!isTouch && e.button !== 0) return; // Only primary mouse button
+    if (e.pointerType !== 'touch') return;
 
     // Ignore drags originating on buttons, links, or form controls
     if ((e.target as HTMLElement)?.closest('button, a, input, textarea, select')) return;
@@ -62,21 +58,20 @@ export function SwipeableRow({
     // Edge-zone starts belong to useTabSwipe's page navigation instead --
     // otherwise this row and the page swipe would both track the same
     // physical touch and fight over it. Keep EDGE_ZONE_PX in sync with
-    // useTabSwipe.ts.
-    if (e.clientX <= EDGE_ZONE_PX || e.clientX >= window.innerWidth - EDGE_ZONE_PX) return;
+    // useTabSwipe.ts by measuring against the enclosing .app-main / .app-container
+    // bounds, exactly as useTabSwipe does.
+    const mainEl =
+      (e.currentTarget as HTMLElement).closest('.app-main') ||
+      (e.currentTarget as HTMLElement).closest('.app-container');
+    const rect = mainEl ? mainEl.getBoundingClientRect() : { left: 0, right: window.innerWidth };
+    const inEdgeZone = e.clientX - rect.left <= EDGE_ZONE_PX || rect.right - e.clientX <= EDGE_ZONE_PX;
+    if (inEdgeZone) return;
+
     active.current = true;
     startX.current = e.clientX;
     hasMoved.current = false;
     hapticFired.current = false;
     setDragging(true);
-
-    if (!isTouch && (e.currentTarget as HTMLElement).setPointerCapture) {
-      try {
-        (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
-      } catch {
-        // ignore pointer capture errors if already released
-      }
-    }
   };
 
   const handlePointerMove = (e: React.PointerEvent) => {
@@ -120,18 +115,10 @@ export function SwipeableRow({
     }
   };
 
-  const endDrag = (e?: React.PointerEvent) => {
+  const endDrag = () => {
     if (!active.current) return;
     active.current = false;
     setDragging(false);
-
-    if (e && (e.currentTarget as HTMLElement).releasePointerCapture) {
-      try {
-        (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
-      } catch {
-        // ignore
-      }
-    }
 
     if (dragX < -THRESHOLD && leftAction) {
       triggerHaptic(leftAction === onDelete ? 'warning' : 'light');

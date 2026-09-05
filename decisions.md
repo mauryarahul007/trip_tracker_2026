@@ -1782,23 +1782,27 @@ This document logs all meaningful technical decisions, library choices, design p
 
 ---
 
-## 99. Swipe-to-Edit & Swipe-to-Delete for Travel Notes
+## 99. Swipe-to-Edit & Swipe-to-Delete for Travel Notes & Gesture Coexistence
 * **Context:**
   - In the newly built Travel Notes section (`ChecklistNotesTab.tsx`), notes previously only supported editing via a tiny 16px icon button in the card header.
   - On mobile, travelers expect native gesture ergonomics where swiping a note card reveals immediate actions (swipe right to Edit, swipe left to Delete), consistent with `ExpenseList` and `MembersGroupsTab`.
+  - The application also provides horizontal page swipe navigation between bottom-nav tabs (`useTabSwipe.ts`), which must cleanly coexist without fighting card-level row gestures.
 * **Decision:**
-  - **Reused & Enhanced `SwipeableRow` (`SwipeableRow.tsx`):**
-    - Enhanced `SwipeableRow` with `allowMouseDrag` support (enabling smooth drag testing on desktop mouse pointers via pointer capture), `borderRadius` forwarding, and a `handleClickCapture` guard so drag gestures don't accidentally fire card clicks upon release.
+  - **Shared `SwipeableRow` (`SwipeableRow.tsx`):**
+    - Retained touch-only gating (`e.pointerType === 'touch'`) to prevent mouse pointer interactions on desktop from colliding with scrolling or text selection.
+    - Fixed edge-zone calculation in `SwipeableRow`: instead of checking raw `window.innerWidth`, it measures relative to the enclosing `.app-main` / `.app-container` (`rect.left` and `rect.right`), in 100% parity with `useTabSwipe.ts`.
+    - Gestures starting in the edge zone (within `EDGE_ZONE_PX = 28px` of container bounds) yield to `useTabSwipe` for bottom-nav tab switching. Gestures starting within the card body engage `SwipeableRow` and opt out `useTabSwipe` (`data-no-tab-swipe="row"`).
+    - Added `borderRadius` forwarding and a `handleClickCapture` guard (`hasMoved.current`) so completing a drag gesture never accidentally fires card clicks upon release.
   - **Swipe-to-Edit & Swipe-to-Delete (`ChecklistNotesTab.tsx`):**
-    - Wrapped each note card in `<SwipeableRow onEdit={() => handleOpenEditNoteModal(note)} onDelete={() => handleDeleteNote(note.id)}>`.
+    - Wrapped each note card in `<SwipeableRow plain onEdit={() => handleOpenEditNoteModal(note)} onDelete={() => handleDeleteNote(note.id)}>`.
     - Swiping right past the 84px threshold triggers a light haptic tick and immediately opens the note in the full edit modal with all fields populated.
     - Swiping left past the 84px threshold triggers a warning haptic tick and staging for deletion.
-    - Made tapping the note card body also open the edit modal (`e.stopPropagation()` on nested action buttons like Copy and Pin).
+    - Made tapping the note card body also open the edit modal (`e.stopPropagation()` on nested action buttons like Copy, Pin, Edit, Delete).
   - **Discoverability & Visual Polish (`index.css`):**
     - Added a subtle pill hint bar (`.notes-swipe-hint-pill`) reading "↔️ Swipe note right to Edit, left to Delete".
     - Wrapped cards with `.note-swipe-wrapper`, ensuring background action reveals match the card's rounded corner geometry (`var(--border-radius-md)`).
 * **Trade-offs Accepted:**
-  - Interactive buttons inside the card (Copy, Pin, Edit, Delete) explicitly call `e.stopPropagation()` and are bypassed in `handlePointerDown` to prevent accidental drag initiation when tapping buttons.
+  - Dragging notes is restricted to touch devices (matching `ExpenseList` and `MembersGroupsTab`); desktop mouse users retain explicit controls (buttons and card click) without mouse drag hijacking.
 
 
 
