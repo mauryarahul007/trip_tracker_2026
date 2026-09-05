@@ -76,7 +76,7 @@ export function triggerHaptic(
         navigator.vibrate(pref === 'subtle' ? [12, 30, 12] : [20, 50, 20]);
         break;
     }
-  } catch (_err) {
+  } catch {
     // Ignore permissions or focus restriction errors silently
   }
 }

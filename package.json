@@ -1,7 +1,7 @@
 {
   "name": "trip-tracker-2026",
   "private": true,
-  "version": "3.0.3",
+  "version": "3.0.4",
   "type": "module",
   "scripts": {
     "postinstall": "node scripts/install-git-hooks.mjs && node scripts/sync-maplibre-worker.mjs",
@@ -13,6 +13,7 @@
     "preview": "vite preview",
     "test": "vitest run",
     "generate:assets": "capacitor-assets generate --android --ios",
+    "cap:sync": "node scripts/build-native.mjs",
     "bug": "node scripts/bug.mjs",
     "bug:add": "node scripts/bug.mjs add",
     "bug:list": "node scripts/bug.mjs list",

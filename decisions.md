@@ -1863,6 +1863,34 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - Enforcing 16px minimum font size on mobile inputs ensures viewport stability and prevents iOS Safari auto-zoom without affecting desktop form density.
 
+---
+
+## 104. Checklist Focus Mode, Celebration Burst, Tab Search & Maps Navigation Shortcut
+* **Context:**
+  - When travelers pack for a trip, long checklists with already-packed items create visual clutter and cognitive overhead, making it harder to spot remaining pending items.
+  - Achieving 100% packing readiness lacked positive reinforcement and delight.
+  - Searching for specific checklist items or travel notes required scrolling through potentially dozens of entries across multiple category pills.
+  - While the `TripRouteModal` offered an interactive MapLibre map and waypoint sequence, travelers heading out on the road had no direct, one-tap shortcut to launch native GPS turn-by-turn navigation in Google Maps or Apple Maps with the full waypoint itinerary.
+* **Decision:**
+  - **Hide Packed / Pending Only Focus Toggle (`ChecklistNotesTab.tsx`):**
+    - Added a 1-tap `Hide Packed (N)` / `Show All` pill filter directly in the category scroll strip.
+    - When active, all completed/packed checklist items are smoothly hidden so travelers see only what still needs packing, with an actionable empty state button to unhide if all are packed.
+  - **100% Readiness Celebration (`ChecklistNotesTab.tsx`):**
+    - Integrated `<ConfettiBurst active={showCelebration} />` and a success haptic pulse (`triggerHaptic('success')`) that triggers automatically when the traveler checks the final remaining item and reaches 100% packing readiness.
+    - Updated progress card headline to celebrate: `All Packed! Ready to travel 🎒✨`.
+  - **Instant In-Tab Search Bar (`ChecklistNotesTab.tsx`):**
+    - Added an instant, 0ms search input at the top of the Checklist & Notes tab with keyboard shortcuts, autofocus support, and a 1-tap clear button (`<IconClose />`).
+    - Filters both checklist items (by text & assignee name) and travel notes (by title & content) simultaneously.
+  - **Turn-by-Turn "Open in Maps 🧭" Shortcut (`TripRouteModal.tsx`):**
+    - Calculated universal directions URL (`https://www.google.com/maps/dir/?api=1&origin=...&destination=...&waypoints=...`) from trip stops and waypoints.
+    - Added a prominent secondary action button in the modal footer that opens Google Maps or Apple Maps with the pre-loaded multi-stop route.
+  - **Automated Native Build & Sync Workflow (`scripts/build-native.mjs`, `package.json`):**
+    - Added `npm run cap:sync` running clean, cross-platform root-base build, Capacitor sync across Android and iOS, and standard web bundle regeneration.
+    - Synchronized native app versions to `v3.0.4` (build `540`).
+* **Trade-offs Accepted:**
+  - Standard Google Maps directions URL scheme is used as it seamlessly opens in Apple Maps on iOS devices or Google Maps on Android and desktop browsers without platform-specific app protocol fragmentation.
+
+
 
 
 

@@ -10,9 +10,11 @@ import {
   IconEdit,
   IconCheck,
   IconClose,
+  IconSearch,
 } from './Icons';
 import { triggerHaptic } from '../utils/haptics';
 import { SwipeableRow } from './SwipeableRow';
+import { ConfettiBurst } from './ConfettiBurst';
 
 type Props = {
   trip: Trip;
@@ -70,6 +72,11 @@ export function ChecklistNotesTab({ trip, members }: Props) {
   const [editItemAssignee, setEditItemAssignee] = useState<string>('');
   const [editItemCompleted, setEditItemCompleted] = useState<boolean>(false);
 
+  // Search & Filter state
+  const [searchQuery, setSearchQuery] = useState('');
+  const [hideCompleted, setHideCompleted] = useState(false);
+  const [showCelebration, setShowCelebration] = useState(false);
+
   // Note Modal state
   const [isNoteModalOpen, setIsNoteModalOpen] = useState(false);
   const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
@@ -94,18 +101,37 @@ export function ChecklistNotesTab({ trip, members }: Props) {
     if (checklistFilter !== 'all') {
       list = list.filter((item) => item.category === checklistFilter);
     }
+    if (hideCompleted) {
+      list = list.filter((item) => !item.completed);
+    }
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim();
+      list = list.filter(
+        (item) =>
+          item.text.toLowerCase().includes(q) ||
+          (item.assignedTo && item.assignedTo.toLowerCase().includes(q))
+      );
+    }
     // Sort uncompleted items first, then completed items
     return [...list].sort((a, b) => {
       if (a.completed === b.completed) return 0;
       return a.completed ? 1 : -1;
     });
-  }, [checklist, checklistFilter]);
+  }, [checklist, checklistFilter, hideCompleted, searchQuery]);
 
   // Filtered Notes
   const filteredNotes = useMemo(() => {
     let list = notes;
     if (noteFilter !== 'all') {
       list = list.filter((item) => item.category === noteFilter);
+    }
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim();
+      list = list.filter(
+        (item) =>
+          item.title.toLowerCase().includes(q) ||
+          item.content.toLowerCase().includes(q)
+      );
     }
     // Pinned notes first, then latest updated
     return [...list].sort((a, b) => {
@@ -114,7 +140,7 @@ export function ChecklistNotesTab({ trip, members }: Props) {
       if (pinA !== pinB) return pinA ? -1 : 1;
       return new Date(b.updatedAt || b.createdAt).getTime() - new Date(a.updatedAt || a.createdAt).getTime();
     });
-  }, [notes, noteFilter]);
+  }, [notes, noteFilter, searchQuery]);
 
   const handleAddChecklistItem = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -132,7 +158,16 @@ export function ChecklistNotesTab({ trip, members }: Props) {
   };
 
   const handleToggleChecklist = async (itemId: string) => {
-    triggerHaptic('light');
+    const item = checklist.find((i) => i.id === itemId);
+    const willBeCompleted = item ? !item.completed : false;
+
+    if (willBeCompleted && completedCount + 1 === totalCount && totalCount > 0) {
+      triggerHaptic('success');
+      setShowCelebration(true);
+      setTimeout(() => setShowCelebration(false), 3800);
+    } else {
+      triggerHaptic('light');
+    }
     await toggleChecklistItem(liveTrip.id, itemId);
   };
 
@@ -309,17 +344,61 @@ export function ChecklistNotesTab({ trip, members }: Props) {
         </div>
       </div>
 
+      {/* Instant In-Tab Search Bar */}
+      {(checklist.length > 0 || notes.length > 0) && (
+        <div style={{ marginBottom: '12px' }}>
+          <div className="input-icon-wrap" style={{ position: 'relative', width: '100%' }}>
+            <IconSearch size={16} className="icon-sm" />
+            <input
+              type="text"
+              className="input-field"
+              style={{
+                width: '100%',
+                paddingLeft: '36px',
+                paddingRight: searchQuery ? '36px' : '14px',
+                borderRadius: 'var(--border-radius-sm)',
+                height: '38px',
+                fontSize: '14px',
+              }}
+              placeholder={viewMode === 'checklist' ? 'Search checklist items or members...' : 'Search travel notes, Wi-Fi, PNRs...'}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              aria-label="Search items"
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                className="search-clear-btn"
+                onClick={() => setSearchQuery('')}
+                aria-label="Clear search"
+                title="Clear search"
+              >
+                <IconClose size={14} />
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* 1. CHECKLIST VIEW */}
       {viewMode === 'checklist' && (
         <div className="checklist-container">
-          {/* Progress Card */}
+          {/* Progress Card with Celebratory Burst */}
           {totalCount > 0 && (
-            <div className="checklist-progress-card">
+            <div
+              className={`checklist-progress-card ${progressPercent === 100 ? 'is-complete' : ''}`}
+              style={{ position: 'relative', overflow: 'hidden' }}
+            >
+              <ConfettiBurst active={showCelebration} />
               <div className="checklist-progress-header">
                 <div>
-                  <div className="checklist-progress-title">Packing & Readiness</div>
+                  <div className="checklist-progress-title">
+                    {progressPercent === 100 ? '✨ 100% Ready!' : 'Packing & Readiness'}
+                  </div>
                   <div className="checklist-progress-subtitle">
-                    {completedCount} of {totalCount} items ready ({progressPercent}%)
+                    {progressPercent === 100
+                      ? `All ${totalCount} items prepared and ready for departure!`
+                      : `${completedCount} of ${totalCount} items ready (${progressPercent}%)`}
                   </div>
                 </div>
                 <div className="checklist-progress-percent">{progressPercent}%</div>
@@ -356,6 +435,28 @@ export function ChecklistNotesTab({ trip, members }: Props) {
                 </button>
               );
             })}
+
+            {/* Hide Packed / Show All Toggle Chip */}
+            {completedCount > 0 && (
+              <button
+                type="button"
+                className={`category-pill ${hideCompleted ? 'active' : ''}`}
+                style={{
+                  borderColor: hideCompleted ? 'var(--primary-accent)' : undefined,
+                  background: hideCompleted ? 'rgba(15, 111, 99, 0.12)' : undefined,
+                  color: hideCompleted ? 'var(--primary-accent)' : undefined,
+                }}
+                onClick={() => {
+                  triggerHaptic('light');
+                  setHideCompleted(!hideCompleted);
+                }}
+                aria-pressed={hideCompleted}
+                title={hideCompleted ? 'Show all items including packed' : 'Hide packed items to focus on pending tasks'}
+              >
+                <span className="category-pill-icon">{hideCompleted ? '👁️' : '📦'}</span>
+                <span>{hideCompleted ? 'Show All' : `Hide Packed (${completedCount})`}</span>
+              </button>
+            )}
           </div>
 
           {/* Quick Add Bar */}
@@ -425,14 +526,40 @@ export function ChecklistNotesTab({ trip, members }: Props) {
           <div className="checklist-items-list" role="list">
             {filteredChecklist.length === 0 ? (
               <div className="checklist-empty-state">
-                <div className="empty-state-icon">📋</div>
+                <div className="empty-state-icon">{searchQuery.trim() ? '🔍' : hideCompleted ? '📦' : '📋'}</div>
                 <div className="empty-state-title">
-                  {checklistFilter === 'all' ? 'No checklist items yet' : `No ${checklistFilter} items`}
+                  {searchQuery.trim()
+                    ? 'No matching items'
+                    : hideCompleted
+                    ? 'All items are packed!'
+                    : checklistFilter === 'all'
+                    ? 'No checklist items yet'
+                    : `No ${checklistFilter} items`}
                 </div>
                 <div className="empty-state-desc">
-                  Keep packing, permits, and travel essentials organized with your group in real-time.
+                  {searchQuery.trim()
+                    ? `No checklist items match "${searchQuery}".`
+                    : hideCompleted
+                    ? 'Everything in this view is packed. Tap "Show All" above to view completed items.'
+                    : 'Keep packing, permits, and travel essentials organized with your group in real-time.'}
                 </div>
-                {checklist.length === 0 && (
+                {searchQuery.trim() ? (
+                  <button
+                    type="button"
+                    className="seed-defaults-btn"
+                    onClick={() => setSearchQuery('')}
+                  >
+                    Clear Search
+                  </button>
+                ) : hideCompleted ? (
+                  <button
+                    type="button"
+                    className="seed-defaults-btn"
+                    onClick={() => setHideCompleted(false)}
+                  >
+                    Show Packed Items
+                  </button>
+                ) : checklist.length === 0 ? (
                   <button
                     type="button"
                     className="seed-defaults-btn"
@@ -440,7 +567,7 @@ export function ChecklistNotesTab({ trip, members }: Props) {
                   >
                     ⚡ Pre-fill Travel Essentials
                   </button>
-                )}
+                ) : null}
               </div>
             ) : (
               filteredChecklist.map((item) => {
@@ -579,20 +706,36 @@ export function ChecklistNotesTab({ trip, members }: Props) {
           <div className="notes-grid">
             {filteredNotes.length === 0 ? (
               <div className="checklist-empty-state">
-                <div className="empty-state-icon">📌</div>
+                <div className="empty-state-icon">{searchQuery.trim() ? '🔍' : '📌'}</div>
                 <div className="empty-state-title">
-                  {noteFilter === 'all' ? 'No travel notes yet' : `No ${noteFilter} notes`}
+                  {searchQuery.trim()
+                    ? 'No matching notes'
+                    : noteFilter === 'all'
+                    ? 'No travel notes yet'
+                    : `No ${noteFilter} notes`}
                 </div>
                 <div className="empty-state-desc">
-                  Store hotel Wi-Fi passwords, booking PNRs, cab driver contacts, and gate access codes for everyone on the trip.
+                  {searchQuery.trim()
+                    ? `No travel notes match "${searchQuery}".`
+                    : 'Store hotel Wi-Fi passwords, booking PNRs, cab driver contacts, and gate access codes for everyone on the trip.'}
                 </div>
-                <button
-                  type="button"
-                  className="seed-defaults-btn"
-                  onClick={handleOpenNewNoteModal}
-                >
-                  <IconPlus size={16} /> Add First Note
-                </button>
+                {searchQuery.trim() ? (
+                  <button
+                    type="button"
+                    className="seed-defaults-btn"
+                    onClick={() => setSearchQuery('')}
+                  >
+                    Clear Search
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    className="seed-defaults-btn"
+                    onClick={handleOpenNewNoteModal}
+                  >
+                    <IconPlus size={16} /> Add First Note
+                  </button>
+                )}
               </div>
             ) : (
               filteredNotes.map((note) => {

@@ -266,7 +266,7 @@ export function AdminToolsPage({ categories, trips, expenses, onRefresh, isRefre
       setActiveBackdropUrl(targetUrl);
       try { localStorage.setItem('tt-landing-bg-cache', targetUrl); } catch {}
       showToast('Landing page background successfully updated!');
-    } catch (e) {
+    } catch {
       showToast('Failed to save background config.');
     } finally {
       setIsSavingBackdrop(false);
@@ -281,7 +281,7 @@ export function AdminToolsPage({ categories, trips, expenses, onRefresh, isRefre
       setCustomBackdropInput('');
       try { localStorage.removeItem('tt-landing-bg-cache'); } catch {}
       showToast('Landing backdrop reset to Default Tropical Paradise.');
-    } catch (e) {
+    } catch {
       showToast('Failed to reset background config.');
     } finally {
       setIsSavingBackdrop(false);

@@ -25,7 +25,7 @@ export function parseCategoryIcon(iconString: string | undefined): ParsedCategor
     };
   }
 
-  const isEmoji = /[^\x00-\x7F]/.test(iconString);
+  const isEmoji = /[^\u0020-\u007E]/.test(iconString);
   if (isEmoji) {
     return {
       color: 'var(--border-color)',

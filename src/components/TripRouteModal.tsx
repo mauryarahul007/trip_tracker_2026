@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { Trip } from '../types';
 import { IconMapPin, IconClose, IconChevronRight } from './Icons';
 import { useResolvedTripStops } from '../hooks/useResolvedTripStops';
@@ -174,13 +174,29 @@ export function TripRouteModal({
     };
   }, [isOpen, resolvedStops]);
 
-  if (!isOpen) return null;
-
   // Stored stops or fallback from parsed route
   const displayStops: { name: string }[] =
     trip.stops && trip.stops.length > 0
       ? trip.stops
       : parsedRoute.allStops.map((s) => ({ name: s }));
+
+  // Google / Apple Maps Directions URL
+  const mapsDirectionsUrl = useMemo(() => {
+    if (displayStops.length === 0) return null;
+    if (displayStops.length === 1) {
+      return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(displayStops[0].name)}`;
+    }
+    const origin = displayStops[0].name;
+    const dest = displayStops[displayStops.length - 1].name;
+    const waypoints = displayStops.slice(1, -1).map((s) => s.name);
+    let url = `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(origin)}&destination=${encodeURIComponent(dest)}`;
+    if (waypoints.length > 0) {
+      url += `&waypoints=${encodeURIComponent(waypoints.join('|'))}`;
+    }
+    return url;
+  }, [displayStops]);
+
+  if (!isOpen) return null;
 
   return (
     <div
@@ -446,13 +462,48 @@ export function TripRouteModal({
             borderTop: '1px solid var(--border-color)',
             background: 'var(--bg-surface-hover)',
             display: 'flex',
-            justifyContent: 'flex-end',
+            gap: '10px',
+            alignItems: 'center',
           }}
         >
+          {mapsDirectionsUrl && (
+            <a
+              href={mapsDirectionsUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="secondary-btn"
+              style={{
+                flex: 1,
+                padding: '10px',
+                fontSize: '13px',
+                fontWeight: 600,
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '6px',
+                textDecoration: 'none',
+                color: 'var(--text-primary)',
+                background: 'var(--bg-surface)',
+                border: '1px solid var(--border-color)',
+                borderRadius: '8px',
+                cursor: 'pointer',
+              }}
+              title="Open turn-by-turn route navigation in Maps"
+            >
+              <span>🧭</span>
+              <span>Open in Maps</span>
+            </a>
+          )}
           <button
             type="button"
             className="primary-btn"
-            style={{ width: '100%', padding: '10px', fontSize: '14px', fontWeight: 600 }}
+            style={{
+              flex: mapsDirectionsUrl ? 1 : undefined,
+              width: mapsDirectionsUrl ? undefined : '100%',
+              padding: '10px',
+              fontSize: '14px',
+              fontWeight: 600,
+            }}
             onClick={onClose}
           >
             Done
