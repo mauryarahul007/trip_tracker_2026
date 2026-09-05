@@ -283,6 +283,7 @@
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+  -webkit-tap-highlight-color: transparent;
 }
 
 html {
@@ -316,6 +317,60 @@ body {
   overscroll-behavior-y: none;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* Fast touch responsiveness and tap parity across iOS Safari and Android Chrome */
+button,
+a,
+input,
+select,
+textarea,
+[role="button"],
+.category-pill,
+.tab-segment-btn,
+.nav-tab-item {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Ensure smooth 120Hz momentum scrolling on iOS and Android across all scroll containers */
+.tab-pane,
+.modal-sheet,
+.expense-form-scroll,
+.notes-container,
+.checklist-container,
+.passport-list,
+.settings-drawer,
+.ops-panel,
+.ops-sheet,
+.ops-drawer,
+.note-modal-card {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+}
+
+/* Horizontal pill scrolls smooth on both platforms */
+.category-pills-scroll,
+.checklist-category-scroll,
+.notes-category-scroll,
+.app-header-stops,
+.segmented-control {
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-x pan-y;
+}
+
+/* Prevent auto-zoom jump on iOS Safari input focus */
+@media (max-width: 768px) {
+  input[type="text"],
+  input[type="number"],
+  input[type="email"],
+  input[type="password"],
+  input[type="date"],
+  input[type="search"],
+  select,
+  textarea {
+    font-size: 16px;
+  }
 }
 
 /* Accessibility: visible focus ring for keyboard navigation */

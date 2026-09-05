@@ -1844,6 +1844,25 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - Touch swipe gestures are scoped to mobile pointer events so mouse click and text interactions on desktop remain unaffected.
 
+---
+
+## 103. Android & iOS Native Sync & WebApp Smoothness Parity
+* **Context:**
+  - With recent releases (Travel Notes swipe, Checklist editing, and interactive Route Stops modal), native Android and iOS Capacitor shells needed updated web bundles, version numbers, and plugin synchronizations.
+  - In webapp mode across mobile devices, iOS Safari and Android Chrome exhibited subtle smoothness and interaction discrepancies: iOS 300ms tap delay, gray tap highlight overlays, lack of momentum scrolling (`-webkit-overflow-scrolling: touch`), and automatic viewport zoom on input focus when font-size was under 16px.
+* **Decision:**
+  - **Native Shell Build & Sync (`android/`, `ios/`):**
+    - Ran `scripts/sync-native-version.mjs` to synchronize `versionCode`/`versionName` to `3.0.3` (build 539) across `android/app/build.gradle` and `ios/App/App.xcodeproj/project.pbxproj`.
+    - Compiled root-base web bundle (`VITE_BASE_PATH=/`) and executed `npx cap sync` to deploy fresh assets, plugins, and configs to both `android` and `ios`.
+  - **Webapp Smoothness Parity (`src/index.css`, `index.html`):**
+    - Added global `-webkit-tap-highlight-color: transparent` to eliminate tap flash boxes.
+    - Set `touch-action: manipulation` across all buttons, links, pills, inputs, and interactive controls to remove iOS Safari 300ms tap latency.
+    - Added `-webkit-overflow-scrolling: touch` and `overscroll-behavior-y: contain` to `.tab-pane`, modals, lists, and drawers for 120Hz native inertia scrolling on iOS.
+    - Prevented mobile viewport zoom jumps on iOS Safari by enforcing a 16px minimum font size on mobile form inputs.
+    - Added `apple-mobile-web-app-status-bar-style="black-translucent"` and `mobile-web-app-capable="yes"` in `index.html`.
+* **Trade-offs Accepted:**
+  - Enforcing 16px minimum font size on mobile inputs ensures viewport stability and prevents iOS Safari auto-zoom without affecting desktop form density.
+
 
 
 
