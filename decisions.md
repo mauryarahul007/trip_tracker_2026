@@ -1780,6 +1780,26 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - Major version bump signals significant functional enhancement and visual architectural modernization across web application surfaces.
 
+---
+
+## 99. Swipe-to-Edit & Swipe-to-Delete for Travel Notes
+* **Context:**
+  - In the newly built Travel Notes section (`ChecklistNotesTab.tsx`), notes previously only supported editing via a tiny 16px icon button in the card header.
+  - On mobile, travelers expect native gesture ergonomics where swiping a note card reveals immediate actions (swipe right to Edit, swipe left to Delete), consistent with `ExpenseList` and `MembersGroupsTab`.
+* **Decision:**
+  - **Reused & Enhanced `SwipeableRow` (`SwipeableRow.tsx`):**
+    - Enhanced `SwipeableRow` with `allowMouseDrag` support (enabling smooth drag testing on desktop mouse pointers via pointer capture), `borderRadius` forwarding, and a `handleClickCapture` guard so drag gestures don't accidentally fire card clicks upon release.
+  - **Swipe-to-Edit & Swipe-to-Delete (`ChecklistNotesTab.tsx`):**
+    - Wrapped each note card in `<SwipeableRow onEdit={() => handleOpenEditNoteModal(note)} onDelete={() => handleDeleteNote(note.id)}>`.
+    - Swiping right past the 84px threshold triggers a light haptic tick and immediately opens the note in the full edit modal with all fields populated.
+    - Swiping left past the 84px threshold triggers a warning haptic tick and staging for deletion.
+    - Made tapping the note card body also open the edit modal (`e.stopPropagation()` on nested action buttons like Copy and Pin).
+  - **Discoverability & Visual Polish (`index.css`):**
+    - Added a subtle pill hint bar (`.notes-swipe-hint-pill`) reading "↔️ Swipe note right to Edit, left to Delete".
+    - Wrapped cards with `.note-swipe-wrapper`, ensuring background action reveals match the card's rounded corner geometry (`var(--border-radius-md)`).
+* **Trade-offs Accepted:**
+  - Interactive buttons inside the card (Copy, Pin, Edit, Delete) explicitly call `e.stopPropagation()` and are bypassed in `handlePointerDown` to prevent accidental drag initiation when tapping buttons.
+
 
 
 

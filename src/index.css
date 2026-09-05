@@ -9847,6 +9847,39 @@ textarea.input-field {
   }
 }
 
+.notes-swipe-hint-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 10px;
+}
+
+.notes-swipe-hint-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  background: var(--bg-surface-hover);
+  border: 1px solid var(--border-color);
+  padding: 4px 12px;
+  border-radius: 9999px;
+  user-select: none;
+}
+
+.note-swipe-wrapper {
+  border-radius: var(--border-radius-md);
+  box-shadow: var(--shadow-sm);
+  height: 100%;
+}
+
+.note-swipe-wrapper .trip-note-card {
+  height: 100%;
+  box-sizing: border-box;
+  box-shadow: none;
+  cursor: pointer;
+}
+
 .trip-note-card {
   background: var(--bg-surface);
   border: 1px solid var(--border-color);

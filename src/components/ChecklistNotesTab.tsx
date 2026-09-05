@@ -12,6 +12,7 @@ import {
   IconClose,
 } from './Icons';
 import { triggerHaptic } from '../utils/haptics';
+import { SwipeableRow } from './SwipeableRow';
 
 type Props = {
   trip: Trip;
@@ -490,6 +491,15 @@ export function ChecklistNotesTab({ trip, members }: Props) {
             </button>
           </div>
 
+          {/* Subtle gesture hint for discoverability */}
+          {filteredNotes.length > 0 && (
+            <div className="notes-swipe-hint-bar" aria-hidden="true">
+              <span className="notes-swipe-hint-pill">
+                <span>↔️</span> Swipe note right to <strong>Edit</strong>, left to <strong>Delete</strong>
+              </span>
+            </div>
+          )}
+
           {/* Notes Grid */}
           <div className="notes-grid">
             {filteredNotes.length === 0 ? (
@@ -514,83 +524,111 @@ export function ChecklistNotesTab({ trip, members }: Props) {
                 const isCopied = copiedNoteId === note.id;
                 const isPinned = Boolean(note.pinned ?? note.isPinned);
                 return (
-                  <div
+                  <SwipeableRow
                     key={note.id}
-                    className={`trip-note-card ${isPinned ? 'is-pinned' : ''}`}
+                    plain
+                    allowMouseDrag
+                    borderRadius="var(--border-radius-md)"
+                    className="note-swipe-wrapper"
+                    onEdit={() => handleOpenEditNoteModal(note)}
+                    onDelete={() => handleDeleteNote(note.id)}
                   >
-                    <div className="note-card-header">
-                      <div className="note-card-title-group">
-                        <span className="note-category-tag">
-                          {note.category === 'wifi' && '📶 Wi-Fi'}
-                          {note.category === 'stay' && '🏨 Stay'}
-                          {note.category === 'transport' && '✈️ Transport'}
-                          {note.category === 'contact' && '📞 Contact'}
-                          {note.category === 'general' && '💡 Note'}
-                        </span>
-                        {isPinned && (
-                          <span className="note-pinned-pill" title="Pinned to top">
-                            <IconPin size={12} /> Pinned
+                    <div
+                      className={`trip-note-card ${isPinned ? 'is-pinned' : ''}`}
+                      onClick={(e) => {
+                        const target = e.target as HTMLElement;
+                        if (!target.closest('button, a, input, textarea, select')) {
+                          handleOpenEditNoteModal(note);
+                        }
+                      }}
+                      title="Swipe right to edit, left to delete · Tap to edit"
+                    >
+                      <div className="note-card-header">
+                        <div className="note-card-title-group">
+                          <span className="note-category-tag">
+                            {note.category === 'wifi' && '📶 Wi-Fi'}
+                            {note.category === 'stay' && '🏨 Stay'}
+                            {note.category === 'transport' && '✈️ Transport'}
+                            {note.category === 'contact' && '📞 Contact'}
+                            {note.category === 'general' && '💡 Note'}
                           </span>
-                        )}
+                          {isPinned && (
+                            <span className="note-pinned-pill" title="Pinned to top">
+                              <IconPin size={12} /> Pinned
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="note-card-actions">
+                          <button
+                            type="button"
+                            className={`note-icon-action-btn ${isPinned ? 'active-pin' : ''}`}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleTogglePinNote(note);
+                            }}
+                            title={isPinned ? 'Unpin note' : 'Pin note to top'}
+                            aria-label={isPinned ? 'Unpin note' : 'Pin note'}
+                          >
+                            <IconPin size={16} />
+                          </button>
+                          <button
+                            type="button"
+                            className="note-icon-action-btn"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleOpenEditNoteModal(note);
+                            }}
+                            title="Edit note"
+                            aria-label="Edit note"
+                          >
+                            <IconEdit size={16} />
+                          </button>
+                          <button
+                            type="button"
+                            className="note-icon-action-btn delete-action"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteNote(note.id);
+                            }}
+                            title="Delete note"
+                            aria-label="Delete note"
+                          >
+                            <IconTrash size={16} />
+                          </button>
+                        </div>
                       </div>
 
-                      <div className="note-card-actions">
+                      <h4 className="note-title">{note.title}</h4>
+
+                      <div className="note-content-box">
+                        <pre className="note-content-text">{note.content}</pre>
+                      </div>
+
+                      <div className="note-card-footer">
                         <button
                           type="button"
-                          className={`note-icon-action-btn ${isPinned ? 'active-pin' : ''}`}
-                          onClick={() => handleTogglePinNote(note)}
-                          title={isPinned ? 'Unpin note' : 'Pin note to top'}
-                          aria-label={isPinned ? 'Unpin note' : 'Pin note'}
+                          className={`note-copy-btn ${isCopied ? 'copied' : ''}`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleCopyNoteContent(note);
+                          }}
                         >
-                          <IconPin size={16} />
-                        </button>
-                        <button
-                          type="button"
-                          className="note-icon-action-btn"
-                          onClick={() => handleOpenEditNoteModal(note)}
-                          title="Edit note"
-                          aria-label="Edit note"
-                        >
-                          <IconEdit size={16} />
-                        </button>
-                        <button
-                          type="button"
-                          className="note-icon-action-btn delete-action"
-                          onClick={() => handleDeleteNote(note.id)}
-                          title="Delete note"
-                          aria-label="Delete note"
-                        >
-                          <IconTrash size={16} />
+                          {isCopied ? (
+                            <>
+                              <IconCheck size={14} />
+                              <span>Copied!</span>
+                            </>
+                          ) : (
+                            <>
+                              <IconCopy size={14} />
+                              <span>Copy Info</span>
+                            </>
+                          )}
                         </button>
                       </div>
                     </div>
-
-                    <h4 className="note-title">{note.title}</h4>
-
-                    <div className="note-content-box">
-                      <pre className="note-content-text">{note.content}</pre>
-                    </div>
-
-                    <div className="note-card-footer">
-                      <button
-                        type="button"
-                        className={`note-copy-btn ${isCopied ? 'copied' : ''}`}
-                        onClick={() => handleCopyNoteContent(note)}
-                      >
-                        {isCopied ? (
-                          <>
-                            <IconCheck size={14} />
-                            <span>Copied!</span>
-                          </>
-                        ) : (
-                          <>
-                            <IconCopy size={14} />
-                            <span>Copy Info</span>
-                          </>
-                        )}
-                      </button>
-                    </div>
-                  </div>
+                  </SwipeableRow>
                 );
               })
             )}
