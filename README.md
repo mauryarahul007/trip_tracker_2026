@@ -141,16 +141,24 @@ public/
 | [How to Track Bugs](docs/howto-bug-tracking.md) | Filing/resolving bugs via the CLI and the Bug Ledger |
 | [How Offline Peer Sync Works](docs/howto-offline-peer-sync.md) | What syncs, what queues, and when |
 | [How to Set Up Codemagic](docs/howto-codemagic-setup.md) | Native Android/iOS build pipeline setup |
-| [How GitHub Actions Builds Work](docs/howto-github-actions-build.md) | CI/CD for web deploys and native triggers |
+| [How to Navigate and Manage Trip Stacks](docs/howto-navigate-and-manage-trip-stacks.md) | Passport card gestures, keyboard navigation, and slide launcher |
+| [How to Generate and Share Trip Wrapped](docs/howto-generate-and-share-trip-wrapped.md) | Launching the story recap, custom awards, and canvas card export |
+| [How to Manage Checklists and Notes](docs/howto-manage-checklists-and-notes.md) | Packing lists, travel medical gear, and 1-tap credential copying |
 | [Reference: Data Model](docs/reference-data-model.md) | All types, fields, and constraints |
 | [Reference: Settlement Algorithm](docs/reference-settlement.md) | How the greedy minimizer works |
 | [Reference: Charts & Analytics](docs/reference-analytics.md) | Formulas behind every stat card and chart |
+| [Reference: Trip Wrapped Engine](docs/reference-trip-wrapped-engine.md) | Archetype heuristics, superlatives, and canvas pipeline |
+| [Reference: Command Palette](docs/reference-command-palette.md) | Cmd+K triggers, fuzzy indexing, and keyboard focus traps |
+| [Reference: Gesture & Sheet System](docs/reference-gesture-and-sheet-system.md) | Snap physics, velocity thresholds, and compositor decoupling |
+| [Reference: Native Shell & Haptics](docs/reference-native-shell-and-haptics.md) | Safe-area probes, visualViewport sizing, and vibration patterns |
 | [Reference: Storage Layer](docs/reference-storage.md) | IndexedDB + service worker offline design |
 | [Reference: Design System](docs/reference-design-system.md) | Palette, type, icons, and component patterns |
 | [Reference: Data Integrity (ACID)](docs/reference-data-integrity-acid.md) | Consistency guarantees across sync/offline |
 | [Reference: Security & Anti-Bot Defense](docs/reference-security-and-anti-bot-defense.md) | RLS, rate limiting, Turnstile, audit logging, CSP |
 | [Explanation: Split Modes](docs/explanation-split-modes.md) | Why four split modes exist and when to use each |
 | [Explanation: Settlement Design](docs/explanation-settlement-design.md) | Trade-offs in debt minimization |
+| [Explanation: Mobile Compositor & WebKit Performance](docs/explanation-mobile-compositor-and-webkit-performance.md) | Metal vs Skia pipelines, WebGL stalls, and GPU translate3d |
+| [Explanation: Trip Stack & Viewport Architecture](docs/explanation-trip-stack-and-viewport-architecture.md) | 3:4 card aspect ratio formula, bottom pinning, and LIFO back stack |
 | [Explanation: Offline Caching](docs/explanation-offline-caching.md) | Why stale-while-revalidate, and what it trades off |
 | [Explanation: Offline Peer Sync](docs/explanation-offline-peer-sync.md) | Sync model across devices/members |
 | [Explanation: Navigation & Offline Fixes](docs/explanation-navigation-and-offline-fixes.md) | Hierarchical back-navigation design |

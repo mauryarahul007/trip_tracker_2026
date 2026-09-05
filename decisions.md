@@ -1977,6 +1977,34 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - The viewport is strictly locked on phone screens so that all home-screen navigation controls (cards, pagination dots, launcher slider) sit precisely in the viewport with no vertical page scroll.
 
+---
+
+## 109. Full-Project Diataxis Documentation System Expansion
+* **Context:**
+  - An audit of the documentation catalog (`docs/`) revealed that several core systems were unmapped:
+    1. The WebKit / Mobile Compositor performance pipeline and zero-reflow GPU sheet architecture (ADR #106).
+    2. The Trip Stack 3:4 aspect ratio clamping formula, viewport locking, and LIFO navigation stack (ADRs #107 & #108).
+    3. The Trip Wrapped recap heuristics, superlatives engine, and 1080x1920 canvas export card.
+    4. The global Command Palette (`Cmd+K`), fuzzy search indexing, and accessible focus traps.
+    5. The interactive Packing Checklist and Trip Notes management system.
+    6. The native mobile shell bridge (`nativeShell.ts`) and multi-tier micro-haptics system (`haptics.ts`).
+* **Decision:**
+  - Authored comprehensive, technical Diataxis documentation across all four quadrants:
+    - `docs/explanation-mobile-compositor-and-webkit-performance.md` (Explanation)
+    - `docs/reference-gesture-and-sheet-system.md` (Reference)
+    - `docs/explanation-trip-stack-and-viewport-architecture.md` (Explanation)
+    - `docs/howto-navigate-and-manage-trip-stacks.md` (How-to)
+    - `docs/reference-trip-wrapped-engine.md` (Reference)
+    - `docs/howto-generate-and-share-trip-wrapped.md` (How-to)
+    - `docs/reference-command-palette.md` (Reference)
+    - `docs/howto-manage-checklists-and-notes.md` (How-to)
+    - `docs/reference-native-shell-and-haptics.md` (Reference)
+  - Updated the centralized documentation table in `README.md` to ensure all new guides are discoverable within two clicks.
+  - Cut release `v3.0.9`.
+* **Trade-offs Accepted:**
+  - Markdown documentation files add negligible repository weight while providing deep traceability for future contributors and automated audit tools.
+
+
 
 
 
