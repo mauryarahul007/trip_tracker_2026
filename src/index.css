@@ -2752,8 +2752,13 @@ input:checked + .toggle-slider:before {
 }
 .trip-stack-stage {
   position: relative;
-  height: min(58vh, 460px);
-  margin-bottom: 14px;
+  width: 100%;
+  max-width: 390px;
+  margin: 0 auto 10px;
+  height: clamp(430px, 58vh, 485px);
+  min-height: 420px;
+  max-height: 500px;
+  aspect-ratio: 3 / 4;
   perspective: 1200px;
   perspective-origin: 50% 35%;
 }
@@ -5436,21 +5441,24 @@ html.capacitor-ios .trip-sheet .tab-pane {
    lock the entire screen to 100% viewport height and disable scrolling so everything
    is viewed directly within the viewport. */
 .trips-screen-scroll.stack-viewport-lock {
-  height: 100%;
-  height: 100dvh;
-  height: var(--app-vh, 100dvh);
-  overflow: hidden;
+  min-height: 100%;
+  min-height: 100dvh;
+  min-height: var(--app-vh, 100dvh);
+  height: auto;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
   display: flex;
   flex-direction: column;
-  padding-top: calc(14px + var(--safe-top, 0px));
-  padding-bottom: calc(14px + var(--safe-bottom, 0px));
+  padding-top: calc(8px + var(--safe-top, 0px));
+  padding-bottom: calc(12px + var(--safe-bottom, 0px));
   padding-left: max(16px, var(--safe-left, 16px));
   padding-right: max(16px, var(--safe-right, 16px));
-  overscroll-behavior: none;
+  overscroll-behavior-y: contain;
 }
 
 .trips-screen-scroll.stack-viewport-lock .trips-screen-header {
-  margin-bottom: 8px;
+  margin-bottom: 6px;
   flex-shrink: 0;
 }
 
@@ -5464,15 +5472,15 @@ html.capacitor-ios .trip-sheet .tab-pane {
 }
 
 .trips-screen-scroll.stack-viewport-lock .trips-screen-main {
-  flex: 1;
+  flex: 1 0 auto;
   min-height: 0;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .trips-screen-scroll.stack-viewport-lock .trips-section-header {
-  margin-bottom: 6px;
+  margin-bottom: 4px;
   flex-shrink: 0;
 }
 
@@ -5481,7 +5489,7 @@ html.capacitor-ios .trip-sheet .tab-pane {
 }
 
 .trips-screen-scroll.stack-viewport-lock .trip-stack {
-  flex: 1;
+  flex: 0 0 auto;
   min-height: 0;
   display: flex;
   flex-direction: column;
@@ -5489,26 +5497,30 @@ html.capacitor-ios .trip-sheet .tab-pane {
 }
 
 .trips-screen-scroll.stack-viewport-lock .trip-stack-stage {
-  flex: 1;
-  min-height: 180px;
-  height: auto;
-  margin-bottom: 8px;
+  flex: 0 0 auto;
+  width: 100%;
+  max-width: 390px;
+  margin: 0 auto 8px;
+  height: clamp(430px, 58vh, 485px);
+  min-height: 420px;
+  max-height: 500px;
+  aspect-ratio: 3 / 4;
 }
 
 .trips-screen-scroll.stack-viewport-lock .trip-stack-viewall {
   margin: 0 auto;
-  padding: 5px 14px;
+  padding: 4px 12px;
   font-size: 12px;
   flex-shrink: 0;
 }
 
 .trips-screen-scroll.stack-viewport-lock .trip-launcher {
-  margin: 8px 0 0;
+  margin: 6px 0 0;
   flex-shrink: 0;
 }
 
 .trips-screen-scroll.stack-viewport-lock .launcher-track {
-  height: 66px;
+  height: 64px;
   max-width: 270px;
 }
 

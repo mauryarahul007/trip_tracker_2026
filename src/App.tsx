@@ -1567,6 +1567,9 @@ export default function App() {
   useHistoryBack(showExpenseFilterDrawer, () => setShowExpenseFilterDrawer(false));
   useHistoryBack(!!selectedReviewExpense, () => setSelectedReviewExpense(null));
   useHistoryBack(showShareTrip, () => setShowShareTrip(false));
+  useHistoryBack(showTripActionSheet, () => setShowTripActionSheet(false));
+  useHistoryBack(showRouteModal, () => setShowRouteModal(false));
+  useHistoryBack(showAchievements, () => setShowAchievements(false));
   useHistoryBack(showGlobalSettings, () => setShowGlobalSettings(false));
   useHistoryBack(!!confirmRequest, () => setConfirmRequest(null));
   useHistoryBack(showCommandPalette, () => setShowCommandPalette(false));
@@ -1581,6 +1584,8 @@ export default function App() {
   useEscapeKey(!!selectedReviewExpense, () => setSelectedReviewExpense(null));
   useEscapeKey(showShareTrip, () => setShowShareTrip(false));
   useEscapeKey(showTripActionSheet, () => setShowTripActionSheet(false));
+  useEscapeKey(showRouteModal, () => setShowRouteModal(false));
+  useEscapeKey(showAchievements, () => setShowAchievements(false));
   useEscapeKey(showGlobalSettings, () => setShowGlobalSettings(false));
   useEscapeKey(!!confirmRequest, () => setConfirmRequest(null));
   useEscapeKey(showTripWrapped, () => setShowTripWrapped(false));

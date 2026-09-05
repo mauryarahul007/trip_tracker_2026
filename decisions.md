@@ -1937,6 +1937,28 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - Header tone over the map relies on the bright vector map default plus existing high-contrast text shadow and scrim layers rather than continuous real-time WebGL canvas pixel sampling. This trade-off was accepted because eliminating the GPU-CPU pipeline stall yields a massive frame-rate improvement on both iOS Safari and Android Chrome.
 
+---
+
+## 107. Cross-Platform Trip Card Aspect Ratio Parity & Route Modal Back Navigation Fix
+* **Context:**
+  - On Android Chrome, the passport trip card displayed in a tall, proportional 3:4 portrait luxury card ratio (~480px height). However, on iOS Safari, browser UI elements (top URL bar, bottom toolbar, notch, and home indicator) reduced the available viewport height to ~650px.
+  - Because `.trips-screen-scroll.stack-viewport-lock` had `height: var(--app-vh, 100dvh); overflow: hidden;` with `.trip-stack-stage` having `flex: 1; min-height: 180px;`, the card was squashed down to ~320px height, creating a squat ~1:1 square card that cropped the cover photo and distorted the layout.
+  - Additionally, when users opened "View Route Stops & Map" (`showRouteModal`) from the header dropdown and attempted to navigate back (via hardware back button, browser back, or mobile edge swipe), the app bypassed the trip summary and completely exited the trip to the all-trips screen (`selectTrip(null)`). This occurred because `showRouteModal` was not registered in the `useHistoryBack` or `useEscapeKey` LIFO navigation stack, leaving `useHistoryBack(!!activeTripId, () => selectTrip(null))` as the next active popstate listener. Furthermore, `TripRouteModal` lacked a dedicated leading back navigation button.
+* **Decision:**
+  - **Cross-Platform Card Aspect Ratio & Height Parity (`src/index.css`):**
+    - Enforced `height: clamp(430px, 58vh, 485px); min-height: 420px; max-height: 500px; aspect-ratio: 3 / 4; max-width: 390px;` across `.trip-stack-stage` both globally and within `.stack-viewport-lock`.
+    - Updated `.trips-screen-scroll.stack-viewport-lock` from `overflow: hidden; height: var(--app-vh)` to `min-height: 100dvh; height: auto; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; overscroll-behavior-y: contain;`.
+    - Optimized header, section, and launcher vertical margins (`padding-top: calc(8px + var(--safe-top))`, `padding-bottom: calc(12px + var(--safe-bottom))`) so that on iOS Safari the card retains its tall, uncompressed 3:4 portrait aspect ratio identical to Android, and scrolling naturally causes Safari's bottom toolbar to collapse into full-screen view.
+  - **Route Modal & Overlay LIFO Navigation Back Wiring (`src/App.tsx`):**
+    - Registered `useHistoryBack(showRouteModal, () => setShowRouteModal(false))` and `useEscapeKey(showRouteModal, () => setShowRouteModal(false))` in the LIFO stack.
+    - Also wired `showTripActionSheet` and `showAchievements` to `useHistoryBack` and `useEscapeKey` to guarantee that all overlay sheets/modals pop cleanly to their previous parent state without exiting the trip.
+  - **Dedicated Back Button in Route Modal (`src/components/TripRouteModal.tsx`):**
+    - Imported `IconChevronLeft` and added an accessible `<button>` on the left side of the modal header labeled "Back to trip summary", allowing users to tap back directly to the trip summary screen in addition to the existing close button and system back gesture.
+  - Cut release `v3.0.7`.
+* **Trade-offs Accepted:**
+  - Allowing subtle vertical overflow on constrained viewports (<680px height with active browser chrome) ensures cards never squash their aspect ratio or crop crucial trip imagery, letting mobile Safari smoothly collapse toolbars when engaged.
+
+
 
 
 

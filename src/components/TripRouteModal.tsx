@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { Trip } from '../types';
-import { IconMapPin, IconClose, IconChevronRight } from './Icons';
+import { IconMapPin, IconClose, IconChevronRight, IconChevronLeft } from './Icons';
 import { useResolvedTripStops } from '../hooks/useResolvedTripStops';
 import { parseTripRoute } from '../utils/routeHelper';
 import { formatDateRange } from '../utils/dateRange';
@@ -235,6 +235,31 @@ export function TripRouteModal({
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <button
+              type="button"
+              className="secondary-btn touch-target-btn"
+              style={{
+                width: '34px',
+                height: '34px',
+                minWidth: '34px',
+                minHeight: '34px',
+                padding: 0,
+                borderRadius: '50%',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                background: 'var(--bg-surface)',
+                border: '1px solid var(--border-color)',
+                color: 'var(--text-primary)',
+                cursor: 'pointer',
+                flexShrink: 0,
+              }}
+              onClick={onClose}
+              aria-label="Back to trip summary"
+              title="Back to trip summary"
+            >
+              <IconChevronLeft size={18} />
+            </button>
             <div
               style={{
                 width: '36px',
