@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useTripStore } from '../store/tripStore';
-import type { Trip, Member, TripNote } from '../types';
+import type { Trip, Member, TripNote, ChecklistItem } from '../types';
 import {
   IconClipboardList,
   IconPin,
@@ -46,6 +46,7 @@ export function ChecklistNotesTab({ trip, members }: Props) {
   const {
     addChecklistItem,
     toggleChecklistItem,
+    updateChecklistItem,
     deleteChecklistItem,
     addTripNote,
     updateTripNote,
@@ -60,6 +61,14 @@ export function ChecklistNotesTab({ trip, members }: Props) {
   const [quickItemText, setQuickItemText] = useState('');
   const [quickItemCategory, setQuickItemCategory] = useState<Exclude<ChecklistCategory, 'all'>>('packing');
   const [quickItemAssignee, setQuickItemAssignee] = useState<string>('');
+
+  // Checklist Item Edit Modal state
+  const [isChecklistModalOpen, setIsChecklistModalOpen] = useState(false);
+  const [editingChecklistItem, setEditingChecklistItem] = useState<ChecklistItem | null>(null);
+  const [editItemText, setEditItemText] = useState('');
+  const [editItemCategory, setEditItemCategory] = useState<Exclude<ChecklistCategory, 'all'>>('packing');
+  const [editItemAssignee, setEditItemAssignee] = useState<string>('');
+  const [editItemCompleted, setEditItemCompleted] = useState<boolean>(false);
 
   // Note Modal state
   const [isNoteModalOpen, setIsNoteModalOpen] = useState(false);
@@ -130,6 +139,31 @@ export function ChecklistNotesTab({ trip, members }: Props) {
   const handleDeleteChecklist = async (itemId: string) => {
     triggerHaptic('warning');
     await deleteChecklistItem(liveTrip.id, itemId);
+  };
+
+  const handleOpenEditChecklistModal = (item: ChecklistItem) => {
+    triggerHaptic('light');
+    setEditingChecklistItem(item);
+    setEditItemText(item.text);
+    setEditItemCategory((item.category as Exclude<ChecklistCategory, 'all'>) || 'packing');
+    setEditItemAssignee(item.assignedTo || '');
+    setEditItemCompleted(Boolean(item.completed));
+    setIsChecklistModalOpen(true);
+  };
+
+  const handleSaveChecklistItem = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingChecklistItem || !editItemText.trim()) return;
+
+    triggerHaptic('success');
+    await updateChecklistItem(liveTrip.id, editingChecklistItem.id, {
+      text: editItemText.trim(),
+      category: editItemCategory,
+      assignedTo: editItemAssignee || undefined,
+      completed: editItemCompleted,
+    });
+    setIsChecklistModalOpen(false);
+    setEditingChecklistItem(null);
   };
 
   const handleSeedDefaults = async () => {
@@ -378,6 +412,15 @@ export function ChecklistNotesTab({ trip, members }: Props) {
             </div>
           </form>
 
+          {/* Subtle gesture hint for discoverability */}
+          {filteredChecklist.length > 0 && (
+            <div className="checklist-swipe-hint-bar" aria-hidden="true">
+              <span className="checklist-swipe-hint-pill">
+                <span>↔️</span> Swipe item right to <strong>Edit</strong>, left to <strong>Delete</strong>
+              </span>
+            </div>
+          )}
+
           {/* Items List */}
           <div className="checklist-items-list" role="list">
             {filteredChecklist.length === 0 ? (
@@ -403,48 +446,80 @@ export function ChecklistNotesTab({ trip, members }: Props) {
               filteredChecklist.map((item) => {
                 const isChecked = item.completed;
                 return (
-                  <div
+                  <SwipeableRow
                     key={item.id}
-                    className={`checklist-item-card ${isChecked ? 'completed' : ''}`}
-                    role="listitem"
+                    plain
+                    borderRadius="var(--border-radius-sm)"
+                    className="checklist-swipe-wrapper"
+                    onEdit={() => handleOpenEditChecklistModal(item)}
+                    onDelete={() => handleDeleteChecklist(item.id)}
                   >
-                    <button
-                      type="button"
-                      className={`checklist-checkbox ${isChecked ? 'checked' : ''}`}
-                      onClick={() => handleToggleChecklist(item.id)}
-                      aria-label={isChecked ? `Mark ${item.text} as pending` : `Mark ${item.text} as completed`}
+                    <div
+                      className={`checklist-item-card ${isChecked ? 'completed' : ''}`}
+                      role="listitem"
                     >
-                      {isChecked && <IconCheck size={14} />}
-                    </button>
+                      <button
+                        type="button"
+                        className={`checklist-checkbox ${isChecked ? 'checked' : ''}`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleToggleChecklist(item.id);
+                        }}
+                        aria-label={isChecked ? `Mark ${item.text} as pending` : `Mark ${item.text} as completed`}
+                      >
+                        {isChecked && <IconCheck size={14} />}
+                      </button>
 
-                    <div className="checklist-item-content" onClick={() => handleToggleChecklist(item.id)}>
-                      <span className={`checklist-item-text ${isChecked ? 'strikethrough' : ''}`}>
-                        {item.text}
-                      </span>
-                      <div className="checklist-item-meta">
-                        <span className={`item-cat-badge cat-${item.category}`}>
-                          {item.category === 'packing' && '🎒 Packing'}
-                          {item.category === 'documents' && '📄 Documents'}
-                          {item.category === 'medical' && '💊 Medical'}
-                          {item.category === 'general' && '⚡ General'}
+                      <div
+                        className="checklist-item-content"
+                        onClick={() => handleToggleChecklist(item.id)}
+                      >
+                        <span className={`checklist-item-text ${isChecked ? 'strikethrough' : ''}`}>
+                          {item.text}
                         </span>
-                        {item.assignedTo && (
-                          <span className="item-assignee-badge">
-                            👤 {item.assignedTo}
+                        <div className="checklist-item-meta">
+                          <span className={`item-cat-badge cat-${item.category}`}>
+                            {item.category === 'packing' && '🎒 Packing'}
+                            {item.category === 'documents' && '📄 Documents'}
+                            {item.category === 'medical' && '💊 Medical'}
+                            {item.category === 'general' && '⚡ General'}
                           </span>
-                        )}
+                          {item.assignedTo && (
+                            <span className="item-assignee-badge">
+                              👤 {item.assignedTo}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="checklist-item-actions">
+                        <button
+                          type="button"
+                          className="checklist-action-btn edit-action"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleOpenEditChecklistModal(item);
+                          }}
+                          aria-label={`Edit ${item.text}`}
+                          title="Edit item"
+                        >
+                          <IconEdit size={16} />
+                        </button>
+                        <button
+                          type="button"
+                          className="checklist-action-btn delete-action"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteChecklist(item.id);
+                          }}
+                          aria-label={`Delete ${item.text}`}
+                          title="Delete item"
+                        >
+                          <IconTrash size={16} />
+                        </button>
                       </div>
                     </div>
-
-                    <button
-                      type="button"
-                      className="checklist-delete-btn"
-                      onClick={() => handleDeleteChecklist(item.id)}
-                      aria-label={`Delete ${item.text}`}
-                    >
-                      <IconTrash size={16} />
-                    </button>
-                  </div>
+                  </SwipeableRow>
                 );
               })
             )}
@@ -772,6 +847,159 @@ export function ChecklistNotesTab({ trip, members }: Props) {
                   disabled={!noteTitle.trim() || !noteContent.trim()}
                 >
                   {editingNoteId ? 'Save Changes' : 'Add Note'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Checklist Item Edit Modal */}
+      {isChecklistModalOpen && editingChecklistItem && (
+        <div className="note-modal-backdrop" onClick={() => setIsChecklistModalOpen(false)}>
+          <div
+            className="note-modal-card"
+            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="checklist-modal-title"
+          >
+            <div className="note-modal-header">
+              <div className="note-modal-header-left">
+                <span className="note-modal-eyebrow">EDIT CHECKLIST ITEM</span>
+                <h3 id="checklist-modal-title" className="note-modal-title">
+                  Update Task or Item
+                </h3>
+              </div>
+              <button
+                type="button"
+                className="note-modal-close-btn"
+                onClick={() => setIsChecklistModalOpen(false)}
+                aria-label="Close dialog"
+              >
+                <IconClose size={18} />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveChecklistItem} className="note-modal-form">
+              {/* Category Chips Selector */}
+              <div className="note-modal-field">
+                <label className="note-modal-label">Category</label>
+                <div className="note-category-picker" role="radiogroup" aria-label="Item Category">
+                  {[
+                    { id: 'packing', icon: '🎒', label: 'Packing' },
+                    { id: 'documents', icon: '📄', label: 'Documents' },
+                    { id: 'medical', icon: '💊', label: 'Medical' },
+                    { id: 'general', icon: '⚡', label: 'General' },
+                  ].map((cat) => (
+                    <button
+                      key={cat.id}
+                      type="button"
+                      role="radio"
+                      aria-checked={editItemCategory === cat.id}
+                      className={`note-cat-chip ${editItemCategory === cat.id ? 'active' : ''}`}
+                      onClick={() => {
+                        triggerHaptic('light');
+                        setEditItemCategory(cat.id as any);
+                      }}
+                    >
+                      <span>{cat.icon}</span>
+                      <span>{cat.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Title / Description Input */}
+              <div className="note-modal-field">
+                <label htmlFor="checklist-item-text-input" className="note-modal-label">
+                  Item Description
+                </label>
+                <input
+                  id="checklist-item-text-input"
+                  type="text"
+                  className="note-modal-input"
+                  placeholder="e.g. Passports, Trekking shoes, Power bank..."
+                  value={editItemText}
+                  onChange={(e) => setEditItemText(e.target.value)}
+                  required
+                  maxLength={100}
+                  autoFocus
+                />
+              </div>
+
+              {/* Assignee Selector */}
+              {members.length > 0 && (
+                <div className="note-modal-field">
+                  <label htmlFor="checklist-assignee-select" className="note-modal-label">
+                    Assign to Member
+                  </label>
+                  <select
+                    id="checklist-assignee-select"
+                    className="quick-add-select"
+                    style={{ width: '100%', padding: '10px 12px', fontSize: '0.92rem' }}
+                    value={editItemAssignee}
+                    onChange={(e) => setEditItemAssignee(e.target.value)}
+                  >
+                    <option value="">👤 Anyone (Unassigned)</option>
+                    {members.map((m) => (
+                      <option key={m.id} value={m.name}>
+                        {m.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {/* Completed Status Checkbox */}
+              <div
+                className="note-pin-toggle-card"
+                onClick={() => {
+                  triggerHaptic('light');
+                  setEditItemCompleted(!editItemCompleted);
+                }}
+                role="checkbox"
+                aria-checked={editItemCompleted}
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === ' ' || e.key === 'Enter') {
+                    e.preventDefault();
+                    triggerHaptic('light');
+                    setEditItemCompleted(!editItemCompleted);
+                  }
+                }}
+              >
+                <div className="note-pin-toggle-info">
+                  <span className="note-pin-icon" style={{ color: editItemCompleted ? 'var(--color-success)' : 'var(--text-muted)' }}>
+                    <IconCheck size={16} />
+                  </span>
+                  <div>
+                    <div className="note-pin-title">Mark as ready / packed</div>
+                    <div className="note-pin-desc">
+                      {editItemCompleted ? 'Item marked complete' : 'Item is still pending'}
+                    </div>
+                  </div>
+                </div>
+                <div className={`note-custom-toggle ${editItemCompleted ? 'active' : ''}`}>
+                  <div className="note-custom-toggle-thumb" />
+                </div>
+              </div>
+
+              {/* Modal Action Buttons */}
+              <div className="note-modal-actions">
+                <button
+                  type="button"
+                  className="note-modal-cancel-btn"
+                  onClick={() => setIsChecklistModalOpen(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="note-modal-submit-btn"
+                  disabled={!editItemText.trim()}
+                >
+                  Save Changes
                 </button>
               </div>
             </form>

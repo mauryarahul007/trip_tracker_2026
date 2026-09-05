@@ -1824,8 +1824,25 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Decision:**
   - Added pre-seeded multi-stop itinerary waypoints (`Mumbai -> Pune -> Goa`) to `demoSeed.ts` so anyone exploring via "Seed Demo Data" can immediately test and visualize the header route chips and dropdown toggle.
   - Bumped version to `v3.0.2` and restarted background Vite development server following automated release protocol.
+---
+
+## 102. Checklist Item Edit Ergonomics & Interactive Route Stops Modal
+* **Context:**
+  - In the Checklist tab, checklist items previously had no edit capability — users could only toggle complete or delete items with no way to rename, change category, or reassign members.
+  - In the header dropdown menu, clicking "View Route Stops" previously merely toggled an inline chip bar that was clipped and hidden by CSS whenever the dashboard header was scrolled down, leaving users with no tangible map or stops view.
+* **Decision:**
+  - **Checklist Item Editing & Gesture Parity (`ChecklistNotesTab.tsx`, `index.css`):**
+    - Added an interactive Edit Checklist Modal allowing full editing of item description, category (packing, documents, medical, general), member assignment, and completion status.
+    - Added a direct `<IconEdit />` button on each checklist card alongside the delete button for 1-tap editing on desktop and mobile.
+    - Wrapped each checklist item in `<SwipeableRow>` with touch-only swipe gestures (swipe right to Edit, swipe left to Delete), maintaining 100% ergonomic parity with Travel Notes, Expenses, and Members.
+    - Added discoverability hint pill (`.checklist-swipe-hint-pill`) informing users of swipe gestures.
+  - **Interactive Route Stops Modal & Header Fix (`TripRouteModal.tsx`, `App.tsx`, `index.css`):**
+    - Built a dedicated `TripRouteModal` providing an interactive MapLibre map route with OSRM road geometry, interactive numbered stop pins that fly-to coordinates on click, a chronological waypoints itinerary timeline, and quick toggle for the inline header stops bar.
+    - Separated header action sheet options into "View N Route Stops & Map" (opens modal) and "Show/Hide Header Route Bar" (toggles inline chips with smooth scroll to container top).
+    - Fixed CSS in `src/index.css` so `.app-header-stops.is-expanded` overrides `.is-scrolled` and `.sheet-full` suppression, keeping route chips visible whenever explicitly expanded.
+  - Cut release `v3.0.3` and updated dev server per automated release protocol.
 * **Trade-offs Accepted:**
-  - Demo trip now demonstrates multi-stop routing capability by default.
+  - Touch swipe gestures are scoped to mobile pointer events so mouse click and text interactions on desktop remain unaffected.
 
 
 

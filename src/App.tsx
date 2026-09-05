@@ -84,6 +84,9 @@ const TripWrappedModal = lazy(lazyImport(() =>
 const AchievementBadgeModal = lazy(lazyImport(() =>
   import('./components/AchievementBadgeModal').then((m) => ({ default: m.AchievementBadgeModal }))
 ));
+const TripRouteModal = lazy(lazyImport(() =>
+  import('./components/TripRouteModal').then((m) => ({ default: m.TripRouteModal }))
+));
 import { usePeerPresence } from './hooks/usePeerPresence';
 import type { AdminTab } from './components/admin/AdminPortalLayout';
 const AdminPortalLayout = lazy(lazyImport(() =>
@@ -379,6 +382,7 @@ export default function App() {
   const [showTripWrapped, setShowTripWrapped] = useState(false);
   const [showTripActionSheet, setShowTripActionSheet] = useState(false);
   const [showAchievements, setShowAchievements] = useState(false);
+  const [showRouteModal, setShowRouteModal] = useState(false);
   const [showShortcutsModal, setShowShortcutsModal] = useState(false);
   const activePeers = usePeerPresence(activeTripId);
 
@@ -1938,7 +1942,7 @@ export default function App() {
             {/* Route Stops Chips Bar inside Header -- collapsed by default
                 (see stopsExpanded above), tap to reveal the full list. */}
             {activeTrip?.stops && activeTrip.stops.length > 0 && (
-              <div className="app-header-stops" style={{ position: 'relative', zIndex: 1 }}>
+              <div className={`app-header-stops ${stopsExpanded ? 'is-expanded' : ''}`} style={{ position: 'relative', zIndex: 1 }}>
                 {stopsExpanded ? (
                   <div style={{ display: 'flex', gap: '6px', overflowX: 'auto', scrollbarWidth: 'none' }}>
                     {activeTrip.stops.map((stop, sIdx) => (
@@ -2300,14 +2304,25 @@ export default function App() {
             ...(activeTrip.stops && activeTrip.stops.length > 0
               ? [
                   {
-                    id: 'stops',
-                    label: stopsExpanded ? 'Hide Route Stops' : `View ${activeTrip.stops.length} Route Stops`,
-                    subtitle: 'Toggle journey stops and map itinerary pins',
+                    id: 'route-modal',
+                    label: `View ${activeTrip.stops.length} Route Stops & Map`,
+                    subtitle: 'Interactive map route, waypoints timeline & itinerary pins',
                     icon: <IconMapPin size={18} />,
                     onClick: () => {
-                      setActiveTab('expenses');
+                      setShowRouteModal(true);
+                    },
+                  },
+                  {
+                    id: 'toggle-header-stops',
+                    label: stopsExpanded ? 'Hide Header Route Bar' : 'Show Header Route Bar',
+                    subtitle: stopsExpanded ? 'Collapse stops chips below header' : 'Pin stops chips directly under header',
+                    icon: <IconMapPin size={18} />,
+                    onClick: () => {
                       setStopsExpanded((prev) => !prev);
-                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                      const tabPane = document.querySelector('.tab-pane.active') || document.querySelector('.tab-pane');
+                      if (tabPane) {
+                        tabPane.scrollTo({ top: 0, behavior: 'smooth' });
+                      }
                     },
                   },
                 ]
@@ -2563,6 +2578,19 @@ export default function App() {
             categories={categories}
             isFullySettled={transfers.length === 0}
             onClose={() => setShowAchievements(false)}
+          />
+        </Suspense>
+      )}
+
+      {/* Trip Route & Stops Modal */}
+      {showRouteModal && activeTrip && (
+        <Suspense fallback={null}>
+          <TripRouteModal
+            isOpen={showRouteModal}
+            onClose={() => setShowRouteModal(false)}
+            trip={activeTrip}
+            stopsExpanded={stopsExpanded}
+            onToggleHeaderStops={() => setStopsExpanded((prev) => !prev)}
           />
         </Suspense>
       )}

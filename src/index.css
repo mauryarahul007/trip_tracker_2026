@@ -1747,6 +1747,16 @@ input[type="date"].input-field {
   pointer-events: none;
 }
 
+.trip-dashboard-header.is-scrolled .app-header-stops.is-expanded,
+.trip-dashboard-header.sheet-full .app-header-stops.is-expanded {
+  opacity: 1 !important;
+  max-height: 52px !important;
+  margin-top: 6px !important;
+  padding-top: 6px !important;
+  transform: none !important;
+  pointer-events: auto !important;
+}
+
 .trip-dashboard-header .secondary-btn {
   transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
   border-radius: var(--border-radius-pill);
@@ -9724,6 +9734,14 @@ textarea.input-field {
   color: var(--text-secondary);
 }
 
+.checklist-item-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.checklist-action-btn,
 .checklist-delete-btn {
   background: transparent;
   border: none;
@@ -9735,16 +9753,52 @@ textarea.input-field {
   align-items: center;
   justify-content: center;
   transition: var(--transition-smooth);
-  opacity: 0.5;
+  opacity: 0.75;
 }
 
+.checklist-item-card:hover .checklist-action-btn,
 .checklist-item-card:hover .checklist-delete-btn {
   opacity: 1;
 }
 
+.checklist-action-btn.edit-action:hover {
+  color: var(--primary-accent);
+  background: var(--bg-surface-hover);
+}
+
+.checklist-action-btn.delete-action:hover,
 .checklist-delete-btn:hover {
   color: var(--color-danger);
   background: rgba(220, 38, 38, 0.1);
+}
+
+.checklist-swipe-hint-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 10px;
+}
+
+.checklist-swipe-hint-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  background: var(--bg-surface-hover);
+  border: 1px solid var(--border-color);
+  padding: 4px 12px;
+  border-radius: 9999px;
+  user-select: none;
+}
+
+.checklist-swipe-wrapper {
+  border-radius: var(--border-radius-sm);
+  margin-bottom: 8px;
+}
+
+.checklist-swipe-wrapper .checklist-item-card {
+  margin-bottom: 0;
 }
 
 /* Empty State */
