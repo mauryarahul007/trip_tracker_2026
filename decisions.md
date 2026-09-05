@@ -1890,6 +1890,24 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - Standard Google Maps directions URL scheme is used as it seamlessly opens in Apple Maps on iOS devices or Google Maps on Android and desktop browsers without platform-specific app protocol fragmentation.
 
+---
+
+## 105. In-Tab Search Clear Button Containment & Layout Anchoring
+* **Context:**
+  - In mobile web browsers (notably Chrome for Android), the "✕" button on the Checklist & Notes search bar appeared displaced and sat outside the right border of the search container.
+  - This occurred because `.input-icon-wrap` is a flex container, and if `.search-clear-btn` stylesheet rules were deferred by PWA cache or lacked explicit bounding coordinates, the button was laid out in normal flex flow following the 100% width input, causing it to push outside the input border.
+* **Decision:**
+  - **Explicit Inline Anchoring (`ChecklistNotesTab.tsx`):**
+    - Directly assigned `position: absolute`, `right: 10px`, `top: 50%`, `transform: translateY(-50%)`, and `zIndex: 2` to the clear button.
+    - Explicitly assigned `position: absolute`, `left: 12px`, `top: 50%`, `transform: translateY(-50%)`, and `zIndex: 2` to the leading search icon.
+    - Enforced `boxSizing: 'border-box'` on the `<input>` element so the input width matches the container exactly without overflow.
+  - **CSS Rule Hardening (`src/index.css`):**
+    - Updated `.search-clear-btn` with `right: 10px`, `width: 28px`, `height: 28px`, and `z-index: 2` for consistent containment across all search instances.
+  - Cut release `v3.0.5` (build `541`).
+* **Trade-offs Accepted:**
+  - Inlining critical bounding coordinates guarantees layout containment even during service worker stylesheet cache transitions on mobile PWAs.
+
+
 
 
 

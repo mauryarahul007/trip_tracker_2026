@@ -1036,7 +1036,7 @@ input[type="date"].input-field {
 
 .search-clear-btn {
   position: absolute;
-  right: 12px;
+  right: 10px;
   top: 50%;
   transform: translateY(-50%);
   background: none;
@@ -1044,10 +1044,13 @@ input[type="date"].input-field {
   color: var(--text-muted);
   cursor: pointer;
   padding: 4px;
+  width: 28px;
+  height: 28px;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 50%;
+  z-index: 2;
   transition: var(--transition-smooth);
 }
 

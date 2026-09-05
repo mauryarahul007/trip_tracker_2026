@@ -348,12 +348,25 @@ export function ChecklistNotesTab({ trip, members }: Props) {
       {(checklist.length > 0 || notes.length > 0) && (
         <div style={{ marginBottom: '12px' }}>
           <div className="input-icon-wrap" style={{ position: 'relative', width: '100%' }}>
-            <IconSearch size={16} className="icon-sm" />
+            <IconSearch
+              size={16}
+              className="icon-sm"
+              style={{
+                position: 'absolute',
+                left: '12px',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                color: 'var(--text-muted)',
+                pointerEvents: 'none',
+                zIndex: 2,
+              }}
+            />
             <input
               type="text"
               className="input-field"
               style={{
                 width: '100%',
+                boxSizing: 'border-box',
                 paddingLeft: '36px',
                 paddingRight: searchQuery ? '36px' : '14px',
                 borderRadius: 'var(--border-radius-sm)',
@@ -372,6 +385,22 @@ export function ChecklistNotesTab({ trip, members }: Props) {
                 onClick={() => setSearchQuery('')}
                 aria-label="Clear search"
                 title="Clear search"
+                style={{
+                  position: 'absolute',
+                  right: '10px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  background: 'none',
+                  border: 'none',
+                  color: 'var(--text-muted)',
+                  cursor: 'pointer',
+                  padding: '6px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  borderRadius: '50%',
+                  zIndex: 2,
+                }}
               >
                 <IconClose size={14} />
               </button>
