@@ -1804,6 +1804,18 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - Dragging notes is restricted to touch devices (matching `ExpenseList` and `MembersGroupsTab`); desktop mouse users retain explicit controls (buttons and card click) without mouse drag hijacking.
 
+---
+
+## 100. v3.0.1 Release Cut & Dev Server Re-evaluation
+* **Context:**
+  - The application version in `package.json` was bumped to `3.0.0`, but the long-running local Vite dev server had been initialized earlier when the version was still `2.0.0`.
+  - Because Vite evaluates `pkgVersion` from `package.json` and git commit count once at boot time in `vite.config.ts` (`define: { __APP_VERSION__, __BUILD_NUMBER__ }`), the client UI continued displaying the stale version.
+* **Decision:**
+  - Cut release `v3.0.1` (`package.json`) via `npm run release:patch` to incorporate the Travel Notes swipe enhancements and gesture navigation alignment.
+  - Restarted the Vite development server so `vite.config.ts` re-evaluates both `__APP_VERSION__` (`3.0.1`) and `__BUILD_NUMBER__` (current git commit count).
+* **Trade-offs Accepted:**
+  - Requires dev server process restart whenever `package.json` version definitions change.
+
 
 
 
