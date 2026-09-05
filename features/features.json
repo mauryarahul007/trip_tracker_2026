@@ -473,5 +473,21 @@
     "shippedAt": "2026-09-04T14:51:48.429Z",
     "shippedBy": "claude-cli",
     "shippedNote": "src/components/SettingsView.tsx: 5 inline group cards collapsed into summary rows, content moved to new subscreens (trip-settings, preferences, data-menu, help-account, about). Build, typecheck, and full test suite (148 tests) all green. Commit 90eecfb."
+  },
+  {
+    "id": "FEAT-031",
+    "title": "Lazy-load CommandPalette (Ctrl+K) to cut initial bundle",
+    "description": "Lazy-load CommandPalette (Ctrl+K) to cut initial bundle",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "agent",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-09-05T15:12:30.993Z",
+    "updatedAt": "2026-09-05T15:12:38.265Z",
+    "shippedBy": "agent",
+    "shippedAt": "2026-09-05T15:12:38.264Z",
+    "shippedNote": "Code-split CommandPalette import in App.tsx via lazy()+Suspense, matching pattern used for other secondary modals. Chunk now loads only on first Ctrl+K open instead of app startup."
   }
 ]

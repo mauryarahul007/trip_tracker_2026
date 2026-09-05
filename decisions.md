@@ -2004,6 +2004,17 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - Markdown documentation files add negligible repository weight while providing deep traceability for future contributors and automated audit tools.
 
+---
+
+## 110. Code-Split the Command Palette (FEAT-031)
+* **Context:**
+  - `CommandPalette` (429 lines) was statically imported and mounted unconditionally in `App.tsx`, always returning `null` internally when closed (`if (!isOpen) return null`). Because the import was eager, its JS chunk shipped in the initial bundle for every session even though the palette (`Ctrl+K`) is opened by only a fraction of users.
+  - Every other secondary modal in `App.tsx` (`GlobalSettingsModal`, `ExpenseForm`, `TripWrappedModal`, `AchievementBadgeModal`, `ShareTripModal`, etc.) already followed a `lazy(lazyImport(...))` code-split pattern; `CommandPalette` was the one outlier still imported eagerly.
+* **Decision:**
+  - Converted the `CommandPalette` import to the same `lazy(lazyImport(...))` pattern used by the other secondary modals.
+* **Trade-offs Accepted:**
+  - First `Ctrl+K` press now pays a one-time chunk fetch instead of the palette being instantly ready; negligible on a cached PWA and outweighed by the smaller initial bundle every session pays regardless of whether the palette is ever opened.
+
 
 
 

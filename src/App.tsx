@@ -75,7 +75,11 @@ import { getCatColor } from './utils/categoryColor';
 import { useTabSwipe } from './utils/useTabSwipe';
 import { ChecklistNotesTab } from './components/ChecklistNotesTab';
 import { withViewTransition } from './utils/viewTransition';
-import { CommandPalette } from './components/CommandPalette';
+// CommandPalette (Ctrl+K) is only needed once the user opens it -- code-split
+// like the other secondary modals so it doesn't ship in the initial bundle.
+const CommandPalette = lazy(lazyImport(() =>
+  import('./components/CommandPalette').then((m) => ({ default: m.CommandPalette }))
+));
 // TripWrappedModal draws a large 1080x1920 canvas story image and is only
 // needed when the user opens Trip Wrapped, so it's lazy-loaded like ExpenseForm.
 const TripWrappedModal = lazy(lazyImport(() =>
