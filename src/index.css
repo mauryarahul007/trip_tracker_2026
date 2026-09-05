@@ -2752,13 +2752,8 @@ input:checked + .toggle-slider:before {
 }
 .trip-stack-stage {
   position: relative;
-  width: 100%;
-  max-width: 390px;
-  margin: 0 auto 10px;
-  height: clamp(430px, 58vh, 485px);
-  min-height: 420px;
-  max-height: 500px;
-  aspect-ratio: 3 / 4;
+  height: min(58vh, 480px);
+  margin-bottom: 12px;
   perspective: 1200px;
   perspective-origin: 50% 35%;
 }
@@ -5441,20 +5436,17 @@ html.capacitor-ios .trip-sheet .tab-pane {
    lock the entire screen to 100% viewport height and disable scrolling so everything
    is viewed directly within the viewport. */
 .trips-screen-scroll.stack-viewport-lock {
-  min-height: 100%;
-  min-height: 100dvh;
-  min-height: var(--app-vh, 100dvh);
-  height: auto;
-  overflow-y: auto;
-  overflow-x: hidden;
-  -webkit-overflow-scrolling: touch;
+  height: 100%;
+  height: 100dvh;
+  height: var(--app-vh, 100dvh);
+  overflow: hidden;
   display: flex;
   flex-direction: column;
   padding-top: calc(8px + var(--safe-top, 0px));
-  padding-bottom: calc(12px + var(--safe-bottom, 0px));
+  padding-bottom: calc(14px + var(--safe-bottom, 0px));
   padding-left: max(16px, var(--safe-left, 16px));
   padding-right: max(16px, var(--safe-right, 16px));
-  overscroll-behavior-y: contain;
+  overscroll-behavior: none;
 }
 
 .trips-screen-scroll.stack-viewport-lock .trips-screen-header {
@@ -5472,11 +5464,11 @@ html.capacitor-ios .trip-sheet .tab-pane {
 }
 
 .trips-screen-scroll.stack-viewport-lock .trips-screen-main {
-  flex: 1 0 auto;
+  flex: 1;
   min-height: 0;
   display: flex;
   flex-direction: column;
-  overflow: visible;
+  overflow: hidden;
 }
 
 .trips-screen-scroll.stack-viewport-lock .trips-section-header {
@@ -5489,7 +5481,7 @@ html.capacitor-ios .trip-sheet .tab-pane {
 }
 
 .trips-screen-scroll.stack-viewport-lock .trip-stack {
-  flex: 0 0 auto;
+  flex: 1;
   min-height: 0;
   display: flex;
   flex-direction: column;
@@ -5497,14 +5489,12 @@ html.capacitor-ios .trip-sheet .tab-pane {
 }
 
 .trips-screen-scroll.stack-viewport-lock .trip-stack-stage {
-  flex: 0 0 auto;
+  flex: 1;
+  min-height: 0;
+  height: auto;
   width: 100%;
-  max-width: 390px;
-  margin: 0 auto 8px;
-  height: clamp(430px, 58vh, 485px);
-  min-height: 420px;
-  max-height: 500px;
-  aspect-ratio: 3 / 4;
+  max-width: min(390px, calc((var(--app-vh, 100dvh) - 220px) * 0.75));
+  margin: 0 auto 6px;
 }
 
 .trips-screen-scroll.stack-viewport-lock .trip-stack-viewall {
@@ -5515,12 +5505,13 @@ html.capacitor-ios .trip-sheet .tab-pane {
 }
 
 .trips-screen-scroll.stack-viewport-lock .trip-launcher {
-  margin: 6px 0 0;
+  margin-top: auto;
+  margin-bottom: 0;
   flex-shrink: 0;
 }
 
 .trips-screen-scroll.stack-viewport-lock .launcher-track {
-  height: 64px;
+  height: 66px;
   max-width: 270px;
 }
 

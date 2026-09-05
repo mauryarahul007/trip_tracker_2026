@@ -1958,6 +1958,26 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - Allowing subtle vertical overflow on constrained viewports (<680px height with active browser chrome) ensures cards never squash their aspect ratio or crop crucial trip imagery, letting mobile Safari smoothly collapse toolbars when engaged.
 
+---
+
+## 108. Bottom Slider Anchoring & Viewport Lock Dead Space Elimination
+* **Context:**
+  - After introducing fixed heights and auto-overflow in ADR #107, an awkward 200–250px dead gap appeared between the Join/Create slider (`.trip-launcher`) and the bottom edge on tall Android screens (e.g. 840–900px device height).
+  - This occurred because `.trips-screen-scroll.stack-viewport-lock` was set to `min-height: 100dvh; height: auto;` while `.trip-stack-stage` had fixed clamped heights and `.trip-launcher` used a fixed top margin (`margin: 6px 0 0`), causing all elements to cluster high up on the screen and leaving vacant space at the bottom.
+* **Decision:**
+  - **Restore Full Viewport Lock (`src/index.css`):**
+    - Locked `.trips-screen-scroll.stack-viewport-lock` back to `height: 100%; height: 100dvh; height: var(--app-vh, 100dvh); overflow: hidden; overscroll-behavior: none;`.
+    - Restored `flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: hidden;` on `.trips-screen-main` and `.trip-stack`.
+  - **Pin Launcher to Viewport Bottom (`src/index.css`):**
+    - Applied `margin-top: auto; margin-bottom: 0; flex-shrink: 0;` to `.trip-launcher`. Any extra vertical space naturally sits above the launcher, ensuring the slider is always neatly anchored right above the bottom navigation / safe-area padding (`calc(14px + var(--safe-bottom))`).
+  - **Dynamic 3:4 Aspect Ratio Containment (`src/index.css`):**
+    - Set `.trip-stack-stage` to `flex: 1; min-height: 0; height: auto; width: 100%; max-width: min(390px, calc((var(--app-vh, 100dvh) - 220px) * 0.75)); margin: 0 auto 6px;`.
+    - This dynamically sizes the card's width in exact 0.75 proportion to available height on short iOS screens (preventing squat horizontal squishing) while expanding fully on tall Android screens to eliminate empty space.
+  - Cut release `v3.0.8`.
+* **Trade-offs Accepted:**
+  - The viewport is strictly locked on phone screens so that all home-screen navigation controls (cards, pagination dots, launcher slider) sit precisely in the viewport with no vertical page scroll.
+
+
 
 
 
