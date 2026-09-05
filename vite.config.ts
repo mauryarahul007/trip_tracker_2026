@@ -28,6 +28,11 @@ export default defineConfig(({ command }) => ({
   optimizeDeps: {
     exclude: ['maplibre-gl'],
   },
+  server: {
+    watch: {
+      ignored: ['**/graphify-out/**', '**/android/**', '**/ios/**', '**/dist/**'],
+    },
+  },
   define: {
     __APP_VERSION__: JSON.stringify(pkgVersion),
     __BUILD_NUMBER__: JSON.stringify(buildNumber),
