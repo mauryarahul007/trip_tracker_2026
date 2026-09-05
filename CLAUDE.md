@@ -34,6 +34,13 @@ instruction, not a one-off. If genuinely unsure which category a change
 falls into, ask the user rather than guessing. Never push before this
 question is asked and answered.
 
+## Automated versioning & dev server reload (mandatory)
+
+Before committing and pushing changes:
+1. Automatically bump `package.json` version (`npm run release:patch|minor|major`) without waiting for user commands.
+2. Restart the background Vite dev server so `__APP_VERSION__` and `__BUILD_NUMBER__` compile into the client UI immediately.
+3. Document the release in `decisions.md` and git commit body.
+
 ## graphify
 
 This project has a knowledge graph at graphify-out/ with god nodes, community structure, and cross-file relationships.
@@ -43,3 +50,4 @@ Rules:
 - If graphify-out/wiki/index.md exists, use it for broad navigation instead of raw source browsing.
 - Read graphify-out/GRAPH_REPORT.md only for broad architecture review or when query/path/explain do not surface enough context.
 - After modifying code, run `graphify update .` to keep the graph current (AST-only, no API cost).
+

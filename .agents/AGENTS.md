@@ -66,5 +66,16 @@
 - **Native Apps (Android & iOS) Guardrail:** Do NOT apply or deploy changes to the native Android or iOS app wrappers/builds unless and until the user explicitly specifies it.
 - **Push Prompt Protocol:** On each push to GitHub, you may ask the user if they want to deploy the changes for the native mobile apps as well. Otherwise, default is strictly webapp only.
 
+## Automated Versioning & Dev Server Reload Protocol (Mandatory)
+
+- **Rule 1 (Automatic Version Bump):** Whenever code changes (features, bug fixes, UI overhauls, or refinements) are prepared for commit and push, you MUST automatically bump the version in `package.json` without waiting for the user to prompt or ask for it:
+  - Use `npm run release:patch` (or edit `package.json`) for bug fixes, performance improvements, and iterative UI refinements.
+  - Use `npm run release:minor` for notable feature additions or multi-component functional additions.
+  - Use `npm run release:major` for architectural rewrites or major platform milestone cuts.
+  - The user must NEVER have to manually instruct or remind the agent to upgrade the version.
+- **Rule 2 (Automatic Dev Server Refresh):** Because `vite.config.ts` compiles `__APP_VERSION__` (from `package.json`) and `__BUILD_NUMBER__` (from `git rev-list --count HEAD`) at initial server boot, whenever the version is bumped, you MUST automatically restart the background Vite development server (`kill` stale task, launch new background daemon `npm run dev`). This ensures the live browser view immediately displays the fresh version and build number in Settings and header badges.
+- **Rule 3 (ADR & Commit Traceability):** Record the release cut in `decisions.md` under a corresponding ADR entry and reference the version in the git commit message and response summary.
+
+
 
 
