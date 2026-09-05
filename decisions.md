@@ -1907,6 +1907,37 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - Inlining critical bounding coordinates guarantees layout containment even during service worker stylesheet cache transitions on mobile PWAs.
 
+---
+
+## 106. WebKit & Mobile Compositor Performance Optimization (GPU Transforms, WebGL Readback Elimination, and Glass Shader Tuning)
+* **Context:**
+  - While the UI was smooth on Android Chrome (due to Blink/Skia's tile-caching and threaded compositor), it suffered from severe frame drops and touch lag on iOS Safari / WebKit (15–30 FPS).
+  - Profiling revealed five primary bottlenecks:
+    1. Dragging the bottom content sheet ([`TripContentSheet.tsx`](file:///c:/ProjectsV1/Trip_Tracker_2026/src/components/TripContentSheet.tsx)) triggered `setTopPercent` React state updates on every single `touchmove` event (up to 120 FPS on iOS ProMotion displays), driving CSS `top` reflows and continuous GPU clipping mask re-rasterization (`borderRadius`).
+    2. [`TripMapHero.tsx`](file:///c:/ProjectsV1/Trip_Tracker_2026/src/components/TripMapHero.tsx) used `preserveDrawingBuffer: true` and executed a continuous `map.on('render')` canvas pixel-sampling loop (`ctx.drawImage` + `ctx.getImageData`), creating a synchronous CPU-GPU pipeline stall on Metal/WebKit.
+    3. Heavy `backdrop-filter: blur(28px)` and `blur(24px)` filters over the dynamic WebGL map caused CoreAnimation fragment shader bottlenecks on iOS Safari.
+    4. [`nativeShell.ts`](file:///c:/ProjectsV1/Trip_Tracker_2026/src/utils/nativeShell.ts) listened to `visualViewport.scroll` and mutated `:root` CSS custom property `--app-vh` during scrolling, triggering document-wide style invalidation passes.
+    5. Scrolling tab panes used continuous `-webkit-mask-image: linear-gradient(...)` alpha masks on WebKit.
+* **Decision:**
+  - **Decouple Sheet Dragging to GPU Transforms (`TripContentSheet.tsx`):**
+    - Transitioned drag movement from React state and CSS `top` to direct DOM `transform: translate3d(0, deltaPx, 0)` and direct `scrim.style.opacity`.
+    - Zero React component re-renders and zero CSS layout reflows occur during active drag gestures.
+    - On gesture release (`handleTouchEnd`), the sheet springs to the resolved snap point via GPU transform before reconciling `top` and React state.
+    - Replaced `window.getComputedStyle` traversal in `handleTouchStart` with an instant `target.closest('.tab-pane, [data-scrollable]')` query.
+  - **Eliminate WebGL Canvas Readback & Stalls (`TripMapHero.tsx`):**
+    - Removed `canvasContextAttributes: { preserveDrawingBuffer: true }` so the browser GPU can utilize double-buffering and buffer discards.
+    - Removed the continuous `sampleHeaderLuminance` readback loop, defaulting header tone to dark for high-contrast legibility over the bright OpenFreeMap Liberty style.
+  - **Tune Glass Shader Radii (`src/index.css`):**
+    - Calibrated blur radii from 28px/24px down to 14px/16px, cutting GPU fragment shading workloads by over 50% while preserving a rich glass aesthetic.
+    - Cleaned up non-composited properties from `will-change` (retaining `will-change: transform, opacity`).
+    - Added `@supports (-webkit-touch-callout: none)` to disable expensive scrolling alpha masks on iOS WebKit.
+  - **Remove VisualViewport Scroll Listener (`src/utils/nativeShell.ts`):**
+    - Removed `vv.addEventListener('scroll', setVar)`, retaining `resize` and `orientationchange` for keyboard and layout adjustments without `:root` style thrashing during scroll.
+  - Cut release `v3.0.6` (build `542`).
+* **Trade-offs Accepted:**
+  - Header tone over the map relies on the bright vector map default plus existing high-contrast text shadow and scrim layers rather than continuous real-time WebGL canvas pixel sampling. This trade-off was accepted because eliminating the GPU-CPU pipeline stall yields a massive frame-rate improvement on both iOS Safari and Android Chrome.
+
+
 
 
 

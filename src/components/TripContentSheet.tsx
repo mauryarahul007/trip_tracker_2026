@@ -64,9 +64,9 @@ interface Props {
 // state is nearer on release. On desktop, dragging is restricted to the handle.
 export function TripContentSheet({ children, onExpandedChange, onFullChange }: Props) {
   const [topPercent, setTopPercent] = useState(SHEET_COLLAPSED_TOP);
-  const [isDragging, setIsDragging] = useState(false);
 
   const sheetRef = useRef<HTMLDivElement | null>(null);
+  const scrimRef = useRef<HTMLDivElement | null>(null);
 
   const dragStartY = useRef(0);
   const dragStartTop = useRef(SHEET_COLLAPSED_TOP);
@@ -76,10 +76,7 @@ export function TripContentSheet({ children, onExpandedChange, onFullChange }: P
   const isDraggingRef = useRef(false);
   const liveTopPercentRef = useRef(SHEET_COLLAPSED_TOP);
   const scrollContainerRef = useRef<HTMLElement | null>(null);
-
-  const lastMoveTime = useRef(0);
-  const lastMovePercent = useRef(SHEET_COLLAPSED_TOP);
-  const velocityRef = useRef(0);
+  const settleTimeoutRef = useRef<number | null>(null);
 
   // Sync live ref with state
   useEffect(() => {
@@ -105,38 +102,88 @@ export function TripContentSheet({ children, onExpandedChange, onFullChange }: P
     lastMovePercent.current = nextPercent;
   };
 
+  const endDragAndSnap = () => {
+    if (!isDraggingRef.current) return;
+    isDraggingRef.current = false;
+
+    const sheetEl = sheetRef.current;
+    const scrimEl = scrimRef.current;
+    sheetEl?.classList.remove('dragging');
+    scrimEl?.classList.remove('dragging');
+
+    const finalTop = resolveSnapPoint(liveTopPercentRef.current, velocityRef.current, dragStartTop.current);
+    if (finalTop !== dragStartTop.current) triggerSnapHaptic();
+
+    // Smoothly spring the GPU transform to the target snap point
+    const targetDeltaPx = ((finalTop - dragStartTop.current) / 100) * window.innerHeight;
+    if (sheetEl) {
+      sheetEl.style.transition = 'transform 0.38s var(--ease-uber-spring)';
+      sheetEl.style.transform = `translate3d(0, ${targetDeltaPx}px, 0)`;
+    }
+    if (scrimEl) {
+      const finalProgress = Math.max(0, Math.min(1, (SHEET_COLLAPSED_TOP - finalTop) / (SHEET_COLLAPSED_TOP - SHEET_FULL_TOP)));
+      scrimEl.style.transition = 'opacity 0.38s var(--ease-uber-spring)';
+      scrimEl.style.opacity = `${finalProgress * 0.55}`;
+    }
+
+    // Once spring completes, reconcile top property and reset inline styles
+    settleTimeoutRef.current = window.setTimeout(() => {
+      settleTimeoutRef.current = null;
+      if (sheetEl) {
+        sheetEl.style.transition = '';
+        sheetEl.style.transform = '';
+      }
+      if (scrimEl) {
+        scrimEl.style.transition = '';
+        scrimEl.style.opacity = '';
+      }
+      updateTopPercent(finalTop);
+      onExpandedChange?.(finalTop !== SHEET_COLLAPSED_TOP);
+      onFullChange?.(finalTop === SHEET_FULL_TOP);
+    }, 380);
+  };
+
   // Pointer events for desktop mouse dragging (restricted to the handle)
   const handlePointerDown = (e: PointerEvent<HTMLDivElement>) => {
     if (e.pointerType !== 'mouse') return; // Touch events are handled separately via native listeners
     if (e.button !== 0) return;
 
+    if (settleTimeoutRef.current !== null) {
+      window.clearTimeout(settleTimeoutRef.current);
+      settleTimeoutRef.current = null;
+    }
+
     e.currentTarget.setPointerCapture(e.pointerId);
     dragStartY.current = e.clientY;
     dragStartTop.current = topPercent;
     resetVelocityTracking(topPercent);
-    setIsDragging(true);
+    isDraggingRef.current = true;
+    sheetRef.current?.classList.add('dragging');
+    scrimRef.current?.classList.add('dragging');
   };
 
   const handlePointerMove = (e: PointerEvent<HTMLDivElement>) => {
     if (e.pointerType !== 'mouse') return;
-    if (!isDragging) return;
+    if (!isDraggingRef.current) return;
 
     const deltaPercent = ((e.clientY - dragStartY.current) / window.innerHeight) * 100;
     const next = withResistance(dragStartTop.current + deltaPercent);
     trackVelocity(next);
-    updateTopPercent(next);
+    liveTopPercentRef.current = next;
+
+    const deltaPx = ((next - dragStartTop.current) / 100) * window.innerHeight;
+    if (sheetRef.current) {
+      sheetRef.current.style.transform = `translate3d(0, ${deltaPx}px, 0)`;
+    }
+    if (scrimRef.current) {
+      const progress = Math.max(0, Math.min(1, (SHEET_COLLAPSED_TOP - next) / (SHEET_COLLAPSED_TOP - SHEET_FULL_TOP)));
+      scrimRef.current.style.opacity = `${progress * 0.55}`;
+    }
   };
 
   const handlePointerUp = (e: PointerEvent<HTMLDivElement>) => {
     if (e.pointerType !== 'mouse') return;
-    if (!isDragging) return;
-
-    setIsDragging(false);
-    const finalTop = resolveSnapPoint(liveTopPercentRef.current, velocityRef.current, dragStartTop.current);
-    if (finalTop !== dragStartTop.current) triggerSnapHaptic();
-    updateTopPercent(finalTop);
-    onExpandedChange?.(finalTop !== SHEET_COLLAPSED_TOP);
-    onFullChange?.(finalTop === SHEET_FULL_TOP);
+    endDragAndSnap();
   };
 
   const handlePointerCancel = (e: PointerEvent<HTMLDivElement>) => {
@@ -150,6 +197,12 @@ export function TripContentSheet({ children, onExpandedChange, onFullChange }: P
 
     const handleTouchStart = (e: TouchEvent) => {
       if (e.touches.length !== 1) return;
+
+      if (settleTimeoutRef.current !== null) {
+        window.clearTimeout(settleTimeoutRef.current);
+        settleTimeoutRef.current = null;
+      }
+
       const touch = e.touches[0];
       touchStartY.current = touch.clientY;
       touchStartX.current = touch.clientX;
@@ -159,21 +212,13 @@ export function TripContentSheet({ children, onExpandedChange, onFullChange }: P
       const target = e.target as HTMLElement;
       const isHandle = target.closest('.trip-sheet-handle');
 
-      // Find closest scrollable element in hierarchy
-      let scrollEl: HTMLElement | null = target;
-      while (scrollEl && scrollEl !== el) {
-        const style = window.getComputedStyle(scrollEl);
-        const overflow = style.overflowY || style.overflow;
-        if ((overflow.includes('auto') || overflow.includes('scroll')) && scrollEl.scrollHeight > scrollEl.clientHeight) {
-          break;
-        }
-        scrollEl = scrollEl.parentElement;
-      }
-      scrollContainerRef.current = scrollEl === el ? null : scrollEl;
+      // Fast container lookup without layout-thrashing getComputedStyle calls
+      scrollContainerRef.current = target.closest('.tab-pane, [data-scrollable]') as HTMLElement | null;
 
       if (isHandle) {
         isDraggingRef.current = true;
-        setIsDragging(true);
+        sheetRef.current?.classList.add('dragging');
+        scrimRef.current?.classList.add('dragging');
       } else {
         isDraggingRef.current = false;
       }
@@ -190,7 +235,16 @@ export function TripContentSheet({ children, onExpandedChange, onFullChange }: P
         const deltaPercent = (dy / window.innerHeight) * 100;
         const next = withResistance(dragStartTop.current + deltaPercent);
         trackVelocity(next);
-        updateTopPercent(next);
+        liveTopPercentRef.current = next;
+
+        const deltaPx = ((next - dragStartTop.current) / 100) * window.innerHeight;
+        if (sheetRef.current) {
+          sheetRef.current.style.transform = `translate3d(0, ${deltaPx}px, 0)`;
+        }
+        if (scrimRef.current) {
+          const progress = Math.max(0, Math.min(1, (SHEET_COLLAPSED_TOP - next) / (SHEET_COLLAPSED_TOP - SHEET_FULL_TOP)));
+          scrimRef.current.style.opacity = `${progress * 0.55}`;
+        }
         return;
       }
 
@@ -199,10 +253,6 @@ export function TripContentSheet({ children, onExpandedChange, onFullChange }: P
         const isScrollAtTop = !scrollContainerRef.current || scrollContainerRef.current.scrollTop <= 0;
         const currentTop = liveTopPercentRef.current;
 
-        // Continuing up past "expanded" (to "full", Uber-style, hiding the
-        // header) or back down from either "expanded" or "full" only
-        // engages once the list itself is scrolled to its top -- otherwise
-        // this hijacks ordinary list scrolling instead of the sheet drag.
         const shouldDrag =
           (currentTop === SHEET_COLLAPSED_TOP && dy < 0) || // Swiping up when collapsed
           (currentTop === SHEET_EXPANDED_TOP && dy < 0 && isScrollAtTop) || // Continue up to full
@@ -211,7 +261,8 @@ export function TripContentSheet({ children, onExpandedChange, onFullChange }: P
 
         if (shouldDrag) {
           isDraggingRef.current = true;
-          setIsDragging(true);
+          sheetRef.current?.classList.add('dragging');
+          scrimRef.current?.classList.add('dragging');
           e.preventDefault();
           touchStartY.current = touch.clientY; // Reset starting touch Y to avoid jump
           resetVelocityTracking(currentTop);
@@ -220,15 +271,7 @@ export function TripContentSheet({ children, onExpandedChange, onFullChange }: P
     };
 
     const handleTouchEnd = () => {
-      if (!isDraggingRef.current) return;
-      isDraggingRef.current = false;
-      setIsDragging(false);
-
-      const finalTop = resolveSnapPoint(liveTopPercentRef.current, velocityRef.current, dragStartTop.current);
-      if (finalTop !== dragStartTop.current) triggerSnapHaptic();
-      updateTopPercent(finalTop);
-      onExpandedChange?.(finalTop !== SHEET_COLLAPSED_TOP);
-      onFullChange?.(finalTop === SHEET_FULL_TOP);
+      endDragAndSnap();
     };
 
     el.addEventListener('touchstart', handleTouchStart);
@@ -241,19 +284,14 @@ export function TripContentSheet({ children, onExpandedChange, onFullChange }: P
       el.removeEventListener('touchmove', handleTouchMove);
       el.removeEventListener('touchend', handleTouchEnd);
       el.removeEventListener('touchcancel', handleTouchEnd);
+      if (settleTimeoutRef.current !== null) {
+        window.clearTimeout(settleTimeoutRef.current);
+      }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Continuous 0..1 across the sheet's whole travel (collapsed -> full) --
-  // drives the map-dimming scrim so the takeover reads as one fluid gesture
-  // rather than snapping to dim only once "full" is reached.
   const scrimProgress = Math.max(0, Math.min(1, (SHEET_COLLAPSED_TOP - topPercent) / (SHEET_COLLAPSED_TOP - SHEET_FULL_TOP)));
-  // Corners only flatten in the last leg (expanded -> full) -- real bottom
-  // sheets stay rounded through the earlier half-to-80% travel and square
-  // off just as they reach true full-screen, covering the status bar cleanly.
-  const cornerProgress = Math.max(0, Math.min(1, (SHEET_EXPANDED_TOP - topPercent) / (SHEET_EXPANDED_TOP - SHEET_FULL_TOP)));
-  const cornerRadius = 28 * (1 - cornerProgress);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     if (e.key === 'Enter' || e.key === ' ') {
@@ -280,17 +318,15 @@ export function TripContentSheet({ children, onExpandedChange, onFullChange }: P
     }
   };
 
-
-
   return (
     <>
-      <div className={`trip-sheet-scrim${isDragging ? ' dragging' : ''}`} style={{ opacity: scrimProgress * 0.55 }} />
+      <div ref={scrimRef} className="trip-sheet-scrim" style={{ opacity: scrimProgress * 0.55 }} />
       <div
         ref={sheetRef}
         role="region"
         aria-label="Trip content sheet"
-        className={`trip-sheet${isDragging ? ' dragging' : ''}${topPercent === SHEET_FULL_TOP ? ' full' : ''}`}
-        style={{ top: `${topPercent}%`, borderRadius: `${cornerRadius}px ${cornerRadius}px 0 0` }}
+        className={`trip-sheet${topPercent === SHEET_FULL_TOP ? ' full' : ''}`}
+        style={{ top: `${topPercent}%` }}
       >
         <div
           role="button"

@@ -38,7 +38,6 @@ function applyViewportHeightVar(): void {
   setVar();
   if (vv) {
     vv.addEventListener('resize', setVar);
-    vv.addEventListener('scroll', setVar);
   } else {
     window.addEventListener('resize', setVar);
   }

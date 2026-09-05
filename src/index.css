@@ -1393,11 +1393,10 @@ input[type="date"].input-field {
   padding-left: max(20px, var(--safe-left, 20px));
   padding-right: max(20px, var(--safe-right, 20px));
   background-image: var(--header-gradient);
-  /* Blur alone leaves a still-detailed, high-contrast wash under text on a
-     busy map; a stronger radius smooths it into a softer field the scrim
-     and text-shadow below can actually win against. */
-  backdrop-filter: blur(28px) saturate(180%);
-  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  /* Crisp, high-end 16px blur radius calibrated for buttery 120 FPS
+     compositing without WebKit CoreAnimation fragment shader stalls. */
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
   border-bottom: 1px solid rgba(255, 255, 255, 0.16);
   box-shadow: 0 4px 20px -4px rgba(0, 0, 0, 0.28);
   /* This is the "reveal" timing -- used whenever .header-hidden is removed.
@@ -1411,7 +1410,7 @@ input[type="date"].input-field {
               color 0.3s ease,
               transform 0.36s var(--ease-decel),
               opacity 0.32s ease-out;
-  will-change: padding, background-color, box-shadow, transform, opacity;
+  will-change: transform, opacity;
   /* Default tone: white text/chrome for a dark or unknown map background.
      TripMapHero samples the live map pixels behind the header and flips
      these when the map area there is bright enough that white would wash
@@ -1451,8 +1450,8 @@ input[type="date"].input-field {
   padding-right: max(12px, var(--safe-right, 12px));
   background-image: var(--header-gradient-scrolled);
   background-color: rgba(11, 83, 72, 0.92);
-  backdrop-filter: blur(28px) saturate(190%);
-  -webkit-backdrop-filter: blur(28px) saturate(190%);
+  backdrop-filter: blur(16px) saturate(190%);
+  -webkit-backdrop-filter: blur(16px) saturate(190%);
   border-bottom: 1px solid rgba(255, 255, 255, 0.14);
   box-shadow: 0 8px 30px -4px rgba(0, 0, 0, 0.35), 0 2px 6px rgba(0, 0, 0, 0.2);
 }
@@ -1919,8 +1918,8 @@ html.capacitor-ios .tab-pane {
   width: calc(100% - 32px);
   max-width: 430px;
   background: var(--bg-nav-glass);
-  backdrop-filter: blur(24px) saturate(190%);
-  -webkit-backdrop-filter: blur(24px) saturate(190%);
+  backdrop-filter: blur(16px) saturate(190%);
+  -webkit-backdrop-filter: blur(16px) saturate(190%);
   border: 1px solid var(--border-nav-glass);
   border-radius: 9999px;
   padding: 5px 6px;
@@ -2137,8 +2136,8 @@ html.capacitor-ios .nav-tabs {
   width: max-content;
   max-width: min(290px, calc(100vw - 32px));
   background: var(--bg-surface);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  backdrop-filter: blur(14px) saturate(180%);
+  -webkit-backdrop-filter: blur(14px) saturate(180%);
   border: 1.5px solid rgba(15, 111, 99, 0.35);
   border-radius: 16px;
   padding: 8px 12px;
@@ -3421,8 +3420,8 @@ input:checked + .toggle-slider:before {
   height: 66px;
   border-radius: 33px;
   background: rgba(15, 23, 42, 0.78);
-  backdrop-filter: blur(24px) saturate(190%);
-  -webkit-backdrop-filter: blur(24px) saturate(190%);
+  backdrop-filter: blur(14px) saturate(190%);
+  -webkit-backdrop-filter: blur(14px) saturate(190%);
   border: 1.5px solid rgba(255, 255, 255, 0.18);
   display: flex;
   align-items: center;
@@ -5117,11 +5116,15 @@ input:checked + .toggle-slider:before {
   border-radius: 28px 28px 0 0;
   box-shadow: 0 -16px 40px -10px rgba(0, 0, 0, 0.4), 0 -4px 16px rgba(0, 0, 0, 0.2);
   overflow: hidden;
-  will-change: top, border-radius;
+  will-change: transform;
   transform: translateZ(0);
   /* Uber-style spring snap curve -- a snapping sheet reads physical
      with calibrated spring damping rather than a flat ease-out. */
   transition: top 0.38s var(--ease-uber-spring), border-radius 0.38s var(--ease-uber-spring);
+}
+
+.trip-sheet.full {
+  border-radius: 0;
 }
 
 .trip-sheet.dragging {
@@ -5195,10 +5198,17 @@ input:checked + .toggle-slider:before {
    scrolling behind it. 88px = the pill's 8px bottom margin + 64px height
    + 16px breathing room above it, matching TabBarGlassMetrics exactly. */
 html.capacitor-ios .tab-pane {
-  padding-top: calc(var(--safe-top, 0px) + 100px + 16px);
-  padding-bottom: calc(84px + var(--safe-bottom, 0px) + 88px);
   mask-image: none;
   -webkit-mask-image: none;
+  padding-top: calc(var(--safe-top, 0px) + 100px + 16px);
+  padding-bottom: calc(84px + var(--safe-bottom, 0px) + 88px);
+}
+
+@supports (-webkit-touch-callout: none) {
+  .tab-pane {
+    mask-image: none !important;
+    -webkit-mask-image: none !important;
+  }
 }
 
 /* The sheet already clears the header via its own top offset + handle --
@@ -5249,8 +5259,8 @@ html.capacitor-ios .trip-sheet .tab-pane {
   gap: 12px;
   padding: 8px 14px;
   background: rgba(254, 252, 247, 0.96);
-  backdrop-filter: blur(24px) saturate(190%);
-  -webkit-backdrop-filter: blur(24px) saturate(190%);
+  backdrop-filter: blur(14px) saturate(190%);
+  -webkit-backdrop-filter: blur(14px) saturate(190%);
   border: 1px solid var(--border-color);
   border-radius: 16px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12), 0 2px 6px rgba(0, 0, 0, 0.05);

@@ -52,37 +52,6 @@ interface Props {
   onToneChange?: (tone: 'light' | 'dark') => void;
 }
 
-// Samples the map's own rendered pixels across the top ~150 CSS px (the
-// header's approximate footprint) and returns their average luminance.
-// Requires preserveDrawingBuffer -- MapLibre's WebGL canvas is cleared
-// after each frame otherwise, so a readback here would just get zeros.
-function sampleHeaderLuminance(map: MaplibreMap): number | null {
-  try {
-    const canvas = map.getCanvas();
-    if (canvas.width === 0 || canvas.height === 0) return null;
-    const dpr = window.devicePixelRatio || 1;
-    const sampleHeight = Math.min(canvas.height, Math.round(150 * dpr));
-
-    const sampler = document.createElement('canvas');
-    sampler.width = 16;
-    sampler.height = 8;
-    const ctx = sampler.getContext('2d', { willReadFrequently: true });
-    if (!ctx) return null;
-    ctx.drawImage(canvas, 0, 0, canvas.width, sampleHeight, 0, 0, 16, 8);
-    const { data } = ctx.getImageData(0, 0, 16, 8);
-
-    let total = 0;
-    for (let i = 0; i < data.length; i += 4) {
-      total += 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
-    }
-    return total / (data.length / 4) / 255;
-  } catch {
-    // Canvas readback blocked (e.g. a tile source without CORS headers
-    // taints the canvas) -- caller keeps the last known/default tone.
-    return null;
-  }
-}
-
 // Continuous full-screen map backdrop for the trip dashboard, pinned and
 // fit-to-bounds on the trip's cities. Fixed behind the header and the
 // content sheet (see .trip-map-hero / .trip-sheet in index.css) -- one
@@ -107,37 +76,14 @@ export function TripMapHero({ trip, sheetExpanded, onToneChange }: Props) {
       // how many stops there turn out to be.
       zoom: validStops.length > 1 ? 10 : 12,
       attributionControl: false,
-      // Needed to read pixels back out for the header-tone sampler --
-      // WebGL clears the buffer after each frame otherwise.
-      canvasContextAttributes: { preserveDrawingBuffer: true },
     });
     mapInstanceRef.current = map;
     baseZoomRef.current = null;
 
-    const updateTone = () => {
-      if (baseZoomRef.current === null) {
-        baseZoomRef.current = map.getZoom();
-      }
-      const luminance = sampleHeaderLuminance(map);
-      if (luminance !== null) {
-        onToneChange?.(luminance > HEADER_TONE_THRESHOLD ? 'dark' : 'light');
-      }
-    };
-    map.on('idle', updateTone);
-
-    // 'idle' only fires once movement fully settles -- during the sheet's
-    // zoom-out easeTo (see below) that left tone stale for the whole ~450ms
-    // transition, which is exactly the moment users swipe and look at the
-    // header. Sample on 'render' too, throttled, so tone tracks the map
-    // continuously instead of jumping once at the end.
-    let lastRenderSample = 0;
-    const RENDER_SAMPLE_INTERVAL_MS = 200;
-    map.on('render', () => {
-      const now = performance.now();
-      if (now - lastRenderSample < RENDER_SAMPLE_INTERVAL_MS) return;
-      lastRenderSample = now;
-      updateTone();
-    });
+    // OpenFreeMap Liberty is a bright pastel map style -- defaulting header
+    // tone to dark ensures high-contrast readable text (#10151F) without
+    // stalling the GPU pipeline with continuous WebGL canvas readbacks.
+    onToneChange?.('dark');
 
     map.on('load', () => {
       const bounds = new LngLatBounds();
