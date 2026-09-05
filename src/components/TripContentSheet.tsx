@@ -77,6 +77,9 @@ export function TripContentSheet({ children, onExpandedChange, onFullChange }: P
   const liveTopPercentRef = useRef(SHEET_COLLAPSED_TOP);
   const scrollContainerRef = useRef<HTMLElement | null>(null);
   const settleTimeoutRef = useRef<number | null>(null);
+  const lastMoveTime = useRef(0);
+  const lastMovePercent = useRef(SHEET_COLLAPSED_TOP);
+  const velocityRef = useRef(0);
 
   // Sync live ref with state
   useEffect(() => {

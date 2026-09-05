@@ -38,10 +38,6 @@ function getHeaderHeightPx(): number {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : 126;
 }
 
-// Luminance threshold (0-1) above which the sampled map region is bright
-// enough that white header text needs to flip to dark. Same formula/cutoff
-// as useCardTone in TripStack, for consistency.
-const HEADER_TONE_THRESHOLD = 0.55;
 // How much of the map to zoom out by when the sheet expands, purely as a
 // visual "the map is making room" cue -- not a real bounds recompute.
 const SHEET_EXPANDED_ZOOM_DELTA = -0.6;
