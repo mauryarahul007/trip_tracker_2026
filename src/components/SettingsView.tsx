@@ -2274,7 +2274,7 @@ export function SettingsView({
             )}
 
             {/* Biometric Screen Lock Toggle */}
-            {bioAvailable && userId && (
+            {isFeatureEnabled('enableBiometricAuth') && bioAvailable && userId && (
               <div className="settings-row-item" style={{ cursor: 'default' }}>
                 <div className="settings-row-left">
                   <div className="settings-squircle squircle-blue-glow">

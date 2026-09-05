@@ -169,12 +169,14 @@ export default function App() {
   const signInSuperadmin = useAuthStore((s) => s.signInSuperadmin);
 
   // Biometric App Lock & Prompt State
+  const isBiometricFeatureEnabled = useTripStore((s) => s.isFeatureEnabled('enableBiometricAuth'));
   const [isScreenLocked, setIsScreenLocked] = useState<boolean>(false);
   const [showBioEnrollPrompt, setShowBioEnrollPrompt] = useState(false);
 
   useEffect(() => {
-    if (!userId) {
+    if (!userId || !isBiometricFeatureEnabled) {
       setIsScreenLocked(false);
+      setShowBioEnrollPrompt(false);
       return;
     }
     if (isBiometricEnrolled(userId) && !isSessionUnlocked()) {
@@ -189,7 +191,7 @@ export default function App() {
         }
       });
     }
-  }, [userId]);
+  }, [userId, isBiometricFeatureEnabled]);
 
   // Navigation tabs: 'expenses' (Summary) | 'ledger' (day-wise Expenses) | 'members' | 'notes' | 'settings'
   type Tab = 'expenses' | 'ledger' | 'members' | 'notes' | 'settings';
@@ -2755,7 +2757,7 @@ export default function App() {
       <InAppNotificationBanner />
 
       {/* Biometric Fullscreen Lock Overlay */}
-      {isScreenLocked && userId && (
+      {isBiometricFeatureEnabled && isScreenLocked && userId && (
         <BiometricLockOverlay
           userId={userId}
           userDisplayName={userDisplayName}
@@ -2766,7 +2768,7 @@ export default function App() {
       )}
 
       {/* Biometric Enrollment Suggestion Prompt */}
-      {showBioEnrollPrompt && userId && (
+      {isBiometricFeatureEnabled && showBioEnrollPrompt && userId && (
         <div
           className="fade-in"
           style={{

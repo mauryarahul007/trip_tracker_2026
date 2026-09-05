@@ -9,13 +9,14 @@ export type FeatureFlagKey =
   | 'enableDemoSeeding'
   | 'enableMultiTripAnalytics'
   | 'enableFeatureSuggestions'
-  | 'enableUpiPayments';
+  | 'enableUpiPayments'
+  | 'enableBiometricAuth';
 
 export interface FeatureFlagMeta {
   key: FeatureFlagKey;
   label: string;
   description: string;
-  category: 'core' | 'geotagging' | 'splits' | 'sync' | 'admin';
+  category: 'core' | 'geotagging' | 'splits' | 'sync' | 'admin' | 'security';
   defaultEnabledForUsers: boolean;
 }
 

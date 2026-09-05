@@ -22,14 +22,26 @@ describe('featureFlags', () => {
     expect(isFeatureActive('enableAdvancedLocationSearch', flags, { isSuperadmin: true })).toBe(true);
   });
 
-  it('strict-toggle flags (demo seeding, feature suggestions) respect explicit toggle state even for superadmin', () => {
-    const flagsOff = { ...DEFAULT_FEATURE_FLAGS, enableDemoSeeding: false, enableFeatureSuggestions: false };
+  it('strict-toggle flags (demo seeding, feature suggestions, biometric auth) respect explicit toggle state even for superadmin', () => {
+    const flagsOff = {
+      ...DEFAULT_FEATURE_FLAGS,
+      enableDemoSeeding: false,
+      enableFeatureSuggestions: false,
+      enableBiometricAuth: false,
+    };
     expect(isFeatureActive('enableDemoSeeding', flagsOff, { isSuperadmin: true })).toBe(false);
     expect(isFeatureActive('enableFeatureSuggestions', flagsOff, { isSuperadmin: true })).toBe(false);
+    expect(isFeatureActive('enableBiometricAuth', flagsOff, { isSuperadmin: true })).toBe(false);
 
-    const flagsOn = { ...DEFAULT_FEATURE_FLAGS, enableDemoSeeding: true, enableFeatureSuggestions: true };
+    const flagsOn = {
+      ...DEFAULT_FEATURE_FLAGS,
+      enableDemoSeeding: true,
+      enableFeatureSuggestions: true,
+      enableBiometricAuth: true,
+    };
     expect(isFeatureActive('enableDemoSeeding', flagsOn, { isSuperadmin: true })).toBe(true);
     expect(isFeatureActive('enableFeatureSuggestions', flagsOn, { isSuperadmin: true })).toBe(true);
+    expect(isFeatureActive('enableBiometricAuth', flagsOn, { isSuperadmin: true })).toBe(true);
   });
 
   it('resolves global flags for regular users', () => {

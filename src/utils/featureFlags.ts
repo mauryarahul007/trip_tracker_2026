@@ -78,6 +78,13 @@ export const FEATURE_FLAGS_META: Record<FeatureFlagKey, FeatureFlagMeta> = {
     category: 'splits',
     defaultEnabledForUsers: false,
   },
+  enableBiometricAuth: {
+    key: 'enableBiometricAuth',
+    label: 'Biometric App Lock (WebAuthn / Passkeys)',
+    description: 'Enables Touch ID, Face ID, or Windows Hello screen lock on this device and allows travelers to toggle biometric protection.',
+    category: 'security',
+    defaultEnabledForUsers: false,
+  },
 };
 
 export const DEFAULT_FEATURE_FLAGS: Record<FeatureFlagKey, boolean> = {
@@ -92,6 +99,7 @@ export const DEFAULT_FEATURE_FLAGS: Record<FeatureFlagKey, boolean> = {
   enableMultiTripAnalytics: false,
   enableFeatureSuggestions: false,
   enableUpiPayments: false,
+  enableBiometricAuth: false,
 };
 
 export function isFeatureActive(
@@ -107,7 +115,10 @@ export function isFeatureActive(
 ): boolean {
   // Strict-toggle flags that directly govern visibility in Settings/UI
   // must respect their explicit flag state and not be unconditionally bypassed by superadmin
-  const isStrictToggleFlag = key === 'enableDemoSeeding' || key === 'enableFeatureSuggestions';
+  const isStrictToggleFlag =
+    key === 'enableDemoSeeding' ||
+    key === 'enableFeatureSuggestions' ||
+    key === 'enableBiometricAuth';
 
   // Superadmin always has full access to all other features
   if (!isStrictToggleFlag && context?.isSuperadmin) {

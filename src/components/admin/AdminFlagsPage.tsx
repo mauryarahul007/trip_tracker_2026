@@ -12,6 +12,7 @@ const FLAG_CATEGORY_LABELS: Record<string, string> = {
   splits: 'Splits',
   sync: 'Sync',
   admin: 'Admin',
+  security: 'Security',
 };
 
 interface Props {

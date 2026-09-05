@@ -2060,6 +2060,25 @@ This document logs all meaningful technical decisions, library choices, design p
   - Standard WebAuthn platform authenticators require user-presence interaction; fallback pathways to Google login and master passwords remain available for all edge cases.
   - All additions strictly target the webapp without touching native mobile app wrapper builds.
 
+---
+
+## 113. Gating Biometric Authentication Behind Superadmin Feature Flag (`enableBiometricAuth`) (v3.1.1)
+* **Context:**
+  - Biometric App Lock & Quick Unlock was introduced in v3.1.0. To enable staged rollouts, dogfooding, and operational controls, the user requested that biometric authentication be placed in flagged mode within the Superadmin Ops Deck.
+  - Normal users should only see the option to enable or disable biometric lock in Settings, and only receive enrollment prompts, if the feature flag is explicitly activated by a SuperAdmin.
+* **Decision:**
+  - **Feature Flag Declaration (`types/admin.ts`, `featureFlags.ts`, `AdminFlagsPage.tsx`):**
+    - Added `enableBiometricAuth` to `FeatureFlagKey` with metadata (`label: 'Biometric App Lock (WebAuthn / Passkeys)'`, `category: 'security'`, `defaultEnabledForUsers: false`).
+    - Added `'security': 'Security'` category to `FLAG_CATEGORY_LABELS` in the Superadmin Flags Page.
+  - **Strict-Toggle Enforcement (`featureFlags.ts`, `featureFlags.test.ts`):**
+    - Classified `enableBiometricAuth` as a strict UI toggle flag in `isFeatureActive` (alongside `enableDemoSeeding` and `enableFeatureSuggestions`). This ensures that administrators can test both disabled and enabled states without unconditional superadmin bypasses.
+  - **Settings & App Gating (`SettingsView.tsx`, `App.tsx`):**
+    - In `SettingsView.tsx`, gated the Biometric Screen Lock card row behind `isFeatureEnabled('enableBiometricAuth')`.
+    - In `App.tsx`, gated the launch `BiometricLockOverlay` and post-login enrollment banner behind `isFeatureEnabled('enableBiometricAuth')`.
+* **Trade-offs Accepted:**
+  - When the flag is disabled globally, travelers do not see biometric options. SuperAdmins can enable the flag globally or target specific trips/users using overrides in the Ops Deck.
+
+
 
 
 
