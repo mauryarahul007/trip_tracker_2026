@@ -50,6 +50,11 @@ export function generateDemoData(): DemoData {
     baseCurrency: 'INR',
     memberIds: [mRahulId, mPriyaId, mAmitId, mSnehaId],
     groupIds: [gCouplesId, gGirlsId],
+    stops: [
+      { id: `stop-1-${now}`, name: 'Mumbai' },
+      { id: `stop-2-${now}`, name: 'Pune' },
+      { id: `stop-3-${now}`, name: 'Goa' },
+    ],
     createdAt: now,
     updatedAt: now,
   };

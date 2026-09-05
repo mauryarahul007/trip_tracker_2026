@@ -1816,6 +1816,18 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - Requires dev server process restart whenever `package.json` version definitions change.
 
+---
+
+## 101. Demo Seed Route Stops & Header Dropdown Itinerary Toggle
+* **Context:**
+  - The header dropdown contains an action item to toggle route stops ("View N Route Stops" / "Hide Route Stops"), but the default demo data previously lacked a populated `stops` array, making the feature invisible on a freshly seeded demo trip unless manually created.
+* **Decision:**
+  - Added pre-seeded multi-stop itinerary waypoints (`Mumbai -> Pune -> Goa`) to `demoSeed.ts` so anyone exploring via "Seed Demo Data" can immediately test and visualize the header route chips and dropdown toggle.
+  - Bumped version to `v3.0.2` and restarted background Vite development server following automated release protocol.
+* **Trade-offs Accepted:**
+  - Demo trip now demonstrates multi-stop routing capability by default.
+
+
 
 
 
