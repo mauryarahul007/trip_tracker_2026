@@ -40,6 +40,9 @@ export interface Database {
           closed: boolean;
           destination: string | null;
           stops: unknown;
+          checklist?: unknown;
+          notes?: unknown;
+          member_roles?: Record<string, string> | null;
           created_at: string;
           updated_at: string;
         };
@@ -56,6 +59,9 @@ export interface Database {
           closed?: boolean;
           destination?: string | null;
           stops?: unknown;
+          checklist?: unknown;
+          notes?: unknown;
+          member_roles?: Record<string, string> | null;
         };
         Update: Partial<{
           name: string;
@@ -67,6 +73,9 @@ export interface Database {
           closed: boolean;
           destination: string | null;
           stops: unknown;
+          checklist?: unknown;
+          notes?: unknown;
+          member_roles?: Record<string, string> | null;
           updated_at: string;
         }>;
         Relationships: [];
@@ -174,6 +183,7 @@ export interface Database {
           split_mode: 'equal' | 'equalUnit' | 'custom' | 'exact' | 'percentage' | 'itemized';
           split_member_ids: string[];
           split_config: Record<string, number> | null;
+          itemized_config?: unknown | null;
           resolved_shares: Record<string, number>;
           receipt_path: string | null;
           is_settlement: boolean;
@@ -196,6 +206,7 @@ export interface Database {
           split_mode: 'equal' | 'equalUnit' | 'custom' | 'exact' | 'percentage' | 'itemized';
           split_member_ids: string[];
           split_config?: Record<string, number> | null;
+          itemized_config?: unknown | null;
           resolved_shares: Record<string, number>;
           receipt_path?: string | null;
           location?: { lat: number; lng: number; placeName?: string } | null;
@@ -212,6 +223,7 @@ export interface Database {
           split_mode: 'equal' | 'equalUnit' | 'custom' | 'exact' | 'percentage' | 'itemized';
           split_member_ids: string[];
           split_config: Record<string, number> | null;
+          itemized_config?: unknown | null;
           resolved_shares: Record<string, number>;
           receipt_path: string | null;
           location: { lat: number; lng: number; placeName?: string } | null;

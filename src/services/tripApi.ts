@@ -27,6 +27,7 @@ function mapTrip(row: TripRow, memberIds: string[], groupIds: string[]): Trip {
     stops: Array.isArray(row.stops) ? (row.stops as unknown as TripStop[]) : undefined,
     checklist: Array.isArray(row.checklist) ? (row.checklist as unknown as ChecklistItem[]) : undefined,
     notes: Array.isArray(row.notes) ? (row.notes as unknown as TripNote[]) : undefined,
+    memberRoles: row.member_roles ? (row.member_roles as unknown as Record<string, import('../types').MemberRole>) : undefined,
     createdAt: new Date(row.created_at).getTime(),
     updatedAt: new Date(row.updated_at).getTime(),
   };
@@ -63,6 +64,7 @@ function mapExpense(row: ExpenseRow & { location?: any }): Expense {
     splitMode: row.split_mode as SplitMode,
     splitMemberIds: row.split_member_ids,
     splitConfig: row.split_config ?? undefined,
+    itemizedConfig: row.itemized_config ? (row.itemized_config as unknown as import('../types').ItemizedReceiptConfig) : undefined,
     resolvedShares: row.resolved_shares,
     receiptPath: row.receipt_path ?? undefined,
     isSettlement: row.is_settlement,
@@ -258,6 +260,17 @@ export async function updateTripNotes(id: string, notes: TripNote[]): Promise<vo
   if (error) throw error;
 }
 
+export async function updateTripMemberRoles(id: string, memberRoles: Record<string, import('../types').MemberRole>): Promise<void> {
+  const { error } = await supabase
+    .from('trips')
+    .update({
+      member_roles: memberRoles,
+      updated_at: new Date().toISOString(),
+    } as any)
+    .eq('id', id);
+  if (error) throw error;
+}
+
 export async function archiveTripRow(id: string, archived: boolean): Promise<void> {
   const { error } = await supabase
     .from('trips')
@@ -416,6 +429,7 @@ export interface ExpenseInput {
   splitMode: SplitMode;
   splitMemberIds: string[];
   splitConfig?: Record<string, number>;
+  itemizedConfig?: import('../types').ItemizedReceiptConfig;
   resolvedShares: Record<string, number>;
   receiptPath?: string; // set only when a new receipt was just uploaded — omit to leave existing untouched
   location?: import('../types').ExpenseLocation | null;
@@ -434,6 +448,7 @@ export async function insertExpense(tripId: string, createdByUserId: string, inp
     split_mode: input.splitMode,
     split_member_ids: input.splitMemberIds,
     split_config: input.splitConfig ?? null,
+    itemized_config: input.itemizedConfig ?? null,
     resolved_shares: input.resolvedShares,
     receipt_path: input.receiptPath ?? null,
     is_settlement: input.title.startsWith('Settlement:'),
@@ -467,6 +482,7 @@ export async function updateExpenseRow(id: string, input: ExpenseInput): Promise
     split_mode: input.splitMode,
     split_member_ids: input.splitMemberIds,
     split_config: input.splitConfig ?? null,
+    itemized_config: input.itemizedConfig ?? null,
     resolved_shares: input.resolvedShares,
     updated_at: new Date().toISOString(),
     ...(input.receiptPath ? { receipt_path: input.receiptPath } : {}),

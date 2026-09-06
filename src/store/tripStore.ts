@@ -15,6 +15,7 @@ import {
   updateTripRow,
   updateTripChecklist,
   updateTripNotes,
+  updateTripMemberRoles,
   archiveTripRow,
   freezeTripRow,
   closeTripRow,
@@ -459,6 +460,7 @@ export const useTripStore = create<TripStore>()(
     splitMode: e.splitMode,
     splitMemberIds: e.splitMemberIds,
     splitConfig: e.splitConfig,
+    itemizedConfig: e.itemizedConfig,
     resolvedShares,
     receiptPath: extra?.receiptPath,
     location: e.location ?? null,
@@ -1559,6 +1561,15 @@ export const useTripStore = create<TripStore>()(
         });
         return { trips: updatedTrips, storageError: null };
       });
+
+      const updatedTrip = get().trips.find((t) => t.id === activeTripId);
+      if (!isMissingSupabaseEnv && updatedTrip?.memberRoles) {
+        try {
+          await updateTripMemberRoles(activeTripId, updatedTrip.memberRoles);
+        } catch (e) {
+          console.warn('Failed to sync member roles to backend:', e);
+        }
+      }
     },
 
     toggleArchiveMember: async (id) => {
