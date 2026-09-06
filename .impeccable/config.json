@@ -62,6 +62,15 @@
         ],
         "createdAt": "2026-09-06T06:35:56.018Z",
         "reason": "same reconciled Ops Deck micro-scale extension already documented in ops-deck.css's header comment; this file renders inside .ops-deck and shares that type system"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "*",
+        "files": [
+          "src/components/admin/ops-deck.css"
+        ],
+        "createdAt": "2026-09-06T06:47:04.380Z",
+        "reason": "Ops Deck is a deliberately separate console-register palette from DESIGN.md's traveler-app palette (per the file's own header comment); disclosed as a known, out-of-scope gap in decisions.md #115 rather than reconciled"
       }
     ]
   }
