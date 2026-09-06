@@ -9,10 +9,10 @@
 
 | Metric | Count | Status Notes |
 | :--- | :--- | :--- |
-| **Total Tracked** | **162** | All recorded bugs across sessions |
+| **Total Tracked** | **166** | All recorded bugs across sessions |
 | **🟢 Open** | **0** | No critical blockers, 0 High |
 | **🟡 In Progress** | **0** | Active investigation or fix |
-| **✅ Resolved** | **129** | Verified & closed |
+| **✅ Resolved** | **133** | Verified & closed |
 | **⚪ Won't Fix** | **33** | Expected behavior / deferred |
 
 ---
@@ -160,6 +160,10 @@
 | **BUG-160** | MembersGroupsTab typeahead dropdown scroll bleeds to parent on touch | `ui-ux` | `medium` | `claude-cli` | `claude-cli` | Added overscrollBehavior: contain and touchAction: pan-y to MembersGroupsTab typeahead dropdown |
 | **BUG-161** | Index used as React key in BugReportModal and OnboardingSwipe | `general` | `low` | `claude-cli` | `claude-cli` | OnboardingSwipe uses step.id as key; BugReportModal uses timestamp+level+idx composite key |
 | **BUG-162** | Header shows 'Synced yesterday' when online because mount-time sync never fires | `ui-ux` | `medium` | `claude-cli` | `claude-cli` | Added mount-time sync effect so lastBackendSyncedAt updates on page load when already online; capped stale label to Synced instead of Synced yesterday |
+| **BUG-163** | Offline sync pending indicator missing on expense cards | `ui-ux` | `medium` | `claude-cli` | `claude-cli` | Added dirtyExpenseIds prop to ExpenseList, computed via collectDirtyExpenseIds from syncQueue in App.tsx; 🔄 badge shown on pending cards |
+| **BUG-164** | Split by Shares mode unlabelled — Weight label not discoverable | `ui-ux` | `medium` | `claude-cli` | `claude-cli` | Renamed Weight→Shares button label, updated summary line and placeholder in ExpenseForm.tsx |
+| **BUG-165** | Checklist items cannot be reordered by drag and drop | `ui-ux` | `medium` | `claude-cli` | `claude-cli` | Added HTML5 drag-and-drop to checklist items; reorderChecklistItems action in tripStore syncs new order via updateTripChecklist |
+| **BUG-166** | No way to duplicate an existing trip | `ui-ux` | `medium` | `claude-cli` | `claude-cli` | Added duplicateTrip to tripStore; Duplicate Trip option in TripsListScreen action sheet copies trip+checklist+notes with new IDs, no expenses |
 
 ---
 

@@ -56,6 +56,7 @@ export function ChecklistNotesTab({ trip, members, isAdmin }: Props) {
     toggleChecklistItem,
     updateChecklistItem,
     deleteChecklistItem,
+    reorderChecklistItems,
     addTripNote,
     updateTripNote,
     deleteTripNote,
@@ -99,6 +100,10 @@ export function ChecklistNotesTab({ trip, members, isAdmin }: Props) {
   // Copy feedback state
   const [copiedNoteId, setCopiedNoteId] = useState<string | null>(null);
 
+  // Drag-to-reorder state
+  const [dragItemId, setDragItemId] = useState<string | null>(null);
+  const [dragOverItemId, setDragOverItemId] = useState<string | null>(null);
+
   // Safely close modals on Android/browser Back or Escape
   useHistoryBack(isChecklistModalOpen, () => {
     setIsChecklistModalOpen(false);
@@ -125,6 +130,40 @@ export function ChecklistNotesTab({ trip, members, isAdmin }: Props) {
   const completedCount = checklist.filter((i) => i.completed).length;
   const totalCount = checklist.length;
   const progressPercent = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
+
+  const handleDragStart = (id: string) => {
+    setDragItemId(id);
+    triggerHaptic('light');
+  };
+
+  const handleDragOver = (e: React.DragEvent, id: string) => {
+    e.preventDefault();
+    if (id !== dragItemId) setDragOverItemId(id);
+  };
+
+  const handleDrop = (targetId: string) => {
+    if (!dragItemId || dragItemId === targetId) {
+      setDragItemId(null);
+      setDragOverItemId(null);
+      return;
+    }
+    const currentList = liveTrip.checklist || [];
+    const fromIdx = currentList.findIndex((i) => i.id === dragItemId);
+    const toIdx = currentList.findIndex((i) => i.id === targetId);
+    if (fromIdx === -1 || toIdx === -1) return;
+    const reordered = [...currentList];
+    const [moved] = reordered.splice(fromIdx, 1);
+    reordered.splice(toIdx, 0, moved);
+    reorderChecklistItems(liveTrip.id, reordered);
+    triggerHaptic('medium');
+    setDragItemId(null);
+    setDragOverItemId(null);
+  };
+
+  const handleDragEnd = () => {
+    setDragItemId(null);
+    setDragOverItemId(null);
+  };
 
   // Filtered Checklist
   const filteredChecklist = useMemo(() => {
@@ -697,8 +736,14 @@ export function ChecklistNotesTab({ trip, members, isAdmin }: Props) {
                     onDelete={() => handleDeleteChecklist(item.id)}
                   >
                     <div
-                      className={`checklist-item-card ${isChecked ? 'completed' : ''}`}
+                      className={`checklist-item-card ${isChecked ? 'completed' : ''} ${dragOverItemId === item.id ? 'drag-over' : ''}`}
                       role="listitem"
+                      draggable
+                      onDragStart={() => handleDragStart(item.id)}
+                      onDragOver={(e) => handleDragOver(e, item.id)}
+                      onDrop={() => handleDrop(item.id)}
+                      onDragEnd={handleDragEnd}
+                      style={{ opacity: dragItemId === item.id ? 0.4 : 1, cursor: 'grab' }}
                     >
                       <button
                         type="button"

@@ -5030,5 +5030,109 @@
     "resolvedBy": "claude-cli",
     "resolvedAt": "2026-09-06T16:37:59.841Z",
     "resolutionNote": "Added mount-time sync effect so lastBackendSyncedAt updates on page load when already online; capped stale label to Synced instead of Synced yesterday"
+  },
+  {
+    "id": "BUG-163",
+    "title": "Offline sync pending indicator missing on expense cards",
+    "description": "Offline sync pending indicator missing on expense cards",
+    "severity": "medium",
+    "category": "ui-ux",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-09-06T16:48:21.639Z",
+    "updatedAt": "2026-09-06T16:48:30.158Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-09-06T16:48:30.158Z",
+    "resolutionNote": "Added dirtyExpenseIds prop to ExpenseList, computed via collectDirtyExpenseIds from syncQueue in App.tsx; 🔄 badge shown on pending cards"
+  },
+  {
+    "id": "BUG-164",
+    "title": "Split by Shares mode unlabelled — Weight label not discoverable",
+    "description": "Split by Shares mode unlabelled — Weight label not discoverable",
+    "severity": "medium",
+    "category": "ui-ux",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-09-06T16:48:21.855Z",
+    "updatedAt": "2026-09-06T16:48:30.382Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-09-06T16:48:30.382Z",
+    "resolutionNote": "Renamed Weight→Shares button label, updated summary line and placeholder in ExpenseForm.tsx"
+  },
+  {
+    "id": "BUG-165",
+    "title": "Checklist items cannot be reordered by drag and drop",
+    "description": "Checklist items cannot be reordered by drag and drop",
+    "severity": "medium",
+    "category": "ui-ux",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-09-06T16:48:22.078Z",
+    "updatedAt": "2026-09-06T16:48:30.603Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-09-06T16:48:30.603Z",
+    "resolutionNote": "Added HTML5 drag-and-drop to checklist items; reorderChecklistItems action in tripStore syncs new order via updateTripChecklist"
+  },
+  {
+    "id": "BUG-166",
+    "title": "No way to duplicate an existing trip",
+    "description": "No way to duplicate an existing trip",
+    "severity": "medium",
+    "category": "ui-ux",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-09-06T16:48:22.302Z",
+    "updatedAt": "2026-09-06T16:48:30.820Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-09-06T16:48:30.820Z",
+    "resolutionNote": "Added duplicateTrip to tripStore; Duplicate Trip option in TripsListScreen action sheet copies trip+checklist+notes with new IDs, no expenses"
   }
 ]

@@ -1280,7 +1280,7 @@ export function ExpenseForm({
         <div className="segmented-control">
           <button type="button" className={splitMode === 'equal' ? 'active' : ''} onClick={() => { triggerHaptic('light'); setSplitMode('equal'); }}>Equal</button>
           <button type="button" className={splitMode === 'itemized' ? 'active' : ''} onClick={() => { triggerHaptic('light'); setSplitMode('itemized'); }}>Itemized</button>
-          <button type="button" className={splitMode === 'custom' ? 'active' : ''} onClick={() => { triggerHaptic('light'); setSplitMode('custom'); }}>Weight</button>
+          <button type="button" className={splitMode === 'custom' ? 'active' : ''} onClick={() => { triggerHaptic('light'); setSplitMode('custom'); }}>Shares</button>
           <button type="button" className={splitMode === 'exact' ? 'active' : ''} onClick={() => { triggerHaptic('light'); setSplitMode('exact'); }}>Exact</button>
           <button type="button" className={splitMode === 'percentage' ? 'active' : ''} onClick={() => { triggerHaptic('light'); setSplitMode('percentage'); }}>Percent</button>
         </div>
@@ -1653,7 +1653,7 @@ export function ExpenseForm({
                   ? `${splitConfigSum.toFixed(1)}% / 100%`
                   : splitMode === 'exact'
                     ? `${currencySymbol}${splitConfigSum.toFixed(2)} / ${currencySymbol}${(parseFloat(amount) || 0).toFixed(2)}`
-                    : `Total weight: ${splitConfigSum.toFixed(2)}`}
+                    : `Total shares: ${splitConfigSum.toFixed(2)}`}
               </span>
               {splitConfigMatches && (splitMode === 'exact' || splitMode === 'percentage') && (
                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', color: 'var(--color-success)', fontSize: '11px' }}>
@@ -1757,7 +1757,7 @@ export function ExpenseForm({
                     type="text"
                     inputMode="decimal"
                     placeholder={
-                      splitMode === 'custom' ? 'e.g. 1' :
+                      splitMode === 'custom' ? 'e.g. 2' :
                       splitMode === 'exact' ? 'e.g. 200' : 'e.g. 25'
                     }
                     className="input-field member-config-input"

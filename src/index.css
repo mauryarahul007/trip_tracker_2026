@@ -9844,6 +9844,12 @@ textarea.input-field {
   background: var(--bg-surface-hover);
 }
 
+.checklist-item-card.drag-over {
+  border-color: var(--primary-accent);
+  background: rgba(15, 169, 143, 0.07);
+  box-shadow: 0 0 0 2px rgba(15, 169, 143, 0.25);
+}
+
 .checklist-checkbox {
   width: 24px;
   height: 24px;

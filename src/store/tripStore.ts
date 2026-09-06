@@ -160,6 +160,7 @@ interface TripStore extends TripState {
   freezeTrip: (id: string, frozen: boolean) => Promise<void>;
   closeTrip: (id: string, closed: boolean) => Promise<void>;
   deleteTrip: (id: string) => Promise<void>;
+  duplicateTrip: (tripId: string) => Promise<void>;
 
   // Checklist & Notes Actions
   addChecklistItem: (tripId: string, item: Omit<ChecklistItem, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
@@ -167,6 +168,7 @@ interface TripStore extends TripState {
   toggleChecklistItem: (tripId: string, itemId: string) => Promise<void>;
   updateChecklistItem: (tripId: string, itemId: string, patch: Partial<Omit<ChecklistItem, 'id' | 'createdAt'>>) => Promise<void>;
   deleteChecklistItem: (tripId: string, itemId: string) => Promise<void>;
+  reorderChecklistItems: (tripId: string, orderedItems: ChecklistItem[]) => Promise<void>;
   addTripNote: (tripId: string, note: Omit<TripNote, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
   updateTripNote: (tripId: string, noteId: string, patch: Partial<Omit<TripNote, 'id' | 'createdAt'>>) => Promise<void>;
   deleteTripNote: (tripId: string, noteId: string) => Promise<void>;
@@ -1408,6 +1410,80 @@ export const useTripStore = create<TripStore>()(
       }
     },
 
+    duplicateTrip: async (tripId) => {
+      const source = get().trips.find((t) => t.id === tripId);
+      if (!source) return;
+      const userId = get().userId || 'guest-traveler-user-id';
+      const creatorName = get().userDisplayName || 'Me';
+      const now = Date.now();
+      const newTripId = newId();
+      const newMemberId = newId();
+
+      const copiedChecklist: ChecklistItem[] = (source.checklist || []).map((item) => ({
+        ...item,
+        id: newId(),
+        completed: false,
+        completedAt: undefined,
+        completedByMemberId: null,
+        createdAt: now,
+        updatedAt: now,
+      }));
+
+      const newTrip: Trip = {
+        ...source,
+        id: newTripId,
+        name: `${source.name} (Copy)`,
+        ownerId: userId,
+        memberIds: [newMemberId],
+        adminMemberIds: [newMemberId],
+        groupIds: [],
+        joinCode: Math.random().toString(36).substring(2, 8).toUpperCase(),
+        createdAt: now,
+        updatedAt: now,
+        expenseCount: 0,
+        checklist: copiedChecklist,
+        notes: (source.notes || []).map((n) => ({ ...n, id: newId(), createdAt: now, updatedAt: now })),
+        passes: [],
+        coverImageUrl: source.coverImageUrl,
+      };
+
+      const newMember: Member = { id: newMemberId, name: creatorName, linkedUserId: userId };
+
+      set((state) => ({
+        trips: [...state.trips, newTrip],
+        members: { ...state.members, [newMemberId]: newMember },
+      }));
+
+      if (!isMissingSupabaseEnv) {
+        try {
+          const inserted = await insertTrip({
+            name: newTrip.name,
+            startDate: newTrip.startDate,
+            endDate: newTrip.endDate,
+            baseCurrency: newTrip.baseCurrency,
+            destination: newTrip.destination,
+            ownerId: userId,
+            id: newTripId,
+            stops: newTrip.stops,
+          });
+          await insertMember(inserted.id, creatorName, userId, newMemberId);
+        } catch (e) {
+          console.warn('duplicateTrip: backend save failed, kept locally:', e);
+          get().queueSync('createTrip', {
+            tripTempId: newTripId,
+            memberTempId: newMemberId,
+            name: newTrip.name,
+            startDate: newTrip.startDate,
+            endDate: newTrip.endDate,
+            baseCurrency: newTrip.baseCurrency,
+            destination: newTrip.destination,
+            ownerId: userId,
+            creatorName,
+          });
+        }
+      }
+    },
+
     addChecklistItem: async (tripId, itemData) => {
       const id = newId();
       const now = Date.now();
@@ -1536,6 +1612,21 @@ export const useTripStore = create<TripStore>()(
           await updateTripChecklist(tripId, updatedList);
         } catch (e) {
           console.warn('Failed to sync checklist deletion to backend:', e);
+        }
+      }
+    },
+
+    reorderChecklistItems: async (tripId, orderedItems) => {
+      const now = Date.now();
+      set((state) => ({
+        trips: state.trips.map((t) => (t.id === tripId ? { ...t, checklist: orderedItems, updatedAt: now } : t)),
+        lastModifiedAt: now,
+      }));
+      if (!isMissingSupabaseEnv) {
+        try {
+          await updateTripChecklist(tripId, orderedItems);
+        } catch (e) {
+          console.warn('Failed to sync checklist reorder to backend:', e);
         }
       }
     },

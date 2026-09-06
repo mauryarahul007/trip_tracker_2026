@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState, useMemo, useCallback, lazy, Suspense } from 'react';
 import { flushSync } from 'react-dom';
-import { useTripStore, getTripNotificationRecipients } from './store/tripStore';
+import { useTripStore, getTripNotificationRecipients, collectDirtyExpenseIds } from './store/tripStore';
 import { useAuthStore } from './store/authStore';
 import { calculateSettlements } from './utils/settlement';
 import type { Expense, Trip, Group, Member, TripStop } from './types';
@@ -563,6 +563,7 @@ export default function App() {
   useScrollLock(Boolean(showTripActionSheet || showShareTrip || showTripWrapped || selectedReviewExpense || confirmRequest || showGlobalSettings || showAddExpense || showExpenseFilterDrawer || showSmartQuickAdd || showOfflineSnapshot || showMediaGallery || showTravelDossier));
 
   const syncQueue = useTripStore((s) => s.syncQueue);
+  const dirtyExpenseIds = useMemo(() => collectDirtyExpenseIds(syncQueue), [syncQueue]);
   const sessionExpired = useTripStore((s) => s.sessionExpired);
   const lastBackendSyncedAt = useTripStore((s) => s.lastBackendSyncedAt);
   const processQueue = useTripStore((s) => s.processQueue);
@@ -1475,6 +1476,10 @@ export default function App() {
     archiveTrip(trip.id, false);
   };
 
+  const handleDuplicateTrip = (trip: Trip) => {
+    useTripStore.getState().duplicateTrip(trip.id);
+  };
+
   // Undo-delete: stage the group, start a 2-second timer
   const handleDeleteGroup = (group: Group) => {
     if (groupUndoTimer) clearTimeout(groupUndoTimer);
@@ -1901,6 +1906,7 @@ export default function App() {
           }}
           onDeleteTrip={handleDeleteTrip}
           onArchiveTrip={handleArchiveTrip}
+          onDuplicateTrip={handleDuplicateTrip}
           onOpenSettings={() => setShowGlobalSettings(true)}
           onOpenBugTracker={isSuperadmin ? () => setShowBugTracker(true) : undefined}
           onOpenCommandPalette={() => setShowCommandPalette(true)}
@@ -2271,6 +2277,7 @@ export default function App() {
                 activeTransitionSourceId={activeTransitionSourceId}
                 onAddExpense={handleOpenAddExpense}
                 onOpenSmartQuickAdd={() => setShowSmartQuickAdd(true)}
+                dirtyExpenseIds={dirtyExpenseIds}
               />
               </div>
             </div>

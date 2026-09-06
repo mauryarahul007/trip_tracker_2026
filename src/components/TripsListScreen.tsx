@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { Trip, Member, TripStop } from '../types';
-import { IconArchive, IconMapPin, IconSearch, IconMoreVertical, IconPlus, IconEdit, IconTrash } from './Icons';
+import { IconArchive, IconMapPin, IconSearch, IconMoreVertical, IconPlus, IconEdit, IconTrash, IconCopy } from './Icons';
 import { ActionSheet } from './common/ActionSheet';
 import { DateRangePicker } from './DateRangePicker';
 import { formatTripStamp } from '../utils/dateRange';
@@ -46,6 +46,7 @@ type Props = {
   onQuickAddExpense?: (trip: Trip) => void;
   onDeleteTrip: (trip: Trip) => void;
   onArchiveTrip: (trip: Trip) => void;
+  onDuplicateTrip: (trip: Trip) => void;
   onOpenSettings: () => void;
   onOpenBugTracker?: () => void;
   onOpenCommandPalette?: () => void;
@@ -86,6 +87,7 @@ export function TripsListScreen({
   onQuickAddExpense,
   onDeleteTrip,
   onArchiveTrip,
+  onDuplicateTrip,
   onOpenSettings,
   onOpenBugTracker,
   onOpenCommandPalette,
@@ -801,6 +803,12 @@ export function TripsListScreen({
               label: 'Edit Trip Details',
               icon: <IconEdit size={18} />,
               onClick: () => onStartEditTrip(actionSheetTrip),
+            },
+            {
+              id: 'duplicate',
+              label: 'Duplicate Trip',
+              icon: <IconCopy size={18} />,
+              onClick: () => onDuplicateTrip(actionSheetTrip),
             },
             {
               id: 'archive',
