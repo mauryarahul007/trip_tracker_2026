@@ -5672,7 +5672,8 @@ html.capacitor-ios .trip-sheet .tab-pane {
   backdrop-filter: blur(12px) saturate(1.2);
   -webkit-backdrop-filter: blur(12px) saturate(1.2);
   overscroll-behavior: contain;
-  touch-action: pan-y;
+  touch-action: none;
+  overflow: hidden;
   animation: overlayFadeIn 0.22s var(--ease-decel, var(--ease-decel)) forwards;
 }
 

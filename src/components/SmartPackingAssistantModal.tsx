@@ -178,6 +178,7 @@ export function SmartPackingAssistantModal({
             minHeight: 0,
             WebkitOverflowScrolling: 'touch',
             overscrollBehavior: 'contain',
+            touchAction: 'pan-y',
             display: 'flex',
             flexDirection: 'column',
             gap: '8px',
