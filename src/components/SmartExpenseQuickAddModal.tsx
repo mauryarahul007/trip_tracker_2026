@@ -5,6 +5,7 @@ import { triggerHaptic } from '../utils/haptics';
 import { formatAmount } from '../utils/currency';
 import { CategoryIcon } from './CategoryIcon';
 import { useEscapeKey } from '../utils/useEscapeKey';
+import { useHistoryBack } from '../utils/useHistoryBack';
 
 interface Props {
   isOpen: boolean;
@@ -51,6 +52,7 @@ export function SmartExpenseQuickAddModal({
   const recognitionRef = useRef<any>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  useHistoryBack(isOpen, onClose);
   useEscapeKey(isOpen, onClose);
 
   useEffect(() => {
@@ -189,19 +191,59 @@ export function SmartExpenseQuickAddModal({
           boxShadow: '0 20px 40px rgba(0, 0, 0, 0.25)',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ fontSize: '22px' }}>⚡</span>
-            <div>
-              <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 700 }}>Smart Quick-Add</h3>
-              <p style={{ margin: 0, fontSize: '12px', color: 'var(--text-muted)' }}>Type or speak in natural language</p>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', gap: '8px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, minWidth: 0 }}>
+            <button
+              type="button"
+              className="secondary-btn"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '4px',
+                padding: '6px 10px',
+                fontSize: '12.5px',
+                borderRadius: '8px',
+                fontWeight: 600,
+                cursor: 'pointer',
+                flexShrink: 0,
+              }}
+              onClick={() => {
+                triggerHaptic('light');
+                onClose();
+              }}
+              aria-label="Go back"
+              title="Go back"
+            >
+              <span>←</span>
+              <span>Back</span>
+            </button>
+            <span style={{ fontSize: '20px', flexShrink: 0 }}>⚡</span>
+            <div style={{ minWidth: 0 }}>
+              <h3 style={{ margin: 0, fontSize: '17px', fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                Smart Quick-Add
+              </h3>
+              <p style={{ margin: 0, fontSize: '11.5px', color: 'var(--text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                Type or speak in natural language
+              </p>
             </div>
           </div>
           <button
             type="button"
             className="secondary-btn"
-            style={{ padding: '4px 10px', fontSize: '13px' }}
-            onClick={onClose}
+            style={{
+              padding: '6px 10px',
+              fontSize: '13px',
+              borderRadius: '8px',
+              fontWeight: 600,
+              cursor: 'pointer',
+              flexShrink: 0,
+            }}
+            onClick={() => {
+              triggerHaptic('light');
+              onClose();
+            }}
+            aria-label="Close"
+            title="Close"
           >
             ✕
           </button>
@@ -360,6 +402,17 @@ export function SmartExpenseQuickAddModal({
               Customize...
             </button>
           )}
+          <button
+            type="button"
+            className="secondary-btn"
+            style={{ padding: '10px 14px', fontSize: '13px' }}
+            onClick={() => {
+              triggerHaptic('light');
+              onClose();
+            }}
+          >
+            Cancel
+          </button>
         </div>
       </div>
     </div>

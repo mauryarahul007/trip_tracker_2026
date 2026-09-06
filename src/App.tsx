@@ -1649,6 +1649,7 @@ export default function App() {
   useHistoryBack(showTripWrapped, () => setShowTripWrapped(false));
   useHistoryBack(showShortcutsModal, () => setShowShortcutsModal(false));
   useHistoryBack(showFxRates, () => setShowFxRates(false));
+  useHistoryBack(showSmartQuickAdd, () => setShowSmartQuickAdd(false));
 
   // Escape key — the desktop equivalent of the back-gesture wiring above,
   // for the same set of overlay modals (excludes tab/trip navigation).
@@ -1665,6 +1666,7 @@ export default function App() {
   useEscapeKey(showTripWrapped, () => setShowTripWrapped(false));
   useEscapeKey(showShortcutsModal, () => setShowShortcutsModal(false));
   useEscapeKey(showFxRates, () => setShowFxRates(false));
+  useEscapeKey(showSmartQuickAdd, () => setShowSmartQuickAdd(false));
 
   // Loading view
   if (!initialized) {

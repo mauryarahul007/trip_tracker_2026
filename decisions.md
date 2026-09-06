@@ -2366,6 +2366,25 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - Switching between 'leg' and 'member' sort modes recalculates grouping in `useMemo` in $O(N \log N)$ time, taking less than 1ms for typical trip pass counts (up to 100+ passes) without background thread overhead.
 
+---
+
+## 127. Smart Expense Quick-Add Navigation & Back Button Wiring (v3.4.10)
+* **Context:**
+  - When opening the 1-tap AI / voice smart quick-add expense modal (`SmartExpenseQuickAddModal.tsx`), users on mobile devices or browser navigations were unable to dismiss the popup using the hardware or browser Back button or swipe-back gesture. Instead of dismissing the modal, triggering the browser back button could navigate away from the active trip entirely.
+  - Furthermore, within the modal itself, there was no visual Back button in the header (only a small `✕` on the far right) and no "Cancel" button in the bottom action bar.
+* **Decision:**
+  1. **History Back & Gesture Stack Integration (`useHistoryBack`):**
+     - Imported and invoked `useHistoryBack(isOpen, onClose)` inside `SmartExpenseQuickAddModal.tsx`.
+     - Wired `useHistoryBack(showSmartQuickAdd, () => setShowSmartQuickAdd(false))` and `useEscapeKey(showSmartQuickAdd, () => setShowSmartQuickAdd(false))` into the central LIFO back-stack in `App.tsx`.
+     - Now, pressing the browser Back button, Android system back button, or performing an edge swipe gesture cleanly dismisses the modal without altering page routing.
+  2. **Visual Back Navigation Affordance (`SmartExpenseQuickAddModal.tsx`):**
+     - Added an explicit `[ ← Back ]` button on the left of the modal header with haptic feedback.
+     - Added a `[ Cancel ]` button to the bottom action bar alongside `1-Tap Save` and `Customize...`.
+     - Maintained circular `✕` top-right dismiss button for multiple accessible exit paths.
+* **Trade-offs Accepted:**
+  - None -- conforms to established modal navigation patterns across the application.
+
+
 
 
 
