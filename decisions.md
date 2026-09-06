@@ -2401,6 +2401,21 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - Standardized on zero-dependency, React hook-based back stack (`useHistoryBack`) across both traveler and superadmin portals.
 
+---
+
+## 129. Deduplicate Trip Wrapped Navigation Entry Point in Settings (v3.4.12)
+* **Context:**
+  - In `SettingsView.tsx`, under the "This Trip" section, two separate entry points for "Trip Wrapped" existed in close proximity:
+    1. An entry directly on the main Settings menu list (`SettingsCell` for "Trip Wrapped (Story Card)").
+    2. An entry inside the "Trip Tools & Story" sub-screen (`subScreen === 'trip-tools'`), which already houses "Trip Wrapped (Story Card)" under "Stories & Navigation".
+  - This redundancy cluttered the main Settings page and duplicated navigation paths.
+* **Decision:**
+  - Removed the redundant top-level `SettingsCell` for Trip Wrapped from the main "This Trip" settings list in `SettingsView.tsx`.
+  - Retained the dedicated and feature-rich "Trip Wrapped" entry point inside "Trip Tools & Story" alongside squad milestones, route maps, categories, and trip preferences.
+* **Trade-offs Accepted:**
+  - Keeps the top-level settings menu clean and uncluttered without losing access to Trip Wrapped.
+
+
 
 
 

@@ -2221,20 +2221,6 @@ export function SettingsView({
               />
             )}
 
-            {onOpenTripWrapped && (
-              <SettingsCell
-                icon={<IconSparkles size={18} />}
-                iconGlow="amber"
-                title="Trip Wrapped (Story Card)"
-                subtitle="Generate 1080x1920 Instagram Story infographic"
-                badge="STORY"
-                onClick={() => {
-                  triggerHaptic('light');
-                  onOpenTripWrapped();
-                }}
-              />
-            )}
-
             {onOpenAchievements && (
               <SettingsCell
                 icon={<IconTrophy size={18} />}
