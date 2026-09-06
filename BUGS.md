@@ -9,10 +9,10 @@
 
 | Metric | Count | Status Notes |
 | :--- | :--- | :--- |
-| **Total Tracked** | **161** | All recorded bugs across sessions |
+| **Total Tracked** | **162** | All recorded bugs across sessions |
 | **🟢 Open** | **0** | No critical blockers, 0 High |
 | **🟡 In Progress** | **0** | Active investigation or fix |
-| **✅ Resolved** | **128** | Verified & closed |
+| **✅ Resolved** | **129** | Verified & closed |
 | **⚪ Won't Fix** | **33** | Expected behavior / deferred |
 
 ---
@@ -159,6 +159,7 @@
 | **BUG-159** | Missing autocomplete attributes on email/password inputs breaks autofill on mobile | `ui-ux` | `medium` | `claude-cli` | `claude-cli` | Added autoComplete attributes to all email/password inputs across LoginScreen, ResetPasswordScreen, SuperadminAuthModal, AdminToolsPage |
 | **BUG-160** | MembersGroupsTab typeahead dropdown scroll bleeds to parent on touch | `ui-ux` | `medium` | `claude-cli` | `claude-cli` | Added overscrollBehavior: contain and touchAction: pan-y to MembersGroupsTab typeahead dropdown |
 | **BUG-161** | Index used as React key in BugReportModal and OnboardingSwipe | `general` | `low` | `claude-cli` | `claude-cli` | OnboardingSwipe uses step.id as key; BugReportModal uses timestamp+level+idx composite key |
+| **BUG-162** | Header shows 'Synced yesterday' when online because mount-time sync never fires | `ui-ux` | `medium` | `claude-cli` | `claude-cli` | Added mount-time sync effect so lastBackendSyncedAt updates on page load when already online; capped stale label to Synced instead of Synced yesterday |
 
 ---
 

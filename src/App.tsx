@@ -611,6 +611,13 @@ export default function App() {
     };
   }, [handleOnlineSync]);
 
+  // Sync on mount if already online (the 'online' event only fires on transition)
+  useEffect(() => {
+    if (navigator.onLine) {
+      void handleOnlineSync();
+    }
+  }, [handleOnlineSync]);
+
   const visibleTrips = useMemo(
     () =>
       trips
@@ -789,7 +796,7 @@ export default function App() {
     if (diffMins < 60) return `Synced ${diffMins}m ago`;
     const diffHours = Math.floor(diffMins / 60);
     if (diffHours < 24) return `Synced ${diffHours}h ago`;
-    return 'Synced yesterday';
+    return 'Synced';
   }, [syncStatus, syncQueue.length, lastBackendSyncedAt]);
 
   const handleSyncClick = async () => {
