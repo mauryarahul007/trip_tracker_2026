@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { parseQuickExpense } from './expenseQuickParser';
-import type { Category, Expense } from '../types';
+import type { Category, Member } from '../types';
 
 describe('expenseQuickParser', () => {
   const mockCategories: Category[] = [
@@ -10,6 +10,12 @@ describe('expenseQuickParser', () => {
     { id: 'cat-activities', name: 'Activities & Sightseeing', isCustom: false },
     { id: 'cat-shopping', name: 'Shopping', isCustom: false },
     { id: 'cat-misc', name: 'Miscellaneous', isCustom: false },
+  ];
+
+  const mockMembers: Member[] = [
+    { id: 'm-1', name: 'Rahul' },
+    { id: 'm-2', name: 'Priya' },
+    { id: 'm-3', name: 'Amit' },
   ];
 
   it('returns null for empty or whitespace-only inputs', () => {
@@ -60,30 +66,28 @@ describe('expenseQuickParser', () => {
     expect(result?.categoryId).toBe('cat-food');
   });
 
-  it('leverages historical trip memory when available', () => {
-    const historicalExpenses: Expense[] = [
-      {
-        id: 'e-1',
-        tripId: 't-1',
-        title: 'Shack 42 Beach Bar',
-        amount: 800,
-        currency: 'INR',
-        category: 'cat-food',
-        date: '2026-08-10',
-        paidBy: 'm-1',
-        splitMode: 'equal',
-        splitMemberIds: ['m-1'],
-        resolvedShares: { 'm-1': 800 },
-        isSettlement: false,
-        createdByUserId: 'u-1',
-        createdAt: 100,
-        updatedAt: 100,
-      },
-    ];
-
-    const result = parseQuickExpense('Shack 42 1200', mockCategories, historicalExpenses);
+  it('parses payer and split members from natural language', () => {
+    const result = parseQuickExpense(
+      'Dinner 1500 food paid by Rahul with Priya and Amit',
+      mockCategories,
+      [],
+      mockMembers
+    );
     expect(result).not.toBeNull();
-    expect(result?.amount).toBe(1200);
-    expect(result?.categoryId).toBe('cat-food');
+    expect(result?.amount).toBe(1500);
+    expect(result?.paidById).toBe('m-1');
+    expect(result?.paidByName).toBe('Rahul');
+    expect(result?.splitMemberIds).toContain('m-1');
+    expect(result?.splitMemberIds).toContain('m-2');
+    expect(result?.splitMemberIds).toContain('m-3');
+  });
+
+  it('parses "yesterday" into relative date', () => {
+    const result = parseQuickExpense('Lunch 600 yesterday', mockCategories, [], mockMembers);
+    expect(result).not.toBeNull();
+    expect(result?.amount).toBe(600);
+    expect(result?.date).toBeDefined();
+    const yesterdayStr = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+    expect(result?.date).toBe(yesterdayStr);
   });
 });

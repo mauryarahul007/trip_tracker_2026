@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import type { Member, Group, Expense, Category, TripState, ExpenseLocation, Trip, TripStop, ChecklistItem, TripNote } from '../types';
+import type { Member, Group, Expense, Category, TripState, ExpenseLocation, Trip, TripStop, ChecklistItem, TripNote, MemberRole, ItemizedReceiptConfig } from '../types';
 import type { FeatureFlagKey } from '../types/admin';
 import { DEFAULT_FEATURE_FLAGS, isFeatureActive } from '../utils/featureFlags';
 import { buildAutoGroupName } from '../utils/groupNaming';
@@ -178,6 +178,7 @@ interface TripStore extends TripState {
   updateMember: (id: string, name: string) => Promise<void>;
   deleteMember: (id: string) => Promise<void>;
   setMemberAdminRole: (memberId: string, isAdmin: boolean) => Promise<void>;
+  setMemberRole: (memberId: string, role: MemberRole) => Promise<void>;
 
   // Group Actions
   createGroup: (name: string, memberIds: string[]) => Promise<void>;
@@ -220,12 +221,18 @@ export const DEFAULT_CATEGORIES: Category[] = [
 ];
 
 // Pure helper — resolves exact money shares for each participant
-const resolveShares = (
-  expenseData: { amount: number; splitMode: string; splitConfig?: Record<string, number>; paidBy: string },
+export const resolveShares = (
+  expenseData: {
+    amount: number;
+    splitMode: string;
+    splitConfig?: Record<string, number>;
+    itemizedConfig?: ItemizedReceiptConfig;
+    paidBy: string;
+  },
   participants: string[]
 ): Record<string, number> => {
   const resolvedShares: Record<string, number> = {};
-  const { amount, splitMode, splitConfig, paidBy } = expenseData;
+  const { amount, splitMode, splitConfig, itemizedConfig, paidBy } = expenseData;
 
   const applyRounding = (shares: Record<string, number>) => {
     const sum = Object.values(shares).reduce((a, b) => a + b, 0);
@@ -233,11 +240,45 @@ const resolveShares = (
     if (diff !== 0) {
       const roundTarget = participants.includes(paidBy) ? paidBy : participants[0];
       if (roundTarget) {
-        shares[roundTarget] = Number((shares[roundTarget] + diff).toFixed(2));
+        shares[roundTarget] = Number(((shares[roundTarget] || 0) + diff).toFixed(2));
       }
     }
     return shares;
   };
+
+  if (splitMode === 'itemized' && itemizedConfig && Array.isArray(itemizedConfig.items) && itemizedConfig.items.length > 0) {
+    const memberItemSums: Record<string, number> = {};
+    participants.forEach((id) => { memberItemSums[id] = 0; });
+
+    let itemsTotal = 0;
+    itemizedConfig.items.forEach((item) => {
+      const assigned = (item.assignedMemberIds || []).filter((id) => participants.includes(id));
+      const targetMembers = assigned.length > 0 ? assigned : participants;
+      const sharePerMember = item.amount / targetMembers.length;
+      itemsTotal += item.amount;
+      targetMembers.forEach((id) => {
+        memberItemSums[id] = (memberItemSums[id] || 0) + sharePerMember;
+      });
+    });
+
+    const tax = Number(itemizedConfig.tax) || 0;
+    const tip = Number(itemizedConfig.tip) || 0;
+    const discount = Number(itemizedConfig.discount) || 0;
+    const netExtras = tax + tip - discount;
+
+    participants.forEach((id) => {
+      const memberSubtotal = memberItemSums[id] || 0;
+      let memberExtras = 0;
+      if (itemsTotal > 0) {
+        memberExtras = (memberSubtotal / itemsTotal) * netExtras;
+      } else {
+        memberExtras = netExtras / participants.length;
+      }
+      resolvedShares[id] = Number((memberSubtotal + memberExtras).toFixed(2));
+    });
+
+    return applyRounding(resolvedShares);
+  }
 
   if (splitMode === 'equal') {
     const share = Number((amount / participants.length).toFixed(2));
@@ -1484,6 +1525,42 @@ export const useTripStore = create<TripStore>()(
       });
     },
 
+    setMemberRole: async (memberId: string, role: MemberRole) => {
+      const activeTripId = get().activeTripId;
+      if (!activeTripId) return;
+      const targetMember = get().members[memberId];
+      if (!targetMember) return;
+
+      set((state) => {
+        const updatedTrips = state.trips.map((t) => {
+          if (t.id !== activeTripId) return t;
+          const currentRoles = { ...(t.memberRoles || {}) };
+          currentRoles[memberId] = role;
+          const currentAdmins = new Set(t.adminMemberIds || []);
+          if (currentAdmins.size === 0 && t.memberIds.length > 0) {
+            currentAdmins.add(t.memberIds[0]);
+          }
+
+          if (role === 'organizer') {
+            currentAdmins.add(memberId);
+          } else {
+            const isOwner = targetMember.linkedUserId && targetMember.linkedUserId === t.ownerId;
+            if (!isOwner && currentAdmins.size > 1) {
+              currentAdmins.delete(memberId);
+            }
+          }
+
+          return {
+            ...t,
+            memberRoles: currentRoles,
+            adminMemberIds: Array.from(currentAdmins),
+            updatedAt: Date.now(),
+          };
+        });
+        return { trips: updatedTrips, storageError: null };
+      });
+    },
+
     toggleArchiveMember: async (id) => {
       const member = get().members[id];
       if (!member) return;
@@ -1702,6 +1779,7 @@ export const useTripStore = create<TripStore>()(
         splitMode: expenseData.splitMode,
         splitMemberIds: expenseData.splitMemberIds,
         splitConfig: expenseData.splitConfig,
+        itemizedConfig: expenseData.itemizedConfig,
         resolvedShares,
         location: expenseData.location ?? undefined,
       };

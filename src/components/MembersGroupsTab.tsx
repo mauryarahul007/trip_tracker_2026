@@ -1,7 +1,7 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
 import Fuse from 'fuse.js';
-import type { Group, Member, PreviousMemberSuggestion } from '../types';
+import type { Group, Member, PreviousMemberSuggestion, MemberRole } from '../types';
 import type { MemberBalance } from '../utils/settlement';
 import { initial } from '../utils/initials';
 import { avatarColorForName } from '../utils/avatarColor';
@@ -34,7 +34,9 @@ type Props = {
   isAdmin: boolean;
   tripOwnerId: string;
   adminMemberIds?: string[];
+  memberRoles?: Record<string, MemberRole>;
   onSetMemberAdminRole?: (memberId: string, isAdmin: boolean) => Promise<void>;
+  onSetMemberRole?: (memberId: string, role: MemberRole) => Promise<void>;
   currentUserId: string | null;
   // Bumped by the nav bar's FAB when it's tapped while this tab is active
   // (see NavTabs) -- any change opens the add-member popup, the value
@@ -60,7 +62,9 @@ export function MembersGroupsTab({
   isAdmin,
   tripOwnerId,
   adminMemberIds,
+  memberRoles,
   onSetMemberAdminRole,
+  onSetMemberRole,
   currentUserId,
   addMemberSignal,
 }: Props) {
@@ -861,18 +865,31 @@ export function MembersGroupsTab({
                         {member.name}
                       </span>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
-                        {isMemberAdmin(member) ? (
-                          <span className="member-badge member-badge-admin" title="Trip Admin">
-                            <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" style={{ flexShrink: 0 }}>
-                              <path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm14 3c0 .6-.4 1-1 1H6c-.6 0-1-.4-1-1v-1h14v1z" />
-                            </svg>
-                            Admin
-                          </span>
-                        ) : (
-                          <span className="member-badge member-badge-you" style={{ color: 'var(--text-muted)' }}>
-                            Member
-                          </span>
-                        )}
+                        {(() => {
+                          const effectiveRole = memberRoles?.[member.id] || (isMemberAdmin(member) ? 'organizer' : 'contributor');
+                          if (effectiveRole === 'organizer') {
+                            return (
+                              <span className="member-badge member-badge-admin" title="Trip Organizer (Admin)">
+                                <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" style={{ flexShrink: 0 }}>
+                                  <path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm14 3c0 .6-.4 1-1 1H6c-.6 0-1-.4-1-1v-1h14v1z" />
+                                </svg>
+                                Organizer
+                              </span>
+                            );
+                          }
+                          if (effectiveRole === 'viewer') {
+                            return (
+                              <span className="member-badge" style={{ background: 'rgba(148, 163, 184, 0.15)', color: 'var(--text-muted)', border: '1px solid rgba(148, 163, 184, 0.3)' }} title="Viewer (Read-only)">
+                                👁️ Viewer
+                              </span>
+                            );
+                          }
+                          return (
+                            <span className="member-badge member-badge-you" style={{ color: 'var(--text-muted)' }} title="Contributor">
+                              ✍️ Contributor
+                            </span>
+                          );
+                        })()}
                         {currentUserId && member.linkedUserId === currentUserId && (
                           <span className="member-badge member-badge-you">You</span>
                         )}
@@ -887,7 +904,28 @@ export function MembersGroupsTab({
                       <div className="lt-amt">{amtLabel}</div>
                       {isAdmin && (
                         <div className="lt-actions" style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-                          {onSetMemberAdminRole && (
+                          {onSetMemberRole && !isOriginalTripOwner(member) ? (
+                            <select
+                              className="secondary-btn"
+                              aria-label={`Set role for ${member.name}`}
+                              style={{
+                                padding: '3px 6px',
+                                fontSize: '11px',
+                                height: '26px',
+                                borderRadius: '6px',
+                                borderColor: 'var(--border-color)',
+                                background: 'var(--card-bg, var(--bg-surface))',
+                                color: 'var(--text-primary)',
+                                cursor: 'pointer',
+                              }}
+                              value={memberRoles?.[member.id] || (isMemberAdmin(member) ? 'organizer' : 'contributor')}
+                              onChange={(e) => onSetMemberRole(member.id, e.target.value as MemberRole)}
+                            >
+                              <option value="organizer">👑 Organizer</option>
+                              <option value="contributor">✍️ Contributor</option>
+                              <option value="viewer">👁️ Viewer</option>
+                            </select>
+                          ) : onSetMemberAdminRole && (
                             !isMemberAdmin(member) ? (
                               <button
                                 type="button"

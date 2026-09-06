@@ -171,7 +171,7 @@ export interface Database {
           category: string;
           date: string;
           paid_by: string;
-          split_mode: 'equal' | 'equalUnit' | 'custom' | 'exact' | 'percentage';
+          split_mode: 'equal' | 'equalUnit' | 'custom' | 'exact' | 'percentage' | 'itemized';
           split_member_ids: string[];
           split_config: Record<string, number> | null;
           resolved_shares: Record<string, number>;
@@ -193,7 +193,7 @@ export interface Database {
           category: string;
           date: string;
           paid_by: string;
-          split_mode: 'equal' | 'equalUnit' | 'custom' | 'exact' | 'percentage';
+          split_mode: 'equal' | 'equalUnit' | 'custom' | 'exact' | 'percentage' | 'itemized';
           split_member_ids: string[];
           split_config?: Record<string, number> | null;
           resolved_shares: Record<string, number>;
@@ -209,7 +209,7 @@ export interface Database {
           category: string;
           date: string;
           paid_by: string;
-          split_mode: 'equal' | 'equalUnit' | 'custom' | 'exact' | 'percentage';
+          split_mode: 'equal' | 'equalUnit' | 'custom' | 'exact' | 'percentage' | 'itemized';
           split_member_ids: string[];
           split_config: Record<string, number> | null;
           resolved_shares: Record<string, number>;

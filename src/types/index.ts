@@ -30,6 +30,22 @@ export interface TripNote {
   updatedAt: number;
 }
 
+export type MemberRole = 'organizer' | 'contributor' | 'viewer';
+
+export interface ReceiptItem {
+  id: string;
+  name: string;
+  amount: number;
+  assignedMemberIds: string[];
+}
+
+export interface ItemizedReceiptConfig {
+  items: ReceiptItem[];
+  tax?: number;
+  tip?: number;
+  discount?: number;
+}
+
 export interface Trip {
   id: string;
   name: string;
@@ -41,6 +57,7 @@ export interface Trip {
   groupIds: string[]; // List of groups associated with this trip
   ownerId: string; // admin: full CRUD + can settle any transfer
   adminMemberIds?: string[]; // list of member IDs who have admin rights on this trip
+  memberRoles?: Record<string, MemberRole>; // memberId -> role (organizer, contributor, viewer)
   joinCode: string; // shareable code, e.g. "ABC123"
   createdAt: number;
   updatedAt: number;
@@ -69,7 +86,7 @@ export interface Group {
   memberIds: string[]; // members inside this group
 }
 
-export type SplitMode = 'equal' | 'equalUnit' | 'custom' | 'exact' | 'percentage';
+export type SplitMode = 'equal' | 'equalUnit' | 'custom' | 'exact' | 'percentage' | 'itemized';
 
 export interface ExpenseLocation {
   lat: number;
@@ -95,6 +112,7 @@ export interface Expense {
   splitMode: SplitMode;
   splitMemberIds: string[]; // members participating in this split
   splitConfig?: Record<string, number>; // memberId -> weight / amount / percentage
+  itemizedConfig?: ItemizedReceiptConfig; // line items + tax/tip/discount for itemized splits
   resolvedShares: Record<string, number>; // memberId -> actual split share in baseCurrency
   receiptImage?: string; // client-only: a freshly-captured base64 preview, not yet uploaded
   receiptPath?: string | null; // Supabase Storage object path once uploaded — resolve via a signed URL to display

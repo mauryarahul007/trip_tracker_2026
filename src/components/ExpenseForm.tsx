@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
-import type { Category, Group, Member, Trip, Expense, ExpenseLocation } from '../types';
+import type { Category, Group, Member, Trip, Expense, ExpenseLocation, SplitMode, ReceiptItem, ItemizedReceiptConfig } from '../types';
 import { IconCheck, IconAlertCircle, IconClose, IconMapPin, IconMic } from './Icons';
 import { CategoryIcon } from './CategoryIcon';
 import { initial } from '../utils/initials';
@@ -16,8 +16,6 @@ import { triggerHaptic } from '../utils/haptics';
 import { convertCurrency, POPULAR_CURRENCIES } from '../utils/currencyConverter';
 import { parseReceiptText, type ExtractedReceiptData } from '../utils/receiptOcr';
 import { useFocusTrap } from '../hooks/useFocusTrap';
-
-type SplitMode = 'equal' | 'custom' | 'exact' | 'percentage';
 
 // Minimal Web Speech API surface -- not in the default TS DOM lib, and
 // vendor-prefixed on most browsers that support it (Chrome/Edge/Safari).
@@ -71,6 +69,7 @@ type Props = {
     splitMode: SplitMode;
     splitMemberIds: string[];
     splitConfig?: Record<string, number>;
+    itemizedConfig?: ItemizedReceiptConfig;
     receiptImage?: string;
     location?: ExpenseLocation | null;
   }) => Promise<{ success: boolean; error?: string }>;
@@ -124,6 +123,64 @@ export function ExpenseForm({
     }
     return initialConfig;
   });
+
+  // Itemized Receipt state
+  const [receiptItems, setReceiptItems] = useState<ReceiptItem[]>(() => {
+    if (editingExpense?.itemizedConfig?.items) {
+      return editingExpense.itemizedConfig.items;
+    }
+    return [];
+  });
+  const [receiptTax, setReceiptTax] = useState<string>(() => editingExpense?.itemizedConfig?.tax ? String(editingExpense.itemizedConfig.tax) : '');
+  const [receiptTip, setReceiptTip] = useState<string>(() => editingExpense?.itemizedConfig?.tip ? String(editingExpense.itemizedConfig.tip) : '');
+  const [receiptDiscount, setReceiptDiscount] = useState<string>(() => editingExpense?.itemizedConfig?.discount ? String(editingExpense.itemizedConfig.discount) : '');
+
+  const itemizedSubtotal = receiptItems.reduce((sum, item) => sum + (item.amount || 0), 0);
+  const itemizedTax = parseFloat(receiptTax) || 0;
+  const itemizedTip = parseFloat(receiptTip) || 0;
+  const itemizedDiscount = parseFloat(receiptDiscount) || 0;
+  const itemizedCalculatedTotal = Math.max(0, itemizedSubtotal + itemizedTax + itemizedTip - itemizedDiscount);
+
+  const handleSyncItemizedTotal = () => {
+    if (itemizedCalculatedTotal > 0) {
+      setAmount(itemizedCalculatedTotal.toFixed(2));
+      triggerHaptic('light');
+    }
+  };
+
+  const handleAddReceiptItem = () => {
+    triggerHaptic('light');
+    const newItem: ReceiptItem = {
+      id: `item-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      name: `Item ${receiptItems.length + 1}`,
+      amount: 0,
+      assignedMemberIds: visibleMembers.map((m) => m.id),
+    };
+    setReceiptItems((prev) => [...prev, newItem]);
+  };
+
+  const handleUpdateReceiptItem = (id: string, updates: Partial<ReceiptItem>) => {
+    setReceiptItems((prev) => prev.map((item) => (item.id === id ? { ...item, ...updates } : item)));
+  };
+
+  const handleToggleMemberOnItem = (itemId: string, memberId: string) => {
+    triggerHaptic('light');
+    setReceiptItems((prev) =>
+      prev.map((item) => {
+        if (item.id !== itemId) return item;
+        const exists = item.assignedMemberIds.includes(memberId);
+        const newAssigned = exists
+          ? item.assignedMemberIds.filter((m) => m !== memberId)
+          : [...item.assignedMemberIds, memberId];
+        return { ...item, assignedMemberIds: newAssigned };
+      })
+    );
+  };
+
+  const handleRemoveReceiptItem = (id: string) => {
+    triggerHaptic('light');
+    setReceiptItems((prev) => prev.filter((item) => item.id !== id));
+  };
 
   const [receiptImage, setReceiptImage] = useState('');
   const [receiptProcessing, setReceiptProcessing] = useState(false);
@@ -511,11 +568,28 @@ export function ExpenseForm({
       return;
     }
 
-    if (!splitConfigMatches) {
+    if (splitMode !== 'itemized' && !splitConfigMatches) {
       const modeLabel = splitMode === 'percentage' ? 'percentages' : 'exact amounts';
       const targetLabel = splitMode === 'percentage' ? '100%' : `${currencySymbol} ${amountVal.toFixed(2)}`;
       setFormError(`Split ${modeLabel} sum (${splitConfigSum.toFixed(2)}) must equal ${targetLabel}.`);
       return;
+    }
+
+    let finalItemizedConfig: ItemizedReceiptConfig | undefined = undefined;
+    if (splitMode === 'itemized') {
+      if (receiptItems.length === 0) {
+        setFormError('Please add at least one item to the itemized receipt breakdown.');
+        return;
+      }
+      finalItemizedConfig = {
+        items: receiptItems.map((item) => ({
+          ...item,
+          assignedMemberIds: item.assignedMemberIds.length > 0 ? item.assignedMemberIds : splitSelectedIds,
+        })),
+        tax: parseFloat(receiptTax) || undefined,
+        tip: parseFloat(receiptTip) || undefined,
+        discount: parseFloat(receiptDiscount) || undefined,
+      };
     }
 
     setFormError('');
@@ -549,6 +623,7 @@ export function ExpenseForm({
         splitMode,
         splitMemberIds: splitSelectedIds,
         splitConfig: Object.keys(finalSplitConfig).length > 0 ? finalSplitConfig : undefined,
+        itemizedConfig: finalItemizedConfig,
         receiptImage: receiptImage || undefined,
         location: location || null,
       });
@@ -1201,6 +1276,7 @@ export function ExpenseForm({
         <legend className="form-label">Split Mode</legend>
         <div className="segmented-control">
           <button type="button" className={splitMode === 'equal' ? 'active' : ''} onClick={() => { triggerHaptic('light'); setSplitMode('equal'); }}>Equal</button>
+          <button type="button" className={splitMode === 'itemized' ? 'active' : ''} onClick={() => { triggerHaptic('light'); setSplitMode('itemized'); }}>Itemized</button>
           <button type="button" className={splitMode === 'custom' ? 'active' : ''} onClick={() => { triggerHaptic('light'); setSplitMode('custom'); }}>Weight</button>
           <button type="button" className={splitMode === 'exact' ? 'active' : ''} onClick={() => { triggerHaptic('light'); setSplitMode('exact'); }}>Exact</button>
           <button type="button" className={splitMode === 'percentage' ? 'active' : ''} onClick={() => { triggerHaptic('light'); setSplitMode('percentage'); }}>Percent</button>
@@ -1363,7 +1439,183 @@ export function ExpenseForm({
           </div>
         </div>
 
-        {splitMode !== 'equal' && splitSelectedIds.length > 0 && (
+        {/* Itemized Receipt Breakdown Builder */}
+        {splitMode === 'itemized' && (
+          <div style={{
+            padding: '16px',
+            borderRadius: '14px',
+            background: 'var(--bg-card-subtle, rgba(0,0,0,0.03))',
+            border: '1px solid var(--border-color)',
+            marginBottom: '16px',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+              <div>
+                <h4 style={{ margin: 0, fontSize: '13.5px', fontWeight: 700, color: 'var(--text-primary)' }}>
+                  🧾 Line Items Breakdown
+                </h4>
+                <div style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>
+                  Assign items to participants who shared them
+                </div>
+              </div>
+              <button
+                type="button"
+                className="secondary-btn"
+                style={{ padding: '4px 10px', fontSize: '11.5px', borderRadius: '8px' }}
+                onClick={handleAddReceiptItem}
+              >
+                ＋ Add Item
+              </button>
+            </div>
+
+            {receiptItems.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '16px', color: 'var(--text-muted)', fontSize: '12.5px' }}>
+                No line items added yet. Click <strong>"＋ Add Item"</strong> to break down dishes, drinks, or tickets.
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                {receiptItems.map((item, idx) => (
+                  <div
+                    key={item.id}
+                    style={{
+                      padding: '12px',
+                      borderRadius: '10px',
+                      background: 'var(--bg-surface, #fff)',
+                      border: '1px solid var(--border-color)',
+                    }}
+                  >
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '8px' }}>
+                      <input
+                        type="text"
+                        className="input-field"
+                        placeholder={`Item ${idx + 1} (e.g. Pizza)`}
+                        value={item.name}
+                        onChange={(e) => handleUpdateReceiptItem(item.id, { name: e.target.value })}
+                        style={{ flex: 2, padding: '6px 10px', fontSize: '13px' }}
+                      />
+                      <div style={{ position: 'relative', flex: 1 }}>
+                        <input
+                          type="text"
+                          inputMode="decimal"
+                          className="input-field"
+                          placeholder="0.00"
+                          value={item.amount || ''}
+                          onChange={(e) => {
+                            const val = parseFloat(e.target.value) || 0;
+                            handleUpdateReceiptItem(item.id, { amount: val });
+                          }}
+                          style={{ padding: '6px 10px', fontSize: '13px' }}
+                        />
+                      </div>
+                      <button
+                        type="button"
+                        className="secondary-btn"
+                        style={{ padding: '6px 8px', color: 'var(--color-danger)', borderColor: 'transparent' }}
+                        onClick={() => handleRemoveReceiptItem(item.id)}
+                        title="Remove item"
+                      >
+                        ✕
+                      </button>
+                    </div>
+
+                    {/* Member Assignees Selector for this Item */}
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', alignItems: 'center' }}>
+                      <span style={{ fontSize: '11px', color: 'var(--text-muted)', marginRight: '4px' }}>Shared by:</span>
+                      {visibleMembers.map((m) => {
+                        const isAssigned = item.assignedMemberIds.includes(m.id);
+                        return (
+                          <button
+                            key={m.id}
+                            type="button"
+                            onClick={() => handleToggleMemberOnItem(item.id, m.id)}
+                            style={{
+                              padding: '2px 8px',
+                              borderRadius: '999px',
+                              fontSize: '11px',
+                              border: isAssigned ? '1px solid var(--primary-accent)' : '1px solid var(--border-color)',
+                              background: isAssigned ? 'rgba(15, 169, 143, 0.12)' : 'transparent',
+                              color: isAssigned ? 'var(--primary-accent)' : 'var(--text-muted)',
+                              cursor: 'pointer',
+                            }}
+                          >
+                            {isAssigned ? '✓ ' : '+ '}{m.name}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Extras: Tax, Tip, Discount */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', marginTop: '12px' }}>
+              <div>
+                <label style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'block', marginBottom: '2px' }}>Tax</label>
+                <input
+                  type="text"
+                  inputMode="decimal"
+                  className="input-field"
+                  placeholder="0.00"
+                  value={receiptTax}
+                  onChange={(e) => setReceiptTax(e.target.value)}
+                  style={{ padding: '6px 8px', fontSize: '12.5px' }}
+                />
+              </div>
+              <div>
+                <label style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'block', marginBottom: '2px' }}>Tip</label>
+                <input
+                  type="text"
+                  inputMode="decimal"
+                  className="input-field"
+                  placeholder="0.00"
+                  value={receiptTip}
+                  onChange={(e) => setReceiptTip(e.target.value)}
+                  style={{ padding: '6px 8px', fontSize: '12.5px' }}
+                />
+              </div>
+              <div>
+                <label style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'block', marginBottom: '2px' }}>Discount</label>
+                <input
+                  type="text"
+                  inputMode="decimal"
+                  className="input-field"
+                  placeholder="0.00"
+                  value={receiptDiscount}
+                  onChange={(e) => setReceiptDiscount(e.target.value)}
+                  style={{ padding: '6px 8px', fontSize: '12.5px' }}
+                />
+              </div>
+            </div>
+
+            {/* Calculated Total Bar */}
+            <div style={{
+              marginTop: '12px',
+              padding: '10px 12px',
+              borderRadius: '8px',
+              background: 'rgba(15, 169, 143, 0.08)',
+              border: '1px solid rgba(15, 169, 143, 0.2)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+            }}>
+              <div style={{ fontSize: '12px' }}>
+                <span>Subtotal: <strong>{currencySymbol} {itemizedSubtotal.toFixed(2)}</strong></span>
+                <span style={{ margin: '0 6px', color: 'var(--text-muted)' }}>•</span>
+                <span>Calculated: <strong style={{ color: 'var(--primary-accent)' }}>{currencySymbol} {itemizedCalculatedTotal.toFixed(2)}</strong></span>
+              </div>
+              <button
+                type="button"
+                className="secondary-btn"
+                style={{ padding: '4px 8px', fontSize: '11px', color: 'var(--primary-accent)', borderColor: 'var(--primary-accent)' }}
+                onClick={handleSyncItemizedTotal}
+              >
+                Sync Total
+              </button>
+            </div>
+          </div>
+        )}
+
+        {splitMode !== 'equal' && splitMode !== 'itemized' && splitSelectedIds.length > 0 && (
           <div style={{ marginBottom: '10px' }}>
             <div style={{
               fontSize: '12px', fontWeight: 600, marginBottom: '6px',
@@ -1476,7 +1728,7 @@ export function ExpenseForm({
                   )}
                 </div>
                 <span className="member-name">{m.name}</span>
-                {isChecked && splitMode !== 'equal' && (
+                {isChecked && splitMode !== 'equal' && splitMode !== 'itemized' && (
                   <input
                     type="text"
                     inputMode="decimal"

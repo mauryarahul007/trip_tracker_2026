@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { collectDirtyExpenseIds, mergeServerExpenses, resolvePendingLocation, getTripNotificationRecipients, filterTripsOwnedByUser, isNonRetryableSyncError, DEFAULT_CATEGORIES, useTripStore } from './tripStore';
+import { collectDirtyExpenseIds, mergeServerExpenses, resolvePendingLocation, getTripNotificationRecipients, filterTripsOwnedByUser, isNonRetryableSyncError, DEFAULT_CATEGORIES, useTripStore, resolveShares } from './tripStore';
 import type { Expense, Member, Trip } from '../types';
 
 vi.mock('../utils/geolocation', () => ({
@@ -247,5 +247,50 @@ describe('resolvePendingLocation', () => {
   it('passes through null/undefined location unchanged', async () => {
     expect(await resolvePendingLocation(null)).toBeNull();
     expect(await resolvePendingLocation(undefined)).toBeUndefined();
+  });
+});
+
+describe('resolveShares', () => {
+  it('resolves equal splits correctly', () => {
+    const res = resolveShares(
+      { amount: 100, splitMode: 'equal', paidBy: 'm1' },
+      ['m1', 'm2', 'm3']
+    );
+    expect(res['m1']).toBe(33.34);
+    expect(res['m2']).toBe(33.33);
+    expect(res['m3']).toBe(33.33);
+    const sum = Object.values(res).reduce((a, b) => a + b, 0);
+    expect(sum).toBe(100);
+  });
+
+  it('resolves itemized receipt splits with proportional tax and tip', () => {
+    const itemizedConfig = {
+      items: [
+        { id: 'i1', name: 'Pizza', amount: 30, assignedMemberIds: ['m1', 'm2'] }, // 15 each
+        { id: 'i2', name: 'Pasta', amount: 20, assignedMemberIds: ['m2'] }, // 20 for m2
+        { id: 'i3', name: 'Salad', amount: 10, assignedMemberIds: ['m3'] }, // 10 for m3
+      ],
+      // Total items = 60. Subtotals: m1=15, m2=35, m3=10
+      // Tax (10%) = 6, Tip = 6. Net extras = 12.
+      // Total expense = 72
+      // Extras allocation:
+      // m1 (15/60 = 25%): 15 + 3 = 18
+      // m2 (35/60 = 58.33%): 35 + 7 = 42
+      // m3 (10/60 = 16.67%): 10 + 2 = 12
+      tax: 6,
+      tip: 6,
+      discount: 0,
+    };
+
+    const res = resolveShares(
+      { amount: 72, splitMode: 'itemized', itemizedConfig, paidBy: 'm1' },
+      ['m1', 'm2', 'm3']
+    );
+
+    expect(res['m1']).toBe(18);
+    expect(res['m2']).toBe(42);
+    expect(res['m3']).toBe(12);
+    const total = Object.values(res).reduce((a, b) => a + b, 0);
+    expect(total).toBe(72);
   });
 });

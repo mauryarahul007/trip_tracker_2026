@@ -100,6 +100,18 @@ const AchievementBadgeModal = lazy(lazyImport(() =>
 const TripRouteModal = lazy(lazyImport(() =>
   import('./components/TripRouteModal').then((m) => ({ default: m.TripRouteModal }))
 ));
+const SmartExpenseQuickAddModal = lazy(lazyImport(() =>
+  import('./components/SmartExpenseQuickAddModal').then((m) => ({ default: m.SmartExpenseQuickAddModal }))
+));
+const OfflineSnapshotModal = lazy(lazyImport(() =>
+  import('./components/OfflineSnapshotModal').then((m) => ({ default: m.OfflineSnapshotModal }))
+));
+const TripMediaGalleryModal = lazy(lazyImport(() =>
+  import('./components/TripMediaGalleryModal').then((m) => ({ default: m.TripMediaGalleryModal }))
+));
+const TravelDossierModal = lazy(lazyImport(() =>
+  import('./components/TravelDossierModal').then((m) => ({ default: m.TravelDossierModal }))
+));
 import { usePeerPresence } from './hooks/usePeerPresence';
 import type { AdminTab } from './components/admin/AdminPortalLayout';
 const AdminPortalLayout = lazy(lazyImport(() =>
@@ -146,6 +158,7 @@ export default function App() {
     updateMember,
     deleteMember,
     setMemberAdminRole,
+    setMemberRole,
     createGroup,
     updateGroup,
     deleteGroup,
@@ -433,6 +446,10 @@ export default function App() {
   const [showAchievements, setShowAchievements] = useState(false);
   const [showRouteModal, setShowRouteModal] = useState(false);
   const [showShortcutsModal, setShowShortcutsModal] = useState(false);
+  const [showSmartQuickAdd, setShowSmartQuickAdd] = useState(false);
+  const [showOfflineSnapshot, setShowOfflineSnapshot] = useState(false);
+  const [showMediaGallery, setShowMediaGallery] = useState(false);
+  const [showTravelDossier, setShowTravelDossier] = useState(false);
   const activePeers = usePeerPresence(activeTripId);
 
   // Global Traveler Keyboard Shortcuts (Cmd+K, N for expense, 1-4 tabs, / search, ? help)
@@ -538,7 +555,7 @@ export default function App() {
   }, [isSuperadmin]);
 
   // Lock background scroll when any modal is active
-  useScrollLock(Boolean(showTripActionSheet || showShareTrip || showTripWrapped || selectedReviewExpense || confirmRequest || showGlobalSettings || showAddExpense || showExpenseFilterDrawer));
+  useScrollLock(Boolean(showTripActionSheet || showShareTrip || showTripWrapped || selectedReviewExpense || confirmRequest || showGlobalSettings || showAddExpense || showExpenseFilterDrawer || showSmartQuickAdd || showOfflineSnapshot || showMediaGallery || showTravelDossier));
 
   const syncQueue = useTripStore((s) => s.syncQueue);
   const sessionExpired = useTripStore((s) => s.sessionExpired);
@@ -1247,9 +1264,10 @@ export default function App() {
     category: string;
     date: string;
     paidBy: string;
-    splitMode: 'equal' | 'custom' | 'exact' | 'percentage';
+    splitMode: import('./types').SplitMode;
     splitMemberIds: string[];
     splitConfig?: Record<string, number>;
+    itemizedConfig?: import('./types').ItemizedReceiptConfig;
     receiptImage?: string;
     location?: import('./types').ExpenseLocation | null;
   }): Promise<{ success: boolean; error?: string }> => {
@@ -1269,6 +1287,7 @@ export default function App() {
         splitMode: expenseData.splitMode,
         splitMemberIds: expenseData.splitMemberIds,
         splitConfig: expenseData.splitConfig,
+        itemizedConfig: expenseData.itemizedConfig,
         receiptImage: expenseData.receiptImage,
         location: expenseData.location,
       };
@@ -2148,7 +2167,9 @@ export default function App() {
                 isAdmin={isAdmin}
                 tripOwnerId={activeTrip?.ownerId ?? ''}
                 adminMemberIds={activeTrip?.adminMemberIds}
+                memberRoles={activeTrip?.memberRoles}
                 onSetMemberAdminRole={setMemberAdminRole}
+                onSetMemberRole={setMemberRole}
                 currentUserId={userId}
                 addMemberSignal={addMemberSignal}
               />
@@ -2206,6 +2227,7 @@ export default function App() {
                 userId={userId}
                 activeTransitionSourceId={activeTransitionSourceId}
                 onAddExpense={handleOpenAddExpense}
+                onOpenSmartQuickAdd={() => setShowSmartQuickAdd(true)}
               />
               </div>
             </div>
@@ -2347,7 +2369,12 @@ export default function App() {
 
       {showShareTrip && activeTrip && (
         <Suspense fallback={null}>
-          <ShareTripModal trip={activeTrip} onClose={() => setShowShareTrip(false)} />
+          <ShareTripModal
+            trip={activeTrip}
+            onClose={() => setShowShareTrip(false)}
+            onOpenDossier={() => setShowTravelDossier(true)}
+            onOpenOfflineSnapshot={() => setShowOfflineSnapshot(true)}
+          />
         </Suspense>
       )}
 
@@ -2359,11 +2386,39 @@ export default function App() {
           description={`${formatDateRange(activeTrip.startDate || '', activeTrip.endDate || '')} · ${visibleMembers.length} member${visibleMembers.length === 1 ? '' : 's'} · ${activeTripExpenses.length} expense${activeTripExpenses.length === 1 ? '' : 's'}`}
           items={[
             {
+              id: 'smart-quick-add',
+              label: '⚡ Smart Voice Quick-Add',
+              subtitle: '1-tap voice & natural language expense logger',
+              icon: <span style={{ fontSize: '18px' }}>⚡</span>,
+              onClick: () => setShowSmartQuickAdd(true),
+            },
+            {
+              id: 'travel-dossier',
+              label: '📄 Travel Dossier & Statement',
+              subtitle: 'Print-ready PDF report with settlement vouchers',
+              icon: <span style={{ fontSize: '18px' }}>📄</span>,
+              onClick: () => setShowTravelDossier(true),
+            },
+            {
+              id: 'media-gallery',
+              label: '📸 Receipts & Memories Gallery',
+              subtitle: 'Visual masonry wall of trip receipts and photos',
+              icon: <span style={{ fontSize: '18px' }}>📸</span>,
+              onClick: () => setShowMediaGallery(true),
+            },
+            {
               id: 'share',
               label: 'Share Trip & QR Code',
               subtitle: 'Invite travelers with join code or scannable QR',
               icon: <IconShare size={18} />,
               onClick: () => setShowShareTrip(true),
+            },
+            {
+              id: 'offline-snapshot',
+              label: '💾 Offline Snapshot (.triptracker)',
+              subtitle: 'Export and restore 100% offline trip backups',
+              icon: <span style={{ fontSize: '18px' }}>💾</span>,
+              onClick: () => setShowOfflineSnapshot(true),
             },
             {
               id: 'export-csv',
@@ -2649,6 +2704,83 @@ export default function App() {
             trip={activeTrip}
             stopsExpanded={stopsExpanded}
             onToggleHeaderStops={() => setStopsExpanded((prev) => !prev)}
+          />
+        </Suspense>
+      )}
+
+      {/* Smart Voice & Natural Language Quick-Add Modal */}
+      {showSmartQuickAdd && activeTrip && (
+        <Suspense fallback={null}>
+          <SmartExpenseQuickAddModal
+            isOpen={showSmartQuickAdd}
+            onClose={() => setShowSmartQuickAdd(false)}
+            categories={categories}
+            historicalExpenses={activeTripExpenses}
+            visibleMembers={visibleMembers}
+            baseCurrency={activeTrip.baseCurrency}
+            onSaveQuickExpense={handleSaveExpense}
+            onOpenFullFormWithTemplate={(tmpl) => {
+              setExpenseTemplate({ title: tmpl.title, category: tmpl.category });
+              setShowAddExpense(true);
+            }}
+          />
+        </Suspense>
+      )}
+
+      {/* Offline Snapshot Backup Modal */}
+      {showOfflineSnapshot && (
+        <Suspense fallback={null}>
+          <OfflineSnapshotModal
+            isOpen={showOfflineSnapshot}
+            onClose={() => setShowOfflineSnapshot(false)}
+            activeTrip={activeTrip}
+            fullTripState={{
+              trips,
+              activeTripId,
+              members,
+              groups,
+              expenses,
+              categories,
+            }}
+            onImportState={async (sanitized) => {
+              try {
+                await importDatabase(JSON.stringify(sanitized));
+                return { success: true };
+              } catch (e: any) {
+                return { success: false, error: e?.message || 'Failed to import snapshot' };
+              }
+            }}
+          />
+        </Suspense>
+      )}
+
+      {/* Receipts & Photo Memories Gallery Modal */}
+      {showMediaGallery && activeTrip && (
+        <Suspense fallback={null}>
+          <TripMediaGalleryModal
+            isOpen={showMediaGallery}
+            onClose={() => setShowMediaGallery(false)}
+            expenses={activeTripExpenses}
+            members={members}
+            categories={categories}
+            currencySymbol={getCurrencySymbol(activeTrip.baseCurrency)}
+            tripName={activeTrip.name}
+          />
+        </Suspense>
+      )}
+
+      {/* Travel Dossier & Statement Modal */}
+      {showTravelDossier && activeTrip && (
+        <Suspense fallback={null}>
+          <TravelDossierModal
+            isOpen={showTravelDossier}
+            onClose={() => setShowTravelDossier(false)}
+            trip={activeTrip}
+            members={members}
+            expenses={activeTripExpenses}
+            categories={categories}
+            balances={balances}
+            settlements={transfers}
           />
         </Suspense>
       )}

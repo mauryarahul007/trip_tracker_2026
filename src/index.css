@@ -10564,3 +10564,48 @@ textarea.input-field {
   view-transition-name: app-header;
 }
 
+/* ==========================================================================
+   Print & Travel Dossier Media Styles
+   ========================================================================== */
+@media print {
+  body {
+    background: #FFFFFF !important;
+    color: #000000 !important;
+  }
+
+  .app-header,
+  .nav-tabs,
+  .tab-bar,
+  .fab,
+  .ptr-pill,
+  .undo-toast-container,
+  .dossier-screen-toolbar,
+  .modal-backdrop:not(.dossier-modal-backdrop),
+  button:not(.print-keep) {
+    display: none !important;
+  }
+
+  .dossier-modal-backdrop {
+    position: static !important;
+    background: none !important;
+    padding: 0 !important;
+    display: block !important;
+  }
+
+  .dossier-print-area {
+    max-width: 100% !important;
+    width: 100% !important;
+    max-height: none !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
+    background: transparent !important;
+    overflow: visible !important;
+  }
+
+  .dossier-document {
+    color: #111827 !important;
+  }
+}
+
+

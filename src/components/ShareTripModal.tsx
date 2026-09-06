@@ -6,6 +6,8 @@ import { useFocusTrap } from '../hooks/useFocusTrap';
 type Props = {
   trip: Trip;
   onClose: () => void;
+  onOpenDossier?: () => void;
+  onOpenOfflineSnapshot?: () => void;
 };
 
 function buildJoinLink(joinCode: string): string {
@@ -13,7 +15,7 @@ function buildJoinLink(joinCode: string): string {
   return `${window.location.origin}${base}join/${joinCode}`;
 }
 
-export function ShareTripModal({ trip, onClose }: Props) {
+export function ShareTripModal({ trip, onClose, onOpenDossier, onOpenOfflineSnapshot }: Props) {
   const [copied, setCopied] = useState<'link' | 'code' | null>(null);
   const hasJoinCode = Boolean(trip.joinCode && trip.joinCode.trim().length > 0);
   const joinLink = hasJoinCode ? buildJoinLink(trip.joinCode) : '';
@@ -46,7 +48,7 @@ export function ShareTripModal({ trip, onClose }: Props) {
         aria-labelledby="share-trip-title"
         className="glass-card fade-in modal-sheet"
         style={{
-          maxWidth: '400px',
+          maxWidth: '420px',
           background: 'var(--bg-surface)',
           boxShadow: 'var(--glass-shadow)',
           border: '1px solid var(--border-color)',
@@ -65,9 +67,9 @@ export function ShareTripModal({ trip, onClose }: Props) {
         </button>
 
 
-        <h3 id="share-trip-title" style={{ fontSize: '17px', marginBottom: '4px' }}>Invite to "{trip.name}"</h3>
-        <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '20px' }}>
-          Anyone with this link can sign in and claim their spot as a trip member.
+        <h3 id="share-trip-title" style={{ fontSize: '17px', marginBottom: '4px' }}>Share & Export "{trip.name}"</h3>
+        <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '16px' }}>
+          Invite travelers or download trip summaries and offline archives.
         </p>
 
         {!hasJoinCode ? (
@@ -100,17 +102,17 @@ export function ShareTripModal({ trip, onClose }: Props) {
               </div>
             </div>
 
-            <div className="form-group" style={{ marginTop: '16px', marginBottom: 0 }}>
+            <div className="form-group" style={{ marginTop: '12px', marginBottom: '16px' }}>
               <span className="form-label">Or share this code</span>
               <div style={{ display: 'flex', gap: '8px' }}>
                 <div
                   style={{
                     flex: 1,
-                    fontSize: '20px',
+                    fontSize: '18px',
                     fontWeight: 700,
                     letterSpacing: '0.15em',
                     textAlign: 'center',
-                    padding: '10px',
+                    padding: '8px',
                     borderRadius: 'var(--border-radius-md)',
                     background: 'var(--bg-subtle, rgba(15,23,42,0.04))',
                     border: '1px solid var(--border-color)',
@@ -125,6 +127,36 @@ export function ShareTripModal({ trip, onClose }: Props) {
             </div>
           </>
         )}
+
+        {/* Export & Dossier Actions */}
+        <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '14px', marginTop: '14px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          {onOpenDossier && (
+            <button
+              type="button"
+              className="secondary-btn"
+              style={{ width: '100%', padding: '9px 12px', fontSize: '13px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+              onClick={() => {
+                onClose();
+                onOpenDossier();
+              }}
+            >
+              <span>📄</span> View Travel Dossier & Statement
+            </button>
+          )}
+          {onOpenOfflineSnapshot && (
+            <button
+              type="button"
+              className="secondary-btn"
+              style={{ width: '100%', padding: '9px 12px', fontSize: '13px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+              onClick={() => {
+                onClose();
+                onOpenOfflineSnapshot();
+              }}
+            >
+              <span>💾</span> Offline Snapshot Backup (.triptracker)
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );

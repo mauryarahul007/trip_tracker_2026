@@ -2107,6 +2107,27 @@ This document logs all meaningful technical decisions, library choices, design p
   - The `ops-deck.css` color palette (as opposed to radius/font-size) was deliberately left unreconciled against DESIGN.md — the Ops Deck's console-register palette is intentionally its own system, and a full color audit was out of scope for this pass; ~57 `design-system-color` findings remain, disclosed but not fixed.
   - Three bug reports (`BUG-155`, `BUG-156`, `BUG-157`) auto-filed by `autoBugReporter.ts` during this session's mid-edit transient states (an `initial`/`initialsFrom` clobber and two since-fixed reference errors) were deleted from the live table via `scripts/bug.mjs delete` — they reflected editing-session artifacts, not product defects.
 
+---
+
+## 116. Traveler Experience Power Suite: Member Roles, Offline Snapshots, Itemized Receipt Splitting, Smart Voice Quick-Add, Photo/Receipt Memory Gallery, & Travel Dossier (v3.3.0)
+* **Context:**
+  - As group trips scale in complexity, travel organizers require granular role delegation (distinguishing organizers, contributors, and read-only viewers).
+  - Groups splitting restaurant bills or grocery receipts needed line-by-line item assignments with proportional distribution of taxes, tips, and discounts rather than single lumpsum splits.
+  - Quick on-the-go expense entry was constrained by multi-field forms; travelers needed natural language and Web Speech API voice capture.
+  - Trip memories, photos, and itemized receipts were scattered across individual expense records without a consolidated visual gallery.
+  - Backups were reliant on local browser storage without a portable, validated `.triptracker` snapshot bundle.
+  - Final settlement summaries and itinerary dossiers lacked a clean, printable, shareable publication format for trip records and archiving.
+* **Decision:**
+  1. **Member Roles & Permissions:** Added `MemberRole` (`organizer` | `contributor` | `viewer`) to `Trip.memberRoles`. Provided utility functions in `src/utils/memberRoles.ts` (`canAddExpense`, `canEditExpense`, `canManageTrip`, `isViewerRole`) and role selector / badge displays in `MembersGroupsTab.tsx`.
+  2. **Offline Snapshot Backup:** Implemented `.triptracker` JSON export & integrity-validated import engine via `OfflineSnapshotModal.tsx` with full checksum and entity count previews.
+  3. **Itemized Receipt Splitting:** Added `ReceiptItem` and `ItemizedReceiptConfig` to `Expense`. Built dynamic line items builder in `ExpenseForm.tsx` supporting item-by-item member assignment chips and proportional tax/tip/discount resolution in `tripStore.ts`.
+  4. **Smart Natural Language & Voice Quick-Add:** Implemented `SmartExpenseQuickAddModal.tsx` utilizing Web Speech API voice recognition and enhanced `expenseQuickParser.ts` for natural language parsing of amounts, categories, payers ("paid by X"), split members ("with Y and Z"), and relative dates.
+  5. **Receipt & Photo Memory Gallery:** Built `TripMediaGalleryModal.tsx` featuring a responsive masonry wall of all trip attachments, category/member filter chips, and interactive full-screen lightbox with zoom and pan controls.
+  6. **Printable / Shareable Travel Dossier & Statement:** Built `TravelDossierModal.tsx` with `@media print` optimized styling, summary financial KPIs, per-member balance settlement slips with UPI/payment integration, and full itinerary breakdown.
+* **Trade-offs Accepted:**
+  - Itemized split calculations allocate fractional remainder pennies to the primary item assignee to guarantee mathematical equality (`sum(resolvedShares) === expense.amount`).
+  - Web Speech API speech recognition falls back gracefully to live natural language typing input when microphone permissions are denied or browser recognition is unavailable.
+
 
 
 

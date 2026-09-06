@@ -114,6 +114,7 @@ type Props = {
   userId: string | null;
   activeTransitionSourceId?: string | null;
   onAddExpense?: (template?: { title?: string; category?: string }) => void;
+  onOpenSmartQuickAdd?: () => void;
 };
 
 export function ExpenseList({
@@ -156,6 +157,7 @@ export function ExpenseList({
   userId,
   activeTransitionSourceId,
   onAddExpense,
+  onOpenSmartQuickAdd,
 }: Props) {
   const currencySymbol = getCurrencySymbol(trip?.baseCurrency || '');
 
@@ -358,6 +360,22 @@ export function ExpenseList({
                 </button>
               )}
             </div>
+            {onOpenSmartQuickAdd && (
+              <button
+                type="button"
+                className="expense-filters-btn"
+                onClick={() => {
+                  triggerHaptic('light');
+                  onOpenSmartQuickAdd();
+                }}
+                aria-label="Smart Voice & Quick-Add expense"
+                title="Smart Voice & Quick-Add expense"
+                style={{ padding: '0 0.6rem', color: 'var(--primary-color, #3b82f6)' }}
+              >
+                <span aria-hidden="true">⚡</span>
+                <span>AI Add</span>
+              </button>
+            )}
             <button
               type="button"
               className="expense-filters-btn"

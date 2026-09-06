@@ -216,6 +216,41 @@ export function ExpenseReviewModal({ expense, members, categories, trip, canMana
               Split Breakdown ({expense.splitMode} split)
             </h4>
 
+            {expense.splitMode === 'itemized' && expense.itemizedConfig && (
+              <div style={{
+                marginBottom: '12px',
+                padding: '10px 12px',
+                background: 'rgba(15,23,42,0.02)',
+                borderRadius: 'var(--border-radius-sm)',
+                border: '1px solid var(--border-color)',
+                fontSize: '12.5px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '6px'
+              }}>
+                <div style={{ fontWeight: 600, color: 'var(--text-primary)', marginBottom: '2px' }}>
+                  🧾 Itemized Line Items ({expense.itemizedConfig.items.length})
+                </div>
+                {expense.itemizedConfig.items.map((item, idx) => (
+                  <div key={item.id || idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: 'var(--text-secondary)' }}>
+                    <span>
+                      {item.name || `Item #${idx + 1}`} ({item.assignedMemberIds.map(id => members[id]?.name || 'Unknown').join(', ') || 'Shared'})
+                    </span>
+                    <span className="money" style={{ fontWeight: 500, color: 'var(--text-primary)' }}>
+                      {currencySymbol} {item.amount.toFixed(2)}
+                    </span>
+                  </div>
+                ))}
+                {(Boolean(expense.itemizedConfig.tax) || Boolean(expense.itemizedConfig.tip) || Boolean(expense.itemizedConfig.discount)) && (
+                  <div style={{ paddingTop: '6px', borderTop: '1px dashed var(--border-color)', display: 'flex', gap: '8px', flexWrap: 'wrap', fontSize: '11px', color: 'var(--text-muted)' }}>
+                    {Boolean(expense.itemizedConfig.tax) && <span>Tax: {currencySymbol}{expense.itemizedConfig.tax?.toFixed(2)}</span>}
+                    {Boolean(expense.itemizedConfig.tip) && <span>Tip: {currencySymbol}{expense.itemizedConfig.tip?.toFixed(2)}</span>}
+                    {Boolean(expense.itemizedConfig.discount) && <span>Discount: -{currencySymbol}{expense.itemizedConfig.discount?.toFixed(2)}</span>}
+                  </div>
+                )}
+              </div>
+            )}
+
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {expense.splitMemberIds.map((memId: string) => {
                 const mem = members[memId];
@@ -229,6 +264,8 @@ export function ExpenseReviewModal({ expense, members, categories, trip, canMana
                   detailLabel = `(${expense.splitConfig?.[memId] ?? 0}%)`;
                 } else if (expense.splitMode === 'exact') {
                   detailLabel = `(Exact)`;
+                } else if (expense.splitMode === 'itemized') {
+                  detailLabel = `(Itemized)`;
                 }
 
                 return (
