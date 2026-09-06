@@ -7,6 +7,7 @@ import { newId } from '../utils/uuid';
 import { useHistoryBack } from '../utils/useHistoryBack';
 import { useEscapeKey } from '../utils/useEscapeKey';
 import { QrCodeView } from './QrCodeView';
+import { savePassAttachment, getPassAttachment } from '../services/passAttachmentStore';
 
 interface Props {
   trip: Trip;
@@ -255,8 +256,17 @@ export function TravelPassWalletView({
 
     triggerHaptic('success');
 
+    const passId = editingPassId || newId();
+    let finalAttachmentUrl = formAttachmentUrl || undefined;
+    if (finalAttachmentUrl && finalAttachmentUrl.startsWith('data:')) {
+      const isPdf = finalAttachmentUrl.startsWith('data:application/pdf');
+      const idbKey = `idb:${isPdf ? 'pdf' : 'img'}-${passId}`;
+      await savePassAttachment(idbKey, finalAttachmentUrl);
+      finalAttachmentUrl = idbKey;
+    }
+
     const newPass: TravelPass = {
-      id: editingPassId || newId(),
+      id: passId,
       tripId: trip.id,
       type: formType,
       title: formTitle.trim(),
@@ -274,7 +284,7 @@ export function TravelPassWalletView({
       phone: formPhone.trim() || undefined,
       notes: formNotes.trim() || undefined,
       assignedMemberIds: formAssignedMemberIds.length > 0 ? formAssignedMemberIds : undefined,
-      attachmentUrl: formAttachmentUrl || undefined,
+      attachmentUrl: finalAttachmentUrl,
       qrData: formReference ? `${formReference} ${formPassengerName}`.trim() : `${formTitle} - ${trip.name}`,
       createdAt: Date.now(),
       updatedAt: Date.now(),
@@ -571,10 +581,19 @@ export function TravelPassWalletView({
                   type="button"
                   className="secondary-btn"
                   style={{ padding: '4px 10px', fontSize: '11.5px', display: 'flex', alignItems: 'center', gap: '4px' }}
-                  onClick={() => setViewingAttachment(pass.attachmentUrl!)}
+                  onClick={async () => {
+                    if (pass.attachmentUrl?.startsWith('idb:')) {
+                      const resolved = await getPassAttachment(pass.attachmentUrl);
+                      if (resolved) {
+                        setViewingAttachment(resolved);
+                      }
+                    } else if (pass.attachmentUrl) {
+                      setViewingAttachment(pass.attachmentUrl);
+                    }
+                  }}
                 >
-                  <span>{pass.attachmentUrl.startsWith('data:application/pdf') ? '📄' : '🖼️'}</span>{' '}
-                  {pass.attachmentUrl.startsWith('data:application/pdf') ? 'View PDF' : 'Ticket Photo'}
+                  <span>{(pass.attachmentUrl.startsWith('data:application/pdf') || pass.attachmentUrl.startsWith('idb:pdf')) ? '📄' : '🖼️'}</span>{' '}
+                  {(pass.attachmentUrl.startsWith('data:application/pdf') || pass.attachmentUrl.startsWith('idb:pdf')) ? 'View PDF' : 'Ticket Photo'}
                 </button>
               )}
             </div>
@@ -868,6 +887,18 @@ export function TravelPassWalletView({
                       style={{ fontSize: '11px', padding: '6px 12px', borderRadius: '8px' }}
                       onClick={async () => {
                         triggerHaptic('success');
+                        let sharedAttachmentKey: string | undefined = undefined;
+                        if (formAttachmentUrl) {
+                          if (formAttachmentUrl.startsWith('data:')) {
+                            const isPdf = formAttachmentUrl.startsWith('data:application/pdf');
+                            const sharedKey = `idb:${isPdf ? 'pdf' : 'img'}-${newId()}`;
+                            await savePassAttachment(sharedKey, formAttachmentUrl);
+                            sharedAttachmentKey = sharedKey;
+                          } else {
+                            sharedAttachmentKey = formAttachmentUrl;
+                          }
+                        }
+
                         for (let i = 0; i < detectedPasses.length; i++) {
                           const p = detectedPasses[i];
                           const matchedMemberId = p.passengerName ? matchPassengerToMember(p.passengerName, Object.values(membersMap)) : undefined;
@@ -890,7 +921,7 @@ export function TravelPassWalletView({
                             seatOrRoom: p.seatOrRoom,
                             notes: p.notes,
                             assignedMemberIds,
-                            attachmentUrl: formAttachmentUrl || undefined,
+                            attachmentUrl: sharedAttachmentKey,
                             qrData: p.referenceCode ? `${p.referenceCode} ${p.passengerName || ''}`.trim() : `${p.title} - ${trip.name}`,
                             createdAt: Date.now() + i,
                             updatedAt: Date.now() + i,
@@ -951,9 +982,9 @@ export function TravelPassWalletView({
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <span>{formAttachmentUrl.startsWith('data:application/pdf') ? '📄' : '🖼️'}</span>
+                    <span>{(formAttachmentUrl.startsWith('data:application/pdf') || formAttachmentUrl.startsWith('idb:pdf')) ? '📄' : '🖼️'}</span>
                     <span style={{ fontWeight: 600 }}>
-                      {formAttachmentUrl.startsWith('data:application/pdf') ? 'PDF Ticket Document Attached' : 'Ticket Image Attached'}
+                      {(formAttachmentUrl.startsWith('data:application/pdf') || formAttachmentUrl.startsWith('idb:pdf')) ? 'PDF Ticket Document Attached' : 'Ticket Image Attached'}
                     </span>
                   </div>
                   <button

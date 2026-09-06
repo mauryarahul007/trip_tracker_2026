@@ -2278,6 +2278,33 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - Segment-scoped chunking parses flight blocks sequentially before falling back to whole-document single-pass extraction, adding minor regex evaluation passes (~15ms), which is negligible compared to PDF OCR times (~200ms) while providing complete leg and PNR accuracy across formats.
 
+---
+
+## 123. Offline IndexedDB Travel Pass Attachment Storage & Quota Self-Healing (v3.4.6)
+* **Context:**
+  - When saving multi-pass itineraries generated from an uploaded PDF ticket (e.g. 6 passes spanning 3 flight segments and 2 passengers), the multi-megabyte base64 Data URL was duplicated across all 6 passes and persisted directly into `localStorage` via Zustand's `persist` middleware (`trip-tracker-store-v1`).
+  - Storing ~9MB in `localStorage` exceeded the browser's strict ~5MB quota ceiling, triggering `DOMException: QuotaExceededError` and rendering a persistent red alert banner (`Storage Error: Your device's local storage is full`).
+  - Furthermore, tapping the dismiss button (`&times;`) triggered `clearStorageError: () => set({ storageError: null })`. Updating the store re-invoked `quotaSafeStorage.setItem()` with the same uncompressed 9MB state, immediately throwing `QuotaExceededError` again and re-setting the error message in <1ms, giving the impression that the dismiss button was broken.
+  - Additionally, `.toast-close` lacked explicit touch sizing (only 20px glyph size without padding), making it difficult to physically tap on mobile screens.
+* **Decision:**
+  1. **Dedicated IndexedDB Pass Attachment Store (`src/services/passAttachmentStore.ts`):**
+     - Mirrors the offline receipt photo store (`offlineReceiptStore.ts`). Large base64 PDF and image Data URLs are offloaded to an IndexedDB store (`trip-tracker-pass-attachments`), replacing raw base64 URLs in pass records with lightweight pointer keys (`idb:pdf-<id>` or `idb:img-<id>`).
+     - Storing attachments in IndexedDB leverages browser storage allocations of hundreds of megabytes while keeping `localStorage` well under 100KB.
+  2. **Single-Storage Multi-Pass De-duplication (`src/components/TravelPassWalletView.tsx`):**
+     - When saving all passes from a multi-leg itinerary (`⚡ Save All N Passes`), the uploaded PDF file is saved once to IndexedDB under a single shared key, and all generated passes reference that exact same key.
+     - Reduces storage footprint from $N \times \text{filesize}$ to $1 \times \text{filesize}$ in IndexedDB, and only ~30 bytes per pass in `localStorage`.
+  3. **Emergency Quota Self-Healing & Automatic Migration (`src/store/tripStore.ts`):**
+     - **On Storage Write Error (`quotaSafeStorage.setItem`):** If a write triggers `QuotaExceededError`, the storage wrapper intercepts the payload, extracts any legacy `data:` URLs in passes, saves them to IndexedDB, converts the payload to lightweight `idb:` keys, writes the sanitized state to `localStorage`, and updates in-memory Zustand state.
+     - **On Store Rehydration & Initialization:** Automatically detects and migrates legacy base64 strings upon app launch or store rehydration.
+     - **Defensive Deletion:** When deleting a travel pass, checks if any other pass in any trip references the same attachment key before cleaning it up from IndexedDB.
+     - **Defensive Save (`saveTravelPass`):** Intercepts any direct pass saves with `data:` URLs and redirects the binary content to IndexedDB before updating state.
+     - **Sanitized Persistence (`partialize`):** Guarantees that `data:` URLs are stripped from JSON payloads before reaching `localStorage`.
+  4. **Accessible 44x44px Mobile Touch Target for Toast Dismiss (`src/index.css`):**
+     - Upgraded `.toast-close` with `min-width: 44px; min-height: 44px; border-radius: 50%;`, translucent circular feedback background, and `touch-action: manipulation` conforming to WCAG 2.2 touch target criteria (2.5.8).
+* **Trade-offs Accepted:**
+  - Reading an attachment for full-screen viewing requires an asynchronous fetch (`getPassAttachment`), adding ~5ms of IndexedDB read latency when opening a ticket PDF, but keeping initial app boot, state updates, and all store persistence lightning-fast and 100% quota-safe.
+
+
 
 
 

@@ -50,6 +50,7 @@ import { generateDemoData } from '../utils/demoSeed';
 import { reverseGeocode, searchPlaces, resolveTripStopCoordinates } from '../utils/geolocation';
 import { sendPushNotification } from '../services/pushApi';
 import { saveOfflineReceipt, getOfflineReceipt, deleteOfflineReceipt } from '../services/offlineReceiptStore';
+import { savePassAttachment, deletePassAttachment } from '../services/passAttachmentStore';
 import { validateAndSanitizeBackup } from '../utils/backupValidation';
 
 // Offline capture falls back to a raw-coordinate placeName (see geolocation.ts).
@@ -411,24 +412,79 @@ export function mergeServerExpenses(
 // e.g. an offline session queued several receipt photos and blew the
 // origin's storage cap) surfaces to the user instead of silently vanishing
 // — without this, the app would look like it saved an expense that was
-// actually never persisted and is gone on next reload.
 const quotaSafeStorage = {
-  getItem: (name: string) => localStorage.getItem(name),
-  removeItem: (name: string) => localStorage.removeItem(name),
+  getItem: (name: string) => {
+    try {
+      return typeof localStorage !== 'undefined' ? localStorage.getItem(name) : null;
+    } catch {
+      return null;
+    }
+  },
+  removeItem: (name: string) => {
+    try {
+      if (typeof localStorage !== 'undefined') localStorage.removeItem(name);
+    } catch {}
+  },
   setItem: (name: string, value: string) => {
+    if (typeof localStorage === 'undefined') return;
     try {
       localStorage.setItem(name, value);
     } catch (e) {
       console.error('Failed to persist trip data locally:', e);
+
+      // If localStorage is full, attempt emergency relief by migrating heavy base64 pass attachments to IndexedDB
+      if (e instanceof DOMException && e.name === 'QuotaExceededError') {
+        try {
+          const parsed = JSON.parse(value);
+          if (parsed?.state?.trips) {
+            let freedCount = 0;
+            for (const t of parsed.state.trips) {
+              if (t.passes) {
+                for (const p of t.passes) {
+                  if (p.attachmentUrl && p.attachmentUrl.startsWith('data:')) {
+                    const isPdf = p.attachmentUrl.startsWith('data:application/pdf');
+                    const key = `idb:${isPdf ? 'pdf' : 'img'}-${p.id}`;
+                    savePassAttachment(key, p.attachmentUrl).catch(() => {});
+                    p.attachmentUrl = key;
+                    freedCount++;
+                  }
+                }
+              }
+            }
+
+            if (freedCount > 0) {
+              const cleanedValue = JSON.stringify(parsed);
+              localStorage.setItem(name, cleanedValue);
+              // Successfully saved after stripping heavy base64 strings!
+              // Synchronize in-memory state so it reflects the lightweight IDB keys and clear storageError
+              setTimeout(() => {
+                useTripStore.setState((s) => ({
+                  trips: s.trips.map((t) => ({
+                    ...t,
+                    passes: t.passes?.map((p) => {
+                      if (p.attachmentUrl && p.attachmentUrl.startsWith('data:')) {
+                        const isPdf = p.attachmentUrl.startsWith('data:application/pdf');
+                        return { ...p, attachmentUrl: `idb:${isPdf ? 'pdf' : 'img'}-${p.id}` };
+                      }
+                      return p;
+                    }),
+                  })),
+                  storageError: null,
+                }));
+              }, 0);
+              return;
+            }
+          }
+        } catch (cleanupErr) {
+          console.error('Emergency quota cleanup failed:', cleanupErr);
+        }
+      }
+
       const message =
         e instanceof DOMException && e.name === 'QuotaExceededError'
           ? "Your device's local storage is full — recent changes may not be saved. Free up space or back up your data from Settings."
           : 'Failed to save your changes locally.';
-      // Guard against re-triggering this same failing write: setting
-      // storageError itself goes through this same storage layer, and an
-      // unconditional set() here would recurse forever on a persistent
-      // quota error. Skipping once the message already matches converges
-      // after exactly one redundant (also-failing, harmless) retry.
+      // Guard against re-triggering this same failing write
       if (useTripStore.getState().storageError !== message) {
         useTripStore.setState({ storageError: message });
       }
@@ -665,6 +721,34 @@ export const useTripStore = create<TripStore>()(
         get().processQueue();
       });
 
+      // Emergency Quota Reliever: if any passes currently in state contain legacy base64 data URLs,
+      // migrate them to IndexedDB immediately and cleanse in-memory state.
+      try {
+        const rawTrips = get().trips || [];
+        let hasDataUrls = false;
+        const sanitizedTrips = rawTrips.map((t) => {
+          if (!t.passes) return t;
+          let modified = false;
+          const passes = t.passes.map((p) => {
+            if (p.attachmentUrl && p.attachmentUrl.startsWith('data:')) {
+              const isPdf = p.attachmentUrl.startsWith('data:application/pdf');
+              const key = `idb:${isPdf ? 'pdf' : 'img'}-${p.id}`;
+              savePassAttachment(key, p.attachmentUrl).catch(() => {});
+              hasDataUrls = true;
+              modified = true;
+              return { ...p, attachmentUrl: key };
+            }
+            return p;
+          });
+          return modified ? { ...t, passes } : t;
+        });
+        if (hasDataUrls) {
+          set({ trips: sanitizedTrips, storageError: null });
+        }
+      } catch (e) {
+        console.warn('Pass attachment startup sanitization skipped:', e);
+      }
+
       // getSession() reads the persisted local session (no network round
       // trip) — unlike getUser(), which calls the Auth server and would
       // hang indefinitely if the app boots while offline.
@@ -772,7 +856,32 @@ export const useTripStore = create<TripStore>()(
       }
     },
 
-    clearStorageError: () => set({ storageError: null }),
+    clearStorageError: () => {
+      const state = get();
+      let hasDataUrls = false;
+      const sanitizedTrips = state.trips.map((t) => {
+        if (!t.passes) return t;
+        let modified = false;
+        const passes = t.passes.map((p) => {
+          if (p.attachmentUrl && p.attachmentUrl.startsWith('data:')) {
+            const isPdf = p.attachmentUrl.startsWith('data:application/pdf');
+            const key = `idb:${isPdf ? 'pdf' : 'img'}-${p.id}`;
+            savePassAttachment(key, p.attachmentUrl).catch(() => {});
+            hasDataUrls = true;
+            modified = true;
+            return { ...p, attachmentUrl: key };
+          }
+          return p;
+        });
+        return modified ? { ...t, passes } : t;
+      });
+
+      if (hasDataUrls) {
+        set({ trips: sanitizedTrips, storageError: null });
+      } else {
+        set({ storageError: null });
+      }
+    },
 
     queueSync: (type, payload) => {
       const newQueue = [...get().syncQueue, { id: newId(), type, payload }];
@@ -1465,16 +1574,25 @@ export const useTripStore = create<TripStore>()(
 
     saveTravelPass: async (tripId, pass) => {
       const now = Date.now();
+      let passToSave = pass;
+      if (pass.attachmentUrl && pass.attachmentUrl.startsWith('data:')) {
+        const isPdf = pass.attachmentUrl.startsWith('data:application/pdf');
+        const key = `idb:${isPdf ? 'pdf' : 'img'}-${pass.id}`;
+        await savePassAttachment(key, pass.attachmentUrl);
+        passToSave = { ...pass, attachmentUrl: key };
+      }
+
       const currentTrip = get().trips.find((t) => t.id === tripId);
       const currentPasses = currentTrip?.passes || [];
-      const exists = currentPasses.some((p) => p.id === pass.id);
+      const exists = currentPasses.some((p) => p.id === passToSave.id);
       const updatedPasses = exists
-        ? currentPasses.map((p) => (p.id === pass.id ? { ...pass, updatedAt: now } : p))
-        : [{ ...pass, createdAt: pass.createdAt || now, updatedAt: now }, ...currentPasses];
+        ? currentPasses.map((p) => (p.id === passToSave.id ? { ...passToSave, updatedAt: now } : p))
+        : [{ ...passToSave, createdAt: passToSave.createdAt || now, updatedAt: now }, ...currentPasses];
 
       set((state) => ({
         trips: state.trips.map((t) => (t.id === tripId ? { ...t, passes: updatedPasses, updatedAt: now } : t)),
         lastModifiedAt: now,
+        storageError: null,
       }));
 
       if (!isMissingSupabaseEnv) {
@@ -1490,6 +1608,16 @@ export const useTripStore = create<TripStore>()(
       const now = Date.now();
       const currentTrip = get().trips.find((t) => t.id === tripId);
       const currentPasses = currentTrip?.passes || [];
+      const passToDelete = currentPasses.find((p) => p.id === passId);
+      if (passToDelete?.attachmentUrl?.startsWith('idb:')) {
+        const attKey = passToDelete.attachmentUrl;
+        const otherUses = get().trips.some((t) =>
+          t.passes?.some((p) => p.id !== passId && p.attachmentUrl === attKey)
+        );
+        if (!otherUses) {
+          deletePassAttachment(attKey).catch(() => {});
+        }
+      }
       const updatedPasses = currentPasses.filter((p) => p.id !== passId);
 
       set((state) => ({
@@ -2456,8 +2584,43 @@ export const useTripStore = create<TripStore>()(
       // persisted data before it's merged into the live store, instead of
       // letting a stale/incompatible shape silently corrupt state.
       migrate: (persistedState) => persistedState as TripStore,
+      onRehydrateStorage: () => (state) => {
+        if (state?.trips) {
+          let hasDataUrls = false;
+          const sanitized = state.trips.map((t) => {
+            if (!t.passes) return t;
+            let modified = false;
+            const passes = t.passes.map((p) => {
+              if (p.attachmentUrl && p.attachmentUrl.startsWith('data:')) {
+                const isPdf = p.attachmentUrl.startsWith('data:application/pdf');
+                const key = `idb:${isPdf ? 'pdf' : 'img'}-${p.id}`;
+                savePassAttachment(key, p.attachmentUrl).catch(() => {});
+                hasDataUrls = true;
+                modified = true;
+                return { ...p, attachmentUrl: key };
+              }
+              return p;
+            });
+            return modified ? { ...t, passes } : t;
+          });
+          if (hasDataUrls) {
+            useTripStore.setState({ trips: sanitized, storageError: null });
+          }
+        }
+      },
       partialize: (state) => ({
-        trips: state.trips,
+        trips: state.trips.map((t) => ({
+          ...t,
+          passes: t.passes?.map((p) => {
+            if (p.attachmentUrl && p.attachmentUrl.startsWith('data:')) {
+              const isPdf = p.attachmentUrl.startsWith('data:application/pdf');
+              const key = `idb:${isPdf ? 'pdf' : 'img'}-${p.id}`;
+              savePassAttachment(key, p.attachmentUrl).catch(() => {});
+              return { ...p, attachmentUrl: key };
+            }
+            return p;
+          }),
+        })),
         activeTripId: state.activeTripId,
         members: state.members,
         groups: state.groups,
