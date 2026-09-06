@@ -224,7 +224,7 @@ export function NavTabs({ activeTab, setActiveTab, onAddExpense, onAddMember, ex
         aria-label="Passes, Notes & Checklist"
       >
         <span className="nav-tab-icon"><IconClipboardList size={26} /></span>
-        <span>Passes &amp; Notes</span>
+        <span>Notes</span>
       </button>
     </nav>
 

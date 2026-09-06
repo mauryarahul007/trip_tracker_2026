@@ -2,7 +2,6 @@ import React, { useState, useMemo } from 'react';
 import { useTripStore } from '../store/tripStore';
 import type { Trip, Member, TripNote, ChecklistItem } from '../types';
 import {
-  IconClipboardList,
   IconPin,
   IconCopy,
   IconPlus,
@@ -388,10 +387,10 @@ export function ChecklistNotesTab({ trip, members, isAdmin }: Props) {
               triggerHaptic('light');
               setViewMode('passes');
             }}
+            aria-label={`Passes, ${passes.length}`}
           >
-            <span className="segment-icon" style={{ fontSize: '15px' }}>🎫</span>
             <span className="segment-label">Passes</span>
-            {passes.length > 0 && <span className="segment-badge">{passes.length}</span>}
+            <span className="segment-badge">{passes.length}</span>
           </button>
           <button
             type="button"
@@ -402,10 +401,10 @@ export function ChecklistNotesTab({ trip, members, isAdmin }: Props) {
               triggerHaptic('light');
               setViewMode('notes');
             }}
+            aria-label={`Notes, ${notes.length}`}
           >
-            <IconPin size={15} className="segment-icon" />
             <span className="segment-label">Notes</span>
-            {notes.length > 0 && <span className="segment-badge">{notes.length}</span>}
+            <span className="segment-badge">{notes.length}</span>
           </button>
           <button
             type="button"
@@ -416,14 +415,12 @@ export function ChecklistNotesTab({ trip, members, isAdmin }: Props) {
               triggerHaptic('light');
               setViewMode('checklist');
             }}
+            aria-label={`Checklist, ${completedCount} of ${totalCount} complete`}
           >
-            <IconClipboardList size={15} className="segment-icon" />
             <span className="segment-label">Checklist</span>
-            {totalCount > 0 && (
-              <span className="segment-badge">
-                {completedCount}/{totalCount}
-              </span>
-            )}
+            <span className="segment-badge">
+              {totalCount > 0 ? `${completedCount}/${totalCount}` : '0'}
+            </span>
           </button>
         </div>
       </div>

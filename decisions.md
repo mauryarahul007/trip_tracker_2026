@@ -2415,6 +2415,18 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - Keeps the top-level settings menu clean and uncluttered without losing access to Trip Wrapped.
 
+---
+
+## 130. Compact Passes/Notes/Checklist Segment Header & Nav Label (v3.4.14)
+* **Context:**
+  - On the Passes & Notes tab, the segmented header (`Passes` / `Notes` / `Checklist`) clipped labels via ellipsis and uneven flex, so names and counts were hard to read on one line.
+  - The bottom nav label `Passes & Notes` overflowed the floating pill because other tabs use single short words.
+* **Decision:**
+  - Dropped decorative segment icons; always show count badges (including `0`); equal-width segments with body font and no text truncation.
+  - Shortened the visible bottom-nav label to `Notes` while keeping the full `aria-label` ("Passes, Notes & Checklist").
+* **Trade-offs Accepted:**
+  - Icons are no longer in the segment control (labels + counts carry the meaning).
+  - Bottom nav text is shorter than the full feature name; screen readers still get the complete description.
 
 
 
