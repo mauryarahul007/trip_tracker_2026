@@ -2615,6 +2615,7 @@ export default function App() {
 
       {confirmRequest && (
         <ConfirmDialog request={confirmRequest} onCancel={() => setConfirmRequest(null)} />
+      )}
 
       {pendingConflicts.length > 0 && activeTrip && (
         <Suspense fallback={null}>
@@ -2627,7 +2628,6 @@ export default function App() {
             onClose={() => resolveConflictAcceptServer(pendingConflicts[0].expenseId)}
           />
         </Suspense>
-      )}
       )}
 
       {/* Command Palette */}

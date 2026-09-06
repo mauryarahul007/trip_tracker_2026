@@ -127,9 +127,9 @@ describe('detectExpenseConflicts', () => {
   });
 
   it('expensesDifferMeaningfully compares amount and title', () => {
-    const a = makeExpense({ id: 'exp-1', title: 'A', amount: 10 });
-    const b = makeExpense({ id: 'exp-1', title: 'A', amount: 10 });
-    const c = makeExpense({ id: 'exp-1', title: 'B', amount: 10 });
+    const a = makeExpense({ id: 'exp-1', tripId: 'trip-a', title: 'A', amount: 10 });
+    const b = makeExpense({ id: 'exp-1', tripId: 'trip-a', title: 'A', amount: 10 });
+    const c = makeExpense({ id: 'exp-1', tripId: 'trip-a', title: 'B', amount: 10 });
     expect(expensesDifferMeaningfully(a, b)).toBe(false);
     expect(expensesDifferMeaningfully(a, c)).toBe(true);
   });

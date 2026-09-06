@@ -2430,6 +2430,13 @@ This document logs all meaningful technical decisions, library choices, design p
 
 ---
 
+## 132. CI fix: App.tsx ConfirmDialog JSX close (v3.5.1)
+* **Context:** GitHub Actions failed on `main` after v3.5.0 — `tsc`/`oxlint` parse errors at `App.tsx:2619` (`')' expected`) plus a follow-on test typing gap in `tripStore.test.ts`.
+* **Decision:** Close the `confirmRequest` JSX branch before the ConflictResolverModal block; require `tripId` on `makeExpense` helpers in the new conflict unit test.
+* **Trade-offs Accepted:** Patch release only; no product behavior change beyond restoring a buildable tree.
+
+---
+
 ## 131. Stability & Product Enhancement Batch (v3.5.0)
 * **Context:** Multi-device trip use exposed presence crashes, view-transition noise, silent expense LWW, quota pressure from receipt base64, and missing native join deep links. Several flags/docs were stale after P2P removal.
 * **Decision:**

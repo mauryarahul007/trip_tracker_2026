@@ -5298,5 +5298,31 @@
     "resolvedAt": "2026-09-06T18:54:57.813+00:00",
     "resolvedBy": "cursor",
     "resolutionNote": "Compacted segment header (no icons/ellipsis, always show counts) and shortened bottom-nav label to Notes. Commit c81540a (v3.4.14)."
+  },
+  {
+    "id": "BUG-173",
+    "title": "CI build failed: missing ConfirmDialog closing paren in App.tsx",
+    "description": "v3.5.0 ConflictResolverModal insert left confirmRequest JSX unclosed; tsc TS1005 and oxlint parse error on App.tsx:2619. Also makeExpense conflict test omitted required tripId.",
+    "severity": "high",
+    "category": "navigation",
+    "status": "resolved",
+    "foundBy": "cursor-agent",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-09-06T20:09:03.160Z",
+    "updatedAt": "2026-09-06T20:09:46.853Z",
+    "resolvedBy": "cursor-agent",
+    "resolvedAt": "2026-09-06T20:09:46.852Z",
+    "resolutionNote": "Closed confirmRequest JSX before ConflictResolverModal; added tripId to makeExpense in conflict tests. Fixed in v3.5.1."
   }
 ]
