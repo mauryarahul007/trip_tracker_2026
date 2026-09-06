@@ -521,5 +521,101 @@
     "shippedAt": "2026-09-06T06:44:51.983Z",
     "shippedBy": "claude-cli",
     "shippedNote": "Shipped"
+  },
+  {
+    "id": "FEAT-034",
+    "title": "Expense conflict clarity for offline multi-edit",
+    "description": "Detect dirty local vs server expense divergence, show ConflictResolverModal with Keep local / Accept server, pause sync queue flush until resolved, and badge conflicting rows in the expense list.",
+    "category": "sync",
+    "status": "shipped",
+    "requestedBy": "cursor-agent",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-09-06T19:57:16.569Z",
+    "updatedAt": "2026-09-06T19:57:16.569Z",
+    "shippedAt": "2026-09-06T19:57:16.569Z",
+    "shippedBy": "cursor-agent",
+    "shippedNote": "Shipped in v3.5.0 (d9c1e28)"
+  },
+  {
+    "id": "FEAT-035",
+    "title": "Native HTTPS join deep links (App Links / Universal Links)",
+    "description": "Canonical https://trip-tracker.blackmaroon.in/.../join/{code} share URLs with Android App Links, iOS Associated Domains, appUrlOpen/getLaunchUrl routing, and public/.well-known verification stubs.",
+    "category": "native",
+    "status": "shipped",
+    "requestedBy": "cursor-agent",
+    "environment": {
+      "platform": "android"
+    },
+    "createdAt": "2026-09-06T19:57:18.358Z",
+    "updatedAt": "2026-09-06T19:57:18.358Z",
+    "shippedAt": "2026-09-06T19:57:18.358Z",
+    "shippedBy": "cursor-agent",
+    "shippedNote": "Shipped in v3.5.0 (d9c1e28)"
+  },
+  {
+    "id": "FEAT-036",
+    "title": "Local pass reminders (T-24h and T-3h)",
+    "description": "Schedule Capacitor local notifications (and web schedule flush) for flight/train passes at T-24h and T-3h, with a Settings toggle defaulting on and reschedule on pass save/delete/trip select.",
+    "category": "notifications",
+    "status": "shipped",
+    "requestedBy": "cursor-agent",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-09-06T19:57:20.157Z",
+    "updatedAt": "2026-09-06T19:57:20.157Z",
+    "shippedAt": "2026-09-06T19:57:20.157Z",
+    "shippedBy": "cursor-agent",
+    "shippedNote": "Shipped in v3.5.0 (d9c1e28)"
+  },
+  {
+    "id": "FEAT-037",
+    "title": "Settings IA cleanup: dedupe Gallery/Snapshot and bury Pro Tips",
+    "description": "Move Gallery/Snapshot under Data and Backups, keep Recycle Bin in Trip Tools, remove duplicate Badges entries, and de-emphasize Pro Tips so Settings is easier to scan.",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "cursor-agent",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-09-06T19:57:22.014Z",
+    "updatedAt": "2026-09-06T19:57:22.014Z",
+    "shippedAt": "2026-09-06T19:57:22.014Z",
+    "shippedBy": "cursor-agent",
+    "shippedNote": "Shipped in v3.5.0 (d9c1e28)"
+  },
+  {
+    "id": "FEAT-038",
+    "title": "Recycle Bin enabled by default for travelers",
+    "description": "Default enableRecycleBin to true so soft-deleted expenses are recoverable without a superadmin flag flip; soft-delete RPCs were already always on.",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "cursor-agent",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-09-06T19:57:23.670Z",
+    "updatedAt": "2026-09-06T19:57:23.670Z",
+    "shippedAt": "2026-09-06T19:57:23.670Z",
+    "shippedBy": "cursor-agent",
+    "shippedNote": "Shipped in v3.5.0 (d9c1e28)"
+  },
+  {
+    "id": "FEAT-039",
+    "title": "Quota-safe receipt storage (no base64 in localStorage)",
+    "description": "Never persist receiptImage in zustand/localStorage or the sync queue; stage receipts in IDB; heal and import sanitize strip expense previews on QuotaExceeded.",
+    "category": "performance",
+    "status": "shipped",
+    "requestedBy": "cursor-agent",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-09-06T19:57:25.539Z",
+    "updatedAt": "2026-09-06T19:57:25.539Z",
+    "shippedAt": "2026-09-06T19:57:25.539Z",
+    "shippedBy": "cursor-agent",
+    "shippedNote": "Shipped in v3.5.0 (d9c1e28)"
   }
 ]

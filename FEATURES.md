@@ -9,11 +9,11 @@
 
 | Metric | Count |
 | :--- | :--- |
-| **Total Tracked** | **33** |
+| **Total Tracked** | **39** |
 | **💡 Requested** | **2** |
 | **📋 Planned** | **0** |
 | **🟡 In Progress** | **0** |
-| **✅ Shipped** | **31** |
+| **✅ Shipped** | **37** |
 | **⚪ Won't Do** | **0** |
 
 ---
@@ -83,6 +83,12 @@ CI pipeline for lint, build, and test on push/PR
 | **FEAT-031** | Lazy-load CommandPalette (Ctrl+K) to cut initial bundle | `ui-ux` | `agent` | `agent` | Code-split CommandPalette import in App.tsx via lazy()+Suspense, matching pattern used for other secondary modals. Chunk now loads only on first Ctrl+K open instead of app startup. |
 | **FEAT-032** | Lazy-load Members and Notes tabs to cut initial bundle | `ui-ux` | `agent` | `agent` | Code-split MembersGroupsTab and ChecklistNotesTab in App.tsx via lazy()+Suspense, gated on hasVisitedMembers/hasVisitedNotes flags -- same pattern already used for SettingsTab/hasVisitedSettings. ~2,300 combined lines no longer ship until the user taps those tabs. Left AnalyticsTab eager since it shares the default landing tab with Balances. |
 | **FEAT-033** | Ops Deck Fleet Vitals retheme: kanban drag-and-drop, mint sidebar shell, calendar widget | `ui-ux` | `claude-cli` | `claude-cli` | Shipped |
+| **FEAT-034** | Expense conflict clarity for offline multi-edit | `sync` | `cursor-agent` | `cursor-agent` | Shipped in v3.5.0 (d9c1e28) |
+| **FEAT-035** | Native HTTPS join deep links (App Links / Universal Links) | `native` | `cursor-agent` | `cursor-agent` | Shipped in v3.5.0 (d9c1e28) |
+| **FEAT-036** | Local pass reminders (T-24h and T-3h) | `notifications` | `cursor-agent` | `cursor-agent` | Shipped in v3.5.0 (d9c1e28) |
+| **FEAT-037** | Settings IA cleanup: dedupe Gallery/Snapshot and bury Pro Tips | `ui-ux` | `cursor-agent` | `cursor-agent` | Shipped in v3.5.0 (d9c1e28) |
+| **FEAT-038** | Recycle Bin enabled by default for travelers | `ui-ux` | `cursor-agent` | `cursor-agent` | Shipped in v3.5.0 (d9c1e28) |
+| **FEAT-039** | Quota-safe receipt storage (no base64 in localStorage) | `performance` | `cursor-agent` | `cursor-agent` | Shipped in v3.5.0 (d9c1e28) |
 
 ---
 
