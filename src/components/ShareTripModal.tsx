@@ -2,6 +2,7 @@ import { useRef, useState } from 'react';
 import type { Trip } from '../types';
 import { IconClose, IconCopy, IconCheck } from './Icons';
 import { useFocusTrap } from '../hooks/useFocusTrap';
+import { buildCanonicalJoinLink } from '../utils/joinDeepLink';
 
 type Props = {
   trip: Trip;
@@ -10,15 +11,10 @@ type Props = {
   onOpenOfflineSnapshot?: () => void;
 };
 
-function buildJoinLink(joinCode: string): string {
-  const base = import.meta.env.BASE_URL.endsWith('/') ? import.meta.env.BASE_URL : `${import.meta.env.BASE_URL}/`;
-  return `${window.location.origin}${base}join/${joinCode}`;
-}
-
 export function ShareTripModal({ trip, onClose, onOpenDossier, onOpenOfflineSnapshot }: Props) {
   const [copied, setCopied] = useState<'link' | 'code' | null>(null);
   const hasJoinCode = Boolean(trip.joinCode && trip.joinCode.trim().length > 0);
-  const joinLink = hasJoinCode ? buildJoinLink(trip.joinCode) : '';
+  const joinLink = hasJoinCode ? buildCanonicalJoinLink(trip.joinCode) : '';
   const sheetRef = useRef<HTMLDivElement>(null);
 
   useFocusTrap(sheetRef, true, false, onClose);

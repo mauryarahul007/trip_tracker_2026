@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { collectDirtyExpenseIds, mergeServerExpenses, resolvePendingLocation, getTripNotificationRecipients, filterTripsOwnedByUser, isNonRetryableSyncError, DEFAULT_CATEGORIES, useTripStore, resolveShares } from './tripStore';
+import { collectDirtyExpenseIds, mergeServerExpenses, detectExpenseConflicts, expensesDifferMeaningfully, resolvePendingLocation, getTripNotificationRecipients, filterTripsOwnedByUser, isNonRetryableSyncError, DEFAULT_CATEGORIES, useTripStore, resolveShares } from './tripStore';
 import type { Expense, Member, Trip } from '../types';
 
 vi.mock('../utils/geolocation', () => ({
@@ -102,6 +102,36 @@ describe('mergeServerExpenses', () => {
     const merged = mergeServerExpenses(local, server, 'trip-a', new Set(['exp-1']));
     expect(merged).toHaveLength(1);
     expect(merged[0].title).toBe('Edited locally');
+  });
+});
+
+describe('detectExpenseConflicts', () => {
+  it('flags dirty expenses that differ from the server copy', () => {
+    const local = [makeExpense({ id: 'exp-1', tripId: 'trip-a', title: 'Local', amount: 100 })];
+    const server = [makeExpense({ id: 'exp-1', tripId: 'trip-a', title: 'Server', amount: 120 })];
+    const conflicts = detectExpenseConflicts(local, server, new Set(['exp-1']), [
+      { type: 'updateExpense', payload: { id: 'exp-1' } },
+    ]);
+    expect(conflicts).toHaveLength(1);
+    expect(conflicts[0].local.title).toBe('Local');
+    expect(conflicts[0].server.title).toBe('Server');
+    expect(conflicts[0].queuedOp).toBe('updateExpense');
+  });
+
+  it('ignores dirty expenses that still match the server', () => {
+    const row = makeExpense({ id: 'exp-1', tripId: 'trip-a', title: 'Same' });
+    const conflicts = detectExpenseConflicts([row], [{ ...row }], new Set(['exp-1']), [
+      { type: 'updateExpense', payload: { id: 'exp-1' } },
+    ]);
+    expect(conflicts).toHaveLength(0);
+  });
+
+  it('expensesDifferMeaningfully compares amount and title', () => {
+    const a = makeExpense({ id: 'exp-1', title: 'A', amount: 10 });
+    const b = makeExpense({ id: 'exp-1', title: 'A', amount: 10 });
+    const c = makeExpense({ id: 'exp-1', title: 'B', amount: 10 });
+    expect(expensesDifferMeaningfully(a, b)).toBe(false);
+    expect(expensesDifferMeaningfully(a, c)).toBe(true);
   });
 });
 

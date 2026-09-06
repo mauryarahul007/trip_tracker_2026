@@ -51,6 +51,7 @@ import { reverseGeocode, searchPlaces, resolveTripStopCoordinates } from '../uti
 import { sendPushNotification } from '../services/pushApi';
 import { saveOfflineReceipt, getOfflineReceipt, deleteOfflineReceipt } from '../services/offlineReceiptStore';
 import { savePassAttachment, deletePassAttachment } from '../services/passAttachmentStore';
+import { schedulePassReminders, cancelPassReminders, rescheduleTripPassReminders } from '../utils/passReminders';
 import { validateAndSanitizeBackup } from '../utils/backupValidation';
 
 // Offline capture falls back to a raw-coordinate placeName (see geolocation.ts).
@@ -115,6 +116,7 @@ interface TripStore extends TripState {
   userId: string | null;
   userDisplayName: string | null;
   syncQueue: SyncQueueItem[];
+  pendingConflicts: ExpenseConflict[];
   lastBackendSyncedAt: number | null;
   sessionExpired: boolean;
   lastModifiedAt: number;
@@ -151,6 +153,8 @@ interface TripStore extends TripState {
   processQueue: () => Promise<void>;
   queueSync: (type: SyncQueueItemType, payload: any) => void;
   updateLastBackendSyncedAt: (timestamp: number) => void;
+  resolveConflictKeepLocal: (expenseId: string) => Promise<void>;
+  resolveConflictAcceptServer: (expenseId: string) => void;
 
   // Trip Actions
   createTrip: (name: string, startDate: string, endDate: string, baseCurrency: string, destination?: string, stops?: TripStop[]) => Promise<void>;
@@ -410,6 +414,57 @@ export function mergeServerExpenses(
   );
 }
 
+export type ExpenseConflict = {
+  expenseId: string;
+  local: Expense;
+  server: Expense;
+  queuedOp: SyncQueueItemType;
+};
+
+export function expensesDifferMeaningfully(a: Expense, b: Expense): boolean {
+  const sharesA = JSON.stringify(a.resolvedShares ?? {});
+  const sharesB = JSON.stringify(b.resolvedShares ?? {});
+  const membersA = JSON.stringify([...(a.splitMemberIds ?? [])].sort());
+  const membersB = JSON.stringify([...(b.splitMemberIds ?? [])].sort());
+  return (
+    a.title !== b.title ||
+    a.amount !== b.amount ||
+    a.date !== b.date ||
+    a.paidBy !== b.paidBy ||
+    a.category !== b.category ||
+    a.splitMode !== b.splitMode ||
+    a.currency !== b.currency ||
+    membersA !== membersB ||
+    sharesA !== sharesB
+  );
+}
+
+export function detectExpenseConflicts(
+  localExpenses: Expense[],
+  serverExpenses: Expense[],
+  dirtyIds: Set<string>,
+  syncQueue: { type: string; payload: any }[]
+): ExpenseConflict[] {
+  const serverById = new Map(serverExpenses.map((e) => [e.id, e]));
+  const conflicts: ExpenseConflict[] = [];
+  for (const local of localExpenses) {
+    if (!dirtyIds.has(local.id)) continue;
+    const server = serverById.get(local.id);
+    if (!server) continue;
+    if (!expensesDifferMeaningfully(local, server)) continue;
+    const queued = syncQueue.find(
+      (q) => q.payload?.id === local.id || q.payload?.tempId === local.id
+    );
+    conflicts.push({
+      expenseId: local.id,
+      local,
+      server,
+      queuedOp: (queued?.type as SyncQueueItemType) || 'updateExpense',
+    });
+  }
+  return conflicts;
+}
+
 let userDismissedStorageError = false;
 
 export function sanitizeTripsPasses(trips: Trip[]): { sanitizedTrips: Trip[]; hadDataUrls: boolean } {
@@ -422,7 +477,10 @@ export function sanitizeTripsPasses(trips: Trip[]): { sanitizedTrips: Trip[]; ha
       if (p.attachmentUrl && p.attachmentUrl.startsWith('data:')) {
         const isPdf = p.attachmentUrl.startsWith('data:application/pdf');
         const key = `idb:${isPdf ? 'pdf' : 'img'}-${p.id}`;
-        savePassAttachment(key, p.attachmentUrl).catch(() => {});
+        // Fire-and-forget is acceptable here only because callers that
+        // create new attachments (saveTravelPass) await savePassAttachment
+        // before writing the idb: key. This path is migration/self-heal.
+        void savePassAttachment(key, p.attachmentUrl);
         hadDataUrls = true;
         modified = true;
         return { ...p, attachmentUrl: key };
@@ -440,6 +498,15 @@ export function sanitizeTripsPasses(trips: Trip[]): { sanitizedTrips: Trip[]; ha
     return t;
   });
   return { sanitizedTrips, hadDataUrls };
+}
+
+/** Never persist base64 receipt previews — they belong in IDB or on the server. */
+export function stripExpenseReceiptImages<T extends { receiptImage?: string }>(expenses: T[]): T[] {
+  return expenses.map((e) => {
+    if (!e.receiptImage) return e;
+    const { receiptImage: _omit, ...rest } = e;
+    return rest as T;
+  });
 }
 
 // Wraps localStorage so a write failure (most commonly QuotaExceededError,
@@ -474,7 +541,8 @@ const quotaSafeStorage = {
     } catch (e) {
       console.error('Failed to persist trip data locally:', e);
 
-      // If localStorage is full, attempt emergency relief by migrating heavy base64 pass attachments to IndexedDB
+      // If localStorage is full, attempt emergency relief by migrating heavy base64
+      // pass attachments to IndexedDB and stripping receipt previews from expenses/queue.
       if (e instanceof DOMException && e.name === 'QuotaExceededError') {
         try {
           const parsed = JSON.parse(value);
@@ -486,7 +554,7 @@ const quotaSafeStorage = {
                   if (p.attachmentUrl && p.attachmentUrl.startsWith('data:')) {
                     const isPdf = p.attachmentUrl.startsWith('data:application/pdf');
                     const key = `idb:${isPdf ? 'pdf' : 'img'}-${p.id}`;
-                    savePassAttachment(key, p.attachmentUrl).catch(() => {});
+                    void savePassAttachment(key, p.attachmentUrl);
                     p.attachmentUrl = key;
                     freedCount++;
                   }
@@ -495,9 +563,31 @@ const quotaSafeStorage = {
             }
           }
 
+          if (parsed?.state?.expenses) {
+            for (const exp of parsed.state.expenses) {
+              if (exp?.receiptImage) {
+                const key = exp.id || `heal-${freedCount}`;
+                void saveOfflineReceipt(key, exp.receiptImage);
+                delete exp.receiptImage;
+                freedCount++;
+              }
+            }
+          }
+
+          if (parsed?.state?.deletedExpenses) {
+            for (const exp of parsed.state.deletedExpenses) {
+              if (exp?.receiptImage) {
+                delete exp.receiptImage;
+                freedCount++;
+              }
+            }
+          }
+
           if (parsed?.state?.syncQueue) {
             for (const item of parsed.state.syncQueue) {
               if (item?.payload?.expenseData?.receiptImage) {
+                const key = item.payload.tempId || item.payload.id || `queue-${freedCount}`;
+                void saveOfflineReceipt(key, item.payload.expenseData.receiptImage);
                 delete item.payload.expenseData.receiptImage;
                 freedCount++;
               }
@@ -519,6 +609,8 @@ const quotaSafeStorage = {
                     return p;
                   }),
                 })),
+                expenses: stripExpenseReceiptImages(s.expenses),
+                deletedExpenses: stripExpenseReceiptImages(s.deletedExpenses),
                 storageError: null,
               }));
             }, 0);
@@ -595,6 +687,7 @@ export const useTripStore = create<TripStore>()(
     userId: null,
     userDisplayName: null,
     syncQueue: [],
+    pendingConflicts: [],
     lastBackendSyncedAt: null,
     sessionExpired: false,
     lastModifiedAt: Date.now(),
@@ -834,6 +927,12 @@ export const useTripStore = create<TripStore>()(
           const dirtyIds = collectDirtyExpenseIds(get().syncQueue);
           set((state) => ({
             expenses: mergeServerExpenses(state.expenses, serverExpenses, activeTrip.id, dirtyIds),
+            pendingConflicts: detectExpenseConflicts(
+              state.expenses.filter((e) => e.tripId === activeTrip.id),
+              serverExpenses,
+              dirtyIds,
+              state.syncQueue
+            ),
             categories: [...DEFAULT_CATEGORIES, ...customCategories],
           }));
         }
@@ -902,6 +1001,12 @@ export const useTripStore = create<TripStore>()(
         const dirtyIds = collectDirtyExpenseIds(get().syncQueue);
         set((state) => ({
           expenses: mergeServerExpenses(state.expenses, serverExpenses, tripId, dirtyIds),
+          pendingConflicts: detectExpenseConflicts(
+            state.expenses.filter((e) => e.tripId === tripId),
+            serverExpenses,
+            dirtyIds,
+            state.syncQueue
+          ),
           categories: [...DEFAULT_CATEGORIES, ...customCategories],
           storageError: null,
         }));
@@ -928,6 +1033,30 @@ export const useTripStore = create<TripStore>()(
       set({ syncQueue: newQueue, lastModifiedAt: Date.now() });
     },
 
+    resolveConflictKeepLocal: async (expenseId) => {
+      const conflict = get().pendingConflicts.find((c) => c.expenseId === expenseId);
+      if (!conflict) return;
+      // Drop the conflict so processQueue may flush the queued local write.
+      set((state) => ({
+        pendingConflicts: state.pendingConflicts.filter((c) => c.expenseId !== expenseId),
+      }));
+      if (navigator.onLine) {
+        await get().processQueue();
+      }
+    },
+
+    resolveConflictAcceptServer: (expenseId) => {
+      const conflict = get().pendingConflicts.find((c) => c.expenseId === expenseId);
+      if (!conflict) return;
+      set((state) => ({
+        expenses: state.expenses.map((e) => (e.id === expenseId ? conflict.server : e)),
+        syncQueue: state.syncQueue.filter(
+          (item) => item.payload?.id !== expenseId && item.payload?.tempId !== expenseId
+        ),
+        pendingConflicts: state.pendingConflicts.filter((c) => c.expenseId !== expenseId),
+        lastModifiedAt: Date.now(),
+      }));
+    },
 
     processQueue: async () => {
       if (!navigator.onLine) return;
@@ -992,6 +1121,11 @@ export const useTripStore = create<TripStore>()(
             }
           } else if (item.type === 'updateExpense') {
             const { id, expenseData } = item.payload;
+            // Do not blind-overwrite the server while a conflict is unresolved.
+            if (get().pendingConflicts.some((c) => c.expenseId === id)) {
+              set((state) => ({ syncQueue: [...state.syncQueue, item] }));
+              continue;
+            }
             const tripId = get().activeTripId;
             if (tripId) {
               const participants = expenseData.splitMemberIds.filter((mId: string) => get().members[mId] && !get().members[mId].archived);
@@ -1259,7 +1393,11 @@ export const useTripStore = create<TripStore>()(
       // cached data yet just renders empty rather than losing data for a
       // trip we DO have cached (e.g. switching back to it later).
       set({ activeTripId: id, deletedExpenses: [] });
-      if (!navigator.onLine) return;
+      if (!navigator.onLine) {
+        const trip = get().trips.find((t) => t.id === id);
+        if (trip) void rescheduleTripPassReminders(trip.passes, trip.name);
+        return;
+      }
       void get().loadFeatureFlags(id);
       set({ expensesLoadingTripId: id });
       try {
@@ -1267,9 +1405,17 @@ export const useTripStore = create<TripStore>()(
         const dirtyIds = collectDirtyExpenseIds(get().syncQueue);
         set((state) => ({
           expenses: mergeServerExpenses(state.expenses, serverExpenses, id, dirtyIds),
+          pendingConflicts: detectExpenseConflicts(
+            state.expenses.filter((e) => e.tripId === id),
+            serverExpenses,
+            dirtyIds,
+            state.syncQueue
+          ),
           categories: [...DEFAULT_CATEGORIES, ...customCategories],
           storageError: null,
         }));
+        const trip = get().trips.find((t) => t.id === id);
+        if (trip) void rescheduleTripPassReminders(trip.passes, trip.name);
       } catch (e) {
         setError(e);
       } finally {
@@ -1731,6 +1877,9 @@ export const useTripStore = create<TripStore>()(
           console.warn('Failed to sync travel pass to backend:', e);
         }
       }
+
+      const tripName = get().trips.find((t) => t.id === tripId)?.name || 'Trip';
+      void schedulePassReminders(passToSave, tripName);
     },
 
     deleteTravelPass: async (tripId, passId) => {
@@ -1761,6 +1910,8 @@ export const useTripStore = create<TripStore>()(
           console.warn('Failed to sync travel pass deletion to backend:', e);
         }
       }
+
+      void cancelPassReminders(passId);
     },
 
     setTripFxConfig: async (tripId, fxConfig) => {
@@ -2182,16 +2333,16 @@ export const useTripStore = create<TripStore>()(
       }
 
       const queueOfflineAdd = async () => {
-        let staged = false;
         if (expenseData.receiptImage) {
           try {
             await saveOfflineReceipt(tempId, expenseData.receiptImage);
-            staged = true;
           } catch (e) {
-            console.error('Failed to stage offline receipt, keeping it inline as a fallback:', e);
+            console.error('Failed to stage offline receipt:', e);
+            set({ storageError: 'Receipt photo could not be saved offline. Re-attach after reconnecting.' });
           }
         }
-        get().queueSync('addExpense', { tempId, expenseData: staged ? { ...expenseData, receiptImage: undefined } : expenseData });
+        // Never keep base64 receipts inline in the sync queue.
+        get().queueSync('addExpense', { tempId, expenseData: { ...expenseData, receiptImage: undefined } });
       };
 
       if (!navigator.onLine) {
@@ -2216,12 +2367,15 @@ export const useTripStore = create<TripStore>()(
       if (participants.length === 0) return;
 
       const resolvedShares = resolveShares(expenseData, participants);
+      const { receiptImage: _previewOnly, ...expenseDataWithoutPreview } = expenseData as typeof expenseData & { receiptImage?: string };
       const updatedExpense: Expense = {
         ...existing,
-        ...expenseData,
+        ...expenseDataWithoutPreview,
         resolvedShares,
         updatedAt: Date.now(),
       };
+      // Never keep base64 receipt previews on persisted expense rows.
+      delete (updatedExpense as { receiptImage?: string }).receiptImage;
 
       // Optimistic update
       set((state) => ({
@@ -2246,16 +2400,15 @@ export const useTripStore = create<TripStore>()(
       };
 
       const queueOfflineUpdate = async () => {
-        let staged = false;
         if (expenseData.receiptImage) {
           try {
             await saveOfflineReceipt(id, expenseData.receiptImage);
-            staged = true;
           } catch (e) {
-            console.error('Failed to stage offline receipt, keeping it inline as a fallback:', e);
+            console.error('Failed to stage offline receipt:', e);
+            set({ storageError: 'Receipt photo could not be saved offline. Re-attach after reconnecting.' });
           }
         }
-        get().queueSync('updateExpense', { id, expenseData: staged ? { ...expenseData, receiptImage: undefined } : expenseData });
+        get().queueSync('updateExpense', { id, expenseData: { ...expenseData, receiptImage: undefined } });
       };
 
       if (!navigator.onLine) {
@@ -2517,6 +2670,9 @@ export const useTripStore = create<TripStore>()(
         }
 
         const parsed = validation.sanitizedState;
+        const { sanitizedTrips } = sanitizeTripsPasses(parsed.trips);
+        parsed.trips = sanitizedTrips;
+        parsed.expenses = stripExpenseReceiptImages(parsed.expenses || []);
         const customCategories = parsed.categories.filter((c) => c.isCustom);
         const existingTripIds = get().trips.map((t) => t.id);
         const ownedTrips = filterTripsOwnedByUser(parsed.trips, userId, existingTripIds);
@@ -2744,7 +2900,7 @@ export const useTripStore = create<TripStore>()(
             if (p.attachmentUrl && p.attachmentUrl.startsWith('data:')) {
               const isPdf = p.attachmentUrl.startsWith('data:application/pdf');
               const key = `idb:${isPdf ? 'pdf' : 'img'}-${p.id}`;
-              savePassAttachment(key, p.attachmentUrl).catch(() => {});
+              void savePassAttachment(key, p.attachmentUrl);
               return { ...p, attachmentUrl: key };
             }
             return p;
@@ -2753,10 +2909,21 @@ export const useTripStore = create<TripStore>()(
         activeTripId: state.activeTripId,
         members: state.members,
         groups: state.groups,
-        expenses: state.expenses,
-        deletedExpenses: state.deletedExpenses,
+        expenses: stripExpenseReceiptImages(state.expenses),
+        deletedExpenses: stripExpenseReceiptImages(state.deletedExpenses),
         categories: state.categories,
-        syncQueue: state.syncQueue,
+        syncQueue: state.syncQueue.map((item) => {
+          if (item?.payload?.expenseData?.receiptImage) {
+            return {
+              ...item,
+              payload: {
+                ...item.payload,
+                expenseData: { ...item.payload.expenseData, receiptImage: undefined },
+              },
+            };
+          }
+          return item;
+        }),
         lastBackendSyncedAt: state.lastBackendSyncedAt,
         lastModifiedAt: state.lastModifiedAt,
         enableGeotagging: state.enableGeotagging,

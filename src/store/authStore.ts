@@ -5,6 +5,7 @@ import { Browser } from '@capacitor/browser';
 import { App as CapacitorApp } from '@capacitor/app';
 import { supabase, isMissingSupabaseEnv } from '../services/supabaseClient';
 import { buildOAuthRedirectUrl, parseNativeAuthCallback } from '../utils/nativeAuth';
+import { parseJoinDeepLink, emitJoinDeepLink } from '../utils/joinDeepLink';
 import { lockSession } from '../utils/webAuthn';
 import { registerForPushNotifications, unregisterPushNotifications } from '../services/pushRegistration';
 import { useTripStore } from './tripStore';
@@ -108,7 +109,13 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
     });
 
     if (Capacitor.isNativePlatform()) {
-      CapacitorApp.addListener('appUrlOpen', async ({ url }) => {
+      const handleIncomingUrl = async (url: string) => {
+        const joinCode = parseJoinDeepLink(url);
+        if (joinCode) {
+          emitJoinDeepLink(joinCode);
+          return;
+        }
+
         const res = parseNativeAuthCallback(url);
         if (!res) return;
         try {
@@ -134,7 +141,18 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
             set({ session: data.session, authError: null });
           }
         }
+      };
+
+      CapacitorApp.addListener('appUrlOpen', async ({ url }) => {
+        await handleIncomingUrl(url);
       });
+
+      // Cold start: OS may open the app with a join URL before listeners attach.
+      CapacitorApp.getLaunchUrl()
+        .then((result) => {
+          if (result?.url) void handleIncomingUrl(result.url);
+        })
+        .catch(() => {});
     }
   },
 

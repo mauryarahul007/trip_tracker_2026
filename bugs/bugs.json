@@ -4429,7 +4429,7 @@
     "description": "Automatically captured unhandled rejection.\n\nNo stack trace available.",
     "severity": "critical",
     "category": "general",
-    "status": "open",
+    "status": "resolved",
     "foundBy": "auto-crash-handler",
     "environment": {
       "route": "#nav-2",
@@ -4448,7 +4448,10 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-09-04T07:27:38.027197+00:00",
-    "updatedAt": "2026-09-04T07:27:38.027197+00:00"
+    "updatedAt": "2026-09-06T19:46:00.795Z",
+    "resolvedBy": "cursor",
+    "resolvedAt": "2026-09-06T19:46:00.793Z",
+    "resolutionNote": "App.tsx setActiveTab and handleStartEditExpense now use withViewTransition which catches aborted/skipped transitions."
   },
   {
     "id": "BUG-144",
@@ -4456,7 +4459,7 @@
     "description": "Automatically captured unhandled rejection.\n\nNo stack trace available.",
     "severity": "critical",
     "category": "general",
-    "status": "open",
+    "status": "resolved",
     "foundBy": "auto-crash-handler",
     "environment": {
       "route": "#nav-3",
@@ -4475,7 +4478,10 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-09-04T08:04:28.653451+00:00",
-    "updatedAt": "2026-09-04T08:04:28.653451+00:00"
+    "updatedAt": "2026-09-06T19:46:02.621Z",
+    "resolvedBy": "cursor",
+    "resolvedAt": "2026-09-06T19:46:02.619Z",
+    "resolutionNote": "Duplicate of BUG-143 — withViewTransition catch on tab/edit paths."
   },
   {
     "id": "BUG-145",
@@ -4513,7 +4519,7 @@
     "description": "Automatically captured react crash.\n\nError: cannot add `presence` callbacks for realtime:trip_presence:137dfbc0-bf90-475c-89d0-86b57f68ae0a after `subscribe()`.\n    at RealtimeChannel.on (http://localhost:5173/node_modules/.vite/deps/@supabase_supabase-js.js?v=2536d9d8:7171:10)\n    at http://localhost:5173/src/hooks/usePeerPresence.ts?t=1788548665785:17:11\n    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:12900:13)\n    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:850:66)\n    at commitHookEffectListMount (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:6615:153)\n    at commitHookPassiveMountEffects (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:6650:55)\n    at commitPassiveMountOnFiber (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:7616:22)\n    at recursivelyTraversePassiveMountEffects (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:7604:5)\n    at commitPassiveMountOnFiber (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:7620:6)\n    at recursivelyTraversePassiveMountEffects (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:7604:5)",
     "severity": "critical",
     "category": "general",
-    "status": "open",
+    "status": "resolved",
     "foundBy": "auto-crash-handler",
     "environment": {
       "route": "#/",
@@ -4540,7 +4546,10 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-09-04T19:04:27.58022+00:00",
-    "updatedAt": "2026-09-04T19:04:27.58022+00:00"
+    "updatedAt": "2026-09-06T19:45:07.451Z",
+    "resolvedBy": "cursor",
+    "resolvedAt": "2026-09-06T19:45:07.449Z",
+    "resolutionNote": "usePeerPresence now removeChannel + untrack on cleanup and tears down existing topic before subscribe. Commit pending (stability batch)."
   },
   {
     "id": "BUG-147",
@@ -4578,7 +4587,7 @@
     "description": "Automatically captured react crash.\n\nError: cannot add `presence` callbacks for realtime:trip_presence:137dfbc0-bf90-475c-89d0-86b57f68ae0a after `subscribe()`.\n    at RealtimeChannel.on (http://localhost:5173/node_modules/.vite/deps/@supabase_supabase-js.js?v=2536d9d8:7171:10)\n    at http://localhost:5173/src/hooks/usePeerPresence.ts?t=1788550829223:17:11\n    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:12900:13)\n    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:850:66)\n    at commitHookEffectListMount (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:6615:153)\n    at commitHookPassiveMountEffects (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:6650:55)\n    at commitPassiveMountOnFiber (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:7616:22)\n    at recursivelyTraversePassiveMountEffects (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:7604:5)\n    at commitPassiveMountOnFiber (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:7620:6)\n    at recursivelyTraversePassiveMountEffects (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:7604:5)",
     "severity": "critical",
     "category": "general",
-    "status": "open",
+    "status": "resolved",
     "foundBy": "auto-crash-handler",
     "environment": {
       "route": "#/",
@@ -4605,7 +4614,10 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-09-04T19:40:31.118207+00:00",
-    "updatedAt": "2026-09-04T19:40:31.118207+00:00"
+    "updatedAt": "2026-09-06T19:45:10.468Z",
+    "resolvedBy": "cursor",
+    "resolvedAt": "2026-09-06T19:45:10.466Z",
+    "resolutionNote": "Duplicate of BUG-146 — presence channel lifecycle fix."
   },
   {
     "id": "BUG-149",
@@ -4613,7 +4625,7 @@
     "description": "Automatically captured react crash.\n\nError: cannot add `presence` callbacks for realtime:trip_presence:137dfbc0-bf90-475c-89d0-86b57f68ae0a after `subscribe()`.\n    at RealtimeChannel.on (http://localhost:5173/node_modules/.vite/deps/@supabase_supabase-js.js?v=2536d9d8:7171:10)\n    at http://localhost:5173/src/hooks/usePeerPresence.ts?t=1788550839991:17:11\n    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:12900:13)\n    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:850:66)\n    at commitHookEffectListMount (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:6615:153)\n    at commitHookPassiveMountEffects (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:6650:55)\n    at commitPassiveMountOnFiber (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:7616:22)\n    at recursivelyTraversePassiveMountEffects (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:7604:5)\n    at commitPassiveMountOnFiber (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:7620:6)\n    at recursivelyTraversePassiveMountEffects (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:7604:5)",
     "severity": "critical",
     "category": "general",
-    "status": "open",
+    "status": "resolved",
     "foundBy": "auto-crash-handler",
     "environment": {
       "route": "#/",
@@ -4640,7 +4652,10 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-09-04T19:40:41.134025+00:00",
-    "updatedAt": "2026-09-04T19:40:41.134025+00:00"
+    "updatedAt": "2026-09-06T19:45:12.637Z",
+    "resolvedBy": "cursor",
+    "resolvedAt": "2026-09-06T19:45:12.635Z",
+    "resolutionNote": "Duplicate of BUG-146 — presence channel lifecycle fix."
   },
   {
     "id": "BUG-150",
@@ -4648,7 +4663,7 @@
     "description": "Automatically captured react crash.\n\nError: cannot add `presence` callbacks for realtime:trip_presence:137dfbc0-bf90-475c-89d0-86b57f68ae0a after `subscribe()`.\n    at RealtimeChannel.on (http://localhost:5173/node_modules/.vite/deps/@supabase_supabase-js.js?v=2536d9d8:7171:10)\n    at http://localhost:5173/src/hooks/usePeerPresence.ts?t=1788550871268:17:11\n    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:12900:13)\n    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:850:66)\n    at commitHookEffectListMount (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:6615:153)\n    at commitHookPassiveMountEffects (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:6650:55)\n    at commitPassiveMountOnFiber (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:7616:22)\n    at recursivelyTraversePassiveMountEffects (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:7604:5)\n    at commitPassiveMountOnFiber (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:7620:6)\n    at recursivelyTraversePassiveMountEffects (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:7604:5)",
     "severity": "critical",
     "category": "general",
-    "status": "open",
+    "status": "resolved",
     "foundBy": "auto-crash-handler",
     "environment": {
       "route": "#/",
@@ -4675,7 +4690,10 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-09-04T19:41:12.618862+00:00",
-    "updatedAt": "2026-09-04T19:41:12.618862+00:00"
+    "updatedAt": "2026-09-06T19:45:14.545Z",
+    "resolvedBy": "cursor",
+    "resolvedAt": "2026-09-06T19:45:14.544Z",
+    "resolutionNote": "Duplicate of BUG-146 — presence channel lifecycle fix."
   },
   {
     "id": "BUG-151",
@@ -4683,7 +4701,7 @@
     "description": "Automatically captured react crash.\n\nError: cannot add `presence` callbacks for realtime:trip_presence:137dfbc0-bf90-475c-89d0-86b57f68ae0a after `subscribe()`.\n    at RealtimeChannel.on (http://localhost:5173/node_modules/.vite/deps/@supabase_supabase-js.js?v=2536d9d8:7171:10)\n    at http://localhost:5173/src/hooks/usePeerPresence.ts?t=1788550883698:17:11\n    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:12900:13)\n    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:850:66)\n    at commitHookEffectListMount (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:6615:153)\n    at commitHookPassiveMountEffects (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:6650:55)\n    at commitPassiveMountOnFiber (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:7616:22)\n    at recursivelyTraversePassiveMountEffects (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:7604:5)\n    at commitPassiveMountOnFiber (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:7620:6)\n    at recursivelyTraversePassiveMountEffects (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:7604:5)",
     "severity": "critical",
     "category": "general",
-    "status": "open",
+    "status": "resolved",
     "foundBy": "auto-crash-handler",
     "environment": {
       "route": "#/",
@@ -4710,7 +4728,10 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-09-04T19:41:25.019669+00:00",
-    "updatedAt": "2026-09-04T19:41:25.019669+00:00"
+    "updatedAt": "2026-09-06T19:45:16.505Z",
+    "resolvedBy": "cursor",
+    "resolvedAt": "2026-09-06T19:45:16.503Z",
+    "resolutionNote": "Duplicate of BUG-146 — presence channel lifecycle fix."
   },
   {
     "id": "BUG-152",
@@ -4718,7 +4739,7 @@
     "description": "Automatically captured react crash.\n\nError: cannot add `presence` callbacks for realtime:trip_presence:137dfbc0-bf90-475c-89d0-86b57f68ae0a after `subscribe()`.\n    at RealtimeChannel.on (http://localhost:5173/node_modules/.vite/deps/@supabase_supabase-js.js?v=2536d9d8:7171:10)\n    at http://localhost:5173/src/hooks/usePeerPresence.ts?t=1788550906029:17:11\n    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:12900:13)\n    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:850:66)\n    at commitHookEffectListMount (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:6615:153)\n    at commitHookPassiveMountEffects (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:6650:55)\n    at commitPassiveMountOnFiber (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:7616:22)\n    at recursivelyTraversePassiveMountEffects (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:7604:5)\n    at commitPassiveMountOnFiber (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:7620:6)\n    at recursivelyTraversePassiveMountEffects (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:7604:5)",
     "severity": "critical",
     "category": "general",
-    "status": "open",
+    "status": "resolved",
     "foundBy": "auto-crash-handler",
     "environment": {
       "route": "#/",
@@ -4745,7 +4766,10 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-09-04T19:41:47.179835+00:00",
-    "updatedAt": "2026-09-04T19:41:47.179835+00:00"
+    "updatedAt": "2026-09-06T19:45:18.390Z",
+    "resolvedBy": "cursor",
+    "resolvedAt": "2026-09-06T19:45:18.388Z",
+    "resolutionNote": "Duplicate of BUG-146 — presence channel lifecycle fix."
   },
   {
     "id": "BUG-153",
@@ -4753,7 +4777,7 @@
     "description": "Automatically captured unhandled rejection.\n\nNo stack trace available.",
     "severity": "critical",
     "category": "general",
-    "status": "open",
+    "status": "resolved",
     "foundBy": "auto-crash-handler",
     "environment": {
       "route": "#nav-1",
@@ -4772,7 +4796,10 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-09-05T05:37:11.868608+00:00",
-    "updatedAt": "2026-09-05T05:37:11.868608+00:00"
+    "updatedAt": "2026-09-06T19:46:04.187Z",
+    "resolvedBy": "cursor",
+    "resolvedAt": "2026-09-06T19:46:04.185Z",
+    "resolutionNote": "Duplicate of BUG-143 — withViewTransition catch on tab/edit paths."
   },
   {
     "id": "BUG-154",
@@ -4780,7 +4807,7 @@
     "description": "Automatically captured unhandled rejection.\n\nNo stack trace available.",
     "severity": "critical",
     "category": "general",
-    "status": "open",
+    "status": "resolved",
     "foundBy": "auto-crash-handler",
     "environment": {
       "route": "#nav-1",
@@ -4799,7 +4826,10 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-09-05T06:32:48.294276+00:00",
-    "updatedAt": "2026-09-05T06:32:48.294276+00:00"
+    "updatedAt": "2026-09-06T19:46:05.972Z",
+    "resolvedBy": "cursor",
+    "resolvedAt": "2026-09-06T19:46:05.970Z",
+    "resolutionNote": "Duplicate of BUG-143 — withViewTransition catch on tab/edit paths."
   },
   {
     "id": "BUG-155",

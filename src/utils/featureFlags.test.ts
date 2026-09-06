@@ -16,9 +16,9 @@ describe('featureFlags', () => {
   });
 
   it('superadmin bypasses feature restrictions for normal capabilities', () => {
-    const flags = { ...DEFAULT_FEATURE_FLAGS, enableGeotagging: false, enableP2PSync: false };
+    const flags = { ...DEFAULT_FEATURE_FLAGS, enableGeotagging: false, enableAdvancedSplits: false };
     expect(isFeatureActive('enableGeotagging', flags, { isSuperadmin: true })).toBe(true);
-    expect(isFeatureActive('enableP2PSync', flags, { isSuperadmin: true })).toBe(true);
+    expect(isFeatureActive('enableAdvancedSplits', flags, { isSuperadmin: true })).toBe(true);
     expect(isFeatureActive('enableAdvancedLocationSearch', flags, { isSuperadmin: true })).toBe(true);
   });
 

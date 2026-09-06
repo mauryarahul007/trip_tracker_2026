@@ -1,0 +1,19 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appIDs": ["TEAMID.com.triptracker.app"],
+        "components": [
+          {
+            "/": "/join/*",
+            "comment": "Trip join invite Universal Links"
+          }
+        ]
+      }
+    ]
+  },
+  "webcredentials": {
+    "apps": ["TEAMID.com.triptracker.app"]
+  }
+}

@@ -22,13 +22,6 @@ export const FEATURE_FLAGS_META: Record<FeatureFlagKey, FeatureFlagMeta> = {
     category: 'splits',
     defaultEnabledForUsers: false,
   },
-  enableP2PSync: {
-    key: 'enableP2PSync',
-    label: 'P2P Offline WebRTC Sync',
-    description: 'Shows P2P direct device pairing and QR code scanner in Settings.',
-    category: 'sync',
-    defaultEnabledForUsers: false,
-  },
   enableReceiptUpload: {
     key: 'enableReceiptUpload',
     label: 'Receipt Photo Attachments',
@@ -41,7 +34,7 @@ export const FEATURE_FLAGS_META: Record<FeatureFlagKey, FeatureFlagMeta> = {
     label: 'Recycle Bin & Permanent Purge',
     description: 'Exposes the Recycle Bin viewer, immediate permanent deletion, and empty bin tools.',
     category: 'admin',
-    defaultEnabledForUsers: false,
+    defaultEnabledForUsers: true,
   },
   enableKeywordTagging: {
     key: 'enableKeywordTagging',
@@ -91,9 +84,8 @@ export const DEFAULT_FEATURE_FLAGS: Record<FeatureFlagKey, boolean> = {
   enableGeotagging: true,
   enableAdvancedLocationSearch: false,
   enableAdvancedSplits: false,
-  enableP2PSync: false,
   enableReceiptUpload: true,
-  enableRecycleBin: false,
+  enableRecycleBin: true,
   enableKeywordTagging: false,
   enableDemoSeeding: false,
   enableMultiTripAnalytics: false,

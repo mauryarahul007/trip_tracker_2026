@@ -22,7 +22,19 @@ export function usePeerPresence(tripId: string | null | undefined): PeerUser[] {
       return;
     }
 
+    let alive = true;
     const channelName = `trip_presence:${tripId}`;
+
+    // Supabase reuses channels by topic name. Remount (Strict Mode / error
+    // boundary) would otherwise call .on('presence') on an already-subscribed
+    // channel and crash (BUG-146). Tear down any prior channel first.
+    for (const existing of supabase.getChannels()) {
+      // Topics are typically `realtime:<name>`; match either form.
+      if (existing.topic === channelName || existing.topic.endsWith(`:${channelName}`)) {
+        void supabase.removeChannel(existing);
+      }
+    }
+
     const channel = supabase.channel(channelName, {
       config: {
         presence: {
@@ -33,6 +45,7 @@ export function usePeerPresence(tripId: string | null | undefined): PeerUser[] {
 
     channel
       .on('presence', { event: 'sync' }, () => {
+        if (!alive) return;
         const state = channel.presenceState();
         const activeUsers: PeerUser[] = [];
         Object.values(state).forEach((presences) => {
@@ -50,7 +63,7 @@ export function usePeerPresence(tripId: string | null | undefined): PeerUser[] {
         setPeers(activeUsers);
       })
       .subscribe(async (status: string) => {
-        if (status === 'SUBSCRIBED') {
+        if (status === 'SUBSCRIBED' && alive) {
           await channel.track({
             userId,
             displayName: userDisplayName,
@@ -60,7 +73,17 @@ export function usePeerPresence(tripId: string | null | undefined): PeerUser[] {
       });
 
     return () => {
-      channel.unsubscribe();
+      alive = false;
+      void (async () => {
+        try {
+          await channel.untrack();
+        } catch {
+          // Channel may already be torn down.
+        }
+        if (supabase) {
+          void supabase.removeChannel(channel);
+        }
+      })();
     };
   }, [tripId, userId, userDisplayName]);
 

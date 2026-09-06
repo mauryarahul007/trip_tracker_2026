@@ -33,6 +33,9 @@ const TripMapHero = lazy(lazyImport(() =>
 const ExpenseForm = lazy(lazyImport(() =>
   import('./components/ExpenseForm').then((m) => ({ default: m.ExpenseForm }))
 ));
+const ConflictResolverModal = lazy(lazyImport(() =>
+  import('./components/ConflictResolverModal').then((m) => ({ default: m.ConflictResolverModal }))
+));
 import { TripContentSheet } from './components/TripContentSheet';
 import { AnalyticsTab } from './components/AnalyticsTab';
 import { ExpenseList } from './components/ExpenseList';
@@ -237,11 +240,7 @@ export default function App() {
   // synchronously inside the transition callback, which is what the API
   // needs to capture old/new snapshots correctly with React's batching.
   const setActiveTab = useCallback((tab: Tab) => {
-    if (typeof document.startViewTransition !== 'function') {
-      setActiveTabRaw(tab);
-      return;
-    }
-    document.startViewTransition(() => {
+    withViewTransition(() => {
       flushSync(() => setActiveTabRaw(tab));
     });
   }, []);
@@ -568,6 +567,13 @@ export default function App() {
 
   const syncQueue = useTripStore((s) => s.syncQueue);
   const dirtyExpenseIds = useMemo(() => collectDirtyExpenseIds(syncQueue), [syncQueue]);
+  const pendingConflicts = useTripStore((s) => s.pendingConflicts);
+  const conflictExpenseIds = useMemo(
+    () => new Set(pendingConflicts.map((c) => c.expenseId)),
+    [pendingConflicts]
+  );
+  const resolveConflictKeepLocal = useTripStore((s) => s.resolveConflictKeepLocal);
+  const resolveConflictAcceptServer = useTripStore((s) => s.resolveConflictAcceptServer);
   const sessionExpired = useTripStore((s) => s.sessionExpired);
   const lastBackendSyncedAt = useTripStore((s) => s.lastBackendSyncedAt);
   const processQueue = useTripStore((s) => s.processQueue);
@@ -577,6 +583,10 @@ export default function App() {
   useEffect(() => {
     initialize();
   }, [initialize]);
+
+  useEffect(() => {
+    void import('./utils/passReminders').then((m) => m.bindWebPassReminderFlush());
+  }, []);
 
   // Track browser connectivity and live syncing state for the backend sync status pill
   const [isOnline, setIsOnline] = useState(navigator.onLine);
@@ -1367,13 +1377,9 @@ export default function App() {
     setEditingExpenseId(exp.id);
     setActiveTransitionSourceId(exp.id);
     setExpenseTemplate(undefined);
-    if (typeof document.startViewTransition === 'function') {
-      document.startViewTransition(() => {
-        flushSync(() => setShowAddExpense(true));
-      });
-      return;
-    }
-    setShowAddExpense(true);
+    withViewTransition(() => {
+      flushSync(() => setShowAddExpense(true));
+    });
   };
 
   const handleDuplicateExpense = (exp: Expense) => {
@@ -2287,6 +2293,7 @@ export default function App() {
                 onAddExpense={handleOpenAddExpense}
                 onOpenSmartQuickAdd={() => setShowSmartQuickAdd(true)}
                 dirtyExpenseIds={dirtyExpenseIds}
+                conflictExpenseIds={conflictExpenseIds}
               />
               </div>
               </TabErrorBoundary>
@@ -2608,6 +2615,19 @@ export default function App() {
 
       {confirmRequest && (
         <ConfirmDialog request={confirmRequest} onCancel={() => setConfirmRequest(null)} />
+
+      {pendingConflicts.length > 0 && activeTrip && (
+        <Suspense fallback={null}>
+          <ConflictResolverModal
+            localExpense={pendingConflicts[0].local}
+            serverExpense={pendingConflicts[0].server}
+            currency={activeTrip.baseCurrency}
+            onKeepLocal={() => void resolveConflictKeepLocal(pendingConflicts[0].expenseId)}
+            onAcceptServer={() => resolveConflictAcceptServer(pendingConflicts[0].expenseId)}
+            onClose={() => resolveConflictAcceptServer(pendingConflicts[0].expenseId)}
+          />
+        </Suspense>
+      )}
       )}
 
       {/* Command Palette */}

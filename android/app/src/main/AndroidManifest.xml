@@ -26,6 +26,17 @@
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="com.triptracker.app" />
             </intent-filter>
+
+            <!-- HTTPS App Links for join invites (verified via assetlinks.json) -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:scheme="https"
+                    android:host="trip-tracker.blackmaroon.in"
+                    android:pathPrefix="/join" />
+            </intent-filter>
         </activity>
 
         <provider

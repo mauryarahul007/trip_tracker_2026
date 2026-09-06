@@ -69,6 +69,12 @@ import { SuperadminAuthModal } from './SuperadminAuthModal';
 const SuperAdminBugTracker = lazy(() => import('./SuperAdminBugTracker').then((m) => ({ default: m.SuperAdminBugTracker })));
 import { useHistoryBack } from '../utils/useHistoryBack';
 import { useEscapeKey } from '../utils/useEscapeKey';
+import { buildCanonicalJoinLink } from '../utils/joinDeepLink';
+import {
+  isPassRemindersEnabled,
+  setPassRemindersEnabled,
+  rescheduleTripPassReminders,
+} from '../utils/passReminders';
 
 export type ThemePref = 'light' | 'dark' | 'system';
 
@@ -506,11 +512,21 @@ export function SettingsView({
 
   // WhatsApp-inspired Tactile Haptic Preference state
   const [hapticPref, setHapticPrefState] = useState<HapticPreference>(getHapticPreference);
+  const [passRemindersOn, setPassRemindersOn] = useState(isPassRemindersEnabled);
 
   const handleSetHapticPref = (pref: HapticPreference) => {
     setHapticPreference(pref);
     setHapticPrefState(pref);
     triggerHaptic('medium');
+  };
+
+  const handleTogglePassReminders = (enabled: boolean) => {
+    setPassRemindersEnabled(enabled);
+    setPassRemindersOn(enabled);
+    triggerHaptic('light');
+    if (enabled && activeTrip) {
+      void rescheduleTripPassReminders(activeTrip.passes, activeTrip.name);
+    }
   };
 
   // WhatsApp Profile QR Code modal state
@@ -573,10 +589,10 @@ export function SettingsView({
   // Shareable Trip & Profile Link
   const tripInviteLink = React.useMemo(() => {
     if (typeof window === 'undefined') return '';
-    const base = import.meta.env.BASE_URL.endsWith('/') ? import.meta.env.BASE_URL : `${import.meta.env.BASE_URL}/`;
     if (activeTrip?.joinCode) {
-      return `${window.location.origin}${base}join/${activeTrip.joinCode}`;
+      return buildCanonicalJoinLink(activeTrip.joinCode);
     }
+    const base = import.meta.env.BASE_URL.endsWith('/') ? import.meta.env.BASE_URL : `${import.meta.env.BASE_URL}/`;
     if (activeTrip) {
       return `${window.location.origin}${base}?trip=${activeTrip.id}`;
     }
@@ -1696,55 +1712,7 @@ export function SettingsView({
               </div>
             </button>
 
-            {onOpenMediaGallery && (
-              <button
-                type="button"
-                className="settings-row-item"
-                onClick={() => {
-                  triggerHaptic('light');
-                  onOpenMediaGallery();
-                }}
-              >
-                <div className="settings-row-left">
-                  <div className="settings-squircle squircle-teal-glow">
-                    <span style={{ fontSize: '18px' }}>📸</span>
-                  </div>
-                  <div className="settings-row-texts">
-                    <span className="settings-row-title">Receipts &amp; Memories Gallery</span>
-                    <span className="settings-row-subtitle">Browse full visual masonry wall of saved receipts</span>
-                  </div>
-                </div>
-                <div className="settings-row-right">
-                  <span className="settings-badge-pill" style={{ background: 'rgba(23, 182, 166, 0.18)', color: '#17B6A6', fontWeight: 700 }}>PHOTOS</span>
-                  <IconChevronRight size={16} />
-                </div>
-              </button>
-            )}
-
-            {onOpenOfflineSnapshot && (
-              <button
-                type="button"
-                className="settings-row-item"
-                onClick={() => {
-                  triggerHaptic('light');
-                  onOpenOfflineSnapshot();
-                }}
-              >
-                <div className="settings-row-left">
-                  <div className="settings-squircle squircle-blue-glow">
-                    <span style={{ fontSize: '18px' }}>💾</span>
-                  </div>
-                  <div className="settings-row-texts">
-                    <span className="settings-row-title">Offline Snapshot (.triptracker)</span>
-                    <span className="settings-row-subtitle">Export or restore encrypted trip offline package</span>
-                  </div>
-                </div>
-                <div className="settings-row-right">
-                  <span className="settings-badge-pill" style={{ background: 'rgba(59, 130, 246, 0.18)', color: '#3B82F6', fontWeight: 700 }}>BACKUP</span>
-                  <IconChevronRight size={16} />
-                </div>
-              </button>
-            )}
+            {/* Gallery & Snapshot canonical entries live under Data & Backups menu */}
           </div>
         </div>
 
@@ -1939,30 +1907,6 @@ export function SettingsView({
               </div>
             </button>
 
-            {onOpenMediaGallery && (
-              <button
-                type="button"
-                className="settings-row-item"
-                onClick={() => {
-                  triggerHaptic('light');
-                  onOpenMediaGallery();
-                }}
-              >
-                <div className="settings-row-left">
-                  <div className="settings-squircle squircle-teal-glow">
-                    <span style={{ fontSize: '18px' }}>📸</span>
-                  </div>
-                  <div className="settings-row-texts">
-                    <span className="settings-row-title">Receipts &amp; Memories Gallery</span>
-                    <span className="settings-row-subtitle">Visual masonry wall of trip receipts and photos</span>
-                  </div>
-                </div>
-                <div className="settings-row-right">
-                  <span className="settings-badge-pill" style={{ background: 'rgba(23, 182, 166, 0.18)', color: '#17B6A6', fontWeight: 700 }}>PHOTOS</span>
-                  <IconChevronRight size={16} />
-                </div>
-              </button>
-            )}
           </div>
         </div>
 
@@ -2221,20 +2165,6 @@ export function SettingsView({
               />
             )}
 
-            {onOpenAchievements && (
-              <SettingsCell
-                icon={<IconTrophy size={18} />}
-                iconGlow="amber"
-                title="Trip Squad Badges & Milestones"
-                subtitle="Squad achievements, awards & journey records"
-                badge="BADGES"
-                onClick={() => {
-                  triggerHaptic('light');
-                  onOpenAchievements();
-                }}
-              />
-            )}
-
             {onOpenFxRates && (
               <SettingsCell
                 icon={<span style={{ fontSize: '18px' }}>💱</span>}
@@ -2263,19 +2193,7 @@ export function SettingsView({
               />
             )}
 
-            {onOpenOfflineSnapshot && (
-              <SettingsCell
-                icon={<span style={{ fontSize: '18px' }}>💾</span>}
-                iconGlow="blue"
-                title="Offline Snapshot (.triptracker)"
-                subtitle="Export and restore 100% offline trip backups"
-                badge="BACKUP"
-                onClick={() => {
-                  triggerHaptic('light');
-                  onOpenOfflineSnapshot();
-                }}
-              />
-            )}
+            {/* Close Trip kept on trip-settings; Snapshot/Gallery live under Data & Backups */}
 
             {showCsvExport && onExportCsv && (
               <SettingsCell
@@ -2437,6 +2355,58 @@ export function SettingsView({
                 </div>
               </button>
             )}
+
+            <div className="settings-row-item" style={{ cursor: 'default' }}>
+              <div className="settings-row-left">
+                <div className="settings-squircle squircle-amber-glow">
+                  <span style={{ fontSize: '18px' }}>🎫</span>
+                </div>
+                <div className="settings-row-texts">
+                  <span className="settings-row-title">Pass reminders</span>
+                  <span className="settings-row-subtitle">Alert 24h (and 3h for flights/trains) before departure</span>
+                </div>
+              </div>
+              <div className="settings-row-right" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span className="settings-badge-pill" style={{ fontWeight: 600, fontSize: '10px' }}>
+                  {passRemindersOn ? 'ON' : 'OFF'}
+                </span>
+                <label style={{ position: 'relative', display: 'inline-block', width: '44px', height: '24px', margin: 0, cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={passRemindersOn}
+                    onChange={(e) => handleTogglePassReminders(e.target.checked)}
+                    aria-label="Pass reminders"
+                    style={{ opacity: 0, width: 0, height: 0, margin: 0 }}
+                  />
+                  <span
+                    style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      backgroundColor: passRemindersOn ? '#17B6A6' : 'var(--border-color)',
+                      transition: '0.2s ease',
+                      borderRadius: 'var(--border-radius-pill)',
+                    }}
+                  >
+                    <span
+                      style={{
+                        position: 'absolute',
+                        height: '18px',
+                        width: '18px',
+                        left: passRemindersOn ? '23px' : '3px',
+                        bottom: '3px',
+                        backgroundColor: 'white',
+                        transition: '0.2s ease',
+                        borderRadius: '50%',
+                        boxShadow: '0 1px 3px rgba(0,0,0,0.25)',
+                      }}
+                    />
+                  </span>
+                </label>
+              </div>
+            </div>
 
             {showGeotag && (
               <div className="settings-row-item" style={{ cursor: 'default' }}>
@@ -3235,27 +3205,7 @@ export function SettingsView({
         </SettingsSection>
       )}
 
-      {/* Pro Tips & Shortcuts (Desktop / Power Travelers) */}
-      {!searchQuery && (
-        <div className="settings-shortcuts-card">
-          <div className="settings-shortcuts-header">
-            <span>⌨️ Pro Tips &amp; Shortcuts</span>
-            <span style={{ fontSize: '10px', fontFamily: 'var(--font-family-mono)', color: 'var(--text-muted)' }}>QUICK REF</span>
-          </div>
-          <div className="settings-shortcut-row">
-            <span>Close settings drawer</span>
-            <kbd className="settings-kbd">Esc</kbd>
-          </div>
-          <div className="settings-shortcut-row">
-            <span>Swipe back to menu</span>
-            <kbd className="settings-kbd">Swipe Right</kbd>
-          </div>
-          <div className="settings-shortcut-row">
-            <span>Add new expense</span>
-            <kbd className="settings-kbd">+</kbd>
-          </div>
-        </div>
-      )}
+      {/* Pro Tips buried — keyboard shortcuts remain discoverable via Cmd+K / help */}
 
       {/* Superadmin Access Link at bottom */}
       {!isSuperadmin && (

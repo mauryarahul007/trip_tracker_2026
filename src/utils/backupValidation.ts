@@ -118,6 +118,7 @@ export function validateAndSanitizeBackup(jsonString: string): ValidationResult 
       category: String(e.category || 'other').slice(0, 50),
       date: String(e.date || '').slice(0, 10) || new Date().toISOString().slice(0, 10),
       splitMemberIds: Array.isArray(e.splitMemberIds) ? e.splitMemberIds.filter((id: any) => typeof id === 'string') : [],
+      receiptImage: undefined,
     });
   }
 

@@ -1,7 +1,7 @@
 {
   "name": "trip-tracker-2026",
   "private": true,
-  "version": "3.4.14",
+  "version": "3.5.0",
   "type": "module",
   "scripts": {
     "postinstall": "node scripts/install-git-hooks.mjs && node scripts/sync-maplibre-worker.mjs",
@@ -39,6 +39,7 @@
     "@capacitor/haptics": "^8.0.2",
     "@capacitor/ios": "8.2.0",
     "@capacitor/keyboard": "^8.0.5",
+    "@capacitor/local-notifications": "^8.3.1",
     "@capacitor/push-notifications": "8.1.2",
     "@capacitor/status-bar": "^8.0.3",
     "@capgo/capacitor-updater": "^8.51.13",

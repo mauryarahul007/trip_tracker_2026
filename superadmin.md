@@ -59,7 +59,7 @@ On mobile (<760px), the section rail is replaced by a tappable "current section"
 
 ### SEC.01 Flags (`AdminFlagsPage.tsx`)
 - **Feature flag switchboard** -- live toggles for:
-  - `enableGeotagging`, `enableAdvancedLocationSearch`, `enableAdvancedSplits`, `enableP2PSync`, `enableReceiptUpload`, `enableRecycleBin`, `enableKeywordTagging`, `enableDemoSeeding`, `enableMultiTripAnalytics`
+  - `enableGeotagging`, `enableAdvancedLocationSearch`, `enableAdvancedSplits`, `enableReceiptUpload`, `enableRecycleBin`, `enableKeywordTagging`, `enableDemoSeeding`, `enableMultiTripAnalytics`
   - `enableFeatureSuggestions` -- gates the Settings "Suggest a Feature" entry point itself. Off by default; enable globally, per-trip, or for one specific person via a User Override.
 - **3-tier hierarchy resolution**: Superadmin bypass (always ON) → User Override → Trip Override → Global Flag → Default.
 - **Cross-device, not per-browser**: flags/overrides are backed by `public.feature_flag_overrides` (migration 0064) and resolved server-side via `get_resolved_feature_flags()`. Earlier in this table's life, toggles only ever updated the admin's own browser's localStorage and never reached other devices -- that was fixed; see `docs/explanation-navigation-and-offline-fixes.md` for the class of bug and BUG-029 in `BUGS.md`.

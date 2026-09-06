@@ -7,6 +7,7 @@ import './index.css'
 import App from './App.tsx'
 import { RequireAuth } from './components/RequireAuth'
 import { ErrorBoundary } from './components/ErrorBoundary'
+import { JoinDeepLinkListener } from './components/JoinDeepLinkListener'
 import { UpdateBanner } from './components/UpdateBanner'
 import { registerServiceWorkerUpdateWatcher } from './services/serviceWorker'
 import { initAutoBugReporter } from './utils/autoBugReporter'
@@ -99,6 +100,7 @@ createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <UpdateBanner />
     <BrowserRouter basename={import.meta.env.BASE_URL}>
+      <JoinDeepLinkListener />
       <Routes>
         <Route
           path="/login"

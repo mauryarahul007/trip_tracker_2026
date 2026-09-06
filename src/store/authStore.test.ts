@@ -21,7 +21,10 @@ vi.mock('@capacitor/browser', () => ({
 }));
 
 vi.mock('@capacitor/app', () => ({
-  App: { addListener: (...args: unknown[]) => addListenerMock(...args) },
+  App: {
+    addListener: (...args: unknown[]) => addListenerMock(...args),
+    getLaunchUrl: vi.fn().mockResolvedValue(undefined),
+  },
 }));
 
 vi.mock('../services/supabaseClient', () => ({

@@ -116,6 +116,7 @@ type Props = {
   onAddExpense?: (template?: { title?: string; category?: string }) => void;
   onOpenSmartQuickAdd?: () => void;
   dirtyExpenseIds?: Set<string>;
+  conflictExpenseIds?: Set<string>;
 };
 
 export function ExpenseList({
@@ -160,6 +161,7 @@ export function ExpenseList({
   onAddExpense,
   onOpenSmartQuickAdd,
   dirtyExpenseIds,
+  conflictExpenseIds,
 }: Props) {
   const currencySymbol = getCurrencySymbol(trip?.baseCurrency || '');
 
@@ -811,6 +813,7 @@ export function ExpenseList({
                 {!collapsed && group.expenses.map((exp, idx) => {
                   const isPending = exp.id === pendingDeleteId;
                   const isDirty = dirtyExpenseIds?.has(exp.id) ?? false;
+                  const isConflict = conflictExpenseIds?.has(exp.id) ?? false;
                   const canManage = isAdmin || exp.createdByUserId === userId;
                   const isPayerDeleted = trip ? !trip.memberIds.includes(exp.paidBy) : false;
                   const hasDeletedParticipants = trip ? exp.splitMemberIds.some((id) => !trip.memberIds.includes(id)) : false;
@@ -887,9 +890,11 @@ export function ExpenseList({
                               {(exp.receiptImage || exp.receiptPath) && (
                                 <span style={{ fontSize: '11px', flexShrink: 0, opacity: 0.85 }} title="Photo receipt attached">📸</span>
                               )}
-                              {isDirty && (
+                              {isConflict ? (
+                                <span style={{ fontSize: '10px', flexShrink: 0, opacity: 0.9 }} title="Sync conflict — choose which version to keep" aria-label="Sync conflict">⚠️</span>
+                              ) : isDirty ? (
                                 <span style={{ fontSize: '10px', flexShrink: 0, opacity: 0.8 }} title="Pending sync" aria-label="Pending sync">🔄</span>
-                              )}
+                              ) : null}
                             </h4>
                             {(() => {
                               const isForeign = Boolean(

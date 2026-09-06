@@ -2428,6 +2428,24 @@ This document logs all meaningful technical decisions, library choices, design p
   - Icons are no longer in the segment control (labels + counts carry the meaning).
   - Bottom nav text is shorter than the full feature name; screen readers still get the complete description.
 
+---
+
+## 131. Stability & Product Enhancement Batch (v3.5.0)
+* **Context:** Multi-device trip use exposed presence crashes, view-transition noise, silent expense LWW, quota pressure from receipt base64, and missing native join deep links. Several flags/docs were stale after P2P removal.
+* **Decision:**
+  - **Presence:** `usePeerPresence` tears down existing channels via `removeChannel`/`untrack` before resubscribe (BUG-146+).
+  - **Nav VT:** Tab/edit transitions always go through `withViewTransition` (BUG-143+).
+  - **P2P:** Removed `enableP2PSync` flag/docs residue; historical bug category label kept.
+  - **Recycle Bin:** `enableRecycleBin` defaults on for travelers (soft-delete was already always on).
+  - **Quota:** Never persist `receiptImage` in zustand/localStorage; stage receipts in IDB; heal strips expense previews on QuotaExceeded.
+  - **Conflicts:** Detect dirty-vs-server expense divergence; wire `ConflictResolverModal`; pause queue flush until resolved.
+  - **Join deep links:** Canonical `https://trip-tracker.blackmaroon.in/.../join/{code}` + Android App Links / iOS Associated Domains + `appUrlOpen`/`getLaunchUrl` routing.
+  - **Pass reminders:** Local notifications (Capacitor) / web schedule flush; T−24h and T−3h for flights/trains; Preferences toggle default on.
+  - **Settings IA:** Dedupe Gallery/Snapshot/Badges/Pro Tips; keep Recycle Bin in Trip Tools; Snapshot/Gallery under Data & Backups.
+* **Trade-offs Accepted:**
+  - Conflict UX is expenses-only (checklist/notes/passes still whole-blob LWW).
+  - App Link verification requires filling Android SHA-256 / Apple Team ID in `public/.well-known/*` and a native rebuild + domain deploy.
+  - Full zustand→IndexedDB migration remains deferred.
 
 
 

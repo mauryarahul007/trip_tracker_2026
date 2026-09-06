@@ -139,7 +139,6 @@ public/
 | [How to Back Up and Restore Data](docs/howto-backup-restore.md) | Full-database JSON export/import |
 | [How to Export to Excel](docs/howto-export-csv.md) | Downloading the settlement spreadsheet |
 | [How to Track Bugs](docs/howto-bug-tracking.md) | Filing/resolving bugs via the CLI and the Bug Ledger |
-| [How Offline Peer Sync Works](docs/howto-offline-peer-sync.md) | What syncs, what queues, and when |
 | [How to Set Up Codemagic](docs/howto-codemagic-setup.md) | Native Android/iOS build pipeline setup |
 | [How to Navigate and Manage Trip Stacks](docs/howto-navigate-and-manage-trip-stacks.md) | Passport card gestures, keyboard navigation, and slide launcher |
 | [How to Generate and Share Trip Wrapped](docs/howto-generate-and-share-trip-wrapped.md) | Launching the story recap, custom awards, and canvas card export |
@@ -160,7 +159,6 @@ public/
 | [Explanation: Mobile Compositor & WebKit Performance](docs/explanation-mobile-compositor-and-webkit-performance.md) | Metal vs Skia pipelines, WebGL stalls, and GPU translate3d |
 | [Explanation: Trip Stack & Viewport Architecture](docs/explanation-trip-stack-and-viewport-architecture.md) | 3:4 card aspect ratio formula, bottom pinning, and LIFO back stack |
 | [Explanation: Offline Caching](docs/explanation-offline-caching.md) | Why stale-while-revalidate, and what it trades off |
-| [Explanation: Offline Peer Sync](docs/explanation-offline-peer-sync.md) | Sync model across devices/members |
 | [Explanation: Navigation & Offline Fixes](docs/explanation-navigation-and-offline-fixes.md) | Hierarchical back-navigation design |
 | [Explanation: Bug Tracking Architecture](docs/explanation-bug-tracking-architecture.md) | How reports flow from device to superadmin dashboard |
 

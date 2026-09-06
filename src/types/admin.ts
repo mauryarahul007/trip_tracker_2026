@@ -2,7 +2,6 @@ export type FeatureFlagKey =
   | 'enableGeotagging'
   | 'enableAdvancedLocationSearch'
   | 'enableAdvancedSplits'
-  | 'enableP2PSync'
   | 'enableReceiptUpload'
   | 'enableRecycleBin'
   | 'enableKeywordTagging'
@@ -16,7 +15,7 @@ export interface FeatureFlagMeta {
   key: FeatureFlagKey;
   label: string;
   description: string;
-  category: 'core' | 'geotagging' | 'splits' | 'sync' | 'admin' | 'security';
+  category: 'core' | 'geotagging' | 'splits' | 'admin' | 'security';
   defaultEnabledForUsers: boolean;
 }
 
