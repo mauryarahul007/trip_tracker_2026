@@ -178,9 +178,8 @@ export function SmartExpenseQuickAddModal({
   if (!isOpen) return null;
 
   return (
-    <div className="modal-backdrop" onClick={onClose} style={{ zIndex: 9999 }}>
+    <div className="modal-overlay" onClick={onClose}>
       <div
-        className="modal-content"
         onClick={(e) => e.stopPropagation()}
         style={{
           maxWidth: '480px',

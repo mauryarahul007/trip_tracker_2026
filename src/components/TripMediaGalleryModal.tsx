@@ -102,9 +102,8 @@ export function TripMediaGalleryModal({
   };
 
   return (
-    <div className="modal-backdrop" onClick={onClose} style={{ zIndex: 9999 }}>
+    <div className="modal-overlay" onClick={onClose}>
       <div
-        className="modal-content"
         onClick={(e) => e.stopPropagation()}
         style={{
           maxWidth: '720px',
@@ -177,6 +176,8 @@ export function TripMediaGalleryModal({
           style={{
             flex: 1,
             overflowY: 'auto',
+            overscrollBehavior: 'contain',
+            touchAction: 'pan-y',
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))',
             gap: '12px',
@@ -260,6 +261,8 @@ export function TripMediaGalleryModal({
               alignItems: 'center',
               justifyContent: 'center',
               padding: '16px',
+              touchAction: 'none',
+              overscrollBehavior: 'contain',
             }}
           >
             {/* Top Toolbar */}
