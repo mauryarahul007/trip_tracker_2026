@@ -27,6 +27,8 @@ function mapTrip(row: TripRow, memberIds: string[], groupIds: string[]): Trip {
     stops: Array.isArray(row.stops) ? (row.stops as unknown as TripStop[]) : undefined,
     checklist: Array.isArray(row.checklist) ? (row.checklist as unknown as ChecklistItem[]) : undefined,
     notes: Array.isArray(row.notes) ? (row.notes as unknown as TripNote[]) : undefined,
+    passes: Array.isArray(row.passes) ? (row.passes as unknown as import('../types').TravelPass[]) : undefined,
+    fxConfig: row.fx_config ? (row.fx_config as unknown as import('../types').TripFxConfig) : undefined,
     memberRoles: row.member_roles ? (row.member_roles as unknown as Record<string, import('../types').MemberRole>) : undefined,
     createdAt: new Date(row.created_at).getTime(),
     updatedAt: new Date(row.updated_at).getTime(),
@@ -265,6 +267,28 @@ export async function updateTripMemberRoles(id: string, memberRoles: Record<stri
     .from('trips')
     .update({
       member_roles: memberRoles,
+      updated_at: new Date().toISOString(),
+    } as any)
+    .eq('id', id);
+  if (error) throw error;
+}
+
+export async function updateTripPasses(id: string, passes: import('../types').TravelPass[]): Promise<void> {
+  const { error } = await supabase
+    .from('trips')
+    .update({
+      passes,
+      updated_at: new Date().toISOString(),
+    } as any)
+    .eq('id', id);
+  if (error) throw error;
+}
+
+export async function updateTripFxConfig(id: string, fxConfig: import('../types').TripFxConfig): Promise<void> {
+  const { error } = await supabase
+    .from('trips')
+    .update({
+      fx_config: fxConfig,
       updated_at: new Date().toISOString(),
     } as any)
     .eq('id', id);

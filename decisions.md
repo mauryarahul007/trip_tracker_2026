@@ -2128,6 +2128,33 @@ This document logs all meaningful technical decisions, library choices, design p
   - Itemized split calculations allocate fractional remainder pennies to the primary item assignee to guarantee mathematical equality (`sum(resolvedShares) === expense.amount`).
   - Web Speech API speech recognition falls back gracefully to live natural language typing input when microphone permissions are denied or browser recognition is unavailable.
 
+---
+
+## 117. Ultimate Travel Utility Suite: Digital Travel Pass & Ticket Wallet, On-Device Receipt OCR Scanner, Live Multi-Currency FX Engine & Offline Rate Lock, & Smart Packing Assistant (v3.4.0)
+* **Context:**
+  - Travelers carry multiple bookings, PDF vouchers, boarding passes, train PNRs, hotel confirmations, and activity passes that get buried across emails and messaging apps. They need a unified, offline-accessible digital wallet with 1-tap QR codes and instant SMS/email itinerary parsing.
+  - Splitting restaurant and grocery receipts line-by-line previously required typing every item manually. Travelers needed instant camera OCR scanning to extract dishes, prices, and tax/tip totals directly into itemized split mode.
+  - International trips often suffer from fluctuating exchange rates or bank forex markups. Travelers needed live exchange rates, a 30-day offline rate cache, and the ability to lock a custom trip exchange rate (e.g. rate at forex card purchase).
+  - Pre-trip packing lists are repetitive and error-prone. Travelers needed context-aware packing recommendations dynamically tailored to the trip's destination, duration, and real-time weather forecasts (temperature & rain conditions).
+* **Decision:**
+  1. **Digital Travel Pass & Ticket Wallet (`TravelPassWalletModal.tsx`, `passParser.ts`):**
+     - Supports 5 distinct pass categories: `flight` (indigo, air india, vistara, international), `train` (IRCTC, seat/berth numbers), `stay` (hotel, airbnb check-in, maps navigation), `transit` (cabs, rentals), and `activity` (event passes).
+     - Intelligent parser (`parseBookingText`) extracts reference PNRs, airline/train codes, origin/destination IATA pairs, dates, times, and seat assignments from raw confirmation SMS and email text.
+     - Generates high-contrast QR codes via `qrcode` for offline airport/ticket gate presentation, with full-screen ticket modal and screenshot attachments.
+  2. **On-Device Receipt OCR Scanner (`ReceiptScannerModal.tsx`, `receiptOcr.ts`):**
+     - HTML5 Canvas pre-processing pipeline converts camera/photo uploads into high-contrast grayscale with adaptive thresholding, downscaling large images to optimize parsing speed.
+     - Line-item extraction regex identifies individual items, subtotals, taxes, tips, discounts, and grand totals, and seamlessly maps them into `ExpenseForm.tsx`'s itemized receipt splitting mode.
+  3. **Live Multi-Currency FX Engine & Offline Rate Lock (`FxRatesModal.tsx`, `currencyFx.ts`):**
+     - Integrates European Central Bank data via the Frankfurter API with a 30-day local cache fallback for total offline reliability.
+     - Allows trip organizers to lock custom exchange rates and configure a foreign exchange markup percentage (e.g., +2% credit card forex fee) that feeds directly into expense conversion calculations.
+  4. **Smart Packing Assistant with Weather Context (`SmartPackingAssistantModal.tsx`, `packingSuggestions.ts`):**
+     - Contextual recommendation engine generates categorized packing lists (Clothing, Gear, Documents, Toiletries, Health, Weather gear) based on trip destination keywords, trip duration days, and live Open-Meteo weather forecasts (rain, extreme cold, tropical heat).
+     - Provides a 1-tap batch checklist creation action (`batchAddChecklistItems`) in `ChecklistNotesTab.tsx`.
+* **Trade-offs Accepted:**
+  - Client-side Canvas image pre-processing operates 100% on-device with zero server transmission, guaranteeing traveler privacy and zero cloud API costs.
+  - Custom trip FX rates override default baseline conversions when set, ensuring personal forex card exchange rates remain consistent across all trip expenses.
+
+
 
 
 

@@ -69,6 +69,38 @@ export interface Trip {
   coverImageUrl?: string; // background cover tourism photo URL
   checklist?: ChecklistItem[]; // Collaborative packing list and tasks
   notes?: TripNote[]; // Collaborative travel notes, Wi-Fi, PNRs
+  passes?: TravelPass[]; // Digital boarding passes, vouchers, and tickets
+  fxConfig?: TripFxConfig; // Custom exchange rates & forex markup
+}
+
+export type TravelPassType = 'flight' | 'train' | 'stay' | 'activity' | 'transit';
+
+export interface TravelPass {
+  id: string;
+  tripId: string;
+  type: TravelPassType;
+  title: string;
+  provider?: string;
+  referenceCode?: string;
+  startDateTime?: string;
+  endDateTime?: string;
+  origin?: string;
+  destination?: string;
+  seatOrRoom?: string;
+  address?: string;
+  phone?: string;
+  qrData?: string;
+  notes?: string;
+  assignedMemberIds?: string[];
+  attachmentUrl?: string;
+  attachmentName?: string;
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface TripFxConfig {
+  customRates?: Record<string, number>;
+  markupPercent?: number;
 }
 
 export interface Member {

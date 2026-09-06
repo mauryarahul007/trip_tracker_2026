@@ -16,6 +16,7 @@ import { triggerHaptic } from '../utils/haptics';
 import { convertCurrency, POPULAR_CURRENCIES } from '../utils/currencyConverter';
 import { parseReceiptText, type ExtractedReceiptData } from '../utils/receiptOcr';
 import { useFocusTrap } from '../hooks/useFocusTrap';
+import { ReceiptScannerModal } from './ReceiptScannerModal';
 
 // Minimal Web Speech API surface -- not in the default TS DOM lib, and
 // vendor-prefixed on most browsers that support it (Chrome/Edge/Safari).
@@ -292,8 +293,10 @@ export function ExpenseForm({
   // Live conversion calculation
   const numericAmount = parseFloat(amount) || 0;
   const currencyConversion = selectedCurrency !== baseCurrency && numericAmount > 0
-    ? convertCurrency(numericAmount, selectedCurrency, baseCurrency)
+    ? convertCurrency(numericAmount, selectedCurrency, baseCurrency, trip?.fxConfig?.customRates)
     : null;
+
+  const [isReceiptScannerOpen, setIsReceiptScannerOpen] = useState(false);
 
   // One-time nudge toward the split presets, shown only on the first-ever
   // new expense a person creates — dismissed permanently after they see it
@@ -1457,14 +1460,35 @@ export function ExpenseForm({
                   Assign items to participants who shared them
                 </div>
               </div>
-              <button
-                type="button"
-                className="secondary-btn"
-                style={{ padding: '4px 10px', fontSize: '11.5px', borderRadius: '8px' }}
-                onClick={handleAddReceiptItem}
-              >
-                ＋ Add Item
-              </button>
+              <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                <button
+                  type="button"
+                  className="secondary-btn"
+                  style={{
+                    padding: '4px 10px',
+                    fontSize: '11.5px',
+                    borderRadius: '8px',
+                    background: 'rgba(20, 184, 166, 0.1)',
+                    borderColor: 'rgba(20, 184, 166, 0.3)',
+                    color: 'var(--primary-accent)',
+                    fontWeight: 600,
+                  }}
+                  onClick={() => {
+                    triggerHaptic('light');
+                    setIsReceiptScannerOpen(true);
+                  }}
+                >
+                  📷 Scan OCR
+                </button>
+                <button
+                  type="button"
+                  className="secondary-btn"
+                  style={{ padding: '4px 10px', fontSize: '11.5px', borderRadius: '8px' }}
+                  onClick={handleAddReceiptItem}
+                >
+                  ＋ Add Item
+                </button>
+              </div>
             </div>
 
             {receiptItems.length === 0 ? (
@@ -1884,6 +1908,30 @@ export function ExpenseForm({
         </button>
       </div>
       </form>
+
+      {/* OCR Receipt Scanner Modal */}
+      <ReceiptScannerModal
+        isOpen={isReceiptScannerOpen}
+        onClose={() => setIsReceiptScannerOpen(false)}
+        currencySymbol={getCurrencySymbol(selectedCurrency)}
+        defaultMemberIds={visibleMembers.map((m) => m.id)}
+        onApplyReceipt={(config, detectedTotal, receiptBase64) => {
+          if (config.items && config.items.length > 0) {
+            setReceiptItems(config.items);
+            setSplitMode('itemized');
+          }
+          if (detectedTotal && (!amount || parseFloat(amount) === 0)) {
+            setAmount(String(detectedTotal));
+          }
+          if (config.tax) setReceiptTax(String(config.tax));
+          if (config.tip) setReceiptTip(String(config.tip));
+          if (config.discount) setReceiptDiscount(String(config.discount));
+          if (receiptBase64) {
+            setReceiptImage(receiptBase64);
+            setShowReceiptSection(true);
+          }
+        }}
+      />
     </div>
   );
 }

@@ -15,6 +15,7 @@ import {
 import { triggerHaptic } from '../utils/haptics';
 import { SwipeableRow } from './SwipeableRow';
 import { ConfettiBurst } from './ConfettiBurst';
+import { SmartPackingAssistantModal } from './SmartPackingAssistantModal';
 
 type Props = {
   trip: Trip;
@@ -47,6 +48,7 @@ export function ChecklistNotesTab({ trip, members }: Props) {
   const liveTrip = useTripStore((s) => s.trips.find((t) => t.id === trip.id)) || trip;
   const {
     addChecklistItem,
+    batchAddChecklistItems,
     toggleChecklistItem,
     updateChecklistItem,
     deleteChecklistItem,
@@ -58,6 +60,7 @@ export function ChecklistNotesTab({ trip, members }: Props) {
   const [viewMode, setViewMode] = useState<ViewMode>('checklist');
   const [checklistFilter, setChecklistFilter] = useState<ChecklistCategory>('all');
   const [noteFilter, setNoteFilter] = useState<NoteCategory>('all');
+  const [isPackingAssistantOpen, setIsPackingAssistantOpen] = useState(false);
 
   // Quick Add Checklist item state
   const [quickItemText, setQuickItemText] = useState('');
@@ -440,6 +443,48 @@ export function ChecklistNotesTab({ trip, members }: Props) {
               </div>
             </div>
           )}
+
+          {/* Smart Packing Assistant Trigger Banner */}
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              background: 'linear-gradient(135deg, rgba(15, 111, 99, 0.12), rgba(20, 184, 166, 0.06))',
+              border: '1px solid rgba(20, 184, 166, 0.25)',
+              borderRadius: '12px',
+              padding: '10px 14px',
+              marginBottom: '12px',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ fontSize: '1.25rem' }}>🧳</span>
+              <div>
+                <div style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)' }}>Need packing ideas?</div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Auto-generate lists based on destination & weather</div>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                triggerHaptic('light');
+                setIsPackingAssistantOpen(true);
+              }}
+              style={{
+                background: 'var(--primary-accent)',
+                color: '#fff',
+                border: 'none',
+                borderRadius: '8px',
+                padding: '6px 12px',
+                fontSize: '0.8rem',
+                fontWeight: 600,
+                cursor: 'pointer',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              Smart Assistant
+            </button>
+          </div>
 
           {/* Category Filter Chips */}
           <div className="checklist-category-scroll" role="group" aria-label="Filter checklist by category">
@@ -1178,6 +1223,16 @@ export function ChecklistNotesTab({ trip, members }: Props) {
           </div>
         </div>
       )}
+
+      {/* Smart Packing Assistant Modal */}
+      <SmartPackingAssistantModal
+        isOpen={isPackingAssistantOpen}
+        onClose={() => setIsPackingAssistantOpen(false)}
+        trip={liveTrip}
+        onBatchAddChecklist={async (items) => {
+          await batchAddChecklistItems(liveTrip.id, items);
+        }}
+      />
     </div>
   );
 }

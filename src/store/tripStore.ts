@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import type { Member, Group, Expense, Category, TripState, ExpenseLocation, Trip, TripStop, ChecklistItem, TripNote, MemberRole, ItemizedReceiptConfig } from '../types';
+import type { Member, Group, Expense, Category, TripState, ExpenseLocation, Trip, TripStop, ChecklistItem, TripNote, MemberRole, ItemizedReceiptConfig, TravelPass, TripFxConfig } from '../types';
 import type { FeatureFlagKey } from '../types/admin';
 import { DEFAULT_FEATURE_FLAGS, isFeatureActive } from '../utils/featureFlags';
 import { buildAutoGroupName } from '../utils/groupNaming';
@@ -16,6 +16,8 @@ import {
   updateTripChecklist,
   updateTripNotes,
   updateTripMemberRoles,
+  updateTripPasses,
+  updateTripFxConfig,
   archiveTripRow,
   freezeTripRow,
   closeTripRow,
@@ -160,12 +162,18 @@ interface TripStore extends TripState {
 
   // Checklist & Notes Actions
   addChecklistItem: (tripId: string, item: Omit<ChecklistItem, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
+  batchAddChecklistItems: (tripId: string, items: Array<Omit<ChecklistItem, 'id' | 'createdAt' | 'updatedAt'>>) => Promise<void>;
   toggleChecklistItem: (tripId: string, itemId: string) => Promise<void>;
   updateChecklistItem: (tripId: string, itemId: string, patch: Partial<Omit<ChecklistItem, 'id' | 'createdAt'>>) => Promise<void>;
   deleteChecklistItem: (tripId: string, itemId: string) => Promise<void>;
   addTripNote: (tripId: string, note: Omit<TripNote, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
   updateTripNote: (tripId: string, noteId: string, patch: Partial<Omit<TripNote, 'id' | 'createdAt'>>) => Promise<void>;
   deleteTripNote: (tripId: string, noteId: string) => Promise<void>;
+
+  // Travel Passes & FX Actions
+  saveTravelPass: (tripId: string, pass: TravelPass) => Promise<void>;
+  deleteTravelPass: (tripId: string, passId: string) => Promise<void>;
+  setTripFxConfig: (tripId: string, fxConfig: TripFxConfig) => Promise<void>;
 
   // Per-user, per-trip push-notification mute (see migration 0070) --
   // suppresses FCM pushes only, the in-app panel still gets the row.
@@ -1281,6 +1289,33 @@ export const useTripStore = create<TripStore>()(
       }
     },
 
+    batchAddChecklistItems: async (tripId, itemsData) => {
+      const now = Date.now();
+      const newItems: ChecklistItem[] = itemsData.map((item, index) => ({
+        id: newId(),
+        ...item,
+        createdAt: now + index,
+        updatedAt: now + index,
+      }));
+
+      const currentTrip = get().trips.find((t) => t.id === tripId);
+      const currentList = currentTrip?.checklist || [];
+      const updatedList = [...newItems, ...currentList];
+
+      set((state) => ({
+        trips: state.trips.map((t) => (t.id === tripId ? { ...t, checklist: updatedList, updatedAt: now } : t)),
+        lastModifiedAt: now,
+      }));
+
+      if (!isMissingSupabaseEnv) {
+        try {
+          await updateTripChecklist(tripId, updatedList);
+        } catch (e) {
+          console.warn('Failed to sync batch checklist items to backend:', e);
+        }
+      }
+    },
+
     toggleChecklistItem: async (tripId, itemId) => {
       const currentTrip = get().trips.find((t) => t.id === tripId);
       const currentList = currentTrip?.checklist || [];
@@ -1424,6 +1459,65 @@ export const useTripStore = create<TripStore>()(
           await updateTripNotes(tripId, updatedNotes);
         } catch (e) {
           console.warn('Failed to sync trip note deletion to backend:', e);
+        }
+      }
+    },
+
+    saveTravelPass: async (tripId, pass) => {
+      const now = Date.now();
+      const currentTrip = get().trips.find((t) => t.id === tripId);
+      const currentPasses = currentTrip?.passes || [];
+      const exists = currentPasses.some((p) => p.id === pass.id);
+      const updatedPasses = exists
+        ? currentPasses.map((p) => (p.id === pass.id ? { ...pass, updatedAt: now } : p))
+        : [{ ...pass, createdAt: pass.createdAt || now, updatedAt: now }, ...currentPasses];
+
+      set((state) => ({
+        trips: state.trips.map((t) => (t.id === tripId ? { ...t, passes: updatedPasses, updatedAt: now } : t)),
+        lastModifiedAt: now,
+      }));
+
+      if (!isMissingSupabaseEnv) {
+        try {
+          await updateTripPasses(tripId, updatedPasses);
+        } catch (e) {
+          console.warn('Failed to sync travel pass to backend:', e);
+        }
+      }
+    },
+
+    deleteTravelPass: async (tripId, passId) => {
+      const now = Date.now();
+      const currentTrip = get().trips.find((t) => t.id === tripId);
+      const currentPasses = currentTrip?.passes || [];
+      const updatedPasses = currentPasses.filter((p) => p.id !== passId);
+
+      set((state) => ({
+        trips: state.trips.map((t) => (t.id === tripId ? { ...t, passes: updatedPasses, updatedAt: now } : t)),
+        lastModifiedAt: now,
+      }));
+
+      if (!isMissingSupabaseEnv) {
+        try {
+          await updateTripPasses(tripId, updatedPasses);
+        } catch (e) {
+          console.warn('Failed to sync travel pass deletion to backend:', e);
+        }
+      }
+    },
+
+    setTripFxConfig: async (tripId, fxConfig) => {
+      const now = Date.now();
+      set((state) => ({
+        trips: state.trips.map((t) => (t.id === tripId ? { ...t, fxConfig, updatedAt: now } : t)),
+        lastModifiedAt: now,
+      }));
+
+      if (!isMissingSupabaseEnv) {
+        try {
+          await updateTripFxConfig(tripId, fxConfig);
+        } catch (e) {
+          console.warn('Failed to sync trip fx config to backend:', e);
         }
       }
     },

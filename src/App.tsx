@@ -112,6 +112,12 @@ const TripMediaGalleryModal = lazy(lazyImport(() =>
 const TravelDossierModal = lazy(lazyImport(() =>
   import('./components/TravelDossierModal').then((m) => ({ default: m.TravelDossierModal }))
 ));
+const TravelPassWalletModal = lazy(lazyImport(() =>
+  import('./components/TravelPassWalletModal').then((m) => ({ default: m.TravelPassWalletModal }))
+));
+const FxRatesModal = lazy(lazyImport(() =>
+  import('./components/FxRatesModal').then((m) => ({ default: m.FxRatesModal }))
+));
 import { usePeerPresence } from './hooks/usePeerPresence';
 import type { AdminTab } from './components/admin/AdminPortalLayout';
 const AdminPortalLayout = lazy(lazyImport(() =>
@@ -171,6 +177,9 @@ export default function App() {
     importDatabase,
     clearDatabase,
     loadDemoTrip,
+    saveTravelPass,
+    deleteTravelPass,
+    setTripFxConfig,
   } = useTripStore();
 
   const userEmail = useAuthStore((s) => s.session?.user.email ?? null);
@@ -450,6 +459,8 @@ export default function App() {
   const [showOfflineSnapshot, setShowOfflineSnapshot] = useState(false);
   const [showMediaGallery, setShowMediaGallery] = useState(false);
   const [showTravelDossier, setShowTravelDossier] = useState(false);
+  const [showTravelPasses, setShowTravelPasses] = useState(false);
+  const [showFxRates, setShowFxRates] = useState(false);
   const activePeers = usePeerPresence(activeTripId);
 
   // Global Traveler Keyboard Shortcuts (Cmd+K, N for expense, 1-4 tabs, / search, ? help)
@@ -1643,6 +1654,8 @@ export default function App() {
   useHistoryBack(showCommandPalette, () => setShowCommandPalette(false));
   useHistoryBack(showTripWrapped, () => setShowTripWrapped(false));
   useHistoryBack(showShortcutsModal, () => setShowShortcutsModal(false));
+  useHistoryBack(showTravelPasses, () => setShowTravelPasses(false));
+  useHistoryBack(showFxRates, () => setShowFxRates(false));
 
   // Escape key — the desktop equivalent of the back-gesture wiring above,
   // for the same set of overlay modals (excludes tab/trip navigation).
@@ -1655,10 +1668,11 @@ export default function App() {
   useEscapeKey(showRouteModal, () => setShowRouteModal(false));
   useEscapeKey(showAchievements, () => setShowAchievements(false));
   useEscapeKey(showGlobalSettings, () => setShowGlobalSettings(false));
-  useEscapeKey(!!confirmRequest, () => setConfirmRequest(null));
-  useEscapeKey(showTripWrapped, () => setShowTripWrapped(false));
   useEscapeKey(showCommandPalette, () => setShowCommandPalette(false));
+  useEscapeKey(showTripWrapped, () => setShowTripWrapped(false));
   useEscapeKey(showShortcutsModal, () => setShowShortcutsModal(false));
+  useEscapeKey(showTravelPasses, () => setShowTravelPasses(false));
+  useEscapeKey(showFxRates, () => setShowFxRates(false));
 
   // Loading view
   if (!initialized) {
@@ -2386,6 +2400,20 @@ export default function App() {
           description={`${formatDateRange(activeTrip.startDate || '', activeTrip.endDate || '')} · ${visibleMembers.length} member${visibleMembers.length === 1 ? '' : 's'} · ${activeTripExpenses.length} expense${activeTripExpenses.length === 1 ? '' : 's'}`}
           items={[
             {
+              id: 'travel-passes',
+              label: '🎫 Travel Pass & Ticket Wallet',
+              subtitle: 'Boarding passes, train PNRs, hotel bookings & offline QR',
+              icon: <span style={{ fontSize: '18px' }}>🎫</span>,
+              onClick: () => setShowTravelPasses(true),
+            },
+            {
+              id: 'fx-rates',
+              label: '💱 Multi-Currency FX Engine',
+              subtitle: 'Live rates, offline lock & forex markup converter',
+              icon: <span style={{ fontSize: '18px' }}>💱</span>,
+              onClick: () => setShowFxRates(true),
+            },
+            {
               id: 'smart-quick-add',
               label: '⚡ Smart Voice Quick-Add',
               subtitle: '1-tap voice & natural language expense logger',
@@ -2624,6 +2652,20 @@ export default function App() {
               setActiveTab('members');
             },
           });
+          suggestions.push({
+            id: 'smart-passes',
+            title: 'Digital Travel Pass & Ticket Wallet',
+            subtitle: 'Boarding passes, train tickets, hotel vouchers & QR codes',
+            icon: <span style={{ fontSize: '15px' }}>🎫</span>,
+            action: () => setShowTravelPasses(true),
+          });
+          suggestions.push({
+            id: 'smart-fx',
+            title: 'Live Multi-Currency FX Rates & Converter',
+            subtitle: 'View live forex rates, offline rate lock & markup',
+            icon: <span style={{ fontSize: '15px' }}>💱</span>,
+            action: () => setShowFxRates(true),
+          });
         }
         return (
           <CommandPalette
@@ -2781,6 +2823,40 @@ export default function App() {
             categories={categories}
             balances={balances}
             settlements={transfers}
+          />
+        </Suspense>
+      )}
+
+      {/* Digital Travel Pass & Ticket Wallet Modal */}
+      {showTravelPasses && activeTrip && (
+        <Suspense fallback={null}>
+          <TravelPassWalletModal
+            isOpen={showTravelPasses}
+            onClose={() => setShowTravelPasses(false)}
+            trip={activeTrip}
+            members={members}
+            isAdmin={isAdmin}
+            onSavePass={async (pass) => {
+              await saveTravelPass(activeTrip.id, pass);
+            }}
+            onDeletePass={async (passId) => {
+              await deleteTravelPass(activeTrip.id, passId);
+            }}
+          />
+        </Suspense>
+      )}
+
+      {/* Multi-Currency FX Rates & Calculator Modal */}
+      {showFxRates && activeTrip && (
+        <Suspense fallback={null}>
+          <FxRatesModal
+            isOpen={showFxRates}
+            onClose={() => setShowFxRates(false)}
+            trip={activeTrip}
+            isAdmin={isAdmin}
+            onSaveFxConfig={async (config) => {
+              await setTripFxConfig(activeTrip.id, config);
+            }}
           />
         </Suspense>
       )}

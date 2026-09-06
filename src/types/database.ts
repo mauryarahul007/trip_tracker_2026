@@ -42,6 +42,8 @@ export interface Database {
           stops: unknown;
           checklist?: unknown;
           notes?: unknown;
+          passes?: unknown;
+          fx_config?: unknown;
           member_roles?: Record<string, string> | null;
           created_at: string;
           updated_at: string;
@@ -61,6 +63,8 @@ export interface Database {
           stops?: unknown;
           checklist?: unknown;
           notes?: unknown;
+          passes?: unknown;
+          fx_config?: unknown;
           member_roles?: Record<string, string> | null;
         };
         Update: Partial<{
@@ -75,6 +79,8 @@ export interface Database {
           stops: unknown;
           checklist?: unknown;
           notes?: unknown;
+          passes?: unknown;
+          fx_config?: unknown;
           member_roles?: Record<string, string> | null;
           updated_at: string;
         }>;
