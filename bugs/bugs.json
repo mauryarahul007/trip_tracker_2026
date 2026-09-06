@@ -4926,5 +4926,57 @@
     "resolvedBy": "claude-cli",
     "resolvedAt": "2026-09-06T16:31:06.185Z",
     "resolutionNote": "Fixed in commit bab6e8e: switched modal-backdrop→modal-overlay; added touch-action and overscroll-behavior to grid and lightbox"
+  },
+  {
+    "id": "BUG-159",
+    "title": "Missing autocomplete attributes on email/password inputs breaks autofill on mobile",
+    "description": "Missing autocomplete attributes on email/password inputs breaks autofill on mobile",
+    "severity": "medium",
+    "category": "ui-ux",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-09-06T16:33:26.068Z",
+    "updatedAt": "2026-09-06T16:33:39.773Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-09-06T16:33:39.773Z",
+    "resolutionNote": "Added autoComplete attributes to all email/password inputs across LoginScreen, ResetPasswordScreen, SuperadminAuthModal, AdminToolsPage"
+  },
+  {
+    "id": "BUG-160",
+    "title": "MembersGroupsTab typeahead dropdown scroll bleeds to parent on touch",
+    "description": "MembersGroupsTab typeahead dropdown scroll bleeds to parent on touch",
+    "severity": "medium",
+    "category": "ui-ux",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-09-06T16:33:26.303Z",
+    "updatedAt": "2026-09-06T16:33:39.980Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-09-06T16:33:39.980Z",
+    "resolutionNote": "Added overscrollBehavior: contain and touchAction: pan-y to MembersGroupsTab typeahead dropdown"
   }
 ]

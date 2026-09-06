@@ -652,6 +652,8 @@ export function MembersGroupsTab({
                   padding: '6px',
                   maxHeight: '260px',
                   overflowY: 'auto',
+                  overscrollBehavior: 'contain',
+                  touchAction: 'pan-y',
                   boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.4), 0 8px 10px -6px rgba(0, 0, 0, 0.3)',
                   border: '1px solid var(--border-color)',
                   backdropFilter: 'blur(16px)',

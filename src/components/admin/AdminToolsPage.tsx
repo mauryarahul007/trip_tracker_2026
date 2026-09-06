@@ -462,6 +462,7 @@ export function AdminToolsPage({ categories, trips, expenses, onRefresh, isRefre
                 type="password"
                 required
                 minLength={8}
+                autoComplete="new-password"
                 className="ops-input"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
@@ -475,6 +476,7 @@ export function AdminToolsPage({ categories, trips, expenses, onRefresh, isRefre
                 type="password"
                 required
                 minLength={8}
+                autoComplete="new-password"
                 className="ops-input"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}

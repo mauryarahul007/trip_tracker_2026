@@ -271,6 +271,7 @@ export function SuperadminAuthModal({ isOpen, onClose, onSuccess }: Props) {
                 id="superadmin-email"
                 type="email"
                 required
+                autoComplete="email"
                 className="input-field"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -305,6 +306,7 @@ export function SuperadminAuthModal({ isOpen, onClose, onSuccess }: Props) {
                 id="superadmin-password"
                 type="password"
                 required
+                autoComplete="current-password"
                 className="input-field"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -332,6 +334,7 @@ export function SuperadminAuthModal({ isOpen, onClose, onSuccess }: Props) {
                 id="superadmin-email"
                 type="email"
                 required
+                autoComplete="email"
                 className="input-field"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}

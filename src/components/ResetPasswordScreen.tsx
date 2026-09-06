@@ -111,6 +111,7 @@ export function ResetPasswordScreen() {
                 type="password"
                 required
                 minLength={8}
+                autoComplete="new-password"
                 className="input-field"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -125,6 +126,7 @@ export function ResetPasswordScreen() {
                 type="password"
                 required
                 minLength={8}
+                autoComplete="new-password"
                 className="input-field"
                 value={confirm}
                 onChange={(e) => setConfirm(e.target.value)}

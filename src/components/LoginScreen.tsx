@@ -327,6 +327,7 @@ export function LoginScreen() {
                     id="admin-email"
                     type="email"
                     required
+                    autoComplete="email"
                     className="input-field login-input-field"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
@@ -354,6 +355,7 @@ export function LoginScreen() {
                     id="admin-password"
                     type="password"
                     required
+                    autoComplete="current-password"
                     className="input-field login-input-field font-mono"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
@@ -379,6 +381,7 @@ export function LoginScreen() {
                     id="admin-reset-email"
                     type="email"
                     required
+                    autoComplete="email"
                     className="input-field login-input-field"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
