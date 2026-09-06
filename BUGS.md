@@ -9,23 +9,440 @@
 
 | Metric | Count | Status Notes |
 | :--- | :--- | :--- |
-| **Total Tracked** | **166** | All recorded bugs across sessions |
-| **🟢 Open** | **0** | No critical blockers, 0 High |
+| **Total Tracked** | **172** | All recorded bugs across sessions |
+| **🟢 Open** | **12** | 🚨 **12 CRITICAL**, 0 High |
 | **🟡 In Progress** | **0** | Active investigation or fix |
-| **✅ Resolved** | **133** | Verified & closed |
-| **⚪ Won't Fix** | **33** | Expected behavior / deferred |
+| **✅ Resolved** | **134** | Verified & closed |
+| **⚪ Won't Fix** | **26** | Expected behavior / deferred |
 
 ---
 
 ## 🚨 Active Bugs (Open & In Progress)
 
-*🎉 No active open bugs! Great job team.* 
+| ID | Severity | Category | Title | Found By | Status |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **[BUG-143](#bug-143)** | 🔴 **CRITICAL** | `general` | Transition was aborted because of invalid state | `auto-crash-handler` | 🟢 Open |
+| **[BUG-144](#bug-144)** | 🔴 **CRITICAL** | `general` | Transition was aborted because of invalid state | `auto-crash-handler` | 🟢 Open |
+| **[BUG-145](#bug-145)** | 🔴 **CRITICAL** | `general` | Importing a module script failed. | `auto-crash-handler` | 🟢 Open |
+| **[BUG-146](#bug-146)** | 🔴 **CRITICAL** | `general` | cannot add `presence` callbacks for realtime:trip_presence:137dfbc0-bf90-475c-89d0-86b57f68ae0a after `subscribe()`. | `auto-crash-handler` | 🟢 Open |
+| **[BUG-147](#bug-147)** | 🔴 **CRITICAL** | `general` | OverflowMenu is not defined | `auto-crash-handler` | 🟢 Open |
+| **[BUG-148](#bug-148)** | 🔴 **CRITICAL** | `general` | cannot add `presence` callbacks for realtime:trip_presence:137dfbc0-bf90-475c-89d0-86b57f68ae0a after `subscribe()`. | `auto-crash-handler` | 🟢 Open |
+| **[BUG-149](#bug-149)** | 🔴 **CRITICAL** | `general` | cannot add `presence` callbacks for realtime:trip_presence:137dfbc0-bf90-475c-89d0-86b57f68ae0a after `subscribe()`. | `auto-crash-handler` | 🟢 Open |
+| **[BUG-150](#bug-150)** | 🔴 **CRITICAL** | `general` | cannot add `presence` callbacks for realtime:trip_presence:137dfbc0-bf90-475c-89d0-86b57f68ae0a after `subscribe()`. | `auto-crash-handler` | 🟢 Open |
+| **[BUG-151](#bug-151)** | 🔴 **CRITICAL** | `general` | cannot add `presence` callbacks for realtime:trip_presence:137dfbc0-bf90-475c-89d0-86b57f68ae0a after `subscribe()`. | `auto-crash-handler` | 🟢 Open |
+| **[BUG-152](#bug-152)** | 🔴 **CRITICAL** | `general` | cannot add `presence` callbacks for realtime:trip_presence:137dfbc0-bf90-475c-89d0-86b57f68ae0a after `subscribe()`. | `auto-crash-handler` | 🟢 Open |
+| **[BUG-153](#bug-153)** | 🔴 **CRITICAL** | `general` | Transition was aborted because of invalid state | `auto-crash-handler` | 🟢 Open |
+| **[BUG-154](#bug-154)** | 🔴 **CRITICAL** | `general` | Transition was skipped | `auto-crash-handler` | 🟢 Open |
 
 ---
 
 ## 📖 Detailed Active Bug Specs
 
-*No active bug details to display.*
+### BUG-143: Transition was aborted because of invalid state
+
+- **Severity**: `CRITICAL` | **Category**: `general` | **Status**: `open`
+- **Found By**: `auto-crash-handler` on 4/9/2026 (web)
+- **Route**: `#nav-2` (Online: `true`)
+
+**Description**:
+Automatically captured unhandled rejection.
+
+No stack trace available.
+
+**Expected**: App runs without throwing.
+
+**Actual**: Transition was aborted because of invalid state
+
+---
+
+### BUG-144: Transition was aborted because of invalid state
+
+- **Severity**: `CRITICAL` | **Category**: `general` | **Status**: `open`
+- **Found By**: `auto-crash-handler` on 4/9/2026 (web)
+- **Route**: `#nav-3` (Online: `true`)
+
+**Description**:
+Automatically captured unhandled rejection.
+
+No stack trace available.
+
+**Expected**: App runs without throwing.
+
+**Actual**: Transition was aborted because of invalid state
+
+---
+
+### BUG-145: Importing a module script failed.
+
+- **Severity**: `CRITICAL` | **Category**: `general` | **Status**: `open`
+- **Found By**: `auto-crash-handler` on 4/9/2026 (web)
+- **Route**: `#nav-1` (Online: `true`)
+
+**Description**:
+Automatically captured react crash.
+
+
+Lazy@unknown:0:0
+Suspense@unknown:0:0
+div@unknown:0:0
+div@unknown:0:0
+pfe@https://trip-tracker.blackmaroon.in/assets/index-DWxV1rqw.js:876:76685
+H9@
+R9@https://trip-tracker.blackmaroon.in/assets/index-DWxV1rqw.js:877:36540
+Ct@https://trip-tracker.blackmaroon.in/assets/index-DWxV1rqw.js:12:4272
+zt@https://trip-tracker.blackmaroon.in/assets/index-DWxV1rqw.js:12:8885
+Rt@https://trip-tracker.blackmaroon.in/assets/index-DWxV1rqw.js:12:8023
+Tn@https://trip-tracker.blackmaroon.in/assets/index-DWxV1rqw.js:12:18283
+
+**Expected**: App runs without throwing.
+
+**Actual**: Importing a module script failed.
+
+**Diagnostic Trace / Stack**:
+```text
+
+Lazy@unknown:0:0
+Suspense@unknown:0:0
+div@unknown:0:0
+div@unknown:0:0
+pfe@https://trip-tracker.blackmaroon.in/assets/index-DWxV1rqw.js:876:76685
+H9@
+R9@https://trip-tracker.blackmaroon.in/assets/index-DWxV1rqw.js:877:36540
+Ct@https://trip-tracker.blackmaroon.in/assets/index-DWxV1rqw.js:12:4272
+zt@https://trip-tracker.blackmaroon.in/assets/index-DWxV1rqw.js:12:8885
+Rt@https://trip-tracker.blackmaroon.in/assets/index-DWxV1rqw.js:12:8023
+Tn@https://trip-tracker.blackmaroon.in/assets/index-DWxV1rqw.js:12:18283
+```
+
+---
+
+### BUG-146: cannot add `presence` callbacks for realtime:trip_presence:137dfbc0-bf90-475c-89d0-86b57f68ae0a after `subscribe()`.
+
+- **Severity**: `CRITICAL` | **Category**: `general` | **Status**: `open`
+- **Found By**: `auto-crash-handler` on 5/9/2026 (web)
+- **Route**: `#/` (Online: `true`)
+
+**Description**:
+Automatically captured react crash.
+
+Error: cannot add `presence` callbacks for realtime:trip_presence:137dfbc0-bf90-475c-89d0-86b57f68ae0a after `subscribe()`.
+    at RealtimeChannel.on (http://localhost:5173/node_modules/.vite/deps/@supabase_supabase-js.js?v=2536d9d8:7171:10)
+    at http://localhost:5173/src/hooks/usePeerPresence.ts?t=1788548665785:17:11
+    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:12900:13)
+    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:850:66)
+    at commitHookEffectListMount (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:6615:153)
+    at commitHookPassiveMountEffects (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:6650:55)
+    at commitPassiveMountOnFiber (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:7616:22)
+    at recursivelyTraversePassiveMountEffects (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:7604:5)
+    at commitPassiveMountOnFiber (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:7620:6)
+    at recursivelyTraversePassiveMountEffects (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:7604:5)
+
+**Expected**: App runs without throwing.
+
+**Actual**: cannot add `presence` callbacks for realtime:trip_presence:137dfbc0-bf90-475c-89d0-86b57f68ae0a after `subscribe()`.
+
+**Diagnostic Trace / Stack**:
+```text
+Error: cannot add `presence` callbacks for realtime:trip_presence:137dfbc0-bf90-475c-89d0-86b57f68ae0a after `subscribe()`.
+    at RealtimeChannel.on (http://localhost:5173/node_modules/.vite/deps/@supabase_supabase-js.js?v=2536d9d8:7171:10)
+    at http://localhost:5173/src/hooks/usePeerPresence.ts?t=1788548665785:17:11
+    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:12900:13)
+    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:850:66)
+    at commitHookEffectListMount (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:6615:153)
+    at commitHookPassiveMountEffects (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:6650:55)
+    at commitPassiveMountOnFiber (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:7616:22)
+    at recursivelyTraversePassiveMountEffects (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:7604:5)
+    at commitPassiveMountOnFiber (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:7620:6)
+    at recursivelyTraversePassiveMountEffects (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:7604:5)
+```
+
+---
+
+### BUG-147: OverflowMenu is not defined
+
+- **Severity**: `CRITICAL` | **Category**: `general` | **Status**: `open`
+- **Found By**: `auto-crash-handler` on 5/9/2026 (web)
+- **Route**: `#nav-1` (Online: `true`)
+
+**Description**:
+Automatically captured react crash.
+
+ReferenceError: OverflowMenu is not defined
+    at App (http://localhost:5173/src/App.tsx?t=1788549344342:2094:35)
+    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:12864:12)
+    at renderWithHooks (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:4211:19)
+    at updateFunctionComponent (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:5567:16)
+    at beginWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:6138:20)
+    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:850:66)
+    at performUnitOfWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:8427:92)
+    at workLoopSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:8323:37)
+    at renderRootSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:8307:6)
+    at performWorkOnRoot (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:7992:27)
+
+**Expected**: App runs without throwing.
+
+**Actual**: OverflowMenu is not defined
+
+**Diagnostic Trace / Stack**:
+```text
+ReferenceError: OverflowMenu is not defined
+    at App (http://localhost:5173/src/App.tsx?t=1788549344342:2094:35)
+    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:12864:12)
+    at renderWithHooks (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:4211:19)
+    at updateFunctionComponent (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:5567:16)
+    at beginWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:6138:20)
+    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:850:66)
+    at performUnitOfWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:8427:92)
+    at workLoopSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:8323:37)
+    at renderRootSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:8307:6)
+    at performWorkOnRoot (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:7992:27)
+```
+
+---
+
+### BUG-148: cannot add `presence` callbacks for realtime:trip_presence:137dfbc0-bf90-475c-89d0-86b57f68ae0a after `subscribe()`.
+
+- **Severity**: `CRITICAL` | **Category**: `general` | **Status**: `open`
+- **Found By**: `auto-crash-handler` on 5/9/2026 (web)
+- **Route**: `#/` (Online: `true`)
+
+**Description**:
+Automatically captured react crash.
+
+Error: cannot add `presence` callbacks for realtime:trip_presence:137dfbc0-bf90-475c-89d0-86b57f68ae0a after `subscribe()`.
+    at RealtimeChannel.on (http://localhost:5173/node_modules/.vite/deps/@supabase_supabase-js.js?v=2536d9d8:7171:10)
+    at http://localhost:5173/src/hooks/usePeerPresence.ts?t=1788550829223:17:11
+    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:12900:13)
+    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:850:66)
+    at commitHookEffectListMount (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:6615:153)
+    at commitHookPassiveMountEffects (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:6650:55)
+    at commitPassiveMountOnFiber (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:7616:22)
+    at recursivelyTraversePassiveMountEffects (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:7604:5)
+    at commitPassiveMountOnFiber (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:7620:6)
+    at recursivelyTraversePassiveMountEffects (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:7604:5)
+
+**Expected**: App runs without throwing.
+
+**Actual**: cannot add `presence` callbacks for realtime:trip_presence:137dfbc0-bf90-475c-89d0-86b57f68ae0a after `subscribe()`.
+
+**Diagnostic Trace / Stack**:
+```text
+Error: cannot add `presence` callbacks for realtime:trip_presence:137dfbc0-bf90-475c-89d0-86b57f68ae0a after `subscribe()`.
+    at RealtimeChannel.on (http://localhost:5173/node_modules/.vite/deps/@supabase_supabase-js.js?v=2536d9d8:7171:10)
+    at http://localhost:5173/src/hooks/usePeerPresence.ts?t=1788550829223:17:11
+    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:12900:13)
+    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:850:66)
+    at commitHookEffectListMount (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:6615:153)
+    at commitHookPassiveMountEffects (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:6650:55)
+    at commitPassiveMountOnFiber (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:7616:22)
+    at recursivelyTraversePassiveMountEffects (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:7604:5)
+    at commitPassiveMountOnFiber (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:7620:6)
+    at recursivelyTraversePassiveMountEffects (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:7604:5)
+```
+
+---
+
+### BUG-149: cannot add `presence` callbacks for realtime:trip_presence:137dfbc0-bf90-475c-89d0-86b57f68ae0a after `subscribe()`.
+
+- **Severity**: `CRITICAL` | **Category**: `general` | **Status**: `open`
+- **Found By**: `auto-crash-handler` on 5/9/2026 (web)
+- **Route**: `#/` (Online: `true`)
+
+**Description**:
+Automatically captured react crash.
+
+Error: cannot add `presence` callbacks for realtime:trip_presence:137dfbc0-bf90-475c-89d0-86b57f68ae0a after `subscribe()`.
+    at RealtimeChannel.on (http://localhost:5173/node_modules/.vite/deps/@supabase_supabase-js.js?v=2536d9d8:7171:10)
+    at http://localhost:5173/src/hooks/usePeerPresence.ts?t=1788550839991:17:11
+    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:12900:13)
+    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:850:66)
+    at commitHookEffectListMount (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:6615:153)
+    at commitHookPassiveMountEffects (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:6650:55)
+    at commitPassiveMountOnFiber (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:7616:22)
+    at recursivelyTraversePassiveMountEffects (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:7604:5)
+    at commitPassiveMountOnFiber (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:7620:6)
+    at recursivelyTraversePassiveMountEffects (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:7604:5)
+
+**Expected**: App runs without throwing.
+
+**Actual**: cannot add `presence` callbacks for realtime:trip_presence:137dfbc0-bf90-475c-89d0-86b57f68ae0a after `subscribe()`.
+
+**Diagnostic Trace / Stack**:
+```text
+Error: cannot add `presence` callbacks for realtime:trip_presence:137dfbc0-bf90-475c-89d0-86b57f68ae0a after `subscribe()`.
+    at RealtimeChannel.on (http://localhost:5173/node_modules/.vite/deps/@supabase_supabase-js.js?v=2536d9d8:7171:10)
+    at http://localhost:5173/src/hooks/usePeerPresence.ts?t=1788550839991:17:11
+    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:12900:13)
+    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:850:66)
+    at commitHookEffectListMount (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:6615:153)
+    at commitHookPassiveMountEffects (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:6650:55)
+    at commitPassiveMountOnFiber (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:7616:22)
+    at recursivelyTraversePassiveMountEffects (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:7604:5)
+    at commitPassiveMountOnFiber (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:7620:6)
+    at recursivelyTraversePassiveMountEffects (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:7604:5)
+```
+
+---
+
+### BUG-150: cannot add `presence` callbacks for realtime:trip_presence:137dfbc0-bf90-475c-89d0-86b57f68ae0a after `subscribe()`.
+
+- **Severity**: `CRITICAL` | **Category**: `general` | **Status**: `open`
+- **Found By**: `auto-crash-handler` on 5/9/2026 (web)
+- **Route**: `#/` (Online: `true`)
+
+**Description**:
+Automatically captured react crash.
+
+Error: cannot add `presence` callbacks for realtime:trip_presence:137dfbc0-bf90-475c-89d0-86b57f68ae0a after `subscribe()`.
+    at RealtimeChannel.on (http://localhost:5173/node_modules/.vite/deps/@supabase_supabase-js.js?v=2536d9d8:7171:10)
+    at http://localhost:5173/src/hooks/usePeerPresence.ts?t=1788550871268:17:11
+    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:12900:13)
+    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:850:66)
+    at commitHookEffectListMount (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:6615:153)
+    at commitHookPassiveMountEffects (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:6650:55)
+    at commitPassiveMountOnFiber (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:7616:22)
+    at recursivelyTraversePassiveMountEffects (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:7604:5)
+    at commitPassiveMountOnFiber (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:7620:6)
+    at recursivelyTraversePassiveMountEffects (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:7604:5)
+
+**Expected**: App runs without throwing.
+
+**Actual**: cannot add `presence` callbacks for realtime:trip_presence:137dfbc0-bf90-475c-89d0-86b57f68ae0a after `subscribe()`.
+
+**Diagnostic Trace / Stack**:
+```text
+Error: cannot add `presence` callbacks for realtime:trip_presence:137dfbc0-bf90-475c-89d0-86b57f68ae0a after `subscribe()`.
+    at RealtimeChannel.on (http://localhost:5173/node_modules/.vite/deps/@supabase_supabase-js.js?v=2536d9d8:7171:10)
+    at http://localhost:5173/src/hooks/usePeerPresence.ts?t=1788550871268:17:11
+    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:12900:13)
+    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:850:66)
+    at commitHookEffectListMount (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:6615:153)
+    at commitHookPassiveMountEffects (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:6650:55)
+    at commitPassiveMountOnFiber (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:7616:22)
+    at recursivelyTraversePassiveMountEffects (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:7604:5)
+    at commitPassiveMountOnFiber (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:7620:6)
+    at recursivelyTraversePassiveMountEffects (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:7604:5)
+```
+
+---
+
+### BUG-151: cannot add `presence` callbacks for realtime:trip_presence:137dfbc0-bf90-475c-89d0-86b57f68ae0a after `subscribe()`.
+
+- **Severity**: `CRITICAL` | **Category**: `general` | **Status**: `open`
+- **Found By**: `auto-crash-handler` on 5/9/2026 (web)
+- **Route**: `#/` (Online: `true`)
+
+**Description**:
+Automatically captured react crash.
+
+Error: cannot add `presence` callbacks for realtime:trip_presence:137dfbc0-bf90-475c-89d0-86b57f68ae0a after `subscribe()`.
+    at RealtimeChannel.on (http://localhost:5173/node_modules/.vite/deps/@supabase_supabase-js.js?v=2536d9d8:7171:10)
+    at http://localhost:5173/src/hooks/usePeerPresence.ts?t=1788550883698:17:11
+    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:12900:13)
+    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:850:66)
+    at commitHookEffectListMount (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:6615:153)
+    at commitHookPassiveMountEffects (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:6650:55)
+    at commitPassiveMountOnFiber (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:7616:22)
+    at recursivelyTraversePassiveMountEffects (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:7604:5)
+    at commitPassiveMountOnFiber (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:7620:6)
+    at recursivelyTraversePassiveMountEffects (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:7604:5)
+
+**Expected**: App runs without throwing.
+
+**Actual**: cannot add `presence` callbacks for realtime:trip_presence:137dfbc0-bf90-475c-89d0-86b57f68ae0a after `subscribe()`.
+
+**Diagnostic Trace / Stack**:
+```text
+Error: cannot add `presence` callbacks for realtime:trip_presence:137dfbc0-bf90-475c-89d0-86b57f68ae0a after `subscribe()`.
+    at RealtimeChannel.on (http://localhost:5173/node_modules/.vite/deps/@supabase_supabase-js.js?v=2536d9d8:7171:10)
+    at http://localhost:5173/src/hooks/usePeerPresence.ts?t=1788550883698:17:11
+    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:12900:13)
+    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:850:66)
+    at commitHookEffectListMount (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:6615:153)
+    at commitHookPassiveMountEffects (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:6650:55)
+    at commitPassiveMountOnFiber (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:7616:22)
+    at recursivelyTraversePassiveMountEffects (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:7604:5)
+    at commitPassiveMountOnFiber (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:7620:6)
+    at recursivelyTraversePassiveMountEffects (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:7604:5)
+```
+
+---
+
+### BUG-152: cannot add `presence` callbacks for realtime:trip_presence:137dfbc0-bf90-475c-89d0-86b57f68ae0a after `subscribe()`.
+
+- **Severity**: `CRITICAL` | **Category**: `general` | **Status**: `open`
+- **Found By**: `auto-crash-handler` on 5/9/2026 (web)
+- **Route**: `#/` (Online: `true`)
+
+**Description**:
+Automatically captured react crash.
+
+Error: cannot add `presence` callbacks for realtime:trip_presence:137dfbc0-bf90-475c-89d0-86b57f68ae0a after `subscribe()`.
+    at RealtimeChannel.on (http://localhost:5173/node_modules/.vite/deps/@supabase_supabase-js.js?v=2536d9d8:7171:10)
+    at http://localhost:5173/src/hooks/usePeerPresence.ts?t=1788550906029:17:11
+    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:12900:13)
+    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:850:66)
+    at commitHookEffectListMount (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:6615:153)
+    at commitHookPassiveMountEffects (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:6650:55)
+    at commitPassiveMountOnFiber (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:7616:22)
+    at recursivelyTraversePassiveMountEffects (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:7604:5)
+    at commitPassiveMountOnFiber (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:7620:6)
+    at recursivelyTraversePassiveMountEffects (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:7604:5)
+
+**Expected**: App runs without throwing.
+
+**Actual**: cannot add `presence` callbacks for realtime:trip_presence:137dfbc0-bf90-475c-89d0-86b57f68ae0a after `subscribe()`.
+
+**Diagnostic Trace / Stack**:
+```text
+Error: cannot add `presence` callbacks for realtime:trip_presence:137dfbc0-bf90-475c-89d0-86b57f68ae0a after `subscribe()`.
+    at RealtimeChannel.on (http://localhost:5173/node_modules/.vite/deps/@supabase_supabase-js.js?v=2536d9d8:7171:10)
+    at http://localhost:5173/src/hooks/usePeerPresence.ts?t=1788550906029:17:11
+    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:12900:13)
+    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:850:66)
+    at commitHookEffectListMount (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:6615:153)
+    at commitHookPassiveMountEffects (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:6650:55)
+    at commitPassiveMountOnFiber (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:7616:22)
+    at recursivelyTraversePassiveMountEffects (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:7604:5)
+    at commitPassiveMountOnFiber (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:7620:6)
+    at recursivelyTraversePassiveMountEffects (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:7604:5)
+```
+
+---
+
+### BUG-153: Transition was aborted because of invalid state
+
+- **Severity**: `CRITICAL` | **Category**: `general` | **Status**: `open`
+- **Found By**: `auto-crash-handler` on 5/9/2026 (web)
+- **Route**: `#nav-1` (Online: `true`)
+
+**Description**:
+Automatically captured unhandled rejection.
+
+No stack trace available.
+
+**Expected**: App runs without throwing.
+
+**Actual**: Transition was aborted because of invalid state
+
+---
+
+### BUG-154: Transition was skipped
+
+- **Severity**: `CRITICAL` | **Category**: `general` | **Status**: `open`
+- **Found By**: `auto-crash-handler` on 5/9/2026 (web)
+- **Route**: `#nav-1` (Online: `true`)
+
+**Description**:
+Automatically captured unhandled rejection.
+
+No stack trace available.
+
+**Expected**: App runs without throwing.
+
+**Actual**: Transition was skipped
+
+---
 
 ## ✅ Resolved Bugs History
 
@@ -147,11 +564,6 @@
 | **BUG-140** | Weather clipped off trip-stack card; IN X DAYS badge unreadable over bright photo | `ui-ux` | `medium` | `claude-cli` | `claude-cli` | Actual root cause was the service worker (public/sw.js), not the CSP alone: its fetch handler treated index.html (the app shell, which carries the CSP header) with stale-while-revalidate -- always serve the cached copy instantly, revalidate in background -- and CACHE_NAME never changes between deploys, so there was no signal to ever prompt a reload. Users could stay on an arbitrarily old cached shell (and therefore an old CSP) indefinitely. Fixed in commit 17b4443: navigation requests (the shell) now go network-first with cache fallback for offline; hashed static assets keep the fast SWR path since a stale one can't be referenced by a fresh shell. Requires one full close-and-reopen (or hard refresh) of the site to pick up the new service worker and shell -- confirmed via GH Actions CI/EC2/Pages all green on commits 5c2504b (CSP + badge) and 17b4443 (SW fix). |
 | **BUG-141** | Trip status badge (IN X DAYS / ONGOING) misclassifies using UTC date instead of local date | `ui-ux` | `medium` | `claude-cli` | `claude-cli` | getTripStatusBadge and getItineraryProgress (src/components/TripStack.tsx) computed today's date via new Date().toISOString().split('T')[0], which is the UTC calendar date, not the viewer's local date. For IST (UTC+5:30), that's already tomorrow's UTC date after 6:30pm local, so trip status (past/ongoing/upcoming) and the countdown badge could misclassify depending on time of day. Fixed in commit f1f2345: added localDateStr() using toLocaleDateString('en-CA') (YYYY-MM-DD in local timezone) and swapped both call sites to use it. |
 | **BUG-142** | Destination name crushed to 2-3 chars in merged trip-card pill | `ui-ux` | `medium` | `claude-cli` | `claude-cli` | The 9a24804 fix (calc(100% - 76px) max-width + 56px min-width on destination) helped short names but wasn't enough for a genuinely long multi-stop route ('Gangtok -> Lachung -> Pelling') sharing one pill with the countdown badge and weather -- three segments always competing for one row meant it kept truncating. Real fix in commit 6968303: split back into two stacked pills -- countdown badge on its own row, destination + weather pill below it, so destination only shares its row with weather (not weather + badge) and gets far more width. Confirmed against the actual reported multi-stop route. |
-| **BUG-143** | Transition was aborted because of invalid state | `general` | `critical` | `auto-crash-handler` | `claude-cli` | Root cause in src/components/NavTabs.tsx:goTo() -- it wrapped setActiveTab(tab) in withViewTransition(), but setActiveTab (App.tsx ~L237-245) already starts its own document.startViewTransition() internally. Calling startViewTransition() again from inside another transition's callback makes the browser immediately abort/skip the transition, throwing an uncaught DOMException ('Transition was aborted'/'Transition was skipped') since only the outer withViewTransition wrapper's ready/finished promises were caught, not the inner nested call's. Fixed by removing the redundant withViewTransition wrapper in NavTabs.tsx so setActiveTab's own transition handling is used directly (no nested startViewTransition calls). Hit on every bottom-nav tab tap, matching the #nav-1/#nav-2/#nav-3 routes in this and duplicate reports (BUG-144, BUG-153, BUG-154). |
-| **BUG-144** | Transition was aborted because of invalid state | `general` | `critical` | `auto-crash-handler` | `claude-cli` | Duplicate of BUG-143 (same nested-startViewTransition bug in NavTabs.tsx's goTo -> setActiveTab). See BUG-143 for full root cause and fix. |
-| **BUG-145** | Importing a module script failed. | `general` | `critical` | `auto-crash-handler` | `claude-cli` | Root cause in src/utils/lazyImport.ts: the CHUNK_LOAD_FAILURE regex only matched Chrome's ('failed to fetch dynamically imported module') and Firefox's ('error loading dynamically imported module') wording for a stale-chunk dynamic import() failure after a deploy, so Safari/WebKit's message ('Importing a module script failed.') was never recognized and never triggered the single-reload recovery -- it fell straight through to the ErrorBoundary crash instead. Fixed by adding 'importing a module script failed' to the regex so Safari gets the same reload-and-recover behavior as other browsers. |
-| **BUG-153** | Transition was aborted because of invalid state | `general` | `critical` | `auto-crash-handler` | `claude-cli` | Duplicate of BUG-143 (same nested-startViewTransition bug in NavTabs.tsx's goTo -> setActiveTab). See BUG-143 for full root cause and fix. |
-| **BUG-154** | Transition was skipped | `general` | `critical` | `auto-crash-handler` | `claude-cli` | Same root cause as BUG-143 (nested startViewTransition via NavTabs.tsx goTo -> setActiveTab); the browser reports this variant as 'Transition was skipped' rather than 'aborted' depending on timing, but it's the identical nested-transition call. See BUG-143 for full root cause and fix. |
 | **BUG-155** | Ops Deck KPI row grid was 3 columns while every page renders 4 cards, wrapping the 4th onto its own row | `ui-ux` | `medium` | `claude-cli` | `claude-cli` | Changed .ops-kpi-row to grid-template-columns: repeat(4, 1fr) in ops-deck.css |
 | **BUG-156** | src/utils/initials.ts overwritten, silently dropping the initial() export used by 6 traveler components | `general` | `high` | `claude-cli` | `claude-cli` | Restored initial() alongside the new initialsFrom() in src/utils/initials.ts; both now coexist |
 | **BUG-157** | Smart Assistant popup scroll bleeds to background page | `ui-ux` | `medium` | `claude-cli` | `claude-cli` | Fixed in commit 2df133b: touch-action: none on .modal-overlay + touch-action: pan-y on inner scroll container |
@@ -164,6 +576,12 @@
 | **BUG-164** | Split by Shares mode unlabelled — Weight label not discoverable | `ui-ux` | `medium` | `claude-cli` | `claude-cli` | Renamed Weight→Shares button label, updated summary line and placeholder in ExpenseForm.tsx |
 | **BUG-165** | Checklist items cannot be reordered by drag and drop | `ui-ux` | `medium` | `claude-cli` | `claude-cli` | Added HTML5 drag-and-drop to checklist items; reorderChecklistItems action in tripStore syncs new order via updateTripChecklist |
 | **BUG-166** | No way to duplicate an existing trip | `ui-ux` | `medium` | `claude-cli` | `claude-cli` | Added duplicateTrip to tripStore; Duplicate Trip option in TripsListScreen action sheet copies trip+checklist+notes with new IDs, no expenses |
+| **BUG-167** | No tab-level error isolation — one tab crash kills entire app | `reliability` | `high` | `claude-cli` | `claude-cli` | Created TabErrorBoundary component and wrapped all 5 tab panes in App.tsx. Commit fa0f6c8. |
+| **BUG-168** | localStorage calls in App.tsx unguarded — crashes in private browsing | `reliability` | `medium` | `claude-cli` | `claude-cli` | Wrapped all 6 localStorage calls in App.tsx with try/catch and sensible fallbacks. Commit fa0f6c8. |
+| **BUG-169** | No onError handlers on img tags — broken images show browser placeholder | `ui-ux` | `medium` | `claude-cli` | `claude-cli` | Added onError={(e) => e.currentTarget.style.display='none'} to all bare img tags in MembersGroupsTab, TripStack, TripsListScreen, ExpenseForm, ReceiptScannerModal. Commit fa0f6c8. |
+| **BUG-170** | handleAddMemberLocal / handleCreateGroupLocal silently drop network errors | `reliability` | `medium` | `claude-cli` | `claude-cli` | Restructured both handlers to try/catch/finally; catch sets form error state. Commit fa0f6c8. |
+| **BUG-171** | Checklist tab label clips on narrow phones due to equal flex widths | `ui-ux` | `low` | `claude-cli` | `claude-cli` | Changed Checklist button to flex:1.3, Passes/Notes to flex:0.85. Commit fa0f6c8. |
+| **BUG-172** | Passes/Notes/Checklist segment labels and bottom-nav pill text clipped | `ui-ux` | `medium` | `human` | `cursor` | Compacted segment header (no icons/ellipsis, always show counts) and shortened bottom-nav label to Notes. Commit c81540a (v3.4.14). |
 
 ---
 

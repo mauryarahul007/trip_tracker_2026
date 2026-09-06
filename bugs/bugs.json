@@ -4429,7 +4429,7 @@
     "description": "Automatically captured unhandled rejection.\n\nNo stack trace available.",
     "severity": "critical",
     "category": "general",
-    "status": "resolved",
+    "status": "open",
     "foundBy": "auto-crash-handler",
     "environment": {
       "route": "#nav-2",
@@ -4448,10 +4448,7 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-09-04T07:27:38.027197+00:00",
-    "updatedAt": "2026-09-06T12:26:44.250Z",
-    "resolvedBy": "claude-cli",
-    "resolvedAt": "2026-09-06T12:26:44.250Z",
-    "resolutionNote": "Root cause in src/components/NavTabs.tsx:goTo() -- it wrapped setActiveTab(tab) in withViewTransition(), but setActiveTab (App.tsx ~L237-245) already starts its own document.startViewTransition() internally. Calling startViewTransition() again from inside another transition's callback makes the browser immediately abort/skip the transition, throwing an uncaught DOMException ('Transition was aborted'/'Transition was skipped') since only the outer withViewTransition wrapper's ready/finished promises were caught, not the inner nested call's. Fixed by removing the redundant withViewTransition wrapper in NavTabs.tsx so setActiveTab's own transition handling is used directly (no nested startViewTransition calls). Hit on every bottom-nav tab tap, matching the #nav-1/#nav-2/#nav-3 routes in this and duplicate reports (BUG-144, BUG-153, BUG-154)."
+    "updatedAt": "2026-09-04T07:27:38.027197+00:00"
   },
   {
     "id": "BUG-144",
@@ -4459,7 +4456,7 @@
     "description": "Automatically captured unhandled rejection.\n\nNo stack trace available.",
     "severity": "critical",
     "category": "general",
-    "status": "resolved",
+    "status": "open",
     "foundBy": "auto-crash-handler",
     "environment": {
       "route": "#nav-3",
@@ -4478,10 +4475,7 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-09-04T08:04:28.653451+00:00",
-    "updatedAt": "2026-09-06T12:26:48.745Z",
-    "resolvedBy": "claude-cli",
-    "resolvedAt": "2026-09-06T12:26:48.744Z",
-    "resolutionNote": "Duplicate of BUG-143 (same nested-startViewTransition bug in NavTabs.tsx's goTo -> setActiveTab). See BUG-143 for full root cause and fix."
+    "updatedAt": "2026-09-04T08:04:28.653451+00:00"
   },
   {
     "id": "BUG-145",
@@ -4489,7 +4483,7 @@
     "description": "Automatically captured react crash.\n\n\nLazy@unknown:0:0\nSuspense@unknown:0:0\ndiv@unknown:0:0\ndiv@unknown:0:0\npfe@https://trip-tracker.blackmaroon.in/assets/index-DWxV1rqw.js:876:76685\nH9@\nR9@https://trip-tracker.blackmaroon.in/assets/index-DWxV1rqw.js:877:36540\nCt@https://trip-tracker.blackmaroon.in/assets/index-DWxV1rqw.js:12:4272\nzt@https://trip-tracker.blackmaroon.in/assets/index-DWxV1rqw.js:12:8885\nRt@https://trip-tracker.blackmaroon.in/assets/index-DWxV1rqw.js:12:8023\nTn@https://trip-tracker.blackmaroon.in/assets/index-DWxV1rqw.js:12:18283",
     "severity": "critical",
     "category": "general",
-    "status": "resolved",
+    "status": "open",
     "foundBy": "auto-crash-handler",
     "environment": {
       "route": "#nav-1",
@@ -4511,10 +4505,7 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-09-04T09:02:15.735229+00:00",
-    "updatedAt": "2026-09-06T12:26:53.043Z",
-    "resolvedBy": "claude-cli",
-    "resolvedAt": "2026-09-06T12:26:53.043Z",
-    "resolutionNote": "Root cause in src/utils/lazyImport.ts: the CHUNK_LOAD_FAILURE regex only matched Chrome's ('failed to fetch dynamically imported module') and Firefox's ('error loading dynamically imported module') wording for a stale-chunk dynamic import() failure after a deploy, so Safari/WebKit's message ('Importing a module script failed.') was never recognized and never triggered the single-reload recovery -- it fell straight through to the ErrorBoundary crash instead. Fixed by adding 'importing a module script failed' to the regex so Safari gets the same reload-and-recover behavior as other browsers."
+    "updatedAt": "2026-09-04T09:02:15.735229+00:00"
   },
   {
     "id": "BUG-146",
@@ -4522,7 +4513,7 @@
     "description": "Automatically captured react crash.\n\nError: cannot add `presence` callbacks for realtime:trip_presence:137dfbc0-bf90-475c-89d0-86b57f68ae0a after `subscribe()`.\n    at RealtimeChannel.on (http://localhost:5173/node_modules/.vite/deps/@supabase_supabase-js.js?v=2536d9d8:7171:10)\n    at http://localhost:5173/src/hooks/usePeerPresence.ts?t=1788548665785:17:11\n    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:12900:13)\n    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:850:66)\n    at commitHookEffectListMount (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:6615:153)\n    at commitHookPassiveMountEffects (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:6650:55)\n    at commitPassiveMountOnFiber (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:7616:22)\n    at recursivelyTraversePassiveMountEffects (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:7604:5)\n    at commitPassiveMountOnFiber (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:7620:6)\n    at recursivelyTraversePassiveMountEffects (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:7604:5)",
     "severity": "critical",
     "category": "general",
-    "status": "wont_fix",
+    "status": "open",
     "foundBy": "auto-crash-handler",
     "environment": {
       "route": "#/",
@@ -4549,8 +4540,7 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-09-04T19:04:27.58022+00:00",
-    "updatedAt": "2026-09-06T12:27:02.889Z",
-    "resolutionNote": "Stale localhost dev artifact, not a defect in committed code. Stack trace points at http://localhost:5173/src/hooks/usePeerPresence.ts:17:11 with a Vite ?t= cache-busting timestamp -- the current committed usePeerPresence.ts (single commit in git history for this file) already calls channel.on('presence', ...) BEFORE .subscribe(), which is the correct order and would not produce 'cannot add presence callbacks after subscribe()'. This matches the classic transient-during-editing pattern: an in-progress edit briefly had .on() after .subscribe(), caught by the dev crash handler, then fixed by the next hot-reload save before it was committed."
+    "updatedAt": "2026-09-04T19:04:27.58022+00:00"
   },
   {
     "id": "BUG-147",
@@ -4558,7 +4548,7 @@
     "description": "Automatically captured react crash.\n\nReferenceError: OverflowMenu is not defined\n    at App (http://localhost:5173/src/App.tsx?t=1788549344342:2094:35)\n    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:12864:12)\n    at renderWithHooks (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:4211:19)\n    at updateFunctionComponent (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:5567:16)\n    at beginWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:6138:20)\n    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:850:66)\n    at performUnitOfWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:8427:92)\n    at workLoopSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:8323:37)\n    at renderRootSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:8307:6)\n    at performWorkOnRoot (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:7992:27)",
     "severity": "critical",
     "category": "general",
-    "status": "wont_fix",
+    "status": "open",
     "foundBy": "auto-crash-handler",
     "environment": {
       "route": "#nav-1",
@@ -4580,8 +4570,7 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-09-04T19:15:46.579191+00:00",
-    "updatedAt": "2026-09-06T12:27:02.973Z",
-    "resolutionNote": "Stale localhost dev artifact. ReferenceError: OverflowMenu is not defined at App.tsx:2094, but 'OverflowMenu' does not appear anywhere in the current App.tsx (grep confirms zero references) -- only its own definition/export exists in src/components/common/OverflowMenu.tsx, unused. This is consistent with an in-progress edit that briefly referenced the component without importing it, caught by the dev crash handler, and fixed/reverted before commit."
+    "updatedAt": "2026-09-04T19:15:46.579191+00:00"
   },
   {
     "id": "BUG-148",
@@ -4589,7 +4578,7 @@
     "description": "Automatically captured react crash.\n\nError: cannot add `presence` callbacks for realtime:trip_presence:137dfbc0-bf90-475c-89d0-86b57f68ae0a after `subscribe()`.\n    at RealtimeChannel.on (http://localhost:5173/node_modules/.vite/deps/@supabase_supabase-js.js?v=2536d9d8:7171:10)\n    at http://localhost:5173/src/hooks/usePeerPresence.ts?t=1788550829223:17:11\n    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:12900:13)\n    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:850:66)\n    at commitHookEffectListMount (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:6615:153)\n    at commitHookPassiveMountEffects (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:6650:55)\n    at commitPassiveMountOnFiber (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:7616:22)\n    at recursivelyTraversePassiveMountEffects (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:7604:5)\n    at commitPassiveMountOnFiber (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:7620:6)\n    at recursivelyTraversePassiveMountEffects (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:7604:5)",
     "severity": "critical",
     "category": "general",
-    "status": "wont_fix",
+    "status": "open",
     "foundBy": "auto-crash-handler",
     "environment": {
       "route": "#/",
@@ -4616,8 +4605,7 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-09-04T19:40:31.118207+00:00",
-    "updatedAt": "2026-09-06T12:27:03.058Z",
-    "resolutionNote": "Duplicate of BUG-146 (same stale localhost usePeerPresence.ts dev artifact, different timestamp/session)."
+    "updatedAt": "2026-09-04T19:40:31.118207+00:00"
   },
   {
     "id": "BUG-149",
@@ -4625,7 +4613,7 @@
     "description": "Automatically captured react crash.\n\nError: cannot add `presence` callbacks for realtime:trip_presence:137dfbc0-bf90-475c-89d0-86b57f68ae0a after `subscribe()`.\n    at RealtimeChannel.on (http://localhost:5173/node_modules/.vite/deps/@supabase_supabase-js.js?v=2536d9d8:7171:10)\n    at http://localhost:5173/src/hooks/usePeerPresence.ts?t=1788550839991:17:11\n    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:12900:13)\n    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:850:66)\n    at commitHookEffectListMount (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:6615:153)\n    at commitHookPassiveMountEffects (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:6650:55)\n    at commitPassiveMountOnFiber (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:7616:22)\n    at recursivelyTraversePassiveMountEffects (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:7604:5)\n    at commitPassiveMountOnFiber (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:7620:6)\n    at recursivelyTraversePassiveMountEffects (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:7604:5)",
     "severity": "critical",
     "category": "general",
-    "status": "wont_fix",
+    "status": "open",
     "foundBy": "auto-crash-handler",
     "environment": {
       "route": "#/",
@@ -4652,8 +4640,7 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-09-04T19:40:41.134025+00:00",
-    "updatedAt": "2026-09-06T12:27:03.143Z",
-    "resolutionNote": "Duplicate of BUG-146 (same stale localhost usePeerPresence.ts dev artifact, different timestamp/session)."
+    "updatedAt": "2026-09-04T19:40:41.134025+00:00"
   },
   {
     "id": "BUG-150",
@@ -4661,7 +4648,7 @@
     "description": "Automatically captured react crash.\n\nError: cannot add `presence` callbacks for realtime:trip_presence:137dfbc0-bf90-475c-89d0-86b57f68ae0a after `subscribe()`.\n    at RealtimeChannel.on (http://localhost:5173/node_modules/.vite/deps/@supabase_supabase-js.js?v=2536d9d8:7171:10)\n    at http://localhost:5173/src/hooks/usePeerPresence.ts?t=1788550871268:17:11\n    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:12900:13)\n    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:850:66)\n    at commitHookEffectListMount (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:6615:153)\n    at commitHookPassiveMountEffects (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:6650:55)\n    at commitPassiveMountOnFiber (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:7616:22)\n    at recursivelyTraversePassiveMountEffects (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:7604:5)\n    at commitPassiveMountOnFiber (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:7620:6)\n    at recursivelyTraversePassiveMountEffects (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:7604:5)",
     "severity": "critical",
     "category": "general",
-    "status": "wont_fix",
+    "status": "open",
     "foundBy": "auto-crash-handler",
     "environment": {
       "route": "#/",
@@ -4688,8 +4675,7 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-09-04T19:41:12.618862+00:00",
-    "updatedAt": "2026-09-06T12:27:03.213Z",
-    "resolutionNote": "Duplicate of BUG-146 (same stale localhost usePeerPresence.ts dev artifact, different timestamp/session)."
+    "updatedAt": "2026-09-04T19:41:12.618862+00:00"
   },
   {
     "id": "BUG-151",
@@ -4697,7 +4683,7 @@
     "description": "Automatically captured react crash.\n\nError: cannot add `presence` callbacks for realtime:trip_presence:137dfbc0-bf90-475c-89d0-86b57f68ae0a after `subscribe()`.\n    at RealtimeChannel.on (http://localhost:5173/node_modules/.vite/deps/@supabase_supabase-js.js?v=2536d9d8:7171:10)\n    at http://localhost:5173/src/hooks/usePeerPresence.ts?t=1788550883698:17:11\n    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:12900:13)\n    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:850:66)\n    at commitHookEffectListMount (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:6615:153)\n    at commitHookPassiveMountEffects (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:6650:55)\n    at commitPassiveMountOnFiber (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:7616:22)\n    at recursivelyTraversePassiveMountEffects (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:7604:5)\n    at commitPassiveMountOnFiber (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:7620:6)\n    at recursivelyTraversePassiveMountEffects (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:7604:5)",
     "severity": "critical",
     "category": "general",
-    "status": "wont_fix",
+    "status": "open",
     "foundBy": "auto-crash-handler",
     "environment": {
       "route": "#/",
@@ -4724,8 +4710,7 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-09-04T19:41:25.019669+00:00",
-    "updatedAt": "2026-09-06T12:27:03.282Z",
-    "resolutionNote": "Duplicate of BUG-146 (same stale localhost usePeerPresence.ts dev artifact, different timestamp/session)."
+    "updatedAt": "2026-09-04T19:41:25.019669+00:00"
   },
   {
     "id": "BUG-152",
@@ -4733,7 +4718,7 @@
     "description": "Automatically captured react crash.\n\nError: cannot add `presence` callbacks for realtime:trip_presence:137dfbc0-bf90-475c-89d0-86b57f68ae0a after `subscribe()`.\n    at RealtimeChannel.on (http://localhost:5173/node_modules/.vite/deps/@supabase_supabase-js.js?v=2536d9d8:7171:10)\n    at http://localhost:5173/src/hooks/usePeerPresence.ts?t=1788550906029:17:11\n    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:12900:13)\n    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:850:66)\n    at commitHookEffectListMount (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:6615:153)\n    at commitHookPassiveMountEffects (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:6650:55)\n    at commitPassiveMountOnFiber (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:7616:22)\n    at recursivelyTraversePassiveMountEffects (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:7604:5)\n    at commitPassiveMountOnFiber (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:7620:6)\n    at recursivelyTraversePassiveMountEffects (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:7604:5)",
     "severity": "critical",
     "category": "general",
-    "status": "wont_fix",
+    "status": "open",
     "foundBy": "auto-crash-handler",
     "environment": {
       "route": "#/",
@@ -4760,8 +4745,7 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-09-04T19:41:47.179835+00:00",
-    "updatedAt": "2026-09-06T12:27:03.353Z",
-    "resolutionNote": "Duplicate of BUG-146 (same stale localhost usePeerPresence.ts dev artifact, different timestamp/session)."
+    "updatedAt": "2026-09-04T19:41:47.179835+00:00"
   },
   {
     "id": "BUG-153",
@@ -4769,7 +4753,7 @@
     "description": "Automatically captured unhandled rejection.\n\nNo stack trace available.",
     "severity": "critical",
     "category": "general",
-    "status": "resolved",
+    "status": "open",
     "foundBy": "auto-crash-handler",
     "environment": {
       "route": "#nav-1",
@@ -4788,10 +4772,7 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-09-05T05:37:11.868608+00:00",
-    "updatedAt": "2026-09-06T12:26:48.821Z",
-    "resolvedBy": "claude-cli",
-    "resolvedAt": "2026-09-06T12:26:48.821Z",
-    "resolutionNote": "Duplicate of BUG-143 (same nested-startViewTransition bug in NavTabs.tsx's goTo -> setActiveTab). See BUG-143 for full root cause and fix."
+    "updatedAt": "2026-09-05T05:37:11.868608+00:00"
   },
   {
     "id": "BUG-154",
@@ -4799,7 +4780,7 @@
     "description": "Automatically captured unhandled rejection.\n\nNo stack trace available.",
     "severity": "critical",
     "category": "general",
-    "status": "resolved",
+    "status": "open",
     "foundBy": "auto-crash-handler",
     "environment": {
       "route": "#nav-1",
@@ -4818,10 +4799,7 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-09-05T06:32:48.294276+00:00",
-    "updatedAt": "2026-09-06T12:26:48.898Z",
-    "resolvedBy": "claude-cli",
-    "resolvedAt": "2026-09-06T12:26:48.898Z",
-    "resolutionNote": "Same root cause as BUG-143 (nested startViewTransition via NavTabs.tsx goTo -> setActiveTab); the browser reports this variant as 'Transition was skipped' rather than 'aborted' depending on timing, but it's the identical nested-transition call. See BUG-143 for full root cause and fix."
+    "updatedAt": "2026-09-05T06:32:48.294276+00:00"
   },
   {
     "id": "BUG-155",
@@ -4832,8 +4810,8 @@
     "status": "resolved",
     "foundBy": "claude-cli",
     "environment": {
-      "platform": "web",
       "isOnline": true,
+      "platform": "web",
       "appVersion": "1.0.0"
     },
     "reproSteps": [
@@ -4843,10 +4821,10 @@
     "expectedBehavior": "",
     "actualBehavior": "",
     "diagnostics": {},
-    "createdAt": "2026-09-06T06:44:59.919Z",
-    "updatedAt": "2026-09-06T06:45:16.633Z",
+    "createdAt": "2026-09-06T06:44:59.919+00:00",
+    "updatedAt": "2026-09-06T06:45:16.633+00:00",
+    "resolvedAt": "2026-09-06T06:45:16.633+00:00",
     "resolvedBy": "claude-cli",
-    "resolvedAt": "2026-09-06T06:45:16.633Z",
     "resolutionNote": "Changed .ops-kpi-row to grid-template-columns: repeat(4, 1fr) in ops-deck.css"
   },
   {
@@ -4858,8 +4836,8 @@
     "status": "resolved",
     "foundBy": "claude-cli",
     "environment": {
-      "platform": "web",
       "isOnline": true,
+      "platform": "web",
       "appVersion": "1.0.0"
     },
     "reproSteps": [
@@ -4869,10 +4847,10 @@
     "expectedBehavior": "",
     "actualBehavior": "",
     "diagnostics": {},
-    "createdAt": "2026-09-06T06:45:23.320Z",
-    "updatedAt": "2026-09-06T06:45:43.592Z",
+    "createdAt": "2026-09-06T06:45:23.32+00:00",
+    "updatedAt": "2026-09-06T06:45:43.592+00:00",
+    "resolvedAt": "2026-09-06T06:45:43.592+00:00",
     "resolvedBy": "claude-cli",
-    "resolvedAt": "2026-09-06T06:45:43.592Z",
     "resolutionNote": "Restored initial() alongside the new initialsFrom() in src/utils/initials.ts; both now coexist"
   },
   {
@@ -5264,5 +5242,31 @@
     "resolvedBy": "claude-cli",
     "resolvedAt": "2026-09-06T17:06:19.149Z",
     "resolutionNote": "Changed Checklist button to flex:1.3, Passes/Notes to flex:0.85. Commit fa0f6c8."
+  },
+  {
+    "id": "BUG-172",
+    "title": "Passes/Notes/Checklist segment labels and bottom-nav pill text clipped",
+    "description": "Segmented header clipped Passes/Notes/Checklist names and counts via ellipsis and icons; bottom nav label 'Passes & Notes' overflowed the floating pill.",
+    "severity": "medium",
+    "category": "ui-ux",
+    "status": "resolved",
+    "foundBy": "human",
+    "environment": {
+      "isOnline": true,
+      "platform": "web",
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "All three segment names and counts visible on one line; bottom nav label fully inside the pill.",
+    "actualBehavior": "Labels truncated in header; 'Passes & Notes' spilled outside the pill.",
+    "diagnostics": {},
+    "createdAt": "2026-09-06T18:54:20.779+00:00",
+    "updatedAt": "2026-09-06T18:54:57.814+00:00",
+    "resolvedAt": "2026-09-06T18:54:57.813+00:00",
+    "resolvedBy": "cursor",
+    "resolutionNote": "Compacted segment header (no icons/ellipsis, always show counts) and shortened bottom-nav label to Notes. Commit c81540a (v3.4.14)."
   }
 ]
