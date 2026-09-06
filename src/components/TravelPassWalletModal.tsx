@@ -1,6 +1,7 @@
 import { useState, useMemo, useRef } from 'react';
 import type { Trip, TravelPass, TravelPassType, Member } from '../types';
-import { parseBookingText } from '../utils/passParser';
+import { parseBookingText, parseAllBookingPasses, type ParsedTravelPass } from '../utils/passParser';
+import { extractPdfText } from '../utils/pdfExtractor';
 import { triggerHaptic } from '../utils/haptics';
 import { useEscapeKey } from '../utils/useEscapeKey';
 import { newId } from '../utils/uuid';
@@ -41,7 +42,7 @@ export function TravelPassWalletModal({
   // Form State
   const [isAdding, setIsAdding] = useState(false);
   const [editingPassId, setEditingPassId] = useState<string | null>(null);
-  const [inputTab, setInputTab] = useState<'upload' | 'paste' | 'manual'>('paste');
+  const [inputTab, setInputTab] = useState<'paste' | 'upload' | 'manual'>('upload');
 
   // Form Fields
   const [formType, setFormType] = useState<TravelPassType>('flight');
@@ -59,6 +60,9 @@ export function TravelPassWalletModal({
   const [formAssignedMemberIds, setFormAssignedMemberIds] = useState<string[]>([]);
   const [formAttachmentUrl, setFormAttachmentUrl] = useState<string>('');
   const [rawPastedText, setRawPastedText] = useState('');
+  const [isExtracting, setIsExtracting] = useState(false);
+  const [detectedPasses, setDetectedPasses] = useState<ParsedTravelPass[]>([]);
+  const [extractionMessage, setExtractionMessage] = useState<string | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -82,10 +86,7 @@ export function TravelPassWalletModal({
     setTimeout(() => setCopiedId(null), 2000);
   };
 
-  const handleParsePasted = () => {
-    if (!rawPastedText.trim()) return;
-    triggerHaptic('medium');
-    const parsed = parseBookingText(rawPastedText);
+  const applyParsedPassToForm = (parsed: ParsedTravelPass) => {
     setFormType(parsed.type);
     setFormTitle(parsed.title);
     if (parsed.provider) setFormProvider(parsed.provider);
@@ -94,26 +95,80 @@ export function TravelPassWalletModal({
     if (parsed.destination) setFormDestination(parsed.destination);
     if (parsed.seatOrRoom) setFormSeatOrRoom(parsed.seatOrRoom);
     if (parsed.startDateTime) setFormStartDateTime(parsed.startDateTime);
+    if (parsed.endDateTime) setFormEndDateTime(parsed.endDateTime);
     if (parsed.notes) setFormNotes(parsed.notes);
+  };
+
+  const handleParsePasted = () => {
+    if (!rawPastedText.trim()) return;
+    triggerHaptic('medium');
+    const allPasses = parseAllBookingPasses(rawPastedText);
+    if (allPasses.length > 1) {
+      setDetectedPasses(allPasses);
+      applyParsedPassToForm(allPasses[0]);
+      setExtractionMessage(`Found ${allPasses.length} flight segments in text! Segment 1 loaded.`);
+    } else if (allPasses.length === 1) {
+      setDetectedPasses([]);
+      applyParsedPassToForm(allPasses[0]);
+      setExtractionMessage('Pass details identified & auto-filled!');
+    } else {
+      const parsed = parseBookingText(rawPastedText);
+      applyParsedPassToForm(parsed);
+      setExtractionMessage('Pass details auto-filled.');
+    }
     setInputTab('manual');
   };
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     triggerHaptic('medium');
 
+    const cleanName = file.name.replace(/\.[^/.]+$/, '').replace(/[_-]/g, ' ');
+    const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
+
     const reader = new FileReader();
-    reader.onload = (uploadEvent) => {
+    reader.onload = async (uploadEvent) => {
       const base64 = uploadEvent.target?.result as string;
       setFormAttachmentUrl(base64);
 
-      // Auto-detect pass name from filename
-      const cleanName = file.name.replace(/\.[^/.]+$/, '').replace(/[_-]/g, ' ');
-      if (!formTitle) {
-        setFormTitle(cleanName);
+      if (isPdf) {
+        setIsExtracting(true);
+        setExtractionMessage('Reading ticket details from PDF...');
+        try {
+          const extractedText = await extractPdfText(file);
+          if (extractedText && extractedText.trim().length > 0) {
+            setRawPastedText(extractedText);
+            const allPasses = parseAllBookingPasses(extractedText);
+            if (allPasses.length > 1) {
+              setDetectedPasses(allPasses);
+              applyParsedPassToForm(allPasses[0]);
+              setExtractionMessage(`Found ${allPasses.length} flight segments in ticket! Segment 1 loaded.`);
+            } else if (allPasses.length === 1) {
+              setDetectedPasses([]);
+              applyParsedPassToForm(allPasses[0]);
+              setExtractionMessage('Ticket details identified and auto-filled from PDF!');
+            } else {
+              setFormTitle(cleanName);
+              setExtractionMessage('PDF attached. Review or complete the form details.');
+            }
+          } else {
+            setFormTitle(cleanName);
+            setExtractionMessage('PDF attached. Review or complete details.');
+          }
+        } catch (err: any) {
+          console.error('[TravelPassWalletModal] PDF extraction error:', err);
+          if (!formTitle) setFormTitle(cleanName);
+          setExtractionMessage('PDF attached as file. Complete any additional fields below.');
+        } finally {
+          setIsExtracting(false);
+          setInputTab('manual');
+        }
+      } else {
+        if (!formTitle) setFormTitle(cleanName);
+        setExtractionMessage('Ticket image attached.');
+        setInputTab('manual');
       }
-      setInputTab('manual');
     };
     reader.readAsDataURL(file);
   };
@@ -121,7 +176,7 @@ export function TravelPassWalletModal({
   const resetForm = () => {
     setIsAdding(false);
     setEditingPassId(null);
-    setInputTab('paste');
+    setInputTab('upload');
     setFormType('flight');
     setFormTitle('');
     setFormProvider('');
@@ -137,6 +192,9 @@ export function TravelPassWalletModal({
     setFormAssignedMemberIds([]);
     setFormAttachmentUrl('');
     setRawPastedText('');
+    setIsExtracting(false);
+    setDetectedPasses([]);
+    setExtractionMessage(null);
   };
 
   const handleStartEdit = (pass: TravelPass) => {
@@ -307,7 +365,7 @@ export function TravelPassWalletModal({
                     }}
                     onClick={() => setInputTab('upload')}
                   >
-                    🖼️ Upload Screenshot
+                    📄 Upload File
                   </button>
                   <button
                     type="button"
@@ -355,33 +413,186 @@ export function TravelPassWalletModal({
 
               {/* Upload tab */}
               {inputTab === 'upload' && !editingPassId && (
-                <div style={{ textAlign: 'center', padding: '24px 16px', border: '1.5px dashed var(--border-color)', borderRadius: '12px' }}>
+                <div style={{ textAlign: 'center', padding: '24px 16px', border: '1.5px dashed var(--border-color)', borderRadius: '12px', background: 'var(--bg-surface-elevated, rgba(15,23,42,0.02))' }}>
                   <input
                     type="file"
                     ref={fileInputRef}
-                    accept="image/*,application/pdf"
+                    accept="image/*,application/pdf,.pdf"
                     style={{ display: 'none' }}
                     onChange={handleFileUpload}
                   />
-                  <div style={{ fontSize: '28px', marginBottom: '8px' }}>🎫</div>
-                  <div style={{ fontSize: '13px', fontWeight: 600, marginBottom: '4px' }}>Upload Boarding Pass or Voucher</div>
-                  <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '12px' }}>
-                    Select screenshot, JPG, PNG or PDF ticket
+                  <div style={{ fontSize: '32px', marginBottom: '8px' }}>📄</div>
+                  <div style={{ fontSize: '13.5px', fontWeight: 600, marginBottom: '4px' }}>Upload Ticket or Boarding Pass</div>
+                  <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', marginBottom: '14px' }}>
+                    Select PDF e-ticket, airline itinerary, or boarding pass screenshot
                   </div>
-                  <button
-                    type="button"
-                    className="secondary-btn"
-                    style={{ padding: '6px 14px', fontSize: '12px' }}
-                    onClick={() => fileInputRef.current?.click()}
-                  >
-                    Choose Image File
-                  </button>
+                  {isExtracting ? (
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '8px', color: 'var(--primary-accent)', fontSize: '12.5px', fontWeight: 600 }}>
+                      <span className="spin" style={{ display: 'inline-block' }}>⏳</span>
+                      <span>Scanning and extracting ticket details...</span>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      className="gradient-btn"
+                      style={{ padding: '8px 18px', fontSize: '12.5px' }}
+                      onClick={() => fileInputRef.current?.click()}
+                    >
+                      Choose File (PDF or Image)
+                    </button>
+                  )}
                 </div>
               )}
 
               {/* Manual Form fields */}
               {(inputTab === 'manual' || editingPassId) && (
                 <>
+                  {/* Status message banner */}
+                  {extractionMessage && (
+                    <div
+                      style={{
+                        padding: '10px 12px',
+                        borderRadius: '10px',
+                        background: 'rgba(16, 185, 129, 0.08)',
+                        border: '1px solid rgba(16, 185, 129, 0.25)',
+                        color: 'var(--text-primary)',
+                        fontSize: '12px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        gap: '8px',
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span>✨</span>
+                        <span>{extractionMessage}</span>
+                      </div>
+                      <button
+                        type="button"
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '12px', color: 'var(--text-muted)' }}
+                        onClick={() => setExtractionMessage(null)}
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Multi-segment itinerary quick-picker and batch save */}
+                  {detectedPasses.length > 1 && (
+                    <div
+                      style={{
+                        background: 'rgba(59, 130, 246, 0.06)',
+                        border: '1.5px solid rgba(59, 130, 246, 0.25)',
+                        borderRadius: '12px',
+                        padding: '12px',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '8px',
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '6px' }}>
+                        <span style={{ fontSize: '12.5px', fontWeight: 700, color: '#3b82f6', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <span>✈️</span> Multi-Leg Itinerary ({detectedPasses.length} Segments)
+                        </span>
+                        <button
+                          type="button"
+                          className="gradient-btn"
+                          style={{ fontSize: '11px', padding: '5px 10px', borderRadius: '8px' }}
+                          onClick={async () => {
+                            triggerHaptic('success');
+                            for (let i = 0; i < detectedPasses.length; i++) {
+                              const p = detectedPasses[i];
+                              await onSavePass({
+                                id: newId(),
+                                tripId: trip.id,
+                                type: p.type,
+                                title: p.title,
+                                provider: p.provider,
+                                referenceCode: p.referenceCode,
+                                origin: p.origin,
+                                destination: p.destination,
+                                startDateTime: p.startDateTime,
+                                endDateTime: p.endDateTime,
+                                seatOrRoom: p.seatOrRoom,
+                                notes: p.notes,
+                                attachmentUrl: formAttachmentUrl || undefined,
+                                qrData: p.referenceCode || `${p.title} - ${trip.name}`,
+                                createdAt: Date.now() + i,
+                                updatedAt: Date.now() + i,
+                              });
+                            }
+                            resetForm();
+                          }}
+                        >
+                          ⚡ Save All {detectedPasses.length} Flights
+                        </button>
+                      </div>
+                      <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                        Select a segment to edit individually, or save all segments to your wallet at once:
+                      </div>
+                      <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                        {detectedPasses.map((p, idx) => (
+                          <button
+                            key={idx}
+                            type="button"
+                            className="secondary-btn"
+                            style={{
+                              fontSize: '11px',
+                              padding: '5px 8px',
+                              borderRadius: '8px',
+                              background: formTitle === p.title ? 'rgba(59, 130, 246, 0.2)' : undefined,
+                              borderColor: formTitle === p.title ? '#3b82f6' : undefined,
+                              color: formTitle === p.title ? '#2563eb' : undefined,
+                              fontWeight: formTitle === p.title ? 700 : 500,
+                            }}
+                            onClick={() => {
+                              triggerHaptic('light');
+                              applyParsedPassToForm(p);
+                            }}
+                          >
+                            Leg {idx + 1}: {p.origin} ➔ {p.destination}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Attached File Preview Badge */}
+                  {formAttachmentUrl && (
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        padding: '8px 12px',
+                        background: 'var(--bg-surface-elevated, rgba(15,23,42,0.03))',
+                        border: '1px solid var(--border-color)',
+                        borderRadius: '10px',
+                        fontSize: '12px',
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span>{formAttachmentUrl.startsWith('data:application/pdf') ? '📄' : '🖼️'}</span>
+                        <span style={{ fontWeight: 600 }}>
+                          {formAttachmentUrl.startsWith('data:application/pdf') ? 'PDF Ticket Document Attached' : 'Ticket Image Attached'}
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          color: 'var(--color-danger, #ef4444)',
+                          cursor: 'pointer',
+                          fontSize: '11px',
+                          fontWeight: 600,
+                        }}
+                        onClick={() => setFormAttachmentUrl('')}
+                      >
+                        Remove Attachment
+                      </button>
+                    </div>
+                  )}
                   {/* Pass Type Selector */}
                   <div className="form-group">
                     <label className="form-label">Pass Category</label>
@@ -836,7 +1047,8 @@ export function TravelPassWalletModal({
                                   style={{ padding: '4px 10px', fontSize: '11.5px', display: 'flex', alignItems: 'center', gap: '4px' }}
                                   onClick={() => setViewingAttachment(pass.attachmentUrl!)}
                                 >
-                                  <span>🖼️</span> Ticket Photo
+                                  <span>{pass.attachmentUrl.startsWith('data:application/pdf') ? '📄' : '🖼️'}</span>{' '}
+                                  {pass.attachmentUrl.startsWith('data:application/pdf') ? 'View PDF' : 'Ticket Photo'}
                                 </button>
                               )}
                             </div>
@@ -907,7 +1119,7 @@ export function TravelPassWalletModal({
         </div>
       )}
 
-      {/* Ticket Screenshot Full-Screen Lightbox */}
+      {/* Ticket Full-Screen Lightbox / PDF Viewer */}
       {viewingAttachment && (
         <div
           className="modal-overlay"
@@ -917,20 +1129,48 @@ export function TravelPassWalletModal({
           <div
             className="glass-card modal-sheet fade-in"
             onClick={(e) => e.stopPropagation()}
-            style={{ maxWidth: '520px', padding: '16px', textAlign: 'center', borderRadius: '20px' }}
+            style={{ maxWidth: '540px', padding: '20px', textAlign: 'center', borderRadius: '20px' }}
           >
-            <img
-              src={viewingAttachment}
-              alt="Ticket Pass"
-              style={{ width: '100%', maxHeight: '70vh', objectFit: 'contain', borderRadius: '12px' }}
-            />
+            {viewingAttachment.startsWith('data:application/pdf') ? (
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '14px', padding: '16px 8px' }}>
+                <span style={{ fontSize: '48px' }}>📄</span>
+                <div>
+                  <h4 style={{ fontSize: '16px', fontWeight: 700, margin: '0 0 6px 0' }}>PDF Ticket Document</h4>
+                  <p style={{ fontSize: '12.5px', color: 'var(--text-muted)', margin: 0 }}>
+                    Official e-ticket document attached to this travel pass.
+                  </p>
+                </div>
+                <a
+                  href={viewingAttachment}
+                  download="e-ticket.pdf"
+                  className="gradient-btn"
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    padding: '8px 20px',
+                    fontSize: '13px',
+                    textDecoration: 'none',
+                    fontWeight: 600,
+                  }}
+                >
+                  <span>⬇️</span> Download / Open PDF
+                </a>
+              </div>
+            ) : (
+              <img
+                src={viewingAttachment}
+                alt="Ticket Pass"
+                style={{ width: '100%', maxHeight: '70vh', objectFit: 'contain', borderRadius: '12px' }}
+              />
+            )}
             <button
               type="button"
-              className="gradient-btn"
-              style={{ marginTop: '12px', width: '100%', padding: '8px' }}
+              className="secondary-btn"
+              style={{ marginTop: '14px', width: '100%', padding: '8px' }}
               onClick={() => setViewingAttachment(null)}
             >
-              Close Ticket
+              Close
             </button>
           </div>
         </div>

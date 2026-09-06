@@ -2175,6 +2175,36 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - Moving deep tools from the header dropdown into the Settings tab adds 1 extra tap for rare exports, but dramatically reduces cognitive load and keeps the header dropdown focused on trip coordination essentials.
 
+---
+
+## 119. Hierarchical Settings Drill-Down Navigation & E-Ticket PDF Itinerary Auto-Parser (v3.4.2)
+* **Context:**
+  - Navigating back from nested sub-screens in `SettingsView.tsx` (e.g. `Settings -> This Trip -> Trip Tools & Story -> Categories/Map/Recycle Bin`) previously cleared `subScreen` to `null`, kicking the traveler completely back to the root Settings screen rather than returning to the immediate parent screen (`Trip Tools & Story` or `This Trip`).
+  - E-ticket PDF uploads (specifically airline bookings such as multi-leg IndiGo/Cleartrip itineraries) failed to extract or populate details in `TravelPassWalletModal.tsx` because `handleFileUpload` only stored the base64 attachment and default filename without running PDF text extraction or calling ticket parsers.
+  - In `passParser.ts`, `lower.includes('stay')` took precedence over `lower.includes('flight')` causing flight itineraries with layovers to be miscategorized, flight number regexes rejected codes with spacing like `6E - 537`, and PNR table headers (`AIRLINE PNR\n YI77GE\n X89JTF`) and online booking IDs (`Trip ID : 260807634788`) were ignored.
+  - The wallet upload UI labels said "Choose Image File" and "Upload Screenshot" even though PDF e-tickets are the primary format for flight itineraries.
+* **Decision:**
+  1. **Hierarchical Stack Navigation in Settings (`SettingsView.tsx`):**
+     - Replaced flat `subScreen` state with an interactive navigation stack (`screenStack: SubScreen[]`) and push/pop handlers (`pushScreen`, `popScreen`).
+     - Added `DEFAULT_PARENT_MAP` defining explicit parent-child relationships across all settings drill-downs (e.g. `categories` -> `trip-tools` -> `trip-settings` -> `Settings`).
+     - Implemented dynamic back-button labels via `getParentTitle()`, replacing static "Settings" labels with the actual parent title (e.g. "← Trip Tools" when inside Categories or Recycle Bin; "← This Trip" when inside Trip Tools).
+     - Aligned all sub-modal `onBack` handlers (`BugReportModal`, `FeatureRequestModal`, `SuperAdminBugTracker`) with `popScreen()`.
+  2. **Client-Side PDF Text Extraction (`src/utils/pdfExtractor.ts`):**
+     - Integrated `unpdf` client-side PDF text extraction, converting uploaded PDF ArrayBuffers/Uint8Arrays into clean multiline text on-device with zero cloud server dependencies.
+  3. **Multi-Leg Flight Segment & E-Ticket Auto-Parser (`src/utils/passParser.ts`):**
+     - Introduced `parseAllBookingPasses()` to identify multi-leg or roundtrip flight itineraries, extracting carrier codes (e.g. `6E-537`, `6E-149`, `6E-445`), airport origins & destinations (`BLR ➔ HYD`, `HYD ➔ IXB`, `IXB ➔ BLR`), scheduled departure & arrival times, and travel dates.
+     - Added `extractReferenceCodes()` supporting tabular `AIRLINE PNR` layouts (`YI77GE`, `X89JTF`) and portal booking IDs (`Trip ID : 260807634788`).
+     - Added `extractPassengers()` detecting titles and full names (`Ms Upama Maurya`, `Mr RAHUL MAURYA`).
+     - Re-ordered type detection precedence so airline codes and flight patterns are checked before generic words like "stay".
+  4. **Travel Pass & Ticket Wallet Experience (`src/components/TravelPassWalletModal.tsx`):**
+     - Renamed tab to "📄 Upload File" and button to "Choose File (PDF or Image)".
+     - Added automated PDF text extraction on file upload with live extraction progress feedback.
+     - When multi-segment itineraries are detected, presents an interactive multi-leg card allowing 1-tap **"Save All N Flights to Wallet"** batch import, or quick-switching between individual flight segment details.
+     - Added PDF document attachment support with download/view options in the pass lightbox.
+* **Trade-offs Accepted:**
+  - Client-side PDF text extraction using `unpdf` operates 100% on-device, preserving traveler privacy and avoiding cloud API costs, but requires standard digital text in the PDF (scanned, image-only PDFs without an embedded OCR text layer will attach as a document without auto-populating fields).
+
+
 
 
 

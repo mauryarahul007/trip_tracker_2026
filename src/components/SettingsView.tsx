@@ -181,7 +181,101 @@ export function SettingsView({
   onOpenMediaGallery,
   onOpenOfflineSnapshot,
 }: SettingsViewProps) {
-  const [subScreen, setSubScreen] = useState<SubScreen>(initialSubScreen);
+  const [screenStack, setScreenStack] = useState<SubScreen[]>(() => (initialSubScreen ? [initialSubScreen] : []));
+  const subScreen = screenStack.length > 0 ? screenStack[screenStack.length - 1] : null;
+
+  useEffect(() => {
+    if (initialSubScreen) {
+      setScreenStack([initialSubScreen]);
+    }
+  }, [initialSubScreen]);
+
+  const pushScreen = (screen: SubScreen) => {
+    triggerHaptic('light');
+    setScreenStack((prev) => [...prev, screen]);
+  };
+
+  const DEFAULT_PARENT_MAP: Record<string, SubScreen> = {
+    'categories': 'trip-tools',
+    'recycle-bin': 'trip-tools',
+    'trip-map': 'trip-tools',
+    'trip-tools': 'trip-settings',
+    'storage-data': 'data-menu',
+    'archived-trips': 'data-menu',
+    'backups': 'data-menu',
+    'report-issue': 'help-account',
+    'suggest-feature': 'help-account',
+    'bug-tracker': 'help-account',
+    'appearance': 'preferences',
+    'trip-settings': null,
+    'preferences': null,
+    'data-menu': null,
+    'help-account': null,
+    'about': null,
+  };
+
+  const popScreen = () => {
+    triggerHaptic('light');
+    setScreenStack((prev) => {
+      if (prev.length > 1) {
+        return prev.slice(0, prev.length - 1);
+      }
+      const current = prev[0] ?? null;
+      const fallback = current ? DEFAULT_PARENT_MAP[current] ?? null : null;
+      return fallback ? [fallback] : [];
+    });
+  };
+
+  const setSubScreen = (target: SubScreen) => {
+    if (target === null) {
+      popScreen();
+    } else {
+      pushScreen(target);
+    }
+  };
+
+  const getScreenTitle = (screen: SubScreen): string => {
+    switch (screen) {
+      case 'trip-settings':
+        return activeTrip ? activeTrip.name : 'This Trip';
+      case 'trip-tools':
+        return 'Trip Tools';
+      case 'data-menu':
+        return 'Data & Backups';
+      case 'storage-data':
+        return 'Storage & Data';
+      case 'help-account':
+        return 'Help & Account';
+      case 'preferences':
+        return 'Preferences';
+      case 'categories':
+        return 'Categories';
+      case 'recycle-bin':
+        return 'Recycle Bin';
+      case 'trip-map':
+        return 'Trip Map';
+      case 'archived-trips':
+        return 'Archived Trips';
+      case 'backups':
+        return 'Backups';
+      case 'appearance':
+        return 'Appearance';
+      case 'about':
+        return 'About';
+      default:
+        return 'Settings';
+    }
+  };
+
+  const getParentTitle = (): string => {
+    if (screenStack.length > 1) {
+      return getScreenTitle(screenStack[screenStack.length - 2]);
+    }
+    if (subScreen && DEFAULT_PARENT_MAP[subScreen] !== undefined) {
+      return getScreenTitle(DEFAULT_PARENT_MAP[subScreen]);
+    }
+    return 'Settings';
+  };
 
   // Store data
   const userId = useTripStore((s) => s.userId);
@@ -736,7 +830,7 @@ export function SettingsView({
         <div className="settings-subscreen-nav-header">
           <button type="button" className="settings-subscreen-back-link" onClick={() => setSubScreen(null)}>
             <IconChevronLeft size={18} />
-            <span>Settings</span>
+            <span>{getParentTitle()}</span>
           </button>
         </div>
         <h3 className="settings-subscreen-main-title">Categories &amp; Tags</h3>
@@ -1032,7 +1126,7 @@ export function SettingsView({
         <div className="settings-subscreen-nav-header">
           <button type="button" className="settings-subscreen-back-link" onClick={() => setSubScreen(null)}>
             <IconChevronLeft size={18} />
-            <span>Settings</span>
+            <span>{getParentTitle()}</span>
           </button>
           {deletedExpenses.length > 0 && (
             <button
@@ -1126,7 +1220,7 @@ export function SettingsView({
         <div className="settings-subscreen-nav-header">
           <button type="button" className="settings-subscreen-back-link" onClick={() => setSubScreen(null)}>
             <IconChevronLeft size={18} />
-            <span>Settings</span>
+            <span>{getParentTitle()}</span>
           </button>
         </div>
         <h3 className="settings-subscreen-main-title">Appearance</h3>
@@ -1192,7 +1286,7 @@ export function SettingsView({
         <div className="settings-subscreen-nav-header">
           <button type="button" className="settings-subscreen-back-link" onClick={() => setSubScreen(null)}>
             <IconChevronLeft size={18} />
-            <span>Settings</span>
+            <span>{getParentTitle()}</span>
           </button>
         </div>
         <h3 className="settings-subscreen-main-title">Trip Map</h3>
@@ -1216,7 +1310,7 @@ export function SettingsView({
         <div className="settings-subscreen-nav-header">
           <button type="button" className="settings-subscreen-back-link" onClick={() => setSubScreen(null)}>
             <IconChevronLeft size={18} />
-            <span>Settings</span>
+            <span>{getParentTitle()}</span>
           </button>
         </div>
         <h3 className="settings-subscreen-main-title">Archived Trips</h3>
@@ -1284,7 +1378,7 @@ export function SettingsView({
         <div className="settings-subscreen-nav-header">
           <button type="button" className="settings-subscreen-back-link" onClick={() => setSubScreen(null)}>
             <IconChevronLeft size={18} />
-            <span>Settings</span>
+            <span>{getParentTitle()}</span>
           </button>
         </div>
         <h3 className="settings-subscreen-main-title">Database &amp; Backups</h3>
@@ -1425,10 +1519,10 @@ export function SettingsView({
               triggerHaptic('light');
               setSubScreen(null);
             }}
-            aria-label="Back to Settings"
+            aria-label={`Back to ${getParentTitle()}`}
           >
             <IconChevronLeft size={18} />
-            <span>Settings</span>
+            <span>{getParentTitle()}</span>
           </button>
         </div>
         <h3 className="settings-subscreen-main-title">Storage and Data</h3>
@@ -1707,10 +1801,10 @@ export function SettingsView({
               triggerHaptic('light');
               setSubScreen(null);
             }}
-            aria-label="Back to Settings"
+            aria-label={`Back to ${getParentTitle()}`}
           >
             <IconChevronLeft size={18} />
-            <span>Settings</span>
+            <span>{getParentTitle()}</span>
           </button>
         </div>
         <h3 className="settings-subscreen-main-title">Trip Tools &amp; Preferences</h3>
@@ -2086,7 +2180,7 @@ export function SettingsView({
         <div className="settings-subscreen-nav-header">
           <button type="button" className="settings-subscreen-back-link" onClick={() => setSubScreen(null)}>
             <IconChevronLeft size={18} />
-            <span>Settings</span>
+            <span>{getParentTitle()}</span>
           </button>
         </div>
         <h3 className="settings-subscreen-main-title">This Trip: {activeTrip.name}</h3>
@@ -2261,7 +2355,7 @@ export function SettingsView({
         <div className="settings-subscreen-nav-header">
           <button type="button" className="settings-subscreen-back-link" onClick={() => setSubScreen(null)}>
             <IconChevronLeft size={18} />
-            <span>Settings</span>
+            <span>{getParentTitle()}</span>
           </button>
         </div>
         <h3 className="settings-subscreen-main-title">Preferences &amp; Interface</h3>
@@ -2612,7 +2706,7 @@ export function SettingsView({
         <div className="settings-subscreen-nav-header">
           <button type="button" className="settings-subscreen-back-link" onClick={() => setSubScreen(null)}>
             <IconChevronLeft size={18} />
-            <span>Settings</span>
+            <span>{getParentTitle()}</span>
           </button>
         </div>
         <h3 className="settings-subscreen-main-title">Data &amp; Backups</h3>
@@ -2715,7 +2809,7 @@ export function SettingsView({
         <div className="settings-subscreen-nav-header">
           <button type="button" className="settings-subscreen-back-link" onClick={() => setSubScreen(null)}>
             <IconChevronLeft size={18} />
-            <span>Settings</span>
+            <span>{getParentTitle()}</span>
           </button>
         </div>
         <h3 className="settings-subscreen-main-title">Help &amp; Account</h3>
@@ -2813,7 +2907,7 @@ export function SettingsView({
         <div className="settings-subscreen-nav-header">
           <button type="button" className="settings-subscreen-back-link" onClick={() => setSubScreen(null)}>
             <IconChevronLeft size={18} />
-            <span>Settings</span>
+            <span>{getParentTitle()}</span>
           </button>
         </div>
         <h3 className="settings-subscreen-main-title">About &amp; Legal</h3>
