@@ -18,6 +18,8 @@ import { usePullToRefresh } from '../utils/usePullToRefresh';
 import { PullToRefreshIndicator } from './PullToRefreshIndicator';
 import { triggerHaptic } from '../utils/haptics';
 import { preloadModule } from '../utils/modulePreload';
+import { useHistoryBack } from '../utils/useHistoryBack';
+import { useEscapeKey } from '../utils/useEscapeKey';
 
 type Props = {
   trips: Trip[];
@@ -109,6 +111,9 @@ export function TripsListScreen({
   const [targetTripId, setTargetTripId] = useState<string | null>(null);
   const [isSavingTrip, setIsSavingTrip] = useState(false);
   const [actionSheetTrip, setActionSheetTrip] = useState<Trip | null>(null);
+
+  useHistoryBack(showJoinTrip, () => setShowJoinTrip(false));
+  useEscapeKey(showJoinTrip, () => setShowJoinTrip(false));
   // Enables full luxury hero spotlight even with 1 trip
   const stackActive = trips.length >= 1 && !showList && !showAddTrip && !showJoinTrip;
 

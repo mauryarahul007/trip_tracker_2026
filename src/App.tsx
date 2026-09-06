@@ -1647,12 +1647,27 @@ export default function App() {
   useHistoryBack(!!confirmRequest, () => setConfirmRequest(null));
   useHistoryBack(showCommandPalette, () => setShowCommandPalette(false));
   useHistoryBack(showTripWrapped, () => setShowTripWrapped(false));
+  useHistoryBack(showBugTracker, () => {
+    setShowBugTracker(false);
+    if (window.location.hash === '#/bugs' || window.location.hash === '#/bug-tracker') {
+      window.location.hash = '#/';
+    }
+  });
+  useHistoryBack(showOfflineSnapshot, () => setShowOfflineSnapshot(false));
+  useHistoryBack(showMediaGallery, () => setShowMediaGallery(false));
+  useHistoryBack(showTravelDossier, () => setShowTravelDossier(false));
   useHistoryBack(showShortcutsModal, () => setShowShortcutsModal(false));
   useHistoryBack(showFxRates, () => setShowFxRates(false));
   useHistoryBack(showSmartQuickAdd, () => setShowSmartQuickAdd(false));
 
   // Escape key — the desktop equivalent of the back-gesture wiring above,
   // for the same set of overlay modals (excludes tab/trip navigation).
+  useEscapeKey(showBugTracker, () => {
+    setShowBugTracker(false);
+    if (window.location.hash === '#/bugs' || window.location.hash === '#/bug-tracker') {
+      window.location.hash = '#/';
+    }
+  });
   useEscapeKey(showAddTrip, handleCancelTripForm);
   useEscapeKey(showAddExpense, handleCancelExpenseForm);
   useEscapeKey(showExpenseFilterDrawer, () => setShowExpenseFilterDrawer(false));
@@ -1662,6 +1677,9 @@ export default function App() {
   useEscapeKey(showRouteModal, () => setShowRouteModal(false));
   useEscapeKey(showAchievements, () => setShowAchievements(false));
   useEscapeKey(showGlobalSettings, () => setShowGlobalSettings(false));
+  useEscapeKey(showOfflineSnapshot, () => setShowOfflineSnapshot(false));
+  useEscapeKey(showMediaGallery, () => setShowMediaGallery(false));
+  useEscapeKey(showTravelDossier, () => setShowTravelDossier(false));
   useEscapeKey(showCommandPalette, () => setShowCommandPalette(false));
   useEscapeKey(showTripWrapped, () => setShowTripWrapped(false));
   useEscapeKey(showShortcutsModal, () => setShowShortcutsModal(false));

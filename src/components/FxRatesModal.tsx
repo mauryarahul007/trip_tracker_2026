@@ -3,6 +3,7 @@ import type { Trip, TripFxConfig } from '../types';
 import { fetchExchangeRates, convertCurrency, type ExchangeRatesData } from '../utils/currencyFx';
 import { triggerHaptic } from '../utils/haptics';
 import { useEscapeKey } from '../utils/useEscapeKey';
+import { useHistoryBack } from '../utils/useHistoryBack';
 import { formatAmount } from '../utils/currency';
 
 interface Props {
@@ -51,6 +52,7 @@ export function FxRatesModal({
   const [markupPercent, setMarkupPercent] = useState<string>(trip.fxConfig?.markupPercent ? String(trip.fxConfig.markupPercent) : '0');
   const [activeCustomRates, setActiveCustomRates] = useState<Record<string, number>>(trip.fxConfig?.customRates || {});
 
+  useHistoryBack(isOpen, onClose);
   useEscapeKey(isOpen, onClose);
 
   useEffect(() => {

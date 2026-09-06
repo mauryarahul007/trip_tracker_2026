@@ -1,5 +1,7 @@
 import { Fragment, useState, useEffect, useMemo, useRef } from 'react';
 import { useFocusTrap } from '../hooks/useFocusTrap';
+import { useHistoryBack } from '../utils/useHistoryBack';
+import { useEscapeKey } from '../utils/useEscapeKey';
 import {
   fetchBugs,
   createBug,
@@ -268,6 +270,17 @@ export function SuperAdminBugTracker({ onBack, isAdmin = true, onRequestConfirm 
   useFocusTrap(drawerRef, Boolean(drawerBugId), false, () => setDrawerBugId(null));
   useFocusTrap(addModalRef, showAddModal, false, () => setShowAddModal(false));
   useFocusTrap(resolveDrawerRef, Boolean(resolvingBug), false, () => setResolvingBug(null));
+
+  // Stack navigation: sub-modals pop first, then the root ledger view returns via onBack
+  useHistoryBack(Boolean(resolvingBug), () => setResolvingBug(null));
+  useHistoryBack(showAddModal, () => setShowAddModal(false));
+  useHistoryBack(Boolean(drawerBugId), () => setDrawerBugId(null));
+  useHistoryBack(!resolvingBug && !showAddModal && !drawerBugId, onBack);
+
+  useEscapeKey(Boolean(resolvingBug), () => setResolvingBug(null));
+  useEscapeKey(showAddModal, () => setShowAddModal(false));
+  useEscapeKey(Boolean(drawerBugId), () => setDrawerBugId(null));
+  useEscapeKey(!resolvingBug && !showAddModal && !drawerBugId, onBack);
   const [toasts, setToasts] = useState<{ id: number; text: string; tone: 'success' | 'danger' }[]>([]);
 
   const [newTitle, setNewTitle] = useState('');
@@ -492,8 +505,8 @@ ${bug.diagnostics?.stackTrace ? `#### Stack Trace\n\`\`\`text\n${bug.diagnostics
             <h2>Bug Ledger</h2>
             <p>Restricted to superadmins and trip admins for system maintenance.</p>
           </div>
-          <button type="button" className="ops-btn" onClick={onBack}>
-            <IconChevronLeft size={14} className="icon-sm" /> Settings
+          <button type="button" className="ops-btn" onClick={onBack} aria-label="Go back" title="Go back">
+            <IconChevronLeft size={14} className="icon-sm" /> Back
           </button>
         </div>
         <div className="ops-card" style={{ textAlign: 'center', padding: '32px 20px' }}>
@@ -504,8 +517,8 @@ ${bug.diagnostics?.stackTrace ? `#### Stack Trace\n\`\`\`text\n${bug.diagnostics
           <p style={{ color: 'var(--text-secondary)', fontSize: '12.5px', maxWidth: '360px', margin: '0 auto 20px' }}>
             The bug ledger is restricted to superadmins and trip admins for system maintenance.
           </p>
-          <button type="button" className="ops-btn ops-btn-primary" onClick={onBack} style={{ padding: '9px 18px' }}>
-            Return to Settings
+          <button type="button" className="ops-btn ops-btn-primary" onClick={onBack} style={{ padding: '9px 18px' }} aria-label="Go back" title="Go back">
+            Return to Previous Screen
           </button>
         </div>
       </div>
@@ -523,8 +536,8 @@ ${bug.diagnostics?.stackTrace ? `#### Stack Trace\n\`\`\`text\n${bug.diagnostics
           <button type="button" className="ops-btn" onClick={loadBugs} title="Sync with the CLI ledger" aria-label="Sync with the CLI ledger">
             <IconRefresh size={14} className="icon-sm" />
           </button>
-          <button type="button" className="ops-btn" onClick={onBack}>
-            <IconChevronLeft size={14} className="icon-sm" /> Settings
+          <button type="button" className="ops-btn" onClick={onBack} aria-label="Go back" title="Go back">
+            <IconChevronLeft size={14} className="icon-sm" /> Back
           </button>
         </div>
       </div>

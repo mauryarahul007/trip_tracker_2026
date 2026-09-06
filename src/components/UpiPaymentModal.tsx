@@ -5,6 +5,8 @@ import { generateUpiUri, isValidUpiId, POPULAR_UPI_APPS } from '../utils/upiLink
 import { IconClose } from './Icons';
 import { triggerHaptic } from '../utils/haptics';
 import { useFocusTrap } from '../hooks/useFocusTrap';
+import { useHistoryBack } from '../utils/useHistoryBack';
+import { useEscapeKey } from '../utils/useEscapeKey';
 import { ConfettiBurst } from './ConfettiBurst';
 import { QrCodeView } from './QrCodeView';
 
@@ -38,6 +40,13 @@ export function UpiPaymentModal({
 
   const modalRef = useRef<HTMLDivElement>(null);
   useFocusTrap(modalRef, true, false, onClose);
+
+  // Dismiss QR code view first on back/escape; dismiss entire modal if QR is not open
+  useHistoryBack(showQr, () => setShowQr(false));
+  useHistoryBack(!showQr, onClose);
+
+  useEscapeKey(showQr, () => setShowQr(false));
+  useEscapeKey(!showQr, onClose);
 
   const currencySymbol = getCurrencySymbol(currency);
   const payerName = fromMember?.name || 'Payer';

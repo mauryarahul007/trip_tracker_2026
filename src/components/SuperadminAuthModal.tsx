@@ -3,6 +3,8 @@ import { IconShield, IconClose, IconCheck, IconAlertCircle } from './Icons';
 import { useTripStore } from '../store/tripStore';
 import { useAuthStore } from '../store/authStore';
 import { useFocusTrap } from '../hooks/useFocusTrap';
+import { useHistoryBack } from '../utils/useHistoryBack';
+import { useEscapeKey } from '../utils/useEscapeKey';
 import { isBiometricAvailable, verifyBiometricCredential } from '../utils/webAuthn';
 import { triggerHaptic } from '../utils/haptics';
 
@@ -19,6 +21,8 @@ export function SuperadminAuthModal({ isOpen, onClose, onSuccess }: Props) {
   const sheetRef = useRef<HTMLDivElement>(null);
 
   useFocusTrap(sheetRef, isOpen, false, onClose);
+  useHistoryBack(isOpen, onClose);
+  useEscapeKey(isOpen, onClose);
 
   // After a real Supabase sign-in, tripStore's userId must match the real
   // auth.uid() — writes (createTrip, addExpense, ...) carry it as an FK to

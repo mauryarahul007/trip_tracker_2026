@@ -6,6 +6,8 @@ import { logSuperadminAction } from '../../services/tripApi';
 import { IconSearch, IconCheck, IconRefresh, IconChevronDown, IconChevronUp, IconX } from '../Icons';
 import type { ConfirmRequest } from '../ConfirmDialog';
 import { useTableDensity } from '../../hooks/useTableDensity';
+import { useHistoryBack } from '../../utils/useHistoryBack';
+import { useEscapeKey } from '../../utils/useEscapeKey';
 
 interface Props {
   trips: Trip[];
@@ -32,6 +34,9 @@ export function AdminTripsPage({ trips, expenses, members, onInspectTrip, onRefr
   const [inspectingTripId, setInspectingTripId] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const { density, toggle: toggleDensity } = useTableDensity('ops-trips-density');
+
+  useHistoryBack(inspectingTripId !== null, () => setInspectingTripId(null));
+  useEscapeKey(inspectingTripId !== null, () => setInspectingTripId(null));
 
   const showToast = (msg: string) => {
     setToastMsg(msg);

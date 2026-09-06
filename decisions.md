@@ -2381,8 +2381,26 @@ This document logs all meaningful technical decisions, library choices, design p
      - Added an explicit `[ ← Back ]` button on the left of the modal header with haptic feedback.
      - Added a `[ Cancel ]` button to the bottom action bar alongside `1-Tap Save` and `Customize...`.
      - Maintained circular `✕` top-right dismiss button for multiple accessible exit paths.
+## 128. Comprehensive Back Navigation & Escape Key Wiring Across All Popups & Pages (v3.4.11)
+* **Context:**
+  - An application-wide audit of all popups, drawers, sheets, and pages revealed several places where browser Back button, Android swipe-back gesture, or desktop Escape key were not wired, leading to either unhandled back events or premature trip/screen exits:
+    1. **Top-Level `App.tsx`:** `showBugTracker`, `showOfflineSnapshot`, `showMediaGallery`, and `showTravelDossier` were missing from the central back-stack.
+    2. **SuperAdmin Bug Tracker (`SuperAdminBugTracker.tsx`):** The full-screen ledger and its three internal overlays (`resolvingBug`, `showAddModal`, `drawerBugId`) lacked `useHistoryBack` and `useEscapeKey`, and the header back button was misleadingly labeled "Settings".
+    3. **SuperAdmin Portal (`AdminPortalLayout.tsx`, `AdminUsersPage.tsx`, `AdminTripsPage.tsx`):** Mobile section switcher, jump menu, broadcast drawer, trip inspection drawer, and tab drill-down lacked LIFO back navigation.
+    4. **Settings & Admin Auth (`SettingsView.tsx`, `SuperadminAuthModal.tsx`):** SuperAdmin authentication modal and category deletion/merge confirmation modal lacked back navigation.
+    5. **Settlements & UPI (`BalancesSettlements.tsx`, `UpiPaymentModal.tsx`):** 1-tap UPI payment modal and its internal QR view lacked back navigation.
+    6. **Modals & Popovers:** `ReceiptScannerModal`, `FxRatesModal`, `TripMediaGalleryModal` (including lightbox photo view), `OfflineSnapshotModal` (including import preview), `TravelDossierModal`, `TripsListScreen` (`showJoinTrip`), and `DateRangePicker` popover lacked back navigation.
+* **Decision:**
+  - **Universal LIFO History Back Stack (`useHistoryBack`):**
+    - Wired `useHistoryBack` across all identified modals, sheets, drawers, and sub-pages so that the deepest open layer is always popped first on back gesture or browser Back button.
+    - Added nested back support for sub-views (e.g. lightbox in media gallery, QR view in UPI modal, import preview in offline snapshot, and drawers in bug tracker).
+  - **Desktop Escape Key Harmonization (`useEscapeKey`):**
+    - Symmetrically paired `useEscapeKey` with `useHistoryBack` across all modals and forms, ensuring desktop keyboard parity.
+  - **Universal Header & Action Affordances:**
+    - Updated `SuperAdminBugTracker` header button to universal "Back" with `aria-label="Back"` and title="Back".
 * **Trade-offs Accepted:**
-  - None -- conforms to established modal navigation patterns across the application.
+  - Standardized on zero-dependency, React hook-based back stack (`useHistoryBack`) across both traveler and superadmin portals.
+
 
 
 

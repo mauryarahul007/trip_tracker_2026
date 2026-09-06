@@ -700,6 +700,10 @@ export function SettingsView({
   useHistoryBack(isQrModalOpen, () => setIsQrModalOpen(false));
   useEscapeKey(isQrModalOpen, () => setIsQrModalOpen(false));
 
+  // Register Superadmin Auth modal into browser history stack
+  useHistoryBack(isSuperadminModalOpen, () => setIsSuperadminModalOpen(false));
+  useEscapeKey(isSuperadminModalOpen, () => setIsSuperadminModalOpen(false));
+
   // Connectivity and disk storage
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [storageEstimate, setStorageEstimate] = useState<{ used: number; quota: number } | null>(null);
@@ -772,6 +776,10 @@ export function SettingsView({
   const [showIconPicker, setShowIconPicker] = useState(false);
   const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null);
   const [mergeTargetId, setMergeTargetId] = useState('');
+
+  // Register Category Delete confirmation modal into browser history stack
+  useHistoryBack(categoryToDelete !== null, () => setCategoryToDelete(null));
+  useEscapeKey(categoryToDelete !== null, () => setCategoryToDelete(null));
 
   const formatBytes = (bytes: number) => {
     if (bytes === 0) return '0 B';

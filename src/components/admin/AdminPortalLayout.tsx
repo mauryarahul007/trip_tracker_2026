@@ -19,6 +19,8 @@ import { IconChevronRight, IconSearch } from '../Icons';
 import { ConfirmDialog, type ConfirmRequest } from '../ConfirmDialog';
 import { formatRelativeTime } from '../../utils/relativeTime';
 import { initialsFrom } from '../../utils/initials';
+import { useHistoryBack } from '../../utils/useHistoryBack';
+import { useEscapeKey } from '../../utils/useEscapeKey';
 // Each admin tab only ever renders one at a time (see the activeTab
 // switches in <main> below) -- lazy per sub-page so opening the Ops Deck
 // to check one tab doesn't also download the other seven's code (~2.9k
@@ -248,6 +250,16 @@ export function AdminPortalLayout({
   const [jumpOpen, setJumpOpen] = useState(false);
   const [jumpIndex, setJumpIndex] = useState(0);
   const cmdkInputRef = useRef<HTMLInputElement>(null);
+
+  // Stack navigation: close switcher drawer and jump menu first, then return to command center
+  useHistoryBack(showSectionSwitcher, () => setShowSectionSwitcher(false));
+  useHistoryBack(jumpOpen, () => setJumpOpen(false));
+  useHistoryBack(Boolean(confirmRequest), () => setConfirmRequest(null));
+  useHistoryBack(activeTab !== 'command', () => onActiveTabChange('command'));
+
+  useEscapeKey(showSectionSwitcher, () => setShowSectionSwitcher(false));
+  useEscapeKey(jumpOpen, () => setJumpOpen(false));
+  useEscapeKey(Boolean(confirmRequest), () => setConfirmRequest(null));
 
   // Global Cmd+K / Ctrl+K keyboard shortcut
   useEffect(() => {

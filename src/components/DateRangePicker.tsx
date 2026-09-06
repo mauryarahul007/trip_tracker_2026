@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { getMonthGrid, toISODate, fromISODate, isSameDate, isBetweenExclusive, formatSingleDate } from '../utils/calendar';
 import { IconCalendar, IconChevronLeft, IconChevronRight } from './Icons';
 import { useFocusTrap } from '../hooks/useFocusTrap';
+import { useHistoryBack } from '../utils/useHistoryBack';
 
 const WEEKDAYS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
 
@@ -58,6 +59,7 @@ export function DateRangePicker({ startDate, endDate, onSelectStart, onSelectEnd
   // restores focus to the trigger button on close -- same pattern already
   // used by every other popup/modal in the app.
   useFocusTrap(popoverRef, open, false, () => setOpen(false));
+  useHistoryBack(open, () => setOpen(false));
 
   const startD = fromISODate(startDate);
   const endD = fromISODate(endDate);

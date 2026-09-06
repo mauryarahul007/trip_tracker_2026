@@ -9,6 +9,7 @@ import { fetchPreviousTripMembers, searchRemoteMemberSuggestions } from '../serv
 import { IconCheck, IconEdit, IconTrash, IconMembers, IconTag } from './Icons';
 import { SwipeableRow } from './SwipeableRow';
 import { useHistoryBack } from '../utils/useHistoryBack';
+import { useEscapeKey } from '../utils/useEscapeKey';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { formatAmount } from '../utils/currency';
 import { buildAutoGroupName } from '../utils/groupNaming';
@@ -336,9 +337,22 @@ export function MembersGroupsTab({
     setEditingGroup(null);
     setGroupFormError('');
   });
+  useEscapeKey(showAddGroup || Boolean(editingGroup), () => {
+    setShowAddGroup(false);
+    setEditingGroup(null);
+    setGroupFormError('');
+  });
 
   // Register member add/edit popup into browser history stack
   useHistoryBack(showAddForm, () => {
+    setShowAddForm(false);
+    setAddAnother(false);
+    setEditingMember(null);
+    setNewMemberName('');
+    setSelectedLinkedUserId(null);
+    setMemberFormError('');
+  });
+  useEscapeKey(showAddForm, () => {
     setShowAddForm(false);
     setAddAnother(false);
     setEditingMember(null);

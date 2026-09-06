@@ -5,6 +5,8 @@ import { setUserBanned, deleteUserAccount, broadcastNotification } from '../../s
 import { IconSearch, IconCheck, IconAlertCircle, IconRefresh } from '../Icons';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
 import { useTableDensity } from '../../hooks/useTableDensity';
+import { useHistoryBack } from '../../utils/useHistoryBack';
+import { useEscapeKey } from '../../utils/useEscapeKey';
 import type { ConfirmRequest } from '../ConfirmDialog';
 
 interface Props {
@@ -33,6 +35,8 @@ export function AdminUsersPage({ users, trips, superadminIds, onUsersChanged, on
   const [showBroadcastDrawer, setShowBroadcastDrawer] = useState(false);
   const broadcastDrawerRef = useRef<HTMLDivElement>(null);
   useFocusTrap(broadcastDrawerRef, showBroadcastDrawer, false, () => setShowBroadcastDrawer(false));
+  useHistoryBack(showBroadcastDrawer, () => setShowBroadcastDrawer(false));
+  useEscapeKey(showBroadcastDrawer, () => setShowBroadcastDrawer(false));
   const [broadcastTitle, setBroadcastTitle] = useState('');
   const [broadcastBody, setBroadcastBody] = useState('');
   const [broadcastTripId, setBroadcastTripId] = useState('');

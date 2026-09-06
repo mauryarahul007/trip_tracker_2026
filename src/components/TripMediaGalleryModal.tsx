@@ -3,6 +3,7 @@ import type { Expense, Member, Category } from '../types';
 import { formatAmount } from '../utils/currency';
 import { triggerHaptic } from '../utils/haptics';
 import { useEscapeKey } from '../utils/useEscapeKey';
+import { useHistoryBack } from '../utils/useHistoryBack';
 
 interface Props {
   isOpen: boolean;
@@ -34,13 +35,11 @@ export function TripMediaGalleryModal({
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [zoomLevel, setZoomLevel] = useState<number>(1);
 
-  useEscapeKey(isOpen, () => {
-    if (lightboxIndex !== null) {
-      setLightboxIndex(null);
-    } else {
-      onClose();
-    }
-  });
+  useHistoryBack(isOpen && lightboxIndex !== null, () => setLightboxIndex(null));
+  useHistoryBack(isOpen && lightboxIndex === null, onClose);
+
+  useEscapeKey(isOpen && lightboxIndex !== null, () => setLightboxIndex(null));
+  useEscapeKey(isOpen && lightboxIndex === null, onClose);
 
   const mediaItems: MediaItem[] = useMemo(() => {
     const items: MediaItem[] = [];

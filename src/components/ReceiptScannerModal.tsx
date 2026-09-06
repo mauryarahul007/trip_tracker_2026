@@ -3,6 +3,7 @@ import type { ItemizedReceiptConfig } from '../types';
 import { preProcessReceiptImage, parseReceiptText, toItemizedConfig, type ParsedReceiptData } from '../utils/receiptOcr';
 import { triggerHaptic } from '../utils/haptics';
 import { useEscapeKey } from '../utils/useEscapeKey';
+import { useHistoryBack } from '../utils/useHistoryBack';
 import { formatAmount } from '../utils/currency';
 
 interface Props {
@@ -28,6 +29,7 @@ export function ReceiptScannerModal({
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  useHistoryBack(isOpen, onClose);
   useEscapeKey(isOpen, onClose);
 
   if (!isOpen) return null;

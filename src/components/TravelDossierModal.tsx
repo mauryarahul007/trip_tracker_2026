@@ -4,6 +4,7 @@ import type { MemberBalance, Transfer } from '../utils/settlement';
 import { formatAmount } from '../utils/currency';
 import { triggerHaptic } from '../utils/haptics';
 import { useEscapeKey } from '../utils/useEscapeKey';
+import { useHistoryBack } from '../utils/useHistoryBack';
 import { getMemberRole } from '../utils/memberRoles';
 
 interface Props {
@@ -29,6 +30,7 @@ export function TravelDossierModal({
 }: Props) {
   const [copied, setCopied] = useState(false);
 
+  useHistoryBack(isOpen, onClose);
   useEscapeKey(isOpen, onClose);
 
   if (!isOpen) return null;

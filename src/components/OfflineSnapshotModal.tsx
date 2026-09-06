@@ -4,6 +4,7 @@ import { validateAndSanitizeBackup } from '../utils/backupValidation';
 import { triggerHaptic } from '../utils/haptics';
 import { formatAmount } from '../utils/currency';
 import { useEscapeKey } from '../utils/useEscapeKey';
+import { useHistoryBack } from '../utils/useHistoryBack';
 
 interface Props {
   isOpen: boolean;
@@ -26,7 +27,10 @@ export function OfflineSnapshotModal({
   const [importSuccess, setImportSuccess] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  useEscapeKey(isOpen, onClose);
+  useHistoryBack(isOpen && importPreview !== null, () => setImportPreview(null));
+  useHistoryBack(isOpen && importPreview === null, onClose);
+  useEscapeKey(isOpen && importPreview !== null, () => setImportPreview(null));
+  useEscapeKey(isOpen && importPreview === null, onClose);
 
   if (!isOpen) return null;
 
