@@ -350,8 +350,8 @@ export function ChecklistNotesTab({ trip, members, isAdmin }: Props) {
               setViewMode('passes');
             }}
           >
-            <span style={{ fontSize: '15px' }}>🎫</span>
-            <span>Passes</span>
+            <span className="segment-icon" style={{ fontSize: '15px' }}>🎫</span>
+            <span className="segment-label">Passes</span>
             {passes.length > 0 && <span className="segment-badge">{passes.length}</span>}
           </button>
           <button
@@ -364,8 +364,8 @@ export function ChecklistNotesTab({ trip, members, isAdmin }: Props) {
               setViewMode('notes');
             }}
           >
-            <IconPin size={17} />
-            <span>Notes</span>
+            <IconPin size={15} className="segment-icon" />
+            <span className="segment-label">Notes</span>
             {notes.length > 0 && <span className="segment-badge">{notes.length}</span>}
           </button>
           <button
@@ -378,8 +378,8 @@ export function ChecklistNotesTab({ trip, members, isAdmin }: Props) {
               setViewMode('checklist');
             }}
           >
-            <IconClipboardList size={17} />
-            <span>Checklist</span>
+            <IconClipboardList size={15} className="segment-icon" />
+            <span className="segment-label">Checklist</span>
             {totalCount > 0 && (
               <span className="segment-badge">
                 {completedCount}/{totalCount}

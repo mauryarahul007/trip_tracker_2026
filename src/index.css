@@ -9528,37 +9528,55 @@ textarea.input-field {
   display: flex;
   justify-content: center;
   margin-top: 4px;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
+  width: 100%;
 }
 
 .tab-segmented-control {
-  display: inline-flex;
+  display: flex;
   background: var(--bg-surface-hover);
-  padding: 4px;
+  padding: 3px;
   border-radius: var(--border-radius-md);
   border: 1px solid var(--border-color);
-  gap: 4px;
+  gap: 3px;
   width: 100%;
   max-width: min(520px, 100%);
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 .tab-segment-btn {
-  flex: 1;
+  flex: 1 1 0;
+  min-width: 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  padding: 8px 10px;
+  gap: 5px;
+  padding: 7px 6px;
   border-radius: var(--border-radius-sm);
   border: none;
   background: transparent;
   color: var(--text-secondary);
   font-family: var(--font-family-title);
-  font-size: 0.84rem;
+  font-size: 0.82rem;
   font-weight: 600;
   cursor: pointer;
   transition: var(--transition-smooth);
   white-space: nowrap;
+}
+
+.tab-segment-btn .segment-icon {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tab-segment-btn .segment-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex-shrink: 1;
 }
 
 .tab-segment-btn.active {
@@ -9569,12 +9587,31 @@ textarea.input-field {
 
 .segment-badge {
   font-family: var(--font-family-mono);
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   font-weight: 700;
-  padding: 2px 7px;
+  padding: 1px 6px;
   border-radius: 999px;
   background: rgba(15, 111, 99, 0.12);
   color: var(--primary-accent);
+  line-height: 1.25;
+  flex-shrink: 0;
+}
+
+.tab-segment-btn.active .segment-badge {
+  background: var(--primary-accent);
+  color: #ffffff;
+}
+
+@media (max-width: 380px) {
+  .tab-segment-btn {
+    padding: 6px 3px;
+    gap: 3px;
+    font-size: 0.76rem;
+  }
+  .segment-badge {
+    font-size: 0.64rem;
+    padding: 1px 4px;
+  }
 }
 
 /* Checklist Progress Card */

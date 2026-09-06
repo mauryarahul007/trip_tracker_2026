@@ -126,4 +126,224 @@ X89JTF`;
     expect(refs.pnrList).toContain('X89JTF');
     expect(refs.tripId).toBe('260807634788');
   });
+
+  it('parses SmartBuy / Cleartrip numbered e-ticket (3 legs, 2 passengers, distinct return PNR)', () => {
+    const smartBuyTicketText = `E-Ticket booked with Booking Confirmed
+Booking ID : 44117860941262337908
+CLEARTRIP Ref ID : 260807625554
+Booked on: Fri, 07 Aug 2026 14:46:25
+For any assistance regarding your booking, please contact CLEARTRIP :
+Email: www.cleartrip.com/support
+Call: +91 9595333333
+
+Departure Flight
+Bangalore to Hyderabad | Sat, 10 Oct 2026 PNR Number : K6BP5V
+IndiGo   6E - 537
+10:15 BLR
+Sat, 10 Oct 2026
+Kempegowda International
+Airport
+Terminal: 1
+1 h 15 min
+Economy
+HYD 11:30
+Sat, 10 Oct 2026
+Rajiv Gandhi International
+Terminal: NA
+
+Hyderabad to Bagdogra | Sat, 10 Oct 2026 PNR Number : K6BP5V
+IndiGo   6E - 149
+13:25 HYD
+Sat, 10 Oct 2026
+Rajiv Gandhi International
+Terminal: NA
+2 h 20 min
+Economy
+IXB 15:45
+Sat, 10 Oct 2026
+Bagdogra
+Terminal: NA
+
+Return Flight
+Bagdogra to Bangalore | Sat, 17 Oct 2026 PNR Number : H4SBKL
+IndiGo   6E - 445
+11:40 IXB
+Sat, 17 Oct 2026
+Bagdogra
+Terminal: NA
+2 h 55 min
+Economy
+BLR 14:35
+Sat, 17 Oct 2026
+Kempegowda International
+Airport
+Terminal: 1
+
+Traveller Details
+Passenger
+Name
+Sector Class/Cabin Seat No. Meal(Name) Extra Baggage
+Travel
+Insurance
+Status
+Ms. Asmita
+Bhosale (Adult)
+BLR-HYD | HYD-IXB <>
+IXB-BLR
+Economy - - - - Confirmed
+Mr. Suyog
+Gadhave (Adult)
+BLR-HYD | HYD-IXB <>
+IXB-BLR
+Economy - - - - Confirmed
+
+Barcode(s) for your journey
+Ms. Asmita Bhosale (Adult)
+BLR - HYD
+HYD - IXB
+IXB - BLR
+Mr. Suyog Gadhave (Adult)
+BLR - HYD
+HYD - IXB
+IXB - BLR
+
+Fare Summary
+Fare Details Amount(₹)
+Base Fare ₹ 44,888
+Total Tax ₹ 7938
+CLEARTRIP Convenience Fee (Non-Refundable) ₹ 1,780
+Total ₹ 54,606`;
+
+    const passes = parseAllBookingPasses(smartBuyTicketText);
+
+    // 2 passengers (Asmita Bhosale, Suyog Gadhave) x 3 flight segments = 6 passes
+    expect(passes.length).toBe(6);
+
+    // Leg 1: Bangalore -> Hyderabad (6E-537)
+    expect(passes[0].provider).toBe('IndiGo');
+    expect(passes[0].origin).toBe('BLR');
+    expect(passes[0].destination).toBe('HYD');
+    expect(passes[0].passengerName).toBe('Asmita Bhosale');
+    expect(passes[0].referenceCode).toBe('K6BP5V');
+    expect(passes[0].startDateTime).toContain('10:15');
+    expect(passes[0].endDateTime).toContain('11:30');
+
+    expect(passes[1].provider).toBe('IndiGo');
+    expect(passes[1].origin).toBe('BLR');
+    expect(passes[1].destination).toBe('HYD');
+    expect(passes[1].passengerName).toBe('Suyog Gadhave');
+    expect(passes[1].referenceCode).toBe('K6BP5V');
+
+    // Leg 2: Hyderabad -> Bagdogra (6E-149)
+    expect(passes[2].provider).toBe('IndiGo');
+    expect(passes[2].origin).toBe('HYD');
+    expect(passes[2].destination).toBe('IXB');
+    expect(passes[2].passengerName).toBe('Asmita Bhosale');
+    expect(passes[2].referenceCode).toBe('K6BP5V');
+    expect(passes[2].startDateTime).toContain('13:25');
+    expect(passes[2].endDateTime).toContain('15:45');
+
+    expect(passes[3].provider).toBe('IndiGo');
+    expect(passes[3].origin).toBe('HYD');
+    expect(passes[3].destination).toBe('IXB');
+    expect(passes[3].passengerName).toBe('Suyog Gadhave');
+    expect(passes[3].referenceCode).toBe('K6BP5V');
+
+    // Leg 3: Bagdogra -> Bangalore (6E-445) - note separate return PNR: H4SBKL
+    expect(passes[4].provider).toBe('IndiGo');
+    expect(passes[4].origin).toBe('IXB');
+    expect(passes[4].destination).toBe('BLR');
+    expect(passes[4].passengerName).toBe('Asmita Bhosale');
+    expect(passes[4].referenceCode).toBe('H4SBKL');
+    expect(passes[4].startDateTime).toContain('11:40');
+    expect(passes[4].endDateTime).toContain('14:35');
+
+    expect(passes[5].provider).toBe('IndiGo');
+    expect(passes[5].origin).toBe('IXB');
+    expect(passes[5].destination).toBe('BLR');
+    expect(passes[5].passengerName).toBe('Suyog Gadhave');
+    expect(passes[5].referenceCode).toBe('H4SBKL');
+
+    // Passengers helper check
+    const passengers = extractPassengers(smartBuyTicketText);
+    expect(passengers.some((p) => p.includes('Asmita Bhosale'))).toBe(true);
+    expect(passengers.some((p) => p.includes('Suyog Gadhave'))).toBe(true);
+
+    // Reference codes check
+    const refs = extractReferenceCodes(smartBuyTicketText);
+    expect(refs.pnrList).toContain('K6BP5V');
+    expect(refs.pnrList).toContain('H4SBKL');
+    expect(refs.tripId).toBe('44117860941262337908');
+  });
+
+  it('parses MakeMyTrip / Goibibo multi-leg booking format', () => {
+    const mmtTicketText = `Flight Booking Confirmed - MMT
+Booking ID: NF281948201948
+New Delhi to Mumbai | 15 Nov 2026 PNR: MMTBOM
+IndiGo 6E 2051
+Departure: DEL 08:30 hrs | Indira Gandhi Intl T1D
+Arrival: BOM 10:45 hrs | Chhatrapati Shivaji T1
+
+Mumbai to Goa | 15 Nov 2026 PNR: MMTBOM
+Air India AI 621
+Departure: BOM 14:00 hrs | T2
+Arrival: GOI 15:15 hrs | Dabolim Airport
+
+Traveller:
+Mr Ramesh Sharma (Adult)`;
+
+    const passes = parseAllBookingPasses(mmtTicketText);
+    expect(passes.length).toBe(2);
+
+    expect(passes[0].provider).toBe('IndiGo');
+    expect(passes[0].origin).toBe('DEL');
+    expect(passes[0].destination).toBe('BOM');
+    expect(passes[0].startDateTime).toContain('08:30');
+    expect(passes[0].passengerName).toBe('Ramesh Sharma');
+    expect(passes[0].referenceCode).toBe('MMTBOM');
+
+    expect(passes[1].provider).toBe('Air India');
+    expect(passes[1].origin).toBe('BOM');
+    expect(passes[1].destination).toBe('GOI');
+    expect(passes[1].startDateTime).toContain('14:00');
+    expect(passes[1].passengerName).toBe('Ramesh Sharma');
+  });
+
+  it('parses direct airline multi-leg itinerary (IndiGo / Air India flight anchor chunking)', () => {
+    const directItinerary = `Booking Reference (PNR): 6EBOOK1
+Itinerary Confirmation
+
+Flight: 6E 537
+Depart: BLR 10:15 | Sat, 10 Oct 2026
+Arrive: HYD 11:30 | Sat, 10 Oct 2026
+Seat: 14A
+
+Flight: 6E 149
+Depart: HYD 13:25 | Sat, 10 Oct 2026
+Arrive: IXB 15:45 | Sat, 10 Oct 2026
+Seat: 16C
+
+Passenger:
+Mr Vikram Malhotra`;
+
+    const passes = parseAllBookingPasses(directItinerary);
+    expect(passes.length).toBe(2);
+
+    expect(passes[0].provider).toBe('IndiGo');
+    expect(passes[0].origin).toBe('BLR');
+    expect(passes[0].destination).toBe('HYD');
+    expect(passes[0].startDateTime).toContain('10:15');
+    expect(passes[0].passengerName).toBe('Vikram Malhotra');
+    expect(passes[0].seatOrRoom).toBe('Seat 14A');
+    expect(passes[0].referenceCode).toBe('6EBOOK1');
+
+    expect(passes[1].provider).toBe('IndiGo');
+    expect(passes[1].origin).toBe('HYD');
+    expect(passes[1].destination).toBe('IXB');
+    expect(passes[1].startDateTime).toContain('13:25');
+    expect(passes[1].passengerName).toBe('Vikram Malhotra');
+    expect(passes[1].seatOrRoom).toBe('Seat 16C');
+  });
 });
+
+
