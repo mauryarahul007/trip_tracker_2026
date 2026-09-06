@@ -46,6 +46,11 @@ type Props = {
   onOpenShareTrip?: () => void;
   onNavigateToBalances?: () => void;
   baseCurrency?: string;
+  onOpenTravelPasses?: () => void;
+  onOpenFxRates?: () => void;
+  onOpenTravelDossier?: () => void;
+  onOpenMediaGallery?: () => void;
+  onOpenOfflineSnapshot?: () => void;
 };
 
 export function GlobalSettingsModal({
@@ -82,6 +87,11 @@ export function GlobalSettingsModal({
   isAdmin = true,
   onOpenShareTrip,
   baseCurrency,
+  onOpenTravelPasses,
+  onOpenFxRates,
+  onOpenTravelDossier,
+  onOpenMediaGallery,
+  onOpenOfflineSnapshot,
 }: Props) {
   const storeCategories = useTripStore((s) => s.categories);
   const storeExpenses = useTripStore((s) => s.expenses);
@@ -166,6 +176,11 @@ export function GlobalSettingsModal({
           onOpenShareTrip={onOpenShareTrip}
           onNavigateToBalances={onNavigateToBalances}
           baseCurrency={baseCurrency}
+          onOpenTravelPasses={onOpenTravelPasses}
+          onOpenFxRates={onOpenFxRates}
+          onOpenTravelDossier={onOpenTravelDossier}
+          onOpenMediaGallery={onOpenMediaGallery}
+          onOpenOfflineSnapshot={onOpenOfflineSnapshot}
         />
       </div>
     </div>

@@ -131,6 +131,11 @@ interface SettingsViewProps {
   onOpenTripWrapped?: () => void;
   onOpenAchievements?: () => void;
   onNavigateToBalances?: () => void;
+  onOpenTravelPasses?: () => void;
+  onOpenFxRates?: () => void;
+  onOpenTravelDossier?: () => void;
+  onOpenMediaGallery?: () => void;
+  onOpenOfflineSnapshot?: () => void;
 }
 
 export function SettingsView({
@@ -170,6 +175,11 @@ export function SettingsView({
   onOpenAchievements,
   onNavigateToBalances,
   baseCurrency,
+  onOpenTravelPasses,
+  onOpenFxRates,
+  onOpenTravelDossier,
+  onOpenMediaGallery,
+  onOpenOfflineSnapshot,
 }: SettingsViewProps) {
   const [subScreen, setSubScreen] = useState<SubScreen>(initialSubScreen);
 
@@ -1581,6 +1591,56 @@ export function SettingsView({
                 <IconChevronRight size={16} />
               </div>
             </button>
+
+            {onOpenMediaGallery && (
+              <button
+                type="button"
+                className="settings-row-item"
+                onClick={() => {
+                  triggerHaptic('light');
+                  onOpenMediaGallery();
+                }}
+              >
+                <div className="settings-row-left">
+                  <div className="settings-squircle squircle-teal-glow">
+                    <span style={{ fontSize: '18px' }}>📸</span>
+                  </div>
+                  <div className="settings-row-texts">
+                    <span className="settings-row-title">Receipts &amp; Memories Gallery</span>
+                    <span className="settings-row-subtitle">Browse full visual masonry wall of saved receipts</span>
+                  </div>
+                </div>
+                <div className="settings-row-right">
+                  <span className="settings-badge-pill" style={{ background: 'rgba(23, 182, 166, 0.18)', color: '#17B6A6', fontWeight: 700 }}>PHOTOS</span>
+                  <IconChevronRight size={16} />
+                </div>
+              </button>
+            )}
+
+            {onOpenOfflineSnapshot && (
+              <button
+                type="button"
+                className="settings-row-item"
+                onClick={() => {
+                  triggerHaptic('light');
+                  onOpenOfflineSnapshot();
+                }}
+              >
+                <div className="settings-row-left">
+                  <div className="settings-squircle squircle-blue-glow">
+                    <span style={{ fontSize: '18px' }}>💾</span>
+                  </div>
+                  <div className="settings-row-texts">
+                    <span className="settings-row-title">Offline Snapshot (.triptracker)</span>
+                    <span className="settings-row-subtitle">Export or restore encrypted trip offline package</span>
+                  </div>
+                </div>
+                <div className="settings-row-right">
+                  <span className="settings-badge-pill" style={{ background: 'rgba(59, 130, 246, 0.18)', color: '#3B82F6', fontWeight: 700 }}>BACKUP</span>
+                  <IconChevronRight size={16} />
+                </div>
+              </button>
+            )}
           </div>
         </div>
 
@@ -1774,6 +1834,56 @@ export function SettingsView({
                 <IconChevronRight size={16} />
               </div>
             </button>
+
+            {onOpenMediaGallery && (
+              <button
+                type="button"
+                className="settings-row-item"
+                onClick={() => {
+                  triggerHaptic('light');
+                  onOpenMediaGallery();
+                }}
+              >
+                <div className="settings-row-left">
+                  <div className="settings-squircle squircle-teal-glow">
+                    <span style={{ fontSize: '18px' }}>📸</span>
+                  </div>
+                  <div className="settings-row-texts">
+                    <span className="settings-row-title">Receipts &amp; Memories Gallery</span>
+                    <span className="settings-row-subtitle">Visual masonry wall of trip receipts and photos</span>
+                  </div>
+                </div>
+                <div className="settings-row-right">
+                  <span className="settings-badge-pill" style={{ background: 'rgba(23, 182, 166, 0.18)', color: '#17B6A6', fontWeight: 700 }}>PHOTOS</span>
+                  <IconChevronRight size={16} />
+                </div>
+              </button>
+            )}
+
+            {onOpenTravelPasses && (
+              <button
+                type="button"
+                className="settings-row-item"
+                onClick={() => {
+                  triggerHaptic('light');
+                  onOpenTravelPasses();
+                }}
+              >
+                <div className="settings-row-left">
+                  <div className="settings-squircle squircle-blue-glow">
+                    <span style={{ fontSize: '18px' }}>🎫</span>
+                  </div>
+                  <div className="settings-row-texts">
+                    <span className="settings-row-title">Travel Pass &amp; Ticket Wallet</span>
+                    <span className="settings-row-subtitle">Boarding passes, train PNRs &amp; offline QR</span>
+                  </div>
+                </div>
+                <div className="settings-row-right">
+                  <span className="settings-badge-pill" style={{ background: 'rgba(59, 130, 246, 0.18)', color: '#3B82F6', fontWeight: 700 }}>PASSES</span>
+                  <IconChevronRight size={16} />
+                </div>
+              </button>
+            )}
           </div>
         </div>
 
@@ -1937,7 +2047,12 @@ export function SettingsView({
     'close', 'reopen', 'lock', 'unlock', 'complete', 'completed', 'completion', 'settled', 'unsettled', 'outstanding', 'balances', 'debts', 'post trip', 'finish', 'archive trip'
   );
   const showCsvExport = hasActiveTrip && activeTrip && onExportCsv && matchesSearch('Excel CSV Export', 'spreadsheet', 'download', 'ledger', 'csv', 'sheets');
-  const showTripGroup = showTripTools || showCloseTrip || showCsvExport;
+  const showTravelPassesSearch = onOpenTravelPasses && matchesSearch('Travel Pass & Ticket Wallet', 'passes', 'ticket', 'boarding', 'pnr', 'hotel', 'wallet');
+  const showFxSearch = onOpenFxRates && matchesSearch('Multi-Currency FX Engine', 'rates', 'fx', 'forex', 'currency', 'exchange');
+  const showDossierSearch = onOpenTravelDossier && matchesSearch('Travel Dossier & Statement', 'dossier', 'pdf', 'voucher', 'statement', 'report');
+  const showSnapshotSearch = onOpenOfflineSnapshot && matchesSearch('Offline Snapshot (.triptracker)', 'snapshot', 'offline', 'backup', 'triptracker');
+  const showGallerySearch = onOpenMediaGallery && matchesSearch('Receipts & Memories Gallery', 'gallery', 'photos', 'receipts', 'memories');
+  const showTripGroup = showTripTools || showCloseTrip || showCsvExport || Boolean(showTravelPassesSearch) || Boolean(showFxSearch) || Boolean(showDossierSearch) || Boolean(showSnapshotSearch) || Boolean(showGallerySearch);
 
   const showAppearance = matchesSearch('Appearance', 'theme', 'dark', 'light', 'night', 'auto', 'color', 'look');
   const showHaptics = matchesSearch('Tactile Haptics', 'vibrate', 'vibration', 'haptic', 'feedback', 'touch', 'buzz');
@@ -1945,13 +2060,13 @@ export function SettingsView({
   const showGeotag = (isSuperadmin || isFeatureEnabled('enableGeotagging')) && matchesSearch('Geotag Expenses', 'gps', 'location', 'place', 'map', 'pin');
   const showCoachmarks = matchesSearch('Flight Coachmarks', 'tips', 'guide', 'reset', 'onboarding', 'airplane');
   const showInstall = pwaInstallable && matchesSearch('Install App', 'pwa', 'home screen', 'download', 'mobile');
-  const showPreferencesGroup = showAppearance || showHaptics || showNotifications || showGeotag || showCoachmarks || showInstall;
+  const showPreferencesGroup = showAppearance || showHaptics || showNotifications || showGeotag || showCoachmarks || showInstall || Boolean(showFxSearch);
 
   const showStorageManager = matchesSearch('Storage and Data', 'storage', 'data', 'cache', 'memory', 'disk', 'receipts', 'photos');
   const showArchived = matchesSearch('Archived Trips', 'restore', 'history', 'past trips', 'archive');
   const showBackups = isSuperadmin && matchesSearch('Database Backups', 'export', 'import', 'json', 'snapshot', 'restore');
   const showDemoTrip = onLoadDemoTrip && isFeatureEnabled('enableDemoSeeding') && matchesSearch('Seed Demo Trip', 'sample', 'test', 'goa', 'demo');
-  const showDataGroup = showStorageManager || showArchived || showBackups || showDemoTrip;
+  const showDataGroup = showStorageManager || showArchived || showBackups || showDemoTrip || Boolean(showSnapshotSearch) || Boolean(showGallerySearch);
 
   const showReportProblem = matchesSearch('Report a Problem', 'bug', 'issue', 'diagnostics', 'broken', 'error');
   const showSuggestFeature = isFeatureEnabled('enableFeatureSuggestions') && matchesSearch('Suggest a Feature', 'feedback', 'idea', 'request');
@@ -2056,14 +2171,59 @@ export function SettingsView({
               />
             )}
 
-            {showCloseTrip && (
+            {onOpenTravelPasses && (
               <SettingsCell
-                icon={<IconShield size={18} />}
-                iconGlow={activeTrip.closed ? 'slate' : 'emerald'}
-                title={closeTripTitle}
-                subtitle={closeTripSubtitle}
-                badge={closeTripBadgeText}
-                onClick={handleToggleCloseTrip}
+                icon={<span style={{ fontSize: '18px' }}>🎫</span>}
+                iconGlow="blue"
+                title="Travel Pass & Ticket Wallet"
+                subtitle="Boarding passes, train PNRs, hotel bookings & offline QR"
+                badge="WALLET"
+                onClick={() => {
+                  triggerHaptic('light');
+                  onOpenTravelPasses();
+                }}
+              />
+            )}
+
+            {onOpenFxRates && (
+              <SettingsCell
+                icon={<span style={{ fontSize: '18px' }}>💱</span>}
+                iconGlow="emerald"
+                title="Multi-Currency FX Engine"
+                subtitle="Live rates, offline lock & forex markup converter"
+                badge="FX"
+                onClick={() => {
+                  triggerHaptic('light');
+                  onOpenFxRates();
+                }}
+              />
+            )}
+
+            {onOpenTravelDossier && (
+              <SettingsCell
+                icon={<span style={{ fontSize: '18px' }}>📄</span>}
+                iconGlow="teal"
+                title="Travel Dossier & Statement"
+                subtitle="Print-ready PDF report with settlement vouchers"
+                badge="PDF"
+                onClick={() => {
+                  triggerHaptic('light');
+                  onOpenTravelDossier();
+                }}
+              />
+            )}
+
+            {onOpenOfflineSnapshot && (
+              <SettingsCell
+                icon={<span style={{ fontSize: '18px' }}>💾</span>}
+                iconGlow="blue"
+                title="Offline Snapshot (.triptracker)"
+                subtitle="Export and restore 100% offline trip backups"
+                badge="BACKUP"
+                onClick={() => {
+                  triggerHaptic('light');
+                  onOpenOfflineSnapshot();
+                }}
               />
             )}
 
@@ -2073,8 +2233,20 @@ export function SettingsView({
                 iconGlow="emerald"
                 title="Excel CSV Export"
                 subtitle="Download settlement ledger & expense breakdown"
-                hasDivider={false}
+                badge="CSV"
                 onClick={onExportCsv}
+              />
+            )}
+
+            {showCloseTrip && (
+              <SettingsCell
+                icon={<IconShield size={18} />}
+                iconGlow={activeTrip.closed ? 'slate' : 'emerald'}
+                title={closeTripTitle}
+                subtitle={closeTripSubtitle}
+                badge={closeTripBadgeText}
+                hasDivider={false}
+                onClick={handleToggleCloseTrip}
               />
             )}
           </div>
@@ -2379,6 +2551,31 @@ export function SettingsView({
               </button>
             )}
 
+            {onOpenFxRates && (
+              <button
+                type="button"
+                className="settings-row-item"
+                onClick={() => {
+                  triggerHaptic('light');
+                  onOpenFxRates();
+                }}
+              >
+                <div className="settings-row-left">
+                  <div className="settings-squircle squircle-emerald-glow">
+                    <span style={{ fontSize: '18px' }}>💱</span>
+                  </div>
+                  <div className="settings-row-texts">
+                    <span className="settings-row-title">Multi-Currency FX Engine</span>
+                    <span className="settings-row-subtitle">Live rates, offline lock &amp; forex markup converter</span>
+                  </div>
+                </div>
+                <div className="settings-row-right">
+                  <span className="settings-badge-pill" style={{ background: 'rgba(16, 185, 129, 0.18)', color: '#10B981', fontWeight: 700 }}>FX</span>
+                  <IconChevronRight size={16} />
+                </div>
+              </button>
+            )}
+
             {showInstall && (
               <button
                 type="button"
@@ -2455,6 +2652,34 @@ export function SettingsView({
                 subtitle="Export/Import JSON database snapshot"
                 badge="JSON"
                 onClick={() => setSubScreen('backups')}
+              />
+            )}
+
+            {onOpenOfflineSnapshot && (
+              <SettingsCell
+                icon={<span style={{ fontSize: '18px' }}>💾</span>}
+                iconGlow="blue"
+                title="Offline Snapshot (.triptracker)"
+                subtitle="Export and restore 100% offline trip backups"
+                badge="BACKUP"
+                onClick={() => {
+                  triggerHaptic('light');
+                  onOpenOfflineSnapshot();
+                }}
+              />
+            )}
+
+            {onOpenMediaGallery && (
+              <SettingsCell
+                icon={<span style={{ fontSize: '18px' }}>📸</span>}
+                iconGlow="teal"
+                title="Receipts & Memories Gallery"
+                subtitle="Browse cached receipt photos and trip media"
+                badge="PHOTOS"
+                onClick={() => {
+                  triggerHaptic('light');
+                  onOpenMediaGallery();
+                }}
               />
             )}
 

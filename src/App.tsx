@@ -71,7 +71,7 @@ import { InAppNotificationBanner } from './components/InAppNotificationBanner';
 import { FitHeading } from './components/FitHeading';
 import { triggerHaptic } from './utils/haptics';
 import { useEscapeKey } from './utils/useEscapeKey';
-import { IconCalendar, IconChevronLeft, IconChevronDown, IconChevronUp, IconShield, IconSearch, IconPlus, IconWallet, IconMapPin, IconCheck, IconMembers, IconClose, IconShare, IconFileSpreadsheet, IconSettings } from './components/Icons';
+import { IconCalendar, IconChevronLeft, IconChevronDown, IconChevronUp, IconShield, IconSearch, IconPlus, IconWallet, IconMapPin, IconCheck, IconMembers, IconClose, IconShare, IconSettings, IconReceipt } from './components/Icons';
 import { ActionSheet } from './components/common/ActionSheet';
 import { formatDateRange } from './utils/dateRange';
 import { useScrollLock } from './utils/useScrollLock';
@@ -2311,6 +2311,11 @@ export default function App() {
                 onOpenAchievements={() => setShowAchievements(true)}
                 onNavigateToBalances={() => setActiveTab('expenses')}
                 baseCurrency={activeTrip?.baseCurrency || ''}
+                onOpenTravelPasses={() => setShowTravelPasses(true)}
+                onOpenFxRates={() => setShowFxRates(true)}
+                onOpenTravelDossier={() => setShowTravelDossier(true)}
+                onOpenMediaGallery={() => setShowMediaGallery(true)}
+                onOpenOfflineSnapshot={() => setShowOfflineSnapshot(true)}
               />
               </Suspense>
               )}
@@ -2400,60 +2405,11 @@ export default function App() {
           description={`${formatDateRange(activeTrip.startDate || '', activeTrip.endDate || '')} · ${visibleMembers.length} member${visibleMembers.length === 1 ? '' : 's'} · ${activeTripExpenses.length} expense${activeTripExpenses.length === 1 ? '' : 's'}`}
           items={[
             {
-              id: 'travel-passes',
-              label: '🎫 Travel Pass & Ticket Wallet',
-              subtitle: 'Boarding passes, train PNRs, hotel bookings & offline QR',
-              icon: <span style={{ fontSize: '18px' }}>🎫</span>,
-              onClick: () => setShowTravelPasses(true),
-            },
-            {
-              id: 'fx-rates',
-              label: '💱 Multi-Currency FX Engine',
-              subtitle: 'Live rates, offline lock & forex markup converter',
-              icon: <span style={{ fontSize: '18px' }}>💱</span>,
-              onClick: () => setShowFxRates(true),
-            },
-            {
-              id: 'smart-quick-add',
-              label: '⚡ Smart Voice Quick-Add',
-              subtitle: '1-tap voice & natural language expense logger',
-              icon: <span style={{ fontSize: '18px' }}>⚡</span>,
-              onClick: () => setShowSmartQuickAdd(true),
-            },
-            {
-              id: 'travel-dossier',
-              label: '📄 Travel Dossier & Statement',
-              subtitle: 'Print-ready PDF report with settlement vouchers',
-              icon: <span style={{ fontSize: '18px' }}>📄</span>,
-              onClick: () => setShowTravelDossier(true),
-            },
-            {
-              id: 'media-gallery',
-              label: '📸 Receipts & Memories Gallery',
-              subtitle: 'Visual masonry wall of trip receipts and photos',
-              icon: <span style={{ fontSize: '18px' }}>📸</span>,
-              onClick: () => setShowMediaGallery(true),
-            },
-            {
               id: 'share',
               label: 'Share Trip & QR Code',
               subtitle: 'Invite travelers with join code or scannable QR',
               icon: <IconShare size={18} />,
               onClick: () => setShowShareTrip(true),
-            },
-            {
-              id: 'offline-snapshot',
-              label: '💾 Offline Snapshot (.triptracker)',
-              subtitle: 'Export and restore 100% offline trip backups',
-              icon: <span style={{ fontSize: '18px' }}>💾</span>,
-              onClick: () => setShowOfflineSnapshot(true),
-            },
-            {
-              id: 'export-csv',
-              label: 'Export to Excel CSV',
-              subtitle: 'Download complete transaction and balance ledger',
-              icon: <IconFileSpreadsheet size={18} />,
-              onClick: () => triggerCsvExport(),
             },
             ...(activeTrip.stops && activeTrip.stops.length > 0
               ? [
@@ -2468,6 +2424,15 @@ export default function App() {
                   },
                 ]
               : []),
+            {
+              id: 'settle-up',
+              label: 'Settle Up & Balances',
+              subtitle: 'View member balances, debt settlements & pay vouchers',
+              icon: <IconReceipt size={18} />,
+              onClick: () => {
+                setActiveTab('ledger');
+              },
+            },
             {
               id: 'settings',
               label: 'Trip Settings & Details',
@@ -2571,6 +2536,11 @@ export default function App() {
             activeTripExpenses={activeTripExpenses}
             onAddCategory={handleAddCategory}
             onDeleteCategory={handleDeleteCategory}
+            onOpenTravelPasses={() => setShowTravelPasses(true)}
+            onOpenFxRates={() => setShowFxRates(true)}
+            onOpenTravelDossier={() => setShowTravelDossier(true)}
+            onOpenMediaGallery={() => setShowMediaGallery(true)}
+            onOpenOfflineSnapshot={() => setShowOfflineSnapshot(true)}
           />
         </Suspense>
       )}

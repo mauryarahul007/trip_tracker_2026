@@ -2154,6 +2154,27 @@ This document logs all meaningful technical decisions, library choices, design p
   - Client-side Canvas image pre-processing operates 100% on-device with zero server transmission, guaranteeing traveler privacy and zero cloud API costs.
   - Custom trip FX rates override default baseline conversions when set, ensuring personal forex card exchange rates remain consistent across all trip expenses.
 
+---
+
+## 118. Navigation & Settings Streamlining: Relocating Travel Utilities to Domain-Specific Settings Menus & Lean Header Dropdown (v3.4.1)
+* **Context:**
+  - Previously, the trip header action sheet (dropdown) had accumulated numerous secondary travel utilities (Smart Voice Quick-Add, Travel Pass Wallet, FX Engine, Travel Dossier, Receipts Gallery, Offline Snapshot, Excel CSV Export).
+  - Smart Voice Quick-Add was already prominently available directly in the Expenses tab (+ FAB and header row), making its presence in the header dropdown redundant.
+  - The heavy list in the header dropdown overwhelmed travelers looking for core top-level actions (Share Trip, Route Stops Itinerary, Settle Up, and Trip Settings).
+* **Decision:**
+  1. **Header Dropdown Streamlining:**
+     - Removed redundant `smart-quick-add`, as well as `travel-passes`, `fx-rates`, `travel-dossier`, `media-gallery`, `offline-snapshot`, and `export-csv` from the header ActionSheet.
+     - Retained a lean, high-signal set of actions: **Share Trip & QR Code**, **Route Stops & Map** (when route stops exist), **Settle Up & Balances** (direct 1-tap route to settlements ledger), **Trip Settings & Details**, **Superadmin Bug Tracker** (gated for superadmins), and **Switch to Another Trip**.
+  2. **Domain-Specific Settings Menu Integration:**
+     - **This Trip: [Name] (`trip-settings`):** Added 🎫 **Travel Pass & Ticket Wallet**, 💱 **Multi-Currency FX Engine**, 📄 **Travel Dossier & Statement**, and 💾 **Offline Snapshot (.triptracker)** alongside Excel CSV Export and Close Trip.
+     - **Trip Tools & Story (`trip-tools`):** Added 📸 **Receipts & Memories Gallery** and 🎫 **Travel Pass & Ticket Wallet** to the *Stories & Navigation* card.
+     - **Data & Backups (`data-menu`):** Added 💾 **Offline Snapshot (.triptracker)** (accessible to all travelers without superadmin privilege) and 📸 **Receipts & Memories Gallery** for instant storage media inspection.
+     - **Preferences & Interface (`preferences`):** Added 💱 **Multi-Currency FX Engine** for app-wide and trip exchange rate management.
+     - **Storage and Data (`storage-data`):** Integrated quick-access actions to inspect Receipts Media Gallery and manage standalone `.triptracker` offline packages.
+     - **Global Search Parity:** Updated `matchesSearch` keywords across all settings groups to ensure quick discoverability when searching for "wallet", "passes", "fx", "currency", "dossier", "statement", "gallery", "photos", or "snapshot".
+* **Trade-offs Accepted:**
+  - Moving deep tools from the header dropdown into the Settings tab adds 1 extra tap for rare exports, but dramatically reduces cognitive load and keeps the header dropdown focused on trip coordination essentials.
+
 
 
 

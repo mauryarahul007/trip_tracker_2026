@@ -38,6 +38,11 @@ type Props = {
   onOpenAchievements?: () => void;
   onNavigateToBalances?: () => void;
   baseCurrency?: string;
+  onOpenTravelPasses?: () => void;
+  onOpenFxRates?: () => void;
+  onOpenTravelDossier?: () => void;
+  onOpenMediaGallery?: () => void;
+  onOpenOfflineSnapshot?: () => void;
 };
 
 export function SettingsTab({
@@ -74,6 +79,11 @@ export function SettingsTab({
   onOpenAchievements,
   onNavigateToBalances,
   baseCurrency,
+  onOpenTravelPasses,
+  onOpenFxRates,
+  onOpenTravelDossier,
+  onOpenMediaGallery,
+  onOpenOfflineSnapshot,
 }: Props) {
   return (
     <SettingsView
@@ -111,6 +121,11 @@ export function SettingsTab({
       onNavigateToBalances={onNavigateToBalances}
       hasActiveTrip={true}
       baseCurrency={baseCurrency}
+      onOpenTravelPasses={onOpenTravelPasses}
+      onOpenFxRates={onOpenFxRates}
+      onOpenTravelDossier={onOpenTravelDossier}
+      onOpenMediaGallery={onOpenMediaGallery}
+      onOpenOfflineSnapshot={onOpenOfflineSnapshot}
     />
   );
 }
