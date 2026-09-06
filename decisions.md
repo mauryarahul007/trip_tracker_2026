@@ -2344,6 +2344,28 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - None -- both fixes are strict corrections of unintended double-invocation / incomplete pattern matching, not new behavior.
 
+---
+
+## 126. Travel Pass Wallet: Multi-Mode Sorting (Travel Leg, Member Name, Date) & Global Collapse/Expand (v3.4.9)
+* **Context:**
+  - When users uploaded multi-passenger tickets or multiple flight/train legs (e.g. 6 passengers across 3 segments), all passes were rendered grouped by leg without sorting controls or bulk collapse/expand actions.
+  - Reviewing tickets for a specific traveler required expanding each flight segment card individually and searching inside.
+  - Users requested a 1-tap bulk "Collapse All" and "Expand All" feature for pass cards, as well as the ability to sort passes by Member Name or Travel Leg Name.
+* **Decision:**
+  1. **Multi-Mode Pass Sorting (`sortMode: 'leg' | 'member' | 'date'`):**
+     - **🛫 Travel Leg (Route Name):** Groups passes by travel leg (`origin ➔ destination` or title) and sorts groups alphabetically (e.g. `BLR ➔ HYD`, `HYD ➔ IXB`, `IXB ➔ BLR`). Inside each flight/train leg group, individual passenger boarding cards are sorted alphabetically by passenger/member name (A-Z).
+     - **👤 Member / Traveler Name:** Reorganizes passes by passenger / trip member name into dedicated traveler folders (e.g. `👤 Asmita Bhosale`, `👤 Rahul Maurya`, `👤 Suyog Gadhave`), sorted alphabetically. Each member folder displays all tickets/passes belonging to that person across the entire trip chronologically by departure date/time. Passes without passenger attribution are gathered in a shared group.
+     - **🕒 Travel Date & Time:** Groups passes by route leg in strict chronological departure sequence (earliest departure first).
+  2. **1-Tap Global "Collapse All" and "Expand All" Controls:**
+     - Added dedicated bulk action buttons (`▼ Expand All` and `▲ Collapse All`) to the wallet toolbar with haptic touch feedback.
+     - Works across both Travel Leg groups and Member groups, toggling all active group keys simultaneously.
+     - Preserves individual accordion toggle functionality for targeted expansion.
+  3. **Context-Aware Sub-Card Layouts:**
+     - In **Leg View**, cards highlight passenger name and seat number (route and PNR are on the group header).
+     - In **Member View**, cards highlight route (`origin ➔ destination`), carrier/flight title, departure timestamp, seat number, and reference PNR code with 1-tap copy.
+* **Trade-offs Accepted:**
+  - Switching between 'leg' and 'member' sort modes recalculates grouping in `useMemo` in $O(N \log N)$ time, taking less than 1ms for typical trip pass counts (up to 100+ passes) without background thread overhead.
+
 
 
 

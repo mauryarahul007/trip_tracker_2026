@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef } from 'react';
+import { useState, useMemo, useRef, useCallback } from 'react';
 import type { Trip, TravelPass, TravelPassType, Member } from '../types';
 import { parseBookingText, parseAllBookingPasses, matchPassengerToMember, type ParsedTravelPass } from '../utils/passParser';
 import { extractPdfText } from '../utils/pdfExtractor';
@@ -39,6 +39,7 @@ export function TravelPassWalletView({
   const [viewingAttachment, setViewingAttachment] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [expandedLegKeys, setExpandedLegKeys] = useState<Record<string, boolean>>({});
+  const [sortMode, setSortMode] = useState<'leg' | 'member' | 'date'>('leg');
 
   // Form State
   const [isAdding, setIsAdding] = useState(false);
@@ -294,10 +295,30 @@ export function TravelPassWalletView({
     resetForm();
   };
 
-  // Group passes by route leg for flight & train passes; solo for others
+  const getPassPassengerLabel = useCallback((pass: TravelPass): string => {
+    if (pass.passengerName && pass.passengerName.trim()) {
+      return pass.passengerName.trim();
+    }
+    if (pass.assignedMemberIds && pass.assignedMemberIds.length > 0) {
+      const first = membersMap[pass.assignedMemberIds[0]];
+      if (first?.name) return first.name;
+    }
+    return 'Unassigned Traveler';
+  }, [membersMap]);
+
+  const getLegDisplay = (origin?: string, destination?: string, title?: string): string => {
+    if (origin && destination) return `${origin} ➔ ${destination}`;
+    if (origin) return origin;
+    if (destination) return destination;
+    return title || 'Travel Leg';
+  };
+
+  // Group and sort passes by leg, member, or date
   const groupedPasses = useMemo(() => {
+    type PassGroupKind = 'leg' | 'member' | 'solo';
     type PassGroup = {
       key: string;
+      groupKind: PassGroupKind;
       type: TravelPassType;
       title: string;
       provider?: string;
@@ -310,6 +331,53 @@ export function TravelPassWalletView({
       isMultiPassengerLeg: boolean;
     };
 
+    if (sortMode === 'member') {
+      const memberMap = new Map<string, PassGroup>();
+      const groups: PassGroup[] = [];
+
+      for (const pass of filteredPasses) {
+        const travelerName = getPassPassengerLabel(pass);
+        const memberKey = `member::${travelerName.toUpperCase()}`;
+
+        let group = memberMap.get(memberKey);
+        if (!group) {
+          group = {
+            key: memberKey,
+            groupKind: 'member',
+            type: pass.type,
+            title: travelerName,
+            provider: 'Traveler',
+            referenceCode: pass.referenceCode,
+            passes: [],
+            isMultiPassengerLeg: true,
+          };
+          memberMap.set(memberKey, group);
+          groups.push(group);
+        }
+        group.passes.push(pass);
+      }
+
+      // Sort member groups alphabetically (place unassigned at the bottom)
+      groups.sort((a, b) => {
+        if (a.title === 'Unassigned Traveler') return 1;
+        if (b.title === 'Unassigned Traveler') return -1;
+        return a.title.localeCompare(b.title, undefined, { sensitivity: 'base' });
+      });
+
+      // Sort passes inside each member group chronologically
+      for (const g of groups) {
+        g.passes.sort((a, b) => {
+          const tA = a.startDateTime || '';
+          const tB = b.startDateTime || '';
+          if (tA && tB) return tA.localeCompare(tB);
+          return a.title.localeCompare(b.title);
+        });
+      }
+
+      return groups;
+    }
+
+    // Default route leg grouping (for flight & train passes)
     const groups: PassGroup[] = [];
     const groupMap = new Map<string, PassGroup>();
 
@@ -327,6 +395,7 @@ export function TravelPassWalletView({
         if (!group) {
           group = {
             key: legKey,
+            groupKind: 'leg',
             type: pass.type,
             title: pass.title,
             provider: pass.provider,
@@ -348,6 +417,7 @@ export function TravelPassWalletView({
       } else {
         groups.push({
           key: pass.id,
+          groupKind: 'solo',
           type: pass.type,
           title: pass.title,
           provider: pass.provider,
@@ -362,10 +432,45 @@ export function TravelPassWalletView({
       }
     }
 
-    return groups;
-  }, [filteredPasses]);
+    if (sortMode === 'leg') {
+      // Sort groups alphabetically by Travel Leg Name (Origin ➔ Destination or Title)
+      groups.sort((a, b) => {
+        const labelA = getLegDisplay(a.origin, a.destination, a.title);
+        const labelB = getLegDisplay(b.origin, b.destination, b.title);
+        return labelA.localeCompare(labelB, undefined, { sensitivity: 'base' });
+      });
+    } else {
+      // sortMode === 'date' (Chronological by startDateTime)
+      groups.sort((a, b) => {
+        const tA = a.startDateTime || '';
+        const tB = b.startDateTime || '';
+        if (tA && tB) return tA.localeCompare(tB);
+        if (tA) return -1;
+        if (tB) return 1;
+        return a.title.localeCompare(b.title);
+      });
+    }
 
-  const renderSinglePassCard = (pass: TravelPass, isInsideGroup: boolean = false) => {
+    // Inside each multi-passenger leg group, sort passenger cards alphabetically
+    for (const g of groups) {
+      if (g.isMultiPassengerLeg) {
+        g.passes.sort((a, b) => {
+          const pA = getPassPassengerLabel(a);
+          const pB = getPassPassengerLabel(b);
+          return pA.localeCompare(pB, undefined, { sensitivity: 'base' });
+        });
+      }
+    }
+
+    return groups;
+  }, [filteredPasses, sortMode, getPassPassengerLabel]);
+
+  const renderSinglePassCard = (
+    pass: TravelPass,
+    context: 'solo' | 'leg' | 'member' = 'solo'
+  ) => {
+    const isInsideGroup = context !== 'solo';
+    const isMemberContext = context === 'member';
     const theme = PASS_THEMES[pass.type] || PASS_THEMES.activity;
     const assignedMembers = (pass.assignedMemberIds || [])
       .map((id) => membersMap[id])
@@ -428,8 +533,8 @@ export function TravelPassWalletView({
 
         {/* Card Body */}
         <div style={{ padding: isInsideGroup ? '12px 14px' : '14px 16px', display: 'flex', flexDirection: 'column', gap: '10px', flex: 1 }}>
-          {/* Passenger Info */}
-          {(pass.passengerName || isInsideGroup) && (
+          {/* Passenger Info (in standalone or leg group) */}
+          {!isMemberContext && (pass.passengerName || isInsideGroup) && (
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '6px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <span style={{ fontSize: '15px' }}>👤</span>
@@ -454,11 +559,54 @@ export function TravelPassWalletView({
             </div>
           )}
 
-          {/* Route & Times (Only for standalone passes) */}
-          {!isInsideGroup && (pass.origin || pass.destination) && (
+          {/* Member Context Card Header: Shows route, provider, and seat */}
+          {isMemberContext && (
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                flexWrap: 'wrap',
+                gap: '6px',
+                borderBottom: '1px dashed var(--border-color)',
+                paddingBottom: '8px',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span style={{ fontSize: '16px' }}>{theme.icon}</span>
+                <div>
+                  <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-primary)' }}>
+                    {pass.title}
+                  </div>
+                  {pass.provider && (
+                    <div style={{ fontSize: '10.5px', color: 'var(--text-muted)' }}>
+                      {pass.provider}
+                    </div>
+                  )}
+                </div>
+              </div>
+              {pass.seatOrRoom && (
+                <span
+                  style={{
+                    fontSize: '11px',
+                    fontWeight: 700,
+                    padding: '2px 8px',
+                    borderRadius: '6px',
+                    background: 'rgba(59, 130, 246, 0.1)',
+                    color: '#2563eb',
+                  }}
+                >
+                  Seat: {pass.seatOrRoom}
+                </span>
+              )}
+            </div>
+          )}
+
+          {/* Route & Times (For standalone passes OR inside member-grouped passes) */}
+          {(!isInsideGroup || isMemberContext) && (pass.origin || pass.destination) && (
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div>
-                <div style={{ fontSize: '18px', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '0.5px' }}>
+                <div style={{ fontSize: isMemberContext ? '15px' : '18px', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '0.5px' }}>
                   {pass.origin || '---'}
                 </div>
                 {pass.startDateTime && (
@@ -467,11 +615,11 @@ export function TravelPassWalletView({
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '0 8px' }}>
-                <span style={{ fontSize: '14px', color: 'var(--primary-accent)' }}>➔</span>
+                <span style={{ fontSize: isMemberContext ? '13px' : '14px', color: 'var(--primary-accent)' }}>➔</span>
               </div>
 
               <div style={{ textAlign: 'right' }}>
-                <div style={{ fontSize: '18px', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '0.5px' }}>
+                <div style={{ fontSize: isMemberContext ? '15px' : '18px', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '0.5px' }}>
                   {pass.destination || '---'}
                 </div>
                 {pass.endDateTime && (
@@ -489,8 +637,8 @@ export function TravelPassWalletView({
             </div>
           )}
 
-          {/* Reference Code & Copy Pill (Only if standalone) */}
-          {!isInsideGroup && pass.referenceCode && (
+          {/* Reference Code & Copy Pill (For standalone passes or inside member groups) */}
+          {(!isInsideGroup || isMemberContext) && pass.referenceCode && (
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--bg-surface-elevated, rgba(15,23,42,0.03))', padding: '6px 10px', borderRadius: '8px' }}>
               <span style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600 }}>
                 PNR / Booking Ref
@@ -624,6 +772,33 @@ export function TravelPassWalletView({
       </div>
     );
   };
+
+  const handleExpandAll = () => {
+    triggerHaptic('light');
+    const next: Record<string, boolean> = {};
+    for (const group of groupedPasses) {
+      next[group.key] = true;
+    }
+    setExpandedLegKeys(next);
+  };
+
+  const handleCollapseAll = () => {
+    triggerHaptic('light');
+    const next: Record<string, boolean> = {};
+    for (const group of groupedPasses) {
+      next[group.key] = false;
+    }
+    setExpandedLegKeys(next);
+  };
+
+  const hasCollapsibleGroups = useMemo(() => {
+    return groupedPasses.some((g) => g.isMultiPassengerLeg || g.passes.length > 1);
+  }, [groupedPasses]);
+
+  const areAllExpanded = useMemo(() => {
+    const multi = groupedPasses.filter((g) => g.isMultiPassengerLeg || g.passes.length > 1);
+    return multi.length > 0 && multi.every((g) => expandedLegKeys[g.key] !== false);
+  }, [groupedPasses, expandedLegKeys]);
 
   return (
     <div className="travel-pass-wallet-view fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '16px', paddingBottom: '24px' }}>
@@ -1246,6 +1421,143 @@ export function TravelPassWalletView({
         </form>
       ) : null}
 
+      {/* Search, Sort & Expand/Collapse Controls Toolbar */}
+      {passes.length > 0 && !isAdding && (
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: '8px',
+            padding: '8px 12px',
+            background: 'var(--bg-surface)',
+            border: '1px solid var(--border-color)',
+            borderRadius: '12px',
+            boxShadow: 'var(--shadow-sm)',
+          }}
+        >
+          {/* Left: Sort By Controls */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+            <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              Sort:
+            </span>
+            <div style={{ display: 'inline-flex', background: 'var(--bg-surface-elevated, rgba(0,0,0,0.04))', borderRadius: '8px', padding: '2px', border: '1px solid var(--border-color)' }}>
+              <button
+                type="button"
+                style={{
+                  border: 'none',
+                  borderRadius: '6px',
+                  padding: '4px 9px',
+                  fontSize: '11.5px',
+                  fontWeight: sortMode === 'leg' ? 700 : 500,
+                  background: sortMode === 'leg' ? 'var(--primary-accent)' : 'transparent',
+                  color: sortMode === 'leg' ? '#ffffff' : 'var(--text-secondary)',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  transition: 'all 0.15s ease',
+                }}
+                onClick={() => {
+                  triggerHaptic('light');
+                  setSortMode('leg');
+                }}
+              >
+                <span>🛫</span> Travel Leg
+              </button>
+              <button
+                type="button"
+                style={{
+                  border: 'none',
+                  borderRadius: '6px',
+                  padding: '4px 9px',
+                  fontSize: '11.5px',
+                  fontWeight: sortMode === 'member' ? 700 : 500,
+                  background: sortMode === 'member' ? 'var(--primary-accent)' : 'transparent',
+                  color: sortMode === 'member' ? '#ffffff' : 'var(--text-secondary)',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  transition: 'all 0.15s ease',
+                }}
+                onClick={() => {
+                  triggerHaptic('light');
+                  setSortMode('member');
+                }}
+              >
+                <span>👤</span> Member Name
+              </button>
+              <button
+                type="button"
+                style={{
+                  border: 'none',
+                  borderRadius: '6px',
+                  padding: '4px 9px',
+                  fontSize: '11.5px',
+                  fontWeight: sortMode === 'date' ? 700 : 500,
+                  background: sortMode === 'date' ? 'var(--primary-accent)' : 'transparent',
+                  color: sortMode === 'date' ? '#ffffff' : 'var(--text-secondary)',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  transition: 'all 0.15s ease',
+                }}
+                onClick={() => {
+                  triggerHaptic('light');
+                  setSortMode('date');
+                }}
+              >
+                <span>🕒</span> Date
+              </button>
+            </div>
+          </div>
+
+          {/* Right: Expand All / Collapse All Controls */}
+          {hasCollapsibleGroups && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <button
+                type="button"
+                className="secondary-btn"
+                style={{
+                  padding: '4px 10px',
+                  fontSize: '11.5px',
+                  borderRadius: '8px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  fontWeight: areAllExpanded ? 700 : 500,
+                  background: areAllExpanded ? 'rgba(15, 169, 143, 0.08)' : undefined,
+                }}
+                onClick={handleExpandAll}
+                title="Expand all ticket groups"
+              >
+                <span>▼</span> Expand All
+              </button>
+              <button
+                type="button"
+                className="secondary-btn"
+                style={{
+                  padding: '4px 10px',
+                  fontSize: '11.5px',
+                  borderRadius: '8px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  fontWeight: !areAllExpanded ? 700 : 500,
+                }}
+                onClick={handleCollapseAll}
+                title="Collapse all ticket groups"
+              >
+                <span>▲</span> Collapse All
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Filter Type Pills */}
       {passes.length > 0 && !isAdding && (
         <div style={{ display: 'flex', gap: '6px', overflowX: 'auto', paddingBottom: '4px' }}>
@@ -1357,8 +1669,9 @@ export function TravelPassWalletView({
               {groupedPasses.map((group) => {
                 const theme = PASS_THEMES[group.type] || PASS_THEMES.activity;
                 const isExpanded = expandedLegKeys[group.key] !== false; // expanded by default
+                const isMemberGroup = group.groupKind === 'member';
 
-                if (group.isMultiPassengerLeg) {
+                if (group.isMultiPassengerLeg || isMemberGroup) {
                   return (
                     <div
                       key={group.key}
@@ -1373,10 +1686,12 @@ export function TravelPassWalletView({
                         background: 'var(--bg-surface)',
                       }}
                     >
-                      {/* Collapsible Leg Header */}
+                      {/* Collapsible Header */}
                       <div
                         style={{
-                          background: 'linear-gradient(135deg, rgba(30, 58, 138, 0.08) 0%, rgba(59, 130, 246, 0.08) 100%)',
+                          background: isMemberGroup
+                            ? 'linear-gradient(135deg, rgba(15, 169, 143, 0.08) 0%, rgba(20, 184, 166, 0.08) 100%)'
+                            : 'linear-gradient(135deg, rgba(30, 58, 138, 0.08) 0%, rgba(59, 130, 246, 0.08) 100%)',
                           borderBottom: isExpanded ? '1px solid var(--border-color)' : 'none',
                           padding: '12px 16px',
                           display: 'flex',
@@ -1395,35 +1710,41 @@ export function TravelPassWalletView({
                         }}
                       >
                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                          <span style={{ fontSize: '22px' }}>{theme.icon}</span>
+                          <span style={{ fontSize: '22px' }}>{isMemberGroup ? '👤' : theme.icon}</span>
                           <div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                               <span style={{ fontSize: '15px', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '0.3px' }}>
-                                {group.origin || 'Route'} ➔ {group.destination || 'Leg'}
+                                {isMemberGroup ? group.title : `${group.origin || 'Route'} ➔ ${group.destination || 'Leg'}`}
                               </span>
                               <span
                                 style={{
                                   fontSize: '11px',
                                   padding: '2px 8px',
                                   borderRadius: '6px',
-                                  background: 'rgba(59, 130, 246, 0.12)',
-                                  color: '#2563eb',
+                                  background: isMemberGroup ? 'rgba(15, 169, 143, 0.12)' : 'rgba(59, 130, 246, 0.12)',
+                                  color: isMemberGroup ? 'var(--primary-accent)' : '#2563eb',
                                   fontWeight: 700,
                                 }}
                               >
-                                {group.provider || theme.label}
+                                {isMemberGroup ? 'Traveler' : (group.provider || theme.label)}
                               </span>
                             </div>
                             <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', marginTop: '2px' }}>
-                              {group.title}
-                              {group.startDateTime && ` · ${group.startDateTime}`}
-                              {group.endDateTime && ` ➔ ${group.endDateTime}`}
+                              {isMemberGroup ? (
+                                `${group.passes.length} ${group.passes.length === 1 ? 'ticket / boarding pass' : 'tickets / boarding passes'}`
+                              ) : (
+                                <>
+                                  {group.title}
+                                  {group.startDateTime && ` · ${group.startDateTime}`}
+                                  {group.endDateTime && ` ➔ ${group.endDateTime}`}
+                                </>
+                              )}
                             </div>
                           </div>
                         </div>
 
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }} onClick={(e) => e.stopPropagation()}>
-                          {group.referenceCode && (
+                          {!isMemberGroup && group.referenceCode && (
                             <button
                               type="button"
                               style={{
@@ -1456,14 +1777,14 @@ export function TravelPassWalletView({
                               border: 'none',
                               fontSize: '11.5px',
                               fontWeight: 700,
-                              color: 'var(--primary-accent)',
+                              color: isMemberGroup ? 'var(--primary-accent)' : '#2563eb',
                               cursor: 'pointer',
                               display: 'flex',
                               alignItems: 'center',
                               gap: '4px',
                               padding: '4px 10px',
                               borderRadius: '12px',
-                              background: 'rgba(15, 169, 143, 0.1)',
+                              background: isMemberGroup ? 'rgba(15, 169, 143, 0.1)' : 'rgba(59, 130, 246, 0.1)',
                             }}
                             onClick={() => {
                               triggerHaptic('light');
@@ -1473,7 +1794,7 @@ export function TravelPassWalletView({
                               }));
                             }}
                           >
-                            <span>👥 {group.passes.length} Passes</span>
+                            <span>{isMemberGroup ? '🎫' : '👥'} {group.passes.length} {group.passes.length === 1 ? 'Pass' : 'Passes'}</span>
                             <span style={{ fontSize: '10px' }}>{isExpanded ? '▲' : '▼'}</span>
                           </button>
                         </div>
@@ -1490,7 +1811,7 @@ export function TravelPassWalletView({
                             background: 'var(--bg-surface-hover, rgba(0,0,0,0.02))',
                           }}
                         >
-                          {group.passes.map((pass) => renderSinglePassCard(pass, true))}
+                          {group.passes.map((pass) => renderSinglePassCard(pass, isMemberGroup ? 'member' : 'leg'))}
                         </div>
                       )}
                     </div>
@@ -1498,7 +1819,7 @@ export function TravelPassWalletView({
                 }
 
                 // Single / Solo pass
-                return renderSinglePassCard(group.passes[0], false);
+                return renderSinglePassCard(group.passes[0], 'solo');
               })}
             </div>
           )}
