@@ -5324,5 +5324,32 @@
     "resolvedBy": "cursor-agent",
     "resolvedAt": "2026-09-06T20:09:46.852Z",
     "resolutionNote": "Closed confirmRequest JSX before ConflictResolverModal; added tripId to makeExpense in conflict tests. Fixed in v3.5.1."
+  },
+  {
+    "id": "BUG-174",
+    "title": "Back/Escape skipped overlays or required two presses",
+    "description": "Overlays missing useHistoryBack were skipped; App+child double registration required two Backs; Escape closed multiple layers at once.",
+    "severity": "medium",
+    "category": "navigation",
+    "status": "resolved",
+    "foundBy": "cursor-agent",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Open FX/gallery/snapshot/action sheet/confirm",
+      "press Back or Escape",
+      "nested pickers inside expense form"
+    ],
+    "expectedBehavior": "Back and Escape pop exactly one layer to the previous screen",
+    "actualBehavior": "Skipped layers, left trip, or needed two presses",
+    "diagnostics": {},
+    "createdAt": "2026-09-06T22:29:09.362Z",
+    "updatedAt": "2026-09-06T22:29:40.292Z",
+    "resolvedBy": "cursor-agent",
+    "resolvedAt": "2026-09-06T22:29:40.291Z",
+    "resolutionNote": "One history owner per overlay; wired gaps (ActionSheet, ConfirmDialog, conflict modal, pickers); Escape LIFO stack. Fixed in v3.6.0 commit df2815e."
   }
 ]

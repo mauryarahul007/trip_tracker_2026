@@ -617,5 +617,21 @@
     "shippedAt": "2026-09-06T19:57:25.539Z",
     "shippedBy": "cursor-agent",
     "shippedNote": "Shipped in v3.5.0 (d9c1e28)"
+  },
+  {
+    "id": "FEAT-040",
+    "title": "WhatsApp-style Settings home (flat titled groups)",
+    "description": "Flatten Settings so home shows concrete rows in This Trip / Preferences / Data / Help / Account / About groups; remove intermediate portal folders; keep real drill-downs only.",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "cursor-agent",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-09-06T22:28:34.642Z",
+    "updatedAt": "2026-09-06T22:28:34.642Z",
+    "shippedAt": "2026-09-06T22:28:34.642Z",
+    "shippedBy": "cursor-agent",
+    "shippedNote": "Shipped in v3.6.0 (df2815e). Reverses FEAT-030 portal-folder IA into WhatsApp-style flat groups."
   }
 ]

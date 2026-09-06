@@ -9,11 +9,11 @@
 
 | Metric | Count |
 | :--- | :--- |
-| **Total Tracked** | **39** |
+| **Total Tracked** | **40** |
 | **💡 Requested** | **2** |
 | **📋 Planned** | **0** |
 | **🟡 In Progress** | **0** |
-| **✅ Shipped** | **37** |
+| **✅ Shipped** | **38** |
 | **⚪ Won't Do** | **0** |
 
 ---
@@ -89,6 +89,7 @@ CI pipeline for lint, build, and test on push/PR
 | **FEAT-037** | Settings IA cleanup: dedupe Gallery/Snapshot and bury Pro Tips | `ui-ux` | `cursor-agent` | `cursor-agent` | Shipped in v3.5.0 (d9c1e28) |
 | **FEAT-038** | Recycle Bin enabled by default for travelers | `ui-ux` | `cursor-agent` | `cursor-agent` | Shipped in v3.5.0 (d9c1e28) |
 | **FEAT-039** | Quota-safe receipt storage (no base64 in localStorage) | `performance` | `cursor-agent` | `cursor-agent` | Shipped in v3.5.0 (d9c1e28) |
+| **FEAT-040** | WhatsApp-style Settings home (flat titled groups) | `ui-ux` | `cursor-agent` | `cursor-agent` | Shipped in v3.6.0 (df2815e). Reverses FEAT-030 portal-folder IA into WhatsApp-style flat groups. |
 
 ---
 

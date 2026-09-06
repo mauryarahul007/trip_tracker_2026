@@ -9,10 +9,10 @@
 
 | Metric | Count | Status Notes |
 | :--- | :--- | :--- |
-| **Total Tracked** | **173** | All recorded bugs across sessions |
+| **Total Tracked** | **174** | All recorded bugs across sessions |
 | **🟢 Open** | **2** | 🚨 **2 CRITICAL**, 0 High |
 | **🟡 In Progress** | **0** | Active investigation or fix |
-| **✅ Resolved** | **145** | Verified & closed |
+| **✅ Resolved** | **146** | Verified & closed |
 | **⚪ Won't Fix** | **26** | Expected behavior / deferred |
 
 ---
@@ -263,6 +263,7 @@ ReferenceError: OverflowMenu is not defined
 | **BUG-171** | Checklist tab label clips on narrow phones due to equal flex widths | `ui-ux` | `low` | `claude-cli` | `claude-cli` | Changed Checklist button to flex:1.3, Passes/Notes to flex:0.85. Commit fa0f6c8. |
 | **BUG-172** | Passes/Notes/Checklist segment labels and bottom-nav pill text clipped | `ui-ux` | `medium` | `human` | `cursor` | Compacted segment header (no icons/ellipsis, always show counts) and shortened bottom-nav label to Notes. Commit c81540a (v3.4.14). |
 | **BUG-173** | CI build failed: missing ConfirmDialog closing paren in App.tsx | `navigation` | `high` | `cursor-agent` | `cursor-agent` | Closed confirmRequest JSX before ConflictResolverModal; added tripId to makeExpense in conflict tests. Fixed in v3.5.1. |
+| **BUG-174** | Back/Escape skipped overlays or required two presses | `navigation` | `medium` | `cursor-agent` | `cursor-agent` | One history owner per overlay; wired gaps (ActionSheet, ConfirmDialog, conflict modal, pickers); Escape LIFO stack. Fixed in v3.6.0 commit df2815e. |
 
 ---
 
