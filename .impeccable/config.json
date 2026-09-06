@@ -8,6 +8,60 @@
         "value": "cubic-bezier(0.34, 1.56, 0.64, 1)",
         "createdAt": "2026-08-30T17:20:02.454Z",
         "reason": "app's own established overshoot/spring motion language (alongside --ease-uber-spring, --ease-bounce-back in DESIGN.md), used deliberately across ~13 reveal/settle moments -- not generic template bounce; verified during /impeccable audit and optimize passes"
+      },
+      {
+        "rule": "side-tab",
+        "value": "*",
+        "files": [
+          "src/components/admin/ops-deck.css"
+        ],
+        "createdAt": "2026-09-06T05:40:20.313Z",
+        "reason": "severity/status stripes (kanban card severity color, resolution-note callout) are functional state encoding, not decorative accent borders on a repeated card grid"
+      },
+      {
+        "rule": "layout-transition",
+        "value": "*",
+        "files": [
+          "src/components/admin/ops-deck.css"
+        ],
+        "createdAt": "2026-09-06T05:40:20.414Z",
+        "reason": "width transitions on progress-bar fills (velocity segment, storage gauge) are data-change-triggered, not per-frame/scroll animation; negligible perf cost, out of scope for this session's kanban drag-drop task"
+      },
+      {
+        "rule": "design-system-radius",
+        "value": "*",
+        "files": [
+          "src/components/admin/ops-deck.css"
+        ],
+        "createdAt": "2026-09-06T05:57:32.812Z",
+        "reason": "reconciled against DESIGN.md: all card/button/pill radii now use --r-sm/md/lg/pill matching DESIGN.md's own values; the 2 remaining literal px radii (statusbar 4px, cmdk focus-ring 4px) are commented in-code as intentional non-card exceptions"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "*",
+        "files": [
+          "src/components/admin/ops-deck.css"
+        ],
+        "createdAt": "2026-09-06T05:57:32.900Z",
+        "reason": "documented intentional extension (see file header comment): DESIGN.md's Label(11px)/Body(15px) pair is sized for the traveler app, not a dense admin data-console; the 9.5-14px micro-scale here is a deliberate, reconciled addition, not drift"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "*",
+        "files": [
+          "src/components/SuperAdminBugTracker.tsx"
+        ],
+        "createdAt": "2026-09-06T06:09:24.638Z",
+        "reason": "Bug Ledger is part of the Ops Deck surface (renders inside .ops-deck, same design language as ops-deck.css); its inline font-sizes are the same documented micro-scale extension already reconciled there, not separate drift"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "*",
+        "files": [
+          "src/components/admin/AdminPortalLayout.tsx"
+        ],
+        "createdAt": "2026-09-06T06:35:56.018Z",
+        "reason": "same reconciled Ops Deck micro-scale extension already documented in ops-deck.css's header comment; this file renders inside .ops-deck and shares that type system"
       }
     ]
   }

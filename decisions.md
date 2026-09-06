@@ -2090,6 +2090,23 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - Travelers expand or collapse the header route stops directly from the header badge, matching standard mobile navigation heuristics.
 
+---
+
+## 115. Ops Deck "Fleet Vitals" Retheme, Bug Ledger Kanban Drag-and-Drop, and DESIGN.md Reconciliation (v3.2.0)
+* **Context:**
+  - The superadmin Ops Deck's kanban board (Bug Ledger) only supported changing a case's status by clicking a button inside the detail drawer — moving a card between columns did nothing.
+  - `ops-deck.css`'s border-radius and font-size values had drifted into ad hoc, undocumented values across 1,869 lines, and the file's accent color was a blue despite the file's own header comment calling it "teal."
+  - The user asked for a visual direction matching a referenced Dribbble shot ("MediApp Pro" healthcare dashboard): mint outer frame, white sidebar with a promo card and user-identity footer, dual-line metrics chart, and a real calendar widget.
+* **Decision:**
+  - Added real HTML5 drag-and-drop to `.ops-kanban-card`/`.ops-kanban-col` in `SuperAdminBugTracker.tsx`, routing drops through the existing `handleStatusChange` (so dropping onto "Settled" still opens the resolution-note flow, matching click behavior).
+  - Reconciled `ops-deck.css`'s radius scale onto DESIGN.md's own tokens (`--r-sm/md/lg/pill` = 10/14/20/9999px, matching the traveler app's documented scale exactly) across all 67 border-radius declarations in the file, and folded two one-off font-size stragglers into the existing micro-scale. The micro-scale itself (9.5–14px) stays a documented, intentional extension — DESIGN.md's 2-step Label/Body scale can't carry a dense admin data console.
+  - Retthemed the shared accent tokens (`--amber`/`--cyan`) from blue to teal (`#0FA98F` light / `#2DD4BF` dark), added a mint `--vitals-outer` frame token and yellow `--promo` tokens, and rebuilt `AdminPortalLayout.tsx`'s shell: removed a hardcoded dark-navy-sidebar-on-light-page override that predated this pass, added a real promo card (shows live recycle-bin count) and a real user-identity footer (`userDisplayName` + session email from the actual stores), and added a real Calendar widget to Command Center (current month, today highlighted, event dots computed from real `auditLogs` dates).
+  - Extracted `initialsFrom()` to a shared `src/utils/initials.ts` (used by both the sidebar avatar and the Bug Ledger's reporter chips) — this file already held an existing `initial()` helper used by 6 traveler-facing components; both now coexist in the same file rather than one clobbering the other.
+  - Fixed a real pre-existing layout bug found during this pass: `.ops-kpi-row` was `grid-template-columns: repeat(3, 1fr)` while every single page (Analytics/Audit/Command Center) renders exactly 4 KPI cards into it, causing the 4th card to wrap onto its own row. Changed to `repeat(4, 1fr)`.
+* **Trade-offs Accepted:**
+  - The `ops-deck.css` color palette (as opposed to radius/font-size) was deliberately left unreconciled against DESIGN.md — the Ops Deck's console-register palette is intentionally its own system, and a full color audit was out of scope for this pass; ~57 `design-system-color` findings remain, disclosed but not fixed.
+  - Three bug reports (`BUG-155`, `BUG-156`, `BUG-157`) auto-filed by `autoBugReporter.ts` during this session's mid-edit transient states (an `initial`/`initialsFrom` clobber and two since-fixed reference errors) were deleted from the live table via `scripts/bug.mjs delete` — they reflected editing-session artifacts, not product defects.
+
 
 
 

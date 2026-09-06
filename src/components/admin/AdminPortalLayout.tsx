@@ -17,6 +17,8 @@ import { fetchBugs } from '../../services/bugApi';
 import { fetchFeatures, type FeatureRecord } from '../../services/featureApi';
 import { IconChevronRight, IconSearch } from '../Icons';
 import { ConfirmDialog, type ConfirmRequest } from '../ConfirmDialog';
+import { formatRelativeTime } from '../../utils/relativeTime';
+import { initialsFrom } from '../../utils/initials';
 // Each admin tab only ever renders one at a time (see the activeTab
 // switches in <main> below) -- lazy per sub-page so opening the Ops Deck
 // to check one tab doesn't also download the other seven's code (~2.9k
@@ -33,8 +35,15 @@ import './ops-deck.css';
 
 function AdminTabLoadingFallback() {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '60px 0' }}>
-      <span className="icon-spin" style={{ width: 24, height: 24, border: '2px solid var(--border-color)', borderTopColor: 'var(--primary-accent)', borderRadius: '50%' }} />
+    <div aria-hidden="true">
+      <div className="ops-skeleton-row">
+        <div className="ops-skeleton-block" style={{ height: 76 }} />
+        <div className="ops-skeleton-block" style={{ height: 76 }} />
+        <div className="ops-skeleton-block" style={{ height: 76 }} />
+        <div className="ops-skeleton-block" style={{ height: 76 }} />
+      </div>
+      <div className="ops-skeleton-block" style={{ height: 160, marginBottom: 12 }} />
+      <div className="ops-skeleton-block" style={{ height: 160 }} />
     </div>
   );
 }
@@ -125,9 +134,13 @@ export function AdminPortalLayout({
   const [showSectionSwitcher, setShowSectionSwitcher] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [confirmRequest, setConfirmRequest] = useState<ConfirmRequest | null>(null);
+  const [lastSyncedAt, setLastSyncedAt] = useState<number | null>(null);
+  const [justSynced, setJustSynced] = useState(false);
   const panelRef = useRef<HTMLElement>(null);
   const lockSuperadmin = useTripStore((s) => s.lockSuperadmin);
   const signOut = useAuthStore((s) => s.signOut);
+  const userDisplayName = useTripStore((s) => s.userDisplayName) || 'Superadmin';
+  const superadminEmail = useAuthStore((s) => s.session?.user.email) || 'superadmin@triptracker.local';
   const clock = useIstClock();
 
   // The traveler app only ever loads one trip's expenses at a time
@@ -165,11 +178,23 @@ export function AdminPortalLayout({
       fetchNotificationStats().then(setNotificationStats).catch(() => {}),
       fetchRecycledExpenseCount().then(setRecycledCount).catch(() => {}),
       fetchFeatures().then(setFeatures).catch(() => setFeatures([])),
-    ]).then(() => undefined);
+    ]).then(() => {
+      setLastSyncedAt(Date.now());
+      setJustSynced(true);
+      setTimeout(() => setJustSynced(false), 1200);
+    });
 
   useEffect(() => {
     reloadFleetData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Keeps the "synced Xs ago" note fresh without a full clock — a
+  // lightweight re-render tick, not a new timestamp source.
+  const [, forceSyncNoteTick] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => forceSyncNoteTick((t) => t + 1), 15000);
+    return () => clearInterval(id);
   }, []);
 
   // On-demand counterpart to the trips-keyed expenses effect above, for the
@@ -333,133 +358,165 @@ export function AdminPortalLayout({
 
   return (
     <div className="ops-deck ops-shell">
-      <div className="ops-statusbar">
-        <div className="ops-callsign">
-          <div className="ops-glyph">TT</div>
-          <div>
-            <h1>Trip Tracker &mdash; Ops Deck</h1>
-            <div className="ops-sub">SUPERADMIN // ROOT ACCESS</div>
-          </div>
-        </div>
-        <div className="ops-cmdk-wrap">
-          <div className="ops-cmdk" onClick={() => cmdkInputRef.current?.focus()}>
-            <IconSearch size={15} className="icon-sm" style={{ color: 'var(--text-tertiary)', flexShrink: 0 }} />
-            <input
-              ref={cmdkInputRef}
-              type="text"
-              placeholder="Search or jump (⌘K / Ctrl+K)..."
-              value={jumpQuery}
-              onChange={(e) => {
-                setJumpQuery(e.target.value);
-                setJumpIndex(0);
-              }}
-              onKeyDown={handleKeyDown}
-              onFocus={() => setJumpOpen(true)}
-              onBlur={() => setTimeout(() => setJumpOpen(false), 200)}
-            />
-            <span className="ops-cmdk-kbd">⌘K</span>
-          </div>
-          {jumpOpen && (
-            <div className="ops-cmdk-results">
-              {jumpResults.length === 0 ? (
-                <div className="ops-cmdk-empty">No matching trip, user, section or case for &ldquo;{jumpQuery}&rdquo;.</div>
-              ) : (
-                jumpResults.map((r, i) => (
+      <div className="ops-vitals-app">
+        <div className="ops-layout">
+          <nav className="ops-rail" aria-label="Ops sections">
+            <div className="ops-vitals-brand">
+              <div className="ops-glyph">TT</div>
+              <div>
+                <h1>Trip Tracker</h1>
+                <div className="ops-sub">Ops Deck</div>
+              </div>
+            </div>
+
+            {SECTION_GROUPS.map((group) => (
+              <div className="ops-rail-group" key={group.label}>
+                <div className="ops-rail-label">{group.label}</div>
+                {group.items.map((s) => (
                   <button
-                    key={`${r.kind}-${i}`}
+                    key={s.id}
                     type="button"
-                    className={`ops-cmdk-row ${i === jumpIndex ? 'selected' : ''}`}
-                    onMouseDown={(e) => {
-                      e.preventDefault();
-                      r.onSelect();
-                      setJumpQuery('');
-                      setJumpOpen(false);
-                    }}
-                    onMouseEnter={() => setJumpIndex(i)}
+                    className="ops-switch-item"
+                    data-current={activeTab === s.id}
+                    onClick={() => onActiveTabChange(s.id)}
                   >
-                    <span className={`kind kind-${r.kind.toLowerCase()}`}>{r.kind}</span>
-                    <span style={{ minWidth: 0, overflow: 'hidden' }}>
-                      <span style={{ display: 'block', fontSize: '12.5px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.label}</span>
-                      <span style={{ display: 'block', fontSize: '10.5px', color: 'var(--text-tertiary)' }}>{r.sublabel}</span>
+                    <span className="ops-lamp" />
+                    <span>
+                      <span className="ops-lbl">{s.label}</span>
+                      <span className="ops-code">{s.code}</span>
                     </span>
+                    {s.id === 'tools' && recycledCount > 0 && <span className="ops-rail-item-flag" title={`${recycledCount} item(s) in recycle bin`} />}
                   </button>
-                ))
+                ))}
+              </div>
+            ))}
+
+            <div className="ops-vitals-promo">
+              {recycledCount > 0 ? (
+                <>
+                  <p>{recycledCount} item{recycledCount === 1 ? '' : 's'} sitting in the recycle bin</p>
+                  <button type="button" onClick={() => onActiveTabChange('tools')}>Review now</button>
+                </>
+              ) : (
+                <>
+                  <p>Fleet running clean &mdash; nothing pending cleanup</p>
+                  <button type="button" disabled={isRefreshing} onClick={() => void handleRefreshAll()}>
+                    {isRefreshing ? 'Refreshing…' : 'Refresh data'}
+                  </button>
+                </>
               )}
             </div>
-          )}
-        </div>
-        <div className="ops-status-right">
-          <div className={`ops-health-pill ${health.ok ? 'ok' : 'warn'}`}>
-            <span className="dot" /> <span className="label">{health.label}</span>
-          </div>
-          <div style={{ fontFamily: 'var(--mono)', fontSize: '11px', color: 'var(--text-secondary)', fontVariantNumeric: 'tabular-nums' }}>{clock}</div>
-          {onOpenBugTracker && (
-            <button
-              type="button"
-              className="ops-btn"
-              onClick={onOpenBugTracker}
-              style={{ position: 'relative' }}
-              aria-label={criticalBugCount > 0 ? `Bug Ledger, ${criticalBugCount} critical case${criticalBugCount === 1 ? '' : 's'} open` : 'Bug Ledger'}
-            >
-              Bug Ledger
-              {criticalBugCount > 0 && (
-                <span
-                  aria-hidden="true"
-                  style={{ position: 'absolute', top: '-3px', right: '-3px', width: '8px', height: '8px', borderRadius: '50%', background: 'var(--danger)', boxShadow: '0 0 6px var(--danger)' }}
-                />
-              )}
-            </button>
-          )}
-          {onExitToTravelerApp && (
-            <button type="button" className="ops-btn" onClick={onExitToTravelerApp}>
-              Preview Traveler View
-            </button>
-          )}
-          <button type="button" className="ops-btn ops-btn-danger" onClick={handleAdminLogout}>
-            Lock &amp; Logout
+
+            <div className="ops-vitals-who">
+              <div className="ops-vitals-who-avatar">{initialsFrom(userDisplayName)}</div>
+              <div>
+                <b>{userDisplayName}</b>
+                <span>{superadminEmail}</span>
+              </div>
+            </div>
+          </nav>
+
+          <button
+            type="button"
+            className="ops-section-trigger"
+            aria-haspopup="listbox"
+            aria-expanded={showSectionSwitcher}
+            onClick={() => setShowSectionSwitcher(true)}
+          >
+            <span className="ops-section-trigger-left">
+              <span className="ops-lamp" />
+              <span className="ops-section-trigger-code">{currentSection.code}</span>
+              <span className="ops-section-trigger-label">{currentSection.label}</span>
+            </span>
+            <IconChevronRight size={16} className="ops-section-trigger-chevron" />
           </button>
-        </div>
-      </div>
 
-      <div className="ops-layout">
-        <nav className="ops-rail" aria-label="Ops sections">
-          {SECTION_GROUPS.map((group) => (
-            <div className="ops-rail-group" key={group.label}>
-              <div className="ops-rail-label">{group.label}</div>
-              {group.items.map((s) => (
-                <button
-                  key={s.id}
-                  type="button"
-                  className="ops-switch-item"
-                  data-current={activeTab === s.id}
-                  onClick={() => onActiveTabChange(s.id)}
-                >
-                  <span className="ops-lamp" />
-                  <span>
-                    <span className="ops-lbl">{s.label}</span>
-                    <span className="ops-code">{s.code}</span>
+          <div className="ops-vitals-main">
+            <div className="ops-vitals-topbar">
+              <div className="ops-cmdk-wrap">
+                <div className="ops-cmdk" onClick={() => cmdkInputRef.current?.focus()}>
+                  <IconSearch size={15} className="icon-sm" style={{ color: 'var(--text-tertiary)', flexShrink: 0 }} />
+                  <input
+                    ref={cmdkInputRef}
+                    type="text"
+                    placeholder="Search or jump (⌘K / Ctrl+K)..."
+                    value={jumpQuery}
+                    onChange={(e) => {
+                      setJumpQuery(e.target.value);
+                      setJumpIndex(0);
+                    }}
+                    onKeyDown={handleKeyDown}
+                    onFocus={() => setJumpOpen(true)}
+                    onBlur={() => setTimeout(() => setJumpOpen(false), 200)}
+                  />
+                  <span className="ops-cmdk-kbd">⌘K</span>
+                </div>
+                {jumpOpen && (
+                  <div className="ops-cmdk-results">
+                    {jumpResults.length === 0 ? (
+                      <div className="ops-cmdk-empty">No matching trip, user, section or case for &ldquo;{jumpQuery}&rdquo;.</div>
+                    ) : (
+                      jumpResults.map((r, i) => (
+                        <button
+                          key={`${r.kind}-${i}`}
+                          type="button"
+                          className={`ops-cmdk-row ${i === jumpIndex ? 'selected' : ''}`}
+                          onMouseDown={(e) => {
+                            e.preventDefault();
+                            r.onSelect();
+                            setJumpQuery('');
+                            setJumpOpen(false);
+                          }}
+                          onMouseEnter={() => setJumpIndex(i)}
+                        >
+                          <span className={`kind kind-${r.kind.toLowerCase()}`}>{r.kind}</span>
+                          <span style={{ minWidth: 0, overflow: 'hidden' }}>
+                            <span style={{ display: 'block', fontSize: '12.5px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.label}</span>
+                            <span style={{ display: 'block', fontSize: '10.5px', color: 'var(--text-tertiary)' }}>{r.sublabel}</span>
+                          </span>
+                        </button>
+                      ))
+                    )}
+                  </div>
+                )}
+              </div>
+              <div className="ops-status-right">
+                <div className={`ops-health-pill ${health.ok ? 'ok' : 'warn'}`}>
+                  <span className="dot" /> <span className="label">{health.label}</span>
+                </div>
+                <div style={{ fontFamily: 'var(--mono)', fontSize: '11px', color: 'var(--text-secondary)', fontVariantNumeric: 'tabular-nums' }}>{clock}</div>
+                {lastSyncedAt && (
+                  <span className="ops-sync-note" data-pulsing={justSynced}>
+                    synced {formatRelativeTime(new Date(lastSyncedAt).toISOString())}
                   </span>
-                  {s.id === 'tools' && recycledCount > 0 && <span className="ops-rail-item-flag" title={`${recycledCount} item(s) in recycle bin`} />}
+                )}
+                {onOpenBugTracker && (
+                  <button
+                    type="button"
+                    className="ops-btn"
+                    onClick={onOpenBugTracker}
+                    style={{ position: 'relative' }}
+                    aria-label={criticalBugCount > 0 ? `Bug Ledger, ${criticalBugCount} critical case${criticalBugCount === 1 ? '' : 's'} open` : 'Bug Ledger'}
+                  >
+                    Bug Ledger
+                    {criticalBugCount > 0 && (
+                      <span
+                        aria-hidden="true"
+                        style={{ position: 'absolute', top: '-3px', right: '-3px', width: '8px', height: '8px', borderRadius: '50%', background: 'var(--danger)', boxShadow: '0 0 6px var(--danger)' }}
+                      />
+                    )}
+                  </button>
+                )}
+                {onExitToTravelerApp && (
+                  <button type="button" className="ops-btn" onClick={onExitToTravelerApp}>
+                    Preview Traveler View
+                  </button>
+                )}
+                <button type="button" className="ops-btn ops-btn-danger" onClick={handleAdminLogout}>
+                  Lock &amp; Logout
                 </button>
-              ))}
+              </div>
             </div>
-          ))}
-        </nav>
-
-        <button
-          type="button"
-          className="ops-section-trigger"
-          aria-haspopup="listbox"
-          aria-expanded={showSectionSwitcher}
-          onClick={() => setShowSectionSwitcher(true)}
-        >
-          <span className="ops-section-trigger-left">
-            <span className="ops-lamp" />
-            <span className="ops-section-trigger-code">{currentSection.code}</span>
-            <span className="ops-section-trigger-label">{currentSection.label}</span>
-          </span>
-          <IconChevronRight size={16} className="ops-section-trigger-chevron" />
-        </button>
 
         <main className="ops-panel" ref={panelRef}>
           <Suspense fallback={<AdminTabLoadingFallback />}>
@@ -539,6 +596,8 @@ export function AdminPortalLayout({
           )}
           </Suspense>
         </main>
+          </div>
+        </div>
       </div>
 
       {showSectionSwitcher && (

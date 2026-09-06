@@ -8,6 +8,8 @@ import {
   type BugRecord,
 } from '../services/bugApi';
 import { diagnosticLogger } from '../utils/diagnosticLogger';
+import { formatRelativeTime } from '../utils/relativeTime';
+import { initialsFrom } from '../utils/initials';
 import type { ConfirmRequest } from './ConfirmDialog';
 import {
   IconChevronLeft,
@@ -82,49 +84,115 @@ function BugDetailBody({
   onCopyPrompt: (bug: BugRecord) => void;
   onDelete: (id: string) => void;
 }) {
+  const hasDiagnostics = Boolean(bug.diagnostics?.stackTrace || bug.diagnostics?.consoleLogs?.length || bug.diagnostics?.syncQueueLength !== undefined || bug.diagnostics?.activeTripId);
+  const [tab, setTab] = useState<'details' | 'diagnostics' | 'history'>('details');
+
   return (
     <>
-      {bug.reproSteps && bug.reproSteps.length > 0 && (
-        <div className="ops-bug-field">
-          <span className="ops-bug-label">Steps to reproduce</span>
-          <ol>
-            {bug.reproSteps.map((step, idx) => (
-              <li key={idx}>{step}</li>
-            ))}
-          </ol>
-        </div>
-      )}
-
-      {(bug.expectedBehavior || bug.actualBehavior) && (
-        <div className="ops-bug-field" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-          {bug.expectedBehavior && (
-            <div>
-              <span className="ops-bug-label">Expected</span>
-              <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>{bug.expectedBehavior}</div>
-            </div>
-          )}
-          {bug.actualBehavior && (
-            <div>
-              <span className="ops-bug-label">Actual</span>
-              <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>{bug.actualBehavior}</div>
-            </div>
-          )}
-        </div>
-      )}
-
-      {bug.diagnostics?.stackTrace && (
-        <div className="ops-bug-field">
-          <span className="ops-bug-label">Trace</span>
-          <div className="ops-bug-stack">{bug.diagnostics.stackTrace}</div>
-        </div>
-      )}
-
       {bug.status === 'resolved' && (
         <div className="ops-bug-field ops-bug-resolution">
           <strong>Resolution:</strong> {bug.resolutionNote || 'Resolved'}
           <div style={{ fontSize: '10.5px', marginTop: '3px', color: 'var(--text-secondary)' }}>
             Settled by {bug.resolvedBy || 'superadmin'} on {bug.resolvedAt ? new Date(bug.resolvedAt).toLocaleDateString() : 'N/A'}
           </div>
+        </div>
+      )}
+
+      <div className="ops-bug-tabs" role="tablist">
+        <button type="button" role="tab" className="ops-bug-tab" data-active={tab === 'details'} onClick={() => setTab('details')}>Details</button>
+        {hasDiagnostics && (
+          <button type="button" role="tab" className="ops-bug-tab" data-active={tab === 'diagnostics'} onClick={() => setTab('diagnostics')}>Diagnostics</button>
+        )}
+        <button type="button" role="tab" className="ops-bug-tab" data-active={tab === 'history'} onClick={() => setTab('history')}>History</button>
+      </div>
+
+      {tab === 'details' && (
+        <>
+          {bug.reproSteps && bug.reproSteps.length > 0 && (
+            <div className="ops-bug-field">
+              <span className="ops-bug-label">Steps to reproduce</span>
+              <ol>
+                {bug.reproSteps.map((step, idx) => (
+                  <li key={idx}>{step}</li>
+                ))}
+              </ol>
+            </div>
+          )}
+
+          {(bug.expectedBehavior || bug.actualBehavior) && (
+            <div className="ops-bug-field" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+              {bug.expectedBehavior && (
+                <div>
+                  <span className="ops-bug-label">Expected</span>
+                  <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>{bug.expectedBehavior}</div>
+                </div>
+              )}
+              {bug.actualBehavior && (
+                <div>
+                  <span className="ops-bug-label">Actual</span>
+                  <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>{bug.actualBehavior}</div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {!bug.reproSteps?.length && !bug.expectedBehavior && !bug.actualBehavior && (
+            <div className="ops-empty" style={{ padding: '12px 0' }}>No repro details recorded.</div>
+          )}
+        </>
+      )}
+
+      {tab === 'diagnostics' && (
+        <>
+          {bug.diagnostics?.stackTrace && (
+            <div className="ops-bug-field">
+              <span className="ops-bug-label">Trace</span>
+              <div className="ops-bug-stack">{bug.diagnostics.stackTrace}</div>
+            </div>
+          )}
+          {bug.diagnostics?.consoleLogs && bug.diagnostics.consoleLogs.length > 0 && (
+            <div className="ops-bug-field">
+              <span className="ops-bug-label">Console (at time of report)</span>
+              <div className="ops-bug-stack">{bug.diagnostics.consoleLogs.join('\n')}</div>
+            </div>
+          )}
+          {(bug.diagnostics?.syncQueueLength !== undefined || bug.diagnostics?.activeTripId) && (
+            <div className="ops-bug-field" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+              {bug.diagnostics?.syncQueueLength !== undefined && (
+                <div>
+                  <span className="ops-bug-label">Sync queue length</span>
+                  <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>{bug.diagnostics.syncQueueLength}</div>
+                </div>
+              )}
+              {bug.diagnostics?.activeTripId && (
+                <div>
+                  <span className="ops-bug-label">Active trip</span>
+                  <div style={{ fontSize: '12px', color: 'var(--text-secondary)', fontFamily: 'var(--mono)' }}>{bug.diagnostics.activeTripId}</div>
+                </div>
+              )}
+            </div>
+          )}
+        </>
+      )}
+
+      {tab === 'history' && (
+        <div className="ops-bug-field" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+            <span className="ops-bug-label" style={{ display: 'inline' }}>Filed</span>{' '}
+            {new Date(bug.createdAt).toLocaleString()} by {bug.foundBy}
+          </div>
+          {bug.updatedAt && bug.updatedAt !== bug.createdAt && (
+            <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+              <span className="ops-bug-label" style={{ display: 'inline' }}>Last updated</span>{' '}
+              {new Date(bug.updatedAt).toLocaleString()}
+            </div>
+          )}
+          {bug.resolvedAt && (
+            <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+              <span className="ops-bug-label" style={{ display: 'inline' }}>Settled</span>{' '}
+              {new Date(bug.resolvedAt).toLocaleString()} by {bug.resolvedBy || 'superadmin'}
+            </div>
+          )}
         </div>
       )}
 
@@ -194,11 +262,13 @@ export function SuperAdminBugTracker({ onBack, isAdmin = true, onRequestConfirm 
   const [resolvingBug, setResolvingBug] = useState<BugRecord | null>(null);
   const [resolutionNote, setResolutionNote] = useState('');
   const [resolvedByName, setResolvedByName] = useState('superadmin');
+  const [draggedBugId, setDraggedBugId] = useState<string | null>(null);
+  const [dragOverStatus, setDragOverStatus] = useState<BugRecord['status'] | null>(null);
 
   useFocusTrap(drawerRef, Boolean(drawerBugId), false, () => setDrawerBugId(null));
   useFocusTrap(addModalRef, showAddModal, false, () => setShowAddModal(false));
   useFocusTrap(resolveDrawerRef, Boolean(resolvingBug), false, () => setResolvingBug(null));
-  const [toastMessage, setToastMessage] = useState<{ text: string; tone: 'success' | 'danger' } | null>(null);
+  const [toasts, setToasts] = useState<{ id: number; text: string; tone: 'success' | 'danger' }[]>([]);
 
   const [newTitle, setNewTitle] = useState('');
   const [newSeverity, setNewSeverity] = useState<BugRecord['severity']>('medium');
@@ -210,8 +280,9 @@ export function SuperAdminBugTracker({ onBack, isAdmin = true, onRequestConfirm 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const showToast = (text: string, tone: 'success' | 'danger' = 'success') => {
-    setToastMessage({ text, tone });
-    setTimeout(() => setToastMessage(null), 3000);
+    const id = Date.now() + Math.random();
+    setToasts((prev) => [...prev, { id, text, tone }]);
+    setTimeout(() => setToasts((prev) => prev.filter((t) => t.id !== id)), 3000);
   };
 
   const loadBugs = async () => {
@@ -458,17 +529,18 @@ ${bug.diagnostics?.stackTrace ? `#### Stack Trace\n\`\`\`text\n${bug.diagnostics
         </div>
       </div>
 
-      {toastMessage && (
-        <div
-          className="ops-toast"
-          style={
-            toastMessage.tone === 'danger'
-              ? { background: 'var(--danger-dim)', borderColor: 'rgba(255,107,94,0.35)', color: 'var(--danger)' }
-              : undefined
-          }
-        >
-          {toastMessage.tone === 'success' ? <IconCheckCircle size={14} /> : <IconAlertCircle size={14} />}
-          {toastMessage.text}
+      {toasts.length > 0 && (
+        <div className="ops-toast-stack">
+          {toasts.map((t) => (
+            <div
+              key={t.id}
+              className="ops-toast"
+              style={t.tone === 'danger' ? { background: 'var(--danger-dim)', borderColor: 'rgba(255,107,94,0.35)', color: 'var(--danger)' } : undefined}
+            >
+              {t.tone === 'success' ? <IconCheckCircle size={14} /> : <IconAlertCircle size={14} />}
+              {t.text}
+            </div>
+          ))}
         </div>
       )}
 
@@ -588,7 +660,27 @@ ${bug.diagnostics?.stackTrace ? `#### Stack Trace\n\`\`\`text\n${bug.diagnostics
           ).map((col) => {
             const colBugs = sortedBugs.filter((b) => b.status === col.status);
             return (
-              <div className="ops-kanban-col" key={col.status}>
+              <div
+                className="ops-kanban-col"
+                key={col.status}
+                data-drag-over={dragOverStatus === col.status}
+                style={{ borderTopWidth: '3px', borderTopColor: col.color }}
+                onDragOver={(e) => {
+                  if (!draggedBugId) return;
+                  e.preventDefault();
+                  e.dataTransfer.dropEffect = 'move';
+                  setDragOverStatus(col.status);
+                }}
+                onDragLeave={() => setDragOverStatus((prev) => (prev === col.status ? null : prev))}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  setDragOverStatus(null);
+                  const id = e.dataTransfer.getData('text/plain') || draggedBugId;
+                  const bug = bugs.find((b) => b.id === id);
+                  setDraggedBugId(null);
+                  if (bug && bug.status !== col.status) void handleStatusChange(bug, col.status);
+                }}
+              >
                 <div className="ops-kanban-col-head">
                   <span className="dot" style={{ background: col.color }} />
                   {col.label}
@@ -603,11 +695,28 @@ ${bug.diagnostics?.stackTrace ? `#### Stack Trace\n\`\`\`text\n${bug.diagnostics
                       type="button"
                       className="ops-kanban-card"
                       data-severity={bug.severity}
+                      data-dragging={draggedBugId === bug.id}
+                      draggable
+                      onDragStart={(e) => {
+                        e.dataTransfer.effectAllowed = 'move';
+                        e.dataTransfer.setData('text/plain', bug.id);
+                        setDraggedBugId(bug.id);
+                      }}
+                      onDragEnd={() => {
+                        setDraggedBugId(null);
+                        setDragOverStatus(null);
+                      }}
                       onClick={() => setDrawerBugId(bug.id)}
                     >
                       <span className="ops-bug-id">{bug.id}</span>
                       <div className="title">{bug.title}</div>
-                      <div className="meta">{bug.category} &middot; {bug.foundBy}</div>
+                      <div className="ops-kanban-card-meta-row">
+                        <span className="ops-kanban-avatar" title={bug.foundBy}>{initialsFrom(bug.foundBy)}</span>
+                        <span className="meta" style={{ marginTop: 0 }}>{bug.category}</span>
+                        <span className="ops-kanban-age" data-stale={bug.status === 'open' && Date.now() - new Date(bug.createdAt).getTime() > 3 * 24 * 60 * 60 * 1000}>
+                          {formatRelativeTime(bug.createdAt)}
+                        </span>
+                      </div>
                     </button>
                   ))
                 )}

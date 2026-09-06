@@ -114,6 +114,27 @@ export function AdminCommandCenterPage({ trips, bugs, features, users, auditLogs
     return list.slice(0, 8);
   }, [auditLogs, activityFilter]);
 
+  const calendar = useMemo(() => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const firstWeekday = (new Date(year, month, 1).getDay() + 6) % 7; // Monday-first
+    const eventDays = new Set(
+      auditLogs
+        .map((l) => new Date(l.createdAt))
+        .filter((d) => d.getFullYear() === year && d.getMonth() === month)
+        .map((d) => d.getDate())
+    );
+    return {
+      label: now.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
+      today: now.getDate(),
+      daysInMonth,
+      firstWeekday,
+      eventDays,
+    };
+  }, [auditLogs]);
+
   const handleExportBugs = () => {
     const blob = new Blob([JSON.stringify(bugs, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
@@ -202,7 +223,7 @@ export function AdminCommandCenterPage({ trips, bugs, features, users, auditLogs
         <div className="ops-card ops-kpi-card">
           <div className="ops-kpi-label">Active Trips</div>
           <div className="ops-kpi-value">{activeTrips.length}</div>
-          <div className="ops-kpi-delta">{groundedTrips.length} grounded</div>
+          <div className="ops-kpi-delta" style={{ color: groundedTrips.length > 0 ? 'var(--warning)' : undefined }}>{groundedTrips.length} grounded</div>
         </div>
         <div className="ops-card ops-kpi-card">
           <div className="ops-kpi-label">Travelers</div>
@@ -212,7 +233,7 @@ export function AdminCommandCenterPage({ trips, bugs, features, users, auditLogs
         <div className="ops-card ops-kpi-card">
           <div className="ops-kpi-label">Open Bug Cases</div>
           <div className="ops-kpi-value" style={{ color: criticalBugs.length > 0 ? 'var(--danger)' : undefined }}>{openBugs.length}</div>
-          <div className="ops-kpi-delta">{criticalBugs.length} critical</div>
+          <div className="ops-kpi-delta" style={{ color: criticalBugs.length > 0 ? 'var(--danger)' : undefined }}>{criticalBugs.length} critical</div>
         </div>
         <div className="ops-card ops-kpi-card">
           <div className="ops-kpi-label">Feature Requests</div>
@@ -221,7 +242,7 @@ export function AdminCommandCenterPage({ trips, bugs, features, users, auditLogs
         </div>
       </div>
 
-      <div className="ops-split-row">
+      <div className="ops-split-row" style={{ gridTemplateColumns: '1.1fr 1fr 0.85fr' }}>
         <div className="ops-card">
           <h3 className="ops-section-title">Needs attention</h3>
           <p className="ops-section-sub">Pulled live from the Bug Ledger and Trips — nothing here is manually curated.</p>
@@ -230,12 +251,20 @@ export function AdminCommandCenterPage({ trips, bugs, features, users, auditLogs
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {needsAttention.map((item) => (
-                <div className="ops-attn-row" key={item.key}>
+                <div
+                  className="ops-attn-row"
+                  key={item.key}
+                  role="button"
+                  tabIndex={0}
+                  onClick={item.onOpen}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); item.onOpen(); } }}
+                  style={{ cursor: 'pointer' }}
+                >
                   <div className={`ops-attn-stripe ${item.severity}`} />
                   <div className="body">
                     <div>
-                      <h4>{item.title}</h4>
-                      <p>{item.meta}</p>
+                      <h4 title={item.title}>{item.title}</h4>
+                      <p title={item.meta}>{item.meta}</p>
                     </div>
                     <button type="button" className="ops-btn" onClick={item.onOpen}>
                       Open
@@ -296,6 +325,31 @@ export function AdminCommandCenterPage({ trips, bugs, features, users, auditLogs
           <button type="button" className="ops-btn" style={{ width: '100%', justifyContent: 'center', marginTop: '12px' }} onClick={() => onNavigate('audit')}>
             View full audit log &rarr;
           </button>
+        </div>
+
+        <div className="ops-card">
+          <div className="ops-cal-head">
+            <h3 className="ops-section-title" style={{ margin: 0 }}>Calendar</h3>
+          </div>
+          <p className="ops-section-sub" style={{ marginTop: '-4px' }}>{calendar.label} &middot; dots mark days with audit activity</p>
+          <div className="ops-cal-grid">
+            {['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'].map((d) => (
+              <div className="hd" key={d}>{d}</div>
+            ))}
+            {Array.from({ length: calendar.firstWeekday }).map((_, i) => (
+              <div className="ops-cal-day faint" key={`pad-${i}`} />
+            ))}
+            {Array.from({ length: calendar.daysInMonth }).map((_, i) => {
+              const day = i + 1;
+              const isToday = day === calendar.today;
+              return (
+                <div className={`ops-cal-day${isToday ? ' today' : ''}`} key={day}>
+                  {day}
+                  {calendar.eventDays.has(day) && <span className="evt" />}
+                </div>
+              );
+            })}
+          </div>
         </div>
       </div>
 

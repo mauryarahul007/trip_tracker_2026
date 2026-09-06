@@ -4,6 +4,7 @@ import type { AdminUserRow } from '../../types/admin';
 import { setUserBanned, deleteUserAccount, broadcastNotification } from '../../services/tripApi';
 import { IconSearch, IconCheck, IconAlertCircle, IconRefresh } from '../Icons';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
+import { useTableDensity } from '../../hooks/useTableDensity';
 import type { ConfirmRequest } from '../ConfirmDialog';
 
 interface Props {
@@ -27,6 +28,7 @@ export function AdminUsersPage({ users, trips, superadminIds, onUsersChanged, on
   const [page, setPage] = useState(0);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isBulkBusy, setIsBulkBusy] = useState(false);
+  const { density, toggle: toggleDensity } = useTableDensity('ops-users-density');
 
   const [showBroadcastDrawer, setShowBroadcastDrawer] = useState(false);
   const broadcastDrawerRef = useRef<HTMLDivElement>(null);
@@ -256,6 +258,10 @@ export function AdminUsersPage({ users, trips, superadminIds, onUsersChanged, on
             }}
           />
         </div>
+        <div className="ops-density-toggle" role="group" aria-label="Table density">
+          <button type="button" data-active={density === 'comfortable'} onClick={() => density === 'compact' && toggleDensity()}>Comfortable</button>
+          <button type="button" data-active={density === 'compact'} onClick={() => density === 'comfortable' && toggleDensity()}>Compact</button>
+        </div>
       </div>
 
       {selectedIds.size > 0 && (
@@ -280,7 +286,7 @@ export function AdminUsersPage({ users, trips, superadminIds, onUsersChanged, on
           {filteredUsers.length === 0 ? (
             <div className="ops-empty" style={{ padding: '32px' }}>No users found.</div>
           ) : (
-            <table className="ops-manifest">
+            <table className="ops-manifest" data-density={density}>
               <thead>
                 <tr>
                   <th style={{ width: '30px' }}>

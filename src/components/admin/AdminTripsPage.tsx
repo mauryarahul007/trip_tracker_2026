@@ -5,6 +5,7 @@ import { getCurrencySymbol } from '../../utils/currency';
 import { logSuperadminAction } from '../../services/tripApi';
 import { IconSearch, IconCheck, IconRefresh, IconChevronDown, IconChevronUp, IconX } from '../Icons';
 import type { ConfirmRequest } from '../ConfirmDialog';
+import { useTableDensity } from '../../hooks/useTableDensity';
 
 interface Props {
   trips: Trip[];
@@ -30,6 +31,7 @@ export function AdminTripsPage({ trips, expenses, members, onInspectTrip, onRefr
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
   const [inspectingTripId, setInspectingTripId] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const { density, toggle: toggleDensity } = useTableDensity('ops-trips-density');
 
   const showToast = (msg: string) => {
     setToastMsg(msg);
@@ -240,6 +242,10 @@ export function AdminTripsPage({ trips, expenses, members, onInspectTrip, onRefr
             );
           })}
         </div>
+        <div className="ops-density-toggle" role="group" aria-label="Table density">
+          <button type="button" data-active={density === 'comfortable'} onClick={() => density === 'compact' && toggleDensity()}>Comfortable</button>
+          <button type="button" data-active={density === 'compact'} onClick={() => density === 'comfortable' && toggleDensity()}>Compact</button>
+        </div>
       </div>
 
       {selectedIds.size > 0 && (
@@ -264,7 +270,7 @@ export function AdminTripsPage({ trips, expenses, members, onInspectTrip, onRefr
           {sortedTrips.length === 0 ? (
             <div className="ops-empty" style={{ padding: '32px' }}>No trips found matching the selected filter.</div>
           ) : (
-            <table className="ops-manifest">
+            <table className="ops-manifest" data-density={density}>
               <thead>
                 <tr>
                   <th style={{ width: '26px' }} />
