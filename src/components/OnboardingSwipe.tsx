@@ -216,9 +216,9 @@ export function OnboardingSwipe({ userId, onDismiss }: Props) {
           </button>
 
           <div style={{ display: 'flex', gap: 8 }}>
-            {STEPS.map((_, i) => (
+            {STEPS.map((step, i) => (
               <span
-                key={i}
+                key={step.id}
                 aria-hidden="true"
                 style={{
                   width: 8,

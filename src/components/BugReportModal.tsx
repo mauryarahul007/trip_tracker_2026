@@ -341,7 +341,7 @@ export function BugReportModal({
                 <span style={{ color: 'var(--text-muted)' }}>No logs recorded yet.</span>
               ) : (
                 snapshot.recentLogs.map((l, idx) => (
-                  <div key={idx} style={{ color: l.level === 'error' ? 'var(--color-danger)' : l.level === 'warn' ? 'var(--secondary-accent)' : 'inherit' }}>
+                  <div key={`${l.timestamp}-${l.level}-${idx}`} style={{ color: l.level === 'error' ? 'var(--color-danger)' : l.level === 'warn' ? 'var(--secondary-accent)' : 'inherit' }}>
                     [{l.timestamp.slice(11, 19)}] [{l.level.toUpperCase()}] {l.message}
                   </div>
                 ))
