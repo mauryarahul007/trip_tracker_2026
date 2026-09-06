@@ -3,6 +3,8 @@ import type { FeatureRecord } from '../../services/featureApi';
 import { updateFeature, createFeatureRequest } from '../../services/featureApi';
 import { logSuperadminAction } from '../../services/tripApi';
 import { IconCheck, IconRefresh, IconSearch, IconPlus, IconX } from '../Icons';
+import { useHistoryBack } from '../../utils/useHistoryBack';
+import { useEscapeKey } from '../../utils/useEscapeKey';
 
 interface Props {
   features: FeatureRecord[];
@@ -44,6 +46,9 @@ export function AdminFeaturesPage({ features, onFeaturesChanged }: Props) {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isNewModalOpen, setIsNewModalOpen] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
+  useHistoryBack(isNewModalOpen, () => setIsNewModalOpen(false));
+  useEscapeKey(isNewModalOpen, () => setIsNewModalOpen(false));
 
   // New Request Form State
   const [newTitle, setNewTitle] = useState('');

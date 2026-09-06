@@ -7,11 +7,10 @@ import { buildCanonicalJoinLink } from '../utils/joinDeepLink';
 type Props = {
   trip: Trip;
   onClose: () => void;
-  onOpenDossier?: () => void;
   onOpenOfflineSnapshot?: () => void;
 };
 
-export function ShareTripModal({ trip, onClose, onOpenDossier, onOpenOfflineSnapshot }: Props) {
+export function ShareTripModal({ trip, onClose, onOpenOfflineSnapshot }: Props) {
   const [copied, setCopied] = useState<'link' | 'code' | null>(null);
   const hasJoinCode = Boolean(trip.joinCode && trip.joinCode.trim().length > 0);
   const joinLink = hasJoinCode ? buildCanonicalJoinLink(trip.joinCode) : '';
@@ -65,7 +64,7 @@ export function ShareTripModal({ trip, onClose, onOpenDossier, onOpenOfflineSnap
 
         <h3 id="share-trip-title" style={{ fontSize: '17px', marginBottom: '4px' }}>Share & Export "{trip.name}"</h3>
         <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '16px' }}>
-          Invite travelers or download trip summaries and offline archives.
+          Invite travelers or save an offline trip archive.
         </p>
 
         {!hasJoinCode ? (
@@ -124,35 +123,21 @@ export function ShareTripModal({ trip, onClose, onOpenDossier, onOpenOfflineSnap
           </>
         )}
 
-        {/* Export & Dossier Actions */}
+        {onOpenOfflineSnapshot && (
         <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '14px', marginTop: '14px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          {onOpenDossier && (
-            <button
-              type="button"
-              className="secondary-btn"
-              style={{ width: '100%', padding: '9px 12px', fontSize: '13px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
-              onClick={() => {
-                onClose();
-                onOpenDossier();
-              }}
-            >
-              <span>📄</span> View Travel Dossier & Statement
-            </button>
-          )}
-          {onOpenOfflineSnapshot && (
-            <button
-              type="button"
-              className="secondary-btn"
-              style={{ width: '100%', padding: '9px 12px', fontSize: '13px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
-              onClick={() => {
-                onClose();
-                onOpenOfflineSnapshot();
-              }}
-            >
-              <span>💾</span> Offline Snapshot Backup (.triptracker)
-            </button>
-          )}
+          <button
+            type="button"
+            className="secondary-btn"
+            style={{ width: '100%', padding: '9px 12px', fontSize: '13px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+            onClick={() => {
+              onClose();
+              onOpenOfflineSnapshot();
+            }}
+          >
+            <span>💾</span> Offline Snapshot Backup (.triptracker)
+          </button>
         </div>
+        )}
       </div>
     </div>
   );

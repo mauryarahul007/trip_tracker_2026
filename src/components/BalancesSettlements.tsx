@@ -8,8 +8,6 @@ import { useTripStore } from '../store/tripStore';
 import { avatarColorForName } from '../utils/avatarColor';
 import { initial } from '../utils/initials';
 import { triggerHaptic } from '../utils/haptics';
-import { useHistoryBack } from '../utils/useHistoryBack';
-import { useEscapeKey } from '../utils/useEscapeKey';
 import { UpiPaymentModal } from './UpiPaymentModal';
 import { BoardingPassHeroCard } from './BoardingPassHeroCard';
 import { StickyBalanceBar } from './StickyBalanceBar';
@@ -788,9 +786,7 @@ export function BalancesSettlements({
   const [customOpenKeys, setCustomOpenKeys] = useState<Record<string, boolean>>({});
   const [upiTargetTransfer, setUpiTargetTransfer] = useState<Transfer | null>(null);
 
-  useHistoryBack(Boolean(upiTargetTransfer), () => setUpiTargetTransfer(null));
-  useEscapeKey(Boolean(upiTargetTransfer), () => setUpiTargetTransfer(null));
-
+  // UpiPaymentModal owns its own Back/Escape stack — do not double-register here
 
   const isUpiEnabled = useTripStore((s) => s.isFeatureEnabled('enableUpiPayments', { tripId: trip.id }));
 

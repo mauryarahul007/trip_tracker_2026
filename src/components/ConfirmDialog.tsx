@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useFocusTrap } from '../hooks/useFocusTrap';
+import { useHistoryBack } from '../utils/useHistoryBack';
+import { useEscapeKey } from '../utils/useEscapeKey';
 
 export type ConfirmRequest = {
   message: string;
@@ -35,6 +37,8 @@ export function ConfirmDialog({ request, onCancel }: Props) {
   const sheetRef = useRef<HTMLDivElement>(null);
 
   useFocusTrap(sheetRef, true, false, onCancel);
+  useHistoryBack(true, onCancel);
+  useEscapeKey(true, onCancel);
 
   const clearTimer = () => {
     if (timerRef.current) {

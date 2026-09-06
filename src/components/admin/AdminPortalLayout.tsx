@@ -254,12 +254,11 @@ export function AdminPortalLayout({
   // Stack navigation: close switcher drawer and jump menu first, then return to command center
   useHistoryBack(showSectionSwitcher, () => setShowSectionSwitcher(false));
   useHistoryBack(jumpOpen, () => setJumpOpen(false));
-  useHistoryBack(Boolean(confirmRequest), () => setConfirmRequest(null));
   useHistoryBack(activeTab !== 'command', () => onActiveTabChange('command'));
 
   useEscapeKey(showSectionSwitcher, () => setShowSectionSwitcher(false));
   useEscapeKey(jumpOpen, () => setJumpOpen(false));
-  useEscapeKey(Boolean(confirmRequest), () => setConfirmRequest(null));
+  // ConfirmDialog owns its own Back/Escape stack
 
   // Global Cmd+K / Ctrl+K keyboard shortcut
   useEffect(() => {

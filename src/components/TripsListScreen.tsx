@@ -116,6 +116,8 @@ export function TripsListScreen({
 
   useHistoryBack(showJoinTrip, () => setShowJoinTrip(false));
   useEscapeKey(showJoinTrip, () => setShowJoinTrip(false));
+  useHistoryBack(showList, () => setShowList(false));
+  useEscapeKey(showList, () => setShowList(false));
   // Enables full luxury hero spotlight even with 1 trip
   const stackActive = trips.length >= 1 && !showList && !showAddTrip && !showJoinTrip;
 

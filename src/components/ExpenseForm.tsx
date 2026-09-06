@@ -17,6 +17,8 @@ import { convertCurrency, POPULAR_CURRENCIES } from '../utils/currencyConverter'
 import { parseReceiptText, type ExtractedReceiptData } from '../utils/receiptOcr';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { ReceiptScannerModal } from './ReceiptScannerModal';
+import { useHistoryBack } from '../utils/useHistoryBack';
+import { useEscapeKey } from '../utils/useEscapeKey';
 
 // Minimal Web Speech API surface -- not in the default TS DOM lib, and
 // vendor-prefixed on most browsers that support it (Chrome/Edge/Safari).
@@ -201,6 +203,11 @@ export function ExpenseForm({
   const [quickInput, setQuickInput] = useState('');
   const [showQuickFill, setShowQuickFill] = useState(false);
   const [autoSelectedCategoryName, setAutoSelectedCategoryName] = useState<string | null>(null);
+
+  useHistoryBack(showCurrencyPicker, () => setShowCurrencyPicker(false));
+  useEscapeKey(showCurrencyPicker, () => setShowCurrencyPicker(false));
+  useHistoryBack(showQuickFill, () => setShowQuickFill(false));
+  useEscapeKey(showQuickFill, () => setShowQuickFill(false));
 
   // Duplicate warning interactives state
   const [ignoredDuplicateId, setIgnoredDuplicateId] = useState<string | null>(null);

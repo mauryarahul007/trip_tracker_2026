@@ -271,16 +271,14 @@ export function SuperAdminBugTracker({ onBack, isAdmin = true, onRequestConfirm 
   useFocusTrap(addModalRef, showAddModal, false, () => setShowAddModal(false));
   useFocusTrap(resolveDrawerRef, Boolean(resolvingBug), false, () => setResolvingBug(null));
 
-  // Stack navigation: sub-modals pop first, then the root ledger view returns via onBack
+  // Stack navigation: sub-modals pop first; parent owns closing the root tracker
   useHistoryBack(Boolean(resolvingBug), () => setResolvingBug(null));
   useHistoryBack(showAddModal, () => setShowAddModal(false));
   useHistoryBack(Boolean(drawerBugId), () => setDrawerBugId(null));
-  useHistoryBack(!resolvingBug && !showAddModal && !drawerBugId, onBack);
 
   useEscapeKey(Boolean(resolvingBug), () => setResolvingBug(null));
   useEscapeKey(showAddModal, () => setShowAddModal(false));
   useEscapeKey(Boolean(drawerBugId), () => setDrawerBugId(null));
-  useEscapeKey(!resolvingBug && !showAddModal && !drawerBugId, onBack);
   const [toasts, setToasts] = useState<{ id: number; text: string; tone: 'success' | 'danger' }[]>([]);
 
   const [newTitle, setNewTitle] = useState('');

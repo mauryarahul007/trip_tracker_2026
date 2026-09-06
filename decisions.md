@@ -2454,6 +2454,19 @@ This document logs all meaningful technical decisions, library choices, design p
   - App Link verification requires filling Android SHA-256 / Apple Team ID in `public/.well-known/*` and a native rebuild + domain deploy.
   - Full zustand→IndexedDB migration remains deferred.
 
+---
+
+## WhatsApp-style Settings home + app-wide Back stack (v3.6.0)
+* **Context:** After Settings cuts, the home screen still hid most rows behind four portal folders (This Trip / Preferences / Data / Help). Separately, Back/Escape often skipped layers or required two presses because App and child modals both pushed history, and Escape fired every open listener.
+* **Decision:**
+  - Flatten Settings into titled WhatsApp-style groups on the first screen; keep real drill-downs only (`categories`, `recycle-bin`, `storage-data`, `archived-trips`, `backups`, `report-issue`, `suggest-feature`, `bug-tracker`, `about`).
+  - One history owner per overlay: deepest UI registers `useHistoryBack`; parents must not double-register.
+  - `useEscapeKey` uses a LIFO stack so Escape pops only the top overlay, matching hardware Back.
+  - Root of the in-trip stack stays: last Back on Expenses leaves the trip → trips list.
+* **Trade-offs Accepted:**
+  - Biometric lock, toasts, and real routes (`/privacy`, `/login`, etc.) are not dismissed by the overlay stack.
+  - Travel Dossier remains removed from Settings and Share Trip.
+
 
 
 

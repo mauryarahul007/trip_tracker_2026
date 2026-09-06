@@ -34,12 +34,9 @@ type Props = {
   onInstallApp?: () => void;
   onRequestConfirm?: (req: ConfirmRequest) => void;
   onOpenShareTrip?: () => void;
-  onOpenTripWrapped?: () => void;
-  onOpenAchievements?: () => void;
   onNavigateToBalances?: () => void;
   baseCurrency?: string;
   onOpenFxRates?: () => void;
-  onOpenTravelDossier?: () => void;
   onOpenMediaGallery?: () => void;
   onOpenOfflineSnapshot?: () => void;
 };
@@ -74,12 +71,9 @@ export function SettingsTab({
   onOpenSuperadminPortal,
   onRequestConfirm,
   onOpenShareTrip,
-  onOpenTripWrapped,
-  onOpenAchievements,
   onNavigateToBalances,
   baseCurrency,
   onOpenFxRates,
-  onOpenTravelDossier,
   onOpenMediaGallery,
   onOpenOfflineSnapshot,
 }: Props) {
@@ -114,13 +108,10 @@ export function SettingsTab({
       onOpenSuperadminPortal={onOpenSuperadminPortal}
       onRequestConfirm={onRequestConfirm}
       onOpenShareTrip={onOpenShareTrip}
-      onOpenTripWrapped={onOpenTripWrapped}
-      onOpenAchievements={onOpenAchievements}
       onNavigateToBalances={onNavigateToBalances}
       hasActiveTrip={true}
       baseCurrency={baseCurrency}
       onOpenFxRates={onOpenFxRates}
-      onOpenTravelDossier={onOpenTravelDossier}
       onOpenMediaGallery={onOpenMediaGallery}
       onOpenOfflineSnapshot={onOpenOfflineSnapshot}
     />

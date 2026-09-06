@@ -25,38 +25,18 @@ import {
   IconShare,
   IconRefresh,
   IconSearch,
-  IconQrCode,
-  IconVibrate,
   IconPieChart,
-  IconUser,
-  IconCheck,
-  IconCopy,
-  IconClose,
-  IconTrophy,
 } from './Icons';
 import { SettingsCell } from './common/SettingsCell';
 import { SettingsSection } from './common/SettingsSection';
-import { QrCodeView } from './QrCodeView';
-// TripJourneyMap pulls in maplibre-gl (~1.5MB minified) -- code-split so it
-// doesn't load unless the user opens the "Trip Map" subscreen.
-const TripJourneyMap = lazy(() =>
-  import('./TripJourneyMap').then((m) => ({ default: m.TripJourneyMap }))
-);
 import { CategoryIcon } from './CategoryIcon';
-import {
-  isBiometricAvailable,
-  isBiometricEnrolled,
-  registerBiometricCredential,
-  setBiometricEnrolled,
-  lockSession,
-} from '../utils/webAuthn';
 import { useTripStore } from '../store/tripStore';
 import { useAuthStore } from '../store/authStore';
 import { useNotificationsStore } from '../store/notificationsStore';
 import { formatDateRange } from '../utils/dateRange';
 import { getCategoryKeywords } from '../utils/categoryHelper';
 import { getAppVersion, WEB_APP_VERSION } from '../utils/appVersion';
-import { triggerHaptic, getHapticPreference, setHapticPreference, type HapticPreference } from '../utils/haptics';
+import { triggerHaptic } from '../utils/haptics';
 import { getCurrencySymbol } from '../utils/currency';
 import { calculateSettlements } from '../utils/settlement';
 import { BugReportModal } from './BugReportModal';
@@ -69,7 +49,6 @@ import { SuperadminAuthModal } from './SuperadminAuthModal';
 const SuperAdminBugTracker = lazy(() => import('./SuperAdminBugTracker').then((m) => ({ default: m.SuperAdminBugTracker })));
 import { useHistoryBack } from '../utils/useHistoryBack';
 import { useEscapeKey } from '../utils/useEscapeKey';
-import { buildCanonicalJoinLink } from '../utils/joinDeepLink';
 import {
   isPassRemindersEnabled,
   setPassRemindersEnabled,
@@ -78,7 +57,7 @@ import {
 
 export type ThemePref = 'light' | 'dark' | 'system';
 
-type SubScreen = null | 'trip-tools' | 'categories' | 'recycle-bin' | 'appearance' | 'backups' | 'archived-trips' | 'bug-tracker' | 'report-issue' | 'suggest-feature' | 'trip-map' | 'storage-data' | 'trip-settings' | 'preferences' | 'data-menu' | 'help-account' | 'about';
+type SubScreen = null | 'categories' | 'recycle-bin' | 'backups' | 'archived-trips' | 'bug-tracker' | 'report-issue' | 'suggest-feature' | 'storage-data' | 'about';
 
 
 const RECYCLE_BIN_WINDOW_MS = 24 * 60 * 60 * 1000;
@@ -134,11 +113,8 @@ interface SettingsViewProps {
   onClose?: () => void;
   onRequestConfirm?: (req: ConfirmRequest) => void;
   onOpenShareTrip?: () => void;
-  onOpenTripWrapped?: () => void;
-  onOpenAchievements?: () => void;
   onNavigateToBalances?: () => void;
   onOpenFxRates?: () => void;
-  onOpenTravelDossier?: () => void;
   onOpenMediaGallery?: () => void;
   onOpenOfflineSnapshot?: () => void;
 }
@@ -176,12 +152,9 @@ export function SettingsView({
   onClose,
   onRequestConfirm,
   onOpenShareTrip,
-  onOpenTripWrapped,
-  onOpenAchievements,
   onNavigateToBalances,
   baseCurrency,
   onOpenFxRates,
-  onOpenTravelDossier,
   onOpenMediaGallery,
   onOpenOfflineSnapshot,
 }: SettingsViewProps) {
@@ -199,22 +172,16 @@ export function SettingsView({
     setScreenStack((prev) => [...prev, screen]);
   };
 
+  // Every drill-down returns to Settings home (folders were removed).
   const DEFAULT_PARENT_MAP: Record<string, SubScreen> = {
-    'categories': 'trip-tools',
-    'recycle-bin': 'trip-tools',
-    'trip-map': 'trip-tools',
-    'trip-tools': 'trip-settings',
-    'storage-data': 'data-menu',
-    'archived-trips': 'data-menu',
-    'backups': 'data-menu',
-    'report-issue': 'help-account',
-    'suggest-feature': 'help-account',
-    'bug-tracker': 'help-account',
-    'appearance': 'preferences',
-    'trip-settings': null,
-    'preferences': null,
-    'data-menu': null,
-    'help-account': null,
+    'categories': null,
+    'recycle-bin': null,
+    'storage-data': null,
+    'archived-trips': null,
+    'backups': null,
+    'report-issue': null,
+    'suggest-feature': null,
+    'bug-tracker': null,
     'about': null,
   };
 
@@ -240,32 +207,24 @@ export function SettingsView({
 
   const getScreenTitle = (screen: SubScreen): string => {
     switch (screen) {
-      case 'trip-settings':
-        return activeTrip ? activeTrip.name : 'This Trip';
-      case 'trip-tools':
-        return 'Trip Tools';
-      case 'data-menu':
-        return 'Data & Backups';
       case 'storage-data':
         return 'Storage & Data';
-      case 'help-account':
-        return 'Help & Account';
-      case 'preferences':
-        return 'Preferences';
       case 'categories':
         return 'Categories';
       case 'recycle-bin':
         return 'Recycle Bin';
-      case 'trip-map':
-        return 'Trip Map';
       case 'archived-trips':
         return 'Archived Trips';
       case 'backups':
         return 'Backups';
-      case 'appearance':
-        return 'Appearance';
       case 'about':
         return 'About';
+      case 'report-issue':
+        return 'Report a Problem';
+      case 'suggest-feature':
+        return 'Suggest a Feature';
+      case 'bug-tracker':
+        return 'Bug Tracker';
       default:
         return 'Settings';
     }
@@ -315,44 +274,6 @@ export function SettingsView({
     activeTrip.ownerId === userId ||
     (userId && Boolean(activeTrip.adminMemberIds?.length) && Boolean(activeTrip.memberIds?.some((mid) => members[mid]?.linkedUserId === userId && activeTrip.adminMemberIds?.includes(mid))))
   );
-
-  // Biometric App Lock state
-  const [bioAvailable, setBioAvailable] = useState(false);
-  const [bioEnrolled, setBioEnrolled] = useState(false);
-  const [bioLoading, setBioLoading] = useState(false);
-
-  useEffect(() => {
-    isBiometricAvailable().then((avail) => {
-      setBioAvailable(avail);
-      if (avail && userId) {
-        setBioEnrolled(isBiometricEnrolled(userId));
-      }
-    });
-  }, [userId]);
-
-  const handleToggleBiometric = async (enable: boolean) => {
-    if (!userId) return;
-    triggerHaptic('light');
-    setBioLoading(true);
-    try {
-      if (enable) {
-        const res = await registerBiometricCredential(userId, userDisplayName);
-        if (res.success) {
-          setBioEnrolled(true);
-          triggerHaptic('success');
-        } else {
-          triggerHaptic('heavy');
-          alert(res.error || 'Failed to enroll biometrics on this device.');
-        }
-      } else {
-        setBiometricEnrolled(userId, false);
-        setBioEnrolled(false);
-        triggerHaptic('light');
-      }
-    } finally {
-      setBioLoading(false);
-    }
-  };
 
   const currencySymbol = getCurrencySymbol(activeTrip?.baseCurrency || baseCurrency || 'INR');
 
@@ -433,24 +354,6 @@ export function SettingsView({
     ? 'SETTLED'
     : 'UNSETTLED';
 
-  const closeTripBadgeBg = activeTrip?.closed
-    ? 'rgba(239, 68, 68, 0.15)'
-    : settlementSummary.isFullySettled
-    ? 'rgba(16, 185, 129, 0.15)'
-    : 'rgba(245, 158, 11, 0.15)';
-
-  const closeTripBadgeColor = activeTrip?.closed
-    ? '#EF4444'
-    : settlementSummary.isFullySettled
-    ? '#10B981'
-    : '#F59E0B';
-
-  const closeTripSquircleClass = activeTrip?.closed
-    ? 'squircle-teal-glow'
-    : settlementSummary.isFullySettled
-    ? 'squircle-teal-glow'
-    : 'squircle-amber-glow';
-
   const flightStatusText = activeTrip?.closed
     ? '🔒 CLOSED'
     : settlementSummary.isFullySettled
@@ -504,21 +407,12 @@ export function SettingsView({
   // Category keyword states
   const [expandedCategoryId, setExpandedCategoryId] = useState<string | null>(null);
   const [newKeywordInput, setNewKeywordInput] = useState('');
-  const [coachmarkResetStatus, setCoachmarkResetStatus] = useState<string | null>(null);
 
   // Settings v2: Search & Clipboard state
   const [searchQuery, setSearchQuery] = useState('');
   const [copyFeedback, setCopyFeedback] = useState<string | null>(null);
 
-  // WhatsApp-inspired Tactile Haptic Preference state
-  const [hapticPref, setHapticPrefState] = useState<HapticPreference>(getHapticPreference);
   const [passRemindersOn, setPassRemindersOn] = useState(isPassRemindersEnabled);
-
-  const handleSetHapticPref = (pref: HapticPreference) => {
-    setHapticPreference(pref);
-    setHapticPrefState(pref);
-    triggerHaptic('medium');
-  };
 
   const handleTogglePassReminders = (enabled: boolean) => {
     setPassRemindersEnabled(enabled);
@@ -527,40 +421,6 @@ export function SettingsView({
     if (enabled && activeTrip) {
       void rescheduleTripPassReminders(activeTrip.passes, activeTrip.name);
     }
-  };
-
-  // WhatsApp Profile QR Code modal state
-  const [isQrModalOpen, setIsQrModalOpen] = useState(false);
-  const [copiedInvite, setCopiedInvite] = useState<string | null>(null);
-
-  // WhatsApp Profile Status tagline state with preset suggestions
-  const STATUS_PRESETS = [
-    'Exploring Tokyo 🗼',
-    'Beach mode activated 🏖️',
-    'Mountain trekking 🏔️',
-    'Road trip vibes 🚗',
-    'Food safari 🍜',
-    'Backpacking mode 🎒',
-  ];
-
-  const [statusTagline, setStatusTagline] = useState<string>(() => {
-    try {
-      return localStorage.getItem('tt_traveler_status_tagline') || 'Exploring the world with friends 🎒';
-    } catch {
-      return 'Exploring the world with friends 🎒';
-    }
-  });
-  const [isEditingStatus, setIsEditingStatus] = useState(false);
-  const [statusDraft, setStatusDraft] = useState(statusTagline);
-
-  const handleSaveStatus = () => {
-    const trimmed = statusDraft.trim() || 'Ready for adventure ✈️';
-    try {
-      localStorage.setItem('tt_traveler_status_tagline', trimmed);
-    } catch {}
-    setStatusTagline(trimmed);
-    setIsEditingStatus(false);
-    triggerHaptic('success');
   };
 
   // Temporary Cache Storage Purge state
@@ -586,45 +446,6 @@ export function SettingsView({
     }
   };
 
-  // Shareable Trip & Profile Link
-  const tripInviteLink = React.useMemo(() => {
-    if (typeof window === 'undefined') return '';
-    if (activeTrip?.joinCode) {
-      return buildCanonicalJoinLink(activeTrip.joinCode);
-    }
-    const base = import.meta.env.BASE_URL.endsWith('/') ? import.meta.env.BASE_URL : `${import.meta.env.BASE_URL}/`;
-    if (activeTrip) {
-      return `${window.location.origin}${base}?trip=${activeTrip.id}`;
-    }
-    return `${window.location.origin}${base}`;
-  }, [activeTrip]);
-
-  const handleCopyInviteLink = async () => {
-    if (!tripInviteLink) return;
-    try {
-      await navigator.clipboard.writeText(tripInviteLink);
-      setCopiedInvite('Copied!');
-      triggerHaptic('success');
-      setTimeout(() => setCopiedInvite(null), 2000);
-    } catch {}
-  };
-
-  const handleShareInviteLink = async () => {
-    if (!tripInviteLink) return;
-    triggerHaptic('light');
-    if (typeof navigator !== 'undefined' && navigator.share) {
-      try {
-        await navigator.share({
-          title: `Join ${activeTrip?.name || 'Trip'} on Trip Tracker`,
-          text: `Join our expedition "${activeTrip?.name || 'Trip'}" to track expenses together!`,
-          url: tripInviteLink,
-        });
-        return;
-      } catch {}
-    }
-    handleCopyInviteLink();
-  };
-
   const handleCopyEmail = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (userEmail) {
@@ -633,18 +454,6 @@ export function SettingsView({
       triggerHaptic('light');
       setTimeout(() => setCopyFeedback(null), 2000);
     }
-  };
-
-  const handleResetCoachmarks = () => {
-    try {
-      if (typeof localStorage !== 'undefined') {
-        localStorage.removeItem('tt_flight_add_tooltip_dismissed_v1');
-      }
-    } catch {}
-    window.dispatchEvent(new CustomEvent('tt:reset-coachmarks'));
-    triggerHaptic('success');
-    setCoachmarkResetStatus('✓ Reactivated');
-    setTimeout(() => setCoachmarkResetStatus(null), 2500);
   };
 
   // Report a Problem registers a guard here while it has unsubmitted text,
@@ -712,13 +521,8 @@ export function SettingsView({
   });
   useEscapeKey(expandedCategoryId !== null, () => setExpandedCategoryId(null));
 
-  // Register WhatsApp QR Code modal into browser history stack
-  useHistoryBack(isQrModalOpen, () => setIsQrModalOpen(false));
-  useEscapeKey(isQrModalOpen, () => setIsQrModalOpen(false));
-
   // Register Superadmin Auth modal into browser history stack
-  useHistoryBack(isSuperadminModalOpen, () => setIsSuperadminModalOpen(false));
-  useEscapeKey(isSuperadminModalOpen, () => setIsSuperadminModalOpen(false));
+  // (owned by SuperadminAuthModal itself — do not double-register here)
 
   // Connectivity and disk storage
   const [isOnline, setIsOnline] = useState(navigator.onLine);
@@ -797,6 +601,10 @@ export function SettingsView({
   useHistoryBack(categoryToDelete !== null, () => setCategoryToDelete(null));
   useEscapeKey(categoryToDelete !== null, () => setCategoryToDelete(null));
 
+  // Category icon picker popover — Back closes picker, not the Categories page
+  useHistoryBack(showIconPicker, () => setShowIconPicker(false));
+  useEscapeKey(showIconPicker, () => setShowIconPicker(false));
+
   const formatBytes = (bytes: number) => {
     if (bytes === 0) return '0 B';
     const k = 1024;
@@ -854,7 +662,7 @@ export function SettingsView({
     return (
       <div className="settings-container settings-subscreen-enter">
         <div className="settings-subscreen-nav-header">
-          <button type="button" className="settings-subscreen-back-link" onClick={() => setSubScreen(null)}>
+          <button type="button" className="settings-subscreen-back-link" onClick={closeSubScreen}>
             <IconChevronLeft size={18} />
             <span>{getParentTitle()}</span>
           </button>
@@ -1150,7 +958,7 @@ export function SettingsView({
     return (
       <div className="settings-container settings-subscreen-enter">
         <div className="settings-subscreen-nav-header">
-          <button type="button" className="settings-subscreen-back-link" onClick={() => setSubScreen(null)}>
+          <button type="button" className="settings-subscreen-back-link" onClick={closeSubScreen}>
             <IconChevronLeft size={18} />
             <span>{getParentTitle()}</span>
           </button>
@@ -1240,101 +1048,11 @@ export function SettingsView({
     );
   }
 
-  if (subScreen === 'appearance') {
-    return (
-      <div className="settings-container settings-subscreen-enter">
-        <div className="settings-subscreen-nav-header">
-          <button type="button" className="settings-subscreen-back-link" onClick={() => setSubScreen(null)}>
-            <IconChevronLeft size={18} />
-            <span>{getParentTitle()}</span>
-          </button>
-        </div>
-        <h3 className="settings-subscreen-main-title">Appearance</h3>
-        <p className="settings-subscreen-subtitle">
-          Customize the theme palette and visual appearance for your device.
-        </p>
-
-        <div className="settings-group">
-          <h4 className="settings-group-title">Theme Palette</h4>
-          <div className="settings-group-card">
-            {(
-              [
-                { value: 'light', label: 'Light', desc: 'Editorial warm canvas & crisp typography' },
-                { value: 'dark', label: 'Night flight', desc: 'Deep obsidian backdrop with emerald luminescence' },
-                { value: 'system', label: 'System default', desc: 'Matches your OS dark/light mode preference' },
-              ] as { value: ThemePref; label: string; desc: string }[]
-            ).map((opt) => (
-              <button
-                key={opt.value}
-                type="button"
-                className="settings-row-item"
-                onClick={() => setThemePref(opt.value)}
-              >
-                <div className="settings-row-left">
-                  <div
-                    className={`settings-squircle ${
-                      opt.value === 'dark'
-                        ? 'squircle-indigo'
-                        : opt.value === 'light'
-                        ? 'squircle-amber'
-                        : 'squircle-teal'
-                    }`}
-                  >
-                    {opt.value === 'dark' ? (
-                      <IconMoon size={18} />
-                    ) : opt.value === 'light' ? (
-                      <IconSun size={18} />
-                    ) : (
-                      <IconSparkles size={18} />
-                    )}
-                  </div>
-                  <div className="settings-row-texts">
-                    <span className="settings-row-title">{opt.label}</span>
-                    <span className="settings-row-subtitle">{opt.desc}</span>
-                  </div>
-                </div>
-                {themePref === opt.value && (
-                  <span style={{ color: 'var(--primary-accent)', display: 'flex', alignItems: 'center' }}>
-                    <IconCheckCircle size={18} />
-                  </span>
-                )}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (subScreen === 'trip-map') {
-    return (
-      <div className="settings-container settings-subscreen-enter">
-        <div className="settings-subscreen-nav-header">
-          <button type="button" className="settings-subscreen-back-link" onClick={() => setSubScreen(null)}>
-            <IconChevronLeft size={18} />
-            <span>{getParentTitle()}</span>
-          </button>
-        </div>
-        <h3 className="settings-subscreen-main-title">Trip Map</h3>
-        <p className="settings-subscreen-subtitle">Where the money went, plotted on the map.</p>
-        <Suspense
-          fallback={
-            <div className="glass-card" style={{ height: '320px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>
-              Loading map...
-            </div>
-          }
-        >
-          <TripJourneyMap expenses={activeTripExpenses} categories={categories} baseCurrency={baseCurrency || ''} />
-        </Suspense>
-      </div>
-    );
-  }
-
   if (subScreen === 'archived-trips') {
     return (
       <div className="settings-container settings-subscreen-enter">
         <div className="settings-subscreen-nav-header">
-          <button type="button" className="settings-subscreen-back-link" onClick={() => setSubScreen(null)}>
+          <button type="button" className="settings-subscreen-back-link" onClick={closeSubScreen}>
             <IconChevronLeft size={18} />
             <span>{getParentTitle()}</span>
           </button>
@@ -1402,7 +1120,7 @@ export function SettingsView({
     return (
       <div className="settings-container settings-subscreen-enter">
         <div className="settings-subscreen-nav-header">
-          <button type="button" className="settings-subscreen-back-link" onClick={() => setSubScreen(null)}>
+          <button type="button" className="settings-subscreen-back-link" onClick={closeSubScreen}>
             <IconChevronLeft size={18} />
             <span>{getParentTitle()}</span>
           </button>
@@ -1541,10 +1259,7 @@ export function SettingsView({
           <button
             type="button"
             className="settings-subscreen-back-link"
-            onClick={() => {
-              triggerHaptic('light');
-              setSubScreen(null);
-            }}
+            onClick={closeSubScreen}
             aria-label={`Back to ${getParentTitle()}`}
           >
             <IconChevronLeft size={18} />
@@ -1741,7 +1456,7 @@ export function SettingsView({
     return (
       <div className="fade-in settings-container">
         <Suspense fallback={null}>
-          <SuperAdminBugTracker onBack={() => setSubScreen(null)} isAdmin={isSuperadmin} onRequestConfirm={onRequestConfirm} />
+          <SuperAdminBugTracker onBack={closeSubScreen} isAdmin={isSuperadmin} onRequestConfirm={onRequestConfirm} />
         </Suspense>
       </div>
     );
@@ -1750,7 +1465,7 @@ export function SettingsView({
   if (subScreen === 'report-issue') {
     return (
       <BugReportModal
-        onBack={() => setSubScreen(null)}
+        onBack={closeSubScreen}
         onRequestConfirm={onRequestConfirm}
         onRegisterBackGuard={setReportIssueBackGuard}
         activeTripInfo={{ id: activeTripId, name: activeTrip?.name || null }}
@@ -1761,296 +1476,10 @@ export function SettingsView({
   if (subScreen === 'suggest-feature') {
     return (
       <FeatureRequestModal
-        onBack={() => setSubScreen(null)}
+        onBack={closeSubScreen}
         onRequestConfirm={onRequestConfirm}
         onRegisterBackGuard={setSuggestFeatureBackGuard}
       />
-    );
-  }
-
-  if (subScreen === 'trip-tools' && activeTrip) {
-    return (
-      <div className="settings-container settings-subscreen-enter">
-        <div className="settings-subscreen-nav-header">
-          <button
-            type="button"
-            className="settings-subscreen-back-link"
-            onClick={() => {
-              triggerHaptic('light');
-              setSubScreen(null);
-            }}
-            aria-label={`Back to ${getParentTitle()}`}
-          >
-            <IconChevronLeft size={18} />
-            <span>{getParentTitle()}</span>
-          </button>
-        </div>
-        <h3 className="settings-subscreen-main-title">Trip Tools &amp; Preferences</h3>
-        <p className="settings-subscreen-subtitle">
-          Manage story cards, interactive maps, categories, and trip-specific notifications.
-        </p>
-
-        <div className="settings-trip-context-card" style={{ margin: '14px 0' }}>
-          <div className="settings-trip-context-header">
-            <span className="settings-trip-context-badge">CURRENT TRIP</span>
-            <span className="settings-trip-context-curr">{activeTrip.baseCurrency}</span>
-          </div>
-          <div className="settings-trip-context-body">
-            <h3 className="settings-trip-context-name">{activeTrip.name}</h3>
-            <div className="settings-trip-context-meta">
-              {activeTrip.destination && (
-                <span className="settings-trip-context-tag">📍 {activeTrip.destination}</span>
-              )}
-              {(activeTrip.startDate || activeTrip.endDate) && (
-                <span className="settings-trip-context-tag">🗓️ {formatDateRange(activeTrip.startDate, activeTrip.endDate)}</span>
-              )}
-            </div>
-          </div>
-        </div>
-
-        <div className="settings-group">
-          <h4 className="settings-group-title">Stories &amp; Navigation</h4>
-          <div className="settings-group-card">
-            {onOpenTripWrapped && (
-              <button
-                type="button"
-                className="settings-row-item"
-                onClick={() => {
-                  triggerHaptic('light');
-                  onOpenTripWrapped();
-                }}
-              >
-                <div className="settings-row-left">
-                  <div className="settings-squircle squircle-amber-glow">
-                    <IconSparkles size={18} />
-                  </div>
-                  <div className="settings-row-texts">
-                    <span className="settings-row-title">Trip Wrapped (Story Card)</span>
-                    <span className="settings-row-subtitle">Generate 1080x1920 Instagram Story infographic</span>
-                  </div>
-                </div>
-                <div className="settings-row-right">
-                  <span className="settings-badge-pill" style={{ background: 'rgba(255,107,107,0.18)', color: '#FF6B6B', fontWeight: 700 }}>STORY</span>
-                  <IconChevronRight size={16} />
-                </div>
-              </button>
-            )}
-
-            {onOpenAchievements && (
-              <button
-                type="button"
-                className="settings-row-item"
-                onClick={() => {
-                  triggerHaptic('light');
-                  onOpenAchievements();
-                }}
-              >
-                <div className="settings-row-left">
-                  <div className="settings-squircle squircle-amber-glow">
-                    <IconTrophy size={18} />
-                  </div>
-                  <div className="settings-row-texts">
-                    <span className="settings-row-title">Trip Squad Badges &amp; Milestones</span>
-                    <span className="settings-row-subtitle">Squad achievements, awards &amp; journey records</span>
-                  </div>
-                </div>
-                <div className="settings-row-right">
-                  <span className="settings-badge-pill" style={{ background: 'rgba(245, 158, 11, 0.18)', color: '#F59E0B', fontWeight: 700 }}>BADGES</span>
-                  <IconChevronRight size={16} />
-                </div>
-              </button>
-            )}
-
-            {onOpenShareTrip && (
-              <button
-                type="button"
-                className="settings-row-item"
-                onClick={() => {
-                  triggerHaptic('light');
-                  onOpenShareTrip();
-                }}
-              >
-                <div className="settings-row-left">
-                  <div className="settings-squircle squircle-teal-glow">
-                    <IconShare size={18} />
-                  </div>
-                  <div className="settings-row-texts">
-                    <span className="settings-row-title">Invite &amp; Share Trip</span>
-                    <span className="settings-row-subtitle">Share join link or QR code with companions</span>
-                  </div>
-                </div>
-                <div className="settings-row-right">
-                  <IconChevronRight size={16} />
-                </div>
-              </button>
-            )}
-
-            <button
-              type="button"
-              className="settings-row-item"
-              onClick={() => {
-                triggerHaptic('light');
-                setSubScreen('trip-map');
-              }}
-            >
-              <div className="settings-row-left">
-                <div className="settings-squircle squircle-blue-glow">
-                  <IconMapPin size={18} />
-                </div>
-                <div className="settings-row-texts">
-                  <span className="settings-row-title">Trip Map</span>
-                  <span className="settings-row-subtitle">Geotagged expenses plotted &amp; routed</span>
-                </div>
-              </div>
-              <div className="settings-row-right">
-                <IconChevronRight size={16} />
-              </div>
-            </button>
-
-          </div>
-        </div>
-
-        <div className="settings-group">
-          <h4 className="settings-group-title">Organization &amp; Preferences</h4>
-          <div className="settings-group-card">
-            {(isSuperadmin || isFeatureEnabled('enableKeywordTagging')) && (
-              <button
-                type="button"
-                className="settings-row-item"
-                onClick={() => {
-                  triggerHaptic('light');
-                  setSubScreen('categories');
-                }}
-              >
-                <div className="settings-row-left">
-                  <div className="settings-squircle squircle-purple-glow">
-                    <IconTag size={18} />
-                  </div>
-                  <div className="settings-row-texts">
-                    <span className="settings-row-title">Categories &amp; Tags</span>
-                    <span className="settings-row-subtitle">{categories.length} active categories</span>
-                  </div>
-                </div>
-                <div className="settings-row-right">
-                  <IconChevronRight size={16} />
-                </div>
-              </button>
-            )}
-
-            {(isSuperadmin || isFeatureEnabled('enableRecycleBin')) && (
-              <button
-                type="button"
-                className="settings-row-item"
-                onClick={() => {
-                  triggerHaptic('light');
-                  setSubScreen('recycle-bin');
-                }}
-              >
-                <div className="settings-row-left">
-                  <div className="settings-squircle squircle-rose-glow">
-                    <IconTrash size={18} />
-                  </div>
-                  <div className="settings-row-texts">
-                    <span className="settings-row-title">Recycle Bin</span>
-                    <span className="settings-row-subtitle">
-                      {deletedExpenses.length === 0 ? 'Empty (24h retention)' : `${deletedExpenses.length} deleted expense${deletedExpenses.length === 1 ? '' : 's'}`}
-                    </span>
-                  </div>
-                </div>
-                <div className="settings-row-right">
-                  {deletedExpenses.length > 0 && <span className="settings-badge-pill">{deletedExpenses.length}</span>}
-                  <IconChevronRight size={16} />
-                </div>
-              </button>
-            )}
-
-            <div className="settings-row-item" style={{ cursor: 'default' }}>
-              <div className="settings-row-left">
-                <div className="settings-squircle squircle-orange-glow">
-                  <IconBell size={18} />
-                </div>
-                <div className="settings-row-texts">
-                  <span className="settings-row-title">Mute Trip Alerts</span>
-                  <span className="settings-row-subtitle">Silence push notifications for this trip</span>
-                </div>
-              </div>
-              <div className="settings-row-right">
-                <label style={{ position: 'relative', display: 'inline-block', width: '44px', height: '24px', margin: 0, cursor: 'pointer' }}>
-                  <input
-                    type="checkbox"
-                    checked={isTripMuted}
-                    onChange={(e) => {
-                      triggerHaptic('light');
-                      setTripMuted(activeTrip.id, e.target.checked);
-                    }}
-                    aria-label="Mute Notifications"
-                    style={{ opacity: 0, width: 0, height: 0, margin: 0 }}
-                  />
-                  <span
-                    style={{
-                      position: 'absolute',
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      bottom: 0,
-                      backgroundColor: isTripMuted ? '#17B6A6' : 'var(--border-color)',
-                      transition: '0.2s ease',
-                      borderRadius: 'var(--border-radius-pill)',
-                    }}
-                  >
-                    <span
-                      style={{
-                        position: 'absolute',
-                        height: '18px',
-                        width: '18px',
-                        left: isTripMuted ? '23px' : '3px',
-                        bottom: '3px',
-                        backgroundColor: 'white',
-                        transition: '0.2s ease',
-                        borderRadius: '50%',
-                        boxShadow: '0 1px 3px rgba(0,0,0,0.25)',
-                      }}
-                    />
-                  </span>
-                </label>
-              </div>
-            </div>
-
-            {isTripAdmin && (
-              <button
-                type="button"
-                className="settings-row-item"
-                onClick={handleToggleCloseTrip}
-              >
-                <div className="settings-row-left">
-                  <div className={`settings-squircle ${closeTripSquircleClass}`}>
-                    <IconShield size={18} />
-                  </div>
-                  <div className="settings-row-texts">
-                    <span className="settings-row-title">{closeTripTitle}</span>
-                    <span className="settings-row-subtitle">
-                      {closeTripSubtitle}
-                    </span>
-                  </div>
-                </div>
-                <div className="settings-row-right">
-                  <span
-                    className="settings-badge-pill"
-                    style={{
-                      background: closeTripBadgeBg,
-                      color: closeTripBadgeColor,
-                      fontWeight: 700,
-                    }}
-                  >
-                    {closeTripBadgeText}
-                  </span>
-                  <IconChevronRight size={16} />
-                </div>
-              </button>
-            )}
-          </div>
-        </div>
-      </div>
     );
   }
 
@@ -2064,774 +1493,53 @@ export function SettingsView({
     return text.toLowerCase().includes(q) || keywords.some((k) => k.toLowerCase().includes(q));
   };
 
-  const showTripTools = hasActiveTrip && activeTrip && matchesSearch('Trip Tools & Story', 'story card', 'map', 'categories', 'recycle bin', 'mute', 'wrapped', 'badges', 'milestones', 'achievements');
-  const showCloseTrip = hasActiveTrip && activeTrip && isTripAdmin && matchesSearch(
+  const showInvite = Boolean(hasActiveTrip && activeTrip && onOpenShareTrip && matchesSearch('Invite & Share Trip', 'invite', 'share', 'qr', 'join'));
+  const showCategories = Boolean(hasActiveTrip && activeTrip && (isSuperadmin || isFeatureEnabled('enableKeywordTagging')) && matchesSearch('Categories & Tags', 'categories', 'tags', 'keywords'));
+  const showRecycleBin = Boolean(hasActiveTrip && activeTrip && (isSuperadmin || isFeatureEnabled('enableRecycleBin')) && matchesSearch('Recycle Bin', 'deleted', 'trash', 'restore'));
+  const showMute = Boolean(hasActiveTrip && activeTrip && matchesSearch('Mute Trip Alerts', 'mute', 'silence', 'notifications', 'alerts'));
+  const showCloseTrip = Boolean(hasActiveTrip && activeTrip && isTripAdmin && matchesSearch(
     activeTrip.closed ? 'Reopen Trip' : 'Close Trip',
     'close', 'reopen', 'lock', 'unlock', 'complete', 'completed', 'completion', 'settled', 'unsettled', 'outstanding', 'balances', 'debts', 'post trip', 'finish', 'archive trip'
-  );
-  const showCsvExport = hasActiveTrip && activeTrip && onExportCsv && matchesSearch('Excel CSV Export', 'spreadsheet', 'download', 'ledger', 'csv', 'sheets');
-  const showFxSearch = onOpenFxRates && matchesSearch('Multi-Currency FX Engine', 'rates', 'fx', 'forex', 'currency', 'exchange');
-  const showDossierSearch = onOpenTravelDossier && matchesSearch('Travel Dossier & Statement', 'dossier', 'pdf', 'voucher', 'statement', 'report');
-  const showSnapshotSearch = onOpenOfflineSnapshot && matchesSearch('Offline Snapshot (.triptracker)', 'snapshot', 'offline', 'backup', 'triptracker');
-  const showGallerySearch = onOpenMediaGallery && matchesSearch('Receipts & Memories Gallery', 'gallery', 'photos', 'receipts', 'memories');
-  const showTripGroup = showTripTools || showCloseTrip || showCsvExport || Boolean(showFxSearch) || Boolean(showDossierSearch) || Boolean(showSnapshotSearch) || Boolean(showGallerySearch);
+  ));
+  const showCsvExport = Boolean(hasActiveTrip && activeTrip && onExportCsv && matchesSearch('Excel CSV Export', 'spreadsheet', 'download', 'ledger', 'csv', 'sheets'));
+  const showFxSearch = Boolean(onOpenFxRates && matchesSearch('Multi-Currency FX Engine', 'rates', 'fx', 'forex', 'currency', 'exchange'));
+  const showTripStatus = Boolean(hasActiveTrip && activeTrip && !searchQuery.trim());
+  const showSnapshotSearch = Boolean(onOpenOfflineSnapshot && matchesSearch('Offline Snapshot (.triptracker)', 'snapshot', 'offline', 'backup', 'triptracker'));
+  const showGallerySearch = Boolean(onOpenMediaGallery && matchesSearch('Receipts & Memories Gallery', 'gallery', 'photos', 'receipts', 'memories'));
+  const showTripGroup = showTripStatus || showInvite || showCategories || showRecycleBin || showMute || showCloseTrip || showCsvExport || showFxSearch;
 
   const showAppearance = matchesSearch('Appearance', 'theme', 'dark', 'light', 'night', 'auto', 'color', 'look');
-  const showHaptics = matchesSearch('Tactile Haptics', 'vibrate', 'vibration', 'haptic', 'feedback', 'touch', 'buzz');
   const showNotifications = matchesSearch('Notifications', 'alerts', 'unread', 'bell', 'messages');
+  const showPassReminders = matchesSearch('Pass reminders', 'pass', 'flight', 'train', 'departure', 'alert');
   const showGeotag = (isSuperadmin || isFeatureEnabled('enableGeotagging')) && matchesSearch('Geotag Expenses', 'gps', 'location', 'place', 'map', 'pin');
-  const showCoachmarks = matchesSearch('Flight Coachmarks', 'tips', 'guide', 'reset', 'onboarding', 'airplane');
   const showInstall = pwaInstallable && matchesSearch('Install App', 'pwa', 'home screen', 'download', 'mobile');
-  const showPreferencesGroup = showAppearance || showHaptics || showNotifications || showGeotag || showCoachmarks || showInstall || Boolean(showFxSearch);
+  const showPreferencesGroup = showAppearance || showNotifications || showPassReminders || showGeotag || showInstall;
 
   const showStorageManager = matchesSearch('Storage and Data', 'storage', 'data', 'cache', 'memory', 'disk', 'receipts', 'photos');
   const showArchived = matchesSearch('Archived Trips', 'restore', 'history', 'past trips', 'archive');
   const showBackups = isSuperadmin && matchesSearch('Database Backups', 'export', 'import', 'json', 'snapshot', 'restore');
-  const showDemoTrip = onLoadDemoTrip && isFeatureEnabled('enableDemoSeeding') && matchesSearch('Seed Demo Trip', 'sample', 'test', 'goa', 'demo');
-  const showDataGroup = showStorageManager || showArchived || showBackups || showDemoTrip || Boolean(showSnapshotSearch) || Boolean(showGallerySearch);
+  const showDemoTrip = Boolean(onLoadDemoTrip && isFeatureEnabled('enableDemoSeeding') && matchesSearch('Seed Demo Trip', 'sample', 'test', 'goa', 'demo'));
+  const showDataGroup = showStorageManager || showArchived || showBackups || showDemoTrip || showSnapshotSearch || showGallerySearch;
 
   const showReportProblem = matchesSearch('Report a Problem', 'bug', 'issue', 'diagnostics', 'broken', 'error');
   const showSuggestFeature = isFeatureEnabled('enableFeatureSuggestions') && matchesSearch('Suggest a Feature', 'feedback', 'idea', 'request');
   const showBugTracker = isSuperadmin && matchesSearch('Superadmin Bug Tracker', 'triage', 'sync', 'cases', 'cockpit');
-  const showSignOut = onSignOut && matchesSearch('Sign Out', 'logout', 'session', 'disconnect', 'account');
-  const showClearData = isSuperadmin && onClearDatabase && matchesSearch('Clear All Data', 'reset', 'wipe', 'delete', 'danger');
-  const showDeleteAccount = onDeleteAccount && matchesSearch('Delete Account', 'remove', 'erase', 'danger', 'privacy');
-  const showHelpGroup = showReportProblem || showSuggestFeature || showBugTracker || showSignOut || showClearData || showDeleteAccount;
+  const showHelpGroup = showReportProblem || showSuggestFeature || showBugTracker;
 
-  const showAbout = matchesSearch('Trip Tracker 2026', 'version', 'about', 'build', 'app');
+  const showSignOut = Boolean(onSignOut && matchesSearch('Sign Out', 'logout', 'session', 'disconnect', 'account'));
+  const showClearData = Boolean(isSuperadmin && onClearDatabase && matchesSearch('Clear All Data', 'reset', 'wipe', 'delete', 'danger'));
+  const showDeleteAccount = Boolean(onDeleteAccount && matchesSearch('Delete Account', 'remove', 'erase', 'danger', 'privacy'));
+  const showAccountGroup = showSignOut || showClearData || showDeleteAccount;
 
-  const hasAnyResults = showTripGroup || showPreferencesGroup || showDataGroup || showHelpGroup || showAbout;
+  const showAbout = matchesSearch('Trip Tracker 2026', 'version', 'about', 'build', 'app', 'privacy', 'terms', 'legal');
 
-  if (subScreen === 'trip-settings' && activeTrip) {
-    return (
-      <div className="settings-container settings-subscreen-enter">
-        <div className="settings-subscreen-nav-header">
-          <button type="button" className="settings-subscreen-back-link" onClick={() => setSubScreen(null)}>
-            <IconChevronLeft size={18} />
-            <span>{getParentTitle()}</span>
-          </button>
-        </div>
-        <h3 className="settings-subscreen-main-title">This Trip: {activeTrip.name}</h3>
-        <p className="settings-subscreen-subtitle">
-          Manage this trip's status, tools, and exports.
-        </p>
-
-        <div className="settings-group">
-          <div className="settings-group-card">
-            {/* Integrated Flight Pass Banner */}
-            <div className="settings-trip-flight-banner">
-              <div>
-                <div className="settings-trip-flight-title">
-                  <span>🌴</span> {activeTrip.name}
-                </div>
-                <div className="settings-trip-flight-meta">
-                  {baseCurrency || activeTrip.baseCurrency || 'INR'} · {(activeTrip.memberIds?.length ?? Object.keys(members).length)} {(activeTrip.memberIds?.length ?? Object.keys(members).length) === 1 ? 'member' : 'members'} · {activeTripExpenses.length} {activeTripExpenses.length === 1 ? 'expense' : 'expenses'}
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={handleToggleCloseTrip}
-                disabled={!isTripAdmin}
-                title={isTripAdmin ? (activeTrip.closed ? 'Click to reopen trip' : 'Click to close and lock trip') : undefined}
-                style={{
-                  fontSize: '9.5px',
-                  fontFamily: 'var(--font-family-mono)',
-                  fontWeight: 700,
-                  padding: '2px 8px',
-                  borderRadius: '12px',
-                  background: flightStatusBg,
-                  color: flightStatusColor,
-                  border: `1px solid ${flightStatusBorder}`,
-                  cursor: isTripAdmin ? 'pointer' : 'default',
-                  transition: 'all 0.15s ease',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '4px',
-                }}
-                aria-label={activeTrip.closed ? 'Trip is closed. Click to reopen.' : 'Trip is active. Click to close.'}
-              >
-                <span>{flightStatusText}</span>
-              </button>
-            </div>
-
-            {showTripTools && (
-              <SettingsCell
-                icon={<IconSparkles size={18} />}
-                iconGlow="amber"
-                title="Trip Tools & Story"
-                subtitle="Story Card, Map, Categories, Recycle Bin & Mute"
-                badge={`${categories.length} categories`}
-                onClick={() => setSubScreen('trip-tools')}
-              />
-            )}
-
-            {onOpenFxRates && (
-              <SettingsCell
-                icon={<span style={{ fontSize: '18px' }}>💱</span>}
-                iconGlow="emerald"
-                title="Multi-Currency FX Engine"
-                subtitle="Live rates, offline lock & forex markup converter"
-                badge="FX"
-                onClick={() => {
-                  triggerHaptic('light');
-                  onOpenFxRates();
-                }}
-              />
-            )}
-
-            {onOpenTravelDossier && (
-              <SettingsCell
-                icon={<span style={{ fontSize: '18px' }}>📄</span>}
-                iconGlow="teal"
-                title="Travel Dossier & Statement"
-                subtitle="Print-ready PDF report with settlement vouchers"
-                badge="PDF"
-                onClick={() => {
-                  triggerHaptic('light');
-                  onOpenTravelDossier();
-                }}
-              />
-            )}
-
-            {/* Close Trip kept on trip-settings; Snapshot/Gallery live under Data & Backups */}
-
-            {showCsvExport && onExportCsv && (
-              <SettingsCell
-                icon={<IconFileSpreadsheet size={18} />}
-                iconGlow="emerald"
-                title="Excel CSV Export"
-                subtitle="Download settlement ledger & expense breakdown"
-                badge="CSV"
-                onClick={onExportCsv}
-              />
-            )}
-
-            {showCloseTrip && (
-              <SettingsCell
-                icon={<IconShield size={18} />}
-                iconGlow={activeTrip.closed ? 'slate' : 'emerald'}
-                title={closeTripTitle}
-                subtitle={closeTripSubtitle}
-                badge={closeTripBadgeText}
-                hasDivider={false}
-                onClick={handleToggleCloseTrip}
-              />
-            )}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (subScreen === 'preferences') {
-    return (
-      <div className="settings-container settings-subscreen-enter">
-        <div className="settings-subscreen-nav-header">
-          <button type="button" className="settings-subscreen-back-link" onClick={() => setSubScreen(null)}>
-            <IconChevronLeft size={18} />
-            <span>{getParentTitle()}</span>
-          </button>
-        </div>
-        <h3 className="settings-subscreen-main-title">Preferences &amp; Interface</h3>
-        <p className="settings-subscreen-subtitle">
-          Appearance, haptics, notifications, and other app-wide preferences.
-        </p>
-
-        <div className="settings-group">
-          <div className="settings-group-card">
-            {/* Inline 3-Way Segmented Theme Switcher */}
-            {showAppearance && (
-              <div className="settings-row-item" style={{ cursor: 'default' }}>
-                <div className="settings-row-left">
-                  <div className="settings-squircle squircle-orange-glow">
-                    {themePref === 'dark' ? <IconMoon size={18} /> : themePref === 'light' ? <IconSun size={18} /> : <IconSmartphone size={18} />}
-                  </div>
-                  <div className="settings-row-texts">
-                    <span className="settings-row-title">Appearance</span>
-                    <span className="settings-row-subtitle">{themeLabel}</span>
-                  </div>
-                </div>
-                <div className="settings-segmented-theme" role="group" aria-label="Theme preference">
-                  <button
-                    type="button"
-                    className={`settings-seg-btn${themePref === 'light' ? ' active' : ''}`}
-                    onClick={() => { triggerHaptic('light'); setThemePref('light'); }}
-                    title="Light mode"
-                    aria-label="Light mode"
-                  >
-                    <IconSun size={13} />
-                    <span>Light</span>
-                  </button>
-                  <button
-                    type="button"
-                    className={`settings-seg-btn${themePref === 'dark' ? ' active' : ''}`}
-                    onClick={() => { triggerHaptic('light'); setThemePref('dark'); }}
-                    title="Night mode"
-                    aria-label="Night mode"
-                  >
-                    <IconMoon size={13} />
-                    <span>Night</span>
-                  </button>
-                  <button
-                    type="button"
-                    className={`settings-seg-btn${themePref === 'system' ? ' active' : ''}`}
-                    onClick={() => { triggerHaptic('light'); setThemePref('system'); }}
-                    title="System default"
-                    aria-label="System default"
-                  >
-                    <IconSmartphone size={13} />
-                    <span>Auto</span>
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* Tactile Haptics 3-Way Segmented Switcher */}
-            {showHaptics && (
-              <div className="settings-row-item" style={{ cursor: 'default' }}>
-                <div className="settings-row-left">
-                  <div className="settings-squircle squircle-purple-glow">
-                    <IconVibrate size={18} />
-                  </div>
-                  <div className="settings-row-texts">
-                    <span className="settings-row-title">Tactile Haptics</span>
-                    <span className="settings-row-subtitle">
-                      {hapticPref === 'off'
-                        ? 'Vibration disabled'
-                        : hapticPref === 'subtle'
-                        ? 'Gentle micro-taps'
-                        : 'Standard button clicks'}
-                    </span>
-                  </div>
-                </div>
-                <div className="settings-segmented-theme" role="group" aria-label="Haptic feedback preference">
-                  <button
-                    type="button"
-                    className={`settings-seg-btn${hapticPref === 'standard' ? ' active' : ''}`}
-                    onClick={() => handleSetHapticPref('standard')}
-                    title="Standard vibration"
-                    aria-label="Standard vibration"
-                  >
-                    <span>Standard</span>
-                  </button>
-                  <button
-                    type="button"
-                    className={`settings-seg-btn${hapticPref === 'subtle' ? ' active' : ''}`}
-                    onClick={() => handleSetHapticPref('subtle')}
-                    title="Subtle micro vibration"
-                    aria-label="Subtle vibration"
-                  >
-                    <span>Subtle</span>
-                  </button>
-                  <button
-                    type="button"
-                    className={`settings-seg-btn${hapticPref === 'off' ? ' active' : ''}`}
-                    onClick={() => handleSetHapticPref('off')}
-                    title="Disable tactile vibration"
-                    aria-label="Disable vibration"
-                  >
-                    <span>Off</span>
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {showNotifications && (
-              <button type="button" className="settings-row-item" onClick={() => { triggerHaptic('light'); openNotificationsPanel(); }}>
-                <div className="settings-row-left">
-                  <div className="settings-squircle squircle-teal-glow">
-                    <IconBell size={18} />
-                  </div>
-                  <div className="settings-row-texts">
-                    <span className="settings-row-title">Notifications</span>
-                    <span className="settings-row-subtitle">{unreadNotificationCount > 0 ? `${unreadNotificationCount} unread` : 'All caught up'}</span>
-                  </div>
-                </div>
-                <div className="settings-row-right">
-                  <span className="settings-badge-pill" style={{ fontWeight: 600 }}>
-                    {unreadNotificationCount > 0 ? `${unreadNotificationCount} unread` : 'Quiet'}
-                  </span>
-                  <IconChevronRight size={16} />
-                </div>
-              </button>
-            )}
-
-            <div className="settings-row-item" style={{ cursor: 'default' }}>
-              <div className="settings-row-left">
-                <div className="settings-squircle squircle-amber-glow">
-                  <span style={{ fontSize: '18px' }}>🎫</span>
-                </div>
-                <div className="settings-row-texts">
-                  <span className="settings-row-title">Pass reminders</span>
-                  <span className="settings-row-subtitle">Alert 24h (and 3h for flights/trains) before departure</span>
-                </div>
-              </div>
-              <div className="settings-row-right" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span className="settings-badge-pill" style={{ fontWeight: 600, fontSize: '10px' }}>
-                  {passRemindersOn ? 'ON' : 'OFF'}
-                </span>
-                <label style={{ position: 'relative', display: 'inline-block', width: '44px', height: '24px', margin: 0, cursor: 'pointer' }}>
-                  <input
-                    type="checkbox"
-                    checked={passRemindersOn}
-                    onChange={(e) => handleTogglePassReminders(e.target.checked)}
-                    aria-label="Pass reminders"
-                    style={{ opacity: 0, width: 0, height: 0, margin: 0 }}
-                  />
-                  <span
-                    style={{
-                      position: 'absolute',
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      bottom: 0,
-                      backgroundColor: passRemindersOn ? '#17B6A6' : 'var(--border-color)',
-                      transition: '0.2s ease',
-                      borderRadius: 'var(--border-radius-pill)',
-                    }}
-                  >
-                    <span
-                      style={{
-                        position: 'absolute',
-                        height: '18px',
-                        width: '18px',
-                        left: passRemindersOn ? '23px' : '3px',
-                        bottom: '3px',
-                        backgroundColor: 'white',
-                        transition: '0.2s ease',
-                        borderRadius: '50%',
-                        boxShadow: '0 1px 3px rgba(0,0,0,0.25)',
-                      }}
-                    />
-                  </span>
-                </label>
-              </div>
-            </div>
-
-            {showGeotag && (
-              <div className="settings-row-item" style={{ cursor: 'default' }}>
-                <div className="settings-row-left">
-                  <div className="settings-squircle squircle-emerald-glow">
-                    <IconMapPin size={18} />
-                  </div>
-                  <div className="settings-row-texts">
-                    <span className="settings-row-title">Geotag Expenses</span>
-                    <span className="settings-row-subtitle">Attach GPS coordinates &amp; place names</span>
-                  </div>
-                </div>
-                <div className="settings-row-right" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span className="settings-badge-pill" style={{ fontWeight: 600, fontSize: '10px' }}>
-                    {enableGeotagging ? 'ACTIVE' : 'OFF'}
-                  </span>
-                  <label style={{ position: 'relative', display: 'inline-block', width: '44px', height: '24px', margin: 0, cursor: 'pointer' }}>
-                    <input
-                      type="checkbox"
-                      checked={enableGeotagging}
-                      onChange={(e) => {
-                        triggerHaptic('light');
-                        setEnableGeotagging(e.target.checked);
-                      }}
-                      aria-label="Geotag Expenses"
-                      style={{ opacity: 0, width: 0, height: 0, margin: 0 }}
-                    />
-                    <span
-                      style={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        backgroundColor: enableGeotagging ? '#17B6A6' : 'var(--border-color)',
-                        transition: '0.2s ease',
-                        borderRadius: 'var(--border-radius-pill)',
-                      }}
-                    >
-                      <span
-                        style={{
-                          position: 'absolute',
-                          height: '18px',
-                          width: '18px',
-                          left: enableGeotagging ? '23px' : '3px',
-                          bottom: '3px',
-                          backgroundColor: 'white',
-                          transition: '0.2s ease',
-                          borderRadius: '50%',
-                          boxShadow: '0 1px 3px rgba(0,0,0,0.25)',
-                        }}
-                      />
-                    </span>
-                  </label>
-                </div>
-              </div>
-            )}
-
-            {/* Biometric Screen Lock Toggle */}
-            {isFeatureEnabled('enableBiometricAuth') && bioAvailable && userId && (
-              <div className="settings-row-item" style={{ cursor: 'default' }}>
-                <div className="settings-row-left">
-                  <div className="settings-squircle squircle-blue-glow">
-                    <IconShield size={18} />
-                  </div>
-                  <div className="settings-row-texts">
-                    <span className="settings-row-title">Biometric App Lock</span>
-                    <span className="settings-row-subtitle">
-                      {bioEnrolled ? 'Protected by Touch ID / Face ID' : 'Require biometric unlock on launch'}
-                    </span>
-                  </div>
-                </div>
-                <div className="settings-row-right" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  {bioEnrolled && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        triggerHaptic('medium');
-                        lockSession();
-                        window.location.reload();
-                      }}
-                      className="pill-chip"
-                      style={{
-                        padding: '4px 10px',
-                        fontSize: '11px',
-                        fontWeight: 600,
-                        background: 'rgba(239, 68, 68, 0.12)',
-                        color: '#ef4444',
-                        border: '1px solid rgba(239, 68, 68, 0.3)',
-                        borderRadius: '12px',
-                        cursor: 'pointer',
-                      }}
-                    >
-                      Lock Now
-                    </button>
-                  )}
-                  <span className="settings-badge-pill" style={{ fontWeight: 600, fontSize: '10px' }}>
-                    {bioEnrolled ? 'ON' : 'OFF'}
-                  </span>
-                  <label style={{ position: 'relative', display: 'inline-block', width: '44px', height: '24px', margin: 0, cursor: bioLoading ? 'wait' : 'pointer' }}>
-                    <input
-                      type="checkbox"
-                      checked={bioEnrolled}
-                      disabled={bioLoading}
-                      onChange={(e) => handleToggleBiometric(e.target.checked)}
-                      aria-label="Biometric App Lock"
-                      style={{ opacity: 0, width: 0, height: 0, margin: 0 }}
-                    />
-                    <span
-                      style={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        backgroundColor: bioEnrolled ? 'var(--primary-accent)' : 'var(--border-color)',
-                        transition: '0.2s ease',
-                        borderRadius: 'var(--border-radius-pill)',
-                      }}
-                    >
-                      <span
-                        style={{
-                          position: 'absolute',
-                          height: '18px',
-                          width: '18px',
-                          left: bioEnrolled ? '23px' : '3px',
-                          bottom: '3px',
-                          backgroundColor: 'white',
-                          transition: '0.2s ease',
-                          borderRadius: '50%',
-                          boxShadow: '0 1px 3px rgba(0,0,0,0.25)',
-                        }}
-                      />
-                    </span>
-                  </label>
-                </div>
-              </div>
-            )}
-
-            {showCoachmarks && (
-              <button
-                type="button"
-                className="settings-row-item"
-                onClick={handleResetCoachmarks}
-              >
-                <div className="settings-row-left">
-                  <div className="settings-squircle squircle-amber-glow">
-                    <span>✈️</span>
-                  </div>
-                  <div className="settings-row-texts">
-                    <span className="settings-row-title">Flight Coachmarks</span>
-                    <span className="settings-row-subtitle">
-                      {coachmarkResetStatus ? 'Onboarding tips re-enabled!' : 'Reset interactive guide on the + button'}
-                    </span>
-                  </div>
-                </div>
-                <div className="settings-row-right">
-                  <span className="settings-badge-pill" style={{ color: coachmarkResetStatus ? 'var(--color-success)' : 'var(--primary-accent)', fontWeight: 600 }}>
-                    {coachmarkResetStatus || 'Reset'}
-                  </span>
-                </div>
-              </button>
-            )}
-
-            {onOpenFxRates && (
-              <button
-                type="button"
-                className="settings-row-item"
-                onClick={() => {
-                  triggerHaptic('light');
-                  onOpenFxRates();
-                }}
-              >
-                <div className="settings-row-left">
-                  <div className="settings-squircle squircle-emerald-glow">
-                    <span style={{ fontSize: '18px' }}>💱</span>
-                  </div>
-                  <div className="settings-row-texts">
-                    <span className="settings-row-title">Multi-Currency FX Engine</span>
-                    <span className="settings-row-subtitle">Live rates, offline lock &amp; forex markup converter</span>
-                  </div>
-                </div>
-                <div className="settings-row-right">
-                  <span className="settings-badge-pill" style={{ background: 'rgba(16, 185, 129, 0.18)', color: '#10B981', fontWeight: 700 }}>FX</span>
-                  <IconChevronRight size={16} />
-                </div>
-              </button>
-            )}
-
-            {showInstall && (
-              <button
-                type="button"
-                className="settings-row-item"
-                onClick={() => {
-                  triggerHaptic('light');
-                  onInstallApp?.();
-                  onClose?.();
-                }}
-              >
-                <div className="settings-row-left">
-                  <div className="settings-squircle squircle-teal-glow">
-                    <IconSmartphone size={18} />
-                  </div>
-                  <div className="settings-row-texts">
-                    <span className="settings-row-title">Install App</span>
-                    <span className="settings-row-subtitle">Add Trip Tracker to your device home screen</span>
-                  </div>
-                </div>
-                <div className="settings-row-right">
-                  <IconDownload size={16} />
-                </div>
-              </button>
-            )}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (subScreen === 'data-menu') {
-    return (
-      <div className="settings-container settings-subscreen-enter">
-        <div className="settings-subscreen-nav-header">
-          <button type="button" className="settings-subscreen-back-link" onClick={() => setSubScreen(null)}>
-            <IconChevronLeft size={18} />
-            <span>{getParentTitle()}</span>
-          </button>
-        </div>
-        <h3 className="settings-subscreen-main-title">Data &amp; Backups</h3>
-        <p className="settings-subscreen-subtitle">
-          Storage usage, archived trips, and database snapshots.
-        </p>
-
-        <div className="settings-group">
-          <div className="settings-group-card">
-            {showStorageManager && (
-              <SettingsCell
-                icon={<IconPieChart size={18} />}
-                iconGlow="amber"
-                title="Storage and Data"
-                subtitle="Receipts media, ledgers & cache visualizer"
-                badge={storageEstimate ? formatBytes(storageEstimate.used) : 'Local'}
-                onClick={() => setSubScreen('storage-data')}
-              />
-            )}
-
-            {showArchived && (
-              <SettingsCell
-                icon={<IconArchive size={18} />}
-                iconGlow="slate"
-                title="Archived Trips"
-                subtitle={archivedTrips.length === 0 ? 'No archived trips' : `${archivedTrips.length} archived trip${archivedTrips.length === 1 ? '' : 's'}`}
-                badge={archivedTrips.length > 0 ? archivedTrips.length : undefined}
-                onClick={() => setSubScreen('archived-trips')}
-              />
-            )}
-
-            {showBackups && (
-              <SettingsCell
-                icon={<IconDatabase size={18} />}
-                iconGlow="indigo"
-                title="Database Backups"
-                subtitle="Export/Import JSON database snapshot"
-                badge="JSON"
-                onClick={() => setSubScreen('backups')}
-              />
-            )}
-
-            {onOpenOfflineSnapshot && (
-              <SettingsCell
-                icon={<span style={{ fontSize: '18px' }}>💾</span>}
-                iconGlow="blue"
-                title="Offline Snapshot (.triptracker)"
-                subtitle="Export and restore 100% offline trip backups"
-                badge="BACKUP"
-                onClick={() => {
-                  triggerHaptic('light');
-                  onOpenOfflineSnapshot();
-                }}
-              />
-            )}
-
-            {onOpenMediaGallery && (
-              <SettingsCell
-                icon={<span style={{ fontSize: '18px' }}>📸</span>}
-                iconGlow="teal"
-                title="Receipts & Memories Gallery"
-                subtitle="Browse cached receipt photos and trip media"
-                badge="PHOTOS"
-                onClick={() => {
-                  triggerHaptic('light');
-                  onOpenMediaGallery();
-                }}
-              />
-            )}
-
-            {showDemoTrip && onLoadDemoTrip && (
-              <SettingsCell
-                icon={<IconSparkles size={18} />}
-                iconGlow="emerald"
-                title="Seed Demo Trip"
-                subtitle="Sample trip with members, geotags & splits"
-                hasDivider={false}
-                onClick={() => {
-                  onRequestConfirm?.({
-                    title: 'Seed Demo Data',
-                    message: 'Populate a sample trip ("Road Trip to Goa ☀️") with test members, geotagged route, and split transactions?',
-                    confirmLabel: 'Load Demo Trip',
-                    onConfirm: () => {
-                      onLoadDemoTrip();
-                      onClose?.();
-                    },
-                  });
-                }}
-              />
-            )}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (subScreen === 'help-account') {
-    return (
-      <div className="settings-container settings-subscreen-enter">
-        <div className="settings-subscreen-nav-header">
-          <button type="button" className="settings-subscreen-back-link" onClick={() => setSubScreen(null)}>
-            <IconChevronLeft size={18} />
-            <span>{getParentTitle()}</span>
-          </button>
-        </div>
-        <h3 className="settings-subscreen-main-title">Help &amp; Account</h3>
-        <p className="settings-subscreen-subtitle">
-          Get support, share feedback, or manage your account.
-        </p>
-
-        <div className="settings-group">
-          <div className="settings-group-card">
-            {showReportProblem && (
-              <SettingsCell
-                icon={<span>🐞</span>}
-                iconGlow="rose"
-                title="Report a Problem"
-                subtitle="Tell us what went wrong — device details attach automatically"
-                onClick={() => setSubScreen('report-issue')}
-              />
-            )}
-
-            {showSuggestFeature && (
-              <SettingsCell
-                icon={<span>✨</span>}
-                iconGlow="teal"
-                title="Suggest a Feature"
-                subtitle="Tell us what would make this app better"
-                onClick={() => setSubScreen('suggest-feature')}
-              />
-            )}
-
-            {showBugTracker && (
-              <SettingsCell
-                icon={<span>🛡️</span>}
-                iconGlow="amber"
-                title="Superadmin Bug Tracker"
-                subtitle="Manage, triage & live-sync bugs"
-                onClick={() => setSubScreen('bug-tracker')}
-              />
-            )}
-
-            {showSignOut && onSignOut && (
-              <SettingsCell
-                icon={<IconLogOut size={18} />}
-                iconGlow="red"
-                destructive
-                title="Sign Out"
-                subtitle="Disconnect active session from Supabase"
-                chevron={false}
-                onClick={() => {
-                  onRequestConfirm?.({
-                    title: 'Sign Out',
-                    message: 'Sign out of your account on this device?',
-                    confirmLabel: 'Sign Out',
-                    onConfirm: () => {
-                      onSignOut();
-                      onClose?.();
-                    },
-                  });
-                }}
-              />
-            )}
-
-            {showClearData && onClearDatabase && (
-              <SettingsCell
-                icon={<IconAlertCircle size={18} />}
-                iconGlow="red"
-                destructive
-                title="Clear All Data"
-                subtitle="Wipe all local trips and reset storage"
-                chevron={false}
-                onClick={onClearDatabase}
-              />
-            )}
-
-            {showDeleteAccount && onDeleteAccount && (
-              <SettingsCell
-                icon={<IconAlertCircle size={18} />}
-                iconGlow="red"
-                destructive
-                hasDivider={false}
-                title="Delete Account"
-                subtitle="Permanently delete your account and owned trips"
-                chevron={false}
-                onClick={onDeleteAccount}
-              />
-            )}
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const hasAnyResults = showTripGroup || showPreferencesGroup || showDataGroup || showHelpGroup || showAccountGroup || showAbout;
 
   if (subScreen === 'about') {
     return (
       <div className="settings-container settings-subscreen-enter">
         <div className="settings-subscreen-nav-header">
-          <button type="button" className="settings-subscreen-back-link" onClick={() => setSubScreen(null)}>
+          <button type="button" className="settings-subscreen-back-link" onClick={closeSubScreen}>
             <IconChevronLeft size={18} />
             <span>{getParentTitle()}</span>
           </button>
@@ -2947,105 +1655,8 @@ export function SettingsView({
                     </span>
                   )}
                 </div>
-
-                {/* WhatsApp-Style Editable Status Tagline */}
-                <div className="settings-profile-status-bar">
-                  {!isEditingStatus ? (
-                    <div
-                      className="settings-profile-status-text"
-                      onClick={() => {
-                        triggerHaptic('light');
-                        setStatusDraft(statusTagline);
-                        setIsEditingStatus(true);
-                      }}
-                      title="Tap to change your travel status"
-                    >
-                      <span className="settings-status-quote">“{statusTagline}”</span>
-                      <span className="settings-status-edit-hint">✎</span>
-                    </div>
-                  ) : (
-                    <div className="settings-status-editor">
-                      <input
-                        type="text"
-                        value={statusDraft}
-                        onChange={(e) => setStatusDraft(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') handleSaveStatus();
-                          if (e.key === 'Escape') setIsEditingStatus(false);
-                        }}
-                        className="settings-status-input"
-                        maxLength={60}
-                        placeholder="e.g. Exploring Tokyo 🗼"
-                        autoFocus
-                      />
-                      <div className="settings-status-presets">
-                        {STATUS_PRESETS.map((p) => (
-                          <button
-                            key={p}
-                            type="button"
-                            className="settings-status-preset-pill"
-                            onClick={() => setStatusDraft(p)}
-                          >
-                            {p}
-                          </button>
-                        ))}
-                      </div>
-                      <div className="settings-status-actions">
-                        <button
-                          type="button"
-                          className="secondary-btn"
-                          style={{ padding: '3px 8px', fontSize: '11px' }}
-                          onClick={() => setIsEditingStatus(false)}
-                        >
-                          Cancel
-                        </button>
-                        <button
-                          type="button"
-                          className="primary-btn"
-                          style={{ padding: '3px 10px', fontSize: '11px' }}
-                          onClick={handleSaveStatus}
-                        >
-                          Save
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
               </div>
-
-              {/* WhatsApp-Style QR Code Button */}
-              <button
-                type="button"
-                className="settings-profile-qr-btn"
-                onClick={() => {
-                  triggerHaptic('light');
-                  setIsQrModalOpen(true);
-                }}
-                title="Scan or share profile & trip QR code"
-                aria-label="Profile and Trip QR Code"
-              >
-                <IconQrCode size={20} />
-              </button>
             </div>
-
-            {/* Travel Stats Chips Strip */}
-            <div className="settings-stat-pills">
-              <span className="settings-stat-pill">✈️ {trips.length} {trips.length === 1 ? 'Trip' : 'Trips'}</span>
-              <span className="settings-stat-pill">👥 {Object.keys(members).length} {Object.keys(members).length === 1 ? 'Companion' : 'Companions'}</span>
-              <span className="settings-stat-pill">🔐 E2E Encrypted</span>
-            </div>
-
-            {/* Storage Gauge */}
-            {storageEstimate && (
-              <div className="settings-storage-gauge">
-                <div className="settings-progress-bar-bg">
-                  <div
-                    className="settings-progress-bar-fill"
-                    style={{ width: `${Math.min(100, Math.max(3, Math.round((storageEstimate.used / (storageEstimate.quota || 50000000)) * 100)))}%` }}
-                  />
-                </div>
-              </div>
-            )}
 
             <div className="settings-sync-hub">
               <div className="settings-sync-status">
@@ -3131,7 +1742,7 @@ export function SettingsView({
         <div className="settings-empty-search">
           <span style={{ fontSize: '28px' }}>🔍</span>
           <strong style={{ color: 'var(--text-primary)' }}>No settings found for "{searchQuery}"</strong>
-          <span style={{ fontSize: '12px' }}>Try searching for "dark", "backup", "map", "csv", or "notifications"</span>
+          <span style={{ fontSize: '12px' }}>Try searching for "dark", "backup", "csv", or "notifications"</span>
           <button
             type="button"
             className="settings-subscreen-back-link"
@@ -3143,65 +1754,558 @@ export function SettingsView({
         </div>
       )}
 
-      {/* Group 1: Trip-Specific Settings (When an active trip is selected) */}
+      {/* This Trip — concrete rows on the home screen */}
       {showTripGroup && activeTrip && (
-        <SettingsSection>
-          <SettingsCell
-            icon={<span>🌴</span>}
-            iconGlow="emerald"
-            title={`This Trip: ${activeTrip.name}`}
-            subtitle="Status, tools & exports"
-            onClick={() => setSubScreen('trip-settings')}
-          />
+        <SettingsSection title={activeTrip.name}>
+          {showTripStatus && (
+            <div className="settings-trip-flight-banner" style={{ borderRadius: 0, margin: 0 }}>
+              <div>
+                <div className="settings-trip-flight-title">
+                  <span>🌴</span> {activeTrip.name}
+                </div>
+                <div className="settings-trip-flight-meta">
+                  {baseCurrency || activeTrip.baseCurrency || 'INR'} · {(activeTrip.memberIds?.length ?? Object.keys(members).length)} {(activeTrip.memberIds?.length ?? Object.keys(members).length) === 1 ? 'member' : 'members'} · {activeTripExpenses.length} {activeTripExpenses.length === 1 ? 'expense' : 'expenses'}
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={handleToggleCloseTrip}
+                disabled={!isTripAdmin}
+                title={isTripAdmin ? (activeTrip.closed ? 'Click to reopen trip' : 'Click to close and lock trip') : undefined}
+                style={{
+                  fontSize: '9.5px',
+                  fontFamily: 'var(--font-family-mono)',
+                  fontWeight: 700,
+                  padding: '2px 8px',
+                  borderRadius: '12px',
+                  background: flightStatusBg,
+                  color: flightStatusColor,
+                  border: `1px solid ${flightStatusBorder}`,
+                  cursor: isTripAdmin ? 'pointer' : 'default',
+                  transition: 'all 0.15s ease',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                }}
+                aria-label={activeTrip.closed ? 'Trip is closed. Click to reopen.' : 'Trip is active. Click to close.'}
+              >
+                <span>{flightStatusText}</span>
+              </button>
+            </div>
+          )}
+
+          {showInvite && onOpenShareTrip && (
+            <SettingsCell
+              icon={<IconShare size={18} />}
+              iconGlow="teal"
+              title="Invite & Share Trip"
+              subtitle="Share join link or QR code with companions"
+              onClick={() => {
+                triggerHaptic('light');
+                onOpenShareTrip();
+              }}
+            />
+          )}
+
+          {showCategories && (
+            <SettingsCell
+              icon={<IconTag size={18} />}
+              iconGlow="purple"
+              title="Categories & Tags"
+              subtitle={`${categories.length} active categories`}
+              onClick={() => setSubScreen('categories')}
+            />
+          )}
+
+          {showRecycleBin && (
+            <SettingsCell
+              icon={<IconTrash size={18} />}
+              iconGlow="rose"
+              title="Recycle Bin"
+              subtitle={deletedExpenses.length === 0 ? 'Empty (24h retention)' : `${deletedExpenses.length} deleted expense${deletedExpenses.length === 1 ? '' : 's'}`}
+              badge={deletedExpenses.length > 0 ? deletedExpenses.length : undefined}
+              onClick={() => setSubScreen('recycle-bin')}
+            />
+          )}
+
+          {showMute && (
+            <div className="settings-row-item" style={{ cursor: 'default' }}>
+              <div className="settings-row-left">
+                <div className="settings-squircle squircle-orange-glow">
+                  <IconBell size={18} />
+                </div>
+                <div className="settings-row-texts">
+                  <span className="settings-row-title">Mute Trip Alerts</span>
+                  <span className="settings-row-subtitle">Silence push notifications for this trip</span>
+                </div>
+              </div>
+              <div className="settings-row-right">
+                <label style={{ position: 'relative', display: 'inline-block', width: '44px', height: '24px', margin: 0, cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={isTripMuted}
+                    onChange={(e) => {
+                      triggerHaptic('light');
+                      setTripMuted(activeTrip.id, e.target.checked);
+                    }}
+                    aria-label="Mute Notifications"
+                    style={{ opacity: 0, width: 0, height: 0, margin: 0 }}
+                  />
+                  <span
+                    style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      backgroundColor: isTripMuted ? '#17B6A6' : 'var(--border-color)',
+                      transition: '0.2s ease',
+                      borderRadius: 'var(--border-radius-pill)',
+                    }}
+                  >
+                    <span
+                      style={{
+                        position: 'absolute',
+                        height: '18px',
+                        width: '18px',
+                        left: isTripMuted ? '23px' : '3px',
+                        bottom: '3px',
+                        backgroundColor: 'white',
+                        transition: '0.2s ease',
+                        borderRadius: '50%',
+                        boxShadow: '0 1px 3px rgba(0,0,0,0.25)',
+                      }}
+                    />
+                  </span>
+                </label>
+              </div>
+            </div>
+          )}
+
+          {showFxSearch && onOpenFxRates && (
+            <SettingsCell
+              icon={<span style={{ fontSize: '18px' }}>💱</span>}
+              iconGlow="emerald"
+              title="Multi-Currency FX Engine"
+              subtitle="Live rates, offline lock & forex markup converter"
+              badge="FX"
+              onClick={() => {
+                triggerHaptic('light');
+                onOpenFxRates();
+              }}
+            />
+          )}
+
+          {showCsvExport && onExportCsv && (
+            <SettingsCell
+              icon={<IconFileSpreadsheet size={18} />}
+              iconGlow="emerald"
+              title="Excel CSV Export"
+              subtitle="Download settlement ledger & expense breakdown"
+              badge="CSV"
+              onClick={onExportCsv}
+            />
+          )}
+
+          {showCloseTrip && (
+            <SettingsCell
+              icon={<IconShield size={18} />}
+              iconGlow={activeTrip.closed ? 'slate' : 'emerald'}
+              title={closeTripTitle}
+              subtitle={closeTripSubtitle}
+              badge={closeTripBadgeText}
+              hasDivider={false}
+              onClick={handleToggleCloseTrip}
+            />
+          )}
         </SettingsSection>
       )}
 
-      {/* Main Settings Categories (WhatsApp Grouped Inset List) */}
-      {(showPreferencesGroup || showDataGroup || showHelpGroup || showAbout) && (
-        <SettingsSection>
-          {showPreferencesGroup && (
-            <SettingsCell
-              icon={themePref === 'dark' ? <IconMoon size={18} /> : themePref === 'light' ? <IconSun size={18} /> : <IconSmartphone size={18} />}
-              iconGlow="orange"
-              title="Preferences & Interface"
-              subtitle="Appearance, haptics, notifications & more"
-              value={themePref === 'dark' ? 'Night' : themePref === 'light' ? 'Light' : 'Auto'}
-              onClick={() => setSubScreen('preferences')}
-            />
+      {/* Preferences */}
+      {showPreferencesGroup && (
+        <SettingsSection title="Preferences">
+          {showAppearance && (
+            <div className="settings-row-item" style={{ cursor: 'default' }}>
+              <div className="settings-row-left">
+                <div className="settings-squircle squircle-orange-glow">
+                  {themePref === 'dark' ? <IconMoon size={18} /> : themePref === 'light' ? <IconSun size={18} /> : <IconSmartphone size={18} />}
+                </div>
+                <div className="settings-row-texts">
+                  <span className="settings-row-title">Appearance</span>
+                  <span className="settings-row-subtitle">{themeLabel}</span>
+                </div>
+              </div>
+              <div className="settings-segmented-theme" role="group" aria-label="Theme preference">
+                <button
+                  type="button"
+                  className={`settings-seg-btn${themePref === 'light' ? ' active' : ''}`}
+                  onClick={() => { triggerHaptic('light'); setThemePref('light'); }}
+                  title="Light mode"
+                  aria-label="Light mode"
+                >
+                  <IconSun size={13} />
+                  <span>Light</span>
+                </button>
+                <button
+                  type="button"
+                  className={`settings-seg-btn${themePref === 'dark' ? ' active' : ''}`}
+                  onClick={() => { triggerHaptic('light'); setThemePref('dark'); }}
+                  title="Night mode"
+                  aria-label="Night mode"
+                >
+                  <IconMoon size={13} />
+                  <span>Night</span>
+                </button>
+                <button
+                  type="button"
+                  className={`settings-seg-btn${themePref === 'system' ? ' active' : ''}`}
+                  onClick={() => { triggerHaptic('light'); setThemePref('system'); }}
+                  title="System default"
+                  aria-label="System default"
+                >
+                  <IconSmartphone size={13} />
+                  <span>Auto</span>
+                </button>
+              </div>
+            </div>
           )}
 
-          {showDataGroup && (
+          {showNotifications && (
+            <button type="button" className="settings-row-item" onClick={() => { triggerHaptic('light'); openNotificationsPanel(); }}>
+              <div className="settings-row-left">
+                <div className="settings-squircle squircle-teal-glow">
+                  <IconBell size={18} />
+                </div>
+                <div className="settings-row-texts">
+                  <span className="settings-row-title">Notifications</span>
+                  <span className="settings-row-subtitle">{unreadNotificationCount > 0 ? `${unreadNotificationCount} unread` : 'All caught up'}</span>
+                </div>
+              </div>
+              <div className="settings-row-right">
+                <span className="settings-badge-pill" style={{ fontWeight: 600 }}>
+                  {unreadNotificationCount > 0 ? `${unreadNotificationCount} unread` : 'Quiet'}
+                </span>
+                <IconChevronRight size={16} />
+              </div>
+            </button>
+          )}
+
+          {showPassReminders && (
+            <div className="settings-row-item" style={{ cursor: 'default' }}>
+              <div className="settings-row-left">
+                <div className="settings-squircle squircle-amber-glow">
+                  <span style={{ fontSize: '18px' }}>🎫</span>
+                </div>
+                <div className="settings-row-texts">
+                  <span className="settings-row-title">Pass reminders</span>
+                  <span className="settings-row-subtitle">Alert 24h (and 3h for flights/trains) before departure</span>
+                </div>
+              </div>
+              <div className="settings-row-right" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span className="settings-badge-pill" style={{ fontWeight: 600, fontSize: '10px' }}>
+                  {passRemindersOn ? 'ON' : 'OFF'}
+                </span>
+                <label style={{ position: 'relative', display: 'inline-block', width: '44px', height: '24px', margin: 0, cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={passRemindersOn}
+                    onChange={(e) => handleTogglePassReminders(e.target.checked)}
+                    aria-label="Pass reminders"
+                    style={{ opacity: 0, width: 0, height: 0, margin: 0 }}
+                  />
+                  <span
+                    style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      backgroundColor: passRemindersOn ? '#17B6A6' : 'var(--border-color)',
+                      transition: '0.2s ease',
+                      borderRadius: 'var(--border-radius-pill)',
+                    }}
+                  >
+                    <span
+                      style={{
+                        position: 'absolute',
+                        height: '18px',
+                        width: '18px',
+                        left: passRemindersOn ? '23px' : '3px',
+                        bottom: '3px',
+                        backgroundColor: 'white',
+                        transition: '0.2s ease',
+                        borderRadius: '50%',
+                        boxShadow: '0 1px 3px rgba(0,0,0,0.25)',
+                      }}
+                    />
+                  </span>
+                </label>
+              </div>
+            </div>
+          )}
+
+          {showGeotag && (
+            <div className="settings-row-item" style={{ cursor: 'default' }}>
+              <div className="settings-row-left">
+                <div className="settings-squircle squircle-emerald-glow">
+                  <IconMapPin size={18} />
+                </div>
+                <div className="settings-row-texts">
+                  <span className="settings-row-title">Geotag Expenses</span>
+                  <span className="settings-row-subtitle">Attach GPS coordinates &amp; place names</span>
+                </div>
+              </div>
+              <div className="settings-row-right" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span className="settings-badge-pill" style={{ fontWeight: 600, fontSize: '10px' }}>
+                  {enableGeotagging ? 'ACTIVE' : 'OFF'}
+                </span>
+                <label style={{ position: 'relative', display: 'inline-block', width: '44px', height: '24px', margin: 0, cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={enableGeotagging}
+                    onChange={(e) => {
+                      triggerHaptic('light');
+                      setEnableGeotagging(e.target.checked);
+                    }}
+                    aria-label="Geotag Expenses"
+                    style={{ opacity: 0, width: 0, height: 0, margin: 0 }}
+                  />
+                  <span
+                    style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      backgroundColor: enableGeotagging ? '#17B6A6' : 'var(--border-color)',
+                      transition: '0.2s ease',
+                      borderRadius: 'var(--border-radius-pill)',
+                    }}
+                  >
+                    <span
+                      style={{
+                        position: 'absolute',
+                        height: '18px',
+                        width: '18px',
+                        left: enableGeotagging ? '23px' : '3px',
+                        bottom: '3px',
+                        backgroundColor: 'white',
+                        transition: '0.2s ease',
+                        borderRadius: '50%',
+                        boxShadow: '0 1px 3px rgba(0,0,0,0.25)',
+                      }}
+                    />
+                  </span>
+                </label>
+              </div>
+            </div>
+          )}
+
+          {showInstall && (
+            <SettingsCell
+              icon={<IconSmartphone size={18} />}
+              iconGlow="teal"
+              title="Install App"
+              subtitle="Add Trip Tracker to your device home screen"
+              chevron={false}
+              hasDivider={false}
+              onClick={() => {
+                triggerHaptic('light');
+                onInstallApp?.();
+                onClose?.();
+              }}
+            />
+          )}
+        </SettingsSection>
+      )}
+
+      {/* Data */}
+      {showDataGroup && (
+        <SettingsSection title="Data">
+          {showStorageManager && (
             <SettingsCell
               icon={<IconPieChart size={18} />}
               iconGlow="amber"
-              title="Data & Backups"
-              subtitle="Storage, archived trips & backups"
+              title="Storage and Data"
+              subtitle="Receipts media, ledgers & cache visualizer"
               badge={storageEstimate ? formatBytes(storageEstimate.used) : 'Local'}
-              onClick={() => setSubScreen('data-menu')}
+              onClick={() => setSubScreen('storage-data')}
             />
           )}
 
-          {showHelpGroup && (
+          {showArchived && (
             <SettingsCell
-              icon={<IconUser size={18} />}
-              iconGlow="rose"
-              title="Help & Account"
-              subtitle="Support, feedback & account controls"
-              onClick={() => setSubScreen('help-account')}
-            />
-          )}
-
-          {showAbout && (
-            <SettingsCell
-              icon={<IconSmartphone size={18} />}
+              icon={<IconArchive size={18} />}
               iconGlow="slate"
-              title="About & Legal"
-              subtitle={`Version ${appVersion ?? WEB_APP_VERSION} · Privacy & Terms`}
-              badge="STABLE"
-              hasDivider={false}
-              onClick={() => setSubScreen('about')}
+              title="Archived Trips"
+              subtitle={archivedTrips.length === 0 ? 'No archived trips' : `${archivedTrips.length} archived trip${archivedTrips.length === 1 ? '' : 's'}`}
+              badge={archivedTrips.length > 0 ? archivedTrips.length : undefined}
+              onClick={() => setSubScreen('archived-trips')}
             />
           )}
+
+          {showSnapshotSearch && onOpenOfflineSnapshot && (
+            <SettingsCell
+              icon={<span style={{ fontSize: '18px' }}>💾</span>}
+              iconGlow="blue"
+              title="Offline Snapshot (.triptracker)"
+              subtitle="Export and restore 100% offline trip backups"
+              badge="BACKUP"
+              onClick={() => {
+                triggerHaptic('light');
+                onOpenOfflineSnapshot();
+              }}
+            />
+          )}
+
+          {showGallerySearch && onOpenMediaGallery && (
+            <SettingsCell
+              icon={<span style={{ fontSize: '18px' }}>📸</span>}
+              iconGlow="teal"
+              title="Receipts & Memories Gallery"
+              subtitle="Browse cached receipt photos and trip media"
+              badge="PHOTOS"
+              onClick={() => {
+                triggerHaptic('light');
+                onOpenMediaGallery();
+              }}
+            />
+          )}
+
+          {showBackups && (
+            <SettingsCell
+              icon={<IconDatabase size={18} />}
+              iconGlow="indigo"
+              title="Database Backups"
+              subtitle="Export/Import JSON database snapshot"
+              badge="JSON"
+              onClick={() => setSubScreen('backups')}
+            />
+          )}
+
+          {showDemoTrip && onLoadDemoTrip && (
+            <SettingsCell
+              icon={<IconSparkles size={18} />}
+              iconGlow="emerald"
+              title="Seed Demo Trip"
+              subtitle="Sample trip with members, geotags & splits"
+              hasDivider={false}
+              onClick={() => {
+                onRequestConfirm?.({
+                  title: 'Seed Demo Data',
+                  message: 'Populate a sample trip ("Road Trip to Goa ☀️") with test members, geotagged route, and split transactions?',
+                  confirmLabel: 'Load Demo Trip',
+                  onConfirm: () => {
+                    onLoadDemoTrip();
+                    onClose?.();
+                  },
+                });
+              }}
+            />
+          )}
+        </SettingsSection>
+      )}
+
+      {/* Help */}
+      {showHelpGroup && (
+        <SettingsSection title="Help">
+          {showReportProblem && (
+            <SettingsCell
+              icon={<span>🐞</span>}
+              iconGlow="rose"
+              title="Report a Problem"
+              subtitle="Tell us what went wrong — device details attach automatically"
+              onClick={() => setSubScreen('report-issue')}
+            />
+          )}
+
+          {showSuggestFeature && (
+            <SettingsCell
+              icon={<span>✨</span>}
+              iconGlow="teal"
+              title="Suggest a Feature"
+              subtitle="Tell us what would make this app better"
+              onClick={() => setSubScreen('suggest-feature')}
+            />
+          )}
+
+          {showBugTracker && (
+            <SettingsCell
+              icon={<span>🛡️</span>}
+              iconGlow="amber"
+              title="Superadmin Bug Tracker"
+              subtitle="Manage, triage & live-sync bugs"
+              hasDivider={false}
+              onClick={() => setSubScreen('bug-tracker')}
+            />
+          )}
+        </SettingsSection>
+      )}
+
+      {/* Account */}
+      {showAccountGroup && (
+        <SettingsSection title="Account">
+          {showSignOut && onSignOut && (
+            <SettingsCell
+              icon={<IconLogOut size={18} />}
+              iconGlow="red"
+              destructive
+              title="Sign Out"
+              subtitle="Disconnect active session from Supabase"
+              chevron={false}
+              onClick={() => {
+                onRequestConfirm?.({
+                  title: 'Sign Out',
+                  message: 'Sign out of your account on this device?',
+                  confirmLabel: 'Sign Out',
+                  onConfirm: () => {
+                    onSignOut();
+                    onClose?.();
+                  },
+                });
+              }}
+            />
+          )}
+
+          {showClearData && onClearDatabase && (
+            <SettingsCell
+              icon={<IconAlertCircle size={18} />}
+              iconGlow="red"
+              destructive
+              title="Clear All Data"
+              subtitle="Wipe all local trips and reset storage"
+              chevron={false}
+              onClick={onClearDatabase}
+            />
+          )}
+
+          {showDeleteAccount && onDeleteAccount && (
+            <SettingsCell
+              icon={<IconAlertCircle size={18} />}
+              iconGlow="red"
+              destructive
+              hasDivider={false}
+              title="Delete Account"
+              subtitle="Permanently delete your account and owned trips"
+              chevron={false}
+              onClick={onDeleteAccount}
+            />
+          )}
+        </SettingsSection>
+      )}
+
+      {/* About */}
+      {showAbout && (
+        <SettingsSection title="About">
+          <SettingsCell
+            icon={<IconSmartphone size={18} />}
+            iconGlow="slate"
+            title="About & Legal"
+            subtitle={`Version ${appVersion ?? WEB_APP_VERSION} · Privacy & Terms`}
+            badge="STABLE"
+            hasDivider={false}
+            onClick={() => setSubScreen('about')}
+          />
         </SettingsSection>
       )}
 
@@ -3240,126 +2344,6 @@ export function SettingsView({
         onClose={() => setIsSuperadminModalOpen(false)}
         onSuccess={() => setIsSuperadminModalOpen(false)}
       />
-
-      {/* WhatsApp-Style Profile & Trip QR Code Modal */}
-      {isQrModalOpen && (
-        <div
-          className="settings-qr-modal-overlay"
-          onClick={() => setIsQrModalOpen(false)}
-        >
-          <div
-            className="settings-qr-card"
-            onClick={(e) => e.stopPropagation()}
-            role="dialog"
-            aria-modal="true"
-            aria-label="Trip and Profile QR Code"
-          >
-            {/* Top-Right Dismiss Button */}
-            <button
-              type="button"
-              className="settings-qr-close-btn"
-              onClick={() => {
-                triggerHaptic('light');
-                setIsQrModalOpen(false);
-              }}
-              aria-label="Close QR Code dialog"
-            >
-              <IconClose size={16} />
-            </button>
-
-            {/* Profile Avatar with Plane Badge */}
-            <div className="settings-qr-avatar-container">
-              {userAvatarUrl ? (
-                <img
-                  src={userAvatarUrl}
-                  alt=""
-                  className="settings-avatar-img"
-                  style={{ width: '58px', height: '58px', borderWidth: '3px' }}
-                />
-              ) : (
-                <div className="settings-avatar-circle" style={{ width: '58px', height: '58px', fontSize: '24px' }}>
-                  {initialLetter}
-                </div>
-              )}
-              <span className="settings-qr-badge-icon" title="Explorer">✈️</span>
-            </div>
-
-            {/* Profile Name & Tagline */}
-            <div className="settings-qr-card-header">
-              <h3 className="settings-qr-display-name">{displayName}</h3>
-              {statusTagline && (
-                <span className="settings-qr-status-tagline">
-                  “{statusTagline}”
-                </span>
-              )}
-              {activeTrip && (
-                <div className="settings-qr-trip-pill">
-                  <span className="settings-qr-trip-pill-icon">🌴</span>
-                  <span className="settings-qr-trip-pill-name">{activeTrip.name}</span>
-                </div>
-              )}
-            </div>
-
-            {/* Scannable Client-Side Offline QR Box */}
-            <div className="settings-qr-frame-box">
-              <QrCodeView
-                value={tripInviteLink}
-                size={210}
-                alt={`Trip Invite QR Code for ${activeTrip?.name || 'Trip Tracker'}`}
-              />
-            </div>
-
-            <p className="settings-qr-hint">
-              {activeTrip
-                ? `Scan with any phone camera or QR scanner to instantly join "${activeTrip.name}"`
-                : 'Scan with any phone camera or QR scanner to open Trip Tracker'}
-            </p>
-
-            {/* Redesigned Actions: Copy Link & Share Link */}
-            <div className="settings-qr-btn-group">
-              <button
-                type="button"
-                className={`settings-qr-action-btn settings-qr-btn-copy${copiedInvite ? ' is-copied' : ''}`}
-                onClick={handleCopyInviteLink}
-                aria-label={copiedInvite ? 'Link copied' : 'Copy invite link'}
-              >
-                {copiedInvite ? (
-                  <>
-                    <IconCheck size={16} className="settings-qr-btn-icon" />
-                    <span>Copied!</span>
-                  </>
-                ) : (
-                  <>
-                    <IconCopy size={16} className="settings-qr-btn-icon" />
-                    <span>Copy Link</span>
-                  </>
-                )}
-              </button>
-
-              <button
-                type="button"
-                className="settings-qr-action-btn settings-qr-btn-share"
-                onClick={handleShareInviteLink}
-                aria-label="Share trip invite link"
-              >
-                <IconShare size={16} className="settings-qr-btn-icon" />
-                <span>Share Link</span>
-              </button>
-            </div>
-
-            <button
-              type="button"
-              className="settings-qr-done-btn"
-              onClick={() => {
-                triggerHaptic('light');
-                setIsQrModalOpen(false);
-              }}
-            >
-              Done
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

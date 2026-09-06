@@ -3,6 +3,8 @@ import type { Expense } from '../types';
 import { IconAlertCircle } from './Icons';
 import { getCurrencySymbol } from '../utils/currency';
 import { useFocusTrap } from '../hooks/useFocusTrap';
+import { useHistoryBack } from '../utils/useHistoryBack';
+import { useEscapeKey } from '../utils/useEscapeKey';
 
 interface ConflictResolverModalProps {
   localExpense: Expense;
@@ -25,6 +27,8 @@ export function ConflictResolverModal({
   const cardRef = useRef<HTMLDivElement>(null);
 
   useFocusTrap(cardRef, true, false, onClose);
+  useHistoryBack(true, onClose);
+  useEscapeKey(true, onClose);
 
   return (
     <div className="modal-backdrop" onClick={onClose}>

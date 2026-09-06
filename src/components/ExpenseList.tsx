@@ -13,6 +13,8 @@ import { tripDayNumber } from '../utils/dateRange';
 import { usePullToRefresh } from '../utils/usePullToRefresh';
 import { PullToRefreshIndicator } from './PullToRefreshIndicator';
 import { useTripStore } from '../store/tripStore';
+import { useHistoryBack } from '../utils/useHistoryBack';
+import { useEscapeKey } from '../utils/useEscapeKey';
 
 // Swipe-to-delete is a supplement to the explicit trash button — skip
 // wrapping the row in it at all when the viewer isn't allowed to delete.
@@ -192,6 +194,8 @@ export function ExpenseList({
 
   const filtersRef = useRef<HTMLDivElement>(null);
   const [showDateFilter, setShowDateFilter] = useState(false);
+  useHistoryBack(showDateFilter, () => setShowDateFilter(false));
+  useEscapeKey(showDateFilter, () => setShowDateFilter(false));
   const isAllActive = !filterCategory && !filterMember && !filterDateFrom && !filterDateTo && !filterAmountMin && !filterAmountMax && !filterRelation && !filterLocation;
 
   // Stats + quick-filter chips default collapsed behind one visible toggle

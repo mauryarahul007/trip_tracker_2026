@@ -1,5 +1,7 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { triggerHaptic } from '../../utils/haptics';
+import { useHistoryBack } from '../../utils/useHistoryBack';
+import { useEscapeKey } from '../../utils/useEscapeKey';
 
 export interface ActionSheetItem {
   id: string;
@@ -34,15 +36,8 @@ export const ActionSheet: React.FC<ActionSheetProps> = ({
   const dragStartY = useRef<number | null>(null);
   const sheetRef = useRef<HTMLDivElement>(null);
 
-  // Close on Escape
-  useEffect(() => {
-    if (!isOpen) return;
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onClose]);
+  useHistoryBack(isOpen, onClose);
+  useEscapeKey(isOpen, onClose);
 
   // Touch / pointer drag down to dismiss (skip if touching buttons)
   const handlePointerDown = (e: React.PointerEvent) => {

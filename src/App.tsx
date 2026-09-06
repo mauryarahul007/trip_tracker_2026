@@ -54,10 +54,8 @@ import { ExpenseFilterDrawer } from './components/ExpenseFilterDrawer';
 const MembersGroupsTab = lazy(lazyImport(() =>
   import('./components/MembersGroupsTab').then((m) => ({ default: m.MembersGroupsTab }))
 ));
-// SettingsTab pulls in TripJourneyMap, which pulls in maplibre-gl (a large
-// mapping dependency) -- code-split so it doesn't inflate the main bundle
-// that every tab pays for, even though Settings is a primary nav tab (see
-// hasVisitedSettings below for why this needs mount-gating, not just lazy()).
+// SettingsTab is a primary nav tab (see hasVisitedSettings below for why
+// this needs mount-gating, not just lazy()).
 const SettingsTab = lazy(lazyImport(() =>
   import('./components/SettingsTab').then((m) => ({ default: m.SettingsTab }))
 ));
@@ -112,9 +110,6 @@ const OfflineSnapshotModal = lazy(lazyImport(() =>
 ));
 const TripMediaGalleryModal = lazy(lazyImport(() =>
   import('./components/TripMediaGalleryModal').then((m) => ({ default: m.TripMediaGalleryModal }))
-));
-const TravelDossierModal = lazy(lazyImport(() =>
-  import('./components/TravelDossierModal').then((m) => ({ default: m.TravelDossierModal }))
 ));
 const FxRatesModal = lazy(lazyImport(() =>
   import('./components/FxRatesModal').then((m) => ({ default: m.FxRatesModal }))
@@ -456,7 +451,6 @@ export default function App() {
   const [showSmartQuickAdd, setShowSmartQuickAdd] = useState(false);
   const [showOfflineSnapshot, setShowOfflineSnapshot] = useState(false);
   const [showMediaGallery, setShowMediaGallery] = useState(false);
-  const [showTravelDossier, setShowTravelDossier] = useState(false);
   const [showFxRates, setShowFxRates] = useState(false);
   const activePeers = usePeerPresence(activeTripId);
 
@@ -563,7 +557,7 @@ export default function App() {
   }, [isSuperadmin]);
 
   // Lock background scroll when any modal is active
-  useScrollLock(Boolean(showTripActionSheet || showShareTrip || showTripWrapped || selectedReviewExpense || confirmRequest || showGlobalSettings || showAddExpense || showExpenseFilterDrawer || showSmartQuickAdd || showOfflineSnapshot || showMediaGallery || showTravelDossier));
+  useScrollLock(Boolean(showTripActionSheet || showShareTrip || showTripWrapped || selectedReviewExpense || confirmRequest || showGlobalSettings || showAddExpense || showExpenseFilterDrawer || showSmartQuickAdd || showOfflineSnapshot || showMediaGallery));
 
   const syncQueue = useTripStore((s) => s.syncQueue);
   const dirtyExpenseIds = useMemo(() => collectDirtyExpenseIds(syncQueue), [syncQueue]);
@@ -1662,11 +1656,11 @@ export default function App() {
   useHistoryBack(showExpenseFilterDrawer, () => setShowExpenseFilterDrawer(false));
   useHistoryBack(!!selectedReviewExpense, () => setSelectedReviewExpense(null));
   useHistoryBack(showShareTrip, () => setShowShareTrip(false));
-  useHistoryBack(showTripActionSheet, () => setShowTripActionSheet(false));
+  // ActionSheet / ConfirmDialog / FX / QuickAdd / Snapshot / Gallery / BugTracker
+  // own their own history entries — do not double-register here.
   useHistoryBack(showRouteModal, () => setShowRouteModal(false));
   useHistoryBack(showAchievements, () => setShowAchievements(false));
   useHistoryBack(showGlobalSettings, () => setShowGlobalSettings(false));
-  useHistoryBack(!!confirmRequest, () => setConfirmRequest(null));
   useHistoryBack(showCommandPalette, () => setShowCommandPalette(false));
   useHistoryBack(showTripWrapped, () => setShowTripWrapped(false));
   useHistoryBack(showBugTracker, () => {
@@ -1675,12 +1669,7 @@ export default function App() {
       window.location.hash = '#/';
     }
   });
-  useHistoryBack(showOfflineSnapshot, () => setShowOfflineSnapshot(false));
-  useHistoryBack(showMediaGallery, () => setShowMediaGallery(false));
-  useHistoryBack(showTravelDossier, () => setShowTravelDossier(false));
   useHistoryBack(showShortcutsModal, () => setShowShortcutsModal(false));
-  useHistoryBack(showFxRates, () => setShowFxRates(false));
-  useHistoryBack(showSmartQuickAdd, () => setShowSmartQuickAdd(false));
 
   // Escape key — the desktop equivalent of the back-gesture wiring above,
   // for the same set of overlay modals (excludes tab/trip navigation).
@@ -1695,18 +1684,12 @@ export default function App() {
   useEscapeKey(showExpenseFilterDrawer, () => setShowExpenseFilterDrawer(false));
   useEscapeKey(!!selectedReviewExpense, () => setSelectedReviewExpense(null));
   useEscapeKey(showShareTrip, () => setShowShareTrip(false));
-  useEscapeKey(showTripActionSheet, () => setShowTripActionSheet(false));
   useEscapeKey(showRouteModal, () => setShowRouteModal(false));
   useEscapeKey(showAchievements, () => setShowAchievements(false));
   useEscapeKey(showGlobalSettings, () => setShowGlobalSettings(false));
-  useEscapeKey(showOfflineSnapshot, () => setShowOfflineSnapshot(false));
-  useEscapeKey(showMediaGallery, () => setShowMediaGallery(false));
-  useEscapeKey(showTravelDossier, () => setShowTravelDossier(false));
   useEscapeKey(showCommandPalette, () => setShowCommandPalette(false));
   useEscapeKey(showTripWrapped, () => setShowTripWrapped(false));
   useEscapeKey(showShortcutsModal, () => setShowShortcutsModal(false));
-  useEscapeKey(showFxRates, () => setShowFxRates(false));
-  useEscapeKey(showSmartQuickAdd, () => setShowSmartQuickAdd(false));
 
   // Loading view
   if (!initialized) {
@@ -2364,12 +2347,9 @@ export default function App() {
                 onOpenSuperadminPortal={() => setIsTravelerPreview(false)}
                 onRequestConfirm={setConfirmRequest}
                 onOpenShareTrip={() => setShowShareTrip(true)}
-                onOpenTripWrapped={() => setShowTripWrapped(true)}
-                onOpenAchievements={() => setShowAchievements(true)}
                 onNavigateToBalances={() => setActiveTab('expenses')}
                 baseCurrency={activeTrip?.baseCurrency || ''}
                 onOpenFxRates={() => setShowFxRates(true)}
-                onOpenTravelDossier={() => setShowTravelDossier(true)}
                 onOpenMediaGallery={() => setShowMediaGallery(true)}
                 onOpenOfflineSnapshot={() => setShowOfflineSnapshot(true)}
               />
@@ -2448,7 +2428,6 @@ export default function App() {
           <ShareTripModal
             trip={activeTrip}
             onClose={() => setShowShareTrip(false)}
-            onOpenDossier={() => setShowTravelDossier(true)}
             onOpenOfflineSnapshot={() => setShowOfflineSnapshot(true)}
           />
         </Suspense>
@@ -2579,8 +2558,6 @@ export default function App() {
             pwaInstallable={!!deferredPrompt}
             onInstallApp={handleInstallApp}
             onRequestConfirm={setConfirmRequest}
-            onOpenTripWrapped={() => setShowTripWrapped(true)}
-            onOpenAchievements={() => setShowAchievements(true)}
             onOpenShareTrip={() => setShowShareTrip(true)}
             onNavigateToBalances={() => {
               setShowGlobalSettings(false);
@@ -2594,7 +2571,6 @@ export default function App() {
             onAddCategory={handleAddCategory}
             onDeleteCategory={handleDeleteCategory}
             onOpenFxRates={() => setShowFxRates(true)}
-            onOpenTravelDossier={() => setShowTravelDossier(true)}
             onOpenMediaGallery={() => setShowMediaGallery(true)}
             onOpenOfflineSnapshot={() => setShowOfflineSnapshot(true)}
           />
@@ -2850,22 +2826,6 @@ export default function App() {
         </Suspense>
       )}
 
-      {/* Travel Dossier & Statement Modal */}
-      {showTravelDossier && activeTrip && (
-        <Suspense fallback={null}>
-          <TravelDossierModal
-            isOpen={showTravelDossier}
-            onClose={() => setShowTravelDossier(false)}
-            trip={activeTrip}
-            members={members}
-            expenses={activeTripExpenses}
-            categories={categories}
-            balances={balances}
-            settlements={transfers}
-          />
-        </Suspense>
-      )}
-
       {/* Multi-Currency FX Rates & Calculator Modal */}
       {showFxRates && activeTrip && (
         <Suspense fallback={null}>
@@ -2966,8 +2926,8 @@ export default function App() {
 
       {/* Rendered unconditionally regardless of which screen is active
           (not nested in the web-only header) so it opens the same way on
-          native too, reached via the "Notifications" row in Settings
-          instead of the header bell button there. */}
+          native too, reached via the Notifications row in Settings
+          or the header bell on web. */}
       <NotificationsPanel onRequestConfirm={setConfirmRequest} />
       <InAppNotificationBanner />
 

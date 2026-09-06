@@ -41,13 +41,10 @@ type Props = {
   onDeleteCategory?: (categoryId: string, replacementCategoryId: string | null) => Promise<void>;
   onExportCsv?: () => void;
   isAdmin?: boolean;
-  onOpenTripWrapped?: () => void;
-  onOpenAchievements?: () => void;
   onOpenShareTrip?: () => void;
   onNavigateToBalances?: () => void;
   baseCurrency?: string;
   onOpenFxRates?: () => void;
-  onOpenTravelDossier?: () => void;
   onOpenMediaGallery?: () => void;
   onOpenOfflineSnapshot?: () => void;
 };
@@ -55,8 +52,6 @@ type Props = {
 export function GlobalSettingsModal({
   onClose,
   onRequestConfirm,
-  onOpenTripWrapped,
-  onOpenAchievements,
   onNavigateToBalances,
   themePref,
   setThemePref,
@@ -87,7 +82,6 @@ export function GlobalSettingsModal({
   onOpenShareTrip,
   baseCurrency,
   onOpenFxRates,
-  onOpenTravelDossier,
   onOpenMediaGallery,
   onOpenOfflineSnapshot,
 }: Props) {
@@ -168,13 +162,10 @@ export function GlobalSettingsModal({
           hasActiveTrip={Boolean(activeTripId)}
           onClose={onClose}
           onRequestConfirm={onRequestConfirm}
-          onOpenTripWrapped={onOpenTripWrapped}
-          onOpenAchievements={onOpenAchievements}
           onOpenShareTrip={onOpenShareTrip}
           onNavigateToBalances={onNavigateToBalances}
           baseCurrency={baseCurrency}
           onOpenFxRates={onOpenFxRates}
-          onOpenTravelDossier={onOpenTravelDossier}
           onOpenMediaGallery={onOpenMediaGallery}
           onOpenOfflineSnapshot={onOpenOfflineSnapshot}
         />
