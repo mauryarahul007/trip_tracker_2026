@@ -9,10 +9,10 @@
 
 | Metric | Count | Status Notes |
 | :--- | :--- | :--- |
-| **Total Tracked** | **157** | All recorded bugs across sessions |
+| **Total Tracked** | **158** | All recorded bugs across sessions |
 | **🟢 Open** | **0** | No critical blockers, 0 High |
 | **🟡 In Progress** | **0** | Active investigation or fix |
-| **✅ Resolved** | **124** | Verified & closed |
+| **✅ Resolved** | **125** | Verified & closed |
 | **⚪ Won't Fix** | **33** | Expected behavior / deferred |
 
 ---
@@ -155,6 +155,7 @@
 | **BUG-155** | Ops Deck KPI row grid was 3 columns while every page renders 4 cards, wrapping the 4th onto its own row | `ui-ux` | `medium` | `claude-cli` | `claude-cli` | Changed .ops-kpi-row to grid-template-columns: repeat(4, 1fr) in ops-deck.css |
 | **BUG-156** | src/utils/initials.ts overwritten, silently dropping the initial() export used by 6 traveler components | `general` | `high` | `claude-cli` | `claude-cli` | Restored initial() alongside the new initialsFrom() in src/utils/initials.ts; both now coexist |
 | **BUG-157** | Smart Assistant popup scroll bleeds to background page | `ui-ux` | `medium` | `claude-cli` | `claude-cli` | Fixed in commit 2df133b: touch-action: none on .modal-overlay + touch-action: pan-y on inner scroll container |
+| **BUG-158** | SmartExpenseQuickAddModal and TripMediaGalleryModal scroll bleeds to background on touch | `ui-ux` | `high` | `claude-cli` | `claude-cli` | Fixed in commit bab6e8e: switched modal-backdrop→modal-overlay; added touch-action and overscroll-behavior to grid and lightbox |
 
 ---
 
