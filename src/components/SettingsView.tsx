@@ -713,7 +713,11 @@ export function SettingsView({
     const receiptExpenses = activeTripExpenses.filter((e) => Boolean(e.receiptImage || e.receiptPath));
     const estimatedReceiptBytes = receiptExpenses.length * 120 * 1024;
     // Database json footprint
-    const estimatedDbBytes = JSON.stringify({ trips, activeTripExpenses, categories }).length * 2;
+    const cleanTripsForEstimate = trips.map((t) => ({
+      ...t,
+      passes: t.passes?.map((p) => (p.attachmentUrl?.startsWith('data:') ? { ...p, attachmentUrl: 'idb:pdf' } : p)),
+    }));
+    const estimatedDbBytes = JSON.stringify({ trips: cleanTripsForEstimate, activeTripExpenses, categories }).length * 2;
     // Remainder is cache and assets
     const estimatedCacheBytes = Math.max(0, totalUsed - estimatedReceiptBytes - estimatedDbBytes);
 

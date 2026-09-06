@@ -2304,6 +2304,33 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - Reading an attachment for full-screen viewing requires an asynchronous fetch (`getPassAttachment`), adding ~5ms of IndexedDB read latency when opening a ticket PDF, but keeping initial app boot, state updates, and all store persistence lightning-fast and 100% quota-safe.
 
+---
+
+## 124. Remote Supabase Pass Sanitization, Dismiss Trap Break & Immediate SW Activation (v3.4.7)
+* **Context:**
+  - Even after initial client-side IndexedDB offloading, devices could experience recurring storage error alerts upon browser refresh. When trips were fetched from Supabase via `fetchMyTripGraph()`, passes previously saved to the database prior to the client fix contained legacy multi-megabyte base64 Data URLs. Calling `set({ ...graph })` re-injected ~23.1MB of in-memory data, triggering `quotaSafeStorage.setItem` `QuotaExceededError`.
+  - Furthermore, clicking the dismiss button was blocked: calling `set({ storageError: null })` triggered `quotaSafeStorage.setItem()`, and when `localStorage` write threw an error, it immediately restored `storageError`, trapping the user in an un-dismissible loop.
+  - Additionally, in `public/sw.js`, `.then(self.skipWaiting())` called `self.skipWaiting()` at promise creation rather than as a chained callback (`.then(() => self.skipWaiting())`).
+* **Decision:**
+  1. **Remote Backend Pass Sanitization (`src/store/tripStore.ts`):**
+     - Introduced `sanitizeTripsPasses()` helper.
+     - When `fetchMyTripGraph()` or `refreshTrips()` returns, passes are sanitized before state insertion: any `data:` URLs are stored in IndexedDB and replaced with `idb:` keys.
+     - Automatically fires a background update to Supabase (`updateTripPasses(t.id, passes)`) to permanently scrub the bloated base64 text from the remote PostgreSQL database.
+  2. **Break Storage Error Dismiss Trap (`src/store/tripStore.ts`):**
+     - Added `userDismissedStorageError` flag.
+     - When user taps dismiss (`clearStorageError`), the flag is set and `storageError` is cleared.
+     - `quotaSafeStorage.setItem` respects `!userDismissedStorageError`, guaranteeing that subsequent local storage write attempts will NEVER revive the dismissed error banner.
+     - Targeted error clearing: `quotaSafeStorage.setItem` only clears storage quota errors, preserving unrelated messages (e.g. permission or locked trip notices).
+  3. **Direct LocalStorage Pre-flight Purge (`src/store/tripStore.ts`):**
+     - On initial app boot, inspects raw `localStorage.getItem('trip-tracker-store-v1')` and strips legacy `data:application/pdf` directly from disk into IndexedDB, shrinking local storage footprint from >10MB to <50KB.
+  4. **Accurate Settings Database Footprint Metric (`src/components/SettingsView.tsx`):**
+     - Excluded offloaded `data:` attachments in `estimatedDbBytes` calculation so the Settings breakdown reflects true disk consumption.
+  5. **Immediate Service Worker SkipWaiting (`public/sw.js`):**
+     - Corrected `.then(() => self.skipWaiting())` in install event listener.
+* **Trade-offs Accepted:**
+  - Purging legacy passes in the background issues non-blocking API calls to Supabase on first startup for trips with legacy PDF data URLs, completing in the background without affecting user interactions.
+
+
 
 
 

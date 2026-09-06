@@ -408,6 +408,38 @@ export function mergeServerExpenses(
   );
 }
 
+let userDismissedStorageError = false;
+
+export function sanitizeTripsPasses(trips: Trip[]): { sanitizedTrips: Trip[]; hadDataUrls: boolean } {
+  if (!trips || !Array.isArray(trips)) return { sanitizedTrips: [], hadDataUrls: false };
+  let hadDataUrls = false;
+  const sanitizedTrips = trips.map((t) => {
+    if (!t.passes || !Array.isArray(t.passes)) return t;
+    let modified = false;
+    const passes = t.passes.map((p) => {
+      if (p.attachmentUrl && p.attachmentUrl.startsWith('data:')) {
+        const isPdf = p.attachmentUrl.startsWith('data:application/pdf');
+        const key = `idb:${isPdf ? 'pdf' : 'img'}-${p.id}`;
+        savePassAttachment(key, p.attachmentUrl).catch(() => {});
+        hadDataUrls = true;
+        modified = true;
+        return { ...p, attachmentUrl: key };
+      }
+      return p;
+    });
+    if (modified) {
+      if (!isMissingSupabaseEnv) {
+        updateTripPasses(t.id, passes).catch((err) => {
+          console.warn('Background Supabase pass sanitization error:', err);
+        });
+      }
+      return { ...t, passes };
+    }
+    return t;
+  });
+  return { sanitizedTrips, hadDataUrls };
+}
+
 // Wraps localStorage so a write failure (most commonly QuotaExceededError,
 // e.g. an offline session queued several receipt photos and blew the
 // origin's storage cap) surfaces to the user instead of silently vanishing
@@ -429,6 +461,14 @@ const quotaSafeStorage = {
     if (typeof localStorage === 'undefined') return;
     try {
       localStorage.setItem(name, value);
+      const currentErr = useTripStore.getState().storageError;
+      if (
+        !userDismissedStorageError &&
+        currentErr &&
+        (currentErr.includes("local storage is full") || currentErr.includes("Failed to save your changes locally"))
+      ) {
+        useTripStore.setState({ storageError: null });
+      }
     } catch (e) {
       console.error('Failed to persist trip data locally:', e);
 
@@ -436,8 +476,8 @@ const quotaSafeStorage = {
       if (e instanceof DOMException && e.name === 'QuotaExceededError') {
         try {
           const parsed = JSON.parse(value);
+          let freedCount = 0;
           if (parsed?.state?.trips) {
-            let freedCount = 0;
             for (const t of parsed.state.trips) {
               if (t.passes) {
                 for (const p of t.passes) {
@@ -451,42 +491,51 @@ const quotaSafeStorage = {
                 }
               }
             }
+          }
 
-            if (freedCount > 0) {
-              const cleanedValue = JSON.stringify(parsed);
-              localStorage.setItem(name, cleanedValue);
-              // Successfully saved after stripping heavy base64 strings!
-              // Synchronize in-memory state so it reflects the lightweight IDB keys and clear storageError
-              setTimeout(() => {
-                useTripStore.setState((s) => ({
-                  trips: s.trips.map((t) => ({
-                    ...t,
-                    passes: t.passes?.map((p) => {
-                      if (p.attachmentUrl && p.attachmentUrl.startsWith('data:')) {
-                        const isPdf = p.attachmentUrl.startsWith('data:application/pdf');
-                        return { ...p, attachmentUrl: `idb:${isPdf ? 'pdf' : 'img'}-${p.id}` };
-                      }
-                      return p;
-                    }),
-                  })),
-                  storageError: null,
-                }));
-              }, 0);
-              return;
+          if (parsed?.state?.syncQueue) {
+            for (const item of parsed.state.syncQueue) {
+              if (item?.payload?.expenseData?.receiptImage) {
+                delete item.payload.expenseData.receiptImage;
+                freedCount++;
+              }
             }
+          }
+
+          if (freedCount > 0) {
+            const cleanedValue = JSON.stringify(parsed);
+            localStorage.setItem(name, cleanedValue);
+            setTimeout(() => {
+              useTripStore.setState((s) => ({
+                trips: s.trips.map((t) => ({
+                  ...t,
+                  passes: t.passes?.map((p) => {
+                    if (p.attachmentUrl && p.attachmentUrl.startsWith('data:')) {
+                      const isPdf = p.attachmentUrl.startsWith('data:application/pdf');
+                      return { ...p, attachmentUrl: `idb:${isPdf ? 'pdf' : 'img'}-${p.id}` };
+                    }
+                    return p;
+                  }),
+                })),
+                storageError: null,
+              }));
+            }, 0);
+            return;
           }
         } catch (cleanupErr) {
           console.error('Emergency quota cleanup failed:', cleanupErr);
         }
       }
 
-      const message =
-        e instanceof DOMException && e.name === 'QuotaExceededError'
-          ? "Your device's local storage is full — recent changes may not be saved. Free up space or back up your data from Settings."
-          : 'Failed to save your changes locally.';
-      // Guard against re-triggering this same failing write
-      if (useTripStore.getState().storageError !== message) {
-        useTripStore.setState({ storageError: message });
+      if (!userDismissedStorageError) {
+        const message =
+          e instanceof DOMException && e.name === 'QuotaExceededError'
+            ? "Your device's local storage is full — recent changes may not be saved. Free up space or back up your data from Settings."
+            : 'Failed to save your changes locally.';
+        // Guard against re-triggering this same failing write
+        if (useTripStore.getState().storageError !== message) {
+          useTripStore.setState({ storageError: message });
+        }
       }
     }
   },
@@ -721,28 +770,29 @@ export const useTripStore = create<TripStore>()(
         get().processQueue();
       });
 
-      // Emergency Quota Reliever: if any passes currently in state contain legacy base64 data URLs,
+      // Direct raw localStorage sanitization if legacy data was stored before this fix:
+      try {
+        const rawStore = typeof localStorage !== 'undefined' ? localStorage.getItem('trip-tracker-store-v1') : null;
+        if (rawStore && rawStore.includes('data:application/pdf')) {
+          const parsed = JSON.parse(rawStore);
+          if (parsed?.state?.trips) {
+            const { sanitizedTrips, hadDataUrls } = sanitizeTripsPasses(parsed.state.trips);
+            if (hadDataUrls) {
+              parsed.state.trips = sanitizedTrips;
+              localStorage.setItem('trip-tracker-store-v1', JSON.stringify(parsed));
+            }
+          }
+        }
+      } catch (err) {
+        console.warn('Startup raw localStorage sanitization warning:', err);
+      }
+
+      // Emergency Quota Reliever: if any passes currently in in-memory state contain legacy base64 data URLs,
       // migrate them to IndexedDB immediately and cleanse in-memory state.
       try {
         const rawTrips = get().trips || [];
-        let hasDataUrls = false;
-        const sanitizedTrips = rawTrips.map((t) => {
-          if (!t.passes) return t;
-          let modified = false;
-          const passes = t.passes.map((p) => {
-            if (p.attachmentUrl && p.attachmentUrl.startsWith('data:')) {
-              const isPdf = p.attachmentUrl.startsWith('data:application/pdf');
-              const key = `idb:${isPdf ? 'pdf' : 'img'}-${p.id}`;
-              savePassAttachment(key, p.attachmentUrl).catch(() => {});
-              hasDataUrls = true;
-              modified = true;
-              return { ...p, attachmentUrl: key };
-            }
-            return p;
-          });
-          return modified ? { ...t, passes } : t;
-        });
-        if (hasDataUrls) {
+        const { sanitizedTrips, hadDataUrls } = sanitizeTripsPasses(rawTrips);
+        if (hadDataUrls) {
           set({ trips: sanitizedTrips, storageError: null });
         }
       } catch (e) {
@@ -768,6 +818,9 @@ export const useTripStore = create<TripStore>()(
 
       try {
         const graph = await fetchMyTripGraph();
+        const { sanitizedTrips: cleanGraphTrips } = sanitizeTripsPasses(graph.trips);
+        graph.trips = cleanGraphTrips;
+
         const activeTripId = get().activeTripId;
         const activeTrip = activeTripId ? graph.trips.find((t) => t.id === activeTripId) : undefined;
 
@@ -824,7 +877,8 @@ export const useTripStore = create<TripStore>()(
       lastTripsRefreshAt = now;
       try {
         const graph = await fetchMyTripGraph();
-        set({ ...graph, storageError: null });
+        const { sanitizedTrips: cleanGraphTrips } = sanitizeTripsPasses(graph.trips);
+        set({ ...graph, trips: cleanGraphTrips, storageError: null });
       } catch (e) {
         setError(e);
       }
@@ -857,26 +911,10 @@ export const useTripStore = create<TripStore>()(
     },
 
     clearStorageError: () => {
+      userDismissedStorageError = true;
       const state = get();
-      let hasDataUrls = false;
-      const sanitizedTrips = state.trips.map((t) => {
-        if (!t.passes) return t;
-        let modified = false;
-        const passes = t.passes.map((p) => {
-          if (p.attachmentUrl && p.attachmentUrl.startsWith('data:')) {
-            const isPdf = p.attachmentUrl.startsWith('data:application/pdf');
-            const key = `idb:${isPdf ? 'pdf' : 'img'}-${p.id}`;
-            savePassAttachment(key, p.attachmentUrl).catch(() => {});
-            hasDataUrls = true;
-            modified = true;
-            return { ...p, attachmentUrl: key };
-          }
-          return p;
-        });
-        return modified ? { ...t, passes } : t;
-      });
-
-      if (hasDataUrls) {
+      const { sanitizedTrips, hadDataUrls } = sanitizeTripsPasses(state.trips || []);
+      if (hadDataUrls) {
         set({ trips: sanitizedTrips, storageError: null });
       } else {
         set({ storageError: null });
