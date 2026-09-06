@@ -2231,6 +2231,31 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - Removing Travel Wallet from Settings eliminates redundancy and consolidates trip logistics into one primary bottom navigation tab ("Passes & Notes"). Travelers accessing Passes no longer need to dig through Settings menus.
 
+---
+
+## 121. Multi-Passenger Pass Splitting, Collapsible Route-Leg Cards & Sleek Passes/Notes UI (v3.4.4)
+* **Context:**
+  - Flight itineraries frequently bundle multiple travelers under a single booking PNR (e.g. Cleartrip / IndiGo bookings with Rahul Maurya and Upama Maurya for multi-leg journeys like `BLR ➔ HYD` and `HYD ➔ IXB`). Previously, only one combined pass was generated per leg, obscuring individual passenger names, seat assignments, and personal QR boarding passes.
+  - In the Smart Packing Assistant modal, touch scrolling up and down was hindered by conflicting outer sheet constraints, preventing users from reviewing suggestions and tapping the confirmation action button. Furthermore, pressing hardware/browser Back inside the modal did not cleanly dismiss it, exiting the trip context instead.
+  - With Passes, Notes, and Checklists consolidated into a single tab, stacked header elements (segmented buttons $\to$ search $\to$ 100px progress card $\to$ 80px assistant banner $\to$ category pills) created visual clutter.
+* **Decision:**
+  1. **Multi-Passenger Pass Splitting & Route Leg Grouping (`src/utils/passParser.ts`, `src/components/TravelPassWalletView.tsx`):**
+     - Extended `TravelPass` with `passengerName`, `bookingId`, and `legIdentifier`.
+     - Implemented `cleanPassengerName` to strip honorific prefixes (Mr/Ms/Mrs/Dr) and format ALL-CAPS names to Title Case.
+     - Implemented `matchPassengerToMember` for fuzzy matching travelers to trip members based on full name or first name.
+     - Updated `parseAllBookingPasses` to perform a Cartesian product ($N \text{ passengers} \times M \text{ flight legs}$), generating individual passes per passenger per segment.
+     - Grouped flight and train passes by route leg (`type::PNR::origin::destination::startDateTime`) into collapsible cards with route headers, departure times, PNR copy button, and passenger count pills (`[ 👥 2 Passes ▼ ]`).
+  2. **Smart Packing Assistant Modal Scroll & Back Navigation (`src/components/SmartPackingAssistantModal.tsx`):**
+     - Set fixed viewport height (`height: min(86dvh, 640px); max-height: min(86dvh, 640px); display: flex; flex-direction: column; overflow: hidden;`) with an isolated flex-scrollable suggestions list (`min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain;`).
+     - Pinned sticky bottom action bar with `✓ Add N Items (Okay)` button always visible and accessible.
+     - Integrated `useHistoryBack` and `useEscapeKey` so pressing Android/browser Back or Escape safely dismisses the modal and returns to the checklist.
+  3. **Checklist & Notes Modal Back Navigation (`src/components/ChecklistNotesTab.tsx`):**
+     - Wired `useHistoryBack` and `useEscapeKey` for both the checklist item edit modal and the note edit modal.
+  4. **Declutter & Sleek Professional UI (`src/components/ChecklistNotesTab.tsx`, `src/index.css`):**
+     - Replaced the bulky ~100px checklist progress card and the 80px assistant trigger banner with a sleek 6px progress track and a compact `✨ Smart Assistant` pill chip inside the category filter row.
+     - Preserved celebratory confetti bursts on 100% completion while reclaiming over 160px of vertical screen real estate.
+* **Trade-offs Accepted:**
+  - Generating separate passes per passenger per leg increases the raw pass count, but collapsible route-leg cards keep the pass deck concise and scannable, while giving each traveler an individual boarding pass with their specific name and personal QR code.
 
 
 

@@ -1,10 +1,13 @@
-import type { TravelPassType } from '../types';
+import type { TravelPassType, Member } from '../types';
 
 export interface ParsedTravelPass {
   type: TravelPassType;
   title: string;
   provider?: string;
   referenceCode?: string;
+  bookingId?: string;
+  passengerName?: string;
+  legIdentifier?: string;
   startDateTime?: string;
   endDateTime?: string;
   origin?: string;
@@ -12,6 +15,52 @@ export interface ParsedTravelPass {
   seatOrRoom?: string;
   address?: string;
   notes?: string;
+}
+
+/**
+ * Strips title prefixes (Mr, Ms, Mrs, Dr, Master) and trims whitespace.
+ */
+export function cleanPassengerName(raw: string): string {
+  const stripped = raw.replace(/^(?:Mr|Ms|Mrs|Dr|Master)\.?\s+/i, '').replace(/\s+/g, ' ').trim();
+  // If the name is ALL CAPS, convert to Title Case (e.g. "RAHUL MAURYA" -> "Rahul Maurya")
+  if (stripped && stripped === stripped.toUpperCase() && /[A-Z]/.test(stripped)) {
+    return stripped
+      .toLowerCase()
+      .split(' ')
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+      .join(' ');
+  }
+  return stripped;
+}
+
+/**
+ * Fuzzy-matches an extracted passenger name to a trip member.
+ */
+export function matchPassengerToMember(
+  passengerName: string,
+  members: Record<string, Member> | Member[]
+): string | undefined {
+  const list = Array.isArray(members) ? members : Object.values(members || {});
+  if (!passengerName || list.length === 0) return undefined;
+  const cleanPass = cleanPassengerName(passengerName).toLowerCase();
+  const passParts = cleanPass.split(' ').filter(Boolean);
+
+  for (const m of list) {
+    const memName = (m.name || '').toLowerCase().trim();
+    if (!memName) continue;
+    // 1. Exact match
+    if (memName === cleanPass) return m.id;
+    // 2. Member first name equals passenger first name (e.g. "Rahul" in "Rahul Maurya")
+    const memParts = memName.split(' ').filter(Boolean);
+    if (memParts[0] && passParts[0] && memParts[0] === passParts[0]) {
+      return m.id;
+    }
+    // 3. Passenger includes member name or vice versa
+    if (cleanPass.includes(memName) || memName.includes(cleanPass)) {
+      return m.id;
+    }
+  }
+  return undefined;
 }
 
 const AIRLINE_PROVIDERS = [
@@ -177,7 +226,9 @@ export function parseAllBookingPasses(rawText: string): ParsedTravelPass[] {
     }
 
     // PNR mapping: If multiple PNRs exist, map index or fallback to first
-    const segmentPnr = pnrList[passes.length] || pnrList[0] || tripId;
+    const legIndex = Math.floor(passes.length / Math.max(1, passengers.length));
+    const segmentPnr = pnrList[legIndex] || pnrList[0] || tripId;
+    const legIdentifier = `${carrierCode}${flightNumber}_${origin}_${destination}`;
 
     const noteParts: string[] = [];
     if (passengers.length > 0) {
@@ -190,17 +241,43 @@ export function parseAllBookingPasses(rawText: string): ParsedTravelPass[] {
       noteParts.push(`All PNRs: ${pnrList.join(', ')}`);
     }
 
-    passes.push({
-      type: 'flight',
-      title: `${provider} ${fullFlightCode} (${origin} ➔ ${destination})`,
-      provider,
-      referenceCode: segmentPnr,
-      origin,
-      destination,
-      startDateTime: `${dateStr} at ${depTime}`,
-      endDateTime: `${dateStr} at ${arrTime}`,
-      notes: noteParts.length > 0 ? noteParts.join(' | ') : undefined,
-    });
+    if (passengers.length > 1) {
+      passengers.forEach((pName) => {
+        const cleanName = cleanPassengerName(pName);
+        passes.push({
+          type: 'flight',
+          title: `${cleanName} · ${provider} ${fullFlightCode} (${origin} ➔ ${destination})`,
+          provider,
+          referenceCode: segmentPnr,
+          bookingId: tripId,
+          passengerName: cleanName,
+          legIdentifier,
+          origin,
+          destination,
+          startDateTime: `${dateStr} at ${depTime}`,
+          endDateTime: `${dateStr} at ${arrTime}`,
+          notes: noteParts.length > 0 ? noteParts.join(' | ') : undefined,
+        });
+      });
+    } else {
+      const singlePassName = passengers[0] ? cleanPassengerName(passengers[0]) : undefined;
+      passes.push({
+        type: 'flight',
+        title: singlePassName
+          ? `${singlePassName} · ${provider} ${fullFlightCode} (${origin} ➔ ${destination})`
+          : `${provider} ${fullFlightCode} (${origin} ➔ ${destination})`,
+        provider,
+        referenceCode: segmentPnr,
+        bookingId: tripId,
+        passengerName: singlePassName,
+        legIdentifier,
+        origin,
+        destination,
+        startDateTime: `${dateStr} at ${depTime}`,
+        endDateTime: `${dateStr} at ${arrTime}`,
+        notes: noteParts.length > 0 ? noteParts.join(' | ') : undefined,
+      });
+    }
   }
 
   if (passes.length > 0) {
@@ -208,7 +285,18 @@ export function parseAllBookingPasses(rawText: string): ParsedTravelPass[] {
   }
 
   // Fallback to single-pass parser if segment regex did not match multi-segments
-  return [parseBookingText(text)];
+  const single = parseBookingText(text);
+  if (passengers.length > 1) {
+    return passengers.map((p) => {
+      const cleanName = cleanPassengerName(p);
+      return {
+        ...single,
+        passengerName: cleanName,
+        title: `${cleanName} · ${single.title}`,
+      };
+    });
+  }
+  return [single];
 }
 
 /**

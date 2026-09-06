@@ -17,6 +17,8 @@ import { SwipeableRow } from './SwipeableRow';
 import { ConfettiBurst } from './ConfettiBurst';
 import { SmartPackingAssistantModal } from './SmartPackingAssistantModal';
 import { TravelPassWalletView } from './TravelPassWalletView';
+import { useHistoryBack } from '../utils/useHistoryBack';
+import { useEscapeKey } from '../utils/useEscapeKey';
 
 type Props = {
   trip: Trip;
@@ -96,6 +98,25 @@ export function ChecklistNotesTab({ trip, members, isAdmin }: Props) {
 
   // Copy feedback state
   const [copiedNoteId, setCopiedNoteId] = useState<string | null>(null);
+
+  // Safely close modals on Android/browser Back or Escape
+  useHistoryBack(isChecklistModalOpen, () => {
+    setIsChecklistModalOpen(false);
+    setEditingChecklistItem(null);
+  });
+  useEscapeKey(isChecklistModalOpen, () => {
+    setIsChecklistModalOpen(false);
+    setEditingChecklistItem(null);
+  });
+
+  useHistoryBack(isNoteModalOpen, () => {
+    setIsNoteModalOpen(false);
+    setEditingNoteId(null);
+  });
+  useEscapeKey(isNoteModalOpen, () => {
+    setIsNoteModalOpen(false);
+    setEditingNoteId(null);
+  });
 
   const passes = liveTrip.passes || [];
   const checklist = liveTrip.checklist || [];
@@ -451,79 +472,63 @@ export function ChecklistNotesTab({ trip, members, isAdmin }: Props) {
       {/* 1. CHECKLIST VIEW */}
       {viewMode === 'checklist' && (
         <div className="checklist-container">
-          {/* Progress Card with Celebratory Burst */}
+          {/* Sleek Progress Indicator with Celebratory Burst */}
           {totalCount > 0 && (
-            <div
-              className={`checklist-progress-card ${progressPercent === 100 ? 'is-complete' : ''}`}
-              style={{ position: 'relative', overflow: 'hidden' }}
-            >
+            <div className="checklist-sleek-progress-bar" style={{ marginBottom: '14px', position: 'relative' }}>
               <ConfettiBurst active={showCelebration} />
-              <div className="checklist-progress-header">
-                <div>
-                  <div className="checklist-progress-title">
-                    {progressPercent === 100 ? '✨ 100% Ready!' : 'Packing & Readiness'}
-                  </div>
-                  <div className="checklist-progress-subtitle">
-                    {progressPercent === 100
-                      ? `All ${totalCount} items prepared and ready for departure!`
-                      : `${completedCount} of ${totalCount} items ready (${progressPercent}%)`}
-                  </div>
-                </div>
-                <div className="checklist-progress-percent">{progressPercent}%</div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px', fontSize: '0.82rem' }}>
+                <span style={{ fontWeight: 600, color: 'var(--text-secondary)' }}>
+                  {progressPercent === 100 ? '✨ 100% Packed & Ready!' : 'Packing Readiness'}
+                </span>
+                <span style={{ fontWeight: 700, color: progressPercent === 100 ? 'var(--color-success)' : 'var(--primary-accent)' }}>
+                  {completedCount} of {totalCount} ready ({progressPercent}%)
+                </span>
               </div>
-              <div className="checklist-progress-bar-track">
+              <div
+                style={{
+                  height: '6px',
+                  borderRadius: '999px',
+                  background: 'var(--bg-card-subtle, rgba(0,0,0,0.06))',
+                  overflow: 'hidden',
+                  position: 'relative',
+                }}
+              >
                 <div
-                  className="checklist-progress-bar-fill"
-                  style={{ width: `${progressPercent}%` }}
+                  style={{
+                    height: '100%',
+                    width: `${progressPercent}%`,
+                    background:
+                      progressPercent === 100
+                        ? 'linear-gradient(90deg, #10b981, #059669)'
+                        : 'linear-gradient(90deg, var(--primary-accent), #2dd4bf)',
+                    borderRadius: '999px',
+                    transition: 'width 0.35s cubic-bezier(0.4, 0, 0.2, 1)',
+                  }}
                 />
               </div>
             </div>
           )}
 
-          {/* Smart Packing Assistant Trigger Banner */}
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              background: 'linear-gradient(135deg, rgba(15, 111, 99, 0.12), rgba(20, 184, 166, 0.06))',
-              border: '1px solid rgba(20, 184, 166, 0.25)',
-              borderRadius: '12px',
-              padding: '10px 14px',
-              marginBottom: '12px',
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ fontSize: '1.25rem' }}>🧳</span>
-              <div>
-                <div style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)' }}>Need packing ideas?</div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Auto-generate lists based on destination & weather</div>
-              </div>
-            </div>
+          {/* Category Filter Chips & Smart Assistant Action */}
+          <div className="checklist-category-scroll" role="group" aria-label="Filter checklist by category">
             <button
               type="button"
+              className="category-pill smart-assistant-pill"
               onClick={() => {
                 triggerHaptic('light');
                 setIsPackingAssistantOpen(true);
               }}
               style={{
-                background: 'var(--primary-accent)',
-                color: '#fff',
-                border: 'none',
-                borderRadius: '8px',
-                padding: '6px 12px',
-                fontSize: '0.8rem',
+                background: 'linear-gradient(135deg, rgba(20, 184, 166, 0.15), rgba(15, 111, 99, 0.22))',
+                border: '1px solid rgba(20, 184, 166, 0.35)',
+                color: 'var(--primary-accent)',
                 fontWeight: 600,
-                cursor: 'pointer',
-                whiteSpace: 'nowrap',
               }}
+              title="Auto-generate checklist items based on destination & weather"
             >
-              Smart Assistant
+              <span className="category-pill-icon">✨</span>
+              <span>Smart Assistant</span>
             </button>
-          </div>
-
-          {/* Category Filter Chips */}
-          <div className="checklist-category-scroll" role="group" aria-label="Filter checklist by category">
             {CHECKLIST_CATEGORIES.map((cat) => {
               const count =
                 cat.id === 'all'

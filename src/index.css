@@ -10609,4 +10609,35 @@ textarea.input-field {
   }
 }
 
+/* ==========================================================================
+   Multi-Passenger Leg Groups & Sleek Checklist & Wallet Styling
+   ========================================================================== */
+.leg-group-card {
+  transition: transform var(--transition-smooth), box-shadow var(--transition-smooth);
+}
+
+.leg-group-card:hover {
+  box-shadow: var(--shadow-md);
+}
+
+.passenger-sub-pass-card {
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.passenger-sub-pass-card:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
+.category-pill.smart-assistant-pill:hover {
+  background: linear-gradient(135deg, rgba(20, 184, 166, 0.22), rgba(15, 111, 99, 0.3)) !important;
+  border-color: rgba(20, 184, 166, 0.5) !important;
+  transform: translateY(-1px);
+}
+
+.checklist-sleek-progress-bar {
+  animation: fadeIn 0.25s ease-out;
+}
+
+
 

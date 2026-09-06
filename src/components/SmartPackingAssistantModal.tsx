@@ -3,6 +3,7 @@ import type { Trip, ChecklistItem } from '../types';
 import { generateSmartPackingSuggestions, type PackingSuggestionItem } from '../utils/packingSuggestions';
 import { triggerHaptic } from '../utils/haptics';
 import { useEscapeKey } from '../utils/useEscapeKey';
+import { useHistoryBack } from '../utils/useHistoryBack';
 import { newId } from '../utils/uuid';
 
 interface Props {
@@ -47,6 +48,7 @@ export function SmartPackingAssistantModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEscapeKey(isOpen, onClose);
+  useHistoryBack(isOpen, onClose);
 
   if (!isOpen) return null;
 
@@ -93,19 +95,22 @@ export function SmartPackingAssistantModal({
   };
 
   return (
-    <div className="modal-overlay" onClick={onClose} role="dialog" aria-modal="true">
+    <div className="modal-overlay" onClick={onClose} role="dialog" aria-modal="true" aria-label="Smart Packing Assistant">
       <div
-        className="glass-card modal-sheet fade-in"
+        className="glass-card fade-in"
         onClick={(e) => e.stopPropagation()}
         style={{
-          maxWidth: '580px',
+          maxWidth: '560px',
           width: '100%',
-          maxHeight: '92vh',
+          height: 'min(86dvh, 640px)',
+          maxHeight: 'min(86dvh, 640px)',
           display: 'flex',
           flexDirection: 'column',
           padding: '0',
           overflow: 'hidden',
-          borderRadius: '24px',
+          borderRadius: '20px',
+          boxShadow: 'var(--shadow-xl)',
+          position: 'relative',
         }}
       >
         {/* Header */}
@@ -165,7 +170,19 @@ export function SmartPackingAssistantModal({
         </div>
 
         {/* Suggestion Item List */}
-        <div style={{ padding: '14px 20px', overflowY: 'auto', flex: 1, display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        <div
+          style={{
+            padding: '14px 18px',
+            overflowY: 'auto',
+            flex: '1 1 auto',
+            minHeight: 0,
+            WebkitOverflowScrolling: 'touch',
+            overscrollBehavior: 'contain',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '8px',
+          }}
+        >
           {suggestions.map((item) => {
             const isChecked = selectedIds.has(item.id);
             return (
@@ -178,9 +195,9 @@ export function SmartPackingAssistantModal({
                   padding: '10px 14px',
                   borderRadius: '12px',
                   background: isChecked ? 'rgba(15, 169, 143, 0.05)' : 'var(--bg-surface, #fff)',
-                  border: isChecked ? '1px solid rgba(15, 169, 143, 0.3)' : '1px solid var(--border-color)',
+                  border: isChecked ? '1.5px solid var(--primary-accent)' : '1px solid var(--border-color)',
                   cursor: 'pointer',
-                  transition: 'background 0.15s ease',
+                  transition: 'all 0.15s ease',
                 }}
                 onClick={() => toggleItem(item.id)}
               >
@@ -189,7 +206,7 @@ export function SmartPackingAssistantModal({
                     type="checkbox"
                     checked={isChecked}
                     onChange={() => toggleItem(item.id)}
-                    style={{ width: '16px', height: '16px', accentColor: 'var(--primary-accent)', cursor: 'pointer' }}
+                    style={{ width: '18px', height: '18px', accentColor: 'var(--primary-accent)', cursor: 'pointer' }}
                     onClick={(e) => e.stopPropagation()}
                   />
                   <div>
@@ -198,7 +215,7 @@ export function SmartPackingAssistantModal({
                       <span>{item.text}</span>
                     </div>
                     {item.reason && (
-                      <div style={{ fontSize: '10.5px', color: 'var(--primary-accent)', fontWeight: 500, marginTop: '2px' }}>
+                      <div style={{ fontSize: '11px', color: 'var(--primary-accent)', fontWeight: 500, marginTop: '2px' }}>
                         💡 {item.reason}
                       </div>
                     )}
@@ -224,16 +241,27 @@ export function SmartPackingAssistantModal({
           })}
         </div>
 
-        {/* Footer Actions */}
-        <div style={{ padding: '14px 20px', borderTop: '1px solid var(--border-color)', background: 'var(--bg-surface-elevated, rgba(15,23,42,0.02))' }}>
+        {/* Pinned Footer Actions */}
+        <div
+          style={{
+            flexShrink: 0,
+            position: 'sticky',
+            bottom: 0,
+            zIndex: 10,
+            padding: '12px 18px',
+            borderTop: '1px solid var(--border-color)',
+            background: 'var(--bg-surface, #fff)',
+            boxShadow: '0 -4px 16px rgba(0, 0, 0, 0.08)',
+          }}
+        >
           <button
             type="button"
             className="gradient-btn"
-            style={{ width: '100%', padding: '10px', fontSize: '13px' }}
+            style={{ width: '100%', padding: '11px 16px', fontSize: '13.5px', fontWeight: 700 }}
             disabled={selectedIds.size === 0 || isSubmitting}
             onClick={handleAddSelected}
           >
-            {isSubmitting ? 'Adding...' : `✓ Add ${selectedIds.size} Items to Trip Packing List`}
+            {isSubmitting ? 'Adding...' : `✓ Add ${selectedIds.size} Items (Okay)`}
           </button>
         </div>
       </div>

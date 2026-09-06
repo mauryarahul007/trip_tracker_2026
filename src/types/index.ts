@@ -82,6 +82,9 @@ export interface TravelPass {
   title: string;
   provider?: string;
   referenceCode?: string;
+  bookingId?: string;
+  passengerName?: string;
+  legIdentifier?: string;
   startDateTime?: string;
   endDateTime?: string;
   origin?: string;

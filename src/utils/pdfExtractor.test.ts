@@ -19,11 +19,14 @@ describe('pdfExtractor', () => {
     expect(text).toContain('IXB');
 
     const passes = parseAllBookingPasses(text);
-    expect(passes.length).toBe(3);
+    // 2 passengers (Rahul Maurya & Upama Maurya) x 3 flight legs = 6 separate passenger passes
+    expect(passes.length).toBe(6);
     expect(passes[0].provider).toBe('IndiGo');
+    expect(passes[0].passengerName).toBe('Upama Maurya');
+    expect(passes[1].passengerName).toBe('Rahul Maurya');
     expect(passes[0].title).toContain('6E-537');
-    expect(passes[1].title).toContain('6E-149');
-    expect(passes[2].title).toContain('6E-445');
+    expect(passes[2].title).toContain('6E-149');
+    expect(passes[4].title).toContain('6E-445');
   });
 
   it('handles invalid input gracefully', async () => {

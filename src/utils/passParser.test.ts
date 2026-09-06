@@ -80,31 +80,41 @@ YI77GE
 X89JTF`;
 
     const passes = parseAllBookingPasses(ticketText);
-    expect(passes.length).toBe(3);
+    // 2 passengers (Ms Upama Maurya, Mr RAHUL MAURYA) x 3 flight legs = 6 passes
+    expect(passes.length).toBe(6);
 
-    // Segment 1: BLR -> HYD
+    // Segment 1 (BLR -> HYD) for Passenger 1
     expect(passes[0].provider).toBe('IndiGo');
     expect(passes[0].origin).toBe('BLR');
     expect(passes[0].destination).toBe('HYD');
     expect(passes[0].title).toContain('6E-537');
+    expect(passes[0].title).toContain('Upama Maurya');
+    expect(passes[0].passengerName).toBe('Upama Maurya');
     expect(passes[0].startDateTime).toContain('10:15');
     expect(passes[0].referenceCode).toBe('YI77GE');
-    expect(passes[0].notes).toContain('Upama Maurya');
     expect(passes[0].notes).toContain('260807634788');
 
-    // Segment 2: HYD -> IXB
+    // Segment 1 (BLR -> HYD) for Passenger 2
     expect(passes[1].provider).toBe('IndiGo');
-    expect(passes[1].origin).toBe('HYD');
-    expect(passes[1].destination).toBe('IXB');
-    expect(passes[1].title).toContain('6E-149');
-    expect(passes[1].startDateTime).toContain('13:25');
+    expect(passes[1].origin).toBe('BLR');
+    expect(passes[1].destination).toBe('HYD');
+    expect(passes[1].passengerName).toBe('Rahul Maurya');
+    expect(passes[1].referenceCode).toBe('YI77GE');
 
-    // Segment 3: IXB -> BLR
+    // Segment 2 (HYD -> IXB) for Passenger 1
     expect(passes[2].provider).toBe('IndiGo');
-    expect(passes[2].origin).toBe('IXB');
-    expect(passes[2].destination).toBe('BLR');
-    expect(passes[2].title).toContain('6E-445');
-    expect(passes[2].startDateTime).toContain('11:40');
+    expect(passes[2].origin).toBe('HYD');
+    expect(passes[2].destination).toBe('IXB');
+    expect(passes[2].title).toContain('6E-149');
+    expect(passes[2].startDateTime).toContain('13:25');
+    expect(passes[2].passengerName).toBe('Upama Maurya');
+
+    // Segment 3 (IXB -> BLR)
+    expect(passes[4].origin).toBe('IXB');
+    expect(passes[4].destination).toBe('BLR');
+    expect(passes[4].title).toContain('6E-445');
+    expect(passes[4].passengerName).toBe('Upama Maurya');
+    expect(passes[5].passengerName).toBe('Rahul Maurya');
 
     // Passengers & PNR helpers
     const passengers = extractPassengers(ticketText);

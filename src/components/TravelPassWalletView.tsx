@@ -1,9 +1,11 @@
 import { useState, useMemo, useRef } from 'react';
 import type { Trip, TravelPass, TravelPassType, Member } from '../types';
-import { parseBookingText, parseAllBookingPasses, type ParsedTravelPass } from '../utils/passParser';
+import { parseBookingText, parseAllBookingPasses, matchPassengerToMember, type ParsedTravelPass } from '../utils/passParser';
 import { extractPdfText } from '../utils/pdfExtractor';
 import { triggerHaptic } from '../utils/haptics';
 import { newId } from '../utils/uuid';
+import { useHistoryBack } from '../utils/useHistoryBack';
+import { useEscapeKey } from '../utils/useEscapeKey';
 import { QrCodeView } from './QrCodeView';
 
 interface Props {
@@ -35,6 +37,7 @@ export function TravelPassWalletView({
   const [selectedPassForQr, setSelectedPassForQr] = useState<TravelPass | null>(null);
   const [viewingAttachment, setViewingAttachment] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [expandedLegKeys, setExpandedLegKeys] = useState<Record<string, boolean>>({});
 
   // Form State
   const [isAdding, setIsAdding] = useState(false);
@@ -46,6 +49,9 @@ export function TravelPassWalletView({
   const [formTitle, setFormTitle] = useState('');
   const [formProvider, setFormProvider] = useState('');
   const [formReference, setFormReference] = useState('');
+  const [formPassengerName, setFormPassengerName] = useState('');
+  const [formBookingId, setFormBookingId] = useState('');
+  const [formLegIdentifier, setFormLegIdentifier] = useState('');
   const [formStartDateTime, setFormStartDateTime] = useState('');
   const [formEndDateTime, setFormEndDateTime] = useState('');
   const [formOrigin, setFormOrigin] = useState('');
@@ -62,6 +68,16 @@ export function TravelPassWalletView({
   const [extractionMessage, setExtractionMessage] = useState<string | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Back navigation & Escape key handling
+  useHistoryBack(Boolean(selectedPassForQr), () => setSelectedPassForQr(null));
+  useEscapeKey(Boolean(selectedPassForQr), () => setSelectedPassForQr(null));
+
+  useHistoryBack(Boolean(viewingAttachment), () => setViewingAttachment(null));
+  useEscapeKey(Boolean(viewingAttachment), () => setViewingAttachment(null));
+
+  useHistoryBack(isAdding, () => resetForm());
+  useEscapeKey(isAdding, () => resetForm());
 
   const membersMap = useMemo(() => {
     if (Array.isArray(members)) {
@@ -94,12 +110,19 @@ export function TravelPassWalletView({
     setFormTitle(parsed.title);
     if (parsed.provider) setFormProvider(parsed.provider);
     if (parsed.referenceCode) setFormReference(parsed.referenceCode);
+    if (parsed.passengerName) setFormPassengerName(parsed.passengerName);
+    if (parsed.bookingId) setFormBookingId(parsed.bookingId);
+    if (parsed.legIdentifier) setFormLegIdentifier(parsed.legIdentifier);
     if (parsed.origin) setFormOrigin(parsed.origin);
     if (parsed.destination) setFormDestination(parsed.destination);
     if (parsed.seatOrRoom) setFormSeatOrRoom(parsed.seatOrRoom);
     if (parsed.startDateTime) setFormStartDateTime(parsed.startDateTime);
     if (parsed.endDateTime) setFormEndDateTime(parsed.endDateTime);
     if (parsed.notes) setFormNotes(parsed.notes);
+    if (parsed.passengerName) {
+      const matchedMemberId = matchPassengerToMember(parsed.passengerName, Object.values(membersMap));
+      if (matchedMemberId) setFormAssignedMemberIds([matchedMemberId]);
+    }
   };
 
   const handleParsePasted = () => {
@@ -109,7 +132,7 @@ export function TravelPassWalletView({
     if (allPasses.length > 1) {
       setDetectedPasses(allPasses);
       applyParsedPassToForm(allPasses[0]);
-      setExtractionMessage(`Found ${allPasses.length} flight segments in text! Segment 1 loaded.`);
+      setExtractionMessage(`Found ${allPasses.length} passes (segments & passengers) in text! Pass 1 loaded.`);
     } else if (allPasses.length === 1) {
       setDetectedPasses([]);
       applyParsedPassToForm(allPasses[0]);
@@ -146,7 +169,7 @@ export function TravelPassWalletView({
             if (allPasses.length > 1) {
               setDetectedPasses(allPasses);
               applyParsedPassToForm(allPasses[0]);
-              setExtractionMessage(`Found ${allPasses.length} flight segments in ticket! Segment 1 loaded.`);
+              setExtractionMessage(`Found ${allPasses.length} passes (segments & passengers) in ticket! Pass 1 loaded.`);
             } else if (allPasses.length === 1) {
               setDetectedPasses([]);
               applyParsedPassToForm(allPasses[0]);
@@ -184,6 +207,9 @@ export function TravelPassWalletView({
     setFormTitle('');
     setFormProvider('');
     setFormReference('');
+    setFormPassengerName('');
+    setFormBookingId('');
+    setFormLegIdentifier('');
     setFormStartDateTime('');
     setFormEndDateTime('');
     setFormOrigin('');
@@ -206,6 +232,9 @@ export function TravelPassWalletView({
     setFormTitle(pass.title);
     setFormProvider(pass.provider || '');
     setFormReference(pass.referenceCode || '');
+    setFormPassengerName(pass.passengerName || '');
+    setFormBookingId(pass.bookingId || '');
+    setFormLegIdentifier(pass.legIdentifier || '');
     setFormStartDateTime(pass.startDateTime || '');
     setFormEndDateTime(pass.endDateTime || '');
     setFormOrigin(pass.origin || '');
@@ -233,6 +262,9 @@ export function TravelPassWalletView({
       title: formTitle.trim(),
       provider: formProvider.trim() || undefined,
       referenceCode: formReference.trim() || undefined,
+      passengerName: formPassengerName.trim() || undefined,
+      bookingId: formBookingId.trim() || undefined,
+      legIdentifier: formLegIdentifier.trim() || undefined,
       startDateTime: formStartDateTime.trim() || undefined,
       endDateTime: formEndDateTime.trim() || undefined,
       origin: formOrigin.trim() || undefined,
@@ -243,13 +275,335 @@ export function TravelPassWalletView({
       notes: formNotes.trim() || undefined,
       assignedMemberIds: formAssignedMemberIds.length > 0 ? formAssignedMemberIds : undefined,
       attachmentUrl: formAttachmentUrl || undefined,
-      qrData: formReference || `${formTitle} - ${trip.name}`,
+      qrData: formReference ? `${formReference} ${formPassengerName}`.trim() : `${formTitle} - ${trip.name}`,
       createdAt: Date.now(),
       updatedAt: Date.now(),
     };
 
     await onSavePass(newPass);
     resetForm();
+  };
+
+  // Group passes by route leg for flight & train passes; solo for others
+  const groupedPasses = useMemo(() => {
+    type PassGroup = {
+      key: string;
+      type: TravelPassType;
+      title: string;
+      provider?: string;
+      referenceCode?: string;
+      origin?: string;
+      destination?: string;
+      startDateTime?: string;
+      endDateTime?: string;
+      passes: TravelPass[];
+      isMultiPassengerLeg: boolean;
+    };
+
+    const groups: PassGroup[] = [];
+    const groupMap = new Map<string, PassGroup>();
+
+    for (const pass of filteredPasses) {
+      if (pass.type === 'flight' || pass.type === 'train') {
+        const legKey = [
+          pass.type,
+          (pass.referenceCode || pass.bookingId || 'no-ref').trim().toUpperCase(),
+          (pass.origin || '').trim().toUpperCase(),
+          (pass.destination || '').trim().toUpperCase(),
+          (pass.startDateTime || '').trim(),
+        ].join('::');
+
+        let group = groupMap.get(legKey);
+        if (!group) {
+          group = {
+            key: legKey,
+            type: pass.type,
+            title: pass.title,
+            provider: pass.provider,
+            referenceCode: pass.referenceCode,
+            origin: pass.origin,
+            destination: pass.destination,
+            startDateTime: pass.startDateTime,
+            endDateTime: pass.endDateTime,
+            passes: [],
+            isMultiPassengerLeg: false,
+          };
+          groupMap.set(legKey, group);
+          groups.push(group);
+        }
+        group.passes.push(pass);
+        if (group.passes.length > 1) {
+          group.isMultiPassengerLeg = true;
+        }
+      } else {
+        groups.push({
+          key: pass.id,
+          type: pass.type,
+          title: pass.title,
+          provider: pass.provider,
+          referenceCode: pass.referenceCode,
+          origin: pass.origin,
+          destination: pass.destination,
+          startDateTime: pass.startDateTime,
+          endDateTime: pass.endDateTime,
+          passes: [pass],
+          isMultiPassengerLeg: false,
+        });
+      }
+    }
+
+    return groups;
+  }, [filteredPasses]);
+
+  const renderSinglePassCard = (pass: TravelPass, isInsideGroup: boolean = false) => {
+    const theme = PASS_THEMES[pass.type] || PASS_THEMES.activity;
+    const assignedMembers = (pass.assignedMemberIds || [])
+      .map((id) => membersMap[id])
+      .filter(Boolean);
+
+    return (
+      <div
+        key={pass.id}
+        className={`glass-card ${isInsideGroup ? 'passenger-sub-pass-card' : ''}`}
+        style={{
+          borderRadius: isInsideGroup ? '12px' : '16px',
+          overflow: 'hidden',
+          border: '1px solid var(--border-color)',
+          boxShadow: isInsideGroup ? 'none' : 'var(--shadow-sm)',
+          display: 'flex',
+          flexDirection: 'column',
+          background: 'var(--bg-surface)',
+        }}
+      >
+        {/* If standalone card: show full theme banner */}
+        {!isInsideGroup && (
+          <div
+            style={{
+              background: theme.bg,
+              color: theme.text,
+              padding: '14px 16px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ fontSize: '22px' }}>{theme.icon}</span>
+              <div>
+                <span style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.8px', opacity: 0.85, fontWeight: 700 }}>
+                  {pass.provider || theme.label}
+                </span>
+                <h4 style={{ margin: 0, fontSize: '14.5px', fontWeight: 700, color: '#ffffff' }}>
+                  {pass.title}
+                </h4>
+              </div>
+            </div>
+            {pass.seatOrRoom && (
+              <div
+                style={{
+                  background: 'rgba(255,255,255,0.2)',
+                  backdropFilter: 'blur(8px)',
+                  padding: '3px 8px',
+                  borderRadius: '8px',
+                  fontSize: '11px',
+                  fontWeight: 700,
+                  letterSpacing: '0.5px',
+                }}
+              >
+                {pass.seatOrRoom}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Card Body */}
+        <div style={{ padding: isInsideGroup ? '12px 14px' : '14px 16px', display: 'flex', flexDirection: 'column', gap: '10px', flex: 1 }}>
+          {/* Passenger Info */}
+          {(pass.passengerName || isInsideGroup) && (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '6px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span style={{ fontSize: '15px' }}>👤</span>
+                <span style={{ fontSize: '13.5px', fontWeight: 700, color: 'var(--text-primary)' }}>
+                  {pass.passengerName || 'Individual Passenger'}
+                </span>
+              </div>
+              {isInsideGroup && pass.seatOrRoom && (
+                <span
+                  style={{
+                    fontSize: '11.5px',
+                    fontWeight: 700,
+                    padding: '2px 8px',
+                    borderRadius: '6px',
+                    background: 'rgba(59, 130, 246, 0.1)',
+                    color: '#2563eb',
+                  }}
+                >
+                  Seat: {pass.seatOrRoom}
+                </span>
+              )}
+            </div>
+          )}
+
+          {/* Route & Times (Only for standalone passes) */}
+          {!isInsideGroup && (pass.origin || pass.destination) && (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div>
+                <div style={{ fontSize: '18px', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '0.5px' }}>
+                  {pass.origin || '---'}
+                </div>
+                {pass.startDateTime && (
+                  <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{pass.startDateTime}</div>
+                )}
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '0 8px' }}>
+                <span style={{ fontSize: '14px', color: 'var(--primary-accent)' }}>➔</span>
+              </div>
+
+              <div style={{ textAlign: 'right' }}>
+                <div style={{ fontSize: '18px', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '0.5px' }}>
+                  {pass.destination || '---'}
+                </div>
+                {pass.endDateTime && (
+                  <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{pass.endDateTime}</div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Single Date / Time for Non-Route Passes */}
+          {!isInsideGroup && !pass.origin && !pass.destination && pass.startDateTime && (
+            <div style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span>🗓️</span> {pass.startDateTime}
+              {pass.endDateTime && ` to ${pass.endDateTime}`}
+            </div>
+          )}
+
+          {/* Reference Code & Copy Pill (Only if standalone) */}
+          {!isInsideGroup && pass.referenceCode && (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--bg-surface-elevated, rgba(15,23,42,0.03))', padding: '6px 10px', borderRadius: '8px' }}>
+              <span style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600 }}>
+                PNR / Booking Ref
+              </span>
+              <button
+                type="button"
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  fontFamily: 'monospace',
+                  fontWeight: 700,
+                  fontSize: '12.5px',
+                  color: 'var(--primary-accent)',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                }}
+                onClick={() => handleCopyCode(pass.referenceCode!, pass.id)}
+                title="Click to copy PNR"
+              >
+                <span>{pass.referenceCode}</span>
+                <span style={{ fontSize: '11px', opacity: 0.8 }}>
+                  {copiedId === pass.id ? '✓ Copied' : '📋'}
+                </span>
+              </button>
+            </div>
+          )}
+
+          {/* Address / Terminal */}
+          {pass.address && (
+            <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <span>📍</span> {pass.address}
+            </div>
+          )}
+
+          {/* Notes / Passengers */}
+          {pass.notes && (
+            <div style={{ fontSize: '11.5px', color: 'var(--text-secondary)', background: 'var(--bg-surface-hover, rgba(0,0,0,0.02))', padding: '6px 8px', borderRadius: '6px', whiteSpace: 'pre-wrap' }}>
+              {pass.notes}
+            </div>
+          )}
+
+          {/* Assigned Member Avatars */}
+          {assignedMembers.length > 0 && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexWrap: 'wrap' }}>
+              <span style={{ fontSize: '10.5px', color: 'var(--text-muted)', marginRight: '2px' }}>Traveler:</span>
+              {assignedMembers.map((m) => (
+                <span
+                  key={m.id}
+                  style={{
+                    fontSize: '10.5px',
+                    padding: '2px 8px',
+                    borderRadius: '12px',
+                    background: 'rgba(15, 169, 143, 0.1)',
+                    color: 'var(--primary-accent)',
+                    fontWeight: 600,
+                  }}
+                >
+                  {m.name}
+                </span>
+              ))}
+            </div>
+          )}
+
+          {/* Ticket Card Footer Actions */}
+          <div
+            style={{
+              borderTop: '1px dashed var(--border-color)',
+              paddingTop: '8px',
+              marginTop: 'auto',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+            }}
+          >
+            <div style={{ display: 'flex', gap: '6px' }}>
+              <button
+                type="button"
+                className="secondary-btn"
+                style={{ padding: '4px 10px', fontSize: '11.5px', display: 'flex', alignItems: 'center', gap: '4px' }}
+                onClick={() => setSelectedPassForQr(pass)}
+              >
+                <span>📱</span> View QR
+              </button>
+              {pass.attachmentUrl && (
+                <button
+                  type="button"
+                  className="secondary-btn"
+                  style={{ padding: '4px 10px', fontSize: '11.5px', display: 'flex', alignItems: 'center', gap: '4px' }}
+                  onClick={() => setViewingAttachment(pass.attachmentUrl!)}
+                >
+                  <span>{pass.attachmentUrl.startsWith('data:application/pdf') ? '📄' : '🖼️'}</span>{' '}
+                  {pass.attachmentUrl.startsWith('data:application/pdf') ? 'View PDF' : 'Ticket Photo'}
+                </button>
+              )}
+            </div>
+
+            <div style={{ display: 'flex', gap: '4px' }}>
+              <button
+                type="button"
+                className="secondary-btn"
+                style={{ padding: '4px 8px', fontSize: '11px' }}
+                onClick={() => handleStartEdit(pass)}
+              >
+                Edit
+              </button>
+              <button
+                type="button"
+                className="secondary-btn"
+                style={{ padding: '4px 8px', fontSize: '11px', color: 'var(--color-danger, #ef4444)' }}
+                onClick={async () => {
+                  triggerHaptic('light');
+                  await onDeletePass(pass.id);
+                }}
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -491,7 +845,7 @@ export function TravelPassWalletView({
                 </div>
               )}
 
-              {/* Multi-segment itinerary quick-picker and batch save */}
+              {/* Multi-segment / multi-passenger itinerary quick-picker and batch save */}
               {detectedPasses.length > 1 && (
                 <div
                   style={{
@@ -506,16 +860,19 @@ export function TravelPassWalletView({
                 >
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '6px' }}>
                     <span style={{ fontSize: '12.5px', fontWeight: 700, color: '#3b82f6', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                      <span>✈️</span> Multi-Leg Itinerary ({detectedPasses.length} Segments)
+                      <span>🎫</span> Multi-Pass Itinerary ({detectedPasses.length} Passes Detected)
                     </span>
                     <button
                       type="button"
                       className="gradient-btn"
-                      style={{ fontSize: '11px', padding: '5px 10px', borderRadius: '8px' }}
+                      style={{ fontSize: '11px', padding: '6px 12px', borderRadius: '8px' }}
                       onClick={async () => {
                         triggerHaptic('success');
                         for (let i = 0; i < detectedPasses.length; i++) {
                           const p = detectedPasses[i];
+                          const matchedMemberId = p.passengerName ? matchPassengerToMember(p.passengerName, Object.values(membersMap)) : undefined;
+                          const assignedMemberIds = matchedMemberId ? [matchedMemberId] : undefined;
+
                           await onSavePass({
                             id: newId(),
                             tripId: trip.id,
@@ -523,14 +880,18 @@ export function TravelPassWalletView({
                             title: p.title,
                             provider: p.provider,
                             referenceCode: p.referenceCode,
+                            passengerName: p.passengerName,
+                            bookingId: p.bookingId,
+                            legIdentifier: p.legIdentifier,
                             origin: p.origin,
                             destination: p.destination,
                             startDateTime: p.startDateTime,
                             endDateTime: p.endDateTime,
                             seatOrRoom: p.seatOrRoom,
                             notes: p.notes,
+                            assignedMemberIds,
                             attachmentUrl: formAttachmentUrl || undefined,
-                            qrData: p.referenceCode || `${p.title} - ${trip.name}`,
+                            qrData: p.referenceCode ? `${p.referenceCode} ${p.passengerName || ''}`.trim() : `${p.title} - ${trip.name}`,
                             createdAt: Date.now() + i,
                             updatedAt: Date.now() + i,
                           });
@@ -538,35 +899,39 @@ export function TravelPassWalletView({
                         resetForm();
                       }}
                     >
-                      ⚡ Save All {detectedPasses.length} Flights
+                      ⚡ Save All {detectedPasses.length} Passes
                     </button>
                   </div>
                   <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-                    Select a segment to edit individually, or save all segments to your wallet at once:
+                    Select a pass to review or edit details, or save all passes to your wallet at once:
                   </div>
                   <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-                    {detectedPasses.map((p, idx) => (
-                      <button
-                        key={idx}
-                        type="button"
-                        className="secondary-btn"
-                        style={{
-                          fontSize: '11px',
-                          padding: '5px 8px',
-                          borderRadius: '8px',
-                          background: formTitle === p.title ? 'rgba(59, 130, 246, 0.2)' : undefined,
-                          borderColor: formTitle === p.title ? '#3b82f6' : undefined,
-                          color: formTitle === p.title ? '#2563eb' : undefined,
-                          fontWeight: formTitle === p.title ? 700 : 500,
-                        }}
-                        onClick={() => {
-                          triggerHaptic('light');
-                          applyParsedPassToForm(p);
-                        }}
-                      >
-                        Leg {idx + 1}: {p.origin} ➔ {p.destination}
-                      </button>
-                    ))}
+                    {detectedPasses.map((p, idx) => {
+                      const isSelected = formTitle === p.title && formPassengerName === (p.passengerName || '');
+                      return (
+                        <button
+                          key={idx}
+                          type="button"
+                          className="secondary-btn"
+                          style={{
+                            fontSize: '11px',
+                            padding: '5px 8px',
+                            borderRadius: '8px',
+                            background: isSelected ? 'rgba(59, 130, 246, 0.2)' : undefined,
+                            borderColor: isSelected ? '#3b82f6' : undefined,
+                            color: isSelected ? '#2563eb' : undefined,
+                            fontWeight: isSelected ? 700 : 500,
+                          }}
+                          onClick={() => {
+                            triggerHaptic('light');
+                            applyParsedPassToForm(p);
+                          }}
+                        >
+                          {p.origin && p.destination ? `${p.origin} ➔ ${p.destination}` : `Pass ${idx + 1}`}
+                          {p.passengerName ? ` · ${p.passengerName}` : ''}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               )}
@@ -671,7 +1036,7 @@ export function TravelPassWalletView({
                 </div>
               </div>
 
-              {/* Reference / PNR */}
+              {/* Reference / PNR & Passenger Name */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                 <div className="form-group">
                   <label className="form-label">Booking Reference / PNR</label>
@@ -684,6 +1049,20 @@ export function TravelPassWalletView({
                   />
                 </div>
                 <div className="form-group">
+                  <label className="form-label">Passenger Name</label>
+                  <input
+                    type="text"
+                    className="input-field"
+                    placeholder="e.g. Rahul Maurya"
+                    value={formPassengerName}
+                    onChange={(e) => setFormPassengerName(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              {/* Seat / Berth / Room & Booking ID */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                <div className="form-group">
                   <label className="form-label">Seat / Berth / Room</label>
                   <input
                     type="text"
@@ -691,6 +1070,16 @@ export function TravelPassWalletView({
                     placeholder="e.g. 14A or Room 302"
                     value={formSeatOrRoom}
                     onChange={(e) => setFormSeatOrRoom(e.target.value)}
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Trip / Booking ID</label>
+                  <input
+                    type="text"
+                    className="input-field"
+                    placeholder="e.g. 260807634788"
+                    value={formBookingId}
+                    onChange={(e) => setFormBookingId(e.target.value)}
                   />
                 </div>
               </div>
@@ -929,231 +1318,156 @@ export function TravelPassWalletView({
           ) : (
             <div
               style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
-                gap: '12px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '14px',
               }}
             >
-              {filteredPasses.map((pass) => {
-                const theme = PASS_THEMES[pass.type] || PASS_THEMES.activity;
-                const assignedMembers = (pass.assignedMemberIds || [])
-                  .map((id) => membersMap[id])
-                  .filter(Boolean);
+              {groupedPasses.map((group) => {
+                const theme = PASS_THEMES[group.type] || PASS_THEMES.activity;
+                const isExpanded = expandedLegKeys[group.key] !== false; // expanded by default
 
-                return (
-                  <div
-                    key={pass.id}
-                    className="glass-card"
-                    style={{
-                      borderRadius: '16px',
-                      overflow: 'hidden',
-                      border: '1px solid var(--border-color)',
-                      boxShadow: 'var(--shadow-sm)',
-                      display: 'flex',
-                      flexDirection: 'column',
-                    }}
-                  >
-                    {/* Card Header Banner */}
+                if (group.isMultiPassengerLeg) {
+                  return (
                     <div
+                      key={group.key}
+                      className="glass-card leg-group-card"
                       style={{
-                        background: theme.bg,
-                        color: theme.text,
-                        padding: '14px 16px',
+                        borderRadius: '16px',
+                        overflow: 'hidden',
+                        border: '1px solid var(--border-color)',
+                        boxShadow: 'var(--shadow-sm)',
                         display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
+                        flexDirection: 'column',
+                        background: 'var(--bg-surface)',
                       }}
                     >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <span style={{ fontSize: '22px' }}>{theme.icon}</span>
-                        <div>
-                          <span style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.8px', opacity: 0.85, fontWeight: 700 }}>
-                            {pass.provider || theme.label}
-                          </span>
-                          <h4 style={{ margin: 0, fontSize: '14.5px', fontWeight: 700, color: '#ffffff' }}>
-                            {pass.title}
-                          </h4>
-                        </div>
-                      </div>
-                      {pass.seatOrRoom && (
-                        <div
-                          style={{
-                            background: 'rgba(255,255,255,0.2)',
-                            backdropFilter: 'blur(8px)',
-                            padding: '3px 8px',
-                            borderRadius: '8px',
-                            fontSize: '11px',
-                            fontWeight: 700,
-                            letterSpacing: '0.5px',
-                          }}
-                        >
-                          {pass.seatOrRoom}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Card Body */}
-                    <div style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: '10px', flex: 1 }}>
-                      {/* Route & Times */}
-                      {(pass.origin || pass.destination) && (
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      {/* Collapsible Leg Header */}
+                      <div
+                        style={{
+                          background: 'linear-gradient(135deg, rgba(30, 58, 138, 0.08) 0%, rgba(59, 130, 246, 0.08) 100%)',
+                          borderBottom: isExpanded ? '1px solid var(--border-color)' : 'none',
+                          padding: '12px 16px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          flexWrap: 'wrap',
+                          gap: '8px',
+                          cursor: 'pointer',
+                        }}
+                        onClick={() => {
+                          triggerHaptic('light');
+                          setExpandedLegKeys((prev) => ({
+                            ...prev,
+                            [group.key]: !isExpanded,
+                          }));
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                          <span style={{ fontSize: '22px' }}>{theme.icon}</span>
                           <div>
-                            <div style={{ fontSize: '18px', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '0.5px' }}>
-                              {pass.origin || '---'}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                              <span style={{ fontSize: '15px', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '0.3px' }}>
+                                {group.origin || 'Route'} ➔ {group.destination || 'Leg'}
+                              </span>
+                              <span
+                                style={{
+                                  fontSize: '11px',
+                                  padding: '2px 8px',
+                                  borderRadius: '6px',
+                                  background: 'rgba(59, 130, 246, 0.12)',
+                                  color: '#2563eb',
+                                  fontWeight: 700,
+                                }}
+                              >
+                                {group.provider || theme.label}
+                              </span>
                             </div>
-                            {pass.startDateTime && (
-                              <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{pass.startDateTime}</div>
-                            )}
-                          </div>
-
-                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '0 8px' }}>
-                            <span style={{ fontSize: '14px', color: 'var(--primary-accent)' }}>➔</span>
-                          </div>
-
-                          <div style={{ textAlign: 'right' }}>
-                            <div style={{ fontSize: '18px', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '0.5px' }}>
-                              {pass.destination || '---'}
+                            <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                              {group.title}
+                              {group.startDateTime && ` · ${group.startDateTime}`}
+                              {group.endDateTime && ` ➔ ${group.endDateTime}`}
                             </div>
-                            {pass.endDateTime && (
-                              <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{pass.endDateTime}</div>
-                            )}
                           </div>
                         </div>
-                      )}
 
-                      {/* Single Date / Time for Non-Route Passes */}
-                      {!pass.origin && !pass.destination && pass.startDateTime && (
-                        <div style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                          <span>🗓️</span> {pass.startDateTime}
-                          {pass.endDateTime && ` to ${pass.endDateTime}`}
-                        </div>
-                      )}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }} onClick={(e) => e.stopPropagation()}>
+                          {group.referenceCode && (
+                            <button
+                              type="button"
+                              style={{
+                                background: 'var(--bg-surface-elevated, rgba(15,23,42,0.04))',
+                                border: '1px solid var(--border-color)',
+                                fontFamily: 'monospace',
+                                fontWeight: 700,
+                                fontSize: '11.5px',
+                                color: 'var(--primary-accent)',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '4px',
+                                padding: '4px 8px',
+                                borderRadius: '6px',
+                              }}
+                              onClick={() => handleCopyCode(group.referenceCode!, group.key)}
+                              title="Click to copy PNR"
+                            >
+                              <span>PNR: {group.referenceCode}</span>
+                              <span style={{ fontSize: '10px', opacity: 0.8 }}>
+                                {copiedId === group.key ? '✓' : '📋'}
+                              </span>
+                            </button>
+                          )}
 
-                      {/* Reference Code & Copy Pill */}
-                      {pass.referenceCode && (
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--bg-surface-elevated, rgba(15,23,42,0.03))', padding: '6px 10px', borderRadius: '8px' }}>
-                          <span style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600 }}>
-                            PNR / Booking Ref
-                          </span>
                           <button
                             type="button"
                             style={{
-                              background: 'none',
                               border: 'none',
-                              fontFamily: 'monospace',
+                              fontSize: '11.5px',
                               fontWeight: 700,
-                              fontSize: '12.5px',
                               color: 'var(--primary-accent)',
                               cursor: 'pointer',
                               display: 'flex',
                               alignItems: 'center',
                               gap: '4px',
+                              padding: '4px 10px',
+                              borderRadius: '12px',
+                              background: 'rgba(15, 169, 143, 0.1)',
                             }}
-                            onClick={() => handleCopyCode(pass.referenceCode!, pass.id)}
-                            title="Click to copy PNR"
-                          >
-                            <span>{pass.referenceCode}</span>
-                            <span style={{ fontSize: '11px', opacity: 0.8 }}>
-                              {copiedId === pass.id ? '✓ Copied' : '📋'}
-                            </span>
-                          </button>
-                        </div>
-                      )}
-
-                      {/* Address / Terminal */}
-                      {pass.address && (
-                        <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                          <span>📍</span> {pass.address}
-                        </div>
-                      )}
-
-                      {/* Notes / Passengers */}
-                      {pass.notes && (
-                        <div style={{ fontSize: '11.5px', color: 'var(--text-secondary)', background: 'var(--bg-surface-hover, rgba(0,0,0,0.02))', padding: '6px 8px', borderRadius: '6px', whiteSpace: 'pre-wrap' }}>
-                          {pass.notes}
-                        </div>
-                      )}
-
-                      {/* Assigned Member Avatars */}
-                      {assignedMembers.length > 0 && (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexWrap: 'wrap' }}>
-                          <span style={{ fontSize: '10.5px', color: 'var(--text-muted)', marginRight: '2px' }}>Travelers:</span>
-                          {assignedMembers.map((m) => (
-                            <span
-                              key={m.id}
-                              style={{
-                                fontSize: '10.5px',
-                                padding: '2px 8px',
-                                borderRadius: '12px',
-                                background: 'rgba(15, 169, 143, 0.1)',
-                                color: 'var(--primary-accent)',
-                                fontWeight: 600,
-                              }}
-                            >
-                              {m.name}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-
-                      {/* Ticket Card Footer Actions */}
-                      <div
-                        style={{
-                          borderTop: '1px dashed var(--border-color)',
-                          paddingTop: '10px',
-                          marginTop: 'auto',
-                          display: 'flex',
-                          justifyContent: 'space-between',
-                          alignItems: 'center',
-                        }}
-                      >
-                        <div style={{ display: 'flex', gap: '6px' }}>
-                          <button
-                            type="button"
-                            className="secondary-btn"
-                            style={{ padding: '4px 10px', fontSize: '11.5px', display: 'flex', alignItems: 'center', gap: '4px' }}
-                            onClick={() => setSelectedPassForQr(pass)}
-                          >
-                            <span>📱</span> View QR
-                          </button>
-                          {pass.attachmentUrl && (
-                            <button
-                              type="button"
-                              className="secondary-btn"
-                              style={{ padding: '4px 10px', fontSize: '11.5px', display: 'flex', alignItems: 'center', gap: '4px' }}
-                              onClick={() => setViewingAttachment(pass.attachmentUrl!)}
-                            >
-                              <span>{pass.attachmentUrl.startsWith('data:application/pdf') ? '📄' : '🖼️'}</span>{' '}
-                              {pass.attachmentUrl.startsWith('data:application/pdf') ? 'View PDF' : 'Ticket Photo'}
-                            </button>
-                          )}
-                        </div>
-
-                        <div style={{ display: 'flex', gap: '4px' }}>
-                          <button
-                            type="button"
-                            className="secondary-btn"
-                            style={{ padding: '4px 8px', fontSize: '11px' }}
-                            onClick={() => handleStartEdit(pass)}
-                          >
-                            Edit
-                          </button>
-                          <button
-                            type="button"
-                            className="secondary-btn"
-                            style={{ padding: '4px 8px', fontSize: '11px', color: 'var(--color-danger, #ef4444)' }}
-                            onClick={async () => {
+                            onClick={() => {
                               triggerHaptic('light');
-                              await onDeletePass(pass.id);
+                              setExpandedLegKeys((prev) => ({
+                                ...prev,
+                                [group.key]: !isExpanded,
+                              }));
                             }}
                           >
-                            Delete
+                            <span>👥 {group.passes.length} Passes</span>
+                            <span style={{ fontSize: '10px' }}>{isExpanded ? '▲' : '▼'}</span>
                           </button>
                         </div>
                       </div>
+
+                      {/* Expanded Passenger Cards Container */}
+                      {isExpanded && (
+                        <div
+                          style={{
+                            padding: '12px',
+                            display: 'grid',
+                            gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+                            gap: '10px',
+                            background: 'var(--bg-surface-hover, rgba(0,0,0,0.02))',
+                          }}
+                        >
+                          {group.passes.map((pass) => renderSinglePassCard(pass, true))}
+                        </div>
+                      )}
                     </div>
-                  </div>
-                );
+                  );
+                }
+
+                // Single / Solo pass
+                return renderSinglePassCard(group.passes[0], false);
               })}
             </div>
           )}
