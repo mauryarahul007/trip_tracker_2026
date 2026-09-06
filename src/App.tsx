@@ -13,6 +13,7 @@ import { isMissingSupabaseEnv } from './services/supabaseClient';
 import { sendPushNotification } from './services/pushApi';
 import { fetchAppFlag } from './services/tripApi';
 import { ConfirmDialog, type ConfirmRequest } from './components/ConfirmDialog';
+import { TabErrorBoundary } from './components/TabErrorBoundary';
 import { TripsListScreen } from './components/TripsListScreen';
 import { lazyImport } from './utils/lazyImport';
 // Code-split secondary modals and heavy views so initial bundle only ships
@@ -201,7 +202,8 @@ export default function App() {
     } else if (!isBiometricEnrolled(userId)) {
       isBiometricAvailable().then((avail) => {
         if (avail) {
-          const dismissed = localStorage.getItem(`tt_bio_prompt_dismissed_${userId}`);
+          let dismissed: string | null = null;
+          try { dismissed = localStorage.getItem(`tt_bio_prompt_dismissed_${userId}`); } catch { /* storage blocked */ }
           if (!dismissed) {
             setShowBioEnrollPrompt(true);
           }
@@ -264,8 +266,10 @@ export default function App() {
   // preference, not trip data, so it stays out of the IndexedDB store.
   type ThemePref = 'light' | 'dark' | 'system';
   const [themePref, setThemePref] = useState<ThemePref>(() => {
-    const stored = localStorage.getItem('theme-pref');
-    return stored === 'light' || stored === 'dark' ? stored : 'system';
+    try {
+      const stored = localStorage.getItem('theme-pref');
+      return stored === 'light' || stored === 'dark' ? stored : 'system';
+    } catch { return 'system'; }
   });
 
   useEffect(() => {
@@ -277,7 +281,7 @@ export default function App() {
       root.dataset.theme = themePref;
       root.style.colorScheme = themePref;
     }
-    localStorage.setItem('theme-pref', themePref);
+    try { localStorage.setItem('theme-pref', themePref); } catch { /* storage blocked or full */ }
   }, [themePref]);
 
   // App-wide micro-haptic tap feedback: fires a light pulse on any real
@@ -444,7 +448,7 @@ export default function App() {
 
   // Command Palette & Trip Wrapped States
   const [showCommandPalette, setShowCommandPalette] = useState(false);
-  const [showCmdKHint, setShowCmdKHint] = useState(() => !localStorage.getItem('tt-cmdk-hint-seen'));
+  const [showCmdKHint, setShowCmdKHint] = useState(() => { try { return !localStorage.getItem('tt-cmdk-hint-seen'); } catch { return false; } });
   const [showTripWrapped, setShowTripWrapped] = useState(false);
   const [showTripActionSheet, setShowTripActionSheet] = useState(false);
   const [showAchievements, setShowAchievements] = useState(false);
@@ -2007,7 +2011,7 @@ export default function App() {
                   onClick={() => {
                     setShowCommandPalette(true);
                     if (showCmdKHint) {
-                      localStorage.setItem('tt-cmdk-hint-seen', '1');
+                      try { localStorage.setItem('tt-cmdk-hint-seen', '1'); } catch { /* storage blocked or full */ }
                       setShowCmdKHint(false);
                     }
                   }}
@@ -2142,6 +2146,7 @@ export default function App() {
                 : { display: 'none' }
               }
             >
+              <TabErrorBoundary label="Summary">
               <div className="fade-in">
                 {activeTrip && visibleMembers.length > 0 && (
                   <BalancesSettlements
@@ -2185,6 +2190,7 @@ export default function App() {
                   }}
                 />
               </div>
+              </TabErrorBoundary>
             </div>
 
             <div
@@ -2195,6 +2201,7 @@ export default function App() {
                 : { display: 'none' }
               }
             >
+              <TabErrorBoundary label="Members">
               <div className="fade-in">
               {hasVisitedMembers && (
               <Suspense fallback={<div className="skeleton" style={{ height: '200px', borderRadius: '14px' }} />}>
@@ -2225,6 +2232,7 @@ export default function App() {
               </Suspense>
               )}
               </div>
+              </TabErrorBoundary>
             </div>
 
             <div
@@ -2235,6 +2243,7 @@ export default function App() {
                 : { display: 'none' }
               }
             >
+              <TabErrorBoundary label="Ledger">
               <div className="fade-in" style={{ paddingBottom: '100px' }}>
               <ExpenseList
                 trip={activeTrip}
@@ -2280,6 +2289,7 @@ export default function App() {
                 dirtyExpenseIds={dirtyExpenseIds}
               />
               </div>
+              </TabErrorBoundary>
             </div>
 
             <div
@@ -2290,6 +2300,7 @@ export default function App() {
                 : { display: 'none' }
               }
             >
+              <TabErrorBoundary label="Notes & Checklist">
               <div className="fade-in">
                 {activeTrip && hasVisitedNotes && (
                   <Suspense fallback={<div className="skeleton" style={{ height: '200px', borderRadius: '14px' }} />}>
@@ -2301,6 +2312,7 @@ export default function App() {
                   </Suspense>
                 )}
               </div>
+              </TabErrorBoundary>
             </div>
 
             <div
@@ -2311,6 +2323,7 @@ export default function App() {
                 : { display: 'none' }
               }
             >
+              <TabErrorBoundary label="Settings">
               <div className="fade-in">
               {hasVisitedSettings && (
               <Suspense fallback={<div className="skeleton" style={{ height: '200px', borderRadius: '14px' }} />}>
@@ -2356,6 +2369,7 @@ export default function App() {
               </Suspense>
               )}
               </div>
+              </TabErrorBoundary>
             </div>
 
           </main>
@@ -3007,7 +3021,7 @@ export default function App() {
               style={{ padding: '6px 8px', fontSize: '12px' }}
               onClick={() => {
                 triggerHaptic('light');
-                localStorage.setItem(`tt_bio_prompt_dismissed_${userId}`, '1');
+                try { localStorage.setItem(`tt_bio_prompt_dismissed_${userId}`, '1'); } catch { /* storage blocked or full */ }
                 setShowBioEnrollPrompt(false);
               }}
               aria-label="Dismiss"

@@ -298,7 +298,7 @@ export function TripsListScreen({
           title="Profile & Settings"
         >
           {userAvatarUrl ? (
-            <img src={userAvatarUrl} alt="" referrerPolicy="no-referrer" loading="lazy" decoding="async" width={40} height={40} />
+            <img src={userAvatarUrl} alt="" referrerPolicy="no-referrer" loading="lazy" decoding="async" width={40} height={40} onError={(e) => { e.currentTarget.style.display = 'none'; }} />
           ) : (
             <span style={{ background: avatarColorForName(userDisplayName || 'Me') }}>
               {initial(userDisplayName || 'Me')}
@@ -729,7 +729,7 @@ export function TripsListScreen({
                         <div className="pp-avatars">
                           {shown.map((m) =>
                             m.avatarUrl ? (
-                              <img key={m.id} src={m.avatarUrl} alt={m.name} title={m.name} className="pp-avatar" referrerPolicy="no-referrer" loading="lazy" decoding="async" width={24} height={24} />
+                              <img key={m.id} src={m.avatarUrl} alt={m.name} title={m.name} className="pp-avatar" referrerPolicy="no-referrer" loading="lazy" decoding="async" width={24} height={24} onError={(e) => { e.currentTarget.style.display = 'none'; }} />
                             ) : (
                               <span key={m.id} className="pp-avatar" style={{ background: avatarColorForName(m.name) }} title={m.name}>{initial(m.name)}</span>
                             )

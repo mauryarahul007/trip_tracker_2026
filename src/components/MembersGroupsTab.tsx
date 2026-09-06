@@ -430,28 +430,29 @@ export function MembersGroupsTab({
       selectedLinkedUserId || (matchingExistingPerson ? matchingExistingPerson.linkedUserId : null);
 
     setIsSavingMember(true);
-    let res: { success: boolean; error?: string };
     try {
-      res = await onSaveMember(
+      const res = await onSaveMember(
         newMemberName,
         editingMember ? editingMember.id : null,
         editingMember ? undefined : linkedIdToUse
       );
+      if (res.success) {
+        setNewMemberName('');
+        setSelectedLinkedUserId(null);
+        setEditingMember(null);
+        setMemberFormError('');
+        if (!addAnother) {
+          setShowAddForm(false);
+        } else {
+          memberInputRef.current?.focus();
+        }
+      } else if (res.error) {
+        setMemberFormError(res.error);
+      }
+    } catch {
+      setMemberFormError('Something went wrong, please try again.');
     } finally {
       setIsSavingMember(false);
-    }
-    if (res.success) {
-      setNewMemberName('');
-      setSelectedLinkedUserId(null);
-      setEditingMember(null);
-      setMemberFormError('');
-      if (!addAnother) {
-        setShowAddForm(false);
-      } else {
-        memberInputRef.current?.focus();
-      }
-    } else if (res.error) {
-      setMemberFormError(res.error);
     }
   };
 
@@ -500,21 +501,22 @@ export function MembersGroupsTab({
     if (isSavingGroup) return;
     const memberIds = Object.keys(selectedGroupMembers).filter((id) => selectedGroupMembers[id]);
     setIsSavingGroup(true);
-    let res: { success: boolean; error?: string };
     try {
-      res = await onSaveGroup(newGroupName, memberIds, editingGroup ? editingGroup.id : null);
+      const res = await onSaveGroup(newGroupName, memberIds, editingGroup ? editingGroup.id : null);
+      if (res.success) {
+        setNewGroupName('');
+        setSelectedGroupMembers({});
+        setEditingGroup(null);
+        setGroupFormError('');
+        setIsGroupNameAuto(true);
+        setShowAddGroup(false);
+      } else if (res.error) {
+        setGroupFormError(res.error);
+      }
+    } catch {
+      setGroupFormError('Something went wrong, please try again.');
     } finally {
       setIsSavingGroup(false);
-    }
-    if (res.success) {
-      setNewGroupName('');
-      setSelectedGroupMembers({});
-      setEditingGroup(null);
-      setGroupFormError('');
-      setIsGroupNameAuto(true);
-      setShowAddGroup(false);
-    } else if (res.error) {
-      setGroupFormError(res.error);
     }
   };
 
@@ -864,7 +866,7 @@ export function MembersGroupsTab({
                 <div className="lt-card">
                   <div className="lt-status" />
                   {member.avatarUrl ? (
-                    <img src={member.avatarUrl} alt="" className="lt-initials" referrerPolicy="no-referrer" loading="lazy" decoding="async" />
+                    <img src={member.avatarUrl} alt="" className="lt-initials" referrerPolicy="no-referrer" loading="lazy" decoding="async" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
                   ) : (
                     <div className="lt-initials" style={{ background: avatarColorForName(member.name) }}>{initial(member.name)}</div>
                   )}

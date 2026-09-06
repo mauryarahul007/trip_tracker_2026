@@ -231,7 +231,7 @@ export function ReceiptScannerModal({
               </div>
               {imagePreview && (
                 <div style={{ marginTop: '16px', maxWidth: '240px', margin: '16px auto 0', borderRadius: '12px', overflow: 'hidden', border: '1px solid var(--border-color)' }}>
-                  <img src={imagePreview} alt="Receipt Scan" style={{ width: '100%', display: 'block' }} />
+                  <img src={imagePreview} alt="Receipt Scan" style={{ width: '100%', display: 'block' }} onError={(e) => { e.currentTarget.style.display = 'none'; }} />
                 </div>
               )}
             </div>
