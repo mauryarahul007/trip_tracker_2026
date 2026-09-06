@@ -131,7 +131,6 @@ interface SettingsViewProps {
   onOpenTripWrapped?: () => void;
   onOpenAchievements?: () => void;
   onNavigateToBalances?: () => void;
-  onOpenTravelPasses?: () => void;
   onOpenFxRates?: () => void;
   onOpenTravelDossier?: () => void;
   onOpenMediaGallery?: () => void;
@@ -175,7 +174,6 @@ export function SettingsView({
   onOpenAchievements,
   onNavigateToBalances,
   baseCurrency,
-  onOpenTravelPasses,
   onOpenFxRates,
   onOpenTravelDossier,
   onOpenMediaGallery,
@@ -1953,31 +1951,6 @@ export function SettingsView({
                 </div>
               </button>
             )}
-
-            {onOpenTravelPasses && (
-              <button
-                type="button"
-                className="settings-row-item"
-                onClick={() => {
-                  triggerHaptic('light');
-                  onOpenTravelPasses();
-                }}
-              >
-                <div className="settings-row-left">
-                  <div className="settings-squircle squircle-blue-glow">
-                    <span style={{ fontSize: '18px' }}>🎫</span>
-                  </div>
-                  <div className="settings-row-texts">
-                    <span className="settings-row-title">Travel Pass &amp; Ticket Wallet</span>
-                    <span className="settings-row-subtitle">Boarding passes, train PNRs &amp; offline QR</span>
-                  </div>
-                </div>
-                <div className="settings-row-right">
-                  <span className="settings-badge-pill" style={{ background: 'rgba(59, 130, 246, 0.18)', color: '#3B82F6', fontWeight: 700 }}>PASSES</span>
-                  <IconChevronRight size={16} />
-                </div>
-              </button>
-            )}
           </div>
         </div>
 
@@ -2141,12 +2114,11 @@ export function SettingsView({
     'close', 'reopen', 'lock', 'unlock', 'complete', 'completed', 'completion', 'settled', 'unsettled', 'outstanding', 'balances', 'debts', 'post trip', 'finish', 'archive trip'
   );
   const showCsvExport = hasActiveTrip && activeTrip && onExportCsv && matchesSearch('Excel CSV Export', 'spreadsheet', 'download', 'ledger', 'csv', 'sheets');
-  const showTravelPassesSearch = onOpenTravelPasses && matchesSearch('Travel Pass & Ticket Wallet', 'passes', 'ticket', 'boarding', 'pnr', 'hotel', 'wallet');
   const showFxSearch = onOpenFxRates && matchesSearch('Multi-Currency FX Engine', 'rates', 'fx', 'forex', 'currency', 'exchange');
   const showDossierSearch = onOpenTravelDossier && matchesSearch('Travel Dossier & Statement', 'dossier', 'pdf', 'voucher', 'statement', 'report');
   const showSnapshotSearch = onOpenOfflineSnapshot && matchesSearch('Offline Snapshot (.triptracker)', 'snapshot', 'offline', 'backup', 'triptracker');
   const showGallerySearch = onOpenMediaGallery && matchesSearch('Receipts & Memories Gallery', 'gallery', 'photos', 'receipts', 'memories');
-  const showTripGroup = showTripTools || showCloseTrip || showCsvExport || Boolean(showTravelPassesSearch) || Boolean(showFxSearch) || Boolean(showDossierSearch) || Boolean(showSnapshotSearch) || Boolean(showGallerySearch);
+  const showTripGroup = showTripTools || showCloseTrip || showCsvExport || Boolean(showFxSearch) || Boolean(showDossierSearch) || Boolean(showSnapshotSearch) || Boolean(showGallerySearch);
 
   const showAppearance = matchesSearch('Appearance', 'theme', 'dark', 'light', 'night', 'auto', 'color', 'look');
   const showHaptics = matchesSearch('Tactile Haptics', 'vibrate', 'vibration', 'haptic', 'feedback', 'touch', 'buzz');
@@ -2261,20 +2233,6 @@ export function SettingsView({
                 onClick={() => {
                   triggerHaptic('light');
                   onOpenAchievements();
-                }}
-              />
-            )}
-
-            {onOpenTravelPasses && (
-              <SettingsCell
-                icon={<span style={{ fontSize: '18px' }}>🎫</span>}
-                iconGlow="blue"
-                title="Travel Pass & Ticket Wallet"
-                subtitle="Boarding passes, train PNRs, hotel bookings & offline QR"
-                badge="WALLET"
-                onClick={() => {
-                  triggerHaptic('light');
-                  onOpenTravelPasses();
                 }}
               />
             )}

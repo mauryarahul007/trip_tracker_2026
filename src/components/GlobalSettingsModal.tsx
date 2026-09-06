@@ -46,7 +46,6 @@ type Props = {
   onOpenShareTrip?: () => void;
   onNavigateToBalances?: () => void;
   baseCurrency?: string;
-  onOpenTravelPasses?: () => void;
   onOpenFxRates?: () => void;
   onOpenTravelDossier?: () => void;
   onOpenMediaGallery?: () => void;
@@ -87,7 +86,6 @@ export function GlobalSettingsModal({
   isAdmin = true,
   onOpenShareTrip,
   baseCurrency,
-  onOpenTravelPasses,
   onOpenFxRates,
   onOpenTravelDossier,
   onOpenMediaGallery,
@@ -140,7 +138,6 @@ export function GlobalSettingsModal({
           </div>
         </header>
 
-
         <SettingsView
           categories={effectiveCategories}
           activeTripExpenses={effectiveExpenses}
@@ -176,7 +173,6 @@ export function GlobalSettingsModal({
           onOpenShareTrip={onOpenShareTrip}
           onNavigateToBalances={onNavigateToBalances}
           baseCurrency={baseCurrency}
-          onOpenTravelPasses={onOpenTravelPasses}
           onOpenFxRates={onOpenFxRates}
           onOpenTravelDossier={onOpenTravelDossier}
           onOpenMediaGallery={onOpenMediaGallery}

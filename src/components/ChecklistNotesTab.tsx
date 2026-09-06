@@ -16,13 +16,15 @@ import { triggerHaptic } from '../utils/haptics';
 import { SwipeableRow } from './SwipeableRow';
 import { ConfettiBurst } from './ConfettiBurst';
 import { SmartPackingAssistantModal } from './SmartPackingAssistantModal';
+import { TravelPassWalletView } from './TravelPassWalletView';
 
 type Props = {
   trip: Trip;
   members: Member[];
+  isAdmin?: boolean;
 };
 
-type ViewMode = 'checklist' | 'notes';
+type ViewMode = 'passes' | 'notes' | 'checklist';
 type ChecklistCategory = 'all' | 'packing' | 'documents' | 'medical' | 'general';
 type NoteCategory = 'all' | 'wifi' | 'stay' | 'transport' | 'contact' | 'general';
 
@@ -43,7 +45,7 @@ const NOTE_CATEGORIES: { id: NoteCategory; label: string; icon: string }[] = [
   { id: 'general', label: 'General Info', icon: '💡' },
 ];
 
-export function ChecklistNotesTab({ trip, members }: Props) {
+export function ChecklistNotesTab({ trip, members, isAdmin }: Props) {
   // Always select live trip from store to react to changes
   const liveTrip = useTripStore((s) => s.trips.find((t) => t.id === trip.id)) || trip;
   const {
@@ -55,9 +57,13 @@ export function ChecklistNotesTab({ trip, members }: Props) {
     addTripNote,
     updateTripNote,
     deleteTripNote,
+    saveTravelPass,
+    deleteTravelPass,
   } = useTripStore();
 
-  const [viewMode, setViewMode] = useState<ViewMode>('checklist');
+  const [viewMode, setViewMode] = useState<ViewMode>(
+    (liveTrip.passes && liveTrip.passes.length > 0) ? 'passes' : 'checklist'
+  );
   const [checklistFilter, setChecklistFilter] = useState<ChecklistCategory>('all');
   const [noteFilter, setNoteFilter] = useState<NoteCategory>('all');
   const [isPackingAssistantOpen, setIsPackingAssistantOpen] = useState(false);
@@ -91,6 +97,7 @@ export function ChecklistNotesTab({ trip, members }: Props) {
   // Copy feedback state
   const [copiedNoteId, setCopiedNoteId] = useState<string | null>(null);
 
+  const passes = liveTrip.passes || [];
   const checklist = liveTrip.checklist || [];
   const notes = liveTrip.notes || [];
 
@@ -308,27 +315,23 @@ export function ChecklistNotesTab({ trip, members }: Props) {
   };
 
   return (
-    <div className="checklist-notes-tab-root" role="region" aria-label="Collaborative Checklist & Travel Notes">
+    <div className="checklist-notes-tab-root" role="region" aria-label="Collaborative Checklist, Travel Passes & Notes">
       {/* Top Segmented Controls */}
       <div className="tab-segmented-header">
         <div className="tab-segmented-control" role="tablist">
           <button
             type="button"
             role="tab"
-            aria-selected={viewMode === 'checklist'}
-            className={`tab-segment-btn ${viewMode === 'checklist' ? 'active' : ''}`}
+            aria-selected={viewMode === 'passes'}
+            className={`tab-segment-btn ${viewMode === 'passes' ? 'active' : ''}`}
             onClick={() => {
               triggerHaptic('light');
-              setViewMode('checklist');
+              setViewMode('passes');
             }}
           >
-            <IconClipboardList size={18} />
-            <span>Checklist</span>
-            {totalCount > 0 && (
-              <span className="segment-badge">
-                {completedCount}/{totalCount}
-              </span>
-            )}
+            <span style={{ fontSize: '15px' }}>🎫</span>
+            <span>Passes</span>
+            {passes.length > 0 && <span className="segment-badge">{passes.length}</span>}
           </button>
           <button
             type="button"
@@ -340,15 +343,48 @@ export function ChecklistNotesTab({ trip, members }: Props) {
               setViewMode('notes');
             }}
           >
-            <IconPin size={18} />
-            <span>Travel Notes</span>
+            <IconPin size={17} />
+            <span>Notes</span>
             {notes.length > 0 && <span className="segment-badge">{notes.length}</span>}
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={viewMode === 'checklist'}
+            className={`tab-segment-btn ${viewMode === 'checklist' ? 'active' : ''}`}
+            onClick={() => {
+              triggerHaptic('light');
+              setViewMode('checklist');
+            }}
+          >
+            <IconClipboardList size={17} />
+            <span>Checklist</span>
+            {totalCount > 0 && (
+              <span className="segment-badge">
+                {completedCount}/{totalCount}
+              </span>
+            )}
           </button>
         </div>
       </div>
 
-      {/* Instant In-Tab Search Bar */}
-      {(checklist.length > 0 || notes.length > 0) && (
+      {/* 0. TRAVEL PASSES & TICKET WALLET VIEW */}
+      {viewMode === 'passes' && (
+        <TravelPassWalletView
+          trip={liveTrip}
+          members={members}
+          onSavePass={async (pass) => {
+            await saveTravelPass(liveTrip.id, pass);
+          }}
+          onDeletePass={async (passId) => {
+            await deleteTravelPass(liveTrip.id, passId);
+          }}
+          isAdmin={isAdmin}
+        />
+      )}
+
+      {/* Instant In-Tab Search Bar (for Checklist & Notes) */}
+      {viewMode !== 'passes' && (checklist.length > 0 || notes.length > 0) && (
         <div style={{ marginBottom: '12px' }}>
           <div className="input-icon-wrap" style={{ position: 'relative', width: '100%' }}>
             <IconSearch

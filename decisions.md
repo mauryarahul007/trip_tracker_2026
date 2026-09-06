@@ -2204,6 +2204,34 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - Client-side PDF text extraction using `unpdf` operates 100% on-device, preserving traveler privacy and avoiding cloud API costs, but requires standard digital text in the PDF (scanned, image-only PDFs without an embedded OCR text layer will attach as a document without auto-populating fields).
 
+---
+
+## 120. Unified Passes & Notes Hub (Option 1) & Removal of Travel Wallet from Settings (v3.4.3)
+* **Context:**
+  - Previously, travel passes (boarding passes, train tickets, hotel vouchers, offline QR codes) lived in a separate modal launched from Settings (`Settings -> This Trip -> Travel Pass & Ticket Wallet`).
+  - Travelers coordinate essential trip documentation (packing lists, confirmation notes, Wi-Fi codes, flight tickets, PNRs) together before and during transit. Stashing ticket passes inside Settings made them hard to locate on-the-go and disconnected from trip notes and checklists.
+  - The user requested Option 1: Unifying Travel Passes with the Notes & Checklist section, and explicitly instructed: *"If we are doing this, then dont keep travel wallet in settings"*.
+* **Decision:**
+  1. **Unified Passes, Notes & Checklist Hub (`src/components/ChecklistNotesTab.tsx`):**
+     - Upgraded the 2-segment switcher into a unified 3-segment pill control: `[ 🎫 Passes (N) ]` | `[ 📌 Notes (N) ]` | `[ 📋 Checklist (N) ]`.
+     - When passes exist for the trip, the tab defaults to `passes` for quick boarding pass and ticket retrieval.
+     - Embedded `TravelPassWalletView` inline directly inside the tab body, removing the need for modal dialog overlays.
+     - Live counter badges display the number of saved passes, notes, and checklist completion progress.
+     - Search filter bar is scoped to notes and checklist items so wallet-specific carrier filters and segment pickers remain undisturbed.
+  2. **Navigation Bar Update (`src/components/NavTabs.tsx`):**
+     - Updated bottom navigation tab label from "Notes" to "Passes & Notes" with `aria-label="Passes, Notes & Checklist"`.
+  3. **Complete Removal of Travel Wallet from Settings (`SettingsView.tsx`, `SettingsTab.tsx`, `GlobalSettingsModal.tsx`, `App.tsx`):**
+     - Removed the "Travel Pass & Ticket Wallet" row item from `trip-tools` (Trip Tools & Story).
+     - Removed the "Travel Pass & Ticket Wallet" settings cell from `trip-settings` (This Trip).
+     - Removed `showTravelPassesSearch` and search keyword matches from the Settings search filter.
+     - Cleaned up `onOpenTravelPasses` props, state, and modal wiring from `SettingsView`, `SettingsTab`, `GlobalSettingsModal`, and `App.tsx`.
+     - In the Command Palette (`Ctrl+K`), selecting "Digital Travel Pass & Ticket Wallet" now smoothly routes directly to the `notes` tab (`setActiveTab('notes')`).
+  4. **Component Modularization & Backward Compatibility (`TravelPassWalletModal.tsx`):**
+     - Refactored `TravelPassWalletModal.tsx` into a lightweight, headless wrapper delegating to `TravelPassWalletView`, eliminating duplicate code while maintaining backward compatibility.
+* **Trade-offs Accepted:**
+  - Removing Travel Wallet from Settings eliminates redundancy and consolidates trip logistics into one primary bottom navigation tab ("Passes & Notes"). Travelers accessing Passes no longer need to dig through Settings menus.
+
+
 
 
 

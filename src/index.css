@@ -9539,7 +9539,7 @@ textarea.input-field {
   border: 1px solid var(--border-color);
   gap: 4px;
   width: 100%;
-  max-width: 440px;
+  max-width: min(520px, 100%);
 }
 
 .tab-segment-btn {
@@ -9547,17 +9547,18 @@ textarea.input-field {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  padding: 8px 14px;
+  gap: 6px;
+  padding: 8px 10px;
   border-radius: var(--border-radius-sm);
   border: none;
   background: transparent;
   color: var(--text-secondary);
   font-family: var(--font-family-title);
-  font-size: 0.88rem;
+  font-size: 0.84rem;
   font-weight: 600;
   cursor: pointer;
   transition: var(--transition-smooth);
+  white-space: nowrap;
 }
 
 .tab-segment-btn.active {

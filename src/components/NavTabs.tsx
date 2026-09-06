@@ -217,10 +217,10 @@ export function NavTabs({ activeTab, setActiveTab, onAddExpense, onAddMember, ex
         onPointerDown={prefetchNotes}
         onMouseEnter={prefetchNotes}
         onClick={() => goTo('notes')}
-        aria-label="Notes & Checklist"
+        aria-label="Passes, Notes & Checklist"
       >
         <span className="nav-tab-icon"><IconClipboardList size={26} /></span>
-        <span>Notes</span>
+        <span>Passes &amp; Notes</span>
       </button>
     </nav>
 

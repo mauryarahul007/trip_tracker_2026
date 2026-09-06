@@ -112,9 +112,6 @@ const TripMediaGalleryModal = lazy(lazyImport(() =>
 const TravelDossierModal = lazy(lazyImport(() =>
   import('./components/TravelDossierModal').then((m) => ({ default: m.TravelDossierModal }))
 ));
-const TravelPassWalletModal = lazy(lazyImport(() =>
-  import('./components/TravelPassWalletModal').then((m) => ({ default: m.TravelPassWalletModal }))
-));
 const FxRatesModal = lazy(lazyImport(() =>
   import('./components/FxRatesModal').then((m) => ({ default: m.FxRatesModal }))
 ));
@@ -177,8 +174,6 @@ export default function App() {
     importDatabase,
     clearDatabase,
     loadDemoTrip,
-    saveTravelPass,
-    deleteTravelPass,
     setTripFxConfig,
   } = useTripStore();
 
@@ -459,7 +454,6 @@ export default function App() {
   const [showOfflineSnapshot, setShowOfflineSnapshot] = useState(false);
   const [showMediaGallery, setShowMediaGallery] = useState(false);
   const [showTravelDossier, setShowTravelDossier] = useState(false);
-  const [showTravelPasses, setShowTravelPasses] = useState(false);
   const [showFxRates, setShowFxRates] = useState(false);
   const activePeers = usePeerPresence(activeTripId);
 
@@ -1654,7 +1648,6 @@ export default function App() {
   useHistoryBack(showCommandPalette, () => setShowCommandPalette(false));
   useHistoryBack(showTripWrapped, () => setShowTripWrapped(false));
   useHistoryBack(showShortcutsModal, () => setShowShortcutsModal(false));
-  useHistoryBack(showTravelPasses, () => setShowTravelPasses(false));
   useHistoryBack(showFxRates, () => setShowFxRates(false));
 
   // Escape key — the desktop equivalent of the back-gesture wiring above,
@@ -1671,7 +1664,6 @@ export default function App() {
   useEscapeKey(showCommandPalette, () => setShowCommandPalette(false));
   useEscapeKey(showTripWrapped, () => setShowTripWrapped(false));
   useEscapeKey(showShortcutsModal, () => setShowShortcutsModal(false));
-  useEscapeKey(showTravelPasses, () => setShowTravelPasses(false));
   useEscapeKey(showFxRates, () => setShowFxRates(false));
 
   // Loading view
@@ -2260,6 +2252,7 @@ export default function App() {
                   <ChecklistNotesTab
                     trip={activeTrip}
                     members={visibleMembers}
+                    isAdmin={isAdmin}
                   />
                   </Suspense>
                 )}
@@ -2311,7 +2304,6 @@ export default function App() {
                 onOpenAchievements={() => setShowAchievements(true)}
                 onNavigateToBalances={() => setActiveTab('expenses')}
                 baseCurrency={activeTrip?.baseCurrency || ''}
-                onOpenTravelPasses={() => setShowTravelPasses(true)}
                 onOpenFxRates={() => setShowFxRates(true)}
                 onOpenTravelDossier={() => setShowTravelDossier(true)}
                 onOpenMediaGallery={() => setShowMediaGallery(true)}
@@ -2536,7 +2528,6 @@ export default function App() {
             activeTripExpenses={activeTripExpenses}
             onAddCategory={handleAddCategory}
             onDeleteCategory={handleDeleteCategory}
-            onOpenTravelPasses={() => setShowTravelPasses(true)}
             onOpenFxRates={() => setShowFxRates(true)}
             onOpenTravelDossier={() => setShowTravelDossier(true)}
             onOpenMediaGallery={() => setShowMediaGallery(true)}
@@ -2627,7 +2618,7 @@ export default function App() {
             title: 'Digital Travel Pass & Ticket Wallet',
             subtitle: 'Boarding passes, train tickets, hotel vouchers & QR codes',
             icon: <span style={{ fontSize: '15px' }}>🎫</span>,
-            action: () => setShowTravelPasses(true),
+            action: () => setActiveTab('notes'),
           });
           suggestions.push({
             id: 'smart-fx',
@@ -2793,25 +2784,6 @@ export default function App() {
             categories={categories}
             balances={balances}
             settlements={transfers}
-          />
-        </Suspense>
-      )}
-
-      {/* Digital Travel Pass & Ticket Wallet Modal */}
-      {showTravelPasses && activeTrip && (
-        <Suspense fallback={null}>
-          <TravelPassWalletModal
-            isOpen={showTravelPasses}
-            onClose={() => setShowTravelPasses(false)}
-            trip={activeTrip}
-            members={members}
-            isAdmin={isAdmin}
-            onSavePass={async (pass) => {
-              await saveTravelPass(activeTrip.id, pass);
-            }}
-            onDeletePass={async (passId) => {
-              await deleteTravelPass(activeTrip.id, passId);
-            }}
           />
         </Suspense>
       )}
