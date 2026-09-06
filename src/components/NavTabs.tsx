@@ -1,7 +1,6 @@
 import { useRef, useState, useEffect, useLayoutEffect, useCallback } from 'react';
 import { IconExpenses, IconMembers, IconReceipt, IconClipboardList, IconPlus } from './Icons';
 import { triggerHaptic } from '../utils/haptics';
-import { withViewTransition } from '../utils/viewTransition';
 import { FlightAddExpenseTooltip, STORAGE_KEY } from './FlightAddExpenseTooltip';
 
 type Tab = 'expenses' | 'ledger' | 'members' | 'notes' | 'settings';
@@ -48,7 +47,12 @@ export function NavTabs({ activeTab, setActiveTab, onAddExpense, onAddMember, ex
   const goTo = (tab: Tab) => {
     if (tab === activeTab) return;
     triggerHaptic('light');
-    withViewTransition(() => setActiveTab(tab));
+    // setActiveTab already starts its own view transition (see App.tsx) --
+    // wrapping it in withViewTransition here nested a second
+    // startViewTransition call inside the first, which the browser
+    // immediately aborts/skips, throwing "Transition was aborted"/
+    // "Transition was skipped" unhandled rejections on every tab tap.
+    setActiveTab(tab);
   };
 
   // Warms the ExpenseForm/SettingsTab lazy chunk on hover/press intent, so

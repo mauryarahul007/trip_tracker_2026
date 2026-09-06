@@ -2330,6 +2330,20 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - Purging legacy passes in the background issues non-blocking API calls to Supabase on first startup for trips with legacy PDF data URLs, completing in the background without affecting user interactions.
 
+---
+
+## 125. Bottom-Nav Nested View-Transition Crash & Safari Chunk-Reload Gap (v3.4.8)
+* **Context:**
+  - Automated crash reports (BUG-143, 144, 153, 154) showed recurring unhandled rejections ("Transition was aborted because of invalid state" / "Transition was skipped") on `#nav-1`/`#nav-2`/`#nav-3`, i.e. every bottom-nav tab tap.
+  - Root cause: `NavTabs.tsx`'s `goTo()` wrapped `setActiveTab(tab)` in `withViewTransition(...)`, but `setActiveTab` (`App.tsx`) already starts its own `document.startViewTransition()` internally. Starting a second view transition from inside another transition's still-running callback makes the browser immediately abort/skip it, and only the *outer* wrapper's `ready`/`finished` promises were caught -- the inner nested call's rejection surfaced as an uncaught crash.
+  - Separately, BUG-145 ("Importing a module script failed.") was a genuine gap in `src/utils/lazyImport.ts`'s stale-chunk recovery: the regex recognized Chrome's and Firefox's wording for a dynamic-`import()` failure after a deploy but not Safari/WebKit's distinct message, so Safari users never got the single-reload recovery and hit the ErrorBoundary crash instead.
+  - The remaining open bugs (BUG-146 through BUG-152, minus 145) were stale `localhost:5173` dev-crash-handler captures from mid-edit hot-reload sessions (`usePeerPresence.ts` presence-callback ordering, an undefined `OverflowMenu` reference) that do not reproduce against the current committed code -- verified by reading the current source and confirming a clean `tsc --noEmit` project-wide.
+* **Decision:**
+  1. **`src/components/NavTabs.tsx`:** Removed the redundant `withViewTransition` wrapper around `setActiveTab(tab)` in `goTo()` -- `setActiveTab` already owns its own transition, so callers just call it directly.
+  2. **`src/utils/lazyImport.ts`:** Extended `CHUNK_LOAD_FAILURE` to also match `/importing a module script failed/i` so Safari gets the same reload-and-recover behavior as Chrome/Firefox.
+* **Trade-offs Accepted:**
+  - None -- both fixes are strict corrections of unintended double-invocation / incomplete pattern matching, not new behavior.
+
 
 
 

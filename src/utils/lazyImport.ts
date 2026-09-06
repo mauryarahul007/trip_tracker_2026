@@ -8,7 +8,7 @@
 // to diagnose crash a moment later. Reloads at most once per tab session;
 // if that doesn't fix it, the error surfaces normally rather than looping.
 const RELOAD_FLAG = 'tt-chunk-reload';
-const CHUNK_LOAD_FAILURE = /failed to fetch dynamically imported module|error loading dynamically imported module/i;
+const CHUNK_LOAD_FAILURE = /failed to fetch dynamically imported module|error loading dynamically imported module|importing a module script failed/i;
 
 export function lazyImport<T>(importer: () => Promise<T>): () => Promise<T> {
   return () =>
