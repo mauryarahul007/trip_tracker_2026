@@ -1,9 +1,10 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import type { Expense, Member, Category } from '../types';
 import { formatAmount } from '../utils/currency';
 import { triggerHaptic } from '../utils/haptics';
 import { useEscapeKey } from '../utils/useEscapeKey';
 import { useHistoryBack } from '../utils/useHistoryBack';
+import { getReceiptSignedUrl } from '../services/tripApi';
 
 interface Props {
   isOpen: boolean;
@@ -34,6 +35,7 @@ export function TripMediaGalleryModal({
   const [selectedMember, setSelectedMember] = useState<string>('all');
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [zoomLevel, setZoomLevel] = useState<number>(1);
+  const [signedUrls, setSignedUrls] = useState<Record<string, string>>({});
 
   useHistoryBack(isOpen && lightboxIndex !== null, () => setLightboxIndex(null));
   useHistoryBack(isOpen && lightboxIndex === null, onClose);
@@ -64,6 +66,31 @@ export function TripMediaGalleryModal({
     });
   }, [mediaItems, selectedCategory, selectedMember]);
 
+  useEffect(() => {
+    if (!isOpen) return;
+    const pending = mediaItems.filter(
+      (item) => !item.expense.receiptImage && item.expense.receiptPath && !signedUrls[item.id]
+    );
+    if (pending.length === 0) return;
+    let cancelled = false;
+    (async () => {
+      for (const item of pending) {
+        try {
+          const url = await getReceiptSignedUrl(item.expense.receiptPath as string);
+          if (!cancelled) setSignedUrls((prev) => ({ ...prev, [item.id]: url }));
+        } catch (err) {
+          console.warn('Failed to resolve receipt url for', item.id, err);
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen, mediaItems, signedUrls]);
+
+  const getDisplayUrl = (item: MediaItem): string | undefined =>
+    item.expense.receiptImage || signedUrls[item.id];
+
   if (!isOpen) return null;
 
   const currentLightboxItem = lightboxIndex !== null ? filteredItems[lightboxIndex] : null;
@@ -86,18 +113,20 @@ export function TripMediaGalleryModal({
 
   const handleShare = async (item: MediaItem) => {
     triggerHaptic('light');
+    const url = getDisplayUrl(item);
+    if (!url) return;
     if (navigator.share) {
       try {
         await navigator.share({
           title: `${item.expense.title} - Receipt`,
           text: `${item.expense.title} (${currencySymbol} ${item.expense.amount.toFixed(2)}) from ${tripName}`,
-          url: item.url,
+          url,
         });
       } catch (err) {
         console.warn('Share cancelled or failed', err);
       }
     } else {
-      window.open(item.url, '_blank');
+      window.open(url, '_blank');
     }
   };
 
@@ -215,13 +244,19 @@ export function TripMediaGalleryModal({
                   onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.02)'; }}
                   onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}
                 >
-                  <img
-                    src={item.url}
-                    alt={item.expense.title}
-                    loading="lazy"
-                    decoding="async"
-                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                  />
+                  {getDisplayUrl(item) ? (
+                    <img
+                      src={getDisplayUrl(item)}
+                      alt={item.expense.title}
+                      loading="lazy"
+                      decoding="async"
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    />
+                  ) : (
+                    <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px', opacity: 0.5 }}>
+                      ⏳
+                    </div>
+                  )}
                   <div
                     style={{
                       position: 'absolute',
@@ -328,7 +363,7 @@ export function TripMediaGalleryModal({
               }}
             >
               <img
-                src={currentLightboxItem.url}
+                src={getDisplayUrl(currentLightboxItem)}
                 alt={currentLightboxItem.expense.title}
                 style={{
                   maxHeight: '70vh',
