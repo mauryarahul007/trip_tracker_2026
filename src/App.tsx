@@ -73,7 +73,7 @@ import { InAppNotificationBanner } from './components/InAppNotificationBanner';
 import { FitHeading } from './components/FitHeading';
 import { triggerHaptic } from './utils/haptics';
 import { useEscapeKey } from './utils/useEscapeKey';
-import { IconCalendar, IconChevronLeft, IconChevronDown, IconChevronUp, IconShield, IconSearch, IconPlus, IconWallet, IconMapPin, IconCheck, IconMembers, IconClose, IconShare, IconSettings, IconReceipt } from './components/Icons';
+import { IconCalendar, IconChevronLeft, IconChevronDown, IconChevronUp, IconShield, IconSearch, IconPlus, IconWallet, IconMapPin, IconCheck, IconMembers, IconClose, IconShare, IconSettings, IconBell, IconEdit } from './components/Icons';
 import { ActionSheet } from './components/common/ActionSheet';
 import { formatDateRange } from './utils/dateRange';
 import { useScrollLock } from './utils/useScrollLock';
@@ -437,6 +437,10 @@ export default function App() {
   const [showGlobalSettings, setShowGlobalSettings] = useState(false);
   const [bypassEnvWarning, setBypassEnvWarning] = useState(false);
   const isSuperadmin = useTripStore((s) => s.isSuperadmin);
+  const setTripMuted = useTripStore((s) => s.setTripMuted);
+  const isActiveTripMuted = useTripStore((s) =>
+    activeTripId ? s.isTripMuted(activeTripId) : false
+  );
   const [isTravelerPreview, setIsTravelerPreview] = useState(false);
   const [adminActiveTab, setAdminActiveTab] = useState<AdminTab>('command');
 
@@ -2461,35 +2465,38 @@ export default function App() {
                 ]
               : []),
             {
-              id: 'settle-up',
-              label: 'Settle Up & Balances',
-              subtitle: 'View member balances, debt settlements & pay vouchers',
-              icon: <IconReceipt size={18} />,
+              id: 'mute',
+              label: isActiveTripMuted ? 'Unmute Trip Alerts' : 'Mute Trip Alerts',
+              subtitle: isActiveTripMuted
+                ? 'Turn push notifications back on for this trip'
+                : 'Silence push notifications for this trip',
+              icon: <IconBell size={18} />,
               onClick: () => {
-                setActiveTab('ledger');
+                void setTripMuted(activeTrip.id, !isActiveTripMuted);
+              },
+            },
+            {
+              id: 'edit-trip',
+              label: 'Edit Trip Details',
+              subtitle: 'Name, dates, destination, and route stops',
+              icon: <IconEdit size={18} />,
+              onClick: () => {
+                handleStartEditTrip(activeTrip);
+                withViewTransition(() => {
+                  void selectTrip(null);
+                });
               },
             },
             {
               id: 'settings',
-              label: 'Trip Settings & Details',
-              subtitle: 'Manage members, base currency, and trip status',
+              label: 'Settings',
+              subtitle: 'Preferences, data, help, and this trip tools',
               icon: <IconSettings size={18} />,
               onClick: () => {
                 setHasVisitedSettings(true);
                 setActiveTab('settings');
               },
             },
-            ...(isSuperadmin
-              ? [
-                  {
-                    id: 'superadmin-bugs',
-                    label: 'Superadmin Bug Tracker',
-                    subtitle: 'Open developer triage and defect ledger',
-                    icon: <IconShield size={18} />,
-                    onClick: () => setShowBugTracker(true),
-                  },
-                ]
-              : []),
             {
               id: 'switch-trip',
               label: 'Switch to Another Trip',

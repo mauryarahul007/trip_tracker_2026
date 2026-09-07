@@ -2467,8 +2467,16 @@ This document logs all meaningful technical decisions, library choices, design p
   - Biometric lock, toasts, and real routes (`/privacy`, `/login`, etc.) are not dismissed by the overlay stack.
   - Travel Dossier remains removed from Settings and Share Trip.
 
+---
 
-
+## Header sheet trim + in-app Privacy/Terms (v3.6.1)
+* **Context:** The trip-title ActionSheet duplicated Summary (Settle Up) and exposed Superadmin Bug Tracker to travelers. Separately, Settings → About used `navigate('/privacy'|'/terms')`, which unmounted App and lost the About `screenStack`; Back remounted on Expenses/Summary instead of About.
+* **Decision:**
+  - Header sheet order: Share → Route Map (if stops) → Mute/Unmute → Edit Trip → Settings → Switch Trip. Gallery and Bug Tracker stay Settings-only (Bug Tracker after Super User Login). Bottom nav unchanged.
+  - Extract `PrivacyPolicyContent` / `TermsOfServiceContent` for shared body copy. Public `/privacy` and `/terms` stay thin `LegalPageLayout` wrappers for store/OAuth. From Settings About, open `privacy`/`terms` subScreens with parent `about` so Back pops Privacy → About → Settings home.
+* **Trade-offs Accepted:**
+  - Edit Trip from the header leaves the active trip so the list-screen edit form can show (form is not mounted in-trip).
+  - Public legal URLs remain separate routes; only the Settings entry path stays inside the app shell.
 
 
 

@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef, lazy, Suspense } from 'react';
-import { useNavigate } from 'react-router-dom';
 import type { Category, Expense, Trip } from '../types';
 import type { ConfirmRequest } from './ConfirmDialog';
+import { PrivacyPolicyContent, PRIVACY_POLICY_UPDATED } from './PrivacyPolicyContent';
+import { TermsOfServiceContent, TERMS_OF_SERVICE_UPDATED } from './TermsOfServiceContent';
 import {
   IconTag,
   IconTrash,
@@ -57,7 +58,7 @@ import {
 
 export type ThemePref = 'light' | 'dark' | 'system';
 
-type SubScreen = null | 'categories' | 'recycle-bin' | 'backups' | 'archived-trips' | 'bug-tracker' | 'report-issue' | 'suggest-feature' | 'storage-data' | 'about';
+type SubScreen = null | 'categories' | 'recycle-bin' | 'backups' | 'archived-trips' | 'bug-tracker' | 'report-issue' | 'suggest-feature' | 'storage-data' | 'about' | 'privacy' | 'terms';
 
 
 const RECYCLE_BIN_WINDOW_MS = 24 * 60 * 60 * 1000;
@@ -172,7 +173,7 @@ export function SettingsView({
     setScreenStack((prev) => [...prev, screen]);
   };
 
-  // Every drill-down returns to Settings home (folders were removed).
+  // Drill-downs return to Settings home; privacy/terms nest under About.
   const DEFAULT_PARENT_MAP: Record<string, SubScreen> = {
     'categories': null,
     'recycle-bin': null,
@@ -183,6 +184,8 @@ export function SettingsView({
     'suggest-feature': null,
     'bug-tracker': null,
     'about': null,
+    'privacy': 'about',
+    'terms': 'about',
   };
 
   const popScreen = () => {
@@ -219,6 +222,10 @@ export function SettingsView({
         return 'Backups';
       case 'about':
         return 'About';
+      case 'privacy':
+        return 'Privacy Policy';
+      case 'terms':
+        return 'Terms of Service';
       case 'report-issue':
         return 'Report a Problem';
       case 'suggest-feature':
@@ -528,7 +535,6 @@ export function SettingsView({
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [storageEstimate, setStorageEstimate] = useState<{ used: number; quota: number } | null>(null);
   const [appVersion, setAppVersion] = useState<string | null>(null);
-  const navigate = useNavigate();
 
   // Partitioned Storage breakdown (Receipts vs Database vs System Cache)
   const storageBreakdown = React.useMemo(() => {
@@ -1566,7 +1572,7 @@ export function SettingsView({
             iconGlow="slate"
             title="Privacy Policy"
             subtitle="What we collect and why"
-            onClick={() => navigate('/privacy')}
+            onClick={() => setSubScreen('privacy')}
           />
           <SettingsCell
             icon={<IconFileSpreadsheet size={18} />}
@@ -1574,9 +1580,45 @@ export function SettingsView({
             title="Terms of Service"
             subtitle="Rules for using Trip Tracker"
             hasDivider={false}
-            onClick={() => navigate('/terms')}
+            onClick={() => setSubScreen('terms')}
           />
         </SettingsSection>
+          </div>
+    );
+  }
+
+  if (subScreen === 'privacy') {
+    return (
+      <div className="settings-container settings-subscreen-enter">
+        <div className="settings-subscreen-nav-header">
+          <button type="button" className="settings-subscreen-back-link" onClick={closeSubScreen}>
+            <IconChevronLeft size={18} />
+            <span>{getParentTitle()}</span>
+          </button>
+        </div>
+        <h3 className="settings-subscreen-main-title">Privacy Policy</h3>
+        <p className="settings-subscreen-subtitle">Last updated: {PRIVACY_POLICY_UPDATED}</p>
+        <div className="legal-page-body" style={{ padding: '0 4px 24px' }}>
+          <PrivacyPolicyContent />
+        </div>
+      </div>
+    );
+  }
+
+  if (subScreen === 'terms') {
+    return (
+      <div className="settings-container settings-subscreen-enter">
+        <div className="settings-subscreen-nav-header">
+          <button type="button" className="settings-subscreen-back-link" onClick={closeSubScreen}>
+            <IconChevronLeft size={18} />
+            <span>{getParentTitle()}</span>
+          </button>
+        </div>
+        <h3 className="settings-subscreen-main-title">Terms of Service</h3>
+        <p className="settings-subscreen-subtitle">Last updated: {TERMS_OF_SERVICE_UPDATED}</p>
+        <div className="legal-page-body" style={{ padding: '0 4px 24px' }}>
+          <TermsOfServiceContent />
+        </div>
       </div>
     );
   }
@@ -1597,11 +1639,11 @@ export function SettingsView({
           aria-label="Search settings"
         />
         {searchQuery && (
-          <button
-            type="button"
+              <button
+                type="button"
             className="settings-search-clear-btn"
-            onClick={() => {
-              triggerHaptic('light');
+                onClick={() => {
+                  triggerHaptic('light');
               setSearchQuery('');
             }}
             aria-label="Clear search"
@@ -1610,7 +1652,7 @@ export function SettingsView({
             ✕
           </button>
         )}
-      </div>
+                  </div>
 
       {/* Profile & Cloud Sync Hub (Hidden when actively searching) */}
       {!searchQuery && (
@@ -1633,7 +1675,7 @@ export function SettingsView({
                   <div className="settings-avatar-circle">{initialLetter}</div>
                 )}
                 {isOnline && <span className="settings-avatar-online-dot" title="Online &amp; Connected" />}
-              </div>
+                  </div>
               <div className="settings-profile-info">
                 <div className="settings-profile-name-row">
                   <span className="settings-profile-name">{displayName}</span>
@@ -1675,8 +1717,8 @@ export function SettingsView({
                 )}
               </div>
               {isOnline && (
-                <button
-                  type="button"
+              <button
+                type="button"
                   className="settings-sync-now-btn"
                   onClick={handleManualSync}
                   disabled={isManualSyncing}
@@ -1687,8 +1729,8 @@ export function SettingsView({
                   <span>{isManualSyncing ? 'Syncing…' : 'Sync Now'}</span>
                 </button>
               )}
-            </div>
-          </div>
+                  </div>
+                  </div>
           <div className="settings-hero-perf" aria-hidden="true" />
         </>
       )}
@@ -1724,15 +1766,15 @@ export function SettingsView({
               }}
             >
               <IconShield size={20} />
-            </div>
+                  </div>
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <strong style={{ fontSize: '15px' }}>⚡ Superadmin Cockpit</strong>
                 <span style={{ fontSize: '10px', background: '#10B981', color: '#fff', padding: '1px 6px', borderRadius: '10px', fontWeight: 700 }}>ACTIVE</span>
-              </div>
+                  </div>
               <span style={{ fontSize: '12px', color: '#92A2AE' }}>Feature Flags, Global Analytics &amp; Admin Tools</span>
-            </div>
-          </div>
+                </div>
+                </div>
           <IconChevronRight size={18} style={{ color: '#17B6A6' }} />
         </div>
       )}
@@ -1743,14 +1785,14 @@ export function SettingsView({
           <span style={{ fontSize: '28px' }}>🔍</span>
           <strong style={{ color: 'var(--text-primary)' }}>No settings found for "{searchQuery}"</strong>
           <span style={{ fontSize: '12px' }}>Try searching for "dark", "backup", "csv", or "notifications"</span>
-          <button
-            type="button"
+            <button
+              type="button"
             className="settings-subscreen-back-link"
             style={{ marginTop: '8px' }}
             onClick={() => setSearchQuery('')}
           >
             Clear Search
-          </button>
+            </button>
         </div>
       )}
 
@@ -1762,10 +1804,10 @@ export function SettingsView({
               <div>
                 <div className="settings-trip-flight-title">
                   <span>🌴</span> {activeTrip.name}
-                </div>
+          </div>
                 <div className="settings-trip-flight-meta">
                   {baseCurrency || activeTrip.baseCurrency || 'INR'} · {(activeTrip.memberIds?.length ?? Object.keys(members).length)} {(activeTrip.memberIds?.length ?? Object.keys(members).length) === 1 ? 'member' : 'members'} · {activeTripExpenses.length} {activeTripExpenses.length === 1 ? 'expense' : 'expenses'}
-                </div>
+        </div>
               </div>
               <button
                 type="button"
@@ -1800,8 +1842,8 @@ export function SettingsView({
               iconGlow="teal"
               title="Invite & Share Trip"
               subtitle="Share join link or QR code with companions"
-              onClick={() => {
-                triggerHaptic('light');
+                onClick={() => {
+                  triggerHaptic('light');
                 onOpenShareTrip();
               }}
             />
@@ -1883,112 +1925,112 @@ export function SettingsView({
           )}
 
           {showFxSearch && onOpenFxRates && (
-            <SettingsCell
-              icon={<span style={{ fontSize: '18px' }}>💱</span>}
-              iconGlow="emerald"
-              title="Multi-Currency FX Engine"
-              subtitle="Live rates, offline lock & forex markup converter"
-              badge="FX"
-              onClick={() => {
-                triggerHaptic('light');
-                onOpenFxRates();
-              }}
-            />
-          )}
+              <SettingsCell
+                icon={<span style={{ fontSize: '18px' }}>💱</span>}
+                iconGlow="emerald"
+                title="Multi-Currency FX Engine"
+                subtitle="Live rates, offline lock & forex markup converter"
+                badge="FX"
+                onClick={() => {
+                  triggerHaptic('light');
+                  onOpenFxRates();
+                }}
+              />
+            )}
 
-          {showCsvExport && onExportCsv && (
-            <SettingsCell
-              icon={<IconFileSpreadsheet size={18} />}
-              iconGlow="emerald"
-              title="Excel CSV Export"
-              subtitle="Download settlement ledger & expense breakdown"
-              badge="CSV"
-              onClick={onExportCsv}
-            />
-          )}
+            {showCsvExport && onExportCsv && (
+              <SettingsCell
+                icon={<IconFileSpreadsheet size={18} />}
+                iconGlow="emerald"
+                title="Excel CSV Export"
+                subtitle="Download settlement ledger & expense breakdown"
+                badge="CSV"
+                onClick={onExportCsv}
+              />
+            )}
 
-          {showCloseTrip && (
-            <SettingsCell
-              icon={<IconShield size={18} />}
-              iconGlow={activeTrip.closed ? 'slate' : 'emerald'}
-              title={closeTripTitle}
-              subtitle={closeTripSubtitle}
-              badge={closeTripBadgeText}
-              hasDivider={false}
-              onClick={handleToggleCloseTrip}
-            />
-          )}
+            {showCloseTrip && (
+              <SettingsCell
+                icon={<IconShield size={18} />}
+                iconGlow={activeTrip.closed ? 'slate' : 'emerald'}
+                title={closeTripTitle}
+                subtitle={closeTripSubtitle}
+                badge={closeTripBadgeText}
+                hasDivider={false}
+                onClick={handleToggleCloseTrip}
+              />
+            )}
         </SettingsSection>
       )}
 
       {/* Preferences */}
       {showPreferencesGroup && (
         <SettingsSection title="Preferences">
-          {showAppearance && (
-            <div className="settings-row-item" style={{ cursor: 'default' }}>
-              <div className="settings-row-left">
-                <div className="settings-squircle squircle-orange-glow">
-                  {themePref === 'dark' ? <IconMoon size={18} /> : themePref === 'light' ? <IconSun size={18} /> : <IconSmartphone size={18} />}
+            {showAppearance && (
+              <div className="settings-row-item" style={{ cursor: 'default' }}>
+                <div className="settings-row-left">
+                  <div className="settings-squircle squircle-orange-glow">
+                    {themePref === 'dark' ? <IconMoon size={18} /> : themePref === 'light' ? <IconSun size={18} /> : <IconSmartphone size={18} />}
+                  </div>
+                  <div className="settings-row-texts">
+                    <span className="settings-row-title">Appearance</span>
+                    <span className="settings-row-subtitle">{themeLabel}</span>
+                  </div>
                 </div>
-                <div className="settings-row-texts">
-                  <span className="settings-row-title">Appearance</span>
-                  <span className="settings-row-subtitle">{themeLabel}</span>
+                <div className="settings-segmented-theme" role="group" aria-label="Theme preference">
+                  <button
+                    type="button"
+                    className={`settings-seg-btn${themePref === 'light' ? ' active' : ''}`}
+                    onClick={() => { triggerHaptic('light'); setThemePref('light'); }}
+                    title="Light mode"
+                    aria-label="Light mode"
+                  >
+                    <IconSun size={13} />
+                    <span>Light</span>
+                  </button>
+                  <button
+                    type="button"
+                    className={`settings-seg-btn${themePref === 'dark' ? ' active' : ''}`}
+                    onClick={() => { triggerHaptic('light'); setThemePref('dark'); }}
+                    title="Night mode"
+                    aria-label="Night mode"
+                  >
+                    <IconMoon size={13} />
+                    <span>Night</span>
+                  </button>
+                  <button
+                    type="button"
+                    className={`settings-seg-btn${themePref === 'system' ? ' active' : ''}`}
+                    onClick={() => { triggerHaptic('light'); setThemePref('system'); }}
+                    title="System default"
+                    aria-label="System default"
+                  >
+                    <IconSmartphone size={13} />
+                    <span>Auto</span>
+                  </button>
                 </div>
               </div>
-              <div className="settings-segmented-theme" role="group" aria-label="Theme preference">
-                <button
-                  type="button"
-                  className={`settings-seg-btn${themePref === 'light' ? ' active' : ''}`}
-                  onClick={() => { triggerHaptic('light'); setThemePref('light'); }}
-                  title="Light mode"
-                  aria-label="Light mode"
-                >
-                  <IconSun size={13} />
-                  <span>Light</span>
-                </button>
-                <button
-                  type="button"
-                  className={`settings-seg-btn${themePref === 'dark' ? ' active' : ''}`}
-                  onClick={() => { triggerHaptic('light'); setThemePref('dark'); }}
-                  title="Night mode"
-                  aria-label="Night mode"
-                >
-                  <IconMoon size={13} />
-                  <span>Night</span>
-                </button>
-                <button
-                  type="button"
-                  className={`settings-seg-btn${themePref === 'system' ? ' active' : ''}`}
-                  onClick={() => { triggerHaptic('light'); setThemePref('system'); }}
-                  title="System default"
-                  aria-label="System default"
-                >
-                  <IconSmartphone size={13} />
-                  <span>Auto</span>
-                </button>
-              </div>
-            </div>
-          )}
+            )}
 
-          {showNotifications && (
-            <button type="button" className="settings-row-item" onClick={() => { triggerHaptic('light'); openNotificationsPanel(); }}>
-              <div className="settings-row-left">
-                <div className="settings-squircle squircle-teal-glow">
-                  <IconBell size={18} />
+            {showNotifications && (
+              <button type="button" className="settings-row-item" onClick={() => { triggerHaptic('light'); openNotificationsPanel(); }}>
+                <div className="settings-row-left">
+                  <div className="settings-squircle squircle-teal-glow">
+                    <IconBell size={18} />
+                  </div>
+                  <div className="settings-row-texts">
+                    <span className="settings-row-title">Notifications</span>
+                    <span className="settings-row-subtitle">{unreadNotificationCount > 0 ? `${unreadNotificationCount} unread` : 'All caught up'}</span>
+                  </div>
                 </div>
-                <div className="settings-row-texts">
-                  <span className="settings-row-title">Notifications</span>
-                  <span className="settings-row-subtitle">{unreadNotificationCount > 0 ? `${unreadNotificationCount} unread` : 'All caught up'}</span>
+                <div className="settings-row-right">
+                  <span className="settings-badge-pill" style={{ fontWeight: 600 }}>
+                    {unreadNotificationCount > 0 ? `${unreadNotificationCount} unread` : 'Quiet'}
+                  </span>
+                  <IconChevronRight size={16} />
                 </div>
-              </div>
-              <div className="settings-row-right">
-                <span className="settings-badge-pill" style={{ fontWeight: 600 }}>
-                  {unreadNotificationCount > 0 ? `${unreadNotificationCount} unread` : 'Quiet'}
-                </span>
-                <IconChevronRight size={16} />
-              </div>
-            </button>
-          )}
+              </button>
+            )}
 
           {showPassReminders && (
             <div className="settings-row-item" style={{ cursor: 'default' }}>
@@ -2044,64 +2086,64 @@ export function SettingsView({
             </div>
           )}
 
-          {showGeotag && (
-            <div className="settings-row-item" style={{ cursor: 'default' }}>
-              <div className="settings-row-left">
-                <div className="settings-squircle squircle-emerald-glow">
-                  <IconMapPin size={18} />
+            {showGeotag && (
+              <div className="settings-row-item" style={{ cursor: 'default' }}>
+                <div className="settings-row-left">
+                  <div className="settings-squircle squircle-emerald-glow">
+                    <IconMapPin size={18} />
+                  </div>
+                  <div className="settings-row-texts">
+                    <span className="settings-row-title">Geotag Expenses</span>
+                    <span className="settings-row-subtitle">Attach GPS coordinates &amp; place names</span>
+                  </div>
                 </div>
-                <div className="settings-row-texts">
-                  <span className="settings-row-title">Geotag Expenses</span>
-                  <span className="settings-row-subtitle">Attach GPS coordinates &amp; place names</span>
-                </div>
-              </div>
-              <div className="settings-row-right" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span className="settings-badge-pill" style={{ fontWeight: 600, fontSize: '10px' }}>
-                  {enableGeotagging ? 'ACTIVE' : 'OFF'}
-                </span>
-                <label style={{ position: 'relative', display: 'inline-block', width: '44px', height: '24px', margin: 0, cursor: 'pointer' }}>
-                  <input
-                    type="checkbox"
-                    checked={enableGeotagging}
-                    onChange={(e) => {
-                      triggerHaptic('light');
-                      setEnableGeotagging(e.target.checked);
-                    }}
-                    aria-label="Geotag Expenses"
-                    style={{ opacity: 0, width: 0, height: 0, margin: 0 }}
-                  />
-                  <span
-                    style={{
-                      position: 'absolute',
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      bottom: 0,
-                      backgroundColor: enableGeotagging ? '#17B6A6' : 'var(--border-color)',
-                      transition: '0.2s ease',
-                      borderRadius: 'var(--border-radius-pill)',
-                    }}
-                  >
+                <div className="settings-row-right" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span className="settings-badge-pill" style={{ fontWeight: 600, fontSize: '10px' }}>
+                    {enableGeotagging ? 'ACTIVE' : 'OFF'}
+                  </span>
+                  <label style={{ position: 'relative', display: 'inline-block', width: '44px', height: '24px', margin: 0, cursor: 'pointer' }}>
+                    <input
+                      type="checkbox"
+                      checked={enableGeotagging}
+                      onChange={(e) => {
+                        triggerHaptic('light');
+                        setEnableGeotagging(e.target.checked);
+                      }}
+                      aria-label="Geotag Expenses"
+                      style={{ opacity: 0, width: 0, height: 0, margin: 0 }}
+                    />
                     <span
                       style={{
                         position: 'absolute',
-                        height: '18px',
-                        width: '18px',
-                        left: enableGeotagging ? '23px' : '3px',
-                        bottom: '3px',
-                        backgroundColor: 'white',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        backgroundColor: enableGeotagging ? '#17B6A6' : 'var(--border-color)',
                         transition: '0.2s ease',
-                        borderRadius: '50%',
-                        boxShadow: '0 1px 3px rgba(0,0,0,0.25)',
+                        borderRadius: 'var(--border-radius-pill)',
                       }}
-                    />
-                  </span>
-                </label>
+                    >
+                      <span
+                        style={{
+                          position: 'absolute',
+                          height: '18px',
+                          width: '18px',
+                          left: enableGeotagging ? '23px' : '3px',
+                          bottom: '3px',
+                          backgroundColor: 'white',
+                          transition: '0.2s ease',
+                          borderRadius: '50%',
+                          boxShadow: '0 1px 3px rgba(0,0,0,0.25)',
+                        }}
+                      />
+                    </span>
+                  </label>
+                </div>
               </div>
-            </div>
-          )}
+            )}
 
-          {showInstall && (
+            {showInstall && (
             <SettingsCell
               icon={<IconSmartphone size={18} />}
               iconGlow="teal"
@@ -2109,11 +2151,11 @@ export function SettingsView({
               subtitle="Add Trip Tracker to your device home screen"
               chevron={false}
               hasDivider={false}
-              onClick={() => {
-                triggerHaptic('light');
-                onInstallApp?.();
-                onClose?.();
-              }}
+                onClick={() => {
+                  triggerHaptic('light');
+                  onInstallApp?.();
+                  onClose?.();
+                }}
             />
           )}
         </SettingsSection>
@@ -2122,55 +2164,55 @@ export function SettingsView({
       {/* Data */}
       {showDataGroup && (
         <SettingsSection title="Data">
-          {showStorageManager && (
-            <SettingsCell
-              icon={<IconPieChart size={18} />}
-              iconGlow="amber"
-              title="Storage and Data"
-              subtitle="Receipts media, ledgers & cache visualizer"
-              badge={storageEstimate ? formatBytes(storageEstimate.used) : 'Local'}
-              onClick={() => setSubScreen('storage-data')}
-            />
-          )}
+            {showStorageManager && (
+              <SettingsCell
+                icon={<IconPieChart size={18} />}
+                iconGlow="amber"
+                title="Storage and Data"
+                subtitle="Receipts media, ledgers & cache visualizer"
+                badge={storageEstimate ? formatBytes(storageEstimate.used) : 'Local'}
+                onClick={() => setSubScreen('storage-data')}
+              />
+            )}
 
-          {showArchived && (
-            <SettingsCell
-              icon={<IconArchive size={18} />}
-              iconGlow="slate"
-              title="Archived Trips"
-              subtitle={archivedTrips.length === 0 ? 'No archived trips' : `${archivedTrips.length} archived trip${archivedTrips.length === 1 ? '' : 's'}`}
-              badge={archivedTrips.length > 0 ? archivedTrips.length : undefined}
-              onClick={() => setSubScreen('archived-trips')}
-            />
-          )}
+            {showArchived && (
+              <SettingsCell
+                icon={<IconArchive size={18} />}
+                iconGlow="slate"
+                title="Archived Trips"
+                subtitle={archivedTrips.length === 0 ? 'No archived trips' : `${archivedTrips.length} archived trip${archivedTrips.length === 1 ? '' : 's'}`}
+                badge={archivedTrips.length > 0 ? archivedTrips.length : undefined}
+                onClick={() => setSubScreen('archived-trips')}
+              />
+            )}
 
           {showSnapshotSearch && onOpenOfflineSnapshot && (
-            <SettingsCell
-              icon={<span style={{ fontSize: '18px' }}>💾</span>}
-              iconGlow="blue"
-              title="Offline Snapshot (.triptracker)"
-              subtitle="Export and restore 100% offline trip backups"
-              badge="BACKUP"
-              onClick={() => {
-                triggerHaptic('light');
-                onOpenOfflineSnapshot();
-              }}
-            />
-          )}
+              <SettingsCell
+                icon={<span style={{ fontSize: '18px' }}>💾</span>}
+                iconGlow="blue"
+                title="Offline Snapshot (.triptracker)"
+                subtitle="Export and restore 100% offline trip backups"
+                badge="BACKUP"
+                onClick={() => {
+                  triggerHaptic('light');
+                  onOpenOfflineSnapshot();
+                }}
+              />
+            )}
 
           {showGallerySearch && onOpenMediaGallery && (
-            <SettingsCell
-              icon={<span style={{ fontSize: '18px' }}>📸</span>}
-              iconGlow="teal"
-              title="Receipts & Memories Gallery"
-              subtitle="Browse cached receipt photos and trip media"
-              badge="PHOTOS"
-              onClick={() => {
-                triggerHaptic('light');
-                onOpenMediaGallery();
-              }}
-            />
-          )}
+              <SettingsCell
+                icon={<span style={{ fontSize: '18px' }}>📸</span>}
+                iconGlow="teal"
+                title="Receipts & Memories Gallery"
+                subtitle="Browse cached receipt photos and trip media"
+                badge="PHOTOS"
+                onClick={() => {
+                  triggerHaptic('light');
+                  onOpenMediaGallery();
+                }}
+              />
+            )}
 
           {showBackups && (
             <SettingsCell
@@ -2183,129 +2225,129 @@ export function SettingsView({
             />
           )}
 
-          {showDemoTrip && onLoadDemoTrip && (
-            <SettingsCell
-              icon={<IconSparkles size={18} />}
-              iconGlow="emerald"
-              title="Seed Demo Trip"
-              subtitle="Sample trip with members, geotags & splits"
-              hasDivider={false}
-              onClick={() => {
-                onRequestConfirm?.({
-                  title: 'Seed Demo Data',
-                  message: 'Populate a sample trip ("Road Trip to Goa ☀️") with test members, geotagged route, and split transactions?',
-                  confirmLabel: 'Load Demo Trip',
-                  onConfirm: () => {
-                    onLoadDemoTrip();
-                    onClose?.();
-                  },
-                });
-              }}
-            />
-          )}
+            {showDemoTrip && onLoadDemoTrip && (
+              <SettingsCell
+                icon={<IconSparkles size={18} />}
+                iconGlow="emerald"
+                title="Seed Demo Trip"
+                subtitle="Sample trip with members, geotags & splits"
+                hasDivider={false}
+                onClick={() => {
+                  onRequestConfirm?.({
+                    title: 'Seed Demo Data',
+                    message: 'Populate a sample trip ("Road Trip to Goa ☀️") with test members, geotagged route, and split transactions?',
+                    confirmLabel: 'Load Demo Trip',
+                    onConfirm: () => {
+                      onLoadDemoTrip();
+                      onClose?.();
+                    },
+                  });
+                }}
+              />
+            )}
         </SettingsSection>
       )}
 
       {/* Help */}
       {showHelpGroup && (
         <SettingsSection title="Help">
-          {showReportProblem && (
-            <SettingsCell
-              icon={<span>🐞</span>}
-              iconGlow="rose"
-              title="Report a Problem"
-              subtitle="Tell us what went wrong — device details attach automatically"
-              onClick={() => setSubScreen('report-issue')}
-            />
-          )}
+            {showReportProblem && (
+              <SettingsCell
+                icon={<span>🐞</span>}
+                iconGlow="rose"
+                title="Report a Problem"
+                subtitle="Tell us what went wrong — device details attach automatically"
+                onClick={() => setSubScreen('report-issue')}
+              />
+            )}
 
-          {showSuggestFeature && (
-            <SettingsCell
-              icon={<span>✨</span>}
-              iconGlow="teal"
-              title="Suggest a Feature"
-              subtitle="Tell us what would make this app better"
-              onClick={() => setSubScreen('suggest-feature')}
-            />
-          )}
+            {showSuggestFeature && (
+              <SettingsCell
+                icon={<span>✨</span>}
+                iconGlow="teal"
+                title="Suggest a Feature"
+                subtitle="Tell us what would make this app better"
+                onClick={() => setSubScreen('suggest-feature')}
+              />
+            )}
 
-          {showBugTracker && (
-            <SettingsCell
-              icon={<span>🛡️</span>}
-              iconGlow="amber"
-              title="Superadmin Bug Tracker"
-              subtitle="Manage, triage & live-sync bugs"
+            {showBugTracker && (
+              <SettingsCell
+                icon={<span>🛡️</span>}
+                iconGlow="amber"
+                title="Superadmin Bug Tracker"
+                subtitle="Manage, triage & live-sync bugs"
               hasDivider={false}
-              onClick={() => setSubScreen('bug-tracker')}
-            />
+                onClick={() => setSubScreen('bug-tracker')}
+              />
           )}
         </SettingsSection>
-      )}
+            )}
 
       {/* Account */}
       {showAccountGroup && (
         <SettingsSection title="Account">
-          {showSignOut && onSignOut && (
-            <SettingsCell
-              icon={<IconLogOut size={18} />}
-              iconGlow="red"
-              destructive
-              title="Sign Out"
-              subtitle="Disconnect active session from Supabase"
-              chevron={false}
-              onClick={() => {
-                onRequestConfirm?.({
-                  title: 'Sign Out',
-                  message: 'Sign out of your account on this device?',
-                  confirmLabel: 'Sign Out',
-                  onConfirm: () => {
-                    onSignOut();
-                    onClose?.();
-                  },
-                });
-              }}
-            />
-          )}
+            {showSignOut && onSignOut && (
+              <SettingsCell
+                icon={<IconLogOut size={18} />}
+                iconGlow="red"
+                destructive
+                title="Sign Out"
+                subtitle="Disconnect active session from Supabase"
+                chevron={false}
+                onClick={() => {
+                  onRequestConfirm?.({
+                    title: 'Sign Out',
+                    message: 'Sign out of your account on this device?',
+                    confirmLabel: 'Sign Out',
+                    onConfirm: () => {
+                      onSignOut();
+                      onClose?.();
+                    },
+                  });
+                }}
+              />
+            )}
 
-          {showClearData && onClearDatabase && (
-            <SettingsCell
-              icon={<IconAlertCircle size={18} />}
-              iconGlow="red"
-              destructive
-              title="Clear All Data"
-              subtitle="Wipe all local trips and reset storage"
-              chevron={false}
-              onClick={onClearDatabase}
-            />
-          )}
+            {showClearData && onClearDatabase && (
+              <SettingsCell
+                icon={<IconAlertCircle size={18} />}
+                iconGlow="red"
+                destructive
+                title="Clear All Data"
+                subtitle="Wipe all local trips and reset storage"
+                chevron={false}
+                onClick={onClearDatabase}
+              />
+            )}
 
-          {showDeleteAccount && onDeleteAccount && (
-            <SettingsCell
-              icon={<IconAlertCircle size={18} />}
-              iconGlow="red"
-              destructive
-              hasDivider={false}
-              title="Delete Account"
-              subtitle="Permanently delete your account and owned trips"
-              chevron={false}
-              onClick={onDeleteAccount}
-            />
-          )}
+            {showDeleteAccount && onDeleteAccount && (
+              <SettingsCell
+                icon={<IconAlertCircle size={18} />}
+                iconGlow="red"
+                destructive
+                hasDivider={false}
+                title="Delete Account"
+                subtitle="Permanently delete your account and owned trips"
+                chevron={false}
+                onClick={onDeleteAccount}
+              />
+            )}
         </SettingsSection>
       )}
 
       {/* About */}
-      {showAbout && (
+          {showAbout && (
         <SettingsSection title="About">
-          <SettingsCell
-            icon={<IconSmartphone size={18} />}
-            iconGlow="slate"
-            title="About & Legal"
-            subtitle={`Version ${appVersion ?? WEB_APP_VERSION} · Privacy & Terms`}
-            badge="STABLE"
-            hasDivider={false}
-            onClick={() => setSubScreen('about')}
-          />
+            <SettingsCell
+              icon={<IconSmartphone size={18} />}
+              iconGlow="slate"
+              title="About & Legal"
+              subtitle={`Version ${appVersion ?? WEB_APP_VERSION} · Privacy & Terms`}
+              badge="STABLE"
+              hasDivider={false}
+              onClick={() => setSubScreen('about')}
+            />
         </SettingsSection>
       )}
 
