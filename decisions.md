@@ -2492,9 +2492,17 @@ This document logs all meaningful technical decisions, library choices, design p
   - Public legal URLs remain separate routes; only the Settings entry path stays inside the app shell.
   - `useHistoryStack` synchronizes browser history entries with state depth; rapid multi-level programmatic pops invoke `window.history.go(-steps)` to maintain parity between browser URL depth and component state.
 
+---
 
-
-
+## Receipt Gallery Signed URL Resolution (v3.6.3, BUG-179)
+* **Context:** `TripMediaGalleryModal` (Settings → Receipts & Memories Gallery) rendered `<img src={e.receiptImage || e.receiptPath}>` directly. `receiptImage` is a client-only base64 preview that only exists before an expense syncs; `receiptPath` is a Supabase Storage *object path* (e.g. `tripId/expenseId.jpg`), not a fetchable URL. Once an expense synced, `tripStore.ts` deletes `receiptImage`, leaving only the unusable `receiptPath`, so every synced receipt showed a broken image icon in the gallery grid, lightbox, and share action. `ExpenseReviewModal` already resolved this correctly via `getReceiptSignedUrl()`.
+* **Decision:** Resolve `receiptPath` to a signed URL per gallery item, mirroring `ExpenseReviewModal`'s pattern, instead of duplicating the raw storage path as an `<img src>`.
+* **Pattern/Implementation:**
+  - Added `signedUrls: Record<string, string>` state plus a `useEffect` that calls `getReceiptSignedUrl(item.expense.receiptPath)` for any item missing `receiptImage` and not yet resolved, caching the result by expense id.
+  - Added a `getDisplayUrl(item)` helper (`receiptImage` base64 preview, else the resolved signed URL) used by the grid thumbnail, lightbox image, and `handleShare`.
+  - Grid thumbnail shows a ⏳ placeholder instead of a broken `<img>` while the signed URL is resolving.
+* **Trade-offs Accepted:**
+  - Signed URLs expire after 1 hour (existing `getReceiptSignedUrl` TTL); re-opening the gallery after expiry re-resolves rather than caching indefinitely, which is correct but means the gallery can't be left open unattended past that window without a refetch on next interaction.
 
 
 

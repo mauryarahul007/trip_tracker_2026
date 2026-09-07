@@ -5381,5 +5381,32 @@
     "resolvedBy": "cursor-agent",
     "resolvedAt": "2026-09-07T05:30:37.168Z",
     "resolutionNote": "About used navigate(/privacy|/terms) which unmounted App and lost screenStack; Back remounted on Expenses/Summary. Fixed in v3.6.1 commit 4560b00: Privacy/Terms are Settings subScreens under About; shared content modules keep public /privacy and /terms routes."
+  },
+  {
+    "id": "BUG-179",
+    "title": "Receipts & Memories Gallery shows broken image icon for synced receipts",
+    "description": "Gallery thumbnail/lightbox show a broken image icon for an expense receipt once that receipt has synced to the server.",
+    "severity": "medium",
+    "category": "receipts-camera",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Add expense with a receipt photo",
+      "Wait for sync (receiptImage preview cleared, receiptPath set)",
+      "Open Settings > Receipts & Memories Gallery"
+    ],
+    "expectedBehavior": "Receipt thumbnail renders",
+    "actualBehavior": "Broken image icon shown instead of the photo",
+    "diagnostics": {},
+    "createdAt": "2026-09-07T12:58:36.528Z",
+    "updatedAt": "2026-09-07T12:58:43.076Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-09-07T12:58:43.076Z",
+    "resolutionNote": "receiptPath is a Supabase Storage object path, not a URL. TripMediaGalleryModal used it directly as img src instead of resolving via getReceiptSignedUrl (the pattern ExpenseReviewModal already used). Fixed in v3.6.3 commit 37f07c4: resolve signed URLs per item with a loading placeholder, also fixed the share action using the same raw path."
   }
 ]

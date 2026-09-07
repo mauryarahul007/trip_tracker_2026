@@ -9,10 +9,10 @@
 
 | Metric | Count | Status Notes |
 | :--- | :--- | :--- |
-| **Total Tracked** | **175** | All recorded bugs across sessions |
+| **Total Tracked** | **176** | All recorded bugs across sessions |
 | **🟢 Open** | **0** | No critical blockers, 0 High |
 | **🟡 In Progress** | **0** | Active investigation or fix |
-| **✅ Resolved** | **148** | Verified & closed |
+| **✅ Resolved** | **149** | Verified & closed |
 | **⚪ Won't Fix** | **27** | Expected behavior / deferred |
 
 ---
@@ -179,6 +179,7 @@
 | **BUG-173** | CI build failed: missing ConfirmDialog closing paren in App.tsx | `navigation` | `high` | `cursor-agent` | `cursor-agent` | Closed confirmRequest JSX before ConflictResolverModal; added tripId to makeExpense in conflict tests. Fixed in v3.5.1. |
 | **BUG-174** | Back/Escape skipped overlays or required two presses | `navigation` | `medium` | `cursor-agent` | `cursor-agent` | One history owner per overlay; wired gaps (ActionSheet, ConfirmDialog, conflict modal, pickers); Escape LIFO stack. Fixed in v3.6.0 commit df2815e. |
 | **BUG-175** | Settings About Privacy/Terms Back returns to Summary instead of About | `navigation` | `medium` | `cursor-agent` | `cursor-agent` | About used navigate(/privacy|/terms) which unmounted App and lost screenStack; Back remounted on Expenses/Summary. Fixed in v3.6.1 commit 4560b00: Privacy/Terms are Settings subScreens under About; shared content modules keep public /privacy and /terms routes. |
+| **BUG-179** | Receipts & Memories Gallery shows broken image icon for synced receipts | `receipts-camera` | `medium` | `claude-cli` | `claude-cli` | receiptPath is a Supabase Storage object path, not a URL. TripMediaGalleryModal used it directly as img src instead of resolving via getReceiptSignedUrl (the pattern ExpenseReviewModal already used). Fixed in v3.6.3 commit 37f07c4: resolve signed URLs per item with a loading placeholder, also fixed the share action using the same raw path. |
 
 ---
 
