@@ -5462,5 +5462,245 @@
     "resolvedBy": "claude-cli",
     "resolvedAt": "2026-09-07T13:36:45.495Z",
     "resolutionNote": "Committed the pre-existing uncommitted duplicate-line fixes for 5 files + a .gitignore encoding fix. Fixed in v3.6.6 commit bb8fa79. Verified lint/build/test all green before pushing."
+  },
+  {
+    "id": "BUG-182",
+    "title": "Settings Back used the same right-to-left slide as entering",
+    "description": "Tapping Back on a Settings submenu replayed the enter animation (slide in from the right) instead of reversing, so returning home felt like opening another screen. Overlay exit could also stick if the close timeout was cleared when dir flipped to out.",
+    "severity": "medium",
+    "category": "navigation",
+    "status": "resolved",
+    "foundBy": "cursor-agent",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Open Settings",
+      "tap Trip Tools",
+      "tap Back"
+    ],
+    "expectedBehavior": "Overlay slides left-to-right off the home layer, home scroll preserved",
+    "actualBehavior": "Same enter animation as opening; home could jump or overlay could stick exiting",
+    "diagnostics": {},
+    "createdAt": "2026-09-07T15:15:15.182Z",
+    "updatedAt": "2026-09-07T15:15:15.486Z",
+    "resolvedBy": "cursor-agent",
+    "resolvedAt": "2026-09-07T15:15:15.486Z",
+    "resolutionNote": "Overlay dir-back / dir-out animations plus an exit timeout keyed only on subScreen. Fixed in v3.6.8 commit a4b1b6c."
+  },
+  {
+    "id": "BUG-183",
+    "title": "First tap on Categories, Recycle Bin, or legal stuttered on lazy chunk load",
+    "description": "Settings leaf screens are lazy-loaded, so the first tap paid import+eval cost with a skeleton flash. Profile Settings and in-trip SettingsTab had the same cold-start hitch.",
+    "severity": "medium",
+    "category": "performance",
+    "status": "resolved",
+    "foundBy": "cursor-agent",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Open Settings",
+      "tap Trip Tools",
+      "tap Categories on a cold load"
+    ],
+    "expectedBehavior": "Screen appears immediately after intent (hover/press)",
+    "actualBehavior": "Brief suspend/skeleton on first open",
+    "diagnostics": {},
+    "createdAt": "2026-09-07T15:15:16.602Z",
+    "updatedAt": "2026-09-07T15:15:16.787Z",
+    "resolvedBy": "cursor-agent",
+    "resolvedAt": "2026-09-07T15:15:16.787Z",
+    "resolutionNote": "Prefetch leaves on pointer enter/down; prefetch SettingsTab from trip header and GlobalSettingsModal from profile avatar / command palette. Fixed in v3.6.8 commit a4b1b6c."
+  },
+  {
+    "id": "BUG-184",
+    "title": "Recycle Bin fetched on every Settings open and badge wiped on trip switch",
+    "description": "Opening Settings always called fetchDeletedExpenses. selectTrip cleared deletedExpenses, so the Trip Tools badge was empty until Recycle Bin was opened again even after a local delete.",
+    "severity": "medium",
+    "category": "performance",
+    "status": "resolved",
+    "foundBy": "cursor-agent",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Delete an expense",
+      "open Settings > Trip Tools without opening Recycle Bin",
+      "switch trips and back"
+    ],
+    "expectedBehavior": "Badge shows locally deleted count without a network fetch; cache kept per trip",
+    "actualBehavior": "Fetch on every Settings visit; badge reset to 0 after selectTrip",
+    "diagnostics": {},
+    "createdAt": "2026-09-07T15:15:17.946Z",
+    "updatedAt": "2026-09-07T15:15:18.253Z",
+    "resolvedBy": "cursor-agent",
+    "resolvedAt": "2026-09-07T15:15:18.253Z",
+    "resolutionNote": "selectTrip no longer wipes deletedExpenses; merge/filter by tripId; fetch only on Recycle Bin screen. Fixed in v3.6.8 commit a4b1b6c."
+  },
+  {
+    "id": "BUG-185",
+    "title": "Storage, Archived, Backups, and About were inlined in a 2400-line SettingsView",
+    "description": "Those screens lived inside SettingsView, so overlay work remounted huge trees and made reverse-slide / home-preservation harder to keep correct.",
+    "severity": "low",
+    "category": "ui-ux",
+    "status": "resolved",
+    "foundBy": "cursor-agent",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Open Settings",
+      "open Storage & Data or About",
+      "tap Back"
+    ],
+    "expectedBehavior": "Each leaf is its own screen; home stays mounted",
+    "actualBehavior": "Monolithic SettingsView owned every leaf inline",
+    "diagnostics": {},
+    "createdAt": "2026-09-07T15:15:19.174Z",
+    "updatedAt": "2026-09-07T15:15:19.379Z",
+    "resolvedBy": "cursor-agent",
+    "resolvedAt": "2026-09-07T15:15:19.379Z",
+    "resolutionNote": "Extracted SettingsStorageDataScreen, SettingsArchivedTripsScreen, SettingsBackupsScreen, SettingsAboutScreen under src/components/settings/. Fixed in v3.6.8 commit a4b1b6c."
+  },
+  {
+    "id": "BUG-186",
+    "title": "Profile Settings drawer snapped shut with no exit animation or swipe dismiss",
+    "description": "GlobalSettingsModal unmounted immediately on close/Back/Escape, so the drawer vanished. No swipe-to-dismiss.",
+    "severity": "medium",
+    "category": "ui-ux",
+    "status": "resolved",
+    "foundBy": "cursor-agent",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Open profile Settings from the trips list avatar",
+      "tap Close or swipe right"
+    ],
+    "expectedBehavior": "Drawer slides out; swipe-right dismisses",
+    "actualBehavior": "Instant unmount; swipe did nothing",
+    "diagnostics": {},
+    "createdAt": "2026-09-07T15:15:20.162Z",
+    "updatedAt": "2026-09-07T15:15:20.351Z",
+    "resolvedBy": "cursor-agent",
+    "resolvedAt": "2026-09-07T15:15:20.351Z",
+    "resolutionNote": "280ms exit animation, swipe-right dismiss, closeRef so App history/Escape wait for the animation. Fixed in v3.6.8 commit a4b1b6c."
+  },
+  {
+    "id": "BUG-187",
+    "title": "In-trip SettingsTab remounted on the next trip even on Expenses",
+    "description": "hasVisitedSettings stayed true after leaving a trip, so opening another trip mounted SettingsTab hidden under Expenses and kept running its work.",
+    "severity": "medium",
+    "category": "navigation",
+    "status": "resolved",
+    "foundBy": "cursor-agent",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Open a trip",
+      "visit Settings",
+      "leave the trip",
+      "open another trip on Expenses"
+    ],
+    "expectedBehavior": "SettingsTab unmounts with the trip; next trip starts on Expenses without a hidden Settings tree",
+    "actualBehavior": "SettingsTab remounted immediately because hasVisitedSettings was still true",
+    "diagnostics": {},
+    "createdAt": "2026-09-07T15:15:21.160Z",
+    "updatedAt": "2026-09-07T15:15:21.348Z",
+    "resolvedBy": "cursor-agent",
+    "resolvedAt": "2026-09-07T15:15:21.347Z",
+    "resolutionNote": "Reset hasVisitedSettings when activeTripId is null. Fixed in v3.6.8 commit a4b1b6c."
+  },
+  {
+    "id": "BUG-188",
+    "title": "Category merge/delete used a private overlay instead of ConfirmDialog",
+    "description": "Deleting a category in use showed an in-screen merge picker plus extra history/Escape hooks, inconsistent with the rest of Settings destructive confirms.",
+    "severity": "medium",
+    "category": "ui-ux",
+    "status": "resolved",
+    "foundBy": "cursor-agent",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Settings > Trip Tools > Categories",
+      "delete a category that has expenses"
+    ],
+    "expectedBehavior": "Shared ConfirmDialog with replacement-category picker",
+    "actualBehavior": "Custom overlay inside the Categories screen",
+    "diagnostics": {},
+    "createdAt": "2026-09-07T15:15:22.142Z",
+    "updatedAt": "2026-09-07T15:15:22.350Z",
+    "resolvedBy": "cursor-agent",
+    "resolvedAt": "2026-09-07T15:15:22.350Z",
+    "resolutionNote": "ConfirmDialog body slot for the merge <select>; Categories calls onRequestConfirm. Fixed in v3.6.8 commit a4b1b6c."
+  },
+  {
+    "id": "BUG-189",
+    "title": "Sign Out and Delete Account could run while offline",
+    "description": "Account rows did not check navigator.onLine, so Sign Out / Delete Account could be confirmed with no network and fail or leave a half-cleared session.",
+    "severity": "medium",
+    "category": "auth",
+    "status": "resolved",
+    "foundBy": "cursor-agent",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Go offline",
+      "Settings > Account > Sign Out or Delete Account"
+    ],
+    "expectedBehavior": "Explain that a connection is required; do not run the action",
+    "actualBehavior": "Confirm dialog proceeded as if online",
+    "diagnostics": {},
+    "createdAt": "2026-09-07T15:15:23.167Z",
+    "updatedAt": "2026-09-07T15:15:23.373Z",
+    "resolvedBy": "cursor-agent",
+    "resolvedAt": "2026-09-07T15:15:23.373Z",
+    "resolutionNote": "Offline ConfirmDialog (OK only) before Sign Out / Delete Account. Fixed in v3.6.8 commit a4b1b6c."
+  },
+  {
+    "id": "BUG-190",
+    "title": "Close Trip settlement math ran while the Close Trip row was hidden",
+    "description": "calculateSettlements ran on every expense change even when Settings was on another tab, a submenu overlay was open, or the user could not close the trip.",
+    "severity": "low",
+    "category": "performance",
+    "status": "resolved",
+    "foundBy": "cursor-agent",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Open a trip with many expenses",
+      "stay on Expenses or open Trip Tools"
+    ],
+    "expectedBehavior": "Settlement for Close Trip is computed only when that row is on screen",
+    "actualBehavior": "Full settlement pass on every SettingsView render path",
+    "diagnostics": {},
+    "createdAt": "2026-09-07T15:15:24.191Z",
+    "updatedAt": "2026-09-07T15:15:24.379Z",
+    "resolvedBy": "cursor-agent",
+    "resolvedAt": "2026-09-07T15:15:24.379Z",
+    "resolutionNote": "Skip calc unless isSurfaceVisible, home overlay is closed, and isTripAdmin; cache last summary. Fixed in v3.6.8 commit a4b1b6c."
   }
 ]

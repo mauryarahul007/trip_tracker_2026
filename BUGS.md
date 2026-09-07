@@ -9,10 +9,10 @@
 
 | Metric | Count | Status Notes |
 | :--- | :--- | :--- |
-| **Total Tracked** | **178** | All recorded bugs across sessions |
+| **Total Tracked** | **187** | All recorded bugs across sessions |
 | **🟢 Open** | **0** | No critical blockers, 0 High |
 | **🟡 In Progress** | **0** | Active investigation or fix |
-| **✅ Resolved** | **151** | Verified & closed |
+| **✅ Resolved** | **160** | Verified & closed |
 | **⚪ Won't Fix** | **27** | Expected behavior / deferred |
 
 ---
@@ -182,6 +182,15 @@
 | **BUG-179** | Receipts & Memories Gallery shows broken image icon for synced receipts | `receipts-camera` | `medium` | `claude-cli` | `claude-cli` | receiptPath is a Supabase Storage object path, not a URL. TripMediaGalleryModal used it directly as img src instead of resolving via getReceiptSignedUrl (the pattern ExpenseReviewModal already used). Fixed in v3.6.3 commit 37f07c4: resolve signed URLs per item with a loading placeholder, also fixed the share action using the same raw path. |
 | **BUG-180** | Appearance row title clipped by Light/Night/Auto segmented control | `ui-ux` | `low` | `claude-cli` | `claude-cli` | Segmented control buttons were icon+text with flex-shrink:0. Dropped text labels (icon-only, tooltips kept) in SettingsView.tsx + trimmed .settings-seg-btn padding in index.css. Fixed in v3.6.5 commit 46342a5. |
 | **BUG-181** | CI/lint broken since v3.6.0-3.6.2 nav refactor — duplicate leftover lines in 5 files | `ui-ux` | `critical` | `claude-cli` | `claude-cli` | Committed the pre-existing uncommitted duplicate-line fixes for 5 files + a .gitignore encoding fix. Fixed in v3.6.6 commit bb8fa79. Verified lint/build/test all green before pushing. |
+| **BUG-182** | Settings Back used the same right-to-left slide as entering | `navigation` | `medium` | `cursor-agent` | `cursor-agent` | Overlay dir-back / dir-out animations plus an exit timeout keyed only on subScreen. Fixed in v3.6.8 commit a4b1b6c. |
+| **BUG-183** | First tap on Categories, Recycle Bin, or legal stuttered on lazy chunk load | `performance` | `medium` | `cursor-agent` | `cursor-agent` | Prefetch leaves on pointer enter/down; prefetch SettingsTab from trip header and GlobalSettingsModal from profile avatar / command palette. Fixed in v3.6.8 commit a4b1b6c. |
+| **BUG-184** | Recycle Bin fetched on every Settings open and badge wiped on trip switch | `performance` | `medium` | `cursor-agent` | `cursor-agent` | selectTrip no longer wipes deletedExpenses; merge/filter by tripId; fetch only on Recycle Bin screen. Fixed in v3.6.8 commit a4b1b6c. |
+| **BUG-185** | Storage, Archived, Backups, and About were inlined in a 2400-line SettingsView | `ui-ux` | `low` | `cursor-agent` | `cursor-agent` | Extracted SettingsStorageDataScreen, SettingsArchivedTripsScreen, SettingsBackupsScreen, SettingsAboutScreen under src/components/settings/. Fixed in v3.6.8 commit a4b1b6c. |
+| **BUG-186** | Profile Settings drawer snapped shut with no exit animation or swipe dismiss | `ui-ux` | `medium` | `cursor-agent` | `cursor-agent` | 280ms exit animation, swipe-right dismiss, closeRef so App history/Escape wait for the animation. Fixed in v3.6.8 commit a4b1b6c. |
+| **BUG-187** | In-trip SettingsTab remounted on the next trip even on Expenses | `navigation` | `medium` | `cursor-agent` | `cursor-agent` | Reset hasVisitedSettings when activeTripId is null. Fixed in v3.6.8 commit a4b1b6c. |
+| **BUG-188** | Category merge/delete used a private overlay instead of ConfirmDialog | `ui-ux` | `medium` | `cursor-agent` | `cursor-agent` | ConfirmDialog body slot for the merge <select>; Categories calls onRequestConfirm. Fixed in v3.6.8 commit a4b1b6c. |
+| **BUG-189** | Sign Out and Delete Account could run while offline | `auth` | `medium` | `cursor-agent` | `cursor-agent` | Offline ConfirmDialog (OK only) before Sign Out / Delete Account. Fixed in v3.6.8 commit a4b1b6c. |
+| **BUG-190** | Close Trip settlement math ran while the Close Trip row was hidden | `performance` | `low` | `cursor-agent` | `cursor-agent` | Skip calc unless isSurfaceVisible, home overlay is closed, and isTripAdmin; cache last summary. Fixed in v3.6.8 commit a4b1b6c. |
 
 ---
 
