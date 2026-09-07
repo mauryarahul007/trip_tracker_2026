@@ -9,6 +9,7 @@ import type { WeatherData } from '../services/weatherService';
 import { useAnimatedNumber } from '../hooks/useAnimatedNumber';
 import { parseTripRoute } from '../utils/routeHelper';
 import { tripDayNumber } from '../utils/dateRange';
+import { PassportStamp } from './common/PassportStamp';
 
 interface BoardingPassHeroCardProps {
   trip: Trip;
@@ -323,6 +324,29 @@ export function BoardingPassHeroCard({
               style={{ color: isFullySettled ? 'var(--color-success)' : 'var(--color-danger)' }}
             >
               {formatAmount(animatedTotalOutstanding, currencySymbol)}
+            </div>
+
+            {/* Passport Ink Stamp Watermark: on the left side above the lower perforated line */}
+            <div
+              style={{
+                position: 'absolute',
+                bottom: '10px',
+                left: '16px',
+                zIndex: 2,
+                pointerEvents: 'none',
+              }}
+              aria-hidden="true"
+            >
+              <PassportStamp
+                destination={parsedRoute.destination || trip.name}
+                tripName={trip.name}
+                date={trip.startDate}
+                variant={isFullySettled ? 'settled' : 'entry'}
+                color={isFullySettled ? 'success' : 'danger'}
+                transparent={true}
+                tilt={8}
+                size={52}
+              />
             </div>
           </div>
 

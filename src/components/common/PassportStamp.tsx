@@ -4,9 +4,11 @@ interface PassportStampProps {
   destination?: string;
   tripName?: string;
   date?: string;
-  variant?: 'entry' | 'departure' | 'settled';
-  color?: 'teal' | 'red' | 'navy' | 'amber' | 'cyan' | 'purple' | 'auto';
+  variant?: 'entry' | 'departure' | 'settled' | 'cleared' | 'unsettled';
+  color?: 'teal' | 'red' | 'navy' | 'amber' | 'cyan' | 'purple' | 'success' | 'danger' | 'coral' | 'auto';
   size?: number;
+  transparent?: boolean;
+  tilt?: number;
   className?: string;
   style?: React.CSSProperties;
 }
@@ -72,6 +74,8 @@ const INK_PALETTE = {
   purple: { stroke: '#A855F7', fill: 'rgba(168, 85, 247, 0.18)', text: '#C084FC', bg: 'rgba(46, 16, 75, 0.65)' },
   navy: { stroke: '#38BDF8', fill: 'rgba(56, 189, 248, 0.18)', text: '#7DD3FC', bg: 'rgba(12, 34, 56, 0.65)' },
   red: { stroke: '#F43F5E', fill: 'rgba(244, 63, 94, 0.18)', text: '#FB7185', bg: 'rgba(60, 10, 20, 0.65)' },
+  success: { stroke: 'var(--color-success)', fill: 'none', text: 'var(--color-success)', bg: 'none' },
+  danger: { stroke: 'var(--color-danger)', fill: 'none', text: 'var(--color-danger)', bg: 'none' },
 };
 
 const DYNAMIC_KEYS: Array<keyof typeof INK_PALETTE> = ['cyan', 'amber', 'purple', 'coral'];
@@ -87,6 +91,8 @@ export const PassportStamp: React.FC<PassportStampProps> = ({
   variant = 'entry',
   color = 'auto',
   size = 68,
+  transparent = false,
+  tilt,
   className = '',
   style = {},
 }) => {
@@ -94,22 +100,32 @@ export const PassportStamp: React.FC<PassportStampProps> = ({
   const code = deriveDestCode(destination, tripName);
   const formattedDate = formatStampDate(date);
 
-  // Deterministic tilt based on code string (-6deg to +6deg)
-  const tiltDeg = ((code.charCodeAt(0) + (code.charCodeAt(1) || 0)) % 13) - 6;
+  // Deterministic tilt based on code string (-6deg to +6deg), or explicit tilt prop
+  const calculatedTilt = ((code.charCodeAt(0) + (code.charCodeAt(1) || 0)) % 13) - 6;
+  const effectiveTilt = tilt !== undefined ? tilt : calculatedTilt;
 
-  // Derive dynamic color: settled trips always get vibrant emerald teal; active trips dynamically cycle through vivid ink tones
+  // Derive dynamic color
   let activeColor = INK_PALETTE.amber;
-  if (variant === 'settled') {
-    activeColor = INK_PALETTE.teal;
-  } else if (color && color !== 'auto' && INK_PALETTE[color]) {
+  if (color && color !== 'auto' && INK_PALETTE[color]) {
     activeColor = INK_PALETTE[color];
+  } else if (variant === 'settled' || variant === 'cleared') {
+    activeColor = transparent ? INK_PALETTE.success : INK_PALETTE.teal;
+  } else if (variant === 'unsettled') {
+    activeColor = INK_PALETTE.danger;
   } else {
     // Dynamic seed based on destination + tripName
     const seed = (code.charCodeAt(0) + (tripName?.length || 0)) % DYNAMIC_KEYS.length;
     activeColor = INK_PALETTE[DYNAMIC_KEYS[seed]];
   }
 
-  const topText = variant === 'settled' ? '• SETTLED •' : variant === 'departure' ? '• DEPARTURE •' : '• IMMIGRATION •';
+  const topText =
+    variant === 'settled' || variant === 'cleared'
+      ? '• SETTLED •'
+      : variant === 'unsettled'
+      ? '• UNSETTLED •'
+      : variant === 'departure'
+      ? '• DEPARTURE •'
+      : '• ENTRY •';
 
   return (
     <div
@@ -118,11 +134,14 @@ export const PassportStamp: React.FC<PassportStampProps> = ({
         display: 'inline-flex',
         alignItems: 'center',
         justifyContent: 'center',
-        transform: `rotate(${tiltDeg}deg)`,
+        transform: `rotate(${effectiveTilt}deg)`,
         transformOrigin: 'center center',
         userSelect: 'none',
         pointerEvents: 'none',
-        filter: 'drop-shadow(0 3px 10px rgba(0, 0, 0, 0.65)) drop-shadow(0 0 1px rgba(0, 0, 0, 0.9))',
+        opacity: transparent ? 0.9 : 1,
+        filter: transparent
+          ? 'drop-shadow(0 1px 2px rgba(0, 0, 0, 0.22))'
+          : 'drop-shadow(0 3px 10px rgba(0, 0, 0, 0.65)) drop-shadow(0 0 1px rgba(0, 0, 0, 0.9))',
         ...style,
       }}
       title={`${variant.toUpperCase()}: ${code} - ${formattedDate}`}
@@ -135,14 +154,16 @@ export const PassportStamp: React.FC<PassportStampProps> = ({
         xmlns="http://www.w3.org/2000/svg"
         style={{ overflow: 'visible' }}
       >
-        {/* Soft tinted backdrop circle for guaranteed high contrast on any card photo */}
-        <circle
-          cx="50"
-          cy="50"
-          r="47"
-          fill={activeColor.bg}
-          style={{ backdropFilter: 'blur(6px)' }}
-        />
+        {/* Soft tinted backdrop circle for photo covers, skipped when transparent paper stamp is requested */}
+        {!transparent && (
+          <circle
+            cx="50"
+            cy="50"
+            r="47"
+            fill={activeColor.bg}
+            style={{ backdropFilter: 'blur(6px)' }}
+          />
+        )}
 
         {/* Outer Distressed Border */}
         <circle
@@ -152,7 +173,7 @@ export const PassportStamp: React.FC<PassportStampProps> = ({
           stroke={activeColor.stroke}
           strokeWidth="2.4"
           strokeDasharray="90 3 40 2 20 4"
-          fill={activeColor.fill}
+          fill={transparent ? 'none' : activeColor.fill}
         />
 
         {/* Inner Solid Border */}
@@ -163,6 +184,7 @@ export const PassportStamp: React.FC<PassportStampProps> = ({
           stroke={activeColor.stroke}
           strokeWidth="1.2"
           strokeDasharray="45 2 30 1"
+          fill="none"
           opacity="0.85"
         />
 

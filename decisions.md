@@ -2586,6 +2586,21 @@ This document logs all meaningful technical decisions, library choices, design p
   - Dropped 2-pane cockpit split view on large screens in favor of consistent single-column layout, prioritizing predictable vertical scanning on web and tablets.
   - Web Audio synthesis requires user interaction gesture to unlock AudioContext in strict browser autoplays (handled cleanly on settle tap).
 
+---
+
+## 138. Transparent & Tilted Passport Stamp on Boarding Pass Hero Card (v3.7.1)
+* **Context:** The cleared/entry passport stamp on the Boarding Pass hero card was initially placed as a solid tinted circle, which visually clashed with the perforated paper texture of the card. Additionally, users noted that the stamp should visually harmonize with the settled/unsettled `.stamp-badge` by being transparent and angled.
+* **Decision:**
+  - Update `PassportStamp` to support `transparent={true}`, omitting the background `<circle>` backdrop and using `fill="none"` with subtle paper-imprint drop shadows.
+  - Pass `tilt={8}` to match the exact 8-degree slant of `.stamp-badge` (`transform: rotate(8deg)`).
+  - Position the stamp on the left side above the lower perforated tear line (`bottom: 10px; left: 16px;`) occupying the dedicated negative space to the left of the centered outstanding amount.
+* **Pattern/Implementation:**
+  - `PassportStamp.tsx`: Supports `transparent?: boolean`, `tilt?: number`, `success`/`danger` ink palettes mapped to `var(--color-success)` / `var(--color-danger)`, and `variant` labels (`• SETTLED •`, `• CLEARED •`, `• ENTRY •`, `• UNSETTLED •`).
+  - `BoardingPassHeroCard.tsx`: Integrates `<PassportStamp ... transparent={true} tilt={8} color={isFullySettled ? 'success' : 'danger'} />`.
+* **Trade-offs Accepted:**
+  - Omission of the blurred backdrop on transparent stamps relies on the contrast between the ink color and the boarding pass gradient background. Both `var(--color-success)` and `var(--color-danger)` have strong WCAG-compliant contrast ratios against the card background.
+
+
 
 
 
