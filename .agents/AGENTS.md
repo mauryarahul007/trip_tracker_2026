@@ -76,6 +76,7 @@
 - **Rule 2 (Automatic Dev Server Refresh):** Because `vite.config.ts` compiles `__APP_VERSION__` (from `package.json`) and `__BUILD_NUMBER__` (from `git rev-list --count HEAD`) at initial server boot, whenever the version is bumped, you MUST automatically restart the background Vite development server (`kill` stale task, launch new background daemon `npm run dev`). This ensures the live browser view immediately displays the fresh version and build number in Settings and header badges.
 - **Rule 3 (ADR & Commit Traceability):** Record the release cut in `decisions.md` under a corresponding ADR entry and reference the version in the git commit message and response summary.
 
+## Post-Push Resource Cleanup Protocol (Mandatory)
 
-
-
+- **Rule 1 (Immediate Server Shutdown):** Immediately after code is committed and pushed to GitHub (or when a testing phase concludes and the user moves on), you MUST terminate all active background dev servers (`npm run dev`), architecture/preview servers (e.g. Archify, Vite preview), and child processes to free system resources (RAM, CPU, and network ports).
+- **Rule 2 (Resource Verification):** Always query `manage_task` with action `'list'` and explicitly `'kill'` any remaining daemons or server tasks. The agent must never leave orphaned servers running indefinitely after a release has been pushed.
