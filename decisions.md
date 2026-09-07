@@ -2516,6 +2516,13 @@ This document logs all meaningful technical decisions, library choices, design p
   - The "Close Trip" action row still exists in the list below (unsettled amount/badge duplicated in the hero) — accepted redundancy: hero is glanceable status, list row is the actual settings action, matches how both Uber and WhatsApp show a summary plus a detail row for the same state.
   - No live browser screenshot taken before shipping (no Playwright/screenshot tool available in this session, only `tsc --noEmit`); flagged to the user as a verification gap.
 
+---
+
+## Appearance Row Title Clip Fix (v3.6.5, BUG-180)
+* **Context:** Confirmed via manual testing (user caught it, not caught by the earlier no-screenshot ship above) — proof the flagged verification gap was real. Preferences → Appearance row rendered the theme picker as icon+text segmented buttons ("Light"/"Night"/"Auto") with `flex-shrink:0`. On mobile widths that control ate most of the row, truncating the "Appearance" title into an ellipsis.
+* **Decision:** Icon-only segmented control (sun/moon/smartphone), tooltips retained via existing `title`/`aria-label` attrs, instead of widening the row or wrapping the title.
+* **Pattern/Implementation:** Removed the `<span>Light/Night/Auto</span>` labels in `SettingsView.tsx`; trimmed `.settings-seg-btn` padding/removed its now-unused `font-size`/`gap` in `index.css`.
+* **Trade-offs Accepted:** Icon-only assumes sun/moon/smartphone read clearly without labels — acceptable given the row's own subtitle already states the current mode in words (e.g. "Light").
 
 
 

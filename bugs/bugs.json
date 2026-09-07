@@ -5408,5 +5408,32 @@
     "resolvedBy": "claude-cli",
     "resolvedAt": "2026-09-07T12:58:43.076Z",
     "resolutionNote": "receiptPath is a Supabase Storage object path, not a URL. TripMediaGalleryModal used it directly as img src instead of resolving via getReceiptSignedUrl (the pattern ExpenseReviewModal already used). Fixed in v3.6.3 commit 37f07c4: resolve signed URLs per item with a loading placeholder, also fixed the share action using the same raw path."
+  },
+  {
+    "id": "BUG-180",
+    "title": "Appearance row title clipped by Light/Night/Auto segmented control",
+    "description": "The theme segmented control rendered icon+text for all 3 options (Light/Night/Auto) with flex-shrink:0, eating enough row width on mobile to truncate the 'Appearance' row title into an ellipsis.",
+    "severity": "low",
+    "category": "ui-ux",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Open Settings",
+      "Scroll to Preferences",
+      "Look at the Appearance row"
+    ],
+    "expectedBehavior": "Appearance title renders in full",
+    "actualBehavior": "Title truncated to 'Appeara…' or similar",
+    "diagnostics": {},
+    "createdAt": "2026-09-07T13:30:51.163Z",
+    "updatedAt": "2026-09-07T13:31:10.131Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-09-07T13:31:10.129Z",
+    "resolutionNote": "Segmented control buttons were icon+text with flex-shrink:0. Dropped text labels (icon-only, tooltips kept) in SettingsView.tsx + trimmed .settings-seg-btn padding in index.css. Fixed in v3.6.5 commit 46342a5."
   }
 ]
