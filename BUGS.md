@@ -10,109 +10,22 @@
 | Metric | Count | Status Notes |
 | :--- | :--- | :--- |
 | **Total Tracked** | **174** | All recorded bugs across sessions |
-| **🟢 Open** | **2** | 🚨 **2 CRITICAL**, 0 High |
+| **🟢 Open** | **0** | No critical blockers, 0 High |
 | **🟡 In Progress** | **0** | Active investigation or fix |
-| **✅ Resolved** | **146** | Verified & closed |
-| **⚪ Won't Fix** | **26** | Expected behavior / deferred |
+| **✅ Resolved** | **147** | Verified & closed |
+| **⚪ Won't Fix** | **27** | Expected behavior / deferred |
 
 ---
 
 ## 🚨 Active Bugs (Open & In Progress)
 
-| ID | Severity | Category | Title | Found By | Status |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| **[BUG-145](#bug-145)** | 🔴 **CRITICAL** | `general` | Importing a module script failed. | `auto-crash-handler` | 🟢 Open |
-| **[BUG-147](#bug-147)** | 🔴 **CRITICAL** | `general` | OverflowMenu is not defined | `auto-crash-handler` | 🟢 Open |
+*🎉 No active open bugs! Great job team.* 
 
 ---
 
 ## 📖 Detailed Active Bug Specs
 
-### BUG-145: Importing a module script failed.
-
-- **Severity**: `CRITICAL` | **Category**: `general` | **Status**: `open`
-- **Found By**: `auto-crash-handler` on 4/9/2026 (web)
-- **Route**: `#nav-1` (Online: `true`)
-
-**Description**:
-Automatically captured react crash.
-
-
-Lazy@unknown:0:0
-Suspense@unknown:0:0
-div@unknown:0:0
-div@unknown:0:0
-pfe@https://trip-tracker.blackmaroon.in/assets/index-DWxV1rqw.js:876:76685
-H9@
-R9@https://trip-tracker.blackmaroon.in/assets/index-DWxV1rqw.js:877:36540
-Ct@https://trip-tracker.blackmaroon.in/assets/index-DWxV1rqw.js:12:4272
-zt@https://trip-tracker.blackmaroon.in/assets/index-DWxV1rqw.js:12:8885
-Rt@https://trip-tracker.blackmaroon.in/assets/index-DWxV1rqw.js:12:8023
-Tn@https://trip-tracker.blackmaroon.in/assets/index-DWxV1rqw.js:12:18283
-
-**Expected**: App runs without throwing.
-
-**Actual**: Importing a module script failed.
-
-**Diagnostic Trace / Stack**:
-```text
-
-Lazy@unknown:0:0
-Suspense@unknown:0:0
-div@unknown:0:0
-div@unknown:0:0
-pfe@https://trip-tracker.blackmaroon.in/assets/index-DWxV1rqw.js:876:76685
-H9@
-R9@https://trip-tracker.blackmaroon.in/assets/index-DWxV1rqw.js:877:36540
-Ct@https://trip-tracker.blackmaroon.in/assets/index-DWxV1rqw.js:12:4272
-zt@https://trip-tracker.blackmaroon.in/assets/index-DWxV1rqw.js:12:8885
-Rt@https://trip-tracker.blackmaroon.in/assets/index-DWxV1rqw.js:12:8023
-Tn@https://trip-tracker.blackmaroon.in/assets/index-DWxV1rqw.js:12:18283
-```
-
----
-
-### BUG-147: OverflowMenu is not defined
-
-- **Severity**: `CRITICAL` | **Category**: `general` | **Status**: `open`
-- **Found By**: `auto-crash-handler` on 5/9/2026 (web)
-- **Route**: `#nav-1` (Online: `true`)
-
-**Description**:
-Automatically captured react crash.
-
-ReferenceError: OverflowMenu is not defined
-    at App (http://localhost:5173/src/App.tsx?t=1788549344342:2094:35)
-    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:12864:12)
-    at renderWithHooks (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:4211:19)
-    at updateFunctionComponent (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:5567:16)
-    at beginWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:6138:20)
-    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:850:66)
-    at performUnitOfWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:8427:92)
-    at workLoopSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:8323:37)
-    at renderRootSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:8307:6)
-    at performWorkOnRoot (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:7992:27)
-
-**Expected**: App runs without throwing.
-
-**Actual**: OverflowMenu is not defined
-
-**Diagnostic Trace / Stack**:
-```text
-ReferenceError: OverflowMenu is not defined
-    at App (http://localhost:5173/src/App.tsx?t=1788549344342:2094:35)
-    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:12864:12)
-    at renderWithHooks (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:4211:19)
-    at updateFunctionComponent (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:5567:16)
-    at beginWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:6138:20)
-    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:850:66)
-    at performUnitOfWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:8427:92)
-    at workLoopSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:8323:37)
-    at renderRootSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:8307:6)
-    at performWorkOnRoot (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:7992:27)
-```
-
----
+*No active bug details to display.*
 
 ## ✅ Resolved Bugs History
 
@@ -236,6 +149,7 @@ ReferenceError: OverflowMenu is not defined
 | **BUG-142** | Destination name crushed to 2-3 chars in merged trip-card pill | `ui-ux` | `medium` | `claude-cli` | `claude-cli` | The 9a24804 fix (calc(100% - 76px) max-width + 56px min-width on destination) helped short names but wasn't enough for a genuinely long multi-stop route ('Gangtok -> Lachung -> Pelling') sharing one pill with the countdown badge and weather -- three segments always competing for one row meant it kept truncating. Real fix in commit 6968303: split back into two stacked pills -- countdown badge on its own row, destination + weather pill below it, so destination only shares its row with weather (not weather + badge) and gets far more width. Confirmed against the actual reported multi-stop route. |
 | **BUG-143** | Transition was aborted because of invalid state | `general` | `critical` | `auto-crash-handler` | `cursor` | App.tsx setActiveTab and handleStartEditExpense now use withViewTransition which catches aborted/skipped transitions. |
 | **BUG-144** | Transition was aborted because of invalid state | `general` | `critical` | `auto-crash-handler` | `cursor` | Duplicate of BUG-143 — withViewTransition catch on tab/edit paths. |
+| **BUG-145** | Importing a module script failed. | `general` | `critical` | `auto-crash-handler` | `claude-cli` | Root cause: src/utils/lazyImport.ts's CHUNK_LOAD_FAILURE regex didn't match Safari/WebKit's 'Importing a module script failed.' wording for a stale dynamic-import() chunk after a deploy, so Safari users fell through to the ErrorBoundary crash instead of getting the single-reload recovery. This was already fixed in commit 340c590 (regex now includes 'importing a module script failed', src/utils/lazyImport.ts:11) and verified present at HEAD; the bug tracker's 'open' status had been reverted back by an external Supabase-ledger sync (commit 3716a1b, authored via Cursor) even though the code fix was never removed. Re-confirmed by reading src/utils/lazyImport.ts (fix present) and a clean project-wide 'npx tsc --noEmit -p tsconfig.app.json'. No further code change needed; re-resolving to correct the tracker state. |
 | **BUG-146** | cannot add `presence` callbacks for realtime:trip_presence:137dfbc0-bf90-475c-89d0-86b57f68ae0a after `subscribe()`. | `general` | `critical` | `auto-crash-handler` | `cursor` | usePeerPresence now removeChannel + untrack on cleanup and tears down existing topic before subscribe. Commit pending (stability batch). |
 | **BUG-148** | cannot add `presence` callbacks for realtime:trip_presence:137dfbc0-bf90-475c-89d0-86b57f68ae0a after `subscribe()`. | `general` | `critical` | `auto-crash-handler` | `cursor` | Duplicate of BUG-146 — presence channel lifecycle fix. |
 | **BUG-149** | cannot add `presence` callbacks for realtime:trip_presence:137dfbc0-bf90-475c-89d0-86b57f68ae0a after `subscribe()`. | `general` | `critical` | `auto-crash-handler` | `cursor` | Duplicate of BUG-146 — presence channel lifecycle fix. |

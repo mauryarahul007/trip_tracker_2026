@@ -4489,7 +4489,7 @@
     "description": "Automatically captured react crash.\n\n\nLazy@unknown:0:0\nSuspense@unknown:0:0\ndiv@unknown:0:0\ndiv@unknown:0:0\npfe@https://trip-tracker.blackmaroon.in/assets/index-DWxV1rqw.js:876:76685\nH9@\nR9@https://trip-tracker.blackmaroon.in/assets/index-DWxV1rqw.js:877:36540\nCt@https://trip-tracker.blackmaroon.in/assets/index-DWxV1rqw.js:12:4272\nzt@https://trip-tracker.blackmaroon.in/assets/index-DWxV1rqw.js:12:8885\nRt@https://trip-tracker.blackmaroon.in/assets/index-DWxV1rqw.js:12:8023\nTn@https://trip-tracker.blackmaroon.in/assets/index-DWxV1rqw.js:12:18283",
     "severity": "critical",
     "category": "general",
-    "status": "open",
+    "status": "resolved",
     "foundBy": "auto-crash-handler",
     "environment": {
       "route": "#nav-1",
@@ -4511,7 +4511,10 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-09-04T09:02:15.735229+00:00",
-    "updatedAt": "2026-09-04T09:02:15.735229+00:00"
+    "updatedAt": "2026-09-07T00:25:07.191Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-09-07T00:25:07.191Z",
+    "resolutionNote": "Root cause: src/utils/lazyImport.ts's CHUNK_LOAD_FAILURE regex didn't match Safari/WebKit's 'Importing a module script failed.' wording for a stale dynamic-import() chunk after a deploy, so Safari users fell through to the ErrorBoundary crash instead of getting the single-reload recovery. This was already fixed in commit 340c590 (regex now includes 'importing a module script failed', src/utils/lazyImport.ts:11) and verified present at HEAD; the bug tracker's 'open' status had been reverted back by an external Supabase-ledger sync (commit 3716a1b, authored via Cursor) even though the code fix was never removed. Re-confirmed by reading src/utils/lazyImport.ts (fix present) and a clean project-wide 'npx tsc --noEmit -p tsconfig.app.json'. No further code change needed; re-resolving to correct the tracker state."
   },
   {
     "id": "BUG-146",
@@ -4557,7 +4560,7 @@
     "description": "Automatically captured react crash.\n\nReferenceError: OverflowMenu is not defined\n    at App (http://localhost:5173/src/App.tsx?t=1788549344342:2094:35)\n    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:12864:12)\n    at renderWithHooks (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:4211:19)\n    at updateFunctionComponent (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:5567:16)\n    at beginWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:6138:20)\n    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:850:66)\n    at performUnitOfWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:8427:92)\n    at workLoopSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:8323:37)\n    at renderRootSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:8307:6)\n    at performWorkOnRoot (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:7992:27)",
     "severity": "critical",
     "category": "general",
-    "status": "open",
+    "status": "wont_fix",
     "foundBy": "auto-crash-handler",
     "environment": {
       "route": "#nav-1",
@@ -4579,7 +4582,8 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-09-04T19:15:46.579191+00:00",
-    "updatedAt": "2026-09-04T19:15:46.579191+00:00"
+    "updatedAt": "2026-09-07T00:25:11.543Z",
+    "resolutionNote": "Stale localhost:5173 dev-crash-handler capture from mid-edit hot-reload (Vite dev server, not production). The ReferenceError pointed at App.tsx:2094 referencing OverflowMenu, but OverflowMenu is not imported or referenced anywhere in the current src/App.tsx -- it was already removed/fixed by a subsequent hot-reload save during that dev session. Verified via grep (no OverflowMenu reference in App.tsx) and a clean project-wide 'npx tsc --noEmit -p tsconfig.app.json'. Not a defect in any committed revision."
   },
   {
     "id": "BUG-148",
