@@ -70,3 +70,4 @@ describe('useHistoryBack & useHistoryStack', () => {
     expect(historyStack[0].state).toEqual({ navDepth: 1 });
   });
 });
+
