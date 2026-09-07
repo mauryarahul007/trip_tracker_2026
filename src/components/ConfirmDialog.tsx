@@ -1,10 +1,12 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { useHistoryBack } from '../utils/useHistoryBack';
 import { useEscapeKey } from '../utils/useEscapeKey';
 
 export type ConfirmRequest = {
   message: string;
+  /** Optional extra content under the message (e.g. a merge-target picker). */
+  body?: ReactNode;
   title?: string;
   confirmLabel?: string;
   danger?: boolean;
@@ -90,7 +92,8 @@ export function ConfirmDialog({ request, onCancel }: Props) {
         onClick={(e) => e.stopPropagation()}
       >
         <h3 id="confirm-dialog-title" style={{ fontSize: '17px', marginBottom: '10px' }}>{request.title || 'Please confirm'}</h3>
-        <p id="confirm-dialog-desc" style={{ fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '20px' }}>{request.message}</p>
+        <p id="confirm-dialog-desc" style={{ fontSize: '14px', color: 'var(--text-secondary)', marginBottom: request.body ? '12px' : '20px' }}>{request.message}</p>
+        {request.body ? <div style={{ marginBottom: '20px' }}>{request.body}</div> : null}
         <div style={{ display: 'flex', gap: '12px' }}>
           <button
             type="button"

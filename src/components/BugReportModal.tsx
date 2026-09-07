@@ -200,7 +200,7 @@ export function BugReportModal({
   };
 
   return (
-    <div className="settings-container settings-subscreen-enter">
+    <div className="settings-container">
       <div className="settings-subscreen-nav-header">
         <button type="button" className="settings-subscreen-back-link" onClick={attemptBack}>
           <IconChevronLeft size={18} />

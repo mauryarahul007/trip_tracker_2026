@@ -324,3 +324,30 @@ describe('resolveShares', () => {
     expect(total).toBe(72);
   });
 });
+
+describe('selectTrip recycle-bin cache', () => {
+  it('does not wipe deletedExpenses when switching trips', async () => {
+    const deleted = makeExpense({ id: 'del-1', tripId: 'trip-a', deletedAt: 1 });
+    useTripStore.setState({
+      trips: [
+        makeTrip({ id: 'trip-a', memberIds: ['m1'] }),
+        makeTrip({ id: 'trip-b', memberIds: ['m1'] }),
+      ],
+      activeTripId: 'trip-a',
+      deletedExpenses: [deleted],
+      expenses: [],
+    });
+
+    const descriptor = Object.getOwnPropertyDescriptor(navigator, 'onLine');
+    Object.defineProperty(navigator, 'onLine', { configurable: true, get: () => false });
+    try {
+      await useTripStore.getState().selectTrip('trip-b');
+    } finally {
+      if (descriptor) Object.defineProperty(navigator, 'onLine', descriptor);
+      else Object.defineProperty(navigator, 'onLine', { configurable: true, value: true });
+    }
+
+    expect(useTripStore.getState().activeTripId).toBe('trip-b');
+    expect(useTripStore.getState().deletedExpenses.map((e) => e.id)).toEqual(['del-1']);
+  });
+});

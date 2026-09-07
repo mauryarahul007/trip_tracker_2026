@@ -5068,6 +5068,21 @@ input:checked + .toggle-slider:before {
   from { opacity: 0; transform: translateX(28px); }
   to { opacity: 1; transform: translateX(0); }
 }
+@keyframes drawerSlideOutRight {
+  from { opacity: 1; transform: translateX(0); }
+  to { opacity: 0; transform: translateX(28px); }
+}
+@keyframes drawerBackdropFadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+.modal-backdrop.drawer-right.is-exiting {
+  animation: drawerBackdropFadeOut 0.28s var(--ease-decel) forwards;
+  pointer-events: none;
+}
+.modal-backdrop.drawer-right.is-exiting .modal-sheet.settings-drawer {
+  animation: drawerSlideOutRight 0.28s var(--ease-decel) forwards;
+}
 @media (prefers-reduced-motion: reduce) {
   .modal-sheet.settings-drawer { animation: none; }
 }
@@ -5754,6 +5769,52 @@ html.capacitor-ios .trip-sheet .tab-pane {
   flex-direction: column;
   gap: 20px;
   padding-bottom: 24px;
+}
+
+/* Overlay drill-down: home stays mounted (scroll preserved) while the
+   current submenu is the only in-flow layer. */
+.settings-nav-root {
+  position: relative;
+}
+
+.settings-overlay-panel {
+  animation: whatsappSlideIn 0.28s var(--ease-decel);
+}
+
+.settings-overlay-panel.dir-back {
+  animation: whatsappSlideInFromLeft 0.28s var(--ease-decel);
+}
+
+.settings-overlay-panel.dir-out {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  pointer-events: none;
+  animation: whatsappSlideOut 0.28s var(--ease-decel) forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .settings-overlay-panel,
+  .settings-overlay-panel.dir-back,
+  .settings-overlay-panel.dir-out {
+    animation: none;
+  }
+  .modal-backdrop.drawer-right.is-exiting {
+    animation: none;
+  }
+  .modal-backdrop.drawer-right.is-exiting .modal-sheet.settings-drawer {
+    animation: none;
+  }
+}
+
+.settings-nav-root.has-overlay:not(.is-exiting) .settings-home-layer {
+  position: absolute;
+  visibility: hidden;
+  pointer-events: none;
+  width: 100%;
+  left: 0;
+  top: 0;
 }
 
 /* Profile Hero Card — same flat paper/border language as the boarding-pass
@@ -6559,7 +6620,6 @@ html.capacitor-ios .trip-sheet .tab-pane {
 /* WhatsApp-Style Sub-screen Navigation & Transitions */
 .settings-subscreen-enter {
   animation: whatsappSlideIn 0.28s var(--ease-decel) forwards;
-  will-change: transform, opacity;
 }
 
 @keyframes whatsappSlideIn {
@@ -6570,6 +6630,28 @@ html.capacitor-ios .trip-sheet .tab-pane {
   to {
     opacity: 1;
     transform: translateX(0);
+  }
+}
+
+@keyframes whatsappSlideInFromLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes whatsappSlideOut {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(24px);
   }
 }
 

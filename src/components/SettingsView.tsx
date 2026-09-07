@@ -1,81 +1,90 @@
-import React, { useState, useEffect, useRef, lazy, Suspense } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useRef, lazy, Suspense } from 'react';
 import type { Category, Expense, Trip } from '../types';
 import type { ConfirmRequest } from './ConfirmDialog';
-import { PrivacyPolicyContent, PRIVACY_POLICY_UPDATED } from './PrivacyPolicyContent';
-import { TermsOfServiceContent, TERMS_OF_SERVICE_UPDATED } from './TermsOfServiceContent';
 import {
-  IconTag,
-  IconTrash,
   IconArchive,
   IconDownload,
-  IconUpload,
-  IconFileSpreadsheet,
   IconMoon,
   IconSun,
   IconSmartphone,
-  IconDatabase,
   IconSparkles,
   IconLogOut,
   IconAlertCircle,
-  IconCheckCircle,
   IconChevronRight,
-  IconChevronLeft,
   IconMapPin,
   IconShield,
-  IconBell,
   IconShare,
   IconRefresh,
   IconSearch,
   IconPieChart,
   IconSettings,
+  IconBell,
 } from './Icons';
 import { SettingsCell } from './common/SettingsCell';
 import { SettingsSection } from './common/SettingsSection';
-import { CategoryIcon } from './CategoryIcon';
 import { useTripStore } from '../store/tripStore';
 import { useAuthStore } from '../store/authStore';
 import { useNotificationsStore } from '../store/notificationsStore';
-import { formatDateRange } from '../utils/dateRange';
-import { getCategoryKeywords } from '../utils/categoryHelper';
 import { getAppVersion, WEB_APP_VERSION } from '../utils/appVersion';
 import { triggerHaptic } from '../utils/haptics';
 import { getCurrencySymbol } from '../utils/currency';
 import { calculateSettlements } from '../utils/settlement';
-import { BugReportModal } from './BugReportModal';
-import { FeatureRequestModal } from './FeatureRequestModal';
 import { SuperadminAuthModal } from './SuperadminAuthModal';
-
-// Superadmin-only, reached only via the gated "Superadmin Console" row
-// below -- code-split so its ~700 lines don't ship in every traveler's
-// bundle.
-const SuperAdminBugTracker = lazy(() => import('./SuperAdminBugTracker').then((m) => ({ default: m.SuperAdminBugTracker })));
-import { useHistoryBack, useHistoryStack } from '../utils/useHistoryBack';
+import { useHistoryStack } from '../utils/useHistoryBack';
 import { useEscapeKey } from '../utils/useEscapeKey';
 import {
   isPassRemindersEnabled,
   setPassRemindersEnabled,
   rescheduleTripPassReminders,
 } from '../utils/passReminders';
+import { SettingsTripToolsHub } from './settings/SettingsTripToolsHub';
+import { SettingsBackupsMediaHub } from './settings/SettingsBackupsMediaHub';
+import { SettingsArchivedTripsScreen } from './settings/SettingsArchivedTripsScreen';
+import { SettingsBackupsScreen } from './settings/SettingsBackupsScreen';
+import { SettingsStorageDataScreen } from './settings/SettingsStorageDataScreen';
+import { SettingsAboutScreen } from './settings/SettingsAboutScreen';
+import { prefetchSettingsLeaves, prefetchSettingsLegal } from './settings/prefetchSettingsLeaves';
+import { formatBytes } from './settings/formatBytes';
+
+const SuperAdminBugTracker = lazy(() => import('./SuperAdminBugTracker').then((m) => ({ default: m.SuperAdminBugTracker })));
+const SettingsCategoriesScreen = lazy(() => import('./settings/SettingsCategoriesScreen').then((m) => ({ default: m.SettingsCategoriesScreen })));
+const SettingsRecycleBinScreen = lazy(() => import('./settings/SettingsRecycleBinScreen').then((m) => ({ default: m.SettingsRecycleBinScreen })));
+const SettingsLegalScreen = lazy(() => import('./settings/SettingsLegalScreen').then((m) => ({ default: m.SettingsLegalScreen })));
+const BugReportModal = lazy(() => import('./BugReportModal').then((m) => ({ default: m.BugReportModal })));
+const FeatureRequestModal = lazy(() => import('./FeatureRequestModal').then((m) => ({ default: m.FeatureRequestModal })));
 
 export type ThemePref = 'light' | 'dark' | 'system';
 
 type SubScreen = null | 'trip-tools' | 'categories' | 'recycle-bin' | 'backups-media' | 'backups' | 'archived-trips' | 'bug-tracker' | 'report-issue' | 'suggest-feature' | 'storage-data' | 'about' | 'privacy' | 'terms';
 
+const EMPTY_SETTLEMENT = {
+  isFullySettled: true,
+  totalOutstanding: 0,
+  transferCount: 0,
+  unsettledMemberCount: 0,
+};
 
-const RECYCLE_BIN_WINDOW_MS = 24 * 60 * 60 * 1000;
+const OVERLAY_MS = 280;
 
-function formatTimeLeft(deletedAt: number): string {
-  const msLeft = deletedAt + RECYCLE_BIN_WINDOW_MS - Date.now();
-  if (msLeft <= 0) return 'purging soon';
-  const hoursLeft = Math.floor(msLeft / (60 * 60 * 1000));
-  if (hoursLeft < 1) return '<1h left';
-  return `${hoursLeft}h left`;
-}
+const SETTINGS_LEAF_FALLBACK = (
+  <div className="skeleton" style={{ height: '200px', borderRadius: '14px' }} />
+);
 
-const CATEGORY_ICON_PRESETS = [
-  '🍔', '🏨', '✈️', '🎟️', '🛍️', '📦', '🚗', '⛽', '🎬', '🍺', '💊', '🎁', '🧾', '🏥', '🎓', '🐾', '🎵', '🚕',
-  '🏖️', '🗺️', '🧳', '🚆', '🚢', '🚌', '🎫', '🍽️', '☕', '🏔️', '🏛️', '📸', '🛂', '💱',
-];
+const DEFAULT_PARENT_MAP: Record<string, SubScreen> = {
+  'trip-tools': null,
+  'categories': null,
+  'recycle-bin': null,
+  'backups-media': null,
+  'storage-data': null,
+  'archived-trips': null,
+  'backups': null,
+  'report-issue': null,
+  'suggest-feature': null,
+  'bug-tracker': null,
+  'about': null,
+  'privacy': 'about',
+  'terms': 'about',
+};
 
 interface SettingsViewProps {
   categories: Category[];
@@ -110,6 +119,8 @@ interface SettingsViewProps {
 
   // Context
   hasActiveTrip?: boolean;
+  /** False when the in-trip Settings tab is mounted but hidden (other tab active). */
+  isSurfaceVisible?: boolean;
   initialSubScreen?: SubScreen;
   baseCurrency?: string;
   onClose?: () => void;
@@ -150,6 +161,7 @@ export function SettingsView({
   onInstallApp,
   onOpenSuperadminPortal,
   hasActiveTrip = true,
+  isSurfaceVisible = true,
   initialSubScreen = null,
   onClose,
   onRequestConfirm,
@@ -162,6 +174,13 @@ export function SettingsView({
 }: SettingsViewProps) {
   const [screenStack, setScreenStack] = useState<SubScreen[]>(() => (initialSubScreen ? [initialSubScreen] : []));
   const subScreen = screenStack.length > 0 ? screenStack[screenStack.length - 1] : null;
+  const navDirectionRef = useRef<'forward' | 'back'>('forward');
+  const [overlayRender, setOverlayRender] = useState<{ screen: SubScreen; dir: 'in' | 'back' | 'out' }>(() => ({
+    screen: initialSubScreen,
+    dir: 'in',
+  }));
+  const overlayRenderRef = useRef(overlayRender);
+  overlayRenderRef.current = overlayRender;
 
   useEffect(() => {
     if (initialSubScreen) {
@@ -171,28 +190,13 @@ export function SettingsView({
 
   const pushScreen = (screen: SubScreen) => {
     triggerHaptic('light');
+    navDirectionRef.current = 'forward';
     setScreenStack((prev) => [...prev, screen]);
-  };
-
-  // Drill-downs return to Settings home; privacy/terms nest under About.
-  const DEFAULT_PARENT_MAP: Record<string, SubScreen> = {
-    'trip-tools': null,
-    'categories': null,
-    'recycle-bin': null,
-    'backups-media': null,
-    'storage-data': null,
-    'archived-trips': null,
-    'backups': null,
-    'report-issue': null,
-    'suggest-feature': null,
-    'bug-tracker': null,
-    'about': null,
-    'privacy': 'about',
-    'terms': 'about',
   };
 
   const popScreen = () => {
     triggerHaptic('light');
+    navDirectionRef.current = 'back';
     setScreenStack((prev) => {
       if (prev.length > 1) {
         return prev.slice(0, prev.length - 1);
@@ -210,6 +214,30 @@ export function SettingsView({
       pushScreen(target);
     }
   };
+
+  useLayoutEffect(() => {
+    const reduce = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const current = overlayRenderRef.current;
+
+    if (subScreen !== null) {
+      if (current.screen === subScreen && current.dir !== 'out') return;
+      setOverlayRender({
+        screen: subScreen,
+        dir: navDirectionRef.current === 'back' ? 'back' : 'in',
+      });
+      return;
+    }
+
+    if (!current.screen || current.dir === 'out') return;
+    if (reduce) {
+      setOverlayRender({ screen: null, dir: 'in' });
+      return;
+    }
+
+    setOverlayRender({ screen: current.screen, dir: 'out' });
+    const t = window.setTimeout(() => setOverlayRender({ screen: null, dir: 'in' }), OVERLAY_MS);
+    return () => window.clearTimeout(t);
+  }, [subScreen]);
 
   const getScreenTitle = (screen: SubScreen): string => {
     switch (screen) {
@@ -278,6 +306,10 @@ export function SettingsView({
   const activeTripId = useTripStore((s) => s.activeTripId);
   const activeTrip = trips.find((t) => t.id === activeTripId);
   const isTripMuted = useTripStore((s) => (activeTripId ? s.isTripMuted(activeTripId) : false));
+  const tripDeletedExpenses = React.useMemo(
+    () => (activeTripId ? deletedExpenses.filter((e) => e.tripId === activeTripId) : []),
+    [deletedExpenses, activeTripId]
+  );
 
   // Determine if current user can manage/close the active trip
   const isTripAdmin = Boolean(
@@ -297,19 +329,26 @@ export function SettingsView({
     return activeTrip ? (activeTrip.groupIds || []).map((id) => groups[id]).filter(Boolean) : [];
   }, [activeTrip, groups]);
 
+  const lastSettlementRef = useRef(EMPTY_SETTLEMENT);
   const settlementSummary = React.useMemo(() => {
-    if (!activeTrip) return { isFullySettled: true, totalOutstanding: 0, transferCount: 0, unsettledMemberCount: 0 };
+    if (!activeTrip || !hasActiveTrip || !isTripAdmin) {
+      lastSettlementRef.current = EMPTY_SETTLEMENT;
+      return EMPTY_SETTLEMENT;
+    }
+    if (!isSurfaceVisible || subScreen !== null) return lastSettlementRef.current;
     const { balances, transfers } = calculateSettlements(activeTrip, members, activeTripExpenses, activeTripGroups);
     const totalOutstanding = transfers.reduce((sum, t) => sum + t.amount, 0);
     const isFullySettled = transfers.length === 0 || totalOutstanding < 0.01;
     const unsettledMemberCount = balances.filter((b) => Math.abs(b.balance) >= 0.01).length;
-    return {
+    const next = {
       isFullySettled,
       totalOutstanding,
       transferCount: transfers.length,
       unsettledMemberCount,
     };
-  }, [activeTrip, members, activeTripExpenses, activeTripGroups]);
+    lastSettlementRef.current = next;
+    return next;
+  }, [activeTrip, hasActiveTrip, isTripAdmin, isSurfaceVisible, subScreen, members, activeTripExpenses, activeTripGroups]);
 
   const handleToggleCloseTrip = () => {
     if (!activeTrip || !isTripAdmin) return;
@@ -418,10 +457,6 @@ export function SettingsView({
   const unreadNotificationCount = useNotificationsStore((s) => s.unreadCount);
   const openNotificationsPanel = useNotificationsStore((s) => s.openPanel);
 
-  // Category keyword states
-  const [expandedCategoryId, setExpandedCategoryId] = useState<string | null>(null);
-  const [newKeywordInput, setNewKeywordInput] = useState('');
-
   // Settings v2: Search & Clipboard state
   const [searchQuery, setSearchQuery] = useState('');
   const [copyFeedback, setCopyFeedback] = useState<string | null>(null);
@@ -522,19 +557,13 @@ export function SettingsView({
       return;
     }
     setSubScreen(null);
-    setExpandedCategoryId(null);
   };
 
-  // Register sub-screen drill-downs into browser history stack (WhatsApp hierarchical navigation)
-  useHistoryBack(subScreen !== null, closeSubScreen);
+  // One history owner for drill-downs (useHistoryStack). Do not also
+  // register useHistoryBack(subScreen) -- that double-pushed and made
+  // browser/Android back skip a screen.
   useHistoryStack(screenStack.length, closeSubScreen);
   useEscapeKey(subScreen !== null, closeSubScreen);
-
-  // Register expanded category auto-tags drawer into browser history stack
-  useHistoryBack(expandedCategoryId !== null, () => {
-    setExpandedCategoryId(null);
-  });
-  useEscapeKey(expandedCategoryId !== null, () => setExpandedCategoryId(null));
 
   // Register Superadmin Auth modal into browser history stack
   // (owned by SuperadminAuthModal itself — do not double-register here)
@@ -544,8 +573,20 @@ export function SettingsView({
   const [storageEstimate, setStorageEstimate] = useState<{ used: number; quota: number } | null>(null);
   const [appVersion, setAppVersion] = useState<string | null>(null);
 
-  // Partitioned Storage breakdown (Receipts vs Database vs System Cache)
+  // Partitioned Storage breakdown (Receipts vs Database vs System Cache).
+  // JSON.stringify of every trip is skipped until Storage & Data is open.
   const storageBreakdown = React.useMemo(() => {
+    if (overlayRender.screen !== 'storage-data') {
+      return {
+        receiptCount: 0,
+        receiptBytes: 0,
+        dbBytes: 0,
+        cacheBytes: 0,
+        mediaPct: 5,
+        dbPct: 5,
+        cachePct: 90,
+      };
+    }
     const totalUsed = storageEstimate?.used || 0;
     // Estimate image receipts footprint: count expenses with receipts
     const receiptExpenses = activeTripExpenses.filter((e) => Boolean(e.receiptImage || e.receiptPath));
@@ -573,11 +614,7 @@ export function SettingsView({
       dbPct,
       cachePct,
     };
-  }, [storageEstimate, activeTripExpenses, trips, categories]);
-
-  useEffect(() => {
-    fetchDeletedExpenses();
-  }, [fetchDeletedExpenses]);
+  }, [overlayRender.screen, storageEstimate, activeTripExpenses, trips, categories]);
 
   useEffect(() => {
     getAppVersion().then(setAppVersion);
@@ -604,1061 +641,153 @@ export function SettingsView({
     };
   }, []);
 
-  // Category form states
-  const [newCategoryName, setNewCategoryName] = useState('');
-  const [newCategoryIcon, setNewCategoryIcon] = useState('');
-  const [showIconPicker, setShowIconPicker] = useState(false);
-  const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null);
-  const [mergeTargetId, setMergeTargetId] = useState('');
-
-  // Register Category Delete confirmation modal into browser history stack
-  useHistoryBack(categoryToDelete !== null, () => setCategoryToDelete(null));
-  useEscapeKey(categoryToDelete !== null, () => setCategoryToDelete(null));
-
-  // Category icon picker popover — Back closes picker, not the Categories page
-  useHistoryBack(showIconPicker, () => setShowIconPicker(false));
-  useEscapeKey(showIconPicker, () => setShowIconPicker(false));
-
-  const formatBytes = (bytes: number) => {
-    if (bytes === 0) return '0 B';
-    const k = 1024;
-    const sizes = ['B', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
-  };
-
-  const handleAddSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newCategoryName.trim()) return;
-    await onAddCategory(newCategoryName.trim(), newCategoryIcon.trim() || '🏷️');
-    setNewCategoryName('');
-    setNewCategoryIcon('');
-  };
-
-  const handleDeleteCategoryTrigger = (cat: Category) => {
-    const affectedCount = activeTripExpenses.filter((e) => e.category === cat.id).length;
-    if (affectedCount > 0) {
-      const otherCats = categories.filter((c) => c.id !== cat.id);
-      setMergeTargetId(otherCats[0]?.id || '');
-      setCategoryToDelete(cat);
-    } else {
-      onRequestConfirm?.({
-        title: 'Delete category',
-        message: `Are you sure you want to delete the category "${cat.name}"?`,
-        confirmLabel: 'Delete',
-        danger: true,
-        onConfirm: () => onDeleteCategory(cat.id, null),
-      });
-    }
-  };
-
-  const handleConfirmMergeDelete = () => {
-    if (!categoryToDelete) return;
-    onDeleteCategory(categoryToDelete.id, mergeTargetId || null);
-    setCategoryToDelete(null);
-  };
-
-  const affectedExpensesCount = categoryToDelete
-    ? activeTripExpenses.filter((e) => e.category === categoryToDelete.id).length
-    : 0;
-
   const displayName = userDisplayName || userEmail?.split('@')[0] || 'Traveler';
   const initialLetter = displayName.charAt(0).toUpperCase();
 
   const themeLabel =
     themePref === 'light' ? 'Light' : themePref === 'dark' ? 'Night flight' : 'System default';
 
-  // -------------------------------------------------------------------------
-  // Sub-screens
-  // -------------------------------------------------------------------------
+  const navRootRef = useRef<HTMLDivElement>(null);
+  const savedHomeScrollRef = useRef(0);
+  const overlayWasOpenRef = useRef(false);
 
-  if (subScreen === 'trip-tools' && activeTrip) {
-    return (
-      <div className="settings-container settings-subscreen-enter">
-        <div className="settings-subscreen-nav-header">
-          <button type="button" className="settings-subscreen-back-link" onClick={closeSubScreen}>
-            <IconChevronLeft size={18} />
-            <span>{getParentTitle()}</span>
-          </button>
-        </div>
-        <h3 className="settings-subscreen-main-title">Trip Tools</h3>
-        <p className="settings-subscreen-subtitle">
-          Categories, recycle bin, alerts, exchange rates &amp; exports for {activeTrip.name}.
-        </p>
+  useLayoutEffect(() => {
+    const root = navRootRef.current;
+    if (!root) return;
+    const scrollParent = root.closest('.tab-pane, .modal-sheet.settings-drawer') as HTMLElement | null;
+    if (!scrollParent) return;
 
-        <div className="settings-group">
-          <div className="settings-group-card">
-            {(isSuperadmin || isFeatureEnabled('enableKeywordTagging')) && (
-              <SettingsCell
-                icon={<IconTag size={18} />}
-                iconGlow="purple"
-                title="Categories & Tags"
-                subtitle={`${categories.length} active categories`}
-                onClick={() => setSubScreen('categories')}
-              />
-            )}
+    const overlayOpen = subScreen !== null;
+    if (overlayOpen && !overlayWasOpenRef.current) {
+      savedHomeScrollRef.current = scrollParent.scrollTop;
+      overlayWasOpenRef.current = true;
+      scrollParent.scrollTop = 0;
+      return;
+    }
+    if (overlayOpen && overlayWasOpenRef.current) {
+      scrollParent.scrollTop = 0;
+      return;
+    }
+    if (!overlayOpen && overlayWasOpenRef.current) {
+      overlayWasOpenRef.current = false;
+      scrollParent.scrollTop = savedHomeScrollRef.current;
+    }
+  }, [subScreen]);
 
-            {(isSuperadmin || isFeatureEnabled('enableRecycleBin')) && (
-              <SettingsCell
-                icon={<IconTrash size={18} />}
-                iconGlow="rose"
-                title="Recycle Bin"
-                subtitle={deletedExpenses.length === 0 ? 'Empty (24h retention)' : `${deletedExpenses.length} deleted expense${deletedExpenses.length === 1 ? '' : 's'}`}
-                badge={deletedExpenses.length > 0 ? deletedExpenses.length : undefined}
-                onClick={() => setSubScreen('recycle-bin')}
-              />
-            )}
+  const parentTitle = getParentTitle();
+  const visibleScreen = overlayRender.screen;
+  let overlay: React.ReactNode = null;
+  if (visibleScreen === 'trip-tools' && activeTrip) {
+    overlay = (
+      <SettingsTripToolsHub
+        parentTitle={parentTitle}
+        onBack={closeSubScreen}
+        activeTrip={activeTrip}
+        categories={categories}
+        deletedCount={tripDeletedExpenses.length}
+        isTripMuted={isTripMuted}
+        showCategories={isSuperadmin || isFeatureEnabled('enableKeywordTagging')}
+        showRecycleBin={isSuperadmin || isFeatureEnabled('enableRecycleBin')}
+        onOpenCategories={() => setSubScreen('categories')}
+        onOpenRecycleBin={() => setSubScreen('recycle-bin')}
+        onToggleMute={(muted) => setTripMuted(activeTrip.id, muted)}
+        onOpenFxRates={onOpenFxRates}
+        onExportCsv={onExportCsv}
+      />
+    );
+  } else if (visibleScreen === 'categories') {
+    overlay = (
+      <SettingsCategoriesScreen
+        parentTitle={parentTitle}
+        onBack={closeSubScreen}
+        categories={categories}
+        activeTripExpenses={activeTripExpenses}
+        isAdmin={isAdmin}
+        onAddCategory={onAddCategory}
+        onDeleteCategory={onDeleteCategory}
+        updateCategoryKeywords={updateCategoryKeywords}
+        resetCategoryKeywords={resetCategoryKeywords}
+        onRequestConfirm={onRequestConfirm}
+      />
+    );
+  } else if (visibleScreen === 'recycle-bin') {
+    overlay = (
+      <SettingsRecycleBinScreen
+        parentTitle={parentTitle}
+        onBack={closeSubScreen}
+        deletedExpenses={tripDeletedExpenses}
+        fetchDeletedExpenses={fetchDeletedExpenses}
+        restoreExpense={restoreExpense}
+        permanentlyDeleteExpense={permanentlyDeleteExpense}
+        emptyRecycleBin={emptyRecycleBin}
+        onRequestConfirm={onRequestConfirm}
+      />
+    );
+  } else if (visibleScreen === 'backups-media') {
+    overlay = (
+      <SettingsBackupsMediaHub
+        parentTitle={parentTitle}
+        onBack={closeSubScreen}
+        isSuperadmin={isSuperadmin}
+        onOpenOfflineSnapshot={onOpenOfflineSnapshot}
+        onOpenMediaGallery={onOpenMediaGallery}
+        onOpenBackups={() => setSubScreen('backups')}
+      />
+    );
+  } else if (visibleScreen === 'archived-trips') {
+    overlay = (
+      <SettingsArchivedTripsScreen
+        parentTitle={parentTitle}
+        onBack={closeSubScreen}
+        archivedTrips={archivedTrips}
+        userId={userId}
+        members={members}
+        onRestoreTrip={onRestoreTrip}
+        onDeleteTrip={onDeleteTrip}
+      />
+    );
+  } else if (visibleScreen === 'backups') {
+    overlay = (
+      <SettingsBackupsScreen
+        parentTitle={parentTitle}
+        onBack={closeSubScreen}
+        storageEstimate={storageEstimate}
+        onExportJson={onExportJson}
+        showImportArea={showImportArea}
+        setShowImportArea={setShowImportArea}
+        importFileInputRef={importFileInputRef}
+        handleImportFileChange={handleImportFileChange}
+        importStatus={importStatus}
+        importJson={importJson}
+        importFileError={importFileError}
+        setImportJson={setImportJson}
+        onImport={onImport}
+        importErrorMessage={importErrorMessage}
+      />
+    );
+  } else if (visibleScreen === 'storage-data') {
+    overlay = (
+      <SettingsStorageDataScreen
+        parentTitle={parentTitle}
+        onBack={closeSubScreen}
+        storageEstimate={storageEstimate}
+        storageBreakdown={storageBreakdown}
+        tripCount={trips.length}
+        tempCacheCleared={tempCacheCleared}
+        onClearTempCache={handleClearTempCache}
+        onExportJson={onExportJson}
+        onOpenBackups={() => setSubScreen('backups')}
+      />
+    );
+  } else if (visibleScreen === 'bug-tracker') {
 
-            <div className="settings-row-item" style={{ cursor: 'default' }}>
-              <div className="settings-row-left">
-                <div className="settings-squircle squircle-orange-glow">
-                  <IconBell size={18} />
-                </div>
-                <div className="settings-row-texts">
-                  <span className="settings-row-title">Mute Trip Alerts</span>
-                  <span className="settings-row-subtitle">Silence push notifications for this trip</span>
-                </div>
-              </div>
-              <div className="settings-row-right">
-                <label style={{ position: 'relative', display: 'inline-block', width: '44px', height: '24px', margin: 0, cursor: 'pointer' }}>
-                  <input
-                    type="checkbox"
-                    checked={isTripMuted}
-                    onChange={(e) => {
-                      triggerHaptic('light');
-                      setTripMuted(activeTrip.id, e.target.checked);
-                    }}
-                    aria-label="Mute Notifications"
-                    style={{ opacity: 0, width: 0, height: 0, margin: 0 }}
-                  />
-                  <span
-                    style={{
-                      position: 'absolute',
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      bottom: 0,
-                      backgroundColor: isTripMuted ? '#17B6A6' : 'var(--border-color)',
-                      transition: '0.2s ease',
-                      borderRadius: 'var(--border-radius-pill)',
-                    }}
-                  >
-                    <span
-                      style={{
-                        position: 'absolute',
-                        height: '18px',
-                        width: '18px',
-                        left: isTripMuted ? '23px' : '3px',
-                        bottom: '3px',
-                        backgroundColor: 'white',
-                        transition: '0.2s ease',
-                        borderRadius: '50%',
-                        boxShadow: '0 1px 3px rgba(0,0,0,0.25)',
-                      }}
-                    />
-                  </span>
-                </label>
-              </div>
-            </div>
-
-            {onOpenFxRates && (
-              <SettingsCell
-                icon={<span style={{ fontSize: '18px' }}>💱</span>}
-                iconGlow="emerald"
-                title="Multi-Currency FX Engine"
-                subtitle="Live rates, offline lock & forex markup converter"
-                badge="FX"
-                onClick={() => {
-                  triggerHaptic('light');
-                  onOpenFxRates();
-                }}
-              />
-            )}
-
-            {onExportCsv && (
-              <SettingsCell
-                icon={<IconFileSpreadsheet size={18} />}
-                iconGlow="emerald"
-                title="Excel CSV Export"
-                subtitle="Download settlement ledger & expense breakdown"
-                badge="CSV"
-                hasDivider={false}
-                onClick={onExportCsv}
-              />
-            )}
-          </div>
-        </div>
+    overlay = (
+      <div className="settings-container">
+        <SuperAdminBugTracker onBack={closeSubScreen} isAdmin={isSuperadmin} onRequestConfirm={onRequestConfirm} />
       </div>
     );
-  }
-
-  if (subScreen === 'categories') {
-    return (
-      <div className="settings-container settings-subscreen-enter">
-        <div className="settings-subscreen-nav-header">
-          <button type="button" className="settings-subscreen-back-link" onClick={closeSubScreen}>
-            <IconChevronLeft size={18} />
-            <span>{getParentTitle()}</span>
-          </button>
-        </div>
-        <h3 className="settings-subscreen-main-title">Categories &amp; Tags</h3>
-        <p className="settings-subscreen-subtitle">
-          Tap any category to view and edit its smart auto-tagging keywords &amp; brands.
-        </p>
-
-        <div className="settings-group">
-          <div className="settings-group-card" style={{ padding: '4px 0' }}>
-            {categories.map((cat) => {
-              const dataset = getCategoryKeywords(cat);
-              const allKeywords = [...dataset.brands, ...dataset.items];
-              const isExpanded = expandedCategoryId === cat.id;
-
-              return (
-                <div
-                  key={cat.id}
-                  style={{
-                    borderBottom: '1px solid var(--border-color-subtle, rgba(15,23,42,0.06))',
-                  }}
-                >
-                  <div
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      padding: '12px 16px',
-                      cursor: 'pointer',
-                      background: isExpanded ? 'rgba(47,111,237,0.04)' : 'transparent',
-                      transition: 'background 0.15s ease',
-                    }}
-                    onClick={() => setExpandedCategoryId(isExpanded ? null : cat.id)}
-                  >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0, flex: 1 }}>
-                      <CategoryIcon categoryId={cat.id} fallbackEmoji={cat.icon} size={18} />
-                      <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-                        <span style={{ color: 'var(--text-primary)', fontWeight: 500, fontSize: '14.5px' }}>{cat.name}</span>
-                        <span style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>
-                          {allKeywords.length} auto-tag keywords {cat.keywords ? '• Custom' : ''}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }} onClick={(e) => e.stopPropagation()}>
-                      <button
-                        type="button"
-                        className="secondary-btn"
-                        style={{ padding: '4px 10px', fontSize: '11.5px' }}
-                        onClick={() => setExpandedCategoryId(isExpanded ? null : cat.id)}
-                      >
-                        {isExpanded ? 'Close Tags' : 'Edit Tags'}
-                      </button>
-                      {cat.isCustom && isAdmin && (
-                        <button
-                          type="button"
-                          className="secondary-btn"
-                          style={{ padding: '4px 8px', fontSize: '11.5px', color: 'var(--color-danger)', borderColor: 'rgba(225,29,72,0.18)' }}
-                          onClick={() => handleDeleteCategoryTrigger(cat)}
-                        >
-                          Delete
-                        </button>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Expanded Keyword Chips & Add form */}
-                  {isExpanded && (
-                    <div className="fade-in" style={{ padding: '12px 16px 16px 16px', background: 'rgba(15,23,42,0.02)', borderTop: '1px dashed var(--border-color)' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                        <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>
-                          Auto-tagging Keywords &amp; Brands ({allKeywords.length}):
-                        </span>
-                        {cat.keywords && (
-                          <button
-                            type="button"
-                            style={{ background: 'transparent', border: 'none', color: 'var(--primary-accent)', fontSize: '11.5px', fontWeight: 600, cursor: 'pointer', padding: '2px 4px' }}
-                            onClick={() => resetCategoryKeywords(cat.id)}
-                          >
-                            Reset to Defaults
-                          </button>
-                        )}
-                      </div>
-
-                      {/* Tag Chips Tray */}
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', maxHeight: '160px', overflowY: 'auto', padding: '6px 2px', marginBottom: '10px' }}>
-                        {allKeywords.map((kw) => (
-                          <span
-                            key={kw}
-                            style={{
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: '4px',
-                              padding: '3px 8px',
-                              borderRadius: '12px',
-                              fontSize: '11.5px',
-                              background: 'var(--bg-surface)',
-                              border: '1px solid var(--border-color)',
-                              color: 'var(--text-primary)',
-                            }}
-                          >
-                            {kw}
-                            <button
-                              type="button"
-                              className="dismiss-glyph-btn"
-                              style={{
-                                background: 'transparent',
-                                border: 'none',
-                                color: 'var(--text-muted)',
-                                cursor: 'pointer',
-                                fontSize: '12px',
-                                lineHeight: 1,
-                              }}
-                              onClick={() => {
-                                const updated = allKeywords.filter((k) => k !== kw);
-                                updateCategoryKeywords(cat.id, updated);
-                              }}
-                              title={`Remove "${kw}"`}
-                              aria-label={`Remove "${kw}"`}
-                            >
-                              &times;
-                            </button>
-                          </span>
-                        ))}
-                      </div>
-
-                      {/* Add new keyword form */}
-                      <form
-                        onSubmit={(e) => {
-                          e.preventDefault();
-                          const val = newKeywordInput.trim().toLowerCase();
-                          if (!val || allKeywords.includes(val)) return;
-                          updateCategoryKeywords(cat.id, [...allKeywords, val]);
-                          setNewKeywordInput('');
-                        }}
-                        style={{ display: 'flex', gap: '8px' }}
-                      >
-                        <input
-                          type="text"
-                          className="input-field"
-                          placeholder="Add new keyword or brand (e.g. dosa, uber, petrol)..."
-                          aria-label={`Add keyword for ${cat.name}`}
-                          style={{ flex: 1, fontSize: '12px', height: '34px' }}
-                          value={newKeywordInput}
-                          onChange={(e) => setNewKeywordInput(e.target.value)}
-                        />
-                        <button type="submit" className="gradient-btn" style={{ padding: '0 14px', fontSize: '12px', height: '34px' }}>
-                          Add Tag
-                        </button>
-                      </form>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {isAdmin ? (
-          <div className="settings-group">
-            <h4 className="settings-group-title">Add Custom Category</h4>
-            <div className="settings-group-card" style={{ padding: '16px' }}>
-              <form onSubmit={handleAddSubmit} style={{ display: 'flex', gap: '8px' }}>
-                <div
-                  style={{ position: 'relative' }}
-                  onBlur={(e) => {
-                    if (!e.currentTarget.contains(e.relatedTarget as Node)) setShowIconPicker(false);
-                  }}
-                >
-                  <input
-                    type="text"
-                    className="input-field"
-                    style={{ width: '52px', height: '44px', textAlign: 'center', fontSize: '19px', padding: '0' }}
-                    placeholder="🏷️"
-                    maxLength={4}
-                    value={newCategoryIcon}
-                    onChange={(e) => setNewCategoryIcon(e.target.value)}
-                    onFocus={() => setShowIconPicker(true)}
-                    aria-label="Category emoji icon"
-                    title="Pick an emoji"
-                  />
-                  {showIconPicker && (
-                    <div
-                      style={{
-                        position: 'absolute',
-                        top: 'calc(100% + 6px)',
-                        left: 0,
-                        zIndex: 20,
-                        width: '204px',
-                        display: 'flex',
-                        flexWrap: 'wrap',
-                        gap: '6px',
-                        padding: '10px',
-                        background: 'var(--bg-surface)',
-                        border: '1px solid var(--border-color)',
-                        borderRadius: 'var(--border-radius-md)',
-                        boxShadow: '0 10px 25px -5px rgba(28,42,56,0.2)',
-                      }}
-                    >
-                      {CATEGORY_ICON_PRESETS.map((icon) => (
-                        <button
-                          key={icon}
-                          type="button"
-                          onClick={() => {
-                            setNewCategoryIcon(icon);
-                            setShowIconPicker(false);
-                          }}
-                          style={{
-                            width: '32px',
-                            height: '32px',
-                            fontSize: '16px',
-                            lineHeight: 1,
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            borderRadius: 'var(--border-radius-sm)',
-                            cursor: 'pointer',
-                            transition: 'var(--transition-smooth)',
-                            border: newCategoryIcon === icon ? '2px solid var(--primary-accent)' : '1.5px solid transparent',
-                            background: newCategoryIcon === icon ? 'rgba(47,111,237,0.10)' : 'var(--bg-surface-hover)',
-                          }}
-                        >
-                          {icon}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-                <input
-                  type="text"
-                  required
-                  className="input-field"
-                  style={{ flex: 1 }}
-                  placeholder="Category name"
-                  value={newCategoryName}
-                  onChange={(e) => setNewCategoryName(e.target.value)}
-                />
-                <button type="submit" className="gradient-btn" style={{ padding: '10px 16px' }}>
-                  Add
-                </button>
-              </form>
-            </div>
-          </div>
-        ) : (
-          <p style={{ fontSize: '12px', color: 'var(--text-secondary)', padding: '0 8px' }}>Only trip admins can add categories.</p>
-        )}
-
-        {/* Merge & Delete Category Dialog */}
-        {categoryToDelete && (
-          <div className="modal-overlay" onClick={() => setCategoryToDelete(null)}>
-            <div className="glass-card fade-in" style={{ width: '100%', maxWidth: '400px', background: 'var(--bg-surface)', border: '1px solid var(--border-color)' }} onClick={(e) => e.stopPropagation()}>
-              <h3 style={{ fontSize: '17px', marginBottom: '10px' }}>Merge and Delete Category</h3>
-              <p style={{ fontSize: '13.5px', color: 'var(--text-secondary)', marginBottom: '16px', lineHeight: '1.5' }}>
-                The category <strong>"{categoryToDelete.name}"</strong> is currently used in <strong>{affectedExpensesCount}</strong> expense{affectedExpensesCount === 1 ? '' : 's'}. Select a replacement category to merge these expenses into:
-              </p>
-
-              <div className="form-group" style={{ marginBottom: '20px' }}>
-                <label className="form-label" htmlFor="merge-target-category">Replacement Category</label>
-                <select
-                  id="merge-target-category"
-                  className="input-field select-field"
-                  value={mergeTargetId}
-                  onChange={(e) => setMergeTargetId(e.target.value)}
-                  style={{ height: '40px' }}
-                >
-                  {categories
-                    .filter((c) => c.id !== categoryToDelete.id)
-                    .map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.name}
-                      </option>
-                    ))}
-                </select>
-              </div>
-
-              <div style={{ display: 'flex', gap: '12px' }}>
-                <button type="button" className="secondary-btn" style={{ flex: 1 }} onClick={() => setCategoryToDelete(null)}>
-                  Cancel
-                </button>
-                <button type="button" className="gradient-btn" style={{ flex: 1, background: 'var(--color-danger)' }} onClick={handleConfirmMergeDelete}>
-                  Merge &amp; Delete
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-    );
-  }
-
-  if (subScreen === 'recycle-bin') {
-    return (
-      <div className="settings-container settings-subscreen-enter">
-        <div className="settings-subscreen-nav-header">
-          <button type="button" className="settings-subscreen-back-link" onClick={closeSubScreen}>
-            <IconChevronLeft size={18} />
-            <span>{getParentTitle()}</span>
-          </button>
-          {deletedExpenses.length > 0 && (
-            <button
-              type="button"
-              className="settings-subscreen-action-btn danger"
-              onClick={() => {
-                onRequestConfirm?.({
-                  title: 'Empty Recycle Bin',
-                  message: 'Permanently delete all expenses in the recycle bin? This cannot be undone.',
-                  confirmLabel: 'Empty Bin',
-                  danger: true,
-                  onConfirm: () => emptyRecycleBin(),
-                });
-              }}
-            >
-              Empty Bin
-            </button>
-          )}
-        </div>
-        <h3 className="settings-subscreen-main-title">Recycle Bin</h3>
-        <p className="settings-subscreen-subtitle">
-          Soft-deleted expenses can be restored back to your trip or permanently removed.
-        </p>
-
-        <div className="settings-group">
-          <div className="settings-group-card">
-            {deletedExpenses.length === 0 ? (
-              <div style={{ padding: '24px 16px', textAlign: 'center', color: 'var(--text-secondary)', fontSize: '13.5px' }}>
-                Recycle Bin is currently empty.
-              </div>
-            ) : (
-              deletedExpenses.map((exp) => (
-                <div
-                  key={exp.id}
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    gap: '10px',
-                    padding: '12px 16px',
-                    borderBottom: '1px solid var(--border-color-subtle, rgba(15,23,42,0.06))',
-                  }}
-                >
-                  <div style={{ minWidth: 0 }}>
-                    <div style={{ fontSize: '14px', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{exp.title}</div>
-                    <div style={{ fontSize: '11.5px', color: 'var(--text-secondary)' }}>
-                      <span>{exp.currency} {exp.amount.toFixed(2)}</span> &middot; {exp.deletedAt ? formatTimeLeft(exp.deletedAt) : ''}
-                    </div>
-                  </div>
-                  <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
-                    <button
-                      type="button"
-                      className="secondary-btn"
-                      style={{ padding: '6px 10px', fontSize: '12px' }}
-                      onClick={() => restoreExpense(exp.id)}
-                      title="Restore expense"
-                    >
-                      <IconArchive size={13} className="icon-sm" /> Restore
-                    </button>
-                    <button
-                      type="button"
-                      className="secondary-btn"
-                      style={{ padding: '6px 8px', fontSize: '12px', color: 'var(--color-danger)', borderColor: 'rgba(184,69,46,0.2)' }}
-                      onClick={() => {
-                        onRequestConfirm?.({
-                          title: 'Delete permanently',
-                          message: `Permanently delete "${exp.title}"? This cannot be undone.`,
-                          confirmLabel: 'Delete',
-                          danger: true,
-                          onConfirm: () => permanentlyDeleteExpense(exp.id),
-                        });
-                      }}
-                      title="Permanently delete now"
-                      aria-label="Permanently delete"
-                    >
-                      <IconTrash size={13} className="icon-sm" />
-                    </button>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (subScreen === 'archived-trips') {
-    return (
-      <div className="settings-container settings-subscreen-enter">
-        <div className="settings-subscreen-nav-header">
-          <button type="button" className="settings-subscreen-back-link" onClick={closeSubScreen}>
-            <IconChevronLeft size={18} />
-            <span>{getParentTitle()}</span>
-          </button>
-        </div>
-        <h3 className="settings-subscreen-main-title">Archived Trips</h3>
-        <p className="settings-subscreen-subtitle">
-          Past trips you've archived. You can restore them anytime or permanently delete them.
-        </p>
-
-        <div className="settings-group">
-          <div className="settings-group-card">
-            {archivedTrips.length === 0 ? (
-              <div style={{ padding: '24px 16px', textAlign: 'center', color: 'var(--text-secondary)', fontSize: '13.5px' }}>
-                No archived trips. Archive a trip from the Trips list to tuck it away without deleting it.
-              </div>
-            ) : (
-              archivedTrips.map((trip) => (
-                <div
-                  key={trip.id}
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    gap: '10px',
-                    padding: '12px 16px',
-                    borderBottom: '1px solid var(--border-color-subtle, rgba(15,23,42,0.06))',
-                  }}
-                >
-                  <div style={{ minWidth: 0 }}>
-                    <div style={{ fontSize: '14px', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{trip.name}</div>
-                    <div style={{ fontSize: '11.5px', color: 'var(--text-secondary)' }}>{formatDateRange(trip.startDate, trip.endDate)}</div>
-                  </div>
-                  <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
-                    <button
-                      type="button"
-                      className="secondary-btn"
-                      style={{ padding: '6px 10px', fontSize: '12px' }}
-                      onClick={() => onRestoreTrip?.(trip)}
-                    >
-                      <IconArchive size={13} className="icon-sm" /> Restore
-                    </button>
-                    {(!trip.ownerId || !userId || trip.ownerId === userId || Boolean(trip.adminMemberIds?.length && trip.memberIds?.some((mid) => members[mid]?.linkedUserId === userId && trip.adminMemberIds?.includes(mid)))) && (
-                      <button
-                        type="button"
-                        className="secondary-btn"
-                        style={{ padding: '6px', color: 'var(--color-danger)', borderColor: 'rgba(184,69,46,0.2)' }}
-                        aria-label="Delete trip permanently"
-                        title="Delete trip permanently"
-                        onClick={() => onDeleteTrip?.(trip)}
-                      >
-                        <IconTrash size={13} className="icon-sm" />
-                      </button>
-                    )}
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (subScreen === 'backups-media') {
-    return (
-      <div className="settings-container settings-subscreen-enter">
-        <div className="settings-subscreen-nav-header">
-          <button type="button" className="settings-subscreen-back-link" onClick={closeSubScreen}>
-            <IconChevronLeft size={18} />
-            <span>{getParentTitle()}</span>
-          </button>
-        </div>
-        <h3 className="settings-subscreen-main-title">Backups &amp; Media</h3>
-        <p className="settings-subscreen-subtitle">
-          Export offline backups, browse trip media, or pull a raw database snapshot.
-        </p>
-
-        <div className="settings-group">
-          <div className="settings-group-card">
-            {onOpenOfflineSnapshot && (
-              <SettingsCell
-                icon={<span style={{ fontSize: '18px' }}>💾</span>}
-                iconGlow="blue"
-                title="Offline Snapshot (.triptracker)"
-                subtitle="Export and restore 100% offline trip backups"
-                badge="BACKUP"
-                onClick={() => {
-                  triggerHaptic('light');
-                  onOpenOfflineSnapshot();
-                }}
-              />
-            )}
-
-            {onOpenMediaGallery && (
-              <SettingsCell
-                icon={<span style={{ fontSize: '18px' }}>📸</span>}
-                iconGlow="teal"
-                title="Receipts & Memories Gallery"
-                subtitle="Browse cached receipt photos and trip media"
-                badge="PHOTOS"
-                onClick={() => {
-                  triggerHaptic('light');
-                  onOpenMediaGallery();
-                }}
-              />
-            )}
-
-            {isSuperadmin && (
-              <SettingsCell
-                icon={<IconDatabase size={18} />}
-                iconGlow="indigo"
-                title="Database Backups"
-                subtitle="Export/Import JSON database snapshot"
-                badge="JSON"
-                hasDivider={false}
-                onClick={() => setSubScreen('backups')}
-              />
-            )}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (subScreen === 'backups') {
-    return (
-      <div className="settings-container settings-subscreen-enter">
-        <div className="settings-subscreen-nav-header">
-          <button type="button" className="settings-subscreen-back-link" onClick={closeSubScreen}>
-            <IconChevronLeft size={18} />
-            <span>{getParentTitle()}</span>
-          </button>
-        </div>
-        <h3 className="settings-subscreen-main-title">Database &amp; Backups</h3>
-        <p className="settings-subscreen-subtitle">
-          Manage your local database, sync storage, and export JSON or CSV backups.
-        </p>
-
-        {/* Disk usage */}
-        {storageEstimate && (
-          <div className="settings-group">
-            <h4 className="settings-group-title">Storage Consumption</h4>
-            <div className="settings-group-card" style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
-                <span style={{ color: 'var(--text-secondary)' }}>Local Disk Usage:</span>
-                <span style={{ fontWeight: 600 }}>
-                  {formatBytes(storageEstimate.used)} of {formatBytes(storageEstimate.quota)}
-                </span>
-              </div>
-              <div style={{ width: '100%', height: '5px', background: 'rgba(15,23,42,0.06)', borderRadius: '3px', overflow: 'hidden' }}>
-                <div
-                  style={{
-                    width: `${Math.min(100, (storageEstimate.used / storageEstimate.quota) * 100)}%`,
-                    height: '100%',
-                    background: 'var(--primary-accent)',
-                  }}
-                />
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* JSON Backup Export & Import */}
-        <div className="settings-group">
-          <h4 className="settings-group-title">JSON Snapshot</h4>
-          <div className="settings-group-card" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
-            <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: 0 }}>
-              Export your local database to keep as a cold offline backup or restore onto another device.
-            </p>
-            <div style={{ display: 'flex', gap: '10px' }}>
-              <button
-                type="button"
-                className="gradient-btn"
-                style={{ flex: 1, padding: '10px', fontSize: '13px' }}
-                onClick={onExportJson}
-              >
-                <IconDownload size={15} className="icon-sm" /> Export Backup
-              </button>
-              <button
-                type="button"
-                className="secondary-btn"
-                style={{ flex: 1, padding: '10px', fontSize: '13px' }}
-                onClick={() => setShowImportArea?.(!showImportArea)}
-              >
-                <IconUpload size={15} className="icon-sm" /> Import Backup
-              </button>
-            </div>
-
-            {showImportArea && (
-              <div className="fade-in" style={{ marginTop: '4px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                <input
-                  ref={importFileInputRef}
-                  type="file"
-                  accept="application/json,.json"
-                  onChange={handleImportFileChange}
-                  style={{ display: 'none' }}
-                />
-                <button
-                  type="button"
-                  className="secondary-btn"
-                  style={{ padding: '10px' }}
-                  disabled={importStatus === 'pending'}
-                  onClick={() => importFileInputRef.current?.click()}
-                >
-                  <IconUpload size={15} className="icon-sm" /> {importStatus === 'pending' ? 'Restoring...' : 'Choose Backup File...'}
-                </button>
-                {importJson && (
-                  <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: 0 }}>
-                    Loaded {formatBytes(new Blob([importJson]).size)} of backup data. Review and restore below.
-                  </p>
-                )}
-                {importFileError && (
-                  <p style={{ color: 'var(--color-danger)', fontSize: '13px', margin: 0 }}>{importFileError}</p>
-                )}
-                <details>
-                  <summary style={{ fontSize: '12px', color: 'var(--text-secondary)', cursor: 'pointer' }}>Or paste JSON manually</summary>
-                  <textarea
-                    className="input-field"
-                    rows={4}
-                    placeholder="Paste backup JSON string here..."
-                    aria-label="Backup JSON data"
-                    style={{ fontFamily: 'var(--font-family-mono)', fontSize: '12px', marginTop: '8px' }}
-                    value={importJson}
-                    onChange={(e) => setImportJson?.(e.target.value)}
-                  />
-                </details>
-                <button
-                  type="button"
-                  className="gradient-btn"
-                  style={{ padding: '8px' }}
-                  disabled={!importJson || importStatus === 'pending'}
-                  onClick={() => onImport?.()}
-                >
-                  {importStatus === 'pending' ? 'Restoring...' : 'Restore Snapshot'}
-                </button>
-
-                {importStatus === 'success' && (
-                  <p style={{ color: 'var(--color-success-text)', fontSize: '13px', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', margin: 0 }}>
-                    <IconCheckCircle size={15} className="icon-sm" /> Database restored successfully!
-                  </p>
-                )}
-                {importStatus === 'error' && (
-                  <p style={{ color: 'var(--color-danger)', fontSize: '13px', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', margin: 0 }}>
-                    <IconAlertCircle size={15} className="icon-sm" /> {importErrorMessage || 'Invalid database snapshot format.'}
-                  </p>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (subScreen === 'storage-data') {
-    const totalUsedStr = storageEstimate ? formatBytes(storageEstimate.used) : '0 B';
-    const quotaStr = storageEstimate ? formatBytes(storageEstimate.quota) : '50 GB';
-    const percentUsed = storageEstimate && storageEstimate.quota > 0
-      ? ((storageEstimate.used / storageEstimate.quota) * 100).toFixed(2)
-      : '0.01';
-
-    return (
-      <div className="settings-container settings-subscreen-enter">
-        <div className="settings-subscreen-nav-header">
-          <button
-            type="button"
-            className="settings-subscreen-back-link"
-            onClick={closeSubScreen}
-            aria-label={`Back to ${getParentTitle()}`}
-          >
-            <IconChevronLeft size={18} />
-            <span>{getParentTitle()}</span>
-          </button>
-        </div>
-        <h3 className="settings-subscreen-main-title">Storage and Data</h3>
-        <p className="settings-subscreen-subtitle">
-          Manage local media receipts, trip ledgers, offline cache, and backup exports.
-        </p>
-
-        {/* Partitioned Storage Visualizer Card */}
-        <div className="settings-group">
-          <h4 className="settings-group-title">Storage Usage</h4>
-          <div className="settings-group-card" style={{ padding: '16px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-              <span style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text-primary)' }}>
-                {totalUsedStr} used
-              </span>
-              <span style={{ fontSize: '12px', fontFamily: 'var(--font-family-mono)', color: 'var(--text-secondary)' }}>
-                {quotaStr} total ({percentUsed}%)
-              </span>
-            </div>
-
-            {/* Segmented Bar */}
-            <div className="settings-storage-segmented-bar" role="progressbar" aria-valuenow={Number(percentUsed)} aria-valuemin={0} aria-valuemax={100}>
-              <div
-                className="storage-seg media"
-                style={{ width: `${storageBreakdown.mediaPct}%` }}
-                title={`Receipt Photos: ${storageBreakdown.mediaPct}%`}
-              />
-              <div
-                className="storage-seg database"
-                style={{ width: `${storageBreakdown.dbPct}%` }}
-                title={`Trips & Ledgers: ${storageBreakdown.dbPct}%`}
-              />
-              <div
-                className="storage-seg cache"
-                style={{ width: `${storageBreakdown.cachePct}%` }}
-                title={`Offline Cache: ${storageBreakdown.cachePct}%`}
-              />
-            </div>
-
-            {/* Legend & Breakdown */}
-            <div className="settings-storage-legend-card" style={{ background: 'transparent', border: 'none', padding: '6px 0 0' }}>
-              <div className="settings-storage-legend-row">
-                <div className="settings-storage-legend-left">
-                  <span className="settings-storage-color-dot media" />
-                  <span>Receipt Photos &amp; Attachments</span>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-                    {storageBreakdown.receiptCount} {storageBreakdown.receiptCount === 1 ? 'receipt' : 'receipts'}
-                  </span>
-                  <span className="settings-storage-val-badge">
-                    {formatBytes(storageBreakdown.receiptBytes)}
-                  </span>
-                </div>
-              </div>
-
-              <div className="settings-storage-legend-row">
-                <div className="settings-storage-legend-left">
-                  <span className="settings-storage-color-dot database" />
-                  <span>Trip Ledgers &amp; Categories</span>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-                    {trips.length} {trips.length === 1 ? 'trip' : 'trips'}
-                  </span>
-                  <span className="settings-storage-val-badge">
-                    {formatBytes(storageBreakdown.dbBytes)}
-                  </span>
-                </div>
-              </div>
-
-              <div className="settings-storage-legend-row">
-                <div className="settings-storage-legend-left">
-                  <span className="settings-storage-color-dot cache" />
-                  <span>App Shell, Icons &amp; Offline Cache</span>
-                </div>
-                <span className="settings-storage-val-badge">
-                  {formatBytes(storageBreakdown.cacheBytes)}
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Storage Optimization Actions */}
-        <div className="settings-group">
-          <h4 className="settings-group-title">Manage &amp; Free Up Space</h4>
-          <div className="settings-group-card">
-            <button
-              type="button"
-              className="settings-row-item"
-              onClick={handleClearTempCache}
-            >
-              <div className="settings-row-left">
-                <div className="settings-squircle squircle-amber-glow">
-                  <IconTrash size={18} />
-                </div>
-                <div className="settings-row-texts">
-                  <span className="settings-row-title">Free Up Cache Storage</span>
-                  <span className="settings-row-subtitle">
-                    {tempCacheCleared ? 'Temporary cache cleared!' : 'Purge temporary web caches and unpinned tiles'}
-                  </span>
-                </div>
-              </div>
-              <div className="settings-row-right">
-                <span
-                  className="settings-badge-pill"
-                  style={{
-                    color: tempCacheCleared ? 'var(--color-success)' : 'var(--primary-accent)',
-                    fontWeight: 600,
-                  }}
-                >
-                  {tempCacheCleared ? '✓ Cleared' : 'Free Up'}
-                </span>
-              </div>
-            </button>
-
-            {onExportJson && (
-              <button
-                type="button"
-                className="settings-row-item"
-                onClick={() => {
-                  triggerHaptic('light');
-                  onExportJson();
-                }}
-              >
-                <div className="settings-row-left">
-                  <div className="settings-squircle squircle-emerald-glow">
-                    <IconDownload size={18} />
-                  </div>
-                  <div className="settings-row-texts">
-                    <span className="settings-row-title">Export Full Offline Backup</span>
-                    <span className="settings-row-subtitle">Download JSON database snapshot for safe offline keeping</span>
-                  </div>
-                </div>
-                <div className="settings-row-right">
-                  <span className="settings-badge-pill">JSON</span>
-                </div>
-              </button>
-            )}
-
-            <button
-              type="button"
-              className="settings-row-item"
-              onClick={() => {
-                triggerHaptic('light');
-                setSubScreen('backups');
-              }}
-            >
-              <div className="settings-row-left">
-                <div className="settings-squircle squircle-indigo-glow">
-                  <IconDatabase size={18} />
-                </div>
-                <div className="settings-row-texts">
-                  <span className="settings-row-title">Backup &amp; Restore Manager</span>
-                  <span className="settings-row-subtitle">Inspect JSON payload, import previous backups</span>
-                </div>
-              </div>
-              <div className="settings-row-right">
-                <IconChevronRight size={16} />
-              </div>
-            </button>
-
-            {/* Gallery & Snapshot canonical entries live under Data & Backups menu */}
-          </div>
-        </div>
-
-        {/* Media Compression Guardrail Info Card */}
-        <div className="settings-group">
-          <h4 className="settings-group-title">Media Efficiency</h4>
-          <div className="settings-group-card" style={{ padding: '14px 16px' }}>
-            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
-              <span style={{ fontSize: '20px' }}>⚡</span>
-              <div>
-                <div style={{ fontSize: '13.5px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '2px' }}>
-                  Smart Camera Auto-Compression Active
-                </div>
-                <div style={{ fontSize: '12px', color: 'var(--text-secondary)', lineHeight: 1.45 }}>
-                  Photos captured up to 25MB are automatically downscaled and re-encoded client-side into WebP/JPEG (&lt;180KB footprint) before saving. This keeps local storage slim and cloud sync instant on spotty 3G/roaming connections.
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (subScreen === 'bug-tracker') {
-    return (
-      <div className="fade-in settings-container">
-        <Suspense fallback={null}>
-          <SuperAdminBugTracker onBack={closeSubScreen} isAdmin={isSuperadmin} onRequestConfirm={onRequestConfirm} />
-        </Suspense>
-      </div>
-    );
-  }
-
-  if (subScreen === 'report-issue') {
-    return (
+  } else if (visibleScreen === 'report-issue') {
+    overlay = (
       <BugReportModal
         onBack={closeSubScreen}
         onRequestConfirm={onRequestConfirm}
@@ -1666,14 +795,31 @@ export function SettingsView({
         activeTripInfo={{ id: activeTripId, name: activeTrip?.name || null }}
       />
     );
-  }
-
-  if (subScreen === 'suggest-feature') {
-    return (
+  } else if (visibleScreen === 'suggest-feature') {
+    overlay = (
       <FeatureRequestModal
         onBack={closeSubScreen}
         onRequestConfirm={onRequestConfirm}
         onRegisterBackGuard={setSuggestFeatureBackGuard}
+      />
+    );
+  } else if (visibleScreen === 'about') {
+    overlay = (
+      <SettingsAboutScreen
+        parentTitle={parentTitle}
+        onBack={closeSubScreen}
+        appVersion={appVersion ?? WEB_APP_VERSION}
+        onOpenPrivacy={() => setSubScreen('privacy')}
+        onOpenTerms={() => setSubScreen('terms')}
+      />
+    );
+  } else if (visibleScreen === 'privacy' || visibleScreen === 'terms') {
+    overlay = (
+      <SettingsLegalScreen
+        kind={visibleScreen}
+        parentTitle={parentTitle}
+        onBack={closeSubScreen}
+        onNavigate={(target) => pushScreen(target)}
       />
     );
   }
@@ -1732,92 +878,16 @@ export function SettingsView({
 
   const hasAnyResults = showTripGroup || showPreferencesGroup || showDataGroup || showHelpAboutGroup || showAccountGroup;
 
-  if (subScreen === 'about') {
-    return (
-      <div className="settings-container settings-subscreen-enter">
-        <div className="settings-subscreen-nav-header">
-          <button type="button" className="settings-subscreen-back-link" onClick={closeSubScreen}>
-            <IconChevronLeft size={18} />
-            <span>{getParentTitle()}</span>
-          </button>
-        </div>
-        <h3 className="settings-subscreen-main-title">About &amp; Legal</h3>
-        <p className="settings-subscreen-subtitle">
-          App version and legal documents.
-        </p>
-
-        <SettingsSection title="About">
-          <SettingsCell
-            icon={<IconSmartphone size={18} />}
-            iconGlow="slate"
-            title="Trip Tracker 2026"
-            subtitle={`Version ${appVersion ?? WEB_APP_VERSION} · Web Edition`}
-            badge="STABLE"
-            hasDivider={false}
-          />
-        </SettingsSection>
-
-        <SettingsSection title="Legal">
-          <SettingsCell
-            icon={<IconShield size={18} />}
-            iconGlow="slate"
-            title="Privacy Policy"
-            subtitle="What we collect and why"
-            onClick={() => setSubScreen('privacy')}
-          />
-          <SettingsCell
-            icon={<IconFileSpreadsheet size={18} />}
-            iconGlow="slate"
-            title="Terms of Service"
-            subtitle="Rules for using Trip Tracker"
-            hasDivider={false}
-            onClick={() => setSubScreen('terms')}
-          />
-        </SettingsSection>
-          </div>
-    );
-  }
-
-  if (subScreen === 'privacy') {
-    return (
-      <div className="settings-container settings-subscreen-enter">
-        <div className="settings-subscreen-nav-header">
-          <button type="button" className="settings-subscreen-back-link" onClick={closeSubScreen}>
-            <IconChevronLeft size={18} />
-            <span>{getParentTitle()}</span>
-          </button>
-        </div>
-        <h3 className="settings-subscreen-main-title">Privacy Policy</h3>
-        <p className="settings-subscreen-subtitle">Last updated: {PRIVACY_POLICY_UPDATED}</p>
-        <div className="legal-page-body" style={{ padding: '0 4px 24px' }}>
-          <PrivacyPolicyContent />
-          <PrivacyPolicyContent onNavigate={(target) => pushScreen(target)} />
-        </div>
-      </div>
-    );
-  }
-
-  if (subScreen === 'terms') {
-    return (
-      <div className="settings-container settings-subscreen-enter">
-        <div className="settings-subscreen-nav-header">
-          <button type="button" className="settings-subscreen-back-link" onClick={closeSubScreen}>
-            <IconChevronLeft size={18} />
-            <span>{getParentTitle()}</span>
-          </button>
-        </div>
-        <h3 className="settings-subscreen-main-title">Terms of Service</h3>
-        <p className="settings-subscreen-subtitle">Last updated: {TERMS_OF_SERVICE_UPDATED}</p>
-        <div className="legal-page-body" style={{ padding: '0 4px 24px' }}>
-          <TermsOfServiceContent />
-          <TermsOfServiceContent onNavigate={(target) => pushScreen(target)} />
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="fade-in settings-container">
+    <div
+      ref={navRootRef}
+      className={`settings-nav-root${overlayRender.screen ? ' has-overlay' : ''}${overlayRender.dir === 'out' ? ' is-exiting' : ''}`}
+    >
+      <div
+        className="settings-home-layer settings-container"
+        aria-hidden={overlayRender.screen !== null && overlayRender.dir !== 'out'}
+        inert={overlayRender.screen !== null && overlayRender.dir !== 'out'}
+      >
       {/* Spotlight Search Header */}
       <div className="settings-search-bar-wrap">
         <span className="settings-search-icon" aria-hidden="true">
@@ -2057,6 +1127,8 @@ export function SettingsView({
               iconGlow="purple"
               title="Trip Tools"
               subtitle="Categories, recycle bin, alerts & FX rates"
+              onPointerEnter={prefetchSettingsLeaves}
+              onPointerDown={prefetchSettingsLeaves}
               onClick={() => setSubScreen('trip-tools')}
             />
           )}
@@ -2318,6 +1390,8 @@ export function SettingsView({
                 iconGlow="rose"
                 title="Report a Problem"
                 subtitle="Tell us what went wrong — device details attach automatically"
+                onPointerEnter={prefetchSettingsLeaves}
+                onPointerDown={prefetchSettingsLeaves}
                 onClick={() => setSubScreen('report-issue')}
               />
             )}
@@ -2328,6 +1402,8 @@ export function SettingsView({
                 iconGlow="teal"
                 title="Suggest a Feature"
                 subtitle="Tell us what would make this app better"
+                onPointerEnter={prefetchSettingsLeaves}
+                onPointerDown={prefetchSettingsLeaves}
                 onClick={() => setSubScreen('suggest-feature')}
               />
             )}
@@ -2370,6 +1446,8 @@ export function SettingsView({
                 subtitle={`Version ${appVersion ?? WEB_APP_VERSION} · Privacy & Terms`}
                 badge="STABLE"
                 hasDivider={false}
+                onPointerEnter={prefetchSettingsLegal}
+                onPointerDown={prefetchSettingsLegal}
                 onClick={() => setSubScreen('about')}
               />
             )}
@@ -2388,6 +1466,15 @@ export function SettingsView({
                 subtitle="Disconnect active session from Supabase"
                 chevron={false}
                 onClick={() => {
+                  if (!isOnline) {
+                    onRequestConfirm?.({
+                      title: 'You are offline',
+                      message: 'Sign out needs a network connection. Reconnect and try again.',
+                      confirmLabel: 'OK',
+                      onConfirm: () => {},
+                    });
+                    return;
+                  }
                   onRequestConfirm?.({
                     title: 'Sign Out',
                     message: 'Sign out of your account on this device?',
@@ -2422,7 +1509,18 @@ export function SettingsView({
                 title="Delete Account"
                 subtitle="Permanently delete your account and owned trips"
                 chevron={false}
-                onClick={onDeleteAccount}
+                onClick={() => {
+                  if (!isOnline) {
+                    onRequestConfirm?.({
+                      title: 'You are offline',
+                      message: 'Deleting your account needs a network connection. Reconnect and try again.',
+                      confirmLabel: 'OK',
+                      onConfirm: () => {},
+                    });
+                    return;
+                  }
+                  onDeleteAccount();
+                }}
               />
             )}
         </SettingsSection>
@@ -2457,12 +1555,19 @@ export function SettingsView({
         </div>
       )}
 
-      {/* Superadmin Auth Modal */}
-      <SuperadminAuthModal
-        isOpen={isSuperadminModalOpen}
-        onClose={() => setIsSuperadminModalOpen(false)}
-        onSuccess={() => setIsSuperadminModalOpen(false)}
-      />
+      </div>
+      {overlayRender.screen ? (
+        <div className={`settings-overlay-panel dir-${overlayRender.dir}`} key={overlayRender.screen}>
+          <Suspense fallback={SETTINGS_LEAF_FALLBACK}>{overlay}</Suspense>
+        </div>
+      ) : null}
+      {isSuperadminModalOpen ? (
+        <SuperadminAuthModal
+          isOpen={isSuperadminModalOpen}
+          onClose={() => setIsSuperadminModalOpen(false)}
+          onSuccess={() => setIsSuperadminModalOpen(false)}
+        />
+      ) : null}
     </div>
   );
 }

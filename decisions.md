@@ -2550,6 +2550,22 @@ This document logs all meaningful technical decisions, library choices, design p
   - Two more taps to reach Categories/Recycle Bin/Mute/FX/CSV Export and Offline Snapshot/Gallery/DB Backups (previously one tap from Settings home). Accepted for the payoff of a scannable home screen — matches how WhatsApp/Uber bury occasional-use settings behind a labeled hub row.
   - `hasDivider={false}` is only set on the last-rendered row in Trip Tools (assumes CSV Export renders); if `onExportCsv` is undefined the FX row keeps a trailing divider — cosmetic only, same imperfection pattern the original flat list already had.
 
+---
+
+## Settings Overlay Smoothness Batch (v3.6.8, BUG-182–BUG-190)
+* **Context:** After the Trip Tools / Backups & Media submenu compaction (v3.6.7), Settings still felt sticky: Back used the same enter animation, lazy leaves stuttered on first tap, Recycle Bin fetched on every Settings open, the profile drawer snapped shut, in-trip Settings remounted on the next trip, category merge used a private overlay, Sign Out/Delete Account ran offline, and Close Trip settlement math ran while that row was hidden. User asked to ship the full follow-up set as bug fixes.
+* **Decision:** Keep the existing Settings IA (home stays mounted; submenus are a sliding overlay). Do not flatten Trip Tools / Backups & Media. Do not reintroduce demo mode.
+* **Pattern/Implementation:**
+  - Overlay Back is a left-to-right reverse (`dir-back` / `dir-out`); exit timeout is keyed only on `subScreen` so flipping to `is-exiting` does not cancel the close animation.
+  - Prefetch Categories / Recycle Bin / legal / Report / Suggest on hover/press; prefetch `SettingsTab` from the trip header and `GlobalSettingsModal` from the profile avatar / command palette.
+  - Recycle Bin cache survives `selectTrip` (filter by `tripId`); fetch only when the Recycle Bin screen opens. Local deletes still bump the badge.
+  - Extract Storage, Archived, Backups, and About into `src/components/settings/*`. Category merge/delete uses shared `ConfirmDialog` (`body` for the replacement picker).
+  - Profile drawer: 280ms exit + swipe-right dismiss; history/Escape call `closeRef` so the animation can play before unmount.
+  - `hasVisitedSettings` resets when leaving a trip. Settlement math skipped unless the Settings surface is visible, home is showing, and the user can close the trip. Sign Out / Delete Account blocked offline.
+* **Trade-offs Accepted:**
+  - Remote recycle-bin rows from other devices do not appear in the badge until Recycle Bin is opened once (avoids a network fetch on every Settings visit).
+  - Nested Back remounts the parent overlay from the left rather than playing a paired exit on the child — matches WhatsApp-style stack replace, not a two-layer push/pop.
+
 
 
 

@@ -92,7 +92,7 @@ export function FeatureRequestModal({ onBack, onRequestConfirm, onRegisterBackGu
   }, [hasUnsentText, title, description]);
 
   return (
-    <div className="settings-container settings-subscreen-enter">
+    <div className="settings-container">
       <div className="settings-subscreen-nav-header">
         <button type="button" className="settings-subscreen-back-link" onClick={attemptBack}>
           <IconChevronLeft size={18} />

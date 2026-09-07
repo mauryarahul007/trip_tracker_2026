@@ -55,8 +55,10 @@ export function NavTabs({ activeTab, setActiveTab, onAddExpense, onAddMember, ex
     setActiveTab(tab);
   };
 
-  // Warms the ExpenseForm/SettingsTab lazy chunk on hover/press intent, so
-  // the click that actually opens them doesn't pay the network+eval cost.
+  // Warms the ExpenseForm lazy chunk on hover/press intent, so the click
+  // that actually opens it doesn't pay the network+eval cost. Settings is
+  // not a bottom-nav tab — SettingsTab is prefetched from the trip header
+  // action sheet, and GlobalSettingsModal from the profile avatar.
   // The browser dedupes repeat import() calls to the same module, so
   // firing this more than once is harmless.
   const prefetchExpenseForm = () => {

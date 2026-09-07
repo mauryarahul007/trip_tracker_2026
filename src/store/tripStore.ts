@@ -1384,7 +1384,7 @@ export const useTripStore = create<TripStore>()(
 
     selectTrip: async (id) => {
       if (id === null) {
-        set({ activeTripId: null, deletedExpenses: [] });
+        set({ activeTripId: null });
         return;
       }
       // Switch instantly using whatever's cached locally for this trip —
@@ -1392,7 +1392,7 @@ export const useTripStore = create<TripStore>()(
       // and it's correct: filtered by tripId downstream, a trip with no
       // cached data yet just renders empty rather than losing data for a
       // trip we DO have cached (e.g. switching back to it later).
-      set({ activeTripId: id, deletedExpenses: [] });
+      set({ activeTripId: id });
       if (!navigator.onLine) {
         const trip = get().trips.find((t) => t.id === id);
         if (trip) void rescheduleTripPassReminders(trip.passes, trip.name);
@@ -2477,8 +2477,14 @@ export const useTripStore = create<TripStore>()(
       const tripId = get().activeTripId;
       if (!tripId) return;
       try {
-        const deletedExpenses = await fetchDeletedExpensesForTrip(tripId);
-        set({ deletedExpenses, storageError: null });
+        const remote = await fetchDeletedExpensesForTrip(tripId);
+        set((state) => ({
+          deletedExpenses: [
+            ...state.deletedExpenses.filter((e) => e.tripId !== tripId),
+            ...remote,
+          ],
+          storageError: null,
+        }));
       } catch (e) {
         setError(e);
       }
@@ -2540,7 +2546,10 @@ export const useTripStore = create<TripStore>()(
     emptyRecycleBin: async () => {
       const tripId = get().activeTripId;
       if (!tripId) return;
-      set({ deletedExpenses: [], storageError: null });
+      set((state) => ({
+        deletedExpenses: state.deletedExpenses.filter((e) => e.tripId !== tripId),
+        storageError: null,
+      }));
 
       if (!navigator.onLine) {
         get().queueSync('emptyRecycleBin', { tripId });

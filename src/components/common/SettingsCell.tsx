@@ -24,6 +24,8 @@ export interface SettingsCellProps {
   rightElement?: React.ReactNode;
   chevron?: boolean;
   onClick?: () => void;
+  onPointerEnter?: () => void;
+  onPointerDown?: () => void;
   disabled?: boolean;
   destructive?: boolean;
   hasDivider?: boolean;
@@ -42,6 +44,8 @@ export const SettingsCell: React.FC<SettingsCellProps> = ({
   rightElement,
   chevron = true,
   onClick,
+  onPointerEnter,
+  onPointerDown,
   disabled = false,
   destructive = false,
   hasDivider = true,
@@ -98,6 +102,8 @@ export const SettingsCell: React.FC<SettingsCellProps> = ({
         type="button"
         className={wrapperClass}
         onClick={handleClick}
+        onPointerEnter={onPointerEnter}
+        onPointerDown={onPointerDown}
         disabled={disabled}
         style={style}
         aria-label={ariaLabel || (typeof title === 'string' ? title : undefined)}

@@ -230,6 +230,10 @@ export default function App() {
     if (activeTab === 'notes') setHasVisitedNotes(true);
   }, [activeTab]);
 
+  useEffect(() => {
+    if (!activeTripId) setHasVisitedSettings(false);
+  }, [activeTripId]);
+
   // Native crossfade between tabs where supported -- browser-compositor
   // only, no animation library. flushSync forces the DOM update to happen
   // synchronously inside the transition callback, which is what the API
@@ -435,6 +439,7 @@ export default function App() {
   const [showShareTrip, setShowShareTrip] = useState(false);
   const [showMembersRequiredNotice, setShowMembersRequiredNotice] = useState(false);
   const [showGlobalSettings, setShowGlobalSettings] = useState(false);
+  const globalSettingsCloseRef = useRef<(() => void) | null>(null);
   const [bypassEnvWarning, setBypassEnvWarning] = useState(false);
   const isSuperadmin = useTripStore((s) => s.isSuperadmin);
   const setTripMuted = useTripStore((s) => s.setTripMuted);
@@ -1664,7 +1669,9 @@ export default function App() {
   // own their own history entries — do not double-register here.
   useHistoryBack(showRouteModal, () => setShowRouteModal(false));
   useHistoryBack(showAchievements, () => setShowAchievements(false));
-  useHistoryBack(showGlobalSettings, () => setShowGlobalSettings(false));
+  useHistoryBack(showGlobalSettings, () => {
+    (globalSettingsCloseRef.current ?? (() => setShowGlobalSettings(false)))();
+  });
   useHistoryBack(showCommandPalette, () => setShowCommandPalette(false));
   useHistoryBack(showTripWrapped, () => setShowTripWrapped(false));
   useHistoryBack(showBugTracker, () => {
@@ -1691,7 +1698,9 @@ export default function App() {
   useEscapeKey(showShareTrip, () => setShowShareTrip(false));
   useEscapeKey(showRouteModal, () => setShowRouteModal(false));
   useEscapeKey(showAchievements, () => setShowAchievements(false));
-  useEscapeKey(showGlobalSettings, () => setShowGlobalSettings(false));
+  useEscapeKey(showGlobalSettings, () => {
+    (globalSettingsCloseRef.current ?? (() => setShowGlobalSettings(false)))();
+  });
   useEscapeKey(showCommandPalette, () => setShowCommandPalette(false));
   useEscapeKey(showTripWrapped, () => setShowTripWrapped(false));
   useEscapeKey(showShortcutsModal, () => setShowShortcutsModal(false));
@@ -1908,7 +1917,10 @@ export default function App() {
           onDuplicateTrip={handleDuplicateTrip}
           onOpenSettings={() => setShowGlobalSettings(true)}
           onOpenBugTracker={isSuperadmin ? () => setShowBugTracker(true) : undefined}
-          onOpenCommandPalette={() => setShowCommandPalette(true)}
+          onOpenCommandPalette={() => {
+            void import('./components/GlobalSettingsModal');
+            setShowCommandPalette(true);
+          }}
           onLoadDemoTrip={handleLoadDemoTrip}
           userAvatarUrl={userAvatarUrl}
           userDisplayName={userDisplayName}
@@ -1928,10 +1940,12 @@ export default function App() {
                   import('./components/ShareTripModal');
                   import('./components/TripRouteModal');
                   import('./components/TripWrappedModal');
+                  import('./components/SettingsTab');
                 }}
                 onMouseEnter={() => {
                   import('./components/ShareTripModal');
                   import('./components/TripRouteModal');
+                  import('./components/SettingsTab');
                 }}
                 onClick={() => setShowTripActionSheet(true)}
                 aria-label={`${activeTrip?.name || 'Trip'} options and details`}
@@ -2001,8 +2015,14 @@ export default function App() {
                 <button
                   type="button"
                   className="header-action-circle-btn"
-                  onPointerDown={() => { import('./components/CommandPalette'); }}
-                  onMouseEnter={() => { import('./components/CommandPalette'); }}
+                  onPointerDown={() => {
+                    import('./components/CommandPalette');
+                    import('./components/GlobalSettingsModal');
+                  }}
+                  onMouseEnter={() => {
+                    import('./components/CommandPalette');
+                    import('./components/GlobalSettingsModal');
+                  }}
                   onClick={() => {
                     setShowCommandPalette(true);
                     if (showCmdKHint) {
@@ -2320,7 +2340,6 @@ export default function App() {
               }
             >
               <TabErrorBoundary label="Settings">
-              <div className="fade-in">
               {hasVisitedSettings && (
               <Suspense fallback={<div className="skeleton" style={{ height: '200px', borderRadius: '14px' }} />}>
               <SettingsTab
@@ -2358,10 +2377,10 @@ export default function App() {
                 onOpenFxRates={() => setShowFxRates(true)}
                 onOpenMediaGallery={() => setShowMediaGallery(true)}
                 onOpenOfflineSnapshot={() => setShowOfflineSnapshot(true)}
+                isSurfaceVisible={activeTab === 'settings'}
               />
               </Suspense>
               )}
-              </div>
               </TabErrorBoundary>
             </div>
 
@@ -2546,6 +2565,7 @@ export default function App() {
         <Suspense fallback={null}>
           <GlobalSettingsModal
             onClose={() => setShowGlobalSettings(false)}
+            closeRef={globalSettingsCloseRef}
             themePref={themePref}
             setThemePref={setThemePref}
             onExportJson={triggerExport}

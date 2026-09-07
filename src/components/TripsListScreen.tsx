@@ -295,6 +295,8 @@ export function TripsListScreen({
         <button
           type="button"
           className="profile-avatar-btn"
+          onPointerDown={() => { void import('./GlobalSettingsModal'); }}
+          onMouseEnter={() => { void import('./GlobalSettingsModal'); }}
           onClick={onOpenSettings}
           aria-label="Profile & Settings"
           title="Profile & Settings"
