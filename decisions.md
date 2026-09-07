@@ -2504,6 +2504,18 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - Signed URLs expire after 1 hour (existing `getReceiptSignedUrl` TTL); re-opening the gallery after expiry re-resolves rather than caching indefinitely, which is correct but means the gallery can't be left open unattended past that window without a refetch on next interaction.
 
+---
+
+## Settings Trip Status Hero + Card Elevation (v3.6.4, FEAT-041)
+* **Context:** User asked for Settings UI polish referencing Uber/WhatsApp reference screenshots — "cleaned and smooth." Reviewed 3 mockup directions with the user first (published as an artifact): grouped elevation (WhatsApp-style card depth), bold hero (Uber-style dark header + stat chips), soft premium glass (frosted blur + gradient status card). Audited `SettingsView.tsx`/`index.css` before mocking anything — the app's grouped-card language (`.settings-group-card`, mono uppercase section titles, squircle glow icons) already matched the "grouped elevation" direction closely; the one clearly missing piece against the references was a glanceable trip-status summary (the existing `.settings-trip-flight-banner` was a thin single-line pill, no stat breakdown).
+* **Decision:** Ship a hybrid — keep the existing grouped-card body (already close to spec, low risk to touch), replace the flight-banner pill with a stat-chip hero card (Unsettled / Members / Expenses, borrowed from the "bold hero" concept but executed in the app's existing light theme, not a dark block) sitting above the "This Trip" group. Skipped the glass/blur concept entirely — `backdrop-filter` is expensive on the mid-range Android WebViews this Capacitor app targets, and a dark gradient mesh would fight the app's light-mode-default rest of the screen.
+* **Pattern/Implementation:**
+  - `SettingsView.tsx`: replaced the `settings-trip-flight-banner` block (inline styles) with `.settings-trip-hero` markup — trip name + clickable close/reopen status chip on top, 3 stat tiles below (`settlementSummary.totalOutstanding`/`isFullySettled`, member count, expense count). `SettingsSection` title changed from the trip's own name (now shown in the hero) to the generic "This Trip" label.
+  - `index.css`: new `.settings-trip-hero*` classes reusing existing tokens (`--primary-accent`/`--secondary-accent` color-mix gradient, same trick the old banner used) so light/dark theming comes for free. Bumped `.settings-group-card` box-shadow from `0 4px 16px rgba(0,0,0,.05)` to `0 8px 22px -6px rgba(15,20,30,.1)` for visible card depth across all Settings groups, not just the hero.
+* **Trade-offs Accepted:**
+  - The "Close Trip" action row still exists in the list below (unsettled amount/badge duplicated in the hero) — accepted redundancy: hero is glanceable status, list row is the actual settings action, matches how both Uber and WhatsApp show a summary plus a detail row for the same state.
+  - No live browser screenshot taken before shipping (no Playwright/screenshot tool available in this session, only `tsc --noEmit`); flagged to the user as a verification gap.
+
 
 
 

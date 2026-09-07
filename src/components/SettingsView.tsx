@@ -48,7 +48,6 @@ import { SuperadminAuthModal } from './SuperadminAuthModal';
 // below -- code-split so its ~700 lines don't ship in every traveler's
 // bundle.
 const SuperAdminBugTracker = lazy(() => import('./SuperAdminBugTracker').then((m) => ({ default: m.SuperAdminBugTracker })));
-import { useHistoryBack } from '../utils/useHistoryBack';
 import { useHistoryBack, useHistoryStack } from '../utils/useHistoryBack';
 import { useEscapeKey } from '../utils/useEscapeKey';
 import {
@@ -1527,7 +1526,7 @@ export function SettingsView({
   const showStorageManager = matchesSearch('Storage and Data', 'storage', 'data', 'cache', 'memory', 'disk', 'receipts', 'photos');
   const showArchived = matchesSearch('Archived Trips', 'restore', 'history', 'past trips', 'archive');
   const showBackups = isSuperadmin && matchesSearch('Database Backups', 'export', 'import', 'json', 'snapshot', 'restore');
-  const showDemoTrip = Boolean(onLoadDemoTrip && isFeatureEnabled('enableDemoSeeding') && matchesSearch('Seed Demo Trip', 'sample', 'test', 'goa', 'demo'));
+  const showDemoTrip = Boolean(onLoadDemoTrip && matchesSearch('Seed Demo Trip', 'sample', 'test', 'goa', 'demo'));
   const showDataGroup = showStorageManager || showArchived || showBackups || showDemoTrip || showSnapshotSearch || showGallerySearch;
 
   const showReportProblem = matchesSearch('Report a Problem', 'bug', 'issue', 'diagnostics', 'broken', 'error');
@@ -1803,43 +1802,52 @@ export function SettingsView({
 
       {/* This Trip — concrete rows on the home screen */}
       {showTripGroup && activeTrip && (
-        <SettingsSection title={activeTrip.name}>
+        <>
           {showTripStatus && (
-            <div className="settings-trip-flight-banner" style={{ borderRadius: 0, margin: 0 }}>
-              <div>
-                <div className="settings-trip-flight-title">
+            <div className="settings-trip-hero">
+              <div className="settings-trip-hero-top">
+                <div className="settings-trip-hero-title">
                   <span>🌴</span> {activeTrip.name}
-          </div>
-                <div className="settings-trip-flight-meta">
-                  {baseCurrency || activeTrip.baseCurrency || 'INR'} · {(activeTrip.memberIds?.length ?? Object.keys(members).length)} {(activeTrip.memberIds?.length ?? Object.keys(members).length) === 1 ? 'member' : 'members'} · {activeTripExpenses.length} {activeTripExpenses.length === 1 ? 'expense' : 'expenses'}
-        </div>
+                </div>
+                <button
+                  type="button"
+                  className="settings-trip-hero-status"
+                  onClick={handleToggleCloseTrip}
+                  disabled={!isTripAdmin}
+                  title={isTripAdmin ? (activeTrip.closed ? 'Click to reopen trip' : 'Click to close and lock trip') : undefined}
+                  style={{
+                    background: flightStatusBg,
+                    color: flightStatusColor,
+                    border: `1px solid ${flightStatusBorder}`,
+                    cursor: isTripAdmin ? 'pointer' : 'default',
+                  }}
+                  aria-label={activeTrip.closed ? 'Trip is closed. Click to reopen.' : 'Trip is active. Click to close.'}
+                >
+                  <span>{flightStatusText}</span>
+                </button>
               </div>
-              <button
-                type="button"
-                onClick={handleToggleCloseTrip}
-                disabled={!isTripAdmin}
-                title={isTripAdmin ? (activeTrip.closed ? 'Click to reopen trip' : 'Click to close and lock trip') : undefined}
-                style={{
-                  fontSize: '9.5px',
-                  fontFamily: 'var(--font-family-mono)',
-                  fontWeight: 700,
-                  padding: '2px 8px',
-                  borderRadius: '12px',
-                  background: flightStatusBg,
-                  color: flightStatusColor,
-                  border: `1px solid ${flightStatusBorder}`,
-                  cursor: isTripAdmin ? 'pointer' : 'default',
-                  transition: 'all 0.15s ease',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '4px',
-                }}
-                aria-label={activeTrip.closed ? 'Trip is closed. Click to reopen.' : 'Trip is active. Click to close.'}
-              >
-                <span>{flightStatusText}</span>
-              </button>
+              <div className="settings-trip-hero-stats">
+                <div className="settings-trip-hero-stat">
+                  <span className={`settings-trip-hero-stat-value ${settlementSummary.isFullySettled ? 'ok' : 'warn'}`}>
+                    {settlementSummary.isFullySettled
+                      ? 'Settled'
+                      : `${currencySymbol}${settlementSummary.totalOutstanding.toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
+                  </span>
+                  <span className="settings-trip-hero-stat-label">Unsettled</span>
+                </div>
+                <div className="settings-trip-hero-stat">
+                  <span className="settings-trip-hero-stat-value">{activeTrip.memberIds?.length ?? Object.keys(members).length}</span>
+                  <span className="settings-trip-hero-stat-label">{(activeTrip.memberIds?.length ?? Object.keys(members).length) === 1 ? 'Member' : 'Members'}</span>
+                </div>
+                <div className="settings-trip-hero-stat">
+                  <span className="settings-trip-hero-stat-value">{activeTripExpenses.length}</span>
+                  <span className="settings-trip-hero-stat-label">{activeTripExpenses.length === 1 ? 'Expense' : 'Expenses'}</span>
+                </div>
+              </div>
             </div>
           )}
+
+        <SettingsSection title="This Trip">
 
           {showInvite && onOpenShareTrip && (
             <SettingsCell
@@ -1966,6 +1974,7 @@ export function SettingsView({
               />
             )}
         </SettingsSection>
+        </>
       )}
 
       {/* Preferences */}

@@ -633,5 +633,21 @@
     "shippedAt": "2026-09-06T22:28:34.642Z",
     "shippedBy": "cursor-agent",
     "shippedNote": "Shipped in v3.6.0 (df2815e). Reverses FEAT-030 portal-folder IA into WhatsApp-style flat groups."
+  },
+  {
+    "id": "FEAT-041",
+    "title": "Settings screen visual redesign: trip status hero + elevated grouped cards",
+    "description": "Replaced the thin trip-status pill banner with a stat-chip hero card (unsettled amount, members, expenses) above the This Trip group, and bumped settings-group-card elevation for real depth instead of near-flat borders. Direction chosen from 3 mockup concepts reviewed with the user (grouped elevation / bold hero / soft premium glass) — this ships a hybrid of grouped-elevation body + hero stat chips.",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-09-07T13:15:26.960Z",
+    "updatedAt": "2026-09-07T13:15:26.960Z",
+    "shippedAt": "2026-09-07T13:15:26.960Z",
+    "shippedBy": "claude-cli",
+    "shippedNote": "Shipped"
   }
 ]
