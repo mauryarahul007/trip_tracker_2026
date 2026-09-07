@@ -12,6 +12,7 @@ import { useTripStore } from '../store/tripStore';
 import { getDestinationWeatherRealtime, type WeatherData } from '../services/weatherService';
 import { useHistoryBack } from '../utils/useHistoryBack';
 import { useEscapeKey } from '../utils/useEscapeKey';
+import { PassportStamp } from './common/PassportStamp';
 
 const PEEK_DEPTH = 3;
 const SWIPE_THRESHOLD = 90;
@@ -324,6 +325,28 @@ function CardContent({
         />
       )}
       <div className="stack-card-content">
+        {/* Authentic Passport Ink Stamp Watermark: floating mid-right on the card cover photo without displacing any text/controls */}
+        <div
+          style={{
+            position: 'absolute',
+            right: '18px',
+            top: '70px',
+            zIndex: 1,
+            pointerEvents: 'none',
+            opacity: 0.92,
+          }}
+          aria-hidden="true"
+        >
+          <PassportStamp
+            destination={trip.destination || trip.name}
+            tripName={trip.name}
+            date={trip.startDate}
+            variant={balanceInfo?.status === 'settled' ? 'settled' : 'entry'}
+            color={balanceInfo?.status === 'settled' ? 'teal' : 'auto'}
+            size={54}
+          />
+        </div>
+
         <div className="stack-card-top-bar">
           <div className="pp-stamp">
             <span>{stamp.top}</span>

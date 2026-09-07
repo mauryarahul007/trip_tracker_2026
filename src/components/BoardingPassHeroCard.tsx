@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react';
 import type { Trip, Member } from '../types';
 import type { Transfer } from '../utils/settlement';
-import { IconCheckCircle, IconTrophy, IconCopy } from './Icons';
+import { IconCheckCircle, IconCopy } from './Icons';
 import { formatAmount } from '../utils/currency';
 import { triggerHaptic } from '../utils/haptics';
 import { getDestinationWeather } from '../services/weatherService';
 import type { WeatherData } from '../services/weatherService';
 import { useAnimatedNumber } from '../hooks/useAnimatedNumber';
 import { parseTripRoute } from '../utils/routeHelper';
+import { tripDayNumber } from '../utils/dateRange';
 
 interface BoardingPassHeroCardProps {
   trip: Trip;
@@ -68,21 +69,6 @@ const S_BACK_FACE: React.CSSProperties = {
 const S_BACK_TOP: React.CSSProperties = { paddingBottom: '8px' };
 const S_BACK_EYEBROW: React.CSSProperties = { display: 'inline-flex', alignItems: 'center', gap: '4px' };
 const S_BACK_TITLE: React.CSSProperties = { fontSize: '15px' };
-const S_BADGE_WRAP: React.CSSProperties = { display: 'flex', gap: '6px' };
-const S_SQUAD_BADGE: React.CSSProperties = {
-  background: 'rgba(217, 119, 6, 0.12)',
-  color: 'var(--color-warning)',
-  fontFamily: 'var(--font-family-mono)',
-  fontSize: '10px',
-  fontWeight: 700,
-  padding: '4px 8px',
-  borderRadius: '8px',
-  cursor: 'pointer',
-  display: 'flex',
-  alignItems: 'center',
-  gap: '4px',
-  border: '1px solid rgba(217, 119, 6, 0.22)',
-};
 const S_ROUTE_GRID: React.CSSProperties = {
   padding: '10px 18px',
   display: 'grid',
@@ -173,6 +159,59 @@ function calculateTripDuration(start?: string, end?: string, stopCount?: number)
   return daysText || 'Trip Route';
 }
 
+interface BoardingStatus {
+  label: string;
+  statusText: string;
+  dotColor: string;
+  glowColor: string;
+}
+
+function getBoardingStatus(startDate?: string, endDate?: string): BoardingStatus {
+  const todayStr = new Date().toLocaleDateString('en-CA');
+  if (!startDate) {
+    return {
+      label: 'TRIP STATUS',
+      statusText: 'ACTIVE',
+      dotColor: '#38BDF8',
+      glowColor: 'rgba(56, 189, 248, 0.5)',
+    };
+  }
+  if (endDate && todayStr > endDate) {
+    return {
+      label: 'ITINERARY',
+      statusText: 'COMPLETED',
+      dotColor: '#94A3B8',
+      glowColor: 'rgba(148, 163, 184, 0.4)',
+    };
+  }
+  if (todayStr >= startDate && (!endDate || todayStr <= endDate)) {
+    const day = tripDayNumber(startDate, todayStr);
+    return {
+      label: 'FLIGHT STATUS',
+      statusText: day ? `ONGOING · DAY ${day}` : 'ONGOING',
+      dotColor: '#10B981',
+      glowColor: 'rgba(16, 185, 129, 0.65)',
+    };
+  }
+  if (todayStr < startDate) {
+    const s = new Date(`${startDate}T00:00:00`).getTime();
+    const t = new Date(`${todayStr}T00:00:00`).getTime();
+    const diffDays = Math.ceil((s - t) / 86400000);
+    return {
+      label: 'DEPARTURE',
+      statusText: diffDays === 1 ? 'STARTS TOMORROW' : `IN ${diffDays} DAYS`,
+      dotColor: '#F59E0B',
+      glowColor: 'rgba(245, 158, 11, 0.65)',
+    };
+  }
+  return {
+    label: 'TRIP STATUS',
+    statusText: 'SCHEDULED',
+    dotColor: '#38BDF8',
+    glowColor: 'rgba(56, 189, 248, 0.5)',
+  };
+}
+
 export function BoardingPassHeroCard({
   trip,
   currencySymbol,
@@ -239,6 +278,7 @@ export function BoardingPassHeroCard({
   const isSquadLeader = currentMember?.id === trip.ownerId;
   const parsedRoute = parseTripRoute(trip);
   const durationLabel = calculateTripDuration(trip.startDate, trip.endDate, parsedRoute.allStops.length > 1 ? parsedRoute.allStops.length : undefined);
+  const boardingStatus = getBoardingStatus(trip.startDate, trip.endDate);
 
   return (
     <div className="boarding-pass-flip-container" style={S_FLIP_CONTAINER}>
@@ -318,20 +358,45 @@ export function BoardingPassHeroCard({
                 {trip.name}
               </div>
             </div>
-            <div style={S_BADGE_WRAP}>
-              {onOpenSquadBadges && (
-                <div
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    triggerHaptic('medium');
-                    onOpenSquadBadges();
+            <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', minWidth: 0 }}>
+              <div style={S_MICRO_LABEL}>{boardingStatus.label}</div>
+              <div
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  marginTop: '3px',
+                  padding: '3px 9px',
+                  borderRadius: '9999px',
+                  background: 'var(--bp-paper-soft)',
+                  border: '1px solid var(--bp-line-strong)',
+                  boxShadow: '0 1px 3px rgba(0, 0, 0, 0.12)',
+                }}
+                title={`Trip Status: ${boardingStatus.statusText}`}
+              >
+                <span
+                  style={{
+                    width: '6px',
+                    height: '6px',
+                    borderRadius: '50%',
+                    background: boardingStatus.dotColor,
+                    boxShadow: `0 0 7px ${boardingStatus.glowColor}`,
+                    flexShrink: 0,
                   }}
-                  style={S_SQUAD_BADGE}
-                  title="View Unlocked Squad Achievements"
+                />
+                <span
+                  style={{
+                    fontFamily: 'var(--font-family-mono)',
+                    fontSize: '10px',
+                    fontWeight: 700,
+                    letterSpacing: '0.04em',
+                    color: 'var(--bp-ink)',
+                    whiteSpace: 'nowrap',
+                  }}
                 >
-                  <IconTrophy size={11} /> SQUAD BADGES
-                </div>
-              )}
+                  {boardingStatus.statusText}
+                </span>
+              </div>
             </div>
           </div>
 

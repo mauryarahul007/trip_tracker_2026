@@ -279,6 +279,163 @@
   --bp-shadow: rgba(0, 0, 0, 0.35);
 }
 
+/* ==========================================================================
+   OLED "NIGHT FLIGHT" PURE BLACK THEME (Battery-saving true black for travel)
+   ========================================================================== */
+:root[data-theme="oled"] {
+  --bg-page: #000000;
+  --bg-app: #000000;
+  --bg-surface: #0A0C0E;
+  --bg-surface-hover: #12151A;
+  --border-color: #1A1F26;
+  --border-color-focus: rgba(63, 203, 189, 0.6);
+
+  --primary-accent: #3FCBBD;
+  --primary-accent-light: #63D8CC;
+  --secondary-accent: #FFFFFF;
+  --secondary-accent-light: #FFFFFF;
+  --accent-orange: #FF7A00;
+
+  --color-success: #34D399;
+  --color-danger: #F87171;
+  --color-warning: #FBBF24;
+  --color-success-text: #34D399;
+  --color-warning-text: #FBBF24;
+
+  --text-primary: #FFFFFF;
+  --text-secondary: #9DA3AE;
+  --text-muted: #6B7280;
+
+  --bg-header: #041210;
+  --header-gradient: linear-gradient(135deg, rgba(63, 203, 189, 0.45) 0%, rgba(4, 18, 16, 0.9) 100%);
+  --header-gradient-scrolled: linear-gradient(135deg, rgba(63, 203, 189, 0.55) 0%, #000000 100%);
+  --header-gradient-solid: linear-gradient(135deg, #0B2925, #000000);
+  --bg-header-glass: rgba(0, 0, 0, 0.92);
+  --bg-header-glass-scrolled: #000000;
+  --glass-shadow: 0 1px 2px rgba(0, 0, 0, 0.6), 0 6px 20px rgba(0, 0, 0, 0.8);
+  --bg-nav-glass: rgba(0, 0, 0, 0.94);
+  --border-nav-glass: rgba(63, 203, 189, 0.25);
+  --shadow-nav-glass: 0 18px 48px -4px rgba(0, 0, 0, 0.95), 0 4px 16px rgba(0, 0, 0, 0.7);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.6);
+  --shadow-md: 0 4px 14px rgba(0, 0, 0, 0.7);
+  --shadow-lg: 0 8px 30px rgba(0, 0, 0, 0.85);
+  --bg-nav-item-active: rgba(63, 203, 189, 0.2);
+  --color-nav-item-active: #3FCBBD;
+
+  --bp-paper: #050607;
+  --bp-paper-soft: #0C0E11;
+  --bp-ink: #FFFFFF;
+  --bp-ink-strong: rgba(255, 255, 255, 0.95);
+  --bp-ink-mid: rgba(255, 255, 255, 0.78);
+  --bp-ink-soft: rgba(255, 255, 255, 0.65);
+  --bp-ink-softer: rgba(255, 255, 255, 0.5);
+  --bp-ink-faint: rgba(255, 255, 255, 0.2);
+  --bp-tint: rgba(63, 203, 189, 0.05);
+  --bp-line: #1A1F26;
+  --bp-line-strong: #252D37;
+  --bp-shadow: rgba(0, 0, 0, 0.8);
+}
+
+/* ==========================================================================
+   UI/UX ENHANCEMENTS: Cockpit 2-Pane, Perforated Rip, Shimmers & Odometer
+   ========================================================================== */
+
+/* Luggage Tag Shimmer Animation */
+.luggage-skeleton-shimmer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.08) 50%,
+    transparent 100%
+  );
+  animation: luggageShimmer 1.8s infinite linear;
+  pointer-events: none;
+}
+
+@keyframes luggageShimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+/* Perforated Receipt Tear-Off Celebration */
+.perforated-tear-container {
+  position: relative;
+  overflow: hidden;
+}
+
+.perforated-tear-active {
+  animation: paperTearRip 0.45s var(--ease-spring) forwards;
+}
+
+@keyframes paperTearRip {
+  0% {
+    transform: scale(1) translateY(0) rotate(0deg);
+    opacity: 1;
+  }
+  40% {
+    transform: scale(0.98) translateY(-4px) rotate(-1.5deg);
+  }
+  100% {
+    transform: scale(1.02) translateY(2px) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+/* Rubber Stamp Bounce Animation */
+.stamp-settle-bounce {
+  animation: stampImpact 0.38s cubic-bezier(0.18, 0.89, 0.32, 1.28) forwards;
+}
+
+@keyframes stampImpact {
+  0% {
+    transform: scale(2.2) rotate(-12deg);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(0.94) rotate(4deg);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+/* Live In-Form FX Currency Ticker */
+.form-fx-ticker {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-md);
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 8px;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.2s ease;
+}
+
+.form-fx-ticker-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-family-mono);
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--primary-accent);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background: rgba(15, 111, 99, 0.08);
+  padding: 2px 7px;
+  border-radius: 6px;
+}
+
 * {
   box-sizing: border-box;
   margin: 0;

@@ -5702,5 +5702,57 @@
     "resolvedBy": "cursor-agent",
     "resolvedAt": "2026-09-07T15:15:24.379Z",
     "resolutionNote": "Skip calc unless isSurfaceVisible, home overlay is closed, and isTripAdmin; cache last summary. Fixed in v3.6.8 commit a4b1b6c."
+  },
+  {
+    "id": "BUG-192",
+    "title": "Settings trip hero displays contradictory Settled and UNSETTLED labels on fully settled trips",
+    "description": "Settings trip hero displays contradictory Settled and UNSETTLED labels on fully settled trips",
+    "severity": "low",
+    "category": "ui-ux",
+    "status": "resolved",
+    "foundBy": "agent",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-09-07T18:42:47.591Z",
+    "updatedAt": "2026-09-07T18:42:53.317Z",
+    "resolvedBy": "agent",
+    "resolvedAt": "2026-09-07T18:42:53.317Z",
+    "resolutionNote": "Made stat box label dynamic to show BALANCES when settled and UNSETTLED when outstanding"
+  },
+  {
+    "id": "BUG-193",
+    "title": "Passport stamp placement in TripStack flex top-bar displaced destination name and weather",
+    "description": "Passport stamp placement in TripStack flex top-bar displaced destination name and weather",
+    "severity": "medium",
+    "category": "ui-ux",
+    "status": "resolved",
+    "foundBy": "agent",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-09-07T18:42:59.069Z",
+    "updatedAt": "2026-09-07T18:43:03.420Z",
+    "resolvedBy": "agent",
+    "resolvedAt": "2026-09-07T18:43:03.419Z",
+    "resolutionNote": "Restored exact original stack-card-top-bar and moved PassportStamp to absolute overlay at top 70px right 18px"
   }
 ]

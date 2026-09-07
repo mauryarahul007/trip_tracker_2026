@@ -2566,6 +2566,27 @@ This document logs all meaningful technical decisions, library choices, design p
   - Remote recycle-bin rows from other devices do not appear in the badge until Recycle Bin is opened once (avoids a network fetch on every Settings visit).
   - Nested Back remounts the parent overlay from the left rather than playing a paired exit on the child — matches WhatsApp-style stack replace, not a two-layer push/pop.
 
+---
+
+## UI/UX Enhancements, Dynamic Passport Stamps & Settings Alignment (v3.7.0, FEAT-043–FEAT-049, BUG-192–BUG-193)
+* **Context:** A multi-component UX audit and feature expansion was undertaken to introduce visual richness, sound effects, offline indicators, and fix status contradictions across cards and settings. During initial review, 2-Pane Cockpit view was deemed non-optimal for user workflow and removed; passport stamp placement in flexbox headers was causing displacement of destination names and live weather; and the Settings hero card displayed contradictory "Settled / UNSETTLED" text for zero-debt trips.
+* **Decision:**
+  - Standardize on single-pane responsive tab layout across all device widths (drop 2-pane desktop split).
+  - Relocate passport ink stamps to absolute non-displacing watermark overlays on trip covers, with dynamic high-contrast ink palettes and frosted glass backdrops.
+  - Make Settings trip hero stat labels dynamic (`BALANCES` when settled, `UNSETTLED` when outstanding).
+  - Replace legacy squad badges button on the Boarding Pass flip card with an authentic airline-style live glowing status tag.
+  - Ship OLED Night Flight mode, live in-form FX ticker with rolling odometer, Web Audio receipt tear settlement celebrations, offline status banners, and luggage-tag skeleton loaders.
+* **Pattern/Implementation:**
+  - `PassportStamp`: SVG dual-ring distressed stamp using `useId()` for arc text paths; dynamic color derived from trip destination hash or settlement state (`#10B981`, `#06B6D4`, `#F59E0B`, `#F43F5E`, `#A855F7`). Positioned at `top: 70px; right: 18px; pointer-events: none; z-index: 1`.
+  - `soundEffects.ts`: Web Audio API synthetic noise + lowpass filter bursts for paper ripping (`playTicketTear()`) and low-frequency exponential ramp sine thud (`playStampThud()`), with zero external audio assets.
+  - `RollingNumber.tsx`: Pure CSS tabular number translation per digit for smooth odometer transitions in currency conversions.
+  - `SettingsView.tsx`: Dynamic label mapping `settlementSummary.isFullySettled ? 'Balances' : 'Unsettled'`.
+  - `BoardingPassHeroCard.tsx`: Replaced `S_SQUAD_BADGE` with structured micro-label (`FLIGHT STATUS`) and glowing live dot pill (`ONGOING · DAY X`, `IN X DAYS`, `COMPLETED`).
+* **Trade-offs Accepted:**
+  - Dropped 2-pane cockpit split view on large screens in favor of consistent single-column layout, prioritizing predictable vertical scanning on web and tablets.
+  - Web Audio synthesis requires user interaction gesture to unlock AudioContext in strict browser autoplays (handled cleanly on settle tap).
+
+
 
 
 

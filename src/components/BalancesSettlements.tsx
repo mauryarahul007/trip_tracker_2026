@@ -12,6 +12,7 @@ import { UpiPaymentModal } from './UpiPaymentModal';
 import { BoardingPassHeroCard } from './BoardingPassHeroCard';
 import { StickyBalanceBar } from './StickyBalanceBar';
 import { ConfettiBurst } from './ConfettiBurst';
+import { playTicketTear, playStampThud } from '../utils/soundEffects';
 
 
 type Props = {
@@ -164,9 +165,18 @@ function TransferRow({
   const [showAudit, setShowAudit] = useState(false);
   const [reminderStatus, setReminderStatus] = useState<'idle' | 'sending' | 'sent' | 'rateLimited'>('idle');
   const [celebrate, setCelebrate] = useState(false);
+  const [isTorn, setIsTorn] = useState(false);
   const fireCelebration = () => {
     setCelebrate(true);
-    setTimeout(() => setCelebrate(false), 900);
+    setIsTorn(true);
+    playTicketTear();
+    setTimeout(() => {
+      playStampThud();
+    }, 280);
+    setTimeout(() => {
+      setCelebrate(false);
+      setIsTorn(false);
+    }, 900);
   };
 
   const fromAudit = getAuditDetailsForNode(t.from, t.fromLabel, balances, groups, activeTripExpenses);
@@ -243,7 +253,7 @@ function TransferRow({
 
   return (
     <div
-      className="traveler-settlement-card"
+      className={`traveler-settlement-card${isTorn ? ' perforated-tear-active' : ''}`}
       style={{
         position: 'relative',
         background: 'var(--bg-surface)',

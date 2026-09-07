@@ -19,6 +19,7 @@ import { useFocusTrap } from '../hooks/useFocusTrap';
 import { ReceiptScannerModal } from './ReceiptScannerModal';
 import { useHistoryBack } from '../utils/useHistoryBack';
 import { useEscapeKey } from '../utils/useEscapeKey';
+import { RollingNumber } from './common/RollingNumber';
 
 // Minimal Web Speech API surface -- not in the default TS DOM lib, and
 // vendor-prefixed on most browsers that support it (Chrome/Edge/Safari).
@@ -941,40 +942,50 @@ export function ExpenseForm({
           )}
         </div>
 
-        {/* Live Currency Conversion Preview */}
+        {/* Live Currency Conversion Ticker */}
         {currencyConversion && (
-          <div className="fade-in" style={{
-            marginTop: '6px',
-            padding: '6px 10px',
-            borderRadius: 'var(--border-radius-sm)',
-            background: 'rgba(47,111,237,0.08)',
-            border: '1px solid rgba(47,111,237,0.25)',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            fontSize: '12px',
-            color: 'var(--text-primary)'
-          }}>
-            <span>
-              ≈ <strong>{getCurrencySymbol(baseCurrency)} {currencyConversion.convertedAmount.toFixed(2)}</strong> {baseCurrency} (1 {selectedCurrency} = {currencyConversion.rate} {baseCurrency})
-            </span>
+          <div className="form-fx-ticker fade-in" role="status" aria-live="polite">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.04em', opacity: 0.75, fontWeight: 600 }}>Trip Base Value</span>
+                <span style={{ fontSize: '10px', padding: '1px 5px', borderRadius: '4px', background: 'rgba(47, 111, 237, 0.15)', color: 'var(--primary-accent)', fontWeight: 700 }}>
+                  1 {selectedCurrency} = {currencyConversion.rate} {baseCurrency}
+                </span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px', fontSize: '15px', fontWeight: 800, color: 'var(--text-primary)' }}>
+                <span>≈</span>
+                <RollingNumber
+                  value={currencyConversion.convertedAmount}
+                  prefix={getCurrencySymbol(baseCurrency)}
+                  decimals={2}
+                />
+                <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary)' }}>{baseCurrency}</span>
+              </div>
+            </div>
             <button
               type="button"
+              className="btn-pill"
               style={{
-                background: 'none',
+                background: 'var(--primary-accent)',
+                color: '#fff',
                 border: 'none',
-                color: 'var(--primary-accent)',
+                padding: '6px 12px',
+                borderRadius: '8px',
                 cursor: 'pointer',
-                fontWeight: 600,
+                fontWeight: 700,
                 fontSize: '11px',
-                textDecoration: 'underline'
+                letterSpacing: '0.02em',
+                boxShadow: '0 2px 8px rgba(47, 111, 237, 0.25)',
+                whiteSpace: 'nowrap'
               }}
               onClick={() => {
+                triggerHaptic('medium');
                 setAmount(String(currencyConversion.convertedAmount));
                 setSelectedCurrency(baseCurrency);
               }}
+              title={`Switch expense directly to ${baseCurrency}`}
             >
-              Use {baseCurrency}
+              Apply {baseCurrency}
             </button>
           </div>
         )}

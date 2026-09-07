@@ -9,11 +9,11 @@
 
 | Metric | Count |
 | :--- | :--- |
-| **Total Tracked** | **42** |
+| **Total Tracked** | **49** |
 | **💡 Requested** | **2** |
 | **📋 Planned** | **0** |
 | **🟡 In Progress** | **0** |
-| **✅ Shipped** | **40** |
+| **✅ Shipped** | **47** |
 | **⚪ Won't Do** | **0** |
 
 ---
@@ -92,6 +92,13 @@ CI pipeline for lint, build, and test on push/PR
 | **FEAT-040** | WhatsApp-style Settings home (flat titled groups) | `ui-ux` | `cursor-agent` | `cursor-agent` | Shipped in v3.6.0 (df2815e). Reverses FEAT-030 portal-folder IA into WhatsApp-style flat groups. |
 | **FEAT-041** | Settings screen visual redesign: trip status hero + elevated grouped cards | `ui-ux` | `claude-cli` | `claude-cli` | Shipped |
 | **FEAT-042** | Settings menu IA compaction — Trip Tools & Backups/Media submenus | `ui-ux` | `claude-cli` | `claude-cli` | Shipped |
+| **FEAT-043** | OLED Night Flight Pure Black Theme with 4-way appearance selector | `ui-ux` | `agent` | `agent` | Shipped |
+| **FEAT-044** | Live In-Form FX Currency Ticker with Rolling Number Odometer animation | `ui-ux` | `agent` | `agent` | Shipped |
+| **FEAT-045** | Perforated Receipt Tear-Off Settlement Celebration with Web Audio sound synthesis | `ui-ux` | `agent` | `agent` | Shipped |
+| **FEAT-046** | Dynamic Vector Passport Ink Stamps on Trip Covers with high-contrast dynamic ink colors | `ui-ux` | `agent` | `agent` | Shipped |
+| **FEAT-047** | In-Flight Remote Offline State Banner and pending mutation queue drawer | `ui-ux` | `agent` | `agent` | Shipped |
+| **FEAT-048** | Luggage-Tag Skeleton Loaders with ticket cutout and barcode shimmer | `ui-ux` | `agent` | `agent` | Shipped |
+| **FEAT-049** | Boarding Pass Flip Flight and Itinerary Status Indicator with live glowing dot | `ui-ux` | `agent` | `agent` | Shipped |
 
 ---
 

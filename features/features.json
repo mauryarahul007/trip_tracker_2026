@@ -665,5 +665,117 @@
     "shippedAt": "2026-09-07T13:50:22.466Z",
     "shippedBy": "claude-cli",
     "shippedNote": "Shipped"
+  },
+  {
+    "id": "FEAT-043",
+    "title": "OLED Night Flight Pure Black Theme with 4-way appearance selector",
+    "description": "OLED Night Flight Pure Black Theme with 4-way appearance selector",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "agent",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-09-07T18:43:08.797Z",
+    "updatedAt": "2026-09-07T18:43:08.797Z",
+    "shippedAt": "2026-09-07T18:43:08.797Z",
+    "shippedBy": "agent",
+    "shippedNote": "Shipped"
+  },
+  {
+    "id": "FEAT-044",
+    "title": "Live In-Form FX Currency Ticker with Rolling Number Odometer animation",
+    "description": "Live In-Form FX Currency Ticker with Rolling Number Odometer animation",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "agent",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-09-07T18:43:14.937Z",
+    "updatedAt": "2026-09-07T18:43:14.937Z",
+    "shippedAt": "2026-09-07T18:43:14.937Z",
+    "shippedBy": "agent",
+    "shippedNote": "Shipped"
+  },
+  {
+    "id": "FEAT-045",
+    "title": "Perforated Receipt Tear-Off Settlement Celebration with Web Audio sound synthesis",
+    "description": "Perforated Receipt Tear-Off Settlement Celebration with Web Audio sound synthesis",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "agent",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-09-07T18:43:20.154Z",
+    "updatedAt": "2026-09-07T18:43:20.154Z",
+    "shippedAt": "2026-09-07T18:43:20.154Z",
+    "shippedBy": "agent",
+    "shippedNote": "Shipped"
+  },
+  {
+    "id": "FEAT-046",
+    "title": "Dynamic Vector Passport Ink Stamps on Trip Covers with high-contrast dynamic ink colors",
+    "description": "Dynamic Vector Passport Ink Stamps on Trip Covers with high-contrast dynamic ink colors",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "agent",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-09-07T18:43:25.474Z",
+    "updatedAt": "2026-09-07T18:43:25.474Z",
+    "shippedAt": "2026-09-07T18:43:25.474Z",
+    "shippedBy": "agent",
+    "shippedNote": "Shipped"
+  },
+  {
+    "id": "FEAT-047",
+    "title": "In-Flight Remote Offline State Banner and pending mutation queue drawer",
+    "description": "In-Flight Remote Offline State Banner and pending mutation queue drawer",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "agent",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-09-07T18:43:29.975Z",
+    "updatedAt": "2026-09-07T18:43:29.975Z",
+    "shippedAt": "2026-09-07T18:43:29.975Z",
+    "shippedBy": "agent",
+    "shippedNote": "Shipped"
+  },
+  {
+    "id": "FEAT-048",
+    "title": "Luggage-Tag Skeleton Loaders with ticket cutout and barcode shimmer",
+    "description": "Luggage-Tag Skeleton Loaders with ticket cutout and barcode shimmer",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "agent",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-09-07T18:43:35.000Z",
+    "updatedAt": "2026-09-07T18:43:35.000Z",
+    "shippedAt": "2026-09-07T18:43:35.000Z",
+    "shippedBy": "agent",
+    "shippedNote": "Shipped"
+  },
+  {
+    "id": "FEAT-049",
+    "title": "Boarding Pass Flip Flight and Itinerary Status Indicator with live glowing dot",
+    "description": "Boarding Pass Flip Flight and Itinerary Status Indicator with live glowing dot",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "agent",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-09-07T18:43:40.332Z",
+    "updatedAt": "2026-09-07T18:43:40.332Z",
+    "shippedAt": "2026-09-07T18:43:40.332Z",
+    "shippedBy": "agent",
+    "shippedNote": "Shipped"
   }
 ]

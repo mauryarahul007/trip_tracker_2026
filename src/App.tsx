@@ -39,6 +39,8 @@ const ConflictResolverModal = lazy(lazyImport(() =>
 import { TripContentSheet } from './components/TripContentSheet';
 import { AnalyticsTab } from './components/AnalyticsTab';
 import { ExpenseList } from './components/ExpenseList';
+import { OfflineTravelBanner } from './components/OfflineTravelBanner';
+import { LuggageTagSkeleton } from './components/common/LuggageTagSkeleton';
 // Superadmin-only screens (Ops Deck + Bug Ledger) never load for a normal
 // traveler -- code-split so their combined ~2.4k lines don't inflate the
 // bundle everyone else downloads. RLS still gates the actual data/actions
@@ -259,14 +261,15 @@ export default function App() {
   // Members tab (see NavTabs' onAddMember).
   const [addMemberSignal, setAddMemberSignal] = useState(0);
 
+
   // Appearance — 'system' follows the OS; 'light'/'dark' pin the "night
   // flight" variant explicitly. Persisted locally; it's a display
   // preference, not trip data, so it stays out of the IndexedDB store.
-  type ThemePref = 'light' | 'dark' | 'system';
+  type ThemePref = 'light' | 'dark' | 'oled' | 'system';
   const [themePref, setThemePref] = useState<ThemePref>(() => {
     try {
       const stored = localStorage.getItem('theme-pref');
-      return stored === 'light' || stored === 'dark' ? stored : 'system';
+      return stored === 'light' || stored === 'dark' || stored === 'oled' ? (stored as ThemePref) : 'system';
     } catch { return 'system'; }
   });
 
@@ -277,7 +280,7 @@ export default function App() {
       root.style.colorScheme = 'light dark';
     } else {
       root.dataset.theme = themePref;
-      root.style.colorScheme = themePref;
+      root.style.colorScheme = themePref === 'oled' ? 'dark' : themePref;
     }
     try { localStorage.setItem('theme-pref', themePref); } catch { /* storage blocked or full */ }
   }, [themePref]);
@@ -512,6 +515,13 @@ export default function App() {
           if (e.key.toLowerCase() === 'n') {
             e.preventDefault();
             setShowAddExpense(true);
+            return;
+          }
+
+          // 'S' or 's' jumps directly to settlements / balances
+          if (e.key.toLowerCase() === 's') {
+            e.preventDefault();
+            setActiveTab('expenses');
             return;
           }
 
@@ -1817,6 +1827,7 @@ export default function App() {
   return (
     <div className="app-container">
       <a href="#main-content" className="skip-link">Skip to content</a>
+      <OfflineTravelBanner />
       {/* Superadmin Traveler Preview Top Floating Banner */}
       {isSuperadmin && isTravelerPreview && (
         <div
@@ -2219,7 +2230,7 @@ export default function App() {
               <TabErrorBoundary label="Members">
               <div className="fade-in">
               {hasVisitedMembers && (
-              <Suspense fallback={<div className="skeleton" style={{ height: '200px', borderRadius: '14px' }} />}>
+              <Suspense fallback={<LuggageTagSkeleton count={2} />}>
               <MembersGroupsTab
                 showMembersRequiredNotice={showMembersRequiredNotice}
                 dismissMembersRequiredNotice={() => setShowMembersRequiredNotice(false)}
@@ -2251,62 +2262,62 @@ export default function App() {
             </div>
 
             <div
-              className="tab-pane"
-              style={
-                activeTab === 'ledger' ? { display: 'block', ...tabSwipe.activePaneStyle }
-                : tabSwipe.previewTab === 'ledger' ? { display: 'block', ...tabSwipe.previewPaneStyle }
-                : { display: 'none' }
-              }
-            >
-              <TabErrorBoundary label="Ledger">
-              <div className="fade-in" style={{ paddingBottom: '100px' }}>
-              <ExpenseList
-                trip={activeTrip}
-                members={members}
-                categories={categories}
-                activeTripMembers={activeTripMembers}
-                activeTripExpenseCount={activeTripExpenses.length}
-                activeTripExpenses={activeTripExpenses}
-                onReviewAffected={handleReviewAffectedExpenses}
-                filteredExpenses={filteredExpenses}
-                pendingDeleteId={pendingDeleteExpense?.id}
-                hasActiveFilters={hasActiveExpenseFilters}
-                totalSpent={totalSpent}
-                averageCost={averageCost}
-                topCategoryName={categoryData[0]?.name}
-                topCategoryPercentage={categoryData[0]?.percentage}
-                getCatColor={getCatColor}
-                search={expenseSearch}
-                setSearch={setExpenseSearch}
-                filterCategory={expenseFilterCategory}
-                setFilterCategory={setExpenseFilterCategory}
-                filterMember={expenseFilterMember}
-                setFilterMember={setExpenseFilterMember}
-                filterDateFrom={expenseFilterDateFrom}
-                setFilterDateFrom={setExpenseFilterDateFrom}
-                filterDateTo={expenseFilterDateTo}
-                setFilterDateTo={setExpenseFilterDateTo}
-                filterAmountMin={expenseFilterAmountMin}
-                filterAmountMax={expenseFilterAmountMax}
-                filterRelation={expenseFilterRelation}
-                filterLocation={expenseFilterLocation}
-                myMemberId={myMemberId}
-                onClearFilters={clearExpenseFilters}
-                onOpenFilters={() => setShowExpenseFilterDrawer(true)}
-                onReview={setSelectedReviewExpense}
-                onEdit={handleStartEditExpense}
-                onDelete={handleDeleteExpense}
-                isAdmin={isAdmin}
-                userId={userId}
-                activeTransitionSourceId={activeTransitionSourceId}
-                onAddExpense={handleOpenAddExpense}
-                onOpenSmartQuickAdd={() => setShowSmartQuickAdd(true)}
-                dirtyExpenseIds={dirtyExpenseIds}
-                conflictExpenseIds={conflictExpenseIds}
-              />
+                className="tab-pane"
+                style={
+                  activeTab === 'ledger' ? { display: 'block', ...tabSwipe.activePaneStyle }
+                  : tabSwipe.previewTab === 'ledger' ? { display: 'block', ...tabSwipe.previewPaneStyle }
+                  : { display: 'none' }
+                }
+              >
+                <TabErrorBoundary label="Ledger">
+                <div className="fade-in" style={{ paddingBottom: '100px' }}>
+                <ExpenseList
+                  trip={activeTrip}
+                  members={members}
+                  categories={categories}
+                  activeTripMembers={activeTripMembers}
+                  activeTripExpenseCount={activeTripExpenses.length}
+                  activeTripExpenses={activeTripExpenses}
+                  onReviewAffected={handleReviewAffectedExpenses}
+                  filteredExpenses={filteredExpenses}
+                  pendingDeleteId={pendingDeleteExpense?.id}
+                  hasActiveFilters={hasActiveExpenseFilters}
+                  totalSpent={totalSpent}
+                  averageCost={averageCost}
+                  topCategoryName={categoryData[0]?.name}
+                  topCategoryPercentage={categoryData[0]?.percentage}
+                  getCatColor={getCatColor}
+                  search={expenseSearch}
+                  setSearch={setExpenseSearch}
+                  filterCategory={expenseFilterCategory}
+                  setFilterCategory={setExpenseFilterCategory}
+                  filterMember={expenseFilterMember}
+                  setFilterMember={setExpenseFilterMember}
+                  filterDateFrom={expenseFilterDateFrom}
+                  setFilterDateFrom={setExpenseFilterDateFrom}
+                  filterDateTo={expenseFilterDateTo}
+                  setFilterDateTo={setExpenseFilterDateTo}
+                  filterAmountMin={expenseFilterAmountMin}
+                  filterAmountMax={expenseFilterAmountMax}
+                  filterRelation={expenseFilterRelation}
+                  filterLocation={expenseFilterLocation}
+                  myMemberId={myMemberId}
+                  onClearFilters={clearExpenseFilters}
+                  onOpenFilters={() => setShowExpenseFilterDrawer(true)}
+                  onReview={setSelectedReviewExpense}
+                  onEdit={handleStartEditExpense}
+                  onDelete={handleDeleteExpense}
+                  isAdmin={isAdmin}
+                  userId={userId}
+                  activeTransitionSourceId={activeTransitionSourceId}
+                  onAddExpense={handleOpenAddExpense}
+                  onOpenSmartQuickAdd={() => setShowSmartQuickAdd(true)}
+                  dirtyExpenseIds={dirtyExpenseIds}
+                  conflictExpenseIds={conflictExpenseIds}
+                />
+                </div>
+                </TabErrorBoundary>
               </div>
-              </TabErrorBoundary>
-            </div>
 
             <div
               className="tab-pane"
@@ -2319,7 +2330,7 @@ export default function App() {
               <TabErrorBoundary label="Notes & Checklist">
               <div className="fade-in">
                 {activeTrip && hasVisitedNotes && (
-                  <Suspense fallback={<div className="skeleton" style={{ height: '200px', borderRadius: '14px' }} />}>
+                  <Suspense fallback={<LuggageTagSkeleton count={2} />}>
                   <ChecklistNotesTab
                     trip={activeTrip}
                     members={visibleMembers}
@@ -2341,7 +2352,7 @@ export default function App() {
             >
               <TabErrorBoundary label="Settings">
               {hasVisitedSettings && (
-              <Suspense fallback={<div className="skeleton" style={{ height: '200px', borderRadius: '14px' }} />}>
+              <Suspense fallback={<LuggageTagSkeleton count={2} />}>
               <SettingsTab
                 categories={categories}
                 activeTripExpenses={activeTripExpenses}
@@ -2919,6 +2930,10 @@ export default function App() {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span style={{ color: 'var(--text-secondary)' }}>Log New Expense</span>
                 <kbd style={{ padding: '2px 8px', background: 'var(--bg-surface)', border: '1px solid var(--border-color)', borderRadius: '6px', fontSize: '11px', fontWeight: 600 }}>N</kbd>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ color: 'var(--text-secondary)' }}>Jump to Balances & Settlements</span>
+                <kbd style={{ padding: '2px 8px', background: 'var(--bg-surface)', border: '1px solid var(--border-color)', borderRadius: '6px', fontSize: '11px', fontWeight: 600 }}>S</kbd>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span style={{ color: 'var(--text-secondary)' }}>Focus Search Bar</span>

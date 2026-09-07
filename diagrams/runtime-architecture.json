@@ -1,0 +1,300 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Trip Tracker 2026 Runtime Architecture",
+    "output": "runtime-architecture.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/mauryarahul007/trip_tracker_2026",
+      "revision": "92fe6e249b26bcc027ae98776e88af6e57238c2d"
+    },
+    "views": [
+      {
+        "id": "primary-flow",
+        "label": "Primary expense flow",
+        "focus": ["users", "pwa_shell", "state_engine", "sync_api", "supabase_db"],
+        "note": "Follow an expense creation from user interaction through optimistic state to PostgreSQL."
+      },
+      {
+        "id": "offline-sync",
+        "label": "Offline persistence",
+        "focus": ["pwa_shell", "service_worker", "state_engine", "offline_store", "sync_api"],
+        "note": "Local cache and mutation queue sustain full app functionality without internet connectivity."
+      },
+      {
+        "id": "cloud-boundary",
+        "label": "Supabase cloud & security",
+        "focus": ["sync_api", "supabase_auth", "supabase_db", "supabase_storage"],
+        "note": "PostgreSQL RLS policies, PKCE auth, and secure bucket storage behind cloud boundary."
+      },
+      {
+        "id": "external-integrations",
+        "label": "External services",
+        "focus": ["pwa_shell", "sync_api", "weather_api", "media_apis"],
+        "note": "External enrichments for weather forecasts, destination imagery, and map tiles."
+      }
+    ]
+  },
+  "components": [
+    {
+      "id": "users",
+      "type": "external",
+      "label": "User Clients",
+      "sublabel": "Browser & Mobile",
+      "tag": "PWA / Native",
+      "pos": [40, 175],
+      "size": [130, 52]
+    },
+    {
+      "id": "pwa_shell",
+      "type": "frontend",
+      "label": "Client App",
+      "sublabel": "React 19 + Capacitor 8",
+      "tag": "Vite SPA",
+      "brand": "react",
+      "pos": [260, 175],
+      "size": [140, 52],
+      "sources": [
+        { "path": "src/App.tsx", "line": 1, "label": "App Coordinator" },
+        { "path": "src/main.tsx", "line": 1, "label": "Client Entrypoint" }
+      ]
+    },
+    {
+      "id": "service_worker",
+      "type": "frontend",
+      "label": "Service Worker",
+      "sublabel": "Cache-First Assets",
+      "tag": "Offline Shell",
+      "pos": [260, 280],
+      "size": [140, 52],
+      "sources": [
+        { "path": "src/services/serviceWorker.ts", "line": 1, "label": "SW Lifecycle" }
+      ]
+    },
+    {
+      "id": "media_apis",
+      "type": "external",
+      "label": "Wikimedia & Tiles",
+      "sublabel": "Covers & MapLibre",
+      "tag": "Media CDN",
+      "pos": [260, 70],
+      "size": [140, 52],
+      "sources": [
+        { "path": "src/services/placeImageService.ts", "line": 1, "label": "Cover Resolver" }
+      ]
+    },
+    {
+      "id": "state_engine",
+      "type": "backend",
+      "label": "Zustand State Store",
+      "sublabel": "Optimistic & Debt Math",
+      "tag": "Settlement Engine",
+      "pos": [480, 175],
+      "size": [140, 52],
+      "sources": [
+        { "path": "src/store/tripStore.ts", "line": 1, "label": "Trip State Store" }
+      ]
+    },
+    {
+      "id": "offline_store",
+      "type": "database",
+      "label": "Local Persistence",
+      "sublabel": "IndexedDB & Sync Queue",
+      "tag": "IDB + localStorage",
+      "pos": [480, 280],
+      "size": [140, 52],
+      "sources": [
+        { "path": "src/services/offlineReceiptStore.ts", "line": 1, "label": "Receipt Store" }
+      ]
+    },
+    {
+      "id": "sync_api",
+      "type": "backend",
+      "label": "Trip Sync API",
+      "sublabel": "Auto-Replay & SDK Client",
+      "tag": "Dual-Mode Sync",
+      "pos": [700, 175],
+      "size": [140, 52],
+      "sources": [
+        { "path": "src/services/tripApi.ts", "line": 1, "label": "Trip API Service" }
+      ]
+    },
+    {
+      "id": "weather_api",
+      "type": "external",
+      "label": "Open-Meteo Weather",
+      "sublabel": "Forecast & History API",
+      "tag": "REST Endpoint",
+      "pos": [700, 70],
+      "size": [140, 52],
+      "sources": [
+        { "path": "src/services/weatherService.ts", "line": 1, "label": "Weather Service" }
+      ]
+    },
+    {
+      "id": "supabase_auth",
+      "type": "security",
+      "label": "Supabase Auth",
+      "sublabel": "PKCE & JWT Session",
+      "tag": "Auth Flow",
+      "brand": "supabase",
+      "pos": [920, 70],
+      "size": [140, 52],
+      "sources": [
+        { "path": "src/store/authStore.ts", "line": 1, "label": "Auth Store" }
+      ]
+    },
+    {
+      "id": "supabase_db",
+      "type": "database",
+      "label": "PostgreSQL DB",
+      "sublabel": "RLS Policies & Realtime",
+      "tag": "PostgREST + WS",
+      "brand": "postgresql",
+      "pos": [920, 175],
+      "size": [140, 52]
+    },
+    {
+      "id": "supabase_storage",
+      "type": "cloud",
+      "label": "Supabase Storage",
+      "sublabel": "Receipts & Travel Passes",
+      "tag": "Object Buckets",
+      "brand": "supabase",
+      "pos": [920, 280],
+      "size": [140, 52]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "security-group",
+      "label": "Client Runtime Sandbox (Browser / Capacitor App)",
+      "wraps": ["pwa_shell", "service_worker", "state_engine", "offline_store", "sync_api"]
+    },
+    {
+      "kind": "region",
+      "label": "Supabase Cloud (RLS Protected)",
+      "wraps": ["supabase_auth", "supabase_db", "supabase_storage"]
+    }
+  ],
+  "connections": [
+    {
+      "id": "user-to-pwa",
+      "from": "users",
+      "to": "pwa_shell",
+      "label": "HTTPS",
+      "variant": "emphasis"
+    },
+    {
+      "id": "pwa-to-media",
+      "from": "pwa_shell",
+      "to": "media_apis",
+      "label": "covers",
+      "fromSide": "top",
+      "toSide": "bottom",
+      "labelDy": -16
+    },
+    {
+      "id": "pwa-to-sw",
+      "from": "pwa_shell",
+      "to": "service_worker",
+      "label": "cache",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "labelDy": 24
+    },
+    {
+      "id": "pwa-to-state",
+      "from": "pwa_shell",
+      "to": "state_engine",
+      "label": "actions",
+      "variant": "emphasis"
+    },
+    {
+      "id": "state-to-offline",
+      "from": "state_engine",
+      "to": "offline_store",
+      "label": "queue",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "labelDy": 24
+    },
+    {
+      "id": "state-to-sync",
+      "from": "state_engine",
+      "to": "sync_api",
+      "label": "reconcile",
+      "variant": "emphasis"
+    },
+    {
+      "id": "sync-to-weather",
+      "from": "sync_api",
+      "to": "weather_api",
+      "label": "forecast",
+      "fromSide": "top",
+      "toSide": "bottom",
+      "labelDy": -24
+    },
+    {
+      "id": "auth-to-sync",
+      "from": "supabase_auth",
+      "to": "sync_api",
+      "label": "JWT",
+      "variant": "security",
+      "fromSide": "left",
+      "toSide": "top"
+    },
+    {
+      "id": "sync-to-db",
+      "from": "sync_api",
+      "to": "supabase_db",
+      "label": "PostgREST",
+      "variant": "emphasis",
+      "labelDy": 14
+    },
+    {
+      "id": "sync-to-storage",
+      "from": "sync_api",
+      "to": "supabase_storage",
+      "label": "receipts",
+      "variant": "dashed",
+      "fromSide": "bottom",
+      "toSide": "left"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Client & Offline Edge",
+      "items": [
+        "React 19 single-page app bundled with Vite and Capacitor 8 native bridges",
+        "Service Worker cache & IndexedDB mutation queue guarantee full offline capability"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Zustand & Financial Engine",
+      "items": [
+        "Optimistic state updates provide zero-latency UI interactions and instant feedback",
+        "Greedy debt settlement engine simplifies member balances across all split modes"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Security & Cloud Backend",
+      "items": [
+        "Supabase Auth with PKCE on native mobile and JWT bearer tokens on web",
+        "PostgreSQL Row-Level Security (RLS) protects trip records with Realtime updates"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "External Services & Media",
+      "items": [
+        "Supabase Storage buckets host expense receipts and travel pass documents",
+        "Open-Meteo REST and Wikimedia APIs provide live forecasts and destination covers"
+      ]
+    }
+  ]
+}

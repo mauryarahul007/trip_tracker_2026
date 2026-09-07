@@ -9,10 +9,10 @@
 
 | Metric | Count | Status Notes |
 | :--- | :--- | :--- |
-| **Total Tracked** | **187** | All recorded bugs across sessions |
+| **Total Tracked** | **189** | All recorded bugs across sessions |
 | **🟢 Open** | **0** | No critical blockers, 0 High |
 | **🟡 In Progress** | **0** | Active investigation or fix |
-| **✅ Resolved** | **160** | Verified & closed |
+| **✅ Resolved** | **162** | Verified & closed |
 | **⚪ Won't Fix** | **27** | Expected behavior / deferred |
 
 ---
@@ -191,6 +191,8 @@
 | **BUG-188** | Category merge/delete used a private overlay instead of ConfirmDialog | `ui-ux` | `medium` | `cursor-agent` | `cursor-agent` | ConfirmDialog body slot for the merge <select>; Categories calls onRequestConfirm. Fixed in v3.6.8 commit a4b1b6c. |
 | **BUG-189** | Sign Out and Delete Account could run while offline | `auth` | `medium` | `cursor-agent` | `cursor-agent` | Offline ConfirmDialog (OK only) before Sign Out / Delete Account. Fixed in v3.6.8 commit a4b1b6c. |
 | **BUG-190** | Close Trip settlement math ran while the Close Trip row was hidden | `performance` | `low` | `cursor-agent` | `cursor-agent` | Skip calc unless isSurfaceVisible, home overlay is closed, and isTripAdmin; cache last summary. Fixed in v3.6.8 commit a4b1b6c. |
+| **BUG-192** | Settings trip hero displays contradictory Settled and UNSETTLED labels on fully settled trips | `ui-ux` | `low` | `agent` | `agent` | Made stat box label dynamic to show BALANCES when settled and UNSETTLED when outstanding |
+| **BUG-193** | Passport stamp placement in TripStack flex top-bar displaced destination name and weather | `ui-ux` | `medium` | `agent` | `agent` | Restored exact original stack-card-top-bar and moved PassportStamp to absolute overlay at top 70px right 18px |
 
 ---
 

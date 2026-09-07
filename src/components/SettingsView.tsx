@@ -6,6 +6,7 @@ import {
   IconDownload,
   IconMoon,
   IconSun,
+  IconOled,
   IconSmartphone,
   IconSparkles,
   IconLogOut,
@@ -53,7 +54,7 @@ const SettingsLegalScreen = lazy(() => import('./settings/SettingsLegalScreen').
 const BugReportModal = lazy(() => import('./BugReportModal').then((m) => ({ default: m.BugReportModal })));
 const FeatureRequestModal = lazy(() => import('./FeatureRequestModal').then((m) => ({ default: m.FeatureRequestModal })));
 
-export type ThemePref = 'light' | 'dark' | 'system';
+export type ThemePref = 'light' | 'dark' | 'oled' | 'system';
 
 type SubScreen = null | 'trip-tools' | 'categories' | 'recycle-bin' | 'backups-media' | 'backups' | 'archived-trips' | 'bug-tracker' | 'report-issue' | 'suggest-feature' | 'storage-data' | 'about' | 'privacy' | 'terms';
 
@@ -645,7 +646,7 @@ export function SettingsView({
   const initialLetter = displayName.charAt(0).toUpperCase();
 
   const themeLabel =
-    themePref === 'light' ? 'Light' : themePref === 'dark' ? 'Night flight' : 'System default';
+    themePref === 'light' ? 'Light' : themePref === 'dark' ? 'Night flight' : themePref === 'oled' ? 'OLED Pure Black' : 'System default';
 
   const navRootRef = useRef<HTMLDivElement>(null);
   const savedHomeScrollRef = useRef(0);
@@ -1092,7 +1093,9 @@ export function SettingsView({
                       ? 'Settled'
                       : `${currencySymbol}${settlementSummary.totalOutstanding.toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
                   </span>
-                  <span className="settings-trip-hero-stat-label">Unsettled</span>
+                  <span className="settings-trip-hero-stat-label">
+                    {settlementSummary.isFullySettled ? 'Balances' : 'Unsettled'}
+                  </span>
                 </div>
                 <div className="settings-trip-hero-stat">
                   <span className="settings-trip-hero-stat-value">{activeTrip.memberIds?.length ?? Object.keys(members).length}</span>
@@ -1155,7 +1158,7 @@ export function SettingsView({
               <div className="settings-row-item" style={{ cursor: 'default' }}>
                 <div className="settings-row-left">
                   <div className="settings-squircle squircle-orange-glow">
-                    {themePref === 'dark' ? <IconMoon size={18} /> : themePref === 'light' ? <IconSun size={18} /> : <IconSmartphone size={18} />}
+                    {themePref === 'oled' ? <IconOled size={18} /> : themePref === 'dark' ? <IconMoon size={18} /> : themePref === 'light' ? <IconSun size={18} /> : <IconSmartphone size={18} />}
                   </div>
                   <div className="settings-row-texts">
                     <span className="settings-row-title">Appearance</span>
@@ -1180,6 +1183,15 @@ export function SettingsView({
                     aria-label="Night mode"
                   >
                     <IconMoon size={14} />
+                  </button>
+                  <button
+                    type="button"
+                    className={`settings-seg-btn${themePref === 'oled' ? ' active' : ''}`}
+                    onClick={() => { triggerHaptic('light'); setThemePref('oled'); }}
+                    title="OLED Pure Black"
+                    aria-label="OLED Pure Black"
+                  >
+                    <IconOled size={14} />
                   </button>
                   <button
                     type="button"
