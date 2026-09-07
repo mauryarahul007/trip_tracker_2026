@@ -43,6 +43,11 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
         const parsed = JSON.parse(storedDemo);
         if (parsed?.user) {
           set({ session: parsed });
+          const displayName =
+            (parsed.user.user_metadata?.full_name as string | undefined) ||
+            (parsed.user.user_metadata?.name as string | undefined) ||
+            'Rahul (Demo Traveler)';
+          useTripStore.getState().setUserIdentity(parsed.user.id, displayName);
           // A demo session is never a real Supabase Auth session -- it
           // can't back is_superadmin()-gated calls (updateUser, RLS
           // writes). Any persisted isSuperadmin from a previous real
@@ -165,15 +170,17 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
       user: {
         id: 'demo-user-superadmin',
         app_metadata: { provider: 'demo' },
-        user_metadata: { full_name: 'Demo Superadmin', name: 'Demo Superadmin' },
+        user_metadata: { full_name: 'Rahul (Demo Traveler)', name: 'Rahul (Demo Traveler)' },
         aud: 'authenticated',
         created_at: new Date().toISOString(),
-        email: 'superadmin@triptracker.local',
+        email: 'traveler@triptracker.local',
       },
     };
     if (typeof localStorage !== 'undefined') {
       localStorage.setItem('trip_tracker_demo_session', JSON.stringify(demoSession));
     }
+    useTripStore.getState().setUserIdentity(demoSession.user.id, 'Rahul (Demo Traveler)');
+    useTripStore.getState().setIsSuperadmin(false);
     set({ session: demoSession, authError: null });
   },
 
