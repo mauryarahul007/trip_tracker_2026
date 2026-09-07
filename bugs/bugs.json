@@ -5355,5 +5355,31 @@
     "resolvedBy": "cursor-agent",
     "resolvedAt": "2026-09-06T22:29:40.291Z",
     "resolutionNote": "One history owner per overlay; wired gaps (ActionSheet, ConfirmDialog, conflict modal, pickers); Escape LIFO stack. Fixed in v3.6.0 commit df2815e."
+  },
+  {
+    "id": "BUG-175",
+    "title": "Settings About Privacy/Terms Back returns to Summary instead of About",
+    "description": "Settings About Privacy/Terms Back returns to Summary instead of About",
+    "severity": "medium",
+    "category": "navigation",
+    "status": "resolved",
+    "foundBy": "cursor-agent",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-09-07T05:29:57.721Z",
+    "updatedAt": "2026-09-07T05:30:37.171Z",
+    "resolvedBy": "cursor-agent",
+    "resolvedAt": "2026-09-07T05:30:37.168Z",
+    "resolutionNote": "About used navigate(/privacy|/terms) which unmounted App and lost screenStack; Back remounted on Expenses/Summary. Fixed in v3.6.1 commit 4560b00: Privacy/Terms are Settings subScreens under About; shared content modules keep public /privacy and /terms routes."
   }
 ]
