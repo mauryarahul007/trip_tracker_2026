@@ -27,6 +27,7 @@ import {
   IconRefresh,
   IconSearch,
   IconPieChart,
+  IconSettings,
 } from './Icons';
 import { SettingsCell } from './common/SettingsCell';
 import { SettingsSection } from './common/SettingsSection';
@@ -58,7 +59,7 @@ import {
 
 export type ThemePref = 'light' | 'dark' | 'system';
 
-type SubScreen = null | 'categories' | 'recycle-bin' | 'backups' | 'archived-trips' | 'bug-tracker' | 'report-issue' | 'suggest-feature' | 'storage-data' | 'about' | 'privacy' | 'terms';
+type SubScreen = null | 'trip-tools' | 'categories' | 'recycle-bin' | 'backups-media' | 'backups' | 'archived-trips' | 'bug-tracker' | 'report-issue' | 'suggest-feature' | 'storage-data' | 'about' | 'privacy' | 'terms';
 
 
 const RECYCLE_BIN_WINDOW_MS = 24 * 60 * 60 * 1000;
@@ -175,8 +176,10 @@ export function SettingsView({
 
   // Drill-downs return to Settings home; privacy/terms nest under About.
   const DEFAULT_PARENT_MAP: Record<string, SubScreen> = {
+    'trip-tools': null,
     'categories': null,
     'recycle-bin': null,
+    'backups-media': null,
     'storage-data': null,
     'archived-trips': null,
     'backups': null,
@@ -197,7 +200,6 @@ export function SettingsView({
       const current = prev[0] ?? null;
       const fallback = current ? DEFAULT_PARENT_MAP[current] ?? null : null;
       return fallback ? [fallback] : [];
-      return [];
     });
   };
 
@@ -211,6 +213,10 @@ export function SettingsView({
 
   const getScreenTitle = (screen: SubScreen): string => {
     switch (screen) {
+      case 'trip-tools':
+        return 'Trip Tools';
+      case 'backups-media':
+        return 'Backups & Media';
       case 'storage-data':
         return 'Storage & Data';
       case 'categories':
@@ -665,6 +671,126 @@ export function SettingsView({
   // -------------------------------------------------------------------------
   // Sub-screens
   // -------------------------------------------------------------------------
+
+  if (subScreen === 'trip-tools' && activeTrip) {
+    return (
+      <div className="settings-container settings-subscreen-enter">
+        <div className="settings-subscreen-nav-header">
+          <button type="button" className="settings-subscreen-back-link" onClick={closeSubScreen}>
+            <IconChevronLeft size={18} />
+            <span>{getParentTitle()}</span>
+          </button>
+        </div>
+        <h3 className="settings-subscreen-main-title">Trip Tools</h3>
+        <p className="settings-subscreen-subtitle">
+          Categories, recycle bin, alerts, exchange rates &amp; exports for {activeTrip.name}.
+        </p>
+
+        <div className="settings-group">
+          <div className="settings-group-card">
+            {(isSuperadmin || isFeatureEnabled('enableKeywordTagging')) && (
+              <SettingsCell
+                icon={<IconTag size={18} />}
+                iconGlow="purple"
+                title="Categories & Tags"
+                subtitle={`${categories.length} active categories`}
+                onClick={() => setSubScreen('categories')}
+              />
+            )}
+
+            {(isSuperadmin || isFeatureEnabled('enableRecycleBin')) && (
+              <SettingsCell
+                icon={<IconTrash size={18} />}
+                iconGlow="rose"
+                title="Recycle Bin"
+                subtitle={deletedExpenses.length === 0 ? 'Empty (24h retention)' : `${deletedExpenses.length} deleted expense${deletedExpenses.length === 1 ? '' : 's'}`}
+                badge={deletedExpenses.length > 0 ? deletedExpenses.length : undefined}
+                onClick={() => setSubScreen('recycle-bin')}
+              />
+            )}
+
+            <div className="settings-row-item" style={{ cursor: 'default' }}>
+              <div className="settings-row-left">
+                <div className="settings-squircle squircle-orange-glow">
+                  <IconBell size={18} />
+                </div>
+                <div className="settings-row-texts">
+                  <span className="settings-row-title">Mute Trip Alerts</span>
+                  <span className="settings-row-subtitle">Silence push notifications for this trip</span>
+                </div>
+              </div>
+              <div className="settings-row-right">
+                <label style={{ position: 'relative', display: 'inline-block', width: '44px', height: '24px', margin: 0, cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={isTripMuted}
+                    onChange={(e) => {
+                      triggerHaptic('light');
+                      setTripMuted(activeTrip.id, e.target.checked);
+                    }}
+                    aria-label="Mute Notifications"
+                    style={{ opacity: 0, width: 0, height: 0, margin: 0 }}
+                  />
+                  <span
+                    style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      backgroundColor: isTripMuted ? '#17B6A6' : 'var(--border-color)',
+                      transition: '0.2s ease',
+                      borderRadius: 'var(--border-radius-pill)',
+                    }}
+                  >
+                    <span
+                      style={{
+                        position: 'absolute',
+                        height: '18px',
+                        width: '18px',
+                        left: isTripMuted ? '23px' : '3px',
+                        bottom: '3px',
+                        backgroundColor: 'white',
+                        transition: '0.2s ease',
+                        borderRadius: '50%',
+                        boxShadow: '0 1px 3px rgba(0,0,0,0.25)',
+                      }}
+                    />
+                  </span>
+                </label>
+              </div>
+            </div>
+
+            {onOpenFxRates && (
+              <SettingsCell
+                icon={<span style={{ fontSize: '18px' }}>💱</span>}
+                iconGlow="emerald"
+                title="Multi-Currency FX Engine"
+                subtitle="Live rates, offline lock & forex markup converter"
+                badge="FX"
+                onClick={() => {
+                  triggerHaptic('light');
+                  onOpenFxRates();
+                }}
+              />
+            )}
+
+            {onExportCsv && (
+              <SettingsCell
+                icon={<IconFileSpreadsheet size={18} />}
+                iconGlow="emerald"
+                title="Excel CSV Export"
+                subtitle="Download settlement ledger & expense breakdown"
+                badge="CSV"
+                hasDivider={false}
+                onClick={onExportCsv}
+              />
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (subScreen === 'categories') {
     return (
@@ -1124,6 +1250,67 @@ export function SettingsView({
     );
   }
 
+  if (subScreen === 'backups-media') {
+    return (
+      <div className="settings-container settings-subscreen-enter">
+        <div className="settings-subscreen-nav-header">
+          <button type="button" className="settings-subscreen-back-link" onClick={closeSubScreen}>
+            <IconChevronLeft size={18} />
+            <span>{getParentTitle()}</span>
+          </button>
+        </div>
+        <h3 className="settings-subscreen-main-title">Backups &amp; Media</h3>
+        <p className="settings-subscreen-subtitle">
+          Export offline backups, browse trip media, or pull a raw database snapshot.
+        </p>
+
+        <div className="settings-group">
+          <div className="settings-group-card">
+            {onOpenOfflineSnapshot && (
+              <SettingsCell
+                icon={<span style={{ fontSize: '18px' }}>💾</span>}
+                iconGlow="blue"
+                title="Offline Snapshot (.triptracker)"
+                subtitle="Export and restore 100% offline trip backups"
+                badge="BACKUP"
+                onClick={() => {
+                  triggerHaptic('light');
+                  onOpenOfflineSnapshot();
+                }}
+              />
+            )}
+
+            {onOpenMediaGallery && (
+              <SettingsCell
+                icon={<span style={{ fontSize: '18px' }}>📸</span>}
+                iconGlow="teal"
+                title="Receipts & Memories Gallery"
+                subtitle="Browse cached receipt photos and trip media"
+                badge="PHOTOS"
+                onClick={() => {
+                  triggerHaptic('light');
+                  onOpenMediaGallery();
+                }}
+              />
+            )}
+
+            {isSuperadmin && (
+              <SettingsCell
+                icon={<IconDatabase size={18} />}
+                iconGlow="indigo"
+                title="Database Backups"
+                subtitle="Export/Import JSON database snapshot"
+                badge="JSON"
+                hasDivider={false}
+                onClick={() => setSubScreen('backups')}
+              />
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (subScreen === 'backups') {
     return (
       <div className="settings-container settings-subscreen-enter">
@@ -1514,7 +1701,8 @@ export function SettingsView({
   const showTripStatus = Boolean(hasActiveTrip && activeTrip && !searchQuery.trim());
   const showSnapshotSearch = Boolean(onOpenOfflineSnapshot && matchesSearch('Offline Snapshot (.triptracker)', 'snapshot', 'offline', 'backup', 'triptracker'));
   const showGallerySearch = Boolean(onOpenMediaGallery && matchesSearch('Receipts & Memories Gallery', 'gallery', 'photos', 'receipts', 'memories'));
-  const showTripGroup = showTripStatus || showInvite || showCategories || showRecycleBin || showMute || showCloseTrip || showCsvExport || showFxSearch;
+  const showTripTools = showCategories || showRecycleBin || showMute || showFxSearch || showCsvExport;
+  const showTripGroup = showTripStatus || showInvite || showTripTools || showCloseTrip;
 
   const showAppearance = matchesSearch('Appearance', 'theme', 'dark', 'light', 'night', 'auto', 'color', 'look');
   const showNotifications = matchesSearch('Notifications', 'alerts', 'unread', 'bell', 'messages');
@@ -1527,12 +1715,12 @@ export function SettingsView({
   const showArchived = matchesSearch('Archived Trips', 'restore', 'history', 'past trips', 'archive');
   const showBackups = isSuperadmin && matchesSearch('Database Backups', 'export', 'import', 'json', 'snapshot', 'restore');
   const showDemoTrip = Boolean(onLoadDemoTrip && matchesSearch('Seed Demo Trip', 'sample', 'test', 'goa', 'demo'));
-  const showDataGroup = showStorageManager || showArchived || showBackups || showDemoTrip || showSnapshotSearch || showGallerySearch;
+  const showBackupsMedia = showSnapshotSearch || showGallerySearch || showBackups;
+  const showDataGroup = showStorageManager || showArchived || showBackupsMedia;
 
   const showReportProblem = matchesSearch('Report a Problem', 'bug', 'issue', 'diagnostics', 'broken', 'error');
   const showSuggestFeature = isFeatureEnabled('enableFeatureSuggestions') && matchesSearch('Suggest a Feature', 'feedback', 'idea', 'request');
   const showBugTracker = isSuperadmin && matchesSearch('Superadmin Bug Tracker', 'triage', 'sync', 'cases', 'cockpit');
-  const showHelpGroup = showReportProblem || showSuggestFeature || showBugTracker;
 
   const showSignOut = Boolean(onSignOut && matchesSearch('Sign Out', 'logout', 'session', 'disconnect', 'account'));
   const showClearData = Boolean(isSuperadmin && onClearDatabase && matchesSearch('Clear All Data', 'reset', 'wipe', 'delete', 'danger'));
@@ -1540,8 +1728,9 @@ export function SettingsView({
   const showAccountGroup = showSignOut || showClearData || showDeleteAccount;
 
   const showAbout = matchesSearch('Trip Tracker 2026', 'version', 'about', 'build', 'app', 'privacy', 'terms', 'legal');
+  const showHelpAboutGroup = showReportProblem || showSuggestFeature || showBugTracker || showDemoTrip || showAbout;
 
-  const hasAnyResults = showTripGroup || showPreferencesGroup || showDataGroup || showHelpGroup || showAccountGroup || showAbout;
+  const hasAnyResults = showTripGroup || showPreferencesGroup || showDataGroup || showHelpAboutGroup || showAccountGroup;
 
   if (subScreen === 'about') {
     return (
@@ -1862,105 +2051,15 @@ export function SettingsView({
             />
           )}
 
-          {showCategories && (
+          {showTripTools && (
             <SettingsCell
-              icon={<IconTag size={18} />}
+              icon={<IconSettings size={18} />}
               iconGlow="purple"
-              title="Categories & Tags"
-              subtitle={`${categories.length} active categories`}
-              onClick={() => setSubScreen('categories')}
+              title="Trip Tools"
+              subtitle="Categories, recycle bin, alerts & FX rates"
+              onClick={() => setSubScreen('trip-tools')}
             />
           )}
-
-          {showRecycleBin && (
-            <SettingsCell
-              icon={<IconTrash size={18} />}
-              iconGlow="rose"
-              title="Recycle Bin"
-              subtitle={deletedExpenses.length === 0 ? 'Empty (24h retention)' : `${deletedExpenses.length} deleted expense${deletedExpenses.length === 1 ? '' : 's'}`}
-              badge={deletedExpenses.length > 0 ? deletedExpenses.length : undefined}
-              onClick={() => setSubScreen('recycle-bin')}
-            />
-          )}
-
-          {showMute && (
-            <div className="settings-row-item" style={{ cursor: 'default' }}>
-              <div className="settings-row-left">
-                <div className="settings-squircle squircle-orange-glow">
-                  <IconBell size={18} />
-                </div>
-                <div className="settings-row-texts">
-                  <span className="settings-row-title">Mute Trip Alerts</span>
-                  <span className="settings-row-subtitle">Silence push notifications for this trip</span>
-                </div>
-              </div>
-              <div className="settings-row-right">
-                <label style={{ position: 'relative', display: 'inline-block', width: '44px', height: '24px', margin: 0, cursor: 'pointer' }}>
-                  <input
-                    type="checkbox"
-                    checked={isTripMuted}
-                    onChange={(e) => {
-                      triggerHaptic('light');
-                      setTripMuted(activeTrip.id, e.target.checked);
-                    }}
-                    aria-label="Mute Notifications"
-                    style={{ opacity: 0, width: 0, height: 0, margin: 0 }}
-                  />
-                  <span
-                    style={{
-                      position: 'absolute',
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      bottom: 0,
-                      backgroundColor: isTripMuted ? '#17B6A6' : 'var(--border-color)',
-                      transition: '0.2s ease',
-                      borderRadius: 'var(--border-radius-pill)',
-                    }}
-                  >
-                    <span
-                      style={{
-                        position: 'absolute',
-                        height: '18px',
-                        width: '18px',
-                        left: isTripMuted ? '23px' : '3px',
-                        bottom: '3px',
-                        backgroundColor: 'white',
-                        transition: '0.2s ease',
-                        borderRadius: '50%',
-                        boxShadow: '0 1px 3px rgba(0,0,0,0.25)',
-                      }}
-                    />
-                  </span>
-                </label>
-              </div>
-            </div>
-          )}
-
-          {showFxSearch && onOpenFxRates && (
-              <SettingsCell
-                icon={<span style={{ fontSize: '18px' }}>💱</span>}
-                iconGlow="emerald"
-                title="Multi-Currency FX Engine"
-                subtitle="Live rates, offline lock & forex markup converter"
-                badge="FX"
-                onClick={() => {
-                  triggerHaptic('light');
-                  onOpenFxRates();
-                }}
-              />
-            )}
-
-            {showCsvExport && onExportCsv && (
-              <SettingsCell
-                icon={<IconFileSpreadsheet size={18} />}
-                iconGlow="emerald"
-                title="Excel CSV Export"
-                subtitle="Download settlement ledger & expense breakdown"
-                badge="CSV"
-                onClick={onExportCsv}
-              />
-            )}
 
             {showCloseTrip && (
               <SettingsCell
@@ -2197,71 +2296,22 @@ export function SettingsView({
               />
             )}
 
-          {showSnapshotSearch && onOpenOfflineSnapshot && (
-              <SettingsCell
-                icon={<span style={{ fontSize: '18px' }}>💾</span>}
-                iconGlow="blue"
-                title="Offline Snapshot (.triptracker)"
-                subtitle="Export and restore 100% offline trip backups"
-                badge="BACKUP"
-                onClick={() => {
-                  triggerHaptic('light');
-                  onOpenOfflineSnapshot();
-                }}
-              />
-            )}
-
-          {showGallerySearch && onOpenMediaGallery && (
-              <SettingsCell
-                icon={<span style={{ fontSize: '18px' }}>📸</span>}
-                iconGlow="teal"
-                title="Receipts & Memories Gallery"
-                subtitle="Browse cached receipt photos and trip media"
-                badge="PHOTOS"
-                onClick={() => {
-                  triggerHaptic('light');
-                  onOpenMediaGallery();
-                }}
-              />
-            )}
-
-          {showBackups && (
+          {showBackupsMedia && (
             <SettingsCell
-              icon={<IconDatabase size={18} />}
+              icon={<IconDownload size={18} />}
               iconGlow="indigo"
-              title="Database Backups"
-              subtitle="Export/Import JSON database snapshot"
-              badge="JSON"
-              onClick={() => setSubScreen('backups')}
+              title="Backups & Media"
+              subtitle="Offline snapshot, receipts gallery & JSON export"
+              hasDivider={false}
+              onClick={() => setSubScreen('backups-media')}
             />
           )}
-
-            {showDemoTrip && onLoadDemoTrip && (
-              <SettingsCell
-                icon={<IconSparkles size={18} />}
-                iconGlow="emerald"
-                title="Seed Demo Trip"
-                subtitle="Sample trip with members, geotags & splits"
-                hasDivider={false}
-                onClick={() => {
-                  onRequestConfirm?.({
-                    title: 'Seed Demo Data',
-                    message: 'Populate a sample trip ("Road Trip to Goa ☀️") with test members, geotagged route, and split transactions?',
-                    confirmLabel: 'Load Demo Trip',
-                    onConfirm: () => {
-                      onLoadDemoTrip();
-                      onClose?.();
-                    },
-                  });
-                }}
-              />
-            )}
         </SettingsSection>
       )}
 
-      {/* Help */}
-      {showHelpGroup && (
-        <SettingsSection title="Help">
+      {/* Help & About */}
+      {showHelpAboutGroup && (
+        <SettingsSection title="Help & About">
             {showReportProblem && (
               <SettingsCell
                 icon={<span>🐞</span>}
@@ -2282,18 +2332,49 @@ export function SettingsView({
               />
             )}
 
+            {showDemoTrip && onLoadDemoTrip && (
+              <SettingsCell
+                icon={<IconSparkles size={18} />}
+                iconGlow="emerald"
+                title="Seed Demo Trip"
+                subtitle="Try the app with a sample trip, expenses & splits"
+                onClick={() => {
+                  onRequestConfirm?.({
+                    title: 'Seed Demo Data',
+                    message: 'Populate a sample trip ("Road Trip to Goa ☀️") with test members, geotagged route, and split transactions?',
+                    confirmLabel: 'Load Demo Trip',
+                    onConfirm: () => {
+                      onLoadDemoTrip();
+                      onClose?.();
+                    },
+                  });
+                }}
+              />
+            )}
+
             {showBugTracker && (
               <SettingsCell
                 icon={<span>🛡️</span>}
                 iconGlow="amber"
                 title="Superadmin Bug Tracker"
                 subtitle="Manage, triage & live-sync bugs"
-              hasDivider={false}
                 onClick={() => setSubScreen('bug-tracker')}
               />
-          )}
-        </SettingsSection>
             )}
+
+            {showAbout && (
+              <SettingsCell
+                icon={<IconSmartphone size={18} />}
+                iconGlow="slate"
+                title="About & Legal"
+                subtitle={`Version ${appVersion ?? WEB_APP_VERSION} · Privacy & Terms`}
+                badge="STABLE"
+                hasDivider={false}
+                onClick={() => setSubScreen('about')}
+              />
+            )}
+        </SettingsSection>
+      )}
 
       {/* Account */}
       {showAccountGroup && (
@@ -2344,21 +2425,6 @@ export function SettingsView({
                 onClick={onDeleteAccount}
               />
             )}
-        </SettingsSection>
-      )}
-
-      {/* About */}
-          {showAbout && (
-        <SettingsSection title="About">
-            <SettingsCell
-              icon={<IconSmartphone size={18} />}
-              iconGlow="slate"
-              title="About & Legal"
-              subtitle={`Version ${appVersion ?? WEB_APP_VERSION} · Privacy & Terms`}
-              badge="STABLE"
-              hasDivider={false}
-              onClick={() => setSubScreen('about')}
-            />
         </SettingsSection>
       )}
 

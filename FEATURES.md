@@ -9,11 +9,11 @@
 
 | Metric | Count |
 | :--- | :--- |
-| **Total Tracked** | **41** |
+| **Total Tracked** | **42** |
 | **💡 Requested** | **2** |
 | **📋 Planned** | **0** |
 | **🟡 In Progress** | **0** |
-| **✅ Shipped** | **39** |
+| **✅ Shipped** | **40** |
 | **⚪ Won't Do** | **0** |
 
 ---
@@ -91,6 +91,7 @@ CI pipeline for lint, build, and test on push/PR
 | **FEAT-039** | Quota-safe receipt storage (no base64 in localStorage) | `performance` | `cursor-agent` | `cursor-agent` | Shipped in v3.5.0 (d9c1e28) |
 | **FEAT-040** | WhatsApp-style Settings home (flat titled groups) | `ui-ux` | `cursor-agent` | `cursor-agent` | Shipped in v3.6.0 (df2815e). Reverses FEAT-030 portal-folder IA into WhatsApp-style flat groups. |
 | **FEAT-041** | Settings screen visual redesign: trip status hero + elevated grouped cards | `ui-ux` | `claude-cli` | `claude-cli` | Shipped |
+| **FEAT-042** | Settings menu IA compaction — Trip Tools & Backups/Media submenus | `ui-ux` | `claude-cli` | `claude-cli` | Shipped |
 
 ---
 

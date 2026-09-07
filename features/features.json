@@ -649,5 +649,21 @@
     "shippedAt": "2026-09-07T13:15:26.960Z",
     "shippedBy": "claude-cli",
     "shippedNote": "Shipped"
+  },
+  {
+    "id": "FEAT-042",
+    "title": "Settings menu IA compaction — Trip Tools & Backups/Media submenus",
+    "description": "Collapsed the Settings home screen from 6 groups/~24 rows to 5 groups/~16-17 rows. This Trip: 7 rows -> 3 (Invite&Share, Trip Tools submenu, Close Trip). Data: 6 rows -> 3 (Storage&Data, Archived Trips, Backups & Media submenu). Help+About merged into one Help & About group, with Seed Demo Trip moved there (kept available to all customers as a try-before-signup exploration aid, not gated to admin). New Trip Tools submenu bundles Categories, Recycle Bin, Mute Alerts, FX Engine, CSV Export. New Backups & Media submenu bundles Offline Snapshot, Receipts Gallery, DB Backups (admin-only). Search still surfaces the new submenu entries via keyword OR across bundled items, matching the app's existing drill-down search pattern.",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-09-07T13:50:22.466Z",
+    "updatedAt": "2026-09-07T13:50:22.466Z",
+    "shippedAt": "2026-09-07T13:50:22.466Z",
+    "shippedBy": "claude-cli",
+    "shippedNote": "Shipped"
   }
 ]

@@ -2532,6 +2532,24 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Decision:** Commit exactly the lines that fix the parse errors (`ResetPasswordScreen.tsx`, `LegalPageLayout.tsx`, `JoinTripScreen.tsx`, `PrivacyPolicyContent.tsx`, `TermsOfServiceContent.tsx`) plus a `.gitignore` encoding fix (its tail had been appended in UTF-16 instead of UTF-8, visible as null-byte garbage — likely a PowerShell append defaulting encoding). Verified `npm run lint` (0 errors), `npm run build`, and `npm test` (201 passed) all clean before pushing.
 * **Explicitly NOT included:** `LoginScreen.tsx`, `TripsListScreen.tsx`, `main.tsx` also had uncommitted changes wiring up an in-progress "Demo Mode" instant-login feature (guest access via `authStore.signInAsDemoUser`, a `/demo` route shortcut, an ungated "Try Demo Mode" button). Left those uncommitted — unrelated to the CI break, and a new user-facing auth flow shouldn't ship silently inside a CI-fix commit.
 
+---
+
+## Settings Menu IA Compaction — Trip Tools & Backups/Media Submenus (v3.6.7, FEAT-042)
+* **Context:** User asked to further compact the Settings menu with meaningful groupings, plan-first. Audit: 6 top-level groups, ~24 rows flat on one screen before any tap — This Trip (7 rows) and Data (6 rows) were the worst offenders. Plan reviewed and approved by the user before implementation (see conversation).
+* **Decision:**
+  - **This Trip**: 7 rows → 3. Kept flat: Invite & Share Trip, Close Trip. New **Trip Tools** submenu (reuses existing `SubScreen`/`setSubScreen` stack pattern) bundles Categories & Tags, Recycle Bin, Mute Trip Alerts, Multi-Currency FX Engine, Excel CSV Export.
+  - **Data**: 6 rows → 3. Kept flat: Storage & Data, Archived Trips. New **Backups & Media** submenu bundles Offline Snapshot, Receipts & Memories Gallery, Database Backups (still admin-gated inside).
+  - **Help + About merged** into one "Help & About" group (was 2 separate section headers) — pure grouping consolidation, no rows moved out.
+  - **Seed Demo Trip**: user explicitly wants this available to all customers for testing/exploration, not admin-gated (matches the existing fresh-signup demo-trip offer). Placed in **Help & About**, not Data — it's a "try the app" aid, not a data-export concern, and keeps Data purely about real backup/export actions.
+  - Account group (Sign Out / Clear Data / Delete Account) left untouched and isolated — destructive actions don't get folded into a compaction pass.
+* **Pattern/Implementation:**
+  - Added `'trip-tools'` and `'backups-media'` to the `SubScreen` union, `DEFAULT_PARENT_MAP`, and `getScreenTitle` in `SettingsView.tsx`. Both new submenus are pure menu screens (list of `SettingsCell`/toggle rows with the same `onClick` handlers the rows already had) — nested navigation (e.g. This Trip → Trip Tools → Categories editor) works for free via the existing `screenStack` array, no parent-map changes needed for the leaf screens.
+  - Search still surfaces the two new submenu entries: `showTripTools`/`showBackupsMedia` are ORs of the original per-row `matchesSearch(...)` flags, so a query like "recycle" still surfaces "Trip Tools" on the home screen (same precedent as existing hubs like Storage & Data, whose internal rows aren't separately searchable either).
+  - Drive-by: removed a dead `return [];` line in `popScreen()` (unreachable after the preceding `return`, pre-existing oxlint warning) since it sat directly in code being edited.
+* **Trade-offs Accepted:**
+  - Two more taps to reach Categories/Recycle Bin/Mute/FX/CSV Export and Offline Snapshot/Gallery/DB Backups (previously one tap from Settings home). Accepted for the payoff of a scannable home screen — matches how WhatsApp/Uber bury occasional-use settings behind a labeled hub row.
+  - `hasDivider={false}` is only set on the last-rendered row in Trip Tools (assumes CSV Export renders); if `onExportCsv` is undefined the FX row keeps a trailing divider — cosmetic only, same imperfection pattern the original flat list already had.
+
 
 
 
