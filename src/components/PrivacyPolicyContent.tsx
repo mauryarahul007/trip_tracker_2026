@@ -5,7 +5,6 @@ type Props = {
 };
 
 /** Shared Privacy Policy body — used by the public /privacy route and Settings About. */
-export function PrivacyPolicyContent() {
 export function PrivacyPolicyContent({ onNavigate }: Props = {}) {
   const renderTermsLink = () => {
     if (onNavigate) {
@@ -124,8 +123,6 @@ export function PrivacyPolicyContent({ onNavigate }: Props = {}) {
 
       <section>
         <h2>Children's Privacy</h2>
-        <p>Trip Tracker is not directed at children, and you must be at least 13 years old to use it (see our
-          <a href="/terms"> Terms of Service</a>). We do not knowingly collect personal information from anyone
         <p>Trip Tracker is not directed at children, and you must be at least 13 years old to use it (see our{' '}
           {renderTermsLink()}). We do not knowingly collect personal information from anyone
           under 13. If you believe a child has provided us data, contact us and we'll remove it.</p>

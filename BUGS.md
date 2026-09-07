@@ -9,8 +9,8 @@
 
 | Metric | Count | Status Notes |
 | :--- | :--- | :--- |
-| **Total Tracked** | **177** | All recorded bugs across sessions |
-| **🟢 Open** | **0** | No critical blockers, 0 High |
+| **Total Tracked** | **178** | All recorded bugs across sessions |
+| **🟢 Open** | **1** | 🚨 **1 CRITICAL**, 0 High |
 | **🟡 In Progress** | **0** | Active investigation or fix |
 | **✅ Resolved** | **150** | Verified & closed |
 | **⚪ Won't Fix** | **27** | Expected behavior / deferred |
@@ -19,13 +19,32 @@
 
 ## 🚨 Active Bugs (Open & In Progress)
 
-*🎉 No active open bugs! Great job team.* 
+| ID | Severity | Category | Title | Found By | Status |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **[BUG-181](#bug-181)** | 🔴 **CRITICAL** | `ui-ux` | CI/lint broken since v3.6.0-3.6.2 nav refactor — duplicate leftover lines in 5 files | `claude-cli` | 🟢 Open |
 
 ---
 
 ## 📖 Detailed Active Bug Specs
 
-*No active bug details to display.*
+### BUG-181: CI/lint broken since v3.6.0-3.6.2 nav refactor — duplicate leftover lines in 5 files
+
+- **Severity**: `CRITICAL` | **Category**: `ui-ux` | **Status**: `open`
+- **Found By**: `claude-cli` on 7/9/2026 (web)
+
+**Description**:
+Every push to main since 'Configure settings and update UI components' (a9fe120) failed CI (lint), which also blocked Deploy to EC2 and Deploy to GitHub Pages — production never received any commits from that point on, including two of my own earlier pushes this session. Root cause: an edit tool left both the old and new line in place (duplicate imports/JSX) in ResetPasswordScreen.tsx, LegalPageLayout.tsx, JoinTripScreen.tsx, PrivacyPolicyContent.tsx, TermsOfServiceContent.tsx during the v3.6.0-3.6.2 back-navigation refactor, breaking oxlint parsing. The corrected versions were already sitting uncommitted in the working tree (visible in git status all session) but never pushed.
+
+**Steps to Reproduce**:
+1. git log --oneline -10 shows the nav-refactor commits
+2. gh run list shows CI/Deploy failing on every push since
+3. npm run lint on HEAD shows 11 parse errors in the 5 files
+
+**Expected**: CI passes, EC2 + GitHub Pages deploys succeed on push to main
+
+**Actual**: oxlint hit duplicate-declaration/unclosed-JSX-tag parse errors, exit 1, build+test steps never ran, both deploy workflows never ran
+
+---
 
 ## ✅ Resolved Bugs History
 

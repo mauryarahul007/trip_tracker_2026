@@ -5,7 +5,6 @@ type Props = {
 };
 
 /** Shared Terms of Service body — used by the public /terms route and Settings About. */
-export function TermsOfServiceContent() {
 export function TermsOfServiceContent({ onNavigate }: Props = {}) {
   const renderPrivacyLink = () => {
     if (onNavigate) {
@@ -97,8 +96,6 @@ export function TermsOfServiceContent({ onNavigate }: Props = {}) {
 
       <section>
         <h2>Termination</h2>
-        <p>You can stop using the app and request account deletion at any time (see our
-          <a href="/privacy"> Privacy Policy</a>). We may suspend or terminate an account that violates these
         <p>You can stop using the app and request account deletion at any time (see our{' '}
           {renderPrivacyLink()}). We may suspend or terminate an account that violates these
           terms.</p>

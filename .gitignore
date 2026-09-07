@@ -43,3 +43,6 @@ graphify-out/
 # Memory palace / Chroma local vector store
 palace/
 hallways.json
+
+# Impeccable design-lint local state
+.impeccable/

@@ -5435,5 +5435,29 @@
     "resolvedBy": "claude-cli",
     "resolvedAt": "2026-09-07T13:31:10.129Z",
     "resolutionNote": "Segmented control buttons were icon+text with flex-shrink:0. Dropped text labels (icon-only, tooltips kept) in SettingsView.tsx + trimmed .settings-seg-btn padding in index.css. Fixed in v3.6.5 commit 46342a5."
+  },
+  {
+    "id": "BUG-181",
+    "title": "CI/lint broken since v3.6.0-3.6.2 nav refactor — duplicate leftover lines in 5 files",
+    "description": "Every push to main since 'Configure settings and update UI components' (a9fe120) failed CI (lint), which also blocked Deploy to EC2 and Deploy to GitHub Pages — production never received any commits from that point on, including two of my own earlier pushes this session. Root cause: an edit tool left both the old and new line in place (duplicate imports/JSX) in ResetPasswordScreen.tsx, LegalPageLayout.tsx, JoinTripScreen.tsx, PrivacyPolicyContent.tsx, TermsOfServiceContent.tsx during the v3.6.0-3.6.2 back-navigation refactor, breaking oxlint parsing. The corrected versions were already sitting uncommitted in the working tree (visible in git status all session) but never pushed.",
+    "severity": "critical",
+    "category": "ui-ux",
+    "status": "open",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "git log --oneline -10 shows the nav-refactor commits",
+      "gh run list shows CI/Deploy failing on every push since",
+      "npm run lint on HEAD shows 11 parse errors in the 5 files"
+    ],
+    "expectedBehavior": "CI passes, EC2 + GitHub Pages deploys succeed on push to main",
+    "actualBehavior": "oxlint hit duplicate-declaration/unclosed-JSX-tag parse errors, exit 1, build+test steps never ran, both deploy workflows never ran",
+    "diagnostics": {},
+    "createdAt": "2026-09-07T13:35:37.448Z",
+    "updatedAt": "2026-09-07T13:35:37.450Z"
   }
 ]

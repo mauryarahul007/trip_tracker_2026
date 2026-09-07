@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../services/supabaseClient';
-import { IconShield, IconCheck, IconAlertCircle } from './Icons';
 import { IconShield, IconCheck, IconAlertCircle, IconChevronLeft } from './Icons';
 
 // Landed on via the link Supabase emails from
