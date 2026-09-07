@@ -1999,8 +1999,7 @@ export function SettingsView({
                     title="Light mode"
                     aria-label="Light mode"
                   >
-                    <IconSun size={13} />
-                    <span>Light</span>
+                    <IconSun size={14} />
                   </button>
                   <button
                     type="button"
@@ -2009,8 +2008,7 @@ export function SettingsView({
                     title="Night mode"
                     aria-label="Night mode"
                   >
-                    <IconMoon size={13} />
-                    <span>Night</span>
+                    <IconMoon size={14} />
                   </button>
                   <button
                     type="button"
@@ -2019,8 +2017,7 @@ export function SettingsView({
                     title="System default"
                     aria-label="System default"
                   >
-                    <IconSmartphone size={13} />
-                    <span>Auto</span>
+                    <IconSmartphone size={14} />
                   </button>
                 </div>
               </div>

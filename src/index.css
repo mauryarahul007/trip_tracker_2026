@@ -6326,14 +6326,12 @@ html.capacitor-ios .trip-sheet .tab-pane {
 .settings-seg-btn {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  padding: 4px 8px;
+  justify-content: center;
+  padding: 6px;
   border-radius: 7px;
   border: none;
   background: transparent;
   color: var(--text-secondary);
-  font-size: 11.5px;
-  font-weight: 500;
   cursor: pointer;
   transition: all 0.15s ease;
   font-family: inherit;
