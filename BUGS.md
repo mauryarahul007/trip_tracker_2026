@@ -10,41 +10,22 @@
 | Metric | Count | Status Notes |
 | :--- | :--- | :--- |
 | **Total Tracked** | **178** | All recorded bugs across sessions |
-| **🟢 Open** | **1** | 🚨 **1 CRITICAL**, 0 High |
+| **🟢 Open** | **0** | No critical blockers, 0 High |
 | **🟡 In Progress** | **0** | Active investigation or fix |
-| **✅ Resolved** | **150** | Verified & closed |
+| **✅ Resolved** | **151** | Verified & closed |
 | **⚪ Won't Fix** | **27** | Expected behavior / deferred |
 
 ---
 
 ## 🚨 Active Bugs (Open & In Progress)
 
-| ID | Severity | Category | Title | Found By | Status |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| **[BUG-181](#bug-181)** | 🔴 **CRITICAL** | `ui-ux` | CI/lint broken since v3.6.0-3.6.2 nav refactor — duplicate leftover lines in 5 files | `claude-cli` | 🟢 Open |
+*🎉 No active open bugs! Great job team.* 
 
 ---
 
 ## 📖 Detailed Active Bug Specs
 
-### BUG-181: CI/lint broken since v3.6.0-3.6.2 nav refactor — duplicate leftover lines in 5 files
-
-- **Severity**: `CRITICAL` | **Category**: `ui-ux` | **Status**: `open`
-- **Found By**: `claude-cli` on 7/9/2026 (web)
-
-**Description**:
-Every push to main since 'Configure settings and update UI components' (a9fe120) failed CI (lint), which also blocked Deploy to EC2 and Deploy to GitHub Pages — production never received any commits from that point on, including two of my own earlier pushes this session. Root cause: an edit tool left both the old and new line in place (duplicate imports/JSX) in ResetPasswordScreen.tsx, LegalPageLayout.tsx, JoinTripScreen.tsx, PrivacyPolicyContent.tsx, TermsOfServiceContent.tsx during the v3.6.0-3.6.2 back-navigation refactor, breaking oxlint parsing. The corrected versions were already sitting uncommitted in the working tree (visible in git status all session) but never pushed.
-
-**Steps to Reproduce**:
-1. git log --oneline -10 shows the nav-refactor commits
-2. gh run list shows CI/Deploy failing on every push since
-3. npm run lint on HEAD shows 11 parse errors in the 5 files
-
-**Expected**: CI passes, EC2 + GitHub Pages deploys succeed on push to main
-
-**Actual**: oxlint hit duplicate-declaration/unclosed-JSX-tag parse errors, exit 1, build+test steps never ran, both deploy workflows never ran
-
----
+*No active bug details to display.*
 
 ## ✅ Resolved Bugs History
 
@@ -200,6 +181,7 @@ Every push to main since 'Configure settings and update UI components' (a9fe120)
 | **BUG-175** | Settings About Privacy/Terms Back returns to Summary instead of About | `navigation` | `medium` | `cursor-agent` | `cursor-agent` | About used navigate(/privacy|/terms) which unmounted App and lost screenStack; Back remounted on Expenses/Summary. Fixed in v3.6.1 commit 4560b00: Privacy/Terms are Settings subScreens under About; shared content modules keep public /privacy and /terms routes. |
 | **BUG-179** | Receipts & Memories Gallery shows broken image icon for synced receipts | `receipts-camera` | `medium` | `claude-cli` | `claude-cli` | receiptPath is a Supabase Storage object path, not a URL. TripMediaGalleryModal used it directly as img src instead of resolving via getReceiptSignedUrl (the pattern ExpenseReviewModal already used). Fixed in v3.6.3 commit 37f07c4: resolve signed URLs per item with a loading placeholder, also fixed the share action using the same raw path. |
 | **BUG-180** | Appearance row title clipped by Light/Night/Auto segmented control | `ui-ux` | `low` | `claude-cli` | `claude-cli` | Segmented control buttons were icon+text with flex-shrink:0. Dropped text labels (icon-only, tooltips kept) in SettingsView.tsx + trimmed .settings-seg-btn padding in index.css. Fixed in v3.6.5 commit 46342a5. |
+| **BUG-181** | CI/lint broken since v3.6.0-3.6.2 nav refactor — duplicate leftover lines in 5 files | `ui-ux` | `critical` | `claude-cli` | `claude-cli` | Committed the pre-existing uncommitted duplicate-line fixes for 5 files + a .gitignore encoding fix. Fixed in v3.6.6 commit bb8fa79. Verified lint/build/test all green before pushing. |
 
 ---
 

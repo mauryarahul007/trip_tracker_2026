@@ -2524,7 +2524,13 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Pattern/Implementation:** Removed the `<span>Light/Night/Auto</span>` labels in `SettingsView.tsx`; trimmed `.settings-seg-btn` padding/removed its now-unused `font-size`/`gap` in `index.css`.
 * **Trade-offs Accepted:** Icon-only assumes sun/moon/smartphone read clearly without labels — acceptable given the row's own subtitle already states the current mode in words (e.g. "Light").
 
+---
 
+## CI/Deploy Restored — Duplicate Leftover Lines (v3.6.6, BUG-181)
+* **Context:** User reported "last commit failed in build." `gh run list` showed CI, Deploy to EC2, and Deploy to GitHub Pages failing on *every* push since `a9fe120` ("Configure settings and update UI components") — the v3.6.0-3.6.2 back-navigation refactor. Production stopped receiving deploys from that point, including two of this session's own earlier pushes (the receipt-gallery fix and the settings redesign never reached `trip-tracker.blackmaroon.in` — which is also why the user saw no visual change after the settings redesign ship).
+* **Root cause:** oxlint parse errors in 5 files — an edit had left both the pre-edit and post-edit line in place side by side (duplicate imports, duplicate JSX elements) instead of replacing. The corrected versions were already sitting **uncommitted** in the working tree the entire session (visible in `git status` from turn one) — a previous session had fixed them locally but never committed.
+* **Decision:** Commit exactly the lines that fix the parse errors (`ResetPasswordScreen.tsx`, `LegalPageLayout.tsx`, `JoinTripScreen.tsx`, `PrivacyPolicyContent.tsx`, `TermsOfServiceContent.tsx`) plus a `.gitignore` encoding fix (its tail had been appended in UTF-16 instead of UTF-8, visible as null-byte garbage — likely a PowerShell append defaulting encoding). Verified `npm run lint` (0 errors), `npm run build`, and `npm test` (201 passed) all clean before pushing.
+* **Explicitly NOT included:** `LoginScreen.tsx`, `TripsListScreen.tsx`, `main.tsx` also had uncommitted changes wiring up an in-progress "Demo Mode" instant-login feature (guest access via `authStore.signInAsDemoUser`, a `/demo` route shortcut, an ungated "Try Demo Mode" button). Left those uncommitted — unrelated to the CI break, and a new user-facing auth flow shouldn't ship silently inside a CI-fix commit.
 
 
 

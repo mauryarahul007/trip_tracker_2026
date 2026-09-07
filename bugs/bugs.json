@@ -5442,7 +5442,7 @@
     "description": "Every push to main since 'Configure settings and update UI components' (a9fe120) failed CI (lint), which also blocked Deploy to EC2 and Deploy to GitHub Pages — production never received any commits from that point on, including two of my own earlier pushes this session. Root cause: an edit tool left both the old and new line in place (duplicate imports/JSX) in ResetPasswordScreen.tsx, LegalPageLayout.tsx, JoinTripScreen.tsx, PrivacyPolicyContent.tsx, TermsOfServiceContent.tsx during the v3.6.0-3.6.2 back-navigation refactor, breaking oxlint parsing. The corrected versions were already sitting uncommitted in the working tree (visible in git status all session) but never pushed.",
     "severity": "critical",
     "category": "ui-ux",
-    "status": "open",
+    "status": "resolved",
     "foundBy": "claude-cli",
     "environment": {
       "platform": "web",
@@ -5458,6 +5458,9 @@
     "actualBehavior": "oxlint hit duplicate-declaration/unclosed-JSX-tag parse errors, exit 1, build+test steps never ran, both deploy workflows never ran",
     "diagnostics": {},
     "createdAt": "2026-09-07T13:35:37.448Z",
-    "updatedAt": "2026-09-07T13:35:37.450Z"
+    "updatedAt": "2026-09-07T13:36:45.496Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-09-07T13:36:45.495Z",
+    "resolutionNote": "Committed the pre-existing uncommitted duplicate-line fixes for 5 files + a .gitignore encoding fix. Fixed in v3.6.6 commit bb8fa79. Verified lint/build/test all green before pushing."
   }
 ]
