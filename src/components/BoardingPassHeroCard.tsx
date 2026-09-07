@@ -220,7 +220,6 @@ export function BoardingPassHeroCard({
   transfers,
   balancesCount,
   currentMember,
-  onOpenSquadBadges,
 }: BoardingPassHeroCardProps) {
   const [isFlipped, setIsFlipped] = useState(false);
   const [copied, setCopied] = useState(false);
