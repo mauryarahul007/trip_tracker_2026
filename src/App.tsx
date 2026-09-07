@@ -1674,6 +1674,7 @@ export default function App() {
     }
   });
   useHistoryBack(showShortcutsModal, () => setShowShortcutsModal(false));
+  useHistoryBack(showBioEnrollPrompt, () => setShowBioEnrollPrompt(false));
 
   // Escape key — the desktop equivalent of the back-gesture wiring above,
   // for the same set of overlay modals (excludes tab/trip navigation).
@@ -1694,6 +1695,7 @@ export default function App() {
   useEscapeKey(showCommandPalette, () => setShowCommandPalette(false));
   useEscapeKey(showTripWrapped, () => setShowTripWrapped(false));
   useEscapeKey(showShortcutsModal, () => setShowShortcutsModal(false));
+  useEscapeKey(showBioEnrollPrompt, () => setShowBioEnrollPrompt(false));
 
   // Loading view
   if (!initialized) {

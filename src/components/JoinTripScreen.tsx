@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { lookupTripByJoinCode, claimTripMember, type JoinLookupResult } from '../services/tripApi';
 import { useTripStore } from '../store/tripStore';
-import { IconMembers, IconCheckCircle, IconClock } from './Icons';
+import { IconMembers, IconCheckCircle, IconClock, IconChevronLeft } from './Icons';
 import { sendPushNotification } from '../services/pushApi';
 import { supabase } from '../services/supabaseClient';
 import { TurnstileWidget } from './TurnstileWidget';
@@ -14,6 +14,14 @@ export function JoinTripScreen() {
   const navigate = useNavigate();
   const refreshTrips = useTripStore((s) => s.refreshTrips);
   const selectTrip = useTripStore((s) => s.selectTrip);
+
+  const handleBack = () => {
+    if (window.history.length > 1 && (window.history.state?.idx > 0 || window.history.state?.navDepth > 0)) {
+      navigate(-1);
+    } else {
+      navigate('/');
+    }
+  };
 
   const [status, setStatus] = useState<Status>('loading');
   const [result, setResult] = useState<JoinLookupResult | null>(null);
@@ -204,9 +212,17 @@ export function JoinTripScreen() {
       <div className="app-container" style={{ justifyContent: 'center', alignItems: 'center', padding: '24px 20px' }}>
         <div className="fade-in glass-card" style={{ width: '100%', maxWidth: '420px', padding: '28px 24px', textAlign: 'center' }}>
           <h2 style={{ marginBottom: '8px' }}>Everyone's already joined</h2>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '14px', marginBottom: '20px' }}>
             All members of "{result.tripName}" have already claimed their spot. Ask the trip admin if you think this is a mistake.
           </p>
+          <button
+            type="button"
+            className="secondary-btn"
+            style={{ width: '100%' }}
+            onClick={handleBack}
+          >
+            Go to my trips
+          </button>
         </div>
       </div>
     );
@@ -216,6 +232,19 @@ export function JoinTripScreen() {
     <div className="app-container" style={{ overflowY: 'auto' }}>
       <div className="fade-in" style={{ padding: 'max(24px, var(--safe-top, 24px)) 20px max(24px, var(--safe-bottom, 24px)) 20px', flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div className="glass-card" style={{ width: '100%', maxWidth: '420px', margin: '0 auto' }}>
+          {/* Top navigation row */}
+          <div style={{ display: 'flex', alignItems: 'center', marginBottom: '14px' }}>
+            <button
+              type="button"
+              className="legal-page-back"
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', padding: 0, fontSize: '13px' }}
+              onClick={handleBack}
+            >
+              <IconChevronLeft size={16} />
+              Back
+            </button>
+          </div>
+
           {/* Honeypot field for automated bot trap */}
           <div style={{ position: 'absolute', left: '-9999px', opacity: 0, pointerEvents: 'none', height: 0, overflow: 'hidden' }} aria-hidden="true">
             <input

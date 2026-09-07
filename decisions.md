@@ -2469,14 +2469,23 @@ This document logs all meaningful technical decisions, library choices, design p
 
 ---
 
-## Header sheet trim + in-app Privacy/Terms (v3.6.1)
-* **Context:** The trip-title ActionSheet duplicated Summary (Settle Up) and exposed Superadmin Bug Tracker to travelers. Separately, Settings → About used `navigate('/privacy'|'/terms')`, which unmounted App and lost the About `screenStack`; Back remounted on Expenses/Summary instead of About.
+## Universal Back Navigation for Pages, Popup Menus & Settings Sub-screens (v3.6.2)
+* **Context:**
+  - Back navigation was inconsistent across sub-screens and popup menus.
+  - In `SettingsView`, `DEFAULT_PARENT_MAP` mapped `'privacy': 'about'` and `'terms': 'about'`. Clicking "Back" on Privacy Policy or Terms of Service when opened directly from Settings redirected users to "About" instead of returning to Settings home, and the back button text wrongly displayed `< About`.
+  - When clicking "Privacy Policy" or "Terms of Service" links inside the text while in Settings, native `<a href>` links triggered a hard document reload, closing the Settings modal.
+  - `useHistoryBack` was single-boolean based (`subScreen !== null`), so multi-level drill-downs (Settings → About → Privacy Policy) did not push individual history states. Pressing browser back closed the entire Settings modal instead of stepping back one level.
+  - Popup menus (such as `OverflowMenu` 3-dots dropdown) and typeahead dropdowns didn't register with history back, causing back gestures to navigate the underlying page instead of dismissing the menu.
+  - Standalone pages (`/privacy`, `/terms`, `/join/:code`, `/reset-password`) had missing or fragile back buttons that could trap users or fail if entered directly without session history.
 * **Decision:**
-  - Header sheet order: Share → Route Map (if stops) → Mute/Unmute → Edit Trip → Settings → Switch Trip. Gallery and Bug Tracker stay Settings-only (Bug Tracker after Super User Login). Bottom nav unchanged.
-  - Extract `PrivacyPolicyContent` / `TermsOfServiceContent` for shared body copy. Public `/privacy` and `/terms` stay thin `LegalPageLayout` wrappers for store/OAuth. From Settings About, open `privacy`/`terms` subScreens with parent `about` so Back pops Privacy → About → Settings home.
+  - **Dynamic History Stack (`useHistoryStack`):** Introduced `useHistoryStack(depth, onPop)` in `src/utils/useHistoryBack.ts` that tracks multi-level view stacks. It pushes a history state for each depth level so browser/gesture back pops one level at a time in LIFO order, while programmatically stepping back browser history when in-app back buttons are pressed.
+  - **Settings Navigation Correction:** Fixed `SettingsView` by removing the hardcoded fallback to `'about'`. Popping a sub-screen now always returns to the true preceding screen (`screenStack.slice(0, -1)` or `[]`). `getParentTitle()` now accurately reflects the immediate parent screen.
+  - **In-App Cross-Links:** Updated `PrivacyPolicyContent` and `TermsOfServiceContent` with an `onNavigate` callback and React Router `<Link>` components, enabling smooth in-modal stack transitions between Privacy Policy and Terms of Service.
+  - **Popup Menu Back Wiring:** Added `useHistoryBack` to `OverflowMenu` (3-dots dropdown), `MembersGroupsTab` (typeahead autocomplete), and biometric enrollment prompt.
+  - **Standalone Routes Polish:** Upgraded `LegalPageLayout`, `JoinTripScreen`, and `ResetPasswordScreen` with robust back navigation buttons with fallback to `/` or `/login` when directly loaded.
 * **Trade-offs Accepted:**
-  - Edit Trip from the header leaves the active trip so the list-screen edit form can show (form is not mounted in-trip).
-  - Public legal URLs remain separate routes; only the Settings entry path stays inside the app shell.
+  - `useHistoryStack` synchronizes browser history entries with state depth; rapid multi-level programmatic pops invoke `window.history.go(-steps)` to maintain parity between browser URL depth and component state.
+
 
 
 

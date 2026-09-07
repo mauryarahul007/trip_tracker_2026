@@ -79,3 +79,75 @@ export function useHistoryBack(isOpen: boolean, onClose: () => void) {
     };
   }, []);
 }
+
+/**
+ * For views that maintain a multi-level stack (such as SettingsView's
+ * screenStack: [] -> ['about'] -> ['about', 'privacy']).
+ *
+ * Pushes a history entry for each depth level > 0, so the browser back button
+ * or back gesture pops one level at a time back to the previous screen.
+ * When popped via UI (in-app back button), steps back the browser history
+ * cleanly without duplicate popstate triggers.
+ */
+export function useHistoryStack(depth: number, onPop: () => void) {
+  const entriesRef = useRef<StackEntry[]>([]);
+  const onPopRef = useRef(onPop);
+  onPopRef.current = onPop;
+
+  useEffect(() => {
+    ensureListener();
+    const currentEntries = entriesRef.current;
+
+    if (depth > currentEntries.length) {
+      // User navigated deeper: push a history state for each newly added depth level
+      while (currentEntries.length < depth) {
+        const entry: StackEntry = { onClose: () => onPopRef.current() };
+        currentEntries.push(entry);
+        stack.push(entry);
+        const navDepth = stack.length;
+        const baseUrl = window.location.pathname + window.location.search;
+        window.history.pushState({ navDepth }, '', `${baseUrl}#nav-${navDepth}`);
+      }
+    } else if (depth < currentEntries.length) {
+      // Depth decreased: remove entries from our tracked list
+      const toRemove = currentEntries.length - depth;
+      let historyStepsBack = 0;
+
+      for (let i = 0; i < toRemove; i++) {
+        const entry = currentEntries.pop();
+        if (entry) {
+          const idx = stack.indexOf(entry);
+          if (idx !== -1) {
+            // Closed programmatically (e.g. in-app back button), not via popstate
+            stack.splice(idx, 1);
+            historyStepsBack++;
+          }
+        }
+      }
+
+      if (historyStepsBack > 0) {
+        if (historyStepsBack === 1) {
+          window.history.back();
+        } else {
+          window.history.go(-historyStepsBack);
+        }
+      }
+    }
+  }, [depth]);
+
+  useEffect(() => {
+    return () => {
+      const currentEntries = entriesRef.current;
+      while (currentEntries.length > 0) {
+        const entry = currentEntries.pop();
+        if (entry) {
+          const idx = stack.indexOf(entry);
+          if (idx !== -1) {
+            stack.splice(idx, 1);
+          }
+        }
+      }
+    };
+  }, []);
+}
+

@@ -1,11 +1,42 @@
+import { Link } from 'react-router-dom';
+
+type Props = {
+  onNavigate?: (screen: 'privacy' | 'terms') => void;
+};
+
 /** Shared Terms of Service body — used by the public /terms route and Settings About. */
-export function TermsOfServiceContent() {
+export function TermsOfServiceContent({ onNavigate }: Props = {}) {
+  const renderPrivacyLink = () => {
+    if (onNavigate) {
+      return (
+        <button
+          type="button"
+          className="link-style-btn"
+          style={{
+            background: 'none',
+            border: 'none',
+            padding: 0,
+            color: 'var(--primary-accent)',
+            textDecoration: 'underline',
+            cursor: 'pointer',
+            font: 'inherit',
+            display: 'inline',
+          }}
+          onClick={() => onNavigate('privacy')}
+        >
+          Privacy Policy
+        </button>
+      );
+    }
+    return <Link to="/privacy">Privacy Policy</Link>;
+  };
+
   return (
     <>
       <section>
         <h2>Acceptance of Terms</h2>
-        <p>By creating an account or using Trip Tracker, you agree to these Terms of Service and our
-          <a href="/privacy"> Privacy Policy</a>. If you don't agree, please don't use the app.</p>
+        <p>By creating an account or using Trip Tracker, you agree to these Terms of Service and our{' '}
+          {renderPrivacyLink()}. If you don't agree, please don't use the app.</p>
       </section>
 
       <section>
@@ -63,8 +94,8 @@ export function TermsOfServiceContent() {
 
       <section>
         <h2>Termination</h2>
-        <p>You can stop using the app and request account deletion at any time (see our
-          <a href="/privacy"> Privacy Policy</a>). We may suspend or terminate an account that violates these
+        <p>You can stop using the app and request account deletion at any time (see our{' '}
+          {renderPrivacyLink()}). We may suspend or terminate an account that violates these
           terms.</p>
       </section>
 

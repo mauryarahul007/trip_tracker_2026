@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { IconChevronLeft } from './Icons';
 
 type Props = {
@@ -14,15 +14,23 @@ type Props = {
 export function LegalPageLayout({ title, lastUpdated, children }: Props) {
   const navigate = useNavigate();
 
+  const handleBack = () => {
+    if (window.history.length > 1 && (window.history.state?.idx > 0 || window.history.state?.navDepth > 0)) {
+      navigate(-1);
+    } else {
+      navigate('/');
+    }
+  };
+
   return (
     <div className="legal-page">
       <div className="legal-page-inner">
         <div className="legal-page-nav">
-          <button type="button" className="legal-page-back" onClick={() => navigate(-1)}>
+          <button type="button" className="legal-page-back" onClick={handleBack}>
             <IconChevronLeft size={18} />
             Back
           </button>
-          <a href="/" className="legal-page-brand">Trip Tracker</a>
+          <Link to="/" className="legal-page-brand">Trip Tracker</Link>
         </div>
 
         <h1 className="legal-page-title">{title}</h1>

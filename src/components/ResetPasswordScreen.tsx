@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../services/supabaseClient';
-import { IconShield, IconCheck, IconAlertCircle } from './Icons';
+import { IconShield, IconCheck, IconAlertCircle, IconChevronLeft } from './Icons';
 
 // Landed on via the link Supabase emails from
 // authStore.requestSuperadminPasswordReset(). Supabase's client auto-parses
@@ -143,6 +143,31 @@ export function ResetPasswordScreen() {
             </button>
           </form>
         )}
+
+        <button
+          type="button"
+          className="secondary-btn"
+          style={{
+            width: '100%',
+            marginTop: '12px',
+            padding: '10px 16px',
+            fontSize: '13px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '6px',
+          }}
+          onClick={() => {
+            if (window.history.length > 1 && (window.history.state?.idx > 0 || window.history.state?.navDepth > 0)) {
+              navigate(-1);
+            } else {
+              navigate('/login');
+            }
+          }}
+        >
+          <IconChevronLeft size={16} />
+          Back to Sign In
+        </button>
       </div>
     </div>
   );

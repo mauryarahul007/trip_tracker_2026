@@ -48,7 +48,7 @@ import { SuperadminAuthModal } from './SuperadminAuthModal';
 // below -- code-split so its ~700 lines don't ship in every traveler's
 // bundle.
 const SuperAdminBugTracker = lazy(() => import('./SuperAdminBugTracker').then((m) => ({ default: m.SuperAdminBugTracker })));
-import { useHistoryBack } from '../utils/useHistoryBack';
+import { useHistoryBack, useHistoryStack } from '../utils/useHistoryBack';
 import { useEscapeKey } from '../utils/useEscapeKey';
 import {
   isPassRemindersEnabled,
@@ -173,30 +173,13 @@ export function SettingsView({
     setScreenStack((prev) => [...prev, screen]);
   };
 
-  // Drill-downs return to Settings home; privacy/terms nest under About.
-  const DEFAULT_PARENT_MAP: Record<string, SubScreen> = {
-    'categories': null,
-    'recycle-bin': null,
-    'storage-data': null,
-    'archived-trips': null,
-    'backups': null,
-    'report-issue': null,
-    'suggest-feature': null,
-    'bug-tracker': null,
-    'about': null,
-    'privacy': 'about',
-    'terms': 'about',
-  };
-
   const popScreen = () => {
     triggerHaptic('light');
     setScreenStack((prev) => {
       if (prev.length > 1) {
         return prev.slice(0, prev.length - 1);
       }
-      const current = prev[0] ?? null;
-      const fallback = current ? DEFAULT_PARENT_MAP[current] ?? null : null;
-      return fallback ? [fallback] : [];
+      return [];
     });
   };
 
@@ -240,9 +223,6 @@ export function SettingsView({
   const getParentTitle = (): string => {
     if (screenStack.length > 1) {
       return getScreenTitle(screenStack[screenStack.length - 2]);
-    }
-    if (subScreen && DEFAULT_PARENT_MAP[subScreen] !== undefined) {
-      return getScreenTitle(DEFAULT_PARENT_MAP[subScreen]);
     }
     return 'Settings';
   };
@@ -519,7 +499,7 @@ export function SettingsView({
   };
 
   // Register sub-screen drill-downs into browser history stack (WhatsApp hierarchical navigation)
-  useHistoryBack(subScreen !== null, closeSubScreen);
+  useHistoryStack(screenStack.length, closeSubScreen);
   useEscapeKey(subScreen !== null, closeSubScreen);
 
   // Register expanded category auto-tags drawer into browser history stack
@@ -1599,7 +1579,7 @@ export function SettingsView({
         <h3 className="settings-subscreen-main-title">Privacy Policy</h3>
         <p className="settings-subscreen-subtitle">Last updated: {PRIVACY_POLICY_UPDATED}</p>
         <div className="legal-page-body" style={{ padding: '0 4px 24px' }}>
-          <PrivacyPolicyContent />
+          <PrivacyPolicyContent onNavigate={(target) => pushScreen(target)} />
         </div>
       </div>
     );
@@ -1617,7 +1597,7 @@ export function SettingsView({
         <h3 className="settings-subscreen-main-title">Terms of Service</h3>
         <p className="settings-subscreen-subtitle">Last updated: {TERMS_OF_SERVICE_UPDATED}</p>
         <div className="legal-page-body" style={{ padding: '0 4px 24px' }}>
-          <TermsOfServiceContent />
+          <TermsOfServiceContent onNavigate={(target) => pushScreen(target)} />
         </div>
       </div>
     );

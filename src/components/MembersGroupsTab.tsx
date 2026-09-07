@@ -343,6 +343,16 @@ export function MembersGroupsTab({
     setGroupFormError('');
   });
 
+  // Register member typeahead dropdown into browser history stack
+  useHistoryBack(isDropdownOpen, () => {
+    setIsDropdownOpen(false);
+    setHighlightedIndex(-1);
+  });
+  useEscapeKey(isDropdownOpen, () => {
+    setIsDropdownOpen(false);
+    setHighlightedIndex(-1);
+  });
+
   // Register member add/edit popup into browser history stack
   useHistoryBack(showAddForm, () => {
     setShowAddForm(false);

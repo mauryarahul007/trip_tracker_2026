@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { IconMoreVertical } from '../Icons';
 import { triggerHaptic } from '../../utils/haptics';
+import { useHistoryBack } from '../../utils/useHistoryBack';
 
 export interface MenuItem {
   id: string;
@@ -40,6 +41,8 @@ export const OverflowMenu: React.FC<OverflowMenuProps> = ({
   const close = useCallback(() => {
     setIsOpen(false);
   }, []);
+
+  useHistoryBack(isOpen, close);
 
   // Outside click listener
   useEffect(() => {
