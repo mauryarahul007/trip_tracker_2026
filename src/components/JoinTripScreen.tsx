@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { lookupTripByJoinCode, claimTripMember, type JoinLookupResult } from '../services/tripApi';
 import { useTripStore } from '../store/tripStore';
+import { IconMembers, IconCheckCircle, IconClock } from './Icons';
 import { IconMembers, IconCheckCircle, IconClock, IconChevronLeft } from './Icons';
 import { sendPushNotification } from '../services/pushApi';
 import { supabase } from '../services/supabaseClient';
@@ -212,6 +213,7 @@ export function JoinTripScreen() {
       <div className="app-container" style={{ justifyContent: 'center', alignItems: 'center', padding: '24px 20px' }}>
         <div className="fade-in glass-card" style={{ width: '100%', maxWidth: '420px', padding: '28px 24px', textAlign: 'center' }}>
           <h2 style={{ marginBottom: '8px' }}>Everyone's already joined</h2>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>
           <p style={{ color: 'var(--text-secondary)', fontSize: '14px', marginBottom: '20px' }}>
             All members of "{result.tripName}" have already claimed their spot. Ask the trip admin if you think this is a mistake.
           </p>

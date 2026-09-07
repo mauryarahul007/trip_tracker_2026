@@ -5,6 +5,7 @@ type Props = {
 };
 
 /** Shared Privacy Policy body — used by the public /privacy route and Settings About. */
+export function PrivacyPolicyContent() {
 export function PrivacyPolicyContent({ onNavigate }: Props = {}) {
   const renderTermsLink = () => {
     if (onNavigate) {
@@ -113,6 +114,8 @@ export function PrivacyPolicyContent({ onNavigate }: Props = {}) {
       <section>
         <h2>Your Rights &amp; Account Deletion</h2>
         <p>You can access, correct, or export your trip and expense data at any time from within the app.
+          To delete your account, go to <strong>Settings &rarr; Delete Account</strong> in the app, or visit
+          <a href="/delete-account"> trip-tracker.blackmaroon.in/delete-account</a> from any browser -- no
           To delete your account, go to <strong>Settings &rarr; Delete Account</strong> in the app, or visit{' '}
           <Link to="/delete-account">trip-tracker.blackmaroon.in/delete-account</Link> from any browser -- no
           install required. Deleting your account also deletes every trip you own; see that page for the
@@ -121,6 +124,8 @@ export function PrivacyPolicyContent({ onNavigate }: Props = {}) {
 
       <section>
         <h2>Children's Privacy</h2>
+        <p>Trip Tracker is not directed at children, and you must be at least 13 years old to use it (see our
+          <a href="/terms"> Terms of Service</a>). We do not knowingly collect personal information from anyone
         <p>Trip Tracker is not directed at children, and you must be at least 13 years old to use it (see our{' '}
           {renderTermsLink()}). We do not knowingly collect personal information from anyone
           under 13. If you believe a child has provided us data, contact us and we'll remove it.</p>
