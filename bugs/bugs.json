@@ -6014,5 +6014,31 @@
     "resolvedBy": "claude-cli",
     "resolvedAt": "2026-09-10T17:20:20.702Z",
     "resolutionNote": "Fixed in commit ffa9c97 (migration 0080_security_hardening_phase5.sql, applied to remote DB; see decisions.md #143)."
+  },
+  {
+    "id": "BUG-204",
+    "title": "Android allowBackup=true allowed WebView/session extraction via adb backup",
+    "description": "Android allowBackup=true allowed WebView/session extraction via adb backup",
+    "severity": "medium",
+    "category": "auth",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-09-10T17:27:54.264Z",
+    "updatedAt": "2026-09-10T17:27:54.566Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-09-10T17:27:54.565Z",
+    "resolutionNote": "Fixed in commit c670cb0 (android:allowBackup set to false); see decisions.md #144."
   }
 ]
