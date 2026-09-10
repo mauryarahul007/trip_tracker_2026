@@ -1,12 +1,12 @@
 /* Ops Deck — superadmin portal visual system. Scoped under .ops-deck so it
    never leaks into the traveler app's cream/teal theme.
 
-   "Ledger Ops" direction: the same observability-console register (Grafana/
-   Datadog, not a flight-deck) rebuilt on the traveler app's own teal/cream
-   identity, so the Bug Ledger and the Ops Deck read as one product instead
-   of a bolted-on dark theme. One accent (teal) carries emphasis; mint/coral
-   are reserved strictly for status. Responds to the same light/dark/system
-   choice as the rest of the app (data-theme on :root, set in App.tsx).
+   Ops Deck v2: MatDash-style violet (#6D5EF6) on a dark-indigo dotted
+   wallpaper with a floating white app card. --amber is the product accent
+   (historically misnamed). Open/caution stay --warning (real amber);
+   resolved is --safe; critical is --danger. Traveler cream/teal is unchanged
+   because this file is scoped under .ops-deck. Responds to the same
+   light/dark/system choice as the rest of the app (data-theme on :root).
 
    Reconciled against DESIGN.md (the traveler app's system):
    --r-sm/--r-md/--r-lg/--r-pill below are the SAME four values DESIGN.md
@@ -27,50 +27,49 @@
   --r-md: 14px;
   --r-lg: 20px;
   --r-pill: 9999px;
-  --bg-void: #F4F5FA;
+  --bg-void: #F6F4FC;
   --bg-panel: #FFFFFF;
-  --bg-panel-raised: #F8FAFC;
-  --bg-inset: rgba(28, 42, 104, 0.04);
-  --line: #E2E8F0;
-  --line-strong: #CBD5E1;
-  --text-primary: #1E293B;
-  --text-secondary: #64748B;
-  --text-tertiary: #94A3B8;
-  --amber: #0FA98F;
-  --amber-dim: rgba(15, 169, 143, 0.10);
-  --amber-line: rgba(15, 169, 143, 0.25);
-  --amber-deep: #0B7C69;
-  --amber-hover: #0C8F79;
+  --bg-panel-raised: #FBFAFF;
+  --bg-inset: rgba(109, 94, 246, 0.08);
+  --line: #E8E4F4;
+  --line-strong: #D4CEEA;
+  --text-primary: #1A1633;
+  --text-secondary: #5B5678;
+  --text-tertiary: #8B86A8;
+  --amber: #6D5EF6;
+  --amber-dim: rgba(109, 94, 246, 0.12);
+  --amber-line: rgba(109, 94, 246, 0.28);
+  --amber-deep: #5546E0;
+  --amber-hover: #8578F8;
   --on-amber: #FFFFFF;
   --orange: #FF7A00;
   --orange-dim: rgba(255, 122, 0, 0.12);
   --orange-line: rgba(255, 122, 0, 0.30);
-  --cyan: #0FA98F;
-  --cyan-dim: rgba(15, 169, 143, 0.10);
+  --cyan: #6D5EF6;
+  --cyan-dim: rgba(109, 94, 246, 0.12);
   --safe: #10B981;
   --safe-dim: rgba(16, 185, 129, 0.12);
   --safe-line: rgba(16, 185, 129, 0.35);
-  --danger: #EF4444;
-  --danger-dim: rgba(239, 68, 68, 0.12);
-  --danger-line: rgba(239, 68, 68, 0.30);
-  --danger-hover-dim: rgba(239, 68, 68, 0.18);
-  --severity-critical: #EF4444;
+  --danger: #F43F5E;
+  --danger-dim: rgba(244, 63, 94, 0.12);
+  --danger-line: rgba(244, 63, 94, 0.30);
+  --danger-hover-dim: rgba(244, 63, 94, 0.18);
+  --severity-critical: #F43F5E;
   --severity-high: #B45309;
   --severity-medium: #64748B;
   --severity-low: #94A3B8;
-  --radial-glow: rgba(15, 169, 143, 0.06);
-  --card-shadow: 0 1px 2px rgba(22, 36, 31, 0.04), 0 10px 26px -12px rgba(22, 36, 31, 0.14);
-  --card-shadow-hover: 0 4px 10px -2px rgba(22, 36, 31, 0.08), 0 20px 40px -16px rgba(22, 36, 31, 0.18);
-  --shadow-sm: 0 1px 2px rgba(22, 36, 31, 0.06);
-  --shadow-lg: 0 24px 56px -20px rgba(22, 36, 31, 0.28);
-  --hero-gradient: linear-gradient(135deg, var(--amber-deep), var(--amber));
-  /* Fleet Vitals theme: mint outer frame + promo card, used only by the
-     shell chrome (AdminPortalLayout), not by page content. */
-  --vitals-outer: #D9F0EA;
-  --vitals-frame-shadow: 0 30px 70px -30px rgba(11, 60, 50, 0.35);
-  --promo: #FBDE7A;
-  --promo-deep: #E8C24A;
-  --promo-ink: #3A2E00;
+  --radial-glow: rgba(109, 94, 246, 0.14);
+  --card-shadow: 0 1px 2px rgba(26, 22, 51, 0.04), 0 10px 26px -12px rgba(26, 22, 51, 0.12);
+  --card-shadow-hover: 0 4px 10px -2px rgba(26, 22, 51, 0.08), 0 20px 40px -16px rgba(26, 22, 51, 0.16);
+  --shadow-sm: 0 1px 2px rgba(26, 22, 51, 0.06);
+  --shadow-lg: 0 24px 56px -20px rgba(26, 22, 51, 0.22);
+  --hero-gradient: linear-gradient(118deg, #6D5EF6 0%, #A78BFA 52%, #DDD6FE 100%);
+  /* Indigo dotted wallpaper + lavender promo, used only by the shell chrome. */
+  --vitals-outer: #1B1540;
+  --vitals-frame-shadow: 0 30px 70px -30px rgba(27, 21, 64, 0.55);
+  --promo: #EDE9FE;
+  --promo-deep: #DDD6FE;
+  --promo-ink: #4C1D95;
   --mono: "JetBrains Mono", ui-monospace, "SF Mono", "Cascadia Mono", Consolas, monospace;
   --display: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --body: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -83,93 +82,93 @@
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) .ops-deck {
-    --bg-void: #12141A;
-    --bg-panel: #1A1E29;
-    --bg-panel-raised: #222836;
-    --bg-inset: rgba(56, 189, 248, 0.08);
-    --line: #2E3440;
-    --line-strong: #3F4756;
+    --bg-void: #16122A;
+    --bg-panel: #1E1A33;
+    --bg-panel-raised: #262240;
+    --bg-inset: rgba(167, 139, 250, 0.12);
+    --line: #3A3458;
+    --line-strong: #4C4570;
     --text-primary: #F8FAFC;
-    --text-secondary: #94A3B8;
-    --text-tertiary: #64748B;
-    --amber: #2DD4BF;
-    --amber-dim: rgba(45, 212, 191, 0.14);
-    --amber-line: rgba(45, 212, 191, 0.35);
-    --amber-deep: #0F9C89;
-    --amber-hover: #5EEAD4;
-    --on-amber: #0B1F1B;
+    --text-secondary: #B8B0D4;
+    --text-tertiary: #7C7598;
+    --amber: #A78BFA;
+    --amber-dim: rgba(167, 139, 250, 0.16);
+    --amber-line: rgba(167, 139, 250, 0.38);
+    --amber-deep: #7C6AF0;
+    --amber-hover: #C4B5FD;
+    --on-amber: #1A1633;
     --orange: #FF7A00;
     --orange-dim: rgba(255, 122, 0, 0.18);
     --orange-line: rgba(255, 122, 0, 0.35);
-    --cyan: #2DD4BF;
-    --cyan-dim: rgba(45, 212, 191, 0.14);
+    --cyan: #A78BFA;
+    --cyan-dim: rgba(167, 139, 250, 0.16);
     --safe: #34D399;
     --safe-dim: rgba(52, 211, 153, 0.14);
     --safe-line: rgba(52, 211, 153, 0.35);
-    --danger: #F87171;
-    --danger-dim: rgba(248, 113, 113, 0.14);
-    --danger-line: rgba(248, 113, 113, 0.35);
-    --danger-hover-dim: rgba(248, 113, 113, 0.20);
-    --severity-critical: #F87171;
+    --danger: #FB7185;
+    --danger-dim: rgba(251, 113, 133, 0.14);
+    --danger-line: rgba(251, 113, 133, 0.35);
+    --danger-hover-dim: rgba(251, 113, 133, 0.20);
+    --severity-critical: #FB7185;
     --severity-high: #FBBF24;
     --severity-medium: #94A3B8;
     --severity-low: #64748B;
-    --radial-glow: rgba(45, 212, 191, 0.12);
+    --radial-glow: rgba(167, 139, 250, 0.14);
     --card-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 12px 30px rgba(0, 0, 0, 0.4);
     --card-shadow-hover: 0 4px 10px rgba(0, 0, 0, 0.3), 0 24px 48px -12px rgba(0, 0, 0, 0.5);
     --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
     --shadow-lg: 0 28px 60px -18px rgba(0, 0, 0, 0.6);
-    --hero-gradient: linear-gradient(135deg, var(--amber-deep), var(--amber));
-    --vitals-outer: #0F2C27;
+    --hero-gradient: linear-gradient(118deg, #5546E0 0%, #7C6AF0 50%, #A78BFA 100%);
+    --vitals-outer: #0E0B24;
     --vitals-frame-shadow: 0 30px 70px -30px rgba(0, 0, 0, 0.6);
-    --promo: #5B4A1E;
-    --promo-deep: #7A6428;
-    --promo-ink: #F8ECC4;
+    --promo: #2E2654;
+    --promo-deep: #3D3470;
+    --promo-ink: #EDE9FE;
   }
 }
 :root[data-theme="dark"] .ops-deck {
-  --bg-void: #12141A;
-  --bg-panel: #1A1E29;
-  --bg-panel-raised: #222836;
-  --bg-inset: rgba(56, 189, 248, 0.08);
-  --line: #2E3440;
-  --line-strong: #3F4756;
+  --bg-void: #16122A;
+  --bg-panel: #1E1A33;
+  --bg-panel-raised: #262240;
+  --bg-inset: rgba(167, 139, 250, 0.12);
+  --line: #3A3458;
+  --line-strong: #4C4570;
   --text-primary: #F8FAFC;
-  --text-secondary: #94A3B8;
-  --text-tertiary: #64748B;
-  --amber: #2DD4BF;
-  --amber-dim: rgba(45, 212, 191, 0.14);
-  --amber-line: rgba(45, 212, 191, 0.35);
-  --amber-deep: #0F9C89;
-  --amber-hover: #5EEAD4;
-  --on-amber: #0B1F1B;
+  --text-secondary: #B8B0D4;
+  --text-tertiary: #7C7598;
+  --amber: #A78BFA;
+  --amber-dim: rgba(167, 139, 250, 0.16);
+  --amber-line: rgba(167, 139, 250, 0.38);
+  --amber-deep: #7C6AF0;
+  --amber-hover: #C4B5FD;
+  --on-amber: #1A1633;
   --orange: #FF7A00;
   --orange-dim: rgba(255, 122, 0, 0.18);
   --orange-line: rgba(255, 122, 0, 0.35);
-  --cyan: #2DD4BF;
-  --cyan-dim: rgba(45, 212, 191, 0.14);
+  --cyan: #A78BFA;
+  --cyan-dim: rgba(167, 139, 250, 0.16);
   --safe: #34D399;
   --safe-dim: rgba(52, 211, 153, 0.14);
   --safe-line: rgba(52, 211, 153, 0.35);
-  --danger: #F87171;
-  --danger-dim: rgba(248, 113, 113, 0.14);
-  --vitals-outer: #0F2C27;
+  --danger: #FB7185;
+  --danger-dim: rgba(251, 113, 133, 0.14);
+  --vitals-outer: #0E0B24;
   --vitals-frame-shadow: 0 30px 70px -30px rgba(0, 0, 0, 0.6);
-  --promo: #5B4A1E;
-  --promo-deep: #7A6428;
-  --promo-ink: #F8ECC4;
-  --danger-line: rgba(248, 113, 113, 0.35);
-  --danger-hover-dim: rgba(248, 113, 113, 0.20);
-  --severity-critical: #F87171;
+  --promo: #2E2654;
+  --promo-deep: #3D3470;
+  --promo-ink: #EDE9FE;
+  --danger-line: rgba(251, 113, 133, 0.35);
+  --danger-hover-dim: rgba(251, 113, 133, 0.20);
+  --severity-critical: #FB7185;
   --severity-high: #FBBF24;
   --severity-medium: #94A3B8;
   --severity-low: #64748B;
-  --radial-glow: rgba(45, 212, 191, 0.12);
+  --radial-glow: rgba(167, 139, 250, 0.14);
   --card-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 12px 30px rgba(0, 0, 0, 0.4);
   --card-shadow-hover: 0 4px 10px rgba(0, 0, 0, 0.3), 0 24px 48px -12px rgba(0, 0, 0, 0.5);
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
   --shadow-lg: 0 28px 60px -18px rgba(0, 0, 0, 0.6);
-  --hero-gradient: linear-gradient(135deg, var(--amber-deep), var(--amber));
+  --hero-gradient: linear-gradient(118deg, #5546E0 0%, #7C6AF0 50%, #A78BFA 100%);
 }
 
 .ops-deck * { box-sizing: border-box; }
@@ -198,11 +197,14 @@
   .ops-shell { padding: calc(10px + var(--safe-top, 0px)) max(12px, var(--safe-right, 12px)) 0 max(12px, var(--safe-left, 12px)); }
 }
 
-/* ---------- Fleet Vitals shell: mint outer frame + white rounded app
-   card (replaces the old full-bleed statusbar+rail layout). .ops-shell
-   above still owns the outer max-width/safe-area/height; this just tints
-   its background and wraps a floating card inside it. ---------- */
-.ops-shell { background: var(--vitals-outer); border-radius: var(--r-lg); }
+/* ---------- Fleet Vitals shell: indigo dotted wallpaper + white rounded
+   app card. .ops-shell still owns max-width/safe-area/height. ---------- */
+.ops-shell {
+  background-color: var(--vitals-outer);
+  background-image: radial-gradient(rgba(255, 255, 255, 0.14) 1px, transparent 1px);
+  background-size: 18px 18px;
+  border-radius: var(--r-lg);
+}
 .ops-vitals-app {
   flex: 1;
   min-height: 0;
@@ -475,12 +477,12 @@
 }
 
 .ops-switch-item[data-current="true"] {
-  background: var(--text-primary);
-  color: var(--bg-panel);
+  background: var(--amber);
+  color: var(--on-amber);
 }
 
 .ops-switch-item[data-current="true"] .ops-lamp {
-  background: var(--bg-panel);
+  background: var(--on-amber);
 }
 
 .ops-switch-item .ops-lbl {
@@ -497,13 +499,74 @@
   font-family: var(--mono);
   font-size: 9px;
   color: var(--text-tertiary);
-  display: block;
-  margin-top: 1px;
+  display: none;
 }
 
 .ops-switch-item[data-current="true"] .ops-code {
-  color: var(--bg-panel);
-  opacity: 0.65;
+  color: var(--on-amber);
+  opacity: 0.7;
+}
+
+.ops-panel { min-width: 0; overflow-y: auto; padding-bottom: calc(60px + var(--safe-bottom, 0px)); overscroll-behavior: contain; }
+@media (max-width: 640px) { .ops-panel { padding-bottom: calc(32px + var(--safe-bottom, 0px)); } }
+
+.ops-page-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 18px; flex-wrap: wrap; }
+.ops-page-head h2 { font-family: var(--display); font-weight: 700; font-size: 19px; letter-spacing: -0.01em; margin: 0 0 4px; color: var(--text-primary); text-wrap: balance; }
+.ops-page-head p { font-family: var(--body); font-size: 12.5px; color: var(--text-secondary); margin: 0; max-width: 56ch; line-height: 1.5; }
+
+.ops-fleet-hero {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+  min-height: 132px;
+  padding: 22px 24px;
+  border-radius: var(--r-lg);
+  background: var(--hero-gradient);
+  color: #FFFFFF;
+  overflow: hidden;
+}
+.ops-fleet-kicker {
+  margin: 0 0 6px;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  opacity: 0.85;
+}
+.ops-fleet-hero h2 {
+  margin: 0;
+  font-family: var(--display);
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: #FFFFFF;
+  max-width: 18ch;
+}
+.ops-fleet-hero-stats {
+  display: flex;
+  gap: 28px;
+  margin: 0;
+}
+.ops-fleet-hero-stats div { margin: 0; }
+.ops-fleet-hero-stats dt {
+  font-size: 11px;
+  opacity: 0.85;
+  margin: 0 0 4px;
+}
+.ops-fleet-hero-stats dd {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+@media (max-width: 760px) {
+  .ops-fleet-hero {
+    flex-direction: column;
+    align-items: flex-start;
+    min-height: 0;
+  }
+  .ops-fleet-hero h2 { font-size: 22px; }
 }
 
 .ops-panel { min-width: 0; overflow-y: auto; padding-bottom: calc(60px + var(--safe-bottom, 0px)); overscroll-behavior: contain; }
@@ -705,6 +768,7 @@
 .ops-trip-route { font-family: var(--mono); font-size: 10.5px; color: var(--text-tertiary); margin-top: 2px; }
 
 .ops-badge { font-size: 9.5px; font-weight: 700; letter-spacing: 0.02em; padding: 3px 9px; border-radius: var(--r-pill); text-transform: none; display: inline-block; }
+button.ops-badge { border: none; cursor: pointer; font-family: inherit; }
 .ops-badge.active { color: var(--safe); background: var(--safe-dim); }
 .ops-badge.grounded { color: var(--danger); background: var(--danger-dim); }
 .ops-badge.archived { color: var(--text-tertiary); background: var(--bg-inset); }
@@ -792,17 +856,17 @@
 
 /* ---------- Bug Ledger ---------- */
 .ops-btn-primary {
-  background: linear-gradient(135deg, #FF7A00 0%, #EA580C 100%);
-  border-color: #FF7A00;
-  color: #FFFFFF;
+  background: var(--amber);
+  border-color: var(--amber);
+  color: var(--on-amber);
   font-weight: 700;
-  box-shadow: 0 2px 8px rgba(255, 122, 0, 0.28);
+  box-shadow: 0 2px 8px rgba(109, 94, 246, 0.28);
 }
 .ops-btn-primary:hover {
-  background: linear-gradient(135deg, #FF8C1A 0%, #F97316 100%);
-  border-color: #FF8C1A;
-  color: #FFFFFF;
-  box-shadow: 0 4px 12px rgba(255, 122, 0, 0.38);
+  background: var(--amber-hover);
+  border-color: var(--amber-hover);
+  color: var(--on-amber);
+  box-shadow: 0 4px 12px rgba(109, 94, 246, 0.38);
   transform: translateY(-1px);
 }
 
@@ -869,6 +933,7 @@ legend.ops-form-label { padding: 0; width: 100%; }
   --warning: #B45309;
   --warning-dim: rgba(180, 83, 9, 0.12);
   --warning-line: rgba(180, 83, 9, 0.32);
+  --status-open: var(--warning);
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) .ops-deck {
@@ -1501,6 +1566,22 @@ legend.ops-form-label { padding: 0; width: 100%; }
   background: #10B981;
 }
 
+.ops-velocity-segment.seg-open {
+  background: var(--status-open);
+}
+
+.ops-velocity-segment.seg-in-progress {
+  background: var(--cyan);
+}
+
+.ops-velocity-segment.seg-resolved {
+  background: var(--safe);
+}
+
+.ops-velocity-segment.seg-wont-fix {
+  background: var(--text-tertiary);
+}
+
 /* View Switcher */
 .ops-view-switcher {
   display: inline-flex;
@@ -1675,7 +1756,8 @@ legend.ops-form-label { padding: 0; width: 100%; }
 }
 
 /* Linear-Grade Dense Table View & Sticky Excel-Style Viewport */
-.ops-feature-table-viewport {
+.ops-feature-table-viewport,
+.ops-bug-table-viewport {
   width: 100%;
   max-height: calc(100vh - 280px);
   min-height: 380px;
@@ -1688,14 +1770,16 @@ legend.ops-form-label { padding: 0; width: 100%; }
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
 }
 
-.ops-dense-feature-table {
+.ops-dense-feature-table,
+.ops-dense-bug-table {
   width: 100%;
   border-collapse: separate;
   border-spacing: 0;
   background: var(--bg-panel);
 }
 
-.ops-dense-feature-table thead th {
+.ops-dense-feature-table thead th,
+.ops-dense-bug-table thead th {
   position: sticky;
   top: 0;
   z-index: 10;
@@ -1712,7 +1796,8 @@ legend.ops-form-label { padding: 0; width: 100%; }
   white-space: nowrap;
 }
 
-.ops-dense-feature-table td {
+.ops-dense-feature-table td,
+.ops-dense-bug-table td {
   padding: 10px 14px;
   font-size: 12px;
   border-bottom: 1px solid var(--line);
@@ -1722,12 +1807,133 @@ legend.ops-form-label { padding: 0; width: 100%; }
   vertical-align: middle;
 }
 
-.ops-dense-feature-table tr:hover td {
+.ops-dense-feature-table tr:hover td,
+.ops-dense-bug-table tbody tr:hover td {
   background: var(--bg-inset);
 }
 
-.ops-dense-feature-table tr:last-child td {
+.ops-dense-feature-table tr:last-child td,
+.ops-dense-bug-table tr:last-child td {
   border-bottom: none;
+}
+
+.ops-dense-bug-table tbody tr {
+  cursor: pointer;
+}
+
+.ops-dense-bug-table tbody tr[data-open="true"] td {
+  background: var(--amber-dim);
+}
+
+.ops-dense-bug-table td.ops-bug-check {
+  width: 36px;
+  padding-right: 0;
+}
+
+.ops-dense-bug-table tr[data-severity="critical"] td:first-child {
+  box-shadow: inset 3px 0 0 var(--danger);
+}
+
+.ops-dense-bug-table tr[data-severity="high"] td:first-child {
+  box-shadow: inset 3px 0 0 var(--warning);
+}
+
+.ops-bug-title-cell {
+  font-weight: 600;
+  line-height: 1.35;
+  max-width: 320px;
+}
+
+.ops-bug-title-cell .ops-bug-meta {
+  margin-top: 2px;
+}
+
+.ops-bug-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.ops-bug-toolbar .ops-search-wrap {
+  min-width: 180px;
+  flex: 1 1 180px;
+}
+
+.ops-page-head-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.ops-toast[data-tone="danger"] {
+  background: var(--danger-dim);
+  border-color: var(--danger-line);
+  color: var(--danger);
+}
+
+.ops-kanban-col[data-status="open"] { border-top: 3px solid var(--status-open); }
+.ops-kanban-col[data-status="in_progress"] { border-top: 3px solid var(--cyan); }
+.ops-kanban-col[data-status="resolved"] { border-top: 3px solid var(--safe); }
+.ops-kanban-col[data-status="wont_fix"] { border-top: 3px solid var(--text-tertiary); }
+
+.ops-rail-item-count {
+  margin-left: auto;
+  font-family: var(--mono);
+  font-size: 9.5px;
+  font-weight: 700;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: var(--r-pill);
+  background: var(--danger-dim);
+  color: var(--danger);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.ops-switch-item[data-current="true"] .ops-rail-item-count {
+  background: rgba(255, 255, 255, 0.22);
+  color: var(--on-amber);
+}
+
+.ops-radar-compact {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  align-items: center;
+}
+
+.ops-radar-compact-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.ops-radar-compact-item .ms {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.ops-velocity-count {
+  border: none;
+  background: none;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+.ops-velocity-count[data-active="true"] strong {
+  color: var(--text-primary);
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
 /* ==========================================================================

@@ -777,5 +777,21 @@
     "shippedAt": "2026-09-07T18:43:40.332Z",
     "shippedBy": "agent",
     "shippedNote": "Shipped"
+  },
+  {
+    "id": "FEAT-050",
+    "title": "Ops Deck v2 violet visual system",
+    "description": "Retoken Superadmin Ops Deck and Bug Ledger to the approved v2 violet mockups (indigo dotted shell, fleet snapshot hero, violet rail pill). Auto-crash reporter ignores recoverable chunk-load errors so HMR/stale-deploy noise stays off the ledger.",
+    "category": "admin",
+    "status": "shipped",
+    "requestedBy": "cursor-grok",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-09-10T16:23:24.726Z",
+    "updatedAt": "2026-09-10T16:23:24.726Z",
+    "shippedAt": "2026-09-10T16:23:24.726Z",
+    "shippedBy": "cursor-grok",
+    "shippedNote": "Shipped in v3.9.0. Also closed live ledger BUG-145, BUG-147, BUG-176–178, BUG-191 as already-fixed or HMR/stale-chunk."
   }
 ]

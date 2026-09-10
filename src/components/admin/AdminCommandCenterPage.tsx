@@ -163,63 +163,32 @@ export function AdminCommandCenterPage({ trips, bugs, features, users, auditLogs
           <p>Everything that needs your eyes today, in one screen — before you drop into a section.</p>
         </div>
         <div style={{ display: 'flex', gap: '8px' }}>
-          <button type="button" className="ops-btn" disabled={isPinging} onClick={() => void handlePingServices()}>
-            <IconRefresh size={13} className={isPinging ? 'icon-sm ops-spin' : 'icon-sm'} /> {isPinging ? 'Pinging Services...' : 'Ping Services'}
-          </button>
           <button type="button" className="ops-btn" disabled={isRefreshing} onClick={() => void onRefresh()}>
             <IconRefresh size={13} className={isRefreshing ? 'icon-sm ops-spin' : 'icon-sm'} /> {isRefreshing ? 'Refreshing...' : 'Refresh'}
           </button>
         </div>
       </div>
 
-      <div className="ops-radar-strip">
-        <div className="ops-radar-header">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span className="ops-dot" />
-            <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-primary)' }}>
-              Service heartbeat
-            </span>
+      <section className="ops-fleet-hero" aria-label="Fleet snapshot">
+        <div>
+          <p className="ops-fleet-kicker">Fleet snapshot</p>
+          <h2>How the operation looks tonight</h2>
+        </div>
+        <dl className="ops-fleet-hero-stats">
+          <div>
+            <dt>Active trips</dt>
+            <dd>{activeTrips.length}</dd>
           </div>
-          <span
-            className={`ops-badge ${
-              !latencies
-                ? 'archived'
-                : Object.values(latencies).some((l) => l.status === 'crit')
-                  ? 'grounded'
-                  : Object.values(latencies).some((l) => l.status === 'warn')
-                    ? 'caution'
-                    : 'active'
-            }`}
-            style={{ fontSize: '11px' }}
-          >
-            {latencies
-              ? Object.values(latencies).some((l) => l.status === 'crit')
-                ? 'One or more checks failed'
-                : Object.values(latencies).some((l) => l.status === 'warn')
-                  ? 'Slow responses'
-                  : 'Checks passed'
-              : 'Ping to measure Auth, Postgres, and Storage'}
-          </span>
-        </div>
-
-        <div className="ops-radar-grid">
-          {(
-            [
-              ['Supabase Auth', latencies?.auth],
-              ['Postgres (bugs)', latencies?.db],
-              ['Storage (receipts)', latencies?.storage],
-            ] as const
-          ).map(([label, probe]) => (
-            <div className="ops-radar-card" key={label}>
-              <div className="ops-radar-label">
-                <span>{label}</span>
-                <span className={`ops-radar-dot ${probe?.status ?? 'idle'}`} />
-              </div>
-              <div className="ops-radar-value">{probe ? `${probe.ms} ms` : '—'}</div>
-            </div>
-          ))}
-        </div>
-      </div>
+          <div>
+            <dt>Travelers</dt>
+            <dd>{users.length}</dd>
+          </div>
+          <div>
+            <dt>Open bugs</dt>
+            <dd>{openBugs.length}</dd>
+          </div>
+        </dl>
+      </section>
 
       <div className="ops-kpi-row">
         <div className="ops-card ops-kpi-card">
@@ -241,6 +210,56 @@ export function AdminCommandCenterPage({ trips, bugs, features, users, auditLogs
           <div className="ops-kpi-label">Feature Requests</div>
           <div className="ops-kpi-value" style={{ color: 'var(--amber)' }}>{activeFeatureRequests.length}</div>
           <div className="ops-kpi-delta">requested, planned or in flight</div>
+        </div>
+      </div>
+
+      <div className="ops-radar-strip">
+        <div className="ops-radar-header">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span className="ops-dot" />
+            <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-primary)' }}>
+              Service heartbeat
+            </span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+            <span
+              className={`ops-badge ${
+                !latencies
+                  ? 'archived'
+                  : Object.values(latencies).some((l) => l.status === 'crit')
+                    ? 'grounded'
+                    : Object.values(latencies).some((l) => l.status === 'warn')
+                      ? 'caution'
+                      : 'active'
+              }`}
+            >
+              {latencies
+                ? Object.values(latencies).some((l) => l.status === 'crit')
+                  ? 'One or more checks failed'
+                  : Object.values(latencies).some((l) => l.status === 'warn')
+                    ? 'Slow responses'
+                    : 'Checks passed'
+                : 'Idle'}
+            </span>
+            <button type="button" className="ops-btn" disabled={isPinging} onClick={() => void handlePingServices()}>
+              <IconRefresh size={13} className={isPinging ? 'icon-sm ops-spin' : 'icon-sm'} /> {isPinging ? 'Pinging...' : 'Ping'}
+            </button>
+          </div>
+        </div>
+        <div className="ops-radar-compact">
+          {(
+            [
+              ['Auth', latencies?.auth],
+              ['Postgres', latencies?.db],
+              ['Storage', latencies?.storage],
+            ] as const
+          ).map(([label, probe]) => (
+            <span className="ops-radar-compact-item" key={label}>
+              <span className={`ops-radar-dot ${probe?.status ?? 'idle'}`} />
+              {label}
+              <span className="ms">{probe ? `${probe.ms} ms` : '—'}</span>
+            </span>
+          ))}
         </div>
       </div>
 

@@ -9,11 +9,11 @@
 
 | Metric | Count |
 | :--- | :--- |
-| **Total Tracked** | **49** |
+| **Total Tracked** | **50** |
 | **💡 Requested** | **2** |
 | **📋 Planned** | **0** |
 | **🟡 In Progress** | **0** |
-| **✅ Shipped** | **47** |
+| **✅ Shipped** | **48** |
 | **⚪ Won't Do** | **0** |
 
 ---
@@ -99,6 +99,7 @@ CI pipeline for lint, build, and test on push/PR
 | **FEAT-047** | In-Flight Remote Offline State Banner and pending mutation queue drawer | `ui-ux` | `agent` | `agent` | Shipped |
 | **FEAT-048** | Luggage-Tag Skeleton Loaders with ticket cutout and barcode shimmer | `ui-ux` | `agent` | `agent` | Shipped |
 | **FEAT-049** | Boarding Pass Flip Flight and Itinerary Status Indicator with live glowing dot | `ui-ux` | `agent` | `agent` | Shipped |
+| **FEAT-050** | Ops Deck v2 violet visual system | `admin` | `cursor-grok` | `cursor-grok` | Shipped in v3.9.0. Also closed live ledger BUG-145, BUG-147, BUG-176–178, BUG-191 as already-fixed or HMR/stale-chunk. |
 
 ---
 

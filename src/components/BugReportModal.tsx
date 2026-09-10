@@ -425,17 +425,8 @@ export function BugReportModal({
 
       {submitResult && (
         <div
-          className="bug-resolution-note"
-          style={{
-            marginBottom: '12px',
-            textAlign: 'center',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '8px',
-            color: submitResult.ok ? 'var(--color-success)' : 'var(--color-danger)',
-          }}
+          className="bug-resolution-note bug-filed-ticket"
+          style={{ color: submitResult.ok ? 'var(--color-success)' : 'var(--color-danger)' }}
         >
           <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
             {submitResult.ok ? <IconCheckCircle size={15} className="icon-sm" /> : <IconAlertCircle size={15} className="icon-sm" />}

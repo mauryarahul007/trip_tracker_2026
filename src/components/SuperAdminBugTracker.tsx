@@ -1,4 +1,4 @@
-import { Fragment, useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { useHistoryBack } from '../utils/useHistoryBack';
 import { useEscapeKey } from '../utils/useEscapeKey';
@@ -69,7 +69,7 @@ function severityColor(severity: BugRecord['severity']): string {
 function statusMeta(status: BugRecord['status']): { label: string; color: string } {
   switch (status) {
     case 'open':
-      return { label: 'Open', color: 'var(--warning)' };
+      return { label: 'Open', color: 'var(--status-open)' };
     case 'in_progress':
       return { label: 'In Progress', color: 'var(--cyan)' };
     case 'resolved':
@@ -298,7 +298,6 @@ export function SuperAdminBugTracker({ onBack, isAdmin = true, onRequestConfirm,
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
-  const [expandedBugId, setExpandedBugId] = useState<string | null>(null);
   const [sortMode, setSortMode] = useState<SortMode>('newest');
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [drawerBugId, setDrawerBugId] = useState<string | null>(null);
@@ -343,8 +342,8 @@ export function SuperAdminBugTracker({ onBack, isAdmin = true, onRequestConfirm,
     setTimeout(() => setToasts((prev) => prev.filter((t) => t.id !== id)), 3000);
   };
 
-  const loadBugs = async () => {
-    setLoading(true);
+  const loadBugs = async (opts?: { quiet?: boolean }) => {
+    if (!opts?.quiet) setLoading(true);
     try {
       const data = await fetchBugs();
       setBugs(data);
@@ -409,8 +408,9 @@ export function SuperAdminBugTracker({ onBack, isAdmin = true, onRequestConfirm,
     const inProgress = bugs.filter((b) => b.status === 'in_progress').length;
     const resolved = bugs.filter((b) => b.status === 'resolved').length;
     const wontFix = bugs.filter((b) => b.status === 'wont_fix').length;
-    const critical = bugs.filter((b) => b.severity === 'critical' && b.status !== 'resolved').length;
-    return { total, open, inProgress, resolved, wontFix, critical };
+    const critical = bugs.filter((b) => b.severity === 'critical' && b.status !== 'resolved' && b.status !== 'wont_fix').length;
+    const pipeline = Math.max(open + inProgress + resolved, 1);
+    return { total, open, inProgress, resolved, wontFix, critical, pipeline };
   }, [bugs]);
 
   const handleCreateBug = async (e: React.FormEvent) => {
@@ -693,11 +693,24 @@ ${bug.diagnostics?.stackTrace ? `#### Stack Trace\n\`\`\`text\n${bug.diagnostics
       <div className="ops-page-head">
         <div>
           <h2>Bug Ledger</h2>
-          <p>Every case found by Antigravity, Claude CLI, or human QA — synced to one ledger.</p>
+          <p>Triage traveler-reported cases. Scan the table, open a drawer, or drag the board.</p>
         </div>
-        <div style={{ display: 'flex', gap: '8px' }}>
-          <button type="button" className="ops-btn" onClick={loadBugs} title="Sync with the CLI ledger" aria-label="Sync with the CLI ledger">
-            <IconRefresh size={14} className="icon-sm" />
+        <div className="ops-page-head-actions">
+          {stats.critical > 0 && (
+            <button
+              type="button"
+              className="ops-badge grounded"
+              onClick={() => setStatusFilter(statusFilter === 'critical' ? 'all' : 'critical')}
+              aria-pressed={statusFilter === 'critical'}
+            >
+              {stats.critical} critical
+            </button>
+          )}
+          <button type="button" className="ops-btn" disabled={loading} onClick={() => void loadBugs({ quiet: true })} title="Sync with the ledger" aria-label="Refresh cases">
+            <IconRefresh size={13} className={loading ? 'icon-sm ops-spin' : 'icon-sm'} /> {loading ? 'Refreshing...' : 'Refresh'}
+          </button>
+          <button type="button" className="ops-btn ops-btn-primary" onClick={() => setShowAddModal(true)}>
+            <IconPlus size={13} /> New case
           </button>
           {onBack && (
             <button type="button" className="ops-btn" onClick={onBack} aria-label="Go back" title="Go back">
@@ -710,11 +723,7 @@ ${bug.diagnostics?.stackTrace ? `#### Stack Trace\n\`\`\`text\n${bug.diagnostics
       {toasts.length > 0 && (
         <div className="ops-toast-stack">
           {toasts.map((t) => (
-            <div
-              key={t.id}
-              className="ops-toast"
-              style={t.tone === 'danger' ? { background: 'var(--danger-dim)', borderColor: 'rgba(255,107,94,0.35)', color: 'var(--danger)' } : undefined}
-            >
+            <div key={t.id} className="ops-toast" data-tone={t.tone}>
               {t.tone === 'success' ? <IconCheckCircle size={14} /> : <IconAlertCircle size={14} />}
               {t.text}
             </div>
@@ -722,35 +731,40 @@ ${bug.diagnostics?.stackTrace ? `#### Stack Trace\n\`\`\`text\n${bug.diagnostics
         </div>
       )}
 
-      <div className="ops-stat-row" style={{ marginBottom: '14px' }}>
-        <button type="button" className="ops-stat-btn" data-active={statusFilter === 'all'} onClick={() => setStatusFilter('all')}>
-          <span className="n">{stats.total}</span>
-          <span className="l">Total</span>
-        </button>
-        <button type="button" className="ops-stat-btn" data-active={statusFilter === 'open'} onClick={() => setStatusFilter('open')}>
-          <span className="n" style={{ color: 'var(--amber)' }}>{stats.open}</span>
-          <span className="l">Open</span>
-        </button>
-        <button type="button" className="ops-stat-btn" data-active={statusFilter === 'in_progress'} onClick={() => setStatusFilter('in_progress')}>
-          <span className="n" style={{ color: 'var(--cyan)' }}>{stats.inProgress}</span>
-          <span className="l">In Progress</span>
-        </button>
-        <button type="button" className="ops-stat-btn" data-active={statusFilter === 'resolved'} onClick={() => setStatusFilter('resolved')}>
-          <span className="n" style={{ color: 'var(--safe)' }}>{stats.resolved}</span>
-          <span className="l">Resolved</span>
-        </button>
-        <button type="button" className="ops-stat-btn" data-active={statusFilter === 'wont_fix'} onClick={() => setStatusFilter('wont_fix')}>
-          <span className="n" style={{ color: 'var(--text-tertiary)' }}>{stats.wontFix}</span>
-          <span className="l">Won't Fix</span>
-        </button>
-        <button type="button" className="ops-stat-btn" data-active={statusFilter === 'critical'} onClick={() => setStatusFilter('critical')}>
-          <span className="n" style={{ color: 'var(--danger)' }}>{stats.critical}</span>
-          <span className="l">Critical</span>
-        </button>
+      <div className="ops-velocity-strip">
+        <div className="ops-radar-header">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+            <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-primary)' }}>Triage pipeline</span>
+            <span className="ops-badge">{stats.total} cases</span>
+          </div>
+          <div style={{ display: 'flex', gap: '14px', fontSize: '12px', color: 'var(--text-secondary)', flexWrap: 'wrap' }}>
+            {([
+              ['open', stats.open, 'Open'],
+              ['in_progress', stats.inProgress, 'In Progress'],
+              ['resolved', stats.resolved, 'Resolved'],
+              ['wont_fix', stats.wontFix, "Won't Fix"],
+            ] as const).map(([key, count, label]) => (
+              <button
+                key={key}
+                type="button"
+                className="ops-velocity-count"
+                data-active={statusFilter === key}
+                onClick={() => setStatusFilter(statusFilter === key ? 'all' : key)}
+              >
+                <strong>{count}</strong> {label}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="ops-velocity-progress" title="Share of open, in progress, and resolved">
+          <div className="ops-velocity-segment seg-open" style={{ width: `${(stats.open / stats.pipeline) * 100}%` }} />
+          <div className="ops-velocity-segment seg-in-progress" style={{ width: `${(stats.inProgress / stats.pipeline) * 100}%` }} />
+          <div className="ops-velocity-segment seg-resolved" style={{ width: `${(stats.resolved / stats.pipeline) * 100}%` }} />
+        </div>
       </div>
 
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginBottom: '14px' }}>
-        <div className="ops-search-wrap" style={{ minWidth: '180px' }}>
+      <div className="ops-bug-toolbar">
+        <div className="ops-search-wrap">
           <IconSearch size={16} />
           <input
             type="text"
@@ -787,33 +801,17 @@ ${bug.diagnostics?.stackTrace ? `#### Stack Trace\n\`\`\`text\n${bug.diagnostics
           <option value="status">Sort: Status</option>
         </select>
 
-        <div style={{ display: 'flex', gap: '2px', background: 'var(--bg-inset)', border: '1px solid var(--line-strong)', borderRadius: '10px', padding: '2px' }}>
-          <button
-            type="button"
-            className="ops-chip"
-            data-active={viewMode === 'list'}
-            style={{ border: 'none', padding: '5px 10px' }}
-            onClick={() => setViewMode('list')}
-          >
+        <div className="ops-view-switcher">
+          <button type="button" className={`ops-view-btn${viewMode === 'list' ? ' active' : ''}`} onClick={() => setViewMode('list')}>
             List
           </button>
-          <button
-            type="button"
-            className="ops-chip"
-            data-active={viewMode === 'kanban'}
-            style={{ border: 'none', padding: '5px 10px' }}
-            onClick={() => setViewMode('kanban')}
-          >
-            Kanban
+          <button type="button" className={`ops-view-btn${viewMode === 'kanban' ? ' active' : ''}`} onClick={() => setViewMode('kanban')}>
+            Board
           </button>
         </div>
 
         <button type="button" className="ops-btn" onClick={handleExportJson}>
           <IconDownload size={14} className="icon-sm" /> Export
-        </button>
-
-        <button type="button" className="ops-btn ops-btn-primary" onClick={() => setShowAddModal(true)} style={{ marginLeft: 'auto' }}>
-          <IconPlus size={14} className="icon-sm" /> New Case
         </button>
       </div>
 
@@ -839,10 +837,16 @@ ${bug.diagnostics?.stackTrace ? `#### Stack Trace\n\`\`\`text\n${bug.diagnostics
         </div>
       )}
 
-      {loading ? (
-        <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-secondary)', fontSize: '13px' }}>
-          Loading the ledger&hellip;
-        </div>
+      {loading && bugs.length === 0 ? (
+        <>
+          <div className="ops-skeleton-row">
+            <div className="ops-skeleton-block" style={{ height: 76 }} />
+            <div className="ops-skeleton-block" style={{ height: 76 }} />
+            <div className="ops-skeleton-block" style={{ height: 76 }} />
+            <div className="ops-skeleton-block" style={{ height: 76 }} />
+          </div>
+          <div className="ops-skeleton-block" style={{ height: 160 }} />
+        </>
       ) : sortedBugs.length === 0 ? (
         <div className="ops-card ops-empty-prompt">
           <IconSearch size={20} className="icon" style={{ color: 'var(--text-tertiary)', marginBottom: '8px' }} />
@@ -852,7 +856,7 @@ ${bug.diagnostics?.stackTrace ? `#### Stack Trace\n\`\`\`text\n${bug.diagnostics
         <div className="ops-kanban">
           {(
             [
-              { status: 'open' as const, label: 'Open', color: 'var(--warning)' },
+              { status: 'open' as const, label: 'Open', color: 'var(--status-open)' },
               { status: 'in_progress' as const, label: 'In Progress', color: 'var(--cyan)' },
               { status: 'resolved' as const, label: 'Resolved', color: 'var(--safe)' },
               { status: 'wont_fix' as const, label: "Won't Fix", color: 'var(--text-tertiary)' },
@@ -863,8 +867,8 @@ ${bug.diagnostics?.stackTrace ? `#### Stack Trace\n\`\`\`text\n${bug.diagnostics
               <div
                 className="ops-kanban-col"
                 key={col.status}
+                data-status={col.status}
                 data-drag-over={dragOverStatus === col.status}
-                style={{ borderTopWidth: '3px', borderTopColor: col.color }}
                 onDragOver={(e) => {
                   if (!draggedBugId) return;
                   e.preventDefault();
@@ -911,10 +915,12 @@ ${bug.diagnostics?.stackTrace ? `#### Stack Trace\n\`\`\`text\n${bug.diagnostics
                       <span className="ops-bug-id">{bug.id}</span>
                       <div className="title">{bug.title}</div>
                       <div className="ops-kanban-card-meta-row">
-                        <span className="ops-kanban-avatar" title={bug.foundBy}>{initialsFrom(bug.foundBy)}</span>
+                        <span className="ops-kanban-avatar" title={bug.assignee || bug.foundBy}>
+                          {initialsFrom(bug.assignee || bug.foundBy)}
+                        </span>
                         <span className="meta" style={{ marginTop: 0 }}>{bug.category}</span>
                         {bug.fingerprint && (similarCountByFp.get(bug.fingerprint) || 1) > 1 && (
-                          <span className="ops-pill" style={{ color: 'var(--warning)', background: 'var(--warning-dim)' }}>
+                          <span className="ops-pill" style={{ color: 'var(--status-open)', background: 'var(--warning-dim)' }}>
                             {similarCountByFp.get(bug.fingerprint)} similar
                           </span>
                         )}
@@ -930,82 +936,84 @@ ${bug.diagnostics?.stackTrace ? `#### Stack Trace\n\`\`\`text\n${bug.diagnostics
           })}
         </div>
       ) : (
-        <div className="ops-bug-list">
-          <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '8px' }}>
-            <input
-              type="checkbox"
-              checked={sortedBugs.length > 0 && selectedIds.size === sortedBugs.length}
-              onChange={toggleSelectAll}
-              aria-label="Select all cases"
-            />
-            Select all visible
-          </label>
-          {sortedBugs.map((bug) => {
-            const isExpanded = expandedBugId === bug.id;
-            const status = statusMeta(bug.status);
-            const isChecked = selectedIds.has(bug.id);
-            const similar = bug.fingerprint ? similarCountByFp.get(bug.fingerprint) || 1 : 1;
-
-            return (
-              <Fragment key={bug.id}>
-                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+        <div className="ops-bug-table-viewport">
+          <table className="ops-dense-bug-table">
+            <thead>
+              <tr>
+                <th className="ops-bug-check">
                   <input
                     type="checkbox"
-                    checked={isChecked}
-                    onChange={() => toggleSelect(bug.id)}
-                    aria-label={`Select ${bug.id}`}
-                    style={{ marginTop: '18px' }}
+                    checked={sortedBugs.length > 0 && selectedIds.size === sortedBugs.length}
+                    onChange={toggleSelectAll}
+                    aria-label="Select all cases"
                   />
-                <button
-                  type="button"
-                  className="ops-bug-entry"
-                  data-severity={bug.severity}
-                  onClick={() => setExpandedBugId(isExpanded ? null : bug.id)}
-                  aria-expanded={isExpanded}
-                  style={{ flex: 1 }}
-                >
-                  <div className="ops-bug-top">
-                    <span className="ops-bug-id">{bug.id}</span>
-                    <span
-                      className="ops-pill"
-                      style={{ color: severityColor(bug.severity), background: 'var(--bg-inset)' }}
-                    >
-                      {SEVERITIES.find((s) => s.value === bug.severity)?.label || bug.severity}
-                    </span>
-                    <span className="ops-pill" style={{ color: status.color, background: 'var(--bg-inset)' }}>
-                      {status.label}
-                    </span>
-                    {similar > 1 && (
-                      <span className="ops-pill" style={{ color: 'var(--warning)', background: 'var(--warning-dim)' }}>
-                        {similar} similar
+                </th>
+                <th>Id</th>
+                <th>Title</th>
+                <th>Severity</th>
+                <th>Status</th>
+                <th>Assignee</th>
+                <th>Age</th>
+              </tr>
+            </thead>
+            <tbody>
+              {sortedBugs.map((bug) => {
+                const status = statusMeta(bug.status);
+                const similar = bug.fingerprint ? similarCountByFp.get(bug.fingerprint) || 1 : 1;
+                return (
+                  <tr
+                    key={bug.id}
+                    data-severity={bug.severity}
+                    data-open={drawerBugId === bug.id}
+                    onClick={() => setDrawerBugId(bug.id)}
+                  >
+                    <td className="ops-bug-check" onClick={(e) => e.stopPropagation()}>
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.has(bug.id)}
+                        onChange={() => toggleSelect(bug.id)}
+                        aria-label={`Select ${bug.id}`}
+                      />
+                    </td>
+                    <td><span className="ops-feature-id-badge">{bug.id}</span></td>
+                    <td className="ops-bug-title-cell">
+                      {bug.title}
+                      <div className="ops-bug-meta">
+                        <span className="cat">{bug.category}</span>
+                        {similar > 1 ? ` · ${similar} similar` : ''}
+                        {bug.environment?.route ? ` · ${bug.environment.route}` : ''}
+                      </div>
+                    </td>
+                    <td>
+                      <span className="ops-pill" style={{ color: severityColor(bug.severity), background: 'var(--bg-inset)' }}>
+                        {SEVERITIES.find((s) => s.value === bug.severity)?.label || bug.severity}
                       </span>
-                    )}
-                  </div>
-                  <p className="ops-bug-title">{bug.title}</p>
-                  <div className="ops-bug-meta">
-                    <span className="cat">{bug.category}</span>
-                    {' · found by '}{bug.foundBy}{' · '}{new Date(bug.createdAt).toLocaleDateString()}
-                    {bug.assignee ? ` · assigned ${bug.assignee}` : ''}
-                    {bug.environment?.route && ` · ${bug.environment.route}`}
-                  </div>
-                </button>
-                </div>
-
-                {isExpanded && (
-                  <div className="ops-bug-detail">
-                    <BugDetailBody
-                      bug={bug}
-                      similarCount={bug.fingerprint ? similarCountByFp.get(bug.fingerprint) || 1 : 1}
-                      onStatusChange={handleStatusChange}
-                      onCopyPrompt={handleCopyPrompt}
-                      onDelete={handleDeleteBug}
-                      onAssign={handleAssign}
-                    />
-                  </div>
-                )}
-              </Fragment>
-            );
-          })}
+                    </td>
+                    <td>
+                      <span className="ops-pill" style={{ color: status.color, background: 'var(--bg-inset)' }}>
+                        {status.label}
+                      </span>
+                    </td>
+                    <td>
+                      {bug.assignee ? (
+                        <span className="ops-kanban-card-meta-row" style={{ marginTop: 0 }}>
+                          <span className="ops-kanban-avatar">{initialsFrom(bug.assignee)}</span>
+                          {bug.assignee}
+                        </span>
+                      ) : (
+                        <span className="ops-bug-meta">—</span>
+                      )}
+                    </td>
+                    <td>
+                      <span className="ops-kanban-age" data-stale={bug.status === 'open' && Date.now() - new Date(bug.createdAt).getTime() > 3 * 24 * 60 * 60 * 1000}>
+                        {formatRelativeTime(bug.createdAt)}
+                      </span>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
       )}
 

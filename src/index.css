@@ -8431,6 +8431,54 @@ html.capacitor-ios .trip-sheet .tab-pane {
   font-size: 12.5px;
 }
 
+.settings-ticket-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.settings-ticket-card {
+  padding: 14px 16px;
+}
+
+.settings-ticket-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.settings-ticket-id {
+  font-family: var(--font-family-mono, ui-monospace, monospace);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.settings-ticket-status {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.settings-ticket-status[data-tone="open"] { color: var(--color-warning-text); }
+.settings-ticket-status[data-tone="progress"] { color: var(--color-info, var(--color-primary)); }
+.settings-ticket-status[data-tone="resolved"] { color: var(--color-success); }
+.settings-ticket-status[data-tone="closed"] { color: var(--text-muted); }
+
+.bug-filed-ticket {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
 textarea.input-field {
   font-family: var(--font-family-body);
   resize: vertical;

@@ -69,7 +69,13 @@ type Section = { id: AdminTab; label: string; code: string };
 // replaces the previous flat 7-item list where Flags, Analytics and Tools
 // all sat at the same level with no relationship to each other.
 const SECTION_GROUPS: { label: string; items: Section[] }[] = [
-  { label: 'Overview', items: [{ id: 'command', label: 'Command Center', code: 'SEC.00' }] },
+  {
+    label: 'Overview',
+    items: [
+      { id: 'command', label: 'Command Center', code: 'SEC.00' },
+      { id: 'analytics', label: 'Analytics', code: 'SEC.02' },
+    ],
+  },
   {
     label: 'Operations',
     items: [
@@ -86,7 +92,6 @@ const SECTION_GROUPS: { label: string; items: Section[] }[] = [
       { id: 'audit', label: 'Audit', code: 'SEC.05' },
     ],
   },
-  { label: 'Insights', items: [{ id: 'analytics', label: 'Analytics', code: 'SEC.02' }] },
   { label: 'System', items: [{ id: 'tools', label: 'Tools', code: 'SEC.07' }] },
 ];
 
@@ -396,7 +401,11 @@ export function AdminPortalLayout({
                       <span className="ops-lbl">{s.label}</span>
                       <span className="ops-code">{s.code}</span>
                     </span>
-                    {s.id === 'bugs' && criticalBugCount > 0 && <span className="ops-rail-item-flag" title={`${criticalBugCount} critical case(s) open`} />}
+                    {s.id === 'bugs' && criticalBugCount > 0 && (
+                      <span className="ops-rail-item-count" title={`${criticalBugCount} critical case(s) open`}>
+                        {criticalBugCount}
+                      </span>
+                    )}
                     {s.id === 'tools' && recycledCount > 0 && <span className="ops-rail-item-flag" title={`${recycledCount} item(s) in recycle bin`} />}
                   </button>
                 ))}
@@ -502,21 +511,6 @@ export function AdminPortalLayout({
                     synced {formatRelativeTime(new Date(lastSyncedAt).toISOString())}
                   </span>
                 )}
-                <button
-                  type="button"
-                  className="ops-btn"
-                  onClick={() => onActiveTabChange('bugs')}
-                  style={{ position: 'relative' }}
-                  aria-label={criticalBugCount > 0 ? `Bugs, ${criticalBugCount} critical case${criticalBugCount === 1 ? '' : 's'} open` : 'Bugs'}
-                >
-                  Bugs
-                  {criticalBugCount > 0 && (
-                    <span
-                      aria-hidden="true"
-                      style={{ position: 'absolute', top: '-3px', right: '-3px', width: '8px', height: '8px', borderRadius: '50%', background: 'var(--danger)', boxShadow: '0 0 6px var(--danger)' }}
-                    />
-                  )}
-                </button>
                 {onExitToTravelerApp && (
                   <button type="button" className="ops-btn" onClick={onExitToTravelerApp}>
                     Preview Traveler View
@@ -645,6 +639,11 @@ export function AdminPortalLayout({
                   <span className="ops-lamp" />
                   <span className="ops-switcher-row-code">{s.code}</span>
                   <span className="ops-switcher-row-label">{s.label}</span>
+                  {s.id === 'bugs' && criticalBugCount > 0 && (
+                    <span className="ops-rail-item-count" title={`${criticalBugCount} critical case(s) open`}>
+                      {criticalBugCount}
+                    </span>
+                  )}
                   {activeTab === s.id && <span className="ops-switcher-row-current">CURRENT</span>}
                 </button>
               ))}

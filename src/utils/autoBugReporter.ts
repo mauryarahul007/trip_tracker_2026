@@ -5,6 +5,7 @@
  */
 import { createBug } from '../services/bugApi';
 import { diagnosticLogger } from './diagnosticLogger';
+import { CHUNK_LOAD_FAILURE } from './lazyImport';
 
 // ponytail: dedupe by message text for the life of the tab. Good enough to
 // stop a repeating error from spamming the ledger; a real fingerprint
@@ -17,7 +18,7 @@ let listenersAttached = false;
 // even though it never indicates an app defect -- see
 // https://github.com/WICG/resize-observer/issues/38. Filing it as a
 // critical bug just burns ledger signal.
-const IGNORED_MESSAGE_PATTERNS = [/^ResizeObserver loop/i];
+const IGNORED_MESSAGE_PATTERNS = [/^ResizeObserver loop/i, CHUNK_LOAD_FAILURE];
 
 export async function autoReportError(
   message: string,

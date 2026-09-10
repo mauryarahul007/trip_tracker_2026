@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { fetchMyBugReports, type MyBugReport } from '../../services/bugApi';
+import { formatRelativeTime } from '../../utils/relativeTime';
 import { SettingsSubscreenFrame } from './SettingsNavHeader';
 
 type Props = {
@@ -20,16 +21,16 @@ function statusLabel(status: MyBugReport['status']): string {
   }
 }
 
-function statusColor(status: MyBugReport['status']): string {
+function statusTone(status: MyBugReport['status']): string {
   switch (status) {
     case 'open':
-      return 'var(--secondary-accent)';
+      return 'open';
     case 'in_progress':
-      return 'var(--color-info, var(--secondary-accent))';
+      return 'progress';
     case 'resolved':
-      return 'var(--color-success)';
+      return 'resolved';
     default:
-      return 'var(--text-muted)';
+      return 'closed';
   }
 }
 
@@ -73,29 +74,17 @@ export function SettingsMyReportsScreen({ parentTitle, onBack }: Props) {
           You haven't filed a report yet. Use Report a Problem and you'll get a ticket id like BUG-001.
         </p>
       ) : (
-        <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        <ul className="settings-ticket-list">
           {reports.map((report) => (
-            <li
-              key={report.id}
-              style={{
-                border: '1px solid var(--border-color)',
-                borderRadius: '14px',
-                padding: '12px 14px',
-                background: 'var(--bg-card, var(--bg-app))',
-              }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', gap: '8px', alignItems: 'baseline' }}>
-                <span style={{ fontFamily: 'var(--font-family-mono)', fontSize: '12px', fontWeight: 700 }}>
-                  {report.id}
-                </span>
-                <span style={{ fontSize: '12px', fontWeight: 700, color: statusColor(report.status) }}>
+            <li key={report.id} className="settings-shortcuts-card settings-ticket-card">
+              <div className="settings-ticket-top">
+                <span className="settings-ticket-id">{report.id}</span>
+                <span className="settings-ticket-status" data-tone={statusTone(report.status)}>
                   {statusLabel(report.status)}
                 </span>
               </div>
-              <p style={{ margin: '6px 0 0', fontSize: '14px', color: 'var(--text-primary)' }}>{report.title}</p>
-              <p style={{ margin: '4px 0 0', fontSize: '12px', color: 'var(--text-muted)' }}>
-                Filed {new Date(report.createdAt).toLocaleDateString()}
-              </p>
+              <p className="settings-row-title">{report.title}</p>
+              <p className="settings-row-subtitle">Filed {formatRelativeTime(report.createdAt)}</p>
             </li>
           ))}
         </ul>

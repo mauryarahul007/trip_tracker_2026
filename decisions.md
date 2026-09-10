@@ -2625,6 +2625,18 @@ This document logs all meaningful technical decisions, library choices, design p
   - Travelers still cannot `SELECT` `public.bugs`; status is only through the RPC.
   - Applying 0079 on the hosted project is required before My reports and fingerprint grouping work against production.
 
+---
+
+## 141. Ops Deck v2 Violet Visual System (v3.9.0)
+* **Context:** Superadmin Ops Deck and Bug Ledger used a teal “Ledger Ops” accent that diverged from the approved v2 mockups (MatDash-like violet, indigo dotted wallpaper, lavender hero).
+* **Decision:** Retoken `.ops-deck` to violet `#6D5EF6` (still via `--amber`), keep Open/caution as real `--warning` amber, and match v2 chrome: dotted indigo shell, violet rail pill, solid violet primary buttons, Command Center fleet hero with live counts, Bug Ledger copy (“Triage traveler-reported cases”, “New case”). Traveler Settings stay on cream/teal.
+* **Pattern/Implementation:**
+  - `ops-deck.css` light/dark tokens, `.ops-shell` wallpaper, `.ops-fleet-hero`, `.ops-btn-primary`, current rail item as violet pill.
+  - `AdminCommandCenterPage` fleet snapshot; `AdminPortalLayout` Analytics under Overview; `SuperAdminBugTracker` subtitle/button copy.
+* **Trade-offs Accepted:**
+  - `--amber` remains the accent token name to avoid a wide rename; it is violet, not amber.
+  - Rail SEC codes stay in the DOM for jump/search identity but are visually hidden to match the mockup.
+
 
 
 
