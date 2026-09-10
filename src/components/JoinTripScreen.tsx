@@ -28,6 +28,8 @@ export function JoinTripScreen() {
   const [errorMessage, setErrorMessage] = useState('');
   const [lockoutSeconds, setLockoutSeconds] = useState<number | null>(null);
   const [honeypotVal, setHoneypotVal] = useState('');
+  const [turnstileToken, setTurnstileToken] = useState<string | undefined>(undefined);
+  const requiresTurnstile = !!import.meta.env.VITE_TURNSTILE_SITE_KEY;
 
   // Countdown timer for rate limit cooldown
   useEffect(() => {
@@ -69,9 +71,15 @@ export function JoinTripScreen() {
   };
 
   useEffect(() => {
+    // The join-code lookup is a public, guessable-code endpoint -- gate it
+    // behind Turnstile solving first when configured (the DB-side attempt
+    // lockout, supabase/migrations/0047 + 0060, is the actual enforced
+    // defense; this is a client-side friction layer on top of it, not a
+    // server-verified one -- lookupTripByJoinCode doesn't check the token).
+    if (requiresTurnstile && !turnstileToken) return;
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [code]);
+  }, [code, turnstileToken, requiresTurnstile]);
 
   const goToTrip = async (tripId: string) => {
     await refreshTrips();
@@ -108,6 +116,20 @@ export function JoinTripScreen() {
       setStatus('ready');
     }
   };
+
+  if (requiresTurnstile && !turnstileToken && status === 'loading') {
+    return (
+      <div className="app-container" style={{ justifyContent: 'center', alignItems: 'center', padding: '24px 20px' }}>
+        <div className="fade-in glass-card" style={{ width: '100%', maxWidth: '420px', padding: '28px 24px', textAlign: 'center' }}>
+          <h2 style={{ marginBottom: '8px' }}>Verifying you're not a bot…</h2>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '14px', marginBottom: '4px' }}>
+            One quick check before we look up this invite.
+          </p>
+          <TurnstileWidget onVerify={setTurnstileToken} />
+        </div>
+      </div>
+    );
+  }
 
   if (status === 'loading' || status === 'claiming') {
     return (
@@ -278,8 +300,6 @@ export function JoinTripScreen() {
               </button>
             ))}
           </div>
-
-          <TurnstileWidget />
         </div>
       </div>
     </div>

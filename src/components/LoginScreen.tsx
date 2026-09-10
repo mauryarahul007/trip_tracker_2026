@@ -5,6 +5,7 @@ import { useTripStore } from '../store/tripStore';
 import { fetchAppFlag } from '../services/tripApi';
 import { IconShield, IconAlertCircle, IconCheck, IconLock } from './Icons';
 import { triggerHaptic } from '../utils/haptics';
+import { TurnstileWidget } from './TurnstileWidget';
 
 export const DEFAULT_LANDING_BACKDROP = 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=1000&auto=format&fit=crop';
 
@@ -44,6 +45,8 @@ export function LoginScreen() {
   const [adminError, setAdminError] = useState('');
   const [adminSuccess, setAdminSuccess] = useState('');
   const [isSubmittingAdmin, setIsSubmittingAdmin] = useState(false);
+  const [adminCaptchaToken, setAdminCaptchaToken] = useState<string | undefined>(undefined);
+  const requiresAdminCaptcha = !!import.meta.env.VITE_TURNSTILE_SITE_KEY;
 
   useEffect(() => {
     initialize();
@@ -91,7 +94,7 @@ export function LoginScreen() {
     setAdminSuccess('');
     setIsSubmittingAdmin(true);
     try {
-      const ok = await signInSuperadmin(email, password);
+      const ok = await signInSuperadmin(email, password, adminCaptchaToken);
       if (!ok) {
         setAdminError(useAuthStore.getState().authError || 'Invalid email or password.');
         return;
@@ -363,10 +366,14 @@ export function LoginScreen() {
                   />
                 </div>
 
+                {requiresAdminCaptcha && (
+                  <TurnstileWidget onVerify={setAdminCaptchaToken} onError={() => setAdminCaptchaToken(undefined)} />
+                )}
+
                 <button
                   type="submit"
                   className="login-btn-admin-submit"
-                  disabled={isSubmittingAdmin}
+                  disabled={isSubmittingAdmin || (requiresAdminCaptcha && !adminCaptchaToken)}
                   onClick={() => triggerHaptic('medium')}
                 >
                   <IconShield size={16} />

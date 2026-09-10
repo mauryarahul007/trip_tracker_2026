@@ -20,7 +20,7 @@ interface AuthStore {
   signInWithGoogle: (redirectPath?: string) => Promise<void>;
   signInAsDemoUser: () => void;
   signInAsGuest: (displayName?: string) => void;
-  signInSuperadmin: (email: string, password: string) => Promise<boolean>;
+  signInSuperadmin: (email: string, password: string, captchaToken?: string) => Promise<boolean>;
   requestSuperadminPasswordReset: (email: string) => Promise<{ success: boolean; message: string }>;
   updateOwnPassword: (newPassword: string) => Promise<{ success: boolean; message: string }>;
   signOut: () => Promise<void>;
@@ -35,7 +35,15 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
 
   initialize: () => {
     if (get().initialized) return;
-    set({ initialized: true });
+
+    // A persisted isSuperadmin=true needs its RLS-side re-verification
+    // (below) to resolve before RequireAuth can trust it -- flipping
+    // `initialized` synchronously here let a forged localStorage flag pass
+    // the route guard for the async gap between this line and the
+    // is_superadmin() RPC settling. Only fast-path `initialized` when there
+    // is nothing to re-verify.
+    const pendingSuperadminRecheck = useTripStore.getState().isSuperadmin && !isMissingSupabaseEnv;
+    if (!pendingSuperadminRecheck) set({ initialized: true });
 
     const storedDemo = typeof localStorage !== 'undefined' ? localStorage.getItem('trip_tracker_demo_session') : null;
     if (storedDemo) {
@@ -56,6 +64,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
           if (useTripStore.getState().isSuperadmin) {
             useTripStore.getState().setIsSuperadmin(false);
           }
+          if (pendingSuperadminRecheck) set({ initialized: true });
           return;
         }
       } catch {
@@ -93,8 +102,10 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
           }
         }
       }
+      if (pendingSuperadminRecheck) set({ initialized: true });
     }).catch(() => {
       // ignore network errors for offline/dummy supabase
+      if (pendingSuperadminRecheck) set({ initialized: true });
     });
 
     supabase.auth.onAuthStateChange((event, session) => {
@@ -233,7 +244,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
     set({ session: mockSession, authError: null });
   },
 
-  signInSuperadmin: async (email: string, password: string) => {
+  signInSuperadmin: async (email: string, password: string, captchaToken?: string) => {
     // Without a real Supabase project there's nothing to authenticate
     // against — accept any credentials for the local-only mock session so
     // the portal stays demoable offline (same trust level as Guest/Demo).
@@ -262,7 +273,11 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
     // -- then require the RLS-side is_superadmin() check to pass before
     // granting the admin UI. A successful password sign-in alone is not
     // enough: any registered user could type their own real credentials.
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+      options: captchaToken ? { captchaToken } : undefined,
+    });
     if (error || !data.session) {
       set({ authError: error?.message || 'Invalid email or password.' });
       return false;
