@@ -9,10 +9,10 @@
 
 | Metric | Count | Status Notes |
 | :--- | :--- | :--- |
-| **Total Tracked** | **189** | All recorded bugs across sessions |
+| **Total Tracked** | **199** | All recorded bugs across sessions |
 | **🟢 Open** | **0** | No critical blockers, 0 High |
 | **🟡 In Progress** | **0** | Active investigation or fix |
-| **✅ Resolved** | **162** | Verified & closed |
+| **✅ Resolved** | **172** | Verified & closed |
 | **⚪ Won't Fix** | **27** | Expected behavior / deferred |
 
 ---
@@ -193,6 +193,16 @@
 | **BUG-190** | Close Trip settlement math ran while the Close Trip row was hidden | `performance` | `low` | `cursor-agent` | `cursor-agent` | Skip calc unless isSurfaceVisible, home overlay is closed, and isTripAdmin; cache last summary. Fixed in v3.6.8 commit a4b1b6c. |
 | **BUG-192** | Settings trip hero displays contradictory Settled and UNSETTLED labels on fully settled trips | `ui-ux` | `low` | `agent` | `agent` | Made stat box label dynamic to show BALANCES when settled and UNSETTLED when outstanding |
 | **BUG-193** | Passport stamp placement in TripStack flex top-bar displaced destination name and weather | `ui-ux` | `medium` | `agent` | `agent` | Restored exact original stack-card-top-bar and moved PassportStamp to absolute overlay at top 70px right 18px |
+| **BUG-194** | Self-unban: profiles.banned writable by the banned user themselves | `auth` | `critical` | `claude-cli` | `claude-cli` | Fixed in commit ffa9c97 (migration 0080_security_hardening_phase5.sql, applied to remote DB; see decisions.md #143). |
+| **BUG-195** | security_audit_logs leaks global superadmin actions to any authenticated user | `auth` | `critical` | `claude-cli` | `claude-cli` | Fixed in commit ffa9c97 (migration 0080_security_hardening_phase5.sql, applied to remote DB; see decisions.md #143). |
+| **BUG-196** | profiles SELECT policy leaks every user's email regardless of shared trip membership | `auth` | `high` | `claude-cli` | `claude-cli` | Fixed in commit ffa9c97 (migration 0080_security_hardening_phase5.sql, applied to remote DB; see decisions.md #143). |
+| **BUG-197** | Turnstile anti-bot widget rendered but never wired up (token never captured or verified) | `auth` | `high` | `claude-cli` | `claude-cli` | Fixed in commit ffa9c97 (migration 0080_security_hardening_phase5.sql, applied to remote DB; see decisions.md #143). |
+| **BUG-198** | expenses.paid_by/split_member_ids never validated against the expense's own trip | `splits-math` | `medium` | `claude-cli` | `claude-cli` | Fixed in commit ffa9c97 (migration 0080_security_hardening_phase5.sql, applied to remote DB; see decisions.md #143). |
+| **BUG-199** | bugs table had a dead raw INSERT policy bypassing the report_bug() RPC | `auth` | `medium` | `claude-cli` | `claude-cli` | Fixed in commit ffa9c97 (migration 0080_security_hardening_phase5.sql, applied to remote DB; see decisions.md #143). |
+| **BUG-200** | CSP script-src shipped unsafe-inline with no inline scripts to justify it | `auth` | `medium` | `claude-cli` | `claude-cli` | Fixed in commit ffa9c97 (migration 0080_security_hardening_phase5.sql, applied to remote DB; see decisions.md #143). |
+| **BUG-201** | log_security_event() RPC had no authority check on p_trip_id (audit-log forgery) | `auth` | `low` | `claude-cli` | `claude-cli` | Fixed in commit ffa9c97 (migration 0080_security_hardening_phase5.sql, applied to remote DB; see decisions.md #143). |
+| **BUG-202** | expenses RLS never enforced the viewer role (UI-only enforcement) | `auth` | `low` | `claude-cli` | `claude-cli` | Fixed in commit ffa9c97 (migration 0080_security_hardening_phase5.sql, applied to remote DB; see decisions.md #143). |
+| **BUG-203** | authStore TOCTOU race: initialized could flip true before superadmin flag re-verification resolved | `auth` | `low` | `claude-cli` | `claude-cli` | Fixed in commit ffa9c97 (migration 0080_security_hardening_phase5.sql, applied to remote DB; see decisions.md #143). |
 
 ---
 

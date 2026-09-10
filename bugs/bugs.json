@@ -5754,5 +5754,265 @@
     "resolvedBy": "agent",
     "resolvedAt": "2026-09-07T18:43:03.419Z",
     "resolutionNote": "Restored exact original stack-card-top-bar and moved PassportStamp to absolute overlay at top 70px right 18px"
+  },
+  {
+    "id": "BUG-194",
+    "title": "Self-unban: profiles.banned writable by the banned user themselves",
+    "description": "Self-unban: profiles.banned writable by the banned user themselves",
+    "severity": "critical",
+    "category": "auth",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-09-10T17:20:03.014Z",
+    "updatedAt": "2026-09-10T17:20:16.858Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-09-10T17:20:16.858Z",
+    "resolutionNote": "Fixed in commit ffa9c97 (migration 0080_security_hardening_phase5.sql, applied to remote DB; see decisions.md #143)."
+  },
+  {
+    "id": "BUG-195",
+    "title": "security_audit_logs leaks global superadmin actions to any authenticated user",
+    "description": "security_audit_logs leaks global superadmin actions to any authenticated user",
+    "severity": "critical",
+    "category": "auth",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-09-10T17:20:04.591Z",
+    "updatedAt": "2026-09-10T17:20:17.279Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-09-10T17:20:17.278Z",
+    "resolutionNote": "Fixed in commit ffa9c97 (migration 0080_security_hardening_phase5.sql, applied to remote DB; see decisions.md #143)."
+  },
+  {
+    "id": "BUG-196",
+    "title": "profiles SELECT policy leaks every user's email regardless of shared trip membership",
+    "description": "profiles SELECT policy leaks every user's email regardless of shared trip membership",
+    "severity": "high",
+    "category": "auth",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-09-10T17:20:05.645Z",
+    "updatedAt": "2026-09-10T17:20:17.730Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-09-10T17:20:17.729Z",
+    "resolutionNote": "Fixed in commit ffa9c97 (migration 0080_security_hardening_phase5.sql, applied to remote DB; see decisions.md #143)."
+  },
+  {
+    "id": "BUG-197",
+    "title": "Turnstile anti-bot widget rendered but never wired up (token never captured or verified)",
+    "description": "Turnstile anti-bot widget rendered but never wired up (token never captured or verified)",
+    "severity": "high",
+    "category": "auth",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-09-10T17:20:06.891Z",
+    "updatedAt": "2026-09-10T17:20:18.191Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-09-10T17:20:18.191Z",
+    "resolutionNote": "Fixed in commit ffa9c97 (migration 0080_security_hardening_phase5.sql, applied to remote DB; see decisions.md #143)."
+  },
+  {
+    "id": "BUG-198",
+    "title": "expenses.paid_by/split_member_ids never validated against the expense's own trip",
+    "description": "expenses.paid_by/split_member_ids never validated against the expense's own trip",
+    "severity": "medium",
+    "category": "splits-math",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-09-10T17:20:07.881Z",
+    "updatedAt": "2026-09-10T17:20:18.614Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-09-10T17:20:18.613Z",
+    "resolutionNote": "Fixed in commit ffa9c97 (migration 0080_security_hardening_phase5.sql, applied to remote DB; see decisions.md #143)."
+  },
+  {
+    "id": "BUG-199",
+    "title": "bugs table had a dead raw INSERT policy bypassing the report_bug() RPC",
+    "description": "bugs table had a dead raw INSERT policy bypassing the report_bug() RPC",
+    "severity": "medium",
+    "category": "auth",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-09-10T17:20:09.032Z",
+    "updatedAt": "2026-09-10T17:20:19.044Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-09-10T17:20:19.043Z",
+    "resolutionNote": "Fixed in commit ffa9c97 (migration 0080_security_hardening_phase5.sql, applied to remote DB; see decisions.md #143)."
+  },
+  {
+    "id": "BUG-200",
+    "title": "CSP script-src shipped unsafe-inline with no inline scripts to justify it",
+    "description": "CSP script-src shipped unsafe-inline with no inline scripts to justify it",
+    "severity": "medium",
+    "category": "auth",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-09-10T17:20:09.959Z",
+    "updatedAt": "2026-09-10T17:20:19.446Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-09-10T17:20:19.446Z",
+    "resolutionNote": "Fixed in commit ffa9c97 (migration 0080_security_hardening_phase5.sql, applied to remote DB; see decisions.md #143)."
+  },
+  {
+    "id": "BUG-201",
+    "title": "log_security_event() RPC had no authority check on p_trip_id (audit-log forgery)",
+    "description": "log_security_event() RPC had no authority check on p_trip_id (audit-log forgery)",
+    "severity": "low",
+    "category": "auth",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-09-10T17:20:11.010Z",
+    "updatedAt": "2026-09-10T17:20:19.886Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-09-10T17:20:19.885Z",
+    "resolutionNote": "Fixed in commit ffa9c97 (migration 0080_security_hardening_phase5.sql, applied to remote DB; see decisions.md #143)."
+  },
+  {
+    "id": "BUG-202",
+    "title": "expenses RLS never enforced the viewer role (UI-only enforcement)",
+    "description": "expenses RLS never enforced the viewer role (UI-only enforcement)",
+    "severity": "low",
+    "category": "auth",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-09-10T17:20:12.051Z",
+    "updatedAt": "2026-09-10T17:20:20.291Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-09-10T17:20:20.291Z",
+    "resolutionNote": "Fixed in commit ffa9c97 (migration 0080_security_hardening_phase5.sql, applied to remote DB; see decisions.md #143)."
+  },
+  {
+    "id": "BUG-203",
+    "title": "authStore TOCTOU race: initialized could flip true before superadmin flag re-verification resolved",
+    "description": "authStore TOCTOU race: initialized could flip true before superadmin flag re-verification resolved",
+    "severity": "low",
+    "category": "auth",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-09-10T17:20:13.008Z",
+    "updatedAt": "2026-09-10T17:20:20.703Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-09-10T17:20:20.702Z",
+    "resolutionNote": "Fixed in commit ffa9c97 (migration 0080_security_hardening_phase5.sql, applied to remote DB; see decisions.md #143)."
   }
 ]
