@@ -9,11 +9,11 @@
 
 | Metric | Count |
 | :--- | :--- |
-| **Total Tracked** | **50** |
+| **Total Tracked** | **51** |
 | **💡 Requested** | **2** |
 | **📋 Planned** | **0** |
 | **🟡 In Progress** | **0** |
-| **✅ Shipped** | **48** |
+| **✅ Shipped** | **49** |
 | **⚪ Won't Do** | **0** |
 
 ---
@@ -100,6 +100,7 @@ CI pipeline for lint, build, and test on push/PR
 | **FEAT-048** | Luggage-Tag Skeleton Loaders with ticket cutout and barcode shimmer | `ui-ux` | `agent` | `agent` | Shipped |
 | **FEAT-049** | Boarding Pass Flip Flight and Itinerary Status Indicator with live glowing dot | `ui-ux` | `agent` | `agent` | Shipped |
 | **FEAT-050** | Ops Deck v2 violet visual system | `admin` | `cursor-grok` | `cursor-grok` | Shipped in v3.9.0. Also closed live ledger BUG-145, BUG-147, BUG-176–178, BUG-191 as already-fixed or HMR/stale-chunk. |
+| **FEAT-051** | Cross-trip expense search + global owe/owed balance dashboard | `ui-ux` | `claude-cli` | `claude-cli` | CommandPalette now searches expenses across every trip the user belongs to (fetchAllExpensesForTrips titleQuery filter, tripApi.ts), each result tagged with its trip name + own currency. TripsListScreen header shows a per-currency net balance chip row (You owe/You're owed) computed via calculateSettlements across all trips. Files: src/services/tripApi.ts, src/components/CommandPalette.tsx, src/components/TripsListScreen.tsx, src/index.css. |
 
 ---
 

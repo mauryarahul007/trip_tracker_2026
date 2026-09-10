@@ -169,13 +169,22 @@ export async function fetchExpensesForTrip(tripId: string): Promise<Expense[]> {
 // expenses at a time via fetchExpensesForTrip. Cross-trip analytics needs
 // real rows for every trip the caller can see, which for a superadmin is
 // every trip (RLS via is_superadmin(), see migration 0054).
-export async function fetchAllExpensesForTrips(tripIds: string[]): Promise<Expense[]> {
+//
+// `titleQuery` also powers the traveler-facing cross-trip search in
+// CommandPalette: same query, filtered + capped instead of hauling every
+// row across every trip the user belongs to.
+export async function fetchAllExpensesForTrips(tripIds: string[], titleQuery?: string): Promise<Expense[]> {
   if (tripIds.length === 0) return [];
-  const { data, error } = await supabase
+  let query = supabase
     .from('expenses')
     .select('*')
     .in('trip_id', tripIds)
     .is('deleted_at', null);
+  if (titleQuery) {
+    const escaped = titleQuery.replace(/[%_]/g, '\\$&');
+    query = query.ilike('title', `%${escaped}%`).order('date', { ascending: false }).limit(50);
+  }
+  const { data, error } = await query;
   if (error) throw error;
   return (data ?? []).map(mapExpense);
 }

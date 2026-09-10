@@ -2664,3 +2664,14 @@ This document logs all meaningful technical decisions, library choices, design p
 
 
 
+
+## 142. Cross-Trip Expense Search + Global Owe/Owed Balance Dashboard (v3.9.1)
+* **Context:** Command Palette expense search was scoped to the active trip only (`activeTripExpenses` in App.tsx), so nothing surfaced for a query while on the Trips List screen or about an expense on another trip. Trips List also had no summary of net balance across a user's trips, only per-trip settlement math (`BalancesSettlements.tsx`, `StickyBalanceBar.tsx`).
+* **Decision:** Extend the existing (superadmin-only) `fetchAllExpensesForTrips` with an optional `titleQuery` filter and reuse it from the traveler-facing `CommandPalette` for a debounced cross-trip expense search. Add a per-currency net-balance chip row to `TripsListScreen`, computed with the existing `calculateSettlements` across every trip the user belongs to.
+* **Pattern/Implementation:**
+  - `tripApi.ts`: `fetchAllExpensesForTrips(tripIds, titleQuery?)` -- unfiltered call unchanged for the superadmin caller; `titleQuery` adds a server-side `ilike` + 50-row cap.
+  - `CommandPalette.tsx`: 250ms-debounced cross-trip fetch when 2+ trips and a 2+ char query; results deduped against the already-loaded active-trip expenses, tagged with trip name + their own currency (fixed a latent bug where every result used the active trip's currency symbol); selecting a cross-trip result switches trips rather than opening the edit modal directly.
+  - `TripsListScreen.tsx`: fetches all expenses for the user's trips on mount/trip-list change (skipped offline), nets balance per member via `calculateSettlements`, groups by trip currency (no FX conversion -- a wrong blended total is worse than none) into `.home-balance-chip` pills in the header.
+* **Trade-offs Accepted:**
+  - Multi-currency balances show as separate chips per currency rather than one blended number.
+  - Cross-trip search result tap switches trips only; it does not deep-link into the specific expense's edit modal yet.

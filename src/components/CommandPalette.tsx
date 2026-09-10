@@ -4,6 +4,7 @@ import { IconSearch, IconPlus, IconMembers, IconSettings, IconCheck, IconCalenda
 import { getCurrencySymbol } from '../utils/currency';
 import { triggerHaptic } from '../utils/haptics';
 import { useFocusTrap } from '../hooks/useFocusTrap';
+import { fetchAllExpensesForTrips } from '../services/tripApi';
 
 interface CommandPaletteProps {
   isOpen: boolean;
@@ -50,9 +51,9 @@ export function CommandPalette({
 }: CommandPaletteProps) {
   const [query, setQuery] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const [crossTripExpenses, setCrossTripExpenses] = useState<Expense[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
-  const currencySymbol = getCurrencySymbol(trip?.baseCurrency || '');
 
   useFocusTrap(cardRef, isOpen, false, onClose);
 
@@ -60,13 +61,33 @@ export function CommandPalette({
     if (isOpen) {
       setQuery('');
       setSelectedIndex(0);
+      setCrossTripExpenses([]);
       setTimeout(() => inputRef.current?.focus(), 50);
     }
   }, [isOpen]);
 
+  // Cross-trip expense search: `expenses` prop only covers the active trip
+  // (see App.tsx's activeTripExpenses), so a query long enough to be worth a
+  // round-trip also searches every other trip the user belongs to.
+  useEffect(() => {
+    const q = query.trim();
+    if (!isOpen || q.length < 2 || trips.length < 2 || !navigator.onLine) {
+      setCrossTripExpenses([]);
+      return;
+    }
+    let cancelled = false;
+    const timer = setTimeout(() => {
+      fetchAllExpensesForTrips(trips.map((t) => t.id), q)
+        .then((results) => { if (!cancelled) setCrossTripExpenses(results); })
+        .catch(() => { if (!cancelled) setCrossTripExpenses([]); });
+    }, 250);
+    return () => { cancelled = true; clearTimeout(timer); };
+  }, [query, isOpen, trips]);
+
   if (!isOpen) return null;
 
   const q = query.trim().toLowerCase();
+  const tripNameById = new Map(trips.map((t) => [t.id, t.name]));
 
   // Build searchable items
   interface CommandItem {
@@ -191,17 +212,31 @@ export function CommandPalette({
     });
   });
 
-  // Filter Expenses
-  expenses.slice(0, 50).forEach((e) => {
+  // Filter Expenses -- active trip's (instant, local) plus any cross-trip
+  // matches from other trips the user belongs to (see the search effect
+  // above). Deduped by id since the active trip can appear in both.
+  const seenExpenseIds = new Set<string>();
+  [...expenses, ...crossTripExpenses].slice(0, 50).forEach((e) => {
+    if (seenExpenseIds.has(e.id)) return;
+    seenExpenseIds.add(e.id);
     const catName = categories.find((c) => c.id === e.category)?.name || 'General';
+    const isOtherTrip = e.tripId !== trip?.id;
+    const tripLabel = isOtherTrip ? tripNameById.get(e.tripId) : undefined;
     items.push({
       id: `exp-${e.id}`,
       type: 'expense',
       title: e.title,
-      subtitle: `${currencySymbol}${e.amount} · ${catName} · ${e.date}`,
+      subtitle: `${tripLabel ? `${tripLabel} · ` : ''}${getCurrencySymbol(e.currency)}${e.amount} · ${catName} · ${e.date}`,
       icon: <IconCalendar size={16} />,
       action: () => {
-        onSelectExpense(e);
+        // Cross-trip result: switch trips first, land on its expense list --
+        // opening the edit modal straight across a trip switch is skipped
+        // for now, add if that jump is worth the extra state juggling.
+        if (isOtherTrip && onSelectTrip) {
+          onSelectTrip(e.tripId);
+        } else {
+          onSelectExpense(e);
+        }
         onClose();
       },
     });

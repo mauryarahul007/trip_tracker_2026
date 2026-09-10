@@ -20,6 +20,9 @@ import { triggerHaptic } from '../utils/haptics';
 import { preloadModule } from '../utils/modulePreload';
 import { useHistoryBack } from '../utils/useHistoryBack';
 import { useEscapeKey } from '../utils/useEscapeKey';
+import { fetchAllExpensesForTrips } from '../services/tripApi';
+import { calculateSettlements } from '../utils/settlement';
+import { getCurrencySymbol, formatAmount } from '../utils/currency';
 
 type Props = {
   trips: Trip[];
@@ -174,6 +177,41 @@ export function TripsListScreen({
     !stackActive
   );
 
+  // Global "you owe / you're owed" net balance, summed per currency across
+  // every trip the user belongs to (not just the active one -- there is no
+  // active trip on this screen). Grouped by currency rather than converted
+  // to one number: FX rates drift, and a wrong blended total is worse than
+  // no total for a money screen.
+  const [crossTripBalances, setCrossTripBalances] = useState<Record<string, number>>({});
+  const tripIdsKey = trips.map((t) => t.id).join(',');
+  useEffect(() => {
+    if (!userId || trips.length === 0 || !navigator.onLine) {
+      setCrossTripBalances({});
+      return;
+    }
+    let cancelled = false;
+    const tripsSnapshot = trips;
+    fetchAllExpensesForTrips(tripsSnapshot.map((t) => t.id))
+      .then((allExpenses) => {
+        if (cancelled) return;
+        const { members: curMembers, groups: curGroups } = useTripStore.getState();
+        const byCurrency: Record<string, number> = {};
+        tripsSnapshot.forEach((trip) => {
+          const myMemberId = trip.memberIds.find((id) => curMembers[id]?.linkedUserId === userId);
+          if (!myMemberId) return;
+          const tripGroups = Object.values(curGroups).filter((g) => trip.groupIds.includes(g.id));
+          const { balances } = calculateSettlements(trip, curMembers, allExpenses, tripGroups);
+          const mine = balances.find((b) => b.memberId === myMemberId)?.balance ?? 0;
+          if (Math.abs(mine) < 0.01) return;
+          byCurrency[trip.baseCurrency] = Number(((byCurrency[trip.baseCurrency] || 0) + mine).toFixed(2));
+        });
+        setCrossTripBalances(byCurrency);
+      })
+      .catch(() => { if (!cancelled) setCrossTripBalances({}); });
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- members/groups read fresh via getState() at resolve time, not tracked as deps
+  }, [tripIdsKey, userId]);
+
   // First-run vs. "deleted my last trip" both hit trips.length === 0 — flag
   // per-account once they've ever had a trip so the two states get different
   // copy instead of onboarding repeating itself forever.
@@ -291,6 +329,19 @@ export function TripsListScreen({
               </>
             )}
           </p>
+          {Object.keys(crossTripBalances).length > 0 && (
+            <p style={{ marginTop: '4px', display: 'flex', gap: '6px', justifyContent: 'center', flexWrap: 'wrap' }}>
+              {Object.entries(crossTripBalances).map(([currency, net]) => (
+                <span
+                  key={currency}
+                  className={`home-balance-chip ${net > 0 ? 'owed-to-me' : 'i-owe'}`}
+                  title={net > 0 ? "Net you're owed across trips in this currency" : 'Net you owe across trips in this currency'}
+                >
+                  {net > 0 ? "You're owed" : 'You owe'} {formatAmount(Math.abs(net), getCurrencySymbol(currency))}
+                </span>
+              ))}
+            </p>
+          )}
         </div>
         <button
           type="button"

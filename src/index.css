@@ -3595,6 +3595,30 @@ input:checked + .toggle-slider:before {
   border-radius: 9999px;
 }
 
+.home-balance-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--font-family-mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  padding: 1px 7px;
+  border-radius: var(--border-radius-pill);
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+.home-balance-chip.owed-to-me {
+  color: var(--color-success-text, var(--color-success));
+  background: color-mix(in srgb, var(--color-success) 12%, transparent);
+  border-color: color-mix(in srgb, var(--color-success) 28%, transparent);
+}
+.home-balance-chip.i-owe {
+  color: var(--color-danger);
+  background: color-mix(in srgb, var(--color-danger) 12%, transparent);
+  border-color: color-mix(in srgb, var(--color-danger) 28%, transparent);
+}
+
 .trip-stack-viewall {
   display: block;
   margin: 0 auto;

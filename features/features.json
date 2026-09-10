@@ -793,5 +793,21 @@
     "shippedAt": "2026-09-10T16:23:24.726Z",
     "shippedBy": "cursor-grok",
     "shippedNote": "Shipped in v3.9.0. Also closed live ledger BUG-145, BUG-147, BUG-176–178, BUG-191 as already-fixed or HMR/stale-chunk."
+  },
+  {
+    "id": "FEAT-051",
+    "title": "Cross-trip expense search + global owe/owed balance dashboard",
+    "description": "Cross-trip expense search + global owe/owed balance dashboard",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-09-10T16:49:59.813Z",
+    "updatedAt": "2026-09-10T16:49:59.813Z",
+    "shippedAt": "2026-09-10T16:49:59.813Z",
+    "shippedBy": "claude-cli",
+    "shippedNote": "CommandPalette now searches expenses across every trip the user belongs to (fetchAllExpensesForTrips titleQuery filter, tripApi.ts), each result tagged with its trip name + own currency. TripsListScreen header shows a per-currency net balance chip row (You owe/You're owed) computed via calculateSettlements across all trips. Files: src/services/tripApi.ts, src/components/CommandPalette.tsx, src/components/TripsListScreen.tsx, src/index.css."
   }
 ]
