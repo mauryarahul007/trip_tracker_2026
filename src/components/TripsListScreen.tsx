@@ -337,7 +337,7 @@ export function TripsListScreen({
                   className={`home-balance-chip ${net > 0 ? 'owed-to-me' : 'i-owe'}`}
                   title={net > 0 ? "Net you're owed across trips in this currency" : 'Net you owe across trips in this currency'}
                 >
-                  {net > 0 ? "You're owed" : 'You owe'} {formatAmount(Math.abs(net), getCurrencySymbol(currency))}
+                  {net > 0 ? 'Owed to you across all trips:' : 'You owe across all trips:'} {formatAmount(Math.abs(net), getCurrencySymbol(currency))}
                 </span>
               ))}
             </p>

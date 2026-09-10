@@ -405,11 +405,11 @@ function CardContent({
             <div style={{ marginBottom: '6px' }}>
               {balanceInfo.status === 'owed' ? (
                 <span className="stack-balance-chip owed">
-                  <span>💰</span> YOU ARE OWED {trip.baseCurrency || 'INR'} {Math.round(balanceInfo.amount).toLocaleString()}
+                  <span>💰</span> OWED TO YOU ON THIS TRIP: {trip.baseCurrency || 'INR'} {Math.round(balanceInfo.amount).toLocaleString()}
                 </span>
               ) : (
                 <span className="stack-balance-chip owe">
-                  <span>💸</span> YOU OWE {trip.baseCurrency || 'INR'} {Math.round(balanceInfo.amount).toLocaleString()}
+                  <span>💸</span> YOU OWE ON THIS TRIP: {trip.baseCurrency || 'INR'} {Math.round(balanceInfo.amount).toLocaleString()}
                 </span>
               )}
             </div>

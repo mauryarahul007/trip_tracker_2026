@@ -9,10 +9,10 @@
 
 | Metric | Count | Status Notes |
 | :--- | :--- | :--- |
-| **Total Tracked** | **200** | All recorded bugs across sessions |
+| **Total Tracked** | **201** | All recorded bugs across sessions |
 | **🟢 Open** | **0** | No critical blockers, 0 High |
 | **🟡 In Progress** | **0** | Active investigation or fix |
-| **✅ Resolved** | **173** | Verified & closed |
+| **✅ Resolved** | **174** | Verified & closed |
 | **⚪ Won't Fix** | **27** | Expected behavior / deferred |
 
 ---
@@ -204,6 +204,7 @@
 | **BUG-202** | expenses RLS never enforced the viewer role (UI-only enforcement) | `auth` | `low` | `claude-cli` | `claude-cli` | Fixed in commit ffa9c97 (migration 0080_security_hardening_phase5.sql, applied to remote DB; see decisions.md #143). |
 | **BUG-203** | authStore TOCTOU race: initialized could flip true before superadmin flag re-verification resolved | `auth` | `low` | `claude-cli` | `claude-cli` | Fixed in commit ffa9c97 (migration 0080_security_hardening_phase5.sql, applied to remote DB; see decisions.md #143). |
 | **BUG-204** | Android allowBackup=true allowed WebView/session extraction via adb backup | `auth` | `medium` | `claude-cli` | `claude-cli` | Fixed in commit c670cb0 (android:allowBackup set to false); see decisions.md #144. |
+| **BUG-205** | Trip-card balance chip and header cross-trip balance chip both said 'You're owed' with no scope distinction | `ui-ux` | `low` | `mauryarahul007@gmail.com` | `claude-cli` | Trip card now reads 'OWED TO YOU ON THIS TRIP' / 'YOU OWE ON THIS TRIP'; header chip now reads 'Owed to you across all trips' / 'You owe across all trips'. Files: TripStack.tsx, TripsListScreen.tsx. |
 
 ---
 

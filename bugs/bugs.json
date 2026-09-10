@@ -6040,5 +6040,31 @@
     "resolvedBy": "claude-cli",
     "resolvedAt": "2026-09-10T17:27:54.565Z",
     "resolutionNote": "Fixed in commit c670cb0 (android:allowBackup set to false); see decisions.md #144."
+  },
+  {
+    "id": "BUG-205",
+    "title": "Trip-card balance chip and header cross-trip balance chip both said 'You're owed' with no scope distinction",
+    "description": "Trip-card balance chip and header cross-trip balance chip both said 'You're owed' with no scope distinction",
+    "severity": "low",
+    "category": "ui-ux",
+    "status": "resolved",
+    "foundBy": "mauryarahul007@gmail.com",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-09-10T17:30:52.488Z",
+    "updatedAt": "2026-09-10T17:30:52.808Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-09-10T17:30:52.807Z",
+    "resolutionNote": "Trip card now reads 'OWED TO YOU ON THIS TRIP' / 'YOU OWE ON THIS TRIP'; header chip now reads 'Owed to you across all trips' / 'You owe across all trips'. Files: TripStack.tsx, TripsListScreen.tsx."
   }
 ]
