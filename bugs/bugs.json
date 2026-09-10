@@ -4448,9 +4448,9 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-09-04T07:27:38.027197+00:00",
-    "updatedAt": "2026-09-06T19:46:00.795Z",
+    "updatedAt": "2026-09-06T19:46:00.795+00:00",
+    "resolvedAt": "2026-09-06T19:46:00.793+00:00",
     "resolvedBy": "cursor",
-    "resolvedAt": "2026-09-06T19:46:00.793Z",
     "resolutionNote": "App.tsx setActiveTab and handleStartEditExpense now use withViewTransition which catches aborted/skipped transitions."
   },
   {
@@ -4478,9 +4478,9 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-09-04T08:04:28.653451+00:00",
-    "updatedAt": "2026-09-06T19:46:02.621Z",
+    "updatedAt": "2026-09-06T19:46:02.621+00:00",
+    "resolvedAt": "2026-09-06T19:46:02.619+00:00",
     "resolvedBy": "cursor",
-    "resolvedAt": "2026-09-06T19:46:02.619Z",
     "resolutionNote": "Duplicate of BUG-143 — withViewTransition catch on tab/edit paths."
   },
   {
@@ -4511,10 +4511,10 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-09-04T09:02:15.735229+00:00",
-    "updatedAt": "2026-09-07T00:25:07.191Z",
-    "resolvedBy": "claude-cli",
-    "resolvedAt": "2026-09-07T00:25:07.191Z",
-    "resolutionNote": "Root cause: src/utils/lazyImport.ts's CHUNK_LOAD_FAILURE regex didn't match Safari/WebKit's 'Importing a module script failed.' wording for a stale dynamic-import() chunk after a deploy, so Safari users fell through to the ErrorBoundary crash instead of getting the single-reload recovery. This was already fixed in commit 340c590 (regex now includes 'importing a module script failed', src/utils/lazyImport.ts:11) and verified present at HEAD; the bug tracker's 'open' status had been reverted back by an external Supabase-ledger sync (commit 3716a1b, authored via Cursor) even though the code fix was never removed. Re-confirmed by reading src/utils/lazyImport.ts (fix present) and a clean project-wide 'npx tsc --noEmit -p tsconfig.app.json'. No further code change needed; re-resolving to correct the tracker state."
+    "updatedAt": "2026-09-10T16:18:48.591+00:00",
+    "resolvedAt": "2026-09-10T16:18:48.591+00:00",
+    "resolvedBy": "cursor-grok",
+    "resolutionNote": "Stale hashed chunk after deploy. lazyImport already reloads once on this error; auto-reporter now ignores it so it does not re-open as critical."
   },
   {
     "id": "BUG-146",
@@ -4549,9 +4549,9 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-09-04T19:04:27.58022+00:00",
-    "updatedAt": "2026-09-06T19:45:07.451Z",
+    "updatedAt": "2026-09-06T19:45:07.451+00:00",
+    "resolvedAt": "2026-09-06T19:45:07.449+00:00",
     "resolvedBy": "cursor",
-    "resolvedAt": "2026-09-06T19:45:07.449Z",
     "resolutionNote": "usePeerPresence now removeChannel + untrack on cleanup and tears down existing topic before subscribe. Commit pending (stability batch)."
   },
   {
@@ -4560,7 +4560,7 @@
     "description": "Automatically captured react crash.\n\nReferenceError: OverflowMenu is not defined\n    at App (http://localhost:5173/src/App.tsx?t=1788549344342:2094:35)\n    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:12864:12)\n    at renderWithHooks (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:4211:19)\n    at updateFunctionComponent (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:5567:16)\n    at beginWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:6138:20)\n    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:850:66)\n    at performUnitOfWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:8427:92)\n    at workLoopSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:8323:37)\n    at renderRootSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:8307:6)\n    at performWorkOnRoot (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bebca624:7992:27)",
     "severity": "critical",
     "category": "general",
-    "status": "wont_fix",
+    "status": "resolved",
     "foundBy": "auto-crash-handler",
     "environment": {
       "route": "#nav-1",
@@ -4582,8 +4582,10 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-09-04T19:15:46.579191+00:00",
-    "updatedAt": "2026-09-07T00:25:11.543Z",
-    "resolutionNote": "Stale localhost:5173 dev-crash-handler capture from mid-edit hot-reload (Vite dev server, not production). The ReferenceError pointed at App.tsx:2094 referencing OverflowMenu, but OverflowMenu is not imported or referenced anywhere in the current src/App.tsx -- it was already removed/fixed by a subsequent hot-reload save during that dev session. Verified via grep (no OverflowMenu reference in App.tsx) and a clean project-wide 'npx tsc --noEmit -p tsconfig.app.json'. Not a defect in any committed revision."
+    "updatedAt": "2026-09-10T16:18:48.591+00:00",
+    "resolvedAt": "2026-09-10T16:18:48.591+00:00",
+    "resolvedBy": "cursor-grok",
+    "resolutionNote": "App.tsx no longer renders OverflowMenu; the ReferenceError source is gone."
   },
   {
     "id": "BUG-148",
@@ -4618,9 +4620,9 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-09-04T19:40:31.118207+00:00",
-    "updatedAt": "2026-09-06T19:45:10.468Z",
+    "updatedAt": "2026-09-06T19:45:10.468+00:00",
+    "resolvedAt": "2026-09-06T19:45:10.466+00:00",
     "resolvedBy": "cursor",
-    "resolvedAt": "2026-09-06T19:45:10.466Z",
     "resolutionNote": "Duplicate of BUG-146 — presence channel lifecycle fix."
   },
   {
@@ -4656,9 +4658,9 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-09-04T19:40:41.134025+00:00",
-    "updatedAt": "2026-09-06T19:45:12.637Z",
+    "updatedAt": "2026-09-06T19:45:12.637+00:00",
+    "resolvedAt": "2026-09-06T19:45:12.635+00:00",
     "resolvedBy": "cursor",
-    "resolvedAt": "2026-09-06T19:45:12.635Z",
     "resolutionNote": "Duplicate of BUG-146 — presence channel lifecycle fix."
   },
   {
@@ -4694,9 +4696,9 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-09-04T19:41:12.618862+00:00",
-    "updatedAt": "2026-09-06T19:45:14.545Z",
+    "updatedAt": "2026-09-06T19:45:14.545+00:00",
+    "resolvedAt": "2026-09-06T19:45:14.544+00:00",
     "resolvedBy": "cursor",
-    "resolvedAt": "2026-09-06T19:45:14.544Z",
     "resolutionNote": "Duplicate of BUG-146 — presence channel lifecycle fix."
   },
   {
@@ -4732,9 +4734,9 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-09-04T19:41:25.019669+00:00",
-    "updatedAt": "2026-09-06T19:45:16.505Z",
+    "updatedAt": "2026-09-06T19:45:16.505+00:00",
+    "resolvedAt": "2026-09-06T19:45:16.503+00:00",
     "resolvedBy": "cursor",
-    "resolvedAt": "2026-09-06T19:45:16.503Z",
     "resolutionNote": "Duplicate of BUG-146 — presence channel lifecycle fix."
   },
   {
@@ -4770,9 +4772,9 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-09-04T19:41:47.179835+00:00",
-    "updatedAt": "2026-09-06T19:45:18.390Z",
+    "updatedAt": "2026-09-06T19:45:18.39+00:00",
+    "resolvedAt": "2026-09-06T19:45:18.388+00:00",
     "resolvedBy": "cursor",
-    "resolvedAt": "2026-09-06T19:45:18.388Z",
     "resolutionNote": "Duplicate of BUG-146 — presence channel lifecycle fix."
   },
   {
@@ -4800,9 +4802,9 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-09-05T05:37:11.868608+00:00",
-    "updatedAt": "2026-09-06T19:46:04.187Z",
+    "updatedAt": "2026-09-06T19:46:04.187+00:00",
+    "resolvedAt": "2026-09-06T19:46:04.185+00:00",
     "resolvedBy": "cursor",
-    "resolvedAt": "2026-09-06T19:46:04.185Z",
     "resolutionNote": "Duplicate of BUG-143 — withViewTransition catch on tab/edit paths."
   },
   {
@@ -4830,9 +4832,9 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-09-05T06:32:48.294276+00:00",
-    "updatedAt": "2026-09-06T19:46:05.972Z",
+    "updatedAt": "2026-09-06T19:46:05.972+00:00",
+    "resolvedAt": "2026-09-06T19:46:05.97+00:00",
     "resolvedBy": "cursor",
-    "resolvedAt": "2026-09-06T19:46:05.970Z",
     "resolutionNote": "Duplicate of BUG-143 — withViewTransition catch on tab/edit paths."
   },
   {
@@ -4896,8 +4898,8 @@
     "status": "resolved",
     "foundBy": "claude-cli",
     "environment": {
-      "platform": "web",
       "isOnline": true,
+      "platform": "web",
       "appVersion": "1.0.0"
     },
     "reproSteps": [
@@ -4907,10 +4909,10 @@
     "expectedBehavior": "",
     "actualBehavior": "",
     "diagnostics": {},
-    "createdAt": "2026-09-06T16:09:41.156Z",
-    "updatedAt": "2026-09-06T16:09:49.469Z",
+    "createdAt": "2026-09-06T16:09:41.156+00:00",
+    "updatedAt": "2026-09-06T16:09:49.469+00:00",
+    "resolvedAt": "2026-09-06T16:09:49.468+00:00",
     "resolvedBy": "claude-cli",
-    "resolvedAt": "2026-09-06T16:09:49.468Z",
     "resolutionNote": "Fixed in commit 2df133b: touch-action: none on .modal-overlay + touch-action: pan-y on inner scroll container"
   },
   {
@@ -4922,8 +4924,8 @@
     "status": "resolved",
     "foundBy": "claude-cli",
     "environment": {
-      "platform": "web",
       "isOnline": true,
+      "platform": "web",
       "appVersion": "1.0.0"
     },
     "reproSteps": [
@@ -4933,10 +4935,10 @@
     "expectedBehavior": "",
     "actualBehavior": "",
     "diagnostics": {},
-    "createdAt": "2026-09-06T16:30:44.443Z",
-    "updatedAt": "2026-09-06T16:31:06.185Z",
+    "createdAt": "2026-09-06T16:30:44.443+00:00",
+    "updatedAt": "2026-09-06T16:31:06.185+00:00",
+    "resolvedAt": "2026-09-06T16:31:06.185+00:00",
     "resolvedBy": "claude-cli",
-    "resolvedAt": "2026-09-06T16:31:06.185Z",
     "resolutionNote": "Fixed in commit bab6e8e: switched modal-backdrop→modal-overlay; added touch-action and overscroll-behavior to grid and lightbox"
   },
   {
@@ -4948,8 +4950,8 @@
     "status": "resolved",
     "foundBy": "claude-cli",
     "environment": {
-      "platform": "web",
       "isOnline": true,
+      "platform": "web",
       "appVersion": "1.0.0"
     },
     "reproSteps": [
@@ -4959,10 +4961,10 @@
     "expectedBehavior": "",
     "actualBehavior": "",
     "diagnostics": {},
-    "createdAt": "2026-09-06T16:33:26.068Z",
-    "updatedAt": "2026-09-06T16:33:39.773Z",
+    "createdAt": "2026-09-06T16:33:26.068+00:00",
+    "updatedAt": "2026-09-06T16:33:39.773+00:00",
+    "resolvedAt": "2026-09-06T16:33:39.773+00:00",
     "resolvedBy": "claude-cli",
-    "resolvedAt": "2026-09-06T16:33:39.773Z",
     "resolutionNote": "Added autoComplete attributes to all email/password inputs across LoginScreen, ResetPasswordScreen, SuperadminAuthModal, AdminToolsPage"
   },
   {
@@ -4974,8 +4976,8 @@
     "status": "resolved",
     "foundBy": "claude-cli",
     "environment": {
-      "platform": "web",
       "isOnline": true,
+      "platform": "web",
       "appVersion": "1.0.0"
     },
     "reproSteps": [
@@ -4985,10 +4987,10 @@
     "expectedBehavior": "",
     "actualBehavior": "",
     "diagnostics": {},
-    "createdAt": "2026-09-06T16:33:26.303Z",
-    "updatedAt": "2026-09-06T16:33:39.980Z",
+    "createdAt": "2026-09-06T16:33:26.303+00:00",
+    "updatedAt": "2026-09-06T16:33:39.98+00:00",
+    "resolvedAt": "2026-09-06T16:33:39.98+00:00",
     "resolvedBy": "claude-cli",
-    "resolvedAt": "2026-09-06T16:33:39.980Z",
     "resolutionNote": "Added overscrollBehavior: contain and touchAction: pan-y to MembersGroupsTab typeahead dropdown"
   },
   {
@@ -5000,8 +5002,8 @@
     "status": "resolved",
     "foundBy": "claude-cli",
     "environment": {
-      "platform": "web",
       "isOnline": true,
+      "platform": "web",
       "appVersion": "1.0.0"
     },
     "reproSteps": [
@@ -5011,10 +5013,10 @@
     "expectedBehavior": "",
     "actualBehavior": "",
     "diagnostics": {},
-    "createdAt": "2026-09-06T16:34:46.071Z",
-    "updatedAt": "2026-09-06T16:34:54.849Z",
+    "createdAt": "2026-09-06T16:34:46.071+00:00",
+    "updatedAt": "2026-09-06T16:34:54.849+00:00",
+    "resolvedAt": "2026-09-06T16:34:54.849+00:00",
     "resolvedBy": "claude-cli",
-    "resolvedAt": "2026-09-06T16:34:54.849Z",
     "resolutionNote": "OnboardingSwipe uses step.id as key; BugReportModal uses timestamp+level+idx composite key"
   },
   {
@@ -5026,8 +5028,8 @@
     "status": "resolved",
     "foundBy": "claude-cli",
     "environment": {
-      "platform": "web",
       "isOnline": true,
+      "platform": "web",
       "appVersion": "1.0.0"
     },
     "reproSteps": [
@@ -5037,10 +5039,10 @@
     "expectedBehavior": "",
     "actualBehavior": "",
     "diagnostics": {},
-    "createdAt": "2026-09-06T16:37:51.491Z",
-    "updatedAt": "2026-09-06T16:37:59.841Z",
+    "createdAt": "2026-09-06T16:37:51.491+00:00",
+    "updatedAt": "2026-09-06T16:37:59.841+00:00",
+    "resolvedAt": "2026-09-06T16:37:59.841+00:00",
     "resolvedBy": "claude-cli",
-    "resolvedAt": "2026-09-06T16:37:59.841Z",
     "resolutionNote": "Added mount-time sync effect so lastBackendSyncedAt updates on page load when already online; capped stale label to Synced instead of Synced yesterday"
   },
   {
@@ -5052,8 +5054,8 @@
     "status": "resolved",
     "foundBy": "claude-cli",
     "environment": {
-      "platform": "web",
       "isOnline": true,
+      "platform": "web",
       "appVersion": "1.0.0"
     },
     "reproSteps": [
@@ -5063,10 +5065,10 @@
     "expectedBehavior": "",
     "actualBehavior": "",
     "diagnostics": {},
-    "createdAt": "2026-09-06T16:48:21.639Z",
-    "updatedAt": "2026-09-06T16:48:30.158Z",
+    "createdAt": "2026-09-06T16:48:21.639+00:00",
+    "updatedAt": "2026-09-06T16:48:30.158+00:00",
+    "resolvedAt": "2026-09-06T16:48:30.158+00:00",
     "resolvedBy": "claude-cli",
-    "resolvedAt": "2026-09-06T16:48:30.158Z",
     "resolutionNote": "Added dirtyExpenseIds prop to ExpenseList, computed via collectDirtyExpenseIds from syncQueue in App.tsx; 🔄 badge shown on pending cards"
   },
   {
@@ -5078,8 +5080,8 @@
     "status": "resolved",
     "foundBy": "claude-cli",
     "environment": {
-      "platform": "web",
       "isOnline": true,
+      "platform": "web",
       "appVersion": "1.0.0"
     },
     "reproSteps": [
@@ -5089,10 +5091,10 @@
     "expectedBehavior": "",
     "actualBehavior": "",
     "diagnostics": {},
-    "createdAt": "2026-09-06T16:48:21.855Z",
-    "updatedAt": "2026-09-06T16:48:30.382Z",
+    "createdAt": "2026-09-06T16:48:21.855+00:00",
+    "updatedAt": "2026-09-06T16:48:30.382+00:00",
+    "resolvedAt": "2026-09-06T16:48:30.382+00:00",
     "resolvedBy": "claude-cli",
-    "resolvedAt": "2026-09-06T16:48:30.382Z",
     "resolutionNote": "Renamed Weight→Shares button label, updated summary line and placeholder in ExpenseForm.tsx"
   },
   {
@@ -5104,8 +5106,8 @@
     "status": "resolved",
     "foundBy": "claude-cli",
     "environment": {
-      "platform": "web",
       "isOnline": true,
+      "platform": "web",
       "appVersion": "1.0.0"
     },
     "reproSteps": [
@@ -5115,10 +5117,10 @@
     "expectedBehavior": "",
     "actualBehavior": "",
     "diagnostics": {},
-    "createdAt": "2026-09-06T16:48:22.078Z",
-    "updatedAt": "2026-09-06T16:48:30.603Z",
+    "createdAt": "2026-09-06T16:48:22.078+00:00",
+    "updatedAt": "2026-09-06T16:48:30.603+00:00",
+    "resolvedAt": "2026-09-06T16:48:30.603+00:00",
     "resolvedBy": "claude-cli",
-    "resolvedAt": "2026-09-06T16:48:30.603Z",
     "resolutionNote": "Added HTML5 drag-and-drop to checklist items; reorderChecklistItems action in tripStore syncs new order via updateTripChecklist"
   },
   {
@@ -5130,8 +5132,8 @@
     "status": "resolved",
     "foundBy": "claude-cli",
     "environment": {
-      "platform": "web",
       "isOnline": true,
+      "platform": "web",
       "appVersion": "1.0.0"
     },
     "reproSteps": [
@@ -5141,11 +5143,63 @@
     "expectedBehavior": "",
     "actualBehavior": "",
     "diagnostics": {},
-    "createdAt": "2026-09-06T16:48:22.302Z",
-    "updatedAt": "2026-09-06T16:48:30.820Z",
+    "createdAt": "2026-09-06T16:48:22.302+00:00",
+    "updatedAt": "2026-09-06T16:48:30.82+00:00",
+    "resolvedAt": "2026-09-06T16:48:30.82+00:00",
     "resolvedBy": "claude-cli",
-    "resolvedAt": "2026-09-06T16:48:30.820Z",
     "resolutionNote": "Added duplicateTrip to tripStore; Duplicate Trip option in TripsListScreen action sheet copies trip+checklist+notes with new IDs, no expenses"
+  },
+  {
+    "id": "BUG-169",
+    "title": "No onError handlers on img tags — broken images show browser placeholder",
+    "description": "All avatar and receipt preview img tags lacked onError handlers. Failed image URLs rendered the browser broken-image icon instead of hiding gracefully.",
+    "severity": "medium",
+    "category": "ui-ux",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "isOnline": true,
+      "platform": "web",
+      "appVersion": "3.4.12"
+    },
+    "reproSteps": [
+      "Have a member with an expired or deleted avatar URL",
+      "Open the Members tab or trip card"
+    ],
+    "expectedBehavior": "Failed images are hidden; initials fallback shows",
+    "actualBehavior": "Broken-image browser icon shows inside avatar circle",
+    "diagnostics": {},
+    "createdAt": "2026-09-06T17:06:19.149+00:00",
+    "updatedAt": "2026-09-06T17:06:19.149+00:00",
+    "resolvedAt": "2026-09-06T17:06:19.149+00:00",
+    "resolvedBy": "claude-cli",
+    "resolutionNote": "Added onError={(e) => e.currentTarget.style.display='none'} to all bare img tags in MembersGroupsTab, TripStack, TripsListScreen, ExpenseForm, ReceiptScannerModal. Commit fa0f6c8."
+  },
+  {
+    "id": "BUG-171",
+    "title": "Checklist tab label clips on narrow phones due to equal flex widths",
+    "description": "\"Checklist\" button in the segmented tab control had equal flex weight as Passes/Notes, causing the longer label and n/n badge to clip on screens ≤375px wide.",
+    "severity": "low",
+    "category": "ui-ux",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "isOnline": true,
+      "platform": "web",
+      "appVersion": "3.4.12"
+    },
+    "reproSteps": [
+      "Open Passes & Notes tab on a 320-375px screen",
+      "Observe Checklist label truncated"
+    ],
+    "expectedBehavior": "All three tab labels and their counts are fully visible",
+    "actualBehavior": "Checklist label ellipsized",
+    "diagnostics": {},
+    "createdAt": "2026-09-06T17:06:19.149+00:00",
+    "updatedAt": "2026-09-06T17:06:19.149+00:00",
+    "resolvedAt": "2026-09-06T17:06:19.149+00:00",
+    "resolvedBy": "claude-cli",
+    "resolutionNote": "Changed Checklist button to flex:1.3, Passes/Notes to flex:0.85. Commit fa0f6c8."
   },
   {
     "id": "BUG-167",
@@ -5200,32 +5254,6 @@
     "resolutionNote": "Wrapped all 6 localStorage calls in App.tsx with try/catch and sensible fallbacks. Commit fa0f6c8."
   },
   {
-    "id": "BUG-169",
-    "title": "No onError handlers on img tags — broken images show browser placeholder",
-    "description": "All avatar and receipt preview img tags lacked onError handlers. Failed image URLs rendered the browser broken-image icon instead of hiding gracefully.",
-    "severity": "medium",
-    "category": "ui-ux",
-    "status": "resolved",
-    "foundBy": "claude-cli",
-    "environment": {
-      "platform": "web",
-      "isOnline": true,
-      "appVersion": "3.4.12"
-    },
-    "reproSteps": [
-      "Have a member with an expired or deleted avatar URL",
-      "Open the Members tab or trip card"
-    ],
-    "expectedBehavior": "Failed images are hidden; initials fallback shows",
-    "actualBehavior": "Broken-image browser icon shows inside avatar circle",
-    "diagnostics": {},
-    "createdAt": "2026-09-06T17:06:19.149Z",
-    "updatedAt": "2026-09-06T17:06:19.149Z",
-    "resolvedBy": "claude-cli",
-    "resolvedAt": "2026-09-06T17:06:19.149Z",
-    "resolutionNote": "Added onError={(e) => e.currentTarget.style.display='none'} to all bare img tags in MembersGroupsTab, TripStack, TripsListScreen, ExpenseForm, ReceiptScannerModal. Commit fa0f6c8."
-  },
-  {
     "id": "BUG-170",
     "title": "handleAddMemberLocal / handleCreateGroupLocal silently drop network errors",
     "description": "Both async handlers used try/finally without catch. If onSaveMember or onSaveGroup threw (network failure), the error propagated as an unhandled rejection with no user feedback.",
@@ -5250,32 +5278,6 @@
     "resolvedBy": "claude-cli",
     "resolvedAt": "2026-09-06T17:06:19.149Z",
     "resolutionNote": "Restructured both handlers to try/catch/finally; catch sets form error state. Commit fa0f6c8."
-  },
-  {
-    "id": "BUG-171",
-    "title": "Checklist tab label clips on narrow phones due to equal flex widths",
-    "description": "\"Checklist\" button in the segmented tab control had equal flex weight as Passes/Notes, causing the longer label and n/n badge to clip on screens ≤375px wide.",
-    "severity": "low",
-    "category": "ui-ux",
-    "status": "resolved",
-    "foundBy": "claude-cli",
-    "environment": {
-      "platform": "web",
-      "isOnline": true,
-      "appVersion": "3.4.12"
-    },
-    "reproSteps": [
-      "Open Passes & Notes tab on a 320-375px screen",
-      "Observe Checklist label truncated"
-    ],
-    "expectedBehavior": "All three tab labels and their counts are fully visible",
-    "actualBehavior": "Checklist label ellipsized",
-    "diagnostics": {},
-    "createdAt": "2026-09-06T17:06:19.149Z",
-    "updatedAt": "2026-09-06T17:06:19.149Z",
-    "resolvedBy": "claude-cli",
-    "resolvedAt": "2026-09-06T17:06:19.149Z",
-    "resolutionNote": "Changed Checklist button to flex:1.3, Passes/Notes to flex:0.85. Commit fa0f6c8."
   },
   {
     "id": "BUG-172",
@@ -5312,8 +5314,8 @@
     "status": "resolved",
     "foundBy": "cursor-agent",
     "environment": {
-      "platform": "web",
       "isOnline": true,
+      "platform": "web",
       "appVersion": "1.0.0"
     },
     "reproSteps": [
@@ -5323,10 +5325,10 @@
     "expectedBehavior": "",
     "actualBehavior": "",
     "diagnostics": {},
-    "createdAt": "2026-09-06T20:09:03.160Z",
-    "updatedAt": "2026-09-06T20:09:46.853Z",
+    "createdAt": "2026-09-06T20:09:03.16+00:00",
+    "updatedAt": "2026-09-06T20:09:46.853+00:00",
+    "resolvedAt": "2026-09-06T20:09:46.852+00:00",
     "resolvedBy": "cursor-agent",
-    "resolvedAt": "2026-09-06T20:09:46.852Z",
     "resolutionNote": "Closed confirmRequest JSX before ConflictResolverModal; added tripId to makeExpense in conflict tests. Fixed in v3.5.1."
   },
   {
@@ -5338,8 +5340,8 @@
     "status": "resolved",
     "foundBy": "cursor-agent",
     "environment": {
-      "platform": "web",
       "isOnline": true,
+      "platform": "web",
       "appVersion": "1.0.0"
     },
     "reproSteps": [
@@ -5350,10 +5352,10 @@
     "expectedBehavior": "Back and Escape pop exactly one layer to the previous screen",
     "actualBehavior": "Skipped layers, left trip, or needed two presses",
     "diagnostics": {},
-    "createdAt": "2026-09-06T22:29:09.362Z",
-    "updatedAt": "2026-09-06T22:29:40.292Z",
+    "createdAt": "2026-09-06T22:29:09.362+00:00",
+    "updatedAt": "2026-09-06T22:29:40.292+00:00",
+    "resolvedAt": "2026-09-06T22:29:40.291+00:00",
     "resolvedBy": "cursor-agent",
-    "resolvedAt": "2026-09-06T22:29:40.291Z",
     "resolutionNote": "One history owner per overlay; wired gaps (ActionSheet, ConfirmDialog, conflict modal, pickers); Escape LIFO stack. Fixed in v3.6.0 commit df2815e."
   },
   {
@@ -5365,8 +5367,8 @@
     "status": "resolved",
     "foundBy": "cursor-agent",
     "environment": {
-      "platform": "web",
       "isOnline": true,
+      "platform": "web",
       "appVersion": "1.0.0"
     },
     "reproSteps": [
@@ -5376,11 +5378,110 @@
     "expectedBehavior": "",
     "actualBehavior": "",
     "diagnostics": {},
-    "createdAt": "2026-09-07T05:29:57.721Z",
-    "updatedAt": "2026-09-07T05:30:37.171Z",
+    "createdAt": "2026-09-07T05:29:57.721+00:00",
+    "updatedAt": "2026-09-07T05:30:37.171+00:00",
+    "resolvedAt": "2026-09-07T05:30:37.168+00:00",
     "resolvedBy": "cursor-agent",
-    "resolvedAt": "2026-09-07T05:30:37.168Z",
-    "resolutionNote": "About used navigate(/privacy|/terms) which unmounted App and lost screenStack; Back remounted on Expenses/Summary. Fixed in v3.6.1 commit 4560b00: Privacy/Terms are Settings subScreens under About; shared content modules keep public /privacy and /terms routes."
+    "resolutionNote": "About used navigate(/privacy|/terms) which unmounted App and lost screenStack; Back remounted on Expenses/Summary. Fixed in v3.6.1 commit d001051: Privacy/Terms are Settings subScreens under About; shared content modules keep public /privacy and /terms routes."
+  },
+  {
+    "id": "BUG-176",
+    "title": "Failed to fetch dynamically imported module: http://localhost:5173/src/components/GlobalSettingsModal.tsx",
+    "description": "Automatically captured react crash.\n\nTypeError: Failed to fetch dynamically imported module: http://localhost:5173/src/components/GlobalSettingsModal.tsx",
+    "severity": "critical",
+    "category": "general",
+    "status": "resolved",
+    "foundBy": "auto-crash-handler",
+    "environment": {
+      "route": "#nav-1",
+      "isOnline": true,
+      "platform": "web",
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [],
+    "expectedBehavior": "App runs without throwing.",
+    "actualBehavior": "Failed to fetch dynamically imported module: http://localhost:5173/src/components/GlobalSettingsModal.tsx",
+    "diagnostics": {
+      "stackTrace": "TypeError: Failed to fetch dynamically imported module: http://localhost:5173/src/components/GlobalSettingsModal.tsx",
+      "consoleLogs": [
+        "[info] DiagnosticLogger initialized",
+        "[error] %o\n\n%s\n\n%s\n {} The above error occurred in one of your React components. React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.",
+        "[error] React Crash: Failed to fetch dynamically imported module: http://localhost:5173/src/components/GlobalSettingsModal.tsx",
+        "[error] Uncaught error inside ErrorBoundary: {} {\"componentStack\":\"\\n    at Lazy (<anonymous>)\\n    at Suspense (<anonymous>)\\n    at div (<anonymous>)\\n    at App (http://localhost:5173/src/App.tsx?t=1788771693729:138:475)\\n    at ErrorBoundary (http://localhost:5173/src/components/ErrorBoundary.tsx:6:8)\\n    at RequireAuth (http://localhost:5173/src/components/RequireAuth.tsx?t=1788771518142:8:31)\\n    at RenderedRoute (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=bdf5e894:4156:"
+      ],
+      "syncQueueLength": 0
+    },
+    "createdAt": "2026-09-07T09:12:52.146324+00:00",
+    "updatedAt": "2026-09-10T16:18:48.591+00:00",
+    "resolvedAt": "2026-09-10T16:18:48.591+00:00",
+    "resolvedBy": "cursor-grok",
+    "resolutionNote": "Duplicate of BUG-177/178: Vite HMR failed to fetch GlobalSettingsModal during local dev. Not a production defect."
+  },
+  {
+    "id": "BUG-177",
+    "title": "Failed to fetch dynamically imported module: http://localhost:5173/src/components/GlobalSettingsModal.tsx",
+    "description": "Automatically captured react crash.\n\nTypeError: Failed to fetch dynamically imported module: http://localhost:5173/src/components/GlobalSettingsModal.tsx",
+    "severity": "critical",
+    "category": "general",
+    "status": "resolved",
+    "foundBy": "auto-crash-handler",
+    "environment": {
+      "route": "#nav-1",
+      "isOnline": true,
+      "platform": "web",
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [],
+    "expectedBehavior": "App runs without throwing.",
+    "actualBehavior": "Failed to fetch dynamically imported module: http://localhost:5173/src/components/GlobalSettingsModal.tsx",
+    "diagnostics": {
+      "stackTrace": "TypeError: Failed to fetch dynamically imported module: http://localhost:5173/src/components/GlobalSettingsModal.tsx",
+      "consoleLogs": [
+        "[info] DiagnosticLogger initialized",
+        "[error] %o\n\n%s\n\n%s\n {} The above error occurred in one of your React components. React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.",
+        "[error] React Crash: Failed to fetch dynamically imported module: http://localhost:5173/src/components/GlobalSettingsModal.tsx",
+        "[error] Uncaught error inside ErrorBoundary: {} {\"componentStack\":\"\\n    at Lazy (<anonymous>)\\n    at Suspense (<anonymous>)\\n    at div (<anonymous>)\\n    at App (http://localhost:5173/src/App.tsx?t=1788771693729:138:475)\\n    at ErrorBoundary (http://localhost:5173/src/components/ErrorBoundary.tsx:6:8)\\n    at RequireAuth (http://localhost:5173/src/components/RequireAuth.tsx?t=1788771518142:8:31)\\n    at RenderedRoute (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=bdf5e894:4156:"
+      ],
+      "syncQueueLength": 0
+    },
+    "createdAt": "2026-09-07T09:16:45.842574+00:00",
+    "updatedAt": "2026-09-10T16:18:48.591+00:00",
+    "resolvedAt": "2026-09-10T16:18:48.591+00:00",
+    "resolvedBy": "cursor-grok",
+    "resolutionNote": "Duplicate of BUG-176/178: Vite HMR failed to fetch GlobalSettingsModal during local dev. Not a production defect."
+  },
+  {
+    "id": "BUG-178",
+    "title": "Failed to fetch dynamically imported module: http://localhost:5173/src/components/GlobalSettingsModal.tsx?t=1788772675831",
+    "description": "Automatically captured react crash.\n\nTypeError: Failed to fetch dynamically imported module: http://localhost:5173/src/components/GlobalSettingsModal.tsx?t=1788772675831",
+    "severity": "critical",
+    "category": "general",
+    "status": "resolved",
+    "foundBy": "auto-crash-handler",
+    "environment": {
+      "route": "#nav-1",
+      "isOnline": true,
+      "platform": "web",
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [],
+    "expectedBehavior": "App runs without throwing.",
+    "actualBehavior": "Failed to fetch dynamically imported module: http://localhost:5173/src/components/GlobalSettingsModal.tsx?t=1788772675831",
+    "diagnostics": {
+      "stackTrace": "TypeError: Failed to fetch dynamically imported module: http://localhost:5173/src/components/GlobalSettingsModal.tsx?t=1788772675831",
+      "consoleLogs": [
+        "[info] DiagnosticLogger initialized",
+        "[error] %o\n\n%s\n\n%s\n {} The above error occurred in one of your React components. React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.",
+        "[error] React Crash: Failed to fetch dynamically imported module: http://localhost:5173/src/components/GlobalSettingsModal.tsx?t=1788772675831",
+        "[error] Uncaught error inside ErrorBoundary: {} {\"componentStack\":\"\\n    at Lazy (<anonymous>)\\n    at Suspense (<anonymous>)\\n    at div (<anonymous>)\\n    at App (http://localhost:5173/src/App.tsx?t=1788772675831:138:475)\\n    at ErrorBoundary (http://localhost:5173/src/components/ErrorBoundary.tsx:6:8)\\n    at RequireAuth (http://localhost:5173/src/components/RequireAuth.tsx?t=1788771518142:8:31)\\n    at RenderedRoute (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=bdf5e894:4156:"
+      ],
+      "syncQueueLength": 0
+    },
+    "createdAt": "2026-09-07T09:19:11.633498+00:00",
+    "updatedAt": "2026-09-10T16:18:48.591+00:00",
+    "resolvedAt": "2026-09-10T16:18:48.591+00:00",
+    "resolvedBy": "cursor-grok",
+    "resolutionNote": "Local Vite HMR stale chunk for GlobalSettingsModal (localhost ?t=). Module exists; lazyImport reloads once. Auto-reporter now ignores this class."
   },
   {
     "id": "BUG-179",
@@ -5391,8 +5492,8 @@
     "status": "resolved",
     "foundBy": "claude-cli",
     "environment": {
-      "platform": "web",
       "isOnline": true,
+      "platform": "web",
       "appVersion": "1.0.0"
     },
     "reproSteps": [
@@ -5403,10 +5504,10 @@
     "expectedBehavior": "Receipt thumbnail renders",
     "actualBehavior": "Broken image icon shown instead of the photo",
     "diagnostics": {},
-    "createdAt": "2026-09-07T12:58:36.528Z",
-    "updatedAt": "2026-09-07T12:58:43.076Z",
+    "createdAt": "2026-09-07T12:58:36.528+00:00",
+    "updatedAt": "2026-09-07T12:58:43.076+00:00",
+    "resolvedAt": "2026-09-07T12:58:43.076+00:00",
     "resolvedBy": "claude-cli",
-    "resolvedAt": "2026-09-07T12:58:43.076Z",
     "resolutionNote": "receiptPath is a Supabase Storage object path, not a URL. TripMediaGalleryModal used it directly as img src instead of resolving via getReceiptSignedUrl (the pattern ExpenseReviewModal already used). Fixed in v3.6.3 commit 37f07c4: resolve signed URLs per item with a loading placeholder, also fixed the share action using the same raw path."
   },
   {
@@ -5418,8 +5519,8 @@
     "status": "resolved",
     "foundBy": "claude-cli",
     "environment": {
-      "platform": "web",
       "isOnline": true,
+      "platform": "web",
       "appVersion": "1.0.0"
     },
     "reproSteps": [
@@ -5430,10 +5531,10 @@
     "expectedBehavior": "Appearance title renders in full",
     "actualBehavior": "Title truncated to 'Appeara…' or similar",
     "diagnostics": {},
-    "createdAt": "2026-09-07T13:30:51.163Z",
-    "updatedAt": "2026-09-07T13:31:10.131Z",
+    "createdAt": "2026-09-07T13:30:51.163+00:00",
+    "updatedAt": "2026-09-07T13:31:10.131+00:00",
+    "resolvedAt": "2026-09-07T13:31:10.129+00:00",
     "resolvedBy": "claude-cli",
-    "resolvedAt": "2026-09-07T13:31:10.129Z",
     "resolutionNote": "Segmented control buttons were icon+text with flex-shrink:0. Dropped text labels (icon-only, tooltips kept) in SettingsView.tsx + trimmed .settings-seg-btn padding in index.css. Fixed in v3.6.5 commit 46342a5."
   },
   {
@@ -5445,8 +5546,8 @@
     "status": "resolved",
     "foundBy": "claude-cli",
     "environment": {
-      "platform": "web",
       "isOnline": true,
+      "platform": "web",
       "appVersion": "1.0.0"
     },
     "reproSteps": [
@@ -5457,10 +5558,10 @@
     "expectedBehavior": "CI passes, EC2 + GitHub Pages deploys succeed on push to main",
     "actualBehavior": "oxlint hit duplicate-declaration/unclosed-JSX-tag parse errors, exit 1, build+test steps never ran, both deploy workflows never ran",
     "diagnostics": {},
-    "createdAt": "2026-09-07T13:35:37.448Z",
-    "updatedAt": "2026-09-07T13:36:45.496Z",
+    "createdAt": "2026-09-07T13:35:37.448+00:00",
+    "updatedAt": "2026-09-07T13:36:45.496+00:00",
+    "resolvedAt": "2026-09-07T13:36:45.495+00:00",
     "resolvedBy": "claude-cli",
-    "resolvedAt": "2026-09-07T13:36:45.495Z",
     "resolutionNote": "Committed the pre-existing uncommitted duplicate-line fixes for 5 files + a .gitignore encoding fix. Fixed in v3.6.6 commit bb8fa79. Verified lint/build/test all green before pushing."
   },
   {
@@ -5472,8 +5573,8 @@
     "status": "resolved",
     "foundBy": "cursor-agent",
     "environment": {
-      "platform": "web",
       "isOnline": true,
+      "platform": "web",
       "appVersion": "1.0.0"
     },
     "reproSteps": [
@@ -5484,10 +5585,10 @@
     "expectedBehavior": "Overlay slides left-to-right off the home layer, home scroll preserved",
     "actualBehavior": "Same enter animation as opening; home could jump or overlay could stick exiting",
     "diagnostics": {},
-    "createdAt": "2026-09-07T15:15:15.182Z",
-    "updatedAt": "2026-09-07T15:15:15.486Z",
+    "createdAt": "2026-09-07T15:15:15.182+00:00",
+    "updatedAt": "2026-09-07T15:15:15.486+00:00",
+    "resolvedAt": "2026-09-07T15:15:15.486+00:00",
     "resolvedBy": "cursor-agent",
-    "resolvedAt": "2026-09-07T15:15:15.486Z",
     "resolutionNote": "Overlay dir-back / dir-out animations plus an exit timeout keyed only on subScreen. Fixed in v3.6.8 commit a4b1b6c."
   },
   {
@@ -5499,8 +5600,8 @@
     "status": "resolved",
     "foundBy": "cursor-agent",
     "environment": {
-      "platform": "web",
       "isOnline": true,
+      "platform": "web",
       "appVersion": "1.0.0"
     },
     "reproSteps": [
@@ -5511,10 +5612,10 @@
     "expectedBehavior": "Screen appears immediately after intent (hover/press)",
     "actualBehavior": "Brief suspend/skeleton on first open",
     "diagnostics": {},
-    "createdAt": "2026-09-07T15:15:16.602Z",
-    "updatedAt": "2026-09-07T15:15:16.787Z",
+    "createdAt": "2026-09-07T15:15:16.602+00:00",
+    "updatedAt": "2026-09-07T15:15:16.787+00:00",
+    "resolvedAt": "2026-09-07T15:15:16.787+00:00",
     "resolvedBy": "cursor-agent",
-    "resolvedAt": "2026-09-07T15:15:16.787Z",
     "resolutionNote": "Prefetch leaves on pointer enter/down; prefetch SettingsTab from trip header and GlobalSettingsModal from profile avatar / command palette. Fixed in v3.6.8 commit a4b1b6c."
   },
   {
@@ -5526,8 +5627,8 @@
     "status": "resolved",
     "foundBy": "cursor-agent",
     "environment": {
-      "platform": "web",
       "isOnline": true,
+      "platform": "web",
       "appVersion": "1.0.0"
     },
     "reproSteps": [
@@ -5538,10 +5639,10 @@
     "expectedBehavior": "Badge shows locally deleted count without a network fetch; cache kept per trip",
     "actualBehavior": "Fetch on every Settings visit; badge reset to 0 after selectTrip",
     "diagnostics": {},
-    "createdAt": "2026-09-07T15:15:17.946Z",
-    "updatedAt": "2026-09-07T15:15:18.253Z",
+    "createdAt": "2026-09-07T15:15:17.946+00:00",
+    "updatedAt": "2026-09-07T15:15:18.253+00:00",
+    "resolvedAt": "2026-09-07T15:15:18.253+00:00",
     "resolvedBy": "cursor-agent",
-    "resolvedAt": "2026-09-07T15:15:18.253Z",
     "resolutionNote": "selectTrip no longer wipes deletedExpenses; merge/filter by tripId; fetch only on Recycle Bin screen. Fixed in v3.6.8 commit a4b1b6c."
   },
   {
@@ -5553,8 +5654,8 @@
     "status": "resolved",
     "foundBy": "cursor-agent",
     "environment": {
-      "platform": "web",
       "isOnline": true,
+      "platform": "web",
       "appVersion": "1.0.0"
     },
     "reproSteps": [
@@ -5565,10 +5666,10 @@
     "expectedBehavior": "Each leaf is its own screen; home stays mounted",
     "actualBehavior": "Monolithic SettingsView owned every leaf inline",
     "diagnostics": {},
-    "createdAt": "2026-09-07T15:15:19.174Z",
-    "updatedAt": "2026-09-07T15:15:19.379Z",
+    "createdAt": "2026-09-07T15:15:19.174+00:00",
+    "updatedAt": "2026-09-07T15:15:19.379+00:00",
+    "resolvedAt": "2026-09-07T15:15:19.379+00:00",
     "resolvedBy": "cursor-agent",
-    "resolvedAt": "2026-09-07T15:15:19.379Z",
     "resolutionNote": "Extracted SettingsStorageDataScreen, SettingsArchivedTripsScreen, SettingsBackupsScreen, SettingsAboutScreen under src/components/settings/. Fixed in v3.6.8 commit a4b1b6c."
   },
   {
@@ -5580,8 +5681,8 @@
     "status": "resolved",
     "foundBy": "cursor-agent",
     "environment": {
-      "platform": "web",
       "isOnline": true,
+      "platform": "web",
       "appVersion": "1.0.0"
     },
     "reproSteps": [
@@ -5591,10 +5692,10 @@
     "expectedBehavior": "Drawer slides out; swipe-right dismisses",
     "actualBehavior": "Instant unmount; swipe did nothing",
     "diagnostics": {},
-    "createdAt": "2026-09-07T15:15:20.162Z",
-    "updatedAt": "2026-09-07T15:15:20.351Z",
+    "createdAt": "2026-09-07T15:15:20.162+00:00",
+    "updatedAt": "2026-09-07T15:15:20.351+00:00",
+    "resolvedAt": "2026-09-07T15:15:20.351+00:00",
     "resolvedBy": "cursor-agent",
-    "resolvedAt": "2026-09-07T15:15:20.351Z",
     "resolutionNote": "280ms exit animation, swipe-right dismiss, closeRef so App history/Escape wait for the animation. Fixed in v3.6.8 commit a4b1b6c."
   },
   {
@@ -5606,8 +5707,8 @@
     "status": "resolved",
     "foundBy": "cursor-agent",
     "environment": {
-      "platform": "web",
       "isOnline": true,
+      "platform": "web",
       "appVersion": "1.0.0"
     },
     "reproSteps": [
@@ -5619,10 +5720,10 @@
     "expectedBehavior": "SettingsTab unmounts with the trip; next trip starts on Expenses without a hidden Settings tree",
     "actualBehavior": "SettingsTab remounted immediately because hasVisitedSettings was still true",
     "diagnostics": {},
-    "createdAt": "2026-09-07T15:15:21.160Z",
-    "updatedAt": "2026-09-07T15:15:21.348Z",
+    "createdAt": "2026-09-07T15:15:21.16+00:00",
+    "updatedAt": "2026-09-07T15:15:21.348+00:00",
+    "resolvedAt": "2026-09-07T15:15:21.347+00:00",
     "resolvedBy": "cursor-agent",
-    "resolvedAt": "2026-09-07T15:15:21.347Z",
     "resolutionNote": "Reset hasVisitedSettings when activeTripId is null. Fixed in v3.6.8 commit a4b1b6c."
   },
   {
@@ -5634,8 +5735,8 @@
     "status": "resolved",
     "foundBy": "cursor-agent",
     "environment": {
-      "platform": "web",
       "isOnline": true,
+      "platform": "web",
       "appVersion": "1.0.0"
     },
     "reproSteps": [
@@ -5645,10 +5746,10 @@
     "expectedBehavior": "Shared ConfirmDialog with replacement-category picker",
     "actualBehavior": "Custom overlay inside the Categories screen",
     "diagnostics": {},
-    "createdAt": "2026-09-07T15:15:22.142Z",
-    "updatedAt": "2026-09-07T15:15:22.350Z",
+    "createdAt": "2026-09-07T15:15:22.142+00:00",
+    "updatedAt": "2026-09-07T15:15:22.35+00:00",
+    "resolvedAt": "2026-09-07T15:15:22.35+00:00",
     "resolvedBy": "cursor-agent",
-    "resolvedAt": "2026-09-07T15:15:22.350Z",
     "resolutionNote": "ConfirmDialog body slot for the merge <select>; Categories calls onRequestConfirm. Fixed in v3.6.8 commit a4b1b6c."
   },
   {
@@ -5660,8 +5761,8 @@
     "status": "resolved",
     "foundBy": "cursor-agent",
     "environment": {
-      "platform": "web",
       "isOnline": true,
+      "platform": "web",
       "appVersion": "1.0.0"
     },
     "reproSteps": [
@@ -5671,10 +5772,10 @@
     "expectedBehavior": "Explain that a connection is required; do not run the action",
     "actualBehavior": "Confirm dialog proceeded as if online",
     "diagnostics": {},
-    "createdAt": "2026-09-07T15:15:23.167Z",
-    "updatedAt": "2026-09-07T15:15:23.373Z",
+    "createdAt": "2026-09-07T15:15:23.167+00:00",
+    "updatedAt": "2026-09-07T15:15:23.373+00:00",
+    "resolvedAt": "2026-09-07T15:15:23.373+00:00",
     "resolvedBy": "cursor-agent",
-    "resolvedAt": "2026-09-07T15:15:23.373Z",
     "resolutionNote": "Offline ConfirmDialog (OK only) before Sign Out / Delete Account. Fixed in v3.6.8 commit a4b1b6c."
   },
   {
@@ -5686,8 +5787,8 @@
     "status": "resolved",
     "foundBy": "cursor-agent",
     "environment": {
-      "platform": "web",
       "isOnline": true,
+      "platform": "web",
       "appVersion": "1.0.0"
     },
     "reproSteps": [
@@ -5697,11 +5798,44 @@
     "expectedBehavior": "Settlement for Close Trip is computed only when that row is on screen",
     "actualBehavior": "Full settlement pass on every SettingsView render path",
     "diagnostics": {},
-    "createdAt": "2026-09-07T15:15:24.191Z",
-    "updatedAt": "2026-09-07T15:15:24.379Z",
+    "createdAt": "2026-09-07T15:15:24.191+00:00",
+    "updatedAt": "2026-09-07T15:15:24.379+00:00",
+    "resolvedAt": "2026-09-07T15:15:24.379+00:00",
     "resolvedBy": "cursor-agent",
-    "resolvedAt": "2026-09-07T15:15:24.379Z",
     "resolutionNote": "Skip calc unless isSurfaceVisible, home overlay is closed, and isTripAdmin; cache last summary. Fixed in v3.6.8 commit a4b1b6c."
+  },
+  {
+    "id": "BUG-191",
+    "title": "isWideScreen is not defined",
+    "description": "Automatically captured react crash.\n\nReferenceError: isWideScreen is not defined\n    at App (http://localhost:5173/src/App.tsx?t=1788805282395:2487:9)\n    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bdf5e894:12864:12)\n    at renderWithHooks (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bdf5e894:4211:19)\n    at updateFunctionComponent (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bdf5e894:5567:16)\n    at beginWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bdf5e894:6138:20)\n    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bdf5e894:850:66)\n    at performUnitOfWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bdf5e894:8427:92)\n    at workLoopSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bdf5e894:8323:37)\n    at renderRootSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bdf5e894:8307:6)\n    at performWorkOnRoot (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bdf5e894:7992:27)",
+    "severity": "critical",
+    "category": "general",
+    "status": "resolved",
+    "foundBy": "auto-crash-handler",
+    "environment": {
+      "route": "#nav-2",
+      "isOnline": true,
+      "platform": "web",
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [],
+    "expectedBehavior": "App runs without throwing.",
+    "actualBehavior": "isWideScreen is not defined",
+    "diagnostics": {
+      "stackTrace": "ReferenceError: isWideScreen is not defined\n    at App (http://localhost:5173/src/App.tsx?t=1788805282395:2487:9)\n    at Object.react_stack_bottom_frame (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bdf5e894:12864:12)\n    at renderWithHooks (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bdf5e894:4211:19)\n    at updateFunctionComponent (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bdf5e894:5567:16)\n    at beginWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bdf5e894:6138:20)\n    at runWithFiberInDEV (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bdf5e894:850:66)\n    at performUnitOfWork (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bdf5e894:8427:92)\n    at workLoopSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bdf5e894:8323:37)\n    at renderRootSync (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bdf5e894:8307:6)\n    at performWorkOnRoot (http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=bdf5e894:7992:27)",
+      "consoleLogs": [
+        "[info] DiagnosticLogger initialized",
+        "[error] %o\n\n%s\n\n%s\n {} The above error occurred in the <App> component. React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.",
+        "[error] React Crash: isWideScreen is not defined",
+        "[error] Uncaught error inside ErrorBoundary: {} {\"componentStack\":\"\\n    at App (http://localhost:5173/src/App.tsx?t=1788805282395:140:475)\\n    at ErrorBoundary (http://localhost:5173/src/components/ErrorBoundary.tsx:6:8)\\n    at RequireAuth (http://localhost:5173/src/components/RequireAuth.tsx:8:31)\\n    at RenderedRoute (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=bdf5e894:4156:26)\\n    at Routes (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=bdf5e894:483"
+      ],
+      "syncQueueLength": 0
+    },
+    "createdAt": "2026-09-07T18:21:25.502756+00:00",
+    "updatedAt": "2026-09-10T16:18:48.591+00:00",
+    "resolvedAt": "2026-09-10T16:18:48.591+00:00",
+    "resolvedBy": "cursor-grok",
+    "resolutionNote": "App.tsx no longer references isWideScreen; the ReferenceError source is gone."
   },
   {
     "id": "BUG-192",
@@ -5712,8 +5846,8 @@
     "status": "resolved",
     "foundBy": "agent",
     "environment": {
-      "platform": "web",
       "isOnline": true,
+      "platform": "web",
       "appVersion": "1.0.0"
     },
     "reproSteps": [
@@ -5723,10 +5857,10 @@
     "expectedBehavior": "",
     "actualBehavior": "",
     "diagnostics": {},
-    "createdAt": "2026-09-07T18:42:47.591Z",
-    "updatedAt": "2026-09-07T18:42:53.317Z",
+    "createdAt": "2026-09-07T18:42:47.591+00:00",
+    "updatedAt": "2026-09-07T18:42:53.317+00:00",
+    "resolvedAt": "2026-09-07T18:42:53.317+00:00",
     "resolvedBy": "agent",
-    "resolvedAt": "2026-09-07T18:42:53.317Z",
     "resolutionNote": "Made stat box label dynamic to show BALANCES when settled and UNSETTLED when outstanding"
   },
   {
@@ -5738,8 +5872,8 @@
     "status": "resolved",
     "foundBy": "agent",
     "environment": {
-      "platform": "web",
       "isOnline": true,
+      "platform": "web",
       "appVersion": "1.0.0"
     },
     "reproSteps": [
@@ -5749,10 +5883,10 @@
     "expectedBehavior": "",
     "actualBehavior": "",
     "diagnostics": {},
-    "createdAt": "2026-09-07T18:42:59.069Z",
-    "updatedAt": "2026-09-07T18:43:03.420Z",
+    "createdAt": "2026-09-07T18:42:59.069+00:00",
+    "updatedAt": "2026-09-07T18:43:03.42+00:00",
+    "resolvedAt": "2026-09-07T18:43:03.419+00:00",
     "resolvedBy": "agent",
-    "resolvedAt": "2026-09-07T18:43:03.419Z",
     "resolutionNote": "Restored exact original stack-card-top-bar and moved PassportStamp to absolute overlay at top 70px right 18px"
   },
   {
@@ -5764,8 +5898,8 @@
     "status": "resolved",
     "foundBy": "claude-cli",
     "environment": {
-      "platform": "web",
       "isOnline": true,
+      "platform": "web",
       "appVersion": "1.0.0"
     },
     "reproSteps": [
@@ -5775,10 +5909,10 @@
     "expectedBehavior": "",
     "actualBehavior": "",
     "diagnostics": {},
-    "createdAt": "2026-09-10T17:20:03.014Z",
-    "updatedAt": "2026-09-10T17:20:16.858Z",
+    "createdAt": "2026-09-10T17:20:03.014+00:00",
+    "updatedAt": "2026-09-10T17:20:16.858+00:00",
+    "resolvedAt": "2026-09-10T17:20:16.858+00:00",
     "resolvedBy": "claude-cli",
-    "resolvedAt": "2026-09-10T17:20:16.858Z",
     "resolutionNote": "Fixed in commit ffa9c97 (migration 0080_security_hardening_phase5.sql, applied to remote DB; see decisions.md #143)."
   },
   {
@@ -5790,8 +5924,8 @@
     "status": "resolved",
     "foundBy": "claude-cli",
     "environment": {
-      "platform": "web",
       "isOnline": true,
+      "platform": "web",
       "appVersion": "1.0.0"
     },
     "reproSteps": [
@@ -5801,10 +5935,10 @@
     "expectedBehavior": "",
     "actualBehavior": "",
     "diagnostics": {},
-    "createdAt": "2026-09-10T17:20:04.591Z",
-    "updatedAt": "2026-09-10T17:20:17.279Z",
+    "createdAt": "2026-09-10T17:20:04.591+00:00",
+    "updatedAt": "2026-09-10T17:20:17.279+00:00",
+    "resolvedAt": "2026-09-10T17:20:17.278+00:00",
     "resolvedBy": "claude-cli",
-    "resolvedAt": "2026-09-10T17:20:17.278Z",
     "resolutionNote": "Fixed in commit ffa9c97 (migration 0080_security_hardening_phase5.sql, applied to remote DB; see decisions.md #143)."
   },
   {
@@ -5816,8 +5950,8 @@
     "status": "resolved",
     "foundBy": "claude-cli",
     "environment": {
-      "platform": "web",
       "isOnline": true,
+      "platform": "web",
       "appVersion": "1.0.0"
     },
     "reproSteps": [
@@ -5827,10 +5961,10 @@
     "expectedBehavior": "",
     "actualBehavior": "",
     "diagnostics": {},
-    "createdAt": "2026-09-10T17:20:05.645Z",
-    "updatedAt": "2026-09-10T17:20:17.730Z",
+    "createdAt": "2026-09-10T17:20:05.645+00:00",
+    "updatedAt": "2026-09-10T17:20:17.73+00:00",
+    "resolvedAt": "2026-09-10T17:20:17.729+00:00",
     "resolvedBy": "claude-cli",
-    "resolvedAt": "2026-09-10T17:20:17.729Z",
     "resolutionNote": "Fixed in commit ffa9c97 (migration 0080_security_hardening_phase5.sql, applied to remote DB; see decisions.md #143)."
   },
   {
@@ -5842,8 +5976,8 @@
     "status": "resolved",
     "foundBy": "claude-cli",
     "environment": {
-      "platform": "web",
       "isOnline": true,
+      "platform": "web",
       "appVersion": "1.0.0"
     },
     "reproSteps": [
@@ -5853,10 +5987,10 @@
     "expectedBehavior": "",
     "actualBehavior": "",
     "diagnostics": {},
-    "createdAt": "2026-09-10T17:20:06.891Z",
-    "updatedAt": "2026-09-10T17:20:18.191Z",
+    "createdAt": "2026-09-10T17:20:06.891+00:00",
+    "updatedAt": "2026-09-10T17:20:18.191+00:00",
+    "resolvedAt": "2026-09-10T17:20:18.191+00:00",
     "resolvedBy": "claude-cli",
-    "resolvedAt": "2026-09-10T17:20:18.191Z",
     "resolutionNote": "Fixed in commit ffa9c97 (migration 0080_security_hardening_phase5.sql, applied to remote DB; see decisions.md #143)."
   },
   {
@@ -5868,8 +6002,8 @@
     "status": "resolved",
     "foundBy": "claude-cli",
     "environment": {
-      "platform": "web",
       "isOnline": true,
+      "platform": "web",
       "appVersion": "1.0.0"
     },
     "reproSteps": [
@@ -5879,10 +6013,10 @@
     "expectedBehavior": "",
     "actualBehavior": "",
     "diagnostics": {},
-    "createdAt": "2026-09-10T17:20:07.881Z",
-    "updatedAt": "2026-09-10T17:20:18.614Z",
+    "createdAt": "2026-09-10T17:20:07.881+00:00",
+    "updatedAt": "2026-09-10T17:20:18.614+00:00",
+    "resolvedAt": "2026-09-10T17:20:18.613+00:00",
     "resolvedBy": "claude-cli",
-    "resolvedAt": "2026-09-10T17:20:18.613Z",
     "resolutionNote": "Fixed in commit ffa9c97 (migration 0080_security_hardening_phase5.sql, applied to remote DB; see decisions.md #143)."
   },
   {
@@ -5894,8 +6028,8 @@
     "status": "resolved",
     "foundBy": "claude-cli",
     "environment": {
-      "platform": "web",
       "isOnline": true,
+      "platform": "web",
       "appVersion": "1.0.0"
     },
     "reproSteps": [
@@ -5905,10 +6039,10 @@
     "expectedBehavior": "",
     "actualBehavior": "",
     "diagnostics": {},
-    "createdAt": "2026-09-10T17:20:09.032Z",
-    "updatedAt": "2026-09-10T17:20:19.044Z",
+    "createdAt": "2026-09-10T17:20:09.032+00:00",
+    "updatedAt": "2026-09-10T17:20:19.044+00:00",
+    "resolvedAt": "2026-09-10T17:20:19.043+00:00",
     "resolvedBy": "claude-cli",
-    "resolvedAt": "2026-09-10T17:20:19.043Z",
     "resolutionNote": "Fixed in commit ffa9c97 (migration 0080_security_hardening_phase5.sql, applied to remote DB; see decisions.md #143)."
   },
   {
@@ -5920,8 +6054,8 @@
     "status": "resolved",
     "foundBy": "claude-cli",
     "environment": {
-      "platform": "web",
       "isOnline": true,
+      "platform": "web",
       "appVersion": "1.0.0"
     },
     "reproSteps": [
@@ -5931,10 +6065,10 @@
     "expectedBehavior": "",
     "actualBehavior": "",
     "diagnostics": {},
-    "createdAt": "2026-09-10T17:20:09.959Z",
-    "updatedAt": "2026-09-10T17:20:19.446Z",
+    "createdAt": "2026-09-10T17:20:09.959+00:00",
+    "updatedAt": "2026-09-10T17:20:19.446+00:00",
+    "resolvedAt": "2026-09-10T17:20:19.446+00:00",
     "resolvedBy": "claude-cli",
-    "resolvedAt": "2026-09-10T17:20:19.446Z",
     "resolutionNote": "Fixed in commit ffa9c97 (migration 0080_security_hardening_phase5.sql, applied to remote DB; see decisions.md #143)."
   },
   {
@@ -5946,8 +6080,8 @@
     "status": "resolved",
     "foundBy": "claude-cli",
     "environment": {
-      "platform": "web",
       "isOnline": true,
+      "platform": "web",
       "appVersion": "1.0.0"
     },
     "reproSteps": [
@@ -5957,10 +6091,10 @@
     "expectedBehavior": "",
     "actualBehavior": "",
     "diagnostics": {},
-    "createdAt": "2026-09-10T17:20:11.010Z",
-    "updatedAt": "2026-09-10T17:20:19.886Z",
+    "createdAt": "2026-09-10T17:20:11.01+00:00",
+    "updatedAt": "2026-09-10T17:20:19.886+00:00",
+    "resolvedAt": "2026-09-10T17:20:19.885+00:00",
     "resolvedBy": "claude-cli",
-    "resolvedAt": "2026-09-10T17:20:19.885Z",
     "resolutionNote": "Fixed in commit ffa9c97 (migration 0080_security_hardening_phase5.sql, applied to remote DB; see decisions.md #143)."
   },
   {
@@ -5972,8 +6106,8 @@
     "status": "resolved",
     "foundBy": "claude-cli",
     "environment": {
-      "platform": "web",
       "isOnline": true,
+      "platform": "web",
       "appVersion": "1.0.0"
     },
     "reproSteps": [
@@ -5983,10 +6117,10 @@
     "expectedBehavior": "",
     "actualBehavior": "",
     "diagnostics": {},
-    "createdAt": "2026-09-10T17:20:12.051Z",
-    "updatedAt": "2026-09-10T17:20:20.291Z",
+    "createdAt": "2026-09-10T17:20:12.051+00:00",
+    "updatedAt": "2026-09-10T17:20:20.291+00:00",
+    "resolvedAt": "2026-09-10T17:20:20.291+00:00",
     "resolvedBy": "claude-cli",
-    "resolvedAt": "2026-09-10T17:20:20.291Z",
     "resolutionNote": "Fixed in commit ffa9c97 (migration 0080_security_hardening_phase5.sql, applied to remote DB; see decisions.md #143)."
   },
   {
@@ -5998,8 +6132,8 @@
     "status": "resolved",
     "foundBy": "claude-cli",
     "environment": {
-      "platform": "web",
       "isOnline": true,
+      "platform": "web",
       "appVersion": "1.0.0"
     },
     "reproSteps": [
@@ -6009,10 +6143,10 @@
     "expectedBehavior": "",
     "actualBehavior": "",
     "diagnostics": {},
-    "createdAt": "2026-09-10T17:20:13.008Z",
-    "updatedAt": "2026-09-10T17:20:20.703Z",
+    "createdAt": "2026-09-10T17:20:13.008+00:00",
+    "updatedAt": "2026-09-10T17:20:20.703+00:00",
+    "resolvedAt": "2026-09-10T17:20:20.702+00:00",
     "resolvedBy": "claude-cli",
-    "resolvedAt": "2026-09-10T17:20:20.702Z",
     "resolutionNote": "Fixed in commit ffa9c97 (migration 0080_security_hardening_phase5.sql, applied to remote DB; see decisions.md #143)."
   },
   {
@@ -6024,8 +6158,8 @@
     "status": "resolved",
     "foundBy": "claude-cli",
     "environment": {
-      "platform": "web",
       "isOnline": true,
+      "platform": "web",
       "appVersion": "1.0.0"
     },
     "reproSteps": [
@@ -6035,10 +6169,10 @@
     "expectedBehavior": "",
     "actualBehavior": "",
     "diagnostics": {},
-    "createdAt": "2026-09-10T17:27:54.264Z",
-    "updatedAt": "2026-09-10T17:27:54.566Z",
+    "createdAt": "2026-09-10T17:27:54.264+00:00",
+    "updatedAt": "2026-09-10T17:27:54.566+00:00",
+    "resolvedAt": "2026-09-10T17:27:54.565+00:00",
     "resolvedBy": "claude-cli",
-    "resolvedAt": "2026-09-10T17:27:54.565Z",
     "resolutionNote": "Fixed in commit c670cb0 (android:allowBackup set to false); see decisions.md #144."
   },
   {
@@ -6050,8 +6184,8 @@
     "status": "resolved",
     "foundBy": "mauryarahul007@gmail.com",
     "environment": {
-      "platform": "web",
       "isOnline": true,
+      "platform": "web",
       "appVersion": "1.0.0"
     },
     "reproSteps": [
@@ -6061,10 +6195,37 @@
     "expectedBehavior": "",
     "actualBehavior": "",
     "diagnostics": {},
-    "createdAt": "2026-09-10T17:30:52.488Z",
-    "updatedAt": "2026-09-10T17:30:52.808Z",
+    "createdAt": "2026-09-10T17:30:52.488+00:00",
+    "updatedAt": "2026-09-10T17:30:52.808+00:00",
+    "resolvedAt": "2026-09-10T17:30:52.807+00:00",
     "resolvedBy": "claude-cli",
-    "resolvedAt": "2026-09-10T17:30:52.807Z",
     "resolutionNote": "Trip card now reads 'OWED TO YOU ON THIS TRIP' / 'YOU OWE ON THIS TRIP'; header chip now reads 'Owed to you across all trips' / 'You owe across all trips'. Files: TripStack.tsx, TripsListScreen.tsx."
+  },
+  {
+    "id": "BUG-206",
+    "title": "Trip-card and home balance chips showed nonzero owed/owe against a trip already Settled in trip detail",
+    "description": "TripStack per-trip chip and TripsListScreen header chip computed the current-user balance off the local zustand expenses store, which can hold an incomplete/stale expense set for a trip not yet opened this session. Trip detail (BalancesSettlements/BoardingPassHeroCard) always fetches the full trip-scoped expense set, so it could correctly show Settled while the home screen still showed a nonzero owed/owe amount for the same trip.",
+    "severity": "medium",
+    "category": "ui-ux",
+    "status": "resolved",
+    "foundBy": "mauryarahul007@gmail.com",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "3.9.4"
+    },
+    "reproSteps": [
+      "Open a trip whose balances are fully settled (transfers.length === 0) so trip detail shows OUTSTANDING = 0.00 / Settled",
+      "Go back to the home trips list without a full app reload",
+      "Observe the trip card and/or header chip still show a nonzero OWED TO YOU / YOU OWE amount for that trip"
+    ],
+    "expectedBehavior": "Home screen balance figures for a trip should never contradict that trip's own detail-page settlement status.",
+    "actualBehavior": "Home screen per-trip and cross-trip chips could show a stale nonzero balance for a trip the in-trip view reports as fully settled.",
+    "diagnostics": {},
+    "createdAt": "2026-09-10T18:08:38.404Z",
+    "updatedAt": "2026-09-10T18:08:38.404Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-09-10T18:08:38.404Z",
+    "resolutionNote": "Removed the stale local-store-derived owed/owe chips from TripStack.tsx (per-trip card) and TripsListScreen.tsx (header banner). Cross-trip owed/owe total relocated to the profile/settings hero (SettingsView.tsx via GlobalSettingsModal.tsx), now sourced from a shared src/hooks/useCrossTripBalances.ts hook that fetches the authoritative full expense set per trip (same approach the header banner already used) instead of the local store snapshot."
   }
 ]

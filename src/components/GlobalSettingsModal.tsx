@@ -34,6 +34,7 @@ type Props = {
   onDeleteTrip: (trip: Trip) => void;
 
   userEmail: string | null;
+  crossTripBalances?: Record<string, number>;
   onSignOut: () => void;
   onDeleteAccount?: () => void;
   pwaInstallable?: boolean;
@@ -76,6 +77,7 @@ export function GlobalSettingsModal({
   onRestoreTrip,
   onDeleteTrip,
   userEmail,
+  crossTripBalances,
   onSignOut,
   onDeleteAccount,
   pwaInstallable = false,
@@ -243,6 +245,7 @@ export function GlobalSettingsModal({
           onRestoreTrip={onRestoreTrip}
           onDeleteTrip={onDeleteTrip}
           userEmail={userEmail}
+          crossTripBalances={crossTripBalances}
           onSignOut={onSignOut}
           onDeleteAccount={onDeleteAccount}
           pwaInstallable={pwaInstallable}

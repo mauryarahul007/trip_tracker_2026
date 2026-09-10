@@ -16,6 +16,7 @@ import { ConfirmDialog, type ConfirmRequest } from './components/ConfirmDialog';
 import { TabErrorBoundary } from './components/TabErrorBoundary';
 import { TripsListScreen } from './components/TripsListScreen';
 import { lazyImport } from './utils/lazyImport';
+import { useCrossTripBalances } from './hooks/useCrossTripBalances';
 // Code-split secondary modals and heavy views so initial bundle only ships
 // the critical path for the active trip view.
 const GlobalSettingsModal = lazy(lazyImport(() =>
@@ -179,6 +180,7 @@ export default function App() {
   const userId = useAuthStore((s) => s.session?.user.id ?? null);
   const userAvatarUrl = useAuthStore((s) => s.session?.user.user_metadata?.avatar_url as string | undefined);
   const userDisplayName = useTripStore((s) => s.userDisplayName);
+  const crossTripBalances = useCrossTripBalances(trips, userId);
   const signOut = useAuthStore((s) => s.signOut);
   const deleteOwnAccount = useAuthStore((s) => s.deleteOwnAccount);
   const signInSuperadmin = useAuthStore((s) => s.signInSuperadmin);
@@ -2567,6 +2569,7 @@ export default function App() {
             onRestoreTrip={handleRestoreTrip}
             onDeleteTrip={handleDeleteTrip}
             userEmail={userEmail}
+            crossTripBalances={crossTripBalances}
             onSignOut={signOut}
             onDeleteAccount={handleDeleteAccount}
             pwaInstallable={!!deferredPrompt}

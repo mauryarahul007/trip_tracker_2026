@@ -28,7 +28,7 @@ import { useAuthStore } from '../store/authStore';
 import { useNotificationsStore } from '../store/notificationsStore';
 import { getAppVersion, WEB_APP_VERSION } from '../utils/appVersion';
 import { triggerHaptic } from '../utils/haptics';
-import { getCurrencySymbol } from '../utils/currency';
+import { getCurrencySymbol, formatAmount } from '../utils/currency';
 import { calculateSettlements } from '../utils/settlement';
 import { SuperadminAuthModal } from './SuperadminAuthModal';
 import { useHistoryStack } from '../utils/useHistoryBack';
@@ -114,6 +114,7 @@ interface SettingsViewProps {
   onRestoreTrip?: (trip: Trip) => void;
   onDeleteTrip?: (trip: Trip) => void;
   userEmail?: string | null;
+  crossTripBalances?: Record<string, number>;
   onSignOut?: () => void;
   onDeleteAccount?: () => void;
   pwaInstallable?: boolean;
@@ -159,6 +160,7 @@ export function SettingsView({
   onRestoreTrip,
   onDeleteTrip,
   userEmail,
+  crossTripBalances,
   onSignOut,
   onDeleteAccount,
   pwaInstallable = false,
@@ -1006,6 +1008,19 @@ export function SettingsView({
               )}
                   </div>
                   </div>
+          {crossTripBalances && Object.keys(crossTripBalances).length > 0 && (
+            <p style={{ marginTop: '10px', display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+              {Object.entries(crossTripBalances).map(([currency, net]) => (
+                <span
+                  key={currency}
+                  className={`home-balance-chip ${net > 0 ? 'owed-to-me' : 'i-owe'}`}
+                  title={net > 0 ? "Net you're owed across trips in this currency" : 'Net you owe across trips in this currency'}
+                >
+                  {net > 0 ? 'Owed to you across all trips:' : 'You owe across all trips:'} {formatAmount(Math.abs(net), getCurrencySymbol(currency))}
+                </span>
+              ))}
+            </p>
+          )}
           <div className="settings-hero-perf" aria-hidden="true" />
         </>
       )}

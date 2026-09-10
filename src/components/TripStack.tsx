@@ -401,20 +401,6 @@ function CardContent({
         </div>
 
         <div style={{ marginTop: 'auto', marginBottom: '8px' }}>
-          {balanceInfo && (balanceInfo.status === 'owed' || balanceInfo.status === 'owe') && (
-            <div style={{ marginBottom: '6px' }}>
-              {balanceInfo.status === 'owed' ? (
-                <span className="stack-balance-chip owed">
-                  <span>💰</span> OWED TO YOU ON THIS TRIP: {trip.baseCurrency || 'INR'} {Math.round(balanceInfo.amount).toLocaleString()}
-                </span>
-              ) : (
-                <span className="stack-balance-chip owe">
-                  <span>💸</span> YOU OWE ON THIS TRIP: {trip.baseCurrency || 'INR'} {Math.round(balanceInfo.amount).toLocaleString()}
-                </span>
-              )}
-            </div>
-          )}
-
           <div className="pp-dest">
             Trip &middot; {trip.baseCurrency}
             {balanceInfo?.status === 'settled' && (
