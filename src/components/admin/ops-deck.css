@@ -54,6 +54,10 @@
   --danger-dim: rgba(239, 68, 68, 0.12);
   --danger-line: rgba(239, 68, 68, 0.30);
   --danger-hover-dim: rgba(239, 68, 68, 0.18);
+  --severity-critical: #EF4444;
+  --severity-high: #B45309;
+  --severity-medium: #64748B;
+  --severity-low: #94A3B8;
   --radial-glow: rgba(15, 169, 143, 0.06);
   --card-shadow: 0 1px 2px rgba(22, 36, 31, 0.04), 0 10px 26px -12px rgba(22, 36, 31, 0.14);
   --card-shadow-hover: 0 4px 10px -2px rgba(22, 36, 31, 0.08), 0 20px 40px -16px rgba(22, 36, 31, 0.18);
@@ -106,6 +110,10 @@
     --danger-dim: rgba(248, 113, 113, 0.14);
     --danger-line: rgba(248, 113, 113, 0.35);
     --danger-hover-dim: rgba(248, 113, 113, 0.20);
+    --severity-critical: #F87171;
+    --severity-high: #FBBF24;
+    --severity-medium: #94A3B8;
+    --severity-low: #64748B;
     --radial-glow: rgba(45, 212, 191, 0.12);
     --card-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 12px 30px rgba(0, 0, 0, 0.4);
     --card-shadow-hover: 0 4px 10px rgba(0, 0, 0, 0.3), 0 24px 48px -12px rgba(0, 0, 0, 0.5);
@@ -152,6 +160,10 @@
   --promo-ink: #F8ECC4;
   --danger-line: rgba(248, 113, 113, 0.35);
   --danger-hover-dim: rgba(248, 113, 113, 0.20);
+  --severity-critical: #F87171;
+  --severity-high: #FBBF24;
+  --severity-medium: #94A3B8;
+  --severity-low: #64748B;
   --radial-glow: rgba(45, 212, 191, 0.12);
   --card-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 12px 30px rgba(0, 0, 0, 0.4);
   --card-shadow-hover: 0 4px 10px rgba(0, 0, 0, 0.3), 0 24px 48px -12px rgba(0, 0, 0, 0.5);
@@ -1775,6 +1787,11 @@ legend.ops-form-label { padding: 0; width: 100%; }
   width: 7px;
   height: 7px;
   border-radius: 50%;
+  background: var(--text-muted);
+  box-shadow: none;
+}
+
+.ops-radar-dot.ok {
   background: var(--safe);
   box-shadow: 0 0 6px var(--safe);
 }

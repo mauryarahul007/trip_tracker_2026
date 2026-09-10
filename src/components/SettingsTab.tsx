@@ -11,6 +11,7 @@ type Props = {
   isAdmin: boolean;
   onOpenGlobalSettings?: () => void;
   onOpenSuperadminPortal?: () => void;
+  onOpenOpsBugs?: () => void;
 
   themePref?: ThemePref;
   setThemePref?: (v: ThemePref) => void;
@@ -70,6 +71,7 @@ export function SettingsTab({
   pwaInstallable,
   onInstallApp,
   onOpenSuperadminPortal,
+  onOpenOpsBugs,
   onRequestConfirm,
   onOpenShareTrip,
   onNavigateToBalances,
@@ -108,6 +110,7 @@ export function SettingsTab({
       pwaInstallable={pwaInstallable}
       onInstallApp={onInstallApp}
       onOpenSuperadminPortal={onOpenSuperadminPortal}
+      onOpenOpsBugs={onOpenOpsBugs}
       onRequestConfirm={onRequestConfirm}
       onOpenShareTrip={onOpenShareTrip}
       onNavigateToBalances={onNavigateToBalances}

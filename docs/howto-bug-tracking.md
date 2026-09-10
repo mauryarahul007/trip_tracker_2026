@@ -10,9 +10,9 @@ A parallel system, [**Feature Tracker**](../FEATURES.md), works identically for 
 
 | Action | Command / Method |
 | :--- | :--- |
-| **Superadmin UI Console** | Navigate to **Settings** → **Superadmin Console** → **Superadmin Bug Tracker** |
-| **Add a Bug (UI)** | In the Superadmin Console, tap **"+ Add Bug"** |
-| **Resolve a Bug (UI)** | In the Superadmin Console, tap **"✅ Mark Resolved"** on any bug card |
+| **Superadmin UI Console** | Ops Deck → **Bugs** (SEC.08). Settings → **Superadmin Bug Tracker** jumps there without leaving the portal. |
+| **Add a Bug (UI)** | In SEC.08, tap **"+ New Case"** |
+| **Resolve a Bug (UI)** | In SEC.08, tap **Resolve** on any case (or bulk-select → **Mark Resolved**) |
 | **Add a Bug (CLI)** | `npm run bug:add -- --title "Bug summary" --severity high --category navigation --by claude-cli` |
 | **List Open Bugs (CLI)** | `npm run bug:list` |
 | **List All Bugs (CLI)** | `npm run bug -- list --all` |
@@ -20,37 +20,41 @@ A parallel system, [**Feature Tracker**](../FEATURES.md), works identically for 
 | **Resolve a Bug (CLI)** | `npm run bug:resolve -- BUG-001 --by antigravity --fix "Fixed in commit ..."` |
 | **Sync Markdown Board** | `npm run bug:sync` |
 | **Crash Reporting** | Tap **"Copy Crash Report for Claude / Antigravity"** on the React Error screen |
+| **Traveler file** | Settings → **Report a Problem** — success shows `BUG-xxx` (copy id). Optional screenshot. |
+| **Traveler status** | Settings → **My reports** (open / in progress / resolved) |
 
 ---
 
 ## 1. Using the Superadmin Bug Console (UI)
 
-The application provides a dedicated **Superadmin Bug Console** for administrators and developers:
+The Bug Ledger lives in the **Ops Deck** as **SEC.08 Bugs** — the same shell as Features, not a Settings overlay.
 
 ### A. Accessing the Console
-1. Open the application locally or on your deployed environment.
-2. Tap the **Settings** tab at the bottom.
-3. Under the **"Superadmin Console"** section, tap **"🛡️ Superadmin Bug Tracker"**.
-4. *(Note: This section is visible only to Superadmins and Trip Admins).*
+1. Sign in as a superadmin (⚡ Super User Login).
+2. Open the Ops Deck. Command Center is SEC.00.
+3. Switch to **Bugs** (SEC.08) from the section rail, the mobile section switcher, Cmd+K, or Command Center.
+4. From the traveler preview, **Settings → Superadmin Bug Tracker** (or the trips-list bug button) jumps to SEC.08 without unmounting the portal.
+5. Travelers keep **Settings → Report a Problem**. They never see the ledger; they get a `BUG-xxx` id and can reopen **My reports**.
 
 ### B. Viewing & Filtering Bugs
-- **Summary Metrics**: Real-time KPI tiles for Total Bugs, Open 🟢, In Progress 🟡, Resolved ✅, and Critical 🚨.
+- **Summary Metrics**: Real-time KPI tiles for Total Bugs, Open, In Progress, Resolved, and Critical.
 - **Search Bar**: Instant full-text search across bug titles, descriptions, categories, and IDs.
 - **Filter Pills**: One-tap filtering by status (`All`, `Open`, `In Progress`, `Resolved`, `Critical`) or by category.
-- **Detailed Bug Specs**: Tap **"▼ View Specs"** on any card to view reproduction steps, expected vs actual behavior, diagnostic logs, and resolution details.
+- **Table + board**: List rows support bulk select; kanban drag updates status. Fingerprint grouping shows **N similar** when stack/title hashes match.
+- **Detailed Bug Specs**: Expand a row (or open the drawer from the board) for reproduction steps, expected vs actual, diagnostics (including screenshot), assignee, activity, and resolution details.
 
 ### C. Adding a Bug via the UI
-1. Tap the **"+ Add Bug"** button in the header.
+1. Tap **"+ New Case"** in the header.
 2. Fill in the Title, Severity, Category, Description, and Reproduction Steps.
-3. Tap **"Save & Sync Bug to Ledger"**.
-4. The bug is saved, assigned the next sequential ID (`BUG-XXX`), and immediately synced with `bugs/bugs.json` and `BUGS.md`!
+3. Save. The bug is assigned the next sequential ID (`BUG-XXX`) and written to `public.bugs`.
 
 ### D. Updating & Resolving Bugs in the UI
-- **Start Work**: Tap **"🟡 Start Work"** to mark a bug as in-progress.
-- **Mark Resolved**: Tap **"✅ Mark Resolved"**, enter your resolution note or commit reference, and confirm.
-- **Re-open**: Tap **"🔄 Re-open Bug"** if an issue regresses.
-- **Copy AI Prompt**: Tap **"📋 Copy Prompt for AI"** to generate structured markdown ready to paste into Antigravity or Claude CLI.
-- **Delete**: Remove obsolete entries from the ledger.
+- **Start Work**: Mark a case **In Progress** (row action or bulk dock).
+- **Resolve**: Enter a resolution note or commit SHA and confirm (uses `ConfirmDialog`, not `window.confirm`).
+- **Re-open**: If an issue regresses.
+- **Assignee**: Set on the detail body; stored on the row (migration 0079).
+- **Copy AI Prompt**: Generate structured markdown ready to paste into Antigravity or Claude CLI.
+- **Delete**: Remove obsolete entries from the ledger (confirm required).
 
 ---
 
@@ -112,7 +116,7 @@ This automatically updates `bugs/bugs.json` and regenerates `BUGS.md`.
 
 ## 3. Bi-Directional Live Sync Mechanics
 
-The Superadmin UI reads/writes `public.bugs` directly in Supabase (migration 0055 — RLS: any authenticated user can insert via the `report_bug` RPC, only a superadmin can read/manage the ledger). `bugs/bugs.json` + `BUGS.md` are a **separate**, git-tracked ledger for AI/CLI agents working in the repo, kept in sync with the Supabase table by `scripts/bug.mjs`:
+The Superadmin UI reads/writes `public.bugs` directly in Supabase (migration 0055 — RLS: any authenticated user can insert via the `report_bug` RPC, only a superadmin can read/manage the ledger). Travelers list their own tickets through `list_my_bug_reports()` (migration 0079). `bugs/bugs.json` + `BUGS.md` are a **separate**, git-tracked ledger for AI/CLI agents working in the repo, kept in sync with the Supabase table by `scripts/bug.mjs`:
 1. **Any bug added or resolved in the UI** lands in Supabase immediately, visible to every device.
 2. **Any bug added or resolved in the CLI** (`npm run bug:add` / `npm run bug:resolve`) mirrors to Supabase too (when `SUPABASE_URL`/`SUPABASE_SERVICE_ROLE_KEY` are set in `.env`), and writes `bugs/bugs.json` + `BUGS.md` locally either way.
 3. Run `npm run bug:sync` to pull anything filed through the UI back into the local ledger — remote wins on a shared id, anything local-only gets pushed up.

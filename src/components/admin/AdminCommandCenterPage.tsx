@@ -6,6 +6,7 @@ import type { FeatureRecord } from '../../services/featureApi';
 import { formatRelativeTime } from '../../utils/relativeTime';
 import { IconRefresh } from '../Icons';
 import type { AdminTab } from './AdminPortalLayout';
+import { supabase, isMissingSupabaseEnv } from '../../services/supabaseClient';
 
 interface Props {
   trips: Trip[];
@@ -15,7 +16,6 @@ interface Props {
   auditLogs: AuditLogEntry[];
   health: { ok: boolean; label: string };
   onNavigate: (tab: AdminTab) => void;
-  onOpenBugTracker?: () => void;
   onRefresh: () => void | Promise<void>;
   isRefreshing: boolean;
 }
@@ -24,7 +24,7 @@ function humanizeAction(action: string): string {
   return action.replace(/_/g, ' ').replace(/^\w/, (c) => c.toUpperCase());
 }
 
-export function AdminCommandCenterPage({ trips, bugs, features, users, auditLogs, health, onNavigate, onOpenBugTracker, onRefresh, isRefreshing }: Props) {
+export function AdminCommandCenterPage({ trips, bugs, features, users, auditLogs, health, onNavigate, onRefresh, isRefreshing }: Props) {
   const activeTrips = trips.filter((t) => !t.archived);
   const groundedTrips = trips.filter((t) => t.frozen);
 
@@ -47,7 +47,7 @@ export function AdminCommandCenterPage({ trips, bugs, features, users, auditLogs
         severity: 'crit',
         title: `${b.id} — ${b.title}`,
         meta: `Critical · ${b.category} · open ${formatRelativeTime(b.createdAt)}`,
-        onOpen: () => onOpenBugTracker?.(),
+        onOpen: () => onNavigate('bugs'),
       })
     );
     groundedTrips.slice(0, 4).forEach((t) =>
@@ -60,7 +60,7 @@ export function AdminCommandCenterPage({ trips, bugs, features, users, auditLogs
       })
     );
     return items;
-  }, [criticalBugs, groundedTrips, onOpenBugTracker, onNavigate]);
+  }, [criticalBugs, groundedTrips, onNavigate]);
 
   const userNameById = useMemo(() => new Map(users.map((u) => [u.id, u.displayName || u.email])), [users]);
   const tripNameById = useMemo(() => new Map(trips.map((t) => [t.id, t.name])), [trips]);
@@ -71,30 +71,40 @@ export function AdminCommandCenterPage({ trips, bugs, features, users, auditLogs
     auth: { ms: number; status: 'ok' | 'warn' | 'crit' };
     db: { ms: number; status: 'ok' | 'warn' | 'crit' };
     storage: { ms: number; status: 'ok' | 'warn' | 'crit' };
-    push: { ms: number; status: 'ok' | 'warn' | 'crit' };
-    maps: { ms: number; status: 'ok' | 'warn' | 'crit' };
-  }>({
-    auth: { ms: 38, status: 'ok' },
-    db: { ms: 45, status: 'ok' },
-    storage: { ms: 68, status: 'ok' },
-    push: { ms: 92, status: 'ok' },
-    maps: { ms: 54, status: 'ok' },
-  });
+  } | null>(null);
 
   const handlePingServices = async () => {
     setIsPinging(true);
+    const time = async (fn: () => Promise<boolean>): Promise<{ ms: number; status: 'ok' | 'warn' | 'crit' }> => {
+      const start = performance.now();
+      try {
+        const ok = await fn();
+        const ms = Math.round(performance.now() - start);
+        if (!ok) return { ms, status: 'crit' };
+        return { ms, status: ms > 800 ? 'warn' : 'ok' };
+      } catch {
+        return { ms: Math.round(performance.now() - start), status: 'crit' };
+      }
+    };
     try {
-      const dbStart = performance.now();
-      await fetch(window.location.origin + '/favicon.ico', { method: 'HEAD', cache: 'no-store' }).catch(() => {});
-      const elapsed = Math.round(performance.now() - dbStart) || 35;
-
-      setLatencies({
-        auth: { ms: Math.max(24, Math.round(elapsed * 0.85)), status: 'ok' },
-        db: { ms: Math.max(30, elapsed), status: 'ok' },
-        storage: { ms: Math.max(45, Math.round(elapsed * 1.3)), status: 'ok' },
-        push: { ms: Math.max(65, Math.round(elapsed * 1.8)), status: elapsed > 350 ? 'warn' : 'ok' },
-        maps: { ms: Math.max(40, Math.round(elapsed * 1.1)), status: 'ok' },
-      });
+      const [auth, db, storage] = await Promise.all([
+        time(async () => {
+          if (isMissingSupabaseEnv) return false;
+          const { error } = await supabase.auth.getSession();
+          return !error;
+        }),
+        time(async () => {
+          if (isMissingSupabaseEnv) return false;
+          const { error } = await supabase.from('bugs').select('id').limit(1);
+          return !error;
+        }),
+        time(async () => {
+          if (isMissingSupabaseEnv) return false;
+          const { error } = await supabase.storage.from('receipts').list('', { limit: 1 });
+          return !error;
+        }),
+      ]);
+      setLatencies({ auth, db, storage });
     } finally {
       setIsPinging(false);
     }
@@ -162,60 +172,52 @@ export function AdminCommandCenterPage({ trips, bugs, features, users, auditLogs
         </div>
       </div>
 
-      {/* Infrastructure Latency & Health Radar */}
       <div className="ops-radar-strip">
         <div className="ops-radar-header">
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <span className="ops-dot" />
             <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-primary)' }}>
-              Live Infrastructure &amp; Service Heartbeat
+              Service heartbeat
             </span>
           </div>
-          <span className="ops-badge safe" style={{ fontSize: '11px' }}>
-            All Systems Operational · Webapp Fleet
+          <span
+            className={`ops-badge ${
+              !latencies
+                ? 'archived'
+                : Object.values(latencies).some((l) => l.status === 'crit')
+                  ? 'grounded'
+                  : Object.values(latencies).some((l) => l.status === 'warn')
+                    ? 'caution'
+                    : 'active'
+            }`}
+            style={{ fontSize: '11px' }}
+          >
+            {latencies
+              ? Object.values(latencies).some((l) => l.status === 'crit')
+                ? 'One or more checks failed'
+                : Object.values(latencies).some((l) => l.status === 'warn')
+                  ? 'Slow responses'
+                  : 'Checks passed'
+              : 'Ping to measure Auth, Postgres, and Storage'}
           </span>
         </div>
 
         <div className="ops-radar-grid">
-          <div className="ops-radar-card">
-            <div className="ops-radar-label">
-              <span>Supabase Auth</span>
-              <span className={`ops-radar-dot ${latencies.auth.status}`} />
+          {(
+            [
+              ['Supabase Auth', latencies?.auth],
+              ['Postgres (bugs)', latencies?.db],
+              ['Storage (receipts)', latencies?.storage],
+            ] as const
+          ).map(([label, probe]) => (
+            <div className="ops-radar-card" key={label}>
+              <div className="ops-radar-label">
+                <span>{label}</span>
+                <span className={`ops-radar-dot ${probe?.status ?? 'idle'}`} />
+              </div>
+              <div className="ops-radar-value">{probe ? `${probe.ms} ms` : '—'}</div>
             </div>
-            <div className="ops-radar-value">{latencies.auth.ms} ms</div>
-          </div>
-
-          <div className="ops-radar-card">
-            <div className="ops-radar-label">
-              <span>Postgres DB / RPC</span>
-              <span className={`ops-radar-dot ${latencies.db.status}`} />
-            </div>
-            <div className="ops-radar-value">{latencies.db.ms} ms</div>
-          </div>
-
-          <div className="ops-radar-card">
-            <div className="ops-radar-label">
-              <span>Storage (Receipts)</span>
-              <span className={`ops-radar-dot ${latencies.storage.status}`} />
-            </div>
-            <div className="ops-radar-value">{latencies.storage.ms} ms</div>
-          </div>
-
-          <div className="ops-radar-card">
-            <div className="ops-radar-label">
-              <span>Edge Push Service</span>
-              <span className={`ops-radar-dot ${latencies.push.status}`} />
-            </div>
-            <div className="ops-radar-value">{latencies.push.ms} ms</div>
-          </div>
-
-          <div className="ops-radar-card">
-            <div className="ops-radar-label">
-              <span>MapLibre Tiles</span>
-              <span className={`ops-radar-dot ${latencies.maps.status}`} />
-            </div>
-            <div className="ops-radar-value">{latencies.maps.ms} ms</div>
-          </div>
+          ))}
         </div>
       </div>
 
@@ -358,6 +360,9 @@ export function AdminCommandCenterPage({ trips, bugs, features, users, auditLogs
         <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginTop: '10px' }}>
           <button type="button" className="ops-btn" onClick={() => onNavigate('users')}>
             Broadcast notification
+          </button>
+          <button type="button" className="ops-btn" onClick={() => onNavigate('bugs')}>
+            Open bug ledger
           </button>
           <button type="button" className="ops-btn" onClick={handleExportBugs}>
             Export bug ledger

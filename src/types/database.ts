@@ -342,7 +342,12 @@ export interface Database {
             consoleLogs?: string[];
             syncQueueLength?: number;
             activeTripId?: string;
+            screenshot?: string;
           } | null;
+          assignee: string | null;
+          github_sha: string | null;
+          fingerprint: string | null;
+          activity: { at: string; by: string; action: string; note?: string }[] | null;
           created_at: string;
           updated_at: string;
           resolved_at: string | null;
@@ -381,7 +386,12 @@ export interface Database {
             consoleLogs?: string[];
             syncQueueLength?: number;
             activeTripId?: string;
+            screenshot?: string;
           } | null;
+          assignee?: string | null;
+          github_sha?: string | null;
+          fingerprint?: string | null;
+          activity?: { at: string; by: string; action: string; note?: string }[] | null;
         };
         Update: Partial<{
           title: string;
@@ -402,6 +412,10 @@ export interface Database {
           resolution_note: string | null;
           resolved_at: string | null;
           updated_at: string;
+          assignee: string | null;
+          github_sha: string | null;
+          fingerprint: string | null;
+          activity: { at: string; by: string; action: string; note?: string }[] | null;
         }>;
         Relationships: [];
       };
@@ -522,6 +536,7 @@ export interface Database {
           p_expected_behavior: string;
           p_actual_behavior: string;
           p_diagnostics: Record<string, unknown>;
+          p_fingerprint?: string | null;
         };
         Returns: {
           id: string;
@@ -555,13 +570,29 @@ export interface Database {
             consoleLogs?: string[];
             syncQueueLength?: number;
             activeTripId?: string;
+            screenshot?: string;
           } | null;
+          assignee: string | null;
+          github_sha: string | null;
+          fingerprint: string | null;
+          activity: { at: string; by: string; action: string; note?: string }[] | null;
           created_at: string;
           updated_at: string;
           resolved_at: string | null;
           resolved_by: string | null;
           resolution_note: string | null;
         };
+      };
+      list_my_bug_reports: {
+        Args: Record<string, never>;
+        Returns: {
+          id: string;
+          title: string;
+          status: string;
+          severity: string;
+          created_at: string;
+          updated_at: string;
+        }[];
       };
       set_user_banned: {
         Args: { p_user_id: string; p_banned: boolean };

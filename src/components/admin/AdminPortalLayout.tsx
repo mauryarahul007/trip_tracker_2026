@@ -33,6 +33,7 @@ const AdminUsersPage = lazy(() => import('./AdminUsersPage').then((m) => ({ defa
 const AdminAuditPage = lazy(() => import('./AdminAuditPage').then((m) => ({ default: m.AdminAuditPage })));
 const AdminFeaturesPage = lazy(() => import('./AdminFeaturesPage').then((m) => ({ default: m.AdminFeaturesPage })));
 const AdminToolsPage = lazy(() => import('./AdminToolsPage').then((m) => ({ default: m.AdminToolsPage })));
+const SuperAdminBugTracker = lazy(() => import('../SuperAdminBugTracker').then((m) => ({ default: m.SuperAdminBugTracker })));
 import './ops-deck.css';
 
 function AdminTabLoadingFallback() {
@@ -57,11 +58,10 @@ interface Props {
   activeTab: AdminTab;
   onActiveTabChange: (tab: AdminTab) => void;
   onExitToTravelerApp?: () => void;
-  onOpenBugTracker?: () => void;
   onInspectTrip?: (tripId: string) => void;
 }
 
-export type AdminTab = 'command' | 'flags' | 'analytics' | 'trips' | 'users' | 'audit' | 'features' | 'tools';
+export type AdminTab = 'command' | 'flags' | 'analytics' | 'trips' | 'users' | 'audit' | 'features' | 'bugs' | 'tools';
 
 type Section = { id: AdminTab; label: string; code: string };
 
@@ -76,6 +76,7 @@ const SECTION_GROUPS: { label: string; items: Section[] }[] = [
       { id: 'flags', label: 'Flags', code: 'SEC.01' },
       { id: 'trips', label: 'Trips', code: 'SEC.03' },
       { id: 'features', label: 'Features', code: 'SEC.06' },
+      { id: 'bugs', label: 'Bugs', code: 'SEC.08' },
     ],
   },
   {
@@ -121,7 +122,6 @@ export function AdminPortalLayout({
   activeTab,
   onActiveTabChange,
   onExitToTravelerApp,
-  onOpenBugTracker,
   onInspectTrip,
 }: Props) {
   const [expenses, setExpenses] = useState<Expense[]>([]);
@@ -340,12 +340,12 @@ export function AdminPortalLayout({
           kind: 'Bug',
           label: `${b.id} — ${b.title}`,
           sublabel: `${b.severity.toUpperCase()} · ${b.status}`,
-          onSelect: () => onOpenBugTracker?.(),
+          onSelect: () => onActiveTabChange('bugs'),
         })
       );
 
     return results.slice(0, 8);
-  }, [jumpQuery, trips, users, bugs, onActiveTabChange, onOpenBugTracker, onInspectTrip]);
+  }, [jumpQuery, trips, users, bugs, onActiveTabChange, onInspectTrip]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (!jumpOpen || jumpResults.length === 0) return;
@@ -396,6 +396,7 @@ export function AdminPortalLayout({
                       <span className="ops-lbl">{s.label}</span>
                       <span className="ops-code">{s.code}</span>
                     </span>
+                    {s.id === 'bugs' && criticalBugCount > 0 && <span className="ops-rail-item-flag" title={`${criticalBugCount} critical case(s) open`} />}
                     {s.id === 'tools' && recycledCount > 0 && <span className="ops-rail-item-flag" title={`${recycledCount} item(s) in recycle bin`} />}
                   </button>
                 ))}
@@ -501,23 +502,21 @@ export function AdminPortalLayout({
                     synced {formatRelativeTime(new Date(lastSyncedAt).toISOString())}
                   </span>
                 )}
-                {onOpenBugTracker && (
-                  <button
-                    type="button"
-                    className="ops-btn"
-                    onClick={onOpenBugTracker}
-                    style={{ position: 'relative' }}
-                    aria-label={criticalBugCount > 0 ? `Bug Ledger, ${criticalBugCount} critical case${criticalBugCount === 1 ? '' : 's'} open` : 'Bug Ledger'}
-                  >
-                    Bug Ledger
-                    {criticalBugCount > 0 && (
-                      <span
-                        aria-hidden="true"
-                        style={{ position: 'absolute', top: '-3px', right: '-3px', width: '8px', height: '8px', borderRadius: '50%', background: 'var(--danger)', boxShadow: '0 0 6px var(--danger)' }}
-                      />
-                    )}
-                  </button>
-                )}
+                <button
+                  type="button"
+                  className="ops-btn"
+                  onClick={() => onActiveTabChange('bugs')}
+                  style={{ position: 'relative' }}
+                  aria-label={criticalBugCount > 0 ? `Bugs, ${criticalBugCount} critical case${criticalBugCount === 1 ? '' : 's'} open` : 'Bugs'}
+                >
+                  Bugs
+                  {criticalBugCount > 0 && (
+                    <span
+                      aria-hidden="true"
+                      style={{ position: 'absolute', top: '-3px', right: '-3px', width: '8px', height: '8px', borderRadius: '50%', background: 'var(--danger)', boxShadow: '0 0 6px var(--danger)' }}
+                    />
+                  )}
+                </button>
                 {onExitToTravelerApp && (
                   <button type="button" className="ops-btn" onClick={onExitToTravelerApp}>
                     Preview Traveler View
@@ -540,7 +539,6 @@ export function AdminPortalLayout({
               auditLogs={auditLogs}
               health={health}
               onNavigate={onActiveTabChange}
-              onOpenBugTracker={onOpenBugTracker}
               onRefresh={handleRefreshAll}
               isRefreshing={isRefreshing}
             />
@@ -595,6 +593,14 @@ export function AdminPortalLayout({
             />
           )}
           {activeTab === 'features' && <AdminFeaturesPage features={features} onFeaturesChanged={reloadFleetData} />}
+          {activeTab === 'bugs' && (
+            <SuperAdminBugTracker
+              embedded
+              isAdmin
+              onRequestConfirm={setConfirmRequest}
+              onBugsChanged={reloadFleetData}
+            />
+          )}
           {activeTab === 'tools' && (
             <AdminToolsPage
               categories={categories}

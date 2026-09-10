@@ -51,6 +51,8 @@ type Props = {
   onOpenFxRates?: () => void;
   onOpenMediaGallery?: () => void;
   onOpenOfflineSnapshot?: () => void;
+  onOpenSuperadminPortal?: () => void;
+  onOpenOpsBugs?: () => void;
 };
 
 export function GlobalSettingsModal({
@@ -89,6 +91,8 @@ export function GlobalSettingsModal({
   onOpenFxRates,
   onOpenMediaGallery,
   onOpenOfflineSnapshot,
+  onOpenSuperadminPortal,
+  onOpenOpsBugs,
 }: Props) {
   const storeCategories = useTripStore((s) => s.categories);
   const storeExpenses = useTripStore((s) => s.expenses);
@@ -252,6 +256,8 @@ export function GlobalSettingsModal({
           onOpenFxRates={onOpenFxRates}
           onOpenMediaGallery={onOpenMediaGallery}
           onOpenOfflineSnapshot={onOpenOfflineSnapshot}
+          onOpenSuperadminPortal={onOpenSuperadminPortal}
+          onOpenOpsBugs={onOpenOpsBugs}
         />
       </div>
     </div>

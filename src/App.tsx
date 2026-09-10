@@ -45,8 +45,8 @@ import { LuggageTagSkeleton } from './components/common/LuggageTagSkeleton';
 // traveler -- code-split so their combined ~2.4k lines don't inflate the
 // bundle everyone else downloads. RLS still gates the actual data/actions
 // underneath regardless of when the JS arrives.
-const SuperAdminBugTracker = lazy(lazyImport(() =>
-  import('./components/SuperAdminBugTracker').then((m) => ({ default: m.SuperAdminBugTracker }))
+const AdminPortalLayout = lazy(lazyImport(() =>
+  import('./components/admin/AdminPortalLayout').then((m) => ({ default: m.AdminPortalLayout }))
 ));
 import { BalancesSettlements } from './components/BalancesSettlements';
 import { ExpenseFilterDrawer } from './components/ExpenseFilterDrawer';
@@ -118,9 +118,6 @@ const FxRatesModal = lazy(lazyImport(() =>
 ));
 import { usePeerPresence } from './hooks/usePeerPresence';
 import type { AdminTab } from './components/admin/AdminPortalLayout';
-const AdminPortalLayout = lazy(lazyImport(() =>
-  import('./components/admin/AdminPortalLayout').then((m) => ({ default: m.AdminPortalLayout }))
-));
 import { BiometricLockOverlay } from './components/BiometricLockOverlay';
 import {
   isBiometricAvailable,
@@ -322,18 +319,23 @@ export default function App() {
   const [newTripEnd, setNewTripEnd] = useState('');
   const [newTripCurrency, setNewTripCurrency] = useState('INR');
 
-  // Superadmin Bug Tracker full-screen view
-  const [showBugTracker, setShowBugTracker] = useState(false);
+  // Superadmin Bug Ledger lives in the Ops Deck (SEC.08). Deep links
+  // `#/bugs` land there instead of a full-screen overlay that left the portal.
+  const openOpsBugs = () => {
+    setAdminActiveTab('bugs');
+    setIsTravelerPreview(false);
+  };
 
   useEffect(() => {
     const handleHash = () => {
       if (window.location.hash === '#/bugs' || window.location.hash === '#/bug-tracker') {
-        setShowBugTracker(true);
+        openOpsBugs();
       }
     };
     handleHash();
     window.addEventListener('hashchange', handleHash);
     return () => window.removeEventListener('hashchange', handleHash);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Local dev convenience only, and only against the dummy/offline Supabase
@@ -347,7 +349,7 @@ export default function App() {
     if (!useTripStore.getState().isSuperadmin) {
       signInSuperadmin('dev@local', 'dev').catch(() => {});
     }
-    setShowBugTracker(true);
+    openOpsBugs();
     if (window.location.hash !== '#/bugs') {
       window.location.hash = '#/bugs';
     }
@@ -1684,23 +1686,11 @@ export default function App() {
   });
   useHistoryBack(showCommandPalette, () => setShowCommandPalette(false));
   useHistoryBack(showTripWrapped, () => setShowTripWrapped(false));
-  useHistoryBack(showBugTracker, () => {
-    setShowBugTracker(false);
-    if (window.location.hash === '#/bugs' || window.location.hash === '#/bug-tracker') {
-      window.location.hash = '#/';
-    }
-  });
   useHistoryBack(showShortcutsModal, () => setShowShortcutsModal(false));
   useHistoryBack(showBioEnrollPrompt, () => setShowBioEnrollPrompt(false));
 
   // Escape key — the desktop equivalent of the back-gesture wiring above,
   // for the same set of overlay modals (excludes tab/trip navigation).
-  useEscapeKey(showBugTracker, () => {
-    setShowBugTracker(false);
-    if (window.location.hash === '#/bugs' || window.location.hash === '#/bug-tracker') {
-      window.location.hash = '#/';
-    }
-  });
   useEscapeKey(showAddTrip, handleCancelTripForm);
   useEscapeKey(showAddExpense, handleCancelExpenseForm);
   useEscapeKey(showExpenseFilterDrawer, () => setShowExpenseFilterDrawer(false));
@@ -1803,7 +1793,7 @@ export default function App() {
     );
   }
 
-  if (isSuperadmin && !isTravelerPreview && !showBugTracker) {
+  if (isSuperadmin && !isTravelerPreview) {
     return (
       <Suspense fallback={<AdminLoadingFallback />}>
         <AdminPortalLayout
@@ -1813,7 +1803,6 @@ export default function App() {
           activeTab={adminActiveTab}
           onActiveTabChange={setAdminActiveTab}
           onExitToTravelerApp={() => setIsTravelerPreview(true)}
-          onOpenBugTracker={() => setShowBugTracker(true)}
           onInspectTrip={(tripId) => {
             void selectTrip(tripId);
             setAdminActiveTab('trips');
@@ -1879,23 +1868,7 @@ export default function App() {
         </div>
       )}
 
-      {/* Full-Screen Superadmin Bug Tracker View */}
-      {showBugTracker ? (
-        <div id="main-content" tabIndex={-1} className="fade-in" style={{ flex: 1, overflowY: 'auto', padding: '16px 20px' }}>
-          <Suspense fallback={<AdminLoadingFallback />}>
-            <SuperAdminBugTracker
-              onBack={() => {
-                setShowBugTracker(false);
-                if (window.location.hash === '#/bugs' || window.location.hash === '#/bug-tracker') {
-                  window.location.hash = '#/';
-                }
-              }}
-              isAdmin={isSuperadmin}
-              onRequestConfirm={setConfirmRequest}
-            />
-          </Suspense>
-        </div>
-      ) : !activeTripId ? (
+      {!activeTripId ? (
         /* Screen 1: Trips List */
         <TripsListScreen
           trips={visibleTrips}
@@ -1927,7 +1900,7 @@ export default function App() {
           onArchiveTrip={handleArchiveTrip}
           onDuplicateTrip={handleDuplicateTrip}
           onOpenSettings={() => setShowGlobalSettings(true)}
-          onOpenBugTracker={isSuperadmin ? () => setShowBugTracker(true) : undefined}
+          onOpenBugTracker={isSuperadmin ? openOpsBugs : undefined}
           onOpenCommandPalette={() => {
             void import('./components/GlobalSettingsModal');
             setShowCommandPalette(true);
@@ -2016,7 +1989,7 @@ export default function App() {
                   <button
                     type="button"
                     className="header-action-circle-btn superadmin-action-btn"
-                    onClick={() => setShowBugTracker(true)}
+                    onClick={openOpsBugs}
                     title="Open Superadmin Bug Tracker"
                     aria-label="Superadmin Bug Tracker"
                   >
@@ -2381,6 +2354,7 @@ export default function App() {
                 pwaInstallable={!!deferredPrompt}
                 onInstallApp={handleInstallApp}
                 onOpenSuperadminPortal={() => setIsTravelerPreview(false)}
+                onOpenOpsBugs={openOpsBugs}
                 onRequestConfirm={setConfirmRequest}
                 onOpenShareTrip={() => setShowShareTrip(true)}
                 onNavigateToBalances={() => setActiveTab('expenses')}
@@ -2613,6 +2587,14 @@ export default function App() {
             onOpenFxRates={() => setShowFxRates(true)}
             onOpenMediaGallery={() => setShowMediaGallery(true)}
             onOpenOfflineSnapshot={() => setShowOfflineSnapshot(true)}
+            onOpenSuperadminPortal={() => {
+              setShowGlobalSettings(false);
+              setIsTravelerPreview(false);
+            }}
+            onOpenOpsBugs={() => {
+              setShowGlobalSettings(false);
+              openOpsBugs();
+            }}
           />
         </Suspense>
       )}

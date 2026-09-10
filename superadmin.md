@@ -21,6 +21,7 @@ graph TD
     end
 
     subgraph "Superadmin Ops Deck (code-split, superadmin-only)"
+        C --> D0[SEC.00 Command Center -- radar, KPIs, jump]
         C --> D1[SEC.01 Flags -- flag toggles + fleet controls]
         C --> D2[SEC.02 Analytics -- fleet-wide KPIs]
         C --> D3[SEC.03 Trips -- directory, freeze/archive/delete, Inspect]
@@ -28,6 +29,7 @@ graph TD
         C --> D5[SEC.05 Audit -- security_audit_logs viewer]
         C --> D6[SEC.06 Features -- triage feature requests]
         C --> D7[SEC.07 Tools -- keyword rules, backup, danger zone]
+        C --> D8[SEC.08 Bugs -- Bug Ledger triage in-shell]
     end
 ```
 
@@ -47,15 +49,19 @@ On mobile (<760px), the section rail is replaced by a tappable "current section"
   - Manage group members and custom groups for their own trips.
   - View net balances and execute debt settlements.
   - View active trip analytics (category breakdown, spend shares, route journey map).
-  - Report a bug or suggest a feature from Settings (Suggest a Feature is flag-gated, off by default -- see §3.1).
+  - Report a bug from Settings → Report a Problem (returns a `BUG-xxx` ticket id). Check later status in Settings → My reports.
+  - Suggest a feature from Settings (Suggest a Feature is flag-gated, off by default -- see §3.1).
 
 ### B. Superadmin
 - **Access Method**: Real Supabase Auth account (email/password), authorized by being listed in `public.superadmins`. There is no shared or hardcoded credential -- see §4.
-- **Portal Shell**: A separate, code-split "Ops Deck" application (`AdminPortalLayout.tsx`) with 7 sections.
+- **Portal Shell**: A separate, code-split "Ops Deck" application (`AdminPortalLayout.tsx`) with Command Center (SEC.00) plus eight sections (Flags through Bugs). Bugs are first-class in the same shell as Features — they are not a Settings overlay.
 
 ---
 
 ## 3. Ops Deck Sections
+
+### SEC.00 Command Center (`AdminCommandCenterPage.tsx`)
+Fleet radar for the day: KPIs, critical bugs, grounded trips, recent audit activity. **Ping Services** measures real Auth session, Postgres (`bugs` select), and Storage (`receipts` list) latency — it does not fabricate health.
 
 ### SEC.01 Flags (`AdminFlagsPage.tsx`)
 - **Feature flag switchboard** -- live toggles for:
@@ -83,6 +89,9 @@ Mirrors the Bug Ledger's architecture for feature requests instead of defects (`
 ### SEC.07 Tools (`AdminToolsPage.tsx`)
 200+ keyword/brand auto-tagging rule editor, JSON database backup/restore, demo dataset seeder, fleet-wide CSV export, on-demand recycle-bin purge, and the danger-zone full wipe.
 
+### SEC.08 Bugs (`SuperAdminBugTracker.tsx`)
+In-shell Bug Ledger (same chrome as Features): table + board, bulk status, assignee, activity, fingerprint "N similar" grouping, screenshot on the diagnostic bag. Travelers file via Settings → Report a Problem (`report_bug` RPC) and see `BUG-xxx`; they can check Open / In Progress / Resolved on Settings → My reports (`list_my_bug_reports`). Superadmins also jump here from Cmd+K, the Command Center, or Settings → Superadmin Bug Tracker. See [`docs/howto-bug-tracking.md`](docs/howto-bug-tracking.md). Extra triage columns live in migration 0079 (`assignee`, `github_sha`, `fingerprint`, `activity`).
+
 ---
 
 ## 4. Superadmin Authentication
@@ -102,6 +111,7 @@ src/
 ├── components/
 │   ├── admin/                          # Code-split -- never shipped to a traveler's bundle
 │   │   ├── AdminPortalLayout.tsx       # Master Ops Deck shell, section nav, mobile switcher
+│   │   ├── AdminCommandCenterPage.tsx  # SEC.00 Command Center
 │   │   ├── AdminFlagsPage.tsx          # SEC.01 Flags + Fleet Controls
 │   │   ├── AdminAnalyticsPage.tsx      # SEC.02 Analytics
 │   │   ├── AdminTripsPage.tsx          # SEC.03 Trips
@@ -110,6 +120,7 @@ src/
 │   │   ├── AdminFeaturesPage.tsx       # SEC.06 Features
 │   │   ├── AdminToolsPage.tsx          # SEC.07 Tools
 │   │   └── ops-deck.css                # Ledger Ops visual system (light/dark, mobile-first)
+│   ├── SuperAdminBugTracker.tsx        # SEC.08 Bugs (embedded in Ops Deck)
 │   ├── LoginScreen.tsx                 # Google Sign-In + Super User Login entry
 │   ├── SuperadminAuthModal.tsx         # Real password auth + is_superadmin() check
 │   ├── FeatureRequestModal.tsx         # Settings > Suggest a Feature (flag-gated)
@@ -134,5 +145,6 @@ supabase/migrations/
 ├── 0054-0059                           # Superadmin identity, Bug Ledger, RLS hardening
 ├── 0060-0062                           # Analytics/Audit/Users backend, app_config
 ├── 0063                                # Feature Tracker table + submit_feature_request()
-└── 0064                                # feature_flag_overrides (cross-device flags)
+├── 0064                                # feature_flag_overrides (cross-device flags)
+└── 0079                                # Bug Ledger assignee, fingerprint, activity, list_my_bug_reports()
 ```

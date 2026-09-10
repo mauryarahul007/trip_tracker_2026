@@ -2612,6 +2612,19 @@ This document logs all meaningful technical decisions, library choices, design p
   - Phase docs are not auto-loaded. Agents that ignore the Cursor rule will not see the detailed procedure unless they open the matching file.
   - This is agent process documentation, not a product feature; it is not logged in `bugs/bugs.json` or the Superadmin feature tracker.
 
+---
+
+## 140. In-Shell Bug Ledger, Traveler My Reports & Triage Columns (v3.8.0)
+* **Context:** Superadmins triaged bugs from a Settings overlay while travelers who filed via Report a Problem had no ticket id and no way to check status. Duplicate reports had no grouping, and rows lacked assignee / commit SHA / activity.
+* **Decision:** Make Bugs first-class in the Ops Deck (SEC.08), return `BUG-xxx` on file, add Settings → My reports via a SECURITY DEFINER RPC, and add triage columns on `public.bugs`.
+* **Pattern/Implementation:**
+  - Migration `0079_bugs_triage_fields.sql`: `assignee`, `github_sha`, `fingerprint`, `activity`; recreate `report_bug` with optional `p_fingerprint`; add `list_my_bug_reports()`.
+  - `SuperAdminBugTracker` embeds in `AdminPortalLayout` (table + board, bulk status, fingerprint “N similar”).
+  - `SettingsMyReportsScreen` lists the caller’s tickets only (email or auth uid on `found_by`).
+* **Trade-offs Accepted:**
+  - Travelers still cannot `SELECT` `public.bugs`; status is only through the RPC.
+  - Applying 0079 on the hosted project is required before My reports and fingerprint grouping work against production.
+
 
 
 

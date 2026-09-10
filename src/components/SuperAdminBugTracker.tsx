@@ -7,6 +7,8 @@ import {
   createBug,
   updateBug,
   deleteBug,
+  appendBugActivity,
+  bugFingerprint,
   type BugRecord,
 } from '../services/bugApi';
 import { diagnosticLogger } from '../utils/diagnosticLogger';
@@ -27,9 +29,11 @@ import {
 import './admin/ops-deck.css';
 
 type Props = {
-  onBack: () => void;
+  onBack?: () => void;
   isAdmin?: boolean;
   onRequestConfirm?: (request: ConfirmRequest) => void;
+  embedded?: boolean;
+  onBugsChanged?: () => void | Promise<void>;
 };
 
 type StatusFilter = 'all' | 'open' | 'in_progress' | 'resolved' | 'wont_fix' | 'critical';
@@ -52,10 +56,10 @@ const CATEGORIES: { value: BugRecord['category']; label: string }[] = [
 ];
 
 const SEVERITIES: { value: BugRecord['severity']; label: string; color: string }[] = [
-  { value: 'critical', label: 'Critical', color: 'var(--danger)' },
-  { value: 'high', label: 'High', color: 'var(--amber)' },
-  { value: 'medium', label: 'Medium', color: 'var(--text-secondary)' },
-  { value: 'low', label: 'Low', color: 'var(--text-tertiary)' },
+  { value: 'critical', label: 'Critical', color: 'var(--severity-critical)' },
+  { value: 'high', label: 'High', color: 'var(--severity-high)' },
+  { value: 'medium', label: 'Medium', color: 'var(--severity-medium)' },
+  { value: 'low', label: 'Low', color: 'var(--severity-low)' },
 ];
 
 function severityColor(severity: BugRecord['severity']): string {
@@ -65,11 +69,11 @@ function severityColor(severity: BugRecord['severity']): string {
 function statusMeta(status: BugRecord['status']): { label: string; color: string } {
   switch (status) {
     case 'open':
-      return { label: 'Open', color: 'var(--amber)' };
+      return { label: 'Open', color: 'var(--warning)' };
     case 'in_progress':
-      return { label: 'Working', color: 'var(--cyan)' };
+      return { label: 'In Progress', color: 'var(--cyan)' };
     case 'resolved':
-      return { label: 'Settled', color: 'var(--safe)' };
+      return { label: 'Resolved', color: 'var(--safe)' };
     default:
       return { label: "Won't Fix", color: 'var(--text-tertiary)' };
   }
@@ -77,16 +81,20 @@ function statusMeta(status: BugRecord['status']): { label: string; color: string
 
 function BugDetailBody({
   bug,
+  similarCount,
   onStatusChange,
   onCopyPrompt,
   onDelete,
+  onAssign,
 }: {
   bug: BugRecord;
+  similarCount: number;
   onStatusChange: (bug: BugRecord, status: 'open' | 'in_progress' | 'resolved' | 'wont_fix') => void;
   onCopyPrompt: (bug: BugRecord) => void;
   onDelete: (id: string) => void;
+  onAssign: (bug: BugRecord, assignee: string) => void;
 }) {
-  const hasDiagnostics = Boolean(bug.diagnostics?.stackTrace || bug.diagnostics?.consoleLogs?.length || bug.diagnostics?.syncQueueLength !== undefined || bug.diagnostics?.activeTripId);
+  const hasDiagnostics = Boolean(bug.diagnostics?.stackTrace || bug.diagnostics?.consoleLogs?.length || bug.diagnostics?.syncQueueLength !== undefined || bug.diagnostics?.activeTripId || bug.diagnostics?.screenshot);
   const [tab, setTab] = useState<'details' | 'diagnostics' | 'history'>('details');
 
   return (
@@ -95,7 +103,7 @@ function BugDetailBody({
         <div className="ops-bug-field ops-bug-resolution">
           <strong>Resolution:</strong> {bug.resolutionNote || 'Resolved'}
           <div style={{ fontSize: '10.5px', marginTop: '3px', color: 'var(--text-secondary)' }}>
-            Settled by {bug.resolvedBy || 'superadmin'} on {bug.resolvedAt ? new Date(bug.resolvedAt).toLocaleDateString() : 'N/A'}
+            Resolved by {bug.resolvedBy || 'superadmin'} on {bug.resolvedAt ? new Date(bug.resolvedAt).toLocaleDateString() : 'N/A'}
           </div>
         </div>
       )}
@@ -110,6 +118,24 @@ function BugDetailBody({
 
       {tab === 'details' && (
         <>
+          {similarCount > 1 && (
+            <div className="ops-bug-field" style={{ color: 'var(--warning)' }}>
+              <span className="ops-bug-label">Similar cases</span>
+              {similarCount} reports share this fingerprint
+            </div>
+          )}
+          {bug.assignee && (
+            <div className="ops-bug-field">
+              <span className="ops-bug-label">Assignee</span>
+              {bug.assignee}
+            </div>
+          )}
+          {bug.githubSha && (
+            <div className="ops-bug-field">
+              <span className="ops-bug-label">Git SHA</span>
+              <code className="ops-flag-key">{bug.githubSha}</code>
+            </div>
+          )}
           {bug.reproSteps && bug.reproSteps.length > 0 && (
             <div className="ops-bug-field">
               <span className="ops-bug-label">Steps to reproduce</span>
@@ -166,10 +192,10 @@ function BugDetailBody({
                   <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>{bug.diagnostics.syncQueueLength}</div>
                 </div>
               )}
-              {bug.diagnostics?.activeTripId && (
+              {bug.diagnostics?.screenshot && (
                 <div>
-                  <span className="ops-bug-label">Active trip</span>
-                  <div style={{ fontSize: '12px', color: 'var(--text-secondary)', fontFamily: 'var(--mono)' }}>{bug.diagnostics.activeTripId}</div>
+                  <span className="ops-bug-label">Screenshot</span>
+                  <img src={bug.diagnostics.screenshot} alt={`Screenshot for ${bug.id}`} style={{ maxWidth: '100%', borderRadius: '10px', marginTop: '6px', border: '1px solid var(--line)' }} />
                 </div>
               )}
             </div>
@@ -191,10 +217,17 @@ function BugDetailBody({
           )}
           {bug.resolvedAt && (
             <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
-              <span className="ops-bug-label" style={{ display: 'inline' }}>Settled</span>{' '}
+              <span className="ops-bug-label" style={{ display: 'inline' }}>Resolved</span>{' '}
               {new Date(bug.resolvedAt).toLocaleString()} by {bug.resolvedBy || 'superadmin'}
             </div>
           )}
+          {(bug.activity || []).map((entry, i) => (
+            <div key={`${entry.at}-${i}`} style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+              <span className="ops-bug-label" style={{ display: 'inline' }}>{entry.action}</span>{' '}
+              {new Date(entry.at).toLocaleString()} by {entry.by}
+              {entry.note ? ` — ${entry.note}` : ''}
+            </div>
+          ))}
         </div>
       )}
 
@@ -212,7 +245,7 @@ function BugDetailBody({
             onClick={() => onStatusChange(bug, 'resolved')}
             style={{ color: 'var(--safe)', borderColor: 'var(--safe-line)' }}
           >
-            Mark settled
+            Mark resolved
           </button>
         )}
 
@@ -227,6 +260,19 @@ function BugDetailBody({
             Reopen
           </button>
         )}
+
+        <label className="ops-form-label" htmlFor={`assign-${bug.id}`} style={{ marginTop: '8px' }}>Assign to</label>
+        <input
+          id={`assign-${bug.id}`}
+          type="text"
+          className="ops-input"
+          defaultValue={bug.assignee || ''}
+          placeholder="Name or email"
+          onBlur={(e) => {
+            const next = e.target.value.trim();
+            if (next !== (bug.assignee || '')) onAssign(bug, next);
+          }}
+        />
 
         <button type="button" className="ops-btn" onClick={() => onCopyPrompt(bug)}>
           <IconCopy size={13} className="icon-sm" /> Copy for AI
@@ -246,7 +292,7 @@ function BugDetailBody({
   );
 }
 
-export function SuperAdminBugTracker({ onBack, isAdmin = true, onRequestConfirm }: Props) {
+export function SuperAdminBugTracker({ onBack, isAdmin = true, onRequestConfirm, embedded = false, onBugsChanged }: Props) {
   const [bugs, setBugs] = useState<BugRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -266,6 +312,7 @@ export function SuperAdminBugTracker({ onBack, isAdmin = true, onRequestConfirm 
   const [resolvedByName, setResolvedByName] = useState('superadmin');
   const [draggedBugId, setDraggedBugId] = useState<string | null>(null);
   const [dragOverStatus, setDragOverStatus] = useState<BugRecord['status'] | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   useFocusTrap(drawerRef, Boolean(drawerBugId), false, () => setDrawerBugId(null));
   useFocusTrap(addModalRef, showAddModal, false, () => setShowAddModal(false));
@@ -345,6 +392,15 @@ export function SuperAdminBugTracker({ onBack, isAdmin = true, onRequestConfirm 
     return sorted;
   }, [filteredBugs, sortMode]);
 
+  const similarCountByFp = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const bug of bugs) {
+      if (!bug.fingerprint) continue;
+      counts.set(bug.fingerprint, (counts.get(bug.fingerprint) || 0) + 1);
+    }
+    return counts;
+  }, [bugs]);
+
   const drawerBug = drawerBugId ? bugs.find((b) => b.id === drawerBugId) || null : null;
 
   const stats = useMemo(() => {
@@ -387,6 +443,11 @@ export function SuperAdminBugTracker({ onBack, isAdmin = true, onRequestConfirm 
           syncQueueLength: snapshot.state.syncQueueLength,
           activeTripId: snapshot.state.activeTripId || undefined,
         },
+        fingerprint: bugFingerprint({
+          title: newTitle.trim(),
+          category: newCategory,
+          route: snapshot.state.routeHash,
+        }),
       });
 
       setBugs((prev) => [created, ...prev.filter((b) => b.id !== created.id)]);
@@ -413,27 +474,118 @@ export function SuperAdminBugTracker({ onBack, isAdmin = true, onRequestConfirm 
       return;
     }
 
-    const updated = await updateBug(bug.id, { status: newStatus });
+    const updated = await updateBug(bug.id, {
+      status: newStatus,
+      activity: appendBugActivity(bug.activity, {
+        by: resolvedByName || 'superadmin',
+        action: 'status',
+        note: `${bug.status} → ${newStatus}`,
+      }),
+    });
     if (updated) {
       setBugs((prev) => prev.map((b) => (b.id === bug.id ? updated : b)));
       showToast(`${bug.id} marked ${statusMeta(newStatus).label}`);
+      void onBugsChanged?.();
     }
   };
 
   const handleConfirmResolve = async () => {
     if (!resolvingBug) return;
+    const shaMatch = resolutionNote.match(/\b[0-9a-f]{7,40}\b/i);
     const updated = await updateBug(resolvingBug.id, {
       status: 'resolved',
       resolvedBy: resolvedByName,
       resolutionNote: resolutionNote.trim() || 'Resolved by superadmin',
       resolvedAt: new Date().toISOString(),
+      githubSha: shaMatch ? shaMatch[0] : resolvingBug.githubSha,
+      activity: appendBugActivity(resolvingBug.activity, {
+        by: resolvedByName || 'superadmin',
+        action: 'resolved',
+        note: resolutionNote.trim() || undefined,
+      }),
     });
 
     if (updated) {
       setBugs((prev) => prev.map((b) => (b.id === resolvingBug.id ? updated : b)));
       setResolvingBug(null);
-      showToast(`${resolvingBug.id} settled`);
+      showToast(`${resolvingBug.id} resolved`);
+      void onBugsChanged?.();
     }
+  };
+
+  const handleAssign = async (bug: BugRecord, assignee: string) => {
+    const updated = await updateBug(bug.id, {
+      assignee,
+      activity: appendBugActivity(bug.activity, {
+        by: resolvedByName || 'superadmin',
+        action: 'assign',
+        note: assignee || 'unassigned',
+      }),
+    });
+    if (updated) {
+      setBugs((prev) => prev.map((b) => (b.id === bug.id ? updated : b)));
+      showToast(assignee ? `${bug.id} assigned to ${assignee}` : `${bug.id} unassigned`);
+    }
+  };
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === sortedBugs.length) setSelectedIds(new Set());
+    else setSelectedIds(new Set(sortedBugs.map((b) => b.id)));
+  };
+
+  const handleBulkStatusChange = async (status: BugRecord['status']) => {
+    const ids = Array.from(selectedIds);
+    if (ids.length === 0) return;
+    if (status === 'resolved') {
+      if (!onRequestConfirm) {
+        showToast('Confirm the resolve action from the Ops Deck', 'danger');
+        return;
+      }
+      onRequestConfirm({
+        title: 'Resolve selected cases',
+        message: `Mark ${ids.length} case${ids.length === 1 ? '' : 's'} resolved?`,
+        confirmLabel: 'Resolve',
+        onConfirm: async () => {
+          for (const id of ids) {
+            const bug = bugs.find((b) => b.id === id);
+            if (!bug) continue;
+            await updateBug(id, {
+              status: 'resolved',
+              resolvedBy: resolvedByName,
+              resolutionNote: 'Resolved via bulk action',
+              resolvedAt: new Date().toISOString(),
+              activity: appendBugActivity(bug.activity, { by: resolvedByName || 'superadmin', action: 'resolved', note: 'bulk' }),
+            });
+          }
+          setSelectedIds(new Set());
+          await loadBugs();
+          void onBugsChanged?.();
+          showToast(`Resolved ${ids.length} cases`);
+        },
+      });
+      return;
+    }
+    for (const id of ids) {
+      const bug = bugs.find((b) => b.id === id);
+      if (!bug) continue;
+      await updateBug(id, {
+        status,
+        activity: appendBugActivity(bug.activity, { by: resolvedByName || 'superadmin', action: 'status', note: `bulk → ${status}` }),
+      });
+    }
+    setSelectedIds(new Set());
+    await loadBugs();
+    void onBugsChanged?.();
+    showToast(`Updated ${ids.length} cases to ${statusMeta(status).label}`);
   };
 
   const handleDeleteBug = (id: string) => {
@@ -441,7 +593,13 @@ export function SuperAdminBugTracker({ onBack, isAdmin = true, onRequestConfirm 
       const success = await deleteBug(id);
       if (success) {
         setBugs((prev) => prev.filter((b) => b.id !== id));
+        setSelectedIds((prev) => {
+          const next = new Set(prev);
+          next.delete(id);
+          return next;
+        });
         showToast(`${id} removed from the ledger`);
+        void onBugsChanged?.();
       }
     };
 
@@ -453,9 +611,9 @@ export function SuperAdminBugTracker({ onBack, isAdmin = true, onRequestConfirm 
         danger: true,
         onConfirm: performDelete,
       });
-    } else if (window.confirm(`Delete ${id}? This removes it from the ledger.`)) {
-      performDelete();
+      return;
     }
+    showToast('Confirm dialog is required to delete a case', 'danger');
   };
 
   const handleCopyPrompt = async (bug: BugRecord) => {
@@ -503,9 +661,11 @@ ${bug.diagnostics?.stackTrace ? `#### Stack Trace\n\`\`\`text\n${bug.diagnostics
             <h2>Bug Ledger</h2>
             <p>Restricted to superadmins and trip admins for system maintenance.</p>
           </div>
-          <button type="button" className="ops-btn" onClick={onBack} aria-label="Go back" title="Go back">
-            <IconChevronLeft size={14} className="icon-sm" /> Back
-          </button>
+          {onBack && (
+            <button type="button" className="ops-btn" onClick={onBack} aria-label="Go back" title="Go back">
+              <IconChevronLeft size={14} className="icon-sm" /> Back
+            </button>
+          )}
         </div>
         <div className="ops-card" style={{ textAlign: 'center', padding: '32px 20px' }}>
           <span style={{ color: 'var(--amber)', margin: '0 auto 12px', display: 'inline-block' }}>
@@ -515,16 +675,21 @@ ${bug.diagnostics?.stackTrace ? `#### Stack Trace\n\`\`\`text\n${bug.diagnostics
           <p style={{ color: 'var(--text-secondary)', fontSize: '12.5px', maxWidth: '360px', margin: '0 auto 20px' }}>
             The bug ledger is restricted to superadmins and trip admins for system maintenance.
           </p>
+          {onBack && (
           <button type="button" className="ops-btn ops-btn-primary" onClick={onBack} style={{ padding: '9px 18px' }} aria-label="Go back" title="Go back">
             Return to Previous Screen
           </button>
+          )}
         </div>
       </div>
     );
   }
 
   return (
-    <div className="ops-deck fade-in" style={{ margin: '-16px -20px', padding: '20px', paddingBottom: '40px', minHeight: '100%' }}>
+    <div
+      className={embedded ? 'fade-in' : 'ops-deck fade-in'}
+      style={embedded ? { display: 'flex', flexDirection: 'column', gap: '16px' } : { margin: '-16px -20px', padding: '20px', paddingBottom: '40px', minHeight: '100%' }}
+    >
       <div className="ops-page-head">
         <div>
           <h2>Bug Ledger</h2>
@@ -534,9 +699,11 @@ ${bug.diagnostics?.stackTrace ? `#### Stack Trace\n\`\`\`text\n${bug.diagnostics
           <button type="button" className="ops-btn" onClick={loadBugs} title="Sync with the CLI ledger" aria-label="Sync with the CLI ledger">
             <IconRefresh size={14} className="icon-sm" />
           </button>
-          <button type="button" className="ops-btn" onClick={onBack} aria-label="Go back" title="Go back">
-            <IconChevronLeft size={14} className="icon-sm" /> Back
-          </button>
+          {onBack && (
+            <button type="button" className="ops-btn" onClick={onBack} aria-label="Go back" title="Go back">
+              <IconChevronLeft size={14} className="icon-sm" /> Back
+            </button>
+          )}
         </div>
       </div>
 
@@ -566,11 +733,11 @@ ${bug.diagnostics?.stackTrace ? `#### Stack Trace\n\`\`\`text\n${bug.diagnostics
         </button>
         <button type="button" className="ops-stat-btn" data-active={statusFilter === 'in_progress'} onClick={() => setStatusFilter('in_progress')}>
           <span className="n" style={{ color: 'var(--cyan)' }}>{stats.inProgress}</span>
-          <span className="l">Working</span>
+          <span className="l">In Progress</span>
         </button>
         <button type="button" className="ops-stat-btn" data-active={statusFilter === 'resolved'} onClick={() => setStatusFilter('resolved')}>
           <span className="n" style={{ color: 'var(--safe)' }}>{stats.resolved}</span>
-          <span className="l">Settled</span>
+          <span className="l">Resolved</span>
         </button>
         <button type="button" className="ops-stat-btn" data-active={statusFilter === 'wont_fix'} onClick={() => setStatusFilter('wont_fix')}>
           <span className="n" style={{ color: 'var(--text-tertiary)' }}>{stats.wontFix}</span>
@@ -650,6 +817,28 @@ ${bug.diagnostics?.stackTrace ? `#### Stack Trace\n\`\`\`text\n${bug.diagnostics
         </button>
       </div>
 
+      {selectedIds.size > 0 && (
+        <div className="ops-bulk-dock" style={{ marginBottom: '14px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <span className="ops-dot" />
+            <span style={{ fontSize: '12.5px', fontWeight: 700, color: 'var(--text-primary)' }}>
+              {selectedIds.size} case{selectedIds.size === 1 ? '' : 's'} selected
+            </span>
+          </div>
+          <div className="ops-bulk-actions">
+            <button type="button" className="ops-btn" onClick={() => void handleBulkStatusChange('in_progress')}>
+              Mark In Progress
+            </button>
+            <button type="button" className="ops-btn ops-btn-primary" onClick={() => void handleBulkStatusChange('resolved')}>
+              Mark Resolved
+            </button>
+            <button type="button" className="ops-btn" onClick={() => setSelectedIds(new Set())}>
+              Clear
+            </button>
+          </div>
+        </div>
+      )}
+
       {loading ? (
         <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-secondary)', fontSize: '13px' }}>
           Loading the ledger&hellip;
@@ -663,9 +852,9 @@ ${bug.diagnostics?.stackTrace ? `#### Stack Trace\n\`\`\`text\n${bug.diagnostics
         <div className="ops-kanban">
           {(
             [
-              { status: 'open' as const, label: 'Backlog (Open)', color: 'var(--amber)' },
-              { status: 'in_progress' as const, label: 'Working (In Progress)', color: 'var(--cyan)' },
-              { status: 'resolved' as const, label: 'Settled (Resolved)', color: 'var(--safe)' },
+              { status: 'open' as const, label: 'Open', color: 'var(--warning)' },
+              { status: 'in_progress' as const, label: 'In Progress', color: 'var(--cyan)' },
+              { status: 'resolved' as const, label: 'Resolved', color: 'var(--safe)' },
               { status: 'wont_fix' as const, label: "Won't Fix", color: 'var(--text-tertiary)' },
             ]
           ).map((col) => {
@@ -724,6 +913,11 @@ ${bug.diagnostics?.stackTrace ? `#### Stack Trace\n\`\`\`text\n${bug.diagnostics
                       <div className="ops-kanban-card-meta-row">
                         <span className="ops-kanban-avatar" title={bug.foundBy}>{initialsFrom(bug.foundBy)}</span>
                         <span className="meta" style={{ marginTop: 0 }}>{bug.category}</span>
+                        {bug.fingerprint && (similarCountByFp.get(bug.fingerprint) || 1) > 1 && (
+                          <span className="ops-pill" style={{ color: 'var(--warning)', background: 'var(--warning-dim)' }}>
+                            {similarCountByFp.get(bug.fingerprint)} similar
+                          </span>
+                        )}
                         <span className="ops-kanban-age" data-stale={bug.status === 'open' && Date.now() - new Date(bug.createdAt).getTime() > 3 * 24 * 60 * 60 * 1000}>
                           {formatRelativeTime(bug.createdAt)}
                         </span>
@@ -737,18 +931,38 @@ ${bug.diagnostics?.stackTrace ? `#### Stack Trace\n\`\`\`text\n${bug.diagnostics
         </div>
       ) : (
         <div className="ops-bug-list">
+          <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '8px' }}>
+            <input
+              type="checkbox"
+              checked={sortedBugs.length > 0 && selectedIds.size === sortedBugs.length}
+              onChange={toggleSelectAll}
+              aria-label="Select all cases"
+            />
+            Select all visible
+          </label>
           {sortedBugs.map((bug) => {
             const isExpanded = expandedBugId === bug.id;
             const status = statusMeta(bug.status);
+            const isChecked = selectedIds.has(bug.id);
+            const similar = bug.fingerprint ? similarCountByFp.get(bug.fingerprint) || 1 : 1;
 
             return (
               <Fragment key={bug.id}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <input
+                    type="checkbox"
+                    checked={isChecked}
+                    onChange={() => toggleSelect(bug.id)}
+                    aria-label={`Select ${bug.id}`}
+                    style={{ marginTop: '18px' }}
+                  />
                 <button
                   type="button"
                   className="ops-bug-entry"
                   data-severity={bug.severity}
                   onClick={() => setExpandedBugId(isExpanded ? null : bug.id)}
                   aria-expanded={isExpanded}
+                  style={{ flex: 1 }}
                 >
                   <div className="ops-bug-top">
                     <span className="ops-bug-id">{bug.id}</span>
@@ -761,18 +975,32 @@ ${bug.diagnostics?.stackTrace ? `#### Stack Trace\n\`\`\`text\n${bug.diagnostics
                     <span className="ops-pill" style={{ color: status.color, background: 'var(--bg-inset)' }}>
                       {status.label}
                     </span>
+                    {similar > 1 && (
+                      <span className="ops-pill" style={{ color: 'var(--warning)', background: 'var(--warning-dim)' }}>
+                        {similar} similar
+                      </span>
+                    )}
                   </div>
                   <p className="ops-bug-title">{bug.title}</p>
                   <div className="ops-bug-meta">
                     <span className="cat">{bug.category}</span>
                     {' · found by '}{bug.foundBy}{' · '}{new Date(bug.createdAt).toLocaleDateString()}
+                    {bug.assignee ? ` · assigned ${bug.assignee}` : ''}
                     {bug.environment?.route && ` · ${bug.environment.route}`}
                   </div>
                 </button>
+                </div>
 
                 {isExpanded && (
                   <div className="ops-bug-detail">
-                    <BugDetailBody bug={bug} onStatusChange={handleStatusChange} onCopyPrompt={handleCopyPrompt} onDelete={handleDeleteBug} />
+                    <BugDetailBody
+                      bug={bug}
+                      similarCount={bug.fingerprint ? similarCountByFp.get(bug.fingerprint) || 1 : 1}
+                      onStatusChange={handleStatusChange}
+                      onCopyPrompt={handleCopyPrompt}
+                      onDelete={handleDeleteBug}
+                      onAssign={handleAssign}
+                    />
                   </div>
                 )}
               </Fragment>
@@ -802,7 +1030,14 @@ ${bug.diagnostics?.stackTrace ? `#### Stack Trace\n\`\`\`text\n${bug.diagnostics
               </button>
             </div>
             <div className="ops-bug-detail" style={{ padding: 0, border: 'none', background: 'transparent' }}>
-              <BugDetailBody bug={drawerBug} onStatusChange={handleStatusChange} onCopyPrompt={handleCopyPrompt} onDelete={handleDeleteBug} />
+              <BugDetailBody
+                bug={drawerBug}
+                similarCount={drawerBug.fingerprint ? similarCountByFp.get(drawerBug.fingerprint) || 1 : 1}
+                onStatusChange={handleStatusChange}
+                onCopyPrompt={handleCopyPrompt}
+                onDelete={handleDeleteBug}
+                onAssign={handleAssign}
+              />
             </div>
           </div>
         </div>
@@ -936,7 +1171,7 @@ ${bug.diagnostics?.stackTrace ? `#### Stack Trace\n\`\`\`text\n${bug.diagnostics
             onClick={(e) => e.stopPropagation()}
           >
             <h3 id="resolve-bug-title" style={{ fontFamily: 'var(--display)', fontSize: '16px', fontWeight: 700, margin: '0 0 4px', color: 'var(--text-primary)' }}>
-              Settle {resolvingBug.id}
+              Resolve {resolvingBug.id}
             </h3>
             <p style={{ fontSize: '12.5px', color: 'var(--text-secondary)', margin: '0 0 16px' }}>
               {resolvingBug.title}
@@ -955,13 +1190,13 @@ ${bug.diagnostics?.stackTrace ? `#### Stack Trace\n\`\`\`text\n${bug.diagnostics
             </div>
 
             <div className="ops-form-group">
-              <label className="ops-form-label" htmlFor="resolve-settled-by">Settled by</label>
+              <label className="ops-form-label" htmlFor="resolve-settled-by">Resolved by</label>
               <input id="resolve-settled-by" type="text" className="ops-input" value={resolvedByName} onChange={(e) => setResolvedByName(e.target.value)} />
             </div>
 
             <div style={{ display: 'flex', gap: '10px', marginTop: '4px' }}>
               <button type="button" className="ops-btn ops-btn-primary" onClick={handleConfirmResolve} style={{ flex: 1, justifyContent: 'center' }}>
-                Confirm settlement
+                Confirm resolve
               </button>
               <button type="button" className="ops-btn" onClick={() => setResolvingBug(null)}>
                 Cancel

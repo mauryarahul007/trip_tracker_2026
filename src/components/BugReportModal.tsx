@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { diagnosticLogger, type DiagnosticSnapshot } from '../utils/diagnosticLogger';
-import { createBug } from '../services/bugApi';
+import { bugFingerprint, createBug } from '../services/bugApi';
+import { compressImageFile } from '../utils/imageCompressor';
 import { useAuthStore } from '../store/authStore';
 import type { ConfirmRequest } from './ConfirmDialog';
 import { IconChevronLeft, IconCopy, IconDownload, IconSparkles, IconCheckCircle, IconAlertCircle } from './Icons';
@@ -53,6 +54,9 @@ export function BugReportModal({
   const [copiedStatus, setCopiedStatus] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitResult, setSubmitResult] = useState<{ ok: boolean; message: string } | null>(null);
+  const [filedId, setFiledId] = useState<string | null>(null);
+  const [screenshotPreview, setScreenshotPreview] = useState<string | null>(null);
+  const [screenshotError, setScreenshotError] = useState<string | null>(null);
   const userEmail = useAuthStore((s) => s.session?.user.email ?? null);
 
   useEffect(() => {
@@ -61,8 +65,31 @@ export function BugReportModal({
   }, []);
 
   const hasUnsentText = Boolean(
-    title.trim() || description.trim() || reproSteps.trim() || expectedBehavior.trim() || actualBehavior.trim()
+    title.trim() || description.trim() || reproSteps.trim() || expectedBehavior.trim() || actualBehavior.trim() || screenshotPreview
   );
+
+  const handleScreenshotChange = async (file: File | undefined) => {
+    setScreenshotError(null);
+    if (!file) {
+      setScreenshotPreview(null);
+      return;
+    }
+    try {
+      const dataUrl = await compressImageFile(file, { maxWidth: 900, maxHeight: 900, quality: 0.55 });
+      setScreenshotPreview(dataUrl);
+    } catch (err) {
+      setScreenshotPreview(null);
+      setScreenshotError(err instanceof Error ? err.message : 'Could not attach that image.');
+    }
+  };
+
+  const handleCopyFiledId = () => {
+    if (!filedId) return;
+    void navigator.clipboard.writeText(filedId).then(() => {
+      setCopiedStatus(`${filedId} copied`);
+      setTimeout(() => setCopiedStatus(null), 2500);
+    });
+  };
 
   const handleSubmitReport = async (): Promise<boolean> => {
     if (!title.trim()) {
@@ -73,7 +100,8 @@ export function BugReportModal({
     setSubmitResult(null);
     try {
       const latestSnapshot = snapshot || (await diagnosticLogger.captureSnapshot(activeTripInfo));
-      await createBug({
+      const stackHint = latestSnapshot.recentLogs.find((l) => l.level === 'error')?.message || initialError || undefined;
+      const created = await createBug({
         title: title.trim(),
         description: description.trim(),
         severity,
@@ -89,18 +117,27 @@ export function BugReportModal({
         reproSteps: reproSteps.split('\n').map((s) => s.trim()).filter(Boolean),
         expectedBehavior,
         actualBehavior,
+        fingerprint: bugFingerprint({
+          title: title.trim(),
+          category,
+          stackTrace: stackHint,
+          route: latestSnapshot.state.routeHash,
+        }),
         diagnostics: {
           consoleLogs: latestSnapshot.recentLogs.map((l) => `[${l.level}] ${l.message}`),
           syncQueueLength: latestSnapshot.state.syncQueueLength,
           activeTripId: latestSnapshot.state.activeTripId || undefined,
+          screenshot: screenshotPreview || undefined,
         },
       });
-      setSubmitResult({ ok: true, message: 'Thanks — sent to the team.' });
+      setFiledId(created.id);
+      setSubmitResult({ ok: true, message: `Filed as ${created.id}` });
       setTitle('');
       setDescription('');
       setReproSteps('');
       setExpectedBehavior('');
       setActualBehavior('');
+      setScreenshotPreview(null);
       return true;
     } catch {
       setSubmitResult({ ok: false, message: "Couldn't send that just now. Try again in a bit." });
@@ -298,6 +335,41 @@ export function BugReportModal({
         </div>
       </div>
 
+      <div className="form-group">
+        <label className="form-label" htmlFor="bug-screenshot">Screenshot (optional)</label>
+        <input
+          id="bug-screenshot"
+          type="file"
+          accept="image/*"
+          className="input-field"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            void handleScreenshotChange(file);
+            e.target.value = '';
+          }}
+        />
+        {screenshotError && (
+          <p style={{ margin: '6px 0 0', fontSize: '12px', color: 'var(--color-danger)' }}>{screenshotError}</p>
+        )}
+        {screenshotPreview && (
+          <div style={{ marginTop: '8px' }}>
+            <img
+              src={screenshotPreview}
+              alt="Attached screenshot preview"
+              style={{ maxWidth: '100%', maxHeight: '180px', borderRadius: '10px', border: '1px solid var(--border-color)' }}
+            />
+            <button
+              type="button"
+              className="secondary-btn"
+              style={{ marginTop: '8px' }}
+              onClick={() => setScreenshotPreview(null)}
+            >
+              Remove screenshot
+            </button>
+          </div>
+        )}
+      </div>
+
       <div style={{ border: '1px solid var(--border-color)', borderRadius: 'var(--border-radius-md)', overflow: 'hidden', marginBottom: '16px' }}>
         <button
           type="button"
@@ -358,14 +430,22 @@ export function BugReportModal({
             marginBottom: '12px',
             textAlign: 'center',
             display: 'flex',
+            flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
-            gap: '6px',
+            gap: '8px',
             color: submitResult.ok ? 'var(--color-success)' : 'var(--color-danger)',
           }}
         >
-          {submitResult.ok ? <IconCheckCircle size={15} className="icon-sm" /> : <IconAlertCircle size={15} className="icon-sm" />}
-          {submitResult.message}
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+            {submitResult.ok ? <IconCheckCircle size={15} className="icon-sm" /> : <IconAlertCircle size={15} className="icon-sm" />}
+            {submitResult.message}
+          </span>
+          {submitResult.ok && filedId && (
+            <button type="button" className="secondary-btn" onClick={handleCopyFiledId}>
+              <IconCopy size={14} className="icon-sm" /> Copy {filedId}
+            </button>
+          )}
         </div>
       )}
 

@@ -41,7 +41,7 @@ A **mobile-first, offline-capable, multi-user** trip-expense splitter. Create a 
 ### Trust & safety
 - **Report a Problem** — any user can file a bug report (with an auto-captured diagnostic snapshot: device info, sync queue state, recent console activity) straight from Settings
 - **Suggest a Feature** — a lighter-weight companion to Report a Problem, flag-gated (off by default, superadmin turns it on globally, per-trip, or for one person)
-- **Superadmin Ops Deck** — a code-split, mobile-friendly admin portal (see [`superadmin.md`](superadmin.md)) with 7 sections: Flags, fleet Analytics, Trips directory, Users (suspend/broadcast), a security Audit log, the Feature request tracker, and system Tools — all Supabase-backed and synced across every device, with CLIs (`npm run bug`, `npm run feature`) for filing/resolving from the terminal
+- **Superadmin Ops Deck** — a code-split, mobile-friendly admin portal (see [`superadmin.md`](superadmin.md)) with Command Center (SEC.00) plus Flags, fleet Analytics, Trips, Users (suspend/broadcast), a security Audit log, Features, **Bugs** (SEC.08, in-shell ledger), and system Tools — all Supabase-backed and synced across every device, with CLIs (`npm run bug`, `npm run feature`) for filing/resolving from the terminal. Travelers file from Settings → Report a Problem (ticket id `BUG-xxx`) and check status under My reports.
 - **Security hardening** — RLS on every table, join-code rate limiting, Cloudflare Turnstile + honeypot anti-bot defenses, DB-level constraints, audit logging, and a locked-down CSP (see [Security reference](docs/reference-security-and-anti-bot-defense.md))
 
 ---

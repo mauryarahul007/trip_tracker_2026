@@ -43,13 +43,34 @@ export interface BugRecord {
     consoleLogs?: string[];
     syncQueueLength?: number;
     activeTripId?: string;
+    screenshot?: string;
   };
+  assignee?: string;
+  githubSha?: string;
+  fingerprint?: string;
+  activity?: BugActivityEntry[];
   createdAt: string;
   updatedAt: string;
   resolvedAt?: string;
   resolvedBy?: string;
   resolutionNote?: string;
 }
+
+export interface BugActivityEntry {
+  at: string;
+  by: string;
+  action: string;
+  note?: string;
+}
+
+export type MyBugReport = {
+  id: string;
+  title: string;
+  status: BugRecord['status'];
+  severity: BugRecord['severity'];
+  createdAt: string;
+  updatedAt: string;
+};
 
 const STORAGE_KEY = 'trip-tracker-local-bugs';
 
@@ -66,6 +87,10 @@ interface BugRow {
   expected_behavior: string;
   actual_behavior: string;
   diagnostics: BugRecord['diagnostics'] | null;
+  assignee: string | null;
+  github_sha: string | null;
+  fingerprint: string | null;
+  activity: BugActivityEntry[] | null;
   created_at: string;
   updated_at: string;
   resolved_at: string | null;
@@ -87,12 +112,34 @@ function mapRow(row: BugRow): BugRecord {
     expectedBehavior: row.expected_behavior,
     actualBehavior: row.actual_behavior,
     diagnostics: row.diagnostics ?? undefined,
+    assignee: row.assignee ?? undefined,
+    githubSha: row.github_sha ?? undefined,
+    fingerprint: row.fingerprint ?? undefined,
+    activity: row.activity ?? undefined,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     resolvedAt: row.resolved_at ?? undefined,
     resolvedBy: row.resolved_by ?? undefined,
     resolutionNote: row.resolution_note ?? undefined,
   };
+}
+
+export function bugFingerprint(input: {
+  title: string;
+  category: string;
+  stackTrace?: string;
+  route?: string;
+}): string {
+  const stackLine = (input.stackTrace || '')
+    .split('\n')
+    .map((s) => s.trim())
+    .find(Boolean) || '';
+  const raw = stackLine || `${input.category}|${input.route || ''}|${input.title.trim().toLowerCase()}`;
+  let hash = 0;
+  for (let i = 0; i < raw.length; i++) {
+    hash = (Math.imul(31, hash) + raw.charCodeAt(i)) | 0;
+  }
+  return `fp_${Math.abs(hash).toString(36)}`;
 }
 
 function nextBugId(existingIds: string[]): string {
@@ -132,6 +179,12 @@ export async function createBug(bug: Partial<BugRecord>): Promise<BugRecord> {
     appVersion: '1.0.0',
     route: typeof window !== 'undefined' ? window.location.hash : '#/',
   };
+  const fingerprint = bug.fingerprint || bugFingerprint({
+    title: bug.title || 'Untitled Bug',
+    category: bug.category || 'general',
+    stackTrace: bug.diagnostics?.stackTrace,
+    route: environment.route,
+  });
 
   if (isMissingSupabaseEnv) {
     const existing = readLocalFallback();
@@ -149,6 +202,10 @@ export async function createBug(bug: Partial<BugRecord>): Promise<BugRecord> {
       expectedBehavior: bug.expectedBehavior || '',
       actualBehavior: bug.actualBehavior || '',
       diagnostics: bug.diagnostics || {},
+      assignee: bug.assignee,
+      githubSha: bug.githubSha,
+      fingerprint,
+      activity: bug.activity || [],
       createdAt: now,
       updatedAt: now,
     };
@@ -171,6 +228,7 @@ export async function createBug(bug: Partial<BugRecord>): Promise<BugRecord> {
     p_expected_behavior: bug.expectedBehavior || '',
     p_actual_behavior: bug.actualBehavior || '',
     p_diagnostics: bug.diagnostics || {},
+    p_fingerprint: fingerprint || null,
   });
   if (error) throw error;
   return mapRow(data);
@@ -202,6 +260,10 @@ export async function updateBug(id: string, updates: Partial<BugRecord>): Promis
   if (updates.resolutionNote !== undefined) payload.resolution_note = updates.resolutionNote;
   if (updates.resolvedAt !== undefined) payload.resolved_at = updates.resolvedAt;
   if (updates.status === 'resolved') payload.resolved_at = updates.resolvedAt || new Date().toISOString();
+  if (updates.assignee !== undefined) payload.assignee = updates.assignee;
+  if (updates.githubSha !== undefined) payload.github_sha = updates.githubSha;
+  if (updates.fingerprint !== undefined) payload.fingerprint = updates.fingerprint;
+  if (updates.activity !== undefined) payload.activity = updates.activity;
 
   const { data, error } = await supabase
     .from('bugs')
@@ -223,4 +285,44 @@ export async function deleteBug(id: string): Promise<boolean> {
   const { error } = await supabase.from('bugs').delete().eq('id', id.toUpperCase());
   if (error) throw error;
   return true;
+}
+
+export async function fetchMyBugReports(): Promise<MyBugReport[]> {
+  if (isMissingSupabaseEnv) {
+    let mail = '';
+    try {
+      const { data } = await supabase.auth.getSession();
+      mail = data.session?.user.email?.toLowerCase() ?? '';
+    } catch {
+      mail = '';
+    }
+    return readLocalFallback()
+      .filter((b) => !mail || b.foundBy.toLowerCase() === mail)
+      .map((b) => ({
+        id: b.id,
+        title: b.title,
+        status: b.status,
+        severity: b.severity,
+        createdAt: b.createdAt,
+        updatedAt: b.updatedAt,
+      }));
+  }
+
+  const { data, error } = await supabase.rpc('list_my_bug_reports');
+  if (error) throw error;
+  return (data ?? []).map((row) => ({
+    id: row.id,
+    title: row.title,
+    status: row.status as BugRecord['status'],
+    severity: row.severity as BugRecord['severity'],
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  }));
+}
+
+export function appendBugActivity(
+  existing: BugActivityEntry[] | undefined,
+  entry: Omit<BugActivityEntry, 'at'> & { at?: string }
+): BugActivityEntry[] {
+  return [...(existing || []), { at: entry.at || new Date().toISOString(), by: entry.by, action: entry.action, note: entry.note }];
 }
