@@ -1,5 +1,9 @@
 # Workspace Rules & Guidelines
 
+## AI engineering procedure
+
+Follow `.cursor/rules/ai-software-engineering.mdc` and the phase docs under `docs/ai-engineering/` (index: `docs/ai-engineering/README.md`). Open only the active phase. Standing rules below (ADRs, git, webapp-only, versioning, cleanup) still apply.
+
 ## Architecture Decision Records (ADRs)
 
 - **Rule:** Whenever a meaningful code decision, library choice, design pattern, or architectural trade-off is accepted in this codebase, you must document it in `decisions.md` located at the root of the workspace.

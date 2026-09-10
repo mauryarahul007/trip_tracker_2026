@@ -2600,6 +2600,18 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - Omission of the blurred backdrop on transparent stamps relies on the contrast between the ink color and the boarding pass gradient background. Both `var(--color-success)` and `var(--color-danger)` have strong WCAG-compliant contrast ratios against the card background.
 
+---
+
+## 139. Token-Efficient AI Software-Engineering Procedure Docs (v3.7.2)
+* **Context:** Agents needed a standing working loop (understand, smallest change, implement, verify) without pasting a long prompt into every chat. Loading the full nine-section prompt as always-on context would fight the prompt's own token-efficiency goal.
+* **Decision:** Split the procedure: a compact always-on Cursor rule plus nine phase docs under `docs/ai-engineering/`. Agents open only the active phase. Pointers live in `CLAUDE.md`, `.agents/AGENTS.md`, and the README documentation table. Existing skill-routing, push, and versioning rules stay as they are.
+* **Pattern/Implementation:**
+  - `.cursor/rules/ai-software-engineering.mdc` (`alwaysApply: true`) holds the loop, webapp-only default, reuse of `src/store` / `src/services` / `src/utils` / `src/components`, and links to phase files.
+  - `docs/ai-engineering/01`–`09` ground the prompt in this repo (Zustand, Supabase, Vitest, oxlint, `npm run build`, ConfirmDialog, RLS).
+* **Trade-offs Accepted:**
+  - Phase docs are not auto-loaded. Agents that ignore the Cursor rule will not see the detailed procedure unless they open the matching file.
+  - This is agent process documentation, not a product feature; it is not logged in `bugs/bugs.json` or the Superadmin feature tracker.
+
 
 
 

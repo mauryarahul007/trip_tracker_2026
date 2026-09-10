@@ -1,0 +1,39 @@
+---
+description: Token-efficient AI software-engineering loop for Trip Tracker. Follow this order on every change; open a phase doc only when that phase is active.
+alwaysApply: true
+---
+
+# AI software-engineering loop
+
+Understand the project → understand the requirement → smallest relevant context → smallest correct change → implement → verify → report concisely.
+
+Priority: **Correctness > requirement > existing patterns > security/reliability > maintainability > token efficiency > short output.** Never skip understanding to save tokens.
+
+## Do
+
+- Read only what the task needs. Start at `package.json`, `CLAUDE.md`, `.agents/AGENTS.md`, and the matching file under `src/` or `docs/`. Do not scan the whole repo.
+- Reuse `src/store`, `src/services`, `src/utils`, `src/components`. Prefer a small patch over a rewrite.
+- Default scope is **webapp only**. Do not touch Android/iOS wrappers unless the user asks.
+- Verify with the checks that match the change: `npm run lint`, a targeted Vitest file or `npm test`, `npm run build` when types/build matter. UI changes: exercise in the browser.
+- Follow standing rules in `CLAUDE.md` (skill routing, bug/feature log before push, version bump) and `.agents/AGENTS.md` (ADRs, commit narrative, post-push cleanup).
+
+## Do not
+
+- Invent a new architecture, API, schema, or dependency when the existing one works.
+- Re-read files already in context. Do not glob `**/*` “just in case”.
+- Drive-by-refactor while fixing a bug.
+- Dump a full project summary unless asked.
+
+## Phase docs (read only the active phase)
+
+Index: `docs/ai-engineering/README.md`
+
+1. Understand before you build — `docs/ai-engineering/01-understand-before-you-build.md`
+2. Understand the requirement — `docs/ai-engineering/02-understand-the-requirement.md`
+3. Smallest correct change — `docs/ai-engineering/03-plan-the-smallest-correct-change.md`
+4. Implementation — `docs/ai-engineering/04-implementation-rules.md`
+5. Debugging — `docs/ai-engineering/05-debugging.md`
+6. Verification — `docs/ai-engineering/06-verification.md`
+7. Token/context efficiency — `docs/ai-engineering/07-token-and-context-efficiency.md`
+8. Output — `docs/ai-engineering/08-output-rules.md`
+9. Decision order — `docs/ai-engineering/09-general-decision-rule.md`

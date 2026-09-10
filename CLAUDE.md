@@ -1,3 +1,7 @@
+## AI engineering procedure
+
+Follow the compact always-on rule in `.cursor/rules/ai-software-engineering.mdc`. Detailed phase docs (understand, smallest change, implement, debug, verify, output) live in `docs/ai-engineering/`. Open only the phase that is active; index: `docs/ai-engineering/README.md`.
+
 ## Skill routing
 
 When the user's request matches an available skill, invoke it via the Skill tool. When in doubt, invoke the skill.

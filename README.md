@@ -131,6 +131,7 @@ public/
 
 | Doc | What it covers |
 |-----|----------------|
+| [AI engineering procedure](docs/ai-engineering/README.md) | Agent working loop: understand, smallest change, implement, verify (not product user docs) |
 | [Superadmin Architecture](superadmin.md) | Ops Deck sections, real auth flow, file map |
 | [Getting Started Tutorial](docs/tutorial-getting-started.md) | From install to your first settled trip |
 | [How to Record an Expense](docs/howto-record-expense.md) | Choosing the right split mode, editing, undo-delete |
