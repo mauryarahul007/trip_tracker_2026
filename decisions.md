@@ -2689,3 +2689,8 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - Join-code Turnstile is a soft client gate, not cryptographically enforced server-side (would need a receipt-table + edge function to fully close, judged disproportionate given the DB lockout already covers the real abuse case).
   - Admin-login captcha enforcement needs a one-time Supabase Dashboard toggle (Authentication -> Settings -> Bot and Abuse Protection) that cannot be done from a migration file.
+
+## 144. Android allowBackup Disabled (v3.9.3)
+* **Context:** Native Android/iOS config was never covered by the two security audits (both were web/DB/CI focused). `android:allowBackup="true"` in `AndroidManifest.xml` let WebView storage -- including the Supabase session token, since supabase-js's default storage adapter is localStorage -- be extracted via `adb backup` given USB debugging + physical device access. Standard OWASP Mobile M9 (Insecure Data Storage) finding.
+* **Decision:** Set `android:allowBackup="false"`. No feature in the app relies on ADB/cloud backup restoring app data (trip data already syncs through Supabase, not local backup).
+* **Trade-offs Accepted:** None -- this only removes an extraction path, no functionality depended on backups being enabled.
