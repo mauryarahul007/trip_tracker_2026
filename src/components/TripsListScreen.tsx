@@ -24,6 +24,7 @@ import { useEscapeKey } from '../utils/useEscapeKey';
 type Props = {
   trips: Trip[];
   members: Record<string, Member>;
+  settledTripIds?: Record<string, boolean>;
   showAddTrip: boolean;
   setShowAddTrip: (show: boolean) => void;
   newTripName: string;
@@ -65,6 +66,7 @@ function getTimeGreeting(): string {
 export function TripsListScreen({
   trips,
   members,
+  settledTripIds,
   showAddTrip,
   setShowAddTrip,
   newTripName,
@@ -625,6 +627,7 @@ export function TripsListScreen({
               <TripStack
                 trips={trips}
                 members={members}
+                settledTripIds={settledTripIds}
                 userId={userId}
                 onSelectTrip={onSelectTrip}
                 onQuickAddExpense={onQuickAddExpense ? (tripId) => {

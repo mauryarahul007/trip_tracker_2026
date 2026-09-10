@@ -5150,6 +5150,84 @@
     "resolutionNote": "Added duplicateTrip to tripStore; Duplicate Trip option in TripsListScreen action sheet copies trip+checklist+notes with new IDs, no expenses"
   },
   {
+    "id": "BUG-167",
+    "title": "No tab-level error isolation — one tab crash kills entire app",
+    "description": "Only a root-level ErrorBoundary existed. A JS crash in any tab (Expenses, Ledger, Members, Checklist, Settings) showed a full-screen crash and required a full page reload.",
+    "severity": "high",
+    "category": "general",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "isOnline": true,
+      "platform": "web",
+      "appVersion": "3.4.12"
+    },
+    "reproSteps": [
+      "Trigger a render error in any tab component",
+      "Entire app crashes"
+    ],
+    "expectedBehavior": "Only the affected tab crashes; others remain usable",
+    "actualBehavior": "Entire app shows crash screen",
+    "diagnostics": {},
+    "createdAt": "2026-09-06T17:06:19.149+00:00",
+    "updatedAt": "2026-09-10T18:17:35.667+00:00",
+    "resolvedAt": "2026-09-06T17:06:19.149+00:00",
+    "resolvedBy": "claude-cli",
+    "resolutionNote": "Created TabErrorBoundary component and wrapped all 5 tab panes in App.tsx. Commit fa0f6c8."
+  },
+  {
+    "id": "BUG-168",
+    "title": "localStorage calls in App.tsx unguarded — crashes in private browsing",
+    "description": "Six localStorage.getItem/setItem calls in App.tsx had no try/catch. SecurityError or QuotaExceededError in private browsing or storage-full state could crash app init.",
+    "severity": "medium",
+    "category": "general",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "isOnline": true,
+      "platform": "web",
+      "appVersion": "3.4.12"
+    },
+    "reproSteps": [
+      "Open app in private/incognito browsing on some browsers",
+      "Theme pref or cmdk hint useState initializer throws"
+    ],
+    "expectedBehavior": "App loads with safe defaults when storage is unavailable",
+    "actualBehavior": "Potential blank-screen crash on init",
+    "diagnostics": {},
+    "createdAt": "2026-09-06T17:06:19.149+00:00",
+    "updatedAt": "2026-09-10T18:17:35.668+00:00",
+    "resolvedAt": "2026-09-06T17:06:19.149+00:00",
+    "resolvedBy": "claude-cli",
+    "resolutionNote": "Wrapped all 6 localStorage calls in App.tsx with try/catch and sensible fallbacks. Commit fa0f6c8."
+  },
+  {
+    "id": "BUG-170",
+    "title": "handleAddMemberLocal / handleCreateGroupLocal silently drop network errors",
+    "description": "Both async handlers used try/finally without catch. If onSaveMember or onSaveGroup threw (network failure), the error propagated as an unhandled rejection with no user feedback.",
+    "severity": "medium",
+    "category": "general",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "isOnline": false,
+      "platform": "web",
+      "appVersion": "3.4.12"
+    },
+    "reproSteps": [
+      "Go offline",
+      "Try to save a member or group"
+    ],
+    "expectedBehavior": "Form shows \"Something went wrong, please try again.\"",
+    "actualBehavior": "Spinner stops silently with no error message",
+    "diagnostics": {},
+    "createdAt": "2026-09-06T17:06:19.149+00:00",
+    "updatedAt": "2026-09-10T18:17:35.668+00:00",
+    "resolvedAt": "2026-09-06T17:06:19.149+00:00",
+    "resolvedBy": "claude-cli",
+    "resolutionNote": "Restructured both handlers to try/catch/finally; catch sets form error state. Commit fa0f6c8."
+  },
+  {
     "id": "BUG-169",
     "title": "No onError handlers on img tags — broken images show browser placeholder",
     "description": "All avatar and receipt preview img tags lacked onError handlers. Failed image URLs rendered the browser broken-image icon instead of hiding gracefully.",
@@ -5200,84 +5278,6 @@
     "resolvedAt": "2026-09-06T17:06:19.149+00:00",
     "resolvedBy": "claude-cli",
     "resolutionNote": "Changed Checklist button to flex:1.3, Passes/Notes to flex:0.85. Commit fa0f6c8."
-  },
-  {
-    "id": "BUG-167",
-    "title": "No tab-level error isolation — one tab crash kills entire app",
-    "description": "Only a root-level ErrorBoundary existed. A JS crash in any tab (Expenses, Ledger, Members, Checklist, Settings) showed a full-screen crash and required a full page reload.",
-    "severity": "high",
-    "category": "reliability",
-    "status": "resolved",
-    "foundBy": "claude-cli",
-    "environment": {
-      "platform": "web",
-      "isOnline": true,
-      "appVersion": "3.4.12"
-    },
-    "reproSteps": [
-      "Trigger a render error in any tab component",
-      "Entire app crashes"
-    ],
-    "expectedBehavior": "Only the affected tab crashes; others remain usable",
-    "actualBehavior": "Entire app shows crash screen",
-    "diagnostics": {},
-    "createdAt": "2026-09-06T17:06:19.149Z",
-    "updatedAt": "2026-09-06T17:06:19.149Z",
-    "resolvedBy": "claude-cli",
-    "resolvedAt": "2026-09-06T17:06:19.149Z",
-    "resolutionNote": "Created TabErrorBoundary component and wrapped all 5 tab panes in App.tsx. Commit fa0f6c8."
-  },
-  {
-    "id": "BUG-168",
-    "title": "localStorage calls in App.tsx unguarded — crashes in private browsing",
-    "description": "Six localStorage.getItem/setItem calls in App.tsx had no try/catch. SecurityError or QuotaExceededError in private browsing or storage-full state could crash app init.",
-    "severity": "medium",
-    "category": "reliability",
-    "status": "resolved",
-    "foundBy": "claude-cli",
-    "environment": {
-      "platform": "web",
-      "isOnline": true,
-      "appVersion": "3.4.12"
-    },
-    "reproSteps": [
-      "Open app in private/incognito browsing on some browsers",
-      "Theme pref or cmdk hint useState initializer throws"
-    ],
-    "expectedBehavior": "App loads with safe defaults when storage is unavailable",
-    "actualBehavior": "Potential blank-screen crash on init",
-    "diagnostics": {},
-    "createdAt": "2026-09-06T17:06:19.149Z",
-    "updatedAt": "2026-09-06T17:06:19.149Z",
-    "resolvedBy": "claude-cli",
-    "resolvedAt": "2026-09-06T17:06:19.149Z",
-    "resolutionNote": "Wrapped all 6 localStorage calls in App.tsx with try/catch and sensible fallbacks. Commit fa0f6c8."
-  },
-  {
-    "id": "BUG-170",
-    "title": "handleAddMemberLocal / handleCreateGroupLocal silently drop network errors",
-    "description": "Both async handlers used try/finally without catch. If onSaveMember or onSaveGroup threw (network failure), the error propagated as an unhandled rejection with no user feedback.",
-    "severity": "medium",
-    "category": "reliability",
-    "status": "resolved",
-    "foundBy": "claude-cli",
-    "environment": {
-      "platform": "web",
-      "isOnline": false,
-      "appVersion": "3.4.12"
-    },
-    "reproSteps": [
-      "Go offline",
-      "Try to save a member or group"
-    ],
-    "expectedBehavior": "Form shows \"Something went wrong, please try again.\"",
-    "actualBehavior": "Spinner stops silently with no error message",
-    "diagnostics": {},
-    "createdAt": "2026-09-06T17:06:19.149Z",
-    "updatedAt": "2026-09-06T17:06:19.149Z",
-    "resolvedBy": "claude-cli",
-    "resolvedAt": "2026-09-06T17:06:19.149Z",
-    "resolutionNote": "Restructured both handlers to try/catch/finally; catch sets form error state. Commit fa0f6c8."
   },
   {
     "id": "BUG-172",
@@ -6210,8 +6210,8 @@
     "status": "resolved",
     "foundBy": "mauryarahul007@gmail.com",
     "environment": {
-      "platform": "web",
       "isOnline": true,
+      "platform": "web",
       "appVersion": "3.9.4"
     },
     "reproSteps": [
@@ -6222,10 +6222,36 @@
     "expectedBehavior": "Home screen balance figures for a trip should never contradict that trip's own detail-page settlement status.",
     "actualBehavior": "Home screen per-trip and cross-trip chips could show a stale nonzero balance for a trip the in-trip view reports as fully settled.",
     "diagnostics": {},
-    "createdAt": "2026-09-10T18:08:38.404Z",
-    "updatedAt": "2026-09-10T18:08:38.404Z",
+    "createdAt": "2026-09-10T18:08:38.404+00:00",
+    "updatedAt": "2026-09-10T18:08:38.404+00:00",
+    "resolvedAt": "2026-09-10T18:08:38.404+00:00",
     "resolvedBy": "claude-cli",
-    "resolvedAt": "2026-09-10T18:08:38.404Z",
     "resolutionNote": "Removed the stale local-store-derived owed/owe chips from TripStack.tsx (per-trip card) and TripsListScreen.tsx (header banner). Cross-trip owed/owe total relocated to the profile/settings hero (SettingsView.tsx via GlobalSettingsModal.tsx), now sourced from a shared src/hooks/useCrossTripBalances.ts hook that fetches the authoritative full expense set per trip (same approach the header banner already used) instead of the local store snapshot."
+  },
+  {
+    "id": "BUG-207",
+    "title": "TripStack fell back to an arbitrary member and falsely stamped trips Settled when the current user could not be matched",
+    "description": "CardContent (TripStack.tsx) resolved \"myMember\" by falling back to tripMemberList[0] when no linkedUserId/name match was found -- showing an unrelated member's balance as the current user's own. Separately, when no member matched at all, balanceInfo defaulted to status: settled, falsely marking an unknown-balance trip as settled. The per-card settled indicator (passport stamp + \"Settled\" pill) was also computed from the local zustand expenses store, which can be an incomplete snapshot for a trip not opened yet this session.",
+    "severity": "medium",
+    "category": "ui-ux",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "3.9.5"
+    },
+    "reproSteps": [
+      "View the trips list where the current user cannot be matched to a trip member by linkedUserId or display name",
+      "Observe the trip card could show another member's balance status, or default to a Settled stamp with no real basis"
+    ],
+    "expectedBehavior": "A trip card should never claim a settled state it cannot verify, and should never attribute another member's balance to the current user.",
+    "actualBehavior": "Card fell back to an arbitrary member for balance display, and defaulted to Settled when no member matched.",
+    "diagnostics": {},
+    "createdAt": "2026-09-10T18:18:22.039Z",
+    "updatedAt": "2026-09-10T18:18:22.039Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-09-10T18:18:22.039Z",
+    "resolutionNote": "TripStack.tsx: removed the tripMemberList[0] fallback (now returns null on no confident match) and the !myMember -> settled default. Replaced the whole local balanceInfo/myMember calc with an isSettled prop threaded from TripsListScreen -> TripStack -> StackCardItem -> CardContent, sourced from useCrossTripBalances.ts (extended to also return a trip-wide settledTripIds map from the same authoritative per-trip fetch already used for the profile balance total) -- one settlement-state source of truth instead of two divergent calcs. Also retagged BUG-167/168/170 from an invalid \"reliability\" category to \"general\" so bug:sync stops failing Supabase's bugs_category_check constraint on every run."
   }
 ]

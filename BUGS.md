@@ -9,10 +9,10 @@
 
 | Metric | Count | Status Notes |
 | :--- | :--- | :--- |
-| **Total Tracked** | **206** | All recorded bugs across sessions |
+| **Total Tracked** | **207** | All recorded bugs across sessions |
 | **🟢 Open** | **0** | No critical blockers, 0 High |
 | **🟡 In Progress** | **0** | Active investigation or fix |
-| **✅ Resolved** | **180** | Verified & closed |
+| **✅ Resolved** | **181** | Verified & closed |
 | **⚪ Won't Fix** | **26** | Expected behavior / deferred |
 
 ---
@@ -171,11 +171,11 @@
 | **BUG-164** | Split by Shares mode unlabelled — Weight label not discoverable | `ui-ux` | `medium` | `claude-cli` | `claude-cli` | Renamed Weight→Shares button label, updated summary line and placeholder in ExpenseForm.tsx |
 | **BUG-165** | Checklist items cannot be reordered by drag and drop | `ui-ux` | `medium` | `claude-cli` | `claude-cli` | Added HTML5 drag-and-drop to checklist items; reorderChecklistItems action in tripStore syncs new order via updateTripChecklist |
 | **BUG-166** | No way to duplicate an existing trip | `ui-ux` | `medium` | `claude-cli` | `claude-cli` | Added duplicateTrip to tripStore; Duplicate Trip option in TripsListScreen action sheet copies trip+checklist+notes with new IDs, no expenses |
+| **BUG-167** | No tab-level error isolation — one tab crash kills entire app | `general` | `high` | `claude-cli` | `claude-cli` | Created TabErrorBoundary component and wrapped all 5 tab panes in App.tsx. Commit fa0f6c8. |
+| **BUG-168** | localStorage calls in App.tsx unguarded — crashes in private browsing | `general` | `medium` | `claude-cli` | `claude-cli` | Wrapped all 6 localStorage calls in App.tsx with try/catch and sensible fallbacks. Commit fa0f6c8. |
+| **BUG-170** | handleAddMemberLocal / handleCreateGroupLocal silently drop network errors | `general` | `medium` | `claude-cli` | `claude-cli` | Restructured both handlers to try/catch/finally; catch sets form error state. Commit fa0f6c8. |
 | **BUG-169** | No onError handlers on img tags — broken images show browser placeholder | `ui-ux` | `medium` | `claude-cli` | `claude-cli` | Added onError={(e) => e.currentTarget.style.display='none'} to all bare img tags in MembersGroupsTab, TripStack, TripsListScreen, ExpenseForm, ReceiptScannerModal. Commit fa0f6c8. |
 | **BUG-171** | Checklist tab label clips on narrow phones due to equal flex widths | `ui-ux` | `low` | `claude-cli` | `claude-cli` | Changed Checklist button to flex:1.3, Passes/Notes to flex:0.85. Commit fa0f6c8. |
-| **BUG-167** | No tab-level error isolation — one tab crash kills entire app | `reliability` | `high` | `claude-cli` | `claude-cli` | Created TabErrorBoundary component and wrapped all 5 tab panes in App.tsx. Commit fa0f6c8. |
-| **BUG-168** | localStorage calls in App.tsx unguarded — crashes in private browsing | `reliability` | `medium` | `claude-cli` | `claude-cli` | Wrapped all 6 localStorage calls in App.tsx with try/catch and sensible fallbacks. Commit fa0f6c8. |
-| **BUG-170** | handleAddMemberLocal / handleCreateGroupLocal silently drop network errors | `reliability` | `medium` | `claude-cli` | `claude-cli` | Restructured both handlers to try/catch/finally; catch sets form error state. Commit fa0f6c8. |
 | **BUG-172** | Passes/Notes/Checklist segment labels and bottom-nav pill text clipped | `ui-ux` | `medium` | `human` | `cursor` | Compacted segment header (no icons/ellipsis, always show counts) and shortened bottom-nav label to Notes. Commit c81540a (v3.4.14). |
 | **BUG-173** | CI build failed: missing ConfirmDialog closing paren in App.tsx | `navigation` | `high` | `cursor-agent` | `cursor-agent` | Closed confirmRequest JSX before ConflictResolverModal; added tripId to makeExpense in conflict tests. Fixed in v3.5.1. |
 | **BUG-174** | Back/Escape skipped overlays or required two presses | `navigation` | `medium` | `cursor-agent` | `cursor-agent` | One history owner per overlay; wired gaps (ActionSheet, ConfirmDialog, conflict modal, pickers); Escape LIFO stack. Fixed in v3.6.0 commit df2815e. |
@@ -211,6 +211,7 @@
 | **BUG-204** | Android allowBackup=true allowed WebView/session extraction via adb backup | `auth` | `medium` | `claude-cli` | `claude-cli` | Fixed in commit c670cb0 (android:allowBackup set to false); see decisions.md #144. |
 | **BUG-205** | Trip-card balance chip and header cross-trip balance chip both said 'You're owed' with no scope distinction | `ui-ux` | `low` | `mauryarahul007@gmail.com` | `claude-cli` | Trip card now reads 'OWED TO YOU ON THIS TRIP' / 'YOU OWE ON THIS TRIP'; header chip now reads 'Owed to you across all trips' / 'You owe across all trips'. Files: TripStack.tsx, TripsListScreen.tsx. |
 | **BUG-206** | Trip-card and home balance chips showed nonzero owed/owe against a trip already Settled in trip detail | `ui-ux` | `medium` | `mauryarahul007@gmail.com` | `claude-cli` | Removed the stale local-store-derived owed/owe chips from TripStack.tsx (per-trip card) and TripsListScreen.tsx (header banner). Cross-trip owed/owe total relocated to the profile/settings hero (SettingsView.tsx via GlobalSettingsModal.tsx), now sourced from a shared src/hooks/useCrossTripBalances.ts hook that fetches the authoritative full expense set per trip (same approach the header banner already used) instead of the local store snapshot. |
+| **BUG-207** | TripStack fell back to an arbitrary member and falsely stamped trips Settled when the current user could not be matched | `ui-ux` | `medium` | `claude-cli` | `claude-cli` | TripStack.tsx: removed the tripMemberList[0] fallback (now returns null on no confident match) and the !myMember -> settled default. Replaced the whole local balanceInfo/myMember calc with an isSettled prop threaded from TripsListScreen -> TripStack -> StackCardItem -> CardContent, sourced from useCrossTripBalances.ts (extended to also return a trip-wide settledTripIds map from the same authoritative per-trip fetch already used for the profile balance total) -- one settlement-state source of truth instead of two divergent calcs. Also retagged BUG-167/168/170 from an invalid "reliability" category to "general" so bug:sync stops failing Supabase's bugs_category_check constraint on every run. |
 
 ---
 

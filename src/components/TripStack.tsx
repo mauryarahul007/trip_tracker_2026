@@ -7,8 +7,6 @@ import { avatarColorForName } from '../utils/avatarColor';
 import { fetchPlaceCoverImage } from '../services/placeImageService';
 import { getImageLuminance, getImageDominantColor } from '../utils/imageLuminance';
 import { triggerHaptic } from '../utils/haptics';
-import { calculateSettlements } from '../utils/settlement';
-import { useTripStore } from '../store/tripStore';
 import { getDestinationWeatherRealtime, type WeatherData } from '../services/weatherService';
 import { useHistoryBack } from '../utils/useHistoryBack';
 import { useEscapeKey } from '../utils/useEscapeKey';
@@ -180,6 +178,7 @@ function rubberBand(d: number, threshold: number = SWIPE_THRESHOLD): number {
 type Props = {
   trips: Trip[]; // 2+ trips, any order -- this component sorts by recency itself
   members: Record<string, Member>;
+  settledTripIds?: Record<string, boolean>;
   userId: string | null;
   onSelectTrip: (id: string) => void;
   onQuickAddExpense?: (tripId: string) => void;
@@ -240,13 +239,13 @@ function useCardTone(photoUrl: string | null): 'light' | 'dark' {
 function CardContent({
   trip,
   members,
-  userId,
+  isSettled,
   isFront = false,
   onQuickAddExpense,
 }: {
   trip: Trip;
   members: Record<string, Member>;
-  userId: string | null;
+  isSettled?: boolean;
   isFront?: boolean;
   onQuickAddExpense?: (tripId: string) => void;
 }) {
@@ -257,51 +256,8 @@ function CardContent({
   const expenseCount = trip.expenseCount || 0;
   const photoUrl = useTripPhoto(trip.destination, trip.coverImageUrl, trip.name);
   const tone = useCardTone(photoUrl);
-  const expenses = useTripStore((s) => s.expenses);
-  const userDisplayName = useTripStore((s) => s.userDisplayName);
   const stopNames = useMemo(() => trip.stops?.map((s) => s.name).filter(Boolean), [trip.stops]);
   const { weather, isRefreshing, refresh: refreshWeather } = useDestinationWeather(trip.destination, trip.name, stopNames, isFront);
-
-  // Robustly identify current user's member object in this trip
-  const myMember = useMemo(() => {
-    if (!trip.memberIds || trip.memberIds.length === 0) return null;
-    const tripMemberList = trip.memberIds.map((id) => members[id]).filter(Boolean);
-    if (userId) {
-      const byLinked = tripMemberList.find((m) => m.linkedUserId === userId);
-      if (byLinked) return byLinked;
-      if (trip.ownerId === userId) {
-        const ownerM = tripMemberList.find((m) => m.linkedUserId === trip.ownerId);
-        if (ownerM) return ownerM;
-      }
-    }
-    if (userDisplayName) {
-      const nameLower = userDisplayName.trim().toLowerCase();
-      const byName = tripMemberList.find((m) => m.name && m.name.trim().toLowerCase() === nameLower);
-      if (byName) return byName;
-    }
-    return tripMemberList[0] || null;
-  }, [trip, members, userId, userDisplayName]);
-
-  // Compute live user settlement balance for this trip on real-time basis
-  const balanceInfo = useMemo(() => {
-    const activeExpenses = expenses.filter((e) => e.tripId === trip.id && !e.deletedAt);
-    if (activeExpenses.length === 0) {
-      return null;
-    }
-    if (!myMember) {
-      return { amount: 0, status: 'settled' as const };
-    }
-    try {
-      const { balances } = calculateSettlements(trip, members, activeExpenses);
-      const myBal = balances.find((b) => b.memberId === myMember.id);
-      const amount = myBal ? myBal.balance : 0;
-      if (amount > 0.01) return { amount, status: 'owed' as const };
-      if (amount < -0.01) return { amount: Math.abs(amount), status: 'owe' as const };
-      return { amount: 0, status: 'settled' as const };
-    } catch {
-      return null;
-    }
-  }, [trip, expenses, members, myMember]);
 
   const statusBadge = useMemo(
     () => getTripStatusBadge(trip.startDate, trip.endDate),
@@ -341,8 +297,8 @@ function CardContent({
             destination={trip.destination || trip.name}
             tripName={trip.name}
             date={trip.startDate}
-            variant={balanceInfo?.status === 'settled' ? 'settled' : 'entry'}
-            color={balanceInfo?.status === 'settled' ? 'teal' : 'auto'}
+            variant={isSettled ? 'settled' : 'entry'}
+            color={isSettled ? 'teal' : 'auto'}
             size={54}
           />
         </div>
@@ -403,7 +359,7 @@ function CardContent({
         <div style={{ marginTop: 'auto', marginBottom: '8px' }}>
           <div className="pp-dest">
             Trip &middot; {trip.baseCurrency}
-            {balanceInfo?.status === 'settled' && (
+            {isSettled && (
               <>
                 <span className="stack-settled-dot"> &middot; </span>
                 <span className="stack-settled-sub">✓ Settled</span>
@@ -459,7 +415,7 @@ function CardContent({
 type CardItemProps = {
   trip: Trip;
   members: Record<string, Member>;
-  userId: string | null;
+  isSettled?: boolean;
   idx: number;
   totalTrips: number;
   canDelete: boolean;
@@ -487,7 +443,7 @@ type CardItemProps = {
 function StackCardItem({
   trip,
   members,
-  userId,
+  isSettled,
   idx,
   totalTrips,
   canDelete,
@@ -769,7 +725,7 @@ function StackCardItem({
         <CardContent
           trip={trip}
           members={members}
-          userId={userId}
+          isSettled={isSettled}
           isFront={isFront}
           onQuickAddExpense={isFront ? onQuickAddExpense : undefined}
         />
@@ -856,6 +812,7 @@ function StackCardItem({
 export function TripStack({
   trips,
   members,
+  settledTripIds,
   userId,
   onSelectTrip,
   onQuickAddExpense,
@@ -947,7 +904,7 @@ export function TripStack({
             key={trip.id}
             trip={trip}
             members={members}
-            userId={userId}
+            isSettled={settledTripIds?.[trip.id]}
             idx={idx}
             totalTrips={trips.length}
             canDelete={canDelete(trip)}
