@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import type { Category, Expense, Member } from '../types';
 import { parseQuickExpense } from '../utils/expenseQuickParser';
 import { triggerHaptic } from '../utils/haptics';
@@ -6,6 +6,7 @@ import { formatAmount } from '../utils/currency';
 import { CategoryIcon } from './CategoryIcon';
 import { useEscapeKey } from '../utils/useEscapeKey';
 import { useHistoryBack } from '../utils/useHistoryBack';
+import { detectDuplicateExpense } from '../utils/duplicateExpenseDetector';
 
 interface Props {
   isOpen: boolean;
@@ -205,7 +206,25 @@ export function SmartExpenseQuickAddModal({
 
   const parsed = parseQuickExpense(inputText, categories, historicalExpenses, visibleMembers);
 
+  const duplicateMatch = useMemo(() => {
+    if (!parsed || !parsed.amount || parsed.amount <= 0) return null;
+    return detectDuplicateExpense(
+      {
+        amount: parsed.amount,
+        currency: parsed.currency || baseCurrency,
+        title: parsed.title,
+        date: parsed.date || new Date().toISOString().slice(0, 10),
+        categoryId: parsed.categoryId,
+        paidById: parsed.paidById || visibleMembers[0]?.id,
+      },
+      historicalExpenses,
+      categories,
+      visibleMembers
+    );
+  }, [parsed, historicalExpenses, categories, visibleMembers, baseCurrency]);
+
   // Once voice recognition completes and a valid amount is detected, start 3-second auto-save countdown
+  // Pauses automatically if a candidate duplicate is detected to prevent accidental double-logging
   useEffect(() => {
     if (
       !isRecording &&
@@ -213,11 +232,12 @@ export function SmartExpenseQuickAddModal({
       parsed?.amount &&
       parsed.amount > 0 &&
       countdownSeconds === null &&
-      !isSubmitting
+      !isSubmitting &&
+      !duplicateMatch
     ) {
       startAutoSaveCountdown();
     }
-  }, [isRecording, isVoiceGenerated, parsed?.amount, isSubmitting, countdownSeconds]);
+  }, [isRecording, isVoiceGenerated, parsed?.amount, isSubmitting, countdownSeconds, duplicateMatch]);
 
   // Execute auto-save on countdown reach 0
   useEffect(() => {
@@ -464,6 +484,32 @@ export function SmartExpenseQuickAddModal({
               >
                 Save Now ⚡
               </button>
+            </div>
+          </div>
+        )}
+
+        {/* Duplicate Warning Alert Banner (Pauses Auto-Save) */}
+        {duplicateMatch && (
+          <div
+            style={{
+              padding: '10px 14px',
+              borderRadius: '12px',
+              background: duplicateMatch.confidence === 'high' ? 'rgba(239, 68, 68, 0.12)' : 'rgba(245, 158, 11, 0.12)',
+              border: `1px solid ${duplicateMatch.confidence === 'high' ? 'rgba(239, 68, 68, 0.35)' : 'rgba(245, 158, 11, 0.35)'}`,
+              marginBottom: '14px',
+              display: 'flex',
+              alignItems: 'flex-start',
+              gap: '8px',
+            }}
+          >
+            <span style={{ fontSize: '18px', flexShrink: 0 }}>⚠️</span>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: '12.5px', fontWeight: 700, color: duplicateMatch.confidence === 'high' ? 'var(--color-danger, #ef4444)' : '#d97706' }}>
+                Possible Duplicate Found (Auto-Save Paused)
+              </div>
+              <div style={{ fontSize: '11.5px', color: 'var(--text-secondary)', marginTop: '2px' }}>
+                {duplicateMatch.reason}
+              </div>
             </div>
           </div>
         )}

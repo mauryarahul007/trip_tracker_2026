@@ -46,3 +46,6 @@ hallways.json
 
 # Impeccable design-lint local state
 .impeccable/
+
+# OCR models
+*.traineddata

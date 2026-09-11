@@ -20,6 +20,7 @@ import { ReceiptScannerModal } from './ReceiptScannerModal';
 import { useHistoryBack } from '../utils/useHistoryBack';
 import { useEscapeKey } from '../utils/useEscapeKey';
 import { RollingNumber } from './common/RollingNumber';
+import { detectDuplicateExpense } from '../utils/duplicateExpenseDetector';
 
 // Minimal Web Speech API surface -- not in the default TS DOM lib, and
 // vendor-prefixed on most browsers that support it (Chrome/Edge/Safari).
@@ -284,14 +285,24 @@ export function ExpenseForm({
     initialExpenseIdsRef.current = new Set(allTripExpenses.map((e) => e.id));
   }
 
-  const duplicateExpense = !isSubmitting && !editingExpense && parseFloat(amount) > 0 && title.trim().length > 1
-    ? allTripExpenses.find((e) =>
-        initialExpenseIdsRef.current?.has(e.id) &&
-        e.date === date &&
-        Math.abs(e.amount - parseFloat(amount)) < 0.05 &&
-        (e.category === category || e.title.toLowerCase().includes(title.trim().toLowerCase()) || title.trim().toLowerCase().includes(e.title.toLowerCase()))
-      )
-    : null;
+  const duplicateMatch = useMemo(() => {
+    if (isSubmitting || editingExpense || !parseFloat(amount) || parseFloat(amount) <= 0) return null;
+    return detectDuplicateExpense(
+      {
+        amount: parseFloat(amount),
+        currency: selectedCurrency,
+        title: title.trim(),
+        date,
+        categoryId: category,
+        paidById: payer,
+      },
+      allTripExpenses.filter((e) => initialExpenseIdsRef.current?.has(e.id)),
+      categories,
+      visibleMembers
+    );
+  }, [amount, selectedCurrency, title, date, category, payer, editingExpense, allTripExpenses, categories, visibleMembers, isSubmitting]);
+
+  const duplicateExpense = duplicateMatch?.matchedExpense || null;
 
   // Reset details expansion if the duplicate target changes
   useEffect(() => {
@@ -1047,7 +1058,7 @@ export function ExpenseForm({
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', width: '100%' }}>
               <IconAlertCircle size={14} style={{ flexShrink: 0 }} />
               <span style={{ marginRight: 'auto' }}>
-                <strong>Duplicate check:</strong> Similar expense found on {duplicateExpense.date}.
+                <strong>Duplicate check:</strong> {duplicateMatch?.reason || `Similar expense found on ${duplicateExpense.date}.`}
               </span>
               <button
                 type="button"

@@ -8,6 +8,8 @@ import { useHistoryBack } from '../utils/useHistoryBack';
 import { useEscapeKey } from '../utils/useEscapeKey';
 import { QrCodeView } from './QrCodeView';
 import { savePassAttachment, getPassAttachment } from '../services/passAttachmentStore';
+import { getTravelStatusInfo, type TravelStatusInfo } from '../utils/travelStatusService';
+import { LiveTravelStatusModal } from './LiveTravelStatusModal';
 
 interface Props {
   trip: Trip;
@@ -36,6 +38,7 @@ export function TravelPassWalletView({
 }: Props) {
   const [filterType, setFilterType] = useState<TravelPassType | 'all'>('all');
   const [selectedPassForQr, setSelectedPassForQr] = useState<TravelPass | null>(null);
+  const [statusModalInfo, setStatusModalInfo] = useState<TravelStatusInfo | null>(null);
   const [viewingAttachment, setViewingAttachment] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [expandedLegKeys, setExpandedLegKeys] = useState<Record<string, boolean>>({});
@@ -74,6 +77,9 @@ export function TravelPassWalletView({
   // Back navigation & Escape key handling
   useHistoryBack(Boolean(selectedPassForQr), () => setSelectedPassForQr(null));
   useEscapeKey(Boolean(selectedPassForQr), () => setSelectedPassForQr(null));
+
+  useHistoryBack(Boolean(statusModalInfo), () => setStatusModalInfo(null));
+  useEscapeKey(Boolean(statusModalInfo), () => setStatusModalInfo(null));
 
   useHistoryBack(Boolean(viewingAttachment), () => setViewingAttachment(null));
   useEscapeKey(Boolean(viewingAttachment), () => setViewingAttachment(null));
@@ -715,7 +721,7 @@ export function TravelPassWalletView({
               alignItems: 'center',
             }}
           >
-            <div style={{ display: 'flex', gap: '6px' }}>
+            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
               <button
                 type="button"
                 className="secondary-btn"
@@ -724,6 +730,36 @@ export function TravelPassWalletView({
               >
                 <span>📱</span> View QR
               </button>
+              {(() => {
+                const statusInfo = getTravelStatusInfo(pass);
+                if (!statusInfo) return null;
+                const isFlight = statusInfo.type === 'flight';
+                return (
+                  <button
+                    type="button"
+                    className="secondary-btn"
+                    style={{
+                      padding: '4px 10px',
+                      fontSize: '11.5px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      color: isFlight ? '#2563eb' : '#059669',
+                      borderColor: isFlight ? 'rgba(37, 99, 235, 0.3)' : 'rgba(5, 150, 105, 0.3)',
+                      background: isFlight ? 'rgba(37, 99, 235, 0.08)' : 'rgba(5, 150, 105, 0.08)',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                    }}
+                    onClick={() => {
+                      triggerHaptic('light');
+                      setStatusModalInfo(statusInfo);
+                    }}
+                    title={isFlight ? 'Check live gate, terminal & flight radar' : 'Check live PNR berth & train running status'}
+                  >
+                    <span>{isFlight ? '🛫 Live Status' : '🚆 PNR Status'}</span>
+                  </button>
+                );
+              })()}
               {pass.attachmentUrl && (
                 <button
                   type="button"
@@ -1770,6 +1806,37 @@ export function TravelPassWalletView({
                               </span>
                             </button>
                           )}
+                          {(() => {
+                            const repPass = group.passes[0];
+                            const statusInfo = repPass ? getTravelStatusInfo(repPass) : null;
+                            if (!statusInfo) return null;
+                            const isFlight = statusInfo.type === 'flight';
+                            return (
+                              <button
+                                type="button"
+                                style={{
+                                  background: isFlight ? 'rgba(37, 99, 235, 0.1)' : 'rgba(16, 185, 129, 0.1)',
+                                  border: `1px solid ${isFlight ? 'rgba(37, 99, 235, 0.3)' : 'rgba(16, 185, 129, 0.3)'}`,
+                                  fontWeight: 700,
+                                  fontSize: '11px',
+                                  color: isFlight ? '#2563eb' : '#10b981',
+                                  cursor: 'pointer',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '4px',
+                                  padding: '4px 8px',
+                                  borderRadius: '6px',
+                                }}
+                                onClick={() => {
+                                  triggerHaptic('light');
+                                  setStatusModalInfo(statusInfo);
+                                }}
+                                title={isFlight ? 'Check live flight status' : 'Check live PNR status'}
+                              >
+                                <span>{isFlight ? '🛫 Live Status' : '🚆 PNR Status'}</span>
+                              </button>
+                            );
+                          })()}
 
                           <button
                             type="button"
@@ -1919,6 +1986,13 @@ export function TravelPassWalletView({
           </div>
         </div>
       )}
+
+      {/* Live Travel & PNR Status Modal */}
+      <LiveTravelStatusModal
+        isOpen={Boolean(statusModalInfo)}
+        onClose={() => setStatusModalInfo(null)}
+        statusInfo={statusModalInfo}
+      />
     </div>
   );
 }

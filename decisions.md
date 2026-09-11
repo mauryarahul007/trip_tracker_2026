@@ -2845,4 +2845,31 @@ This document logs all meaningful technical decisions, library choices, design p
   - First-name leakage on a valid join code is intentional (enough to recognize the trip, not enough to enumerate the roster). Invalid codes stay empty plus lockout, not a distinct "not found" oracle beyond attempt limits.
   - Tesseract WASM is code-split so the main bundle stays lean; first scan pays a download. English traineddata is fetched at runtime, not committed (`eng.traineddata` at repo root is a local leftover).
 
+---
+
+## 155. Duplicate Expense Warning & Live Flight / PNR Status Tracker (v3.13.0)
+* **Context:**
+  - Group trips frequently experience duplicate expenses—either through the same user accidentally tapping "Save" or speech quick-adding twice, or multiple group members independently recording the same shared group bill (e.g. hotel check-out, rental car, dinner).
+  - Travelers holding digital boarding passes and train tickets in the Travel Pass Wallet currently only see the QR/barcode for airport/station security, but lack immediate access to real-time gate changes, departure delays, airborne live flight radars, and railway coach/berth confirmation status without manually copying numbers into search engines.
+* **Decision:**
+  - **Duplicate Expense Warning & Anti-Double-Counting Guard:**
+    - Created `src/utils/duplicateExpenseDetector.ts` evaluating 4-dimensional criteria:
+      1. Exact or near-identical amount ($\le 2\%$ difference or exact currency match).
+      2. High title similarity using token Dice coefficient ($\ge 0.70$) or substring inclusion.
+      3. Date proximity (same calendar date or within $\pm 24$ hours).
+      4. Payer collision (same payer = likely double entry; different payer = potential shared bill collision).
+    - Integrated seamlessly into `ExpenseForm.tsx` as a non-blocking warning banner with collapsible details, direct link to view the conflicting expense, and an explicit acknowledgment to proceed if intended.
+    - Integrated into `SmartExpenseQuickAddModal.tsx`: candidate duplicate expenses immediately pause the 3-second hands-free auto-save countdown timer, display an alert banner with matching details, and prompt for confirmation so voice users never double-log in a noisy environment.
+  - **Live Flight & PNR Status Tracker in Travel Pass Wallet:**
+    - Created `src/utils/travelStatusService.ts` providing deep intelligence:
+      - Flight carrier identification (IndiGo `6E`, Air India `AI`, Akasa `QP`, SpiceJet `SG`, Vistara `UK`, Emirates `EK`, British Airways `BA`, Lufthansa `LH`, United `UA`, Delta `DL`, etc.) and extraction of IATA flight numbers and routes.
+      - IRCTC / Indian Railways 10-digit PNR detection and 5-digit train number detection from pass metadata, barcodes, and booking references.
+      - Direct links to Google Live Flight Tracker, Flightradar24 real-time radar, FlightAware, ConfirmTkt PNR Status, RailYatri, and Google Live Train Running Status.
+    - Created `src/components/LiveTravelStatusModal.tsx` displaying an airline/train hero badge, copy-to-clipboard actions, and single-tap live tracker launcher buttons.
+    - Integrated directly into `TravelPassWalletView.tsx` with dedicated `🛫 Live Status` and `🚆 PNR Status` action buttons on pass cards and multi-leg group headers.
+* **Trade-offs Accepted:**
+  - Rather than making duplicate warnings blocking (which would prevent legitimate recurring payments like two separate cab rides of the same fare), warnings are advisory and highlight differences (same payer vs. different payer) while pausing voice auto-submit.
+  - Live flight radar and Indian Railways PNR lookups are routed via curated deep links (Google Flight Status, Flightradar24, ConfirmTkt, RailYatri) with pre-filled flight numbers and PNRs, eliminating high-latency API keys or CAPTCHA blockers while guaranteeing 100% up-to-date carrier and railway data.
+
+
 
