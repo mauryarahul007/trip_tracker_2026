@@ -2787,3 +2787,27 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - Kept documentation concise and feature-oriented, linking to granular deep-dive guides under `docs/` for architectural references.
 
+---
+
+## 152. 3-Second Hands-Free Voice Quick-Add Expense Logging (v3.11.2)
+* **Context:** Travelers on the go (stepping out of cabs, paying food stalls, or carrying luggage) needed a frictionless way to record expenses in seconds without navigating forms or manually typing numbers, categories, and payers on a small mobile touchscreen.
+* **Decision:** Implemented an instant 3-second offline-first voice quick-add pipeline leveraging browser-native Web Speech API (`SpeechRecognition` / `webkitSpeechRecognition`), enhanced natural language parsing in `expenseQuickParser.ts`, animated audio waveform feedback, and a hands-free 3-second auto-save countdown timer.
+* **Pattern/Implementation:**
+  - `SmartExpenseQuickAddModal.tsx`:
+    - Added `autoListen` prop: opening via the microphone trigger activates speech recognition immediately on render without a second tap.
+    - Added animated sound wave bars (`.voice-wave-bar`) with pulsating keyframes during active speech capture.
+    - Added a hands-free 3-second countdown banner (`⚡ Auto-saving in 3s...`) once speech ends and a valid amount is parsed. Includes `Save Now` and `⏸️ Pause / Edit` buttons to bypass or hold the timer.
+    - Dynamic language detection (`navigator.language || 'en-IN'`).
+    - Added graceful microphone permission and error recovery messages with instant keyboard fallback.
+  - `expenseQuickParser.ts`:
+    - Added normalization for spoken number phrases (e.g. "twelve hundred" -> 1200, "four fifty" -> 450, "one thousand" -> 1000).
+    - Added support for spoken currency keywords ("rupees", "bucks", "dollars", "euros", "pounds") both as prefixes and suffixes.
+    - Stripped leading speech fillers ("please add expense", "log expense", "spent").
+  - `ExpenseList.tsx` & `App.tsx`:
+    - Added high-visibility `🎙️ Voice` button in the expense search bar toolbar.
+    - Added `🎙️ Speak Expense` action button on the empty-state card.
+    - Integrated `🎙️ Voice Quick-Add Expense` into the global `Cmd+K` Command Palette.
+* **Trade-offs Accepted:**
+  - Web Speech API operates on-device in modern Chromium/Android browsers with zero cloud API costs or latency. In browsers lacking SpeechRecognition support (e.g. Firefox desktop), the UI displays a clean notification and falls back to natural-language keyboard input.
+
+

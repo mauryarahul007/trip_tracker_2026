@@ -10,6 +10,7 @@ import { useHistoryBack } from '../utils/useHistoryBack';
 interface Props {
   isOpen: boolean;
   onClose: () => void;
+  autoListen?: boolean;
   categories: Category[];
   historicalExpenses: Expense[];
   visibleMembers: Member[];
@@ -37,6 +38,7 @@ interface Props {
 export function SmartExpenseQuickAddModal({
   isOpen,
   onClose,
+  autoListen = false,
   categories,
   historicalExpenses,
   visibleMembers,
@@ -49,12 +51,17 @@ export function SmartExpenseQuickAddModal({
   const [speechSupported, setSpeechSupported] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [countdownSeconds, setCountdownSeconds] = useState<number | null>(null);
+  const [isVoiceGenerated, setIsVoiceGenerated] = useState(false);
+
   const recognitionRef = useRef<any>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const countdownTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useHistoryBack(isOpen, onClose);
   useEscapeKey(isOpen, onClose);
 
+  // Initialize browser Web Speech API
   useEffect(() => {
     const SpeechRec = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (SpeechRec) {
@@ -62,18 +69,25 @@ export function SmartExpenseQuickAddModal({
       const rec = new SpeechRec();
       rec.continuous = false;
       rec.interimResults = true;
-      rec.lang = 'en-US';
+      const userLang = navigator.language || 'en-IN';
+      rec.lang = userLang.startsWith('en') ? userLang : 'en-IN';
 
       rec.onresult = (event: any) => {
         const text = Array.from(event.results)
           .map((r: any) => r[0]?.transcript || '')
           .join('');
         setInputText(text);
+        setIsVoiceGenerated(true);
       };
 
       rec.onerror = (err: any) => {
         console.warn('Speech recognition error:', err);
         setIsRecording(false);
+        if (err.error === 'not-allowed') {
+          setErrorMessage('Microphone access was denied. Please allow microphone permissions or type below.');
+        } else if (err.error === 'no-speech') {
+          setErrorMessage('No speech detected. Tap the mic to try again or type below.');
+        }
       };
 
       rec.onend = () => {
@@ -84,29 +98,90 @@ export function SmartExpenseQuickAddModal({
     }
   }, []);
 
+  const cancelAutoSaveCountdown = () => {
+    if (countdownTimerRef.current) {
+      clearInterval(countdownTimerRef.current);
+      countdownTimerRef.current = null;
+    }
+    setCountdownSeconds(null);
+  };
+
+  const startAutoSaveCountdown = () => {
+    cancelAutoSaveCountdown();
+    setCountdownSeconds(3);
+    countdownTimerRef.current = setInterval(() => {
+      setCountdownSeconds((prev) => {
+        if (prev === null || prev <= 1) {
+          if (countdownTimerRef.current) {
+            clearInterval(countdownTimerRef.current);
+            countdownTimerRef.current = null;
+          }
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  };
+
+  // Trigger speech recognition on modal open if autoListen requested
   useEffect(() => {
     if (isOpen) {
       setInputText('');
       setErrorMessage('');
-      setTimeout(() => inputRef.current?.focus(), 100);
+      cancelAutoSaveCountdown();
+      setIsVoiceGenerated(false);
+
+      if (autoListen) {
+        const timer = setTimeout(() => {
+          if (recognitionRef.current) {
+            try {
+              recognitionRef.current.start();
+              setIsRecording(true);
+              setIsVoiceGenerated(true);
+              triggerHaptic('medium');
+            } catch (e) {
+              console.warn('Could not auto-start speech recognition:', e);
+            }
+          }
+        }, 120);
+        return () => clearTimeout(timer);
+      } else {
+        setTimeout(() => inputRef.current?.focus(), 100);
+      }
     } else {
+      cancelAutoSaveCountdown();
       if (recognitionRef.current && isRecording) {
-        recognitionRef.current.stop();
+        try {
+          recognitionRef.current.stop();
+        } catch {}
         setIsRecording(false);
       }
     }
-  }, [isOpen]);
+  }, [isOpen, autoListen]);
+
+  useEffect(() => {
+    return () => {
+      if (countdownTimerRef.current) {
+        clearInterval(countdownTimerRef.current);
+      }
+    };
+  }, []);
 
   const toggleRecording = () => {
     if (!recognitionRef.current) return;
     triggerHaptic('medium');
+    cancelAutoSaveCountdown();
+
     if (isRecording) {
-      recognitionRef.current.stop();
+      try {
+        recognitionRef.current.stop();
+      } catch {}
       setIsRecording(false);
     } else {
       try {
         recognitionRef.current.start();
         setIsRecording(true);
+        setIsVoiceGenerated(true);
         setErrorMessage('');
       } catch (e) {
         console.warn('Could not start speech recognition:', e);
@@ -116,7 +191,30 @@ export function SmartExpenseQuickAddModal({
 
   const parsed = parseQuickExpense(inputText, categories, historicalExpenses, visibleMembers);
 
+  // Once voice recognition completes and a valid amount is detected, start 3-second auto-save countdown
+  useEffect(() => {
+    if (
+      !isRecording &&
+      isVoiceGenerated &&
+      parsed?.amount &&
+      parsed.amount > 0 &&
+      countdownSeconds === null &&
+      !isSubmitting
+    ) {
+      startAutoSaveCountdown();
+    }
+  }, [isRecording, isVoiceGenerated, parsed?.amount, isSubmitting, countdownSeconds]);
+
+  // Execute auto-save on countdown reach 0
+  useEffect(() => {
+    if (countdownSeconds === 0) {
+      setCountdownSeconds(null);
+      handle1TapSave();
+    }
+  }, [countdownSeconds]);
+
   const handle1TapSave = async () => {
+    cancelAutoSaveCountdown();
     if (!parsed || !parsed.amount || parsed.amount <= 0) {
       setErrorMessage('Please specify a valid expense amount.');
       return;
@@ -128,9 +226,10 @@ export function SmartExpenseQuickAddModal({
       return;
     }
 
-    const splitMembers = parsed.splitMemberIds && parsed.splitMemberIds.length > 0
-      ? parsed.splitMemberIds
-      : visibleMembers.map((m) => m.id);
+    const splitMembers =
+      parsed.splitMemberIds && parsed.splitMemberIds.length > 0
+        ? parsed.splitMemberIds
+        : visibleMembers.map((m) => m.id);
 
     setIsSubmitting(true);
     setErrorMessage('');
@@ -160,6 +259,7 @@ export function SmartExpenseQuickAddModal({
   };
 
   const handleCustomizeInFullForm = () => {
+    cancelAutoSaveCountdown();
     if (!parsed) return;
     triggerHaptic('light');
     onClose();
@@ -190,6 +290,7 @@ export function SmartExpenseQuickAddModal({
           boxShadow: '0 20px 40px rgba(0, 0, 0, 0.25)',
         }}
       >
+        {/* Header */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', gap: '8px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, minWidth: 0 }}>
             <button
@@ -207,6 +308,7 @@ export function SmartExpenseQuickAddModal({
                 flexShrink: 0,
               }}
               onClick={() => {
+                cancelAutoSaveCountdown();
                 triggerHaptic('light');
                 onClose();
               }}
@@ -216,13 +318,13 @@ export function SmartExpenseQuickAddModal({
               <span>←</span>
               <span>Back</span>
             </button>
-            <span style={{ fontSize: '20px', flexShrink: 0 }}>⚡</span>
+            <span style={{ fontSize: '20px', flexShrink: 0 }}>🎙️</span>
             <div style={{ minWidth: 0 }}>
               <h3 style={{ margin: 0, fontSize: '17px', fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                Smart Quick-Add
+                Voice Quick-Add
               </h3>
               <p style={{ margin: 0, fontSize: '11.5px', color: 'var(--text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                Type or speak in natural language
+                Speak or type in natural language
               </p>
             </div>
           </div>
@@ -238,6 +340,7 @@ export function SmartExpenseQuickAddModal({
               flexShrink: 0,
             }}
             onClick={() => {
+              cancelAutoSaveCountdown();
               triggerHaptic('light');
               onClose();
             }}
@@ -248,7 +351,84 @@ export function SmartExpenseQuickAddModal({
           </button>
         </div>
 
-        {/* Input Bar with Voice Button */}
+        {/* Pulsing Audio Waveform Bar during Active Recording */}
+        {isRecording && (
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '14px 16px',
+              background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.08), rgba(249, 115, 22, 0.08))',
+              border: '1px solid rgba(239, 68, 68, 0.25)',
+              borderRadius: '14px',
+              marginBottom: '14px',
+              gap: '8px',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '5px', height: '28px' }}>
+              <span className="voice-wave-bar bar-1" />
+              <span className="voice-wave-bar bar-2" />
+              <span className="voice-wave-bar bar-3" />
+              <span className="voice-wave-bar bar-4" />
+              <span className="voice-wave-bar bar-5" />
+            </div>
+            <div style={{ fontSize: '12.5px', fontWeight: 600, color: 'var(--color-danger, #ef4444)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span style={{ animation: 'pulse 1.2s infinite', display: 'inline-block' }}>🔴</span>
+              <span>Listening... Speak naturally (e.g. &ldquo;Dinner 1200 paid by Rahul&rdquo;)</span>
+            </div>
+          </div>
+        )}
+
+        {/* 3-Second Hands-Free Auto-Save Countdown Banner */}
+        {countdownSeconds !== null && countdownSeconds > 0 && parsed?.amount && (
+          <div
+            style={{
+              padding: '10px 14px',
+              borderRadius: '12px',
+              background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.12), rgba(6, 182, 212, 0.12))',
+              border: '1px solid rgba(16, 185, 129, 0.35)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              marginBottom: '14px',
+              gap: '8px',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
+              <span style={{ fontSize: '18px' }}>⚡</span>
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontSize: '12.5px', fontWeight: 700, color: '#059669' }}>
+                  Auto-saving in {countdownSeconds}s...
+                </div>
+                <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                  Hands-free quick save active
+                </div>
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
+              <button
+                type="button"
+                className="secondary-btn"
+                onClick={cancelAutoSaveCountdown}
+                style={{ padding: '4px 8px', fontSize: '11.5px', borderRadius: '7px', fontWeight: 600 }}
+              >
+                ⏸️ Pause / Edit
+              </button>
+              <button
+                type="button"
+                className="primary-btn"
+                onClick={handle1TapSave}
+                style={{ padding: '4px 10px', fontSize: '11.5px', borderRadius: '7px', fontWeight: 700 }}
+              >
+                Save Now ⚡
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Input Bar with Voice Microphone Button */}
         <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
           <input
             ref={inputRef}
@@ -256,7 +436,10 @@ export function SmartExpenseQuickAddModal({
             className="input-field"
             placeholder="e.g. Dinner 1200 food paid by Rahul with Priya"
             value={inputText}
-            onChange={(e) => setInputText(e.target.value)}
+            onChange={(e) => {
+              cancelAutoSaveCountdown();
+              setInputText(e.target.value);
+            }}
             onKeyDown={(e) => {
               if (e.key === 'Enter' && parsed?.amount) {
                 e.preventDefault();
@@ -265,7 +448,7 @@ export function SmartExpenseQuickAddModal({
             }}
             style={{
               paddingRight: speechSupported ? '44px' : '12px',
-              fontSize: '14.5px',
+              fontSize: '14px',
             }}
           />
           {speechSupported && (
@@ -279,9 +462,9 @@ export function SmartExpenseQuickAddModal({
                 right: '6px',
                 top: '50%',
                 transform: 'translateY(-50%)',
-                background: isRecording ? 'var(--color-danger, #ef4444)' : 'transparent',
-                color: isRecording ? '#fff' : 'var(--text-primary)',
-                border: 'none',
+                background: isRecording ? 'var(--color-danger, #ef4444)' : 'rgba(239, 68, 68, 0.12)',
+                color: isRecording ? '#fff' : 'var(--color-danger, #ef4444)',
+                border: '1px solid rgba(239, 68, 68, 0.3)',
                 borderRadius: '50%',
                 width: '32px',
                 height: '32px',
@@ -292,7 +475,7 @@ export function SmartExpenseQuickAddModal({
                 transition: 'all 0.2s ease',
               }}
             >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
                 <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
                 <line x1="12" y1="19" x2="12" y2="22" />
@@ -300,24 +483,6 @@ export function SmartExpenseQuickAddModal({
             </button>
           )}
         </div>
-
-        {isRecording && (
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            padding: '8px 12px',
-            background: 'rgba(239, 68, 68, 0.1)',
-            border: '1px solid rgba(239, 68, 68, 0.25)',
-            borderRadius: '10px',
-            marginBottom: '14px',
-            fontSize: '12.5px',
-            color: 'var(--color-danger, #ef4444)',
-          }}>
-            <span style={{ animation: 'pulse 1.5s infinite', display: 'inline-block' }}>🎙️</span>
-            <span>Listening... speak your expense clearly</span>
-          </div>
-        )}
 
         {/* Parsed Result Preview Card */}
         {parsed && (
@@ -332,7 +497,7 @@ export function SmartExpenseQuickAddModal({
           >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
               <span style={{ fontSize: '11.5px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                AI Parsed Preview
+                Parsed Preview
               </span>
               <span style={{ fontSize: '11px', color: parsed.amount ? 'var(--color-success, #10b981)' : 'var(--text-muted)' }}>
                 {parsed.amount ? '✓ Ready to Save' : '⚠️ Need Amount'}
@@ -340,7 +505,7 @@ export function SmartExpenseQuickAddModal({
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-              <div style={{ fontSize: '16px', fontWeight: 600, color: 'var(--text-primary)' }}>
+              <div style={{ fontSize: '15.5px', fontWeight: 600, color: 'var(--text-primary)' }}>
                 {parsed.title}
               </div>
               <div style={{ fontSize: '18px', fontWeight: 700, color: 'var(--primary-accent)' }}>
@@ -406,6 +571,7 @@ export function SmartExpenseQuickAddModal({
             className="secondary-btn"
             style={{ padding: '10px 14px', fontSize: '13px' }}
             onClick={() => {
+              cancelAutoSaveCountdown();
               triggerHaptic('light');
               onClose();
             }}

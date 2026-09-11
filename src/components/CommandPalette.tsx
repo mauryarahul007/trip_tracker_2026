@@ -18,6 +18,7 @@ interface CommandPaletteProps {
   onSelectMember: (memberId: string) => void;
   onSelectTrip?: (tripId: string) => void;
   onNewExpense: () => void;
+  onOpenVoiceQuickAdd?: () => void;
   onCreateTrip?: () => void;
   onOpenWrapped: () => void;
   onOpenSettings: () => void;
@@ -43,6 +44,7 @@ export function CommandPalette({
   onSelectMember,
   onSelectTrip,
   onNewExpense,
+  onOpenVoiceQuickAdd,
   onCreateTrip,
   onOpenWrapped,
   onOpenSettings,
@@ -146,6 +148,20 @@ export function CommandPalette({
       onClose();
     },
   });
+
+  if (trip && onOpenVoiceQuickAdd) {
+    items.push({
+      id: 'act-voice-quick-add',
+      type: 'action',
+      title: '🎙️ Voice Quick-Add Expense',
+      subtitle: 'Speak naturally to log an expense in 3 seconds',
+      icon: <span style={{ fontSize: '14px' }}>🎙️</span>,
+      action: () => {
+        onClose();
+        onOpenVoiceQuickAdd();
+      },
+    });
+  }
 
   if (trip) {
     items.push({

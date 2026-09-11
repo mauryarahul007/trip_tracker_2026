@@ -30,6 +30,71 @@ const CURRENCY_SYMBOLS_MAP: Record<string, string> = {
   'CHF': 'CHF',
 };
 
+const CURRENCY_WORDS_MAP: Record<string, string> = {
+  rupees: 'INR',
+  rupee: 'INR',
+  rs: 'INR',
+  inr: 'INR',
+  bucks: 'USD',
+  dollars: 'USD',
+  dollar: 'USD',
+  usd: 'USD',
+  euros: 'EUR',
+  euro: 'EUR',
+  eur: 'EUR',
+  pounds: 'GBP',
+  pound: 'GBP',
+  gbp: 'GBP',
+  baht: 'THB',
+  thb: 'THB',
+  dirhams: 'AED',
+  dirham: 'AED',
+  aed: 'AED',
+};
+
+// Spoken number word replacement for speech recognition transcripts
+function normalizeSpokenNumberWords(input: string): string {
+  let text = input;
+  const wordNumberMap: [RegExp, string][] = [
+    [/\b(one|a)\s+thousand\s+(?:and\s+)?five\s+hundred\b/gi, '1500'],
+    [/\b(one|a)\s+thousand\s+(?:and\s+)?two\s+hundred\b/gi, '1200'],
+    [/\b(one|a)\s+thousand\b/gi, '1000'],
+    [/\btwo\s+thousand\b/gi, '2000'],
+    [/\bthree\s+thousand\b/gi, '3000'],
+    [/\bfive\s+thousand\b/gi, '5000'],
+    [/\bten\s+thousand\b/gi, '10000'],
+    [/\btwenty\s+five\s+hundred\b/gi, '2500'],
+    [/\btwenty\s+hundred\b/gi, '2000'],
+    [/\bfifteen\s+hundred\b/gi, '1500'],
+    [/\bfourteen\s+hundred\b/gi, '1400'],
+    [/\bthirteen\s+hundred\b/gi, '1300'],
+    [/\btwelve\s+hundred\b/gi, '1200'],
+    [/\beleven\s+hundred\b/gi, '1100'],
+    [/\bnine\s+hundred\b/gi, '900'],
+    [/\beight\s+hundred\b/gi, '800'],
+    [/\bseven\s+hundred\b/gi, '700'],
+    [/\bsix\s+hundred\b/gi, '600'],
+    [/\bfive\s+hundred\b/gi, '500'],
+    [/\bfour\s+hundred\s+(?:and\s+)?fifty\b/gi, '450'],
+    [/\bfour\s+hundred\b/gi, '400'],
+    [/\bthree\s+hundred\s+(?:and\s+)?fifty\b/gi, '350'],
+    [/\bthree\s+hundred\b/gi, '300'],
+    [/\btwo\s+hundred\s+(?:and\s+)?fifty\b/gi, '250'],
+    [/\btwo\s+hundred\b/gi, '200'],
+    [/\bone\s+hundred\s+(?:and\s+)?fifty\b/gi, '150'],
+    [/\bone\s+hundred\b/gi, '100'],
+    [/\bfour\s+fifty\b/gi, '450'],
+    [/\bthree\s+fifty\b/gi, '350'],
+    [/\btwo\s+fifty\b/gi, '250'],
+    [/\bone\s+fifty\b/gi, '150'],
+  ];
+
+  for (const [pattern, replacement] of wordNumberMap) {
+    text = text.replace(pattern, replacement);
+  }
+  return text;
+}
+
 /**
  * Enhanced natural language & voice expense parser.
  * Examples:
@@ -37,6 +102,8 @@ const CURRENCY_SYMBOLS_MAP: Record<string, string> = {
  *   "Uber to airport 420 yesterday"
  *   "₹1,200 Airbnb in Goa paid by Priya for everyone"
  *   "$45.50 museum pass with Alice"
+ *   "Coffee 150 rupees today"
+ *   "Dinner twelve hundred paid by Rahul"
  */
 export function parseQuickExpense(
   rawInput: string,
@@ -47,7 +114,13 @@ export function parseQuickExpense(
   const trimmed = rawInput.trim();
   if (!trimmed) return null;
 
-  let workingText = trimmed;
+  // Normalize speech filler words and spoken number words
+  let workingText = normalizeSpokenNumberWords(trimmed);
+
+  // Strip leading conversational fillers (e.g. "please add expense", "log expense", "add", "spent")
+  workingText = workingText
+    .replace(/^(?:please\s+)?(?:add\s+expense|log\s+expense|add|log|spent)\s+/i, '')
+    .trim();
   let detectedAmount: number | null = null;
   let detectedCurrency: string | undefined = undefined;
   let detectedPaidById: string | null = null;
@@ -137,17 +210,33 @@ export function parseQuickExpense(
     }
   }
 
-  // If no symbol match yet, check for numbers with currency suffix (e.g. 500rs, 500 inr, 45 usd)
+  // If no symbol match yet, check for numbers with currency suffix or spoken currency words (e.g. 500rs, 500 rupees, 45 dollars, 20 bucks)
   if (detectedAmount === null) {
-    const suffixRegex = /(?:^|\s)([0-9.,]+)\s*(rs\.?|inr|usd|eur|gbp|aed|thb|sgd)(?:\s|$)/i;
+    const suffixRegex = /(?:^|\s)([0-9.,]+)\s*(rs\.?|rupees?|bucks?|dollars?|euros?|pounds?|inr|usd|eur|gbp|aed|thb|sgd)(?:\s|$)/i;
     const match = workingText.match(suffixRegex);
     if (match) {
       const numStr = match[1].replace(/,/g, '');
       const parsedNum = parseFloat(numStr);
       if (!Number.isNaN(parsedNum)) {
         detectedAmount = parsedNum;
-        const cur = match[2].toUpperCase().replace(/\./g, '');
-        detectedCurrency = cur === 'RS' ? 'INR' : cur;
+        const curWord = match[2].toLowerCase().replace(/\./g, '');
+        detectedCurrency = CURRENCY_WORDS_MAP[curWord] || curWord.toUpperCase();
+        workingText = workingText.replace(match[0], ' ').trim();
+      }
+    }
+  }
+
+  // Check for currency word prefix (e.g. "rupees 500", "dollars 40")
+  if (detectedAmount === null) {
+    const prefixRegex = /(?:^|\s)(rs\.?|rupees?|bucks?|dollars?|inr|usd|eur|gbp)\s+([0-9.,]+)(?:\s|$)/i;
+    const match = workingText.match(prefixRegex);
+    if (match) {
+      const numStr = match[2].replace(/,/g, '');
+      const parsedNum = parseFloat(numStr);
+      if (!Number.isNaN(parsedNum)) {
+        detectedAmount = parsedNum;
+        const curWord = match[1].toLowerCase().replace(/\./g, '');
+        detectedCurrency = CURRENCY_WORDS_MAP[curWord] || curWord.toUpperCase();
         workingText = workingText.replace(match[0], ' ').trim();
       }
     }

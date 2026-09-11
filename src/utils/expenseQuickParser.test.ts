@@ -90,4 +90,34 @@ describe('expenseQuickParser', () => {
     const yesterdayStr = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
     expect(result?.date).toBe(yesterdayStr);
   });
+
+  it('parses spoken number words like "twelve hundred"', () => {
+    const result = parseQuickExpense('Dinner twelve hundred paid by Rahul', mockCategories, [], mockMembers);
+    expect(result).not.toBeNull();
+    expect(result?.amount).toBe(1200);
+    expect(result?.title).toBe('Dinner');
+    expect(result?.paidById).toBe('m-1');
+    expect(result?.categoryId).toBe('cat-food');
+  });
+
+  it('parses spoken currency words like "rupees" and "bucks"', () => {
+    const resultInr = parseQuickExpense('Coffee 150 rupees', mockCategories);
+    expect(resultInr).not.toBeNull();
+    expect(resultInr?.amount).toBe(150);
+    expect(resultInr?.currency).toBe('INR');
+
+    const resultUsd = parseQuickExpense('Burgers 25 bucks with Priya', mockCategories, [], mockMembers);
+    expect(resultUsd).not.toBeNull();
+    expect(resultUsd?.amount).toBe(25);
+    expect(resultUsd?.currency).toBe('USD');
+  });
+
+  it('strips conversational voice filler words like "please add expense"', () => {
+    const result = parseQuickExpense('Please add expense cab to beach 450 paid by Rahul', mockCategories, [], mockMembers);
+    expect(result).not.toBeNull();
+    expect(result?.amount).toBe(450);
+    expect(result?.title).toBe('Cab to beach');
+    expect(result?.paidById).toBe('m-1');
+    expect(result?.categoryId).toBe('cat-travel');
+  });
 });

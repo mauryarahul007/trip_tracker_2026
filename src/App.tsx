@@ -465,6 +465,7 @@ export default function App() {
   const [showRouteModal, setShowRouteModal] = useState(false);
   const [showShortcutsModal, setShowShortcutsModal] = useState(false);
   const [showSmartQuickAdd, setShowSmartQuickAdd] = useState(false);
+  const [smartQuickAddAutoListen, setSmartQuickAddAutoListen] = useState(false);
   const [showOfflineSnapshot, setShowOfflineSnapshot] = useState(false);
   const [showMediaGallery, setShowMediaGallery] = useState(false);
   const [showFxRates, setShowFxRates] = useState(false);
@@ -1389,6 +1390,11 @@ export default function App() {
     setShowAddExpense(true);
   };
 
+  const handleOpenSmartQuickAdd = (autoListen = false) => {
+    setSmartQuickAddAutoListen(autoListen);
+    setShowSmartQuickAdd(true);
+  };
+
   const handleStartEditExpense = (exp: Expense) => {
     setReviewQueue([]);
     setEditingExpenseId(exp.id);
@@ -2287,7 +2293,7 @@ export default function App() {
                   userId={userId}
                   activeTransitionSourceId={activeTransitionSourceId}
                   onAddExpense={handleOpenAddExpense}
-                  onOpenSmartQuickAdd={() => setShowSmartQuickAdd(true)}
+                  onOpenSmartQuickAdd={handleOpenSmartQuickAdd}
                   dirtyExpenseIds={dirtyExpenseIds}
                   conflictExpenseIds={conflictExpenseIds}
                 />
@@ -2731,6 +2737,7 @@ export default function App() {
               setActiveTab('expenses');
             }}
             onNewExpense={handleOpenAddExpense}
+            onOpenVoiceQuickAdd={() => handleOpenSmartQuickAdd(true)}
             onOpenWrapped={() => setShowTripWrapped(true)}
             onOpenSettings={() => setShowGlobalSettings(true)}
             onSwitchTab={(t) => {
@@ -2796,7 +2803,11 @@ export default function App() {
         <Suspense fallback={null}>
           <SmartExpenseQuickAddModal
             isOpen={showSmartQuickAdd}
-            onClose={() => setShowSmartQuickAdd(false)}
+            autoListen={smartQuickAddAutoListen}
+            onClose={() => {
+              setShowSmartQuickAdd(false);
+              setSmartQuickAddAutoListen(false);
+            }}
             categories={categories}
             historicalExpenses={activeTripExpenses}
             visibleMembers={visibleMembers}

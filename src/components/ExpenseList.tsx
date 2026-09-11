@@ -116,7 +116,7 @@ type Props = {
   userId: string | null;
   activeTransitionSourceId?: string | null;
   onAddExpense?: (template?: { title?: string; category?: string }) => void;
-  onOpenSmartQuickAdd?: () => void;
+  onOpenSmartQuickAdd?: (autoListen?: boolean) => void;
   dirtyExpenseIds?: Set<string>;
   conflictExpenseIds?: Set<string>;
 };
@@ -373,15 +373,24 @@ export function ExpenseList({
                 type="button"
                 className="expense-filters-btn"
                 onClick={() => {
-                  triggerHaptic('light');
-                  onOpenSmartQuickAdd();
+                  triggerHaptic('medium');
+                  onOpenSmartQuickAdd(true);
                 }}
-                aria-label="Smart Voice & Quick-Add expense"
-                title="Smart Voice & Quick-Add expense"
-                style={{ padding: '0 0.6rem', color: 'var(--primary-color, #3b82f6)' }}
+                aria-label="3-Second Voice Quick-Add expense"
+                title="3-Second Voice Quick-Add expense"
+                style={{
+                  padding: '0 0.65rem',
+                  color: 'var(--color-danger, #ef4444)',
+                  borderColor: 'rgba(239, 68, 68, 0.35)',
+                  background: 'rgba(239, 68, 68, 0.08)',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  fontWeight: 600,
+                }}
               >
-                <span aria-hidden="true">⚡</span>
-                <span>AI Add</span>
+                <span aria-hidden="true" style={{ fontSize: '13px' }}>🎙️</span>
+                <span>Voice</span>
               </button>
             )}
             <button
@@ -650,25 +659,51 @@ export function ExpenseList({
               })}
             </div>
 
-            {onAddExpense && (
-              <button
-                type="button"
-                className="primary-btn"
-                onClick={() => {
-                  triggerHaptic('light');
-                  onAddExpense();
-                }}
-                style={{
-                  padding: '10px 22px',
-                  fontSize: '13px',
-                  borderRadius: '9999px',
-                  fontWeight: 700,
-                  marginTop: '4px',
-                }}
-              >
-                + Log Custom Expense
-              </button>
-            )}
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'center', marginTop: '6px' }}>
+              {onOpenSmartQuickAdd && (
+                <button
+                  type="button"
+                  className="secondary-btn"
+                  onClick={() => {
+                    triggerHaptic('medium');
+                    onOpenSmartQuickAdd(true);
+                  }}
+                  style={{
+                    padding: '10px 18px',
+                    fontSize: '13px',
+                    borderRadius: '9999px',
+                    fontWeight: 700,
+                    color: 'var(--color-danger, #ef4444)',
+                    borderColor: 'rgba(239, 68, 68, 0.35)',
+                    background: 'rgba(239, 68, 68, 0.06)',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                  }}
+                >
+                  <span>🎙️</span>
+                  <span>Speak Expense</span>
+                </button>
+              )}
+              {onAddExpense && (
+                <button
+                  type="button"
+                  className="primary-btn"
+                  onClick={() => {
+                    triggerHaptic('light');
+                    onAddExpense();
+                  }}
+                  style={{
+                    padding: '10px 22px',
+                    fontSize: '13px',
+                    borderRadius: '9999px',
+                    fontWeight: 700,
+                  }}
+                >
+                  + Log Custom Expense
+                </button>
+              )}
+            </div>
           </div>
         )
       ) : (
