@@ -2832,4 +2832,17 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - Payment mode is extracted for preview badges and title cleanliness; since the baseline `Expense` schema stores notes and splits, the payment channel is primarily leveraged for UX clarification and can be populated into transfer descriptions.
 
+---
+
+## 154. Public Join-Code Preview & On-Device Receipt OCR (v3.12.0)
+* **Context:** Invited friends landing on `/join/:code` had to sign in with Google before they could tell whether the link was real, who was already on the trip, or when it ran. Separately, receipt scanning still needed a reliable OCR path that did not invent line items from a sample receipt when the scan failed.
+* **Decision:** Ship two traveler-facing features together as a minor release. (1) A public join preview: anonymous visitors see trip name, dates, and member first names, then continue with Google to claim the seat. Backed by security-definer RPC `preview_trip_by_join_code` (migration 0081), which never returns trip ids, member ids, expenses, or balances, and rate-limits failed codes by hashed client IP the same way authenticated lookups do. (2) Receipt OCR via lazy-loaded `tesseract.js` with no sample-receipt fallback; failed scans surface an error instead of fake items.
+* **Pattern/Implementation:**
+  - `supabase/migrations/0081_join_code_public_preview.sql` adds `trip_join_preview_attempts` (revoked from anon/authenticated) and grants `preview_trip_by_join_code` to anon + authenticated.
+  - `src/utils/joinPreview.ts` maps the RPC row and re-strips last names client-side. `JoinTripScreen` loads the preview before auth; `tripApi.ts` calls the RPC; `database.ts` types it.
+  - `src/utils/receiptOcr.ts` + `ReceiptScannerModal.tsx` load Tesseract on demand (`vite.config.ts` excludes it from `optimizeDeps`). Parse failures throw `ReceiptOcrError` rather than substituting demo data.
+* **Trade-offs Accepted:**
+  - First-name leakage on a valid join code is intentional (enough to recognize the trip, not enough to enumerate the roster). Invalid codes stay empty plus lockout, not a distinct "not found" oracle beyond attempt limits.
+  - Tesseract WASM is code-split so the main bundle stays lean; first scan pays a download. English traineddata is fetched at runtime, not committed (`eng.traineddata` at repo root is a local leftover).
+
 

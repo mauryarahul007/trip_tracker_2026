@@ -516,6 +516,15 @@ export interface Database {
           member_name: string | null;
         }[];
       };
+      preview_trip_by_join_code: {
+        Args: { p_code: string };
+        Returns: {
+          trip_name: string;
+          start_date: string;
+          end_date: string;
+          member_first_names: string[];
+        }[];
+      };
       claim_trip_member: {
         Args: { p_member_id: string };
         Returns: boolean;

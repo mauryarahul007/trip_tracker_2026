@@ -26,7 +26,7 @@ export default defineConfig(({ command }) => ({
   // resolves the worker correctly. Production builds are unaffected (no
   // optimizeDeps step there).
   optimizeDeps: {
-    exclude: ['maplibre-gl'],
+    exclude: ['maplibre-gl', 'tesseract.js'],
   },
   server: {
     watch: {

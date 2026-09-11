@@ -9,11 +9,11 @@
 
 | Metric | Count |
 | :--- | :--- |
-| **Total Tracked** | **51** |
+| **Total Tracked** | **53** |
 | **💡 Requested** | **2** |
 | **📋 Planned** | **0** |
 | **🟡 In Progress** | **0** |
-| **✅ Shipped** | **49** |
+| **✅ Shipped** | **51** |
 | **⚪ Won't Do** | **0** |
 
 ---
@@ -101,6 +101,8 @@ CI pipeline for lint, build, and test on push/PR
 | **FEAT-049** | Boarding Pass Flip Flight and Itinerary Status Indicator with live glowing dot | `ui-ux` | `agent` | `agent` | Shipped |
 | **FEAT-050** | Ops Deck v2 violet visual system | `admin` | `cursor-grok` | `cursor-grok` | Shipped in v3.9.0. Also closed live ledger BUG-145, BUG-147, BUG-176–178, BUG-191 as already-fixed or HMR/stale-chunk. |
 | **FEAT-051** | Cross-trip expense search + global owe/owed balance dashboard | `ui-ux` | `claude-cli` | `claude-cli` | CommandPalette now searches expenses across every trip the user belongs to (fetchAllExpensesForTrips titleQuery filter, tripApi.ts), each result tagged with its trip name + own currency. TripsListScreen header shows a per-currency net balance chip row (You owe/You're owed) computed via calculateSettlements across all trips. Files: src/services/tripApi.ts, src/components/CommandPalette.tsx, src/components/TripsListScreen.tsx, src/index.css. |
+| **FEAT-052** | Public join-code preview before Google sign-in | `ui-ux` | `cursor-grok` | `cursor-grok` | Shipped in v3.12.0. Migration 0081 applied to remote (preview_trip_by_join_code). Files: src/components/JoinTripScreen.tsx, src/utils/joinPreview.ts, src/utils/joinPreview.test.ts, src/services/tripApi.ts, src/types/database.ts, src/main.tsx, supabase/migrations/0081_join_code_public_preview.sql. |
+| **FEAT-053** | On-device receipt OCR via Tesseract | `ui-ux` | `cursor-grok` | `cursor-grok` | Shipped in v3.12.0. Files: src/utils/receiptOcr.ts, src/utils/receiptOcr.test.ts, src/components/ReceiptScannerModal.tsx, vite.config.ts (optimizeDeps exclude tesseract.js), package.json (tesseract.js). |
 
 ---
 

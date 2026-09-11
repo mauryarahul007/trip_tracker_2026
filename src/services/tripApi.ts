@@ -2,6 +2,7 @@ import { supabase } from './supabaseClient';
 import type { Category, ChecklistItem, Expense, Group, Member, PreviousMemberSuggestion, SplitMode, Trip, TripNote, TripStop } from '../types';
 import type { Database } from '../types/database';
 import type { AdminUserRow, AppConfigKey, AuditLogEntry, DevicePlatformCount, NotificationStats } from '../types/admin';
+import { mapJoinPreviewRow, type JoinPreviewResult } from '../utils/joinPreview';
 
 type TripRow = Database['public']['Tables']['trips']['Row'] & { checklist?: unknown; notes?: unknown };
 type MemberRow = Database['public']['Tables']['members']['Row'];
@@ -783,6 +784,15 @@ export interface JoinLookupResult {
   isAdmin: boolean;
   myMemberId: string | null;
   unclaimedMembers: { id: string; name: string }[];
+}
+
+export type { JoinPreviewResult };
+
+export async function previewTripByJoinCode(code: string): Promise<JoinPreviewResult | null> {
+  const { data, error } = await supabase.rpc('preview_trip_by_join_code', { p_code: code });
+  if (error) throw error;
+  const row = Array.isArray(data) ? data[0] : data;
+  return mapJoinPreviewRow(row ?? null);
 }
 
 // Returns null for an invalid/unknown code. A valid code always yields a

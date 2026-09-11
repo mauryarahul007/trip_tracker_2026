@@ -1,6 +1,12 @@
 import { useState, useRef } from 'react';
 import type { ItemizedReceiptConfig } from '../types';
-import { preProcessReceiptImage, parseReceiptText, toItemizedConfig, type ParsedReceiptData } from '../utils/receiptOcr';
+import {
+  parseScannedReceipt,
+  scanReceiptImage,
+  toItemizedConfig,
+  ReceiptOcrError,
+  type ParsedReceiptData,
+} from '../utils/receiptOcr';
 import { triggerHaptic } from '../utils/haptics';
 import { useEscapeKey } from '../utils/useEscapeKey';
 import { useHistoryBack } from '../utils/useHistoryBack';
@@ -26,6 +32,7 @@ export function ReceiptScannerModal({
   const [parsedData, setParsedData] = useState<ParsedReceiptData | null>(null);
   const [manualTextMode, setManualTextMode] = useState(false);
   const [rawText, setRawText] = useState('');
+  const [scanError, setScanError] = useState('');
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -34,43 +41,37 @@ export function ReceiptScannerModal({
 
   if (!isOpen) return null;
 
+  const resetFileInput = () => {
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
   const handleImageSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+    resetFileInput();
     if (!file) return;
 
     triggerHaptic('medium');
     setIsScanning(true);
+    setScanError('');
+    setParsedData(null);
 
     try {
-      // 1. Pre-process image on canvas (grayscale, binarize, downscale to 1200px)
-      const processedBase64 = await preProcessReceiptImage(file);
-      setImagePreview(processedBase64);
-
-      // Simulate on-device OCR recognition / text parsing
-      // For images without pure machine text, we generate a fast template or parse raw text
-      setTimeout(() => {
-        // Sample standard OCR parsing demo fallback if pure text detection is running
-        const sampleOcrOutput = `
-          RECEIPT INVOICE
-          Date: ${new Date().toISOString().split('T')[0]}
-
-          Appetizer Platter      380.00
-          Main Course Special    550.00
-          Beverages (x2)         180.00
-          Dessert                140.00
-
-          Subtotal              1250.00
-          GST / Tax (5%)          62.50
-          Service Tip             50.00
-          TOTAL AMOUNT          1362.50
-        `;
-
-        const parsed = parseReceiptText(rawText.trim() ? rawText : sampleOcrOutput, defaultMemberIds);
-        setParsedData(parsed);
-        setIsScanning(false);
-        triggerHaptic('success');
-      }, 1200);
-    } catch {
+      const { parsed, previewBase64 } = await scanReceiptImage(file, defaultMemberIds, {
+        onPreview: setImagePreview,
+      });
+      setImagePreview(previewBase64);
+      setParsedData(parsed);
+      triggerHaptic('success');
+    } catch (err) {
+      triggerHaptic('warning');
+      const message =
+        err instanceof ReceiptOcrError
+          ? err.message
+          : err instanceof Error
+            ? err.message
+            : "Couldn't read this receipt. Try a clearer photo, or paste the text.";
+      setScanError(message);
+    } finally {
       setIsScanning(false);
     }
   };
@@ -86,8 +87,18 @@ export function ReceiptScannerModal({
   const handleParseManualText = () => {
     if (!rawText.trim()) return;
     triggerHaptic('medium');
-    const parsed = parseReceiptText(rawText, defaultMemberIds);
-    setParsedData(parsed);
+    setScanError('');
+    try {
+      const parsed = parseScannedReceipt(rawText, defaultMemberIds);
+      setParsedData(parsed);
+    } catch (err) {
+      triggerHaptic('warning');
+      setScanError(
+        err instanceof ReceiptOcrError
+          ? err.message
+          : "We couldn't find prices in that text. Check the lines and try again."
+      );
+    }
   };
 
   return (
@@ -138,6 +149,30 @@ export function ReceiptScannerModal({
 
         {/* Modal Body */}
         <div style={{ padding: '16px 20px', overflowY: 'auto', flex: 1 }}>
+          {scanError && !isScanning && (
+            <div
+              role="alert"
+              style={{
+                marginBottom: parsedData ? '12px' : '16px',
+                padding: '10px 12px',
+                borderRadius: '12px',
+                background: 'rgba(239, 68, 68, 0.08)',
+                border: '1px solid rgba(239, 68, 68, 0.28)',
+                color: 'var(--color-danger, #ef4444)',
+                fontSize: '13px',
+                textAlign: 'left',
+              }}
+            >
+              {scanError}
+            </div>
+          )}
+
+          {scanError && imagePreview && !parsedData && !isScanning && (
+            <div style={{ marginBottom: '16px', maxWidth: '240px', margin: '0 auto 16px', borderRadius: '12px', overflow: 'hidden', border: '1px solid var(--border-color)' }}>
+              <img src={imagePreview} alt="Receipt that could not be read" style={{ width: '100%', display: 'block' }} />
+            </div>
+          )}
+
           {!parsedData && !isScanning && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', textAlign: 'center' }}>
               <div
@@ -225,9 +260,9 @@ export function ReceiptScannerModal({
               <div style={{ fontSize: '36px', animation: 'spin 2s linear infinite', display: 'inline-block', marginBottom: '12px' }}>
                 🔍
               </div>
-              <div style={{ fontSize: '15px', fontWeight: 700 }}>Scanning & Pre-Processing Receipt...</div>
+              <div style={{ fontSize: '15px', fontWeight: 700 }}>Reading this receipt…</div>
               <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px' }}>
-                Extracting dish items, taxes, tips, and grand total
+                On-device OCR — extracting items, tax, tip, and total from the photo
               </div>
               {imagePreview && (
                 <div style={{ marginTop: '16px', maxWidth: '240px', margin: '16px auto 0', borderRadius: '12px', overflow: 'hidden', border: '1px solid var(--border-color)' }}>
@@ -243,10 +278,14 @@ export function ReceiptScannerModal({
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(16, 185, 129, 0.08)', padding: '10px 14px', borderRadius: '12px', border: '1px solid rgba(16, 185, 129, 0.2)' }}>
                 <div>
                   <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--color-success, #10b981)' }}>
-                    ✓ {parsedData.items.length} Items Detected
+                    {parsedData.items.length > 0
+                      ? `✓ ${parsedData.items.length} item${parsedData.items.length === 1 ? '' : 's'} detected`
+                      : '✓ Total detected'}
                   </div>
                   <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-                    Review detected items before applying to split
+                    {parsedData.items.length > 0
+                      ? 'Review detected items before applying to split'
+                      : 'No line items found — total was read. Add items manually after applying if needed.'}
                   </div>
                 </div>
                 <div style={{ textAlign: 'right' }}>
@@ -359,7 +398,11 @@ export function ReceiptScannerModal({
                   type="button"
                   className="secondary-btn"
                   style={{ padding: '10px 14px', fontSize: '12px' }}
-                  onClick={() => setParsedData(null)}
+                  onClick={() => {
+                    setParsedData(null);
+                    setScanError('');
+                    setImagePreview(null);
+                  }}
                 >
                   Rescan
                 </button>

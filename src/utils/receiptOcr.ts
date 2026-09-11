@@ -212,3 +212,97 @@ export function toItemizedConfig(data: ParsedReceiptData): ItemizedReceiptConfig
     discount: data.discount > 0 ? data.discount : undefined,
   };
 }
+
+export type ReceiptOcrFailure = 'empty' | 'unreadable' | 'engine';
+
+export class ReceiptOcrError extends Error {
+  readonly reason: ReceiptOcrFailure;
+
+  constructor(message: string, reason: ReceiptOcrFailure) {
+    super(message);
+    this.name = 'ReceiptOcrError';
+    this.reason = reason;
+  }
+}
+
+export function parseScannedReceipt(text: string, defaultMemberIds: string[] = []): ParsedReceiptData {
+  const trimmed = text.trim();
+  if (!trimmed) {
+    throw new ReceiptOcrError(
+      "Couldn't read any text from this photo. Try a clearer shot, or paste the lines.",
+      'empty'
+    );
+  }
+
+  const parsed = parseReceiptText(trimmed, defaultMemberIds);
+  if (parsed.items.length === 0 && parsed.total <= 0) {
+    throw new ReceiptOcrError(
+      "We couldn't find prices on this receipt. Try a clearer photo, or paste the text.",
+      'unreadable'
+    );
+  }
+  return parsed;
+}
+
+type RecognizeFn = (image: string) => Promise<string>;
+
+type TesseractWorker = {
+  recognize: (image: string) => Promise<{ data: { text: string } }>;
+};
+
+let workerPromise: Promise<TesseractWorker> | null = null;
+
+async function getOcrWorker(): Promise<TesseractWorker> {
+  if (!workerPromise) {
+    workerPromise = (async () => {
+      const { createWorker } = await import('tesseract.js');
+      return createWorker('eng', 1, { logger: () => {} });
+    })();
+  }
+  try {
+    return await workerPromise;
+  } catch (err) {
+    workerPromise = null;
+    throw err;
+  }
+}
+
+/** Lazy-loads tesseract.js so OCR stays out of the critical-path bundle. */
+export async function recognizeReceiptText(image: string): Promise<string> {
+  try {
+    const worker = await getOcrWorker();
+    const { data } = await worker.recognize(image);
+    return (data.text || '').trim();
+  } catch (err) {
+    if (err instanceof ReceiptOcrError) throw err;
+    throw new ReceiptOcrError(
+      "Couldn't start the receipt reader. Check your connection and try again, or paste the text.",
+      'engine'
+    );
+  }
+}
+
+export async function scanReceiptImage(
+  file: File | Blob,
+  defaultMemberIds: string[] = [],
+  options?: {
+    recognize?: RecognizeFn;
+    onPreview?: (previewBase64: string) => void;
+  }
+): Promise<{ parsed: ParsedReceiptData; previewBase64: string }> {
+  const recognize = options?.recognize ?? recognizeReceiptText;
+  const previewBase64 = await preProcessReceiptImage(file);
+  options?.onPreview?.(previewBase64);
+  let text: string;
+  try {
+    text = await recognize(previewBase64);
+  } catch (err) {
+    if (err instanceof ReceiptOcrError) throw err;
+    throw new ReceiptOcrError(
+      "Couldn't read this receipt. Check your connection and try again, or paste the lines.",
+      'engine'
+    );
+  }
+  const parsed = parseScannedReceipt(text, defaultMemberIds);
+  return { parsed, previewBase64 };
+}

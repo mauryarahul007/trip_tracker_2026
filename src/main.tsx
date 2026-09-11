@@ -145,13 +145,11 @@ createRoot(document.getElementById('root')!).render(
         <Route
           path="/join/:code"
           element={
-            <RequireAuth>
-              <ErrorBoundary>
-                <Suspense fallback={<RouteLoadingFallback />}>
-                  <JoinTripScreen />
-                </Suspense>
-              </ErrorBoundary>
-            </RequireAuth>
+            <ErrorBoundary>
+              <Suspense fallback={<RouteLoadingFallback />}>
+                <JoinTripScreen />
+              </Suspense>
+            </ErrorBoundary>
           }
         />
         <Route

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseReceiptText } from './receiptOcr';
+import { parseReceiptText, parseScannedReceipt, ReceiptOcrError } from './receiptOcr';
 
 describe('receiptOcr', () => {
   it('parses typical restaurant receipt with line items, tax, and total', () => {
@@ -47,5 +47,42 @@ describe('receiptOcr', () => {
     expect(parsed.items[1].amount).toBe(180);
     expect(parsed.tax).toBe(16.5);
     expect(parsed.total).toBe(346.5);
+  });
+});
+
+describe('parseScannedReceipt', () => {
+  it('parses a real bill into itemized lines and total', () => {
+    const parsed = parseScannedReceipt(
+      `
+      Pasta 320.00
+      Pizza 450.00
+      Tax 38.50
+      Total 808.50
+    `,
+      ['m1']
+    );
+    expect(parsed.items).toHaveLength(2);
+    expect(parsed.items[0].name).toBe('Pasta');
+    expect(parsed.items[0].amount).toBe(320);
+    expect(parsed.items[1].amount).toBe(450);
+    expect(parsed.tax).toBe(38.5);
+    expect(parsed.total).toBe(808.5);
+    expect(parsed.items[0].assignedMemberIds).toEqual(['m1']);
+  });
+
+  it('throws a clear error when OCR returns no text', () => {
+    expect(() => parseScannedReceipt('   \n  ')).toThrow(ReceiptOcrError);
+    expect(() => parseScannedReceipt('')).toThrow(/Couldn't read any text/);
+  });
+
+  it('throws a clear error when text has no prices — never invents sample items', () => {
+    expect(() => parseScannedReceipt('THANK YOU FOR VISITING\nCome again soon')).toThrow(
+      ReceiptOcrError
+    );
+    expect(() => parseScannedReceipt('THANK YOU FOR VISITING')).toThrow(/couldn't find prices/i);
+  });
+
+  it('does not inject a canned restaurant bill when OCR text is unrelated', () => {
+    expect(() => parseScannedReceipt('blurry photo noise')).toThrow(ReceiptOcrError);
   });
 });

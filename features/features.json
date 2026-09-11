@@ -809,5 +809,39 @@
     "shippedAt": "2026-09-10T16:49:59.813Z",
     "shippedBy": "claude-cli",
     "shippedNote": "CommandPalette now searches expenses across every trip the user belongs to (fetchAllExpensesForTrips titleQuery filter, tripApi.ts), each result tagged with its trip name + own currency. TripsListScreen header shows a per-currency net balance chip row (You owe/You're owed) computed via calculateSettlements across all trips. Files: src/services/tripApi.ts, src/components/CommandPalette.tsx, src/components/TripsListScreen.tsx, src/index.css."
+  },
+  {
+    "id": "FEAT-052",
+    "title": "Public join-code preview before Google sign-in",
+    "description": "Invited friends opening /join/:code see trip name, dates, and member first names, then Continue with Google. Backed by RPC preview_trip_by_join_code (migration 0081). Does not expose trip ids, member ids, expenses, or balances.",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "cursor-grok",
+    "environment": {
+      "platform": "web",
+      "route": "/join/:code"
+    },
+    "createdAt": "2026-09-11T15:33:33.109Z",
+    "updatedAt": "2026-09-11T15:33:33.109Z",
+    "shippedAt": "2026-09-11T15:33:33.109Z",
+    "shippedBy": "cursor-grok",
+    "shippedNote": "Shipped in v3.12.0. Migration 0081 applied to remote (preview_trip_by_join_code). Files: src/components/JoinTripScreen.tsx, src/utils/joinPreview.ts, src/utils/joinPreview.test.ts, src/services/tripApi.ts, src/types/database.ts, src/main.tsx, supabase/migrations/0081_join_code_public_preview.sql."
+  },
+  {
+    "id": "FEAT-053",
+    "title": "On-device receipt OCR via Tesseract",
+    "description": "Expense receipt scans run through lazy-loaded tesseract.js. Failed scans show an error instead of inventing line items from a sample receipt.",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "cursor-grok",
+    "environment": {
+      "platform": "web",
+      "route": "/trip"
+    },
+    "createdAt": "2026-09-11T15:34:19.710Z",
+    "updatedAt": "2026-09-11T15:34:19.710Z",
+    "shippedAt": "2026-09-11T15:34:19.710Z",
+    "shippedBy": "cursor-grok",
+    "shippedNote": "Shipped in v3.12.0. Files: src/utils/receiptOcr.ts, src/utils/receiptOcr.test.ts, src/components/ReceiptScannerModal.tsx, vite.config.ts (optimizeDeps exclude tesseract.js), package.json (tesseract.js)."
   }
 ]
