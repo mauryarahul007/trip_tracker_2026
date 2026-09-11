@@ -139,10 +139,6 @@ export function SmartPackingAssistantModal({
     () => allSuggestions.filter((i) => i.airplaneEligibility === 'checkin-only'),
     [allSuggestions]
   );
-  const flexibleItems = useMemo(
-    () => allSuggestions.filter((i) => i.airplaneEligibility === 'any'),
-    [allSuggestions]
-  );
 
   // Filtered view items based on active luggage tab
   const displayedItems = useMemo(() => {
