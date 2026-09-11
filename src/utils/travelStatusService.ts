@@ -6,9 +6,11 @@ export interface FlightStatusInfo {
   flightNumber: string;
   airlineName: string;
   fullFlightCode: string;
+  icaoCode?: string;
   googleStatusUrl: string;
   flightradar24Url: string;
   flightAwareUrl: string;
+  flightStatsUrl?: string;
   origin?: string;
   destination?: string;
   departureTime?: string;
@@ -90,6 +92,30 @@ const ICAO_TO_IATA: Record<string, string> = {
   THA: 'TG',
 };
 
+const IATA_TO_ICAO: Record<string, string> = {
+  '6E': 'IGO',
+  AI: 'AIC',
+  UK: 'VTI',
+  QP: 'AKJ',
+  SG: 'SEJ',
+  IX: 'AXB',
+  BA: 'BAW',
+  EK: 'UAE',
+  QR: 'QTR',
+  SQ: 'SIA',
+  LH: 'DLH',
+  UA: 'UAL',
+  AA: 'AAL',
+  DL: 'DAL',
+  AF: 'AFR',
+  KL: 'KLM',
+  EY: 'ETD',
+  CX: 'CPA',
+  TK: 'THY',
+  TG: 'THA',
+  G8: 'GOW',
+};
+
 const AIRLINE_NAME_TO_IATA: Record<string, string> = {
   indigo: '6E',
   'air india': 'AI',
@@ -123,18 +149,25 @@ export function buildFlightUrls(carrierCode: string, flightNumber: string) {
   const cleanCarrier = carrierCode.trim().toUpperCase();
   const cleanFlightNum = flightNumber.trim().replace(/^0+/, '') || flightNumber.trim();
   const fullFlightCode = `${cleanCarrier}-${cleanFlightNum}`;
+  const icaoCode = IATA_TO_ICAO[cleanCarrier] || cleanCarrier;
 
   const googleStatusUrl = `https://www.google.com/search?q=${encodeURIComponent(
     `${cleanCarrier}-${cleanFlightNum} flight status`
   )}`;
-  const flightradar24Url = `https://www.flightradar24.com/data/flights/${cleanCarrier.toLowerCase()}-${cleanFlightNum}`;
-  const flightAwareUrl = `https://www.flightaware.com/live/flight/${cleanCarrier}-${cleanFlightNum}`;
+  // Flightradar24 requires standard slug format: e.g. 6e537 (canonical lowercase without hyphens)
+  const flightradar24Url = `https://www.flightradar24.com/data/flights/${cleanCarrier.toLowerCase()}${cleanFlightNum}`;
+  // FlightAware indexes flights by ICAO designator (e.g. IGO537)
+  const flightAwareUrl = `https://www.flightaware.com/live/flight/${icaoCode}${cleanFlightNum}`;
+  // FlightStats direct flight status page (e.g. 6E/537)
+  const flightStatsUrl = `https://www.flightstats.com/v2/flight-tracker/${cleanCarrier}/${cleanFlightNum}`;
 
   return {
     fullFlightCode,
+    icaoCode,
     googleStatusUrl,
     flightradar24Url,
     flightAwareUrl,
+    flightStatsUrl,
   };
 }
 

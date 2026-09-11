@@ -102,92 +102,117 @@ export function LiveTravelStatusModal({ isOpen, onClose, statusInfo }: Props) {
 
         {/* Flight Card Hero */}
         {isFlight && displayFlight && (
-          <div
-            style={{
-              padding: '16px',
-              borderRadius: '14px',
-              background: 'linear-gradient(135deg, rgba(30, 58, 138, 0.12), rgba(59, 130, 246, 0.12))',
-              border: '1px solid rgba(59, 130, 246, 0.3)',
-              marginBottom: '16px',
-            }}
-          >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-              <span style={{ fontSize: '13px', fontWeight: 700, color: '#3b82f6', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                {displayFlight.airlineName}
-              </span>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <button
-                  type="button"
-                  onClick={() => setIsEditingFlight((prev) => !prev)}
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    color: 'var(--text-muted)',
-                    fontSize: '11px',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '2px',
-                  }}
-                  title="Edit flight code"
-                >
-                  <span>{isEditingFlight ? '✓ Done' : '✏️ Edit'}</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleCopy(displayFlight.fullFlightCode, 'flight')}
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    color: 'var(--text-muted)',
-                    fontSize: '11px',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '4px',
-                  }}
-                >
-                  <span>{copiedText === 'flight' ? '✓ Copied' : '📋 Copy Code'}</span>
-                </button>
-              </div>
-            </div>
-
-            {isEditingFlight ? (
-              <div style={{ marginBottom: '10px' }}>
-                <input
-                  type="text"
-                  className="input-field"
-                  value={flightInput}
-                  onChange={(e) => setFlightInput(e.target.value)}
-                  placeholder="e.g. 6E-537 or AI 101"
-                  style={{
-                    fontFamily: 'var(--font-family-mono, monospace)',
-                    fontWeight: 700,
-                    fontSize: '18px',
-                    padding: '6px 10px',
-                    width: '100%',
-                    borderRadius: '8px',
-                  }}
-                  autoFocus
-                />
-                <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>
-                  Carrier & flight number (e.g. 6E 537, AI-101, QP 1302)
+          <>
+            <div
+              style={{
+                padding: '16px',
+                borderRadius: '14px',
+                background: 'linear-gradient(135deg, rgba(30, 58, 138, 0.12), rgba(59, 130, 246, 0.12))',
+                border: '1px solid rgba(59, 130, 246, 0.3)',
+                marginBottom: '12px',
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', flexWrap: 'wrap', gap: '6px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span style={{ fontSize: '13px', fontWeight: 700, color: '#3b82f6', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    {displayFlight.airlineName}
+                  </span>
+                  {displayFlight.icaoCode && (
+                    <span style={{ fontSize: '10.5px', padding: '1px 6px', borderRadius: '4px', background: 'rgba(59, 130, 246, 0.15)', color: '#2563eb', fontWeight: 600, fontFamily: 'monospace' }}>
+                      ICAO: {displayFlight.icaoCode}{displayFlight.flightNumber}
+                    </span>
+                  )}
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <button
+                    type="button"
+                    onClick={() => setIsEditingFlight((prev) => !prev)}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: 'var(--text-muted)',
+                      fontSize: '11px',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '2px',
+                    }}
+                    title="Edit flight code"
+                  >
+                    <span>{isEditingFlight ? '✓ Done' : '✏️ Edit'}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleCopy(displayFlight.fullFlightCode, 'flight')}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: 'var(--text-muted)',
+                      fontSize: '11px',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                    }}
+                  >
+                    <span>{copiedText === 'flight' ? '✓ Copied' : '📋 Copy Code'}</span>
+                  </button>
                 </div>
               </div>
-            ) : (
-              <div style={{ fontSize: '24px', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '8px', letterSpacing: '0.02em' }}>
-                {displayFlight.fullFlightCode}
-              </div>
-            )}
 
-            {(displayFlight.origin || displayFlight.destination) && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', fontWeight: 600, color: 'var(--text-secondary)' }}>
-                <span>{displayFlight.origin || 'Origin'}</span>
-                <span>✈️ ➔</span>
-                <span>{displayFlight.destination || 'Destination'}</span>
-              </div>
-            )}
-          </div>
+              {isEditingFlight ? (
+                <div style={{ marginBottom: '10px' }}>
+                  <input
+                    type="text"
+                    className="input-field"
+                    value={flightInput}
+                    onChange={(e) => setFlightInput(e.target.value)}
+                    placeholder="e.g. 6E-537 or AI 101"
+                    style={{
+                      fontFamily: 'var(--font-family-mono, monospace)',
+                      fontWeight: 700,
+                      fontSize: '18px',
+                      padding: '6px 10px',
+                      width: '100%',
+                      borderRadius: '8px',
+                    }}
+                    autoFocus
+                  />
+                  <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>
+                    Carrier & flight number (e.g. 6E-537, AI-101, QP-1302)
+                  </div>
+                </div>
+              ) : (
+                <div style={{ fontSize: '24px', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '8px', letterSpacing: '0.02em' }}>
+                  {displayFlight.fullFlightCode}
+                </div>
+              )}
+
+              {(displayFlight.origin || displayFlight.destination) && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', fontWeight: 600, color: 'var(--text-secondary)' }}>
+                  <span>{displayFlight.origin || 'Origin'}</span>
+                  <span>✈️ ➔</span>
+                  <span>{displayFlight.destination || 'Destination'}</span>
+                </div>
+              )}
+            </div>
+
+            {/* Explanatory Tracker Note */}
+            <div
+              style={{
+                padding: '8px 12px',
+                borderRadius: '10px',
+                background: 'rgba(59, 130, 246, 0.08)',
+                border: '1px solid rgba(59, 130, 246, 0.18)',
+                fontSize: '11px',
+                color: 'var(--text-secondary)',
+                lineHeight: 1.4,
+                marginBottom: '14px',
+              }}
+            >
+              💡 <strong>Tracker Tip:</strong> Google & FlightAware track gate schedules, delays, and routes at all times. Flightradar24 displays active live GPS radar while the aircraft is currently airborne.
+            </div>
+          </>
         )}
 
         {/* Train Card Hero */}
@@ -278,13 +303,44 @@ export function LiveTravelStatusModal({ isOpen, onClose, statusInfo }: Props) {
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <span style={{ fontSize: '18px' }}>🛫</span>
                   <div>
-                    <div>Live Gate & Terminal Status</div>
+                    <div>Google Live Gate & Flight Status</div>
                     <div style={{ fontSize: '11px', opacity: 0.85, fontWeight: 400 }}>
-                      Real-time departure, delay, and baggage carousel
+                      Real-time departure, delay, terminal, gate & carousel
                     </div>
                   </div>
                 </div>
                 <span>➔</span>
+              </a>
+
+              <a
+                href={displayFlight.flightAwareUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => triggerHaptic('light')}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: '12px 16px',
+                  borderRadius: '12px',
+                  background: 'var(--bg-card-subtle, rgba(255, 255, 255, 0.05))',
+                  border: '1px solid var(--border-color)',
+                  color: 'var(--text-primary)',
+                  textDecoration: 'none',
+                  fontWeight: 600,
+                  fontSize: '14px',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{ fontSize: '18px' }}>🗺️</span>
+                  <div>
+                    <div>FlightAware Live Flight Tracker</div>
+                    <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 400 }}>
+                      Direct tracking via official airline callsign {displayFlight.icaoCode ? `(${displayFlight.icaoCode})` : ''}
+                    </div>
+                  </div>
+                </div>
+                <span>↗</span>
               </a>
 
               <a
@@ -311,43 +367,45 @@ export function LiveTravelStatusModal({ isOpen, onClose, statusInfo }: Props) {
                   <div>
                     <div>Flightradar24 Live Radar Track</div>
                     <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 400 }}>
-                      Live airborne GPS radar map
+                      Live GPS airborne radar map (active during flight)
                     </div>
                   </div>
                 </div>
                 <span>↗</span>
               </a>
 
-              <a
-                href={displayFlight.flightAwareUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() => triggerHaptic('light')}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  padding: '12px 16px',
-                  borderRadius: '12px',
-                  background: 'var(--bg-card-subtle, rgba(255, 255, 255, 0.05))',
-                  border: '1px solid var(--border-color)',
-                  color: 'var(--text-primary)',
-                  textDecoration: 'none',
-                  fontWeight: 600,
-                  fontSize: '14px',
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span style={{ fontSize: '18px' }}>🗺️</span>
-                  <div>
-                    <div>FlightAware Route & History</div>
-                    <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 400 }}>
-                      Detailed flight plan and inbound aircraft info
+              {displayFlight.flightStatsUrl && (
+                <a
+                  href={displayFlight.flightStatsUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => triggerHaptic('light')}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '12px 16px',
+                    borderRadius: '12px',
+                    background: 'var(--bg-card-subtle, rgba(255, 255, 255, 0.05))',
+                    border: '1px solid var(--border-color)',
+                    color: 'var(--text-primary)',
+                    textDecoration: 'none',
+                    fontWeight: 600,
+                    fontSize: '14px',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ fontSize: '18px' }}>⏱️</span>
+                    <div>
+                      <div>FlightStats Global Status</div>
+                      <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 400 }}>
+                        Cirium airport departures, delay index & timetable
+                      </div>
                     </div>
                   </div>
-                </div>
-                <span>↗</span>
-              </a>
+                  <span>↗</span>
+                </a>
+              )}
             </>
           ) : statusInfo.type === 'train' ? (
             <>

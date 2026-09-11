@@ -20,7 +20,8 @@ describe('travelStatusService', () => {
     expect(status?.fullFlightCode).toBe('6E-2132');
     expect(status?.airlineName).toBe('IndiGo');
     expect(status?.googleStatusUrl).toContain('6E-2132');
-    expect(status?.flightradar24Url).toContain('6e-2132');
+    expect(status?.flightradar24Url).toContain('6e2132');
+    expect(status?.flightAwareUrl).toContain('IGO2132');
   });
 
   it('extracts flight status info for Air India AI 101 from reference code', () => {
@@ -37,7 +38,7 @@ describe('travelStatusService', () => {
     expect(status?.flightNumber).toBe('101');
     expect(status?.fullFlightCode).toBe('AI-101');
     expect(status?.airlineName).toBe('Air India');
-    expect(status?.flightAwareUrl).toContain('AI-101');
+    expect(status?.flightAwareUrl).toContain('AIC101');
   });
 
   it('extracts train status info for 10-digit PNR', () => {
@@ -86,8 +87,9 @@ describe('travelStatusService', () => {
     expect(status?.fullFlightCode).toBe('6E-537');
     expect(status?.airlineName).toBe('IndiGo');
     expect(status?.googleStatusUrl).toContain('6E-537');
-    expect(status?.flightradar24Url).toContain('6e-537');
-    expect(status?.flightAwareUrl).toContain('6E-537');
+    expect(status?.flightradar24Url).toContain('6e537');
+    expect(status?.flightAwareUrl).toContain('IGO537');
+    expect(status?.flightStatsUrl).toContain('6E/537');
   });
 
   it('handles spaces around hyphen like 6E - 537 and title fallback', () => {
@@ -101,7 +103,8 @@ describe('travelStatusService', () => {
     expect(status?.carrierCode).toBe('6E');
     expect(status?.flightNumber).toBe('537');
     expect(status?.fullFlightCode).toBe('6E-537');
-    expect(status?.flightradar24Url).toContain('6e-537');
+    expect(status?.flightradar24Url).toContain('6e537');
+    expect(status?.flightAwareUrl).toContain('IGO537');
   });
 
   it('resolves flight number from provider hint when code is omitted', () => {

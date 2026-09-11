@@ -2876,8 +2876,9 @@ This document logs all meaningful technical decisions, library choices, design p
     - Enforced that general 2-char IATA codes MUST include at least one letter (`[A-Za-z][A-Za-z0-9]|[A-Za-z0-9][A-Za-z]`), preventing purely numeric sequences like `537` from being misclassified as carrier codes.
     - Added 3-letter ICAO to IATA mapping (e.g. `IGO` -> `6E`, `AIC` -> `AI`) and provider-name fallback (`IndiGo` -> `6E`).
     - Added inline interactive editing in `LiveTravelStatusModal` allowing users to view, edit, and fine-tune carrier & flight codes on the fly with live deep link updates.
-  - *(v3.13.2 Refinement)*: Standardized on hyphenated flight code format (`6E-537`) across all tracking deep links (Flightradar24 `data/flights/6e-537`, FlightAware `live/flight/6E-537`, and Google `6E-537 flight status`), modal header display, and 1-tap clipboard copying so external flight trackers instantly resolve carrier and flight number with hyphen preservation.
-
-
-
-
+  - *(v3.13.2 Refinement)*: Attempted hyphenated flight code preservation across external trackers.
+  - *(v3.13.3 Resolution - ICAO Callsign & Canonical Slug Routing)*:
+    - **FlightAware Resolution:** FlightAware's search engine strictly indexes airline operations by 3-letter ICAO callsigns (e.g. `IGO` for IndiGo, `AIC` for Air India, `AKJ` for Akasa, `VTI` for Vistara, `SEJ` for SpiceJet) rather than 2-letter commercial IATA codes. Passing `6E-537` caused FlightAware to fail with "Unknown Flight". Implemented `IATA_TO_ICAO` dictionary mapping so FlightAware deep links directly to `https://www.flightaware.com/live/flight/IGO537`, immediately displaying the live route, gate, history, and status for IndiGo 537.
+    - **Flightradar24 Resolution:** Flightradar24 canonical flight slugs mandate lowercase alphanumeric format without hyphens (`/data/flights/6e537`). Hyphenated URLs (`6e-537`) resulted in 404 or unrouted map views. Preserved `6e537` for Flightradar24 while adding an in-modal tracker tip clarifying that live radar tracking displays real-time GPS positions when the aircraft is airborne.
+    - **FlightStats Direct Integration:** Added FlightStats (`/v2/flight-tracker/6E/537`) providing Cirium-powered real-time airport departures, delay index, and gate timetable.
+    - **Boarding Pass Hero Clarity:** Preserved user-friendly hyphenated formatting (`6E-537`) in modal hero, ticket titles, and clipboard copy action while displaying an `ICAO: IGO537` callsign badge.
