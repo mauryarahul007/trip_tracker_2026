@@ -14,6 +14,7 @@ Follow `.cursor/rules/ai-software-engineering.mdc` and the phase docs under `doc
 
 ## Git Push & Commit Protocols
 
+- **Rule 0 (Mandatory Local Build Pre-Check - Never Push Broken Builds):** You MUST NEVER push code to GitHub without first running and passing a full local production build (`npm run build` which executes `tsc -b && vite build`) and tests (`npm test`). If `npm run build` reports any errors (e.g. `TS6133` unused variables under `noUnusedLocals`, syntax errors, or bundling issues), you MUST resolve them locally first. Only when the local build passes with exit code 0 are you permitted to commit and push to `main`.
 - **Rule 1 (Git Commit Body):** Whenever code or configuration is committed, the **git commit message body** (commit description/comments pushed to GitHub) MUST be human-readable, narrative-driven, and grouped by thematic impact (e.g. Safety, Forms & data, Notifications & UI, Layout & polish) rather than just listing raw technical filenames. It must explain *what changed from the user's perspective, how it affects behavior, and why*.
 - **Sample Inspiration Format for Git Commits:**
   ```text
