@@ -9,10 +9,10 @@
 
 | Metric | Count | Status Notes |
 | :--- | :--- | :--- |
-| **Total Tracked** | **207** | All recorded bugs across sessions |
+| **Total Tracked** | **208** | All recorded bugs across sessions |
 | **🟢 Open** | **0** | No critical blockers, 0 High |
 | **🟡 In Progress** | **0** | Active investigation or fix |
-| **✅ Resolved** | **181** | Verified & closed |
+| **✅ Resolved** | **182** | Verified & closed |
 | **⚪ Won't Fix** | **26** | Expected behavior / deferred |
 
 ---
@@ -212,6 +212,7 @@
 | **BUG-205** | Trip-card balance chip and header cross-trip balance chip both said 'You're owed' with no scope distinction | `ui-ux` | `low` | `mauryarahul007@gmail.com` | `claude-cli` | Trip card now reads 'OWED TO YOU ON THIS TRIP' / 'YOU OWE ON THIS TRIP'; header chip now reads 'Owed to you across all trips' / 'You owe across all trips'. Files: TripStack.tsx, TripsListScreen.tsx. |
 | **BUG-206** | Trip-card and home balance chips showed nonzero owed/owe against a trip already Settled in trip detail | `ui-ux` | `medium` | `mauryarahul007@gmail.com` | `claude-cli` | Removed the stale local-store-derived owed/owe chips from TripStack.tsx (per-trip card) and TripsListScreen.tsx (header banner). Cross-trip owed/owe total relocated to the profile/settings hero (SettingsView.tsx via GlobalSettingsModal.tsx), now sourced from a shared src/hooks/useCrossTripBalances.ts hook that fetches the authoritative full expense set per trip (same approach the header banner already used) instead of the local store snapshot. |
 | **BUG-207** | TripStack fell back to an arbitrary member and falsely stamped trips Settled when the current user could not be matched | `ui-ux` | `medium` | `claude-cli` | `claude-cli` | TripStack.tsx: removed the tripMemberList[0] fallback (now returns null on no confident match) and the !myMember -> settled default. Replaced the whole local balanceInfo/myMember calc with an isSettled prop threaded from TripsListScreen -> TripStack -> StackCardItem -> CardContent, sourced from useCrossTripBalances.ts (extended to also return a trip-wide settledTripIds map from the same authoritative per-trip fetch already used for the profile balance total) -- one settlement-state source of truth instead of two divergent calcs. Also retagged BUG-167/168/170 from an invalid "reliability" category to "general" so bug:sync stops failing Supabase's bugs_category_check constraint on every run. |
+| **BUG-208** | Superadmin mobile section switcher couldn't navigate away from Command Center | `ui-ux` | `high` | `human` | `claude-cli` | AdminPortalLayout.tsx: removed the section switcher sheet's own useHistoryBack entry, which raced the outer "leaving Command Center" history push (async history.back() landing after the sync pushState reverted the tab). Sheet still closes via backdrop tap, Close button, and Escape. |
 
 ---
 

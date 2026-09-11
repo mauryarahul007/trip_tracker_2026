@@ -256,8 +256,15 @@ export function AdminPortalLayout({
   const [jumpIndex, setJumpIndex] = useState(0);
   const cmdkInputRef = useRef<HTMLInputElement>(null);
 
-  // Stack navigation: close switcher drawer and jump menu first, then return to command center
-  useHistoryBack(showSectionSwitcher, () => setShowSectionSwitcher(false));
+  // Stack navigation: close jump menu first, then return to command center.
+  // The section switcher sheet deliberately has no history-back entry of its
+  // own: selecting a row from Command Center closes the sheet AND pushes the
+  // "leaving Command Center" entry (below) in the same tick. That push is
+  // synchronous (pushState) while a back-close here would be async
+  // (history.back()'s popstate lands on a later task), racing it and
+  // corrupting the nav stack -- on mobile (the only place this sheet is
+  // used) that raced back() reliably stranded the tab on Command Center.
+  // Backdrop tap, the Close button and Escape still close the sheet.
   useHistoryBack(jumpOpen, () => setJumpOpen(false));
   useHistoryBack(activeTab !== 'command', () => onActiveTabChange('command'));
 

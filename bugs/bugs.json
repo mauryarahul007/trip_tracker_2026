@@ -6253,5 +6253,33 @@
     "resolvedBy": "claude-cli",
     "resolvedAt": "2026-09-10T18:18:22.039Z",
     "resolutionNote": "TripStack.tsx: removed the tripMemberList[0] fallback (now returns null on no confident match) and the !myMember -> settled default. Replaced the whole local balanceInfo/myMember calc with an isSettled prop threaded from TripsListScreen -> TripStack -> StackCardItem -> CardContent, sourced from useCrossTripBalances.ts (extended to also return a trip-wide settledTripIds map from the same authoritative per-trip fetch already used for the profile balance total) -- one settlement-state source of truth instead of two divergent calcs. Also retagged BUG-167/168/170 from an invalid \"reliability\" category to \"general\" so bug:sync stops failing Supabase's bugs_category_check constraint on every run."
+  },
+  {
+    "id": "BUG-208",
+    "title": "Superadmin mobile section switcher couldn't navigate away from Command Center",
+    "description": "AdminPortalLayout renders a rail nav on desktop but a `.ops-section-trigger` button + switcher sheet on mobile (<=760px). Both the sheet's open state and the active admin tab used independent useHistoryBack entries. Selecting a section from Command Center closed the sheet and changed the tab in the same render: the sheet's close called the async window.history.back(), the tab change's open called the synchronous window.history.pushState(). The two raced -- the deferred back() landed after the push and reverted the tab, so every first navigation attempt on mobile silently snapped back to Command Center. Desktop's rail buttons never touch the switcher sheet, so the race never fired there.",
+    "severity": "high",
+    "category": "ui-ux",
+    "status": "resolved",
+    "foundBy": "human",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "3.14.2"
+    },
+    "reproSteps": [
+      "Open the Superadmin portal on a mobile viewport (<=760px width)",
+      "On Command Center, tap the section trigger to open the switcher sheet",
+      "Tap any other section (e.g. Trips, Analytics)",
+      "Observe the sheet closes but the view stays on Command Center"
+    ],
+    "expectedBehavior": "Selecting a section from the mobile switcher sheet should navigate to that section, matching desktop rail nav behavior.",
+    "actualBehavior": "The tab change was reverted by a racing history.back() call from the sheet's own close-on-back-navigation tracking, stranding the user on Command Center.",
+    "diagnostics": {},
+    "createdAt": "2026-09-12T00:00:00.000Z",
+    "updatedAt": "2026-09-12T00:00:00.000Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-09-12T00:00:00.000Z",
+    "resolutionNote": "AdminPortalLayout.tsx: removed the section switcher sheet's own useHistoryBack entry (it no longer pushes/pops a browser history entry when opened/closed). The sheet still closes via backdrop tap, its Close button, and Escape, and the outer 'leaving Command Center' useHistoryBack entry still pushes cleanly without racing a second history mutation in the same tick."
   }
 ]

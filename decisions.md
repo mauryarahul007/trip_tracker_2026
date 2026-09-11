@@ -2958,3 +2958,14 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - Preserved the document as markdown within the version-controlled repository to ensure traceability alongside code updates and architectural releases.
 
+---
+
+## 159. Fixed Superadmin Mobile Navigation Stuck on Command Center (v3.14.3)
+* **Context:**
+  - On mobile, `AdminPortalLayout` (`src/components/admin/AdminPortalLayout.tsx`) swaps the desktop rail nav for a `.ops-section-trigger` button that opens a section-switcher sheet. Both the sheet's open state and the active admin tab were independently tracked with `useHistoryBack` (`src/utils/useHistoryBack.ts`), each pushing/popping its own browser history entry.
+  - Selecting a section from Command Center closes the sheet and changes the active tab in the same synchronous render. The sheet's close calls the async `window.history.back()`; the tab change's open calls the synchronous `window.history.pushState()`. The two raced: the deferred `back()` landed after the push and reverted the tab, stranding the admin on Command Center on every first mobile navigation. Desktop's rail buttons never touch the sheet, so they never hit the race.
+* **Decision:**
+  - Removed the section switcher sheet's own `useHistoryBack` entry. The sheet still closes via backdrop tap, its Close button, and Escape; only "hardware back closes an empty switcher sheet" was dropped.
+* **Trade-offs Accepted:**
+  - On mobile, pressing hardware back while the switcher sheet is open (before picking anything) no longer just closes the sheet by itself in every case — acceptable given the alternative was mobile section navigation being non-functional.
+
