@@ -2772,3 +2772,18 @@ This document logs all meaningful technical decisions, library choices, design p
     - Rendered Wi-Fi and credential codes into copyable badges while preserving proportional, readable font hierarchy.
 * **Trade-offs Accepted:**
   - Kept underlying `note.content` string unchanged in the database for 100% backward compatibility and plain-text clipboard copying fidelity, while transforming the visual presentation inside the note card into rich structured elements.
+
+---
+
+## 151. Repository README Alignment for Smart Packing, Notes, Passes & Release Tooling (v3.11.1)
+* **Context:** Recent major platform capabilities (Smart Packing Assistant with ICAO/TSA aviation security compliance, structured `NoteContentView` rendering, Travel Pass Wallet with boarding pass QR/PDF extraction, Trip Wrapped storytelling, and automated release scripts) were omitted from the repository's root `README.md`.
+* **Decision:** Updated the primary repository documentation (`README.md`) to comprehensively reflect all newly introduced features, security workflows, and developer release CLI tooling.
+* **Pattern/Implementation:**
+  - Updated `README.md`:
+    - Added **Smart Travel Prep & Packing**: weather-aware packing assistant, ICAO/TSA cabin vs check-in hold aviation rules, airport scanner checkpoint tray, squad gear carrier assignments, and universal back navigation.
+    - Added **Checklists, Travel Notes & Passes**: collaborative checklists, structured note cards, 1-tap copyable credentials, and travel pass wallet.
+    - Added **Story Recaps & Experience**: Trip Wrapped story recap and passport card deck gestures.
+    - Updated **Development**: documented `npm run release:patch`, `npm run release:minor`, and `npm run release:major` scripts.
+* **Trade-offs Accepted:**
+  - Kept documentation concise and feature-oriented, linking to granular deep-dive guides under `docs/` for architectural references.
+

@@ -23,6 +23,24 @@ A **mobile-first, offline-capable, multi-user** trip-expense splitter. Create a 
 - **Charts & analytics** — spending breakdown by category, per-member contribution overview
 - **Export to Excel-compatible CSV** — expenses, net balances, and settlement plan in one file
 - **Backup & restore** — full JSON export/import for data portability
+- **Command Palette (`Cmd+K` / `Ctrl+K`)** — instant fuzzy search across trips, expenses, actions, and settings
+
+### Smart Travel Prep & Packing
+- **Smart Packing Assistant** — destination-aware packing checklist generator tailored to live weather conditions, seasonal climatology, and real-time trip duration (`[-] / [+]` days stepper)
+- **Aviation Security Compliance (ICAO / TSA)** — automatic bag segregation enforcing cabin carry-on rules (loose lithium batteries & power banks strictly in cabin; 3-1-1 liquids limit ≤100ml) versus checked hold items (sharp tools, trekking poles)
+- **Pre-Flight Airport Security Scanner Tray** — on-demand checklist tray (`✈️ Flight Ready ✓` / `🛂 Essentials`) with 1-tap "Pack All 4" for rapid security lane throughput
+- **Squad Shared Gear Carrier Assignments** — assign group gear (first-aid kit, travel speaker, multi-tool) to specific squad members with real-time luggage weight estimations
+- **Universal Back Navigation** — in-app `←` back button, browser back, Android system back, and edge swipe gestures cleanly return to the previous view without navigating away
+
+### Checklists, Travel Notes & Passes
+- **Collaborative Checklists** — categorized to-do and packing lists with drag-and-drop reordering, progress meters, and member assignments
+- **Rich Structured Travel Notes** — smart parser (`NoteContentView`) transforms packing notes into color-coded cards (`✈️ Cabin Bag`, `🧳 Checked Hold`, `🎒 Flexible / Shared`) with glass metadata pills (`📍 Destination`, `📅 Dates`, `⛅ Weather`) and collapsible toggles for long lists
+- **1-Tap Credential Copying** — Wi-Fi credentials, booking IDs, and PNR codes format into distinct, high-legibility copyable badges
+- **Travel Pass Wallet** — store boarding passes (flight, train, bus, hotel) with PDF extraction, QR code generator, offline attachment caching, and departure countdowns
+
+### Story Recaps & Experience
+- **Trip Wrapped** — end-of-trip story recap celebrating traveler archetypes, awards, top spenders, and custom canvas-generated visual award cards
+- **Passport Card Deck** — 3:4 card aspect ratio stack launcher with physics-based gesture navigation, smooth swipe transitions, and settled stamp indicators
 
 ### Account & privacy
 - **Email/password auth** with password reset, backed by Supabase Auth
@@ -201,6 +219,10 @@ npm run feature:add   # Log a feature request/shipped item (syncs to Supabase + 
 npm run feature:list  # List tracked features
 npm run feature:ship  # Mark a feature shipped by ID
 npm run feature:sync  # Reconcile local ledger with Supabase
+
+npm run release:patch # Automatic patch bump (e.g. 3.11.0 -> 3.11.1)
+npm run release:minor # Feature release bump (e.g. 3.10.x -> 3.11.0)
+npm run release:major # Platform milestone bump (e.g. 3.x -> 4.0.0)
 ```
 
 ---
