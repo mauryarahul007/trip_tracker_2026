@@ -1,6 +1,7 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useTripStore } from '../store/tripStore';
 import type { Trip, Member, TripNote, ChecklistItem } from '../types';
+import { getDestinationWeatherRealtime, type WeatherData } from '../services/weatherService';
 import {
   IconPin,
   IconCopy,
@@ -69,6 +70,22 @@ export function ChecklistNotesTab({ trip, members, isAdmin }: Props) {
   const [checklistFilter, setChecklistFilter] = useState<ChecklistCategory>('all');
   const [noteFilter, setNoteFilter] = useState<NoteCategory>('all');
   const [isPackingAssistantOpen, setIsPackingAssistantOpen] = useState(false);
+  const [weather, setWeather] = useState<WeatherData | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    const destQuery = liveTrip.destination || liveTrip.name;
+    if (destQuery) {
+      getDestinationWeatherRealtime(destQuery, (fresh) => {
+        if (isMounted) setWeather(fresh);
+      }).then((cached) => {
+        if (isMounted && cached) setWeather(cached);
+      });
+    }
+    return () => {
+      isMounted = false;
+    };
+  }, [liveTrip.destination, liveTrip.name]);
 
   // Quick Add Checklist item state
   const [quickItemText, setQuickItemText] = useState('');
@@ -508,6 +525,49 @@ export function ChecklistNotesTab({ trip, members, isAdmin }: Props) {
       {/* 1. CHECKLIST VIEW */}
       {viewMode === 'checklist' && (
         <div className="checklist-container">
+          {/* Smart Assistant Ambient Suggestion Card when checklist is empty */}
+          {totalCount === 0 && (
+            <div
+              className="glass-card"
+              style={{
+                marginBottom: '14px',
+                padding: '14px 16px',
+                background: 'linear-gradient(135deg, rgba(20, 184, 166, 0.08), rgba(14, 165, 233, 0.08))',
+                border: '1px solid rgba(20, 184, 166, 0.25)',
+                borderRadius: '16px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: '12px',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <span style={{ fontSize: '28px' }}>✈️</span>
+                <div>
+                  <div style={{ fontSize: '13.5px', fontWeight: 700, color: 'var(--text-primary)' }}>
+                    Packing for {liveTrip.destination || liveTrip.name}?
+                  </div>
+                  <div style={{ fontSize: '11.5px', color: 'var(--text-secondary)', marginTop: '2px' }}>
+                    {weather
+                      ? `${weather.weatherEmoji} ${weather.tempC}°C ${weather.condition} • Aviation security compliant`
+                      : 'Tailored for travel dates, seasonal weather & flight rules'}
+                  </div>
+                </div>
+              </div>
+              <button
+                type="button"
+                className="gradient-btn"
+                style={{ padding: '8px 14px', fontSize: '12px', fontWeight: 700, flexShrink: 0 }}
+                onClick={() => {
+                  triggerHaptic('light');
+                  setIsPackingAssistantOpen(true);
+                }}
+              >
+                ✨ Smart Assistant
+              </button>
+            </div>
+          )}
+
           {/* Sleek Progress Indicator with Celebratory Burst */}
           {totalCount > 0 && (
             <div className="checklist-sleek-progress-bar" style={{ marginBottom: '14px', position: 'relative' }}>
@@ -711,13 +771,26 @@ export function ChecklistNotesTab({ trip, members, isAdmin }: Props) {
                     Show Packed Items
                   </button>
                 ) : checklist.length === 0 ? (
-                  <button
-                    type="button"
-                    className="seed-defaults-btn"
-                    onClick={handleSeedDefaults}
-                  >
-                    ⚡ Pre-fill Travel Essentials
-                  </button>
+                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'center' }}>
+                    <button
+                      type="button"
+                      className="gradient-btn"
+                      style={{ padding: '8px 16px', fontSize: '12.5px', fontWeight: 700 }}
+                      onClick={() => {
+                        triggerHaptic('light');
+                        setIsPackingAssistantOpen(true);
+                      }}
+                    >
+                      ✨ Smart Flight Assistant
+                    </button>
+                    <button
+                      type="button"
+                      className="seed-defaults-btn"
+                      onClick={handleSeedDefaults}
+                    >
+                      ⚡ Pre-fill Travel Essentials
+                    </button>
+                  </div>
                 ) : null}
               </div>
             ) : (
@@ -1312,8 +1385,18 @@ export function ChecklistNotesTab({ trip, members, isAdmin }: Props) {
         isOpen={isPackingAssistantOpen}
         onClose={() => setIsPackingAssistantOpen(false)}
         trip={liveTrip}
+        weatherCondition={weather?.condition}
+        avgTemp={weather?.tempC}
         onBatchAddChecklist={async (items) => {
           await batchAddChecklistItems(liveTrip.id, items);
+        }}
+        onSaveAsNote={async (noteData) => {
+          await addTripNote(liveTrip.id, {
+            title: noteData.title,
+            content: noteData.content,
+            category: noteData.category,
+            isPinned: true,
+          });
         }}
       />
     </div>

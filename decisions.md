@@ -2714,3 +2714,15 @@ This document logs all meaningful technical decisions, library choices, design p
   - `App.tsx`: destructures both fields from the hook; passes `settledTripIds` down to `TripsListScreen` alongside the existing `crossTripBalances` pass-through to `GlobalSettingsModal`.
   - `bugs/bugs.json`: BUG-167/168/170 recategorized `reliability` -> `general`.
 * **Trade-offs Accepted:** None of substance -- this closes out the correctness gaps #145 left standing rather than trading anything off.
+
+## 147. Timing, Weather & Flight-Compliant Smart Travel Packing Assistant (v3.10.0)
+* **Context:** Travelers creating trips needed intelligent preparation assistance based on the trip's destination, dates/timing, and expected climate. Crucially, packed items must strictly comply with aviation safety and airport security rules (ICAO / TSA standards: lithium batteries/power banks forbidden in cargo hold, liquids limited to <=100ml / 3-1-1 rule in cabin, sharp tools and trekking poles restricted to checked luggage).
+* **Decision:** Re-architected the smart travel packing engine in `src/utils/packingSuggestions.ts`, updated `SmartPackingAssistantModal.tsx` with flight-compliance badging and luggage filtering, and integrated ambient trigger cards into `ChecklistNotesTab.tsx`.
+* **Pattern/Implementation:**
+  - `src/utils/packingSuggestions.ts`: Added `AirplaneEligibility` ('cabin-only' | 'checkin-only' | 'any'), `cabinNote`, `isLiquid`, and seasonal climatology inference (`inferSeasonalClimate`) for trips scheduled beyond the 14-day live weather window. Added `generatePackingGuideNote` to produce formatted travel guide notes.
+  - `src/components/SmartPackingAssistantModal.tsx`: Added luggage segmentation pills (`All Baggage`, `✈️ Carry-on Only`, `🧳 Checked Baggage`), an aviation security compliance banner (highlighting lithium battery hold prohibition and 3-1-1 liquids rule), visual badges on each item, an option to tag items with luggage bag prefixes (`[✈️ Cabin]`, `[🧳 Check-in]`), and dual actions ("Add to Checklist" and "Save as Note").
+  - `src/components/ChecklistNotesTab.tsx`: Wired live weather updates via `getDestinationWeatherRealtime`, added an ambient travel preparation card when the checklist is empty, added an assistant action button to the empty state, and connected `onSaveAsNote` to `addTripNote` with pinned status.
+  - `src/utils/packingSuggestions.test.ts`: Added 8 comprehensive unit tests covering aviation rules, carry-on filtering, seasonal inference, and markdown note formatting.
+* **Trade-offs Accepted:**
+  - For dates months in advance where real-time forecasts are meteorologically impossible, the engine automatically falls back to seasonal hemispheric climatology based on the destination region and travel month.
+

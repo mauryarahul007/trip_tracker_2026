@@ -71,6 +71,15 @@
         ],
         "createdAt": "2026-09-06T06:47:04.380Z",
         "reason": "Ops Deck is a deliberately separate console-register palette from DESIGN.md's traveler-app palette (per the file's own header comment); disclosed as a known, out-of-scope gap in decisions.md #115 rather than reconciled"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "18px",
+        "files": [
+          "src/components/TripStack.tsx"
+        ],
+        "createdAt": "2026-09-10T18:21:21.575Z",
+        "reason": "pre-existing icon glyph size (quick-add + button), untouched by this session's edits; not body/UI type ramp text"
       }
     ]
   }

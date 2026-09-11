@@ -1,25 +1,125 @@
+export type AirplaneEligibility = 'cabin-only' | 'checkin-only' | 'any';
+
 export interface PackingSuggestionItem {
   id: string;
   text: string;
   category: 'packing' | 'prep' | 'documents' | 'medical' | 'general';
-  reason?: string; // e.g. "Monsoon / Rain in forecast" or "Beach destination"
+  airplaneEligibility: AirplaneEligibility;
+  cabinNote?: string; // e.g. "Prohibited in hold (ICAO fire safety)" or "Container must be ≤ 100ml"
+  isLiquid?: boolean;
+  reason?: string; // e.g. "Monsoon / Rain in forecast", "Beach destination", "Winter climate"
   icon?: string;
   defaultChecked?: boolean;
 }
 
 export interface PackingContext {
   destination?: string;
+  startDate?: string;
+  endDate?: string;
   durationDays?: number;
   weatherCondition?: string; // e.g. "rain", "sunny", "clouds", "snow"
   avgTemp?: number;
   isInternational?: boolean;
+  luggageFilter?: 'all' | 'cabin-only' | 'checkin-only';
+}
+
+/**
+ * Infer seasonal climate if live forecast is unavailable or for far-future dates.
+ */
+export function inferSeasonalClimate(destination: string, startDateStr?: string): {
+  seasonName: string;
+  isCold: boolean;
+  isRainy: boolean;
+  isHot: boolean;
+  estimatedTempC: number;
+} {
+  const destLower = (destination || '').toLowerCase();
+  let month = new Date().getMonth(); // 0-11
+  if (startDateStr) {
+    const parsed = new Date(startDateStr);
+    if (!isNaN(parsed.getTime())) {
+      month = parsed.getMonth();
+    }
+  }
+
+  // Detect mountain or high-altitude cold locations
+  const isHighAltitudeOrAlpine =
+    destLower.includes('mountain') ||
+    destLower.includes('trek') ||
+    destLower.includes('manali') ||
+    destLower.includes('ladakh') ||
+    destLower.includes('leh') ||
+    destLower.includes('shimla') ||
+    destLower.includes('alps') ||
+    destLower.includes('himalaya') ||
+    destLower.includes('kashmir') ||
+    destLower.includes('gulmarg') ||
+    destLower.includes('switzerland') ||
+    destLower.includes('iceland') ||
+    destLower.includes('norway');
+
+  // Southern Hemisphere destinations (inverted seasons)
+  const isSouthernHemisphere =
+    destLower.includes('australia') ||
+    destLower.includes('sydney') ||
+    destLower.includes('melbourne') ||
+    destLower.includes('new zealand') ||
+    destLower.includes('south africa') ||
+    destLower.includes('argentina') ||
+    destLower.includes('chile');
+
+  const effectiveMonth = isSouthernHemisphere ? (month + 6) % 12 : month;
+
+  // Northern Seasons:
+  // 11, 0, 1 => Winter (Dec, Jan, Feb)
+  // 2, 3 => Spring (Mar, Apr)
+  // 4, 5, 6 => Summer (May, Jun, Jul)
+  // 6, 7, 8 => Monsoon (South Asia Jun-Sep)
+  // 9, 10 => Autumn (Oct, Nov)
+
+  const isWinterMonths = effectiveMonth === 11 || effectiveMonth === 0 || effectiveMonth === 1;
+  const isSummerMonths = effectiveMonth === 4 || effectiveMonth === 5 || effectiveMonth === 6;
+  const isMonsoonMonths =
+    (effectiveMonth === 5 || effectiveMonth === 6 || effectiveMonth === 7 || effectiveMonth === 8) &&
+    (destLower.includes('india') ||
+      destLower.includes('goa') ||
+      destLower.includes('mumbai') ||
+      destLower.includes('kerala') ||
+      destLower.includes('thailand') ||
+      destLower.includes('vietnam') ||
+      destLower.includes('bali'));
+
+  const isCold = isHighAltitudeOrAlpine || (isWinterMonths && !destLower.includes('beach') && !destLower.includes('dubai'));
+  const isRainy = Boolean(isMonsoonMonths);
+  const isHot = isSummerMonths || destLower.includes('dubai') || destLower.includes('cairo') || destLower.includes('rajasthan');
+
+  let estimatedTempC = 24;
+  let seasonName = 'Mild / Moderate';
+
+  if (isCold) {
+    estimatedTempC = isHighAltitudeOrAlpine ? (isWinterMonths ? -2 : 8) : 9;
+    seasonName = isWinterMonths ? 'Winter / Cold Season' : 'Cool Alpine';
+  } else if (isRainy) {
+    estimatedTempC = 26;
+    seasonName = 'Monsoon / Wet Season';
+  } else if (isHot) {
+    estimatedTempC = 34;
+    seasonName = 'Summer / High Heat';
+  } else if (isWinterMonths) {
+    estimatedTempC = 20;
+    seasonName = 'Mild Winter';
+  }
+
+  return { seasonName, isCold, isRainy, isHot, estimatedTempC };
 }
 
 export function generateSmartPackingSuggestions(context: PackingContext): PackingSuggestionItem[] {
   const days = Math.max(1, context.durationDays || 3);
   const destLower = (context.destination || '').toLowerCase();
   const weatherLower = (context.weatherCondition || '').toLowerCase();
-  const temp = context.avgTemp ?? 25;
+
+  const seasonal = inferSeasonalClimate(destLower, context.startDate);
+  const temp = context.avgTemp ?? seasonal.estimatedTempC;
 
   const isBeach =
     destLower.includes('beach') ||
@@ -30,10 +130,12 @@ export function generateSmartPackingSuggestions(context: PackingContext): Packin
     destLower.includes('coast') ||
     destLower.includes('island') ||
     destLower.includes('krabi') ||
-    destLower.includes('pattaya');
+    destLower.includes('pattaya') ||
+    destLower.includes('hawaii');
 
   const isMountainOrCold =
     temp < 15 ||
+    seasonal.isCold ||
     destLower.includes('mountain') ||
     destLower.includes('trek') ||
     destLower.includes('manali') ||
@@ -44,91 +146,460 @@ export function generateSmartPackingSuggestions(context: PackingContext): Packin
     destLower.includes('kashmir') ||
     destLower.includes('switzerland');
 
-  const isRainy = weatherLower.includes('rain') || weatherLower.includes('drizzle') || weatherLower.includes('thunderstorm') || weatherLower.includes('shower');
+  const isRainy =
+    seasonal.isRainy ||
+    weatherLower.includes('rain') ||
+    weatherLower.includes('drizzle') ||
+    weatherLower.includes('thunderstorm') ||
+    weatherLower.includes('shower');
 
-  const suggestions: PackingSuggestionItem[] = [];
+  const rawSuggestions: PackingSuggestionItem[] = [];
 
-  // 1. Documents & Essentials
-  suggestions.push(
-    { id: 'doc-id', text: 'Government Photo ID / Passport', category: 'documents', defaultChecked: true, icon: '🪪' },
-    { id: 'doc-tickets', text: 'Flight / Train Boarding Passes & Tickets', category: 'documents', defaultChecked: true, icon: '🎫' },
-    { id: 'doc-hotel', text: 'Hotel / Airbnb Confirmation Vouchers', category: 'documents', defaultChecked: true, icon: '🏨' },
-    { id: 'doc-cash', text: 'Cash & Forex / Debit Cards', category: 'documents', defaultChecked: true, icon: '💵' }
+  // ==========================================
+  // 1. Travel Documents & Essentials (Cabin Only)
+  // ==========================================
+  rawSuggestions.push(
+    {
+      id: 'doc-id',
+      text: 'Government Photo ID / Physical Passport',
+      category: 'documents',
+      airplaneEligibility: 'cabin-only',
+      cabinNote: 'Must be in cabin / accessible for airport check-in and security checkpoints',
+      defaultChecked: true,
+      icon: '🪪',
+    },
+    {
+      id: 'doc-tickets',
+      text: 'Flight / Train Boarding Passes & Itinerary',
+      category: 'documents',
+      airplaneEligibility: 'cabin-only',
+      cabinNote: 'Carry in cabin or store in digital passes wallet',
+      defaultChecked: true,
+      icon: '🎫',
+    },
+    {
+      id: 'doc-hotel',
+      text: 'Hotel / Stay Confirmation Vouchers',
+      category: 'documents',
+      airplaneEligibility: 'cabin-only',
+      cabinNote: 'Keep booking reference handy for immigration / customs',
+      defaultChecked: true,
+      icon: '🏨',
+    },
+    {
+      id: 'doc-cash',
+      text: 'Cash & Forex / Debit Cards',
+      category: 'documents',
+      airplaneEligibility: 'cabin-only',
+      cabinNote: 'Aviation security: never pack money or credit cards in check-in hold',
+      defaultChecked: true,
+      icon: '💵',
+    }
   );
 
   if (context.isInternational) {
-    suggestions.push(
-      { id: 'doc-passport-copy', text: 'Printed Passport Copies & Visa', category: 'documents', reason: 'International travel', defaultChecked: true, icon: '🛂' },
-      { id: 'doc-insurance', text: 'Travel Medical Insurance Card', category: 'documents', reason: 'International travel', defaultChecked: true, icon: '📋' }
+    rawSuggestions.push(
+      {
+        id: 'doc-passport-copy',
+        text: 'Printed Passport Copies & Visa Papers',
+        category: 'documents',
+        airplaneEligibility: 'cabin-only',
+        reason: 'International travel & immigration',
+        cabinNote: 'Keep copies separate from original passport',
+        defaultChecked: true,
+        icon: '🛂',
+      },
+      {
+        id: 'doc-insurance',
+        text: 'Travel Medical Insurance Policy Card',
+        category: 'documents',
+        airplaneEligibility: 'cabin-only',
+        reason: 'International visa / border compliance',
+        defaultChecked: true,
+        icon: '📋',
+      }
     );
   }
 
-  // 2. Clothing Essentials (computed by duration)
-  const topsCount = Math.min(days + 2, 10);
-  const bottomsCount = Math.min(Math.ceil(days / 2) + 1, 5);
-  suggestions.push(
-    { id: 'cloth-tops', text: `${topsCount}x T-shirts / Shirts`, category: 'packing', reason: `Calculated for ${days} days`, defaultChecked: true, icon: '👕' },
-    { id: 'cloth-bottoms', text: `${bottomsCount}x Pants / Shorts / Jeans`, category: 'packing', reason: `Calculated for ${days} days`, defaultChecked: true, icon: '👖' },
-    { id: 'cloth-inner', text: `${topsCount}x Undergarments & Socks`, category: 'packing', defaultChecked: true, icon: '🧦' },
-    { id: 'cloth-sleep', text: '2x Nightwear / Loungewear', category: 'packing', defaultChecked: true, icon: '🩳' },
-    { id: 'cloth-shoes', text: 'Comfortable Walking Shoes', category: 'packing', defaultChecked: true, icon: '👟' }
-  );
-
-  // 3. Beach & Tropical additions
-  if (isBeach) {
-    suggestions.push(
-      { id: 'beach-swim', text: 'Swimwear / Swim Trunks', category: 'packing', reason: 'Beach / Coastal spot', defaultChecked: true, icon: '🩲' },
-      { id: 'beach-sunscreen', text: 'Water-resistant Sunscreen (SPF 50+)', category: 'packing', reason: 'High UV exposure', defaultChecked: true, icon: '🧴' },
-      { id: 'beach-sunglasses', text: 'Polarized Sunglasses & Sun Hat', category: 'packing', reason: 'Sunny weather', defaultChecked: true, icon: '🕶️' },
-      { id: 'beach-pouch', text: 'Waterproof Phone Pouch', category: 'packing', reason: 'Water sports & pool', defaultChecked: true, icon: '📱' },
-      { id: 'beach-sandals', text: 'Flip Flops / Beach Slippers', category: 'packing', defaultChecked: true, icon: '🩴' }
-    );
-  }
-
-  // 4. Cold & Mountain additions
-  if (isMountainOrCold) {
-    suggestions.push(
-      { id: 'cold-jacket', text: 'Heavy Down Jacket / Windcheater', category: 'packing', reason: `Cold weather (${temp}°C)`, defaultChecked: true, icon: '🧥' },
-      { id: 'cold-thermal', text: 'Thermal Innerwear (Top & Bottom)', category: 'packing', reason: `Low temperature (${temp}°C)`, defaultChecked: true, icon: '🧣' },
-      { id: 'cold-beanie', text: 'Woolen Beanie & Warm Gloves', category: 'packing', reason: 'Cold temperatures', defaultChecked: true, icon: '🧤' },
-      { id: 'cold-lipbalm', text: 'Moisturizer & Lip Balm', category: 'packing', reason: 'Dry mountain air', defaultChecked: true, icon: '💄' }
-    );
-  }
-
-  // 5. Rainy / Weather additions
-  if (isRainy) {
-    suggestions.push(
-      { id: 'rain-umbrella', text: 'Compact Umbrella / Rain Poncho', category: 'packing', reason: 'Rain in weather forecast', defaultChecked: true, icon: '☂️' },
-      { id: 'rain-bagcover', text: 'Waterproof Backpack Cover', category: 'packing', reason: 'Precipitation protection', defaultChecked: true, icon: '🎒' },
-      { id: 'rain-quickdry', text: 'Quick-dry Towel & Clothes', category: 'packing', reason: 'Humid / Wet weather', defaultChecked: true, icon: '🧺' }
-    );
-  }
-
-  // 6. Electronics & Gadgets
-  suggestions.push(
-    { id: 'elec-charger', text: 'Phone Charger & Fast-charging Cable', category: 'packing', defaultChecked: true, icon: '🔌' },
-    { id: 'elec-powerbank', text: 'Power Bank (10,000+ mAh)', category: 'packing', defaultChecked: true, icon: '🔋' },
-    { id: 'elec-headphones', text: 'Earphones / Noise Cancelling Headphones', category: 'packing', defaultChecked: true, icon: '🎧' }
+  // ==========================================
+  // 2. Electronics & Lithium Batteries (Cabin Only Safety Rule)
+  // ==========================================
+  rawSuggestions.push(
+    {
+      id: 'elec-powerbank',
+      text: 'Power Bank (10,000 - 20,000 mAh)',
+      category: 'packing',
+      airplaneEligibility: 'cabin-only',
+      reason: 'ICAO Aviation Safety: loose lithium batteries strictly prohibited in hold',
+      cabinNote: 'Must be carried in cabin only. Prohibited in check-in baggage!',
+      defaultChecked: true,
+      icon: '🔋',
+    },
+    {
+      id: 'elec-charger',
+      text: 'Phone Charger & Fast-charging Cables',
+      category: 'packing',
+      airplaneEligibility: 'any',
+      cabinNote: 'Recommended in cabin for airport / in-flight charging ports',
+      defaultChecked: true,
+      icon: '🔌',
+    },
+    {
+      id: 'elec-headphones',
+      text: 'Earphones / Noise Cancelling Headphones',
+      category: 'packing',
+      airplaneEligibility: 'cabin-only',
+      reason: 'In-flight entertainment & comfort',
+      defaultChecked: true,
+      icon: '🎧',
+    }
   );
 
   if (context.isInternational) {
-    suggestions.push({
+    rawSuggestions.push({
       id: 'elec-adapter',
       text: 'Universal Travel Plug Adapter',
       category: 'packing',
+      airplaneEligibility: 'any',
       reason: 'International plug sockets',
       defaultChecked: true,
       icon: '🔌',
     });
   }
 
-  // 7. Medical & Toiletries
-  suggestions.push(
-    { id: 'med-kit', text: 'First-aid Kit (Band-aids, Antiseptic, Cotton)', category: 'medical', defaultChecked: true, icon: '🩹' },
-    { id: 'med-pills', text: 'Painkillers (Paracetamol), Antacids, Motion Sickness pills', category: 'medical', defaultChecked: true, icon: '💊' },
-    { id: 'toil-brush', text: 'Toothbrush, Paste & Mini Toiletries', category: 'packing', defaultChecked: true, icon: '🪥' },
-    { id: 'toil-wipes', text: 'Sanitizer & Disinfectant Wet Wipes', category: 'packing', defaultChecked: true, icon: '🧼' }
+  // ==========================================
+  // 3. Clothing Essentials (Scaled by Duration)
+  // ==========================================
+  const topsCount = Math.min(days + 2, 10);
+  const bottomsCount = Math.min(Math.ceil(days / 2) + 1, 5);
+
+  rawSuggestions.push(
+    {
+      id: 'cloth-tops',
+      text: `${topsCount}x T-shirts / Shirts`,
+      category: 'packing',
+      airplaneEligibility: 'any',
+      reason: `Calculated for ${days} days`,
+      defaultChecked: true,
+      icon: '👕',
+    },
+    {
+      id: 'cloth-bottoms',
+      text: `${bottomsCount}x Pants / Shorts / Jeans`,
+      category: 'packing',
+      airplaneEligibility: 'any',
+      reason: `Calculated for ${days} days`,
+      defaultChecked: true,
+      icon: '👖',
+    },
+    {
+      id: 'cloth-inner',
+      text: `${topsCount}x Undergarments & Socks`,
+      category: 'packing',
+      airplaneEligibility: 'any',
+      defaultChecked: true,
+      icon: '🧦',
+    },
+    {
+      id: 'cloth-sleep',
+      text: '2x Nightwear / Loungewear',
+      category: 'packing',
+      airplaneEligibility: 'any',
+      defaultChecked: true,
+      icon: '🩳',
+    },
+    {
+      id: 'cloth-shoes',
+      text: 'Comfortable Walking Shoes',
+      category: 'packing',
+      airplaneEligibility: 'any',
+      defaultChecked: true,
+      icon: '👟',
+    }
   );
 
-  return suggestions;
+  // ==========================================
+  // 4. Beach & Warm Weather Additions
+  // ==========================================
+  if (isBeach) {
+    rawSuggestions.push(
+      {
+        id: 'beach-swim',
+        text: 'Swimwear / Swim Trunks',
+        category: 'packing',
+        airplaneEligibility: 'any',
+        reason: 'Beach / Coastal spot',
+        defaultChecked: true,
+        icon: '🩲',
+      },
+      {
+        id: 'beach-sunscreen',
+        text: 'Sunscreen Lotion (SPF 50+ travel bottle ≤100ml)',
+        category: 'packing',
+        airplaneEligibility: 'cabin-only',
+        isLiquid: true,
+        reason: 'High UV exposure (Cabin compliant container)',
+        cabinNote: '3-1-1 Rule: Keep in transparent 1-quart bag if carried in cabin',
+        defaultChecked: true,
+        icon: '🧴',
+      },
+      {
+        id: 'beach-sunglasses',
+        text: 'Polarized Sunglasses & Sun Hat',
+        category: 'packing',
+        airplaneEligibility: 'any',
+        reason: 'Sunny weather',
+        defaultChecked: true,
+        icon: '🕶️',
+      },
+      {
+        id: 'beach-pouch',
+        text: 'Waterproof Phone Pouch',
+        category: 'packing',
+        airplaneEligibility: 'any',
+        reason: 'Water sports & pool',
+        defaultChecked: true,
+        icon: '📱',
+      },
+      {
+        id: 'beach-sandals',
+        text: 'Flip Flops / Beach Slippers',
+        category: 'packing',
+        airplaneEligibility: 'any',
+        defaultChecked: true,
+        icon: '🩴',
+      }
+    );
+  }
+
+  // ==========================================
+  // 5. Cold Weather & Mountain Gear
+  // ==========================================
+  if (isMountainOrCold) {
+    rawSuggestions.push(
+      {
+        id: 'cold-jacket',
+        text: 'Heavy Down Jacket / Windcheater',
+        category: 'packing',
+        airplaneEligibility: 'any',
+        reason: `Cold climate (~${temp}°C)`,
+        cabinNote: 'Wear or carry onto aircraft to save luggage weight',
+        defaultChecked: true,
+        icon: '🧥',
+      },
+      {
+        id: 'cold-thermal',
+        text: 'Thermal Innerwear (Top & Bottom)',
+        category: 'packing',
+        airplaneEligibility: 'any',
+        reason: `Low temperatures (~${temp}°C)`,
+        defaultChecked: true,
+        icon: '🧣',
+      },
+      {
+        id: 'cold-beanie',
+        text: 'Woolen Beanie & Warm Gloves',
+        category: 'packing',
+        airplaneEligibility: 'any',
+        reason: 'Protection against cold winds',
+        defaultChecked: true,
+        icon: '🧤',
+      },
+      {
+        id: 'cold-lipbalm',
+        text: 'Moisturizer & Lip Balm (Travel Mini ≤100ml)',
+        category: 'packing',
+        airplaneEligibility: 'any',
+        isLiquid: true,
+        reason: 'Dry cold mountain air',
+        cabinNote: 'Complies with 3-1-1 cabin liquids limit',
+        defaultChecked: true,
+        icon: '💄',
+      }
+    );
+
+    // If trekking or mountain destination: flag trekking pole check-in requirement
+    if (
+      destLower.includes('trek') ||
+      destLower.includes('mountain') ||
+      destLower.includes('himalaya') ||
+      destLower.includes('alps') ||
+      destLower.includes('manali') ||
+      destLower.includes('himachal') ||
+      destLower.includes('ladakh') ||
+      destLower.includes('leh')
+    ) {
+      rawSuggestions.push({
+        id: 'gear-trekking-poles',
+        text: 'Trekking Poles / Hiking Sticks',
+        category: 'packing',
+        airplaneEligibility: 'checkin-only',
+        reason: 'Trekking terrain',
+        cabinNote: 'Prohibited in aircraft cabin by airport security. Must go into check-in hold!',
+        defaultChecked: false,
+        icon: '🦯',
+      });
+    }
+  }
+
+  // ==========================================
+  // 6. Rainy & Monsoon Gear
+  // ==========================================
+  if (isRainy) {
+    rawSuggestions.push(
+      {
+        id: 'rain-umbrella',
+        text: 'Compact Foldable Umbrella / Rain Poncho',
+        category: 'packing',
+        airplaneEligibility: 'any',
+        reason: 'Precipitation / Rain in forecast',
+        cabinNote: 'Foldable umbrellas allowed in cabin; straight spiked ones may require check-in',
+        defaultChecked: true,
+        icon: '☂️',
+      },
+      {
+        id: 'rain-bagcover',
+        text: 'Waterproof Backpack Cover',
+        category: 'packing',
+        airplaneEligibility: 'any',
+        reason: 'Rain protection on the go',
+        defaultChecked: true,
+        icon: '🎒',
+      },
+      {
+        id: 'rain-quickdry',
+        text: 'Quick-dry Microfiber Towel & Clothes',
+        category: 'packing',
+        airplaneEligibility: 'any',
+        reason: 'High humidity & wet conditions',
+        defaultChecked: true,
+        icon: '🧺',
+      }
+    );
+  }
+
+  // ==========================================
+  // 7. Medical & First-Aid (Prescriptions in Cabin)
+  // ==========================================
+  rawSuggestions.push(
+    {
+      id: 'med-prescriptions',
+      text: 'Personal Prescription Medicines & Inhalers',
+      category: 'medical',
+      airplaneEligibility: 'cabin-only',
+      cabinNote: 'Aviation guideline: never check in vital medications in hold',
+      defaultChecked: true,
+      icon: '💊',
+    },
+    {
+      id: 'med-kit',
+      text: 'First-aid Essentials (Band-aids, Antiseptic cream ≤100ml)',
+      category: 'medical',
+      airplaneEligibility: 'any',
+      isLiquid: true,
+      defaultChecked: true,
+      icon: '🩹',
+    },
+    {
+      id: 'med-pills',
+      text: 'Paracetamol, Antacids & Motion Sickness Pills',
+      category: 'medical',
+      airplaneEligibility: 'any',
+      defaultChecked: true,
+      icon: '💊',
+    }
+  );
+
+  // ==========================================
+  // 8. Toiletries (Enforcing 3-1-1 Airplane Rule)
+  // ==========================================
+  rawSuggestions.push(
+    {
+      id: 'toil-mini-kit',
+      text: 'Travel Toiletries Kit (Toothbrush, Paste, Shampoo ≤100ml)',
+      category: 'packing',
+      airplaneEligibility: 'any',
+      isLiquid: true,
+      cabinNote: 'Containers ≤ 100ml (3.4oz) in transparent 1-quart resealable bag',
+      defaultChecked: true,
+      icon: '🪥',
+    },
+    {
+      id: 'toil-wipes',
+      text: 'Sanitizer Wipes & Tissues',
+      category: 'packing',
+      airplaneEligibility: 'any',
+      cabinNote: 'Solid wipes are exempt from liquid volume limits',
+      defaultChecked: true,
+      icon: '🧼',
+    }
+  );
+
+  // Swiss army knife / Multi-tool / Nail clippers (Check-in security warning)
+  rawSuggestions.push({
+    id: 'gear-multitool',
+    text: 'Multi-tool / Swiss Pocket Knife / Scissors',
+    category: 'packing',
+    airplaneEligibility: 'checkin-only',
+    reason: 'Emergency utility gear',
+    cabinNote: 'Blades and sharp objects strictly prohibited in airplane cabin. Check-in only!',
+    defaultChecked: false,
+    icon: '🔪',
+  });
+
+  // Apply luggageFilter if requested
+  if (context.luggageFilter === 'cabin-only') {
+    return rawSuggestions.filter((item) => item.airplaneEligibility !== 'checkin-only');
+  } else if (context.luggageFilter === 'checkin-only') {
+    return rawSuggestions.filter((item) => item.airplaneEligibility !== 'cabin-only');
+  }
+
+  return rawSuggestions;
+}
+
+/**
+ * Generate a formatted travel packing note in markdown format
+ * for adding directly to the trip notes.
+ */
+export function generatePackingGuideNote(
+  destination: string,
+  startDate: string,
+  endDate: string,
+  items: PackingSuggestionItem[],
+  weatherInfo?: string
+): { title: string; content: string } {
+  const cabinItems = items.filter((i) => i.airplaneEligibility === 'cabin-only');
+  const checkinItems = items.filter((i) => i.airplaneEligibility === 'checkin-only');
+  const anyBagItems = items.filter((i) => i.airplaneEligibility === 'any');
+
+  const content = [
+    `📍 **Destination:** ${destination || 'Trip'}`,
+    `📅 **Dates:** ${startDate} to ${endDate}`,
+    weatherInfo ? `⛅ **Weather Forecast / Climate:** ${weatherInfo}` : '',
+    '',
+    '### ✈️ Airplane Carry-on (Cabin Bag)',
+    '> *Strictly pack lithium batteries, power banks, and vital IDs here. Containers must be ≤100ml in a clear 1-quart bag.*',
+    ...cabinItems.map((i) => `- [ ] ${i.icon || '📦'} **${i.text}**${i.cabinNote ? ` _(${i.cabinNote})_` : ''}`),
+    '',
+    ...(checkinItems.length > 0
+      ? [
+          '### 🧳 Checked Baggage Only',
+          '> *Blades, sharp tools, and liquids over 100ml must NOT enter the aircraft cabin.*',
+          ...checkinItems.map((i) => `- [ ] ${i.icon || '📦'} **${i.text}**${i.cabinNote ? ` _(${i.cabinNote})_` : ''}`),
+          '',
+        ]
+      : []),
+    '### 🎒 Flexible / Any Bag',
+    ...anyBagItems.map((i) => `- [ ] ${i.icon || '📦'} **${i.text}**`),
+    '',
+    '---',
+    '💡 *Generated by Smart Travel Assistant — compliant with ICAO / TSA baggage standards.*',
+  ]
+    .filter(Boolean)
+    .join('\n');
+
+  return {
+    title: `✈️ Packing & Flight Guide - ${destination || 'Trip'}`,
+    content,
+  };
 }
