@@ -2726,3 +2726,16 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - For dates months in advance where real-time forecasts are meteorologically impossible, the engine automatically falls back to seasonal hemispheric climatology based on the destination region and travel month.
 
+## 148. Real-Time Travel Days Stepper, Season Override & Modal Scroll Lock (v3.10.1)
+* **Context:** Two UX friction points were identified in the packing assistant: First, scrolling inside the assistant modal on mobile/touch screens was difficult because touch drag propagated to the background page (`document.body`), causing whole-screen rubber-banding. Second, users needed clear visual confirmation that packing suggestions and luggage categorization (Carry-on vs Checked baggage) update dynamically in real time when duration or timing changes.
+* **Decision:** Integrated `useScrollLock` to strictly isolate scrolling within the modal viewport, added a timezone-safe duration calculation with an interactive `[-] / [+]` days stepper, a real-time season/timing selector, and live badge counts on luggage tabs and footer action buttons.
+* **Pattern/Implementation:**
+  - `SmartPackingAssistantModal.tsx`:
+    - Wired `useScrollLock(isOpen)` and added CSS `overscroll-behavior: contain; touch-action: pan-y;` on both the card and inner scrollable list.
+    - Added an interactive **Trip Duration Stepper** (`[-] {N} days [+]`) directly in the modal header; tapping `+` or `-` immediately recomputes clothing ratios in real time.
+    - Added an interactive **Season Selector** (`Auto`, `Summer`, `Monsoon`, `Winter / Alpine`) allowing immediate preview and real-time generation of climate gear.
+    - Added live item counts to each luggage tab (`All Baggage (N)`, `✈️ Carry-on Only (N)`, `🧳 Checked Baggage (N)`) and live selected breakdown (`Add N Items (X Cabin, Y Check-in)`) in the footer.
+* **Trade-offs Accepted:**
+  - Days adjusted inside the assistant customize the packing list without mutating the underlying trip's stored start/end dates in the database.
+
+
