@@ -67,6 +67,53 @@ describe('travelStatusService', () => {
     expect(status?.pnr).toBe('2849182391');
   });
 
+  it('extracts hyphenated flight code 6E-537 correctly with carrier and flight number', () => {
+    const flightPass: Partial<TravelPass> = {
+      type: 'flight',
+      title: 'Rahul · IndiGo 6E-537 (BLR ➔ HYD)',
+      legIdentifier: '6E537_BLR_HYD',
+      origin: 'BLR',
+      destination: 'HYD',
+    };
+
+    const status = extractFlightStatus(flightPass);
+    expect(status).not.toBeNull();
+    expect(status?.carrierCode).toBe('6E');
+    expect(status?.flightNumber).toBe('537');
+    expect(status?.fullFlightCode).toBe('6E 537');
+    expect(status?.airlineName).toBe('IndiGo');
+    expect(status?.googleStatusUrl).toContain('6E%20537');
+    expect(status?.flightradar24Url).toContain('6e537');
+    expect(status?.flightAwareUrl).toContain('6E537');
+  });
+
+  it('handles spaces around hyphen like 6E - 537 and title fallback', () => {
+    const flightPass: Partial<TravelPass> = {
+      type: 'flight',
+      title: 'IndiGo 6E - 537 flight to Mumbai',
+    };
+
+    const status = extractFlightStatus(flightPass);
+    expect(status).not.toBeNull();
+    expect(status?.carrierCode).toBe('6E');
+    expect(status?.flightNumber).toBe('537');
+    expect(status?.fullFlightCode).toBe('6E 537');
+  });
+
+  it('resolves flight number from provider hint when code is omitted', () => {
+    const flightPass: Partial<TravelPass> = {
+      type: 'flight',
+      title: 'Flight 537',
+      provider: 'IndiGo',
+    };
+
+    const status = extractFlightStatus(flightPass);
+    expect(status).not.toBeNull();
+    expect(status?.carrierCode).toBe('6E');
+    expect(status?.flightNumber).toBe('537');
+    expect(status?.airlineName).toBe('IndiGo');
+  });
+
   it('returns null for stay or activity passes without flight/train info', () => {
     const stayPass: TravelPass = {
       id: 'p-1',
@@ -80,3 +127,4 @@ describe('travelStatusService', () => {
     expect(getTravelStatusInfo(stayPass)).toBeNull();
   });
 });
+

@@ -2870,6 +2870,12 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - Rather than making duplicate warnings blocking (which would prevent legitimate recurring payments like two separate cab rides of the same fare), warnings are advisory and highlight differences (same payer vs. different payer) while pausing voice auto-submit.
   - Live flight radar and Indian Railways PNR lookups are routed via curated deep links (Google Flight Status, Flightradar24, ConfirmTkt, RailYatri) with pre-filled flight numbers and PNRs, eliminating high-latency API keys or CAPTCHA blockers while guaranteeing 100% up-to-date carrier and railway data.
+  - *(v3.13.1 Refinement)*: Fixed flight code extraction heuristic:
+    - Replaced `[A-Z0-9]{2}\s*[0-9]{1,4}` which previously permitted hyphenated codes like `6E-537` to fail the 2-char check at `-` and accidentally match `53` + `7` (isolating "537" without airline prefix).
+    - Added support for hyphens, spaces, and no-separator formats (`6E-537`, `6E - 537`, `6E537`, `6E537_BLR_HYD`).
+    - Enforced that general 2-char IATA codes MUST include at least one letter (`[A-Za-z][A-Za-z0-9]|[A-Za-z0-9][A-Za-z]`), preventing purely numeric sequences like `537` from being misclassified as carrier codes.
+    - Added 3-letter ICAO to IATA mapping (e.g. `IGO` -> `6E`, `AIC` -> `AI`) and provider-name fallback (`IndiGo` -> `6E`).
+    - Added inline interactive editing in `LiveTravelStatusModal` allowing users to view, edit, and fine-tune carrier & flight codes on the fly with live deep link updates.
 
 
 

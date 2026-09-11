@@ -1,5 +1,9 @@
-import { useState } from 'react';
-import type { TravelStatusInfo } from '../utils/travelStatusService';
+import { useState, useMemo, useEffect } from 'react';
+import {
+  type TravelStatusInfo,
+  buildFlightUrls,
+  parseFlightCode,
+} from '../utils/travelStatusService';
 import { useHistoryBack } from '../utils/useHistoryBack';
 import { useEscapeKey } from '../utils/useEscapeKey';
 import { triggerHaptic } from '../utils/haptics';
@@ -12,9 +16,36 @@ interface Props {
 
 export function LiveTravelStatusModal({ isOpen, onClose, statusInfo }: Props) {
   const [copiedText, setCopiedText] = useState<string | null>(null);
+  const [flightInput, setFlightInput] = useState('');
+  const [isEditingFlight, setIsEditingFlight] = useState(false);
+
+  // Sync state when modal opens or statusInfo changes
+  useEffect(() => {
+    if (statusInfo?.type === 'flight') {
+      setFlightInput(`${statusInfo.carrierCode} ${statusInfo.flightNumber}`);
+      setIsEditingFlight(false);
+    }
+  }, [statusInfo]);
 
   useHistoryBack(isOpen, onClose);
   useEscapeKey(isOpen, onClose);
+
+  // Recomputed flight info if user edits flight code inline
+  const activeFlight = useMemo(() => {
+    if (!statusInfo || statusInfo.type !== 'flight') return null;
+    const parsed = parseFlightCode(flightInput, statusInfo.airlineName);
+    if (parsed) {
+      const urls = buildFlightUrls(parsed.carrierCode, parsed.flightNumber);
+      return {
+        ...statusInfo,
+        carrierCode: parsed.carrierCode,
+        flightNumber: parsed.flightNumber,
+        airlineName: parsed.airlineName || statusInfo.airlineName,
+        ...urls,
+      };
+    }
+    return statusInfo;
+  }, [statusInfo, flightInput]);
 
   if (!isOpen || !statusInfo) return null;
 
@@ -26,6 +57,7 @@ export function LiveTravelStatusModal({ isOpen, onClose, statusInfo }: Props) {
   };
 
   const isFlight = statusInfo.type === 'flight';
+  const displayFlight = isFlight ? (activeFlight || statusInfo) : null;
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -69,7 +101,7 @@ export function LiveTravelStatusModal({ isOpen, onClose, statusInfo }: Props) {
         </div>
 
         {/* Flight Card Hero */}
-        {isFlight && (
+        {isFlight && displayFlight && (
           <div
             style={{
               padding: '16px',
@@ -81,35 +113,78 @@ export function LiveTravelStatusModal({ isOpen, onClose, statusInfo }: Props) {
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
               <span style={{ fontSize: '13px', fontWeight: 700, color: '#3b82f6', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                {statusInfo.airlineName}
+                {displayFlight.airlineName}
               </span>
-              <button
-                type="button"
-                onClick={() => handleCopy(statusInfo.fullFlightCode, 'flight')}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  color: 'var(--text-muted)',
-                  fontSize: '11px',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '4px',
-                }}
-              >
-                <span>{copiedText === 'flight' ? '✓ Copied' : '📋 Copy Code'}</span>
-              </button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <button
+                  type="button"
+                  onClick={() => setIsEditingFlight((prev) => !prev)}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: 'var(--text-muted)',
+                    fontSize: '11px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '2px',
+                  }}
+                  title="Edit flight code"
+                >
+                  <span>{isEditingFlight ? '✓ Done' : '✏️ Edit'}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleCopy(displayFlight.fullFlightCode, 'flight')}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: 'var(--text-muted)',
+                    fontSize: '11px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                  }}
+                >
+                  <span>{copiedText === 'flight' ? '✓ Copied' : '📋 Copy Code'}</span>
+                </button>
+              </div>
             </div>
 
-            <div style={{ fontSize: '24px', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '8px', letterSpacing: '0.02em' }}>
-              {statusInfo.fullFlightCode}
-            </div>
+            {isEditingFlight ? (
+              <div style={{ marginBottom: '10px' }}>
+                <input
+                  type="text"
+                  className="input-field"
+                  value={flightInput}
+                  onChange={(e) => setFlightInput(e.target.value)}
+                  placeholder="e.g. 6E-537 or AI 101"
+                  style={{
+                    fontFamily: 'var(--font-family-mono, monospace)',
+                    fontWeight: 700,
+                    fontSize: '18px',
+                    padding: '6px 10px',
+                    width: '100%',
+                    borderRadius: '8px',
+                  }}
+                  autoFocus
+                />
+                <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>
+                  Carrier & flight number (e.g. 6E 537, AI-101, QP 1302)
+                </div>
+              </div>
+            ) : (
+              <div style={{ fontSize: '24px', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '8px', letterSpacing: '0.02em' }}>
+                {displayFlight.fullFlightCode}
+              </div>
+            )}
 
-            {(statusInfo.origin || statusInfo.destination) && (
+            {(displayFlight.origin || displayFlight.destination) && (
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', fontWeight: 600, color: 'var(--text-secondary)' }}>
-                <span>{statusInfo.origin || 'Origin'}</span>
+                <span>{displayFlight.origin || 'Origin'}</span>
                 <span>✈️ ➔</span>
-                <span>{statusInfo.destination || 'Destination'}</span>
+                <span>{displayFlight.destination || 'Destination'}</span>
               </div>
             )}
           </div>
@@ -179,10 +254,10 @@ export function LiveTravelStatusModal({ isOpen, onClose, statusInfo }: Props) {
 
         {/* 1-Tap Action Links */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '16px' }}>
-          {isFlight ? (
+          {statusInfo.type === 'flight' && displayFlight ? (
             <>
               <a
-                href={statusInfo.googleStatusUrl}
+                href={displayFlight.googleStatusUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={() => triggerHaptic('medium')}
@@ -213,7 +288,7 @@ export function LiveTravelStatusModal({ isOpen, onClose, statusInfo }: Props) {
               </a>
 
               <a
-                href={statusInfo.flightradar24Url}
+                href={displayFlight.flightradar24Url}
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={() => triggerHaptic('light')}
@@ -244,7 +319,7 @@ export function LiveTravelStatusModal({ isOpen, onClose, statusInfo }: Props) {
               </a>
 
               <a
-                href={statusInfo.flightAwareUrl}
+                href={displayFlight.flightAwareUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={() => triggerHaptic('light')}
@@ -274,7 +349,7 @@ export function LiveTravelStatusModal({ isOpen, onClose, statusInfo }: Props) {
                 <span>↗</span>
               </a>
             </>
-          ) : (
+          ) : statusInfo.type === 'train' ? (
             <>
               {statusInfo.confirmTktUrl && (
                 <a
@@ -375,7 +450,7 @@ export function LiveTravelStatusModal({ isOpen, onClose, statusInfo }: Props) {
                 </a>
               )}
             </>
-          )}
+          ) : null}
         </div>
 
         {/* Footer */}
