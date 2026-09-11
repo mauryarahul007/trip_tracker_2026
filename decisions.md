@@ -2923,3 +2923,25 @@ This document logs all meaningful technical decisions, library choices, design p
   - The Wake Lock API degrades gracefully on unsupported mobile browsers or background tabs without throwing errors or blocking modal display.
   - Quick-chips are non-intrusive and automatically clear or filter as the user types custom titles.
 
+---
+
+## 157. Voice Input NLP Parser Refinement & Settings Menu Simplification (v3.14.1)
+* **Context:**
+  - In fast-paced travel environments, travelers using the voice input / speech-to-text option in the Expenses tab (Quick Add) and Expense Form found that common natural spoken phrases like `"500 coffee"`, `"coffee 500"`, `"500 for coffee"`, `"500/- coffee"`, or spoken Hinglish numbers were intermittently missed or left dirty prepositions in the item title. Additionally, mobile Chrome SpeechRecognition instances were throwing `InvalidStateError` when restarted after silence timeouts.
+  - In Settings, the "My reports" option under Help and About was redundant and no longer needed by users, cluttering the menu.
+* **Decision:**
+  - **Voice Input NLP Engine (`expenseQuickParser.ts`):**
+    - Relaxed regex lookahead for number detection to `(?=[.,;:!?-]?(\s|$))` ensuring trailing punctuation appended by mobile speech engines (`500, coffee` or `coffee 500.`) does not prevent amount identification.
+    - Added normalization for currency symbols and ledger suffix formats (`500/-`, `500/=`, `Rs. 500`, `₹ 500`).
+    - Expanded spoken number parser with colloquial English and Hinglish scales (`dedh sau` -> 150, `dhai sau` -> 250, `paanch sau` -> 500, `dedh hazar` -> 1500, `dhai hazar` -> 2500, `do hazar` -> 2000, `rupay`, `rupaye`, etc.).
+    - Added bidirectional preposition and particle cleaning (`for`, `on`, `of`, `towards`, `at`, `in`, `worth`, `ka`, `ki`, `ke`, `ko`, `mein`, `se`) preventing dirty titles like `"Coffee of"` or `"Coffee ka"`.
+    - Added comprehensive unit test coverage in `expenseQuickParser.test.ts` verifying 16 real-world speech permutations.
+  - **Speech Recognition Lifecycle Robustness (`SmartExpenseQuickAddModal.tsx` & `ExpenseForm.tsx`):**
+    - Replaced the persistent speech instance with per-session instantiation in `SmartExpenseQuickAddModal.tsx`, completely preventing `InvalidStateError` when restarting after silence timeouts.
+    - Added real-time interim speech preview, multi-dialect support (`en-IN`, `en-US`, `en-GB`, `hi-IN`), and 1-tap parsed result confirmation preview.
+    - Upgraded `ExpenseForm.tsx` mic button to leverage `parseQuickExpense`, auto-populating amount, title, and inferred category.
+  - **Settings Menu Simplification:**
+    - Removed `"My reports"` cell, route handling, search matching, and prefetch from `SettingsView.tsx` and `prefetchSettingsLeaves.ts`.
+* **Trade-offs Accepted:**
+  - Unused references to `SettingsMyReportsScreen` were pruned from bundle to maintain tree-shaking efficiency while retaining file for historical consistency.
+

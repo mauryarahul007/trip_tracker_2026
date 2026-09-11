@@ -53,11 +53,10 @@ const SettingsRecycleBinScreen = lazy(() => import('./settings/SettingsRecycleBi
 const SettingsLegalScreen = lazy(() => import('./settings/SettingsLegalScreen').then((m) => ({ default: m.SettingsLegalScreen })));
 const BugReportModal = lazy(() => import('./BugReportModal').then((m) => ({ default: m.BugReportModal })));
 const FeatureRequestModal = lazy(() => import('./FeatureRequestModal').then((m) => ({ default: m.FeatureRequestModal })));
-const SettingsMyReportsScreen = lazy(() => import('./settings/SettingsMyReportsScreen').then((m) => ({ default: m.SettingsMyReportsScreen })));
 
 export type ThemePref = 'light' | 'dark' | 'oled' | 'system';
 
-type SubScreen = null | 'trip-tools' | 'categories' | 'recycle-bin' | 'backups-media' | 'backups' | 'archived-trips' | 'bug-tracker' | 'report-issue' | 'suggest-feature' | 'my-reports' | 'storage-data' | 'about' | 'privacy' | 'terms';
+type SubScreen = null | 'trip-tools' | 'categories' | 'recycle-bin' | 'backups-media' | 'backups' | 'archived-trips' | 'bug-tracker' | 'report-issue' | 'suggest-feature' | 'storage-data' | 'about' | 'privacy' | 'terms';
 
 const EMPTY_SETTLEMENT = {
   isFullySettled: true,
@@ -82,7 +81,6 @@ const DEFAULT_PARENT_MAP: Record<string, SubScreen> = {
   'backups': null,
   'report-issue': null,
   'suggest-feature': null,
-  'my-reports': null,
   'bug-tracker': null,
   'about': null,
   'privacy': 'about',
@@ -272,8 +270,6 @@ export function SettingsView({
         return 'Report a Problem';
       case 'suggest-feature':
         return 'Suggest a Feature';
-      case 'my-reports':
-        return 'My reports';
       case 'bug-tracker':
         return 'Bug Tracker';
       default:
@@ -812,10 +808,6 @@ export function SettingsView({
         onRegisterBackGuard={setSuggestFeatureBackGuard}
       />
     );
-  } else if (visibleScreen === 'my-reports') {
-    overlay = (
-      <SettingsMyReportsScreen parentTitle={parentTitle} onBack={closeSubScreen} />
-    );
   } else if (visibleScreen === 'about') {
     overlay = (
       <SettingsAboutScreen
@@ -878,7 +870,6 @@ export function SettingsView({
   const showDataGroup = showStorageManager || showArchived || showBackupsMedia;
 
   const showReportProblem = matchesSearch('Report a Problem', 'bug', 'issue', 'diagnostics', 'broken', 'error');
-  const showMyReports = Boolean(userEmail) && matchesSearch('My reports', 'ticket', 'BUG-', 'status', 'filed');
   const showSuggestFeature = isFeatureEnabled('enableFeatureSuggestions') && matchesSearch('Suggest a Feature', 'feedback', 'idea', 'request');
   const showBugTracker = isSuperadmin && matchesSearch('Superadmin Bug Tracker', 'triage', 'sync', 'cases', 'cockpit');
 
@@ -888,7 +879,7 @@ export function SettingsView({
   const showAccountGroup = showSignOut || showClearData || showDeleteAccount;
 
   const showAbout = matchesSearch('Trip Tracker 2026', 'version', 'about', 'build', 'app', 'privacy', 'terms', 'legal');
-  const showHelpAboutGroup = showReportProblem || showMyReports || showSuggestFeature || showBugTracker || showDemoTrip || showAbout;
+  const showHelpAboutGroup = showReportProblem || showSuggestFeature || showBugTracker || showDemoTrip || showAbout;
 
   const hasAnyResults = showTripGroup || showPreferencesGroup || showDataGroup || showHelpAboutGroup || showAccountGroup;
 
@@ -1431,18 +1422,6 @@ export function SettingsView({
                 onPointerEnter={prefetchSettingsLeaves}
                 onPointerDown={prefetchSettingsLeaves}
                 onClick={() => setSubScreen('report-issue')}
-              />
-            )}
-
-            {showMyReports && (
-              <SettingsCell
-                icon={<span>🎫</span>}
-                iconGlow="slate"
-                title="My reports"
-                subtitle="Open, in progress, or resolved — with your BUG-xxx id"
-                onPointerEnter={prefetchSettingsLeaves}
-                onPointerDown={prefetchSettingsLeaves}
-                onClick={() => setSubScreen('my-reports')}
               />
             )}
 

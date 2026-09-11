@@ -69,49 +69,13 @@ export function SmartExpenseQuickAddModal({
   useHistoryBack(isOpen, onClose);
   useEscapeKey(isOpen, onClose);
 
-  // Initialize browser Web Speech API
+  // Check browser Web Speech API availability
   useEffect(() => {
     const SpeechRec = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (SpeechRec) {
       setSpeechSupported(true);
-      const rec = new SpeechRec();
-      rec.continuous = false;
-      rec.interimResults = true;
-      rec.lang = voiceLang;
-
-      rec.onresult = (event: any) => {
-        const text = Array.from(event.results)
-          .map((r: any) => r[0]?.transcript || '')
-          .join('');
-        setInputText(text);
-        setIsVoiceGenerated(true);
-      };
-
-      rec.onerror = (err: any) => {
-        console.warn('Speech recognition error:', err);
-        setIsRecording(false);
-        if (err.error === 'not-allowed') {
-          setErrorMessage('Microphone access was denied. Please allow microphone permissions or type below.');
-        } else if (err.error === 'no-speech') {
-          setErrorMessage('No speech detected. Tap the mic to try again or type below.');
-        }
-      };
-
-      rec.onend = () => {
-        setIsRecording(false);
-      };
-
-      recognitionRef.current = rec;
     }
   }, []);
-
-  // Update speech recognition language when voiceLang changes
-  useEffect(() => {
-    if (recognitionRef.current) {
-      recognitionRef.current.lang = voiceLang;
-    }
-    localStorage.setItem('trip_tracker_voice_lang', voiceLang);
-  }, [voiceLang]);
 
   const cancelAutoSaveCountdown = () => {
     if (countdownTimerRef.current) {
@@ -138,6 +102,88 @@ export function SmartExpenseQuickAddModal({
     }, 1000);
   };
 
+  const stopListening = () => {
+    if (recognitionRef.current) {
+      try {
+        recognitionRef.current.abort();
+      } catch {}
+      recognitionRef.current = null;
+    }
+    setIsRecording(false);
+  };
+
+  const startListening = () => {
+    const SpeechRec = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRec) {
+      setErrorMessage('Speech recognition is not supported in this browser. Please type below.');
+      return;
+    }
+
+    // Clean up any stale session first
+    stopListening();
+
+    try {
+      const rec = new SpeechRec();
+      rec.continuous = false;
+      rec.interimResults = true;
+      rec.maxAlternatives = 3;
+      rec.lang = voiceLang;
+
+      rec.onstart = () => {
+        setIsRecording(true);
+        setErrorMessage('');
+      };
+
+      rec.onresult = (event: any) => {
+        let text = '';
+        for (let i = 0; i < event.results.length; i++) {
+          const res = event.results[i];
+          if (res && res[0]) {
+            text += res[0].transcript || '';
+          }
+        }
+        if (text.trim()) {
+          setInputText(text.trim());
+          setIsVoiceGenerated(true);
+        }
+      };
+
+      rec.onerror = (err: any) => {
+        console.warn('Speech recognition error:', err);
+        setIsRecording(false);
+        if (err.error === 'not-allowed') {
+          setErrorMessage('Microphone access was denied. Please allow microphone permissions or type below.');
+        } else if (err.error === 'no-speech') {
+          setErrorMessage('Didn\'t catch that. Tap the mic 🎙️ to try again or type below.');
+        } else if (err.error !== 'aborted') {
+          setErrorMessage(`Voice input error (${err.error}). Tap mic to retry.`);
+        }
+      };
+
+      rec.onend = () => {
+        setIsRecording(false);
+      };
+
+      recognitionRef.current = rec;
+      rec.start();
+      triggerHaptic('medium');
+    } catch (e) {
+      console.warn('Failed to start speech recognition:', e);
+      setIsRecording(false);
+      setErrorMessage('Could not activate microphone. Please tap mic again or type below.');
+    }
+  };
+
+  const toggleRecording = () => {
+    cancelAutoSaveCountdown();
+    if (isRecording) {
+      stopListening();
+      triggerHaptic('light');
+    } else {
+      startListening();
+    }
+  };
+
   // Trigger speech recognition on modal open if autoListen requested
   useEffect(() => {
     if (isOpen) {
@@ -148,61 +194,24 @@ export function SmartExpenseQuickAddModal({
 
       if (autoListen) {
         const timer = setTimeout(() => {
-          if (recognitionRef.current) {
-            try {
-              recognitionRef.current.start();
-              setIsRecording(true);
-              setIsVoiceGenerated(true);
-              triggerHaptic('medium');
-            } catch (e) {
-              console.warn('Could not auto-start speech recognition:', e);
-            }
-          }
-        }, 120);
+          startListening();
+        }, 220);
         return () => clearTimeout(timer);
       } else {
         setTimeout(() => inputRef.current?.focus(), 100);
       }
     } else {
       cancelAutoSaveCountdown();
-      if (recognitionRef.current && isRecording) {
-        try {
-          recognitionRef.current.stop();
-        } catch {}
-        setIsRecording(false);
-      }
+      stopListening();
     }
   }, [isOpen, autoListen]);
 
   useEffect(() => {
     return () => {
-      if (countdownTimerRef.current) {
-        clearInterval(countdownTimerRef.current);
-      }
+      cancelAutoSaveCountdown();
+      stopListening();
     };
   }, []);
-
-  const toggleRecording = () => {
-    if (!recognitionRef.current) return;
-    triggerHaptic('medium');
-    cancelAutoSaveCountdown();
-
-    if (isRecording) {
-      try {
-        recognitionRef.current.stop();
-      } catch {}
-      setIsRecording(false);
-    } else {
-      try {
-        recognitionRef.current.start();
-        setIsRecording(true);
-        setIsVoiceGenerated(true);
-        setErrorMessage('');
-      } catch (e) {
-        console.warn('Could not start speech recognition:', e);
-      }
-    }
-  };
 
   const parsed = parseQuickExpense(inputText, categories, historicalExpenses, visibleMembers);
 
@@ -366,7 +375,15 @@ export function SmartExpenseQuickAddModal({
             {speechSupported && (
               <select
                 value={voiceLang}
-                onChange={(e) => setVoiceLang(e.target.value)}
+                onChange={(e) => {
+                  const newLang = e.target.value;
+                  setVoiceLang(newLang);
+                  localStorage.setItem('trip_tracker_voice_lang', newLang);
+                  if (isRecording) {
+                    stopListening();
+                    setTimeout(() => startListening(), 100);
+                  }
+                }}
                 style={{
                   padding: '5px 8px',
                   fontSize: '11.5px',
@@ -436,7 +453,7 @@ export function SmartExpenseQuickAddModal({
             </div>
             <div style={{ fontSize: '12.5px', fontWeight: 600, color: 'var(--color-danger, #ef4444)', display: 'flex', alignItems: 'center', gap: '6px' }}>
               <span style={{ animation: 'pulse 1.2s infinite', display: 'inline-block' }}>🔴</span>
-              <span>Listening... Speak naturally (e.g. &ldquo;Dinner 1200 paid by Rahul&rdquo;)</span>
+              <span>Listening... Speak naturally (e.g. &ldquo;500 coffee&rdquo; or &ldquo;Lunch 1200 paid by Rahul&rdquo;)</span>
             </div>
           </div>
         )}
@@ -520,7 +537,7 @@ export function SmartExpenseQuickAddModal({
             ref={inputRef}
             type="text"
             className="input-field"
-            placeholder="e.g. Paid 200 for cab by upi by Rahul, or 1450 dinner"
+            placeholder='e.g. "500 coffee", "Paid 200 for cab by Rahul", "1450 dinner"'
             value={inputText}
             onChange={(e) => {
               cancelAutoSaveCountdown();
@@ -645,7 +662,11 @@ export function SmartExpenseQuickAddModal({
             disabled={!parsed?.amount || isSubmitting}
             onClick={handle1TapSave}
           >
-            {isSubmitting ? 'Saving...' : '⚡ 1-Tap Save'}
+            {isSubmitting
+              ? 'Saving...'
+              : parsed?.amount
+              ? `⚡ 1-Tap Save · ${parsed.title} (${formatAmount(parsed.amount, parsed.currency || baseCurrency)})`
+              : '⚡ 1-Tap Save'}
           </button>
           {onOpenFullFormWithTemplate && (
             <button

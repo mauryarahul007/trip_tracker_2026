@@ -171,4 +171,34 @@ describe('expenseQuickParser', () => {
     expect(cashResult?.amount).toBe(1200);
     expect(cashResult?.title).toBe('Groceries');
   });
+
+  it('parses "500 coffee" variations accurately', () => {
+    const inputs = [
+      '500 coffee',
+      'five hundred coffee',
+      '500 for coffee',
+      'coffee 500',
+      'coffee for 500',
+      '500 on coffee',
+      'coffee of 500',
+      '500/- coffee',
+      '500rs coffee',
+      '₹500 coffee',
+      'Rs 500 coffee',
+      'five hundred for coffee',
+      'five hundred rupees for coffee',
+      'coffee 500 rupees',
+      '500 ka coffee',
+      '500 ki coffee',
+    ];
+
+    for (const input of inputs) {
+      const res = parseQuickExpense(input, mockCategories);
+      expect(res, `Failed on: "${input}"`).not.toBeNull();
+      expect(res?.amount, `Wrong amount for "${input}"`).toBe(500);
+      expect(res?.title.toLowerCase(), `Wrong title for "${input}"`).toContain('coffee');
+      expect(res?.categoryId, `Wrong category for "${input}"`).toBe('cat-food');
+    }
+  });
 });
+

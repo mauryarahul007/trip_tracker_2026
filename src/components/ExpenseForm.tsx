@@ -561,12 +561,34 @@ export function ExpenseForm({
     recognition.onresult = (event) => {
       const transcript = event.results[0]?.[0]?.transcript;
       if (transcript) {
-        setTitle(transcript);
-        const suggested = autoSuggestCategory(transcript, categories, allTripExpenses);
-        if (suggested) {
-          setCategory(suggested);
-          const foundCat = categories.find((c) => c.id === suggested);
-          setAutoSelectedCategoryName(foundCat?.name || null);
+        const parsed = parseQuickExpense(transcript, categories, allTripExpenses, visibleMembers);
+        if (parsed) {
+          if (parsed.title) {
+            setTitle(parsed.title);
+          }
+          if (parsed.amount && parsed.amount > 0) {
+            setAmount(String(parsed.amount));
+          }
+          if (parsed.categoryId) {
+            setCategory(parsed.categoryId);
+            const foundCat = categories.find((c) => c.id === parsed.categoryId);
+            setAutoSelectedCategoryName(foundCat?.name || null);
+          }
+          if (parsed.paidById) {
+            setPayer(parsed.paidById);
+          }
+          if (parsed.date) {
+            setDate(parsed.date);
+          }
+          triggerHaptic('success');
+        } else {
+          setTitle(transcript);
+          const suggested = autoSuggestCategory(transcript, categories, allTripExpenses);
+          if (suggested) {
+            setCategory(suggested);
+            const foundCat = categories.find((c) => c.id === suggested);
+            setAutoSelectedCategoryName(foundCat?.name || null);
+          }
         }
       }
     };

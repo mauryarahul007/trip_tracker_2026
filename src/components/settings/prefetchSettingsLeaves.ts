@@ -5,7 +5,6 @@ export function prefetchSettingsLeaves(): void {
   void import('./SettingsLegalScreen');
   void import('../BugReportModal');
   void import('../FeatureRequestModal');
-  void import('./SettingsMyReportsScreen');
 }
 
 export function prefetchSettingsLegal(): void {

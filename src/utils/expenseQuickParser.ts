@@ -51,6 +51,15 @@ const CURRENCY_WORDS_MAP: Record<string, string> = {
   dirhams: 'AED',
   dirham: 'AED',
   aed: 'AED',
+  rupay: 'INR',
+  rupaye: 'INR',
+  rp: 'INR',
+  sgd: 'SGD',
+  aud: 'AUD',
+  cad: 'CAD',
+  chf: 'CHF',
+  yen: 'JPY',
+  jpy: 'JPY',
 };
 
 // Spoken number word replacement for speech recognition transcripts
@@ -63,32 +72,82 @@ function normalizeSpokenNumberWords(input: string): string {
 
   const wordNumberMap: [RegExp, string][] = [
     // Multi-thousands and composite hundreds
-    [/\b(?:one|a|won)\s+thousand\s+(?:and\s+)?five\s+hundred\b/gi, '1500'],
-    [/\b(?:one|a|won)\s+thousand\s+(?:and\s+)?two\s+hundred\b/gi, '1200'],
+    [/\b(?:one|a|won)\s+thousand\s+(?:and\s+)?(?:five|5)\s+hundred\b/gi, '1500'],
+    [/\b(?:one|a|won)\s+thousand\s+(?:and\s+)?(?:two|2)\s+hundred\b/gi, '1200'],
+    [/\b(?:two|to|too)\s+thousand\s+(?:and\s+)?(?:five|5)\s+hundred\b/gi, '2500'],
+    [/\b(?:three|tree)\s+thousand\s+(?:and\s+)?(?:five|5)\s+hundred\b/gi, '3500'],
+    [/\b(?:four|for)\s+thousand\s+(?:and\s+)?(?:five|5)\s+hundred\b/gi, '4500'],
+    [/\b(?:five)\s+thousand\s+(?:and\s+)?(?:five|5)\s+hundred\b/gi, '5500'],
+
+    // Thousands
     [/\b(?:one|a|won)\s+thousand\b/gi, '1000'],
     [/\b(?:two|to|too)\s+thousand\b/gi, '2000'],
     [/\b(?:three|tree)\s+thousand\b/gi, '3000'],
     [/\b(?:four|for)\s+thousand\b/gi, '4000'],
     [/\b(?:five)\s+thousand\b/gi, '5000'],
+    [/\b(?:six)\s+thousand\b/gi, '6000'],
+    [/\b(?:seven)\s+thousand\b/gi, '7000'],
+    [/\b(?:eight|ate)\s+thousand\b/gi, '8000'],
+    [/\b(?:nine)\s+thousand\b/gi, '9000'],
     [/\b(?:ten)\s+thousand\b/gi, '10000'],
-    // Indian numbering system (Lakh / Lakhs)
+    [/\b(?:twelve)\s+thousand\b/gi, '12000'],
+    [/\b(?:fifteen)\s+thousand\b/gi, '15000'],
+    [/\b(?:twenty)\s+thousand\b/gi, '20000'],
+    [/\b(?:twenty\s+five)\s+thousand\b/gi, '25000'],
+    [/\b(?:fifty)\s+thousand\b/gi, '50000'],
+
+    // Indian numbering system (Lakh / Lakhs / Hazar / Sau)
     [/\b(?:one|a|won)\s+lakh(?:s)?\b/gi, '100000'],
     [/\b(?:two|to|too)\s+lakh(?:s)?\b/gi, '200000'],
     [/\b(?:three|tree)\s+lakh(?:s)?\b/gi, '300000'],
+    [/\b(?:four|for)\s+lakh(?:s)?\b/gi, '400000'],
     [/\b(?:five)\s+lakh(?:s)?\b/gi, '500000'],
     [/\b(?:ten)\s+lakh(?:s)?\b/gi, '1000000'],
-    // Hundreds
+    // Hinglish spoken amounts
+    [/\bdedh\s+hazar\b/gi, '1500'],
+    [/\bdedh\s+hazaar\b/gi, '1500'],
+    [/\bdhai\s+hazar\b/gi, '2500'],
+    [/\bdhai\s+hazaar\b/gi, '2500'],
+    [/\bdedh\s+sau\b/gi, '150'],
+    [/\bdedh\s+so\b/gi, '150'],
+    [/\bdhai\s+sau\b/gi, '250'],
+    [/\bdhai\s+so\b/gi, '250'],
+    [/\b(?:ek)\s+(?:sau|so)\b/gi, '100'],
+    [/\b(?:do)\s+(?:sau|so)\b/gi, '200'],
+    [/\b(?:teen|tin)\s+(?:sau|so)\b/gi, '300'],
+    [/\b(?:chaar|char)\s+(?:sau|so)\b/gi, '400'],
+    [/\b(?:paanch|panch)\s+(?:sau|so)\b/gi, '500'],
+    [/\b(?:chhe|che)\s+(?:sau|so)\b/gi, '600'],
+    [/\b(?:saat)\s+(?:sau|so)\b/gi, '700'],
+    [/\b(?:aath)\s+(?:sau|so)\b/gi, '800'],
+    [/\b(?:nau)\s+(?:sau|so)\b/gi, '900'],
+    [/\b(?:dus|das)\s+(?:hazar|hazaar)\b/gi, '10000'],
+    [/\b(?:paanch|panch)\s+(?:hazar|hazaar)\b/gi, '5000'],
+    [/\b(?:do)\s+(?:hazar|hazaar)\b/gi, '2000'],
+    [/\b(?:ek)\s+(?:hazar|hazaar)\b/gi, '1000'],
+
+    // Hundreds and composite hundreds
     [/\btwenty\s+five\s+hundred\b/gi, '2500'],
     [/\btwenty\s+hundred\b/gi, '2000'],
+    [/\bnineteen\s+hundred\b/gi, '1900'],
+    [/\beighteen\s+hundred\b/gi, '1800'],
+    [/\bseventeen\s+hundred\b/gi, '1700'],
+    [/\bsixteen\s+hundred\b/gi, '1600'],
     [/\bfifteen\s+hundred\b/gi, '1500'],
     [/\bfourteen\s+hundred\b/gi, '1400'],
     [/\bthirteen\s+hundred\b/gi, '1300'],
     [/\btwelve\s+hundred\b/gi, '1200'],
     [/\beleven\s+hundred\b/gi, '1100'],
+    [/\bnine\s+hundred\s+(?:and\s+)?fifty\b/gi, '950'],
     [/\bnine\s+hundred\b/gi, '900'],
+    [/\b(?:eight|ate)\s+hundred\s+(?:and\s+)?fifty\b/gi, '850'],
     [/\b(?:eight|ate)\s+hundred\b/gi, '800'],
+    [/\bseven\s+hundred\s+(?:and\s+)?fifty\b/gi, '750'],
     [/\bseven\s+hundred\b/gi, '700'],
+    [/\bsix\s+hundred\s+(?:and\s+)?fifty\b/gi, '650'],
     [/\bsix\s+hundred\b/gi, '600'],
+    [/\bfive\s+hundred\s+(?:and\s+)?fifty\b/gi, '550'],
+    [/\bfive\s+hundred\s+(?:and\s+)?twenty\b/gi, '520'],
     [/\bfive\s+hundred\b/gi, '500'],
     [/\b(?:four|for)\s+hundred\s+(?:and\s+)?fifty\b/gi, '450'],
     [/\b(?:four|for)\s+hundred\b/gi, '400'],
@@ -98,10 +157,37 @@ function normalizeSpokenNumberWords(input: string): string {
     [/\b(?:two|to|too)\s+hundred\b/gi, '200'],
     [/\b(?:one|a|won)\s+hundred\s+(?:and\s+)?fifty\b/gi, '150'],
     [/\b(?:one|a|won)\s+hundred\b/gi, '100'],
+
+    // Colloquial fifties & composites
+    [/\bnine\s+fifty\b/gi, '950'],
+    [/\beight\s+fifty\b/gi, '850'],
+    [/\bseven\s+fifty\b/gi, '750'],
+    [/\bsix\s+fifty\b/gi, '650'],
+    [/\bfive\s+fifty\b/gi, '550'],
     [/\b(?:four|for)\s+fifty\b/gi, '450'],
     [/\b(?:three|tree)\s+fifty\b/gi, '350'],
     [/\b(?:two|to|too)\s+fifty\b/gi, '250'],
     [/\b(?:one|a|won)\s+fifty\b/gi, '150'],
+
+    // Tens with units
+    [/\bninety\s+five\b/gi, '95'],
+    [/\beighty\s+five\b/gi, '85'],
+    [/\bseventy\s+five\b/gi, '75'],
+    [/\bsixty\s+five\b/gi, '65'],
+    [/\bfifty\s+five\b/gi, '55'],
+    [/\bforty\s+five\b/gi, '45'],
+    [/\bthirty\s+five\b/gi, '35'],
+    [/\btwenty\s+five\b/gi, '25'],
+
+    // Standalone tens
+    [/\bninety\b/gi, '90'],
+    [/\beighty\b/gi, '80'],
+    [/\bseventy\b/gi, '70'],
+    [/\bsixty\b/gi, '60'],
+    [/\bfifty\b/gi, '50'],
+    [/\bforty\b/gi, '40'],
+    [/\bthirty\b/gi, '30'],
+    [/\btwenty\b/gi, '20'],
   ];
 
   for (const [pattern, replacement] of wordNumberMap) {
@@ -133,6 +219,22 @@ export function parseQuickExpense(
   // Normalize speech filler words, spoken number words, and homophones
   let workingText = normalizeSpokenNumberWords(trimmed);
 
+  // Normalize punctuation and symbols attached to numbers:
+  // 1. e.g. "500/-", "500/=" -> "500"
+  workingText = workingText.replace(/([0-9]+)\s*\/[-=]/g, '$1');
+
+  // 2. e.g. "Rs. 500", "Rs.500", "Rs 500" -> "INR $1"
+  workingText = workingText.replace(/\b(?:rs\.|rs|inr)\s*([0-9]+)/gi, 'INR $1');
+
+  // 3. e.g. "₹ 500" -> "₹$1"
+  workingText = workingText.replace(/₹\s*([0-9]+)/g, '₹$1');
+
+  // 4. Numbers followed immediately by comma, colon: e.g. "500, coffee" -> "500 coffee"
+  workingText = workingText.replace(/([0-9]+)[,:](\s|$)/g, '$1$2');
+
+  // 5. Numbers followed by period before words or end: e.g. "500. Coffee" -> "500 Coffee", "coffee 500." -> "coffee 500"
+  workingText = workingText.replace(/(^|\s)([0-9]+)\.(?=\s+[a-zA-Z]|$)/g, '$1$2');
+
   let detectedAmount: number | null = null;
   let detectedCurrency: string | undefined = undefined;
   let detectedPaymentMode: string | undefined = undefined;
@@ -143,7 +245,7 @@ export function parseQuickExpense(
   let confidence = 0.5;
 
   // 1. Detect Action Verb + Amount (e.g. "Paid 200", "Spent 1500", "Cost 800")
-  const actionAmountRegex = /(?:^|\s)(?:paid|pay|spent|spend|cost|charged|total(?:\s+of)?)\s+([0-9]+(?:,[0-9]{3})*(?:\.[0-9]+)?|[0-9]+(?:\.[0-9]+)?)(?=\s|$)/i;
+  const actionAmountRegex = /(?:^|\s)(?:paid|pay|spent|spend|cost|charged|total(?:\s+of)?)\s+([0-9]+(?:,[0-9]{3})*(?:\.[0-9]+)?|[0-9]+(?:\.[0-9]+)?)(?=[.,;:!?-]?(\s|$))/i;
   const actionMatch = workingText.match(actionAmountRegex);
   if (actionMatch) {
     const numStr = actionMatch[1].replace(/,/g, '');
@@ -293,7 +395,7 @@ export function parseQuickExpense(
 
   // If still no amount, search for standalone numbers (e.g. "Dinner 1450" or "450 Coffee" or "Shack 42 1200")
   if (detectedAmount === null) {
-    const numberRegex = /(?<=\s|^)([0-9]+(?:,[0-9]{3})*(?:\.[0-9]+)?|[0-9]+(?:\.[0-9]+)?)(?=\s|$)/g;
+    const numberRegex = /(?<=\s|^)([0-9]+(?:,[0-9]{3})*(?:\.[0-9]+)?|[0-9]+(?:\.[0-9]+)?)(?=[.,;:!?-]?(\s|$))/g;
     const matches = Array.from(workingText.matchAll(numberRegex));
     if (matches.length > 0) {
       // Smartly choose the actual expense amount if multiple numbers exist:
@@ -372,9 +474,9 @@ export function parseQuickExpense(
   }
 
   // 6. Clean up the title
-  // Strip leading prepositions or action remnants (e.g. "for cab" -> "cab", "on dinner" -> "dinner", "towards stay" -> "stay")
+  // Strip leading prepositions, particles or action remnants (e.g. "for cab" -> "cab", "on dinner" -> "dinner", "towards stay" -> "stay", "of coffee" -> "coffee")
   workingText = workingText
-    .replace(/^(?:for|on|towards|at|in)\s+/i, '')
+    .replace(/^(?:for|on|towards|at|in|of|worth|ka|ki|ke|ko|about)\s+/i, '')
     .trim();
 
   // Strip lingering verbs or prepositions
@@ -382,13 +484,16 @@ export function parseQuickExpense(
     .replace(/\b(?:paid\s+for|paid|spent\s+on|spent|bought|gave|cost)\b/gi, ' ')
     .trim();
 
-  // Strip trailing or leading prepositions or payment leftovers
+  // Strip trailing or leading prepositions, Hinglish particles, or payment leftovers
   workingText = workingText
-    .replace(/\s+(?:for|on|towards|by|via|at)$/i, '')
+    .replace(/\s+(?:for|on|towards|by|via|at|of|worth|ka|ki|ke|ko|mein|se)$/i, '')
     .trim();
   workingText = workingText
-    .replace(/^(?:for|on|towards|by|via)\s+/i, '')
+    .replace(/^(?:for|on|towards|by|via|of|worth|ka|ki|ke|ko)\s+/i, '')
     .trim();
+
+  // Strip dangling punctuation from boundaries (e.g. commas, dashes, colons)
+  workingText = workingText.replace(/^[.,:;!?-]+|[.,:;!?-]+$/g, '').trim();
 
   let finalTitle = workingText.replace(/\s+/g, ' ').trim();
   if (finalTitle.length > 0) {
