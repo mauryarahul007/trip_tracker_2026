@@ -6,10 +6,10 @@ import { triggerHaptic } from '../utils/haptics';
 import { newId } from '../utils/uuid';
 import { useHistoryBack } from '../utils/useHistoryBack';
 import { useEscapeKey } from '../utils/useEscapeKey';
-import { QrCodeView } from './QrCodeView';
 import { savePassAttachment, getPassAttachment } from '../services/passAttachmentStore';
 import { getTravelStatusInfo, type TravelStatusInfo } from '../utils/travelStatusService';
 import { LiveTravelStatusModal } from './LiveTravelStatusModal';
+import { PassScannerModal } from './PassScannerModal';
 
 interface Props {
   trip: Trip;
@@ -726,9 +726,13 @@ export function TravelPassWalletView({
                 type="button"
                 className="secondary-btn"
                 style={{ padding: '4px 10px', fontSize: '11.5px', display: 'flex', alignItems: 'center', gap: '4px' }}
-                onClick={() => setSelectedPassForQr(pass)}
+                onClick={() => {
+                  triggerHaptic('light');
+                  setSelectedPassForQr(pass);
+                }}
+                title="Open high-contrast barcode scanner for airport gate turnstiles"
               >
-                <span>📱</span> View QR
+                <span>📲</span> Pass Scanner
               </button>
               {(() => {
                 const statusInfo = getTravelStatusInfo(pass);
@@ -1893,40 +1897,12 @@ export function TravelPassWalletView({
         </>
       )}
 
-      {/* QR Code Full Screen Modal */}
-      {selectedPassForQr && (
-        <div
-          className="modal-overlay"
-          style={{ zIndex: 999 }}
-          onClick={() => setSelectedPassForQr(null)}
-          role="dialog"
-          aria-modal="true"
-        >
-          <div
-            className="glass-card modal-sheet fade-in"
-            onClick={(e) => e.stopPropagation()}
-            style={{ maxWidth: '340px', textAlign: 'center', padding: '24px 20px', borderRadius: '20px' }}
-          >
-            <h4 style={{ fontSize: '16px', fontWeight: 700, marginBottom: '4px' }}>{selectedPassForQr.title}</h4>
-            <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '16px' }}>
-              {selectedPassForQr.referenceCode ? `PNR: ${selectedPassForQr.referenceCode}` : 'Gate / Turnstile Scanner Pass'}
-            </div>
-            <div style={{ background: '#ffffff', padding: '16px', borderRadius: '16px', display: 'inline-block', boxShadow: '0 4px 12px rgba(0,0,0,0.15)' }}>
-              <QrCodeView value={selectedPassForQr.qrData || selectedPassForQr.referenceCode || selectedPassForQr.title} size={220} />
-            </div>
-            <div style={{ marginTop: '16px' }}>
-              <button
-                type="button"
-                className="gradient-btn"
-                style={{ width: '100%', padding: '8px' }}
-                onClick={() => setSelectedPassForQr(null)}
-              >
-                Close Pass
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* High-Contrast Fullscreen Scanner Modal (Airport Gate Mode) */}
+      <PassScannerModal
+        isOpen={Boolean(selectedPassForQr)}
+        onClose={() => setSelectedPassForQr(null)}
+        pass={selectedPassForQr}
+      />
 
       {/* Ticket Full-Screen Lightbox / PDF Viewer */}
       {viewingAttachment && (

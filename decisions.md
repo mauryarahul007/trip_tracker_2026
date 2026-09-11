@@ -2887,3 +2887,39 @@ This document logs all meaningful technical decisions, library choices, design p
     - **Google Flight Status Date Targeting:** Appended formatted date string (e.g. `15 Sep 2026`) directly into the Google Live Flight Status search query (`6E-537 flight status 15 Sep 2026`), navigating directly to the specific departure day rather than defaulting to today's flight card.
     - **FlightStats Date Query Parameters:** Added calendar day parameters (`?year=YYYY&month=M&date=D`) to Cirium FlightStats deep links, immediately filtering the global timetable and delay index to the ticket's departure date.
     - **Modal Hero Date & Time Display:** Prominently rendered departure date (`📅 15 Sep 2026`) and flight time (`⏰ 10:30 AM`) in `LiveTravelStatusModal.tsx` for both flight and train passes, with dynamic action button subtitles reflecting the target date.
+
+---
+
+## 156. Frictionless Traveler Experience Suite: Dynamic Island Travel Capsule, Offline Gate Scanner, Tactile Swipe Gestures, & Predictive Quick-Chips (v3.14.0)
+* **Context:**
+  - In real-world travel conditions (hurrying through departure halls, juggling luggage, spotty airport/subway cellular reception, and repetitive small cash logging), travelers face multiple micro-frictions:
+    1. Finding an upcoming boarding pass or train coach number requires switching away from the active trip expense feed to the Travel Pass Wallet tab and scrolling.
+    2. Optical boarding gate turnstiles and security scanners often fail on dark-mode mobile screens due to lack of contrast or screen auto-dimming during queues.
+    3. Flick-scrolling through a long ledger of expenses occasionally triggers accidental horizontal swipe-to-delete/edit gestures or jitter.
+    4. Entering repetitive on-trip expenses (breakfast, coffee, metro, water bottles, tolls) requires repeatedly typing identical titles and selecting categories.
+* **Decision:**
+  - **1. "Next Up" Smart Travel Capsule (`NextUpTravelCapsule.tsx`):**
+    - Pinned a sleek Dynamic Island header widget at the top of the trip ledger (`ExpenseList.tsx`).
+    - Intelligently detects imminent travel passes (within a 36-hour schedule window or departed < 3 hours ago).
+    - Computes real-time countdowns (`Boarding in 45m`, `Departs in 3h 15m`, `En Route / Airborne`, or `Tomorrow`).
+    - One-tap quick actions: instant access to `[📲 Show Pass]` (optical scanner) and `[🛫 Live Status]` (real-time gate, radar, and delay tracking).
+    - Expandable/collapsible accordion layout that stays unobtrusive while keeping critical flight/train numbers, seats, gates, and terminals in clear view.
+  - **2. High-Contrast Offline Pass Scanner Modal (`PassScannerModal.tsx`):**
+    - Built a high-contrast modal displaying an inverted `#FFFFFF` card backdrop with deep black retina QR/barcode specifically optimized for optical security gates and ticket turnstiles.
+    - Prominently surfaces passenger name, seat/berth, coach, terminal, gate, and booking reference with a 1-tap copy button.
+    - Leverages the browser `Screen Wake Lock API` (`navigator.wakeLock.request('screen')`) to keep the phone screen awake and bright while standing in boarding queues.
+    - Offline guarantee shield badge (`🛡️ Offline Scanner Ready · Stored in Device Memory`) reassuring passengers that passes are cached and render without cellular connectivity.
+    - Integrated directly into `TravelPassWalletView.tsx` and `NextUpTravelCapsule.tsx`.
+  - **3. Dual-Stage Tactile Haptic Swipe Gestures (`SwipeableRow.tsx`):**
+    - Added vertical dominance gesture filtering: during touch interactions, if vertical scroll exceeds 7px and $\ge$ horizontal movement, horizontal dragging is immediately suppressed to prioritize native buttery page scrolling.
+    - Implemented dual-stage tactile vibration haptics: a subtle "tick" peek feedback at 36px threshold, followed by a crisp "pop" commit feedback when pulled past 84px.
+    - Added smooth spring transitions with `cubic-bezier(0.16, 1, 0.3, 1)` and high-contrast edit/delete background affordances.
+  - **4. Predictive Expense Auto-Complete & Smart Quick-Chips (`src/utils/predictiveExpenses.ts`):**
+    - Developed an adaptive contextual suggestions engine that combines time-of-day awareness (e.g. Breakfast/Coffee/Metro in the morning, Lunch/Snacks/Sightseeing in the afternoon, Dinner/Drinks/Cab in the evening) with learned frequent trip expenses ($\ge 2$ occurrences).
+    - Added automatic category inference (`inferCategoryId`) matching natural transaction keywords to existing trip categories.
+    - Rendered horizontal scrollable quick-chips above the expense title input in `ExpenseForm.tsx`. Tapping any chip automatically fills the title, auto-selects the inferred category, and smoothly shifts focus to the amount input for near-zero-latency expense entry.
+* **Trade-offs Accepted:**
+  - The "Next Up" capsule restricts auto-surfacing to active/imminent passes within 36 hours of departure (or 3 hours post-departure) to prevent older or far-future passes from cluttering the transaction list when users are simply managing trip finances.
+  - The Wake Lock API degrades gracefully on unsupported mobile browsers or background tabs without throwing errors or blocking modal display.
+  - Quick-chips are non-intrusive and automatically clear or filter as the user types custom titles.
+

@@ -41,8 +41,11 @@ export function SwipeableRow({
   const [dragging, setDragging] = useState(false);
   const active = useRef(false);
   const startX = useRef(0);
+  const startY = useRef(0);
+  const isHorizontal = useRef(false);
   const hasMoved = useRef(false);
-  const hapticFired = useRef(false);
+  const peekHapticFired = useRef(false);
+  const commitHapticFired = useRef(false);
 
   // The action a leftward drag fires, and the action a rightward drag
   // fires -- swapped from the default when `reversed` is set.
@@ -69,47 +72,83 @@ export function SwipeableRow({
 
     active.current = true;
     startX.current = e.clientX;
+    startY.current = e.clientY;
+    isHorizontal.current = false;
     hasMoved.current = false;
-    hapticFired.current = false;
-    setDragging(true);
+    peekHapticFired.current = false;
+    commitHapticFired.current = false;
   };
 
   const handlePointerMove = (e: React.PointerEvent) => {
     if (!active.current) return;
-    const delta = e.clientX - startX.current;
-    if (Math.abs(delta) > 5) {
+    const deltaX = e.clientX - startX.current;
+    const deltaY = e.clientY - startY.current;
+
+    // Gesture disambiguation: If vertical movement dominates early on,
+    // yield completely to natural vertical scrolling!
+    if (!isHorizontal.current) {
+      if (Math.abs(deltaY) > 7 && Math.abs(deltaY) >= Math.abs(deltaX)) {
+        active.current = false;
+        setDragging(false);
+        setDragX(0);
+        return;
+      }
+      if (Math.abs(deltaX) > 7 && Math.abs(deltaX) > Math.abs(deltaY)) {
+        isHorizontal.current = true;
+        setDragging(true);
+      } else {
+        return;
+      }
+    }
+
+    if (Math.abs(deltaX) > 5) {
       hasMoved.current = true;
     }
-    if (delta < 0 && leftAction) {
+
+    if (deltaX < 0 && leftAction) {
       // Elastic rubber banding beyond threshold
-      let nextDragX = delta;
-      if (Math.abs(delta) > THRESHOLD) {
-        const overflow = Math.abs(delta) - THRESHOLD;
+      let nextDragX = deltaX;
+      if (Math.abs(deltaX) > THRESHOLD) {
+        const overflow = Math.abs(deltaX) - THRESHOLD;
         nextDragX = -(THRESHOLD + overflow * 0.45);
       }
       nextDragX = Math.max(nextDragX, -MAX_DRAG);
 
-      if (nextDragX < -THRESHOLD && !hapticFired.current) {
+      // Stage 1: Peek tick
+      if (nextDragX < -36 && !peekHapticFired.current) {
+        triggerHaptic('light');
+        peekHapticFired.current = true;
+      }
+
+      // Stage 2: Commit pop
+      if (nextDragX < -THRESHOLD && !commitHapticFired.current) {
         triggerHaptic('medium');
-        hapticFired.current = true;
-      } else if (nextDragX >= -THRESHOLD && hapticFired.current) {
-        hapticFired.current = false;
+        commitHapticFired.current = true;
+      } else if (nextDragX >= -THRESHOLD && commitHapticFired.current) {
+        commitHapticFired.current = false;
       }
       setDragX(nextDragX);
-    } else if (delta > 0 && rightAction) {
+    } else if (deltaX > 0 && rightAction) {
       // Elastic rubber banding beyond threshold
-      let nextDragX = delta;
-      if (delta > THRESHOLD) {
-        const overflow = delta - THRESHOLD;
+      let nextDragX = deltaX;
+      if (deltaX > THRESHOLD) {
+        const overflow = deltaX - THRESHOLD;
         nextDragX = THRESHOLD + overflow * 0.45;
       }
       nextDragX = Math.min(nextDragX, MAX_DRAG);
 
-      if (nextDragX > THRESHOLD && !hapticFired.current) {
+      // Stage 1: Peek tick
+      if (nextDragX > 36 && !peekHapticFired.current) {
+        triggerHaptic('light');
+        peekHapticFired.current = true;
+      }
+
+      // Stage 2: Commit pop
+      if (nextDragX > THRESHOLD && !commitHapticFired.current) {
         triggerHaptic('medium');
-        hapticFired.current = true;
-      } else if (nextDragX <= THRESHOLD && hapticFired.current) {
-        hapticFired.current = false;
+        commitHapticFired.current = true;
+      } else if (nextDragX <= THRESHOLD && commitHapticFired.current) {
+        commitHapticFired.current = false;
       }
       setDragX(nextDragX);
     }
@@ -119,6 +158,7 @@ export function SwipeableRow({
     if (!active.current) return;
     active.current = false;
     setDragging(false);
+    isHorizontal.current = false;
 
     if (dragX < -THRESHOLD && leftAction) {
       triggerHaptic(leftAction === onDelete ? 'warning' : 'light');

@@ -21,6 +21,7 @@ import { useHistoryBack } from '../utils/useHistoryBack';
 import { useEscapeKey } from '../utils/useEscapeKey';
 import { RollingNumber } from './common/RollingNumber';
 import { detectDuplicateExpense } from '../utils/duplicateExpenseDetector';
+import { getPredictiveQuickChips } from '../utils/predictiveExpenses';
 
 // Minimal Web Speech API surface -- not in the default TS DOM lib, and
 // vendor-prefixed on most browsers that support it (Chrome/Edge/Safari).
@@ -278,6 +279,11 @@ export function ExpenseForm({
   // Duplicate expense detection
   const expenses = useTripStore((s) => s.expenses);
   const allTripExpenses = useMemo(() => expenses.filter((e) => e.tripId === trip?.id), [expenses, trip?.id]);
+
+  // Contextual smart quick-chips (time of day + frequent trip items)
+  const predictiveChips = useMemo(() => {
+    return getPredictiveQuickChips(categories, allTripExpenses);
+  }, [categories, allTripExpenses]);
 
   // Snapshot initial expense IDs on mount so we never match against newly submitted/optimistic items
   const initialExpenseIdsRef = useRef<Set<string> | null>(null);
@@ -1113,7 +1119,69 @@ export function ExpenseForm({
       </div>
 
       <div className="form-group">
-        <label className="form-label" htmlFor="expense-title">Expense Title</label>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+          <label className="form-label" htmlFor="expense-title" style={{ marginBottom: 0 }}>
+            Expense Title
+          </label>
+        </div>
+
+        {/* Smart Predictive Quick-Chips */}
+        {!editingExpense && predictiveChips.length > 0 && (
+          <div
+            style={{
+              display: 'flex',
+              gap: '6px',
+              overflowX: 'auto',
+              paddingBottom: '6px',
+              marginBottom: '4px',
+              scrollbarWidth: 'none',
+              WebkitOverflowScrolling: 'touch',
+            }}
+          >
+            {predictiveChips.map((chip) => {
+              const isSelected = title.trim().toLowerCase() === chip.title.trim().toLowerCase();
+              return (
+                <button
+                  key={chip.id}
+                  type="button"
+                  onClick={() => {
+                    triggerHaptic('light');
+                    setTitle(chip.title);
+                    if (formError) setFormError('');
+                    if (chip.categoryId) {
+                      setCategory(chip.categoryId);
+                      const foundCat = categories.find((c) => c.id === chip.categoryId);
+                      setAutoSelectedCategoryName(foundCat?.name || null);
+                    }
+                    if (!amount || parseFloat(amount) <= 0) {
+                      amountInputRef.current?.focus();
+                    }
+                  }}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '5px',
+                    padding: '5px 11px',
+                    borderRadius: '9999px',
+                    fontSize: '11.5px',
+                    fontWeight: 600,
+                    background: isSelected ? 'var(--primary-accent)' : 'var(--bg-surface-hover, rgba(255, 255, 255, 0.07))',
+                    color: isSelected ? '#fff' : 'var(--text-primary)',
+                    border: isSelected ? '1px solid var(--primary-accent)' : '1px solid var(--border-color)',
+                    cursor: 'pointer',
+                    whiteSpace: 'nowrap',
+                    flexShrink: 0,
+                    transition: 'all 0.15s ease',
+                  }}
+                >
+                  <span style={{ fontSize: '13px' }}>{chip.icon}</span>
+                  <span>{chip.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        )}
+
         <div style={{ position: 'relative' }}>
           <input
             id="expense-title"

@@ -15,6 +15,7 @@ import { PullToRefreshIndicator } from './PullToRefreshIndicator';
 import { useTripStore } from '../store/tripStore';
 import { useHistoryBack } from '../utils/useHistoryBack';
 import { useEscapeKey } from '../utils/useEscapeKey';
+import { NextUpTravelCapsule } from './NextUpTravelCapsule';
 
 // Swipe-to-delete is a supplement to the explicit trash button — skip
 // wrapping the row in it at all when the viewer isn't allowed to delete.
@@ -534,6 +535,14 @@ export function ExpenseList({
             </>
           )}
         </div>
+      )}
+
+      {/* Imminent Boarding / Travel / Stay Dynamic Capsule */}
+      {trip && (
+        <NextUpTravelCapsule
+          trip={trip}
+          passes={trip.passes}
+        />
       )}
 
       {/* Clean Transaction Feed with Date Dividers or Quick Starters */}
