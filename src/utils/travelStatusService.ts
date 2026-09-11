@@ -122,13 +122,13 @@ const AIRLINE_NAME_TO_IATA: Record<string, string> = {
 export function buildFlightUrls(carrierCode: string, flightNumber: string) {
   const cleanCarrier = carrierCode.trim().toUpperCase();
   const cleanFlightNum = flightNumber.trim().replace(/^0+/, '') || flightNumber.trim();
-  const fullFlightCode = `${cleanCarrier} ${cleanFlightNum}`;
+  const fullFlightCode = `${cleanCarrier}-${cleanFlightNum}`;
 
   const googleStatusUrl = `https://www.google.com/search?q=${encodeURIComponent(
-    `${cleanCarrier} ${cleanFlightNum} flight status`
+    `${cleanCarrier}-${cleanFlightNum} flight status`
   )}`;
-  const flightradar24Url = `https://www.flightradar24.com/data/flights/${cleanCarrier.toLowerCase()}${cleanFlightNum}`;
-  const flightAwareUrl = `https://www.flightaware.com/live/flight/${cleanCarrier}${cleanFlightNum}`;
+  const flightradar24Url = `https://www.flightradar24.com/data/flights/${cleanCarrier.toLowerCase()}-${cleanFlightNum}`;
+  const flightAwareUrl = `https://www.flightaware.com/live/flight/${cleanCarrier}-${cleanFlightNum}`;
 
   return {
     fullFlightCode,

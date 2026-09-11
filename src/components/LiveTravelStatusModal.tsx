@@ -22,7 +22,7 @@ export function LiveTravelStatusModal({ isOpen, onClose, statusInfo }: Props) {
   // Sync state when modal opens or statusInfo changes
   useEffect(() => {
     if (statusInfo?.type === 'flight') {
-      setFlightInput(`${statusInfo.carrierCode} ${statusInfo.flightNumber}`);
+      setFlightInput(`${statusInfo.carrierCode}-${statusInfo.flightNumber}`);
       setIsEditingFlight(false);
     }
   }, [statusInfo]);

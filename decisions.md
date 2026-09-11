@@ -2876,6 +2876,8 @@ This document logs all meaningful technical decisions, library choices, design p
     - Enforced that general 2-char IATA codes MUST include at least one letter (`[A-Za-z][A-Za-z0-9]|[A-Za-z0-9][A-Za-z]`), preventing purely numeric sequences like `537` from being misclassified as carrier codes.
     - Added 3-letter ICAO to IATA mapping (e.g. `IGO` -> `6E`, `AIC` -> `AI`) and provider-name fallback (`IndiGo` -> `6E`).
     - Added inline interactive editing in `LiveTravelStatusModal` allowing users to view, edit, and fine-tune carrier & flight codes on the fly with live deep link updates.
+  - *(v3.13.2 Refinement)*: Standardized on hyphenated flight code format (`6E-537`) across all tracking deep links (Flightradar24 `data/flights/6e-537`, FlightAware `live/flight/6E-537`, and Google `6E-537 flight status`), modal header display, and 1-tap clipboard copying so external flight trackers instantly resolve carrier and flight number with hyphen preservation.
+
 
 
 
