@@ -10709,16 +10709,19 @@ textarea.input-field {
   border-radius: var(--border-radius-sm);
   padding: 10px 12px;
   border: 1px solid rgba(0, 0, 0, 0.04);
+  max-height: 480px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .note-content-text {
-  font-family: var(--font-family-mono);
-  font-size: 0.85rem;
+  font-family: inherit;
+  font-size: 0.88rem;
   color: var(--text-primary);
   margin: 0;
   white-space: pre-wrap;
   word-break: break-word;
-  line-height: 1.5;
+  line-height: 1.55;
 }
 
 .note-card-footer {

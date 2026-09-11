@@ -47,6 +47,329 @@ const NOTE_CATEGORIES: { id: NoteCategory; label: string; icon: string }[] = [
   { id: 'general', label: 'General Info', icon: '💡' },
 ];
 
+interface NoteSection {
+  title: string;
+  badge: string;
+  badgeColor: string;
+  quote?: string;
+  items: { icon?: string; text: string; note?: string }[];
+}
+
+function parseFormattedNote(raw: string): {
+  meta: string[];
+  sections: NoteSection[];
+  isStructured: boolean;
+} {
+  const lines = raw.split('\n');
+  const meta: string[] = [];
+  const sections: NoteSection[] = [];
+  let currentSection: NoteSection | null = null;
+  let hasStructuredContent = false;
+
+  for (const rawLine of lines) {
+    const line = rawLine.trim();
+    if (!line || line === '---') continue;
+
+    if (line.startsWith('📍') || line.startsWith('📅') || line.startsWith('⛅')) {
+      hasStructuredContent = true;
+      meta.push(line.replace(/\*\*/g, ''));
+      continue;
+    }
+
+    if (line.startsWith('###')) {
+      hasStructuredContent = true;
+      const title = line.replace(/^###\s*/, '').trim();
+      let badgeColor = 'var(--primary-accent)';
+      let badge = 'Bag';
+      if (title.toLowerCase().includes('carry-on') || title.toLowerCase().includes('cabin')) {
+        badgeColor = '#0284c7';
+        badge = '✈️ Cabin';
+      } else if (title.toLowerCase().includes('checked')) {
+        badgeColor = '#d97706';
+        badge = '🧳 Hold';
+      } else if (title.toLowerCase().includes('flexible') || title.toLowerCase().includes('any')) {
+        badgeColor = 'var(--primary-accent)';
+        badge = '🎒 Flexible';
+      }
+
+      currentSection = {
+        title,
+        badge,
+        badgeColor,
+        items: [],
+      };
+      sections.push(currentSection);
+      continue;
+    }
+
+    if (line.startsWith('>')) {
+      hasStructuredContent = true;
+      if (currentSection) {
+        currentSection.quote = line.replace(/^>\s*\*?/, '').replace(/\*$/, '').trim();
+      }
+      continue;
+    }
+
+    if (line.startsWith('- [ ]') || line.startsWith('- [x]') || line.startsWith('•') || line.startsWith('- ')) {
+      hasStructuredContent = true;
+      let text = line.replace(/^-\s*\[[ x]\]\s*/, '').replace(/^[•\-]\s*/, '').trim();
+      let icon = '📦';
+      let note: string | undefined;
+
+      const iconMatch = text.match(/^([\p{Emoji}\u200d\uFE0F]+)\s*(.*)/u);
+      if (iconMatch) {
+        icon = iconMatch[1];
+        text = iconMatch[2];
+      }
+
+      const noteMatch = text.match(/^(.*?)_\((.*?)\)_$/);
+      if (noteMatch) {
+        text = noteMatch[1].trim();
+        note = noteMatch[2].trim();
+      }
+
+      text = text.replace(/\*\*/g, '').trim();
+
+      if (!currentSection) {
+        currentSection = {
+          title: 'Items',
+          badge: 'List',
+          badgeColor: 'var(--primary-accent)',
+          items: [],
+        };
+        sections.push(currentSection);
+      }
+      currentSection.items.push({ icon, text, note });
+      continue;
+    }
+
+    if (currentSection && currentSection.items.length === 0 && !currentSection.quote) {
+      currentSection.quote = line;
+    }
+  }
+
+  return { meta, sections, isStructured: hasStructuredContent && sections.length > 0 };
+}
+
+function StandardNoteRenderer({ content, category }: { content: string; category?: string }) {
+  const lines = content.split('\n');
+  const isKeyValue = lines.some((l) =>
+    /^(ssid|wi-?fi|network|password|pass|pnr|code|booking|phone|cab|contact)\s*[:=]/i.test(l.trim())
+  );
+
+  if (isKeyValue || category === 'wifi') {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+        {lines.map((rawLine, idx) => {
+          const line = rawLine.trim();
+          if (!line) return null;
+          const match = line.match(/^([^:=]+)[:=]\s*(.*)$/);
+          if (match) {
+            const key = match[1].trim();
+            const val = match[2].trim();
+            return (
+              <div
+                key={idx}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: '4px 8px',
+                  borderRadius: '6px',
+                  background: 'rgba(0,0,0,0.03)',
+                  fontSize: '11.5px',
+                }}
+              >
+                <span style={{ fontWeight: 600, color: 'var(--text-muted)', fontSize: '11px' }}>
+                  {key}:
+                </span>
+                <code
+                  style={{
+                    fontFamily: 'var(--font-family-mono)',
+                    fontWeight: 700,
+                    color: 'var(--text-primary)',
+                    background: 'var(--bg-surface)',
+                    padding: '2px 6px',
+                    borderRadius: '4px',
+                    border: '1px solid var(--border-color)',
+                    fontSize: '11.5px',
+                  }}
+                >
+                  {val}
+                </code>
+              </div>
+            );
+          }
+          return (
+            <div key={idx} style={{ fontSize: '12px', color: 'var(--text-primary)', lineHeight: 1.4 }}>
+              {line}
+            </div>
+          );
+        })}
+      </div>
+    );
+  }
+
+  return (
+    <div
+      style={{
+        fontFamily: 'inherit',
+        fontSize: '12px',
+        color: 'var(--text-primary)',
+        lineHeight: 1.5,
+        whiteSpace: 'pre-wrap',
+        wordBreak: 'break-word',
+      }}
+    >
+      {content}
+    </div>
+  );
+}
+
+function NoteContentView({ content, category }: { content: string; category?: string }) {
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  const parsed = useMemo(() => parseFormattedNote(content), [content]);
+
+  if (parsed.isStructured) {
+    const totalItems = parsed.sections.reduce((acc, s) => acc + s.items.length, 0);
+    const shouldTruncate = totalItems > 6 && !isExpanded;
+    let itemsShown = 0;
+
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        {parsed.meta.length > 0 && (
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px' }}>
+            {parsed.meta.map((m, idx) => (
+              <span
+                key={idx}
+                style={{
+                  padding: '2px 7px',
+                  borderRadius: '6px',
+                  background: 'rgba(20, 184, 166, 0.08)',
+                  color: 'var(--text-secondary)',
+                  fontWeight: 600,
+                  fontSize: '10.5px',
+                }}
+              >
+                {m}
+              </span>
+            ))}
+          </div>
+        )}
+
+        {parsed.sections.map((section, sIdx) => {
+          if (shouldTruncate && itemsShown >= 6) return null;
+
+          const visibleItems = shouldTruncate
+            ? section.items.slice(0, Math.max(0, 6 - itemsShown))
+            : section.items;
+
+          itemsShown += visibleItems.length;
+
+          return (
+            <div
+              key={sIdx}
+              style={{
+                borderRadius: '8px',
+                border: `1px solid ${section.badgeColor}33`,
+                background: `${section.badgeColor}08`,
+                padding: '7px 9px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '5px',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-primary)' }}>
+                  {section.title}
+                </span>
+                <span
+                  style={{
+                    fontSize: '9.5px',
+                    fontWeight: 700,
+                    padding: '1px 5px',
+                    borderRadius: '4px',
+                    background: `${section.badgeColor}22`,
+                    color: section.badgeColor,
+                  }}
+                >
+                  {section.badge} ({section.items.length})
+                </span>
+              </div>
+
+              {section.quote && (
+                <div
+                  style={{
+                    fontSize: '10px',
+                    color: 'var(--text-secondary)',
+                    fontStyle: 'italic',
+                    padding: '3px 6px',
+                    borderRadius: '4px',
+                    background: 'rgba(0,0,0,0.03)',
+                    lineHeight: 1.3,
+                  }}
+                >
+                  💡 {section.quote}
+                </div>
+              )}
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                {visibleItems.map((item, iIdx) => (
+                  <div
+                    key={iIdx}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'baseline',
+                      gap: '5px',
+                      fontSize: '11.5px',
+                      color: 'var(--text-primary)',
+                      lineHeight: 1.35,
+                    }}
+                  >
+                    <span style={{ fontSize: '12px' }}>{item.icon || '•'}</span>
+                    <span style={{ fontWeight: 600 }}>{item.text}</span>
+                    {item.note && (
+                      <span style={{ fontSize: '9.5px', color: 'var(--text-muted)' }}>
+                        — {item.note}
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        })}
+
+        {totalItems > 6 && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsExpanded(!isExpanded);
+            }}
+            style={{
+              alignSelf: 'center',
+              background: 'transparent',
+              border: 'none',
+              color: 'var(--primary-accent)',
+              fontSize: '11px',
+              fontWeight: 700,
+              cursor: 'pointer',
+              padding: '2px 8px',
+              marginTop: '2px',
+            }}
+          >
+            {isExpanded ? '▴ Show Less' : `▾ View All ${totalItems} Items`}
+          </button>
+        )}
+      </div>
+    );
+  }
+
+  return <StandardNoteRenderer content={content} category={category} />;
+}
+
 export function ChecklistNotesTab({ trip, members, isAdmin }: Props) {
   // Always select live trip from store to react to changes
   const liveTrip = useTripStore((s) => s.trips.find((t) => t.id === trip.id)) || trip;
@@ -1049,7 +1372,7 @@ export function ChecklistNotesTab({ trip, members, isAdmin }: Props) {
                       <h4 className="note-title">{note.title}</h4>
 
                       <div className="note-content-box">
-                        <pre className="note-content-text">{note.content}</pre>
+                        <NoteContentView content={note.content} category={note.category} />
                       </div>
 
                       <div className="note-card-footer">
@@ -1385,6 +1708,7 @@ export function ChecklistNotesTab({ trip, members, isAdmin }: Props) {
         isOpen={isPackingAssistantOpen}
         onClose={() => setIsPackingAssistantOpen(false)}
         trip={liveTrip}
+        members={members}
         weatherCondition={weather?.condition}
         avgTemp={weather?.tempC}
         onBatchAddChecklist={async (items) => {

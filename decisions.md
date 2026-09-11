@@ -2752,5 +2752,23 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - Used React DOM portal to break free of transformed stacking contexts; ensures clean viewport positioning regardless of where in the component hierarchy the trigger button resides.
 
+---
 
-
+## 150. Streamlined Packing Assistant, Structured Notes Depiction & Universal Back Navigation (v3.11.0)
+* **Context:** The initial Smart Packing Assistant presented excessive information on screen (day-by-day forecast strips, large luggage cards, and popovers that caused header title shifting), squeezing the interactive packing checklist to the very bottom. When saved as a note in the Notes & Checklists tab, the content rendered as a raw monospace text dump. Furthermore, users navigating back using the browser Back button, mobile swipe-back gestures, or an in-app back button needed predictable return to the previous page (Notes tab).
+* **Decision:** Dramatically streamlined the assistant interface to dedicate 80%+ of vertical viewport space to packing items, replaced raw text note rendering with a rich structured note view component (`NoteContentView`), and implemented universal back navigation (`useHistoryBack`, `useEscapeKey`, in-app `←` back button).
+* **Pattern/Implementation:**
+  - `SmartPackingAssistantModal.tsx`:
+    - Removed bulky day-by-day weather cards and static luggage blocks; replaced with a single-row compact segmented filter bar (`All`, `Cabin`, `Hold`, `Squad`, Duration stepper `[- 5d +]`, and `All/None` toggle).
+    - Compacted the header to a non-wrapping single-line title (`Smart Packing • {Destination}`) with climate pills, eliminating header layout shifts.
+    - Added dedicated in-app `←` Back button (`IconChevronLeft`) and wired `useHistoryBack(isOpen, handleBack)` and `useEscapeKey(isOpen, handleBack)` so hardware back, browser back, swipe-back, and Esc cleanly dismiss the modal and return to the Notes tab.
+    - Fast airport security scanner tray accessible on demand via a compact `[ ✈️ Flight Ready ✓ ]` / `[ 🛂 Essentials ]` pill with 1-tap "Pack All 4" action.
+    - Squad shared gear carrier assignment (`🎒 Carrier: {MemberName}`) with live weight summaries.
+  - `ChecklistNotesTab.tsx` & `src/index.css`:
+    - Replaced raw `<pre className="note-content-text">` with a structured `NoteContentView` parser.
+    - Parsed categories into distinct visual sections: `✈️ Cabin Bag` (blue badge), `🧳 Checked Hold` (amber badge), `🎒 Flexible / Shared` (teal badge), and checklist rows with bold titles and subtle guidance text.
+    - Rendered top trip metadata (`📍 Destination`, `📅 Dates`, `⛅ Weather`) into sleek glass pills.
+    - Added an inline collapsible toggle (`[ ▾ View All N Items ]` / `[ ▴ Show Less ]`) for long notes (>6 items).
+    - Rendered Wi-Fi and credential codes into copyable badges while preserving proportional, readable font hierarchy.
+* **Trade-offs Accepted:**
+  - Kept underlying `note.content` string unchanged in the database for 100% backward compatibility and plain-text clipboard copying fidelity, while transforming the visual presentation inside the note card into rich structured elements.

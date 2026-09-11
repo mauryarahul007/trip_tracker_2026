@@ -1,4 +1,5 @@
 export type AirplaneEligibility = 'cabin-only' | 'checkin-only' | 'any';
+export type PackingScope = 'personal' | 'shared';
 
 export interface PackingSuggestionItem {
   id: string;
@@ -7,6 +8,8 @@ export interface PackingSuggestionItem {
   airplaneEligibility: AirplaneEligibility;
   cabinNote?: string; // e.g. "Prohibited in hold (ICAO fire safety)" or "Container must be ≤ 100ml"
   isLiquid?: boolean;
+  isFlightEssential?: boolean; // Essential for clearing airport security / boarding
+  scope?: PackingScope; // 'personal' vs 'shared' (squad gear to avoid duplicates)
   reason?: string; // e.g. "Monsoon / Rain in forecast", "Beach destination", "Winter climate"
   icon?: string;
   defaultChecked?: boolean;
@@ -21,6 +24,76 @@ export interface PackingContext {
   avgTemp?: number;
   isInternational?: boolean;
   luggageFilter?: 'all' | 'cabin-only' | 'checkin-only';
+}
+
+export interface DayForecast {
+  dayNumber: number;
+  dateStr?: string;
+  emoji: string;
+  tempC: number;
+  condition: string;
+  outfitTip: string;
+}
+
+/**
+ * Generate sensible day-by-day forecast & outfit matrix for the horizon strip.
+ */
+export function generateDailyForecasts(
+  startDateStr: string | undefined,
+  durationDays: number,
+  baseCondition: string,
+  baseTempC: number
+): DayForecast[] {
+  const forecasts: DayForecast[] = [];
+  const days = Math.min(Math.max(1, durationDays), 14);
+  const conditionLower = (baseCondition || '').toLowerCase();
+
+  for (let i = 0; i < days; i++) {
+    const tempVar = ((i * 3) % 5) - 2;
+    const tempC = Math.round(baseTempC + tempVar);
+    let emoji = '☀️';
+    let condition = 'Clear & Sunny';
+    let outfitTip = 'Comfortable breathable daywear';
+
+    let dateStr: string | undefined;
+    if (startDateStr) {
+      const s = startDateStr.includes('T') ? startDateStr.split('T')[0] : startDateStr;
+      const [sy, sm, sd] = s.split('-').map(Number);
+      if (sy && sm && sd) {
+        const d = new Date(sy, sm - 1, sd + i);
+        dateStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      }
+    }
+
+    if (conditionLower.includes('rain') || conditionLower.includes('monsoon')) {
+      emoji = i % 2 === 0 ? '🌧️' : '🌦️';
+      condition = i % 2 === 0 ? 'Showers Expected' : 'Humid & Overcast';
+      outfitTip = 'Waterproof rain poncho & quick-dry shoes';
+    } else if (conditionLower.includes('snow') || baseTempC < 12) {
+      emoji = '❄️';
+      condition = 'Cold Alpine Air';
+      outfitTip = 'Thermal base layers, fleece & down jacket';
+    } else if (baseTempC > 28) {
+      emoji = '☀️';
+      condition = 'High Sun & Warm';
+      outfitTip = 'Light linen/cotton, UV hat & sunglasses';
+    } else {
+      emoji = i === 0 ? '⛅' : '☀️';
+      condition = i === 0 ? 'Pleasant Breezy' : 'Clear Sky';
+      outfitTip = 'Layered daywear with light evening jacket';
+    }
+
+    forecasts.push({
+      dayNumber: i + 1,
+      dateStr,
+      emoji,
+      tempC,
+      condition,
+      outfitTip,
+    });
+  }
+
+  return forecasts;
 }
 
 /**
@@ -69,13 +142,6 @@ export function inferSeasonalClimate(destination: string, startDateStr?: string)
     destLower.includes('chile');
 
   const effectiveMonth = isSouthernHemisphere ? (month + 6) % 12 : month;
-
-  // Northern Seasons:
-  // 11, 0, 1 => Winter (Dec, Jan, Feb)
-  // 2, 3 => Spring (Mar, Apr)
-  // 4, 5, 6 => Summer (May, Jun, Jul)
-  // 6, 7, 8 => Monsoon (South Asia Jun-Sep)
-  // 9, 10 => Autumn (Oct, Nov)
 
   const isWinterMonths = effectiveMonth === 11 || effectiveMonth === 0 || effectiveMonth === 1;
   const isSummerMonths = effectiveMonth === 4 || effectiveMonth === 5 || effectiveMonth === 6;
@@ -164,6 +230,8 @@ export function generateSmartPackingSuggestions(context: PackingContext): Packin
       text: 'Government Photo ID / Physical Passport',
       category: 'documents',
       airplaneEligibility: 'cabin-only',
+      isFlightEssential: true,
+      scope: 'personal',
       cabinNote: 'Must be in cabin / accessible for airport check-in and security checkpoints',
       defaultChecked: true,
       icon: '🪪',
@@ -173,6 +241,8 @@ export function generateSmartPackingSuggestions(context: PackingContext): Packin
       text: 'Flight / Train Boarding Passes & Itinerary',
       category: 'documents',
       airplaneEligibility: 'cabin-only',
+      isFlightEssential: true,
+      scope: 'personal',
       cabinNote: 'Carry in cabin or store in digital passes wallet',
       defaultChecked: true,
       icon: '🎫',
@@ -182,6 +252,7 @@ export function generateSmartPackingSuggestions(context: PackingContext): Packin
       text: 'Hotel / Stay Confirmation Vouchers',
       category: 'documents',
       airplaneEligibility: 'cabin-only',
+      scope: 'shared',
       cabinNote: 'Keep booking reference handy for immigration / customs',
       defaultChecked: true,
       icon: '🏨',
@@ -191,6 +262,8 @@ export function generateSmartPackingSuggestions(context: PackingContext): Packin
       text: 'Cash & Forex / Debit Cards',
       category: 'documents',
       airplaneEligibility: 'cabin-only',
+      isFlightEssential: true,
+      scope: 'personal',
       cabinNote: 'Aviation security: never pack money or credit cards in check-in hold',
       defaultChecked: true,
       icon: '💵',
@@ -204,6 +277,7 @@ export function generateSmartPackingSuggestions(context: PackingContext): Packin
         text: 'Printed Passport Copies & Visa Papers',
         category: 'documents',
         airplaneEligibility: 'cabin-only',
+        scope: 'personal',
         reason: 'International travel & immigration',
         cabinNote: 'Keep copies separate from original passport',
         defaultChecked: true,
@@ -214,6 +288,7 @@ export function generateSmartPackingSuggestions(context: PackingContext): Packin
         text: 'Travel Medical Insurance Policy Card',
         category: 'documents',
         airplaneEligibility: 'cabin-only',
+        scope: 'shared',
         reason: 'International visa / border compliance',
         defaultChecked: true,
         icon: '📋',
@@ -230,6 +305,8 @@ export function generateSmartPackingSuggestions(context: PackingContext): Packin
       text: 'Power Bank (10,000 - 20,000 mAh)',
       category: 'packing',
       airplaneEligibility: 'cabin-only',
+      isFlightEssential: true,
+      scope: 'personal',
       reason: 'ICAO Aviation Safety: loose lithium batteries strictly prohibited in hold',
       cabinNote: 'Must be carried in cabin only. Prohibited in check-in baggage!',
       defaultChecked: true,
@@ -240,6 +317,7 @@ export function generateSmartPackingSuggestions(context: PackingContext): Packin
       text: 'Phone Charger & Fast-charging Cables',
       category: 'packing',
       airplaneEligibility: 'any',
+      scope: 'personal',
       cabinNote: 'Recommended in cabin for airport / in-flight charging ports',
       defaultChecked: true,
       icon: '🔌',
@@ -249,19 +327,32 @@ export function generateSmartPackingSuggestions(context: PackingContext): Packin
       text: 'Earphones / Noise Cancelling Headphones',
       category: 'packing',
       airplaneEligibility: 'cabin-only',
+      scope: 'personal',
       reason: 'In-flight entertainment & comfort',
       defaultChecked: true,
       icon: '🎧',
+    },
+    {
+      id: 'squad-speaker',
+      text: 'Portable Bluetooth Travel Speaker',
+      category: 'packing',
+      airplaneEligibility: 'cabin-only',
+      scope: 'shared',
+      reason: 'Squad entertainment at stay / villa (Bring 1 for the group)',
+      cabinNote: 'Internal lithium battery - carry in cabin',
+      defaultChecked: false,
+      icon: '🔊',
     }
   );
 
   if (context.isInternational) {
     rawSuggestions.push({
       id: 'elec-adapter',
-      text: 'Universal Travel Plug Adapter',
+      text: 'Universal Travel Plug Adapter & Multi-USB Hub',
       category: 'packing',
       airplaneEligibility: 'any',
-      reason: 'International plug sockets',
+      scope: 'shared',
+      reason: 'International plug sockets (Shareable for squad)',
       defaultChecked: true,
       icon: '🔌',
     });
@@ -279,6 +370,7 @@ export function generateSmartPackingSuggestions(context: PackingContext): Packin
       text: `${topsCount}x T-shirts / Shirts`,
       category: 'packing',
       airplaneEligibility: 'any',
+      scope: 'personal',
       reason: `Calculated for ${days} days`,
       defaultChecked: true,
       icon: '👕',
@@ -288,6 +380,7 @@ export function generateSmartPackingSuggestions(context: PackingContext): Packin
       text: `${bottomsCount}x Pants / Shorts / Jeans`,
       category: 'packing',
       airplaneEligibility: 'any',
+      scope: 'personal',
       reason: `Calculated for ${days} days`,
       defaultChecked: true,
       icon: '👖',
@@ -297,6 +390,7 @@ export function generateSmartPackingSuggestions(context: PackingContext): Packin
       text: `${topsCount}x Undergarments & Socks`,
       category: 'packing',
       airplaneEligibility: 'any',
+      scope: 'personal',
       defaultChecked: true,
       icon: '🧦',
     },
@@ -305,6 +399,7 @@ export function generateSmartPackingSuggestions(context: PackingContext): Packin
       text: '2x Nightwear / Loungewear',
       category: 'packing',
       airplaneEligibility: 'any',
+      scope: 'personal',
       defaultChecked: true,
       icon: '🩳',
     },
@@ -313,6 +408,7 @@ export function generateSmartPackingSuggestions(context: PackingContext): Packin
       text: 'Comfortable Walking Shoes',
       category: 'packing',
       airplaneEligibility: 'any',
+      scope: 'personal',
       defaultChecked: true,
       icon: '👟',
     }
@@ -328,6 +424,7 @@ export function generateSmartPackingSuggestions(context: PackingContext): Packin
         text: 'Swimwear / Swim Trunks',
         category: 'packing',
         airplaneEligibility: 'any',
+        scope: 'personal',
         reason: 'Beach / Coastal spot',
         defaultChecked: true,
         icon: '🩲',
@@ -337,8 +434,9 @@ export function generateSmartPackingSuggestions(context: PackingContext): Packin
         text: 'Sunscreen Lotion (SPF 50+ travel bottle ≤100ml)',
         category: 'packing',
         airplaneEligibility: 'cabin-only',
+        scope: 'shared',
         isLiquid: true,
-        reason: 'High UV exposure (Cabin compliant container)',
+        reason: 'High UV exposure (Shareable squad bottle)',
         cabinNote: '3-1-1 Rule: Keep in transparent 1-quart bag if carried in cabin',
         defaultChecked: true,
         icon: '🧴',
@@ -348,6 +446,7 @@ export function generateSmartPackingSuggestions(context: PackingContext): Packin
         text: 'Polarized Sunglasses & Sun Hat',
         category: 'packing',
         airplaneEligibility: 'any',
+        scope: 'personal',
         reason: 'Sunny weather',
         defaultChecked: true,
         icon: '🕶️',
@@ -357,6 +456,7 @@ export function generateSmartPackingSuggestions(context: PackingContext): Packin
         text: 'Waterproof Phone Pouch',
         category: 'packing',
         airplaneEligibility: 'any',
+        scope: 'personal',
         reason: 'Water sports & pool',
         defaultChecked: true,
         icon: '📱',
@@ -366,6 +466,7 @@ export function generateSmartPackingSuggestions(context: PackingContext): Packin
         text: 'Flip Flops / Beach Slippers',
         category: 'packing',
         airplaneEligibility: 'any',
+        scope: 'personal',
         defaultChecked: true,
         icon: '🩴',
       }
@@ -382,6 +483,7 @@ export function generateSmartPackingSuggestions(context: PackingContext): Packin
         text: 'Heavy Down Jacket / Windcheater',
         category: 'packing',
         airplaneEligibility: 'any',
+        scope: 'personal',
         reason: `Cold climate (~${temp}°C)`,
         cabinNote: 'Wear or carry onto aircraft to save luggage weight',
         defaultChecked: true,
@@ -392,6 +494,7 @@ export function generateSmartPackingSuggestions(context: PackingContext): Packin
         text: 'Thermal Innerwear (Top & Bottom)',
         category: 'packing',
         airplaneEligibility: 'any',
+        scope: 'personal',
         reason: `Low temperatures (~${temp}°C)`,
         defaultChecked: true,
         icon: '🧣',
@@ -401,6 +504,7 @@ export function generateSmartPackingSuggestions(context: PackingContext): Packin
         text: 'Woolen Beanie & Warm Gloves',
         category: 'packing',
         airplaneEligibility: 'any',
+        scope: 'personal',
         reason: 'Protection against cold winds',
         defaultChecked: true,
         icon: '🧤',
@@ -410,6 +514,7 @@ export function generateSmartPackingSuggestions(context: PackingContext): Packin
         text: 'Moisturizer & Lip Balm (Travel Mini ≤100ml)',
         category: 'packing',
         airplaneEligibility: 'any',
+        scope: 'personal',
         isLiquid: true,
         reason: 'Dry cold mountain air',
         cabinNote: 'Complies with 3-1-1 cabin liquids limit',
@@ -418,7 +523,6 @@ export function generateSmartPackingSuggestions(context: PackingContext): Packin
       }
     );
 
-    // If trekking or mountain destination: flag trekking pole check-in requirement
     if (
       destLower.includes('trek') ||
       destLower.includes('mountain') ||
@@ -434,6 +538,7 @@ export function generateSmartPackingSuggestions(context: PackingContext): Packin
         text: 'Trekking Poles / Hiking Sticks',
         category: 'packing',
         airplaneEligibility: 'checkin-only',
+        scope: 'personal',
         reason: 'Trekking terrain',
         cabinNote: 'Prohibited in aircraft cabin by airport security. Must go into check-in hold!',
         defaultChecked: false,
@@ -452,6 +557,7 @@ export function generateSmartPackingSuggestions(context: PackingContext): Packin
         text: 'Compact Foldable Umbrella / Rain Poncho',
         category: 'packing',
         airplaneEligibility: 'any',
+        scope: 'personal',
         reason: 'Precipitation / Rain in forecast',
         cabinNote: 'Foldable umbrellas allowed in cabin; straight spiked ones may require check-in',
         defaultChecked: true,
@@ -462,6 +568,7 @@ export function generateSmartPackingSuggestions(context: PackingContext): Packin
         text: 'Waterproof Backpack Cover',
         category: 'packing',
         airplaneEligibility: 'any',
+        scope: 'personal',
         reason: 'Rain protection on the go',
         defaultChecked: true,
         icon: '🎒',
@@ -471,6 +578,7 @@ export function generateSmartPackingSuggestions(context: PackingContext): Packin
         text: 'Quick-dry Microfiber Towel & Clothes',
         category: 'packing',
         airplaneEligibility: 'any',
+        scope: 'personal',
         reason: 'High humidity & wet conditions',
         defaultChecked: true,
         icon: '🧺',
@@ -487,16 +595,20 @@ export function generateSmartPackingSuggestions(context: PackingContext): Packin
       text: 'Personal Prescription Medicines & Inhalers',
       category: 'medical',
       airplaneEligibility: 'cabin-only',
+      isFlightEssential: true,
+      scope: 'personal',
       cabinNote: 'Aviation guideline: never check in vital medications in hold',
       defaultChecked: true,
       icon: '💊',
     },
     {
       id: 'med-kit',
-      text: 'First-aid Essentials (Band-aids, Antiseptic cream ≤100ml)',
+      text: 'Shared Squad First-aid Kit (Band-aids, Antiseptic, Cotton)',
       category: 'medical',
       airplaneEligibility: 'any',
+      scope: 'shared',
       isLiquid: true,
+      reason: 'Shared squad medical kit (1 member can carry for group)',
       defaultChecked: true,
       icon: '🩹',
     },
@@ -505,6 +617,8 @@ export function generateSmartPackingSuggestions(context: PackingContext): Packin
       text: 'Paracetamol, Antacids & Motion Sickness Pills',
       category: 'medical',
       airplaneEligibility: 'any',
+      scope: 'shared',
+      reason: 'General travel pills (1 strip for group)',
       defaultChecked: true,
       icon: '💊',
     }
@@ -519,6 +633,7 @@ export function generateSmartPackingSuggestions(context: PackingContext): Packin
       text: 'Travel Toiletries Kit (Toothbrush, Paste, Shampoo ≤100ml)',
       category: 'packing',
       airplaneEligibility: 'any',
+      scope: 'personal',
       isLiquid: true,
       cabinNote: 'Containers ≤ 100ml (3.4oz) in transparent 1-quart resealable bag',
       defaultChecked: true,
@@ -529,25 +644,25 @@ export function generateSmartPackingSuggestions(context: PackingContext): Packin
       text: 'Sanitizer Wipes & Tissues',
       category: 'packing',
       airplaneEligibility: 'any',
+      scope: 'shared',
       cabinNote: 'Solid wipes are exempt from liquid volume limits',
       defaultChecked: true,
       icon: '🧼',
     }
   );
 
-  // Swiss army knife / Multi-tool / Nail clippers (Check-in security warning)
   rawSuggestions.push({
     id: 'gear-multitool',
     text: 'Multi-tool / Swiss Pocket Knife / Scissors',
     category: 'packing',
     airplaneEligibility: 'checkin-only',
-    reason: 'Emergency utility gear',
+    scope: 'shared',
+    reason: 'Emergency utility gear (1 for the group)',
     cabinNote: 'Blades and sharp objects strictly prohibited in airplane cabin. Check-in only!',
     defaultChecked: false,
     icon: '🔪',
   });
 
-  // Apply luggageFilter if requested
   if (context.luggageFilter === 'cabin-only') {
     return rawSuggestions.filter((item) => item.airplaneEligibility !== 'checkin-only');
   } else if (context.luggageFilter === 'checkin-only') {
