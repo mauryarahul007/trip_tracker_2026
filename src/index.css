@@ -11190,5 +11190,27 @@ textarea.input-field {
   animation: fadeIn 0.25s ease-out;
 }
 
+/* Smart Travel & Packing Assistant Portal Modal & Bottom Sheet */
+.packing-assistant-portal-overlay {
+  z-index: 10000 !important;
+  touch-action: auto !important;
+}
+
+.packing-assistant-sheet {
+  animation: bottomSheetSlideUp 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@media (min-width: 640px) {
+  .packing-assistant-portal-overlay {
+    align-items: center !important;
+    padding: 24px !important;
+  }
+  .packing-assistant-sheet {
+    border-radius: 24px !important;
+    max-height: min(85dvh, 720px) !important;
+  }
+}
+
+
 
 

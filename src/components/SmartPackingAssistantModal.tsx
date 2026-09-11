@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import type { Trip, ChecklistItem } from '../types';
 import {
   generateSmartPackingSuggestions,
@@ -34,7 +35,7 @@ export function SmartPackingAssistantModal({
   onBatchAddChecklist,
   onSaveAsNote,
 }: Props) {
-  // Lock body scroll while modal is active to prevent page bounce/background scrolling
+  // Lock body scroll while modal is active
   useScrollLock(isOpen);
   useEscapeKey(isOpen, onClose);
   useHistoryBack(isOpen, onClose);
@@ -44,6 +45,7 @@ export function SmartPackingAssistantModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [noteSavedFeedback, setNoteSavedFeedback] = useState(false);
   const [seasonOverride, setSeasonOverride] = useState<SeasonOverride>('auto');
+  const [showFlightRules, setShowFlightRules] = useState(false);
 
   // Compute trip duration in days safely without timezone offsets
   const computedDuration = useMemo(() => {
@@ -74,17 +76,16 @@ export function SmartPackingAssistantModal({
   // Effective weather condition and temperature based on overrides
   const effectiveWeather = useMemo(() => {
     if (seasonOverride === 'winter') {
-      return { condition: 'Winter Cold', temp: 6, label: '❄️ Winter Climate' };
+      return { condition: 'Winter Cold', temp: 6, label: '❄️ Winter' };
     }
     if (seasonOverride === 'monsoon') {
-      return { condition: 'Heavy Rain / Monsoon', temp: 25, label: '🌧️ Monsoon Season' };
+      return { condition: 'Heavy Rain / Monsoon', temp: 25, label: '🌧️ Monsoon' };
     }
     if (seasonOverride === 'summer') {
-      return { condition: 'Sunny / Hot', temp: 33, label: '☀️ Summer Heat' };
+      return { condition: 'Sunny / Hot', temp: 33, label: '☀️ Summer' };
     }
-    // Auto: live weather or inferred seasonal
     if (weatherCondition && avgTemp !== undefined) {
-      return { condition: weatherCondition, temp: avgTemp, label: `⛅ Live Forecast (${avgTemp}°C)` };
+      return { condition: weatherCondition, temp: avgTemp, label: `⛅ ${avgTemp}°C` };
     }
     return {
       condition: seasonalClimate.isCold ? 'Cold' : seasonalClimate.isRainy ? 'Rainy' : 'Fair',
@@ -116,12 +117,11 @@ export function SmartPackingAssistantModal({
   // Selected item IDs state (default selects all items)
   const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set(allSuggestions.map((s) => s.id)));
 
-  // Sync selected IDs when item list changes dynamically (e.g. days or season updated)
+  // Sync selected IDs when item list changes dynamically
   useEffect(() => {
     setSelectedIds((prev) => {
       const next = new Set<string>();
       allSuggestions.forEach((item) => {
-        // Keep checked if previously selected or defaultChecked
         if (prev.has(item.id) || (item.defaultChecked && !prev.has(`unselected_${item.id}`))) {
           next.add(item.id);
         }
@@ -247,81 +247,127 @@ export function SmartPackingAssistantModal({
     setTimeout(() => setNoteSavedFeedback(false), 2500);
   };
 
-  // Real-time selected counts for footer feedback
+  // Real-time counts
   const selectedCount = allSuggestions.filter((i) => selectedIds.has(i.id)).length;
   const selectedCabinCount = cabinItems.filter((i) => selectedIds.has(i.id)).length;
   const selectedCheckinCount = checkinItems.filter((i) => selectedIds.has(i.id)).length;
 
-  return (
+  const modalContent = (
     <div
-      className="modal-overlay"
+      className="modal-overlay packing-assistant-portal-overlay"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
       aria-label="Smart Travel Packing Assistant"
       style={{
-        overscrollBehavior: 'contain',
-        overscrollBehaviorY: 'contain',
-        WebkitOverflowScrolling: 'touch',
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        zIndex: 10000,
+        background: 'rgba(15, 23, 42, 0.75)',
+        backdropFilter: 'blur(16px)',
+        WebkitBackdropFilter: 'blur(16px)',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'flex-end', // Bottom sheet on mobile, centered on larger screens
+        padding: '0',
+        touchAction: 'auto',
+        overflow: 'hidden',
       }}
     >
       <div
-        className="glass-card fade-in"
+        className="glass-card packing-assistant-sheet"
         onClick={(e) => e.stopPropagation()}
         style={{
-          maxWidth: '600px',
           width: '100%',
-          height: 'min(90dvh, 720px)',
-          maxHeight: 'min(90dvh, 720px)',
+          maxWidth: '640px',
+          height: 'min(92dvh, 760px)',
+          maxHeight: 'min(92dvh, 760px)',
           display: 'flex',
           flexDirection: 'column',
-          padding: '0',
-          overflow: 'hidden',
-          borderRadius: '20px',
-          boxShadow: 'var(--shadow-xl)',
+          background: 'var(--bg-surface, #ffffff)',
+          borderTopLeftRadius: '24px',
+          borderTopRightRadius: '24px',
+          borderBottomLeftRadius: '0',
+          borderBottomRightRadius: '0',
+          boxShadow: '0 -10px 40px rgba(0, 0, 0, 0.28)',
           position: 'relative',
-          overscrollBehavior: 'contain',
-          overscrollBehaviorY: 'contain',
-          touchAction: 'pan-y',
+          overflow: 'hidden',
         }}
       >
-        {/* Top Header */}
+        {/* Mobile Pull Handle */}
+        <div style={{ display: 'flex', justifyContent: 'center', padding: '8px 0 2px' }}>
+          <div style={{ width: '38px', height: '4px', borderRadius: '999px', background: 'var(--border-color, rgba(0,0,0,0.15))' }} />
+        </div>
+
+        {/* 1. Sleek Compact Header */}
         <div
           style={{
-            padding: '14px 18px',
-            borderBottom: '1px solid var(--border-color)',
+            padding: '10px 18px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            background: 'var(--bg-surface-elevated, rgba(15,23,42,0.03))',
+            borderBottom: '1px solid var(--border-color)',
+            background: 'var(--bg-surface-elevated, rgba(15,23,42,0.02))',
             flexShrink: 0,
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <span style={{ fontSize: '24px' }}>✈️</span>
+            <div
+              style={{
+                width: '36px',
+                height: '36px',
+                borderRadius: '10px',
+                background: 'linear-gradient(135deg, rgba(20, 184, 166, 0.15), rgba(14, 165, 233, 0.2))',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '20px',
+              }}
+            >
+              ✈️
+            </div>
             <div>
-              <h3 style={{ fontSize: '15.5px', fontWeight: 700, margin: 0 }}>
-                Smart Travel & Packing Assistant
+              <h3 style={{ fontSize: '15.5px', fontWeight: 700, margin: 0, color: 'var(--text-primary)' }}>
+                Smart Travel & Packing
               </h3>
-              <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-                {trip.destination || trip.name} • Live Aviation & Weather Rules
-              </span>
+              <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '6px', marginTop: '1px' }}>
+                <span style={{ fontWeight: 600, color: 'var(--primary-accent)' }}>{trip.destination || trip.name}</span>
+                <span>•</span>
+                <span>{effectiveWeather.label}</span>
+              </div>
             </div>
           </div>
+
           <button
             type="button"
-            className="secondary-btn dismiss-glyph-btn"
-            style={{ padding: '4px 10px', fontSize: '12px' }}
             onClick={onClose}
+            aria-label="Close"
+            style={{
+              width: '32px',
+              height: '32px',
+              borderRadius: '50%',
+              border: '1px solid var(--border-color)',
+              background: 'var(--bg-surface-elevated, rgba(0,0,0,0.04))',
+              color: 'var(--text-secondary)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '16px',
+              fontWeight: 600,
+              cursor: 'pointer',
+            }}
           >
-            Close
+            ✕
           </button>
         </div>
 
-        {/* Real-time Timing & Travel Days Adjuster */}
+        {/* 2. Interactive Controls Bar (Days + Season + Select All) */}
         <div
           style={{
-            padding: '10px 18px',
+            padding: '8px 18px',
             background: 'var(--bg-surface, #fff)',
             borderBottom: '1px solid var(--border-color)',
             display: 'flex',
@@ -335,15 +381,17 @@ export function SmartPackingAssistantModal({
         >
           {/* Days Stepper */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span style={{ fontWeight: 600, color: 'var(--text-secondary)' }}>Trip Duration:</span>
+            <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+              Duration:
+            </span>
             <div
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
                 border: '1px solid var(--border-color)',
-                borderRadius: '8px',
+                borderRadius: '20px',
                 background: 'var(--bg-surface-elevated, rgba(0,0,0,0.03))',
-                overflow: 'hidden',
+                padding: '2px 4px',
               }}
             >
               <button
@@ -353,17 +401,21 @@ export function SmartPackingAssistantModal({
                 style={{
                   border: 'none',
                   background: 'transparent',
-                  padding: '3px 9px',
+                  width: '24px',
+                  height: '24px',
+                  borderRadius: '50%',
                   fontWeight: 700,
                   cursor: durationDays <= 1 ? 'not-allowed' : 'pointer',
                   color: 'var(--text-primary)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
                 }}
-                title="Decrease days"
               >
                 -
               </button>
-              <span style={{ padding: '2px 8px', fontWeight: 700, minWidth: '55px', textAlign: 'center' }}>
-                {durationDays} {durationDays === 1 ? 'day' : 'days'}
+              <span style={{ padding: '0 6px', fontWeight: 700, minWidth: '45px', textAlign: 'center', fontSize: '11.5px' }}>
+                {durationDays}d
               </span>
               <button
                 type="button"
@@ -372,21 +424,24 @@ export function SmartPackingAssistantModal({
                 style={{
                   border: 'none',
                   background: 'transparent',
-                  padding: '3px 9px',
+                  width: '24px',
+                  height: '24px',
+                  borderRadius: '50%',
                   fontWeight: 700,
                   cursor: durationDays >= 60 ? 'not-allowed' : 'pointer',
                   color: 'var(--text-primary)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
                 }}
-                title="Increase days"
               >
                 +
               </button>
             </div>
           </div>
 
-          {/* Season / Timing Selector */}
+          {/* Season Selector */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span style={{ fontWeight: 600, color: 'var(--text-secondary)' }}>Season:</span>
             <select
               value={seasonOverride}
               onChange={(e) => {
@@ -394,8 +449,8 @@ export function SmartPackingAssistantModal({
                 setSeasonOverride(e.target.value as SeasonOverride);
               }}
               style={{
-                padding: '4px 8px',
-                borderRadius: '8px',
+                padding: '4px 10px',
+                borderRadius: '20px',
                 fontSize: '11.5px',
                 border: '1px solid var(--border-color)',
                 background: 'var(--bg-surface-elevated, rgba(0,0,0,0.03))',
@@ -405,35 +460,17 @@ export function SmartPackingAssistantModal({
               }}
             >
               <option value="auto">Auto ({effectiveWeather.label})</option>
-              <option value="summer">☀️ Summer / Hot</option>
-              <option value="monsoon">🌧️ Monsoon / Rain</option>
-              <option value="winter">❄️ Winter / Alpine Cold</option>
+              <option value="summer">☀️ Summer</option>
+              <option value="monsoon">🌧️ Monsoon</option>
+              <option value="winter">❄️ Winter</option>
             </select>
           </div>
-        </div>
 
-        {/* Aviation Security Notice Callout */}
-        <div
-          style={{
-            padding: '8px 18px',
-            background: 'linear-gradient(135deg, rgba(14, 165, 233, 0.08), rgba(20, 184, 166, 0.08))',
-            borderBottom: '1px solid rgba(14, 165, 233, 0.15)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            fontSize: '11px',
-            color: 'var(--text-secondary)',
-            lineHeight: 1.4,
-            flexShrink: 0,
-          }}
-        >
-          <div>
-            ⚡ <strong>Power banks</strong>: Cabin only (cargo hold prohibited). 🧴 <strong>Liquids in cabin</strong>: ≤ 100ml in 1-quart bag (3-1-1 rule). 🔪 <strong>Sharp tools</strong>: Checked baggage only.
-          </div>
-          <div style={{ display: 'flex', gap: '6px', marginLeft: '8px', flexShrink: 0 }}>
+          {/* Quick Toggle All */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <button
               type="button"
-              style={{ background: 'transparent', border: 'none', color: 'var(--primary-accent)', fontSize: '11px', fontWeight: 700, cursor: 'pointer', padding: 0 }}
+              style={{ background: 'transparent', border: 'none', color: 'var(--primary-accent)', fontSize: '11.5px', fontWeight: 700, cursor: 'pointer', padding: 0 }}
               onClick={selectAll}
             >
               Select All
@@ -441,7 +478,7 @@ export function SmartPackingAssistantModal({
             <span style={{ color: 'var(--text-muted)' }}>•</span>
             <button
               type="button"
-              style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', fontSize: '11px', cursor: 'pointer', padding: 0 }}
+              style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', fontSize: '11.5px', cursor: 'pointer', padding: 0 }}
               onClick={deselectAll}
             >
               Clear
@@ -449,20 +486,74 @@ export function SmartPackingAssistantModal({
           </div>
         </div>
 
-        {/* Luggage Mode Segmented Tabs with Real-time Counts */}
+        {/* 3. Aviation Security Advisory (Collapsible micro-pill) */}
+        <div
+          style={{
+            padding: '6px 18px',
+            background: 'rgba(14, 165, 233, 0.07)',
+            borderBottom: '1px solid rgba(14, 165, 233, 0.12)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            fontSize: '11px',
+            color: 'var(--text-secondary)',
+            flexShrink: 0,
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span style={{ color: '#0284c7', fontWeight: 700 }}>🛡️ Aviation Rules:</span>
+            <span>Power banks in Cabin • Liquids ≤ 100ml</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setShowFlightRules(!showFlightRules)}
+            style={{
+              background: 'transparent',
+              border: 'none',
+              color: '#0284c7',
+              fontSize: '10.5px',
+              fontWeight: 600,
+              cursor: 'pointer',
+              textDecoration: 'underline',
+              padding: 0,
+            }}
+          >
+            {showFlightRules ? 'Hide Info' : 'Details'}
+          </button>
+        </div>
+
+        {showFlightRules && (
+          <div
+            style={{
+              padding: '8px 18px',
+              background: 'rgba(14, 165, 233, 0.04)',
+              borderBottom: '1px solid rgba(14, 165, 233, 0.1)',
+              fontSize: '10.5px',
+              lineHeight: 1.45,
+              color: 'var(--text-secondary)',
+              flexShrink: 0,
+            }}
+          >
+            • ⚡ <strong>Cabin Only:</strong> Power banks, spare lithium batteries, laptops, IDs, essential medication.<br />
+            • 🧳 <strong>Check-in Only:</strong> Multi-tools, scissors, pocket knives, trekking poles, liquids &gt; 100ml.<br />
+            • 🧴 <strong>3-1-1 Rule:</strong> All cabin liquids must be in containers ≤ 100ml in 1 transparent quart pouch.
+          </div>
+        )}
+
+        {/* 4. Luggage Filter Pills */}
         <div
           style={{
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
             padding: '8px 18px',
-            background: 'var(--bg-surface-elevated, rgba(0,0,0,0.02))',
+            background: 'var(--bg-surface-elevated, rgba(0,0,0,0.015))',
             borderBottom: '1px solid var(--border-color)',
             gap: '8px',
             flexShrink: 0,
           }}
         >
-          <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: '6px', overflowX: 'auto', WebkitOverflowScrolling: 'touch', paddingBottom: '2px' }}>
             <button
               type="button"
               onClick={() => {
@@ -471,16 +562,17 @@ export function SmartPackingAssistantModal({
               }}
               style={{
                 padding: '4px 10px',
-                borderRadius: '8px',
+                borderRadius: '16px',
                 fontSize: '11px',
                 fontWeight: luggageFilter === 'all' ? 700 : 500,
                 background: luggageFilter === 'all' ? 'var(--primary-accent)' : 'transparent',
                 color: luggageFilter === 'all' ? '#fff' : 'var(--text-secondary)',
                 border: luggageFilter === 'all' ? 'none' : '1px solid var(--border-color)',
                 cursor: 'pointer',
+                whiteSpace: 'nowrap',
               }}
             >
-              All Baggage ({allSuggestions.length})
+              All ({allSuggestions.length})
             </button>
             <button
               type="button"
@@ -490,17 +582,18 @@ export function SmartPackingAssistantModal({
               }}
               style={{
                 padding: '4px 10px',
-                borderRadius: '8px',
+                borderRadius: '16px',
                 fontSize: '11px',
                 fontWeight: luggageFilter === 'cabin-only' ? 700 : 500,
                 background: luggageFilter === 'cabin-only' ? '#0284c7' : 'transparent',
                 color: luggageFilter === 'cabin-only' ? '#fff' : 'var(--text-secondary)',
                 border: luggageFilter === 'cabin-only' ? 'none' : '1px solid var(--border-color)',
                 cursor: 'pointer',
+                whiteSpace: 'nowrap',
               }}
-              title="Only show items eligible to travel in passenger cabin"
+              title="Only show items eligible for aircraft cabin"
             >
-              ✈️ Carry-on Only ({allSuggestions.length - checkinItems.length})
+              ✈️ Cabin ({allSuggestions.length - checkinItems.length})
             </button>
             <button
               type="button"
@@ -510,16 +603,17 @@ export function SmartPackingAssistantModal({
               }}
               style={{
                 padding: '4px 10px',
-                borderRadius: '8px',
+                borderRadius: '16px',
                 fontSize: '11px',
                 fontWeight: luggageFilter === 'checkin-only' ? 700 : 500,
                 background: luggageFilter === 'checkin-only' ? '#d97706' : 'transparent',
                 color: luggageFilter === 'checkin-only' ? '#fff' : 'var(--text-secondary)',
                 border: luggageFilter === 'checkin-only' ? 'none' : '1px solid var(--border-color)',
                 cursor: 'pointer',
+                whiteSpace: 'nowrap',
               }}
             >
-              🧳 Checked Baggage ({allSuggestions.length - cabinItems.length})
+              🧳 Check-in ({allSuggestions.length - cabinItems.length})
             </button>
           </div>
 
@@ -528,31 +622,32 @@ export function SmartPackingAssistantModal({
               type="checkbox"
               checked={includeLuggageTag}
               onChange={(e) => setIncludeLuggageTag(e.target.checked)}
-              style={{ accentColor: 'var(--primary-accent)' }}
+              style={{ accentColor: 'var(--primary-accent)', width: '15px', height: '15px' }}
             />
-            <span>Tag luggage bag</span>
+            <span style={{ fontSize: '10.5px' }}>Tag bag</span>
           </label>
         </div>
 
-        {/* Smooth, Contained Scrollable List */}
+        {/* 5. Fluid, Scrollable Suggestion List (Expands to fill all vertical height) */}
         <div
+          className="packing-assistant-scroll-list"
           style={{
             padding: '12px 18px',
             overflowY: 'auto',
-            flex: '1 1 auto',
-            minHeight: 0,
             WebkitOverflowScrolling: 'touch',
             overscrollBehavior: 'contain',
             overscrollBehaviorY: 'contain',
             touchAction: 'pan-y',
+            flex: '1 1 auto',
+            minHeight: 0,
             display: 'flex',
             flexDirection: 'column',
             gap: '8px',
           }}
         >
           {displayedItems.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '40px 10px', color: 'var(--text-muted)', fontSize: '13px' }}>
-              No items match the selected filter.
+            <div style={{ textAlign: 'center', padding: '50px 16px', color: 'var(--text-muted)', fontSize: '13px' }}>
+              No items match this filter.
             </div>
           ) : (
             displayedItems.map((item) => {
@@ -567,12 +662,12 @@ export function SmartPackingAssistantModal({
                     display: 'flex',
                     alignItems: 'flex-start',
                     justifyContent: 'space-between',
-                    padding: '10px 14px',
+                    padding: '9px 12px',
                     borderRadius: '12px',
                     background: isChecked ? 'rgba(15, 169, 143, 0.05)' : 'var(--bg-surface, #fff)',
                     border: isChecked ? '1.5px solid var(--primary-accent)' : '1px solid var(--border-color)',
                     cursor: 'pointer',
-                    transition: 'all 0.15s ease',
+                    transition: 'border-color 0.15s ease, background 0.15s ease',
                     gap: '10px',
                   }}
                   onClick={() => toggleItem(item.id)}
@@ -582,50 +677,57 @@ export function SmartPackingAssistantModal({
                       type="checkbox"
                       checked={isChecked}
                       onChange={() => toggleItem(item.id)}
-                      style={{ width: '18px', height: '18px', marginTop: '2px', accentColor: 'var(--primary-accent)', cursor: 'pointer' }}
+                      style={{
+                        width: '18px',
+                        height: '18px',
+                        marginTop: '2px',
+                        accentColor: 'var(--primary-accent)',
+                        cursor: 'pointer',
+                        flexShrink: 0,
+                      }}
                       onClick={(e) => e.stopPropagation()}
                     />
                     <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                      <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '5px', flexWrap: 'wrap' }}>
                         <span>{item.icon || '📦'}</span>
                         <span>{item.text}</span>
 
                         {isCabin && (
                           <span
                             style={{
-                              fontSize: '10px',
+                              fontSize: '9.5px',
                               fontWeight: 700,
                               background: 'rgba(14, 165, 233, 0.12)',
                               color: '#0284c7',
-                              padding: '1px 6px',
+                              padding: '1px 5px',
                               borderRadius: '4px',
                             }}
                           >
-                            ✈️ Cabin Bag
+                            ✈️ Cabin
                           </span>
                         )}
                         {isCheckin && (
                           <span
                             style={{
-                              fontSize: '10px',
+                              fontSize: '9.5px',
                               fontWeight: 700,
                               background: 'rgba(217, 119, 6, 0.12)',
                               color: '#d97706',
-                              padding: '1px 6px',
+                              padding: '1px 5px',
                               borderRadius: '4px',
                             }}
                           >
-                            🧳 Check-in Only
+                            🧳 Check-in
                           </span>
                         )}
                         {item.isLiquid && (
                           <span
                             style={{
-                              fontSize: '10px',
+                              fontSize: '9.5px',
                               fontWeight: 700,
                               background: 'rgba(20, 184, 166, 0.12)',
                               color: 'var(--primary-accent)',
-                              padding: '1px 6px',
+                              padding: '1px 5px',
                               borderRadius: '4px',
                             }}
                           >
@@ -635,7 +737,7 @@ export function SmartPackingAssistantModal({
                       </div>
 
                       {item.cabinNote && (
-                        <div style={{ fontSize: '11px', color: isCabin ? '#0284c7' : isCheckin ? '#c2410c' : 'var(--text-secondary)', fontWeight: 500, marginTop: '2px' }}>
+                        <div style={{ fontSize: '11px', color: isCabin ? '#0284c7' : isCheckin ? '#c2410c' : 'var(--text-secondary)', fontWeight: 500, marginTop: '2px', lineHeight: 1.3 }}>
                           ℹ️ {item.cabinNote}
                         </div>
                       )}
@@ -650,10 +752,10 @@ export function SmartPackingAssistantModal({
 
                   <span
                     style={{
-                      fontSize: '9.5px',
+                      fontSize: '9px',
                       textTransform: 'uppercase',
-                      letterSpacing: '0.05em',
-                      padding: '2px 6px',
+                      letterSpacing: '0.04em',
+                      padding: '2px 5px',
                       borderRadius: '4px',
                       background: 'rgba(0,0,0,0.04)',
                       color: 'var(--text-muted)',
@@ -669,19 +771,17 @@ export function SmartPackingAssistantModal({
           )}
         </div>
 
-        {/* Pinned Footer with Real-time Count Badges */}
+        {/* 6. Pinned High-Z-Index Footer with Native Safe Area Support */}
         <div
           style={{
             flexShrink: 0,
-            position: 'sticky',
-            bottom: 0,
-            zIndex: 10,
-            padding: '12px 18px',
+            padding: '12px 18px calc(12px + env(safe-area-inset-bottom, 8px))',
             borderTop: '1px solid var(--border-color)',
-            background: 'var(--bg-surface, #fff)',
-            boxShadow: '0 -4px 16px rgba(0, 0, 0, 0.08)',
+            background: 'var(--bg-surface, #ffffff)',
+            boxShadow: '0 -6px 20px rgba(0, 0, 0, 0.08)',
             display: 'flex',
             gap: '10px',
+            alignItems: 'center',
           }}
         >
           {onSaveAsNote && (
@@ -696,19 +796,27 @@ export function SmartPackingAssistantModal({
                 display: 'flex',
                 alignItems: 'center',
                 gap: '6px',
+                borderRadius: '12px',
               }}
               disabled={selectedCount === 0 || isSubmitting}
               onClick={handleSaveAsNote}
-              title="Create a structured flight & packing reference note in the Notes tab"
+              title="Export as a reference travel note"
             >
-              <span>{noteSavedFeedback ? '✅ Saved!' : '📝 Save as Note'}</span>
+              <span>{noteSavedFeedback ? '✅ Saved!' : '📝 Save Note'}</span>
             </button>
           )}
 
           <button
             type="button"
             className="gradient-btn"
-            style={{ flex: 1, padding: '11px 16px', fontSize: '13.5px', fontWeight: 700 }}
+            style={{
+              flex: 1,
+              padding: '11px 16px',
+              fontSize: '13px',
+              fontWeight: 700,
+              borderRadius: '12px',
+              boxShadow: 'var(--shadow-md)',
+            }}
             disabled={selectedCount === 0 || isSubmitting}
             onClick={handleAddSelected}
           >
@@ -720,4 +828,6 @@ export function SmartPackingAssistantModal({
       </div>
     </div>
   );
+
+  return createPortal(modalContent, document.body);
 }

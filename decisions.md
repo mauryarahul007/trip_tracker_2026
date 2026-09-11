@@ -2738,4 +2738,19 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - Days adjusted inside the assistant customize the packing list without mutating the underlying trip's stored start/end dates in the database.
 
+## 149. Portal-Mounted Bottom Sheet & Mobile Scrolling Overhaul for Packing Assistant (v3.10.2)
+* **Context:** On mobile devices, `SmartPackingAssistantModal` was rendered within a transformed parent (`.tab-pane` with swipe gesture transforms). In CSS, a transformed ancestor forms a new containing block for `position: fixed` elements, trapping the modal below `.app-header` (z-index 100) and underneath the floating `.nav-tabs` bottom bar (z-index 50), which occluded the "Save as Note" and "Add Items" action buttons. In addition, large stacked header controls consumed ~60% of vertical screen height, leaving only ~120px for the items list, and parent `touch-action: none` blocked touch drag scrolling.
+* **Decision:** Mounted `SmartPackingAssistantModal` directly to `document.body` via `createPortal` with `z-index: 10000`, redesigned the modal into a sleek mobile-native bottom sheet (centered dialog on desktop >=640px), streamlined header controls into a compact toolbar, added collapsible aviation details, and ensured full touch-scroll fluidity (`touch-action: auto` on overlay, `touch-action: pan-y` on scroll list).
+* **Pattern/Implementation:**
+  - `SmartPackingAssistantModal.tsx`:
+    - Rendered via `createPortal(modalContent, document.body)` with `z-index: 10000` to sit permanently above the app header and bottom navigation bar.
+    - Redesigned into a native bottom sheet with pull handle, compact header with `✕` dismiss button, and consolidated single-row controls (duration stepper + season dropdown + select all).
+    - Compacted aviation security guidance into a 1-line bar with collapsible details toggle, reclaiming ~180px of vertical space for the items list.
+    - Elevated sticky footer with safe-area padding (`env(safe-area-inset-bottom, 8px)`) ensuring action buttons are 100% visible and un-obscured on all phone screens.
+  - `src/index.css`:
+    - Added `.packing-assistant-portal-overlay` and `.packing-assistant-sheet` classes with `bottomSheetSlideUp` animation and responsive desktop centering (`min-width: 640px`).
+* **Trade-offs Accepted:**
+  - Used React DOM portal to break free of transformed stacking contexts; ensures clean viewport positioning regardless of where in the component hierarchy the trigger button resides.
+
+
 
