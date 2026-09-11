@@ -35,7 +35,11 @@ export function LiveTravelStatusModal({ isOpen, onClose, statusInfo }: Props) {
     if (!statusInfo || statusInfo.type !== 'flight') return null;
     const parsed = parseFlightCode(flightInput, statusInfo.airlineName);
     if (parsed) {
-      const urls = buildFlightUrls(parsed.carrierCode, parsed.flightNumber);
+      const urls = buildFlightUrls(
+        parsed.carrierCode,
+        parsed.flightNumber,
+        statusInfo.departureTime
+      );
       return {
         ...statusInfo,
         carrierCode: parsed.carrierCode,
@@ -195,6 +199,20 @@ export function LiveTravelStatusModal({ isOpen, onClose, statusInfo }: Props) {
                   <span>{displayFlight.destination || 'Destination'}</span>
                 </div>
               )}
+
+              {(displayFlight.formattedFlightDate || displayFlight.departureTime) && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', color: 'var(--text-secondary)', marginTop: '6px' }}>
+                  <span>📅</span>
+                  <span style={{ fontWeight: 600 }}>
+                    {displayFlight.formattedFlightDate || displayFlight.departureTime}
+                  </span>
+                  {displayFlight.flightTime && (
+                    <span style={{ color: 'var(--text-muted)', fontSize: '12px' }}>
+                      · ⏰ {displayFlight.flightTime}
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Explanatory Tracker Note */}
@@ -274,6 +292,13 @@ export function LiveTravelStatusModal({ isOpen, onClose, statusInfo }: Props) {
                 <span>{statusInfo.destination || 'Destination'}</span>
               </div>
             )}
+
+            {statusInfo.departureTime && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', color: 'var(--text-secondary)', marginTop: '6px' }}>
+                <span>📅</span>
+                <span style={{ fontWeight: 600 }}>{statusInfo.departureTime}</span>
+              </div>
+            )}
           </div>
         )}
 
@@ -305,7 +330,9 @@ export function LiveTravelStatusModal({ isOpen, onClose, statusInfo }: Props) {
                   <div>
                     <div>Google Live Gate & Flight Status</div>
                     <div style={{ fontSize: '11px', opacity: 0.85, fontWeight: 400 }}>
-                      Real-time departure, delay, terminal, gate & carousel
+                      {displayFlight.formattedFlightDate
+                        ? `Direct flight schedule & gate card for ${displayFlight.formattedFlightDate}`
+                        : 'Real-time departure, delay, terminal, gate & carousel'}
                     </div>
                   </div>
                 </div>
@@ -399,7 +426,9 @@ export function LiveTravelStatusModal({ isOpen, onClose, statusInfo }: Props) {
                     <div>
                       <div>FlightStats Global Status</div>
                       <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 400 }}>
-                        Cirium airport departures, delay index & timetable
+                        {displayFlight.formattedFlightDate
+                          ? `Cirium schedule & timetable for ${displayFlight.formattedFlightDate}`
+                          : 'Cirium airport departures, delay index & timetable'}
                       </div>
                     </div>
                   </div>

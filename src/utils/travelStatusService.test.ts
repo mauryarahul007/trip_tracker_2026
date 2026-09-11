@@ -19,7 +19,10 @@ describe('travelStatusService', () => {
     expect(status?.flightNumber).toBe('2132');
     expect(status?.fullFlightCode).toBe('6E-2132');
     expect(status?.airlineName).toBe('IndiGo');
-    expect(status?.googleStatusUrl).toContain('6E-2132');
+    expect(status?.formattedFlightDate).toBe('15 Sep 2026');
+    expect(status?.flightTime).toBe('10:30 AM');
+    expect(status?.googleStatusUrl).toContain('15%20Sep%202026');
+    expect(status?.flightStatsUrl).toContain('year=2026&month=9&date=15');
     expect(status?.flightradar24Url).toContain('6e2132');
     expect(status?.flightAwareUrl).toContain('IGO2132');
   });
@@ -120,6 +123,24 @@ describe('travelStatusService', () => {
     expect(status?.flightNumber).toBe('537');
     expect(status?.fullFlightCode).toBe('6E-537');
     expect(status?.airlineName).toBe('IndiGo');
+  });
+
+  it('parses natural date formats and appends date to FlightStats and Google query', () => {
+    const flightPass: Partial<TravelPass> = {
+      type: 'flight',
+      title: 'Akasa Air QP-1302 to Mumbai',
+      startDateTime: '20 Oct 2026 at 02:45 PM',
+    };
+
+    const status = extractFlightStatus(flightPass);
+    expect(status).not.toBeNull();
+    expect(status?.carrierCode).toBe('QP');
+    expect(status?.flightNumber).toBe('1302');
+    expect(status?.formattedFlightDate).toBe('20 Oct 2026');
+    expect(status?.flightTime).toBe('02:45 PM');
+    expect(status?.googleStatusUrl).toContain('20%20Oct%202026');
+    expect(status?.flightStatsUrl).toContain('year=2026&month=10&date=20');
+    expect(status?.flightAwareUrl).toContain('AKJ1302');
   });
 
   it('returns null for stay or activity passes without flight/train info', () => {

@@ -11,6 +11,8 @@ export interface FlightStatusInfo {
   flightradar24Url: string;
   flightAwareUrl: string;
   flightStatsUrl?: string;
+  formattedFlightDate?: string;
+  flightTime?: string;
   origin?: string;
   destination?: string;
   departureTime?: string;
@@ -145,21 +147,111 @@ const AIRLINE_NAME_TO_IATA: Record<string, string> = {
   'cathay pacific': 'CX',
 };
 
-export function buildFlightUrls(carrierCode: string, flightNumber: string) {
+export interface ParsedFlightDate {
+  year?: number;
+  month?: number;
+  day?: number;
+  formattedDateString?: string;
+  timeString?: string;
+}
+
+export function parseFlightDate(dateStr?: string): ParsedFlightDate | null {
+  if (!dateStr || !dateStr.trim()) return null;
+  const raw = dateStr.trim();
+
+  const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+  // 1. Try standard ISO or YYYY-MM-DD format (e.g. 2026-09-15T10:30, 2026-09-15 10:30, 2026-09-15)
+  const isoMatch = raw.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})(?:[T\s](\d{1,2}):(\d{2}))?/);
+  if (isoMatch) {
+    const year = parseInt(isoMatch[1], 10);
+    const month = parseInt(isoMatch[2], 10);
+    const day = parseInt(isoMatch[3], 10);
+    const hours = isoMatch[4] !== undefined ? parseInt(isoMatch[4], 10) : undefined;
+    const minutes = isoMatch[5] !== undefined ? parseInt(isoMatch[5], 10) : undefined;
+    const formattedDateString = `${day} ${monthNames[month - 1]} ${year}`;
+    let timeString: string | undefined;
+    if (hours !== undefined && minutes !== undefined) {
+      const period = hours >= 12 ? 'PM' : 'AM';
+      const h12 = hours % 12 || 12;
+      const mStr = minutes < 10 ? `0${minutes}` : `${minutes}`;
+      timeString = `${h12}:${mStr} ${period}`;
+    }
+    return { year, month, day, formattedDateString, timeString };
+  }
+
+  // 2. Try natural text formats: e.g. "15 Sep 2026", "15 Oct at 08:30 AM", "15 Sep"
+  const monthMap: Record<string, number> = {
+    jan: 1, january: 1, feb: 2, february: 2, mar: 3, march: 3,
+    apr: 4, april: 4, may: 5, june: 6, jun: 6, july: 7, jul: 7,
+    aug: 8, august: 8, sep: 9, september: 9, oct: 10, october: 10,
+    nov: 11, november: 11, dec: 12, december: 12,
+  };
+  const textMatch = raw.match(
+    /(\d{1,2})\s+([A-Za-z]{3,9})(?:\s+(\d{4}))?(?:\s+(?:at\s+)?(\d{1,2}:\d{2}(?:\s*[AaPp][Mm])?))?/i
+  );
+  if (textMatch) {
+    const day = parseInt(textMatch[1], 10);
+    const mStr = textMatch[2].toLowerCase();
+    const month = monthMap[mStr];
+    if (month) {
+      const year = textMatch[3] ? parseInt(textMatch[3], 10) : new Date().getFullYear();
+      const formattedDateString = `${day} ${monthNames[month - 1]} ${year}`;
+      const timeString = textMatch[4] ? textMatch[4].trim() : undefined;
+      return { year, month, day, formattedDateString, timeString };
+    }
+  }
+
+  // 3. Fallback: JavaScript Date.parse
+  const parsedTs = Date.parse(raw);
+  if (!isNaN(parsedTs)) {
+    const d = new Date(parsedTs);
+    const year = d.getFullYear();
+    const month = d.getMonth() + 1;
+    const day = d.getDate();
+    const formattedDateString = `${day} ${monthNames[month - 1]} ${year}`;
+    const hours = d.getHours();
+    const minutes = d.getMinutes();
+    const period = hours >= 12 ? 'PM' : 'AM';
+    const h12 = hours % 12 || 12;
+    const mStr = minutes < 10 ? `0${minutes}` : `${minutes}`;
+    const timeString = `${h12}:${mStr} ${period}`;
+    return { year, month, day, formattedDateString, timeString };
+  }
+
+  return null;
+}
+
+export function buildFlightUrls(
+  carrierCode: string,
+  flightNumber: string,
+  dateString?: string
+) {
   const cleanCarrier = carrierCode.trim().toUpperCase();
   const cleanFlightNum = flightNumber.trim().replace(/^0+/, '') || flightNumber.trim();
   const fullFlightCode = `${cleanCarrier}-${cleanFlightNum}`;
   const icaoCode = IATA_TO_ICAO[cleanCarrier] || cleanCarrier;
 
-  const googleStatusUrl = `https://www.google.com/search?q=${encodeURIComponent(
-    `${cleanCarrier}-${cleanFlightNum} flight status`
-  )}`;
+  const parsedDate = parseFlightDate(dateString);
+
+  // Google Live Flight Status: append departure date if present to query specific day directly
+  const googleQuery = parsedDate?.formattedDateString
+    ? `${cleanCarrier}-${cleanFlightNum} flight status ${parsedDate.formattedDateString}`
+    : `${cleanCarrier}-${cleanFlightNum} flight status`;
+  const googleStatusUrl = `https://www.google.com/search?q=${encodeURIComponent(googleQuery)}`;
+
   // Flightradar24 requires standard slug format: e.g. 6e537 (canonical lowercase without hyphens)
   const flightradar24Url = `https://www.flightradar24.com/data/flights/${cleanCarrier.toLowerCase()}${cleanFlightNum}`;
+
   // FlightAware indexes flights by ICAO designator (e.g. IGO537)
   const flightAwareUrl = `https://www.flightaware.com/live/flight/${icaoCode}${cleanFlightNum}`;
-  // FlightStats direct flight status page (e.g. 6E/537)
-  const flightStatsUrl = `https://www.flightstats.com/v2/flight-tracker/${cleanCarrier}/${cleanFlightNum}`;
+
+  // FlightStats direct flight status page with date query parameters if available
+  const dateParams =
+    parsedDate?.year && parsedDate?.month && parsedDate?.day
+      ? `?year=${parsedDate.year}&month=${parsedDate.month}&date=${parsedDate.day}`
+      : '';
+  const flightStatsUrl = `https://www.flightstats.com/v2/flight-tracker/${cleanCarrier}/${cleanFlightNum}${dateParams}`;
 
   return {
     fullFlightCode,
@@ -168,6 +260,8 @@ export function buildFlightUrls(carrierCode: string, flightNumber: string) {
     flightradar24Url,
     flightAwareUrl,
     flightStatsUrl,
+    formattedFlightDate: parsedDate?.formattedDateString,
+    flightTime: parsedDate?.timeString,
   };
 }
 
@@ -267,7 +361,7 @@ export function extractFlightStatus(pass: Partial<TravelPass>): FlightStatusInfo
   if (!parsed) return null;
 
   const { carrierCode, flightNumber, airlineName } = parsed;
-  const urls = buildFlightUrls(carrierCode, flightNumber);
+  const urls = buildFlightUrls(carrierCode, flightNumber, pass.startDateTime);
 
   return {
     type: 'flight',
