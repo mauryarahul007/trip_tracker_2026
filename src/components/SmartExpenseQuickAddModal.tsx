@@ -53,6 +53,13 @@ export function SmartExpenseQuickAddModal({
   const [errorMessage, setErrorMessage] = useState('');
   const [countdownSeconds, setCountdownSeconds] = useState<number | null>(null);
   const [isVoiceGenerated, setIsVoiceGenerated] = useState(false);
+  const [voiceLang, setVoiceLang] = useState<string>(() => {
+    const saved = localStorage.getItem('trip_tracker_voice_lang');
+    if (saved) return saved;
+    if (baseCurrency === 'INR') return 'en-IN';
+    const userLang = navigator.language || 'en-IN';
+    return userLang.startsWith('en') ? userLang : 'en-IN';
+  });
 
   const recognitionRef = useRef<any>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -69,8 +76,7 @@ export function SmartExpenseQuickAddModal({
       const rec = new SpeechRec();
       rec.continuous = false;
       rec.interimResults = true;
-      const userLang = navigator.language || 'en-IN';
-      rec.lang = userLang.startsWith('en') ? userLang : 'en-IN';
+      rec.lang = voiceLang;
 
       rec.onresult = (event: any) => {
         const text = Array.from(event.results)
@@ -97,6 +103,14 @@ export function SmartExpenseQuickAddModal({
       recognitionRef.current = rec;
     }
   }, []);
+
+  // Update speech recognition language when voiceLang changes
+  useEffect(() => {
+    if (recognitionRef.current) {
+      recognitionRef.current.lang = voiceLang;
+    }
+    localStorage.setItem('trip_tracker_voice_lang', voiceLang);
+  }, [voiceLang]);
 
   const cancelAutoSaveCountdown = () => {
     if (countdownTimerRef.current) {
@@ -328,27 +342,53 @@ export function SmartExpenseQuickAddModal({
               </p>
             </div>
           </div>
-          <button
-            type="button"
-            className="secondary-btn"
-            style={{
-              padding: '6px 10px',
-              fontSize: '13px',
-              borderRadius: '8px',
-              fontWeight: 600,
-              cursor: 'pointer',
-              flexShrink: 0,
-            }}
-            onClick={() => {
-              cancelAutoSaveCountdown();
-              triggerHaptic('light');
-              onClose();
-            }}
-            aria-label="Close"
-            title="Close"
-          >
-            ✕
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            {speechSupported && (
+              <select
+                value={voiceLang}
+                onChange={(e) => setVoiceLang(e.target.value)}
+                style={{
+                  padding: '5px 8px',
+                  fontSize: '11.5px',
+                  borderRadius: '8px',
+                  background: 'var(--bg-subtle, rgba(255,255,255,0.06))',
+                  color: 'var(--text-secondary, #94a3b8)',
+                  border: '1px solid var(--border-color, rgba(255,255,255,0.12))',
+                  cursor: 'pointer',
+                  fontWeight: 600,
+                  outline: 'none',
+                }}
+                title="Voice recognition dialect/accent"
+                aria-label="Voice recognition dialect/accent"
+              >
+                <option value="en-IN">🇮🇳 English (India)</option>
+                <option value="en-US">🇺🇸 English (US)</option>
+                <option value="en-GB">🇬🇧 English (UK)</option>
+                <option value="hi-IN">🇮🇳 हिन्दी (Hindi)</option>
+              </select>
+            )}
+            <button
+              type="button"
+              className="secondary-btn"
+              style={{
+                padding: '6px 10px',
+                fontSize: '13px',
+                borderRadius: '8px',
+                fontWeight: 600,
+                cursor: 'pointer',
+                flexShrink: 0,
+              }}
+              onClick={() => {
+                cancelAutoSaveCountdown();
+                triggerHaptic('light');
+                onClose();
+              }}
+              aria-label="Close"
+              title="Close"
+            >
+              ✕
+            </button>
+          </div>
         </div>
 
         {/* Pulsing Audio Waveform Bar during Active Recording */}
@@ -434,7 +474,7 @@ export function SmartExpenseQuickAddModal({
             ref={inputRef}
             type="text"
             className="input-field"
-            placeholder="e.g. Dinner 1200 food paid by Rahul with Priya"
+            placeholder="e.g. Paid 200 for cab by upi by Rahul, or 1450 dinner"
             value={inputText}
             onChange={(e) => {
               cancelAutoSaveCountdown();
@@ -523,6 +563,11 @@ export function SmartExpenseQuickAddModal({
               {parsed.paidByName && (
                 <span className="member-badge" style={{ background: 'rgba(59, 130, 246, 0.12)', color: '#3b82f6', border: '1px solid rgba(59, 130, 246, 0.25)' }}>
                   👤 Paid by {parsed.paidByName}
+                </span>
+              )}
+              {parsed.paymentMode && (
+                <span className="member-badge" style={{ background: 'rgba(234, 179, 8, 0.12)', color: '#eab308', border: '1px solid rgba(234, 179, 8, 0.25)' }}>
+                  💳 {parsed.paymentMode}
                 </span>
               )}
               {parsed.splitMemberIds && parsed.splitMemberIds.length > 0 && (

@@ -120,4 +120,55 @@ describe('expenseQuickParser', () => {
     expect(result?.paidById).toBe('m-1');
     expect(result?.categoryId).toBe('cat-travel');
   });
+
+  it('parses "Paid 200 for cab by upi by rahul" cleanly with amount, title, payment mode, and payer', () => {
+    const result = parseQuickExpense('Paid 200 for cab by upi by rahul', mockCategories, [], mockMembers);
+    expect(result).not.toBeNull();
+    expect(result?.amount).toBe(200);
+    expect(result?.title).toBe('Cab');
+    expect(result?.categoryId).toBe('cat-travel');
+    expect(result?.paidById).toBe('m-1');
+    expect(result?.paidByName).toBe('Rahul');
+    expect(result?.paymentMode).toBe('UPI');
+  });
+
+  it('handles speech-to-text "4" homophone when transcribed as "Paid 200 4 cab by upi by rahul"', () => {
+    const result = parseQuickExpense('Paid 200 4 cab by upi by rahul', mockCategories, [], mockMembers);
+    expect(result).not.toBeNull();
+    expect(result?.amount).toBe(200);
+    expect(result?.title).toBe('Cab');
+    expect(result?.paidById).toBe('m-1');
+    expect(result?.paymentMode).toBe('UPI');
+  });
+
+  it('handles phonetic spoken variations like "Paid to hundred for cab" and "Paid two hundred for cab"', () => {
+    const resultTo = parseQuickExpense('Paid to hundred for cab by upi by rahul', mockCategories, [], mockMembers);
+    expect(resultTo).not.toBeNull();
+    expect(resultTo?.amount).toBe(200);
+    expect(resultTo?.title).toBe('Cab');
+
+    const resultTwo = parseQuickExpense('Paid two hundred for cab by upi by rahul', mockCategories, [], mockMembers);
+    expect(resultTwo).not.toBeNull();
+    expect(resultTwo?.amount).toBe(200);
+    expect(resultTwo?.title).toBe('Cab');
+  });
+
+  it('does not confuse ticket count or person count with total amount in "Paid 800 for 4 tickets"', () => {
+    const result = parseQuickExpense('Paid 800 for 4 tickets to museum paid by Priya', mockCategories, [], mockMembers);
+    expect(result).not.toBeNull();
+    expect(result?.amount).toBe(800);
+    expect(result?.paidById).toBe('m-2');
+  });
+
+  it('detects multiple payment modes (GPay, PhonePe, Cash, Card)', () => {
+    const gpayResult = parseQuickExpense('500 dinner on gpay by Priya', mockCategories, [], mockMembers);
+    expect(gpayResult?.paymentMode).toBe('GPay');
+    expect(gpayResult?.amount).toBe(500);
+    expect(gpayResult?.title).toBe('Dinner');
+
+    const cashResult = parseQuickExpense('1200 groceries in cash', mockCategories);
+    expect(cashResult?.paymentMode).toBe('Cash');
+    expect(cashResult?.amount).toBe(1200);
+    expect(cashResult?.title).toBe('Groceries');
+  });
 });

@@ -2810,4 +2810,26 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - Web Speech API operates on-device in modern Chromium/Android browsers with zero cloud API costs or latency. In browsers lacking SpeechRecognition support (e.g. Firefox desktop), the UI displays a clean notification and falls back to natural-language keyboard input.
 
+---
+
+## 153. Voice Quick-Add Natural Language & Dialect Precision Refinement (v3.11.3)
+* **Context:**
+  - When users spoke natural phrases like *"Paid 200 for cab by upi by rahul"*, speech recognition on desktop/Chromium instances with default `en-US` locales acoustically misclassified Indian English *"Paid two hundred"* as *"800"*, and the previous parser did not recognize payment channels (*"by upi"*, *"via gpay"*), leaving them in the expense title (*"Paid for cab by upi"*).
+  - Prepositions like *"for cab"* were captured as part of the title, and speech-to-text homophones where *"for"* was transcribed as digit *"4"* caused the parser to mistakenly treat *"4"* as the expense amount instead of the actual price.
+* **Decision:**
+  - **Acoustic Dialect Targeting & Persistence (`SmartExpenseQuickAddModal.tsx`):**
+    - Defaults voice speech recognition language to `en-IN` (Indian English) when `baseCurrency === 'INR'` or Indian locale is present, ensuring high-accuracy acoustic models for Indian English phonology, local names (*Rahul*, *Priya*), and terminology (*UPI*, *GPay*, *PhonePe*, *cab*, *auto*).
+    - Added an in-modal dialect/accent switcher (`🇮🇳 English (India)`, `🇺🇸 English (US)`, `🇬🇧 English (UK)`, `🇮🇳 हिन्दी (Hindi)`) with persistent `localStorage` memory (`trip_tracker_voice_lang`).
+  - **Payment Mode Detection & Stripping (`expenseQuickParser.ts`):**
+    - Added detection for payment channels: `UPI`, `GPay`, `PhonePe`, `Paytm`, `Cash`, `Card`, `Bank Transfer`, `Apple Pay`, and `PayPal`.
+    - Automatically extracts `paymentMode` into `ParsedQuickExpense` and strips payment phrases (*"by upi"*, *"via card"*) before payer and title parsing so they never pollute expense titles.
+    - Surfaced a `💳 [PaymentMode]` pill in the modal's preview chip strip.
+  - **Action Verb & Preposition Title Cleaning (`expenseQuickParser.ts`):**
+    - Added `actionAmountRegex` to match amounts immediately following transaction verbs (*"Paid 200"*, *"Spent 1500"*), ensuring clean extraction before filler stripping.
+    - Cleanly strips leading prepositions (*"for cab"* -> *"Cab"*, *"on lunch"* -> *"Lunch"*) and trailing leftovers.
+    - Added speech homophone normalization converting digit `4` following an amount/verb into *"for"* (*"Paid 200 4 cab"* -> *"Paid 200 for cab"* -> Amount: 200, Title: "Cab").
+    - Refined number heuristic to prioritize price numbers over quantity counts (*"4 tickets"*, *"2 people"*).
+* **Trade-offs Accepted:**
+  - Payment mode is extracted for preview badges and title cleanliness; since the baseline `Expense` schema stores notes and splits, the payment channel is primarily leveraged for UX clarification and can be populated into transfer descriptions.
+
 

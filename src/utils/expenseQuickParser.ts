@@ -11,6 +11,7 @@ export interface ParsedQuickExpense {
   paidByName?: string;
   splitMemberIds?: string[];
   date?: string;
+  paymentMode?: string;
   rawInput: string;
   confidence: number;
 }
@@ -55,14 +56,28 @@ const CURRENCY_WORDS_MAP: Record<string, string> = {
 // Spoken number word replacement for speech recognition transcripts
 function normalizeSpokenNumberWords(input: string): string {
   let text = input;
+
+  // Speech-to-text homophone correction: convert "4 <word>" to "for <word>" when preceded by a number or verb
+  // e.g. "Paid 200 4 cab", "200 4 lunch", "paid 4 dinner" -> "Paid 200 for cab"
+  text = text.replace(/(?<=(?:\d+|paid|pay|spent|cost)\s+)(?:4)\s+([a-zA-Z]+)/gi, 'for $1');
+
   const wordNumberMap: [RegExp, string][] = [
-    [/\b(one|a)\s+thousand\s+(?:and\s+)?five\s+hundred\b/gi, '1500'],
-    [/\b(one|a)\s+thousand\s+(?:and\s+)?two\s+hundred\b/gi, '1200'],
-    [/\b(one|a)\s+thousand\b/gi, '1000'],
-    [/\btwo\s+thousand\b/gi, '2000'],
-    [/\bthree\s+thousand\b/gi, '3000'],
-    [/\bfive\s+thousand\b/gi, '5000'],
-    [/\bten\s+thousand\b/gi, '10000'],
+    // Multi-thousands and composite hundreds
+    [/\b(?:one|a|won)\s+thousand\s+(?:and\s+)?five\s+hundred\b/gi, '1500'],
+    [/\b(?:one|a|won)\s+thousand\s+(?:and\s+)?two\s+hundred\b/gi, '1200'],
+    [/\b(?:one|a|won)\s+thousand\b/gi, '1000'],
+    [/\b(?:two|to|too)\s+thousand\b/gi, '2000'],
+    [/\b(?:three|tree)\s+thousand\b/gi, '3000'],
+    [/\b(?:four|for)\s+thousand\b/gi, '4000'],
+    [/\b(?:five)\s+thousand\b/gi, '5000'],
+    [/\b(?:ten)\s+thousand\b/gi, '10000'],
+    // Indian numbering system (Lakh / Lakhs)
+    [/\b(?:one|a|won)\s+lakh(?:s)?\b/gi, '100000'],
+    [/\b(?:two|to|too)\s+lakh(?:s)?\b/gi, '200000'],
+    [/\b(?:three|tree)\s+lakh(?:s)?\b/gi, '300000'],
+    [/\b(?:five)\s+lakh(?:s)?\b/gi, '500000'],
+    [/\b(?:ten)\s+lakh(?:s)?\b/gi, '1000000'],
+    // Hundreds
     [/\btwenty\s+five\s+hundred\b/gi, '2500'],
     [/\btwenty\s+hundred\b/gi, '2000'],
     [/\bfifteen\s+hundred\b/gi, '1500'],
@@ -71,22 +86,22 @@ function normalizeSpokenNumberWords(input: string): string {
     [/\btwelve\s+hundred\b/gi, '1200'],
     [/\beleven\s+hundred\b/gi, '1100'],
     [/\bnine\s+hundred\b/gi, '900'],
-    [/\beight\s+hundred\b/gi, '800'],
+    [/\b(?:eight|ate)\s+hundred\b/gi, '800'],
     [/\bseven\s+hundred\b/gi, '700'],
     [/\bsix\s+hundred\b/gi, '600'],
     [/\bfive\s+hundred\b/gi, '500'],
-    [/\bfour\s+hundred\s+(?:and\s+)?fifty\b/gi, '450'],
-    [/\bfour\s+hundred\b/gi, '400'],
-    [/\bthree\s+hundred\s+(?:and\s+)?fifty\b/gi, '350'],
-    [/\bthree\s+hundred\b/gi, '300'],
-    [/\btwo\s+hundred\s+(?:and\s+)?fifty\b/gi, '250'],
-    [/\btwo\s+hundred\b/gi, '200'],
-    [/\bone\s+hundred\s+(?:and\s+)?fifty\b/gi, '150'],
-    [/\bone\s+hundred\b/gi, '100'],
-    [/\bfour\s+fifty\b/gi, '450'],
-    [/\bthree\s+fifty\b/gi, '350'],
-    [/\btwo\s+fifty\b/gi, '250'],
-    [/\bone\s+fifty\b/gi, '150'],
+    [/\b(?:four|for)\s+hundred\s+(?:and\s+)?fifty\b/gi, '450'],
+    [/\b(?:four|for)\s+hundred\b/gi, '400'],
+    [/\b(?:three|tree)\s+hundred\s+(?:and\s+)?fifty\b/gi, '350'],
+    [/\b(?:three|tree)\s+hundred\b/gi, '300'],
+    [/\b(?:two|to|too)\s+hundred\s+(?:and\s+)?fifty\b/gi, '250'],
+    [/\b(?:two|to|too)\s+hundred\b/gi, '200'],
+    [/\b(?:one|a|won)\s+hundred\s+(?:and\s+)?fifty\b/gi, '150'],
+    [/\b(?:one|a|won)\s+hundred\b/gi, '100'],
+    [/\b(?:four|for)\s+fifty\b/gi, '450'],
+    [/\b(?:three|tree)\s+fifty\b/gi, '350'],
+    [/\b(?:two|to|too)\s+fifty\b/gi, '250'],
+    [/\b(?:one|a|won)\s+fifty\b/gi, '150'],
   ];
 
   for (const [pattern, replacement] of wordNumberMap) {
@@ -98,6 +113,7 @@ function normalizeSpokenNumberWords(input: string): string {
 /**
  * Enhanced natural language & voice expense parser.
  * Examples:
+ *   "Paid 200 for cab by upi by rahul"
  *   "Dinner 1450 food paid by Rahul split with Priya and Amit"
  *   "Uber to airport 420 yesterday"
  *   "₹1,200 Airbnb in Goa paid by Priya for everyone"
@@ -114,22 +130,55 @@ export function parseQuickExpense(
   const trimmed = rawInput.trim();
   if (!trimmed) return null;
 
-  // Normalize speech filler words and spoken number words
+  // Normalize speech filler words, spoken number words, and homophones
   let workingText = normalizeSpokenNumberWords(trimmed);
 
-  // Strip leading conversational fillers (e.g. "please add expense", "log expense", "add", "spent")
-  workingText = workingText
-    .replace(/^(?:please\s+)?(?:add\s+expense|log\s+expense|add|log|spent)\s+/i, '')
-    .trim();
   let detectedAmount: number | null = null;
   let detectedCurrency: string | undefined = undefined;
+  let detectedPaymentMode: string | undefined = undefined;
   let detectedPaidById: string | null = null;
   let detectedPaidByName: string | undefined = undefined;
   let detectedSplitMemberIds: string[] | undefined = undefined;
   let detectedDate: string | undefined = undefined;
   let confidence = 0.5;
 
-  // 1. Detect Relative Date ("yesterday", "today", "tomorrow", "2 days ago")
+  // 1. Detect Action Verb + Amount (e.g. "Paid 200", "Spent 1500", "Cost 800")
+  const actionAmountRegex = /(?:^|\s)(?:paid|pay|spent|spend|cost|charged|total(?:\s+of)?)\s+([0-9]+(?:,[0-9]{3})*(?:\.[0-9]+)?|[0-9]+(?:\.[0-9]+)?)(?=\s|$)/i;
+  const actionMatch = workingText.match(actionAmountRegex);
+  if (actionMatch) {
+    const numStr = actionMatch[1].replace(/,/g, '');
+    const parsedNum = parseFloat(numStr);
+    if (!Number.isNaN(parsedNum)) {
+      detectedAmount = parsedNum;
+      workingText = workingText.replace(actionMatch[0], ' ').trim();
+    }
+  }
+
+  // Strip leading conversational and transaction filler verbs
+  workingText = workingText
+    .replace(/^(?:please\s+)?(?:add\s+expense|log\s+expense|add|log|spent|spend|paid|pay|bought|buy|gave|give|cost|charged)\s+/i, '')
+    .trim();
+
+  // 1. Detect Payment Method ("by upi", "via gpay", "on card", "in cash", "through phonepe", etc.)
+  const paymentMethodRegex = /\b(?:paid\s+)?(?:by|via|through|on|in|with|using)\s+(upi|gpay|google\s*pay|phonepe|paytm|bhim|cash|card|credit\s*card|debit\s*card|net\s*banking|bank\s*transfer|apple\s*pay|paypal)\b/i;
+  const paymentMatch = workingText.match(paymentMethodRegex);
+  if (paymentMatch) {
+    const rawMode = paymentMatch[1].toLowerCase().replace(/\s+/g, '');
+    if (rawMode === 'upi' || rawMode === 'bhim') detectedPaymentMode = 'UPI';
+    else if (rawMode === 'gpay' || rawMode === 'googlepay') detectedPaymentMode = 'GPay';
+    else if (rawMode === 'phonepe') detectedPaymentMode = 'PhonePe';
+    else if (rawMode === 'paytm') detectedPaymentMode = 'Paytm';
+    else if (rawMode === 'cash') detectedPaymentMode = 'Cash';
+    else if (rawMode.includes('card')) detectedPaymentMode = 'Card';
+    else if (rawMode.includes('banking') || rawMode.includes('transfer')) detectedPaymentMode = 'Bank Transfer';
+    else if (rawMode === 'applepay') detectedPaymentMode = 'Apple Pay';
+    else if (rawMode === 'paypal') detectedPaymentMode = 'PayPal';
+    else detectedPaymentMode = paymentMatch[1].toUpperCase();
+
+    workingText = workingText.replace(paymentMatch[0], ' ').trim();
+  }
+
+  // 2. Detect Relative Date ("yesterday", "today", "tomorrow", "2 days ago")
   const today = new Date();
   const yesterdayRegex = /\b(yesterday)\b/i;
   const todayRegex = /\b(today)\b/i;
@@ -247,8 +296,39 @@ export function parseQuickExpense(
     const numberRegex = /(?<=\s|^)([0-9]+(?:,[0-9]{3})*(?:\.[0-9]+)?|[0-9]+(?:\.[0-9]+)?)(?=\s|$)/g;
     const matches = Array.from(workingText.matchAll(numberRegex));
     if (matches.length > 0) {
-      // Prefer the last number if multiple exist
-      const chosenMatch = matches[matches.length - 1];
+      // Smartly choose the actual expense amount if multiple numbers exist:
+      let chosenMatch = matches[matches.length - 1];
+
+      if (matches.length > 1) {
+        // 1. Check if any number is immediately preceded by "for", "paid", "spent", "cost"
+        const precededByAction = matches.find((m) => {
+          const idx = m.index ?? 0;
+          const prefix = workingText.slice(0, idx).trim();
+          return /(?:\b(?:for|paid|spent|cost|price|total|rs\.?|rupees?|inr|usd|\$|₹))\s*$/i.test(prefix);
+        });
+
+        // 2. Filter out numbers followed by quantity words (e.g. 2 in "2 people", 4 in "4 tickets")
+        const nonQuantityMatches = matches.filter((m) => {
+          const idx = (m.index ?? 0) + m[0].length;
+          const suffix = workingText.slice(idx).trim();
+          return !/^(?:people|persons?|pax|tickets?|beers?|coffees?|cabs?|seats?|items?|days?|nights?|hours?|mins?|minutes?)\b/i.test(suffix);
+        });
+
+        if (precededByAction) {
+          chosenMatch = precededByAction;
+        } else if (nonQuantityMatches.length === 1) {
+          chosenMatch = nonQuantityMatches[0];
+        } else if (nonQuantityMatches.length > 1) {
+          // If multiple numbers remain, prefer the largest one as the expense total
+          const sorted = [...nonQuantityMatches].sort((a, b) => {
+            const valA = parseFloat(a[1].replace(/,/g, ''));
+            const valB = parseFloat(b[1].replace(/,/g, ''));
+            return valB - valA;
+          });
+          chosenMatch = sorted[0];
+        }
+      }
+
       const numStr = chosenMatch[1].replace(/,/g, '');
       const parsedNum = parseFloat(numStr);
       if (!Number.isNaN(parsedNum)) {
@@ -292,6 +372,24 @@ export function parseQuickExpense(
   }
 
   // 6. Clean up the title
+  // Strip leading prepositions or action remnants (e.g. "for cab" -> "cab", "on dinner" -> "dinner", "towards stay" -> "stay")
+  workingText = workingText
+    .replace(/^(?:for|on|towards|at|in)\s+/i, '')
+    .trim();
+
+  // Strip lingering verbs or prepositions
+  workingText = workingText
+    .replace(/\b(?:paid\s+for|paid|spent\s+on|spent|bought|gave|cost)\b/gi, ' ')
+    .trim();
+
+  // Strip trailing or leading prepositions or payment leftovers
+  workingText = workingText
+    .replace(/\s+(?:for|on|towards|by|via|at)$/i, '')
+    .trim();
+  workingText = workingText
+    .replace(/^(?:for|on|towards|by|via)\s+/i, '')
+    .trim();
+
   let finalTitle = workingText.replace(/\s+/g, ' ').trim();
   if (finalTitle.length > 0) {
     finalTitle = finalTitle.charAt(0).toUpperCase() + finalTitle.slice(1);
@@ -306,7 +404,8 @@ export function parseQuickExpense(
   if (detectedAmount !== null) score += 0.3;
   if (detectedCategoryId !== null) score += 0.2;
   if (detectedPaidById !== null) score += 0.1;
-  if (detectedSplitMemberIds && detectedSplitMemberIds.length > 0) score += 0.1;
+  if (detectedPaymentMode) score += 0.05;
+  if (detectedSplitMemberIds && detectedSplitMemberIds.length > 0) score += 0.05;
   confidence = Math.min(1.0, score);
 
   return {
@@ -318,6 +417,7 @@ export function parseQuickExpense(
     paidById: detectedPaidById,
     paidByName: detectedPaidByName,
     splitMemberIds: detectedSplitMemberIds,
+    paymentMode: detectedPaymentMode,
     date: detectedDate,
     rawInput: trimmed,
     confidence,
