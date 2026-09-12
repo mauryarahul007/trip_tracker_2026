@@ -2,6 +2,7 @@ import { useRef, useState, useEffect, useLayoutEffect, useCallback } from 'react
 import { IconExpenses, IconMembers, IconReceipt, IconClipboardList, IconPlus } from './Icons';
 import { triggerHaptic } from '../utils/haptics';
 import { FlightAddExpenseTooltip, STORAGE_KEY } from './FlightAddExpenseTooltip';
+import { useFeatureNudge } from '../hooks/useFeatureNudge';
 
 type Tab = 'expenses' | 'ledger' | 'members' | 'notes' | 'settings';
 
@@ -22,6 +23,10 @@ export function NavTabs({ activeTab, setActiveTab, onAddExpense, onAddMember, ex
   const longPressFired = useRef(false);
   const [showDeniedHint, setShowDeniedHint] = useState(false);
   const deniedHintTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Notes tab now also hosts the Travel Pass Wallet & Smart Packing Assistant
+  // (added v3.4-v3.10) -- returning users who never re-discover the tab after
+  // those features shipped have no other cue they exist.
+  const [showNotesNudge, dismissNotesNudge] = useFeatureNudge('notes-tab-pass-wallet-packing');
 
   // Measure and position the active sliding pill indicator
   const updatePill = useCallback(() => {
@@ -46,6 +51,7 @@ export function NavTabs({ activeTab, setActiveTab, onAddExpense, onAddMember, ex
 
   const goTo = (tab: Tab) => {
     if (tab === activeTab) return;
+    if (tab === 'notes' && showNotesNudge) dismissNotesNudge();
     triggerHaptic('light');
     // setActiveTab already starts its own view transition (see App.tsx) --
     // wrapping it in withViewTransition here nested a second
@@ -223,10 +229,11 @@ export function NavTabs({ activeTab, setActiveTab, onAddExpense, onAddMember, ex
         onPointerDown={prefetchNotes}
         onMouseEnter={prefetchNotes}
         onClick={() => goTo('notes')}
-        aria-label="Passes, Notes & Checklist"
+        aria-label={showNotesNudge ? 'Passes, Notes & Checklist (new: Travel Pass Wallet & Smart Packing)' : 'Passes, Notes & Checklist'}
       >
         <span className="nav-tab-icon"><IconClipboardList size={26} /></span>
         <span>Notes</span>
+        {showNotesNudge && <span className="nav-tab-badge nav-tab-badge-dot" aria-hidden="true" />}
       </button>
     </nav>
 

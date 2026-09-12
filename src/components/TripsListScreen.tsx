@@ -1,7 +1,8 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import Fuse from 'fuse.js';
 import { useNavigate } from 'react-router-dom';
 import type { Trip, Member, TripStop } from '../types';
-import { IconArchive, IconMapPin, IconSearch, IconMoreVertical, IconPlus, IconEdit, IconTrash, IconCopy } from './Icons';
+import { IconArchive, IconMapPin, IconSearch, IconMoreVertical, IconPlus, IconEdit, IconTrash, IconCopy, IconX } from './Icons';
 import { ActionSheet } from './common/ActionSheet';
 import { DateRangePicker } from './DateRangePicker';
 import { formatTripStamp } from '../utils/dateRange';
@@ -115,13 +116,15 @@ export function TripsListScreen({
   const [targetTripId, setTargetTripId] = useState<string | null>(null);
   const [isSavingTrip, setIsSavingTrip] = useState(false);
   const [actionSheetTrip, setActionSheetTrip] = useState<Trip | null>(null);
+  const [tripSearchQuery, setTripSearchQuery] = useState('');
 
   useHistoryBack(showJoinTrip, () => setShowJoinTrip(false));
   useEscapeKey(showJoinTrip, () => setShowJoinTrip(false));
   useHistoryBack(showList, () => setShowList(false));
   useEscapeKey(showList, () => setShowList(false));
+  const isSearchingTrips = tripSearchQuery.trim().length > 0;
   // Enables full luxury hero spotlight even with 1 trip
-  const stackActive = trips.length >= 1 && !showList && !showAddTrip && !showJoinTrip;
+  const stackActive = trips.length >= 1 && !showList && !showAddTrip && !showJoinTrip && !isSearchingTrips;
 
   useEffect(() => {
     preloadModule(() => import('./ExpenseForm'));
@@ -175,6 +178,16 @@ export function TripsListScreen({
     () => refreshTrips(true),
     !stackActive
   );
+
+  const tripSearchIndex = useMemo(
+    () => new Fuse(trips, { keys: ['name', 'destination'], threshold: 0.35, minMatchCharLength: 1 }),
+    [trips]
+  );
+  const visibleTrips = useMemo(() => {
+    const query = tripSearchQuery.trim();
+    if (!query) return trips;
+    return tripSearchIndex.search(query).map((r) => r.item);
+  }, [trips, tripSearchQuery, tripSearchIndex]);
 
 
   // First-run vs. "deleted my last trip" both hit trips.length === 0 — flag
@@ -581,8 +594,53 @@ export function TripsListScreen({
           </form>
         )}
 
+        {trips.length > 3 && !showAddTrip && !showJoinTrip && (
+          <div className="trip-search-bar" style={{ position: 'relative', marginBottom: '14px' }}>
+            <IconSearch
+              size={15}
+              className="icon-sm"
+              style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', pointerEvents: 'none' }}
+            />
+            <input
+              type="text"
+              className="input-field"
+              placeholder="Search trips by name or destination"
+              value={tripSearchQuery}
+              onChange={(e) => setTripSearchQuery(e.target.value)}
+              aria-label="Search trips"
+              style={{ paddingLeft: '36px', paddingRight: tripSearchQuery ? '36px' : undefined }}
+            />
+            {tripSearchQuery && (
+              <button
+                type="button"
+                onClick={() => setTripSearchQuery('')}
+                aria-label="Clear trip search"
+                style={{
+                  position: 'absolute',
+                  right: '8px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  background: 'none',
+                  border: 'none',
+                  color: 'var(--text-muted)',
+                  cursor: 'pointer',
+                  padding: '6px',
+                  display: 'flex',
+                }}
+              >
+                <IconX size={14} className="icon-sm" />
+              </button>
+            )}
+          </div>
+        )}
+
         {/* Trips List Grid */}
-        {trips.length === 0 ? (
+        {visibleTrips.length === 0 ? (
+          tripSearchQuery ? (
+            <div className="glass-card ledger-empty" style={{ borderStyle: 'dashed' }}>
+              <p>No trips match "{tripSearchQuery}".</p>
+            </div>
+          ) :
           <div className="glass-card ledger-empty" style={{ borderStyle: 'dashed', position: 'relative' }}>
             <div className="ledger-rule" />
             <div className="ledger-empty-prompt">
@@ -689,7 +747,7 @@ export function TripsListScreen({
               </button>
             )}
             <div className={`passport-list ${stackActive ? 'stack-mode' : ''}`}>
-            {trips.map((trip, idx) => {
+            {visibleTrips.map((trip, idx) => {
               const stamp = formatTripStamp(trip.startDate, trip.endDate);
               const tripMembers = trip.memberIds.map((id) => members[id]).filter(Boolean);
               const shown = tripMembers.slice(0, 3);

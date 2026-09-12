@@ -2969,3 +2969,18 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - On mobile, pressing hardware back while the switcher sheet is open (before picking anything) no longer just closes the sheet by itself in every case — acceptable given the alternative was mobile section navigation being non-functional.
 
+---
+
+## 160. UI/UX Audit Gaps Fixed & Strategy Doc Expanded (v3.14.4)
+* **Context:**
+  - A codebase-wide UI/UX audit (feature-parity and accessibility pass against `FEATURES.md`) surfaced four real gaps: no search/filter on the trips list, thin `aria-label`/focus-trap coverage on `ActionSheet.tsx` (used app-wide for context menus), no in-app discovery nudge for features shipped after a user's first run, and no i18n framework (scoped out of this pass by explicit decision — see Trade-offs).
+  - Separately, `docs/product-strategy-and-market-analysis.md` (ADR 158) was expanded on request with a named competitor matrix, underserved-vertical analysis, platform/dependency risk, four additional growth vectors, and Roadmap Phases 4-6.
+* **Decision:**
+  - `TripsListScreen.tsx`: added a `fuse.js`-backed fuzzy search bar (name/destination) shown once a user has >3 trips; searching forces the flat list view and shows a "no match" empty state.
+  - `common/ActionSheet.tsx`: added `useFocusTrap`, `aria-labelledby`/`aria-describedby` wired to title/description, and `role="menu"`/`"menuitem"` on the action list.
+  - Added `src/hooks/useFeatureNudge.ts` (generic, localStorage-backed, dismiss-once hook) and wired a pulsing `.nav-tab-badge-dot` onto the Notes tab (`NavTabs.tsx`) pointing existing users at the Travel Pass Wallet & Smart Packing Assistant; dismisses permanently on first tab open.
+  - Expanded `docs/product-strategy-and-market-analysis.md` per above; added `CLAUDE.md` rule mandating a short implementation plan (files touched, risk, assumptions) before any non-trivial coding task, with explicit user go-ahead required first.
+* **Trade-offs Accepted:**
+  - Full i18n rollout (touches all ~103 component files) was explicitly deferred by user decision as a separate, larger effort rather than bundled into this pass.
+  - Accessibility fixes were scoped to the highest-traffic surfaces found to have a real gap (`ActionSheet`) rather than an exhaustive sweep — `NavTabs`, `ConfirmDialog`, and `CommandPalette` were audited and already had adequate `aria-*`/focus-trap coverage.
+

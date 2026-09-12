@@ -2,6 +2,7 @@ import React, { useRef, useState } from 'react';
 import { triggerHaptic } from '../../utils/haptics';
 import { useHistoryBack } from '../../utils/useHistoryBack';
 import { useEscapeKey } from '../../utils/useEscapeKey';
+import { useFocusTrap } from '../../hooks/useFocusTrap';
 
 export interface ActionSheetItem {
   id: string;
@@ -38,6 +39,7 @@ export const ActionSheet: React.FC<ActionSheetProps> = ({
 
   useHistoryBack(isOpen, onClose);
   useEscapeKey(isOpen, onClose);
+  useFocusTrap(sheetRef, isOpen, false, onClose);
 
   // Touch / pointer drag down to dismiss (skip if touching buttons)
   const handlePointerDown = (e: React.PointerEvent) => {
@@ -76,9 +78,12 @@ export const ActionSheet: React.FC<ActionSheetProps> = ({
       }}
       role="dialog"
       aria-modal="true"
+      aria-labelledby={title ? 'action-sheet-title' : undefined}
+      aria-describedby={description ? 'action-sheet-desc' : undefined}
     >
       <div
         ref={sheetRef}
+        tabIndex={-1}
         className="wa-action-sheet-card wa-sheet-enter"
         style={{
           transform: dragOffset > 0 ? `translateY(${dragOffset}px)` : undefined,
@@ -91,24 +96,25 @@ export const ActionSheet: React.FC<ActionSheetProps> = ({
         onPointerCancel={handlePointerUp}
       >
         {/* Drag Pill Handle */}
-        <div className="wa-action-sheet-handle-wrap">
+        <div className="wa-action-sheet-handle-wrap" aria-hidden="true">
           <span className="wa-action-sheet-drag-pill" />
         </div>
 
         {/* Header (Optional) */}
         {(title || description) && (
           <div className="wa-action-sheet-header">
-            {title && <h3 className="wa-action-sheet-title">{title}</h3>}
-            {description && <p className="wa-action-sheet-desc">{description}</p>}
+            {title && <h3 id="action-sheet-title" className="wa-action-sheet-title">{title}</h3>}
+            {description && <p id="action-sheet-desc" className="wa-action-sheet-desc">{description}</p>}
           </div>
         )}
 
         {/* Action Items List */}
-        <div className="wa-action-sheet-list">
+        <div className="wa-action-sheet-list" role="menu">
           {items.map((item) => (
             <button
               key={item.id}
               type="button"
+              role="menuitem"
               className={`wa-action-sheet-item ${item.destructive ? 'destructive' : ''} ${item.disabled ? 'disabled' : ''}`}
               disabled={item.disabled}
               onClick={() => {

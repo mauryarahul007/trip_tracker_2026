@@ -1,3 +1,10 @@
+## Plan before code (mandatory, no exceptions)
+
+For any coding task (feature, fix, refactor), post short implementation plan
+before editing files: what changes, which files, why, risks/assumptions.
+Wait for user go-ahead unless user already said "just do it" / gave explicit
+approval upfront in same message. Trivial one-line/typo fixes exempt.
+
 ## AI engineering procedure
 
 Follow the compact always-on rule in `.cursor/rules/ai-software-engineering.mdc`. Detailed phase docs (understand, smallest change, implement, debug, verify, output) live in `docs/ai-engineering/`. Open only the phase that is active; index: `docs/ai-engineering/README.md`.
