@@ -3035,5 +3035,23 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - Closed trips remain readable for travelers so they can review historical splits and settle outstanding balances; write operations remain restricted per existing business logic.
 
+---
+
+## 163. Dynamic Bottom Nav Bar Symmetrical Alignment & Centered FAB (v3.15.2)
+* **Context:**
+  - When the Collaborative Notes & Checklist Hub flag is turned off, the Notes tab is safely unmounted from the bottom navigation bar (`NavTabs.tsx`).
+  - Previously, `.nav-tabs` was structured as a flat `display: flex; justify-content: space-between` container with `flex: 1` buttons. When Notes was present, 2 buttons on the left and 2 on the right balanced the `+` FAB in the middle. But when Notes was hidden, the left side had 2 buttons (`Summary`, `Expenses`) taking 2 flex units, while the right side had only 1 button (`Members`) taking 1 flex unit.
+  - This asymmetry pushed the `+` FAB to ~67% of the bar, leaving the right side cramped and the entire bottom navigation bar visibly skewed and distorted.
+* **Decision:**
+  - Refactored `.nav-tabs` to use CSS Grid layout:
+    - In 4-tab mode (`.nav-tabs.has-notes`): `grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto minmax(0, 1fr) minmax(0, 1fr)`. Left wing (2fr) balances right wing (2fr), centering the FAB at exactly 50%.
+    - In 3-tab mode (`.nav-tabs.no-notes`): `grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto minmax(0, 2fr)`. Left wing (`1fr + 1fr = 2fr`) balances right wing (`2fr`), keeping the `+` FAB in the exact dead center (50%) regardless of flag state.
+    - Centered `button[data-tab="members"]` in the right 2fr column (`justify-self: center; width: 100%; max-width: 110px`), providing visual symmetry to the left wing's center of mass.
+    - Centered `.nav-tab-fab-wrap` with `justify-self: center; width: 50px`.
+  - Added `hasNotesOrPassesTab` to `useLayoutEffect` in `NavTabs.tsx` with `requestAnimationFrame(updatePill)` so the active indicator pill automatically recalculates its `offsetLeft` and `offsetWidth` without flicker when switching flags.
+* **Trade-offs Accepted:**
+  - Standardized CSS Grid across all mobile viewports, using `minmax(0, ...)` to ensure no track overflows even on narrow 320px screens.
+
+
 
 

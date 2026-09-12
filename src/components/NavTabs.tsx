@@ -53,16 +53,18 @@ export function NavTabs({
     }
   }, [activeTab]);
 
+  const hasNotesOrPassesTab = isNotesEnabled || isPassesEnabled;
+
   useLayoutEffect(() => {
     updatePill();
-  }, [updatePill]);
+    const raf = requestAnimationFrame(updatePill);
+    return () => cancelAnimationFrame(raf);
+  }, [updatePill, hasNotesOrPassesTab]);
 
   useEffect(() => {
     window.addEventListener('resize', updatePill);
     return () => window.removeEventListener('resize', updatePill);
   }, [updatePill]);
-
-  const hasNotesOrPassesTab = isNotesEnabled || isPassesEnabled;
 
   const goTo = (tab: Tab) => {
     if (tab === activeTab) return;
@@ -141,7 +143,12 @@ export function NavTabs({
   };
 
   return (
-    <nav ref={navRef} className="nav-tabs" role="tablist" aria-label="Trip navigation tabs">
+    <nav
+      ref={navRef}
+      className={`nav-tabs ${hasNotesOrPassesTab ? 'has-notes' : 'no-notes'}`}
+      role="tablist"
+      aria-label="Trip navigation tabs"
+    >
       {pillStyle && (
         <div
           className="nav-tabs-pill"

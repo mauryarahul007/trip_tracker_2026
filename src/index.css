@@ -2133,13 +2133,26 @@ html.capacitor-ios .tab-pane {
   border-radius: 9999px;
   padding: 5px 6px;
   box-shadow: var(--shadow-nav-glass);
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto minmax(0, 1fr) minmax(0, 1fr);
   align-items: center;
-  justify-content: space-between;
   gap: 4px;
   flex-shrink: 0;
   z-index: 50;
   transition: background-color 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+/* Dynamically balance nav bar when Notes & Passes are disabled:
+   Left wing (Summary + Expenses = 2fr), Center FAB (auto), Right wing (Members = 2fr)
+   keeps the '+' FAB in the dead center (50%) regardless of tab count. */
+.nav-tabs.no-notes {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto minmax(0, 2fr);
+}
+
+.nav-tabs.no-notes .nav-tab-item[data-tab="members"] {
+  justify-self: center;
+  width: 100%;
+  max-width: 110px;
 }
 
 /* Sliding active pill indicator behind the selected tab */
@@ -2270,6 +2283,8 @@ html.capacitor-ios .nav-tabs {
   display: flex;
   align-items: center;
   justify-content: center;
+  justify-self: center;
+  width: 50px;
   flex-shrink: 0;
   margin-top: -26px;
 }
