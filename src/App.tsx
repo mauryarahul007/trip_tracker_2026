@@ -2387,6 +2387,7 @@ export default function App() {
                 onOpenFxRates={isFeatureEnabled('enableCurrencyFx', { tripId: activeTrip?.id, userId: userId || undefined }) ? () => setShowFxRates(true) : undefined}
                 onOpenMediaGallery={() => setShowMediaGallery(true)}
                 onOpenOfflineSnapshot={isFeatureEnabled('enableOfflineSnapshot') ? () => setShowOfflineSnapshot(true) : undefined}
+                onOpenTripWrapped={isFeatureEnabled('enableTripWrapped', { tripId: activeTrip?.id, userId: userId || undefined }) ? () => setShowTripWrapped(true) : undefined}
                 isSurfaceVisible={activeTab === 'settings'}
               />
               </Suspense>
@@ -2494,6 +2495,19 @@ export default function App() {
                     icon: <IconMapPin size={18} />,
                     onClick: () => {
                       setShowRouteModal(true);
+                    },
+                  },
+                ]
+              : []),
+            ...(isFeatureEnabled('enableTripWrapped', { tripId: activeTrip.id, userId: userId || undefined })
+              ? [
+                  {
+                    id: 'trip-wrapped',
+                    label: 'Trip Wrapped & Highlights ✨',
+                    subtitle: 'Infographic story card, superlatives & journey recap',
+                    icon: <span style={{ fontSize: '18px' }}>✨</span>,
+                    onClick: () => {
+                      setShowTripWrapped(true);
                     },
                   },
                 ]

@@ -18,6 +18,7 @@ type Props = {
   onToggleMute: (muted: boolean) => void;
   onOpenFxRates?: () => void;
   onExportCsv?: () => void;
+  onOpenTripWrapped?: () => void;
 };
 
 export function SettingsTripToolsHub({
@@ -34,6 +35,7 @@ export function SettingsTripToolsHub({
   onToggleMute,
   onOpenFxRates,
   onExportCsv,
+  onOpenTripWrapped,
 }: Props) {
   return (
     <SettingsSubscreenFrame
@@ -42,7 +44,7 @@ export function SettingsTripToolsHub({
       title="Trip Tools"
       subtitle={
         <>
-          Categories, recycle bin, alerts{onOpenFxRates ? ', exchange rates' : ''} &amp; exports for {activeTrip.name}.
+          Categories, recycle bin, alerts{onOpenTripWrapped ? ', wrapped recap' : ''}{onOpenFxRates ? ', exchange rates' : ''} &amp; exports for {activeTrip.name}.
         </>
       }
     >
@@ -124,6 +126,20 @@ export function SettingsTripToolsHub({
               </label>
             </div>
           </div>
+
+          {onOpenTripWrapped && (
+            <SettingsCell
+              icon={<span style={{ fontSize: '18px' }}>✨</span>}
+              iconGlow="amber"
+              title="Trip Wrapped & Highlights"
+              subtitle="Infographic story card, superlatives & journey recap"
+              badge="STORY"
+              onClick={() => {
+                triggerHaptic('light');
+                onOpenTripWrapped();
+              }}
+            />
+          )}
 
           {onOpenFxRates && (
             <SettingsCell

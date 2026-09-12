@@ -40,6 +40,7 @@ type Props = {
   onOpenFxRates?: () => void;
   onOpenMediaGallery?: () => void;
   onOpenOfflineSnapshot?: () => void;
+  onOpenTripWrapped?: () => void;
   isSurfaceVisible?: boolean;
 };
 
@@ -79,6 +80,7 @@ export function SettingsTab({
   onOpenFxRates,
   onOpenMediaGallery,
   onOpenOfflineSnapshot,
+  onOpenTripWrapped,
   isSurfaceVisible = true,
 }: Props) {
   return (
@@ -119,6 +121,7 @@ export function SettingsTab({
       onOpenFxRates={onOpenFxRates}
       onOpenMediaGallery={onOpenMediaGallery}
       onOpenOfflineSnapshot={onOpenOfflineSnapshot}
+      onOpenTripWrapped={onOpenTripWrapped}
       isSurfaceVisible={isSurfaceVisible}
     />
   );

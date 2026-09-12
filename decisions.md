@@ -3052,6 +3052,21 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - Standardized CSS Grid across all mobile viewports, using `minmax(0, ...)` to ensure no track overflows even on narrow 320px screens.
 
+---
+
+## 164. Trip Wrapped & Story Highlights Settings and ActionSheet Integration (v3.15.3)
+* **Context:**
+  - While the `enableTripWrapped` flag was properly declared and supported in the Command Palette (`Cmd+K`), travelers navigating the Settings tab could not discover or trigger their Trip Wrapped story cards from the Settings menu or the Trip Tools Hub.
+  - Travelers expecting full feature discoverability requested that Trip Wrapped be accessible in the Settings menu while strictly adhering to the `enableTripWrapped` flag (so that toggling the flag off completely removes the entry with zero leaks).
+* **Decision:**
+  - Added `onOpenTripWrapped` to `SettingsTripToolsHub.tsx`, rendering a dedicated `SettingsCell` (*"Trip Wrapped & Highlights ✨" - Infographic story card, superlatives & journey recap*) with amber glow and a `STORY` badge.
+  - Threaded the action down from `App.tsx` through `SettingsTab.tsx` and `SettingsView.tsx`, strictly gated by `isFeatureEnabled('enableTripWrapped', { tripId: activeTrip?.id, userId: userId || undefined })`.
+  - Added search indexing for "wrapped", "story", "highlights", "recap", "stats", and "infographic" within Settings search.
+  - Added a quick-launch action to the Trip Dashboard ActionSheet (triggered by tapping the header trip title), strictly gated by `enableTripWrapped`.
+* **Trade-offs Accepted:**
+  - If `enableTripWrapped` is safed or disabled in a release phase, the card and search results vanish cleanly from Settings and the ActionSheet with zero residue.
+
+
 
 
 

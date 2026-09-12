@@ -133,6 +133,7 @@ interface SettingsViewProps {
   onOpenFxRates?: () => void;
   onOpenMediaGallery?: () => void;
   onOpenOfflineSnapshot?: () => void;
+  onOpenTripWrapped?: () => void;
 }
 
 export function SettingsView({
@@ -176,6 +177,7 @@ export function SettingsView({
   onOpenFxRates,
   onOpenMediaGallery,
   onOpenOfflineSnapshot,
+  onOpenTripWrapped,
 }: SettingsViewProps) {
   const [screenStack, setScreenStack] = useState<SubScreen[]>(() => (initialSubScreen ? [initialSubScreen] : []));
   const subScreen = screenStack.length > 0 ? screenStack[screenStack.length - 1] : null;
@@ -699,6 +701,7 @@ export function SettingsView({
         onOpenRecycleBin={() => setSubScreen('recycle-bin')}
         onToggleMute={(muted) => setTripMuted(activeTrip.id, muted)}
         onOpenFxRates={isFeatureEnabled('enableCurrencyFx', { tripId: activeTrip.id, userId: userId || undefined }) ? onOpenFxRates : undefined}
+        onOpenTripWrapped={isFeatureEnabled('enableTripWrapped', { tripId: activeTrip.id, userId: userId || undefined }) ? onOpenTripWrapped : undefined}
         onExportCsv={onExportCsv}
       />
     );
@@ -852,11 +855,13 @@ export function SettingsView({
   const showCsvExport = Boolean(hasActiveTrip && activeTrip && onExportCsv && matchesSearch('Excel CSV Export', 'spreadsheet', 'download', 'ledger', 'csv', 'sheets'));
   const isFxEnabled = isFeatureEnabled('enableCurrencyFx', { tripId: activeTrip?.id, userId: userId || undefined });
   const showFxSearch = Boolean(onOpenFxRates && isFxEnabled && matchesSearch('Multi-Currency FX Engine', 'rates', 'fx', 'forex', 'currency', 'exchange'));
+  const isWrappedEnabled = isFeatureEnabled('enableTripWrapped', { tripId: activeTrip?.id, userId: userId || undefined });
+  const showWrappedSearch = Boolean(onOpenTripWrapped && isWrappedEnabled && matchesSearch('Trip Wrapped & Highlights', 'wrapped', 'story', 'highlights', 'recap', 'stats', 'infographic'));
   const showTripStatus = Boolean(hasActiveTrip && activeTrip && !searchQuery.trim());
   const isSnapshotEnabled = isFeatureEnabled('enableOfflineSnapshot');
   const showSnapshotSearch = Boolean(onOpenOfflineSnapshot && isSnapshotEnabled && matchesSearch('Offline Snapshot (.triptracker)', 'snapshot', 'offline', 'backup', 'triptracker'));
   const showGallerySearch = Boolean(onOpenMediaGallery && matchesSearch('Receipts & Memories Gallery', 'gallery', 'photos', 'receipts', 'memories'));
-  const showTripTools = showCategories || showRecycleBin || showMute || showFxSearch || showCsvExport;
+  const showTripTools = showCategories || showRecycleBin || showMute || showFxSearch || showCsvExport || showWrappedSearch;
   const showTripGroup = showTripStatus || showInvite || showTripTools || showCloseTrip;
 
   const showAppearance = matchesSearch('Appearance', 'theme', 'dark', 'light', 'night', 'auto', 'color', 'look');
@@ -1150,7 +1155,15 @@ export function SettingsView({
               icon={<IconSettings size={18} />}
               iconGlow="purple"
               title="Trip Tools"
-              subtitle={isFxEnabled ? "Categories, recycle bin, alerts & FX rates" : "Categories, recycle bin, alerts & exports"}
+              subtitle={
+                isWrappedEnabled && isFxEnabled
+                  ? "Categories, recycle bin, alerts, wrapped & FX rates"
+                  : isWrappedEnabled
+                  ? "Categories, recycle bin, alerts & wrapped recap"
+                  : isFxEnabled
+                  ? "Categories, recycle bin, alerts & FX rates"
+                  : "Categories, recycle bin, alerts & exports"
+              }
               onPointerEnter={prefetchSettingsLeaves}
               onPointerDown={prefetchSettingsLeaves}
               onClick={() => setSubScreen('trip-tools')}
