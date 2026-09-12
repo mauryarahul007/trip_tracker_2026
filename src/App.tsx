@@ -449,11 +449,13 @@ export default function App() {
   const globalSettingsCloseRef = useRef<(() => void) | null>(null);
   const [bypassEnvWarning, setBypassEnvWarning] = useState(false);
   const isSuperadmin = useTripStore((s) => s.isSuperadmin);
+  const isFeatureEnabled = useTripStore((s) => s.isFeatureEnabled);
   const setTripMuted = useTripStore((s) => s.setTripMuted);
   const isActiveTripMuted = useTripStore((s) =>
     activeTripId ? s.isTripMuted(activeTripId) : false
   );
-  const [isTravelerPreview, setIsTravelerPreview] = useState(false);
+  const isTravelerPreview = useTripStore((s) => s.isTravelerPreview);
+  const setIsTravelerPreview = useTripStore((s) => s.setIsTravelerPreview);
   const [adminActiveTab, setAdminActiveTab] = useState<AdminTab>('command');
 
   // Command Palette & Trip Wrapped States
@@ -2293,7 +2295,7 @@ export default function App() {
                   userId={userId}
                   activeTransitionSourceId={activeTransitionSourceId}
                   onAddExpense={handleOpenAddExpense}
-                  onOpenSmartQuickAdd={handleOpenSmartQuickAdd}
+                  onOpenSmartQuickAdd={isFeatureEnabled('enableVoiceInput') ? handleOpenSmartQuickAdd : undefined}
                   dirtyExpenseIds={dirtyExpenseIds}
                   conflictExpenseIds={conflictExpenseIds}
                 />
@@ -2466,7 +2468,7 @@ export default function App() {
               icon: <IconShare size={18} />,
               onClick: () => setShowShareTrip(true),
             },
-            ...(activeTrip.stops && activeTrip.stops.length > 0
+            ...(activeTrip.stops && activeTrip.stops.length > 0 && isFeatureEnabled('enableRouteStops', { tripId: activeTrip.id })
               ? [
                   {
                     id: 'route-modal',
@@ -2737,8 +2739,8 @@ export default function App() {
               setActiveTab('expenses');
             }}
             onNewExpense={handleOpenAddExpense}
-            onOpenVoiceQuickAdd={() => handleOpenSmartQuickAdd(true)}
-            onOpenWrapped={() => setShowTripWrapped(true)}
+            onOpenVoiceQuickAdd={isFeatureEnabled('enableVoiceInput') ? () => handleOpenSmartQuickAdd(true) : undefined}
+            onOpenWrapped={isFeatureEnabled('enableTripWrapped') ? () => setShowTripWrapped(true) : undefined}
             onOpenSettings={() => setShowGlobalSettings(true)}
             onSwitchTab={(t) => {
               if (t === 'balances') {
@@ -2753,7 +2755,7 @@ export default function App() {
       })()}
 
       {/* Trip Wrapped Story Card Modal */}
-      {showTripWrapped && activeTrip && (
+      {showTripWrapped && activeTrip && isFeatureEnabled('enableTripWrapped') && (
         <Suspense fallback={
           <div className="modal-backdrop" style={{ background: 'var(--bg-app)' }}>
             <div className="modal-sheet expense-form-sheet" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
@@ -2772,7 +2774,7 @@ export default function App() {
       )}
 
       {/* Trip Squad Achievements & Milestones Modal */}
-      {showAchievements && activeTrip && (
+      {showAchievements && activeTrip && isFeatureEnabled('enableAchievements') && (
         <Suspense fallback={null}>
           <AchievementBadgeModal
             trip={activeTrip}
@@ -2799,7 +2801,7 @@ export default function App() {
       )}
 
       {/* Smart Voice & Natural Language Quick-Add Modal */}
-      {showSmartQuickAdd && activeTrip && (
+      {showSmartQuickAdd && activeTrip && isFeatureEnabled('enableVoiceInput') && (
         <Suspense fallback={null}>
           <SmartExpenseQuickAddModal
             isOpen={showSmartQuickAdd}
@@ -2822,7 +2824,7 @@ export default function App() {
       )}
 
       {/* Offline Snapshot Backup Modal */}
-      {showOfflineSnapshot && (
+      {showOfflineSnapshot && isFeatureEnabled('enableOfflineSnapshot') && (
         <Suspense fallback={null}>
           <OfflineSnapshotModal
             isOpen={showOfflineSnapshot}

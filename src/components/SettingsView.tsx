@@ -304,7 +304,9 @@ export function SettingsView({
   const setTripMuted = useTripStore((s) => s.setTripMuted);
 
   // Superadmin & Feature Flag state
-  const isSuperadmin = useTripStore((s) => s.isSuperadmin);
+  const isSuperadminRaw = useTripStore((s) => s.isSuperadmin);
+  const isTravelerPreview = useTripStore((s) => s.isTravelerPreview);
+  const isSuperadmin = isSuperadminRaw && !isTravelerPreview;
   const isFeatureEnabled = useTripStore((s) => s.isFeatureEnabled);
   const refreshTrips = useTripStore((s) => s.refreshTrips);
   const trips = useTripStore((s) => s.trips);

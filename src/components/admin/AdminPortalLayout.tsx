@@ -97,6 +97,18 @@ const SECTION_GROUPS: { label: string; items: Section[] }[] = [
 
 const SECTIONS: Section[] = SECTION_GROUPS.flatMap((g) => g.items);
 
+const SECTION_GLYPHS: Record<AdminTab, string> = {
+  command: '⚡',
+  flags: '🚩',
+  analytics: '📈',
+  trips: '🧭',
+  users: '👥',
+  audit: '📜',
+  features: '✨',
+  bugs: '🐛',
+  tools: '🛠️',
+};
+
 type JumpResult = { kind: 'Section' | 'Action' | 'Trip' | 'User' | 'Bug'; label: string; sublabel: string; onSelect: () => void };
 
 function useIstClock() {
@@ -256,6 +268,27 @@ export function AdminPortalLayout({
   const [jumpIndex, setJumpIndex] = useState(0);
   const cmdkInputRef = useRef<HTMLInputElement>(null);
 
+  // Concept 4 Mini-rail state (persisted)
+  const [railCollapsed, setRailCollapsed] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem('ops-deck-rail-collapsed') === 'true';
+    } catch {
+      return false;
+    }
+  });
+
+  const toggleRailCollapsed = () => {
+    setRailCollapsed((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem('ops-deck-rail-collapsed', String(next));
+      } catch {
+        // ignore
+      }
+      return next;
+    });
+  };
+
   // Stack navigation: close jump menu first, then return to command center.
   // The section switcher sheet deliberately has no history-back entry of its
   // own: selecting a row from Command Center closes the sheet AND pushes the
@@ -272,13 +305,17 @@ export function AdminPortalLayout({
   useEscapeKey(jumpOpen, () => setJumpOpen(false));
   // ConfirmDialog owns its own Back/Escape stack
 
-  // Global Cmd+K / Ctrl+K keyboard shortcut
+  // Global Cmd+K / Ctrl+K keyboard shortcut & Cmd+\ / Ctrl+\ rail toggle
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
         cmdkInputRef.current?.focus();
         setJumpOpen(true);
+      }
+      if ((e.metaKey || e.ctrlKey) && e.key === '\\') {
+        e.preventDefault();
+        toggleRailCollapsed();
       }
       if (e.key === 'Escape') {
         setJumpOpen(false);
@@ -382,8 +419,8 @@ export function AdminPortalLayout({
   return (
     <div className="ops-deck ops-shell">
       <div className="ops-vitals-app">
-        <div className="ops-layout">
-          <nav className="ops-rail" aria-label="Ops sections">
+        <div className="ops-layout" data-rail-collapsed={railCollapsed}>
+          <nav className="ops-rail" data-collapsed={railCollapsed} aria-label="Ops sections">
             <div className="ops-vitals-brand">
               <div className="ops-glyph">TT</div>
               <div>
@@ -391,6 +428,17 @@ export function AdminPortalLayout({
                 <div className="ops-sub">Ops Deck</div>
               </div>
             </div>
+
+            <button
+              type="button"
+              className="ops-rail-toggle-btn"
+              onClick={toggleRailCollapsed}
+              title={railCollapsed ? 'Expand sidebar (Ctrl+\\)' : 'Collapse sidebar (Ctrl+\\)'}
+              aria-label={railCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            >
+              <span>{railCollapsed ? '⇥' : '⇤'}</span>
+              <span className="toggle-text">{railCollapsed ? 'Expand' : 'Collapse'}</span>
+            </button>
 
             {SECTION_GROUPS.map((group) => (
               <div className="ops-rail-group" key={group.label}>
@@ -402,8 +450,10 @@ export function AdminPortalLayout({
                     className="ops-switch-item"
                     data-current={activeTab === s.id}
                     onClick={() => onActiveTabChange(s.id)}
+                    title={`${s.label} (${s.code})`}
                   >
                     <span className="ops-lamp" />
+                    <span className="ops-rail-glyph">{SECTION_GLYPHS[s.id] || '•'}</span>
                     <span>
                       <span className="ops-lbl">{s.label}</span>
                       <span className="ops-code">{s.code}</span>
@@ -539,6 +589,9 @@ export function AdminPortalLayout({
               users={users}
               auditLogs={auditLogs}
               health={health}
+              expenses={expenses}
+              members={members}
+              categories={categories}
               onNavigate={onActiveTabChange}
               onRefresh={handleRefreshAll}
               isRefreshing={isRefreshing}

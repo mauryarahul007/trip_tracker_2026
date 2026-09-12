@@ -20,7 +20,7 @@ interface CommandPaletteProps {
   onNewExpense: () => void;
   onOpenVoiceQuickAdd?: () => void;
   onCreateTrip?: () => void;
-  onOpenWrapped: () => void;
+  onOpenWrapped?: () => void;
   onOpenSettings: () => void;
   onSwitchTab: (tab: 'expenses' | 'balances' | 'settings' | 'members') => void;
   smartSuggestions?: Array<{
@@ -163,7 +163,7 @@ export function CommandPalette({
     });
   }
 
-  if (trip) {
+  if (trip && onOpenWrapped) {
     items.push({
       id: 'act-wrapped',
       type: 'action',

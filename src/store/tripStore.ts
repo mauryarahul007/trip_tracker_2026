@@ -1,8 +1,8 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import type { Member, Group, Expense, Category, TripState, ExpenseLocation, Trip, TripStop, ChecklistItem, TripNote, MemberRole, ItemizedReceiptConfig, TravelPass, TripFxConfig } from '../types';
-import type { FeatureFlagKey } from '../types/admin';
-import { DEFAULT_FEATURE_FLAGS, isFeatureActive } from '../utils/featureFlags';
+import type { FeatureFlagKey, ReleasePhaseId } from '../types/admin';
+import { DEFAULT_FEATURE_FLAGS, isFeatureActive, getPhaseFlagKeys } from '../utils/featureFlags';
 import { buildAutoGroupName } from '../utils/groupNaming';
 import { newId } from '../utils/uuid';
 import { fetchResolvedFeatureFlags, fetchAllFeatureFlagOverrides, setFeatureFlagOverride } from '../services/featureFlagApi';
@@ -125,13 +125,16 @@ interface TripStore extends TripState {
 
   // Superadmin & Feature Flags
   isSuperadmin: boolean;
+  isTravelerPreview: boolean;
   featureFlags: Record<FeatureFlagKey, boolean>;
   tripFlagOverrides: Record<string, Record<string, boolean>>;
   userFlagOverrides: Record<string, Record<string, boolean>>;
   setIsSuperadmin: (value: boolean) => void;
+  setIsTravelerPreview: (value: boolean) => void;
   lockSuperadmin: () => void;
   setUserIdentity: (userId: string, displayName: string | null) => void;
   setFeatureFlag: (key: FeatureFlagKey, value: boolean) => Promise<void>;
+  setPhaseFlags: (phaseId: ReleasePhaseId, enabled: boolean) => Promise<void>;
   setTripFlagOverride: (tripId: string, key: FeatureFlagKey, value: boolean | null) => Promise<void>;
   setUserFlagOverride: (userId: string, key: FeatureFlagKey, value: boolean | null) => Promise<void>;
   resetFeatureFlags: () => Promise<void>;
@@ -696,9 +699,14 @@ export const useTripStore = create<TripStore>()(
 
     // Superadmin & Feature Flags
     isSuperadmin: false,
+    isTravelerPreview: false,
     featureFlags: DEFAULT_FEATURE_FLAGS,
     tripFlagOverrides: {},
     userFlagOverrides: {},
+
+    setIsTravelerPreview: (value: boolean) => {
+      set({ isTravelerPreview: value, lastModifiedAt: Date.now() });
+    },
 
     // Trusts the caller: authStore's signInSuperadmin only calls this after
     // Supabase's is_superadmin() RPC confirms the real, signed-in session is
@@ -735,6 +743,28 @@ export const useTripStore = create<TripStore>()(
         await setFeatureFlagOverride('global', '', key, value);
       } catch (e) {
         console.error('Failed to persist global feature flag:', e);
+      }
+    },
+
+    setPhaseFlags: async (phaseId: ReleasePhaseId, enabled: boolean) => {
+      const keys = getPhaseFlagKeys(phaseId);
+      if (keys.length === 0) return;
+      set((s) => {
+        const next = { ...s.featureFlags };
+        for (const k of keys) {
+          next[k] = enabled;
+        }
+        return {
+          featureFlags: next,
+          lastModifiedAt: Date.now(),
+        };
+      });
+      try {
+        await Promise.all(
+          keys.map((k) => setFeatureFlagOverride('global', '', k, enabled))
+        );
+      } catch (e) {
+        console.error('Failed to persist phase feature flags:', e);
       }
     },
 
@@ -832,6 +862,7 @@ export const useTripStore = create<TripStore>()(
       const s = get();
       return isFeatureActive(key, s.featureFlags, {
         isSuperadmin: s.isSuperadmin,
+        isTravelerPreview: s.isTravelerPreview,
         tripId: context?.tripId || s.activeTripId || undefined,
         userId: context?.userId || s.userId || undefined,
         tripOverrides: s.tripFlagOverrides,

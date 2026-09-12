@@ -386,10 +386,21 @@ export function ChecklistNotesTab({ trip, members, isAdmin }: Props) {
     saveTravelPass,
     deleteTravelPass,
   } = useTripStore();
+  const isFeatureEnabled = useTripStore((s) => s.isFeatureEnabled);
+  const isPassesEnabled = isFeatureEnabled('enableTravelPasses', { tripId: liveTrip.id });
+  const isPackingEnabled = isFeatureEnabled('enablePackingAssistant', { tripId: liveTrip.id });
 
-  const [viewMode, setViewMode] = useState<ViewMode>(
-    (liveTrip.passes && liveTrip.passes.length > 0) ? 'passes' : 'checklist'
-  );
+  const [viewMode, setViewMode] = useState<ViewMode>(() => {
+    if (isPassesEnabled && liveTrip.passes && liveTrip.passes.length > 0) return 'passes';
+    return 'checklist';
+  });
+
+  useEffect(() => {
+    if (!isPassesEnabled && viewMode === 'passes') {
+      setViewMode('checklist');
+    }
+  }, [isPassesEnabled, viewMode]);
+
   const [checklistFilter, setChecklistFilter] = useState<ChecklistCategory>('all');
   const [noteFilter, setNoteFilter] = useState<NoteCategory>('all');
   const [isPackingAssistantOpen, setIsPackingAssistantOpen] = useState(false);
@@ -398,7 +409,7 @@ export function ChecklistNotesTab({ trip, members, isAdmin }: Props) {
   useEffect(() => {
     let isMounted = true;
     const destQuery = liveTrip.destination || liveTrip.name;
-    if (destQuery) {
+    if (destQuery && isPackingEnabled) {
       getDestinationWeatherRealtime(destQuery, (fresh) => {
         if (isMounted) setWeather(fresh);
       }).then((cached) => {
@@ -408,7 +419,7 @@ export function ChecklistNotesTab({ trip, members, isAdmin }: Props) {
     return () => {
       isMounted = false;
     };
-  }, [liveTrip.destination, liveTrip.name]);
+  }, [liveTrip.destination, liveTrip.name, isPackingEnabled]);
 
   // Quick Add Checklist item state
   const [quickItemText, setQuickItemText] = useState('');
@@ -718,20 +729,22 @@ export function ChecklistNotesTab({ trip, members, isAdmin }: Props) {
       {/* Top Segmented Controls */}
       <div className="tab-segmented-header">
         <div className="tab-segmented-control" role="tablist">
-          <button
-            type="button"
-            role="tab"
-            aria-selected={viewMode === 'passes'}
-            className={`tab-segment-btn ${viewMode === 'passes' ? 'active' : ''}`}
-            onClick={() => {
-              triggerHaptic('light');
-              setViewMode('passes');
-            }}
-            aria-label={`Passes, ${passes.length}`}
-          >
-            <span className="segment-label">Passes</span>
-            <span className="segment-badge">{passes.length}</span>
-          </button>
+          {isPassesEnabled && (
+            <button
+              type="button"
+              role="tab"
+              aria-selected={viewMode === 'passes'}
+              className={`tab-segment-btn ${viewMode === 'passes' ? 'active' : ''}`}
+              onClick={() => {
+                triggerHaptic('light');
+                setViewMode('passes');
+              }}
+              aria-label={`Passes, ${passes.length}`}
+            >
+              <span className="segment-label">Passes</span>
+              <span className="segment-badge">{passes.length}</span>
+            </button>
+          )}
           <button
             type="button"
             role="tab"
@@ -766,7 +779,7 @@ export function ChecklistNotesTab({ trip, members, isAdmin }: Props) {
       </div>
 
       {/* 0. TRAVEL PASSES & TICKET WALLET VIEW */}
-      {viewMode === 'passes' && (
+      {viewMode === 'passes' && isPassesEnabled && (
         <TravelPassWalletView
           trip={liveTrip}
           members={members}
@@ -849,7 +862,7 @@ export function ChecklistNotesTab({ trip, members, isAdmin }: Props) {
       {viewMode === 'checklist' && (
         <div className="checklist-container">
           {/* Smart Assistant Ambient Suggestion Card when checklist is empty */}
-          {totalCount === 0 && (
+          {totalCount === 0 && isPackingEnabled && (
             <div
               className="glass-card"
               style={{
@@ -930,24 +943,26 @@ export function ChecklistNotesTab({ trip, members, isAdmin }: Props) {
 
           {/* Category Filter Chips & Smart Assistant Action */}
           <div className="checklist-category-scroll" role="group" aria-label="Filter checklist by category">
-            <button
-              type="button"
-              className="category-pill smart-assistant-pill"
-              onClick={() => {
-                triggerHaptic('light');
-                setIsPackingAssistantOpen(true);
-              }}
-              style={{
-                background: 'linear-gradient(135deg, rgba(20, 184, 166, 0.15), rgba(15, 111, 99, 0.22))',
-                border: '1px solid rgba(20, 184, 166, 0.35)',
-                color: 'var(--primary-accent)',
-                fontWeight: 600,
-              }}
-              title="Auto-generate checklist items based on destination & weather"
-            >
-              <span className="category-pill-icon">✨</span>
-              <span>Smart Assistant</span>
-            </button>
+            {isPackingEnabled && (
+              <button
+                type="button"
+                className="category-pill smart-assistant-pill"
+                onClick={() => {
+                  triggerHaptic('light');
+                  setIsPackingAssistantOpen(true);
+                }}
+                style={{
+                  background: 'linear-gradient(135deg, rgba(20, 184, 166, 0.15), rgba(15, 111, 99, 0.22))',
+                  border: '1px solid rgba(20, 184, 166, 0.35)',
+                  color: 'var(--primary-accent)',
+                  fontWeight: 600,
+                }}
+                title="Auto-generate checklist items based on destination & weather"
+              >
+                <span className="category-pill-icon">✨</span>
+                <span>Smart Assistant</span>
+              </button>
+            )}
             {CHECKLIST_CATEGORIES.map((cat) => {
               const count =
                 cat.id === 'all'
@@ -1095,17 +1110,19 @@ export function ChecklistNotesTab({ trip, members, isAdmin }: Props) {
                   </button>
                 ) : checklist.length === 0 ? (
                   <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'center' }}>
-                    <button
-                      type="button"
-                      className="gradient-btn"
-                      style={{ padding: '8px 16px', fontSize: '12.5px', fontWeight: 700 }}
-                      onClick={() => {
-                        triggerHaptic('light');
-                        setIsPackingAssistantOpen(true);
-                      }}
-                    >
-                      ✨ Smart Flight Assistant
-                    </button>
+                    {isPackingEnabled && (
+                      <button
+                        type="button"
+                        className="gradient-btn"
+                        style={{ padding: '8px 16px', fontSize: '12.5px', fontWeight: 700 }}
+                        onClick={() => {
+                          triggerHaptic('light');
+                          setIsPackingAssistantOpen(true);
+                        }}
+                      >
+                        ✨ Smart Flight Assistant
+                      </button>
+                    )}
                     <button
                       type="button"
                       className="seed-defaults-btn"

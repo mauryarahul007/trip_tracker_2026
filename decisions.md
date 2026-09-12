@@ -2984,3 +2984,34 @@ This document logs all meaningful technical decisions, library choices, design p
   - Full i18n rollout (touches all ~103 component files) was explicitly deferred by user decision as a separate, larger effort rather than bundled into this pass.
   - Accessibility fixes were scoped to the highest-traffic surfaces found to have a real gap (`ActionSheet`) rather than an exhaustive sweep — `NavTabs`, `ConfirmDialog`, and `CommandPalette` were audited and already had adequate `aria-*`/focus-trap coverage.
 
+---
+
+## 161. Superadmin Command Center Bento Redesign, Release Phase Gating & Financial KPIs (v3.15.0)
+* **Context:**
+  - Release phase arm/safe switches in Superadmin were not dynamically hiding preview and live entry points for gated features (e.g. Travel Pass Wallet, Smart Packing, Hands-Free Voice Quick Add) when set to "Safe" or disabled.
+  - Staging & Overrides required comprehensive support so that any feature flag could be selectively overridden on a per-trip and per-member basis.
+  - Superadmin overview was cluttered with redundant full-width cards, lacked high-density financial metrics, suffered from sparkline rendering anomalies, and the Trips list screen contained an unnecessary duplicate search input competing with the header search.
+* **Decision:**
+  - **Release Phase Gating & Overrides:**
+    - Refactored `featureFlags.ts` and `tripStore.ts` to dynamically resolve flags against trip-level and member-level overrides before falling back to global defaults (`isFeatureEnabled(flagKey, activeTripId, currentUserId)`).
+    - Wired feature flag guards around Travel Pass Wallet, Smart Weather Packing Assistant, Voice Quick Add mic buttons, Smart Flight OCR, and Predictive Expenses.
+    - Updated Staging & Overrides admin interface to expose every platform flag for granular trip and member scoping.
+  - **Superadmin Command Center Redesign:**
+    - Adopted a hybrid Bento Grid architecture with a collapsible 9-section Mini-Rail navigation.
+    - Implemented a high-density 4-up Financial KPI grid:
+      - **Active Fleet Ratio**: Active vs grounded trips with health indicators.
+      - **Average Ticket / Expense Size**: Normalized gross spend divided by clean transaction count.
+      - **Settlement Overhang & Liquidity**: Aggregated outstanding cross-trip debt liquidity and percentage of trips fully settled.
+      - **Top Category Concentration**: Leading spend category icon, name, and percentage share of total volume.
+    - Added multi-currency normalization with `FALLBACK_USD_RATES` and filtered internal settlement transfers to accurately compute true platform volume.
+    - Resolved CSS collision for `.ops-bento-spark-strip` and styled interactive 7-day activity sparklines.
+  - **Concept 2 High-Density Linear Bug Ledger:**
+    - Redesigned the bug ledger with inline expandable drawers displaying reproduction steps, stack traces, and triage actions.
+  - **7-Day Velocity & Trend in Analytics Tab:**
+    - Implemented trailing 7-day velocity vs previous cycle acceleration/deceleration badge, daily run rates, weekly transaction counts, and an interactive daily histogram in `AdminAnalyticsPage.tsx`.
+  - **Search UX Cleanup:**
+    - Removed redundant search bar on `TripsListScreen.tsx`, consolidating search UX into the global top-left search trigger.
+* **Trade-offs Accepted:**
+  - Settlement overhang calculations run on active trip balances client-side in the admin portal; for very large datasets (>10,000 trips), this would eventually move to a backend materialized view or RPC.
+
+

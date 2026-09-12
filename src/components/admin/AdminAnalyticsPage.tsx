@@ -270,6 +270,61 @@ export function AdminAnalyticsPage({ trips, expenses, members, categories, bugs,
 
   const totalReceiptsUploaded = useMemo(() => activeExpenses.filter((e) => !!e.receiptPath).length, [activeExpenses]);
 
+  // Trailing 7-Day Velocity & Trend compared to previous 7-day window
+  const sevenDayTrend = useMemo(() => {
+    const now = Date.now();
+    const SEVEN_DAYS_MS = 7 * DAY_MS;
+
+    let thisWeekSpend = 0;
+    let thisWeekCount = 0;
+    let lastWeekSpend = 0;
+    let lastWeekCount = 0;
+
+    const dayBuckets = [0, 1, 2, 3, 4, 5, 6].map((offset) => {
+      const d = new Date();
+      d.setDate(d.getDate() - (6 - offset));
+      return {
+        dateStr: d.toISOString().slice(0, 10),
+        dayName: WEEKDAY_LABELS[d.getDay()],
+        spend: 0,
+        count: 0,
+      };
+    });
+
+    activeExpenses.forEach((e) => {
+      const t = new Date(e.date || e.createdAt).getTime();
+      const age = now - t;
+      if (age >= 0 && age < SEVEN_DAYS_MS) {
+        thisWeekSpend += e.amount;
+        thisWeekCount += 1;
+        const diffDays = Math.floor(age / DAY_MS);
+        if (diffDays >= 0 && diffDays < 7) {
+          dayBuckets[6 - diffDays].spend += e.amount;
+          dayBuckets[6 - diffDays].count += 1;
+        }
+      } else if (age >= SEVEN_DAYS_MS && age < 2 * SEVEN_DAYS_MS) {
+        lastWeekSpend += e.amount;
+        lastWeekCount += 1;
+      }
+    });
+
+    const diff = thisWeekSpend - lastWeekSpend;
+    const pctChange = lastWeekSpend > 0 ? (diff / lastWeekSpend) * 100 : thisWeekSpend > 0 ? 100 : 0;
+    const dailyAvg = thisWeekSpend / 7;
+    const maxDaySpend = Math.max(...dayBuckets.map((b) => b.spend), 1);
+
+    return {
+      thisWeekSpend,
+      thisWeekCount,
+      lastWeekSpend,
+      lastWeekCount,
+      pctChange,
+      dailyAvg,
+      dayBuckets,
+      maxDaySpend,
+    };
+  }, [activeExpenses]);
+
   return (
     <div className="fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
       <div className="ops-page-head">
@@ -325,6 +380,83 @@ export function AdminAnalyticsPage({ trips, expenses, members, categories, bugs,
           <div className="ops-kpi-label">Settled Trips</div>
           <div className="ops-kpi-value">{settlementHealth.settledPct.toFixed(0)}%</div>
           <div className="ops-kpi-delta">&#8377;{settlementHealth.outstandingVolume.toFixed(2)} outstanding</div>
+        </div>
+      </div>
+
+      {/* 7-Day Velocity & Trend Telemetry */}
+      <div className="ops-card" style={{ marginBottom: '14px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+          <div>
+            <h3 className="ops-section-title" style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}>
+              <span>⚡</span> 7-Day Velocity &amp; Spending Trend
+            </h3>
+            <p className="ops-section-sub" style={{ marginTop: '3px' }}>
+              Trailing 7-day throughput compared to previous 7-day cycle.
+            </p>
+          </div>
+          <span
+            className={`ops-badge ${sevenDayTrend.pctChange > 0 ? 'active' : sevenDayTrend.pctChange < 0 ? 'caution' : 'idle'}`}
+            style={{ fontSize: '11px', padding: '3px 8px' }}
+          >
+            {sevenDayTrend.pctChange > 0
+              ? `▲ +${sevenDayTrend.pctChange.toFixed(1)}% Acceleration`
+              : sevenDayTrend.pctChange < 0
+                ? `▼ ${sevenDayTrend.pctChange.toFixed(1)}% Deceleration`
+                : '— Stable Pace'}
+          </span>
+        </div>
+
+        <div className="ops-kpi-row" style={{ marginTop: '12px', marginBottom: '16px' }}>
+          <div>
+            <div className="ops-kpi-label">7-Day Volume</div>
+            <div className="ops-kpi-value">
+              &#8377;{sevenDayTrend.thisWeekSpend.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </div>
+            <div className="ops-kpi-delta">
+              vs &#8377;{sevenDayTrend.lastWeekSpend.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} prev cycle
+            </div>
+          </div>
+          <div>
+            <div className="ops-kpi-label">Daily Run Rate</div>
+            <div className="ops-kpi-value">
+              &#8377;{sevenDayTrend.dailyAvg.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </div>
+            <div className="ops-kpi-delta">Avg daily volume</div>
+          </div>
+          <div>
+            <div className="ops-kpi-label">Weekly Transactions</div>
+            <div className="ops-kpi-value">{sevenDayTrend.thisWeekCount}</div>
+            <div className="ops-kpi-delta">
+              {sevenDayTrend.lastWeekCount > 0
+                ? `${sevenDayTrend.thisWeekCount - sevenDayTrend.lastWeekCount >= 0 ? '+' : ''}${sevenDayTrend.thisWeekCount - sevenDayTrend.lastWeekCount} vs last week`
+                : `${sevenDayTrend.thisWeekCount} active receipts`}
+            </div>
+          </div>
+        </div>
+
+        {/* Daily Velocity Histogram */}
+        <div style={{ display: 'flex', alignItems: 'flex-end', gap: '8px', height: '64px', padding: '8px 0 0', borderTop: '1px solid var(--line)' }}>
+          {sevenDayTrend.dayBuckets.map((bucket, i) => (
+            <div
+              key={i}
+              style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '5px', height: '100%', justifyContent: 'flex-end' }}
+              title={`${bucket.dateStr} (${bucket.dayName}): ₹${bucket.spend.toLocaleString('en-IN')} across ${bucket.count} expense(s)`}
+            >
+              <div
+                style={{
+                  width: '100%',
+                  background: 'var(--amber, #6D5EF6)',
+                  borderRadius: '3px 3px 0 0',
+                  height: `${bucket.spend > 0 ? Math.max(12, Math.round((bucket.spend / sevenDayTrend.maxDaySpend) * 100)) : 4}%`,
+                  opacity: bucket.spend > 0 ? 0.85 : 0.25,
+                  transition: 'height 0.2s ease, opacity 0.15s ease',
+                }}
+              />
+              <span style={{ fontSize: '9px', fontFamily: 'var(--mono)', color: 'var(--text-tertiary)', textTransform: 'uppercase' }}>
+                {bucket.dayName}
+              </span>
+            </div>
+          ))}
         </div>
       </div>
 

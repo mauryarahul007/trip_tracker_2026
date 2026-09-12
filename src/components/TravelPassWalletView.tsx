@@ -10,6 +10,7 @@ import { savePassAttachment, getPassAttachment } from '../services/passAttachmen
 import { getTravelStatusInfo, type TravelStatusInfo } from '../utils/travelStatusService';
 import { LiveTravelStatusModal } from './LiveTravelStatusModal';
 import { PassScannerModal } from './PassScannerModal';
+import { useTripStore } from '../store/tripStore';
 
 interface Props {
   trip: Trip;
@@ -36,6 +37,7 @@ export function TravelPassWalletView({
   isAdmin: _isAdmin,
   onCloseModal,
 }: Props) {
+  const isFeatureEnabled = useTripStore((s) => s.isFeatureEnabled);
   const [filterType, setFilterType] = useState<TravelPassType | 'all'>('all');
   const [selectedPassForQr, setSelectedPassForQr] = useState<TravelPass | null>(null);
   const [statusModalInfo, setStatusModalInfo] = useState<TravelStatusInfo | null>(null);
@@ -722,19 +724,21 @@ export function TravelPassWalletView({
             }}
           >
             <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-              <button
-                type="button"
-                className="secondary-btn"
-                style={{ padding: '4px 10px', fontSize: '11.5px', display: 'flex', alignItems: 'center', gap: '4px' }}
-                onClick={() => {
-                  triggerHaptic('light');
-                  setSelectedPassForQr(pass);
-                }}
-                title="Open high-contrast barcode scanner for airport gate turnstiles"
-              >
-                <span>📲</span> Pass Scanner
-              </button>
-              {(() => {
+              {isFeatureEnabled('enableGateScanner', { tripId: trip.id }) && (
+                <button
+                  type="button"
+                  className="secondary-btn"
+                  style={{ padding: '4px 10px', fontSize: '11.5px', display: 'flex', alignItems: 'center', gap: '4px' }}
+                  onClick={() => {
+                    triggerHaptic('light');
+                    setSelectedPassForQr(pass);
+                  }}
+                  title="Open high-contrast barcode scanner for airport gate turnstiles"
+                >
+                  <span>📲</span> Pass Scanner
+                </button>
+              )}
+              {isFeatureEnabled('enableFlightRadar', { tripId: trip.id }) && (() => {
                 const statusInfo = getTravelStatusInfo(pass);
                 if (!statusInfo) return null;
                 const isFlight = statusInfo.type === 'flight';

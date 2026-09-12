@@ -8,7 +8,7 @@ export interface ExchangeRatesData {
 }
 
 // Fallback rates against USD (1 USD = X Currency)
-const FALLBACK_USD_RATES: Record<string, number> = {
+export const FALLBACK_USD_RATES: Record<string, number> = {
   USD: 1.0,
   INR: 86.8,
   EUR: 0.92,

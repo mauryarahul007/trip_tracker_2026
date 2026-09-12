@@ -3,6 +3,9 @@ import {
   DEFAULT_FEATURE_FLAGS,
   isFeatureActive,
   FEATURE_FLAGS_META,
+  RELEASE_PHASES,
+  getPhaseFlagKeys,
+  getPhaseStatus,
 } from './featureFlags';
 
 describe('featureFlags', () => {
@@ -15,33 +18,68 @@ describe('featureFlags', () => {
     });
   });
 
-  it('superadmin bypasses feature restrictions for normal capabilities', () => {
-    const flags = { ...DEFAULT_FEATURE_FLAGS, enableGeotagging: false, enableAdvancedSplits: false };
-    expect(isFeatureActive('enableGeotagging', flags, { isSuperadmin: true })).toBe(true);
-    expect(isFeatureActive('enableAdvancedSplits', flags, { isSuperadmin: true })).toBe(true);
-    expect(isFeatureActive('enableAdvancedLocationSearch', flags, { isSuperadmin: true })).toBe(true);
+  it('defines 4 customer release phases plus deferred ops', () => {
+    expect(RELEASE_PHASES.length).toBe(5);
+    const phaseIds = RELEASE_PHASES.map((p) => p.id);
+    expect(phaseIds).toEqual(['phase1', 'phase2', 'phase3', 'phase4', 'deferred']);
+
+    RELEASE_PHASES.forEach((phase) => {
+      expect(phase.flagKeys.length).toBeGreaterThan(0);
+      phase.flagKeys.forEach((key) => {
+        expect(DEFAULT_FEATURE_FLAGS).toHaveProperty(key);
+      });
+    });
   });
 
-  it('strict-toggle flags (demo seeding, feature suggestions, biometric auth) respect explicit toggle state even for superadmin', () => {
-    const flagsOff = {
-      ...DEFAULT_FEATURE_FLAGS,
-      enableDemoSeeding: false,
-      enableFeatureSuggestions: false,
-      enableBiometricAuth: false,
-    };
-    expect(isFeatureActive('enableDemoSeeding', flagsOff, { isSuperadmin: true })).toBe(false);
-    expect(isFeatureActive('enableFeatureSuggestions', flagsOff, { isSuperadmin: true })).toBe(false);
-    expect(isFeatureActive('enableBiometricAuth', flagsOff, { isSuperadmin: true })).toBe(false);
+  it('keeps UPI payments deferred and disabled by default', () => {
+    expect(DEFAULT_FEATURE_FLAGS.enableUpiPayments).toBe(false);
+    const deferredKeys = getPhaseFlagKeys('deferred');
+    expect(deferredKeys).toContain('enableUpiPayments');
+  });
 
-    const flagsOn = {
+  it('correctly calculates phase status (armed, safed, partial)', () => {
+    const allArmed = { ...DEFAULT_FEATURE_FLAGS, enablePredictiveChips: true, enableRecycleBin: true };
+    expect(getPhaseStatus('phase1', allArmed).status).toBe('armed');
+    expect(getPhaseStatus('phase1', allArmed).activeCount).toBe(2);
+
+    const allSafed = { ...DEFAULT_FEATURE_FLAGS, enablePredictiveChips: false, enableRecycleBin: false };
+    expect(getPhaseStatus('phase1', allSafed).status).toBe('safed');
+    expect(getPhaseStatus('phase1', allSafed).activeCount).toBe(0);
+
+    const partial = { ...DEFAULT_FEATURE_FLAGS, enablePredictiveChips: true, enableRecycleBin: false };
+    expect(getPhaseStatus('phase1', partial).status).toBe('partial');
+    expect(getPhaseStatus('phase1', partial).activeCount).toBe(1);
+  });
+
+  it('strictly respects explicit global flag configurations (armed or safed)', () => {
+    const flagsSafed = {
       ...DEFAULT_FEATURE_FLAGS,
-      enableDemoSeeding: true,
-      enableFeatureSuggestions: true,
-      enableBiometricAuth: true,
+      enableTravelPasses: false,
+      enablePackingAssistant: false,
+      enableNextUpCapsule: false,
+      enableVoiceInput: false,
+      enableAdvancedSplits: false,
     };
-    expect(isFeatureActive('enableDemoSeeding', flagsOn, { isSuperadmin: true })).toBe(true);
-    expect(isFeatureActive('enableFeatureSuggestions', flagsOn, { isSuperadmin: true })).toBe(true);
-    expect(isFeatureActive('enableBiometricAuth', flagsOn, { isSuperadmin: true })).toBe(true);
+    // Whether superadmin or normal traveler, an explicit safe state must be respected
+    expect(isFeatureActive('enableTravelPasses', flagsSafed, { isSuperadmin: true })).toBe(false);
+    expect(isFeatureActive('enablePackingAssistant', flagsSafed, { isSuperadmin: true })).toBe(false);
+    expect(isFeatureActive('enableNextUpCapsule', flagsSafed, { isSuperadmin: true })).toBe(false);
+    expect(isFeatureActive('enableVoiceInput', flagsSafed, { isSuperadmin: false })).toBe(false);
+    expect(isFeatureActive('enableAdvancedSplits', flagsSafed, { isSuperadmin: false })).toBe(false);
+
+    const flagsArmed = {
+      ...DEFAULT_FEATURE_FLAGS,
+      enableTravelPasses: true,
+      enablePackingAssistant: true,
+      enableNextUpCapsule: true,
+      enableVoiceInput: true,
+      enableAdvancedSplits: true,
+    };
+    expect(isFeatureActive('enableTravelPasses', flagsArmed, { isSuperadmin: true })).toBe(true);
+    expect(isFeatureActive('enablePackingAssistant', flagsArmed, { isSuperadmin: false })).toBe(true);
+    expect(isFeatureActive('enableNextUpCapsule', flagsArmed, { isSuperadmin: true })).toBe(true);
+    expect(isFeatureActive('enableVoiceInput', flagsArmed, { isSuperadmin: false })).toBe(true);
+    expect(isFeatureActive('enableAdvancedSplits', flagsArmed, { isSuperadmin: true })).toBe(true);
   });
 
   it('resolves global flags for regular users', () => {

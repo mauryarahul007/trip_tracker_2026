@@ -1,21 +1,56 @@
 export type FeatureFlagKey =
-  | 'enableGeotagging'
-  | 'enableAdvancedLocationSearch'
-  | 'enableAdvancedSplits'
-  | 'enableReceiptUpload'
+  // Phase 1: Core Social Splitter (Base MVP)
+  | 'enablePredictiveChips'
   | 'enableRecycleBin'
+  // Phase 2: Active Group Collab & Natural Entry
+  | 'enableVoiceInput'
+  | 'enableReceiptUpload'
+  | 'enableNotesAndChecklist'
+  | 'enableDuplicateDetector'
+  // Phase 3: Smart Travel Navigator & Pass Hub
+  | 'enableTravelPasses'
+  | 'enableNextUpCapsule'
+  | 'enableGateScanner'
+  | 'enableFlightRadar'
+  | 'enablePackingAssistant'
+  | 'enableRouteStops'
+  | 'enableGeotagging'
+  // Phase 4: FinTech Pro & Global Jetsetter Suite
+  | 'enableAdvancedSplits'
+  | 'enableItemizedSplit'
+  | 'enableReceiptOcr'
+  | 'enableCurrencyFx'
+  | 'enableMultiTripAnalytics'
+  | 'enableBiometricAuth'
+  // Deferred & Admin Ops
+  | 'enableUpiPayments'
+  | 'enableAdvancedLocationSearch'
   | 'enableKeywordTagging'
   | 'enableDemoSeeding'
-  | 'enableMultiTripAnalytics'
   | 'enableFeatureSuggestions'
-  | 'enableUpiPayments'
-  | 'enableBiometricAuth';
+  | 'enableTripWrapped'
+  | 'enableAchievements'
+  | 'enableOfflineSnapshot';
+
+export type ReleasePhaseId = 'phase1' | 'phase2' | 'phase3' | 'phase4' | 'deferred';
+
+export interface ReleasePhaseDef {
+  id: ReleasePhaseId;
+  phaseNumber: 1 | 2 | 3 | 4 | 0;
+  code: string;
+  title: string;
+  tagline: string;
+  description: string;
+  targetAudience: string;
+  flagKeys: FeatureFlagKey[];
+}
 
 export interface FeatureFlagMeta {
   key: FeatureFlagKey;
   label: string;
   description: string;
-  category: 'core' | 'geotagging' | 'splits' | 'admin' | 'security';
+  category: 'core' | 'collab' | 'transit' | 'fintech' | 'geotagging' | 'splits' | 'admin' | 'security';
+  phase: ReleasePhaseId;
   defaultEnabledForUsers: boolean;
 }
 

@@ -5,6 +5,7 @@ import { parseFlightDate } from '../utils/travelStatusService';
 import { LiveTravelStatusModal } from './LiveTravelStatusModal';
 import { PassScannerModal } from './PassScannerModal';
 import { triggerHaptic } from '../utils/haptics';
+import { useTripStore } from '../store/tripStore';
 
 interface Props {
   trip: Trip;
@@ -22,6 +23,7 @@ interface ImminentPassTarget {
 }
 
 export const NextUpTravelCapsule: React.FC<Props> = ({ trip, passes, onOpenWallet }) => {
+  const isFeatureEnabled = useTripStore((s) => s.isFeatureEnabled);
   const [selectedScannerPass, setSelectedScannerPass] = useState<TravelPass | null>(null);
   const [statusModalInfo, setStatusModalInfo] = useState<TravelStatusInfo | null>(null);
   const [isMinimized, setIsMinimized] = useState(false);
@@ -222,30 +224,32 @@ export const NextUpTravelCapsule: React.FC<Props> = ({ trip, passes, onOpenWalle
 
             {/* Quick Action Button Strip */}
             <div style={{ display: 'flex', gap: '8px', marginTop: '10px', flexWrap: 'wrap' }}>
-              <button
-                type="button"
-                className="primary-btn"
-                onClick={() => {
-                  triggerHaptic('light');
-                  setSelectedScannerPass(pass);
-                }}
-                style={{
-                  padding: '6px 12px',
-                  fontSize: '12px',
-                  borderRadius: '10px',
-                  fontWeight: 700,
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '5px',
-                  background: '#0F172A',
-                  color: '#FFFFFF',
-                }}
-              >
-                <span>📲</span>
-                <span>Show Pass</span>
-              </button>
+              {isFeatureEnabled('enableGateScanner', { tripId: trip.id }) && (
+                <button
+                  type="button"
+                  className="primary-btn"
+                  onClick={() => {
+                    triggerHaptic('light');
+                    setSelectedScannerPass(pass);
+                  }}
+                  style={{
+                    padding: '6px 12px',
+                    fontSize: '12px',
+                    borderRadius: '10px',
+                    fontWeight: 700,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '5px',
+                    background: '#0F172A',
+                    color: '#FFFFFF',
+                  }}
+                >
+                  <span>📲</span>
+                  <span>Show Pass</span>
+                </button>
+              )}
 
-              {statusInfo && (
+              {statusInfo && isFeatureEnabled('enableFlightRadar', { tripId: trip.id }) && (
                 <button
                   type="button"
                   className="secondary-btn"

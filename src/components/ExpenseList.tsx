@@ -178,6 +178,7 @@ export function ExpenseList({
     paneRef.current = wrapperRef.current?.closest<HTMLElement>('.tab-pane') ?? null;
   }, []);
   const refreshActiveTripExpenses = useTripStore((s) => s.refreshActiveTripExpenses);
+  const isFeatureEnabled = useTripStore((s) => s.isFeatureEnabled);
   const ptrIndicatorRef = useRef<HTMLDivElement>(null);
   const pullToRefresh = usePullToRefresh(paneRef, ptrIndicatorRef, () => refreshActiveTripExpenses());
   const expensesLoadingTripId = useTripStore((s) => s.expensesLoadingTripId);
@@ -369,7 +370,7 @@ export function ExpenseList({
                 </button>
               )}
             </div>
-            {onOpenSmartQuickAdd && (
+            {onOpenSmartQuickAdd && isFeatureEnabled('enableVoiceInput') && (
               <button
                 type="button"
                 className="expense-filters-btn"
@@ -538,12 +539,14 @@ export function ExpenseList({
       )}
 
       {/* Imminent Boarding / Travel / Stay Dynamic Capsule */}
-      {trip && (
-        <NextUpTravelCapsule
-          trip={trip}
-          passes={trip.passes}
-        />
-      )}
+      {trip &&
+        isFeatureEnabled('enableNextUpCapsule', { tripId: trip.id }) &&
+        isFeatureEnabled('enableTravelPasses', { tripId: trip.id }) && (
+          <NextUpTravelCapsule
+            trip={trip}
+            passes={trip.passes}
+          />
+        )}
 
       {/* Clean Transaction Feed with Date Dividers or Quick Starters */}
       {filteredExpenses.length === 0 && isLoadingExpenses ? (

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef, Fragment } from 'react';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { useHistoryBack } from '../utils/useHistoryBack';
 import { useEscapeKey } from '../utils/useEscapeKey';
@@ -312,6 +312,19 @@ export function SuperAdminBugTracker({ onBack, isAdmin = true, onRequestConfirm,
   const [draggedBugId, setDraggedBugId] = useState<string | null>(null);
   const [dragOverStatus, setDragOverStatus] = useState<BugRecord['status'] | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [expandedBugIds, setExpandedBugIds] = useState<Set<string>>(new Set());
+
+  const toggleExpandBug = (id: string) => {
+    setExpandedBugIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
 
   useFocusTrap(drawerRef, Boolean(drawerBugId), false, () => setDrawerBugId(null));
   useFocusTrap(addModalRef, showAddModal, false, () => setShowAddModal(false));
@@ -940,6 +953,7 @@ ${bug.diagnostics?.stackTrace ? `#### Stack Trace\n\`\`\`text\n${bug.diagnostics
           <table className="ops-dense-bug-table">
             <thead>
               <tr>
+                <th style={{ width: 28, padding: '0 4px' }} title="Expand / collapse inline details" />
                 <th className="ops-bug-check">
                   <input
                     type="checkbox"
@@ -960,61 +974,246 @@ ${bug.diagnostics?.stackTrace ? `#### Stack Trace\n\`\`\`text\n${bug.diagnostics
               {sortedBugs.map((bug) => {
                 const status = statusMeta(bug.status);
                 const similar = bug.fingerprint ? similarCountByFp.get(bug.fingerprint) || 1 : 1;
+                const isExpanded = expandedBugIds.has(bug.id);
+
                 return (
-                  <tr
-                    key={bug.id}
-                    data-severity={bug.severity}
-                    data-open={drawerBugId === bug.id}
-                    onClick={() => setDrawerBugId(bug.id)}
-                  >
-                    <td className="ops-bug-check" onClick={(e) => e.stopPropagation()}>
-                      <input
-                        type="checkbox"
-                        checked={selectedIds.has(bug.id)}
-                        onChange={() => toggleSelect(bug.id)}
-                        aria-label={`Select ${bug.id}`}
-                      />
-                    </td>
-                    <td><span className="ops-feature-id-badge">{bug.id}</span></td>
-                    <td className="ops-bug-title-cell">
-                      {bug.title}
-                      <div className="ops-bug-meta">
-                        <span className="cat">{bug.category}</span>
-                        {similar > 1 ? ` · ${similar} similar` : ''}
-                        {bug.environment?.route ? ` · ${bug.environment.route}` : ''}
-                      </div>
-                    </td>
-                    <td>
-                      <span className="ops-pill" style={{ color: severityColor(bug.severity), background: 'var(--bg-inset)' }}>
-                        {SEVERITIES.find((s) => s.value === bug.severity)?.label || bug.severity}
-                      </span>
-                    </td>
-                    <td>
-                      <span className="ops-pill" style={{ color: status.color, background: 'var(--bg-inset)' }}>
-                        {status.label}
-                      </span>
-                    </td>
-                    <td>
-                      {bug.assignee ? (
-                        <span className="ops-kanban-card-meta-row" style={{ marginTop: 0 }}>
-                          <span className="ops-kanban-avatar">{initialsFrom(bug.assignee)}</span>
-                          {bug.assignee}
+                  <Fragment key={bug.id}>
+                    <tr
+                      className="ops-linear-row"
+                      data-severity={bug.severity}
+                      data-expanded={isExpanded}
+                      onClick={() => toggleExpandBug(bug.id)}
+                    >
+                      <td style={{ width: 28, textAlign: 'center', padding: '0 4px' }} onClick={(e) => { e.stopPropagation(); toggleExpandBug(bug.id); }}>
+                        <span className="ops-expand-chevron" data-expanded={isExpanded}>
+                          &#9656;
                         </span>
-                      ) : (
-                        <span className="ops-bug-meta">—</span>
-                      )}
-                    </td>
-                    <td>
-                      <span className="ops-kanban-age" data-stale={bug.status === 'open' && Date.now() - new Date(bug.createdAt).getTime() > 3 * 24 * 60 * 60 * 1000}>
-                        {formatRelativeTime(bug.createdAt)}
-                      </span>
-                    </td>
-                  </tr>
+                      </td>
+                      <td className="ops-bug-check" onClick={(e) => e.stopPropagation()}>
+                        <input
+                          type="checkbox"
+                          checked={selectedIds.has(bug.id)}
+                          onChange={() => toggleSelect(bug.id)}
+                          aria-label={`Select ${bug.id}`}
+                        />
+                      </td>
+                      <td><span className="ops-feature-id-badge">{bug.id}</span></td>
+                      <td className="ops-bug-title-cell">
+                        <div style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{bug.title}</div>
+                        <div className="ops-bug-meta">
+                          <span className="cat">{bug.category}</span>
+                          {similar > 1 ? ` · ${similar} similar` : ''}
+                          {bug.environment?.route ? ` · ${bug.environment.route}` : ''}
+                        </div>
+                      </td>
+                      <td>
+                        <span className="ops-pill" style={{ color: severityColor(bug.severity), background: 'var(--bg-inset)' }}>
+                          {SEVERITIES.find((s) => s.value === bug.severity)?.label || bug.severity}
+                        </span>
+                      </td>
+                      <td>
+                        <span className="ops-pill" style={{ color: status.color, background: 'var(--bg-inset)' }}>
+                          {status.label}
+                        </span>
+                      </td>
+                      <td>
+                        {bug.assignee ? (
+                          <span className="ops-kanban-card-meta-row" style={{ marginTop: 0 }}>
+                            <span className="ops-kanban-avatar">{initialsFrom(bug.assignee)}</span>
+                            {bug.assignee}
+                          </span>
+                        ) : (
+                          <span className="ops-bug-meta">—</span>
+                        )}
+                      </td>
+                      <td>
+                        <span className="ops-kanban-age" data-stale={bug.status === 'open' && Date.now() - new Date(bug.createdAt).getTime() > 3 * 24 * 60 * 60 * 1000}>
+                          {formatRelativeTime(bug.createdAt)}
+                        </span>
+                      </td>
+                    </tr>
+
+                    {isExpanded && (
+                      <tr className="ops-linear-tray-row" key={`${bug.id}-tray`}>
+                        <td colSpan={8}>
+                          <div className="ops-linear-tray-content">
+                            {/* Inline Tray Quick Bar */}
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                <span style={{ fontSize: '10.5px', color: 'var(--text-tertiary)', textTransform: 'uppercase', fontFamily: 'var(--mono)' }}>
+                                  Transition:
+                                </span>
+                                {bug.status !== 'in_progress' && (
+                                  <button
+                                    type="button"
+                                    className="ops-btn"
+                                    style={{ fontSize: '11px', padding: '3px 8px' }}
+                                    onClick={(e) => { e.stopPropagation(); void handleStatusChange(bug, 'in_progress'); }}
+                                  >
+                                    Mark In Progress
+                                  </button>
+                                )}
+                                {bug.status !== 'resolved' && (
+                                  <button
+                                    type="button"
+                                    className="ops-btn ops-btn-primary"
+                                    style={{ fontSize: '11px', padding: '3px 8px' }}
+                                    onClick={(e) => { e.stopPropagation(); void handleStatusChange(bug, 'resolved'); }}
+                                  >
+                                    Mark Resolved
+                                  </button>
+                                )}
+                                {bug.status === 'resolved' && (
+                                  <button
+                                    type="button"
+                                    className="ops-btn"
+                                    style={{ fontSize: '11px', padding: '3px 8px' }}
+                                    onClick={(e) => { e.stopPropagation(); void handleStatusChange(bug, 'open'); }}
+                                  >
+                                    Re-open Case
+                                  </button>
+                                )}
+                                {bug.status !== 'wont_fix' && (
+                                  <button
+                                    type="button"
+                                    className="ops-btn"
+                                    style={{ fontSize: '11px', padding: '3px 8px' }}
+                                    onClick={(e) => { e.stopPropagation(); void handleStatusChange(bug, 'wont_fix'); }}
+                                  >
+                                    Won&apos;t Fix
+                                  </button>
+                                )}
+                              </div>
+
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                <button
+                                  type="button"
+                                  className="ops-btn"
+                                  style={{ fontSize: '11px', padding: '3px 8px' }}
+                                  onClick={(e) => { e.stopPropagation(); void handleCopyPrompt(bug); }}
+                                  title="Copy markdown diagnostic prompt for AI assistant"
+                                >
+                                  <IconCopy size={12} className="icon-sm" /> Copy AI Prompt
+                                </button>
+                                <button
+                                  type="button"
+                                  className="ops-btn"
+                                  style={{ fontSize: '11px', padding: '3px 8px' }}
+                                  onClick={(e) => { e.stopPropagation(); setDrawerBugId(bug.id); }}
+                                >
+                                  &#8599; Full Drawer
+                                </button>
+                                <button
+                                  type="button"
+                                  className="ops-btn ops-btn-danger"
+                                  style={{ fontSize: '11px', padding: '3px 8px' }}
+                                  onClick={(e) => { e.stopPropagation(); handleDeleteBug(bug.id); }}
+                                >
+                                  <IconTrash size={12} className="icon-sm" /> Delete
+                                </button>
+                              </div>
+                            </div>
+
+                            {/* Inline Tray Content Grid: Reproduction vs Diagnostics */}
+                            <div className="ops-linear-tray-grid">
+                              {/* Left Column: Narrative & Reproduction */}
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                {bug.description && (
+                                  <div style={{ fontSize: '12px', color: 'var(--text-primary)', background: 'var(--bg-panel)', padding: '8px 10px', borderRadius: 'var(--r-sm)', border: '1px solid var(--line)' }}>
+                                    <strong style={{ fontSize: '11px', color: 'var(--text-secondary)', display: 'block', marginBottom: '3px' }}>Description:</strong>
+                                    {bug.description}
+                                  </div>
+                                )}
+
+                                {bug.reproSteps && bug.reproSteps.length > 0 && (
+                                  <div style={{ fontSize: '12px', background: 'var(--bg-panel)', padding: '8px 10px', borderRadius: 'var(--r-sm)', border: '1px solid var(--line)' }}>
+                                    <strong style={{ fontSize: '11px', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>Steps to Reproduce:</strong>
+                                    <ol style={{ margin: 0, paddingLeft: '18px', fontSize: '11.5px', color: 'var(--text-primary)' }}>
+                                      {bug.reproSteps.map((step, idx) => (
+                                        <li key={idx} style={{ marginBottom: '2px' }}>{step}</li>
+                                      ))}
+                                    </ol>
+                                  </div>
+                                )}
+
+                                {(bug.expectedBehavior || bug.actualBehavior) && (
+                                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                                    {bug.expectedBehavior && (
+                                      <div style={{ fontSize: '11px', background: 'var(--bg-panel)', padding: '6px 8px', borderRadius: 'var(--r-sm)', border: '1px solid var(--line)' }}>
+                                        <span style={{ color: 'var(--safe)', fontWeight: 600 }}>Expected:</span> {bug.expectedBehavior}
+                                      </div>
+                                    )}
+                                    {bug.actualBehavior && (
+                                      <div style={{ fontSize: '11px', background: 'var(--bg-panel)', padding: '6px 8px', borderRadius: 'var(--r-sm)', border: '1px solid var(--line)' }}>
+                                        <span style={{ color: 'var(--danger)', fontWeight: 600 }}>Actual:</span> {bug.actualBehavior}
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
+
+                                {bug.environment && (
+                                  <div style={{ fontSize: '10.5px', color: 'var(--text-tertiary)', fontFamily: 'var(--mono)', display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                                    <span>Platform: {bug.environment.platform || 'web'}</span>
+                                    <span>Browser: {bug.environment.browser || 'N/A'}</span>
+                                    <span>App: v{bug.environment.appVersion || '3.14.4'}</span>
+                                    <span>Online: {bug.environment.isOnline ? 'Yes' : 'No'}</span>
+                                  </div>
+                                )}
+                              </div>
+
+                              {/* Right Column: Diagnostics & Stack Trace */}
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                  <strong style={{ fontSize: '11px', color: 'var(--text-secondary)', textTransform: 'uppercase', fontFamily: 'var(--mono)' }}>
+                                    Diagnostics &amp; Telemetry
+                                  </strong>
+                                  {bug.diagnostics?.stackTrace && (
+                                    <button
+                                      type="button"
+                                      className="ops-btn"
+                                      style={{ fontSize: '10px', padding: '2px 6px' }}
+                                      onClick={async (e) => {
+                                        e.stopPropagation();
+                                        if (bug.diagnostics?.stackTrace) {
+                                          await navigator.clipboard.writeText(bug.diagnostics.stackTrace);
+                                          showToast('Stack trace copied');
+                                        }
+                                      }}
+                                    >
+                                      Copy Trace
+                                    </button>
+                                  )}
+                                </div>
+
+                                {bug.diagnostics?.stackTrace ? (
+                                  <pre className="ops-mono-trace-box">{bug.diagnostics.stackTrace}</pre>
+                                ) : bug.diagnostics?.consoleLogs && bug.diagnostics.consoleLogs.length > 0 ? (
+                                  <pre className="ops-mono-trace-box">
+                                    {bug.diagnostics.consoleLogs.map((l) => (typeof l === 'string' ? l : JSON.stringify(l))).join('\n')}
+                                  </pre>
+                                ) : (
+                                  <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', padding: '12px', background: 'var(--bg-panel)', borderRadius: 'var(--r-sm)', border: '1px solid var(--line)', textAlign: 'center' }}>
+                                    No active error stack trace logged for this report.
+                                    {bug.diagnostics?.syncQueueLength !== undefined && (
+                                      <div style={{ marginTop: '4px', fontFamily: 'var(--mono)' }}>
+                                        Sync queue depth: {bug.diagnostics.syncQueueLength}
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </Fragment>
                 );
               })}
             </tbody>
           </table>
         </div>
+
       )}
 
       {drawerBug && (

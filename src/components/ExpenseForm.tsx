@@ -276,14 +276,27 @@ export function ExpenseForm({
     triggerHaptic('light');
   };
 
+  // Feature Flags & Role Governance
+  const isFeatureEnabled = useTripStore((s) => s.isFeatureEnabled);
+  const enableGeotagging = isFeatureEnabled('enableGeotagging');
+  const enableAdvancedLocationSearch = isFeatureEnabled('enableAdvancedLocationSearch');
+  const enableAdvancedSplits = isFeatureEnabled('enableAdvancedSplits');
+  const enableItemizedSplit = isFeatureEnabled('enableItemizedSplit');
+  const enableReceiptOcr = isFeatureEnabled('enableReceiptOcr');
+  const enableReceiptUpload = isFeatureEnabled('enableReceiptUpload');
+  const enablePredictiveChips = isFeatureEnabled('enablePredictiveChips');
+  const enableDuplicateDetector = isFeatureEnabled('enableDuplicateDetector');
+  const enableVoiceInput = isFeatureEnabled('enableVoiceInput');
+
   // Duplicate expense detection
   const expenses = useTripStore((s) => s.expenses);
   const allTripExpenses = useMemo(() => expenses.filter((e) => e.tripId === trip?.id), [expenses, trip?.id]);
 
   // Contextual smart quick-chips (time of day + frequent trip items)
   const predictiveChips = useMemo(() => {
+    if (!enablePredictiveChips) return [];
     return getPredictiveQuickChips(categories, allTripExpenses);
-  }, [categories, allTripExpenses]);
+  }, [enablePredictiveChips, categories, allTripExpenses]);
 
   // Snapshot initial expense IDs on mount so we never match against newly submitted/optimistic items
   const initialExpenseIdsRef = useRef<Set<string> | null>(null);
@@ -292,6 +305,7 @@ export function ExpenseForm({
   }
 
   const duplicateMatch = useMemo(() => {
+    if (!enableDuplicateDetector) return null;
     if (isSubmitting || editingExpense || !parseFloat(amount) || parseFloat(amount) <= 0) return null;
     return detectDuplicateExpense(
       {
@@ -306,7 +320,7 @@ export function ExpenseForm({
       categories,
       visibleMembers
     );
-  }, [amount, selectedCurrency, title, date, category, payer, editingExpense, allTripExpenses, categories, visibleMembers, isSubmitting]);
+  }, [enableDuplicateDetector, amount, selectedCurrency, title, date, category, payer, editingExpense, allTripExpenses, categories, visibleMembers, isSubmitting]);
 
   const duplicateExpense = duplicateMatch?.matchedExpense || null;
 
@@ -334,11 +348,6 @@ export function ExpenseForm({
     localStorage.setItem('expense-presets-tip-seen', '1');
     setShowPresetsTip(false);
   };
-
-  // Feature Flags & Role Governance
-  const isFeatureEnabled = useTripStore((s) => s.isFeatureEnabled);
-  const enableGeotagging = isFeatureEnabled('enableGeotagging');
-  const enableAdvancedLocationSearch = isFeatureEnabled('enableAdvancedLocationSearch');
 
   // Geotagging
   const [location, setLocation] = useState<ExpenseLocation | null>(editingExpense?.location || null);
@@ -1211,7 +1220,7 @@ export function ExpenseForm({
             className="input-field"
             placeholder="e.g. Flight Tickets"
             value={title}
-            style={getSpeechRecognitionCtor() ? { paddingRight: '40px' } : undefined}
+            style={enableVoiceInput && getSpeechRecognitionCtor() ? { paddingRight: '40px' } : undefined}
             onChange={(e) => {
               const val = e.target.value;
               setTitle(val);
@@ -1224,7 +1233,7 @@ export function ExpenseForm({
               }
             }}
           />
-          {getSpeechRecognitionCtor() && (
+          {enableVoiceInput && getSpeechRecognitionCtor() && (
             <button
               type="button"
               onClick={handleToggleVoiceInput}
@@ -1398,64 +1407,72 @@ export function ExpenseForm({
         <legend className="form-label">Split Mode</legend>
         <div className="segmented-control">
           <button type="button" className={splitMode === 'equal' ? 'active' : ''} onClick={() => { triggerHaptic('light'); setSplitMode('equal'); }}>Equal</button>
-          <button type="button" className={splitMode === 'itemized' ? 'active' : ''} onClick={() => { triggerHaptic('light'); setSplitMode('itemized'); }}>Itemized</button>
-          <button type="button" className={splitMode === 'custom' ? 'active' : ''} onClick={() => { triggerHaptic('light'); setSplitMode('custom'); }}>Shares</button>
-          <button type="button" className={splitMode === 'exact' ? 'active' : ''} onClick={() => { triggerHaptic('light'); setSplitMode('exact'); }}>Exact</button>
-          <button type="button" className={splitMode === 'percentage' ? 'active' : ''} onClick={() => { triggerHaptic('light'); setSplitMode('percentage'); }}>Percent</button>
+          {(enableItemizedSplit || splitMode === 'itemized') && (
+            <button type="button" className={splitMode === 'itemized' ? 'active' : ''} onClick={() => { triggerHaptic('light'); setSplitMode('itemized'); }}>Itemized</button>
+          )}
+          {(enableAdvancedSplits || splitMode === 'custom' || splitMode === 'exact' || splitMode === 'percentage') && (
+            <>
+              <button type="button" className={splitMode === 'custom' ? 'active' : ''} onClick={() => { triggerHaptic('light'); setSplitMode('custom'); }}>Shares</button>
+              <button type="button" className={splitMode === 'exact' ? 'active' : ''} onClick={() => { triggerHaptic('light'); setSplitMode('exact'); }}>Exact</button>
+              <button type="button" className={splitMode === 'percentage' ? 'active' : ''} onClick={() => { triggerHaptic('light'); setSplitMode('percentage'); }}>Percent</button>
+            </>
+          )}
         </div>
       </fieldset>
 
-      <div className="form-group">
-        {!showReceiptSection && !receiptImage ? (
-          <button
-            type="button"
-            className="secondary-btn"
-            style={{ padding: '8px 14px', fontSize: '13px' }}
-            onClick={() => setShowReceiptSection(true)}
-          >
-            + Add Receipt
-          </button>
-        ) : (
-          <>
-            <label className="form-label" id="expense-receipt-label">Receipt (optional)</label>
-            {receiptImage ? (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <img
-                  src={receiptImage}
-                  alt="Receipt preview"
-                  decoding="async"
-                  style={{ width: '64px', height: '64px', objectFit: 'cover', borderRadius: 'var(--border-radius-sm)', border: '1px solid var(--border-color)' }}
-                />
-                <button type="button" className="secondary-btn" style={{ padding: '6px 12px', fontSize: '12px' }} onClick={() => setReceiptImage('')}>
-                  Remove
+      {(enableReceiptUpload || !!receiptImage) && (
+        <div className="form-group">
+          {!showReceiptSection && !receiptImage ? (
+            <button
+              type="button"
+              className="secondary-btn"
+              style={{ padding: '8px 14px', fontSize: '13px' }}
+              onClick={() => setShowReceiptSection(true)}
+            >
+              + Add Receipt
+            </button>
+          ) : (
+            <>
+              <label className="form-label" id="expense-receipt-label">Receipt (optional)</label>
+              {receiptImage ? (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <img
+                    src={receiptImage}
+                    alt="Receipt preview"
+                    decoding="async"
+                    style={{ width: '64px', height: '64px', objectFit: 'cover', borderRadius: 'var(--border-radius-sm)', border: '1px solid var(--border-color)' }}
+                  />
+                  <button type="button" className="secondary-btn" style={{ padding: '6px 12px', fontSize: '12px' }} onClick={() => setReceiptImage('')}>
+                    Remove
+                  </button>
+                </div>
+              ) : Capacitor.isNativePlatform() ? (
+                <button
+                  type="button"
+                  className="secondary-btn"
+                  style={{ padding: '8px 14px', fontSize: '13px' }}
+                  onClick={handleNativeCameraCapture}
+                  disabled={receiptProcessing}
+                >
+                  📷 Take or Choose Photo
                 </button>
-              </div>
-            ) : Capacitor.isNativePlatform() ? (
-              <button
-                type="button"
-                className="secondary-btn"
-                style={{ padding: '8px 14px', fontSize: '13px' }}
-                onClick={handleNativeCameraCapture}
-                disabled={receiptProcessing}
-              >
-                📷 Take or Choose Photo
-              </button>
-            ) : (
-              <input
-                type="file"
-                accept="image/*"
-                className="input-field"
-                aria-labelledby="expense-receipt-label"
-                onChange={handleReceiptFileChangeLocal}
-                disabled={receiptProcessing}
-              />
-            )}
-            {receiptProcessing && (
-              <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '4px' }}>Processing image...</p>
-            )}
-          </>
-        )}
-      </div>
+              ) : (
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="input-field"
+                  aria-labelledby="expense-receipt-label"
+                  onChange={handleReceiptFileChangeLocal}
+                  disabled={receiptProcessing}
+                />
+              )}
+              {receiptProcessing && (
+                <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '4px' }}>Processing image...</p>
+              )}
+            </>
+          )}
+        </div>
+      )}
 
       {/* One-time tip pointing new users at the presets below, dismissed
           permanently on first sight or first preset tap. */}
@@ -1580,25 +1597,27 @@ export function ExpenseForm({
                 </div>
               </div>
               <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-                <button
-                  type="button"
-                  className="secondary-btn"
-                  style={{
-                    padding: '4px 10px',
-                    fontSize: '11.5px',
-                    borderRadius: '8px',
-                    background: 'rgba(20, 184, 166, 0.1)',
-                    borderColor: 'rgba(20, 184, 166, 0.3)',
-                    color: 'var(--primary-accent)',
-                    fontWeight: 600,
-                  }}
-                  onClick={() => {
-                    triggerHaptic('light');
-                    setIsReceiptScannerOpen(true);
-                  }}
-                >
-                  📷 Scan OCR
-                </button>
+                {enableReceiptOcr && (
+                  <button
+                    type="button"
+                    className="secondary-btn"
+                    style={{
+                      padding: '4px 10px',
+                      fontSize: '11.5px',
+                      borderRadius: '8px',
+                      background: 'rgba(20, 184, 166, 0.1)',
+                      borderColor: 'rgba(20, 184, 166, 0.3)',
+                      color: 'var(--primary-accent)',
+                      fontWeight: 600,
+                    }}
+                    onClick={() => {
+                      triggerHaptic('light');
+                      setIsReceiptScannerOpen(true);
+                    }}
+                  >
+                    📷 Scan OCR
+                  </button>
+                )}
                 <button
                   type="button"
                   className="secondary-btn"
@@ -1940,68 +1959,70 @@ export function ExpenseForm({
       </div>
 
       {/* Receipt & Travel Polaroid Attachment */}
-      <div style={{ marginTop: '16px', paddingTop: '14px', borderTop: '1px dashed var(--border-color)' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-          <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>
-            📸 Receipt / Travel Photo
-          </span>
-          {receiptImage && (
-            <button
-              type="button"
-              onClick={() => {
-                triggerHaptic('light');
-                setReceiptImage('');
+      {(enableReceiptUpload || !!receiptImage) && (
+        <div style={{ marginTop: '16px', paddingTop: '14px', borderTop: '1px dashed var(--border-color)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+            <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>
+              📸 Receipt / Travel Photo
+            </span>
+            {receiptImage && (
+              <button
+                type="button"
+                onClick={() => {
+                  triggerHaptic('light');
+                  setReceiptImage('');
+                }}
+                style={{ background: 'none', border: 'none', color: 'var(--color-danger)', fontSize: '11px', fontWeight: 600, cursor: 'pointer' }}
+              >
+                Remove Photo
+              </button>
+            )}
+          </div>
+
+          {receiptImage ? (
+            <div
+              style={{
+                position: 'relative',
+                width: '100px',
+                height: '100px',
+                borderRadius: '12px',
+                overflow: 'hidden',
+                border: '2px solid var(--primary-accent)',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
               }}
-              style={{ background: 'none', border: 'none', color: 'var(--color-danger)', fontSize: '11px', fontWeight: 600, cursor: 'pointer' }}
             >
-              Remove Photo
-            </button>
+              <img src={receiptImage} alt="Receipt preview" decoding="async" style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+            </div>
+          ) : (
+            <label
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '8px 14px',
+                borderRadius: '10px',
+                border: '1.5px dashed var(--border-color)',
+                background: 'var(--bg-surface-hover)',
+                fontSize: '12px',
+                fontWeight: 600,
+                color: 'var(--text-primary)',
+                cursor: 'pointer',
+                transition: 'background 0.2s ease',
+              }}
+            >
+              <input
+                type="file"
+                accept="image/*"
+                capture="environment"
+                onChange={handleReceiptFileChangeLocal}
+                style={{ display: 'none' }}
+                disabled={receiptProcessing}
+              />
+              <span>{receiptProcessing ? '⏳ Compressing...' : '＋ Attach Photo / Bill'}</span>
+            </label>
           )}
         </div>
-
-        {receiptImage ? (
-          <div
-            style={{
-              position: 'relative',
-              width: '100px',
-              height: '100px',
-              borderRadius: '12px',
-              overflow: 'hidden',
-              border: '2px solid var(--primary-accent)',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-            }}
-          >
-            <img src={receiptImage} alt="Receipt preview" decoding="async" style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={(e) => { e.currentTarget.style.display = 'none'; }} />
-          </div>
-        ) : (
-          <label
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '6px',
-              padding: '8px 14px',
-              borderRadius: '10px',
-              border: '1.5px dashed var(--border-color)',
-              background: 'var(--bg-surface-hover)',
-              fontSize: '12px',
-              fontWeight: 600,
-              color: 'var(--text-primary)',
-              cursor: 'pointer',
-              transition: 'background 0.2s ease',
-            }}
-          >
-            <input
-              type="file"
-              accept="image/*"
-              capture="environment"
-              onChange={handleReceiptFileChangeLocal}
-              style={{ display: 'none' }}
-              disabled={receiptProcessing}
-            />
-            <span>{receiptProcessing ? '⏳ Compressing...' : '＋ Attach Photo / Bill'}</span>
-          </label>
-        )}
-      </div>
+      )}
 
       {isGeneralFormError && (
         <p id="expense-form-error" role="alert" aria-live="assertive" style={{ color: 'var(--color-danger)', fontSize: '13px', marginTop: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
