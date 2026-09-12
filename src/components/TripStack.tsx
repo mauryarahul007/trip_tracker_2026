@@ -147,8 +147,15 @@ function useAmbientGlowColor(photoUrl: string | null): string | null {
   return glowColor;
 }
 
-// Compute contextual status badge (Ongoing / Upcoming) for card header
-function getTripStatusBadge(startDate?: string, endDate?: string): { label: string; kind: 'ongoing' | 'upcoming' } | null {
+// Compute contextual status badge (Ongoing / Upcoming / Closed / Archived) for card header
+function getTripStatusBadge(trip: { startDate?: string; endDate?: string; closed?: boolean; archived?: boolean }): { label: string; kind: 'ongoing' | 'upcoming' | 'closed' | 'archived' } | null {
+  if (trip.archived) {
+    return { label: 'ARCHIVED', kind: 'archived' };
+  }
+  if (trip.closed) {
+    return { label: 'CLOSED', kind: 'closed' };
+  }
+  const { startDate, endDate } = trip;
   if (!startDate || !endDate) return null;
   const todayStr = localDateStr();
   if (todayStr >= startDate && todayStr <= endDate) {
@@ -260,8 +267,8 @@ function CardContent({
   const { weather, isRefreshing, refresh: refreshWeather } = useDestinationWeather(trip.destination, trip.name, stopNames, isFront);
 
   const statusBadge = useMemo(
-    () => getTripStatusBadge(trip.startDate, trip.endDate),
-    [trip.startDate, trip.endDate]
+    () => getTripStatusBadge(trip),
+    [trip.startDate, trip.endDate, trip.closed, trip.archived]
   );
 
   const itineraryProgress = useMemo(
@@ -297,8 +304,8 @@ function CardContent({
             destination={trip.destination || trip.name}
             tripName={trip.name}
             date={trip.startDate}
-            variant={isSettled ? 'settled' : 'entry'}
-            color={isSettled ? 'teal' : 'auto'}
+            variant={trip.closed ? 'settled' : isSettled ? 'settled' : 'entry'}
+            color={trip.closed || isSettled ? 'teal' : 'auto'}
             size={54}
           />
         </div>

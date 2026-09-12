@@ -400,10 +400,10 @@ export function AdminCommandCenterPage({
                   <span>🧭</span> Active Fleet
                 </div>
                 <div className="ops-bento-stat-val">
-                  {activeTrips.length} <span style={{ fontSize: '11px', color: 'var(--text-tertiary)', fontWeight: 500 }}>/ {trips.length}</span>
+                  {trips.filter((t) => !t.archived && !t.closed && !t.frozen).length} <span style={{ fontSize: '11px', color: 'var(--text-tertiary)', fontWeight: 500 }}>/ {trips.length}</span>
                 </div>
                 <div className="ops-bento-stat-sub">
-                  {groundedTrips.length === 0 ? '🟢 100% Active' : `⚠️ ${groundedTrips.length} Grounded`}
+                  {trips.filter((t) => t.closed).length > 0 ? `🔒 ${trips.filter((t) => t.closed).length} Closed` : groundedTrips.length === 0 ? '🟢 100% Active' : `⚠️ ${groundedTrips.length} Grounded`}
                 </div>
               </div>
 

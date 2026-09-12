@@ -3137,6 +3137,16 @@ input:checked + .toggle-slider:before {
   color: #38BDF8;
 }
 
+.stack-status-dot-indicator.closed {
+  color: #A5B4FC;
+  border-color: rgba(165, 180, 252, 0.35);
+}
+
+.stack-status-dot-indicator.archived {
+  color: #94A3B8;
+  border-color: rgba(148, 163, 184, 0.3);
+}
+
 .stack-status-live-dot {
   width: 6px;
   height: 6px;

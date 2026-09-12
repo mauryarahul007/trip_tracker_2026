@@ -3014,4 +3014,26 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - Settlement overhang calculations run on active trip balances client-side in the admin portal; for very large datasets (>10,000 trips), this would eventually move to a backend materialized view or RPC.
 
+---
+
+## 162. Comprehensive Feature Flag Audit & True Trip Status Lifecycle (v3.15.1)
+* **Context:**
+  - When reviewing release phase flags in traveler mode, several disabled features still surfaced UI controls. Investigation revealed that `SettingsView.tsx` contained hardcoded `isSuperadmin || isFeatureEnabled(...)` bypasses that leaked Superadmin preview controls (e.g. Recycle Bin, Keyword Tagging, Multi-Currency FX Engine, Demo Data Seeding) even when their flags were explicitly switched off.
+  - Minor feature flag leaks also existed in `ExpenseForm.tsx` (FX currency pill & drawer), `TripsListScreen.tsx` (multi-stop route buttons), `ExpenseList.tsx` (secondary voice input button), and `ChecklistNotesTab.tsx` (no graceful disabled banner when Collaborative Notes was deactivated).
+  - In the Trips section, all trips were displayed as "Active" in both the Ops Deck and traveler view even when closed (`t.closed = true`). Because normal travelers cannot delete trips, closed and archived trips must clearly reflect their true lifecycle status.
+* **Decision:**
+  - **Feature Flag Leak Remediation:**
+    - Audited all 27 feature flags across all release phases.
+    - Removed `isSuperadmin ||` overrides from `SettingsView.tsx`, enforcing strict compliance with `isFeatureEnabled(flagKey, tripId, userId)`.
+    - Added guards in `ExpenseForm.tsx` (`enableCurrencyFx` hides currency pill and converter drawer), `TripsListScreen.tsx` (`enableRouteStops` hides stop inputs), `ExpenseList.tsx` (`enableVoiceInput` hides empty-state mic button), `App.tsx` (modal launch guards), and `ChecklistNotesTab.tsx` (informative disabled notice when Notes tab feature flag is off).
+    - Expanded unit tests in `featureFlags.test.ts` to 250 passing tests verifying all flags.
+  - **True Trip Status Lifecycle (`Active`, `Closed`, `Archived`):**
+    - Updated status calculation in `AdminTripsPage.tsx`: `t.frozen ? 'grounded' : t.archived ? 'archived' : t.closed ? 'closed' : 'active'`.
+    - Added a `Closed (N)` filter chip, amber badge styling (`.ops-badge.closed`), and accurate CSV exports.
+    - Updated `AdminCommandCenterPage.tsx` active fleet stats to report open trips and call out closed trips (`🔒 N Closed`).
+    - Updated Traveler UI in `TripStack.tsx` and `TripsListScreen.tsx` with dedicated status badge chips (`ARCHIVED`, `🔒 CLOSED`, or `ACTIVE`), dot indicators, and updated sheet descriptions.
+* **Trade-offs Accepted:**
+  - Closed trips remain readable for travelers so they can review historical splits and settle outstanding balances; write operations remain restricted per existing business logic.
+
+
 

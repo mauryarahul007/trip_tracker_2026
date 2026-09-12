@@ -42,7 +42,7 @@ export function SettingsTripToolsHub({
       title="Trip Tools"
       subtitle={
         <>
-          Categories, recycle bin, alerts, exchange rates &amp; exports for {activeTrip.name}.
+          Categories, recycle bin, alerts{onOpenFxRates ? ', exchange rates' : ''} &amp; exports for {activeTrip.name}.
         </>
       }
     >

@@ -27,7 +27,7 @@ export function AdminTripsPage({ trips, expenses, members, onInspectTrip, onRefr
   const deleteTrip = useTripStore((s) => s.deleteTrip);
 
   const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'frozen' | 'archived'>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'closed' | 'frozen' | 'archived'>('all');
   const [toastMsg, setToastMsg] = useState('');
   const [sortKey, setSortKey] = useState<SortKey>('name');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
@@ -51,7 +51,8 @@ export function AdminTripsPage({ trips, expenses, members, onInspectTrip, onRefr
       t.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       t.baseCurrency.toLowerCase().includes(searchQuery.toLowerCase());
     if (!matchesSearch) return false;
-    if (statusFilter === 'active') return !t.archived && !t.frozen;
+    if (statusFilter === 'active') return !t.archived && !t.frozen && !t.closed;
+    if (statusFilter === 'closed') return Boolean(t.closed) && !t.archived && !t.frozen;
     if (statusFilter === 'frozen') return !!t.frozen;
     if (statusFilter === 'archived') return !!t.archived;
     return true;
@@ -114,7 +115,7 @@ export function AdminTripsPage({ trips, expenses, members, onInspectTrip, onRefr
         endDate: t.endDate,
         membersCount: t.memberIds.length,
         volume: tripVolume(t.id),
-        status: t.frozen ? 'grounded' : t.archived ? 'archived' : 'active',
+        status: t.frozen ? 'grounded' : t.archived ? 'archived' : t.closed ? 'closed' : 'active',
       }));
     const blob = new Blob([JSON.stringify(rows, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
@@ -225,15 +226,17 @@ export function AdminTripsPage({ trips, expenses, members, onInspectTrip, onRefr
           />
         </div>
         <div className="ops-filter-row" style={{ marginBottom: 0 }}>
-          {(['all', 'active', 'frozen', 'archived'] as const).map((filter) => {
+          {(['all', 'active', 'closed', 'frozen', 'archived'] as const).map((filter) => {
             const count =
               filter === 'all'
                 ? trips.length
                 : filter === 'active'
-                  ? trips.filter((t) => !t.archived && !t.frozen).length
-                  : filter === 'frozen'
-                    ? trips.filter((t) => t.frozen).length
-                    : trips.filter((t) => t.archived).length;
+                  ? trips.filter((t) => !t.archived && !t.frozen && !t.closed).length
+                  : filter === 'closed'
+                    ? trips.filter((t) => Boolean(t.closed) && !t.archived && !t.frozen).length
+                    : filter === 'frozen'
+                      ? trips.filter((t) => t.frozen).length
+                      : trips.filter((t) => t.archived).length;
             return (
               <button
                 key={filter}
@@ -242,7 +245,7 @@ export function AdminTripsPage({ trips, expenses, members, onInspectTrip, onRefr
                 data-active={statusFilter === filter}
                 onClick={() => setStatusFilter(filter)}
               >
-                {filter === 'frozen' ? 'Grounded' : filter} ({count})
+                {filter === 'frozen' ? 'Grounded' : filter.charAt(0).toUpperCase() + filter.slice(1)} ({count})
               </button>
             );
           })}
@@ -302,7 +305,7 @@ export function AdminTripsPage({ trips, expenses, members, onInspectTrip, onRefr
                 {sortedTrips.map((t) => {
                   const tripExpenses = expenses.filter((e) => e.tripId === t.id && !e.title.startsWith('Settlement:'));
                   const tripTotal = tripExpenses.reduce((sum, e) => sum + e.amount, 0);
-                  const status = t.frozen ? 'grounded' : t.archived ? 'archived' : 'active';
+                  const status = t.frozen ? 'grounded' : t.archived ? 'archived' : t.closed ? 'closed' : 'active';
 
                   return (
                     <tr key={t.id}>
@@ -322,7 +325,7 @@ export function AdminTripsPage({ trips, expenses, members, onInspectTrip, onRefr
                       </td>
                       <td data-label="Status">
                         <span className={`ops-badge ${status}`}>
-                          {status === 'grounded' ? 'Grounded' : status === 'archived' ? 'Archived' : 'Active'}
+                          {status === 'grounded' ? 'Grounded' : status === 'archived' ? 'Archived' : status === 'closed' ? 'Closed' : 'Active'}
                         </span>
                       </td>
                       <td className="ops-num-right" data-label="Members">{t.memberIds.length}</td>
@@ -404,8 +407,8 @@ export function AdminTripsPage({ trips, expenses, members, onInspectTrip, onRefr
                   <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)' }}>
                     {activeInspectedTrip.name}
                   </h3>
-                  <span className={`ops-badge ${activeInspectedTrip.frozen ? 'grounded' : activeInspectedTrip.archived ? 'archived' : 'safe'}`}>
-                    {activeInspectedTrip.frozen ? 'Grounded' : activeInspectedTrip.archived ? 'Archived' : 'Active'}
+                  <span className={`ops-badge ${activeInspectedTrip.frozen ? 'grounded' : activeInspectedTrip.archived ? 'archived' : activeInspectedTrip.closed ? 'closed' : 'safe'}`}>
+                    {activeInspectedTrip.frozen ? 'Grounded' : activeInspectedTrip.archived ? 'Archived' : activeInspectedTrip.closed ? 'Closed' : 'Active'}
                   </span>
                 </div>
                 <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '2px', fontFamily: 'var(--mono)' }}>

@@ -693,16 +693,16 @@ export function SettingsView({
         categories={categories}
         deletedCount={tripDeletedExpenses.length}
         isTripMuted={isTripMuted}
-        showCategories={isSuperadmin || isFeatureEnabled('enableKeywordTagging')}
-        showRecycleBin={isSuperadmin || isFeatureEnabled('enableRecycleBin')}
+        showCategories={isFeatureEnabled('enableKeywordTagging')}
+        showRecycleBin={isFeatureEnabled('enableRecycleBin')}
         onOpenCategories={() => setSubScreen('categories')}
         onOpenRecycleBin={() => setSubScreen('recycle-bin')}
         onToggleMute={(muted) => setTripMuted(activeTrip.id, muted)}
-        onOpenFxRates={onOpenFxRates}
+        onOpenFxRates={isFeatureEnabled('enableCurrencyFx', { tripId: activeTrip.id, userId: userId || undefined }) ? onOpenFxRates : undefined}
         onExportCsv={onExportCsv}
       />
     );
-  } else if (visibleScreen === 'categories') {
+  } else if (visibleScreen === 'categories' && isFeatureEnabled('enableKeywordTagging')) {
     overlay = (
       <SettingsCategoriesScreen
         parentTitle={parentTitle}
@@ -717,7 +717,7 @@ export function SettingsView({
         onRequestConfirm={onRequestConfirm}
       />
     );
-  } else if (visibleScreen === 'recycle-bin') {
+  } else if (visibleScreen === 'recycle-bin' && isFeatureEnabled('enableRecycleBin')) {
     overlay = (
       <SettingsRecycleBinScreen
         parentTitle={parentTitle}
@@ -736,7 +736,7 @@ export function SettingsView({
         parentTitle={parentTitle}
         onBack={closeSubScreen}
         isSuperadmin={isSuperadmin}
-        onOpenOfflineSnapshot={onOpenOfflineSnapshot}
+        onOpenOfflineSnapshot={isFeatureEnabled('enableOfflineSnapshot') ? onOpenOfflineSnapshot : undefined}
         onOpenMediaGallery={onOpenMediaGallery}
         onOpenBackups={() => setSubScreen('backups')}
       />
@@ -802,7 +802,7 @@ export function SettingsView({
         activeTripInfo={{ id: activeTripId, name: activeTrip?.name || null }}
       />
     );
-  } else if (visibleScreen === 'suggest-feature') {
+  } else if (visibleScreen === 'suggest-feature' && isFeatureEnabled('enableFeatureSuggestions')) {
     overlay = (
       <FeatureRequestModal
         onBack={closeSubScreen}
@@ -842,17 +842,19 @@ export function SettingsView({
   };
 
   const showInvite = Boolean(hasActiveTrip && activeTrip && onOpenShareTrip && matchesSearch('Invite & Share Trip', 'invite', 'share', 'qr', 'join'));
-  const showCategories = Boolean(hasActiveTrip && activeTrip && (isSuperadmin || isFeatureEnabled('enableKeywordTagging')) && matchesSearch('Categories & Tags', 'categories', 'tags', 'keywords'));
-  const showRecycleBin = Boolean(hasActiveTrip && activeTrip && (isSuperadmin || isFeatureEnabled('enableRecycleBin')) && matchesSearch('Recycle Bin', 'deleted', 'trash', 'restore'));
+  const showCategories = Boolean(hasActiveTrip && activeTrip && isFeatureEnabled('enableKeywordTagging') && matchesSearch('Categories & Tags', 'categories', 'tags', 'keywords'));
+  const showRecycleBin = Boolean(hasActiveTrip && activeTrip && isFeatureEnabled('enableRecycleBin') && matchesSearch('Recycle Bin', 'deleted', 'trash', 'restore'));
   const showMute = Boolean(hasActiveTrip && activeTrip && matchesSearch('Mute Trip Alerts', 'mute', 'silence', 'notifications', 'alerts'));
   const showCloseTrip = Boolean(hasActiveTrip && activeTrip && isTripAdmin && matchesSearch(
     activeTrip.closed ? 'Reopen Trip' : 'Close Trip',
     'close', 'reopen', 'lock', 'unlock', 'complete', 'completed', 'completion', 'settled', 'unsettled', 'outstanding', 'balances', 'debts', 'post trip', 'finish', 'archive trip'
   ));
   const showCsvExport = Boolean(hasActiveTrip && activeTrip && onExportCsv && matchesSearch('Excel CSV Export', 'spreadsheet', 'download', 'ledger', 'csv', 'sheets'));
-  const showFxSearch = Boolean(onOpenFxRates && matchesSearch('Multi-Currency FX Engine', 'rates', 'fx', 'forex', 'currency', 'exchange'));
+  const isFxEnabled = isFeatureEnabled('enableCurrencyFx', { tripId: activeTrip?.id, userId: userId || undefined });
+  const showFxSearch = Boolean(onOpenFxRates && isFxEnabled && matchesSearch('Multi-Currency FX Engine', 'rates', 'fx', 'forex', 'currency', 'exchange'));
   const showTripStatus = Boolean(hasActiveTrip && activeTrip && !searchQuery.trim());
-  const showSnapshotSearch = Boolean(onOpenOfflineSnapshot && matchesSearch('Offline Snapshot (.triptracker)', 'snapshot', 'offline', 'backup', 'triptracker'));
+  const isSnapshotEnabled = isFeatureEnabled('enableOfflineSnapshot');
+  const showSnapshotSearch = Boolean(onOpenOfflineSnapshot && isSnapshotEnabled && matchesSearch('Offline Snapshot (.triptracker)', 'snapshot', 'offline', 'backup', 'triptracker'));
   const showGallerySearch = Boolean(onOpenMediaGallery && matchesSearch('Receipts & Memories Gallery', 'gallery', 'photos', 'receipts', 'memories'));
   const showTripTools = showCategories || showRecycleBin || showMute || showFxSearch || showCsvExport;
   const showTripGroup = showTripStatus || showInvite || showTripTools || showCloseTrip;
@@ -860,14 +862,14 @@ export function SettingsView({
   const showAppearance = matchesSearch('Appearance', 'theme', 'dark', 'light', 'night', 'auto', 'color', 'look');
   const showNotifications = matchesSearch('Notifications', 'alerts', 'unread', 'bell', 'messages');
   const showPassReminders = matchesSearch('Pass reminders', 'pass', 'flight', 'train', 'departure', 'alert');
-  const showGeotag = (isSuperadmin || isFeatureEnabled('enableGeotagging')) && matchesSearch('Geotag Expenses', 'gps', 'location', 'place', 'map', 'pin');
+  const showGeotag = isFeatureEnabled('enableGeotagging') && matchesSearch('Geotag Expenses', 'gps', 'location', 'place', 'map', 'pin');
   const showInstall = pwaInstallable && matchesSearch('Install App', 'pwa', 'home screen', 'download', 'mobile');
   const showPreferencesGroup = showAppearance || showNotifications || showPassReminders || showGeotag || showInstall;
 
   const showStorageManager = matchesSearch('Storage and Data', 'storage', 'data', 'cache', 'memory', 'disk', 'receipts', 'photos');
   const showArchived = matchesSearch('Archived Trips', 'restore', 'history', 'past trips', 'archive');
   const showBackups = isSuperadmin && matchesSearch('Database Backups', 'export', 'import', 'json', 'snapshot', 'restore');
-  const showDemoTrip = Boolean(onLoadDemoTrip && matchesSearch('Seed Demo Trip', 'sample', 'test', 'goa', 'demo'));
+  const showDemoTrip = Boolean(onLoadDemoTrip && isFeatureEnabled('enableDemoSeeding', { tripId: activeTripId || undefined, userId: userId || undefined }) && matchesSearch('Seed Demo Trip', 'sample', 'test', 'goa', 'demo'));
   const showBackupsMedia = showSnapshotSearch || showGallerySearch || showBackups;
   const showDataGroup = showStorageManager || showArchived || showBackupsMedia;
 
@@ -1148,7 +1150,7 @@ export function SettingsView({
               icon={<IconSettings size={18} />}
               iconGlow="purple"
               title="Trip Tools"
-              subtitle="Categories, recycle bin, alerts & FX rates"
+              subtitle={isFxEnabled ? "Categories, recycle bin, alerts & FX rates" : "Categories, recycle bin, alerts & exports"}
               onPointerEnter={prefetchSettingsLeaves}
               onPointerDown={prefetchSettingsLeaves}
               onClick={() => setSubScreen('trip-tools')}

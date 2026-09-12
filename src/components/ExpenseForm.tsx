@@ -287,6 +287,7 @@ export function ExpenseForm({
   const enablePredictiveChips = isFeatureEnabled('enablePredictiveChips');
   const enableDuplicateDetector = isFeatureEnabled('enableDuplicateDetector');
   const enableVoiceInput = isFeatureEnabled('enableVoiceInput');
+  const enableCurrencyFx = isFeatureEnabled('enableCurrencyFx', { tripId: trip?.id });
 
   // Duplicate expense detection
   const expenses = useTripStore((s) => s.expenses);
@@ -331,7 +332,7 @@ export function ExpenseForm({
 
   // Live conversion calculation
   const numericAmount = parseFloat(amount) || 0;
-  const currencyConversion = selectedCurrency !== baseCurrency && numericAmount > 0
+  const currencyConversion = enableCurrencyFx && selectedCurrency !== baseCurrency && numericAmount > 0
     ? convertCurrency(numericAmount, selectedCurrency, baseCurrency, trip?.fxConfig?.customRates)
     : null;
 
@@ -879,32 +880,52 @@ export function ExpenseForm({
             Amount ({selectedCurrency})
           </label>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <button
-              type="button"
-              className="currency-pill-btn"
-              style={{
-                fontSize: '11px',
-                padding: '3px 8px',
-                borderRadius: '12px',
-                background: selectedCurrency !== baseCurrency ? 'var(--primary-accent)' : 'var(--bg-card-hover)',
-                color: selectedCurrency !== baseCurrency ? '#fff' : 'var(--text-secondary)',
-                border: '1px solid var(--border-color)',
-                cursor: 'pointer',
-                fontWeight: 600,
-                display: 'flex',
-                alignItems: 'center',
-                gap: '4px'
-              }}
-              onClick={() => setShowCurrencyPicker(!showCurrencyPicker)}
-              title="Change Currency"
-            >
-              <span>{getCurrencySymbol(selectedCurrency)}</span>
-              <span>{selectedCurrency}</span>
-            </button>
+            {enableCurrencyFx ? (
+              <button
+                type="button"
+                className="currency-pill-btn"
+                style={{
+                  fontSize: '11px',
+                  padding: '3px 8px',
+                  borderRadius: '12px',
+                  background: selectedCurrency !== baseCurrency ? 'var(--primary-accent)' : 'var(--bg-card-hover)',
+                  color: selectedCurrency !== baseCurrency ? '#fff' : 'var(--text-secondary)',
+                  border: '1px solid var(--border-color)',
+                  cursor: 'pointer',
+                  fontWeight: 600,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px'
+                }}
+                onClick={() => setShowCurrencyPicker(!showCurrencyPicker)}
+                title="Change Currency"
+              >
+                <span>{getCurrencySymbol(selectedCurrency)}</span>
+                <span>{selectedCurrency}</span>
+              </button>
+            ) : (
+              <span
+                style={{
+                  fontSize: '11px',
+                  padding: '3px 8px',
+                  borderRadius: '12px',
+                  background: 'var(--bg-card-hover)',
+                  color: 'var(--text-secondary)',
+                  border: '1px solid var(--border-color)',
+                  fontWeight: 600,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px'
+                }}
+              >
+                <span>{getCurrencySymbol(selectedCurrency)}</span>
+                <span>{selectedCurrency}</span>
+              </span>
+            )}
           </div>
         </div>
 
-        {showCurrencyPicker && (
+        {enableCurrencyFx && showCurrencyPicker && (
           <div className="fade-in" style={{
             display: 'flex',
             flexWrap: 'wrap',

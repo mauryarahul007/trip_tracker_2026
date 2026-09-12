@@ -5,6 +5,7 @@ import type { BugRecord } from '../../services/bugApi';
 import { getCurrencySymbol } from '../../utils/currency';
 import { calculateSettlements } from '../../utils/settlement';
 import { IconRefresh } from '../Icons';
+import { useTripStore } from '../../store/tripStore';
 
 interface Props {
   trips: Trip[];
@@ -42,6 +43,7 @@ const SUB_TABS: { id: AnalyticsSubTab; label: string }[] = [
 ];
 
 export function AdminAnalyticsPage({ trips, expenses, members, categories, bugs, users, platformCounts, notificationStats, recycledCount, onRefresh, isRefreshing }: Props) {
+  const isMultiTripAnalyticsEnabled = useTripStore((s) => s.isFeatureEnabled('enableMultiTripAnalytics'));
   // The 13 sections below used to sit in one long equal-weight scroll --
   // grouped into sub-tabs so "what's the bug pulse today" doesn't require
   // scrolling past 10 unrelated charts to get there.
@@ -336,6 +338,26 @@ export function AdminAnalyticsPage({ trips, expenses, members, categories, bugs,
           <IconRefresh size={13} className={isRefreshing ? 'icon-sm ops-spin' : 'icon-sm'} /> {isRefreshing ? 'Refreshing...' : 'Refresh'}
         </button>
       </div>
+
+      {!isMultiTripAnalyticsEnabled && (
+        <div
+          style={{
+            padding: '10px 14px',
+            borderRadius: '8px',
+            background: 'rgba(239, 68, 68, 0.1)',
+            border: '1px solid rgba(239, 68, 68, 0.28)',
+            color: '#fca5a5',
+            fontSize: '12px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            marginBottom: '6px',
+          }}
+        >
+          <span>⚠️ <strong>Master Multi-Trip Analytics Flag is Disabled (Safed).</strong> Cross-trip client telemetry and aggregated spending models are deactivated in current release gating.</span>
+          <span style={{ fontSize: '10px', padding: '2px 8px', borderRadius: '4px', background: 'rgba(239, 68, 68, 0.2)', fontWeight: 700 }}>FLAG SAFED</span>
+        </div>
+      )}
 
       <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', margin: '2px 0 10px' }}>
         {SUB_TABS.map((t) => (

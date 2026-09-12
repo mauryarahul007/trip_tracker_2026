@@ -672,7 +672,7 @@ export function ExpenseList({
             </div>
 
             <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'center', marginTop: '6px' }}>
-              {onOpenSmartQuickAdd && (
+              {onOpenSmartQuickAdd && isFeatureEnabled('enableVoiceInput') && (
                 <button
                   type="button"
                   className="secondary-btn"

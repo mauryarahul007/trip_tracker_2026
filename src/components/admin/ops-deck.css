@@ -932,6 +932,7 @@ button.ops-badge { border: none; cursor: pointer; font-family: inherit; }
 .ops-badge.active { color: var(--safe); background: var(--safe-dim); }
 .ops-badge.grounded { color: var(--danger); background: var(--danger-dim); }
 .ops-badge.archived { color: var(--text-tertiary); background: var(--bg-inset); }
+.ops-badge.closed { color: #818cf8; background: rgba(99, 102, 241, 0.14); border: 1px solid rgba(99, 102, 241, 0.28); }
 
 .ops-manifest-actions { display: flex; gap: 6px; justify-content: flex-end; white-space: nowrap; }
 .ops-mini-btn { font-size: 10px; letter-spacing: 0; padding: 5px 10px; border-radius: var(--r-sm); border: 1px solid var(--line-strong); background: var(--bg-inset); color: var(--text-secondary); cursor: pointer; }

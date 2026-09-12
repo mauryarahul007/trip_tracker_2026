@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect, useLayoutEffect, useCallback } from 'react';
-import { IconExpenses, IconMembers, IconReceipt, IconClipboardList, IconPlus } from './Icons';
+import { IconExpenses, IconMembers, IconReceipt, IconClipboardList, IconPlus, IconWallet } from './Icons';
 import { triggerHaptic } from '../utils/haptics';
 import { FlightAddExpenseTooltip, STORAGE_KEY } from './FlightAddExpenseTooltip';
 import { useFeatureNudge } from '../hooks/useFeatureNudge';
@@ -13,9 +13,22 @@ type Props = {
   onAddMember?: () => void;
   expenseCount?: number;
   tripDestination?: string;
+  isNotesEnabled?: boolean;
+  isPassesEnabled?: boolean;
+  passesCount?: number;
 };
 
-export function NavTabs({ activeTab, setActiveTab, onAddExpense, onAddMember, expenseCount, tripDestination }: Props) {
+export function NavTabs({
+  activeTab,
+  setActiveTab,
+  onAddExpense,
+  onAddMember,
+  expenseCount,
+  tripDestination,
+  isNotesEnabled = true,
+  isPassesEnabled = true,
+  passesCount = 0,
+}: Props) {
   const isMembersTab = activeTab === 'members';
   const navRef = useRef<HTMLElement | null>(null);
   const [pillStyle, setPillStyle] = useState<{ left: number; width: number } | null>(null);
@@ -49,8 +62,11 @@ export function NavTabs({ activeTab, setActiveTab, onAddExpense, onAddMember, ex
     return () => window.removeEventListener('resize', updatePill);
   }, [updatePill]);
 
+  const hasNotesOrPassesTab = isNotesEnabled || isPassesEnabled;
+
   const goTo = (tab: Tab) => {
     if (tab === activeTab) return;
+    if (tab === 'notes' && !hasNotesOrPassesTab) return;
     if (tab === 'notes' && showNotesNudge) dismissNotesNudge();
     triggerHaptic('light');
     // setActiveTab already starts its own view transition (see App.tsx) --
@@ -220,21 +236,32 @@ export function NavTabs({ activeTab, setActiveTab, onAddExpense, onAddMember, ex
         <span className="nav-tab-icon"><IconMembers size={26} /></span>
         <span>Members</span>
       </button>
-      <button
-        type="button"
-        role="tab"
-        aria-selected={activeTab === 'notes'}
-        data-tab="notes"
-        className={`nav-tab-item ${activeTab === 'notes' ? 'active' : ''}`}
-        onPointerDown={prefetchNotes}
-        onMouseEnter={prefetchNotes}
-        onClick={() => goTo('notes')}
-        aria-label={showNotesNudge ? 'Passes, Notes & Checklist (new: Travel Pass Wallet & Smart Packing)' : 'Passes, Notes & Checklist'}
-      >
-        <span className="nav-tab-icon"><IconClipboardList size={26} /></span>
-        <span>Notes</span>
-        {showNotesNudge && <span className="nav-tab-badge nav-tab-badge-dot" aria-hidden="true" />}
-      </button>
+      {hasNotesOrPassesTab && (
+        <button
+          type="button"
+          role="tab"
+          aria-selected={activeTab === 'notes'}
+          data-tab="notes"
+          className={`nav-tab-item ${activeTab === 'notes' ? 'active' : ''}`}
+          onPointerDown={prefetchNotes}
+          onMouseEnter={prefetchNotes}
+          onClick={() => goTo('notes')}
+          aria-label={
+            isNotesEnabled
+              ? (showNotesNudge ? 'Passes, Notes & Checklist (new: Travel Pass Wallet & Smart Packing)' : 'Passes, Notes & Checklist')
+              : 'Travel Pass Wallet'
+          }
+        >
+          <span className="nav-tab-icon">
+            {isNotesEnabled ? <IconClipboardList size={26} /> : <IconWallet size={26} />}
+          </span>
+          <span>{isNotesEnabled ? 'Notes' : 'Passes'}</span>
+          {isNotesEnabled && showNotesNudge && <span className="nav-tab-badge nav-tab-badge-dot" aria-hidden="true" />}
+          {!isNotesEnabled && passesCount > 0 && (
+            <span className="nav-tab-badge" aria-label={`${passesCount} passes`}>{passesCount}</span>
+          )}
+        </button>
+      )}
     </nav>
 
   );

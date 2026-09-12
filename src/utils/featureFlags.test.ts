@@ -124,4 +124,17 @@ describe('featureFlags', () => {
       userOverrides,
     })).toBe(false);
   });
+
+  it('verifies that every single flag in all phases can be enabled and disabled', () => {
+    const allFlagKeys = Object.keys(DEFAULT_FEATURE_FLAGS) as (keyof typeof DEFAULT_FEATURE_FLAGS)[];
+    expect(allFlagKeys.length).toBe(27);
+
+    allFlagKeys.forEach((flagKey) => {
+      const disabledFlags = { ...DEFAULT_FEATURE_FLAGS, [flagKey]: false };
+      expect(isFeatureActive(flagKey, disabledFlags, { isSuperadmin: false })).toBe(false);
+
+      const enabledFlags = { ...DEFAULT_FEATURE_FLAGS, [flagKey]: true };
+      expect(isFeatureActive(flagKey, enabledFlags, { isSuperadmin: false })).toBe(true);
+    });
+  });
 });

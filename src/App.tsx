@@ -213,9 +213,24 @@ export default function App() {
 
   // Navigation tabs: 'expenses' (Summary) | 'ledger' (day-wise Expenses) | 'members' | 'notes' | 'settings'
   type Tab = 'expenses' | 'ledger' | 'members' | 'notes' | 'settings';
-  const TAB_ORDER = ['expenses', 'ledger', 'members', 'notes'] as const;
+  const isFeatureEnabled = useTripStore((s) => s.isFeatureEnabled);
+  const isNotesEnabled = isFeatureEnabled('enableNotesAndChecklist', { tripId: activeTripId || undefined, userId: userId || undefined });
+  const isPassesEnabled = isFeatureEnabled('enableTravelPasses', { tripId: activeTripId || undefined, userId: userId || undefined });
+  const hasNotesOrPassesTab = isNotesEnabled || isPassesEnabled;
+  const currentTabOrder = useMemo(() => {
+    return hasNotesOrPassesTab
+      ? (['expenses', 'ledger', 'members', 'notes'] as const)
+      : (['expenses', 'ledger', 'members'] as const);
+  }, [hasNotesOrPassesTab]);
+
   const [activeTab, setActiveTabRaw] = useState<Tab>('expenses');
   const mainContentRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    if (activeTab === 'notes' && !hasNotesOrPassesTab) {
+      setActiveTabRaw('expenses');
+    }
+  }, [activeTab, hasNotesOrPassesTab]);
 
   // Tab panes stay mounted once rendered (display:none swap, not unmount --
   // see the .tab-pane comment below), so a lazy SettingsTab would suspend on
@@ -253,7 +268,7 @@ export default function App() {
   // view-transition crossfade -- the drag itself already animates the
   // handoff (the pane visually slides into place), so layering a
   // second, independent crossfade on top would fight it.
-  const tabSwipe = useTabSwipe(mainContentRef, TAB_ORDER, activeTab, setActiveTabRaw);
+  const tabSwipe = useTabSwipe(mainContentRef, currentTabOrder, activeTab, setActiveTabRaw);
 
   // Bumped to tell MembersGroupsTab to open its add-member popup -- the
   // nav bar's FAB triggers this instead of add-expense while on the
@@ -449,7 +464,6 @@ export default function App() {
   const globalSettingsCloseRef = useRef<(() => void) | null>(null);
   const [bypassEnvWarning, setBypassEnvWarning] = useState(false);
   const isSuperadmin = useTripStore((s) => s.isSuperadmin);
-  const isFeatureEnabled = useTripStore((s) => s.isFeatureEnabled);
   const setTripMuted = useTripStore((s) => s.setTripMuted);
   const isActiveTripMuted = useTripStore((s) =>
     activeTripId ? s.isTripMuted(activeTripId) : false
@@ -548,7 +562,7 @@ export default function App() {
             setActiveTab('members');
             return;
           }
-          if (e.key === '4') {
+          if (e.key === '4' && hasNotesOrPassesTab) {
             e.preventDefault();
             setActiveTab('notes');
             return;
@@ -2169,7 +2183,7 @@ export default function App() {
                     isAdmin={isAdmin}
                     myMemberId={myMemberId}
                     members={members}
-                    onOpenSquadBadges={() => setShowAchievements(true)}
+                    onOpenSquadBadges={isFeatureEnabled('enableAchievements') ? () => setShowAchievements(true) : undefined}
                     onMemberClick={(memberId) => {
                       setExpenseFilterMember(memberId);
                       setShowExpenseFilterDrawer(false);
@@ -2306,14 +2320,14 @@ export default function App() {
             <div
               className="tab-pane"
               style={
-                activeTab === 'notes' ? { display: 'block', ...tabSwipe.activePaneStyle }
-                : tabSwipe.previewTab === 'notes' ? { display: 'block', ...tabSwipe.previewPaneStyle }
+                activeTab === 'notes' && hasNotesOrPassesTab ? { display: 'block', ...tabSwipe.activePaneStyle }
+                : tabSwipe.previewTab === 'notes' && hasNotesOrPassesTab ? { display: 'block', ...tabSwipe.previewPaneStyle }
                 : { display: 'none' }
               }
             >
               <TabErrorBoundary label="Notes & Checklist">
               <div className="fade-in">
-                {activeTrip && hasVisitedNotes && (
+                {activeTrip && hasVisitedNotes && hasNotesOrPassesTab && (
                   <Suspense fallback={<LuggageTagSkeleton count={2} />}>
                   <ChecklistNotesTab
                     trip={activeTrip}
@@ -2370,9 +2384,9 @@ export default function App() {
                 onOpenShareTrip={() => setShowShareTrip(true)}
                 onNavigateToBalances={() => setActiveTab('expenses')}
                 baseCurrency={activeTrip?.baseCurrency || ''}
-                onOpenFxRates={() => setShowFxRates(true)}
+                onOpenFxRates={isFeatureEnabled('enableCurrencyFx', { tripId: activeTrip?.id, userId: userId || undefined }) ? () => setShowFxRates(true) : undefined}
                 onOpenMediaGallery={() => setShowMediaGallery(true)}
-                onOpenOfflineSnapshot={() => setShowOfflineSnapshot(true)}
+                onOpenOfflineSnapshot={isFeatureEnabled('enableOfflineSnapshot') ? () => setShowOfflineSnapshot(true) : undefined}
                 isSurfaceVisible={activeTab === 'settings'}
               />
               </Suspense>
@@ -2390,6 +2404,9 @@ export default function App() {
             onAddMember={isAdmin ? () => setAddMemberSignal((n) => n + 1) : undefined}
             expenseCount={activeTripExpenses.length}
             tripDestination={activeTrip?.destination}
+            isNotesEnabled={isNotesEnabled}
+            isPassesEnabled={isPassesEnabled}
+            passesCount={activeTrip?.passes?.length || 0}
           />
         </div>
       )}
@@ -2449,7 +2466,7 @@ export default function App() {
           <ShareTripModal
             trip={activeTrip}
             onClose={() => setShowShareTrip(false)}
-            onOpenOfflineSnapshot={() => setShowOfflineSnapshot(true)}
+            onOpenOfflineSnapshot={isFeatureEnabled('enableOfflineSnapshot') ? () => setShowOfflineSnapshot(true) : undefined}
           />
         </Suspense>
       )}
@@ -2596,9 +2613,9 @@ export default function App() {
             activeTripExpenses={activeTripExpenses}
             onAddCategory={handleAddCategory}
             onDeleteCategory={handleDeleteCategory}
-            onOpenFxRates={() => setShowFxRates(true)}
+            onOpenFxRates={isFeatureEnabled('enableCurrencyFx', { tripId: activeTrip?.id, userId: userId || undefined }) ? () => setShowFxRates(true) : undefined}
             onOpenMediaGallery={() => setShowMediaGallery(true)}
-            onOpenOfflineSnapshot={() => setShowOfflineSnapshot(true)}
+            onOpenOfflineSnapshot={isFeatureEnabled('enableOfflineSnapshot') ? () => setShowOfflineSnapshot(true) : undefined}
             onOpenSuperadminPortal={() => {
               setShowGlobalSettings(false);
               setIsTravelerPreview(false);
@@ -2788,7 +2805,7 @@ export default function App() {
       )}
 
       {/* Trip Route & Stops Modal */}
-      {showRouteModal && activeTrip && (
+      {showRouteModal && activeTrip && isFeatureEnabled('enableRouteStops', { tripId: activeTrip.id }) && (
         <Suspense fallback={null}>
           <TripRouteModal
             isOpen={showRouteModal}
@@ -2866,7 +2883,7 @@ export default function App() {
       )}
 
       {/* Multi-Currency FX Rates & Calculator Modal */}
-      {showFxRates && activeTrip && (
+      {showFxRates && activeTrip && isFeatureEnabled('enableCurrencyFx', { tripId: activeTrip.id, userId: userId || undefined }) && (
         <Suspense fallback={null}>
           <FxRatesModal
             isOpen={showFxRates}

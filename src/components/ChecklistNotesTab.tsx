@@ -388,18 +388,23 @@ export function ChecklistNotesTab({ trip, members, isAdmin }: Props) {
   } = useTripStore();
   const isFeatureEnabled = useTripStore((s) => s.isFeatureEnabled);
   const isPassesEnabled = isFeatureEnabled('enableTravelPasses', { tripId: liveTrip.id });
+  const isNotesEnabled = isFeatureEnabled('enableNotesAndChecklist', { tripId: liveTrip.id });
   const isPackingEnabled = isFeatureEnabled('enablePackingAssistant', { tripId: liveTrip.id });
 
   const [viewMode, setViewMode] = useState<ViewMode>(() => {
     if (isPassesEnabled && liveTrip.passes && liveTrip.passes.length > 0) return 'passes';
+    if (isNotesEnabled) return 'checklist';
+    if (isPassesEnabled) return 'passes';
     return 'checklist';
   });
 
   useEffect(() => {
     if (!isPassesEnabled && viewMode === 'passes') {
-      setViewMode('checklist');
+      setViewMode(isNotesEnabled ? 'checklist' : 'notes');
+    } else if (!isNotesEnabled && (viewMode === 'notes' || viewMode === 'checklist')) {
+      if (isPassesEnabled) setViewMode('passes');
     }
-  }, [isPassesEnabled, viewMode]);
+  }, [isPassesEnabled, isNotesEnabled, viewMode]);
 
   const [checklistFilter, setChecklistFilter] = useState<ChecklistCategory>('all');
   const [noteFilter, setNoteFilter] = useState<NoteCategory>('all');
@@ -727,9 +732,9 @@ export function ChecklistNotesTab({ trip, members, isAdmin }: Props) {
   return (
     <div className="checklist-notes-tab-root" role="region" aria-label="Collaborative Checklist, Travel Passes & Notes">
       {/* Top Segmented Controls */}
-      <div className="tab-segmented-header">
-        <div className="tab-segmented-control" role="tablist">
-          {isPassesEnabled && (
+      {isPassesEnabled && isNotesEnabled && (
+        <div className="tab-segmented-header">
+          <div className="tab-segmented-control" role="tablist">
             <button
               type="button"
               role="tab"
@@ -744,39 +749,76 @@ export function ChecklistNotesTab({ trip, members, isAdmin }: Props) {
               <span className="segment-label">Passes</span>
               <span className="segment-badge">{passes.length}</span>
             </button>
-          )}
-          <button
-            type="button"
-            role="tab"
-            aria-selected={viewMode === 'notes'}
-            className={`tab-segment-btn ${viewMode === 'notes' ? 'active' : ''}`}
-            onClick={() => {
-              triggerHaptic('light');
-              setViewMode('notes');
-            }}
-            aria-label={`Notes, ${notes.length}`}
-          >
-            <span className="segment-label">Notes</span>
-            <span className="segment-badge">{notes.length}</span>
-          </button>
-          <button
-            type="button"
-            role="tab"
-            aria-selected={viewMode === 'checklist'}
-            className={`tab-segment-btn ${viewMode === 'checklist' ? 'active' : ''}`}
-            onClick={() => {
-              triggerHaptic('light');
-              setViewMode('checklist');
-            }}
-            aria-label={`Checklist, ${completedCount} of ${totalCount} complete`}
-          >
-            <span className="segment-label">Checklist</span>
-            <span className="segment-badge">
-              {totalCount > 0 ? `${completedCount}/${totalCount}` : '0'}
-            </span>
-          </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={viewMode === 'notes'}
+              className={`tab-segment-btn ${viewMode === 'notes' ? 'active' : ''}`}
+              onClick={() => {
+                triggerHaptic('light');
+                setViewMode('notes');
+              }}
+              aria-label={`Notes, ${notes.length}`}
+            >
+              <span className="segment-label">Notes</span>
+              <span className="segment-badge">{notes.length}</span>
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={viewMode === 'checklist'}
+              className={`tab-segment-btn ${viewMode === 'checklist' ? 'active' : ''}`}
+              onClick={() => {
+                triggerHaptic('light');
+                setViewMode('checklist');
+              }}
+              aria-label={`Checklist, ${completedCount} of ${totalCount} complete`}
+            >
+              <span className="segment-label">Checklist</span>
+              <span className="segment-badge">
+                {totalCount > 0 ? `${completedCount}/${totalCount}` : '0'}
+              </span>
+            </button>
+          </div>
         </div>
-      </div>
+      )}
+
+      {!isPassesEnabled && isNotesEnabled && (
+        <div className="tab-segmented-header">
+          <div className="tab-segmented-control" role="tablist">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={viewMode === 'notes'}
+              className={`tab-segment-btn ${viewMode === 'notes' ? 'active' : ''}`}
+              onClick={() => {
+                triggerHaptic('light');
+                setViewMode('notes');
+              }}
+              aria-label={`Notes, ${notes.length}`}
+            >
+              <span className="segment-label">Notes</span>
+              <span className="segment-badge">{notes.length}</span>
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={viewMode === 'checklist'}
+              className={`tab-segment-btn ${viewMode === 'checklist' ? 'active' : ''}`}
+              onClick={() => {
+                triggerHaptic('light');
+                setViewMode('checklist');
+              }}
+              aria-label={`Checklist, ${completedCount} of ${totalCount} complete`}
+            >
+              <span className="segment-label">Checklist</span>
+              <span className="segment-badge">
+                {totalCount > 0 ? `${completedCount}/${totalCount}` : '0'}
+              </span>
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* 0. TRAVEL PASSES & TICKET WALLET VIEW */}
       {viewMode === 'passes' && isPassesEnabled && (
@@ -794,7 +836,7 @@ export function ChecklistNotesTab({ trip, members, isAdmin }: Props) {
       )}
 
       {/* Instant In-Tab Search Bar (for Checklist & Notes) */}
-      {viewMode !== 'passes' && (checklist.length > 0 || notes.length > 0) && (
+      {viewMode !== 'passes' && isNotesEnabled && (checklist.length > 0 || notes.length > 0) && (
         <div style={{ marginBottom: '12px' }}>
           <div className="input-icon-wrap" style={{ position: 'relative', width: '100%' }}>
             <IconSearch
@@ -859,7 +901,7 @@ export function ChecklistNotesTab({ trip, members, isAdmin }: Props) {
       )}
 
       {/* 1. CHECKLIST VIEW */}
-      {viewMode === 'checklist' && (
+      {viewMode === 'checklist' && isNotesEnabled && (
         <div className="checklist-container">
           {/* Smart Assistant Ambient Suggestion Card when checklist is empty */}
           {totalCount === 0 && isPackingEnabled && (
@@ -1225,7 +1267,7 @@ export function ChecklistNotesTab({ trip, members, isAdmin }: Props) {
       )}
 
       {/* 2. NOTES VIEW */}
-      {viewMode === 'notes' && (
+      {viewMode === 'notes' && isNotesEnabled && (
         <div className="notes-container">
           {/* Header Action Bar */}
           <div className="notes-action-bar">
@@ -1740,6 +1782,17 @@ export function ChecklistNotesTab({ trip, members, isAdmin }: Props) {
           });
         }}
       />
+      {!isNotesEnabled && !isPassesEnabled && (
+        <div className="empty-state" style={{ padding: '60px 20px', textAlign: 'center' }}>
+          <div style={{ fontSize: '36px', marginBottom: '12px' }}>🔒</div>
+          <div style={{ fontSize: '16px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '6px' }}>
+            Notes &amp; Passes Currently Inactive
+          </div>
+          <div style={{ fontSize: '13px', color: 'var(--text-secondary)', maxWidth: '320px', margin: '0 auto' }}>
+            Collaborative notes, checklists, and travel pass wallet features are safed or inactive in this release phase.
+          </div>
+        </div>
+      )}
     </div>
   );
 }

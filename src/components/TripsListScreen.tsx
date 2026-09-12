@@ -412,40 +412,42 @@ export function TripsListScreen({
             <div className="input-group">
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
                 <label className="form-label" htmlFor="new_trip_destination" style={{ marginBottom: 0 }}>
-                  Destinations & Stops (Optional)
+                  {isFeatureEnabled('enableRouteStops') ? 'Destinations & Stops (Optional)' : 'Destination (Optional)'}
                 </label>
-                <button
-                  type="button"
-                  onClick={() => {
-                    const nextId = newId();
-                    if (newTripStops.length === 0) {
-                      const firstVal = newTripDestination.trim();
-                      setNewTripStops([
-                        { id: newId(), name: firstVal || '' },
-                        { id: nextId, name: '' },
-                      ]);
-                      setNewTripDestination('');
-                    } else {
-                      setNewTripStops([...newTripStops, { id: nextId, name: '' }]);
-                    }
-                  }}
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    color: 'var(--primary-accent)',
-                    fontSize: '12px',
-                    fontWeight: 700,
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '4px',
-                  }}
-                >
-                  <span>+ Add Stop</span>
-                </button>
+                {isFeatureEnabled('enableRouteStops') && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const nextId = newId();
+                      if (newTripStops.length === 0) {
+                        const firstVal = newTripDestination.trim();
+                        setNewTripStops([
+                          { id: newId(), name: firstVal || '' },
+                          { id: nextId, name: '' },
+                        ]);
+                        setNewTripDestination('');
+                      } else {
+                        setNewTripStops([...newTripStops, { id: nextId, name: '' }]);
+                      }
+                    }}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: 'var(--primary-accent)',
+                      fontSize: '12px',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                    }}
+                  >
+                    <span>+ Add Stop</span>
+                  </button>
+                )}
               </div>
 
-              {newTripStops.length === 0 ? (
+              {newTripStops.length === 0 || !isFeatureEnabled('enableRouteStops') ? (
                 <div>
                   <input
                     id="new_trip_destination"
@@ -730,7 +732,22 @@ export function TripsListScreen({
                         <span>{stamp.top}</span>
                         <span>{stamp.bottom}</span>
                       </div>
-                      <div className="pp-dest">Trip &middot; {trip.baseCurrency}</div>
+                      <div className="pp-dest" style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                        <span>Trip &middot; {trip.baseCurrency}</span>
+                        {trip.archived ? (
+                          <span style={{ fontSize: '9px', fontWeight: 700, padding: '1px 6px', borderRadius: '4px', background: 'rgba(148, 163, 184, 0.15)', color: 'var(--text-secondary)', letterSpacing: '0.04em' }}>
+                            ARCHIVED
+                          </span>
+                        ) : trip.closed ? (
+                          <span style={{ fontSize: '9px', fontWeight: 700, padding: '1px 6px', borderRadius: '4px', background: 'rgba(99, 102, 241, 0.15)', color: '#818cf8', border: '1px solid rgba(99, 102, 241, 0.28)', letterSpacing: '0.04em' }}>
+                            🔒 CLOSED
+                          </span>
+                        ) : (
+                          <span style={{ fontSize: '9px', fontWeight: 700, padding: '1px 6px', borderRadius: '4px', background: 'rgba(16, 185, 129, 0.12)', color: '#10b981', letterSpacing: '0.04em' }}>
+                            ACTIVE
+                          </span>
+                        )}
+                      </div>
                       <h3 className="pp-name">{trip.name}</h3>
                       <div className="pp-meta">
                         {tripMembers.length} member{tripMembers.length === 1 ? '' : 's'} &middot; {expenseCount} expense{expenseCount === 1 ? '' : 's'}
@@ -790,7 +807,7 @@ export function TripsListScreen({
           isOpen={Boolean(actionSheetTrip)}
           onClose={() => setActionSheetTrip(null)}
           title={actionSheetTrip.name}
-          description={`${actionSheetTrip.destination || 'Expedition'} · ${actionSheetTrip.baseCurrency}`}
+          description={`${actionSheetTrip.destination || 'Expedition'} · ${actionSheetTrip.baseCurrency} · ${actionSheetTrip.archived ? 'Archived' : actionSheetTrip.closed ? 'Closed 🔒' : 'Active'}`}
           items={[
             {
               id: 'open',
