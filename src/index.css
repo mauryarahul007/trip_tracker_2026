@@ -446,6 +446,12 @@
 html {
   height: 100%;
   height: -webkit-fill-available;
+  /* Pin the document to the layout viewport so iOS Safari cannot pan
+     visualViewport.offsetTop when a text input (chat composer) is focused.
+     Internal scrolling stays on .tab-pane / .trip-chat-list. */
+  position: fixed;
+  inset: 0;
+  width: 100%;
   overflow: hidden;
   overscroll-behavior-y: none;
   -webkit-text-size-adjust: 100%;
@@ -471,6 +477,9 @@ body {
   height: var(--app-vh, 100dvh);
   margin: 0;
   padding: 0;
+  position: fixed;
+  inset: 0;
+  width: 100%;
   overflow: hidden;
   overscroll-behavior-y: none;
   -webkit-font-smoothing: antialiased;
@@ -5567,6 +5576,22 @@ html.capacitor-ios .trip-sheet .tab-pane {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+}
+
+/* WhatsApp-style composer: nav clearance when idle; keyboard overlay when focused.
+   max(keyboard, safe-bottom) so Android layout-resize (keyboard-height 0) still
+   clears the home indicator, while iOS overlay does not double-count it. */
+.trip-chat-composer {
+  flex-shrink: 0;
+  display: flex;
+  gap: 8px;
+  padding: 8px 14px calc(76px + var(--safe-bottom, 0px));
+  background: var(--bg-surface, #fff);
+  transition: padding-bottom 0.25s ease;
+}
+
+.trip-chat-composer.is-focused {
+  padding-bottom: calc(8px + max(var(--keyboard-height, 0px), var(--safe-bottom, 0px)));
 }
 
 /* ===============================/* ==========================================================================

@@ -27,7 +27,7 @@ export function TripChatPanel({ tripId, members, onComposerFocusChange }: Props)
   const [isSending, setIsSending] = useState(false);
   const [sendError, setSendError] = useState<string | null>(null);
   const [isInputFocused, setIsInputFocused] = useState(false);
-  const listEndRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
 
   const memberById = useMemo(() => new Map(members.map((m) => [m.id, m])), [members]);
 
@@ -53,7 +53,8 @@ export function TripChatPanel({ tripId, members, onComposerFocusChange }: Props)
   }, [tripId]);
 
   useEffect(() => {
-    listEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    const list = listRef.current;
+    if (list) list.scrollTop = list.scrollHeight;
   }, [messages.length]);
 
   const handleSend = async () => {
@@ -108,6 +109,8 @@ export function TripChatPanel({ tripId, members, onComposerFocusChange }: Props)
       }}
     >
       <div
+        ref={listRef}
+        className="trip-chat-list"
         style={{
           flex: '1 1 auto',
           overflowY: 'auto',
@@ -175,7 +178,6 @@ export function TripChatPanel({ tripId, members, onComposerFocusChange }: Props)
             );
           })
         )}
-        <div ref={listEndRef} />
       </div>
 
       {sendError && (
@@ -193,16 +195,9 @@ export function TripChatPanel({ tripId, members, onComposerFocusChange }: Props)
       )}
 
       <div
+        className={`trip-chat-composer${isInputFocused ? ' is-focused' : ''}`}
         style={{
-          flexShrink: 0,
-          display: 'flex',
-          gap: '8px',
-          padding: isInputFocused
-            ? '8px 14px calc(8px + env(safe-area-inset-bottom, 6px))'
-            : '8px 14px calc(76px + var(--safe-bottom, 0px))',
           borderTop: sendError ? 'none' : '1px solid var(--border-color)',
-          background: 'var(--bg-surface, #fff)',
-          transition: 'padding-bottom 0.25s ease',
         }}
       >
         <input
@@ -213,10 +208,8 @@ export function TripChatPanel({ tripId, members, onComposerFocusChange }: Props)
             setIsInputFocused(true);
             onComposerFocusChange?.(true);
             if (window.scrollY !== 0) window.scrollTo(0, 0);
-            setTimeout(() => {
-              listEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
-              if (window.scrollY !== 0) window.scrollTo(0, 0);
-            }, 100);
+            const list = listRef.current;
+            if (list) list.scrollTop = list.scrollHeight;
           }}
           onBlur={() => {
             setIsInputFocused(false);

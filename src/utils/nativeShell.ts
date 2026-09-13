@@ -1,6 +1,7 @@
 import { Capacitor } from '@capacitor/core';
 import { Keyboard } from '@capacitor/keyboard';
 import { StatusBar, Style } from '@capacitor/status-bar';
+import { resolveViewportCssVars } from './viewportKeyboard';
 
 // WKWebView reports env(safe-area-inset-*) as 0 on the very first paint and
 // only resolves the real geometry ~500ms later. CSS rules that read env()
@@ -25,36 +26,61 @@ function applySafeAreaVars(): void {
 
 // index.css's html/#root/.app-container anchors read --app-vh as their
 // height source (falling back to 100dvh before this runs). visualViewport
-// fires resize/scroll independent of document scroll, so it converges to
-// the real visible height on iOS Safari where bare 100dvh freezes stale
+// fires resize independent of document scroll, so it converges to the
+// real visible height on iOS Safari where bare 100dvh freezes stale
 // (see applySafeAreaVars comment above -- same root cause: this app's
 // document is intentionally overflow:hidden per decisions.md #12, so
 // Safari never gets the scroll-driven trigger dvh needs to recompute).
+//
+// Keyboard overlay (iOS Safari) must NOT shrink --app-vh -- that plus
+// WebKit's visualViewport pan is what slides the trip chrome off-screen
+// and leaves the fixed map filling the view. Overlay vs layout-resize
+// is resolved in viewportKeyboard.ts; --keyboard-height on web comes
+// from the same pass. Native Capacitor owns --keyboard-height via the
+// Keyboard plugin below, so this path does not overwrite it there.
+// visualViewport.scroll only resets window.scrollY -- rewriting --app-vh
+// on scroll caused document-wide style invalidation (decisions.md #105).
 function applyViewportHeightVar(): void {
-  const vv = window.visualViewport;
+  const root = document.documentElement.style;
+  let lastFullHeight = window.innerHeight;
+  const writeNative = Capacitor.isNativePlatform();
+
   const setVar = () => {
-    document.documentElement.style.setProperty('--app-vh', `${vv?.height ?? window.innerHeight}px`);
+    const vv = window.visualViewport;
+    const resolved = resolveViewportCssVars(
+      {
+        innerHeight: window.innerHeight,
+        visualHeight: vv?.height ?? window.innerHeight,
+        offsetTop: vv?.offsetTop ?? 0,
+      },
+      lastFullHeight,
+    );
+    lastFullHeight = resolved.lastFullHeight;
+    root.setProperty('--app-vh', `${resolved.appVh}px`);
+    if (!writeNative) {
+      root.setProperty('--keyboard-height', `${resolved.keyboardHeight}px`);
+    }
     if (window.scrollY !== 0) {
       window.scrollTo(0, 0);
     }
   };
+
+  const resetScroll = () => {
+    if (window.scrollY !== 0) {
+      window.scrollTo(0, 0);
+    }
+  };
+
   setVar();
+  const vv = window.visualViewport;
   if (vv) {
     vv.addEventListener('resize', setVar);
-    vv.addEventListener('scroll', () => {
-      if (window.scrollY !== 0) {
-        window.scrollTo(0, 0);
-      }
-    });
+    vv.addEventListener('scroll', resetScroll);
   } else {
     window.addEventListener('resize', setVar);
   }
   window.addEventListener('orientationchange', setVar);
-  window.addEventListener('scroll', () => {
-    if (window.scrollY !== 0) {
-      window.scrollTo(0, 0);
-    }
-  }, { passive: true });
+  window.addEventListener('scroll', resetScroll, { passive: true });
 }
 
 function findScrollParent(el: HTMLElement): HTMLElement | null {
@@ -84,6 +110,12 @@ function setUpKeyboardAvoidance(): void {
 
     const active = document.activeElement;
     if (!(active instanceof HTMLElement)) return;
+
+    // Chat composer is a sibling of the message scroller, not inside it --
+    // padding a scroll parent cannot lift it, and scrollIntoView pans the
+    // window on iOS (the map-takeover jump). The composer reads
+    // --keyboard-height itself.
+    if (active.closest('.trip-chat-panel')) return;
 
     const scrollParent = findScrollParent(active);
     if (scrollParent) {

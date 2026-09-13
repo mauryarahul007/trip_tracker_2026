@@ -3145,3 +3145,16 @@ This document logs all meaningful technical decisions, library choices, design p
   - Prevent downward sheet drag gestures on message content when `forceFull` is active.
 * **Trade-offs Accepted:**
   - When actively typing in chat, `.nav-tabs` is hidden off-screen; it re-appears as soon as the composer is blurred or message sent.
+
+---
+
+## 171. iOS Chat Keyboard Overlay: Freeze Layout Height, Pad Composer (v3.16.5)
+* **Context:** BUG-213 / ADR 170 still failed on real iOS Safari (WhatsApp video): tapping the chat box panned the visual viewport, collapsed `--app-vh` to the keyboard-shrunk height, and left the fixed map filling the screen. Android Chrome already looked WhatsApp-like because `interactive-widget=resizes-content` actually resizes the layout there; iOS Safari mostly ignores that meta tag and overlays instead. `scrollIntoView` on the composer, and `--keyboard-height` only being set by the Capacitor Keyboard plugin, made Safari keep hunting for the input.
+* **Decision:** Treat keyboard overlay and layout-resize as two cases. Overlay (iOS) freezes `--app-vh` at the last keyboard-closed height and sets `--keyboard-height` from visualViewport so only the composer lifts. Layout-resize (Android) follows `innerHeight` and leaves keyboard height at 0. Pin `html`/`body` with `position: fixed` so WebKit cannot pan `visualViewport.offsetTop`. Chat scrolls its own list via `scrollTop`, never `scrollIntoView`.
+* **Pattern/Implementation:**
+  - New [`src/utils/viewportKeyboard.ts`](src/utils/viewportKeyboard.ts) + tests: overlay threshold 80px so Safari chrome show/hide is ignored.
+  - [`src/utils/nativeShell.ts`](src/utils/nativeShell.ts) writes `--app-vh` / web `--keyboard-height` from that helper; native Capacitor still owns `--keyboard-height` via the Keyboard plugin. Skip pad+`scrollIntoView` when the focused node is inside `.trip-chat-panel`.
+  - [`TripChatPanel.tsx`](src/components/TripChatPanel.tsx) composer class `.is-focused` uses `max(var(--keyboard-height), var(--safe-bottom))`.
+  - Capacitor Android/iOS wrappers re-synced (`npm run cap:sync`), including the previously missing `@capacitor/local-notifications` plugin entries.
+* **Trade-offs Accepted:**
+  - `position: fixed` on `html`/`body` is the document-lock this app already intended (`overflow: hidden`, internal pane scroll). Safari address-bar chrome still updates `--app-vh` on visualViewport resize when no keyboard overlay is detected.
