@@ -6461,9 +6461,9 @@
     "actualBehavior": "Two separate share buttons (Share, Share Card) both doing the same WhatsApp hand-off.",
     "diagnostics": {},
     "createdAt": "2026-09-13T14:40:32.445Z",
-    "updatedAt": "2026-09-13T14:40:40.503Z",
+    "updatedAt": "2026-09-13T14:42:14.488Z",
     "resolvedBy": "Rahul",
     "resolvedAt": "2026-09-13T14:40:40.502Z",
-    "resolutionNote": "Removed the redundant text-only Share chip from BalancesSettlements.tsx's per-transfer action row; kept the Share Card chip (which already sends the same info as a WhatsApp-shareable image) as the single share action, gated by the same enableWhatsAppSettlementShare superadmin flag as before. handleShareReminder was kept internally since handleShareCard's error fallback still calls it. Commit hash to follow in a follow-up log update."
+    "resolutionNote": "Removed the redundant text-only Share chip from BalancesSettlements.tsx's per-transfer action row; kept the Share Card chip (which already sends the same info as a WhatsApp-shareable image) as the single share action, gated by the same enableWhatsAppSettlementShare superadmin flag as before. handleShareReminder was kept internally since handleShareCard's error fallback still calls it. Fixed in commit aef218f."
   }
 ]
