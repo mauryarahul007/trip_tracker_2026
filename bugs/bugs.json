@@ -6488,9 +6488,9 @@
     "actualBehavior": "tsc -b fails: TripMessageRow requires edited_at but the generated row shape lacks it; edit_trip_message rejected as not assignable to the RPC name union.",
     "diagnostics": {},
     "createdAt": "2026-09-13T16:25:17.116Z",
-    "updatedAt": "2026-09-13T16:25:27.041Z",
+    "updatedAt": "2026-09-13T16:26:48.465Z",
     "resolvedBy": "Rahul",
     "resolvedAt": "2026-09-13T16:25:27.040Z",
-    "resolutionNote": "Manually added edited_at to trip_messages Row/Insert/Update and an edit_trip_message entry to the Functions map in src/types/database.ts, matching the file's existing hand-written style (not a full regeneration -- tried npx supabase gen types typescript --project-id cdpdlzjwmffdtyzvbtpg first, but the generated output uses much stricter literal-union/Json typing than this file's loose conventions and broke ~40 unrelated call sites across services/*.ts; reverted that and made the targeted addition instead). Verified with the exact CI command, npm run build (tsc -b && vite build), which now passes. Commit hash to follow in a follow-up log update."
+    "resolutionNote": "Hand-added edited_at to trip_messages Row/Insert/Update and an edit_trip_message entry to the Functions map in src/types/database.ts, matching the file's existing hand-written style. Tried a full regeneration first (npx supabase gen types) but it broke ~40 unrelated call sites due to stricter literal-union/Json typing; reverted and made the targeted addition instead. Verified with npm run build (tsc -b && vite build). Fixed in commit 8bc273e."
   }
 ]
