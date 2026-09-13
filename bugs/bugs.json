@@ -6385,5 +6385,32 @@
     "resolvedBy": "claude-cli",
     "resolvedAt": "2026-09-13T09:56:11.455Z",
     "resolutionNote": "Correction: the first fix (forceFull on input onFocus) was itself buggy -- resizing TripContentSheet synchronously inside the focus handler made iOS Safari/Chrome cancel the keyboard outright (WebKit aborts keyboard-show if the focused element's containing layout changes size in the same tick as the focus gesture), which read as keyboard not appearing + map flashing back. Retargeted the trigger: sheet now forces full as soon as the Chat sub-tab becomes the active view (ChecklistNotesTab useEffect keyed on viewMode), not on input focus/blur -- by the time the user taps the input the sheet has already settled, so nothing resizes during the focus gesture. Removed the onComposerFocusChange plumbing from TripChatPanel entirely; App.tsx's forceFull state renamed chatViewActive, set via ChecklistNotesTab's onChatViewActiveChange."
+  },
+  {
+    "id": "BUG-214",
+    "title": "iOS chat input pans the whole trip screen onto the map",
+    "description": "Tapping the trip chat box on iOS Safari/WKWebView pans visualViewport, shrinks --app-vh, and leaves the fixed map filling the screen. Follow-up to BUG-213.",
+    "severity": "high",
+    "category": "ui-ux",
+    "status": "resolved",
+    "foundBy": "cursor-agent",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Open a trip on iOS Safari",
+      "open Notes then Chat",
+      "tap the chat input."
+    ],
+    "expectedBehavior": "Header stays put; message list shrinks; composer sits above the keyboard like WhatsApp.",
+    "actualBehavior": "Entire UI jumps off-screen; map fills the view behind the keyboard.",
+    "diagnostics": {},
+    "createdAt": "2026-09-13T11:42:27.755Z",
+    "updatedAt": "2026-09-13T11:42:56.283Z",
+    "resolvedBy": "cursor-agent",
+    "resolvedAt": "2026-09-13T11:42:56.282Z",
+    "resolutionNote": "v3.16.5 commit 71ebc2c: freeze --app-vh on keyboard overlay, set --keyboard-height from visualViewport on web, pin html/body, scroll chat list instead of window scrollIntoView, re-sync Android/iOS Capacitor wrappers."
   }
 ]

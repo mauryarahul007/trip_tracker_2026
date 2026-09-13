@@ -9,10 +9,10 @@
 
 | Metric | Count | Status Notes |
 | :--- | :--- | :--- |
-| **Total Tracked** | **212** | All recorded bugs across sessions |
+| **Total Tracked** | **213** | All recorded bugs across sessions |
 | **🟢 Open** | **0** | No critical blockers, 0 High |
 | **🟡 In Progress** | **0** | Active investigation or fix |
-| **✅ Resolved** | **186** | Verified & closed |
+| **✅ Resolved** | **187** | Verified & closed |
 | **⚪ Won't Fix** | **26** | Expected behavior / deferred |
 
 ---
@@ -217,6 +217,7 @@
 | **BUG-211** | Chat input caused iOS Safari/Chrome page zoom while typing | `ui-ux` | `medium` | `claude-cli` | `claude-cli` | Chat input had fontSize 13px. iOS Safari/Chrome (WebKit) auto-zooms the page on focusing any text input under 16px, then zooms back out on blur -- read as alignment changing while typing, iOS-only since Android Chrome has no focus-zoom. Bumped input font-size to 16px. |
 | **BUG-212** | Chat message silently lost on send failure (offline/network error) | `offline-sync` | `medium` | `claude-cli` | `claude-cli` | TripChatPanel handleSend swallowed sendTripMessage errors -- draft stayed but no feedback, message just never sent. Added sendError state + inline red banner distinguishing offline vs generic failure, draft preserved for retry. |
 | **BUG-213** | Chat composer exposed full map behind iOS keyboard (sheet only covers bottom 50%) | `ui-ux` | `high` | `claude-cli` | `claude-cli` | Correction: the first fix (forceFull on input onFocus) was itself buggy -- resizing TripContentSheet synchronously inside the focus handler made iOS Safari/Chrome cancel the keyboard outright (WebKit aborts keyboard-show if the focused element's containing layout changes size in the same tick as the focus gesture), which read as keyboard not appearing + map flashing back. Retargeted the trigger: sheet now forces full as soon as the Chat sub-tab becomes the active view (ChecklistNotesTab useEffect keyed on viewMode), not on input focus/blur -- by the time the user taps the input the sheet has already settled, so nothing resizes during the focus gesture. Removed the onComposerFocusChange plumbing from TripChatPanel entirely; App.tsx's forceFull state renamed chatViewActive, set via ChecklistNotesTab's onChatViewActiveChange. |
+| **BUG-214** | iOS chat input pans the whole trip screen onto the map | `ui-ux` | `high` | `cursor-agent` | `cursor-agent` | v3.16.5 commit 71ebc2c: freeze --app-vh on keyboard overlay, set --keyboard-height from visualViewport on web, pin html/body, scroll chat list instead of window scrollIntoView, re-sync Android/iOS Capacitor wrappers. |
 
 ---
 
