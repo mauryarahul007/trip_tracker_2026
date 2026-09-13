@@ -9,10 +9,10 @@
 
 | Metric | Count | Status Notes |
 | :--- | :--- | :--- |
-| **Total Tracked** | **211** | All recorded bugs across sessions |
+| **Total Tracked** | **212** | All recorded bugs across sessions |
 | **🟢 Open** | **0** | No critical blockers, 0 High |
 | **🟡 In Progress** | **0** | Active investigation or fix |
-| **✅ Resolved** | **185** | Verified & closed |
+| **✅ Resolved** | **186** | Verified & closed |
 | **⚪ Won't Fix** | **26** | Expected behavior / deferred |
 
 ---
@@ -216,6 +216,7 @@
 | **BUG-210** | Trip Chat input floated mid-screen with dead space below it | `ui-ux` | `high` | `claude-cli` | `claude-cli` | TripChatPanel.tsx root used height:'100%', but its parent .tab-pane has no explicit height (same naturally-scrolling block as Notes/Checklist), so the percentage collapsed to content height. Fixed: height: min(64dvh, 560px) (self-contained, no parent height needed), wrapped in .glass-card to match app card convention. |
 | **BUG-211** | Chat input caused iOS Safari/Chrome page zoom while typing | `ui-ux` | `medium` | `claude-cli` | `claude-cli` | Chat input had fontSize 13px. iOS Safari/Chrome (WebKit) auto-zooms the page on focusing any text input under 16px, then zooms back out on blur -- read as alignment changing while typing, iOS-only since Android Chrome has no focus-zoom. Bumped input font-size to 16px. |
 | **BUG-212** | Chat message silently lost on send failure (offline/network error) | `offline-sync` | `medium` | `claude-cli` | `claude-cli` | TripChatPanel handleSend swallowed sendTripMessage errors -- draft stayed but no feedback, message just never sent. Added sendError state + inline red banner distinguishing offline vs generic failure, draft preserved for retry. |
+| **BUG-213** | Chat composer exposed full map behind iOS keyboard (sheet only covers bottom 50%) | `ui-ux` | `high` | `claude-cli` | `claude-cli` | TripContentSheet defaults to 50% collapsed (map fills the top half). Focusing the chat input didn't change that, so an iOS keyboard covering the same bottom half squeezed chat to nothing between map and keyboard. Added forceFull prop to TripContentSheet: chat input onFocus now snaps the sheet fully open (same path the drag handle already uses), onBlur does not auto-collapse so a manual drag afterward isn't fought. Wired TripChatPanel -> ChecklistNotesTab -> App.tsx -> TripContentSheet. |
 
 ---
 

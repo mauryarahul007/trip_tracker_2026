@@ -33,6 +33,7 @@ type Props = {
   // fight a later manual tab switch.
   initialViewMode?: ViewMode | null;
   onInitialViewModeConsumed?: () => void;
+  onChatComposerFocusChange?: (focused: boolean) => void;
 };
 
 type ChecklistCategory = 'all' | 'packing' | 'documents' | 'medical' | 'general';
@@ -378,7 +379,7 @@ function NoteContentView({ content, category }: { content: string; category?: st
   return <StandardNoteRenderer content={content} category={category} />;
 }
 
-export function ChecklistNotesTab({ trip, members, isAdmin, initialViewMode, onInitialViewModeConsumed }: Props) {
+export function ChecklistNotesTab({ trip, members, isAdmin, initialViewMode, onInitialViewModeConsumed, onChatComposerFocusChange }: Props) {
   // Always select live trip from store to react to changes
   const liveTrip = useTripStore((s) => s.trips.find((t) => t.id === trip.id)) || trip;
   const {
@@ -863,7 +864,9 @@ export function ChecklistNotesTab({ trip, members, isAdmin, initialViewMode, onI
       )}
 
       {/* GROUP CHAT VIEW */}
-      {viewMode === 'chat' && isChatEnabled && <TripChatPanel tripId={liveTrip.id} members={members} />}
+      {viewMode === 'chat' && isChatEnabled && (
+        <TripChatPanel tripId={liveTrip.id} members={members} onComposerFocusChange={onChatComposerFocusChange} />
+      )}
 
       {/* Instant In-Tab Search Bar (for Checklist & Notes) */}
       {viewMode !== 'passes' && viewMode !== 'chat' && isNotesEnabled && (checklist.length > 0 || notes.length > 0) && (

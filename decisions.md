@@ -3106,3 +3106,14 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - Chat's offline handling is still just "surface the error, keep the draft" — no outbox/retry queue like expenses have. Bigger job, not done here.
   - Chat has no message edit/typing indicators/read receipts, unchanged from FEAT-055.
+
+---
+
+## 168. Chat Composer Forces Sheet Full to Escape the Map (v3.16.2)
+* **Context:** BUG-213: a real-device screenshot on iOS showed the entire screen filled with the trip map (and nothing else) after tapping the chat input, keyboard open. Root cause wasn't chat-specific: `TripContentSheet` (the Uber-style draggable bottom sheet holding every tab) defaults to 50% collapsed, so `TripMapHero` fills the top half at all times unless the sheet is dragged fully open. The iOS keyboard then covers the same bottom half the sheet occupies, squeezing chat's content to zero visible height between map and keyboard.
+* **Decision:** Force the sheet fully open (same state the drag handle already snaps to at its top extreme) the moment the chat composer gets focus, rather than leaving sheet position purely gesture-driven.
+* **Pattern/Implementation:**
+  - `TripContentSheet.tsx` gained a `forceFull?: boolean` prop and a `useEffect` keyed on it: a rising edge (false → true) calls the same `updateTopPercent(SHEET_FULL_TOP)` + `onExpandedChange`/`onFullChange` path the drag-to-full gesture already uses, so it inherits the existing spring transition and header-hiding behavior for free. Deliberately one-directional — it never force-collapses on its own, so a manual drag back down afterward isn't fought by a stale `true` prop.
+  - Threaded straight down: `TripChatPanel`'s input `onFocus`/`onBlur` → `onComposerFocusChange` → `ChecklistNotesTab`'s `onChatComposerFocusChange` → `App.tsx`'s new `chatComposerFocused` state → `TripContentSheet`'s `forceFull`.
+* **Trade-offs Accepted:**
+  - Only chat's composer triggers this; other inputs elsewhere in the app (expense form fields, member names, etc.) live inside actual modals with their own scroll-lock and don't share this bug, so they weren't touched.

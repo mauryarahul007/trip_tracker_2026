@@ -57,12 +57,20 @@ interface Props {
   // vs. any other state -- lets the caller hide the floating header, which
   // otherwise always paints above the sheet regardless of how far it's dragged.
   onFullChange?: (full: boolean) => void;
+  // Rising edge (false -> true) snaps the sheet to full, same as dragging it
+  // there by hand. Used when a text input inside the sheet gets focus (e.g.
+  // trip chat) -- at the default 50% collapsed state the sheet only covers
+  // the bottom half of the screen, so an iOS keyboard covering that half too
+  // leaves the input with nowhere to render. One-directional on purpose: it
+  // never force-collapses back down on its own, so a manual drag afterward
+  // isn't fought.
+  forceFull?: boolean;
 }
 
 // Draggable bottom sheet over the map backdrop. Starts covering half the
 // screen; swiping anywhere up on mobile expands it to 80%, snapping to whichever
 // state is nearer on release. On desktop, dragging is restricted to the handle.
-export function TripContentSheet({ children, onExpandedChange, onFullChange }: Props) {
+export function TripContentSheet({ children, onExpandedChange, onFullChange, forceFull }: Props) {
   const [topPercent, setTopPercent] = useState(SHEET_COLLAPSED_TOP);
 
   const sheetRef = useRef<HTMLDivElement | null>(null);
@@ -90,6 +98,15 @@ export function TripContentSheet({ children, onExpandedChange, onFullChange }: P
     liveTopPercentRef.current = val;
     setTopPercent(val);
   };
+
+  useEffect(() => {
+    if (!forceFull) return;
+    if (liveTopPercentRef.current === SHEET_FULL_TOP) return;
+    updateTopPercent(SHEET_FULL_TOP);
+    onExpandedChange?.(true);
+    onFullChange?.(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [forceFull]);
 
   const resetVelocityTracking = (startPercent: number) => {
     lastMoveTime.current = performance.now();

@@ -10,9 +10,10 @@ const CHAT_PUSH_PREVIEW_LENGTH = 80;
 interface Props {
   tripId: string;
   members: Member[];
+  onComposerFocusChange?: (focused: boolean) => void;
 }
 
-export function TripChatPanel({ tripId, members }: Props) {
+export function TripChatPanel({ tripId, members, onComposerFocusChange }: Props) {
   const userId = useTripStore((s) => s.userId);
   const tripName = useTripStore((s) => s.trips.find((t) => t.id === tripId)?.name) || 'Trip Tracker';
   const myMemberId = useMemo(
@@ -207,6 +208,8 @@ export function TripChatPanel({ tripId, members }: Props) {
               handleSend();
             }
           }}
+          onFocus={() => onComposerFocusChange?.(true)}
+          onBlur={() => onComposerFocusChange?.(false)}
           placeholder="Message the squad..."
           maxLength={2000}
           style={{
