@@ -16,6 +16,7 @@ type Props = {
   isNotesEnabled?: boolean;
   isPassesEnabled?: boolean;
   passesCount?: number;
+  isHidden?: boolean;
 };
 
 export function NavTabs({
@@ -28,6 +29,7 @@ export function NavTabs({
   isNotesEnabled = true,
   isPassesEnabled = true,
   passesCount = 0,
+  isHidden = false,
 }: Props) {
   const isMembersTab = activeTab === 'members';
   const navRef = useRef<HTMLElement | null>(null);
@@ -145,7 +147,7 @@ export function NavTabs({
   return (
     <nav
       ref={navRef}
-      className={`nav-tabs ${hasNotesOrPassesTab ? 'has-notes' : 'no-notes'}`}
+      className={`nav-tabs ${hasNotesOrPassesTab ? 'has-notes' : 'no-notes'} ${isHidden ? 'is-hidden' : ''}`}
       role="tablist"
       aria-label="Trip navigation tabs"
     >

@@ -240,6 +240,7 @@ export default function App() {
   // tab-switch rather than input focus -- resizing the sheet synchronously
   // inside a focus event made iOS cancel the keyboard outright.
   const [chatViewActive, setChatViewActive] = useState(false);
+  const [chatComposerFocused, setChatComposerFocused] = useState(false);
 
   useEffect(() => {
     if (activeTab === 'notes' && !hasNotesOrPassesTab) {
@@ -2365,15 +2366,15 @@ export default function App() {
               </div>
 
             <div
-              className="tab-pane"
+              className={`tab-pane ${activeTab === 'notes' && chatViewActive ? 'chat-tab-pane' : ''}`}
               style={
-                activeTab === 'notes' && hasNotesOrPassesTab ? { display: 'block', ...tabSwipe.activePaneStyle }
+                activeTab === 'notes' && hasNotesOrPassesTab ? { display: chatViewActive ? 'flex' : 'block', flexDirection: 'column', ...tabSwipe.activePaneStyle }
                 : tabSwipe.previewTab === 'notes' && hasNotesOrPassesTab ? { display: 'block', ...tabSwipe.previewPaneStyle }
                 : { display: 'none' }
               }
             >
               <TabErrorBoundary label="Notes & Checklist">
-              <div className="fade-in">
+              <div className={`fade-in ${chatViewActive ? 'chat-fade-fill' : ''}`}>
                 {activeTrip && hasVisitedNotes && hasNotesOrPassesTab && (
                   <Suspense fallback={<LuggageTagSkeleton count={2} />}>
                   <ChecklistNotesTab
@@ -2383,6 +2384,7 @@ export default function App() {
                     initialViewMode={pendingNotesView}
                     onInitialViewModeConsumed={() => setPendingNotesView(null)}
                     onChatViewActiveChange={setChatViewActive}
+                    onChatComposerFocusChange={setChatComposerFocused}
                   />
                   </Suspense>
                 )}
@@ -2458,6 +2460,7 @@ export default function App() {
             isNotesEnabled={isNotesEnabled}
             isPassesEnabled={isPassesEnabled}
             passesCount={activeTrip?.passes?.length || 0}
+            isHidden={chatComposerFocused && activeTab === 'notes'}
           />
         </div>
       )}

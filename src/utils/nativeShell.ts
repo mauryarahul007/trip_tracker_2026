@@ -34,14 +34,27 @@ function applyViewportHeightVar(): void {
   const vv = window.visualViewport;
   const setVar = () => {
     document.documentElement.style.setProperty('--app-vh', `${vv?.height ?? window.innerHeight}px`);
+    if (window.scrollY !== 0) {
+      window.scrollTo(0, 0);
+    }
   };
   setVar();
   if (vv) {
     vv.addEventListener('resize', setVar);
+    vv.addEventListener('scroll', () => {
+      if (window.scrollY !== 0) {
+        window.scrollTo(0, 0);
+      }
+    });
   } else {
     window.addEventListener('resize', setVar);
   }
   window.addEventListener('orientationchange', setVar);
+  window.addEventListener('scroll', () => {
+    if (window.scrollY !== 0) {
+      window.scrollTo(0, 0);
+    }
+  }, { passive: true });
 }
 
 function findScrollParent(el: HTMLElement): HTMLElement | null {

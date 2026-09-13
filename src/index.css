@@ -446,6 +446,7 @@
 html {
   height: 100%;
   height: -webkit-fill-available;
+  overflow: hidden;
   overscroll-behavior-y: none;
   -webkit-text-size-adjust: 100%;
 }
@@ -2139,7 +2140,14 @@ html.capacitor-ios .tab-pane {
   gap: 4px;
   flex-shrink: 0;
   z-index: 50;
-  transition: background-color 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+  transition: transform 0.28s var(--ease-uber-spring), opacity 0.22s ease, background-color 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+  will-change: transform, opacity;
+}
+
+.nav-tabs.is-hidden {
+  transform: translate(-50%, calc(100% + 40px + var(--safe-bottom, 0px))) !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
 }
 
 /* Dynamically balance nav bar when Notes & Passes are disabled:
@@ -5528,6 +5536,37 @@ html.capacitor-ios .tab-pane {
 }
 html.capacitor-ios .trip-sheet .tab-pane {
   padding-top: 8px;
+}
+
+/* Chat View Mode within TripContentSheet -- flexes cleanly to available height above keyboard */
+.tab-pane.chat-tab-pane {
+  display: flex !important;
+  flex-direction: column !important;
+  flex: 1 1 0% !important;
+  min-height: 0 !important;
+  height: 100% !important;
+  padding-bottom: 0 !important;
+  padding-left: max(10px, var(--safe-left, 10px)) !important;
+  padding-right: max(10px, var(--safe-right, 10px)) !important;
+  overflow: hidden !important;
+}
+
+.fade-in.chat-fade-fill {
+  flex: 1 1 0%;
+  min-height: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.checklist-notes-tab-root.is-chat-mode {
+  flex: 1 1 0%;
+  min-height: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 /* ===============================/* ==========================================================================

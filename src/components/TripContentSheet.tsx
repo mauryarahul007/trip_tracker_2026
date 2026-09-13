@@ -277,7 +277,7 @@ export function TripContentSheet({ children, onExpandedChange, onFullChange, for
           (currentTop === SHEET_COLLAPSED_TOP && dy < 0) || // Swiping up when collapsed
           (currentTop === SHEET_EXPANDED_TOP && dy < 0 && isScrollAtTop) || // Continue up to full
           (currentTop === SHEET_EXPANDED_TOP && dy > 0 && isScrollAtTop) || // Back down to collapsed
-          (currentTop === SHEET_FULL_TOP && dy > 0 && isScrollAtTop); // Back down from full
+          (!forceFull && currentTop === SHEET_FULL_TOP && dy > 0 && isScrollAtTop); // Back down from full (only when not forceFull)
 
         if (shouldDrag) {
           isDraggingRef.current = true;

@@ -34,6 +34,7 @@ type Props = {
   initialViewMode?: ViewMode | null;
   onInitialViewModeConsumed?: () => void;
   onChatViewActiveChange?: (active: boolean) => void;
+  onChatComposerFocusChange?: (focused: boolean) => void;
 };
 
 type ChecklistCategory = 'all' | 'packing' | 'documents' | 'medical' | 'general';
@@ -379,7 +380,7 @@ function NoteContentView({ content, category }: { content: string; category?: st
   return <StandardNoteRenderer content={content} category={category} />;
 }
 
-export function ChecklistNotesTab({ trip, members, isAdmin, initialViewMode, onInitialViewModeConsumed, onChatViewActiveChange }: Props) {
+export function ChecklistNotesTab({ trip, members, isAdmin, initialViewMode, onInitialViewModeConsumed, onChatViewActiveChange, onChatComposerFocusChange }: Props) {
   // Always select live trip from store to react to changes
   const liveTrip = useTripStore((s) => s.trips.find((t) => t.id === trip.id)) || trip;
   const {
@@ -823,7 +824,7 @@ export function ChecklistNotesTab({ trip, members, isAdmin, initialViewMode, onI
   };
 
   return (
-    <div className="checklist-notes-tab-root" role="region" aria-label="Collaborative Checklist, Travel Passes & Notes">
+    <div className={`checklist-notes-tab-root ${viewMode === 'chat' ? 'is-chat-mode' : ''}`} role="region" aria-label="Collaborative Checklist, Travel Passes & Notes">
       {/* Top Segmented Controls */}
       {(() => {
         const segments: { id: ViewMode; label: string; badge: string }[] = [];
@@ -876,7 +877,7 @@ export function ChecklistNotesTab({ trip, members, isAdmin, initialViewMode, onI
 
       {/* GROUP CHAT VIEW */}
       {viewMode === 'chat' && isChatEnabled && (
-        <TripChatPanel tripId={liveTrip.id} members={members} />
+        <TripChatPanel tripId={liveTrip.id} members={members} onComposerFocusChange={onChatComposerFocusChange} />
       )}
 
       {/* Instant In-Tab Search Bar (for Checklist & Notes) */}

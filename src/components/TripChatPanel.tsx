@@ -10,9 +10,10 @@ const CHAT_PUSH_PREVIEW_LENGTH = 80;
 interface Props {
   tripId: string;
   members: Member[];
+  onComposerFocusChange?: (focused: boolean) => void;
 }
 
-export function TripChatPanel({ tripId, members }: Props) {
+export function TripChatPanel({ tripId, members, onComposerFocusChange }: Props) {
   const userId = useTripStore((s) => s.userId);
   const tripName = useTripStore((s) => s.trips.find((t) => t.id === tripId)?.name) || 'Trip Tracker';
   const myMemberId = useMemo(
@@ -25,6 +26,7 @@ export function TripChatPanel({ tripId, members }: Props) {
   const [isLoading, setIsLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
   const [sendError, setSendError] = useState<string | null>(null);
+  const [isInputFocused, setIsInputFocused] = useState(false);
   const listEndRef = useRef<HTMLDivElement>(null);
 
   const memberById = useMemo(() => new Map(members.map((m) => [m.id, m])), [members]);
@@ -93,13 +95,16 @@ export function TripChatPanel({ tripId, members }: Props) {
 
   return (
     <div
-      className="glass-card"
+      className="glass-card trip-chat-panel"
       style={{
         display: 'flex',
         flexDirection: 'column',
-        height: 'min(64dvh, 560px)',
+        flex: '1 1 0%',
+        minHeight: 0,
+        height: '100%',
         overflow: 'hidden',
         padding: 0,
+        borderRadius: '16px 16px 0 0',
       }}
     >
       <div
@@ -192,15 +197,31 @@ export function TripChatPanel({ tripId, members }: Props) {
           flexShrink: 0,
           display: 'flex',
           gap: '8px',
-          padding: '10px 14px calc(10px + env(safe-area-inset-bottom, 8px))',
+          padding: isInputFocused
+            ? '8px 14px calc(8px + env(safe-area-inset-bottom, 6px))'
+            : '8px 14px calc(76px + var(--safe-bottom, 0px))',
           borderTop: sendError ? 'none' : '1px solid var(--border-color)',
           background: 'var(--bg-surface, #fff)',
+          transition: 'padding-bottom 0.25s ease',
         }}
       >
         <input
           type="text"
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
+          onFocus={() => {
+            setIsInputFocused(true);
+            onComposerFocusChange?.(true);
+            if (window.scrollY !== 0) window.scrollTo(0, 0);
+            setTimeout(() => {
+              listEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+              if (window.scrollY !== 0) window.scrollTo(0, 0);
+            }, 100);
+          }}
+          onBlur={() => {
+            setIsInputFocused(false);
+            onComposerFocusChange?.(false);
+          }}
           onKeyDown={(e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
               e.preventDefault();
@@ -216,11 +237,6 @@ export function TripChatPanel({ tripId, members }: Props) {
             border: '1px solid var(--border-color)',
             background: 'var(--bg-surface-elevated, rgba(0,0,0,0.02))',
             color: 'var(--text-primary)',
-            // 16px minimum -- iOS Safari/Chrome (WebKit) auto-zooms the whole
-            // page on focusing a text input with a computed font-size below
-            // 16px, then zooms back out on blur. That zoom-in/out is what
-            // reads as "alignment completely changes while typing" and is
-            // iOS-only since Android Chrome has no such focus-zoom behavior.
             fontSize: '16px',
           }}
         />

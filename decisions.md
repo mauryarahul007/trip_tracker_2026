@@ -3129,3 +3129,19 @@ This document logs all meaningful technical decisions, library choices, design p
   - `App.tsx`'s `forceFull` state renamed `chatComposerFocused` → `chatViewActive` for accuracy, wired the same way into `TripContentSheet`'s existing `forceFull` prop (that part of #168 needed no changes, only what triggers it).
 * **Trade-offs Accepted:**
   - The sheet now expands the instant you open the Chat sub-tab, even if you never touch the input -- a deliberate trade (matches how the map is irrelevant to a chat conversation anyway) to guarantee the resize never overlaps a focus gesture.
+
+---
+
+## 170. Fix iOS Virtual Keyboard Chat Viewport Displacement & Document Scroll (v3.16.4)
+* **Context:** BUG-213 on real iOS devices (WhatsApp video evidence): when tapping the chat input in Mobile Safari or WKWebView, the entire UI (header, tabs, chat card, bottom nav) was displaced off-screen, revealing the full fixed Leaflet map backdrop behind the keyboard. Root cause:
+  1. `TripChatPanel` had a hardcoded `height: min(64dvh, 560px)` nested inside `.tab-pane` (which had `padding-bottom: 104px` for `.nav-tabs`), placing the input at Y ~ 650px. When the virtual keyboard opened, the visual viewport shrank to ~450px. WebKit detected the input was obscured and forcefully scrolled `window.scrollY` up by ~300px.
+  2. `--app-vh` shrank to `visualViewport.height` (~450px). With `window.scrollY = 300px`, the resized app container was scrolled 300px off the top of the viewport. Because `.trip-map-hero` is `position: fixed; inset: 0;`, the background map filled the entire screen.
+  3. Swiping down on chat messages when at top of scroll would also trigger `TripContentSheet`'s downward drag, pulling the sheet back down to 50% map view.
+* **Decision:**
+  - Make `TripChatPanel` fill `flex: 1 1 0%` of available sheet height rather than a fixed 560px block.
+  - In chat mode, `.tab-pane` and its wrappers switch to `display: flex; flex-direction: column; overflow: hidden; padding-bottom: 0`, preventing nested scroll containers and eliminating dead bottom padding.
+  - Add `onComposerFocusChange`: when the chat input is focused, smoothly hide `.nav-tabs` (`translateY(120%)`) and switch the composer bar's padding to sit directly above the keyboard. When blurred, `.nav-tabs` slides back up and composer padding clears it.
+  - Guard `applyViewportHeightVar()` in `nativeShell.ts` so whenever WebKit attempts to scroll `window.scrollY > 0`, it resets to `(0, 0)` immediately. Also set `overflow: hidden` on `html`.
+  - Prevent downward sheet drag gestures on message content when `forceFull` is active.
+* **Trade-offs Accepted:**
+  - When actively typing in chat, `.nav-tabs` is hidden off-screen; it re-appears as soon as the composer is blurred or message sent.
