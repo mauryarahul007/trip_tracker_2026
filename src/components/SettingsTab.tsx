@@ -8,6 +8,7 @@ type Props = {
   onAddCategory: (name: string, icon: string) => Promise<void>;
   onDeleteCategory: (categoryId: string, replacementCategoryId: string | null) => Promise<void>;
   onExportCsv: () => void;
+  onOpenSplitwiseImport?: () => void;
   isAdmin: boolean;
   onOpenGlobalSettings?: () => void;
   onOpenSuperadminPortal?: () => void;
@@ -50,6 +51,7 @@ export function SettingsTab({
   onAddCategory,
   onDeleteCategory,
   onExportCsv,
+  onOpenSplitwiseImport,
   isAdmin,
   themePref = 'light',
   setThemePref = () => {},
@@ -90,6 +92,7 @@ export function SettingsTab({
       onAddCategory={onAddCategory}
       onDeleteCategory={onDeleteCategory}
       onExportCsv={onExportCsv}
+      onOpenSplitwiseImport={onOpenSplitwiseImport}
       isAdmin={isAdmin}
       themePref={themePref}
       setThemePref={setThemePref}

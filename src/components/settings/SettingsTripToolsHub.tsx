@@ -1,5 +1,5 @@
 import type { Category, Trip } from '../../types';
-import { IconBell, IconFileSpreadsheet, IconTag, IconTrash } from '../Icons';
+import { IconBell, IconFileSpreadsheet, IconTag, IconTrash, IconUpload } from '../Icons';
 import { SettingsCell } from '../common/SettingsCell';
 import { triggerHaptic } from '../../utils/haptics';
 import { SettingsSubscreenFrame } from './SettingsNavHeader';
@@ -18,6 +18,7 @@ type Props = {
   onToggleMute: (muted: boolean) => void;
   onOpenFxRates?: () => void;
   onExportCsv?: () => void;
+  onOpenSplitwiseImport?: () => void;
   onOpenTripWrapped?: () => void;
 };
 
@@ -35,6 +36,7 @@ export function SettingsTripToolsHub({
   onToggleMute,
   onOpenFxRates,
   onExportCsv,
+  onOpenSplitwiseImport,
   onOpenTripWrapped,
 }: Props) {
   return (
@@ -162,8 +164,20 @@ export function SettingsTripToolsHub({
               title="Excel CSV Export"
               subtitle="Download settlement ledger & expense breakdown"
               badge="CSV"
-              hasDivider={false}
+              hasDivider={Boolean(onOpenSplitwiseImport)}
               onClick={onExportCsv}
+            />
+          )}
+
+          {onOpenSplitwiseImport && (
+            <SettingsCell
+              icon={<IconUpload size={18} />}
+              iconGlow="teal"
+              title="Import Splitwise CSV"
+              subtitle="Bring a Splitwise group spreadsheet into this trip"
+              badge="CSV"
+              hasDivider={false}
+              onClick={onOpenSplitwiseImport}
             />
           )}
         </div>

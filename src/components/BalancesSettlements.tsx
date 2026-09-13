@@ -9,6 +9,11 @@ import { avatarColorForName } from '../utils/avatarColor';
 import { initial } from '../utils/initials';
 import { triggerHaptic } from '../utils/haptics';
 import { UpiPaymentModal } from './UpiPaymentModal';
+import {
+  canvasToPngFile,
+  drawSettlementShareCard,
+  getSettlementShareCardLayout,
+} from '../utils/settlementShareCard';
 import { BoardingPassHeroCard } from './BoardingPassHeroCard';
 import { StickyBalanceBar } from './StickyBalanceBar';
 import { ConfettiBurst } from './ConfettiBurst';
@@ -55,6 +60,7 @@ type TransferRowProps = {
   activeTripExpenses: Expense[];
   members: Record<string, Member>;
   onMemberClick?: (memberId: string) => void;
+  isShareCardEnabled?: boolean;
 };
 
 interface MemberAuditDetails {
@@ -160,6 +166,7 @@ function TransferRow({
   activeTripExpenses,
   members,
   onMemberClick,
+  isShareCardEnabled,
 }: Omit<TransferRowProps, 'isSettled'> & { isSettled?: boolean }) {
   const settleAmount = parseFloat(customValue) || t.amount;
   const [showAudit, setShowAudit] = useState(false);
@@ -248,6 +255,64 @@ function TransferRow({
       copyToClipboard();
       const waUrl = `https://wa.me/?text=${encodeURIComponent(shareText)}`;
       window.open(waUrl, '_blank');
+    }
+  };
+
+  const handleShareCard = async () => {
+    triggerHaptic('light');
+    const input = {
+      tripName: tripName || 'Trip',
+      fromLabel: t.fromLabel,
+      toLabel: t.toLabel,
+      amount: settleAmount,
+      currencySymbol,
+      upiId: members[t.toMemberId]?.upiId || null,
+    };
+    const layout = getSettlementShareCardLayout(input);
+    const shareText = layout.caption;
+    const downloadPng = (file: File) => {
+      const url = URL.createObjectURL(file);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = file.name;
+      link.click();
+      URL.revokeObjectURL(url);
+    };
+    const openWhatsApp = () => {
+      window.open(`https://wa.me/?text=${encodeURIComponent(shareText)}`, '_blank');
+    };
+
+    try {
+      const canvas = document.createElement('canvas');
+      canvas.width = layout.width;
+      canvas.height = layout.height;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) throw new Error('no canvas');
+      drawSettlementShareCard(ctx, input);
+      const file = await canvasToPngFile(canvas, layout.fileName);
+      const nav = navigator as Navigator & { canShare?: (data: ShareData) => boolean };
+      if (typeof navigator.share === 'function') {
+        const payload: ShareData = { title: 'Trip settlement', text: shareText, files: [file] };
+        if (!nav.canShare || nav.canShare(payload)) {
+          try {
+            await navigator.share(payload);
+            return;
+          } catch (err) {
+            if ((err as Error).name === 'AbortError') return;
+          }
+        }
+        try {
+          await navigator.share({ title: 'Trip settlement', text: shareText });
+        } catch {
+          openWhatsApp();
+        }
+        downloadPng(file);
+        return;
+      }
+      downloadPng(file);
+      openWhatsApp();
+    } catch {
+      void handleShareReminder();
     }
   };
 
@@ -673,6 +738,30 @@ function TransferRow({
             <IconShare size={12} />
             <span>{shareCopied ? 'Copied!' : 'Share'}</span>
           </button>
+          {isShareCardEnabled && (
+            <button
+              type="button"
+              className="traveler-settlement-action-chip"
+              style={{
+                padding: '5px 10px',
+                borderRadius: '9999px',
+                fontSize: '11.5px',
+                fontWeight: 600,
+                background: 'transparent',
+                border: '1px solid var(--border-color)',
+                color: 'var(--text-secondary)',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '4px',
+                cursor: 'pointer',
+              }}
+              onClick={() => { void handleShareCard(); }}
+              title="Share a settlement card image via WhatsApp"
+            >
+              <IconShare size={12} />
+              <span>Card</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -799,6 +888,7 @@ export function BalancesSettlements({
   // UpiPaymentModal owns its own Back/Escape stack — do not double-register here
 
   const isUpiEnabled = useTripStore((s) => s.isFeatureEnabled('enableUpiPayments', { tripId: trip.id }));
+  const isShareCardEnabled = useTripStore((s) => s.isFeatureEnabled('enableWhatsAppSettlementShare', { tripId: trip.id }));
 
   const setCustom = (rowKey: string, v: string) => setCustomAmounts({ ...customAmounts, [rowKey]: v });
   const toggleCustomOpen = (rowKey: string) => setCustomOpenKeys({ ...customOpenKeys, [rowKey]: !customOpenKeys[rowKey] });
@@ -1057,6 +1147,7 @@ export function BalancesSettlements({
                           activeTripExpenses={activeTripExpenses}
                           members={members}
                           onMemberClick={onMemberClick}
+                          isShareCardEnabled={isShareCardEnabled}
                         />
                       );
                     })}
@@ -1096,6 +1187,7 @@ export function BalancesSettlements({
                           activeTripExpenses={activeTripExpenses}
                           members={members}
                           onMemberClick={onMemberClick}
+                          isShareCardEnabled={isShareCardEnabled}
                         />
                       );
                     })}

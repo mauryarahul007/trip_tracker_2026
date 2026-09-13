@@ -93,6 +93,7 @@ interface SettingsViewProps {
   onAddCategory: (name: string, icon: string) => Promise<void>;
   onDeleteCategory: (categoryId: string, replacementCategoryId: string | null) => Promise<void>;
   onExportCsv?: () => void;
+  onOpenSplitwiseImport?: () => void;
   isAdmin?: boolean;
 
   // Global settings properties
@@ -142,6 +143,7 @@ export function SettingsView({
   onAddCategory,
   onDeleteCategory,
   onExportCsv,
+  onOpenSplitwiseImport,
   isAdmin = true,
   themePref,
   setThemePref,
@@ -703,6 +705,7 @@ export function SettingsView({
         onOpenFxRates={isFeatureEnabled('enableCurrencyFx', { tripId: activeTrip.id, userId: userId || undefined }) ? onOpenFxRates : undefined}
         onOpenTripWrapped={isFeatureEnabled('enableTripWrapped', { tripId: activeTrip.id, userId: userId || undefined }) ? onOpenTripWrapped : undefined}
         onExportCsv={onExportCsv}
+        onOpenSplitwiseImport={isFeatureEnabled('enableSplitwiseImport', { tripId: activeTrip.id, userId: userId || undefined }) ? onOpenSplitwiseImport : undefined}
       />
     );
   } else if (visibleScreen === 'categories' && isFeatureEnabled('enableKeywordTagging')) {
@@ -853,6 +856,7 @@ export function SettingsView({
     'close', 'reopen', 'lock', 'unlock', 'complete', 'completed', 'completion', 'settled', 'unsettled', 'outstanding', 'balances', 'debts', 'post trip', 'finish', 'archive trip'
   ));
   const showCsvExport = Boolean(hasActiveTrip && activeTrip && onExportCsv && matchesSearch('Excel CSV Export', 'spreadsheet', 'download', 'ledger', 'csv', 'sheets'));
+  const showSplitwiseImport = Boolean(hasActiveTrip && activeTrip && onOpenSplitwiseImport && isFeatureEnabled('enableSplitwiseImport', { tripId: activeTrip.id, userId: userId || undefined }) && matchesSearch('Import Splitwise CSV', 'splitwise', 'import', 'csv'));
   const isFxEnabled = isFeatureEnabled('enableCurrencyFx', { tripId: activeTrip?.id, userId: userId || undefined });
   const showFxSearch = Boolean(onOpenFxRates && isFxEnabled && matchesSearch('Multi-Currency FX Engine', 'rates', 'fx', 'forex', 'currency', 'exchange'));
   const isWrappedEnabled = isFeatureEnabled('enableTripWrapped', { tripId: activeTrip?.id, userId: userId || undefined });
@@ -861,7 +865,7 @@ export function SettingsView({
   const isSnapshotEnabled = isFeatureEnabled('enableOfflineSnapshot');
   const showSnapshotSearch = Boolean(onOpenOfflineSnapshot && isSnapshotEnabled && matchesSearch('Offline Snapshot (.triptracker)', 'snapshot', 'offline', 'backup', 'triptracker'));
   const showGallerySearch = Boolean(onOpenMediaGallery && matchesSearch('Receipts & Memories Gallery', 'gallery', 'photos', 'receipts', 'memories'));
-  const showTripTools = showCategories || showRecycleBin || showMute || showFxSearch || showCsvExport || showWrappedSearch;
+  const showTripTools = showCategories || showRecycleBin || showMute || showFxSearch || showCsvExport || showSplitwiseImport || showWrappedSearch;
   const showTripGroup = showTripStatus || showInvite || showTripTools || showCloseTrip;
 
   const showAppearance = matchesSearch('Appearance', 'theme', 'dark', 'light', 'night', 'auto', 'color', 'look');

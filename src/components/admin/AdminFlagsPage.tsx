@@ -52,6 +52,7 @@ function OverridePanel({
     { id: 'phase2', label: 'Phase 2: Active Group Collab', icon: '🎙️' },
     { id: 'phase3', label: 'Phase 3: Smart Travel Navigator', icon: '🧭' },
     { id: 'phase4', label: 'Phase 4: FinTech Pro & Global Suite', icon: '💎' },
+    { id: 'phase5', label: 'Phase 5: Switch, Speed & Trust', icon: '🔁' },
     { id: 'deferred', label: 'Platform Extras & Unphased Features', icon: '⚙️' },
   ];
 
@@ -225,6 +226,7 @@ export function AdminFlagsPage({ trips, members }: Props) {
     phase2: false,
     phase3: false,
     phase4: false,
+    phase5: false,
     deferred: false,
   });
 

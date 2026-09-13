@@ -907,5 +907,21 @@
     "shippedAt": "2026-09-13T09:20:29.980Z",
     "shippedBy": "claude-cli",
     "shippedNote": "handleOpenNotification in NotificationsPanel.tsx now calls onNavigate(n) after switching trip (if cross-trip), always closing the panel. App.tsx's handleNotificationNavigate maps notification.data.type to a Tab: expense_* -> ledger, member_* -> members, settlement_* -> expenses (Summary), chat_message -> notes tab + auto-opens its Chat sub-view via a new initialViewMode prop on ChecklistNotesTab, consumed once so it does not fight a later manual switch."
+  },
+  {
+    "id": "FEAT-058",
+    "title": "Phase 5 flag-gated conversion: Splitwise import, WhatsApp settle card, clone-last, remember split, settlement date/note",
+    "description": "Adds release phase 5 (Switch, Speed & Trust) with five flags default OFF: enableSplitwiseImport, enableWhatsAppSettlementShare, enableCloneLastExpense, enableRememberDefaultSplit, enableSettlementDateNote. Splitwise CSV import into active trip, settlement PNG share card, clone-last expense prefills, remembered default split in localStorage, and settlement date/note via ConfirmDialog without schema change.",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "cursor-agent",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-09-13T13:27:13.960Z",
+    "updatedAt": "2026-09-13T13:27:13.960Z",
+    "shippedAt": "2026-09-13T13:27:13.960Z",
+    "shippedBy": "cursor-agent",
+    "shippedNote": "Shipped"
   }
 ]

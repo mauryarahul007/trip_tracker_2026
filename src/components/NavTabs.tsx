@@ -10,6 +10,7 @@ type Props = {
   activeTab: Tab;
   setActiveTab: (tab: Tab) => void;
   onAddExpense: () => void;
+  onCloneLastExpense?: () => void;
   onAddMember?: () => void;
   expenseCount?: number;
   tripDestination?: string;
@@ -23,6 +24,7 @@ export function NavTabs({
   activeTab,
   setActiveTab,
   onAddExpense,
+  onCloneLastExpense,
   onAddMember,
   expenseCount,
   tripDestination,
@@ -97,6 +99,10 @@ export function NavTabs({
     longPressTimer.current = setTimeout(() => {
       longPressFired.current = true;
       triggerHaptic('medium');
+      if (onCloneLastExpense && !isMembersTab) {
+        onCloneLastExpense();
+        return;
+      }
       try {
         if (typeof localStorage !== 'undefined') {
           localStorage.removeItem(STORAGE_KEY);
@@ -226,7 +232,7 @@ export function NavTabs({
           onMouseEnter={isMembersTab ? undefined : prefetchExpenseForm}
           onClick={handleFabClick}
           aria-label={isMembersTab ? (onAddMember ? 'Add Member' : 'Add Member (admins only)') : 'Add expense'}
-          title={isMembersTab ? (onAddMember ? 'Add Member' : 'Add Member (admins only)') : 'Add expense'}
+          title={isMembersTab ? (onAddMember ? 'Add Member' : 'Add Member (admins only)') : (onCloneLastExpense ? 'Add expense · long-press to copy last' : 'Add expense')}
         >
           <IconPlus size={24} />
         </button>

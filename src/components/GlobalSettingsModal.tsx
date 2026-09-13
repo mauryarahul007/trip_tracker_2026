@@ -45,6 +45,7 @@ type Props = {
   onAddCategory?: (name: string, icon: string) => Promise<void>;
   onDeleteCategory?: (categoryId: string, replacementCategoryId: string | null) => Promise<void>;
   onExportCsv?: () => void;
+  onOpenSplitwiseImport?: () => void;
   isAdmin?: boolean;
   onOpenShareTrip?: () => void;
   onNavigateToBalances?: () => void;
@@ -87,6 +88,7 @@ export function GlobalSettingsModal({
   onAddCategory,
   onDeleteCategory,
   onExportCsv,
+  onOpenSplitwiseImport,
   isAdmin = true,
   onOpenShareTrip,
   baseCurrency,
@@ -228,6 +230,7 @@ export function GlobalSettingsModal({
           onAddCategory={onAddCategory || (async () => {})}
           onDeleteCategory={onDeleteCategory || (async () => {})}
           onExportCsv={onExportCsv}
+          onOpenSplitwiseImport={onOpenSplitwiseImport}
           isAdmin={isAdmin}
           themePref={themePref}
           setThemePref={setThemePref}

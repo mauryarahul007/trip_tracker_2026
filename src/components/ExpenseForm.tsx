@@ -22,6 +22,8 @@ import { useEscapeKey } from '../utils/useEscapeKey';
 import { RollingNumber } from './common/RollingNumber';
 import { detectDuplicateExpense } from '../utils/duplicateExpenseDetector';
 import { getPredictiveQuickChips } from '../utils/predictiveExpenses';
+import { loadDefaultSplit, saveDefaultSplit } from '../utils/defaultSplit';
+import { getLatestNonSettlementExpense } from '../utils/lastExpense';
 
 // Minimal Web Speech API surface -- not in the default TS DOM lib, and
 // vendor-prefixed on most browsers that support it (Chrome/Edge/Safari).
@@ -59,6 +61,16 @@ function formatAmountDisplay(raw: string): string {
   return decPart !== undefined ? `${withCommas}.${decPart}` : withCommas;
 }
 
+export type ExpenseFormTemplate = {
+  title?: string;
+  category?: string;
+  amount?: number;
+  paidBy?: string;
+  splitMode?: SplitMode;
+  splitMemberIds?: string[];
+  splitConfig?: Record<string, number>;
+};
+
 type Props = {
   trip: Trip | undefined;
   visibleMembers: Member[];
@@ -80,10 +92,8 @@ type Props = {
     location?: ExpenseLocation | null;
   }) => Promise<{ success: boolean; error?: string }>;
   onCancel: () => void;
-  initialTemplate?: { title?: string; category?: string };
+  initialTemplate?: ExpenseFormTemplate;
 };
-
-
 
 export function ExpenseForm({
   trip,
@@ -101,19 +111,29 @@ export function ExpenseForm({
   const [title, setTitle] = useState(editingExpense?.title || initialTemplate?.title || '');
   const [isListening, setIsListening] = useState(false);
   const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
-  const [amount, setAmount] = useState(editingExpense ? String(editingExpense.amount) : '');
+  const [amount, setAmount] = useState(
+    editingExpense ? String(editingExpense.amount) : (initialTemplate?.amount != null ? String(initialTemplate.amount) : '')
+  );
   const [category, setCategory] = useState(
     editingExpense?.category ||
     (initialTemplate?.category && categories.some((c) => c.id === initialTemplate.category) ? initialTemplate.category : (categories[0]?.id || ''))
   );
   const [date, setDate] = useState(editingExpense?.date || getTodayDateString());
-  const [payer, setPayer] = useState(editingExpense?.paidBy || (visibleMembers[0]?.id || ''));
-  const [splitMode, setSplitMode] = useState<SplitMode>((editingExpense?.splitMode as SplitMode) || 'equal');
+  const [payer, setPayer] = useState(
+    editingExpense?.paidBy
+    || (initialTemplate?.paidBy && visibleMembers.some((m) => m.id === initialTemplate.paidBy) ? initialTemplate.paidBy : (visibleMembers[0]?.id || ''))
+  );
+  const [splitMode, setSplitMode] = useState<SplitMode>(
+    (editingExpense?.splitMode as SplitMode) || initialTemplate?.splitMode || 'equal'
+  );
   
   const [selectedSplitMembers, setSelectedSplitMembers] = useState<Record<string, boolean>>(() => {
     const initialSplit: Record<string, boolean> = {};
     if (editingExpense) {
       editingExpense.splitMemberIds.forEach((id) => { initialSplit[id] = true; });
+    } else if (initialTemplate?.splitMemberIds && initialTemplate.splitMemberIds.length > 0) {
+      visibleMembers.forEach((m) => { initialSplit[m.id] = false; });
+      initialTemplate.splitMemberIds.forEach((id) => { initialSplit[id] = true; });
     } else {
       visibleMembers.forEach((m) => { initialSplit[m.id] = true; });
     }
@@ -122,8 +142,9 @@ export function ExpenseForm({
 
   const [splitConfig, setSplitConfig] = useState<Record<string, string>>(() => {
     const initialConfig: Record<string, string> = {};
-    if (editingExpense?.splitConfig) {
-      Object.entries(editingExpense.splitConfig).forEach(([id, val]) => {
+    const source = editingExpense?.splitConfig || initialTemplate?.splitConfig;
+    if (source) {
+      Object.entries(source).forEach(([id, val]) => {
         initialConfig[id] = String(val);
       });
     }
@@ -236,8 +257,30 @@ export function ExpenseForm({
         if (draft.selectedSplitMembers) setSelectedSplitMembers(draft.selectedSplitMembers);
         if (draft.splitConfig) setSplitConfig(draft.splitConfig);
         setIsDraftRestored(true);
+        return;
       }
     } catch {}
+
+    if (initialTemplate?.splitMemberIds && initialTemplate.splitMemberIds.length > 0) return;
+    if (!trip?.id) return;
+    const rememberOn = useTripStore.getState().isFeatureEnabled('enableRememberDefaultSplit', { tripId: trip.id });
+    if (!rememberOn) return;
+    const stored = loadDefaultSplit(trip.id);
+    if (!stored) return;
+    const allowed = new Set(visibleMembers.map((m) => m.id));
+    const ids = stored.splitMemberIds.filter((id) => allowed.has(id));
+    if (ids.length === 0) return;
+    const nextSplit: Record<string, boolean> = {};
+    visibleMembers.forEach((m) => { nextSplit[m.id] = ids.includes(m.id); });
+    setSelectedSplitMembers(nextSplit);
+    setSplitMode(stored.splitMode);
+    if (stored.splitConfig) {
+      const nextConfig: Record<string, string> = {};
+      Object.entries(stored.splitConfig).forEach(([id, val]) => {
+        if (allowed.has(id)) nextConfig[id] = String(val);
+      });
+      setSplitConfig(nextConfig);
+    }
   }, []);
 
   useEffect(() => {
@@ -285,6 +328,7 @@ export function ExpenseForm({
   const enableReceiptOcr = isFeatureEnabled('enableReceiptOcr');
   const enableReceiptUpload = isFeatureEnabled('enableReceiptUpload');
   const enablePredictiveChips = isFeatureEnabled('enablePredictiveChips');
+  const enableCloneLastExpense = isFeatureEnabled('enableCloneLastExpense', { tripId: trip?.id });
   const enableDuplicateDetector = isFeatureEnabled('enableDuplicateDetector');
   const enableVoiceInput = isFeatureEnabled('enableVoiceInput');
   const enableCurrencyFx = isFeatureEnabled('enableCurrencyFx', { tripId: trip?.id });
@@ -298,6 +342,34 @@ export function ExpenseForm({
     if (!enablePredictiveChips) return [];
     return getPredictiveQuickChips(categories, allTripExpenses);
   }, [enablePredictiveChips, categories, allTripExpenses]);
+
+  const lastExpense = useMemo(
+    () => getLatestNonSettlementExpense(allTripExpenses, trip?.id),
+    [allTripExpenses, trip?.id]
+  );
+
+  const applyLastExpense = () => {
+    if (!lastExpense) return;
+    triggerHaptic('light');
+    setTitle(lastExpense.title);
+    setAmount(String(lastExpense.amount));
+    if (categories.some((c) => c.id === lastExpense.category)) setCategory(lastExpense.category);
+    setDate(getTodayDateString());
+    if (visibleMembers.some((m) => m.id === lastExpense.paidBy)) setPayer(lastExpense.paidBy);
+    setSplitMode(lastExpense.splitMode);
+    const nextSplit: Record<string, boolean> = {};
+    visibleMembers.forEach((m) => {
+      nextSplit[m.id] = lastExpense.splitMemberIds.includes(m.id);
+    });
+    setSelectedSplitMembers(nextSplit);
+    const nextConfig: Record<string, string> = {};
+    if (lastExpense.splitConfig) {
+      Object.entries(lastExpense.splitConfig).forEach(([id, val]) => {
+        nextConfig[id] = String(val);
+      });
+    }
+    setSplitConfig(nextConfig);
+  };
 
   // Snapshot initial expense IDs on mount so we never match against newly submitted/optimistic items
   const initialExpenseIdsRef = useRef<Set<string> | null>(null);
@@ -694,6 +766,23 @@ export function ExpenseForm({
         try {
           sessionStorage.removeItem(DRAFT_KEY);
         } catch {}
+        if (
+          !editingExpense &&
+          trip?.id &&
+          useTripStore.getState().isFeatureEnabled('enableRememberDefaultSplit', { tripId: trip.id })
+        ) {
+          const rememberedConfig: Record<string, number> = {};
+          if (splitMode === 'percentage' || splitMode === 'exact') {
+            splitSelectedIds.forEach((id) => {
+              rememberedConfig[id] = parseFloat(splitConfig[id] || '') || 0;
+            });
+          }
+          saveDefaultSplit(trip.id, {
+            splitMode,
+            splitMemberIds: splitSelectedIds,
+            splitConfig: Object.keys(rememberedConfig).length > 0 ? rememberedConfig : undefined,
+          });
+        }
       }
     } finally {
       setIsSubmitting(false);
@@ -1178,7 +1267,7 @@ export function ExpenseForm({
         </div>
 
         {/* Smart Predictive Quick-Chips */}
-        {!editingExpense && predictiveChips.length > 0 && (
+        {!editingExpense && (predictiveChips.length > 0 || (enableCloneLastExpense && lastExpense)) && (
           <div
             style={{
               display: 'flex',
@@ -1190,6 +1279,28 @@ export function ExpenseForm({
               WebkitOverflowScrolling: 'touch',
             }}
           >
+            {enableCloneLastExpense && lastExpense && (
+              <button
+                type="button"
+                onClick={applyLastExpense}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '5px',
+                  padding: '5px 11px',
+                  borderRadius: '9999px',
+                  fontSize: '11.5px',
+                  fontWeight: 600,
+                  background: 'var(--bg-surface-hover, rgba(255, 255, 255, 0.07))',
+                  color: 'var(--text-primary)',
+                  border: '1px solid var(--border-color)',
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                Copy last
+              </button>
+            )}
             {predictiveChips.map((chip) => {
               const isSelected = title.trim().toLowerCase() === chip.title.trim().toLowerCase();
               return (

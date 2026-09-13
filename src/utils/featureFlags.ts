@@ -58,6 +58,22 @@ export const RELEASE_PHASES: ReleasePhaseDef[] = [
     ],
   },
   {
+    id: 'phase5',
+    phaseNumber: 5,
+    code: 'PHASE 05',
+    title: 'Switch, Speed & Trust',
+    tagline: 'Splitwise import, WhatsApp settle cards, faster logging, dated settlements',
+    description: 'Convert groups from Splitwise, share a settlement card on WhatsApp, clone the last expense, remember default splits, and record settlements with a date and note.',
+    targetAudience: 'Groups switching from Splitwise, repeat trip spenders, anyone settling over chat',
+    flagKeys: [
+      'enableSplitwiseImport',
+      'enableWhatsAppSettlementShare',
+      'enableCloneLastExpense',
+      'enableRememberDefaultSplit',
+      'enableSettlementDateNote',
+    ],
+  },
+  {
     id: 'deferred',
     phaseNumber: 0,
     code: 'EXTRAS',
@@ -255,6 +271,48 @@ export const FEATURE_FLAGS_META: Record<FeatureFlagKey, FeatureFlagMeta> = {
     defaultEnabledForUsers: true,
   },
 
+  // Phase 5: Switch, Speed & Trust (safed by default)
+  enableSplitwiseImport: {
+    key: 'enableSplitwiseImport',
+    label: 'Splitwise CSV Import',
+    description: 'Import a Splitwise group spreadsheet into the active trip with member mapping.',
+    category: 'splits',
+    phase: 'phase5',
+    defaultEnabledForUsers: false,
+  },
+  enableWhatsAppSettlementShare: {
+    key: 'enableWhatsAppSettlementShare',
+    label: 'WhatsApp Settlement Share Card',
+    description: 'Share a settlement PNG card via WhatsApp or the system share sheet.',
+    category: 'splits',
+    phase: 'phase5',
+    defaultEnabledForUsers: false,
+  },
+  enableCloneLastExpense: {
+    key: 'enableCloneLastExpense',
+    label: 'Clone Last Expense',
+    description: 'Prefill the add-expense form from the most recent trip expense (date resets to today).',
+    category: 'core',
+    phase: 'phase5',
+    defaultEnabledForUsers: false,
+  },
+  enableRememberDefaultSplit: {
+    key: 'enableRememberDefaultSplit',
+    label: 'Remember Default Split',
+    description: 'Reuse the last split mode and participants on new expenses in this trip.',
+    category: 'splits',
+    phase: 'phase5',
+    defaultEnabledForUsers: false,
+  },
+  enableSettlementDateNote: {
+    key: 'enableSettlementDateNote',
+    label: 'Settlement Date & Note',
+    description: 'Record a settlement with a chosen date and optional note on the ledger entry.',
+    category: 'splits',
+    phase: 'phase5',
+    defaultEnabledForUsers: false,
+  },
+
   // Extras & Unphased Platform Tools
   enableTripWrapped: {
     key: 'enableTripWrapped',
@@ -351,6 +409,13 @@ export const DEFAULT_FEATURE_FLAGS: Record<FeatureFlagKey, boolean> = {
   enableCurrencyFx: true,
   enableMultiTripAnalytics: true,
   enableBiometricAuth: true,
+
+  // Phase 5 (safed by default)
+  enableSplitwiseImport: false,
+  enableWhatsAppSettlementShare: false,
+  enableCloneLastExpense: false,
+  enableRememberDefaultSplit: false,
+  enableSettlementDateNote: false,
 
   // Platform Extras & Deferred
   enableTripWrapped: true,

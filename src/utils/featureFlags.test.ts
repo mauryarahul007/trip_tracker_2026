@@ -18,10 +18,10 @@ describe('featureFlags', () => {
     });
   });
 
-  it('defines 4 customer release phases plus deferred ops', () => {
-    expect(RELEASE_PHASES.length).toBe(5);
+  it('defines 5 customer release phases plus deferred ops', () => {
+    expect(RELEASE_PHASES.length).toBe(6);
     const phaseIds = RELEASE_PHASES.map((p) => p.id);
-    expect(phaseIds).toEqual(['phase1', 'phase2', 'phase3', 'phase4', 'deferred']);
+    expect(phaseIds).toEqual(['phase1', 'phase2', 'phase3', 'phase4', 'phase5', 'deferred']);
 
     RELEASE_PHASES.forEach((phase) => {
       expect(phase.flagKeys.length).toBeGreaterThan(0);
@@ -29,6 +29,22 @@ describe('featureFlags', () => {
         expect(DEFAULT_FEATURE_FLAGS).toHaveProperty(key);
       });
     });
+  });
+
+  it('keeps phase 5 conversion flags safed by default', () => {
+    expect(DEFAULT_FEATURE_FLAGS.enableSplitwiseImport).toBe(false);
+    expect(DEFAULT_FEATURE_FLAGS.enableWhatsAppSettlementShare).toBe(false);
+    expect(DEFAULT_FEATURE_FLAGS.enableCloneLastExpense).toBe(false);
+    expect(DEFAULT_FEATURE_FLAGS.enableRememberDefaultSplit).toBe(false);
+    expect(DEFAULT_FEATURE_FLAGS.enableSettlementDateNote).toBe(false);
+    const phase5Keys = getPhaseFlagKeys('phase5');
+    expect(phase5Keys).toEqual([
+      'enableSplitwiseImport',
+      'enableWhatsAppSettlementShare',
+      'enableCloneLastExpense',
+      'enableRememberDefaultSplit',
+      'enableSettlementDateNote',
+    ]);
   });
 
   it('keeps UPI payments deferred and disabled by default', () => {
@@ -127,7 +143,7 @@ describe('featureFlags', () => {
 
   it('verifies that every single flag in all phases can be enabled and disabled', () => {
     const allFlagKeys = Object.keys(DEFAULT_FEATURE_FLAGS) as (keyof typeof DEFAULT_FEATURE_FLAGS)[];
-    expect(allFlagKeys.length).toBe(29);
+    expect(allFlagKeys.length).toBe(34);
 
     allFlagKeys.forEach((flagKey) => {
       const disabledFlags = { ...DEFAULT_FEATURE_FLAGS, [flagKey]: false };

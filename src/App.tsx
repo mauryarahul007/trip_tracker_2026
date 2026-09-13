@@ -13,6 +13,8 @@ import { isMissingSupabaseEnv } from './services/supabaseClient';
 import { sendPushNotification } from './services/pushApi';
 import { fetchAppFlag } from './services/tripApi';
 import { ConfirmDialog, type ConfirmRequest } from './components/ConfirmDialog';
+import { SettlementDateNoteFields } from './components/SettlementDateNoteFields';
+import type { ExpenseFormTemplate } from './components/ExpenseForm';
 import { TabErrorBoundary } from './components/TabErrorBoundary';
 import { TripsListScreen } from './components/TripsListScreen';
 import { lazyImport } from './utils/lazyImport';
@@ -74,7 +76,7 @@ import { NotificationsPanel } from './components/NotificationsPanel';
 import { NotificationsBellButton } from './components/NotificationsBellButton';
 import { InAppNotificationBanner } from './components/InAppNotificationBanner';
 import { FitHeading } from './components/FitHeading';
-import { triggerHaptic } from './utils/haptics';
+import { getLatestNonSettlementExpense } from './utils/lastExpense';
 import { useEscapeKey } from './utils/useEscapeKey';
 import { IconCalendar, IconChevronLeft, IconChevronDown, IconChevronUp, IconShield, IconSearch, IconPlus, IconWallet, IconMapPin, IconCheck, IconMembers, IconClose, IconShare, IconSettings, IconBell, IconEdit } from './components/Icons';
 import { ActionSheet } from './components/common/ActionSheet';
@@ -107,6 +109,9 @@ const TripRouteModal = lazy(lazyImport(() =>
 ));
 const SmartExpenseQuickAddModal = lazy(lazyImport(() =>
   import('./components/SmartExpenseQuickAddModal').then((m) => ({ default: m.SmartExpenseQuickAddModal }))
+));
+const SplitwiseImportModal = lazy(lazyImport(() =>
+  import('./components/SplitwiseImportModal').then((m) => ({ default: m.SplitwiseImportModal }))
 ));
 const OfflineSnapshotModal = lazy(lazyImport(() =>
   import('./components/OfflineSnapshotModal').then((m) => ({ default: m.OfflineSnapshotModal }))
@@ -449,7 +454,10 @@ export default function App() {
   // Form states - Groups
   // Form states
   const [showAddExpense, setShowAddExpense] = useState(false);
-  const [expenseTemplate, setExpenseTemplate] = useState<{ title?: string; category?: string } | undefined>(undefined);
+  const [expenseTemplate, setExpenseTemplate] = useState<ExpenseFormTemplate | undefined>(undefined);
+  const [showSplitwiseImport, setShowSplitwiseImport] = useState(false);
+  const settleDateRef = useRef(new Date().toISOString().split('T')[0]);
+  const settleNoteRef = useRef('');
   const [activeTransitionSourceId, setActiveTransitionSourceId] = useState<string | null>(null);
   const [editingExpenseId, setEditingExpenseId] = useState<string | null>(null);
   const [selectedReviewExpense, setSelectedReviewExpense] = useState<Expense | null>(null);
@@ -645,7 +653,7 @@ export default function App() {
   }, [isSuperadmin]);
 
   // Lock background scroll when any modal is active
-  useScrollLock(Boolean(showTripActionSheet || showShareTrip || showTripWrapped || selectedReviewExpense || confirmRequest || showGlobalSettings || showAddExpense || showExpenseFilterDrawer || showSmartQuickAdd || showOfflineSnapshot || showMediaGallery));
+  useScrollLock(Boolean(showTripActionSheet || showShareTrip || showTripWrapped || selectedReviewExpense || confirmRequest || showGlobalSettings || showAddExpense || showExpenseFilterDrawer || showSmartQuickAdd || showOfflineSnapshot || showMediaGallery || showSplitwiseImport));
 
   const syncQueue = useTripStore((s) => s.syncQueue);
   const dirtyExpenseIds = useMemo(() => collectDirtyExpenseIds(syncQueue), [syncQueue]);
@@ -1441,7 +1449,7 @@ export default function App() {
     setShowAddExpense(true);
   };
 
-  const handleOpenAddExpense = (template?: { title?: string; category?: string }) => {
+  const handleOpenAddExpense = (template?: ExpenseFormTemplate) => {
     if (visibleMembers.length === 0) {
       setShowMembersRequiredNotice(true);
       setActiveTab('members');
@@ -1452,6 +1460,23 @@ export default function App() {
     setActiveTransitionSourceId(null);
     setExpenseTemplate(template);
     setShowAddExpense(true);
+  };
+
+  const handleCloneLastExpense = () => {
+    const last = getLatestNonSettlementExpense(activeTripExpenses, activeTripId);
+    if (!last) {
+      handleOpenAddExpense();
+      return;
+    }
+    handleOpenAddExpense({
+      title: last.title,
+      category: last.category,
+      amount: last.amount,
+      paidBy: last.paidBy,
+      splitMode: last.splitMode,
+      splitMemberIds: last.splitMemberIds,
+      splitConfig: last.splitConfig,
+    });
   };
 
   const handleOpenSmartQuickAdd = (autoListen = false) => {
@@ -1623,18 +1648,39 @@ export default function App() {
       ? `You are settling this partially: ${fromLabel} pays ${toLabel} ${currencySymbol}${amount.toFixed(2)} out of ${currencySymbol}${totalDebt.toFixed(2)}${payerNote}${receiverNote}. The remaining ${currencySymbol}${remaining.toFixed(2)} will stay pending to be settled. Do you want to proceed?`
       : `Mark transfer: ${fromLabel} pays ${toLabel} ${currencySymbol}${amount.toFixed(2)}${payerNote}${receiverNote} as settled?`;
     const confirmLabel = isPartial ? 'Mark Partial Settlement' : 'Mark Settled';
+    const today = new Date().toISOString().split('T')[0];
+    settleDateRef.current = today;
+    settleNoteRef.current = '';
+    const dateNoteEnabled = isFeatureEnabled('enableSettlementDateNote', {
+      tripId: activeTrip.id,
+      userId: userId || undefined,
+    });
 
     setConfirmRequest({
       title,
       message,
       confirmLabel,
+      body: dateNoteEnabled
+        ? (
+          <SettlementDateNoteFields
+            dateRef={settleDateRef}
+            noteRef={settleNoteRef}
+            defaultDate={today}
+          />
+        )
+        : undefined,
       onConfirm: () => {
+        const note = dateNoteEnabled ? settleNoteRef.current.trim() : '';
+        const date = dateNoteEnabled && settleDateRef.current ? settleDateRef.current : today;
+        const titleText = note
+          ? `Settlement: ${fromLabel} ➔ ${toLabel} — ${note}`
+          : `Settlement: ${fromLabel} ➔ ${toLabel}`;
         addExpense({
-          title: `Settlement: ${fromLabel} ➔ ${toLabel}`,
+          title: titleText,
           amount: amount,
           currency: activeTrip.baseCurrency,
           category: 'cat-misc',
-          date: new Date().toISOString().split('T')[0],
+          date,
           paidBy: fromId, // paid by debtor
           splitMode: 'exact',
           splitMemberIds: [toId], // split 100% to creditor
@@ -2357,6 +2403,7 @@ export default function App() {
                   userId={userId}
                   activeTransitionSourceId={activeTransitionSourceId}
                   onAddExpense={handleOpenAddExpense}
+                  onCloneLastExpense={isFeatureEnabled('enableCloneLastExpense', { tripId: activeTrip?.id, userId: userId || undefined }) ? handleCloneLastExpense : undefined}
                   onOpenSmartQuickAdd={isFeatureEnabled('enableVoiceInput') ? handleOpenSmartQuickAdd : undefined}
                   dirtyExpenseIds={dirtyExpenseIds}
                   conflictExpenseIds={conflictExpenseIds}
@@ -2409,6 +2456,7 @@ export default function App() {
                 onDeleteCategory={handleDeleteCategory}
                 onAddCategory={handleAddCategory}
                 onExportCsv={triggerCsvExport}
+                onOpenSplitwiseImport={isFeatureEnabled('enableSplitwiseImport', { tripId: activeTrip?.id, userId: userId || undefined }) ? () => setShowSplitwiseImport(true) : undefined}
                 isAdmin={isAdmin}
                 themePref={themePref}
                 setThemePref={setThemePref}
@@ -2454,6 +2502,7 @@ export default function App() {
             activeTab={activeTab}
             setActiveTab={setActiveTab}
             onAddExpense={handleOpenAddExpense}
+            onCloneLastExpense={isFeatureEnabled('enableCloneLastExpense', { tripId: activeTrip?.id, userId: userId || undefined }) ? handleCloneLastExpense : undefined}
             onAddMember={isAdmin ? () => setAddMemberSignal((n) => n + 1) : undefined}
             expenseCount={activeTripExpenses.length}
             tripDestination={activeTrip?.destination}
@@ -2502,7 +2551,7 @@ export default function App() {
           </div>
         }>
           <ExpenseForm
-            key={editingExpenseId || (expenseTemplate ? `${expenseTemplate.title}-${expenseTemplate.category}` : 'new')}
+            key={editingExpenseId || (expenseTemplate ? `tmpl-${expenseTemplate.title}-${expenseTemplate.amount}-${expenseTemplate.paidBy}` : 'new')}
             trip={activeTrip}
             visibleMembers={visibleMembers}
             visibleTripGroups={visibleTripGroups}
@@ -2675,6 +2724,7 @@ export default function App() {
             }}
             isAdmin={isAdmin}
             onExportCsv={triggerCsvExport}
+            onOpenSplitwiseImport={isFeatureEnabled('enableSplitwiseImport', { tripId: activeTrip?.id, userId: userId || undefined }) ? () => setShowSplitwiseImport(true) : undefined}
             baseCurrency={activeTrip ? getCurrencySymbol(activeTrip.baseCurrency) : ''}
             categories={categories}
             activeTripExpenses={activeTripExpenses}
@@ -2709,6 +2759,17 @@ export default function App() {
 
       {confirmRequest && (
         <ConfirmDialog request={confirmRequest} onCancel={() => setConfirmRequest(null)} />
+      )}
+
+      {showSplitwiseImport && activeTrip && isFeatureEnabled('enableSplitwiseImport', { tripId: activeTrip.id, userId: userId || undefined }) && (
+        <Suspense fallback={null}>
+          <SplitwiseImportModal
+            tripId={activeTrip.id}
+            members={visibleMembers}
+            categories={categories}
+            onClose={() => setShowSplitwiseImport(false)}
+          />
+        </Suspense>
       )}
 
       {pendingConflicts.length > 0 && activeTrip && (

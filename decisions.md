@@ -3158,3 +3158,21 @@ This document logs all meaningful technical decisions, library choices, design p
   - Capacitor Android/iOS wrappers re-synced (`npm run cap:sync`), including the previously missing `@capacitor/local-notifications` plugin entries.
 * **Trade-offs Accepted:**
   - `position: fixed` on `html`/`body` is the document-lock this app already intended (`overflow: hidden`, internal pane scroll). Safari address-bar chrome still updates `--app-vh` on visualViewport resize when no keyboard overlay is detected.
+
+---
+
+## 172. Flag-Gated Conversion, Speed, and Trust (Phase 5)
+* **Context:** Switching groups from Splitwise, settling over WhatsApp, logging the same chai again, and recording *when/how* a payment happened were the lightest upgrades that compete with WhatsApp+UPI without a new architecture. Each needed to ship independently so Ops can arm one without the rest.
+* **Decision:** Add customer **phase 5** ("Switch, Speed & Trust") with five flags, all **default OFF** (same pattern as `enableTripChat`). Implement the surfaces behind `isFeatureEnabled`; leave existing settle / text-share / Duplicate / equal-all split unchanged when a flag is safed.
+* **Pattern/Implementation:**
+  - Flags: `enableSplitwiseImport`, `enableWhatsAppSettlementShare`, `enableCloneLastExpense`, `enableRememberDefaultSplit`, `enableSettlementDateNote` in [`src/types/admin.ts`](src/types/admin.ts) + [`src/utils/featureFlags.ts`](src/utils/featureFlags.ts). Admin Flags stays data-driven.
+  - Splitwise: parse group CSV (`src/utils/splitwiseImport.ts`), preview + member map in `SplitwiseImportModal`, import into the **active trip** via existing `addMember` / `addExpense`. Payment rows skipped by default. No Splitwise API.
+  - Settlement card: canvas PNG + `navigator.share({ files })` with `wa.me` + download fallback (`src/utils/settlementShareCard.ts`), extra **Card** chip on the transfer row. Existing text Share stays ungated.
+  - Clone last: opens Add Expense **prefilled**, date = today. Review → Duplicate still writes immediately and stays ungated. FAB long-press clones when the flag is on.
+  - Remembered split: versioned `localStorage` key `tt-default-split:v1:{tripId}`. Applied on blank new-expense forms only; clone template and drafts win.
+  - Settlement date/note: extra fields in existing `ConfirmDialog` body. Date on `expense.date`; note appended to title (`Settlement: A ➔ B — paid via UPI`). No schema change.
+* **Trade-offs Accepted:**
+  - Flags stay off until Superadmin arms them — conversion features are not a surprise for existing trips.
+  - Splitwise import is CSV-only, current-trip only, sequential writes. Good enough for typical group ledgers; not a live sync.
+  - Settlement notes live in the title suffix so filters that already key on `Settlement:` keep working without a `notes` column.
+

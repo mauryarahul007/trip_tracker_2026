@@ -24,6 +24,12 @@ export type FeatureFlagKey =
   | 'enableCurrencyFx'
   | 'enableMultiTripAnalytics'
   | 'enableBiometricAuth'
+  // Phase 5: Switch, Speed & Trust
+  | 'enableSplitwiseImport'
+  | 'enableWhatsAppSettlementShare'
+  | 'enableCloneLastExpense'
+  | 'enableRememberDefaultSplit'
+  | 'enableSettlementDateNote'
   // Deferred & Admin Ops
   | 'enableUpiPayments'
   | 'enableAdvancedLocationSearch'
@@ -34,11 +40,11 @@ export type FeatureFlagKey =
   | 'enableAchievements'
   | 'enableOfflineSnapshot';
 
-export type ReleasePhaseId = 'phase1' | 'phase2' | 'phase3' | 'phase4' | 'deferred';
+export type ReleasePhaseId = 'phase1' | 'phase2' | 'phase3' | 'phase4' | 'phase5' | 'deferred';
 
 export interface ReleasePhaseDef {
   id: ReleasePhaseId;
-  phaseNumber: 1 | 2 | 3 | 4 | 0;
+  phaseNumber: 1 | 2 | 3 | 4 | 5 | 0;
   code: string;
   title: string;
   tagline: string;

@@ -738,6 +738,7 @@
 .ops-phase-badge.phase2 { color: #818cf8; background: rgba(129, 140, 248, 0.12); }
 .ops-phase-badge.phase3 { color: #34d399; background: rgba(52, 211, 153, 0.12); }
 .ops-phase-badge.phase4 { color: #fbbf24; background: rgba(251, 191, 36, 0.12); }
+.ops-phase-badge.phase5 { color: #fb7185; background: rgba(251, 113, 133, 0.12); }
 .ops-phase-badge.deferred { color: var(--text-tertiary); background: var(--bg-inset); }
 
 .ops-phase-name { font-size: 15px; font-weight: 700; color: var(--text-primary); }

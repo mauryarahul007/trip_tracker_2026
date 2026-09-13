@@ -117,6 +117,7 @@ type Props = {
   userId: string | null;
   activeTransitionSourceId?: string | null;
   onAddExpense?: (template?: { title?: string; category?: string }) => void;
+  onCloneLastExpense?: () => void;
   onOpenSmartQuickAdd?: (autoListen?: boolean) => void;
   dirtyExpenseIds?: Set<string>;
   conflictExpenseIds?: Set<string>;
@@ -162,6 +163,7 @@ export function ExpenseList({
   userId,
   activeTransitionSourceId,
   onAddExpense,
+  onCloneLastExpense,
   onOpenSmartQuickAdd,
   dirtyExpenseIds,
   conflictExpenseIds,
@@ -458,6 +460,18 @@ export function ExpenseList({
                   >
                     All
                   </button>
+                  {onCloneLastExpense && (
+                    <button
+                      type="button"
+                      className="filter-chip"
+                      onClick={() => {
+                        triggerHaptic('light');
+                        onCloneLastExpense();
+                      }}
+                    >
+                      Copy last
+                    </button>
+                  )}
                   {categories.map((c) => (
                     <button
                       key={c.id}
