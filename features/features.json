@@ -923,5 +923,21 @@
     "shippedAt": "2026-09-13T13:27:13.960Z",
     "shippedBy": "cursor-agent",
     "shippedNote": "Shipped in v3.17.0 (1f21096)"
+  },
+  {
+    "id": "FEAT-059",
+    "title": "Settlements section on Expenses page",
+    "description": "Superadmin flag enableSettlementDateNote lets users capture a date+note when settling a debt, but once settled there was no dedicated place to review that history -- settlement records were mixed anonymously into the day-grouped expense list on the Expenses (ledger) tab, styled identically to a real expense. Added a separate collapsible 'Settlements' section below the expense day-groups on the same page (ExpenseList.tsx), reusing the existing day-card/row rendering (now extracted into shared renderExpenseRow/renderDayGroupCard helpers) so settlement history is easy to find without digging through daily expense entries.",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "Rahul",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-09-13T14:31:52.166Z",
+    "updatedAt": "2026-09-13T14:31:52.166Z",
+    "shippedAt": "2026-09-13T14:31:52.166Z",
+    "shippedBy": "Rahul",
+    "shippedNote": "Shipped in ExpenseList.tsx: settlements split out of the day-grouped expense list into their own collapsible history section"
   }
 ]

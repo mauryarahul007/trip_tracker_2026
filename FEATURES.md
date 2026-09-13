@@ -9,11 +9,11 @@
 
 | Metric | Count |
 | :--- | :--- |
-| **Total Tracked** | **58** |
+| **Total Tracked** | **59** |
 | **💡 Requested** | **2** |
 | **📋 Planned** | **0** |
 | **🟡 In Progress** | **0** |
-| **✅ Shipped** | **56** |
+| **✅ Shipped** | **57** |
 | **⚪ Won't Do** | **0** |
 
 ---
@@ -108,6 +108,7 @@ CI pipeline for lint, build, and test on push/PR
 | **FEAT-056** | ICS Calendar Export for travel passes | `ui-ux` | `claude-cli` | `claude-cli` | Export flight/train/hotel passes as an RFC 5545 .ics file, importable into Google/Apple/Outlook/Samsung Calendar. Pure client-side (src/utils/icsExport.ts) from existing trip.passes data, download button in TravelPassWalletView.tsx. Gated behind enableIcsExport flag, default OFF. |
 | **FEAT-057** | Notification tap routes to relevant tab (expenses, members, chat, settlements) | `ui-ux` | `claude-cli` | `claude-cli` | handleOpenNotification in NotificationsPanel.tsx now calls onNavigate(n) after switching trip (if cross-trip), always closing the panel. App.tsx's handleNotificationNavigate maps notification.data.type to a Tab: expense_* -> ledger, member_* -> members, settlement_* -> expenses (Summary), chat_message -> notes tab + auto-opens its Chat sub-view via a new initialViewMode prop on ChecklistNotesTab, consumed once so it does not fight a later manual switch. |
 | **FEAT-058** | Phase 5 flag-gated conversion: Splitwise import, WhatsApp settle card, clone-last, remember split, settlement date/note | `ui-ux` | `cursor-agent` | `cursor-agent` | Shipped in v3.17.0 (1f21096) |
+| **FEAT-059** | Settlements section on Expenses page | `ui-ux` | `Rahul` | `Rahul` | Shipped in ExpenseList.tsx: settlements split out of the day-grouped expense list into their own collapsible history section |
 
 ---
 

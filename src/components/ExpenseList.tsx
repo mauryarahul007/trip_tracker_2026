@@ -238,22 +238,30 @@ export function ExpenseList({
   // Expenses already arrive newest date first, so the first N groups
   // encountered are the most recent days -- expand those by default,
   // collapse the rest.
-  const dayGroups = displayedExpenses.reduce<{ date: string; expenses: Expense[] }[]>((groups, exp) => {
-    const lastGroup = groups[groups.length - 1];
-    if (lastGroup && lastGroup.date === exp.date) {
-      lastGroup.expenses.push(exp);
-    } else {
-      groups.push({ date: exp.date, expenses: [exp] });
-    }
-    return groups;
-  }, []);
-
   const isActualExpense = (e: Expense) => !e.isSettlement && !e.title.startsWith('Settlement:');
 
+  const groupByDay = (list: Expense[]) =>
+    list.reduce<{ date: string; expenses: Expense[] }[]>((groups, exp) => {
+      const lastGroup = groups[groups.length - 1];
+      if (lastGroup && lastGroup.date === exp.date) {
+        lastGroup.expenses.push(exp);
+      } else {
+        groups.push({ date: exp.date, expenses: [exp] });
+      }
+      return groups;
+    }, []);
+
+  // Settlements get their own section below the day-grouped expenses (see
+  // "Settlements" render block) instead of being mixed into a day's
+  // expense group -- keeps both lists homogeneous.
+  const actualDisplayed = displayedExpenses.filter(isActualExpense);
+  const settlementsDisplayed = displayedExpenses.filter((e) => !isActualExpense(e));
+  const dayGroups = groupByDay(actualDisplayed);
+  const settlementGroups = groupByDay(settlementsDisplayed);
+
   const avgDailySpend = useMemo(() => {
-    // Only calculate average daily spend across actual expenses, excluding debt settlements
     const dailyTotals = dayGroups
-      .map((g) => g.expenses.filter(isActualExpense).reduce((sum, e) => sum + e.amount, 0))
+      .map((g) => g.expenses.reduce((sum, e) => sum + e.amount, 0))
       .filter((tot) => tot > 0);
     if (dailyTotals.length === 0) return 0;
     const total = dailyTotals.reduce((acc, t) => acc + t, 0);
@@ -304,6 +312,283 @@ export function ExpenseList({
         )
         .map((e) => e.id)
     : [];
+
+  // Shared row renderer -- used by both the expense day-groups and the
+  // Settlements day-groups below, so swipe/avatar/currency-toggle/needs-
+  // review markup isn't duplicated between the two sections.
+  const renderExpenseRow = (exp: Expense, idx: number, siblingCount: number) => {
+    const isPending = exp.id === pendingDeleteId;
+    const isDirty = dirtyExpenseIds?.has(exp.id) ?? false;
+    const isConflict = conflictExpenseIds?.has(exp.id) ?? false;
+    const canManage = isAdmin || exp.createdByUserId === userId;
+    const isPayerDeleted = trip ? !trip.memberIds.includes(exp.paidBy) : false;
+    const hasDeletedParticipants = trip ? exp.splitMemberIds.some((id) => !trip.memberIds.includes(id)) : false;
+    const needsReview = isPayerDeleted || hasDeletedParticipants;
+    const payerMember = members[exp.paidBy];
+    const cat = categories.find((c) => c.id === exp.category);
+    const splitMembers = exp.splitMemberIds.map((id) => ({ id, member: members[id] }));
+    const visibleSplitMembers = splitMembers.slice(0, 4);
+    const overflowSplitCount = splitMembers.length - visibleSplitMembers.length;
+    const categoryAccentColor = needsReview ? 'var(--color-warning)' : getCatColor(exp.category, 0);
+
+    // Shown only when it differs from the full amount --
+    // otherwise it's just noise repeating the line total.
+    const myShare = myMemberId ? exp.resolvedShares[myMemberId] : undefined;
+    const showMyShare = typeof myShare === 'number' && Math.abs(myShare - exp.amount) > 0.01;
+
+    const reviewMessage = isPayerDeleted && hasDeletedParticipants
+      ? 'Payer and a split member were removed — reassign the payer and update the split.'
+      : isPayerDeleted
+        ? 'Payer was removed — assign a new payer.'
+        : 'A split member was removed — update the split.';
+
+    return (
+      <div
+        key={exp.id}
+        aria-hidden={isPending}
+        className="expense-item-cascade"
+        style={{
+          borderBottom: idx < siblingCount - 1 ? '1.5px dashed var(--border-color)' : 'none',
+          opacity: isPending ? 0.35 : 1,
+          pointerEvents: isPending ? 'none' : undefined,
+          transition: 'opacity 0.25s ease',
+          // Skip layout/paint for off-screen rows -- cheap
+          // substitute for list virtualization at this scale.
+          contentVisibility: 'auto',
+          containIntrinsicSize: '0 84px',
+          ['--item-index' as string]: Math.min(idx, 15),
+        }}
+      >
+        <ConditionalSwipe
+          enabled={canManage}
+          onDelete={() => onDelete(exp)}
+          onEdit={exp.title.startsWith('Settlement:') ? undefined : () => onEdit(exp)}
+        >
+          <div
+            style={{
+              display: 'flex', flexDirection: 'column', gap: '6px',
+              padding: '12px 14px',
+              borderLeft: `3.5px solid ${categoryAccentColor}`,
+              background: needsReview ? 'rgba(185, 138, 62, 0.07)' : undefined,
+            }}
+          >
+            <div
+              style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}
+              onClick={() => { triggerHaptic('light'); onReview(exp); }}
+            >
+              <div
+                style={{
+                  width: '32px',
+                  height: '32px',
+                  borderRadius: '8px',
+                  background: `${categoryAccentColor}18`,
+                  color: categoryAccentColor,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                }}
+              >
+                <CategoryIcon categoryId={cat?.id || ''} fallbackEmoji={cat?.icon || '🏷️'} size={16} />
+              </div>
+              <h4 style={{ flex: 1, minWidth: 0, fontSize: '15px', lineHeight: 1.3, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '5px', viewTransitionName: activeTransitionSourceId === exp.id ? 'expense-shared-title' : undefined }}>
+                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{exp.title}</span>
+                {(exp.receiptImage || exp.receiptPath) && (
+                  <span style={{ fontSize: '11px', flexShrink: 0, opacity: 0.85 }} title="Photo receipt attached">📸</span>
+                )}
+                {isConflict ? (
+                  <span style={{ fontSize: '10px', flexShrink: 0, opacity: 0.9 }} title="Sync conflict — choose which version to keep" aria-label="Sync conflict">⚠️</span>
+                ) : isDirty ? (
+                  <span style={{ fontSize: '10px', flexShrink: 0, opacity: 0.8 }} title="Pending sync" aria-label="Pending sync">🔄</span>
+                ) : null}
+              </h4>
+              {(() => {
+                const isForeign = Boolean(
+                  exp.currency &&
+                  trip?.baseCurrency &&
+                  exp.currency.trim().toUpperCase() !== trip.baseCurrency.trim().toUpperCase()
+                );
+                const isShowingForeign = isForeign && !!toggledCurrencyExpenseIds[exp.id];
+                const convertedForeign = isForeign
+                  ? convertCurrency(exp.amount, trip?.baseCurrency || 'INR', exp.currency)
+                  : null;
+                const displayAmount = isShowingForeign && convertedForeign
+                  ? convertedForeign.convertedAmount
+                  : exp.amount;
+                const displaySymbol = isShowingForeign
+                  ? getCurrencySymbol(exp.currency)
+                  : currencySymbol;
+
+                return (
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', flexShrink: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <span className="money" style={{ fontSize: '15px', fontWeight: '600', color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
+                        {formatAmount(displayAmount, displaySymbol)}
+                      </span>
+                      {isForeign && (
+                        <button
+                          type="button"
+                          onClick={(e) => handleToggleExpenseCurrency(e, exp.id)}
+                          aria-label={`Switch between ${trip?.baseCurrency} and ${exp.currency}`}
+                          title={`Logged in ${exp.currency}. Tap to toggle between ${trip?.baseCurrency} and ${exp.currency}`}
+                          style={{
+                            background: isShowingForeign ? 'var(--primary-accent)' : 'rgba(255,255,255,0.08)',
+                            color: isShowingForeign ? '#fff' : 'var(--text-muted)',
+                            border: '1px solid var(--border-color)',
+                            borderRadius: '8px',
+                            fontSize: '10px',
+                            fontWeight: 700,
+                            padding: '1px 5px',
+                            cursor: 'pointer',
+                            lineHeight: 1.2,
+                          }}
+                        >
+                          {isShowingForeign ? exp.currency : `⇄ ${exp.currency}`}
+                        </button>
+                      )}
+                    </div>
+                    {showMyShare && (
+                      <span style={{ fontSize: '11px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
+                        your share {formatAmount(myShare as number, currencySymbol)}
+                      </span>
+                    )}
+                  </div>
+                );
+              })()}
+            </div>
+            <div
+              style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', minWidth: 0 }}
+              onClick={() => { triggerHaptic('light'); onReview(exp); }}
+              title={`Paid by ${payerMember?.name || 'a removed member'}`}
+            >
+              <ExpenseAvatar member={payerMember} size={22} muted={isPayerDeleted} />
+              <span style={{ color: 'var(--text-muted)', fontSize: '12px', flexShrink: 0 }}>→</span>
+              <div style={{ display: 'flex', flexShrink: 0 }}>
+                {visibleSplitMembers.map(({ id, member }, splitIdx) => (
+                  <div key={id} style={{ marginLeft: splitIdx === 0 ? 0 : '-8px' }}>
+                    <ExpenseAvatar member={member} size={20} muted={!member} />
+                  </div>
+                ))}
+                {overflowSplitCount > 0 && (
+                  <div
+                    style={{
+                      marginLeft: '-8px', width: '20px', height: '20px', borderRadius: '50%',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      background: 'var(--bg-surface-hover)', color: 'var(--text-secondary)',
+                      fontSize: '9.5px', fontWeight: 700, fontFamily: 'var(--font-family-mono)',
+                      border: '1.5px solid var(--bg-surface)', flexShrink: 0,
+                    }}
+                  >
+                    +{overflowSplitCount}
+                  </div>
+                )}
+              </div>
+              {exp.location?.placeName && (
+                <span style={{ color: '#00BFA5', fontSize: '12px', flexShrink: 0 }} title={exp.location.placeName}>📍</span>
+              )}
+            </div>
+            {needsReview && (
+              <div style={{
+                display: 'flex', alignItems: 'center', gap: '6px',
+                fontSize: '12px', fontWeight: 500, color: 'var(--color-warning-text)',
+              }}>
+                <IconAlertCircle size={14} className="icon-sm" />
+                <span>{reviewMessage}</span>
+              </div>
+            )}
+          </div>
+        </ConditionalSwipe>
+      </div>
+    );
+  };
+
+  // Shared day-card renderer -- used for both the expense day-groups and
+  // the Settlements day-groups. `collapseKeyPrefix` keeps the two
+  // sections' expand/collapse state independent even when a settlement
+  // happened on the same date as an expense.
+  const renderDayGroupCard = (
+    group: { date: string; expenses: Expense[] },
+    groupIdx: number,
+    opts?: { collapseKeyPrefix?: string; amountSuffix?: string; showBurn?: boolean }
+  ) => {
+    const collapseKeyPrefix = opts?.collapseKeyPrefix ?? '';
+    const collapseKey = `${collapseKeyPrefix}${group.date}`;
+    const groupDate = new Date(`${group.date}T00:00:00`);
+    const dateLabel = Number.isNaN(groupDate.getTime())
+      ? group.date
+      : groupDate.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', month: 'short' });
+    const dayNum = trip?.startDate ? tripDayNumber(trip.startDate, group.date) : null;
+    const groupLabel = dayNum ? `Day ${dayNum} · ${dateLabel}` : dateLabel;
+    const groupTotal = group.expenses.reduce((sum, e) => sum + e.amount, 0);
+    const collapsed = isDayCollapsed(collapseKey, groupIdx);
+    // Burn indicator strictly measures real expense burn rate against daily averages (never debt settlements)
+    const isHighBurn = (opts?.showBurn ?? false) && avgDailySpend > 0 && groupTotal > avgDailySpend * 1.5 && group.expenses.length > 1;
+
+    return (
+      <div key={collapseKey} className="glass-card" style={{ padding: 0, overflow: 'hidden', marginBottom: '10px' }}>
+        <div
+          role="button"
+          tabIndex={0}
+          onClick={() => toggleDay(collapseKey, groupIdx)}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleDay(collapseKey, groupIdx); } }}
+          style={{
+            position: 'sticky', top: 0, zIndex: 2,
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            gap: '10px', padding: '10px 14px', cursor: 'pointer',
+            background: 'var(--bg-surface-hover)',
+            borderBottom: collapsed ? 'none' : '1.5px solid var(--border-color)',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
+            <IconChevronRight
+              size={15}
+              className="icon-sm"
+              style={{ transition: 'transform 0.2s ease', transform: collapsed ? 'rotate(0deg)' : 'rotate(90deg)', flexShrink: 0 }}
+            />
+            <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              {groupLabel}
+            </span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+            {isHighBurn && (
+              <span
+                style={{
+                  fontSize: '10px',
+                  fontWeight: 700,
+                  padding: '1px 5px',
+                  borderRadius: '8px',
+                  background: 'rgba(239, 68, 68, 0.15)',
+                  color: 'var(--color-danger, #ef4444)',
+                  border: '1px solid rgba(239, 68, 68, 0.3)',
+                }}
+                title="High spending day (> 1.5x average daily spend)"
+              >
+                🔥 Burn
+              </span>
+            )}
+            <span
+              style={{
+                fontSize: '12px',
+                fontWeight: 600,
+                color: 'var(--text-primary)',
+                background: 'var(--bg-card)',
+                padding: '2px 8px',
+                borderRadius: '12px',
+                border: '1px solid var(--border-color)',
+              }}
+            >
+              {formatAmount(groupTotal, currencySymbol)}{opts?.amountSuffix ? ` ${opts.amountSuffix}` : ''}
+            </span>
+            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+              {group.expenses.length}
+            </span>
+          </div>
+        </div>
+
+        {!collapsed && group.expenses.map((exp, idx) => renderExpenseRow(exp, idx, group.expenses.length))}
+      </div>
+    );
+  };
 
   return (
     <div ref={wrapperRef}>
@@ -768,301 +1053,23 @@ export function ExpenseList({
               )}
             </div>
           )}
-          {dayGroups.map((group, groupIdx) => {
-            const groupDate = new Date(`${group.date}T00:00:00`);
-            const dateLabel = Number.isNaN(groupDate.getTime())
-              ? group.date
-              : groupDate.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', month: 'short' });
-            const dayNum = trip?.startDate ? tripDayNumber(trip.startDate, group.date) : null;
-            const groupLabel = dayNum ? `Day ${dayNum} · ${dateLabel}` : dateLabel;
-            const actualExpenses = group.expenses.filter(isActualExpense);
-            const settlements = group.expenses.filter((e) => !isActualExpense(e));
-            const groupExpenseTotal = actualExpenses.reduce((sum, e) => sum + e.amount, 0);
-            const settlementsTotal = settlements.reduce((sum, e) => sum + e.amount, 0);
-            const collapsed = isDayCollapsed(group.date, groupIdx);
-            // Burn indicator strictly measures real expense burn rate against daily averages (never debt settlements)
-            const isHighBurn = avgDailySpend > 0 && groupExpenseTotal > avgDailySpend * 1.5 && actualExpenses.length > 1;
+          {dayGroups.map((group, groupIdx) => renderDayGroupCard(group, groupIdx, { showBurn: true }))}
 
-            return (
-              <div key={group.date} className="glass-card" style={{ padding: 0, overflow: 'hidden', marginBottom: '10px' }}>
-                <div
-                  role="button"
-                  tabIndex={0}
-                  onClick={() => toggleDay(group.date, groupIdx)}
-                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleDay(group.date, groupIdx); } }}
-                  style={{
-                    position: 'sticky', top: 0, zIndex: 2,
-                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                    gap: '10px', padding: '10px 14px', cursor: 'pointer',
-                    background: 'var(--bg-surface-hover)',
-                    borderBottom: collapsed ? 'none' : '1.5px solid var(--border-color)',
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
-                    <IconChevronRight
-                      size={15}
-                      className="icon-sm"
-                      style={{ transition: 'transform 0.2s ease', transform: collapsed ? 'rotate(0deg)' : 'rotate(90deg)', flexShrink: 0 }}
-                    />
-                    <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                      {groupLabel}
-                    </span>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
-                    {isHighBurn && (
-                      <span
-                        style={{
-                          fontSize: '10px',
-                          fontWeight: 700,
-                          padding: '1px 5px',
-                          borderRadius: '8px',
-                          background: 'rgba(239, 68, 68, 0.15)',
-                          color: 'var(--color-danger, #ef4444)',
-                          border: '1px solid rgba(239, 68, 68, 0.3)',
-                        }}
-                        title="High spending day (> 1.5x average daily spend)"
-                      >
-                        🔥 Burn
-                      </span>
-                    )}
-                    {groupExpenseTotal > 0 ? (
-                      <span
-                        style={{
-                          fontSize: '12px',
-                          fontWeight: 600,
-                          color: 'var(--text-primary)',
-                          background: 'var(--bg-card)',
-                          padding: '2px 8px',
-                          borderRadius: '12px',
-                          border: '1px solid var(--border-color)',
-                        }}
-                      >
-                        {formatAmount(groupExpenseTotal, currencySymbol)}
-                      </span>
-                    ) : settlementsTotal > 0 ? (
-                      <span
-                        style={{
-                          fontSize: '11px',
-                          fontWeight: 500,
-                          color: 'var(--text-muted)',
-                          background: 'var(--bg-card)',
-                          padding: '2px 7px',
-                          borderRadius: '10px',
-                          border: '1px solid var(--border-color)',
-                        }}
-                      >
-                        {formatAmount(settlementsTotal, currencySymbol)} settled
-                      </span>
-                    ) : (
-                      <span
-                        style={{
-                          fontSize: '12px',
-                          fontWeight: 600,
-                          color: 'var(--text-primary)',
-                          background: 'var(--bg-card)',
-                          padding: '2px 8px',
-                          borderRadius: '12px',
-                          border: '1px solid var(--border-color)',
-                        }}
-                      >
-                        {formatAmount(0, currencySymbol)}
-                      </span>
-                    )}
-                    <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-                      {actualExpenses.length > 0 ? actualExpenses.length : settlements.length}
-                      {actualExpenses.length > 0 && settlements.length > 0 ? ` (+${settlements.length}s)` : ''}
-                    </span>
-                  </div>
-                </div>
-
-                {!collapsed && group.expenses.map((exp, idx) => {
-                  const isPending = exp.id === pendingDeleteId;
-                  const isDirty = dirtyExpenseIds?.has(exp.id) ?? false;
-                  const isConflict = conflictExpenseIds?.has(exp.id) ?? false;
-                  const canManage = isAdmin || exp.createdByUserId === userId;
-                  const isPayerDeleted = trip ? !trip.memberIds.includes(exp.paidBy) : false;
-                  const hasDeletedParticipants = trip ? exp.splitMemberIds.some((id) => !trip.memberIds.includes(id)) : false;
-                  const needsReview = isPayerDeleted || hasDeletedParticipants;
-                  const payerMember = members[exp.paidBy];
-                  const cat = categories.find((c) => c.id === exp.category);
-                  const splitMembers = exp.splitMemberIds.map((id) => ({ id, member: members[id] }));
-                  const visibleSplitMembers = splitMembers.slice(0, 4);
-                  const overflowSplitCount = splitMembers.length - visibleSplitMembers.length;
-                  const categoryAccentColor = needsReview ? 'var(--color-warning)' : getCatColor(exp.category, 0);
-
-                  // Shown only when it differs from the full amount --
-                  // otherwise it's just noise repeating the line total.
-                  const myShare = myMemberId ? exp.resolvedShares[myMemberId] : undefined;
-                  const showMyShare = typeof myShare === 'number' && Math.abs(myShare - exp.amount) > 0.01;
-
-                  const reviewMessage = isPayerDeleted && hasDeletedParticipants
-                    ? 'Payer and a split member were removed — reassign the payer and update the split.'
-                    : isPayerDeleted
-                      ? 'Payer was removed — assign a new payer.'
-                      : 'A split member was removed — update the split.';
-
-                  return (
-                    <div
-                      key={exp.id}
-                      aria-hidden={isPending}
-                      className="expense-item-cascade"
-                      style={{
-                        borderBottom: idx < group.expenses.length - 1 ? '1.5px dashed var(--border-color)' : 'none',
-                        opacity: isPending ? 0.35 : 1,
-                        pointerEvents: isPending ? 'none' : undefined,
-                        transition: 'opacity 0.25s ease',
-                        // Skip layout/paint for off-screen rows -- cheap
-                        // substitute for list virtualization at this scale.
-                        contentVisibility: 'auto',
-                        containIntrinsicSize: '0 84px',
-                        ['--item-index' as string]: Math.min(idx, 15),
-                      }}
-                    >
-                      <ConditionalSwipe
-                        enabled={canManage}
-                        onDelete={() => onDelete(exp)}
-                        onEdit={exp.title.startsWith('Settlement:') ? undefined : () => onEdit(exp)}
-                      >
-                        <div
-                          style={{
-                            display: 'flex', flexDirection: 'column', gap: '6px',
-                            padding: '12px 14px',
-                            borderLeft: `3.5px solid ${categoryAccentColor}`,
-                            background: needsReview ? 'rgba(185, 138, 62, 0.07)' : undefined,
-                          }}
-                        >
-                          <div
-                            style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}
-                            onClick={() => { triggerHaptic('light'); onReview(exp); }}
-                          >
-                            <div
-                              style={{
-                                width: '32px',
-                                height: '32px',
-                                borderRadius: '8px',
-                                background: `${categoryAccentColor}18`,
-                                color: categoryAccentColor,
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                flexShrink: 0,
-                              }}
-                            >
-                              <CategoryIcon categoryId={cat?.id || ''} fallbackEmoji={cat?.icon || '🏷️'} size={16} />
-                            </div>
-                            <h4 style={{ flex: 1, minWidth: 0, fontSize: '15px', lineHeight: 1.3, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '5px', viewTransitionName: activeTransitionSourceId === exp.id ? 'expense-shared-title' : undefined }}>
-                              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{exp.title}</span>
-                              {(exp.receiptImage || exp.receiptPath) && (
-                                <span style={{ fontSize: '11px', flexShrink: 0, opacity: 0.85 }} title="Photo receipt attached">📸</span>
-                              )}
-                              {isConflict ? (
-                                <span style={{ fontSize: '10px', flexShrink: 0, opacity: 0.9 }} title="Sync conflict — choose which version to keep" aria-label="Sync conflict">⚠️</span>
-                              ) : isDirty ? (
-                                <span style={{ fontSize: '10px', flexShrink: 0, opacity: 0.8 }} title="Pending sync" aria-label="Pending sync">🔄</span>
-                              ) : null}
-                            </h4>
-                            {(() => {
-                              const isForeign = Boolean(
-                                exp.currency &&
-                                trip?.baseCurrency &&
-                                exp.currency.trim().toUpperCase() !== trip.baseCurrency.trim().toUpperCase()
-                              );
-                              const isShowingForeign = isForeign && !!toggledCurrencyExpenseIds[exp.id];
-                              const convertedForeign = isForeign
-                                ? convertCurrency(exp.amount, trip?.baseCurrency || 'INR', exp.currency)
-                                : null;
-                              const displayAmount = isShowingForeign && convertedForeign
-                                ? convertedForeign.convertedAmount
-                                : exp.amount;
-                              const displaySymbol = isShowingForeign
-                                ? getCurrencySymbol(exp.currency)
-                                : currencySymbol;
-
-                              return (
-                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', flexShrink: 0 }}>
-                                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                    <span className="money" style={{ fontSize: '15px', fontWeight: '600', color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
-                                      {formatAmount(displayAmount, displaySymbol)}
-                                    </span>
-                                    {isForeign && (
-                                      <button
-                                        type="button"
-                                        onClick={(e) => handleToggleExpenseCurrency(e, exp.id)}
-                                        aria-label={`Switch between ${trip?.baseCurrency} and ${exp.currency}`}
-                                        title={`Logged in ${exp.currency}. Tap to toggle between ${trip?.baseCurrency} and ${exp.currency}`}
-                                        style={{
-                                          background: isShowingForeign ? 'var(--primary-accent)' : 'rgba(255,255,255,0.08)',
-                                          color: isShowingForeign ? '#fff' : 'var(--text-muted)',
-                                          border: '1px solid var(--border-color)',
-                                          borderRadius: '8px',
-                                          fontSize: '10px',
-                                          fontWeight: 700,
-                                          padding: '1px 5px',
-                                          cursor: 'pointer',
-                                          lineHeight: 1.2,
-                                        }}
-                                      >
-                                        {isShowingForeign ? exp.currency : `⇄ ${exp.currency}`}
-                                      </button>
-                                    )}
-                                  </div>
-                                  {showMyShare && (
-                                    <span style={{ fontSize: '11px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
-                                      your share {formatAmount(myShare as number, currencySymbol)}
-                                    </span>
-                                  )}
-                                </div>
-                              );
-                            })()}
-                          </div>
-                          <div
-                            style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', minWidth: 0 }}
-                            onClick={() => { triggerHaptic('light'); onReview(exp); }}
-                            title={`Paid by ${payerMember?.name || 'a removed member'}`}
-                          >
-                            <ExpenseAvatar member={payerMember} size={22} muted={isPayerDeleted} />
-                            <span style={{ color: 'var(--text-muted)', fontSize: '12px', flexShrink: 0 }}>→</span>
-                            <div style={{ display: 'flex', flexShrink: 0 }}>
-                              {visibleSplitMembers.map(({ id, member }, splitIdx) => (
-                                <div key={id} style={{ marginLeft: splitIdx === 0 ? 0 : '-8px' }}>
-                                  <ExpenseAvatar member={member} size={20} muted={!member} />
-                                </div>
-                              ))}
-                              {overflowSplitCount > 0 && (
-                                <div
-                                  style={{
-                                    marginLeft: '-8px', width: '20px', height: '20px', borderRadius: '50%',
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    background: 'var(--bg-surface-hover)', color: 'var(--text-secondary)',
-                                    fontSize: '9.5px', fontWeight: 700, fontFamily: 'var(--font-family-mono)',
-                                    border: '1.5px solid var(--bg-surface)', flexShrink: 0,
-                                  }}
-                                >
-                                  +{overflowSplitCount}
-                                </div>
-                              )}
-                            </div>
-                            {exp.location?.placeName && (
-                              <span style={{ color: '#00BFA5', fontSize: '12px', flexShrink: 0 }} title={exp.location.placeName}>📍</span>
-                            )}
-                          </div>
-                          {needsReview && (
-                            <div style={{
-                              display: 'flex', alignItems: 'center', gap: '6px',
-                              fontSize: '12px', fontWeight: 500, color: 'var(--color-warning-text)',
-                            }}>
-                              <IconAlertCircle size={14} className="icon-sm" />
-                              <span>{reviewMessage}</span>
-                            </div>
-                          )}
-                        </div>
-                      </ConditionalSwipe>
-                    </div>
-                  );
-                })}
+          {settlementGroups.length > 0 && (
+            <>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '18px 0 10px', padding: '0 4px' }}>
+                <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
+                  Settlements · {settlementsDisplayed.length}
+                </span>
+                <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                  {formatAmount(settlementsDisplayed.reduce((sum, e) => sum + e.amount, 0), currencySymbol)} settled
+                </span>
               </div>
-            );
-          })}
+              {settlementGroups.map((group, groupIdx) =>
+                renderDayGroupCard(group, groupIdx, { collapseKeyPrefix: 'settlement:', amountSuffix: 'settled' })
+              )}
+            </>
+          )}
         </>
       )}
 

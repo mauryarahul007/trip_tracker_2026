@@ -60,6 +60,19 @@ This document logs all meaningful technical decisions, library choices, design p
 
 ---
 
+## 6. Settlements Section on the Expenses Page (FEAT-059, v3.18.0)
+* **Context:** The superadmin flag `enableSettlementDateNote` lets users capture a date + note when settling a debt (`SettlementDateNoteFields.tsx` → `App.tsx` `handleSettle`). There is no separate settlements table -- a completed settlement is persisted as a normal `expenses` row (`isSettlement` / title `"Settlement: {from} ➔ {to}"`, optionally ` — {note}`). Previously these rows were mixed into the day-grouped expense list on the Expenses (ledger) tab, styled identically to a real expense, so there was no dedicated place to review settlement history.
+* **Decision:** Split settlement rows out of the day-grouped expense list into their own collapsible **"Settlements"** section below it, on the same Expenses page (`src/components/ExpenseList.tsx`).
+* **Pattern/Implementation:**
+  - `isActualExpense` (pre-existing) now partitions `displayedExpenses` into `actualDisplayed` / `settlementsDisplayed` before day-grouping via a shared `groupByDay()` helper, producing `dayGroups` (real expenses only) and `settlementGroups`.
+  - Extracted the previously-inline per-row JSX into `renderExpenseRow(exp, idx, siblingCount)` and the day-card shell into `renderDayGroupCard(group, groupIdx, opts)`, reused by both sections -- avoids duplicating the swipe/avatar/currency-toggle/needs-review markup (~180 lines) between expenses and settlements.
+  - Settlement day-cards get a `settlement:` collapse-state key prefix so expanding a settlement day doesn't also expand an expense day sharing the same date.
+  - No DB/schema change, no new feature flag -- the section is always shown when settlement history exists, independent of `enableSettlementDateNote` (that flag only controls capture-time date/note fields).
+* **Trade-offs Accepted:**
+  - Settlement rows still render through the same expense-row template (category icon/border etc.), which is visually generic for a settlement rather than a purpose-built settlement card. Accepted to keep the diff to one file and avoid a larger redesign for what is primarily a visibility/organization fix.
+
+---
+
 ## 6. Consistent Ordering in Group Name Auto-Generation
 * **Context:** When editing an existing group, `isGroupNameAuto` was resolving to `false` because the expected auto-generated name was mapped from raw `grp.memberIds` (e.g. `['Priya', 'Rahul']` resulting in `"Priya & Rahul"`), while the actual stored group name was created using the sorted `visibleMembers` array (resulting in `"Rahul & Priya"`). This mismatch disabled real-time name updates during edits.
 * **Decision:** Modify `handleStartEditGroup` in `App.tsx` to map member names by filtering `visibleMembers` (retaining the consistent index order) rather than mapping `grp.memberIds` directly.
