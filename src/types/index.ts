@@ -11,6 +11,7 @@ export interface TripMessage {
   memberId: string;
   body: string;
   createdAt: number;
+  editedAt?: number | null;
   deletedAt?: number | null;
 }
 

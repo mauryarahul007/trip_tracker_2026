@@ -9,11 +9,11 @@
 
 | Metric | Count |
 | :--- | :--- |
-| **Total Tracked** | **59** |
+| **Total Tracked** | **60** |
 | **💡 Requested** | **2** |
 | **📋 Planned** | **0** |
 | **🟡 In Progress** | **0** |
-| **✅ Shipped** | **57** |
+| **✅ Shipped** | **58** |
 | **⚪ Won't Do** | **0** |
 
 ---
@@ -109,6 +109,7 @@ CI pipeline for lint, build, and test on push/PR
 | **FEAT-057** | Notification tap routes to relevant tab (expenses, members, chat, settlements) | `ui-ux` | `claude-cli` | `claude-cli` | handleOpenNotification in NotificationsPanel.tsx now calls onNavigate(n) after switching trip (if cross-trip), always closing the panel. App.tsx's handleNotificationNavigate maps notification.data.type to a Tab: expense_* -> ledger, member_* -> members, settlement_* -> expenses (Summary), chat_message -> notes tab + auto-opens its Chat sub-view via a new initialViewMode prop on ChecklistNotesTab, consumed once so it does not fight a later manual switch. |
 | **FEAT-058** | Phase 5 flag-gated conversion: Splitwise import, WhatsApp settle card, clone-last, remember split, settlement date/note | `ui-ux` | `cursor-agent` | `cursor-agent` | Shipped in v3.17.0 (1f21096) |
 | **FEAT-059** | Settlements section on Expenses page | `ui-ux` | `Rahul` | `Rahul` | Shipped in ExpenseList.tsx: settlements split out of the day-grouped expense list into their own collapsible history section |
+| **FEAT-060** | WhatsApp-style edit/delete for trip chat messages | `ui-ux` | `Rahul` | `Rahul` | Shipped: TripChatPanel.tsx long-press action sheet, edit_trip_message RPC (migration 0083), realtime UPDATE handling |
 
 ---
 

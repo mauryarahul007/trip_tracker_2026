@@ -939,5 +939,21 @@
     "shippedAt": "2026-09-13T14:31:52.166Z",
     "shippedBy": "Rahul",
     "shippedNote": "Shipped in ExpenseList.tsx: settlements split out of the day-grouped expense list into their own collapsible history section"
+  },
+  {
+    "id": "FEAT-060",
+    "title": "WhatsApp-style edit/delete for trip chat messages",
+    "description": "Trip group chat previously had no way to correct a typo or remove a sent message. Added WhatsApp-style long-press (450ms, pointer-based) on a message bubble to open an action sheet with Edit and/or Delete, gated by permission: sender can edit their own message within a 15-minute window (enforced server-side by a new edit_trip_message SECURITY DEFINER RPC, migration 0083), sender or trip admin can delete anytime (admin also bypasses the edit window). Deleted messages render as a tombstone ('This message was deleted') for everyone instead of disappearing, matching WhatsApp. Edited messages show a small '· edited' label. Delete confirmation reuses the app's existing global ConfirmDialog. Realtime subscription extended to handle UPDATE events (covers both edits and soft-deletes) alongside the existing INSERT handling.",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "Rahul",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-09-13T16:17:31.959Z",
+    "updatedAt": "2026-09-13T16:17:31.959Z",
+    "shippedAt": "2026-09-13T16:17:31.959Z",
+    "shippedBy": "Rahul",
+    "shippedNote": "Shipped: TripChatPanel.tsx long-press action sheet, edit_trip_message RPC (migration 0083), realtime UPDATE handling"
   }
 ]

@@ -3209,4 +3209,17 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - "Share Card" stays gated behind `enableWhatsAppSettlementShare`. If that flag is off for a trip, the row now has no share action at all (previously "Share" was the always-available fallback). Left as-is per explicit decision -- flag gating is superadmin's call, not addressed by this fix.
 
+---
+
+## 176. WhatsApp-Style Edit/Delete for Trip Chat Messages (FEAT-060, v3.19.0)
+* **Context:** Trip group chat (`TripChatPanel.tsx`, ADR #166) had no way to correct a typo or remove a sent message. `trip_messages` (migration 0082) already had a `deleted_at` soft-delete column and a working-but-unwired `deleteTripMessage()`; there was no edit capability or `edited_at` column at all.
+* **Decision:** Long-press a message bubble (own messages, or any message if trip admin) to open an action sheet with Edit and/or Delete, matching WhatsApp's own gesture. Sender can edit within a 15-minute window; admin can edit/delete anytime; sender can also delete anytime. Deleted messages render as a tombstone ("This message was deleted") for everyone rather than disappearing.
+* **Pattern/Implementation:**
+  - Migration `0083_trip_messages_edit.sql`: adds `edited_at timestamptz`; tightens the existing "author or admin can soft-delete" UPDATE policy's `WITH CHECK` so a direct client `UPDATE` can no longer change `body` (only `deleted_at` and other non-body columns); adds a `SECURITY DEFINER` RPC `edit_trip_message(p_message_id, p_body)` that is the only path allowed to change `body` -- it enforces the 15-minute sender window (`created_at > now() - interval '15 minutes'`) and lets `is_trip_admin` bypass it, matching the pattern already used by `submit_feature_request`/`report_bug`.
+  - `tripMessagesApi.ts`: new `editTripMessage()` calling the RPC; `fetchTripMessages` no longer filters `deleted_at is null` (tombstones need to be fetched, just rendered differently); `subscribeToTripMessages` signature changed from a single `onInsert` callback to `{ onInsert, onUpdate }` -- edits and soft-deletes both arrive as Postgres `UPDATE` events on the same realtime channel.
+  - `TripChatPanel.tsx`: pointer-based long-press (450ms hold, cancels past a small move tolerance so list-scrolling doesn't misfire it) opens the existing reusable `common/ActionSheet.tsx` component (not a new bespoke popover) with Edit/Delete items computed per-message from `isAdmin`/`myMemberId`/`createdAt`, mirroring the RPC's own permission check exactly so the client never offers an action the server would then reject. Editing switches the composer into an edit state (prefilled body, "Editing message" banner, Cancel, Send label becomes Update). Delete routes through the app's single global `ConfirmDialog` via a newly-threaded `onRequestConfirm` prop (`App.tsx` -> `ChecklistNotesTab.tsx` -> `TripChatPanel.tsx`), the same instance every other destructive action in the app already uses.
+* **Trade-offs Accepted:**
+  - No edit history/audit trail is kept -- editing overwrites `body` in place, only the fact that it was edited (`edited_at`) is visible, not the prior text. Matches WhatsApp's own behavior; acceptable for a lightweight trip chat.
+  - No optimistic local update on edit/delete -- both actions wait for the realtime `UPDATE` echo to patch the UI, same pattern the existing `sendTripMessage` send flow already relies on for `INSERT`. A slow connection means a brief lag before the sender's own edit/delete visibly applies.
+
 

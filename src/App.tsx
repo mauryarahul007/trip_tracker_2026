@@ -2433,6 +2433,7 @@ export default function App() {
                     onInitialViewModeConsumed={() => setPendingNotesView(null)}
                     onChatViewActiveChange={setChatViewActive}
                     onChatComposerFocusChange={setChatComposerFocused}
+                    onRequestConfirm={setConfirmRequest}
                   />
                   </Suspense>
                 )}
