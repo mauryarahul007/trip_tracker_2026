@@ -24,6 +24,7 @@ export function TripChatPanel({ tripId, members }: Props) {
   const [draft, setDraft] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
+  const [sendError, setSendError] = useState<string | null>(null);
   const listEndRef = useRef<HTMLDivElement>(null);
 
   const memberById = useMemo(() => new Map(members.map((m) => [m.id, m])), [members]);
@@ -58,6 +59,7 @@ export function TripChatPanel({ tripId, members }: Props) {
     if (!body || !myMemberId || !userId || isSending) return;
 
     setIsSending(true);
+    setSendError(null);
     triggerHaptic('light');
     try {
       await sendTripMessage(tripId, myMemberId, body);
@@ -70,6 +72,12 @@ export function TripChatPanel({ tripId, members }: Props) {
       const preview = body.length > CHAT_PUSH_PREVIEW_LENGTH ? `${body.slice(0, CHAT_PUSH_PREVIEW_LENGTH)}…` : body;
       // Best-effort, non-blocking -- sendPushNotification never throws.
       sendPushNotification(recipients, tripName, 'chat_message', { senderName, preview }, tripId);
+    } catch {
+      // Chat has no offline outbox (unlike expenses) -- a failed send here
+      // means the message was NOT saved, so surface it instead of silently
+      // dropping the draft. Draft text is kept so the traveler can retry.
+      setSendError(navigator.onLine ? 'Message failed to send. Tap Send to retry.' : "You're offline — message will not send until you're back online.");
+      triggerHaptic('warning');
     } finally {
       setIsSending(false);
     }
@@ -77,18 +85,29 @@ export function TripChatPanel({ tripId, members }: Props) {
 
   if (!myMemberId) {
     return (
-      <div style={{ padding: '24px 16px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '13px' }}>
+      <div className="glass-card" style={{ padding: '24px 16px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '13px' }}>
         Join this trip as a member to use chat.
       </div>
     );
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
+    <div
+      className="glass-card"
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        height: 'min(64dvh, 560px)',
+        overflow: 'hidden',
+        padding: 0,
+      }}
+    >
       <div
         style={{
           flex: '1 1 auto',
           overflowY: 'auto',
+          WebkitOverflowScrolling: 'touch',
+          overscrollBehavior: 'contain',
           padding: '12px 14px',
           display: 'flex',
           flexDirection: 'column',
@@ -154,13 +173,27 @@ export function TripChatPanel({ tripId, members }: Props) {
         <div ref={listEndRef} />
       </div>
 
+      {sendError && (
+        <div
+          style={{
+            padding: '6px 14px',
+            fontSize: '11px',
+            color: '#dc2626',
+            background: 'rgba(220, 38, 38, 0.08)',
+            borderTop: '1px solid rgba(220, 38, 38, 0.2)',
+          }}
+        >
+          ⚠️ {sendError}
+        </div>
+      )}
+
       <div
         style={{
           flexShrink: 0,
           display: 'flex',
           gap: '8px',
           padding: '10px 14px calc(10px + env(safe-area-inset-bottom, 8px))',
-          borderTop: '1px solid var(--border-color)',
+          borderTop: sendError ? 'none' : '1px solid var(--border-color)',
           background: 'var(--bg-surface, #fff)',
         }}
       >
@@ -183,7 +216,12 @@ export function TripChatPanel({ tripId, members }: Props) {
             border: '1px solid var(--border-color)',
             background: 'var(--bg-surface-elevated, rgba(0,0,0,0.02))',
             color: 'var(--text-primary)',
-            fontSize: '13px',
+            // 16px minimum -- iOS Safari/Chrome (WebKit) auto-zooms the whole
+            // page on focusing a text input with a computed font-size below
+            // 16px, then zooms back out on blur. That zoom-in/out is what
+            // reads as "alignment completely changes while typing" and is
+            // iOS-only since Android Chrome has no such focus-zoom behavior.
+            fontSize: '16px',
           }}
         />
         <button

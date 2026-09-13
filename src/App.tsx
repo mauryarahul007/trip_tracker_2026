@@ -3,7 +3,7 @@ import { flushSync } from 'react-dom';
 import { useTripStore, getTripNotificationRecipients, collectDirtyExpenseIds } from './store/tripStore';
 import { useAuthStore } from './store/authStore';
 import { calculateSettlements } from './utils/settlement';
-import type { Expense, Trip, Group, Member, TripStop } from './types';
+import type { Expense, Trip, Group, Member, TripStop, AppNotification } from './types';
 import { exportTripToCSV } from './utils/csvExport';
 import { fetchPlaceCoverImage } from './services/placeImageService';
 
@@ -226,6 +226,12 @@ export default function App() {
   const [activeTab, setActiveTabRaw] = useState<Tab>('expenses');
   const mainContentRef = useRef<HTMLElement>(null);
 
+  // Set only for notification types whose destination is a sub-tab inside
+  // the Notes pane (currently just chat) rather than a top-level Tab --
+  // consumed once by ChecklistNotesTab via onInitialViewModeConsumed so it
+  // doesn't override a later manual sub-tab switch.
+  const [pendingNotesView, setPendingNotesView] = useState<'chat' | null>(null);
+
   useEffect(() => {
     if (activeTab === 'notes' && !hasNotesOrPassesTab) {
       setActiveTabRaw('expenses');
@@ -259,6 +265,38 @@ export default function App() {
       flushSync(() => setActiveTabRaw(tab));
     });
   }, []);
+
+  // Tapping a notification should land the traveler on the screen it's
+  // actually about, not just mark it read and leave them wherever they were.
+  // Trip switching (if the notification belongs to a different trip) is
+  // handled by the caller (NotificationsPanel) before this runs.
+  const handleNotificationNavigate = useCallback((notification: AppNotification) => {
+    const type = notification.data?.type;
+    switch (type) {
+      case 'expense_added':
+      case 'expense_updated':
+      case 'expense_deleted':
+      case 'expense_restored':
+        setActiveTab('ledger');
+        break;
+      case 'member_added':
+      case 'member_added_notice':
+      case 'member_joined':
+        setActiveTab('members');
+        break;
+      case 'settlement':
+      case 'settle':
+      case 'settlement_reminder':
+        setActiveTab('expenses');
+        break;
+      case 'chat_message':
+        setActiveTab('notes');
+        setPendingNotesView('chat');
+        break;
+      default:
+        break;
+    }
+  }, [setActiveTab]);
 
   // Right-hand-friendly horizontal swipe between the bottom-nav tabs,
   // WhatsApp-style. Skips gestures that start on a row/map that already
@@ -2333,6 +2371,8 @@ export default function App() {
                     trip={activeTrip}
                     members={visibleMembers}
                     isAdmin={isAdmin}
+                    initialViewMode={pendingNotesView}
+                    onInitialViewModeConsumed={() => setPendingNotesView(null)}
                   />
                   </Suspense>
                 )}
@@ -3002,7 +3042,7 @@ export default function App() {
           (not nested in the web-only header) so it opens the same way on
           native too, reached via the Notifications row in Settings
           or the header bell on web. */}
-      <NotificationsPanel onRequestConfirm={setConfirmRequest} />
+      <NotificationsPanel onRequestConfirm={setConfirmRequest} onNavigate={handleNotificationNavigate} />
       <InAppNotificationBanner />
 
       {/* Biometric Fullscreen Lock Overlay */}

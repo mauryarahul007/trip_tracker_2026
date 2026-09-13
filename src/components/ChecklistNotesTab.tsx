@@ -21,13 +21,20 @@ import { TripChatPanel } from './TripChatPanel';
 import { useHistoryBack } from '../utils/useHistoryBack';
 import { useEscapeKey } from '../utils/useEscapeKey';
 
+type ViewMode = 'passes' | 'notes' | 'checklist' | 'chat';
+
 type Props = {
   trip: Trip;
   members: Member[];
   isAdmin?: boolean;
+  // Set by App.tsx when a notification (e.g. a chat message) should land the
+  // traveler directly on a specific sub-tab instead of whatever they last
+  // had open. Consumed once via onInitialViewModeConsumed so it doesn't
+  // fight a later manual tab switch.
+  initialViewMode?: ViewMode | null;
+  onInitialViewModeConsumed?: () => void;
 };
 
-type ViewMode = 'passes' | 'notes' | 'checklist' | 'chat';
 type ChecklistCategory = 'all' | 'packing' | 'documents' | 'medical' | 'general';
 type NoteCategory = 'all' | 'wifi' | 'stay' | 'transport' | 'contact' | 'general';
 
@@ -371,7 +378,7 @@ function NoteContentView({ content, category }: { content: string; category?: st
   return <StandardNoteRenderer content={content} category={category} />;
 }
 
-export function ChecklistNotesTab({ trip, members, isAdmin }: Props) {
+export function ChecklistNotesTab({ trip, members, isAdmin, initialViewMode, onInitialViewModeConsumed }: Props) {
   // Always select live trip from store to react to changes
   const liveTrip = useTripStore((s) => s.trips.find((t) => t.id === trip.id)) || trip;
   const {
@@ -412,6 +419,13 @@ export function ChecklistNotesTab({ trip, members, isAdmin }: Props) {
       setViewMode(isNotesEnabled ? 'checklist' : isPassesEnabled ? 'passes' : 'notes');
     }
   }, [isPassesEnabled, isNotesEnabled, isChatEnabled, viewMode]);
+
+  useEffect(() => {
+    if (!initialViewMode) return;
+    if (initialViewMode === 'chat' && !isChatEnabled) return;
+    setViewMode(initialViewMode);
+    onInitialViewModeConsumed?.();
+  }, [initialViewMode, isChatEnabled, onInitialViewModeConsumed]);
 
   const [checklistFilter, setChecklistFilter] = useState<ChecklistCategory>('all');
   const [noteFilter, setNoteFilter] = useState<NoteCategory>('all');
@@ -849,11 +863,7 @@ export function ChecklistNotesTab({ trip, members, isAdmin }: Props) {
       )}
 
       {/* GROUP CHAT VIEW */}
-      {viewMode === 'chat' && isChatEnabled && (
-        <div style={{ flex: '1 1 auto', minHeight: '50vh', display: 'flex', margin: '0 -16px' }}>
-          <TripChatPanel tripId={liveTrip.id} members={members} />
-        </div>
-      )}
+      {viewMode === 'chat' && isChatEnabled && <TripChatPanel tripId={liveTrip.id} members={members} />}
 
       {/* Instant In-Tab Search Bar (for Checklist & Notes) */}
       {viewMode !== 'passes' && viewMode !== 'chat' && isNotesEnabled && (checklist.length > 0 || notes.length > 0) && (

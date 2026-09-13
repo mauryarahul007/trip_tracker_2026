@@ -131,6 +131,15 @@
         ],
         "createdAt": "2026-09-13T07:41:34.338Z",
         "reason": "matches adjacent Add Pass button font-size in same header row, not a new deviation"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "16px",
+        "files": [
+          "src/components/TripChatPanel.tsx"
+        ],
+        "createdAt": "2026-09-13T09:11:33.606Z",
+        "reason": "iOS Safari/Chrome auto-zooms on input focus below 16px -- platform-mandated minimum, not a ramp deviation"
       }
     ]
   }

@@ -891,5 +891,21 @@
     "shippedAt": "2026-09-13T07:51:28.590Z",
     "shippedBy": "claude-cli",
     "shippedNote": "Export flight/train/hotel passes as an RFC 5545 .ics file, importable into Google/Apple/Outlook/Samsung Calendar. Pure client-side (src/utils/icsExport.ts) from existing trip.passes data, download button in TravelPassWalletView.tsx. Gated behind enableIcsExport flag, default OFF."
+  },
+  {
+    "id": "FEAT-057",
+    "title": "Notification tap routes to relevant tab (expenses, members, chat, settlements)",
+    "description": "Notification tap routes to relevant tab (expenses, members, chat, settlements)",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-09-13T09:20:29.980Z",
+    "updatedAt": "2026-09-13T09:20:29.980Z",
+    "shippedAt": "2026-09-13T09:20:29.980Z",
+    "shippedBy": "claude-cli",
+    "shippedNote": "handleOpenNotification in NotificationsPanel.tsx now calls onNavigate(n) after switching trip (if cross-trip), always closing the panel. App.tsx's handleNotificationNavigate maps notification.data.type to a Tab: expense_* -> ledger, member_* -> members, settlement_* -> expenses (Summary), chat_message -> notes tab + auto-opens its Chat sub-view via a new initialViewMode prop on ChecklistNotesTab, consumed once so it does not fight a later manual switch."
   }
 ]

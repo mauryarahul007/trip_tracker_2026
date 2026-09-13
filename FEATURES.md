@@ -9,11 +9,11 @@
 
 | Metric | Count |
 | :--- | :--- |
-| **Total Tracked** | **56** |
+| **Total Tracked** | **57** |
 | **💡 Requested** | **2** |
 | **📋 Planned** | **0** |
 | **🟡 In Progress** | **0** |
-| **✅ Shipped** | **54** |
+| **✅ Shipped** | **55** |
 | **⚪ Won't Do** | **0** |
 
 ---
@@ -106,6 +106,7 @@ CI pipeline for lint, build, and test on push/PR
 | **FEAT-054** | Bulk select-all for Checklist & Notes | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in v3.15.4: batch delete/complete via Select mode, backed by batchDeleteChecklistItems/batchCompleteChecklistItems/batchDeleteTripNotes in tripStore.ts |
 | **FEAT-055** | Trip Group Chat with realtime sync and push notifications | `ui-ux` | `claude-cli` | `claude-cli` | WhatsApp-style chat per trip: trip_messages table (migration 0082, RLS + realtime publication), tripMessagesApi.ts, TripChatPanel.tsx as 3rd sub-tab in ChecklistNotesTab. New message triggers send-push Edge Function (chat_message type, redeployed) respecting per-trip mute. Gated behind enableTripChat flag, default OFF (Ops Deck Flags page to arm). |
 | **FEAT-056** | ICS Calendar Export for travel passes | `ui-ux` | `claude-cli` | `claude-cli` | Export flight/train/hotel passes as an RFC 5545 .ics file, importable into Google/Apple/Outlook/Samsung Calendar. Pure client-side (src/utils/icsExport.ts) from existing trip.passes data, download button in TravelPassWalletView.tsx. Gated behind enableIcsExport flag, default OFF. |
+| **FEAT-057** | Notification tap routes to relevant tab (expenses, members, chat, settlements) | `ui-ux` | `claude-cli` | `claude-cli` | handleOpenNotification in NotificationsPanel.tsx now calls onNavigate(n) after switching trip (if cross-trip), always closing the panel. App.tsx's handleNotificationNavigate maps notification.data.type to a Tab: expense_* -> ledger, member_* -> members, settlement_* -> expenses (Summary), chat_message -> notes tab + auto-opens its Chat sub-view via a new initialViewMode prop on ChecklistNotesTab, consumed once so it does not fight a later manual switch. |
 
 ---
 

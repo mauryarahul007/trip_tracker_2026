@@ -9,10 +9,10 @@
 
 | Metric | Count | Status Notes |
 | :--- | :--- | :--- |
-| **Total Tracked** | **208** | All recorded bugs across sessions |
+| **Total Tracked** | **211** | All recorded bugs across sessions |
 | **🟢 Open** | **0** | No critical blockers, 0 High |
 | **🟡 In Progress** | **0** | Active investigation or fix |
-| **✅ Resolved** | **182** | Verified & closed |
+| **✅ Resolved** | **185** | Verified & closed |
 | **⚪ Won't Fix** | **26** | Expected behavior / deferred |
 
 ---
@@ -213,6 +213,9 @@
 | **BUG-206** | Trip-card and home balance chips showed nonzero owed/owe against a trip already Settled in trip detail | `ui-ux` | `medium` | `mauryarahul007@gmail.com` | `claude-cli` | Removed the stale local-store-derived owed/owe chips from TripStack.tsx (per-trip card) and TripsListScreen.tsx (header banner). Cross-trip owed/owe total relocated to the profile/settings hero (SettingsView.tsx via GlobalSettingsModal.tsx), now sourced from a shared src/hooks/useCrossTripBalances.ts hook that fetches the authoritative full expense set per trip (same approach the header banner already used) instead of the local store snapshot. |
 | **BUG-207** | TripStack fell back to an arbitrary member and falsely stamped trips Settled when the current user could not be matched | `ui-ux` | `medium` | `claude-cli` | `claude-cli` | TripStack.tsx: removed the tripMemberList[0] fallback (now returns null on no confident match) and the !myMember -> settled default. Replaced the whole local balanceInfo/myMember calc with an isSettled prop threaded from TripsListScreen -> TripStack -> StackCardItem -> CardContent, sourced from useCrossTripBalances.ts (extended to also return a trip-wide settledTripIds map from the same authoritative per-trip fetch already used for the profile balance total) -- one settlement-state source of truth instead of two divergent calcs. Also retagged BUG-167/168/170 from an invalid "reliability" category to "general" so bug:sync stops failing Supabase's bugs_category_check constraint on every run. |
 | **BUG-208** | Superadmin mobile section switcher couldn't navigate away from Command Center | `ui-ux` | `high` | `human` | `claude-cli` | AdminPortalLayout.tsx: removed the section switcher sheet's own useHistoryBack entry (it no longer pushes/pops a browser history entry when opened/closed). The sheet still closes via backdrop tap, its Close button, and Escape, and the outer 'leaving Command Center' useHistoryBack entry still pushes cleanly without racing a second history mutation in the same tick. |
+| **BUG-210** | Trip Chat input floated mid-screen with dead space below it | `ui-ux` | `high` | `claude-cli` | `claude-cli` | TripChatPanel.tsx root used height:'100%', but its parent .tab-pane has no explicit height (same naturally-scrolling block as Notes/Checklist), so the percentage collapsed to content height. Fixed: height: min(64dvh, 560px) (self-contained, no parent height needed), wrapped in .glass-card to match app card convention. |
+| **BUG-211** | Chat input caused iOS Safari/Chrome page zoom while typing | `ui-ux` | `medium` | `claude-cli` | `claude-cli` | Chat input had fontSize 13px. iOS Safari/Chrome (WebKit) auto-zooms the page on focusing any text input under 16px, then zooms back out on blur -- read as alignment changing while typing, iOS-only since Android Chrome has no focus-zoom. Bumped input font-size to 16px. |
+| **BUG-212** | Chat message silently lost on send failure (offline/network error) | `offline-sync` | `medium` | `claude-cli` | `claude-cli` | TripChatPanel handleSend swallowed sendTripMessage errors -- draft stayed but no feedback, message just never sent. Added sendError state + inline red banner distinguishing offline vs generic failure, draft preserved for retry. |
 
 ---
 

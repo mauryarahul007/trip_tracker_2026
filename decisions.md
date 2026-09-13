@@ -3092,3 +3092,17 @@ This document logs all meaningful technical decisions, library choices, design p
   - No message edit, typing indicators, or read receipts in v1 — plain send/soft-delete only, add later if asked.
   - Every chat message writes one `notifications` row per recipient with no batching/throttling, same as `expense_added`/`member_joined` etc. — fine at normal trip-chat volume, could get noisy in a very chatty group; no debounce added since no other notification type has one either.
   - ICS export defaults every pass to a 1-hour calendar event when `endDateTime` isn't set, since passes don't reliably carry one today.
+
+---
+
+## 167. Trip Chat Layout/iOS Fixes + Notification Tap Routing (v3.16.1)
+* **Context:** First real-device look at Trip Chat (FEAT-055) surfaced three bugs, plus a standing gap where tapping any notification only switched trips (if cross-trip) and never actually navigated to the screen the notification was about.
+* **Decision:** Fix all three chat bugs and add notification-tap routing to the relevant tab/sub-tab.
+* **Pattern/Implementation:**
+  - **BUG-210 (layout):** `TripChatPanel.tsx`'s root used `height: '100%'`, but its parent `.tab-pane` has no explicit height (it's the same naturally-scrolling block Notes/Checklist already rely on), so the percentage collapsed to content height — the input floated right after the one message with a large dead area below it. Fixed to `height: min(64dvh, 560px)` (self-contained, doesn't need a sized parent) and wrapped the whole panel in `.glass-card` to match the app's existing card convention instead of floating unstyled.
+  - **BUG-211 (iOS zoom):** the chat input had `fontSize: 13px`. iOS Safari/Chrome (WebKit) auto-zooms the page when a focused text input computes under 16px, then zooms back out on blur — this reads exactly like "alignment completely changes while typing" and is iOS-only since Android Chrome has no focus-zoom behavior. Fixed by bumping the input to 16px (the platform-mandated minimum, not a design-ramp deviation).
+  - **BUG-212 (silent failure):** `handleSend` had no catch — a failed `sendTripMessage` (e.g. offline) just silently dropped the message with zero feedback. Added `sendError` state + an inline red banner distinguishing offline vs. generic failure, draft text preserved for retry.
+  - **FEAT-057 (notification routing):** `NotificationsPanel.tsx`'s `handleOpenNotification` now calls a new `onNavigate(n)` callback after switching trips (if cross-trip) and always closes the panel afterward (previously it only closed the panel on a cross-trip switch, leaving same-trip taps inert). `App.tsx`'s new `handleNotificationNavigate` maps `notification.data.type` to a `Tab`: `expense_*` → `ledger`, `member_*` → `members`, `settlement*` → `expenses` (Summary). `chat_message` is the one type whose destination is a sub-tab, not a top-level `Tab` — it sets `activeTab` to `notes` and a new `pendingNotesView` state to `'chat'`, threaded into `ChecklistNotesTab` as `initialViewMode` + `onInitialViewModeConsumed`, applied once via a mount/update effect so a later manual sub-tab switch isn't fought by a stale pending value.
+* **Trade-offs Accepted:**
+  - Chat's offline handling is still just "surface the error, keep the draft" — no outbox/retry queue like expenses have. Bigger job, not done here.
+  - Chat has no message edit/typing indicators/read receipts, unchanged from FEAT-055.

@@ -6281,5 +6281,83 @@
     "resolvedBy": "claude-cli",
     "resolvedAt": "2026-09-12T00:00:00.000Z",
     "resolutionNote": "AdminPortalLayout.tsx: removed the section switcher sheet's own useHistoryBack entry (it no longer pushes/pops a browser history entry when opened/closed). The sheet still closes via backdrop tap, its Close button, and Escape, and the outer 'leaving Command Center' useHistoryBack entry still pushes cleanly without racing a second history mutation in the same tick."
+  },
+  {
+    "id": "BUG-210",
+    "title": "Trip Chat input floated mid-screen with dead space below it",
+    "description": "Trip Chat input floated mid-screen with dead space below it",
+    "severity": "high",
+    "category": "ui-ux",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-09-13T09:19:56.183Z",
+    "updatedAt": "2026-09-13T09:20:15.121Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-09-13T09:20:15.121Z",
+    "resolutionNote": "TripChatPanel.tsx root used height:'100%', but its parent .tab-pane has no explicit height (same naturally-scrolling block as Notes/Checklist), so the percentage collapsed to content height. Fixed: height: min(64dvh, 560px) (self-contained, no parent height needed), wrapped in .glass-card to match app card convention."
+  },
+  {
+    "id": "BUG-211",
+    "title": "Chat input caused iOS Safari/Chrome page zoom while typing",
+    "description": "Chat input caused iOS Safari/Chrome page zoom while typing",
+    "severity": "medium",
+    "category": "ui-ux",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-09-13T09:20:05.704Z",
+    "updatedAt": "2026-09-13T09:20:23.480Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-09-13T09:20:23.479Z",
+    "resolutionNote": "Chat input had fontSize 13px. iOS Safari/Chrome (WebKit) auto-zooms the page on focusing any text input under 16px, then zooms back out on blur -- read as alignment changing while typing, iOS-only since Android Chrome has no focus-zoom. Bumped input font-size to 16px."
+  },
+  {
+    "id": "BUG-212",
+    "title": "Chat message silently lost on send failure (offline/network error)",
+    "description": "Chat message silently lost on send failure (offline/network error)",
+    "severity": "medium",
+    "category": "offline-sync",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-09-13T09:20:10.712Z",
+    "updatedAt": "2026-09-13T09:20:19.513Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-09-13T09:20:19.513Z",
+    "resolutionNote": "TripChatPanel handleSend swallowed sendTripMessage errors -- draft stayed but no feedback, message just never sent. Added sendError state + inline red banner distinguishing offline vs generic failure, draft preserved for retry."
   }
 ]

@@ -246,8 +246,10 @@ function NotificationCard({
 
 export function NotificationsPanel({
   onRequestConfirm,
+  onNavigate,
 }: {
   onRequestConfirm?: (req: ConfirmRequest) => void;
+  onNavigate?: (notification: AppNotification) => void;
 } = {}) {
   const isPanelOpen = useNotificationsStore((s) => s.isPanelOpen);
   const closePanel = useNotificationsStore((s) => s.closePanel);
@@ -294,11 +296,11 @@ export function NotificationsPanel({
     }
     if (n.tripId && n.tripId !== useTripStore.getState().activeTripId) {
       const tripExists = trips.some((t) => t.id === n.tripId);
-      if (tripExists) {
-        useTripStore.getState().selectTrip(n.tripId);
-        closePanel();
-      }
+      if (!tripExists) return;
+      useTripStore.getState().selectTrip(n.tripId);
     }
+    onNavigate?.(n);
+    closePanel();
   };
 
   const handleMarkFilteredAsRead = () => {
