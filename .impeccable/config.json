@@ -86,6 +86,51 @@
         "value": "12px",
         "createdAt": "2026-09-13T07:11:12.128Z",
         "reason": "matches existing 12px/11.5px literals used pervasively throughout this file's inline styles"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "13px",
+        "files": [
+          "src/components/TripChatPanel.tsx"
+        ],
+        "createdAt": "2026-09-13T07:39:53.265Z",
+        "reason": "matches existing shipped SmartPackingAssistantModal.tsx compact-modal font scale, consistency not deviation"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "12.5px",
+        "files": [
+          "src/components/TripChatPanel.tsx"
+        ],
+        "createdAt": "2026-09-13T07:39:53.354Z",
+        "reason": "matches existing shipped SmartPackingAssistantModal.tsx compact-modal font scale"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "9.5px",
+        "files": [
+          "src/components/TripChatPanel.tsx"
+        ],
+        "createdAt": "2026-09-13T07:39:53.446Z",
+        "reason": "matches existing shipped SmartPackingAssistantModal.tsx compact-modal font scale"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "10.5px",
+        "files": [
+          "src/components/TripChatPanel.tsx"
+        ],
+        "createdAt": "2026-09-13T07:39:53.552Z",
+        "reason": "matches existing shipped SmartPackingAssistantModal.tsx compact-modal font scale"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "12.5px",
+        "files": [
+          "src/components/TravelPassWalletView.tsx"
+        ],
+        "createdAt": "2026-09-13T07:41:34.338Z",
+        "reason": "matches adjacent Add Pass button font-size in same header row, not a new deviation"
       }
     ]
   }

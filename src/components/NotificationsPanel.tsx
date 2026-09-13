@@ -52,6 +52,8 @@ export function getNotificationMeta(type?: string): { icon: React.ReactNode; col
     case 'settle':
     case 'settlement_reminder':
       return { icon: <IconCheckCircle size={17} />, colorClass: 'squircle-emerald' };
+    case 'chat_message':
+      return { icon: <IconMail size={17} />, colorClass: 'squircle-indigo' };
     default:
       return { icon: <IconBell size={17} />, colorClass: 'squircle-blue' };
   }

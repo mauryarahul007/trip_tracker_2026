@@ -239,6 +239,29 @@ export interface Database {
         }>;
         Relationships: [];
       };
+      trip_messages: {
+        Row: {
+          id: string;
+          trip_id: string;
+          member_id: string;
+          body: string;
+          created_at: string;
+          deleted_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          trip_id: string;
+          member_id: string;
+          body: string;
+          created_at?: string;
+          deleted_at?: string | null;
+        };
+        Update: Partial<{
+          body: string;
+          deleted_at: string | null;
+        }>;
+        Relationships: [];
+      };
       device_push_tokens: {
         Row: {
           id: string;

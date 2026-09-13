@@ -43,6 +43,8 @@ function renderNotification(type: string, tripName: string, params: Record<strin
       return { title, body: `You owe ${params.toLabel} ${params.currency}${params.amount} for this trip` };
     case 'trip_deleted':
       return { title, body: `${tripName || 'A trip'} was deleted` };
+    case 'chat_message':
+      return { title, body: `${params.senderName}: ${params.preview}` };
     default:
       return { title, body: 'You have a new notification' };
   }

@@ -5,6 +5,15 @@ export interface TripStop {
   lng?: number;
 }
 
+export interface TripMessage {
+  id: string;
+  tripId: string;
+  memberId: string;
+  body: string;
+  createdAt: number;
+  deletedAt?: number | null;
+}
+
 export interface ChecklistItem {
   id: string;
   text: string;

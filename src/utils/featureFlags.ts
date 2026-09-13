@@ -19,7 +19,7 @@ export const RELEASE_PHASES: ReleasePhaseDef[] = [
     tagline: 'Frictionless on-trip logging & shared trip organization',
     description: 'Hands-free voice quick-add with Hinglish NLP parsing, compressed receipt photos, collaborative packing & rich notes, and 4D duplicate expense warning.',
     targetAudience: 'Friends & families actively traveling together',
-    flagKeys: ['enableVoiceInput', 'enableReceiptUpload', 'enableNotesAndChecklist', 'enableDuplicateDetector'],
+    flagKeys: ['enableVoiceInput', 'enableReceiptUpload', 'enableNotesAndChecklist', 'enableDuplicateDetector', 'enableTripChat'],
   },
   {
     id: 'phase3',
@@ -37,6 +37,7 @@ export const RELEASE_PHASES: ReleasePhaseDef[] = [
       'enablePackingAssistant',
       'enableRouteStops',
       'enableGeotagging',
+      'enableIcsExport',
     ],
   },
   {
@@ -129,6 +130,14 @@ export const FEATURE_FLAGS_META: Record<FeatureFlagKey, FeatureFlagMeta> = {
     phase: 'phase2',
     defaultEnabledForUsers: true,
   },
+  enableTripChat: {
+    key: 'enableTripChat',
+    label: 'Trip Group Chat',
+    description: 'WhatsApp-style realtime chat thread scoped to the trip, inside the Notes tab.',
+    category: 'collab',
+    phase: 'phase2',
+    defaultEnabledForUsers: false,
+  },
 
   // Phase 3: Smart Travel Navigator & Pass Hub
   enableTravelPasses: {
@@ -186,6 +195,14 @@ export const FEATURE_FLAGS_META: Record<FeatureFlagKey, FeatureFlagMeta> = {
     category: 'geotagging',
     phase: 'phase3',
     defaultEnabledForUsers: true,
+  },
+  enableIcsExport: {
+    key: 'enableIcsExport',
+    label: 'ICS Calendar Export for Passes',
+    description: 'Export flight/train/hotel passes as a downloadable .ics calendar file.',
+    category: 'transit',
+    phase: 'phase3',
+    defaultEnabledForUsers: false,
   },
 
   // Phase 4: FinTech Pro & Global Jetsetter Suite
@@ -315,6 +332,7 @@ export const DEFAULT_FEATURE_FLAGS: Record<FeatureFlagKey, boolean> = {
   enableReceiptUpload: true,
   enableNotesAndChecklist: true,
   enableDuplicateDetector: true,
+  enableTripChat: false,
 
   // Phase 3 (Armed by default)
   enableTravelPasses: true,
@@ -324,6 +342,7 @@ export const DEFAULT_FEATURE_FLAGS: Record<FeatureFlagKey, boolean> = {
   enablePackingAssistant: true,
   enableRouteStops: true,
   enableGeotagging: true,
+  enableIcsExport: false,
 
   // Phase 4 (Armed by default)
   enableAdvancedSplits: true,

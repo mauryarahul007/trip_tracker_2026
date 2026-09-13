@@ -9,11 +9,11 @@
 
 | Metric | Count |
 | :--- | :--- |
-| **Total Tracked** | **54** |
+| **Total Tracked** | **56** |
 | **💡 Requested** | **2** |
 | **📋 Planned** | **0** |
 | **🟡 In Progress** | **0** |
-| **✅ Shipped** | **52** |
+| **✅ Shipped** | **54** |
 | **⚪ Won't Do** | **0** |
 
 ---
@@ -104,6 +104,8 @@ CI pipeline for lint, build, and test on push/PR
 | **FEAT-052** | Public join-code preview before Google sign-in | `ui-ux` | `cursor-grok` | `cursor-grok` | Shipped in v3.12.0. Migration 0081 applied to remote (preview_trip_by_join_code). Files: src/components/JoinTripScreen.tsx, src/utils/joinPreview.ts, src/utils/joinPreview.test.ts, src/services/tripApi.ts, src/types/database.ts, src/main.tsx, supabase/migrations/0081_join_code_public_preview.sql. |
 | **FEAT-053** | On-device receipt OCR via Tesseract | `ui-ux` | `cursor-grok` | `cursor-grok` | Shipped in v3.12.0. Files: src/utils/receiptOcr.ts, src/utils/receiptOcr.test.ts, src/components/ReceiptScannerModal.tsx, vite.config.ts (optimizeDeps exclude tesseract.js), package.json (tesseract.js). |
 | **FEAT-054** | Bulk select-all for Checklist & Notes | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in v3.15.4: batch delete/complete via Select mode, backed by batchDeleteChecklistItems/batchCompleteChecklistItems/batchDeleteTripNotes in tripStore.ts |
+| **FEAT-055** | Trip Group Chat with realtime sync and push notifications | `ui-ux` | `claude-cli` | `claude-cli` | WhatsApp-style chat per trip: trip_messages table (migration 0082, RLS + realtime publication), tripMessagesApi.ts, TripChatPanel.tsx as 3rd sub-tab in ChecklistNotesTab. New message triggers send-push Edge Function (chat_message type, redeployed) respecting per-trip mute. Gated behind enableTripChat flag, default OFF (Ops Deck Flags page to arm). |
+| **FEAT-056** | ICS Calendar Export for travel passes | `ui-ux` | `claude-cli` | `claude-cli` | Export flight/train/hotel passes as an RFC 5545 .ics file, importable into Google/Apple/Outlook/Samsung Calendar. Pure client-side (src/utils/icsExport.ts) from existing trip.passes data, download button in TravelPassWalletView.tsx. Gated behind enableIcsExport flag, default OFF. |
 
 ---
 

@@ -859,5 +859,37 @@
     "shippedAt": "2026-09-13T07:15:07.815Z",
     "shippedBy": "claude-cli",
     "shippedNote": "Shipped in v3.15.4: batch delete/complete via Select mode, backed by batchDeleteChecklistItems/batchCompleteChecklistItems/batchDeleteTripNotes in tripStore.ts"
+  },
+  {
+    "id": "FEAT-055",
+    "title": "Trip Group Chat with realtime sync and push notifications",
+    "description": "Trip Group Chat with realtime sync and push notifications",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-09-13T07:51:18.978Z",
+    "updatedAt": "2026-09-13T07:51:18.978Z",
+    "shippedAt": "2026-09-13T07:51:18.978Z",
+    "shippedBy": "claude-cli",
+    "shippedNote": "WhatsApp-style chat per trip: trip_messages table (migration 0082, RLS + realtime publication), tripMessagesApi.ts, TripChatPanel.tsx as 3rd sub-tab in ChecklistNotesTab. New message triggers send-push Edge Function (chat_message type, redeployed) respecting per-trip mute. Gated behind enableTripChat flag, default OFF (Ops Deck Flags page to arm)."
+  },
+  {
+    "id": "FEAT-056",
+    "title": "ICS Calendar Export for travel passes",
+    "description": "ICS Calendar Export for travel passes",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-09-13T07:51:28.590Z",
+    "updatedAt": "2026-09-13T07:51:28.590Z",
+    "shippedAt": "2026-09-13T07:51:28.590Z",
+    "shippedBy": "claude-cli",
+    "shippedNote": "Export flight/train/hotel passes as an RFC 5545 .ics file, importable into Google/Apple/Outlook/Samsung Calendar. Pure client-side (src/utils/icsExport.ts) from existing trip.passes data, download button in TravelPassWalletView.tsx. Gated behind enableIcsExport flag, default OFF."
   }
 ]

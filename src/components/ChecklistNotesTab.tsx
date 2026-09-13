@@ -17,6 +17,7 @@ import { SwipeableRow } from './SwipeableRow';
 import { ConfettiBurst } from './ConfettiBurst';
 import { SmartPackingAssistantModal } from './SmartPackingAssistantModal';
 import { TravelPassWalletView } from './TravelPassWalletView';
+import { TripChatPanel } from './TripChatPanel';
 import { useHistoryBack } from '../utils/useHistoryBack';
 import { useEscapeKey } from '../utils/useEscapeKey';
 
@@ -26,7 +27,7 @@ type Props = {
   isAdmin?: boolean;
 };
 
-type ViewMode = 'passes' | 'notes' | 'checklist';
+type ViewMode = 'passes' | 'notes' | 'checklist' | 'chat';
 type ChecklistCategory = 'all' | 'packing' | 'documents' | 'medical' | 'general';
 type NoteCategory = 'all' | 'wifi' | 'stay' | 'transport' | 'contact' | 'general';
 
@@ -393,6 +394,7 @@ export function ChecklistNotesTab({ trip, members, isAdmin }: Props) {
   const isPassesEnabled = isFeatureEnabled('enableTravelPasses', { tripId: liveTrip.id });
   const isNotesEnabled = isFeatureEnabled('enableNotesAndChecklist', { tripId: liveTrip.id });
   const isPackingEnabled = isFeatureEnabled('enablePackingAssistant', { tripId: liveTrip.id });
+  const isChatEnabled = isFeatureEnabled('enableTripChat', { tripId: liveTrip.id });
 
   const [viewMode, setViewMode] = useState<ViewMode>(() => {
     if (isPassesEnabled && liveTrip.passes && liveTrip.passes.length > 0) return 'passes';
@@ -406,8 +408,10 @@ export function ChecklistNotesTab({ trip, members, isAdmin }: Props) {
       setViewMode(isNotesEnabled ? 'checklist' : 'notes');
     } else if (!isNotesEnabled && (viewMode === 'notes' || viewMode === 'checklist')) {
       if (isPassesEnabled) setViewMode('passes');
+    } else if (!isChatEnabled && viewMode === 'chat') {
+      setViewMode(isNotesEnabled ? 'checklist' : isPassesEnabled ? 'passes' : 'notes');
     }
-  }, [isPassesEnabled, isNotesEnabled, viewMode]);
+  }, [isPassesEnabled, isNotesEnabled, isChatEnabled, viewMode]);
 
   const [checklistFilter, setChecklistFilter] = useState<ChecklistCategory>('all');
   const [noteFilter, setNoteFilter] = useState<NoteCategory>('all');
@@ -795,93 +799,39 @@ export function ChecklistNotesTab({ trip, members, isAdmin }: Props) {
   return (
     <div className="checklist-notes-tab-root" role="region" aria-label="Collaborative Checklist, Travel Passes & Notes">
       {/* Top Segmented Controls */}
-      {isPassesEnabled && isNotesEnabled && (
-        <div className="tab-segmented-header">
-          <div className="tab-segmented-control" role="tablist">
-            <button
-              type="button"
-              role="tab"
-              aria-selected={viewMode === 'passes'}
-              className={`tab-segment-btn ${viewMode === 'passes' ? 'active' : ''}`}
-              onClick={() => {
-                triggerHaptic('light');
-                setViewMode('passes');
-              }}
-              aria-label={`Passes, ${passes.length}`}
-            >
-              <span className="segment-label">Passes</span>
-              <span className="segment-badge">{passes.length}</span>
-            </button>
-            <button
-              type="button"
-              role="tab"
-              aria-selected={viewMode === 'notes'}
-              className={`tab-segment-btn ${viewMode === 'notes' ? 'active' : ''}`}
-              onClick={() => {
-                triggerHaptic('light');
-                setViewMode('notes');
-              }}
-              aria-label={`Notes, ${notes.length}`}
-            >
-              <span className="segment-label">Notes</span>
-              <span className="segment-badge">{notes.length}</span>
-            </button>
-            <button
-              type="button"
-              role="tab"
-              aria-selected={viewMode === 'checklist'}
-              className={`tab-segment-btn ${viewMode === 'checklist' ? 'active' : ''}`}
-              onClick={() => {
-                triggerHaptic('light');
-                setViewMode('checklist');
-              }}
-              aria-label={`Checklist, ${completedCount} of ${totalCount} complete`}
-            >
-              <span className="segment-label">Checklist</span>
-              <span className="segment-badge">
-                {totalCount > 0 ? `${completedCount}/${totalCount}` : '0'}
-              </span>
-            </button>
-          </div>
-        </div>
-      )}
+      {(() => {
+        const segments: { id: ViewMode; label: string; badge: string }[] = [];
+        if (isPassesEnabled) segments.push({ id: 'passes', label: 'Passes', badge: String(passes.length) });
+        if (isNotesEnabled) segments.push({ id: 'notes', label: 'Notes', badge: String(notes.length) });
+        if (isNotesEnabled) segments.push({ id: 'checklist', label: 'Checklist', badge: totalCount > 0 ? `${completedCount}/${totalCount}` : '0' });
+        if (isChatEnabled) segments.push({ id: 'chat', label: 'Chat', badge: '' });
 
-      {!isPassesEnabled && isNotesEnabled && (
-        <div className="tab-segmented-header">
-          <div className="tab-segmented-control" role="tablist">
-            <button
-              type="button"
-              role="tab"
-              aria-selected={viewMode === 'notes'}
-              className={`tab-segment-btn ${viewMode === 'notes' ? 'active' : ''}`}
-              onClick={() => {
-                triggerHaptic('light');
-                setViewMode('notes');
-              }}
-              aria-label={`Notes, ${notes.length}`}
-            >
-              <span className="segment-label">Notes</span>
-              <span className="segment-badge">{notes.length}</span>
-            </button>
-            <button
-              type="button"
-              role="tab"
-              aria-selected={viewMode === 'checklist'}
-              className={`tab-segment-btn ${viewMode === 'checklist' ? 'active' : ''}`}
-              onClick={() => {
-                triggerHaptic('light');
-                setViewMode('checklist');
-              }}
-              aria-label={`Checklist, ${completedCount} of ${totalCount} complete`}
-            >
-              <span className="segment-label">Checklist</span>
-              <span className="segment-badge">
-                {totalCount > 0 ? `${completedCount}/${totalCount}` : '0'}
-              </span>
-            </button>
+        if (segments.length < 2) return null;
+
+        return (
+          <div className="tab-segmented-header">
+            <div className="tab-segmented-control" role="tablist">
+              {segments.map((segment) => (
+                <button
+                  key={segment.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={viewMode === segment.id}
+                  className={`tab-segment-btn ${viewMode === segment.id ? 'active' : ''}`}
+                  onClick={() => {
+                    triggerHaptic('light');
+                    setViewMode(segment.id);
+                  }}
+                  aria-label={segment.badge ? `${segment.label}, ${segment.badge}` : segment.label}
+                >
+                  <span className="segment-label">{segment.label}</span>
+                  {segment.badge && <span className="segment-badge">{segment.badge}</span>}
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* 0. TRAVEL PASSES & TICKET WALLET VIEW */}
       {viewMode === 'passes' && isPassesEnabled && (
@@ -898,8 +848,15 @@ export function ChecklistNotesTab({ trip, members, isAdmin }: Props) {
         />
       )}
 
+      {/* GROUP CHAT VIEW */}
+      {viewMode === 'chat' && isChatEnabled && (
+        <div style={{ flex: '1 1 auto', minHeight: '50vh', display: 'flex', margin: '0 -16px' }}>
+          <TripChatPanel tripId={liveTrip.id} members={members} />
+        </div>
+      )}
+
       {/* Instant In-Tab Search Bar (for Checklist & Notes) */}
-      {viewMode !== 'passes' && isNotesEnabled && (checklist.length > 0 || notes.length > 0) && (
+      {viewMode !== 'passes' && viewMode !== 'chat' && isNotesEnabled && (checklist.length > 0 || notes.length > 0) && (
         <div style={{ marginBottom: '12px' }}>
           <div className="input-icon-wrap" style={{ position: 'relative', width: '100%' }}>
             <IconSearch

@@ -12,6 +12,7 @@ export const NOTIFICATION_TYPE_HEADLINES: Record<string, string> = {
   settlement_reminder: 'Settlement Reminder',
   settlement: 'Settlement Updated',
   settle: 'Settlement Updated',
+  chat_message: 'New Message',
 };
 
 export function getNotificationHeadline(type?: string): string {
@@ -91,6 +92,8 @@ export function renderNotificationBody(notification: AppNotification): string {
       return notification.body || 'You have a pending settlement reminder';
     case 'trip_deleted':
       return `"${data?.tripName || notification.title || 'Trip'}" was deleted`;
+    case 'chat_message':
+      return data?.senderName && data?.preview ? `${data.senderName}: ${data.preview}` : (notification.body || 'New message in trip chat');
     default:
       // Fallback for legacy rows written before structured schemas existed
       return notification.body || 'You have a new notification';
