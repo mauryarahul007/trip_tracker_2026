@@ -33,7 +33,7 @@ type Props = {
   // fight a later manual tab switch.
   initialViewMode?: ViewMode | null;
   onInitialViewModeConsumed?: () => void;
-  onChatComposerFocusChange?: (focused: boolean) => void;
+  onChatViewActiveChange?: (active: boolean) => void;
 };
 
 type ChecklistCategory = 'all' | 'packing' | 'documents' | 'medical' | 'general';
@@ -379,7 +379,7 @@ function NoteContentView({ content, category }: { content: string; category?: st
   return <StandardNoteRenderer content={content} category={category} />;
 }
 
-export function ChecklistNotesTab({ trip, members, isAdmin, initialViewMode, onInitialViewModeConsumed, onChatComposerFocusChange }: Props) {
+export function ChecklistNotesTab({ trip, members, isAdmin, initialViewMode, onInitialViewModeConsumed, onChatViewActiveChange }: Props) {
   // Always select live trip from store to react to changes
   const liveTrip = useTripStore((s) => s.trips.find((t) => t.id === trip.id)) || trip;
   const {
@@ -427,6 +427,17 @@ export function ChecklistNotesTab({ trip, members, isAdmin, initialViewMode, onI
     setViewMode(initialViewMode);
     onInitialViewModeConsumed?.();
   }, [initialViewMode, isChatEnabled, onInitialViewModeConsumed]);
+
+  // Forces the sheet fully open as soon as the Chat sub-tab becomes active,
+  // NOT on input focus -- resizing the sheet synchronously inside a focus
+  // event confused iOS Safari/Chrome into cancelling the keyboard entirely
+  // (WebKit aborts the keyboard show if the focused element's containing
+  // layout changes size in the same tick as the focus gesture). Triggering
+  // on tab-switch instead means the sheet has already settled by the time
+  // the user actually taps the input, so nothing resizes during that gesture.
+  useEffect(() => {
+    onChatViewActiveChange?.(viewMode === 'chat' && isChatEnabled);
+  }, [viewMode, isChatEnabled, onChatViewActiveChange]);
 
   const [checklistFilter, setChecklistFilter] = useState<ChecklistCategory>('all');
   const [noteFilter, setNoteFilter] = useState<NoteCategory>('all');
@@ -865,7 +876,7 @@ export function ChecklistNotesTab({ trip, members, isAdmin, initialViewMode, onI
 
       {/* GROUP CHAT VIEW */}
       {viewMode === 'chat' && isChatEnabled && (
-        <TripChatPanel tripId={liveTrip.id} members={members} onComposerFocusChange={onChatComposerFocusChange} />
+        <TripChatPanel tripId={liveTrip.id} members={members} />
       )}
 
       {/* Instant In-Tab Search Bar (for Checklist & Notes) */}

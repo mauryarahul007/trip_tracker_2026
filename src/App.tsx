@@ -235,9 +235,11 @@ export default function App() {
   // At its default 50%-collapsed state, TripContentSheet only covers the
   // bottom half of the screen -- the map fills the rest. An iOS keyboard
   // covering that same bottom half leaves the chat composer nowhere to
-  // render, so focusing it forces the sheet fully open first (see
-  // TripContentSheet's forceFull prop).
-  const [chatComposerFocused, setChatComposerFocused] = useState(false);
+  // render, so the sheet forces fully open as soon as the Chat sub-tab
+  // becomes active (see TripContentSheet's forceFull prop). Triggered on
+  // tab-switch rather than input focus -- resizing the sheet synchronously
+  // inside a focus event made iOS cancel the keyboard outright.
+  const [chatViewActive, setChatViewActive] = useState(false);
 
   useEffect(() => {
     if (activeTab === 'notes' && !hasNotesOrPassesTab) {
@@ -2204,7 +2206,7 @@ export default function App() {
             )}
           </header>
 
-          <TripContentSheet onExpandedChange={setSheetExpanded} onFullChange={setSheetFull} forceFull={chatComposerFocused}>
+          <TripContentSheet onExpandedChange={setSheetExpanded} onFullChange={setSheetFull} forceFull={chatViewActive}>
           <main className="app-main" ref={mainContentRef}>
             {/* View Switching Tab Content */}
             <div
@@ -2380,7 +2382,7 @@ export default function App() {
                     isAdmin={isAdmin}
                     initialViewMode={pendingNotesView}
                     onInitialViewModeConsumed={() => setPendingNotesView(null)}
-                    onChatComposerFocusChange={setChatComposerFocused}
+                    onChatViewActiveChange={setChatViewActive}
                   />
                   </Suspense>
                 )}

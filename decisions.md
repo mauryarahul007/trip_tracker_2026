@@ -3117,3 +3117,15 @@ This document logs all meaningful technical decisions, library choices, design p
   - Threaded straight down: `TripChatPanel`'s input `onFocus`/`onBlur` → `onComposerFocusChange` → `ChecklistNotesTab`'s `onChatComposerFocusChange` → `App.tsx`'s new `chatComposerFocused` state → `TripContentSheet`'s `forceFull`.
 * **Trade-offs Accepted:**
   - Only chat's composer triggers this; other inputs elsewhere in the app (expense form fields, member names, etc.) live inside actual modals with their own scroll-lock and don't share this bug, so they weren't touched.
+
+---
+
+## 169. Correction: Sheet-Expand Trigger Moved from Input Focus to Chat-Tab-Active (v3.16.3)
+* **Context:** Real-device retest of #168's fix (forceFull on the chat input's `onFocus`) made things worse, not better: on iOS the keyboard stopped appearing at all, and the map flashed back full-screen exactly like the original bug. Root cause of *this* regression: resizing `TripContentSheet` synchronously inside the input's `onFocus` handler raced WebKit's own keyboard-show logic -- iOS Safari/Chrome cancels the keyboard outright if the focused element's containing layout changes size in the same tick as the focus gesture, which is exactly what forcing the sheet from 50% to 0% top did.
+* **Decision:** Move the trigger earlier so no resize ever happens during the focus gesture itself: expand the sheet as soon as the Chat sub-tab becomes the active view, not when the input is tapped.
+* **Pattern/Implementation:**
+  - Removed the `onComposerFocusChange` prop and the input's `onFocus`/`onBlur` handlers from `TripChatPanel.tsx` entirely.
+  - `ChecklistNotesTab.tsx` gained a `useEffect` keyed on `viewMode` (and `isChatEnabled`): `onChatViewActiveChange?.(viewMode === 'chat' && isChatEnabled)` -- fires on tab-switch, well before any input gets touched, so the sheet's spring transition has settled by the time the user actually taps in.
+  - `App.tsx`'s `forceFull` state renamed `chatComposerFocused` → `chatViewActive` for accuracy, wired the same way into `TripContentSheet`'s existing `forceFull` prop (that part of #168 needed no changes, only what triggers it).
+* **Trade-offs Accepted:**
+  - The sheet now expands the instant you open the Chat sub-tab, even if you never touch the input -- a deliberate trade (matches how the map is irrelevant to a chat conversation anyway) to guarantee the resize never overlaps a focus gesture.

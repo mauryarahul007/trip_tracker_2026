@@ -6381,9 +6381,9 @@
     "actualBehavior": "",
     "diagnostics": {},
     "createdAt": "2026-09-13T09:37:22.812Z",
-    "updatedAt": "2026-09-13T09:37:28.086Z",
+    "updatedAt": "2026-09-13T09:56:11.455Z",
     "resolvedBy": "claude-cli",
-    "resolvedAt": "2026-09-13T09:37:28.085Z",
-    "resolutionNote": "TripContentSheet defaults to 50% collapsed (map fills the top half). Focusing the chat input didn't change that, so an iOS keyboard covering the same bottom half squeezed chat to nothing between map and keyboard. Added forceFull prop to TripContentSheet: chat input onFocus now snaps the sheet fully open (same path the drag handle already uses), onBlur does not auto-collapse so a manual drag afterward isn't fought. Wired TripChatPanel -> ChecklistNotesTab -> App.tsx -> TripContentSheet."
+    "resolvedAt": "2026-09-13T09:56:11.455Z",
+    "resolutionNote": "Correction: the first fix (forceFull on input onFocus) was itself buggy -- resizing TripContentSheet synchronously inside the focus handler made iOS Safari/Chrome cancel the keyboard outright (WebKit aborts keyboard-show if the focused element's containing layout changes size in the same tick as the focus gesture), which read as keyboard not appearing + map flashing back. Retargeted the trigger: sheet now forces full as soon as the Chat sub-tab becomes the active view (ChecklistNotesTab useEffect keyed on viewMode), not on input focus/blur -- by the time the user taps the input the sheet has already settled, so nothing resizes during the focus gesture. Removed the onComposerFocusChange plumbing from TripChatPanel entirely; App.tsx's forceFull state renamed chatViewActive, set via ChecklistNotesTab's onChatViewActiveChange."
   }
 ]
