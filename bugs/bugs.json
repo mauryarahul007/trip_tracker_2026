@@ -6438,5 +6438,32 @@
     "resolvedBy": "cursor-agent",
     "resolvedAt": "2026-09-13T13:52:13.880Z",
     "resolutionNote": "Restored triggerHaptic import in src/App.tsx; tsc -b && vite build verified passing cleanly (v3.17.1)"
+  },
+  {
+    "id": "BUG-216",
+    "title": "Redundant Share button duplicated Share Card in Who Owes Who section",
+    "description": "BalancesSettlements.tsx showed both a text-only Share chip and an image Share Card chip on each settlement transfer row, both ultimately routing to WhatsApp -- redundant UI with no functional difference for the user.",
+    "severity": "low",
+    "category": "ui-ux",
+    "status": "resolved",
+    "foundBy": "Rahul",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Enable enableWhatsAppSettlementShare flag for a trip",
+      "Open Summary tab > Who owes who section",
+      "Observe a settlement transfer row shows both Share and Card buttons"
+    ],
+    "expectedBehavior": "One share action per settlement row when the WhatsApp Settlement Share flag is on.",
+    "actualBehavior": "Two separate share buttons (Share, Share Card) both doing the same WhatsApp hand-off.",
+    "diagnostics": {},
+    "createdAt": "2026-09-13T14:40:32.445Z",
+    "updatedAt": "2026-09-13T14:40:40.503Z",
+    "resolvedBy": "Rahul",
+    "resolvedAt": "2026-09-13T14:40:40.502Z",
+    "resolutionNote": "Removed the redundant text-only Share chip from BalancesSettlements.tsx's per-transfer action row; kept the Share Card chip (which already sends the same info as a WhatsApp-shareable image) as the single share action, gated by the same enableWhatsAppSettlementShare superadmin flag as before. handleShareReminder was kept internally since handleShareCard's error fallback still calls it. Commit hash to follow in a follow-up log update."
   }
 ]

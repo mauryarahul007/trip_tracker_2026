@@ -227,17 +227,15 @@ function TransferRow({
     reminderStatus === 'rateLimited' ? 'Already reminded' :
     '🔔 Remind';
 
-  const [shareCopied, setShareCopied] = useState(false);
-
+  // Kept as the last-resort fallback inside handleShareCard's catch block
+  // below (e.g. canvas/share-sheet failure) -- no longer wired to its own
+  // button now that "Share Card" covers the same reminder-sharing need.
   const handleShareReminder = async () => {
     triggerHaptic('light');
     const shareText = `Hey ${t.fromLabel}, just a reminder to settle ${currencySymbol}${settleAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} to ${t.toLabel} for our trip "${tripName || 'Trip'}".`;
 
     const copyToClipboard = () => {
-      navigator.clipboard.writeText(shareText).then(() => {
-        setShareCopied(true);
-        setTimeout(() => setShareCopied(false), 2000);
-      });
+      void navigator.clipboard.writeText(shareText);
     };
 
     if (navigator.share) {
@@ -716,28 +714,6 @@ function TransferRow({
             </button>
           )}
 
-          <button
-            type="button"
-            className="traveler-settlement-action-chip"
-            style={{
-              padding: '5px 10px',
-              borderRadius: '9999px',
-              fontSize: '11.5px',
-              fontWeight: 600,
-              background: 'transparent',
-              border: '1px solid var(--border-color)',
-              color: 'var(--text-secondary)',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '4px',
-              cursor: 'pointer',
-            }}
-            onClick={handleShareReminder}
-            title="Share reminder text via WhatsApp or system share"
-          >
-            <IconShare size={12} />
-            <span>{shareCopied ? 'Copied!' : 'Share'}</span>
-          </button>
           {isShareCardEnabled && (
             <button
               type="button"

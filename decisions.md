@@ -60,7 +60,7 @@ This document logs all meaningful technical decisions, library choices, design p
 
 ---
 
-## 6. Settlements Section on the Expenses Page (FEAT-059, v3.18.0)
+## 174. Settlements Section on the Expenses Page (FEAT-059, v3.18.0)
 * **Context:** The superadmin flag `enableSettlementDateNote` lets users capture a date + note when settling a debt (`SettlementDateNoteFields.tsx` → `App.tsx` `handleSettle`). There is no separate settlements table -- a completed settlement is persisted as a normal `expenses` row (`isSettlement` / title `"Settlement: {from} ➔ {to}"`, optionally ` — {note}`). Previously these rows were mixed into the day-grouped expense list on the Expenses (ledger) tab, styled identically to a real expense, so there was no dedicated place to review settlement history.
 * **Decision:** Split settlement rows out of the day-grouped expense list into their own collapsible **"Settlements"** section below it, on the same Expenses page (`src/components/ExpenseList.tsx`).
 * **Pattern/Implementation:**
@@ -3196,5 +3196,17 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Decision:** Restore `import { triggerHaptic } from './utils/haptics';` in `src/App.tsx`.
 * **Pattern/Implementation:** Restored named import alongside `getLatestNonSettlementExpense`. Verified `tsc -b && vite build` and test suite pass cleanly locally.
 * **Trade-offs Accepted:** None.
+
+---
+
+## 175. Removed Redundant "Share" Button in Who-Owes-Who Section (BUG-216, v3.18.1)
+* **Context:** Each settlement transfer row in `BalancesSettlements.tsx`'s "Who owes who" section showed two separate share actions -- a text-only "Share" chip (`handleShareReminder`, sends a reminder sentence via the Web Share API / WhatsApp deep link / clipboard fallback) and an image "Share Card" chip (`handleShareCard`, gated behind the `enableWhatsAppSettlementShare` superadmin flag, sends a rendered settlement PNG card via the same channels). Both ultimately hand off to WhatsApp/system share for the same purpose, so the pair read as redundant.
+* **Decision:** Remove the "Share" chip and its `shareCopied` UI state; keep "Share Card" as the sole share action, unchanged and still gated by `enableWhatsAppSettlementShare`.
+* **Pattern/Implementation:**
+  - Deleted the "Share" `<button>` block from the transfer row's action-chip row.
+  - Kept the `handleShareReminder` function itself (now internal-only) because `handleShareCard`'s final catch-all fallback still calls it when the canvas/share-sheet pipeline fails outright.
+  - Simplified `handleShareReminder`'s `copyToClipboard` to a plain `navigator.clipboard.writeText` call now that nothing renders the "Copied!" state; removed the now-dead `shareCopied`/`setShareCopied` state.
+* **Trade-offs Accepted:**
+  - "Share Card" stays gated behind `enableWhatsAppSettlementShare`. If that flag is off for a trip, the row now has no share action at all (previously "Share" was the always-available fallback). Left as-is per explicit decision -- flag gating is superadmin's call, not addressed by this fix.
 
 
