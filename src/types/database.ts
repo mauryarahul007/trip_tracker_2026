@@ -246,6 +246,7 @@ export interface Database {
           member_id: string;
           body: string;
           created_at: string;
+          edited_at: string | null;
           deleted_at: string | null;
         };
         Insert: {
@@ -254,10 +255,12 @@ export interface Database {
           member_id: string;
           body: string;
           created_at?: string;
+          edited_at?: string | null;
           deleted_at?: string | null;
         };
         Update: Partial<{
           body: string;
+          edited_at: string | null;
           deleted_at: string | null;
         }>;
         Relationships: [];
@@ -661,6 +664,18 @@ export interface Database {
       get_superadmin_ids: {
         Args: Record<string, never>;
         Returns: string[];
+      };
+      edit_trip_message: {
+        Args: { p_message_id: string; p_body: string };
+        Returns: {
+          id: string;
+          trip_id: string;
+          member_id: string;
+          body: string;
+          created_at: string;
+          edited_at: string | null;
+          deleted_at: string | null;
+        };
       };
       submit_feature_request: {
         Args: {

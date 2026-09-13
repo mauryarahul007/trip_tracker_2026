@@ -9,10 +9,10 @@
 
 | Metric | Count | Status Notes |
 | :--- | :--- | :--- |
-| **Total Tracked** | **215** | All recorded bugs across sessions |
+| **Total Tracked** | **216** | All recorded bugs across sessions |
 | **🟢 Open** | **0** | No critical blockers, 0 High |
 | **🟡 In Progress** | **0** | Active investigation or fix |
-| **✅ Resolved** | **189** | Verified & closed |
+| **✅ Resolved** | **190** | Verified & closed |
 | **⚪ Won't Fix** | **26** | Expected behavior / deferred |
 
 ---
@@ -220,6 +220,7 @@
 | **BUG-214** | iOS chat input pans the whole trip screen onto the map | `ui-ux` | `high` | `cursor-agent` | `cursor-agent` | v3.16.5 commit 71ebc2c: freeze --app-vh on keyboard overlay, set --keyboard-height from visualViewport on web, pin html/body, scroll chat list instead of window scrollIntoView, re-sync Android/iOS Capacitor wrappers. |
 | **BUG-215** | Missing triggerHaptic import in App.tsx breaks production build | `general` | `high` | `cursor-agent` | `cursor-agent` | Restored triggerHaptic import in src/App.tsx; tsc -b && vite build verified passing cleanly (v3.17.1) |
 | **BUG-216** | Redundant Share button duplicated Share Card in Who Owes Who section | `ui-ux` | `low` | `Rahul` | `Rahul` | Removed the redundant text-only Share chip from BalancesSettlements.tsx's per-transfer action row; kept the Share Card chip (which already sends the same info as a WhatsApp-shareable image) as the single share action, gated by the same enableWhatsAppSettlementShare superadmin flag as before. handleShareReminder was kept internally since handleShareCard's error fallback still calls it. Fixed in commit aef218f. |
+| **BUG-217** | CI build failure: stale database.ts missing trip_messages.edited_at / edit_trip_message RPC | `general` | `high` | `Rahul` | `Rahul` | Manually added edited_at to trip_messages Row/Insert/Update and an edit_trip_message entry to the Functions map in src/types/database.ts, matching the file's existing hand-written style (not a full regeneration -- tried npx supabase gen types typescript --project-id cdpdlzjwmffdtyzvbtpg first, but the generated output uses much stricter literal-union/Json typing than this file's loose conventions and broke ~40 unrelated call sites across services/*.ts; reverted that and made the targeted addition instead). Verified with the exact CI command, npm run build (tsc -b && vite build), which now passes. Commit hash to follow in a follow-up log update. |
 
 ---
 

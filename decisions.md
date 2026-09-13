@@ -3222,4 +3222,15 @@ This document logs all meaningful technical decisions, library choices, design p
   - No edit history/audit trail is kept -- editing overwrites `body` in place, only the fact that it was edited (`edited_at`) is visible, not the prior text. Matches WhatsApp's own behavior; acceptable for a lightweight trip chat.
   - No optimistic local update on edit/delete -- both actions wait for the realtime `UPDATE` echo to patch the UI, same pattern the existing `sendTripMessage` send flow already relies on for `INSERT`. A slow connection means a brief lag before the sender's own edit/delete visibly applies.
 
+---
+
+## 177. CI Build Failure: Stale database.ts Missing trip_messages.edited_at / edit_trip_message (BUG-217, v3.19.1)
+* **Context:** `src/types/database.ts` is a hand-maintained Supabase type mirror (`export const supabase = createClient<Database>(...)` in `supabaseClient.ts`) -- it is not regenerated automatically at build time. Migration 0083 (ADR #176) added `trip_messages.edited_at` and the `edit_trip_message` RPC, but the mirror wasn't updated alongside it. `tsc -b` (what `npm run build` actually runs) failed identically on CI, "Deploy to GitHub Pages", and "Deploy to EC2": `TripMessageRow` required `edited_at` that the mirrored row type didn't have, and `'edit_trip_message'` wasn't part of the RPC name union. A plain `tsc --noEmit -p .` run locally beforehand did not catch this.
+* **Decision:** Hand-add the missing `edited_at` field and `edit_trip_message` function entry to `src/types/database.ts`, matching its existing style, rather than replacing the file wholesale.
+* **Pattern/Implementation:**
+  - Tried the file's own suggested regeneration command first (`npx supabase gen types typescript --project-id <ref> > src/types/database.ts`, per its header comment). The freshly generated output types every jsonb column as a strict `Json` union and every enum-ish text column as a literal-string union, which is measurably stricter than this file's original loosely-typed (`string`, `Record<string, unknown>`) conventions -- swapping it in broke type-checking across ~40 unrelated call sites in `src/services/*.ts` (bugApi, featureApi, featureFlagApi, notificationsApi, tripApi) that were written against the looser shapes.
+  - Reverted that wholesale swap (`git checkout -- src/types/database.ts`) and instead added just the two missing pieces by hand: `edited_at: string | null` on `trip_messages`' `Row`/`Insert`/`Update`, and an `edit_trip_message` entry under `Functions` with `Args`/`Returns` matching the RPC's actual signature.
+  - Verified with the exact command CI runs, `npm run build` (`tsc -b && vite build`), not just `tsc --noEmit`, since that's what caught the discrepancy in the first place.
+* **Trade-offs Accepted:**
+  - `database.ts` remains hand-maintained, not auto-generated -- the next migration that adds a column/RPC touched by app code must remember to update this file too, or CI will fail the same way again. A full regeneration would require also loosening the many call sites currently written against the looser hand-written shapes; out of scope for this fix.
 
