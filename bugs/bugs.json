@@ -6412,5 +6412,31 @@
     "resolvedBy": "cursor-agent",
     "resolvedAt": "2026-09-13T11:42:56.282Z",
     "resolutionNote": "v3.16.5 commit 71ebc2c: freeze --app-vh on keyboard overlay, set --keyboard-height from visualViewport on web, pin html/body, scroll chat list instead of window scrollIntoView, re-sync Android/iOS Capacitor wrappers."
+  },
+  {
+    "id": "BUG-215",
+    "title": "Missing triggerHaptic import in App.tsx breaks production build",
+    "description": "During phase 5 feature flag integration, the triggerHaptic import was inadvertently replaced when adding getLatestNonSettlementExpense in App.tsx, causing tsc compilation failure in GitHub Actions CI",
+    "severity": "high",
+    "category": "general",
+    "status": "resolved",
+    "foundBy": "cursor-agent",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "tsc and vite build pass cleanly on CI",
+    "actualBehavior": "TypeScript error TS2304: Cannot find name triggerHaptic in App.tsx",
+    "diagnostics": {},
+    "createdAt": "2026-09-13T13:51:57.127Z",
+    "updatedAt": "2026-09-13T13:52:13.881Z",
+    "resolvedBy": "cursor-agent",
+    "resolvedAt": "2026-09-13T13:52:13.880Z",
+    "resolutionNote": "Restored triggerHaptic import in src/App.tsx; tsc -b && vite build verified passing cleanly (v3.17.1)"
   }
 ]

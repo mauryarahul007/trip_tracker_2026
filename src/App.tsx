@@ -76,6 +76,7 @@ import { NotificationsPanel } from './components/NotificationsPanel';
 import { NotificationsBellButton } from './components/NotificationsBellButton';
 import { InAppNotificationBanner } from './components/InAppNotificationBanner';
 import { FitHeading } from './components/FitHeading';
+import { triggerHaptic } from './utils/haptics';
 import { getLatestNonSettlementExpense } from './utils/lastExpense';
 import { useEscapeKey } from './utils/useEscapeKey';
 import { IconCalendar, IconChevronLeft, IconChevronDown, IconChevronUp, IconShield, IconSearch, IconPlus, IconWallet, IconMapPin, IconCheck, IconMembers, IconClose, IconShare, IconSettings, IconBell, IconEdit } from './components/Icons';

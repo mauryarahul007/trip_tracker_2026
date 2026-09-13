@@ -3176,3 +3176,12 @@ This document logs all meaningful technical decisions, library choices, design p
   - Splitwise import is CSV-only, current-trip only, sequential writes. Good enough for typical group ledgers; not a live sync.
   - Settlement notes live in the title suffix so filters that already key on `Settlement:` keep working without a `notes` column.
 
+---
+
+## 173. Restore triggerHaptic Import in App.tsx (v3.17.1)
+* **Context:** In v3.17.0 (ADR 172), adding `getLatestNonSettlementExpense` to `src/App.tsx` inadvertently overwrote the import for `triggerHaptic` from `./utils/haptics`, causing TS2304 compiler failures in GitHub Actions CI during `npm run build`.
+* **Decision:** Restore `import { triggerHaptic } from './utils/haptics';` in `src/App.tsx`.
+* **Pattern/Implementation:** Restored named import alongside `getLatestNonSettlementExpense`. Verified `tsc -b && vite build` and test suite pass cleanly locally.
+* **Trade-offs Accepted:** None.
+
+
