@@ -843,5 +843,21 @@
     "shippedAt": "2026-09-11T15:34:19.710Z",
     "shippedBy": "cursor-grok",
     "shippedNote": "Shipped in v3.12.0. Files: src/utils/receiptOcr.ts, src/utils/receiptOcr.test.ts, src/components/ReceiptScannerModal.tsx, vite.config.ts (optimizeDeps exclude tesseract.js), package.json (tesseract.js)."
+  },
+  {
+    "id": "FEAT-054",
+    "title": "Bulk select-all for Checklist & Notes",
+    "description": "Added a Select mode to the Checklist and Notes views in ChecklistNotesTab.tsx: per-row checkboxes, Select-all, and a bulk action bar (Delete for both views, Mark Packed for Checklist). Swipe-to-edit/delete stays active during selection.",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-09-13T07:15:07.815Z",
+    "updatedAt": "2026-09-13T07:15:07.815Z",
+    "shippedAt": "2026-09-13T07:15:07.815Z",
+    "shippedBy": "claude-cli",
+    "shippedNote": "Shipped in v3.15.4: batch delete/complete via Select mode, backed by batchDeleteChecklistItems/batchCompleteChecklistItems/batchDeleteTripNotes in tripStore.ts"
   }
 ]

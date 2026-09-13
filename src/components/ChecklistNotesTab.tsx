@@ -379,10 +379,13 @@ export function ChecklistNotesTab({ trip, members, isAdmin }: Props) {
     toggleChecklistItem,
     updateChecklistItem,
     deleteChecklistItem,
+    batchDeleteChecklistItems,
+    batchCompleteChecklistItems,
     reorderChecklistItems,
     addTripNote,
     updateTripNote,
     deleteTripNote,
+    batchDeleteTripNotes,
     saveTravelPass,
     deleteTravelPass,
   } = useTripStore();
@@ -444,6 +447,10 @@ export function ChecklistNotesTab({ trip, members, isAdmin }: Props) {
   const [hideCompleted, setHideCompleted] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
 
+  // Bulk selection state (shared shape for both Checklist & Notes views)
+  const [isSelecting, setIsSelecting] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
   // Note Modal state
   const [isNoteModalOpen, setIsNoteModalOpen] = useState(false);
   const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
@@ -477,6 +484,12 @@ export function ChecklistNotesTab({ trip, members, isAdmin }: Props) {
     setIsNoteModalOpen(false);
     setEditingNoteId(null);
   });
+
+  // Selection is view-scoped: leaving the view, switching view, or searching drops it
+  useEffect(() => {
+    setIsSelecting(false);
+    setSelectedIds(new Set());
+  }, [viewMode, searchQuery]);
 
   const passes = liveTrip.passes || [];
   const checklist = liveTrip.checklist || [];
@@ -599,6 +612,56 @@ export function ChecklistNotesTab({ trip, members, isAdmin }: Props) {
   const handleDeleteChecklist = async (itemId: string) => {
     triggerHaptic('warning');
     await deleteChecklistItem(liveTrip.id, itemId);
+  };
+
+  const toggleSelectId = (id: string) => {
+    triggerHaptic('light');
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const handleSelectAllChecklist = () => {
+    triggerHaptic('light');
+    setSelectedIds((prev) =>
+      prev.size === filteredChecklist.length
+        ? new Set()
+        : new Set(filteredChecklist.map((i) => i.id))
+    );
+  };
+
+  const handleSelectAllNotes = () => {
+    triggerHaptic('light');
+    setSelectedIds((prev) =>
+      prev.size === filteredNotes.length ? new Set() : new Set(filteredNotes.map((n) => n.id))
+    );
+  };
+
+  const handleBulkDeleteChecklist = async () => {
+    if (selectedIds.size === 0) return;
+    triggerHaptic('warning');
+    await batchDeleteChecklistItems(liveTrip.id, Array.from(selectedIds));
+    setSelectedIds(new Set());
+    setIsSelecting(false);
+  };
+
+  const handleBulkCompleteChecklist = async (completed: boolean) => {
+    if (selectedIds.size === 0) return;
+    triggerHaptic('success');
+    await batchCompleteChecklistItems(liveTrip.id, Array.from(selectedIds), completed);
+    setSelectedIds(new Set());
+    setIsSelecting(false);
+  };
+
+  const handleBulkDeleteNotes = async () => {
+    if (selectedIds.size === 0) return;
+    triggerHaptic('warning');
+    await batchDeleteTripNotes(liveTrip.id, Array.from(selectedIds));
+    setSelectedIds(new Set());
+    setIsSelecting(false);
   };
 
   const handleOpenEditChecklistModal = (item: ChecklistItem) => {
@@ -1104,12 +1167,88 @@ export function ChecklistNotesTab({ trip, members, isAdmin }: Props) {
             </div>
           </form>
 
-          {/* Subtle gesture hint for discoverability */}
+          {/* Bulk selection bar */}
           {filteredChecklist.length > 0 && (
-            <div className="checklist-swipe-hint-bar" aria-hidden="true">
-              <span className="checklist-swipe-hint-pill">
-                <span>↔️</span> Swipe item right to <strong>Edit</strong>, left to <strong>Delete</strong>
-              </span>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: '8px',
+                marginBottom: '8px',
+                flexWrap: 'wrap',
+              }}
+            >
+              {isSelecting ? (
+                <label
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    fontSize: '12px',
+                    fontWeight: 600,
+                    color: 'var(--text-secondary)',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={selectedIds.size > 0 && selectedIds.size === filteredChecklist.length}
+                    onChange={handleSelectAllChecklist}
+                    aria-label="Select all checklist items"
+                  />
+                  {selectedIds.size > 0 ? `${selectedIds.size} selected` : 'Select all'}
+                </label>
+              ) : (
+                <div className="checklist-swipe-hint-bar" aria-hidden="true">
+                  <span className="checklist-swipe-hint-pill">
+                    <span>↔️</span> Swipe item right to <strong>Edit</strong>, left to <strong>Delete</strong>
+                  </span>
+                </div>
+              )}
+
+              {isSelecting ? (
+                <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                  <button
+                    type="button"
+                    className="seed-defaults-btn"
+                    style={{ padding: '5px 10px', fontSize: '11.5px' }}
+                    disabled={selectedIds.size === 0}
+                    onClick={() => handleBulkCompleteChecklist(true)}
+                  >
+                    ✅ Mark Packed
+                  </button>
+                  <button
+                    type="button"
+                    className="seed-defaults-btn"
+                    style={{ padding: '5px 10px', fontSize: '11.5px' }}
+                    disabled={selectedIds.size === 0}
+                    onClick={handleBulkDeleteChecklist}
+                  >
+                    🗑️ Delete
+                  </button>
+                  <button
+                    type="button"
+                    className="category-pill"
+                    style={{ padding: '5px 10px', fontSize: '11.5px' }}
+                    onClick={() => {
+                      setIsSelecting(false);
+                      setSelectedIds(new Set());
+                    }}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  className="category-pill"
+                  style={{ padding: '5px 10px', fontSize: '11.5px', flexShrink: 0 }}
+                  onClick={() => setIsSelecting(true)}
+                >
+                  Select
+                </button>
+              )}
             </div>
           )}
 
@@ -1197,6 +1336,20 @@ export function ChecklistNotesTab({ trip, members, isAdmin }: Props) {
                       onDragEnd={handleDragEnd}
                       style={{ opacity: dragItemId === item.id ? 0.4 : 1, cursor: 'grab' }}
                     >
+                      {isSelecting && (
+                        <input
+                          type="checkbox"
+                          checked={selectedIds.has(item.id)}
+                          onChange={(e) => {
+                            e.stopPropagation();
+                            toggleSelectId(item.id);
+                          }}
+                          onClick={(e) => e.stopPropagation()}
+                          style={{ width: '18px', height: '18px', flexShrink: 0, cursor: 'pointer' }}
+                          aria-label={`Select ${item.text}`}
+                        />
+                      )}
+
                       <button
                         type="button"
                         className={`checklist-checkbox ${isChecked ? 'checked' : ''}`}
@@ -1305,12 +1458,79 @@ export function ChecklistNotesTab({ trip, members, isAdmin }: Props) {
             </button>
           </div>
 
-          {/* Subtle gesture hint for discoverability */}
+          {/* Bulk selection bar */}
           {filteredNotes.length > 0 && (
-            <div className="notes-swipe-hint-bar" aria-hidden="true">
-              <span className="notes-swipe-hint-pill">
-                <span>↔️</span> Swipe note right to <strong>Edit</strong>, left to <strong>Delete</strong>
-              </span>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: '8px',
+                marginBottom: '8px',
+                flexWrap: 'wrap',
+              }}
+            >
+              {isSelecting ? (
+                <label
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    fontSize: '12px',
+                    fontWeight: 600,
+                    color: 'var(--text-secondary)',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={selectedIds.size > 0 && selectedIds.size === filteredNotes.length}
+                    onChange={handleSelectAllNotes}
+                    aria-label="Select all notes"
+                  />
+                  {selectedIds.size > 0 ? `${selectedIds.size} selected` : 'Select all'}
+                </label>
+              ) : (
+                <div className="notes-swipe-hint-bar" aria-hidden="true">
+                  <span className="notes-swipe-hint-pill">
+                    <span>↔️</span> Swipe note right to <strong>Edit</strong>, left to <strong>Delete</strong>
+                  </span>
+                </div>
+              )}
+
+              {isSelecting ? (
+                <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                  <button
+                    type="button"
+                    className="seed-defaults-btn"
+                    style={{ padding: '5px 10px', fontSize: '11.5px' }}
+                    disabled={selectedIds.size === 0}
+                    onClick={handleBulkDeleteNotes}
+                  >
+                    🗑️ Delete
+                  </button>
+                  <button
+                    type="button"
+                    className="category-pill"
+                    style={{ padding: '5px 10px', fontSize: '11.5px' }}
+                    onClick={() => {
+                      setIsSelecting(false);
+                      setSelectedIds(new Set());
+                    }}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  className="category-pill"
+                  style={{ padding: '5px 10px', fontSize: '11.5px', flexShrink: 0 }}
+                  onClick={() => setIsSelecting(true)}
+                >
+                  Select
+                </button>
+              )}
             </div>
           )}
 
@@ -1374,6 +1594,15 @@ export function ChecklistNotesTab({ trip, members, isAdmin }: Props) {
                     >
                       <div className="note-card-header">
                         <div className="note-card-title-group">
+                          {isSelecting && (
+                            <input
+                              type="checkbox"
+                              checked={selectedIds.has(note.id)}
+                              onChange={() => toggleSelectId(note.id)}
+                              style={{ width: '18px', height: '18px', flexShrink: 0, cursor: 'pointer' }}
+                              aria-label={`Select ${note.title}`}
+                            />
+                          )}
                           <span className="note-category-tag">
                             {note.category === 'wifi' && '📶 Wi-Fi'}
                             {note.category === 'stay' && '🏨 Stay'}

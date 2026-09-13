@@ -80,6 +80,12 @@
         ],
         "createdAt": "2026-09-10T18:21:21.575Z",
         "reason": "pre-existing icon glyph size (quick-add + button), untouched by this session's edits; not body/UI type ramp text"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "12px",
+        "createdAt": "2026-09-13T07:11:12.128Z",
+        "reason": "matches existing 12px/11.5px literals used pervasively throughout this file's inline styles"
       }
     ]
   }

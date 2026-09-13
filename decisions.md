@@ -3066,7 +3066,14 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - If `enableTripWrapped` is safed or disabled in a release phase, the card and search results vanish cleanly from Settings and the ActionSheet with zero residue.
 
+---
 
-
-
-
+## 165. Bulk Select-All for Checklist & Notes (v3.15.4)
+* **Context:** Notes and Checklist tabs had no way to act on multiple items at once — clearing packed items or a batch of notes required deleting one row at a time.
+* **Decision:** Add a "Select" mode to both views with a "Select all" checkbox, per-row checkboxes, and a bulk action bar (Delete for both, Mark Packed for Checklist).
+* **Pattern/Implementation:**
+  - Added `batchDeleteChecklistItems`, `batchCompleteChecklistItems`, and `batchDeleteTripNotes` to `tripStore.ts`, mirroring the existing single-item actions (one state update + one backend sync write per call, rather than looping single-item calls).
+  - `ChecklistNotesTab.tsx` tracks `isSelecting` + `selectedIds` (Set), scoped per view and cleared on view switch or search.
+  - Swipe-to-edit/delete gestures on `SwipeableRow` remain fully active during selection mode by design.
+* **Trade-offs Accepted:**
+  - Selection state is local UI state (not persisted), so it resets on tab switch or search — acceptable since selection is a transient bulk-action affordance, not saved data.

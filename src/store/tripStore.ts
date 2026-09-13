@@ -175,10 +175,13 @@ interface TripStore extends TripState {
   toggleChecklistItem: (tripId: string, itemId: string) => Promise<void>;
   updateChecklistItem: (tripId: string, itemId: string, patch: Partial<Omit<ChecklistItem, 'id' | 'createdAt'>>) => Promise<void>;
   deleteChecklistItem: (tripId: string, itemId: string) => Promise<void>;
+  batchDeleteChecklistItems: (tripId: string, itemIds: string[]) => Promise<void>;
+  batchCompleteChecklistItems: (tripId: string, itemIds: string[], completed: boolean) => Promise<void>;
   reorderChecklistItems: (tripId: string, orderedItems: ChecklistItem[]) => Promise<void>;
   addTripNote: (tripId: string, note: Omit<TripNote, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
   updateTripNote: (tripId: string, noteId: string, patch: Partial<Omit<TripNote, 'id' | 'createdAt'>>) => Promise<void>;
   deleteTripNote: (tripId: string, noteId: string) => Promise<void>;
+  batchDeleteTripNotes: (tripId: string, noteIds: string[]) => Promise<void>;
 
   // Travel Passes & FX Actions
   saveTravelPass: (tripId: string, pass: TravelPass) => Promise<void>;
@@ -1793,6 +1796,61 @@ export const useTripStore = create<TripStore>()(
       }
     },
 
+    batchDeleteChecklistItems: async (tripId, itemIds) => {
+      const idSet = new Set(itemIds);
+      const currentTrip = get().trips.find((t) => t.id === tripId);
+      const currentList = currentTrip?.checklist || [];
+      const now = Date.now();
+
+      const updatedList = currentList.filter((item) => !idSet.has(item.id));
+
+      set((state) => ({
+        trips: state.trips.map((t) => (t.id === tripId ? { ...t, checklist: updatedList, updatedAt: now } : t)),
+        lastModifiedAt: now,
+      }));
+
+      if (!isMissingSupabaseEnv) {
+        try {
+          await updateTripChecklist(tripId, updatedList);
+        } catch (e) {
+          console.warn('Failed to sync batch checklist deletion to backend:', e);
+        }
+      }
+    },
+
+    batchCompleteChecklistItems: async (tripId, itemIds, completed) => {
+      const idSet = new Set(itemIds);
+      const currentTrip = get().trips.find((t) => t.id === tripId);
+      const currentList = currentTrip?.checklist || [];
+      const now = Date.now();
+      const currentUserId = get().userId;
+      const currentMemberId = currentUserId ? Object.values(get().members).find((m) => m.linkedUserId === currentUserId)?.id : undefined;
+
+      const updatedList = currentList.map((item) => {
+        if (!idSet.has(item.id)) return item;
+        return {
+          ...item,
+          completed,
+          completedAt: completed ? new Date().toISOString() : undefined,
+          completedByMemberId: completed ? (currentMemberId || 'self') : null,
+          updatedAt: now,
+        };
+      });
+
+      set((state) => ({
+        trips: state.trips.map((t) => (t.id === tripId ? { ...t, checklist: updatedList, updatedAt: now } : t)),
+        lastModifiedAt: now,
+      }));
+
+      if (!isMissingSupabaseEnv) {
+        try {
+          await updateTripChecklist(tripId, updatedList);
+        } catch (e) {
+          console.warn('Failed to sync batch checklist completion to backend:', e);
+        }
+      }
+    },
+
     reorderChecklistItems: async (tripId, orderedItems) => {
       const now = Date.now();
       set((state) => ({
@@ -1874,6 +1932,28 @@ export const useTripStore = create<TripStore>()(
           await updateTripNotes(tripId, updatedNotes);
         } catch (e) {
           console.warn('Failed to sync trip note deletion to backend:', e);
+        }
+      }
+    },
+
+    batchDeleteTripNotes: async (tripId, noteIds) => {
+      const idSet = new Set(noteIds);
+      const currentTrip = get().trips.find((t) => t.id === tripId);
+      const currentNotes = currentTrip?.notes || [];
+      const now = Date.now();
+
+      const updatedNotes = currentNotes.filter((note) => !idSet.has(note.id));
+
+      set((state) => ({
+        trips: state.trips.map((t) => (t.id === tripId ? { ...t, notes: updatedNotes, updatedAt: now } : t)),
+        lastModifiedAt: now,
+      }));
+
+      if (!isMissingSupabaseEnv) {
+        try {
+          await updateTripNotes(tripId, updatedNotes);
+        } catch (e) {
+          console.warn('Failed to sync batch note deletion to backend:', e);
         }
       }
     },
