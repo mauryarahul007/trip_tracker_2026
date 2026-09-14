@@ -10,36 +10,22 @@
 | Metric | Count | Status Notes |
 | :--- | :--- | :--- |
 | **Total Tracked** | **218** | All recorded bugs across sessions |
-| **🟢 Open** | **1** | No critical blockers, 0 High |
+| **🟢 Open** | **0** | No critical blockers, 0 High |
 | **🟡 In Progress** | **0** | Active investigation or fix |
-| **✅ Resolved** | **191** | Verified & closed |
+| **✅ Resolved** | **192** | Verified & closed |
 | **⚪ Won't Fix** | **26** | Expected behavior / deferred |
 
 ---
 
 ## 🚨 Active Bugs (Open & In Progress)
 
-| ID | Severity | Category | Title | Found By | Status |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| **[BUG-219](#bug-219)** | 🟡 Medium | `ui-ux` | Dispute Flag/Resolve button did not update immediately after flagging an expense | `claude-cli` | 🟢 Open |
+*🎉 No active open bugs! Great job team.* 
 
 ---
 
 ## 📖 Detailed Active Bug Specs
 
-### BUG-219: Dispute Flag/Resolve button did not update immediately after flagging an expense
-
-- **Severity**: `MEDIUM` | **Category**: `ui-ux` | **Status**: `open`
-- **Found By**: `claude-cli` on 14/9/2026 (web)
-
-**Description**:
-Dispute Flag/Resolve button did not update immediately after flagging an expense
-
-**Steps to Reproduce**:
-1. Navigate to application
-2. Perform action that triggers bug
-
----
+*No active bug details to display.*
 
 ## ✅ Resolved Bugs History
 
@@ -236,6 +222,7 @@ Dispute Flag/Resolve button did not update immediately after flagging an expense
 | **BUG-216** | Redundant Share button duplicated Share Card in Who Owes Who section | `ui-ux` | `low` | `Rahul` | `Rahul` | Removed the redundant text-only Share chip from BalancesSettlements.tsx's per-transfer action row; kept the Share Card chip (which already sends the same info as a WhatsApp-shareable image) as the single share action, gated by the same enableWhatsAppSettlementShare superadmin flag as before. handleShareReminder was kept internally since handleShareCard's error fallback still calls it. Fixed in commit aef218f. |
 | **BUG-217** | CI build failure: stale database.ts missing trip_messages.edited_at / edit_trip_message RPC | `general` | `high` | `Rahul` | `Rahul` | Hand-added edited_at to trip_messages Row/Insert/Update and an edit_trip_message entry to the Functions map in src/types/database.ts, matching the file's existing hand-written style. Tried a full regeneration first (npx supabase gen types) but it broke ~40 unrelated call sites due to stricter literal-union/Json typing; reverted and made the targeted addition instead. Verified with npm run build (tsc -b && vite build). Fixed in commit 8bc273e. |
 | **BUG-218** | Expense review modal header overflows horizontally on mobile after adding Flag button | `navigation` | `medium` | `claude-cli` | `claude-cli` | Split ExpenseReviewModal header into a title+close row and a separate flex-wrap actions row. Commit 7573172. |
+| **BUG-219** | Dispute Flag/Resolve button did not update immediately after flagging an expense | `ui-ux` | `medium` | `claude-cli` | `claude-cli` | App.tsx derives liveExpense from activeTripExpenses by id instead of the tap-time snapshot. Commit b9211ba. |
 
 ---
 

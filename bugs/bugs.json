@@ -6525,7 +6525,7 @@
     "description": "Dispute Flag/Resolve button did not update immediately after flagging an expense",
     "severity": "medium",
     "category": "ui-ux",
-    "status": "open",
+    "status": "resolved",
     "foundBy": "claude-cli",
     "environment": {
       "platform": "web",
@@ -6540,6 +6540,9 @@
     "actualBehavior": "",
     "diagnostics": {},
     "createdAt": "2026-09-14T12:09:35.816Z",
-    "updatedAt": "2026-09-14T12:09:35.818Z"
+    "updatedAt": "2026-09-14T12:10:35.200Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-09-14T12:10:35.199Z",
+    "resolutionNote": "App.tsx derives liveExpense from activeTripExpenses by id instead of the tap-time snapshot. Commit b9211ba."
   }
 ]
