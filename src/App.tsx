@@ -124,6 +124,9 @@ const TripMediaGalleryModal = lazy(lazyImport(() =>
 const DocumentVaultModal = lazy(lazyImport(() =>
   import('./components/DocumentVaultModal').then((m) => ({ default: m.DocumentVaultModal }))
 ));
+const LiveLocationShareModal = lazy(lazyImport(() =>
+  import('./components/LiveLocationShareModal').then((m) => ({ default: m.LiveLocationShareModal }))
+));
 const FxRatesModal = lazy(lazyImport(() =>
   import('./components/FxRatesModal').then((m) => ({ default: m.FxRatesModal }))
 ));
@@ -177,6 +180,8 @@ export default function App() {
     addExpense,
     updateExpense,
     deleteExpense,
+    flagExpenseDispute,
+    resolveExpenseDispute,
     addCategory,
     deleteCategory,
     exportDatabase,
@@ -549,6 +554,7 @@ export default function App() {
   const [smartQuickAddAutoListen, setSmartQuickAddAutoListen] = useState(false);
   const [showOfflineSnapshot, setShowOfflineSnapshot] = useState(false);
   const [showDocumentVault, setShowDocumentVault] = useState(false);
+  const [showLiveLocationShare, setShowLiveLocationShare] = useState(false);
   const [showMediaGallery, setShowMediaGallery] = useState(false);
   const [showFxRates, setShowFxRates] = useState(false);
   const activePeers = usePeerPresence(activeTripId);
@@ -2499,6 +2505,11 @@ export default function App() {
                 onOpenMediaGallery={() => setShowMediaGallery(true)}
                 onOpenOfflineSnapshot={isFeatureEnabled('enableOfflineSnapshot') ? () => setShowOfflineSnapshot(true) : undefined}
                 onOpenDocumentVault={isFeatureEnabled('enableDocumentVault') ? () => setShowDocumentVault(true) : undefined}
+                onOpenLiveLocationShare={
+                  myMemberId && isFeatureEnabled('enableLiveLocationShare', { tripId: activeTrip?.id, userId: userId || undefined })
+                    ? () => setShowLiveLocationShare(true)
+                    : undefined
+                }
                 onOpenTripWrapped={isFeatureEnabled('enableTripWrapped', { tripId: activeTrip?.id, userId: userId || undefined }) ? () => setShowTripWrapped(true) : undefined}
                 isSurfaceVisible={activeTab === 'settings'}
               />
@@ -2683,6 +2694,8 @@ export default function App() {
             categories={categories}
             trip={activeTrip}
             canManage={isAdmin || selectedReviewExpense.createdByUserId === userId}
+            currentUserId={userId}
+            isTripAdmin={isAdmin}
             onClose={() => setSelectedReviewExpense(null)}
             onEdit={() => {
               const exp = selectedReviewExpense;
@@ -2698,6 +2711,16 @@ export default function App() {
               handleDuplicateExpense(selectedReviewExpense);
               setSelectedReviewExpense(null);
             }}
+            onFlagDispute={
+              isFeatureEnabled('enableExpenseDisputes', { tripId: activeTrip?.id, userId: userId || undefined })
+                ? () => void flagExpenseDispute(selectedReviewExpense.id)
+                : undefined
+            }
+            onResolveDispute={
+              isFeatureEnabled('enableExpenseDisputes', { tripId: activeTrip?.id, userId: userId || undefined })
+                ? () => void resolveExpenseDispute(selectedReviewExpense.id)
+                : undefined
+            }
           />
         </Suspense>
       )}
@@ -2746,6 +2769,11 @@ export default function App() {
             onOpenMediaGallery={() => setShowMediaGallery(true)}
             onOpenOfflineSnapshot={isFeatureEnabled('enableOfflineSnapshot') ? () => setShowOfflineSnapshot(true) : undefined}
             onOpenDocumentVault={isFeatureEnabled('enableDocumentVault') ? () => setShowDocumentVault(true) : undefined}
+            onOpenLiveLocationShare={
+              myMemberId && isFeatureEnabled('enableLiveLocationShare', { tripId: activeTrip?.id, userId: userId || undefined })
+                ? () => setShowLiveLocationShare(true)
+                : undefined
+            }
             onOpenSuperadminPortal={() => {
               setShowGlobalSettings(false);
               setIsTravelerPreview(false);
@@ -3012,6 +3040,19 @@ export default function App() {
       {showDocumentVault && isFeatureEnabled('enableDocumentVault') && (
         <Suspense fallback={null}>
           <DocumentVaultModal isOpen={showDocumentVault} onClose={() => setShowDocumentVault(false)} />
+        </Suspense>
+      )}
+
+      {/* Live Location Share -- public link, bounded 12h window */}
+      {showLiveLocationShare && activeTrip && myMemberId && userId && isFeatureEnabled('enableLiveLocationShare', { tripId: activeTrip.id, userId }) && (
+        <Suspense fallback={null}>
+          <LiveLocationShareModal
+            isOpen={showLiveLocationShare}
+            onClose={() => setShowLiveLocationShare(false)}
+            tripId={activeTrip.id}
+            memberId={myMemberId}
+            userId={userId}
+          />
         </Suspense>
       )}
 

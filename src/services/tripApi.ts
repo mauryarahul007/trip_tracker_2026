@@ -71,6 +71,9 @@ function mapExpense(row: ExpenseRow & { location?: any }): Expense {
     resolvedShares: row.resolved_shares,
     receiptPath: row.receipt_path ?? undefined,
     photoPaths: row.photo_paths ?? undefined,
+    disputedAt: row.disputed_at ? new Date(row.disputed_at).getTime() : null,
+    disputedByUserId: row.disputed_by_user_id ?? null,
+    disputeNote: row.dispute_note ?? null,
     isSettlement: row.is_settlement,
     createdByUserId: row.created_by_user_id,
     location: row.location ?? undefined,
@@ -582,6 +585,20 @@ export async function getReceiptSignedUrl(path: string): Promise<string> {
 // primary receipt, so no storage policy changes are needed.
 export async function updateExpensePhotoPaths(id: string, photoPaths: string[]): Promise<void> {
   const { error } = await supabase.from('expenses').update({ photo_paths: photoPaths }).eq('id', id);
+  if (error) throw error;
+}
+
+// Both routed through SECURITY DEFINER RPCs (migration 0085) rather than a
+// direct table update -- flagging must work for any trip participant, not
+// just the expense's admin/author that the normal update RLS policy allows,
+// and resolving is restricted to the flagger or a trip admin server-side.
+export async function flagExpenseDispute(expenseId: string, note?: string): Promise<void> {
+  const { error } = await supabase.rpc('flag_expense_dispute', { p_expense_id: expenseId, p_note: note ?? null });
+  if (error) throw error;
+}
+
+export async function resolveExpenseDispute(expenseId: string): Promise<void> {
+  const { error } = await supabase.rpc('resolve_expense_dispute', { p_expense_id: expenseId });
   if (error) throw error;
 }
 

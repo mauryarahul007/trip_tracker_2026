@@ -210,10 +210,44 @@ async function handleSendPush(req: Request): Promise<Response> {
     return jsonResponse({ sent: 0, total: 0 }, 200);
   }
 
+  // Digest-mode users (migration 0087) get their push queued instead of
+  // sent immediately -- the notifications table row above was already
+  // written either way, so the in-app panel is unaffected. A daily cron
+  // job (send-digest) compiles the queue into one push per user.
+  const { data: digestPrefs, error: digestPrefsError } = await supabaseAdmin
+    .from('notification_digest_prefs')
+    .select('user_id')
+    .eq('enabled', true)
+    .in('user_id', pushEligibleUserIds);
+  if (digestPrefsError) {
+    console.error('Failed to load digest preferences, sending push immediately to all recipients', digestPrefsError);
+  }
+  const digestUserIds = new Set((digestPrefs || []).map((p) => p.user_id));
+  const immediateUserIds = pushEligibleUserIds.filter((id) => !digestUserIds.has(id));
+
+  if (digestUserIds.size > 0) {
+    const { error: queueError } = await supabaseAdmin.from('pending_digest_events').insert(
+      Array.from(digestUserIds).map((recipientId) => ({
+        user_id: recipientId,
+        trip_id: tripId ?? null,
+        trip_name: tripName || null,
+        type,
+        params: notificationParams,
+      }))
+    );
+    if (queueError) {
+      console.error('Failed to queue digest event', queueError);
+    }
+  }
+
+  if (immediateUserIds.length === 0) {
+    return jsonResponse({ sent: 0, total: 0, queued: digestUserIds.size }, 200);
+  }
+
   const { data: tokens, error: tokenError } = await supabaseAdmin
     .from('device_push_tokens')
     .select('id, fcm_token')
-    .in('user_id', pushEligibleUserIds);
+    .in('user_id', immediateUserIds);
   if (tokenError) {
     return jsonResponse({ error: tokenError.message }, 500);
   }
@@ -266,5 +300,5 @@ async function handleSendPush(req: Request): Promise<Response> {
     }
   }
 
-  return jsonResponse({ sent, total: tokens.length }, 200);
+  return jsonResponse({ sent, total: tokens.length, queued: digestUserIds.size }, 200);
 }

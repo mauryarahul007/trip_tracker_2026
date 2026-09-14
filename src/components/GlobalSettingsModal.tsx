@@ -54,6 +54,7 @@ type Props = {
   onOpenMediaGallery?: () => void;
   onOpenOfflineSnapshot?: () => void;
   onOpenDocumentVault?: () => void;
+  onOpenLiveLocationShare?: () => void;
   onOpenSuperadminPortal?: () => void;
   onOpenOpsBugs?: () => void;
 };
@@ -97,6 +98,7 @@ export function GlobalSettingsModal({
   onOpenMediaGallery,
   onOpenOfflineSnapshot,
   onOpenDocumentVault,
+  onOpenLiveLocationShare,
   onOpenSuperadminPortal,
   onOpenOpsBugs,
 }: Props) {
@@ -265,6 +267,7 @@ export function GlobalSettingsModal({
           onOpenMediaGallery={onOpenMediaGallery}
           onOpenOfflineSnapshot={onOpenOfflineSnapshot}
           onOpenDocumentVault={onOpenDocumentVault}
+          onOpenLiveLocationShare={onOpenLiveLocationShare}
           onOpenSuperadminPortal={onOpenSuperadminPortal}
           onOpenOpsBugs={onOpenOpsBugs}
         />

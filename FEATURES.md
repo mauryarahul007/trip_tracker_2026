@@ -9,11 +9,11 @@
 
 | Metric | Count |
 | :--- | :--- |
-| **Total Tracked** | **64** |
+| **Total Tracked** | **68** |
 | **💡 Requested** | **2** |
 | **📋 Planned** | **0** |
 | **🟡 In Progress** | **0** |
-| **✅ Shipped** | **62** |
+| **✅ Shipped** | **66** |
 | **⚪ Won't Do** | **0** |
 
 ---
@@ -114,6 +114,10 @@ CI pipeline for lint, build, and test on push/PR
 | **FEAT-062** | Document / ID Vault (local-only, biometric-gated) | `ui-ux` | `claude-cli` | `claude-cli` | Shipped |
 | **FEAT-063** | Offline map tile caching for trip journey map | `performance` | `claude-cli` | `claude-cli` | Shipped |
 | **FEAT-064** | Calendar sync via native Share sheet (upgrades ICS export) | `ui-ux` | `claude-cli` | `claude-cli` | Shipped |
+| **FEAT-065** | Payment history / installment tracker on settlements | `ui-ux` | `claude-cli` | `claude-cli` | Shipped |
+| **FEAT-066** | Dispute flag on expenses | `ui-ux` | `claude-cli` | `claude-cli` | Shipped |
+| **FEAT-067** | Live location share (public link, 12h window) | `ui-ux` | `claude-cli` | `claude-cli` | Shipped |
+| **FEAT-068** | Digest-mode push notifications (daily summary) | `performance` | `claude-cli` | `claude-cli` | Shipped |
 
 ---
 

@@ -162,6 +162,9 @@ export interface Expense {
   receiptImage?: string; // client-only: a freshly-captured base64 preview, not yet uploaded
   receiptPath?: string | null; // Supabase Storage object path once uploaded — resolve via a signed URL to display
   photoPaths?: string[]; // Supabase Storage paths for additional photos attached after the initial save (same 'receipts' bucket)
+  disputedAt?: number | null; // set when a participant flags this expense as disputed
+  disputedByUserId?: string | null; // only this user or a trip admin can resolve the dispute
+  disputeNote?: string | null;
   isSettlement: boolean;
   createdByUserId: string | null; // participant edit/delete rights are scoped to this; null once the creator's account has been deleted
   location?: ExpenseLocation | null; // optional GPS geotag

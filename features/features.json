@@ -1019,5 +1019,69 @@
     "shippedAt": "2026-09-14T06:56:40.599Z",
     "shippedBy": "claude-cli",
     "shippedNote": "Shipped"
+  },
+  {
+    "id": "FEAT-065",
+    "title": "Payment history / installment tracker on settlements",
+    "description": "Payment history / installment tracker on settlements",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-09-14T11:39:24.619Z",
+    "updatedAt": "2026-09-14T11:39:24.619Z",
+    "shippedAt": "2026-09-14T11:39:24.619Z",
+    "shippedBy": "claude-cli",
+    "shippedNote": "Shipped"
+  },
+  {
+    "id": "FEAT-066",
+    "title": "Dispute flag on expenses",
+    "description": "Dispute flag on expenses",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-09-14T11:39:26.686Z",
+    "updatedAt": "2026-09-14T11:39:26.686Z",
+    "shippedAt": "2026-09-14T11:39:26.686Z",
+    "shippedBy": "claude-cli",
+    "shippedNote": "Shipped"
+  },
+  {
+    "id": "FEAT-067",
+    "title": "Live location share (public link, 12h window)",
+    "description": "Live location share (public link, 12h window)",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-09-14T11:39:28.459Z",
+    "updatedAt": "2026-09-14T11:39:28.459Z",
+    "shippedAt": "2026-09-14T11:39:28.459Z",
+    "shippedBy": "claude-cli",
+    "shippedNote": "Shipped"
+  },
+  {
+    "id": "FEAT-068",
+    "title": "Digest-mode push notifications (daily summary)",
+    "description": "Digest-mode push notifications (daily summary)",
+    "category": "performance",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-09-14T11:39:30.051Z",
+    "updatedAt": "2026-09-14T11:39:30.051Z",
+    "shippedAt": "2026-09-14T11:39:30.051Z",
+    "shippedBy": "claude-cli",
+    "shippedNote": "Shipped"
   }
 ]

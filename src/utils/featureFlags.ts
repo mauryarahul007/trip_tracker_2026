@@ -19,7 +19,7 @@ export const RELEASE_PHASES: ReleasePhaseDef[] = [
     tagline: 'Frictionless on-trip logging & shared trip organization',
     description: 'Hands-free voice quick-add with Hinglish NLP parsing, compressed receipt photos, collaborative packing & rich notes, and 4D duplicate expense warning.',
     targetAudience: 'Friends & families actively traveling together',
-    flagKeys: ['enableVoiceInput', 'enableReceiptUpload', 'enableNotesAndChecklist', 'enableDuplicateDetector', 'enableTripChat', 'enableExpensePhotoLinking'],
+    flagKeys: ['enableVoiceInput', 'enableReceiptUpload', 'enableNotesAndChecklist', 'enableDuplicateDetector', 'enableTripChat', 'enableExpensePhotoLinking', 'enableExpenseDisputes', 'enableDigestNotifications'],
   },
   {
     id: 'phase3',
@@ -39,6 +39,7 @@ export const RELEASE_PHASES: ReleasePhaseDef[] = [
       'enableGeotagging',
       'enableIcsExport',
       'enableOfflineMapTiles',
+      'enableLiveLocationShare',
     ],
   },
   {
@@ -73,6 +74,7 @@ export const RELEASE_PHASES: ReleasePhaseDef[] = [
       'enableCloneLastExpense',
       'enableRememberDefaultSplit',
       'enableSettlementDateNote',
+      'enableSettlementHistory',
     ],
   },
   {
@@ -136,6 +138,22 @@ export const FEATURE_FLAGS_META: Record<FeatureFlagKey, FeatureFlagMeta> = {
     key: 'enableExpensePhotoLinking',
     label: 'Extra Expense Photos',
     description: 'Attach more photos to an already-saved expense, beyond the single primary receipt.',
+    category: 'collab',
+    phase: 'phase2',
+    defaultEnabledForUsers: false,
+  },
+  enableExpenseDisputes: {
+    key: 'enableExpenseDisputes',
+    label: 'Dispute Flag on Expenses',
+    description: 'Any participant can flag an expense as disputed; the flagger or a trip admin can resolve it.',
+    category: 'collab',
+    phase: 'phase2',
+    defaultEnabledForUsers: false,
+  },
+  enableDigestNotifications: {
+    key: 'enableDigestNotifications',
+    label: 'Digest-Mode Notifications',
+    description: 'One daily push summary instead of a push per event. Requires the digest_cron_secret Vault setup in migration 0087.',
     category: 'collab',
     phase: 'phase2',
     defaultEnabledForUsers: false,
@@ -238,6 +256,14 @@ export const FEATURE_FLAGS_META: Record<FeatureFlagKey, FeatureFlagMeta> = {
     phase: 'phase3',
     defaultEnabledForUsers: false,
   },
+  enableLiveLocationShare: {
+    key: 'enableLiveLocationShare',
+    label: 'Live Location Share',
+    description: 'Share a public, no-login link showing a member’s current position for a bounded 12h window.',
+    category: 'geotagging',
+    phase: 'phase3',
+    defaultEnabledForUsers: false,
+  },
 
   // Phase 4: FinTech Pro & Global Jetsetter Suite
   enableAdvancedSplits: {
@@ -330,6 +356,14 @@ export const FEATURE_FLAGS_META: Record<FeatureFlagKey, FeatureFlagMeta> = {
     phase: 'phase5',
     defaultEnabledForUsers: false,
   },
+  enableSettlementHistory: {
+    key: 'enableSettlementHistory',
+    label: 'Payment History / Installment Tracker',
+    description: 'Groups partial settlements between the same two members into a running paid-so-far history instead of separate ledger rows.',
+    category: 'splits',
+    phase: 'phase5',
+    defaultEnabledForUsers: false,
+  },
   enableSettlementDateNote: {
     key: 'enableSettlementDateNote',
     label: 'Settlement Date & Note',
@@ -418,6 +452,8 @@ export const DEFAULT_FEATURE_FLAGS: Record<FeatureFlagKey, boolean> = {
   enableDuplicateDetector: true,
   enableTripChat: false,
   enableExpensePhotoLinking: false,
+  enableExpenseDisputes: false,
+  enableDigestNotifications: false,
 
   // Phase 3 (Armed by default)
   enableTravelPasses: true,
@@ -429,6 +465,7 @@ export const DEFAULT_FEATURE_FLAGS: Record<FeatureFlagKey, boolean> = {
   enableGeotagging: true,
   enableIcsExport: false,
   enableOfflineMapTiles: false,
+  enableLiveLocationShare: false,
 
   // Phase 4 (Armed by default)
   enableAdvancedSplits: true,
@@ -445,6 +482,7 @@ export const DEFAULT_FEATURE_FLAGS: Record<FeatureFlagKey, boolean> = {
   enableCloneLastExpense: false,
   enableRememberDefaultSplit: false,
   enableSettlementDateNote: false,
+  enableSettlementHistory: false,
 
   // Platform Extras & Deferred
   enableTripWrapped: true,

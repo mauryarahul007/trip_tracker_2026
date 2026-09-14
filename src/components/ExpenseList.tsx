@@ -16,6 +16,7 @@ import { useTripStore } from '../store/tripStore';
 import { useHistoryBack } from '../utils/useHistoryBack';
 import { useEscapeKey } from '../utils/useEscapeKey';
 import { NextUpTravelCapsule } from './NextUpTravelCapsule';
+import { SettlementHistorySection } from './SettlementHistorySection';
 
 // Swipe-to-delete is a supplement to the explicit trash button — skip
 // wrapping the row in it at all when the viewer isn't allowed to delete.
@@ -395,6 +396,9 @@ export function ExpenseList({
                 <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{exp.title}</span>
                 {(exp.receiptImage || exp.receiptPath) && (
                   <span style={{ fontSize: '11px', flexShrink: 0, opacity: 0.85 }} title="Photo receipt attached">📸</span>
+                )}
+                {exp.disputedAt && (
+                  <span style={{ fontSize: '11px', flexShrink: 0 }} title={exp.disputeNote ? `Flagged: ${exp.disputeNote}` : 'Flagged as disputed'} aria-label="Disputed">🚩</span>
                 )}
                 {isConflict ? (
                   <span style={{ fontSize: '10px', flexShrink: 0, opacity: 0.9 }} title="Sync conflict — choose which version to keep" aria-label="Sync conflict">⚠️</span>
@@ -1067,6 +1071,13 @@ export function ExpenseList({
               </div>
               {settlementGroups.map((group, groupIdx) =>
                 renderDayGroupCard(group, groupIdx, { collapseKeyPrefix: 'settlement:', amountSuffix: 'settled' })
+              )}
+              {isFeatureEnabled('enableSettlementHistory', { tripId: trip?.id }) && (
+                <SettlementHistorySection
+                  settlementExpenses={settlementsDisplayed}
+                  members={members}
+                  currencySymbol={currencySymbol}
+                />
               )}
             </>
           )}

@@ -10,6 +10,44 @@ export interface Transfer {
   amount: number;
 }
 
+export interface PairSettlementGroup {
+  fromMemberId: string; // debtor -- expense.paidBy on each payment
+  toMemberId: string; // creditor -- expense.splitMemberIds[0] on each payment
+  totalPaid: number;
+  payments: Expense[]; // newest first
+}
+
+// Groups settlement expenses (title starts with "Settlement:", isSettlement
+// true) by the debtor/creditor pair recorded on onSettle -- paidBy is
+// always the debtor and splitMemberIds[0] the creditor (see App.tsx's
+// settle-confirm handler), so this reads structural fields rather than
+// parsing the title string.
+export function groupSettlementsByPair(settlementExpenses: Expense[]): PairSettlementGroup[] {
+  const groups = new Map<string, PairSettlementGroup>();
+
+  settlementExpenses.forEach((expense) => {
+    const fromMemberId = expense.paidBy;
+    const toMemberId = expense.splitMemberIds[0];
+    if (!toMemberId) return;
+
+    const key = `${fromMemberId}:${toMemberId}`;
+    const existing = groups.get(key);
+    if (existing) {
+      existing.totalPaid += expense.amount;
+      existing.payments.push(expense);
+    } else {
+      groups.set(key, { fromMemberId, toMemberId, totalPaid: expense.amount, payments: [expense] });
+    }
+  });
+
+  return Array.from(groups.values())
+    .map((group) => ({
+      ...group,
+      payments: [...group.payments].sort((a, b) => b.createdAt - a.createdAt),
+    }))
+    .sort((a, b) => b.totalPaid - a.totalPaid);
+}
+
 export interface MemberBalance {
   memberId: string;
   name: string;

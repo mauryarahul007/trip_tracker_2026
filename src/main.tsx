@@ -25,6 +25,9 @@ const ResetPasswordScreen = lazy(() =>
 const JoinTripScreen = lazy(() =>
   import('./components/JoinTripScreen').then((m) => ({ default: m.JoinTripScreen }))
 )
+const LiveLocationPage = lazy(() =>
+  import('./components/LiveLocationPage').then((m) => ({ default: m.LiveLocationPage }))
+)
 const PrivacyPolicyPage = lazy(() =>
   import('./components/PrivacyPolicyPage').then((m) => ({ default: m.PrivacyPolicyPage }))
 )
@@ -148,6 +151,16 @@ createRoot(document.getElementById('root')!).render(
             <ErrorBoundary>
               <Suspense fallback={<RouteLoadingFallback />}>
                 <JoinTripScreen />
+              </Suspense>
+            </ErrorBoundary>
+          }
+        />
+        <Route
+          path="/live/:token"
+          element={
+            <ErrorBoundary>
+              <Suspense fallback={<RouteLoadingFallback />}>
+                <LiveLocationPage />
               </Suspense>
             </ErrorBoundary>
           }

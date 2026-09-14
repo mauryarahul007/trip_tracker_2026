@@ -46,6 +46,7 @@ import { SettingsStorageDataScreen } from './settings/SettingsStorageDataScreen'
 import { SettingsAboutScreen } from './settings/SettingsAboutScreen';
 import { prefetchSettingsLeaves, prefetchSettingsLegal } from './settings/prefetchSettingsLeaves';
 import { formatBytes } from './settings/formatBytes';
+import { getDigestPreference, setDigestPreference } from '../services/notificationDigestApi';
 
 const SuperAdminBugTracker = lazy(() => import('./SuperAdminBugTracker').then((m) => ({ default: m.SuperAdminBugTracker })));
 const SettingsCategoriesScreen = lazy(() => import('./settings/SettingsCategoriesScreen').then((m) => ({ default: m.SettingsCategoriesScreen })));
@@ -135,6 +136,7 @@ interface SettingsViewProps {
   onOpenMediaGallery?: () => void;
   onOpenOfflineSnapshot?: () => void;
   onOpenDocumentVault?: () => void;
+  onOpenLiveLocationShare?: () => void;
   onOpenTripWrapped?: () => void;
 }
 
@@ -181,6 +183,7 @@ export function SettingsView({
   onOpenMediaGallery,
   onOpenOfflineSnapshot,
   onOpenDocumentVault,
+  onOpenLiveLocationShare,
   onOpenTripWrapped,
 }: SettingsViewProps) {
   const [screenStack, setScreenStack] = useState<SubScreen[]>(() => (initialSubScreen ? [initialSubScreen] : []));
@@ -475,6 +478,25 @@ export function SettingsView({
   const [copyFeedback, setCopyFeedback] = useState<string | null>(null);
 
   const [passRemindersOn, setPassRemindersOn] = useState(isPassRemindersEnabled);
+
+  // Cross-trip, Supabase-backed (not a local/per-trip flag like the others
+  // in this file) -- see notificationDigestApi.ts. Loaded once per userId.
+  const [digestModeOn, setDigestModeOn] = useState(false);
+  const [digestModeBusy, setDigestModeBusy] = useState(false);
+  useEffect(() => {
+    if (!userId) return;
+    getDigestPreference(userId).then(setDigestModeOn).catch(() => {});
+  }, [userId]);
+
+  const handleToggleDigestMode = (enabled: boolean) => {
+    if (!userId || digestModeBusy) return;
+    setDigestModeBusy(true);
+    setDigestModeOn(enabled);
+    triggerHaptic('light');
+    setDigestPreference(userId, enabled)
+      .catch(() => setDigestModeOn(!enabled))
+      .finally(() => setDigestModeBusy(false));
+  };
 
   const handleTogglePassReminders = (enabled: boolean) => {
     setPassRemindersEnabled(enabled);
@@ -875,10 +897,12 @@ export function SettingsView({
 
   const showAppearance = matchesSearch('Appearance', 'theme', 'dark', 'light', 'night', 'auto', 'color', 'look');
   const showNotifications = matchesSearch('Notifications', 'alerts', 'unread', 'bell', 'messages');
+  const showDigestMode = isFeatureEnabled('enableDigestNotifications') && matchesSearch('Digest Mode', 'digest', 'daily', 'summary', 'notifications', 'batch');
   const showPassReminders = matchesSearch('Pass reminders', 'pass', 'flight', 'train', 'departure', 'alert');
   const showGeotag = isFeatureEnabled('enableGeotagging') && matchesSearch('Geotag Expenses', 'gps', 'location', 'place', 'map', 'pin');
+  const showLiveLocationShare = Boolean(onOpenLiveLocationShare && matchesSearch('Live Location Share', 'location', 'safety', 'share', 'gps', 'live'));
   const showInstall = pwaInstallable && matchesSearch('Install App', 'pwa', 'home screen', 'download', 'mobile');
-  const showPreferencesGroup = showAppearance || showNotifications || showPassReminders || showGeotag || showInstall;
+  const showPreferencesGroup = showAppearance || showNotifications || showDigestMode || showPassReminders || showGeotag || showLiveLocationShare || showInstall;
 
   const showStorageManager = matchesSearch('Storage and Data', 'storage', 'data', 'cache', 'memory', 'disk', 'receipts', 'photos');
   const showArchived = matchesSearch('Archived Trips', 'restore', 'history', 'past trips', 'archive');
@@ -1269,6 +1293,60 @@ export function SettingsView({
               </button>
             )}
 
+            {showDigestMode && (
+              <div className="settings-row-item" style={{ cursor: 'default' }}>
+                <div className="settings-row-left">
+                  <div className="settings-squircle squircle-slate-glow">
+                    <IconBell size={18} />
+                  </div>
+                  <div className="settings-row-texts">
+                    <span className="settings-row-title">Digest Mode</span>
+                    <span className="settings-row-subtitle">One daily summary instead of a push per event</span>
+                  </div>
+                </div>
+                <div className="settings-row-right" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span className="settings-badge-pill" style={{ fontWeight: 600, fontSize: '10px' }}>
+                    {digestModeOn ? 'ON' : 'OFF'}
+                  </span>
+                  <label style={{ position: 'relative', display: 'inline-block', width: '44px', height: '24px', margin: 0, cursor: 'pointer' }}>
+                    <input
+                      type="checkbox"
+                      checked={digestModeOn}
+                      onChange={(e) => handleToggleDigestMode(e.target.checked)}
+                      aria-label="Digest Mode"
+                      style={{ opacity: 0, width: 0, height: 0, margin: 0 }}
+                    />
+                    <span
+                      style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        backgroundColor: digestModeOn ? '#17B6A6' : 'var(--border-color)',
+                        transition: '0.2s ease',
+                        borderRadius: 'var(--border-radius-pill)',
+                      }}
+                    >
+                      <span
+                        style={{
+                          position: 'absolute',
+                          height: '18px',
+                          width: '18px',
+                          left: digestModeOn ? '23px' : '3px',
+                          bottom: '3px',
+                          backgroundColor: 'white',
+                          transition: '0.2s ease',
+                          borderRadius: '50%',
+                          boxShadow: '0 1px 3px rgba(0,0,0,0.25)',
+                        }}
+                      />
+                    </span>
+                  </label>
+                </div>
+              </div>
+            )}
+
           {showPassReminders && (
             <div className="settings-row-item" style={{ cursor: 'default' }}>
               <div className="settings-row-left">
@@ -1378,6 +1456,17 @@ export function SettingsView({
                   </label>
                 </div>
               </div>
+            )}
+
+            {showLiveLocationShare && onOpenLiveLocationShare && (
+              <SettingsCell
+                icon={<IconMapPin size={18} />}
+                iconGlow="rose"
+                title="Live Location Share"
+                subtitle="Share a public link with your current position for 12h"
+                badge="SAFETY"
+                onClick={onOpenLiveLocationShare}
+              />
             )}
 
             {showInstall && (

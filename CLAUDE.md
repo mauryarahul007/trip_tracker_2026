@@ -49,6 +49,22 @@ instruction, not a one-off. If genuinely unsure which category a change
 falls into, ask the user rather than guessing. Never push before this
 question is asked and answered.
 
+## New features must be flag-gated and phase-classified (mandatory, no exceptions)
+
+Every new customer-facing feature added to this app must ship behind a
+Superadmin Ops Deck feature flag, default OFF, with no code path reachable
+outside that flag. Register it in both `src/types/admin.ts`
+(`FeatureFlagKey` union) and `src/utils/featureFlags.ts`
+(`FEATURE_FLAGS_META` entry + `DEFAULT_FEATURE_FLAGS` default + a
+`RELEASE_PHASES` `flagKeys` entry). Assign it to the release phase that
+thematically fits (Phase 1 Core, Phase 2 Collab, Phase 3 Travel/Geo, Phase
+4 FinTech/Security, Phase 5 Switch/Speed/Trust) rather than dumping it in
+"Deferred" — Deferred is for genuinely out-of-scope/shelved work, not new
+shipped features. Bump the hardcoded flag-count assertion in
+`src/utils/featureFlags.test.ts` to match. The Ops Deck's Flags/Release
+Phases pages are fully data-driven off this registry — no other wiring
+needed for a flag to appear there.
+
 ## Automated versioning & dev server reload (mandatory)
 
 Before committing and pushing changes:

@@ -102,6 +102,58 @@ export interface Database {
         }>;
         Relationships: [];
       };
+      notification_digest_prefs: {
+        Row: {
+          user_id: string;
+          enabled: boolean;
+          updated_at: string;
+        };
+        Insert: {
+          user_id: string;
+          enabled?: boolean;
+          updated_at?: string;
+        };
+        Update: Partial<{
+          enabled: boolean;
+          updated_at: string;
+        }>;
+        Relationships: [];
+      };
+      member_locations: {
+        Row: {
+          id: string;
+          trip_id: string;
+          member_id: string;
+          user_id: string;
+          lat: number;
+          lng: number;
+          share_token: string;
+          is_sharing: boolean;
+          expires_at: string | null;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          trip_id: string;
+          member_id: string;
+          user_id: string;
+          lat: number;
+          lng: number;
+          share_token?: string;
+          is_sharing?: boolean;
+          expires_at?: string | null;
+          updated_at?: string;
+        };
+        Update: Partial<{
+          lat: number;
+          lng: number;
+          share_token: string;
+          is_sharing: boolean;
+          expires_at: string | null;
+          updated_at: string;
+        }>;
+        Relationships: [];
+      };
       members: {
         Row: {
           id: string;
@@ -193,6 +245,9 @@ export interface Database {
           resolved_shares: Record<string, number>;
           receipt_path: string | null;
           photo_paths: string[] | null;
+          disputed_at: string | null;
+          disputed_by_user_id: string | null;
+          dispute_note: string | null;
           is_settlement: boolean;
           created_by_user_id: string | null;
           location?: { lat: number; lng: number; placeName?: string } | null;
@@ -235,6 +290,9 @@ export interface Database {
           resolved_shares: Record<string, number>;
           receipt_path: string | null;
           photo_paths: string[] | null;
+          disputed_at: string | null;
+          disputed_by_user_id: string | null;
+          dispute_note: string | null;
           location: { lat: number; lng: number; placeName?: string } | null;
           deleted_at: string | null;
           deleted_by_user_id: string | null;
@@ -679,6 +737,25 @@ export interface Database {
           edited_at: string | null;
           deleted_at: string | null;
         };
+      };
+      get_shared_location: {
+        Args: { p_token: string };
+        Returns: {
+          member_name: string;
+          trip_name: string;
+          lat: number;
+          lng: number;
+          updated_at: string;
+          expires_at: string | null;
+        }[];
+      };
+      flag_expense_dispute: {
+        Args: { p_expense_id: string; p_note?: string | null };
+        Returns: Database['public']['Tables']['expenses']['Row'];
+      };
+      resolve_expense_dispute: {
+        Args: { p_expense_id: string };
+        Returns: Database['public']['Tables']['expenses']['Row'];
       };
       submit_feature_request: {
         Args: {

@@ -1,7 +1,7 @@
 import { useRef, useState, useEffect } from 'react';
 import type { Category, Expense, Member, Trip } from '../types';
 import { getReceiptSignedUrl } from '../services/tripApi';
-import { IconEdit, IconTrash, IconCopy } from './Icons';
+import { IconEdit, IconTrash, IconCopy, IconAlertCircle } from './Icons';
 import { getCurrencySymbol } from '../utils/currency';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 
@@ -12,13 +12,17 @@ type Props = {
   categories: Category[];
   trip: Trip | undefined;
   canManage: boolean;
+  currentUserId?: string | null;
+  isTripAdmin?: boolean;
   onClose: () => void;
   onEdit: () => void;
   onDelete: () => void;
   onDuplicate?: () => void;
+  onFlagDispute?: () => void;
+  onResolveDispute?: () => void;
 };
 
-export function ExpenseReviewModal({ expense, members, categories, trip, canManage, onClose, onEdit, onDelete, onDuplicate }: Props) {
+export function ExpenseReviewModal({ expense, members, categories, trip, canManage, currentUserId, isTripAdmin, onClose, onEdit, onDelete, onDuplicate, onFlagDispute, onResolveDispute }: Props) {
   const isSettlement = expense.title.startsWith('Settlement:');
   const currencySymbol = getCurrencySymbol(trip?.baseCurrency || '');
   const [receiptUrl, setReceiptUrl] = useState<string | null>(null);
@@ -100,6 +104,24 @@ export function ExpenseReviewModal({ expense, members, categories, trip, canMana
                 <IconTrash size={13} className="icon-sm" /> Delete
               </button>
             )}
+            {!isSettlement && !expense.disputedAt && onFlagDispute && (
+              <button
+                className="secondary-btn"
+                style={{ padding: '6px 12px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}
+                onClick={onFlagDispute}
+              >
+                <IconAlertCircle size={13} className="icon-sm" /> Flag
+              </button>
+            )}
+            {expense.disputedAt && (isTripAdmin || expense.disputedByUserId === currentUserId) && onResolveDispute && (
+              <button
+                className="secondary-btn"
+                style={{ padding: '6px 12px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}
+                onClick={onResolveDispute}
+              >
+                <IconAlertCircle size={13} className="icon-sm" /> Resolve
+              </button>
+            )}
             <button
               className="secondary-btn"
               style={{ padding: '6px 12px', fontSize: '13px' }}
@@ -109,6 +131,27 @@ export function ExpenseReviewModal({ expense, members, categories, trip, canMana
             </button>
           </div>
         </div>
+
+        {expense.disputedAt && (
+          <div style={{
+            fontSize: '12.5px',
+            color: 'var(--color-danger)',
+            background: 'rgba(184, 69, 46, 0.06)',
+            border: '1px solid rgba(184, 69, 46, 0.25)',
+            borderRadius: 'var(--border-radius-md)',
+            padding: '8px 12px',
+            marginBottom: '16px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+          }}>
+            <IconAlertCircle size={14} className="icon-sm" />
+            <span>
+              Flagged by {members[expense.disputedByUserId || '']?.name || 'a participant'}
+              {expense.disputeNote ? `: "${expense.disputeNote}"` : ' — needs a look before this is settled.'}
+            </span>
+          </div>
+        )}
 
         {!canManage && !isSettlement && (
           <div style={{

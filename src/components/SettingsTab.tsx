@@ -42,6 +42,7 @@ type Props = {
   onOpenMediaGallery?: () => void;
   onOpenOfflineSnapshot?: () => void;
   onOpenDocumentVault?: () => void;
+  onOpenLiveLocationShare?: () => void;
   onOpenTripWrapped?: () => void;
   isSurfaceVisible?: boolean;
 };
@@ -84,6 +85,7 @@ export function SettingsTab({
   onOpenMediaGallery,
   onOpenOfflineSnapshot,
   onOpenDocumentVault,
+  onOpenLiveLocationShare,
   onOpenTripWrapped,
   isSurfaceVisible = true,
 }: Props) {
@@ -127,6 +129,7 @@ export function SettingsTab({
       onOpenMediaGallery={onOpenMediaGallery}
       onOpenOfflineSnapshot={onOpenOfflineSnapshot}
       onOpenDocumentVault={onOpenDocumentVault}
+      onOpenLiveLocationShare={onOpenLiveLocationShare}
       onOpenTripWrapped={onOpenTripWrapped}
       isSurfaceVisible={isSurfaceVisible}
     />

@@ -43,6 +43,8 @@ import {
   insertTripGraph,
   uploadReceipt,
   updateExpensePhotoPaths,
+  flagExpenseDispute,
+  resolveExpenseDispute,
   invalidatePreviousMembersCache,
   type ExpenseInput,
 } from '../services/tripApi';
@@ -214,6 +216,8 @@ interface TripStore extends TripState {
   deleteExpense: (id: string) => Promise<void>;
   addExpensePhoto: (expenseId: string, dataUrl: string) => Promise<void>;
   removeExpensePhoto: (expenseId: string, path: string) => Promise<void>;
+  flagExpenseDispute: (expenseId: string, note?: string) => Promise<void>;
+  resolveExpenseDispute: (expenseId: string) => Promise<void>;
 
   // Recycle Bin
   deletedExpenses: Expense[];
@@ -2577,6 +2581,31 @@ export const useTripStore = create<TripStore>()(
         expenses: state.expenses.map((e) => (e.id === expenseId ? { ...e, photoPaths: nextPaths } : e)),
       }));
       void supabase.storage.from('receipts').remove([path]);
+    },
+
+    // Routed through the SECURITY DEFINER RPCs in migration 0085 -- see
+    // tripApi.ts for why a direct table update won't work for flagging
+    // (any participant, not just the expense's admin/author).
+    flagExpenseDispute: async (expenseId, note) => {
+      if (isMissingSupabaseEnv) return;
+      const userId = get().userId;
+      if (!userId) return;
+      await flagExpenseDispute(expenseId, note);
+      set((state) => ({
+        expenses: state.expenses.map((e) =>
+          e.id === expenseId ? { ...e, disputedAt: Date.now(), disputedByUserId: userId, disputeNote: note || null } : e
+        ),
+      }));
+    },
+
+    resolveExpenseDispute: async (expenseId) => {
+      if (isMissingSupabaseEnv) return;
+      await resolveExpenseDispute(expenseId);
+      set((state) => ({
+        expenses: state.expenses.map((e) =>
+          e.id === expenseId ? { ...e, disputedAt: null, disputedByUserId: null, disputeNote: null } : e
+        ),
+      }));
     },
 
     deleteExpense: async (id) => {
