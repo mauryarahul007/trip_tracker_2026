@@ -15,6 +15,13 @@ export interface SharedLocation {
   expiresAt: string | null;
 }
 
+export interface TripActiveShare {
+  memberId: string;
+  lat: number;
+  lng: number;
+  updatedAt: string;
+}
+
 const SHARE_DURATION_MS = 12 * 60 * 60 * 1000; // 12h -- bounded window, not "forever"
 
 // Owner-only upsert (RLS: user_id = auth.uid()) -- starts or refreshes a
@@ -57,6 +64,20 @@ export async function getMyLocationShare(tripId: string): Promise<MyLocationShar
   if (error) throw error;
   if (!data) return null;
   return { isSharing: data.is_sharing, shareToken: data.share_token, expiresAt: data.expires_at };
+}
+
+// Trip participants (migration 0089) -- separate from the public token RPC
+// below, this is for viewing shares in-app without needing a link at all.
+// Member names come from the trip's already-loaded members map client-side
+// rather than a join, since the caller already has it.
+export async function getActiveTripLocationShares(tripId: string): Promise<TripActiveShare[]> {
+  const { data, error } = await supabase
+    .from('member_locations')
+    .select('member_id, lat, lng, updated_at')
+    .eq('trip_id', tripId)
+    .eq('is_sharing', true);
+  if (error) throw error;
+  return (data || []).map((row) => ({ memberId: row.member_id, lat: row.lat, lng: row.lng, updatedAt: row.updated_at }));
 }
 
 // Public, unauthenticated -- the only way to read another user's location,

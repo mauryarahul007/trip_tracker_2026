@@ -6518,5 +6518,28 @@
     "resolvedBy": "claude-cli",
     "resolvedAt": "2026-09-14T11:57:21.012Z",
     "resolutionNote": "Split ExpenseReviewModal header into a title+close row and a separate flex-wrap actions row. Commit 7573172."
+  },
+  {
+    "id": "BUG-219",
+    "title": "Dispute Flag/Resolve button did not update immediately after flagging an expense",
+    "description": "Dispute Flag/Resolve button did not update immediately after flagging an expense",
+    "severity": "medium",
+    "category": "ui-ux",
+    "status": "open",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-09-14T12:09:35.816Z",
+    "updatedAt": "2026-09-14T12:09:35.818Z"
   }
 ]

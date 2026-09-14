@@ -1083,5 +1083,21 @@
     "shippedAt": "2026-09-14T11:39:30.051Z",
     "shippedBy": "claude-cli",
     "shippedNote": "Shipped"
+  },
+  {
+    "id": "FEAT-069",
+    "title": "Live location visible in-app via Chat banner (no link needed for trip members)",
+    "description": "Live location visible in-app via Chat banner (no link needed for trip members)",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-09-14T12:09:37.555Z",
+    "updatedAt": "2026-09-14T12:09:37.555Z",
+    "shippedAt": "2026-09-14T12:09:37.555Z",
+    "shippedBy": "claude-cli",
+    "shippedNote": "Shipped"
   }
 ]

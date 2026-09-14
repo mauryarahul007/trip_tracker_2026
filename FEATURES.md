@@ -9,11 +9,11 @@
 
 | Metric | Count |
 | :--- | :--- |
-| **Total Tracked** | **68** |
+| **Total Tracked** | **69** |
 | **💡 Requested** | **2** |
 | **📋 Planned** | **0** |
 | **🟡 In Progress** | **0** |
-| **✅ Shipped** | **66** |
+| **✅ Shipped** | **67** |
 | **⚪ Won't Do** | **0** |
 
 ---
@@ -118,6 +118,7 @@ CI pipeline for lint, build, and test on push/PR
 | **FEAT-066** | Dispute flag on expenses | `ui-ux` | `claude-cli` | `claude-cli` | Shipped |
 | **FEAT-067** | Live location share (public link, 12h window) | `ui-ux` | `claude-cli` | `claude-cli` | Shipped |
 | **FEAT-068** | Digest-mode push notifications (daily summary) | `performance` | `claude-cli` | `claude-cli` | Shipped |
+| **FEAT-069** | Live location visible in-app via Chat banner (no link needed for trip members) | `ui-ux` | `claude-cli` | `claude-cli` | Shipped |
 
 ---
 

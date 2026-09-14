@@ -7,6 +7,7 @@ import { triggerHaptic } from '../utils/haptics';
 import { ActionSheet, type ActionSheetItem } from './common/ActionSheet';
 import type { ConfirmRequest } from './ConfirmDialog';
 import { IconEdit, IconTrash } from './Icons';
+import { LiveLocationChatBanner } from './LiveLocationChatBanner';
 
 const CHAT_PUSH_PREVIEW_LENGTH = 80;
 // Matches the server-side window enforced by edit_trip_message() (migration
@@ -237,6 +238,7 @@ export function TripChatPanel({ tripId, members, isAdmin, onComposerFocusChange,
         borderRadius: '16px 16px 0 0',
       }}
     >
+      <LiveLocationChatBanner tripId={tripId} members={members} />
       <div
         ref={listRef}
         className="trip-chat-list"

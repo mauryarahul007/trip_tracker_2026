@@ -2624,19 +2624,6 @@ export default function App() {
                   },
                 ]
               : []),
-            ...(isFeatureEnabled('enableTripWrapped', { tripId: activeTrip.id, userId: userId || undefined })
-              ? [
-                  {
-                    id: 'trip-wrapped',
-                    label: 'Trip Wrapped & Highlights ✨',
-                    subtitle: 'Infographic story card, superlatives & journey recap',
-                    icon: <span style={{ fontSize: '18px' }}>✨</span>,
-                    onClick: () => {
-                      setShowTripWrapped(true);
-                    },
-                  },
-                ]
-              : []),
             {
               id: 'mute',
               label: isActiveTripMuted ? 'Unmute Trip Alerts' : 'Mute Trip Alerts',
@@ -2686,14 +2673,20 @@ export default function App() {
         />
       )}
 
-      {selectedReviewExpense && (
+      {selectedReviewExpense && (() => {
+        // selectedReviewExpense is a snapshot taken when the row was tapped
+        // -- re-derive from the live store array so Flag/Resolve (and any
+        // other in-place update) reflects immediately without closing and
+        // reopening the modal.
+        const liveExpense = activeTripExpenses.find((e) => e.id === selectedReviewExpense.id) ?? selectedReviewExpense;
+        return (
         <Suspense fallback={null}>
           <ExpenseReviewModal
-            expense={selectedReviewExpense}
+            expense={liveExpense}
             members={members}
             categories={categories}
             trip={activeTrip}
-            canManage={isAdmin || selectedReviewExpense.createdByUserId === userId}
+            canManage={isAdmin || liveExpense.createdByUserId === userId}
             currentUserId={userId}
             isTripAdmin={isAdmin}
             onClose={() => setSelectedReviewExpense(null)}
@@ -2723,7 +2716,8 @@ export default function App() {
             }
           />
         </Suspense>
-      )}
+        );
+      })()}
 
       {showGlobalSettings && (
         <Suspense fallback={null}>

@@ -9,8 +9,8 @@
 
 | Metric | Count | Status Notes |
 | :--- | :--- | :--- |
-| **Total Tracked** | **217** | All recorded bugs across sessions |
-| **🟢 Open** | **0** | No critical blockers, 0 High |
+| **Total Tracked** | **218** | All recorded bugs across sessions |
+| **🟢 Open** | **1** | No critical blockers, 0 High |
 | **🟡 In Progress** | **0** | Active investigation or fix |
 | **✅ Resolved** | **191** | Verified & closed |
 | **⚪ Won't Fix** | **26** | Expected behavior / deferred |
@@ -19,13 +19,27 @@
 
 ## 🚨 Active Bugs (Open & In Progress)
 
-*🎉 No active open bugs! Great job team.* 
+| ID | Severity | Category | Title | Found By | Status |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **[BUG-219](#bug-219)** | 🟡 Medium | `ui-ux` | Dispute Flag/Resolve button did not update immediately after flagging an expense | `claude-cli` | 🟢 Open |
 
 ---
 
 ## 📖 Detailed Active Bug Specs
 
-*No active bug details to display.*
+### BUG-219: Dispute Flag/Resolve button did not update immediately after flagging an expense
+
+- **Severity**: `MEDIUM` | **Category**: `ui-ux` | **Status**: `open`
+- **Found By**: `claude-cli` on 14/9/2026 (web)
+
+**Description**:
+Dispute Flag/Resolve button did not update immediately after flagging an expense
+
+**Steps to Reproduce**:
+1. Navigate to application
+2. Perform action that triggers bug
+
+---
 
 ## ✅ Resolved Bugs History
 
