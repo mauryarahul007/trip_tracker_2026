@@ -6499,7 +6499,7 @@
     "description": "Expense review modal header overflows horizontally on mobile after adding Flag button",
     "severity": "medium",
     "category": "navigation",
-    "status": "open",
+    "status": "resolved",
     "foundBy": "claude-cli",
     "environment": {
       "platform": "web",
@@ -6514,6 +6514,9 @@
     "actualBehavior": "",
     "diagnostics": {},
     "createdAt": "2026-09-14T11:56:32.906Z",
-    "updatedAt": "2026-09-14T11:56:32.907Z"
+    "updatedAt": "2026-09-14T11:57:21.013Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-09-14T11:57:21.012Z",
+    "resolutionNote": "Split ExpenseReviewModal header into a title+close row and a separate flex-wrap actions row. Commit 7573172."
   }
 ]
