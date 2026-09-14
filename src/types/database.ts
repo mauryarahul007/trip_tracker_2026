@@ -192,6 +192,7 @@ export interface Database {
           itemized_config?: unknown | null;
           resolved_shares: Record<string, number>;
           receipt_path: string | null;
+          photo_paths: string[] | null;
           is_settlement: boolean;
           created_by_user_id: string | null;
           location?: { lat: number; lng: number; placeName?: string } | null;
@@ -215,6 +216,7 @@ export interface Database {
           itemized_config?: unknown | null;
           resolved_shares: Record<string, number>;
           receipt_path?: string | null;
+          photo_paths?: string[] | null;
           location?: { lat: number; lng: number; placeName?: string } | null;
           is_settlement?: boolean;
           created_by_user_id: string;
@@ -232,6 +234,7 @@ export interface Database {
           itemized_config?: unknown | null;
           resolved_shares: Record<string, number>;
           receipt_path: string | null;
+          photo_paths: string[] | null;
           location: { lat: number; lng: number; placeName?: string } | null;
           deleted_at: string | null;
           deleted_by_user_id: string | null;

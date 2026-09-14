@@ -134,6 +134,7 @@ interface SettingsViewProps {
   onOpenFxRates?: () => void;
   onOpenMediaGallery?: () => void;
   onOpenOfflineSnapshot?: () => void;
+  onOpenDocumentVault?: () => void;
   onOpenTripWrapped?: () => void;
 }
 
@@ -179,6 +180,7 @@ export function SettingsView({
   onOpenFxRates,
   onOpenMediaGallery,
   onOpenOfflineSnapshot,
+  onOpenDocumentVault,
   onOpenTripWrapped,
 }: SettingsViewProps) {
   const [screenStack, setScreenStack] = useState<SubScreen[]>(() => (initialSubScreen ? [initialSubScreen] : []));
@@ -744,6 +746,7 @@ export function SettingsView({
         isSuperadmin={isSuperadmin}
         onOpenOfflineSnapshot={isFeatureEnabled('enableOfflineSnapshot') ? onOpenOfflineSnapshot : undefined}
         onOpenMediaGallery={onOpenMediaGallery}
+        onOpenDocumentVault={isFeatureEnabled('enableDocumentVault') ? onOpenDocumentVault : undefined}
         onOpenBackups={() => setSubScreen('backups')}
       />
     );
@@ -865,6 +868,8 @@ export function SettingsView({
   const isSnapshotEnabled = isFeatureEnabled('enableOfflineSnapshot');
   const showSnapshotSearch = Boolean(onOpenOfflineSnapshot && isSnapshotEnabled && matchesSearch('Offline Snapshot (.triptracker)', 'snapshot', 'offline', 'backup', 'triptracker'));
   const showGallerySearch = Boolean(onOpenMediaGallery && matchesSearch('Receipts & Memories Gallery', 'gallery', 'photos', 'receipts', 'memories'));
+  const isVaultEnabled = isFeatureEnabled('enableDocumentVault');
+  const showVaultSearch = Boolean(onOpenDocumentVault && isVaultEnabled && matchesSearch('Document Vault', 'vault', 'passport', 'visa', 'insurance', 'documents', 'id'));
   const showTripTools = showCategories || showRecycleBin || showMute || showFxSearch || showCsvExport || showSplitwiseImport || showWrappedSearch;
   const showTripGroup = showTripStatus || showInvite || showTripTools || showCloseTrip;
 
@@ -879,7 +884,7 @@ export function SettingsView({
   const showArchived = matchesSearch('Archived Trips', 'restore', 'history', 'past trips', 'archive');
   const showBackups = isSuperadmin && matchesSearch('Database Backups', 'export', 'import', 'json', 'snapshot', 'restore');
   const showDemoTrip = Boolean(onLoadDemoTrip && isFeatureEnabled('enableDemoSeeding', { tripId: activeTripId || undefined, userId: userId || undefined }) && matchesSearch('Seed Demo Trip', 'sample', 'test', 'goa', 'demo'));
-  const showBackupsMedia = showSnapshotSearch || showGallerySearch || showBackups;
+  const showBackupsMedia = showSnapshotSearch || showGallerySearch || showVaultSearch || showBackups;
   const showDataGroup = showStorageManager || showArchived || showBackupsMedia;
 
   const showReportProblem = matchesSearch('Report a Problem', 'bug', 'issue', 'diagnostics', 'broken', 'error');

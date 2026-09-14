@@ -8,6 +8,7 @@ export type FeatureFlagKey =
   | 'enableNotesAndChecklist'
   | 'enableDuplicateDetector'
   | 'enableTripChat'
+  | 'enableExpensePhotoLinking'
   // Phase 3: Smart Travel Navigator & Pass Hub
   | 'enableTravelPasses'
   | 'enableNextUpCapsule'
@@ -17,6 +18,7 @@ export type FeatureFlagKey =
   | 'enableRouteStops'
   | 'enableGeotagging'
   | 'enableIcsExport'
+  | 'enableOfflineMapTiles'
   // Phase 4: FinTech Pro & Global Jetsetter Suite
   | 'enableAdvancedSplits'
   | 'enableItemizedSplit'
@@ -24,6 +26,7 @@ export type FeatureFlagKey =
   | 'enableCurrencyFx'
   | 'enableMultiTripAnalytics'
   | 'enableBiometricAuth'
+  | 'enableDocumentVault'
   // Phase 5: Switch, Speed & Trust
   | 'enableSplitwiseImport'
   | 'enableWhatsAppSettlementShare'

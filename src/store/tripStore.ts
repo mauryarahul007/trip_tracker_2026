@@ -42,6 +42,7 @@ import {
   fetchDeletedExpensesForTrip,
   insertTripGraph,
   uploadReceipt,
+  updateExpensePhotoPaths,
   invalidatePreviousMembersCache,
   type ExpenseInput,
 } from '../services/tripApi';
@@ -211,6 +212,8 @@ interface TripStore extends TripState {
   addExpense: (expense: Omit<Expense, 'id' | 'tripId' | 'resolvedShares' | 'createdAt' | 'updatedAt' | 'isSettlement' | 'createdByUserId'>) => Promise<void>;
   updateExpense: (id: string, expense: Omit<Expense, 'id' | 'tripId' | 'resolvedShares' | 'createdAt' | 'updatedAt' | 'isSettlement' | 'createdByUserId'>) => Promise<void>;
   deleteExpense: (id: string) => Promise<void>;
+  addExpensePhoto: (expenseId: string, dataUrl: string) => Promise<void>;
+  removeExpensePhoto: (expenseId: string, path: string) => Promise<void>;
 
   // Recycle Bin
   deletedExpenses: Expense[];
@@ -2542,6 +2545,38 @@ export const useTripStore = create<TripStore>()(
           await queueOfflineUpdate();
         }
       }
+    },
+
+    // Extra photos, attached after the expense is already saved -- online
+    // only (no offline sync queue, unlike the primary OCR receipt path).
+    addExpensePhoto: async (expenseId, dataUrl) => {
+      const tripId = get().activeTripId;
+      if (!tripId || isMissingSupabaseEnv) return;
+      if (!navigator.onLine) {
+        set({ storageError: 'Photos can only be added while online.' });
+        return;
+      }
+      const expense = get().expenses.find((e) => e.id === expenseId);
+      if (!expense) return;
+      const suffix = Date.now().toString(36);
+      const path = await uploadReceipt(tripId, `${expenseId}-${suffix}`, dataUrl);
+      const nextPaths = [...(expense.photoPaths || []), path];
+      await updateExpensePhotoPaths(expenseId, nextPaths);
+      set((state) => ({
+        expenses: state.expenses.map((e) => (e.id === expenseId ? { ...e, photoPaths: nextPaths } : e)),
+      }));
+    },
+
+    removeExpensePhoto: async (expenseId, path) => {
+      if (isMissingSupabaseEnv) return;
+      const expense = get().expenses.find((e) => e.id === expenseId);
+      if (!expense) return;
+      const nextPaths = (expense.photoPaths || []).filter((p) => p !== path);
+      await updateExpensePhotoPaths(expenseId, nextPaths);
+      set((state) => ({
+        expenses: state.expenses.map((e) => (e.id === expenseId ? { ...e, photoPaths: nextPaths } : e)),
+      }));
+      void supabase.storage.from('receipts').remove([path]);
     },
 
     deleteExpense: async (id) => {

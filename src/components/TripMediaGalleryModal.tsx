@@ -54,6 +54,13 @@ export function TripMediaGalleryModal({
           expense: e,
         });
       }
+      (e.photoPaths || []).forEach((path) => {
+        items.push({
+          id: `${e.id}:${path}`,
+          url: path,
+          expense: e,
+        });
+      });
     });
     return items;
   }, [expenses]);
@@ -68,15 +75,16 @@ export function TripMediaGalleryModal({
 
   useEffect(() => {
     if (!isOpen) return;
-    const pending = mediaItems.filter(
-      (item) => !item.expense.receiptImage && item.expense.receiptPath && !signedUrls[item.id]
-    );
+    // item.url is either a data: preview (nothing to sign) or a Storage
+    // object path (both the primary receipt and every extra photo path use
+    // the same 'receipts' bucket, so the same signer works for both).
+    const pending = mediaItems.filter((item) => !item.url.startsWith('data:') && !signedUrls[item.id]);
     if (pending.length === 0) return;
     let cancelled = false;
     (async () => {
       for (const item of pending) {
         try {
-          const url = await getReceiptSignedUrl(item.expense.receiptPath as string);
+          const url = await getReceiptSignedUrl(item.url);
           if (!cancelled) setSignedUrls((prev) => ({ ...prev, [item.id]: url }));
         } catch (err) {
           console.warn('Failed to resolve receipt url for', item.id, err);
@@ -89,7 +97,7 @@ export function TripMediaGalleryModal({
   }, [isOpen, mediaItems, signedUrls]);
 
   const getDisplayUrl = (item: MediaItem): string | undefined =>
-    item.expense.receiptImage || signedUrls[item.id];
+    (item.url.startsWith('data:') ? item.url : undefined) || signedUrls[item.id];
 
   if (!isOpen) return null;
 

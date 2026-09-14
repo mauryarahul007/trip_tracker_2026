@@ -18,6 +18,7 @@ import type { ExpenseFormTemplate } from './components/ExpenseForm';
 import { TabErrorBoundary } from './components/TabErrorBoundary';
 import { TripsListScreen } from './components/TripsListScreen';
 import { lazyImport } from './utils/lazyImport';
+import { syncOfflineMapTilesFlag } from './utils/mapTileCacheFlag';
 import { useCrossTripBalances } from './hooks/useCrossTripBalances';
 // Code-split secondary modals and heavy views so initial bundle only ships
 // the critical path for the active trip view.
@@ -119,6 +120,9 @@ const OfflineSnapshotModal = lazy(lazyImport(() =>
 ));
 const TripMediaGalleryModal = lazy(lazyImport(() =>
   import('./components/TripMediaGalleryModal').then((m) => ({ default: m.TripMediaGalleryModal }))
+));
+const DocumentVaultModal = lazy(lazyImport(() =>
+  import('./components/DocumentVaultModal').then((m) => ({ default: m.DocumentVaultModal }))
 ));
 const FxRatesModal = lazy(lazyImport(() =>
   import('./components/FxRatesModal').then((m) => ({ default: m.FxRatesModal }))
@@ -222,6 +226,10 @@ export default function App() {
   const isFeatureEnabled = useTripStore((s) => s.isFeatureEnabled);
   const isNotesEnabled = isFeatureEnabled('enableNotesAndChecklist', { tripId: activeTripId || undefined, userId: userId || undefined });
   const isPassesEnabled = isFeatureEnabled('enableTravelPasses', { tripId: activeTripId || undefined, userId: userId || undefined });
+  const isOfflineMapTilesEnabled = isFeatureEnabled('enableOfflineMapTiles', { tripId: activeTripId || undefined, userId: userId || undefined });
+  useEffect(() => {
+    void syncOfflineMapTilesFlag(isOfflineMapTilesEnabled);
+  }, [isOfflineMapTilesEnabled]);
   const hasNotesOrPassesTab = isNotesEnabled || isPassesEnabled;
   const currentTabOrder = useMemo(() => {
     return hasNotesOrPassesTab
@@ -540,6 +548,7 @@ export default function App() {
   const [showSmartQuickAdd, setShowSmartQuickAdd] = useState(false);
   const [smartQuickAddAutoListen, setSmartQuickAddAutoListen] = useState(false);
   const [showOfflineSnapshot, setShowOfflineSnapshot] = useState(false);
+  const [showDocumentVault, setShowDocumentVault] = useState(false);
   const [showMediaGallery, setShowMediaGallery] = useState(false);
   const [showFxRates, setShowFxRates] = useState(false);
   const activePeers = usePeerPresence(activeTripId);
@@ -654,7 +663,7 @@ export default function App() {
   }, [isSuperadmin]);
 
   // Lock background scroll when any modal is active
-  useScrollLock(Boolean(showTripActionSheet || showShareTrip || showTripWrapped || selectedReviewExpense || confirmRequest || showGlobalSettings || showAddExpense || showExpenseFilterDrawer || showSmartQuickAdd || showOfflineSnapshot || showMediaGallery || showSplitwiseImport));
+  useScrollLock(Boolean(showTripActionSheet || showShareTrip || showTripWrapped || selectedReviewExpense || confirmRequest || showGlobalSettings || showAddExpense || showExpenseFilterDrawer || showSmartQuickAdd || showOfflineSnapshot || showMediaGallery || showSplitwiseImport || showDocumentVault));
 
   const syncQueue = useTripStore((s) => s.syncQueue);
   const dirtyExpenseIds = useMemo(() => collectDirtyExpenseIds(syncQueue), [syncQueue]);
@@ -2489,6 +2498,7 @@ export default function App() {
                 onOpenFxRates={isFeatureEnabled('enableCurrencyFx', { tripId: activeTrip?.id, userId: userId || undefined }) ? () => setShowFxRates(true) : undefined}
                 onOpenMediaGallery={() => setShowMediaGallery(true)}
                 onOpenOfflineSnapshot={isFeatureEnabled('enableOfflineSnapshot') ? () => setShowOfflineSnapshot(true) : undefined}
+                onOpenDocumentVault={isFeatureEnabled('enableDocumentVault') ? () => setShowDocumentVault(true) : undefined}
                 onOpenTripWrapped={isFeatureEnabled('enableTripWrapped', { tripId: activeTrip?.id, userId: userId || undefined }) ? () => setShowTripWrapped(true) : undefined}
                 isSurfaceVisible={activeTab === 'settings'}
               />
@@ -2735,6 +2745,7 @@ export default function App() {
             onOpenFxRates={isFeatureEnabled('enableCurrencyFx', { tripId: activeTrip?.id, userId: userId || undefined }) ? () => setShowFxRates(true) : undefined}
             onOpenMediaGallery={() => setShowMediaGallery(true)}
             onOpenOfflineSnapshot={isFeatureEnabled('enableOfflineSnapshot') ? () => setShowOfflineSnapshot(true) : undefined}
+            onOpenDocumentVault={isFeatureEnabled('enableDocumentVault') ? () => setShowDocumentVault(true) : undefined}
             onOpenSuperadminPortal={() => {
               setShowGlobalSettings(false);
               setIsTravelerPreview(false);
@@ -2994,6 +3005,13 @@ export default function App() {
               }
             }}
           />
+        </Suspense>
+      )}
+
+      {/* Document / ID Vault -- local-only, never uploaded */}
+      {showDocumentVault && isFeatureEnabled('enableDocumentVault') && (
+        <Suspense fallback={null}>
+          <DocumentVaultModal isOpen={showDocumentVault} onClose={() => setShowDocumentVault(false)} />
         </Suspense>
       )}
 

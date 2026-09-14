@@ -9,11 +9,11 @@
 
 | Metric | Count |
 | :--- | :--- |
-| **Total Tracked** | **60** |
+| **Total Tracked** | **64** |
 | **💡 Requested** | **2** |
 | **📋 Planned** | **0** |
 | **🟡 In Progress** | **0** |
-| **✅ Shipped** | **58** |
+| **✅ Shipped** | **62** |
 | **⚪ Won't Do** | **0** |
 
 ---
@@ -110,6 +110,10 @@ CI pipeline for lint, build, and test on push/PR
 | **FEAT-058** | Phase 5 flag-gated conversion: Splitwise import, WhatsApp settle card, clone-last, remember split, settlement date/note | `ui-ux` | `cursor-agent` | `cursor-agent` | Shipped in v3.17.0 (1f21096) |
 | **FEAT-059** | Settlements section on Expenses page | `ui-ux` | `Rahul` | `Rahul` | Shipped in ExpenseList.tsx: settlements split out of the day-grouped expense list into their own collapsible history section |
 | **FEAT-060** | WhatsApp-style edit/delete for trip chat messages | `ui-ux` | `Rahul` | `Rahul` | Shipped: TripChatPanel.tsx long-press action sheet, edit_trip_message RPC (migration 0083), realtime UPDATE handling |
+| **FEAT-061** | Extra expense photos (multi-photo attach) | `ui-ux` | `claude-cli` | `claude-cli` | Shipped |
+| **FEAT-062** | Document / ID Vault (local-only, biometric-gated) | `ui-ux` | `claude-cli` | `claude-cli` | Shipped |
+| **FEAT-063** | Offline map tile caching for trip journey map | `performance` | `claude-cli` | `claude-cli` | Shipped |
+| **FEAT-064** | Calendar sync via native Share sheet (upgrades ICS export) | `ui-ux` | `claude-cli` | `claude-cli` | Shipped |
 
 ---
 

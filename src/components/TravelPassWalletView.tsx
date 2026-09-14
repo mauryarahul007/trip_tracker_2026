@@ -11,7 +11,7 @@ import { getTravelStatusInfo, type TravelStatusInfo } from '../utils/travelStatu
 import { LiveTravelStatusModal } from './LiveTravelStatusModal';
 import { PassScannerModal } from './PassScannerModal';
 import { useTripStore } from '../store/tripStore';
-import { downloadTripIcs } from '../utils/icsExport';
+import { shareTripIcs } from '../utils/icsExport';
 
 interface Props {
   trip: Trip;
@@ -875,11 +875,11 @@ export function TravelPassWalletView({
               style={{ padding: '7px 12px', fontSize: '12.5px', display: 'flex', alignItems: 'center', gap: '6px' }}
               onClick={() => {
                 triggerHaptic('light');
-                downloadTripIcs(trip);
+                void shareTripIcs(trip);
               }}
-              title="Export all passes as a .ics calendar file"
+              title="Add all passes to your Calendar app"
             >
-              📅 Export to Calendar
+              📅 Add to Calendar
             </button>
           )}
           {!isAdding ? (

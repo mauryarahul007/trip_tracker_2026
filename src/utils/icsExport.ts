@@ -74,3 +74,27 @@ export function downloadTripIcs(trip: Trip): void {
   document.body.removeChild(link);
   URL.revokeObjectURL(url);
 }
+
+/**
+ * Hands the trip's .ics off to the OS share sheet (same navigator.share
+ * pattern already used for receipt sharing) so the user can pick their
+ * Calendar app directly instead of downloading a file and importing it
+ * manually. Falls back to a plain file download when Web Share (or file
+ * sharing specifically) isn't supported -- desktop browsers mostly.
+ */
+export async function shareTripIcs(trip: Trip): Promise<void> {
+  const ics = generateTripIcs(trip);
+  const fileName = `${trip.name.replace(/[^a-z0-9]+/gi, '-') || 'trip'}-itinerary.ics`;
+  const file = new File([ics], fileName, { type: 'text/calendar' });
+
+  if (navigator.canShare?.({ files: [file] })) {
+    try {
+      await navigator.share({ files: [file], title: `${trip.name} Itinerary` });
+      return;
+    } catch {
+      // User cancelled, or the share sheet failed -- fall back to download.
+    }
+  }
+
+  downloadTripIcs(trip);
+}

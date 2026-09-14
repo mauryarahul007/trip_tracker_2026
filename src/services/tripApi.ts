@@ -70,6 +70,7 @@ function mapExpense(row: ExpenseRow & { location?: any }): Expense {
     itemizedConfig: row.itemized_config ? (row.itemized_config as unknown as import('../types').ItemizedReceiptConfig) : undefined,
     resolvedShares: row.resolved_shares,
     receiptPath: row.receipt_path ?? undefined,
+    photoPaths: row.photo_paths ?? undefined,
     isSettlement: row.is_settlement,
     createdByUserId: row.created_by_user_id,
     location: row.location ?? undefined,
@@ -573,6 +574,15 @@ export async function getReceiptSignedUrl(path: string): Promise<string> {
   const { data, error } = await supabase.storage.from('receipts').createSignedUrl(path, 60 * 60); // 1 hour
   if (error) throw error;
   return data.signedUrl;
+}
+
+// Appends/removes an expense's extra photo paths (beyond the single OCR
+// receipt) -- online-only, called from the edit view once the expense
+// already has a stable id. Reuses the same 'receipts' bucket/RLS as the
+// primary receipt, so no storage policy changes are needed.
+export async function updateExpensePhotoPaths(id: string, photoPaths: string[]): Promise<void> {
+  const { error } = await supabase.from('expenses').update({ photo_paths: photoPaths }).eq('id', id);
+  if (error) throw error;
 }
 
 export async function deleteExpenseRow(id: string, deletedByUserId: string): Promise<void> {

@@ -9,6 +9,7 @@ type Props = {
   isSuperadmin: boolean;
   onOpenOfflineSnapshot?: () => void;
   onOpenMediaGallery?: () => void;
+  onOpenDocumentVault?: () => void;
   onOpenBackups: () => void;
 };
 
@@ -18,6 +19,7 @@ export function SettingsBackupsMediaHub({
   isSuperadmin,
   onOpenOfflineSnapshot,
   onOpenMediaGallery,
+  onOpenDocumentVault,
   onOpenBackups,
 }: Props) {
   return (
@@ -53,6 +55,20 @@ export function SettingsBackupsMediaHub({
               onClick={() => {
                 triggerHaptic('light');
                 onOpenMediaGallery();
+              }}
+            />
+          )}
+
+          {onOpenDocumentVault && (
+            <SettingsCell
+              icon={<span style={{ fontSize: '18px' }}>🔒</span>}
+              iconGlow="indigo"
+              title="Document Vault"
+              subtitle="Passport, visa & insurance scans -- device only"
+              badge="PRIVATE"
+              onClick={() => {
+                triggerHaptic('light');
+                onOpenDocumentVault();
               }}
             />
           )}

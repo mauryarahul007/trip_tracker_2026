@@ -17,6 +17,7 @@ import { convertCurrency, POPULAR_CURRENCIES } from '../utils/currencyConverter'
 import { parseReceiptText, type ExtractedReceiptData } from '../utils/receiptOcr';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { ReceiptScannerModal } from './ReceiptScannerModal';
+import { getReceiptSignedUrl } from '../services/tripApi';
 import { useHistoryBack } from '../utils/useHistoryBack';
 import { useEscapeKey } from '../utils/useEscapeKey';
 import { RollingNumber } from './common/RollingNumber';
@@ -212,6 +213,51 @@ export function ExpenseForm({
   const [receiptImage, setReceiptImage] = useState('');
   const [receiptProcessing, setReceiptProcessing] = useState(false);
   const [showReceiptSection, setShowReceiptSection] = useState(!!editingExpense?.receiptImage);
+
+  // Extra photos attached after the expense already has an id -- reuses the
+  // same signed-url + upload plumbing as the primary receipt (see
+  // TripMediaGalleryModal for the same pattern).
+  const [extraPhotoUrls, setExtraPhotoUrls] = useState<Record<string, string>>({});
+  const [extraPhotoUploading, setExtraPhotoUploading] = useState(false);
+
+  useEffect(() => {
+    const paths = editingExpense?.photoPaths;
+    if (!paths || paths.length === 0) return;
+    const pending = paths.filter((p) => !extraPhotoUrls[p]);
+    if (pending.length === 0) return;
+    let cancelled = false;
+    (async () => {
+      for (const path of pending) {
+        try {
+          const url = await getReceiptSignedUrl(path);
+          if (!cancelled) setExtraPhotoUrls((prev) => ({ ...prev, [path]: url }));
+        } catch (err) {
+          console.warn('Failed to resolve photo url', path, err);
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [editingExpense?.photoPaths, extraPhotoUrls]);
+
+  const handleExtraPhotoFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file || !editingExpense) return;
+    setExtraPhotoUploading(true);
+    try {
+      const dataUrl = await compressImageToDataUrl(file);
+      await useTripStore.getState().addExpensePhoto(editingExpense.id, dataUrl);
+    } finally {
+      setExtraPhotoUploading(false);
+    }
+  };
+
+  const handleRemoveExtraPhoto = (path: string) => {
+    if (!editingExpense) return;
+    void useTripStore.getState().removeExpensePhoto(editingExpense.id, path);
+  };
   const [formError, setFormError] = useState('');
   const [honeypotVal, setHoneypotVal] = useState('');
 
@@ -327,6 +373,7 @@ export function ExpenseForm({
   const enableItemizedSplit = isFeatureEnabled('enableItemizedSplit');
   const enableReceiptOcr = isFeatureEnabled('enableReceiptOcr');
   const enableReceiptUpload = isFeatureEnabled('enableReceiptUpload');
+  const enableExpensePhotoLinking = isFeatureEnabled('enableExpensePhotoLinking', { tripId: trip?.id });
   const enablePredictiveChips = isFeatureEnabled('enablePredictiveChips');
   const enableCloneLastExpense = isFeatureEnabled('enableCloneLastExpense', { tripId: trip?.id });
   const enableDuplicateDetector = isFeatureEnabled('enableDuplicateDetector');
@@ -2153,6 +2200,81 @@ export function ExpenseForm({
               <span>{receiptProcessing ? '⏳ Compressing...' : '＋ Attach Photo / Bill'}</span>
             </label>
           )}
+        </div>
+      )}
+
+      {/* Extra photos -- only once the expense has a stable id to attach to */}
+      {editingExpense && enableExpensePhotoLinking && (
+        <div style={{ marginTop: '16px', paddingTop: '14px', borderTop: '1px dashed var(--border-color)' }}>
+          <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>
+            🖼️ More Photos
+          </span>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '8px' }}>
+            {(editingExpense.photoPaths || []).map((path) => (
+              <div
+                key={path}
+                style={{
+                  position: 'relative',
+                  width: '72px',
+                  height: '72px',
+                  borderRadius: '10px',
+                  overflow: 'hidden',
+                  border: '1px solid var(--border-color)',
+                }}
+              >
+                {extraPhotoUrls[path] ? (
+                  <img src={extraPhotoUrls[path]} alt="Trip photo" decoding="async" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                ) : (
+                  <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', opacity: 0.5 }}>⏳</div>
+                )}
+                <button
+                  type="button"
+                  onClick={() => { triggerHaptic('light'); handleRemoveExtraPhoto(path); }}
+                  aria-label="Remove photo"
+                  style={{
+                    position: 'absolute',
+                    top: '2px',
+                    right: '2px',
+                    width: '18px',
+                    height: '18px',
+                    borderRadius: '50%',
+                    border: 'none',
+                    background: 'rgba(0,0,0,0.6)',
+                    color: '#fff',
+                    fontSize: '11px',
+                    lineHeight: 1,
+                    cursor: 'pointer',
+                  }}
+                >
+                  ✕
+                </button>
+              </div>
+            ))}
+            <label
+              style={{
+                width: '72px',
+                height: '72px',
+                borderRadius: '10px',
+                border: '1.5px dashed var(--border-color)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                fontSize: '20px',
+                color: 'var(--text-muted)',
+              }}
+            >
+              <input
+                type="file"
+                accept="image/*"
+                capture="environment"
+                style={{ display: 'none' }}
+                onChange={handleExtraPhotoFileChange}
+                disabled={extraPhotoUploading}
+              />
+              {extraPhotoUploading ? '⏳' : '＋'}
+            </label>
+          </div>
         </div>
       )}
 

@@ -8,6 +8,35 @@ const PRECACHE_URLS = [
   './manifest.json'
 ];
 
+// Separate cache bucket for map tiles/style/sprite/glyphs (TripJourneyMap,
+// TripMapHero, TripRouteModal all load from this one host) so a trip's map
+// keeps rendering offline once it's been viewed once. Kept apart from
+// CACHE_NAME so it isn't wiped by the app-shell cache-name bump on deploy,
+// and evicted on its own age-based limit instead of growing forever.
+const TILE_CACHE_NAME = 'trip-tracker-tiles-v1';
+const TILE_CACHE_HOST = 'tiles.openfreemap.org';
+const TILE_CACHE_MAX_ENTRIES = 2000;
+
+// Superadmin-gated: 'enableOfflineMapTiles' lives in the Zustand store,
+// which this SW can't reach directly, so the page writes the flag into
+// Cache Storage (see src/utils/mapTileCacheFlag.ts) and this reads it back.
+// Defaults to OFF (plain network passthrough, no interception at all) when
+// the flag has never been synced -- e.g. the very first load, or the flag
+// off in the Ops Deck.
+const CONFIG_CACHE_NAME = 'trip-tracker-sw-config';
+const TILE_FLAG_KEY = 'flag:enableOfflineMapTiles';
+
+async function isOfflineMapTilesEnabled() {
+  try {
+    const cache = await caches.open(CONFIG_CACHE_NAME);
+    const res = await cache.match(TILE_FLAG_KEY);
+    if (!res) return false;
+    return (await res.json()) === true;
+  } catch {
+    return false;
+  }
+}
+
 // Perform install and cache shell assets
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -23,7 +52,7 @@ self.addEventListener('activate', (event) => {
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames.map((cacheName) => {
-          if (cacheName !== CACHE_NAME) {
+          if (cacheName !== CACHE_NAME && cacheName !== TILE_CACHE_NAME) {
             return caches.delete(cacheName);
           }
         })
@@ -32,10 +61,50 @@ self.addEventListener('activate', (event) => {
   );
 });
 
+// Evicts oldest entries once the tile cache passes TILE_CACHE_MAX_ENTRIES --
+// Cache Storage has no built-in quota/eviction policy of its own, and tiles
+// are small but numerous (every pan/zoom is more requests), so an unbounded
+// cache would otherwise grow forever.
+async function trimTileCache(cache) {
+  const keys = await cache.keys();
+  if (keys.length <= TILE_CACHE_MAX_ENTRIES) return;
+  const toDelete = keys.slice(0, keys.length - TILE_CACHE_MAX_ENTRIES);
+  await Promise.all(toDelete.map((key) => cache.delete(key)));
+}
+
 // Stale-While-Revalidate fetch handler
 self.addEventListener('fetch', (event) => {
-  // Ignore non-GET requests (e.g. POST, PUT, DELETE) and browser extensions
-  if (event.request.method !== 'GET' || !event.request.url.startsWith(self.location.origin)) {
+  if (event.request.method !== 'GET') return;
+
+  const requestUrl = new URL(event.request.url);
+
+  // Map tiles/style/sprite/glyphs: cross-origin, cached separately so the
+  // last-viewed trip map still renders with no signal.
+  if (requestUrl.hostname === TILE_CACHE_HOST) {
+    event.respondWith(
+      isOfflineMapTilesEnabled().then((enabled) => {
+        if (!enabled) return fetch(event.request);
+        return caches.open(TILE_CACHE_NAME).then((cache) =>
+          cache.match(event.request).then((cachedResponse) => {
+            const fetchPromise = fetch(event.request)
+              .then((networkResponse) => {
+                if (networkResponse.status === 200) {
+                  cache.put(event.request, networkResponse.clone());
+                  void trimTileCache(cache);
+                }
+                return networkResponse;
+              })
+              .catch(() => cachedResponse);
+            return cachedResponse || fetchPromise;
+          })
+        );
+      })
+    );
+    return;
+  }
+
+  // Ignore other cross-origin requests (analytics, Supabase, etc.)
+  if (!event.request.url.startsWith(self.location.origin)) {
     return;
   }
 

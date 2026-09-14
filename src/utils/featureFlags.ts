@@ -19,7 +19,7 @@ export const RELEASE_PHASES: ReleasePhaseDef[] = [
     tagline: 'Frictionless on-trip logging & shared trip organization',
     description: 'Hands-free voice quick-add with Hinglish NLP parsing, compressed receipt photos, collaborative packing & rich notes, and 4D duplicate expense warning.',
     targetAudience: 'Friends & families actively traveling together',
-    flagKeys: ['enableVoiceInput', 'enableReceiptUpload', 'enableNotesAndChecklist', 'enableDuplicateDetector', 'enableTripChat'],
+    flagKeys: ['enableVoiceInput', 'enableReceiptUpload', 'enableNotesAndChecklist', 'enableDuplicateDetector', 'enableTripChat', 'enableExpensePhotoLinking'],
   },
   {
     id: 'phase3',
@@ -38,6 +38,7 @@ export const RELEASE_PHASES: ReleasePhaseDef[] = [
       'enableRouteStops',
       'enableGeotagging',
       'enableIcsExport',
+      'enableOfflineMapTiles',
     ],
   },
   {
@@ -55,6 +56,7 @@ export const RELEASE_PHASES: ReleasePhaseDef[] = [
       'enableCurrencyFx',
       'enableMultiTripAnalytics',
       'enableBiometricAuth',
+      'enableDocumentVault',
     ],
   },
   {
@@ -129,6 +131,14 @@ export const FEATURE_FLAGS_META: Record<FeatureFlagKey, FeatureFlagMeta> = {
     category: 'collab',
     phase: 'phase2',
     defaultEnabledForUsers: true,
+  },
+  enableExpensePhotoLinking: {
+    key: 'enableExpensePhotoLinking',
+    label: 'Extra Expense Photos',
+    description: 'Attach more photos to an already-saved expense, beyond the single primary receipt.',
+    category: 'collab',
+    phase: 'phase2',
+    defaultEnabledForUsers: false,
   },
   enableNotesAndChecklist: {
     key: 'enableNotesAndChecklist',
@@ -215,8 +225,16 @@ export const FEATURE_FLAGS_META: Record<FeatureFlagKey, FeatureFlagMeta> = {
   enableIcsExport: {
     key: 'enableIcsExport',
     label: 'ICS Calendar Export for Passes',
-    description: 'Export flight/train/hotel passes as a downloadable .ics calendar file.',
+    description: 'Share flight/train/hotel passes to the device Calendar app (Web Share), or download a .ics file as fallback.',
     category: 'transit',
+    phase: 'phase3',
+    defaultEnabledForUsers: false,
+  },
+  enableOfflineMapTiles: {
+    key: 'enableOfflineMapTiles',
+    label: 'Offline Map Tile Caching',
+    description: 'Caches MapLibre journey-map tiles so the last-viewed trip map still renders with no signal.',
+    category: 'geotagging',
     phase: 'phase3',
     defaultEnabledForUsers: false,
   },
@@ -269,6 +287,14 @@ export const FEATURE_FLAGS_META: Record<FeatureFlagKey, FeatureFlagMeta> = {
     category: 'security',
     phase: 'phase4',
     defaultEnabledForUsers: true,
+  },
+  enableDocumentVault: {
+    key: 'enableDocumentVault',
+    label: 'Document / ID Vault',
+    description: 'Local-only, biometric-gated storage for passport, visa, and insurance scans. Never leaves the device.',
+    category: 'security',
+    phase: 'phase4',
+    defaultEnabledForUsers: false,
   },
 
   // Phase 5: Switch, Speed & Trust (safed by default)
@@ -391,6 +417,7 @@ export const DEFAULT_FEATURE_FLAGS: Record<FeatureFlagKey, boolean> = {
   enableNotesAndChecklist: true,
   enableDuplicateDetector: true,
   enableTripChat: false,
+  enableExpensePhotoLinking: false,
 
   // Phase 3 (Armed by default)
   enableTravelPasses: true,
@@ -401,6 +428,7 @@ export const DEFAULT_FEATURE_FLAGS: Record<FeatureFlagKey, boolean> = {
   enableRouteStops: true,
   enableGeotagging: true,
   enableIcsExport: false,
+  enableOfflineMapTiles: false,
 
   // Phase 4 (Armed by default)
   enableAdvancedSplits: true,
@@ -409,6 +437,7 @@ export const DEFAULT_FEATURE_FLAGS: Record<FeatureFlagKey, boolean> = {
   enableCurrencyFx: true,
   enableMultiTripAnalytics: true,
   enableBiometricAuth: true,
+  enableDocumentVault: false,
 
   // Phase 5 (safed by default)
   enableSplitwiseImport: false,
