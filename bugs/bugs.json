@@ -6492,5 +6492,28 @@
     "resolvedBy": "Rahul",
     "resolvedAt": "2026-09-13T16:25:27.040Z",
     "resolutionNote": "Hand-added edited_at to trip_messages Row/Insert/Update and an edit_trip_message entry to the Functions map in src/types/database.ts, matching the file's existing hand-written style. Tried a full regeneration first (npx supabase gen types) but it broke ~40 unrelated call sites due to stricter literal-union/Json typing; reverted and made the targeted addition instead. Verified with npm run build (tsc -b && vite build). Fixed in commit 8bc273e."
+  },
+  {
+    "id": "BUG-218",
+    "title": "Expense review modal header overflows horizontally on mobile after adding Flag button",
+    "description": "Expense review modal header overflows horizontally on mobile after adding Flag button",
+    "severity": "medium",
+    "category": "navigation",
+    "status": "open",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-09-14T11:56:32.906Z",
+    "updatedAt": "2026-09-14T11:56:32.907Z"
   }
 ]

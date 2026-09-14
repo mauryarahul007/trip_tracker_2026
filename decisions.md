@@ -3267,3 +3267,11 @@ This document logs all meaningful technical decisions, library choices, design p
   - Digest mode fires at one fixed time (8am UTC) for every opted-in user, not per-timezone. Reasonable default, not built configurable.
   - `send-digest`'s FCM-sending loop duplicates `send-push`'s, matching that function's own stated convention (two small independent Deno copies over a shared package for a codebase this size).
   - Migrations 0085-0088 applied directly to the remote Supabase project via `supabase db push --linked`, and `send-digest` deployed + its Vault secret set, at explicit user request.
+
+---
+
+## 180. Expense Review Modal Header Overflow (BUG-218, v3.21.1)
+* **Context:** ADR #179's dispute-flag Flag/Resolve buttons pushed the header actions row (Edit, Duplicate, Delete, Flag/Resolve, Close) to 5 buttons in one `flex` row with no wrap -- on mobile widths this overflowed horizontally, forcing the user to scroll sideways to reach Close/Flag instead of seeing everything in view.
+* **Decision:** Split the header into two rows: title + a compact icon-only Close button pinned top-right (always reachable, never part of the overflow), and a second row of action buttons with `flexWrap: 'wrap'` so they flow to a second line on narrow screens instead of scrolling.
+* **Pattern/Implementation:** `src/components/ExpenseReviewModal.tsx` -- title row now `justify-content: space-between` with a 30x30 icon-only Close button (`IconClose`); actions row (`Edit`/`Duplicate`/`Flag`/`Resolve`/`Delete`, in that order, Delete moved last as the destructive action) is a separate `flex-wrap: wrap` container below it.
+* **Trade-offs Accepted:** None -- pure layout fix, no behavior change.

@@ -1,7 +1,7 @@
 import { useRef, useState, useEffect } from 'react';
 import type { Category, Expense, Member, Trip } from '../types';
 import { getReceiptSignedUrl } from '../services/tripApi';
-import { IconEdit, IconTrash, IconCopy, IconAlertCircle } from './Icons';
+import { IconEdit, IconTrash, IconCopy, IconAlertCircle, IconClose } from './Icons';
 import { getCurrencySymbol } from '../utils/currency';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 
@@ -63,8 +63,8 @@ export function ExpenseReviewModal({ expense, members, categories, trip, canMana
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
-          <div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px', marginBottom: '12px' }}>
+          <div style={{ minWidth: 0 }}>
             <span style={{
               fontSize: '12px',
               fontWeight: 700,
@@ -74,62 +74,65 @@ export function ExpenseReviewModal({ expense, members, categories, trip, canMana
             }}>
               Expense Review
             </span>
-            <h3 id="expense-review-title" style={{ fontSize: '22px', marginTop: '4px' }}>{expense.title}</h3>
+            <h3 id="expense-review-title" style={{ fontSize: '22px', marginTop: '4px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{expense.title}</h3>
           </div>
-          <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
-            {canManage && !isSettlement && (
-              <button
-                className="secondary-btn"
-                style={{ padding: '6px 12px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}
-                onClick={onEdit}
-              >
-                <IconEdit size={13} className="icon-sm" /> Edit
-              </button>
-            )}
-            {canManage && !isSettlement && onDuplicate && (
-              <button
-                className="secondary-btn"
-                style={{ padding: '6px 12px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}
-                onClick={onDuplicate}
-              >
-                <IconCopy size={13} className="icon-sm" /> Duplicate
-              </button>
-            )}
-            {canManage && (
-              <button
-                className="secondary-btn"
-                style={{ padding: '6px 12px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--color-danger)', borderColor: 'rgba(184, 69, 46, 0.3)' }}
-                onClick={onDelete}
-              >
-                <IconTrash size={13} className="icon-sm" /> Delete
-              </button>
-            )}
-            {!isSettlement && !expense.disputedAt && onFlagDispute && (
-              <button
-                className="secondary-btn"
-                style={{ padding: '6px 12px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}
-                onClick={onFlagDispute}
-              >
-                <IconAlertCircle size={13} className="icon-sm" /> Flag
-              </button>
-            )}
-            {expense.disputedAt && (isTripAdmin || expense.disputedByUserId === currentUserId) && onResolveDispute && (
-              <button
-                className="secondary-btn"
-                style={{ padding: '6px 12px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}
-                onClick={onResolveDispute}
-              >
-                <IconAlertCircle size={13} className="icon-sm" /> Resolve
-              </button>
-            )}
+          <button
+            type="button"
+            aria-label="Close"
+            className="secondary-btn"
+            style={{ padding: '6px', width: '30px', height: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
+            onClick={onClose}
+          >
+            <IconClose size={14} className="icon-sm" />
+          </button>
+        </div>
+
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '20px' }}>
+          {canManage && !isSettlement && (
             <button
               className="secondary-btn"
-              style={{ padding: '6px 12px', fontSize: '13px' }}
-              onClick={onClose}
+              style={{ padding: '6px 12px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}
+              onClick={onEdit}
             >
-              Close
+              <IconEdit size={13} className="icon-sm" /> Edit
             </button>
-          </div>
+          )}
+          {canManage && !isSettlement && onDuplicate && (
+            <button
+              className="secondary-btn"
+              style={{ padding: '6px 12px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}
+              onClick={onDuplicate}
+            >
+              <IconCopy size={13} className="icon-sm" /> Duplicate
+            </button>
+          )}
+          {!isSettlement && !expense.disputedAt && onFlagDispute && (
+            <button
+              className="secondary-btn"
+              style={{ padding: '6px 12px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}
+              onClick={onFlagDispute}
+            >
+              <IconAlertCircle size={13} className="icon-sm" /> Flag
+            </button>
+          )}
+          {expense.disputedAt && (isTripAdmin || expense.disputedByUserId === currentUserId) && onResolveDispute && (
+            <button
+              className="secondary-btn"
+              style={{ padding: '6px 12px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}
+              onClick={onResolveDispute}
+            >
+              <IconAlertCircle size={13} className="icon-sm" /> Resolve
+            </button>
+          )}
+          {canManage && (
+            <button
+              className="secondary-btn"
+              style={{ padding: '6px 12px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--color-danger)', borderColor: 'rgba(184, 69, 46, 0.3)' }}
+              onClick={onDelete}
+            >
+              <IconTrash size={13} className="icon-sm" /> Delete
+            </button>
+          )}
         </div>
 
         {expense.disputedAt && (
