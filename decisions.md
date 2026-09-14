@@ -3288,3 +3288,22 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - The Chat banner polls on a fixed 30s interval rather than subscribing to realtime changes on `member_locations` -- consistent with the public page's own polling approach (`LiveLocationPage.tsx`), simplest thing that works for a feature already capped at a 12h window.
   - Trip participants can now see any active sharer's position without that person explicitly sending them a link -- disclosed as a real scope widening, not hidden in the diff.
+
+---
+
+## 182. Mobile Profile Button Tap Reliability, Vendor Chunking & Startup Deduplication (v3.21.3)
+* **Context:** Following the v3.20.0–v3.21.2 deployments, two issues were reported: (1) users were unable to click the profile button on the trips home page to open settings and log out on mobile, and (2) app startup loading on iOS and Android became noticeably sluggish.
+* **Decision:** Resolve the touch suppression and layout squeeze on the profile button, provide immediate visual feedback for settings drawer loading, deduplicate startup network queries, and split the bloated 940 kB entry bundle into parallel cached vendor chunks.
+* **Pattern/Implementation:**
+  - **Profile Button & Touch Interception (`usePullToRefresh.ts`, `TripsListScreen.tsx`, `index.css`):**
+    - `usePullToRefresh.ts`: touches starting on interactive elements (`button`, `a`, `input`, `select`, `textarea`, `[role="button"]`) or inside `.trips-screen-header` are ignored. Increased drag threshold from 6px to 14px with vertical dominance check before `e.preventDefault()`, stopping finger wobble during taps from suppressing synthetic `click` events on iOS Safari and Android Chrome.
+    - `index.css`: gave `.trips-screen-header` `position: relative; z-index: 10;` and flexible grid columns (`minmax(40px, auto) minmax(0, 1fr) 40px`), ensuring long greeting strings cannot push the right-edge avatar button off-screen. Added `touch-action: manipulation`, `-webkit-tap-highlight-color: transparent`, and `:active` scale (0.92) to `.profile-avatar-btn`.
+    - `App.tsx`: replaced `GlobalSettingsModal`'s `<Suspense fallback={null}>` with an immediate drawer backdrop and TT loader skeleton so tapping the profile icon provides instantaneous visual feedback while the code-split module loads.
+  - **Bundle Optimization (`vite.config.ts`):**
+    - Configured `build.rollupOptions.output.manualChunks` splitting `@supabase/supabase-js`, `react`/`react-dom`/`react-router-dom`, `@capacitor/*`, and `lucide-react` into dedicated vendor chunks (`vendor-supabase`, `vendor-react`, `vendor-capacitor`, `vendor-icons`).
+    - Reduced the entry bundle `dist/assets/index-*.js` from **940.60 kB down to 495.82 kB** (gzipped: 268.91 kB down to 138.95 kB, a 48% reduction), dramatically decreasing JS parse and evaluation time on mobile WebViews.
+  - **Startup Deduplication & Deferred OTA (`App.tsx`, `liveUpdate.ts`):**
+    - `App.tsx`: mount-time `handleOnlineSync()` now only fires if `syncQueue.length > 0`, eliminating 2 redundant Supabase API requests (`fetchExpensesForTrip`, `fetchCategoriesForTrip`) that were executing in parallel with `initialize()`.
+    - `liveUpdate.ts`: deferred Capgo OTA manifest check and ZIP bundle download until after the app reaches idle state (`requestIdleCallback` / 3s fallback), preventing update downloads from saturating mobile bandwidth on app boot.
+* **Trade-offs Accepted:**
+  - Multiple vendor chunks generate a few extra parallel HTTP requests on initial uncached load, but HTTP/2 multiplexing handles this efficiently and independent caching prevents re-downloading unchanged vendor code across minor app updates.

@@ -8,7 +8,7 @@ const COMMIT_THRESHOLD_PX = 70;
 // Clamp how far the visual indicator can be dragged, with rubber-banding
 // past the commit threshold so it doesn't feel like it can pull forever.
 const MAX_PULL_PX = 120;
-const START_THRESHOLD_PX = 6;
+const START_THRESHOLD_PX = 14;
 // Height the indicator settles to while the refresh is in flight.
 const REFRESHING_HEIGHT_PX = 40;
 const SETTLE_TRANSITION = 'height 0.22s ease-out';
@@ -48,6 +48,7 @@ export function usePullToRefresh(
   stateRef.current = state;
 
   const touchStartY = useRef(0);
+  const touchStartX = useRef(0);
   const isDraggingRef = useRef(false);
   const onRefreshRef = useRef(onRefresh);
   onRefreshRef.current = onRefresh;
@@ -70,14 +71,20 @@ export function usePullToRefresh(
 
     const handleTouchStart = (e: TouchEvent) => {
       if (e.touches.length !== 1 || stateRef.current.refreshing) return;
+      const target = e.target as HTMLElement | null;
+      if (target?.closest?.('button, a, input, select, textarea, [role="button"], .trips-screen-header, .settings-drawer')) {
+        return;
+      }
       if (el.scrollTop > 0) return;
       touchStartY.current = e.touches[0].clientY;
+      touchStartX.current = e.touches[0].clientX;
       isDraggingRef.current = false;
     };
 
     const handleTouchMove = (e: TouchEvent) => {
       if (e.touches.length !== 1 || stateRef.current.refreshing) return;
       const dy = e.touches[0].clientY - touchStartY.current;
+      const dx = Math.abs(e.touches[0].clientX - touchStartX.current);
       if (dy <= 0 || el.scrollTop > 0) {
         if (isDraggingRef.current) {
           isDraggingRef.current = false;
@@ -87,7 +94,7 @@ export function usePullToRefresh(
         return;
       }
       if (!isDraggingRef.current) {
-        if (dy < START_THRESHOLD_PX) return;
+        if (dy < START_THRESHOLD_PX || dx > dy * 0.8) return;
         isDraggingRef.current = true;
       }
       e.preventDefault();

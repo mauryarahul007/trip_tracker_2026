@@ -18,24 +18,35 @@ export async function initLiveUpdates(): Promise<void> {
   // bundle failed to load and roll back to the previous one automatically.
   await CapacitorUpdater.notifyAppReady();
 
-  try {
-    const res = await fetch(MANIFEST_URL, { cache: 'no-store' });
-    if (!res.ok) return;
-    const manifest = (await res.json()) as UpdateManifest;
-    if (!manifest?.version || !manifest?.url) return;
+  // Defer manifest fetch & bundle download until after initial UI rendering
+  // so native mobile apps don't saturate network bandwidth or contend with
+  // Supabase data synchronization during startup.
+  const checkUpdates = async () => {
+    try {
+      const res = await fetch(MANIFEST_URL, { cache: 'no-store' });
+      if (!res.ok) return;
+      const manifest = (await res.json()) as UpdateManifest;
+      if (!manifest?.version || !manifest?.url) return;
 
-    const { bundle: current } = await CapacitorUpdater.current();
-    if (current.version === manifest.version) return;
+      const { bundle: current } = await CapacitorUpdater.current();
+      if (current.version === manifest.version) return;
 
-    const downloaded = await CapacitorUpdater.download({
-      url: manifest.url,
-      version: manifest.version,
-      checksum: manifest.checksum,
-    });
-    // Applies next time the app backgrounds/relaunches — no disruptive
-    // mid-session reload.
-    await CapacitorUpdater.next({ id: downloaded.id });
-  } catch {
-    // Offline, manifest missing, bad zip, etc. should never block the app.
+      const downloaded = await CapacitorUpdater.download({
+        url: manifest.url,
+        version: manifest.version,
+        checksum: manifest.checksum,
+      });
+      // Applies next time the app backgrounds/relaunches — no disruptive
+      // mid-session reload.
+      await CapacitorUpdater.next({ id: downloaded.id });
+    } catch {
+      // Offline, manifest missing, bad zip, etc. should never block the app.
+    }
+  };
+
+  if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+    (window as any).requestIdleCallback(() => void checkUpdates(), { timeout: 4000 });
+  } else {
+    setTimeout(() => void checkUpdates(), 3000);
   }
 }

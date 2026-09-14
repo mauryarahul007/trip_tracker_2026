@@ -33,6 +33,26 @@ export default defineConfig(({ command }) => ({
       ignored: ['**/graphify-out/**', '**/android/**', '**/ios/**', '**/dist/**'],
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules/react/') || id.includes('node_modules/react-dom/') || id.includes('node_modules/react-router')) {
+            return 'vendor-react';
+          }
+          if (id.includes('node_modules/@supabase/')) {
+            return 'vendor-supabase';
+          }
+          if (id.includes('node_modules/@capacitor/')) {
+            return 'vendor-capacitor';
+          }
+          if (id.includes('node_modules/lucide-react/')) {
+            return 'vendor-icons';
+          }
+        },
+      },
+    },
+  },
   define: {
     __APP_VERSION__: JSON.stringify(pkgVersion),
     __BUILD_NUMBER__: JSON.stringify(buildNumber),

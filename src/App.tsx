@@ -732,12 +732,12 @@ export default function App() {
     };
   }, [handleOnlineSync]);
 
-  // Sync on mount if already online (the 'online' event only fires on transition)
+  // Only flush queued changes on mount if items are actually pending offline
   useEffect(() => {
-    if (navigator.onLine) {
+    if (navigator.onLine && syncQueue.length > 0) {
       void handleOnlineSync();
     }
-  }, [handleOnlineSync]);
+  }, [handleOnlineSync, syncQueue.length]);
 
   const visibleTrips = useMemo(
     () =>
@@ -2720,7 +2720,23 @@ export default function App() {
       })()}
 
       {showGlobalSettings && (
-        <Suspense fallback={null}>
+        <Suspense
+          fallback={
+            <div className="modal-backdrop drawer-right" onClick={() => setShowGlobalSettings(false)}>
+              <div
+                className="modal-sheet settings-drawer"
+                role="dialog"
+                aria-modal="true"
+                aria-label="Loading settings"
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}
+              >
+                <div className="ledger-loader" role="status" aria-label="Loading settings">
+                  <span className="ledger-loader-mark">TT</span>
+                </div>
+              </div>
+            </div>
+          }
+        >
           <GlobalSettingsModal
             onClose={() => setShowGlobalSettings(false)}
             closeRef={globalSettingsCloseRef}

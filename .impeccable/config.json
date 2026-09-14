@@ -140,6 +140,141 @@
         ],
         "createdAt": "2026-09-13T09:11:33.606Z",
         "reason": "iOS Safari/Chrome auto-zooms on input focus below 16px -- platform-mandated minimum, not a ramp deviation"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "18px",
+        "files": [
+          "src/components/ExpenseForm.tsx"
+        ],
+        "createdAt": "2026-09-14T06:35:20.033Z",
+        "reason": "matches ExpenseForm's existing inline-style convention; file has 54 pre-existing identical findings, no DESIGN.md token used anywhere in this legacy component"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "20px",
+        "files": [
+          "src/components/ExpenseForm.tsx"
+        ],
+        "createdAt": "2026-09-14T06:35:20.144Z",
+        "reason": "matches ExpenseForm's existing inline-style convention; file has 54 pre-existing identical findings, no DESIGN.md token used anywhere in this legacy component"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "13px",
+        "files": [
+          "src/components/ExpenseForm.tsx"
+        ],
+        "createdAt": "2026-09-14T06:35:20.245Z",
+        "reason": "matches ExpenseForm's existing inline-style convention; file has 54 pre-existing identical findings, no DESIGN.md token used anywhere in this legacy component"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "18px",
+        "files": [
+          "src/components/settings/SettingsBackupsMediaHub.tsx"
+        ],
+        "createdAt": "2026-09-14T06:42:10.932Z",
+        "reason": "matches the two pre-existing sibling SettingsCell icons in this same file (18px), no DESIGN.md token used anywhere in this component"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "13px",
+        "files": [
+          "src/components/SettlementHistorySection.tsx"
+        ],
+        "createdAt": "2026-09-14T11:14:01.460Z",
+        "reason": "matches the project-wide inline-style convention already used in ExpenseForm/TripMediaGalleryModal/SettingsBackupsMediaHub -- no DESIGN.md token used anywhere in these components"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "13px",
+        "files": [
+          "src/components/ExpenseReviewModal.tsx"
+        ],
+        "createdAt": "2026-09-14T11:18:41.607Z",
+        "reason": "matches this file's pre-existing button font-size convention (Edit/Duplicate/Delete buttons already use 13px), no DESIGN.md token used anywhere in this component"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "rgba(184, 69, 46, 0.06)",
+        "files": [
+          "src/components/ExpenseReviewModal.tsx"
+        ],
+        "createdAt": "2026-09-14T11:19:07.683Z",
+        "reason": "same danger-color RGB family (184,69,46) already used for the Delete button border in this file, no DESIGN.md token used anywhere in this component"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "rgba(184, 69, 46, 0.25)",
+        "files": [
+          "src/components/ExpenseReviewModal.tsx"
+        ],
+        "createdAt": "2026-09-14T11:19:07.811Z",
+        "reason": "same danger-color RGB family (184,69,46) already used for the Delete button border in this file, no DESIGN.md token used anywhere in this component"
+      },
+      {
+        "rule": "design-system-radius",
+        "value": "24px",
+        "files": [
+          "src/components/LiveLocationShareModal.tsx"
+        ],
+        "createdAt": "2026-09-14T11:24:22.384Z",
+        "reason": "matches DocumentVaultModal.tsx's modal-sheet convention (same session), no DESIGN.md token used anywhere in these modal components"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "20px",
+        "files": [
+          "src/components/LiveLocationShareModal.tsx"
+        ],
+        "createdAt": "2026-09-14T11:24:22.496Z",
+        "reason": "matches DocumentVaultModal.tsx's header convention"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "16px",
+        "files": [
+          "src/components/LiveLocationShareModal.tsx"
+        ],
+        "createdAt": "2026-09-14T11:24:22.627Z",
+        "reason": "matches DocumentVaultModal.tsx's header convention"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#ef4444",
+        "files": [
+          "src/components/LiveLocationShareModal.tsx"
+        ],
+        "createdAt": "2026-09-14T11:24:22.740Z",
+        "reason": "matches DocumentVaultModal.tsx's danger-color convention"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "rgba(239,68,68,0.08)",
+        "files": [
+          "src/components/LiveLocationShareModal.tsx"
+        ],
+        "createdAt": "2026-09-14T11:24:22.847Z",
+        "reason": "matches DocumentVaultModal.tsx's danger-color convention"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#2f6fed",
+        "files": [
+          "src/components/LiveLocationChatBanner.tsx"
+        ],
+        "createdAt": "2026-09-14T12:07:04.807Z",
+        "reason": "matches the marker/accent blue already used in TripJourneyMap.tsx and LiveLocationPage.tsx (same session)"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "rgba(47,111,237,0.08)",
+        "files": [
+          "src/components/LiveLocationChatBanner.tsx"
+        ],
+        "createdAt": "2026-09-14T12:07:04.905Z",
+        "reason": "same accent-blue family already used across map components this session"
       }
     ]
   }

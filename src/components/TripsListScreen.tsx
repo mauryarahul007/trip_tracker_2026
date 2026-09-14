@@ -277,9 +277,9 @@ export function TripsListScreen({
           )}
           {!onOpenCommandPalette && !onOpenBugTracker && <div aria-hidden="true" />}
         </div>
-        <div style={{ textAlign: 'center' }}>
+        <div style={{ textAlign: 'center', minWidth: 0, overflow: 'hidden' }}>
           <h1 className="app-logo">Trip Tracker 2026</h1>
-          <p className="home-adaptive-greeting" style={{ color: 'var(--text-secondary)', fontSize: '13.5px', marginTop: '4px' }}>
+          <p className="home-adaptive-greeting" style={{ color: 'var(--text-secondary)', fontSize: '13.5px', marginTop: '4px', whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>
             <span>{getTimeGreeting()}{userDisplayName ? `, ${userDisplayName.split(' ')[0]}` : ''}</span>
             {trips.length > 0 && (
               <>
