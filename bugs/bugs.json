@@ -6568,9 +6568,9 @@
     "actualBehavior": "Delete appears to do nothing; the confirm dialog is cancelled by a racing history popstate.",
     "diagnostics": {},
     "createdAt": "2026-09-15T12:23:12.406Z",
-    "updatedAt": "2026-09-15T12:23:23.558Z",
+    "updatedAt": "2026-09-15T12:33:17.677Z",
     "resolvedBy": "cursor-agent",
-    "resolvedAt": "2026-09-15T12:23:23.558Z",
-    "resolutionNote": "Removed useHistoryBack from the TripStack long-press overlay so closing the menu no longer races history.back() against ConfirmDialog. Delete (and Edit / Add expense from the same menu) now keep the follow-up dialog open. Hash recorded after the fix commit."
+    "resolvedAt": "2026-09-15T12:33:17.677Z",
+    "resolutionNote": "Removed useHistoryBack from the TripStack long-press overlay so closing the menu no longer races history.back() against ConfirmDialog. Delete (and Edit / Add expense from the same menu) now keep the follow-up dialog open. Fixed in commit 05852f4."
   }
 ]
