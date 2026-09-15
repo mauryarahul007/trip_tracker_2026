@@ -26,7 +26,12 @@ type Props = {
   balances: MemberBalance[];
   currencySymbol: string;
   onToggleArchiveMember: (id: string) => void;
-  onSaveMember: (name: string, id: string | null, linkedUserId?: string | null) => Promise<{ success: boolean; error?: string }>;
+  onSaveMember: (
+    name: string,
+    id: string | null,
+    linkedUserId?: string | null,
+    dates?: { joinDate?: string | null; leaveDate?: string | null }
+  ) => Promise<{ success: boolean; error?: string }>;
   onDeleteMember: (member: Member) => void;
 
   visibleTripGroups: Group[];
@@ -76,9 +81,12 @@ export function MembersGroupsTab({
   lastSeenByUserId,
 }: Props) {
   const showLastSeen = useTripStore((s) => s.isFeatureEnabled('enableMemberLastSeen'));
+  const dateRangeMembershipEnabled = useTripStore((s) => s.isFeatureEnabled('enableDateRangeMembership'));
   // Member Form State
   const [newMemberName, setNewMemberName] = React.useState('');
   const [editingMember, setEditingMember] = React.useState<Member | null>(null);
+  const [memberJoinDate, setMemberJoinDate] = React.useState('');
+  const [memberLeaveDate, setMemberLeaveDate] = React.useState('');
   const [memberFormError, setMemberFormError] = React.useState('');
   const [isSavingMember, setIsSavingMember] = React.useState(false);
   // Add/edit member now renders as a popup instead of an always-inline
@@ -451,12 +459,17 @@ export function MembersGroupsTab({
       const res = await onSaveMember(
         newMemberName,
         editingMember ? editingMember.id : null,
-        editingMember ? undefined : linkedIdToUse
+        editingMember ? undefined : linkedIdToUse,
+        editingMember && dateRangeMembershipEnabled
+          ? { joinDate: memberJoinDate || null, leaveDate: memberLeaveDate || null }
+          : undefined
       );
       if (res.success) {
         setNewMemberName('');
         setSelectedLinkedUserId(null);
         setEditingMember(null);
+        setMemberJoinDate('');
+        setMemberLeaveDate('');
         setMemberFormError('');
         if (!addAnother) {
           setShowAddForm(false);
@@ -478,6 +491,8 @@ export function MembersGroupsTab({
     setEditingMember(member);
     setNewMemberName(member.name);
     setSelectedLinkedUserId(null);
+    setMemberJoinDate(member.joinDate || '');
+    setMemberLeaveDate(member.leaveDate || '');
     setMemberFormError('');
     setAddAnother(false);
     setShowAddForm(true);
@@ -488,6 +503,8 @@ export function MembersGroupsTab({
     setNewMemberName('');
     setSelectedLinkedUserId(null);
     setEditingMember(null);
+    setMemberJoinDate('');
+    setMemberLeaveDate('');
     setMemberFormError('');
     setAddAnother(false);
     setShowAddForm(false);
@@ -820,6 +837,37 @@ export function MembersGroupsTab({
               </div>
             )}
           </div>
+          {editingMember && dateRangeMembershipEnabled && (
+            <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
+              <div className="form-group" style={{ flex: 1 }}>
+                <label className="form-label" htmlFor="member-join-date">Joins on</label>
+                <input
+                  id="member-join-date"
+                  type="date"
+                  className="input-field"
+                  value={memberJoinDate}
+                  max={memberLeaveDate || undefined}
+                  onChange={(e) => setMemberJoinDate(e.target.value)}
+                />
+              </div>
+              <div className="form-group" style={{ flex: 1 }}>
+                <label className="form-label" htmlFor="member-leave-date">Leaves on</label>
+                <input
+                  id="member-leave-date"
+                  type="date"
+                  className="input-field"
+                  value={memberLeaveDate}
+                  min={memberJoinDate || undefined}
+                  onChange={(e) => setMemberLeaveDate(e.target.value)}
+                />
+              </div>
+            </div>
+          )}
+          {editingMember && dateRangeMembershipEnabled && (memberJoinDate || memberLeaveDate) && (
+            <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px' }}>
+              New expenses will default to excluding {editingMember.name} outside this range. Leave blank for the whole trip.
+            </p>
+          )}
           {memberFormError && (
             <p style={{ color: 'var(--color-danger)', fontSize: '13px', marginTop: '4px', marginBottom: '8px' }}>{memberFormError}</p>
           )}

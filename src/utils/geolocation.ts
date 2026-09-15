@@ -1,8 +1,10 @@
 import { Capacitor } from '@capacitor/core';
 import { Geolocation } from '@capacitor/geolocation';
 import type { ExpenseLocation, TripStop } from '../types';
+import { currencyForCountryCode } from './countryCurrencyMap';
 
 const geocodeCache = new Map<string, string>();
+const currencyGeocodeCache = new Map<string, string | null>();
 
 /**
  * Gets the device's current GPS position. Uses the Capacitor Geolocation
@@ -224,6 +226,43 @@ export async function searchPlaces(query: string): Promise<{ lat: number; lng: n
   }
 
   return [];
+}
+
+/**
+ * Resolves the ISO 4217 currency code for the country a lat/lng falls in,
+ * via Nominatim reverse geocoding's country_code field. Returns null when
+ * offline, on network failure, or the country isn't in the lookup table --
+ * callers should treat null as "no suggestion", never fall back to a guess.
+ */
+export async function detectCurrencyFromLocation(lat: number, lng: number): Promise<string | null> {
+  const cacheKey = `${lat.toFixed(2)},${lng.toFixed(2)}`;
+  if (currencyGeocodeCache.has(cacheKey)) {
+    return currencyGeocodeCache.get(cacheKey)!;
+  }
+
+  if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+    return null;
+  }
+
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 4000);
+
+    const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=3&addressdetails=1`;
+    const res = await fetch(url, { signal: controller.signal, headers: { Accept: 'application/json' } });
+    clearTimeout(timer);
+
+    if (res.ok) {
+      const data = await res.json();
+      const currency = currencyForCountryCode(data.address?.country_code);
+      currencyGeocodeCache.set(cacheKey, currency);
+      return currency;
+    }
+  } catch {
+    // Network failure / timeout / offline
+  }
+
+  return null;
 }
 
 /**

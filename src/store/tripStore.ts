@@ -16,6 +16,7 @@ import {
   updateTripChecklist,
   updateTripNotes,
   updateTripMemberRoles,
+  updateTripSplitExclusionDefaults,
   updateTripPasses,
   updateTripFxConfig,
   archiveTripRow,
@@ -200,10 +201,11 @@ interface TripStore extends TripState {
   // Member Actions
   addMember: (name: string, linkedUserId?: string | null) => Promise<void>;
   toggleArchiveMember: (id: string) => Promise<void>;
-  updateMember: (id: string, name: string) => Promise<void>;
+  updateMember: (id: string, name: string, dates?: { joinDate?: string | null; leaveDate?: string | null }) => Promise<void>;
   deleteMember: (id: string) => Promise<void>;
   setMemberAdminRole: (memberId: string, isAdmin: boolean) => Promise<void>;
   setMemberRole: (memberId: string, role: MemberRole) => Promise<void>;
+  setSplitExclusionDefaults: (categoryId: string, excludedMemberIds: string[]) => Promise<void>;
 
   // Group Actions
   createGroup: (name: string, memberIds: string[]) => Promise<void>;
@@ -1211,8 +1213,12 @@ export const useTripStore = create<TripStore>()(
             invalidatePreviousMembersCache();
             set((state) => ({ members: { ...state.members, [tempId]: member } }));
           } else if (item.type === 'updateMember') {
-            const { id, name } = item.payload;
-            await updateMemberRow(id, { name });
+            const { id, name, join_date, leave_date } = item.payload;
+            await updateMemberRow(id, {
+              name,
+              ...(join_date !== undefined ? { join_date } : {}),
+              ...(leave_date !== undefined ? { leave_date } : {}),
+            });
           } else if (item.type === 'toggleArchiveMember') {
             const { id, archived } = item.payload;
             await updateMemberRow(id, { archived });
@@ -2192,6 +2198,31 @@ export const useTripStore = create<TripStore>()(
       }
     },
 
+    setSplitExclusionDefaults: async (categoryId: string, excludedMemberIds: string[]) => {
+      const activeTripId = get().activeTripId;
+      if (!activeTripId) return;
+
+      set((state) => ({
+        trips: state.trips.map((t) => {
+          if (t.id !== activeTripId) return t;
+          const current = { ...(t.splitExclusionDefaults || {}) };
+          if (excludedMemberIds.length > 0) current[categoryId] = excludedMemberIds;
+          else delete current[categoryId];
+          return { ...t, splitExclusionDefaults: current, updatedAt: Date.now() };
+        }),
+        storageError: null,
+      }));
+
+      const updatedTrip = get().trips.find((t) => t.id === activeTripId);
+      if (!isMissingSupabaseEnv && updatedTrip) {
+        try {
+          await updateTripSplitExclusionDefaults(activeTripId, updatedTrip.splitExclusionDefaults || {});
+        } catch (e) {
+          console.warn('Failed to sync split exclusion defaults to backend:', e);
+        }
+      }
+    },
+
     toggleArchiveMember: async (id) => {
       const member = get().members[id];
       if (!member) return;
@@ -2210,19 +2241,29 @@ export const useTripStore = create<TripStore>()(
       }
     },
 
-    updateMember: async (id, name) => {
+    updateMember: async (id, name, dates) => {
       const member = get().members[id];
       if (!member) return;
-      set((state) => ({ members: { ...state.members, [id]: { ...member, name } }, storageError: null }));
+      const nextMember = {
+        ...member,
+        name,
+        ...(dates?.joinDate !== undefined ? { joinDate: dates.joinDate } : {}),
+        ...(dates?.leaveDate !== undefined ? { leaveDate: dates.leaveDate } : {}),
+      };
+      set((state) => ({ members: { ...state.members, [id]: nextMember }, storageError: null }));
+
+      const patch: { name: string; join_date?: string | null; leave_date?: string | null } = { name };
+      if (dates?.joinDate !== undefined) patch.join_date = dates.joinDate;
+      if (dates?.leaveDate !== undefined) patch.leave_date = dates.leaveDate;
 
       if (!navigator.onLine) {
-        get().queueSync('updateMember', { id, name });
+        get().queueSync('updateMember', { id, ...patch });
       } else {
         try {
-          await updateMemberRow(id, { name });
+          await updateMemberRow(id, patch);
         } catch (e) {
           console.warn('Online updateMember failed, falling back to offline sync queue:', e);
-          get().queueSync('updateMember', { id, name });
+          get().queueSync('updateMember', { id, ...patch });
         }
       }
     },

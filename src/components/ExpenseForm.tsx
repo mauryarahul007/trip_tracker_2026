@@ -10,7 +10,8 @@ import { getCurrencySymbol } from '../utils/currency';
 import { compressImageToDataUrl, compressDataUrlToDataUrl } from '../utils/image';
 import { autoSuggestCategory } from '../utils/categoryHelper';
 import { parseQuickExpense } from '../utils/expenseQuickParser';
-import { captureCurrentExpenseLocation } from '../utils/geolocation';
+import { captureCurrentExpenseLocation, detectCurrencyFromLocation } from '../utils/geolocation';
+import { isMemberPresentOnDate } from '../utils/memberDateRange';
 import { useTripStore } from '../store/tripStore';
 import { triggerHaptic } from '../utils/haptics';
 import { convertCurrency, POPULAR_CURRENCIES } from '../utils/currencyConverter';
@@ -136,7 +137,14 @@ export function ExpenseForm({
       visibleMembers.forEach((m) => { initialSplit[m.id] = false; });
       initialTemplate.splitMemberIds.forEach((id) => { initialSplit[id] = true; });
     } else {
-      visibleMembers.forEach((m) => { initialSplit[m.id] = true; });
+      const storeState = useTripStore.getState();
+      const dateRangeMembershipEnabled = storeState.isFeatureEnabled('enableDateRangeMembership', { tripId: trip?.id });
+      const exclusionDefaultsEnabled = storeState.isFeatureEnabled('enableSplitExclusionDefaults', { tripId: trip?.id });
+      const excludedForCategory = exclusionDefaultsEnabled ? trip?.splitExclusionDefaults?.[category] || [] : [];
+      visibleMembers.forEach((m) => {
+        const inDateRange = dateRangeMembershipEnabled ? isMemberPresentOnDate(m, date) : true;
+        initialSplit[m.id] = inDateRange && !excludedForCategory.includes(m.id);
+      });
     }
     return initialSplit;
   });
@@ -379,6 +387,7 @@ export function ExpenseForm({
   const enableDuplicateDetector = isFeatureEnabled('enableDuplicateDetector');
   const enableVoiceInput = isFeatureEnabled('enableVoiceInput');
   const enableCurrencyFx = isFeatureEnabled('enableCurrencyFx', { tripId: trip?.id });
+  const enableAutoCurrencyDetection = isFeatureEnabled('enableAutoCurrencyDetection', { tripId: trip?.id });
 
   // Duplicate expense detection
   const expenses = useTripStore((s) => s.expenses);
@@ -485,6 +494,22 @@ export function ExpenseForm({
         .finally(() => setLocationLoading(false));
     }
   }, [editingExpense, enableGeotagging, location]);
+
+  // Currency suggestion -- reuses the coordinates Geotagging already
+  // captured above rather than requesting device location a second time.
+  const [detectedCurrency, setDetectedCurrency] = useState<string | null>(null);
+  const [currencyChipDismissed, setCurrencyChipDismissed] = useState(false);
+
+  useEffect(() => {
+    if (editingExpense || !enableAutoCurrencyDetection || !location || detectedCurrency) return;
+    let cancelled = false;
+    detectCurrencyFromLocation(location.lat, location.lng).then((currency) => {
+      if (!cancelled && currency) setDetectedCurrency(currency);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [editingExpense, enableAutoCurrencyDetection, location, detectedCurrency]);
 
   const sheetRef = useRef<HTMLFormElement>(null);
   const amountInputRef = useRef<HTMLInputElement>(null);
@@ -1060,6 +1085,48 @@ export function ExpenseForm({
             )}
           </div>
         </div>
+
+        {detectedCurrency && !currencyChipDismissed && detectedCurrency !== selectedCurrency && (
+          <div
+            className="fade-in"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: '8px',
+              padding: '6px 10px',
+              marginBottom: '10px',
+              borderRadius: 'var(--border-radius-sm)',
+              background: 'rgba(15, 111, 99, 0.08)',
+              border: '1px solid rgba(15, 111, 99, 0.25)',
+              fontSize: '12px',
+            }}
+          >
+            <span style={{ color: 'var(--text-secondary)' }}>
+              You're near a {detectedCurrency} location &mdash; use it instead?
+            </span>
+            <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
+              <button
+                type="button"
+                className="pill-chip"
+                style={{ fontSize: '11px', padding: '3px 8px', borderRadius: '10px', border: 'none', background: 'var(--primary-accent)', color: '#fff', fontWeight: 700, cursor: 'pointer' }}
+                onClick={() => {
+                  setSelectedCurrency(detectedCurrency);
+                  setCurrencyChipDismissed(true);
+                }}
+              >
+                Use {detectedCurrency}
+              </button>
+              <button
+                type="button"
+                style={{ fontSize: '11px', padding: '3px 8px', borderRadius: '10px', border: '1px solid var(--border-color)', background: 'transparent', color: 'var(--text-secondary)', cursor: 'pointer' }}
+                onClick={() => setCurrencyChipDismissed(true)}
+              >
+                Dismiss
+              </button>
+            </div>
+          </div>
+        )}
 
         {enableCurrencyFx && showCurrencyPicker && (
           <div className="fade-in" style={{

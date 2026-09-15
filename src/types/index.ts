@@ -81,6 +81,7 @@ export interface Trip {
   notes?: TripNote[]; // Collaborative travel notes, Wi-Fi, PNRs
   passes?: TravelPass[]; // Digital boarding passes, vouchers, and tickets
   fxConfig?: TripFxConfig; // Custom exchange rates & forex markup
+  splitExclusionDefaults?: Record<string, string[]>; // categoryId -> memberIds excluded by default from that category's split
 }
 
 export type TravelPassType = 'flight' | 'train' | 'stay' | 'activity' | 'transit';
@@ -123,6 +124,8 @@ export interface Member {
   linkedUserId?: string | null; // set once this member "claims" their identity via /join
   avatarUrl?: string | null; // from the linked account's Google profile, if any
   upiId?: string | null; // optional UPI ID / VPA for 1-tap debt settlement
+  joinDate?: string | null; // ISO date -- member only present in the trip from this date (inclusive)
+  leaveDate?: string | null; // ISO date -- member only present in the trip through this date (inclusive)
 }
 
 export interface Group {

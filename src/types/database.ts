@@ -45,6 +45,7 @@ export interface Database {
           passes?: unknown;
           fx_config?: unknown;
           member_roles?: Record<string, string> | null;
+          split_exclusion_defaults?: Record<string, string[]> | null;
           created_at: string;
           updated_at: string;
         };
@@ -66,6 +67,7 @@ export interface Database {
           passes?: unknown;
           fx_config?: unknown;
           member_roles?: Record<string, string> | null;
+          split_exclusion_defaults?: Record<string, string[]> | null;
         };
         Update: Partial<{
           name: string;
@@ -82,6 +84,7 @@ export interface Database {
           passes?: unknown;
           fx_config?: unknown;
           member_roles?: Record<string, string> | null;
+          split_exclusion_defaults?: Record<string, string[]> | null;
           updated_at: string;
         }>;
         Relationships: [];
@@ -115,6 +118,32 @@ export interface Database {
         };
         Update: Partial<{
           enabled: boolean;
+          updated_at: string;
+        }>;
+        Relationships: [];
+      };
+      quiet_hours_prefs: {
+        Row: {
+          user_id: string;
+          enabled: boolean;
+          start_time: string;
+          end_time: string;
+          timezone: string;
+          updated_at: string;
+        };
+        Insert: {
+          user_id: string;
+          enabled?: boolean;
+          start_time?: string;
+          end_time?: string;
+          timezone?: string;
+          updated_at?: string;
+        };
+        Update: Partial<{
+          enabled: boolean;
+          start_time: string;
+          end_time: string;
+          timezone: string;
           updated_at: string;
         }>;
         Relationships: [];
@@ -161,6 +190,8 @@ export interface Database {
           name: string;
           archived: boolean;
           linked_user_id: string | null;
+          join_date: string | null;
+          leave_date: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -175,6 +206,8 @@ export interface Database {
           name: string;
           archived: boolean;
           linked_user_id: string | null;
+          join_date: string | null;
+          leave_date: string | null;
           updated_at: string;
         }>;
         Relationships: [

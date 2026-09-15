@@ -1200,7 +1200,12 @@ export default function App() {
     setShowAddTrip(false);
   };
 
-  const handleSaveMember = async (name: string, id: string | null, linkedUserId?: string | null): Promise<{ success: boolean; error?: string }> => {
+  const handleSaveMember = async (
+    name: string,
+    id: string | null,
+    linkedUserId?: string | null,
+    dates?: { joinDate?: string | null; leaveDate?: string | null }
+  ): Promise<{ success: boolean; error?: string }> => {
     const nameTrimmed = name.trim();
     if (!nameTrimmed) return { success: false, error: 'Member name cannot be empty.' };
 
@@ -1220,7 +1225,7 @@ export default function App() {
     }
 
     if (id) {
-      await updateMember(id, nameTrimmed);
+      await updateMember(id, nameTrimmed, dates);
     } else {
       // If linkedUserId wasn't explicitly passed, look up if an existing member with this name has a linkedUserId
       let finalLinkedUserId = linkedUserId || null;

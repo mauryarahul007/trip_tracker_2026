@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { reverseGeocode, getCurrentGPSPosition } from './geolocation';
+import { reverseGeocode, getCurrentGPSPosition, detectCurrencyFromLocation } from './geolocation';
 
 vi.mock('@capacitor/core', () => ({
   Capacitor: { isNativePlatform: vi.fn(() => false) },
@@ -40,6 +40,22 @@ describe('Geolocation Utility', () => {
 
     // Restore
     (globalThis.navigator as any).geolocation = originalGeo;
+  });
+
+  it('detects a currency from a mapped country code', async () => {
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ address: { country_code: 'in' } }),
+    });
+
+    const currency = await detectCurrencyFromLocation(15.5, 73.8);
+    expect(currency).toBe('INR');
+  });
+
+  it('returns null when the country is unmapped or fetch fails', async () => {
+    globalThis.fetch = vi.fn().mockRejectedValue(new Error('Network offline'));
+    const currency = await detectCurrencyFromLocation(0, 0);
+    expect(currency).toBeNull();
   });
 });
 

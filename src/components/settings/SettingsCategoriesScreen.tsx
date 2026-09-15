@@ -6,6 +6,7 @@ import { getCategoryKeywords } from '../../utils/categoryHelper';
 import { useHistoryBack } from '../../utils/useHistoryBack';
 import { useEscapeKey } from '../../utils/useEscapeKey';
 import { SettingsSubscreenFrame } from './SettingsNavHeader';
+import { useTripStore } from '../../store/tripStore';
 
 const CATEGORY_ICON_PRESETS = [
   '🍔', '🏨', '✈️', '🎟️', '🛍️', '📦', '🚗', '⛽', '🎬', '🍺', '💊', '🎁', '🧾', '🏥', '🎓', '🐾', '🎵', '🚕',
@@ -42,6 +43,14 @@ export function SettingsCategoriesScreen({
   const [newCategoryName, setNewCategoryName] = useState('');
   const [newCategoryIcon, setNewCategoryIcon] = useState('');
   const [showIconPicker, setShowIconPicker] = useState(false);
+
+  const exclusionDefaultsEnabled = useTripStore((s) => s.isFeatureEnabled('enableSplitExclusionDefaults'));
+  const activeTripId = useTripStore((s) => s.activeTripId);
+  const activeTrip = useTripStore((s) => s.trips.find((t) => t.id === activeTripId));
+  const members = useTripStore((s) => s.members);
+  const setSplitExclusionDefaults = useTripStore((s) => s.setSplitExclusionDefaults);
+  const tripMembers = (activeTrip?.memberIds || []).map((id) => members[id]).filter((m): m is NonNullable<typeof m> => !!m);
+  const splitExclusionDefaults = activeTrip?.splitExclusionDefaults || {};
 
   useHistoryBack(expandedCategoryId !== null, () => {
     setExpandedCategoryId(null);
@@ -246,6 +255,42 @@ export function SettingsCategoriesScreen({
                         Add Tag
                       </button>
                     </form>
+
+                    {exclusionDefaultsEnabled && tripMembers.length > 0 && (
+                      <div style={{ marginTop: '14px', paddingTop: '12px', borderTop: '1px dashed var(--border-color)' }}>
+                        <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: '6px' }}>
+                          Exclude by default from {cat.name} splits:
+                        </span>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                          {tripMembers.map((m) => {
+                            const excluded = (splitExclusionDefaults[cat.id] || []).includes(m.id);
+                            return (
+                              <button
+                                key={m.id}
+                                type="button"
+                                style={{
+                                  padding: '4px 10px',
+                                  borderRadius: '12px',
+                                  fontSize: '11.5px',
+                                  fontWeight: 600,
+                                  cursor: 'pointer',
+                                  border: excluded ? '1px solid rgba(239, 68, 68, 0.35)' : '1px solid var(--border-color)',
+                                  background: excluded ? 'rgba(239, 68, 68, 0.12)' : 'var(--bg-surface)',
+                                  color: excluded ? '#EF4444' : 'var(--text-primary)',
+                                }}
+                                onClick={() => {
+                                  const current = splitExclusionDefaults[cat.id] || [];
+                                  const next = excluded ? current.filter((id) => id !== m.id) : [...current, m.id];
+                                  setSplitExclusionDefaults(cat.id, next);
+                                }}
+                              >
+                                {excluded ? `${m.name} ✕` : m.name}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

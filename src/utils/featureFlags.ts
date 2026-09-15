@@ -19,7 +19,7 @@ export const RELEASE_PHASES: ReleasePhaseDef[] = [
     tagline: 'Frictionless on-trip logging & shared trip organization',
     description: 'Hands-free voice quick-add with Hinglish NLP parsing, compressed receipt photos, collaborative packing & rich notes, and 4D duplicate expense warning.',
     targetAudience: 'Friends & families actively traveling together',
-    flagKeys: ['enableVoiceInput', 'enableReceiptUpload', 'enableNotesAndChecklist', 'enableDuplicateDetector', 'enableTripChat', 'enableExpensePhotoLinking', 'enableExpenseDisputes', 'enableDigestNotifications', 'enableMemberLastSeen'],
+    flagKeys: ['enableVoiceInput', 'enableReceiptUpload', 'enableNotesAndChecklist', 'enableDuplicateDetector', 'enableTripChat', 'enableExpensePhotoLinking', 'enableExpenseDisputes', 'enableDigestNotifications', 'enableMemberLastSeen', 'enableQuietHours'],
   },
   {
     id: 'phase3',
@@ -59,6 +59,10 @@ export const RELEASE_PHASES: ReleasePhaseDef[] = [
       'enableMultiTripAnalytics',
       'enableBiometricAuth',
       'enableDocumentVault',
+      'enableBurnRateInsight',
+      'enableDateRangeMembership',
+      'enableAutoCurrencyDetection',
+      'enableSplitExclusionDefaults',
     ],
   },
   {
@@ -165,6 +169,14 @@ export const FEATURE_FLAGS_META: Record<FeatureFlagKey, FeatureFlagMeta> = {
     key: 'enableDigestNotifications',
     label: 'Digest-Mode Notifications',
     description: 'One daily push summary instead of a push per event. Requires the digest_cron_secret Vault setup in migration 0087.',
+    category: 'collab',
+    phase: 'phase2',
+    defaultEnabledForUsers: false,
+  },
+  enableQuietHours: {
+    key: 'enableQuietHours',
+    label: 'Quiet Hours',
+    description: 'Per-user time window (e.g. 11pm-7am, in their local timezone) during which push notifications are suppressed.',
     category: 'collab',
     phase: 'phase2',
     defaultEnabledForUsers: false,
@@ -349,6 +361,38 @@ export const FEATURE_FLAGS_META: Record<FeatureFlagKey, FeatureFlagMeta> = {
     phase: 'phase4',
     defaultEnabledForUsers: false,
   },
+  enableBurnRateInsight: {
+    key: 'enableBurnRateInsight',
+    label: 'Spend Burn-Rate Forecast',
+    description: 'Analytics card projecting total trip spend from the daily average so far, for trips currently in progress.',
+    category: 'fintech',
+    phase: 'phase4',
+    defaultEnabledForUsers: false,
+  },
+  enableDateRangeMembership: {
+    key: 'enableDateRangeMembership',
+    label: 'Date-Range Member Participation',
+    description: 'Members can have a join/leave date within the trip; new expenses default their split to only members present on that date.',
+    category: 'splits',
+    phase: 'phase4',
+    defaultEnabledForUsers: false,
+  },
+  enableAutoCurrencyDetection: {
+    key: 'enableAutoCurrencyDetection',
+    label: 'Auto Currency Detection',
+    description: 'Suggests the local currency on the expense form from device GPS location (reuses existing Geotag consent).',
+    category: 'fintech',
+    phase: 'phase4',
+    defaultEnabledForUsers: false,
+  },
+  enableSplitExclusionDefaults: {
+    key: 'enableSplitExclusionDefaults',
+    label: 'Per-Category Split Exclusion Defaults',
+    description: 'Set members who are excluded by default from a category\'s split (e.g. non-drinkers from Alcohol), applied automatically on new expenses.',
+    category: 'splits',
+    phase: 'phase4',
+    defaultEnabledForUsers: false,
+  },
 
   // Phase 5: Switch, Speed & Trust (safed by default)
   enableSplitwiseImport: {
@@ -499,6 +543,7 @@ export const DEFAULT_FEATURE_FLAGS: Record<FeatureFlagKey, boolean> = {
   enableExpenseDisputes: false,
   enableDigestNotifications: false,
   enableMemberLastSeen: false,
+  enableQuietHours: false,
 
   // Phase 3 (Armed by default)
   enableTravelPasses: true,
@@ -521,6 +566,10 @@ export const DEFAULT_FEATURE_FLAGS: Record<FeatureFlagKey, boolean> = {
   enableMultiTripAnalytics: true,
   enableBiometricAuth: true,
   enableDocumentVault: false,
+  enableBurnRateInsight: false,
+  enableDateRangeMembership: false,
+  enableAutoCurrencyDetection: false,
+  enableSplitExclusionDefaults: false,
 
   // Phase 5 (safed by default)
   enableSplitwiseImport: false,

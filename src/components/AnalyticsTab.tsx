@@ -1,8 +1,10 @@
-import { useEffect, useId, useState } from 'react';
+import { useEffect, useId, useMemo, useState } from 'react';
 import type { Trip, Expense } from '../types';
 import { CategoryIcon } from './CategoryIcon';
 import { IconAnalytics, IconTrophy, IconChevronDown, IconChevronUp } from './Icons';
 import { getCurrencySymbol, formatAmount } from '../utils/currency';
+import { computeBurnRateInsight } from '../utils/burnRate';
+import { useTripStore } from '../store/tripStore';
 
 type CategoryDatum = { id: string; name: string; icon: string; amount: number; percentage: number };
 type MemberSpend = { id: string; name: string; amount: number; percentage: number };
@@ -54,6 +56,12 @@ export function AnalyticsTab({
   const trendGradientId = useId();
   const [chartFilled, setChartFilled] = useState(false);
   const [showTrends, setShowTrends] = useState(false);
+
+  const burnRateEnabled = useTripStore((s) => s.isFeatureEnabled('enableBurnRateInsight', { tripId: trip?.id }));
+  const burnRate = useMemo(() => {
+    if (!burnRateEnabled || !trip?.startDate || !trip?.endDate) return null;
+    return computeBurnRateInsight(trip.startDate, trip.endDate, totalSpent);
+  }, [burnRateEnabled, trip?.startDate, trip?.endDate, totalSpent]);
 
   useEffect(() => {
     const raf1 = requestAnimationFrame(() => {
@@ -152,6 +160,31 @@ export function AnalyticsTab({
           </strong>
         </div>
       </div>
+
+      {burnRate && (
+        <div
+          className="glass-card"
+          style={{
+            padding: '14px 16px',
+            marginBottom: '20px',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '4px',
+            border: '1.5px solid rgba(255, 122, 0, 0.22)',
+            background: 'radial-gradient(circle at 10% 50%, rgba(255, 122, 0, 0.08), var(--bg-surface))',
+          }}
+        >
+          <span style={{ fontSize: '12px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            Pace &middot; Day {burnRate.daysElapsed} of {burnRate.daysTotal}
+          </span>
+          <strong className="money" style={{ fontSize: '17px', color: 'var(--text-primary)' }}>
+            At this pace, ~{formatAmount(burnRate.projectedTotal, currencySymbol)} by trip end
+          </strong>
+          <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+            {formatAmount(burnRate.dailyAverage, currencySymbol)}/day average so far
+          </span>
+        </div>
+      )}
 
       {!hasExpenses ? (
         <div className="glass-card ledger-empty" style={{ borderStyle: 'dashed' }}>

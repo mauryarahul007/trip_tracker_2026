@@ -50,6 +50,36 @@ function renderNotification(type: string, tripName: string, params: Record<strin
   }
 }
 
+// "HH:MM" (24h) in the given IANA timezone right now. Falls back to UTC on
+// an invalid/unknown timezone string rather than throwing.
+function currentTimeInZone(now: Date, timezone: string): string {
+  try {
+    const parts = new Intl.DateTimeFormat('en-GB', {
+      timeZone: timezone,
+      hour: '2-digit',
+      minute: '2-digit',
+      hourCycle: 'h23',
+    }).formatToParts(now);
+    const hour = parts.find((p) => p.type === 'hour')?.value ?? '00';
+    const minute = parts.find((p) => p.type === 'minute')?.value ?? '00';
+    return `${hour}:${minute}`;
+  } catch {
+    return new Intl.DateTimeFormat('en-GB', { timeZone: 'UTC', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' })
+      .format(now);
+  }
+}
+
+// start/end are "HH:MM" strings. Handles the overnight case (e.g.
+// 22:00-07:00) where start > end means the window wraps past midnight.
+function isWithinQuietHours(now: Date, startTime: string, endTime: string, timezone: string): boolean {
+  const current = currentTimeInZone(now, timezone);
+  if (startTime === endTime) return false; // zero-width window -- treat as never quiet
+  if (startTime < endTime) {
+    return current >= startTime && current < endTime;
+  }
+  return current >= startTime || current < endTime;
+}
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -204,6 +234,33 @@ async function handleSendPush(req: Request): Promise<Response> {
     } else {
       const mutedUserIds = new Set((mutes || []).map((m) => m.user_id));
       pushEligibleUserIds = filteredUserIds.filter((id) => !mutedUserIds.has(id));
+    }
+  }
+  if (pushEligibleUserIds.length === 0) {
+    return jsonResponse({ sent: 0, total: 0 }, 200);
+  }
+
+  // Quiet hours (migration 0092) -- per-user time window, independent of
+  // trip mute above (that's per-trip and all-or-nothing; this applies
+  // across every trip and only during the configured window). Same
+  // fail-open philosophy as the rest of this function: any lookup error
+  // sends the push rather than silently dropping it.
+  const { data: quietPrefs, error: quietPrefsError } = await supabaseAdmin
+    .from('quiet_hours_prefs')
+    .select('user_id, start_time, end_time, timezone')
+    .eq('enabled', true)
+    .in('user_id', pushEligibleUserIds);
+  if (quietPrefsError) {
+    console.error('Failed to load quiet hours preferences, sending push to all recipients', quietPrefsError);
+  } else if (quietPrefs && quietPrefs.length > 0) {
+    const now = new Date();
+    const quietUserIds = new Set(
+      quietPrefs
+        .filter((p) => isWithinQuietHours(now, p.start_time, p.end_time, p.timezone))
+        .map((p) => p.user_id)
+    );
+    if (quietUserIds.size > 0) {
+      pushEligibleUserIds = pushEligibleUserIds.filter((id) => !quietUserIds.has(id));
     }
   }
   if (pushEligibleUserIds.length === 0) {

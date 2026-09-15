@@ -47,6 +47,7 @@ import { SettingsAboutScreen } from './settings/SettingsAboutScreen';
 import { prefetchSettingsLeaves, prefetchSettingsLegal } from './settings/prefetchSettingsLeaves';
 import { formatBytes } from './settings/formatBytes';
 import { getDigestPreference, setDigestPreference } from '../services/notificationDigestApi';
+import { getQuietHoursPreference, setQuietHoursPreference, type QuietHoursPreference } from '../services/quietHoursApi';
 
 const SuperAdminBugTracker = lazy(() => import('./SuperAdminBugTracker').then((m) => ({ default: m.SuperAdminBugTracker })));
 const SettingsCategoriesScreen = lazy(() => import('./settings/SettingsCategoriesScreen').then((m) => ({ default: m.SettingsCategoriesScreen })));
@@ -504,6 +505,32 @@ export function SettingsView({
       .finally(() => setDigestModeBusy(false));
   };
 
+  // Quiet hours -- per-user, cross-trip, backed by quiet_hours_prefs
+  // (migration 0092). Distinct from Digest Mode above: this is a time
+  // window, not a batching strategy.
+  const [quietHours, setQuietHours] = useState<QuietHoursPreference>({ enabled: false, startTime: '22:00', endTime: '07:00', timezone: 'UTC' });
+  const [quietHoursBusy, setQuietHoursBusy] = useState(false);
+  useEffect(() => {
+    if (!userId) return;
+    getQuietHoursPreference(userId).then(setQuietHours).catch(() => {});
+  }, [userId]);
+
+  const saveQuietHours = (next: QuietHoursPreference) => {
+    if (!userId || quietHoursBusy) return;
+    const previous = quietHours;
+    setQuietHoursBusy(true);
+    setQuietHours(next);
+    triggerHaptic('light');
+    setQuietHoursPreference(userId, next)
+      .catch(() => setQuietHours(previous))
+      .finally(() => setQuietHoursBusy(false));
+  };
+
+  const handleToggleQuietHours = (enabled: boolean) => {
+    const tz = quietHours.timezone === 'UTC' ? Intl.DateTimeFormat().resolvedOptions().timeZone : quietHours.timezone;
+    saveQuietHours({ ...quietHours, enabled, timezone: tz });
+  };
+
   const handleTogglePassReminders = (enabled: boolean) => {
     setPassRemindersEnabled(enabled);
     setPassRemindersOn(enabled);
@@ -904,11 +931,12 @@ export function SettingsView({
   const showAppearance = matchesSearch('Appearance', 'theme', 'dark', 'light', 'night', 'auto', 'color', 'look');
   const showNotifications = matchesSearch('Notifications', 'alerts', 'unread', 'bell', 'messages');
   const showDigestMode = isFeatureEnabled('enableDigestNotifications') && matchesSearch('Digest Mode', 'digest', 'daily', 'summary', 'notifications', 'batch');
+  const showQuietHours = isFeatureEnabled('enableQuietHours') && matchesSearch('Quiet Hours', 'quiet', 'dnd', 'do not disturb', 'mute', 'sleep', 'night');
   const showPassReminders = matchesSearch('Pass reminders', 'pass', 'flight', 'train', 'departure', 'alert');
   const showGeotag = isFeatureEnabled('enableGeotagging') && matchesSearch('Geotag Expenses', 'gps', 'location', 'place', 'map', 'pin');
   const showLiveLocationShare = Boolean(onOpenLiveLocationShare && matchesSearch('Live Location Share', 'location', 'safety', 'share', 'gps', 'live'));
   const showInstall = pwaInstallable && matchesSearch('Install App', 'pwa', 'home screen', 'download', 'mobile');
-  const showPreferencesGroup = showAppearance || showNotifications || showDigestMode || showPassReminders || showGeotag || showLiveLocationShare || showInstall;
+  const showPreferencesGroup = showAppearance || showNotifications || showDigestMode || showQuietHours || showPassReminders || showGeotag || showLiveLocationShare || showInstall;
 
   const showStorageManager = matchesSearch('Storage and Data', 'storage', 'data', 'cache', 'memory', 'disk', 'receipts', 'photos');
   const showArchived = matchesSearch('Archived Trips', 'restore', 'history', 'past trips', 'archive');
@@ -1350,6 +1378,83 @@ export function SettingsView({
                     </span>
                   </label>
                 </div>
+              </div>
+            )}
+
+            {showQuietHours && (
+              <div className="settings-row-item" style={{ cursor: 'default', flexDirection: 'column', alignItems: 'stretch', gap: '10px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+                  <div className="settings-row-left">
+                    <div className="settings-squircle squircle-slate-glow">
+                      <span style={{ fontSize: '18px' }}>🌙</span>
+                    </div>
+                    <div className="settings-row-texts">
+                      <span className="settings-row-title">Quiet Hours</span>
+                      <span className="settings-row-subtitle">Pause push notifications during this window</span>
+                    </div>
+                  </div>
+                  <div className="settings-row-right" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span className="settings-badge-pill" style={{ fontWeight: 600, fontSize: '10px' }}>
+                      {quietHours.enabled ? 'ON' : 'OFF'}
+                    </span>
+                    <label style={{ position: 'relative', display: 'inline-block', width: '44px', height: '24px', margin: 0, cursor: 'pointer' }}>
+                      <input
+                        type="checkbox"
+                        checked={quietHours.enabled}
+                        onChange={(e) => handleToggleQuietHours(e.target.checked)}
+                        aria-label="Quiet Hours"
+                        style={{ opacity: 0, width: 0, height: 0, margin: 0 }}
+                      />
+                      <span
+                        style={{
+                          position: 'absolute',
+                          top: 0,
+                          left: 0,
+                          right: 0,
+                          bottom: 0,
+                          backgroundColor: quietHours.enabled ? '#17B6A6' : 'var(--border-color)',
+                          transition: '0.2s ease',
+                          borderRadius: 'var(--border-radius-pill)',
+                        }}
+                      >
+                        <span
+                          style={{
+                            position: 'absolute',
+                            height: '18px',
+                            width: '18px',
+                            left: quietHours.enabled ? '23px' : '3px',
+                            bottom: '3px',
+                            backgroundColor: 'white',
+                            transition: '0.2s ease',
+                            borderRadius: '50%',
+                            boxShadow: '0 1px 3px rgba(0,0,0,0.25)',
+                          }}
+                        />
+                      </span>
+                    </label>
+                  </div>
+                </div>
+                {quietHours.enabled && (
+                  <div className="fade-in" style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                    <input
+                      type="time"
+                      className="input-field"
+                      style={{ flex: 1 }}
+                      value={quietHours.startTime}
+                      aria-label="Quiet hours start"
+                      onChange={(e) => saveQuietHours({ ...quietHours, startTime: e.target.value })}
+                    />
+                    <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>to</span>
+                    <input
+                      type="time"
+                      className="input-field"
+                      style={{ flex: 1 }}
+                      value={quietHours.endTime}
+                      aria-label="Quiet hours end"
+                      onChange={(e) => saveQuietHours({ ...quietHours, endTime: e.target.value })}
+                    />
+                  </div>
+                )}
               </div>
             )}
 

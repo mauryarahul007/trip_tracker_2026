@@ -9,11 +9,11 @@
 
 | Metric | Count |
 | :--- | :--- |
-| **Total Tracked** | **70** |
+| **Total Tracked** | **75** |
 | **💡 Requested** | **2** |
 | **📋 Planned** | **0** |
 | **🟡 In Progress** | **0** |
-| **✅ Shipped** | **68** |
+| **✅ Shipped** | **73** |
 | **⚪ Won't Do** | **0** |
 
 ---
@@ -120,6 +120,11 @@ CI pipeline for lint, build, and test on push/PR
 | **FEAT-068** | Digest-mode push notifications (daily summary) | `performance` | `claude-cli` | `claude-cli` | Shipped |
 | **FEAT-069** | Live location visible in-app via Chat banner (no link needed for trip members) | `ui-ux` | `claude-cli` | `claude-cli` | Shipped |
 | **FEAT-070** | Trip closeout, last-seen, collapsed map, cross-trip search, and settlement audit | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit 4537c8d (v3.22.0). Five Superadmin flags default OFF. |
+| **FEAT-071** | Spend Burn-Rate Forecast | `analytics` | `claude-cli` | `claude-cli` | src/utils/burnRate.ts + AnalyticsTab.tsx card, flag-gated Phase 4, off by default. |
+| **FEAT-072** | Date-Range Member Participation | `ui-ux` | `claude-cli` | `claude-cli` | Member.joinDate/leaveDate (migration 0090), edit-only UI in MembersGroupsTab, default-split filter in ExpenseForm via memberDateRange.ts. |
+| **FEAT-073** | Auto Currency Detection | `ui-ux` | `claude-cli` | `claude-cli` | countryCurrencyMap.ts + geolocation.ts detectCurrencyFromLocation(), dismissible chip in ExpenseForm. |
+| **FEAT-074** | Per-Category Split Exclusion Defaults | `ui-ux` | `claude-cli` | `claude-cli` | Trip.splitExclusionDefaults (migration 0091), per-category chips in SettingsCategoriesScreen, applied in ExpenseForm default split. |
+| **FEAT-075** | Quiet Hours | `notifications` | `claude-cli` | `claude-cli` | quiet_hours_prefs table (migration 0092), timezone-aware overnight-safe check in send-push edge function, toggle+time pickers in SettingsView. |
 
 ---
 

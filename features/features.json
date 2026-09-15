@@ -1115,5 +1115,85 @@
     "shippedAt": "2026-09-15T14:27:16.162Z",
     "shippedBy": "claude-cli",
     "shippedNote": "Shipped in commit 4537c8d (v3.22.0). Five Superadmin flags default OFF."
+  },
+  {
+    "id": "FEAT-071",
+    "title": "Spend Burn-Rate Forecast",
+    "description": "Analytics card projecting total trip spend from the daily average so far, for trips currently in progress. Flag: enableBurnRateInsight.",
+    "category": "analytics",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-09-15T19:26:08.452Z",
+    "updatedAt": "2026-09-15T19:26:08.452Z",
+    "shippedAt": "2026-09-15T19:26:08.452Z",
+    "shippedBy": "claude-cli",
+    "shippedNote": "src/utils/burnRate.ts + AnalyticsTab.tsx card, flag-gated Phase 4, off by default."
+  },
+  {
+    "id": "FEAT-072",
+    "title": "Date-Range Member Participation",
+    "description": "Members can have a join/leave date within the trip; new expenses default their split to only members present on that date. Flag: enableDateRangeMembership.",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-09-15T19:26:08.735Z",
+    "updatedAt": "2026-09-15T19:26:08.735Z",
+    "shippedAt": "2026-09-15T19:26:08.735Z",
+    "shippedBy": "claude-cli",
+    "shippedNote": "Member.joinDate/leaveDate (migration 0090), edit-only UI in MembersGroupsTab, default-split filter in ExpenseForm via memberDateRange.ts."
+  },
+  {
+    "id": "FEAT-073",
+    "title": "Auto Currency Detection",
+    "description": "Suggests the local currency on the expense form from device GPS location, reusing existing Geotag consent. Flag: enableAutoCurrencyDetection.",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-09-15T19:26:09.000Z",
+    "updatedAt": "2026-09-15T19:26:09.000Z",
+    "shippedAt": "2026-09-15T19:26:09.000Z",
+    "shippedBy": "claude-cli",
+    "shippedNote": "countryCurrencyMap.ts + geolocation.ts detectCurrencyFromLocation(), dismissible chip in ExpenseForm."
+  },
+  {
+    "id": "FEAT-074",
+    "title": "Per-Category Split Exclusion Defaults",
+    "description": "Set members who are excluded by default from a category's split (e.g. non-drinkers from Alcohol), applied automatically on new expenses. Flag: enableSplitExclusionDefaults.",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-09-15T19:26:09.285Z",
+    "updatedAt": "2026-09-15T19:26:09.285Z",
+    "shippedAt": "2026-09-15T19:26:09.285Z",
+    "shippedBy": "claude-cli",
+    "shippedNote": "Trip.splitExclusionDefaults (migration 0091), per-category chips in SettingsCategoriesScreen, applied in ExpenseForm default split."
+  },
+  {
+    "id": "FEAT-075",
+    "title": "Quiet Hours",
+    "description": "Per-user time window during which push notifications are suppressed, independent of the existing per-trip mute. Flag: enableQuietHours.",
+    "category": "notifications",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-09-15T19:26:09.572Z",
+    "updatedAt": "2026-09-15T19:26:09.572Z",
+    "shippedAt": "2026-09-15T19:26:09.572Z",
+    "shippedBy": "claude-cli",
+    "shippedNote": "quiet_hours_prefs table (migration 0092), timezone-aware overnight-safe check in send-push edge function, toggle+time pickers in SettingsView."
   }
 ]

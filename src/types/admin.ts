@@ -33,6 +33,12 @@ export type FeatureFlagKey =
   | 'enableMultiTripAnalytics'
   | 'enableBiometricAuth'
   | 'enableDocumentVault'
+  | 'enableBurnRateInsight'
+  | 'enableDateRangeMembership'
+  | 'enableAutoCurrencyDetection'
+  | 'enableSplitExclusionDefaults'
+  // Phase 2: Active Group Collab & Natural Entry (cont'd)
+  | 'enableQuietHours'
   // Phase 5: Switch, Speed & Trust
   | 'enableSplitwiseImport'
   | 'enableWhatsAppSettlementShare'

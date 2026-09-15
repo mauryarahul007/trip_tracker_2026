@@ -31,6 +31,7 @@ function mapTrip(row: TripRow, memberIds: string[], groupIds: string[]): Trip {
     passes: Array.isArray(row.passes) ? (row.passes as unknown as import('../types').TravelPass[]) : undefined,
     fxConfig: row.fx_config ? (row.fx_config as unknown as import('../types').TripFxConfig) : undefined,
     memberRoles: row.member_roles ? (row.member_roles as unknown as Record<string, import('../types').MemberRole>) : undefined,
+    splitExclusionDefaults: row.split_exclusion_defaults ? (row.split_exclusion_defaults as unknown as Record<string, string[]>) : undefined,
     createdAt: new Date(row.created_at).getTime(),
     updatedAt: new Date(row.updated_at).getTime(),
   };
@@ -43,6 +44,8 @@ function mapMember(row: MemberRow & { profile?: { avatar_url: string | null } | 
     archived: row.archived,
     linkedUserId: row.linked_user_id,
     avatarUrl: row.profile?.avatar_url ?? undefined,
+    joinDate: row.join_date,
+    leaveDate: row.leave_date,
   };
 }
 
@@ -287,6 +290,17 @@ export async function updateTripMemberRoles(id: string, memberRoles: Record<stri
   if (error) throw error;
 }
 
+export async function updateTripSplitExclusionDefaults(id: string, splitExclusionDefaults: Record<string, string[]>): Promise<void> {
+  const { error } = await supabase
+    .from('trips')
+    .update({
+      split_exclusion_defaults: splitExclusionDefaults,
+      updated_at: new Date().toISOString(),
+    } as any)
+    .eq('id', id);
+  if (error) throw error;
+}
+
 export async function updateTripPasses(id: string, passes: import('../types').TravelPass[]): Promise<void> {
   const { error } = await supabase
     .from('trips')
@@ -376,7 +390,10 @@ export async function insertMember(tripId: string, name: string, linkedUserId?: 
   return mapMember(data);
 }
 
-export async function updateMemberRow(id: string, patch: Partial<{ name: string; archived: boolean }>): Promise<void> {
+export async function updateMemberRow(
+  id: string,
+  patch: Partial<{ name: string; archived: boolean; join_date: string | null; leave_date: string | null }>
+): Promise<void> {
   const { error } = await supabase
     .from('members')
     .update({ ...patch, updated_at: new Date().toISOString() })
