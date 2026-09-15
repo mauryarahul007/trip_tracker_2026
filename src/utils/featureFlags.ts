@@ -9,7 +9,7 @@ export const RELEASE_PHASES: ReleasePhaseDef[] = [
     tagline: 'Instant, offline group bill splitting without setup hurdles',
     description: 'Core frictionless expense splitting, time-of-day predictive chips, 200+ keyword auto-tagging, and 24h soft-delete protection.',
     targetAudience: 'Casual outings, dinners, weekend getaways, roommates',
-    flagKeys: ['enablePredictiveChips', 'enableRecycleBin'],
+    flagKeys: ['enablePredictiveChips', 'enableRecycleBin', 'enableExplainThisNumber'],
   },
   {
     id: 'phase2',
@@ -19,7 +19,7 @@ export const RELEASE_PHASES: ReleasePhaseDef[] = [
     tagline: 'Frictionless on-trip logging & shared trip organization',
     description: 'Hands-free voice quick-add with Hinglish NLP parsing, compressed receipt photos, collaborative packing & rich notes, and 4D duplicate expense warning.',
     targetAudience: 'Friends & families actively traveling together',
-    flagKeys: ['enableVoiceInput', 'enableReceiptUpload', 'enableNotesAndChecklist', 'enableDuplicateDetector', 'enableTripChat', 'enableExpensePhotoLinking', 'enableExpenseDisputes', 'enableDigestNotifications'],
+    flagKeys: ['enableVoiceInput', 'enableReceiptUpload', 'enableNotesAndChecklist', 'enableDuplicateDetector', 'enableTripChat', 'enableExpensePhotoLinking', 'enableExpenseDisputes', 'enableDigestNotifications', 'enableMemberLastSeen'],
   },
   {
     id: 'phase3',
@@ -40,6 +40,7 @@ export const RELEASE_PHASES: ReleasePhaseDef[] = [
       'enableIcsExport',
       'enableOfflineMapTiles',
       'enableLiveLocationShare',
+      'enableMapCollapsedByDefault',
     ],
   },
   {
@@ -75,6 +76,8 @@ export const RELEASE_PHASES: ReleasePhaseDef[] = [
       'enableRememberDefaultSplit',
       'enableSettlementDateNote',
       'enableSettlementHistory',
+      'enableTripCloseout',
+      'enableCrossTripSearch',
     ],
   },
   {
@@ -116,6 +119,14 @@ export const FEATURE_FLAGS_META: Record<FeatureFlagKey, FeatureFlagMeta> = {
     phase: 'phase1',
     defaultEnabledForUsers: true,
   },
+  enableExplainThisNumber: {
+    key: 'enableExplainThisNumber',
+    label: 'Why This Amount? Settlement Audit',
+    description: 'ⓘ on a suggested transfer explains the number, including the bill titles in that balance.',
+    category: 'core',
+    phase: 'phase1',
+    defaultEnabledForUsers: false,
+  },
 
   // Phase 2: Active Group Collab
   enableVoiceInput: {
@@ -154,6 +165,14 @@ export const FEATURE_FLAGS_META: Record<FeatureFlagKey, FeatureFlagMeta> = {
     key: 'enableDigestNotifications',
     label: 'Digest-Mode Notifications',
     description: 'One daily push summary instead of a push per event. Requires the digest_cron_secret Vault setup in migration 0087.',
+    category: 'collab',
+    phase: 'phase2',
+    defaultEnabledForUsers: false,
+  },
+  enableMemberLastSeen: {
+    key: 'enableMemberLastSeen',
+    label: 'Member Last Seen',
+    description: 'Show Online now / last seen on member rows from live trip presence (remembered on this device).',
     category: 'collab',
     phase: 'phase2',
     defaultEnabledForUsers: false,
@@ -264,6 +283,14 @@ export const FEATURE_FLAGS_META: Record<FeatureFlagKey, FeatureFlagMeta> = {
     phase: 'phase3',
     defaultEnabledForUsers: false,
   },
+  enableMapCollapsedByDefault: {
+    key: 'enableMapCollapsedByDefault',
+    label: 'Collapse Map by Default',
+    description: 'Open a trip with the content sheet covering the map. Swipe down to peek the route.',
+    category: 'geotagging',
+    phase: 'phase3',
+    defaultEnabledForUsers: false,
+  },
 
   // Phase 4: FinTech Pro & Global Jetsetter Suite
   enableAdvancedSplits: {
@@ -356,6 +383,22 @@ export const FEATURE_FLAGS_META: Record<FeatureFlagKey, FeatureFlagMeta> = {
     phase: 'phase5',
     defaultEnabledForUsers: false,
   },
+  enableTripCloseout: {
+    key: 'enableTripCloseout',
+    label: 'End-of-Trip Closeout',
+    description: 'Guided review → settle remaining → lock the trip, plus a reminder when trip dates have ended.',
+    category: 'splits',
+    phase: 'phase5',
+    defaultEnabledForUsers: false,
+  },
+  enableCrossTripSearch: {
+    key: 'enableCrossTripSearch',
+    label: 'Search Across All Trips',
+    description: 'Cmd+K / home search finds expenses in every trip you belong to and opens the matching trip.',
+    category: 'core',
+    phase: 'phase5',
+    defaultEnabledForUsers: false,
+  },
   enableSettlementHistory: {
     key: 'enableSettlementHistory',
     label: 'Payment History / Installment Tracker',
@@ -444,6 +487,7 @@ export const DEFAULT_FEATURE_FLAGS: Record<FeatureFlagKey, boolean> = {
   // Phase 1 (Armed by default)
   enablePredictiveChips: true,
   enableRecycleBin: true,
+  enableExplainThisNumber: false,
 
   // Phase 2 (Armed by default)
   enableVoiceInput: true,
@@ -454,6 +498,7 @@ export const DEFAULT_FEATURE_FLAGS: Record<FeatureFlagKey, boolean> = {
   enableExpensePhotoLinking: false,
   enableExpenseDisputes: false,
   enableDigestNotifications: false,
+  enableMemberLastSeen: false,
 
   // Phase 3 (Armed by default)
   enableTravelPasses: true,
@@ -466,6 +511,7 @@ export const DEFAULT_FEATURE_FLAGS: Record<FeatureFlagKey, boolean> = {
   enableIcsExport: false,
   enableOfflineMapTiles: false,
   enableLiveLocationShare: false,
+  enableMapCollapsedByDefault: false,
 
   // Phase 4 (Armed by default)
   enableAdvancedSplits: true,
@@ -483,6 +529,8 @@ export const DEFAULT_FEATURE_FLAGS: Record<FeatureFlagKey, boolean> = {
   enableRememberDefaultSplit: false,
   enableSettlementDateNote: false,
   enableSettlementHistory: false,
+  enableTripCloseout: false,
+  enableCrossTripSearch: false,
 
   // Platform Extras & Deferred
   enableTripWrapped: true,

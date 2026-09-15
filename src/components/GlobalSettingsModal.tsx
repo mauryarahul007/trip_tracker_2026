@@ -49,6 +49,7 @@ type Props = {
   isAdmin?: boolean;
   onOpenShareTrip?: () => void;
   onNavigateToBalances?: () => void;
+  onOpenCloseout?: () => void;
   baseCurrency?: string;
   onOpenFxRates?: () => void;
   onOpenMediaGallery?: () => void;
@@ -64,6 +65,7 @@ export function GlobalSettingsModal({
   closeRef,
   onRequestConfirm,
   onNavigateToBalances,
+  onOpenCloseout,
   themePref,
   setThemePref,
   onExportJson,
@@ -262,6 +264,7 @@ export function GlobalSettingsModal({
           onRequestConfirm={onRequestConfirm}
           onOpenShareTrip={onOpenShareTrip}
           onNavigateToBalances={onNavigateToBalances}
+          onOpenCloseout={onOpenCloseout}
           baseCurrency={baseCurrency}
           onOpenFxRates={onOpenFxRates}
           onOpenMediaGallery={onOpenMediaGallery}

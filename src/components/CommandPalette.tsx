@@ -5,6 +5,7 @@ import { getCurrencySymbol } from '../utils/currency';
 import { triggerHaptic } from '../utils/haptics';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { fetchAllExpensesForTrips } from '../services/tripApi';
+import { useTripStore } from '../store/tripStore';
 
 interface CommandPaletteProps {
   isOpen: boolean;
@@ -54,6 +55,7 @@ export function CommandPalette({
   const [query, setQuery] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [crossTripExpenses, setCrossTripExpenses] = useState<Expense[]>([]);
+  const enableCrossTripSearch = useTripStore((s) => s.isFeatureEnabled('enableCrossTripSearch'));
   const inputRef = useRef<HTMLInputElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
 
@@ -68,12 +70,11 @@ export function CommandPalette({
     }
   }, [isOpen]);
 
-  // Cross-trip expense search: `expenses` prop only covers the active trip
-  // (see App.tsx's activeTripExpenses), so a query long enough to be worth a
-  // round-trip also searches every other trip the user belongs to.
+  // Local `expenses` covers whatever the store has cached (often the active
+  // trip plus leftovers). A query of 2+ chars also fetches other trips.
   useEffect(() => {
     const q = query.trim();
-    if (!isOpen || q.length < 2 || trips.length < 2 || !navigator.onLine) {
+    if (!isOpen || !enableCrossTripSearch || q.length < 2 || trips.length < 2 || !navigator.onLine) {
       setCrossTripExpenses([]);
       return;
     }
@@ -84,7 +85,7 @@ export function CommandPalette({
         .catch(() => { if (!cancelled) setCrossTripExpenses([]); });
     }, 250);
     return () => { cancelled = true; clearTimeout(timer); };
-  }, [query, isOpen, trips]);
+  }, [query, isOpen, trips, enableCrossTripSearch]);
 
   if (!isOpen) return null;
 
@@ -228,35 +229,41 @@ export function CommandPalette({
     });
   });
 
-  // Filter Expenses -- active trip's (instant, local) plus any cross-trip
-  // matches from other trips the user belongs to (see the search effect
-  // above). Deduped by id since the active trip can appear in both.
+  // Local + fetched expenses. Filter by query first so a match on trip 3
+  // is not dropped by an arbitrary first-50 slice of the unfiltered list.
   const seenExpenseIds = new Set<string>();
-  [...expenses, ...crossTripExpenses].slice(0, 50).forEach((e) => {
-    if (seenExpenseIds.has(e.id)) return;
-    seenExpenseIds.add(e.id);
-    const catName = categories.find((c) => c.id === e.category)?.name || 'General';
-    const isOtherTrip = e.tripId !== trip?.id;
-    const tripLabel = isOtherTrip ? tripNameById.get(e.tripId) : undefined;
-    items.push({
-      id: `exp-${e.id}`,
-      type: 'expense',
-      title: e.title,
-      subtitle: `${tripLabel ? `${tripLabel} · ` : ''}${getCurrencySymbol(e.currency)}${e.amount} · ${catName} · ${e.date}`,
-      icon: <IconCalendar size={16} />,
-      action: () => {
-        // Cross-trip result: switch trips first, land on its expense list --
-        // opening the edit modal straight across a trip switch is skipped
-        // for now, add if that jump is worth the extra state juggling.
-        if (isOtherTrip && onSelectTrip) {
-          onSelectTrip(e.tripId);
-        } else {
+  [...expenses, ...crossTripExpenses]
+    .filter((e) => {
+      if (seenExpenseIds.has(e.id)) return false;
+      seenExpenseIds.add(e.id);
+      if (!q) return true;
+      const catName = categories.find((c) => c.id === e.category)?.name || '';
+      const tripLabel = tripNameById.get(e.tripId) || '';
+      return (
+        e.title.toLowerCase().includes(q) ||
+        catName.toLowerCase().includes(q) ||
+        tripLabel.toLowerCase().includes(q) ||
+        String(e.amount).includes(q) ||
+        e.date.includes(q)
+      );
+    })
+    .slice(0, 50)
+    .forEach((e) => {
+      const catName = categories.find((c) => c.id === e.category)?.name || 'General';
+      const isOtherTrip = e.tripId !== trip?.id;
+      const tripLabel = isOtherTrip ? tripNameById.get(e.tripId) : undefined;
+      items.push({
+        id: `exp-${e.id}`,
+        type: 'expense',
+        title: e.title,
+        subtitle: `${tripLabel ? `${tripLabel} · ` : ''}${getCurrencySymbol(e.currency)}${e.amount} · ${catName} · ${e.date}`,
+        icon: <IconCalendar size={16} />,
+        action: () => {
           onSelectExpense(e);
-        }
-        onClose();
-      },
+          onClose();
+        },
+      });
     });
-  });
 
   // Filter by query
   const filteredItems = items.filter((item) => {
@@ -325,7 +332,7 @@ export function CommandPalette({
             aria-autocomplete="list"
             aria-controls="command-palette-results"
             aria-activedescendant={selectedItemId}
-            aria-label="Search commands, expenses, or members"
+            aria-label={enableCrossTripSearch ? 'Search trips, expenses, or members' : 'Search expenses or members'}
             className="command-palette-input"
             style={{
               flex: 1,
@@ -335,7 +342,7 @@ export function CommandPalette({
               color: 'var(--text-primary)',
               outline: 'none',
             }}
-            placeholder="Type a command, expense, or member name..."
+            placeholder={enableCrossTripSearch ? 'Search any trip, expense, or member...' : 'Search expenses or members...'}
             value={query}
             onChange={(e) => {
               setQuery(e.target.value);

@@ -109,6 +109,7 @@ function getAuditDetailsForNode(
     const netBalance = balances.find((b) => b.memberId === mid)?.balance || 0;
 
     const contributions = activeTripExpenses
+      .filter((exp) => !exp.isSettlement && !exp.deletedAt)
       .map((exp) => {
         const paid = exp.paidBy === mid ? exp.amount : 0;
         const owed = exp.resolvedShares[mid] || 0;
@@ -170,6 +171,7 @@ function TransferRow({
 }: Omit<TransferRowProps, 'isSettled'> & { isSettled?: boolean }) {
   const settleAmount = parseFloat(customValue) || t.amount;
   const [showAudit, setShowAudit] = useState(false);
+  const showExplainNumber = useTripStore((s) => s.isFeatureEnabled('enableExplainThisNumber', { tripId }));
   const [reminderStatus, setReminderStatus] = useState<'idle' | 'sending' | 'sent' | 'rateLimited'>('idle');
   const [celebrate, setCelebrate] = useState(false);
   const [isTorn, setIsTorn] = useState(false);
@@ -482,6 +484,7 @@ function TransferRow({
         </div>
 
         {/* Audit breakdown button */}
+        {showExplainNumber && (
         <button
           type="button"
           onClick={() => setShowAudit(!showAudit)}
@@ -508,6 +511,7 @@ function TransferRow({
         >
           ⓘ
         </button>
+        )}
       </div>
 
       {/* Main Settle Up Action Button */}
@@ -742,7 +746,7 @@ function TransferRow({
       </div>
 
       {/* Audit Breakdown dropdown */}
-      {showAudit && (
+      {showExplainNumber && showAudit && (
         <div
           className="traveler-settlement-audit-panel"
           style={{
@@ -810,6 +814,30 @@ function TransferRow({
               ))}
             </div>
           </div>
+
+          {(() => {
+            const seen = new Set<string>();
+            const bills = [...fromAudit.members, ...toAudit.members].flatMap((m) =>
+              m.contributions.map((c) => ({ ...c, memberName: m.name }))
+            ).filter((c) => {
+              if (seen.has(c.expenseId)) return false;
+              seen.add(c.expenseId);
+              return true;
+            }).slice(0, 12);
+            if (bills.length === 0) return null;
+            return (
+              <div>
+                <strong style={{ color: 'var(--text-primary)' }}>Bills in this balance</strong>
+                <ul style={{ margin: '6px 0 0', paddingLeft: '18px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  {bills.map((c) => (
+                    <li key={c.expenseId} style={{ color: 'var(--text-secondary)', fontSize: '11.5px' }}>
+                      {c.title} · {c.date} · {c.net >= 0 ? '+' : '−'}{currencySymbol}{Math.abs(c.net).toFixed(2)}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            );
+          })()}
         </div>
       )}
     </div>

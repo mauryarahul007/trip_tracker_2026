@@ -23,8 +23,8 @@ import { useEscapeKey } from '../utils/useEscapeKey';
 import { RollingNumber } from './common/RollingNumber';
 import { detectDuplicateExpense } from '../utils/duplicateExpenseDetector';
 import { getPredictiveQuickChips } from '../utils/predictiveExpenses';
-import { loadDefaultSplit, saveDefaultSplit } from '../utils/defaultSplit';
 import { getLatestNonSettlementExpense } from '../utils/lastExpense';
+import { loadDefaultSplit, saveDefaultSplit } from '../utils/defaultSplit';
 
 // Minimal Web Speech API surface -- not in the default TS DOM lib, and
 // vendor-prefixed on most browsers that support it (Chrome/Edge/Safari).

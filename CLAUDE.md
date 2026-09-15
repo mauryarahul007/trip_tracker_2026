@@ -69,6 +69,10 @@ needed for a flag to appear there.
 
 Before committing and pushing changes:
 1. Automatically bump `package.json` version (`npm run release:patch|minor|major`) without waiting for user commands.
-2. Restart the background Vite dev server so `__APP_VERSION__` and `__BUILD_NUMBER__` compile into the client UI immediately.
+2. Restart the background Vite dev server so `__APP_VERSION__` and `__BUILD_NUMBER__` compile into the client UI immediately **only if the user still needs a local server for testing**.
 3. Document the release in `decisions.md` and git commit body.
+
+## Post-push: close all dev servers (mandatory)
+
+Immediately after a successful git push (or when testing is done), terminate every local `npm run dev` / Vite / `vite preview` process and free their ports. Do not leave background dev servers running. This releases RAM, CPU, and network resources.
 

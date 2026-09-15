@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../services/supabaseClient';
 import { useAuthStore } from '../store/authStore';
+import { loadLastSeenMap, saveLastSeenMap } from '../utils/lastSeen';
 
 export interface PeerUser {
   userId: string;
@@ -9,8 +10,12 @@ export interface PeerUser {
   onlineAt: string;
 }
 
-export function usePeerPresence(tripId: string | null | undefined): PeerUser[] {
+export function usePeerPresence(tripId: string | null | undefined): {
+  peers: PeerUser[];
+  lastSeenByUserId: Record<string, string>;
+} {
   const [peers, setPeers] = useState<PeerUser[]>([]);
+  const [lastSeenByUserId, setLastSeenByUserId] = useState<Record<string, string>>(loadLastSeenMap);
   const session = useAuthStore((s) => s.session);
   const userId = session?.user?.id;
   const userEmail = session?.user?.email;
@@ -51,16 +56,26 @@ export function usePeerPresence(tripId: string | null | undefined): PeerUser[] {
         Object.values(state).forEach((presences) => {
           (presences as any[]).forEach((p) => {
             if (p.userId && p.userId !== userId) {
+              const onlineAt = p.onlineAt || new Date().toISOString();
               activeUsers.push({
                 userId: p.userId,
                 displayName: p.displayName || 'Traveler',
                 avatarUrl: p.avatarUrl,
-                onlineAt: p.onlineAt || new Date().toISOString(),
+                onlineAt,
               });
             }
           });
         });
         setPeers(activeUsers);
+        if (activeUsers.length > 0) {
+          const seenAt = new Date().toISOString();
+          setLastSeenByUserId((prev) => {
+            const next = { ...prev };
+            activeUsers.forEach((u) => { next[u.userId] = seenAt; });
+            saveLastSeenMap(next);
+            return next;
+          });
+        }
       })
       .subscribe(async (status: string) => {
         if (status === 'SUBSCRIBED' && alive) {
@@ -87,5 +102,5 @@ export function usePeerPresence(tripId: string | null | undefined): PeerUser[] {
     };
   }, [tripId, userId, userDisplayName]);
 
-  return peers;
+  return { peers, lastSeenByUserId };
 }

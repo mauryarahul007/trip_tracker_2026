@@ -37,6 +37,7 @@ type Props = {
   onRequestConfirm?: (req: ConfirmRequest) => void;
   onOpenShareTrip?: () => void;
   onNavigateToBalances?: () => void;
+  onOpenCloseout?: () => void;
   baseCurrency?: string;
   onOpenFxRates?: () => void;
   onOpenMediaGallery?: () => void;
@@ -80,6 +81,7 @@ export function SettingsTab({
   onRequestConfirm,
   onOpenShareTrip,
   onNavigateToBalances,
+  onOpenCloseout,
   baseCurrency,
   onOpenFxRates,
   onOpenMediaGallery,
@@ -123,6 +125,7 @@ export function SettingsTab({
       onRequestConfirm={onRequestConfirm}
       onOpenShareTrip={onOpenShareTrip}
       onNavigateToBalances={onNavigateToBalances}
+      onOpenCloseout={onOpenCloseout}
       hasActiveTrip={true}
       baseCurrency={baseCurrency}
       onOpenFxRates={onOpenFxRates}

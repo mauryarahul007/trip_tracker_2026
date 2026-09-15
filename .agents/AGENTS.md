@@ -79,7 +79,7 @@ Follow `.cursor/rules/ai-software-engineering.mdc` and the phase docs under `doc
   - Use `npm run release:minor` for notable feature additions or multi-component functional additions.
   - Use `npm run release:major` for architectural rewrites or major platform milestone cuts.
   - The user must NEVER have to manually instruct or remind the agent to upgrade the version.
-- **Rule 2 (Automatic Dev Server Refresh):** Because `vite.config.ts` compiles `__APP_VERSION__` (from `package.json`) and `__BUILD_NUMBER__` (from `git rev-list --count HEAD`) at initial server boot, whenever the version is bumped, you MUST automatically restart the background Vite development server (`kill` stale task, launch new background daemon `npm run dev`). This ensures the live browser view immediately displays the fresh version and build number in Settings and header badges.
+- **Rule 2 (Automatic Dev Server Refresh):** Because `vite.config.ts` compiles `__APP_VERSION__` (from `package.json`) and `__BUILD_NUMBER__` (from `git rev-list --count HEAD`) at initial server boot, whenever the version is bumped **and the user still needs a local server**, restart the background Vite development server. After a successful push, do not leave it running — see Post-Push Resource Cleanup.
 - **Rule 3 (ADR & Commit Traceability):** Record the release cut in `decisions.md` under a corresponding ADR entry and reference the version in the git commit message and response summary.
 
 ## Post-Push Resource Cleanup Protocol (Mandatory)

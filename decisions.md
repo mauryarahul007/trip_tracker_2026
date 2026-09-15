@@ -3315,3 +3315,21 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Decision:** Stop registering `useHistoryBack` on that contextual menu. Same pattern as ADR #93 (header action sheet) and BUG-208 (admin section switcher): a temporary overlay must not own a history slot if it immediately opens another history-backed modal.
 * **Pattern/Implementation:** `src/components/TripStack.tsx` — removed `useHistoryBack(quickActionsOpen, ...)`. Escape, backdrop tap, and the action buttons still close the overlay. `ConfirmDialog` keeps its own history entry, so the delayed `popstate` from `history.back()` no longer cancels it.
 * **Trade-offs Accepted:** Hardware / browser Back while the overlay is open no longer closes the menu first (it may leave the page instead). Accepted for contextual menus in this codebase.
+
+---
+
+## 184. Closeout, Last Seen, Map Default, Cross-Trip Search, Explain-This-Number (flags default OFF)
+* **Context:** Product asks: end-of-trip closeout, explain-this-number, search across trips, collapse map by default, last-seen on members. A UPI-style amount keypad was prototyped and removed after visual review.
+* **Decision:** Five Superadmin flags, all `defaultEnabledForUsers: false`. Ops Deck Flags/Release Phases pages stay data-driven off `FEATURE_FLAGS_META` / `RELEASE_PHASES`.
+* **Pattern/Implementation:**
+  - **Phase 1 Core:** `enableExplainThisNumber` (ⓘ Why this amount? + bill titles on a transfer).
+  - **Phase 2 Collab:** `enableMemberLastSeen` (Online now / last seen on member rows).
+  - **Phase 3 Travel/Geo:** `enableMapCollapsedByDefault` (trip sheet starts covering the map).
+  - **Phase 5 Speed/Trust:** `enableTripCloseout` (closeout wizard + ended-trip banner), `enableCrossTripSearch` (Cmd+K / home search across trips).
+  - Closeout uses existing `closeTrip`; last-seen uses presence + `tt_last_seen_v1` localStorage; search uses existing palette + `fetchAllExpensesForTrips` only when the flag is on.
+* **Trade-offs Accepted:**
+  - Last-seen is this-device only and only as fresh as presence sync.
+  - The ⓘ audit control is hidden when `enableExplainThisNumber` is safed, even though a thinner breakdown existed before this work.
+  - With map flag safed, the sheet still starts at 50vh (map half visible), matching the prior default.
+  - Amount keypad was dropped rather than restyled.
+  - Shipped as **v3.22.0**.

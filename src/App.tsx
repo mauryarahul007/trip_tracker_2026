@@ -98,6 +98,9 @@ import { withViewTransition } from './utils/viewTransition';
 const CommandPalette = lazy(lazyImport(() =>
   import('./components/CommandPalette').then((m) => ({ default: m.CommandPalette }))
 ));
+const TripCloseoutModal = lazy(lazyImport(() =>
+  import('./components/TripCloseoutModal').then((m) => ({ default: m.TripCloseoutModal }))
+));
 // TripWrappedModal draws a large 1080x1920 canvas story image and is only
 // needed when the user opens Trip Wrapped, so it's lazy-loaded like ExpenseForm.
 const TripWrappedModal = lazy(lazyImport(() =>
@@ -168,6 +171,7 @@ export default function App() {
     selectTrip,
     archiveTrip,
     deleteTrip,
+    closeTrip,
     addMember,
     toggleArchiveMember,
     updateMember,
@@ -546,6 +550,7 @@ export default function App() {
   const [showCommandPalette, setShowCommandPalette] = useState(false);
   const [showCmdKHint, setShowCmdKHint] = useState(() => { try { return !localStorage.getItem('tt-cmdk-hint-seen'); } catch { return false; } });
   const [showTripWrapped, setShowTripWrapped] = useState(false);
+  const [showCloseout, setShowCloseout] = useState(false);
   const [showTripActionSheet, setShowTripActionSheet] = useState(false);
   const [showAchievements, setShowAchievements] = useState(false);
   const [showRouteModal, setShowRouteModal] = useState(false);
@@ -557,7 +562,7 @@ export default function App() {
   const [showLiveLocationShare, setShowLiveLocationShare] = useState(false);
   const [showMediaGallery, setShowMediaGallery] = useState(false);
   const [showFxRates, setShowFxRates] = useState(false);
-  const activePeers = usePeerPresence(activeTripId);
+  const { peers: activePeers, lastSeenByUserId } = usePeerPresence(activeTripId);
 
   // Global Traveler Keyboard Shortcuts (Cmd+K, N for expense, 1-4 tabs, / search, ? help)
   useEffect(() => {
@@ -669,7 +674,7 @@ export default function App() {
   }, [isSuperadmin]);
 
   // Lock background scroll when any modal is active
-  useScrollLock(Boolean(showTripActionSheet || showShareTrip || showTripWrapped || selectedReviewExpense || confirmRequest || showGlobalSettings || showAddExpense || showExpenseFilterDrawer || showSmartQuickAdd || showOfflineSnapshot || showMediaGallery || showSplitwiseImport || showDocumentVault));
+  useScrollLock(Boolean(showTripActionSheet || showShareTrip || showTripWrapped || showCloseout || selectedReviewExpense || confirmRequest || showGlobalSettings || showAddExpense || showExpenseFilterDrawer || showSmartQuickAdd || showOfflineSnapshot || showMediaGallery || showSplitwiseImport || showDocumentVault));
 
   const syncQueue = useTripStore((s) => s.syncQueue);
   const dirtyExpenseIds = useMemo(() => collectDirtyExpenseIds(syncQueue), [syncQueue]);
@@ -2269,7 +2274,13 @@ export default function App() {
             )}
           </header>
 
-          <TripContentSheet onExpandedChange={setSheetExpanded} onFullChange={setSheetFull} forceFull={chatViewActive}>
+          <TripContentSheet
+            key={isFeatureEnabled('enableMapCollapsedByDefault', { tripId: activeTrip?.id, userId: userId || undefined }) ? 'map-full' : 'map-half'}
+            startFull={isFeatureEnabled('enableMapCollapsedByDefault', { tripId: activeTrip?.id, userId: userId || undefined })}
+            onExpandedChange={setSheetExpanded}
+            onFullChange={setSheetFull}
+            forceFull={chatViewActive}
+          >
           <main className="app-main" ref={mainContentRef}>
             {/* View Switching Tab Content */}
             <div
@@ -2282,6 +2293,16 @@ export default function App() {
             >
               <TabErrorBoundary label="Summary">
               <div className="fade-in">
+                {activeTrip && !activeTrip.closed && activeTrip.endDate && isFeatureEnabled('enableTripCloseout', { tripId: activeTrip.id, userId: userId || undefined }) && activeTrip.endDate < new Date().toISOString().slice(0, 10) && (
+                  <button
+                    type="button"
+                    className="secondary-btn"
+                    onClick={() => setShowCloseout(true)}
+                    style={{ width: '100%', marginBottom: '12px', textAlign: 'left', padding: '10px 14px' }}
+                  >
+                    Trip dates ended — close out remaining balances
+                  </button>
+                )}
                 {activeTrip && visibleMembers.length > 0 && (
                   <BalancesSettlements
                     trip={activeTrip}
@@ -2362,6 +2383,8 @@ export default function App() {
                 onSetMemberRole={setMemberRole}
                 currentUserId={userId}
                 addMemberSignal={addMemberSignal}
+                onlineUserIds={activePeers.map((p) => p.userId)}
+                lastSeenByUserId={lastSeenByUserId}
               />
               </Suspense>
               )}
@@ -2500,6 +2523,7 @@ export default function App() {
                 onRequestConfirm={setConfirmRequest}
                 onOpenShareTrip={() => setShowShareTrip(true)}
                 onNavigateToBalances={() => setActiveTab('expenses')}
+                onOpenCloseout={() => setShowCloseout(true)}
                 baseCurrency={activeTrip?.baseCurrency || ''}
                 onOpenFxRates={isFeatureEnabled('enableCurrencyFx', { tripId: activeTrip?.id, userId: userId || undefined }) ? () => setShowFxRates(true) : undefined}
                 onOpenMediaGallery={() => setShowMediaGallery(true)}
@@ -2767,6 +2791,10 @@ export default function App() {
               setShowGlobalSettings(false);
               setActiveTab('expenses');
             }}
+            onOpenCloseout={() => {
+              setShowGlobalSettings(false);
+              setShowCloseout(true);
+            }}
             isAdmin={isAdmin}
             onExportCsv={triggerCsvExport}
             onOpenSplitwiseImport={isFeatureEnabled('enableSplitwiseImport', { tripId: activeTrip?.id, userId: userId || undefined }) ? () => setShowSplitwiseImport(true) : undefined}
@@ -2810,6 +2838,26 @@ export default function App() {
 
       {confirmRequest && (
         <ConfirmDialog request={confirmRequest} onCancel={() => setConfirmRequest(null)} />
+      )}
+
+      {showCloseout && activeTrip && (
+        <Suspense fallback={null}>
+          <TripCloseoutModal
+            tripName={activeTrip.name}
+            currencySymbol={getCurrencySymbol(activeTrip.baseCurrency)}
+            transfers={transfers}
+            isFullySettled={transfers.length === 0}
+            onGoToBalances={() => {
+              setShowGlobalSettings(false);
+              setActiveTab('expenses');
+            }}
+            onLockTrip={() => {
+              void closeTrip(activeTrip.id, true);
+            }}
+            onOpenWrapped={isFeatureEnabled('enableTripWrapped', { tripId: activeTrip.id, userId: userId || undefined }) ? () => setShowTripWrapped(true) : undefined}
+            onClose={() => setShowCloseout(false)}
+          />
+        </Suspense>
       )}
 
       {showSplitwiseImport && activeTrip && isFeatureEnabled('enableSplitwiseImport', { tripId: activeTrip.id, userId: userId || undefined }) && (
@@ -2918,7 +2966,7 @@ export default function App() {
             onClose={() => setShowCommandPalette(false)}
             trip={activeTrip}
             trips={trips}
-            expenses={activeTripExpenses}
+            expenses={isFeatureEnabled('enableCrossTripSearch', { tripId: activeTrip?.id, userId: userId || undefined }) ? expenses : activeTripExpenses}
             members={visibleMembers}
             categories={categories}
             onSelectTrip={(id) => withViewTransition(() => selectTrip(id))}
@@ -2929,7 +2977,16 @@ export default function App() {
                 setShowAddTrip(true);
               }
             }}
-            onSelectExpense={(exp) => handleStartEditExpense(exp)}
+            onSelectExpense={(exp) => {
+              if (
+                isFeatureEnabled('enableCrossTripSearch', { tripId: activeTrip?.id, userId: userId || undefined })
+                && exp.tripId !== activeTripId
+              ) {
+                void selectTrip(exp.tripId).then(() => handleStartEditExpense(exp));
+              } else {
+                handleStartEditExpense(exp);
+              }
+            }}
             onSelectMember={(mId) => {
               setExpenseFilterMember(mId);
               setActiveTab('expenses');

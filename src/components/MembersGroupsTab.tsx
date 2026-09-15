@@ -12,6 +12,8 @@ import { useHistoryBack } from '../utils/useHistoryBack';
 import { useEscapeKey } from '../utils/useEscapeKey';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { formatAmount } from '../utils/currency';
+import { formatLastSeen } from '../utils/lastSeen';
+import { useTripStore } from '../store/tripStore';
 import { buildAutoGroupName } from '../utils/groupNaming';
 
 type Props = {
@@ -43,6 +45,8 @@ type Props = {
   // (see NavTabs) -- any change opens the add-member popup, the value
   // itself is unused.
   addMemberSignal?: number;
+  onlineUserIds?: string[];
+  lastSeenByUserId?: Record<string, string>;
 };
 
 export function MembersGroupsTab({
@@ -68,7 +72,10 @@ export function MembersGroupsTab({
   onSetMemberRole,
   currentUserId,
   addMemberSignal,
+  onlineUserIds,
+  lastSeenByUserId,
 }: Props) {
+  const showLastSeen = useTripStore((s) => s.isFeatureEnabled('enableMemberLastSeen'));
   // Member Form State
   const [newMemberName, setNewMemberName] = React.useState('');
   const [editingMember, setEditingMember] = React.useState<Member | null>(null);
@@ -929,7 +936,18 @@ export function MembersGroupsTab({
                       </div>
                     </div>
                     <div className="lt-bottom-row" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', marginTop: '6px', flexWrap: 'wrap' }}>
-                      <div className="lt-amt">{amtLabel}</div>
+                      <div>
+                        <div className="lt-amt">{amtLabel}</div>
+                        {showLastSeen && member.linkedUserId && member.linkedUserId !== currentUserId && (
+                          <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                            {onlineUserIds?.includes(member.linkedUserId)
+                              ? 'Online now'
+                              : lastSeenByUserId?.[member.linkedUserId]
+                                ? `Last seen ${formatLastSeen(lastSeenByUserId[member.linkedUserId])}`
+                                : null}
+                          </div>
+                        )}
+                      </div>
                       {isAdmin && (
                         <div className="lt-actions" style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
                           {onSetMemberRole && !isOriginalTripOwner(member) ? (

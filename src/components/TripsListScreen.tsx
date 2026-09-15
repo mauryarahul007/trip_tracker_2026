@@ -102,6 +102,7 @@ export function TripsListScreen({
   const refreshTrips = useTripStore((s) => s.refreshTrips);
   const syncQueue = useTripStore((s) => s.syncQueue);
   const isFeatureEnabled = useTripStore((s) => s.isFeatureEnabled);
+  const enableCrossTripSearch = isFeatureEnabled('enableCrossTripSearch', { userId: userId || undefined });
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const ptrIndicatorRef = useRef<HTMLDivElement>(null);
   const stepperTrackRef = useRef<HTMLDivElement>(null);
@@ -246,8 +247,8 @@ export function TripsListScreen({
                 color: 'var(--text-secondary)',
               }}
               onClick={onOpenCommandPalette}
-              aria-label="Search & Quick Actions (Cmd+K)"
-              title="Search & Quick Actions (Cmd+K / Ctrl+K)"
+              aria-label={enableCrossTripSearch ? 'Search all trips and expenses (Cmd+K)' : 'Search (Cmd+K)'}
+              title={enableCrossTripSearch ? 'Search all trips and expenses (Cmd+K / Ctrl+K)' : 'Search (Cmd+K / Ctrl+K)'}
             >
               <IconSearch size={16} />
             </button>

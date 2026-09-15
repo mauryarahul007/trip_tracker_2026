@@ -1,0 +1,16 @@
+---
+description: After git push, always stop local Vite/dev/preview servers and free ports.
+alwaysApply: true
+---
+
+# Post-push: close dev servers
+
+Immediately after a successful `git push` (or when the user is done testing), terminate every local dev process this session started:
+
+- `npm run dev` / Vite (`:5173`)
+- `vite preview` (`:4173`)
+- any other architecture/preview servers
+
+Kill the process and free the port. Do not leave a background Vite running after push.
+
+This overrides the pre-commit “restart Vite so the version badge updates” step: bump the version for the commit, but **after push, always shut the servers down**.

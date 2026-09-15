@@ -37,6 +37,8 @@ describe('featureFlags', () => {
     expect(DEFAULT_FEATURE_FLAGS.enableCloneLastExpense).toBe(false);
     expect(DEFAULT_FEATURE_FLAGS.enableRememberDefaultSplit).toBe(false);
     expect(DEFAULT_FEATURE_FLAGS.enableSettlementDateNote).toBe(false);
+    expect(DEFAULT_FEATURE_FLAGS.enableTripCloseout).toBe(false);
+    expect(DEFAULT_FEATURE_FLAGS.enableCrossTripSearch).toBe(false);
     const phase5Keys = getPhaseFlagKeys('phase5');
     expect(phase5Keys).toEqual([
       'enableSplitwiseImport',
@@ -45,6 +47,8 @@ describe('featureFlags', () => {
       'enableRememberDefaultSplit',
       'enableSettlementDateNote',
       'enableSettlementHistory',
+      'enableTripCloseout',
+      'enableCrossTripSearch',
     ]);
   });
 
@@ -55,11 +59,11 @@ describe('featureFlags', () => {
   });
 
   it('correctly calculates phase status (armed, safed, partial)', () => {
-    const allArmed = { ...DEFAULT_FEATURE_FLAGS, enablePredictiveChips: true, enableRecycleBin: true };
+    const allArmed = { ...DEFAULT_FEATURE_FLAGS, enablePredictiveChips: true, enableRecycleBin: true, enableExplainThisNumber: true };
     expect(getPhaseStatus('phase1', allArmed).status).toBe('armed');
-    expect(getPhaseStatus('phase1', allArmed).activeCount).toBe(2);
+    expect(getPhaseStatus('phase1', allArmed).activeCount).toBe(3);
 
-    const allSafed = { ...DEFAULT_FEATURE_FLAGS, enablePredictiveChips: false, enableRecycleBin: false };
+    const allSafed = { ...DEFAULT_FEATURE_FLAGS, enablePredictiveChips: false, enableRecycleBin: false, enableExplainThisNumber: false };
     expect(getPhaseStatus('phase1', allSafed).status).toBe('safed');
     expect(getPhaseStatus('phase1', allSafed).activeCount).toBe(0);
 
@@ -144,7 +148,7 @@ describe('featureFlags', () => {
 
   it('verifies that every single flag in all phases can be enabled and disabled', () => {
     const allFlagKeys = Object.keys(DEFAULT_FEATURE_FLAGS) as (keyof typeof DEFAULT_FEATURE_FLAGS)[];
-    expect(allFlagKeys.length).toBe(41);
+    expect(allFlagKeys.length).toBe(46);
 
     allFlagKeys.forEach((flagKey) => {
       const disabledFlags = { ...DEFAULT_FEATURE_FLAGS, [flagKey]: false };

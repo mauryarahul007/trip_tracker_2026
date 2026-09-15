@@ -132,6 +132,7 @@ interface SettingsViewProps {
   onRequestConfirm?: (req: ConfirmRequest) => void;
   onOpenShareTrip?: () => void;
   onNavigateToBalances?: () => void;
+  onOpenCloseout?: () => void;
   onOpenFxRates?: () => void;
   onOpenMediaGallery?: () => void;
   onOpenOfflineSnapshot?: () => void;
@@ -178,6 +179,7 @@ export function SettingsView({
   onRequestConfirm,
   onOpenShareTrip,
   onNavigateToBalances,
+  onOpenCloseout,
   baseCurrency,
   onOpenFxRates,
   onOpenMediaGallery,
@@ -375,6 +377,10 @@ export function SettingsView({
     }
 
     if (onRequestConfirm) {
+      if (onOpenCloseout && isFeatureEnabled('enableTripCloseout', { tripId: activeTrip.id, userId: userId || undefined })) {
+        onOpenCloseout();
+        return;
+      }
       if (settlementSummary.isFullySettled) {
         onRequestConfirm({
           title: 'Close & Lock Trip',

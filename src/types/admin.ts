@@ -2,6 +2,7 @@ export type FeatureFlagKey =
   // Phase 1: Core Social Splitter (Base MVP)
   | 'enablePredictiveChips'
   | 'enableRecycleBin'
+  | 'enableExplainThisNumber'
   // Phase 2: Active Group Collab & Natural Entry
   | 'enableVoiceInput'
   | 'enableReceiptUpload'
@@ -11,6 +12,7 @@ export type FeatureFlagKey =
   | 'enableExpensePhotoLinking'
   | 'enableExpenseDisputes'
   | 'enableDigestNotifications'
+  | 'enableMemberLastSeen'
   // Phase 3: Smart Travel Navigator & Pass Hub
   | 'enableTravelPasses'
   | 'enableNextUpCapsule'
@@ -22,6 +24,7 @@ export type FeatureFlagKey =
   | 'enableIcsExport'
   | 'enableOfflineMapTiles'
   | 'enableLiveLocationShare'
+  | 'enableMapCollapsedByDefault'
   // Phase 4: FinTech Pro & Global Jetsetter Suite
   | 'enableAdvancedSplits'
   | 'enableItemizedSplit'
@@ -37,6 +40,8 @@ export type FeatureFlagKey =
   | 'enableRememberDefaultSplit'
   | 'enableSettlementDateNote'
   | 'enableSettlementHistory'
+  | 'enableTripCloseout'
+  | 'enableCrossTripSearch'
   // Deferred & Admin Ops
   | 'enableUpiPayments'
   | 'enableAdvancedLocationSearch'

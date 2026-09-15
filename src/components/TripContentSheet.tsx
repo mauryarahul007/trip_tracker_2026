@@ -5,7 +5,7 @@ import { Haptics, ImpactStyle } from '@capacitor/haptics';
 // Exported so TripMapHero can size its fitBounds padding to match --
 // the map needs to fit the whole route above wherever the sheet's top
 // edge actually sits, not just this file's own layout.
-export const SHEET_COLLAPSED_TOP = 50; // vh% -- initial state, map half visible
+export const SHEET_COLLAPSED_TOP = 50; // vh% -- map half visible when the user peeks it
 const SHEET_EXPANDED_TOP = 20; // vh% -- swiped-up state, 80% coverage
 const SHEET_FULL_TOP = 0; // vh% -- fully expanded, Uber-style: covers the map entirely
 
@@ -65,28 +65,29 @@ interface Props {
   // never force-collapses back down on its own, so a manual drag afterward
   // isn't fought.
   forceFull?: boolean;
+  startFull?: boolean;
 }
 
-// Draggable bottom sheet over the map backdrop. Starts covering half the
-// screen; swiping anywhere up on mobile expands it to 80%, snapping to whichever
-// state is nearer on release. On desktop, dragging is restricted to the handle.
-export function TripContentSheet({ children, onExpandedChange, onFullChange, forceFull }: Props) {
-  const [topPercent, setTopPercent] = useState(SHEET_COLLAPSED_TOP);
+// Draggable bottom sheet over the map backdrop. Default snap is half-map
+// (50vh). When startFull is set, it opens covering the map; swipe down to peek.
+export function TripContentSheet({ children, onExpandedChange, onFullChange, forceFull, startFull = false }: Props) {
+  const initialTop = startFull ? SHEET_FULL_TOP : SHEET_COLLAPSED_TOP;
+  const [topPercent, setTopPercent] = useState(initialTop);
 
   const sheetRef = useRef<HTMLDivElement | null>(null);
   const scrimRef = useRef<HTMLDivElement | null>(null);
 
   const dragStartY = useRef(0);
-  const dragStartTop = useRef(SHEET_COLLAPSED_TOP);
+  const dragStartTop = useRef(initialTop);
 
   const touchStartY = useRef(0);
   const touchStartX = useRef(0);
   const isDraggingRef = useRef(false);
-  const liveTopPercentRef = useRef(SHEET_COLLAPSED_TOP);
+  const liveTopPercentRef = useRef(initialTop);
   const scrollContainerRef = useRef<HTMLElement | null>(null);
   const settleTimeoutRef = useRef<number | null>(null);
   const lastMoveTime = useRef(0);
-  const lastMovePercent = useRef(SHEET_COLLAPSED_TOP);
+  const lastMovePercent = useRef(initialTop);
   const velocityRef = useRef(0);
 
   // Sync live ref with state
