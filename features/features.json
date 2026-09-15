@@ -1099,5 +1099,21 @@
     "shippedAt": "2026-09-14T12:09:37.555Z",
     "shippedBy": "claude-cli",
     "shippedNote": "Shipped"
+  },
+  {
+    "id": "FEAT-070",
+    "title": "Trip closeout, last-seen, collapsed map, cross-trip search, and settlement audit",
+    "description": "Trip closeout, last-seen, collapsed map, cross-trip search, and settlement audit",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-09-15T14:27:16.162Z",
+    "updatedAt": "2026-09-15T14:27:16.162Z",
+    "shippedAt": "2026-09-15T14:27:16.162Z",
+    "shippedBy": "claude-cli",
+    "shippedNote": "Shipped in commit 4537c8d (v3.22.0). Five Superadmin flags default OFF."
   }
 ]
