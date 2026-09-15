@@ -9,10 +9,10 @@
 
 | Metric | Count | Status Notes |
 | :--- | :--- | :--- |
-| **Total Tracked** | **218** | All recorded bugs across sessions |
+| **Total Tracked** | **219** | All recorded bugs across sessions |
 | **🟢 Open** | **0** | No critical blockers, 0 High |
 | **🟡 In Progress** | **0** | Active investigation or fix |
-| **✅ Resolved** | **192** | Verified & closed |
+| **✅ Resolved** | **193** | Verified & closed |
 | **⚪ Won't Fix** | **26** | Expected behavior / deferred |
 
 ---
@@ -223,6 +223,7 @@
 | **BUG-217** | CI build failure: stale database.ts missing trip_messages.edited_at / edit_trip_message RPC | `general` | `high` | `Rahul` | `Rahul` | Hand-added edited_at to trip_messages Row/Insert/Update and an edit_trip_message entry to the Functions map in src/types/database.ts, matching the file's existing hand-written style. Tried a full regeneration first (npx supabase gen types) but it broke ~40 unrelated call sites due to stricter literal-union/Json typing; reverted and made the targeted addition instead. Verified with npm run build (tsc -b && vite build). Fixed in commit 8bc273e. |
 | **BUG-218** | Expense review modal header overflows horizontally on mobile after adding Flag button | `navigation` | `medium` | `claude-cli` | `claude-cli` | Split ExpenseReviewModal header into a title+close row and a separate flex-wrap actions row. Commit 7573172. |
 | **BUG-219** | Dispute Flag/Resolve button did not update immediately after flagging an expense | `ui-ux` | `medium` | `claude-cli` | `claude-cli` | App.tsx derives liveExpense from activeTripExpenses by id instead of the tap-time snapshot. Commit b9211ba. |
+| **BUG-220** | Long-press Delete on trip home card does not open confirm | `ui-ux` | `high` | `human` | `cursor-agent` | Removed useHistoryBack from the TripStack long-press overlay so closing the menu no longer races history.back() against ConfirmDialog. Delete (and Edit / Add expense from the same menu) now keep the follow-up dialog open. Hash recorded after the fix commit. |
 
 ---
 

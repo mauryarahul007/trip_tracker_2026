@@ -3307,3 +3307,11 @@ This document logs all meaningful technical decisions, library choices, design p
     - `liveUpdate.ts`: deferred Capgo OTA manifest check and ZIP bundle download until after the app reaches idle state (`requestIdleCallback` / 3s fallback), preventing update downloads from saturating mobile bandwidth on app boot.
 * **Trade-offs Accepted:**
   - Multiple vendor chunks generate a few extra parallel HTTP requests on initial uncached load, but HTTP/2 multiplexing handles this efficiently and independent caching prevents re-downloading unchanged vendor code across minor app updates.
+
+---
+
+## 183. Trip Home Long-Press Delete Confirm Cancelled by History Back (BUG-220, v3.21.4)
+* **Context:** Long-pressing a trip card on the home stack opens a quick-actions overlay with Delete. Tapping Delete appeared to do nothing: the overlay closed and `ConfirmDialog` opened in the same tick, then vanished.
+* **Decision:** Stop registering `useHistoryBack` on that contextual menu. Same pattern as ADR #93 (header action sheet) and BUG-208 (admin section switcher): a temporary overlay must not own a history slot if it immediately opens another history-backed modal.
+* **Pattern/Implementation:** `src/components/TripStack.tsx` — removed `useHistoryBack(quickActionsOpen, ...)`. Escape, backdrop tap, and the action buttons still close the overlay. `ConfirmDialog` keeps its own history entry, so the delayed `popstate` from `history.back()` no longer cancels it.
+* **Trade-offs Accepted:** Hardware / browser Back while the overlay is open no longer closes the menu first (it may leave the page instead). Accepted for contextual menus in this codebase.

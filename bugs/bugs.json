@@ -6544,5 +6544,33 @@
     "resolvedBy": "claude-cli",
     "resolvedAt": "2026-09-14T12:10:35.199Z",
     "resolutionNote": "App.tsx derives liveExpense from activeTripExpenses by id instead of the tap-time snapshot. Commit b9211ba."
+  },
+  {
+    "id": "BUG-220",
+    "title": "Long-press Delete on trip home card does not open confirm",
+    "description": "On the trips home stack, long-pressing a card opens a quick-actions menu with Delete. Tapping Delete closed that overlay and opened ConfirmDialog in the same tick; the overlay's useHistoryBack then called history.back(), and the delayed popstate cancelled the confirm immediately so delete appeared to do nothing.",
+    "severity": "high",
+    "category": "ui-ux",
+    "status": "resolved",
+    "foundBy": "human",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0",
+      "route": "/"
+    },
+    "reproSteps": [
+      "Open the trips home page",
+      "Long-press a trip card until the quick-actions menu appears",
+      "Tap Delete"
+    ],
+    "expectedBehavior": "The delete confirm dialog stays open so the user can two-tap confirm.",
+    "actualBehavior": "Delete appears to do nothing; the confirm dialog is cancelled by a racing history popstate.",
+    "diagnostics": {},
+    "createdAt": "2026-09-15T12:23:12.406Z",
+    "updatedAt": "2026-09-15T12:23:23.558Z",
+    "resolvedBy": "cursor-agent",
+    "resolvedAt": "2026-09-15T12:23:23.558Z",
+    "resolutionNote": "Removed useHistoryBack from the TripStack long-press overlay so closing the menu no longer races history.back() against ConfirmDialog. Delete (and Edit / Add expense from the same menu) now keep the follow-up dialog open. Hash recorded after the fix commit."
   }
 ]

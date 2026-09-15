@@ -8,7 +8,6 @@ import { fetchPlaceCoverImage } from '../services/placeImageService';
 import { getImageLuminance, getImageDominantColor } from '../utils/imageLuminance';
 import { triggerHaptic } from '../utils/haptics';
 import { getDestinationWeatherRealtime, type WeatherData } from '../services/weatherService';
-import { useHistoryBack } from '../utils/useHistoryBack';
 import { useEscapeKey } from '../utils/useEscapeKey';
 import { PassportStamp } from './common/PassportStamp';
 
@@ -469,7 +468,9 @@ function StackCardItem({
   const [dragging, setDragging] = useState(false);
   const [exit, setExit] = useState<'left' | 'right' | 'up' | null>(null);
   const [quickActionsOpen, setQuickActionsOpen] = useState(false);
-  useHistoryBack(quickActionsOpen, () => setQuickActionsOpen(false));
+  // Contextual menu: no useHistoryBack. Closing this overlay and opening
+  // ConfirmDialog in the same tick would race history.back()'s popstate
+  // against the dialog's new history entry and cancel the confirm immediately.
   useEscapeKey(quickActionsOpen, () => setQuickActionsOpen(false));
   const active = useRef(false);
   const start = useRef({ x: 0, y: 0 });
