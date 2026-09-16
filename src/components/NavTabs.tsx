@@ -1,10 +1,10 @@
 import { useRef, useState, useEffect, useLayoutEffect, useCallback } from 'react';
-import { IconExpenses, IconMembers, IconReceipt, IconClipboardList, IconPlus, IconWallet } from './Icons';
+import { IconExpenses, IconMembers, IconReceipt, IconClipboardList, IconPlus, IconWallet, IconChat } from './Icons';
 import { triggerHaptic } from '../utils/haptics';
 import { FlightAddExpenseTooltip, STORAGE_KEY } from './FlightAddExpenseTooltip';
 import { useFeatureNudge } from '../hooks/useFeatureNudge';
 
-type Tab = 'expenses' | 'ledger' | 'members' | 'notes' | 'settings';
+type Tab = 'chat' | 'expenses' | 'ledger' | 'members' | 'notes' | 'settings';
 
 type Props = {
   activeTab: Tab;
@@ -18,6 +18,7 @@ type Props = {
   isPassesEnabled?: boolean;
   passesCount?: number;
   isHidden?: boolean;
+  isChatFirstNav?: boolean;
 };
 
 export function NavTabs({
@@ -32,6 +33,7 @@ export function NavTabs({
   isPassesEnabled = true,
   passesCount = 0,
   isHidden = false,
+  isChatFirstNav = false,
 }: Props) {
   const isMembersTab = activeTab === 'members';
   const navRef = useRef<HTMLElement | null>(null);
@@ -143,6 +145,9 @@ export function NavTabs({
     onAddExpense();
   };
 
+  const prefetchChat = () => {
+    import('./TripChatPanel');
+  };
   const prefetchMembers = () => {
     import('./MembersGroupsTab');
   };
@@ -150,134 +155,164 @@ export function NavTabs({
     import('./ChecklistNotesTab');
   };
 
-  return (
-    <nav
-      ref={navRef}
-      className={`nav-tabs ${hasNotesOrPassesTab ? 'has-notes' : 'no-notes'} ${isHidden ? 'is-hidden' : ''}`}
-      role="tablist"
-      aria-label="Trip navigation tabs"
+  const renderFab = (isFloating: boolean) => (
+    <div
+      className={isFloating ? `nav-floating-fab-wrap ${isHidden ? 'is-hidden' : ''}` : 'nav-tab-fab-wrap'}
+      role="presentation"
     >
-      {pillStyle && (
-        <div
-          className="nav-tabs-pill"
-          style={{
-            left: `${pillStyle.left}px`,
-            width: `${pillStyle.width}px`,
-          }}
-          aria-hidden="true"
+      {activeTab !== 'settings' && activeTab !== 'notes' && activeTab !== 'chat' && (
+        <FlightAddExpenseTooltip
+          activeTab={activeTab}
+          onAddExpense={onAddExpense}
+          onAddMember={onAddMember}
+          expenseCount={expenseCount}
+          tripDestination={tripDestination}
         />
+      )}
+
+      {showDeniedHint && (
+        <div className="nav-tab-fab-denied-hint" role="status">
+          Only trip admins can add members
+        </div>
+      )}
+      {isMembersTab && !showDeniedHint && (
+        <div className="nav-tab-fab-mode-label" aria-hidden="true">
+          Add member
+        </div>
       )}
       <button
         type="button"
-        role="tab"
-        aria-selected={activeTab === 'expenses'}
-        data-tab="expenses"
-        className={`nav-tab-item ${activeTab === 'expenses' ? 'active' : ''}`}
-        onClick={() => goTo('expenses')}
-        aria-label="Summary"
+        className={isFloating ? `nav-floating-fab ${isMembersTab ? 'mode-member' : ''}` : `nav-tab-fab ${isMembersTab ? 'mode-member' : ''}`}
+        onPointerDown={handlePointerDown}
+        onPointerUp={clearLongPress}
+        onPointerCancel={clearLongPress}
+        onMouseEnter={isMembersTab ? undefined : prefetchExpenseForm}
+        onClick={handleFabClick}
+        aria-label={isMembersTab ? (onAddMember ? 'Add Member' : 'Add Member (admins only)') : 'Add expense'}
+        title={isMembersTab ? (onAddMember ? 'Add Member' : 'Add Member (admins only)') : (onCloneLastExpense ? 'Add expense · long-press to copy last' : 'Add expense')}
       >
-        <span className="nav-tab-icon"><IconExpenses size={26} /></span>
-        <span>Summary</span>
+        <IconPlus size={isFloating ? 26 : 24} />
       </button>
-      <button
-        type="button"
-        role="tab"
-        aria-selected={activeTab === 'ledger'}
-        data-tab="ledger"
-        className={`nav-tab-item ${activeTab === 'ledger' ? 'active' : ''}`}
-        onClick={() => goTo('ledger')}
-        aria-label="Expenses"
-      >
-        <span className="nav-tab-icon"><IconReceipt size={26} /></span>
-        <span>Expenses</span>
-        {expenseCount !== undefined && expenseCount > 0 && (
-          <span className="nav-tab-badge" aria-label={`${expenseCount} expenses`}>{expenseCount > 99 ? '99+' : expenseCount}</span>
-        )}
-      </button>
-      <div className="nav-tab-fab-wrap" role="presentation">
+    </div>
+  );
 
-        {/* Renders contextual coachmark: "Add expense" on Summary & Expenses, "Add member" on Members, and hidden on Settings/Notes */}
-        {activeTab !== 'settings' && activeTab !== 'notes' && (
-          <FlightAddExpenseTooltip
-            activeTab={activeTab}
-            onAddExpense={onAddExpense}
-            onAddMember={onAddMember}
-            expenseCount={expenseCount}
-            tripDestination={tripDestination}
+  return (
+    <>
+      <nav
+        ref={navRef}
+        className={`nav-tabs ${isChatFirstNav ? 'has-chat-nav' : ''} ${hasNotesOrPassesTab ? 'has-notes' : 'no-notes'} ${isHidden ? 'is-hidden' : ''}`}
+        role="tablist"
+        aria-label="Trip navigation tabs"
+      >
+        {pillStyle && (
+          <div
+            className="nav-tabs-pill"
+            style={{
+              left: `${pillStyle.left}px`,
+              width: `${pillStyle.width}px`,
+            }}
+            aria-hidden="true"
           />
         )}
 
+        {/* Tab 1: Chat (if isChatFirstNav) */}
+        {isChatFirstNav && (
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeTab === 'chat'}
+            data-tab="chat"
+            className={`nav-tab-item ${activeTab === 'chat' ? 'active' : ''}`}
+            onClick={() => goTo('chat')}
+            onMouseEnter={prefetchChat}
+            aria-label="Chat"
+          >
+            <span className="nav-tab-icon"><IconChat size={24} /></span>
+            <span>Chat</span>
+          </button>
+        )}
 
-        {showDeniedHint && (
-          <div className="nav-tab-fab-denied-hint" role="status">
-            Only trip admins can add members
-          </div>
-        )}
-        {/* The "+" button silently changes meaning on the Members tab (adds
-            a member instead of an expense) with no visible cue beyond a
-            color swap -- name it, so the switch isn't only communicated by
-            hue. Skipped on the denied-hint case above so the two never
-            overlap. */}
-        {isMembersTab && !showDeniedHint && (
-          <div className="nav-tab-fab-mode-label" aria-hidden="true">
-            Add member
-          </div>
-        )}
-        <button
-          type="button"
-          className={`nav-tab-fab ${isMembersTab ? 'mode-member' : ''}`}
-          onPointerDown={handlePointerDown}
-          onPointerUp={clearLongPress}
-          onPointerCancel={clearLongPress}
-          onMouseEnter={isMembersTab ? undefined : prefetchExpenseForm}
-          onClick={handleFabClick}
-          aria-label={isMembersTab ? (onAddMember ? 'Add Member' : 'Add Member (admins only)') : 'Add expense'}
-          title={isMembersTab ? (onAddMember ? 'Add Member' : 'Add Member (admins only)') : (onCloneLastExpense ? 'Add expense · long-press to copy last' : 'Add expense')}
-        >
-          <IconPlus size={24} />
-        </button>
-      </div>
-      <button
-        type="button"
-        role="tab"
-        aria-selected={activeTab === 'members'}
-        data-tab="members"
-        className={`nav-tab-item ${activeTab === 'members' ? 'active' : ''}`}
-        onPointerDown={prefetchMembers}
-        onMouseEnter={prefetchMembers}
-        onClick={() => goTo('members')}
-        aria-label="Members & Groups"
-      >
-        <span className="nav-tab-icon"><IconMembers size={26} /></span>
-        <span>Members</span>
-      </button>
-      {hasNotesOrPassesTab && (
+        {/* Summary tab: Tab 2 (if isChatFirstNav) OR Tab 1 (classic) */}
         <button
           type="button"
           role="tab"
-          aria-selected={activeTab === 'notes'}
-          data-tab="notes"
-          className={`nav-tab-item ${activeTab === 'notes' ? 'active' : ''}`}
-          onPointerDown={prefetchNotes}
-          onMouseEnter={prefetchNotes}
-          onClick={() => goTo('notes')}
-          aria-label={
-            isNotesEnabled
-              ? (showNotesNudge ? 'Passes, Notes & Checklist (new: Travel Pass Wallet & Smart Packing)' : 'Passes, Notes & Checklist')
-              : 'Travel Pass Wallet'
-          }
+          aria-selected={activeTab === 'expenses'}
+          data-tab="expenses"
+          className={`nav-tab-item ${activeTab === 'expenses' ? 'active' : ''}`}
+          onClick={() => goTo('expenses')}
+          aria-label="Summary"
         >
-          <span className="nav-tab-icon">
-            {isNotesEnabled ? <IconClipboardList size={26} /> : <IconWallet size={26} />}
-          </span>
-          <span>{isNotesEnabled ? 'Notes' : 'Passes'}</span>
-          {isNotesEnabled && showNotesNudge && <span className="nav-tab-badge nav-tab-badge-dot" aria-hidden="true" />}
-          {!isNotesEnabled && passesCount > 0 && (
-            <span className="nav-tab-badge" aria-label={`${passesCount} passes`}>{passesCount}</span>
+          <span className="nav-tab-icon"><IconExpenses size={24} /></span>
+          <span>Summary</span>
+        </button>
+
+        {/* Expenses tab */}
+        <button
+          type="button"
+          role="tab"
+          aria-selected={activeTab === 'ledger'}
+          data-tab="ledger"
+          className={`nav-tab-item ${activeTab === 'ledger' ? 'active' : ''}`}
+          onClick={() => goTo('ledger')}
+          aria-label="Expenses"
+        >
+          <span className="nav-tab-icon"><IconReceipt size={24} /></span>
+          <span>Expenses</span>
+          {expenseCount !== undefined && expenseCount > 0 && (
+            <span className="nav-tab-badge" aria-label={`${expenseCount} expenses`}>{expenseCount > 99 ? '99+' : expenseCount}</span>
           )}
         </button>
-      )}
-    </nav>
 
+        {/* Center Action (+) FAB: only placed inside nav bar when isChatFirstNav is OFF */}
+        {!isChatFirstNav && renderFab(false)}
+
+        {/* Members tab */}
+        <button
+          type="button"
+          role="tab"
+          aria-selected={activeTab === 'members'}
+          data-tab="members"
+          className={`nav-tab-item ${activeTab === 'members' ? 'active' : ''}`}
+          onPointerDown={prefetchMembers}
+          onMouseEnter={prefetchMembers}
+          onClick={() => goTo('members')}
+          aria-label="Members & Groups"
+        >
+          <span className="nav-tab-icon"><IconMembers size={24} /></span>
+          <span>Members</span>
+        </button>
+
+        {/* Notes / Prep tab */}
+        {hasNotesOrPassesTab && (
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeTab === 'notes'}
+            data-tab="notes"
+            className={`nav-tab-item ${activeTab === 'notes' ? 'active' : ''}`}
+            onPointerDown={prefetchNotes}
+            onMouseEnter={prefetchNotes}
+            onClick={() => goTo('notes')}
+            aria-label={
+              isNotesEnabled
+                ? (showNotesNudge ? 'Passes, Notes & Checklist (new: Travel Pass Wallet & Smart Packing)' : 'Passes, Notes & Checklist')
+                : 'Travel Pass Wallet'
+            }
+          >
+            <span className="nav-tab-icon">
+              {isNotesEnabled ? <IconClipboardList size={24} /> : <IconWallet size={24} />}
+            </span>
+            <span>{isNotesEnabled ? (isChatFirstNav ? 'Prep' : 'Notes') : 'Passes'}</span>
+            {isNotesEnabled && showNotesNudge && <span className="nav-tab-badge nav-tab-badge-dot" aria-hidden="true" />}
+            {!isNotesEnabled && passesCount > 0 && (
+              <span className="nav-tab-badge" aria-label={`${passesCount} passes`}>{passesCount}</span>
+            )}
+          </button>
+        )}
+      </nav>
+
+      {/* Floating Action Button for Chat-first navigation (WhatsApp / Material 3 standard) */}
+      {isChatFirstNav && renderFab(true)}
+    </>
   );
 }

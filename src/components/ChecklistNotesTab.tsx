@@ -408,6 +408,8 @@ export function ChecklistNotesTab({ trip, members, isAdmin, initialViewMode, onI
   const isNotesEnabled = isFeatureEnabled('enableNotesAndChecklist', { tripId: liveTrip.id });
   const isPackingEnabled = isFeatureEnabled('enablePackingAssistant', { tripId: liveTrip.id });
   const isChatEnabled = isFeatureEnabled('enableTripChat', { tripId: liveTrip.id });
+  const isChatFirstNav = isFeatureEnabled('enableChatFirstNav', { tripId: liveTrip.id });
+  const isChatSubTabEnabled = isChatEnabled && !isChatFirstNav;
 
   const [viewMode, setViewMode] = useState<ViewMode>(() => {
     if (isPassesEnabled && liveTrip.passes && liveTrip.passes.length > 0) return 'passes';
@@ -421,17 +423,17 @@ export function ChecklistNotesTab({ trip, members, isAdmin, initialViewMode, onI
       setViewMode(isNotesEnabled ? 'checklist' : 'notes');
     } else if (!isNotesEnabled && (viewMode === 'notes' || viewMode === 'checklist')) {
       if (isPassesEnabled) setViewMode('passes');
-    } else if (!isChatEnabled && viewMode === 'chat') {
+    } else if (!isChatSubTabEnabled && viewMode === 'chat') {
       setViewMode(isNotesEnabled ? 'checklist' : isPassesEnabled ? 'passes' : 'notes');
     }
-  }, [isPassesEnabled, isNotesEnabled, isChatEnabled, viewMode]);
+  }, [isPassesEnabled, isNotesEnabled, isChatSubTabEnabled, viewMode]);
 
   useEffect(() => {
     if (!initialViewMode) return;
-    if (initialViewMode === 'chat' && !isChatEnabled) return;
+    if (initialViewMode === 'chat' && !isChatSubTabEnabled) return;
     setViewMode(initialViewMode);
     onInitialViewModeConsumed?.();
-  }, [initialViewMode, isChatEnabled, onInitialViewModeConsumed]);
+  }, [initialViewMode, isChatSubTabEnabled, onInitialViewModeConsumed]);
 
   // Forces the sheet fully open as soon as the Chat sub-tab becomes active,
   // NOT on input focus -- resizing the sheet synchronously inside a focus
@@ -441,8 +443,8 @@ export function ChecklistNotesTab({ trip, members, isAdmin, initialViewMode, onI
   // on tab-switch instead means the sheet has already settled by the time
   // the user actually taps the input, so nothing resizes during that gesture.
   useEffect(() => {
-    onChatViewActiveChange?.(viewMode === 'chat' && isChatEnabled);
-  }, [viewMode, isChatEnabled, onChatViewActiveChange]);
+    onChatViewActiveChange?.(viewMode === 'chat' && isChatSubTabEnabled);
+  }, [viewMode, isChatSubTabEnabled, onChatViewActiveChange]);
 
   const [checklistFilter, setChecklistFilter] = useState<ChecklistCategory>('all');
   const [noteFilter, setNoteFilter] = useState<NoteCategory>('all');
@@ -835,7 +837,7 @@ export function ChecklistNotesTab({ trip, members, isAdmin, initialViewMode, onI
         if (isPassesEnabled) segments.push({ id: 'passes', label: 'Passes', badge: String(passes.length) });
         if (isNotesEnabled) segments.push({ id: 'notes', label: 'Notes', badge: String(notes.length) });
         if (isNotesEnabled) segments.push({ id: 'checklist', label: 'Checklist', badge: totalCount > 0 ? `${completedCount}/${totalCount}` : '0' });
-        if (isChatEnabled) segments.push({ id: 'chat', label: 'Chat', badge: '' });
+        if (isChatSubTabEnabled) segments.push({ id: 'chat', label: 'Chat', badge: '' });
 
         if (segments.length < 2) return null;
 
@@ -880,7 +882,7 @@ export function ChecklistNotesTab({ trip, members, isAdmin, initialViewMode, onI
       )}
 
       {/* GROUP CHAT VIEW */}
-      {viewMode === 'chat' && isChatEnabled && (
+      {viewMode === 'chat' && isChatSubTabEnabled && (
         <TripChatPanel
           tripId={liveTrip.id}
           members={members}

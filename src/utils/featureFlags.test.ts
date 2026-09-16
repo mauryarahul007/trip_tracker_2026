@@ -18,10 +18,10 @@ describe('featureFlags', () => {
     });
   });
 
-  it('defines 5 customer release phases plus deferred ops', () => {
-    expect(RELEASE_PHASES.length).toBe(6);
+  it('defines 7 customer release phases plus deferred ops', () => {
+    expect(RELEASE_PHASES.length).toBe(8);
     const phaseIds = RELEASE_PHASES.map((p) => p.id);
-    expect(phaseIds).toEqual(['phase1', 'phase2', 'phase3', 'phase4', 'phase5', 'deferred']);
+    expect(phaseIds).toEqual(['phase1', 'phase2', 'phase3', 'phase4', 'phase5', 'phase6', 'phase7', 'deferred']);
 
     RELEASE_PHASES.forEach((phase) => {
       expect(phase.flagKeys.length).toBeGreaterThan(0);
@@ -49,6 +49,26 @@ describe('featureFlags', () => {
       'enableSettlementHistory',
       'enableTripCloseout',
       'enableCrossTripSearch',
+    ]);
+  });
+
+  it('keeps phase 6 social chat flags safed by default', () => {
+    expect(DEFAULT_FEATURE_FLAGS.enableChatFirstNav).toBe(false);
+    expect(DEFAULT_FEATURE_FLAGS.enableChatReactionsAndReplies).toBe(false);
+    expect(DEFAULT_FEATURE_FLAGS.enableChatOfflineOutbox).toBe(false);
+    const phase6Keys = getPhaseFlagKeys('phase6');
+    expect(phase6Keys).toEqual([
+      'enableChatFirstNav',
+      'enableChatReactionsAndReplies',
+      'enableChatOfflineOutbox',
+    ]);
+  });
+
+  it('keeps phase 7 fintech debts flags safed by default', () => {
+    expect(DEFAULT_FEATURE_FLAGS.enableSimplifyDebtsToggle).toBe(false);
+    const phase7Keys = getPhaseFlagKeys('phase7');
+    expect(phase7Keys).toEqual([
+      'enableSimplifyDebtsToggle',
     ]);
   });
 
@@ -148,7 +168,7 @@ describe('featureFlags', () => {
 
   it('verifies that every single flag in all phases can be enabled and disabled', () => {
     const allFlagKeys = Object.keys(DEFAULT_FEATURE_FLAGS) as (keyof typeof DEFAULT_FEATURE_FLAGS)[];
-    expect(allFlagKeys.length).toBe(51);
+    expect(allFlagKeys.length).toBe(55);
 
     allFlagKeys.forEach((flagKey) => {
       const disabledFlags = { ...DEFAULT_FEATURE_FLAGS, [flagKey]: false };

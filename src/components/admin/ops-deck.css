@@ -703,33 +703,52 @@
 
 /* ---------- Phased Releases Switchboard ---------- */
 .ops-phases-section { display: flex; flex-direction: column; gap: 14px; }
-.ops-phase-summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 6px; }
+.ops-phase-summary-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(175px, 1fr)); gap: 10px; margin-bottom: 6px; }
 @media (max-width: 860px) { .ops-phase-summary-grid { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 480px) { .ops-phase-summary-grid { grid-template-columns: 1fr; } }
 .ops-phase-summary-card {
   display: flex; flex-direction: column; gap: 4px; padding: 10px 14px;
   background: var(--bg-panel); border: 1px solid var(--line); border-radius: var(--r-md);
-  cursor: pointer; transition: border-color 0.15s ease, background 0.15s ease; text-align: left;
+  cursor: pointer; transition: border-color 0.15s ease, background 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease; text-align: left;
 }
-.ops-phase-summary-card:hover { border-color: var(--line-strong); background: var(--bg-panel-raised); }
+.ops-phase-summary-card:hover { border-color: var(--line-strong); background: var(--bg-panel-raised); transform: translateY(-1px); }
 .ops-phase-summary-card.active { border-color: var(--amber); }
 .ops-phase-summary-top { display: flex; justify-content: space-between; align-items: center; }
 .ops-phase-summary-code { font-family: var(--mono); font-size: 9.5px; font-weight: 700; color: var(--text-tertiary); letter-spacing: 0.08em; }
 .ops-phase-summary-title { font-size: 12px; font-weight: 600; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.ops-phase-summary-count { font-family: var(--mono); font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
+.ops-phase-summary-count { display: flex; justify-content: space-between; align-items: center; font-family: var(--mono); font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
+.ops-phase-summary-jump { font-size: 10px; color: var(--amber); opacity: 0.75; font-weight: 600; transition: opacity 0.15s ease, transform 0.15s ease; }
+.ops-phase-summary-card:hover .ops-phase-summary-jump { opacity: 1; transform: translateY(1px); }
 
 .ops-phase-card {
   display: flex; flex-direction: column; gap: 12px;
   border: 1px solid var(--line); border-radius: var(--r-md); background: var(--bg-panel); padding: 16px;
-  transition: border-color 0.18s ease;
+  transition: border-color 0.18s ease, box-shadow 0.25s ease;
+  scroll-margin-top: 18px;
 }
 .ops-phase-card.armed { border-color: rgba(34, 197, 94, 0.35); }
 .ops-phase-card.partial { border-color: rgba(245, 158, 11, 0.35); }
 .ops-phase-card.safed { border-color: var(--line); }
 
-.ops-phase-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 14px; flex-wrap: wrap; }
-.ops-phase-info { display: flex; flex-direction: column; gap: 4px; flex: 1 1 280px; }
-.ops-phase-title-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+@keyframes ops-phase-pulse-glow {
+  0% {
+    box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.65);
+    border-color: var(--amber);
+  }
+  40% {
+    box-shadow: 0 0 0 5px rgba(245, 158, 11, 0.25);
+    border-color: var(--amber);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(245, 158, 11, 0);
+  }
+}
+
+.ops-phase-card.ops-phase-target-glow {
+  animation: ops-phase-pulse-glow 1.8s ease-out;
+  border-color: var(--amber) !important;
+}
+
 .ops-phase-badge {
   font-family: var(--mono); font-size: 10px; font-weight: 700; letter-spacing: 0.06em;
   padding: 2px 8px; border-radius: var(--r-pill); text-transform: uppercase;
@@ -739,6 +758,8 @@
 .ops-phase-badge.phase3 { color: #34d399; background: rgba(52, 211, 153, 0.12); }
 .ops-phase-badge.phase4 { color: #fbbf24; background: rgba(251, 191, 36, 0.12); }
 .ops-phase-badge.phase5 { color: #fb7185; background: rgba(251, 113, 133, 0.12); }
+.ops-phase-badge.phase6 { color: #22c55e; background: rgba(34, 197, 94, 0.12); }
+.ops-phase-badge.phase7 { color: #a855f7; background: rgba(168, 85, 247, 0.12); }
 .ops-phase-badge.deferred { color: var(--text-tertiary); background: var(--bg-inset); }
 
 .ops-phase-name { font-size: 15px; font-weight: 700; color: var(--text-primary); }

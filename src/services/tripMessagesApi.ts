@@ -9,6 +9,9 @@ interface TripMessageRow {
   created_at: string;
   edited_at: string | null;
   deleted_at: string | null;
+  reply_to_id?: string | null;
+  reactions?: Record<string, string[]> | null;
+  is_pinned?: boolean | null;
 }
 
 const MESSAGE_FETCH_LIMIT = 200;
@@ -22,6 +25,10 @@ function mapTripMessage(row: TripMessageRow): TripMessage {
     createdAt: new Date(row.created_at).getTime(),
     editedAt: row.edited_at ? new Date(row.edited_at).getTime() : null,
     deletedAt: row.deleted_at ? new Date(row.deleted_at).getTime() : null,
+    replyToId: row.reply_to_id ?? null,
+    reactions: (row.reactions && typeof row.reactions === 'object') ? row.reactions : {},
+    isPinned: Boolean(row.is_pinned),
+    status: 'delivered',
   };
 }
 
@@ -36,14 +43,58 @@ export async function fetchTripMessages(tripId: string): Promise<TripMessage[]> 
   return (data ?? []).map(mapTripMessage).reverse();
 }
 
-export async function sendTripMessage(tripId: string, memberId: string, body: string): Promise<TripMessage> {
-  const { data, error } = await supabase
+export async function sendTripMessage(
+  tripId: string,
+  memberId: string,
+  body: string,
+  options?: { replyToId?: string | null }
+): Promise<TripMessage> {
+  const payload: any = { trip_id: tripId, member_id: memberId, body };
+  if (options?.replyToId) {
+    payload.reply_to_id = options.replyToId;
+  }
+  let { data, error } = await supabase
     .from('trip_messages')
-    .insert({ trip_id: tripId, member_id: memberId, body })
+    .insert(payload)
     .select('*')
     .single();
-  if (error) throw error;
+
+  // If remote schema doesn't yet have reply_to_id column, fallback cleanly
+  if (error && options?.replyToId) {
+    delete payload.reply_to_id;
+    const retry = await supabase.from('trip_messages').insert(payload).select('*').single();
+    data = retry.data;
+    error = retry.error;
+  }
+
+  if (error || !data) throw error || new Error('Failed to send trip message');
   return mapTripMessage(data);
+}
+
+export async function updateMessageReactions(
+  messageId: string,
+  reactions: Record<string, string[]>
+): Promise<void> {
+  const { error } = await supabase
+    .from('trip_messages')
+    .update({ reactions } as any)
+    .eq('id', messageId);
+  if (error) {
+    console.warn('[tripMessagesApi] updateMessageReactions warning:', error.message);
+  }
+}
+
+export async function updateMessagePin(
+  messageId: string,
+  isPinned: boolean
+): Promise<void> {
+  const { error } = await supabase
+    .from('trip_messages')
+    .update({ is_pinned: isPinned } as any)
+    .eq('id', messageId);
+  if (error) {
+    console.warn('[tripMessagesApi] updateMessagePin warning:', error.message);
+  }
 }
 
 // Server-side enforces the 15-minute sender edit window (and blanket admin

@@ -92,6 +92,9 @@ import { useTabSwipe } from './utils/useTabSwipe';
 const ChecklistNotesTab = lazy(lazyImport(() =>
   import('./components/ChecklistNotesTab').then((m) => ({ default: m.ChecklistNotesTab }))
 ));
+const TripChatPanel = lazy(lazyImport(() =>
+  import('./components/TripChatPanel').then((m) => ({ default: m.TripChatPanel }))
+));
 import { withViewTransition } from './utils/viewTransition';
 // CommandPalette (Ctrl+K) is only needed once the user opens it -- code-split
 // like the other secondary modals so it doesn't ship in the initial bundle.
@@ -230,21 +233,27 @@ export default function App() {
     }
   }, [userId, isBiometricFeatureEnabled]);
 
-  // Navigation tabs: 'expenses' (Summary) | 'ledger' (day-wise Expenses) | 'members' | 'notes' | 'settings'
-  type Tab = 'expenses' | 'ledger' | 'members' | 'notes' | 'settings';
+  // Navigation tabs: 'chat' (if elevated) | 'expenses' (Summary) | 'ledger' (day-wise Expenses) | 'members' | 'notes' | 'settings'
+  type Tab = 'chat' | 'expenses' | 'ledger' | 'members' | 'notes' | 'settings';
   const isFeatureEnabled = useTripStore((s) => s.isFeatureEnabled);
   const isNotesEnabled = isFeatureEnabled('enableNotesAndChecklist', { tripId: activeTripId || undefined, userId: userId || undefined });
   const isPassesEnabled = isFeatureEnabled('enableTravelPasses', { tripId: activeTripId || undefined, userId: userId || undefined });
+  const isChatFirstNav = isFeatureEnabled('enableChatFirstNav', { tripId: activeTripId || undefined, userId: userId || undefined });
   const isOfflineMapTilesEnabled = isFeatureEnabled('enableOfflineMapTiles', { tripId: activeTripId || undefined, userId: userId || undefined });
   useEffect(() => {
     void syncOfflineMapTilesFlag(isOfflineMapTilesEnabled);
   }, [isOfflineMapTilesEnabled]);
   const hasNotesOrPassesTab = isNotesEnabled || isPassesEnabled;
   const currentTabOrder = useMemo(() => {
+    if (isChatFirstNav) {
+      return hasNotesOrPassesTab
+        ? (['chat', 'expenses', 'ledger', 'members', 'notes'] as const)
+        : (['chat', 'expenses', 'ledger', 'members'] as const);
+    }
     return hasNotesOrPassesTab
       ? (['expenses', 'ledger', 'members', 'notes'] as const)
       : (['expenses', 'ledger', 'members'] as const);
-  }, [hasNotesOrPassesTab]);
+  }, [isChatFirstNav, hasNotesOrPassesTab]);
 
   const [activeTab, setActiveTabRaw] = useState<Tab>('expenses');
   const mainContentRef = useRef<HTMLElement>(null);
@@ -269,7 +278,10 @@ export default function App() {
     if (activeTab === 'notes' && !hasNotesOrPassesTab) {
       setActiveTabRaw('expenses');
     }
-  }, [activeTab, hasNotesOrPassesTab]);
+    if (activeTab === 'chat' && !isChatFirstNav) {
+      setActiveTabRaw('expenses');
+    }
+  }, [activeTab, hasNotesOrPassesTab, isChatFirstNav]);
 
   // Tab panes stay mounted once rendered (display:none swap, not unmount --
   // see the .tab-pane comment below), so a lazy SettingsTab would suspend on
@@ -279,14 +291,19 @@ export default function App() {
   const [hasVisitedSettings, setHasVisitedSettings] = useState(activeTab === 'settings');
   const [hasVisitedMembers, setHasVisitedMembers] = useState(activeTab === 'members');
   const [hasVisitedNotes, setHasVisitedNotes] = useState(activeTab === 'notes');
+  const [hasVisitedChat, setHasVisitedChat] = useState(activeTab === 'chat');
   useEffect(() => {
     if (activeTab === 'settings') setHasVisitedSettings(true);
     if (activeTab === 'members') setHasVisitedMembers(true);
     if (activeTab === 'notes') setHasVisitedNotes(true);
+    if (activeTab === 'chat') setHasVisitedChat(true);
   }, [activeTab]);
 
   useEffect(() => {
-    if (!activeTripId) setHasVisitedSettings(false);
+    if (!activeTripId) {
+      setHasVisitedSettings(false);
+      setHasVisitedChat(false);
+    }
   }, [activeTripId]);
 
   // Native crossfade between tabs where supported -- browser-compositor
@@ -323,13 +340,17 @@ export default function App() {
         setActiveTab('expenses');
         break;
       case 'chat_message':
-        setActiveTab('notes');
-        setPendingNotesView('chat');
+        if (isChatFirstNav) {
+          setActiveTab('chat');
+        } else {
+          setActiveTab('notes');
+          setPendingNotesView('chat');
+        }
         break;
       default:
         break;
     }
-  }, [setActiveTab]);
+  }, [setActiveTab, isChatFirstNav]);
 
   // Right-hand-friendly horizontal swipe between the bottom-nav tabs,
   // WhatsApp-style. Skips gestures that start on a row/map that already
@@ -2284,10 +2305,39 @@ export default function App() {
             startFull={isFeatureEnabled('enableMapCollapsedByDefault', { tripId: activeTrip?.id, userId: userId || undefined })}
             onExpandedChange={setSheetExpanded}
             onFullChange={setSheetFull}
-            forceFull={chatViewActive}
+            forceFull={chatViewActive || (isChatFirstNav && activeTab === 'chat')}
           >
           <main className="app-main" ref={mainContentRef}>
             {/* View Switching Tab Content */}
+            {isChatFirstNav && (
+              <div
+                className={`tab-pane ${activeTab === 'chat' ? 'chat-tab-pane' : ''}`}
+                style={
+                  activeTab === 'chat'
+                    ? { display: 'flex', flexDirection: 'column', ...tabSwipe.activePaneStyle }
+                    : tabSwipe.previewTab === 'chat'
+                    ? { display: 'block', ...tabSwipe.previewPaneStyle }
+                    : { display: 'none' }
+                }
+              >
+                <TabErrorBoundary label="Chat">
+                  <div className={`fade-in ${activeTab === 'chat' ? 'chat-fade-fill' : ''}`}>
+                    {activeTrip && hasVisitedChat && (
+                      <Suspense fallback={<LuggageTagSkeleton count={2} />}>
+                        <TripChatPanel
+                          tripId={activeTrip.id}
+                          members={visibleMembers}
+                          isAdmin={isAdmin}
+                          onComposerFocusChange={setChatComposerFocused}
+                          onRequestConfirm={setConfirmRequest}
+                        />
+                      </Suspense>
+                    )}
+                  </div>
+                </TabErrorBoundary>
+              </div>
+            )}
+
             <div
               className="tab-pane"
               style={
@@ -2561,7 +2611,8 @@ export default function App() {
             isNotesEnabled={isNotesEnabled}
             isPassesEnabled={isPassesEnabled}
             passesCount={activeTrip?.passes?.length || 0}
-            isHidden={chatComposerFocused && activeTab === 'notes'}
+            isChatFirstNav={isChatFirstNav}
+            isHidden={chatComposerFocused && (activeTab === 'notes' || activeTab === 'chat')}
           />
         </div>
       )}

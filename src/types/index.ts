@@ -13,6 +13,12 @@ export interface TripMessage {
   createdAt: number;
   editedAt?: number | null;
   deletedAt?: number | null;
+  replyToId?: string | null;
+  replyToSenderName?: string | null;
+  replyToBody?: string | null;
+  reactions?: Record<string, string[]>; // emoji -> memberId[]
+  isPinned?: boolean;
+  status?: 'sending' | 'sent' | 'delivered';
 }
 
 export interface ChecklistItem {
@@ -82,6 +88,7 @@ export interface Trip {
   passes?: TravelPass[]; // Digital boarding passes, vouchers, and tickets
   fxConfig?: TripFxConfig; // Custom exchange rates & forex markup
   splitExclusionDefaults?: Record<string, string[]>; // categoryId -> memberIds excluded by default from that category's split
+  simplifyDebts?: boolean; // true = greedy flow minimization (default), false = direct bilateral debts
 }
 
 export type TravelPassType = 'flight' | 'train' | 'stay' | 'activity' | 'transit';

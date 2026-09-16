@@ -151,13 +151,112 @@ export function calculateGroupInternalTransfers(balances: MemberBalance[], group
   return matchDebtorsToCreditors(memberNodes, balances);
 }
 
-export function calculateSettlements(
+// Direct pairwise settlement calculation without greedy flow minimization:
+// each participant pays back the exact member who fronted the money for their share.
+export function calculateDirectSettlements(
   trip: Trip,
   members: Record<string, Member>,
   expenses: Expense[],
   groups: Group[] = []
-): { balances: MemberBalance[]; transfers: Transfer[] } {
-  const activeTripExpenses = expenses.filter((e) => e.tripId === trip.id);
+): Transfer[] {
+  const activeTripExpenses = expenses.filter((e) => e.tripId === trip.id && !e.deletedAt);
+
+  // Group membership index
+  const groupOfMember: Record<string, string> = {};
+  groups.forEach((g) => {
+    g.memberIds.forEach((mid) => {
+      if (!groupOfMember[mid]) groupOfMember[mid] = g.id;
+    });
+  });
+
+  // Map of debtorId -> Map of creditorId -> amount
+  const pairwise = new Map<string, Map<string, number>>();
+
+  const addDebt = (debtor: string, creditor: string, amount: number) => {
+    if (!debtor || !creditor || debtor === creditor || amount <= 0.005) return;
+    // Members in the exact same group do not owe each other in group-netted mode
+    if (groupOfMember[debtor] && groupOfMember[debtor] === groupOfMember[creditor]) {
+      return;
+    }
+    let debtorMap = pairwise.get(debtor);
+    if (!debtorMap) {
+      debtorMap = new Map<string, number>();
+      pairwise.set(debtor, debtorMap);
+    }
+    debtorMap.set(creditor, (debtorMap.get(creditor) || 0) + amount);
+  };
+
+  activeTripExpenses.forEach((exp) => {
+    if (exp.isSettlement) {
+      // Settlement: debtor exp.paidBy pays creditor exp.splitMemberIds[0]
+      const debtor = exp.paidBy;
+      const creditor = exp.splitMemberIds[0];
+      if (creditor) {
+        addDebt(creditor, debtor, exp.amount);
+      }
+    } else {
+      const payer = exp.paidBy;
+      Object.entries(exp.resolvedShares).forEach(([borrower, share]) => {
+        if (borrower !== payer && share > 0.005) {
+          addDebt(borrower, payer, share);
+        }
+      });
+    }
+  });
+
+  const transfers: Transfer[] = [];
+  const processedPairs = new Set<string>();
+
+  trip.memberIds.forEach((idA) => {
+    trip.memberIds.forEach((idB) => {
+      if (idA === idB) return;
+      const pairKey = idA < idB ? `${idA}:${idB}` : `${idB}:${idA}`;
+      if (processedPairs.has(pairKey)) return;
+      processedPairs.add(pairKey);
+
+      const debtAtoB = pairwise.get(idA)?.get(idB) || 0;
+      const debtBtoA = pairwise.get(idB)?.get(idA) || 0;
+      const net = Number((debtAtoB - debtBtoA).toFixed(2));
+
+      if (net > 0.005) {
+        const memA = members[idA];
+        const memB = members[idB];
+        transfers.push({
+          from: `member:${idA}`,
+          to: `member:${idB}`,
+          fromLabel: memA ? memA.name : 'Deleted Member',
+          toLabel: memB ? memB.name : 'Deleted Member',
+          fromMemberId: idA,
+          toMemberId: idB,
+          amount: net,
+        });
+      } else if (net < -0.005) {
+        const memA = members[idA];
+        const memB = members[idB];
+        transfers.push({
+          from: `member:${idB}`,
+          to: `member:${idA}`,
+          fromLabel: memB ? memB.name : 'Deleted Member',
+          toLabel: memA ? memA.name : 'Deleted Member',
+          fromMemberId: idB,
+          toMemberId: idA,
+          amount: Math.abs(net),
+        });
+      }
+    });
+  });
+
+  return transfers.sort((a, b) => b.amount - a.amount);
+}
+
+export function calculateSettlements(
+  trip: Trip,
+  members: Record<string, Member>,
+  expenses: Expense[],
+  groups: Group[] = [],
+  options?: { simplifyDebts?: boolean }
+): { balances: MemberBalance[]; transfers: Transfer[]; isSimplified: boolean } {
+  const activeTripExpenses = expenses.filter((e) => e.tripId === trip.id && !e.deletedAt);
   
   // 1. Calculate net balances for every member of the trip
   const netBalances: Record<string, number> = {};
@@ -189,10 +288,21 @@ export function calculateSettlements(
     };
   });
 
+  // Check whether to use simplified greedy algorithm or direct bilateral netting
+  const shouldSimplify = options?.simplifyDebts !== undefined
+    ? options.simplifyDebts
+    : (trip.simplifyDebts !== false);
+
+  if (!shouldSimplify) {
+    const directTransfers = calculateDirectSettlements(trip, members, expenses, groups);
+    return { balances, transfers: directTransfers, isSimplified: false };
+  }
+
   // 2. Merge group members into single settlement nodes, then greedily
   // match debtor nodes to creditor nodes to minimize transfers.
   const nodes = buildSettlementNodes(balances, groups);
   const transfers = matchDebtorsToCreditors(nodes, balances);
 
-  return { balances, transfers };
+  return { balances, transfers, isSimplified: true };
 }
+

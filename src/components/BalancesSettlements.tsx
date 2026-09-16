@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import type { Expense, Group, Member, Trip } from '../types';
 import type { MemberBalance, Transfer } from '../utils/settlement';
-import { IconEdit, IconShare } from './Icons';
+import { IconEdit, IconShare, IconClose } from './Icons';
 import { getCurrencySymbol } from '../utils/currency';
 import { sendPushNotification } from '../services/pushApi';
 import { useTripStore } from '../store/tripStore';
@@ -893,6 +893,10 @@ export function BalancesSettlements({
 
   const isUpiEnabled = useTripStore((s) => s.isFeatureEnabled('enableUpiPayments', { tripId: trip.id }));
   const isShareCardEnabled = useTripStore((s) => s.isFeatureEnabled('enableWhatsAppSettlementShare', { tripId: trip.id }));
+  const isSimplifyToggleActive = useTripStore((s) => s.isFeatureEnabled('enableSimplifyDebtsToggle', { tripId: trip.id }));
+  const setTripSimplifyDebts = useTripStore((s) => s.setTripSimplifyDebts);
+  const [showSimplifyInfo, setShowSimplifyInfo] = useState(false);
+  const isSimplified = trip.simplifyDebts !== false;
 
   const setCustom = (rowKey: string, v: string) => setCustomAmounts({ ...customAmounts, [rowKey]: v });
   const toggleCustomOpen = (rowKey: string) => setCustomOpenKeys({ ...customOpenKeys, [rowKey]: !customOpenKeys[rowKey] });
@@ -1048,6 +1052,168 @@ export function BalancesSettlements({
             </span>
           </div>
         </div>
+
+        {isSimplifyToggleActive && (
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              padding: '0 4px',
+              marginBottom: '14px',
+            }}
+          >
+            <div
+              style={{
+                display: 'inline-flex',
+                background: 'var(--bg-secondary)',
+                borderRadius: '9999px',
+                padding: '2px',
+                gap: '2px',
+              }}
+            >
+              <button
+                type="button"
+                style={{
+                  border: 'none',
+                  padding: '4px 11px',
+                  borderRadius: '9999px',
+                  background: isSimplified ? 'var(--bg-card)' : 'transparent',
+                  color: isSimplified ? 'var(--primary-accent)' : 'var(--text-muted)',
+                  fontWeight: isSimplified ? 700 : 500,
+                  fontSize: '11px',
+                  boxShadow: isSimplified ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease',
+                }}
+                onClick={() => {
+                  triggerHaptic('light');
+                  setTripSimplifyDebts(trip.id, true);
+                }}
+              >
+                ⚡ Simplified
+              </button>
+              <button
+                type="button"
+                style={{
+                  border: 'none',
+                  padding: '4px 11px',
+                  borderRadius: '9999px',
+                  background: !isSimplified ? 'var(--bg-card)' : 'transparent',
+                  color: !isSimplified ? 'var(--primary-accent)' : 'var(--text-muted)',
+                  fontWeight: !isSimplified ? 700 : 500,
+                  fontSize: '11px',
+                  boxShadow: !isSimplified ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease',
+                }}
+                onClick={() => {
+                  triggerHaptic('light');
+                  setTripSimplifyDebts(trip.id, false);
+                }}
+              >
+                👥 Direct Debts
+              </button>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowSimplifyInfo(true)}
+              style={{
+                border: 'none',
+                background: 'transparent',
+                color: 'var(--text-muted)',
+                fontSize: '11.5px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                padding: '4px 6px',
+                borderRadius: '6px',
+              }}
+              title="Learn about settlement debt algorithms"
+            >
+              <span style={{ fontSize: '12px' }}>ⓘ</span>
+              <span>{isSimplified ? 'Minimizes transfers' : 'Exact pairwise'}</span>
+            </button>
+          </div>
+        )}
+
+        {showSimplifyInfo && (
+          <div
+            className="modal-overlay"
+            style={{
+              position: 'fixed',
+              inset: 0,
+              zIndex: 9999,
+              background: 'rgba(0,0,0,0.5)',
+              backdropFilter: 'blur(4px)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '16px',
+            }}
+            onClick={() => setShowSimplifyInfo(false)}
+          >
+            <div
+              className="glass-card"
+              style={{
+                maxWidth: '420px',
+                width: '100%',
+                padding: '20px',
+                borderRadius: '16px',
+                background: 'var(--bg-card)',
+                boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.3)',
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+                <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)' }}>
+                  Settlement Algorithm
+                </h3>
+                <button
+                  type="button"
+                  onClick={() => setShowSimplifyInfo(false)}
+                  style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--text-muted)' }}
+                >
+                  <IconClose size={18} />
+                </button>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '13px', lineHeight: 1.5, color: 'var(--text-secondary)' }}>
+                <div style={{ padding: '10px 12px', borderRadius: '10px', background: isSimplified ? 'rgba(63, 203, 189, 0.08)' : 'var(--bg-secondary)', border: isSimplified ? '1px solid rgba(63, 203, 189, 0.3)' : '1px solid transparent' }}>
+                  <div style={{ fontWeight: 700, color: 'var(--text-primary)', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span>⚡ Simplified Debts</span>
+                    {isSimplified && <span style={{ fontSize: '10px', padding: '1px 6px', borderRadius: '4px', background: 'var(--primary-accent)', color: '#fff' }}>Active</span>}
+                  </div>
+                  <div>
+                    Uses a greedy flow algorithm to minimize the total number of payments across the trip. A member might pay someone they didn't directly split with, but the net group money balances out with fewer total bank transfers.
+                  </div>
+                </div>
+
+                <div style={{ padding: '10px 12px', borderRadius: '10px', background: !isSimplified ? 'rgba(63, 203, 189, 0.08)' : 'var(--bg-secondary)', border: !isSimplified ? '1px solid rgba(63, 203, 189, 0.3)' : '1px solid transparent' }}>
+                  <div style={{ fontWeight: 700, color: 'var(--text-primary)', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span>👥 Direct Bilateral Debts</span>
+                    {!isSimplified && <span style={{ fontSize: '10px', padding: '1px 6px', borderRadius: '4px', background: 'var(--primary-accent)', color: '#fff' }}>Active</span>}
+                  </div>
+                  <div>
+                    You only reimburse the exact person who fronted the money for your share. No debt routing through third parties. Great if you prefer direct 1-on-1 settlements with the payer.
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'flex-end' }}>
+                <button
+                  type="button"
+                  className="primary-btn"
+                  style={{ padding: '8px 18px', fontSize: '13px', borderRadius: '8px' }}
+                  onClick={() => setShowSimplifyInfo(false)}
+                >
+                  Got it
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {!isFullySettled && balances.length > 0 && (
           <div style={{ padding: '0 4px', marginBottom: '16px' }}>

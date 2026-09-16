@@ -2159,6 +2159,86 @@ html.capacitor-ios .tab-pane {
   pointer-events: none !important;
 }
 
+/* WhatsApp-grade 5-tab layout when Chat-first navigation is enabled:
+   all 5 tabs have 100% equal width (20% each), perfectly balanced with identical active pill dimensions.
+   The '+' action button floats elevated on the bottom-right (WhatsApp/Material 3 standard). */
+.nav-tabs.has-chat-nav {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  max-width: 460px;
+  gap: 2px;
+}
+
+.nav-tabs.has-chat-nav .nav-tab-item {
+  font-size: 10px;
+  padding: 6px 2px 5px;
+}
+
+.nav-tabs.has-chat-nav .nav-tab-icon svg {
+  width: 24px;
+  height: 24px;
+}
+
+.nav-tabs.has-chat-nav.no-notes {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+/* WhatsApp / Material 3 Floating Action Button */
+.nav-floating-fab-wrap {
+  position: absolute;
+  right: 18px;
+  bottom: calc(82px + var(--safe-bottom, 0px));
+  z-index: 55;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  pointer-events: auto;
+  transition: transform 0.28s var(--ease-uber-spring), opacity 0.22s ease;
+}
+
+.nav-floating-fab-wrap.is-hidden {
+  transform: translateY(30px) scale(0.8);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.nav-floating-fab {
+  flex-shrink: 0;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: 2.5px solid rgba(255, 255, 255, 0.3);
+  background-image: var(--header-gradient-solid);
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 10px 24px -4px rgba(2, 132, 199, 0.55), 0 3px 8px rgba(0, 0, 0, 0.18);
+  transition: transform 0.2s var(--ease-decel), box-shadow 0.2s ease, background-image 0.25s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.nav-floating-fab:hover {
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 14px 28px -4px rgba(2, 132, 199, 0.65), 0 4px 12px rgba(0, 0, 0, 0.22);
+}
+
+.nav-floating-fab:active {
+  transform: scale(0.92);
+}
+
+.nav-floating-fab.mode-member {
+  background-image: linear-gradient(135deg, var(--primary-accent, #2F6FED), #1E3A8A);
+  box-shadow: 0 10px 24px -4px rgba(47, 111, 237, 0.55), 0 3px 8px rgba(0, 0, 0, 0.18);
+}
+
+.nav-floating-fab-wrap .nav-tab-fab-denied-hint,
+.nav-floating-fab-wrap .nav-tab-fab-mode-label {
+  left: auto;
+  right: 0;
+  transform: none;
+}
+
 /* Dynamically balance nav bar when Notes & Passes are disabled:
    Left wing (Summary + Expenses = 2fr), Center FAB (auto), Right wing (Members = 2fr)
    keeps the '+' FAB in the dead center (50%) regardless of tab count. */
@@ -2677,6 +2757,44 @@ html.capacitor-ios .nav-tabs {
 @keyframes flightFloat {
   0% { transform: translateX(-50%) translateY(0); }
   100% { transform: translateX(-50%) translateY(-5px); }
+}
+
+@keyframes flightFloatFloating {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(-5px); }
+}
+
+/* Floating Action Button Tooltip Adaptation (WhatsApp / Material 3 floating mode) */
+.nav-floating-fab-wrap .flight-add-tooltip {
+  left: auto !important;
+  right: 0 !important;
+  transform: translateY(8px) scale(0.94);
+}
+
+.nav-floating-fab-wrap .flight-add-tooltip.enter {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0) scale(1) !important;
+  animation: flightFloatFloating 3.6s ease-in-out infinite alternate !important;
+}
+
+.nav-floating-fab-wrap .flight-add-tooltip.leave {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(6px) scale(0.92) !important;
+}
+
+/* Align directional arrow directly over the 52px floating FAB (center at 26px from right edge) */
+.nav-floating-fab-wrap .flight-tooltip-arrow {
+  left: auto !important;
+  right: 26px !important;
+  transform: translateX(50%) !important;
+}
+
+.nav-floating-fab-wrap .flight-contrail-svg {
+  left: auto !important;
+  right: 8px !important;
+  transform: none !important;
 }
 
 @media (prefers-reduced-motion: reduce) {

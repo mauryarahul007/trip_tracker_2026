@@ -509,7 +509,7 @@ export function AdminCommandCenterPage({
               <div className="ops-bento-card-title" style={{ margin: 0 }}>
                 <span>🎯</span> Release Train Milestones
               </div>
-              <span className="ops-badge active" style={{ fontSize: '10px', padding: '2px 8px' }}>5 Tracks</span>
+              <span className="ops-badge active" style={{ fontSize: '10px', padding: '2px 8px' }}>{phaseStatuses.length} Tracks</span>
             </div>
             <p className="ops-bento-card-sub" style={{ marginTop: '4px' }}>Progressive release milestones &amp; feature gate control.</p>
 
@@ -521,10 +521,12 @@ export function AdminCommandCenterPage({
                   data-armed={phase.status === 'armed'}
                   data-staged={phase.status === 'safed'}
                   title={`${phase.title} · ${phase.activeCount}/${phase.totalCount} active flags`}
+                  onClick={() => onNavigate('flags')}
+                  style={{ cursor: 'pointer' }}
                 >
                   <div className="ops-milestone-chip-info">
                     <div className="ops-milestone-chip-title">
-                      {phase.id === 'deferred' ? 'Phase 5 · Extras' : phase.id.replace('phase', 'Phase ')}
+                      {phase.id === 'deferred' ? 'Extras · Platform' : phase.id.replace('phase', 'Phase ')}
                     </div>
                     <div className="ops-milestone-chip-sub">
                       {phase.title}

@@ -48,6 +48,12 @@ export type FeatureFlagKey =
   | 'enableSettlementHistory'
   | 'enableTripCloseout'
   | 'enableCrossTripSearch'
+  // Phase 6: WhatsApp Social & Chat Hub
+  | 'enableChatFirstNav'
+  | 'enableChatReactionsAndReplies'
+  | 'enableChatOfflineOutbox'
+  // Phase 7: Commercial FinTech & Smart Splitting
+  | 'enableSimplifyDebtsToggle'
   // Deferred & Admin Ops
   | 'enableUpiPayments'
   | 'enableAdvancedLocationSearch'
@@ -58,11 +64,11 @@ export type FeatureFlagKey =
   | 'enableAchievements'
   | 'enableOfflineSnapshot';
 
-export type ReleasePhaseId = 'phase1' | 'phase2' | 'phase3' | 'phase4' | 'phase5' | 'deferred';
+export type ReleasePhaseId = 'phase1' | 'phase2' | 'phase3' | 'phase4' | 'phase5' | 'phase6' | 'phase7' | 'deferred';
 
 export interface ReleasePhaseDef {
   id: ReleasePhaseId;
-  phaseNumber: 1 | 2 | 3 | 4 | 5 | 0;
+  phaseNumber: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 0;
   code: string;
   title: string;
   tagline: string;

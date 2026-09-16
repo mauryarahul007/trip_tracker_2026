@@ -13,6 +13,7 @@ import {
   fetchCategoriesForTrip,
   insertTrip,
   updateTripRow,
+  updateTripSimplifyDebts,
   updateTripChecklist,
   updateTripNotes,
   updateTripMemberRoles,
@@ -191,6 +192,7 @@ interface TripStore extends TripState {
   saveTravelPass: (tripId: string, pass: TravelPass) => Promise<void>;
   deleteTravelPass: (tripId: string, passId: string) => Promise<void>;
   setTripFxConfig: (tripId: string, fxConfig: TripFxConfig) => Promise<void>;
+  setTripSimplifyDebts: (tripId: string, simplifyDebts: boolean) => Promise<void>;
 
   // Per-user, per-trip push-notification mute (see migration 0070) --
   // suppresses FCM pushes only, the in-app panel still gets the row.
@@ -2050,6 +2052,22 @@ export const useTripStore = create<TripStore>()(
           await updateTripFxConfig(tripId, fxConfig);
         } catch (e) {
           console.warn('Failed to sync trip fx config to backend:', e);
+        }
+      }
+    },
+
+    setTripSimplifyDebts: async (tripId, simplifyDebts) => {
+      const now = Date.now();
+      set((state) => ({
+        trips: state.trips.map((t) => (t.id === tripId ? { ...t, simplifyDebts, updatedAt: now } : t)),
+        lastModifiedAt: now,
+      }));
+
+      if (!isMissingSupabaseEnv) {
+        try {
+          await updateTripSimplifyDebts(tripId, simplifyDebts);
+        } catch (e) {
+          console.warn('Failed to sync trip simplify debts to backend:', e);
         }
       }
     },

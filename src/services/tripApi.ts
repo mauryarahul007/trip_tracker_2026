@@ -32,6 +32,7 @@ function mapTrip(row: TripRow, memberIds: string[], groupIds: string[]): Trip {
     fxConfig: row.fx_config ? (row.fx_config as unknown as import('../types').TripFxConfig) : undefined,
     memberRoles: row.member_roles ? (row.member_roles as unknown as Record<string, import('../types').MemberRole>) : undefined,
     splitExclusionDefaults: row.split_exclusion_defaults ? (row.split_exclusion_defaults as unknown as Record<string, string[]>) : undefined,
+    simplifyDebts: (row as any).simplify_debts !== undefined ? Boolean((row as any).simplify_debts) : true,
     createdAt: new Date(row.created_at).getTime(),
     updatedAt: new Date(row.updated_at).getTime(),
   };
@@ -299,6 +300,19 @@ export async function updateTripSplitExclusionDefaults(id: string, splitExclusio
     } as any)
     .eq('id', id);
   if (error) throw error;
+}
+
+export async function updateTripSimplifyDebts(id: string, simplifyDebts: boolean): Promise<void> {
+  const { error } = await supabase
+    .from('trips')
+    .update({
+      simplify_debts: simplifyDebts,
+      updated_at: new Date().toISOString(),
+    } as any)
+    .eq('id', id);
+  if (error) {
+    console.warn('[tripApi] updateTripSimplifyDebts remote warning:', error.message);
+  }
 }
 
 export async function updateTripPasses(id: string, passes: import('../types').TravelPass[]): Promise<void> {

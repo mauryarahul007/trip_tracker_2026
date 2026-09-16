@@ -1,23 +1,35 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { useTripStore } from '../store/tripStore';
 import type { Member, TripMessage } from '../types';
-import { deleteTripMessage, editTripMessage, fetchTripMessages, sendTripMessage, subscribeToTripMessages } from '../services/tripMessagesApi';
+import {
+  deleteTripMessage,
+  editTripMessage,
+  fetchTripMessages,
+  sendTripMessage,
+  subscribeToTripMessages,
+  updateMessageReactions,
+  updateMessagePin,
+} from '../services/tripMessagesApi';
 import { sendPushNotification } from '../services/pushApi';
 import { triggerHaptic } from '../utils/haptics';
 import { ActionSheet, type ActionSheetItem } from './common/ActionSheet';
 import type { ConfirmRequest } from './ConfirmDialog';
-import { IconEdit, IconTrash } from './Icons';
+import { IconEdit, IconTrash, IconClose } from './Icons';
 import { LiveLocationChatBanner } from './LiveLocationChatBanner';
+import {
+  queueOfflineMessage,
+  getOfflineMessagesForTrip,
+  removeOfflineMessage,
+  type QueuedChatMessage,
+} from '../services/offlineChatStore';
+import { newId } from '../utils/uuid';
 
 const CHAT_PUSH_PREVIEW_LENGTH = 80;
-// Matches the server-side window enforced by edit_trip_message() (migration
-// 0083) -- only hides the Edit action past this point, the RPC is the real
-// enforcement so a stale client can't edit past its deadline either.
 const EDIT_WINDOW_MS = 15 * 60 * 1000;
-const LONG_PRESS_MS = 450;
-// Cancel the long-press if the pointer drifts (e.g. the list is being
-// scrolled) instead of firing the menu mid-scroll.
+const LONG_PRESS_MS = 400;
 const LONG_PRESS_MOVE_TOLERANCE = 10;
+const SWIPE_REPLY_THRESHOLD = 45;
+const QUICK_EMOJIS = ['👍', '❤️', '😂', '😮', '🙏', '🔥'];
 
 interface Props {
   tripId: string;
@@ -35,6 +47,9 @@ export function TripChatPanel({ tripId, members, isAdmin, onComposerFocusChange,
     [members, userId]
   );
 
+  const isSocialEnabled = useTripStore((s) => s.isFeatureEnabled('enableChatReactionsAndReplies', { tripId }));
+  const isOutboxEnabled = useTripStore((s) => s.isFeatureEnabled('enableChatOfflineOutbox', { tripId }));
+
   const [messages, setMessages] = useState<TripMessage[]>([]);
   const [draft, setDraft] = useState('');
   const [isLoading, setIsLoading] = useState(true);
@@ -42,38 +57,90 @@ export function TripChatPanel({ tripId, members, isAdmin, onComposerFocusChange,
   const [sendError, setSendError] = useState<string | null>(null);
   const [isInputFocused, setIsInputFocused] = useState(false);
   const [editingMessage, setEditingMessage] = useState<TripMessage | null>(null);
+  const [replyingToMessage, setReplyingToMessage] = useState<TripMessage | null>(null);
   const [actionSheetMessage, setActionSheetMessage] = useState<TripMessage | null>(null);
   const listRef = useRef<HTMLDivElement>(null);
 
   const memberById = useMemo(() => new Map(members.map((m) => [m.id, m])), [members]);
 
-  useEffect(() => {
-    let isMounted = true;
-    setIsLoading(true);
-    fetchTripMessages(tripId)
-      .then((rows) => {
-        if (isMounted) setMessages(rows);
-      })
-      .finally(() => {
-        if (isMounted) setIsLoading(false);
+  // Load backend messages + offline queued messages
+  const loadAllMessages = useCallback(async () => {
+    try {
+      const [serverRows, queuedRows] = await Promise.all([
+        fetchTripMessages(tripId).catch(() => []),
+        getOfflineMessagesForTrip(tripId).catch(() => []),
+      ]);
+
+      const queuedMapped: TripMessage[] = queuedRows.map((q) => ({
+        id: q.id,
+        tripId: q.tripId,
+        memberId: q.memberId,
+        body: q.body,
+        replyToId: q.replyToId,
+        replyToSenderName: q.replyToSenderName,
+        replyToBody: q.replyToBody,
+        createdAt: q.createdAt,
+        status: 'sending',
+      }));
+
+      // Merge and deduplicate by ID
+      const existingIds = new Set(serverRows.map((r) => r.id));
+      const merged = [...serverRows];
+      queuedMapped.forEach((q) => {
+        if (!existingIds.has(q.id)) {
+          merged.push(q);
+        }
       });
+
+      setMessages(merged.sort((a, b) => a.createdAt - b.createdAt));
+    } finally {
+      setIsLoading(false);
+    }
+  }, [tripId]);
+
+  // Auto-drain offline outbox when connection restores
+  const drainOutbox = useCallback(async () => {
+    if (!navigator.onLine) return;
+    const queued = await getOfflineMessagesForTrip(tripId).catch(() => []);
+    if (queued.length === 0) return;
+
+    for (const q of queued) {
+      try {
+        const sent = await sendTripMessage(tripId, q.memberId, q.body, { replyToId: q.replyToId });
+        await removeOfflineMessage(q.id);
+        setMessages((prev) =>
+          prev.map((m) => (m.id === q.id ? { ...sent, status: 'delivered' } : m))
+        );
+      } catch (err) {
+        console.warn('[TripChatPanel] Failed to drain queued message:', err);
+        break; // Retry later
+      }
+    }
+  }, [tripId]);
+
+  useEffect(() => {
+    loadAllMessages();
+    drainOutbox();
 
     const unsubscribe = subscribeToTripMessages(tripId, {
       onInsert: (message) => {
         setMessages((prev) => (prev.some((m) => m.id === message.id) ? prev : [...prev, message]));
       },
-      // Covers both edits and soft-deletes -- both are plain UPDATEs on
-      // trip_messages, the rendered bubble branches on deletedAt/editedAt.
       onUpdate: (message) => {
         setMessages((prev) => prev.map((m) => (m.id === message.id ? message : m)));
       },
     });
 
-    return () => {
-      isMounted = false;
-      unsubscribe();
+    const handleOnline = () => {
+      drainOutbox();
     };
-  }, [tripId]);
+    window.addEventListener('online', handleOnline);
+
+    return () => {
+      unsubscribe();
+      window.removeEventListener('online', handleOnline);
+    };
+  }, [tripId, loadAllMessages, drainOutbox]);
 
   useEffect(() => {
     const list = listRef.current;
@@ -93,38 +160,124 @@ export function TripChatPanel({ tripId, members, isAdmin, onComposerFocusChange,
     setIsSending(true);
     setSendError(null);
     triggerHaptic('light');
+
+    const replyId = replyingToMessage?.id || null;
+    const replySender = replyingToMessage ? memberById.get(replyingToMessage.memberId)?.name || 'Traveler' : null;
+    const replyBody = replyingToMessage?.body || null;
+
     try {
       if (editingMessage) {
         await editTripMessage(editingMessage.id, body);
         setEditingMessage(null);
         setDraft('');
       } else {
-        await sendTripMessage(tripId, myMemberId, body);
+        if (!navigator.onLine && isOutboxEnabled) {
+          // Offline queue
+          const tempId = newId();
+          const queued: QueuedChatMessage = {
+            id: tempId,
+            tripId,
+            memberId: myMemberId,
+            body,
+            replyToId: replyId,
+            replyToSenderName: replySender,
+            replyToBody: replyBody,
+            createdAt: Date.now(),
+            status: 'sending',
+          };
+          await queueOfflineMessage(queued);
+          setMessages((prev) => [...prev, { ...queued }]);
+          setDraft('');
+          setReplyingToMessage(null);
+          return;
+        }
+
+        const sent = await sendTripMessage(tripId, myMemberId, body, { replyToId: replyId });
+        setMessages((prev) => (prev.some((m) => m.id === sent.id) ? prev : [...prev, sent]));
         setDraft('');
+        setReplyingToMessage(null);
 
         const senderName = memberById.get(myMemberId)?.name || 'Someone';
         const recipients = members
           .filter((m) => !m.archived && m.linkedUserId && m.linkedUserId !== userId)
           .map((m) => m.linkedUserId as string);
         const preview = body.length > CHAT_PUSH_PREVIEW_LENGTH ? `${body.slice(0, CHAT_PUSH_PREVIEW_LENGTH)}…` : body;
-        // Best-effort, non-blocking -- sendPushNotification never throws.
         sendPushNotification(recipients, tripName, 'chat_message', { senderName, preview }, tripId);
       }
     } catch {
-      // Chat has no offline outbox (unlike expenses) -- a failed send/edit
-      // here means it was NOT saved, so surface it instead of silently
-      // dropping the draft. Draft text is kept so the traveler can retry.
-      setSendError(
-        editingMessage
-          ? 'Failed to update message. Tap Update to retry.'
-          : navigator.onLine
-            ? 'Message failed to send. Tap Send to retry.'
-            : "You're offline — message will not send until you're back online."
-      );
-      triggerHaptic('warning');
+      if (isOutboxEnabled && !editingMessage) {
+        // Fallback to offline outbox if remote send fails
+        const tempId = newId();
+        const queued: QueuedChatMessage = {
+          id: tempId,
+          tripId,
+          memberId: myMemberId,
+          body,
+          replyToId: replyId,
+          replyToSenderName: replySender,
+          replyToBody: replyBody,
+          createdAt: Date.now(),
+          status: 'sending',
+        };
+        await queueOfflineMessage(queued).catch(() => {});
+        setMessages((prev) => [...prev, { ...queued }]);
+        setDraft('');
+        setReplyingToMessage(null);
+      } else {
+        setSendError(
+          editingMessage
+            ? 'Failed to update message. Tap Update to retry.'
+            : navigator.onLine
+              ? 'Message failed to send. Tap Send to retry.'
+              : "You're offline — message will send once you're back online."
+        );
+        triggerHaptic('warning');
+      }
     } finally {
       setIsSending(false);
     }
+  };
+
+  const handleToggleReaction = async (message: TripMessage, emoji: string) => {
+    if (!myMemberId) return;
+    triggerHaptic('light');
+
+    const currentReactions: Record<string, string[]> = { ...(message.reactions || {}) };
+    const currentUsers = currentReactions[emoji] ? [...currentReactions[emoji]] : [];
+    const index = currentUsers.indexOf(myMemberId);
+
+    if (index >= 0) {
+      currentUsers.splice(index, 1);
+    } else {
+      currentUsers.push(myMemberId);
+    }
+
+    if (currentUsers.length === 0) {
+      delete currentReactions[emoji];
+    } else {
+      currentReactions[emoji] = currentUsers;
+    }
+
+    // Optimistic UI update
+    setMessages((prev) =>
+      prev.map((m) => (m.id === message.id ? { ...m, reactions: currentReactions } : m))
+    );
+
+    if (actionSheetMessage?.id === message.id) {
+      setActionSheetMessage(null);
+    }
+
+    await updateMessageReactions(message.id, currentReactions);
+  };
+
+  const handleTogglePin = async (message: TripMessage) => {
+    triggerHaptic('medium');
+    const newPinState = !message.isPinned;
+    setMessages((prev) =>
+      prev.map((m) => (m.id === message.id ? { ...m, isPinned: newPinState } : m))
+    );
+    setActionSheetMessage(null);
+    await updateMessagePin(message.id, newPinState);
   };
 
   const handleRequestDelete = (message: TripMessage) => {
@@ -142,14 +295,12 @@ export function TripChatPanel({ tripId, members, isAdmin, onComposerFocusChange,
     });
   };
 
-  // Long-press (touch and mouse) on a bubble opens the Edit/Delete action
-  // sheet -- mirrors WhatsApp's own gesture rather than a swipe, which this
-  // app already uses elsewhere for "reply"-shaped actions, not this one.
+  // Touch and pointer gestures for long-press & swipe-to-reply
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const longPressStart = useRef({ x: 0, y: 0 });
-  const longPressMoved = useRef(false);
+  const pointerStart = useRef({ x: 0, y: 0 });
+  const swipedMessage = useRef<TripMessage | null>(null);
 
-  const clearLongPressTimer = () => {
+  const clearTimer = () => {
     if (longPressTimer.current) {
       clearTimeout(longPressTimer.current);
       longPressTimer.current = null;
@@ -157,41 +308,68 @@ export function TripChatPanel({ tripId, members, isAdmin, onComposerFocusChange,
   };
 
   const handleBubblePointerDown = (message: TripMessage) => (e: React.PointerEvent) => {
-    longPressMoved.current = false;
-    longPressStart.current = { x: e.clientX, y: e.clientY };
-    clearLongPressTimer();
+    pointerStart.current = { x: e.clientX, y: e.clientY };
+    swipedMessage.current = null;
+    clearTimer();
     longPressTimer.current = setTimeout(() => {
-      if (!longPressMoved.current) {
-        triggerHaptic('medium');
-        setActionSheetMessage(message);
-      }
+      triggerHaptic('medium');
+      setActionSheetMessage(message);
     }, LONG_PRESS_MS);
   };
 
-  const handleBubblePointerMove = (e: React.PointerEvent) => {
-    const dx = e.clientX - longPressStart.current.x;
-    const dy = e.clientY - longPressStart.current.y;
-    if (Math.abs(dx) > LONG_PRESS_MOVE_TOLERANCE || Math.abs(dy) > LONG_PRESS_MOVE_TOLERANCE) {
-      longPressMoved.current = true;
-      clearLongPressTimer();
+  const handleBubblePointerMove = (message: TripMessage) => (e: React.PointerEvent) => {
+    const dx = e.clientX - pointerStart.current.x;
+    const dy = e.clientY - pointerStart.current.y;
+
+    if (Math.abs(dy) > LONG_PRESS_MOVE_TOLERANCE) {
+      clearTimer();
+    }
+
+    // Swipe right to reply gesture
+    if (isSocialEnabled && dx > SWIPE_REPLY_THRESHOLD && !swipedMessage.current) {
+      clearTimer();
+      swipedMessage.current = message;
+      triggerHaptic('light');
+      setReplyingToMessage(message);
     }
   };
 
   const handleBubblePointerUp = () => {
-    clearLongPressTimer();
+    clearTimer();
+    swipedMessage.current = null;
   };
 
-  useEffect(() => clearLongPressTimer, []);
+  useEffect(() => clearTimer, []);
 
   const actionSheetItems: ActionSheetItem[] = useMemo(() => {
     if (!actionSheetMessage) return [];
     const isMine = actionSheetMessage.memberId === myMemberId;
-    // Mirrors edit_trip_message()'s check exactly (migration 0083): admin
-    // bypasses the window regardless of authorship, sender is bound by it.
     const canEdit = Boolean(isAdmin) || (isMine && Date.now() - actionSheetMessage.createdAt < EDIT_WINDOW_MS);
     const canDelete = isMine || Boolean(isAdmin);
 
     const items: ActionSheetItem[] = [];
+
+    if (isSocialEnabled) {
+      items.push({
+        id: 'reply',
+        label: 'Reply',
+        icon: <span>↩️</span>,
+        onClick: () => {
+          setReplyingToMessage(actionSheetMessage);
+          setActionSheetMessage(null);
+        },
+      });
+
+      if (isAdmin) {
+        items.push({
+          id: 'pin',
+          label: actionSheetMessage.isPinned ? 'Unpin from top' : 'Pin notice to top',
+          icon: <span>📌</span>,
+          onClick: () => handleTogglePin(actionSheetMessage),
+        });
+      }
+    }
+
     if (canEdit) {
       items.push({
         id: 'edit',
@@ -203,6 +381,7 @@ export function TripChatPanel({ tripId, members, isAdmin, onComposerFocusChange,
         },
       });
     }
+
     if (canDelete) {
       items.push({
         id: 'delete',
@@ -212,9 +391,15 @@ export function TripChatPanel({ tripId, members, isAdmin, onComposerFocusChange,
         onClick: () => handleRequestDelete(actionSheetMessage),
       });
     }
+
     return items;
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- handleRequestDelete is stable per render and not itself a dependency of what this list needs to react to
-  }, [actionSheetMessage, myMemberId, isAdmin]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [actionSheetMessage, myMemberId, isAdmin, isSocialEnabled]);
+
+  const pinnedMessages = useMemo(
+    () => messages.filter((m) => m.isPinned && !m.deletedAt),
+    [messages]
+  );
 
   if (!myMemberId) {
     return (
@@ -239,6 +424,39 @@ export function TripChatPanel({ tripId, members, isAdmin, onComposerFocusChange,
       }}
     >
       <LiveLocationChatBanner tripId={tripId} members={members} />
+
+      {/* Pinned Announcements Banner */}
+      {isSocialEnabled && pinnedMessages.length > 0 && (
+        <div
+          style={{
+            padding: '8px 14px',
+            background: 'rgba(63, 203, 189, 0.09)',
+            borderBottom: '1px solid rgba(63, 203, 189, 0.25)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            fontSize: '11.5px',
+            cursor: 'pointer',
+          }}
+          onClick={() => {
+            const el = document.getElementById(`msg-${pinnedMessages[0].id}`);
+            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', overflow: 'hidden' }}>
+            <span>📌</span>
+            <span style={{ fontWeight: 700, color: 'var(--primary-accent)' }}>Pinned:</span>
+            <span style={{ color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              {pinnedMessages[0].body}
+            </span>
+          </div>
+          {pinnedMessages.length > 1 && (
+            <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>+{pinnedMessages.length - 1}</span>
+          )}
+        </div>
+      )}
+
+      {/* Message List */}
       <div
         ref={listRef}
         className="trip-chat-list"
@@ -250,7 +468,7 @@ export function TripChatPanel({ tripId, members, isAdmin, onComposerFocusChange,
           padding: '12px 14px',
           display: 'flex',
           flexDirection: 'column',
-          gap: '8px',
+          gap: '10px',
           minHeight: 0,
         }}
       >
@@ -267,12 +485,15 @@ export function TripChatPanel({ tripId, members, isAdmin, onComposerFocusChange,
             const isMine = message.memberId === myMemberId;
             const sender = memberById.get(message.memberId);
             const isDeleted = Boolean(message.deletedAt);
+            const parentMsg = message.replyToId ? messages.find((m) => m.id === message.replyToId) : null;
+
             return (
               <div
                 key={message.id}
+                id={`msg-${message.id}`}
                 style={{
                   alignSelf: isMine ? 'flex-end' : 'flex-start',
-                  maxWidth: '78%',
+                  maxWidth: '82%',
                   display: 'flex',
                   flexDirection: 'column',
                   gap: '2px',
@@ -283,9 +504,10 @@ export function TripChatPanel({ tripId, members, isAdmin, onComposerFocusChange,
                     {sender?.name || 'Traveler'}
                   </span>
                 )}
+
                 <div
                   onPointerDown={isDeleted ? undefined : handleBubblePointerDown(message)}
-                  onPointerMove={isDeleted ? undefined : handleBubblePointerMove}
+                  onPointerMove={isDeleted ? undefined : handleBubblePointerMove(message)}
                   onPointerUp={isDeleted ? undefined : handleBubblePointerUp}
                   onPointerCancel={isDeleted ? undefined : handleBubblePointerUp}
                   onContextMenu={(e) => e.preventDefault()}
@@ -302,20 +524,110 @@ export function TripChatPanel({ tripId, members, isAdmin, onComposerFocusChange,
                     userSelect: 'none',
                     WebkitUserSelect: 'none',
                     touchAction: 'pan-y',
+                    position: 'relative',
                   }}
                 >
+                  {/* Quoted Reply snippet */}
+                  {parentMsg && (
+                    <div
+                      style={{
+                        padding: '4px 8px',
+                        borderRadius: '6px',
+                        background: isMine ? 'rgba(0,0,0,0.18)' : 'rgba(0,0,0,0.06)',
+                        borderLeft: isMine ? '3px solid #fff' : '3px solid var(--primary-accent)',
+                        marginBottom: '6px',
+                        fontSize: '11px',
+                        lineHeight: 1.3,
+                      }}
+                    >
+                      <span style={{ fontWeight: 700, display: 'block', fontSize: '10px', color: isMine ? '#fff' : 'var(--primary-accent)' }}>
+                        {memberById.get(parentMsg.memberId)?.name || 'Traveler'}
+                      </span>
+                      <span style={{ opacity: 0.9, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                        {parentMsg.body}
+                      </span>
+                    </div>
+                  )}
+
+                  {message.isPinned && (
+                    <span style={{ fontSize: '10px', marginRight: '4px', opacity: 0.8 }} title="Pinned message">
+                      📌
+                    </span>
+                  )}
+
                   {isDeleted ? 'This message was deleted' : message.body}
                 </div>
+
+                {/* Emoji Reaction Chips */}
+                {isSocialEnabled && message.reactions && Object.keys(message.reactions).length > 0 && (
+                  <div
+                    style={{
+                      display: 'flex',
+                      flexWrap: 'wrap',
+                      gap: '3px',
+                      marginTop: '2px',
+                      alignSelf: isMine ? 'flex-end' : 'flex-start',
+                      paddingLeft: isMine ? '0' : '4px',
+                      paddingRight: isMine ? '4px' : '0',
+                    }}
+                  >
+                    {Object.entries(message.reactions).map(([emoji, memberIds]) => {
+                      if (!memberIds || memberIds.length === 0) return null;
+                      const hasMyReaction = myMemberId ? memberIds.includes(myMemberId) : false;
+                      return (
+                        <button
+                          key={emoji}
+                          type="button"
+                          onClick={() => handleToggleReaction(message, emoji)}
+                          style={{
+                            border: hasMyReaction ? '1px solid var(--primary-accent)' : '1px solid var(--border-color)',
+                            borderRadius: '12px',
+                            padding: '1px 6px',
+                            fontSize: '11px',
+                            background: hasMyReaction ? 'rgba(63, 203, 189, 0.15)' : 'var(--bg-card)',
+                            color: 'var(--text-primary)',
+                            cursor: 'pointer',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '3px',
+                          }}
+                        >
+                          <span>{emoji}</span>
+                          {memberIds.length > 1 && (
+                            <span style={{ fontSize: '10px', fontWeight: 600 }}>{memberIds.length}</span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* Timestamp & Status Indicator */}
                 <span
                   style={{
                     fontSize: '9.5px',
                     color: 'var(--text-muted)',
                     alignSelf: isMine ? 'flex-end' : 'flex-start',
                     padding: '0 4px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px',
                   }}
                 >
                   {new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   {!isDeleted && message.editedAt ? ' · edited' : ''}
+
+                  {isMine && isOutboxEnabled && (
+                    <span style={{ fontSize: '10.5px' }}>
+                      {message.status === 'sending' ? (
+                        <span title="Queued offline">🕒</span>
+                      ) : message.status === 'sent' ? (
+                        <span title="Sent to server" style={{ color: 'var(--text-muted)' }}>✓</span>
+                      ) : (
+                        <span title="Delivered" style={{ color: 'var(--primary-accent)' }}>✓✓</span>
+                      )}
+                    </span>
+                  )}
                 </span>
               </div>
             );
@@ -323,6 +635,39 @@ export function TripChatPanel({ tripId, members, isAdmin, onComposerFocusChange,
         )}
       </div>
 
+      {/* Replying Quote Box */}
+      {replyingToMessage && (
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: '8px 14px',
+            background: 'var(--bg-secondary)',
+            borderLeft: '3px solid var(--primary-accent)',
+            fontSize: '12px',
+            borderTop: '1px solid var(--border-color)',
+          }}
+        >
+          <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', marginRight: '8px' }}>
+            <span style={{ fontWeight: 700, color: 'var(--primary-accent)', fontSize: '11px' }}>
+              Replying to {memberById.get(replyingToMessage.memberId)?.name || 'Traveler'}
+            </span>
+            <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: 'var(--text-secondary)' }}>
+              {replyingToMessage.body}
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setReplyingToMessage(null)}
+            style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--text-muted)', padding: '2px' }}
+          >
+            <IconClose size={16} />
+          </button>
+        </div>
+      )}
+
+      {/* Editing State Box */}
       {editingMessage && (
         <div
           style={{
@@ -361,10 +706,11 @@ export function TripChatPanel({ tripId, members, isAdmin, onComposerFocusChange,
         </div>
       )}
 
+      {/* Composer Input Bar */}
       <div
         className={`trip-chat-composer${isInputFocused ? ' is-focused' : ''}`}
         style={{
-          borderTop: sendError || editingMessage ? 'none' : '1px solid var(--border-color)',
+          borderTop: sendError || editingMessage || replyingToMessage ? 'none' : '1px solid var(--border-color)',
         }}
       >
         <input
@@ -387,8 +733,9 @@ export function TripChatPanel({ tripId, members, isAdmin, onComposerFocusChange,
               e.preventDefault();
               handleSend();
             }
-            if (e.key === 'Escape' && editingMessage) {
-              handleCancelEdit();
+            if (e.key === 'Escape') {
+              if (editingMessage) handleCancelEdit();
+              if (replyingToMessage) setReplyingToMessage(null);
             }
           }}
           placeholder={editingMessage ? 'Edit message...' : 'Message the squad...'}
@@ -413,6 +760,47 @@ export function TripChatPanel({ tripId, members, isAdmin, onComposerFocusChange,
           {editingMessage ? 'Update' : 'Send'}
         </button>
       </div>
+
+      {/* WhatsApp Quick Emoji Reaction Bar (Rendered above ActionSheet) */}
+      {isSocialEnabled && actionSheetMessage && (
+        <div
+          style={{
+            position: 'fixed',
+            bottom: '220px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 10001,
+            background: 'var(--bg-card)',
+            boxShadow: '0 8px 24px rgba(0,0,0,0.25)',
+            borderRadius: '28px',
+            padding: '6px 14px',
+            display: 'flex',
+            gap: '10px',
+            alignItems: 'center',
+            border: '1px solid var(--border-color)',
+          }}
+        >
+          {QUICK_EMOJIS.map((emoji) => (
+            <button
+              key={emoji}
+              type="button"
+              onClick={() => handleToggleReaction(actionSheetMessage, emoji)}
+              style={{
+                border: 'none',
+                background: 'transparent',
+                fontSize: '22px',
+                cursor: 'pointer',
+                transition: 'transform 0.15s ease',
+                padding: '2px',
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.transform = 'scale(1.25)')}
+              onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
+            >
+              {emoji}
+            </button>
+          ))}
+        </div>
+      )}
 
       <ActionSheet
         isOpen={Boolean(actionSheetMessage)}

@@ -3350,3 +3350,44 @@ This document logs all meaningful technical decisions, library choices, design p
   - Auto currency detection's country→currency table isn't exhaustive (~80 countries) — an unmapped country just means no suggestion chip, never a wrong one.
   - Quiet hours suppresses only the FCM push, same as trip mute and digest mode — the in-app notification row is always written, so nothing is silently lost.
   - Migrations `0090`–`0092` applied directly to the live Supabase project via `npx supabase db push` (no local Supabase CLI was installed; linked via a personal access token generated for this session).
+
+---
+
+## 186. WhatsApp Social Chat Hub, Reactions & Offline Outbox, Primary Tab-1 Elevation, Simplify Debts Toggle (Phase 06 & Phase 07, v3.25.0)
+* **Context:** To elevate Trip Tracker to commercial parity with leading social and fintech platforms (such as WhatsApp and Splitwise):
+  1. Chat was previously buried as a secondary sub-tab within the Notes & Checklist pane, limiting group engagement.
+  2. Chat interactions lacked standard WhatsApp micro-interactions (emoji reactions, swipe-to-reply quotes, pinned admin notices).
+  3. Sending messages while disconnected resulted in blocking alert toasts rather than offline queuing with delivery state indicators.
+  4. Debt settlements were strictly greedy flow-minimized, giving travelers no control over bilateral reimbursement preferences.
+* **Decision:**
+  - Implemented **Phase 06 (WhatsApp Social & Chat Hub)** and **Phase 07 (Commercial FinTech & Smart Splitting)** with 4 new Superadmin feature flags, all `defaultEnabledForUsers: false`:
+    - `enableChatFirstNav`: Elevates Chat to Tab 1 on the primary bottom navigation bar, streamlining Notes into a travel prep hub.
+    - `enableChatReactionsAndReplies`: WhatsApp-style emoji reaction chips, swipe-to-reply quoting, and sticky pinned notices.
+    - `enableChatOfflineOutbox`: Local IndexedDB queuing with WhatsApp status ticks (🕒 queued ➔ ✓ sent ➔ ✓✓ delivered) and automatic online sync.
+    - `enableSimplifyDebtsToggle`: Splitwise-style switch between greedy flow minimization and direct bilateral reimbursements.
+  - Authored and maintained permanent tracking ledger `COMMERCIAL_ROADMAP.md` covering all 12 commercial features and milestones.
+* **Pattern/Implementation:**
+  - **Primary Tab-1 Elevation & WhatsApp Floating Action Button (`NavTabs.tsx`, `App.tsx`, `index.css`):**
+    - When `enableChatFirstNav` is active, NavTabs renders a 5-equal-tab bottom bar (`['chat', 'expenses', 'ledger', 'members', 'notes']`) where every destination tab receives exactly 20% width (`grid-template-columns: repeat(5, minmax(0, 1fr))`), delivering flawless symmetry and identical sliding active pill indicator dimensions.
+    - The `+` primary action button is elevated into a floating action button (WhatsApp / Google Material 3 standard) positioned at the bottom-right above the nav bar (`bottom: calc(82px + var(--safe-bottom, 0px)); right: 18px;`), contextual to the active tab (Add Member on Members tab, Add Expense with long-press clone on other tabs).
+    - When `enableChatFirstNav` is OFF, the UI cleanly reverts to the classic 5-column layout (`grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto minmax(0, 1fr) minmax(0, 1fr)`), where the `+` FAB sits right in the mathematical dead center between Expenses and Members.
+    - Notes pane automatically suppresses its internal Chat sub-tab via `isChatSubTabEnabled = isChatEnabled && !isChatFirstNav`.
+    - Main pane integrates `TripChatPanel` as a code-split top-level tab pane with full-sheet expansion (`forceFull`) so virtual keyboards have dedicated clearance.
+  - **WhatsApp Reactions, Swipe-to-Reply & Sticky Pins (`TripChatPanel.tsx`, `tripMessagesApi.ts`):**
+    - Long-press or hover triggers an animated emoji bar (👍, ❤️, 😂, 😮, 🙏, 🔥) with toggleable participant lists.
+    - Horizontal swipe-right gesture triggers a quote preview banner above the composer with original sender name and text snippet.
+    - Trip admins can pin up to 3 urgent notices into a collapsible header banner.
+  - **Offline Chat Outbox (`offlineChatStore.ts`, `TripChatPanel.tsx`):**
+    - Messages submitted without signal are stored in IndexedDB (`trip-tracker-offline-chat`).
+    - WhatsApp status indicators: 🕒 (clock: local queue), ✓ (single tick: saved to server), ✓✓ (double tick: acknowledged).
+    - Auto-drain listener activates on `window.addEventListener('online')` and flushes pending messages in FIFO order.
+  - **Direct Bilateral Debts Engine (`settlement.ts`, `BalancesSettlements.tsx`):**
+    - Added `calculateDirectSettlements` computing pairwise net transfers (`net = payerOwed - receiverOwed`) without rerouting through intermediaries.
+    - Integrated segmented control `[ ⚡ Simplified ]` vs `[ 👥 Direct Debts ]` in Balances with informational trade-off modal.
+  - **Database Migration & Fallback Resilience (`0093_trip_social_and_debts.sql`, `tripMessagesApi.ts`, `tripApi.ts`):**
+    - Schema migration adds `reply_to_id`, `reactions`, `is_pinned` to `trip_messages` and `simplify_debts` to `trips`.
+    - Client APIs include try/catch retries that strip newly added columns if remote PostgREST columns are not yet live, preventing runtime disruption.
+* **Trade-offs Accepted:**
+  - Offline outbox messages sent while offline do not guarantee cross-device sync until connectivity returns.
+  - Bilateral debts may produce more total transfers than simplified flow netting, but preserve exact personal accountability as preferred by certain traveler groups.
+

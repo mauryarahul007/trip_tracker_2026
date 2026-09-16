@@ -85,6 +85,32 @@ export const RELEASE_PHASES: ReleasePhaseDef[] = [
     ],
   },
   {
+    id: 'phase6',
+    phaseNumber: 6,
+    code: 'PHASE 06',
+    title: 'WhatsApp Social & Chat Hub',
+    tagline: 'Real-time social engagement, emoji reactions, outbox & Tab-1 elevation',
+    description: 'Elevates Chat to primary Tab-1, removes chat from Notes, adds WhatsApp emoji reactions, swipe-to-reply, pinned notices, and offline outbox with status ticks.',
+    targetAudience: 'Active group travelers, friends and families coordinating on the go',
+    flagKeys: [
+      'enableChatFirstNav',
+      'enableChatReactionsAndReplies',
+      'enableChatOfflineOutbox',
+    ],
+  },
+  {
+    id: 'phase7',
+    phaseNumber: 7,
+    code: 'PHASE 07',
+    title: 'Commercial FinTech & Smart Splitting',
+    tagline: 'Splitwise-grade debt simplification controls and direct debts',
+    description: 'Allows trips to toggle between greedy flow debt minimization and direct bilateral reimbursement.',
+    targetAudience: 'Power expense splitters, friend groups who prefer direct settling',
+    flagKeys: [
+      'enableSimplifyDebtsToggle',
+    ],
+  },
+  {
     id: 'deferred',
     phaseNumber: 0,
     code: 'EXTRAS',
@@ -211,7 +237,7 @@ export const FEATURE_FLAGS_META: Record<FeatureFlagKey, FeatureFlagMeta> = {
     description: 'WhatsApp-style realtime chat thread scoped to the trip, inside the Notes tab.',
     category: 'collab',
     phase: 'phase2',
-    defaultEnabledForUsers: false,
+    defaultEnabledForUsers: true,
   },
 
   // Phase 3: Smart Travel Navigator & Pass Hub
@@ -460,6 +486,42 @@ export const FEATURE_FLAGS_META: Record<FeatureFlagKey, FeatureFlagMeta> = {
     defaultEnabledForUsers: false,
   },
 
+  // Phase 6: WhatsApp Social & Chat Hub
+  enableChatFirstNav: {
+    key: 'enableChatFirstNav',
+    label: 'Primary Tab-1 Chat Navigation',
+    description: 'Elevates Chat to Tab 1 on the primary bottom bar and cleans Notes to be travel prep/wallet.',
+    category: 'collab',
+    phase: 'phase6',
+    defaultEnabledForUsers: false,
+  },
+  enableChatReactionsAndReplies: {
+    key: 'enableChatReactionsAndReplies',
+    label: 'Chat Emoji Reactions & Quoted Replies',
+    description: 'WhatsApp-style emoji reactions (👍, ❤️, 😂, 😮, 🙏), swipe-to-reply quoting, and pinned admin notices.',
+    category: 'collab',
+    phase: 'phase6',
+    defaultEnabledForUsers: false,
+  },
+  enableChatOfflineOutbox: {
+    key: 'enableChatOfflineOutbox',
+    label: 'Offline Chat Outbox with Status Ticks',
+    description: 'Queue messages in IndexedDB when offline with WhatsApp delivery indicators (🕒, ✓, ✓✓).',
+    category: 'collab',
+    phase: 'phase6',
+    defaultEnabledForUsers: false,
+  },
+
+  // Phase 7: Commercial FinTech & Smart Splitting
+  enableSimplifyDebtsToggle: {
+    key: 'enableSimplifyDebtsToggle',
+    label: '"Simplify Debts" Algorithm Toggle',
+    description: 'Allow trip members to toggle between greedy debt flow minimization and direct bilateral reimbursement.',
+    category: 'splits',
+    phase: 'phase7',
+    defaultEnabledForUsers: false,
+  },
+
   // Extras & Unphased Platform Tools
   enableTripWrapped: {
     key: 'enableTripWrapped',
@@ -538,7 +600,7 @@ export const DEFAULT_FEATURE_FLAGS: Record<FeatureFlagKey, boolean> = {
   enableReceiptUpload: true,
   enableNotesAndChecklist: true,
   enableDuplicateDetector: true,
-  enableTripChat: false,
+  enableTripChat: true,
   enableExpensePhotoLinking: false,
   enableExpenseDisputes: false,
   enableDigestNotifications: false,
@@ -580,6 +642,14 @@ export const DEFAULT_FEATURE_FLAGS: Record<FeatureFlagKey, boolean> = {
   enableSettlementHistory: false,
   enableTripCloseout: false,
   enableCrossTripSearch: false,
+
+  // Phase 6 (WhatsApp Social & Chat Hub - safed by default)
+  enableChatFirstNav: false,
+  enableChatReactionsAndReplies: false,
+  enableChatOfflineOutbox: false,
+
+  // Phase 7 (Commercial FinTech - safed by default)
+  enableSimplifyDebtsToggle: false,
 
   // Platform Extras & Deferred
   enableTripWrapped: true,

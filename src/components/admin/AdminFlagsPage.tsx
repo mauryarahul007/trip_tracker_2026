@@ -227,11 +227,35 @@ export function AdminFlagsPage({ trips, members }: Props) {
     phase3: false,
     phase4: false,
     phase5: false,
+    phase6: false,
+    phase7: false,
     deferred: false,
   });
 
   const togglePhaseExpand = (phaseId: ReleasePhaseId) => {
     setExpandedPhases((prev) => ({ ...prev, [phaseId]: !prev[phaseId] }));
+  };
+
+  const scrollToPhase = (phaseId: ReleasePhaseId) => {
+    if (activeSubTab !== 'phases') {
+      setActiveSubTab('phases');
+    }
+    // Expand the targeted phase so the user can immediately inspect and tune its controls
+    setExpandedPhases((prev) => ({ ...prev, [phaseId]: true }));
+
+    // Wait for the DOM to update and render expanded content
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        const el = document.getElementById(`phase-section-${phaseId}`);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          el.classList.add('ops-phase-target-glow');
+          setTimeout(() => {
+            el.classList.remove('ops-phase-target-glow');
+          }, 2000);
+        }
+      }, 50);
+    });
   };
 
   const [selectedTripId, setSelectedTripId] = useState('');
@@ -323,7 +347,7 @@ export function AdminFlagsPage({ trips, members }: Props) {
       <div className="ops-page-head">
         <div>
           <h2>Feature Flags &amp; Release Switchboard</h2>
-          <p>Govern progressive customer rollouts (Phases 1–4), device beta overrides, and system access gates.</p>
+          <p>Govern progressive customer rollouts (Phases 1–7), device beta overrides, and system access gates.</p>
         </div>
         <div style={{ display: 'flex', gap: '8px' }}>
           <button type="button" className="ops-btn" disabled={isRefreshing} onClick={() => void handleRefresh()}>
@@ -357,7 +381,7 @@ export function AdminFlagsPage({ trips, members }: Props) {
           className={`ops-subnav-btn ${activeSubTab === 'phases' ? 'active' : ''}`}
           onClick={() => setActiveSubTab('phases')}
         >
-          🚀 Customer Release Phases (1–4)
+          🚀 Customer Release Phases (1–7)
         </button>
         <button
           type="button"
@@ -392,7 +416,9 @@ export function AdminFlagsPage({ trips, members }: Props) {
                   key={phase.id}
                   type="button"
                   className={`ops-phase-summary-card ${isExpanded ? 'active' : ''}`}
-                  onClick={() => togglePhaseExpand(phase.id)}
+                  onClick={() => scrollToPhase(phase.id)}
+                  title={`Jump to ${phase.code}: ${phase.title}`}
+                  aria-label={`Jump to ${phase.code}: ${phase.title}`}
                 >
                   <div className="ops-phase-summary-top">
                     <span className="ops-phase-summary-code">{phase.code}</span>
@@ -402,7 +428,8 @@ export function AdminFlagsPage({ trips, members }: Props) {
                   </div>
                   <div className="ops-phase-summary-title">{phase.title}</div>
                   <div className="ops-phase-summary-count">
-                    {stats.activeCount} of {stats.totalCount} active
+                    <span>{stats.activeCount} of {stats.totalCount} active</span>
+                    <span className="ops-phase-summary-jump">Jump &darr;</span>
                   </div>
                 </button>
               );
@@ -416,7 +443,7 @@ export function AdminFlagsPage({ trips, members }: Props) {
             const phaseEntries = phase.flagKeys.map((k) => [k, FEATURE_FLAGS_META[k]] as [FeatureFlagKey, typeof FEATURE_FLAGS_META[FeatureFlagKey]]);
 
             return (
-              <div key={phase.id} className={`ops-phase-card ${stats.status}`}>
+              <div key={phase.id} id={`phase-section-${phase.id}`} className={`ops-phase-card ${stats.status}`}>
                 <div className="ops-phase-header">
                   <div className="ops-phase-info">
                     <div className="ops-phase-title-row">
@@ -454,6 +481,19 @@ export function AdminFlagsPage({ trips, members }: Props) {
                       }}
                     >
                       Safe Phase (Turn Off)
+                    </button>
+                    <button
+                      type="button"
+                      className="ops-phase-btn safe"
+                      style={{ color: 'var(--text-tertiary)' }}
+                      onClick={() => {
+                        const topEl = document.querySelector('.ops-phase-summary-grid') || document.querySelector('.ops-phases-section');
+                        topEl?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                      }}
+                      title="Scroll to phases summary rail"
+                      aria-label="Scroll to phases summary rail"
+                    >
+                      &uarr; Overview
                     </button>
                   </div>
                 </div>
@@ -535,7 +575,7 @@ export function AdminFlagsPage({ trips, members }: Props) {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <div>
             <h3 className="ops-section-title">Granular Scoped Overrides</h3>
-            <p className="ops-section-sub">Test unreleased Phase 3/4 features on specific test trips or VIP user accounts before wide public release.</p>
+            <p className="ops-section-sub">Test unreleased Phase 3–7 features on specific test trips or VIP user accounts before wide public release.</p>
           </div>
 
           <div className="ops-override-split">
