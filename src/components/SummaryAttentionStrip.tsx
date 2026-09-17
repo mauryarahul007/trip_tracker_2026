@@ -84,7 +84,8 @@ export function SummaryAttentionStrip({
     const memberById = new Map(members.map((m) => [m.id, m]));
     const unlinked = trip.memberIds
       .map((id) => memberById.get(id))
-      .filter((m): m is Member => Boolean(m) && !m.archived && !m.linkedUserId).length;
+      .filter((m): m is Member => m != null)
+      .filter((m) => !m.archived && !m.linkedUserId).length;
     if (unlinked > 0) {
       next.push({
         id: 'invites',
