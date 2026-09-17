@@ -1207,9 +1207,9 @@
       "platform": "web"
     },
     "createdAt": "2026-09-17T05:09:33.004Z",
-    "updatedAt": "2026-09-17T05:13:05.203Z",
+    "updatedAt": "2026-09-17T05:13:33.236Z",
     "shippedBy": "claude-cli",
-    "shippedAt": "2026-09-17T05:13:05.203Z",
-    "shippedNote": "Shipped in v3.26.0. Migration 0094 applied (trip_messages kind/payload). Flag enableInChatEventCards Phase 6 default OFF. Includes live-location session heartbeat + Summary attention strip / pin carousel."
+    "shippedAt": "2026-09-17T05:13:33.236Z",
+    "shippedNote": "Shipped in commit b4eb125 (v3.26.0). Migration 0094 applied remotely. Flag enableInChatEventCards Phase 6 default OFF. Includes live-location session heartbeat + Summary attention strip / pin carousel."
   }
 ]

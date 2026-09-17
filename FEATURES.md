@@ -125,7 +125,7 @@ CI pipeline for lint, build, and test on push/PR
 | **FEAT-073** | Auto Currency Detection | `ui-ux` | `claude-cli` | `claude-cli` | countryCurrencyMap.ts + geolocation.ts detectCurrencyFromLocation(), dismissible chip in ExpenseForm. |
 | **FEAT-074** | Per-Category Split Exclusion Defaults | `ui-ux` | `claude-cli` | `claude-cli` | Trip.splitExclusionDefaults (migration 0091), per-category chips in SettingsCategoriesScreen, applied in ExpenseForm default split. |
 | **FEAT-075** | Quiet Hours | `notifications` | `claude-cli` | `claude-cli` | quiet_hours_prefs table (migration 0092), timezone-aware overnight-safe check in send-push edge function, toggle+time pickers in SettingsView. |
-| **FEAT-076** | In-chat expense event cards, live-location session heartbeat, Summary polish | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in v3.26.0. Migration 0094 applied (trip_messages kind/payload). Flag enableInChatEventCards Phase 6 default OFF. Includes live-location session heartbeat + Summary attention strip / pin carousel. |
+| **FEAT-076** | In-chat expense event cards, live-location session heartbeat, Summary polish | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit b4eb125 (v3.26.0). Migration 0094 applied remotely. Flag enableInChatEventCards Phase 6 default OFF. Includes live-location session heartbeat + Summary attention strip / pin carousel. |
 
 ---
 
