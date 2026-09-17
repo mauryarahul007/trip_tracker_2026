@@ -53,6 +53,11 @@ export type FeatureFlagKey =
   | 'enableChatReactionsAndReplies'
   | 'enableChatOfflineOutbox'
   | 'enableInChatEventCards'
+  | 'enableChatAttachments'
+  | 'enableChatVoiceNotes'
+  | 'enableChatTypingIndicators'
+  | 'enableChatReadReceipts'
+  | 'enableTripbotNlExpenses'
   // Phase 7: Commercial FinTech & Smart Splitting
   | 'enableSimplifyDebtsToggle'
   // Deferred & Admin Ops

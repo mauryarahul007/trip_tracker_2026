@@ -54,7 +54,12 @@ import { fetchPlaceCoverImage } from '../services/placeImageService';
 import { generateDemoData } from '../utils/demoSeed';
 import { reverseGeocode, searchPlaces, resolveTripStopCoordinates } from '../utils/geolocation';
 import { sendPushNotification } from '../services/pushApi';
-import { sendExpenseAddedEventMessage } from '../services/tripMessagesApi';
+import {
+  sendExpenseAddedEventMessage,
+  sendExpenseDisputedEventMessage,
+  sendExpenseDisputeResolvedEventMessage,
+  sendSettlementRecordedEventMessage,
+} from '../services/tripMessagesApi';
 import { saveOfflineReceipt, getOfflineReceipt, deleteOfflineReceipt } from '../services/offlineReceiptStore';
 import { savePassAttachment, deletePassAttachment } from '../services/passAttachmentStore';
 import { schedulePassReminders, cancelPassReminders, rescheduleTripPassReminders } from '../utils/passReminders';
@@ -397,6 +402,15 @@ export function getTripNotificationRecipients(
     .map((m) => m.linkedUserId as string);
 }
 
+function resolveMyMemberId(get: () => TripStore, tripId: string, userId: string): string | null {
+  const trip = get().trips.find((t) => t.id === tripId);
+  return (
+    (trip?.memberIds ?? [])
+      .map((id) => get().members[id])
+      .find((m) => m && !m.archived && m.linkedUserId === userId)?.id ?? null
+  );
+}
+
 /** Best-effort chat card after an expense lands; never blocks the expense path. */
 async function postExpenseAddedChatCard(
   get: () => TripStore,
@@ -407,19 +421,54 @@ async function postExpenseAddedChatCard(
   try {
     if (!get().isFeatureEnabled('enableInChatEventCards', { tripId, userId })) return;
     if (!get().isFeatureEnabled('enableTripChat', { tripId, userId })) return;
-    const trip = get().trips.find((t) => t.id === tripId);
-    const memberId = (trip?.memberIds ?? [])
-      .map((id) => get().members[id])
-      .find((m) => m && !m.archived && m.linkedUserId === userId)?.id;
+    const memberId = resolveMyMemberId(get, tripId, userId);
     if (!memberId) return;
-    await sendExpenseAddedEventMessage(tripId, memberId, {
+    const payload = {
       expenseId: expense.id,
       title: expense.title,
       amount: expense.amount,
       currency: expense.currency,
-    });
+    };
+    if (expense.isSettlement) {
+      await sendSettlementRecordedEventMessage(tripId, memberId, payload);
+    } else {
+      await sendExpenseAddedEventMessage(tripId, memberId, payload);
+    }
   } catch (err) {
     console.warn('[tripStore] postExpenseAddedChatCard skipped:', err);
+  }
+}
+
+async function postDisputeChatCard(
+  get: () => TripStore,
+  expenseId: string,
+  resolved: boolean,
+  note?: string
+): Promise<void> {
+  try {
+    const expense = get().expenses.find((e) => e.id === expenseId);
+    const userId = get().userId;
+    if (!expense || !userId) return;
+    const tripId = expense.tripId;
+    if (!get().isFeatureEnabled('enableInChatEventCards', { tripId, userId })) return;
+    if (!get().isFeatureEnabled('enableTripChat', { tripId, userId })) return;
+    if (!get().isFeatureEnabled('enableExpenseDisputes', { tripId, userId })) return;
+    const memberId = resolveMyMemberId(get, tripId, userId);
+    if (!memberId) return;
+    const payload = {
+      expenseId: expense.id,
+      title: expense.title,
+      amount: expense.amount,
+      currency: expense.currency,
+      note: note || undefined,
+    };
+    if (resolved) {
+      await sendExpenseDisputeResolvedEventMessage(tripId, memberId, payload);
+    } else {
+      await sendExpenseDisputedEventMessage(tripId, memberId, payload);
+    }
+  } catch (err) {
+    console.warn('[tripStore] postDisputeChatCard skipped:', err);
   }
 }
 
@@ -2684,6 +2733,7 @@ export const useTripStore = create<TripStore>()(
           e.id === expenseId ? { ...e, disputedAt: Date.now(), disputedByUserId: userId, disputeNote: note || null } : e
         ),
       }));
+      void postDisputeChatCard(get, expenseId, false, note);
     },
 
     resolveExpenseDispute: async (expenseId) => {
@@ -2694,6 +2744,7 @@ export const useTripStore = create<TripStore>()(
           e.id === expenseId ? { ...e, disputedAt: null, disputedByUserId: null, disputeNote: null } : e
         ),
       }));
+      void postDisputeChatCard(get, expenseId, true);
     },
 
     deleteExpense: async (id) => {

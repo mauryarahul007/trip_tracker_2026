@@ -374,6 +374,25 @@ export interface Database {
         }>;
         Relationships: [];
       };
+      trip_chat_read_cursors: {
+        Row: {
+          trip_id: string;
+          member_id: string;
+          last_read_at: string;
+          last_message_id: string | null;
+        };
+        Insert: {
+          trip_id: string;
+          member_id: string;
+          last_read_at?: string;
+          last_message_id?: string | null;
+        };
+        Update: Partial<{
+          last_read_at: string;
+          last_message_id: string | null;
+        }>;
+        Relationships: [];
+      };
       device_push_tokens: {
         Row: {
           id: string;

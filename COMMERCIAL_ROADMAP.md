@@ -69,7 +69,10 @@
 ### Pillar IV: Zero-Signal Offline Advantage
 13. **[FEAT-C13] Offline P2P Dynamic QR Sync** — Device-to-device synchronization over animated rotating QR codes for zero-signal environments.
 
-**Status notes:** FEAT-C05 (`enableInChatEventCards`) implemented client-side with migration `0094` (default OFF). Apply migration before arming the flag.
+**Status notes:**
+- FEAT-C05 (`enableInChatEventCards`) + settlement/dispute card kinds: client + migrations `0094`/`0095` (default OFF).
+- FEAT-C04 voice notes + chat attachments: `enableChatVoiceNotes` / `enableChatAttachments` + migration `0096` (`chat-media` bucket). Typing/read cursors: `enableChatTypingIndicators` / `enableChatReadReceipts` + `0097`. All default OFF.
+- FEAT-C06 `@tripbot`: `enableTripbotNlExpenses` (default OFF); confirm sheet → `addExpense` via `parseQuickExpense`. Apply `0095`–`0097` before arming.
 
 ---
 

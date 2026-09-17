@@ -3422,3 +3422,20 @@ This document logs all meaningful technical decisions, library choices, design p
   - Event cards require migration `0094` applied remotely before the flag is useful in production.
   - Composer attachment tray and explain-on-chat deferred until media schema / richer card actions.
 
+
+---
+
+## 189. Chat Depth: Media, Receipts, Typing & @tripbot
+* **Context:** Phase 6 chat hub needed settlement/dispute cards, attachments/voice, typing + read receipts, and NL `@tripbot` expense logging (FEAT-C04/C05/C06) without background GPS.
+* **Decision:**
+  - Widen `trip_messages.kind` via migrations `0095`/`0096`; private `chat-media` bucket (5MB, trip-participant RLS); trip-level `trip_chat_read_cursors` (`0097`) instead of per-message receipts.
+  - Five new Phase 6 flags (default OFF): `enableChatAttachments`, `enableChatVoiceNotes`, `enableChatTypingIndicators`, `enableChatReadReceipts`, `enableTripbotNlExpenses`. Reuse `enableInChatEventCards` + `enableExpenseDisputes` + `enableExplainThisNumber` for event cards / explain.
+  - Voice max 60s / ~5MB; images compressed client-side; client UUID then upload+insert for media messages.
+* **Pattern/Implementation:**
+  - Store posts `settlement_recorded` / dispute cards when flags on; `TripChatPanel` renders card variants, media bubbles, hold-to-record, typing broadcast on `trip_chat_typing:{tripId}`, cursor upserts, `@tripbot` → `parseQuickExpense` → confirm sheet → `addExpense`.
+  - APIs: `chatMediaApi`, `chatReadCursorApi`, expanded `tripMessagesApi.sendEventMessage` helpers.
+* **Trade-offs Accepted:**
+  - Read receipts are trip cursors (peer caught up), not WhatsApp per-message ticks across devices with different clock skew edge cases.
+  - Apply `0095`–`0097` remotely before arming media/receipts flags; schema lag fails soft (warn + skip card).
+  - Audio bill memos (15s on expense forms) remain out of scope for this drop.
+

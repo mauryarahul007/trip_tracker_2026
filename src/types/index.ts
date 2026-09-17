@@ -5,14 +5,44 @@ export interface TripStop {
   lng?: number;
 }
 
-export type TripMessageKind = 'text' | 'expense_added';
+export type TripMessageKind =
+  | 'text'
+  | 'expense_added'
+  | 'settlement_recorded'
+  | 'expense_disputed'
+  | 'expense_dispute_resolved'
+  | 'image'
+  | 'expense_link'
+  | 'voice_note';
 
 export interface TripMessageExpensePayload {
   expenseId: string;
   title: string;
   amount: number;
   currency: string;
+  source?: 'tripbot';
+  note?: string;
 }
+
+export interface TripMessageMediaPayload {
+  storagePath: string;
+  mimeType: string;
+  durationMs?: number;
+  width?: number;
+  height?: number;
+}
+
+export interface TripMessageExpenseLinkPayload {
+  expenseId: string;
+  title: string;
+  amount?: number;
+  currency?: string;
+}
+
+export type TripMessagePayload =
+  | TripMessageExpensePayload
+  | TripMessageMediaPayload
+  | TripMessageExpenseLinkPayload;
 
 export interface TripMessage {
   id: string;
@@ -20,7 +50,7 @@ export interface TripMessage {
   memberId: string;
   body: string;
   kind?: TripMessageKind;
-  payload?: TripMessageExpensePayload | null;
+  payload?: TripMessagePayload | null;
   createdAt: number;
   editedAt?: number | null;
   deletedAt?: number | null;

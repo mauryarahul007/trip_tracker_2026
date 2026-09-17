@@ -1211,5 +1211,21 @@
     "shippedBy": "claude-cli",
     "shippedAt": "2026-09-17T05:13:33.236Z",
     "shippedNote": "Shipped in commit b4eb125 (v3.26.0). Migration 0094 applied remotely. Flag enableInChatEventCards Phase 6 default OFF. Includes live-location session heartbeat + Summary attention strip / pin carousel."
+  },
+  {
+    "id": "FEAT-077",
+    "title": "Chat depth: media, voice, typing, read receipts, more event cards, @tripbot",
+    "description": "Phase 6 chat depth: settlement/dispute cards + explain-on-card; chat-media bucket for images/voice; typing indicators; trip-level read cursors; @tripbot NL expense confirm. Flags: enableChatAttachments, enableChatVoiceNotes, enableChatTypingIndicators, enableChatReadReceipts, enableTripbotNlExpenses (all default OFF). Migrations 0095-0097.",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-09-17T05:51:31.716Z",
+    "updatedAt": "2026-09-17T05:51:31.796Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-09-17T05:51:31.796Z",
+    "shippedNote": "Shipped in v3.27.0. Migrations 0095-0097 applied remotely. ADR #189."
   }
 ]

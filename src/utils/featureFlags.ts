@@ -97,6 +97,11 @@ export const RELEASE_PHASES: ReleasePhaseDef[] = [
       'enableChatReactionsAndReplies',
       'enableChatOfflineOutbox',
       'enableInChatEventCards',
+      'enableChatAttachments',
+      'enableChatVoiceNotes',
+      'enableChatTypingIndicators',
+      'enableChatReadReceipts',
+      'enableTripbotNlExpenses',
     ],
   },
   {
@@ -520,6 +525,46 @@ export const FEATURE_FLAGS_META: Record<FeatureFlagKey, FeatureFlagMeta> = {
     phase: 'phase6',
     defaultEnabledForUsers: false,
   },
+  enableChatAttachments: {
+    key: 'enableChatAttachments',
+    label: 'Chat Attachment Tray',
+    description: 'Composer + tray for camera, gallery, and attach-existing-expense cards (chat-media storage).',
+    category: 'collab',
+    phase: 'phase6',
+    defaultEnabledForUsers: false,
+  },
+  enableChatVoiceNotes: {
+    key: 'enableChatVoiceNotes',
+    label: 'Chat Voice Notes',
+    description: 'Hold-to-record voice bubbles in trip chat (separate from speech-to-text quick-add).',
+    category: 'collab',
+    phase: 'phase6',
+    defaultEnabledForUsers: false,
+  },
+  enableChatTypingIndicators: {
+    key: 'enableChatTypingIndicators',
+    label: 'Chat Typing Indicators',
+    description: 'Realtime “is typing…” presence on the trip chat channel.',
+    category: 'collab',
+    phase: 'phase6',
+    defaultEnabledForUsers: false,
+  },
+  enableChatReadReceipts: {
+    key: 'enableChatReadReceipts',
+    label: 'Chat Read Receipts',
+    description: 'Trip-level read cursors so senders see when peers have caught up (not per-message rows).',
+    category: 'collab',
+    phase: 'phase6',
+    defaultEnabledForUsers: false,
+  },
+  enableTripbotNlExpenses: {
+    key: 'enableTripbotNlExpenses',
+    label: 'In-Chat @tripbot Expense Logging',
+    description: 'Parse @tripbot natural-language lines into a confirm sheet, then create an expense.',
+    category: 'collab',
+    phase: 'phase6',
+    defaultEnabledForUsers: false,
+  },
 
   // Phase 7: Commercial FinTech & Smart Splitting
   enableSimplifyDebtsToggle: {
@@ -657,6 +702,11 @@ export const DEFAULT_FEATURE_FLAGS: Record<FeatureFlagKey, boolean> = {
   enableChatReactionsAndReplies: false,
   enableChatOfflineOutbox: false,
   enableInChatEventCards: false,
+  enableChatAttachments: false,
+  enableChatVoiceNotes: false,
+  enableChatTypingIndicators: false,
+  enableChatReadReceipts: false,
+  enableTripbotNlExpenses: false,
 
   // Phase 7 (Commercial FinTech - safed by default)
   enableSimplifyDebtsToggle: false,
