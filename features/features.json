@@ -1223,9 +1223,9 @@
       "platform": "web"
     },
     "createdAt": "2026-09-17T05:51:31.716Z",
-    "updatedAt": "2026-09-17T05:51:31.796Z",
+    "updatedAt": "2026-09-17T05:51:55.830Z",
     "shippedBy": "claude-cli",
-    "shippedAt": "2026-09-17T05:51:31.796Z",
-    "shippedNote": "Shipped in v3.27.0. Migrations 0095-0097 applied remotely. ADR #189."
+    "shippedAt": "2026-09-17T05:51:55.830Z",
+    "shippedNote": "Shipped in commit fbe5c7a (v3.27.0). Migrations 0095-0097 applied remotely. ADR #189."
   }
 ]

@@ -126,7 +126,7 @@ CI pipeline for lint, build, and test on push/PR
 | **FEAT-074** | Per-Category Split Exclusion Defaults | `ui-ux` | `claude-cli` | `claude-cli` | Trip.splitExclusionDefaults (migration 0091), per-category chips in SettingsCategoriesScreen, applied in ExpenseForm default split. |
 | **FEAT-075** | Quiet Hours | `notifications` | `claude-cli` | `claude-cli` | quiet_hours_prefs table (migration 0092), timezone-aware overnight-safe check in send-push edge function, toggle+time pickers in SettingsView. |
 | **FEAT-076** | In-chat expense event cards, live-location session heartbeat, Summary polish | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit b4eb125 (v3.26.0). Migration 0094 applied remotely. Flag enableInChatEventCards Phase 6 default OFF. Includes live-location session heartbeat + Summary attention strip / pin carousel. |
-| **FEAT-077** | Chat depth: media, voice, typing, read receipts, more event cards, @tripbot | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in v3.27.0. Migrations 0095-0097 applied remotely. ADR #189. |
+| **FEAT-077** | Chat depth: media, voice, typing, read receipts, more event cards, @tripbot | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit fbe5c7a (v3.27.0). Migrations 0095-0097 applied remotely. ADR #189. |
 
 ---
 
