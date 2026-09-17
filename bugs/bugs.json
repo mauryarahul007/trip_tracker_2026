@@ -6650,9 +6650,9 @@
     "actualBehavior": "Chat TabErrorBoundary with Maximum update depth exceeded.",
     "diagnostics": {},
     "createdAt": "2026-09-17T07:22:42.738Z",
-    "updatedAt": "2026-09-17T07:24:22.040Z",
+    "updatedAt": "2026-09-17T07:24:34.797Z",
     "resolvedBy": "cursor-agent",
     "resolvedAt": "2026-09-17T07:23:22.853Z",
-    "resolutionNote": "Select s.expenses (stable) and filter in useMemo; harden payload guards and amount formatting; show error.message on TabErrorBoundary. Fixed in v3.27.2."
+    "resolutionNote": "Select s.expenses (stable) and filter in useMemo; harden payload guards and amount formatting; show error.message on TabErrorBoundary. Fixed in commit 437f53a (v3.27.2)."
   }
 ]
