@@ -1,0 +1,15 @@
+---
+description: Append manual QA steps to docs/FEATURE_TEST_STEPS.md when shipping customer-facing features
+alwaysApply: true
+---
+
+# Feature test steps doc
+
+When you implement or ship a **customer-facing** feature or UX fix that needs manual verification:
+
+1. Append a new section to [`docs/FEATURE_TEST_STEPS.md`](docs/FEATURE_TEST_STEPS.md) using the template at the bottom of that file.
+2. Update the Index table (version, FEAT/BUG id, link).
+3. Include required Superadmin flags, numbered steps, flag-OFF negative checks, and pass criteria.
+4. Prefer the same commit/PR as the feature; otherwise add it before asking the user to test.
+
+Do not create a parallel QA guide. Math/automated verification stays in `docs/qa-testing-report.md`.

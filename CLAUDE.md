@@ -65,6 +65,14 @@ shipped features. Bump the hardcoded flag-count assertion in
 Phases pages are fully data-driven off this registry — no other wiring
 needed for a flag to appear there.
 
+## Feature manual test steps (mandatory, no exceptions)
+
+Every customer-facing feature or UX fix that needs manual QA must append
+detailed test steps to `docs/FEATURE_TEST_STEPS.md` (same PR/commit when
+practical). Include flags, numbered steps, flag-OFF negative checks, and
+pass criteria. Update the Index table in that file. Do not invent a second
+test-guide file.
+
 ## Automated versioning & dev server reload (mandatory)
 
 Before committing and pushing changes:
