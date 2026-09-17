@@ -2330,6 +2330,11 @@ export default function App() {
                           isAdmin={isAdmin}
                           onComposerFocusChange={setChatComposerFocused}
                           onRequestConfirm={setConfirmRequest}
+                          onOpenLiveLocationShare={
+                            myMemberId && isFeatureEnabled('enableLiveLocationShare', { tripId: activeTrip.id, userId: userId || undefined })
+                              ? () => setShowLiveLocationShare(true)
+                              : undefined
+                          }
                         />
                       </Suspense>
                     )}
@@ -2527,6 +2532,11 @@ export default function App() {
                     onChatViewActiveChange={setChatViewActive}
                     onChatComposerFocusChange={setChatComposerFocused}
                     onRequestConfirm={setConfirmRequest}
+                    onOpenLiveLocationShare={
+                      myMemberId && isFeatureEnabled('enableLiveLocationShare', { tripId: activeTrip.id, userId: userId || undefined })
+                        ? () => setShowLiveLocationShare(true)
+                        : undefined
+                    }
                   />
                   </Suspense>
                 )}

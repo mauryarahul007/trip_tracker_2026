@@ -6572,5 +6572,30 @@
     "resolvedBy": "cursor-agent",
     "resolvedAt": "2026-09-15T12:33:17.677Z",
     "resolutionNote": "Removed useHistoryBack from the TripStack long-press overlay so closing the menu no longer races history.back() against ConfirmDialog. Delete (and Edit / Add expense from the same menu) now keep the follow-up dialog open. Fixed in commit 05852f4."
+  },
+  {
+    "id": "BUG-221",
+    "title": "Chat emoji sheet and floating FAB overlap chat UI after Social Hub",
+    "description": "After enableChatFirstNav / enableChatReactionsAndReplies (v3.25.0), long-press message action sheet showed a fixed emoji pill overlapping Reply/Pin, and the chat-first floating + FAB sat on top of the chat composer (and painted above the ActionSheet due to trip-sheet stacking context). Live location could only be started from Settings, not Chat.",
+    "severity": "high",
+    "category": "ui-ux",
+    "status": "open",
+    "foundBy": "human",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "3.25.0"
+    },
+    "reproSteps": [
+      "Enable enableChatFirstNav and enableChatReactionsAndReplies for a trip",
+      "Open Chat tab and long-press a message",
+      "Observe emoji bar covering Reply and green + over the sheet",
+      "Dismiss sheet: observe green + overlapping the composer right side"
+    ],
+    "expectedBehavior": "Emoji reactions sit inside the ActionSheet above actions; floating + is not shown on Chat; ActionSheet clears the FAB; Chat can open live-location share when that flag is on.",
+    "actualBehavior": "Fixed-position emoji bar overlapped Reply/Pin; FAB covered composer and ActionSheet.",
+    "diagnostics": {},
+    "createdAt": "2026-09-17T04:32:47.088Z",
+    "updatedAt": "2026-09-17T04:32:47.088Z"
   }
 ]

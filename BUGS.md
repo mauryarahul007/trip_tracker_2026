@@ -9,8 +9,8 @@
 
 | Metric | Count | Status Notes |
 | :--- | :--- | :--- |
-| **Total Tracked** | **219** | All recorded bugs across sessions |
-| **🟢 Open** | **0** | No critical blockers, 0 High |
+| **Total Tracked** | **220** | All recorded bugs across sessions |
+| **🟢 Open** | **1** | No critical blockers, 1 High |
 | **🟡 In Progress** | **0** | Active investigation or fix |
 | **✅ Resolved** | **193** | Verified & closed |
 | **⚪ Won't Fix** | **26** | Expected behavior / deferred |
@@ -19,13 +19,33 @@
 
 ## 🚨 Active Bugs (Open & In Progress)
 
-*🎉 No active open bugs! Great job team.* 
+| ID | Severity | Category | Title | Found By | Status |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **[BUG-221](#bug-221)** | 🟠 High | `ui-ux` | Chat emoji sheet and floating FAB overlap chat UI after Social Hub | `human` | 🟢 Open |
 
 ---
 
 ## 📖 Detailed Active Bug Specs
 
-*No active bug details to display.*
+### BUG-221: Chat emoji sheet and floating FAB overlap chat UI after Social Hub
+
+- **Severity**: `HIGH` | **Category**: `ui-ux` | **Status**: `open`
+- **Found By**: `human` on 9/17/2026 (web)
+
+**Description**:
+After enableChatFirstNav / enableChatReactionsAndReplies (v3.25.0), long-press message action sheet showed a fixed emoji pill overlapping Reply/Pin, and the chat-first floating + FAB sat on top of the chat composer (and painted above the ActionSheet due to trip-sheet stacking context). Live location could only be started from Settings, not Chat.
+
+**Steps to Reproduce**:
+1. Enable enableChatFirstNav and enableChatReactionsAndReplies for a trip
+2. Open Chat tab and long-press a message
+3. Observe emoji bar covering Reply and green + over the sheet
+4. Dismiss sheet: observe green + overlapping the composer right side
+
+**Expected**: Emoji reactions sit inside the ActionSheet above actions; floating + is not shown on Chat; ActionSheet clears the FAB; Chat can open live-location share when that flag is on.
+
+**Actual**: Fixed-position emoji bar overlapped Reply/Pin; FAB covered composer and ActionSheet.
+
+---
 
 ## ✅ Resolved Bugs History
 

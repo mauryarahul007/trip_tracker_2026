@@ -16,13 +16,16 @@ const POLL_MS = 30 * 1000;
 interface Props {
   tripId: string;
   members: Member[];
+  /** Opens the existing Live Location Share modal (Settings flow). */
+  onShareMyLocation?: () => void;
 }
 
 // Surfaces active live-location shares (Settings > Live Location Share)
 // directly in chat -- trip participants can see the pin in-app (migration
 // 0089's RLS) instead of needing the separate public /live/:token link,
 // which stays the mechanism for sharing with people outside the trip.
-export function LiveLocationChatBanner({ tripId, members }: Props) {
+// When onShareMyLocation is provided, also shows a Chat entry point to start sharing.
+export function LiveLocationChatBanner({ tripId, members, onShareMyLocation }: Props) {
   const isFeatureEnabled = useTripStore((s) => s.isFeatureEnabled);
   const enabled = isFeatureEnabled('enableLiveLocationShare', { tripId });
   const [shares, setShares] = useState<TripActiveShare[]>([]);
@@ -71,11 +74,37 @@ export function LiveLocationChatBanner({ tripId, members }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- re-init only on which member is expanded, not on every position refresh
   }, [expandedMemberId]);
 
-  if (!enabled || shares.length === 0) return null;
+  if (!enabled) return null;
+  if (shares.length === 0 && !onShareMyLocation) return null;
+
+  const handleShareMine = () => {
+    if (!onShareMyLocation) return;
+    triggerHaptic('light');
+    onShareMyLocation();
+  };
+
+  if (shares.length === 0) {
+    return (
+      <div style={{ borderBottom: '1px solid var(--border-color)', background: 'var(--bg-surface)' }}>
+        <button
+          type="button"
+          className="live-location-chat-cta"
+          onClick={handleShareMine}
+          aria-label="Share my live location"
+        >
+          <span className="live-location-chat-cta-label">
+            <IconMapPin size={14} className="icon-sm" style={{ color: '#2F6FED' }} />
+            Let the squad see where you are
+          </span>
+          <span className="live-location-chat-cta-action">Share my location</span>
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div style={{ borderBottom: '1px solid var(--border-color)', background: 'var(--bg-surface)' }}>
-      <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', padding: '8px 12px' }}>
+      <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', padding: '8px 12px', alignItems: 'center' }}>
         {shares.map((share) => {
           const name = members.find((m) => m.id === share.memberId)?.name || 'A traveler';
           const isExpanded = expandedMemberId === share.memberId;
@@ -108,6 +137,17 @@ export function LiveLocationChatBanner({ tripId, members }: Props) {
             </button>
           );
         })}
+        {onShareMyLocation && (
+          <button
+            type="button"
+            className="live-location-share-mine-btn"
+            onClick={handleShareMine}
+            aria-label="Share my live location"
+          >
+            <IconMapPin size={12} className="icon-sm" />
+            Share mine
+          </button>
+        )}
       </div>
       {expandedShare && (
         <div ref={mapContainerRef} style={{ height: '180px', borderTop: '1px solid var(--border-color)' }} />

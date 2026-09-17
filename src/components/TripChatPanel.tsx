@@ -37,9 +37,10 @@ interface Props {
   isAdmin?: boolean;
   onComposerFocusChange?: (focused: boolean) => void;
   onRequestConfirm: (request: ConfirmRequest) => void;
+  onOpenLiveLocationShare?: () => void;
 }
 
-export function TripChatPanel({ tripId, members, isAdmin, onComposerFocusChange, onRequestConfirm }: Props) {
+export function TripChatPanel({ tripId, members, isAdmin, onComposerFocusChange, onRequestConfirm, onOpenLiveLocationShare }: Props) {
   const userId = useTripStore((s) => s.userId);
   const tripName = useTripStore((s) => s.trips.find((t) => t.id === tripId)?.name) || 'Trip Tracker';
   const myMemberId = useMemo(
@@ -423,7 +424,11 @@ export function TripChatPanel({ tripId, members, isAdmin, onComposerFocusChange,
         borderRadius: '16px 16px 0 0',
       }}
     >
-      <LiveLocationChatBanner tripId={tripId} members={members} />
+      <LiveLocationChatBanner
+        tripId={tripId}
+        members={members}
+        onShareMyLocation={onOpenLiveLocationShare}
+      />
 
       {/* Pinned Announcements Banner */}
       {isSocialEnabled && pinnedMessages.length > 0 && (
@@ -761,50 +766,26 @@ export function TripChatPanel({ tripId, members, isAdmin, onComposerFocusChange,
         </button>
       </div>
 
-      {/* WhatsApp Quick Emoji Reaction Bar (Rendered above ActionSheet) */}
-      {isSocialEnabled && actionSheetMessage && (
-        <div
-          style={{
-            position: 'fixed',
-            bottom: '220px',
-            left: '50%',
-            transform: 'translateX(-50%)',
-            zIndex: 10001,
-            background: 'var(--bg-card)',
-            boxShadow: '0 8px 24px rgba(0,0,0,0.25)',
-            borderRadius: '28px',
-            padding: '6px 14px',
-            display: 'flex',
-            gap: '10px',
-            alignItems: 'center',
-            border: '1px solid var(--border-color)',
-          }}
-        >
-          {QUICK_EMOJIS.map((emoji) => (
-            <button
-              key={emoji}
-              type="button"
-              onClick={() => handleToggleReaction(actionSheetMessage, emoji)}
-              style={{
-                border: 'none',
-                background: 'transparent',
-                fontSize: '22px',
-                cursor: 'pointer',
-                transition: 'transform 0.15s ease',
-                padding: '2px',
-              }}
-              onMouseEnter={(e) => (e.currentTarget.style.transform = 'scale(1.25)')}
-              onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
-            >
-              {emoji}
-            </button>
-          ))}
-        </div>
-      )}
-
       <ActionSheet
         isOpen={Boolean(actionSheetMessage)}
         onClose={() => setActionSheetMessage(null)}
+        header={
+          isSocialEnabled && actionSheetMessage ? (
+            <div className="wa-action-sheet-reactions" role="group" aria-label="Quick reactions">
+              {QUICK_EMOJIS.map((emoji) => (
+                <button
+                  key={emoji}
+                  type="button"
+                  className="wa-action-sheet-reaction-btn"
+                  aria-label={`React with ${emoji}`}
+                  onClick={() => handleToggleReaction(actionSheetMessage, emoji)}
+                >
+                  {emoji}
+                </button>
+              ))}
+            </div>
+          ) : undefined
+        }
         items={actionSheetItems}
       />
     </div>

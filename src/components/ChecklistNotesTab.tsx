@@ -39,6 +39,7 @@ type Props = {
   // App.tsx owns the single global ConfirmDialog instance; threaded down so
   // chat message delete can use the same confirm flow as everything else.
   onRequestConfirm: (request: ConfirmRequest) => void;
+  onOpenLiveLocationShare?: () => void;
 };
 
 type ChecklistCategory = 'all' | 'packing' | 'documents' | 'medical' | 'general';
@@ -384,7 +385,7 @@ function NoteContentView({ content, category }: { content: string; category?: st
   return <StandardNoteRenderer content={content} category={category} />;
 }
 
-export function ChecklistNotesTab({ trip, members, isAdmin, initialViewMode, onInitialViewModeConsumed, onChatViewActiveChange, onChatComposerFocusChange, onRequestConfirm }: Props) {
+export function ChecklistNotesTab({ trip, members, isAdmin, initialViewMode, onInitialViewModeConsumed, onChatViewActiveChange, onChatComposerFocusChange, onRequestConfirm, onOpenLiveLocationShare }: Props) {
   // Always select live trip from store to react to changes
   const liveTrip = useTripStore((s) => s.trips.find((t) => t.id === trip.id)) || trip;
   const {
@@ -889,6 +890,7 @@ export function ChecklistNotesTab({ trip, members, isAdmin, initialViewMode, onI
           isAdmin={isAdmin}
           onComposerFocusChange={onChatComposerFocusChange}
           onRequestConfirm={onRequestConfirm}
+          onOpenLiveLocationShare={onOpenLiveLocationShare}
         />
       )}
 

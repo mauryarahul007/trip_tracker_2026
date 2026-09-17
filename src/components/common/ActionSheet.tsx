@@ -1,4 +1,5 @@
 import React, { useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { triggerHaptic } from '../../utils/haptics';
 import { useHistoryBack } from '../../utils/useHistoryBack';
 import { useEscapeKey } from '../../utils/useEscapeKey';
@@ -19,6 +20,8 @@ export interface ActionSheetProps {
   onClose: () => void;
   title?: string;
   description?: string;
+  /** Optional content above the item list (e.g. emoji reaction row). */
+  header?: React.ReactNode;
   items: ActionSheetItem[];
   showCancel?: boolean;
   cancelLabel?: string;
@@ -29,6 +32,7 @@ export const ActionSheet: React.FC<ActionSheetProps> = ({
   onClose,
   title,
   description,
+  header,
   items,
   showCancel = true,
   cancelLabel = 'Cancel',
@@ -43,7 +47,7 @@ export const ActionSheet: React.FC<ActionSheetProps> = ({
 
   // Touch / pointer drag down to dismiss (skip if touching buttons)
   const handlePointerDown = (e: React.PointerEvent) => {
-    if ((e.target as HTMLElement).closest('.wa-action-sheet-item, .wa-action-sheet-cancel-btn')) {
+    if ((e.target as HTMLElement).closest('.wa-action-sheet-item, .wa-action-sheet-cancel-btn, .wa-action-sheet-reactions')) {
       return;
     }
     dragStartY.current = e.clientY;
@@ -69,7 +73,9 @@ export const ActionSheet: React.FC<ActionSheetProps> = ({
 
   if (!isOpen) return null;
 
-  return (
+  // Portal to body so trip-sheet transform / stacking context cannot trap
+  // this overlay under the chat-first floating FAB (z-index 55).
+  return createPortal(
     <div
       className="wa-action-sheet-backdrop"
       onClick={() => {
@@ -95,12 +101,10 @@ export const ActionSheet: React.FC<ActionSheetProps> = ({
         onPointerUp={handlePointerUp}
         onPointerCancel={handlePointerUp}
       >
-        {/* Drag Pill Handle */}
         <div className="wa-action-sheet-handle-wrap" aria-hidden="true">
           <span className="wa-action-sheet-drag-pill" />
         </div>
 
-        {/* Header (Optional) */}
         {(title || description) && (
           <div className="wa-action-sheet-header">
             {title && <h3 id="action-sheet-title" className="wa-action-sheet-title">{title}</h3>}
@@ -108,7 +112,8 @@ export const ActionSheet: React.FC<ActionSheetProps> = ({
           </div>
         )}
 
-        {/* Action Items List */}
+        {header}
+
         <div className="wa-action-sheet-list" role="menu">
           {items.map((item) => (
             <button
@@ -137,7 +142,6 @@ export const ActionSheet: React.FC<ActionSheetProps> = ({
           ))}
         </div>
 
-        {/* Cancel Button */}
         {showCancel && (
           <div className="wa-action-sheet-cancel-wrap">
             <button
@@ -153,6 +157,7 @@ export const ActionSheet: React.FC<ActionSheetProps> = ({
           </div>
         )}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };

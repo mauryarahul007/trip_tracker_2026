@@ -311,8 +311,8 @@ export function NavTabs({
         )}
       </nav>
 
-      {/* Floating Action Button for Chat-first navigation (WhatsApp / Material 3 standard) */}
-      {isChatFirstNav && renderFab(true)}
+      {/* Floating + for chat-first nav — hidden on Chat so it does not cover the composer */}
+      {isChatFirstNav && activeTab !== 'chat' && renderFab(true)}
     </>
   );
 }
