@@ -242,11 +242,15 @@ export default function App() {
   const isNotesEnabled = isFeatureEnabled('enableNotesAndChecklist', { tripId: activeTripId || undefined, userId: userId || undefined });
   const isPassesEnabled = isFeatureEnabled('enableTravelPasses', { tripId: activeTripId || undefined, userId: userId || undefined });
   const isChatFirstNav = isFeatureEnabled('enableChatFirstNav', { tripId: activeTripId || undefined, userId: userId || undefined });
+  const isTripChatEnabled = isFeatureEnabled('enableTripChat', { tripId: activeTripId || undefined, userId: userId || undefined });
   const isOfflineMapTilesEnabled = isFeatureEnabled('enableOfflineMapTiles', { tripId: activeTripId || undefined, userId: userId || undefined });
   useEffect(() => {
     void syncOfflineMapTilesFlag(isOfflineMapTilesEnabled);
   }, [isOfflineMapTilesEnabled]);
-  const hasNotesOrPassesTab = isNotesEnabled || isPassesEnabled;
+  // Notes hub also hosts Chat when trip chat is on and chat-first nav is off
+  // (otherwise Chat would have nowhere to live if Notes + Passes are both off).
+  const hasNotesOrPassesTab =
+    isNotesEnabled || isPassesEnabled || (isTripChatEnabled && !isChatFirstNav);
   const currentTabOrder = useMemo(() => {
     if (isChatFirstNav) {
       return hasNotesOrPassesTab

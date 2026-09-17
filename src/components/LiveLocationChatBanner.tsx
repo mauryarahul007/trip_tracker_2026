@@ -1,6 +1,4 @@
 import { useEffect, useRef, useState } from 'react';
-import { Map as MaplibreMap, Marker, setWorkerUrl } from 'maplibre-gl';
-import 'maplibre-gl/dist/maplibre-gl.css';
 import type { Member } from '../types';
 import { useTripStore } from '../store/tripStore';
 import { getActiveTripLocationShares, type TripActiveShare } from '../services/locationShareApi';
@@ -8,7 +6,8 @@ import { formatRelativeTime } from '../utils/relativeTime';
 import { triggerHaptic } from '../utils/haptics';
 import { IconMapPin } from './Icons';
 
-setWorkerUrl(`${import.meta.env.BASE_URL}maplibre/maplibre-gl-worker.js`);
+// maplibre is loaded only when a share map is expanded — a top-level import
+// pulled maplibre into Notes via TripChatPanel and crashed the Notes hub.
 
 const MAP_STYLE_URL = 'https://tiles.openfreemap.org/styles/liberty';
 const POLL_MS = 30 * 1000;
@@ -20,18 +19,13 @@ interface Props {
   onShareMyLocation?: () => void;
 }
 
-// Surfaces active live-location shares (Settings > Live Location Share)
-// directly in chat -- trip participants can see the pin in-app (migration
-// 0089's RLS) instead of needing the separate public /live/:token link,
-// which stays the mechanism for sharing with people outside the trip.
-// When onShareMyLocation is provided, also shows a Chat entry point to start sharing.
 export function LiveLocationChatBanner({ tripId, members, onShareMyLocation }: Props) {
   const isFeatureEnabled = useTripStore((s) => s.isFeatureEnabled);
   const enabled = isFeatureEnabled('enableLiveLocationShare', { tripId });
   const [shares, setShares] = useState<TripActiveShare[]>([]);
   const [expandedMemberId, setExpandedMemberId] = useState<string | null>(null);
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
-  const mapRef = useRef<MaplibreMap | null>(null);
+  const mapRef = useRef<{ remove: () => void } | null>(null);
 
   useEffect(() => {
     if (!enabled) return;
@@ -59,19 +53,42 @@ export function LiveLocationChatBanner({ tripId, members, onShareMyLocation }: P
       mapRef.current = null;
       return;
     }
-    mapRef.current = new MaplibreMap({
-      container: mapContainerRef.current,
-      style: MAP_STYLE_URL,
-      center: [expandedShare.lng, expandedShare.lat],
-      zoom: 13,
-      attributionControl: { compact: true },
-    });
-    new Marker({ color: '#2F6FED' }).setLngLat([expandedShare.lng, expandedShare.lat]).addTo(mapRef.current);
+
+    let cancelled = false;
+    const container = mapContainerRef.current;
+    const { lng, lat } = expandedShare;
+
+    void (async () => {
+      try {
+        const maplibre = await import('maplibre-gl');
+        await import('maplibre-gl/dist/maplibre-gl.css');
+        try {
+          maplibre.setWorkerUrl(`${import.meta.env.BASE_URL}maplibre/maplibre-gl-worker.js`);
+        } catch {
+          /* worker optional */
+        }
+        if (cancelled || !container) return;
+        mapRef.current?.remove();
+        const map = new maplibre.Map({
+          container,
+          style: MAP_STYLE_URL,
+          center: [lng, lat],
+          zoom: 13,
+          attributionControl: { compact: true },
+        });
+        new maplibre.Marker({ color: '#2F6FED' }).setLngLat([lng, lat]).addTo(map);
+        mapRef.current = map;
+      } catch (err) {
+        console.warn('[LiveLocationChatBanner] map init failed:', err);
+      }
+    })();
+
     return () => {
+      cancelled = true;
       mapRef.current?.remove();
       mapRef.current = null;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- re-init only on which member is expanded, not on every position refresh
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- re-init only on which member is expanded
   }, [expandedMemberId]);
 
   if (!enabled) return null;

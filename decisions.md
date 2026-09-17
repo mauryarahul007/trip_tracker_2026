@@ -3439,3 +3439,12 @@ This document logs all meaningful technical decisions, library choices, design p
   - Apply `0095`–`0097` remotely before arming media/receipts flags; schema lag fails soft (warn + skip card).
   - Audio bill memos (15s on expense forms) remain out of scope for this drop.
 
+---
+
+## 190. Chat Placement: Notes Hub vs Tab-1 Elevation (BUG-222, v3.27.1)
+* **Context:** Chat under Notes errored / felt missing for some flag combos. Desired model: Chat-first OFF keeps Chat in Notes; Chat-first ON elevates to Tab 1. Opening Chat under Notes blanked the hub with “The notes and checklist tab ran into an error.”
+* **Decision:** Keep two-flag model (`enableTripChat` = capability, `enableChatFirstNav` = placement). No dual placement. Close homeless-Chat gap when Notes+Passes are off but Trip Chat is on and Chat-first is off by still showing the Notes hub shell. Isolate Chat in a nested `TabErrorBoundary` so a Chat crash does not blank the whole Notes tab. Clarify Ops Deck copy for both flags. Lazy-load `TripChatPanel` from Notes and defer MapLibre until a live-location map expands.
+* **Trade-offs Accepted:**
+  - Unread badge on Notes when chat-first is off remains optional/deferred.
+
+

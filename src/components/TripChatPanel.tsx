@@ -297,10 +297,15 @@ export function TripChatPanel({
     }
 
     const channelName = `trip_chat_typing:${tripId}`;
-    for (const existing of supabase.getChannels()) {
-      if (existing.topic === channelName || existing.topic.endsWith(`:${channelName}`)) {
-        void supabase.removeChannel(existing);
+    try {
+      for (const existing of supabase.getChannels()) {
+        if (existing.topic === channelName || existing.topic.endsWith(`:${channelName}`)) {
+          void supabase.removeChannel(existing);
+        }
       }
+    } catch (err) {
+      console.warn('[TripChatPanel] typing channel cleanup skipped:', err);
+      return;
     }
 
     const channel = supabase.channel(channelName);

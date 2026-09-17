@@ -9,10 +9,10 @@
 
 | Metric | Count | Status Notes |
 | :--- | :--- | :--- |
-| **Total Tracked** | **220** | All recorded bugs across sessions |
+| **Total Tracked** | **221** | All recorded bugs across sessions |
 | **🟢 Open** | **0** | No critical blockers, 0 High |
 | **🟡 In Progress** | **0** | Active investigation or fix |
-| **✅ Resolved** | **194** | Verified & closed |
+| **✅ Resolved** | **195** | Verified & closed |
 | **⚪ Won't Fix** | **26** | Expected behavior / deferred |
 
 ---
@@ -225,6 +225,7 @@
 | **BUG-219** | Dispute Flag/Resolve button did not update immediately after flagging an expense | `ui-ux` | `medium` | `claude-cli` | `claude-cli` | App.tsx derives liveExpense from activeTripExpenses by id instead of the tap-time snapshot. Commit b9211ba. |
 | **BUG-220** | Long-press Delete on trip home card does not open confirm | `ui-ux` | `high` | `human` | `cursor-agent` | Removed useHistoryBack from the TripStack long-press overlay so closing the menu no longer races history.back() against ConfirmDialog. Delete (and Edit / Add expense from the same menu) now keep the follow-up dialog open. Fixed in commit 05852f4. |
 | **BUG-221** | Chat emoji sheet and floating FAB overlap chat UI after Social Hub | `ui-ux` | `high` | `human` | `cursor-agent` | Moved emoji reactions into ActionSheet header, portaled ActionSheet to document.body, hid chat-first floating FAB on Chat tab, and added Chat Share my location CTA. Fixed in commit 0eead19 (v3.25.1). |
+| **BUG-222** | Notes hub blanked when opening Chat (MapLibre eager import) | `ui-ux` | `high` | `human` | `cursor-agent` | Lazy-load TripChatPanel inside Notes with nested Chat TabErrorBoundary; defer maplibre-gl until LiveLocationChatBanner expands a share map. Also hardened chat placement (Notes-shell fallback, flag copy). Fixed in v3.27.1 — commit hash filled after commit. |
 
 ---
 

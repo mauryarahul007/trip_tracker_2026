@@ -6600,5 +6600,32 @@
     "resolvedBy": "cursor-agent",
     "resolvedAt": "2026-09-17T04:34:00.114Z",
     "resolutionNote": "Moved emoji reactions into ActionSheet header, portaled ActionSheet to document.body, hid chat-first floating FAB on Chat tab, and added Chat Share my location CTA. Fixed in commit 0eead19 (v3.25.1)."
+  },
+  {
+    "id": "BUG-222",
+    "title": "Notes hub blanked when opening Chat (MapLibre eager import)",
+    "description": "With Trip Chat under Notes (enableChatFirstNav OFF), opening the Chat segment showed “The notes and checklist tab ran into an error” and blanked the whole Notes hub. ChecklistNotesTab eagerly imported TripChatPanel, which pulled LiveLocationChatBanner’s top-level maplibre-gl import into the Notes chunk; MapLibre init/import failures (or related crashes) were caught by the outer Notes TabErrorBoundary.",
+    "severity": "high",
+    "category": "ui-ux",
+    "status": "resolved",
+    "foundBy": "human",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "3.27.0"
+    },
+    "reproSteps": [
+      "Enable enableTripChat; leave enableChatFirstNav OFF",
+      "Open a trip → Notes hub → tap Chat segment",
+      "Observe full Notes tab replaced by “The notes and checklist tab ran into an error”"
+    ],
+    "expectedBehavior": "Chat loads inside Notes. A Chat-only crash shows “The Chat tab ran into an error” with Try again, without wiping Notes forever. MapLibre only loads when expanding a live-location map.",
+    "actualBehavior": "Entire Notes & Checklist tab error boundary fired; Notes hub unusable until retry/reload.",
+    "diagnostics": {},
+    "createdAt": "2026-09-17T06:34:40.704Z",
+    "updatedAt": "2026-09-17T06:35:48.060Z",
+    "resolvedBy": "cursor-agent",
+    "resolvedAt": "2026-09-17T06:35:48.060Z",
+    "resolutionNote": "Lazy-load TripChatPanel inside Notes with nested Chat TabErrorBoundary; defer maplibre-gl until LiveLocationChatBanner expands a share map. Also hardened chat placement (Notes-shell fallback, flag copy). Fixed in v3.27.1 — commit hash filled after commit."
   }
 ]

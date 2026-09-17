@@ -24,6 +24,7 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 | 2026-09-16 | v3.25.1 | BUG-221 | [Chat overlay & live-location CTA](#bug-221--chat-overlay--live-location-cta-v3251) |
 | 2026-09-17 | v3.26.0 / v3.26.1 | FEAT-076 | [Expense cards, location heartbeat, Summary polish](#feat-076--expense-cards-location-heartbeat-summary-polish-v3260) |
 | 2026-09-17 | v3.27.0 | FEAT-077 | [Chat depth: media, voice, typing, reads, tripbot](#feat-077--chat-depth-media-voice-typing-reads-tripbot-v3270) |
+| 2026-09-17 | v3.27.1 | BUG-222 | [Chat placement + Notes/Chat crash](#chat-placement-flags--notes-vs-tab-1) |
 
 ---
 
@@ -176,6 +177,47 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 ### Pass
 
 - Each flag gates its UI/writes; media lands in `chat-media`; tripbot never auto-writes without confirm.
+
+---
+
+## Chat placement flags — Notes vs Tab 1
+
+**Version:** v3.27.1 · **BUG-222** (Notes hub blanked when opening Chat).  
+**Context:** `enableTripChat` = capability; `enableChatFirstNav` = placement only. Chat must not disappear when Chat-first is OFF.
+
+### Flags
+
+| Behavior | Flag | Default |
+|----------|------|---------|
+| Chat available | `enableTripChat` | ON |
+| Elevate Chat to bottom Tab 1 | `enableChatFirstNav` | OFF |
+| Notes / Checklist hub | `enableNotesAndChecklist` | ON |
+| Passes in hub | `enableTravelPasses` | ON |
+
+### Matrix
+
+| Trip Chat | Chat-first | Expected |
+|-----------|------------|----------|
+| OFF | * | No Chat anywhere |
+| ON | OFF | Chat under **Notes** hub (segment “Chat”) |
+| ON | ON | Chat as **bottom Tab 1**; no Chat segment in Notes |
+
+### Steps
+
+1. Trip Chat ON, Chat-first **OFF**, Notes hub available → open **Notes** → tap **Chat** → thread loads (send a message). A Chat crash must show “Chat … error / Try again”, not wipe the whole Notes hub forever. If you previously saw “Notes & Checklist … error”, hard-refresh once (MapLibre was pulled into Notes; that path is now lazy).
+2. Trip Chat ON, Chat-first **ON** → bottom bar shows **Chat** first; Notes has no Chat segment; open Tab-1 Chat and send.
+3. Trip Chat ON, Chat-first OFF, **Notes + Passes both OFF** → bottom bar still shows a Notes-style hub that opens Chat (fallback so Chat is not homeless).
+4. Trip Chat **OFF** → no Chat tab and no Chat segment in Notes.
+5. Ops Deck: `enableChatFirstNav` description mentions it **moves** Chat and requires Trip Group Chat.
+
+### Negative checks
+
+- Chat-first ON → Chat must not appear twice (Tab 1 and Notes).
+- Trip Chat OFF → Chat-first ON alone must not invent a working chat without `enableTripChat` (panel may mount empty only if misconfigured; capability flag must gate).
+
+### Pass
+
+- Placement matches the matrix; homeless-Chat gap closed; Chat errors isolated from Notes.
 
 ---
 

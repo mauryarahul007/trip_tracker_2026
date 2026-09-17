@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, lazy, Suspense } from 'react';
 import { useTripStore } from '../store/tripStore';
 import type { Trip, Member, TripNote, ChecklistItem } from '../types';
 import { getDestinationWeatherRealtime, type WeatherData } from '../services/weatherService';
@@ -17,10 +17,17 @@ import { SwipeableRow } from './SwipeableRow';
 import { ConfettiBurst } from './ConfettiBurst';
 import { SmartPackingAssistantModal } from './SmartPackingAssistantModal';
 import { TravelPassWalletView } from './TravelPassWalletView';
-import { TripChatPanel } from './TripChatPanel';
+import { TabErrorBoundary } from './TabErrorBoundary';
+import { lazyImport } from '../utils/lazyImport';
 import { useHistoryBack } from '../utils/useHistoryBack';
 import { useEscapeKey } from '../utils/useEscapeKey';
 import type { ConfirmRequest } from './ConfirmDialog';
+
+// Lazy so opening Notes does not pull TripChatPanel / Capacitor / heavy chat
+// deps — a sync import previously crashed the whole Notes tab boundary.
+const TripChatPanel = lazy(lazyImport(() =>
+  import('./TripChatPanel').then((m) => ({ default: m.TripChatPanel }))
+));
 
 type ViewMode = 'passes' | 'notes' | 'checklist' | 'chat';
 
@@ -414,17 +421,20 @@ export function ChecklistNotesTab({ trip, members, isAdmin, initialViewMode, onI
   const isChatSubTabEnabled = isChatEnabled && !isChatFirstNav;
 
   const [viewMode, setViewMode] = useState<ViewMode>(() => {
+    if (isChatSubTabEnabled && !isNotesEnabled && !isPassesEnabled) return 'chat';
     if (isPassesEnabled && liveTrip.passes && liveTrip.passes.length > 0) return 'passes';
     if (isNotesEnabled) return 'checklist';
+    if (isChatSubTabEnabled) return 'chat';
     if (isPassesEnabled) return 'passes';
     return 'checklist';
   });
 
   useEffect(() => {
     if (!isPassesEnabled && viewMode === 'passes') {
-      setViewMode(isNotesEnabled ? 'checklist' : 'notes');
+      setViewMode(isNotesEnabled ? 'checklist' : isChatSubTabEnabled ? 'chat' : 'notes');
     } else if (!isNotesEnabled && (viewMode === 'notes' || viewMode === 'checklist')) {
-      if (isPassesEnabled) setViewMode('passes');
+      if (isChatSubTabEnabled) setViewMode('chat');
+      else if (isPassesEnabled) setViewMode('passes');
     } else if (!isChatSubTabEnabled && viewMode === 'chat') {
       setViewMode(isNotesEnabled ? 'checklist' : isPassesEnabled ? 'passes' : 'notes');
     }
@@ -883,17 +893,27 @@ export function ChecklistNotesTab({ trip, members, isAdmin, initialViewMode, onI
         />
       )}
 
-      {/* GROUP CHAT VIEW */}
+      {/* GROUP CHAT VIEW — lazy + isolated so Chat/maplibre cannot blank Notes */}
       {viewMode === 'chat' && isChatSubTabEnabled && (
-        <TripChatPanel
-          tripId={liveTrip.id}
-          members={members}
-          isAdmin={isAdmin}
-          onComposerFocusChange={onChatComposerFocusChange}
-          onRequestConfirm={onRequestConfirm}
-          onOpenLiveLocationShare={onOpenLiveLocationShare}
-          onOpenExpenseFromChat={onOpenExpenseFromChat}
-        />
+        <TabErrorBoundary label="Chat">
+          <Suspense
+            fallback={
+              <div style={{ padding: '24px 16px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '13px' }}>
+                Loading chat…
+              </div>
+            }
+          >
+            <TripChatPanel
+              tripId={liveTrip.id}
+              members={members}
+              isAdmin={isAdmin}
+              onComposerFocusChange={onChatComposerFocusChange}
+              onRequestConfirm={onRequestConfirm}
+              onOpenLiveLocationShare={onOpenLiveLocationShare}
+              onOpenExpenseFromChat={onOpenExpenseFromChat}
+            />
+          </Suspense>
+        </TabErrorBoundary>
       )}
 
       {/* Instant In-Tab Search Bar (for Checklist & Notes) */}

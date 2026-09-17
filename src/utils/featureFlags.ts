@@ -240,7 +240,8 @@ export const FEATURE_FLAGS_META: Record<FeatureFlagKey, FeatureFlagMeta> = {
   enableTripChat: {
     key: 'enableTripChat',
     label: 'Trip Group Chat',
-    description: 'WhatsApp-style realtime chat thread scoped to the trip, inside the Notes tab.',
+    description:
+      'WhatsApp-style realtime chat for the trip. Lives under Notes by default; enable Primary Tab-1 Chat Navigation to elevate it to the bottom bar.',
     category: 'collab',
     phase: 'phase2',
     defaultEnabledForUsers: true,
@@ -496,7 +497,8 @@ export const FEATURE_FLAGS_META: Record<FeatureFlagKey, FeatureFlagMeta> = {
   enableChatFirstNav: {
     key: 'enableChatFirstNav',
     label: 'Primary Tab-1 Chat Navigation',
-    description: 'Elevates Chat to Tab 1 on the primary bottom bar and cleans Notes to be travel prep/wallet.',
+    description:
+      'Moves Chat from the Notes hub to Tab 1 on the bottom bar. Does not create Chat by itself — requires Trip Group Chat (enableTripChat). When OFF, Chat stays under Notes.',
     category: 'collab',
     phase: 'phase6',
     defaultEnabledForUsers: false,
