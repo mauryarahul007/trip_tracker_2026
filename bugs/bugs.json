@@ -6623,9 +6623,9 @@
     "actualBehavior": "Entire Notes & Checklist tab error boundary fired; Notes hub unusable until retry/reload.",
     "diagnostics": {},
     "createdAt": "2026-09-17T06:34:40.704Z",
-    "updatedAt": "2026-09-17T06:35:48.060Z",
+    "updatedAt": "2026-09-17T06:36:58.270Z",
     "resolvedBy": "cursor-agent",
     "resolvedAt": "2026-09-17T06:35:48.060Z",
-    "resolutionNote": "Lazy-load TripChatPanel inside Notes with nested Chat TabErrorBoundary; defer maplibre-gl until LiveLocationChatBanner expands a share map. Also hardened chat placement (Notes-shell fallback, flag copy). Fixed in v3.27.1 — commit hash filled after commit."
+    "resolutionNote": "Lazy-load TripChatPanel inside Notes with nested Chat TabErrorBoundary; defer maplibre-gl until LiveLocationChatBanner expands a share map. Also hardened chat placement (Notes-shell fallback, flag copy). Fixed in v3.27.1 — commit 6f62609."
   }
 ]
