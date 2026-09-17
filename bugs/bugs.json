@@ -6579,7 +6579,7 @@
     "description": "After enableChatFirstNav / enableChatReactionsAndReplies (v3.25.0), long-press message action sheet showed a fixed emoji pill overlapping Reply/Pin, and the chat-first floating + FAB sat on top of the chat composer (and painted above the ActionSheet due to trip-sheet stacking context). Live location could only be started from Settings, not Chat.",
     "severity": "high",
     "category": "ui-ux",
-    "status": "open",
+    "status": "resolved",
     "foundBy": "human",
     "environment": {
       "platform": "web",
@@ -6596,6 +6596,9 @@
     "actualBehavior": "Fixed-position emoji bar overlapped Reply/Pin; FAB covered composer and ActionSheet.",
     "diagnostics": {},
     "createdAt": "2026-09-17T04:32:47.088Z",
-    "updatedAt": "2026-09-17T04:32:47.088Z"
+    "updatedAt": "2026-09-17T04:34:00.114Z",
+    "resolvedBy": "cursor-agent",
+    "resolvedAt": "2026-09-17T04:34:00.114Z",
+    "resolutionNote": "Moved emoji reactions into ActionSheet header, portaled ActionSheet to document.body, hid chat-first floating FAB on Chat tab, and added Chat Share my location CTA. Fixed in commit 0eead19 (v3.25.1)."
   }
 ]

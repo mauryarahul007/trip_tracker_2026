@@ -3391,3 +3391,17 @@ This document logs all meaningful technical decisions, library choices, design p
   - Offline outbox messages sent while offline do not guarantee cross-device sync until connectivity returns.
   - Bilateral debts may produce more total transfers than simplified flow netting, but preserve exact personal accountability as preferred by certain traveler groups.
 
+---
+
+## 187. Chat Action-Sheet Overlay & FAB Collision Fixes (BUG-221, v3.25.1)
+* **Context:** After v3.25.0 Social Hub shipped, long-press message actions stacked a fixed emoji pill (`bottom: 220px`) over Reply/Pin, and chat-first floating `+` covered the composer (and painted above ActionSheet because `.trip-sheet` traps stacking with `transform: translateZ(0)`). Live location was viewable in chat but only startable from Settings.
+* **Decision:** Treat as a bug-fix release (patch). Keep existing flags; no new feature flag for the Chat share CTA (reuses `enableLiveLocationShare`).
+* **Pattern/Implementation:**
+  - `ActionSheet` gains optional `header` slot and portals to `document.body`.
+  - Chat quick reactions move into that header; remove fixed emoji overlay.
+  - Hide floating FAB when `activeTab === 'chat'`.
+  - `LiveLocationChatBanner` empty-state CTA + “Share mine” open the existing `LiveLocationShareModal` via threaded callback from `App` / `ChecklistNotesTab`.
+* **Trade-offs Accepted:**
+  - Add Expense is unavailable from the Chat tab while chat-first nav is on (reachable from Summary/Expenses/etc.). Matches WhatsApp conversation UX.
+  - GPS heartbeat still only runs while the share modal is open (unchanged v1 limit).
+

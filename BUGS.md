@@ -10,42 +10,22 @@
 | Metric | Count | Status Notes |
 | :--- | :--- | :--- |
 | **Total Tracked** | **220** | All recorded bugs across sessions |
-| **🟢 Open** | **1** | No critical blockers, 1 High |
+| **🟢 Open** | **0** | No critical blockers, 0 High |
 | **🟡 In Progress** | **0** | Active investigation or fix |
-| **✅ Resolved** | **193** | Verified & closed |
+| **✅ Resolved** | **194** | Verified & closed |
 | **⚪ Won't Fix** | **26** | Expected behavior / deferred |
 
 ---
 
 ## 🚨 Active Bugs (Open & In Progress)
 
-| ID | Severity | Category | Title | Found By | Status |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| **[BUG-221](#bug-221)** | 🟠 High | `ui-ux` | Chat emoji sheet and floating FAB overlap chat UI after Social Hub | `human` | 🟢 Open |
+*🎉 No active open bugs! Great job team.* 
 
 ---
 
 ## 📖 Detailed Active Bug Specs
 
-### BUG-221: Chat emoji sheet and floating FAB overlap chat UI after Social Hub
-
-- **Severity**: `HIGH` | **Category**: `ui-ux` | **Status**: `open`
-- **Found By**: `human` on 9/17/2026 (web)
-
-**Description**:
-After enableChatFirstNav / enableChatReactionsAndReplies (v3.25.0), long-press message action sheet showed a fixed emoji pill overlapping Reply/Pin, and the chat-first floating + FAB sat on top of the chat composer (and painted above the ActionSheet due to trip-sheet stacking context). Live location could only be started from Settings, not Chat.
-
-**Steps to Reproduce**:
-1. Enable enableChatFirstNav and enableChatReactionsAndReplies for a trip
-2. Open Chat tab and long-press a message
-3. Observe emoji bar covering Reply and green + over the sheet
-4. Dismiss sheet: observe green + overlapping the composer right side
-
-**Expected**: Emoji reactions sit inside the ActionSheet above actions; floating + is not shown on Chat; ActionSheet clears the FAB; Chat can open live-location share when that flag is on.
-
-**Actual**: Fixed-position emoji bar overlapped Reply/Pin; FAB covered composer and ActionSheet.
-
----
+*No active bug details to display.*
 
 ## ✅ Resolved Bugs History
 
@@ -244,6 +224,7 @@ After enableChatFirstNav / enableChatReactionsAndReplies (v3.25.0), long-press m
 | **BUG-218** | Expense review modal header overflows horizontally on mobile after adding Flag button | `navigation` | `medium` | `claude-cli` | `claude-cli` | Split ExpenseReviewModal header into a title+close row and a separate flex-wrap actions row. Commit 7573172. |
 | **BUG-219** | Dispute Flag/Resolve button did not update immediately after flagging an expense | `ui-ux` | `medium` | `claude-cli` | `claude-cli` | App.tsx derives liveExpense from activeTripExpenses by id instead of the tap-time snapshot. Commit b9211ba. |
 | **BUG-220** | Long-press Delete on trip home card does not open confirm | `ui-ux` | `high` | `human` | `cursor-agent` | Removed useHistoryBack from the TripStack long-press overlay so closing the menu no longer races history.back() against ConfirmDialog. Delete (and Edit / Add expense from the same menu) now keep the follow-up dialog open. Fixed in commit 05852f4. |
+| **BUG-221** | Chat emoji sheet and floating FAB overlap chat UI after Social Hub | `ui-ux` | `high` | `human` | `cursor-agent` | Moved emoji reactions into ActionSheet header, portaled ActionSheet to document.body, hid chat-first floating FAB on Chat tab, and added Chat Share my location CTA. Fixed in commit 0eead19 (v3.25.1). |
 
 ---
 
