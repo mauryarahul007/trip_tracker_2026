@@ -26,6 +26,7 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 | 2026-09-17 | v3.27.0 | FEAT-077 | [Chat depth: media, voice, typing, reads, tripbot](#feat-077--chat-depth-media-voice-typing-reads-tripbot-v3270) |
 | 2026-09-17 | v3.27.1 | BUG-222 | [Chat placement + Notes/Chat crash](#chat-placement-flags--notes-vs-tab-1) |
 | 2026-09-17 | v3.27.2 | BUG-223 | [Chat max update depth](#bug-223--chat-max-update-depth-v3272) |
+| 2026-09-17 | v3.27.3 | BUG-224 | [Settlement Algorithm info modal opacity](#bug-224--settlement-algorithm-info-modal-opacity-v3273) |
 
 ---
 
@@ -239,6 +240,28 @@ No new flag. `enableInChatEventCards` unchanged (not the crash cause).
 
 ### Pass
 - No “Maximum update depth exceeded”; Chat usable.
+
+---
+
+## BUG-224 — Settlement Algorithm info modal opacity (v3.27.3)
+
+**Commit:** pending in this release. **ADR:** #192.
+
+### Flags
+No new flag. Summary / Who owes who available when balances exist.
+
+### Steps
+1. Open a trip with unsettled balances → **Summary** → **Who owes who**.
+2. Tap the **ⓘ** info control next to Simplified / Direct.
+3. Confirm the **Settlement Algorithm** dialog has a solid opaque card (page text behind does not show through title or body copy).
+4. Scrim dims the page; **Got it** / ✕ / tap outside closes the dialog.
+5. Toggle Simplified ↔ Direct; reopen ⓘ — Active badge and copy stay readable in light and dark theme.
+
+### Negative checks
+- N/A (no feature flag).
+
+### Pass
+- Dialog text is fully readable; no bleed-through of “Who owes who” / amounts through the card.
 
 ---
 

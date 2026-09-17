@@ -6116,16 +6116,17 @@ html.capacitor-ios .trip-sheet .tab-pane {
   animation: overlayFadeIn 0.22s var(--ease-decel, var(--ease-decel)) forwards;
 }
 
+.modal-overlay .modal-card,
 .modal-backdrop .modal-card {
-  background: var(--bg-surface);
+  /* Opaque surface — never glass/alpha; undefined --bg-card made dialogs see-through. */
+  background: var(--bg-surface, #ffffff);
   border: 1px solid var(--border-color);
   border-radius: var(--border-radius-lg);
   box-shadow: var(--shadow-lg);
-  backdrop-filter: blur(16px) saturate(1.4);
-  -webkit-backdrop-filter: blur(16px) saturate(1.4);
 }
 
 .modal-overlay .modal-sheet,
+.modal-overlay .modal-card,
 .modal-backdrop .modal-card {
   width: 100%;
   max-width: 460px;

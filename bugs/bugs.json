@@ -6654,5 +6654,32 @@
     "resolvedBy": "cursor-agent",
     "resolvedAt": "2026-09-17T07:23:22.853Z",
     "resolutionNote": "Select s.expenses (stable) and filter in useMemo; harden payload guards and amount formatting; show error.message on TabErrorBoundary. Fixed in commit 437f53a (v3.27.2)."
+  },
+  {
+    "id": "BUG-224",
+    "title": "Settlement Algorithm info dialog transparent over Who owes who",
+    "description": "Tapping ⓘ next to Simplified/Direct in Who owes who opened the Settlement Algorithm dialog with a see-through card. Page copy (amounts, section titles) bled through and made the explanation unreadable. Root cause: inline background used undefined CSS tokens (--bg-card / --bg-secondary); the invalid declaration won the cascade and computed to transparent. Modal also used glass-card (content-visibility) instead of an opaque portaled surface.",
+    "severity": "medium",
+    "category": "ui-ux",
+    "status": "resolved",
+    "foundBy": "human",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "3.27.2"
+    },
+    "reproSteps": [
+      "Open a trip with balances → Summary → Who owes who",
+      "Tap the ⓘ info control next to Simplified / Direct",
+      "Observe Settlement Algorithm card text overlapping page content through a transparent background"
+    ],
+    "expectedBehavior": "Opaque dialog card with readable copy; dimmed scrim; Got it / close / outside tap dismisses.",
+    "actualBehavior": "Semi-transparent card; underlying Who owes who text and amounts visible through the dialog.",
+    "diagnostics": {},
+    "createdAt": "2026-09-17T07:55:00.000Z",
+    "updatedAt": "2026-09-17T07:55:00.000Z",
+    "resolvedBy": "cursor-agent",
+    "resolvedAt": "2026-09-17T07:55:00.000Z",
+    "resolutionNote": "Portal modal to document.body; solid --bg-surface card; drop glass-card; fix undefined tokens; opaque .modal-overlay .modal-card CSS. Fixed in v3.27.3 — commit pending."
   }
 ]

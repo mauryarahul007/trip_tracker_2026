@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import type { Expense, Group, Member, Trip } from '../types';
 import type { MemberBalance, Transfer } from '../utils/settlement';
 import { IconEdit, IconShare, IconClose } from './Icons';
@@ -1066,7 +1067,7 @@ export function BalancesSettlements({
             <div
               style={{
                 display: 'inline-flex',
-                background: 'var(--bg-secondary)',
+                background: 'var(--bg-page)',
                 borderRadius: '9999px',
                 padding: '2px',
                 gap: '2px',
@@ -1078,7 +1079,7 @@ export function BalancesSettlements({
                   border: 'none',
                   padding: '4px 11px',
                   borderRadius: '9999px',
-                  background: isSimplified ? 'var(--bg-card)' : 'transparent',
+                  background: isSimplified ? 'var(--bg-surface)' : 'transparent',
                   color: isSimplified ? 'var(--primary-accent)' : 'var(--text-muted)',
                   fontWeight: isSimplified ? 700 : 500,
                   fontSize: '11px',
@@ -1099,7 +1100,7 @@ export function BalancesSettlements({
                   border: 'none',
                   padding: '4px 11px',
                   borderRadius: '9999px',
-                  background: !isSimplified ? 'var(--bg-card)' : 'transparent',
+                  background: !isSimplified ? 'var(--bg-surface)' : 'transparent',
                   color: !isSimplified ? 'var(--primary-accent)' : 'var(--text-muted)',
                   fontWeight: !isSimplified ? 700 : 500,
                   fontSize: '11px',
@@ -1138,41 +1139,36 @@ export function BalancesSettlements({
           </div>
         )}
 
-        {showSimplifyInfo && (
+        {showSimplifyInfo && createPortal(
           <div
             className="modal-overlay"
-            style={{
-              position: 'fixed',
-              inset: 0,
-              zIndex: 9999,
-              background: 'rgba(0,0,0,0.5)',
-              backdropFilter: 'blur(4px)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              padding: '16px',
-            }}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="settlement-algorithm-title"
             onClick={() => setShowSimplifyInfo(false)}
           >
             <div
-              className="glass-card"
+              className="modal-card"
               style={{
                 maxWidth: '420px',
                 width: '100%',
                 padding: '20px',
-                borderRadius: '16px',
-                background: 'var(--bg-card)',
-                boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.3)',
+                borderRadius: 'var(--border-radius-lg)',
+                background: 'var(--bg-surface, #ffffff)',
+                border: '1px solid var(--border-color)',
+                boxShadow: 'var(--shadow-lg)',
+                color: 'var(--text-primary)',
               }}
               onClick={(e) => e.stopPropagation()}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
-                <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)' }}>
+                <h3 id="settlement-algorithm-title" style={{ margin: 0, fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)' }}>
                   Settlement Algorithm
                 </h3>
                 <button
                   type="button"
                   onClick={() => setShowSimplifyInfo(false)}
+                  aria-label="Close"
                   style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--text-muted)' }}
                 >
                   <IconClose size={18} />
@@ -1180,7 +1176,7 @@ export function BalancesSettlements({
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '13px', lineHeight: 1.5, color: 'var(--text-secondary)' }}>
-                <div style={{ padding: '10px 12px', borderRadius: '10px', background: isSimplified ? 'rgba(63, 203, 189, 0.08)' : 'var(--bg-secondary)', border: isSimplified ? '1px solid rgba(63, 203, 189, 0.3)' : '1px solid transparent' }}>
+                <div style={{ padding: '10px 12px', borderRadius: '10px', background: isSimplified ? 'rgba(15, 111, 99, 0.08)' : 'var(--bg-page)', border: isSimplified ? '1px solid rgba(15, 111, 99, 0.28)' : '1px solid var(--border-color)' }}>
                   <div style={{ fontWeight: 700, color: 'var(--text-primary)', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <span>⚡ Simplified Debts</span>
                     {isSimplified && <span style={{ fontSize: '10px', padding: '1px 6px', borderRadius: '4px', background: 'var(--primary-accent)', color: '#fff' }}>Active</span>}
@@ -1190,7 +1186,7 @@ export function BalancesSettlements({
                   </div>
                 </div>
 
-                <div style={{ padding: '10px 12px', borderRadius: '10px', background: !isSimplified ? 'rgba(63, 203, 189, 0.08)' : 'var(--bg-secondary)', border: !isSimplified ? '1px solid rgba(63, 203, 189, 0.3)' : '1px solid transparent' }}>
+                <div style={{ padding: '10px 12px', borderRadius: '10px', background: !isSimplified ? 'rgba(15, 111, 99, 0.08)' : 'var(--bg-page)', border: !isSimplified ? '1px solid rgba(15, 111, 99, 0.28)' : '1px solid var(--border-color)' }}>
                   <div style={{ fontWeight: 700, color: 'var(--text-primary)', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <span>👥 Direct Bilateral Debts</span>
                     {!isSimplified && <span style={{ fontSize: '10px', padding: '1px 6px', borderRadius: '4px', background: 'var(--primary-accent)', color: '#fff' }}>Active</span>}
@@ -1212,7 +1208,8 @@ export function BalancesSettlements({
                 </button>
               </div>
             </div>
-          </div>
+          </div>,
+          document.body,
         )}
 
         {!isFullySettled && balances.length > 0 && (
@@ -1221,7 +1218,7 @@ export function BalancesSettlements({
               <span>{settledMemberCount} of {balances.length} settled up</span>
               <span>{settledPct}%</span>
             </div>
-            <div style={{ height: '6px', borderRadius: '9999px', background: 'var(--bg-secondary)', overflow: 'hidden' }}>
+            <div style={{ height: '6px', borderRadius: '9999px', background: 'var(--bg-page)', overflow: 'hidden' }}>
               <div
                 style={{
                   height: '100%',

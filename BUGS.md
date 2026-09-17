@@ -9,10 +9,10 @@
 
 | Metric | Count | Status Notes |
 | :--- | :--- | :--- |
-| **Total Tracked** | **222** | All recorded bugs across sessions |
+| **Total Tracked** | **223** | All recorded bugs across sessions |
 | **🟢 Open** | **0** | No critical blockers, 0 High |
 | **🟡 In Progress** | **0** | Active investigation or fix |
-| **✅ Resolved** | **196** | Verified & closed |
+| **✅ Resolved** | **197** | Verified & closed |
 | **⚪ Won't Fix** | **26** | Expected behavior / deferred |
 
 ---
@@ -227,6 +227,7 @@
 | **BUG-221** | Chat emoji sheet and floating FAB overlap chat UI after Social Hub | `ui-ux` | `high` | `human` | `cursor-agent` | Moved emoji reactions into ActionSheet header, portaled ActionSheet to document.body, hid chat-first floating FAB on Chat tab, and added Chat Share my location CTA. Fixed in commit 0eead19 (v3.25.1). |
 | **BUG-222** | Notes hub blanked when opening Chat (MapLibre eager import) | `ui-ux` | `high` | `human` | `cursor-agent` | Lazy-load TripChatPanel inside Notes with nested Chat TabErrorBoundary; defer maplibre-gl until LiveLocationChatBanner expands a share map. Also hardened chat placement (Notes-shell fallback, flag copy). Fixed in v3.27.1 — commit 6f62609. |
 | **BUG-223** | Chat tab Maximum update depth from unstable expenses zustand selector | `ui-ux` | `high` | `human` | `cursor-agent` | Select s.expenses (stable) and filter in useMemo; harden payload guards and amount formatting; show error.message on TabErrorBoundary. Fixed in commit 437f53a (v3.27.2). |
+| **BUG-224** | Settlement Algorithm info dialog transparent over Who owes who | `ui-ux` | `medium` | `human` | `cursor-agent` | Portal modal to document.body; solid --bg-surface card; drop glass-card; fix undefined tokens; opaque .modal-overlay .modal-card CSS. Fixed in v3.27.3 — commit pending. |
 
 ---
 

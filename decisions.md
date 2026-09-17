@@ -3455,4 +3455,17 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - Existing expense event messages still render as cards when that flag produced them; no feature removal.
 
+---
+
+## 192. Opaque Settlement Algorithm Info Modal (BUG-224, v3.27.3)
+* **Context:** Who owes who ⓘ opened Settlement Algorithm with a see-through card; page text bled through. Inline `background: var(--bg-card)` used an undefined token; invalid-at-computed-value made the winning declaration transparent. `glass-card` / content-visibility were a poor fit for a modal.
+* **Decision:** Treat as a patch bug-fix. No new feature flag (balances UI is always on when balances exist).
+* **Pattern/Implementation:**
+  - Portal the dialog to `document.body` like ActionSheet.
+  - Use solid `var(--bg-surface)` / `.modal-card`; remove `glass-card` from the dialog.
+  - Replace undefined `--bg-card` / `--bg-secondary` with `--bg-surface` / `--bg-page` on nearby toggles and panels.
+  - CSS: `.modal-overlay .modal-card` gets an opaque surface (no card-level glass blur).
+* **Trade-offs Accepted:**
+  - Did not globally define `--bg-card` aliases across the app; fixed call sites in this flow. Broader token cleanup remains optional.
+
 
