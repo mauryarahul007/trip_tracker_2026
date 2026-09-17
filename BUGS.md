@@ -9,10 +9,10 @@
 
 | Metric | Count | Status Notes |
 | :--- | :--- | :--- |
-| **Total Tracked** | **223** | All recorded bugs across sessions |
+| **Total Tracked** | **224** | All recorded bugs across sessions |
 | **🟢 Open** | **0** | No critical blockers, 0 High |
 | **🟡 In Progress** | **0** | Active investigation or fix |
-| **✅ Resolved** | **197** | Verified & closed |
+| **✅ Resolved** | **198** | Verified & closed |
 | **⚪ Won't Fix** | **26** | Expected behavior / deferred |
 
 ---
@@ -228,6 +228,7 @@
 | **BUG-222** | Notes hub blanked when opening Chat (MapLibre eager import) | `ui-ux` | `high` | `human` | `cursor-agent` | Lazy-load TripChatPanel inside Notes with nested Chat TabErrorBoundary; defer maplibre-gl until LiveLocationChatBanner expands a share map. Also hardened chat placement (Notes-shell fallback, flag copy). Fixed in v3.27.1 — commit 6f62609. |
 | **BUG-223** | Chat tab Maximum update depth from unstable expenses zustand selector | `ui-ux` | `high` | `human` | `cursor-agent` | Select s.expenses (stable) and filter in useMemo; harden payload guards and amount formatting; show error.message on TabErrorBoundary. Fixed in commit 437f53a (v3.27.2). |
 | **BUG-224** | Settlement Algorithm info dialog transparent over Who owes who | `ui-ux` | `medium` | `human` | `cursor-agent` | Portal modal to document.body; solid --bg-surface card; drop glass-card; fix undefined tokens; opaque .modal-overlay .modal-card CSS. Fixed in commit 5e907a6 (v3.27.3). |
+| **BUG-225** | CI build failed: stale database.ts types + no-op typecheck command | `general` | `high` | `agent` | `agent` | src/types/database.ts was missing the columns/RPCs added by migrations 0098-0101 (approval_status, settlement_confirmed_at, share_token, share_enabled, share_expires_at, approval_threshold, confirm_settlement, approve_expense, get_trip_share), so tsc -b (what npm run build actually uses) failed with RejectExcessProperties errors from postgrest-js. My earlier verification used tsc --noEmit -p . which silently checks zero files since the root tsconfig.json only has references, no include -- gave a false pass all session. Fixed by hand-adding the missing fields/RPCs to database.ts (not a full regen, which would have overwritten this file's hand-tuned narrower literal types across many unrelated tables) and switching verification to tsc -b --noEmit. |
 
 ---
 

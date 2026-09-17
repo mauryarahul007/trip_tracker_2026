@@ -6681,5 +6681,31 @@
     "resolvedBy": "cursor-agent",
     "resolvedAt": "2026-09-17T07:55:00.000Z",
     "resolutionNote": "Portal modal to document.body; solid --bg-surface card; drop glass-card; fix undefined tokens; opaque .modal-overlay .modal-card CSS. Fixed in commit 5e907a6 (v3.27.3)."
+  },
+  {
+    "id": "BUG-225",
+    "title": "CI build failed: stale database.ts types + no-op typecheck command",
+    "description": "CI build failed: stale database.ts types + no-op typecheck command",
+    "severity": "high",
+    "category": "general",
+    "status": "resolved",
+    "foundBy": "agent",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-09-17T18:13:30.514Z",
+    "updatedAt": "2026-09-17T18:13:40.936Z",
+    "resolvedBy": "agent",
+    "resolvedAt": "2026-09-17T18:13:40.936Z",
+    "resolutionNote": "src/types/database.ts was missing the columns/RPCs added by migrations 0098-0101 (approval_status, settlement_confirmed_at, share_token, share_enabled, share_expires_at, approval_threshold, confirm_settlement, approve_expense, get_trip_share), so tsc -b (what npm run build actually uses) failed with RejectExcessProperties errors from postgrest-js. My earlier verification used tsc --noEmit -p . which silently checks zero files since the root tsconfig.json only has references, no include -- gave a false pass all session. Fixed by hand-adding the missing fields/RPCs to database.ts (not a full regen, which would have overwritten this file's hand-tuned narrower literal types across many unrelated tables) and switching verification to tsc -b --noEmit."
   }
 ]

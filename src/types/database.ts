@@ -46,6 +46,10 @@ export interface Database {
           fx_config?: unknown;
           member_roles?: Record<string, string> | null;
           split_exclusion_defaults?: Record<string, string[]> | null;
+          share_token: string | null;
+          share_enabled: boolean;
+          share_expires_at: string | null;
+          approval_threshold: number | null;
           created_at: string;
           updated_at: string;
         };
@@ -85,6 +89,10 @@ export interface Database {
           fx_config?: unknown;
           member_roles?: Record<string, string> | null;
           split_exclusion_defaults?: Record<string, string[]> | null;
+          share_token: string | null;
+          share_enabled: boolean;
+          share_expires_at: string | null;
+          approval_threshold: number | null;
           updated_at: string;
         }>;
         Relationships: [];
@@ -281,6 +289,10 @@ export interface Database {
           disputed_at: string | null;
           disputed_by_user_id: string | null;
           dispute_note: string | null;
+          settlement_confirmed_at: string | null;
+          settlement_confirmed_by_user_id: string | null;
+          approval_status: 'confirmed' | 'pending_approval';
+          approved_by_user_id: string | null;
           is_settlement: boolean;
           created_by_user_id: string | null;
           location?: { lat: number; lng: number; placeName?: string } | null;
@@ -307,6 +319,7 @@ export interface Database {
           photo_paths?: string[] | null;
           location?: { lat: number; lng: number; placeName?: string } | null;
           is_settlement?: boolean;
+          approval_status?: 'confirmed' | 'pending_approval';
           created_by_user_id: string;
         };
         Update: Partial<{
@@ -326,6 +339,10 @@ export interface Database {
           disputed_at: string | null;
           disputed_by_user_id: string | null;
           dispute_note: string | null;
+          settlement_confirmed_at: string | null;
+          settlement_confirmed_by_user_id: string | null;
+          approval_status: 'confirmed' | 'pending_approval';
+          approved_by_user_id: string | null;
           location: { lat: number; lng: number; placeName?: string } | null;
           deleted_at: string | null;
           deleted_by_user_id: string | null;
@@ -823,6 +840,26 @@ export interface Database {
       resolve_expense_dispute: {
         Args: { p_expense_id: string };
         Returns: Database['public']['Tables']['expenses']['Row'];
+      };
+      confirm_settlement: {
+        Args: { p_expense_id: string };
+        Returns: Database['public']['Tables']['expenses']['Row'];
+      };
+      approve_expense: {
+        Args: { p_expense_id: string };
+        Returns: Database['public']['Tables']['expenses']['Row'];
+      };
+      get_trip_share: {
+        Args: { p_token: string };
+        Returns: {
+          trip_name: string;
+          start_date: string;
+          end_date: string;
+          destination: string | null;
+          member_count: number;
+          expense_count: number;
+          spend_by_currency: Record<string, number>;
+        }[];
       };
       submit_feature_request: {
         Args: {
