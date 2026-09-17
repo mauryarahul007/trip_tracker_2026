@@ -6680,6 +6680,6 @@
     "updatedAt": "2026-09-17T07:55:00.000Z",
     "resolvedBy": "cursor-agent",
     "resolvedAt": "2026-09-17T07:55:00.000Z",
-    "resolutionNote": "Portal modal to document.body; solid --bg-surface card; drop glass-card; fix undefined tokens; opaque .modal-overlay .modal-card CSS. Fixed in v3.27.3 — commit pending."
+    "resolutionNote": "Portal modal to document.body; solid --bg-surface card; drop glass-card; fix undefined tokens; opaque .modal-overlay .modal-card CSS. Fixed in commit 5e907a6 (v3.27.3)."
   }
 ]

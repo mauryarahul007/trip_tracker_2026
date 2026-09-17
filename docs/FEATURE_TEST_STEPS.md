@@ -245,7 +245,7 @@ No new flag. `enableInChatEventCards` unchanged (not the crash cause).
 
 ## BUG-224 — Settlement Algorithm info modal opacity (v3.27.3)
 
-**Commit:** pending in this release. **ADR:** #192.
+**Commit:** `5e907a6`. **ADR:** #192.
 
 ### Flags
 No new flag. Summary / Who owes who available when balances exist.
