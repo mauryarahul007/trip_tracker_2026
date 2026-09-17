@@ -20,9 +20,13 @@ type Props = {
   onDuplicate?: () => void;
   onFlagDispute?: () => void;
   onResolveDispute?: () => void;
+  myMemberId?: string | null;
+  onConfirmSettlement?: () => void;
+  settlementConfirmationEnabled?: boolean;
+  onApproveExpense?: () => void;
 };
 
-export function ExpenseReviewModal({ expense, members, categories, trip, canManage, currentUserId, isTripAdmin, onClose, onEdit, onDelete, onDuplicate, onFlagDispute, onResolveDispute }: Props) {
+export function ExpenseReviewModal({ expense, members, categories, trip, canManage, currentUserId, isTripAdmin, onClose, onEdit, onDelete, onDuplicate, onFlagDispute, onResolveDispute, myMemberId, onConfirmSettlement, settlementConfirmationEnabled, onApproveExpense }: Props) {
   const isSettlement = expense.title.startsWith('Settlement:');
   const currencySymbol = getCurrencySymbol(trip?.baseCurrency || '');
   const [receiptUrl, setReceiptUrl] = useState<string | null>(null);
@@ -124,6 +128,24 @@ export function ExpenseReviewModal({ expense, members, categories, trip, canMana
               <IconAlertCircle size={13} className="icon-sm" /> Resolve
             </button>
           )}
+          {expense.approvalStatus === 'pending_approval' && expense.createdByUserId !== currentUserId && onApproveExpense && (
+            <button
+              className="secondary-btn"
+              style={{ padding: '6px 12px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}
+              onClick={onApproveExpense}
+            >
+              ✓ Approve
+            </button>
+          )}
+          {isSettlement && settlementConfirmationEnabled && !expense.settlementConfirmedAt && expense.splitMemberIds[0] === myMemberId && onConfirmSettlement && (
+            <button
+              className="secondary-btn"
+              style={{ padding: '6px 12px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}
+              onClick={onConfirmSettlement}
+            >
+              ✓ Confirm Receipt
+            </button>
+          )}
           {canManage && (
             <button
               className="secondary-btn"
@@ -134,6 +156,36 @@ export function ExpenseReviewModal({ expense, members, categories, trip, canMana
             </button>
           )}
         </div>
+
+        {expense.approvalStatus === 'pending_approval' && (
+          <div style={{
+            fontSize: '12.5px',
+            color: 'var(--color-warning, #b8862e)',
+            background: 'rgba(184, 134, 46, 0.08)',
+            border: '1px solid rgba(184, 134, 46, 0.25)',
+            borderRadius: 'var(--border-radius-md)',
+            padding: '8px 12px',
+            marginBottom: '16px',
+          }}>
+            Pending approval — above this trip's threshold, so it's excluded from balances until a second member approves it.
+          </div>
+        )}
+
+        {isSettlement && settlementConfirmationEnabled && (
+          <div style={{
+            fontSize: '12.5px',
+            color: expense.settlementConfirmedAt ? 'var(--color-success, #17B6A6)' : 'var(--text-secondary)',
+            background: expense.settlementConfirmedAt ? 'rgba(23,182,166,0.08)' : 'var(--bg-subtle, rgba(15,23,42,0.04))',
+            border: `1px solid ${expense.settlementConfirmedAt ? 'rgba(23,182,166,0.25)' : 'var(--border-color)'}`,
+            borderRadius: 'var(--border-radius-md)',
+            padding: '8px 12px',
+            marginBottom: '16px',
+          }}>
+            {expense.settlementConfirmedAt
+              ? `✓ Confirmed received by ${members[expense.splitMemberIds[0]]?.name || 'recipient'}`
+              : 'Awaiting confirmation from the recipient that this was received.'}
+          </div>
+        )}
 
         {expense.disputedAt && (
           <div style={{

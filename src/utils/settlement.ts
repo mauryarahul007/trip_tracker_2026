@@ -159,7 +159,10 @@ export function calculateDirectSettlements(
   expenses: Expense[],
   groups: Group[] = []
 ): Transfer[] {
-  const activeTripExpenses = expenses.filter((e) => e.tripId === trip.id && !e.deletedAt);
+  // approvalStatus === 'pending_approval' (enableExpenseApprovalThreshold) is
+  // excluded from every balance/transfer calc until a second member approves
+  // it -- otherwise an unapproved big expense would silently move money.
+  const activeTripExpenses = expenses.filter((e) => e.tripId === trip.id && !e.deletedAt && e.approvalStatus !== 'pending_approval');
 
   // Group membership index
   const groupOfMember: Record<string, string> = {};
@@ -256,8 +259,11 @@ export function calculateSettlements(
   groups: Group[] = [],
   options?: { simplifyDebts?: boolean }
 ): { balances: MemberBalance[]; transfers: Transfer[]; isSimplified: boolean } {
-  const activeTripExpenses = expenses.filter((e) => e.tripId === trip.id && !e.deletedAt);
-  
+  // approvalStatus === 'pending_approval' (enableExpenseApprovalThreshold) is
+  // excluded until a second member approves it, same reasoning as
+  // calculateDirectSettlements above.
+  const activeTripExpenses = expenses.filter((e) => e.tripId === trip.id && !e.deletedAt && e.approvalStatus !== 'pending_approval');
+
   // 1. Calculate net balances for every member of the trip
   const netBalances: Record<string, number> = {};
   trip.memberIds.forEach((id) => {

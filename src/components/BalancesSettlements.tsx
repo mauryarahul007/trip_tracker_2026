@@ -898,6 +898,9 @@ export function BalancesSettlements({
   const setTripSimplifyDebts = useTripStore((s) => s.setTripSimplifyDebts);
   const [showSimplifyInfo, setShowSimplifyInfo] = useState(false);
   const isSimplified = trip.simplifyDebts !== false;
+  const isApprovalThresholdEnabled = useTripStore((s) => s.isFeatureEnabled('enableExpenseApprovalThreshold', { tripId: trip.id }));
+  const updateApprovalThreshold = useTripStore((s) => s.updateApprovalThreshold);
+  const [thresholdInput, setThresholdInput] = useState(trip.approvalThreshold != null ? String(trip.approvalThreshold) : '');
 
   const setCustom = (rowKey: string, v: string) => setCustomAmounts({ ...customAmounts, [rowKey]: v });
   const toggleCustomOpen = (rowKey: string) => setCustomOpenKeys({ ...customOpenKeys, [rowKey]: !customOpenKeys[rowKey] });
@@ -1053,6 +1056,30 @@ export function BalancesSettlements({
             </span>
           </div>
         </div>
+
+        {isApprovalThresholdEnabled && isAdmin && (
+          <div style={{ padding: '10px 4px', marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <label htmlFor="approval-threshold-input" style={{ fontSize: '12px', color: 'var(--text-secondary)', flexShrink: 0 }}>
+              Require 2nd approval above
+            </label>
+            <input
+              id="approval-threshold-input"
+              type="number"
+              min="0"
+              inputMode="decimal"
+              placeholder="Off"
+              className="input-field"
+              style={{ width: '90px', fontSize: '13px', padding: '5px 8px' }}
+              value={thresholdInput}
+              onChange={(e) => setThresholdInput(e.target.value)}
+              onBlur={() => {
+                const parsed = thresholdInput.trim() === '' ? null : Number(thresholdInput);
+                void updateApprovalThreshold(trip.id, Number.isFinite(parsed) && (parsed as number) > 0 ? parsed : null);
+              }}
+            />
+            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{currencySymbol}</span>
+          </div>
+        )}
 
         {isSimplifyToggleActive && (
           <div

@@ -12,6 +12,8 @@ export const NOTIFICATION_TYPE_HEADLINES: Record<string, string> = {
   settlement_reminder: 'Settlement Reminder',
   settlement: 'Settlement Updated',
   settle: 'Settlement Updated',
+  settlement_confirmation_requested: 'Confirm Settlement',
+  weather_itinerary_nudge: 'Weather Alert',
   chat_message: 'New Message',
 };
 
@@ -90,6 +92,13 @@ export function renderNotificationBody(notification: AppNotification): string {
         return `You owe ${data.toLabel} ${data.currency || ''}${data.amount} for this trip`;
       }
       return notification.body || 'You have a pending settlement reminder';
+    case 'settlement_confirmation_requested':
+      if (data?.amount && data?.currency) {
+        return `Someone marked ${data.currency} ${parseFloat(data.amount).toFixed(2)} as paid to you — confirm you received it`;
+      }
+      return notification.body || 'Confirm a settlement paid to you';
+    case 'weather_itinerary_nudge':
+      return notification.body || 'Rain looks likely tomorrow near your next stop — plan an indoor backup.';
     case 'trip_deleted':
       return `"${data?.tripName || notification.title || 'Trip'}" was deleted`;
     case 'chat_message':

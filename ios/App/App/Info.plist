@@ -39,6 +39,8 @@
 	<string>Trip Tracker can tag the location where an expense happened, only while you're adding it.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Trip Tracker lets you attach an existing photo of a receipt to an expense.</string>
+	<key>NSContactsUsageDescription</key>
+	<string>Trip Tracker can look up a contact so you can send them a trip invite.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

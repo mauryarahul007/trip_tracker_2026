@@ -400,6 +400,9 @@ export function ExpenseList({
                 {exp.disputedAt && (
                   <span style={{ fontSize: '11px', flexShrink: 0 }} title={exp.disputeNote ? `Flagged: ${exp.disputeNote}` : 'Flagged as disputed'} aria-label="Disputed">🚩</span>
                 )}
+                {exp.approvalStatus === 'pending_approval' && (
+                  <span style={{ fontSize: '11px', flexShrink: 0 }} title="Pending approval — excluded from balances until a second member approves it" aria-label="Pending approval">⏳</span>
+                )}
                 {isConflict ? (
                   <span style={{ fontSize: '10px', flexShrink: 0, opacity: 0.9 }} title="Sync conflict — choose which version to keep" aria-label="Sync conflict">⚠️</span>
                 ) : isDirty ? (

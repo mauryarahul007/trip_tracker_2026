@@ -41,6 +41,8 @@ function renderNotification(type: string, tripName: string, params: Record<strin
       return { title, body: `${params.memberName} joined the trip` };
     case 'settlement_reminder':
       return { title, body: `You owe ${params.toLabel} ${params.currency}${params.amount} for this trip` };
+    case 'settlement_confirmation_requested':
+      return { title, body: `Someone marked ${params.currency} ${params.amount} as paid to you — confirm you received it` };
     case 'trip_deleted':
       return { title, body: `${tripName || 'A trip'} was deleted` };
     case 'chat_message':

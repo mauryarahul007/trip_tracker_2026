@@ -192,6 +192,8 @@ export default function App() {
     deleteExpense,
     flagExpenseDispute,
     resolveExpenseDispute,
+    confirmSettlement,
+    approveExpense,
     addCategory,
     deleteCategory,
     exportDatabase,
@@ -1120,7 +1122,11 @@ export default function App() {
 
   // Filters out settlements to keep expense analytics clean
   const nonSettlementExpenses = useMemo(() => {
-    return activeTripExpenses.filter((e) => !e.title.startsWith('Settlement:'));
+    // approvalStatus === 'pending_approval' (enableExpenseApprovalThreshold)
+    // stays out of every money total here -- it's still visible in the
+    // expense list itself (activeTripExpenses, unfiltered) so it can be
+    // reviewed and approved, it just doesn't move any balance yet.
+    return activeTripExpenses.filter((e) => !e.title.startsWith('Settlement:') && e.approvalStatus !== 'pending_approval');
   }, [activeTripExpenses]);
 
   const totalSpent = useMemo(() => {
@@ -2862,6 +2868,14 @@ export default function App() {
             onResolveDispute={
               isFeatureEnabled('enableExpenseDisputes', { tripId: activeTrip?.id, userId: userId || undefined })
                 ? () => void resolveExpenseDispute(selectedReviewExpense.id)
+                : undefined
+            }
+            myMemberId={myMemberId}
+            settlementConfirmationEnabled={isFeatureEnabled('enableSettlementConfirmation', { tripId: activeTrip?.id, userId: userId || undefined })}
+            onConfirmSettlement={() => void confirmSettlement(selectedReviewExpense.id)}
+            onApproveExpense={
+              isFeatureEnabled('enableExpenseApprovalThreshold', { tripId: activeTrip?.id, userId: userId || undefined })
+                ? () => void approveExpense(selectedReviewExpense.id)
                 : undefined
             }
           />

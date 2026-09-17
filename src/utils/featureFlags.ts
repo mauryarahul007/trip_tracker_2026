@@ -19,7 +19,7 @@ export const RELEASE_PHASES: ReleasePhaseDef[] = [
     tagline: 'Frictionless on-trip logging & shared trip organization',
     description: 'Hands-free voice quick-add with Hinglish NLP parsing, compressed receipt photos, collaborative packing & rich notes, and 4D duplicate expense warning.',
     targetAudience: 'Friends & families actively traveling together',
-    flagKeys: ['enableVoiceInput', 'enableReceiptUpload', 'enableNotesAndChecklist', 'enableDuplicateDetector', 'enableTripChat', 'enableExpensePhotoLinking', 'enableExpenseDisputes', 'enableDigestNotifications', 'enableMemberLastSeen', 'enableQuietHours'],
+    flagKeys: ['enableVoiceInput', 'enableReceiptUpload', 'enableNotesAndChecklist', 'enableDuplicateDetector', 'enableTripChat', 'enableExpensePhotoLinking', 'enableExpenseDisputes', 'enableDigestNotifications', 'enableMemberLastSeen', 'enableQuietHours', 'enableExpenseApprovalThreshold'],
   },
   {
     id: 'phase3',
@@ -41,6 +41,7 @@ export const RELEASE_PHASES: ReleasePhaseDef[] = [
       'enableOfflineMapTiles',
       'enableLiveLocationShare',
       'enableMapCollapsedByDefault',
+      'enableWeatherItineraryNudges',
     ],
   },
   {
@@ -82,6 +83,9 @@ export const RELEASE_PHASES: ReleasePhaseDef[] = [
       'enableSettlementHistory',
       'enableTripCloseout',
       'enableCrossTripSearch',
+      'enableSettlementConfirmation',
+      'enableTripShareLink',
+      'enableContactInvite',
     ],
   },
   {
@@ -246,6 +250,15 @@ export const FEATURE_FLAGS_META: Record<FeatureFlagKey, FeatureFlagMeta> = {
     phase: 'phase2',
     defaultEnabledForUsers: true,
   },
+  enableExpenseApprovalThreshold: {
+    key: 'enableExpenseApprovalThreshold',
+    label: 'Big-Expense Mutual Approval',
+    description:
+      'Expenses above a per-trip threshold enter Pending Approval and are excluded from balances/analytics until a second member approves.',
+    category: 'collab',
+    phase: 'phase2',
+    defaultEnabledForUsers: false,
+  },
 
   // Phase 3: Smart Travel Navigator & Pass Hub
   enableTravelPasses: {
@@ -333,6 +346,14 @@ export const FEATURE_FLAGS_META: Record<FeatureFlagKey, FeatureFlagMeta> = {
     label: 'Collapse Map by Default',
     description: 'Open a trip with the content sheet covering the map. Swipe down to peek the route.',
     category: 'geotagging',
+    phase: 'phase3',
+    defaultEnabledForUsers: false,
+  },
+  enableWeatherItineraryNudges: {
+    key: 'enableWeatherItineraryNudges',
+    label: 'Weather-Triggered Itinerary Nudges',
+    description: 'Daily server check of each upcoming route-stop destination; pushes a nudge when bad weather is forecast for the next day.',
+    category: 'transit',
     phase: 'phase3',
     defaultEnabledForUsers: false,
   },
@@ -489,6 +510,30 @@ export const FEATURE_FLAGS_META: Record<FeatureFlagKey, FeatureFlagMeta> = {
     label: 'Settlement Date & Note',
     description: 'Record a settlement with a chosen date and optional note on the ledger entry.',
     category: 'splits',
+    phase: 'phase5',
+    defaultEnabledForUsers: false,
+  },
+  enableSettlementConfirmation: {
+    key: 'enableSettlementConfirmation',
+    label: 'Two-Sided Settlement Confirmation',
+    description: 'The recipient of a settlement must confirm receipt before it\'s marked fully settled, instead of trusting the payer\'s entry alone.',
+    category: 'splits',
+    phase: 'phase5',
+    defaultEnabledForUsers: false,
+  },
+  enableTripShareLink: {
+    key: 'enableTripShareLink',
+    label: 'Read-Only Trip Share Link',
+    description: 'Generate a revocable, no-login link showing a bounded read-only trip summary for people outside the trip.',
+    category: 'core',
+    phase: 'phase5',
+    defaultEnabledForUsers: false,
+  },
+  enableContactInvite: {
+    key: 'enableContactInvite',
+    label: 'Invite From Phone Contacts',
+    description: 'Pick a trip invitee from the device contact list (native only) and hand off to the system share sheet with the join link.',
+    category: 'core',
     phase: 'phase5',
     defaultEnabledForUsers: false,
   },
@@ -662,6 +707,7 @@ export const DEFAULT_FEATURE_FLAGS: Record<FeatureFlagKey, boolean> = {
   enableDigestNotifications: false,
   enableMemberLastSeen: false,
   enableQuietHours: false,
+  enableExpenseApprovalThreshold: false,
 
   // Phase 3 (Armed by default)
   enableTravelPasses: true,
@@ -675,6 +721,7 @@ export const DEFAULT_FEATURE_FLAGS: Record<FeatureFlagKey, boolean> = {
   enableOfflineMapTiles: false,
   enableLiveLocationShare: false,
   enableMapCollapsedByDefault: false,
+  enableWeatherItineraryNudges: false,
 
   // Phase 4 (Armed by default)
   enableAdvancedSplits: true,
@@ -698,6 +745,9 @@ export const DEFAULT_FEATURE_FLAGS: Record<FeatureFlagKey, boolean> = {
   enableSettlementHistory: false,
   enableTripCloseout: false,
   enableCrossTripSearch: false,
+  enableSettlementConfirmation: false,
+  enableTripShareLink: false,
+  enableContactInvite: false,
 
   // Phase 6 (WhatsApp Social & Chat Hub - safed by default)
   enableChatFirstNav: false,

@@ -27,6 +27,7 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 | 2026-09-17 | v3.27.1 | BUG-222 | [Chat placement + Notes/Chat crash](#chat-placement-flags--notes-vs-tab-1) |
 | 2026-09-17 | v3.27.2 | BUG-223 | [Chat max update depth](#bug-223--chat-max-update-depth-v3272) |
 | 2026-09-17 | v3.27.3 | BUG-224 | [Settlement Algorithm info modal opacity](#bug-224--settlement-algorithm-info-modal-opacity-v3273) |
+| 2026-09-17 | v3.28.0 | FEAT-078 | [Settlement confirmation, share link, contact invite, weather nudges, expense approval](#feat-078--settlement-confirmation-share-link-contact-invite-weather-nudges-expense-approval-v3280) |
 
 ---
 
@@ -262,6 +263,72 @@ No new flag. Summary / Who owes who available when balances exist.
 
 ### Pass
 - Dialog text is fully readable; no bleed-through of “Who owes who” / amounts through the card.
+
+---
+
+## FEAT-078 — Settlement confirmation, share link, contact invite, weather nudges, expense approval (v3.28.0)
+
+**Migrations:** `0098` (trip share link), `0099` (settlement confirmation), `0100` (expense approval threshold), `0101` (weather nudges). `0102` (Google Calendar sync) and its edge functions were shipped, then fully removed by `0103` before any user connected — see decisions.md #194. Not covered below.
+**New edge functions:** `send-weather-nudge`.
+**Manual setup required** (server-side, one-time, not code): Vault secret `weather_nudge_cron_secret` (see migration 0101 header) — already set for this project; until set, weather nudges silently no-op on schedule instead of erroring.
+
+### Flags
+
+| Behavior | Flag | Default |
+|----------|------|---------|
+| Two-sided settlement confirmation | `enableSettlementConfirmation` | OFF |
+| Read-only trip share link | `enableTripShareLink` | OFF |
+| Invite from phone contacts | `enableContactInvite` | OFF |
+| Weather-triggered itinerary nudges | `enableWeatherItineraryNudges` | OFF |
+| Big-expense mutual approval | `enableExpenseApprovalThreshold` | OFF |
+
+### A. Settlement confirmation
+
+1. `enableSettlementConfirmation` OFF → record a settlement (A pays B) → open it from the expense list → no confirm button, no status banner.
+2. Flag ON → A records the settlement → as **B**, open the settlement from the list → "Confirm Receipt" button visible; A does not see it on their own copy.
+3. B taps Confirm → banner switches to "✓ Confirmed received by B"; A's view updates on refresh.
+4. B gets a push/in-app notification ("...confirm you received it") when the settlement is recorded.
+5. Confirming twice (retry) is rejected server-side (`already confirmed`).
+
+### B. Read-only trip share link
+
+1. `enableTripShareLink` OFF → Share & Export modal → no "Read-only summary link" section.
+2. Flag ON → open **Share & Export** → **Generate Share Link** → link appears, copy works.
+3. Open the link in a private/incognito window (logged out) → trip name, dates, destination, traveler/expense counts, and total spend by currency render — **no** member names, no individual expenses, no balances.
+4. **Revoke Link** → reloading the same URL shows "This link has ended or expired."
+5. Regenerating issues a new token; the old link stops resolving.
+
+### C. Invite from phone contacts
+
+1. `enableContactInvite` OFF → Share & Export modal → no "Invite From Contacts" button.
+2. Flag ON, **native app only** (button hidden on web) → tap **Invite From Contacts** → OS contact picker opens.
+3. Grant permission, pick a contact → OS share sheet opens prefilled with a message containing the join link.
+4. Deny contacts permission → inline error shown, no crash.
+
+### D. Weather-triggered itinerary nudges
+
+1. `enableWeatherItineraryNudges` OFF for all trips → no nudge pushes/notifications appear regardless of forecast.
+2. Flag ON (global or trip override) for a trip with a route stop that has coordinates, ending in the future → after the daily cron fires (18:00 UTC) and Open-Meteo reports ≥60% precip probability or a stormy code for tomorrow at that stop, all linked participants get a push + in-app notification ("Rain looks likely tomorrow...").
+3. A trip already nudged today is not nudged again even if the job re-runs (`weather_nudge_log` dedupe).
+4. A trip with no stop coordinates and no `destination` text is skipped, not errored.
+
+### E. Big-expense mutual approval
+
+1. `enableExpenseApprovalThreshold` OFF → **Balances** tab has no "Require 2nd approval above" field; expenses of any size post normally.
+2. Flag ON → trip admin sets a threshold (e.g. 5000) in **Balances** → an expense at/above that amount saves with a ⏳ badge in the list and doesn't move balances (Balances tab total unaffected).
+3. Open the pending expense → "Pending approval" banner + **Approve** button visible to anyone **except** its creator.
+4. A second member taps Approve → badge/banner clear, balances update to include it.
+5. The creator does not see an Approve button on their own pending expense (self-approval blocked server-side too).
+6. A settlement above the threshold is **not** gated (settlement confirmation, section A, covers that trust path instead).
+7. Clearing the threshold field (empty) turns the gate off for that trip; expenses of any size post normally again.
+
+### Negative checks
+
+- All five flags OFF → none of the new UI (share link section, contacts button, approval field/badges) renders anywhere, and no new push/notification types fire.
+
+### Pass
+
+- Each flag independently gates its feature with no bleed into the others; balances/analytics never include a pending-approval expense; the share link never exposes member-level data.
 
 ---
 

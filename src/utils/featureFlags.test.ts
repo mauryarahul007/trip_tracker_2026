@@ -49,6 +49,9 @@ describe('featureFlags', () => {
       'enableSettlementHistory',
       'enableTripCloseout',
       'enableCrossTripSearch',
+      'enableSettlementConfirmation',
+      'enableTripShareLink',
+      'enableContactInvite',
     ]);
   });
 
@@ -180,7 +183,7 @@ describe('featureFlags', () => {
 
   it('verifies that every single flag in all phases can be enabled and disabled', () => {
     const allFlagKeys = Object.keys(DEFAULT_FEATURE_FLAGS) as (keyof typeof DEFAULT_FEATURE_FLAGS)[];
-    expect(allFlagKeys.length).toBe(61);
+    expect(allFlagKeys.length).toBe(66);
 
     allFlagKeys.forEach((flagKey) => {
       const disabledFlags = { ...DEFAULT_FEATURE_FLAGS, [flagKey]: false };

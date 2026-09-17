@@ -1227,5 +1227,85 @@
     "shippedBy": "claude-cli",
     "shippedAt": "2026-09-17T05:51:55.830Z",
     "shippedNote": "Shipped in commit fbe5c7a (v3.27.0). Migrations 0095-0097 applied remotely. ADR #189."
+  },
+  {
+    "id": "FEAT-078",
+    "title": "Two-sided settlement confirmation (enableSettlementConfirmation)",
+    "description": "Two-sided settlement confirmation (enableSettlementConfirmation)",
+    "category": "sync",
+    "status": "shipped",
+    "requestedBy": "agent",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-09-17T18:00:23.506Z",
+    "updatedAt": "2026-09-17T18:00:32.302Z",
+    "shippedBy": "agent",
+    "shippedAt": "2026-09-17T18:00:32.302Z",
+    "shippedNote": "Shipped flag-gated (default OFF), see docs/FEATURE_TEST_STEPS.md and decisions.md #193"
+  },
+  {
+    "id": "FEAT-079",
+    "title": "Read-only trip share link (enableTripShareLink)",
+    "description": "Read-only trip share link (enableTripShareLink)",
+    "category": "sync",
+    "status": "shipped",
+    "requestedBy": "agent",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-09-17T18:00:23.612Z",
+    "updatedAt": "2026-09-17T18:00:32.375Z",
+    "shippedBy": "agent",
+    "shippedAt": "2026-09-17T18:00:32.375Z",
+    "shippedNote": "Shipped flag-gated (default OFF), see docs/FEATURE_TEST_STEPS.md and decisions.md #193"
+  },
+  {
+    "id": "FEAT-080",
+    "title": "Invite from phone contacts (enableContactInvite)",
+    "description": "Invite from phone contacts (enableContactInvite)",
+    "category": "native",
+    "status": "shipped",
+    "requestedBy": "agent",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-09-17T18:00:23.708Z",
+    "updatedAt": "2026-09-17T18:00:32.453Z",
+    "shippedBy": "agent",
+    "shippedAt": "2026-09-17T18:00:32.453Z",
+    "shippedNote": "Shipped flag-gated (default OFF), see docs/FEATURE_TEST_STEPS.md and decisions.md #193"
+  },
+  {
+    "id": "FEAT-081",
+    "title": "Weather-triggered itinerary nudges (enableWeatherItineraryNudges)",
+    "description": "Weather-triggered itinerary nudges (enableWeatherItineraryNudges)",
+    "category": "notifications",
+    "status": "shipped",
+    "requestedBy": "agent",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-09-17T18:00:23.810Z",
+    "updatedAt": "2026-09-17T18:00:32.520Z",
+    "shippedBy": "agent",
+    "shippedAt": "2026-09-17T18:00:32.520Z",
+    "shippedNote": "Shipped flag-gated (default OFF), see docs/FEATURE_TEST_STEPS.md and decisions.md #193"
+  },
+  {
+    "id": "FEAT-082",
+    "title": "Big-expense mutual approval threshold (enableExpenseApprovalThreshold)",
+    "description": "Big-expense mutual approval threshold (enableExpenseApprovalThreshold)",
+    "category": "security",
+    "status": "shipped",
+    "requestedBy": "agent",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-09-17T18:00:23.877Z",
+    "updatedAt": "2026-09-17T18:00:32.585Z",
+    "shippedBy": "agent",
+    "shippedAt": "2026-09-17T18:00:32.585Z",
+    "shippedNote": "Shipped flag-gated (default OFF), see docs/FEATURE_TEST_STEPS.md and decisions.md #193"
   }
 ]

@@ -3468,4 +3468,39 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - Did not globally define `--bg-card` aliases across the app; fixed call sites in this flow. Broader token cleanup remains optional.
 
+---
+
+## 193. Six Trust/Convenience Features: Settlement Confirmation, Share Link, Contact Invite, Weather Nudges, Expense Approval, Calendar Sync (FEAT-078, v3.28.0)
+* **Context:** Customer-facing gap audit surfaced six candidates spanning trust (settlement confirmation, big-expense approval), convenience (contact invite, share link), and travel (weather nudges, calendar sync). Planned and scoped before implementation per the mandatory plan-first rule; user approved all six.
+* **Decision:**
+  - Merged the originally separate "public trip page" and "read-only guest link" asks into one `enableTripShareLink` feature — same token-gated anon-read mechanism, building both would have duplicated the access-control code.
+  - Settlement confirmation and expense-approval both mirror the existing `flag_expense_dispute`/`resolve_expense_dispute` SECURITY DEFINER RPC shape (migration 0085) rather than inventing a new authorization pattern.
+  - Trip share link reuses the unguessable-uuid-token-no-lockout-needed reasoning from `member_locations.share_token` (migration 0086), not the short-join-code IP-lockout pattern (migration 0081) — the token has enough entropy on its own.
+  - Weather nudges reuse the exact cron -> secret-header-authenticated-edge-function shape as digest notifications (migration 0087), including the Vault manual-setup step.
+  - Calendar sync is scoped to **one-way (app → Google Calendar push only)** for v1 — true two-way sync needs a public webhook receiver with 7-day renewal upkeep and ongoing token-refresh cron; one-way still delivers most of the customer value (passes land on the traveler's phone calendar) without that operational surface. Flagged as the heaviest of the six at plan time; scoped down as recommended.
+  - Big-expense approval explicitly excludes settlements from the threshold gate — `enableSettlementConfirmation` already covers settlement trust from the recipient's side; gating both would be two confirmation steps for the same money movement.
+* **Pattern/Implementation:**
+  - Migrations `0098`–`0102`. New edge functions: `send-weather-nudge`, `google-calendar-oauth-start`, `google-calendar-oauth-callback`, `push-calendar-event`.
+  - `approvalStatus === 'pending_approval'` is excluded at the single choke point each for balances (`settlement.ts`'s two functions) and analytics/burn-rate (`App.tsx`'s `nonSettlementExpenses`) — the expense list itself still shows pending items (with a ⏳ badge) so they can be reviewed and approved.
+  - Calendar/weather OAuth and cron secrets follow the same Vault + edge-function-env-var manual-setup pattern established by `digest_cron_secret` (0087) — never committed to git.
+  - All six flags registered per the mandatory flag-gating rule: `enableSettlementConfirmation` / `enableTripShareLink` / `enableContactInvite` → Phase 5; `enableExpenseApprovalThreshold` → Phase 2; `enableWeatherItineraryNudges` / `enableCalendarSync` → Phase 3. Flag-count assertion bumped 61 → 67.
+* **Trade-offs Accepted:**
+  - Trip Wrapped's own internal expense aggregation was left untouched (pre-existing quirk: it already doesn't distinguish settlement rows either) — not in scope for this drop, flagged as a known gap rather than silently expanded into.
+  - The offline addExpense sync-queue path gets the correct `approvalStatus` on replay (fixed — an earlier pass would have silently un-gated a pending expense on reconnect) but does **not** fire the settlement-confirmation-requested push if the settlement was recorded while offline; the recipient still sees it in-app once synced, just without the nudge. Marked `ponytail:` in `tripStore.ts` with the upgrade path noted.
+  - Calendar sync token storage follows the codebase's existing precedent (RLS-protected plaintext in a service-role-only table, same posture as `device_push_tokens`) rather than adding column-level encryption infra that doesn't exist anywhere else in the app.
+
+---
+
+## 194. Removed Google Calendar Sync (deferred, not needed right now)
+* **Context:** User deferred the calendar-sync feature (#193) immediately after it shipped — never armed, no user ever connected an account, so removal is a clean revert with no data loss.
+* **Decision:** Fully removed rather than just leaving the flag OFF and the code dormant — less surface area to maintain/audit for a feature nobody asked to keep around. `enableCalendarSync` deregistered (67 → 66 flags). Migration `0102` (its tables/functions/cron) reverted by a new forward migration `0103` rather than deleting/rewriting `0102` — the historical record of what shipped and was then pulled stays intact, consistent with this repo's forward-only migration convention.
+* **Pattern/Implementation:**
+  - Deleted the three edge functions from the live project (`google-calendar-oauth-start`, `google-calendar-oauth-callback`, `push-calendar-event`) and their local directories.
+  - `0103_remove_calendar_sync.sql` drops `calendar_connections`, `calendar_oauth_states`, their functions, and the `expire-calendar-oauth-states` cron job.
+  - Removed `src/services/calendarSyncApi.ts`, the Travel Pass Wallet "Connect Google Calendar" UI, and the `pushPassToCalendar` hook in `saveTravelPass` (tripStore.ts).
+  - `supabase/config.toml`'s `verify_jwt = false` entry for `google-calendar-oauth-callback` removed along with it; `send-digest` and `send-weather-nudge` keep theirs (still legitimately needed — see #193's JWT-gateway fix).
+* **Trade-offs Accepted:**
+  - The other five features from #193 (settlement confirmation, trip share link, contact invite, weather nudges, expense approval threshold) are unaffected and remain as shipped.
+  - Revisiting calendar sync later means re-doing the Google Cloud OAuth client setup from scratch (nothing was configured for it before removal, so nothing extra was lost).
+
 

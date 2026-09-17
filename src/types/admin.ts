@@ -13,6 +13,7 @@ export type FeatureFlagKey =
   | 'enableExpenseDisputes'
   | 'enableDigestNotifications'
   | 'enableMemberLastSeen'
+  | 'enableExpenseApprovalThreshold'
   // Phase 3: Smart Travel Navigator & Pass Hub
   | 'enableTravelPasses'
   | 'enableNextUpCapsule'
@@ -25,6 +26,7 @@ export type FeatureFlagKey =
   | 'enableOfflineMapTiles'
   | 'enableLiveLocationShare'
   | 'enableMapCollapsedByDefault'
+  | 'enableWeatherItineraryNudges'
   // Phase 4: FinTech Pro & Global Jetsetter Suite
   | 'enableAdvancedSplits'
   | 'enableItemizedSplit'
@@ -48,6 +50,9 @@ export type FeatureFlagKey =
   | 'enableSettlementHistory'
   | 'enableTripCloseout'
   | 'enableCrossTripSearch'
+  | 'enableSettlementConfirmation'
+  | 'enableTripShareLink'
+  | 'enableContactInvite'
   // Phase 6: WhatsApp Social & Chat Hub
   | 'enableChatFirstNav'
   | 'enableChatReactionsAndReplies'

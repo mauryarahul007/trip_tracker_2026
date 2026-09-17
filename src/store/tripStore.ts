@@ -47,6 +47,9 @@ import {
   updateExpensePhotoPaths,
   flagExpenseDispute,
   resolveExpenseDispute,
+  confirmSettlement,
+  approveExpense,
+  updateApprovalThreshold,
   invalidatePreviousMembersCache,
   type ExpenseInput,
 } from '../services/tripApi';
@@ -228,6 +231,9 @@ interface TripStore extends TripState {
   removeExpensePhoto: (expenseId: string, path: string) => Promise<void>;
   flagExpenseDispute: (expenseId: string, note?: string) => Promise<void>;
   resolveExpenseDispute: (expenseId: string) => Promise<void>;
+  confirmSettlement: (expenseId: string) => Promise<void>;
+  approveExpense: (expenseId: string) => Promise<void>;
+  updateApprovalThreshold: (tripId: string, threshold: number | null) => Promise<void>;
 
   // Recycle Bin
   deletedExpenses: Expense[];
@@ -748,7 +754,7 @@ export const useTripStore = create<TripStore>()(
   const toExpenseInput = (
     e: Omit<Expense, 'id' | 'tripId' | 'resolvedShares' | 'createdAt' | 'updatedAt' | 'isSettlement' | 'createdByUserId'>,
     resolvedShares: Record<string, number>,
-    extra?: { id?: string; receiptPath?: string }
+    extra?: { id?: string; receiptPath?: string; approvalStatus?: 'confirmed' | 'pending_approval' }
   ): ExpenseInput => ({
     id: extra?.id,
     title: e.title,
@@ -764,7 +770,23 @@ export const useTripStore = create<TripStore>()(
     resolvedShares,
     receiptPath: extra?.receiptPath,
     location: e.location ?? null,
+    approvalStatus: extra?.approvalStatus,
   });
+
+  // A settlement is never gated by the threshold -- enableSettlementConfirmation
+  // already covers settlement trust from the recipient's side, gating both
+  // would just be two confirmation steps for the same money movement.
+  const computeApprovalStatus = (
+    trip: Trip | undefined,
+    thresholdEnabled: boolean,
+    isSettlement: boolean,
+    amount: number
+  ): 'confirmed' | 'pending_approval' => {
+    if (isSettlement || !thresholdEnabled) return 'confirmed';
+    const threshold = trip?.approvalThreshold;
+    if (!threshold || threshold <= 0) return 'confirmed';
+    return amount >= threshold ? 'pending_approval' : 'confirmed';
+  };
 
   return {
     trips: [],
@@ -1223,7 +1245,13 @@ export const useTripStore = create<TripStore>()(
                 receiptPath = await uploadReceipt(tripId, tempId, expenseData.receiptImage);
               }
               const location = await resolvePendingLocation(expenseData.location);
-              const savedExpense = await insertExpense(tripId, userId, toExpenseInput({ ...expenseData, location }, resolvedShares, { id: tempId, receiptPath }));
+              const approvalStatus = computeApprovalStatus(
+                get().trips.find((t) => t.id === tripId),
+                get().isFeatureEnabled('enableExpenseApprovalThreshold', { tripId, userId }),
+                expenseData.title.startsWith('Settlement:'),
+                expenseData.amount
+              );
+              const savedExpense = await insertExpense(tripId, userId, toExpenseInput({ ...expenseData, location }, resolvedShares, { id: tempId, receiptPath, approvalStatus }));
               set((state) => ({
                 expenses: state.expenses.map((e) => (e.id === tempId ? savedExpense : e)),
                 trips: state.trips.map((t) => (t.id === tripId ? { ...t, updatedAt: Date.now() } : t)),
@@ -2530,13 +2558,21 @@ export const useTripStore = create<TripStore>()(
 
       const resolvedShares = resolveShares(expenseData, participants);
       const tempId = newId();
+      const isSettlementExpense = expenseData.title.startsWith('Settlement:');
+      const approvalStatus = computeApprovalStatus(
+        activeTrip,
+        get().isFeatureEnabled('enableExpenseApprovalThreshold', { tripId, userId }),
+        isSettlementExpense,
+        expenseData.amount
+      );
       const tempExpense: Expense = {
         id: tempId,
         tripId,
         createdByUserId: userId,
         createdAt: Date.now(),
         updatedAt: Date.now(),
-        isSettlement: expenseData.title.startsWith('Settlement:'),
+        isSettlement: isSettlementExpense,
+        approvalStatus,
         title: expenseData.title.trim(),
         amount: expenseData.amount,
         currency: expenseData.currency,
@@ -2564,7 +2600,7 @@ export const useTripStore = create<TripStore>()(
           receiptPath = await uploadReceipt(tripId, tempId, expenseData.receiptImage);
         }
         const location = await resolvePendingLocation(expenseData.location);
-        const savedExpense = await insertExpense(tripId, userId, toExpenseInput({ ...expenseData, location }, resolvedShares, { id: tempId, receiptPath }));
+        const savedExpense = await insertExpense(tripId, userId, toExpenseInput({ ...expenseData, location }, resolvedShares, { id: tempId, receiptPath, approvalStatus }));
 
         set((state) => ({
           expenses: state.expenses.map((e) => (e.id === tempId ? savedExpense : e)),
@@ -2580,6 +2616,26 @@ export const useTripStore = create<TripStore>()(
           { expenseTitle: savedExpense.title, amount: savedExpense.amount.toFixed(2), currency: savedExpense.currency },
           tripId
         );
+        // ponytail: only fires on the online-first save path, not the offline
+        // sync-queue replay (line ~1237) -- a settlement recorded while
+        // offline still confirms fine, it just won't nudge the recipient
+        // until they see it in-app. Add the same block there if that gap matters.
+        if (
+          savedExpense.isSettlement &&
+          get().isFeatureEnabled('enableSettlementConfirmation', { tripId, userId })
+        ) {
+          const creditorMemberId = savedExpense.splitMemberIds[0];
+          const creditorUserId = creditorMemberId ? get().members[creditorMemberId]?.linkedUserId : null;
+          if (creditorUserId && creditorUserId !== userId) {
+            sendPushNotification(
+              [creditorUserId],
+              trip?.name || 'Trip Tracker',
+              'settlement_confirmation_requested',
+              { amount: savedExpense.amount.toFixed(2), currency: savedExpense.currency },
+              tripId
+            );
+          }
+        }
         void postExpenseAddedChatCard(get, tripId, userId, savedExpense);
       };
 
@@ -2745,6 +2801,42 @@ export const useTripStore = create<TripStore>()(
         ),
       }));
       void postDisputeChatCard(get, expenseId, true);
+    },
+
+    // Routed through the SECURITY DEFINER confirm_settlement RPC (migration
+    // 0099) -- only the recorded creditor can call it, enforced server-side.
+    confirmSettlement: async (expenseId) => {
+      if (isMissingSupabaseEnv) return;
+      const userId = get().userId;
+      if (!userId) return;
+      await confirmSettlement(expenseId);
+      set((state) => ({
+        expenses: state.expenses.map((e) =>
+          e.id === expenseId ? { ...e, settlementConfirmedAt: Date.now(), settlementConfirmedByUserId: userId } : e
+        ),
+      }));
+    },
+
+    // Routed through the SECURITY DEFINER approve_expense RPC (migration
+    // 0100) -- refuses self-approval by the expense's own creator server-side.
+    approveExpense: async (expenseId) => {
+      if (isMissingSupabaseEnv) return;
+      const userId = get().userId;
+      if (!userId) return;
+      await approveExpense(expenseId);
+      set((state) => ({
+        expenses: state.expenses.map((e) =>
+          e.id === expenseId ? { ...e, approvalStatus: 'confirmed', approvedByUserId: userId } : e
+        ),
+      }));
+    },
+
+    updateApprovalThreshold: async (tripId, threshold) => {
+      if (isMissingSupabaseEnv) return;
+      await updateApprovalThreshold(tripId, threshold);
+      set((state) => ({
+        trips: state.trips.map((t) => (t.id === tripId ? { ...t, approvalThreshold: threshold } : t)),
+      }));
     },
 
     deleteExpense: async (id) => {

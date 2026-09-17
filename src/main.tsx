@@ -28,6 +28,9 @@ const JoinTripScreen = lazy(() =>
 const LiveLocationPage = lazy(() =>
   import('./components/LiveLocationPage').then((m) => ({ default: m.LiveLocationPage }))
 )
+const TripSharePage = lazy(() =>
+  import('./components/TripSharePage').then((m) => ({ default: m.TripSharePage }))
+)
 const PrivacyPolicyPage = lazy(() =>
   import('./components/PrivacyPolicyPage').then((m) => ({ default: m.PrivacyPolicyPage }))
 )
@@ -161,6 +164,16 @@ createRoot(document.getElementById('root')!).render(
             <ErrorBoundary>
               <Suspense fallback={<RouteLoadingFallback />}>
                 <LiveLocationPage />
+              </Suspense>
+            </ErrorBoundary>
+          }
+        />
+        <Route
+          path="/share/:token"
+          element={
+            <ErrorBoundary>
+              <Suspense fallback={<RouteLoadingFallback />}>
+                <TripSharePage />
               </Suspense>
             </ErrorBoundary>
           }

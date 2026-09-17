@@ -9,11 +9,11 @@
 
 | Metric | Count |
 | :--- | :--- |
-| **Total Tracked** | **77** |
+| **Total Tracked** | **82** |
 | **💡 Requested** | **2** |
 | **📋 Planned** | **0** |
 | **🟡 In Progress** | **0** |
-| **✅ Shipped** | **75** |
+| **✅ Shipped** | **80** |
 | **⚪ Won't Do** | **0** |
 
 ---
@@ -127,6 +127,11 @@ CI pipeline for lint, build, and test on push/PR
 | **FEAT-075** | Quiet Hours | `notifications` | `claude-cli` | `claude-cli` | quiet_hours_prefs table (migration 0092), timezone-aware overnight-safe check in send-push edge function, toggle+time pickers in SettingsView. |
 | **FEAT-076** | In-chat expense event cards, live-location session heartbeat, Summary polish | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit b4eb125 (v3.26.0). Migration 0094 applied remotely. Flag enableInChatEventCards Phase 6 default OFF. Includes live-location session heartbeat + Summary attention strip / pin carousel. |
 | **FEAT-077** | Chat depth: media, voice, typing, read receipts, more event cards, @tripbot | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in commit fbe5c7a (v3.27.0). Migrations 0095-0097 applied remotely. ADR #189. |
+| **FEAT-078** | Two-sided settlement confirmation (enableSettlementConfirmation) | `sync` | `agent` | `agent` | Shipped flag-gated (default OFF), see docs/FEATURE_TEST_STEPS.md and decisions.md #193 |
+| **FEAT-079** | Read-only trip share link (enableTripShareLink) | `sync` | `agent` | `agent` | Shipped flag-gated (default OFF), see docs/FEATURE_TEST_STEPS.md and decisions.md #193 |
+| **FEAT-080** | Invite from phone contacts (enableContactInvite) | `native` | `agent` | `agent` | Shipped flag-gated (default OFF), see docs/FEATURE_TEST_STEPS.md and decisions.md #193 |
+| **FEAT-081** | Weather-triggered itinerary nudges (enableWeatherItineraryNudges) | `notifications` | `agent` | `agent` | Shipped flag-gated (default OFF), see docs/FEATURE_TEST_STEPS.md and decisions.md #193 |
+| **FEAT-082** | Big-expense mutual approval threshold (enableExpenseApprovalThreshold) | `security` | `agent` | `agent` | Shipped flag-gated (default OFF), see docs/FEATURE_TEST_STEPS.md and decisions.md #193 |
 
 ---
 

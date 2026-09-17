@@ -130,6 +130,10 @@ export interface Trip {
   fxConfig?: TripFxConfig; // Custom exchange rates & forex markup
   splitExclusionDefaults?: Record<string, string[]>; // categoryId -> memberIds excluded by default from that category's split
   simplifyDebts?: boolean; // true = greedy flow minimization (default), false = direct bilateral debts
+  shareToken?: string | null; // public read-only link token, present once generated
+  shareEnabled?: boolean; // whether the read-only link currently resolves
+  shareExpiresAt?: string | null; // ISO timestamp; link stops resolving after this
+  approvalThreshold?: number | null; // enableExpenseApprovalThreshold; in baseCurrency, null/undefined = feature off for this trip
 }
 
 export type TravelPassType = 'flight' | 'train' | 'stay' | 'activity' | 'transit';
@@ -217,6 +221,10 @@ export interface Expense {
   disputedByUserId?: string | null; // only this user or a trip admin can resolve the dispute
   disputeNote?: string | null;
   isSettlement: boolean;
+  settlementConfirmedAt?: number | null; // set once the recipient confirms receipt (enableSettlementConfirmation)
+  settlementConfirmedByUserId?: string | null;
+  approvalStatus?: 'confirmed' | 'pending_approval'; // enableExpenseApprovalThreshold; excluded from balances while pending
+  approvedByUserId?: string | null;
   createdByUserId: string | null; // participant edit/delete rights are scoped to this; null once the creator's account has been deleted
   location?: ExpenseLocation | null; // optional GPS geotag
   deletedAt?: number | null; // set when soft-deleted into the recycle bin; purged 24h after

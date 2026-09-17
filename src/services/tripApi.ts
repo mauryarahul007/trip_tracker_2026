@@ -33,6 +33,10 @@ function mapTrip(row: TripRow, memberIds: string[], groupIds: string[]): Trip {
     memberRoles: row.member_roles ? (row.member_roles as unknown as Record<string, import('../types').MemberRole>) : undefined,
     splitExclusionDefaults: row.split_exclusion_defaults ? (row.split_exclusion_defaults as unknown as Record<string, string[]>) : undefined,
     simplifyDebts: (row as any).simplify_debts !== undefined ? Boolean((row as any).simplify_debts) : true,
+    shareToken: (row as any).share_token ?? null,
+    shareEnabled: Boolean((row as any).share_enabled),
+    shareExpiresAt: (row as any).share_expires_at ?? null,
+    approvalThreshold: (row as any).approval_threshold ?? null,
     createdAt: new Date(row.created_at).getTime(),
     updatedAt: new Date(row.updated_at).getTime(),
   };
@@ -79,6 +83,10 @@ function mapExpense(row: ExpenseRow & { location?: any }): Expense {
     disputedByUserId: row.disputed_by_user_id ?? null,
     disputeNote: row.dispute_note ?? null,
     isSettlement: row.is_settlement,
+    settlementConfirmedAt: (row as any).settlement_confirmed_at ? new Date((row as any).settlement_confirmed_at).getTime() : null,
+    settlementConfirmedByUserId: (row as any).settlement_confirmed_by_user_id ?? null,
+    approvalStatus: ((row as any).approval_status as 'confirmed' | 'pending_approval' | undefined) ?? 'confirmed',
+    approvedByUserId: (row as any).approved_by_user_id ?? null,
     createdByUserId: row.created_by_user_id,
     location: row.location ?? undefined,
     deletedAt: row.deleted_at ? new Date(row.deleted_at).getTime() : null,
@@ -502,6 +510,7 @@ export interface ExpenseInput {
   resolvedShares: Record<string, number>;
   receiptPath?: string; // set only when a new receipt was just uploaded — omit to leave existing untouched
   location?: import('../types').ExpenseLocation | null;
+  approvalStatus?: 'confirmed' | 'pending_approval'; // enableExpenseApprovalThreshold; omit/confirmed = no gate
 }
 
 export async function insertExpense(tripId: string, createdByUserId: string, input: ExpenseInput): Promise<Expense> {
@@ -521,6 +530,7 @@ export async function insertExpense(tripId: string, createdByUserId: string, inp
     resolved_shares: input.resolvedShares,
     receipt_path: input.receiptPath ?? null,
     is_settlement: input.title.startsWith('Settlement:'),
+    approval_status: input.approvalStatus ?? 'confirmed',
     created_by_user_id: createdByUserId,
   };
 
@@ -877,6 +887,91 @@ export async function claimTripMember(memberId: string): Promise<boolean> {
   const { data, error } = await supabase.rpc('claim_trip_member', { p_member_id: memberId });
   if (error) throw error;
   return data === true;
+}
+
+// Recipient-only confirmation that a settlement was actually received
+// (migration 0099). Throws if the caller isn't the recorded creditor or
+// the settlement is already confirmed -- surface the error to the user
+// rather than swallowing it, since a silent no-op here would look like a
+// successful confirm.
+export async function confirmSettlement(expenseId: string): Promise<void> {
+  const { error } = await supabase.rpc('confirm_settlement', { p_expense_id: expenseId });
+  if (error) throw error;
+}
+
+// Owner-only, via the trip's existing "only admin can update trip" RLS
+// policy -- null/0 disables the gate for this trip.
+export async function updateApprovalThreshold(tripId: string, threshold: number | null): Promise<void> {
+  const { error } = await supabase.from('trips').update({ approval_threshold: threshold }).eq('id', tripId);
+  if (error) throw error;
+}
+
+// Approves a pending-approval expense (migration 0100). Throws if the
+// caller is the expense's own creator -- self-approval defeats the point
+// of a second-person check, enforced server-side in approve_expense.
+export async function approveExpense(expenseId: string): Promise<void> {
+  const { error } = await supabase.rpc('approve_expense', { p_expense_id: expenseId });
+  if (error) throw error;
+}
+
+// ---------------------------------------------------------------------------
+// Read-only trip share link (migration 0098) -- owner-only generate/revoke
+// via the trip's existing "only admin can update trip" RLS policy, no RPC
+// needed for that half. The public read side is the get_trip_share RPC.
+// ---------------------------------------------------------------------------
+
+const SHARE_LINK_DURATION_MS = 30 * 24 * 60 * 60 * 1000; // 30 days, revocable earlier
+
+export interface TripShareLinkState {
+  shareToken: string;
+  shareEnabled: boolean;
+  shareExpiresAt: string;
+}
+
+export async function generateTripShareLink(tripId: string): Promise<TripShareLinkState> {
+  const expiresAt = new Date(Date.now() + SHARE_LINK_DURATION_MS).toISOString();
+  const { data, error } = await supabase
+    .from('trips')
+    .update({ share_token: crypto.randomUUID(), share_enabled: true, share_expires_at: expiresAt })
+    .eq('id', tripId)
+    .select('share_token, share_enabled, share_expires_at')
+    .single();
+  if (error) throw error;
+  return { shareToken: (data as any).share_token, shareEnabled: (data as any).share_enabled, shareExpiresAt: (data as any).share_expires_at };
+}
+
+export async function revokeTripShareLink(tripId: string): Promise<void> {
+  const { error } = await supabase.from('trips').update({ share_enabled: false }).eq('id', tripId);
+  if (error) throw error;
+}
+
+export interface TripShareSummary {
+  tripName: string;
+  startDate: string;
+  endDate: string;
+  destination: string | null;
+  memberCount: number;
+  expenseCount: number;
+  spendByCurrency: Record<string, number>;
+}
+
+// Public, unauthenticated -- reads only through the SECURITY DEFINER
+// get_trip_share RPC, which already refuses to return anything once the
+// link is disabled or expired.
+export async function getTripShare(shareToken: string): Promise<TripShareSummary | null> {
+  const { data, error } = await supabase.rpc('get_trip_share', { p_token: shareToken });
+  if (error) throw error;
+  const row = Array.isArray(data) ? data[0] : data;
+  if (!row) return null;
+  return {
+    tripName: row.trip_name,
+    startDate: row.start_date,
+    endDate: row.end_date,
+    destination: row.destination,
+    memberCount: Number(row.member_count),
+    expenseCount: Number(row.expense_count),
+    spendByCurrency: row.spend_by_currency ?? {},
+  };
 }
 
 // ---------------------------------------------------------------------------

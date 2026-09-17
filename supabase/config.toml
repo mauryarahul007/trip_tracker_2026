@@ -412,3 +412,15 @@ enabled = true
 # declarative_schema_path = "./database"
 # JSON string passed through to pg-delta SQL formatting.
 # format_options = "{\"keywordCase\":\"upper\",\"indent\":2,\"maxWidth\":80,\"commaStyle\":\"trailing\"}"
+
+# Functions hit without a Supabase-issued JWT: cron jobs (net.http_post,
+# authenticated with their own Vault-stored secret header instead).
+# verify_jwt defaults to true project-wide, so these were getting a 401
+# from the gateway before ever reaching the function's own auth check --
+# send-digest's daily cron had been silently failing on this exact issue.
+# Declaring it here (not just as a one-off --no-verify-jwt deploy flag) so
+# a future redeploy can't silently regress it back to true.
+[functions.send-digest]
+verify_jwt = false
+[functions.send-weather-nudge]
+verify_jwt = false
