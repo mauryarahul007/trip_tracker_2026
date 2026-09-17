@@ -54,6 +54,7 @@ import { fetchPlaceCoverImage } from '../services/placeImageService';
 import { generateDemoData } from '../utils/demoSeed';
 import { reverseGeocode, searchPlaces, resolveTripStopCoordinates } from '../utils/geolocation';
 import { sendPushNotification } from '../services/pushApi';
+import { sendExpenseAddedEventMessage } from '../services/tripMessagesApi';
 import { saveOfflineReceipt, getOfflineReceipt, deleteOfflineReceipt } from '../services/offlineReceiptStore';
 import { savePassAttachment, deletePassAttachment } from '../services/passAttachmentStore';
 import { schedulePassReminders, cancelPassReminders, rescheduleTripPassReminders } from '../utils/passReminders';
@@ -394,6 +395,32 @@ export function getTripNotificationRecipients(
     .map((id) => members[id])
     .filter((m): m is Member => !!m && !m.archived && !!m.linkedUserId && m.linkedUserId !== excludeUserId)
     .map((m) => m.linkedUserId as string);
+}
+
+/** Best-effort chat card after an expense lands; never blocks the expense path. */
+async function postExpenseAddedChatCard(
+  get: () => TripStore,
+  tripId: string,
+  userId: string,
+  expense: Expense
+): Promise<void> {
+  try {
+    if (!get().isFeatureEnabled('enableInChatEventCards', { tripId, userId })) return;
+    if (!get().isFeatureEnabled('enableTripChat', { tripId, userId })) return;
+    const trip = get().trips.find((t) => t.id === tripId);
+    const memberId = (trip?.memberIds ?? [])
+      .map((id) => get().members[id])
+      .find((m) => m && !m.archived && m.linkedUserId === userId)?.id;
+    if (!memberId) return;
+    await sendExpenseAddedEventMessage(tripId, memberId, {
+      expenseId: expense.id,
+      title: expense.title,
+      amount: expense.amount,
+      currency: expense.currency,
+    });
+  } catch (err) {
+    console.warn('[tripStore] postExpenseAddedChatCard skipped:', err);
+  }
 }
 
 // A restored backup may include trips the importing user only joined (via
@@ -1163,6 +1190,7 @@ export const useTripStore = create<TripStore>()(
                 { expenseTitle: savedExpense.title, amount: savedExpense.amount.toFixed(2), currency: savedExpense.currency },
                 tripId
               );
+              void postExpenseAddedChatCard(get, tripId, userId, savedExpense);
             }
           } else if (item.type === 'updateExpense') {
             const { id, expenseData } = item.payload;
@@ -2503,6 +2531,7 @@ export const useTripStore = create<TripStore>()(
           { expenseTitle: savedExpense.title, amount: savedExpense.amount.toFixed(2), currency: savedExpense.currency },
           tripId
         );
+        void postExpenseAddedChatCard(get, tripId, userId, savedExpense);
       };
 
       if (isMissingSupabaseEnv) {

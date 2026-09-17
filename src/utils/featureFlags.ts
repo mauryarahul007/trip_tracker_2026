@@ -96,6 +96,7 @@ export const RELEASE_PHASES: ReleasePhaseDef[] = [
       'enableChatFirstNav',
       'enableChatReactionsAndReplies',
       'enableChatOfflineOutbox',
+      'enableInChatEventCards',
     ],
   },
   {
@@ -511,6 +512,14 @@ export const FEATURE_FLAGS_META: Record<FeatureFlagKey, FeatureFlagMeta> = {
     phase: 'phase6',
     defaultEnabledForUsers: false,
   },
+  enableInChatEventCards: {
+    key: 'enableInChatEventCards',
+    label: 'In-Chat Expense Event Cards',
+    description: 'Auto-post compact expense cards into trip chat when someone adds a bill (title, amount, tap to open).',
+    category: 'collab',
+    phase: 'phase6',
+    defaultEnabledForUsers: false,
+  },
 
   // Phase 7: Commercial FinTech & Smart Splitting
   enableSimplifyDebtsToggle: {
@@ -647,6 +656,7 @@ export const DEFAULT_FEATURE_FLAGS: Record<FeatureFlagKey, boolean> = {
   enableChatFirstNav: false,
   enableChatReactionsAndReplies: false,
   enableChatOfflineOutbox: false,
+  enableInChatEventCards: false,
 
   // Phase 7 (Commercial FinTech - safed by default)
   enableSimplifyDebtsToggle: false,

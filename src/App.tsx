@@ -12,6 +12,8 @@ import { syncStatusBarTone, resolveTheme } from './utils/nativeShell';
 import { isMissingSupabaseEnv } from './services/supabaseClient';
 import { sendPushNotification } from './services/pushApi';
 import { fetchAppFlag } from './services/tripApi';
+import { getMyLocationShare } from './services/locationShareApi';
+import { startLiveLocationHeartbeat, stopLiveLocationHeartbeat } from './services/liveLocationHeartbeat';
 import { ConfirmDialog, type ConfirmRequest } from './components/ConfirmDialog';
 import { SettlementDateNoteFields } from './components/SettlementDateNoteFields';
 import type { ExpenseFormTemplate } from './components/ExpenseForm';
@@ -44,6 +46,7 @@ import { TripContentSheet } from './components/TripContentSheet';
 import { AnalyticsTab } from './components/AnalyticsTab';
 import { ExpenseList } from './components/ExpenseList';
 import { OfflineTravelBanner } from './components/OfflineTravelBanner';
+import { SummaryAttentionStrip } from './components/SummaryAttentionStrip';
 import { LuggageTagSkeleton } from './components/common/LuggageTagSkeleton';
 // Superadmin-only screens (Ops Deck + Bug Ledger) never load for a normal
 // traveler -- code-split so their combined ~2.4k lines don't inflate the
@@ -1004,6 +1007,31 @@ export default function App() {
     return false;
   }, [activeTrip, userId, activeTripMembers]);
   const myMemberId = useMemo(() => activeTripMembers.find((m) => m.linkedUserId === userId)?.id ?? null, [activeTripMembers, userId]);
+
+  // Keep live-location heartbeats alive after the share sheet closes, as long
+  // as the app is open and this trip still has is_sharing = true.
+  useEffect(() => {
+    if (!activeTripId || !userId || !myMemberId) {
+      stopLiveLocationHeartbeat();
+      return;
+    }
+    if (!isFeatureEnabled('enableLiveLocationShare', { tripId: activeTripId, userId })) {
+      stopLiveLocationHeartbeat();
+      return;
+    }
+    let cancelled = false;
+    getMyLocationShare(activeTripId)
+      .then((share) => {
+        if (cancelled) return;
+        if (share?.isSharing) startLiveLocationHeartbeat(activeTripId);
+        else stopLiveLocationHeartbeat(activeTripId);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+      stopLiveLocationHeartbeat();
+    };
+  }, [activeTripId, userId, myMemberId, isFeatureEnabled]);
 
   const filteredExpenses = useMemo(() => {
     const min = expenseFilterAmountMin.trim() ? Number(expenseFilterAmountMin) : null;
@@ -2335,6 +2363,10 @@ export default function App() {
                               ? () => setShowLiveLocationShare(true)
                               : undefined
                           }
+                          onOpenExpenseFromChat={(expenseId) => {
+                            const exp = expenses.find((e) => e.id === expenseId);
+                            if (exp) setSelectedReviewExpense(exp);
+                          }}
                         />
                       </Suspense>
                     )}
@@ -2353,6 +2385,26 @@ export default function App() {
             >
               <TabErrorBoundary label="Summary">
               <div className="fade-in">
+                {activeTrip && (
+                  <SummaryAttentionStrip
+                    trip={activeTrip}
+                    myMemberId={myMemberId}
+                    balances={balances}
+                    expenses={activeTripExpenses}
+                    members={visibleMembers}
+                    onOpenCloseout={
+                      isFeatureEnabled('enableTripCloseout', { tripId: activeTrip.id, userId: userId || undefined })
+                        ? () => setShowCloseout(true)
+                        : undefined
+                    }
+                    onGoToLedger={() => setActiveTab('ledger')}
+                    onGoToMembers={() => setActiveTab('members')}
+                    onGoToBalances={() => {
+                      const el = document.getElementById('balances-section');
+                      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }}
+                  />
+                )}
                 {activeTrip && !activeTrip.closed && activeTrip.endDate && isFeatureEnabled('enableTripCloseout', { tripId: activeTrip.id, userId: userId || undefined }) && activeTrip.endDate < new Date().toISOString().slice(0, 10) && (
                   <button
                     type="button"
@@ -2537,6 +2589,10 @@ export default function App() {
                         ? () => setShowLiveLocationShare(true)
                         : undefined
                     }
+                    onOpenExpenseFromChat={(expenseId) => {
+                      const exp = expenses.find((e) => e.id === expenseId);
+                      if (exp) setSelectedReviewExpense(exp);
+                    }}
                   />
                   </Suspense>
                 )}

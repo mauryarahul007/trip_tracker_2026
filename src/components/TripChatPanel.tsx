@@ -38,9 +38,10 @@ interface Props {
   onComposerFocusChange?: (focused: boolean) => void;
   onRequestConfirm: (request: ConfirmRequest) => void;
   onOpenLiveLocationShare?: () => void;
+  onOpenExpenseFromChat?: (expenseId: string) => void;
 }
 
-export function TripChatPanel({ tripId, members, isAdmin, onComposerFocusChange, onRequestConfirm, onOpenLiveLocationShare }: Props) {
+export function TripChatPanel({ tripId, members, isAdmin, onComposerFocusChange, onRequestConfirm, onOpenLiveLocationShare, onOpenExpenseFromChat }: Props) {
   const userId = useTripStore((s) => s.userId);
   const tripName = useTripStore((s) => s.trips.find((t) => t.id === tripId)?.name) || 'Trip Tracker';
   const myMemberId = useMemo(
@@ -345,12 +346,13 @@ export function TripChatPanel({ tripId, members, isAdmin, onComposerFocusChange,
   const actionSheetItems: ActionSheetItem[] = useMemo(() => {
     if (!actionSheetMessage) return [];
     const isMine = actionSheetMessage.memberId === myMemberId;
-    const canEdit = Boolean(isAdmin) || (isMine && Date.now() - actionSheetMessage.createdAt < EDIT_WINDOW_MS);
+    const isEventCard = actionSheetMessage.kind === 'expense_added';
+    const canEdit = !isEventCard && (Boolean(isAdmin) || (isMine && Date.now() - actionSheetMessage.createdAt < EDIT_WINDOW_MS));
     const canDelete = isMine || Boolean(isAdmin);
 
     const items: ActionSheetItem[] = [];
 
-    if (isSocialEnabled) {
+    if (isSocialEnabled && !isEventCard) {
       items.push({
         id: 'reply',
         label: 'Reply',
@@ -369,6 +371,18 @@ export function TripChatPanel({ tripId, members, isAdmin, onComposerFocusChange,
           onClick: () => handleTogglePin(actionSheetMessage),
         });
       }
+    }
+
+    if (isEventCard && actionSheetMessage.payload?.expenseId && onOpenExpenseFromChat) {
+      items.push({
+        id: 'view-expense',
+        label: 'View expense',
+        icon: <span>💳</span>,
+        onClick: () => {
+          onOpenExpenseFromChat(actionSheetMessage.payload!.expenseId);
+          setActionSheetMessage(null);
+        },
+      });
     }
 
     if (canEdit) {
@@ -395,7 +409,7 @@ export function TripChatPanel({ tripId, members, isAdmin, onComposerFocusChange,
 
     return items;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [actionSheetMessage, myMemberId, isAdmin, isSocialEnabled]);
+  }, [actionSheetMessage, myMemberId, isAdmin, isSocialEnabled, onOpenExpenseFromChat]);
 
   const pinnedMessages = useMemo(
     () => messages.filter((m) => m.isPinned && !m.deletedAt),
@@ -430,34 +444,28 @@ export function TripChatPanel({ tripId, members, isAdmin, onComposerFocusChange,
         onShareMyLocation={onOpenLiveLocationShare}
       />
 
-      {/* Pinned Announcements Banner */}
+      {/* Pinned Announcements carousel */}
       {isSocialEnabled && pinnedMessages.length > 0 && (
-        <div
-          style={{
-            padding: '8px 14px',
-            background: 'rgba(63, 203, 189, 0.09)',
-            borderBottom: '1px solid rgba(63, 203, 189, 0.25)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            fontSize: '11.5px',
-            cursor: 'pointer',
-          }}
-          onClick={() => {
-            const el = document.getElementById(`msg-${pinnedMessages[0].id}`);
-            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', overflow: 'hidden' }}>
-            <span>📌</span>
-            <span style={{ fontWeight: 700, color: 'var(--primary-accent)' }}>Pinned:</span>
-            <span style={{ color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-              {pinnedMessages[0].body}
-            </span>
+        <div className="trip-chat-pin-carousel" role="region" aria-label="Pinned notices">
+          <div className="trip-chat-pin-track">
+            {pinnedMessages.map((pin, index) => (
+              <button
+                key={pin.id}
+                type="button"
+                className="trip-chat-pin-slide"
+                onClick={() => {
+                  const el = document.getElementById(`msg-${pin.id}`);
+                  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }}
+              >
+                <span aria-hidden="true">📌</span>
+                <span className="trip-chat-pin-label">
+                  Pinned{pinnedMessages.length > 1 ? ` ${index + 1}/${pinnedMessages.length}` : ''}
+                </span>
+                <span className="trip-chat-pin-body">{pin.body}</span>
+              </button>
+            ))}
           </div>
-          {pinnedMessages.length > 1 && (
-            <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>+{pinnedMessages.length - 1}</span>
-          )}
         </div>
       )}
 
@@ -491,6 +499,43 @@ export function TripChatPanel({ tripId, members, isAdmin, onComposerFocusChange,
             const sender = memberById.get(message.memberId);
             const isDeleted = Boolean(message.deletedAt);
             const parentMsg = message.replyToId ? messages.find((m) => m.id === message.replyToId) : null;
+            const isExpenseCard = message.kind === 'expense_added' && Boolean(message.payload?.expenseId);
+
+            if (isExpenseCard && !isDeleted) {
+              const payload = message.payload!;
+              return (
+                <div
+                  key={message.id}
+                  id={`msg-${message.id}`}
+                  className="trip-chat-expense-card-wrap"
+                  style={{ alignSelf: 'center', width: '100%', maxWidth: '320px' }}
+                >
+                  <button
+                    type="button"
+                    className="trip-chat-expense-card"
+                    onClick={() => {
+                      if (onOpenExpenseFromChat) onOpenExpenseFromChat(payload.expenseId);
+                    }}
+                    onPointerDown={handleBubblePointerDown(message)}
+                    onPointerUp={handleBubblePointerUp}
+                    onPointerCancel={handleBubblePointerUp}
+                    onContextMenu={(e) => e.preventDefault()}
+                  >
+                    <span className="trip-chat-expense-card-icon" aria-hidden="true">💳</span>
+                    <span className="trip-chat-expense-card-text">
+                      <span className="trip-chat-expense-card-who">
+                        {isMine ? 'You' : (sender?.name || 'Traveler')} added
+                      </span>
+                      <span className="trip-chat-expense-card-title">{payload.title}</span>
+                      <span className="trip-chat-expense-card-amount">
+                        {payload.currency} {payload.amount.toFixed(2)}
+                      </span>
+                    </span>
+                    <span className="trip-chat-expense-card-hint">Tap to view</span>
+                  </button>
+                </div>
+              );
+            }
 
             return (
               <div
@@ -532,7 +577,6 @@ export function TripChatPanel({ tripId, members, isAdmin, onComposerFocusChange,
                     position: 'relative',
                   }}
                 >
-                  {/* Quoted Reply snippet */}
                   {parentMsg && (
                     <div
                       style={{

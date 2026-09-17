@@ -56,11 +56,13 @@ describe('featureFlags', () => {
     expect(DEFAULT_FEATURE_FLAGS.enableChatFirstNav).toBe(false);
     expect(DEFAULT_FEATURE_FLAGS.enableChatReactionsAndReplies).toBe(false);
     expect(DEFAULT_FEATURE_FLAGS.enableChatOfflineOutbox).toBe(false);
+    expect(DEFAULT_FEATURE_FLAGS.enableInChatEventCards).toBe(false);
     const phase6Keys = getPhaseFlagKeys('phase6');
     expect(phase6Keys).toEqual([
       'enableChatFirstNav',
       'enableChatReactionsAndReplies',
       'enableChatOfflineOutbox',
+      'enableInChatEventCards',
     ]);
   });
 
@@ -168,7 +170,7 @@ describe('featureFlags', () => {
 
   it('verifies that every single flag in all phases can be enabled and disabled', () => {
     const allFlagKeys = Object.keys(DEFAULT_FEATURE_FLAGS) as (keyof typeof DEFAULT_FEATURE_FLAGS)[];
-    expect(allFlagKeys.length).toBe(55);
+    expect(allFlagKeys.length).toBe(56);
 
     allFlagKeys.forEach((flagKey) => {
       const disabledFlags = { ...DEFAULT_FEATURE_FLAGS, [flagKey]: false };

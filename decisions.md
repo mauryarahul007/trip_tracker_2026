@@ -3403,5 +3403,22 @@ This document logs all meaningful technical decisions, library choices, design p
   - `LiveLocationChatBanner` empty-state CTA + “Share mine” open the existing `LiveLocationShareModal` via threaded callback from `App` / `ChecklistNotesTab`.
 * **Trade-offs Accepted:**
   - Add Expense is unavailable from the Chat tab while chat-first nav is on (reachable from Summary/Expenses/etc.). Matches WhatsApp conversation UX.
-  - GPS heartbeat still only runs while the share modal is open (unchanged v1 limit).
+  - (Superseded by ADR #188) GPS heartbeat originally only ran while the share modal was open.
+
+---
+
+## 188. In-Chat Expense Cards, Session Live-Location Heartbeat & Summary Polish
+* **Context:** Travelers missed expense activity in chat (FEAT-C05), live location stopped updating after closing the share sheet, and Summary lacked a compact “needs you” / sync-ready surface. Attachment tray and OS-background GPS remain deferred.
+* **Decision:**
+  - Ship `enableInChatEventCards` (Phase 6, default OFF) with migration `0094` (`kind` + `payload` on `trip_messages`).
+  - Lift live-location heartbeat to app session scope (`liveLocationHeartbeat.ts`) so closing the modal keeps updates while the app is open.
+  - Polish: pinned-notice carousel, Summary sync-ready line + needs-you chips.
+* **Pattern/Implementation:**
+  - `addExpense` / offline replay posts `expense_added` cards via `sendExpenseAddedEventMessage` when flag + trip chat are on.
+  - `TripChatPanel` renders compact tap-to-review cards; long-press offers View expense / Delete (no text edit).
+  - `SummaryAttentionStrip` aggregates owe/owed, disputes, pending invites, closeout, and pending `syncQueue`.
+* **Trade-offs Accepted:**
+  - Heartbeat is app-foreground only (web/native); true phone-locked background GPS needs new Capacitor plugins + Always permissions later.
+  - Event cards require migration `0094` applied remotely before the flag is useful in production.
+  - Composer attachment tray and explain-on-chat deferred until media schema / richer card actions.
 

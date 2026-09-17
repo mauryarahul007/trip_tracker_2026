@@ -52,6 +52,7 @@ export type FeatureFlagKey =
   | 'enableChatFirstNav'
   | 'enableChatReactionsAndReplies'
   | 'enableChatOfflineOutbox'
+  | 'enableInChatEventCards'
   // Phase 7: Commercial FinTech & Smart Splitting
   | 'enableSimplifyDebtsToggle'
   // Deferred & Admin Ops

@@ -1,6 +1,7 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { getCurrentGPSPosition } from '../utils/geolocation';
-import { startLocationShare, updateLocationShare, stopLocationShare, getMyLocationShare } from '../services/locationShareApi';
+import { startLocationShare, stopLocationShare, getMyLocationShare } from '../services/locationShareApi';
+import { startLiveLocationHeartbeat, stopLiveLocationHeartbeat } from '../services/liveLocationHeartbeat';
 import { formatRelativeTime } from '../utils/relativeTime';
 import { triggerHaptic } from '../utils/haptics';
 import { useEscapeKey } from '../utils/useEscapeKey';
@@ -14,8 +15,6 @@ interface Props {
   userId: string;
 }
 
-const HEARTBEAT_MS = 60 * 1000;
-
 function buildShareUrl(token: string): string {
   return `${window.location.origin}${import.meta.env.BASE_URL}live/${token}`;
 }
@@ -27,7 +26,6 @@ export function LiveLocationShareModal({ isOpen, onClose, tripId, memberId, user
   const [isBusy, setIsBusy] = useState(false);
   const [error, setError] = useState('');
   const [copied, setCopied] = useState(false);
-  const heartbeatRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useHistoryBack(isOpen, onClose);
   useEscapeKey(isOpen, onClose);
@@ -40,25 +38,12 @@ export function LiveLocationShareModal({ isOpen, onClose, tripId, memberId, user
         setIsSharing(share.isSharing);
         setShareToken(share.shareToken);
         setExpiresAt(share.expiresAt);
+        if (share.isSharing) {
+          startLiveLocationHeartbeat(tripId);
+        }
       })
       .catch(() => {});
   }, [isOpen, tripId]);
-
-  // Heartbeat only runs while this modal stays mounted -- there's no
-  // background service, so closing the sheet stops position updates even
-  // though is_sharing stays true server-side until the 12h expiry or the
-  // user stops it explicitly. Copy below is upfront about this.
-  useEffect(() => {
-    if (!isSharing) return;
-    heartbeatRef.current = setInterval(() => {
-      getCurrentGPSPosition().then((pos) => {
-        if (pos) void updateLocationShare(tripId, pos.lat, pos.lng).catch(() => {});
-      });
-    }, HEARTBEAT_MS);
-    return () => {
-      if (heartbeatRef.current) clearInterval(heartbeatRef.current);
-    };
-  }, [isSharing, tripId]);
 
   if (!isOpen) return null;
 
@@ -75,6 +60,7 @@ export function LiveLocationShareModal({ isOpen, onClose, tripId, memberId, user
       setIsSharing(true);
       setShareToken(share.shareToken);
       setExpiresAt(share.expiresAt);
+      startLiveLocationHeartbeat(tripId);
       triggerHaptic('success');
     } catch {
       setError('Failed to start sharing. Try again.');
@@ -87,6 +73,7 @@ export function LiveLocationShareModal({ isOpen, onClose, tripId, memberId, user
     setIsBusy(true);
     try {
       await stopLocationShare(tripId);
+      stopLiveLocationHeartbeat(tripId);
       setIsSharing(false);
       triggerHaptic('medium');
     } catch {
@@ -147,7 +134,7 @@ export function LiveLocationShareModal({ isOpen, onClose, tripId, memberId, user
           {!isSharing ? (
             <>
               <p style={{ fontSize: '12.5px', color: 'var(--text-secondary)', margin: 0 }}>
-                Share a link showing your current position for the next 12 hours. Anyone with the link can see it -- no account required. Keep this screen open while sharing to keep your position updating.
+                Share a link showing your current position for the next 12 hours. Anyone with the link can see it -- no account required. Keep the app open while sharing so your position keeps updating (closing this sheet is fine).
               </p>
               <button type="button" className="gradient-btn" style={{ padding: '10px', fontSize: '13px' }} onClick={handleStart} disabled={isBusy}>
                 {isBusy ? 'Starting…' : '📍 Start Sharing My Location'}
@@ -156,7 +143,7 @@ export function LiveLocationShareModal({ isOpen, onClose, tripId, memberId, user
           ) : (
             <>
               <div style={{ padding: '10px 12px', borderRadius: '12px', background: 'rgba(23,182,166,0.08)', border: '1px solid rgba(23,182,166,0.25)', fontSize: '12.5px' }}>
-                Sharing your location{expiresAt ? ` -- expires ${formatRelativeTime(expiresAt)}` : ''}.
+                Sharing your location{expiresAt ? ` -- expires ${formatRelativeTime(expiresAt)}` : ''}. Keep the app open to keep updating.
               </div>
               <div style={{ display: 'flex', gap: '8px' }}>
                 <button type="button" className="secondary-btn" style={{ flex: 1, padding: '9px', fontSize: '12.5px' }} onClick={handleCopy}>

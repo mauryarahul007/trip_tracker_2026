@@ -1,11 +1,13 @@
 import { supabase } from './supabaseClient';
-import type { TripMessage } from '../types';
+import type { TripMessage, TripMessageExpensePayload, TripMessageKind } from '../types';
 
 interface TripMessageRow {
   id: string;
   trip_id: string;
   member_id: string;
   body: string;
+  kind?: string | null;
+  payload?: TripMessageExpensePayload | Record<string, unknown> | null;
   created_at: string;
   edited_at: string | null;
   deleted_at: string | null;
@@ -16,12 +18,26 @@ interface TripMessageRow {
 
 const MESSAGE_FETCH_LIMIT = 200;
 
+function mapPayload(raw: TripMessageRow['payload']): TripMessageExpensePayload | null {
+  if (!raw || typeof raw !== 'object') return null;
+  const expenseId = (raw as TripMessageExpensePayload).expenseId;
+  const title = (raw as TripMessageExpensePayload).title;
+  const amount = (raw as TripMessageExpensePayload).amount;
+  const currency = (raw as TripMessageExpensePayload).currency;
+  if (typeof expenseId !== 'string' || typeof title !== 'string') return null;
+  if (typeof amount !== 'number' || typeof currency !== 'string') return null;
+  return { expenseId, title, amount, currency };
+}
+
 function mapTripMessage(row: TripMessageRow): TripMessage {
+  const kind = (row.kind === 'expense_added' ? 'expense_added' : 'text') as TripMessageKind;
   return {
     id: row.id,
     tripId: row.trip_id,
     memberId: row.member_id,
     body: row.body,
+    kind,
+    payload: kind === 'expense_added' ? mapPayload(row.payload) : null,
     createdAt: new Date(row.created_at).getTime(),
     editedAt: row.edited_at ? new Date(row.edited_at).getTime() : null,
     deletedAt: row.deleted_at ? new Date(row.deleted_at).getTime() : null,
@@ -49,26 +65,58 @@ export async function sendTripMessage(
   body: string,
   options?: { replyToId?: string | null }
 ): Promise<TripMessage> {
-  const payload: any = { trip_id: tripId, member_id: memberId, body };
+  const payload: Record<string, unknown> = { trip_id: tripId, member_id: memberId, body, kind: 'text' };
   if (options?.replyToId) {
     payload.reply_to_id = options.replyToId;
   }
   let { data, error } = await supabase
     .from('trip_messages')
-    .insert(payload)
+    .insert(payload as any)
     .select('*')
     .single();
 
-  // If remote schema doesn't yet have reply_to_id column, fallback cleanly
-  if (error && options?.replyToId) {
-    delete payload.reply_to_id;
-    const retry = await supabase.from('trip_messages').insert(payload).select('*').single();
+  if (error) {
+    // Strip newer columns if remote schema lags
+    const stripped: Record<string, unknown> = { trip_id: tripId, member_id: memberId, body };
+    if (options?.replyToId) stripped.reply_to_id = options.replyToId;
+    let retry = await supabase.from('trip_messages').insert(stripped as any).select('*').single();
+    if (retry.error && options?.replyToId) {
+      retry = await supabase.from('trip_messages').insert({ trip_id: tripId, member_id: memberId, body } as any).select('*').single();
+    }
     data = retry.data;
     error = retry.error;
   }
 
   if (error || !data) throw error || new Error('Failed to send trip message');
   return mapTripMessage(data);
+}
+
+/** Posts a structured expense card into trip chat. Fails soft if schema/flag path unavailable. */
+export async function sendExpenseAddedEventMessage(
+  tripId: string,
+  memberId: string,
+  expense: TripMessageExpensePayload
+): Promise<TripMessage | null> {
+  const body = `Added ${expense.title} · ${expense.currency} ${expense.amount.toFixed(2)}`;
+  const insertPayload: Record<string, unknown> = {
+    trip_id: tripId,
+    member_id: memberId,
+    body,
+    kind: 'expense_added',
+    payload: expense,
+  };
+  let { data, error } = await supabase
+    .from('trip_messages')
+    .insert(insertPayload as any)
+    .select('*')
+    .single();
+
+  if (error) {
+    // Schema not migrated yet -- skip rather than break expense save
+    console.warn('[tripMessagesApi] sendExpenseAddedEventMessage skipped:', error.message);
+    return null;
+  }
+  return data ? mapTripMessage(data) : null;
 }
 
 export async function updateMessageReactions(

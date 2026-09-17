@@ -339,23 +339,38 @@ export interface Database {
           trip_id: string;
           member_id: string;
           body: string;
+          kind: string;
+          payload: Record<string, unknown> | null;
           created_at: string;
           edited_at: string | null;
           deleted_at: string | null;
+          reply_to_id: string | null;
+          reactions: Record<string, string[]> | null;
+          is_pinned: boolean | null;
         };
         Insert: {
           id?: string;
           trip_id: string;
           member_id: string;
           body: string;
+          kind?: string;
+          payload?: Record<string, unknown> | null;
           created_at?: string;
           edited_at?: string | null;
           deleted_at?: string | null;
+          reply_to_id?: string | null;
+          reactions?: Record<string, string[]> | null;
+          is_pinned?: boolean | null;
         };
         Update: Partial<{
           body: string;
+          kind: string;
+          payload: Record<string, unknown> | null;
           edited_at: string | null;
           deleted_at: string | null;
+          reply_to_id: string | null;
+          reactions: Record<string, string[]> | null;
+          is_pinned: boolean | null;
         }>;
         Relationships: [];
       };

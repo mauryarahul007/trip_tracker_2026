@@ -5,11 +5,22 @@ export interface TripStop {
   lng?: number;
 }
 
+export type TripMessageKind = 'text' | 'expense_added';
+
+export interface TripMessageExpensePayload {
+  expenseId: string;
+  title: string;
+  amount: number;
+  currency: string;
+}
+
 export interface TripMessage {
   id: string;
   tripId: string;
   memberId: string;
   body: string;
+  kind?: TripMessageKind;
+  payload?: TripMessageExpensePayload | null;
   createdAt: number;
   editedAt?: number | null;
   deletedAt?: number | null;
