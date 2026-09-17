@@ -25,6 +25,7 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 | 2026-09-17 | v3.26.0 / v3.26.1 | FEAT-076 | [Expense cards, location heartbeat, Summary polish](#feat-076--expense-cards-location-heartbeat-summary-polish-v3260) |
 | 2026-09-17 | v3.27.0 | FEAT-077 | [Chat depth: media, voice, typing, reads, tripbot](#feat-077--chat-depth-media-voice-typing-reads-tripbot-v3270) |
 | 2026-09-17 | v3.27.1 | BUG-222 | [Chat placement + Notes/Chat crash](#chat-placement-flags--notes-vs-tab-1) |
+| 2026-09-17 | v3.27.2 | BUG-223 | [Chat max update depth](#bug-223--chat-max-update-depth-v3272) |
 
 ---
 
@@ -204,7 +205,7 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 
 ### Steps
 
-1. Trip Chat ON, Chat-first **OFF**, Notes hub available → open **Notes** → tap **Chat** → thread loads (send a message). A Chat crash must show “Chat … error / Try again”, not wipe the whole Notes hub forever. If you previously saw “Notes & Checklist … error”, hard-refresh once (MapLibre was pulled into Notes; that path is now lazy).
+1. Trip Chat ON, Chat-first **OFF**, Notes hub available → open **Notes** → tap **Chat** → thread loads (send a message). A Chat crash must show “Chat … error / Try again” (plus a short error detail line), not wipe the whole Notes hub forever. If you previously saw “Notes & Checklist … error”, hard-refresh once (MapLibre was pulled into Notes; that path is now lazy).
 2. Trip Chat ON, Chat-first **ON** → bottom bar shows **Chat** first; Notes has no Chat segment; open Tab-1 Chat and send.
 3. Trip Chat ON, Chat-first OFF, **Notes + Passes both OFF** → bottom bar still shows a Notes-style hub that opens Chat (fallback so Chat is not homeless).
 4. Trip Chat **OFF** → no Chat tab and no Chat segment in Notes.
@@ -218,6 +219,26 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 ### Pass
 
 - Placement matches the matrix; homeless-Chat gap closed; Chat errors isolated from Notes.
+
+---
+
+## BUG-223 — Chat max update depth (v3.27.2)
+
+**Commit:** pending in this release. **ADR:** #191.
+
+### Flags
+No new flag. `enableInChatEventCards` unchanged (not the crash cause).
+
+### Steps
+1. Trip with expenses; Trip Chat ON; Chat-first OFF.
+2. Notes → Chat → thread loads (no error boundary).
+3. Send a message; optional: toggle `enableInChatEventCards` and add an expense → card still works when ON.
+
+### Negative checks
+- Chat-first ON → Tab-1 Chat also loads without max-update-depth error.
+
+### Pass
+- No “Maximum update depth exceeded”; Chat usable.
 
 ---
 

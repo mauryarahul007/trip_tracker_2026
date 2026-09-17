@@ -6627,5 +6627,32 @@
     "resolvedBy": "cursor-agent",
     "resolvedAt": "2026-09-17T06:35:48.060Z",
     "resolutionNote": "Lazy-load TripChatPanel inside Notes with nested Chat TabErrorBoundary; defer maplibre-gl until LiveLocationChatBanner expands a share map. Also hardened chat placement (Notes-shell fallback, flag copy). Fixed in v3.27.1 — commit 6f62609."
+  },
+  {
+    "id": "BUG-223",
+    "title": "Chat tab Maximum update depth from unstable expenses zustand selector",
+    "description": "Opening Chat under Notes showed “The Chat tab ran into an error” with React “Maximum update depth exceeded”. TripChatPanel selected expenses via useTripStore(s => s.expenses.filter(...)), which returns a new array every useSyncExternalStore snapshot and infinite-loops re-renders. Not caused by enableInChatEventCards expense cards (kept flag-gated).",
+    "severity": "high",
+    "category": "ui-ux",
+    "status": "resolved",
+    "foundBy": "human",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "3.27.1"
+    },
+    "reproSteps": [
+      "Open a trip with expenses; enableTripChat ON, enableChatFirstNav OFF",
+      "Notes → Chat",
+      "Observe Chat error boundary with Maximum update depth exceeded"
+    ],
+    "expectedBehavior": "Chat thread loads normally.",
+    "actualBehavior": "Chat TabErrorBoundary with Maximum update depth exceeded.",
+    "diagnostics": {},
+    "createdAt": "2026-09-17T07:22:42.738Z",
+    "updatedAt": "2026-09-17T07:24:22.040Z",
+    "resolvedBy": "cursor-agent",
+    "resolvedAt": "2026-09-17T07:23:22.853Z",
+    "resolutionNote": "Select s.expenses (stable) and filter in useMemo; harden payload guards and amount formatting; show error.message on TabErrorBoundary. Fixed in v3.27.2."
   }
 ]

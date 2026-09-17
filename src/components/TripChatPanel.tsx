@@ -77,16 +77,37 @@ interface Props {
   onOpenExpenseFromChat?: (expenseId: string) => void;
 }
 
+function isPlainPayload(p: TripMessage['payload']): boolean {
+  return Boolean(p) && typeof p === 'object' && !Array.isArray(p);
+}
+
 function isExpensePayload(p: TripMessage['payload']): p is TripMessageExpensePayload {
-  return Boolean(p && 'expenseId' in p && 'title' in p && typeof (p as TripMessageExpensePayload).amount === 'number');
+  if (!isPlainPayload(p) || !p) return false;
+  return (
+    typeof (p as TripMessageExpensePayload).expenseId === 'string' &&
+    typeof (p as TripMessageExpensePayload).title === 'string' &&
+    typeof (p as TripMessageExpensePayload).amount === 'number'
+  );
 }
 
 function isMediaPayload(p: TripMessage['payload']): p is TripMessageMediaPayload {
-  return Boolean(p && 'storagePath' in p && 'mimeType' in p);
+  if (!isPlainPayload(p) || !p) return false;
+  return (
+    typeof (p as TripMessageMediaPayload).storagePath === 'string' &&
+    typeof (p as TripMessageMediaPayload).mimeType === 'string'
+  );
 }
 
 function isLinkPayload(p: TripMessage['payload']): p is TripMessageExpenseLinkPayload {
-  return Boolean(p && 'expenseId' in p && 'title' in p && !('storagePath' in p));
+  if (!isPlainPayload(p) || !p) return false;
+  const link = p as TripMessageExpenseLinkPayload & { storagePath?: string };
+  return typeof link.expenseId === 'string' && typeof link.title === 'string' && typeof link.storagePath !== 'string';
+}
+
+function formatExpenseAmount(currency: string | undefined, amount: unknown): string {
+  const n = typeof amount === 'number' ? amount : Number(amount);
+  const safe = Number.isFinite(n) ? n : 0;
+  return `${currency || ''} ${safe.toFixed(2)}`.trim();
 }
 
 function ChatMediaImage({ path, alt }: { path: string; alt: string }) {
@@ -147,7 +168,14 @@ export function TripChatPanel({
   const tripName = trip?.name || 'Trip Tracker';
   const baseCurrency = trip?.baseCurrency || 'INR';
   const categories = useTripStore((s) => s.categories);
-  const expenses = useTripStore((s) => s.expenses.filter((e) => e.tripId === tripId && !e.deletedAt));
+  // Select the stable expenses array from the store, then filter in useMemo.
+  // Filtering inside the zustand selector returns a new array every snapshot and
+  // trips React 18's useSyncExternalStore into "Maximum update depth exceeded".
+  const allExpenses = useTripStore((s) => s.expenses);
+  const expenses = useMemo(
+    () => allExpenses.filter((e) => e.tripId === tripId && !e.deletedAt),
+    [allExpenses, tripId]
+  );
   const addExpense = useTripStore((s) => s.addExpense);
   const isFeatureEnabled = useTripStore((s) => s.isFeatureEnabled);
 
@@ -910,20 +938,22 @@ export function TripChatPanel({
   );
 
   const expensePickItems: ActionSheetItem[] = useMemo(
-    () =>
-      expenses
+    () => {
+      if (!attachmentsEnabled) return [];
+      return expenses
         .filter((e) => !e.isSettlement)
         .slice(0, 20)
         .map((e) => ({
           id: e.id,
           label: e.title,
-          subtitle: `${e.currency} ${e.amount.toFixed(2)}`,
+          subtitle: formatExpenseAmount(e.currency, e.amount),
           onClick: () => {
             void handleAttachExpense(e.id);
           },
-        })),
+        }));
+    },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [expenses]
+    [expenses, attachmentsEnabled]
   );
 
   const pinnedMessages = useMemo(() => messages.filter((m) => m.isPinned && !m.deletedAt), [messages]);
@@ -991,9 +1021,11 @@ export function TripChatPanel({
       whoLabel = `${isMine ? 'You' : sender?.name || 'Traveler'} linked`;
     }
 
+    const amountNum =
+      typeof expensePayload.amount === 'number' ? expensePayload.amount : Number(expensePayload.amount);
     const amount =
-      typeof expensePayload.amount === 'number' && expensePayload.currency
-        ? `${expensePayload.currency} ${expensePayload.amount.toFixed(2)}`
+      expensePayload.currency && Number.isFinite(amountNum)
+        ? formatExpenseAmount(expensePayload.currency, amountNum)
         : null;
     const note = isExpensePayload(payload) ? payload.note : undefined;
 
@@ -1192,7 +1224,11 @@ export function TripChatPanel({
                   {isDeleted ? 'This message was deleted' : message.body}
                 </div>
 
-                {isSocialEnabled && message.reactions && Object.keys(message.reactions).length > 0 && (
+                {isSocialEnabled &&
+                  message.reactions &&
+                  typeof message.reactions === 'object' &&
+                  !Array.isArray(message.reactions) &&
+                  Object.keys(message.reactions).length > 0 && (
                   <div
                     style={{
                       display: 'flex',

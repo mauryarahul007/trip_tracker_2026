@@ -44,6 +44,20 @@ export class TabErrorBoundary extends Component<Props, State> {
           <p style={{ color: 'var(--text-secondary)', fontSize: '14px', margin: 0, lineHeight: 1.5 }}>
             {this.props.label ? `The ${this.props.label} tab` : 'This section'} ran into an error.
           </p>
+          {this.state.error?.message ? (
+            <p
+              style={{
+                color: 'var(--text-muted)',
+                fontSize: '11px',
+                margin: 0,
+                lineHeight: 1.4,
+                maxWidth: '280px',
+                wordBreak: 'break-word',
+              }}
+            >
+              {this.state.error.message}
+            </p>
+          ) : null}
           <button
             type="button"
             className="gradient-btn"

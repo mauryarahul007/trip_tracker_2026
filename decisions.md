@@ -3447,4 +3447,12 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - Unread badge on Notes when chat-first is off remains optional/deferred.
 
+---
+
+## 191. Chat Max Update Depth from Unstable Zustand Selector (BUG-223, v3.27.2)
+* **Context:** After Notes isolation (BUG-222), Chat still crashed with React “Maximum update depth exceeded.” Suspected in-chat expense cards; root cause was `useTripStore(s => s.expenses.filter(...))` returning a new array every `useSyncExternalStore` snapshot.
+* **Decision:** Keep `enableInChatEventCards` flag-gated as before. Fix Chat by selecting `s.expenses` (stable reference) and filtering in `useMemo`. Harden payload/`toFixed` guards and surface `error.message` on `TabErrorBoundary`.
+* **Trade-offs Accepted:**
+  - Existing expense event messages still render as cards when that flag produced them; no feature removal.
+
 

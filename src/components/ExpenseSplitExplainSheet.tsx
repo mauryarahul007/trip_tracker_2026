@@ -42,7 +42,11 @@ export function ExpenseSplitExplainSheet({ isOpen, onClose, title, shares }: Pro
               <li key={row.memberId} className="trip-chat-explain-row">
                 <span className="trip-chat-explain-name">{row.name}</span>
                 <span className="trip-chat-explain-amount">
-                  {row.currency} {row.amount.toFixed(2)}
+                  {row.currency}{' '}
+                  {(typeof row.amount === 'number' && Number.isFinite(row.amount)
+                    ? row.amount
+                    : Number(row.amount) || 0
+                  ).toFixed(2)}
                 </span>
               </li>
             ))}
