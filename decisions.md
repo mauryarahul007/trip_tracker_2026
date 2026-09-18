@@ -3530,6 +3530,20 @@ This document logs all meaningful technical decisions, library choices, design p
   - For legacy or external systems querying `paid_by`, the primary payer with the highest contribution is set as `paid_by`. This preserves backward compatibility with older clients or third-party consumers while `paid_by_shares` holds the granular breakdown.
   - Quick filter chips operate purely on client-side state without triggering server refetches or storing filter state in database tables, ensuring zero server load and instant sub-millisecond interaction.
 
+---
+
+## 196. Currency-Aware Split Rounding & Fair Remainder Distribution (BUG-226, v3.29.1)
+* **Context:** While drafting lightweight enhancement ideas, a codebase audit of `resolveShares()`/`applyRounding()` in `tripStore.ts` surfaced two real correctness issues: (1) all split math hardcoded `.toFixed(2)` regardless of the expense's currency, so zero-decimal currencies (JPY, KRW, etc.) produced invalid fractional split amounts, and (2) any rounding remainder beyond a single minor unit was dumped entirely onto one participant (the payer) instead of spread fairly — e.g. splitting ₹100 seven ways gave the payer 14.26 while everyone else got 14.29.
+* **Decision:** Treat as a patch bug-fix, no feature flag (split math is core, always-on).
+* **Pattern/Implementation:**
+  - Added `getCurrencyDecimals()` in `src/utils/currency.ts`: an ISO 4217 zero-decimal-currency lookup (JPY, KRW, VND, CLP, etc. → 0; everything else → 2).
+  - `resolveShares()` now reads `expenseData.currency` and rounds every branch to the currency's actual decimal count instead of a hardcoded 2.
+  - Added `distributeWithLargestRemainder()`: floors each raw (pre-rounding) share, then hands out the remaining minor units one at a time to whichever participants had the largest fractional remainder (the Hamilton/largest-remainder apportionment method), tie-breaking to the payer first so single-unit-remainder cases (the common case) land identically to the old behavior. Wired into the equal/custom/percentage/itemized split branches.
+  - Left `exact` mode's remainder handling unchanged (still dumps the diff on the payer) — its remainder reflects a user typo/mismatch against the total, not a division rounding artifact, so largest-remainder apportionment doesn't apply.
+  - Synced the standalone `src/utils/math_verification.ts` self-check copy and added a 7-way-split regression case proving the fix (4 participants at 14.29, 3 at 14.28, summing exactly to 100.00).
+* **Trade-offs Accepted:**
+  - `formatAmount()` in `currency.ts` still hardcodes 2 display decimals, so a JPY split now computes correctly (e.g. `33`) but may still render as `¥33.00` until display formatting is audited across its call sites — cosmetic only, deferred as out of scope for this fix.
+  - The fix only affects newly computed splits going forward; it does not retroactively correct already-stored expense amounts on existing trips.
 
 
 

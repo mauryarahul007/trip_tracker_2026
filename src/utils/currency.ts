@@ -1,3 +1,18 @@
+// ISO 4217 currencies whose minor unit is 0 (no sub-unit / decimal places).
+const ZERO_DECIMAL_CODES = new Set([
+  'BIF', 'CLP', 'DJF', 'GNF', 'ISK', 'JPY', 'KMF', 'KRW',
+  'PYG', 'RWF', 'UGX', 'VND', 'VUV', 'XAF', 'XOF', 'XPF',
+]);
+
+/**
+ * Returns how many decimal places a currency's minor unit uses (2 for most,
+ * 0 for currencies like JPY/KRW that have no sub-unit). Split math and
+ * display formatting should round to this instead of hardcoding 2.
+ */
+export function getCurrencyDecimals(code: string): number {
+  return ZERO_DECIMAL_CODES.has((code || '').toUpperCase()) ? 0 : 2;
+}
+
 /**
  * Maps standard ISO currency codes to their corresponding visual symbols.
  * Defaults back to the code itself if no matching symbol is registered.

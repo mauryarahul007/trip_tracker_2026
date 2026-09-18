@@ -4,6 +4,7 @@ import type { Member, Group, Expense, Category, TripState, ExpenseLocation, Trip
 import type { FeatureFlagKey, ReleasePhaseId } from '../types/admin';
 import { DEFAULT_FEATURE_FLAGS, isFeatureActive, getPhaseFlagKeys } from '../utils/featureFlags';
 import { buildAutoGroupName } from '../utils/groupNaming';
+import { getCurrencyDecimals } from '../utils/currency';
 import { newId } from '../utils/uuid';
 import { fetchResolvedFeatureFlags, fetchAllFeatureFlagOverrides, setFeatureFlagOverride } from '../services/featureFlagApi';
 import { supabase, isMissingSupabaseEnv } from '../services/supabaseClient';
@@ -273,22 +274,80 @@ export const resolveShares = (
     splitConfig?: Record<string, number>;
     itemizedConfig?: ItemizedReceiptConfig;
     paidBy: string;
+    currency?: string;
   },
   participants: string[]
 ): Record<string, number> => {
   const resolvedShares: Record<string, number> = {};
-  const { amount, splitMode, splitConfig, itemizedConfig, paidBy } = expenseData;
+  const { amount, splitMode, splitConfig, itemizedConfig, paidBy, currency } = expenseData;
+  const decimals = getCurrencyDecimals(currency || '');
+  const scale = Math.pow(10, decimals);
 
+  // A single indivisible remainder unit (e.g. the last ₹0.01, or ¥1 for a
+  // zero-decimal currency) always has to land on someone — dump it on the
+  // payer (or the first participant) same as before.
   const applyRounding = (shares: Record<string, number>) => {
     const sum = Object.values(shares).reduce((a, b) => a + b, 0);
-    const diff = Number((amount - sum).toFixed(2));
+    const diff = Number((amount - sum).toFixed(decimals));
     if (diff !== 0) {
       const roundTarget = participants.includes(paidBy) ? paidBy : participants[0];
       if (roundTarget) {
-        shares[roundTarget] = Number(((shares[roundTarget] || 0) + diff).toFixed(2));
+        shares[roundTarget] = Number(((shares[roundTarget] || 0) + diff).toFixed(decimals));
       }
     }
     return shares;
+  };
+
+  // Splits computed by dividing the amount (equal/custom/percentage/itemized)
+  // can need more than one remainder unit spread around (e.g. splitting
+  // ₹100 seven ways). Give each unit to whoever had the largest fractional
+  // remainder before rounding (the "largest remainder" apportionment
+  // method) instead of piling the whole remainder onto one participant.
+  // Ties (e.g. an equal split, where every remainder is identical) go to
+  // the payer first, then list order — same participant the old dump-it-all
+  // behavior picked, so a single-unit remainder still lands the same place.
+  const distributeWithLargestRemainder = (rawShares: Record<string, number>): Record<string, number> => {
+    const floorUnits: Record<string, number> = {};
+    const remainders: { id: string; frac: number }[] = [];
+    let allocatedUnits = 0;
+
+    participants.forEach((id) => {
+      const scaled = (rawShares[id] || 0) * scale;
+      const floored = Math.floor(scaled);
+      floorUnits[id] = floored;
+      remainders.push({ id, frac: scaled - floored });
+      allocatedUnits += floored;
+    });
+
+    let remainingUnits = Math.round(amount * scale) - allocatedUnits;
+
+    remainders.sort((a, b) => {
+      if (b.frac !== a.frac) return b.frac - a.frac;
+      if (a.id === paidBy) return -1;
+      if (b.id === paidBy) return 1;
+      return 0;
+    });
+
+    let i = 0;
+    while (remainingUnits > 0 && i < remainders.length) {
+      floorUnits[remainders[i].id] += 1;
+      remainingUnits -= 1;
+      i++;
+    }
+    // Defensive: float drift pushed floors past the target — claw back
+    // starting from the smallest remainders.
+    i = remainders.length - 1;
+    while (remainingUnits < 0 && i >= 0) {
+      floorUnits[remainders[i].id] -= 1;
+      remainingUnits += 1;
+      i--;
+    }
+
+    const result: Record<string, number> = {};
+    participants.forEach((id) => {
+      result[id] = Number((floorUnits[id] / scale).toFixed(decimals));
+    });
+    return result;
   };
 
   if (splitMode === 'itemized' && itemizedConfig && Array.isArray(itemizedConfig.items) && itemizedConfig.items.length > 0) {
@@ -311,6 +370,7 @@ export const resolveShares = (
     const discount = Number(itemizedConfig.discount) || 0;
     const netExtras = tax + tip - discount;
 
+    const rawShares: Record<string, number> = {};
     participants.forEach((id) => {
       const memberSubtotal = memberItemSums[id] || 0;
       let memberExtras = 0;
@@ -319,46 +379,49 @@ export const resolveShares = (
       } else {
         memberExtras = netExtras / participants.length;
       }
-      resolvedShares[id] = Number((memberSubtotal + memberExtras).toFixed(2));
+      rawShares[id] = memberSubtotal + memberExtras;
     });
 
-    return applyRounding(resolvedShares);
+    return distributeWithLargestRemainder(rawShares);
   }
 
   if (splitMode === 'equal') {
-    const share = Number((amount / participants.length).toFixed(2));
-    participants.forEach((id) => { resolvedShares[id] = share; });
-    return applyRounding(resolvedShares);
+    const rawShares: Record<string, number> = {};
+    const raw = amount / participants.length;
+    participants.forEach((id) => { rawShares[id] = raw; });
+    return distributeWithLargestRemainder(rawShares);
   }
 
   if (splitMode === 'custom') {
     const config = splitConfig || {};
     const totalWeight = participants.reduce((sum, id) => sum + (config[id] || 1), 0);
+    const rawShares: Record<string, number> = {};
     if (totalWeight <= 0) {
-      const share = Number((amount / participants.length).toFixed(2));
-      participants.forEach((id) => { resolvedShares[id] = share; });
+      const raw = amount / participants.length;
+      participants.forEach((id) => { rawShares[id] = raw; });
     } else {
       participants.forEach((id) => {
-        resolvedShares[id] = Number((((config[id] || 1) / totalWeight) * amount).toFixed(2));
+        rawShares[id] = ((config[id] || 1) / totalWeight) * amount;
       });
     }
-    return applyRounding(resolvedShares);
+    return distributeWithLargestRemainder(rawShares);
   }
 
   if (splitMode === 'exact') {
     const config = splitConfig || {};
     participants.forEach((id) => {
-      resolvedShares[id] = Number((config[id] || 0).toFixed(2));
+      resolvedShares[id] = Number((config[id] || 0).toFixed(decimals));
     });
     return applyRounding(resolvedShares);
   }
 
   if (splitMode === 'percentage') {
     const config = splitConfig || {};
+    const rawShares: Record<string, number> = {};
     participants.forEach((id) => {
-      resolvedShares[id] = Number((((config[id] || 0) / 100) * amount).toFixed(2));
+      rawShares[id] = ((config[id] || 0) / 100) * amount;
     });
-    return applyRounding(resolvedShares);
+    return distributeWithLargestRemainder(rawShares);
   }
 
   return resolvedShares;

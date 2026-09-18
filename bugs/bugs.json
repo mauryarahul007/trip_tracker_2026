@@ -6707,5 +6707,36 @@
     "resolvedBy": "agent",
     "resolvedAt": "2026-09-17T18:13:40.936Z",
     "resolutionNote": "src/types/database.ts was missing the columns/RPCs added by migrations 0098-0101 (approval_status, settlement_confirmed_at, share_token, share_enabled, share_expires_at, approval_threshold, confirm_settlement, approve_expense, get_trip_share), so tsc -b (what npm run build actually uses) failed with RejectExcessProperties errors from postgrest-js. My earlier verification used tsc --noEmit -p . which silently checks zero files since the root tsconfig.json only has references, no include -- gave a false pass all session. Fixed by hand-adding the missing fields/RPCs to database.ts (not a full regen, which would have overwritten this file's hand-tuned narrower literal types across many unrelated tables) and switching verification to tsc -b --noEmit."
+  },
+  {
+    "id": "BUG-226",
+    "title": "Split rounding: remainder dumped on one participant, zero-decimal currencies got fractional splits",
+    "description": "resolveShares()/applyRounding() in tripStore.ts hardcoded .toFixed(2) regardless of the expense's currency, and always dumped the entire rounding remainder onto a single participant (the payer) instead of spreading multi-unit remainders fairly.",
+    "severity": "medium",
+    "category": "splits-math",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "3.29.0"
+    },
+    "reproSteps": [
+      "Set a trip's currency to JPY or KRW (zero-decimal currencies)",
+      "Add any expense and split it (equal/custom/percentage/itemized) among the members",
+      "Observe stored split shares carry fractional decimals (e.g. ¥33.33), invalid for a currency with no minor unit",
+      "Separately, on any currency: split an amount that leaves more than one rounding-unit remainder (e.g. ₹100 split 7 ways = 14.2857... each)",
+      "Observe one participant's share absorbs the entire remainder (14.26 vs everyone else's 14.29) instead of the remainder being spread across multiple participants (four people at 14.29, three at 14.28)"
+    ],
+    "expectedBehavior": "Split amounts round to the currency's actual minor-unit decimal places (0 for JPY/KRW/etc., 2 for most others), and any unavoidable rounding remainder is distributed across participants by largest fractional remainder (Splitwise-style apportionment) rather than piled onto one person.",
+    "actualBehavior": "All split branches called .toFixed(2) unconditionally, and applyRounding() added the full diff to a single participant's share regardless of how many remainder units needed distributing.",
+    "diagnostics": {
+      "location": "src/store/tripStore.ts:282-354 (resolveShares / applyRounding), src/utils/currency.ts"
+    },
+    "createdAt": "2026-09-18T18:41:59.000Z",
+    "updatedAt": "2026-09-18T18:41:59.000Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-09-18T18:41:59.000Z",
+    "resolutionNote": "Added getCurrencyDecimals() in currency.ts (ISO 4217 zero-decimal lookup: JPY, KRW, VND, etc.). resolveShares() now reads expenseData.currency and rounds to the correct decimal count instead of hardcoded 2. Equal/custom/percentage/itemized splits now go through a new distributeWithLargestRemainder() helper that floors each raw share and hands out remaining minor units to the participants with the largest fractional remainder (ties go to the payer first, matching prior single-unit behavior exactly -- confirmed via unchanged existing test assertions). Exact-split mode is untouched, since its remainder reflects a user-input mismatch, not a division rounding artifact. Synced the standalone src/utils/math_verification.ts self-check copy and added a 7-way-split regression case proving the old single-recipient dump is gone. Verified: tsc -b --noEmit clean, full vitest suite 296/296 passing (original 33.34/33.33/33.33 assertions unchanged), oxlint clean. Not yet committed -- commit hash to be added once the user approves commit+push."
   }
 ]

@@ -2,60 +2,108 @@
 import { calculateSettlements } from './settlement';
 import type { Expense, Member, Trip } from '../types';
 
-// Copy resolveShares for test verification
+// Copy of resolveShares (src/store/tripStore.ts) for standalone verification —
+// keep the largest-remainder distribution in sync with the real one.
 const resolveShares = (
   expenseData: { amount: number; splitMode: string; splitConfig?: Record<string, number>; paidBy: string },
   participants: string[]
 ): Record<string, number> => {
   const resolvedShares: Record<string, number> = {};
   const { amount, splitMode, splitConfig, paidBy } = expenseData;
+  const decimals = 2;
+  const scale = Math.pow(10, decimals);
 
   const applyRounding = (shares: Record<string, number>) => {
     const sum = Object.values(shares).reduce((a, b) => a + b, 0);
-    const diff = Number((amount - sum).toFixed(2));
+    const diff = Number((amount - sum).toFixed(decimals));
     if (diff !== 0) {
       const roundTarget = participants.includes(paidBy) ? paidBy : participants[0];
       if (roundTarget) {
-        shares[roundTarget] = Number((shares[roundTarget] + diff).toFixed(2));
+        shares[roundTarget] = Number((shares[roundTarget] + diff).toFixed(decimals));
       }
     }
     return shares;
   };
 
+  const distributeWithLargestRemainder = (rawShares: Record<string, number>): Record<string, number> => {
+    const floorUnits: Record<string, number> = {};
+    const remainders: { id: string; frac: number }[] = [];
+    let allocatedUnits = 0;
+
+    participants.forEach((id) => {
+      const scaled = (rawShares[id] || 0) * scale;
+      const floored = Math.floor(scaled);
+      floorUnits[id] = floored;
+      remainders.push({ id, frac: scaled - floored });
+      allocatedUnits += floored;
+    });
+
+    let remainingUnits = Math.round(amount * scale) - allocatedUnits;
+
+    remainders.sort((a, b) => {
+      if (b.frac !== a.frac) return b.frac - a.frac;
+      if (a.id === paidBy) return -1;
+      if (b.id === paidBy) return 1;
+      return 0;
+    });
+
+    let i = 0;
+    while (remainingUnits > 0 && i < remainders.length) {
+      floorUnits[remainders[i].id] += 1;
+      remainingUnits -= 1;
+      i++;
+    }
+    i = remainders.length - 1;
+    while (remainingUnits < 0 && i >= 0) {
+      floorUnits[remainders[i].id] -= 1;
+      remainingUnits += 1;
+      i--;
+    }
+
+    const result: Record<string, number> = {};
+    participants.forEach((id) => {
+      result[id] = Number((floorUnits[id] / scale).toFixed(decimals));
+    });
+    return result;
+  };
+
   if (splitMode === 'equal') {
-    const share = Number((amount / participants.length).toFixed(2));
-    participants.forEach((id) => { resolvedShares[id] = share; });
-    return applyRounding(resolvedShares);
+    const rawShares: Record<string, number> = {};
+    const raw = amount / participants.length;
+    participants.forEach((id) => { rawShares[id] = raw; });
+    return distributeWithLargestRemainder(rawShares);
   }
 
   if (splitMode === 'custom') {
     const config = splitConfig || {};
     const totalWeight = participants.reduce((sum, id) => sum + (config[id] || 1), 0);
+    const rawShares: Record<string, number> = {};
     if (totalWeight <= 0) {
-      const share = Number((amount / participants.length).toFixed(2));
-      participants.forEach((id) => { resolvedShares[id] = share; });
+      const raw = amount / participants.length;
+      participants.forEach((id) => { rawShares[id] = raw; });
     } else {
       participants.forEach((id) => {
-        resolvedShares[id] = Number((((config[id] || 1) / totalWeight) * amount).toFixed(2));
+        rawShares[id] = ((config[id] || 1) / totalWeight) * amount;
       });
     }
-    return applyRounding(resolvedShares);
+    return distributeWithLargestRemainder(rawShares);
   }
 
   if (splitMode === 'exact') {
     const config = splitConfig || {};
     participants.forEach((id) => {
-      resolvedShares[id] = Number((config[id] || 0).toFixed(2));
+      resolvedShares[id] = Number((config[id] || 0).toFixed(decimals));
     });
     return applyRounding(resolvedShares);
   }
 
   if (splitMode === 'percentage') {
     const config = splitConfig || {};
+    const rawShares: Record<string, number> = {};
     participants.forEach((id) => {
-      resolvedShares[id] = Number((((config[id] || 0) / 100) * amount).toFixed(2));
+      rawShares[id] = ((config[id] || 0) / 100) * amount;
     });
-    return applyRounding(resolvedShares);
+    return distributeWithLargestRemainder(rawShares);
   }
 
   return resolvedShares;
@@ -83,6 +131,21 @@ function runTests() {
   assert(shares1['mem-1'] === 33.34, "Payer should absorb the +0.01 rounding difference (33.34)");
   assert(shares1['mem-2'] === 33.33, "Other participants get 33.33");
   assert(shares1['mem-3'] === 33.33, "Other participants get 33.33");
+
+  // --- Test 1b: Multi-unit remainder is spread, not dumped on one person ---
+  // 100 / 7 = 14.2857... -- old code rounded every share to 14.29 then
+  // dumped the resulting -0.03 entirely on the payer (14.26 vs everyone
+  // else's 14.29). Largest-remainder apportionment should instead give
+  // exactly 4 people 14.29 and 3 people 14.28, still summing to 100.00.
+  const exp1b = { amount: 100, splitMode: 'equal', paidBy: 'mem-1' };
+  const sevenWay = ['mem-1', 'mem-2', 'mem-3', 'mem-4', 'mem-5', 'mem-6', 'mem-7'];
+  const shares1b = resolveShares(exp1b, sevenWay);
+  const sum1b = Object.values(shares1b).reduce((a, b) => a + b, 0);
+  const countAt29 = Object.values(shares1b).filter((v) => v === 14.29).length;
+  const countAt28 = Object.values(shares1b).filter((v) => v === 14.28).length;
+  assert(Math.abs(sum1b - 100) < 1e-9, "7-way split must still sum to exactly 100.00");
+  assert(countAt29 === 4, "4 participants should get 14.29");
+  assert(countAt28 === 3, "3 participants should get 14.28 (not one person absorbing all -0.03)");
 
   // --- Test 2: Custom Split with Weights ---
   const exp2 = { 
