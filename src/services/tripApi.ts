@@ -72,6 +72,7 @@ function mapExpense(row: ExpenseRow & { location?: any }): Expense {
     category: row.category,
     date: row.date,
     paidBy: row.paid_by,
+    paidByShares: (row as any).paid_by_shares ?? undefined,
     splitMode: row.split_mode as SplitMode,
     splitMemberIds: row.split_member_ids,
     splitConfig: row.split_config ?? undefined,
@@ -503,6 +504,7 @@ export interface ExpenseInput {
   category: string;
   date: string;
   paidBy: string;
+  paidByShares?: Record<string, number>;
   splitMode: SplitMode;
   splitMemberIds: string[];
   splitConfig?: Record<string, number>;
@@ -523,6 +525,7 @@ export async function insertExpense(tripId: string, createdByUserId: string, inp
     category: input.category,
     date: input.date,
     paid_by: input.paidBy,
+    paid_by_shares: input.paidByShares ?? null,
     split_mode: input.splitMode,
     split_member_ids: input.splitMemberIds,
     split_config: input.splitConfig ?? null,
@@ -558,6 +561,7 @@ export async function updateExpenseRow(id: string, input: ExpenseInput): Promise
     category: input.category,
     date: input.date,
     paid_by: input.paidBy,
+    ...(input.paidByShares !== undefined ? { paid_by_shares: input.paidByShares } : {}),
     split_mode: input.splitMode,
     split_member_ids: input.splitMemberIds,
     split_config: input.splitConfig ?? null,

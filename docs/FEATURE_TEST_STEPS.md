@@ -28,6 +28,7 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 | 2026-09-17 | v3.27.2 | BUG-223 | [Chat max update depth](#bug-223--chat-max-update-depth-v3272) |
 | 2026-09-17 | v3.27.3 | BUG-224 | [Settlement Algorithm info modal opacity](#bug-224--settlement-algorithm-info-modal-opacity-v3273) |
 | 2026-09-17 | v3.28.0 | FEAT-078 | [Settlement confirmation, share link, contact invite, weather nudges, expense approval](#feat-078--settlement-confirmation-share-link-contact-invite-weather-nudges-expense-approval-v3280) |
+| 2026-09-18 | v3.29.0 | FEAT-079 | [Multi-payer single expense, ledger UI enhancements, quick filter chips](#feat-079--multi-payer-single-expense-ledger-ui-enhancements-quick-filter-chips-v3290) |
 
 ---
 
@@ -329,6 +330,70 @@ No new flag. Summary / Who owes who available when balances exist.
 ### Pass
 
 - Each flag independently gates its feature with no bleed into the others; balances/analytics never include a pending-approval expense; the share link never exposes member-level data.
+
+---
+
+## FEAT-079 — Multi-payer single expense, ledger UI enhancements, quick filter chips (v3.29.0)
+
+**Migrations:** `0104_multi_payer_expenses.sql`. **ADR:** #195.
+
+### Flags
+| Behavior | Flag | Default | Phase |
+|----------|------|---------|-------|
+| Multi-payer contributions per expense | `enableMultiPayerExpenses` | OFF | Phase 4 |
+| Sticky glassmorphic day-total headers | `enableStickyDayHeaders` | OFF | Phase 1 |
+| Category icon ambient glow rings | `enableCategoryColorRings` | OFF | Phase 1 |
+| OLED Pure Black theme in Settings | `enableAmoledTheme` | OFF | Phase 4 |
+| Quick filter chip bar on Expenses tab | `enableExpenseQuickFilterChips` | OFF | Phase 5 |
+
+### A. Multi-Payer Single Expense
+
+1. `enableMultiPayerExpenses` OFF → Add Expense form shows standard single "Paid By" member dropdown.
+2. Flag ON → Add Expense form shows a segmented toggle: **Single Payer** vs **Multiple Payers**.
+3. Select **Multiple Payers** → Member list appears with input fields for each member's contribution amount.
+4. Tap **Split Equally** → Total expense amount is divided equally among members with cents rounded and balanced.
+5. Manually edit shares → The allocation counter displays "Allocated: $X / $Y" with green checkmark when balanced, or warning badge if sum does not match total expense.
+6. Attempt to submit with mismatched allocation → Form displays validation message preventing save.
+7. Save balanced expense → On the Expenses ledger, expense row displays an avatar stack of all contributing payers and the count of contributors.
+8. Balances & Settlements → Verify in Balances tab that each contributing payer is credited their exact paid portion, and debts are minimized correctly.
+
+### B. Sticky Day-Total Headers
+
+1. `enableStickyDayHeaders` OFF → Date headers scroll away naturally with standard static styling.
+2. Flag ON → Date group headers become sticky at the top of the viewport when scrolling down the expenses ledger.
+3. Verify sticky header displays the day's formatted date, expense item count pill, and total sum of actual expenses spent that day.
+4. Verify smooth background blur (`backdrop-filter: blur(12px)`) with crisp contrast in light, dark, and OLED themes.
+
+### C. Category Ambient Color Glow Rings & Tabular Numerals
+
+1. `enableCategoryColorRings` OFF → Category icons render standard circular badges.
+2. Flag ON → Category icons on expense rows render with a vibrant duo-tone ambient glow ring matching the category accent palette.
+3. Tabular numerals check: Amounts across ledger rows and day headers maintain uniform character width and digit alignment (`font-variant-numeric: tabular-nums`).
+
+### D. OLED Pure Black Theme
+
+1. `enableAmoledTheme` OFF → Settings → Appearance only shows "System", "Day flight", "Night flight".
+2. Flag ON → Settings → Appearance shows "OLED" pure black theme option.
+3. Switch to OLED → Page background flips to true `#000000`, card borders have clean high-contrast edges, saving power on AMOLED screens.
+
+### E. Quick Filter Chip Bar
+
+1. `enableExpenseQuickFilterChips` OFF → Quick filter chip bar above expenses list is hidden.
+2. Flag ON → Horizontally scrollable chip bar renders right above the ledger with:
+   - **All** (active default with count)
+   - **My Expenses** (filters expenses involving current member)
+   - **Paid by Me** (filters expenses where current member is the primary or joint payer)
+   - **Pending ⏳** (filters expenses awaiting threshold approval)
+   - Top category chips (e.g. Food, Stay, Travel)
+   - Spending thresholds (e.g. `> 1000`)
+3. Tap **Paid by Me** → Ledger immediately filters without page reload or network request.
+4. Tap **All** → Ledger resets to full list instantly.
+
+### Negative checks
+- All five flags OFF → The app looks and behaves exactly as v3.28.1 with single-payer dropdown, classic date headers, standard category badges, and no quick filter bar.
+
+### Pass
+- Each of the 5 flags functions completely independently with zero regressions, settlements balance to exact zero, and build/tests pass 100%.
 
 ---
 

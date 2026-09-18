@@ -198,12 +198,26 @@ export function calculateDirectSettlements(
         addDebt(creditor, debtor, exp.amount);
       }
     } else {
-      const payer = exp.paidBy;
-      Object.entries(exp.resolvedShares).forEach(([borrower, share]) => {
-        if (borrower !== payer && share > 0.005) {
-          addDebt(borrower, payer, share);
-        }
-      });
+      const hasMultiPayers = Boolean(exp.paidByShares && Object.keys(exp.paidByShares).length > 1);
+      if (hasMultiPayers && exp.amount > 0) {
+        const payers = Object.entries(exp.paidByShares!);
+        Object.entries(exp.resolvedShares).forEach(([borrower, share]) => {
+          if (share <= 0.005) return;
+          payers.forEach(([payer, paidAmount]) => {
+            if (borrower !== payer && paidAmount > 0.005) {
+              const payerPortion = (paidAmount / exp.amount) * share;
+              addDebt(borrower, payer, payerPortion);
+            }
+          });
+        });
+      } else {
+        const payer = exp.paidBy;
+        Object.entries(exp.resolvedShares).forEach(([borrower, share]) => {
+          if (borrower !== payer && share > 0.005) {
+            addDebt(borrower, payer, share);
+          }
+        });
+      }
     }
   });
 
@@ -243,7 +257,7 @@ export function calculateDirectSettlements(
           toLabel: memA ? memA.name : 'Deleted Member',
           fromMemberId: idB,
           toMemberId: idA,
-          amount: Math.abs(net),
+          amount: Number((-net).toFixed(2)),
         });
       }
     });
@@ -271,8 +285,14 @@ export function calculateSettlements(
   });
 
   activeTripExpenses.forEach((exp) => {
-    // Add amount paid by the payer
-    if (netBalances[exp.paidBy] !== undefined) {
+    // Add amount paid by the payer(s)
+    if (exp.paidByShares && Object.keys(exp.paidByShares).length > 0) {
+      Object.entries(exp.paidByShares).forEach(([payerId, paidAmount]) => {
+        if (netBalances[payerId] !== undefined) {
+          netBalances[payerId] += paidAmount;
+        }
+      });
+    } else if (netBalances[exp.paidBy] !== undefined) {
       netBalances[exp.paidBy] += exp.amount;
     }
 

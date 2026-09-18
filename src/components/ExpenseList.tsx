@@ -106,10 +106,12 @@ type Props = {
   filterAmountMin: string;
   filterAmountMax: string;
   filterRelation: '' | 'paidByMe' | 'involvesMe';
+  setFilterRelation?: (v: '' | 'paidByMe' | 'involvesMe') => void;
   filterLocation: string;
   myMemberId: string | null;
   onClearFilters: () => void;
   onOpenFilters: () => void;
+  setFilterAmountMin?: (v: string) => void;
 
   onReview: (expense: Expense) => void;
   onEdit: (expense: Expense) => void;
@@ -153,10 +155,12 @@ export function ExpenseList({
   filterAmountMin,
   filterAmountMax,
   filterRelation,
+  setFilterRelation,
   filterLocation,
   myMemberId,
   onClearFilters,
   onOpenFilters,
+  setFilterAmountMin,
   onReview,
   onEdit,
   onDelete,
@@ -381,13 +385,22 @@ export function ExpenseList({
                 style={{
                   width: '32px',
                   height: '32px',
-                  borderRadius: '8px',
-                  background: `${categoryAccentColor}18`,
+                  borderRadius: isFeatureEnabled('enableCategoryColorRings', { tripId: trip?.id }) ? '10px' : '8px',
+                  background: isFeatureEnabled('enableCategoryColorRings', { tripId: trip?.id })
+                    ? `linear-gradient(135deg, ${categoryAccentColor}2e, ${categoryAccentColor}0d)`
+                    : `${categoryAccentColor}18`,
+                  border: isFeatureEnabled('enableCategoryColorRings', { tripId: trip?.id })
+                    ? `1.5px solid ${categoryAccentColor}55`
+                    : 'none',
+                  boxShadow: isFeatureEnabled('enableCategoryColorRings', { tripId: trip?.id })
+                    ? `0 0 0 2px ${categoryAccentColor}22, 0 3px 8px ${categoryAccentColor}18`
+                    : undefined,
                   color: categoryAccentColor,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   flexShrink: 0,
+                  transition: 'all 0.2s ease',
                 }}
               >
                 <CategoryIcon categoryId={cat?.id || ''} fallbackEmoji={cat?.icon || '🏷️'} size={16} />
@@ -429,7 +442,7 @@ export function ExpenseList({
                 return (
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', flexShrink: 0 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                      <span className="money" style={{ fontSize: '15px', fontWeight: '600', color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
+                      <span className="money" style={{ fontSize: '15px', fontWeight: '600', color: 'var(--text-primary)', whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }}>
                         {formatAmount(displayAmount, displaySymbol)}
                       </span>
                       {isForeign && (
@@ -463,14 +476,43 @@ export function ExpenseList({
                 );
               })()}
             </div>
-            <div
-              style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', minWidth: 0 }}
-              onClick={() => { triggerHaptic('light'); onReview(exp); }}
-              title={`Paid by ${payerMember?.name || 'a removed member'}`}
-            >
-              <ExpenseAvatar member={payerMember} size={22} muted={isPayerDeleted} />
-              <span style={{ color: 'var(--text-muted)', fontSize: '12px', flexShrink: 0 }}>→</span>
-              <div style={{ display: 'flex', flexShrink: 0 }}>
+            {(() => {
+              const multiPayersList = exp.paidByShares && Object.keys(exp.paidByShares).length > 1
+                ? Object.entries(exp.paidByShares).map(([mId, amt]) => ({
+                    id: mId,
+                    member: members[mId],
+                    amount: amt,
+                  }))
+                : null;
+
+              const multiPayersTitle = multiPayersList
+                ? `Paid jointly by: ${multiPayersList.map((p) => `${p.member?.name || 'Removed'}: ${currencySymbol} ${p.amount.toFixed(2)}`).join(', ')}`
+                : `Paid by ${payerMember?.name || 'a removed member'}`;
+
+              return (
+                <div
+                  style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', minWidth: 0 }}
+                  onClick={() => { triggerHaptic('light'); onReview(exp); }}
+                  title={multiPayersTitle}
+                >
+                  {multiPayersList ? (
+                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                      <div style={{ display: 'flex', flexShrink: 0 }}>
+                        {multiPayersList.slice(0, 2).map((p, pIdx) => (
+                          <div key={p.id} style={{ marginLeft: pIdx === 0 ? 0 : '-7px' }}>
+                            <ExpenseAvatar member={p.member} size={22} muted={!p.member} />
+                          </div>
+                        ))}
+                      </div>
+                      <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary)', marginLeft: '5px' }}>
+                        {multiPayersList.length} payers
+                      </span>
+                    </div>
+                  ) : (
+                    <ExpenseAvatar member={payerMember} size={22} muted={isPayerDeleted} />
+                  )}
+                  <span style={{ color: 'var(--text-muted)', fontSize: '12px', flexShrink: 0 }}>→</span>
+                  <div style={{ display: 'flex', flexShrink: 0 }}>
                 {visibleSplitMembers.map(({ id, member }, splitIdx) => (
                   <div key={id} style={{ marginLeft: splitIdx === 0 ? 0 : '-8px' }}>
                     <ExpenseAvatar member={member} size={20} muted={!member} />
@@ -494,6 +536,8 @@ export function ExpenseList({
                 <span style={{ color: '#00BFA5', fontSize: '12px', flexShrink: 0 }} title={exp.location.placeName}>📍</span>
               )}
             </div>
+          );
+        })()}
             {needsReview && (
               <div style={{
                 display: 'flex', alignItems: 'center', gap: '6px',
@@ -530,20 +574,38 @@ export function ExpenseList({
     const collapsed = isDayCollapsed(collapseKey, groupIdx);
     // Burn indicator strictly measures real expense burn rate against daily averages (never debt settlements)
     const isHighBurn = (opts?.showBurn ?? false) && avgDailySpend > 0 && groupTotal > avgDailySpend * 1.5 && group.expenses.length > 1;
+    const isSticky = isFeatureEnabled('enableStickyDayHeaders', { tripId: trip?.id });
 
     return (
-      <div key={collapseKey} className="glass-card" style={{ padding: 0, overflow: 'hidden', marginBottom: '10px' }}>
+      <div
+        key={collapseKey}
+        className="glass-card"
+        style={{
+          padding: 0,
+          overflow: isSticky ? 'visible' : 'hidden',
+          marginBottom: '10px',
+          borderRadius: '12px',
+        }}
+      >
         <div
           role="button"
           tabIndex={0}
           onClick={() => toggleDay(collapseKey, groupIdx)}
           onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleDay(collapseKey, groupIdx); } }}
           style={{
-            position: 'sticky', top: 0, zIndex: 2,
+            position: 'sticky', top: 0, zIndex: isSticky ? 4 : 2,
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
             gap: '10px', padding: '10px 14px', cursor: 'pointer',
-            background: 'var(--bg-surface-hover)',
+            background: isSticky ? 'var(--bg-header-glass, rgba(28, 33, 40, 0.95))' : 'var(--bg-surface-hover)',
+            backdropFilter: isSticky ? 'blur(12px)' : undefined,
+            WebkitBackdropFilter: isSticky ? 'blur(12px)' : undefined,
+            boxShadow: isSticky ? '0 2px 8px rgba(0, 0, 0, 0.15)' : undefined,
+            borderTopLeftRadius: '12px',
+            borderTopRightRadius: '12px',
+            borderBottomLeftRadius: collapsed ? '12px' : 0,
+            borderBottomRightRadius: collapsed ? '12px' : 0,
             borderBottom: collapsed ? 'none' : '1.5px solid var(--border-color)',
+            transition: 'background 0.2s ease, border-radius 0.2s ease',
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
@@ -555,6 +617,22 @@ export function ExpenseList({
             <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
               {groupLabel}
             </span>
+            {isSticky && (
+              <span
+                style={{
+                  fontSize: '10.5px',
+                  fontWeight: 600,
+                  color: 'var(--text-muted)',
+                  background: 'var(--bg-surface)',
+                  padding: '1px 6px',
+                  borderRadius: '10px',
+                  border: '1px solid var(--border-color)',
+                  flexShrink: 0,
+                }}
+              >
+                {group.expenses.length}
+              </span>
+            )}
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
             {isHighBurn && (
@@ -563,31 +641,17 @@ export function ExpenseList({
                   fontSize: '10px',
                   fontWeight: 700,
                   padding: '1px 5px',
-                  borderRadius: '8px',
+                  borderRadius: '4px',
                   background: 'rgba(239, 68, 68, 0.15)',
-                  color: 'var(--color-danger, #ef4444)',
+                  color: 'var(--color-danger)',
                   border: '1px solid rgba(239, 68, 68, 0.3)',
                 }}
-                title="High spending day (> 1.5x average daily spend)"
               >
-                🔥 Burn
+                High burn
               </span>
             )}
-            <span
-              style={{
-                fontSize: '12px',
-                fontWeight: 600,
-                color: 'var(--text-primary)',
-                background: 'var(--bg-card)',
-                padding: '2px 8px',
-                borderRadius: '12px',
-                border: '1px solid var(--border-color)',
-              }}
-            >
+            <span className="money" style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)', fontVariantNumeric: 'tabular-nums' }}>
               {formatAmount(groupTotal, currencySymbol)}{opts?.amountSuffix ? ` ${opts.amountSuffix}` : ''}
-            </span>
-            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-              {group.expenses.length}
             </span>
           </div>
         </div>
@@ -853,6 +917,117 @@ export function ExpenseList({
             passes={trip.passes}
           />
         )}
+
+      {/* Always-Accessible Quick-Filter Chip Bar */}
+      {isFeatureEnabled('enableExpenseQuickFilterChips', { tripId: trip?.id }) && (
+        <div
+          className="filter-chips-track scroll-fade-mask"
+          data-no-tab-swipe="true"
+          style={{
+            display: 'flex',
+            gap: '6px',
+            overflowX: 'auto',
+            padding: '4px 2px 10px 2px',
+            scrollbarWidth: 'none',
+            WebkitOverflowScrolling: 'touch',
+          }}
+        >
+          <button
+            type="button"
+            className={`filter-chip ${isAllActive ? 'active' : ''}`}
+            onClick={onClearFilters}
+            style={{ flexShrink: 0 }}
+          >
+            All ({activeTripExpenseCount})
+          </button>
+          {myMemberId && (
+            <>
+              <button
+                type="button"
+                className={`filter-chip ${filterRelation === 'involvesMe' ? 'active' : ''}`}
+                onClick={() => {
+                  triggerHaptic('light');
+                  setFilterRelation?.(filterRelation === 'involvesMe' ? '' : 'involvesMe');
+                }}
+                style={{ flexShrink: 0 }}
+              >
+                My Expenses
+              </button>
+              <button
+                type="button"
+                className={`filter-chip ${filterRelation === 'paidByMe' ? 'active' : ''}`}
+                onClick={() => {
+                  triggerHaptic('light');
+                  setFilterRelation?.(filterRelation === 'paidByMe' ? '' : 'paidByMe');
+                }}
+                style={{ flexShrink: 0 }}
+              >
+                Paid by Me
+              </button>
+            </>
+          )}
+          {activeTripExpenses.some((e) => e.approvalStatus === 'pending_approval') && (
+            <button
+              type="button"
+              className="filter-chip"
+              onClick={() => {
+                triggerHaptic('light');
+                setSearch('pending_approval');
+              }}
+              style={{
+                flexShrink: 0,
+                borderColor: 'rgba(245, 158, 11, 0.4)',
+                color: 'var(--color-warning-text)',
+                background: 'rgba(245, 158, 11, 0.08)',
+              }}
+            >
+              Pending ⏳
+            </button>
+          )}
+          {categories.slice(0, 4).map((c) => (
+            <button
+              key={c.id}
+              type="button"
+              className={`filter-chip ${filterCategory === c.id ? 'active' : ''}`}
+              onClick={() => {
+                triggerHaptic('light');
+                setFilterCategory(filterCategory === c.id ? '' : c.id);
+              }}
+              style={{ flexShrink: 0 }}
+            >
+              <CategoryIcon categoryId={c.id} fallbackEmoji={c.icon} size={13} />
+              <span>{c.name}</span>
+            </button>
+          ))}
+          {(() => {
+            const thresholdAmt = trip?.baseCurrency === 'INR' ? '1000' : '50';
+            const isHighActive = filterAmountMin === thresholdAmt;
+            return (
+              <button
+                type="button"
+                className={`filter-chip ${isHighActive ? 'active' : ''}`}
+                onClick={() => {
+                  triggerHaptic('light');
+                  setFilterAmountMin?.(isHighActive ? '' : thresholdAmt);
+                }}
+                style={{ flexShrink: 0 }}
+              >
+                &gt; {currencySymbol}{thresholdAmt}
+              </button>
+            );
+          })()}
+          {hasActiveFilters && (
+            <button
+              type="button"
+              className="filter-chip filter-chip-clear"
+              onClick={onClearFilters}
+              style={{ flexShrink: 0 }}
+            >
+              Reset
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Clean Transaction Feed with Date Dividers or Quick Starters */}
       {filteredExpenses.length === 0 && isLoadingExpenses ? (

@@ -3,6 +3,8 @@ export type FeatureFlagKey =
   | 'enablePredictiveChips'
   | 'enableRecycleBin'
   | 'enableExplainThisNumber'
+  | 'enableStickyDayHeaders'
+  | 'enableCategoryColorRings'
   // Phase 2: Active Group Collab & Natural Entry
   | 'enableVoiceInput'
   | 'enableReceiptUpload'
@@ -39,6 +41,8 @@ export type FeatureFlagKey =
   | 'enableDateRangeMembership'
   | 'enableAutoCurrencyDetection'
   | 'enableSplitExclusionDefaults'
+  | 'enableMultiPayerExpenses'
+  | 'enableAmoledTheme'
   // Phase 2: Active Group Collab & Natural Entry (cont'd)
   | 'enableQuietHours'
   // Phase 5: Switch, Speed & Trust
@@ -53,6 +57,7 @@ export type FeatureFlagKey =
   | 'enableSettlementConfirmation'
   | 'enableTripShareLink'
   | 'enableContactInvite'
+  | 'enableExpenseQuickFilterChips'
   // Phase 6: WhatsApp Social & Chat Hub
   | 'enableChatFirstNav'
   | 'enableChatReactionsAndReplies'

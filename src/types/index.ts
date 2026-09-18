@@ -208,7 +208,8 @@ export interface Expense {
   currency: string;
   category: string;
   date: string;
-  paidBy: string; // memberId
+  paidBy: string; // memberId (primary / legacy payer)
+  paidByShares?: Record<string, number>; // memberId -> exact contribution amount for multi-payer expenses
   splitMode: SplitMode;
   splitMemberIds: string[]; // members participating in this split
   splitConfig?: Record<string, number>; // memberId -> weight / amount / percentage

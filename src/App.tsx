@@ -1168,7 +1168,13 @@ export default function App() {
       spentMap[m.id] = 0;
     });
     nonSettlementExpenses.forEach((exp) => {
-      if (spentMap[exp.paidBy] !== undefined) {
+      if (exp.paidByShares && Object.keys(exp.paidByShares).length > 0) {
+        Object.entries(exp.paidByShares).forEach(([payerId, paidAmount]) => {
+          if (spentMap[payerId] !== undefined) {
+            spentMap[payerId] += paidAmount;
+          }
+        });
+      } else if (spentMap[exp.paidBy] !== undefined) {
         spentMap[exp.paidBy] += exp.amount;
       }
     });
@@ -1466,6 +1472,7 @@ export default function App() {
     category: string;
     date: string;
     paidBy: string;
+    paidByShares?: Record<string, number>;
     splitMode: import('./types').SplitMode;
     splitMemberIds: string[];
     splitConfig?: Record<string, number>;
@@ -1486,6 +1493,7 @@ export default function App() {
         category: expenseData.category,
         date: expenseData.date,
         paidBy: expenseData.paidBy,
+        paidByShares: expenseData.paidByShares,
         splitMode: expenseData.splitMode,
         splitMemberIds: expenseData.splitMemberIds,
         splitConfig: expenseData.splitConfig,
@@ -2551,8 +2559,10 @@ export default function App() {
                   filterDateTo={expenseFilterDateTo}
                   setFilterDateTo={setExpenseFilterDateTo}
                   filterAmountMin={expenseFilterAmountMin}
+                  setFilterAmountMin={setExpenseFilterAmountMin}
                   filterAmountMax={expenseFilterAmountMax}
                   filterRelation={expenseFilterRelation}
+                  setFilterRelation={setExpenseFilterRelation}
                   filterLocation={expenseFilterLocation}
                   myMemberId={myMemberId}
                   onClearFilters={clearExpenseFilters}

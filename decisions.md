@@ -3503,4 +3503,33 @@ This document logs all meaningful technical decisions, library choices, design p
   - The other five features from #193 (settlement confirmation, trip share link, contact invite, weather nudges, expense approval threshold) are unaffected and remain as shipped.
   - Revisiting calendar sync later means re-doing the Google Cloud OAuth client setup from scratch (nothing was configured for it before removal, so nothing extra was lost).
 
+---
+
+## 195. Multi-Payer Single Expenses, Ledger UI Enhancements & Quick Filter Chips (FEAT-079, v3.29.0)
+* **Context:** Users frequently share upfront payments for expensive single activities (e.g. villa bookings, boat charters, rental cars) where multiple individuals contribute directly to the merchant. Previously, each expense only supported a single `paid_by` member, forcing users to either file separate artificial expenses or execute manual offsets. In addition, user feedback requested ledger visual hierarchy upgrades (sticky date totals, category ambient glow rings, tabular numeric alignment) and one-tap quick filter chips on the Expenses tab, alongside flag-gating the OLED/AMOLED pure black theme option.
+* **Decision:**
+  - Introduce full multi-payer single expense support gated by `enableMultiPayerExpenses` (Phase 4).
+  - Add sticky glassmorphic day-total headers gated by `enableStickyDayHeaders` (Phase 1).
+  - Add duo-tone ambient glow rings for category icons gated by `enableCategoryColorRings` (Phase 1).
+  - Add tabular numeral layout and OLED theme gating behind `enableAmoledTheme` (Phase 4).
+  - Add a horizontally scrollable, one-tap quick filter chip bar gated by `enableExpenseQuickFilterChips` (Phase 5).
+* **Pattern/Implementation:**
+  - **Data Layer & Migration:** Migration `0104_multi_payer_expenses.sql` adds `paid_by_shares jsonb default null` to `public.expenses`. Schema maps `paid_by_shares` as `Record<string, number> | null`. When multi-payer is disabled or an expense has a single payer, `paid_by` remains the primary payer and `paid_by_shares` is `null`/omitted for zero backward-incompatibility.
+  - **Settlement & Math Engine:**
+    - `calculateSettlements`: credits each payer in `exp.paidByShares` according to their contribution (`netBalances[payerId] += paidAmount`), seamlessly integrating with existing debt minimization heuristics.
+    - `calculateDirectSettlements`: distributes borrower debts proportionally across joint payers based on their contribution ratios.
+    - `memberSpentMap` in `App.tsx`: sums individual contributions from `paidByShares` when computing total spent per member.
+  - **Expense Form UX:**
+    - Segmented "Single Payer" vs "Multiple Payers" toggle appears when `enableMultiPayerExpenses` is active.
+    - Interactive contribution list with quick "Split Equally" distribution, real-time live allocation progress bar, and strict sum validation against the converted total amount.
+  - **Ledger UI & Quick Filters:**
+    - `ExpenseList.tsx` renders avatar stacks with count pills and multi-payer breakdown tooltips.
+    - Sticky day headers (`top: 0`, `backdrop-filter: blur(12px)`) provide date context and aggregated day totals while scrolling through lengthy trip records.
+    - Quick filter chip bar pinned above expenses provides instant one-tap filtering by "All", "My Expenses", "Paid by Me", "Pending ⏳", top categories, and high-value spending thresholds.
+* **Trade-offs Accepted:**
+  - For legacy or external systems querying `paid_by`, the primary payer with the highest contribution is set as `paid_by`. This preserves backward compatibility with older clients or third-party consumers while `paid_by_shares` holds the granular breakdown.
+  - Quick filter chips operate purely on client-side state without triggering server refetches or storing filter state in database tables, ensuring zero server load and instant sub-millisecond interaction.
+
+
+
 

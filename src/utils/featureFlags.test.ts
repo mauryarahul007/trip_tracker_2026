@@ -52,6 +52,7 @@ describe('featureFlags', () => {
       'enableSettlementConfirmation',
       'enableTripShareLink',
       'enableContactInvite',
+      'enableExpenseQuickFilterChips',
     ]);
   });
 
@@ -94,11 +95,25 @@ describe('featureFlags', () => {
   });
 
   it('correctly calculates phase status (armed, safed, partial)', () => {
-    const allArmed = { ...DEFAULT_FEATURE_FLAGS, enablePredictiveChips: true, enableRecycleBin: true, enableExplainThisNumber: true };
+    const allArmed = {
+      ...DEFAULT_FEATURE_FLAGS,
+      enablePredictiveChips: true,
+      enableRecycleBin: true,
+      enableExplainThisNumber: true,
+      enableStickyDayHeaders: true,
+      enableCategoryColorRings: true,
+    };
     expect(getPhaseStatus('phase1', allArmed).status).toBe('armed');
-    expect(getPhaseStatus('phase1', allArmed).activeCount).toBe(3);
+    expect(getPhaseStatus('phase1', allArmed).activeCount).toBe(5);
 
-    const allSafed = { ...DEFAULT_FEATURE_FLAGS, enablePredictiveChips: false, enableRecycleBin: false, enableExplainThisNumber: false };
+    const allSafed = {
+      ...DEFAULT_FEATURE_FLAGS,
+      enablePredictiveChips: false,
+      enableRecycleBin: false,
+      enableExplainThisNumber: false,
+      enableStickyDayHeaders: false,
+      enableCategoryColorRings: false,
+    };
     expect(getPhaseStatus('phase1', allSafed).status).toBe('safed');
     expect(getPhaseStatus('phase1', allSafed).activeCount).toBe(0);
 
@@ -183,7 +198,7 @@ describe('featureFlags', () => {
 
   it('verifies that every single flag in all phases can be enabled and disabled', () => {
     const allFlagKeys = Object.keys(DEFAULT_FEATURE_FLAGS) as (keyof typeof DEFAULT_FEATURE_FLAGS)[];
-    expect(allFlagKeys.length).toBe(66);
+    expect(allFlagKeys.length).toBe(71);
 
     allFlagKeys.forEach((flagKey) => {
       const disabledFlags = { ...DEFAULT_FEATURE_FLAGS, [flagKey]: false };

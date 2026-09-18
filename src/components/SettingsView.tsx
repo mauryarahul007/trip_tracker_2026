@@ -921,6 +921,7 @@ export function SettingsView({
   const showWrappedSearch = Boolean(onOpenTripWrapped && isWrappedEnabled && matchesSearch('Trip Wrapped & Highlights', 'wrapped', 'story', 'highlights', 'recap', 'stats', 'infographic'));
   const showTripStatus = Boolean(hasActiveTrip && activeTrip && !searchQuery.trim());
   const isSnapshotEnabled = isFeatureEnabled('enableOfflineSnapshot');
+  const isAmoledEnabled = isFeatureEnabled('enableAmoledTheme');
   const showSnapshotSearch = Boolean(onOpenOfflineSnapshot && isSnapshotEnabled && matchesSearch('Offline Snapshot (.triptracker)', 'snapshot', 'offline', 'backup', 'triptracker'));
   const showGallerySearch = Boolean(onOpenMediaGallery && matchesSearch('Receipts & Memories Gallery', 'gallery', 'photos', 'receipts', 'memories'));
   const isVaultEnabled = isFeatureEnabled('enableDocumentVault');
@@ -1285,15 +1286,17 @@ export function SettingsView({
                   >
                     <IconMoon size={14} />
                   </button>
-                  <button
-                    type="button"
-                    className={`settings-seg-btn${themePref === 'oled' ? ' active' : ''}`}
-                    onClick={() => { triggerHaptic('light'); setThemePref('oled'); }}
-                    title="OLED Pure Black"
-                    aria-label="OLED Pure Black"
-                  >
-                    <IconOled size={14} />
-                  </button>
+                  {isAmoledEnabled && (
+                    <button
+                      type="button"
+                      className={`settings-seg-btn${themePref === 'oled' ? ' active' : ''}`}
+                      onClick={() => { triggerHaptic('light'); setThemePref('oled'); }}
+                      title="OLED Pure Black"
+                      aria-label="OLED Pure Black"
+                    >
+                      <IconOled size={14} />
+                    </button>
+                  )}
                   <button
                     type="button"
                     className={`settings-seg-btn${themePref === 'system' ? ' active' : ''}`}

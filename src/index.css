@@ -336,6 +336,20 @@
   --bp-shadow: rgba(0, 0, 0, 0.8);
 }
 
+:root[data-theme="oled"] .glass-card {
+  background: #090b0e;
+  border: 1px solid #232a35;
+}
+
+:root[data-theme="oled"] .member-card {
+  background: #090b0e;
+  border-color: #232a35;
+}
+
+.tabular-nums, .money {
+  font-variant-numeric: tabular-nums;
+}
+
 /* ==========================================================================
    UI/UX ENHANCEMENTS: Cockpit 2-Pane, Perforated Rip, Shimmers & Odometer
    ========================================================================== */

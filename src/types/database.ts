@@ -279,6 +279,7 @@ export interface Database {
           category: string;
           date: string;
           paid_by: string;
+          paid_by_shares: Record<string, number> | null;
           split_mode: 'equal' | 'equalUnit' | 'custom' | 'exact' | 'percentage' | 'itemized';
           split_member_ids: string[];
           split_config: Record<string, number> | null;
@@ -310,6 +311,7 @@ export interface Database {
           category: string;
           date: string;
           paid_by: string;
+          paid_by_shares?: Record<string, number> | null;
           split_mode: 'equal' | 'equalUnit' | 'custom' | 'exact' | 'percentage' | 'itemized';
           split_member_ids: string[];
           split_config?: Record<string, number> | null;
@@ -329,6 +331,7 @@ export interface Database {
           category: string;
           date: string;
           paid_by: string;
+          paid_by_shares: Record<string, number> | null;
           split_mode: 'equal' | 'equalUnit' | 'custom' | 'exact' | 'percentage' | 'itemized';
           split_member_ids: string[];
           split_config: Record<string, number> | null;

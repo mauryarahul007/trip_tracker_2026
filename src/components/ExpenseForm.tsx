@@ -86,6 +86,7 @@ type Props = {
     category: string;
     date: string;
     paidBy: string;
+    paidByShares?: Record<string, number>;
     splitMode: SplitMode;
     splitMemberIds: string[];
     splitConfig?: Record<string, number>;
@@ -125,6 +126,23 @@ export function ExpenseForm({
     editingExpense?.paidBy
     || (initialTemplate?.paidBy && visibleMembers.some((m) => m.id === initialTemplate.paidBy) ? initialTemplate.paidBy : (visibleMembers[0]?.id || ''))
   );
+  const [payerMode, setPayerMode] = useState<'single' | 'multiple'>(() => {
+    return editingExpense?.paidByShares && Object.keys(editingExpense.paidByShares).length > 1
+      ? 'multiple'
+      : 'single';
+  });
+  const [multiPayerShares, setMultiPayerShares] = useState<Record<string, string>>(() => {
+    if (editingExpense?.paidByShares && Object.keys(editingExpense.paidByShares).length > 0) {
+      const initialMap: Record<string, string> = {};
+      Object.entries(editingExpense.paidByShares).forEach(([id, val]) => {
+        initialMap[id] = String(val);
+      });
+      return initialMap;
+    }
+    const initialPayerId = editingExpense?.paidBy || (initialTemplate?.paidBy && visibleMembers.some((m) => m.id === initialTemplate.paidBy) ? initialTemplate.paidBy : (visibleMembers[0]?.id || ''));
+    const initialAmt = editingExpense ? String(editingExpense.amount) : (initialTemplate?.amount != null ? String(initialTemplate.amount) : '');
+    return initialPayerId && initialAmt ? { [initialPayerId]: initialAmt } : {};
+  });
   const [splitMode, setSplitMode] = useState<SplitMode>(
     (editingExpense?.splitMode as SplitMode) || initialTemplate?.splitMode || 'equal'
   );
@@ -817,13 +835,63 @@ export function ExpenseForm({
         ? currencyConversion.convertedAmount
         : amountVal;
 
+      let finalPaidBy = payer;
+      let finalPaidByShares: Record<string, number> | undefined = undefined;
+
+      const multiPayerActive = isFeatureEnabled('enableMultiPayerExpenses', { tripId: trip?.id });
+      if (multiPayerActive && payerMode === 'multiple') {
+        const parsedPayers: Record<string, number> = {};
+        let totalMultiPaid = 0;
+        Object.entries(multiPayerShares).forEach(([id, val]) => {
+          const num = parseFloat(val);
+          if (!isNaN(num) && num > 0.005) {
+            parsedPayers[id] = Number(num.toFixed(2));
+            totalMultiPaid += parsedPayers[id];
+          }
+        });
+
+        if (Object.keys(parsedPayers).length === 0) {
+          setFormError('Please allocate payment amounts for at least one member.');
+          return;
+        }
+
+        if (Math.abs(totalMultiPaid - amountVal) > 0.02) {
+          setFormError(`Multi-payer sum (${currencySymbol} ${totalMultiPaid.toFixed(2)}) must equal total expense (${currencySymbol} ${amountVal.toFixed(2)}). Difference: ${currencySymbol} ${Math.abs(totalMultiPaid - amountVal).toFixed(2)}.`);
+          return;
+        }
+
+        if (selectedCurrency !== baseCurrency && currencyConversion && amountVal > 0) {
+          const ratio = finalAmount / amountVal;
+          const baseShares: Record<string, number> = {};
+          let allocatedBase = 0;
+          const payerEntries = Object.entries(parsedPayers);
+          payerEntries.forEach(([id, amt]) => {
+            const inBase = Number((amt * ratio).toFixed(2));
+            baseShares[id] = inBase;
+            allocatedBase += inBase;
+          });
+          const diffBase = Number((finalAmount - allocatedBase).toFixed(2));
+          if (diffBase !== 0 && payerEntries.length > 0) {
+            const largestPayer = payerEntries.sort((a, b) => b[1] - a[1])[0][0];
+            baseShares[largestPayer] = Number((baseShares[largestPayer] + diffBase).toFixed(2));
+          }
+          finalPaidByShares = baseShares;
+        } else {
+          finalPaidByShares = parsedPayers;
+        }
+
+        const sortedPayers = Object.entries(parsedPayers).sort((a, b) => b[1] - a[1]);
+        finalPaidBy = sortedPayers[0][0];
+      }
+
       const res = await onSave({
         title: title.trim(),
         amount: finalAmount,
         currency: selectedCurrency,
         category,
         date,
-        paidBy: payer,
+        paidBy: finalPaidBy,
+        paidByShares: finalPaidByShares,
         splitMode,
         splitMemberIds: splitSelectedIds,
         splitConfig: Object.keys(finalSplitConfig).length > 0 ? finalSplitConfig : undefined,
@@ -1535,32 +1603,191 @@ export function ExpenseForm({
       </fieldset>
 
       <fieldset className="form-group">
-        <legend className="form-label">Paid By</legend>
-        {payer && !visibleMembers.some((m) => m.id === payer) && (
-          <p style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12.5px', fontWeight: 500, color: 'var(--color-warning-text)', marginBottom: '4px' }}>
-            <IconAlertCircle size={14} className="icon-sm" /> Previous payer was removed — choose someone new.
-          </p>
-        )}
-        <div className="member-grid">
-          {visibleMembers.map((m) => {
-            const isSelected = payer === m.id;
-            return (
-              <button
-                key={m.id}
-                type="button"
-                className="member-card"
-                style={isSelected ? { borderColor: 'var(--primary-accent)', background: 'rgba(47,111,237,0.07)' } : undefined}
-                onClick={() => setPayer(m.id)}
-                aria-pressed={isSelected}
-              >
-                <div className="member-avatar" style={{ background: isSelected ? 'var(--primary-accent)' : avatarColorForName(m.name) }}>
-                  {initial(m.name)}
+        {(() => {
+          const multiPayerActive = isFeatureEnabled('enableMultiPayerExpenses', { tripId: trip?.id });
+          return (
+            <>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <legend className="form-label" style={{ marginBottom: 0 }}>Paid By</legend>
+                {multiPayerActive && (
+                  <div style={{ display: 'inline-flex', background: 'var(--bg-surface-hover)', borderRadius: '8px', padding: '2px', border: '1px solid var(--border-color)' }}>
+                    <button
+                      type="button"
+                      className={`segment-btn ${payerMode === 'single' ? 'active' : ''}`}
+                      onClick={() => {
+                        triggerHaptic('light');
+                        setPayerMode('single');
+                      }}
+                      style={{
+                        padding: '3px 10px',
+                        fontSize: '11.5px',
+                        fontWeight: 600,
+                        border: 'none',
+                        borderRadius: '6px',
+                        cursor: 'pointer',
+                        background: payerMode === 'single' ? 'var(--primary-accent)' : 'transparent',
+                        color: payerMode === 'single' ? '#FFF' : 'var(--text-secondary)',
+                        transition: 'all 0.15s ease',
+                      }}
+                    >
+                      Single Payer
+                    </button>
+                    <button
+                      type="button"
+                      className={`segment-btn ${payerMode === 'multiple' ? 'active' : ''}`}
+                      onClick={() => {
+                        triggerHaptic('light');
+                        setPayerMode('multiple');
+                        if (Object.keys(multiPayerShares).length === 0 && payer) {
+                          setMultiPayerShares({ [payer]: amount || '' });
+                        }
+                      }}
+                      style={{
+                        padding: '3px 10px',
+                        fontSize: '11.5px',
+                        fontWeight: 600,
+                        border: 'none',
+                        borderRadius: '6px',
+                        cursor: 'pointer',
+                        background: payerMode === 'multiple' ? 'var(--primary-accent)' : 'transparent',
+                        color: payerMode === 'multiple' ? '#FFF' : 'var(--text-secondary)',
+                        transition: 'all 0.15s ease',
+                      }}
+                    >
+                      Multiple Payers
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {payerMode === 'single' ? (
+                <>
+                  {payer && !visibleMembers.some((m) => m.id === payer) && (
+                    <p style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12.5px', fontWeight: 500, color: 'var(--color-warning-text)', marginBottom: '4px' }}>
+                      <IconAlertCircle size={14} className="icon-sm" /> Previous payer was removed — choose someone new.
+                    </p>
+                  )}
+                  <div className="member-grid">
+                    {visibleMembers.map((m) => {
+                      const isSelected = payer === m.id;
+                      return (
+                        <button
+                          key={m.id}
+                          type="button"
+                          className="member-card"
+                          style={isSelected ? { borderColor: 'var(--primary-accent)', background: 'rgba(47,111,237,0.07)' } : undefined}
+                          onClick={() => setPayer(m.id)}
+                          aria-pressed={isSelected}
+                        >
+                          <div className="member-avatar" style={{ background: isSelected ? 'var(--primary-accent)' : avatarColorForName(m.name) }}>
+                            {initial(m.name)}
+                          </div>
+                          <span className="member-name">{m.name}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', background: 'var(--bg-surface-hover)', padding: '12px', borderRadius: '10px', border: '1px solid var(--border-color)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                    <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Enter how much each member paid:</span>
+                    <button
+                      type="button"
+                      className="btn-ghost"
+                      onClick={() => {
+                        triggerHaptic('light');
+                        const numericAmt = parseFloat(amount) || 0;
+                        const activePayerIds = visibleMembers.filter((m) => {
+                          const val = multiPayerShares[m.id];
+                          return val && parseFloat(val) > 0;
+                        }).map((m) => m.id);
+                        const targetIds = activePayerIds.length > 0 ? activePayerIds : visibleMembers.map((m) => m.id);
+                        if (targetIds.length === 0 || numericAmt <= 0) return;
+                        const perPerson = Number((numericAmt / targetIds.length).toFixed(2));
+                        const newMap: Record<string, string> = {};
+                        let sumAssigned = 0;
+                        targetIds.forEach((id, idx) => {
+                          if (idx === targetIds.length - 1) {
+                            newMap[id] = Number((numericAmt - sumAssigned).toFixed(2)).toString();
+                          } else {
+                            newMap[id] = perPerson.toString();
+                            sumAssigned += perPerson;
+                          }
+                        });
+                        setMultiPayerShares(newMap);
+                      }}
+                      style={{ fontSize: '11.5px', color: 'var(--primary-accent)', padding: '2px 8px', border: '1px solid var(--border-color)', borderRadius: '6px', cursor: 'pointer' }}
+                    >
+                      Split Equally
+                    </button>
+                  </div>
+
+                  {visibleMembers.map((m) => {
+                    const val = multiPayerShares[m.id] ?? '';
+                    const isIncluded = parseFloat(val) > 0;
+                    return (
+                      <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'space-between' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
+                          <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: isIncluded ? 'var(--primary-accent)' : avatarColorForName(m.name), color: '#FFF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10.5px', fontWeight: 700, flexShrink: 0 }}>
+                            {initial(m.name)}
+                          </div>
+                          <span style={{ fontSize: '13px', fontWeight: 500, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {m.name}
+                          </span>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
+                          <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{selectedCurrency}</span>
+                          <input
+                            type="number"
+                            inputMode="decimal"
+                            step="any"
+                            placeholder="0.00"
+                            value={val}
+                            onChange={(e) => {
+                              const newV = e.target.value;
+                              setMultiPayerShares((prev) => ({ ...prev, [m.id]: newV }));
+                            }}
+                            style={{
+                              width: '85px',
+                              padding: '6px 8px',
+                              borderRadius: '6px',
+                              border: '1px solid var(--border-color)',
+                              background: 'var(--bg-surface)',
+                              color: 'var(--text-primary)',
+                              fontSize: '13px',
+                              fontWeight: 600,
+                              fontVariantNumeric: 'tabular-nums',
+                              textAlign: 'right',
+                            }}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+
+                  {(() => {
+                    const numericAmt = parseFloat(amount) || 0;
+                    const totalAllocated = Object.values(multiPayerShares).reduce((s, v) => s + (parseFloat(v) || 0), 0);
+                    const diff = Number((numericAmt - totalAllocated).toFixed(2));
+                    const isMatching = Math.abs(diff) < 0.01;
+
+                    return (
+                      <div style={{ marginTop: '6px', padding: '6px 10px', borderRadius: '6px', background: isMatching ? 'rgba(52, 211, 153, 0.1)' : 'rgba(245, 158, 11, 0.1)', border: `1px solid ${isMatching ? 'rgba(52, 211, 153, 0.3)' : 'rgba(245, 158, 11, 0.3)'}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px' }}>
+                        <span style={{ color: isMatching ? 'var(--color-success-text)' : 'var(--color-warning-text)', fontWeight: 600 }}>
+                          {isMatching ? '✓ Total allocated matches expense' : diff > 0 ? `Remaining: ${selectedCurrency} ${diff.toFixed(2)}` : `Over allocated: ${selectedCurrency} ${(-diff).toFixed(2)}`}
+                        </span>
+                        <span style={{ fontFamily: 'var(--font-family-mono)', fontWeight: 700, color: 'var(--text-primary)' }}>
+                          {totalAllocated.toFixed(2)} / {numericAmt.toFixed(2)}
+                        </span>
+                      </div>
+                    );
+                  })()}
                 </div>
-                <span className="member-name">{m.name}</span>
-              </button>
-            );
-          })}
-        </div>
+              )}
+            </>
+          );
+        })()}
       </fieldset>
 
       <div className="form-group">

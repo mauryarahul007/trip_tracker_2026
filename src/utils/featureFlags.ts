@@ -9,7 +9,7 @@ export const RELEASE_PHASES: ReleasePhaseDef[] = [
     tagline: 'Instant, offline group bill splitting without setup hurdles',
     description: 'Core frictionless expense splitting, time-of-day predictive chips, 200+ keyword auto-tagging, and 24h soft-delete protection.',
     targetAudience: 'Casual outings, dinners, weekend getaways, roommates',
-    flagKeys: ['enablePredictiveChips', 'enableRecycleBin', 'enableExplainThisNumber'],
+    flagKeys: ['enablePredictiveChips', 'enableRecycleBin', 'enableExplainThisNumber', 'enableStickyDayHeaders', 'enableCategoryColorRings'],
   },
   {
     id: 'phase2',
@@ -64,6 +64,8 @@ export const RELEASE_PHASES: ReleasePhaseDef[] = [
       'enableDateRangeMembership',
       'enableAutoCurrencyDetection',
       'enableSplitExclusionDefaults',
+      'enableMultiPayerExpenses',
+      'enableAmoledTheme',
     ],
   },
   {
@@ -86,6 +88,7 @@ export const RELEASE_PHASES: ReleasePhaseDef[] = [
       'enableSettlementConfirmation',
       'enableTripShareLink',
       'enableContactInvite',
+      'enableExpenseQuickFilterChips',
     ],
   },
   {
@@ -163,6 +166,22 @@ export const FEATURE_FLAGS_META: Record<FeatureFlagKey, FeatureFlagMeta> = {
     key: 'enableExplainThisNumber',
     label: 'Why This Amount? Settlement Audit',
     description: 'ⓘ on a suggested transfer explains the number, including the bill titles in that balance.',
+    category: 'core',
+    phase: 'phase1',
+    defaultEnabledForUsers: false,
+  },
+  enableStickyDayHeaders: {
+    key: 'enableStickyDayHeaders',
+    label: 'Sticky Ledger Day Headers',
+    description: 'Pins day headers with date and subtotal while scrolling the expense ledger feed.',
+    category: 'core',
+    phase: 'phase1',
+    defaultEnabledForUsers: false,
+  },
+  enableCategoryColorRings: {
+    key: 'enableCategoryColorRings',
+    label: 'Category Icon Color Rings & Tabular Alignment',
+    description: 'Ambient duo-tone color halo rings on expense category icons with tabular-number alignment.',
     category: 'core',
     phase: 'phase1',
     defaultEnabledForUsers: false,
@@ -447,6 +466,22 @@ export const FEATURE_FLAGS_META: Record<FeatureFlagKey, FeatureFlagMeta> = {
     phase: 'phase4',
     defaultEnabledForUsers: false,
   },
+  enableMultiPayerExpenses: {
+    key: 'enableMultiPayerExpenses',
+    label: 'Multi-Payer Shared Expenses',
+    description: 'Allows single expenses to be fronted by multiple members in custom amounts with exact settlement math.',
+    category: 'splits',
+    phase: 'phase4',
+    defaultEnabledForUsers: false,
+  },
+  enableAmoledTheme: {
+    key: 'enableAmoledTheme',
+    label: 'AMOLED Pure Black & High-Contrast Theme',
+    description: 'Gates the battery-saving OLED Pure Black theme with high-contrast borders for bright daylight and night flights.',
+    category: 'fintech',
+    phase: 'phase4',
+    defaultEnabledForUsers: false,
+  },
 
   // Phase 5: Switch, Speed & Trust (safed by default)
   enableSplitwiseImport: {
@@ -533,6 +568,14 @@ export const FEATURE_FLAGS_META: Record<FeatureFlagKey, FeatureFlagMeta> = {
     key: 'enableContactInvite',
     label: 'Invite From Phone Contacts',
     description: 'Pick a trip invitee from the device contact list (native only) and hand off to the system share sheet with the join link.',
+    category: 'core',
+    phase: 'phase5',
+    defaultEnabledForUsers: false,
+  },
+  enableExpenseQuickFilterChips: {
+    key: 'enableExpenseQuickFilterChips',
+    label: 'Expenses Tab Quick-Filter Chip Bar',
+    description: 'Horizontally scrollable 1-tap filter chips directly on the Expenses tab for instant filtering without opening drawers.',
     category: 'core',
     phase: 'phase5',
     defaultEnabledForUsers: false,
@@ -695,6 +738,8 @@ export const DEFAULT_FEATURE_FLAGS: Record<FeatureFlagKey, boolean> = {
   enablePredictiveChips: true,
   enableRecycleBin: true,
   enableExplainThisNumber: false,
+  enableStickyDayHeaders: false,
+  enableCategoryColorRings: false,
 
   // Phase 2 (Armed by default)
   enableVoiceInput: true,
@@ -735,6 +780,8 @@ export const DEFAULT_FEATURE_FLAGS: Record<FeatureFlagKey, boolean> = {
   enableDateRangeMembership: false,
   enableAutoCurrencyDetection: false,
   enableSplitExclusionDefaults: false,
+  enableMultiPayerExpenses: false,
+  enableAmoledTheme: false,
 
   // Phase 5 (safed by default)
   enableSplitwiseImport: false,
@@ -748,6 +795,7 @@ export const DEFAULT_FEATURE_FLAGS: Record<FeatureFlagKey, boolean> = {
   enableSettlementConfirmation: false,
   enableTripShareLink: false,
   enableContactInvite: false,
+  enableExpenseQuickFilterChips: false,
 
   // Phase 6 (WhatsApp Social & Chat Hub - safed by default)
   enableChatFirstNav: false,

@@ -156,5 +156,85 @@ describe('Settlement Utilities', () => {
     expect(bobToAlice).toBeDefined();
     expect(bobToAlice?.amount).toBe(60);
   });
+
+  it('correctly calculates balances and transfers for multi-payer single expenses', () => {
+    const trip: Trip = {
+      id: 't1',
+      name: 'Goa',
+      startDate: '2026-03-01',
+      endDate: '2026-03-05',
+      baseCurrency: 'INR',
+      memberIds: ['m1', 'm2', 'm3', 'm4'],
+      groupIds: [],
+      ownerId: 'u1',
+      joinCode: 'GOA1',
+      createdAt: 0,
+      updatedAt: 0,
+    };
+
+    const members: Record<string, Member> = {
+      m1: { id: 'm1', name: 'Alice' },
+      m2: { id: 'm2', name: 'Bob' },
+      m3: { id: 'm3', name: 'Charlie' },
+      m4: { id: 'm4', name: 'David' },
+    };
+
+    // Alice paid 60 and Bob paid 40 for a 100 dinner split equally among all 4
+    const expenses: Expense[] = [
+      {
+        id: 'e1',
+        tripId: 't1',
+        title: 'Villa Dinner',
+        amount: 100,
+        currency: 'INR',
+        category: 'cat-food',
+        date: '2026-03-01',
+        paidBy: 'm1', // primary
+        paidByShares: { m1: 60, m2: 40 },
+        splitMode: 'equal',
+        splitMemberIds: ['m1', 'm2', 'm3', 'm4'],
+        resolvedShares: { m1: 25, m2: 25, m3: 25, m4: 25 },
+        createdAt: 1,
+        updatedAt: 1,
+        isSettlement: false,
+        createdByUserId: 'u1',
+      },
+    ];
+
+    const res = calculateSettlements(trip, members, expenses);
+    const bAlice = res.balances.find((b) => b.memberId === 'm1')?.balance;
+    const bBob = res.balances.find((b) => b.memberId === 'm2')?.balance;
+    const bCharlie = res.balances.find((b) => b.memberId === 'm3')?.balance;
+    const bDavid = res.balances.find((b) => b.memberId === 'm4')?.balance;
+
+    expect(bAlice).toBe(35); // 60 paid - 25 share
+    expect(bBob).toBe(15);   // 40 paid - 25 share
+    expect(bCharlie).toBe(-25); // 0 paid - 25 share
+    expect(bDavid).toBe(-25);   // 0 paid - 25 share
+
+    // Check zero-sum balance invariant
+    const sum = res.balances.reduce((acc, b) => acc + b.balance, 0);
+    expect(Math.abs(sum)).toBeLessThan(0.01);
+
+    // Check direct transfers
+    const direct = calculateSettlements(trip, members, expenses, [], { simplifyDebts: false });
+    expect(direct.isSimplified).toBe(false);
+
+    // In direct debts:
+    // Charlie (share 25) owes Alice 60% of 25 = 15, and Bob 40% of 25 = 10
+    // David (share 25) owes Alice 60% of 25 = 15, and Bob 40% of 25 = 10
+    // Bob (share 25) owes Alice 60% of 25 = 15, but Alice owes Bob 40% of 25 = 10 -> net Bob owes Alice 5
+    const charlieToAlice = direct.transfers.find((t) => t.fromMemberId === 'm3' && t.toMemberId === 'm1');
+    const charlieToBob = direct.transfers.find((t) => t.fromMemberId === 'm3' && t.toMemberId === 'm2');
+    const davidToAlice = direct.transfers.find((t) => t.fromMemberId === 'm4' && t.toMemberId === 'm1');
+    const davidToBob = direct.transfers.find((t) => t.fromMemberId === 'm4' && t.toMemberId === 'm2');
+    const bobToAlice = direct.transfers.find((t) => t.fromMemberId === 'm2' && t.toMemberId === 'm1');
+
+    expect(charlieToAlice?.amount).toBe(15);
+    expect(charlieToBob?.amount).toBe(10);
+    expect(davidToAlice?.amount).toBe(15);
+    expect(davidToBob?.amount).toBe(10);
+    expect(bobToAlice?.amount).toBe(5);
+  });
 });
 
