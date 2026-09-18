@@ -10,6 +10,7 @@ type Props = {
   appVersion: string;
   onOpenPrivacy: () => void;
   onOpenTerms: () => void;
+  onOpenWhatsNew?: () => void; // present only when enableWhatsNewHub is on
 };
 
 export function SettingsAboutScreen({
@@ -18,6 +19,7 @@ export function SettingsAboutScreen({
   appVersion,
   onOpenPrivacy,
   onOpenTerms,
+  onOpenWhatsNew,
 }: Props) {
   return (
     <SettingsSubscreenFrame
@@ -31,9 +33,10 @@ export function SettingsAboutScreen({
           icon={<IconSmartphone size={18} />}
           iconGlow="slate"
           title="Trip Tracker 2026"
-          subtitle={`Version ${appVersion} · Web Edition`}
+          subtitle={onOpenWhatsNew ? `Version ${appVersion} · See what's new` : `Version ${appVersion} · Web Edition`}
           badge="STABLE"
           hasDivider={false}
+          onClick={onOpenWhatsNew}
         />
       </SettingsSection>
       <SettingsSection title="Legal">

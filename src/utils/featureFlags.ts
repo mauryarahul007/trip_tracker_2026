@@ -205,8 +205,8 @@ export const FEATURE_FLAGS_META: Record<FeatureFlagKey, FeatureFlagMeta> = {
   },
   enableWhatsNewHub: {
     key: 'enableWhatsNewHub',
-    label: '"What\'s New" Discovery Hub',
-    description: 'Settings screen surfacing newly-unlocked features (from flag changes) and recent app updates.',
+    label: "What's New on Version Screen",
+    description: "Makes the version in Settings → About tappable, opening an iOS-style 'What's New' screen with this release's changes.",
     category: 'core',
     phase: 'phase1',
     defaultEnabledForUsers: false,

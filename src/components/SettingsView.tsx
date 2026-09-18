@@ -53,9 +53,6 @@ import { prefetchSettingsLeaves, prefetchSettingsLegal } from './settings/prefet
 import { formatBytes } from './settings/formatBytes';
 import { getDigestPreference, setDigestPreference } from '../services/notificationDigestApi';
 import { getQuietHoursPreference, setQuietHoursPreference, type QuietHoursPreference } from '../services/quietHoursApi';
-import { DEFAULT_FEATURE_FLAGS } from '../utils/featureFlags';
-import type { FeatureFlagKey } from '../types/admin';
-import { getNewlyUnlockedFlags, markAllFlagsSeen } from '../utils/whatsNew';
 
 const SuperAdminBugTracker = lazy(() => import('./SuperAdminBugTracker').then((m) => ({ default: m.SuperAdminBugTracker })));
 const SettingsCategoriesScreen = lazy(() => import('./settings/SettingsCategoriesScreen').then((m) => ({ default: m.SettingsCategoriesScreen })));
@@ -95,7 +92,7 @@ const DEFAULT_PARENT_MAP: Record<string, SubScreen> = {
   'about': null,
   'privacy': 'about',
   'terms': 'about',
-  'whats-new': null,
+  'whats-new': 'about',
 };
 
 interface SettingsViewProps {
@@ -493,10 +490,6 @@ export function SettingsView({
   const dataSaverOn = useDataSaverEnabled();
   const compactLedgerOn = useCompactLedgerView();
   const isWhatsNewHubEnabled = isFeatureEnabled('enableWhatsNewHub');
-  const allEnabledFlags = isWhatsNewHubEnabled
-    ? (Object.keys(DEFAULT_FEATURE_FLAGS) as FeatureFlagKey[]).filter((k) => isFeatureEnabled(k))
-    : [];
-  const newlyUnlockedFlags = isWhatsNewHubEnabled ? getNewlyUnlockedFlags(allEnabledFlags) : [];
 
   // Settings v2: Search & Clipboard state
   const [searchQuery, setSearchQuery] = useState('');
@@ -897,7 +890,7 @@ export function SettingsView({
       <SettingsWhatsNewScreen
         parentTitle={parentTitle}
         onBack={closeSubScreen}
-        newlyUnlockedFlags={newlyUnlockedFlags}
+        appVersion={appVersion ?? WEB_APP_VERSION}
       />
     );
   } else if (visibleScreen === 'about') {
@@ -908,6 +901,7 @@ export function SettingsView({
         appVersion={appVersion ?? WEB_APP_VERSION}
         onOpenPrivacy={() => setSubScreen('privacy')}
         onOpenTerms={() => setSubScreen('terms')}
+        onOpenWhatsNew={isWhatsNewHubEnabled ? () => setSubScreen('whats-new') : undefined}
       />
     );
   } else if (visibleScreen === 'privacy' || visibleScreen === 'terms') {
@@ -984,8 +978,7 @@ export function SettingsView({
   const showAccountGroup = showSignOut || showClearData || showDeleteAccount;
 
   const showAbout = matchesSearch('Trip Tracker 2026', 'version', 'about', 'build', 'app', 'privacy', 'terms', 'legal');
-  const showWhatsNew = isWhatsNewHubEnabled && matchesSearch("What's New", 'new', 'update', 'changelog', 'release', 'unlocked');
-  const showHelpAboutGroup = showReportProblem || showSuggestFeature || showBugTracker || showDemoTrip || showAbout || showWhatsNew;
+  const showHelpAboutGroup = showReportProblem || showSuggestFeature || showBugTracker || showDemoTrip || showAbout;
 
   const hasAnyResults = showTripGroup || showPreferencesGroup || showDataGroup || showHelpAboutGroup || showAccountGroup;
 
@@ -1837,18 +1830,6 @@ export function SettingsView({
                   }
                   setSubScreen('bug-tracker');
                 }}
-              />
-            )}
-
-            {showWhatsNew && (
-              <SettingsCell
-                icon={<IconSparkles size={18} />}
-                iconGlow="amber"
-                title="What's New"
-                subtitle="Newly unlocked features and recent app updates"
-                badge={newlyUnlockedFlags.length > 0 ? newlyUnlockedFlags.length : undefined}
-                hasDivider={true}
-                onClick={() => { markAllFlagsSeen(allEnabledFlags); setSubScreen('whats-new'); }}
               />
             )}
 

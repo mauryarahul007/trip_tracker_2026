@@ -3562,5 +3562,11 @@ This document logs all meaningful technical decisions, library choices, design p
   - Category reorder only reorders two UI surfaces (the Settings management screen and the expense-form picker) — analytics category breakdowns, filter chips, and other enumeration points elsewhere in the app still use insertion order. Judged secondary to input-time convenience, which was the actual ask; flagged here rather than silently expanded into.
   - The Data Saver connectivity-suggestion banner uses the Network Information API (`navigator.connection.saveData`/`effectiveType`), which has partial browser support (notably absent in Safari); on unsupported browsers the manual toggle still works, the proactive suggestion just never fires.
 
+---
 
+## 198. What's New Moved Into the Version Screen (FEAT-080 rework, v3.30.1)
+* **Context:** The v3.30.0 "What's New" hub was a separate Settings row that also diffed resolved flags against a localStorage snapshot. It showed nothing useful: the flag defaults OFF, the flag diff is empty on first open by design, and the changelog was missing the v3.30.0 entry itself. User asked for it to live only behind the version, iOS-update style.
+* **Decision:** Drop the standalone row and the flag-diff/badge machinery (`whatsNew.ts` deleted). `enableWhatsNewHub` now only makes the version cell in Settings → About tappable, opening a screen with the running version's changes plus earlier versions.
+* **Pattern/Implementation:** `CHANGELOG_ENTRIES` is now `{ version, date, changes[] }`. New `changelog.test.ts` fails if `package.json`'s version has no entry, so a release can't ship without one. The screen matches the running version (ignoring any "(build)" suffix) and falls back to the newest entry.
+* **Trade-offs Accepted:** The changelog is still hand-maintained (the test only enforces presence, not quality). The flag stays default OFF per the flag-gating rule, so it must be enabled in Ops Deck to appear.
 

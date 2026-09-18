@@ -408,7 +408,7 @@ No new flag. Summary / Who owes who available when balances exist.
 | Data Saver mode (map stays collapsed, no celebration animations) | `enableDataSaverMode` | OFF | Phase 3 |
 | Compact/dense expense ledger rows | `enableCompactLedgerView` | OFF | Phase 1 |
 | Manual up/down category reorder | `enableCategoryReorder` | OFF | Phase 1 |
-| "What's New" discovery hub (newly-unlocked flags + changelog) | `enableWhatsNewHub` | OFF | Phase 1 |
+| Tappable version → "What's New" screen (Settings → About) | `enableWhatsNewHub` | OFF | Phase 1 |
 
 ### A. Data Saver Mode
 
@@ -435,13 +435,13 @@ No new flag. Summary / Who owes who available when balances exist.
 5. On a second device/browser signed into the same trip, refresh → the reordered sequence syncs (confirms the Supabase `category_order` write, not just local state).
 6. Add a brand-new custom category after reordering → it appears at the end of the list (unlisted categories render last), not inserted into the middle.
 
-### D. "What's New" Hub
+### D. "What's New" on the Version Screen (reworked in v3.30.1)
 
-1. `enableWhatsNewHub` OFF → Settings → Help & About shows no "What's New" row.
-2. Flag ON for the first time on a fresh device/browser profile → Settings shows a **What's New** row with **no** badge count (first-ever check silently seeds the baseline instead of announcing everything already on).
-3. In Superadmin Ops Deck, flip on a different, previously-OFF flag for this user (e.g. `enableCompactLedgerView` if not already on) → reload the app → the What's New row now shows a badge with count **1**.
-4. Tap into What's New → **"Newly unlocked for you"** section lists that flag's label/description; **"Recent app updates"** section lists the last few versions with a one-line summary each, newest first.
-5. Go back to Settings → the badge is gone (marked seen on open) and stays gone on reload, until another flag is flipped on.
+1. `enableWhatsNewHub` OFF → Settings → Help & About → About & Legal: the version cell reads "Version X · Web Edition" and is not tappable; there is no separate "What's New" row anywhere in Settings.
+2. Flag ON → the version cell reads "Version X · See what's new" and shows a chevron.
+3. Tap it → iOS-style "What's New" screen: subtitle "Version X · date", a bullet list of this release's changes, and an "Earlier versions" section below.
+4. Back → returns to About & Legal (not the Settings root).
+5. Search Settings for "new" → no standalone What's New result appears.
 
 ### Negative checks
 - All four flags OFF → app behaves exactly as v3.29.1: map always loads immediately, ledger rows at normal size, no reorder controls, no What's New entry.
