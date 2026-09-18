@@ -19,6 +19,7 @@ import {
   updateTripNotes,
   updateTripMemberRoles,
   updateTripSplitExclusionDefaults,
+  updateTripCategoryOrder,
   updateTripPasses,
   updateTripFxConfig,
   archiveTripRow,
@@ -218,6 +219,7 @@ interface TripStore extends TripState {
   setMemberAdminRole: (memberId: string, isAdmin: boolean) => Promise<void>;
   setMemberRole: (memberId: string, role: MemberRole) => Promise<void>;
   setSplitExclusionDefaults: (categoryId: string, excludedMemberIds: string[]) => Promise<void>;
+  setCategoryOrder: (categoryOrder: string[]) => Promise<void>;
 
   // Group Actions
   createGroup: (name: string, memberIds: string[]) => Promise<void>;
@@ -265,6 +267,21 @@ export const DEFAULT_CATEGORIES: Category[] = [
   { id: 'cat-shopping', name: 'Shopping', icon: '🛍️', isCustom: false },
   { id: 'cat-misc', name: 'Misc & Others', icon: '📦', isCustom: false },
 ];
+
+// Pure helper — sorts categories by the trip's saved categoryOrder (an
+// array of category IDs); any category not listed there (new custom
+// categories created after the order was last saved, or before a user
+// ever reorders) keeps its normal position at the end, in insertion order.
+export const getOrderedCategories = (categories: Category[], categoryOrder: string[] | undefined): Category[] => {
+  if (!categoryOrder || categoryOrder.length === 0) return categories;
+  const rank = new Map(categoryOrder.map((id, idx) => [id, idx]));
+  return [...categories].sort((a, b) => {
+    const ra = rank.has(a.id) ? rank.get(a.id)! : Infinity;
+    const rb = rank.has(b.id) ? rank.get(b.id)! : Infinity;
+    if (ra !== rb) return ra - rb;
+    return 0; // both unlisted -- keep their existing relative (insertion) order
+  });
+};
 
 // Pure helper — resolves exact money shares for each participant
 export const resolveShares = (
@@ -2405,6 +2422,24 @@ export const useTripStore = create<TripStore>()(
           await updateTripSplitExclusionDefaults(activeTripId, updatedTrip.splitExclusionDefaults || {});
         } catch (e) {
           console.warn('Failed to sync split exclusion defaults to backend:', e);
+        }
+      }
+    },
+
+    setCategoryOrder: async (categoryOrder: string[]) => {
+      const activeTripId = get().activeTripId;
+      if (!activeTripId) return;
+
+      set((state) => ({
+        trips: state.trips.map((t) => (t.id === activeTripId ? { ...t, categoryOrder, updatedAt: Date.now() } : t)),
+        storageError: null,
+      }));
+
+      if (!isMissingSupabaseEnv) {
+        try {
+          await updateTripCategoryOrder(activeTripId, categoryOrder);
+        } catch (e) {
+          console.warn('Failed to sync category order to backend:', e);
         }
       }
     },

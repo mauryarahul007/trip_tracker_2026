@@ -12,7 +12,7 @@ import { autoSuggestCategory } from '../utils/categoryHelper';
 import { parseQuickExpense } from '../utils/expenseQuickParser';
 import { captureCurrentExpenseLocation, detectCurrencyFromLocation } from '../utils/geolocation';
 import { isMemberPresentOnDate } from '../utils/memberDateRange';
-import { useTripStore } from '../store/tripStore';
+import { useTripStore, getOrderedCategories } from '../store/tripStore';
 import { triggerHaptic } from '../utils/haptics';
 import { convertCurrency, POPULAR_CURRENCIES } from '../utils/currencyConverter';
 import { parseReceiptText, type ExtractedReceiptData } from '../utils/receiptOcr';
@@ -401,6 +401,11 @@ export function ExpenseForm({
   const enableReceiptUpload = isFeatureEnabled('enableReceiptUpload');
   const enableExpensePhotoLinking = isFeatureEnabled('enableExpensePhotoLinking', { tripId: trip?.id });
   const enablePredictiveChips = isFeatureEnabled('enablePredictiveChips');
+  const enableCategoryReorder = isFeatureEnabled('enableCategoryReorder', { tripId: trip?.id });
+  // Local to the picker only -- `categories` itself stays in its original
+  // order everywhere else in this file (default-category fallback logic
+  // elsewhere relies on categories[0] meaning the untouched first category).
+  const orderedPickerCategories = enableCategoryReorder ? getOrderedCategories(categories, trip?.categoryOrder) : categories;
   const enableCloneLastExpense = isFeatureEnabled('enableCloneLastExpense', { tripId: trip?.id });
   const enableDuplicateDetector = isFeatureEnabled('enableDuplicateDetector');
   const enableVoiceInput = isFeatureEnabled('enableVoiceInput');
@@ -1587,7 +1592,7 @@ export function ExpenseForm({
       <fieldset className="form-group">
         <legend className="form-label">Category</legend>
         <div className="badge-row">
-          {categories.map((c) => (
+          {orderedPickerCategories.map((c) => (
             <button
               key={c.id}
               type="button"

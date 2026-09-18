@@ -9,6 +9,8 @@ import { useHistoryBack } from '../utils/useHistoryBack';
 import { useEscapeKey } from '../utils/useEscapeKey';
 import { ConfettiBurst } from './ConfettiBurst';
 import { QrCodeView } from './QrCodeView';
+import { useTripStore } from '../store/tripStore';
+import { useDataSaverEnabled } from '../hooks/useDataSaverEnabled';
 
 // How long the confetti burst plays before the modal actually confirms
 // and closes -- matches ConfettiBurst's own animation window.
@@ -37,6 +39,9 @@ export function UpiPaymentModal({
   const [copied, setCopied] = useState(false);
   const [showQr, setShowQr] = useState(false);
   const [celebrating, setCelebrating] = useState(false);
+  const isDataSaverFlagEnabled = useTripStore((s) => s.isFeatureEnabled('enableDataSaverMode'));
+  const dataSaverPref = useDataSaverEnabled();
+  const dataSaverActive = isDataSaverFlagEnabled && dataSaverPref;
 
   const modalRef = useRef<HTMLDivElement>(null);
   useFocusTrap(modalRef, true, false, onClose);
@@ -296,7 +301,7 @@ export function UpiPaymentModal({
             {celebrating ? '✓ Settled!' : '✓ Mark as Settled'}
           </button>
         </div>
-        <ConfettiBurst active={celebrating} />
+        <ConfettiBurst active={celebrating && !dataSaverActive} />
       </div>
     </div>
   );

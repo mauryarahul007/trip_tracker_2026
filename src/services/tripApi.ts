@@ -32,6 +32,7 @@ function mapTrip(row: TripRow, memberIds: string[], groupIds: string[]): Trip {
     fxConfig: row.fx_config ? (row.fx_config as unknown as import('../types').TripFxConfig) : undefined,
     memberRoles: row.member_roles ? (row.member_roles as unknown as Record<string, import('../types').MemberRole>) : undefined,
     splitExclusionDefaults: row.split_exclusion_defaults ? (row.split_exclusion_defaults as unknown as Record<string, string[]>) : undefined,
+    categoryOrder: Array.isArray(row.category_order) ? row.category_order : undefined,
     simplifyDebts: (row as any).simplify_debts !== undefined ? Boolean((row as any).simplify_debts) : true,
     shareToken: (row as any).share_token ?? null,
     shareEnabled: Boolean((row as any).share_enabled),
@@ -305,6 +306,17 @@ export async function updateTripSplitExclusionDefaults(id: string, splitExclusio
     .from('trips')
     .update({
       split_exclusion_defaults: splitExclusionDefaults,
+      updated_at: new Date().toISOString(),
+    } as any)
+    .eq('id', id);
+  if (error) throw error;
+}
+
+export async function updateTripCategoryOrder(id: string, categoryOrder: string[]): Promise<void> {
+  const { error } = await supabase
+    .from('trips')
+    .update({
+      category_order: categoryOrder,
       updated_at: new Date().toISOString(),
     } as any)
     .eq('id', id);

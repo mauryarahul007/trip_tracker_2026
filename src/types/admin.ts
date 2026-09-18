@@ -5,6 +5,9 @@ export type FeatureFlagKey =
   | 'enableExplainThisNumber'
   | 'enableStickyDayHeaders'
   | 'enableCategoryColorRings'
+  | 'enableCompactLedgerView'
+  | 'enableCategoryReorder'
+  | 'enableWhatsNewHub'
   // Phase 2: Active Group Collab & Natural Entry
   | 'enableVoiceInput'
   | 'enableReceiptUpload'
@@ -29,6 +32,7 @@ export type FeatureFlagKey =
   | 'enableLiveLocationShare'
   | 'enableMapCollapsedByDefault'
   | 'enableWeatherItineraryNudges'
+  | 'enableDataSaverMode'
   // Phase 4: FinTech Pro & Global Jetsetter Suite
   | 'enableAdvancedSplits'
   | 'enableItemizedSplit'

@@ -3545,5 +3545,22 @@ This document logs all meaningful technical decisions, library choices, design p
   - `formatAmount()` in `currency.ts` still hardcodes 2 display decimals, so a JPY split now computes correctly (e.g. `33`) but may still render as `¥33.00` until display formatting is audited across its call sites — cosmetic only, deferred as out of scope for this fix.
   - The fix only affects newly computed splits going forward; it does not retroactively correct already-stored expense amounts on existing trips.
 
+---
+
+## 197. Data Saver, Compact Ledger View, Category Reorder, What's New Hub (FEAT-080, v3.30.0)
+* **Context:** Follow-up enhancement pass after BUG-226, scoped to lightweight, non-resource-heavy customer wins under Features/UI/UX. User asked for a plan first; approved all four before implementation.
+* **Decision:**
+  - Merged two of the originally-suggested five ideas ("New" badges on freshly-enabled flags + an in-app changelog strip) into **one** feature, `enableWhatsNewHub`, rather than building a generic per-flag UI-anchor injection system — the existing `useFeatureNudge` hook already proved that pattern is hand-wired per spot (one hardcoded `NavTabs.tsx` call site), and a flagKey→UI-anchor registry for 75+ flags was judged not worth the complexity versus one centralized hub reusing `FEATURE_FLAGS_META` copy that's already maintained.
+  - Data Saver's map-suppression mechanism turned out to need more than initially planned: `enableMapCollapsedByDefault` only changes the content sheet's *starting position* (`TripContentSheet`'s `startFull`), it does not stop `TripMapHero` from mounting and fetching MapLibre tiles + OSRM routing calls underneath. Corrected mid-build to instead conditionally not mount `TripMapHero` at all when Data Saver is active, replacing it with a tap-to-reveal placeholder (revealed state is session-only, so the point isn't defeated on the next visit).
+  - Category Reorder needed real per-trip, cross-device persistence (not a local pref like the other three), so it follows the `split_exclusion_defaults` trip-level-JSONB pattern exactly rather than inventing a new one.
+* **Pattern/Implementation:**
+  - New shared `createLocalBoolPref(storageKey)` factory (`src/hooks/useLocalBoolPref.ts`) backs both `useDataSaverEnabled` and `useCompactLedgerView` — written as two near-identical files first, then collapsed into one factory once the duplication was obvious (device/display prefs stay in localStorage, not the zustand store, matching the existing `theme-pref` precedent in `App.tsx`).
+  - Migration `0105_category_order.sql` adds `category_order jsonb not null default '[]'`. `getOrderedCategories()` (`tripStore.ts`) is the single sort helper, applied in `SettingsCategoriesScreen` (where the up/down controls live) and in `ExpenseForm`'s category picker only — deliberately *not* applied to the raw `categories` array used elsewhere in the codebase, since several call sites (e.g. `categories[0]` default-category fallback) depend on the original insertion order and reordering the underlying array would have silently changed that behavior.
+  - `getNewlyUnlockedFlags()` (`src/utils/whatsNew.ts`) diffs the current resolved-enabled flag set against a localStorage snapshot; first-ever check on a device silently seeds the snapshot instead of retroactively announcing all 75+ already-on flags as "new". `CHANGELOG_ENTRIES` (`src/utils/changelog.ts`) is a small hand-maintained static array, not parsed from `decisions.md`/`BUGS.md` at runtime (those are prose files for humans; shipping/parsing them client-side would cost more than it's worth for a handful of lines).
+  - All four flags registered per the mandatory flag-gating rule: `enableCompactLedgerView` / `enableCategoryReorder` / `enableWhatsNewHub` → Phase 1 Core; `enableDataSaverMode` → Phase 3 Travel/Geo. Flag-count assertion bumped 71 → 75.
+* **Trade-offs Accepted:**
+  - Category reorder only reorders two UI surfaces (the Settings management screen and the expense-form picker) — analytics category breakdowns, filter chips, and other enumeration points elsewhere in the app still use insertion order. Judged secondary to input-time convenience, which was the actual ask; flagged here rather than silently expanded into.
+  - The Data Saver connectivity-suggestion banner uses the Network Information API (`navigator.connection.saveData`/`effectiveType`), which has partial browser support (notably absent in Safari); on unsupported browsers the manual toggle still works, the proactive suggestion just never fires.
+
 
 

@@ -29,6 +29,7 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 | 2026-09-17 | v3.27.3 | BUG-224 | [Settlement Algorithm info modal opacity](#bug-224--settlement-algorithm-info-modal-opacity-v3273) |
 | 2026-09-17 | v3.28.0 | FEAT-078 | [Settlement confirmation, share link, contact invite, weather nudges, expense approval](#feat-078--settlement-confirmation-share-link-contact-invite-weather-nudges-expense-approval-v3280) |
 | 2026-09-18 | v3.29.0 | FEAT-079 | [Multi-payer single expense, ledger UI enhancements, quick filter chips](#feat-079--multi-payer-single-expense-ledger-ui-enhancements-quick-filter-chips-v3290) |
+| 2026-09-19 | v3.30.0 | FEAT-080 | [Data Saver, Compact Ledger View, Category Reorder, What's New Hub](#feat-080--data-saver-compact-ledger-view-category-reorder-whats-new-hub-v3300) |
 
 ---
 
@@ -394,6 +395,59 @@ No new flag. Summary / Who owes who available when balances exist.
 
 ### Pass
 - Each of the 5 flags functions completely independently with zero regressions, settlements balance to exact zero, and build/tests pass 100%.
+
+---
+
+## FEAT-080 — Data Saver, Compact Ledger View, Category Reorder, What's New Hub (v3.30.0)
+
+**Migrations:** `0105_category_order.sql`. **ADR:** #197.
+
+### Flags
+| Behavior | Flag | Default | Phase |
+|----------|------|---------|-------|
+| Data Saver mode (map stays collapsed, no celebration animations) | `enableDataSaverMode` | OFF | Phase 3 |
+| Compact/dense expense ledger rows | `enableCompactLedgerView` | OFF | Phase 1 |
+| Manual up/down category reorder | `enableCategoryReorder` | OFF | Phase 1 |
+| "What's New" discovery hub (newly-unlocked flags + changelog) | `enableWhatsNewHub` | OFF | Phase 1 |
+
+### A. Data Saver Mode
+
+1. `enableDataSaverMode` OFF → Settings → Preferences shows no Data Saver row; trip dashboard map loads normally on open.
+2. Flag ON → Settings → Preferences shows a **Data Saver** toggle (OFF by default).
+3. Turn it ON → reopen a trip → the map area shows a **"🗺️ Map hidden to save data · Tap to load"** placeholder instead of the live map; the content sheet starts fully expanded over it.
+4. Tap the placeholder → the real map (MapLibre) loads immediately for the rest of this session.
+5. Reload the page (fresh session) with Data Saver still ON → map is hidden again (placeholder, not auto-revealed) — confirms the reveal is per-session, not permanent.
+6. With Data Saver ON, trigger a settlement / UPI "Mark as Settled" / checklist-100%-complete celebration → no confetti plays (compare to Data Saver OFF, where confetti plays normally).
+7. Slow-connection nudge: in DevTools → Network → set throttling to "Slow 3G" (or set `navigator.connection.saveData` via a quick console call if throttling doesn't expose it), reload with Data Saver OFF → a dismissible banner appears suggesting Data Saver; tapping **Enable** turns the toggle on and hides the banner; tapping the ✕ dismisses without enabling and doesn't reappear on next reload.
+
+### B. Compact Ledger View
+
+1. `enableCompactLedgerView` OFF → Settings → Preferences shows no Compact Ledger row; Expenses tab rows render at normal size.
+2. Flag ON → toggle appears in Settings; turning it ON immediately shrinks row padding, category icon box, and icon size on the Expenses tab ledger.
+3. Turn OFF again → rows return to normal size.
+
+### C. Manual Category Reorder
+
+1. `enableCategoryReorder` OFF → Settings → Categories & Tags shows no up/down arrows next to each category.
+2. Flag ON → up/down chevron buttons appear next to every category row; the first row's up-arrow and the last row's down-arrow are disabled.
+3. Move a category down, then reopen Settings → Categories & Tags → new order persists (same device).
+4. Open the Add Expense form's Category picker → the same reordered sequence appears there too.
+5. On a second device/browser signed into the same trip, refresh → the reordered sequence syncs (confirms the Supabase `category_order` write, not just local state).
+6. Add a brand-new custom category after reordering → it appears at the end of the list (unlisted categories render last), not inserted into the middle.
+
+### D. "What's New" Hub
+
+1. `enableWhatsNewHub` OFF → Settings → Help & About shows no "What's New" row.
+2. Flag ON for the first time on a fresh device/browser profile → Settings shows a **What's New** row with **no** badge count (first-ever check silently seeds the baseline instead of announcing everything already on).
+3. In Superadmin Ops Deck, flip on a different, previously-OFF flag for this user (e.g. `enableCompactLedgerView` if not already on) → reload the app → the What's New row now shows a badge with count **1**.
+4. Tap into What's New → **"Newly unlocked for you"** section lists that flag's label/description; **"Recent app updates"** section lists the last few versions with a one-line summary each, newest first.
+5. Go back to Settings → the badge is gone (marked seen on open) and stays gone on reload, until another flag is flipped on.
+
+### Negative checks
+- All four flags OFF → app behaves exactly as v3.29.1: map always loads immediately, ledger rows at normal size, no reorder controls, no What's New entry.
+
+### Pass
+- Each of the 4 flags functions independently with zero regressions; Data Saver measurably stops the map from mounting (verify via DevTools Network tab — no `tiles.openfreemap.org` requests until the placeholder is tapped); category order syncs across devices; What's New badge correctly reflects only genuinely new flag activity, never the initial baseline.
 
 ---
 

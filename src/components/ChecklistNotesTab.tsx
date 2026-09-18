@@ -15,6 +15,7 @@ import {
 import { triggerHaptic } from '../utils/haptics';
 import { SwipeableRow } from './SwipeableRow';
 import { ConfettiBurst } from './ConfettiBurst';
+import { useDataSaverEnabled } from '../hooks/useDataSaverEnabled';
 import { SmartPackingAssistantModal } from './SmartPackingAssistantModal';
 import { TravelPassWalletView } from './TravelPassWalletView';
 import { TabErrorBoundary } from './TabErrorBoundary';
@@ -418,6 +419,9 @@ export function ChecklistNotesTab({ trip, members, isAdmin, initialViewMode, onI
   const isPackingEnabled = isFeatureEnabled('enablePackingAssistant', { tripId: liveTrip.id });
   const isChatEnabled = isFeatureEnabled('enableTripChat', { tripId: liveTrip.id });
   const isChatFirstNav = isFeatureEnabled('enableChatFirstNav', { tripId: liveTrip.id });
+  const isDataSaverFlagEnabled = isFeatureEnabled('enableDataSaverMode', { tripId: liveTrip.id });
+  const dataSaverPref = useDataSaverEnabled();
+  const dataSaverActive = isDataSaverFlagEnabled && dataSaverPref;
   const isChatSubTabEnabled = isChatEnabled && !isChatFirstNav;
 
   const [viewMode, setViewMode] = useState<ViewMode>(() => {
@@ -1030,7 +1034,7 @@ export function ChecklistNotesTab({ trip, members, isAdmin, initialViewMode, onI
           {/* Sleek Progress Indicator with Celebratory Burst */}
           {totalCount > 0 && (
             <div className="checklist-sleek-progress-bar" style={{ marginBottom: '14px', position: 'relative' }}>
-              <ConfettiBurst active={showCelebration} />
+              <ConfettiBurst active={showCelebration && !dataSaverActive} />
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px', fontSize: '0.82rem' }}>
                 <span style={{ fontWeight: 600, color: 'var(--text-secondary)' }}>
                   {progressPercent === 100 ? '✨ 100% Packed & Ready!' : 'Packing Readiness'}

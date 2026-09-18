@@ -9,7 +9,7 @@ export const RELEASE_PHASES: ReleasePhaseDef[] = [
     tagline: 'Instant, offline group bill splitting without setup hurdles',
     description: 'Core frictionless expense splitting, time-of-day predictive chips, 200+ keyword auto-tagging, and 24h soft-delete protection.',
     targetAudience: 'Casual outings, dinners, weekend getaways, roommates',
-    flagKeys: ['enablePredictiveChips', 'enableRecycleBin', 'enableExplainThisNumber', 'enableStickyDayHeaders', 'enableCategoryColorRings'],
+    flagKeys: ['enablePredictiveChips', 'enableRecycleBin', 'enableExplainThisNumber', 'enableStickyDayHeaders', 'enableCategoryColorRings', 'enableCompactLedgerView', 'enableCategoryReorder', 'enableWhatsNewHub'],
   },
   {
     id: 'phase2',
@@ -42,6 +42,7 @@ export const RELEASE_PHASES: ReleasePhaseDef[] = [
       'enableLiveLocationShare',
       'enableMapCollapsedByDefault',
       'enableWeatherItineraryNudges',
+      'enableDataSaverMode',
     ],
   },
   {
@@ -182,6 +183,30 @@ export const FEATURE_FLAGS_META: Record<FeatureFlagKey, FeatureFlagMeta> = {
     key: 'enableCategoryColorRings',
     label: 'Category Icon Color Rings & Tabular Alignment',
     description: 'Ambient duo-tone color halo rings on expense category icons with tabular-number alignment.',
+    category: 'core',
+    phase: 'phase1',
+    defaultEnabledForUsers: false,
+  },
+  enableCompactLedgerView: {
+    key: 'enableCompactLedgerView',
+    label: 'Compact Ledger View',
+    description: 'Tighter row padding and smaller avatars/icons in the expense ledger for viewing more rows per screen.',
+    category: 'core',
+    phase: 'phase1',
+    defaultEnabledForUsers: false,
+  },
+  enableCategoryReorder: {
+    key: 'enableCategoryReorder',
+    label: 'Manual Category Reorder',
+    description: 'Reorder expense categories with up/down controls in Settings; order syncs across devices for the trip.',
+    category: 'core',
+    phase: 'phase1',
+    defaultEnabledForUsers: false,
+  },
+  enableWhatsNewHub: {
+    key: 'enableWhatsNewHub',
+    label: '"What\'s New" Discovery Hub',
+    description: 'Settings screen surfacing newly-unlocked features (from flag changes) and recent app updates.',
     category: 'core',
     phase: 'phase1',
     defaultEnabledForUsers: false,
@@ -372,6 +397,14 @@ export const FEATURE_FLAGS_META: Record<FeatureFlagKey, FeatureFlagMeta> = {
     key: 'enableWeatherItineraryNudges',
     label: 'Weather-Triggered Itinerary Nudges',
     description: 'Daily server check of each upcoming route-stop destination; pushes a nudge when bad weather is forecast for the next day.',
+    category: 'transit',
+    phase: 'phase3',
+    defaultEnabledForUsers: false,
+  },
+  enableDataSaverMode: {
+    key: 'enableDataSaverMode',
+    label: 'Data Saver Mode',
+    description: 'Keeps the trip map collapsed until manually opened and skips celebration animations, to cut mobile data and battery use while traveling.',
     category: 'transit',
     phase: 'phase3',
     defaultEnabledForUsers: false,
@@ -740,6 +773,9 @@ export const DEFAULT_FEATURE_FLAGS: Record<FeatureFlagKey, boolean> = {
   enableExplainThisNumber: false,
   enableStickyDayHeaders: false,
   enableCategoryColorRings: false,
+  enableCompactLedgerView: false,
+  enableCategoryReorder: false,
+  enableWhatsNewHub: false,
 
   // Phase 2 (Armed by default)
   enableVoiceInput: true,
@@ -767,6 +803,7 @@ export const DEFAULT_FEATURE_FLAGS: Record<FeatureFlagKey, boolean> = {
   enableLiveLocationShare: false,
   enableMapCollapsedByDefault: false,
   enableWeatherItineraryNudges: false,
+  enableDataSaverMode: false,
 
   // Phase 4 (Armed by default)
   enableAdvancedSplits: true,

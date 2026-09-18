@@ -20,10 +20,14 @@ import {
   IconPieChart,
   IconSettings,
   IconBell,
+  IconDatabase,
+  IconClipboardList,
 } from './Icons';
 import { SettingsCell } from './common/SettingsCell';
 import { SettingsSection } from './common/SettingsSection';
 import { useTripStore } from '../store/tripStore';
+import { useDataSaverEnabled, setDataSaverEnabled } from '../hooks/useDataSaverEnabled';
+import { useCompactLedgerView, setCompactLedgerView } from '../hooks/useCompactLedgerView';
 import { useAuthStore } from '../store/authStore';
 import { useNotificationsStore } from '../store/notificationsStore';
 import { getAppVersion, WEB_APP_VERSION } from '../utils/appVersion';
@@ -44,10 +48,14 @@ import { SettingsArchivedTripsScreen } from './settings/SettingsArchivedTripsScr
 import { SettingsBackupsScreen } from './settings/SettingsBackupsScreen';
 import { SettingsStorageDataScreen } from './settings/SettingsStorageDataScreen';
 import { SettingsAboutScreen } from './settings/SettingsAboutScreen';
+import { SettingsWhatsNewScreen } from './settings/SettingsWhatsNewScreen';
 import { prefetchSettingsLeaves, prefetchSettingsLegal } from './settings/prefetchSettingsLeaves';
 import { formatBytes } from './settings/formatBytes';
 import { getDigestPreference, setDigestPreference } from '../services/notificationDigestApi';
 import { getQuietHoursPreference, setQuietHoursPreference, type QuietHoursPreference } from '../services/quietHoursApi';
+import { DEFAULT_FEATURE_FLAGS } from '../utils/featureFlags';
+import type { FeatureFlagKey } from '../types/admin';
+import { getNewlyUnlockedFlags, markAllFlagsSeen } from '../utils/whatsNew';
 
 const SuperAdminBugTracker = lazy(() => import('./SuperAdminBugTracker').then((m) => ({ default: m.SuperAdminBugTracker })));
 const SettingsCategoriesScreen = lazy(() => import('./settings/SettingsCategoriesScreen').then((m) => ({ default: m.SettingsCategoriesScreen })));
@@ -58,7 +66,7 @@ const FeatureRequestModal = lazy(() => import('./FeatureRequestModal').then((m) 
 
 export type ThemePref = 'light' | 'dark' | 'oled' | 'system';
 
-type SubScreen = null | 'trip-tools' | 'categories' | 'recycle-bin' | 'backups-media' | 'backups' | 'archived-trips' | 'bug-tracker' | 'report-issue' | 'suggest-feature' | 'storage-data' | 'about' | 'privacy' | 'terms';
+type SubScreen = null | 'trip-tools' | 'categories' | 'recycle-bin' | 'backups-media' | 'backups' | 'archived-trips' | 'bug-tracker' | 'report-issue' | 'suggest-feature' | 'storage-data' | 'about' | 'privacy' | 'terms' | 'whats-new';
 
 const EMPTY_SETTLEMENT = {
   isFullySettled: true,
@@ -87,6 +95,7 @@ const DEFAULT_PARENT_MAP: Record<string, SubScreen> = {
   'about': null,
   'privacy': 'about',
   'terms': 'about',
+  'whats-new': null,
 };
 
 interface SettingsViewProps {
@@ -274,6 +283,8 @@ export function SettingsView({
         return 'Backups';
       case 'about':
         return 'About';
+      case 'whats-new':
+        return "What's New";
       case 'privacy':
         return 'Privacy Policy';
       case 'terms':
@@ -479,6 +490,13 @@ export function SettingsView({
   const [isSuperadminModalOpen, setIsSuperadminModalOpen] = useState(false);
   const unreadNotificationCount = useNotificationsStore((s) => s.unreadCount);
   const openNotificationsPanel = useNotificationsStore((s) => s.openPanel);
+  const dataSaverOn = useDataSaverEnabled();
+  const compactLedgerOn = useCompactLedgerView();
+  const isWhatsNewHubEnabled = isFeatureEnabled('enableWhatsNewHub');
+  const allEnabledFlags = isWhatsNewHubEnabled
+    ? (Object.keys(DEFAULT_FEATURE_FLAGS) as FeatureFlagKey[]).filter((k) => isFeatureEnabled(k))
+    : [];
+  const newlyUnlockedFlags = isWhatsNewHubEnabled ? getNewlyUnlockedFlags(allEnabledFlags) : [];
 
   // Settings v2: Search & Clipboard state
   const [searchQuery, setSearchQuery] = useState('');
@@ -874,6 +892,14 @@ export function SettingsView({
         onRegisterBackGuard={setSuggestFeatureBackGuard}
       />
     );
+  } else if (visibleScreen === 'whats-new') {
+    overlay = (
+      <SettingsWhatsNewScreen
+        parentTitle={parentTitle}
+        onBack={closeSubScreen}
+        newlyUnlockedFlags={newlyUnlockedFlags}
+      />
+    );
   } else if (visibleScreen === 'about') {
     overlay = (
       <SettingsAboutScreen
@@ -930,6 +956,8 @@ export function SettingsView({
   const showTripGroup = showTripStatus || showInvite || showTripTools || showCloseTrip;
 
   const showAppearance = matchesSearch('Appearance', 'theme', 'dark', 'light', 'night', 'auto', 'color', 'look');
+  const showDataSaver = isFeatureEnabled('enableDataSaverMode') && matchesSearch('Data Saver', 'data', 'saver', 'mobile data', 'low data', 'map', 'battery');
+  const showCompactLedger = isFeatureEnabled('enableCompactLedgerView') && matchesSearch('Compact Ledger View', 'compact', 'dense', 'ledger', 'rows', 'density');
   const showNotifications = matchesSearch('Notifications', 'alerts', 'unread', 'bell', 'messages');
   const showDigestMode = isFeatureEnabled('enableDigestNotifications') && matchesSearch('Digest Mode', 'digest', 'daily', 'summary', 'notifications', 'batch');
   const showQuietHours = isFeatureEnabled('enableQuietHours') && matchesSearch('Quiet Hours', 'quiet', 'dnd', 'do not disturb', 'mute', 'sleep', 'night');
@@ -937,7 +965,7 @@ export function SettingsView({
   const showGeotag = isFeatureEnabled('enableGeotagging') && matchesSearch('Geotag Expenses', 'gps', 'location', 'place', 'map', 'pin');
   const showLiveLocationShare = Boolean(onOpenLiveLocationShare && matchesSearch('Live Location Share', 'location', 'safety', 'share', 'gps', 'live'));
   const showInstall = pwaInstallable && matchesSearch('Install App', 'pwa', 'home screen', 'download', 'mobile');
-  const showPreferencesGroup = showAppearance || showNotifications || showDigestMode || showQuietHours || showPassReminders || showGeotag || showLiveLocationShare || showInstall;
+  const showPreferencesGroup = showAppearance || showDataSaver || showCompactLedger || showNotifications || showDigestMode || showQuietHours || showPassReminders || showGeotag || showLiveLocationShare || showInstall;
 
   const showStorageManager = matchesSearch('Storage and Data', 'storage', 'data', 'cache', 'memory', 'disk', 'receipts', 'photos');
   const showArchived = matchesSearch('Archived Trips', 'restore', 'history', 'past trips', 'archive');
@@ -956,7 +984,8 @@ export function SettingsView({
   const showAccountGroup = showSignOut || showClearData || showDeleteAccount;
 
   const showAbout = matchesSearch('Trip Tracker 2026', 'version', 'about', 'build', 'app', 'privacy', 'terms', 'legal');
-  const showHelpAboutGroup = showReportProblem || showSuggestFeature || showBugTracker || showDemoTrip || showAbout;
+  const showWhatsNew = isWhatsNewHubEnabled && matchesSearch("What's New", 'new', 'update', 'changelog', 'release', 'unlocked');
+  const showHelpAboutGroup = showReportProblem || showSuggestFeature || showBugTracker || showDemoTrip || showAbout || showWhatsNew;
 
   const hasAnyResults = showTripGroup || showPreferencesGroup || showDataGroup || showHelpAboutGroup || showAccountGroup;
 
@@ -1306,6 +1335,114 @@ export function SettingsView({
                   >
                     <IconSmartphone size={14} />
                   </button>
+                </div>
+              </div>
+            )}
+
+            {showDataSaver && (
+              <div className="settings-row-item" style={{ cursor: 'default' }}>
+                <div className="settings-row-left">
+                  <div className="settings-squircle squircle-emerald-glow">
+                    <IconDatabase size={18} />
+                  </div>
+                  <div className="settings-row-texts">
+                    <span className="settings-row-title">Data Saver</span>
+                    <span className="settings-row-subtitle">Keeps the map collapsed and skips celebration animations to save data &amp; battery</span>
+                  </div>
+                </div>
+                <div className="settings-row-right" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span className="settings-badge-pill" style={{ fontWeight: 600, fontSize: '10px' }}>
+                    {dataSaverOn ? 'ON' : 'OFF'}
+                  </span>
+                  <label style={{ position: 'relative', display: 'inline-block', width: '44px', height: '24px', margin: 0, cursor: 'pointer' }}>
+                    <input
+                      type="checkbox"
+                      checked={dataSaverOn}
+                      onChange={(e) => { triggerHaptic('light'); setDataSaverEnabled(e.target.checked); }}
+                      aria-label="Data Saver"
+                      style={{ opacity: 0, width: 0, height: 0, margin: 0 }}
+                    />
+                    <span
+                      style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        backgroundColor: dataSaverOn ? '#17B6A6' : 'var(--border-color)',
+                        transition: '0.2s ease',
+                        borderRadius: 'var(--border-radius-pill)',
+                      }}
+                    >
+                      <span
+                        style={{
+                          position: 'absolute',
+                          height: '18px',
+                          width: '18px',
+                          left: dataSaverOn ? '23px' : '3px',
+                          bottom: '3px',
+                          backgroundColor: 'white',
+                          transition: '0.2s ease',
+                          borderRadius: '50%',
+                          boxShadow: '0 1px 3px rgba(0,0,0,0.25)',
+                        }}
+                      />
+                    </span>
+                  </label>
+                </div>
+              </div>
+            )}
+
+            {showCompactLedger && (
+              <div className="settings-row-item" style={{ cursor: 'default' }}>
+                <div className="settings-row-left">
+                  <div className="settings-squircle squircle-amber-glow">
+                    <IconClipboardList size={18} />
+                  </div>
+                  <div className="settings-row-texts">
+                    <span className="settings-row-title">Compact Ledger View</span>
+                    <span className="settings-row-subtitle">Tighter rows and smaller icons to fit more expenses on screen</span>
+                  </div>
+                </div>
+                <div className="settings-row-right" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span className="settings-badge-pill" style={{ fontWeight: 600, fontSize: '10px' }}>
+                    {compactLedgerOn ? 'ON' : 'OFF'}
+                  </span>
+                  <label style={{ position: 'relative', display: 'inline-block', width: '44px', height: '24px', margin: 0, cursor: 'pointer' }}>
+                    <input
+                      type="checkbox"
+                      checked={compactLedgerOn}
+                      onChange={(e) => { triggerHaptic('light'); setCompactLedgerView(e.target.checked); }}
+                      aria-label="Compact Ledger View"
+                      style={{ opacity: 0, width: 0, height: 0, margin: 0 }}
+                    />
+                    <span
+                      style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        backgroundColor: compactLedgerOn ? '#17B6A6' : 'var(--border-color)',
+                        transition: '0.2s ease',
+                        borderRadius: 'var(--border-radius-pill)',
+                      }}
+                    >
+                      <span
+                        style={{
+                          position: 'absolute',
+                          height: '18px',
+                          width: '18px',
+                          left: compactLedgerOn ? '23px' : '3px',
+                          bottom: '3px',
+                          backgroundColor: 'white',
+                          transition: '0.2s ease',
+                          borderRadius: '50%',
+                          boxShadow: '0 1px 3px rgba(0,0,0,0.25)',
+                        }}
+                      />
+                    </span>
+                  </label>
                 </div>
               </div>
             )}
@@ -1700,6 +1837,18 @@ export function SettingsView({
                   }
                   setSubScreen('bug-tracker');
                 }}
+              />
+            )}
+
+            {showWhatsNew && (
+              <SettingsCell
+                icon={<IconSparkles size={18} />}
+                iconGlow="amber"
+                title="What's New"
+                subtitle="Newly unlocked features and recent app updates"
+                badge={newlyUnlockedFlags.length > 0 ? newlyUnlockedFlags.length : undefined}
+                hasDivider={true}
+                onClick={() => { markAllFlagsSeen(allEnabledFlags); setSubScreen('whats-new'); }}
               />
             )}
 

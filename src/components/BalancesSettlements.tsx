@@ -19,6 +19,7 @@ import { BoardingPassHeroCard } from './BoardingPassHeroCard';
 import { StickyBalanceBar } from './StickyBalanceBar';
 import { ConfettiBurst } from './ConfettiBurst';
 import { playTicketTear, playStampThud } from '../utils/soundEffects';
+import { useDataSaverEnabled } from '../hooks/useDataSaverEnabled';
 
 
 type Props = {
@@ -173,6 +174,9 @@ function TransferRow({
   const settleAmount = parseFloat(customValue) || t.amount;
   const [showAudit, setShowAudit] = useState(false);
   const showExplainNumber = useTripStore((s) => s.isFeatureEnabled('enableExplainThisNumber', { tripId }));
+  const isDataSaverFlagEnabled = useTripStore((s) => s.isFeatureEnabled('enableDataSaverMode', { tripId }));
+  const dataSaverPref = useDataSaverEnabled();
+  const dataSaverActive = isDataSaverFlagEnabled && dataSaverPref;
   const [reminderStatus, setReminderStatus] = useState<'idle' | 'sending' | 'sent' | 'rateLimited'>('idle');
   const [celebrate, setCelebrate] = useState(false);
   const [isTorn, setIsTorn] = useState(false);
@@ -334,7 +338,7 @@ function TransferRow({
         transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
       }}
     >
-      <ConfettiBurst active={celebrate} />
+      <ConfettiBurst active={celebrate && !dataSaverActive} />
       <div
         className="traveler-settlement-main-row"
         style={{

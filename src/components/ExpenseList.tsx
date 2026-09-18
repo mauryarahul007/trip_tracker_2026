@@ -13,6 +13,7 @@ import { tripDayNumber } from '../utils/dateRange';
 import { usePullToRefresh } from '../utils/usePullToRefresh';
 import { PullToRefreshIndicator } from './PullToRefreshIndicator';
 import { useTripStore } from '../store/tripStore';
+import { useCompactLedgerView } from '../hooks/useCompactLedgerView';
 import { useHistoryBack } from '../utils/useHistoryBack';
 import { useEscapeKey } from '../utils/useEscapeKey';
 import { NextUpTravelCapsule } from './NextUpTravelCapsule';
@@ -186,6 +187,8 @@ export function ExpenseList({
   }, []);
   const refreshActiveTripExpenses = useTripStore((s) => s.refreshActiveTripExpenses);
   const isFeatureEnabled = useTripStore((s) => s.isFeatureEnabled);
+  const compactLedgerPref = useCompactLedgerView();
+  const compactLedgerActive = isFeatureEnabled('enableCompactLedgerView', { tripId: trip?.id }) && compactLedgerPref;
   const ptrIndicatorRef = useRef<HTMLDivElement>(null);
   const pullToRefresh = usePullToRefresh(paneRef, ptrIndicatorRef, () => refreshActiveTripExpenses());
   const expensesLoadingTripId = useTripStore((s) => s.expensesLoadingTripId);
@@ -360,7 +363,7 @@ export function ExpenseList({
           // Skip layout/paint for off-screen rows -- cheap
           // substitute for list virtualization at this scale.
           contentVisibility: 'auto',
-          containIntrinsicSize: '0 84px',
+          containIntrinsicSize: compactLedgerActive ? '0 62px' : '0 84px',
           ['--item-index' as string]: Math.min(idx, 15),
         }}
       >
@@ -371,8 +374,8 @@ export function ExpenseList({
         >
           <div
             style={{
-              display: 'flex', flexDirection: 'column', gap: '6px',
-              padding: '12px 14px',
+              display: 'flex', flexDirection: 'column', gap: compactLedgerActive ? '4px' : '6px',
+              padding: compactLedgerActive ? '7px 12px' : '12px 14px',
               borderLeft: `3.5px solid ${categoryAccentColor}`,
               background: needsReview ? 'rgba(185, 138, 62, 0.07)' : undefined,
             }}
@@ -383,8 +386,8 @@ export function ExpenseList({
             >
               <div
                 style={{
-                  width: '32px',
-                  height: '32px',
+                  width: compactLedgerActive ? '24px' : '32px',
+                  height: compactLedgerActive ? '24px' : '32px',
                   borderRadius: isFeatureEnabled('enableCategoryColorRings', { tripId: trip?.id }) ? '10px' : '8px',
                   background: isFeatureEnabled('enableCategoryColorRings', { tripId: trip?.id })
                     ? `linear-gradient(135deg, ${categoryAccentColor}2e, ${categoryAccentColor}0d)`
@@ -403,7 +406,7 @@ export function ExpenseList({
                   transition: 'all 0.2s ease',
                 }}
               >
-                <CategoryIcon categoryId={cat?.id || ''} fallbackEmoji={cat?.icon || '🏷️'} size={16} />
+                <CategoryIcon categoryId={cat?.id || ''} fallbackEmoji={cat?.icon || '🏷️'} size={compactLedgerActive ? 13 : 16} />
               </div>
               <h4 style={{ flex: 1, minWidth: 0, fontSize: '15px', lineHeight: 1.3, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '5px', viewTransitionName: activeTransitionSourceId === exp.id ? 'expense-shared-title' : undefined }}>
                 <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{exp.title}</span>

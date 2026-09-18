@@ -22,6 +22,7 @@ import { TripsListScreen } from './components/TripsListScreen';
 import { lazyImport } from './utils/lazyImport';
 import { syncOfflineMapTilesFlag } from './utils/mapTileCacheFlag';
 import { useCrossTripBalances } from './hooks/useCrossTripBalances';
+import { useDataSaverEnabled, setDataSaverEnabled } from './hooks/useDataSaverEnabled';
 // Code-split secondary modals and heavy views so initial bundle only ships
 // the critical path for the active trip view.
 const GlobalSettingsModal = lazy(lazyImport(() =>
@@ -399,6 +400,33 @@ export default function App() {
     }
     try { localStorage.setItem('theme-pref', themePref); } catch { /* storage blocked or full */ }
   }, [themePref]);
+
+  // Data Saver: device preference (see useDataSaverEnabled), gated behind
+  // enableDataSaverMode. When active, the map backdrop (TripMapHero) stays
+  // unmounted -- no tiles, no OSRM routing calls -- until the user taps to
+  // reveal it, for this session only (revealing permanently would defeat
+  // the point on the next visit).
+  const dataSaverPref = useDataSaverEnabled();
+  const dataSaverActive = isFeatureEnabled('enableDataSaverMode') && dataSaverPref;
+  const [mapRevealedThisSession, setMapRevealedThisSession] = useState(false);
+
+  // One-time nudge when the browser itself reports a constrained
+  // connection (native Network Information API -- no polling, no deps).
+  const [showDataSaverSuggestion, setShowDataSaverSuggestion] = useState(false);
+  useEffect(() => {
+    if (dataSaverPref) return;
+    try {
+      const conn = (navigator as Navigator & { connection?: { saveData?: boolean; effectiveType?: string } }).connection;
+      const constrained = !!conn && (conn.saveData === true || conn.effectiveType === '2g' || conn.effectiveType === 'slow-2g');
+      if (constrained && !localStorage.getItem('tt-data-saver-suggested')) {
+        setShowDataSaverSuggestion(true);
+      }
+    } catch { /* Network Information API unavailable -- skip the suggestion */ }
+  }, [dataSaverPref]);
+  const dismissDataSaverSuggestion = () => {
+    setShowDataSaverSuggestion(false);
+    try { localStorage.setItem('tt-data-saver-suggested', '1'); } catch { /* storage blocked or full */ }
+  };
 
   // App-wide micro-haptic tap feedback: fires a light pulse on any real
   // button/toggle press, everywhere in the app. Interactions that need a
@@ -2028,6 +2056,23 @@ export default function App() {
     <div className="app-container">
       <a href="#main-content" className="skip-link">Skip to content</a>
       <OfflineTravelBanner />
+      {showDataSaverSuggestion && isFeatureEnabled('enableDataSaverMode') && (
+        <div className="data-saver-suggestion-banner" role="status">
+          <span>Slow connection detected. Turn on Data Saver to cut map data &amp; battery use?</span>
+          <div className="data-saver-suggestion-actions">
+            <button
+              type="button"
+              className="data-saver-suggestion-enable"
+              onClick={() => { triggerHaptic('light'); setDataSaverEnabled(true); dismissDataSaverSuggestion(); }}
+            >
+              Enable
+            </button>
+            <button type="button" className="data-saver-suggestion-dismiss" onClick={dismissDataSaverSuggestion} aria-label="Dismiss">
+              <IconClose size={14} />
+            </button>
+          </div>
+        </div>
+      )}
       {/* Superadmin Traveler Preview Top Floating Banner */}
       {isSuperadmin && isTravelerPreview && (
         <div
@@ -2124,9 +2169,21 @@ export default function App() {
       ) : (
         /* Screen 2: Active Trip Dashboard */
         <div id="main-content" tabIndex={-1} className="trip-dashboard-container fade-in" style={{ position: 'relative' }}>
-          <Suspense fallback={null}>
-            <TripMapHero trip={activeTrip ?? null} sheetExpanded={sheetExpanded} onToneChange={setHeaderTone} />
-          </Suspense>
+          {dataSaverActive && !mapRevealedThisSession ? (
+            <div className="trip-map-hero trip-map-hero-data-saver">
+              <button
+                type="button"
+                className="trip-map-hero-reveal-btn"
+                onClick={() => { triggerHaptic('light'); setMapRevealedThisSession(true); }}
+              >
+                🗺️ Map hidden to save data · Tap to load
+              </button>
+            </div>
+          ) : (
+            <Suspense fallback={null}>
+              <TripMapHero trip={activeTrip ?? null} sheetExpanded={sheetExpanded} onToneChange={setHeaderTone} />
+            </Suspense>
+          )}
           <header ref={headerRef} className={`app-header trip-dashboard-header ${isHeaderScrolled || sheetFull ? 'is-scrolled' : ''} ${headerTone === 'dark' ? 'tone-dark' : ''} ${sheetFull ? 'sheet-full' : ''}`} style={{ overflow: 'hidden' }}>
             <div className="app-header-top" style={{ position: 'relative', zIndex: 1 }}>
               <button
@@ -2347,8 +2404,8 @@ export default function App() {
           </header>
 
           <TripContentSheet
-            key={isFeatureEnabled('enableMapCollapsedByDefault', { tripId: activeTrip?.id, userId: userId || undefined }) ? 'map-full' : 'map-half'}
-            startFull={isFeatureEnabled('enableMapCollapsedByDefault', { tripId: activeTrip?.id, userId: userId || undefined })}
+            key={(isFeatureEnabled('enableMapCollapsedByDefault', { tripId: activeTrip?.id, userId: userId || undefined }) || dataSaverActive) ? 'map-full' : 'map-half'}
+            startFull={isFeatureEnabled('enableMapCollapsedByDefault', { tripId: activeTrip?.id, userId: userId || undefined }) || dataSaverActive}
             onExpandedChange={setSheetExpanded}
             onFullChange={setSheetFull}
             forceFull={chatViewActive || (isChatFirstNav && activeTab === 'chat')}

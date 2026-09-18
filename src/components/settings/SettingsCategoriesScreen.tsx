@@ -2,11 +2,13 @@ import { useState, type FormEvent } from 'react';
 import type { Category, Expense } from '../../types';
 import type { ConfirmRequest } from '../ConfirmDialog';
 import { CategoryIcon } from '../CategoryIcon';
+import { IconChevronUp, IconChevronDown } from '../Icons';
 import { getCategoryKeywords } from '../../utils/categoryHelper';
 import { useHistoryBack } from '../../utils/useHistoryBack';
 import { useEscapeKey } from '../../utils/useEscapeKey';
 import { SettingsSubscreenFrame } from './SettingsNavHeader';
-import { useTripStore } from '../../store/tripStore';
+import { useTripStore, getOrderedCategories } from '../../store/tripStore';
+import { triggerHaptic } from '../../utils/haptics';
 
 const CATEGORY_ICON_PRESETS = [
   '🍔', '🏨', '✈️', '🎟️', '🛍️', '📦', '🚗', '⛽', '🎬', '🍺', '💊', '🎁', '🧾', '🏥', '🎓', '🐾', '🎵', '🚕',
@@ -45,12 +47,25 @@ export function SettingsCategoriesScreen({
   const [showIconPicker, setShowIconPicker] = useState(false);
 
   const exclusionDefaultsEnabled = useTripStore((s) => s.isFeatureEnabled('enableSplitExclusionDefaults'));
+  const categoryReorderEnabled = useTripStore((s) => s.isFeatureEnabled('enableCategoryReorder'));
   const activeTripId = useTripStore((s) => s.activeTripId);
   const activeTrip = useTripStore((s) => s.trips.find((t) => t.id === activeTripId));
   const members = useTripStore((s) => s.members);
   const setSplitExclusionDefaults = useTripStore((s) => s.setSplitExclusionDefaults);
+  const setCategoryOrder = useTripStore((s) => s.setCategoryOrder);
   const tripMembers = (activeTrip?.memberIds || []).map((id) => members[id]).filter((m): m is NonNullable<typeof m> => !!m);
   const splitExclusionDefaults = activeTrip?.splitExclusionDefaults || {};
+
+  const orderedCategories = categoryReorderEnabled ? getOrderedCategories(categories, activeTrip?.categoryOrder) : categories;
+  const moveCategory = (categoryId: string, direction: -1 | 1) => {
+    const ids = orderedCategories.map((c) => c.id);
+    const idx = ids.indexOf(categoryId);
+    const swapWith = idx + direction;
+    if (idx < 0 || swapWith < 0 || swapWith >= ids.length) return;
+    [ids[idx], ids[swapWith]] = [ids[swapWith], ids[idx]];
+    triggerHaptic('light');
+    void setCategoryOrder(ids);
+  };
 
   useHistoryBack(expandedCategoryId !== null, () => {
     setExpandedCategoryId(null);
@@ -118,7 +133,7 @@ export function SettingsCategoriesScreen({
     >
       <div className="settings-group">
         <div className="settings-group-card" style={{ padding: '4px 0' }}>
-          {categories.map((cat) => {
+          {orderedCategories.map((cat, catIdx) => {
             const dataset = getCategoryKeywords(cat);
             const allKeywords = [...dataset.brands, ...dataset.items];
             const isExpanded = expandedCategoryId === cat.id;
@@ -153,6 +168,30 @@ export function SettingsCategoriesScreen({
                   </div>
 
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }} onClick={(e) => e.stopPropagation()}>
+                    {categoryReorderEnabled && (
+                      <div style={{ display: 'flex', flexDirection: 'column' }}>
+                        <button
+                          type="button"
+                          className="secondary-btn"
+                          style={{ padding: '1px 4px', lineHeight: 0 }}
+                          disabled={catIdx === 0}
+                          onClick={() => moveCategory(cat.id, -1)}
+                          aria-label={`Move ${cat.name} up`}
+                        >
+                          <IconChevronUp size={12} />
+                        </button>
+                        <button
+                          type="button"
+                          className="secondary-btn"
+                          style={{ padding: '1px 4px', lineHeight: 0 }}
+                          disabled={catIdx === orderedCategories.length - 1}
+                          onClick={() => moveCategory(cat.id, 1)}
+                          aria-label={`Move ${cat.name} down`}
+                        >
+                          <IconChevronDown size={12} />
+                        </button>
+                      </div>
+                    )}
                     <button
                       type="button"
                       className="secondary-btn"
