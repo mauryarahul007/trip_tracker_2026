@@ -9,6 +9,13 @@ export interface ChangelogEntry {
 // parsed from decisions.md/BUGS.md: those are prose for developers, not client data.
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: '3.30.2',
+    date: '2026-09-19',
+    changes: [
+      'Voice and quick-add expenses now default to whoever is signed in as the payer, not the trip creator. You can still name someone else, or pick from the list.',
+    ],
+  },
+  {
     version: '3.30.1',
     date: '2026-09-19',
     changes: [

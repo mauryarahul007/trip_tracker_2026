@@ -6738,5 +6738,34 @@
     "resolvedBy": "claude-cli",
     "resolvedAt": "2026-09-18T18:41:59.000Z",
     "resolutionNote": "Added getCurrencyDecimals() in currency.ts (ISO 4217 zero-decimal lookup: JPY, KRW, VND, etc.). resolveShares() now reads expenseData.currency and rounds to the correct decimal count instead of hardcoded 2. Equal/custom/percentage/itemized splits now go through a new distributeWithLargestRemainder() helper that floors each raw share and hands out remaining minor units to the participants with the largest fractional remainder (ties go to the payer first, matching prior single-unit behavior exactly -- confirmed via unchanged existing test assertions). Exact-split mode is untouched, since its remainder reflects a user-input mismatch, not a division rounding artifact. Synced the standalone src/utils/math_verification.ts self-check copy and added a 7-way-split regression case proving the old single-recipient dump is gone. Verified: tsc -b --noEmit clean, full vitest suite 296/296 passing (original 33.34/33.33/33.33 assertions unchanged), oxlint clean. Fixed in commit 0dac502 (v3.29.1)."
+  },
+  {
+    "id": "BUG-227",
+    "title": "Voice expenses default payer to trip creator instead of the signed-in member",
+    "description": "Voice Quick-Add used visibleMembers[0] (usually the trip creator) when speech did not name a payer, hid that default in the preview, and auto-saved in 3s as the wrong person.",
+    "severity": "high",
+    "category": "ui-ux",
+    "status": "resolved",
+    "foundBy": "human",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Sign in as a non-creator linked member",
+      "Open Voice Quick-Add",
+      "Speak or type 500 coffee with no name",
+      "Save or wait for auto-save",
+      "Expense shows the trip creator as payer"
+    ],
+    "expectedBehavior": "Whoever is signed in is the default payer unless they name someone else; preview always shows who paid.",
+    "actualBehavior": "Rahul (first member / creator) was recorded as payer for anyone using voice.",
+    "diagnostics": {},
+    "createdAt": "2026-09-19T15:25:11.929Z",
+    "updatedAt": "2026-09-19T15:25:18.246Z",
+    "resolvedBy": "cursor-agent",
+    "resolvedAt": "2026-09-19T15:25:18.246Z",
+    "resolutionNote": "Voice/NL expenses now default paidBy to the signed-in trip member (resolveDefaultExpensePayerId), not visibleMembers[0]. Preview always shows a Paid-by picker; 'I paid' maps to the speaker; unnamed voice will not auto-save if the user is not a linked member. Expense form uses the same default. v3.30.2."
   }
 ]

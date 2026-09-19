@@ -196,6 +196,29 @@ function normalizeSpokenNumberWords(input: string): string {
   return text;
 }
 
+const FIRST_PERSON_PAYER_REGEX =
+  /\b(?:i|i've|ive)\s+(?:paid|pay|spent|spend)\b|\bpaid\s+by\s+(?:me|myself)\b|\b(?:maine|main\s+ne)\s+(?:paid|pay|diya|kharcha)\b/i;
+
+/**
+ * Who should be recorded as payer for a voice / NL expense.
+ * Spoken names win. Otherwise the signed-in trip member. Never silently
+ * pick members[0] (that is usually the trip creator, not the speaker).
+ */
+export function resolveDefaultExpensePayerId(
+  members: Member[],
+  options: {
+    parsedPaidById?: string | null;
+    currentMemberId?: string | null;
+    fallbackToFirstMember?: boolean;
+  } = {}
+): string | null {
+  const { parsedPaidById, currentMemberId, fallbackToFirstMember = false } = options;
+  if (parsedPaidById && members.some((m) => m.id === parsedPaidById)) return parsedPaidById;
+  if (currentMemberId && members.some((m) => m.id === currentMemberId)) return currentMemberId;
+  if (fallbackToFirstMember) return members[0]?.id ?? null;
+  return null;
+}
+
 /**
  * Enhanced natural language & voice expense parser.
  * Examples:
@@ -211,13 +234,15 @@ export function parseQuickExpense(
   rawInput: string,
   categories: Category[] = [],
   historicalExpenses: Expense[] = [],
-  members: Member[] = []
+  members: Member[] = [],
+  currentMemberId?: string | null
 ): ParsedQuickExpense | null {
   const trimmed = rawInput.trim();
   if (!trimmed) return null;
 
   // Normalize speech filler words, spoken number words, and homophones
   let workingText = normalizeSpokenNumberWords(trimmed);
+  const textForFirstPerson = workingText;
 
   // Normalize punctuation and symbols attached to numbers:
   // 1. e.g. "500/-", "500/=" -> "500"
@@ -312,6 +337,19 @@ export function parseQuickExpense(
         detectedPaidByName = member.name;
         workingText = workingText.replace(memberPaidRegex, ' ').trim();
         break;
+      }
+    }
+
+    // "I paid" / "paid by me" — use the signed-in member, not members[0]
+    if (!detectedPaidById && currentMemberId) {
+      const currentMember = members.find((m) => m.id === currentMemberId);
+      if (currentMember && FIRST_PERSON_PAYER_REGEX.test(textForFirstPerson)) {
+        detectedPaidById = currentMember.id;
+        detectedPaidByName = currentMember.name;
+        workingText = workingText
+          .replace(/\bpaid\s+by\s+(?:me|myself)\b/gi, ' ')
+          .replace(/^(?:i|me)\s+/i, '')
+          .trim();
       }
     }
   }

@@ -422,7 +422,7 @@ export function TripChatPanel({
     // @tripbot intercept
     if (tripbotEnabled && !editingMessage && TRIPBOT_RE.test(body)) {
       const nl = body.replace(TRIPBOT_RE, '').trim();
-      const parsed = parseQuickExpense(nl, categories, expenses, visibleMembers);
+      const parsed = parseQuickExpense(nl, categories, expenses, visibleMembers, myMemberId);
       if (!parsed || parsed.amount == null || parsed.amount <= 0) {
         setSendError('Could not parse that @tripbot expense. Try e.g. @tripbot Dinner 450 food');
         triggerHaptic('warning');

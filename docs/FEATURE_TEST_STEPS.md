@@ -30,6 +30,7 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 | 2026-09-17 | v3.28.0 | FEAT-078 | [Settlement confirmation, share link, contact invite, weather nudges, expense approval](#feat-078--settlement-confirmation-share-link-contact-invite-weather-nudges-expense-approval-v3280) |
 | 2026-09-18 | v3.29.0 | FEAT-079 | [Multi-payer single expense, ledger UI enhancements, quick filter chips](#feat-079--multi-payer-single-expense-ledger-ui-enhancements-quick-filter-chips-v3290) |
 | 2026-09-19 | v3.30.0 | FEAT-080 | [Data Saver, Compact Ledger View, Category Reorder, What's New Hub](#feat-080--data-saver-compact-ledger-view-category-reorder-whats-new-hub-v3300) |
+| 2026-09-19 | v3.30.2 | BUG-227 | [Voice expense payer is the signed-in member](#bug-227--voice-expense-payer-is-the-signed-in-member) |
 
 ---
 
@@ -448,6 +449,36 @@ No new flag. Summary / Who owes who available when balances exist.
 
 ### Pass
 - Each of the 4 flags functions independently with zero regressions; Data Saver measurably stops the map from mounting (verify via DevTools Network tab — no `tiles.openfreemap.org` requests until the placeholder is tapped); category order syncs across devices; What's New badge correctly reflects only genuinely new flag activity, never the initial baseline.
+
+---
+
+## BUG-227 — Voice expense payer is the signed-in member
+
+**Why:** Voice Quick-Add used `visibleMembers[0]` (usually the trip creator, e.g. Rahul) whenever speech did not name a payer, then hid that default in the preview. Auto-save in 3s wrote the wrong person.
+
+**Flags:** `enableVoiceInput` (existing). No new flag.
+
+### Prep
+1. Use a trip with at least two linked members (A = trip creator, B = someone else).
+2. Sign in as **member B**. Confirm B is a linked trip member (not just a guest viewer).
+3. Superadmin → Ops Deck → Flags: `enableVoiceInput` **ON** for this trip.
+
+### Steps
+1. Open the trip as B → Voice Quick-Add (mic / command palette “Voice quick-add”).
+2. Speak or type **`500 coffee`** (no name). Parsed preview must show **Paid by B (you)**, not A.
+3. Let the 3s auto-save complete (or tap Save). Expense ledger: **Paid by B**.
+4. Speak **`I paid 200 for cab`**. Payer is B.
+5. Speak **`Lunch 1200 paid by` + A's name**. Payer is A (explicit name still wins).
+6. Change the Paid-by dropdown to A before save → auto-save pauses; saving stores A.
+7. If B is not a linked member, preview asks **Who paid?** and does **not** auto-save until a member is picked.
+8. Add Expense form (not voice): new expense Paid-by defaults to **B**, not the first member.
+
+### Negative checks
+- `enableVoiceInput` OFF → Voice Quick-Add is hidden; Add Expense form still defaults Paid-by to the signed-in member.
+- Explicit "paid by [other member]" must never be overwritten with the speaker.
+
+### Pass
+- Whoever is signed in is the default payer for unnamed voice/NL expenses; the preview always shows who paid; named payers still win.
 
 ---
 

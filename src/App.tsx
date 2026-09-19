@@ -2800,6 +2800,7 @@ export default function App() {
             key={editingExpenseId || (expenseTemplate ? `tmpl-${expenseTemplate.title}-${expenseTemplate.amount}-${expenseTemplate.paidBy}` : 'new')}
             trip={activeTrip}
             visibleMembers={visibleMembers}
+            currentMemberId={myMemberId}
             visibleTripGroups={visibleTripGroups}
             categories={categories}
             editingExpense={editingExpense}
@@ -3273,10 +3274,17 @@ export default function App() {
             categories={categories}
             historicalExpenses={activeTripExpenses}
             visibleMembers={visibleMembers}
+            currentMemberId={myMemberId}
             baseCurrency={activeTrip.baseCurrency}
             onSaveQuickExpense={handleSaveExpense}
             onOpenFullFormWithTemplate={(tmpl) => {
-              setExpenseTemplate({ title: tmpl.title, category: tmpl.category });
+              setExpenseTemplate({
+                title: tmpl.title,
+                category: tmpl.category,
+                amount: tmpl.amount,
+                paidBy: tmpl.paidBy,
+                splitMemberIds: tmpl.splitMemberIds,
+              });
               setShowAddExpense(true);
             }}
           />

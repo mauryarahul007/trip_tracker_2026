@@ -3570,3 +3570,16 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Pattern/Implementation:** `CHANGELOG_ENTRIES` is now `{ version, date, changes[] }`. New `changelog.test.ts` fails if `package.json`'s version has no entry, so a release can't ship without one. The screen matches the running version (ignoring any "(build)" suffix) and falls back to the newest entry.
 * **Trade-offs Accepted:** The changelog is still hand-maintained (the test only enforces presence, not quality). The flag stays default OFF per the flag-gating rule, so it must be enabled in Ops Deck to appear.
 
+---
+
+## 199. Voice Expense Payer Is the Signed-In Member (BUG-227, v3.30.2)
+* **Context:** Voice Quick-Add and the Add Expense form defaulted `paidBy` to `visibleMembers[0]` when speech/NL did not name a payer. That is usually the trip creator (Rahul). The voice preview also hid the default unless a name was parsed, so 3-second auto-save wrote the wrong person. Chat `@tripbot` already used `myMemberId`.
+* **Decision:** Default unnamed expenses to the signed-in trip member. Spoken names still win. If the speaker is not a linked member, ask who paid and do not auto-save. No new flag (`enableVoiceInput` already gates the modal).
+* **Pattern/Implementation:**
+  - `resolveDefaultExpensePayerId()` in `expenseQuickParser.ts`: parsed name → current member → optional first-member fallback for the full form only.
+  - Parser maps "I paid" / "paid by me" to `currentMemberId`.
+  - Voice Quick-Add always shows a Paid-by select; changing it pauses auto-save.
+  - ExpenseForm and Customize-from-voice now receive `currentMemberId` and the full template (`paidBy`, amount, split).
+* **Trade-offs Accepted:**
+  - The full expense form still falls back to `members[0]` if the current user is not a linked member, because the form always needs a selected payer. Voice auto-save does not take that fallback.
+

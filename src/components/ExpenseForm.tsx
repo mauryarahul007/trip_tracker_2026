@@ -9,7 +9,7 @@ import { avatarColorForName } from '../utils/avatarColor';
 import { getCurrencySymbol } from '../utils/currency';
 import { compressImageToDataUrl, compressDataUrlToDataUrl } from '../utils/image';
 import { autoSuggestCategory } from '../utils/categoryHelper';
-import { parseQuickExpense } from '../utils/expenseQuickParser';
+import { parseQuickExpense, resolveDefaultExpensePayerId } from '../utils/expenseQuickParser';
 import { captureCurrentExpenseLocation, detectCurrencyFromLocation } from '../utils/geolocation';
 import { isMemberPresentOnDate } from '../utils/memberDateRange';
 import { useTripStore, getOrderedCategories } from '../store/tripStore';
@@ -96,6 +96,7 @@ type Props = {
   }) => Promise<{ success: boolean; error?: string }>;
   onCancel: () => void;
   initialTemplate?: ExpenseFormTemplate;
+  currentMemberId?: string | null;
 };
 
 export function ExpenseForm({
@@ -107,6 +108,7 @@ export function ExpenseForm({
   onSave,
   onCancel,
   initialTemplate,
+  currentMemberId = null,
 }: Props) {
   const currencySymbol = getCurrencySymbol(trip?.baseCurrency || '');
 
@@ -124,7 +126,12 @@ export function ExpenseForm({
   const [date, setDate] = useState(editingExpense?.date || getTodayDateString());
   const [payer, setPayer] = useState(
     editingExpense?.paidBy
-    || (initialTemplate?.paidBy && visibleMembers.some((m) => m.id === initialTemplate.paidBy) ? initialTemplate.paidBy : (visibleMembers[0]?.id || ''))
+    || resolveDefaultExpensePayerId(visibleMembers, {
+      parsedPaidById: initialTemplate?.paidBy,
+      currentMemberId,
+      fallbackToFirstMember: true,
+    })
+    || ''
   );
   const [payerMode, setPayerMode] = useState<'single' | 'multiple'>(() => {
     return editingExpense?.paidByShares && Object.keys(editingExpense.paidByShares).length > 1
@@ -139,7 +146,13 @@ export function ExpenseForm({
       });
       return initialMap;
     }
-    const initialPayerId = editingExpense?.paidBy || (initialTemplate?.paidBy && visibleMembers.some((m) => m.id === initialTemplate.paidBy) ? initialTemplate.paidBy : (visibleMembers[0]?.id || ''));
+    const initialPayerId = editingExpense?.paidBy
+      || resolveDefaultExpensePayerId(visibleMembers, {
+        parsedPaidById: initialTemplate?.paidBy,
+        currentMemberId,
+        fallbackToFirstMember: true,
+      })
+      || '';
     const initialAmt = editingExpense ? String(editingExpense.amount) : (initialTemplate?.amount != null ? String(initialTemplate.amount) : '');
     return initialPayerId && initialAmt ? { [initialPayerId]: initialAmt } : {};
   });
@@ -385,7 +398,12 @@ export function ExpenseForm({
     setAmount('');
     setCategory(categories[0]?.id || '');
     setDate(getTodayDateString());
-    setPayer(visibleMembers[0]?.id || '');
+    setPayer(
+      resolveDefaultExpensePayerId(visibleMembers, {
+        currentMemberId,
+        fallbackToFirstMember: true,
+      }) || ''
+    );
     setSplitMode('equal');
     setIsDraftRestored(false);
     triggerHaptic('light');
@@ -579,7 +597,7 @@ export function ExpenseForm({
   const handleApplyQuickFill = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!quickInput.trim()) return;
-    const parsed = parseQuickExpense(quickInput, categories, allTripExpenses);
+    const parsed = parseQuickExpense(quickInput, categories, allTripExpenses, visibleMembers, currentMemberId);
     if (parsed) {
       triggerHaptic('medium');
       if (parsed.amount !== null && parsed.amount > 0) {
@@ -594,6 +612,9 @@ export function ExpenseForm({
       if (parsed.categoryId) {
         setCategory(parsed.categoryId);
         setAutoSelectedCategoryName(parsed.categoryName || null);
+      }
+      if (parsed.paidById) {
+        setPayer(parsed.paidById);
       }
       setQuickInput('');
       setShowQuickFill(false);
@@ -738,7 +759,7 @@ export function ExpenseForm({
     recognition.onresult = (event) => {
       const transcript = event.results[0]?.[0]?.transcript;
       if (transcript) {
-        const parsed = parseQuickExpense(transcript, categories, allTripExpenses, visibleMembers);
+        const parsed = parseQuickExpense(transcript, categories, allTripExpenses, visibleMembers, currentMemberId);
         if (parsed) {
           if (parsed.title) {
             setTitle(parsed.title);

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import type { Category, Expense, Member } from '../types';
-import { parseQuickExpense } from '../utils/expenseQuickParser';
+import { parseQuickExpense, resolveDefaultExpensePayerId } from '../utils/expenseQuickParser';
 import { triggerHaptic } from '../utils/haptics';
 import { formatAmount } from '../utils/currency';
 import { CategoryIcon } from './CategoryIcon';
@@ -15,6 +15,7 @@ interface Props {
   categories: Category[];
   historicalExpenses: Expense[];
   visibleMembers: Member[];
+  currentMemberId?: string | null;
   baseCurrency: string;
   onSaveQuickExpense: (expense: {
     title: string;
@@ -43,6 +44,7 @@ export function SmartExpenseQuickAddModal({
   categories,
   historicalExpenses,
   visibleMembers,
+  currentMemberId = null,
   baseCurrency,
   onSaveQuickExpense,
   onOpenFullFormWithTemplate,
@@ -54,6 +56,7 @@ export function SmartExpenseQuickAddModal({
   const [errorMessage, setErrorMessage] = useState('');
   const [countdownSeconds, setCountdownSeconds] = useState<number | null>(null);
   const [isVoiceGenerated, setIsVoiceGenerated] = useState(false);
+  const [payerOverride, setPayerOverride] = useState<string | null>(null);
   const [voiceLang, setVoiceLang] = useState<string>(() => {
     const saved = localStorage.getItem('trip_tracker_voice_lang');
     if (saved) return saved;
@@ -191,6 +194,7 @@ export function SmartExpenseQuickAddModal({
       setErrorMessage('');
       cancelAutoSaveCountdown();
       setIsVoiceGenerated(false);
+      setPayerOverride(null);
 
       if (autoListen) {
         const timer = setTimeout(() => {
@@ -213,7 +217,20 @@ export function SmartExpenseQuickAddModal({
     };
   }, []);
 
-  const parsed = parseQuickExpense(inputText, categories, historicalExpenses, visibleMembers);
+  const parsed = parseQuickExpense(
+    inputText,
+    categories,
+    historicalExpenses,
+    visibleMembers,
+    currentMemberId
+  );
+
+  const inferredPayerId = resolveDefaultExpensePayerId(visibleMembers, {
+    parsedPaidById: parsed?.paidById,
+    currentMemberId,
+  });
+  const selectedPayerId = payerOverride || inferredPayerId;
+  const selectedPayer = visibleMembers.find((m) => m.id === selectedPayerId);
 
   const duplicateMatch = useMemo(() => {
     if (!parsed || !parsed.amount || parsed.amount <= 0) return null;
@@ -224,13 +241,13 @@ export function SmartExpenseQuickAddModal({
         title: parsed.title,
         date: parsed.date || new Date().toISOString().slice(0, 10),
         categoryId: parsed.categoryId,
-        paidById: parsed.paidById || visibleMembers[0]?.id,
+        paidById: parsed.paidById || selectedPayerId || undefined,
       },
       historicalExpenses,
       categories,
       visibleMembers
     );
-  }, [parsed, historicalExpenses, categories, visibleMembers, baseCurrency]);
+  }, [parsed, historicalExpenses, categories, visibleMembers, baseCurrency, selectedPayerId]);
 
   // Once voice recognition completes and a valid amount is detected, start 3-second auto-save countdown
   // Pauses automatically if a candidate duplicate is detected to prevent accidental double-logging
@@ -240,13 +257,14 @@ export function SmartExpenseQuickAddModal({
       isVoiceGenerated &&
       parsed?.amount &&
       parsed.amount > 0 &&
+      selectedPayerId &&
       countdownSeconds === null &&
       !isSubmitting &&
       !duplicateMatch
     ) {
       startAutoSaveCountdown();
     }
-  }, [isRecording, isVoiceGenerated, parsed?.amount, isSubmitting, countdownSeconds, duplicateMatch]);
+  }, [isRecording, isVoiceGenerated, parsed?.amount, selectedPayerId, isSubmitting, countdownSeconds, duplicateMatch]);
 
   // Execute auto-save on countdown reach 0
   useEffect(() => {
@@ -263,9 +281,9 @@ export function SmartExpenseQuickAddModal({
       return;
     }
 
-    const payer = parsed.paidById || visibleMembers[0]?.id;
+    const payer = selectedPayerId;
     if (!payer) {
-      setErrorMessage('No valid trip member found for payer.');
+      setErrorMessage('Who paid? Pick your name (or another member) before saving.');
       return;
     }
 
@@ -311,7 +329,7 @@ export function SmartExpenseQuickAddModal({
         title: parsed.title,
         amount: parsed.amount || 0,
         category: parsed.categoryId || categories[0]?.id || 'cat-misc',
-        paidBy: parsed.paidById || undefined,
+        paidBy: selectedPayerId || undefined,
         date: parsed.date,
         splitMemberIds: parsed.splitMemberIds,
       });
@@ -623,11 +641,49 @@ export function SmartExpenseQuickAddModal({
                   {parsed.categoryName}
                 </span>
               )}
-              {parsed.paidByName && (
-                <span className="member-badge" style={{ background: 'rgba(59, 130, 246, 0.12)', color: '#3b82f6', border: '1px solid rgba(59, 130, 246, 0.25)' }}>
-                  👤 Paid by {parsed.paidByName}
-                </span>
-              )}
+              {visibleMembers.length > 0 ? (
+                <label
+                  className="member-badge"
+                  style={{
+                    background: selectedPayer ? 'rgba(59, 130, 246, 0.12)' : 'rgba(245, 158, 11, 0.12)',
+                    color: selectedPayer ? '#3b82f6' : '#d97706',
+                    border: selectedPayer
+                      ? '1px solid rgba(59, 130, 246, 0.25)'
+                      : '1px solid rgba(245, 158, 11, 0.35)',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    cursor: 'pointer',
+                  }}
+                >
+                  👤 {selectedPayer ? 'Paid by' : 'Who paid?'}
+                  <select
+                    value={selectedPayerId || ''}
+                    aria-label="Who paid for this expense"
+                    onChange={(e) => {
+                      cancelAutoSaveCountdown();
+                      setPayerOverride(e.target.value || null);
+                    }}
+                    style={{
+                      border: 'none',
+                      background: 'transparent',
+                      color: 'inherit',
+                      fontWeight: 700,
+                      fontSize: 'inherit',
+                      cursor: 'pointer',
+                      outline: 'none',
+                      maxWidth: '160px',
+                    }}
+                  >
+                    {!selectedPayerId ? <option value="">Select member</option> : null}
+                    {visibleMembers.map((m) => (
+                      <option key={m.id} value={m.id}>
+                        {m.name}{m.id === currentMemberId ? ' (you)' : ''}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              ) : null}
               {parsed.paymentMode && (
                 <span className="member-badge" style={{ background: 'rgba(234, 179, 8, 0.12)', color: '#eab308', border: '1px solid rgba(234, 179, 8, 0.25)' }}>
                   💳 {parsed.paymentMode}

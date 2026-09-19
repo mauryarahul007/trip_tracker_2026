@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseQuickExpense } from './expenseQuickParser';
+import { parseQuickExpense, resolveDefaultExpensePayerId } from './expenseQuickParser';
 import type { Category, Member } from '../types';
 
 describe('expenseQuickParser', () => {
@@ -199,6 +199,68 @@ describe('expenseQuickParser', () => {
       expect(res?.title.toLowerCase(), `Wrong title for "${input}"`).toContain('coffee');
       expect(res?.categoryId, `Wrong category for "${input}"`).toBe('cat-food');
     }
+  });
+
+  it('does not invent a payer when speech names nobody', () => {
+    const result = parseQuickExpense('500 coffee', mockCategories, [], mockMembers);
+    expect(result?.amount).toBe(500);
+    expect(result?.paidById).toBeNull();
+    expect(result?.paidByName).toBeUndefined();
+  });
+
+  it('maps "I paid" and "paid by me" to the signed-in member, not the first member', () => {
+    const iPaid = parseQuickExpense('I paid 500 for coffee', mockCategories, [], mockMembers, 'm-2');
+    expect(iPaid?.amount).toBe(500);
+    expect(iPaid?.paidById).toBe('m-2');
+    expect(iPaid?.paidByName).toBe('Priya');
+    expect(iPaid?.title.toLowerCase()).toContain('coffee');
+
+    const byMe = parseQuickExpense('Cab 200 paid by me', mockCategories, [], mockMembers, 'm-3');
+    expect(byMe?.amount).toBe(200);
+    expect(byMe?.paidById).toBe('m-3');
+    expect(byMe?.paidByName).toBe('Amit');
+  });
+
+  it('lets an explicit name win over first-person phrasing', () => {
+    const result = parseQuickExpense(
+      'I paid 800 for tickets paid by Priya',
+      mockCategories,
+      [],
+      mockMembers,
+      'm-1'
+    );
+    expect(result?.paidById).toBe('m-2');
+    expect(result?.paidByName).toBe('Priya');
+  });
+});
+
+describe('resolveDefaultExpensePayerId', () => {
+  const mockMembers: Member[] = [
+    { id: 'm-1', name: 'Rahul' },
+    { id: 'm-2', name: 'Priya' },
+    { id: 'm-3', name: 'Amit' },
+  ];
+
+  it('prefers a spoken/parsed payer', () => {
+    expect(
+      resolveDefaultExpensePayerId(mockMembers, { parsedPaidById: 'm-3', currentMemberId: 'm-2' })
+    ).toBe('m-3');
+  });
+
+  it('falls back to the signed-in member, not the first trip member', () => {
+    expect(
+      resolveDefaultExpensePayerId(mockMembers, { parsedPaidById: null, currentMemberId: 'm-2' })
+    ).toBe('m-2');
+  });
+
+  it('does not silently pick members[0] when the speaker is unknown', () => {
+    expect(resolveDefaultExpensePayerId(mockMembers, { parsedPaidById: null })).toBeNull();
+  });
+
+  it('optionally falls back to the first member for forms that always need a selection', () => {
+    expect(
+      resolveDefaultExpensePayerId(mockMembers, { fallbackToFirstMember: true })
+    ).toBe('m-1');
   });
 });
 
