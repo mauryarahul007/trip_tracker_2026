@@ -375,8 +375,8 @@
     "environment": {
       "platform": "web"
     },
-    "createdAt": "2026-09-01T18:27:22.653Z",
-    "updatedAt": "2026-09-01T18:27:22.653Z"
+    "createdAt": "2026-09-01T18:27:22.653+00:00",
+    "updatedAt": "2026-09-01T18:27:22.653+00:00"
   },
   {
     "id": "FEAT-025",
@@ -436,9 +436,9 @@
     "environment": {
       "platform": "web"
     },
-    "createdAt": "2026-09-04T13:59:51.949Z",
-    "updatedAt": "2026-09-04T13:59:58.680Z",
-    "shippedAt": "2026-09-04T13:59:58.679Z",
+    "createdAt": "2026-09-04T13:59:51.949+00:00",
+    "updatedAt": "2026-09-04T13:59:58.68+00:00",
+    "shippedAt": "2026-09-04T13:59:58.679+00:00",
     "shippedBy": "claude-cli",
     "shippedNote": "Removed .githooks/post-commit auto-bump entirely (it also did a git commit --amend on every commit). scripts/bump-version.mjs is now a manual major/minor/patch CLI. vite.config.ts injects __BUILD_NUMBER__ (git rev-list --count HEAD) replacing __BUILD_SHA__. appVersion.ts and SettingsView.tsx display Version (Build). sync-native-version.mjs local fallback also uses commit count. Reset package.json version to 2.0.0 to mark the cutover. Commit 1241bc3."
   },
@@ -452,9 +452,9 @@
     "environment": {
       "platform": "web"
     },
-    "createdAt": "2026-09-04T14:25:55.862Z",
-    "updatedAt": "2026-09-04T14:26:02.466Z",
-    "shippedAt": "2026-09-04T14:26:02.465Z",
+    "createdAt": "2026-09-04T14:25:55.862+00:00",
+    "updatedAt": "2026-09-04T14:26:02.466+00:00",
+    "shippedAt": "2026-09-04T14:26:02.465+00:00",
     "shippedBy": "claude-cli",
     "shippedNote": "src/components/PrivacyPolicyPage.tsx, TermsOfServicePage.tsx, LegalPageLayout.tsx, DeleteAccountPage.tsx. supabase/migrations/0075_delete_own_account.sql applied to remote. authStore.deleteOwnAccount(), Settings > Legal + Delete Account rows threaded through SettingsView/SettingsTab/GlobalSettingsModal/App.tsx. Routes /privacy, /terms, /delete-account (public, outside RequireAuth). Commit 901cd1a."
   },
@@ -468,9 +468,9 @@
     "environment": {
       "platform": "web"
     },
-    "createdAt": "2026-09-04T14:51:41.761Z",
-    "updatedAt": "2026-09-04T14:51:48.429Z",
-    "shippedAt": "2026-09-04T14:51:48.429Z",
+    "createdAt": "2026-09-04T14:51:41.761+00:00",
+    "updatedAt": "2026-09-04T14:51:48.429+00:00",
+    "shippedAt": "2026-09-04T14:51:48.429+00:00",
     "shippedBy": "claude-cli",
     "shippedNote": "src/components/SettingsView.tsx: 5 inline group cards collapsed into summary rows, content moved to new subscreens (trip-settings, preferences, data-menu, help-account, about). Build, typecheck, and full test suite (148 tests) all green. Commit 90eecfb."
   },
@@ -484,10 +484,10 @@
     "environment": {
       "platform": "web"
     },
-    "createdAt": "2026-09-05T15:12:30.993Z",
-    "updatedAt": "2026-09-05T15:12:38.265Z",
+    "createdAt": "2026-09-05T15:12:30.993+00:00",
+    "updatedAt": "2026-09-05T15:12:38.265+00:00",
+    "shippedAt": "2026-09-05T15:12:38.264+00:00",
     "shippedBy": "agent",
-    "shippedAt": "2026-09-05T15:12:38.264Z",
     "shippedNote": "Code-split CommandPalette import in App.tsx via lazy()+Suspense, matching pattern used for other secondary modals. Chunk now loads only on first Ctrl+K open instead of app startup."
   },
   {
@@ -500,10 +500,10 @@
     "environment": {
       "platform": "web"
     },
-    "createdAt": "2026-09-05T15:19:57.638Z",
-    "updatedAt": "2026-09-05T15:20:04.621Z",
+    "createdAt": "2026-09-05T15:19:57.638+00:00",
+    "updatedAt": "2026-09-05T15:20:04.621+00:00",
+    "shippedAt": "2026-09-05T15:20:04.619+00:00",
     "shippedBy": "agent",
-    "shippedAt": "2026-09-05T15:20:04.619Z",
     "shippedNote": "Code-split MembersGroupsTab and ChecklistNotesTab in App.tsx via lazy()+Suspense, gated on hasVisitedMembers/hasVisitedNotes flags -- same pattern already used for SettingsTab/hasVisitedSettings. ~2,300 combined lines no longer ship until the user taps those tabs. Left AnalyticsTab eager since it shares the default landing tab with Balances."
   },
   {
@@ -516,9 +516,9 @@
     "environment": {
       "platform": "web"
     },
-    "createdAt": "2026-09-06T06:44:51.983Z",
-    "updatedAt": "2026-09-06T06:44:51.983Z",
-    "shippedAt": "2026-09-06T06:44:51.983Z",
+    "createdAt": "2026-09-06T06:44:51.983+00:00",
+    "updatedAt": "2026-09-06T06:44:51.983+00:00",
+    "shippedAt": "2026-09-06T06:44:51.983+00:00",
     "shippedBy": "claude-cli",
     "shippedNote": "Shipped"
   },
@@ -532,9 +532,9 @@
     "environment": {
       "platform": "web"
     },
-    "createdAt": "2026-09-06T19:57:16.569Z",
-    "updatedAt": "2026-09-06T19:57:16.569Z",
-    "shippedAt": "2026-09-06T19:57:16.569Z",
+    "createdAt": "2026-09-06T19:57:16.569+00:00",
+    "updatedAt": "2026-09-06T19:57:16.569+00:00",
+    "shippedAt": "2026-09-06T19:57:16.569+00:00",
     "shippedBy": "cursor-agent",
     "shippedNote": "Shipped in v3.5.0 (d9c1e28)"
   },
@@ -548,9 +548,9 @@
     "environment": {
       "platform": "android"
     },
-    "createdAt": "2026-09-06T19:57:18.358Z",
-    "updatedAt": "2026-09-06T19:57:18.358Z",
-    "shippedAt": "2026-09-06T19:57:18.358Z",
+    "createdAt": "2026-09-06T19:57:18.358+00:00",
+    "updatedAt": "2026-09-06T19:57:18.358+00:00",
+    "shippedAt": "2026-09-06T19:57:18.358+00:00",
     "shippedBy": "cursor-agent",
     "shippedNote": "Shipped in v3.5.0 (d9c1e28)"
   },
@@ -564,9 +564,9 @@
     "environment": {
       "platform": "web"
     },
-    "createdAt": "2026-09-06T19:57:20.157Z",
-    "updatedAt": "2026-09-06T19:57:20.157Z",
-    "shippedAt": "2026-09-06T19:57:20.157Z",
+    "createdAt": "2026-09-06T19:57:20.157+00:00",
+    "updatedAt": "2026-09-06T19:57:20.157+00:00",
+    "shippedAt": "2026-09-06T19:57:20.157+00:00",
     "shippedBy": "cursor-agent",
     "shippedNote": "Shipped in v3.5.0 (d9c1e28)"
   },
@@ -580,9 +580,9 @@
     "environment": {
       "platform": "web"
     },
-    "createdAt": "2026-09-06T19:57:22.014Z",
-    "updatedAt": "2026-09-06T19:57:22.014Z",
-    "shippedAt": "2026-09-06T19:57:22.014Z",
+    "createdAt": "2026-09-06T19:57:22.014+00:00",
+    "updatedAt": "2026-09-06T19:57:22.014+00:00",
+    "shippedAt": "2026-09-06T19:57:22.014+00:00",
     "shippedBy": "cursor-agent",
     "shippedNote": "Shipped in v3.5.0 (d9c1e28)"
   },
@@ -596,9 +596,9 @@
     "environment": {
       "platform": "web"
     },
-    "createdAt": "2026-09-06T19:57:23.670Z",
-    "updatedAt": "2026-09-06T19:57:23.670Z",
-    "shippedAt": "2026-09-06T19:57:23.670Z",
+    "createdAt": "2026-09-06T19:57:23.67+00:00",
+    "updatedAt": "2026-09-06T19:57:23.67+00:00",
+    "shippedAt": "2026-09-06T19:57:23.67+00:00",
     "shippedBy": "cursor-agent",
     "shippedNote": "Shipped in v3.5.0 (d9c1e28)"
   },
@@ -612,9 +612,9 @@
     "environment": {
       "platform": "web"
     },
-    "createdAt": "2026-09-06T19:57:25.539Z",
-    "updatedAt": "2026-09-06T19:57:25.539Z",
-    "shippedAt": "2026-09-06T19:57:25.539Z",
+    "createdAt": "2026-09-06T19:57:25.539+00:00",
+    "updatedAt": "2026-09-06T19:57:25.539+00:00",
+    "shippedAt": "2026-09-06T19:57:25.539+00:00",
     "shippedBy": "cursor-agent",
     "shippedNote": "Shipped in v3.5.0 (d9c1e28)"
   },
@@ -628,9 +628,9 @@
     "environment": {
       "platform": "web"
     },
-    "createdAt": "2026-09-06T22:28:34.642Z",
-    "updatedAt": "2026-09-06T22:28:34.642Z",
-    "shippedAt": "2026-09-06T22:28:34.642Z",
+    "createdAt": "2026-09-06T22:28:34.642+00:00",
+    "updatedAt": "2026-09-06T22:28:34.642+00:00",
+    "shippedAt": "2026-09-06T22:28:34.642+00:00",
     "shippedBy": "cursor-agent",
     "shippedNote": "Shipped in v3.6.0 (df2815e). Reverses FEAT-030 portal-folder IA into WhatsApp-style flat groups."
   },
@@ -644,9 +644,9 @@
     "environment": {
       "platform": "web"
     },
-    "createdAt": "2026-09-07T13:15:26.960Z",
-    "updatedAt": "2026-09-07T13:15:26.960Z",
-    "shippedAt": "2026-09-07T13:15:26.960Z",
+    "createdAt": "2026-09-07T13:15:26.96+00:00",
+    "updatedAt": "2026-09-07T13:15:26.96+00:00",
+    "shippedAt": "2026-09-07T13:15:26.96+00:00",
     "shippedBy": "claude-cli",
     "shippedNote": "Shipped"
   },
@@ -660,9 +660,9 @@
     "environment": {
       "platform": "web"
     },
-    "createdAt": "2026-09-07T13:50:22.466Z",
-    "updatedAt": "2026-09-07T13:50:22.466Z",
-    "shippedAt": "2026-09-07T13:50:22.466Z",
+    "createdAt": "2026-09-07T13:50:22.466+00:00",
+    "updatedAt": "2026-09-07T13:50:22.466+00:00",
+    "shippedAt": "2026-09-07T13:50:22.466+00:00",
     "shippedBy": "claude-cli",
     "shippedNote": "Shipped"
   },
@@ -676,9 +676,9 @@
     "environment": {
       "platform": "web"
     },
-    "createdAt": "2026-09-07T18:43:08.797Z",
-    "updatedAt": "2026-09-07T18:43:08.797Z",
-    "shippedAt": "2026-09-07T18:43:08.797Z",
+    "createdAt": "2026-09-07T18:43:08.797+00:00",
+    "updatedAt": "2026-09-07T18:43:08.797+00:00",
+    "shippedAt": "2026-09-07T18:43:08.797+00:00",
     "shippedBy": "agent",
     "shippedNote": "Shipped"
   },
@@ -692,9 +692,9 @@
     "environment": {
       "platform": "web"
     },
-    "createdAt": "2026-09-07T18:43:14.937Z",
-    "updatedAt": "2026-09-07T18:43:14.937Z",
-    "shippedAt": "2026-09-07T18:43:14.937Z",
+    "createdAt": "2026-09-07T18:43:14.937+00:00",
+    "updatedAt": "2026-09-07T18:43:14.937+00:00",
+    "shippedAt": "2026-09-07T18:43:14.937+00:00",
     "shippedBy": "agent",
     "shippedNote": "Shipped"
   },
@@ -708,9 +708,9 @@
     "environment": {
       "platform": "web"
     },
-    "createdAt": "2026-09-07T18:43:20.154Z",
-    "updatedAt": "2026-09-07T18:43:20.154Z",
-    "shippedAt": "2026-09-07T18:43:20.154Z",
+    "createdAt": "2026-09-07T18:43:20.154+00:00",
+    "updatedAt": "2026-09-07T18:43:20.154+00:00",
+    "shippedAt": "2026-09-07T18:43:20.154+00:00",
     "shippedBy": "agent",
     "shippedNote": "Shipped"
   },
@@ -724,9 +724,9 @@
     "environment": {
       "platform": "web"
     },
-    "createdAt": "2026-09-07T18:43:25.474Z",
-    "updatedAt": "2026-09-07T18:43:25.474Z",
-    "shippedAt": "2026-09-07T18:43:25.474Z",
+    "createdAt": "2026-09-07T18:43:25.474+00:00",
+    "updatedAt": "2026-09-07T18:43:25.474+00:00",
+    "shippedAt": "2026-09-07T18:43:25.474+00:00",
     "shippedBy": "agent",
     "shippedNote": "Shipped"
   },
@@ -740,9 +740,9 @@
     "environment": {
       "platform": "web"
     },
-    "createdAt": "2026-09-07T18:43:29.975Z",
-    "updatedAt": "2026-09-07T18:43:29.975Z",
-    "shippedAt": "2026-09-07T18:43:29.975Z",
+    "createdAt": "2026-09-07T18:43:29.975+00:00",
+    "updatedAt": "2026-09-07T18:43:29.975+00:00",
+    "shippedAt": "2026-09-07T18:43:29.975+00:00",
     "shippedBy": "agent",
     "shippedNote": "Shipped"
   },
@@ -756,9 +756,9 @@
     "environment": {
       "platform": "web"
     },
-    "createdAt": "2026-09-07T18:43:35.000Z",
-    "updatedAt": "2026-09-07T18:43:35.000Z",
-    "shippedAt": "2026-09-07T18:43:35.000Z",
+    "createdAt": "2026-09-07T18:43:35+00:00",
+    "updatedAt": "2026-09-07T18:43:35+00:00",
+    "shippedAt": "2026-09-07T18:43:35+00:00",
     "shippedBy": "agent",
     "shippedNote": "Shipped"
   },
@@ -772,9 +772,9 @@
     "environment": {
       "platform": "web"
     },
-    "createdAt": "2026-09-07T18:43:40.332Z",
-    "updatedAt": "2026-09-07T18:43:40.332Z",
-    "shippedAt": "2026-09-07T18:43:40.332Z",
+    "createdAt": "2026-09-07T18:43:40.332+00:00",
+    "updatedAt": "2026-09-07T18:43:40.332+00:00",
+    "shippedAt": "2026-09-07T18:43:40.332+00:00",
     "shippedBy": "agent",
     "shippedNote": "Shipped"
   },
@@ -788,9 +788,9 @@
     "environment": {
       "platform": "web"
     },
-    "createdAt": "2026-09-10T16:23:24.726Z",
-    "updatedAt": "2026-09-10T16:23:24.726Z",
-    "shippedAt": "2026-09-10T16:23:24.726Z",
+    "createdAt": "2026-09-10T16:23:24.726+00:00",
+    "updatedAt": "2026-09-10T16:23:24.726+00:00",
+    "shippedAt": "2026-09-10T16:23:24.726+00:00",
     "shippedBy": "cursor-grok",
     "shippedNote": "Shipped in v3.9.0. Also closed live ledger BUG-145, BUG-147, BUG-176–178, BUG-191 as already-fixed or HMR/stale-chunk."
   },
@@ -804,9 +804,9 @@
     "environment": {
       "platform": "web"
     },
-    "createdAt": "2026-09-10T16:49:59.813Z",
-    "updatedAt": "2026-09-10T16:49:59.813Z",
-    "shippedAt": "2026-09-10T16:49:59.813Z",
+    "createdAt": "2026-09-10T16:49:59.813+00:00",
+    "updatedAt": "2026-09-10T16:49:59.813+00:00",
+    "shippedAt": "2026-09-10T16:49:59.813+00:00",
     "shippedBy": "claude-cli",
     "shippedNote": "CommandPalette now searches expenses across every trip the user belongs to (fetchAllExpensesForTrips titleQuery filter, tripApi.ts), each result tagged with its trip name + own currency. TripsListScreen header shows a per-currency net balance chip row (You owe/You're owed) computed via calculateSettlements across all trips. Files: src/services/tripApi.ts, src/components/CommandPalette.tsx, src/components/TripsListScreen.tsx, src/index.css."
   },
@@ -818,12 +818,12 @@
     "status": "shipped",
     "requestedBy": "cursor-grok",
     "environment": {
-      "platform": "web",
-      "route": "/join/:code"
+      "route": "/join/:code",
+      "platform": "web"
     },
-    "createdAt": "2026-09-11T15:33:33.109Z",
-    "updatedAt": "2026-09-11T15:33:33.109Z",
-    "shippedAt": "2026-09-11T15:33:33.109Z",
+    "createdAt": "2026-09-11T15:33:33.109+00:00",
+    "updatedAt": "2026-09-11T15:33:33.109+00:00",
+    "shippedAt": "2026-09-11T15:33:33.109+00:00",
     "shippedBy": "cursor-grok",
     "shippedNote": "Shipped in v3.12.0. Migration 0081 applied to remote (preview_trip_by_join_code). Files: src/components/JoinTripScreen.tsx, src/utils/joinPreview.ts, src/utils/joinPreview.test.ts, src/services/tripApi.ts, src/types/database.ts, src/main.tsx, supabase/migrations/0081_join_code_public_preview.sql."
   },
@@ -835,12 +835,12 @@
     "status": "shipped",
     "requestedBy": "cursor-grok",
     "environment": {
-      "platform": "web",
-      "route": "/trip"
+      "route": "/trip",
+      "platform": "web"
     },
-    "createdAt": "2026-09-11T15:34:19.710Z",
-    "updatedAt": "2026-09-11T15:34:19.710Z",
-    "shippedAt": "2026-09-11T15:34:19.710Z",
+    "createdAt": "2026-09-11T15:34:19.71+00:00",
+    "updatedAt": "2026-09-11T15:34:19.71+00:00",
+    "shippedAt": "2026-09-11T15:34:19.71+00:00",
     "shippedBy": "cursor-grok",
     "shippedNote": "Shipped in v3.12.0. Files: src/utils/receiptOcr.ts, src/utils/receiptOcr.test.ts, src/components/ReceiptScannerModal.tsx, vite.config.ts (optimizeDeps exclude tesseract.js), package.json (tesseract.js)."
   },
@@ -854,9 +854,9 @@
     "environment": {
       "platform": "web"
     },
-    "createdAt": "2026-09-13T07:15:07.815Z",
-    "updatedAt": "2026-09-13T07:15:07.815Z",
-    "shippedAt": "2026-09-13T07:15:07.815Z",
+    "createdAt": "2026-09-13T07:15:07.815+00:00",
+    "updatedAt": "2026-09-13T07:15:07.815+00:00",
+    "shippedAt": "2026-09-13T07:15:07.815+00:00",
     "shippedBy": "claude-cli",
     "shippedNote": "Shipped in v3.15.4: batch delete/complete via Select mode, backed by batchDeleteChecklistItems/batchCompleteChecklistItems/batchDeleteTripNotes in tripStore.ts"
   },
@@ -870,9 +870,9 @@
     "environment": {
       "platform": "web"
     },
-    "createdAt": "2026-09-13T07:51:18.978Z",
-    "updatedAt": "2026-09-13T07:51:18.978Z",
-    "shippedAt": "2026-09-13T07:51:18.978Z",
+    "createdAt": "2026-09-13T07:51:18.978+00:00",
+    "updatedAt": "2026-09-13T07:51:18.978+00:00",
+    "shippedAt": "2026-09-13T07:51:18.978+00:00",
     "shippedBy": "claude-cli",
     "shippedNote": "WhatsApp-style chat per trip: trip_messages table (migration 0082, RLS + realtime publication), tripMessagesApi.ts, TripChatPanel.tsx as 3rd sub-tab in ChecklistNotesTab. New message triggers send-push Edge Function (chat_message type, redeployed) respecting per-trip mute. Gated behind enableTripChat flag, default OFF (Ops Deck Flags page to arm)."
   },
@@ -886,9 +886,9 @@
     "environment": {
       "platform": "web"
     },
-    "createdAt": "2026-09-13T07:51:28.590Z",
-    "updatedAt": "2026-09-13T07:51:28.590Z",
-    "shippedAt": "2026-09-13T07:51:28.590Z",
+    "createdAt": "2026-09-13T07:51:28.59+00:00",
+    "updatedAt": "2026-09-13T07:51:28.59+00:00",
+    "shippedAt": "2026-09-13T07:51:28.59+00:00",
     "shippedBy": "claude-cli",
     "shippedNote": "Export flight/train/hotel passes as an RFC 5545 .ics file, importable into Google/Apple/Outlook/Samsung Calendar. Pure client-side (src/utils/icsExport.ts) from existing trip.passes data, download button in TravelPassWalletView.tsx. Gated behind enableIcsExport flag, default OFF."
   },
@@ -902,9 +902,9 @@
     "environment": {
       "platform": "web"
     },
-    "createdAt": "2026-09-13T09:20:29.980Z",
-    "updatedAt": "2026-09-13T09:20:29.980Z",
-    "shippedAt": "2026-09-13T09:20:29.980Z",
+    "createdAt": "2026-09-13T09:20:29.98+00:00",
+    "updatedAt": "2026-09-13T09:20:29.98+00:00",
+    "shippedAt": "2026-09-13T09:20:29.98+00:00",
     "shippedBy": "claude-cli",
     "shippedNote": "handleOpenNotification in NotificationsPanel.tsx now calls onNavigate(n) after switching trip (if cross-trip), always closing the panel. App.tsx's handleNotificationNavigate maps notification.data.type to a Tab: expense_* -> ledger, member_* -> members, settlement_* -> expenses (Summary), chat_message -> notes tab + auto-opens its Chat sub-view via a new initialViewMode prop on ChecklistNotesTab, consumed once so it does not fight a later manual switch."
   },
@@ -918,11 +918,11 @@
     "environment": {
       "platform": "web"
     },
-    "createdAt": "2026-09-13T13:27:13.960Z",
-    "updatedAt": "2026-09-13T13:27:13.960Z",
-    "shippedAt": "2026-09-13T13:27:13.960Z",
+    "createdAt": "2026-09-13T13:27:13.96+00:00",
+    "updatedAt": "2026-09-13T13:27:13.96+00:00",
+    "shippedAt": "2026-09-13T13:27:13.96+00:00",
     "shippedBy": "cursor-agent",
-    "shippedNote": "Shipped in v3.17.0 (1f21096)"
+    "shippedNote": "Shipped"
   },
   {
     "id": "FEAT-059",
@@ -934,9 +934,9 @@
     "environment": {
       "platform": "web"
     },
-    "createdAt": "2026-09-13T14:31:52.166Z",
-    "updatedAt": "2026-09-13T14:31:52.166Z",
-    "shippedAt": "2026-09-13T14:31:52.166Z",
+    "createdAt": "2026-09-13T14:31:52.166+00:00",
+    "updatedAt": "2026-09-13T14:31:52.166+00:00",
+    "shippedAt": "2026-09-13T14:31:52.166+00:00",
     "shippedBy": "Rahul",
     "shippedNote": "Shipped in ExpenseList.tsx: settlements split out of the day-grouped expense list into their own collapsible history section"
   },
@@ -950,9 +950,9 @@
     "environment": {
       "platform": "web"
     },
-    "createdAt": "2026-09-13T16:17:31.959Z",
-    "updatedAt": "2026-09-13T16:17:31.959Z",
-    "shippedAt": "2026-09-13T16:17:31.959Z",
+    "createdAt": "2026-09-13T16:17:31.959+00:00",
+    "updatedAt": "2026-09-13T16:17:31.959+00:00",
+    "shippedAt": "2026-09-13T16:17:31.959+00:00",
     "shippedBy": "Rahul",
     "shippedNote": "Shipped: TripChatPanel.tsx long-press action sheet, edit_trip_message RPC (migration 0083), realtime UPDATE handling"
   },
@@ -966,9 +966,9 @@
     "environment": {
       "platform": "web"
     },
-    "createdAt": "2026-09-14T06:56:35.906Z",
-    "updatedAt": "2026-09-14T06:56:35.906Z",
-    "shippedAt": "2026-09-14T06:56:35.906Z",
+    "createdAt": "2026-09-14T06:56:35.906+00:00",
+    "updatedAt": "2026-09-14T06:56:35.906+00:00",
+    "shippedAt": "2026-09-14T06:56:35.906+00:00",
     "shippedBy": "claude-cli",
     "shippedNote": "Shipped"
   },
@@ -982,9 +982,9 @@
     "environment": {
       "platform": "web"
     },
-    "createdAt": "2026-09-14T06:56:37.634Z",
-    "updatedAt": "2026-09-14T06:56:37.634Z",
-    "shippedAt": "2026-09-14T06:56:37.634Z",
+    "createdAt": "2026-09-14T06:56:37.634+00:00",
+    "updatedAt": "2026-09-14T06:56:37.634+00:00",
+    "shippedAt": "2026-09-14T06:56:37.634+00:00",
     "shippedBy": "claude-cli",
     "shippedNote": "Shipped"
   },
@@ -998,9 +998,9 @@
     "environment": {
       "platform": "web"
     },
-    "createdAt": "2026-09-14T06:56:39.256Z",
-    "updatedAt": "2026-09-14T06:56:39.256Z",
-    "shippedAt": "2026-09-14T06:56:39.256Z",
+    "createdAt": "2026-09-14T06:56:39.256+00:00",
+    "updatedAt": "2026-09-14T06:56:39.256+00:00",
+    "shippedAt": "2026-09-14T06:56:39.256+00:00",
     "shippedBy": "claude-cli",
     "shippedNote": "Shipped"
   },
@@ -1014,9 +1014,9 @@
     "environment": {
       "platform": "web"
     },
-    "createdAt": "2026-09-14T06:56:40.599Z",
-    "updatedAt": "2026-09-14T06:56:40.599Z",
-    "shippedAt": "2026-09-14T06:56:40.599Z",
+    "createdAt": "2026-09-14T06:56:40.599+00:00",
+    "updatedAt": "2026-09-14T06:56:40.599+00:00",
+    "shippedAt": "2026-09-14T06:56:40.599+00:00",
     "shippedBy": "claude-cli",
     "shippedNote": "Shipped"
   },
@@ -1030,9 +1030,9 @@
     "environment": {
       "platform": "web"
     },
-    "createdAt": "2026-09-14T11:39:24.619Z",
-    "updatedAt": "2026-09-14T11:39:24.619Z",
-    "shippedAt": "2026-09-14T11:39:24.619Z",
+    "createdAt": "2026-09-14T11:39:24.619+00:00",
+    "updatedAt": "2026-09-14T11:39:24.619+00:00",
+    "shippedAt": "2026-09-14T11:39:24.619+00:00",
     "shippedBy": "claude-cli",
     "shippedNote": "Shipped"
   },
@@ -1046,9 +1046,9 @@
     "environment": {
       "platform": "web"
     },
-    "createdAt": "2026-09-14T11:39:26.686Z",
-    "updatedAt": "2026-09-14T11:39:26.686Z",
-    "shippedAt": "2026-09-14T11:39:26.686Z",
+    "createdAt": "2026-09-14T11:39:26.686+00:00",
+    "updatedAt": "2026-09-14T11:39:26.686+00:00",
+    "shippedAt": "2026-09-14T11:39:26.686+00:00",
     "shippedBy": "claude-cli",
     "shippedNote": "Shipped"
   },
@@ -1062,9 +1062,9 @@
     "environment": {
       "platform": "web"
     },
-    "createdAt": "2026-09-14T11:39:28.459Z",
-    "updatedAt": "2026-09-14T11:39:28.459Z",
-    "shippedAt": "2026-09-14T11:39:28.459Z",
+    "createdAt": "2026-09-14T11:39:28.459+00:00",
+    "updatedAt": "2026-09-14T11:39:28.459+00:00",
+    "shippedAt": "2026-09-14T11:39:28.459+00:00",
     "shippedBy": "claude-cli",
     "shippedNote": "Shipped"
   },
@@ -1078,9 +1078,9 @@
     "environment": {
       "platform": "web"
     },
-    "createdAt": "2026-09-14T11:39:30.051Z",
-    "updatedAt": "2026-09-14T11:39:30.051Z",
-    "shippedAt": "2026-09-14T11:39:30.051Z",
+    "createdAt": "2026-09-14T11:39:30.051+00:00",
+    "updatedAt": "2026-09-14T11:39:30.051+00:00",
+    "shippedAt": "2026-09-14T11:39:30.051+00:00",
     "shippedBy": "claude-cli",
     "shippedNote": "Shipped"
   },
@@ -1094,9 +1094,9 @@
     "environment": {
       "platform": "web"
     },
-    "createdAt": "2026-09-14T12:09:37.555Z",
-    "updatedAt": "2026-09-14T12:09:37.555Z",
-    "shippedAt": "2026-09-14T12:09:37.555Z",
+    "createdAt": "2026-09-14T12:09:37.555+00:00",
+    "updatedAt": "2026-09-14T12:09:37.555+00:00",
+    "shippedAt": "2026-09-14T12:09:37.555+00:00",
     "shippedBy": "claude-cli",
     "shippedNote": "Shipped"
   },

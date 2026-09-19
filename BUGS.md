@@ -9,8 +9,8 @@
 
 | Metric | Count | Status Notes |
 | :--- | :--- | :--- |
-| **Total Tracked** | **235** | All recorded bugs across sessions |
-| **🟢 Open** | **0** | No critical blockers, 0 High |
+| **Total Tracked** | **236** | All recorded bugs across sessions |
+| **🟢 Open** | **1** | 🚨 **1 CRITICAL**, 0 High |
 | **🟡 In Progress** | **0** | Active investigation or fix |
 | **✅ Resolved** | **209** | Verified & closed |
 | **⚪ Won't Fix** | **26** | Expected behavior / deferred |
@@ -19,13 +19,55 @@
 
 ## 🚨 Active Bugs (Open & In Progress)
 
-*🎉 No active open bugs! Great job team.* 
+| ID | Severity | Category | Title | Found By | Status |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **[BUG-209](#bug-209)** | 🔴 **CRITICAL** | `general` | Cannot read properties of undefined (reading 'length') | `auto-crash-handler` | 🟢 Open |
 
 ---
 
 ## 📖 Detailed Active Bug Specs
 
-*No active bug details to display.*
+### BUG-209: Cannot read properties of undefined (reading 'length')
+
+- **Severity**: `CRITICAL` | **Category**: `general` | **Status**: `open`
+- **Found By**: `auto-crash-handler` on 9/12/2026 (web)
+- **Route**: `#/` (Online: `true`)
+
+**Description**:
+Automatically captured react crash.
+
+TypeError: Cannot read properties of undefined (reading 'length')
+    at http://localhost:5174/src/components/admin/AdminCommandCenterPage.tsx:145:30
+    at Array.map (<anonymous>)
+    at http://localhost:5174/src/components/admin/AdminCommandCenterPage.tsx:139:25
+    at mountMemo (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=808eb20e:4929:20)
+    at Object.useMemo (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=808eb20e:13020:13)
+    at exports.useMemo (http://localhost:5174/node_modules/.vite/deps/react.js?v=808eb20e:736:31)
+    at AdminCommandCenterPage (http://localhost:5174/src/components/admin/AdminCommandCenterPage.tsx:138:24)
+    at Object.react_stack_bottom_frame (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=808eb20e:12864:12)
+    at renderWithHooks (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=808eb20e:4211:19)
+    at updateFunctionComponent (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=808eb20e:5567:16)
+
+**Expected**: App runs without throwing.
+
+**Actual**: Cannot read properties of undefined (reading 'length')
+
+**Diagnostic Trace / Stack**:
+```text
+TypeError: Cannot read properties of undefined (reading 'length')
+    at http://localhost:5174/src/components/admin/AdminCommandCenterPage.tsx:145:30
+    at Array.map (<anonymous>)
+    at http://localhost:5174/src/components/admin/AdminCommandCenterPage.tsx:139:25
+    at mountMemo (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=808eb20e:4929:20)
+    at Object.useMemo (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=808eb20e:13020:13)
+    at exports.useMemo (http://localhost:5174/node_modules/.vite/deps/react.js?v=808eb20e:736:31)
+    at AdminCommandCenterPage (http://localhost:5174/src/components/admin/AdminCommandCenterPage.tsx:138:24)
+    at Object.react_stack_bottom_frame (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=808eb20e:12864:12)
+    at renderWithHooks (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=808eb20e:4211:19)
+    at updateFunctionComponent (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=808eb20e:5567:16)
+```
+
+---
 
 ## ✅ Resolved Bugs History
 
@@ -212,7 +254,7 @@
 | **BUG-205** | Trip-card balance chip and header cross-trip balance chip both said 'You're owed' with no scope distinction | `ui-ux` | `low` | `mauryarahul007@gmail.com` | `claude-cli` | Trip card now reads 'OWED TO YOU ON THIS TRIP' / 'YOU OWE ON THIS TRIP'; header chip now reads 'Owed to you across all trips' / 'You owe across all trips'. Files: TripStack.tsx, TripsListScreen.tsx. |
 | **BUG-206** | Trip-card and home balance chips showed nonzero owed/owe against a trip already Settled in trip detail | `ui-ux` | `medium` | `mauryarahul007@gmail.com` | `claude-cli` | Removed the stale local-store-derived owed/owe chips from TripStack.tsx (per-trip card) and TripsListScreen.tsx (header banner). Cross-trip owed/owe total relocated to the profile/settings hero (SettingsView.tsx via GlobalSettingsModal.tsx), now sourced from a shared src/hooks/useCrossTripBalances.ts hook that fetches the authoritative full expense set per trip (same approach the header banner already used) instead of the local store snapshot. |
 | **BUG-207** | TripStack fell back to an arbitrary member and falsely stamped trips Settled when the current user could not be matched | `ui-ux` | `medium` | `claude-cli` | `claude-cli` | TripStack.tsx: removed the tripMemberList[0] fallback (now returns null on no confident match) and the !myMember -> settled default. Replaced the whole local balanceInfo/myMember calc with an isSettled prop threaded from TripsListScreen -> TripStack -> StackCardItem -> CardContent, sourced from useCrossTripBalances.ts (extended to also return a trip-wide settledTripIds map from the same authoritative per-trip fetch already used for the profile balance total) -- one settlement-state source of truth instead of two divergent calcs. Also retagged BUG-167/168/170 from an invalid "reliability" category to "general" so bug:sync stops failing Supabase's bugs_category_check constraint on every run. |
-| **BUG-208** | Superadmin mobile section switcher couldn't navigate away from Command Center | `ui-ux` | `high` | `human` | `claude-cli` | AdminPortalLayout.tsx: removed the section switcher sheet's own useHistoryBack entry (it no longer pushes/pops a browser history entry when opened/closed). The sheet still closes via backdrop tap, its Close button, and Escape, and the outer 'leaving Command Center' useHistoryBack entry still pushes cleanly without racing a second history mutation in the same tick. |
+| **BUG-208** | useNavigate is not defined | `general` | `critical` | `auto-crash-handler` | `claude-cli` | AdminPortalLayout.tsx: removed the section switcher sheet's own useHistoryBack entry (it no longer pushes/pops a browser history entry when opened/closed). The sheet still closes via backdrop tap, its Close button, and Escape, and the outer 'leaving Command Center' useHistoryBack entry still pushes cleanly without racing a second history mutation in the same tick. |
 | **BUG-210** | Trip Chat input floated mid-screen with dead space below it | `ui-ux` | `high` | `claude-cli` | `claude-cli` | TripChatPanel.tsx root used height:'100%', but its parent .tab-pane has no explicit height (same naturally-scrolling block as Notes/Checklist), so the percentage collapsed to content height. Fixed: height: min(64dvh, 560px) (self-contained, no parent height needed), wrapped in .glass-card to match app card convention. |
 | **BUG-211** | Chat input caused iOS Safari/Chrome page zoom while typing | `ui-ux` | `medium` | `claude-cli` | `claude-cli` | Chat input had fontSize 13px. iOS Safari/Chrome (WebKit) auto-zooms the page on focusing any text input under 16px, then zooms back out on blur -- read as alignment changing while typing, iOS-only since Android Chrome has no focus-zoom. Bumped input font-size to 16px. |
 | **BUG-212** | Chat message silently lost on send failure (offline/network error) | `offline-sync` | `medium` | `claude-cli` | `claude-cli` | TripChatPanel handleSend swallowed sendTripMessage errors -- draft stayed but no feedback, message just never sent. Added sendError state + inline red banner distinguishing offline vs generic failure, draft preserved for retry. |

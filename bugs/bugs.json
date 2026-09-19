@@ -6237,8 +6237,8 @@
     "status": "resolved",
     "foundBy": "claude-cli",
     "environment": {
-      "platform": "web",
       "isOnline": true,
+      "platform": "web",
       "appVersion": "3.9.5"
     },
     "reproSteps": [
@@ -6248,39 +6248,74 @@
     "expectedBehavior": "A trip card should never claim a settled state it cannot verify, and should never attribute another member's balance to the current user.",
     "actualBehavior": "Card fell back to an arbitrary member for balance display, and defaulted to Settled when no member matched.",
     "diagnostics": {},
-    "createdAt": "2026-09-10T18:18:22.039Z",
-    "updatedAt": "2026-09-10T18:18:22.039Z",
+    "createdAt": "2026-09-10T18:18:22.039+00:00",
+    "updatedAt": "2026-09-10T18:18:22.039+00:00",
+    "resolvedAt": "2026-09-10T18:18:22.039+00:00",
     "resolvedBy": "claude-cli",
-    "resolvedAt": "2026-09-10T18:18:22.039Z",
     "resolutionNote": "TripStack.tsx: removed the tripMemberList[0] fallback (now returns null on no confident match) and the !myMember -> settled default. Replaced the whole local balanceInfo/myMember calc with an isSettled prop threaded from TripsListScreen -> TripStack -> StackCardItem -> CardContent, sourced from useCrossTripBalances.ts (extended to also return a trip-wide settledTripIds map from the same authoritative per-trip fetch already used for the profile balance total) -- one settlement-state source of truth instead of two divergent calcs. Also retagged BUG-167/168/170 from an invalid \"reliability\" category to \"general\" so bug:sync stops failing Supabase's bugs_category_check constraint on every run."
   },
   {
     "id": "BUG-208",
-    "title": "Superadmin mobile section switcher couldn't navigate away from Command Center",
-    "description": "AdminPortalLayout renders a rail nav on desktop but a `.ops-section-trigger` button + switcher sheet on mobile (<=760px). Both the sheet's open state and the active admin tab used independent useHistoryBack entries. Selecting a section from Command Center closed the sheet and changed the tab in the same render: the sheet's close called the async window.history.back(), the tab change's open called the synchronous window.history.pushState(). The two raced -- the deferred back() landed after the push and reverted the tab, so every first navigation attempt on mobile silently snapped back to Command Center. Desktop's rail buttons never touch the switcher sheet, so the race never fired there.",
-    "severity": "high",
-    "category": "ui-ux",
+    "title": "useNavigate is not defined",
+    "description": "Automatically captured react crash.\n\nReferenceError: useNavigate is not defined\n    at TripsListScreen (http://localhost:5174/src/components/TripsListScreen.tsx?t=1789217180688:32:19)\n    at Object.react_stack_bottom_frame (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=808eb20e:12864:12)\n    at renderWithHooks (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=808eb20e:4211:19)\n    at updateFunctionComponent (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=808eb20e:5567:16)\n    at beginWork (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=808eb20e:6138:20)\n    at runWithFiberInDEV (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=808eb20e:850:66)\n    at performUnitOfWork (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=808eb20e:8427:92)\n    at workLoopSync (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=808eb20e:8323:37)\n    at renderRootSync (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=808eb20e:8307:6)\n    at performWorkOnRoot (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=808eb20e:7992:27)",
+    "severity": "critical",
+    "category": "general",
     "status": "resolved",
-    "foundBy": "human",
+    "foundBy": "auto-crash-handler",
     "environment": {
-      "platform": "web",
+      "route": "#/",
       "isOnline": true,
-      "appVersion": "3.14.2"
+      "platform": "web",
+      "appVersion": "1.0.0"
     },
-    "reproSteps": [
-      "Open the Superadmin portal on a mobile viewport (<=760px width)",
-      "On Command Center, tap the section trigger to open the switcher sheet",
-      "Tap any other section (e.g. Trips, Analytics)",
-      "Observe the sheet closes but the view stays on Command Center"
-    ],
-    "expectedBehavior": "Selecting a section from the mobile switcher sheet should navigate to that section, matching desktop rail nav behavior.",
-    "actualBehavior": "The tab change was reverted by a racing history.back() call from the sheet's own close-on-back-navigation tracking, stranding the user on Command Center.",
-    "diagnostics": {},
-    "createdAt": "2026-09-12T00:00:00.000Z",
-    "updatedAt": "2026-09-12T00:00:00.000Z",
+    "reproSteps": [],
+    "expectedBehavior": "App runs without throwing.",
+    "actualBehavior": "useNavigate is not defined",
+    "diagnostics": {
+      "stackTrace": "ReferenceError: useNavigate is not defined\n    at TripsListScreen (http://localhost:5174/src/components/TripsListScreen.tsx?t=1789217180688:32:19)\n    at Object.react_stack_bottom_frame (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=808eb20e:12864:12)\n    at renderWithHooks (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=808eb20e:4211:19)\n    at updateFunctionComponent (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=808eb20e:5567:16)\n    at beginWork (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=808eb20e:6138:20)\n    at runWithFiberInDEV (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=808eb20e:850:66)\n    at performUnitOfWork (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=808eb20e:8427:92)\n    at workLoopSync (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=808eb20e:8323:37)\n    at renderRootSync (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=808eb20e:8307:6)\n    at performWorkOnRoot (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=808eb20e:7992:27)",
+      "consoleLogs": [
+        "[info] DiagnosticLogger initialized",
+        "[error] %o\n\n%s\n\n%s\n {} The above error occurred in the <TripsListScreen> component. React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.",
+        "[error] React Crash: useNavigate is not defined",
+        "[error] Uncaught error inside ErrorBoundary: {} {\"componentStack\":\"\\n    at TripsListScreen (http://localhost:5174/src/components/TripsListScreen.tsx?t=1789217180688:30:35)\\n    at div (<anonymous>)\\n    at App (http://localhost:5174/src/App.tsx:139:475)\\n    at ErrorBoundary (http://localhost:5174/src/components/ErrorBoundary.tsx:6:8)\\n    at RequireAuth (http://localhost:5174/src/components/RequireAuth.tsx:8:31)\\n    at RenderedRoute (http://localhost:5174/node_modules/.vite/deps/react-router-dom.js?v"
+      ],
+      "syncQueueLength": 0
+    },
+    "createdAt": "2026-09-12T12:46:22.623802+00:00",
+    "updatedAt": "2026-09-19T22:03:48.356Z",
     "resolvedBy": "claude-cli",
-    "resolvedAt": "2026-09-12T00:00:00.000Z",
+    "resolvedAt": "2026-09-19T22:03:48.356Z",
     "resolutionNote": "AdminPortalLayout.tsx: removed the section switcher sheet's own useHistoryBack entry (it no longer pushes/pops a browser history entry when opened/closed). The sheet still closes via backdrop tap, its Close button, and Escape, and the outer 'leaving Command Center' useHistoryBack entry still pushes cleanly without racing a second history mutation in the same tick."
+  },
+  {
+    "id": "BUG-209",
+    "title": "Cannot read properties of undefined (reading 'length')",
+    "description": "Automatically captured react crash.\n\nTypeError: Cannot read properties of undefined (reading 'length')\n    at http://localhost:5174/src/components/admin/AdminCommandCenterPage.tsx:145:30\n    at Array.map (<anonymous>)\n    at http://localhost:5174/src/components/admin/AdminCommandCenterPage.tsx:139:25\n    at mountMemo (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=808eb20e:4929:20)\n    at Object.useMemo (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=808eb20e:13020:13)\n    at exports.useMemo (http://localhost:5174/node_modules/.vite/deps/react.js?v=808eb20e:736:31)\n    at AdminCommandCenterPage (http://localhost:5174/src/components/admin/AdminCommandCenterPage.tsx:138:24)\n    at Object.react_stack_bottom_frame (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=808eb20e:12864:12)\n    at renderWithHooks (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=808eb20e:4211:19)\n    at updateFunctionComponent (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=808eb20e:5567:16)",
+    "severity": "critical",
+    "category": "general",
+    "status": "open",
+    "foundBy": "auto-crash-handler",
+    "environment": {
+      "route": "#/",
+      "isOnline": true,
+      "platform": "web",
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [],
+    "expectedBehavior": "App runs without throwing.",
+    "actualBehavior": "Cannot read properties of undefined (reading 'length')",
+    "diagnostics": {
+      "stackTrace": "TypeError: Cannot read properties of undefined (reading 'length')\n    at http://localhost:5174/src/components/admin/AdminCommandCenterPage.tsx:145:30\n    at Array.map (<anonymous>)\n    at http://localhost:5174/src/components/admin/AdminCommandCenterPage.tsx:139:25\n    at mountMemo (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=808eb20e:4929:20)\n    at Object.useMemo (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=808eb20e:13020:13)\n    at exports.useMemo (http://localhost:5174/node_modules/.vite/deps/react.js?v=808eb20e:736:31)\n    at AdminCommandCenterPage (http://localhost:5174/src/components/admin/AdminCommandCenterPage.tsx:138:24)\n    at Object.react_stack_bottom_frame (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=808eb20e:12864:12)\n    at renderWithHooks (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=808eb20e:4211:19)\n    at updateFunctionComponent (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=808eb20e:5567:16)",
+      "consoleLogs": [
+        "[info] DiagnosticLogger initialized",
+        "[error] %o\n\n%s\n\n%s\n {} The above error occurred in the <AdminCommandCenterPage> component. React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.",
+        "[error] React Crash: Cannot read properties of undefined (reading 'length')",
+        "[error] Uncaught error inside ErrorBoundary: {} {\"componentStack\":\"\\n    at AdminCommandCenterPage (http://localhost:5174/src/components/admin/AdminCommandCenterPage.tsx:13:42)\\n    at Suspense (<anonymous>)\\n    at main (<anonymous>)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at div (<anonymous>)\\n    at AdminPortalLayout (http://localhost:5174/src/components/admin/AdminPortalLayout.tsx:208:37)\\n    at Suspense (<anonymous>)\\n    at App (http://localhost:5174/src"
+      ],
+      "syncQueueLength": 0
+    },
+    "createdAt": "2026-09-12T12:58:53.843657+00:00",
+    "updatedAt": "2026-09-12T12:58:53.843657+00:00"
   },
   {
     "id": "BUG-210",
@@ -6291,8 +6326,8 @@
     "status": "resolved",
     "foundBy": "claude-cli",
     "environment": {
-      "platform": "web",
       "isOnline": true,
+      "platform": "web",
       "appVersion": "1.0.0"
     },
     "reproSteps": [
@@ -6302,10 +6337,10 @@
     "expectedBehavior": "",
     "actualBehavior": "",
     "diagnostics": {},
-    "createdAt": "2026-09-13T09:19:56.183Z",
-    "updatedAt": "2026-09-13T09:20:15.121Z",
+    "createdAt": "2026-09-13T09:19:56.183+00:00",
+    "updatedAt": "2026-09-13T09:20:15.121+00:00",
+    "resolvedAt": "2026-09-13T09:20:15.121+00:00",
     "resolvedBy": "claude-cli",
-    "resolvedAt": "2026-09-13T09:20:15.121Z",
     "resolutionNote": "TripChatPanel.tsx root used height:'100%', but its parent .tab-pane has no explicit height (same naturally-scrolling block as Notes/Checklist), so the percentage collapsed to content height. Fixed: height: min(64dvh, 560px) (self-contained, no parent height needed), wrapped in .glass-card to match app card convention."
   },
   {
@@ -6317,8 +6352,8 @@
     "status": "resolved",
     "foundBy": "claude-cli",
     "environment": {
-      "platform": "web",
       "isOnline": true,
+      "platform": "web",
       "appVersion": "1.0.0"
     },
     "reproSteps": [
@@ -6328,10 +6363,10 @@
     "expectedBehavior": "",
     "actualBehavior": "",
     "diagnostics": {},
-    "createdAt": "2026-09-13T09:20:05.704Z",
-    "updatedAt": "2026-09-13T09:20:23.480Z",
+    "createdAt": "2026-09-13T09:20:05.704+00:00",
+    "updatedAt": "2026-09-13T09:20:23.48+00:00",
+    "resolvedAt": "2026-09-13T09:20:23.479+00:00",
     "resolvedBy": "claude-cli",
-    "resolvedAt": "2026-09-13T09:20:23.479Z",
     "resolutionNote": "Chat input had fontSize 13px. iOS Safari/Chrome (WebKit) auto-zooms the page on focusing any text input under 16px, then zooms back out on blur -- read as alignment changing while typing, iOS-only since Android Chrome has no focus-zoom. Bumped input font-size to 16px."
   },
   {
@@ -6343,8 +6378,8 @@
     "status": "resolved",
     "foundBy": "claude-cli",
     "environment": {
-      "platform": "web",
       "isOnline": true,
+      "platform": "web",
       "appVersion": "1.0.0"
     },
     "reproSteps": [
@@ -6354,10 +6389,10 @@
     "expectedBehavior": "",
     "actualBehavior": "",
     "diagnostics": {},
-    "createdAt": "2026-09-13T09:20:10.712Z",
-    "updatedAt": "2026-09-13T09:20:19.513Z",
+    "createdAt": "2026-09-13T09:20:10.712+00:00",
+    "updatedAt": "2026-09-13T09:20:19.513+00:00",
+    "resolvedAt": "2026-09-13T09:20:19.513+00:00",
     "resolvedBy": "claude-cli",
-    "resolvedAt": "2026-09-13T09:20:19.513Z",
     "resolutionNote": "TripChatPanel handleSend swallowed sendTripMessage errors -- draft stayed but no feedback, message just never sent. Added sendError state + inline red banner distinguishing offline vs generic failure, draft preserved for retry."
   },
   {
@@ -6369,8 +6404,8 @@
     "status": "resolved",
     "foundBy": "claude-cli",
     "environment": {
-      "platform": "web",
       "isOnline": true,
+      "platform": "web",
       "appVersion": "1.0.0"
     },
     "reproSteps": [
@@ -6380,10 +6415,10 @@
     "expectedBehavior": "",
     "actualBehavior": "",
     "diagnostics": {},
-    "createdAt": "2026-09-13T09:37:22.812Z",
-    "updatedAt": "2026-09-13T09:56:11.455Z",
+    "createdAt": "2026-09-13T09:37:22.812+00:00",
+    "updatedAt": "2026-09-13T09:56:11.455+00:00",
+    "resolvedAt": "2026-09-13T09:56:11.455+00:00",
     "resolvedBy": "claude-cli",
-    "resolvedAt": "2026-09-13T09:56:11.455Z",
     "resolutionNote": "Correction: the first fix (forceFull on input onFocus) was itself buggy -- resizing TripContentSheet synchronously inside the focus handler made iOS Safari/Chrome cancel the keyboard outright (WebKit aborts keyboard-show if the focused element's containing layout changes size in the same tick as the focus gesture), which read as keyboard not appearing + map flashing back. Retargeted the trigger: sheet now forces full as soon as the Chat sub-tab becomes the active view (ChecklistNotesTab useEffect keyed on viewMode), not on input focus/blur -- by the time the user taps the input the sheet has already settled, so nothing resizes during the focus gesture. Removed the onComposerFocusChange plumbing from TripChatPanel entirely; App.tsx's forceFull state renamed chatViewActive, set via ChecklistNotesTab's onChatViewActiveChange."
   },
   {
@@ -6395,8 +6430,8 @@
     "status": "resolved",
     "foundBy": "cursor-agent",
     "environment": {
-      "platform": "web",
       "isOnline": true,
+      "platform": "web",
       "appVersion": "1.0.0"
     },
     "reproSteps": [
@@ -6407,10 +6442,10 @@
     "expectedBehavior": "Header stays put; message list shrinks; composer sits above the keyboard like WhatsApp.",
     "actualBehavior": "Entire UI jumps off-screen; map fills the view behind the keyboard.",
     "diagnostics": {},
-    "createdAt": "2026-09-13T11:42:27.755Z",
-    "updatedAt": "2026-09-13T11:42:56.283Z",
+    "createdAt": "2026-09-13T11:42:27.755+00:00",
+    "updatedAt": "2026-09-13T11:42:56.283+00:00",
+    "resolvedAt": "2026-09-13T11:42:56.282+00:00",
     "resolvedBy": "cursor-agent",
-    "resolvedAt": "2026-09-13T11:42:56.282Z",
     "resolutionNote": "v3.16.5 commit 71ebc2c: freeze --app-vh on keyboard overlay, set --keyboard-height from visualViewport on web, pin html/body, scroll chat list instead of window scrollIntoView, re-sync Android/iOS Capacitor wrappers."
   },
   {
@@ -6422,8 +6457,8 @@
     "status": "resolved",
     "foundBy": "cursor-agent",
     "environment": {
-      "platform": "web",
       "isOnline": true,
+      "platform": "web",
       "appVersion": "1.0.0"
     },
     "reproSteps": [
@@ -6433,10 +6468,10 @@
     "expectedBehavior": "tsc and vite build pass cleanly on CI",
     "actualBehavior": "TypeScript error TS2304: Cannot find name triggerHaptic in App.tsx",
     "diagnostics": {},
-    "createdAt": "2026-09-13T13:51:57.127Z",
-    "updatedAt": "2026-09-13T13:52:13.881Z",
+    "createdAt": "2026-09-13T13:51:57.127+00:00",
+    "updatedAt": "2026-09-13T13:52:13.881+00:00",
+    "resolvedAt": "2026-09-13T13:52:13.88+00:00",
     "resolvedBy": "cursor-agent",
-    "resolvedAt": "2026-09-13T13:52:13.880Z",
     "resolutionNote": "Restored triggerHaptic import in src/App.tsx; tsc -b && vite build verified passing cleanly (v3.17.1)"
   },
   {
@@ -6448,8 +6483,8 @@
     "status": "resolved",
     "foundBy": "Rahul",
     "environment": {
-      "platform": "web",
       "isOnline": true,
+      "platform": "web",
       "appVersion": "1.0.0"
     },
     "reproSteps": [
@@ -6460,10 +6495,10 @@
     "expectedBehavior": "One share action per settlement row when the WhatsApp Settlement Share flag is on.",
     "actualBehavior": "Two separate share buttons (Share, Share Card) both doing the same WhatsApp hand-off.",
     "diagnostics": {},
-    "createdAt": "2026-09-13T14:40:32.445Z",
-    "updatedAt": "2026-09-13T14:42:14.488Z",
+    "createdAt": "2026-09-13T14:40:32.445+00:00",
+    "updatedAt": "2026-09-13T14:42:14.488+00:00",
+    "resolvedAt": "2026-09-13T14:40:40.502+00:00",
     "resolvedBy": "Rahul",
-    "resolvedAt": "2026-09-13T14:40:40.502Z",
     "resolutionNote": "Removed the redundant text-only Share chip from BalancesSettlements.tsx's per-transfer action row; kept the Share Card chip (which already sends the same info as a WhatsApp-shareable image) as the single share action, gated by the same enableWhatsAppSettlementShare superadmin flag as before. handleShareReminder was kept internally since handleShareCard's error fallback still calls it. Fixed in commit aef218f."
   },
   {
@@ -6475,8 +6510,8 @@
     "status": "resolved",
     "foundBy": "Rahul",
     "environment": {
-      "platform": "web",
       "isOnline": true,
+      "platform": "web",
       "appVersion": "1.0.0"
     },
     "reproSteps": [
@@ -6487,10 +6522,10 @@
     "expectedBehavior": "npm run build (tsc -b && vite build) succeeds on the v3.19.0 chat edit/delete commit.",
     "actualBehavior": "tsc -b fails: TripMessageRow requires edited_at but the generated row shape lacks it; edit_trip_message rejected as not assignable to the RPC name union.",
     "diagnostics": {},
-    "createdAt": "2026-09-13T16:25:17.116Z",
-    "updatedAt": "2026-09-13T16:26:48.465Z",
+    "createdAt": "2026-09-13T16:25:17.116+00:00",
+    "updatedAt": "2026-09-13T16:26:48.465+00:00",
+    "resolvedAt": "2026-09-13T16:25:27.04+00:00",
     "resolvedBy": "Rahul",
-    "resolvedAt": "2026-09-13T16:25:27.040Z",
     "resolutionNote": "Hand-added edited_at to trip_messages Row/Insert/Update and an edit_trip_message entry to the Functions map in src/types/database.ts, matching the file's existing hand-written style. Tried a full regeneration first (npx supabase gen types) but it broke ~40 unrelated call sites due to stricter literal-union/Json typing; reverted and made the targeted addition instead. Verified with npm run build (tsc -b && vite build). Fixed in commit 8bc273e."
   },
   {
@@ -6502,8 +6537,8 @@
     "status": "resolved",
     "foundBy": "claude-cli",
     "environment": {
-      "platform": "web",
       "isOnline": true,
+      "platform": "web",
       "appVersion": "1.0.0"
     },
     "reproSteps": [
@@ -6513,10 +6548,10 @@
     "expectedBehavior": "",
     "actualBehavior": "",
     "diagnostics": {},
-    "createdAt": "2026-09-14T11:56:32.906Z",
-    "updatedAt": "2026-09-14T11:57:21.013Z",
+    "createdAt": "2026-09-14T11:56:32.906+00:00",
+    "updatedAt": "2026-09-14T11:57:21.013+00:00",
+    "resolvedAt": "2026-09-14T11:57:21.012+00:00",
     "resolvedBy": "claude-cli",
-    "resolvedAt": "2026-09-14T11:57:21.012Z",
     "resolutionNote": "Split ExpenseReviewModal header into a title+close row and a separate flex-wrap actions row. Commit 7573172."
   },
   {
@@ -6528,8 +6563,8 @@
     "status": "resolved",
     "foundBy": "claude-cli",
     "environment": {
-      "platform": "web",
       "isOnline": true,
+      "platform": "web",
       "appVersion": "1.0.0"
     },
     "reproSteps": [
@@ -6539,10 +6574,10 @@
     "expectedBehavior": "",
     "actualBehavior": "",
     "diagnostics": {},
-    "createdAt": "2026-09-14T12:09:35.816Z",
-    "updatedAt": "2026-09-14T12:10:35.200Z",
+    "createdAt": "2026-09-14T12:09:35.816+00:00",
+    "updatedAt": "2026-09-14T12:10:35.2+00:00",
+    "resolvedAt": "2026-09-14T12:10:35.199+00:00",
     "resolvedBy": "claude-cli",
-    "resolvedAt": "2026-09-14T12:10:35.199Z",
     "resolutionNote": "App.tsx derives liveExpense from activeTripExpenses by id instead of the tap-time snapshot. Commit b9211ba."
   },
   {
