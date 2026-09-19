@@ -36,27 +36,51 @@ describe('frontCardTransform', () => {
     expect(t).toContain('rotateY(');
     expect(t).toContain('rotateX(');
   });
+
+  it('tracks finger 1:1 horizontally by default', () => {
+    const t = frontCardTransform(150, 0, '2d');
+    expect(t).toContain('translate3d(150px, 0px, 0)');
+  });
+
+  it('damps horizontal displacement when dampHorizontal is enabled', () => {
+    const t = frontCardTransform(150, 0, '2d', true);
+    expect(t).not.toContain('translate3d(150px,');
+    expect(t).toContain(`translate3d(${rubberBand(150)}px,`);
+  });
 });
 
 describe('peekCardTransform', () => {
-  it('only translates peek cards in 2D mode', () => {
-    const d1 = peekCardTransform(1, 0.5, '2d');
-    expect(d1.transform).toMatch(/^translate3d\(/);
-    expect(d1.transform).not.toContain('scale(');
-    expect(d1.transform).not.toContain('rotate(');
+  it('smoothly scales and rotates depth-1 peek card continuously', () => {
+    const atRest = peekCardTransform(1, 0, '2d');
+    expect(atRest.transform).toContain('translate3d(0, 14.0px, 0)');
+    expect(atRest.transform).toContain('scale(0.960)');
+    expect(atRest.transform).toContain('rotate(-2.50deg)');
+
+    const atPeak = peekCardTransform(1, 1, '2d');
+    expect(atPeak.transform).toContain('translate3d(0, 0.0px, 0)');
+    expect(atPeak.transform).toContain('scale(1.000)');
+    expect(atPeak.transform).toContain('rotate(0.00deg)');
   });
 
-  it('scales and rotates peek cards in 3D mode', () => {
-    const d1 = peekCardTransform(1, 1, '3d');
-    expect(d1.transform).toContain('scale(');
-    expect(d1.transform).toContain('rotate(');
+  it('smoothly scales and escalates depth-2 peek card', () => {
+    const atRest = peekCardTransform(2, 0, '2d');
+    expect(atRest.transform).toContain('translate3d(0, 26.0px, 0)');
+    expect(atRest.transform).toContain('scale(0.920)');
+    expect(atRest.transform).toContain('rotate(2.00deg)');
+    expect(atRest.opacity).toBe('0.85');
+
+    const atPeak = peekCardTransform(2, 1, '2d');
+    expect(atPeak.transform).toContain('translate3d(0, 14.0px, 0)');
+    expect(atPeak.transform).toContain('scale(0.960)');
+    expect(atPeak.transform).toContain('rotate(-2.50deg)');
+    expect(atPeak.opacity).toBe('1.00');
   });
 });
 
 describe('exitCardTransform', () => {
   it('exits on the compositor (translate3d)', () => {
-    expect(exitCardTransform('left')).toContain('translate3d(-160%');
-    expect(exitCardTransform('right')).toContain('translate3d(160%');
+    expect(exitCardTransform('left')).toContain('translate3d(-150%');
+    expect(exitCardTransform('right')).toContain('translate3d(150%');
     expect(exitCardTransform('up')).toContain('translate3d(0, -140%');
   });
 });

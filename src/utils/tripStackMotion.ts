@@ -1,5 +1,5 @@
-const SWIPE_THRESHOLD = 90;
-const EXIT_TRANSITION_MS = 380;
+const SWIPE_THRESHOLD = 85;
+const EXIT_TRANSITION_MS = 320;
 
 export function isWebKitCompositor(): boolean {
   return typeof CSS !== 'undefined'
@@ -13,10 +13,7 @@ export function stackMotionMode(): StackMotionMode {
   return isWebKitCompositor() ? '2d' : '3d';
 }
 
-// Beyond `threshold`, extra drag distance is damped instead of following
-// the finger 1:1 -- same elastic idea SwipeableRow already uses, so a
-// stray drag doesn't send the card sailing off past the point a release
-// would commit it anyway.
+// Rubber-bands displacement beyond threshold (used for single-card decks or over-drag)
 export function rubberBand(d: number, threshold: number = SWIPE_THRESHOLD): number {
   if (Math.abs(d) <= threshold) return d;
   const sign = d < 0 ? -1 : 1;
@@ -24,10 +21,16 @@ export function rubberBand(d: number, threshold: number = SWIPE_THRESHOLD): numb
   return sign * (threshold + overflow * 0.45);
 }
 
-export function frontCardTransform(x: number, y: number, mode: StackMotionMode = '3d'): string {
-  const renderX = rubberBand(x);
-  const renderY = y < 0 ? -rubberBand(-y) : rubberBand(y);
-  const tiltDeg = (renderX * 0.055).toFixed(2);
+// Front card transform: 1:1 responsive tracking with dynamic tilt
+export function frontCardTransform(
+  x: number,
+  y: number,
+  mode: StackMotionMode = '3d',
+  dampHorizontal: boolean = false,
+): string {
+  const renderX = dampHorizontal ? rubberBand(x) : x;
+  const renderY = rubberBand(y, 140);
+  const tiltDeg = (renderX * 0.065).toFixed(2);
   if (mode === '2d') {
     return `translate3d(${renderX}px, ${renderY}px, 0) rotate(${tiltDeg}deg)`;
   }
@@ -36,28 +39,25 @@ export function frontCardTransform(x: number, y: number, mode: StackMotionMode =
   return `translate3d(${renderX}px, ${renderY}px, 0) rotate(${tiltDeg}deg) rotateY(${rotateY}deg) rotateX(${rotateX}deg)`;
 }
 
+// Peek card transform: continuous 2D affine interpolation matching rest CSS
 export function peekCardTransform(
   depth: 1 | 2,
   p: number,
-  mode: StackMotionMode = '3d',
+  _mode: StackMotionMode = '3d',
 ): { transform: string; opacity?: string } {
   const clamped = Math.min(1, Math.max(0, p));
   if (depth === 1) {
     const dy = 14 - clamped * 14;
-    if (mode === '2d') {
-      return { transform: `translate3d(0, ${dy.toFixed(1)}px, 0)` };
-    }
     const s = 0.96 + clamped * 0.04;
     const r = -2.5 + clamped * 2.5;
-    return { transform: `translate3d(0, ${dy.toFixed(1)}px, 0) scale(${s.toFixed(3)}) rotate(${r.toFixed(2)}deg)` };
+    return {
+      transform: `translate3d(0, ${dy.toFixed(1)}px, 0) scale(${s.toFixed(3)}) rotate(${r.toFixed(2)}deg)`,
+    };
   }
   const dy = 26 - clamped * 12;
-  const opacity = String(0.85 + clamped * 0.11);
-  if (mode === '2d') {
-    return { transform: `translate3d(0, ${dy.toFixed(1)}px, 0)`, opacity };
-  }
   const s = 0.92 + clamped * 0.04;
   const r = 2 - clamped * 4.5;
+  const opacity = String((0.85 + clamped * 0.15).toFixed(2));
   return {
     transform: `translate3d(0, ${dy.toFixed(1)}px, 0) scale(${s.toFixed(3)}) rotate(${r.toFixed(2)}deg)`,
     opacity,
@@ -65,9 +65,9 @@ export function peekCardTransform(
 }
 
 export function exitCardTransform(dir: 'left' | 'right' | 'up'): string {
-  if (dir === 'left') return 'translate3d(-160%, 0, 0) rotate(-18deg) scale(0.9)';
-  if (dir === 'right') return 'translate3d(160%, 0, 0) rotate(18deg) scale(0.9)';
-  return 'translate3d(0, -140%, 0) scale(0.9) rotate(2deg)';
+  if (dir === 'left') return 'translate3d(-150%, 0, 0) rotate(-16deg) scale(0.92)';
+  if (dir === 'right') return 'translate3d(150%, 0, 0) rotate(16deg) scale(0.92)';
+  return 'translate3d(0, -140%, 0) scale(0.92) rotate(2deg)';
 }
 
 export { SWIPE_THRESHOLD, EXIT_TRANSITION_MS };

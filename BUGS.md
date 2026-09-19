@@ -9,10 +9,10 @@
 
 | Metric | Count | Status Notes |
 | :--- | :--- | :--- |
-| **Total Tracked** | **229** | All recorded bugs across sessions |
+| **Total Tracked** | **230** | All recorded bugs across sessions |
 | **🟢 Open** | **0** | No critical blockers, 0 High |
 | **🟡 In Progress** | **0** | Active investigation or fix |
-| **✅ Resolved** | **203** | Verified & closed |
+| **✅ Resolved** | **204** | Verified & closed |
 | **⚪ Won't Fix** | **26** | Expected behavior / deferred |
 
 ---
@@ -234,6 +234,7 @@
 | **BUG-228** | iOS Safari/WKWebView feels choppy vs Android (WebKit compositor cost) | `performance` | `high` | `human` | `cursor-agent` | Always-on WebKit compositor fallback: iOS drops stacked backdrop-filter/will-change; gestures write transform/opacity on the DOM; trip sheet parks via translate3d; MapLibre pauses while the sheet is dragging. Android glass unchanged (@supports -webkit-touch-callout). ADR 200. Fixed in commit c21ddf0 (v3.30.3). |
 | **BUG-229** | Home Expeditions chip unreadable on bright trip photos | `ui-ux` | `medium` | `human` | `cursor-agent` | Chip samples cover-photo luminance and switches dark-on-light vs light-on-dark. Theme tokens used when no photo. ADR 201. Fixed in commit 4863d9b (v3.30.4). |
 | **BUG-230** | iOS trip-stack swipe still hitchy after BUG-228 compositor diet | `performance` | `high` | `human` | `cursor-agent` | WebKit stack drag is 2D translate3d + Z rotate; React style no longer owns the live transform; iOS drops ambient blur and 3D perspective. Android 3D tilt unchanged. ADR 201. Fixed in commit 4863d9b (v3.30.4). |
+| **BUG-231** | Home trip card swipe choppy, snaps, and freezes after cycling | `ui-ux` | `high` | `antigravity` | `antigravity` | Restored 1:1 responsive Tinder-like swipe physics without rubber-band clamp; unified 2D affine scale and rotation across all modes to remove discontinuous peek snap; cleaned up exit lifecycle so cards cycle cleanly without freezing; eliminated gesture-start React re-renders and frame-by-frame stage class toggling. |
 
 ---
 

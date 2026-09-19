@@ -3610,4 +3610,22 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - iOS stack loses the 3D “card in space” tilt during drag. Tracking smoothness beats that flourish on WebKit.
 
+---
+
+## 202. Silky-Smooth Home Card Swipe Physics & Lifecycle (BUG-231, v3.30.5)
+* **Context:** Following v3.30.3 and v3.30.4, the Tinder-style trip card swipe mechanism on the home screen suffered from noticeable choppiness, mid-swipe snaps, artificial rubber-band drag lag past 90px, and permanent freezing after swiping due to uncleaned `exit` state and leaked inline styles. In addition, peeking cards snapped flat on touch start because 2D mode stripped `scale` and `rotate(Z)`.
+* **Decision:** Re-architect the gesture interaction engine for true 60/120fps hardware-composited performance with zero React re-renders during active drag, continuous 2D affine peek transitions matching rest CSS, and complete card lifecycle cleanup upon cycling.
+* **Pattern/Implementation:**
+  - `src/utils/tripStackMotion.ts`: Front card follows pointer 1:1 during active horizontal and vertical swipes (`totalTrips >= 2`) with natural dynamic tilt; rubber-banding is retained only when `totalTrips < 2` or for extreme vertical over-drag.
+  - Peek cards (`peekCardTransform`) preserve continuous 2D hardware-accelerated `scale` and `rotate(Z)` across both 2D and 3D modes, exactly matching the resting CSS transform at `p = 0` and escalating smoothly to `scale(1)` at `p = 1`.
+  - `src/components/TripStack.tsx`:
+    - Removed `setDragging(true)` React state on pointer down/up; `.dragging` class and transforms are manipulated directly on the DOM node to eliminate gesture-start hitching.
+    - Card exit lifecycle: `commitExit` lets the exit transition finish cleanly (~220-320ms), resets `exit` state to `null`, purges inline styles, and restores DOM classes. An effect on `idx` ensures that any recycled card returning to depth 1/2 or depth 0 is 100% clean and responsive.
+    - Wrapped `CardContent` in `React.memo` to avoid re-renders during parent state updates.
+    - Throttled `.trip-stack-stage.is-dragging` class toggles to gesture start/end boundaries rather than every frame of `pointermove`.
+    - Added universal pointer support (`e.pointerType === 'mouse'` with `e.button === 0`) so desktop and touch devices both swipe seamlessly.
+* **Trade-offs Accepted:**
+  - Retaining 2D `scale` and `rotate(Z)` on WebKit preserves full visual depth continuity without triggering WebKit's 3D perspective compositor hitches.
+
+
 

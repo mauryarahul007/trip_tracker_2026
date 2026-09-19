@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { Member, Trip } from '../types';
 import { IconArchive, IconEdit, IconTrash } from './Icons';
 import { formatTripStamp, tripDayNumber } from '../utils/dateRange';
@@ -16,6 +16,7 @@ import {
   exitCardTransform,
   frontCardTransform,
   peekCardTransform,
+  rubberBand,
   stackMotionMode,
 } from '../utils/tripStackMotion';
 
@@ -23,9 +24,6 @@ const PEEK_DEPTH = 3;
 const LONG_PRESS_MS = 450;
 const JITTER = 10;
 const MOTION_MODE = stackMotionMode();
-// Fires late enough into the exit spring (~68%) that the card is already
-// most of the way off-canvas before the stack reorders underneath it.
-const EXIT_COMMIT_MS = Math.round(EXIT_TRANSITION_MS * 0.68);
 const RING_RADIUS = 30;
 const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
 
@@ -174,7 +172,6 @@ function getTripStatusBadge(trip: { startDate?: string; endDate?: string; closed
 
 function writePeekCard(el: HTMLElement | null, depth: 1 | 2, p: number, dragging: boolean) {
   if (!el) return;
-  el.style.filter = 'none';
   const transKey = dragging ? '1' : '0';
   if (el.dataset.stackDrag !== transKey) {
     el.dataset.stackDrag = transKey;
@@ -246,7 +243,7 @@ export function usePhotoTextTone(photoUrl: string | null): 'light' | 'dark' {
   return tone;
 }
 
-function CardContent({
+const CardContent = memo(function CardContent({
   trip,
   members,
   isSettled,
@@ -420,7 +417,7 @@ function CardContent({
       </div>
     </div>
   );
-}
+});
 
 type CardItemProps = {
   trip: Trip;
@@ -468,7 +465,6 @@ function StackCardItem({
   onDelete,
 }: CardItemProps) {
   const isFront = idx === 0;
-  const [dragging, setDragging] = useState(false);
   const [exit, setExit] = useState<'left' | 'right' | 'up' | null>(null);
   const [quickActionsOpen, setQuickActionsOpen] = useState(false);
   // Contextual menu: no useHistoryBack. Closing this overlay and opening
@@ -491,6 +487,21 @@ function StackCardItem({
   const badgeRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef({ x: 0, y: 0 });
 
+  // Clean up any exit state and lingering transforms when card depth/front changes
+  useEffect(() => {
+    if (!isFront) {
+      setExit(null);
+      const el = cardRef.current;
+      if (el) {
+        el.classList.remove('exiting', 'dragging');
+        el.style.willChange = '';
+        el.style.opacity = '';
+        el.style.transform = '';
+        el.style.transition = '';
+      }
+    }
+  }, [isFront, idx]);
+
   const setCardEl = (el: HTMLDivElement | null) => {
     cardRef.current = el;
     bindCardEl?.(el);
@@ -498,12 +509,12 @@ function StackCardItem({
 
   const writeFrontCard = (x: number, y: number) => {
     const el = cardRef.current;
-    if (el) el.style.transform = frontCardTransform(x, y, MOTION_MODE);
+    if (el) el.style.transform = frontCardTransform(x, y, MOTION_MODE, totalTrips < 2);
     const badge = badgeRef.current;
     if (!badge) return;
     const badgeHoriz = Math.abs(x) > Math.abs(y);
     const badgeDist = badgeHoriz ? Math.abs(x) : Math.abs(y);
-    const badgeArmed = badgeDist > SWIPE_THRESHOLD || Math.abs(velocity.current.vx) > 0.45;
+    const badgeArmed = badgeDist > SWIPE_THRESHOLD || Math.abs(velocity.current.vx) > 0.42;
     const badgeProgress = Math.min(1, badgeDist / SWIPE_THRESHOLD);
     const badgeKind: 'browse' | 'archive' | 'peek' | null =
       !active.current ? null :
@@ -560,7 +571,8 @@ function StackCardItem({
   };
 
   const handlePointerDown = (e: React.PointerEvent) => {
-    if (!isFront || e.pointerType !== 'touch' || quickActionsOpen || exit) return;
+    if (!isFront || quickActionsOpen || exit) return;
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
     const now = performance.now();
 
     // Double-tap peek micro-gesture: rapidly double-tapping peeks the next card
@@ -593,7 +605,6 @@ function StackCardItem({
       el.style.transition = 'none';
       el.style.willChange = 'transform';
     }
-    setDragging(true);
     startHoldRing();
     longPressTimer.current = setTimeout(() => {
       if (!moved.current) {
@@ -604,7 +615,11 @@ function StackCardItem({
         active.current = false;
         dragRef.current = { x: 0, y: 0 };
         writeFrontCard(0, 0);
-        setDragging(false);
+        const cardEl = cardRef.current;
+        if (cardEl) {
+          cardEl.classList.remove('dragging');
+          cardEl.style.willChange = '';
+        }
         onDragProgress?.(0, 0);
       }
     }, LONG_PRESS_MS);
@@ -628,11 +643,14 @@ function StackCardItem({
       moved.current = true;
       clearLongPress();
     }
-    // Damp horizontal drag if there's only 1 trip in the deck
-    const effectiveDx = totalTrips < 2 ? dx * 0.25 : dx;
+    // Damp horizontal drag only if there's only 1 trip in the deck
+    const effectiveDx = totalTrips < 2 ? rubberBand(dx, 60) : dx;
     dragRef.current = { x: effectiveDx, y: dy };
     writeFrontCard(effectiveDx, dy);
-    onDragProgress?.(Math.min(1, Math.max(Math.abs(effectiveDx), Math.max(0, dy * 1.5)) / SWIPE_THRESHOLD), effectiveDx);
+    const horizDist = Math.abs(effectiveDx);
+    const vertDist = Math.max(0, -dy * 1.2);
+    const progress = Math.min(1, Math.max(horizDist, vertDist) / SWIPE_THRESHOLD);
+    onDragProgress?.(progress, effectiveDx);
   };
 
   const endDrag = () => {
@@ -640,16 +658,14 @@ function StackCardItem({
     active.current = false;
     clearLongPress();
     stopHoldRing(false);
-    setDragging(false);
     if (badgeRef.current) badgeRef.current.style.opacity = '0';
-    onDragProgress?.(0, 0);
 
     const { x, y } = dragRef.current;
     const { vx, vy } = velocity.current;
     const canSwipe = totalTrips >= 2;
 
     // Velocity-assisted flick (natural quick throw) or distance-based commit
-    const isHorizFlick = canSwipe && Math.abs(vx) > 0.42 && Math.abs(x) > 24;
+    const isHorizFlick = canSwipe && Math.abs(vx) > 0.38 && Math.abs(x) > 20;
     const isHorizThreshold = canSwipe && Math.abs(x) > Math.abs(y) && Math.abs(x) > SWIPE_THRESHOLD;
 
     const commitExit = (dir: 'left' | 'right' | 'up', speed: number, onDone: () => void) => {
@@ -660,14 +676,28 @@ function StackCardItem({
         el.style.willChange = 'transform, opacity';
         el.style.transition = prefersReducedMotion
           ? 'none'
-          : `transform ${EXIT_TRANSITION_MS}ms var(--ease-uber-spring), opacity 0.28s ease`;
+          : `transform ${EXIT_TRANSITION_MS}ms cubic-bezier(0.2, 0.9, 0.3, 1), opacity ${Math.round(EXIT_TRANSITION_MS * 0.85)}ms ease`;
         el.style.transform = exitCardTransform(dir);
         el.style.opacity = '0';
       }
       setExit(dir);
-      const flickSpeed = Math.max(1, speed);
-      const dynamicCommitMs = Math.max(160, Math.min(EXIT_COMMIT_MS, Math.round(EXIT_COMMIT_MS / (flickSpeed * 0.9))));
-      setTimeout(onDone, dynamicCommitMs);
+      onDragProgress?.(1, dir === 'left' ? -SWIPE_THRESHOLD : SWIPE_THRESHOLD);
+
+      const exitDuration = prefersReducedMotion
+        ? 0
+        : Math.max(220, Math.min(EXIT_TRANSITION_MS, Math.round(EXIT_TRANSITION_MS / Math.max(1, speed * 0.8))));
+
+      setTimeout(() => {
+        onDone();
+        if (el) {
+          el.classList.remove('exiting', 'dragging');
+          el.style.willChange = '';
+          el.style.opacity = '';
+          el.style.transform = '';
+          el.style.transition = '';
+        }
+        setExit(null);
+      }, exitDuration);
     };
 
     if (isHorizFlick || isHorizThreshold) {
@@ -678,7 +708,7 @@ function StackCardItem({
       return;
     }
 
-    const isUpFlick = vy < -0.42 && y < -24;
+    const isUpFlick = vy < -0.38 && y < -20;
     const isUpThreshold = y < -SWIPE_THRESHOLD && Math.abs(y) > Math.abs(x);
 
     if (isUpFlick || isUpThreshold) {
@@ -687,6 +717,7 @@ function StackCardItem({
       commitExit('up', Math.abs(vy), onArchive);
       return;
     }
+
     dragRef.current = { x: 0, y: 0 };
     const el = cardRef.current;
     if (el) {
@@ -697,6 +728,7 @@ function StackCardItem({
         : `transform ${EXIT_TRANSITION_MS}ms var(--ease-uber-spring), opacity 0.28s ease`;
     }
     writeFrontCard(0, 0);
+    onDragProgress?.(0, 0);
   };
 
   const handleClick = () => {
@@ -717,7 +749,7 @@ function StackCardItem({
   return (
     <div
       ref={setCardEl}
-      className={`stack-card depth-${idx}${isFront && dragging ? ' dragging' : ''}${isFront && exit ? ' exiting' : ''}`}
+      className={`stack-card depth-${idx}${isFront && exit ? ' exiting' : ''}`}
       style={isFront ? { touchAction: 'none' } : undefined}
       onPointerDown={isFront ? handlePointerDown : undefined}
       onPointerMove={isFront ? handlePointerMove : undefined}
@@ -876,23 +908,37 @@ export function TripStack({
     }
   }, [targetTripId, order, tripsById]);
 
-  const writePeeks = (p: number, dragging: boolean) => {
-    stageRef.current?.classList.toggle('is-dragging', dragging);
+  const isDraggingStageRef = useRef(false);
+  const writePeeks = useCallback((p: number, dragging: boolean) => {
+    if (isDraggingStageRef.current !== dragging) {
+      isDraggingStageRef.current = dragging;
+      stageRef.current?.classList.toggle('is-dragging', dragging);
+    }
     writePeekCard(peekElsRef.current[0], 1, p, dragging);
     writePeekCard(peekElsRef.current[1], 2, p, dragging);
-  };
+  }, []);
+
+  // Ensure peeking cards rest at pristine depth positions after order changes
+  useEffect(() => {
+    writePeeks(0, false);
+  }, [order, writePeeks]);
 
   const handlePeekPreview = () => {
     writePeeks(0.85, false);
     window.setTimeout(() => writePeeks(0, false), 700);
   };
 
+  const cycleToBack = useCallback(() => {
+    setManualOrder((prev) => {
+      const current = prev ?? sortedIds;
+      return [...current.slice(1), current[0]];
+    });
+  }, [sortedIds]);
+
   const frontPhotoUrl = useTripPhoto(front?.destination, front?.coverImageUrl, front?.name);
   const frontGlowColor = useAmbientGlowColor(frontPhotoUrl);
 
   if (!front) return null;
-
-  const cycleToBack = () => setManualOrder([...order.slice(1), order[0]]);
 
   const canDelete = (trip: Trip) =>
     !trip.ownerId || !userId || trip.ownerId === userId ||

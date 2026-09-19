@@ -6849,5 +6849,31 @@
     "resolvedBy": "cursor-agent",
     "resolvedAt": "2026-09-19T18:54:03.819Z",
     "resolutionNote": "WebKit stack drag is 2D translate3d + Z rotate; React style no longer owns the live transform; iOS drops ambient blur and 3D perspective. Android 3D tilt unchanged. ADR 201. Fixed in commit 4863d9b (v3.30.4)."
+  },
+  {
+    "id": "BUG-231",
+    "title": "Home trip card swipe choppy, snaps, and freezes after cycling",
+    "description": "Home trip card swipe choppy, snaps, and freezes after cycling",
+    "severity": "high",
+    "category": "ui-ux",
+    "status": "resolved",
+    "foundBy": "antigravity",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-09-19T19:36:25.634Z",
+    "updatedAt": "2026-09-19T19:36:29.822Z",
+    "resolvedBy": "antigravity",
+    "resolvedAt": "2026-09-19T19:36:29.819Z",
+    "resolutionNote": "Restored 1:1 responsive Tinder-like swipe physics without rubber-band clamp; unified 2D affine scale and rotation across all modes to remove discontinuous peek snap; cleaned up exit lifecycle so cards cycle cleanly without freezing; eliminated gesture-start React re-renders and frame-by-frame stage class toggling."
   }
 ]
