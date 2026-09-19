@@ -6791,9 +6791,9 @@
     "actualBehavior": "Sheet, stack, and chrome hitch because WebKit pays compositor tax on blur, will-change, and layout animation every frame.",
     "diagnostics": {},
     "createdAt": "2026-09-19T18:20:18.912Z",
-    "updatedAt": "2026-09-19T18:20:30.933Z",
+    "updatedAt": "2026-09-19T18:23:08.384Z",
     "resolvedBy": "cursor-agent",
-    "resolvedAt": "2026-09-19T18:20:30.933Z",
-    "resolutionNote": "Always-on WebKit compositor fallback: iOS drops stacked backdrop-filter/will-change; gestures write transform/opacity on the DOM; trip sheet parks via translate3d; MapLibre pauses while the sheet is dragging. Android glass unchanged (@supports -webkit-touch-callout). v3.30.3, ADR 200. Commit SHA stamped after git commit."
+    "resolvedAt": "2026-09-19T18:23:08.384Z",
+    "resolutionNote": "Always-on WebKit compositor fallback: iOS drops stacked backdrop-filter/will-change; gestures write transform/opacity on the DOM; trip sheet parks via translate3d; MapLibre pauses while the sheet is dragging. Android glass unchanged (@supports -webkit-touch-callout). ADR 200. Fixed in commit c21ddf0 (v3.30.3)."
   }
 ]
