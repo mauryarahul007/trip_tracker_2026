@@ -678,7 +678,7 @@ export function MembersGroupsTab({
 
             {!editingMember && isDropdownOpen && filteredSuggestions.length > 0 && (
               <div
-                className="typeahead-dropdown glass-card"
+                className="typeahead-dropdown glass-card compositor-blur"
                 style={{
                   position: 'absolute',
                   top: 'calc(100% + 4px)',

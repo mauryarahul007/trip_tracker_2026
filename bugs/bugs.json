@@ -6767,5 +6767,33 @@
     "resolvedBy": "cursor-agent",
     "resolvedAt": "2026-09-19T15:25:55.178Z",
     "resolutionNote": "Voice/NL expenses now default paidBy to the signed-in trip member (resolveDefaultExpensePayerId), not visibleMembers[0]. Preview always shows a Paid-by picker; 'I paid' maps to the speaker; unnamed voice will not auto-save if the user is not a linked member. Expense form uses the same default. Fixed in commit d198a2d (v3.30.2)."
+  },
+  {
+    "id": "BUG-228",
+    "title": "iOS Safari/WKWebView feels choppy vs Android (WebKit compositor cost)",
+    "description": "Trip Tracker is smooth on Android Chrome/WebView but hitchy on iOS Safari and Capacitor WKWebView: stacked backdrop-filter, per-touchmove React setState, layout-animated sheet top, and live MapLibre under dragging chrome.",
+    "severity": "high",
+    "category": "performance",
+    "status": "resolved",
+    "foundBy": "human",
+    "environment": {
+      "platform": "ios",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Open the app on iPhone Safari or Capacitor iOS",
+      "Swipe the home trip stack",
+      "Drag the trip content sheet over the map",
+      "Swipe an expense row and between tabs"
+    ],
+    "expectedBehavior": "Gestures track the finger near Android smoothness; login/modals stay usable without 15-30fps hitch.",
+    "actualBehavior": "Sheet, stack, and chrome hitch because WebKit pays compositor tax on blur, will-change, and layout animation every frame.",
+    "diagnostics": {},
+    "createdAt": "2026-09-19T18:20:18.912Z",
+    "updatedAt": "2026-09-19T18:20:30.933Z",
+    "resolvedBy": "cursor-agent",
+    "resolvedAt": "2026-09-19T18:20:30.933Z",
+    "resolutionNote": "Always-on WebKit compositor fallback: iOS drops stacked backdrop-filter/will-change; gestures write transform/opacity on the DOM; trip sheet parks via translate3d; MapLibre pauses while the sheet is dragging. Android glass unchanged (@supports -webkit-touch-callout). v3.30.3, ADR 200. Commit SHA stamped after git commit."
   }
 ]

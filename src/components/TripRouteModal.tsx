@@ -342,6 +342,7 @@ export function TripRouteModal({
           >
             <div ref={mapContainerRef} style={{ width: '100%', height: '100%' }} />
             <div
+              className="compositor-blur"
               style={{
                 position: 'absolute',
                 bottom: '8px',

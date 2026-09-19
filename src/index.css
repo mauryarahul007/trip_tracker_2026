@@ -1644,12 +1644,9 @@ input[type="date"].input-field {
               transform 0.36s var(--ease-decel),
               opacity 0.32s ease-out;
   will-change: transform, opacity;
-  /* Default tone: white text/chrome for a dark or unknown map background.
-     TripMapHero samples the live map pixels behind the header and flips
-     these when the map area there is bright enough that white would wash
-     out (see .tone-dark below). The text-shadow is a second, JS-independent
-     legibility layer -- a dark halo right at the glyph edges that holds up
-     even if the tone sample is wrong or momentarily stale (e.g. mid-swipe). */
+  /* Default tone: white text/chrome for a dark map background.
+     TripMapHero uses a static dark tone (no WebGL pixel sampling).
+     The text-shadow is a JS-independent legibility layer. */
   --header-fg: #FFFFFF;
   --header-fg-muted: rgba(255, 255, 255, 0.88);
   --header-fg-border: rgba(255, 255, 255, 0.28);
@@ -3178,6 +3175,11 @@ input:checked + .toggle-slider:before {
 .stack-card.depth-0 {
   z-index: 3;
 }
+.stack-card.depth-0.dragging {
+  box-shadow: 0 28px 56px -10px rgba(0, 0, 0, 0.45), 0 16px 28px -6px rgba(0, 0, 0, 0.3);
+  transition: none;
+  will-change: transform;
+}
 .stack-card.depth-1 {
   z-index: 2;
   transform: translateY(14px) scale(0.96) rotate(-2.5deg);
@@ -3186,9 +3188,6 @@ input:checked + .toggle-slider:before {
   z-index: 1;
   transform: translateY(26px) scale(0.92) rotate(2deg);
   opacity: 0.85;
-  /* Blur on top of the opacity dip sells "further back in the stack"
-     instead of just "faded". */
-  filter: blur(1.4px) brightness(0.88);
 }
 .stack-card:focus-visible {
   outline: 3px solid var(--primary-accent);
@@ -5620,7 +5619,6 @@ input:checked + .toggle-slider:before {
   background: #000;
   pointer-events: none;
   transition: opacity 0.38s var(--ease-uber-spring);
-  will-change: opacity;
 }
 
 .trip-sheet-scrim.dragging {
@@ -5635,6 +5633,7 @@ input:checked + .toggle-slider:before {
   position: absolute;
   left: 0;
   right: 0;
+  top: 0;
   bottom: 0;
   z-index: 10;
   display: flex;
@@ -5644,11 +5643,10 @@ input:checked + .toggle-slider:before {
   border-radius: 28px 28px 0 0;
   box-shadow: 0 -16px 40px -10px rgba(0, 0, 0, 0.4), 0 -4px 16px rgba(0, 0, 0, 0.2);
   overflow: hidden;
-  will-change: transform;
-  transform: translateZ(0);
-  /* Uber-style spring snap curve -- a snapping sheet reads physical
-     with calibrated spring damping rather than a flat ease-out. */
-  transition: top 0.38s var(--ease-uber-spring), border-radius 0.38s var(--ease-uber-spring);
+  transform: translate3d(0, 50%, 0);
+  /* Snap via transform only -- never transition `top` (WebKit reflow).
+     Sheet is always full-viewport tall; translateY(N%) parks the top edge. */
+  transition: transform 0.38s var(--ease-uber-spring), border-radius 0.38s var(--ease-uber-spring);
 }
 
 .trip-sheet.full {
@@ -5657,6 +5655,7 @@ input:checked + .toggle-slider:before {
 
 .trip-sheet.dragging {
   transition: none;
+  will-change: transform;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -5693,7 +5692,6 @@ input:checked + .toggle-slider:before {
   opacity: 0.35;
   transform-origin: center;
   transition: background 0.2s ease, opacity 0.2s ease, transform 0.2s var(--ease-uber-spring);
-  will-change: transform;
 }
 
 .trip-sheet-handle:hover .trip-sheet-handle-bar,
@@ -9500,11 +9498,12 @@ textarea.input-field {
   top: 0;
   bottom: 0;
   left: 0;
+  width: 100%;
   border-radius: 32px;
   background: linear-gradient(90deg, rgba(15, 111, 99, 0.28) 0%, rgba(22, 163, 74, 0.55) 100%);
   pointer-events: none;
   z-index: 1;
-  will-change: width;
+  transform-origin: left center;
 }
 
 /* Mobility-grade staggered cascade animation for list items */
@@ -12043,5 +12042,109 @@ textarea.input-field {
 @keyframes voiceWavePulse {
   0%, 100% { transform: scaleY(0.4); opacity: 0.6; }
   50% { transform: scaleY(1); opacity: 1; }
+}
+
+/* ==========================================================================
+   iOS / WebKit compositor fallbacks
+   Safari, Chrome-on-iOS, and Capacitor WKWebView all match
+   -webkit-touch-callout. Android Chrome (Blink) does not, so glass stays.
+   ========================================================================== */
+@supports (-webkit-touch-callout: none) {
+  .trip-ambient-backdrop,
+  .expense-item-cascade,
+  .category-badge,
+  .member-card,
+  .map-marker-pin,
+  .nav-tabs-pill,
+  .unlock-slider-handle,
+  .unlock-slider-fill {
+    will-change: auto;
+  }
+
+  .modal-overlay,
+  .wa-action-sheet-backdrop,
+  .note-modal-backdrop,
+  .fab-speed-dial-scrim,
+  .settings-qr-modal-overlay,
+  .landing-glass-card,
+  .login-feature-chip,
+  .login-landing-badge,
+  .stack-status-dot-indicator,
+  .stack-header-caption,
+  .stack-weather-pill,
+  .stack-quick-add-chip,
+  .stack-swipe-badge,
+  .stack-destination-pill,
+  .stack-status-pill,
+  .stack-balance-chip,
+  .stack-card-face.has-photo .pp-stamp,
+  .launcher-track,
+  .launcher-thumb,
+  .mini-bp-capsule,
+  .wa-overflow-dropdown,
+  .flight-add-tooltip,
+  .compositor-blur {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
+  .modal-overlay {
+    background: rgba(15, 23, 42, 0.78);
+  }
+  .wa-action-sheet-backdrop {
+    background: rgba(0, 0, 0, 0.72);
+  }
+  .note-modal-backdrop {
+    background: rgba(15, 23, 42, 0.82);
+  }
+  .fab-speed-dial-scrim {
+    background: rgba(10, 15, 20, 0.72);
+  }
+  .settings-qr-modal-overlay {
+    background: rgba(0, 0, 0, 0.82);
+  }
+  .landing-glass-card {
+    background: rgba(15, 23, 42, 0.92);
+  }
+  .login-feature-chip {
+    background: rgba(15, 23, 42, 0.92);
+  }
+  .login-landing-badge {
+    background: rgba(0, 0, 0, 0.72);
+  }
+  .stack-status-dot-indicator,
+  .stack-header-caption,
+  .stack-weather-pill,
+  .stack-destination-pill,
+  .stack-status-pill,
+  .stack-balance-chip {
+    background: rgba(15, 23, 42, 0.88);
+  }
+  .stack-quick-add-chip {
+    background: rgba(14, 116, 144, 0.88);
+  }
+  .launcher-track {
+    background: rgba(15, 23, 42, 0.92);
+  }
+
+  .stack-ambient-glow {
+    filter: none;
+    -webkit-filter: none;
+    opacity: 0.55;
+  }
+
+  .trip-ambient-backdrop {
+    filter: none;
+    will-change: auto;
+  }
+
+  .map-marker-pin::after {
+    animation: none;
+    display: none;
+  }
+
+  .stack-card.depth-2 {
+    filter: none;
+  }
 }
 

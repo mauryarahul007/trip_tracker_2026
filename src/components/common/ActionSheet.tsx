@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { triggerHaptic } from '../../utils/haptics';
 import { useHistoryBack } from '../../utils/useHistoryBack';
@@ -37,7 +37,7 @@ export const ActionSheet: React.FC<ActionSheetProps> = ({
   showCancel = true,
   cancelLabel = 'Cancel',
 }) => {
-  const [dragOffset, setDragOffset] = useState(0);
+  const dragOffsetRef = useRef(0);
   const dragStartY = useRef<number | null>(null);
   const sheetRef = useRef<HTMLDivElement>(null);
 
@@ -57,18 +57,27 @@ export const ActionSheet: React.FC<ActionSheetProps> = ({
     if (dragStartY.current === null) return;
     const diff = e.clientY - dragStartY.current;
     if (diff > 8) {
-      setDragOffset(diff - 8);
+      const offset = diff - 8;
+      dragOffsetRef.current = offset;
+      if (sheetRef.current) {
+        sheetRef.current.style.transition = 'none';
+        sheetRef.current.style.transform = `translateY(${offset}px)`;
+      }
     }
   };
 
   const handlePointerUp = () => {
     if (dragStartY.current === null) return;
-    if (dragOffset > 70) {
+    if (dragOffsetRef.current > 70) {
       triggerHaptic('light');
       onClose();
     }
     dragStartY.current = null;
-    setDragOffset(0);
+    dragOffsetRef.current = 0;
+    if (sheetRef.current) {
+      sheetRef.current.style.transition = 'transform 0.22s cubic-bezier(0.32, 0.72, 0, 1)';
+      sheetRef.current.style.transform = '';
+    }
   };
 
   if (!isOpen) return null;
@@ -92,8 +101,8 @@ export const ActionSheet: React.FC<ActionSheetProps> = ({
         tabIndex={-1}
         className="wa-action-sheet-card wa-sheet-enter"
         style={{
-          transform: dragOffset > 0 ? `translateY(${dragOffset}px)` : undefined,
-          transition: dragStartY.current ? 'none' : 'transform 0.22s cubic-bezier(0.32, 0.72, 0, 1)',
+          transform: undefined,
+          transition: 'transform 0.22s cubic-bezier(0.32, 0.72, 0, 1)',
         }}
         onClick={(e) => e.stopPropagation()}
         onPointerDown={handlePointerDown}

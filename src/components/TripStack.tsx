@@ -181,6 +181,34 @@ function rubberBand(d: number, threshold: number = SWIPE_THRESHOLD): number {
   return sign * (threshold + overflow * 0.45);
 }
 
+function frontCardTransform(x: number, y: number): string {
+  const renderX = rubberBand(x);
+  const renderY = y < 0 ? -rubberBand(-y) : rubberBand(y);
+  const tiltDeg = (renderX * 0.055).toFixed(2);
+  const rotateY = (renderX * 0.038).toFixed(2);
+  const rotateX = (-renderY * 0.032).toFixed(2);
+  return `translate3d(${renderX}px, ${renderY}px, 0) rotate(${tiltDeg}deg) rotateY(${rotateY}deg) rotateX(${rotateX}deg)`;
+}
+
+function writePeekCard(el: HTMLElement | null, depth: 1 | 2, p: number, dragging: boolean) {
+  if (!el) return;
+  el.style.filter = 'none';
+  el.style.transition = dragging || prefersReducedMotion ? 'none' : 'transform 0.34s var(--ease-decel), opacity 0.34s var(--ease-decel)';
+  if (depth === 1) {
+    const dy = 14 - p * 14;
+    const s = 0.96 + p * 0.04;
+    const r = -2.5 + p * 2.5;
+    el.style.transform = `translate3d(0, ${dy.toFixed(1)}px, 0) scale(${s.toFixed(3)}) rotate(${r.toFixed(2)}deg)`;
+  } else {
+    const dy = 26 - p * 12;
+    const s = 0.92 + p * 0.04;
+    const r = 2 - p * 4.5;
+    const op = 0.85 + p * 0.11;
+    el.style.transform = `translate3d(0, ${dy.toFixed(1)}px, 0) scale(${s.toFixed(3)}) rotate(${r.toFixed(2)}deg)`;
+    el.style.opacity = String(op);
+  }
+}
+
 type Props = {
   trips: Trip[]; // 2+ trips, any order -- this component sorts by recency itself
   members: Record<string, Member>;
@@ -425,8 +453,8 @@ type CardItemProps = {
   idx: number;
   totalTrips: number;
   canDelete: boolean;
-  dragProgress?: number;
   onDragProgress?: (ratio: number, dragX: number) => void;
+  bindCardEl?: (el: HTMLDivElement | null) => void;
   onPeekPreview?: () => void;
   onOpen: () => void;
   onQuickAddExpense?: (tripId: string) => void;
@@ -453,8 +481,8 @@ function StackCardItem({
   idx,
   totalTrips,
   canDelete,
-  dragProgress,
   onDragProgress,
+  bindCardEl,
   onPeekPreview,
   onOpen,
   onQuickAddExpense,
@@ -464,7 +492,6 @@ function StackCardItem({
   onDelete,
 }: CardItemProps) {
   const isFront = idx === 0;
-  const [drag, setDrag] = useState({ x: 0, y: 0 });
   const [dragging, setDragging] = useState(false);
   const [exit, setExit] = useState<'left' | 'right' | 'up' | null>(null);
   const [quickActionsOpen, setQuickActionsOpen] = useState(false);
@@ -484,6 +511,40 @@ function StackCardItem({
   const lastPointer = useRef<{ x: number; y: number; time: number }>({ x: 0, y: 0, time: 0 });
   const velocity = useRef<{ vx: number; vy: number }>({ vx: 0, vy: 0 });
   const lastTapRef = useRef(0);
+  const cardRef = useRef<HTMLDivElement>(null);
+  const badgeRef = useRef<HTMLDivElement>(null);
+  const dragRef = useRef({ x: 0, y: 0 });
+
+  const setCardEl = (el: HTMLDivElement | null) => {
+    cardRef.current = el;
+    bindCardEl?.(el);
+  };
+
+  const writeFrontCard = (x: number, y: number) => {
+    const el = cardRef.current;
+    if (el) el.style.transform = frontCardTransform(x, y);
+    const badge = badgeRef.current;
+    if (!badge) return;
+    const badgeHoriz = Math.abs(x) > Math.abs(y);
+    const badgeDist = badgeHoriz ? Math.abs(x) : Math.abs(y);
+    const badgeArmed = badgeDist > SWIPE_THRESHOLD || Math.abs(velocity.current.vx) > 0.45;
+    const badgeProgress = Math.min(1, badgeDist / SWIPE_THRESHOLD);
+    const badgeKind: 'browse' | 'archive' | 'peek' | null =
+      !active.current ? null :
+      totalTrips >= 2 && badgeHoriz && Math.abs(x) > 6 ? 'browse' :
+      y < -6 ? 'archive' :
+      totalTrips >= 2 && y > 8 ? 'peek' : null;
+    if (!badgeKind) {
+      badge.style.opacity = '0';
+      return;
+    }
+    badge.className = `stack-swipe-badge ${badgeKind}`;
+    badge.textContent =
+      badgeKind === 'browse' ? (x < 0 ? '← Browse' : 'Browse →') :
+      badgeKind === 'archive' ? '↑ Archive' : '↓ Peek Next';
+    badge.style.opacity = String(badgeProgress);
+    badge.style.transform = `translate(-50%, ${(-6 + badgeProgress * 6).toFixed(1)}px) scale(${(0.85 + badgeProgress * (badgeArmed ? 0.2 : 0.1)).toFixed(2)})`;
+  };
 
   const clearLongPress = () => {
     if (longPressTimer.current) {
@@ -543,6 +604,7 @@ function StackCardItem({
     start.current = { x: e.clientX, y: e.clientY };
     lastPointer.current = { x: e.clientX, y: e.clientY, time: now };
     velocity.current = { vx: 0, vy: 0 };
+    dragRef.current = { x: 0, y: 0 };
     setDragging(true);
     startHoldRing();
     longPressTimer.current = setTimeout(() => {
@@ -552,7 +614,8 @@ function StackCardItem({
         stopHoldRing(true);
         setQuickActionsOpen(true);
         active.current = false;
-        setDrag({ x: 0, y: 0 });
+        dragRef.current = { x: 0, y: 0 };
+        writeFrontCard(0, 0);
         setDragging(false);
         onDragProgress?.(0, 0);
       }
@@ -579,7 +642,8 @@ function StackCardItem({
     }
     // Damp horizontal drag if there's only 1 trip in the deck
     const effectiveDx = totalTrips < 2 ? dx * 0.25 : dx;
-    setDrag({ x: effectiveDx, y: dy });
+    dragRef.current = { x: effectiveDx, y: dy };
+    writeFrontCard(effectiveDx, dy);
     onDragProgress?.(Math.min(1, Math.max(Math.abs(effectiveDx), Math.max(0, dy * 1.5)) / SWIPE_THRESHOLD), effectiveDx);
   };
 
@@ -589,9 +653,10 @@ function StackCardItem({
     clearLongPress();
     stopHoldRing(false);
     setDragging(false);
+    if (badgeRef.current) badgeRef.current.style.opacity = '0';
     onDragProgress?.(0, 0);
 
-    const { x, y } = drag;
+    const { x, y } = dragRef.current;
     const { vx, vy } = velocity.current;
     const canSwipe = totalTrips >= 2;
 
@@ -622,7 +687,8 @@ function StackCardItem({
       setTimeout(onArchive, dynamicCommitMs);
       return;
     }
-    setDrag({ x: 0, y: 0 });
+    dragRef.current = { x: 0, y: 0 };
+    writeFrontCard(0, 0);
   };
 
   const handleClick = () => {
@@ -640,81 +706,23 @@ function StackCardItem({
     }
   };
 
-  // Visually damp beyond the swipe threshold (rubberBand) so the card
-  // stays near the frame during an overlong drag; the raw drag.x/drag.y
-  // (undamped) still drive the actual commit decision in endDrag above.
-  const renderX = rubberBand(drag.x);
-  const renderY = drag.y < 0 ? -rubberBand(-drag.y) : rubberBand(drag.y);
-  const tiltDeg = (renderX * 0.055).toFixed(2);
-  const rotateY = (renderX * 0.038).toFixed(2);
-  const rotateX = (-renderY * 0.032).toFixed(2);
-
-  const transform =
+  const exitTransform =
     exit === 'left' ? 'translateX(-160%) rotate(-18deg) scale(0.9)' :
     exit === 'right' ? 'translateX(160%) rotate(18deg) scale(0.9)' :
     exit === 'up' ? 'translateY(-140%) scale(0.9) rotate(2deg)' :
-    `translate3d(${renderX}px, ${renderY}px, 0) rotate(${tiltDeg}deg) rotateY(${rotateY}deg) rotateX(${rotateX}deg)`;
-
-  // Directional commit-preview badge: tells the user what a release will
-  // do before they let go, fading/arming in as the drag crosses threshold.
-  const badgeHoriz = Math.abs(drag.x) > Math.abs(drag.y);
-  const badgeDist = badgeHoriz ? Math.abs(drag.x) : Math.abs(drag.y);
-  const badgeArmed = badgeDist > SWIPE_THRESHOLD || Math.abs(velocity.current.vx) > 0.45;
-  const badgeProgress = Math.min(1, badgeDist / SWIPE_THRESHOLD);
-  const badgeKind: 'browse' | 'archive' | 'peek' | null =
-    !dragging || exit ? null :
-    totalTrips >= 2 && badgeHoriz && Math.abs(drag.x) > 6 ? 'browse' :
-    drag.y < -6 ? 'archive' :
-    totalTrips >= 2 && drag.y > 8 ? 'peek' : null;
-
-  // Real-time reactive escalation for cards at depth-1 and depth-2
-  let peekStyle: React.CSSProperties | undefined = undefined;
-  if (!isFront) {
-    if (idx === 1) {
-      const p = dragProgress || 0;
-      const dy = 14 - p * 14;
-      const s = 0.96 + p * 0.04;
-      const r = -2.5 + p * 2.5;
-      const blurVal = Math.max(0, 0.7 * (1 - p * 1.5));
-      peekStyle = {
-        transform: `translate3d(0, ${dy.toFixed(1)}px, 0) scale(${s.toFixed(3)}) rotate(${r.toFixed(2)}deg)`,
-        filter: blurVal > 0.05 ? `blur(${blurVal.toFixed(1)}px)` : 'none',
-        transition: p > 0 || prefersReducedMotion ? 'none' : 'transform 0.34s var(--ease-decel), filter 0.34s var(--ease-decel)',
-        willChange: p > 0 ? 'transform, filter' : undefined,
-      };
-    } else if (idx === 2) {
-      const p = dragProgress || 0;
-      const dy = 26 - p * 12;
-      const s = 0.92 + p * 0.04;
-      const r = 2 - p * 4.5;
-      const blurVal = Math.max(0, 1.4 - p * 0.7);
-      const bright = 0.88 + p * 0.08;
-      const op = 0.85 + p * 0.11;
-      peekStyle = {
-        transform: `translate3d(0, ${dy.toFixed(1)}px, 0) scale(${s.toFixed(3)}) rotate(${r.toFixed(2)}deg)`,
-        filter: `blur(${blurVal.toFixed(1)}px) brightness(${bright.toFixed(2)})`,
-        opacity: op,
-        transition: p > 0 || prefersReducedMotion ? 'none' : 'transform 0.34s var(--ease-decel), opacity 0.34s var(--ease-decel), filter 0.34s var(--ease-decel)',
-        willChange: p > 0 ? 'transform, opacity, filter' : undefined,
-      };
-    }
-  }
+    undefined;
 
   return (
     <div
-      className={`stack-card depth-${idx}`}
+      ref={setCardEl}
+      className={`stack-card depth-${idx}${isFront && dragging ? ' dragging' : ''}`}
       style={isFront ? {
-        transform,
-        opacity: exit ? 0 : 1,
+        ...(exit && exitTransform ? { transform: exitTransform, opacity: 0 } : null),
         transition: dragging || prefersReducedMotion
           ? 'none'
           : `transform ${EXIT_TRANSITION_MS}ms var(--ease-uber-spring), opacity 0.28s ease`,
         touchAction: 'pan-y',
-        boxShadow: dragging
-          ? '0 28px 56px -10px rgba(0, 0, 0, 0.45), 0 16px 28px -6px rgba(0, 0, 0, 0.3)'
-          : undefined,
-        willChange: dragging ? 'transform' : undefined,
-      } : peekStyle}
+      } : undefined}
       onPointerDown={isFront ? handlePointerDown : undefined}
       onPointerMove={isFront ? handlePointerMove : undefined}
       onPointerUp={isFront ? endDrag : undefined}
@@ -739,17 +747,12 @@ function StackCardItem({
         />
       </div>
 
-      {isFront && badgeKind && (
+      {isFront && (
         <div
-          className={`stack-swipe-badge ${badgeKind}`}
-          style={{
-            opacity: badgeProgress,
-            transform: `translate(-50%, ${(-6 + badgeProgress * 6).toFixed(1)}px) scale(${(0.85 + badgeProgress * (badgeArmed ? 0.2 : 0.1)).toFixed(2)})`,
-          }}
-        >
-          {badgeKind === 'browse' ? (drag.x < 0 ? '← Browse' : 'Browse →') :
-           badgeKind === 'archive' ? '↑ Archive' : '↓ Peek Next'}
-        </div>
+          ref={badgeRef}
+          className="stack-swipe-badge"
+          style={{ opacity: 0 }}
+        />
       )}
       {isFront && (
         <div className="stack-hold-ring" ref={ringRef} aria-hidden="true">
@@ -850,7 +853,7 @@ export function TripStack({
   // Cycling the stack (browse) reorders locally; any real change to the
   // trip set or its recency order resets back to the fresh sort.
   const [manualOrder, setManualOrder] = useState<string[] | null>(null);
-  const [dragRatio, setDragRatio] = useState(0);
+  const peekElsRef = useRef<[HTMLDivElement | null, HTMLDivElement | null]>([null, null]);
   useEffect(() => { setManualOrder(null); }, [idsKey]);
 
   const order = manualOrder ?? sortedIds;
@@ -876,12 +879,14 @@ export function TripStack({
     }
   }, [targetTripId, order, tripsById]);
 
-  const [peekPreview, setPeekPreview] = useState(false);
-  const effectiveDragProgress = peekPreview ? 0.85 : dragRatio;
+  const writePeeks = (p: number, dragging: boolean) => {
+    writePeekCard(peekElsRef.current[0], 1, p, dragging);
+    writePeekCard(peekElsRef.current[1], 2, p, dragging);
+  };
 
   const handlePeekPreview = () => {
-    setPeekPreview(true);
-    setTimeout(() => setPeekPreview(false), 700);
+    writePeeks(0.85, false);
+    window.setTimeout(() => writePeeks(0, false), 700);
   };
 
   const frontPhotoUrl = useTripPhoto(front?.destination, front?.coverImageUrl, front?.name);
@@ -916,8 +921,8 @@ export function TripStack({
             idx={idx}
             totalTrips={trips.length}
             canDelete={canDelete(trip)}
-            dragProgress={effectiveDragProgress}
-            onDragProgress={idx === 0 ? (ratio) => setDragRatio(ratio) : undefined}
+            onDragProgress={idx === 0 ? (ratio) => writePeeks(ratio, ratio > 0) : undefined}
+            bindCardEl={idx === 1 ? (el) => { peekElsRef.current[0] = el; } : idx === 2 ? (el) => { peekElsRef.current[1] = el; } : undefined}
             onPeekPreview={handlePeekPreview}
             onOpen={() => onSelectTrip(trip.id)}
             onQuickAddExpense={onQuickAddExpense}

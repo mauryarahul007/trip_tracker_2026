@@ -593,6 +593,7 @@ export function ExpenseList({
         <div
           role="button"
           tabIndex={0}
+          className={isSticky ? 'compositor-blur' : undefined}
           onClick={() => toggleDay(collapseKey, groupIdx)}
           onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleDay(collapseKey, groupIdx); } }}
           style={{

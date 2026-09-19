@@ -57,6 +57,7 @@ export function BiometricLockOverlay({ userId, userDisplayName, onUnlocked }: Pr
       role="dialog"
       aria-modal="true"
       aria-label="Screen Lock"
+      className="compositor-blur"
       style={{
         position: 'fixed',
         inset: 0,

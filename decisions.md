@@ -3583,3 +3583,18 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - The full expense form still falls back to `members[0]` if the current user is not a linked member, because the form always needs a selected payer. Voice auto-save does not take that fallback.
 
+---
+
+## 200. iOS WebKit compositor feel (no Flutter rewrite)
+* **Context:** The app is smooth on Android Chrome/WebView but choppy on iOS Safari / Capacitor WKWebView (BUG-228). A Flutter rewrite was considered and rejected: this is a WebKit compositor problem in a React + Capacitor product that already shares one web codebase (PWA + native shells). Shipped in v3.30.3.
+* **Decision:** Keep React + Capacitor. Make iOS match Android *feel* with an always-on WebKit compositor fallback (Android glass unchanged). No Superadmin flag.
+* **Pattern/Implementation:**
+  - CSS `@supports (-webkit-touch-callout: none)`: drop stacked `backdrop-filter`, permanent `will-change`, and `.stack-ambient-glow` `blur(48px)`. Inline blurs opt into `.compositor-blur`.
+  - Gesture `touchmove` writes `transform`/`opacity` on the DOM (TripStack, SwipeableRow, ActionSheet, settings drawer, tab swipe CSS var, banners, SlideToUnlock `scaleX`, launcher vapor `scaleX`). React state commits on pointer up.
+  - `TripContentSheet` is full-viewport and parks snap points as `translate3d(0, N%, 0)` — never transitions `top`.
+  - `TripMapHero` pauses MapLibre while `.trip-sheet.dragging`. Header tone stays static dark (no WebGL readback).
+* **Trade-offs Accepted:**
+  - iOS glass is more opaque than Android. Feel parity beats visual-blur parity on WebKit.
+  - Peek-card live `filter: blur` during stack drag was removed on all platforms (scale/opacity only) because live filters hitch even on Blink when React was in the loop; rest CSS still distinguishes depth.
+
+

@@ -31,10 +31,17 @@ type Props = {
 export function OnboardingSwipe({ userId, onDismiss }: Props) {
   const [index, setIndex] = useState(0);
   const [dragging, setDragging] = useState(false);
-  const [dragX, setDragX] = useState(0);
   const startX = useRef(0);
+  const dragXRef = useRef(0);
+  const stripRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
   const completeRef = useRef(false);
+
+  const writeStrip = (i: number, dx: number) => {
+    if (stripRef.current) {
+      stripRef.current.style.transform = `translateX(calc(-${i * 100}% + ${dx}px))`;
+    }
+  };
 
   const markDone = useCallback(() => {
     if (completeRef.current) return;
@@ -47,7 +54,8 @@ export function OnboardingSwipe({ userId, onDismiss }: Props) {
   const goNext = useCallback(() => {
     if (index < STEPS.length - 1) {
       setIndex((i) => i + 1);
-      setDragX(0);
+      dragXRef.current = 0;
+      writeStrip(index + 1, 0);
     } else {
       markDone();
     }
@@ -56,29 +64,38 @@ export function OnboardingSwipe({ userId, onDismiss }: Props) {
   const goPrev = useCallback(() => {
     if (index > 0) {
       setIndex((i) => i - 1);
-      setDragX(0);
+      dragXRef.current = 0;
+      writeStrip(index - 1, 0);
     }
   }, [index]);
 
   const onPointerDown = (e: React.PointerEvent) => {
     startX.current = e.clientX;
     setDragging(true);
-    setDragX(0);
+    dragXRef.current = 0;
+    if (stripRef.current) stripRef.current.style.transition = 'none';
+    writeStrip(index, 0);
   };
 
   const onPointerMove = (e: React.PointerEvent) => {
     if (!dragging) return;
     const dx = e.clientX - startX.current;
-    setDragX(dx);
+    dragXRef.current = dx;
+    writeStrip(index, dx);
   };
 
   const onPointerUp = () => {
     if (!dragging) return;
     setDragging(false);
+    if (stripRef.current) stripRef.current.style.transition = 'transform 0.35s cubic-bezier(0.4, 0, 0.2, 1)';
     const threshold = 60;
-    if (dragX < -threshold) goNext();
-    else if (dragX > threshold) goPrev();
-    else setDragX(0);
+    const dx = dragXRef.current;
+    if (dx < -threshold) goNext();
+    else if (dx > threshold) goPrev();
+    else {
+      dragXRef.current = 0;
+      writeStrip(index, 0);
+    }
   };
 
   useEffect(() => {
@@ -94,13 +111,12 @@ export function OnboardingSwipe({ userId, onDismiss }: Props) {
   const trackStyle: React.CSSProperties = {
     display: 'flex',
     transition: dragging ? 'none' : 'transform 0.35s cubic-bezier(0.4, 0, 0.2, 1)',
-    transform: `translateX(calc(-${index * 100}% + ${dragX}px))`,
-    willChange: 'transform',
+    transform: `translateX(-${index * 100}%)`,
   };
 
   return (
     <div
-      className="onboarding-overlay"
+      className="onboarding-overlay compositor-blur"
       style={{
         position: 'fixed',
         inset: 0,
@@ -140,7 +156,7 @@ export function OnboardingSwipe({ userId, onDismiss }: Props) {
           onPointerUp={onPointerUp}
           onPointerLeave={dragging ? onPointerUp : undefined}
         >
-          <div style={trackStyle}>
+          <div ref={stripRef} style={trackStyle}>
             {STEPS.map((step) => (
               <div
                 key={step.id}

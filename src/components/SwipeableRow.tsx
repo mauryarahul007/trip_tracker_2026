@@ -37,7 +37,6 @@ export function SwipeableRow({
   style,
   borderRadius,
 }: Props) {
-  const [dragX, setDragX] = useState(0);
   const [dragging, setDragging] = useState(false);
   const active = useRef(false);
   const startX = useRef(0);
@@ -51,6 +50,29 @@ export function SwipeableRow({
   // fires -- swapped from the default when `reversed` is set.
   const leftAction = reversed ? onEdit : onDelete;
   const rightAction = reversed ? onDelete : onEdit;
+  const dragXRef = useRef(0);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const leftRevealRef = useRef<HTMLDivElement>(null);
+  const rightRevealRef = useRef<HTMLDivElement>(null);
+  const leftIconRef = useRef<HTMLSpanElement>(null);
+  const rightIconRef = useRef<HTMLSpanElement>(null);
+
+  const writeDrag = (x: number) => {
+    dragXRef.current = x;
+    if (contentRef.current) contentRef.current.style.transform = `translateX(${x}px)`;
+    const leftTriggered = x < -THRESHOLD;
+    const rightTriggered = x > THRESHOLD;
+    if (leftRevealRef.current) {
+      leftRevealRef.current.style.opacity = x < 0 ? String(Math.min(Math.abs(x) / THRESHOLD, 1)) : '0';
+      leftRevealRef.current.style.transform = `scale(${leftTriggered ? 1.05 : 1})`;
+    }
+    if (rightRevealRef.current) {
+      rightRevealRef.current.style.opacity = x > 0 ? String(Math.min(x / THRESHOLD, 1)) : '0';
+      rightRevealRef.current.style.transform = `scale(${rightTriggered ? 1.05 : 1})`;
+    }
+    if (leftIconRef.current) leftIconRef.current.style.transform = `scale(${leftTriggered ? 1.2 : 1})`;
+    if (rightIconRef.current) rightIconRef.current.style.transform = `scale(${rightTriggered ? 1.2 : 1})`;
+  };
 
   const handlePointerDown = (e: React.PointerEvent) => {
     if (e.pointerType !== 'touch') return;
@@ -90,7 +112,7 @@ export function SwipeableRow({
       if (Math.abs(deltaY) > 7 && Math.abs(deltaY) >= Math.abs(deltaX)) {
         active.current = false;
         setDragging(false);
-        setDragX(0);
+        writeDrag(0);
         return;
       }
       if (Math.abs(deltaX) > 7 && Math.abs(deltaX) > Math.abs(deltaY)) {
@@ -127,7 +149,7 @@ export function SwipeableRow({
       } else if (nextDragX >= -THRESHOLD && commitHapticFired.current) {
         commitHapticFired.current = false;
       }
-      setDragX(nextDragX);
+      writeDrag(nextDragX);
     } else if (deltaX > 0 && rightAction) {
       // Elastic rubber banding beyond threshold
       let nextDragX = deltaX;
@@ -150,7 +172,7 @@ export function SwipeableRow({
       } else if (nextDragX <= THRESHOLD && commitHapticFired.current) {
         commitHapticFired.current = false;
       }
-      setDragX(nextDragX);
+      writeDrag(nextDragX);
     }
   };
 
@@ -160,14 +182,15 @@ export function SwipeableRow({
     setDragging(false);
     isHorizontal.current = false;
 
-    if (dragX < -THRESHOLD && leftAction) {
+    const x = dragXRef.current;
+    if (x < -THRESHOLD && leftAction) {
       triggerHaptic(leftAction === onDelete ? 'warning' : 'light');
       leftAction();
-    } else if (dragX > THRESHOLD && rightAction) {
+    } else if (x > THRESHOLD && rightAction) {
       triggerHaptic(rightAction === onDelete ? 'warning' : 'light');
       rightAction();
     }
-    setDragX(0);
+    writeDrag(0);
   };
 
   const handleClickCapture = (e: React.MouseEvent) => {
@@ -180,8 +203,6 @@ export function SwipeableRow({
 
   const leftIsDelete = leftAction === onDelete;
   const rightIsDelete = rightAction === onDelete;
-  const isLeftTriggered = dragX < -THRESHOLD;
-  const isRightTriggered = dragX > THRESHOLD;
   const effectiveRadius = borderRadius ?? style?.borderRadius;
 
   return (
@@ -202,6 +223,7 @@ export function SwipeableRow({
     >
       {leftAction && (
         <div
+          ref={leftRevealRef}
           aria-hidden="true"
           style={{
             position: 'absolute',
@@ -215,13 +237,12 @@ export function SwipeableRow({
             color: '#fff',
             fontSize: '13px',
             fontWeight: 600,
-            opacity: dragX < 0 ? Math.min(Math.abs(dragX) / THRESHOLD, 1) : 0,
-            transform: `scale(${isLeftTriggered ? 1.05 : 1})`,
+            opacity: 0,
             transition: 'transform 0.18s var(--ease-uber-spring)',
             borderRadius: effectiveRadius,
           }}
         >
-          <span style={{ transform: `scale(${isLeftTriggered ? 1.2 : 1})`, transition: 'transform 0.18s var(--ease-uber-spring)', display: 'inline-flex' }}>
+          <span ref={leftIconRef} style={{ transition: 'transform 0.18s var(--ease-uber-spring)', display: 'inline-flex' }}>
             {leftIsDelete ? <IconTrash size={15} className="icon-sm" /> : <IconEdit size={15} className="icon-sm" />}
           </span>
           {plain
@@ -231,6 +252,7 @@ export function SwipeableRow({
       )}
       {rightAction && (
         <div
+          ref={rightRevealRef}
           aria-hidden="true"
           style={{
             position: 'absolute',
@@ -244,13 +266,12 @@ export function SwipeableRow({
             color: '#fff',
             fontSize: '13px',
             fontWeight: 600,
-            opacity: dragX > 0 ? Math.min(dragX / THRESHOLD, 1) : 0,
-            transform: `scale(${isRightTriggered ? 1.05 : 1})`,
+            opacity: 0,
             transition: 'transform 0.18s var(--ease-uber-spring)',
             borderRadius: effectiveRadius,
           }}
         >
-          <span style={{ transform: `scale(${isRightTriggered ? 1.2 : 1})`, transition: 'transform 0.18s var(--ease-uber-spring)', display: 'inline-flex' }}>
+          <span ref={rightIconRef} style={{ transition: 'transform 0.18s var(--ease-uber-spring)', display: 'inline-flex' }}>
             {rightIsDelete ? <IconTrash size={15} className="icon-sm" /> : <IconEdit size={15} className="icon-sm" />}
           </span>
           {plain
@@ -259,12 +280,13 @@ export function SwipeableRow({
         </div>
       )}
       <div
+        ref={contentRef}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={endDrag}
         onPointerCancel={endDrag}
         style={{
-          transform: `translateX(${dragX}px)`,
+          transform: 'translateX(0px)',
           transition: dragging || prefersReducedMotion ? 'none' : 'transform 0.32s var(--ease-uber-spring)',
           background: 'var(--bg-surface)',
           touchAction: 'pan-y',

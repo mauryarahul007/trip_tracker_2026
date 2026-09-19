@@ -79,14 +79,11 @@ To ensure 100% reliability across Web, PWA, iOS, and Android:
    - Start stop: Teal marker (`#0F6F63`).
    - End stop: Orange marker (`#FF7A00`).
    - Intermediate stops: Slate dark marker (`#16181D`).
-3. **Dynamic Header Luminance Sampling (`sampleHeaderLuminance`):**
-   - Initializes MapLibre with `preserveDrawingBuffer: true`.
-   - Samples the top 150px of the rendered WebGL canvas via a 16×8 downsampled 2D canvas context.
-   - Calculates relative luminance: `0.299*R + 0.587*G + 0.114*B`.
-   - Fires `onToneChange('dark' | 'light')` to dynamically adjust header button contrast (dark vs light text) based on whether the underlying map tile is bright sand/snow or dark ocean/terrain.
-   - Runs on `idle` and throttled `render` (200ms interval) for fluid transitions during gestures.
-4. **Sheet Expansion Interaction:**
-   - Listens to bottom-sheet gesture state (`sheetExpanded`) and applies a subtle camera ease-out (`-0.6` zoom delta) to create an organic visual depth cue when opening panels.
+3. **Static header tone (no WebGL readback):**
+   - MapLibre initializes without `preserveDrawingBuffer`.
+   - Header contrast uses a static dark tone (`onToneChange('dark')`) so OpenFreeMap Liberty stays legible without sampling canvas pixels.
+4. **Sheet drag pause:**
+   - While `.trip-sheet` has `.dragging`, TripMapHero calls `map.stop()` and `dragPan.disable()` so WebGL does not composite under the sheet gesture. Interaction resumes on settle.
 
 ---
 

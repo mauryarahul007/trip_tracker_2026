@@ -115,8 +115,8 @@ export function GlobalSettingsModal({
   const closingRef = useRef(false);
   const dragStartRef = useRef<{ x: number; y: number } | null>(null);
   const draggingRef = useRef(false);
+  const dragXRef = useRef(0);
   const [exiting, setExiting] = useState(false);
-  const [dragX, setDragX] = useState(0);
 
   const onCloseRef = useRef(onClose);
   onCloseRef.current = onClose;
@@ -169,25 +169,28 @@ export function GlobalSettingsModal({
       draggingRef.current = true;
       e.currentTarget.setPointerCapture(e.pointerId);
     }
-    setDragX(Math.max(0, dx));
+    const next = Math.max(0, dx);
+    dragXRef.current = next;
+    if (sheetRef.current) {
+      sheetRef.current.style.transition = 'none';
+      sheetRef.current.style.transform = `translateX(${next}px)`;
+    }
   };
 
   const handlePointerUp = () => {
     if (!dragStartRef.current) return;
-    const shouldDismiss = draggingRef.current && dragX > SWIPE_DISMISS_PX;
+    const shouldDismiss = draggingRef.current && dragXRef.current > SWIPE_DISMISS_PX;
     dragStartRef.current = null;
     draggingRef.current = false;
-    if (shouldDismiss) {
-      setDragX(0);
-      requestClose();
-      return;
+    dragXRef.current = 0;
+    if (sheetRef.current) {
+      sheetRef.current.style.transition = '';
+      sheetRef.current.style.transform = '';
     }
-    setDragX(0);
+    if (shouldDismiss) {
+      requestClose();
+    }
   };
-
-  const sheetStyle = dragX > 0
-    ? { transform: `translateX(${dragX}px)`, transition: 'none' as const }
-    : undefined;
 
   return (
     <div
@@ -202,7 +205,6 @@ export function GlobalSettingsModal({
         aria-modal="true"
         aria-labelledby="global-settings-title"
         data-no-tab-swipe="true"
-        style={sheetStyle}
         onClick={(e) => e.stopPropagation()}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}

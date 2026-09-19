@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { useNotificationsStore } from '../store/notificationsStore';
 import { renderNotificationBody, getNotificationHeadline } from '../utils/notificationText';
 import { getNotificationMeta } from './NotificationsPanel';
@@ -15,14 +15,19 @@ export function InAppNotificationBanner() {
   const dismissBanner = useNotificationsStore((s) => s.dismissBanner);
   const openPanel = useNotificationsStore((s) => s.openPanel);
 
-  const [dragY, setDragY] = useState(0);
+  const bannerRef = useRef<HTMLDivElement>(null);
+  const dragYRef = useRef(0);
   const dragStartY = useRef<number | null>(null);
   const draggingRef = useRef(false);
 
   useEffect(() => {
     if (!banner) return;
-    setDragY(0);
+    dragYRef.current = 0;
     draggingRef.current = false;
+    if (bannerRef.current) {
+      bannerRef.current.style.transform = 'translateY(0px)';
+      bannerRef.current.style.opacity = '1';
+    }
     const timer = setTimeout(() => dismissBanner(), AUTO_DISMISS_MS);
     return () => clearTimeout(timer);
   }, [banner, dismissBanner]);
@@ -43,15 +48,21 @@ export function InAppNotificationBanner() {
     const delta = e.clientY - dragStartY.current;
     if (delta < 0) {
       draggingRef.current = true;
-      setDragY(delta);
+      dragYRef.current = delta;
+      if (bannerRef.current) {
+        bannerRef.current.style.transform = `translateY(${delta}px)`;
+        bannerRef.current.style.opacity = String(Math.max(0, 1 + delta / 100));
+      }
     }
   };
   const handlePointerUp = () => {
-    if (dragY < -SWIPE_DISMISS_THRESHOLD) {
+    if (dragYRef.current < -SWIPE_DISMISS_THRESHOLD) {
       dismissBanner();
-    } else {
-      setDragY(0);
+    } else if (bannerRef.current) {
+      bannerRef.current.style.transform = 'translateY(0px)';
+      bannerRef.current.style.opacity = '1';
     }
+    dragYRef.current = 0;
     dragStartY.current = null;
   };
   const handleTap = () => {
@@ -62,8 +73,8 @@ export function InAppNotificationBanner() {
 
   return (
     <div
+      ref={bannerRef}
       className="in-app-notif-banner"
-      style={{ transform: `translateY(${dragY}px)`, opacity: dragY < 0 ? Math.max(0, 1 + dragY / 100) : 1 }}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}

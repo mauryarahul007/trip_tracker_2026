@@ -66,6 +66,7 @@ export function useTabSwipe<T extends string>(
   const touchStartY = useRef(0);
   const startTime = useRef(0);
   const isDraggingRef = useRef(false);
+  const deltaPercentRef = useRef(0);
   const containerWidth = useRef(1);
   const activeIndexRef = useRef(tabs.indexOf(activeTab));
   activeIndexRef.current = tabs.indexOf(activeTab);
@@ -132,6 +133,8 @@ export function useTabSwipe<T extends string>(
         if (targetIdx < 0 || targetIdx >= tabs.length) return; // no adjacent tab that way
         isDraggingRef.current = true;
         gestureIdRef.current += 1;
+        deltaPercentRef.current = 0;
+        el.style.setProperty('--tab-swipe-x', '0%');
         setDrag({ active: true, settling: false, direction: dir, deltaPercent: 0 });
       }
 
@@ -139,7 +142,8 @@ export function useTabSwipe<T extends string>(
         e.preventDefault();
         const pct = (dx / containerWidth.current) * 100;
         const clamped = Math.max(-100, Math.min(100, pct));
-        setDrag((prev) => (prev.active ? { ...prev, deltaPercent: clamped } : prev));
+        deltaPercentRef.current = clamped;
+        el.style.setProperty('--tab-swipe-x', `${clamped}%`);
       }
     };
 
@@ -155,11 +159,12 @@ export function useTabSwipe<T extends string>(
       startTime.current = 0;
 
       const velocity = Math.abs(dxPx) / elapsed;
-      const distancePercent = Math.abs(current.deltaPercent);
+      const distancePercent = Math.abs(deltaPercentRef.current);
       const shouldCommit =
         !!current.direction && (distancePercent >= COMMIT_RATIO * 100 || (velocity > FLICK_VELOCITY && distancePercent > 8));
 
       if (!current.direction) {
+        el.style.removeProperty('--tab-swipe-x');
         setDrag(IDLE);
         return;
       }
@@ -169,16 +174,20 @@ export function useTabSwipe<T extends string>(
         const targetTab = tabs[targetIdx];
         const commitTo = current.direction === 'next' ? -100 : 100;
         triggerHaptic('light');
+        el.style.setProperty('--tab-swipe-x', `${commitTo}%`);
         setDrag({ ...current, settling: true, deltaPercent: commitTo });
         window.setTimeout(() => {
           if (gestureIdRef.current !== gestureId) return;
           onSwipe(targetTab);
+          el.style.removeProperty('--tab-swipe-x');
           setDrag(IDLE);
         }, reducedMotion.current ? 0 : SETTLE_MS);
       } else {
+        el.style.setProperty('--tab-swipe-x', '0%');
         setDrag({ ...current, settling: true, deltaPercent: 0 });
         window.setTimeout(() => {
           if (gestureIdRef.current !== gestureId) return;
+          el.style.removeProperty('--tab-swipe-x');
           setDrag(IDLE);
         }, reducedMotion.current ? 0 : SETTLE_MS);
       }
@@ -213,7 +222,7 @@ export function useTabSwipe<T extends string>(
           inset: 0,
           width: '100%',
           height: '100%',
-          transform: `translateX(${drag.deltaPercent}%)`,
+          transform: 'translateX(var(--tab-swipe-x, 0%))',
           transition,
           willChange: 'transform',
         }
@@ -229,7 +238,7 @@ export function useTabSwipe<T extends string>(
       inset: 0,
       width: '100%',
       height: '100%',
-      transform: `translateX(${previewBase + drag.deltaPercent}%)`,
+      transform: `translateX(calc(${previewBase}% + var(--tab-swipe-x, 0%)))`,
       transition,
       willChange: 'transform',
     };

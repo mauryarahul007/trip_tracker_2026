@@ -524,6 +524,7 @@ export function TravelPassWalletView({
             </div>
             {pass.seatOrRoom && (
               <div
+                className="compositor-blur"
                 style={{
                   background: 'rgba(255,255,255,0.2)',
                   backdropFilter: 'blur(8px)',

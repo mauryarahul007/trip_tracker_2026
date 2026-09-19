@@ -31,6 +31,7 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 | 2026-09-18 | v3.29.0 | FEAT-079 | [Multi-payer single expense, ledger UI enhancements, quick filter chips](#feat-079--multi-payer-single-expense-ledger-ui-enhancements-quick-filter-chips-v3290) |
 | 2026-09-19 | v3.30.0 | FEAT-080 | [Data Saver, Compact Ledger View, Category Reorder, What's New Hub](#feat-080--data-saver-compact-ledger-view-category-reorder-whats-new-hub-v3300) |
 | 2026-09-19 | v3.30.2 | BUG-227 | [Voice expense payer is the signed-in member](#bug-227--voice-expense-payer-is-the-signed-in-member) |
+| 2026-09-19 | v3.30.3 | BUG-228 | [iOS WebKit compositor feel](#ios-webkit-compositor-feel) |
 
 ---
 
@@ -479,6 +480,29 @@ No new flag. Summary / Who owes who available when balances exist.
 
 ### Pass
 - Whoever is signed in is the default payer for unnamed voice/NL expenses; the preview always shows who paid; named payers still win.
+
+---
+
+## iOS WebKit compositor feel
+
+**Commit:** v3.30.3 / BUG-228 (see `decisions.md` ADR 200). **Migrations:** none.  
+**Flags:** none — always-on WebKit compositor fallback. Android Chrome must keep existing glass.
+
+### Steps
+1. On **iPhone Safari** (and Capacitor if installed): open login. Glass cards are solid/opaque, not heavy blur. Screen does not hitch on first paint.
+2. Home trip stack: swipe left/right/up. Front card tracks the finger; peek cards scale without live `filter: blur`. Release commits browse/archive as before.
+3. Open a trip: drag the content sheet. Sheet follows the finger; map does not pan during the drag. Snap is a transform spring (no jump when it settles).
+4. Expense list: swipe a row to Edit/Delete. Row tracks the finger; action reveal fades in.
+5. Swipe between tabs (from the screen edge). Panes follow the finger, then settle.
+6. Open a modal / action sheet. Overlay is a darker solid, not frosted glass. Drag-to-dismiss still works.
+7. Keyboard on Add Expense: sheet still clears the keyboard; layout does not jump every scroll frame.
+
+### Negative checks
+- **Android Chrome** (or desktop Chrome): login glass, stack pills, and modal overlays still use `backdrop-filter` blur. Gestures still commit the same actions.
+- Flag N/A — there is no Superadmin flag for this UX fix.
+
+### Pass
+- iOS scroll/drag feels within a small gap of Android (no 15–30fps sheet/stack hitch). Android visuals are unchanged.
 
 ---
 

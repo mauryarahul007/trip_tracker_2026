@@ -69,6 +69,7 @@ export const OfflineTravelBanner: React.FC = () => {
             triggerHaptic();
             setShowDrawer(true);
           }}
+          className="compositor-blur"
           style={{
             display: 'flex',
             alignItems: 'center',

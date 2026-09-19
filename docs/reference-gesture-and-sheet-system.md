@@ -104,7 +104,7 @@ Touch Move (touchmove / pointermove)
   ├── Calculate deltaPx = (currentY - touchStartY)
   ├── Calculate liveTop = dragStartTop + (deltaPx / window.innerHeight * 100)
   ├── Apply rubber-band resistance: dampedTop = withResistance(liveTop)
-  ├── Set sheetRef.current.style.transform = `translate3d(0, ${deltaPx}px, 0)`
+  ├── Set sheetRef.current.style.transform = `translate3d(0, ${dampedTop}%, 0)`
   └── Interpolate scrimRef.current.style.opacity
         │
         ▼

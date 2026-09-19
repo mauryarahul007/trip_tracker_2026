@@ -15,12 +15,44 @@ type Props = {
 // to reach either action.
 export function TripSlideLauncher({ onCreateTrip, onJoinTrip }: Props) {
   const trackRef = useRef<HTMLDivElement>(null);
-  const [dragX, setDragX] = useState(0);
+  const thumbRef = useRef<HTMLDivElement>(null);
+  const vaporRef = useRef<HTMLDivElement>(null);
+  const fillLeftRef = useRef<HTMLDivElement>(null);
+  const fillRightRef = useRef<HTMLDivElement>(null);
+  const zoneLeftRef = useRef<HTMLButtonElement>(null);
+  const zoneRightRef = useRef<HTMLButtonElement>(null);
   const [dragging, setDragging] = useState(false);
   const active = useRef(false);
   const startX = useRef(0);
   const halfWidth = useRef(0);
+  const dragXRef = useRef(0);
   const hapticFired = useRef(false);
+
+  const writeLauncher = (x: number) => {
+    dragXRef.current = x;
+    const fillRatio = halfWidth.current > 0 ? Math.min(1, Math.abs(x) / halfWidth.current) : 0;
+    const planePitch = Math.max(-14, Math.min(14, x * 0.12));
+    if (thumbRef.current) {
+      thumbRef.current.style.transform = `translateX(${x}px) rotate(${planePitch}deg)`;
+      thumbRef.current.className = `launcher-thumb${x < 0 ? ' left' : x > 0 ? ' right' : ''}`;
+    }
+    if (fillLeftRef.current) {
+      fillLeftRef.current.style.opacity = x < 0 ? String(fillRatio) : '0';
+      fillLeftRef.current.style.transform = `scaleX(${x < 0 ? fillRatio : 0})`;
+    }
+    if (fillRightRef.current) {
+      fillRightRef.current.style.opacity = x > 0 ? String(fillRatio) : '0';
+      fillRightRef.current.style.transform = `scaleX(${x > 0 ? fillRatio : 0})`;
+    }
+    if (vaporRef.current) {
+      vaporRef.current.className = `launcher-vapor-trail ${x >= 0 ? 'to-right' : 'to-left'}`;
+      vaporRef.current.style.opacity = String(Math.min(1, Math.abs(x) / Math.max(1, halfWidth.current * 0.45)));
+      vaporRef.current.style.transformOrigin = x >= 0 ? 'left center' : 'right center';
+      vaporRef.current.style.transform = `scaleX(${Math.abs(x)})`;
+    }
+    zoneLeftRef.current?.classList.toggle('active', x < 0);
+    zoneRightRef.current?.classList.toggle('active', x > 0);
+  };
 
   const handlePointerDown = (e: React.PointerEvent) => {
     if (e.pointerType !== 'touch') return;
@@ -31,6 +63,7 @@ export function TripSlideLauncher({ onCreateTrip, onJoinTrip }: Props) {
     halfWidth.current = track.offsetWidth / 2 - 40;
     hapticFired.current = false;
     setDragging(true);
+    writeLauncher(0);
   };
 
   const handlePointerMove = (e: React.PointerEvent) => {
@@ -52,7 +85,7 @@ export function TripSlideLauncher({ onCreateTrip, onJoinTrip }: Props) {
     } else if (Math.abs(clamped) <= threshold && hapticFired.current) {
       hapticFired.current = false;
     }
-    setDragX(clamped);
+    writeLauncher(clamped);
   };
 
   const endDrag = () => {
@@ -60,54 +93,55 @@ export function TripSlideLauncher({ onCreateTrip, onJoinTrip }: Props) {
     active.current = false;
     setDragging(false);
     const threshold = halfWidth.current * THRESHOLD_RATIO;
-    if (dragX > threshold) {
+    const x = dragXRef.current;
+    if (x > threshold) {
       triggerHaptic('success');
       onCreateTrip();
-    } else if (dragX < -threshold) {
+    } else if (x < -threshold) {
       triggerHaptic('success');
       onJoinTrip();
     }
-    setDragX(0);
+    writeLauncher(0);
   };
-
-  const fillRatio = halfWidth.current > 0 ? Math.min(1, Math.abs(dragX) / halfWidth.current) : 0;
-  const planePitch = Math.max(-14, Math.min(14, dragX * 0.12));
 
   return (
     <div className="trip-launcher">
       <div className="launcher-track" ref={trackRef}>
         <div
+          ref={fillLeftRef}
           className="launcher-fill left"
-          style={{ opacity: dragX < 0 ? fillRatio : 0, transform: `scaleX(${dragX < 0 ? fillRatio : 0})` }}
+          style={{ opacity: 0, transform: 'scaleX(0)' }}
         />
         <div
+          ref={fillRightRef}
           className="launcher-fill right"
-          style={{ opacity: dragX > 0 ? fillRatio : 0, transform: `scaleX(${dragX > 0 ? fillRatio : 0})` }}
+          style={{ opacity: 0, transform: 'scaleX(0)' }}
         />
 
-        {/* Dynamic Jet Contrail / Vapor Stream */}
-        {dragX !== 0 && (
-          <div
-            className={`launcher-vapor-trail ${dragX > 0 ? 'to-right' : 'to-left'}`}
-            style={{
-              width: `${Math.abs(dragX)}px`,
-              transform: dragX > 0 ? 'translateX(0)' : `translateX(${dragX}px)`,
-              opacity: Math.min(1, Math.abs(dragX) / (halfWidth.current * 0.45)),
-            }}
-          />
-        )}
+        <div
+          ref={vaporRef}
+          className="launcher-vapor-trail to-right"
+          style={{
+            width: '1px',
+            left: '50%',
+            opacity: 0,
+            transformOrigin: 'left center',
+            transform: 'scaleX(0)',
+          }}
+        />
 
-        <button type="button" className={`launcher-zone left${dragX < 0 ? ' active' : ''}`} onClick={onJoinTrip}>
+        <button ref={zoneLeftRef} type="button" className="launcher-zone left" onClick={onJoinTrip}>
           <span>🔑</span> Join
         </button>
-        <button type="button" className={`launcher-zone right${dragX > 0 ? ' active' : ''}`} onClick={onCreateTrip}>
+        <button ref={zoneRightRef} type="button" className="launcher-zone right" onClick={onCreateTrip}>
           Create <span>+</span>
         </button>
         <div
-          className={`launcher-thumb${dragX < 0 ? ' left' : dragX > 0 ? ' right' : ''}`}
+          ref={thumbRef}
+          className="launcher-thumb"
           aria-hidden="true"
           style={{
-            transform: `translateX(${dragX}px) rotate(${planePitch}deg)`,
+            transform: 'translateX(0px) rotate(0deg)',
             transition: dragging ? 'none' : 'transform 0.32s cubic-bezier(0.16,1,0.3,1), background 0.2s ease',
             touchAction: 'pan-y',
           }}

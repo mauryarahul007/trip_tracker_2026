@@ -95,10 +95,11 @@ function NotificationCard({
   onToggleRead: () => void;
   onDelete: () => void;
 }) {
-  const [dragX, setDragX] = useState(0);
   const [dragging, setDragging] = useState(false);
   const startRef = useRef<{ x: number; y: number } | null>(null);
   const directionRef = useRef<'horizontal' | 'vertical' | null>(null);
+  const dragXRef = useRef(0);
+  const rowRef = useRef<HTMLDivElement>(null);
 
   const handleStart = (x: number, y: number) => {
     startRef.current = { x, y };
@@ -117,16 +118,23 @@ function NotificationCard({
     }
     if (directionRef.current !== 'horizontal') return false;
 
-    setDragX(Math.min(0, dx));
+    const next = Math.min(0, dx);
+    dragXRef.current = next;
+    if (rowRef.current) {
+      rowRef.current.style.transition = 'none';
+      rowRef.current.style.transform = `translateX(${next}px)`;
+    }
     return true;
   };
 
   const handleEnd = () => {
-    if (directionRef.current === 'horizontal' && dragX < -SWIPE_DELETE_THRESHOLD) {
+    if (directionRef.current === 'horizontal' && dragXRef.current < -SWIPE_DELETE_THRESHOLD) {
       onDelete();
-    } else {
-      setDragX(0);
+    } else if (rowRef.current) {
+      rowRef.current.style.transition = 'transform 0.22s cubic-bezier(0.16, 1, 0.3, 1)';
+      rowRef.current.style.transform = 'translateX(0px)';
     }
+    dragXRef.current = 0;
     setDragging(false);
     startRef.current = null;
     directionRef.current = null;
@@ -143,12 +151,13 @@ function NotificationCard({
       </div>
 
       <div
+        ref={rowRef}
         className={`notif-card ${!notification.read ? 'unread' : 'read'}`}
         role="button"
         tabIndex={0}
         aria-label={`${notification.read ? 'Read' : 'Unread'} notification: ${display.headline}`}
         onClick={() => {
-          if (dragX === 0) onOpen();
+          if (dragXRef.current === 0) onOpen();
         }}
         onKeyDown={(e) => {
           if (e.target !== e.currentTarget) return;
@@ -169,7 +178,7 @@ function NotificationCard({
         onPointerUp={handleEnd}
         onPointerLeave={() => startRef.current && handleEnd()}
         style={{
-          transform: `translateX(${dragX}px)`,
+          transform: 'translateX(0px)',
           transition: dragging ? 'none' : 'transform 0.22s cubic-bezier(0.16, 1, 0.3, 1)',
         }}
       >

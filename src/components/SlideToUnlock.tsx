@@ -8,10 +8,12 @@ interface SlideToUnlockProps {
 }
 
 export function SlideToUnlock({ onUnlock, label = 'Slide to open ledger' }: SlideToUnlockProps) {
-  const [sliderX, setSliderX] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const trackRef = useRef<HTMLDivElement>(null);
+  const handleRef = useRef<HTMLDivElement>(null);
+  const fillRef = useRef<HTMLDivElement>(null);
   const startX = useRef(0);
+  const sliderXRef = useRef(0);
   const lastHapticMilestone = useRef(0);
 
   const handleWidth = 54; // Matches CSS width of the handle (54px)
@@ -19,9 +21,18 @@ export function SlideToUnlock({ onUnlock, label = 'Slide to open ledger' }: Slid
 
   const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     e.currentTarget.setPointerCapture(e.pointerId);
-    startX.current = e.clientX - sliderX;
+    startX.current = e.clientX - sliderXRef.current;
     lastHapticMilestone.current = 0;
     setIsDragging(true);
+  };
+
+  const writeSlider = (x: number, trackWidth: number) => {
+    sliderXRef.current = x;
+    const fillWidth = x + handleWidth + 5;
+    if (handleRef.current) handleRef.current.style.transform = `translateX(${x}px)`;
+    if (fillRef.current && trackWidth > 0) {
+      fillRef.current.style.transform = `scaleX(${fillWidth / trackWidth})`;
+    }
   };
 
   const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
@@ -30,7 +41,7 @@ export function SlideToUnlock({ onUnlock, label = 'Slide to open ledger' }: Slid
     const maxDistance = Math.max(0, trackWidth - handleWidth - trackPadding);
     const currentX = e.clientX - startX.current;
     const clampedX = Math.max(0, Math.min(maxDistance, currentX));
-    setSliderX(clampedX);
+    writeSlider(clampedX, trackWidth);
 
     // Multi-stage haptic feedback across slider travel (Ola / Rapido style)
     if (maxDistance > 0) {
@@ -57,8 +68,9 @@ export function SlideToUnlock({ onUnlock, label = 'Slide to open ledger' }: Slid
     const trackWidth = trackRef.current.clientWidth;
     const maxDistance = Math.max(0, trackWidth - handleWidth - trackPadding);
 
+    const sliderX = sliderXRef.current;
     if (sliderX >= maxDistance * 0.85) {
-      setSliderX(maxDistance);
+      writeSlider(maxDistance, trackWidth);
       // Play decisive success haptic feedback
       try {
         triggerHaptic('success');
@@ -71,7 +83,7 @@ export function SlideToUnlock({ onUnlock, label = 'Slide to open ledger' }: Slid
           triggerHaptic('warning');
         } catch {}
       }
-      setSliderX(0);
+      writeSlider(0, trackWidth);
     }
   };
 
@@ -85,24 +97,25 @@ export function SlideToUnlock({ onUnlock, label = 'Slide to open ledger' }: Slid
     }
   };
 
-  const fillWidth = sliderX + handleWidth + 5;
-
   return (
     <div
       ref={trackRef}
       className="unlock-slider-track"
     >
       <div
+        ref={fillRef}
         className="unlock-slider-fill"
         style={{
-          width: `${fillWidth}px`,
-          transition: isDragging ? 'none' : 'width 0.34s var(--ease-uber-spring)',
+          transform: 'scaleX(0.12)',
+          transformOrigin: 'left center',
+          transition: isDragging ? 'none' : 'transform 0.34s var(--ease-uber-spring)',
         }}
       />
       <div className="unlock-slider-label">
         {label}
       </div>
       <div
+        ref={handleRef}
         className="unlock-slider-handle"
         role="button"
         tabIndex={0}
@@ -112,7 +125,7 @@ export function SlideToUnlock({ onUnlock, label = 'Slide to open ledger' }: Slid
         onPointerUp={handlePointerUp}
         onKeyDown={handleKeyDown}
         style={{
-          transform: `translateX(${sliderX}px)`,
+          transform: 'translateX(0px)',
           transition: isDragging ? 'none' : 'transform 0.34s var(--ease-uber-spring)',
         }}
       >

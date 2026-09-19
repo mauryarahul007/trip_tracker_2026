@@ -38,13 +38,8 @@ function getHeaderHeightPx(): number {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : 126;
 }
 
-// How much of the map to zoom out by when the sheet expands, purely as a
-// visual "the map is making room" cue -- not a real bounds recompute.
-const SHEET_EXPANDED_ZOOM_DELTA = -0.6;
-
 interface Props {
   trip: Trip | null;
-  sheetExpanded?: boolean;
   onToneChange?: (tone: 'light' | 'dark') => void;
 }
 
@@ -52,12 +47,11 @@ interface Props {
 // fit-to-bounds on the trip's cities. Fixed behind the header and the
 // content sheet (see .trip-map-hero / .trip-sheet in index.css) -- one
 // persistent instance for the whole dashboard, not per-tab.
-export function TripMapHero({ trip, sheetExpanded, onToneChange }: Props) {
+export function TripMapHero({ trip, onToneChange }: Props) {
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const mapInstanceRef = useRef<MaplibreMap | null>(null);
   const markersRef = useRef<Marker[]>([]);
   const validStops = useResolvedTripStops(trip);
-  const baseZoomRef = useRef<number | null>(null);
 
   useEffect(() => {
     if (!mapContainerRef.current || validStops.length === 0) return;
@@ -74,7 +68,6 @@ export function TripMapHero({ trip, sheetExpanded, onToneChange }: Props) {
       attributionControl: false,
     });
     mapInstanceRef.current = map;
-    baseZoomRef.current = null;
 
     // OpenFreeMap Liberty is a bright pastel map style -- defaulting header
     // tone to dark ensures high-contrast readable text (#10151F) without
@@ -144,10 +137,6 @@ export function TripMapHero({ trip, sheetExpanded, onToneChange }: Props) {
           // shrink, past what the stops themselves already span.
           validStops.forEach((s) => roadBounds.extend([s.lng, s.lat]));
           if (!roadBounds.isEmpty()) {
-            // The sheet-expand zoom-out cue offsets from whatever zoom
-            // fitBounds lands on -- reset so it's recaptured from THIS
-            // fit, not the earlier straight-line one.
-            baseZoomRef.current = null;
             map.fitBounds(roadBounds, { padding: fitPadding, maxZoom: 12, duration: 500 });
           }
         });
@@ -193,14 +182,24 @@ export function TripMapHero({ trip, sheetExpanded, onToneChange }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [trip?.id, validStops.length]);
 
-  // Zoom out a touch when the sheet expands, as a lightweight "the map is
-  // making room" cue tied to the drag -- not a re-fit, just an offset from
-  // whatever fitBounds already landed on.
   useEffect(() => {
-    const map = mapInstanceRef.current;
-    if (!map || baseZoomRef.current === null) return;
-    map.easeTo({ zoom: baseZoomRef.current + (sheetExpanded ? SHEET_EXPANDED_ZOOM_DELTA : 0), duration: 450 });
-  }, [sheetExpanded]);
+    const sheet = document.querySelector('.trip-sheet');
+    if (!sheet) return;
+    const apply = () => {
+      const map = mapInstanceRef.current;
+      if (!map) return;
+      if (sheet.classList.contains('dragging')) {
+        map.stop();
+        map.dragPan.disable();
+      } else {
+        map.dragPan.enable();
+      }
+    };
+    const observer = new MutationObserver(apply);
+    observer.observe(sheet, { attributes: true, attributeFilter: ['class'] });
+    apply();
+    return () => observer.disconnect();
+  }, [trip?.id, validStops.length]);
 
   if (validStops.length === 0) return null;
 

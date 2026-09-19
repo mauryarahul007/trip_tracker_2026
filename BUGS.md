@@ -9,10 +9,10 @@
 
 | Metric | Count | Status Notes |
 | :--- | :--- | :--- |
-| **Total Tracked** | **226** | All recorded bugs across sessions |
+| **Total Tracked** | **227** | All recorded bugs across sessions |
 | **🟢 Open** | **0** | No critical blockers, 0 High |
 | **🟡 In Progress** | **0** | Active investigation or fix |
-| **✅ Resolved** | **200** | Verified & closed |
+| **✅ Resolved** | **201** | Verified & closed |
 | **⚪ Won't Fix** | **26** | Expected behavior / deferred |
 
 ---
@@ -231,6 +231,7 @@
 | **BUG-225** | CI build failed: stale database.ts types + no-op typecheck command | `general` | `high` | `agent` | `agent` | src/types/database.ts was missing the columns/RPCs added by migrations 0098-0101 (approval_status, settlement_confirmed_at, share_token, share_enabled, share_expires_at, approval_threshold, confirm_settlement, approve_expense, get_trip_share), so tsc -b (what npm run build actually uses) failed with RejectExcessProperties errors from postgrest-js. My earlier verification used tsc --noEmit -p . which silently checks zero files since the root tsconfig.json only has references, no include -- gave a false pass all session. Fixed by hand-adding the missing fields/RPCs to database.ts (not a full regen, which would have overwritten this file's hand-tuned narrower literal types across many unrelated tables) and switching verification to tsc -b --noEmit. |
 | **BUG-226** | Split rounding: remainder dumped on one participant, zero-decimal currencies got fractional splits | `splits-math` | `medium` | `claude-cli` | `claude-cli` | Added getCurrencyDecimals() in currency.ts (ISO 4217 zero-decimal lookup: JPY, KRW, VND, etc.). resolveShares() now reads expenseData.currency and rounds to the correct decimal count instead of hardcoded 2. Equal/custom/percentage/itemized splits now go through a new distributeWithLargestRemainder() helper that floors each raw share and hands out remaining minor units to the participants with the largest fractional remainder (ties go to the payer first, matching prior single-unit behavior exactly -- confirmed via unchanged existing test assertions). Exact-split mode is untouched, since its remainder reflects a user-input mismatch, not a division rounding artifact. Synced the standalone src/utils/math_verification.ts self-check copy and added a 7-way-split regression case proving the old single-recipient dump is gone. Verified: tsc -b --noEmit clean, full vitest suite 296/296 passing (original 33.34/33.33/33.33 assertions unchanged), oxlint clean. Fixed in commit 0dac502 (v3.29.1). |
 | **BUG-227** | Voice expenses default payer to trip creator instead of the signed-in member | `ui-ux` | `high` | `human` | `cursor-agent` | Voice/NL expenses now default paidBy to the signed-in trip member (resolveDefaultExpensePayerId), not visibleMembers[0]. Preview always shows a Paid-by picker; 'I paid' maps to the speaker; unnamed voice will not auto-save if the user is not a linked member. Expense form uses the same default. Fixed in commit d198a2d (v3.30.2). |
+| **BUG-228** | iOS Safari/WKWebView feels choppy vs Android (WebKit compositor cost) | `performance` | `high` | `human` | `cursor-agent` | Always-on WebKit compositor fallback: iOS drops stacked backdrop-filter/will-change; gestures write transform/opacity on the DOM; trip sheet parks via translate3d; MapLibre pauses while the sheet is dragging. Android glass unchanged (@supports -webkit-touch-callout). v3.30.3, ADR 200. Commit SHA stamped after git commit. |
 
 ---
 

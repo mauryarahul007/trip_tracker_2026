@@ -851,16 +851,12 @@ export default function App() {
 
   // Track scroll on active tab-pane with directional hysteresis for smooth fluid header morphing
   const [isHeaderScrolled, setIsHeaderScrolled] = useState(false);
-  // Sampled from the live map pixels behind the header (see TripMapHero) so
-  // header text/chrome stays legible regardless of what's under it.
+  // Static dark tone so header chrome stays legible on the pastel map
+  // without WebGL pixel sampling.
   const [headerTone, setHeaderTone] = useState<'light' | 'dark'>('light');
-  // Whether the content sheet is in its expanded (80%) snap state -- lets
-  // the map zoom out slightly to visually "resize" as more of it is
-  // exposed, instead of sitting static underneath the drag.
-  const [sheetExpanded, setSheetExpanded] = useState(false);
   const [sheetFull, setSheetFull] = useState(false);
   // Status bar icons need to flip with whatever's actually behind them:
-  // the map's sampled tone while the header's showing, the app surface's
+  // the map's static dark tone while the header's showing, the app surface's
   // own theme once the sheet goes full-screen over everything.
   useEffect(() => {
     const backgroundIsBright = sheetFull ? resolveTheme() === 'light' : headerTone === 'dark';
@@ -2181,7 +2177,7 @@ export default function App() {
             </div>
           ) : (
             <Suspense fallback={null}>
-              <TripMapHero trip={activeTrip ?? null} sheetExpanded={sheetExpanded} onToneChange={setHeaderTone} />
+              <TripMapHero trip={activeTrip ?? null} onToneChange={setHeaderTone} />
             </Suspense>
           )}
           <header ref={headerRef} className={`app-header trip-dashboard-header ${isHeaderScrolled || sheetFull ? 'is-scrolled' : ''} ${headerTone === 'dark' ? 'tone-dark' : ''} ${sheetFull ? 'sheet-full' : ''}`} style={{ overflow: 'hidden' }}>
@@ -2353,6 +2349,7 @@ export default function App() {
                     {activeTrip.stops.map((stop, sIdx) => (
                       <span
                         key={stop.id || sIdx}
+                        className="compositor-blur"
                         style={{
                           display: 'inline-flex',
                           alignItems: 'center',
@@ -2388,6 +2385,7 @@ export default function App() {
                   <button
                     type="button"
                     onClick={() => setStopsExpanded(true)}
+                    className="compositor-blur"
                     style={{
                       display: 'inline-flex', alignItems: 'center', gap: '5px',
                       fontSize: '11px', fontWeight: 600, padding: '3px 10px', borderRadius: '12px',
@@ -2406,7 +2404,6 @@ export default function App() {
           <TripContentSheet
             key={(isFeatureEnabled('enableMapCollapsedByDefault', { tripId: activeTrip?.id, userId: userId || undefined }) || dataSaverActive) ? 'map-full' : 'map-half'}
             startFull={isFeatureEnabled('enableMapCollapsedByDefault', { tripId: activeTrip?.id, userId: userId || undefined }) || dataSaverActive}
-            onExpandedChange={setSheetExpanded}
             onFullChange={setSheetFull}
             forceFull={chatViewActive || (isChatFirstNav && activeTab === 'chat')}
           >

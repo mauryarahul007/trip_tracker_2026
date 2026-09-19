@@ -116,6 +116,17 @@ In [`src/utils/nativeShell.ts`](file:///c:/ProjectsV1/Trip_Tracker_2026/src/util
 
 ---
 
+## Follow-up: iOS compositor diet (2026-09-19)
+
+A later pass made iOS feel closer to Android without a Flutter rewrite:
+
+- WebKit-only CSS (`@supports (-webkit-touch-callout: none)`): drop stacked `backdrop-filter`, permanent `will-change`, and the 48px stack ambient blur. Android Blink keeps glass.
+- Gesture paths write `transform` / `opacity` on the DOM during `touchmove` (TripStack, SwipeableRow, sheets, tab swipe, banners). React state commits on settle.
+- Trip sheet rests on `translate3d(0, N%, 0)` of a full-viewport sheet — never transitions `top`.
+- MapLibre pauses (`map.stop()`, `dragPan.disable()`) while `.trip-sheet.dragging`.
+
+---
+
 ## Related Documentation
 
 - [Reference: Gesture & Sheet System](reference-gesture-and-sheet-system.md)
