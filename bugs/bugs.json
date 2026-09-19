@@ -6882,7 +6882,7 @@
     "description": "Trip Closeout, Settlement Algorithm sheet and Offline queue drawer ignored back/Esc and left history entries behind",
     "severity": "medium",
     "category": "navigation",
-    "status": "open",
+    "status": "resolved",
     "foundBy": "claude-cli",
     "environment": {
       "platform": "web",
@@ -6897,7 +6897,10 @@
     "actualBehavior": "",
     "diagnostics": {},
     "createdAt": "2026-09-19T21:55:31.338Z",
-    "updatedAt": "2026-09-19T21:55:31.338Z"
+    "updatedAt": "2026-09-19T21:56:53.026Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-09-19T21:56:53.026Z",
+    "resolutionNote": "Fixed in v3.31.0. Commit 19d96be."
   },
   {
     "id": "BUG-233",
@@ -6905,7 +6908,7 @@
     "description": "Android back at the root screen exited the app instantly on a stray press",
     "severity": "low",
     "category": "navigation",
-    "status": "open",
+    "status": "resolved",
     "foundBy": "claude-cli",
     "environment": {
       "platform": "web",
@@ -6920,7 +6923,10 @@
     "actualBehavior": "",
     "diagnostics": {},
     "createdAt": "2026-09-19T21:55:31.562Z",
-    "updatedAt": "2026-09-19T21:55:31.562Z"
+    "updatedAt": "2026-09-19T21:56:53.114Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-09-19T21:56:53.114Z",
+    "resolutionNote": "Fixed in v3.31.0. Commit 19d96be."
   },
   {
     "id": "BUG-234",
@@ -6928,7 +6934,7 @@
     "description": "Reloading or closing the web tab silently discarded a half-filled new expense",
     "severity": "medium",
     "category": "ui-ux",
-    "status": "open",
+    "status": "resolved",
     "foundBy": "claude-cli",
     "environment": {
       "platform": "web",
@@ -6943,7 +6949,10 @@
     "actualBehavior": "",
     "diagnostics": {},
     "createdAt": "2026-09-19T21:55:31.781Z",
-    "updatedAt": "2026-09-19T21:55:31.782Z"
+    "updatedAt": "2026-09-19T21:56:53.204Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-09-19T21:56:53.204Z",
+    "resolutionNote": "Fixed in v3.31.0. Commit 19d96be."
   },
   {
     "id": "BUG-235",
@@ -6951,7 +6960,7 @@
     "description": "Native alert() popups for missing trip dates and biometric enroll errors",
     "severity": "low",
     "category": "ui-ux",
-    "status": "open",
+    "status": "resolved",
     "foundBy": "claude-cli",
     "environment": {
       "platform": "web",
@@ -6966,7 +6975,10 @@
     "actualBehavior": "",
     "diagnostics": {},
     "createdAt": "2026-09-19T21:55:32.025Z",
-    "updatedAt": "2026-09-19T21:55:32.026Z"
+    "updatedAt": "2026-09-19T21:56:53.289Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-09-19T21:56:53.289Z",
+    "resolutionNote": "Fixed in v3.31.0. Commit 19d96be."
   },
   {
     "id": "BUG-236",
@@ -6974,7 +6986,7 @@
     "description": "Settlement Algorithm sheet and Offline queue drawer did not trap focus or return it on close",
     "severity": "low",
     "category": "ui-ux",
-    "status": "open",
+    "status": "resolved",
     "foundBy": "claude-cli",
     "environment": {
       "platform": "web",
@@ -6989,6 +7001,9 @@
     "actualBehavior": "",
     "diagnostics": {},
     "createdAt": "2026-09-19T21:55:32.235Z",
-    "updatedAt": "2026-09-19T21:55:32.235Z"
+    "updatedAt": "2026-09-19T21:56:53.369Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-09-19T21:56:53.368Z",
+    "resolutionNote": "Fixed in v3.31.0. Commit 19d96be."
   }
 ]

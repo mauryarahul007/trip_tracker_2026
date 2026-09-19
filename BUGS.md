@@ -10,96 +10,22 @@
 | Metric | Count | Status Notes |
 | :--- | :--- | :--- |
 | **Total Tracked** | **235** | All recorded bugs across sessions |
-| **🟢 Open** | **5** | No critical blockers, 0 High |
+| **🟢 Open** | **0** | No critical blockers, 0 High |
 | **🟡 In Progress** | **0** | Active investigation or fix |
-| **✅ Resolved** | **204** | Verified & closed |
+| **✅ Resolved** | **209** | Verified & closed |
 | **⚪ Won't Fix** | **26** | Expected behavior / deferred |
 
 ---
 
 ## 🚨 Active Bugs (Open & In Progress)
 
-| ID | Severity | Category | Title | Found By | Status |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| **[BUG-232](#bug-232)** | 🟡 Medium | `navigation` | Trip Closeout, Settlement Algorithm sheet and Offline queue drawer ignored back/Esc and left history entries behind | `claude-cli` | 🟢 Open |
-| **[BUG-233](#bug-233)** | ⚪ Low | `navigation` | Android back at the root screen exited the app instantly on a stray press | `claude-cli` | 🟢 Open |
-| **[BUG-234](#bug-234)** | 🟡 Medium | `ui-ux` | Reloading or closing the web tab silently discarded a half-filled new expense | `claude-cli` | 🟢 Open |
-| **[BUG-235](#bug-235)** | ⚪ Low | `ui-ux` | Native alert() popups for missing trip dates and biometric enroll errors | `claude-cli` | 🟢 Open |
-| **[BUG-236](#bug-236)** | ⚪ Low | `ui-ux` | Settlement Algorithm sheet and Offline queue drawer did not trap focus or return it on close | `claude-cli` | 🟢 Open |
+*🎉 No active open bugs! Great job team.* 
 
 ---
 
 ## 📖 Detailed Active Bug Specs
 
-### BUG-232: Trip Closeout, Settlement Algorithm sheet and Offline queue drawer ignored back/Esc and left history entries behind
-
-- **Severity**: `MEDIUM` | **Category**: `navigation` | **Status**: `open`
-- **Found By**: `claude-cli` on 9/20/2026 (web)
-
-**Description**:
-Trip Closeout, Settlement Algorithm sheet and Offline queue drawer ignored back/Esc and left history entries behind
-
-**Steps to Reproduce**:
-1. Navigate to application
-2. Perform action that triggers bug
-
----
-
-### BUG-233: Android back at the root screen exited the app instantly on a stray press
-
-- **Severity**: `LOW` | **Category**: `navigation` | **Status**: `open`
-- **Found By**: `claude-cli` on 9/20/2026 (web)
-
-**Description**:
-Android back at the root screen exited the app instantly on a stray press
-
-**Steps to Reproduce**:
-1. Navigate to application
-2. Perform action that triggers bug
-
----
-
-### BUG-234: Reloading or closing the web tab silently discarded a half-filled new expense
-
-- **Severity**: `MEDIUM` | **Category**: `ui-ux` | **Status**: `open`
-- **Found By**: `claude-cli` on 9/20/2026 (web)
-
-**Description**:
-Reloading or closing the web tab silently discarded a half-filled new expense
-
-**Steps to Reproduce**:
-1. Navigate to application
-2. Perform action that triggers bug
-
----
-
-### BUG-235: Native alert() popups for missing trip dates and biometric enroll errors
-
-- **Severity**: `LOW` | **Category**: `ui-ux` | **Status**: `open`
-- **Found By**: `claude-cli` on 9/20/2026 (web)
-
-**Description**:
-Native alert() popups for missing trip dates and biometric enroll errors
-
-**Steps to Reproduce**:
-1. Navigate to application
-2. Perform action that triggers bug
-
----
-
-### BUG-236: Settlement Algorithm sheet and Offline queue drawer did not trap focus or return it on close
-
-- **Severity**: `LOW` | **Category**: `ui-ux` | **Status**: `open`
-- **Found By**: `claude-cli` on 9/20/2026 (web)
-
-**Description**:
-Settlement Algorithm sheet and Offline queue drawer did not trap focus or return it on close
-
-**Steps to Reproduce**:
-1. Navigate to application
-2. Perform action that triggers bug
-
----
+*No active bug details to display.*
 
 ## ✅ Resolved Bugs History
 
@@ -309,6 +235,11 @@ Settlement Algorithm sheet and Offline queue drawer did not trap focus or return
 | **BUG-229** | Home Expeditions chip unreadable on bright trip photos | `ui-ux` | `medium` | `human` | `cursor-agent` | Chip samples cover-photo luminance and switches dark-on-light vs light-on-dark. Theme tokens used when no photo. ADR 201. Fixed in commit 4863d9b (v3.30.4). |
 | **BUG-230** | iOS trip-stack swipe still hitchy after BUG-228 compositor diet | `performance` | `high` | `human` | `cursor-agent` | WebKit stack drag is 2D translate3d + Z rotate; React style no longer owns the live transform; iOS drops ambient blur and 3D perspective. Android 3D tilt unchanged. ADR 201. Fixed in commit 4863d9b (v3.30.4). |
 | **BUG-231** | Home trip card swipe choppy, snaps, and freezes after cycling | `ui-ux` | `high` | `antigravity` | `antigravity` | Restored 1:1 responsive Tinder-like swipe physics without rubber-band clamp; unified 2D affine scale and rotation across all modes to remove discontinuous peek snap; cleaned up exit lifecycle so cards cycle cleanly without freezing; eliminated gesture-start React re-renders and frame-by-frame stage class toggling. |
+| **BUG-232** | Trip Closeout, Settlement Algorithm sheet and Offline queue drawer ignored back/Esc and left history entries behind | `navigation` | `medium` | `claude-cli` | `claude-cli` | Fixed in v3.31.0. Commit 19d96be. |
+| **BUG-233** | Android back at the root screen exited the app instantly on a stray press | `navigation` | `low` | `claude-cli` | `claude-cli` | Fixed in v3.31.0. Commit 19d96be. |
+| **BUG-234** | Reloading or closing the web tab silently discarded a half-filled new expense | `ui-ux` | `medium` | `claude-cli` | `claude-cli` | Fixed in v3.31.0. Commit 19d96be. |
+| **BUG-235** | Native alert() popups for missing trip dates and biometric enroll errors | `ui-ux` | `low` | `claude-cli` | `claude-cli` | Fixed in v3.31.0. Commit 19d96be. |
+| **BUG-236** | Settlement Algorithm sheet and Offline queue drawer did not trap focus or return it on close | `ui-ux` | `low` | `claude-cli` | `claude-cli` | Fixed in v3.31.0. Commit 19d96be. |
 
 ---
 

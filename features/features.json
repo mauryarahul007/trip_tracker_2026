@@ -1313,64 +1313,79 @@
     "title": "Tab Back History: back gesture walks the tabs you visited (enableTabBackHistory)",
     "description": "Tab Back History: back gesture walks the tabs you visited (enableTabBackHistory)",
     "category": "ui-ux",
-    "status": "requested",
+    "status": "shipped",
     "requestedBy": "claude-cli",
     "environment": {
       "platform": "web"
     },
     "createdAt": "2026-09-19T21:55:40.506Z",
-    "updatedAt": "2026-09-19T21:55:40.506Z"
+    "updatedAt": "2026-09-19T21:56:53.425Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-09-19T21:56:53.425Z",
+    "shippedNote": "Shipped in v3.31.0 behind default-OFF flag. Commit 19d96be."
   },
   {
     "id": "FEAT-084",
     "title": "Deep-Linked Tabs: ?trip=&tab= restores the open screen on refresh or shared link (enableDeepLinkedTabs)",
     "description": "Deep-Linked Tabs: ?trip=&tab= restores the open screen on refresh or shared link (enableDeepLinkedTabs)",
     "category": "ui-ux",
-    "status": "requested",
+    "status": "shipped",
     "requestedBy": "claude-cli",
     "environment": {
       "platform": "web"
     },
     "createdAt": "2026-09-19T21:55:40.584Z",
-    "updatedAt": "2026-09-19T21:55:40.584Z"
+    "updatedAt": "2026-09-19T21:56:53.490Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-09-19T21:56:53.490Z",
+    "shippedNote": "Shipped in v3.31.0 behind default-OFF flag. Commit 19d96be."
   },
   {
     "id": "FEAT-085",
     "title": "Persistent Expense Draft: 24h draft survives app close, covers payers/currency/location/receipt (enablePersistentExpenseDraft)",
     "description": "Persistent Expense Draft: 24h draft survives app close, covers payers/currency/location/receipt (enablePersistentExpenseDraft)",
     "category": "ui-ux",
-    "status": "requested",
+    "status": "shipped",
     "requestedBy": "claude-cli",
     "environment": {
       "platform": "web"
     },
     "createdAt": "2026-09-19T21:55:40.650Z",
-    "updatedAt": "2026-09-19T21:55:40.650Z"
+    "updatedAt": "2026-09-19T21:56:53.556Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-09-19T21:56:53.556Z",
+    "shippedNote": "Shipped in v3.31.0 behind default-OFF flag. Commit 19d96be."
   },
   {
     "id": "FEAT-086",
     "title": "Sync Queue Inspector: readable offline queue with errors, Retry and Discard (enableSyncQueueInspector)",
     "description": "Sync Queue Inspector: readable offline queue with errors, Retry and Discard (enableSyncQueueInspector)",
     "category": "sync",
-    "status": "requested",
+    "status": "shipped",
     "requestedBy": "claude-cli",
     "environment": {
       "platform": "web"
     },
     "createdAt": "2026-09-19T21:55:40.721Z",
-    "updatedAt": "2026-09-19T21:55:40.721Z"
+    "updatedAt": "2026-09-19T21:56:53.627Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-09-19T21:56:53.626Z",
+    "shippedNote": "Shipped in v3.31.0 behind default-OFF flag. Commit 19d96be."
   },
   {
     "id": "FEAT-087",
     "title": "Extended Undo: undo for member delete/archive and recorded settlements (enableExtendedUndo)",
     "description": "Extended Undo: undo for member delete/archive and recorded settlements (enableExtendedUndo)",
     "category": "ui-ux",
-    "status": "requested",
+    "status": "shipped",
     "requestedBy": "claude-cli",
     "environment": {
       "platform": "web"
     },
     "createdAt": "2026-09-19T21:55:40.788Z",
-    "updatedAt": "2026-09-19T21:55:40.788Z"
+    "updatedAt": "2026-09-19T21:56:53.697Z",
+    "shippedBy": "claude-cli",
+    "shippedAt": "2026-09-19T21:56:53.697Z",
+    "shippedNote": "Shipped in v3.31.0 behind default-OFF flag. Commit 19d96be."
   }
 ]
