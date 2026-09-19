@@ -6818,10 +6818,10 @@
     "actualBehavior": "Sky-blue text on a sky photo is nearly invisible.",
     "diagnostics": {},
     "createdAt": "2026-09-19T18:52:48.493Z",
-    "updatedAt": "2026-09-19T18:53:23.375Z",
+    "updatedAt": "2026-09-19T18:54:03.585Z",
     "resolvedBy": "cursor-agent",
-    "resolvedAt": "2026-09-19T18:53:23.375Z",
-    "resolutionNote": "Chip samples cover-photo luminance and switches dark-on-light vs light-on-dark. Theme tokens used when no photo. ADR 201, v3.30.4."
+    "resolvedAt": "2026-09-19T18:54:03.585Z",
+    "resolutionNote": "Chip samples cover-photo luminance and switches dark-on-light vs light-on-dark. Theme tokens used when no photo. ADR 201. Fixed in commit 4863d9b (v3.30.4)."
   },
   {
     "id": "BUG-230",
@@ -6845,9 +6845,9 @@
     "actualBehavior": "Swipe feels choppy; card can hitch when drag state commits.",
     "diagnostics": {},
     "createdAt": "2026-09-19T18:52:48.764Z",
-    "updatedAt": "2026-09-19T18:53:23.639Z",
+    "updatedAt": "2026-09-19T18:54:03.819Z",
     "resolvedBy": "cursor-agent",
-    "resolvedAt": "2026-09-19T18:53:23.639Z",
-    "resolutionNote": "WebKit stack drag is 2D translate3d + Z rotate; React style no longer owns the live transform; iOS drops ambient blur and 3D perspective. Android 3D tilt unchanged. ADR 201, v3.30.4."
+    "resolvedAt": "2026-09-19T18:54:03.819Z",
+    "resolutionNote": "WebKit stack drag is 2D translate3d + Z rotate; React style no longer owns the live transform; iOS drops ambient blur and 3D perspective. Android 3D tilt unchanged. ADR 201. Fixed in commit 4863d9b (v3.30.4)."
   }
 ]
