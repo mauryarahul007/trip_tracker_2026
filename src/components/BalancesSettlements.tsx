@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import type { Expense, Group, Member, Trip } from '../types';
 import type { MemberBalance, Transfer } from '../utils/settlement';
@@ -20,6 +20,8 @@ import { StickyBalanceBar } from './StickyBalanceBar';
 import { ConfettiBurst } from './ConfettiBurst';
 import { playTicketTear, playStampThud } from '../utils/soundEffects';
 import { useDataSaverEnabled } from '../hooks/useDataSaverEnabled';
+import { useFocusTrap } from '../hooks/useFocusTrap';
+import { useHistoryBack } from '../utils/useHistoryBack';
 
 
 type Props = {
@@ -901,6 +903,10 @@ export function BalancesSettlements({
   const isSimplifyToggleActive = useTripStore((s) => s.isFeatureEnabled('enableSimplifyDebtsToggle', { tripId: trip.id }));
   const setTripSimplifyDebts = useTripStore((s) => s.setTripSimplifyDebts);
   const [showSimplifyInfo, setShowSimplifyInfo] = useState(false);
+  const simplifyInfoRef = useRef<HTMLDivElement>(null);
+  const closeSimplifyInfo = useCallback(() => setShowSimplifyInfo(false), []);
+  useHistoryBack(showSimplifyInfo, closeSimplifyInfo);
+  useFocusTrap(simplifyInfoRef, showSimplifyInfo, false, closeSimplifyInfo);
   const isSimplified = trip.simplifyDebts !== false;
   const isApprovalThresholdEnabled = useTripStore((s) => s.isFeatureEnabled('enableExpenseApprovalThreshold', { tripId: trip.id }));
   const updateApprovalThreshold = useTripStore((s) => s.updateApprovalThreshold);
@@ -1172,11 +1178,13 @@ export function BalancesSettlements({
 
         {showSimplifyInfo && createPortal(
           <div
+            ref={simplifyInfoRef}
+            tabIndex={-1}
             className="modal-overlay"
             role="dialog"
             aria-modal="true"
             aria-labelledby="settlement-algorithm-title"
-            onClick={() => setShowSimplifyInfo(false)}
+            onClick={closeSimplifyInfo}
           >
             <div
               className="modal-card"

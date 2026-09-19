@@ -6875,5 +6875,120 @@
     "resolvedBy": "antigravity",
     "resolvedAt": "2026-09-19T19:36:29.819Z",
     "resolutionNote": "Restored 1:1 responsive Tinder-like swipe physics without rubber-band clamp; unified 2D affine scale and rotation across all modes to remove discontinuous peek snap; cleaned up exit lifecycle so cards cycle cleanly without freezing; eliminated gesture-start React re-renders and frame-by-frame stage class toggling."
+  },
+  {
+    "id": "BUG-232",
+    "title": "Trip Closeout, Settlement Algorithm sheet and Offline queue drawer ignored back/Esc and left history entries behind",
+    "description": "Trip Closeout, Settlement Algorithm sheet and Offline queue drawer ignored back/Esc and left history entries behind",
+    "severity": "medium",
+    "category": "navigation",
+    "status": "open",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-09-19T21:55:31.338Z",
+    "updatedAt": "2026-09-19T21:55:31.338Z"
+  },
+  {
+    "id": "BUG-233",
+    "title": "Android back at the root screen exited the app instantly on a stray press",
+    "description": "Android back at the root screen exited the app instantly on a stray press",
+    "severity": "low",
+    "category": "navigation",
+    "status": "open",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-09-19T21:55:31.562Z",
+    "updatedAt": "2026-09-19T21:55:31.562Z"
+  },
+  {
+    "id": "BUG-234",
+    "title": "Reloading or closing the web tab silently discarded a half-filled new expense",
+    "description": "Reloading or closing the web tab silently discarded a half-filled new expense",
+    "severity": "medium",
+    "category": "ui-ux",
+    "status": "open",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-09-19T21:55:31.781Z",
+    "updatedAt": "2026-09-19T21:55:31.782Z"
+  },
+  {
+    "id": "BUG-235",
+    "title": "Native alert() popups for missing trip dates and biometric enroll errors",
+    "description": "Native alert() popups for missing trip dates and biometric enroll errors",
+    "severity": "low",
+    "category": "ui-ux",
+    "status": "open",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-09-19T21:55:32.025Z",
+    "updatedAt": "2026-09-19T21:55:32.026Z"
+  },
+  {
+    "id": "BUG-236",
+    "title": "Settlement Algorithm sheet and Offline queue drawer did not trap focus or return it on close",
+    "description": "Settlement Algorithm sheet and Offline queue drawer did not trap focus or return it on close",
+    "severity": "low",
+    "category": "ui-ux",
+    "status": "open",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-09-19T21:55:32.235Z",
+    "updatedAt": "2026-09-19T21:55:32.235Z"
   }
 ]

@@ -115,6 +115,7 @@ export function TripsListScreen({
   const [frontTripIndex, setFrontTripIndex] = useState(0);
   const [targetTripId, setTargetTripId] = useState<string | null>(null);
   const [isSavingTrip, setIsSavingTrip] = useState(false);
+  const [dateError, setDateError] = useState('');
   const [actionSheetTrip, setActionSheetTrip] = useState<Trip | null>(null);
 
   useHistoryBack(showJoinTrip, () => setShowJoinTrip(false));
@@ -209,9 +210,10 @@ export function TripsListScreen({
     // while silently failing to create the trip if left blank. Block it
     // here with a clear reason instead of a confusing no-op submit.
     if (!newTripStart || !newTripEnd) {
-      alert('Please choose a start and end date for the trip.');
+      setDateError('Please choose a start and end date for the trip.');
       return;
     }
+    setDateError('');
     setIsSavingTrip(true);
     try {
       await onCreateTrip(e);
@@ -558,9 +560,14 @@ export function TripsListScreen({
               <DateRangePicker
                 startDate={newTripStart}
                 endDate={newTripEnd}
-                onSelectStart={setNewTripStart}
-                onSelectEnd={setNewTripEnd}
+                onSelectStart={(d) => { setDateError(''); setNewTripStart(d); }}
+                onSelectEnd={(d) => { setDateError(''); setNewTripEnd(d); }}
               />
+              {dateError && (
+                <div role="alert" style={{ marginTop: '6px', fontSize: '12px', color: 'var(--color-danger, #DC2626)' }}>
+                  {dateError}
+                </div>
+              )}
             </div>
 
             {!editingTripId && (

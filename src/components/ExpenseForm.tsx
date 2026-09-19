@@ -4,6 +4,7 @@ import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 import type { Category, Group, Member, Trip, Expense, ExpenseLocation, SplitMode, ReceiptItem, ItemizedReceiptConfig } from '../types';
 import { IconCheck, IconAlertCircle, IconClose, IconMapPin, IconMic } from './Icons';
 import { CategoryIcon } from './CategoryIcon';
+import { saveDraft, loadDraft } from '../utils/expenseDraft';
 import { initial } from '../utils/initials';
 import { avatarColorForName } from '../utils/avatarColor';
 import { getCurrencySymbol } from '../utils/currency';
@@ -325,14 +326,35 @@ export function ExpenseForm({
 
   // Draft auto-recovery via sessionStorage
   const DRAFT_KEY = trip ? `tt_draft_expense_${trip.id}` : 'tt_draft_expense_default';
+  // enablePersistentExpenseDraft: localStorage + 24h expiry (survives the app
+  // being closed) and also covers payers, currency, location and itemized
+  // receipt. Flag OFF keeps the original session-only draft, unchanged.
+  const persistentDraft = useTripStore((s) => s.isFeatureEnabled('enablePersistentExpenseDraft', { tripId: trip?.id }));
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const readDraft = (): Record<string, any> | null => {
+    try {
+      if (persistentDraft) return loadDraft(localStorage, DRAFT_KEY);
+      const raw = sessionStorage.getItem(DRAFT_KEY);
+      return raw ? JSON.parse(raw) : null;
+    } catch {
+      return null;
+    }
+  };
+  const removeDraft = () => {
+    try {
+      (persistentDraft ? localStorage : sessionStorage).removeItem(DRAFT_KEY);
+    } catch {
+      // storage blocked — nothing to clear
+    }
+  };
   const [isDraftRestored, setIsDraftRestored] = useState(false);
+  const [location, setLocation] = useState<ExpenseLocation | null>(editingExpense?.location || null);
 
   useEffect(() => {
     if (editingExpense) return;
     try {
-      const raw = sessionStorage.getItem(DRAFT_KEY);
-      if (raw) {
-        const draft = JSON.parse(raw);
+      const draft = readDraft();
+      if (draft) {
         if (draft.title && !initialTemplate?.title) setTitle(draft.title);
         if (draft.amount) setAmount(draft.amount);
         if (draft.category && categories.some((c) => c.id === draft.category)) setCategory(draft.category);
@@ -341,6 +363,16 @@ export function ExpenseForm({
         if (draft.splitMode) setSplitMode(draft.splitMode);
         if (draft.selectedSplitMembers) setSelectedSplitMembers(draft.selectedSplitMembers);
         if (draft.splitConfig) setSplitConfig(draft.splitConfig);
+        if (persistentDraft) {
+          if (draft.payerMode === 'single' || draft.payerMode === 'multiple') setPayerMode(draft.payerMode);
+          if (draft.multiPayerShares) setMultiPayerShares(draft.multiPayerShares);
+          if (typeof draft.selectedCurrency === 'string') setSelectedCurrency(draft.selectedCurrency);
+          if (draft.location) setLocation(draft.location);
+          if (Array.isArray(draft.receiptItems)) setReceiptItems(draft.receiptItems);
+          if (draft.receiptTax) setReceiptTax(draft.receiptTax);
+          if (draft.receiptTip) setReceiptTip(draft.receiptTip);
+          if (draft.receiptDiscount) setReceiptDiscount(draft.receiptDiscount);
+        }
         setIsDraftRestored(true);
         return;
       }
@@ -370,7 +402,7 @@ export function ExpenseForm({
 
   useEffect(() => {
     if (editingExpense) return;
-    const timer = setTimeout(() => {
+    const write = () => {
       try {
         if (title.trim() || amount.trim()) {
           const draft = {
@@ -383,17 +415,45 @@ export function ExpenseForm({
             selectedSplitMembers,
             splitConfig,
           };
-          sessionStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+          if (persistentDraft) {
+            saveDraft(localStorage, DRAFT_KEY, {
+              ...draft,
+              payerMode,
+              multiPayerShares,
+              selectedCurrency,
+              location,
+              receiptItems,
+              receiptTax,
+              receiptTip,
+              receiptDiscount,
+            });
+          } else {
+            sessionStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+          }
         }
-      } catch {}
-    }, 350);
-    return () => clearTimeout(timer);
-  }, [title, amount, category, date, payer, splitMode, selectedSplitMembers, splitConfig, editingExpense, DRAFT_KEY]);
+      } catch {
+        // storage blocked or full — the draft is best-effort
+      }
+    };
+    const timer = setTimeout(write, 350);
+    // The debounce can lose the last edit if the OS kills the app right
+    // after backgrounding it, so flush immediately on hide.
+    const flushOnHide = () => {
+      if (document.visibilityState === 'hidden') write();
+    };
+    if (persistentDraft) {
+      document.addEventListener('visibilitychange', flushOnHide);
+      window.addEventListener('pagehide', write);
+    }
+    return () => {
+      clearTimeout(timer);
+      document.removeEventListener('visibilitychange', flushOnHide);
+      window.removeEventListener('pagehide', write);
+    };
+  }, [title, amount, category, date, payer, splitMode, selectedSplitMembers, splitConfig, editingExpense, DRAFT_KEY, persistentDraft, payerMode, multiPayerShares, selectedCurrency, location, receiptItems, receiptTax, receiptTip, receiptDiscount]);
 
   const handleDiscardDraft = () => {
-    try {
-      sessionStorage.removeItem(DRAFT_KEY);
-    } catch {}
+    removeDraft();
     setTitle('');
     setAmount('');
     setCategory(categories[0]?.id || '');
@@ -520,7 +580,6 @@ export function ExpenseForm({
   };
 
   // Geotagging
-  const [location, setLocation] = useState<ExpenseLocation | null>(editingExpense?.location || null);
   const [locationLoading, setLocationLoading] = useState(false);
   const hasAttemptedGeoRef = useRef(false);
 
@@ -579,6 +638,20 @@ export function ExpenseForm({
     !receiptImage &&
     !location &&
     Object.keys(splitConfig).length === 0;
+
+  // Web only: a reload or tab close would silently drop a half-filled new
+  // expense (native shells have no unload prompt). Skipped when the
+  // persistent draft flag is on — the draft already survives a reload.
+  const hasUnsavedNewExpense = !editingExpense && !isFormEmpty && !isSubmitting && !persistentDraft;
+  useEffect(() => {
+    if (Capacitor.isNativePlatform() || !hasUnsavedNewExpense) return;
+    const onBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = '';
+    };
+    window.addEventListener('beforeunload', onBeforeUnload);
+    return () => window.removeEventListener('beforeunload', onBeforeUnload);
+  }, [hasUnsavedNewExpense]);
 
   // Derived Splits States
   const splitSelectedIds = Object.keys(selectedSplitMembers)
@@ -929,9 +1002,7 @@ export function ExpenseForm({
       if (!res.success && res.error) {
         setFormError(res.error);
       } else if (res.success) {
-        try {
-          sessionStorage.removeItem(DRAFT_KEY);
-        } catch {}
+        removeDraft();
         if (
           !editingExpense &&
           trip?.id &&

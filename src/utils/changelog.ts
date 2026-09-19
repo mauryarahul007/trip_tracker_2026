@@ -9,6 +9,17 @@ export interface ChangelogEntry {
 // parsed from decisions.md/BUGS.md: those are prose for developers, not client data.
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: '3.31.0',
+    date: '2026-09-20',
+    changes: [
+      'Back now closes the Trip Closeout, Settlement Algorithm and offline-queue sheets first, instead of leaving the screen behind them.',
+      'On Android, press back twice to exit the app, so a stray swipe no longer closes it.',
+      'Missing trip dates and biometric setup errors show inline instead of as popup alerts.',
+      'Web: a warning before you reload or close the tab with an unsaved new expense.',
+      'New, off by default: back walks through the tabs you visited, trip and tab in the address bar, a 24-hour expense draft that survives closing the app, a readable offline queue with Retry and Discard, and undo for member delete, archive and settlements.',
+    ],
+  },
+  {
     version: '3.30.5',
     date: '2026-09-20',
     changes: [

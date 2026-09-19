@@ -1,7 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useTripStore } from '../store/tripStore';
 import { triggerHaptic } from '../utils/haptics';
+import { useFocusTrap } from '../hooks/useFocusTrap';
+import { useHistoryBack } from '../utils/useHistoryBack';
 import { IconClose, IconRefresh, IconCheck } from './Icons';
+import { describeSyncItem } from '../utils/syncQueueLabel';
 
 /**
  * "In-Flight / Remote" Offline State Banner
@@ -11,9 +14,24 @@ import { IconClose, IconRefresh, IconCheck } from './Icons';
 export const OfflineTravelBanner: React.FC = () => {
   const [isOnline, setIsOnline] = useState(typeof navigator !== 'undefined' ? navigator.onLine : true);
   const [showDrawer, setShowDrawer] = useState(false);
+  const drawerRef = useRef<HTMLDivElement>(null);
+  const closeDrawer = useCallback(() => setShowDrawer(false), []);
+  useHistoryBack(showDrawer, closeDrawer);
+  useFocusTrap(drawerRef, showDrawer, false, closeDrawer);
   const [isSyncing, setIsSyncing] = useState(false);
   const syncQueue = useTripStore((s) => s.syncQueue);
   const processQueue = useTripStore((s) => s.processQueue);
+  const inspectorOn = useTripStore((s) => s.isFeatureEnabled('enableSyncQueueInspector'));
+  const retrySyncItem = useTripStore((s) => s.retrySyncItem);
+  const discardSyncItem = useTripStore((s) => s.discardSyncItem);
+  const [confirmDiscardId, setConfirmDiscardId] = useState<string | null>(null);
+  // The banner unmounts its whole UI once online with nothing queued; reset
+  // the flag too so the drawer's history entry doesn't linger and it doesn't
+  // pop back open the next time something is queued.
+  const bannerHidden = isOnline && syncQueue.length === 0;
+  useEffect(() => {
+    if (bannerHidden) setShowDrawer(false);
+  }, [bannerHidden]);
 
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
@@ -111,11 +129,13 @@ export const OfflineTravelBanner: React.FC = () => {
       {/* Offline Queue Drawer / Modal */}
       {showDrawer && (
         <div
+          ref={drawerRef}
+          tabIndex={-1}
           role="dialog"
           aria-modal="true"
           aria-label="Offline Sync Queue"
           className="modal-overlay"
-          onClick={() => setShowDrawer(false)}
+          onClick={closeDrawer}
           style={{
             zIndex: 11000,
             display: 'flex',
@@ -181,31 +201,75 @@ export const OfflineTravelBanner: React.FC = () => {
                   <div>All local changes are fully reconciled!</div>
                 </div>
               ) : (
-                syncQueue.map((item, idx) => (
+                syncQueue.map((item, idx) => {
+                  const failed = inspectorOn && !!item.lastError;
+                  return (
                   <div
                     key={item.id || idx}
                     style={{
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'space-between',
+                      gap: '10px',
                       padding: '10px 12px',
                       background: 'var(--bg-surface)',
-                      border: '1px solid var(--border-color)',
+                      border: `1px solid ${item.needsAttention && inspectorOn ? 'var(--color-danger, #DC2626)' : 'var(--border-color)'}`,
                       borderRadius: '8px',
                       fontSize: '12px',
                     }}
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <span style={{ color: 'var(--accent-orange)' }}>●</span>
-                      <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
-                        {item.type.replace(/([A-Z])/g, ' $1').toLowerCase()}
-                      </span>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', minWidth: 0 }}>
+                      <span style={{ color: failed ? 'var(--color-danger, #DC2626)' : 'var(--accent-orange)' }}>●</span>
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{ fontWeight: 600, color: 'var(--text-primary)', overflowWrap: 'anywhere' }}>
+                          {inspectorOn ? describeSyncItem(item) : item.type.replace(/([A-Z])/g, ' $1').toLowerCase()}
+                        </div>
+                        {failed && (
+                          <div style={{ color: 'var(--text-muted)', fontSize: '11px', marginTop: '2px', overflowWrap: 'anywhere' }}>
+                            {item.needsAttention ? 'Needs attention' : `Retrying (attempt ${item.attempts ?? 1})`}: {item.lastError}
+                          </div>
+                        )}
+                      </div>
                     </div>
-                    <span style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-family-mono)', fontSize: '11px' }}>
-                      Staged locally
-                    </span>
+                    {inspectorOn ? (
+                      <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
+                        {isOnline && (
+                          <button
+                            type="button"
+                            className="secondary-btn"
+                            style={{ padding: '4px 10px', fontSize: '11px' }}
+                            onClick={() => { triggerHaptic(); void retrySyncItem(item.id); }}
+                            disabled={isSyncing}
+                          >
+                            Retry
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          className="secondary-btn"
+                          style={{ padding: '4px 10px', fontSize: '11px', color: 'var(--color-danger, #DC2626)' }}
+                          onClick={() => {
+                            triggerHaptic();
+                            if (confirmDiscardId === item.id) {
+                              setConfirmDiscardId(null);
+                              void discardSyncItem(item.id);
+                            } else {
+                              setConfirmDiscardId(item.id);
+                            }
+                          }}
+                          onBlur={() => setConfirmDiscardId((cur) => (cur === item.id ? null : cur))}
+                        >
+                          {confirmDiscardId === item.id ? 'Confirm?' : 'Discard'}
+                        </button>
+                      </div>
+                    ) : (
+                      <span style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-family-mono)', fontSize: '11px' }}>
+                        Staged locally
+                      </span>
+                    )}
                   </div>
-                ))
+                  );
+                })
               )}
             </div>
 

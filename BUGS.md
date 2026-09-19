@@ -9,8 +9,8 @@
 
 | Metric | Count | Status Notes |
 | :--- | :--- | :--- |
-| **Total Tracked** | **230** | All recorded bugs across sessions |
-| **🟢 Open** | **0** | No critical blockers, 0 High |
+| **Total Tracked** | **235** | All recorded bugs across sessions |
+| **🟢 Open** | **5** | No critical blockers, 0 High |
 | **🟡 In Progress** | **0** | Active investigation or fix |
 | **✅ Resolved** | **204** | Verified & closed |
 | **⚪ Won't Fix** | **26** | Expected behavior / deferred |
@@ -19,13 +19,87 @@
 
 ## 🚨 Active Bugs (Open & In Progress)
 
-*🎉 No active open bugs! Great job team.* 
+| ID | Severity | Category | Title | Found By | Status |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **[BUG-232](#bug-232)** | 🟡 Medium | `navigation` | Trip Closeout, Settlement Algorithm sheet and Offline queue drawer ignored back/Esc and left history entries behind | `claude-cli` | 🟢 Open |
+| **[BUG-233](#bug-233)** | ⚪ Low | `navigation` | Android back at the root screen exited the app instantly on a stray press | `claude-cli` | 🟢 Open |
+| **[BUG-234](#bug-234)** | 🟡 Medium | `ui-ux` | Reloading or closing the web tab silently discarded a half-filled new expense | `claude-cli` | 🟢 Open |
+| **[BUG-235](#bug-235)** | ⚪ Low | `ui-ux` | Native alert() popups for missing trip dates and biometric enroll errors | `claude-cli` | 🟢 Open |
+| **[BUG-236](#bug-236)** | ⚪ Low | `ui-ux` | Settlement Algorithm sheet and Offline queue drawer did not trap focus or return it on close | `claude-cli` | 🟢 Open |
 
 ---
 
 ## 📖 Detailed Active Bug Specs
 
-*No active bug details to display.*
+### BUG-232: Trip Closeout, Settlement Algorithm sheet and Offline queue drawer ignored back/Esc and left history entries behind
+
+- **Severity**: `MEDIUM` | **Category**: `navigation` | **Status**: `open`
+- **Found By**: `claude-cli` on 9/20/2026 (web)
+
+**Description**:
+Trip Closeout, Settlement Algorithm sheet and Offline queue drawer ignored back/Esc and left history entries behind
+
+**Steps to Reproduce**:
+1. Navigate to application
+2. Perform action that triggers bug
+
+---
+
+### BUG-233: Android back at the root screen exited the app instantly on a stray press
+
+- **Severity**: `LOW` | **Category**: `navigation` | **Status**: `open`
+- **Found By**: `claude-cli` on 9/20/2026 (web)
+
+**Description**:
+Android back at the root screen exited the app instantly on a stray press
+
+**Steps to Reproduce**:
+1. Navigate to application
+2. Perform action that triggers bug
+
+---
+
+### BUG-234: Reloading or closing the web tab silently discarded a half-filled new expense
+
+- **Severity**: `MEDIUM` | **Category**: `ui-ux` | **Status**: `open`
+- **Found By**: `claude-cli` on 9/20/2026 (web)
+
+**Description**:
+Reloading or closing the web tab silently discarded a half-filled new expense
+
+**Steps to Reproduce**:
+1. Navigate to application
+2. Perform action that triggers bug
+
+---
+
+### BUG-235: Native alert() popups for missing trip dates and biometric enroll errors
+
+- **Severity**: `LOW` | **Category**: `ui-ux` | **Status**: `open`
+- **Found By**: `claude-cli` on 9/20/2026 (web)
+
+**Description**:
+Native alert() popups for missing trip dates and biometric enroll errors
+
+**Steps to Reproduce**:
+1. Navigate to application
+2. Perform action that triggers bug
+
+---
+
+### BUG-236: Settlement Algorithm sheet and Offline queue drawer did not trap focus or return it on close
+
+- **Severity**: `LOW` | **Category**: `ui-ux` | **Status**: `open`
+- **Found By**: `claude-cli` on 9/20/2026 (web)
+
+**Description**:
+Settlement Algorithm sheet and Offline queue drawer did not trap focus or return it on close
+
+**Steps to Reproduce**:
+1. Navigate to application
+2. Perform action that triggers bug
+
+---
 
 ## ✅ Resolved Bugs History
 

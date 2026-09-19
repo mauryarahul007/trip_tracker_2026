@@ -9,8 +9,8 @@
 
 | Metric | Count |
 | :--- | :--- |
-| **Total Tracked** | **82** |
-| **💡 Requested** | **2** |
+| **Total Tracked** | **87** |
+| **💡 Requested** | **7** |
 | **📋 Planned** | **0** |
 | **🟡 In Progress** | **0** |
 | **✅ Shipped** | **80** |
@@ -24,6 +24,11 @@
 | :--- | :--- | :--- | :--- | :--- |
 | **[FEAT-002](#feat-002)** | `ui-ux` | Test | `mauryarahul007@gmail.com` | 💡 Requested |
 | **[FEAT-024](#feat-024)** | `admin` | CI pipeline for lint, build, and test on push/PR | `claude-cli` | 💡 Requested |
+| **[FEAT-083](#feat-083)** | `ui-ux` | Tab Back History: back gesture walks the tabs you visited (enableTabBackHistory) | `claude-cli` | 💡 Requested |
+| **[FEAT-084](#feat-084)** | `ui-ux` | Deep-Linked Tabs: ?trip=&tab= restores the open screen on refresh or shared link (enableDeepLinkedTabs) | `claude-cli` | 💡 Requested |
+| **[FEAT-085](#feat-085)** | `ui-ux` | Persistent Expense Draft: 24h draft survives app close, covers payers/currency/location/receipt (enablePersistentExpenseDraft) | `claude-cli` | 💡 Requested |
+| **[FEAT-086](#feat-086)** | `sync` | Sync Queue Inspector: readable offline queue with errors, Retry and Discard (enableSyncQueueInspector) | `claude-cli` | 💡 Requested |
+| **[FEAT-087](#feat-087)** | `ui-ux` | Extended Undo: undo for member delete/archive and recorded settlements (enableExtendedUndo) | `claude-cli` | 💡 Requested |
 
 ---
 
@@ -45,6 +50,51 @@ Test
 - **Requested By**: `claude-cli` on 9/1/2026 (web)
 
 CI pipeline for lint, build, and test on push/PR
+
+---
+
+### FEAT-083: Tab Back History: back gesture walks the tabs you visited (enableTabBackHistory)
+
+- **Category**: `ui-ux` | **Status**: `requested`
+- **Requested By**: `claude-cli` on 9/20/2026 (web)
+
+Tab Back History: back gesture walks the tabs you visited (enableTabBackHistory)
+
+---
+
+### FEAT-084: Deep-Linked Tabs: ?trip=&tab= restores the open screen on refresh or shared link (enableDeepLinkedTabs)
+
+- **Category**: `ui-ux` | **Status**: `requested`
+- **Requested By**: `claude-cli` on 9/20/2026 (web)
+
+Deep-Linked Tabs: ?trip=&tab= restores the open screen on refresh or shared link (enableDeepLinkedTabs)
+
+---
+
+### FEAT-085: Persistent Expense Draft: 24h draft survives app close, covers payers/currency/location/receipt (enablePersistentExpenseDraft)
+
+- **Category**: `ui-ux` | **Status**: `requested`
+- **Requested By**: `claude-cli` on 9/20/2026 (web)
+
+Persistent Expense Draft: 24h draft survives app close, covers payers/currency/location/receipt (enablePersistentExpenseDraft)
+
+---
+
+### FEAT-086: Sync Queue Inspector: readable offline queue with errors, Retry and Discard (enableSyncQueueInspector)
+
+- **Category**: `sync` | **Status**: `requested`
+- **Requested By**: `claude-cli` on 9/20/2026 (web)
+
+Sync Queue Inspector: readable offline queue with errors, Retry and Discard (enableSyncQueueInspector)
+
+---
+
+### FEAT-087: Extended Undo: undo for member delete/archive and recorded settlements (enableExtendedUndo)
+
+- **Category**: `ui-ux` | **Status**: `requested`
+- **Requested By**: `claude-cli` on 9/20/2026 (web)
+
+Extended Undo: undo for member delete/archive and recorded settlements (enableExtendedUndo)
 
 ---
 

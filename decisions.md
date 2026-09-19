@@ -3627,5 +3627,21 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - Retaining 2D `scale` and `rotate(Z)` on WebKit preserves full visual depth continuity without triggering WebKit's 3D perspective compositor hitches.
 
+---
 
+## 203. Navigation, dialog & sync UX pass (BUG-232..236, FEAT-083..087, v3.31.0)
+* **Context:** Audit of back navigation and dialogs found overlays that ignored back/Esc (Trip Closeout, Settlement Algorithm sheet, Offline queue drawer), an instant Android exit at the root screen, native `alert()` popups, and no protection for unsaved expenses. The audit also proposed five larger UX/logic features.
+* **Decision:** Ship the five small defects as unflagged fixes. Ship the five larger changes behind default-OFF Ops Deck flags (Phase 1: `enableTabBackHistory`, `enableDeepLinkedTabs`, `enableExtendedUndo`; Phase 2: `enablePersistentExpenseDraft`; Phase 5: `enableSyncQueueInspector`).
+* **Pattern/Implementation:**
+  - Overlays: `useHistoryBack` + `useFocusTrap(onEscape)`. The Offline drawer resets `showDrawer` when the banner unmounts so its history entry can't leak.
+  - Double-back exit: `src/utils/doubleBackExit.ts` (2s window, DOM hint pill) called from the Capacitor `backButton` handler in `main.tsx`.
+  - Tab back history: `useHistoryStack(tabTrail.length)` declared before the trip-level `useHistoryBack` so a UI trip exit unwinds the trail first. `src/utils/tabTrail.ts` caps the trail at 5.
+  - Deep links: `src/utils/deepLink.ts`; URL synced with `replaceState(history.state, ...)` so back-stack entries are untouched. Applied once after trips load; unknown trip/tab ids are ignored.
+  - Draft: `src/utils/expenseDraft.ts` stores `{ savedAt, data }` in `localStorage`, 24h TTL, flushed on `visibilitychange`/`pagehide`. Flag OFF keeps the `sessionStorage` draft unchanged.
+  - Sync inspector: `SyncQueueItem` gains `attempts`, `lastError`, `needsAttention`. With the flag on, non-retryable failures stay in the queue (skipped until Retry) instead of being dropped. `discardSyncItem` also removes the optimistic local expense and anything queued against its temp id.
+  - Extended undo: one generic toast slot in `App.tsx`; member delete is deferred by the timer (and committed on replace/unmount); archive undo re-toggles; settlement undo deletes the settlement expense.
+* **Trade-offs Accepted:**
+  - Tab trail stops recording after 5 switches rather than trimming browser history.
+  - Undo window stays at the existing 2s.
+  - While a member delete is pending the member is hidden only in the Members tab; the trip header count updates when the delete commits.
 

@@ -53,6 +53,7 @@ describe('featureFlags', () => {
       'enableTripShareLink',
       'enableContactInvite',
       'enableExpenseQuickFilterChips',
+    'enableSyncQueueInspector',
     ]);
   });
 
@@ -105,9 +106,12 @@ describe('featureFlags', () => {
       enableCompactLedgerView: true,
       enableCategoryReorder: true,
       enableWhatsNewHub: true,
+      enableTabBackHistory: true,
+      enableDeepLinkedTabs: true,
+      enableExtendedUndo: true,
     };
     expect(getPhaseStatus('phase1', allArmed).status).toBe('armed');
-    expect(getPhaseStatus('phase1', allArmed).activeCount).toBe(8);
+    expect(getPhaseStatus('phase1', allArmed).activeCount).toBe(11);
 
     const allSafed = {
       ...DEFAULT_FEATURE_FLAGS,
@@ -119,6 +123,9 @@ describe('featureFlags', () => {
       enableCompactLedgerView: false,
       enableCategoryReorder: false,
       enableWhatsNewHub: false,
+      enableTabBackHistory: false,
+      enableDeepLinkedTabs: false,
+      enableExtendedUndo: false,
     };
     expect(getPhaseStatus('phase1', allSafed).status).toBe('safed');
     expect(getPhaseStatus('phase1', allSafed).activeCount).toBe(0);
@@ -204,7 +211,7 @@ describe('featureFlags', () => {
 
   it('verifies that every single flag in all phases can be enabled and disabled', () => {
     const allFlagKeys = Object.keys(DEFAULT_FEATURE_FLAGS) as (keyof typeof DEFAULT_FEATURE_FLAGS)[];
-    expect(allFlagKeys.length).toBe(75);
+    expect(allFlagKeys.length).toBe(80);
 
     allFlagKeys.forEach((flagKey) => {
       const disabledFlags = { ...DEFAULT_FEATURE_FLAGS, [flagKey]: false };

@@ -15,6 +15,7 @@ import { useAuthStore } from './store/authStore'
 import { isMissingSupabaseEnv } from './services/supabaseClient'
 import { initNativeShell } from './utils/nativeShell'
 import { initLiveUpdates } from './utils/liveUpdate'
+import { handleRootBackPress } from './utils/doubleBackExit'
 
 const LoginScreen = lazy(() =>
   import('./components/LoginScreen').then((m) => ({ default: m.LoginScreen }))
@@ -90,13 +91,13 @@ if (import.meta.env.DEV && isMissingSupabaseEnv && !useAuthStore.getState().sess
 }
 
 // Android hardware/gesture back button: pop whatever screen/modal pushed a
-// history entry (see useHistoryBack), or exit the app at the root screen.
+// history entry (see useHistoryBack), or exit the app on a double press at the root screen.
 // iOS handles the swipe-back gesture natively via WKWebView history.
 if (Capacitor.isNativePlatform()) {
   CapacitorApp.addListener('backButton', ({ canGoBack }) => {
     if (canGoBack) {
       window.history.back()
-    } else {
+    } else if (handleRootBackPress()) {
       CapacitorApp.exitApp()
     }
   })

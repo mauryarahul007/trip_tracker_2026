@@ -11,6 +11,9 @@ type Props = {
   onUndoDeleteGroup: () => void;
   pendingEditExpense?: Expense | null;
   onUndoEditExpense?: () => void;
+  // enableExtendedUndo: member delete/archive and recorded settlements.
+  pendingExtended?: { key: string; message: string; undoLabel: string } | null;
+  onUndoExtended?: () => void;
   durationMs: number;
 };
 
@@ -48,9 +51,11 @@ export function UndoToasts({
   onUndoDeleteGroup,
   pendingEditExpense,
   onUndoEditExpense,
+  pendingExtended,
+  onUndoExtended,
   durationMs,
 }: Props) {
-  if (!pendingDeleteExpense && !pendingDeleteTrip && !pendingDeleteGroup && !pendingEditExpense) return null;
+  if (!pendingDeleteExpense && !pendingDeleteTrip && !pendingDeleteGroup && !pendingEditExpense && !pendingExtended) return null;
 
   return (
     <div
@@ -93,6 +98,16 @@ export function UndoToasts({
           message={<>Group <strong>'{truncateForToast(pendingDeleteGroup.name)}'</strong> deleted</>}
           onUndo={onUndoDeleteGroup}
           durationMs={durationMs}
+        />
+      )}
+      {pendingExtended && onUndoExtended && (
+        <PostmarkToast
+          key={pendingExtended.key}
+          message={pendingExtended.message}
+          onUndo={onUndoExtended}
+          durationMs={durationMs}
+          icon={IconEdit}
+          undoLabel={pendingExtended.undoLabel}
         />
       )}
       {pendingEditExpense && onUndoEditExpense && (

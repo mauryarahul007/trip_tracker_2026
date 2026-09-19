@@ -33,6 +33,7 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 | 2026-09-19 | v3.30.2 | BUG-227 | [Voice expense payer is the signed-in member](#bug-227--voice-expense-payer-is-the-signed-in-member) |
 | 2026-09-19 | v3.30.3 | BUG-228 | [iOS WebKit compositor feel](#ios-webkit-compositor-feel) |
 | 2026-09-20 | v3.30.4 | BUG-229 / BUG-230 | [Expeditions chip contrast + iOS stack swipe](#expeditions-chip-contrast--ios-stack-swipe) |
+| 2026-09-20 | v3.31.0 | BUG-232..236 / FEAT-083..087 | [Navigation, dialogs & sync UX pass](#navigation-dialogs--sync-ux-pass-v3310) |
 
 ---
 
@@ -526,6 +527,104 @@ No new flag. Summary / Who owes who available when balances exist.
 
 ### Pass
 - iOS scroll/drag feels within a small gap of Android (no 15–30fps sheet/stack hitch). Android visuals are unchanged.
+
+---
+
+## Navigation, dialogs & sync UX pass (v3.31.0)
+
+**Ids:** BUG-232 (F1), BUG-233 (F2), BUG-234 (F4), BUG-235 (F5), BUG-236 (F6); FEAT-083 (A), FEAT-084 (B), FEAT-085 (C), FEAT-086 (D), FEAT-087 (E). **Migrations:** none. **ADR:** #203.
+
+### Flags
+| Behavior | Flag | Default | Phase |
+|----------|------|---------|-------|
+| Back walks the tabs you visited (up to 5) | `enableTabBackHistory` | OFF | Phase 1 |
+| `?trip=&tab=` mirrors the open screen; refresh / shared link restores it | `enableDeepLinkedTabs` | OFF | Phase 1 |
+| Undo toast for member delete, member archive, recorded settlement | `enableExtendedUndo` | OFF | Phase 1 |
+| New-expense draft survives app close (24h), covers payers / currency / location / itemized receipt | `enablePersistentExpenseDraft` | OFF | Phase 2 |
+| Offline queue shows readable items, errors, per-item Retry / Discard | `enableSyncQueueInspector` | OFF | Phase 5 |
+
+Arm each in Superadmin **Ops Deck → Flags** (arm the whole phase, or use **Tune Individual Flags**).
+
+### Fixes (no flag — verify with all flags OFF)
+
+**F1. Back closes the three overlays that used to ignore it**
+1. (needs `enableSimplifyDebtsToggle`) Open a trip → Balances → tap the info icon next to "simplify" → the **Settlement Algorithm** sheet opens. Press browser Back / Android back / swipe-back → only the sheet closes; you stay on the same trip and tab. Repeat with **Esc** on desktop.
+2. (needs `enableTripCloseout`) Settings → **Close out trip** → the closeout modal opens. Press Back → only the modal closes.
+3. Go offline (DevTools → Network → Offline) and make any edit → tap the **In-Flight** pill → the queue drawer opens. Press Back → only the drawer closes.
+4. In each case, with the overlay closed, one more Back leaves the trip as before (no extra history entry left behind).
+
+**F2. Android: press back again to exit** (native Android build only)
+1. From the trips list (root screen), press the back button once → a **"Press back again to exit"** pill appears and the app stays open.
+2. Press back again within 2 seconds → the app exits.
+3. Press once, wait 3 seconds, press again → the hint shows again (no exit).
+4. Inside a trip / any sheet, back still steps out one level as before (no hint).
+
+**F4. Web: reload warning on an unsaved new expense** (flag `enablePersistentExpenseDraft` OFF)
+1. Add Expense → type a title or amount → reload or close the tab → the browser shows its "Leave site?" prompt.
+2. Empty form, or editing an existing expense → no prompt.
+3. Save the expense → no prompt afterwards.
+4. Native app: no prompt at all (not applicable).
+
+**F5. No more native `alert()` popups**
+1. New Trip → enter a name, leave dates empty → **Save Trip** → a red inline message *"Please choose a start and end date for the trip."* appears under **Dates**; no browser alert. Pick both dates → message clears; trip saves.
+2. Biometric enroll prompt (needs `enableBiometricAuth`, device with a passkey): cancel the system prompt / cause a failure → the error appears inside the prompt card in red. No alert; tapping ✕ clears it.
+
+**F6. Focus is trapped and restored in the overlays** — open the simplify sheet or the queue drawer with the keyboard (Tab/Enter): Tab cycles inside the dialog; Esc closes it; focus returns to the button that opened it.
+
+### A. `enableTabBackHistory`
+1. Flag OFF → open a trip, go Summary → Expenses → Members, press Back → jumps straight to **Summary** (old behavior).
+2. Flag ON → repeat: Back goes **Members → Expenses → Summary**, one step at a time; one more Back leaves the trip.
+3. Switch to the same tab you're already on → no extra Back step.
+4. Switch tabs more than 5 times → the last 5 steps are walkable; Back never breaks or skips the trip exit.
+5. Swipe between tabs (edge swipe) → those switches are recorded too.
+6. Leave the trip with the on-screen back arrow while on the Members tab → trips list shows; press Back once → you are **not** dropped into a stale tab of the old trip.
+**Pass:** Back always retraces tabs in reverse order; leaving the trip is always the last step.
+
+### B. `enableDeepLinkedTabs`
+1. Flag ON → open a trip and switch tabs → the address bar shows `?trip=<id>&tab=<tab>` (Expenses tab = `ledger`, Summary = `expenses`). The Back stack is unchanged (no new entries).
+2. Reload → you land on the same trip and tab.
+3. Paste that URL into a new browser tab (signed in) → same trip and tab. Signed out → login, then you land on it afterwards.
+4. Edit the URL to a trip id you don't belong to, or a tab that doesn't exist (`tab=nope`) → the app opens normally, no error, and the URL is rewritten to the real state.
+5. Leave the trip → `trip` / `tab` are removed from the URL; other query params stay.
+6. With `enableTabBackHistory` also ON: open a URL with `tab=members` → Back returns to Summary before leaving the trip.
+7. Flag OFF → URL never gets `trip` / `tab`; existing `?trip=` in the URL is ignored.
+
+### C. `enablePersistentExpenseDraft`
+1. Flag OFF → type into Add Expense, hard-reload → reopening shows the draft only within the same browser tab session (old behavior); closing the tab loses it. Nothing stored in `localStorage` under `tt_draft_expense_*`.
+2. Flag ON → Add Expense → title `Beach shack lunch`, amount `450`; wait 1s → DevTools → Application → Local Storage → `tt_draft_expense_<tripId>` exists with `savedAt`.
+3. Close the tab / kill the app and reopen → Add Expense shows **"Restored unsaved draft"**, with title, amount, category, date, payer, split, multi-payer shares, currency, location, and itemized items restored.
+4. Tap **Discard** on the banner → fields reset and the storage key is gone.
+5. Save the expense → draft is removed; reopening Add Expense is blank.
+6. Edit `savedAt` in DevTools to more than 24h ago → reopening shows a blank form and the key is deleted.
+7. Background the app right after typing (switch tab / app) → the draft is still saved (flushed on hide).
+8. With the flag ON, the browser "Leave site?" prompt (F4) is **not** shown.
+
+### D. `enableSyncQueueInspector`
+1. Flag OFF → go offline, make 2 edits → pill shows "2 staged offline"; drawer rows show a raw type name and "Staged locally", no buttons.
+2. Flag ON → drawer rows read like **"Add expense: Dinner"**, **"Delete member: Asha"**, **"Create trip: Goa"**, each with **Retry** (online only) and **Discard**.
+3. Go online with a change the server rejects (permission / policy error) → the row stays in the drawer with a red border, **"Needs attention: <error>"**, and is **not** dropped silently. It is skipped by automatic sync until you tap **Retry**.
+4. A network failure shows **"Retrying (attempt N): <error>"** and keeps retrying automatically.
+5. **Discard** → first tap changes the button to **Confirm?**, second tap removes the row. Discarding a queued *Add expense* also removes that expense from the ledger and anything queued against it.
+6. Discarding the last item closes the drawer (banner disappears when online); pressing Back afterwards leaves the trip, not a ghost drawer.
+7. Reload with items queued → rows, errors and "Needs attention" markers persist.
+
+### E. `enableExtendedUndo`
+1. Flag OFF → Members tab → delete a member (confirm) → member is deleted immediately, no undo toast.
+2. Flag ON → delete a member (confirm) → member disappears from the list at once and a toast **"Member 'X' deleted · Undo"** shows for about 2 seconds.
+   - Tap **Undo** → member is back, with balances and groups intact. Do nothing → member is deleted for good when the toast ends (offline queue shows "Delete member: X").
+   - Delete member A, then quickly member B → A is deleted for good (committed), B gets the toast.
+3. Archive a member → toast **"Member 'X' archived · Undo archive"**; Undo restores them. Restore an archived member → toast **"restored · Undo restore"**.
+4. Record a settlement (Balances → Settle → confirm) → toast **"Settlement recorded · Undo settlement"**; Undo removes the settlement expense and the balance returns.
+5. Leave the trip / close the app mid-toast on a member delete → the delete is committed, not lost.
+
+### Negative checks
+- With **all five flags OFF**: tab Back jumps to Summary, no URL params, no draft in `localStorage`, drawer rows show raw type names with no buttons, no undo toast for members or settlements. Fixes F1–F6 still apply.
+- Superadmin **Traveler Preview** follows the same flags as real users.
+
+### Pass
+- Back always closes the top-most overlay first, then retraces tabs (flag ON), then leaves the trip; nothing is left in the history stack afterwards.
+- A failed offline change is never lost without the user choosing **Discard**.
+- Drafts survive an app kill for up to 24h and vanish after save, Discard or expiry.
 
 ---
 

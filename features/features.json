@@ -1307,5 +1307,70 @@
     "shippedBy": "agent",
     "shippedAt": "2026-09-17T18:00:32.585Z",
     "shippedNote": "Shipped flag-gated (default OFF), see docs/FEATURE_TEST_STEPS.md and decisions.md #193"
+  },
+  {
+    "id": "FEAT-083",
+    "title": "Tab Back History: back gesture walks the tabs you visited (enableTabBackHistory)",
+    "description": "Tab Back History: back gesture walks the tabs you visited (enableTabBackHistory)",
+    "category": "ui-ux",
+    "status": "requested",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-09-19T21:55:40.506Z",
+    "updatedAt": "2026-09-19T21:55:40.506Z"
+  },
+  {
+    "id": "FEAT-084",
+    "title": "Deep-Linked Tabs: ?trip=&tab= restores the open screen on refresh or shared link (enableDeepLinkedTabs)",
+    "description": "Deep-Linked Tabs: ?trip=&tab= restores the open screen on refresh or shared link (enableDeepLinkedTabs)",
+    "category": "ui-ux",
+    "status": "requested",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-09-19T21:55:40.584Z",
+    "updatedAt": "2026-09-19T21:55:40.584Z"
+  },
+  {
+    "id": "FEAT-085",
+    "title": "Persistent Expense Draft: 24h draft survives app close, covers payers/currency/location/receipt (enablePersistentExpenseDraft)",
+    "description": "Persistent Expense Draft: 24h draft survives app close, covers payers/currency/location/receipt (enablePersistentExpenseDraft)",
+    "category": "ui-ux",
+    "status": "requested",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-09-19T21:55:40.650Z",
+    "updatedAt": "2026-09-19T21:55:40.650Z"
+  },
+  {
+    "id": "FEAT-086",
+    "title": "Sync Queue Inspector: readable offline queue with errors, Retry and Discard (enableSyncQueueInspector)",
+    "description": "Sync Queue Inspector: readable offline queue with errors, Retry and Discard (enableSyncQueueInspector)",
+    "category": "sync",
+    "status": "requested",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-09-19T21:55:40.721Z",
+    "updatedAt": "2026-09-19T21:55:40.721Z"
+  },
+  {
+    "id": "FEAT-087",
+    "title": "Extended Undo: undo for member delete/archive and recorded settlements (enableExtendedUndo)",
+    "description": "Extended Undo: undo for member delete/archive and recorded settlements (enableExtendedUndo)",
+    "category": "ui-ux",
+    "status": "requested",
+    "requestedBy": "claude-cli",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-09-19T21:55:40.788Z",
+    "updatedAt": "2026-09-19T21:55:40.788Z"
   }
 ]

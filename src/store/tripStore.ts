@@ -119,6 +119,12 @@ interface SyncQueueItem {
   id: string;
   type: SyncQueueItemType;
   payload: any;
+  // enableSyncQueueInspector: failure bookkeeping so the drawer can explain
+  // a stuck change. needsAttention items are skipped by processQueue until
+  // the user retries or discards them.
+  attempts?: number;
+  lastError?: string;
+  needsAttention?: boolean;
 }
 
 interface TripStore extends TripState {
@@ -170,6 +176,8 @@ interface TripStore extends TripState {
   refreshActiveTripExpenses: () => Promise<void>;
   clearStorageError: () => void;
   processQueue: () => Promise<void>;
+  retrySyncItem: (id: string) => Promise<void>;
+  discardSyncItem: (id: string) => Promise<void>;
   queueSync: (type: SyncQueueItemType, payload: any) => void;
   updateLastBackendSyncedAt: (timestamp: number) => void;
   resolveConflictKeepLocal: (expenseId: string) => Promise<void>;
@@ -1302,8 +1310,13 @@ export const useTripStore = create<TripStore>()(
       if (get().syncQueue.length === 0) return;
       const queue = [...get().syncQueue];
       set({ syncQueue: [] });
+      const inspectorOn = get().isFeatureEnabled('enableSyncQueueInspector');
 
       for (const item of queue) {
+        if (inspectorOn && item.needsAttention) {
+          set((state) => ({ syncQueue: [...state.syncQueue, item] }));
+          continue;
+        }
         try {
           if (item.type === 'addExpense') {
             const { tempId, expenseData } = item.payload;
@@ -1436,9 +1449,21 @@ export const useTripStore = create<TripStore>()(
           }
         } catch (err) {
           console.error('Offline sync failed for item:', item, err);
-          if (isNonRetryableSyncError(err)) {
+          const nonRetryable = isNonRetryableSyncError(err);
+          if (nonRetryable) {
             set({ storageError: "A change couldn't be saved — you may not have permission to edit that expense. Ask the trip admin to fix it." });
-          } else {
+          }
+          if (inspectorOn) {
+            // Keep the change (flagged if it can't succeed on its own) so the
+            // user can see what failed and choose to retry or discard it.
+            const failed: SyncQueueItem = {
+              ...item,
+              attempts: (item.attempts ?? 0) + 1,
+              lastError: err instanceof Error ? err.message : 'Unknown error',
+              needsAttention: nonRetryable || undefined,
+            };
+            set((state) => ({ syncQueue: [...state.syncQueue, failed] }));
+          } else if (!nonRetryable) {
             set((state) => ({ syncQueue: [...state.syncQueue, item] }));
           }
         }
@@ -1447,6 +1472,29 @@ export const useTripStore = create<TripStore>()(
       if (get().syncQueue.length === 0) {
         get().updateLastBackendSyncedAt(Date.now());
       }
+    },
+
+    retrySyncItem: async (id) => {
+      set((state) => ({
+        syncQueue: state.syncQueue.map((item) => (item.id === id ? { ...item, needsAttention: undefined } : item)),
+      }));
+      if (navigator.onLine) await get().processQueue();
+    },
+
+    discardSyncItem: async (id) => {
+      const item = get().syncQueue.find((i) => i.id === id);
+      if (!item) return;
+      // Discarding a queued add also drops the optimistic local copy and
+      // anything queued against its temp id, or it would linger as a phantom.
+      const tempId = item.type === 'addExpense' ? item.payload?.tempId : undefined;
+      set((state) => ({
+        syncQueue: state.syncQueue.filter(
+          (i) => i.id !== id && !(tempId && (i.payload?.id === tempId || i.payload?.tempId === tempId))
+        ),
+        expenses: tempId ? state.expenses.filter((e) => e.id !== tempId) : state.expenses,
+        lastModifiedAt: Date.now(),
+      }));
+      if (tempId) await deleteOfflineReceipt(tempId).catch(() => {});
     },
 
     createTrip: async (name, startDate, endDate, baseCurrency, destination, stops) => {
@@ -2451,13 +2499,13 @@ export const useTripStore = create<TripStore>()(
       set((state) => ({ members: { ...state.members, [id]: { ...member, archived } }, storageError: null }));
 
       if (!navigator.onLine) {
-        get().queueSync('toggleArchiveMember', { id, archived });
+        get().queueSync('toggleArchiveMember', { id, name: member.name, archived });
       } else {
         try {
           await updateMemberRow(id, { archived });
         } catch (e) {
           console.warn('Online toggleArchiveMember failed, falling back to offline sync queue:', e);
-          get().queueSync('toggleArchiveMember', { id, archived });
+          get().queueSync('toggleArchiveMember', { id, name: member.name, archived });
         }
       }
     },
@@ -2542,7 +2590,7 @@ export const useTripStore = create<TripStore>()(
       });
 
       if (!navigator.onLine) {
-        get().queueSync('deleteMember', { id, groupsToDissolve, groupsToRename });
+        get().queueSync('deleteMember', { id, name: currentMembers[id]?.name, groupsToDissolve, groupsToRename });
       } else {
         try {
           await deleteMemberRow(id); // cascades group_members via FK
@@ -2552,7 +2600,7 @@ export const useTripStore = create<TripStore>()(
           ]);
         } catch (e) {
           console.warn('Online deleteMember failed, falling back to offline sync queue:', e);
-          get().queueSync('deleteMember', { id, groupsToDissolve, groupsToRename });
+          get().queueSync('deleteMember', { id, name: currentMembers[id]?.name, groupsToDissolve, groupsToRename });
         }
       }
     },

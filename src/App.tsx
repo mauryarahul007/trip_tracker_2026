@@ -88,7 +88,9 @@ import { IconCalendar, IconChevronLeft, IconChevronDown, IconChevronUp, IconShie
 import { ActionSheet } from './components/common/ActionSheet';
 import { formatDateRange } from './utils/dateRange';
 import { useScrollLock } from './utils/useScrollLock';
-import { useHistoryBack } from './utils/useHistoryBack';
+import { useHistoryBack, useHistoryStack } from './utils/useHistoryBack';
+import { pushTab, popTab } from './utils/tabTrail';
+import { parseDeepLink, withDeepLink, type DeepLink } from './utils/deepLink';
 import { getCatColor } from './utils/categoryColor';
 import { useTabSwipe } from './utils/useTabSwipe';
 // ChecklistNotesTab (1,183 lines) stays mounted once visited -- code-split
@@ -217,6 +219,7 @@ export default function App() {
   const isBiometricFeatureEnabled = useTripStore((s) => s.isFeatureEnabled('enableBiometricAuth'));
   const [isScreenLocked, setIsScreenLocked] = useState<boolean>(false);
   const [showBioEnrollPrompt, setShowBioEnrollPrompt] = useState(false);
+  const [bioEnrollError, setBioEnrollError] = useState('');
 
   useEffect(() => {
     if (!userId || !isBiometricFeatureEnabled) {
@@ -266,6 +269,32 @@ export default function App() {
   }, [isChatFirstNav, hasNotesOrPassesTab]);
 
   const [activeTab, setActiveTabRaw] = useState<Tab>('expenses');
+  const activeTabRef = useRef(activeTab);
+  activeTabRef.current = activeTab;
+
+  // enableTabBackHistory: each tab switch leaves a back-step behind, so the
+  // back gesture walks the tabs in reverse. tabTrail feeds useHistoryStack
+  // (one history entry per step); the ref mirror lets pop handlers that fire
+  // back-to-back from a fast swipe see each other's updates.
+  const tabBackHistoryOn = !!activeTripId && isFeatureEnabled('enableTabBackHistory', { tripId: activeTripId, userId: userId || undefined });
+  const tabBackHistoryOnRef = useRef(tabBackHistoryOn);
+  tabBackHistoryOnRef.current = tabBackHistoryOn;
+  const [tabTrail, setTabTrailState] = useState<Tab[]>([]);
+  const tabTrailRef = useRef<Tab[]>([]);
+  const setTabTrail = useCallback((next: Tab[]) => {
+    tabTrailRef.current = next;
+    setTabTrailState(next);
+  }, []);
+  const recordTabSwitch = useCallback((to: Tab) => {
+    if (tabBackHistoryOnRef.current) setTabTrail(pushTab(tabTrailRef.current, activeTabRef.current, to));
+  }, [setTabTrail]);
+  const setActiveTabTracked = useCallback((tab: Tab) => {
+    recordTabSwitch(tab);
+    setActiveTabRaw(tab);
+  }, [recordTabSwitch]);
+  useEffect(() => {
+    if (!tabBackHistoryOn && tabTrailRef.current.length > 0) setTabTrail([]);
+  }, [tabBackHistoryOn, setTabTrail]);
   const mainContentRef = useRef<HTMLElement>(null);
 
   // Set only for notification types whose destination is a sub-tab inside
@@ -321,10 +350,11 @@ export default function App() {
   // synchronously inside the transition callback, which is what the API
   // needs to capture old/new snapshots correctly with React's batching.
   const setActiveTab = useCallback((tab: Tab) => {
+    recordTabSwitch(tab);
     withViewTransition(() => {
       flushSync(() => setActiveTabRaw(tab));
     });
-  }, []);
+  }, [recordTabSwitch]);
 
   // Tapping a notification should land the traveler on the screen it's
   // actually about, not just mark it read and leave them wherever they were.
@@ -370,7 +400,45 @@ export default function App() {
   // view-transition crossfade -- the drag itself already animates the
   // handoff (the pane visually slides into place), so layering a
   // second, independent crossfade on top would fight it.
-  const tabSwipe = useTabSwipe(mainContentRef, currentTabOrder, activeTab, setActiveTabRaw);
+  const tabSwipe = useTabSwipe(mainContentRef, currentTabOrder, activeTab, setActiveTabTracked);
+
+  // enableDeepLinkedTabs: ?trip=<id>&tab=<tab> mirrors the open screen so a
+  // refresh or shared link lands back on it. Read once at load, applied
+  // after trips have loaded; replaceState (keeping history.state) so it
+  // never adds or disturbs back-stack entries.
+  const deepLinkOn = isFeatureEnabled('enableDeepLinkedTabs', { userId: userId || undefined });
+  const extendedUndoOn = isFeatureEnabled('enableExtendedUndo', { tripId: activeTripId ?? undefined, userId: userId || undefined });
+  const pendingDeepLinkRef = useRef<DeepLink | null | undefined>(undefined);
+  if (pendingDeepLinkRef.current === undefined) {
+    const parsed = parseDeepLink(window.location.search);
+    pendingDeepLinkRef.current = parsed.tripId ? parsed : null;
+  }
+  const deepLinkTabRef = useRef<{ tripId: string; tab: string } | null>(null);
+  useEffect(() => {
+    const pending = pendingDeepLinkRef.current;
+    if (!deepLinkOn || !initialized || !pending?.tripId) return;
+    pendingDeepLinkRef.current = null;
+    if (!trips.some((t) => t.id === pending.tripId)) return;
+    if (pending.tab) deepLinkTabRef.current = { tripId: pending.tripId, tab: pending.tab };
+    if (activeTripId !== pending.tripId) void selectTrip(pending.tripId);
+  }, [deepLinkOn, initialized, trips, activeTripId, selectTrip]);
+  useEffect(() => {
+    const target = deepLinkTabRef.current;
+    if (!target || target.tripId !== activeTripId) return;
+    deepLinkTabRef.current = null;
+    const tab = (currentTabOrder as readonly string[]).includes(target.tab) ? (target.tab as Tab) : null;
+    if (!tab || tab === activeTabRef.current) return;
+    if (tabBackHistoryOnRef.current) setTabTrail(['expenses']);
+    setActiveTabRaw(tab);
+  // trips/initialized/deepLinkOn re-run this after the effect above queues a tab
+  }, [activeTripId, currentTabOrder, setTabTrail, trips, initialized, deepLinkOn]);
+  useEffect(() => {
+    if (!deepLinkOn || !initialized || pendingDeepLinkRef.current || deepLinkTabRef.current) return;
+    const search = withDeepLink(window.location.search, activeTripId, activeTab);
+    if (search !== window.location.search) {
+      window.history.replaceState(window.history.state, '', window.location.pathname + search + window.location.hash);
+    }
+  }, [deepLinkOn, initialized, activeTripId, activeTab]);
 
   // Bumped to tell MembersGroupsTab to open its add-member popup -- the
   // nav bar's FAB triggers this instead of add-expense while on the
@@ -573,6 +641,15 @@ export default function App() {
   const [tripUndoTimer, setTripUndoTimer] = useState<ReturnType<typeof setTimeout> | null>(null);
   const [pendingDeleteGroup, setPendingDeleteGroup] = useState<Group | null>(null);
   const [groupUndoTimer, setGroupUndoTimer] = useState<ReturnType<typeof setTimeout> | null>(null);
+  // enableExtendedUndo: one generic slot for member delete/archive and
+  // recorded-settlement undo. A deferred action (member delete) commits via
+  // onExpire; staging a new toast, or unmounting, commits the pending one
+  // first so a quick second action never silently drops the first.
+  type ExtendedUndo = { key: string; message: string; undoLabel: string; onUndo: () => void; onExpire?: () => void };
+  const [extendedUndo, setExtendedUndo] = useState<ExtendedUndo | null>(null);
+  const extendedUndoRef = useRef<ExtendedUndo | null>(null);
+  const extendedUndoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [pendingDeleteMemberId, setPendingDeleteMemberId] = useState<string | null>(null);
   // Undo-edit: unlike delete, the edit is already applied (the form is
   // closed) -- this snapshot is what undo re-applies via updateExpense to
   // revert it, going through the same optimistic/offline-queue path as any
@@ -1427,7 +1504,7 @@ export default function App() {
       message,
       confirmLabel: 'Delete',
       danger: true,
-      onConfirm: () => deleteMember(member.id),
+      onConfirm: () => (extendedUndoOn ? stageMemberDelete(member) : deleteMember(member.id)),
     });
   };
 
@@ -1736,6 +1813,57 @@ export default function App() {
     setPendingDeleteGroup(null);
   };
 
+  const settleExtendedUndo = (commit: boolean) => {
+    if (extendedUndoTimerRef.current) clearTimeout(extendedUndoTimerRef.current);
+    extendedUndoTimerRef.current = null;
+    const current = extendedUndoRef.current;
+    extendedUndoRef.current = null;
+    setExtendedUndo(null);
+    setPendingDeleteMemberId(null);
+    if (commit) current?.onExpire?.();
+  };
+
+  const stageExtendedUndo = (toast: Omit<ExtendedUndo, 'key'>) => {
+    settleExtendedUndo(true);
+    const staged = { ...toast, key: `ext-${Date.now()}` };
+    extendedUndoRef.current = staged;
+    setExtendedUndo(staged);
+    extendedUndoTimerRef.current = setTimeout(() => settleExtendedUndo(true), UNDO_DURATION_MS);
+  };
+
+  const handleUndoExtended = () => {
+    const current = extendedUndoRef.current;
+    settleExtendedUndo(false);
+    current?.onUndo();
+  };
+
+  // Commit a still-pending deferred action if the app unmounts mid-window.
+  useEffect(() => () => settleExtendedUndo(true), []);
+
+  const truncateName = (name: string) => (name.length > 40 ? `${name.slice(0, 39).trimEnd()}…` : name);
+
+  const stageMemberDelete = (member: Member) => {
+    stageExtendedUndo({
+      message: `Member '${truncateName(member.name)}' deleted`,
+      undoLabel: 'Undo member deletion',
+      onUndo: () => {},
+      onExpire: () => void deleteMember(member.id),
+    });
+    // After staging: staging first commits (and clears) any earlier pending toast.
+    setPendingDeleteMemberId(member.id);
+  };
+
+  const handleToggleArchiveMember = (id: string) => {
+    const member = members[id];
+    void toggleArchiveMember(id);
+    if (!member) return;
+    stageExtendedUndo({
+      message: `Member '${truncateName(member.name)}' ${member.archived ? 'restored' : 'archived'}`,
+      undoLabel: member.archived ? 'Undo restore' : 'Undo archive',
+      onUndo: () => void toggleArchiveMember(id),
+    });
+  };
+
 
 
   // Record a settlement transfer. fromId/toId are the real member ids that
@@ -1792,16 +1920,33 @@ export default function App() {
         const titleText = note
           ? `Settlement: ${fromLabel} ➔ ${toLabel} — ${note}`
           : `Settlement: ${fromLabel} ➔ ${toLabel}`;
-        addExpense({
+        const settlement = {
           title: titleText,
           amount: amount,
           currency: activeTrip.baseCurrency,
           category: 'cat-misc',
           date,
           paidBy: fromId, // paid by debtor
-          splitMode: 'exact',
+          splitMode: 'exact' as const,
           splitMemberIds: [toId], // split 100% to creditor
           splitConfig: { [toId]: amount }
+        };
+        if (!extendedUndoOn) {
+          addExpense(settlement);
+          return;
+        }
+        // addExpense doesn't return the new id, so find the just-created
+        // settlement by its (unique enough) title/date/amount, newest first.
+        void addExpense(settlement).then(() => {
+          const created = useTripStore.getState().expenses
+            .filter((e) => e.tripId === activeTrip.id && !e.deletedAt && e.title === titleText && e.date === date && e.amount === amount)
+            .sort((a, b) => b.createdAt - a.createdAt)[0];
+          if (!created) return;
+          stageExtendedUndo({
+            message: 'Settlement recorded',
+            undoLabel: 'Undo settlement',
+            onUndo: () => void deleteExpense(created.id),
+          });
         });
       },
     });
@@ -1905,13 +2050,22 @@ export default function App() {
     setIsTravelerPreview(false);
     void selectTrip(null);
   });
+  // Declared before the trip-level entry below so a UI-driven trip exit
+  // unwinds the tab trail first (see useHistoryStack).
+  useHistoryStack(tabBackHistoryOn ? tabTrail.length : 0, () => {
+    const { tab, trail } = popTab(tabTrailRef.current);
+    if (!tab) return;
+    setTabTrail(trail);
+    setActiveTabRaw(tab);
+  });
   useHistoryBack(!!activeTripId && !isTravelerPreview, () => selectTrip(null));
-  useHistoryBack(!!activeTripId && activeTab !== 'expenses', () => setActiveTab('expenses'));
+  useHistoryBack(!!activeTripId && !tabBackHistoryOn && activeTab !== 'expenses', () => setActiveTab('expenses'));
   useHistoryBack(showAddTrip, handleCancelTripForm);
   useHistoryBack(showAddExpense, handleCancelExpenseForm);
   useHistoryBack(showExpenseFilterDrawer, () => setShowExpenseFilterDrawer(false));
   useHistoryBack(!!selectedReviewExpense, () => setSelectedReviewExpense(null));
   useHistoryBack(showShareTrip, () => setShowShareTrip(false));
+  useHistoryBack(showCloseout, () => setShowCloseout(false));
   // ActionSheet / ConfirmDialog / FX / QuickAdd / Snapshot / Gallery / BugTracker
   // own their own history entries — do not double-register here.
   useHistoryBack(showRouteModal, () => setShowRouteModal(false));
@@ -2547,12 +2701,12 @@ export default function App() {
               <MembersGroupsTab
                 showMembersRequiredNotice={showMembersRequiredNotice}
                 dismissMembersRequiredNotice={() => setShowMembersRequiredNotice(false)}
-                activeTripMembers={activeTripMembers}
-                visibleMembers={visibleMembers}
-                archivedMembers={archivedMembers}
+                activeTripMembers={activeTripMembers.filter((m) => m.id !== pendingDeleteMemberId)}
+                visibleMembers={visibleMembers.filter((m) => m.id !== pendingDeleteMemberId)}
+                archivedMembers={archivedMembers.filter((m) => m.id !== pendingDeleteMemberId)}
                 balances={balances}
                 currencySymbol={activeTrip ? getCurrencySymbol(activeTrip.baseCurrency) : ''}
-                onToggleArchiveMember={toggleArchiveMember}
+                onToggleArchiveMember={extendedUndoOn ? handleToggleArchiveMember : toggleArchiveMember}
                 onSaveMember={handleSaveMember}
                 onDeleteMember={handleDeleteMember}
                 visibleTripGroups={visibleTripGroups}
@@ -3038,6 +3192,8 @@ export default function App() {
         onUndoDeleteGroup={handleUndoDeleteGroup}
         pendingEditExpense={pendingEditExpense}
         onUndoEditExpense={handleUndoEditExpense}
+        pendingExtended={extendedUndo}
+        onUndoExtended={handleUndoExtended}
         durationMs={UNDO_DURATION_MS}
       />
 
@@ -3499,8 +3655,11 @@ export default function App() {
               <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>
                 Enable Fingerprint / Face ID
               </div>
-              <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
-                Faster, secure 1-tap unlock on this device
+              <div
+                role={bioEnrollError ? 'alert' : undefined}
+                style={{ fontSize: '11px', color: bioEnrollError ? 'var(--color-danger, #DC2626)' : 'var(--text-secondary)' }}
+              >
+                {bioEnrollError || 'Faster, secure 1-tap unlock on this device'}
               </div>
             </div>
           </div>
@@ -3511,13 +3670,14 @@ export default function App() {
               style={{ padding: '6px 12px', fontSize: '12px' }}
               onClick={async () => {
                 triggerHaptic('light');
+                setBioEnrollError('');
                 const res = await registerBiometricCredential(userId, userDisplayName);
                 if (res.success) {
                   triggerHaptic('success');
                   setShowBioEnrollPrompt(false);
                 } else if (res.error) {
                   triggerHaptic('heavy');
-                  alert(res.error);
+                  setBioEnrollError(res.error);
                 }
               }}
             >
@@ -3530,6 +3690,7 @@ export default function App() {
               onClick={() => {
                 triggerHaptic('light');
                 try { localStorage.setItem(`tt_bio_prompt_dismissed_${userId}`, '1'); } catch { /* storage blocked or full */ }
+                setBioEnrollError('');
                 setShowBioEnrollPrompt(false);
               }}
               aria-label="Dismiss"

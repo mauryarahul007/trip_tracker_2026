@@ -351,3 +351,53 @@ describe('selectTrip recycle-bin cache', () => {
     expect(useTripStore.getState().deletedExpenses.map((e) => e.id)).toEqual(['del-1']);
   });
 });
+
+describe('sync queue inspector actions', () => {
+  it('discarding a queued addExpense also drops the local copy and dependent queue items', async () => {
+    useTripStore.setState({
+      expenses: [makeExpense({ id: 'temp-1', tripId: 'trip-a' }), makeExpense({ id: 'keep-1', tripId: 'trip-a' })],
+      syncQueue: [
+        { id: 'q1', type: 'addExpense', payload: { tempId: 'temp-1', expenseData: {} } },
+        { id: 'q2', type: 'updateExpense', payload: { id: 'temp-1', expenseData: {} } },
+        { id: 'q3', type: 'deleteExpense', payload: { id: 'keep-1' } },
+      ],
+    });
+
+    await useTripStore.getState().discardSyncItem('q1');
+
+    const state = useTripStore.getState();
+    expect(state.expenses.map((e) => e.id)).toEqual(['keep-1']);
+    expect(state.syncQueue.map((i) => i.id)).toEqual(['q3']);
+  });
+
+  it('discarding a non-add item only removes that queue entry', async () => {
+    useTripStore.setState({
+      expenses: [makeExpense({ id: 'e1', tripId: 'trip-a' })],
+      syncQueue: [
+        { id: 'q1', type: 'deleteExpense', payload: { id: 'e1' } },
+        { id: 'q2', type: 'deleteExpense', payload: { id: 'e2' } },
+      ],
+    });
+
+    await useTripStore.getState().discardSyncItem('q1');
+
+    expect(useTripStore.getState().syncQueue.map((i) => i.id)).toEqual(['q2']);
+    expect(useTripStore.getState().expenses).toHaveLength(1);
+  });
+
+  it('retry clears needsAttention on the item (offline: no replay attempted)', async () => {
+    useTripStore.setState({
+      syncQueue: [{ id: 'q1', type: 'deleteExpense', payload: { id: 'e1' }, needsAttention: true, attempts: 2, lastError: 'blocked' }],
+    });
+    const descriptor = Object.getOwnPropertyDescriptor(navigator, 'onLine');
+    Object.defineProperty(navigator, 'onLine', { configurable: true, get: () => false });
+    try {
+      await useTripStore.getState().retrySyncItem('q1');
+    } finally {
+      if (descriptor) Object.defineProperty(navigator, 'onLine', descriptor);
+      else Object.defineProperty(navigator, 'onLine', { configurable: true, value: true });
+    }
+    expect(useTripStore.getState().syncQueue[0].needsAttention).toBeUndefined();
+    expect(useTripStore.getState().syncQueue[0].attempts).toBe(2);
+  });
+});
