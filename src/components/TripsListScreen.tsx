@@ -10,7 +10,7 @@ import { avatarColorForName } from '../utils/avatarColor';
 import { newId } from '../utils/uuid';
 import { useTripStore } from '../store/tripStore';
 import { SwipeableRow } from './SwipeableRow';
-import { TripStack } from './TripStack';
+import { TripStack, useTripPhoto, usePhotoTextTone } from './TripStack';
 import { TripSlideLauncher } from './TripSlideLauncher';
 import { HomeAmbientBackdrop } from './HomeAmbientBackdrop';
 import { OnboardingSwipe } from './OnboardingSwipe';
@@ -123,6 +123,9 @@ export function TripsListScreen({
   useEscapeKey(showList, () => setShowList(false));
   // Enables full luxury hero spotlight even with 1 trip
   const stackActive = trips.length >= 1 && !showList && !showAddTrip && !showJoinTrip;
+  const ambientTrip = focusedTrip || trips[0] || null;
+  const ambientPhotoUrl = useTripPhoto(ambientTrip?.destination, ambientTrip?.coverImageUrl, ambientTrip?.name);
+  const expeditionsTone = usePhotoTextTone(ambientPhotoUrl);
 
   useEffect(() => {
     preloadModule(() => import('./ExpenseForm'));
@@ -285,7 +288,7 @@ export function TripsListScreen({
             {trips.length > 0 && (
               <>
                 <span style={{ margin: '0 6px', opacity: 0.4 }}>&middot;</span>
-                <span className="home-expeditions-count">{trips.length} {trips.length === 1 ? 'Expedition' : 'Expeditions'}</span>
+                <span className={`home-expeditions-count${ambientPhotoUrl ? ` tone-${expeditionsTone}` : ''}`}>{trips.length} {trips.length === 1 ? 'Expedition' : 'Expeditions'}</span>
               </>
             )}
             {typeof navigator !== 'undefined' && (!navigator.onLine || syncQueue.length > 0) && (

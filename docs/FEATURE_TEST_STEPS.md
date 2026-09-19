@@ -32,6 +32,7 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 | 2026-09-19 | v3.30.0 | FEAT-080 | [Data Saver, Compact Ledger View, Category Reorder, What's New Hub](#feat-080--data-saver-compact-ledger-view-category-reorder-whats-new-hub-v3300) |
 | 2026-09-19 | v3.30.2 | BUG-227 | [Voice expense payer is the signed-in member](#bug-227--voice-expense-payer-is-the-signed-in-member) |
 | 2026-09-19 | v3.30.3 | BUG-228 | [iOS WebKit compositor feel](#ios-webkit-compositor-feel) |
+| 2026-09-20 | v3.30.4 | BUG-229 / BUG-230 | [Expeditions chip contrast + iOS stack swipe](#expeditions-chip-contrast--ios-stack-swipe) |
 
 ---
 
@@ -480,6 +481,28 @@ No new flag. Summary / Who owes who available when balances exist.
 
 ### Pass
 - Whoever is signed in is the default payer for unnamed voice/NL expenses; the preview always shows who paid; named payers still win.
+
+---
+
+## Expeditions chip contrast + iOS stack swipe
+
+**Commit:** v3.30.4 / BUG-229 + BUG-230 (see `decisions.md` ADR 201). **Migrations:** none.  
+**Flags:** none.
+
+### Steps
+1. Home (trips list) with a **bright** cover photo behind the header (sky, snow, beach). The `N Expeditions` chip is **dark text on a light pill**, readable against the photo. Greeting text stays readable.
+2. Swipe the stack to a **dark** cover photo. The chip becomes **light text on a dark pill**. It never stays sky-blue on a blue sky.
+3. With no cover photo (or before the image loads), the chip uses theme text/`--bg-surface` and is still readable in light and dark theme.
+4. On **iPhone Safari / Capacitor**: swipe the trip stack left/right. The front card tracks the finger without hitching at drag start; peek cards rise; release still browses. Swipe up still archives. Long-press still opens edit/delete.
+5. Repeat stack swipes several times in a row. No stutter when the next card becomes front.
+
+### Negative checks
+- **Android Chrome**: stack cards still have the 3D tilt while dragging. Glass/blur on Android home chrome is unchanged.
+- Flag N/A.
+
+### Pass
+- Expeditions count is readable on bright and dark trip photos.
+- iOS stack swipe tracks the finger without the post-v3.30.3 hitch; Android look/feel is unchanged aside from the chip contrast.
 
 ---
 

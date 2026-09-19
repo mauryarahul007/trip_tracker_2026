@@ -6795,5 +6795,59 @@
     "resolvedBy": "cursor-agent",
     "resolvedAt": "2026-09-19T18:23:08.384Z",
     "resolutionNote": "Always-on WebKit compositor fallback: iOS drops stacked backdrop-filter/will-change; gestures write transform/opacity on the DOM; trip sheet parks via translate3d; MapLibre pauses while the sheet is dragging. Android glass unchanged (@supports -webkit-touch-callout). ADR 200. Fixed in commit c21ddf0 (v3.30.3)."
+  },
+  {
+    "id": "BUG-229",
+    "title": "Home Expeditions chip unreadable on bright trip photos",
+    "description": "The home-header N Expeditions count was hardcoded sky-blue (#38BDF8) so it vanished against sky/snow/water cover photos.",
+    "severity": "medium",
+    "category": "ui-ux",
+    "status": "resolved",
+    "foundBy": "human",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Open home with at least one trip",
+      "Use a bright cover (sky, snow, beach) as the front stack photo",
+      "Look at N Expeditions next to the greeting"
+    ],
+    "expectedBehavior": "Chip text stays readable on both bright and dark covers.",
+    "actualBehavior": "Sky-blue text on a sky photo is nearly invisible.",
+    "diagnostics": {},
+    "createdAt": "2026-09-19T18:52:48.493Z",
+    "updatedAt": "2026-09-19T18:53:23.375Z",
+    "resolvedBy": "cursor-agent",
+    "resolvedAt": "2026-09-19T18:53:23.375Z",
+    "resolutionNote": "Chip samples cover-photo luminance and switches dark-on-light vs light-on-dark. Theme tokens used when no photo. ADR 201, v3.30.4."
+  },
+  {
+    "id": "BUG-230",
+    "title": "iOS trip-stack swipe still hitchy after BUG-228 compositor diet",
+    "description": "Post-v3.30.3 iPhone stack swipe still stuttered: 3D rotateX/Y, full-screen ambient blur, and React style commits wiping the live transform on drag-start.",
+    "severity": "high",
+    "category": "performance",
+    "status": "resolved",
+    "foundBy": "human",
+    "environment": {
+      "platform": "ios",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "On iPhone Safari or Capacitor, open home with 2+ trips",
+      "Swipe the trip stack left/right several times",
+      "Watch for hitch at drag start and while the card follows the finger"
+    ],
+    "expectedBehavior": "Front card tracks the finger near Android smoothness; browse/archive/long-press still work.",
+    "actualBehavior": "Swipe feels choppy; card can hitch when drag state commits.",
+    "diagnostics": {},
+    "createdAt": "2026-09-19T18:52:48.764Z",
+    "updatedAt": "2026-09-19T18:53:23.639Z",
+    "resolvedBy": "cursor-agent",
+    "resolvedAt": "2026-09-19T18:53:23.639Z",
+    "resolutionNote": "WebKit stack drag is 2D translate3d + Z rotate; React style no longer owns the live transform; iOS drops ambient blur and 3D perspective. Android 3D tilt unchanged. ADR 201, v3.30.4."
   }
 ]

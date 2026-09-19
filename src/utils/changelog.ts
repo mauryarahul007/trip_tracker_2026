@@ -9,6 +9,14 @@ export interface ChangelogEntry {
 // parsed from decisions.md/BUGS.md: those are prose for developers, not client data.
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: '3.30.4',
+    date: '2026-09-20',
+    changes: [
+      'The home “N Expeditions” count now picks dark or light text from the trip photo, so it stays readable on bright skies.',
+      'iPhone trip-card swipe follows your finger more smoothly. Android’s 3D tilt is unchanged.',
+    ],
+  },
+  {
     version: '3.30.3',
     date: '2026-09-19',
     changes: [

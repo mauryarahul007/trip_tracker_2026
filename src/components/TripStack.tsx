@@ -5,22 +5,24 @@ import { formatTripStamp, tripDayNumber } from '../utils/dateRange';
 import { initial } from '../utils/initials';
 import { avatarColorForName } from '../utils/avatarColor';
 import { fetchPlaceCoverImage } from '../services/placeImageService';
-import { getImageLuminance, getImageDominantColor } from '../utils/imageLuminance';
+import { getImageLuminance, getImageDominantColor, photoTextTone } from '../utils/imageLuminance';
 import { triggerHaptic } from '../utils/haptics';
 import { getDestinationWeatherRealtime, type WeatherData } from '../services/weatherService';
 import { useEscapeKey } from '../utils/useEscapeKey';
 import { PassportStamp } from './common/PassportStamp';
+import {
+  EXIT_TRANSITION_MS,
+  SWIPE_THRESHOLD,
+  exitCardTransform,
+  frontCardTransform,
+  peekCardTransform,
+  stackMotionMode,
+} from '../utils/tripStackMotion';
 
 const PEEK_DEPTH = 3;
-const SWIPE_THRESHOLD = 90;
 const LONG_PRESS_MS = 450;
 const JITTER = 10;
-const BRIGHT_LUMINANCE_THRESHOLD = 0.55;
-// Front card's spring-back/exit transition duration -- EXIT_COMMIT_MS is
-// derived from this instead of being a second hand-picked number, so the
-// two can't drift out of sync the way a bare "260" and a bare "0.38s" in
-// two different files could.
-const EXIT_TRANSITION_MS = 380;
+const MOTION_MODE = stackMotionMode();
 // Fires late enough into the exit spring (~68%) that the card is already
 // most of the way off-canvas before the stack reorders underneath it.
 const EXIT_COMMIT_MS = Math.round(EXIT_TRANSITION_MS * 0.68);
@@ -170,43 +172,19 @@ function getTripStatusBadge(trip: { startDate?: string; endDate?: string; closed
   return null;
 }
 
-// Beyond `threshold`, extra drag distance is damped instead of following
-// the finger 1:1 -- same elastic idea SwipeableRow already uses, so a
-// stray drag doesn't send the card sailing off past the point a release
-// would commit it anyway.
-function rubberBand(d: number, threshold: number = SWIPE_THRESHOLD): number {
-  if (Math.abs(d) <= threshold) return d;
-  const sign = d < 0 ? -1 : 1;
-  const overflow = Math.abs(d) - threshold;
-  return sign * (threshold + overflow * 0.45);
-}
-
-function frontCardTransform(x: number, y: number): string {
-  const renderX = rubberBand(x);
-  const renderY = y < 0 ? -rubberBand(-y) : rubberBand(y);
-  const tiltDeg = (renderX * 0.055).toFixed(2);
-  const rotateY = (renderX * 0.038).toFixed(2);
-  const rotateX = (-renderY * 0.032).toFixed(2);
-  return `translate3d(${renderX}px, ${renderY}px, 0) rotate(${tiltDeg}deg) rotateY(${rotateY}deg) rotateX(${rotateX}deg)`;
-}
-
 function writePeekCard(el: HTMLElement | null, depth: 1 | 2, p: number, dragging: boolean) {
   if (!el) return;
   el.style.filter = 'none';
-  el.style.transition = dragging || prefersReducedMotion ? 'none' : 'transform 0.34s var(--ease-decel), opacity 0.34s var(--ease-decel)';
-  if (depth === 1) {
-    const dy = 14 - p * 14;
-    const s = 0.96 + p * 0.04;
-    const r = -2.5 + p * 2.5;
-    el.style.transform = `translate3d(0, ${dy.toFixed(1)}px, 0) scale(${s.toFixed(3)}) rotate(${r.toFixed(2)}deg)`;
-  } else {
-    const dy = 26 - p * 12;
-    const s = 0.92 + p * 0.04;
-    const r = 2 - p * 4.5;
-    const op = 0.85 + p * 0.11;
-    el.style.transform = `translate3d(0, ${dy.toFixed(1)}px, 0) scale(${s.toFixed(3)}) rotate(${r.toFixed(2)}deg)`;
-    el.style.opacity = String(op);
+  const transKey = dragging ? '1' : '0';
+  if (el.dataset.stackDrag !== transKey) {
+    el.dataset.stackDrag = transKey;
+    el.style.transition = dragging || prefersReducedMotion
+      ? 'none'
+      : 'transform 0.34s var(--ease-decel), opacity 0.34s var(--ease-decel)';
   }
+  const next = peekCardTransform(depth, p, MOTION_MODE);
+  el.style.transform = next.transform;
+  if (next.opacity !== undefined) el.style.opacity = next.opacity;
 }
 
 type Props = {
@@ -253,17 +231,15 @@ export function useTripPhoto(destination?: string, coverImageUrl?: string, tripN
 // Text sits at the top of the card (stamp/destination/name/meta) -- only
 // the avatar row lives at the bottom -- so the scrim darkens the top, and
 // this reads the same top region to decide whether that scrim needs dark
-// or light text on top of it.
-function useCardTone(photoUrl: string | null): 'light' | 'dark' {
+// or light text on top of it. Shared with the home expeditions chip.
+export function usePhotoTextTone(photoUrl: string | null): 'light' | 'dark' {
   const [tone, setTone] = useState<'light' | 'dark'>('light');
   useEffect(() => {
     let cancelled = false;
     setTone('light');
     if (!photoUrl) return;
     getImageLuminance(photoUrl).then((luminance) => {
-      if (!cancelled && luminance !== null) {
-        setTone(luminance > BRIGHT_LUMINANCE_THRESHOLD ? 'dark' : 'light');
-      }
+      if (!cancelled) setTone(photoTextTone(luminance));
     });
     return () => { cancelled = true; };
   }, [photoUrl]);
@@ -289,7 +265,7 @@ function CardContent({
   const overflow = tripMembers.length - shown.length;
   const expenseCount = trip.expenseCount || 0;
   const photoUrl = useTripPhoto(trip.destination, trip.coverImageUrl, trip.name);
-  const tone = useCardTone(photoUrl);
+  const tone = usePhotoTextTone(photoUrl);
   const stopNames = useMemo(() => trip.stops?.map((s) => s.name).filter(Boolean), [trip.stops]);
   const { weather, isRefreshing, refresh: refreshWeather } = useDestinationWeather(trip.destination, trip.name, stopNames, isFront);
 
@@ -522,7 +498,7 @@ function StackCardItem({
 
   const writeFrontCard = (x: number, y: number) => {
     const el = cardRef.current;
-    if (el) el.style.transform = frontCardTransform(x, y);
+    if (el) el.style.transform = frontCardTransform(x, y, MOTION_MODE);
     const badge = badgeRef.current;
     if (!badge) return;
     const badgeHoriz = Math.abs(x) > Math.abs(y);
@@ -584,7 +560,7 @@ function StackCardItem({
   };
 
   const handlePointerDown = (e: React.PointerEvent) => {
-    if (!isFront || e.pointerType !== 'touch' || quickActionsOpen) return;
+    if (!isFront || e.pointerType !== 'touch' || quickActionsOpen || exit) return;
     const now = performance.now();
 
     // Double-tap peek micro-gesture: rapidly double-tapping peeks the next card
@@ -599,12 +575,24 @@ function StackCardItem({
     }
     lastTapRef.current = now;
 
+    try {
+      e.currentTarget.setPointerCapture(e.pointerId);
+    } catch {
+      // Capture is best-effort; move/up still fire on this node without it.
+    }
+
     active.current = true;
     moved.current = false;
     start.current = { x: e.clientX, y: e.clientY };
     lastPointer.current = { x: e.clientX, y: e.clientY, time: now };
     velocity.current = { vx: 0, vy: 0 };
     dragRef.current = { x: 0, y: 0 };
+    const el = cardRef.current;
+    if (el) {
+      el.classList.add('dragging');
+      el.style.transition = 'none';
+      el.style.willChange = 'transform';
+    }
     setDragging(true);
     startHoldRing();
     longPressTimer.current = setTimeout(() => {
@@ -664,14 +652,29 @@ function StackCardItem({
     const isHorizFlick = canSwipe && Math.abs(vx) > 0.42 && Math.abs(x) > 24;
     const isHorizThreshold = canSwipe && Math.abs(x) > Math.abs(y) && Math.abs(x) > SWIPE_THRESHOLD;
 
+    const commitExit = (dir: 'left' | 'right' | 'up', speed: number, onDone: () => void) => {
+      const el = cardRef.current;
+      if (el) {
+        el.classList.remove('dragging');
+        el.classList.add('exiting');
+        el.style.willChange = 'transform, opacity';
+        el.style.transition = prefersReducedMotion
+          ? 'none'
+          : `transform ${EXIT_TRANSITION_MS}ms var(--ease-uber-spring), opacity 0.28s ease`;
+        el.style.transform = exitCardTransform(dir);
+        el.style.opacity = '0';
+      }
+      setExit(dir);
+      const flickSpeed = Math.max(1, speed);
+      const dynamicCommitMs = Math.max(160, Math.min(EXIT_COMMIT_MS, Math.round(EXIT_COMMIT_MS / (flickSpeed * 0.9))));
+      setTimeout(onDone, dynamicCommitMs);
+    };
+
     if (isHorizFlick || isHorizThreshold) {
       gestureFired.current = true;
       triggerHaptic('light');
       const dir = isHorizFlick ? (vx > 0 ? 'right' : 'left') : (x > 0 ? 'right' : 'left');
-      setExit(dir);
-      const flickSpeed = Math.max(1, Math.abs(vx));
-      const dynamicCommitMs = Math.max(160, Math.min(EXIT_COMMIT_MS, Math.round(EXIT_COMMIT_MS / (flickSpeed * 0.9))));
-      setTimeout(onBrowse, dynamicCommitMs);
+      commitExit(dir, Math.abs(vx), onBrowse);
       return;
     }
 
@@ -681,13 +684,18 @@ function StackCardItem({
     if (isUpFlick || isUpThreshold) {
       gestureFired.current = true;
       triggerHaptic('success');
-      setExit('up');
-      const flickSpeed = Math.max(1, Math.abs(vy));
-      const dynamicCommitMs = Math.max(160, Math.min(EXIT_COMMIT_MS, Math.round(EXIT_COMMIT_MS / (flickSpeed * 0.9))));
-      setTimeout(onArchive, dynamicCommitMs);
+      commitExit('up', Math.abs(vy), onArchive);
       return;
     }
     dragRef.current = { x: 0, y: 0 };
+    const el = cardRef.current;
+    if (el) {
+      el.classList.remove('dragging');
+      el.style.willChange = '';
+      el.style.transition = prefersReducedMotion
+        ? 'none'
+        : `transform ${EXIT_TRANSITION_MS}ms var(--ease-uber-spring), opacity 0.28s ease`;
+    }
     writeFrontCard(0, 0);
   };
 
@@ -706,23 +714,11 @@ function StackCardItem({
     }
   };
 
-  const exitTransform =
-    exit === 'left' ? 'translateX(-160%) rotate(-18deg) scale(0.9)' :
-    exit === 'right' ? 'translateX(160%) rotate(18deg) scale(0.9)' :
-    exit === 'up' ? 'translateY(-140%) scale(0.9) rotate(2deg)' :
-    undefined;
-
   return (
     <div
       ref={setCardEl}
-      className={`stack-card depth-${idx}${isFront && dragging ? ' dragging' : ''}`}
-      style={isFront ? {
-        ...(exit && exitTransform ? { transform: exitTransform, opacity: 0 } : null),
-        transition: dragging || prefersReducedMotion
-          ? 'none'
-          : `transform ${EXIT_TRANSITION_MS}ms var(--ease-uber-spring), opacity 0.28s ease`,
-        touchAction: 'pan-y',
-      } : undefined}
+      className={`stack-card depth-${idx}${isFront && dragging ? ' dragging' : ''}${isFront && exit ? ' exiting' : ''}`}
+      style={isFront ? { touchAction: 'none' } : undefined}
       onPointerDown={isFront ? handlePointerDown : undefined}
       onPointerMove={isFront ? handlePointerMove : undefined}
       onPointerUp={isFront ? endDrag : undefined}
@@ -854,6 +850,7 @@ export function TripStack({
   // trip set or its recency order resets back to the fresh sort.
   const [manualOrder, setManualOrder] = useState<string[] | null>(null);
   const peekElsRef = useRef<[HTMLDivElement | null, HTMLDivElement | null]>([null, null]);
+  const stageRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => { setManualOrder(null); }, [idsKey]);
 
   const order = manualOrder ?? sortedIds;
@@ -880,6 +877,7 @@ export function TripStack({
   }, [targetTripId, order, tripsById]);
 
   const writePeeks = (p: number, dragging: boolean) => {
+    stageRef.current?.classList.toggle('is-dragging', dragging);
     writePeekCard(peekElsRef.current[0], 1, p, dragging);
     writePeekCard(peekElsRef.current[1], 2, p, dragging);
   };
@@ -902,7 +900,7 @@ export function TripStack({
 
   return (
     <div className="trip-stack">
-      <div className="trip-stack-stage">
+      <div className="trip-stack-stage" ref={stageRef}>
         {frontGlowColor && (
           <div
             className="stack-ambient-glow"

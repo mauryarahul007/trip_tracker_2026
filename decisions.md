@@ -3597,4 +3597,17 @@ This document logs all meaningful technical decisions, library choices, design p
   - iOS glass is more opaque than Android. Feel parity beats visual-blur parity on WebKit.
   - Peek-card live `filter: blur` during stack drag was removed on all platforms (scale/opacity only) because live filters hitch even on Blink when React was in the loop; rest CSS still distinguishes depth.
 
+---
+
+## 201. Home expeditions contrast + iOS stack 2D motion (v3.30.4)
+* **Context:** After BUG-228, two leftover home issues: the `N Expeditions` chip was hardcoded `#38BDF8` and vanished on sky photos (BUG-229); iPhone stack swipe still hitching because React style commits wiped the live `transform` and WebKit still paid for `rotateX`/`rotateY` plus a full-screen ambient blur (BUG-230).
+* **Decision:** Drive chip colors from cover-photo luminance (`photoTextTone`). On WebKit, stack drag is 2D `translate3d` + Z rotate only; React never owns the in-flight transform. Android keeps 3D tilt.
+* **Pattern/Implementation:**
+  - `getImageLuminance` → `tone-dark` / `tone-light` on `.home-expeditions-count`. Fallback uses `--text-primary` / `--bg-surface`.
+  - `src/utils/tripStackMotion.ts` picks 2d vs 3d via `CSS.supports('-webkit-touch-callout', 'none')`.
+  - Pointer capture + `touch-action: none` on the front card; exit/spring written on the DOM; peek transition updated only when drag starts/ends.
+  - iOS `@supports`: `perspective: none`, `transform-style: flat`, drop `.home-ambient-layer` blur.
+* **Trade-offs Accepted:**
+  - iOS stack loses the 3D “card in space” tilt during drag. Tracking smoothness beats that flourish on WebKit.
+
 

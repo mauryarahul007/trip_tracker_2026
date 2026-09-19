@@ -9,10 +9,10 @@
 
 | Metric | Count | Status Notes |
 | :--- | :--- | :--- |
-| **Total Tracked** | **227** | All recorded bugs across sessions |
+| **Total Tracked** | **229** | All recorded bugs across sessions |
 | **🟢 Open** | **0** | No critical blockers, 0 High |
 | **🟡 In Progress** | **0** | Active investigation or fix |
-| **✅ Resolved** | **201** | Verified & closed |
+| **✅ Resolved** | **203** | Verified & closed |
 | **⚪ Won't Fix** | **26** | Expected behavior / deferred |
 
 ---
@@ -232,6 +232,8 @@
 | **BUG-226** | Split rounding: remainder dumped on one participant, zero-decimal currencies got fractional splits | `splits-math` | `medium` | `claude-cli` | `claude-cli` | Added getCurrencyDecimals() in currency.ts (ISO 4217 zero-decimal lookup: JPY, KRW, VND, etc.). resolveShares() now reads expenseData.currency and rounds to the correct decimal count instead of hardcoded 2. Equal/custom/percentage/itemized splits now go through a new distributeWithLargestRemainder() helper that floors each raw share and hands out remaining minor units to the participants with the largest fractional remainder (ties go to the payer first, matching prior single-unit behavior exactly -- confirmed via unchanged existing test assertions). Exact-split mode is untouched, since its remainder reflects a user-input mismatch, not a division rounding artifact. Synced the standalone src/utils/math_verification.ts self-check copy and added a 7-way-split regression case proving the old single-recipient dump is gone. Verified: tsc -b --noEmit clean, full vitest suite 296/296 passing (original 33.34/33.33/33.33 assertions unchanged), oxlint clean. Fixed in commit 0dac502 (v3.29.1). |
 | **BUG-227** | Voice expenses default payer to trip creator instead of the signed-in member | `ui-ux` | `high` | `human` | `cursor-agent` | Voice/NL expenses now default paidBy to the signed-in trip member (resolveDefaultExpensePayerId), not visibleMembers[0]. Preview always shows a Paid-by picker; 'I paid' maps to the speaker; unnamed voice will not auto-save if the user is not a linked member. Expense form uses the same default. Fixed in commit d198a2d (v3.30.2). |
 | **BUG-228** | iOS Safari/WKWebView feels choppy vs Android (WebKit compositor cost) | `performance` | `high` | `human` | `cursor-agent` | Always-on WebKit compositor fallback: iOS drops stacked backdrop-filter/will-change; gestures write transform/opacity on the DOM; trip sheet parks via translate3d; MapLibre pauses while the sheet is dragging. Android glass unchanged (@supports -webkit-touch-callout). ADR 200. Fixed in commit c21ddf0 (v3.30.3). |
+| **BUG-229** | Home Expeditions chip unreadable on bright trip photos | `ui-ux` | `medium` | `human` | `cursor-agent` | Chip samples cover-photo luminance and switches dark-on-light vs light-on-dark. Theme tokens used when no photo. ADR 201, v3.30.4. |
+| **BUG-230** | iOS trip-stack swipe still hitchy after BUG-228 compositor diet | `performance` | `high` | `human` | `cursor-agent` | WebKit stack drag is 2D translate3d + Z rotate; React style no longer owns the live transform; iOS drops ambient blur and 3D perspective. Android 3D tilt unchanged. ADR 201, v3.30.4. |
 
 ---
 

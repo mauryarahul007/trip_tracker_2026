@@ -1,6 +1,15 @@
 const luminanceCache = new Map<string, number | null>();
 const dominantColorCache = new Map<string, string | null>();
 
+// Above this, cover-photo text (and the home expeditions chip) switches
+// to dark-on-light so a sky/snow backdrop cannot wash out a light accent.
+export const BRIGHT_LUMINANCE_THRESHOLD = 0.55;
+
+export function photoTextTone(luminance: number | null): 'light' | 'dark' {
+  if (luminance === null) return 'light';
+  return luminance > BRIGHT_LUMINANCE_THRESHOLD ? 'dark' : 'light';
+}
+
 // 0 (black) to 1 (white). Samples only the top third of the image, since
 // that's the region the trip name/meta actually sit over on a stack card
 // -- not the bottom, where only the small avatar row lives.

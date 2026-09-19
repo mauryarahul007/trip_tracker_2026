@@ -3180,6 +3180,17 @@ input:checked + .toggle-slider:before {
   transition: none;
   will-change: transform;
 }
+.stack-card.depth-0.exiting {
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+.trip-stack-stage.is-dragging .stack-card-sway {
+  animation: none !important;
+}
+.trip-stack-stage.is-dragging .stack-ambient-glow {
+  opacity: 0;
+  transition: none;
+}
 .stack-card.depth-1 {
   z-index: 2;
   transform: translateY(14px) scale(0.96) rotate(-2.5deg);
@@ -3774,15 +3785,26 @@ input:checked + .toggle-slider:before {
 }
 
 .home-expeditions-count {
-  color: #38BDF8;
+  color: var(--text-primary);
   font-family: var(--font-family-mono);
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.02em;
-  background: rgba(56, 189, 248, 0.12);
-  border: 1px solid rgba(56, 189, 248, 0.28);
+  background: var(--bg-surface);
+  border: 1px solid color-mix(in srgb, var(--text-primary) 22%, transparent);
+  background: color-mix(in srgb, var(--bg-surface) 88%, transparent);
   padding: 1px 7px;
   border-radius: 9999px;
+}
+.home-expeditions-count.tone-dark {
+  color: #0F172A;
+  background: rgba(255, 255, 255, 0.88);
+  border-color: rgba(15, 23, 42, 0.22);
+}
+.home-expeditions-count.tone-light {
+  color: #F8FAFC;
+  background: rgba(15, 23, 42, 0.78);
+  border-color: rgba(248, 250, 252, 0.28);
 }
 
 .home-balance-chip {
@@ -12145,6 +12167,16 @@ textarea.input-field {
 
   .stack-card.depth-2 {
     filter: none;
+  }
+
+  .trip-stack-stage {
+    perspective: none;
+  }
+  .stack-card {
+    transform-style: flat;
+  }
+  .home-ambient-layer {
+    filter: saturate(1.15) brightness(0.7);
   }
 }
 
