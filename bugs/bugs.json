@@ -6763,9 +6763,9 @@
     "actualBehavior": "Rahul (first member / creator) was recorded as payer for anyone using voice.",
     "diagnostics": {},
     "createdAt": "2026-09-19T15:25:11.929Z",
-    "updatedAt": "2026-09-19T15:25:18.246Z",
+    "updatedAt": "2026-09-19T15:25:55.178Z",
     "resolvedBy": "cursor-agent",
-    "resolvedAt": "2026-09-19T15:25:18.246Z",
-    "resolutionNote": "Voice/NL expenses now default paidBy to the signed-in trip member (resolveDefaultExpensePayerId), not visibleMembers[0]. Preview always shows a Paid-by picker; 'I paid' maps to the speaker; unnamed voice will not auto-save if the user is not a linked member. Expense form uses the same default. v3.30.2."
+    "resolvedAt": "2026-09-19T15:25:55.178Z",
+    "resolutionNote": "Voice/NL expenses now default paidBy to the signed-in trip member (resolveDefaultExpensePayerId), not visibleMembers[0]. Preview always shows a Paid-by picker; 'I paid' maps to the speaker; unnamed voice will not auto-save if the user is not a linked member. Expense form uses the same default. Fixed in commit d198a2d (v3.30.2)."
   }
 ]
