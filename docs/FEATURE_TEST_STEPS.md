@@ -629,7 +629,7 @@ Arm each in Superadmin **Ops Deck → Flags** (arm the whole phase, or use **Tun
 
 ## FEAT-TRIPSORT — Trip stack alphabetical swipe + sort toggle
 
-**Commit:** pending. **Migrations:** none.
+**Commit:** `40d0d01`. **Migrations:** none.
 
 ### Flags
 | Behavior | Flag | Default |

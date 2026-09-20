@@ -240,7 +240,7 @@
 | **BUG-234** | Reloading or closing the web tab silently discarded a half-filled new expense | `ui-ux` | `medium` | `claude-cli` | `claude-cli` | Fixed in v3.31.0. Commit 19d96be. |
 | **BUG-235** | Native alert() popups for missing trip dates and biometric enroll errors | `ui-ux` | `low` | `claude-cli` | `claude-cli` | Fixed in v3.31.0. Commit 19d96be. |
 | **BUG-236** | Settlement Algorithm sheet and Offline queue drawer did not trap focus or return it on close | `ui-ux` | `low` | `claude-cli` | `claude-cli` | Fixed in v3.31.0. Commit 19d96be. |
-| **BUG-237** | Home trip stack swipe order felt random: left/right both advanced by date, no alphabetical ring or sort option | `ui-ux` | `low` | `claude-cli` | `claude-cli` | Fixed in v3.32.4. Stack is now an alphabetical ring (left = next/clockwise, right = previous/anticlockwise, wraps); dots follow the same order; optional Sort A-Z/Date toggle behind enableTripStackSort. Commit pending. |
+| **BUG-237** | Home trip stack swipe order felt random: left/right both advanced by date, no alphabetical ring or sort option | `ui-ux` | `low` | `claude-cli` | `claude-cli` | Fixed in v3.32.4. Stack is now an alphabetical ring (left = next/clockwise, right = previous/anticlockwise, wraps); dots follow the same order; optional Sort A-Z/Date toggle behind enableTripStackSort. Commit 40d0d01. |
 
 ---
 
