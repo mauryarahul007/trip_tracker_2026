@@ -9,6 +9,15 @@ export interface ChangelogEntry {
 // parsed from decisions.md/BUGS.md: those are prose for developers, not client data.
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: '3.32.1',
+    date: '2026-09-20',
+    changes: [
+      'De-cluttered unified login screen: replaced bulky vertical feature cards with an ultra-sleek horizontal capsule pill strip.',
+      'Refined login card hierarchy with a subtle divider and clean join-by-code input layout.',
+      'Stacked centered security trust seal and legal footer links with safe-area bottom inset padding for mobile navigation bars.',
+    ],
+  },
+  {
     version: '3.32.0',
     date: '2026-09-20',
     changes: [

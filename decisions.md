@@ -3703,3 +3703,17 @@ This document logs all meaningful technical decisions, library choices, design p
     - Upgraded both quick-add and full expense forms to use the unified speech controller and N-best evaluator.
 * **Trade-offs Accepted:**
   - Added `@capacitor-community/speech-recognition@7.0.1` plugin for native builds (dynamically imported at runtime on native platforms; zero web bundle bloat).
+
+---
+
+## 206. Unified Login Screen UI De-cluttering & Mobile Viewport Polish (Release v3.32.1)
+* **Context:** Following the legal compliance update in v3.32.0, user feedback indicated that the public unified landing screen felt vertically cramped and cluttered on mobile devices. The 3 stacked feature cards consumed over 210px of vertical space, the join input placeholder was truncated, and the horizontal footer links wrapped awkwardly against the 256-bit encryption badge near the device navigation bar.
+* **Decision:** Redesign the login screen presentation layer to maximize vertical breathability while strictly retaining all legal, security, and functional flows.
+* **Pattern/Implementation:**
+  - **Feature Capsule Strip (`LoginScreen.tsx`, `index.css`)**: Replaced the 3 bulky stacked feature cards with an ultra-sleek, compact horizontal pill strip (`100% Offline-First`, `Smart Splits`, `Instant Sync`), saving ~150px of vertical height.
+  - **Contextual Divider**: Added a subtle hairline divider (`or join with trip code`) to cleanly separate primary OAuth authentication from the lightweight join code entry.
+  - **Input Responsiveness**: Shortened the placeholder to `"Enter 6-digit trip code"` and enforced `min-width: 0` so the flex input never overflows on narrow (<=360px) viewports.
+  - **Stacked Centered Footer with Safe-Area Inset**: Restructured the footer into a centered two-tier stack (trust seal on top, legal links below) and added `padding-bottom: max(16px, env(safe-area-inset-bottom))` to avoid colliding with device home indicator bars.
+* **Trade-offs Accepted:**
+  - Shortened feature descriptions from multi-line sentences to concise, descriptive capsule pills. The core marketing points remain immediately clear while eliminating vertical scroll pressure.
+

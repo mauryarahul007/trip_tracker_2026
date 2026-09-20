@@ -160,31 +160,23 @@ export function LoginScreen() {
               </p>
             </header>
 
-            {/* Feature Highlights Grid */}
-            <div className="login-feature-chips">
-              <div className="login-feature-chip">
-                <div className="login-feature-chip-icon">⚡</div>
-                <div>
-                  <div className="login-feature-chip-title">100% Offline-First</div>
-                  <div className="login-feature-chip-desc">Log spends without Wi-Fi; auto-syncs when back online.</div>
-                </div>
+            {/* Feature Highlights Capsule Strip */}
+            <div className="login-feature-pills" role="list" aria-label="Key app features">
+              <div className="login-feature-pill" role="listitem">
+                <span className="login-pill-icon" aria-hidden="true">⚡</span>
+                <span>100% Offline-First</span>
               </div>
-
-              <div className="login-feature-chip">
-                <div className="login-feature-chip-icon">⚖️</div>
-                  <div className="login-feature-chip-title">Smart Split Engine</div>
-                  <div className="login-feature-chip-desc">Equal, exact, custom &amp; % splits with zero-math debt minimization.</div>
-                </div>
-              <div className="login-feature-chip">
-                <div className="login-feature-chip-icon">🌐</div>
-                <div>
-                  <div className="login-feature-chip-title">Instant Join &amp; Cloud Sync</div>
-                  <div className="login-feature-chip-desc">Share 6-digit trip codes to collaborate in real-time across devices.</div>
-                </div>
+              <div className="login-feature-pill" role="listitem">
+                <span className="login-pill-icon" aria-hidden="true">⚖️</span>
+                <span>Smart Splits</span>
+              </div>
+              <div className="login-feature-pill" role="listitem">
+                <span className="login-pill-icon" aria-hidden="true">🌐</span>
+                <span>Instant Sync</span>
               </div>
             </div>
 
-            {/* Bottom Compact Action Hub (Matches Proposal Glass Card) */}
+            {/* Bottom Compact Action Hub */}
             <main className="landing-glass-card">
               {authError && (
                 <div role="alert" className="login-alert-banner danger">
@@ -239,6 +231,11 @@ export function LoginScreen() {
                 <Link to="/privacy" className="login-legal-link">Privacy Policy</Link>.
               </p>
 
+              {/* Subtle Divider */}
+              <div className="login-divider" aria-hidden="true">
+                <span>or join with trip code</span>
+              </div>
+
               {/* Inline Join with 6-digit Code */}
               <form onSubmit={handleQuickJoinSubmit} className="login-inline-join-wrap">
                 {/* Honeypot field - visually hidden to trap bots */}
@@ -256,7 +253,7 @@ export function LoginScreen() {
                 </div>
                 <input
                   type="text"
-                  placeholder="Have a 6-digit trip code?"
+                  placeholder="Enter 6-digit trip code"
                   value={quickJoinCode}
                   onChange={(e) => setQuickJoinCode(e.target.value)}
                   className="login-inline-join-input"
@@ -271,12 +268,16 @@ export function LoginScreen() {
                 </button>
               </form>
 
-              {/* Footer Row: Public legal links, superadmin toggle & privacy seal */}
+              {/* Footer: Centered Trust Seal & Public Legal Links */}
               <footer className="landing-glass-footer">
+                <div className="login-security-seal">
+                  <IconLock size={12} className="login-lock-icon" />
+                  <span>256-BIT ENCRYPTION · SECURE SYNC</span>
+                </div>
                 <div className="landing-legal-links-row">
-                  <Link to="/privacy" className="landing-glass-footer-link">Privacy</Link>
+                  <Link to="/privacy" className="landing-glass-footer-link">Privacy Policy</Link>
                   <span className="landing-footer-sep" aria-hidden="true">·</span>
-                  <Link to="/terms" className="landing-glass-footer-link">Terms</Link>
+                  <Link to="/terms" className="landing-glass-footer-link">Terms of Service</Link>
                   <span className="landing-footer-sep" aria-hidden="true">·</span>
                   <button
                     type="button"
@@ -288,10 +289,6 @@ export function LoginScreen() {
                   >
                     Superadmin
                   </button>
-                </div>
-                <div className="login-security-seal" style={{ margin: 0 }}>
-                  <IconLock size={12} className="login-lock-icon" />
-                  <span>256-BIT ENCRYPTED · SECURE SYNC</span>
                 </div>
               </footer>
             </main>

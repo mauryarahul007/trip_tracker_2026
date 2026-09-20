@@ -10264,6 +10264,7 @@ textarea.input-field {
   justify-content: space-between;
   align-items: center;
   box-sizing: border-box;
+  padding-bottom: max(16px, env(safe-area-inset-bottom));
 }
 
 .login-landing-hero {
@@ -10310,61 +10311,44 @@ textarea.input-field {
   text-shadow: 0 2px 10px rgba(0, 0, 0, 0.7);
 }
 
-/* Feature Highlights Grid/Chips */
-.login-feature-chips {
+/* Feature Highlights Capsule Strip */
+.login-feature-pills {
   width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin: auto 0;
-}
-
-.login-feature-chip {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 14px;
-  background: rgba(15, 23, 42, 0.65);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  border-radius: 16px;
-  box-shadow:
-    0 8px 24px -4px rgba(0, 0, 0, 0.5),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2);
-  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
-}
-
-.login-feature-chip:hover {
-  transform: translateY(-1.5px);
-  border-color: rgba(56, 189, 248, 0.4);
-  box-shadow: 0 12px 28px -4px rgba(0, 0, 0, 0.6), 0 0 16px rgba(56, 189, 248, 0.25);
-}
-
-.login-feature-chip-icon {
-  width: 32px;
-  height: 32px;
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.08);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 17px;
-  flex-shrink: 0;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 14px 0 18px 0;
 }
 
-.login-feature-chip-title {
-  font-size: 12.5px;
-  font-weight: 700;
-  color: #FFFFFF;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+.login-feature-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 9999px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #F8FAFC;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  white-space: nowrap;
+  transition: transform 0.15s ease, border-color 0.15s ease, background 0.15s ease;
 }
 
-.login-feature-chip-desc {
-  font-size: 11px;
-  color: #CBD5E1;
-  line-height: 1.3;
+.login-feature-pill:hover {
+  transform: translateY(-1px);
+  border-color: rgba(56, 189, 248, 0.4);
+  background: rgba(15, 23, 42, 0.7);
+}
+
+.login-pill-icon {
+  font-size: 13px;
+  line-height: 1;
 }
 
 /* Inline Join by Code Form inside Card */
@@ -10375,6 +10359,7 @@ textarea.input-field {
 
 .login-inline-join-input {
   flex: 1;
+  min-width: 0;
   padding: 10px 12px;
   font-size: 12px;
   border-radius: 12px;
@@ -10448,12 +10433,15 @@ textarea.input-field {
 
 .landing-glass-footer {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: space-between;
-  padding-top: 10px;
+  justify-content: center;
+  gap: 8px;
+  padding-top: 12px;
   border-top: 1px solid rgba(255, 255, 255, 0.12);
   font-size: 11.5px;
   color: var(--text-secondary);
+  width: 100%;
 }
 
 .landing-glass-footer-link {
@@ -10493,11 +10481,38 @@ textarea.input-field {
   color: #7DD3FC;
 }
 
+.login-divider {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  margin: 2px 0;
+  gap: 10px;
+}
+
+.login-divider::before,
+.login-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.login-divider span {
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.45);
+  white-space: nowrap;
+}
+
 .landing-legal-links-row {
   display: flex;
   align-items: center;
-  gap: 6px;
+  justify-content: center;
+  gap: 8px;
   flex-wrap: wrap;
+  width: 100%;
 }
 
 .landing-footer-sep {
@@ -10696,21 +10711,24 @@ textarea.input-field {
 
 /* Security Seal Footnote */
 .login-security-seal {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
-  padding-top: 10px;
-  border-top: 1px solid var(--border-color);
+  padding: 3px 10px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   font-family: var(--font-family-mono);
-  font-size: 10.5px;
-  font-weight: 700;
-  color: var(--text-muted);
-  letter-spacing: 0.06em;
+  font-size: 10px;
+  font-weight: 600;
+  color: #94A3B8;
+  letter-spacing: 0.04em;
+  margin: 0 auto;
 }
 
 .login-lock-icon {
-  color: var(--text-muted);
+  color: #94A3B8;
 }
 
 /* Admin Banner */
@@ -12209,7 +12227,7 @@ textarea.input-field {
   .fab-speed-dial-scrim,
   .settings-qr-modal-overlay,
   .landing-glass-card,
-  .login-feature-chip,
+  .login-feature-pill,
   .login-landing-badge,
   .stack-status-dot-indicator,
   .stack-header-caption,
@@ -12248,7 +12266,7 @@ textarea.input-field {
   .landing-glass-card {
     background: rgba(15, 23, 42, 0.92);
   }
-  .login-feature-chip {
+  .login-feature-pill {
     background: rgba(15, 23, 42, 0.92);
   }
   .login-landing-badge {
