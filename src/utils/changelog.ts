@@ -9,6 +9,15 @@ export interface ChangelogEntry {
 // parsed from decisions.md/BUGS.md: those are prose for developers, not client data.
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: '3.32.3',
+    date: '2026-09-20',
+    changes: [
+      'WhatsApp-inspired traveler profile card in Settings with companion QR code sharing and an interactive multi-segment offline storage visualizer.',
+      'Linear-grade Bugs Ledger overhaul featuring geometric priority indicators, live device telemetry capsules (platform, sync, offline, screenshot), and 1-tap quick status transitions.',
+      'Modernized Superadmin operations deck with clean index numbering and a responsive horizontal mobile navigation ribbon with live badge counters.',
+    ],
+  },
+  {
     version: '3.32.2',
     date: '2026-09-20',
     changes: [

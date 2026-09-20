@@ -3727,6 +3727,25 @@ This document logs all meaningful technical decisions, library choices, design p
   - Retained the prominent, unauthenticated clickable links in the pre-consent text (`By continuing, you agree to our Terms of Service and Privacy Policy.`), which fulfills all App Store, GDPR, and DPDP compliance requirements.
   - Removed obsolete `.landing-legal-links-row` and `.landing-footer-sep` CSS from `src/index.css`.
 * **Trade-offs Accepted:**
-  - Visitors desiring to inspect the terms or privacy policy click the notice directly below the sign-in button rather than the footer, matching standard modern auth card conventions (e.g. Google, Spotify, Linear).
+---
+
+## 208. Administrative & Traveler Experience Overhaul: Settings, Bugs Ledger, & Superadmin Operations (Release v3.32.3)
+* **Context:**
+  - While the core trip feed and expense recording experienced continuous refinement, peripheral administrative and traveler management interfaces (Settings tab, Bugs Ledger, and Superadmin portal) retained older, utilitarian desktop-first aesthetics.
+  - Specifically, Settings lacked a modern consumer traveler identity hero (as found in WhatsApp or Apple iOS settings), storage metrics were isolated in a sub-modal without live visual feedback, the Bugs Ledger table displayed raw JSON text for telemetry, and the Superadmin portal lacked a fluid, 1-tap mobile navigation bar.
+* **Decision:**
+  - **WhatsApp-Grade Traveler Profile & Storage Visualizer (`SettingsView.tsx`, `index.css`):**
+    - Redesigned the traveler profile hero with an integrated companion QR code action (`.settings-qr-companion-btn`) and verified identity badges.
+    - Added an interactive multi-segment mini storage visualizer (`.settings-storage-bar-card`) directly below the profile, displaying live breakdowns of Trips & Balances, Documents, Receipts, and Offline cache in branded color bands.
+    - Upgraded `.settings-group-card` to 20px rounded inset grouped surfaces with smooth hover elevations.
+  - **Linear-Grade Bugs Ledger Redesign (`SuperAdminBugTracker.tsx`, `ops-deck.css`):**
+    - Introduced geometric priority badges (`LinearSeverityBadge`) following Linear's design language: critical (`◆` red/solid), high (`▲` orange/solid), medium (`■` amber/muted), and low (`●` emerald/outline).
+    - Designed live device telemetry capsules (`renderTelemetryCapsules`) that parse user agent, sync queue depth, offline states, and screenshot attachments into compact, scannable micro-pills.
+    - Implemented a 1-tap `QuickStatusButton` allowing operators to instantly toggle between Open, In Progress, and Resolved directly from both table rows and kanban cards without opening deep edit modals.
+  - **Superadmin Portal Mobile Navigation Ribbon (`AdminPortalLayout.tsx`, `ops-deck.css`):**
+    - Cleaned section identifiers from bureaucratic `SEC.00` prefix to sleek `#00`, `#01` notation.
+    - Added `.ops-mobile-nav-ribbon` providing a horizontal, gesture-friendly tab rail with live badge indicator counters for seamless mobile operations management.
+* **Trade-offs Accepted:**
+  - Multi-segment storage visualizer computes lightweight estimates across indexed stores synchronously on mount; full re-indexing remains safely bound to the dedicated Storage Diagnostics modal.
 
 

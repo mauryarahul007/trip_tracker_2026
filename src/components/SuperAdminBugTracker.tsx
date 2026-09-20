@@ -62,9 +62,6 @@ const SEVERITIES: { value: BugRecord['severity']; label: string; color: string }
   { value: 'low', label: 'Low', color: 'var(--severity-low)' },
 ];
 
-function severityColor(severity: BugRecord['severity']): string {
-  return SEVERITIES.find((s) => s.value === severity)?.color || 'var(--text-tertiary)';
-}
 
 function statusMeta(status: BugRecord['status']): { label: string; color: string } {
   switch (status) {
@@ -77,6 +74,103 @@ function statusMeta(status: BugRecord['status']): { label: string; color: string
     default:
       return { label: "Won't Fix", color: 'var(--text-tertiary)' };
   }
+}
+
+function LinearSeverityBadge({ severity }: { severity: BugRecord['severity'] }) {
+  switch (severity) {
+    case 'critical':
+      return (
+        <span className="ops-linear-severity-badge critical" title="Critical Severity">
+          <span className="ops-severity-icon" aria-hidden="true">◆</span>
+          <span>Critical</span>
+        </span>
+      );
+    case 'high':
+      return (
+        <span className="ops-linear-severity-badge high" title="High Severity">
+          <span className="ops-severity-icon" aria-hidden="true">▲</span>
+          <span>High</span>
+        </span>
+      );
+    case 'medium':
+      return (
+        <span className="ops-linear-severity-badge medium" title="Medium Severity">
+          <span className="ops-severity-icon" aria-hidden="true">■</span>
+          <span>Medium</span>
+        </span>
+      );
+    default:
+      return (
+        <span className="ops-linear-severity-badge low" title="Low Severity">
+          <span className="ops-severity-icon" aria-hidden="true">●</span>
+          <span>Low</span>
+        </span>
+      );
+  }
+}
+
+function renderTelemetryCapsules(bug: BugRecord) {
+  const env = bug.environment;
+  const diag = bug.diagnostics;
+  return (
+    <div className="ops-telemetry-capsules">
+      {env?.platform && (
+        <span className="ops-telemetry-pill platform" title={`Platform: ${env.platform}`}>
+          {env.platform === 'ios' ? ' iOS' : env.platform === 'android' ? '🤖 Android' : '🌐 Web'}
+        </span>
+      )}
+      {env?.isOnline === false && (
+        <span className="ops-telemetry-pill offline" title="Recorded while offline">
+          📶 Offline
+        </span>
+      )}
+      {diag?.syncQueueLength !== undefined && diag.syncQueueLength > 0 && (
+        <span className="ops-telemetry-pill queue" title="Sync Queue items pending">
+          ⚡ Queue: {diag.syncQueueLength}
+        </span>
+      )}
+      {diag?.screenshot && (
+        <span className="ops-telemetry-pill screenshot" title="Attached screenshot">
+          📷 Shot
+        </span>
+      )}
+      {env?.appVersion && (
+        <span className="ops-telemetry-pill version" title={`App Version: ${env.appVersion}`}>
+          v{env.appVersion}
+        </span>
+      )}
+      {env?.route && (
+        <span className="ops-telemetry-pill route" title={`Route: ${env.route}`}>
+          {env.route}
+        </span>
+      )}
+    </div>
+  );
+}
+
+function QuickStatusButton({
+  status,
+  onCycle,
+}: {
+  status: BugRecord['status'];
+  onCycle: () => void;
+}) {
+  const meta = statusMeta(status);
+  return (
+    <button
+      type="button"
+      className="ops-quick-status-btn"
+      onClick={(e) => {
+        e.stopPropagation();
+        onCycle();
+      }}
+      title="Click to advance status (Open -> In Progress -> Resolved)"
+    >
+      <span className="ops-status-dot" style={{ background: meta.color }} />
+      <span>{meta.label}</span>
+      <span className="ops-status-cycle-hint" aria-hidden="true">↻</span>
+    </button>
+  );
 }
 
 function BugDetailBody({
@@ -925,8 +1019,12 @@ ${bug.diagnostics?.stackTrace ? `#### Stack Trace\n\`\`\`text\n${bug.diagnostics
                       }}
                       onClick={() => setDrawerBugId(bug.id)}
                     >
-                      <span className="ops-bug-id">{bug.id}</span>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                        <span className="ops-bug-id">{bug.id}</span>
+                        <LinearSeverityBadge severity={bug.severity} />
+                      </div>
                       <div className="title">{bug.title}</div>
+                      {renderTelemetryCapsules(bug)}
                       <div className="ops-kanban-card-meta-row">
                         <span className="ops-kanban-avatar" title={bug.assignee || bug.foundBy}>
                           {initialsFrom(bug.assignee || bug.foundBy)}
@@ -972,7 +1070,6 @@ ${bug.diagnostics?.stackTrace ? `#### Stack Trace\n\`\`\`text\n${bug.diagnostics
             </thead>
             <tbody>
               {sortedBugs.map((bug) => {
-                const status = statusMeta(bug.status);
                 const similar = bug.fingerprint ? similarCountByFp.get(bug.fingerprint) || 1 : 1;
                 const isExpanded = expandedBugIds.has(bug.id);
 
@@ -1005,16 +1102,19 @@ ${bug.diagnostics?.stackTrace ? `#### Stack Trace\n\`\`\`text\n${bug.diagnostics
                           {similar > 1 ? ` · ${similar} similar` : ''}
                           {bug.environment?.route ? ` · ${bug.environment.route}` : ''}
                         </div>
+                        {renderTelemetryCapsules(bug)}
                       </td>
                       <td>
-                        <span className="ops-pill" style={{ color: severityColor(bug.severity), background: 'var(--bg-inset)' }}>
-                          {SEVERITIES.find((s) => s.value === bug.severity)?.label || bug.severity}
-                        </span>
+                        <LinearSeverityBadge severity={bug.severity} />
                       </td>
-                      <td>
-                        <span className="ops-pill" style={{ color: status.color, background: 'var(--bg-inset)' }}>
-                          {status.label}
-                        </span>
+                      <td onClick={(e) => e.stopPropagation()}>
+                        <QuickStatusButton
+                          status={bug.status}
+                          onCycle={() => {
+                            const next = bug.status === 'open' ? 'in_progress' : bug.status === 'in_progress' ? 'resolved' : 'open';
+                            void handleStatusChange(bug, next);
+                          }}
+                        />
                       </td>
                       <td>
                         {bug.assignee ? (

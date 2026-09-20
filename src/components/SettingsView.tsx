@@ -22,6 +22,7 @@ import {
   IconBell,
   IconDatabase,
   IconClipboardList,
+  IconQrCode,
 } from './Icons';
 import { SettingsCell } from './common/SettingsCell';
 import { SettingsSection } from './common/SettingsSection';
@@ -574,8 +575,8 @@ export function SettingsView({
     }
   };
 
-  const handleCopyEmail = (e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handleCopyEmail = (e?: React.MouseEvent) => {
+    e?.stopPropagation();
     if (userEmail) {
       navigator.clipboard?.writeText(userEmail);
       setCopyFeedback('Copied!');
@@ -653,36 +654,19 @@ export function SettingsView({
   const [appVersion, setAppVersion] = useState<string | null>(null);
 
   // Partitioned Storage breakdown (Receipts vs Database vs System Cache).
-  // JSON.stringify of every trip is skipped until Storage & Data is open.
   const storageBreakdown = React.useMemo(() => {
-    if (overlayRender.screen !== 'storage-data') {
-      return {
-        receiptCount: 0,
-        receiptBytes: 0,
-        dbBytes: 0,
-        cacheBytes: 0,
-        mediaPct: 5,
-        dbPct: 5,
-        cachePct: 90,
-      };
-    }
     const totalUsed = storageEstimate?.used || 0;
-    // Estimate image receipts footprint: count expenses with receipts
     const receiptExpenses = activeTripExpenses.filter((e) => Boolean(e.receiptImage || e.receiptPath));
     const estimatedReceiptBytes = receiptExpenses.length * 120 * 1024;
-    // Database json footprint
-    const cleanTripsForEstimate = trips.map((t) => ({
-      ...t,
-      passes: t.passes?.map((p) => (p.attachmentUrl?.startsWith('data:') ? { ...p, attachmentUrl: 'idb:pdf' } : p)),
-    }));
-    const estimatedDbBytes = JSON.stringify({ trips: cleanTripsForEstimate, activeTripExpenses, categories }).length * 2;
-    // Remainder is cache and assets
+    const estimatedDbBytes = overlayRender.screen === 'storage-data'
+      ? JSON.stringify({ trips, activeTripExpenses, categories }).length * 2
+      : (trips.length * 2048) + (activeTripExpenses.length * 512) + (categories.length * 256);
     const estimatedCacheBytes = Math.max(0, totalUsed - estimatedReceiptBytes - estimatedDbBytes);
 
     const safeTotal = Math.max(totalUsed, estimatedReceiptBytes + estimatedDbBytes + estimatedCacheBytes, 1);
-    const mediaPct = Math.min(85, Math.max(5, Math.round((estimatedReceiptBytes / safeTotal) * 100)));
-    const dbPct = Math.min(85, Math.max(5, Math.round((estimatedDbBytes / safeTotal) * 100)));
-    const cachePct = Math.max(5, 100 - mediaPct - dbPct);
+    const mediaPct = Math.min(85, Math.max(8, Math.round((estimatedReceiptBytes / safeTotal) * 100)));
+    const dbPct = Math.min(85, Math.max(12, Math.round((estimatedDbBytes / safeTotal) * 100)));
+    const cachePct = Math.max(8, 100 - mediaPct - dbPct);
 
     return {
       receiptCount: receiptExpenses.length,
@@ -693,7 +677,7 @@ export function SettingsView({
       dbPct,
       cachePct,
     };
-  }, [overlayRender.screen, storageEstimate, activeTripExpenses, trips, categories]);
+  }, [overlayRender.screen, storageEstimate?.used, activeTripExpenses, trips, categories]);
 
   useEffect(() => {
     getAppVersion().then(setAppVersion);
@@ -1041,8 +1025,8 @@ export function SettingsView({
                 ) : (
                   <div className="settings-avatar-circle">{initialLetter}</div>
                 )}
-                {isOnline && <span className="settings-avatar-online-dot" title="Online &amp; Connected" />}
-                  </div>
+                {isOnline && <span className="settings-avatar-online-dot" title="Online & Connected" />}
+              </div>
               <div className="settings-profile-info">
                 <div className="settings-profile-name-row">
                   <span className="settings-profile-name">{displayName}</span>
@@ -1065,27 +1049,85 @@ export function SettingsView({
                   )}
                 </div>
               </div>
-            </div>
 
-            <div className="settings-sync-hub">
-              <div className="settings-sync-status">
-                <span
-                  className={`settings-status-dot${isOnline ? ' online' : ' offline'}`}
-                  aria-hidden="true"
-                />
-                <span className="settings-sync-state-text">
-                  {isOnline ? (syncFeedback || 'Cloud Synced') : 'Offline Mode'}
-                </span>
-                {storageEstimate && (
-                  <>
-                    <span className="settings-sync-divider">·</span>
-                    <span className="settings-storage-text">{formatBytes(storageEstimate.used)} used</span>
-                  </>
-                )}
-              </div>
-              {isOnline && (
+              {/* WhatsApp-Style Companion QR Action */}
               <button
                 type="button"
+                className="settings-qr-companion-btn"
+                onClick={() => {
+                  triggerHaptic('medium');
+                  if (onOpenShareTrip) {
+                    onOpenShareTrip();
+                  } else {
+                    handleCopyEmail();
+                  }
+                }}
+                title={onOpenShareTrip ? "Share active trip QR code" : "Share account ID"}
+                aria-label="Share QR code"
+              >
+                <IconQrCode size={19} />
+              </button>
+            </div>
+
+            {/* Visual Storage & Sync Hub Card */}
+            <div className="settings-sync-hub">
+              <div
+                className="settings-storage-bar-card"
+                onClick={() => {
+                  triggerHaptic('light');
+                  setSubScreen('storage-data');
+                }}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    setSubScreen('storage-data');
+                  }
+                }}
+                title="View local media, cache and backup breakdown"
+              >
+                <div className="settings-storage-bar-top">
+                  <div className="settings-sync-status">
+                    <span
+                      className={`settings-status-dot${isOnline ? ' online' : ' offline'}`}
+                      aria-hidden="true"
+                    />
+                    <span className="settings-sync-state-text">
+                      {isOnline ? (syncFeedback || 'Cloud Synced') : 'Offline Mode'}
+                    </span>
+                    {storageEstimate && (
+                      <>
+                        <span className="settings-sync-divider">·</span>
+                        <span className="settings-storage-text">{formatBytes(storageEstimate.used)} used</span>
+                      </>
+                    )}
+                  </div>
+                  <IconChevronRight size={13} className="settings-storage-arrow" />
+                </div>
+                {/* Segmented color visualizer bar */}
+                <div className="settings-storage-segmented-bar mini" aria-hidden="true">
+                  <div
+                    className="storage-seg media"
+                    style={{ width: `${storageBreakdown.mediaPct}%` }}
+                    title={`Receipts: ${storageBreakdown.mediaPct}%`}
+                  />
+                  <div
+                    className="storage-seg database"
+                    style={{ width: `${storageBreakdown.dbPct}%` }}
+                    title={`Database: ${storageBreakdown.dbPct}%`}
+                  />
+                  <div
+                    className="storage-seg cache"
+                    style={{ width: `${storageBreakdown.cachePct}%` }}
+                    title={`Cache: ${storageBreakdown.cachePct}%`}
+                  />
+                </div>
+              </div>
+
+              {isOnline && (
+                <button
+                  type="button"
                   className="settings-sync-now-btn"
                   onClick={handleManualSync}
                   disabled={isManualSyncing}
@@ -1093,11 +1135,11 @@ export function SettingsView({
                   aria-label="Sync latest data with cloud"
                 >
                   <IconRefresh size={13} className={isManualSyncing ? 'icon-spin' : ''} />
-                  <span>{isManualSyncing ? 'Syncing…' : 'Sync Now'}</span>
+                  <span>{isManualSyncing ? 'Syncing…' : 'Sync'}</span>
                 </button>
               )}
-                  </div>
-                  </div>
+            </div>
+          </div>
           {crossTripBalances && Object.keys(crossTripBalances).length > 0 && (
             <p style={{ marginTop: '10px', display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
               {Object.entries(crossTripBalances).map(([currency, net]) => (

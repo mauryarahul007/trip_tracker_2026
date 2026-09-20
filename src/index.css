@@ -6541,9 +6541,77 @@ html.capacitor-ios .trip-sheet .tab-pane {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding-top: 8px;
+  padding-top: 10px;
   border-top: 1px dashed var(--border-color);
-  gap: 8px;
+  gap: 12px;
+}
+
+/* Mini Segmented Storage Bar in Settings Hero */
+.settings-storage-bar-card {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 10px;
+  transition: background 0.15s ease;
+}
+
+.settings-storage-bar-card:hover {
+  background: color-mix(in srgb, var(--primary-accent) 6%, transparent);
+}
+
+.settings-storage-bar-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.settings-storage-arrow {
+  color: var(--text-muted);
+  flex-shrink: 0;
+  transition: transform 0.15s ease, color 0.15s ease;
+}
+
+.settings-storage-bar-card:hover .settings-storage-arrow {
+  transform: translateX(2px);
+  color: var(--primary-accent);
+}
+
+.settings-storage-segmented-bar.mini {
+  height: 5px;
+  margin: 0;
+  border-radius: 4px;
+}
+
+/* Companion QR Button in Profile Top */
+.settings-qr-companion-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--primary-accent) 10%, var(--bg-surface));
+  border: 1px solid color-mix(in srgb, var(--primary-accent) 24%, var(--border-color));
+  color: var(--primary-accent);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.settings-qr-companion-btn:hover {
+  background: color-mix(in srgb, var(--primary-accent) 18%, var(--bg-surface));
+  transform: scale(1.06);
+  border-color: var(--primary-accent);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--primary-accent) 20%, transparent);
+}
+
+.settings-qr-companion-btn:active {
+  transform: scale(0.96);
 }
 
 .settings-sync-status {
@@ -6959,9 +7027,9 @@ html.capacitor-ios .trip-sheet .tab-pane {
 .settings-group-card {
   background: var(--bg-surface);
   border: 1px solid var(--border-color);
-  border-radius: 16px;
+  border-radius: 20px;
   overflow: hidden;
-  box-shadow: 0 8px 22px -6px rgba(15, 20, 30, 0.1);
+  box-shadow: 0 8px 24px -6px rgba(15, 20, 30, 0.1);
 }
 
 .settings-row-item {

@@ -397,6 +397,78 @@
 .ops-section-trigger-chevron { color: var(--text-tertiary); flex-shrink: 0; transition: transform 0.15s; transform: rotate(90deg); }
 .ops-section-trigger[aria-expanded="true"] .ops-section-trigger-chevron { transform: rotate(270deg); }
 
+/* Executive Mobile Navigation Ribbon */
+.ops-mobile-nav-ribbon {
+  display: none;
+}
+
+@media (max-width: 760px) {
+  .ops-mobile-nav-ribbon {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    overflow-x: auto;
+    padding: 2px 2px 10px 2px;
+    margin-bottom: 8px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .ops-mobile-nav-ribbon::-webkit-scrollbar {
+    display: none;
+  }
+  .ops-mobile-ribbon-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 12px;
+    border-radius: 9999px;
+    background: var(--bg-panel);
+    border: 1px solid var(--line);
+    color: var(--text-secondary);
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+    flex-shrink: 0;
+    transition: all 0.15s ease;
+  }
+  .ops-mobile-ribbon-btn:hover {
+    background: var(--bg-panel-raised);
+    color: var(--text-primary);
+  }
+  .ops-mobile-ribbon-btn.active {
+    background: var(--amber);
+    color: var(--on-amber);
+    border-color: var(--amber);
+    font-weight: 700;
+    box-shadow: 0 2px 10px rgba(245, 158, 11, 0.3);
+  }
+  .ops-ribbon-glyph {
+    font-size: 13px;
+    line-height: 1;
+  }
+  .ops-ribbon-pip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1px 5px;
+    border-radius: 9999px;
+    background: #EF4444;
+    color: #FFFFFF;
+    font-size: 9.5px;
+    font-weight: 700;
+  }
+  .ops-ribbon-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--amber);
+  }
+  .ops-mobile-ribbon-btn.active .ops-ribbon-dot {
+    background: var(--on-amber);
+  }
+}
+
 .ops-switcher-list { display: flex; flex-direction: column; gap: 2px; }
 .ops-switcher-row {
   display: flex;
@@ -2920,6 +2992,130 @@ legend.ops-form-label { padding: 0; width: 100%; }
   color: var(--text-primary);
   line-height: 1.5;
 }
+
+/* Linear-Style Severity Badges */
+.ops-linear-severity-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+.ops-linear-severity-badge .ops-severity-icon {
+  font-size: 9px;
+  line-height: 1;
+}
+.ops-linear-severity-badge.critical {
+  background: rgba(239, 68, 68, 0.15);
+  color: #EF4444;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+.ops-linear-severity-badge.high {
+  background: rgba(249, 115, 22, 0.15);
+  color: #F97316;
+  border: 1px solid rgba(249, 115, 22, 0.3);
+}
+.ops-linear-severity-badge.medium {
+  background: rgba(245, 158, 11, 0.15);
+  color: #F59E0B;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+.ops-linear-severity-badge.low {
+  background: rgba(148, 163, 184, 0.15);
+  color: #94A3B8;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+}
+
+/* Telemetry Capsule Strip */
+.ops-telemetry-capsules {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+.ops-telemetry-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 1.5px 6px;
+  border-radius: 5px;
+  font-size: 10px;
+  font-family: var(--font-family-mono, monospace);
+  font-weight: 500;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-secondary);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+.ops-telemetry-pill.platform {
+  background: rgba(56, 189, 248, 0.1);
+  color: #38BDF8;
+  border-color: rgba(56, 189, 248, 0.25);
+}
+.ops-telemetry-pill.offline {
+  background: rgba(239, 68, 68, 0.12);
+  color: #F87171;
+  border-color: rgba(239, 68, 68, 0.25);
+}
+.ops-telemetry-pill.queue {
+  background: rgba(245, 158, 11, 0.12);
+  color: #FBBF24;
+  border-color: rgba(245, 158, 11, 0.25);
+}
+.ops-telemetry-pill.screenshot {
+  background: rgba(168, 85, 247, 0.12);
+  color: #C084FC;
+  border-color: rgba(168, 85, 247, 0.25);
+}
+.ops-telemetry-pill.version {
+  background: rgba(16, 185, 129, 0.1);
+  color: #34D399;
+  border-color: rgba(16, 185, 129, 0.25);
+}
+.ops-telemetry-pill.route {
+  color: var(--text-tertiary);
+}
+
+/* Quick Status Advance Button */
+.ops-quick-status-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+  background: var(--bg-panel);
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-primary);
+  transition: all 0.15s ease;
+}
+.ops-quick-status-btn:hover {
+  background: var(--bg-panel-raised);
+  border-color: var(--amber);
+  transform: translateY(-1px);
+}
+.ops-quick-status-btn .ops-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.ops-quick-status-btn .ops-status-cycle-hint {
+  font-size: 10px;
+  color: var(--text-tertiary);
+  opacity: 0.6;
+}
+.ops-quick-status-btn:hover .ops-status-cycle-hint {
+  opacity: 1;
+  color: var(--amber);
+}
+
 
 
 

@@ -72,27 +72,27 @@ const SECTION_GROUPS: { label: string; items: Section[] }[] = [
   {
     label: 'Overview',
     items: [
-      { id: 'command', label: 'Command Center', code: 'SEC.00' },
-      { id: 'analytics', label: 'Analytics', code: 'SEC.02' },
+      { id: 'command', label: 'Command Center', code: '#00' },
+      { id: 'analytics', label: 'Analytics', code: '#02' },
     ],
   },
   {
     label: 'Operations',
     items: [
-      { id: 'flags', label: 'Flags', code: 'SEC.01' },
-      { id: 'trips', label: 'Trips', code: 'SEC.03' },
-      { id: 'features', label: 'Features', code: 'SEC.06' },
-      { id: 'bugs', label: 'Bugs', code: 'SEC.08' },
+      { id: 'flags', label: 'Flags', code: '#01' },
+      { id: 'trips', label: 'Trips', code: '#03' },
+      { id: 'features', label: 'Features', code: '#06' },
+      { id: 'bugs', label: 'Bugs', code: '#08' },
     ],
   },
   {
     label: 'People',
     items: [
-      { id: 'users', label: 'Users', code: 'SEC.04' },
-      { id: 'audit', label: 'Audit', code: 'SEC.05' },
+      { id: 'users', label: 'Users', code: '#04' },
+      { id: 'audit', label: 'Audit', code: '#05' },
     ],
   },
-  { label: 'System', items: [{ id: 'tools', label: 'Tools', code: 'SEC.07' }] },
+  { label: 'System', items: [{ id: 'tools', label: 'Tools', code: '#07' }] },
 ];
 
 const SECTIONS: Section[] = SECTION_GROUPS.flatMap((g) => g.items);
@@ -510,6 +510,29 @@ export function AdminPortalLayout({
           </button>
 
           <div className="ops-vitals-main">
+            {/* Mobile Horizontal Navigation Ribbon */}
+            <div className="ops-mobile-nav-ribbon" role="tablist" aria-label="Ops Deck Navigation">
+              {SECTIONS.map((s) => (
+                <button
+                  key={s.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={activeTab === s.id}
+                  className={`ops-mobile-ribbon-btn${activeTab === s.id ? ' active' : ''}`}
+                  onClick={() => onActiveTabChange(s.id)}
+                >
+                  <span className="ops-ribbon-glyph">{SECTION_GLYPHS[s.id] || '•'}</span>
+                  <span className="ops-ribbon-text">{s.label}</span>
+                  {s.id === 'bugs' && criticalBugCount > 0 && (
+                    <span className="ops-ribbon-pip">{criticalBugCount}</span>
+                  )}
+                  {s.id === 'tools' && recycledCount > 0 && (
+                    <span className="ops-ribbon-dot" />
+                  )}
+                </button>
+              ))}
+            </div>
+
             <div className="ops-vitals-topbar">
               <div className="ops-cmdk-wrap">
                 <div className="ops-cmdk" onClick={() => cmdkInputRef.current?.focus()}>
