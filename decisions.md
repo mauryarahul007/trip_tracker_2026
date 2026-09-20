@@ -3762,3 +3762,17 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - Peek cards behind the front card remain the next two trips, so a right swipe brings in a trip that was not peeking (no dedicated slide-in yet).
   - Alphabetical is now the default start order for everyone; the previous newest-first start is available via Sort: Date once the flag is on.
+
+---
+
+## 210. Trip Stack Swipe Flicker Fix (Release v3.32.5, BUG-238)
+* **Context:**
+  - A screen recording of v3.32.4 showed two glitches: after a left swipe the swiped-away trip flashed back at the front for a frame before the next trip appeared, and some swipes showed a blank white card before the photo faded in.
+  - Cause 1: `commitExit` reset the exiting card's inline styles in the same `setTimeout` tick as the reorder `setState`; React committed the reorder later, so the old card was briefly visible again at depth 0.
+  - Cause 2: the previous trip (the target of a right swipe) was not mounted, so it mounted fresh at the front with no photo (`useTripPhoto` starts null; `.stack-card-photo` fades in over 0.4s).
+* **Decision:**
+  - Wrap the reorder in `flushSync`, then snap the exiting card to its new depth with `transition: none` + forced reflow before restoring the transition.
+  - Render the last trip in the ring as a hidden `depth-3` card (only when more than 3 trips) so it is already loaded and rises like a peek card.
+* **Trade-offs Accepted:**
+  - One extra mounted card (photo fetch + weather hook idle) when a user has 4+ trips.
+  - Not verified on device by automated tests; animation feel needs manual QA (see FEAT-TRIPSORT steps).

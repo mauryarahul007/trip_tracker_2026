@@ -7067,5 +7067,31 @@
     "resolvedBy": "claude-cli",
     "resolvedAt": "2026-09-20T10:15:42.086Z",
     "resolutionNote": "Fixed in v3.32.4. Stack is now an alphabetical ring (left = next/clockwise, right = previous/anticlockwise, wraps); dots follow the same order; optional Sort A-Z/Date toggle behind enableTripStackSort. Commit 40d0d01."
+  },
+  {
+    "id": "BUG-238",
+    "title": "Trip stack swipe flicker: swiped-away card flashed back before the next trip, and incoming card mounted blank white",
+    "description": "Trip stack swipe flicker: swiped-away card flashed back before the next trip, and incoming card mounted blank white",
+    "severity": "low",
+    "category": "ui-ux",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-09-20T10:36:16.071Z",
+    "updatedAt": "2026-09-20T10:36:16.183Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-09-20T10:36:16.183Z",
+    "resolutionNote": "Fixed in v3.32.5. Reorder committed with flushSync before exit styles reset (old card no longer flashes back); previous trip pre-mounted hidden (depth-3) so a right swipe rises with its photo loaded. Commit pending."
   }
 ]

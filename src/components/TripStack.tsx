@@ -1,3 +1,4 @@
+import { flushSync } from 'react-dom';
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { Member, Trip } from '../types';
 import { IconArchive, IconEdit, IconTrash } from './Icons';
@@ -691,12 +692,17 @@ function StackCardItem({
         : Math.max(220, Math.min(EXIT_TRANSITION_MS, Math.round(EXIT_TRANSITION_MS / Math.max(1, speed * 0.8))));
 
       setTimeout(() => {
-        onDone();
+        // Commit the reorder first: resetting the exiting card's styles
+        // before React re-renders made the old trip flash back at the
+        // front for a frame. Then snap (no transition) to its new depth.
+        flushSync(onDone);
         if (el) {
           el.classList.remove('exiting', 'dragging');
           el.style.willChange = '';
+          el.style.transition = 'none';
           el.style.opacity = '';
           el.style.transform = '';
+          void el.offsetHeight;
           el.style.transition = '';
         }
         setExit(null);
@@ -881,6 +887,11 @@ export function TripStack({
 
   const order = manualOrder ?? sortedIds;
   const visible = order.slice(0, PEEK_DEPTH).map((id) => tripsById[id]).filter(Boolean);
+  // The trip a right swipe brings forward stays mounted (hidden, depth-3)
+  // so it rises like a peek card instead of mounting blank with its photo
+  // still loading.
+  const prevTrip = order.length > PEEK_DEPTH ? tripsById[order[order.length - 1]] : undefined;
+  const rendered = prevTrip ? [...visible, prevTrip] : visible;
   const front = visible[0];
 
   useEffect(() => {
@@ -953,7 +964,7 @@ export function TripStack({
             aria-hidden="true"
           />
         )}
-        {visible.map((trip, idx) => (
+        {rendered.map((trip, idx) => (
           <StackCardItem
             key={trip.id}
             trip={trip}

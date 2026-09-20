@@ -9,6 +9,14 @@ export interface ChangelogEntry {
 // parsed from decisions.md/BUGS.md: those are prose for developers, not client data.
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: '3.32.5',
+    date: '2026-09-20',
+    changes: [
+      'Smoother trip stack swipes: the trip you swipe away no longer flashes back for a moment before the next one appears.',
+      'The next trip now slides in with its photo already loaded, removing the blank white flash on some swipes.',
+    ],
+  },
+  {
     version: '3.32.4',
     date: '2026-09-20',
     changes: [

@@ -3200,6 +3200,13 @@ input:checked + .toggle-slider:before {
   transform: translateY(26px) scale(0.92) rotate(2deg);
   opacity: 0.85;
 }
+/* Pre-mounted "previous" card (right swipe target); invisible until it rises. */
+.stack-card.depth-3 {
+  z-index: 0;
+  transform: translateY(34px) scale(0.9) rotate(-2deg);
+  opacity: 0;
+  pointer-events: none;
+}
 .stack-card:focus-visible {
   outline: 3px solid var(--primary-accent);
   outline-offset: -3px;

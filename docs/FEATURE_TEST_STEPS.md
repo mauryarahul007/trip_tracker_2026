@@ -648,6 +648,7 @@ Account with 4+ trips, e.g. Bali, agra, Goa, Coorg (mixed case, different start 
 5. Enable `enableTripStackSort` in Ops Deck, reload. A `Sort: A–Z` pill appears beside "View all trips".
 6. Tap it → `Sort: Date`; front card becomes the newest trip; left = next older, right = newer. Reload: choice persists.
 7. Swipe up to archive a trip: stack advances without errors.
+8. (v3.32.5, BUG-238) With 4+ trips, swipe left and right repeatedly, also fast flicks: the swiped-away card must not flash back at the front, and no blank white card should appear before the photo.
 
 ### Negative checks
 - Flag OFF → no Sort pill; order is always A–Z; left/right still step next/previous.

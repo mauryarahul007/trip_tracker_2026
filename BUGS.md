@@ -9,10 +9,10 @@
 
 | Metric | Count | Status Notes |
 | :--- | :--- | :--- |
-| **Total Tracked** | **237** | All recorded bugs across sessions |
+| **Total Tracked** | **238** | All recorded bugs across sessions |
 | **🟢 Open** | **0** | No critical blockers, 0 High |
 | **🟡 In Progress** | **0** | Active investigation or fix |
-| **✅ Resolved** | **210** | Verified & closed |
+| **✅ Resolved** | **211** | Verified & closed |
 | **⚪ Won't Fix** | **27** | Expected behavior / deferred |
 
 ---
@@ -241,6 +241,7 @@
 | **BUG-235** | Native alert() popups for missing trip dates and biometric enroll errors | `ui-ux` | `low` | `claude-cli` | `claude-cli` | Fixed in v3.31.0. Commit 19d96be. |
 | **BUG-236** | Settlement Algorithm sheet and Offline queue drawer did not trap focus or return it on close | `ui-ux` | `low` | `claude-cli` | `claude-cli` | Fixed in v3.31.0. Commit 19d96be. |
 | **BUG-237** | Home trip stack swipe order felt random: left/right both advanced by date, no alphabetical ring or sort option | `ui-ux` | `low` | `claude-cli` | `claude-cli` | Fixed in v3.32.4. Stack is now an alphabetical ring (left = next/clockwise, right = previous/anticlockwise, wraps); dots follow the same order; optional Sort A-Z/Date toggle behind enableTripStackSort. Commit 40d0d01. |
+| **BUG-238** | Trip stack swipe flicker: swiped-away card flashed back before the next trip, and incoming card mounted blank white | `ui-ux` | `low` | `claude-cli` | `claude-cli` | Fixed in v3.32.5. Reorder committed with flushSync before exit styles reset (old card no longer flashes back); previous trip pre-mounted hidden (depth-3) so a right swipe rises with its photo loaded. Commit pending. |
 
 ---
 
