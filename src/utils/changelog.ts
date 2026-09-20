@@ -9,6 +9,14 @@ export interface ChangelogEntry {
 // parsed from decisions.md/BUGS.md: those are prose for developers, not client data.
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: '3.32.7',
+    date: '2026-09-20',
+    changes: [
+      'Superadmin Ops Deck and Bug Ledger open faster: first paint no longer waits on every expense, audit log, user, and bug diagnostic.',
+      'Home trip stack swipes stay on the finger through the gesture, without a hitch from live blur or a forced layout at the end.',
+    ],
+  },
+  {
     version: '3.32.6',
     date: '2026-09-20',
     changes: [

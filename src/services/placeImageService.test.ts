@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { fetchPlaceCoverImage } from './placeImageService';
+import { fetchPlaceCoverImage, coverImageUrlAtWidth } from './placeImageService';
 
 describe('placeImageService', () => {
   beforeEach(() => {
@@ -103,5 +103,30 @@ describe('placeImageService', () => {
 
     const result = await fetchPlaceCoverImage('Goa Beaches');
     expect(result).toBe(mockPhotoUrl);
+  });
+});
+
+describe('coverImageUrlAtWidth', () => {
+  it('rewrites a Wikimedia original to a sized thumb', () => {
+    const original = 'https://upload.wikimedia.org/wikipedia/commons/a/ab/Goa_beach.jpg';
+    expect(coverImageUrlAtWidth(original, 480)).toBe(
+      'https://upload.wikimedia.org/wikipedia/commons/thumb/a/ab/Goa_beach.jpg/480px-Goa_beach.jpg'
+    );
+  });
+
+  it('rewrites an already-sized Wikimedia thumb to a smaller width', () => {
+    const thumb = 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/ab/Goa_beach.jpg/960px-Goa_beach.jpg';
+    expect(coverImageUrlAtWidth(thumb, 480)).toBe(
+      'https://upload.wikimedia.org/wikipedia/commons/thumb/a/ab/Goa_beach.jpg/480px-Goa_beach.jpg'
+    );
+  });
+
+  it('leaves non-Wikimedia URLs unchanged', () => {
+    const url = 'https://cdn.example.com/cover.jpg';
+    expect(coverImageUrlAtWidth(url, 480)).toBe(url);
+  });
+
+  it('returns null for a missing url', () => {
+    expect(coverImageUrlAtWidth(null, 480)).toBeNull();
   });
 });

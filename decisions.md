@@ -3789,3 +3789,18 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - Verified with a per-frame probe and 12 recorded swipes on desktop Chromium (mouse input); touch / iOS WebKit not tested.
   - Right-drag over the far peeks relies on a same-z DOM-order tie-break.
+
+---
+
+## 212. Ops Deck load + home stack smoothness (Release v3.32.7)
+* **Context:**
+  - Opening Superadmin Ops Deck / Bug Ledger waited on the whole fleet: eight queries on mount (trips, members, groups, every expense row, users, audit, device tokens, bugs with diagnostics/screenshots), then Bug Ledger fetched bugs again.
+  - `fetchMyTripGraph` scanned every expense `trip_id` just to count badges. Device platform split downloaded every token row.
+  - After BUG-231/238/239, the home stack still felt unsmooth: `flushSync` + forced `offsetHeight` reflow on commit, live `blur(48px)` and `backdrop-filter` while dragging, and 960px covers on peek cards.
+* **Decision:**
+  - **Tab-scoped Ops Deck (`AdminPortalLayout.tsx`):** load only the keys the current tab needs. Expenses wait until Analytics/Trips/Command Center widgets need them. Bug Ledger reuses the parent list (`skipFetch`) instead of a second `fetchBugs`.
+  - **Slim payloads (`bugApi.ts`, `tripApi.ts`):** list bugs via `BUG_SUMMARY_COLUMNS` and hydrate diagnostics on expand/drawer (`fetchBug`). Admin expenses use `ADMIN_EXPENSE_COLUMNS`. Trip graph prefers PostgREST `expenses(count)` with the old trip_id scan as fallback. Device platforms use HEAD `count=exact`.
+  - **Stack compositor (`TripStack.tsx`, `index.css`, `placeImageService.ts`):** rAF-coalesce pointer writes; `useLayoutEffect` instead of `flushSync` + reflow; drop live glow blur; disable `backdrop-filter` while dragging (`html.stack-dragging` also freezes home ambient blur); peek covers at 480px.
+* **Trade-offs Accepted:**
+  - Bug export and row expand pay a second round-trip for full records. Command Center spend widgets fill in after first paint.
+  - Dummy-env local QA cannot measure production payload timing or photo-stack swipe feel.

@@ -35,6 +35,7 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 | 2026-09-20 | v3.30.4 | BUG-229 / BUG-230 | [Expeditions chip contrast + iOS stack swipe](#expeditions-chip-contrast--ios-stack-swipe) |
 | 2026-09-20 | v3.31.0 | BUG-232..236 / FEAT-083..087 | [Navigation, dialogs & sync UX pass](#navigation-dialogs--sync-ux-pass-v3310) |
 | 2026-09-20 | unreleased | FEAT-TRIPSORT | [Trip stack alphabetical swipe + sort toggle](#feat-tripsort--trip-stack-alphabetical-swipe--sort-toggle) |
+| 2026-09-20 | v3.32.7 | PERF-OPS-STACK | [Ops Deck load + home stack smoothness](#perf-ops-stack--ops-deck-load--home-stack-smoothness) |
 
 ---
 
@@ -657,6 +658,42 @@ Account with 4+ trips, e.g. Bali, agra, Goa, Coorg (mixed case, different start 
 
 ### Pass
 - Left/right are exact opposites and wrap; dots match the stack; toggle persists.
+
+---
+
+## PERF-OPS-STACK — Ops Deck load + home stack smoothness
+
+**Commit:** v3.32.7 (hash stamped after ship). **Migrations:** none. **Flags:** none.
+
+Two related performance fixes: Ops Deck / Bug Ledger no longer download the whole fleet on first paint, and the home trip stack drops live blur + forced reflow during swipe.
+
+### Prep
+- Superadmin account with a real Supabase project (not dummy env).
+- Traveler account with 4+ trips that have cover photos.
+
+### Steps
+
+#### Superadmin portal / Bug Ledger
+1. Sign in as superadmin. Default landing is Command Center (or Bugs if you used `#/bugs`).
+2. Command Center should show the shell (rail, clock, health pill) quickly. Spend / settlement widgets may fill in a moment later — they wait on expenses, not on Bugs/Audit/Users.
+3. Open **Bugs**. The table/kanban appears without a second full-ledger download. Expand a row or open the drawer: diagnostics / screenshot load then, not on first list paint.
+4. Open **Analytics** or **Trips** after sitting on Bugs: expenses load on that tab, not retroactively while you were on Bugs.
+5. Tap **Refresh** on a page: that page's data reloads. Jump search still finds trips from the already-loaded trip graph.
+
+#### Home card stack
+1. Open Home on a phone-width viewport with 4+ photo cards.
+2. Drag slowly left and right: the front card tracks the finger without stutter; peek cards rise in the swipe direction (left = next, right = previous).
+3. Flick left/right repeatedly: no blank white card, no flash of the old trip back to the front, no clunk at the end of the swipe.
+4. Swipe up to archive: still works; confirm remains.
+5. Data Saver ON: stack still swipes; no regression.
+
+### Negative checks
+- Non-superadmin never sees Ops Deck.
+- Flag `enableTripStackSort` OFF: no Sort pill (existing). Stack smoothness does not depend on the flag.
+
+### Pass
+- Opening Ops Deck or Bugs no longer waits on every expense, audit log, user, and bug diagnostic before the first useful screen.
+- Home stack swipe stays on the finger through the gesture and the commit, with no flash or hitch.
 
 ---
 

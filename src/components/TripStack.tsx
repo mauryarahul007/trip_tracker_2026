@@ -1,11 +1,10 @@
-import { flushSync } from 'react-dom';
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { Member, Trip } from '../types';
 import { IconArchive, IconEdit, IconTrash } from './Icons';
 import { formatTripStamp, tripDayNumber } from '../utils/dateRange';
 import { initial } from '../utils/initials';
 import { avatarColorForName } from '../utils/avatarColor';
-import { fetchPlaceCoverImage } from '../services/placeImageService';
+import { fetchPlaceCoverImage, coverImageUrlAtWidth, PEEK_COVER_WIDTH, COVER_WIDTH } from '../services/placeImageService';
 import { getImageLuminance, getImageDominantColor, photoTextTone } from '../utils/imageLuminance';
 import { triggerHaptic } from '../utils/haptics';
 import { getDestinationWeatherRealtime, type WeatherData } from '../services/weatherService';
@@ -211,12 +210,12 @@ type Props = {
 // dedupes/caches by place name at module scope, so mounting this once per
 // peeking card (not just the front one) is effectively free after the
 // first fetch, and doubles as prefetching for whichever card rises next.
-export function useTripPhoto(destination?: string, coverImageUrl?: string, tripName?: string): string | null {
-  const [url, setUrl] = useState<string | null>(coverImageUrl || null);
+export function useTripPhoto(destination?: string, coverImageUrl?: string, tripName?: string, width: number = COVER_WIDTH): string | null {
+  const [url, setUrl] = useState<string | null>(() => coverImageUrlAtWidth(coverImageUrl || null, width));
   useEffect(() => {
     let cancelled = false;
     if (coverImageUrl) {
-      setUrl(coverImageUrl);
+      setUrl(coverImageUrlAtWidth(coverImageUrl, width));
       return;
     }
     const query = destination || tripName;
@@ -225,10 +224,10 @@ export function useTripPhoto(destination?: string, coverImageUrl?: string, tripN
       return;
     }
     fetchPlaceCoverImage(query).then((result) => {
-      if (!cancelled) setUrl(result);
+      if (!cancelled) setUrl(coverImageUrlAtWidth(result, width));
     });
     return () => { cancelled = true; };
-  }, [destination, coverImageUrl, tripName]);
+  }, [destination, coverImageUrl, tripName, width]);
   return url;
 }
 
@@ -268,7 +267,7 @@ const CardContent = memo(function CardContent({
   const shown = tripMembers.slice(0, 3);
   const overflow = tripMembers.length - shown.length;
   const expenseCount = trip.expenseCount || 0;
-  const photoUrl = useTripPhoto(trip.destination, trip.coverImageUrl, trip.name);
+  const photoUrl = useTripPhoto(trip.destination, trip.coverImageUrl, trip.name, isFront ? COVER_WIDTH : PEEK_COVER_WIDTH);
   const tone = usePhotoTextTone(photoUrl);
   const stopNames = useMemo(() => trip.stops?.map((s) => s.name).filter(Boolean), [trip.stops]);
   const { weather, isRefreshing, refresh: refreshWeather } = useDestinationWeather(trip.destination, trip.name, stopNames, isFront);
@@ -493,9 +492,12 @@ function StackCardItem({
   const cardRef = useRef<HTMLDivElement>(null);
   const badgeRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef({ x: 0, y: 0 });
+  const moveRaf = useRef<number | null>(null);
 
-  // Clean up any exit state and lingering transforms when card depth/front changes
-  useEffect(() => {
+  // Clean up any exit state and lingering transforms when card depth/front
+  // changes. Layout effect so the browser never paints the exiting transform
+  // on the card's new depth (that flash is what flushSync used to paper over).
+  useLayoutEffect(() => {
     if (cardRef.current) cardRef.current.style.zIndex = '';
     if (!isFront) {
       setExit(null);
@@ -654,16 +656,26 @@ function StackCardItem({
     // Damp horizontal drag only if there's only 1 trip in the deck
     const effectiveDx = totalTrips < 2 ? rubberBand(dx, 60) : dx;
     dragRef.current = { x: effectiveDx, y: dy };
-    writeFrontCard(effectiveDx, dy);
-    const horizDist = Math.abs(effectiveDx);
-    const vertDist = Math.max(0, -dy * 1.2);
-    const progress = Math.min(1, Math.max(horizDist, vertDist) / SWIPE_THRESHOLD);
-    onDragProgress?.(progress, effectiveDx);
+    if (moveRaf.current != null) return;
+    moveRaf.current = requestAnimationFrame(() => {
+      moveRaf.current = null;
+      if (!active.current) return;
+      const { x, y } = dragRef.current;
+      writeFrontCard(x, y);
+      const horizDist = Math.abs(x);
+      const vertDist = Math.max(0, -y * 1.2);
+      const progress = Math.min(1, Math.max(horizDist, vertDist) / SWIPE_THRESHOLD);
+      onDragProgress?.(progress, x);
+    });
   };
 
   const endDrag = () => {
     if (!active.current) return;
     active.current = false;
+    if (moveRaf.current != null) {
+      cancelAnimationFrame(moveRaf.current);
+      moveRaf.current = null;
+    }
     clearLongPress();
     stopHoldRing(false);
     if (badgeRef.current) badgeRef.current.style.opacity = '0';
@@ -695,20 +707,10 @@ function StackCardItem({
         ? 0
         : Math.max(220, Math.min(EXIT_TRANSITION_MS, Math.round(EXIT_TRANSITION_MS / Math.max(1, speed * 0.8))));
 
-      setTimeout(() => {
-        // Commit the reorder first: resetting the exiting card's styles
-        // before React re-renders made the old trip flash back at the
-        // front for a frame. Then snap (no transition) to its new depth.
-        flushSync(onDone);
-        if (el) {
-          el.classList.remove('exiting', 'dragging');
-          el.style.willChange = '';
-          el.style.transition = 'none';
-          el.style.opacity = '';
-          el.style.transform = '';
-          void el.offsetHeight;
-          el.style.transition = '';
-        }
+      window.setTimeout(() => {
+        // Reorder first; useLayoutEffect on the new depth clears the exit
+        // transform before paint, so we don't need flushSync or a forced reflow.
+        onDone();
         setExit(null);
       }, exitDuration);
     };
@@ -925,6 +927,7 @@ export function TripStack({
     if (isDraggingStageRef.current !== dragging) {
       isDraggingStageRef.current = dragging;
       stageRef.current?.classList.toggle('is-dragging', dragging);
+      document.documentElement.classList.toggle('stack-dragging', dragging);
     }
     writePeekCard(peekElsRef.current[0], 1, toPrev ? 0 : p, dragging);
     writePeekCard(peekElsRef.current[1], 2, toPrev ? 0 : p, dragging);
@@ -935,6 +938,12 @@ export function TripStack({
   useEffect(() => {
     writePeeks(0, false);
   }, [order, writePeeks]);
+
+  useEffect(() => {
+    return () => {
+      document.documentElement.classList.remove('stack-dragging');
+    };
+  }, []);
 
   const handlePeekPreview = () => {
     writePeeks(0.85, false);

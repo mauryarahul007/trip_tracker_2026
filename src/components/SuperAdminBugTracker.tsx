@@ -4,6 +4,7 @@ import { useHistoryBack } from '../utils/useHistoryBack';
 import { useEscapeKey } from '../utils/useEscapeKey';
 import {
   fetchBugs,
+  fetchBug,
   createBug,
   updateBug,
   deleteBug,
@@ -33,6 +34,8 @@ type Props = {
   isAdmin?: boolean;
   onRequestConfirm?: (request: ConfirmRequest) => void;
   embedded?: boolean;
+  bugs?: BugRecord[];
+  skipFetch?: boolean;
   onBugsChanged?: () => void | Promise<void>;
 };
 
@@ -386,9 +389,10 @@ function BugDetailBody({
   );
 }
 
-export function SuperAdminBugTracker({ onBack, isAdmin = true, onRequestConfirm, embedded = false, onBugsChanged }: Props) {
-  const [bugs, setBugs] = useState<BugRecord[]>([]);
-  const [loading, setLoading] = useState(true);
+export function SuperAdminBugTracker({ onBack, isAdmin = true, onRequestConfirm, embedded = false, bugs: bugsFromParent, skipFetch = false, onBugsChanged }: Props) {
+  const [bugs, setBugs] = useState<BugRecord[]>(() => bugsFromParent ?? []);
+  const [loading, setLoading] = useState(!skipFetch);
+  const hydratedRef = useRef(new Set<string>());
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
@@ -411,13 +415,23 @@ export function SuperAdminBugTracker({ onBack, isAdmin = true, onRequestConfirm,
   const toggleExpandBug = (id: string) => {
     setExpandedBugIds((prev) => {
       const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
-        next.add(id);
-      }
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
       return next;
     });
+    hydrateBug(id);
+  };
+
+  const hydrateBug = (id: string) => {
+    if (hydratedRef.current.has(id)) return;
+    hydratedRef.current.add(id);
+    void fetchBug(id)
+      .then((full) => {
+        if (full) setBugs((prev) => prev.map((b) => (b.id === id ? full : b)));
+      })
+      .catch(() => {
+        hydratedRef.current.delete(id);
+      });
   };
 
   useFocusTrap(drawerRef, Boolean(drawerBugId), false, () => setDrawerBugId(null));
@@ -450,10 +464,15 @@ export function SuperAdminBugTracker({ onBack, isAdmin = true, onRequestConfirm,
   };
 
   const loadBugs = async (opts?: { quiet?: boolean }) => {
+    if (skipFetch) {
+      await onBugsChanged?.();
+      return;
+    }
     if (!opts?.quiet) setLoading(true);
     try {
       const data = await fetchBugs();
       setBugs(data);
+      hydratedRef.current.clear();
     } catch {
       showToast('Could not load the ledger', 'danger');
     } finally {
@@ -462,8 +481,18 @@ export function SuperAdminBugTracker({ onBack, isAdmin = true, onRequestConfirm,
   };
 
   useEffect(() => {
-    loadBugs();
-  }, []);
+    if (skipFetch) return;
+    void loadBugs();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [skipFetch]);
+
+  useEffect(() => {
+    if (bugsFromParent) setBugs(bugsFromParent);
+  }, [bugsFromParent]);
+
+  useEffect(() => {
+    if (drawerBugId) hydrateBug(drawerBugId);
+  }, [drawerBugId]);
 
   const filteredBugs = useMemo(() => {
     return bugs.filter((bug) => {
@@ -749,15 +778,20 @@ ${bug.diagnostics?.stackTrace ? `#### Stack Trace\n\`\`\`text\n${bug.diagnostics
     showToast(`Copied AI prompt for ${bug.id}`);
   };
 
-  const handleExportJson = () => {
-    const blob = new Blob([JSON.stringify(bugs, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `trip-tracker-bugs-${Date.now()}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-    showToast('Exported bugs.json');
+  const handleExportJson = async () => {
+    try {
+      const payload = await fetchBugs({ full: true });
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `trip-tracker-bugs-${Date.now()}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('Exported bugs.json');
+    } catch {
+      showToast('Could not export the ledger', 'danger');
+    }
   };
 
   if (!isAdmin) {

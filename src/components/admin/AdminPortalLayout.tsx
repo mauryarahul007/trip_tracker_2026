@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { Category, Trip, Expense, Member } from '../../types';
 import type { AdminUserRow, AuditLogEntry, DevicePlatformCount, NotificationStats } from '../../types/admin';
 import type { BugRecord } from '../../services/bugApi';
@@ -97,6 +97,43 @@ const SECTION_GROUPS: { label: string; items: Section[] }[] = [
 
 const SECTIONS: Section[] = SECTION_GROUPS.flatMap((g) => g.items);
 
+type FleetKey =
+  | 'bugs'
+  | 'recycledCount'
+  | 'users'
+  | 'superadminIds'
+  | 'features'
+  | 'auditLogs'
+  | 'expenses'
+  | 'platformCounts'
+  | 'notificationStats';
+
+const TABS_NEEDING_EXPENSES: AdminTab[] = ['command', 'analytics', 'trips', 'tools'];
+
+function keysForTab(tab: AdminTab): FleetKey[] {
+  const shell: FleetKey[] = ['bugs', 'recycledCount'];
+  switch (tab) {
+    case 'command':
+      return [...shell, 'users', 'features', 'auditLogs', 'expenses'];
+    case 'analytics':
+      return [...shell, 'expenses', 'users', 'platformCounts', 'notificationStats'];
+    case 'trips':
+      return [...shell, 'expenses'];
+    case 'users':
+      return [...shell, 'users', 'superadminIds'];
+    case 'audit':
+      return [...shell, 'auditLogs', 'users'];
+    case 'features':
+      return [...shell, 'features'];
+    case 'tools':
+      return [...shell, 'expenses'];
+    case 'bugs':
+    case 'flags':
+    default:
+      return shell;
+  }
+}
+
 const SECTION_GLYPHS: Record<AdminTab, string> = {
   command: '⚡',
   flags: '🚩',
@@ -162,51 +199,67 @@ export function AdminPortalLayout({
   const superadminEmail = useAuthStore((s) => s.session?.user.email) || 'superadmin@triptracker.local';
   const clock = useIstClock();
 
-  // The traveler app only ever loads one trip's expenses at a time
-  // (fetchExpensesForTrip); cross-trip analytics needs every trip's real
-  // rows, which RLS now allows for a superadmin (see migration 0054).
+  const fetchedRef = useRef(new Set<FleetKey>());
+  const tripsRef = useRef(trips);
+  tripsRef.current = trips;
+
+  const markSynced = () => {
+    setLastSyncedAt(Date.now());
+    setJustSynced(true);
+    setTimeout(() => setJustSynced(false), 1200);
+  };
+
+  const fetchKeys = useCallback((keys: FleetKey[], force = false) => {
+    const toFetch = force ? keys : keys.filter((k) => !fetchedRef.current.has(k));
+    if (toFetch.length === 0) return Promise.resolve();
+    toFetch.forEach((k) => fetchedRef.current.add(k));
+
+    const tripIds = tripsRef.current.map((t) => t.id);
+    const jobs: Promise<unknown>[] = [];
+    if (toFetch.includes('bugs')) jobs.push(fetchBugs().then(setBugs).catch(() => setBugs([])));
+    if (toFetch.includes('users')) jobs.push(fetchAllProfilesForAdmin().then(setUsers).catch(() => setUsers([])));
+    if (toFetch.includes('platformCounts')) jobs.push(fetchDevicePlatformCounts().then(setPlatformCounts).catch(() => setPlatformCounts([])));
+    if (toFetch.includes('superadminIds')) jobs.push(fetchSuperadminIds().then(setSuperadminIds).catch(() => setSuperadminIds([])));
+    if (toFetch.includes('auditLogs')) jobs.push(fetchAuditLogs().then(setAuditLogs).catch(() => setAuditLogs([])));
+    if (toFetch.includes('notificationStats')) jobs.push(fetchNotificationStats().then(setNotificationStats).catch(() => {}));
+    if (toFetch.includes('recycledCount')) jobs.push(fetchRecycledExpenseCount().then(setRecycledCount).catch(() => {}));
+    if (toFetch.includes('features')) jobs.push(fetchFeatures().then(setFeatures).catch(() => setFeatures([])));
+    if (toFetch.includes('expenses')) {
+      if (tripIds.length === 0) {
+        setExpenses([]);
+      } else {
+        jobs.push(fetchAllExpensesForTrips(tripIds).then(setExpenses).catch(() => setExpenses([])));
+      }
+    }
+    return Promise.all(jobs).then(markSynced);
+  }, []);
+
+  // Load only what the current tab needs. Refresh-all still refetches every
+  // key that has already been seen, plus the current tab.
   useEffect(() => {
-    const tripIds = trips.map((t) => t.id);
-    if (tripIds.length === 0) {
-      setExpenses([]);
+    void fetchKeys(keysForTab(activeTab));
+  }, [activeTab, fetchKeys]);
+
+  const tripIdsKey = trips.map((t) => t.id).join(',');
+  const tripIdsReady = useRef(false);
+  useEffect(() => {
+    if (!tripIdsReady.current) {
+      tripIdsReady.current = true;
       return;
     }
-    let cancelled = false;
-    fetchAllExpensesForTrips(tripIds)
-      .then((rows) => {
-        if (!cancelled) setExpenses(rows);
-      })
-      .catch(() => {
-        if (!cancelled) setExpenses([]);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [trips]);
-
-  // Returns a Promise so callers that want to know when a refresh actually
-  // finished (e.g. a manual Refresh button showing a spinner) can await it;
-  // fire-and-forget callers (mutation handlers) are unaffected either way.
-  const reloadFleetData = () =>
-    Promise.all([
-      fetchBugs().then(setBugs).catch(() => setBugs([])),
-      fetchAllProfilesForAdmin().then(setUsers).catch(() => setUsers([])),
-      fetchDevicePlatformCounts().then(setPlatformCounts).catch(() => setPlatformCounts([])),
-      fetchSuperadminIds().then(setSuperadminIds).catch(() => setSuperadminIds([])),
-      fetchAuditLogs().then(setAuditLogs).catch(() => setAuditLogs([])),
-      fetchNotificationStats().then(setNotificationStats).catch(() => {}),
-      fetchRecycledExpenseCount().then(setRecycledCount).catch(() => {}),
-      fetchFeatures().then(setFeatures).catch(() => setFeatures([])),
-    ]).then(() => {
-      setLastSyncedAt(Date.now());
-      setJustSynced(true);
-      setTimeout(() => setJustSynced(false), 1200);
-    });
-
-  useEffect(() => {
-    reloadFleetData();
+    fetchedRef.current.delete('expenses');
+    if (TABS_NEEDING_EXPENSES.includes(activeTab) && tripIdsKey) {
+      void fetchKeys(['expenses'], true);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [tripIdsKey]);
+
+  const reloadFleetData = () => fetchKeys(keysForTab(activeTab), true);
+
+  const reloadBugs = () => {
+    fetchedRef.current.delete('bugs');
+    return fetchKeys(['bugs'], true);
+  };
 
   // Keeps the "synced Xs ago" note fresh without a full clock — a
   // lightweight re-render tick, not a new timestamp source.
@@ -216,21 +269,12 @@ export function AdminPortalLayout({
     return () => clearInterval(id);
   }, []);
 
-  // On-demand counterpart to the trips-keyed expenses effect above, for the
-  // per-section manual Refresh buttons (Analytics/Trips/Users/Audit/Tools).
-  const reloadExpenses = () => {
-    const tripIds = trips.map((t) => t.id);
-    if (tripIds.length === 0) {
-      setExpenses([]);
-      return Promise.resolve();
-    }
-    return fetchAllExpensesForTrips(tripIds).then(setExpenses).catch(() => setExpenses([]));
-  };
-
   const handleRefreshAll = async () => {
     setIsRefreshing(true);
     try {
-      await Promise.all([reloadFleetData(), reloadExpenses()]);
+      const seen = Array.from(fetchedRef.current);
+      const keys = Array.from(new Set([...seen, ...keysForTab(activeTab)]));
+      await fetchKeys(keys, true);
     } finally {
       setIsRefreshing(false);
     }
@@ -674,8 +718,10 @@ export function AdminPortalLayout({
             <SuperAdminBugTracker
               embedded
               isAdmin
+              bugs={bugs}
+              skipFetch
               onRequestConfirm={setConfirmRequest}
-              onBugsChanged={reloadFleetData}
+              onBugsChanged={reloadBugs}
             />
           )}
           {activeTab === 'tools' && (

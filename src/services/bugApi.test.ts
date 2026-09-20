@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { appendBugActivity, bugFingerprint } from './bugApi';
+import { appendBugActivity, bugFingerprint, BUG_SUMMARY_COLUMNS } from './bugApi';
 
 describe('bugFingerprint', () => {
   it('is stable for the same stack line and title', () => {
@@ -24,6 +24,18 @@ describe('bugFingerprint', () => {
     const a = bugFingerprint({ title: 'Crash on expenses', category: 'ui-ux', stackTrace: stack });
     const b = bugFingerprint({ title: 'Null crash', category: 'navigation', stackTrace: stack });
     expect(a).toBe(b);
+  });
+});
+
+describe('BUG_SUMMARY_COLUMNS', () => {
+  it('omits diagnostics, activity, and screenshot-sized JSON', () => {
+    expect(BUG_SUMMARY_COLUMNS).toContain('id');
+    expect(BUG_SUMMARY_COLUMNS).toContain('title');
+    expect(BUG_SUMMARY_COLUMNS).toContain('severity');
+    expect(BUG_SUMMARY_COLUMNS).not.toContain('diagnostics');
+    expect(BUG_SUMMARY_COLUMNS).not.toContain('activity');
+    expect(BUG_SUMMARY_COLUMNS).not.toContain('repro_steps');
+    expect(BUG_SUMMARY_COLUMNS).not.toContain('screenshot');
   });
 });
 

@@ -3191,6 +3191,17 @@ input:checked + .toggle-slider:before {
   opacity: 0;
   transition: none;
 }
+/* Backdrop-filter on pills that sit on a transforming card forces a
+   per-frame filter pass. Solid fills during drag; restore at rest. */
+.trip-stack-stage.is-dragging .stack-status-dot-indicator,
+.trip-stack-stage.is-dragging .stack-header-caption,
+.trip-stack-stage.is-dragging .stack-weather-pill,
+.trip-stack-stage.is-dragging .stack-quick-add-chip,
+.trip-stack-stage.is-dragging .stack-swipe-badge,
+.trip-stack-stage.is-dragging .stack-card-face.has-photo .pp-stamp {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
 .stack-card.depth-1 {
   z-index: 2;
   transform: translateY(14px) scale(0.96) rotate(-2.5deg);
@@ -3253,9 +3264,9 @@ input:checked + .toggle-slider:before {
   bottom: 12px;
   pointer-events: none;
   z-index: 0;
-  filter: blur(48px);
-  -webkit-filter: blur(48px);
-  opacity: 0.35;
+  /* Soft radial only -- a live blur(48px) on this layer was the main
+     compositor tax during swipe. The gradient already fades to transparent. */
+  opacity: 0.42;
   transform: translate3d(0, 0, 0);
   transition: opacity 0.5s ease, background 0.6s cubic-bezier(0.16, 1, 0.3, 1);
   border-radius: 40px;
@@ -6198,6 +6209,10 @@ html.capacitor-ios .trip-sheet .tab-pane {
   transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1);
   mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.92) 0%, rgba(0, 0, 0, 0.95) 45%, rgba(0, 0, 0, 0.45) 85%, transparent 100%);
   -webkit-mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.92) 0%, rgba(0, 0, 0, 0.95) 45%, rgba(0, 0, 0, 0.45) 85%, transparent 100%);
+}
+html.stack-dragging .home-ambient-layer {
+  filter: brightness(0.65);
+  transition: none;
 }
 
 .modal-overlay {

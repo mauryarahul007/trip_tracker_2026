@@ -164,12 +164,35 @@ function writeLocalFallback(bugs: BugRecord[]) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(bugs));
 }
 
-export async function fetchBugs(): Promise<BugRecord[]> {
+// List view + Ops Deck health never need diagnostics/screenshots/activity.
+// Those columns are the bulk of the payload (console dumps, optional data-URL
+// screenshots). Load them only when a single case is opened.
+export const BUG_SUMMARY_COLUMNS =
+  'id, title, description, severity, category, status, found_by, environment, assignee, fingerprint, created_at, updated_at, resolved_at, resolved_by, resolution_note';
+
+export async function fetchBugs(opts?: { full?: boolean }): Promise<BugRecord[]> {
   if (isMissingSupabaseEnv) return readLocalFallback();
 
-  const { data, error } = await supabase.from('bugs').select('*').order('created_at', { ascending: false });
+  const query = opts?.full
+    ? supabase.from('bugs').select('*').order('created_at', { ascending: false })
+    : supabase.from('bugs').select(BUG_SUMMARY_COLUMNS).order('created_at', { ascending: false });
+  const { data, error } = await query;
   if (error) throw error;
-  return (data ?? []).map(mapRow);
+  return (data ?? []).map((row) => mapRow(row as BugRow));
+}
+
+export async function fetchBug(id: string): Promise<BugRecord | null> {
+  if (isMissingSupabaseEnv) {
+    return readLocalFallback().find((b) => b.id.toUpperCase() === id.toUpperCase()) ?? null;
+  }
+
+  const { data, error } = await supabase
+    .from('bugs')
+    .select('*')
+    .eq('id', id.toUpperCase())
+    .maybeSingle();
+  if (error) throw error;
+  return data ? mapRow(data as BugRow) : null;
 }
 
 export async function createBug(bug: Partial<BugRecord>): Promise<BugRecord> {

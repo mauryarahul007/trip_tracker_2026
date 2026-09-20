@@ -105,13 +105,31 @@ export interface TripGraph {
 }
 
 // Fetches every trip the current user can see (RLS-scoped to admin or
-// claimed participant) plus all members/groups for those trips. Expenses
-// and custom categories are intentionally NOT included here — categories
-// are scoped to a single trip (mixing them across trips would leak trip
-// B's custom categories into trip A's UI), and expenses are the bulk of
-// the data — both are fetched lazily, only when a trip becomes active.
+// claimed participant) plus all members/groups for those trips. Expense
+// *rows* are fetched lazily when a trip becomes active. Card badges only
+// need a count, which PostgREST can return as `{ expenses: [{ count: N }] }`
+// instead of downloading every trip_id.
+export function expenseCountFromEmbedded(row: unknown): number {
+  if (!row || typeof row !== 'object') return 0;
+  const embedded = (row as { expenses?: unknown }).expenses;
+  if (Array.isArray(embedded) && embedded[0] && typeof (embedded[0] as { count?: unknown }).count === 'number') {
+    return (embedded[0] as { count: number }).count;
+  }
+  return 0;
+}
+
 export async function fetchMyTripGraph(): Promise<TripGraph> {
-  const { data: tripRows, error: tripsErr } = await supabase.from('trips').select('*').order('created_at', { ascending: true });
+  const embedded = await supabase
+    .from('trips')
+    .select('*, expenses(count)')
+    .order('created_at', { ascending: true });
+  // Older PostgREST / missing FK name: fall back to a plain trips select
+  // plus a trip_id-only expense scan (previous behavior).
+  const tripsRes = embedded.error
+    ? await supabase.from('trips').select('*').order('created_at', { ascending: true })
+    : embedded;
+  const tripRows = tripsRes.data;
+  const tripsErr = tripsRes.error;
   if (tripsErr) throw tripsErr;
 
   const tripIds = (tripRows ?? []).map((t) => t.id);
@@ -119,19 +137,28 @@ export async function fetchMyTripGraph(): Promise<TripGraph> {
     return { trips: [], members: {}, groups: {} };
   }
 
+  const usedEmbed = !embedded.error;
   const [membersRes, groupsRes, expensesRes] = await Promise.all([
     supabase.from('members').select('*, profile:linked_user_id(avatar_url)').in('trip_id', tripIds),
     supabase.from('groups').select('*').in('trip_id', tripIds),
-    supabase.from('expenses').select('trip_id').in('trip_id', tripIds),
+    usedEmbed
+      ? Promise.resolve({ data: [] as { trip_id: string }[], error: null })
+      : supabase.from('expenses').select('trip_id').in('trip_id', tripIds),
   ]);
   if (membersRes.error) throw membersRes.error;
   if (groupsRes.error) throw groupsRes.error;
   if (expensesRes.error) throw expensesRes.error;
 
   const expenseCounts: Record<string, number> = {};
-  (expensesRes.data ?? []).forEach((row) => {
-    expenseCounts[row.trip_id] = (expenseCounts[row.trip_id] || 0) + 1;
-  });
+  if (usedEmbed) {
+    (tripRows ?? []).forEach((row) => {
+      expenseCounts[row.id] = expenseCountFromEmbedded(row);
+    });
+  } else {
+    (expensesRes.data ?? []).forEach((row) => {
+      expenseCounts[row.trip_id] = (expenseCounts[row.trip_id] || 0) + 1;
+    });
+  }
 
   const groupIds = (groupsRes.data ?? []).map((g) => g.id);
   const groupMembersRes = groupIds.length
@@ -191,12 +218,16 @@ export async function fetchExpensesForTrip(tripId: string): Promise<Expense[]> {
 //
 // `titleQuery` also powers the traveler-facing cross-trip search in
 // CommandPalette: same query, filtered + capped instead of hauling every
-// row across every trip the user belongs to.
+// row across every trip the user belongs to. Ops Deck analytics needs the
+// split math, not receipts, GPS, or itemized JSON.
+const ADMIN_EXPENSE_COLUMNS =
+  'id, trip_id, title, amount, currency, category, date, paid_by, paid_by_shares, split_mode, split_member_ids, split_config, resolved_shares, receipt_path, is_settlement, approval_status, created_by_user_id, created_at, updated_at';
+
 export async function fetchAllExpensesForTrips(tripIds: string[], titleQuery?: string): Promise<Expense[]> {
   if (tripIds.length === 0) return [];
   let query = supabase
     .from('expenses')
-    .select('*')
+    .select(ADMIN_EXPENSE_COLUMNS)
     .in('trip_id', tripIds)
     .is('deleted_at', null);
   if (titleQuery) {
@@ -205,7 +236,7 @@ export async function fetchAllExpensesForTrips(tripIds: string[], titleQuery?: s
   }
   const { data, error } = await query;
   if (error) throw error;
-  return (data ?? []).map(mapExpense);
+  return (data ?? []).map((row) => mapExpense(row as ExpenseRow));
 }
 
 export async function fetchDeletedExpensesForTrip(tripId: string): Promise<Expense[]> {
@@ -1180,13 +1211,17 @@ export async function deleteUserAccount(userId: string): Promise<void> {
 // One row per device, so a multi-device user counts once per platform they
 // use -- fine for a rough fleet split, not meant to be a unique-user count.
 export async function fetchDevicePlatformCounts(): Promise<DevicePlatformCount[]> {
-  const { data, error } = await supabase.from('device_push_tokens').select('platform');
-  if (error) throw error;
-  const counts: Record<string, number> = {};
-  (data ?? []).forEach((row) => {
-    counts[row.platform] = (counts[row.platform] || 0) + 1;
-  });
-  return Object.entries(counts).map(([platform, count]) => ({ platform: platform as 'ios' | 'android', count }));
+  const [ios, android] = await Promise.all([
+    supabase.from('device_push_tokens').select('id', { count: 'exact', head: true }).eq('platform', 'ios'),
+    supabase.from('device_push_tokens').select('id', { count: 'exact', head: true }).eq('platform', 'android'),
+  ]);
+  if (ios.error) throw ios.error;
+  if (android.error) throw android.error;
+  const counts: DevicePlatformCount[] = [
+    { platform: 'ios', count: ios.count ?? 0 },
+    { platform: 'android', count: android.count ?? 0 },
+  ];
+  return counts.filter((row) => row.count > 0);
 }
 
 export async function fetchAppConfig(): Promise<Partial<Record<AppConfigKey, unknown>>> {

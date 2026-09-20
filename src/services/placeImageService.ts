@@ -15,7 +15,9 @@ const imageCache = new Map<string, string | null>();
 // any other width are rejected with 400 (API-routed requests get silently
 // rounded to the nearest one, but our /thumb/ URLs are direct hotlinks).
 // https://www.mediawiki.org/wiki/Common_thumbnail_sizes
-const THUMB_WIDTH = 960;
+export const COVER_WIDTH = 960;
+export const PEEK_COVER_WIDTH = 480;
+const THUMB_WIDTH = COVER_WIDTH;
 
 // Wikimedia originals live at .../wikipedia/<project>/<h1>/<h2>/<file>.
 // Rewriting to the /thumb/ path asks Wikimedia's own resizer for a
@@ -43,6 +45,25 @@ function toSizedThumbnail(url: string, width: number = THUMB_WIDTH): string {
   if (!match) return url;
   const [, prefix, h1, h2, filename] = match;
   return `${parsed.origin}${prefix}thumb/${h1}/${h2}/${filename}/${width}px-${filename}`;
+}
+
+const WIKIMEDIA_THUMB_PX_PATTERN = /\/(\d+)px-([^/]+)$/;
+
+// Peek cards are ~half the front card. Rewriting an already-cached 960px
+// Wikimedia thumb to 480px keeps decode cost down without a second fetch.
+export function coverImageUrlAtWidth(url: string | null, width: number): string | null {
+  if (!url) return null;
+  try {
+    const parsed = new URL(url);
+    if (parsed.hostname !== 'upload.wikimedia.org') return url;
+    if (WIKIMEDIA_THUMB_PX_PATTERN.test(parsed.pathname)) {
+      parsed.pathname = parsed.pathname.replace(WIKIMEDIA_THUMB_PX_PATTERN, `/${width}px-$2`);
+      return parsed.toString();
+    }
+    return toSizedThumbnail(url, width);
+  } catch {
+    return url;
+  }
 }
 
 // Prefer a sized-down copy of the original (consistent, controlled width)

@@ -11,7 +11,7 @@ vi.mock('./supabaseClient', () => ({
   supabase: { from: (table: string) => fromMock(table) },
 }));
 
-import { updateExpenseRow, type ExpenseInput } from './tripApi';
+import { updateExpenseRow, expenseCountFromEmbedded, type ExpenseInput } from './tripApi';
 
 const baseInput: ExpenseInput = {
   title: 'Dinner',
@@ -52,5 +52,18 @@ describe('updateExpenseRow', () => {
   it('still throws the original error when Supabase reports one', async () => {
     selectMock.mockResolvedValue({ data: null, error: { message: 'network error' } });
     await expect(updateExpenseRow('exp-1', baseInput)).rejects.toMatchObject({ message: 'network error' });
+  });
+});
+
+describe('expenseCountFromEmbedded', () => {
+  it('reads PostgREST nested count shape', () => {
+    expect(expenseCountFromEmbedded({ expenses: [{ count: 12 }] })).toBe(12);
+  });
+
+  it('returns 0 when the embed is missing or empty', () => {
+    expect(expenseCountFromEmbedded({})).toBe(0);
+    expect(expenseCountFromEmbedded({ expenses: [] })).toBe(0);
+    expect(expenseCountFromEmbedded({ expenses: null })).toBe(0);
+    expect(expenseCountFromEmbedded(null)).toBe(0);
   });
 });
