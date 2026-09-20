@@ -7118,6 +7118,6 @@
     "updatedAt": "2026-09-20T10:56:37.320Z",
     "resolvedBy": "claude-cli",
     "resolvedAt": "2026-09-20T10:56:37.320Z",
-    "resolutionNote": "Fixed in v3.32.6. Drag is direction-aware: dragging right raises the hidden previous-trip card above the peeks (opaque within first third), peeks stay still; hidden card kept at opacity .01 so its photo is decoded. Follow-up to BUG-238. Commit pending."
+    "resolutionNote": "Fixed in v3.32.6. Drag is direction-aware: dragging right raises the hidden previous-trip card above the peeks (opaque within first third), peeks stay still; hidden card kept at opacity .01 so its photo is decoded. Follow-up to BUG-238. Commit 2fca9d0."
   }
 ]
