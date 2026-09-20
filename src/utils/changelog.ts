@@ -9,6 +9,15 @@ export interface ChangelogEntry {
 // parsed from decisions.md/BUGS.md: those are prose for developers, not client data.
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: '3.32.4',
+    date: '2026-09-20',
+    changes: [
+      'Home trip stack now swipes in a predictable alphabetical loop: swipe left for the next trip, right for the previous one, and it wraps around.',
+      'Pagination dots on the home screen now follow the same order as the trip stack.',
+      'New optional Sort toggle (A–Z or Date) under the trip stack.',
+    ],
+  },
+  {
     version: '3.32.3',
     date: '2026-09-20',
     changes: [
