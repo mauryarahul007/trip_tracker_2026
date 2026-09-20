@@ -52,7 +52,3 @@ export function generateUpiUri(details: UpiPaymentDetails, appScheme?: string): 
       return `upi://pay?${baseParams}`;
   }
 }
-
-export function getQrCodeUrl(upiUri: string, size = 220): string {
-  return `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(upiUri)}`;
-}

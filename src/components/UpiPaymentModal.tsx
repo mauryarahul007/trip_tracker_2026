@@ -276,6 +276,20 @@ export function UpiPaymentModal({
           </div>
         )}
 
+        {/* UPI & Settlement Legal Disclaimer */}
+        <div style={{
+          fontSize: '11px',
+          color: 'var(--text-muted, var(--text-secondary))',
+          lineHeight: '1.4',
+          marginBottom: '14px',
+          padding: '8px 10px',
+          background: 'var(--bg-secondary, rgba(255, 255, 255, 0.04))',
+          borderRadius: '8px',
+          border: '1px solid var(--border-subtle, rgba(255, 255, 255, 0.06))',
+        }}>
+          🛡️ <strong>Notice:</strong> Trip Tracker does not process payments or handle funds. Payments take place directly inside your UPI banking app. Please verify the payee UPI ID and amount before sending.
+        </div>
+
         {/* Final Confirmation */}
         <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '14px', display: 'flex', gap: '8px' }}>
           <button

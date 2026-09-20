@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Navigate, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { useTripStore } from '../store/tripStore';
 import { fetchAppFlag } from '../services/tripApi';
@@ -231,6 +231,14 @@ export function LoginScreen() {
                 <span>Continue with Google</span>
               </button>
 
+              {/* Legal Agreement Pre-Consent Notice */}
+              <p className="login-legal-consent-notice">
+                By continuing, you agree to our{' '}
+                <Link to="/terms" className="login-legal-link">Terms of Service</Link>
+                {' '}and{' '}
+                <Link to="/privacy" className="login-legal-link">Privacy Policy</Link>.
+              </p>
+
               {/* Inline Join with 6-digit Code */}
               <form onSubmit={handleQuickJoinSubmit} className="login-inline-join-wrap">
                 {/* Honeypot field - visually hidden to trap bots */}
@@ -263,21 +271,27 @@ export function LoginScreen() {
                 </button>
               </form>
 
-              {/* Footer Row: Superadmin toggle & privacy seal */}
+              {/* Footer Row: Public legal links, superadmin toggle & privacy seal */}
               <footer className="landing-glass-footer">
-                <button
-                  type="button"
-                  onClick={() => {
-                    triggerHaptic('light');
-                    setPersona('admin');
-                  }}
-                  className="landing-glass-footer-link"
-                >
-                  <span>🛡️</span> Superadmin Login
-                </button>
+                <div className="landing-legal-links-row">
+                  <Link to="/privacy" className="landing-glass-footer-link">Privacy</Link>
+                  <span className="landing-footer-sep" aria-hidden="true">·</span>
+                  <Link to="/terms" className="landing-glass-footer-link">Terms</Link>
+                  <span className="landing-footer-sep" aria-hidden="true">·</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      triggerHaptic('light');
+                      setPersona('admin');
+                    }}
+                    className="landing-glass-footer-link"
+                  >
+                    Superadmin
+                  </button>
+                </div>
                 <div className="login-security-seal" style={{ margin: 0 }}>
                   <IconLock size={12} className="login-lock-icon" />
-                  <span>E2E ENCRYPTED</span>
+                  <span>256-BIT ENCRYPTED · SECURE SYNC</span>
                 </div>
               </footer>
             </main>

@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import type { AppNotification } from '../types';
 import type { ConfirmRequest } from './ConfirmDialog';
 import { useNotificationsStore } from '../store/notificationsStore';
@@ -270,7 +270,67 @@ export function NotificationsPanel({
   const deleteOne = useNotificationsStore((s) => s.deleteOne);
   const clearAll = useNotificationsStore((s) => s.clearAll);
   const [permission, setPermission] = useState(getWebNotificationPermission());
+  const [isRequestingPermission, setIsRequestingPermission] = useState(false);
+  const [showBlockedGuide, setShowBlockedGuide] = useState(false);
+  const [isBannerDismissed, setIsBannerDismissed] = useState(() => {
+    try {
+      return sessionStorage.getItem('tt_dismiss_alerts_banner') === '1';
+    } catch {
+      return false;
+    }
+  });
   const sheetRef = useRef<HTMLDivElement>(null);
+
+  // Sync notification permission on mount and when browser permissions change
+  useEffect(() => {
+    setPermission(getWebNotificationPermission());
+
+    if (typeof navigator !== 'undefined' && 'permissions' in navigator) {
+      let mounted = true;
+      try {
+        navigator.permissions
+          .query({ name: 'notifications' as PermissionName })
+          .then((status) => {
+            if (!mounted) return;
+            const handleChange = () => {
+              if (!mounted) return;
+              setPermission(getWebNotificationPermission());
+            };
+            status.addEventListener('change', handleChange);
+          })
+          .catch(() => {
+            // Notifications permission query not supported in all browsers
+          });
+      } catch {
+        // Ignored
+      }
+      return () => {
+        mounted = false;
+      };
+    }
+  }, [isPanelOpen]);
+
+  const handleEnableAlerts = async () => {
+    setIsRequestingPermission(true);
+    try {
+      const res = await requestWebNotificationPermission();
+      setPermission(res);
+      if (res === 'denied') {
+        setShowBlockedGuide(true);
+      }
+    } finally {
+      setIsRequestingPermission(false);
+    }
+  };
+
+  const handleDismissBanner = () => {
+    setIsBannerDismissed(true);
+    try {
+      sessionStorage.setItem('tt_dismiss_alerts_banner', '1');
+    } catch {
+      // Ignored
+    }
+  };
 
   // Multi-Trip Filter State (Option C Hybrid)
   const activeTripId = useTripStore((s) => s.activeTripId);
@@ -458,23 +518,75 @@ export function NotificationsPanel({
             only; native (Android/iOS) has its own FCM permission flow via
             pushRegistration.ts, and Notification.requestPermission() is a
             silent no-op there, so this must never render on native. */}
-        {isWebNotificationSupported() && permission !== 'granted' && (
-          <div className="notif-alert-banner">
-            <div className="notif-alert-banner-left">
-              <span className="notif-alert-icon">🔔</span>
-              <div className="notif-alert-text">
-                <strong className="notif-alert-title">Enable Live Alerts</strong>
-                <span className="notif-alert-desc">Get browser alerts when friends add expenses or settle</span>
+        {isWebNotificationSupported() && permission !== 'granted' && !isBannerDismissed && (
+          <>
+            <div className={`notif-alert-banner ${permission === 'denied' ? 'notif-alert-banner-denied' : ''}`}>
+              <div className="notif-alert-banner-left">
+                <span className="notif-alert-icon" aria-hidden="true">
+                  {permission === 'denied' ? '🔕' : '🔔'}
+                </span>
+                <div className="notif-alert-text">
+                  <strong className="notif-alert-title">
+                    {permission === 'denied' ? 'Live Alerts Blocked' : 'Enable Live Alerts'}
+                  </strong>
+                  <span className="notif-alert-desc">
+                    {permission === 'denied'
+                      ? 'Notifications are blocked in your browser settings'
+                      : 'Get browser alerts when friends add expenses or settle'}
+                  </span>
+                </div>
+              </div>
+              <div className="notif-alert-actions">
+                {permission === 'denied' ? (
+                  <button
+                    type="button"
+                    className="notif-alert-help-btn"
+                    onClick={() => setShowBlockedGuide((prev) => !prev)}
+                    aria-expanded={showBlockedGuide}
+                  >
+                    {showBlockedGuide ? 'Hide Guide' : 'How to Fix'}
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    className="notif-alert-enable-btn"
+                    onClick={handleEnableAlerts}
+                    disabled={isRequestingPermission}
+                  >
+                    {isRequestingPermission ? 'Enabling...' : 'Enable'}
+                  </button>
+                )}
+                <button
+                  type="button"
+                  className="notif-alert-dismiss-btn"
+                  onClick={handleDismissBanner}
+                  title="Dismiss banner"
+                  aria-label="Dismiss banner"
+                >
+                  <IconClose size={13} />
+                </button>
               </div>
             </div>
-            <button
-              type="button"
-              className="notif-alert-enable-btn"
-              onClick={async () => setPermission(await requestWebNotificationPermission())}
-            >
-              Enable
-            </button>
-          </div>
+
+            {permission === 'denied' && showBlockedGuide && (
+              <div className="notif-alert-guide" role="region" aria-label="Notification unblock guide">
+                <div className="notif-alert-guide-header">
+                  <strong>How to unblock in your browser:</strong>
+                </div>
+                <ol className="notif-alert-guide-steps">
+                  <li>
+                    Click the <strong>site info / padlock / tune</strong> icon in your browser address bar.
+                  </li>
+                  <li>
+                    Find <strong>Notifications</strong> and change it from <em>Block</em> to <strong>Allow</strong>.
+                  </li>
+                  <li>
+                    Reload the page or switch back here to start receiving live alerts.
+                  </li>
+                </ol>
+              </div>
+            )}
+          </>
         )}
 
         {/* Content List or Empty State */}

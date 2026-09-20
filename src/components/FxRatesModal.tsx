@@ -356,6 +356,20 @@ export function FxRatesModal({
             </div>
           </div>
 
+          {/* FX Rates Legal Disclaimer */}
+          <div style={{
+            fontSize: '11px',
+            color: 'var(--text-muted, var(--text-secondary))',
+            lineHeight: '1.4',
+            margin: '12px 0',
+            padding: '8px 10px',
+            background: 'var(--bg-secondary, rgba(255, 255, 255, 0.04))',
+            borderRadius: '8px',
+            border: '1px solid var(--border-subtle, rgba(255, 255, 255, 0.06))',
+          }}>
+            ℹ️ <strong>Notice:</strong> Exchange rates are estimated from public market feeds (Frankfurter API) for reference only. Bank, card, and credit conversion rates will vary.
+          </div>
+
           {/* Save Button */}
           <div style={{ marginTop: 'auto' }}>
             <button

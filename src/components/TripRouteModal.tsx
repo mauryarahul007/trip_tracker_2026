@@ -75,7 +75,7 @@ export function TripRouteModal({
       style: MAP_STYLE_URL,
       center: initialCenter,
       zoom: resolvedStops.length > 1 ? 8 : 11,
-      attributionControl: false,
+      attributionControl: { compact: true },
     });
     mapInstanceRef.current = map;
 

@@ -10,7 +10,12 @@ import { avatarColorForName } from '../utils/avatarColor';
 import { getCurrencySymbol } from '../utils/currency';
 import { compressImageToDataUrl, compressDataUrlToDataUrl } from '../utils/image';
 import { autoSuggestCategory } from '../utils/categoryHelper';
-import { parseQuickExpense, resolveDefaultExpensePayerId } from '../utils/expenseQuickParser';
+import { parseQuickExpense, resolveDefaultExpensePayerId, pickBestQuickExpenseParse } from '../utils/expenseQuickParser';
+import {
+  isSpeechRecognitionSupported,
+  startSpeechRecognition,
+  type SpeechRecognitionController,
+} from '../utils/speechRecognition';
 import { captureCurrentExpenseLocation, detectCurrencyFromLocation } from '../utils/geolocation';
 import { isMemberPresentOnDate } from '../utils/memberDateRange';
 import { useTripStore, getOrderedCategories } from '../store/tripStore';
@@ -28,26 +33,6 @@ import { getPredictiveQuickChips } from '../utils/predictiveExpenses';
 import { getLatestNonSettlementExpense } from '../utils/lastExpense';
 import { loadDefaultSplit, saveDefaultSplit } from '../utils/defaultSplit';
 
-// Minimal Web Speech API surface -- not in the default TS DOM lib, and
-// vendor-prefixed on most browsers that support it (Chrome/Edge/Safari).
-interface SpeechRecognitionInstance extends EventTarget {
-  lang: string;
-  interimResults: boolean;
-  maxAlternatives: number;
-  start: () => void;
-  stop: () => void;
-  onresult: ((event: { results: ArrayLike<ArrayLike<{ transcript: string }>> }) => void) | null;
-  onerror: (() => void) | null;
-  onend: (() => void) | null;
-}
-
-function getSpeechRecognitionCtor(): (new () => SpeechRecognitionInstance) | null {
-  const w = window as unknown as {
-    SpeechRecognition?: new () => SpeechRecognitionInstance;
-    webkitSpeechRecognition?: new () => SpeechRecognitionInstance;
-  };
-  return w.SpeechRecognition || w.webkitSpeechRecognition || null;
-}
 
 const getTodayDateString = () => {
   const today = new Date();
@@ -116,7 +101,8 @@ export function ExpenseForm({
   // Local Form States
   const [title, setTitle] = useState(editingExpense?.title || initialTemplate?.title || '');
   const [isListening, setIsListening] = useState(false);
-  const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
+  const [speechSupported, setSpeechSupported] = useState(false);
+  const recognitionRef = useRef<SpeechRecognitionController | null>(null);
   const [amount, setAmount] = useState(
     editingExpense ? String(editingExpense.amount) : (initialTemplate?.amount != null ? String(initialTemplate.amount) : '')
   );
@@ -815,24 +801,48 @@ export function ExpenseForm({
     setSplitMode('equal');
   };
 
-  useEffect(() => () => recognitionRef.current?.stop(), []);
+  useEffect(() => {
+    let mounted = true;
+    isSpeechRecognitionSupported().then((supported) => {
+      if (mounted) setSpeechSupported(supported);
+    });
+    return () => {
+      mounted = false;
+      recognitionRef.current?.stop();
+    };
+  }, []);
 
   const handleToggleVoiceInput = () => {
     if (isListening) {
       recognitionRef.current?.stop();
+      setIsListening(false);
       return;
     }
-    const Ctor = getSpeechRecognitionCtor();
-    if (!Ctor) return;
+    if (!speechSupported) return;
     triggerHaptic('light');
-    const recognition = new Ctor();
-    recognition.lang = 'en-IN';
-    recognition.interimResults = false;
-    recognition.maxAlternatives = 1;
-    recognition.onresult = (event) => {
-      const transcript = event.results[0]?.[0]?.transcript;
-      if (transcript) {
-        const parsed = parseQuickExpense(transcript, categories, allTripExpenses, visibleMembers, currentMemberId);
+
+    const controller = startSpeechRecognition({
+      language: 'en-IN',
+      continuous: false,
+      maxAlternatives: 3,
+      silenceTimeoutMs: 2200,
+      onStart: () => setIsListening(true),
+      onResult: (payload) => {
+        const candidates = payload.alternatives && payload.alternatives.length > 0
+          ? payload.alternatives
+          : [payload.transcript];
+
+        const best = pickBestQuickExpenseParse(
+          candidates,
+          categories,
+          allTripExpenses,
+          visibleMembers,
+          currentMemberId
+        );
+
+        const chosenTranscript = best?.bestTranscript || payload.transcript;
+        const parsed = best?.parsed || parseQuickExpense(chosenTranscript, categories, allTripExpenses, visibleMembers, currentMemberId);
+
         if (parsed) {
           if (parsed.title) {
             setTitle(parsed.title);
@@ -853,21 +863,20 @@ export function ExpenseForm({
           }
           triggerHaptic('success');
         } else {
-          setTitle(transcript);
-          const suggested = autoSuggestCategory(transcript, categories, allTripExpenses);
+          setTitle(chosenTranscript);
+          const suggested = autoSuggestCategory(chosenTranscript, categories, allTripExpenses);
           if (suggested) {
             setCategory(suggested);
             const foundCat = categories.find((c) => c.id === suggested);
             setAutoSelectedCategoryName(foundCat?.name || null);
           }
         }
-      }
-    };
-    recognition.onerror = () => setIsListening(false);
-    recognition.onend = () => setIsListening(false);
-    recognitionRef.current = recognition;
-    recognition.start();
-    setIsListening(true);
+      },
+      onError: () => setIsListening(false),
+      onEnd: () => setIsListening(false),
+    });
+
+    recognitionRef.current = controller;
   };
 
   const handleSubmitLocal = async (e: React.FormEvent) => {
@@ -1631,7 +1640,7 @@ export function ExpenseForm({
             className="input-field"
             placeholder="e.g. Flight Tickets"
             value={title}
-            style={enableVoiceInput && getSpeechRecognitionCtor() ? { paddingRight: '40px' } : undefined}
+            style={enableVoiceInput && speechSupported ? { paddingRight: '40px' } : undefined}
             onChange={(e) => {
               const val = e.target.value;
               setTitle(val);
@@ -1644,7 +1653,7 @@ export function ExpenseForm({
               }
             }}
           />
-          {enableVoiceInput && getSpeechRecognitionCtor() && (
+          {enableVoiceInput && speechSupported && (
             <button
               type="button"
               onClick={handleToggleVoiceInput}

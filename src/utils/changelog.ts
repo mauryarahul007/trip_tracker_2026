@@ -9,6 +9,16 @@ export interface ChangelogEntry {
 // parsed from decisions.md/BUGS.md: those are prose for developers, not client data.
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: '3.32.0',
+    date: '2026-09-20',
+    changes: [
+      'Enhanced voice expense recognition with multi-alternative parse scoring, fuzzy member name matching (e.g. Raul -> Rahul), and spoken number slang (2k, 1.5k, grand, lakh).',
+      'Unified cross-platform speech engine bridging native on-device speech on iOS/Android with continuous listening and natural pause debouncing.',
+      'Live Alerts notifications panel overhaul with actionable permission unblocking guides and real-time status detection.',
+      'Comprehensive legal and privacy updates: clear encryption descriptions, account deletion IndexedDB vault purging, and OpenStreetMap map attribution.',
+    ],
+  },
+  {
     version: '3.31.0',
     date: '2026-09-20',
     changes: [

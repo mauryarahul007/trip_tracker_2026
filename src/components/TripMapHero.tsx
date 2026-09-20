@@ -65,7 +65,7 @@ export function TripMapHero({ trip, onToneChange }: Props) {
       // for the brief pre-'load' paint instead of a fixed 10 regardless of
       // how many stops there turn out to be.
       zoom: validStops.length > 1 ? 10 : 12,
-      attributionControl: false,
+      attributionControl: { compact: true },
     });
     mapInstanceRef.current = map;
 

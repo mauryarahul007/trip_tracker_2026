@@ -36,9 +36,10 @@ export function PrivacyPolicyContent({ onNavigate }: Props = {}) {
       <section>
         <h2>Overview</h2>
         <p>
-          Trip Tracker is a group expense-tracking app -- it helps travelers log shared expenses and see who
-          owes whom. It does not move money: no payments are processed, and no bank or card details are
-          collected. This policy explains what data we do collect, why, and what control you have over it.
+          Trip Tracker is a group expense-tracking application designed to help travelers log shared expenses,
+          calculate fair splits, and see balances. It does not move money: no payments are processed, and no
+          bank accounts, credit cards, or financial credentials are collected or held. This policy explains what
+          data we collect, how it is used, where it is stored, and your rights under applicable privacy laws.
         </p>
       </section>
 
@@ -48,119 +49,133 @@ export function PrivacyPolicyContent({ onNavigate }: Props = {}) {
           address, and profile photo. We use this to create your account and identify you to other members
           of your trips.</p>
         <p><strong>Trip and expense data.</strong> Trip names, dates, destinations, expense entries, amounts,
-          categories, notes, and how each expense is split between members. This is the core content of the
-          app -- it exists so the app can work, and is visible to the other members of a trip you belong to.</p>
-        <p><strong>Receipt photos.</strong> If you attach a receipt to an expense, we store the photo you
-          capture or select from your gallery. This is optional -- expenses can be logged without a photo.</p>
-        <p><strong>Location data.</strong> If you tag an expense's location or view a trip's map, we store the
-          coordinates involved and use them to render maps and route lines. Location access is requested only
-          when you use a location-specific feature, never in the background.</p>
-        <p><strong>Push notification token.</strong> If you enable notifications, your device is assigned a
-          token so we can deliver alerts (new expenses, settlement reminders, invites). We don't use this
-          token for anything beyond sending you notifications you've opted into.</p>
-        <p><strong>Diagnostic and crash data.</strong> If the app crashes or hits an unexpected error, a report
-          containing the error message, stack trace, and basic device/browser info is sent automatically so we
-          can fix it. This never includes your expense amounts or photos.</p>
-        <p><strong>Locally stored data.</strong> Trip and expense data is cached on your device (browser
-          local storage, or IndexedDB for offline receipt photos) so the app keeps working without a
-          connection. This local copy stays on your device and syncs back to your account when you're online.</p>
+          categories, notes, and how each expense is split between members. This information is visible to the
+          other members of trips you join.</p>
+        <p><strong>Receipt photos &amp; on-device OCR.</strong> If you attach a receipt to an expense, the image is
+          stored in our secure cloud storage. If you use the receipt scanner, optical character recognition (OCR)
+          is performed entirely on your device using client-side WebAssembly (Tesseract.js). Receipt images and text
+          are never shared with third-party AI or machine learning models.</p>
+        <p><strong>Document Vault (passports, visas, IDs).</strong> If you store scans of travel documents
+          (passports, visas, insurance, or national ID cards) in the Document Vault, these files are saved
+          <strong> strictly in your local device storage (IndexedDB)</strong>. They are <strong>never uploaded to or
+          stored on our cloud servers</strong>, and are accessible only on your device, optionally protected by
+          biometric screen lock.</p>
+        <p><strong>Location data &amp; live location sharing.</strong> If you tag an expense with a location, view a
+          trip map, or resolve place names, coordinates are used to render routes and contextual information. If you
+          explicitly enable Live Location Sharing for a trip, your device broadcasts foreground GPS coordinates to the
+          other members of that specific trip via a live heartbeat. Location sharing can be stopped at any time.</p>
+        <p><strong>Device Contacts (optional).</strong> If you use the "Invite from Contacts" feature in the Share
+          Trip modal, the app uses your operating system's contact picker so you can choose a recipient for a trip invite
+          link. We receive only the contact name and phone number you explicitly select to compose the invite message.
+          We never upload, scan, or store your address book.</p>
+        <p><strong>Biometric credentials.</strong> If you enable Biometric Screen Lock, authentication is performed
+          locally on your device by the operating system via standard W3C WebAuthn. Biometric measurements (fingerprints,
+          Face ID) remain in your device hardware enclave and are never accessible to Trip Tracker or transmitted over
+          the network.</p>
+        <p><strong>Push notification tokens.</strong> If you opt in to notifications, a device token is assigned to
+          deliver alerts regarding new expenses, settlements, and invites. It is not used for any other purpose.</p>
+        <p><strong>Diagnostic &amp; crash data.</strong> If an error occurs, an automated technical report containing
+          the error message, stack trace, and browser/device environment is logged to help us fix the bug. Diagnostic logs
+          never contain personal expense amounts, receipt photos, or document scans.</p>
+        <p><strong>Locally stored data.</strong> Trip data and preferences are cached on your device (LocalStorage and
+          IndexedDB) so the application functions seamlessly offline. Local data syncs back to your account when an
+          internet connection is available.</p>
       </section>
 
       <section>
         <h2>How We Use Your Information</h2>
         <ul>
-          <li>To operate the core features of the app -- tracking, splitting, and syncing trip expenses across your devices and trip members.</li>
-          <li>To show maps, weather, and location context for a trip.</li>
-          <li>To send notifications you've explicitly enabled.</li>
-          <li>To diagnose and fix bugs and crashes.</li>
-          <li>To maintain basic aggregate usage statistics (e.g. how many trips or expenses exist in total) for our own product decisions -- this is not tied back to an identifiable person in anything we act on.</li>
+          <li>To operate core features: tracking, splitting, and synchronizing trip expenses with your group.</li>
+          <li>To display maps, routes, weather context, and location details for trips.</li>
+          <li>To deliver push notifications and live alerts you have explicitly enabled.</li>
+          <li>To diagnose, resolve, and prevent technical bugs and application crashes.</li>
+          <li>To maintain basic aggregate usage metrics (e.g. total trip count) for product development.</li>
         </ul>
-        <p>We do not sell your personal information, and we do not use your data for advertising.</p>
+        <p>We do not sell your personal data, and we do not use your information for targeted advertising.</p>
       </section>
 
       <section>
-        <h2>Third Parties We Work With</h2>
-        <p>We use a small number of service providers to run the app. Each only receives the data it needs to
-          do its specific job:</p>
+        <h2>Third Parties &amp; Sub-Processors</h2>
+        <p>We work with trusted third-party service providers to deliver the app. Each receives only the minimum data
+          necessary to fulfill its role:</p>
         <ul>
-          <li><strong>Supabase</strong> -- hosts our database, authentication, and file storage (including receipt photos).</li>
-          <li><strong>Google</strong> -- provides sign-in (OAuth). See "Google User Data" below.</li>
-          <li><strong>Push notification delivery</strong> -- delivers alerts to your device via your device token.</li>
-          <li><strong>Open-Meteo</strong> -- a public weather API used to show forecasts for a trip's destination. We send only the coordinates needed for a forecast, nothing that identifies you.</li>
-          <li><strong>Map tile provider (MapLibre)</strong> -- renders the map tiles shown on trip maps.</li>
+          <li><strong>Supabase</strong> -- provides secure cloud database hosting, authentication, and encrypted object storage for receipt photos.</li>
+          <li><strong>Google Identity</strong> -- provides secure user sign-in (OAuth). See Google User Data below.</li>
+          <li><strong>Push notification services (FCM &amp; Web Push)</strong> -- delivers alerts to your device via your device push token.</li>
+          <li><strong>Open-Meteo &amp; Komoot Photon</strong> -- provides weather forecasts and place search suggestions. Requests send search terms or coordinates; no personal identifiers are shared.</li>
+          <li><strong>OpenStreetMap &amp; OSRM</strong> -- renders map tiles and calculates overland travel routes. Map data is &copy; OpenStreetMap contributors (ODbL).</li>
+          <li><strong>Frankfurter API</strong> -- provides public exchange rate reference data for foreign currency conversions.</li>
+          <li><strong>Cloudflare Turnstile</strong> -- provides privacy-preserving bot detection and CAPTCHA verification to protect accounts against automated abuse.</li>
         </ul>
-        <p>None of these providers are permitted to use your data for their own purposes beyond providing the
-          service to us.</p>
       </section>
 
       <section>
         <h2>Google User Data &amp; Limited Use</h2>
-        <p>Trip Tracker's use of information received from Google APIs adheres to the
+        <p>Trip Tracker's use and transfer to any other app of information received from Google APIs adheres to the
           <a href="https://developers.google.com/terms/api-services-user-data-policy" target="_blank" rel="noopener noreferrer"> Google API Services User Data Policy</a>,
-          including the Limited Use requirements. Your Google account data (name, email, profile photo) is
-          used solely to run the sign-in feature of this app -- it is never used to train any AI or machine
-          learning model, and it is never sold or shared for advertising.</p>
+          including the Limited Use requirements. Your Google account profile is used exclusively to identify you to your
+          trip companions, and is never sold, transferred to data brokers, or used to train AI models.</p>
       </section>
 
       <section>
-        <h2>Data Retention</h2>
-        <p>We keep your data for as long as your account is active. If you delete a trip or an expense, it's
-          removed from active use (a short-lived recycle bin may retain it briefly so you can undo an accidental
-          delete). If you delete your account, your personal data is deleted or anonymized within a reasonable
-          period, except where we're required to retain something by law.</p>
+        <h2>Data Retention &amp; Right to Erasure</h2>
+        <p>We retain your account data for as long as your account is active. When you delete a trip or expense, it is
+          moved to a temporary recycle bin for accidental recovery and permanently purged thereafter. When you delete your
+          account via <strong>Settings &rarr; Delete Account</strong> or our public deletion portal at{' '}
+          <Link to="/delete-account">trip-tracker.blackmaroon.in/delete-account</Link>, all trips you own, profile records,
+          push registrations, and local client-side vaults are permanently wiped.</p>
       </section>
 
       <section>
-        <h2>Your Rights &amp; Account Deletion</h2>
-        <p>You can access, correct, or export your trip and expense data at any time from within the app.
-          To delete your account, go to <strong>Settings &rarr; Delete Account</strong> in the app, or visit
-          <a href="/delete-account"> trip-tracker.blackmaroon.in/delete-account</a> from any browser -- no
-          To delete your account, go to <strong>Settings &rarr; Delete Account</strong> in the app, or visit{' '}
-          <Link to="/delete-account">trip-tracker.blackmaroon.in/delete-account</Link> from any browser -- no
-          install required. Deleting your account also deletes every trip you own; see that page for the
-          full detail.</p>
-      </section>
-
-      <section>
-        <h2>Children's Privacy</h2>
-        <p>Trip Tracker is not directed at children, and you must be at least 13 years old to use it (see our{' '}
-          {renderTermsLink()}). We do not knowingly collect personal information from anyone
-          under 13. If you believe a child has provided us data, contact us and we'll remove it.</p>
+        <h2>Children's Privacy &amp; Age of Majority</h2>
+        <p>Trip Tracker is not directed to children, and usage is subject to our {renderTermsLink()}. In India, in compliance with the Digital Personal Data Protection Act
+          2023, users must be at least 18 years of age or possess verifiable parental or legal guardian consent. In other
+          jurisdictions, users must be at least 13 years old (or 16 in the European Economic Area and UK). We do not knowingly
+          collect personal data from children below these ages. If you believe a child has provided us data, please contact
+          our Grievance Officer and we will promptly delete it.</p>
       </section>
 
       <section>
         <h2>Data Security</h2>
-        <p>Data is encrypted in transit between your device and our servers. Access to production data is
-          restricted to what's needed to operate and support the app. No system is perfectly secure, but we
-          take reasonable, industry-standard steps to protect your information.</p>
+        <p>All data transmitted between your device and our servers is encrypted in transit using industry-standard TLS
+          (HTTPS) with 256-bit encryption, and stored in secure, encrypted cloud databases. Access to production systems is
+          strictly restricted. Sensitive document vault scans remain strictly on your local device.</p>
       </section>
 
       <section>
         <h2>International Data Transfers</h2>
-        <p>Our infrastructure providers may process data in countries other than your own. Where that happens,
-          we rely on our providers' own safeguards (such as standard contractual clauses) for cross-border
-          transfers.</p>
+        <p>Our cloud infrastructure is hosted with global providers (such as Supabase). When data is processed across
+          borders, we rely on established legal safeguards, including Standard Contractual Clauses (SCCs), to protect
+          your information.</p>
       </section>
 
       <section>
-        <h2>India -- Digital Personal Data Protection Act</h2>
-        <p>For users in India, we process personal data only for the specific purposes described in this
-          policy, retain it only as long as needed for those purposes, and you may withdraw consent or request
-          deletion at any time using the contact details below.</p>
+        <h2>India -- Digital Personal Data Protection Act (DPDP Act 2023)</h2>
+        <p>For users in India, we process personal data in accordance with the Digital Personal Data Protection Act 2023.
+          You have the right to access a summary of your personal data, request correction or erasure of your data, nominate
+          an individual in the event of death or incapacity, and access grievance redressal as detailed below.</p>
+      </section>
+
+      <section>
+        <h2>Grievance Redressal Officer &amp; Contact Information</h2>
+        <p>In accordance with the Information Technology Act, IT Rules 2021, and the DPDP Act 2023, the designated Grievance
+          Redressal Officer for Trip Tracker is:</p>
+        <p style={{ margin: '8px 0', lineHeight: 1.6 }}>
+          <strong>Name:</strong> Rahul Maurya<br />
+          <strong>Designation:</strong> Grievance Redressal Officer &amp; Privacy Lead<br />
+          <strong>Email:</strong> <a href="mailto:mauryarahul007@gmail.com">mauryarahul007@gmail.com</a><br />
+          <strong>Location:</strong> New Delhi, India<br />
+          <strong>Grievance Resolution Timeline:</strong> Grievances and data deletion requests are acknowledged and resolved within 30 days.
+        </p>
       </section>
 
       <section>
         <h2>Changes to This Policy</h2>
-        <p>If we make a material change to this policy, we'll update the date at the top of this page and, for
-          significant changes, let you know in the app.</p>
-      </section>
-
-      <section>
-        <h2>Contact Us</h2>
-        <p>Questions, requests, or concerns about this policy: <a href="mailto:mauryarahul007@gmail.com">mauryarahul007@gmail.com</a></p>
+        <p>If we make material changes to this Privacy Policy, we will update the date at the top of this document and provide
+          prominent notice within the application.</p>
       </section>
     </>
   );
 }
 
-export const PRIVACY_POLICY_UPDATED = 'September 4, 2026';
+export const PRIVACY_POLICY_UPDATED = 'September 20, 2026';

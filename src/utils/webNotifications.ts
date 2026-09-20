@@ -8,18 +8,23 @@ export function isWebNotificationSupported(): boolean {
 }
 
 export function getWebNotificationPermission(): NotificationPermission | null {
-  return isWebNotificationSupported() ? Notification.permission : null;
+  return isWebNotificationSupported() ? window.Notification.permission : null;
 }
 
 export async function requestWebNotificationPermission(): Promise<NotificationPermission | null> {
   if (!isWebNotificationSupported()) return null;
-  return Notification.requestPermission();
+  try {
+    return await window.Notification.requestPermission();
+  } catch (err) {
+    console.warn('Failed to request web notification permission:', err);
+    return typeof window !== 'undefined' && 'Notification' in window ? window.Notification.permission : null;
+  }
 }
 
 export function showBrowserNotification(title: string, body: string): void {
-  if (!isWebNotificationSupported() || Notification.permission !== 'granted') return;
+  if (!isWebNotificationSupported() || window.Notification.permission !== 'granted') return;
   try {
-    const notification = new Notification(title, { body, icon: `${import.meta.env.BASE_URL}favicon.svg` });
+    const notification = new window.Notification(title, { body, icon: `${import.meta.env.BASE_URL}favicon.svg` });
     notification.onclick = () => {
       window.focus();
       notification.close();

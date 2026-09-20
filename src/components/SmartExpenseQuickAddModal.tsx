@@ -1,6 +1,11 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import type { Category, Expense, Member } from '../types';
-import { parseQuickExpense, resolveDefaultExpensePayerId } from '../utils/expenseQuickParser';
+import { parseQuickExpense, resolveDefaultExpensePayerId, pickBestQuickExpenseParse } from '../utils/expenseQuickParser';
+import {
+  isSpeechRecognitionSupported,
+  startSpeechRecognition,
+  type SpeechRecognitionController,
+} from '../utils/speechRecognition';
 import { triggerHaptic } from '../utils/haptics';
 import { formatAmount } from '../utils/currency';
 import { CategoryIcon } from './CategoryIcon';
@@ -65,19 +70,22 @@ export function SmartExpenseQuickAddModal({
     return userLang.startsWith('en') ? userLang : 'en-IN';
   });
 
-  const recognitionRef = useRef<any>(null);
+  const recognitionRef = useRef<SpeechRecognitionController | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const countdownTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useHistoryBack(isOpen, onClose);
   useEscapeKey(isOpen, onClose);
 
-  // Check browser Web Speech API availability
+  // Check speech recognition availability across Web and Native platforms
   useEffect(() => {
-    const SpeechRec = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (SpeechRec) {
-      setSpeechSupported(true);
-    }
+    let mounted = true;
+    isSpeechRecognitionSupported().then((supported) => {
+      if (mounted) setSpeechSupported(supported);
+    });
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   const cancelAutoSaveCountdown = () => {
@@ -108,7 +116,7 @@ export function SmartExpenseQuickAddModal({
   const stopListening = () => {
     if (recognitionRef.current) {
       try {
-        recognitionRef.current.abort();
+        recognitionRef.current.stop();
       } catch {}
       recognitionRef.current = null;
     }
@@ -116,59 +124,48 @@ export function SmartExpenseQuickAddModal({
   };
 
   const startListening = () => {
-    const SpeechRec = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SpeechRec) {
-      setErrorMessage('Speech recognition is not supported in this browser. Please type below.');
-      return;
-    }
-
     // Clean up any stale session first
     stopListening();
 
     try {
-      const rec = new SpeechRec();
-      rec.continuous = false;
-      rec.interimResults = true;
-      rec.maxAlternatives = 3;
-      rec.lang = voiceLang;
+      const controller = startSpeechRecognition({
+        language: voiceLang,
+        continuous: true,
+        maxAlternatives: 3,
+        silenceTimeoutMs: 2400,
+        onStart: () => {
+          setIsRecording(true);
+          setErrorMessage('');
+        },
+        onResult: (payload) => {
+          const candidates = payload.alternatives && payload.alternatives.length > 0
+            ? payload.alternatives
+            : [payload.transcript];
 
-      rec.onstart = () => {
-        setIsRecording(true);
-        setErrorMessage('');
-      };
+          const best = pickBestQuickExpenseParse(
+            candidates,
+            categories,
+            historicalExpenses,
+            visibleMembers,
+            currentMemberId
+          );
 
-      rec.onresult = (event: any) => {
-        let text = '';
-        for (let i = 0; i < event.results.length; i++) {
-          const res = event.results[i];
-          if (res && res[0]) {
-            text += res[0].transcript || '';
+          const chosenText = best?.bestTranscript || payload.transcript;
+          if (chosenText && chosenText.trim()) {
+            setInputText(chosenText.trim());
+            setIsVoiceGenerated(true);
           }
-        }
-        if (text.trim()) {
-          setInputText(text.trim());
-          setIsVoiceGenerated(true);
-        }
-      };
+        },
+        onError: (errText) => {
+          setIsRecording(false);
+          setErrorMessage(errText);
+        },
+        onEnd: () => {
+          setIsRecording(false);
+        },
+      });
 
-      rec.onerror = (err: any) => {
-        console.warn('Speech recognition error:', err);
-        setIsRecording(false);
-        if (err.error === 'not-allowed') {
-          setErrorMessage('Microphone access was denied. Please allow microphone permissions or type below.');
-        } else if (err.error === 'no-speech') {
-          setErrorMessage('Didn\'t catch that. Tap the mic 🎙️ to try again or type below.');
-        } else if (err.error !== 'aborted') {
-          setErrorMessage(`Voice input error (${err.error}). Tap mic to retry.`);
-        }
-      };
-
-      rec.onend = () => {
-        setIsRecording(false);
-      };
-
-      recognitionRef.current = rec;
-      rec.start();
+      recognitionRef.current = controller;
       triggerHaptic('medium');
     } catch (e) {
       console.warn('Failed to start speech recognition:', e);

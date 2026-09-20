@@ -1,7 +1,7 @@
 {
   "name": "trip-tracker-2026",
   "private": true,
-  "version": "3.31.0",
+  "version": "3.32.0",
   "type": "module",
   "scripts": {
     "postinstall": "node scripts/install-git-hooks.mjs && node scripts/sync-maplibre-worker.mjs",
@@ -30,6 +30,7 @@
   },
   "dependencies": {
     "@capacitor-community/contacts": "8.0.0",
+    "@capacitor-community/speech-recognition": "^7.0.1",
     "@capacitor/android": "8.2.0",
     "@capacitor/app": "8.1.1",
     "@capacitor/browser": "8.0.4",

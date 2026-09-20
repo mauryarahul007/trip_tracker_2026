@@ -1,5 +1,6 @@
 import type { Category, Expense, Member } from '../types';
 import { autoSuggestCategory } from './categoryHelper';
+import Fuse from 'fuse.js';
 
 export interface ParsedQuickExpense {
   amount: number | null;
@@ -69,6 +70,23 @@ function normalizeSpokenNumberWords(input: string): string {
   // Speech-to-text homophone correction: convert "4 <word>" to "for <word>" when preceded by a number or verb
   // e.g. "Paid 200 4 cab", "200 4 lunch", "paid 4 dinner" -> "Paid 200 for cab"
   text = text.replace(/(?<=(?:\d+|paid|pay|spent|cost)\s+)(?:4)\s+([a-zA-Z]+)/gi, 'for $1');
+
+  // Colloquial shortcuts for thousands and grand: "2k", "1.5k", "half a grand", "5 grand"
+  text = text.replace(/\bhalf\s+(?:a\s+)?grand\b/gi, '500');
+  text = text.replace(/\b([0-9]+(?:\.[0-9]+)?)\s*(?:k|grand)\b/gi, (_match, num) => {
+    const val = parseFloat(num) * 1000;
+    return Number.isFinite(val) ? String(Math.round(val)) : _match;
+  });
+
+  // Indian numbering system shortcuts: "1.5 lakh", "2 lakhs", "1 crore"
+  text = text.replace(/\b([0-9]+(?:\.[0-9]+)?)\s*lakh(?:s)?\b/gi, (_match, num) => {
+    const val = parseFloat(num) * 100000;
+    return Number.isFinite(val) ? String(Math.round(val)) : _match;
+  });
+  text = text.replace(/\b([0-9]+(?:\.[0-9]+)?)\s*crore(?:s)?\b/gi, (_match, num) => {
+    const val = parseFloat(num) * 10000000;
+    return Number.isFinite(val) ? String(Math.round(val)) : _match;
+  });
 
   const wordNumberMap: [RegExp, string][] = [
     // Multi-thousands and composite hundreds
@@ -340,6 +358,32 @@ export function parseQuickExpense(
       }
     }
 
+    // If exact name was not found, perform phonetic/fuzzy match using Fuse.js
+    if (!detectedPaidById) {
+      const candidatePaidByMatch = workingText.match(/\b(?:paid\s+by|by)\s+([a-zA-Z]+)\b/i);
+      const candidateMemberPaidMatch = workingText.match(/\b([a-zA-Z]+)\s+paid\b/i);
+      const candidateMatch = candidatePaidByMatch || candidateMemberPaidMatch;
+
+      if (candidateMatch) {
+        const candidateWord = candidateMatch[1].toLowerCase();
+        const reservedWords = new Set(['me', 'myself', 'cash', 'card', 'upi', 'gpay', 'today', 'yesterday', 'all', 'everyone']);
+        if (!reservedWords.has(candidateWord)) {
+          const fuse = new Fuse(members, {
+            keys: ['name'],
+            threshold: 0.38,
+            includeScore: true,
+          });
+          const searchResults = fuse.search(candidateWord);
+          if (searchResults.length > 0 && searchResults[0].score !== undefined && searchResults[0].score <= 0.38) {
+            const matchedMember = searchResults[0].item;
+            detectedPaidById = matchedMember.id;
+            detectedPaidByName = matchedMember.name;
+            workingText = workingText.replace(candidateMatch[0], ' ').trim();
+          }
+        }
+      }
+    }
+
     // "I paid" / "paid by me" — use the signed-in member, not members[0]
     if (!detectedPaidById && currentMemberId) {
       const currentMember = members.find((m) => m.id === currentMemberId);
@@ -366,7 +410,18 @@ export function parseQuickExpense(
         const potentialNames = withMatch[1].split(/,|and|&|\s+/).map((n) => n.trim().toLowerCase()).filter(Boolean);
         const matchedIds: string[] = [];
         for (const pName of potentialNames) {
-          const matchMem = members.find((m) => m.name.toLowerCase() === pName);
+          let matchMem = members.find((m) => m.name.toLowerCase() === pName);
+          if (!matchMem) {
+            const fuse = new Fuse(members, {
+              keys: ['name'],
+              threshold: 0.38,
+              includeScore: true,
+            });
+            const searchRes = fuse.search(pName);
+            if (searchRes.length > 0 && searchRes[0].score !== undefined && searchRes[0].score <= 0.38) {
+              matchMem = searchRes[0].item;
+            }
+          }
           if (matchMem && !matchedIds.includes(matchMem.id)) {
             matchedIds.push(matchMem.id);
           }
@@ -565,4 +620,57 @@ export function parseQuickExpense(
     rawInput: trimmed,
     confidence,
   };
+}
+
+export interface BestQuickExpenseParseResult {
+  bestTranscript: string;
+  parsed: ParsedQuickExpense | null;
+  score: number;
+}
+
+/**
+ * Evaluates multiple speech recognition candidate transcripts and picks the one with
+ * the highest extraction confidence (e.g. having a valid numeric amount, matched payer, category).
+ */
+export function pickBestQuickExpenseParse(
+  candidates: string[],
+  categories: Category[] = [],
+  historicalExpenses: Expense[] = [],
+  members: Member[] = [],
+  currentMemberId?: string | null
+): BestQuickExpenseParseResult | null {
+  if (!candidates || candidates.length === 0) return null;
+
+  let bestResult: BestQuickExpenseParseResult | null = null;
+
+  for (const transcript of candidates) {
+    const trimmed = (transcript || '').trim();
+    if (!trimmed) continue;
+
+    const parsed = parseQuickExpense(trimmed, categories, historicalExpenses, members, currentMemberId);
+    let score = 0;
+
+    if (parsed) {
+      if (parsed.amount && parsed.amount > 0) score += 100;
+      if (parsed.title && parsed.title.length > 1) score += 20;
+      if (parsed.paidById) score += 30;
+      if (parsed.categoryId) score += 15;
+      if (parsed.splitMemberIds && parsed.splitMemberIds.length > 0) score += 10;
+      if (parsed.paymentMode) score += 10;
+      if (parsed.date) score += 5;
+      score += (parsed.confidence || 0) * 10;
+    } else {
+      score = trimmed.length > 0 ? 1 : 0;
+    }
+
+    if (!bestResult || score > bestResult.score) {
+      bestResult = {
+        bestTranscript: trimmed,
+        parsed,
+        score,
+      };
+    }
+  }
+
+  return bestResult;
 }

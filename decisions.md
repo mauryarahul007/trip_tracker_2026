@@ -3645,3 +3645,61 @@ This document logs all meaningful technical decisions, library choices, design p
   - Undo window stays at the existing 2s.
   - While a member delete is pending the member is hidden only in the Members tab; the trip header count updates when the delete commits.
 
+---
+
+## 204. Legal Exposure, Privacy Compliance & Disclaimers Normalization
+* **Context:** Comprehensive legal and compliance audit identified critical risk exposures: (1) Misleading security claim on the login screen (`E2E ENCRYPTED` when data is encrypted in transit and at rest via PostgreSQL, but not client-side zero-knowledge end-to-end encrypted); (2) Unenforceable Terms and lack of pre-consent on `LoginScreen.tsx`; (3) Undisclosed device Contacts access (`@capacitor-community/contacts`) and Document Vault local storage in `PrivacyPolicyContent.tsx` risking Apple/Google store rejections; (4) OpenStreetMap ODbL attribution disabled on map canvases; (5) India DPDP Act 2023 age-of-majority alignment and missing Grievance Redressal Officer; (6) Incomplete client-side data erasure (IndexedDB vaults and local storage intact after account deletion); (7) Lack of financial disclaimers on UPI payment and FX conversion modals; (8) Accidental duplicate paragraphs in Privacy Policy and Terms of Service.
+* **Decision:** Remediate all audit findings with full technical and legal precision across frontend screens, modals, store deletion flows, and legal documents.
+* **Pattern/Implementation:**
+  - **Login Screen Pre-Consent & Security Badge (`LoginScreen.tsx`, `index.css`)**:
+    - Replaced misleading `E2E ENCRYPTED` with technically accurate `256-BIT ENCRYPTION · SECURE SYNC`.
+    - Added conspicuous pre-consent notice beneath Google sign-in: *"By continuing, you agree to our Terms of Service and Privacy Policy."*
+    - Added public footer links to `/terms` and `/privacy` for unauthenticated visitors and app store reviewers.
+  - **Comprehensive Privacy Policy (`PrivacyPolicyContent.tsx`)**:
+    - Fixed duplicate account deletion text.
+    - Explicitly disclosed optional Contacts permission (picked locally for invite messaging; never uploaded).
+    - Disclosed Document Vault (passports, visas, IDs stored strictly in local IndexedDB; never uploaded to cloud servers).
+    - Disclosed on-device OCR (Tesseract.js), Live Location Sharing, and W3C WebAuthn local biometric authentication.
+    - Disclosed third-party sub-processors: Supabase, Google, Push (FCM/Web), Open-Meteo, Komoot Photon, OpenStreetMap, OSRM, Frankfurter FX, and Cloudflare Turnstile.
+    - Designated Grievance Redressal Officer (Rahul Maurya, `mauryarahul007@gmail.com`, New Delhi, India) with 30-day statutory resolution timeline under DPDP Act 2023 / IT Rules 2021.
+    - Aligned age requirements: 18+ in India (or with verified parental consent), 13+ in other jurisdictions (16 in EEA/UK).
+  - **Comprehensive Terms of Service (`TermsOfServiceContent.tsx`)**:
+    - Fixed duplicate Acceptance of Terms text.
+    - Added Apple Guideline 1.2 User-Generated Content (UGC) Zero-Tolerance Policy & 24-hour moderation/takedown mechanism.
+    - Added robust Financial & UPI disclaimer: Trip Tracker is not a bank, payment processor, or money transmitter; UPI deep links launch external apps; Trip Tracker holds no funds, cannot reverse transfers, and assumes zero liability for transfer errors or debt disputes.
+    - Added Frankfurter FX indicative rate estimate disclaimer.
+  - **OpenStreetMap ODbL Attribution (`TripMapHero.tsx`, `TripRouteModal.tsx`)**:
+    - Switched `attributionControl: false` to `attributionControl: { compact: true }` to guarantee copyright compliance with OpenStreetMap's Open Database License.
+  - **Interactive Modal Disclaimers (`UpiPaymentModal.tsx`, `FxRatesModal.tsx`, `upiLinks.ts`)**:
+    - Embedded clear, styled disclaimer banners inside the UPI payment modal and FX rate modal.
+    - Removed unused external QR generation API (`getQrCodeUrl` pointing to `api.qrserver.com`) from `upiLinks.ts`.
+  - **Complete Client Data Erasure on Account Deletion (`authStore.ts`)**:
+    - Extended `deleteOwnAccount()` to purge client-side IndexedDB databases (`trip-tracker-document-vault`, `trip-tracker-pass-attachments`, `trip-tracker-offline-chats`, `trip-tracker-offline-receipts`), clear session caches, and remove local identifiers, ensuring full compliance with GDPR Right to Erasure (Art. 17) and DPDP obligations.
+* **Trade-offs Accepted:**
+  - Compact attribution pill on map views consumes a minimal ~18px footprint in the lower corner of map canvases, which is legally mandated by OpenStreetMap's license.
+
+---
+
+## 205. Voice Recognition Accuracy & On-Device Native Bridge (Strategy 1 & Strategy 2)
+* **Context:**
+  - Voice expense entry in `SmartExpenseQuickAddModal` and `ExpenseForm` previously relied solely on direct browser `SpeechRecognition` with rigid parameters (`continuous = false`, `maxAlternatives = 1`).
+  - Users experienced premature silence cutoff (when pausing for >800ms), lost payers due to minor speech misspellings of member names (e.g. "Raul" for "Rahul", "Preeya" for "Priya"), unhandled spoken multipliers (e.g. "2k", "1.5k", "half a grand", "2 lakh"), and discarded N-best speech recognition alternatives.
+  - Furthermore, native mobile apps (Capacitor on iOS & Android) lacked a direct bridge to hardware-accelerated on-device speech engines (Apple Neural Engine / Google Speech Services).
+* **Decision:**
+  - **Unified Cross-Platform Speech Service (`speechRecognition.ts`):**
+    - Created an abstracted speech recognition utility dynamically bridging `@capacitor-community/speech-recognition` on native mobile devices and standard Web Speech API on browsers/PWA.
+    - Added configurable silence debounce timer (2.2s–2.4s) and continuous listening support so natural conversational pauses do not abort speech recognition.
+    - Emits all N-best alternative transcript candidates for holistic downstream evaluation.
+  - **Multi-Alternative (N-Best) Parse Scoring (`expenseQuickParser.ts`):**
+    - Implemented `pickBestQuickExpenseParse()` which evaluates all speech recognition alternatives in parallel, scoring candidate completeness based on valid amount (>0), identified payer, matched category, and parse confidence.
+  - **Fuzzy Member Name Matching with Fuse.js (`expenseQuickParser.ts`):**
+    - Integrated `Fuse.js` phonetic and fuzzy matching (threshold: 0.38) for payer and split participant detection.
+    - Resolves acoustic speech misspellings of Indian and international names to actual trip members.
+  - **Spoken Multipliers & Number Slang Normalization (`expenseQuickParser.ts`):**
+    - Added regex conversions for "k" / "grand" ("2k" -> 2000, "1.5k" -> 1500, "5 grand" -> 5000, "half a grand" -> 500).
+    - Added Indian numbering multipliers: "1.5 lakh" -> 150000, "2 crore" -> 20000000.
+    - Added currency slang: "bucks" -> USD, "quid" -> GBP, and Hinglish counters.
+  - **UI Integration (`SmartExpenseQuickAddModal.tsx`, `ExpenseForm.tsx`):**
+    - Upgraded both quick-add and full expense forms to use the unified speech controller and N-best evaluator.
+* **Trade-offs Accepted:**
+  - Added `@capacitor-community/speech-recognition@7.0.1` plugin for native builds (dynamically imported at runtime on native platforms; zero web bundle bloat).

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseQuickExpense, resolveDefaultExpensePayerId } from './expenseQuickParser';
+import { parseQuickExpense, resolveDefaultExpensePayerId, pickBestQuickExpenseParse } from './expenseQuickParser';
 import type { Category, Member } from '../types';
 
 describe('expenseQuickParser', () => {
@@ -232,6 +232,42 @@ describe('expenseQuickParser', () => {
     expect(result?.paidById).toBe('m-2');
     expect(result?.paidByName).toBe('Priya');
   });
+
+  it('parses colloquial multipliers like "2k", "1.5k", and "half a grand"', () => {
+    const res2k = parseQuickExpense('Cab 2k paid by Rahul', mockCategories, [], mockMembers);
+    expect(res2k?.amount).toBe(2000);
+    expect(res2k?.title).toBe('Cab');
+
+    const res15k = parseQuickExpense('Dinner 1.5k paid by Priya', mockCategories, [], mockMembers);
+    expect(res15k?.amount).toBe(1500);
+
+    const resGrand = parseQuickExpense('Hotel half a grand', mockCategories, [], mockMembers);
+    expect(resGrand?.amount).toBe(500);
+  });
+
+  it('parses Indian number multipliers like "lakh" and "crore"', () => {
+    const resLakh = parseQuickExpense('Flight 1.5 lakh paid by Rahul', mockCategories, [], mockMembers);
+    expect(resLakh?.amount).toBe(150000);
+
+    const res2Lakh = parseQuickExpense('Villa booking 2 lakhs', mockCategories, [], mockMembers);
+    expect(res2Lakh?.amount).toBe(200000);
+  });
+
+  it('fuzzy matches spoken misspellings of member names in payer and split', () => {
+    // "Raul" -> "Rahul" (m-1)
+    const resRaul = parseQuickExpense('Paid 400 for lunch by Raul', mockCategories, [], mockMembers);
+    expect(resRaul?.paidById).toBe('m-1');
+    expect(resRaul?.paidByName).toBe('Rahul');
+
+    // "Preeya" -> "Priya" (m-2)
+    const resPreeya = parseQuickExpense('Dinner 1200 paid by Preeya', mockCategories, [], mockMembers);
+    expect(resPreeya?.paidById).toBe('m-2');
+    expect(resPreeya?.paidByName).toBe('Priya');
+
+    // "Amith" -> "Amit" (m-3) in split
+    const resSplit = parseQuickExpense('Snacks 250 with Amith', mockCategories, [], mockMembers);
+    expect(resSplit?.splitMemberIds).toContain('m-3');
+  });
 });
 
 describe('resolveDefaultExpensePayerId', () => {
@@ -261,6 +297,36 @@ describe('resolveDefaultExpensePayerId', () => {
     expect(
       resolveDefaultExpensePayerId(mockMembers, { fallbackToFirstMember: true })
     ).toBe('m-1');
+  });
+});
+
+describe('pickBestQuickExpenseParse', () => {
+  const mockCategories: Category[] = [
+    { id: 'cat-food', name: 'Food & Dining', isCustom: false },
+    { id: 'cat-travel', name: 'Travel & Commute', isCustom: false },
+  ];
+
+  const mockMembers: Member[] = [
+    { id: 'm-1', name: 'Rahul' },
+    { id: 'm-2', name: 'Priya' },
+  ];
+
+  it('returns null for empty candidates list', () => {
+    expect(pickBestQuickExpenseParse([])).toBeNull();
+  });
+
+  it('selects the superior alternative containing valid amount and payer over garbled candidate', () => {
+    const alternatives = [
+      'calling taxi to airport',     // alt 0: no amount, no payer
+      'cab 450 paid by Rahul',       // alt 1: clean amount 450, clean payer Rahul
+      'cap four fifty',              // alt 2: no payer
+    ];
+
+    const result = pickBestQuickExpenseParse(alternatives, mockCategories, [], mockMembers);
+    expect(result).not.toBeNull();
+    expect(result?.bestTranscript).toBe('cab 450 paid by Rahul');
+    expect(result?.parsed?.amount).toBe(450);
+    expect(result?.parsed?.paidById).toBe('m-1');
   });
 });
 

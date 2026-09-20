@@ -322,7 +322,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
     return { success: true, message: 'Password updated.' };
   },
 
-  // Self-service deletion (Apple Guideline 5.1.1 / Google Play policy) --
+  // Self-service deletion (Apple Guideline 5.1.1 / Google Play policy / GDPR Art. 17) --
   // distinct from the superadmin-only delete_user RPC (0068, 0072), which
   // explicitly blocks self-delete. See 0075_delete_own_account.sql: this
   // cascades to delete every trip the caller owns, including ones shared
@@ -343,9 +343,41 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
     }
     useNotificationsStore.getState().teardown();
     await useTripStore.getState().clearDatabase();
-    if (typeof localStorage !== 'undefined') {
-      localStorage.removeItem('trip_tracker_demo_session');
+
+    // Comprehensive client-side data erasure (GDPR Right to Erasure / DPDP Act)
+    if (typeof indexedDB !== 'undefined' && typeof indexedDB.deleteDatabase === 'function') {
+      const databasesToPurge = [
+        'trip-tracker-document-vault',
+        'trip-tracker-offline-receipts',
+        'trip-tracker-pass-attachments',
+        'trip-tracker-offline-chats',
+      ];
+      for (const dbName of databasesToPurge) {
+        try {
+          indexedDB.deleteDatabase(dbName);
+        } catch {
+          // Best-effort local cleanup
+        }
+      }
     }
+
+    if (typeof localStorage !== 'undefined') {
+      try {
+        localStorage.removeItem('trip_tracker_demo_session');
+        localStorage.removeItem('trip_tracker_active_trip');
+        localStorage.removeItem('tt_dismiss_alerts_banner');
+      } catch {
+        // Best-effort local cleanup
+      }
+    }
+    if (typeof sessionStorage !== 'undefined') {
+      try {
+        sessionStorage.clear();
+      } catch {
+        // Best-effort local cleanup
+      }
+    }
+
     try {
       await supabase.auth.signOut();
     } catch {
