@@ -3792,7 +3792,7 @@ This document logs all meaningful technical decisions, library choices, design p
 
 ---
 
-## 212. Ops Deck load + home stack smoothness (Release v3.32.7)
+## 212. Ops Deck load + home stack smoothness (Release v3.32.7, BUG-240 / BUG-241)
 * **Context:**
   - Opening Superadmin Ops Deck / Bug Ledger waited on the whole fleet: eight queries on mount (trips, members, groups, every expense row, users, audit, device tokens, bugs with diagnostics/screenshots), then Bug Ledger fetched bugs again.
   - `fetchMyTripGraph` scanned every expense `trip_id` just to count badges. Device platform split downloaded every token row.

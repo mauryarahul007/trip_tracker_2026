@@ -35,7 +35,7 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 | 2026-09-20 | v3.30.4 | BUG-229 / BUG-230 | [Expeditions chip contrast + iOS stack swipe](#expeditions-chip-contrast--ios-stack-swipe) |
 | 2026-09-20 | v3.31.0 | BUG-232..236 / FEAT-083..087 | [Navigation, dialogs & sync UX pass](#navigation-dialogs--sync-ux-pass-v3310) |
 | 2026-09-20 | unreleased | FEAT-TRIPSORT | [Trip stack alphabetical swipe + sort toggle](#feat-tripsort--trip-stack-alphabetical-swipe--sort-toggle) |
-| 2026-09-20 | v3.32.7 | PERF-OPS-STACK | [Ops Deck load + home stack smoothness](#perf-ops-stack--ops-deck-load--home-stack-smoothness) |
+| 2026-09-20 | v3.32.7 | BUG-240 / BUG-241 | [Ops Deck load + home stack smoothness](#perf-ops-stack--ops-deck-load--home-stack-smoothness) |
 
 ---
 
@@ -663,7 +663,7 @@ Account with 4+ trips, e.g. Bali, agra, Goa, Coorg (mixed case, different start 
 
 ## PERF-OPS-STACK — Ops Deck load + home stack smoothness
 
-**Commit:** v3.32.7 (hash stamped after ship). **Migrations:** none. **Flags:** none.
+**Commit:** `432b854` (v3.32.7, BUG-240 / BUG-241). **Migrations:** none. **Flags:** none.
 
 Two related performance fixes: Ops Deck / Bug Ledger no longer download the whole fleet on first paint, and the home trip stack drops live blur + forced reflow during swipe.
 

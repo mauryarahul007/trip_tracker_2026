@@ -7119,5 +7119,60 @@
     "resolvedBy": "claude-cli",
     "resolvedAt": "2026-09-20T10:56:37.320Z",
     "resolutionNote": "Fixed in v3.32.6. Drag is direction-aware: dragging right raises the hidden previous-trip card above the peeks (opaque within first third), peeks stay still; hidden card kept at opacity .01 so its photo is decoded. Follow-up to BUG-238. Commit 2fca9d0."
+  },
+  {
+    "id": "BUG-240",
+    "title": "Ops Deck and Bug Ledger wait on full fleet payload before first paint",
+    "description": "Opening Superadmin Ops Deck or Bug Ledger downloaded trips, members, groups, every expense row, users, audit logs, device tokens, and bugs with diagnostics/screenshots before the first useful screen, then Bug Ledger fetched bugs again.",
+    "severity": "medium",
+    "category": "performance",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0",
+      "route": "#/bugs"
+    },
+    "reproSteps": [
+      "Sign in as superadmin",
+      "Open Ops Deck Command Center or #/bugs",
+      "Wait for the first useful screen"
+    ],
+    "expectedBehavior": "Shell and the current tab's data appear without waiting on unrelated fleet tables or bug diagnostics.",
+    "actualBehavior": "First paint waited on every fleet query plus a duplicate full-ledger fetchBugs.",
+    "diagnostics": {},
+    "createdAt": "2026-09-20T13:30:17.748Z",
+    "updatedAt": "2026-09-20T13:30:23.385Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-09-20T13:30:23.384Z",
+    "resolutionNote": "Fixed in v3.32.7. Tab-scoped Ops Deck loading, slim BUG_SUMMARY_COLUMNS + hydrate on expand, nested expenses(count), HEAD device counts, slim ADMIN_EXPENSE_COLUMNS, no duplicate fetchBugs. Commit 432b854."
+  },
+  {
+    "id": "BUG-241",
+    "title": "Home trip stack still hitches during swipe after gesture-logic upgrades",
+    "description": "After BUG-231/238/239 swipe-logic fixes, the home card stack still felt unsmooth: flushSync plus a forced offsetHeight reflow on commit, live blur(48px) and backdrop-filter while dragging, and 960px covers on peek cards.",
+    "severity": "low",
+    "category": "ui-ux",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Open Home on a phone-width viewport with 4+ photo trips",
+      "Drag slowly left and right",
+      "Flick left/right repeatedly"
+    ],
+    "expectedBehavior": "Front card tracks the finger through the gesture and commit with no hitch or flash.",
+    "actualBehavior": "Swipe still clunked at commit and felt heavy from live GPU blur while dragging.",
+    "diagnostics": {},
+    "createdAt": "2026-09-20T13:30:18.171Z",
+    "updatedAt": "2026-09-20T13:30:23.674Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-09-20T13:30:23.673Z",
+    "resolutionNote": "Fixed in v3.32.7. rAF-coalesced pointer writes, useLayoutEffect instead of flushSync+reflow, drop live blur, disable backdrop-filter while dragging, peek covers at 480px. Commit 432b854."
   }
 ]
