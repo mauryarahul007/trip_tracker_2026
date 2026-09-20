@@ -7092,6 +7092,6 @@
     "updatedAt": "2026-09-20T10:36:16.183Z",
     "resolvedBy": "claude-cli",
     "resolvedAt": "2026-09-20T10:36:16.183Z",
-    "resolutionNote": "Fixed in v3.32.5. Reorder committed with flushSync before exit styles reset (old card no longer flashes back); previous trip pre-mounted hidden (depth-3) so a right swipe rises with its photo loaded. Commit pending."
+    "resolutionNote": "Fixed in v3.32.5. Reorder committed with flushSync before exit styles reset (old card no longer flashes back); previous trip pre-mounted hidden (depth-3) so a right swipe rises with its photo loaded. Commit 6353570."
   }
 ]
