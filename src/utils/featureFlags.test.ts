@@ -109,9 +109,10 @@ describe('featureFlags', () => {
       enableTabBackHistory: true,
       enableDeepLinkedTabs: true,
       enableExtendedUndo: true,
+      enableTripStackSort: true,
     };
     expect(getPhaseStatus('phase1', allArmed).status).toBe('armed');
-    expect(getPhaseStatus('phase1', allArmed).activeCount).toBe(11);
+    expect(getPhaseStatus('phase1', allArmed).activeCount).toBe(12);
 
     const allSafed = {
       ...DEFAULT_FEATURE_FLAGS,
@@ -211,7 +212,7 @@ describe('featureFlags', () => {
 
   it('verifies that every single flag in all phases can be enabled and disabled', () => {
     const allFlagKeys = Object.keys(DEFAULT_FEATURE_FLAGS) as (keyof typeof DEFAULT_FEATURE_FLAGS)[];
-    expect(allFlagKeys.length).toBe(80);
+    expect(allFlagKeys.length).toBe(81);
 
     allFlagKeys.forEach((flagKey) => {
       const disabledFlags = { ...DEFAULT_FEATURE_FLAGS, [flagKey]: false };

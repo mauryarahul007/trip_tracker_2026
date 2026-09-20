@@ -57,6 +57,7 @@ export type FeatureFlagKey =
   | 'enableTabBackHistory'
   | 'enableDeepLinkedTabs'
   | 'enableExtendedUndo'
+  | 'enableTripStackSort'
   | 'enablePersistentExpenseDraft'
   | 'enableSyncQueueInspector'
   | 'enableSettlementDateNote'

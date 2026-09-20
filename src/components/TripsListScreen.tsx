@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { Trip, Member, TripStop } from '../types';
 import { IconArchive, IconMapPin, IconSearch, IconMoreVertical, IconPlus, IconEdit, IconTrash, IconCopy } from './Icons';
@@ -11,6 +11,7 @@ import { newId } from '../utils/uuid';
 import { useTripStore } from '../store/tripStore';
 import { SwipeableRow } from './SwipeableRow';
 import { TripStack, useTripPhoto, usePhotoTextTone } from './TripStack';
+import { sortTrips, type TripSortMode } from '../utils/tripSort';
 import { TripSlideLauncher } from './TripSlideLauncher';
 import { HomeAmbientBackdrop } from './HomeAmbientBackdrop';
 import { OnboardingSwipe } from './OnboardingSwipe';
@@ -111,6 +112,17 @@ export function TripsListScreen({
   const [joinCode, setJoinCode] = useState('');
   const [honeypotVal, setHoneypotVal] = useState('');
   const [showList, setShowList] = useState(false);
+  const sortToggleOn = isFeatureEnabled('enableTripStackSort', { userId: userId || undefined });
+  const [storedSort, setStoredSort] = useState<TripSortMode>(() => {
+    try { return localStorage.getItem('tt-trip-stack-sort') === 'date' ? 'date' : 'name'; } catch { return 'name'; }
+  });
+  const sortMode: TripSortMode = sortToggleOn ? storedSort : 'name';
+  const changeSortMode = (m: TripSortMode) => {
+    setStoredSort(m);
+    try { localStorage.setItem('tt-trip-stack-sort', m); } catch { /* ignore */ }
+  };
+  // Same order the stack uses, so the pagination dots line up with it.
+  const orderedTrips = useMemo(() => sortTrips(trips, sortMode), [trips, sortMode]);
   const [focusedTrip, setFocusedTrip] = useState<Trip | null>(() => trips[0] || null);
   const [frontTripIndex, setFrontTripIndex] = useState(0);
   const [targetTripId, setTargetTripId] = useState<string | null>(null);
@@ -135,15 +147,15 @@ export function TripsListScreen({
 
   const handleStepperScrub = (clientX: number) => {
     const track = stepperTrackRef.current;
-    if (!track || trips.length < 2) return;
+    if (!track || orderedTrips.length < 2) return;
     const rect = track.getBoundingClientRect();
     const x = Math.max(0, Math.min(rect.width, clientX - rect.left));
     const ratio = x / rect.width;
-    const newIndex = Math.min(trips.length - 1, Math.floor(ratio * trips.length));
+    const newIndex = Math.min(orderedTrips.length - 1, Math.floor(ratio * orderedTrips.length));
     if (newIndex !== frontTripIndex) {
       triggerHaptic('light');
       setFrontTripIndex(newIndex);
-      setTargetTripId(trips[newIndex].id);
+      setTargetTripId(orderedTrips[newIndex].id);
     }
   };
 
@@ -641,6 +653,8 @@ export function TripsListScreen({
             {stackActive && (
               <TripStack
                 trips={trips}
+                sortMode={sortMode}
+                onSortModeChange={sortToggleOn ? changeSortMode : undefined}
                 members={members}
                 settledTripIds={settledTripIds}
                 userId={userId}
@@ -669,7 +683,7 @@ export function TripsListScreen({
                 onPointerUp={handleStepperPointerUp}
                 onPointerCancel={handleStepperPointerUp}
               >
-                {trips.map((t, idx) => (
+                {orderedTrips.map((t, idx) => (
                   <button
                     key={t.id}
                     type="button"

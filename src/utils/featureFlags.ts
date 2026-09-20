@@ -9,7 +9,7 @@ export const RELEASE_PHASES: ReleasePhaseDef[] = [
     tagline: 'Instant, offline group bill splitting without setup hurdles',
     description: 'Core frictionless expense splitting, time-of-day predictive chips, 200+ keyword auto-tagging, and 24h soft-delete protection.',
     targetAudience: 'Casual outings, dinners, weekend getaways, roommates',
-    flagKeys: ['enablePredictiveChips', 'enableRecycleBin', 'enableExplainThisNumber', 'enableStickyDayHeaders', 'enableCategoryColorRings', 'enableCompactLedgerView', 'enableCategoryReorder', 'enableWhatsNewHub', 'enableTabBackHistory', 'enableDeepLinkedTabs', 'enableExtendedUndo'],
+    flagKeys: ['enablePredictiveChips', 'enableRecycleBin', 'enableExplainThisNumber', 'enableStickyDayHeaders', 'enableCategoryColorRings', 'enableCompactLedgerView', 'enableCategoryReorder', 'enableWhatsNewHub', 'enableTabBackHistory', 'enableDeepLinkedTabs', 'enableExtendedUndo', 'enableTripStackSort'],
   },
   {
     id: 'phase2',
@@ -566,6 +566,14 @@ export const FEATURE_FLAGS_META: Record<FeatureFlagKey, FeatureFlagMeta> = {
     phase: 'phase1',
     defaultEnabledForUsers: false,
   },
+  enableTripStackSort: {
+    key: 'enableTripStackSort',
+    label: 'Trip Stack Sort Toggle',
+    description: 'Adds a Sort: A–Z / Date toggle under the home trip stack. Swiping always steps alphabetically or by date order (left = next, right = previous).',
+    category: 'core',
+    phase: 'phase1',
+    defaultEnabledForUsers: false,
+  },
   enablePersistentExpenseDraft: {
     key: 'enablePersistentExpenseDraft',
     label: 'Persistent Expense Draft',
@@ -869,6 +877,7 @@ export const DEFAULT_FEATURE_FLAGS: Record<FeatureFlagKey, boolean> = {
   enableTabBackHistory: false,
   enableDeepLinkedTabs: false,
   enableExtendedUndo: false,
+  enableTripStackSort: false,
   enablePersistentExpenseDraft: false,
   enableSyncQueueInspector: false,
   enableSettlementDateNote: false,

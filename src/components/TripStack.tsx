@@ -9,6 +9,7 @@ import { getImageLuminance, getImageDominantColor, photoTextTone } from '../util
 import { triggerHaptic } from '../utils/haptics';
 import { getDestinationWeatherRealtime, type WeatherData } from '../services/weatherService';
 import { useEscapeKey } from '../utils/useEscapeKey';
+import { sortTrips, type TripSortMode } from '../utils/tripSort';
 import { PassportStamp } from './common/PassportStamp';
 import {
   EXIT_TRANSITION_MS,
@@ -185,7 +186,9 @@ function writePeekCard(el: HTMLElement | null, depth: 1 | 2, p: number, dragging
 }
 
 type Props = {
-  trips: Trip[]; // 2+ trips, any order -- this component sorts by recency itself
+  trips: Trip[]; // 2+ trips, any order -- this component sorts them itself
+  sortMode?: TripSortMode;
+  onSortModeChange?: (mode: TripSortMode) => void; // omit to hide the sort toggle
   members: Record<string, Member>;
   settledTripIds?: Record<string, boolean>;
   userId: string | null;
@@ -431,7 +434,7 @@ type CardItemProps = {
   onPeekPreview?: () => void;
   onOpen: () => void;
   onQuickAddExpense?: (tripId: string) => void;
-  onBrowse: () => void;
+  onBrowse: (dir: 'left' | 'right') => void;
   onArchive: () => void;
   onEdit: () => void;
   onDelete: () => void;
@@ -704,7 +707,7 @@ function StackCardItem({
       gestureFired.current = true;
       triggerHaptic('light');
       const dir = isHorizFlick ? (vx > 0 ? 'right' : 'left') : (x > 0 ? 'right' : 'left');
-      commitExit(dir, Math.abs(vx), onBrowse);
+      commitExit(dir, Math.abs(vx), () => onBrowse(dir));
       return;
     }
 
@@ -850,6 +853,8 @@ function StackCardItem({
 
 export function TripStack({
   trips,
+  sortMode = 'name',
+  onSortModeChange,
   members,
   settledTripIds,
   userId,
@@ -863,18 +868,7 @@ export function TripStack({
   onIndexChange,
   targetTripId,
 }: Props) {
-  const sortedIds = useMemo(
-    () =>
-      [...trips]
-        .sort((a, b) => {
-          const dateA = a.startDate || '';
-          const dateB = b.startDate || '';
-          if (dateA && dateB && dateA !== dateB) return dateB.localeCompare(dateA);
-          return (b.updatedAt || b.createdAt || 0) - (a.updatedAt || a.createdAt || 0);
-        })
-        .map((t) => t.id),
-    [trips]
-  );
+  const sortedIds = useMemo(() => sortTrips(trips, sortMode).map((t) => t.id), [trips, sortMode]);
   const idsKey = sortedIds.join(',');
   const tripsById = useMemo(() => Object.fromEntries(trips.map((t) => [t.id, t])), [trips]);
 
@@ -928,10 +922,13 @@ export function TripStack({
     window.setTimeout(() => writePeeks(0, false), 700);
   };
 
-  const cycleToBack = useCallback(() => {
+  // Swipe left = next in the ring (clockwise), right = previous (anticlockwise).
+  const cycle = useCallback((dir: 'left' | 'right') => {
     setManualOrder((prev) => {
       const current = prev ?? sortedIds;
-      return [...current.slice(1), current[0]];
+      return dir === 'left'
+        ? [...current.slice(1), current[0]]
+        : [current[current.length - 1], ...current.slice(0, -1)];
     });
   }, [sortedIds]);
 
@@ -970,17 +967,30 @@ export function TripStack({
             onPeekPreview={handlePeekPreview}
             onOpen={() => onSelectTrip(trip.id)}
             onQuickAddExpense={onQuickAddExpense}
-            onBrowse={cycleToBack}
-            onArchive={() => { onArchiveTrip(trip); cycleToBack(); }}
+            onBrowse={cycle}
+            onArchive={() => { onArchiveTrip(trip); cycle('left'); }}
             onEdit={() => onStartEditTrip(trip)}
             onDelete={() => onDeleteTrip(trip)}
           />
         ))}
       </div>
       {trips.length >= 2 && (
-        <button type="button" className="trip-stack-viewall" onClick={onShowList}>
-          View all trips
-        </button>
+        <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
+          <button type="button" className="trip-stack-viewall" style={{ margin: 0 }} onClick={onShowList}>
+            View all trips
+          </button>
+          {onSortModeChange && (
+            <button
+              type="button"
+              className="trip-stack-viewall"
+              style={{ margin: 0 }}
+              aria-label={`Sorted by ${sortMode === 'name' ? 'name' : 'date'}. Tap to change.`}
+              onClick={() => onSortModeChange(sortMode === 'name' ? 'date' : 'name')}
+            >
+              Sort: {sortMode === 'name' ? 'A–Z' : 'Date'}
+            </button>
+          )}
+        </div>
       )}
     </div>
   );

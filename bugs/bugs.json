@@ -7041,5 +7041,31 @@
     "resolvedBy": "claude-cli",
     "resolvedAt": "2026-09-19T21:56:53.368Z",
     "resolutionNote": "Fixed in v3.31.0. Commit 19d96be."
+  },
+  {
+    "id": "BUG-237",
+    "title": "Home trip stack swipe order felt random: left/right both advanced by date, no alphabetical ring or sort option",
+    "description": "Home trip stack swipe order felt random: left/right both advanced by date, no alphabetical ring or sort option",
+    "severity": "low",
+    "category": "ui-ux",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-09-20T10:15:25.485Z",
+    "updatedAt": "2026-09-20T10:15:42.086Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-09-20T10:15:42.086Z",
+    "resolutionNote": "Fixed in v3.32.4. Stack is now an alphabetical ring (left = next/clockwise, right = previous/anticlockwise, wraps); dots follow the same order; optional Sort A-Z/Date toggle behind enableTripStackSort. Commit pending."
   }
 ]

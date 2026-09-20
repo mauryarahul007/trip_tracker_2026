@@ -3749,3 +3749,16 @@ This document logs all meaningful technical decisions, library choices, design p
   - Multi-segment storage visualizer computes lightweight estimates across indexed stores synchronously on mount; full re-indexing remains safely bound to the dedicated Storage Diagnostics modal.
 
 
+
+---
+
+## 209. Home Trip Stack: Alphabetical Ring, Directional Swipe & Sort Toggle (Release v3.32.4, BUG-237)
+* **Context:**
+  - The home trip stack sorted by start date, and both swipe directions called the same "send front card to back" action, so left/right changed only the exit animation. Users read the resulting order as random. The pagination dots also indexed the raw `trips` array while the stack used its own sort, so the two disagreed.
+* **Decision:**
+  - **Alphabetical ring (`TripStack.tsx`, `src/utils/tripSort.ts`):** the stack starts on the first trip A-Z (case-insensitive, numeric-aware). Swipe left = next (clockwise), swipe right = previous (anticlockwise), both wrap. Swipe-up archive still advances forward.
+  - **Shared sort helper:** `sortTrips(trips, 'name' | 'date')` is used by both the stack and the pagination dots (`TripsListScreen.tsx`) so they always agree.
+  - **Sort toggle:** a `Sort: A-Z / Date` pill beside "View all trips", persisted in localStorage (`tt-trip-stack-sort`), gated by the new Phase 1 flag `enableTripStackSort` (default OFF). With the flag off the order is always A-Z.
+* **Trade-offs Accepted:**
+  - Peek cards behind the front card remain the next two trips, so a right swipe brings in a trip that was not peeking (no dedicated slide-in yet).
+  - Alphabetical is now the default start order for everyone; the previous newest-first start is available via Sort: Date once the flag is on.

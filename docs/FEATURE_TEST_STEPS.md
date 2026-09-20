@@ -34,6 +34,7 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 | 2026-09-19 | v3.30.3 | BUG-228 | [iOS WebKit compositor feel](#ios-webkit-compositor-feel) |
 | 2026-09-20 | v3.30.4 | BUG-229 / BUG-230 | [Expeditions chip contrast + iOS stack swipe](#expeditions-chip-contrast--ios-stack-swipe) |
 | 2026-09-20 | v3.31.0 | BUG-232..236 / FEAT-083..087 | [Navigation, dialogs & sync UX pass](#navigation-dialogs--sync-ux-pass-v3310) |
+| 2026-09-20 | unreleased | FEAT-TRIPSORT | [Trip stack alphabetical swipe + sort toggle](#feat-tripsort--trip-stack-alphabetical-swipe--sort-toggle) |
 
 ---
 
@@ -625,6 +626,35 @@ Arm each in Superadmin **Ops Deck → Flags** (arm the whole phase, or use **Tun
 - Back always closes the top-most overlay first, then retraces tabs (flag ON), then leaves the trip; nothing is left in the history stack afterwards.
 - A failed offline change is never lost without the user choosing **Discard**.
 - Drafts survive an app kill for up to 24h and vanish after save, Discard or expiry.
+
+## FEAT-TRIPSORT — Trip stack alphabetical swipe + sort toggle
+
+**Commit:** pending. **Migrations:** none.
+
+### Flags
+| Behavior | Flag | Default |
+|----------|------|---------|
+| Sort: A–Z / Date toggle under the stack | `enableTripStackSort` (Phase 1 Core) | OFF |
+| Alphabetical ring + directional swipe | none (fix to existing behavior) | always on |
+
+### Prep
+Account with 4+ trips, e.g. Bali, agra, Goa, Coorg (mixed case, different start dates). Phone width (<900px).
+
+### Steps
+1. Open Home. Front card is **agra** (first A–Z, case-insensitive), not the newest trip.
+2. Swipe **left** repeatedly: agra → Bali → Coorg → Goa → back to agra (wraps).
+3. Swipe **right** repeatedly: agra → Goa → Coorg → Bali → agra.
+4. Watch the pagination dots: the active dot moves in the same order; tap a dot to jump to that trip; scrub across the dots.
+5. Enable `enableTripStackSort` in Ops Deck, reload. A `Sort: A–Z` pill appears beside "View all trips".
+6. Tap it → `Sort: Date`; front card becomes the newest trip; left = next older, right = newer. Reload: choice persists.
+7. Swipe up to archive a trip: stack advances without errors.
+
+### Negative checks
+- Flag OFF → no Sort pill; order is always A–Z; left/right still step next/previous.
+- 1 trip → no pill, swipe rubber-bands.
+
+### Pass
+- Left/right are exact opposites and wrap; dots match the stack; toggle persists.
 
 ---
 
