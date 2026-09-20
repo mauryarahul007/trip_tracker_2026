@@ -64,6 +64,18 @@ export function peekCardTransform(
   };
 }
 
+// The hidden "previous trip" card rises from behind while dragging right,
+// mirroring what the depth-1 peek does when dragging left.
+export function prevCardTransform(p: number): { transform: string; opacity: string } {
+  const c = Math.min(1, Math.max(0, p));
+  return {
+    transform: `translate3d(0, ${(34 - c * 34).toFixed(1)}px, 0) scale(${(0.9 + c * 0.1).toFixed(3)}) rotate(${(-2 + c * 2).toFixed(2)}deg)`,
+    // Fully opaque by a third of the way, so the next-trip peek it sits
+    // over doesn't show through.
+    opacity: String(Math.min(1, 0.01 + c * 3).toFixed(2)),
+  };
+}
+
 export function exitCardTransform(dir: 'left' | 'right' | 'up'): string {
   if (dir === 'left') return 'translate3d(-150%, 0, 0) rotate(-16deg) scale(0.92)';
   if (dir === 'right') return 'translate3d(150%, 0, 0) rotate(16deg) scale(0.92)';

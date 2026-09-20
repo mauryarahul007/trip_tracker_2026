@@ -18,6 +18,7 @@ import {
   exitCardTransform,
   frontCardTransform,
   peekCardTransform,
+  prevCardTransform,
   rubberBand,
   stackMotionMode,
 } from '../utils/tripStackMotion';
@@ -172,7 +173,7 @@ function getTripStatusBadge(trip: { startDate?: string; endDate?: string; closed
   return null;
 }
 
-function writePeekCard(el: HTMLElement | null, depth: 1 | 2, p: number, dragging: boolean) {
+function writePeekCard(el: HTMLElement | null, depth: 1 | 2 | 3, p: number, dragging: boolean) {
   if (!el) return;
   const transKey = dragging ? '1' : '0';
   if (el.dataset.stackDrag !== transKey) {
@@ -181,9 +182,11 @@ function writePeekCard(el: HTMLElement | null, depth: 1 | 2, p: number, dragging
       ? 'none'
       : 'transform 0.34s var(--ease-decel), opacity 0.34s var(--ease-decel)';
   }
-  const next = peekCardTransform(depth, p, MOTION_MODE);
+  const next = depth === 3 ? prevCardTransform(p) : peekCardTransform(depth, p, MOTION_MODE);
   el.style.transform = next.transform;
   if (next.opacity !== undefined) el.style.opacity = next.opacity;
+  // Above the peeks while it rises (same z as depth-1, but later in the DOM).
+  if (depth === 3) el.style.zIndex = p > 0 ? '2' : '';
 }
 
 type Props = {
@@ -493,6 +496,7 @@ function StackCardItem({
 
   // Clean up any exit state and lingering transforms when card depth/front changes
   useEffect(() => {
+    if (cardRef.current) cardRef.current.style.zIndex = '';
     if (!isFront) {
       setExit(null);
       const el = cardRef.current;
@@ -881,7 +885,7 @@ export function TripStack({
   // Cycling the stack (browse) reorders locally; any real change to the
   // trip set or its recency order resets back to the fresh sort.
   const [manualOrder, setManualOrder] = useState<string[] | null>(null);
-  const peekElsRef = useRef<[HTMLDivElement | null, HTMLDivElement | null]>([null, null]);
+  const peekElsRef = useRef<(HTMLDivElement | null)[]>([null, null, null]);
   const stageRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => { setManualOrder(null); }, [idsKey]);
 
@@ -914,13 +918,17 @@ export function TripStack({
   }, [targetTripId, order, tripsById]);
 
   const isDraggingStageRef = useRef(false);
-  const writePeeks = useCallback((p: number, dragging: boolean) => {
+  // Dragging right heads to the previous trip: raise the hidden previous
+  // card and keep the next-trip peeks still, so what rises behind the
+  // front card is what actually ends up in front.
+  const writePeeks = useCallback((p: number, dragging: boolean, toPrev = false) => {
     if (isDraggingStageRef.current !== dragging) {
       isDraggingStageRef.current = dragging;
       stageRef.current?.classList.toggle('is-dragging', dragging);
     }
-    writePeekCard(peekElsRef.current[0], 1, p, dragging);
-    writePeekCard(peekElsRef.current[1], 2, p, dragging);
+    writePeekCard(peekElsRef.current[0], 1, toPrev ? 0 : p, dragging);
+    writePeekCard(peekElsRef.current[1], 2, toPrev ? 0 : p, dragging);
+    writePeekCard(peekElsRef.current[2], 3, toPrev ? p : 0, dragging);
   }, []);
 
   // Ensure peeking cards rest at pristine depth positions after order changes
@@ -973,8 +981,8 @@ export function TripStack({
             idx={idx}
             totalTrips={trips.length}
             canDelete={canDelete(trip)}
-            onDragProgress={idx === 0 ? (ratio) => writePeeks(ratio, ratio > 0) : undefined}
-            bindCardEl={idx === 1 ? (el) => { peekElsRef.current[0] = el; } : idx === 2 ? (el) => { peekElsRef.current[1] = el; } : undefined}
+            onDragProgress={idx === 0 ? (ratio, dx) => writePeeks(ratio, ratio > 0, dx > 6) : undefined}
+            bindCardEl={idx >= 1 && idx <= 3 ? (el) => { peekElsRef.current[idx - 1] = el; } : undefined}
             onPeekPreview={handlePeekPreview}
             onOpen={() => onSelectTrip(trip.id)}
             onQuickAddExpense={onQuickAddExpense}

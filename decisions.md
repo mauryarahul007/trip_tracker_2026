@@ -3776,3 +3776,16 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - One extra mounted card (photo fetch + weather hook idle) when a user has 4+ trips.
   - Not verified on device by automated tests; animation feel needs manual QA (see FEAT-TRIPSORT steps).
+
+---
+
+## 211. Trip Stack: Direction-Aware Drag (Release v3.32.6, BUG-239)
+* **Context:**
+  - BUG-238's fix (flushSync + pre-mounted previous card) did not resolve the reported glitch. Reproducing in Chromium against the real `TripsListScreen` showed the real cause: dragging the front card in either direction raised the depth-1 peek (the next trip), but a right swipe rotates the ring to the *previous* trip, so the wrong trip rose behind the card and was swapped on commit. The pre-mounted previous card sat at z-index 0, hidden under that peek.
+* **Decision:**
+  - `onDragProgress` now passes the drag sign; `writePeeks(p, dragging, toPrev)` raises the depth-3 previous card (new `prevCardTransform`) and holds the peeks still when dragging right, and the reverse when dragging left.
+  - The previous card is lifted to z-index 2 (same as depth-1, later in DOM) while rising and reset when it becomes front; opacity ramps to 1 by a third of the drag so the peek does not show through.
+  - Hidden rest opacity is 0.01 instead of 0 so the browser still decodes its photo (avoids the blank white card).
+* **Trade-offs Accepted:**
+  - Verified with a per-frame probe and 12 recorded swipes on desktop Chromium (mouse input); touch / iOS WebKit not tested.
+  - Right-drag over the far peeks relies on a same-z DOM-order tie-break.

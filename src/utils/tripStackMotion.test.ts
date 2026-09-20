@@ -3,6 +3,7 @@ import {
   exitCardTransform,
   frontCardTransform,
   peekCardTransform,
+  prevCardTransform,
   rubberBand,
   SWIPE_THRESHOLD,
   isWebKitCompositor,
@@ -98,5 +99,12 @@ describe('stackMotionMode', () => {
     expect(isWebKitCompositor()).toBe(false);
     expect(stackMotionMode()).toBe('3d');
     vi.unstubAllGlobals();
+  });
+});
+
+describe('prevCardTransform', () => {
+  it('rests hidden-but-painted behind the stack and rises to full size', () => {
+    expect(prevCardTransform(0)).toEqual({ transform: 'translate3d(0, 34.0px, 0) scale(0.900) rotate(-2.00deg)', opacity: '0.01' });
+    expect(prevCardTransform(1)).toEqual({ transform: 'translate3d(0, 0.0px, 0) scale(1.000) rotate(0.00deg)', opacity: '1.00' });
   });
 });

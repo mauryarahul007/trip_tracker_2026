@@ -9,6 +9,14 @@ export interface ChangelogEntry {
 // parsed from decisions.md/BUGS.md: those are prose for developers, not client data.
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: '3.32.6',
+    date: '2026-09-20',
+    changes: [
+      'Swiping a trip toward the previous one now shows that trip rising behind the card, instead of briefly showing the wrong trip and then swapping.',
+      'Removed the blank white flash when the previous trip slides in.',
+    ],
+  },
+  {
     version: '3.32.5',
     date: '2026-09-20',
     changes: [

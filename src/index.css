@@ -3204,7 +3204,9 @@ input:checked + .toggle-slider:before {
 .stack-card.depth-3 {
   z-index: 0;
   transform: translateY(34px) scale(0.9) rotate(-2deg);
-  opacity: 0;
+  /* Not 0: browsers skip decoding the photo of a fully transparent layer,
+     which showed as a blank white card when it rose. */
+  opacity: 0.01;
   pointer-events: none;
 }
 .stack-card:focus-visible {
