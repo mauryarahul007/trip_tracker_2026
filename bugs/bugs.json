@@ -6293,7 +6293,7 @@
     "description": "Automatically captured react crash.\n\nTypeError: Cannot read properties of undefined (reading 'length')\n    at http://localhost:5174/src/components/admin/AdminCommandCenterPage.tsx:145:30\n    at Array.map (<anonymous>)\n    at http://localhost:5174/src/components/admin/AdminCommandCenterPage.tsx:139:25\n    at mountMemo (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=808eb20e:4929:20)\n    at Object.useMemo (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=808eb20e:13020:13)\n    at exports.useMemo (http://localhost:5174/node_modules/.vite/deps/react.js?v=808eb20e:736:31)\n    at AdminCommandCenterPage (http://localhost:5174/src/components/admin/AdminCommandCenterPage.tsx:138:24)\n    at Object.react_stack_bottom_frame (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=808eb20e:12864:12)\n    at renderWithHooks (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=808eb20e:4211:19)\n    at updateFunctionComponent (http://localhost:5174/node_modules/.vite/deps/react-dom_client.js?v=808eb20e:5567:16)",
     "severity": "critical",
     "category": "general",
-    "status": "open",
+    "status": "wont_fix",
     "foundBy": "auto-crash-handler",
     "environment": {
       "route": "#/",
@@ -6315,7 +6315,8 @@
       "syncQueueLength": 0
     },
     "createdAt": "2026-09-12T12:58:53.843657+00:00",
-    "updatedAt": "2026-09-12T12:58:53.843657+00:00"
+    "updatedAt": "2026-09-20T00:24:08.465Z",
+    "resolutionNote": "Stale dev-only artifact: stack trace points at http://localhost:5174/src/components/admin/AdminCommandCenterPage.tsx:145 during active development (captured 2026-09-12). The file has since been substantially edited (commits aef218f, 6774206) and current code at that location is just a useMemo dependency array with no .length access matching the reported TypeError. bugs/trips/auditLogs/users are all required (non-optional) array props in the current component signature. npx tsc --noEmit -p tsconfig.app.json is clean project-wide. Not reproducible against current committed code."
   },
   {
     "id": "BUG-210",
