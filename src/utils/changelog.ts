@@ -9,6 +9,14 @@ export interface ChangelogEntry {
 // parsed from decisions.md/BUGS.md: those are prose for developers, not client data.
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: '3.32.2',
+    date: '2026-09-20',
+    changes: [
+      'Eliminated duplicate legal links on the login screen by consolidating Terms of Service and Privacy Policy to the authoritative pre-consent disclosure.',
+      'Streamlined landing footer to a minimal, focused pairing of the 256-bit encryption trust seal and Superadmin switch.',
+    ],
+  },
+  {
     version: '3.32.1',
     date: '2026-09-20',
     changes: [

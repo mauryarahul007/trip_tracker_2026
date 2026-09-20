@@ -268,28 +268,22 @@ export function LoginScreen() {
                 </button>
               </form>
 
-              {/* Footer: Centered Trust Seal & Public Legal Links */}
+              {/* Footer: Centered Trust Seal & Superadmin Switch */}
               <footer className="landing-glass-footer">
                 <div className="login-security-seal">
                   <IconLock size={12} className="login-lock-icon" />
                   <span>256-BIT ENCRYPTION · SECURE SYNC</span>
                 </div>
-                <div className="landing-legal-links-row">
-                  <Link to="/privacy" className="landing-glass-footer-link">Privacy Policy</Link>
-                  <span className="landing-footer-sep" aria-hidden="true">·</span>
-                  <Link to="/terms" className="landing-glass-footer-link">Terms of Service</Link>
-                  <span className="landing-footer-sep" aria-hidden="true">·</span>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      triggerHaptic('light');
-                      setPersona('admin');
-                    }}
-                    className="landing-glass-footer-link"
-                  >
-                    Superadmin
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    triggerHaptic('light');
+                    setPersona('admin');
+                  }}
+                  className="landing-glass-footer-link"
+                >
+                  Superadmin
+                </button>
               </footer>
             </main>
           </>

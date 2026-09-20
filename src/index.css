@@ -10506,20 +10506,6 @@ textarea.input-field {
   white-space: nowrap;
 }
 
-.landing-legal-links-row {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  flex-wrap: wrap;
-  width: 100%;
-}
-
-.landing-footer-sep {
-  color: rgba(255, 255, 255, 0.28);
-  font-size: 10px;
-}
-
 .landing-admin-header {
   display: flex;
   align-items: center;

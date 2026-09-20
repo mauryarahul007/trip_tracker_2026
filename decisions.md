@@ -3717,3 +3717,16 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - Shortened feature descriptions from multi-line sentences to concise, descriptive capsule pills. The core marketing points remain immediately clear while eliminating vertical scroll pressure.
 
+---
+
+## 207. Login Screen Legal Links Consolidation & Redundancy Removal (Release v3.32.2)
+* **Context:** The login screen displayed links to `Terms of Service` and `Privacy Policy` twice in close proximity within the same compact glass card: once in the pre-consent disclosure beneath the Google sign-in button, and again in the bottom footer row.
+* **Decision:** Consolidate public legal links into the pre-consent notice, eliminating the duplicate footer links and leaving the footer focused on the 256-bit encryption trust seal and the Superadmin portal toggle.
+* **Pattern/Implementation:**
+  - Removed duplicate `<Link to="/privacy">` and `<Link to="/terms">` from `.landing-glass-footer` in `LoginScreen.tsx`.
+  - Retained the prominent, unauthenticated clickable links in the pre-consent text (`By continuing, you agree to our Terms of Service and Privacy Policy.`), which fulfills all App Store, GDPR, and DPDP compliance requirements.
+  - Removed obsolete `.landing-legal-links-row` and `.landing-footer-sep` CSS from `src/index.css`.
+* **Trade-offs Accepted:**
+  - Visitors desiring to inspect the terms or privacy policy click the notice directly below the sign-in button rather than the footer, matching standard modern auth card conventions (e.g. Google, Spotify, Linear).
+
+
