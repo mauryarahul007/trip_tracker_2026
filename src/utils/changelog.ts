@@ -9,6 +9,15 @@ export interface ChangelogEntry {
 // parsed from decisions.md/BUGS.md: those are prose for developers, not client data.
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: '3.37.0',
+    date: '2026-09-22',
+    changes: [
+      'The invite screen now says what you get before you sign in, and the read-only trip share page has a button for starting your own trip. Guests still never see expenses or balances.',
+      'Settings shows a Traveler Passport: trips, destinations, settled trips and days away, worked out on your device.',
+      'Superadmin can arm growth telemetry (retention and sync health) and lifecycle reminder pushes. Both stay off until Ops Deck arms them.',
+    ],
+  },
+  {
     version: '3.36.0',
     date: '2026-09-21',
     changes: [
