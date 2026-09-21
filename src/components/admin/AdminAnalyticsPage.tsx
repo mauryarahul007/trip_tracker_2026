@@ -1,11 +1,35 @@
 import { useMemo, useState } from 'react';
 import type { Trip, Expense, Member, Category } from '../../types';
-import type { AdminUserRow, DevicePlatformCount, NotificationStats } from '../../types/admin';
+import type { AdminUserRow, AuditLogEntry, DevicePlatformCount, NotificationStats } from '../../types/admin';
 import type { BugRecord } from '../../services/bugApi';
 import { getCurrencySymbol } from '../../utils/currency';
 import { calculateSettlements } from '../../utils/settlement';
 import { IconRefresh } from '../Icons';
 import { useTripStore } from '../../store/tripStore';
+import {
+  computeActivationFunnel,
+  computeCloseoutPulse,
+  computeFlagUsageProxies,
+  computeGhostTrips,
+  computeInviteAttribution,
+  computeLoopHealth,
+  computeSignupSources,
+  computeSliceLoopHealth,
+  computeSplitwiseImports,
+  computeWinBackList,
+} from '../../utils/opsGrowthMetrics';
+import {
+  ActivationFunnelCard,
+  CloseoutPulseCard,
+  FlagUsedVsArmedCard,
+  GhostQueueCard,
+  InviteAttributionCard,
+  LoopHealthStrip,
+  SignupSourceCard,
+  SplitwiseImportCard,
+  TripTypeSlicesCard,
+  WinBackCard,
+} from './AdminGrowthPanels';
 
 interface Props {
   trips: Trip[];
@@ -14,6 +38,7 @@ interface Props {
   categories: Category[];
   bugs: BugRecord[];
   users: AdminUserRow[];
+  auditLogs?: AuditLogEntry[];
   platformCounts: DevicePlatformCount[];
   notificationStats: NotificationStats;
   recycledCount: number;
@@ -33,21 +58,20 @@ const SPLIT_MODE_LABELS: Record<string, string> = {
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-type AnalyticsSubTab = 'overview' | 'financial' | 'engagement' | 'health';
+type AnalyticsSubTab = 'growth' | 'overview' | 'financial' | 'engagement' | 'health';
 
 const SUB_TABS: { id: AnalyticsSubTab; label: string }[] = [
+  { id: 'growth', label: 'Growth' },
   { id: 'overview', label: 'Overview' },
   { id: 'financial', label: 'Financial' },
   { id: 'engagement', label: 'Engagement' },
   { id: 'health', label: 'Health' },
 ];
 
-export function AdminAnalyticsPage({ trips, expenses, members, categories, bugs, users, platformCounts, notificationStats, recycledCount, onRefresh, isRefreshing }: Props) {
+export function AdminAnalyticsPage({ trips, expenses, members, categories, bugs, users, auditLogs = [], platformCounts, notificationStats, recycledCount, onRefresh, isRefreshing }: Props) {
   const isMultiTripAnalyticsEnabled = useTripStore((s) => s.isFeatureEnabled('enableMultiTripAnalytics'));
-  // The 13 sections below used to sit in one long equal-weight scroll --
-  // grouped into sub-tabs so "what's the bug pulse today" doesn't require
-  // scrolling past 10 unrelated charts to get there.
-  const [subTab, setSubTab] = useState<AnalyticsSubTab>('overview');
+  const featureFlags = useTripStore((s) => s.featureFlags);
+  const [subTab, setSubTab] = useState<AnalyticsSubTab>('growth');
   const activeTrips = trips.filter((t) => !t.archived);
   const activeTripIds = new Set(activeTrips.map((t) => t.id));
   const activeExpenses = expenses.filter((e) => activeTripIds.has(e.tripId) && !e.title.startsWith('Settlement:'));
@@ -327,19 +351,57 @@ export function AdminAnalyticsPage({ trips, expenses, members, categories, bugs,
     };
   }, [activeExpenses]);
 
+  const loopHealth = useMemo(
+    () => computeLoopHealth(trips, expenses, members),
+    [trips, expenses, members]
+  );
+  const activationFunnel = useMemo(
+    () => computeActivationFunnel(users, trips, expenses, members),
+    [users, trips, expenses, members]
+  );
+  const ghostTrips = useMemo(
+    () => computeGhostTrips(trips, expenses, members),
+    [trips, expenses, members]
+  );
+  const flagUsage = useMemo(
+    () => computeFlagUsageProxies(trips, expenses, members, featureFlags),
+    [trips, expenses, members, featureFlags]
+  );
+  const inviteAttribution = useMemo(
+    () => computeInviteAttribution(trips, expenses, members),
+    [trips, expenses, members]
+  );
+  const sliceLoop = useMemo(
+    () => computeSliceLoopHealth(trips, expenses, members),
+    [trips, expenses, members]
+  );
+  const winBack = useMemo(
+    () => computeWinBackList(trips, expenses),
+    [trips, expenses]
+  );
+  const closeoutPulse = useMemo(
+    () => computeCloseoutPulse(trips, auditLogs),
+    [trips, auditLogs]
+  );
+  const splitwiseImports = useMemo(
+    () => computeSplitwiseImports(trips, auditLogs),
+    [trips, auditLogs]
+  );
+  const signupSources = useMemo(() => computeSignupSources(users, auditLogs), [users, auditLogs]);
+
   return (
     <div className="fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
       <div className="ops-page-head">
         <div>
           <h2>Global Trip Analytics</h2>
-          <p>Telemetry, aggregate volume, spending distributions, and category patterns across all trips.</p>
+          <p>Loop health and activation first. Spend and 30-day login stay on Overview / Health.</p>
         </div>
         <button type="button" className="ops-btn" disabled={isRefreshing} onClick={() => void onRefresh()}>
           <IconRefresh size={13} className={isRefreshing ? 'icon-sm ops-spin' : 'icon-sm'} /> {isRefreshing ? 'Refreshing...' : 'Refresh'}
         </button>
       </div>
 
-      {!isMultiTripAnalyticsEnabled && (
+      {!isMultiTripAnalyticsEnabled && subTab !== 'growth' && (
         <div
           style={{
             padding: '10px 14px',
@@ -366,6 +428,29 @@ export function AdminAnalyticsPage({ trips, expenses, members, categories, bugs,
           </button>
         ))}
       </div>
+
+      {subTab === 'growth' && (
+      <>
+        <LoopHealthStrip health={loopHealth} />
+        <div className="ops-split-row">
+          <ActivationFunnelCard funnel={activationFunnel} />
+          <GhostQueueCard ghosts={ghostTrips} />
+        </div>
+        <FlagUsedVsArmedCard rows={flagUsage} />
+        <div className="ops-split-row">
+          <InviteAttributionCard attr={inviteAttribution} />
+          <TripTypeSlicesCard slices={sliceLoop} />
+        </div>
+        <div className="ops-split-row">
+          <CloseoutPulseCard pulse={closeoutPulse} />
+          <SplitwiseImportCard summary={splitwiseImports} />
+        </div>
+        <div className="ops-split-row">
+          <WinBackCard rows={winBack} />
+          <SignupSourceCard rows={signupSources} />
+        </div>
+      </>
+      )}
 
       {subTab === 'overview' && (
       <>

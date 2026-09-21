@@ -37,6 +37,11 @@ function mapTrip(row: TripRow, memberIds: string[], groupIds: string[]): Trip {
     shareToken: (row as any).share_token ?? null,
     shareEnabled: Boolean((row as any).share_enabled),
     shareExpiresAt: (row as any).share_expires_at ?? null,
+    shareViewCount: Number((row as any).share_view_count ?? 0) || 0,
+    closeoutPulse: ((row as any).closeout_pulse as Trip['closeoutPulse']) ?? null,
+    closeoutPulseAt: (row as any).closeout_pulse_at ? new Date((row as any).closeout_pulse_at).getTime() : null,
+    splitwiseImportedAt: (row as any).splitwise_imported_at ? new Date((row as any).splitwise_imported_at).getTime() : null,
+    splitwiseImportCount: Number((row as any).splitwise_import_count ?? 0) || 0,
     approvalThreshold: (row as any).approval_threshold ?? null,
     createdAt: new Date(row.created_at).getTime(),
     updatedAt: new Date(row.updated_at).getTime(),
@@ -987,6 +992,43 @@ export async function generateTripShareLink(tripId: string): Promise<TripShareLi
   return { shareToken: (data as any).share_token, shareEnabled: (data as any).share_enabled, shareExpiresAt: (data as any).share_expires_at };
 }
 
+export async function recordTripShareView(shareToken: string): Promise<number> {
+  const { data, error } = await supabase.rpc('record_trip_share_view', { p_token: shareToken });
+  if (error) return 0;
+  return Number(data ?? 0) || 0;
+}
+
+export async function recordTripCloseoutPulse(tripId: string, answer: 'yes' | 'no' | 'skip'): Promise<void> {
+  const { error } = await supabase
+    .from('trips')
+    .update({ closeout_pulse: answer, closeout_pulse_at: new Date().toISOString() } as never)
+    .eq('id', tripId);
+  if (error) throw error;
+}
+
+export async function recordTripSplitwiseImport(tripId: string, count: number): Promise<void> {
+  const { error } = await supabase
+    .from('trips')
+    .update({
+      splitwise_imported_at: new Date().toISOString(),
+      splitwise_import_count: count,
+    } as never)
+    .eq('id', tripId);
+  if (error) throw error;
+}
+
+export async function persistSignupSource(
+  userId: string,
+  source: { utm_source?: string; utm_medium?: string; utm_campaign?: string; capturedAt?: number }
+): Promise<void> {
+  const { error } = await supabase
+    .from('profiles')
+    .update({ signup_source: source } as never)
+    .eq('id', userId)
+    .is('signup_source', null);
+  if (error) throw error;
+}
+
 export async function revokeTripShareLink(tripId: string): Promise<void> {
   const { error } = await supabase.from('trips').update({ share_enabled: false }).eq('id', tripId);
   if (error) throw error;
@@ -1178,17 +1220,24 @@ export async function searchRemoteMemberSuggestions(
 // ---------------------------------------------------------------------------
 
 export async function fetchAllProfilesForAdmin(): Promise<AdminUserRow[]> {
-  const { data, error } = await supabase
+  const withSource = await supabase
     .from('profiles')
-    .select('id, email, display_name, banned, created_at')
+    .select('id, email, display_name, banned, created_at, signup_source')
     .order('created_at', { ascending: false });
-  if (error) throw error;
-  return (data ?? []).map((p) => ({
+  const result = withSource.error
+    ? await supabase
+        .from('profiles')
+        .select('id, email, display_name, banned, created_at')
+        .order('created_at', { ascending: false })
+    : withSource;
+  if (result.error) throw result.error;
+  return (result.data ?? []).map((p) => ({
     id: p.id,
     email: p.email,
     displayName: p.display_name,
     banned: p.banned,
     createdAt: p.created_at,
+    signupSource: (p as { signup_source?: AdminUserRow['signupSource'] }).signup_source ?? null,
   }));
 }
 

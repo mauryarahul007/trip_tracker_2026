@@ -13,6 +13,7 @@ export interface Database {
           avatar_url: string | null;
           banned: boolean;
           created_at: string;
+          signup_source: Record<string, unknown> | null;
         };
         Insert: {
           id: string;
@@ -50,6 +51,11 @@ export interface Database {
           share_token: string | null;
           share_enabled: boolean;
           share_expires_at: string | null;
+          share_view_count: number;
+          closeout_pulse: string | null;
+          closeout_pulse_at: string | null;
+          splitwise_imported_at: string | null;
+          splitwise_import_count: number | null;
           approval_threshold: number | null;
           created_at: string;
           updated_at: string;
@@ -866,6 +872,10 @@ export interface Database {
           expense_count: number;
           spend_by_currency: Record<string, number>;
         }[];
+      };
+      record_trip_share_view: {
+        Args: { p_token: string };
+        Returns: number;
       };
       submit_feature_request: {
         Args: {

@@ -1420,5 +1420,37 @@
     "shippedAt": "2026-09-21T08:50:57.882Z",
     "shippedBy": "rahul",
     "shippedNote": "Shipped in v3.34.0 behind Superadmin Ops Deck flags (default OFF). ADR 214. FEAT-LIGHTLOOP / FEAT-LIGHTLOOP2."
+  },
+  {
+    "id": "FEAT-090",
+    "title": "Consumer packs in Ops Deck (Core/Trip/Travel/Pro/Labs/Ops replace phases)",
+    "description": "Ops Deck groups flags by who should see them. Core and Trip default ON in code; Pro/Labs/Ops stay OFF. ADR 215.",
+    "category": "admin",
+    "status": "shipped",
+    "requestedBy": "rahul",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-09-21T14:00:25.931Z",
+    "updatedAt": "2026-09-21T14:00:25.931Z",
+    "shippedAt": "2026-09-21T14:00:25.931Z",
+    "shippedBy": "rahul",
+    "shippedNote": "Shipped in v3.35.0. ADR 215. FEAT-PACKS."
+  },
+  {
+    "id": "FEAT-091",
+    "title": "Superadmin loop health and growth (funnel, ghosts, attribution, landing copy)",
+    "description": "Command Center loop-health strip and Analytics Growth tab derived from existing trips. Optional closeout pulse (Labs, OFF). Landing copy in Tools. Migration 0107 for pulse/UTM/share views.",
+    "category": "admin",
+    "status": "shipped",
+    "requestedBy": "rahul",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-09-21T14:00:26.362Z",
+    "updatedAt": "2026-09-21T14:00:26.362Z",
+    "shippedAt": "2026-09-21T14:00:26.362Z",
+    "shippedBy": "rahul",
+    "shippedNote": "Shipped in v3.35.0. ADR 216. FEAT-GROWTH. Migration 0107."
   }
 ]

@@ -1,5 +1,5 @@
 export type FeatureFlagKey =
-  // Phase 1: Core Social Splitter (Base MVP)
+  // Core pack
   | 'enablePredictiveChips'
   | 'enableRecycleBin'
   | 'enableExplainThisNumber'
@@ -93,13 +93,15 @@ export type FeatureFlagKey =
   | 'enableFeatureSuggestions'
   | 'enableTripWrapped'
   | 'enableAchievements'
-  | 'enableOfflineSnapshot';
+  | 'enableOfflineSnapshot'
+  | 'enableCloseoutPulse';
 
-export type ReleasePhaseId = 'phase1' | 'phase2' | 'phase3' | 'phase4' | 'phase5' | 'phase6' | 'phase7' | 'deferred';
+/** Who the flag is for — Ops Deck groups and arm/safe by pack, not engineering phase. */
+export type ConsumerPackId = 'core' | 'trip' | 'travel' | 'pro' | 'labs' | 'ops';
 
-export interface ReleasePhaseDef {
-  id: ReleasePhaseId;
-  phaseNumber: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 0;
+export interface ConsumerPackDef {
+  id: ConsumerPackId;
+  packNumber: 1 | 2 | 3 | 4 | 5 | 6;
   code: string;
   title: string;
   tagline: string;
@@ -113,7 +115,7 @@ export interface FeatureFlagMeta {
   label: string;
   description: string;
   category: 'core' | 'collab' | 'transit' | 'fintech' | 'geotagging' | 'splits' | 'admin' | 'security';
-  phase: ReleasePhaseId;
+  pack: ConsumerPackId;
   defaultEnabledForUsers: boolean;
 }
 
@@ -154,6 +156,12 @@ export interface AdminUserRow {
   displayName: string | null;
   banned: boolean;
   createdAt: string;
+  signupSource?: {
+    utm_source?: string;
+    utm_medium?: string;
+    utm_campaign?: string;
+    capturedAt?: number;
+  } | null;
 }
 
 export type AppConfigKey =
@@ -166,7 +174,11 @@ export type AppConfigKey =
   | 'expense_amount_ceiling'
   | 'audit_log_retention_days'
   | 'landing_backdrop_url'
-  | 'ops_webhook_url';
+  | 'ops_webhook_url'
+  | 'landing_headline'
+  | 'landing_tagline'
+  | 'landing_invite_blurb'
+  | 'empty_trip_blurb';
 
 export interface DevicePlatformCount {
   platform: 'ios' | 'android';

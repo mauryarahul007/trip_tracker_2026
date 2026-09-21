@@ -1,27 +1,37 @@
 ---
-description: Every new customer-facing feature must be Superadmin-flagged, default OFF, with a clear Ops Deck explanation
+description: Every new customer-facing feature must be Superadmin-flagged, assigned to a consumer pack, with a clear Ops Deck explanation
 alwaysApply: true
 ---
 
 # Superadmin feature flags (mandatory)
 
-Every **new customer-facing feature or UX** ships behind a Superadmin Ops Deck flag. Default **OFF**. No reachable code path when the flag is off.
+Every **new customer-facing feature or UX** ships behind a Superadmin Ops Deck flag. Default **OFF** unless it belongs in the **Core** or **Trip** pack (first 60s / last 5 min / on-trip logging). No reachable code path when the flag is off.
 
 ## Register (all four)
 
 1. `FeatureFlagKey` in `src/types/admin.ts`
 2. `FEATURE_FLAGS_META` in `src/utils/featureFlags.ts` — **label + description Superadmin can act on**
-3. `DEFAULT_FEATURE_FLAGS` — `false`
-4. `RELEASE_PHASES` `flagKeys` for the matching phase (not Deferred unless shelved)
+3. `DEFAULT_FEATURE_FLAGS` — `false` unless the pack is Core or Trip
+4. `CONSUMER_PACKS` `flagKeys` for the matching pack (`core` / `trip` / `travel` / `pro` / `labs` / `ops`)
 
-Bump the flag-count assertion in `src/utils/featureFlags.test.ts`. Ops Deck Flags/Phases are data-driven off this registry.
+Bump the flag-count assertion in `src/utils/featureFlags.test.ts`. Ops Deck Flags/Packs are data-driven off this registry.
+
+**Packs (who sees it), not phases (build order):**
+- **Core** — first 60s + last 5 min money loop. Default ON.
+- **Trip** — voice, receipts, Notes + quiet chat, packing, FX. Default ON.
+- **Travel** — passes / Next-Up / scanner / radar. Capable ON; chrome hidden until a pass exists. Route stops stay OFF.
+- **Pro** — itemized, OCR, analytics, vault, Splitwise import. Default OFF.
+- **Labs** — chat-first, Tripbot, live location, achievements. Stay OFF.
+- **Ops** — demo seed, snapshot, sync inspector. Superadmin only.
+
+Do not put settle / UPI / share / clone-squad in Pro. Do not dump new work in Labs unless it is shelved.
 
 ## Explanation (required, not optional)
 
 `label`: short name Superadmin sees.
 `description`: what the traveler feels **when ON**, what is **absent when OFF**, and what this flag does **not** do (no extra tab, no new product line). One or two sentences. Vague copy like "enables the feature" is not enough.
 
-Reuse an existing flag when the work is the same surface. Do not default-ON existing flags to "ship" work.
+Reuse an existing flag when the work is the same surface. Do not default-ON Labs or Pro flags to "ship" work.
 
 ## Gate in UI/store
 

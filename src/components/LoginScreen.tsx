@@ -3,6 +3,13 @@ import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { useTripStore } from '../store/tripStore';
 import { fetchAppFlag } from '../services/tripApi';
+import { captureSignupAttribution } from '../utils/signupAttribution';
+import {
+  asCopyString,
+  DEFAULT_LANDING_HEADLINE,
+  DEFAULT_LANDING_INVITE_BLURB,
+  DEFAULT_LANDING_TAGLINE,
+} from '../utils/landingCopy';
 import { IconShield, IconAlertCircle, IconCheck, IconLock } from './Icons';
 import { triggerHaptic } from '../utils/haptics';
 import { TurnstileWidget } from './TurnstileWidget';
@@ -35,6 +42,9 @@ export function LoginScreen() {
       return DEFAULT_LANDING_BACKDROP;
     }
   });
+  const [landingHeadline, setLandingHeadline] = useState(DEFAULT_LANDING_HEADLINE);
+  const [landingTagline, setLandingTagline] = useState(DEFAULT_LANDING_TAGLINE);
+  const [landingInviteBlurb, setLandingInviteBlurb] = useState(DEFAULT_LANDING_INVITE_BLURB);
   const [quickJoinCode, setQuickJoinCode] = useState('');
   const [honeypotVal, setHoneypotVal] = useState('');
 
@@ -49,8 +59,9 @@ export function LoginScreen() {
   const requiresAdminCaptcha = !!import.meta.env.VITE_TURNSTILE_SITE_KEY;
 
   useEffect(() => {
+    captureSignupAttribution(searchParams.toString());
     initialize();
-  }, [initialize]);
+  }, [initialize, searchParams]);
 
   // Superadmin-set gates & dynamic backdrop
   useEffect(() => {
@@ -65,6 +76,16 @@ export function LoginScreen() {
           try { localStorage.setItem('tt-landing-bg-cache', v.trim()); } catch {}
         }
       })
+      .catch(() => {});
+
+    fetchAppFlag('landing_headline')
+      .then((v) => setLandingHeadline(asCopyString(v, DEFAULT_LANDING_HEADLINE)))
+      .catch(() => {});
+    fetchAppFlag('landing_tagline')
+      .then((v) => setLandingTagline(asCopyString(v, DEFAULT_LANDING_TAGLINE)))
+      .catch(() => {});
+    fetchAppFlag('landing_invite_blurb')
+      .then((v) => setLandingInviteBlurb(asCopyString(v, DEFAULT_LANDING_INVITE_BLURB)))
       .catch(() => {});
   }, []);
 
@@ -154,9 +175,9 @@ export function LoginScreen() {
               <div className="login-landing-badge">
                 <span>🌴</span> PARADISE EDITION · 2026
               </div>
-              <h1 className="login-landing-title">Trip Tracker</h1>
+              <h1 className="login-landing-title">{landingHeadline}</h1>
               <p className="login-landing-subtitle">
-                Split costs effortlessly with travel companions anywhere on earth.
+                {landingTagline}
               </p>
             </header>
 
@@ -233,7 +254,7 @@ export function LoginScreen() {
 
               {/* Subtle Divider */}
               <div className="login-divider" aria-hidden="true">
-                <span>or join with trip code</span>
+                <span>{landingInviteBlurb}</span>
               </div>
 
               {/* Inline Join with 6-digit Code */}

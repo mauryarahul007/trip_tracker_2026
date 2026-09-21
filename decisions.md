@@ -3843,3 +3843,37 @@ This document logs all meaningful technical decisions, library choices, design p
   - Production Ops Deck rows that already stored a flag as true still win over these defaults until a superadmin toggles them.
   - Cross-trip IOU on home still needs online `fetchAllExpensesForTrips` (existing hook); offline home shows no strip.
   - Copied squad members are placeholders until they join; groups are not copied.
+
+---
+
+## 215. Consumer packs replace release phases in Ops Deck
+* **Context:** Flags were grouped as engineering Phases 1–7 + Deferred. Superadmin could not see which flags belong with first-open vs settle-out vs power users. Core money-loop flags sat in Phase 5 safed-by-default, while travel chrome and itemized OCR were default ON.
+* **Decision:** Replace `RELEASE_PHASES` with `CONSUMER_PACKS` (Core, Trip, Travel, Pro, Labs, Ops). Ops Deck Flags and Command Center arm/safe by pack. Core and Trip default ON; Travel is capable with route-stops off; Pro / Labs / Ops default OFF. Settle, UPI, share, and clone-squad stay in Core, never Pro.
+* **Pattern/Implementation:**
+  - `ConsumerPackId` / `ConsumerPackDef` in `src/types/admin.ts`; `FEATURE_FLAGS_META.pack` replaces `.phase`.
+  - `CONSUMER_PACKS`, `getPackFlagKeys`, `getPackStatus`, `setPackFlags` drive Admin Flags and Command Center.
+  - `DEFAULT_FEATURE_FLAGS` aligned to pack intent (34 ON / 53 OFF of 87, including Labs `enableCloseoutPulse`).
+  - Shipped in v3.35.0 as FEAT-090.
+* **Trade-offs Accepted:**
+  - Stored production `resolved.global` rows still win until Superadmin **Reset to Defaults** or **Arm/Safe Pack**.
+  - Travel Next-Up/radar/scanner stay default-capable; `enableProgressiveNextUp` (Core, ON) hides expense-tab chrome until a pass exists.
+  - Itemized, OCR, analytics, biometric, achievements, snapshot, and feature-suggestions flip default OFF — power users lose them until Pro/Ops is armed.
+
+---
+
+## 216. Superadmin growth ops: loop health, not DAU
+* **Context:** Ops Deck Analytics showed spend, join-code claim, and 30-day login retention. That is the wrong north star for an episodic trip splitter. Marketing needed first-60s / last-5-min / same-squad next trip, without a Mixpanel clone or traveler chrome.
+* **Decision:** Derive Superadmin Growth from existing trips, expenses, members, and audit logs. Command Center shows a loop-health strip. Analytics adds a Growth tab (funnel, ghosts, flag used-vs-armed proxies, invite/share attribution, trip-type slices, win-back, closeout pulse, Splitwise imports, UTM). Landing copy is four `app_config` keys. Closeout pulse is a Labs flag default OFF. Share views / pulse / Splitwise / UTM persist via migration 0107 when applied; until then local store + audit logs still work.
+* **Pattern/Implementation:**
+  - `src/utils/opsGrowthMetrics.ts` is the single derivation; Command Center and Analytics only render.
+  - `enableCloseoutPulse` (Labs, OFF): one tap after lock in `TripCloseoutModal`.
+  - `landing_headline`, `landing_tagline`, `landing_invite_blurb`, `empty_trip_blurb` in Tools.
+  - `utm_source` / `ref` captured on `/login` into sessionStorage, flushed to `profiles.signup_source` and `signup_attribution` audit on sign-in.
+* **Trade-offs Accepted:**
+  - Flag usage is **proxies** (clone-last = duplicate rows in 5 min; WA share = settlement exists). Labeled in the UI.
+  - Share view counts stay 0 until migration 0107's `record_trip_share_view` exists.
+  - No DAU, CRM blast, or chat-spy surfaces.
+  - Shipped in v3.35.0 as FEAT-091.
+
+---
+

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { getTripShare, type TripShareSummary } from '../services/tripApi';
+import { getTripShare, recordTripShareView, type TripShareSummary } from '../services/tripApi';
 import { formatDateRange } from '../utils/dateRange';
 
 // Public, unauthenticated page -- anyone with the link (no login) lands
@@ -22,6 +22,7 @@ export function TripSharePage() {
         if (result) {
           setSummary(result);
           setStatus('ok');
+          void recordTripShareView(token).catch(() => {});
         } else {
           setStatus('ended');
         }

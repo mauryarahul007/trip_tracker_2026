@@ -8,9 +8,11 @@ import { IconRefresh } from '../Icons';
 import type { AdminTab } from './AdminPortalLayout';
 import { supabase, isMissingSupabaseEnv } from '../../services/supabaseClient';
 import { useTripStore } from '../../store/tripStore';
-import { RELEASE_PHASES, getPhaseStatus } from '../../utils/featureFlags';
+import { CONSUMER_PACKS, getPackStatus } from '../../utils/featureFlags';
 import { convertCurrency, FALLBACK_USD_RATES } from '../../utils/currencyFx';
 import { calculateSettlements } from '../../utils/settlement';
+import { computeGhostTrips, computeLoopHealth } from '../../utils/opsGrowthMetrics';
+import { LoopHealthStrip } from './AdminGrowthPanels';
 
 interface Props {
   trips: Trip[];
@@ -177,13 +179,14 @@ export function AdminCommandCenterPage({
 
   // Concept 4 Bento Data
   const featureFlags = useTripStore((s) => s.featureFlags);
-  const phaseStatuses = useMemo(() => {
-    return RELEASE_PHASES.map((p) => {
-      const pStatus = getPhaseStatus(p.id, featureFlags);
+  const packStatuses = useMemo(() => {
+    return CONSUMER_PACKS.map((p) => {
+      const pStatus = getPackStatus(p.id, featureFlags);
       return {
         id: p.id,
+        code: p.code,
         title: p.title,
-        status: pStatus.status, // 'armed' | 'partial' | 'safed'
+        status: pStatus.status,
         activeCount: pStatus.activeCount,
         totalCount: pStatus.totalCount,
         flagCount: p.flagKeys.length,
@@ -228,6 +231,15 @@ export function AdminCommandCenterPage({
   const cleanExpenses = useMemo(() => {
     return effectiveExpenses.filter((e) => !e.title?.startsWith('Settlement:') && !e.isSettlement);
   }, [effectiveExpenses]);
+
+  const loopHealth = useMemo(
+    () => computeLoopHealth(trips, effectiveExpenses, members || {}, Date.now()),
+    [trips, effectiveExpenses, members]
+  );
+  const ghostTrips = useMemo(
+    () => computeGhostTrips(trips, effectiveExpenses, members || {}, Date.now()),
+    [trips, effectiveExpenses, members]
+  );
 
   // Normalized Platform Spend Volume & Fleet Financial KPIs
   const spendMetrics = useMemo(() => {
@@ -382,6 +394,12 @@ export function AdminCommandCenterPage({
         </div>
       </div>
 
+      <LoopHealthStrip health={loopHealth} onOpenGrowth={() => onNavigate('analytics')} />
+      {ghostTrips.length > 0 && (
+        <p style={{ margin: 0, fontSize: '12px', color: 'var(--text-secondary)' }}>
+          {ghostTrips.length} ghost trip{ghostTrips.length === 1 ? '' : 's'} in the queue (idle or ended unpaid) — details on Analytics → Growth.
+        </p>
+      )}
 
       {/* Concept 4 Hero Bento Grid */}
       <div className="ops-bento-hero-grid">
@@ -502,41 +520,41 @@ export function AdminCommandCenterPage({
           </div>
         </div>
 
-        {/* Bento Card 2: Release Train Milestones */}
+        {/* Bento Card 2: Consumer Packs */}
         <div className="ops-bento-card">
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div className="ops-bento-card-title" style={{ margin: 0 }}>
-                <span>🎯</span> Release Train Milestones
+                <span>Consumer Packs</span>
               </div>
-              <span className="ops-badge active" style={{ fontSize: '10px', padding: '2px 8px' }}>{phaseStatuses.length} Tracks</span>
+              <span className="ops-badge active" style={{ fontSize: '10px', padding: '2px 8px' }}>{packStatuses.length} Packs</span>
             </div>
-            <p className="ops-bento-card-sub" style={{ marginTop: '4px' }}>Progressive release milestones &amp; feature gate control.</p>
+            <p className="ops-bento-card-sub" style={{ marginTop: '4px' }}>Who sees what: Core, Trip, Travel, Pro, Labs, Ops.</p>
 
             <div className="ops-milestone-rail">
-              {phaseStatuses.map((phase) => (
+              {packStatuses.map((pack) => (
                 <div
-                  key={phase.id}
+                  key={pack.id}
                   className="ops-milestone-chip"
-                  data-armed={phase.status === 'armed'}
-                  data-staged={phase.status === 'safed'}
-                  title={`${phase.title} · ${phase.activeCount}/${phase.totalCount} active flags`}
+                  data-armed={pack.status === 'armed'}
+                  data-staged={pack.status === 'safed'}
+                  title={`${pack.title} · ${pack.activeCount}/${pack.totalCount} active flags`}
                   onClick={() => onNavigate('flags')}
                   style={{ cursor: 'pointer' }}
                 >
                   <div className="ops-milestone-chip-info">
                     <div className="ops-milestone-chip-title">
-                      {phase.id === 'deferred' ? 'Extras · Platform' : phase.id.replace('phase', 'Phase ')}
+                      {pack.code}
                     </div>
                     <div className="ops-milestone-chip-sub">
-                      {phase.title}
+                      {pack.title}
                     </div>
                   </div>
                   <span
                     className="ops-milestone-chip-badge"
-                    data-status={phase.status}
+                    data-status={pack.status}
                   >
-                    {phase.status === 'armed' ? '🟢 Armed' : phase.status === 'partial' ? '🟡 Partial' : '⚪ Safe'}
+                    {pack.status === 'armed' ? 'Armed' : pack.status === 'partial' ? 'Partial' : 'Safe'}
                   </span>
                 </div>
               ))}

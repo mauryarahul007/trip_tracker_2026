@@ -23,6 +23,8 @@ import { useHistoryBack } from '../utils/useHistoryBack';
 import { useEscapeKey } from '../utils/useEscapeKey';
 import { formatAmount, getCurrencySymbol } from '../utils/currency';
 import { pickTripForQuickAdd } from '../utils/pickTripForQuickAdd';
+import { fetchAppFlag } from '../services/tripApi';
+import { asCopyString, DEFAULT_EMPTY_TRIP_BLURB } from '../utils/landingCopy';
 
 type Props = {
   trips: Trip[];
@@ -116,6 +118,7 @@ export function TripsListScreen({
   const [isScrubbing, setIsScrubbing] = useState(false);
   const [showJoinTrip, setShowJoinTrip] = useState(false);
   const [joinCode, setJoinCode] = useState('');
+  const [emptyTripBlurb, setEmptyTripBlurb] = useState(DEFAULT_EMPTY_TRIP_BLURB);
   const [honeypotVal, setHoneypotVal] = useState('');
   const [showList, setShowList] = useState(false);
   const sortToggleOn = isFeatureEnabled('enableTripStackSort', { userId: userId || undefined });
@@ -149,6 +152,12 @@ export function TripsListScreen({
   useEffect(() => {
     preloadModule(() => import('./ExpenseForm'));
     preloadModule(() => import('./TripMapHero'));
+  }, []);
+
+  useEffect(() => {
+    fetchAppFlag('empty_trip_blurb')
+      .then((v) => setEmptyTripBlurb(asCopyString(v, DEFAULT_EMPTY_TRIP_BLURB)))
+      .catch(() => {});
   }, []);
 
   const handleStepperScrub = (clientX: number) => {
@@ -648,7 +657,7 @@ export function TripsListScreen({
               {isFirstRun ? (
                 <p>Welcome aboard. A trip holds your <strong>members</strong>, the <strong>expenses</strong> they log, and the <strong>splits</strong> between them — start one to see it come together.</p>
               ) : (
-                <p>Nothing here yet. Start a trip and add who's coming.</p>
+                <p>{emptyTripBlurb}</p>
               )}
               <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'center', marginTop: '12px' }}>
                 <button className="gradient-btn" onClick={() => setShowAddTrip(true)}>

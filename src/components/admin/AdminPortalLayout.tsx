@@ -673,6 +673,7 @@ export function AdminPortalLayout({
               categories={categories}
               bugs={bugs}
               users={users}
+              auditLogs={auditLogs}
               platformCounts={platformCounts}
               notificationStats={notificationStats}
               recycledCount={recycledCount}

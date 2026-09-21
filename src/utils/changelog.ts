@@ -9,6 +9,15 @@ export interface ChangelogEntry {
 // parsed from decisions.md/BUGS.md: those are prose for developers, not client data.
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: '3.35.0',
+    date: '2026-09-21',
+    changes: [
+      'Ops Deck Flags are grouped as consumer packs (Core, Trip, Travel, Pro, Labs, Ops) instead of engineering phases, so first-open and settle-out stay light unless Superadmin arms more.',
+      'Superadmin Command Center and Analytics Growth show whether groups finish the money loop and come back: first expense, second member, settle, next trip — not daily login streaks.',
+      'Landing headline and empty-state copy can be changed from Tools without a deploy. After lock, an optional one-tap “use this next trip?” question stays off until Superadmin arms it.',
+    ],
+  },
+  {
     version: '3.34.0',
     date: '2026-09-21',
     changes: [

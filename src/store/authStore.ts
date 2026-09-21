@@ -10,6 +10,24 @@ import { lockSession } from '../utils/webAuthn';
 import { registerForPushNotifications, unregisterPushNotifications } from '../services/pushRegistration';
 import { useTripStore } from './tripStore';
 import { useNotificationsStore } from './notificationsStore';
+import { clearSignupAttribution, loadSignupAttribution } from '../utils/signupAttribution';
+import { persistSignupSource, logSuperadminAction } from '../services/tripApi';
+
+async function flushSignupAttribution(userId: string) {
+  const attr = loadSignupAttribution();
+  if (!attr) return;
+  try {
+    await persistSignupSource(userId, attr);
+  } catch {
+    /* signup_source column may not exist until migration 0107 */
+  }
+  try {
+    await logSuperadminAction(null, 'signup_attribution', { ...attr });
+    clearSignupAttribution();
+  } catch {
+    /* keep sessionStorage for a retry on next load */
+  }
+}
 
 interface AuthStore {
   session: Session | null;
@@ -83,6 +101,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
           null;
         useTripStore.getState().setUserIdentity(user.id, displayName);
         useNotificationsStore.getState().initialize(data.session.user.id);
+        void flushSignupAttribution(user.id);
       }
 
       // A persisted `isSuperadmin=true` (tripStore survives reloads via
@@ -121,6 +140,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
         useTripStore.getState().setUserIdentity(user.id, displayName);
         registerForPushNotifications(session.user.id);
         useNotificationsStore.getState().initialize(session.user.id);
+        void flushSignupAttribution(user.id);
       }
     });
 

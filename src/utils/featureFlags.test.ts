@@ -3,9 +3,9 @@ import {
   DEFAULT_FEATURE_FLAGS,
   isFeatureActive,
   FEATURE_FLAGS_META,
-  RELEASE_PHASES,
-  getPhaseFlagKeys,
-  getPhaseStatus,
+  CONSUMER_PACKS,
+  getPackFlagKeys,
+  getPackStatus,
 } from './featureFlags';
 
 describe('featureFlags', () => {
@@ -19,139 +19,94 @@ describe('featureFlags', () => {
     });
   });
 
-  it('defines 7 customer release phases plus deferred ops', () => {
-    expect(RELEASE_PHASES.length).toBe(8);
-    const phaseIds = RELEASE_PHASES.map((p) => p.id);
-    expect(phaseIds).toEqual(['phase1', 'phase2', 'phase3', 'phase4', 'phase5', 'phase6', 'phase7', 'deferred']);
+  it('defines 6 consumer packs covering every flag exactly once', () => {
+    expect(CONSUMER_PACKS.length).toBe(6);
+    expect(CONSUMER_PACKS.map((p) => p.id)).toEqual(['core', 'trip', 'travel', 'pro', 'labs', 'ops']);
 
-    RELEASE_PHASES.forEach((phase) => {
-      expect(phase.flagKeys.length).toBeGreaterThan(0);
-      phase.flagKeys.forEach((key) => {
+    CONSUMER_PACKS.forEach((pack) => {
+      expect(pack.flagKeys.length).toBeGreaterThan(0);
+      pack.flagKeys.forEach((key) => {
         expect(DEFAULT_FEATURE_FLAGS).toHaveProperty(key);
+        expect(FEATURE_FLAGS_META[key].pack).toBe(pack.id);
       });
     });
 
-    const inPhases = RELEASE_PHASES.flatMap((p) => p.flagKeys);
-    expect(inPhases).toHaveLength(new Set(inPhases).size);
-    expect([...inPhases].sort()).toEqual(Object.keys(DEFAULT_FEATURE_FLAGS).sort());
+    const inPacks = CONSUMER_PACKS.flatMap((p) => p.flagKeys);
+    expect(inPacks).toHaveLength(new Set(inPacks).size);
+    expect([...inPacks].sort()).toEqual(Object.keys(DEFAULT_FEATURE_FLAGS).sort());
   });
 
-  it('keeps phase 5 money-loop flags safed until Superadmin arms them', () => {
-    expect(DEFAULT_FEATURE_FLAGS.enableWhatsAppSettlementShare).toBe(false);
-    expect(DEFAULT_FEATURE_FLAGS.enableCloneLastExpense).toBe(false);
-    expect(DEFAULT_FEATURE_FLAGS.enableRememberDefaultSplit).toBe(false);
-    expect(DEFAULT_FEATURE_FLAGS.enableTripCloseout).toBe(false);
-    expect(DEFAULT_FEATURE_FLAGS.enableTripShareLink).toBe(false);
-    expect(DEFAULT_FEATURE_FLAGS.enableHomeNetBalance).toBe(false);
-    expect(DEFAULT_FEATURE_FLAGS.enableCloneTripSquad).toBe(false);
-    expect(DEFAULT_FEATURE_FLAGS.enableSplitwiseImport).toBe(false);
-    expect(DEFAULT_FEATURE_FLAGS.enableSettlementDateNote).toBe(false);
-    expect(DEFAULT_FEATURE_FLAGS.enableCrossTripSearch).toBe(false);
-    expect(DEFAULT_FEATURE_FLAGS.enableContactInvite).toBe(false);
-    const phase5Keys = getPhaseFlagKeys('phase5');
-    expect(phase5Keys).toEqual([
-      'enableSplitwiseImport',
-      'enableWhatsAppSettlementShare',
-      'enableCloneLastExpense',
-      'enableRememberDefaultSplit',
-      'enableSettlementDateNote',
-      'enableSettlementHistory',
-      'enableTripCloseout',
-      'enableCrossTripSearch',
-      'enableSettlementConfirmation',
-      'enableTripShareLink',
-      'enableHomeNetBalance',
-      'enableCloneTripSquad',
-      'enableContactInvite',
-      'enableExpenseQuickFilterChips',
-    'enableSyncQueueInspector',
-    ]);
+  it('defaults Core and Trip ON so first and last minutes are reachable', () => {
+    getPackFlagKeys('core').forEach((key) => {
+      expect(DEFAULT_FEATURE_FLAGS[key]).toBe(true);
+    });
+    getPackFlagKeys('trip').forEach((key) => {
+      expect(DEFAULT_FEATURE_FLAGS[key]).toBe(true);
+    });
+    expect(getPackStatus('core', DEFAULT_FEATURE_FLAGS).status).toBe('armed');
+    expect(getPackStatus('trip', DEFAULT_FEATURE_FLAGS).status).toBe('armed');
   });
 
-  it('keeps phase 6 social chat flags safed by default', () => {
-    expect(DEFAULT_FEATURE_FLAGS.enableChatFirstNav).toBe(false);
-    expect(DEFAULT_FEATURE_FLAGS.enableChatReactionsAndReplies).toBe(false);
-    expect(DEFAULT_FEATURE_FLAGS.enableChatOfflineOutbox).toBe(false);
-    expect(DEFAULT_FEATURE_FLAGS.enableInChatEventCards).toBe(false);
-    expect(DEFAULT_FEATURE_FLAGS.enableChatAttachments).toBe(false);
-    expect(DEFAULT_FEATURE_FLAGS.enableChatVoiceNotes).toBe(false);
-    expect(DEFAULT_FEATURE_FLAGS.enableChatTypingIndicators).toBe(false);
-    expect(DEFAULT_FEATURE_FLAGS.enableChatReadReceipts).toBe(false);
-    expect(DEFAULT_FEATURE_FLAGS.enableTripbotNlExpenses).toBe(false);
-    expect(DEFAULT_FEATURE_FLAGS.enableChatUnreadOnNotes).toBe(false);
-    const phase6Keys = getPhaseFlagKeys('phase6');
-    expect(phase6Keys).toEqual([
-      'enableChatFirstNav',
-      'enableChatReactionsAndReplies',
-      'enableChatOfflineOutbox',
-      'enableInChatEventCards',
-      'enableChatAttachments',
-      'enableChatVoiceNotes',
-      'enableChatTypingIndicators',
-      'enableChatReadReceipts',
-      'enableTripbotNlExpenses',
-      'enableChatUnreadOnNotes',
-    ]);
+  it('keeps Travel chrome capable but route-stops / tiles / data-saver off', () => {
+    expect(DEFAULT_FEATURE_FLAGS.enableTravelPasses).toBe(true);
+    expect(DEFAULT_FEATURE_FLAGS.enableNextUpCapsule).toBe(true);
+    expect(DEFAULT_FEATURE_FLAGS.enableGateScanner).toBe(true);
+    expect(DEFAULT_FEATURE_FLAGS.enableFlightRadar).toBe(true);
+    expect(DEFAULT_FEATURE_FLAGS.enableIcsExport).toBe(true);
+    expect(DEFAULT_FEATURE_FLAGS.enableProgressiveNextUp).toBe(true);
+    expect(DEFAULT_FEATURE_FLAGS.enableRouteStops).toBe(false);
+    expect(DEFAULT_FEATURE_FLAGS.enableOfflineMapTiles).toBe(false);
+    expect(DEFAULT_FEATURE_FLAGS.enableDataSaverMode).toBe(false);
+    expect(getPackStatus('travel', DEFAULT_FEATURE_FLAGS).status).toBe('partial');
   });
 
-  it('keeps phase 7 fintech debts flags safed by default', () => {
-    expect(DEFAULT_FEATURE_FLAGS.enableSimplifyDebtsToggle).toBe(false);
-    const phase7Keys = getPhaseFlagKeys('phase7');
-    expect(phase7Keys).toEqual([
-      'enableSimplifyDebtsToggle',
-    ]);
+  it('keeps Pro, Labs, and Ops safed by default', () => {
+    getPackFlagKeys('pro').forEach((key) => {
+      expect(DEFAULT_FEATURE_FLAGS[key]).toBe(false);
+    });
+    getPackFlagKeys('labs').forEach((key) => {
+      expect(DEFAULT_FEATURE_FLAGS[key]).toBe(false);
+    });
+    getPackFlagKeys('ops').forEach((key) => {
+      expect(DEFAULT_FEATURE_FLAGS[key]).toBe(false);
+    });
+    expect(getPackStatus('pro', DEFAULT_FEATURE_FLAGS).status).toBe('safed');
+    expect(getPackStatus('labs', DEFAULT_FEATURE_FLAGS).status).toBe('safed');
+    expect(getPackStatus('ops', DEFAULT_FEATURE_FLAGS).status).toBe('safed');
   });
 
-  it('keeps UPI, drafts, Notes IA, and progressive Next-Up safed by default', () => {
-    expect(DEFAULT_FEATURE_FLAGS.enableUpiPayments).toBe(false);
-    expect(DEFAULT_FEATURE_FLAGS.enablePersistentExpenseDraft).toBe(false);
-    expect(DEFAULT_FEATURE_FLAGS.enableNotesTalkPackPass).toBe(false);
-    expect(DEFAULT_FEATURE_FLAGS.enableProgressiveNextUp).toBe(false);
-    expect(getPhaseFlagKeys('phase2')).toContain('enableNotesTalkPackPass');
-    expect(getPhaseFlagKeys('phase3')).toContain('enableProgressiveNextUp');
-    const deferredKeys = getPhaseFlagKeys('deferred');
-    expect(deferredKeys).toContain('enableUpiPayments');
+  it('places money-loop flags in Core, not Pro', () => {
+    const core = getPackFlagKeys('core');
+    expect(core).toContain('enableHomeNetBalance');
+    expect(core).toContain('enableCloneTripSquad');
+    expect(core).toContain('enableTripCloseout');
+    expect(core).toContain('enableWhatsAppSettlementShare');
+    expect(core).toContain('enableUpiPayments');
+    expect(core).toContain('enableTripShareLink');
+    expect(core).toContain('enableExplainThisNumber');
+    expect(getPackFlagKeys('pro')).not.toContain('enableUpiPayments');
+    expect(getPackFlagKeys('labs')).toContain('enableChatFirstNav');
+    expect(getPackFlagKeys('labs')).toContain('enableTripbotNlExpenses');
   });
 
-  it('correctly calculates phase status (armed, safed, partial)', () => {
-    const allArmed = {
-      ...DEFAULT_FEATURE_FLAGS,
-      enablePredictiveChips: true,
-      enableRecycleBin: true,
-      enableExplainThisNumber: true,
-      enableStickyDayHeaders: true,
-      enableCategoryColorRings: true,
-      enableCompactLedgerView: true,
-      enableCategoryReorder: true,
-      enableWhatsNewHub: true,
-      enableTabBackHistory: true,
-      enableDeepLinkedTabs: true,
-      enableExtendedUndo: true,
-      enableTripStackSort: true,
-    };
-    expect(getPhaseStatus('phase1', allArmed).status).toBe('armed');
-    expect(getPhaseStatus('phase1', allArmed).activeCount).toBe(12);
+  it('correctly calculates pack status (armed, safed, partial)', () => {
+    const allArmed = { ...DEFAULT_FEATURE_FLAGS };
+    getPackFlagKeys('core').forEach((k) => {
+      allArmed[k] = true;
+    });
+    expect(getPackStatus('core', allArmed).status).toBe('armed');
+    expect(getPackStatus('core', allArmed).activeCount).toBe(18);
 
-    const allSafed = {
-      ...DEFAULT_FEATURE_FLAGS,
-      enablePredictiveChips: false,
-      enableRecycleBin: false,
-      enableExplainThisNumber: false,
-      enableStickyDayHeaders: false,
-      enableCategoryColorRings: false,
-      enableCompactLedgerView: false,
-      enableCategoryReorder: false,
-      enableWhatsNewHub: false,
-      enableTabBackHistory: false,
-      enableDeepLinkedTabs: false,
-      enableExtendedUndo: false,
-    };
-    expect(getPhaseStatus('phase1', allSafed).status).toBe('safed');
-    expect(getPhaseStatus('phase1', allSafed).activeCount).toBe(0);
+    const allSafed = { ...DEFAULT_FEATURE_FLAGS };
+    getPackFlagKeys('core').forEach((k) => {
+      allSafed[k] = false;
+    });
+    expect(getPackStatus('core', allSafed).status).toBe('safed');
+    expect(getPackStatus('core', allSafed).activeCount).toBe(0);
 
-    const partial = { ...DEFAULT_FEATURE_FLAGS, enablePredictiveChips: true, enableRecycleBin: false };
-    expect(getPhaseStatus('phase1', partial).status).toBe('partial');
-    expect(getPhaseStatus('phase1', partial).activeCount).toBe(1);
+    const partial = { ...allSafed, enablePredictiveChips: true };
+    expect(getPackStatus('core', partial).status).toBe('partial');
+    expect(getPackStatus('core', partial).activeCount).toBe(1);
   });
 
   it('strictly respects explicit global flag configurations (armed or safed)', () => {
@@ -228,9 +183,9 @@ describe('featureFlags', () => {
     })).toBe(false);
   });
 
-  it('verifies that every single flag in all phases can be enabled and disabled', () => {
+  it('verifies that every flag in all packs can be enabled and disabled', () => {
     const allFlagKeys = Object.keys(DEFAULT_FEATURE_FLAGS) as (keyof typeof DEFAULT_FEATURE_FLAGS)[];
-    expect(allFlagKeys.length).toBe(86);
+    expect(allFlagKeys.length).toBe(87);
 
     allFlagKeys.forEach((flagKey) => {
       const disabledFlags = { ...DEFAULT_FEATURE_FLAGS, [flagKey]: false };

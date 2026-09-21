@@ -182,6 +182,7 @@ export default function App() {
     archiveTrip,
     deleteTrip,
     closeTrip,
+    recordCloseoutPulse,
     addMember,
     toggleArchiveMember,
     updateMember,
@@ -3230,6 +3231,10 @@ export default function App() {
             }}
             onLockTrip={() => {
               void closeTrip(activeTrip.id, true);
+            }}
+            showCloseoutPulse={isFeatureEnabled('enableCloseoutPulse', { tripId: activeTrip.id, userId: userId || undefined })}
+            onPulse={(answer) => {
+              void recordCloseoutPulse(activeTrip.id, answer);
             }}
             onOpenWrapped={isFeatureEnabled('enableTripWrapped', { tripId: activeTrip.id, userId: userId || undefined }) ? () => setShowTripWrapped(true) : undefined}
             onClose={() => setShowCloseout(false)}

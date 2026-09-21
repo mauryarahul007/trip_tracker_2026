@@ -9,8 +9,10 @@ type Props = {
   currencySymbol: string;
   transfers: Transfer[];
   isFullySettled: boolean;
+  showCloseoutPulse?: boolean;
   onGoToBalances: () => void;
   onLockTrip: () => void;
+  onPulse?: (answer: 'yes' | 'no' | 'skip') => void;
   onOpenWrapped?: () => void;
   onClose: () => void;
 };
@@ -20,13 +22,16 @@ export function TripCloseoutModal({
   currencySymbol,
   transfers,
   isFullySettled,
+  showCloseoutPulse = false,
   onGoToBalances,
   onLockTrip,
+  onPulse,
   onOpenWrapped,
   onClose,
 }: Props) {
   const sheetRef = useRef<HTMLDivElement>(null);
   const [locked, setLocked] = useState(false);
+  const [pulseAsked, setPulseAsked] = useState(false);
   useFocusTrap(sheetRef, true, false, onClose);
   useEscapeKey(true, onClose);
 
@@ -86,6 +91,11 @@ export function TripCloseoutModal({
                 onClick={() => {
                   triggerHaptic('medium');
                   onLockTrip();
+                  if (showCloseoutPulse && onPulse) {
+                    setLocked(true);
+                    setPulseAsked(true);
+                    return;
+                  }
                   if (onOpenWrapped) {
                     onClose();
                     onOpenWrapped();
@@ -98,6 +108,61 @@ export function TripCloseoutModal({
               </button>
               <button type="button" className="secondary-btn" onClick={onClose}>
                 Not now
+              </button>
+            </div>
+          </>
+        ) : pulseAsked ? (
+          <>
+            <p style={{ fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '16px' }}>
+              Would you use Trip Tracker for the next trip with this group?
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <button
+                type="button"
+                className="gradient-btn"
+                onClick={() => {
+                  triggerHaptic('success');
+                  onPulse?.('yes');
+                  if (onOpenWrapped) {
+                    onClose();
+                    onOpenWrapped();
+                    return;
+                  }
+                  setPulseAsked(false);
+                }}
+              >
+                Yes
+              </button>
+              <button
+                type="button"
+                className="secondary-btn"
+                onClick={() => {
+                  triggerHaptic('light');
+                  onPulse?.('no');
+                  if (onOpenWrapped) {
+                    onClose();
+                    onOpenWrapped();
+                    return;
+                  }
+                  setPulseAsked(false);
+                }}
+              >
+                Not this group
+              </button>
+              <button
+                type="button"
+                className="secondary-btn"
+                onClick={() => {
+                  onPulse?.('skip');
+                  if (onOpenWrapped) {
+                    onClose();
+                    onOpenWrapped();
+                    return;
+                  }
+                  setPulseAsked(false);
+                }}
+              >
+                Skip
               </button>
             </div>
           </>

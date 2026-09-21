@@ -21,6 +21,8 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 
 | Shipped | Version | Id | Section |
 |--------|---------|-----|---------|
+| 2026-09-21 | v3.35.0 | FEAT-GROWTH | [Superadmin loop health & growth](#feat-growth--superadmin-loop-health--growth) |
+| 2026-09-21 | v3.35.0 | FEAT-PACKS | [Consumer packs in Ops Deck](#feat-packs--consumer-packs-replace-phases) |
 | 2026-09-21 | v3.34.0 | FEAT-LIGHTLOOP2 | [Money-loop finish](#feat-lightloop2--money-loop-finish) |
 | 2026-09-21 | v3.34.0 | FEAT-LIGHTLOOP | [Light money loop](#feat-lightloop--light-money-loop) |
 | 2026-09-21 | v3.33.0 | FEAT-088 | [Chat money cards stay quiet](#feat-chatlife--chat-money-cards-stay-quiet) |
@@ -52,11 +54,99 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 
 ---
 
+## FEAT-GROWTH — Superadmin loop health & growth
+
+**Commit:** v3.35.0. **Migrations:** `0107_growth_ops_attribution.sql` (pulse, Splitwise count, share views, signup UTM). **ADR:** 216. **Tracker:** FEAT-091.
+
+**Point:** Ops Deck measures the trip loop (first expense, second member, settle, next trip), not 30-day login. Travelers get no new tab. Optional one-tap closeout pulse is Labs, default OFF.
+
+### Flags
+| Behavior | Flag | Default |
+|----------|------|---------|
+| One-tap “use this next trip?” after lock | `enableCloseoutPulse` | OFF (Labs) |
+
+Landing headline / tagline / invite blurb / empty-state copy are **Tools → app_config**, not flags.
+
+### Prep
+1. Superadmin account. Hard-refresh so Command Center and Analytics load this build.
+2. Prefer a fleet that already has trips, expenses, and at least one claimed member.
+3. Dummy local Supabase with no trips will show 0s — that is expected.
+
+### Steps
+1. Superadmin → **Command Center**. A **Loop health** strip shows five percentages: first expense ≤ 10 min, second member, settlement, locked, same-squad next trip ≤ 90d. Ghost-trip count may appear under the strip.
+2. Tap **Open Growth** (or Analytics). Default sub-tab is **Growth**.
+3. Confirm sections: activation funnel, ghost queue, flag used vs armed (proxies labeled), invite/share attribution, trip-type slices, closeout pulse, Splitwise imports, win-back list, signup UTM.
+4. **Tools → Landing & empty-state copy.** Change headline and tagline, Save. Sign out and open `/login` — copy matches. Home empty state uses the empty-trip blurb when you have no trips.
+5. Arm `enableCloseoutPulse` on a trip override. End-date in the past → Close out → Lock. After lock, Yes / Not this group / Skip appear. Answer Yes. Growth closeout pulse increments (or after refresh). Flag OFF: lock still two buttons, no question.
+6. (Optional, needs migration 0107) Open a view-only share link in a private window. Share views on Growth increment. Import a Splitwise CSV on a Pro-armed trip — trips imported / rows imported increment.
+
+### Negative checks
+- Flag `enableCloseoutPulse` OFF → no pulse question after lock.
+- Non-superadmin never sees Command Center / Growth.
+- No DAU, streak, chat transcript, or email-blast UI.
+
+### Pass
+- Loop health is visible without scrolling past spend.
+- Growth tab is derived from trips/expenses/members (proxies are labeled).
+- Landing copy changes without a deploy.
+- Pulse is one tap and absent when the flag is off.
+
+---
+
+## FEAT-PACKS — Consumer packs replace phases
+
+**Commit:** v3.35.0. **ADR:** 215. **Tracker:** FEAT-090.
+
+**Point:** Ops Deck groups flags by who should see them (Core / Trip / Travel / Pro / Labs / Ops), not by engineering Phase 1–7. Core money loop defaults ON in code. Production DB rows still win until Reset or Arm Pack.
+
+### Flags / packs
+
+| Pack | Default in code | What travelers feel |
+|------|-----------------|---------------------|
+| Core (18) | ON | First 60s + last 5 min: add, invite, settle, share, lock, same squad next trip |
+| Trip (11) | ON | Voice, receipt, Notes + quiet chat, packing, FX, map collapsed |
+| Travel (8) | Partial | Passes / Next-Up / scanner / radar ON; route stops / tiles / data-saver OFF. Next-Up chrome hidden until a pass exists |
+| Pro (28) | OFF | Itemized, OCR, analytics, biometric, Splitwise import |
+| Labs (18) | OFF | Chat-first, Tripbot, live location, achievements, closeout pulse |
+| Ops (4) | OFF | Demo seed, snapshot, suggestions, sync inspector |
+
+### Prep
+
+1. Hard-refresh so Ops Deck loads this build.
+2. Superadmin → Ops Deck → Flags. Tab is **Consumer Packs** (not Release Phases).
+3. If production already stored flags, click **Reset to Defaults** on a staging env only — that writes the new pack defaults to `resolved.global`.
+
+### Steps
+
+1. Command Center shows six pack chips (CORE, TRIP, TRAVEL, PRO, LABS, OPS) with Armed / Partial / Safe.
+2. Flags page: six summary cards. Core is expanded. Arm Pack / Safe Pack toggles every flag in that pack.
+3. Search "Why This Amount" — it sits under Core, not Phase 1.
+4. As a traveler after Reset: home can show You owe / You are owed; settle rows can show WhatsApp / UPI / Why?; ended trip can offer New trip with this group.
+5. Expenses tab without a pass: no Next-Up capsule (progressive Next-Up is Core ON).
+6. Itemized split / OCR / analytics / achievements absent until Pro or Labs is armed.
+
+### Flag-OFF / negative
+
+1. Safe Pack on Core → home IOU, clone last, closeout, UPI, share link gone (old first-session).
+2. Arm Pack on Labs → Chat-first and Tripbot appear. Do not leave Labs armed on production.
+3. Safe Pack on Trip → voice / Notes hub / chat under Notes disappear.
+
+### Pass
+
+- No "Phase 1–7" copy in Flags or Command Center.
+- Core + Trip armed by default after Reset.
+- Labs and Pro stay safed.
+- Traveler first-open is not a radar/scanner cockpit. Last 5 min can settle and clone squad without a Pro pack.
+
+---
+
 ## FEAT-LIGHTLOOP — Light money loop
 
 **Commit:** v3.34.0. **ADR:** 214.
 
 **Point:** Faster add, clearer home IOU, settle without leaving chat-you-already-use, next trip with the same people. No Chat-first, Tripbot, or itinerary builder.
+
+**Defaults note:** This section recorded v3.34.0 as all-OFF. From ADR 215 / FEAT-PACKS, these flags sit in **Core** and default **ON** in code. Production stored rows still win until Reset / Arm Pack.
 
 ### Flags
 

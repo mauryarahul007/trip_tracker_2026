@@ -1,8 +1,8 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import type { Member, Group, Expense, Category, TripState, ExpenseLocation, Trip, TripStop, ChecklistItem, TripNote, MemberRole, ItemizedReceiptConfig, TravelPass, TripFxConfig } from '../types';
-import type { FeatureFlagKey, ReleasePhaseId } from '../types/admin';
-import { DEFAULT_FEATURE_FLAGS, isFeatureActive, getPhaseFlagKeys } from '../utils/featureFlags';
+import type { FeatureFlagKey, ConsumerPackId } from '../types/admin';
+import { DEFAULT_FEATURE_FLAGS, isFeatureActive, getPackFlagKeys } from '../utils/featureFlags';
 import { buildAutoGroupName } from '../utils/groupNaming';
 import { copyDefaultSplit } from '../utils/defaultSplit';
 import { getCurrencyDecimals } from '../utils/currency';
@@ -26,6 +26,9 @@ import {
   archiveTripRow,
   freezeTripRow,
   closeTripRow,
+  recordTripCloseoutPulse,
+  recordTripSplitwiseImport,
+  logSuperadminAction,
   fetchMutedTripIds,
   setTripMutedRow,
   deleteTripRow,
@@ -157,7 +160,7 @@ interface TripStore extends TripState {
   lockSuperadmin: () => void;
   setUserIdentity: (userId: string, displayName: string | null) => void;
   setFeatureFlag: (key: FeatureFlagKey, value: boolean) => Promise<void>;
-  setPhaseFlags: (phaseId: ReleasePhaseId, enabled: boolean) => Promise<void>;
+  setPackFlags: (packId: ConsumerPackId, enabled: boolean) => Promise<void>;
   setTripFlagOverride: (tripId: string, key: FeatureFlagKey, value: boolean | null) => Promise<void>;
   setUserFlagOverride: (userId: string, key: FeatureFlagKey, value: boolean | null) => Promise<void>;
   resetFeatureFlags: () => Promise<void>;
@@ -191,6 +194,8 @@ interface TripStore extends TripState {
   archiveTrip: (id: string, archived: boolean) => Promise<void>;
   freezeTrip: (id: string, frozen: boolean) => Promise<void>;
   closeTrip: (id: string, closed: boolean) => Promise<void>;
+  recordCloseoutPulse: (id: string, answer: 'yes' | 'no' | 'skip') => Promise<void>;
+  recordSplitwiseImport: (id: string, count: number) => Promise<void>;
   deleteTrip: (id: string) => Promise<void>;
   duplicateTrip: (tripId: string) => Promise<void>;
 
@@ -954,8 +959,8 @@ export const useTripStore = create<TripStore>()(
       }
     },
 
-    setPhaseFlags: async (phaseId: ReleasePhaseId, enabled: boolean) => {
-      const keys = getPhaseFlagKeys(phaseId);
+    setPackFlags: async (packId: ConsumerPackId, enabled: boolean) => {
+      const keys = getPackFlagKeys(packId);
       if (keys.length === 0) return;
       set((s) => {
         const next = { ...s.featureFlags };
@@ -972,7 +977,7 @@ export const useTripStore = create<TripStore>()(
           keys.map((k) => setFeatureFlagOverride('global', '', k, enabled))
         );
       } catch (e) {
-        console.error('Failed to persist phase feature flags:', e);
+        console.error('Failed to persist pack feature flags:', e);
       }
     },
 
@@ -1766,6 +1771,48 @@ export const useTripStore = create<TripStore>()(
         lastModifiedAt: Date.now(),
         storageError: null,
       }));
+    },
+
+    recordCloseoutPulse: async (id, answer) => {
+      const now = Date.now();
+      set((state) => ({
+        trips: state.trips.map((t) =>
+          t.id === id ? { ...t, closeoutPulse: answer, closeoutPulseAt: now, updatedAt: now } : t
+        ),
+        lastModifiedAt: now,
+      }));
+      if (isMissingSupabaseEnv) return;
+      try {
+        await recordTripCloseoutPulse(id, answer);
+      } catch {
+        /* column may not exist until migration 0107 */
+      }
+      try {
+        await logSuperadminAction(id, 'closeout_pulse', { wouldReuse: answer });
+      } catch {
+        /* audit is best-effort */
+      }
+    },
+
+    recordSplitwiseImport: async (id, count) => {
+      const now = Date.now();
+      set((state) => ({
+        trips: state.trips.map((t) =>
+          t.id === id ? { ...t, splitwiseImportedAt: now, splitwiseImportCount: count, updatedAt: now } : t
+        ),
+        lastModifiedAt: now,
+      }));
+      if (isMissingSupabaseEnv) return;
+      try {
+        await recordTripSplitwiseImport(id, count);
+      } catch {
+        /* column may not exist until migration 0107 */
+      }
+      try {
+        await logSuperadminAction(id, 'splitwise_import', { count });
+      } catch {
+        /* audit is best-effort */
+      }
     },
 
     isTripMuted: (tripId) => get().mutedTripIds.has(tripId),

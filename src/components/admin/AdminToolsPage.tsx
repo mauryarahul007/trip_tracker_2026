@@ -3,6 +3,13 @@ import type { Category, Trip, Expense } from '../../types';
 import { useTripStore } from '../../store/tripStore';
 import { useAuthStore } from '../../store/authStore';
 import { purgeRecycleBinOlderThan, fetchAppFlag, setAppConfigValue } from '../../services/tripApi';
+import {
+  asCopyString,
+  DEFAULT_EMPTY_TRIP_BLURB,
+  DEFAULT_LANDING_HEADLINE,
+  DEFAULT_LANDING_INVITE_BLURB,
+  DEFAULT_LANDING_TAGLINE,
+} from '../../utils/landingCopy';
 import { exportFleetSummaryToCSV } from '../../utils/csvExport';
 import { autoSuggestCategory } from '../../utils/categoryHelper';
 import { CategoryIcon } from '../CategoryIcon';
@@ -81,6 +88,11 @@ export function AdminToolsPage({ categories, trips, expenses, onRefresh, isRefre
   const [activeBackdropUrl, setActiveBackdropUrl] = useState<string>(BACKDROP_PRESETS[0].url);
   const [customBackdropInput, setCustomBackdropInput] = useState<string>('');
   const [isSavingBackdrop, setIsSavingBackdrop] = useState<boolean>(false);
+  const [landingHeadline, setLandingHeadline] = useState(DEFAULT_LANDING_HEADLINE);
+  const [landingTagline, setLandingTagline] = useState(DEFAULT_LANDING_TAGLINE);
+  const [landingInviteBlurb, setLandingInviteBlurb] = useState(DEFAULT_LANDING_INVITE_BLURB);
+  const [emptyTripBlurb, setEmptyTripBlurb] = useState(DEFAULT_EMPTY_TRIP_BLURB);
+  const [isSavingCopy, setIsSavingCopy] = useState(false);
 
   useEffect(() => {
     fetchAppFlag('landing_backdrop_url')
@@ -90,6 +102,18 @@ export function AdminToolsPage({ categories, trips, expenses, onRefresh, isRefre
           setCustomBackdropInput(val.trim());
         }
       })
+      .catch(() => {});
+    fetchAppFlag('landing_headline')
+      .then((v) => setLandingHeadline(asCopyString(v, DEFAULT_LANDING_HEADLINE)))
+      .catch(() => {});
+    fetchAppFlag('landing_tagline')
+      .then((v) => setLandingTagline(asCopyString(v, DEFAULT_LANDING_TAGLINE)))
+      .catch(() => {});
+    fetchAppFlag('landing_invite_blurb')
+      .then((v) => setLandingInviteBlurb(asCopyString(v, DEFAULT_LANDING_INVITE_BLURB)))
+      .catch(() => {});
+    fetchAppFlag('empty_trip_blurb')
+      .then((v) => setEmptyTripBlurb(asCopyString(v, DEFAULT_EMPTY_TRIP_BLURB)))
       .catch(() => {});
   }, []);
 
@@ -285,6 +309,23 @@ export function AdminToolsPage({ categories, trips, expenses, onRefresh, isRefre
       showToast('Failed to reset background config.');
     } finally {
       setIsSavingBackdrop(false);
+    }
+  };
+
+  const handleSaveLandingCopy = async () => {
+    setIsSavingCopy(true);
+    try {
+      await Promise.all([
+        setAppConfigValue('landing_headline', landingHeadline.trim() || DEFAULT_LANDING_HEADLINE),
+        setAppConfigValue('landing_tagline', landingTagline.trim() || DEFAULT_LANDING_TAGLINE),
+        setAppConfigValue('landing_invite_blurb', landingInviteBlurb.trim() || DEFAULT_LANDING_INVITE_BLURB),
+        setAppConfigValue('empty_trip_blurb', emptyTripBlurb.trim() || DEFAULT_EMPTY_TRIP_BLURB),
+      ]);
+      showToast('Landing and empty-state copy saved.');
+    } catch {
+      showToast('Failed to save copy. Check app_config access.');
+    } finally {
+      setIsSavingCopy(false);
     }
   };
 
@@ -579,9 +620,9 @@ export function AdminToolsPage({ categories, trips, expenses, onRefresh, isRefre
                 <div style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '3px 8px', borderRadius: '9999px', background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.2)', fontSize: '10px', color: '#67E8F9', fontFamily: 'var(--font-family-mono)', fontWeight: 700, marginBottom: '4px' }}>
                   🌴 PARADISE EDITION · 2026
                 </div>
-                <h4 style={{ margin: '0 0 2px 0', fontSize: '16px', fontWeight: 800, textShadow: '0 2px 8px rgba(0,0,0,0.8)' }}>Trip Tracker</h4>
+                <h4 style={{ margin: '0 0 2px 0', fontSize: '16px', fontWeight: 800, textShadow: '0 2px 8px rgba(0,0,0,0.8)' }}>{landingHeadline}</h4>
                 <p style={{ margin: '0 0 8px 0', fontSize: '11px', color: '#E2E8F0', opacity: 0.9, textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>
-                  Split costs effortlessly with travel companions anywhere on earth.
+                  {landingTagline}
                 </p>
                 <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                   <div style={{ padding: '4px 8px', borderRadius: '8px', background: 'rgba(15,23,42,0.7)', border: '1px solid rgba(255,255,255,0.15)', fontSize: '10px', display: 'flex', alignItems: 'center', gap: '4px', backdropFilter: 'blur(10px)' }}>
@@ -593,6 +634,34 @@ export function AdminToolsPage({ categories, trips, expenses, onRefresh, isRefre
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+
+        <div className="ops-card">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '10px', marginBottom: '10px' }}>
+            <div>
+              <h3 className="ops-section-title">Landing &amp; empty-state copy</h3>
+              <p className="ops-section-sub">Headline, invite blurb, and home empty state — not a CMS for every string.</p>
+            </div>
+            <button type="button" className="ops-btn ops-btn-primary" disabled={isSavingCopy} onClick={() => void handleSaveLandingCopy()}>
+              {isSavingCopy ? 'Saving…' : 'Save copy'}
+            </button>
+          </div>
+          <div className="ops-form-group">
+            <label className="ops-form-label" htmlFor="landing-headline">Headline</label>
+            <input id="landing-headline" className="ops-input" value={landingHeadline} onChange={(e) => setLandingHeadline(e.target.value)} />
+          </div>
+          <div className="ops-form-group" style={{ marginTop: '8px' }}>
+            <label className="ops-form-label" htmlFor="landing-tagline">Tagline</label>
+            <input id="landing-tagline" className="ops-input" value={landingTagline} onChange={(e) => setLandingTagline(e.target.value)} />
+          </div>
+          <div className="ops-form-group" style={{ marginTop: '8px' }}>
+            <label className="ops-form-label" htmlFor="landing-invite">Invite blurb (under Google)</label>
+            <input id="landing-invite" className="ops-input" value={landingInviteBlurb} onChange={(e) => setLandingInviteBlurb(e.target.value)} />
+          </div>
+          <div className="ops-form-group" style={{ marginTop: '8px' }}>
+            <label className="ops-form-label" htmlFor="empty-trip">Home empty-state (returning traveler)</label>
+            <input id="empty-trip" className="ops-input" value={emptyTripBlurb} onChange={(e) => setEmptyTripBlurb(e.target.value)} />
           </div>
         </div>
 

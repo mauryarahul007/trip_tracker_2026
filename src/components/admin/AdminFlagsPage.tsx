@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { Trip, Member } from '../../types';
-import type { AppConfigKey, FeatureFlagKey, ReleasePhaseId } from '../../types/admin';
-import { FEATURE_FLAGS_META, RELEASE_PHASES, getPhaseStatus } from '../../utils/featureFlags';
+import type { AppConfigKey, FeatureFlagKey, ConsumerPackId } from '../../types/admin';
+import { FEATURE_FLAGS_META, CONSUMER_PACKS, getPackStatus } from '../../utils/featureFlags';
 import { useTripStore } from '../../store/tripStore';
 import { fetchAppConfig, setAppConfigValue } from '../../services/tripApi';
 import { IconCheck, IconAlertCircle, IconRefresh, IconSearch, IconChevronDown, IconChevronUp } from '../Icons';
@@ -46,15 +46,6 @@ function OverridePanel({
 }) {
   const [search, setSearch] = useState('');
   const activeCount = overrides ? Object.keys(overrides).length : 0;
-
-  const phaseGroups: { id: ReleasePhaseId; label: string; icon: string }[] = [
-    { id: 'phase1', label: 'Phase 1: Core Social Splitter', icon: '🚀' },
-    { id: 'phase2', label: 'Phase 2: Active Group Collab', icon: '🎙️' },
-    { id: 'phase3', label: 'Phase 3: Smart Travel Navigator', icon: '🧭' },
-    { id: 'phase4', label: 'Phase 4: FinTech Pro & Global Suite', icon: '💎' },
-    { id: 'phase5', label: 'Phase 5: Switch, Speed & Trust', icon: '🔁' },
-    { id: 'deferred', label: 'Platform Extras & Unphased Features', icon: '⚙️' },
-  ];
 
   const q = search.trim().toLowerCase();
   const filteredEntries = flagEntries.filter(([key, meta]) => {
@@ -114,8 +105,8 @@ function OverridePanel({
             />
           </div>
 
-          {phaseGroups.map((group) => {
-            const groupItems = filteredEntries.filter(([, meta]) => meta.phase === group.id);
+          {CONSUMER_PACKS.map((group) => {
+            const groupItems = filteredEntries.filter(([, meta]) => meta.pack === group.id);
             if (groupItems.length === 0) return null;
 
             return (
@@ -134,7 +125,7 @@ function OverridePanel({
                     justifyContent: 'space-between',
                   }}
                 >
-                  <span>{group.icon} {group.label}</span>
+                  <span>{group.code} · {group.title}</span>
                   <span style={{ fontSize: '10px', opacity: 0.7, fontFamily: 'var(--mono)' }}>{groupItems.length}</span>
                 </div>
 
@@ -216,37 +207,33 @@ export function AdminFlagsPage({ trips, members }: Props) {
   const setUserFlagOverride = useTripStore((s) => s.setUserFlagOverride);
   const resetFeatureFlags = useTripStore((s) => s.resetFeatureFlags);
   const loadAllFeatureFlagOverrides = useTripStore((s) => s.loadAllFeatureFlagOverrides);
-  const setPhaseFlags = useTripStore((s) => s.setPhaseFlags);
+  const setPackFlags = useTripStore((s) => s.setPackFlags);
 
-  type FlagsSubTab = 'phases' | 'overrides' | 'system';
-  const [activeSubTab, setActiveSubTab] = useState<FlagsSubTab>('phases');
+  type FlagsSubTab = 'packs' | 'overrides' | 'system';
+  const [activeSubTab, setActiveSubTab] = useState<FlagsSubTab>('packs');
 
-  const [expandedPhases, setExpandedPhases] = useState<Record<ReleasePhaseId, boolean>>({
-    phase1: false,
-    phase2: false,
-    phase3: false,
-    phase4: false,
-    phase5: false,
-    phase6: false,
-    phase7: false,
-    deferred: false,
+  const [expandedPacks, setExpandedPacks] = useState<Record<ConsumerPackId, boolean>>({
+    core: true,
+    trip: false,
+    travel: false,
+    pro: false,
+    labs: false,
+    ops: false,
   });
 
-  const togglePhaseExpand = (phaseId: ReleasePhaseId) => {
-    setExpandedPhases((prev) => ({ ...prev, [phaseId]: !prev[phaseId] }));
+  const togglePackExpand = (packId: ConsumerPackId) => {
+    setExpandedPacks((prev) => ({ ...prev, [packId]: !prev[packId] }));
   };
 
-  const scrollToPhase = (phaseId: ReleasePhaseId) => {
-    if (activeSubTab !== 'phases') {
-      setActiveSubTab('phases');
+  const scrollToPack = (packId: ConsumerPackId) => {
+    if (activeSubTab !== 'packs') {
+      setActiveSubTab('packs');
     }
-    // Expand the targeted phase so the user can immediately inspect and tune its controls
-    setExpandedPhases((prev) => ({ ...prev, [phaseId]: true }));
+    setExpandedPacks((prev) => ({ ...prev, [packId]: true }));
 
-    // Wait for the DOM to update and render expanded content
     requestAnimationFrame(() => {
       setTimeout(() => {
-        const el = document.getElementById(`phase-section-${phaseId}`);
+        const el = document.getElementById(`pack-section-${packId}`);
         if (el) {
           el.scrollIntoView({ behavior: 'smooth', block: 'start' });
           el.classList.add('ops-phase-target-glow');
@@ -346,8 +333,8 @@ export function AdminFlagsPage({ trips, members }: Props) {
       {/* Page Header */}
       <div className="ops-page-head">
         <div>
-          <h2>Feature Flags &amp; Release Switchboard</h2>
-          <p>Govern progressive customer rollouts (Phases 1–7), device beta overrides, and system access gates.</p>
+          <h2>Feature Flags &amp; Consumer Packs</h2>
+          <p>Arm who sees what: Core (first and last minutes), Trip, Travel, Pro, Labs, Ops. Staging overrides and system gates stay on the other tabs.</p>
         </div>
         <div style={{ display: 'flex', gap: '8px' }}>
           <button type="button" className="ops-btn" disabled={isRefreshing} onClick={() => void handleRefresh()}>
@@ -377,11 +364,11 @@ export function AdminFlagsPage({ trips, members }: Props) {
         <button
           type="button"
           role="tab"
-          aria-selected={activeSubTab === 'phases'}
-          className={`ops-subnav-btn ${activeSubTab === 'phases' ? 'active' : ''}`}
-          onClick={() => setActiveSubTab('phases')}
+          aria-selected={activeSubTab === 'packs'}
+          className={`ops-subnav-btn ${activeSubTab === 'packs' ? 'active' : ''}`}
+          onClick={() => setActiveSubTab('packs')}
         >
-          🚀 Customer Release Phases (1–7)
+          Consumer Packs
         </button>
         <button
           type="button"
@@ -404,29 +391,28 @@ export function AdminFlagsPage({ trips, members }: Props) {
       </div>
 
       {/* VIEW 1: CUSTOMER RELEASE PHASES */}
-      {activeSubTab === 'phases' && (
+      {activeSubTab === 'packs' && (
         <div className="ops-phases-section">
-          {/* Top Summary Bar */}
           <div className="ops-phase-summary-grid">
-            {RELEASE_PHASES.filter((p) => p.id !== 'deferred').map((phase) => {
-              const stats = getPhaseStatus(phase.id, featureFlags);
-              const isExpanded = expandedPhases[phase.id];
+            {CONSUMER_PACKS.map((pack) => {
+              const stats = getPackStatus(pack.id, featureFlags);
+              const isExpanded = expandedPacks[pack.id];
               return (
                 <button
-                  key={phase.id}
+                  key={pack.id}
                   type="button"
                   className={`ops-phase-summary-card ${isExpanded ? 'active' : ''}`}
-                  onClick={() => scrollToPhase(phase.id)}
-                  title={`Jump to ${phase.code}: ${phase.title}`}
-                  aria-label={`Jump to ${phase.code}: ${phase.title}`}
+                  onClick={() => scrollToPack(pack.id)}
+                  title={`Jump to ${pack.code}: ${pack.title}`}
+                  aria-label={`Jump to ${pack.code}: ${pack.title}`}
                 >
                   <div className="ops-phase-summary-top">
-                    <span className="ops-phase-summary-code">{phase.code}</span>
+                    <span className="ops-phase-summary-code">{pack.code}</span>
                     <span className={`ops-state-tag ${stats.status === 'armed' ? 'on' : stats.status === 'partial' ? 'on' : 'off'}`}>
                       {stats.status === 'armed' ? 'ARMED' : stats.status === 'partial' ? 'PARTIAL' : 'SAFED'}
                     </span>
                   </div>
-                  <div className="ops-phase-summary-title">{phase.title}</div>
+                  <div className="ops-phase-summary-title">{pack.title}</div>
                   <div className="ops-phase-summary-count">
                     <span>{stats.activeCount} of {stats.totalCount} active</span>
                     <span className="ops-phase-summary-jump">Jump &darr;</span>
@@ -436,26 +422,25 @@ export function AdminFlagsPage({ trips, members }: Props) {
             })}
           </div>
 
-          {/* Phase Cards */}
-          {RELEASE_PHASES.map((phase) => {
-            const stats = getPhaseStatus(phase.id, featureFlags);
-            const isExpanded = expandedPhases[phase.id];
-            const phaseEntries = phase.flagKeys.map((k) => [k, FEATURE_FLAGS_META[k]] as [FeatureFlagKey, typeof FEATURE_FLAGS_META[FeatureFlagKey]]);
+          {CONSUMER_PACKS.map((pack) => {
+            const stats = getPackStatus(pack.id, featureFlags);
+            const isExpanded = expandedPacks[pack.id];
+            const packEntries = pack.flagKeys.map((k) => [k, FEATURE_FLAGS_META[k]] as [FeatureFlagKey, typeof FEATURE_FLAGS_META[FeatureFlagKey]]);
 
             return (
-              <div key={phase.id} id={`phase-section-${phase.id}`} className={`ops-phase-card ${stats.status}`}>
+              <div key={pack.id} id={`pack-section-${pack.id}`} className={`ops-phase-card ${stats.status}`}>
                 <div className="ops-phase-header">
                   <div className="ops-phase-info">
                     <div className="ops-phase-title-row">
-                      <span className={`ops-phase-badge ${phase.id}`}>{phase.code}</span>
-                      <span className="ops-phase-name">{phase.title}</span>
+                      <span className={`ops-phase-badge ${pack.id}`}>{pack.code}</span>
+                      <span className="ops-phase-name">{pack.title}</span>
                       <span className={`ops-state-tag ${stats.status === 'armed' ? 'on' : stats.status === 'partial' ? 'on' : 'off'}`}>
                         {stats.status === 'armed' ? 'ALL ARMED' : stats.status === 'partial' ? `${stats.activeCount}/${stats.totalCount} ARMED` : 'SAFED (DISABLED)'}
                       </span>
                     </div>
-                    <div className="ops-phase-tagline">{phase.tagline}</div>
+                    <div className="ops-phase-tagline">{pack.tagline}</div>
                     <div className="ops-phase-target">
-                      <strong>Audience:</strong> {phase.targetAudience}
+                      <strong>Audience:</strong> {pack.targetAudience}
                     </div>
                   </div>
 
@@ -465,22 +450,22 @@ export function AdminFlagsPage({ trips, members }: Props) {
                       className="ops-phase-btn arm"
                       style={stats.status === 'armed' ? { opacity: 0.5 } : undefined}
                       onClick={async () => {
-                        await setPhaseFlags(phase.id, true);
-                        showToast(`${phase.code} (${phase.title}): All flags ARMED`);
+                        await setPackFlags(pack.id, true);
+                        showToast(`${pack.code} (${pack.title}): All flags ARMED`);
                       }}
                     >
-                      Arm Phase (Turn On)
+                      Arm Pack (Turn On)
                     </button>
                     <button
                       type="button"
                       className="ops-phase-btn safe"
                       style={stats.status === 'safed' ? { opacity: 0.5 } : undefined}
                       onClick={async () => {
-                        await setPhaseFlags(phase.id, false);
-                        showToast(`${phase.code} (${phase.title}): All flags SAFED`);
+                        await setPackFlags(pack.id, false);
+                        showToast(`${pack.code} (${pack.title}): All flags SAFED`);
                       }}
                     >
-                      Safe Phase (Turn Off)
+                      Safe Pack (Turn Off)
                     </button>
                     <button
                       type="button"
@@ -490,17 +475,16 @@ export function AdminFlagsPage({ trips, members }: Props) {
                         const topEl = document.querySelector('.ops-phase-summary-grid') || document.querySelector('.ops-phases-section');
                         topEl?.scrollIntoView({ behavior: 'smooth', block: 'start' });
                       }}
-                      title="Scroll to phases summary rail"
-                      aria-label="Scroll to phases summary rail"
+                      title="Scroll to packs summary"
+                      aria-label="Scroll to packs summary"
                     >
                       &uarr; Overview
                     </button>
                   </div>
                 </div>
 
-                {/* Instant Visual Feature Badges */}
                 <div className="ops-phase-feature-chips">
-                  {phase.flagKeys.map((k) => {
+                  {pack.flagKeys.map((k) => {
                     const isArmed = featureFlags[k] ?? FEATURE_FLAGS_META[k]?.defaultEnabledForUsers ?? false;
                     return (
                       <span key={k} className={`ops-phase-chip ${isArmed ? 'armed' : 'safed'}`}>
@@ -511,13 +495,12 @@ export function AdminFlagsPage({ trips, members }: Props) {
                   })}
                 </div>
 
-                {/* Collapsible Tuning Controls */}
                 <button
                   type="button"
                   className="ops-phase-toggle-expand"
                   style={{ alignSelf: 'flex-start', marginTop: '6px' }}
-                  onClick={() => togglePhaseExpand(phase.id)}
-                  aria-label={`Toggle ${phase.title} individual flags`}
+                  onClick={() => togglePackExpand(pack.id)}
+                  aria-label={`Toggle ${pack.title} individual flags`}
                 >
                   {isExpanded ? (
                     <>Hide Detailed Flag Relays <IconChevronUp size={12} /></>
@@ -528,7 +511,7 @@ export function AdminFlagsPage({ trips, members }: Props) {
 
                 {isExpanded && (
                   <div className="ops-flag-grid" style={{ marginTop: '8px' }}>
-                    {phaseEntries.map(([key, meta]) => {
+                    {packEntries.map(([key, meta]) => {
                       const isEnabled = featureFlags[key] ?? meta.defaultEnabledForUsers;
                       return (
                         <div key={key} className="ops-card ops-flag-card">
@@ -575,7 +558,7 @@ export function AdminFlagsPage({ trips, members }: Props) {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <div>
             <h3 className="ops-section-title">Granular Scoped Overrides</h3>
-            <p className="ops-section-sub">Test unreleased Phase 3–7 features on specific test trips or VIP user accounts before wide public release.</p>
+            <p className="ops-section-sub">Force Pro or Labs flags on a test trip or one member without arming the pack globally.</p>
           </div>
 
           <div className="ops-override-split">

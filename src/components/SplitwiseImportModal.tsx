@@ -110,6 +110,7 @@ export function SplitwiseImportModal({ tripId, members, categories, onClose }: P
     setStatus('done');
     setProgress(`Imported ${imported} expense${imported === 1 ? '' : 's'}${skipped ? `, skipped ${skipped}` : ''}.`);
     triggerHaptic('success');
+    void useTripStore.getState().recordSplitwiseImport(tripId, imported);
   };
 
   return (
