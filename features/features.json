@@ -1432,10 +1432,10 @@
       "platform": "web"
     },
     "createdAt": "2026-09-21T14:00:25.931Z",
-    "updatedAt": "2026-09-21T14:00:25.931Z",
-    "shippedAt": "2026-09-21T14:00:25.931Z",
+    "updatedAt": "2026-09-21T14:02:41.294Z",
+    "shippedAt": "2026-09-21T14:02:41.294Z",
     "shippedBy": "rahul",
-    "shippedNote": "Shipped in v3.35.0. ADR 215. FEAT-PACKS."
+    "shippedNote": "Shipped in commit dca5349 (v3.35.0). ADR 215. FEAT-PACKS."
   },
   {
     "id": "FEAT-091",
@@ -1448,9 +1448,9 @@
       "platform": "web"
     },
     "createdAt": "2026-09-21T14:00:26.362Z",
-    "updatedAt": "2026-09-21T14:00:26.362Z",
-    "shippedAt": "2026-09-21T14:00:26.362Z",
+    "updatedAt": "2026-09-21T14:02:41.528Z",
+    "shippedAt": "2026-09-21T14:02:41.528Z",
     "shippedBy": "rahul",
-    "shippedNote": "Shipped in v3.35.0. ADR 216. FEAT-GROWTH. Migration 0107."
+    "shippedNote": "Shipped in commit dca5349 (v3.35.0). ADR 216. FEAT-GROWTH. Migration 0107."
   }
 ]

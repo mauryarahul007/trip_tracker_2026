@@ -56,7 +56,7 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 
 ## FEAT-GROWTH — Superadmin loop health & growth
 
-**Commit:** v3.35.0. **Migrations:** `0107_growth_ops_attribution.sql` (pulse, Splitwise count, share views, signup UTM). **ADR:** 216. **Tracker:** FEAT-091.
+**Commit:** dca5349 (v3.35.0). **Migrations:** `0107_growth_ops_attribution.sql` (pulse, Splitwise count, share views, signup UTM). **ADR:** 216. **Tracker:** FEAT-091.
 
 **Point:** Ops Deck measures the trip loop (first expense, second member, settle, next trip), not 30-day login. Travelers get no new tab. Optional one-tap closeout pulse is Labs, default OFF.
 
@@ -95,7 +95,7 @@ Landing headline / tagline / invite blurb / empty-state copy are **Tools → app
 
 ## FEAT-PACKS — Consumer packs replace phases
 
-**Commit:** v3.35.0. **ADR:** 215. **Tracker:** FEAT-090.
+**Commit:** dca5349 (v3.35.0). **ADR:** 215. **Tracker:** FEAT-090.
 
 **Point:** Ops Deck groups flags by who should see them (Core / Trip / Travel / Pro / Labs / Ops), not by engineering Phase 1–7. Core money loop defaults ON in code. Production DB rows still win until Reset or Arm Pack.
 

@@ -139,8 +139,8 @@ CI pipeline for lint, build, and test on push/PR
 | **FEAT-087** | Extended Undo: undo for member delete/archive and recorded settlements (enableExtendedUndo) | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in v3.31.0 behind default-OFF flag. Commit 19d96be. |
 | **FEAT-088** | Quiet trip chat: overlay delete/settle, stack bills, unread on Notes | `ui-ux` | `rahul` | `rahul` | Shipped in v3.33.0; migration 0106 applied to remote. |
 | **FEAT-089** | Light money loop: home IOU, squad clone, Notes Talk/Pack/Pass, closeout recap (Superadmin-gated) | `ui-ux` | `rahul` | `rahul` | Shipped in v3.34.0 behind Superadmin Ops Deck flags (default OFF). ADR 214. FEAT-LIGHTLOOP / FEAT-LIGHTLOOP2. |
-| **FEAT-090** | Consumer packs in Ops Deck (Core/Trip/Travel/Pro/Labs/Ops replace phases) | `admin` | `rahul` | `rahul` | Shipped in v3.35.0. ADR 215. FEAT-PACKS. |
-| **FEAT-091** | Superadmin loop health and growth (funnel, ghosts, attribution, landing copy) | `admin` | `rahul` | `rahul` | Shipped in v3.35.0. ADR 216. FEAT-GROWTH. Migration 0107. |
+| **FEAT-090** | Consumer packs in Ops Deck (Core/Trip/Travel/Pro/Labs/Ops replace phases) | `admin` | `rahul` | `rahul` | Shipped in commit dca5349 (v3.35.0). ADR 215. FEAT-PACKS. |
+| **FEAT-091** | Superadmin loop health and growth (funnel, ghosts, attribution, landing copy) | `admin` | `rahul` | `rahul` | Shipped in commit dca5349 (v3.35.0). ADR 216. FEAT-GROWTH. Migration 0107. |
 
 ---
 
