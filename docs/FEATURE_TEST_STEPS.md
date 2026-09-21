@@ -21,6 +21,7 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 
 | Shipped | Version | Id | Section |
 |--------|---------|-----|---------|
+| unreleased | next | FEAT-GROWTH2 | [Growth: invite conversion, telemetry, passport, nudges](#feat-growth2--invite-conversion-telemetry-passport-nudges) |
 | 2026-09-21 | v3.36.0 | FEAT-093 | [Flag recipes and saved mixes](#feat-presets--flag-recipes-and-saved-mixes) |
 | 2026-09-21 | v3.35.1 | FEAT-092 | [Restore recommended app confirm](#feat-092--restore-recommended-app-confirm) |
 | 2026-09-21 | v3.35.0 | FEAT-GROWTH | [Superadmin loop health & growth](#feat-growth--superadmin-loop-health--growth) |
@@ -1021,6 +1022,59 @@ Two related performance fixes: Ops Deck / Bug Ledger no longer download the whol
 ### Pass
 - Opening Ops Deck or Bugs no longer waits on every expense, audit log, user, and bug diagnostic before the first useful screen.
 - Home stack swipe stays on the finger through the gesture and the commit, with no flash or hitch.
+
+---
+
+## FEAT-GROWTH2 — Invite conversion, telemetry, passport, nudges (unreleased)
+
+**Migrations:** `0108_growth_telemetry_and_lifecycle.sql` (apply first; untested against a live DB when written, so run it on staging). **Edge function:** `send-lifecycle-nudge` (deploy, then one-time Vault secret `lifecycle_nudge_cron_secret` and env `LIFECYCLE_NUDGE_CRON_SECRET`, see migration header).
+
+### Flags
+| Behavior | Flag | Pack | Default |
+|----------|------|------|---------|
+| Invite preview value block + invite signup tag; share-page signup button | `enableInviteConversion` | Core | ON |
+| Traveler Passport card in Settings | `enableTravelerPassport` | Trip | ON |
+| App-open / sync-health events, join-preview counter, Retention + Reliability cards | `enableGrowthTelemetry` | Ops | OFF |
+| Daily lifecycle push job | `enableLifecycleNudges` | Travel | OFF |
+
+### A. Invite & share conversion (`enableInviteConversion`)
+1. Ops Deck → Flags: confirm the flag is ON. Signed out (private window), open a real `/join/<code>`.
+2. Preview shows the trip name, dates, who is on it, a three-line "what you get" block, then Continue with Google. Sign in and claim a name.
+3. Ops Deck → Analytics → Growth → Signup source: `invite` increases by 1 for a **new** account. Known limit: an older account with no stored signup source that signs in through an invite link is also tagged `invite`.
+4. Signed out, open `/share/<token>` from a trip with Share link on: a green "Splitting a trip with friends? Track it free" button shows under the totals. Tap it: lands on `/login`, and after a fresh Google signup the source shows as `trip_share`.
+5. Guests still see no expenses, balances or member list on either page.
+
+**Negative checks:** flag OFF → preview is the plain Google-only screen, share page has no button, no `invite` / `trip_share` source is recorded. An RPC failure also renders the original UI.
+
+### B. Growth telemetry (`enableGrowthTelemetry`)
+1. Flag OFF (default): open the app, then in the DB `select count(*) from app_events` stays 0; Growth cards show "No events yet".
+2. Arm the flag globally. Reload as a normal user: one `app_open` row for today. Reload again: still one.
+3. Go offline, add an expense, stay online-but-blocked (or leave the queue non-empty) for 10+ minutes: one `queue_stuck` row. Force a failing sync: one `sync_fail`. Let a queue drain: one `flush_ok`. Each appears at most once per session.
+4. Open a signed-out `/join/<code>`: that trip's `join_preview_count` goes up by 1. Invalid code: nothing changes and no error is shown.
+5. Ops Deck → Analytics → Growth: Retention table, Trip 1 → trip 2 tile, Sync reliability table and the "Signed-out invite previews" bar all render. Non-superadmin calling the `admin_*` RPCs gets "Superadmin access required".
+6. `props` never contains expense, member or search text (inspect a few rows).
+
+**Negative checks:** flag OFF again → new inserts are rejected by RLS and nothing is sent; join previews stop counting.
+
+### C. Traveler Passport (`enableTravelerPassport`)
+1. Settings shows a "Traveler Passport" card above "This Trip" with Trips, Destinations, Settled, Days away.
+2. Two trips with destination "Goa" and " goa " count as 1 destination. A closed trip adds to Settled. A future trip adds no days.
+3. No currency amounts appear anywhere on the card.
+
+**Negative checks:** flag OFF → no card. No trips → no card.
+
+### D. Lifecycle nudges (`enableLifecycleNudges`)
+1. Flag OFF (default): invoke the function manually with the secret header: response `{"nudged":0,"candidates":0}` and nothing is sent.
+2. Arm globally (or on one test trip). Create a trip older than 24h with no expenses and nobody else joined: the next run sends the organizer "Nobody has joined yet… code XXXXXX" (push if a token is registered, always an in-app "Trip Tip" notification).
+3. Trip starting in 2 days with an empty checklist: packing nudge. A closed trip that ended 30 days ago: next-trip nudge.
+4. Run again: no duplicate for the same trip + kind. A second eligible trip for the same user within 3 days: not sent.
+5. User with Quiet hours active, or Digest mode ON: gets the in-app notification but no push.
+
+**Negative checks:** flag OFF → nothing selected, nothing sent. Settlement reminders are unaffected either way.
+
+### Pass
+- With the two default-OFF flags left OFF, no new data is collected and no push is sent.
+- Every new surface disappears when its flag is turned OFF.
 
 ---
 

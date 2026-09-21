@@ -152,13 +152,14 @@ describe('opsGrowthMetrics', () => {
 
   it('attributes join-code claims and share-link views', () => {
     const trips = [
-      trip({ id: 't1', name: 'Goa', memberIds: ['m1', 'm2'], shareToken: 'tok', shareEnabled: true, shareViewCount: 4 }),
+      trip({ id: 't1', name: 'Goa', memberIds: ['m1', 'm2'], shareToken: 'tok', shareEnabled: true, shareViewCount: 4, joinPreviewCount: 7 }),
       trip({ id: 't2', name: 'Solo', memberIds: ['m3'] }),
     ];
     const attr = computeInviteAttribution(trips, [], members);
     expect(attr.joinCodeClaimed).toBe(1);
     expect(attr.shareLinkCreated).toBe(1);
     expect(attr.shareLinkViews).toBe(4);
+    expect(attr.joinPreviews).toBe(7);
     expect(attr.placeholderMembers).toBe(1);
   });
 

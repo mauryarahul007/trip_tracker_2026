@@ -3,6 +3,7 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import type { Member, Group, Expense, Category, TripState, ExpenseLocation, Trip, TripStop, ChecklistItem, TripNote, MemberRole, ItemizedReceiptConfig, TravelPass, TripFxConfig } from '../types';
 import type { FeatureFlagKey, ConsumerPackId } from '../types/admin';
 import { DEFAULT_FEATURE_FLAGS, isFeatureActive, getPackFlagKeys } from '../utils/featureFlags';
+import { trackGrowthEvent } from '../utils/growthTelemetry';
 import { hydrateFlagSet } from '../utils/flagPresets';
 import { buildAutoGroupName } from '../utils/groupNaming';
 import { copyDefaultSplit } from '../utils/defaultSplit';
@@ -1478,6 +1479,7 @@ export const useTripStore = create<TripStore>()(
           }
         } catch (err) {
           console.error('Offline sync failed for item:', item, err);
+          trackGrowthEvent('sync_fail', { kind: item.type });
           const nonRetryable = isNonRetryableSyncError(err);
           if (nonRetryable) {
             set({ storageError: "A change couldn't be saved — you may not have permission to edit that expense. Ask the trip admin to fix it." });
@@ -1500,6 +1502,7 @@ export const useTripStore = create<TripStore>()(
 
       if (get().syncQueue.length === 0) {
         get().updateLastBackendSyncedAt(Date.now());
+        trackGrowthEvent('flush_ok');
       }
     },
 

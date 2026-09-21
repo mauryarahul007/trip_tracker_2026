@@ -94,7 +94,12 @@ export type FeatureFlagKey =
   | 'enableTripWrapped'
   | 'enableAchievements'
   | 'enableOfflineSnapshot'
-  | 'enableCloseoutPulse';
+  | 'enableCloseoutPulse'
+  // Growth & retention
+  | 'enableInviteConversion'
+  | 'enableTravelerPassport'
+  | 'enableGrowthTelemetry'
+  | 'enableLifecycleNudges';
 
 /** Who the flag is for — Ops Deck groups and arm/safe by pack, not engineering phase. */
 export type ConsumerPackId = 'core' | 'trip' | 'travel' | 'pro' | 'labs' | 'ops';

@@ -106,18 +106,20 @@ export function FlagUsedVsArmedCard({ rows }: { rows: FlagUsageRow[] }) {
   );
 }
 
-export function InviteAttributionCard({ attr }: { attr: InviteAttribution }) {
+export function InviteAttributionCard({ attr, inviteSignups = 0 }: { attr: InviteAttribution; inviteSignups?: number }) {
   const items = [
     { label: 'Join-code claimed', value: attr.joinCodeClaimed },
     { label: 'Share link created', value: attr.shareLinkCreated },
     { label: 'Share link views', value: attr.shareLinkViews },
+    { label: 'Signed-out invite previews', value: attr.joinPreviews },
+    { label: 'New signups via invite link', value: inviteSignups },
     { label: 'WA settle (proxy)', value: attr.waSettleProxy },
     { label: 'Placeholder members', value: attr.placeholderMembers },
   ];
   return (
     <div className="ops-card">
       <h3 className="ops-section-title">Invite &amp; share attribution</h3>
-      <p className="ops-section-sub">Viral loop from existing tokens and claims. Share views need migration 0107; until then the count stays 0.</p>
+      <p className="ops-section-sub">Viral loop from existing tokens and claims. Share views need migration 0107. Invite previews need migration 0108 and Growth Telemetry ON, and count from the day it is armed. Signups via invite need Invite Conversion ON.</p>
       {items.map((item) => (
         <div key={item.label} className="ops-bar-row">
           <span className="ops-bar-label">{item.label}</span>

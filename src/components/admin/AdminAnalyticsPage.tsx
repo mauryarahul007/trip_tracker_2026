@@ -30,6 +30,7 @@ import {
   TripTypeSlicesCard,
   WinBackCard,
 } from './AdminGrowthPanels';
+import { GrowthTelemetryCards } from './AdminTelemetryCards';
 
 interface Props {
   trips: Trip[];
@@ -438,7 +439,7 @@ export function AdminAnalyticsPage({ trips, expenses, members, categories, bugs,
         </div>
         <FlagUsedVsArmedCard rows={flagUsage} />
         <div className="ops-split-row">
-          <InviteAttributionCard attr={inviteAttribution} />
+          <InviteAttributionCard attr={inviteAttribution} inviteSignups={signupSources.find((r) => r.source === 'invite')?.count ?? 0} />
           <TripTypeSlicesCard slices={sliceLoop} />
         </div>
         <div className="ops-split-row">
@@ -449,6 +450,7 @@ export function AdminAnalyticsPage({ trips, expenses, members, categories, bugs,
           <WinBackCard rows={winBack} />
           <SignupSourceCard rows={signupSources} />
         </div>
+        <GrowthTelemetryCards />
       </>
       )}
 

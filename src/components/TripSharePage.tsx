@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { getTripShare, recordTripShareView, type TripShareSummary } from '../services/tripApi';
 import { formatDateRange } from '../utils/dateRange';
+import { fetchPublicGrowthFlags } from '../services/growthApi';
 
 // Public, unauthenticated page -- anyone with the link (no login) lands
 // here. Reads only through the SECURITY DEFINER get_trip_share RPC
@@ -12,6 +13,18 @@ export function TripSharePage() {
   const { token } = useParams<{ token: string }>();
   const [summary, setSummary] = useState<TripShareSummary | null>(null);
   const [status, setStatus] = useState<'loading' | 'ok' | 'ended'>('loading');
+  const [showSignupCta, setShowSignupCta] = useState(false);
+
+  // Flag: enableInviteConversion. Fails closed (no button) if the flag read errors.
+  useEffect(() => {
+    let cancelled = false;
+    fetchPublicGrowthFlags().then((f) => {
+      if (!cancelled) setShowSignupCta(f.enableInviteConversion);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     if (!token) return;
@@ -76,6 +89,15 @@ export function TripSharePage() {
                   .map(([currency, amount]) => `${currency} ${amount.toLocaleString()}`)
                   .join(' · ')}
               </div>
+            )}
+
+            {showSignupCta && (
+              <a
+                href="/login?ref=trip_share&utm_medium=share_page"
+                style={{ display: 'block', marginTop: '18px', padding: '12px', borderRadius: '12px', background: '#0FA98F', color: '#fff', fontWeight: 600, fontSize: '14px', textDecoration: 'none' }}
+              >
+                Splitting a trip with friends? Track it free
+              </a>
             )}
 
             <p style={{ fontSize: '11px', color: '#94A3B8', marginTop: '18px' }}>

@@ -14,6 +14,8 @@ import { IconMembers, IconCheckCircle, IconClock, IconChevronLeft } from './Icon
 import { sendPushNotification } from '../services/pushApi';
 import { TurnstileWidget } from './TurnstileWidget';
 import { formatDateRange } from '../utils/dateRange';
+import { fetchPublicGrowthFlags, recordJoinPreview, type PublicGrowthFlags } from '../services/growthApi';
+import { captureSignupAttribution, loadSignupAttribution } from '../utils/signupAttribution';
 import { buildAutoGroupName } from '../utils/groupNaming';
 import { triggerHaptic } from '../utils/haptics';
 
@@ -50,6 +52,7 @@ export function JoinTripScreen() {
   const [honeypotVal, setHoneypotVal] = useState('');
   const [turnstileToken, setTurnstileToken] = useState<string | undefined>(undefined);
   const [googleBusy, setGoogleBusy] = useState(false);
+  const [growthFlags, setGrowthFlags] = useState<PublicGrowthFlags | null>(null);
   const requiresTurnstile = !!import.meta.env.VITE_TURNSTILE_SITE_KEY;
 
   useEffect(() => {
@@ -79,6 +82,28 @@ export function JoinTripScreen() {
   useEffect(() => {
     if (session) setAuthGate('authed');
   }, [session]);
+
+  // Signed-out invitees cannot read feature flags through the normal
+  // (authenticated-only) resolver, so read the two growth flags publicly.
+  useEffect(() => {
+    if (authGate !== 'anon') return;
+    let cancelled = false;
+    fetchPublicGrowthFlags().then((f) => {
+      if (!cancelled) setGrowthFlags(f);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [authGate]);
+
+  // Tag this visit as an invite signup (survives the Google redirect via
+  // sessionStorage). Never overwrites an earlier utm/ref capture.
+  const inviteConversionOn = growthFlags?.enableInviteConversion === true;
+  useEffect(() => {
+    if (inviteConversionOn && !loadSignupAttribution()) {
+      captureSignupAttribution('ref=invite&utm_medium=join_link');
+    }
+  }, [inviteConversionOn]);
 
   // Countdown timer for rate limit cooldown
   useEffect(() => {
@@ -116,6 +141,7 @@ export function JoinTripScreen() {
       }
       setPreview(lookup);
       setStatus('preview');
+      void recordJoinPreview(code);
     } catch (e) {
       applyLookupError(e);
     }
@@ -348,6 +374,14 @@ export function JoinTripScreen() {
               <IconMembers size={16} className="icon-sm" />
               <p style={{ color: 'var(--text-secondary)', fontSize: '14px', margin: 0 }}>{whoLabel}</p>
             </div>
+
+            {inviteConversionOn && (
+              <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 16px', color: 'var(--text-secondary)', fontSize: '13px', display: 'grid', gap: '6px' }}>
+                <li>✓ Every expense in one place, even without signal</li>
+                <li>✓ See exactly who owes whom, settle by UPI or WhatsApp</li>
+                <li>✓ Your share is worked out for you</li>
+              </ul>
+            )}
 
             <p style={{ color: 'var(--text-secondary)', fontSize: '13px', marginBottom: '16px' }}>
               Sign in with Google to pick your name and join. Expenses and balances stay hidden until you're in.

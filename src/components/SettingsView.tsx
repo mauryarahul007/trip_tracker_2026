@@ -26,6 +26,7 @@ import {
 } from './Icons';
 import { SettingsCell } from './common/SettingsCell';
 import { SettingsSection } from './common/SettingsSection';
+import { computeTravelerPassport } from '../utils/travelerPassport';
 import { useTripStore } from '../store/tripStore';
 import { useDataSaverEnabled, setDataSaverEnabled } from '../hooks/useDataSaverEnabled';
 import { useCompactLedgerView, setCompactLedgerView } from '../hooks/useCompactLedgerView';
@@ -1266,6 +1267,28 @@ export function SettingsView({
               </div>
             </div>
           )}
+
+        {isFeatureEnabled('enableTravelerPassport', { userId: userId || undefined }) && trips.length > 0 && (() => {
+          const passport = computeTravelerPassport(trips);
+          const stats: [number, string][] = [
+            [passport.trips, passport.trips === 1 ? 'Trip' : 'Trips'],
+            [passport.destinations, passport.destinations === 1 ? 'Destination' : 'Destinations'],
+            [passport.tripsSettled, 'Settled'],
+            [passport.daysOnTheRoad, 'Days away'],
+          ];
+          return (
+            <SettingsSection title="Traveler Passport">
+              <div className="settings-trip-hero-stats" style={{ padding: '12px' }}>
+                {stats.map(([value, label]) => (
+                  <div key={label} className="settings-trip-hero-stat">
+                    <span className="settings-trip-hero-stat-value">{value}</span>
+                    <span className="settings-trip-hero-stat-label">{label}</span>
+                  </div>
+                ))}
+              </div>
+            </SettingsSection>
+          );
+        })()}
 
         <SettingsSection title="This Trip">
 

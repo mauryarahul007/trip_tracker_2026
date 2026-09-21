@@ -138,6 +138,7 @@ export interface Trip {
   shareEnabled?: boolean; // whether the read-only link currently resolves
   shareExpiresAt?: string | null; // ISO timestamp; link stops resolving after this
   shareViewCount?: number; // public share-page loads (Ops growth attribution)
+  joinPreviewCount?: number; // signed-out invite previews (needs Growth Telemetry ON)
   closeoutPulse?: 'yes' | 'no' | 'skip' | null;
   closeoutPulseAt?: number | null;
   splitwiseImportedAt?: number | null;

@@ -103,6 +103,7 @@ const TripChatPanel = lazy(lazyImport(() =>
   import('./components/TripChatPanel').then((m) => ({ default: m.TripChatPanel }))
 ));
 import { withViewTransition } from './utils/viewTransition';
+import { configureGrowthTelemetry } from './utils/growthTelemetry';
 // CommandPalette (Ctrl+K) is only needed once the user opens it -- code-split
 // like the other secondary modals so it doesn't ship in the initial bundle.
 const CommandPalette = lazy(lazyImport(() =>
@@ -255,6 +256,11 @@ export default function App() {
   useEffect(() => {
     void syncOfflineMapTilesFlag(isOfflineMapTilesEnabled);
   }, [isOfflineMapTilesEnabled]);
+  const isGrowthTelemetryEnabled = isFeatureEnabled('enableGrowthTelemetry', { userId: userId || undefined });
+  useEffect(() => {
+    configureGrowthTelemetry(isGrowthTelemetryEnabled, userId, () => useTripStore.getState().syncQueue.length);
+    return () => configureGrowthTelemetry(false, null, () => 0);
+  }, [isGrowthTelemetryEnabled, userId]);
   // Notes hub also hosts Chat when trip chat is on and chat-first nav is off
   // (otherwise Chat would have nowhere to live if Notes + Passes are both off).
   const hasNotesOrPassesTab =

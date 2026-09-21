@@ -424,3 +424,5 @@ enabled = true
 verify_jwt = false
 [functions.send-weather-nudge]
 verify_jwt = false
+[functions.send-lifecycle-nudge]
+verify_jwt = false

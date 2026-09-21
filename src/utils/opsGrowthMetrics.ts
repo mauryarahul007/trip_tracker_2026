@@ -60,6 +60,7 @@ export interface InviteAttribution {
   joinCodeClaimed: number;
   shareLinkCreated: number;
   shareLinkViews: number;
+  joinPreviews: number;
   waSettleProxy: number;
   placeholderMembers: number;
   tripCount: number;
@@ -434,6 +435,7 @@ export function computeInviteAttribution(
     joinCodeClaimed: pool.filter((t) => claimedMemberCount(t, members) >= 1).length,
     shareLinkCreated: pool.filter((t) => Boolean(t.shareToken) || t.shareEnabled).length,
     shareLinkViews: pool.reduce((sum, t) => sum + (t.shareViewCount ?? 0), 0),
+    joinPreviews: pool.reduce((sum, t) => sum + (t.joinPreviewCount ?? 0), 0),
     waSettleProxy: pool.filter((t) => tripHasSettle(t, expenses)).length,
     placeholderMembers: pool.filter((t) => t.memberIds.length > claimedMemberCount(t, members)).length,
   };

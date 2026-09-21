@@ -3887,3 +3887,20 @@ This document logs all meaningful technical decisions, library choices, design p
 
 ---
 
+
+---
+
+## 218. Growth telemetry, invite conversion, traveler passport, lifecycle nudges (v3.37.0)
+* **Context:** Ops Growth was computed only from trips, expenses and audit logs, so retention, sync health and the invite funnel were invisible. Signed-out invitees and share-page viewers had no attribution or call to action. Regular sign-in is Google-only, so the invite preview is the whole pre-signup funnel.
+* **Decision:** Ship four flag-gated pieces in existing packs: `enableInviteConversion` (Core, ON), `enableTravelerPassport` (Trip, ON), `enableGrowthTelemetry` (Ops, OFF), `enableLifecycleNudges` (Travel, OFF). Migration `0108` adds `app_events` (insert-only RLS gated by the flag), `record_join_preview`, `get_public_growth_flags` (anon-readable, two flags only), superadmin aggregates (`admin_retention_cohorts`, `admin_repeat_creator_rate`, `admin_reliability_summary`) and the lifecycle candidate/log/cron plumbing. New edge function `send-lifecycle-nudge` (`verify_jwt = false`, secret-authenticated) follows the weather-nudge shape.
+* **Pattern/Implementation:**
+  - `src/utils/growthTelemetry.ts`: one `app_open` per UTC day, `sync_fail` / `queue_stuck` / `flush_ok` once per session, no content in props.
+  - Invite preview tags the visit via the existing `captureSignupAttribution('ref=invite')`; share page button links to `/login?ref=trip_share`. Both fail closed to the original UI if the public flag read errors.
+  - Passport is computed on the device from `trips` (`src/utils/travelerPassport.ts`); never sums money across currencies.
+  - Nudges: invite reminder, packing reminder, next-trip prompt; max one per user per 3 days, quiet hours and digest-mode users get no FCM push.
+* **Trade-offs Accepted:**
+  - `invite` signup source also tags older accounts with no stored source that sign in through an invite link.
+  - Telemetry data starts from the day the flag is armed; retention cohorts exclude earlier signups.
+  - Lifecycle date windows are exact, so a missed cron day skips that nudge.
+  - Email sign-in fallback for invitees was dropped (would need new auth). Query-text logging (#13) was dropped.
+  - Migration 0108 and the edge function were written without a local Postgres and were not exercised before this commit.

@@ -24,6 +24,7 @@ export const CONSUMER_PACKS: ConsumerPackDef[] = [
       'enableWhatsAppSettlementShare',
       'enableUpiPayments',
       'enableTripShareLink',
+      'enableInviteConversion',
       'enableExtendedUndo',
       'enableContactInvite',
       'enableNotesTalkPackPass',
@@ -50,6 +51,7 @@ export const CONSUMER_PACKS: ConsumerPackDef[] = [
       'enableAdvancedSplits',
       'enableDeepLinkedTabs',
       'enableMapCollapsedByDefault',
+      'enableTravelerPassport',
     ],
   },
   {
@@ -69,6 +71,7 @@ export const CONSUMER_PACKS: ConsumerPackDef[] = [
       'enableRouteStops',
       'enableOfflineMapTiles',
       'enableDataSaverMode',
+      'enableLifecycleNudges',
     ],
   },
   {
@@ -152,6 +155,7 @@ export const CONSUMER_PACKS: ConsumerPackDef[] = [
       'enableFeatureSuggestions',
       'enableDemoSeeding',
       'enableSyncQueueInspector',
+      'enableGrowthTelemetry',
     ],
   },
 ];
@@ -871,6 +875,42 @@ export const FEATURE_FLAGS_META: Record<FeatureFlagKey, FeatureFlagMeta> = {
     pack: 'labs',
     defaultEnabledForUsers: false,
   },
+  enableInviteConversion: {
+    key: 'enableInviteConversion',
+    label: 'Invite & Share Signup Conversion',
+    description:
+      'ON: the invite preview screen adds a short "what you get" block and tags the visitor as an invite signup, and the public share page shows a "Track your own trip" button tagged as a share-page signup. OFF: preview is the plain Google-only screen and the share page has no button and no signup tag. Does not change what a guest can see (still no expenses or balances), who can join, or how sign-in works. Join-preview counts on Growth need Growth Telemetry ON.',
+    category: 'core',
+    pack: 'core',
+    defaultEnabledForUsers: true,
+  },
+  enableTravelerPassport: {
+    key: 'enableTravelerPassport',
+    label: 'Traveler Passport',
+    description:
+      'ON: Settings shows a Traveler Passport card with lifetime trips, destinations visited, trips settled and trips with a group, worked out from the trips already on the device. OFF: the card is absent. Does not sync a separate profile, never adds money across currencies, and has no share button.',
+    category: 'core',
+    pack: 'trip',
+    defaultEnabledForUsers: true,
+  },
+  enableGrowthTelemetry: {
+    key: 'enableGrowthTelemetry',
+    label: 'Growth Telemetry (Retention & Reliability)',
+    description:
+      'ON: signed-in apps send one app-open event per day plus sync-health events (queue stuck, sync failed, queue flushed), and join-code previews are counted per trip. These feed the Retention, Reliability and Invite funnel cards on Ops Deck Analytics. OFF: nothing is sent or counted and those cards stay empty. Travelers see nothing either way, and no expense, member name or search text is ever sent. Data starts from the day this is armed.',
+    category: 'admin',
+    pack: 'ops',
+    defaultEnabledForUsers: false,
+  },
+  enableLifecycleNudges: {
+    key: 'enableLifecycleNudges',
+    label: 'Lifecycle Nudge Pushes',
+    description:
+      'ON (global or per-trip): a daily job may push the trip organizer at most once per 3 days: invite reminder for a trip over 24h old with no expenses and nobody else joined, packing reminder 2 days before start when the checklist is empty, and a plan-the-next-trip prompt 30 days after closeout. OFF: the job selects nothing and sends nothing. Push only, no email; does not replace settlement reminders. Quiet hours and notification opt-outs still apply.',
+    category: 'collab',
+    pack: 'travel',
+    defaultEnabledForUsers: false,
+  },
 };
 
 export const DEFAULT_FEATURE_FLAGS: Record<FeatureFlagKey, boolean> = {
@@ -889,6 +929,7 @@ export const DEFAULT_FEATURE_FLAGS: Record<FeatureFlagKey, boolean> = {
   enableWhatsAppSettlementShare: true,
   enableUpiPayments: true,
   enableTripShareLink: true,
+  enableInviteConversion: true,
   enableExtendedUndo: true,
   enableContactInvite: true,
   enableNotesTalkPackPass: true,
@@ -906,6 +947,7 @@ export const DEFAULT_FEATURE_FLAGS: Record<FeatureFlagKey, boolean> = {
   enableAdvancedSplits: true,
   enableDeepLinkedTabs: true,
   enableMapCollapsedByDefault: true,
+  enableTravelerPassport: true,
 
   // Travel — pass holders (chrome gated; route stops / tiles / data-saver OFF)
   enableTravelPasses: true,
@@ -916,6 +958,7 @@ export const DEFAULT_FEATURE_FLAGS: Record<FeatureFlagKey, boolean> = {
   enableRouteStops: false,
   enableOfflineMapTiles: false,
   enableDataSaverMode: false,
+  enableLifecycleNudges: false,
 
   // Pro — power money (default OFF)
   enableItemizedSplit: false,
@@ -972,6 +1015,7 @@ export const DEFAULT_FEATURE_FLAGS: Record<FeatureFlagKey, boolean> = {
   enableFeatureSuggestions: false,
   enableDemoSeeding: false,
   enableSyncQueueInspector: false,
+  enableGrowthTelemetry: false,
 };
 
 export function getPackFlagKeys(packId: ConsumerPackId): FeatureFlagKey[] {

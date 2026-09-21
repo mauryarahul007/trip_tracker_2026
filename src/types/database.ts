@@ -877,6 +877,32 @@ export interface Database {
         Args: { p_token: string };
         Returns: number;
       };
+      get_public_growth_flags: {
+        Args: Record<string, never>;
+        Returns: { enableInviteConversion: boolean; enableGrowthTelemetry: boolean };
+      };
+      record_join_preview: {
+        Args: { p_code: string };
+        Returns: void;
+      };
+      admin_retention_cohorts: {
+        Args: { p_weeks?: number };
+        Returns: {
+          cohort_week: string;
+          cohort_size: number;
+          d1_eligible: number; d1_retained: number;
+          d7_eligible: number; d7_retained: number;
+          d30_eligible: number; d30_retained: number;
+        }[];
+      };
+      admin_repeat_creator_rate: {
+        Args: Record<string, never>;
+        Returns: { creators_eligible: number; repeat_creators: number }[];
+      };
+      admin_reliability_summary: {
+        Args: { p_days?: number };
+        Returns: { platform: string; app_version: string; event: string; events: number; users: number }[];
+      };
       submit_feature_request: {
         Args: {
           p_title: string;

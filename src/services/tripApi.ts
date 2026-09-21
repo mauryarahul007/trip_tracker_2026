@@ -38,6 +38,7 @@ function mapTrip(row: TripRow, memberIds: string[], groupIds: string[]): Trip {
     shareEnabled: Boolean((row as any).share_enabled),
     shareExpiresAt: (row as any).share_expires_at ?? null,
     shareViewCount: Number((row as any).share_view_count ?? 0) || 0,
+    joinPreviewCount: Number((row as any).join_preview_count ?? 0) || 0,
     closeoutPulse: ((row as any).closeout_pulse as Trip['closeoutPulse']) ?? null,
     closeoutPulseAt: (row as any).closeout_pulse_at ? new Date((row as any).closeout_pulse_at).getTime() : null,
     splitwiseImportedAt: (row as any).splitwise_imported_at ? new Date((row as any).splitwise_imported_at).getTime() : null,

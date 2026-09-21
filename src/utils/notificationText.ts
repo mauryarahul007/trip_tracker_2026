@@ -14,6 +14,7 @@ export const NOTIFICATION_TYPE_HEADLINES: Record<string, string> = {
   settle: 'Settlement Updated',
   settlement_confirmation_requested: 'Confirm Settlement',
   weather_itinerary_nudge: 'Weather Alert',
+  lifecycle_nudge: 'Trip Tip',
   chat_message: 'New Message',
 };
 
