@@ -1464,9 +1464,9 @@
       "platform": "web"
     },
     "createdAt": "2026-09-21T14:23:04.738Z",
-    "updatedAt": "2026-09-21T14:23:04.738Z",
-    "shippedAt": "2026-09-21T14:23:04.738Z",
+    "updatedAt": "2026-09-21T14:24:42.605Z",
+    "shippedAt": "2026-09-21T14:24:42.604Z",
     "shippedBy": "rahul",
-    "shippedNote": "Shipped in v3.35.1."
+    "shippedNote": "Shipped in commit aee182f (v3.35.1)."
   }
 ]

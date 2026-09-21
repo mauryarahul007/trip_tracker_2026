@@ -57,7 +57,7 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 
 ## FEAT-092 — Restore recommended app confirm
 
-**Commit:** v3.35.1. **Tracker:** FEAT-092. Reuses pack defaults from FEAT-PACKS / ADR 215. No new traveler flag.
+**Commit:** aee182f (v3.35.1). **Tracker:** FEAT-092. Reuses pack defaults from FEAT-PACKS / ADR 215. No new traveler flag.
 
 **Point:** Superadmin Flags no longer silently resets. **Restore recommended app** confirms Core + Trip on, Travel capable, Pro/Labs/Ops off. This is not all flags on.
 
