@@ -1484,5 +1484,21 @@
     "shippedAt": "2026-09-21T14:45:00.436Z",
     "shippedBy": "rahul",
     "shippedNote": "Shipped in commit 2a704e0 (v3.36.0). ADR 217."
+  },
+  {
+    "id": "FEAT-094",
+    "title": "Growth: invite conversion, telemetry, traveler passport, lifecycle nudges",
+    "description": "Four flag-gated pieces: enableInviteConversion (Core, ON), enableTravelerPassport (Trip, ON), enableGrowthTelemetry (Ops, OFF), enableLifecycleNudges (Travel, OFF). Migration 0108 plus send-lifecycle-nudge edge function. Ops Deck Growth gains retention cohorts, trip 1 to trip 2 rate, sync reliability and invite preview/signup counts.",
+    "category": "analytics",
+    "status": "shipped",
+    "requestedBy": "rahul",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-09-21T18:36:17.017Z",
+    "updatedAt": "2026-09-21T18:36:23.831Z",
+    "shippedBy": "rahul",
+    "shippedAt": "2026-09-21T18:36:23.831Z",
+    "shippedNote": "Shipped in commit 09e8785 (v3.37.0). ADR 218. Migration 0108 not applied to the live project at push time."
   }
 ]

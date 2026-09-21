@@ -21,7 +21,7 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 
 | Shipped | Version | Id | Section |
 |--------|---------|-----|---------|
-| unreleased | next | FEAT-GROWTH2 | [Growth: invite conversion, telemetry, passport, nudges](#feat-growth2--invite-conversion-telemetry-passport-nudges) |
+| 2026-09-22 | v3.37.0 | FEAT-GROWTH2 | [Growth: invite conversion, telemetry, passport, nudges](#feat-growth2--invite-conversion-telemetry-passport-nudges) |
 | 2026-09-21 | v3.36.0 | FEAT-093 | [Flag recipes and saved mixes](#feat-presets--flag-recipes-and-saved-mixes) |
 | 2026-09-21 | v3.35.1 | FEAT-092 | [Restore recommended app confirm](#feat-092--restore-recommended-app-confirm) |
 | 2026-09-21 | v3.35.0 | FEAT-GROWTH | [Superadmin loop health & growth](#feat-growth--superadmin-loop-health--growth) |
@@ -1025,9 +1025,9 @@ Two related performance fixes: Ops Deck / Bug Ledger no longer download the whol
 
 ---
 
-## FEAT-GROWTH2 — Invite conversion, telemetry, passport, nudges (unreleased)
+## FEAT-GROWTH2 — Invite conversion, telemetry, passport, nudges (v3.37.0)
 
-**Migrations:** `0108_growth_telemetry_and_lifecycle.sql` (apply first; untested against a live DB when written, so run it on staging). **Edge function:** `send-lifecycle-nudge` (deploy, then one-time Vault secret `lifecycle_nudge_cron_secret` and env `LIFECYCLE_NUDGE_CRON_SECRET`, see migration header).
+**Commit:** `09e8785`. **Migrations:** `0108_growth_telemetry_and_lifecycle.sql` (apply first; untested against a live DB when written, so run it on staging). **Edge function:** `send-lifecycle-nudge` (deploy, then one-time Vault secret `lifecycle_nudge_cron_secret` and env `LIFECYCLE_NUDGE_CRON_SECRET`, see migration header).
 
 ### Flags
 | Behavior | Flag | Pack | Default |
