@@ -143,7 +143,7 @@ CI pipeline for lint, build, and test on push/PR
 | **FEAT-091** | Superadmin loop health and growth (funnel, ghosts, attribution, landing copy) | `admin` | `rahul` | `rahul` | Shipped in commit dca5349 (v3.35.0). ADR 216. FEAT-GROWTH. Migration 0107. |
 | **FEAT-092** | Restore recommended app confirm on Flags (Core+Trip, not all flags) | `admin` | `rahul` | `rahul` | Shipped in commit aee182f (v3.35.1). |
 | **FEAT-093** | Flag recipes and saved mixes on Ops Deck Flags | `admin` | `rahul` | `rahul` | Shipped in commit 2a704e0 (v3.36.0). ADR 217. |
-| **FEAT-094** | Growth: invite conversion, telemetry, traveler passport, lifecycle nudges | `analytics` | `rahul` | `rahul` | Shipped in commit 09e8785 (v3.37.0). ADR 218. Migration 0108 not applied to the live project at push time. |
+| **FEAT-094** | Growth: invite conversion, telemetry, traveler passport, lifecycle nudges | `analytics` | `rahul` | `rahul` | Shipped in commit 09e8785 (v3.37.0). ADR 218. Migration 0108 applied to the live project on 2026-09-22 (after the code push). Edge function send-lifecycle-nudge not yet deployed. |
 
 ---
 

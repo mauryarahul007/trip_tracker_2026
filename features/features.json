@@ -1496,9 +1496,9 @@
       "platform": "web"
     },
     "createdAt": "2026-09-21T18:36:17.017Z",
-    "updatedAt": "2026-09-21T18:36:23.831Z",
+    "updatedAt": "2026-09-21T18:40:03.951Z",
     "shippedBy": "rahul",
-    "shippedAt": "2026-09-21T18:36:23.831Z",
-    "shippedNote": "Shipped in commit 09e8785 (v3.37.0). ADR 218. Migration 0108 not applied to the live project at push time."
+    "shippedAt": "2026-09-21T18:40:03.951Z",
+    "shippedNote": "Shipped in commit 09e8785 (v3.37.0). ADR 218. Migration 0108 applied to the live project on 2026-09-22 (after the code push). Edge function send-lifecycle-nudge not yet deployed."
   }
 ]

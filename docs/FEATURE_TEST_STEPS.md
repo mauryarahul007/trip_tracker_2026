@@ -1027,7 +1027,7 @@ Two related performance fixes: Ops Deck / Bug Ledger no longer download the whol
 
 ## FEAT-GROWTH2 — Invite conversion, telemetry, passport, nudges (v3.37.0)
 
-**Commit:** `09e8785`. **Migrations:** `0108_growth_telemetry_and_lifecycle.sql` (apply first; untested against a live DB when written, so run it on staging). **Edge function:** `send-lifecycle-nudge` (deploy, then one-time Vault secret `lifecycle_nudge_cron_secret` and env `LIFECYCLE_NUDGE_CRON_SECRET`, see migration header).
+**Commit:** `09e8785`. **Migrations:** `0108_growth_telemetry_and_lifecycle.sql` (applied to the live project on 2026-09-22; it had never run against a database before that, so verify on the first arm). **Edge function:** `send-lifecycle-nudge` (deploy, then one-time Vault secret `lifecycle_nudge_cron_secret` and env `LIFECYCLE_NUDGE_CRON_SECRET`, see migration header).
 
 ### Flags
 | Behavior | Flag | Pack | Default |

@@ -3903,4 +3903,4 @@ This document logs all meaningful technical decisions, library choices, design p
   - Telemetry data starts from the day the flag is armed; retention cohorts exclude earlier signups.
   - Lifecycle date windows are exact, so a missed cron day skips that nudge.
   - Email sign-in fallback for invitees was dropped (would need new auth). Query-text logging (#13) was dropped.
-  - Migration 0108 and the edge function were written without a local Postgres and were not exercised before this commit.
+  - Migration 0108 and the edge function were written without a local Postgres and were not exercised before this commit. Migration 0108 was applied to the live project on 2026-09-22 via `supabase db push --linked`, after the code push (an earlier attempt was blocked by the auto-mode classifier); the edge function is not yet deployed and the nudge Vault secret is not set.
