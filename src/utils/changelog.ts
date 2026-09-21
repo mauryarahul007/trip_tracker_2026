@@ -9,6 +9,13 @@ export interface ChangelogEntry {
 // parsed from decisions.md/BUGS.md: those are prose for developers, not client data.
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: '3.35.1',
+    date: '2026-09-21',
+    changes: [
+      'Ops Deck Flags now asks before restoring the recommended app: Core and Trip on, Travel capable, Pro and Labs off — not every flag.',
+    ],
+  },
+  {
     version: '3.35.0',
     date: '2026-09-21',
     changes: [

@@ -664,7 +664,9 @@ export function AdminPortalLayout({
               isRefreshing={isRefreshing}
             />
           )}
-          {activeTab === 'flags' && <AdminFlagsPage trips={trips} members={members} />}
+          {activeTab === 'flags' && (
+            <AdminFlagsPage trips={trips} members={members} onRequestConfirm={setConfirmRequest} />
+          )}
           {activeTab === 'analytics' && (
             <AdminAnalyticsPage
               trips={trips}

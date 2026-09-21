@@ -21,6 +21,7 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 
 | Shipped | Version | Id | Section |
 |--------|---------|-----|---------|
+| 2026-09-21 | v3.35.1 | FEAT-092 | [Restore recommended app confirm](#feat-092--restore-recommended-app-confirm) |
 | 2026-09-21 | v3.35.0 | FEAT-GROWTH | [Superadmin loop health & growth](#feat-growth--superadmin-loop-health--growth) |
 | 2026-09-21 | v3.35.0 | FEAT-PACKS | [Consumer packs in Ops Deck](#feat-packs--consumer-packs-replace-phases) |
 | 2026-09-21 | v3.34.0 | FEAT-LIGHTLOOP2 | [Money-loop finish](#feat-lightloop2--money-loop-finish) |
@@ -51,6 +52,33 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 3. Prefer **two browsers / accounts** on the same trip for realtime checks (A = you, B = peer).
 4. Open **Superadmin → Ops Deck → Flags**. Prefer **trip overrides** for safe testing.
 5. For each feature: confirm **flag OFF → feature absent**, then arm the flag and retest.
+
+---
+
+## FEAT-092 — Restore recommended app confirm
+
+**Commit:** v3.35.1. **Tracker:** FEAT-092. Reuses pack defaults from FEAT-PACKS / ADR 215. No new traveler flag.
+
+**Point:** Superadmin Flags no longer silently resets. **Restore recommended app** confirms Core + Trip on, Travel capable, Pro/Labs/Ops off. This is not all flags on.
+
+### Flags
+None new. Same `DEFAULT_FEATURE_FLAGS` as FEAT-PACKS.
+
+### Prep
+1. Superadmin → Ops Deck → Flags. Hard-refresh so the header shows **Restore recommended app**.
+
+### Steps
+1. Header button is **Restore recommended app**, not Reset to Defaults.
+2. Click it. Dialog lists Core/Trip on, Travel capable (route stops off), Pro/Labs/Ops off.
+3. **Cancel** — pack chips and toggles unchanged.
+4. Click again → **Restore recommended**. Toast: Core and Trip on, Pro and Labs off. Core/Trip Armed, Travel Partial, Pro/Labs/Ops Safe.
+
+### Negative checks
+- Confirm does not arm Pro, Labs, or route stops.
+- Arm Pack on Travel still turns route stops on (different from Restore).
+
+### Pass
+- One confirm, copy matches pack intent, Cancel writes nothing.
 
 ---
 
@@ -97,7 +125,7 @@ Landing headline / tagline / invite blurb / empty-state copy are **Tools → app
 
 **Commit:** dca5349 (v3.35.0). **ADR:** 215. **Tracker:** FEAT-090.
 
-**Point:** Ops Deck groups flags by who should see them (Core / Trip / Travel / Pro / Labs / Ops), not by engineering Phase 1–7. Core money loop defaults ON in code. Production DB rows still win until Reset or Arm Pack.
+**Point:** Ops Deck groups flags by who should see them (Core / Trip / Travel / Pro / Labs / Ops), not by engineering Phase 1–7. Core money loop defaults ON in code. Production DB rows still win until **Restore recommended app** or Arm Pack.
 
 ### Flags / packs
 
@@ -114,14 +142,14 @@ Landing headline / tagline / invite blurb / empty-state copy are **Tools → app
 
 1. Hard-refresh so Ops Deck loads this build.
 2. Superadmin → Ops Deck → Flags. Tab is **Consumer Packs** (not Release Phases).
-3. If production already stored flags, click **Reset to Defaults** on a staging env only — that writes the new pack defaults to `resolved.global`.
+3. If production already stored flags, click **Restore recommended app** on a staging env only — confirm lists Core + Trip on, Travel capable, Pro/Labs/Ops off. That writes pack defaults to `resolved.global`. Cancel leaves flags unchanged. This is not “all flags on.”
 
 ### Steps
 
 1. Command Center shows six pack chips (CORE, TRIP, TRAVEL, PRO, LABS, OPS) with Armed / Partial / Safe.
 2. Flags page: six summary cards. Core is expanded. Arm Pack / Safe Pack toggles every flag in that pack.
 3. Search "Why This Amount" — it sits under Core, not Phase 1.
-4. As a traveler after Reset: home can show You owe / You are owed; settle rows can show WhatsApp / UPI / Why?; ended trip can offer New trip with this group.
+4. As a traveler after Restore recommended app: home can show You owe / You are owed; settle rows can show WhatsApp / UPI / Why?; ended trip can offer New trip with this group.
 5. Expenses tab without a pass: no Next-Up capsule (progressive Next-Up is Core ON).
 6. Itemized split / OCR / analytics / achievements absent until Pro or Labs is armed.
 
@@ -134,7 +162,7 @@ Landing headline / tagline / invite blurb / empty-state copy are **Tools → app
 ### Pass
 
 - No "Phase 1–7" copy in Flags or Command Center.
-- Core + Trip armed by default after Reset.
+- Core + Trip armed by default after Restore recommended app.
 - Labs and Pro stay safed.
 - Traveler first-open is not a radar/scanner cockpit. Last 5 min can settle and clone squad without a Pro pack.
 

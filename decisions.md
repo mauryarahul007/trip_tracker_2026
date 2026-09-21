@@ -3855,7 +3855,7 @@ This document logs all meaningful technical decisions, library choices, design p
   - `DEFAULT_FEATURE_FLAGS` aligned to pack intent (34 ON / 53 OFF of 87, including Labs `enableCloseoutPulse`).
   - Shipped in v3.35.0 as FEAT-090.
 * **Trade-offs Accepted:**
-  - Stored production `resolved.global` rows still win until Superadmin **Reset to Defaults** or **Arm/Safe Pack**.
+  - Stored production `resolved.global` rows still win until Superadmin **Restore recommended app** or **Arm/Safe Pack**.
   - Travel Next-Up/radar/scanner stay default-capable; `enableProgressiveNextUp` (Core, ON) hides expense-tab chrome until a pass exists.
   - Itemized, OCR, analytics, biometric, achievements, snapshot, and feature-suggestions flip default OFF — power users lose them until Pro/Ops is armed.
 

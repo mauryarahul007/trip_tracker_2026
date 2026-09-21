@@ -1452,5 +1452,21 @@
     "shippedAt": "2026-09-21T14:02:41.528Z",
     "shippedBy": "rahul",
     "shippedNote": "Shipped in commit dca5349 (v3.35.0). ADR 216. FEAT-GROWTH. Migration 0107."
+  },
+  {
+    "id": "FEAT-092",
+    "title": "Restore recommended app confirm on Flags (Core+Trip, not all flags)",
+    "description": "Rename Reset to Defaults to Restore recommended app. Confirm lists Core and Trip on, Travel capable, Pro/Labs/Ops off. Cancel writes nothing.",
+    "category": "admin",
+    "status": "shipped",
+    "requestedBy": "rahul",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-09-21T14:23:04.738Z",
+    "updatedAt": "2026-09-21T14:23:04.738Z",
+    "shippedAt": "2026-09-21T14:23:04.738Z",
+    "shippedBy": "rahul",
+    "shippedNote": "Shipped in v3.35.1."
   }
 ]

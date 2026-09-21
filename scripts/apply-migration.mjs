@@ -23,15 +23,36 @@ const config = {
   connectionTimeoutMillis: 15000,
 };
 
+function migrationNameFromPath(filePath) {
+  const base = path.basename(filePath, '.sql');
+  return base.replace(/^\d+_/, '') || base;
+}
+
+function migrationVersionFromPath(filePath) {
+  const base = path.basename(filePath, '.sql');
+  const match = base.match(/^(\d+)/);
+  return match ? match[1] : base;
+}
+
 async function run() {
   const sql = fs.readFileSync(path.resolve(migrationPath), 'utf8');
+  const version = migrationVersionFromPath(migrationPath);
+  const name = migrationNameFromPath(migrationPath);
   console.log(`Connecting to db.${PROJECT_REF}.supabase.co...`);
   const client = new Client(config);
   try {
     await client.connect();
     console.log(`Executing ${migrationPath}...`);
     await client.query(sql);
-    console.log('✓ Migration applied successfully.');
+    await client.query(
+      `insert into supabase_migrations.schema_migrations (version, name, statements)
+       values ($1, $2, $3)
+       on conflict (version) do update
+         set name = excluded.name,
+             statements = excluded.statements`,
+      [version, name, [sql]]
+    );
+    console.log(`✓ Migration applied and recorded as ${version} (${name}).`);
   } catch (err) {
     console.error('Error applying migration:', err);
     process.exit(1);

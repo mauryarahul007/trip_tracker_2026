@@ -4,6 +4,7 @@ import type { AppConfigKey, FeatureFlagKey, ConsumerPackId } from '../../types/a
 import { FEATURE_FLAGS_META, CONSUMER_PACKS, getPackStatus } from '../../utils/featureFlags';
 import { useTripStore } from '../../store/tripStore';
 import { fetchAppConfig, setAppConfigValue } from '../../services/tripApi';
+import type { ConfirmRequest } from '../ConfirmDialog';
 import { IconCheck, IconAlertCircle, IconRefresh, IconSearch, IconChevronDown, IconChevronUp } from '../Icons';
 
 const FLAG_CATEGORY_LABELS: Record<string, string> = {
@@ -21,6 +22,7 @@ const FLAG_CATEGORY_LABELS: Record<string, string> = {
 interface Props {
   trips: Trip[];
   members: Record<string, Member>;
+  onRequestConfirm: (req: ConfirmRequest) => void;
 }
 
 function OverridePanel({
@@ -198,7 +200,7 @@ function OverridePanel({
   );
 }
 
-export function AdminFlagsPage({ trips, members }: Props) {
+export function AdminFlagsPage({ trips, members, onRequestConfirm }: Props) {
   const featureFlags = useTripStore((s) => s.featureFlags);
   const setFeatureFlag = useTripStore((s) => s.setFeatureFlag);
   const tripFlagOverrides = useTripStore((s) => s.tripFlagOverrides);
@@ -334,7 +336,7 @@ export function AdminFlagsPage({ trips, members }: Props) {
       <div className="ops-page-head">
         <div>
           <h2>Feature Flags &amp; Consumer Packs</h2>
-          <p>Arm who sees what: Core (first and last minutes), Trip, Travel, Pro, Labs, Ops. Staging overrides and system gates stay on the other tabs.</p>
+          <p>Arm who sees what: Core (first and last minutes), Trip, Travel, Pro, Labs, Ops. Staging overrides and system gates stay on the other tabs. Restore recommended app is Core + Trip on, not every flag.</p>
         </div>
         <div style={{ display: 'flex', gap: '8px' }}>
           <button type="button" className="ops-btn" disabled={isRefreshing} onClick={() => void handleRefresh()}>
@@ -344,11 +346,26 @@ export function AdminFlagsPage({ trips, members }: Props) {
             type="button"
             className="ops-btn"
             onClick={() => {
-              resetFeatureFlags();
-              showToast('Reset all feature flags to defaults.');
+              onRequestConfirm({
+                title: 'Restore recommended app?',
+                message: 'This writes the traveler default, not every flag. Global Superadmin overrides are cleared.',
+                confirmLabel: 'Restore recommended',
+                body: (
+                  <ul style={{ margin: 0, paddingLeft: '18px', fontSize: '13px', color: 'var(--text-secondary)', lineHeight: 1.45 }}>
+                    <li>Core and Trip on — add, invite, settle, Notes, receipts</li>
+                    <li>Travel capable — passes and radar exist; chrome hidden until a pass. Route stops stay off</li>
+                    <li>Pro, Labs, and Ops off — no OCR, itemized, chat-first, or demo seed</li>
+                  </ul>
+                ),
+                onConfirm: () => {
+                  void resetFeatureFlags().then(() => {
+                    showToast('Restored recommended app: Core and Trip on, Pro and Labs off.');
+                  });
+                },
+              });
             }}
           >
-            Reset to Defaults
+            Restore recommended app
           </button>
         </div>
       </div>
