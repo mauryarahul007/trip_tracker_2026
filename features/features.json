@@ -1387,5 +1387,22 @@
     "shippedBy": "claude-cli",
     "shippedAt": "2026-09-19T21:56:53.697Z",
     "shippedNote": "Shipped in v3.31.0 behind default-OFF flag. Commit 19d96be."
+  },
+  {
+    "id": "FEAT-088",
+    "title": "Quiet trip chat: overlay delete/settle, stack bills, unread on Notes",
+    "description": "Keep trip chat conversational: one money card per bill with in-place delete/restore/confirm overlays, stack consecutive bills, Hide bills, reply on cards, and an optional unread dot on Notes. Migration 0106 applied.",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "rahul",
+    "environment": {
+      "platform": "web",
+      "route": "Notes/Chat"
+    },
+    "createdAt": "2026-09-21T07:50:34.146Z",
+    "updatedAt": "2026-09-21T07:50:34.146Z",
+    "shippedAt": "2026-09-21T07:50:34.146Z",
+    "shippedBy": "rahul",
+    "shippedNote": "Shipped in v3.33.0; migration 0106 applied to remote."
   }
 ]

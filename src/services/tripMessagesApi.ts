@@ -7,6 +7,7 @@ import type {
   TripMessageMediaPayload,
   TripMessagePayload,
 } from '../types';
+import { expenseEventBody } from '../utils/chatExpenseCards';
 
 interface TripMessageRow {
   id: string;
@@ -34,6 +35,9 @@ const KNOWN_KINDS = new Set<TripMessageKind>([
   'image',
   'expense_link',
   'voice_note',
+  'expense_deleted',
+  'expense_restored',
+  'settlement_confirmed',
 ]);
 
 const EVENT_KINDS = new Set<TripMessageKind>([
@@ -41,6 +45,9 @@ const EVENT_KINDS = new Set<TripMessageKind>([
   'settlement_recorded',
   'expense_disputed',
   'expense_dispute_resolved',
+  'expense_deleted',
+  'expense_restored',
+  'settlement_confirmed',
 ]);
 
 function mapKind(raw: string | null | undefined): TripMessageKind {
@@ -188,8 +195,7 @@ export async function sendExpenseAddedEventMessage(
   memberId: string,
   expense: TripMessageExpensePayload
 ): Promise<TripMessage | null> {
-  const body = `Added ${expense.title} · ${expense.currency} ${expense.amount.toFixed(2)}`;
-  return sendEventMessage(tripId, memberId, 'expense_added', body, expense);
+  return sendEventMessage(tripId, memberId, 'expense_added', expenseEventBody('expense_added', expense), expense);
 }
 
 export async function sendSettlementRecordedEventMessage(
@@ -197,8 +203,13 @@ export async function sendSettlementRecordedEventMessage(
   memberId: string,
   expense: TripMessageExpensePayload
 ): Promise<TripMessage | null> {
-  const body = `Settlement ${expense.title} · ${expense.currency} ${expense.amount.toFixed(2)}`;
-  return sendEventMessage(tripId, memberId, 'settlement_recorded', body, expense);
+  return sendEventMessage(
+    tripId,
+    memberId,
+    'settlement_recorded',
+    expenseEventBody('settlement_recorded', expense),
+    expense
+  );
 }
 
 export async function sendExpenseDisputedEventMessage(
@@ -206,9 +217,13 @@ export async function sendExpenseDisputedEventMessage(
   memberId: string,
   expense: TripMessageExpensePayload
 ): Promise<TripMessage | null> {
-  const note = expense.note ? ` — ${expense.note}` : '';
-  const body = `Disputed ${expense.title}${note}`;
-  return sendEventMessage(tripId, memberId, 'expense_disputed', body, expense);
+  return sendEventMessage(
+    tripId,
+    memberId,
+    'expense_disputed',
+    expenseEventBody('expense_disputed', expense),
+    expense
+  );
 }
 
 export async function sendExpenseDisputeResolvedEventMessage(
@@ -216,8 +231,55 @@ export async function sendExpenseDisputeResolvedEventMessage(
   memberId: string,
   expense: TripMessageExpensePayload
 ): Promise<TripMessage | null> {
-  const body = `Dispute resolved: ${expense.title}`;
-  return sendEventMessage(tripId, memberId, 'expense_dispute_resolved', body, expense);
+  return sendEventMessage(
+    tripId,
+    memberId,
+    'expense_dispute_resolved',
+    expenseEventBody('expense_dispute_resolved', expense),
+    expense
+  );
+}
+
+export async function sendExpenseDeletedEventMessage(
+  tripId: string,
+  memberId: string,
+  expense: TripMessageExpensePayload
+): Promise<TripMessage | null> {
+  return sendEventMessage(
+    tripId,
+    memberId,
+    'expense_deleted',
+    expenseEventBody('expense_deleted', expense),
+    expense
+  );
+}
+
+export async function sendExpenseRestoredEventMessage(
+  tripId: string,
+  memberId: string,
+  expense: TripMessageExpensePayload
+): Promise<TripMessage | null> {
+  return sendEventMessage(
+    tripId,
+    memberId,
+    'expense_restored',
+    expenseEventBody('expense_restored', expense),
+    expense
+  );
+}
+
+export async function sendSettlementConfirmedEventMessage(
+  tripId: string,
+  memberId: string,
+  expense: TripMessageExpensePayload
+): Promise<TripMessage | null> {
+  return sendEventMessage(
+    tripId,
+    memberId,
+    'settlement_confirmed',
+    expenseEventBody('settlement_confirmed', expense),
+    expense
+  );
 }
 
 export async function sendImageMessage(
@@ -294,6 +356,29 @@ export async function deleteTripMessage(messageId: string): Promise<void> {
     .update({ deleted_at: new Date().toISOString() })
     .eq('id', messageId);
   if (error) throw error;
+}
+
+export async function fetchLatestTripMessageMeta(
+  tripId: string
+): Promise<{ id: string; memberId: string; createdAt: number } | null> {
+  const { data, error } = await supabase
+    .from('trip_messages')
+    .select('id, member_id, created_at')
+    .eq('trip_id', tripId)
+    .is('deleted_at', null)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (error) {
+    console.warn('[tripMessagesApi] fetchLatestTripMessageMeta skipped:', error.message);
+    return null;
+  }
+  if (!data) return null;
+  return {
+    id: data.id,
+    memberId: data.member_id,
+    createdAt: new Date(data.created_at).getTime(),
+  };
 }
 
 export function subscribeToTripMessages(

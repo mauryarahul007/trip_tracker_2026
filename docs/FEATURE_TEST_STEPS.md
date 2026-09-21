@@ -21,6 +21,7 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 
 | Shipped | Version | Id | Section |
 |--------|---------|-----|---------|
+| 2026-09-21 | v3.33.0 | FEAT-088 | [Chat money cards stay quiet](#feat-chatlife--chat-money-cards-stay-quiet) |
 | 2026-09-16 | v3.25.1 | BUG-221 | [Chat overlay & live-location CTA](#bug-221--chat-overlay--live-location-cta-v3251) |
 | 2026-09-17 | v3.26.0 / v3.26.1 | FEAT-076 | [Expense cards, location heartbeat, Summary polish](#feat-076--expense-cards-location-heartbeat-summary-polish-v3260) |
 | 2026-09-17 | v3.27.0 | FEAT-077 | [Chat depth: media, voice, typing, reads, tripbot](#feat-077--chat-depth-media-voice-typing-reads-tripbot-v3270) |
@@ -46,6 +47,66 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 3. Prefer **two browsers / accounts** on the same trip for realtime checks (A = you, B = peer).
 4. Open **Superadmin → Ops Deck → Flags**. Prefer **trip overrides** for safe testing.
 5. For each feature: confirm **flag OFF → feature absent**, then arm the flag and retest.
+
+---
+
+## FEAT-CHATLIFE — Chat money cards stay quiet
+
+**Commit:** v3.33.0 (FEAT-088). **Migration:** `0106` applied (kinds allowed; delete/confirm are **in-place overlays**, not extra bubbles).  
+**Point:** Chat stays a conversation. Money events are one card each; status updates on that card.
+
+### Flags
+
+| Behavior | Flag | Default |
+|----------|------|---------|
+| Trip chat | `enableTripChat` | (existing) |
+| Expense event cards | `enableInChatEventCards` | OFF |
+| Settlement confirm overlay | `enableSettlementConfirmation` | OFF |
+| Reply on expense cards | `enableChatReactionsAndReplies` | OFF |
+| Unread on Notes / Chat tab | `enableChatUnreadOnNotes` | OFF |
+
+### A. In-place delete / settle (no extra bubbles)
+
+1. Cards ON. Add an expense → one **added** card.
+2. Delete it → **same** card strikes through with **Deleted**. No second “deleted” bubble. Tap does not open review.
+3. Restore from Recycle Bin → original card is live again (**Tap to view**). No “restored” bubble.
+4. Record a settlement from Balances → one **settlement** card.
+5. Peer confirms (`enableSettlementConfirmation` ON) → that settlement card shows **Confirmed**. No extra confirm bubble.
+
+### B. Stack consecutive bills
+
+1. Add 2+ expenses in a row with no chat in between → one **N bills** row.
+2. Tap **Show** → cards expand. **Hide** collapses.
+3. A normal text message between bills breaks the stack.
+
+### C. Hide bills
+
+1. Cards ON → **Hide bills** in the chat header.
+2. Money cards disappear; human messages stay.
+3. **Show bills** brings them back. Preference survives reload on this trip.
+
+### D. Reply on an expense card
+
+1. `enableChatReactionsAndReplies` ON.
+2. Long-press an expense card → **Reply** is in the sheet.
+3. Send a reply → quote of that bill sits on the human message.
+
+### E. Unread on Notes
+
+1. `enableChatUnreadOnNotes` ON. Stay on Summary (or Notes → Checklist).
+2. Peer sends a chat message → **dot on Notes** (or Chat tab if Chat-first is on). Chat segment also dots when Notes is open on another sub-tab.
+3. Open Chat → dot clears.
+4. Flag OFF → no unread dots.
+
+### Negative checks
+
+- `enableInChatEventCards` OFF → no add cards, no Hide bills, no stacks.
+- Unread flag OFF → no Notes/Chat unread dots (chat still works).
+- Reply flag OFF → no Reply on expense cards.
+
+### Pass
+
+- Delete/settle visible without extra bubbles; stacks and Hide bills keep talk readable; unread is a dot only.
 
 ---
 

@@ -3804,3 +3804,19 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - Bug export and row expand pay a second round-trip for full records. Command Center spend widgets fill in after first paint.
   - Dummy-env local QA cannot measure production payload timing or photo-stack swipe feel.
+
+---
+
+## 213. Quiet trip chat: overlay money status, stack bills, unread on Notes (Release v3.33.0, FEAT-088)
+* **Context:**
+  - Expense create already posted an in-chat card (`enableInChatEventCards`). Delete, restore, and settlement confirm did not update the thread, so users thought money events vanished.
+  - Extra lifecycle bubbles (`expense_deleted` / `expense_restored` / `settlement_confirmed`) would turn chat into a ledger feed and fight ADR 166 (WhatsApp-style conversation) and ADR 188 (cards as miss-a-bill overlay).
+* **Decision:**
+  - **One card per money event.** Keep posting on add (and existing settlement/dispute kinds). Status after delete, restore, or peer confirm is an overlay on that card from live expense store (`deletedExpenses`, `settlementConfirmedAt`) — strikethrough **Deleted**, live again after restore, **Confirmed** on settlements. No extra bubbles.
+  - **Migration 0106** still widens `trip_messages.kind` so those kinds are legal if older or future clients send them; the current client does not post them.
+  - **Anti-clutter:** consecutive money cards collapse into an expandable **N bills** stack; per-trip **Hide bills** (`tt-chat-mute-events:v1:{tripId}`) hides system money cards. Reply on expense cards reuses `enableChatReactionsAndReplies`.
+  - **Unread:** new flag `enableChatUnreadOnNotes` (Phase 6, default OFF). Own read cursor is upserted when Chat is open even if read-receipts are off; a separate realtime channel (`trip_chat_unread:{tripId}`) drives a dot on Notes or the Chat tab.
+* **Trade-offs Accepted:**
+  - Overlay status is live-store, not message history — a delayed client without the expense row may not show Deleted until it syncs.
+  - Hide bills and unread cursor are local / per-device; they are not a shared mute.
+  - 0106 kinds exist on the server but are unused by this client so we do not spam the thread.

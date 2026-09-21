@@ -9,6 +9,15 @@ export interface ChangelogEntry {
 // parsed from decisions.md/BUGS.md: those are prose for developers, not client data.
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: '3.33.0',
+    date: '2026-09-21',
+    changes: [
+      'Trip chat keeps money as one card per bill: delete, restore, and settlement confirm update that card in place instead of adding extra bubbles.',
+      'Consecutive expense cards stack into a single bills row you can expand, and Hide bills tucks money cards out of the thread.',
+      'Optional unread dot on Notes (or Chat) when there are new trip messages you have not opened.',
+    ],
+  },
+  {
     version: '3.32.7',
     date: '2026-09-20',
     changes: [

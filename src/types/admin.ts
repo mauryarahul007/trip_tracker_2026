@@ -78,6 +78,7 @@ export type FeatureFlagKey =
   | 'enableChatTypingIndicators'
   | 'enableChatReadReceipts'
   | 'enableTripbotNlExpenses'
+  | 'enableChatUnreadOnNotes'
   // Phase 7: Commercial FinTech & Smart Splitting
   | 'enableSimplifyDebtsToggle'
   // Deferred & Admin Ops

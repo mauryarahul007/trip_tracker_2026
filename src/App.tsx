@@ -23,6 +23,7 @@ import { lazyImport } from './utils/lazyImport';
 import { syncOfflineMapTilesFlag } from './utils/mapTileCacheFlag';
 import { useCrossTripBalances } from './hooks/useCrossTripBalances';
 import { useDataSaverEnabled, setDataSaverEnabled } from './hooks/useDataSaverEnabled';
+import { useTripChatUnread } from './hooks/useTripChatUnread';
 // Code-split secondary modals and heavy views so initial bundle only ships
 // the critical path for the active trip view.
 const GlobalSettingsModal = lazy(lazyImport(() =>
@@ -1114,6 +1115,18 @@ export default function App() {
     return false;
   }, [activeTrip, userId, activeTripMembers]);
   const myMemberId = useMemo(() => activeTripMembers.find((m) => m.linkedUserId === userId)?.id ?? null, [activeTripMembers, userId]);
+  const chatHasUnread = useTripChatUnread({
+    tripId: activeTripId || undefined,
+    memberId: myMemberId,
+    enabled: Boolean(
+      isTripChatEnabled &&
+      isFeatureEnabled('enableChatUnreadOnNotes', {
+        tripId: activeTripId || undefined,
+        userId: userId || undefined,
+      })
+    ),
+    isViewingChat: isChatFirstNav ? activeTab === 'chat' : activeTab === 'notes' && chatViewActive,
+  });
 
   // Keep live-location heartbeats alive after the share sheet closes, as long
   // as the app is open and this trip still has is_sharing = true.
@@ -2821,6 +2834,7 @@ export default function App() {
                       const exp = expenses.find((e) => e.id === expenseId);
                       if (exp) setSelectedReviewExpense(exp);
                     }}
+                    chatHasUnread={chatHasUnread}
                   />
                   </Suspense>
                 )}
@@ -2906,6 +2920,7 @@ export default function App() {
             isPassesEnabled={isPassesEnabled}
             passesCount={activeTrip?.passes?.length || 0}
             isChatFirstNav={isChatFirstNav}
+            chatHasUnread={chatHasUnread}
             isHidden={chatComposerFocused && (activeTab === 'notes' || activeTab === 'chat')}
           />
         </div>

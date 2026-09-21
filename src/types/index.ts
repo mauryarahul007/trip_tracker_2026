@@ -13,7 +13,10 @@ export type TripMessageKind =
   | 'expense_dispute_resolved'
   | 'image'
   | 'expense_link'
-  | 'voice_note';
+  | 'voice_note'
+  | 'expense_deleted'
+  | 'expense_restored'
+  | 'settlement_confirmed';
 
 export interface TripMessageExpensePayload {
   expenseId: string;

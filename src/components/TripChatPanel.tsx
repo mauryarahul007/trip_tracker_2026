@@ -1,6 +1,15 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
+import {
+  chatExpenseStackLabel,
+  getChatExpenseCardPresentation,
+  getChatExpenseLiveStatus,
+  groupChatMessagesForRender,
+  isChatMoneyEventKind,
+  shouldMarkChatExpenseCardStale,
+} from '../utils/chatExpenseCards';
+import { useChatMuteEventCards } from '../hooks/useChatMuteEventCards';
 import { useTripStore } from '../store/tripStore';
 import type {
   Member,
@@ -65,6 +74,9 @@ const EVENT_CARD_KINDS = new Set<TripMessageKind>([
   'expense_disputed',
   'expense_dispute_resolved',
   'expense_link',
+  'expense_deleted',
+  'expense_restored',
+  'settlement_confirmed',
 ]);
 
 interface Props {
@@ -172,9 +184,19 @@ export function TripChatPanel({
   // Filtering inside the zustand selector returns a new array every snapshot and
   // trips React 18's useSyncExternalStore into "Maximum update depth exceeded".
   const allExpenses = useTripStore((s) => s.expenses);
+  const allDeletedExpenses = useTripStore((s) => s.deletedExpenses);
   const expenses = useMemo(
     () => allExpenses.filter((e) => e.tripId === tripId && !e.deletedAt),
     [allExpenses, tripId]
+  );
+  const liveExpenseIds = useMemo(() => new Set(expenses.map((e) => e.id)), [expenses]);
+  const confirmedExpenseIds = useMemo(
+    () => new Set(expenses.filter((e) => e.settlementConfirmedAt).map((e) => e.id)),
+    [expenses]
+  );
+  const deletedExpenseIds = useMemo(
+    () => new Set(allDeletedExpenses.filter((e) => e.tripId === tripId).map((e) => e.id)),
+    [allDeletedExpenses, tripId]
   );
   const addExpense = useTripStore((s) => s.addExpense);
   const isFeatureEnabled = useTripStore((s) => s.isFeatureEnabled);
@@ -192,6 +214,8 @@ export function TripChatPanel({
   const typingEnabled = isFeatureEnabled('enableChatTypingIndicators', { tripId });
   const readReceiptsEnabled = isFeatureEnabled('enableChatReadReceipts', { tripId });
   const tripbotEnabled = isFeatureEnabled('enableTripbotNlExpenses', { tripId });
+  const eventCardsEnabled = isFeatureEnabled('enableInChatEventCards', { tripId });
+  const [hideMoneyEvents, setHideMoneyEvents] = useChatMuteEventCards(tripId);
 
   const [messages, setMessages] = useState<TripMessage[]>([]);
   const [draft, setDraft] = useState('');
@@ -212,6 +236,7 @@ export function TripChatPanel({
   const [readCursors, setReadCursors] = useState<TripChatReadCursor[]>([]);
   const [isRecording, setIsRecording] = useState(false);
   const [recordSeconds, setRecordSeconds] = useState(0);
+  const [expandedStacks, setExpandedStacks] = useState<Set<string>>(() => new Set());
 
   const listRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -309,13 +334,14 @@ export function TripChatPanel({
     return subscribeToReadCursors(tripId, setReadCursors);
   }, [tripId, readReceiptsEnabled]);
 
-  // Upsert own cursor when viewing / on new messages
+  // Own read cursor always updates while this panel is open so unread
+  // badges (enableChatUnreadOnNotes) work even if peer receipts are off.
   useEffect(() => {
-    if (!readReceiptsEnabled || !myMemberId || messages.length === 0) return;
+    if (!myMemberId || messages.length === 0) return;
     const last = messages[messages.length - 1];
     if (!last || last.deletedAt) return;
     void upsertReadCursor(tripId, myMemberId, last.id);
-  }, [tripId, myMemberId, readReceiptsEnabled, messages]);
+  }, [tripId, myMemberId, messages]);
 
   // Typing indicators (broadcast)
   useEffect(() => {
@@ -828,12 +854,13 @@ export function TripChatPanel({
     const isMine = actionSheetMessage.memberId === myMemberId;
     const kind = actionSheetMessage.kind || 'text';
     const isEventCard = EVENT_CARD_KINDS.has(kind) || kind === 'image' || kind === 'voice_note';
+    const isMoneyCard = isChatMoneyEventKind(kind);
     const canEdit = !isEventCard && (Boolean(isAdmin) || (isMine && Date.now() - actionSheetMessage.createdAt < EDIT_WINDOW_MS));
     const canDelete = isMine || Boolean(isAdmin);
 
     const items: ActionSheetItem[] = [];
 
-    if (isSocialEnabled && !isEventCard) {
+    if (isSocialEnabled && (!isEventCard || isMoneyCard)) {
       items.push({
         id: 'reply',
         label: 'Reply',
@@ -843,7 +870,7 @@ export function TripChatPanel({
           setActionSheetMessage(null);
         },
       });
-      if (isAdmin) {
+      if (isAdmin && !isEventCard) {
         items.push({
           id: 'pin',
           label: actionSheetMessage.isPinned ? 'Unpin from top' : 'Pin notice to top',
@@ -957,6 +984,10 @@ export function TripChatPanel({
   );
 
   const pinnedMessages = useMemo(() => messages.filter((m) => m.isPinned && !m.deletedAt), [messages]);
+  const renderItems = useMemo(
+    () => groupChatMessagesForRender(messages, hideMoneyEvents),
+    [messages, hideMoneyEvents]
+  );
 
   const renderEventCard = (message: TripMessage) => {
     const kind = message.kind || 'text';
@@ -1000,26 +1031,18 @@ export function TripChatPanel({
     const expensePayload = isExpensePayload(payload) ? payload : isLinkPayload(payload) ? payload : null;
     if (!expensePayload) return null;
 
-    let variant = 'expense';
-    let icon = '💳';
-    let whoLabel = `${isMine ? 'You' : sender?.name || 'Traveler'} added`;
-    if (kind === 'settlement_recorded') {
-      variant = 'settlement';
-      icon = '🤝';
-      whoLabel = `${isMine ? 'You' : sender?.name || 'Traveler'} recorded settlement`;
-    } else if (kind === 'expense_disputed') {
-      variant = 'dispute';
-      icon = '⚠️';
-      whoLabel = `${isMine ? 'You' : sender?.name || 'Traveler'} disputed`;
-    } else if (kind === 'expense_dispute_resolved') {
-      variant = 'resolved';
-      icon = '✅';
-      whoLabel = `Dispute resolved`;
-    } else if (kind === 'expense_link') {
-      variant = 'link';
-      icon = '🔗';
-      whoLabel = `${isMine ? 'You' : sender?.name || 'Traveler'} linked`;
-    }
+    const { variant, icon, whoLabel } = getChatExpenseCardPresentation(
+      kind,
+      isMine,
+      sender?.name || 'Traveler'
+    );
+    const liveStatus = getChatExpenseLiveStatus(expensePayload.expenseId, liveExpenseIds, deletedExpenseIds);
+    const isStale = shouldMarkChatExpenseCardStale(kind, liveStatus);
+    const isConfirmed =
+      kind === 'settlement_recorded' &&
+      liveStatus === 'live' &&
+      confirmedExpenseIds.has(expensePayload.expenseId);
+    const canOpen = Boolean(onOpenExpenseFromChat && expensePayload.expenseId && liveStatus === 'live');
 
     const amountNum =
       typeof expensePayload.amount === 'number' ? expensePayload.amount : Number(expensePayload.amount);
@@ -1028,6 +1051,15 @@ export function TripChatPanel({
         ? formatExpenseAmount(expensePayload.currency, amountNum)
         : null;
     const note = isExpensePayload(payload) ? payload.note : undefined;
+    const hint = isStale
+      ? liveStatus === 'deleted'
+        ? 'Deleted'
+        : 'Removed'
+      : isConfirmed
+        ? 'Confirmed'
+        : kind === 'expense_deleted'
+          ? 'In recycle bin'
+          : 'Tap to view';
 
     return (
       <div
@@ -1038,9 +1070,9 @@ export function TripChatPanel({
       >
         <button
           type="button"
-          className={`trip-chat-expense-card trip-chat-expense-card--${variant}`}
+          className={`trip-chat-expense-card trip-chat-expense-card--${variant}${isStale ? ' is-stale' : ''}${isConfirmed ? ' is-confirmed' : ''}`}
           onClick={() => {
-            if (onOpenExpenseFromChat && expensePayload.expenseId) onOpenExpenseFromChat(expensePayload.expenseId);
+            if (canOpen && expensePayload.expenseId) onOpenExpenseFromChat?.(expensePayload.expenseId);
           }}
           onPointerDown={handleBubblePointerDown(message)}
           onPointerUp={handleBubblePointerUp}
@@ -1056,7 +1088,7 @@ export function TripChatPanel({
             {amount ? <span className="trip-chat-expense-card-amount">{amount}</span> : null}
             {note ? <span className="trip-chat-expense-card-note">{note}</span> : null}
           </span>
-          <span className="trip-chat-expense-card-hint">Tap to view</span>
+          <span className="trip-chat-expense-card-hint">{hint}</span>
         </button>
       </div>
     );
@@ -1092,6 +1124,18 @@ export function TripChatPanel({
       }}
     >
       <LiveLocationChatBanner tripId={tripId} members={members} onShareMyLocation={onOpenLiveLocationShare} />
+
+      {eventCardsEnabled && (
+        <div className="trip-chat-bills-bar">
+          <button
+            type="button"
+            className={`trip-chat-bills-toggle${hideMoneyEvents ? ' is-muted' : ''}`}
+            onClick={() => setHideMoneyEvents(!hideMoneyEvents)}
+          >
+            {hideMoneyEvents ? 'Show bills' : 'Hide bills'}
+          </button>
+        </div>
+      )}
 
       {isSocialEnabled && pinnedMessages.length > 0 && (
         <div className="trip-chat-pin-carousel" role="region" aria-label="Pinned notices">
@@ -1138,8 +1182,38 @@ export function TripChatPanel({
           <div style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '12.5px', padding: '20px' }}>
             No messages yet. Say hi to the squad 👋
           </div>
+        ) : renderItems.length === 0 ? (
+          <div style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '12.5px', padding: '20px' }}>
+            Bills are hidden. Chat is talk-only.
+          </div>
         ) : (
-          messages.map((message) => {
+          renderItems.map((item) => {
+            if (item.type === 'stack') {
+              const expanded = expandedStacks.has(item.id);
+              return (
+                <div key={item.id} className="trip-chat-expense-stack">
+                  <button
+                    type="button"
+                    className="trip-chat-expense-stack-toggle"
+                    onClick={() => {
+                      setExpandedStacks((prev) => {
+                        const next = new Set(prev);
+                        if (next.has(item.id)) next.delete(item.id);
+                        else next.add(item.id);
+                        return next;
+                      });
+                    }}
+                  >
+                    <span aria-hidden="true">💳</span>
+                    <span>{chatExpenseStackLabel(item.messages.length)}</span>
+                    <span className="trip-chat-expense-stack-action">{expanded ? 'Hide' : 'Show'}</span>
+                  </button>
+                  {expanded ? item.messages.map((stacked) => renderEventCard(stacked)) : null}
+                </div>
+              );
+            }
+
+            const message = item.message;
             const isMine = message.memberId === myMemberId;
             const sender = memberById.get(message.memberId);
             const isDeleted = Boolean(message.deletedAt);

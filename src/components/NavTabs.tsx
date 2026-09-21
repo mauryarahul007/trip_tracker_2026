@@ -19,6 +19,7 @@ type Props = {
   passesCount?: number;
   isHidden?: boolean;
   isChatFirstNav?: boolean;
+  chatHasUnread?: boolean;
 };
 
 export function NavTabs({
@@ -34,6 +35,7 @@ export function NavTabs({
   passesCount = 0,
   isHidden = false,
   isChatFirstNav = false,
+  chatHasUnread = false,
 }: Props) {
   const isMembersTab = activeTab === 'members';
   const navRef = useRef<HTMLElement | null>(null);
@@ -225,10 +227,11 @@ export function NavTabs({
             className={`nav-tab-item ${activeTab === 'chat' ? 'active' : ''}`}
             onClick={() => goTo('chat')}
             onMouseEnter={prefetchChat}
-            aria-label="Chat"
+            aria-label={chatHasUnread ? 'Chat, unread' : 'Chat'}
           >
             <span className="nav-tab-icon"><IconChat size={24} /></span>
             <span>Chat</span>
+            {chatHasUnread && <span className="nav-tab-badge nav-tab-badge-dot" aria-hidden="true" />}
           </button>
         )}
 
@@ -295,7 +298,7 @@ export function NavTabs({
             onClick={() => goTo('notes')}
             aria-label={
               isNotesEnabled
-                ? (showNotesNudge ? 'Passes, Notes & Checklist (new: Travel Pass Wallet & Smart Packing)' : 'Passes, Notes & Checklist')
+                ? (showNotesNudge ? 'Passes, Notes & Checklist (new: Travel Pass Wallet & Smart Packing)' : chatHasUnread && !isChatFirstNav ? 'Passes, Notes & Checklist, unread chat' : 'Passes, Notes & Checklist')
                 : 'Travel Pass Wallet'
             }
           >
@@ -303,7 +306,7 @@ export function NavTabs({
               {isNotesEnabled ? <IconClipboardList size={24} /> : <IconWallet size={24} />}
             </span>
             <span>{isNotesEnabled ? (isChatFirstNav ? 'Prep' : 'Notes') : 'Passes'}</span>
-            {isNotesEnabled && showNotesNudge && <span className="nav-tab-badge nav-tab-badge-dot" aria-hidden="true" />}
+            {(isNotesEnabled && showNotesNudge) || (chatHasUnread && !isChatFirstNav) ? <span className="nav-tab-badge nav-tab-badge-dot" aria-hidden="true" /> : null}
             {!isNotesEnabled && passesCount > 0 && (
               <span className="nav-tab-badge" aria-label={`${passesCount} passes`}>{passesCount}</span>
             )}

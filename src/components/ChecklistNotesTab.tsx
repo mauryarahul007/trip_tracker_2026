@@ -49,6 +49,7 @@ type Props = {
   onRequestConfirm: (request: ConfirmRequest) => void;
   onOpenLiveLocationShare?: () => void;
   onOpenExpenseFromChat?: (expenseId: string) => void;
+  chatHasUnread?: boolean;
 };
 
 type ChecklistCategory = 'all' | 'packing' | 'documents' | 'medical' | 'general';
@@ -394,7 +395,7 @@ function NoteContentView({ content, category }: { content: string; category?: st
   return <StandardNoteRenderer content={content} category={category} />;
 }
 
-export function ChecklistNotesTab({ trip, members, isAdmin, initialViewMode, onInitialViewModeConsumed, onChatViewActiveChange, onChatComposerFocusChange, onRequestConfirm, onOpenLiveLocationShare, onOpenExpenseFromChat }: Props) {
+export function ChecklistNotesTab({ trip, members, isAdmin, initialViewMode, onInitialViewModeConsumed, onChatViewActiveChange, onChatComposerFocusChange, onRequestConfirm, onOpenLiveLocationShare, onOpenExpenseFromChat, chatHasUnread }: Props) {
   // Always select live trip from store to react to changes
   const liveTrip = useTripStore((s) => s.trips.find((t) => t.id === trip.id)) || trip;
   const {
@@ -853,7 +854,13 @@ export function ChecklistNotesTab({ trip, members, isAdmin, initialViewMode, onI
         if (isPassesEnabled) segments.push({ id: 'passes', label: 'Passes', badge: String(passes.length) });
         if (isNotesEnabled) segments.push({ id: 'notes', label: 'Notes', badge: String(notes.length) });
         if (isNotesEnabled) segments.push({ id: 'checklist', label: 'Checklist', badge: totalCount > 0 ? `${completedCount}/${totalCount}` : '0' });
-        if (isChatSubTabEnabled) segments.push({ id: 'chat', label: 'Chat', badge: '' });
+        if (isChatSubTabEnabled) {
+          segments.push({
+            id: 'chat',
+            label: 'Chat',
+            badge: chatHasUnread && viewMode !== 'chat' ? 'unread' : '',
+          });
+        }
 
         if (segments.length < 2) return null;
 
@@ -871,10 +878,20 @@ export function ChecklistNotesTab({ trip, members, isAdmin, initialViewMode, onI
                     triggerHaptic('light');
                     setViewMode(segment.id);
                   }}
-                  aria-label={segment.badge ? `${segment.label}, ${segment.badge}` : segment.label}
+                  aria-label={
+                    segment.badge === 'unread'
+                      ? `${segment.label}, unread`
+                      : segment.badge
+                        ? `${segment.label}, ${segment.badge}`
+                        : segment.label
+                  }
                 >
                   <span className="segment-label">{segment.label}</span>
-                  {segment.badge && <span className="segment-badge">{segment.badge}</span>}
+                  {segment.badge === 'unread' ? (
+                    <span className="segment-unread-dot" aria-hidden="true" />
+                  ) : (
+                    segment.badge && <span className="segment-badge">{segment.badge}</span>
+                  )}
                 </button>
               ))}
             </div>

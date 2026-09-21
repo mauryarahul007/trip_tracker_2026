@@ -7806,6 +7806,94 @@ html.stack-dragging .home-ambient-layer {
   background: color-mix(in srgb, var(--primary-accent) 5%, var(--bg-surface));
 }
 
+.trip-chat-expense-card--deleted {
+  border-color: color-mix(in srgb, #dc2626 28%, var(--border-color));
+  background: color-mix(in srgb, #dc2626 7%, var(--bg-surface));
+}
+
+.trip-chat-expense-card--restored {
+  border-color: color-mix(in srgb, #2563eb 28%, var(--border-color));
+  background: color-mix(in srgb, #2563eb 7%, var(--bg-surface));
+}
+
+.trip-chat-expense-card--confirmed {
+  border-color: color-mix(in srgb, #16a34a 30%, var(--border-color));
+  background: color-mix(in srgb, #16a34a 8%, var(--bg-surface));
+}
+
+.trip-chat-expense-card.is-stale {
+  opacity: 0.72;
+  cursor: default;
+}
+
+.trip-chat-expense-card.is-stale .trip-chat-expense-card-title {
+  text-decoration: line-through;
+}
+
+.trip-chat-expense-card.is-confirmed {
+  border-color: color-mix(in srgb, #16a34a 30%, var(--border-color));
+}
+
+.trip-chat-bills-bar {
+  display: flex;
+  justify-content: flex-end;
+  padding: 6px 12px 0;
+}
+
+.trip-chat-bills-toggle {
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px 2px;
+}
+
+.trip-chat-bills-toggle.is-muted {
+  color: var(--primary-accent);
+}
+
+.trip-chat-expense-stack {
+  align-self: center;
+  width: 100%;
+  max-width: 320px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.trip-chat-expense-stack-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  border: 1px dashed color-mix(in srgb, var(--primary-accent) 28%, var(--border-color));
+  background: color-mix(in srgb, var(--primary-accent) 5%, var(--bg-surface));
+  color: var(--text-primary);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  text-align: left;
+}
+
+.trip-chat-expense-stack-action {
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--primary-accent);
+  font-weight: 700;
+}
+
+.segment-unread-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--primary-accent);
+  flex-shrink: 0;
+}
+
 .trip-chat-expense-card-note {
   font-size: 11px;
   color: var(--text-muted);

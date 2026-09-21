@@ -505,48 +505,18 @@ function resolveMyMemberId(get: () => TripStore, tripId: string, userId: string)
   );
 }
 
-/** Best-effort chat card after an expense lands; never blocks the expense path. */
-async function postExpenseAddedChatCard(
+/** Best-effort chat card after an expense lands or changes; never blocks the expense path. */
+async function postExpenseLifecycleChatCard(
   get: () => TripStore,
   tripId: string,
   userId: string,
-  expense: Expense
-): Promise<void> {
-  try {
-    if (!get().isFeatureEnabled('enableInChatEventCards', { tripId, userId })) return;
-    if (!get().isFeatureEnabled('enableTripChat', { tripId, userId })) return;
-    const memberId = resolveMyMemberId(get, tripId, userId);
-    if (!memberId) return;
-    const payload = {
-      expenseId: expense.id,
-      title: expense.title,
-      amount: expense.amount,
-      currency: expense.currency,
-    };
-    if (expense.isSettlement) {
-      await sendSettlementRecordedEventMessage(tripId, memberId, payload);
-    } else {
-      await sendExpenseAddedEventMessage(tripId, memberId, payload);
-    }
-  } catch (err) {
-    console.warn('[tripStore] postExpenseAddedChatCard skipped:', err);
-  }
-}
-
-async function postDisputeChatCard(
-  get: () => TripStore,
-  expenseId: string,
-  resolved: boolean,
+  expense: Pick<Expense, 'id' | 'title' | 'amount' | 'currency' | 'isSettlement'>,
+  kind: 'added' | 'disputed' | 'dispute_resolved',
   note?: string
 ): Promise<void> {
   try {
-    const expense = get().expenses.find((e) => e.id === expenseId);
-    const userId = get().userId;
-    if (!expense || !userId) return;
-    const tripId = expense.tripId;
     if (!get().isFeatureEnabled('enableInChatEventCards', { tripId, userId })) return;
     if (!get().isFeatureEnabled('enableTripChat', { tripId, userId })) return;
-    if (!get().isFeatureEnabled('enableExpenseDisputes', { tripId, userId })) return;
     const memberId = resolveMyMemberId(get, tripId, userId);
     if (!memberId) return;
     const payload = {
@@ -556,14 +526,51 @@ async function postDisputeChatCard(
       currency: expense.currency,
       note: note || undefined,
     };
-    if (resolved) {
+    if (kind === 'added') {
+      if (expense.isSettlement) {
+        await sendSettlementRecordedEventMessage(tripId, memberId, payload);
+      } else {
+        await sendExpenseAddedEventMessage(tripId, memberId, payload);
+      }
+      return;
+    }
+    if (!get().isFeatureEnabled('enableExpenseDisputes', { tripId, userId })) return;
+    if (kind === 'dispute_resolved') {
       await sendExpenseDisputeResolvedEventMessage(tripId, memberId, payload);
     } else {
       await sendExpenseDisputedEventMessage(tripId, memberId, payload);
     }
   } catch (err) {
-    console.warn('[tripStore] postDisputeChatCard skipped:', err);
+    console.warn('[tripStore] postExpenseLifecycleChatCard skipped:', err);
   }
+}
+
+async function postExpenseAddedChatCard(
+  get: () => TripStore,
+  tripId: string,
+  userId: string,
+  expense: Expense
+): Promise<void> {
+  await postExpenseLifecycleChatCard(get, tripId, userId, expense, 'added');
+}
+
+async function postDisputeChatCard(
+  get: () => TripStore,
+  expenseId: string,
+  resolved: boolean,
+  note?: string
+): Promise<void> {
+  const expense = get().expenses.find((e) => e.id === expenseId);
+  const userId = get().userId;
+  if (!expense || !userId) return;
+  await postExpenseLifecycleChatCard(
+    get,
+    expense.tripId,
+    userId,
+    expense,
+    resolved ? 'dispute_resolved' : 'disputed',
+    note
+  );
 }
 
 // A restored backup may include trips the importing user only joined (via

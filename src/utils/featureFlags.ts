@@ -111,6 +111,7 @@ export const RELEASE_PHASES: ReleasePhaseDef[] = [
       'enableChatTypingIndicators',
       'enableChatReadReceipts',
       'enableTripbotNlExpenses',
+      'enableChatUnreadOnNotes',
     ],
   },
   {
@@ -692,7 +693,7 @@ export const FEATURE_FLAGS_META: Record<FeatureFlagKey, FeatureFlagMeta> = {
   enableInChatEventCards: {
     key: 'enableInChatEventCards',
     label: 'In-Chat Expense Event Cards',
-    description: 'Auto-post compact expense cards into trip chat when someone adds a bill (title, amount, tap to open).',
+    description: 'Auto-post compact expense cards into trip chat when someone adds a bill. Delete, restore, and settlement confirm update that same card in place (title, amount, tap to open).',
     category: 'collab',
     phase: 'phase6',
     defaultEnabledForUsers: false,
@@ -733,6 +734,14 @@ export const FEATURE_FLAGS_META: Record<FeatureFlagKey, FeatureFlagMeta> = {
     key: 'enableTripbotNlExpenses',
     label: 'In-Chat @tripbot Expense Logging',
     description: 'Parse @tripbot natural-language lines into a confirm sheet, then create an expense.',
+    category: 'collab',
+    phase: 'phase6',
+    defaultEnabledForUsers: false,
+  },
+  enableChatUnreadOnNotes: {
+    key: 'enableChatUnreadOnNotes',
+    label: 'Unread Badge on Notes Chat',
+    description: 'Dot on Notes (and Chat tab when Chat-first is on) when there are new trip messages you have not opened. Does not add messages to the thread.',
     category: 'collab',
     phase: 'phase6',
     defaultEnabledForUsers: false,
@@ -899,6 +908,7 @@ export const DEFAULT_FEATURE_FLAGS: Record<FeatureFlagKey, boolean> = {
   enableChatTypingIndicators: false,
   enableChatReadReceipts: false,
   enableTripbotNlExpenses: false,
+  enableChatUnreadOnNotes: false,
 
   // Phase 7 (Commercial FinTech - safed by default)
   enableSimplifyDebtsToggle: false,
