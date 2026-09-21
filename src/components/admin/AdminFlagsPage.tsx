@@ -2,10 +2,24 @@ import { useEffect, useState } from 'react';
 import type { Trip, Member } from '../../types';
 import type { AppConfigKey, FeatureFlagKey, ConsumerPackId } from '../../types/admin';
 import { FEATURE_FLAGS_META, CONSUMER_PACKS, getPackStatus } from '../../utils/featureFlags';
+import {
+  FLAG_RECIPES,
+  flagsForRecipe,
+  recipeMatches,
+  labsKeysOn,
+  packStatusLines,
+  parseCustomPresets,
+  readLocalCustomPresets,
+  writeLocalCustomPresets,
+  flagSetsEqual,
+  MAX_CUSTOM_FLAG_PRESETS,
+  type CustomFlagPreset,
+  type FlagRecipeId,
+} from '../../utils/flagPresets';
 import { useTripStore } from '../../store/tripStore';
 import { fetchAppConfig, setAppConfigValue } from '../../services/tripApi';
 import type { ConfirmRequest } from '../ConfirmDialog';
-import { IconCheck, IconAlertCircle, IconRefresh, IconSearch, IconChevronDown, IconChevronUp } from '../Icons';
+import { IconCheck, IconAlertCircle, IconRefresh, IconSearch, IconChevronDown, IconChevronUp, IconX } from '../Icons';
 
 const FLAG_CATEGORY_LABELS: Record<string, string> = {
   core: 'Core',
@@ -208,6 +222,7 @@ export function AdminFlagsPage({ trips, members, onRequestConfirm }: Props) {
   const userFlagOverrides = useTripStore((s) => s.userFlagOverrides);
   const setUserFlagOverride = useTripStore((s) => s.setUserFlagOverride);
   const resetFeatureFlags = useTripStore((s) => s.resetFeatureFlags);
+  const applyFeatureFlagSet = useTripStore((s) => s.applyFeatureFlagSet);
   const loadAllFeatureFlagOverrides = useTripStore((s) => s.loadAllFeatureFlagOverrides);
   const setPackFlags = useTripStore((s) => s.setPackFlags);
 
@@ -263,6 +278,9 @@ export function AdminFlagsPage({ trips, members, onRequestConfirm }: Props) {
   const [maintenanceWindowStart, setMaintenanceWindowStart] = useState('');
   const [maintenanceWindowEnd, setMaintenanceWindowEnd] = useState('');
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [customPresets, setCustomPresets] = useState<CustomFlagPreset[]>(() => readLocalCustomPresets());
+  const [saveOpen, setSaveOpen] = useState(false);
+  const [saveName, setSaveName] = useState('');
 
   const showToast = (msg: string) => {
     setToastMsg(msg);
@@ -273,6 +291,8 @@ export function AdminFlagsPage({ trips, members, onRequestConfirm }: Props) {
     Promise.all([
       fetchAppConfig().then((c) => {
         setConfig(c);
+        const remote = parseCustomPresets(c.flag_presets);
+        setCustomPresets(remote.length > 0 ? remote : readLocalCustomPresets());
         if (typeof c.join_max_attempts === 'number') setJoinMaxAttemptsInput(String(c.join_max_attempts));
         if (typeof c.join_lockout_minutes === 'number') setJoinLockoutMinutesInput(String(c.join_lockout_minutes));
         if (typeof c.recycle_bin_retention_hours === 'number') setRecycleBinHoursInput(String(c.recycle_bin_retention_hours));
@@ -315,6 +335,113 @@ export function AdminFlagsPage({ trips, members, onRequestConfirm }: Props) {
     }
   };
 
+  const persistCustomPresets = async (list: CustomFlagPreset[]) => {
+    setCustomPresets(list);
+    writeLocalCustomPresets(list);
+    try {
+      await setAppConfigValue('flag_presets', { custom: list });
+      setConfig((c) => ({ ...c, flag_presets: { custom: list } }));
+    } catch {
+      // Dummy / offline: localStorage still holds the mix.
+    }
+  };
+
+  const confirmApplyFlags = (
+    title: string,
+    confirmLabel: string,
+    bullets: string[],
+    flagsToApply: Record<FeatureFlagKey, boolean>,
+    useCodeDefaults: boolean,
+    includePackLines: boolean
+  ) => {
+    const labs = labsKeysOn(flagsToApply);
+    const lines = includePackLines ? [...bullets, ...packStatusLines(flagsToApply)] : bullets;
+    onRequestConfirm({
+      title,
+      message: 'This replaces the global flag mix. Trip overrides still win until you clear them. Cancel writes nothing.',
+      confirmLabel,
+      body: (
+        <ul style={{ margin: 0, paddingLeft: '18px', fontSize: '13px', color: 'var(--text-secondary)', lineHeight: 1.45 }}>
+          {lines.map((line) => (
+            <li key={line}>{line}</li>
+          ))}
+          {labs.length > 0 ? (
+            <li>Labs on ({labs.length}) — keep this mix off production if you can</li>
+          ) : null}
+        </ul>
+      ),
+      onConfirm: () => {
+        const run = useCodeDefaults ? resetFeatureFlags() : applyFeatureFlagSet(flagsToApply);
+        void run.then(() => showToast(`Applied ${title.replace(/\?$/, '').replace(/^Apply /, '')}.`));
+      },
+    });
+  };
+
+  const handleApplyRecipe = (id: FlagRecipeId) => {
+    const recipe = FLAG_RECIPES.find((r) => r.id === id);
+    if (!recipe) return;
+    confirmApplyFlags(
+      `Apply ${recipe.title}?`,
+      recipe.confirmLabel,
+      recipe.bullets,
+      flagsForRecipe(id),
+      recipe.usesCodeDefaults,
+      false
+    );
+  };
+
+  const handleApplyCustom = (preset: CustomFlagPreset) => {
+    confirmApplyFlags(
+      `Apply “${preset.name}”?`,
+      'Apply mix',
+      [`Saved mix “${preset.name}” writes these pack states:`],
+      preset.flags,
+      false,
+      true
+    );
+  };
+
+  const handleSaveCurrentMix = () => {
+    const name = saveName.trim().slice(0, 40);
+    if (!name) {
+      showToast('Name the mix first.');
+      return;
+    }
+    if (customPresets.some((p) => p.name.toLowerCase() === name.toLowerCase())) {
+      showToast('That name is already used.');
+      return;
+    }
+    if (customPresets.length >= MAX_CUSTOM_FLAG_PRESETS) {
+      showToast(`Max ${MAX_CUSTOM_FLAG_PRESETS} saved mixes. Delete one first.`);
+      return;
+    }
+    const next: CustomFlagPreset = {
+      id: `mix-${Date.now()}`,
+      name,
+      flags: { ...featureFlags },
+      savedAt: Date.now(),
+    };
+    void persistCustomPresets([...customPresets, next]).then(() => {
+      setSaveName('');
+      setSaveOpen(false);
+      showToast(`Saved mix “${name}”.`);
+    });
+  };
+
+  const handleDeleteCustom = (preset: CustomFlagPreset) => {
+    onRequestConfirm({
+      title: `Delete “${preset.name}”?`,
+      message: 'Removes this saved mix. Live flags stay as they are.',
+      confirmLabel: 'Delete mix',
+      danger: true,
+      onConfirm: () => {
+        void persistCustomPresets(customPresets.filter((p) => p.id !== preset.id)).then(() => {
+          showToast(`Deleted “${preset.name}”.`);
+        });
+      },
+    });
+  };
+
   const flagEntries = Object.entries(FEATURE_FLAGS_META) as [FeatureFlagKey, typeof FEATURE_FLAGS_META[FeatureFlagKey]][];
   const claimedMembersById = new Map<string, Member>();
   for (const m of Object.values(members)) {
@@ -336,36 +463,11 @@ export function AdminFlagsPage({ trips, members, onRequestConfirm }: Props) {
       <div className="ops-page-head">
         <div>
           <h2>Feature Flags &amp; Consumer Packs</h2>
-          <p>Arm who sees what: Core (first and last minutes), Trip, Travel, Pro, Labs, Ops. Staging overrides and system gates stay on the other tabs. Restore recommended app is Core + Trip on, not every flag.</p>
+          <p>Arm who sees what: Core, Trip, Travel, Pro, Labs, Ops. Recipes write a global mix. Packs below still Arm or Safe one group. This is not all flags on.</p>
         </div>
         <div style={{ display: 'flex', gap: '8px' }}>
           <button type="button" className="ops-btn" disabled={isRefreshing} onClick={() => void handleRefresh()}>
             <IconRefresh size={13} className={isRefreshing ? 'icon-sm ops-spin' : 'icon-sm'} /> {isRefreshing ? 'Refreshing...' : 'Refresh'}
-          </button>
-          <button
-            type="button"
-            className="ops-btn"
-            onClick={() => {
-              onRequestConfirm({
-                title: 'Restore recommended app?',
-                message: 'This writes the traveler default, not every flag. Global Superadmin overrides are cleared.',
-                confirmLabel: 'Restore recommended',
-                body: (
-                  <ul style={{ margin: 0, paddingLeft: '18px', fontSize: '13px', color: 'var(--text-secondary)', lineHeight: 1.45 }}>
-                    <li>Core and Trip on — add, invite, settle, Notes, receipts</li>
-                    <li>Travel capable — passes and radar exist; chrome hidden until a pass. Route stops stay off</li>
-                    <li>Pro, Labs, and Ops off — no OCR, itemized, chat-first, or demo seed</li>
-                  </ul>
-                ),
-                onConfirm: () => {
-                  void resetFeatureFlags().then(() => {
-                    showToast('Restored recommended app: Core and Trip on, Pro and Labs off.');
-                  });
-                },
-              });
-            }}
-          >
-            Restore recommended app
           </button>
         </div>
       </div>
@@ -375,6 +477,93 @@ export function AdminFlagsPage({ trips, members, onRequestConfirm }: Props) {
           <IconCheck size={14} /> {toastMsg}
         </div>
       )}
+
+      <div className="ops-card">
+        <div className="ops-ov-head">
+          <span className="ops-ov-title">Recipes</span>
+          <span className="ops-ov-count">{customPresets.length}/{MAX_CUSTOM_FLAG_PRESETS} saved mixes</span>
+        </div>
+        <p className="ops-section-sub" style={{ marginTop: 0 }}>
+          One tap writes a global mix. Recommended and Flyer are the traveler default. On the road hides travel chrome. Power money adds Pro. Labs is never in a built-in recipe.
+        </p>
+        <div className="ops-recipe-row">
+          {FLAG_RECIPES.map((recipe) => (
+            <button
+              key={recipe.id}
+              type="button"
+              className="ops-chip"
+              data-active={recipeMatches(recipe.id, featureFlags) ? 'true' : 'false'}
+              title={recipe.tagline}
+              onClick={() => handleApplyRecipe(recipe.id)}
+            >
+              {recipe.title}
+            </button>
+          ))}
+          {customPresets.map((preset) => (
+            <span key={preset.id} className="ops-recipe-chip">
+              <button
+                type="button"
+                className="ops-chip"
+                data-active={flagSetsEqual(preset.flags, featureFlags) ? 'true' : 'false'}
+                title={`Apply saved mix ${preset.name}`}
+                onClick={() => handleApplyCustom(preset)}
+              >
+                {preset.name}
+              </button>
+              <button
+                type="button"
+                className="ops-recipe-remove"
+                aria-label={`Delete ${preset.name}`}
+                onClick={() => handleDeleteCustom(preset)}
+              >
+                <IconX size={12} />
+              </button>
+            </span>
+          ))}
+          <button
+            type="button"
+            className="ops-btn"
+            onClick={() => {
+              if (customPresets.length >= MAX_CUSTOM_FLAG_PRESETS) {
+                showToast(`Max ${MAX_CUSTOM_FLAG_PRESETS} saved mixes. Delete one first.`);
+                return;
+              }
+              setSaveOpen(true);
+            }}
+          >
+            Save current mix
+          </button>
+        </div>
+        {saveOpen ? (
+          <form
+            className="ops-recipe-save"
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleSaveCurrentMix();
+            }}
+          >
+            <input
+              className="ops-input"
+              value={saveName}
+              onChange={(e) => setSaveName(e.target.value)}
+              placeholder="e.g. Goa weekend"
+              maxLength={40}
+              aria-label="Name for this flag mix"
+            />
+            <button type="submit" className="ops-btn ops-btn-primary">Save mix</button>
+            <button
+              type="button"
+              className="ops-btn"
+              onClick={() => {
+                setSaveOpen(false);
+                setSaveName('');
+              }}
+            >
+              Cancel
+            </button>
+          </form>
+        ) : null}
+      </div>
 
       {/* Sub-Navigation Tabs */}
       <div className="ops-subnav-bar" role="tablist" aria-label="Feature flag views">

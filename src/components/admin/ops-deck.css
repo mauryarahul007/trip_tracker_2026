@@ -992,6 +992,19 @@
 .ops-filter-row { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
 .ops-chip { font-size: 11px; letter-spacing: 0; padding: 6px 13px; border-radius: var(--r-pill); border: 1px solid var(--line-strong); background: var(--bg-inset); color: var(--text-secondary); cursor: pointer; }
 .ops-chip[data-active="true"] { border-color: var(--amber); color: var(--text-primary); background: var(--amber-dim); }
+.ops-recipe-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.ops-recipe-chip { display: inline-flex; align-items: center; gap: 6px; }
+.ops-recipe-chip .ops-recipe-remove {
+  border: 0;
+  background: transparent;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  padding: 0;
+  line-height: 0;
+}
+.ops-recipe-chip .ops-recipe-remove:hover { color: var(--danger); }
+.ops-recipe-save { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 10px; }
+.ops-recipe-save .ops-input { flex: 1 1 180px; min-width: 0; }
 
 .ops-search-wrap { position: relative; flex: 1 1 240px; }
 .ops-search-wrap svg { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--text-tertiary); pointer-events: none; }

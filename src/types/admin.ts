@@ -178,7 +178,8 @@ export type AppConfigKey =
   | 'landing_headline'
   | 'landing_tagline'
   | 'landing_invite_blurb'
-  | 'empty_trip_blurb';
+  | 'empty_trip_blurb'
+  | 'flag_presets';
 
 export interface DevicePlatformCount {
   platform: 'ios' | 'android';

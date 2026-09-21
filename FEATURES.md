@@ -9,11 +9,11 @@
 
 | Metric | Count |
 | :--- | :--- |
-| **Total Tracked** | **92** |
+| **Total Tracked** | **93** |
 | **💡 Requested** | **2** |
 | **📋 Planned** | **0** |
 | **🟡 In Progress** | **0** |
-| **✅ Shipped** | **90** |
+| **✅ Shipped** | **91** |
 | **⚪ Won't Do** | **0** |
 
 ---
@@ -142,6 +142,7 @@ CI pipeline for lint, build, and test on push/PR
 | **FEAT-090** | Consumer packs in Ops Deck (Core/Trip/Travel/Pro/Labs/Ops replace phases) | `admin` | `rahul` | `rahul` | Shipped in commit dca5349 (v3.35.0). ADR 215. FEAT-PACKS. |
 | **FEAT-091** | Superadmin loop health and growth (funnel, ghosts, attribution, landing copy) | `admin` | `rahul` | `rahul` | Shipped in commit dca5349 (v3.35.0). ADR 216. FEAT-GROWTH. Migration 0107. |
 | **FEAT-092** | Restore recommended app confirm on Flags (Core+Trip, not all flags) | `admin` | `rahul` | `rahul` | Shipped in commit aee182f (v3.35.1). |
+| **FEAT-093** | Flag recipes and saved mixes on Ops Deck Flags | `admin` | `rahul` | `rahul` | Shipped in v3.36.0. ADR 217. |
 
 ---
 

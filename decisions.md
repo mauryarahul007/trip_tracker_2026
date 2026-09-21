@@ -3877,3 +3877,13 @@ This document logs all meaningful technical decisions, library choices, design p
 
 ---
 
+## 217. Superadmin flag recipes and saved mixes
+* **Context:** Packs (Core/Trip/Travel/Pro/Labs/Ops) are the product contract. Superadmin still needed named mixes (cafe vs flyer vs power splitter) without Arm-all and without a second flag system.
+* **Decision:** Flags page Recipes: four built-in recipes (Recommended, On the road, Flyer, Power money) plus up to five named custom mixes. Apply confirms and replaces the global flag set. Recommended and Flyer write code defaults (same bits, different story). On the road safes Travel/Pro/Labs/Ops. Power money arms Pro and leaves Labs off. Custom saves current toggles to `app_config.flag_presets` with localStorage fallback. Labs is never in a built-in recipe; custom confirm warns if Labs is on.
+* **Trade-offs Accepted:**
+  - Flyer === Recommended bitset on purpose (air/rail story vs default story).
+  - Trip/user overrides still win after Apply until cleared.
+  - New flags missing from an old custom mix inherit `DEFAULT_FEATURE_FLAGS`.
+
+---
+

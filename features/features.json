@@ -1468,5 +1468,21 @@
     "shippedAt": "2026-09-21T14:24:42.604Z",
     "shippedBy": "rahul",
     "shippedNote": "Shipped in commit aee182f (v3.35.1)."
+  },
+  {
+    "id": "FEAT-093",
+    "title": "Flag recipes and saved mixes on Ops Deck Flags",
+    "description": "Built-in recipes (Recommended, On the road, Flyer, Power money) plus up to five named custom mixes. Apply confirms and replaces the global flag set. Labs never in a built-in recipe.",
+    "category": "admin",
+    "status": "shipped",
+    "requestedBy": "rahul",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-09-21T14:43:45.005Z",
+    "updatedAt": "2026-09-21T14:43:45.005Z",
+    "shippedAt": "2026-09-21T14:43:45.005Z",
+    "shippedBy": "rahul",
+    "shippedNote": "Shipped in v3.36.0. ADR 217."
   }
 ]

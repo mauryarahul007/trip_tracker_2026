@@ -3,6 +3,7 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import type { Member, Group, Expense, Category, TripState, ExpenseLocation, Trip, TripStop, ChecklistItem, TripNote, MemberRole, ItemizedReceiptConfig, TravelPass, TripFxConfig } from '../types';
 import type { FeatureFlagKey, ConsumerPackId } from '../types/admin';
 import { DEFAULT_FEATURE_FLAGS, isFeatureActive, getPackFlagKeys } from '../utils/featureFlags';
+import { hydrateFlagSet } from '../utils/flagPresets';
 import { buildAutoGroupName } from '../utils/groupNaming';
 import { copyDefaultSplit } from '../utils/defaultSplit';
 import { getCurrencyDecimals } from '../utils/currency';
@@ -164,6 +165,7 @@ interface TripStore extends TripState {
   setTripFlagOverride: (tripId: string, key: FeatureFlagKey, value: boolean | null) => Promise<void>;
   setUserFlagOverride: (userId: string, key: FeatureFlagKey, value: boolean | null) => Promise<void>;
   resetFeatureFlags: () => Promise<void>;
+  applyFeatureFlagSet: (flags: Record<FeatureFlagKey, boolean>) => Promise<void>;
   isFeatureEnabled: (key: FeatureFlagKey, context?: { tripId?: string; userId?: string }) => boolean;
   // Pulls this user's resolved flags (global + their trip + their own
   // overrides) from Supabase -- see migration 0064. featureFlags/
@@ -1027,6 +1029,20 @@ export const useTripStore = create<TripStore>()(
         await Promise.all(all.filter((o) => o.scope === 'global').map((o) => setFeatureFlagOverride('global', '', o.flagKey, null)));
       } catch (e) {
         console.error('Failed to clear global feature flag overrides:', e);
+      }
+    },
+
+    applyFeatureFlagSet: async (flags) => {
+      const next = hydrateFlagSet(flags);
+      set({
+        featureFlags: next,
+        lastModifiedAt: Date.now(),
+      });
+      const keys = Object.keys(DEFAULT_FEATURE_FLAGS) as FeatureFlagKey[];
+      try {
+        await Promise.all(keys.map((k) => setFeatureFlagOverride('global', '', k, next[k])));
+      } catch (e) {
+        console.error('Failed to persist feature flag set:', e);
       }
     },
 

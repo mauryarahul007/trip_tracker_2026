@@ -9,6 +9,13 @@ export interface ChangelogEntry {
 // parsed from decisions.md/BUGS.md: those are prose for developers, not client data.
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: '3.36.0',
+    date: '2026-09-21',
+    changes: [
+      'Ops Deck Flags can apply a named mix: Recommended, On the road, Flyer, or Power money — or a saved custom mix — after a confirm. This is not all flags on.',
+    ],
+  },
+  {
     version: '3.35.1',
     date: '2026-09-21',
     changes: [

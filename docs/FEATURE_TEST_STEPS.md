@@ -21,6 +21,7 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 
 | Shipped | Version | Id | Section |
 |--------|---------|-----|---------|
+| 2026-09-21 | v3.36.0 | FEAT-093 | [Flag recipes and saved mixes](#feat-presets--flag-recipes-and-saved-mixes) |
 | 2026-09-21 | v3.35.1 | FEAT-092 | [Restore recommended app confirm](#feat-092--restore-recommended-app-confirm) |
 | 2026-09-21 | v3.35.0 | FEAT-GROWTH | [Superadmin loop health & growth](#feat-growth--superadmin-loop-health--growth) |
 | 2026-09-21 | v3.35.0 | FEAT-PACKS | [Consumer packs in Ops Deck](#feat-packs--consumer-packs-replace-phases) |
@@ -55,20 +56,51 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 
 ---
 
+## FEAT-PRESETS — Flag recipes and saved mixes
+
+**Commit:** v3.36.0. **ADR:** 217. **Tracker:** FEAT-093. No new traveler flag.
+
+**Point:** Superadmin Flags can apply a named global mix. Built-in recipes are Recommended, On the road, Flyer, Power money. Save current mix stores up to 5 named custom mixes. This is not all flags on. Packs still Arm/Safe one group.
+
+### Flags
+None new. Recipes write `DEFAULT_FEATURE_FLAGS` variants.
+
+### Prep
+1. Superadmin → Ops Deck → Flags. Hard-refresh so the **Recipes** card is under the page title.
+
+### Steps
+1. Recipes shows Recommended, On the road, Flyer, Power money, and **Save current mix**.
+2. **Recommended** confirm: Core + Trip on, Travel capable, Pro/Labs off. Cancel writes nothing. Apply → Core/Trip Armed, Travel Partial, Pro/Labs/Ops Safe.
+3. **On the road** → Travel pack Safe (passes/radar off). Core+Trip still Armed.
+4. **Flyer** → same pack states as Recommended.
+5. **Power money** → Pro Armed, Labs still Safe. Itemized/OCR available; Chat-first still absent.
+6. Toggle a Pro flag extra, **Save current mix** as “Goa weekend”. Chip appears. Apply it after changing flags — mix returns. Delete mix → flags unchanged.
+7. Seventh save is blocked (max 5).
+
+### Negative checks
+- Built-in recipes never turn Labs on.
+- Arm Pack on Travel still turns route stops on (different from Flyer/Recommended).
+- Cancel on confirm leaves flags unchanged.
+
+### Pass
+- One confirm per apply. Custom mix round-trips. Packs below still work.
+
+---
+
 ## FEAT-092 — Restore recommended app confirm
 
 **Commit:** aee182f (v3.35.1). **Tracker:** FEAT-092. Reuses pack defaults from FEAT-PACKS / ADR 215. No new traveler flag.
 
-**Point:** Superadmin Flags no longer silently resets. **Restore recommended app** confirms Core + Trip on, Travel capable, Pro/Labs/Ops off. This is not all flags on.
+**Point:** Superadmin Flags no longer silently resets. **Recommended** (Recipes) confirms Core + Trip on, Travel capable, Pro/Labs/Ops off. This is not all flags on. See FEAT-PRESETS for On the road / Flyer / Power money / saved mixes.
 
 ### Flags
 None new. Same `DEFAULT_FEATURE_FLAGS` as FEAT-PACKS.
 
 ### Prep
-1. Superadmin → Ops Deck → Flags. Hard-refresh so the header shows **Restore recommended app**.
+1. Superadmin → Ops Deck → Flags. Hard-refresh so **Recipes** includes **Recommended**.
 
 ### Steps
-1. Header button is **Restore recommended app**, not Reset to Defaults.
+1. **Recommended** recipe chip, not a silent Reset to Defaults.
 2. Click it. Dialog lists Core/Trip on, Travel capable (route stops off), Pro/Labs/Ops off.
 3. **Cancel** — pack chips and toggles unchanged.
 4. Click again → **Restore recommended**. Toast: Core and Trip on, Pro and Labs off. Core/Trip Armed, Travel Partial, Pro/Labs/Ops Safe.
