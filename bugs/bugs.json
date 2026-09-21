@@ -7174,5 +7174,31 @@
     "resolvedBy": "claude-cli",
     "resolvedAt": "2026-09-20T13:30:23.673Z",
     "resolutionNote": "Fixed in v3.32.7. rAF-coalesced pointer writes, useLayoutEffect instead of flushSync+reflow, drop live blur, disable backdrop-filter while dragging, peek covers at 480px. Commit 432b854."
+  },
+  {
+    "id": "BUG-242",
+    "title": "Tracker and ADR 218 said migration 0108 was not applied after it was applied",
+    "description": "After the v3.37.0 push, FEAT-094's shipped note, ADR 218 and FEATURE_TEST_STEPS all stated migration 0108 was not applied to the live project. It was applied on 2026-09-22, so operators reading the records would wrongly believe the Growth cards and invite/share flag reads were still broken.",
+    "severity": "low",
+    "category": "general",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-09-21T18:40:13.849Z",
+    "updatedAt": "2026-09-21T18:40:20.852Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-09-21T18:40:20.852Z",
+    "resolutionNote": "Fixed in commit 12b39bb (docs only). ADR 218, FEAT-094 note and FEATURE_TEST_STEPS now say 0108 was applied on 2026-09-22 after the code push."
   }
 ]

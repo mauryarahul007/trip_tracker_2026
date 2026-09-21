@@ -9,10 +9,10 @@
 
 | Metric | Count | Status Notes |
 | :--- | :--- | :--- |
-| **Total Tracked** | **241** | All recorded bugs across sessions |
+| **Total Tracked** | **242** | All recorded bugs across sessions |
 | **🟢 Open** | **0** | No critical blockers, 0 High |
 | **🟡 In Progress** | **0** | Active investigation or fix |
-| **✅ Resolved** | **214** | Verified & closed |
+| **✅ Resolved** | **215** | Verified & closed |
 | **⚪ Won't Fix** | **27** | Expected behavior / deferred |
 
 ---
@@ -245,6 +245,7 @@
 | **BUG-239** | Trip stack right-swipe showed the next trip behind the card, then swapped to the previous trip; blank card flash | `ui-ux` | `low` | `claude-cli` | `claude-cli` | Fixed in v3.32.6. Drag is direction-aware: dragging right raises the hidden previous-trip card above the peeks (opaque within first third), peeks stay still; hidden card kept at opacity .01 so its photo is decoded. Follow-up to BUG-238. Commit 2fca9d0. |
 | **BUG-240** | Ops Deck and Bug Ledger wait on full fleet payload before first paint | `performance` | `medium` | `claude-cli` | `claude-cli` | Fixed in v3.32.7. Tab-scoped Ops Deck loading, slim BUG_SUMMARY_COLUMNS + hydrate on expand, nested expenses(count), HEAD device counts, slim ADMIN_EXPENSE_COLUMNS, no duplicate fetchBugs. Commit 432b854. |
 | **BUG-241** | Home trip stack still hitches during swipe after gesture-logic upgrades | `ui-ux` | `low` | `claude-cli` | `claude-cli` | Fixed in v3.32.7. rAF-coalesced pointer writes, useLayoutEffect instead of flushSync+reflow, drop live blur, disable backdrop-filter while dragging, peek covers at 480px. Commit 432b854. |
+| **BUG-242** | Tracker and ADR 218 said migration 0108 was not applied after it was applied | `general` | `low` | `claude-cli` | `claude-cli` | Fixed in commit 12b39bb (docs only). ADR 218, FEAT-094 note and FEATURE_TEST_STEPS now say 0108 was applied on 2026-09-22 after the code push. |
 
 ---
 
