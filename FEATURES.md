@@ -142,7 +142,7 @@ CI pipeline for lint, build, and test on push/PR
 | **FEAT-090** | Consumer packs in Ops Deck (Core/Trip/Travel/Pro/Labs/Ops replace phases) | `admin` | `rahul` | `rahul` | Shipped in commit dca5349 (v3.35.0). ADR 215. FEAT-PACKS. |
 | **FEAT-091** | Superadmin loop health and growth (funnel, ghosts, attribution, landing copy) | `admin` | `rahul` | `rahul` | Shipped in commit dca5349 (v3.35.0). ADR 216. FEAT-GROWTH. Migration 0107. |
 | **FEAT-092** | Restore recommended app confirm on Flags (Core+Trip, not all flags) | `admin` | `rahul` | `rahul` | Shipped in commit aee182f (v3.35.1). |
-| **FEAT-093** | Flag recipes and saved mixes on Ops Deck Flags | `admin` | `rahul` | `rahul` | Shipped in v3.36.0. ADR 217. |
+| **FEAT-093** | Flag recipes and saved mixes on Ops Deck Flags | `admin` | `rahul` | `rahul` | Shipped in commit 2a704e0 (v3.36.0). ADR 217. |
 
 ---
 

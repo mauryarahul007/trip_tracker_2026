@@ -1480,9 +1480,9 @@
       "platform": "web"
     },
     "createdAt": "2026-09-21T14:43:45.005Z",
-    "updatedAt": "2026-09-21T14:43:45.005Z",
-    "shippedAt": "2026-09-21T14:43:45.005Z",
+    "updatedAt": "2026-09-21T14:45:00.436Z",
+    "shippedAt": "2026-09-21T14:45:00.436Z",
     "shippedBy": "rahul",
-    "shippedNote": "Shipped in v3.36.0. ADR 217."
+    "shippedNote": "Shipped in commit 2a704e0 (v3.36.0). ADR 217."
   }
 ]

@@ -58,7 +58,7 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 
 ## FEAT-PRESETS — Flag recipes and saved mixes
 
-**Commit:** v3.36.0. **ADR:** 217. **Tracker:** FEAT-093. No new traveler flag.
+**Commit:** 2a704e0 (v3.36.0). **ADR:** 217. **Tracker:** FEAT-093. No new traveler flag.
 
 **Point:** Superadmin Flags can apply a named global mix. Built-in recipes are Recommended, On the road, Flyer, Power money. Save current mix stores up to 5 named custom mixes. This is not all flags on. Packs still Arm/Safe one group.
 
