@@ -7200,5 +7200,31 @@
     "resolvedBy": "claude-cli",
     "resolvedAt": "2026-09-21T18:40:20.852Z",
     "resolutionNote": "Fixed in commit 12b39bb (docs only). ADR 218, FEAT-094 note and FEATURE_TEST_STEPS now say 0108 was applied on 2026-09-22 after the code push."
+  },
+  {
+    "id": "BUG-243",
+    "title": "CI failing since v3.37.0: changelog entry missing for the bumped version",
+    "description": "The v3.37.0 release bumped package.json but src/utils/changelog.ts had no 3.37.0 entry, so src/utils/changelog.test.ts failed and CI failed on 94caf9d and d637e74 (09e8785 was cancelled). Lint, build and deploys were green. The pre-commit test run happened before the version bump, so it did not catch it.",
+    "severity": "medium",
+    "category": "general",
+    "status": "resolved",
+    "foundBy": "claude-cli",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-09-21T18:44:51.166Z",
+    "updatedAt": "2026-09-21T18:44:51.279Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-09-21T18:44:51.279Z",
+    "resolutionNote": "Fixed in commit 4e7fa28. Added the 3.37.0 changelog entry; npm run lint, build and test all pass locally (405/405). Lesson: rerun the full test suite after the version bump, not before."
   }
 ]
