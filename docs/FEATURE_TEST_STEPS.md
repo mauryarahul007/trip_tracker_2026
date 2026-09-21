@@ -21,6 +21,8 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 
 | Shipped | Version | Id | Section |
 |--------|---------|-----|---------|
+| 2026-09-21 | v3.34.0 | FEAT-LIGHTLOOP2 | [Money-loop finish](#feat-lightloop2--money-loop-finish) |
+| 2026-09-21 | v3.34.0 | FEAT-LIGHTLOOP | [Light money loop](#feat-lightloop--light-money-loop) |
 | 2026-09-21 | v3.33.0 | FEAT-088 | [Chat money cards stay quiet](#feat-chatlife--chat-money-cards-stay-quiet) |
 | 2026-09-16 | v3.25.1 | BUG-221 | [Chat overlay & live-location CTA](#bug-221--chat-overlay--live-location-cta-v3251) |
 | 2026-09-17 | v3.26.0 / v3.26.1 | FEAT-076 | [Expense cards, location heartbeat, Summary polish](#feat-076--expense-cards-location-heartbeat-summary-polish-v3260) |
@@ -47,6 +49,120 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 3. Prefer **two browsers / accounts** on the same trip for realtime checks (A = you, B = peer).
 4. Open **Superadmin → Ops Deck → Flags**. Prefer **trip overrides** for safe testing.
 5. For each feature: confirm **flag OFF → feature absent**, then arm the flag and retest.
+
+---
+
+## FEAT-LIGHTLOOP — Light money loop
+
+**Commit:** v3.34.0. **ADR:** 214.
+
+**Point:** Faster add, clearer home IOU, settle without leaving chat-you-already-use, next trip with the same people. No Chat-first, Tripbot, or itinerary builder.
+
+### Flags
+
+All default **OFF**. Arm in Superadmin → Ops Deck → Flags (or Release Phases). Nothing in this feature is reachable until its flag is ON.
+
+| Behavior | Flag | Default |
+|----------|------|---------|
+| Clone last expense | `enableCloneLastExpense` | OFF |
+| Remember split | `enableRememberDefaultSplit` | OFF |
+| Expense draft 24h | `enablePersistentExpenseDraft` | OFF |
+| WhatsApp settle card | `enableWhatsAppSettlementShare` | OFF |
+| UPI on settlement row | `enableUpiPayments` | OFF |
+| Trip closeout | `enableTripCloseout` | OFF |
+| View-only share link | `enableTripShareLink` | OFF |
+| Home You are owed / You owe | `enableHomeNetBalance` | OFF |
+| New trip with this group (copy names) | `enableCloneTripSquad` | OFF |
+| Notes Talk / Pack / Pass labels | `enableNotesTalkPackPass` | OFF |
+| Hide Next-Up until a pass exists | `enableProgressiveNextUp` | OFF |
+| Chat-first / Tripbot / in-chat cards | Phase 6 flags | stay OFF |
+
+If production Ops Deck already stored a flag as ON, that stored value still wins — turn it OFF there to hide the surface.
+
+### A. Fast add
+**Flags ON:** `enableCloneLastExpense`, `enableRememberDefaultSplit`, `enablePersistentExpenseDraft`.
+
+1. Open a trip with at least one expense. Add expense → **Clone last** (or long-press +). Date is today; split matches last.
+2. Change split participants, save. Next new expense reuses that split.
+3. Start a new expense, type a title, leave. Reopen add: draft is still there.
+
+### B. Settle out
+**Flags ON:** `enableUpiPayments`, `enableWhatsAppSettlementShare`, `enableTripCloseout`, `enableTripShareLink`.
+
+1. Balances with an open transfer → **UPI Pay** on that row (not a new tab). **Share** produces a WhatsApp/system card.
+2. Trip end date in the past → closeout reminder. Complete closeout → trip locks.
+3. Share trip → generate read-only link. Open in a logged-out browser: summary, no edit.
+
+### C. Home IOU and next trip
+**Flags ON:** `enableHomeNetBalance`, `enableCloneTripSquad`.
+
+1. Home (no trip open), online, you have a non-zero net in some currency → strip **You are owed** / **You owe** above the stack.
+2. Trip action sheet → **New trip with this group**. New trip has the same people (names, not their logins) and no expenses.
+
+### D. Notes IA and progressive travel
+**Flags ON:** `enableNotesTalkPackPass`, `enableProgressiveNextUp` (plus existing `enableTravelPasses` / `enableNextUpCapsule`).
+
+1. Notes hub segments: **Talk / Pack / Pass / Notes** (Talk only if trip chat is on and chat-first is off).
+2. Expenses tab: Next-Up capsule is absent until the trip has a pass. Radar / scanner stay on pass cards only.
+
+### Negative checks
+- **All light-loop flags OFF:** no Clone last, no remembered split, no 24h draft, no UPI chip, no WhatsApp settle share, no closeout, no share link, no home IOU strip, Duplicate Trip copies only you (not the squad), Notes labels stay Passes / Notes / Checklist / Chat, Next-Up can still show without a pass (existing Next-Up flag).
+- Phase 6 chat-first / Tripbot / in-chat cards still OFF → no Chat tab-1, no tripbot, no extra money bubbles.
+- Splitwise import and contact invite still OFF.
+- Toggle any one flag OFF in Ops Deck → that surface disappears; others stay.
+
+### Pass
+- With flags ON: second expense is fast; home shows money; settle is a row action; next trip reuses the squad; Notes is three jobs plus notes; travel extras wait for a pass.
+- With flags OFF: none of those surfaces appear.
+
+---
+
+## FEAT-LIGHTLOOP2 — Money-loop finish
+
+**Commit:** v3.34.0. **ADR:** 214.
+
+**Point:** Finish the five leftover edges from the light money-loop analysis: home Add, copy split on squad clone, closeout → Wrapped, view-only share first, Why? on settle rows. No new flags — each reuses an existing Superadmin flag, default OFF except Wrapped (already ON).
+
+### Flags
+
+| Behavior | Flag | Default |
+|----------|------|---------|
+| Home IOU strip + **Add** | `enableHomeNetBalance` | OFF |
+| Copy squad + remembered split | `enableCloneTripSquad` + `enableRememberDefaultSplit` | OFF |
+| Closeout then Wrapped recap | `enableTripCloseout` (+ `enableTripWrapped`) | Closeout OFF, Wrapped ON |
+| View-only link first in Invite | `enableTripShareLink` | OFF |
+| **Why?** on settle rows | `enableExplainThisNumber` | OFF |
+
+### A. Home Add
+1. Flags: `enableHomeNetBalance` ON. Home, online, non-zero net → strip shows You are owed / You owe **and** **Add**.
+2. Tap **Add** → opens the trip whose dates include today (else last-updated open trip) with the add-expense form.
+3. Flag OFF → no strip, no Add.
+
+### B. Split habits on next trip
+1. Flags: `enableCloneTripSquad` and `enableRememberDefaultSplit` ON. On a trip, save an expense with a non-default split.
+2. Action sheet → **New trip with this group**. Add expense on the copy: split mode/people match (mapped by name).
+3. Either flag OFF → Duplicate Trip does not copy split storage.
+
+### C. Closeout → Wrapped
+1. Flags: `enableTripCloseout` ON, `enableTripWrapped` ON. Finish closeout → **Lock trip**. Trip Wrapped opens immediately (closeout sheet closes).
+2. Wrapped OFF → lock stays on the “Trip locked / Done” sheet. No recap.
+
+### D. View-only share first
+1. Flag: `enableTripShareLink` ON. Settings → Invite & Share. **View-only link (no account)** is first; a link is generated if none exists. Join code is under **Invite to join**.
+2. Open the `/share/…` URL logged out: summary only, no edit.
+3. Flag OFF → join link/code first; no view-only block.
+
+### E. Why this amount?
+1. Flag: `enableExplainThisNumber` ON. Balances → a suggested transfer shows **ⓘ Why?**
+2. Tap → bill titles that make up that amount. Flag OFF → no Why? control.
+
+### Negative checks
+- Home Add never appears without the IOU strip / flag.
+- Duplicate without both clone-squad and remember-split does not write `tt-default-split` for the new trip.
+- Share modal does not auto-generate a view-only token when `enableTripShareLink` is OFF.
+
+### Pass
+- Home is money + one tap to add; next trip keeps split habits; lock becomes a recap; auntie gets a view-only link first; settle rows can explain the number.
 
 ---
 

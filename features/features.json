@@ -1404,5 +1404,21 @@
     "shippedAt": "2026-09-21T07:50:34.146Z",
     "shippedBy": "rahul",
     "shippedNote": "Shipped in v3.33.0; migration 0106 applied to remote."
+  },
+  {
+    "id": "FEAT-089",
+    "title": "Light money loop: home IOU, squad clone, Notes Talk/Pack/Pass, closeout recap (Superadmin-gated)",
+    "description": "Flag-gated (default OFF) money-loop finish: home you-owe/Add strip, clone last/remember split/draft, WhatsApp settle, UPI row chip, closeout→Wrapped, view-only share first, Talk/Pack/Pass Notes IA, progressive Next-Up, Why? on settle rows. New flags enableHomeNetBalance, enableCloneTripSquad, enableNotesTalkPackPass, enableProgressiveNextUp.",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "rahul",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-09-21T08:50:57.882Z",
+    "updatedAt": "2026-09-21T08:50:57.882Z",
+    "shippedAt": "2026-09-21T08:50:57.882Z",
+    "shippedBy": "rahul",
+    "shippedNote": "Shipped in v3.34.0 behind Superadmin Ops Deck flags (default OFF). ADR 214. FEAT-LIGHTLOOP / FEAT-LIGHTLOOP2."
   }
 ]

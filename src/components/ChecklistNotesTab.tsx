@@ -424,6 +424,7 @@ export function ChecklistNotesTab({ trip, members, isAdmin, initialViewMode, onI
   const dataSaverPref = useDataSaverEnabled();
   const dataSaverActive = isDataSaverFlagEnabled && dataSaverPref;
   const isChatSubTabEnabled = isChatEnabled && !isChatFirstNav;
+  const isTalkPackPass = isFeatureEnabled('enableNotesTalkPackPass', { tripId: liveTrip.id });
 
   const [viewMode, setViewMode] = useState<ViewMode>(() => {
     if (isChatSubTabEnabled && !isNotesEnabled && !isPassesEnabled) return 'chat';
@@ -851,15 +852,28 @@ export function ChecklistNotesTab({ trip, members, isAdmin, initialViewMode, onI
       {/* Top Segmented Controls */}
       {(() => {
         const segments: { id: ViewMode; label: string; badge: string }[] = [];
-        if (isPassesEnabled) segments.push({ id: 'passes', label: 'Passes', badge: String(passes.length) });
-        if (isNotesEnabled) segments.push({ id: 'notes', label: 'Notes', badge: String(notes.length) });
-        if (isNotesEnabled) segments.push({ id: 'checklist', label: 'Checklist', badge: totalCount > 0 ? `${completedCount}/${totalCount}` : '0' });
-        if (isChatSubTabEnabled) {
-          segments.push({
-            id: 'chat',
-            label: 'Chat',
-            badge: chatHasUnread && viewMode !== 'chat' ? 'unread' : '',
-          });
+        if (isTalkPackPass) {
+          if (isChatSubTabEnabled) {
+            segments.push({
+              id: 'chat',
+              label: 'Talk',
+              badge: chatHasUnread && viewMode !== 'chat' ? 'unread' : '',
+            });
+          }
+          if (isNotesEnabled) segments.push({ id: 'checklist', label: 'Pack', badge: totalCount > 0 ? `${completedCount}/${totalCount}` : '0' });
+          if (isPassesEnabled) segments.push({ id: 'passes', label: 'Pass', badge: String(passes.length) });
+          if (isNotesEnabled) segments.push({ id: 'notes', label: 'Notes', badge: String(notes.length) });
+        } else {
+          if (isPassesEnabled) segments.push({ id: 'passes', label: 'Passes', badge: String(passes.length) });
+          if (isNotesEnabled) segments.push({ id: 'notes', label: 'Notes', badge: String(notes.length) });
+          if (isNotesEnabled) segments.push({ id: 'checklist', label: 'Checklist', badge: totalCount > 0 ? `${completedCount}/${totalCount}` : '0' });
+          if (isChatSubTabEnabled) {
+            segments.push({
+              id: 'chat',
+              label: 'Chat',
+              badge: chatHasUnread && viewMode !== 'chat' ? 'unread' : '',
+            });
+          }
         }
 
         if (segments.length < 2) return null;

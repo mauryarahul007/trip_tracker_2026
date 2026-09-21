@@ -86,6 +86,11 @@ export function TripCloseoutModal({
                 onClick={() => {
                   triggerHaptic('medium');
                   onLockTrip();
+                  if (onOpenWrapped) {
+                    onClose();
+                    onOpenWrapped();
+                    return;
+                  }
                   setLocked(true);
                 }}
               >
@@ -111,7 +116,7 @@ export function TripCloseoutModal({
                     onOpenWrapped();
                   }}
                 >
-                  View trip recap
+                  See your trip recap
                 </button>
               )}
               <button type="button" className="secondary-btn" onClick={onClose}>

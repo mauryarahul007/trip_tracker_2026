@@ -65,6 +65,12 @@ shipped features. Bump the hardcoded flag-count assertion in
 Phases pages are fully data-driven off this registry — no other wiring
 needed for a flag to appear there.
 
+`FEATURE_FLAGS_META` **label** and **description** must explain, in
+Superadmin language: what the traveler sees when ON, what is gone when
+OFF, and what the flag does not do. Vague copy ("enables the feature") is
+not enough. Reuse an existing flag when the work is the same surface; do
+not default-ON an old flag just to ship.
+
 ## Feature manual test steps (mandatory, no exceptions)
 
 Every customer-facing feature or UX fix that needs manual QA must append

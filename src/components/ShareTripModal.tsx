@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Capacitor } from '@capacitor/core';
 import type { Trip } from '../types';
 import { IconClose, IconCopy, IconCheck } from './Icons';
@@ -48,6 +48,13 @@ export function ShareTripModal({ trip, onClose, onOpenOfflineSnapshot }: Props) 
     try {
       const result = await generateTripShareLink(trip.id);
       setShareState({ enabled: true, token: result.shareToken });
+      useTripStore.setState((s) => ({
+        trips: s.trips.map((t) =>
+          t.id === trip.id
+            ? { ...t, shareToken: result.shareToken, shareEnabled: true, shareExpiresAt: result.shareExpiresAt }
+            : t
+        ),
+      }));
     } catch {
       // surfaced via the unchanged shareState — button stays actionable to retry
     } finally {
@@ -55,11 +62,22 @@ export function ShareTripModal({ trip, onClose, onOpenOfflineSnapshot }: Props) 
     }
   };
 
+  const autoShareStarted = useRef(false);
+  useEffect(() => {
+    if (!isTripShareLinkEnabled || autoShareStarted.current) return;
+    if (shareState.enabled || shareState.token) return;
+    autoShareStarted.current = true;
+    void handleGenerateShareLink();
+  }, [isTripShareLinkEnabled, shareState.enabled, shareState.token]);
+
   const handleRevokeShareLink = async () => {
     setShareBusy(true);
     try {
       await revokeTripShareLink(trip.id);
       setShareState((s) => ({ ...s, enabled: false }));
+      useTripStore.setState((s) => ({
+        trips: s.trips.map((t) => (t.id === trip.id ? { ...t, shareEnabled: false } : t)),
+      }));
     } finally {
       setShareBusy(false);
     }
@@ -121,8 +139,42 @@ export function ShareTripModal({ trip, onClose, onOpenOfflineSnapshot }: Props) 
 
         <h3 id="share-trip-title" style={{ fontSize: '17px', marginBottom: '4px' }}>Share & Export "{trip.name}"</h3>
         <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '16px' }}>
-          Invite travelers or save an offline trip archive.
+          {isTripShareLinkEnabled
+            ? 'Send a view-only link — no account needed. Or invite companions to join and log.'
+            : 'Invite travelers or save an offline trip archive.'}
         </p>
+
+        {isTripShareLinkEnabled && (
+          <div className="form-group" style={{ marginBottom: '16px' }}>
+            <span className="form-label">View-only link (no account)</span>
+            <p style={{ fontSize: '11.5px', color: 'var(--text-secondary)', margin: '2px 0 8px' }}>
+              Anyone with the link sees trip name, dates, and total spend — not individual expenses or balances. Expires in 30 days or when you revoke it.
+            </p>
+            {!shareState.enabled ? (
+              <button type="button" className="gradient-btn" style={{ width: '100%', padding: '9px 12px', fontSize: '13px' }} onClick={handleGenerateShareLink} disabled={shareBusy}>
+                {shareBusy ? 'Generating…' : 'Copy view-only link'}
+              </button>
+            ) : (
+              <>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <input id="share-readonly-link" type="text" readOnly className="input-field" value={shareState.token ? buildTripShareUrl(shareState.token) : ''} style={{ flex: 1, fontSize: '13px' }} onFocus={(e) => e.target.select()} />
+                  <button type="button" className="gradient-btn" style={{ padding: '0 14px', flexShrink: 0 }} onClick={() => shareState.token && copy(buildTripShareUrl(shareState.token), 'share')}>
+                    {copied === 'share' ? <IconCheck size={16} className="icon-sm" /> : <IconCopy size={16} className="icon-sm" />}
+                  </button>
+                </div>
+                <button
+                  type="button"
+                  className="secondary-btn"
+                  style={{ width: '100%', padding: '9px', fontSize: '12.5px', marginTop: '8px', color: 'var(--color-danger)', borderColor: 'rgba(184, 69, 46, 0.3)' }}
+                  onClick={handleRevokeShareLink}
+                  disabled={shareBusy}
+                >
+                  Revoke Link
+                </button>
+              </>
+            )}
+          </div>
+        )}
 
         {!hasJoinCode ? (
           <div
@@ -144,8 +196,8 @@ export function ShareTripModal({ trip, onClose, onOpenOfflineSnapshot }: Props) 
           </div>
         ) : (
           <>
-            <div className="form-group">
-              <label className="form-label" htmlFor="share-invite-link">Invite link</label>
+            <div className="form-group" style={isTripShareLinkEnabled ? { borderTop: '1px solid var(--border-color)', paddingTop: '14px' } : undefined}>
+              <label className="form-label" htmlFor="share-invite-link">{isTripShareLinkEnabled ? 'Invite to join (they can add expenses)' : 'Invite link'}</label>
               <div style={{ display: 'flex', gap: '8px' }}>
                 <input id="share-invite-link" type="text" readOnly className="input-field" value={joinLink} style={{ flex: 1, fontSize: '13px' }} onFocus={(e) => e.target.select()} />
                 <button type="button" className="secondary-btn" style={{ padding: '0 14px', flexShrink: 0 }} onClick={() => copy(joinLink, 'link')}>
@@ -187,38 +239,6 @@ export function ShareTripModal({ trip, onClose, onOpenOfflineSnapshot }: Props) 
               </div>
             )}
           </>
-        )}
-
-        {isTripShareLinkEnabled && (
-          <div className="form-group" style={{ borderTop: '1px solid var(--border-color)', paddingTop: '14px', marginBottom: '16px' }}>
-            <span className="form-label">Read-only summary link</span>
-            <p style={{ fontSize: '11.5px', color: 'var(--text-secondary)', margin: '2px 0 8px' }}>
-              Share a no-login link showing trip name, dates, and total spend — not individual expenses or balances. Expires in 30 days or when you revoke it.
-            </p>
-            {!shareState.enabled ? (
-              <button type="button" className="secondary-btn" style={{ width: '100%', padding: '9px 12px', fontSize: '13px' }} onClick={handleGenerateShareLink} disabled={shareBusy}>
-                {shareBusy ? 'Generating…' : '🔗 Generate Share Link'}
-              </button>
-            ) : (
-              <>
-                <div style={{ display: 'flex', gap: '8px' }}>
-                  <input type="text" readOnly className="input-field" value={shareState.token ? buildTripShareUrl(shareState.token) : ''} style={{ flex: 1, fontSize: '13px' }} onFocus={(e) => e.target.select()} />
-                  <button type="button" className="secondary-btn" style={{ padding: '0 14px', flexShrink: 0 }} onClick={() => shareState.token && copy(buildTripShareUrl(shareState.token), 'share')}>
-                    {copied === 'share' ? <IconCheck size={16} className="icon-sm" /> : <IconCopy size={16} className="icon-sm" />}
-                  </button>
-                </div>
-                <button
-                  type="button"
-                  className="secondary-btn"
-                  style={{ width: '100%', padding: '9px', fontSize: '12.5px', marginTop: '8px', color: 'var(--color-danger)', borderColor: 'rgba(184, 69, 46, 0.3)' }}
-                  onClick={handleRevokeShareLink}
-                  disabled={shareBusy}
-                >
-                  Revoke Link
-                </button>
-              </>
-            )}
-          </div>
         )}
 
         {onOpenOfflineSnapshot && (

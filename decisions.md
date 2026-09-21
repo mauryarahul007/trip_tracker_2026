@@ -3820,3 +3820,26 @@ This document logs all meaningful technical decisions, library choices, design p
   - Overlay status is live-store, not message history — a delayed client without the expense row may not show Deleted until it syncs.
   - Hide bills and unread cursor are local / per-device; they are not a shared mute.
   - 0106 kinds exist on the server but are unused by this client so we do not spam the thread.
+
+---
+
+## 214. Light money loop: Superadmin-gated settle/add/share, home IOU, squad clone, Notes Talk/Pack/Pass (Release v3.34.0)
+* **Context:**
+  - Competitive review (2026 splitters + Wanderlog) showed Trip Tracker already out-features Tricount/Splid on trip-native logging, but loses the first 60 seconds and the last 5 minutes of a trip. Clone-last, remembered split, drafts, WhatsApp settle, UPI, closeout, and read-only share links were built and default OFF. Home already computed cross-trip IOUs (`useCrossTripBalances`) but only showed them in Settings.
+  - Chat-first, Tripbot, itinerary builder, and extra game surfaces were explicitly skipped: they add weight without the episodic trip-reuse loop.
+  - Standing rule: every new customer-facing surface ships behind an Ops Deck flag, default OFF.
+* **Decision:**
+  - **Existing money-loop flags stay default OFF.** Superadmin arms clone last expense, remember default split, persistent draft, WhatsApp settle card, UPI settle-row chip, trip closeout, and read-only share link. Leave Splitwise import, contact invite, chat-first, Tripbot, and the rest of Phase 6 OFF.
+  - **New flags (default OFF):** `enableHomeNetBalance` (home You are owed / You owe strip), `enableCloneTripSquad` (name-only member copy + "New trip with this group"), `enableNotesTalkPackPass` (Talk / Pack / Pass / Notes labels), `enableProgressiveNextUp` (hide Next-Up until a pass exists).
+  - **Home net strip:** reuse `useCrossTripBalances` above the trip stack when `enableHomeNetBalance` is on. Settings cross-trip chips are unchanged (pre-existing).
+  - **Same squad, new trip:** when `enableCloneTripSquad` is on, `duplicateTrip` copies name-only members (not linked accounts, not expenses). Flag off keeps Duplicate Trip as creator-only.
+  - **Notes IA / Next-Up:** Talk/Pack/Pass labels and the extra Next-Up pass-length guard are flag-off until Superadmin arms them.
+  - **Home Add:** on the IOU strip (`enableHomeNetBalance`), Add opens expense create on the trip in dates today, else the last-updated open trip.
+  - **Split habits on clone:** when `enableCloneTripSquad` and `enableRememberDefaultSplit` are on, `duplicateTrip` remaps `tt-default-split` member IDs by name onto the new trip.
+  - **Closeout → Wrapped:** locking a trip with `enableTripCloseout` and `enableTripWrapped` closes closeout and opens Trip Wrapped immediately.
+  - **Share-first view-only link:** with `enableTripShareLink`, Invite & Share leads with a no-account summary link (auto-generated if missing); join code stays secondary.
+  - **Why? on settle rows:** `enableExplainThisNumber` shows an ⓘ Why? control on suggested transfers (still default OFF).
+* **Trade-offs Accepted:**
+  - Production Ops Deck rows that already stored a flag as true still win over these defaults until a superadmin toggles them.
+  - Cross-trip IOU on home still needs online `fetchAllExpensesForTrips` (existing hook); offline home shows no strip.
+  - Copied squad members are placeholders until they join; groups are not copied.

@@ -15,6 +15,7 @@ describe('featureFlags', () => {
       expect(FEATURE_FLAGS_META[key]).toBeDefined();
       expect(FEATURE_FLAGS_META[key].label).toBeTruthy();
       expect(FEATURE_FLAGS_META[key].description).toBeTruthy();
+      expect(FEATURE_FLAGS_META[key].defaultEnabledForUsers).toBe(DEFAULT_FEATURE_FLAGS[key]);
     });
   });
 
@@ -29,16 +30,24 @@ describe('featureFlags', () => {
         expect(DEFAULT_FEATURE_FLAGS).toHaveProperty(key);
       });
     });
+
+    const inPhases = RELEASE_PHASES.flatMap((p) => p.flagKeys);
+    expect(inPhases).toHaveLength(new Set(inPhases).size);
+    expect([...inPhases].sort()).toEqual(Object.keys(DEFAULT_FEATURE_FLAGS).sort());
   });
 
-  it('keeps phase 5 conversion flags safed by default', () => {
-    expect(DEFAULT_FEATURE_FLAGS.enableSplitwiseImport).toBe(false);
+  it('keeps phase 5 money-loop flags safed until Superadmin arms them', () => {
     expect(DEFAULT_FEATURE_FLAGS.enableWhatsAppSettlementShare).toBe(false);
     expect(DEFAULT_FEATURE_FLAGS.enableCloneLastExpense).toBe(false);
     expect(DEFAULT_FEATURE_FLAGS.enableRememberDefaultSplit).toBe(false);
-    expect(DEFAULT_FEATURE_FLAGS.enableSettlementDateNote).toBe(false);
     expect(DEFAULT_FEATURE_FLAGS.enableTripCloseout).toBe(false);
+    expect(DEFAULT_FEATURE_FLAGS.enableTripShareLink).toBe(false);
+    expect(DEFAULT_FEATURE_FLAGS.enableHomeNetBalance).toBe(false);
+    expect(DEFAULT_FEATURE_FLAGS.enableCloneTripSquad).toBe(false);
+    expect(DEFAULT_FEATURE_FLAGS.enableSplitwiseImport).toBe(false);
+    expect(DEFAULT_FEATURE_FLAGS.enableSettlementDateNote).toBe(false);
     expect(DEFAULT_FEATURE_FLAGS.enableCrossTripSearch).toBe(false);
+    expect(DEFAULT_FEATURE_FLAGS.enableContactInvite).toBe(false);
     const phase5Keys = getPhaseFlagKeys('phase5');
     expect(phase5Keys).toEqual([
       'enableSplitwiseImport',
@@ -51,6 +60,8 @@ describe('featureFlags', () => {
       'enableCrossTripSearch',
       'enableSettlementConfirmation',
       'enableTripShareLink',
+      'enableHomeNetBalance',
+      'enableCloneTripSquad',
       'enableContactInvite',
       'enableExpenseQuickFilterChips',
     'enableSyncQueueInspector',
@@ -91,8 +102,13 @@ describe('featureFlags', () => {
     ]);
   });
 
-  it('keeps UPI payments deferred and disabled by default', () => {
+  it('keeps UPI, drafts, Notes IA, and progressive Next-Up safed by default', () => {
     expect(DEFAULT_FEATURE_FLAGS.enableUpiPayments).toBe(false);
+    expect(DEFAULT_FEATURE_FLAGS.enablePersistentExpenseDraft).toBe(false);
+    expect(DEFAULT_FEATURE_FLAGS.enableNotesTalkPackPass).toBe(false);
+    expect(DEFAULT_FEATURE_FLAGS.enableProgressiveNextUp).toBe(false);
+    expect(getPhaseFlagKeys('phase2')).toContain('enableNotesTalkPackPass');
+    expect(getPhaseFlagKeys('phase3')).toContain('enableProgressiveNextUp');
     const deferredKeys = getPhaseFlagKeys('deferred');
     expect(deferredKeys).toContain('enableUpiPayments');
   });
@@ -214,7 +230,7 @@ describe('featureFlags', () => {
 
   it('verifies that every single flag in all phases can be enabled and disabled', () => {
     const allFlagKeys = Object.keys(DEFAULT_FEATURE_FLAGS) as (keyof typeof DEFAULT_FEATURE_FLAGS)[];
-    expect(allFlagKeys.length).toBe(82);
+    expect(allFlagKeys.length).toBe(86);
 
     allFlagKeys.forEach((flagKey) => {
       const disabledFlags = { ...DEFAULT_FEATURE_FLAGS, [flagKey]: false };

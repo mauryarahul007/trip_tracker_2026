@@ -12,6 +12,7 @@ export type FeatureFlagKey =
   | 'enableVoiceInput'
   | 'enableReceiptUpload'
   | 'enableNotesAndChecklist'
+  | 'enableNotesTalkPackPass'
   | 'enableDuplicateDetector'
   | 'enableTripChat'
   | 'enableExpensePhotoLinking'
@@ -22,6 +23,7 @@ export type FeatureFlagKey =
   // Phase 3: Smart Travel Navigator & Pass Hub
   | 'enableTravelPasses'
   | 'enableNextUpCapsule'
+  | 'enableProgressiveNextUp'
   | 'enableGateScanner'
   | 'enableFlightRadar'
   | 'enablePackingAssistant'
@@ -66,6 +68,8 @@ export type FeatureFlagKey =
   | 'enableCrossTripSearch'
   | 'enableSettlementConfirmation'
   | 'enableTripShareLink'
+  | 'enableHomeNetBalance'
+  | 'enableCloneTripSquad'
   | 'enableContactInvite'
   | 'enableExpenseQuickFilterChips'
   // Phase 6: WhatsApp Social & Chat Hub

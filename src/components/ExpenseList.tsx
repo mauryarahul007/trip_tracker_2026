@@ -915,7 +915,8 @@ export function ExpenseList({
       {/* Imminent Boarding / Travel / Stay Dynamic Capsule */}
       {trip &&
         isFeatureEnabled('enableNextUpCapsule', { tripId: trip.id }) &&
-        isFeatureEnabled('enableTravelPasses', { tripId: trip.id }) && (
+        isFeatureEnabled('enableTravelPasses', { tripId: trip.id }) &&
+        (!isFeatureEnabled('enableProgressiveNextUp', { tripId: trip.id }) || (trip.passes?.length ?? 0) > 0) && (
           <NextUpTravelCapsule
             trip={trip}
             passes={trip.passes}

@@ -2,7 +2,7 @@
 
 ## AI engineering procedure
 
-Follow `.cursor/rules/ai-software-engineering.mdc` and the phase docs under `docs/ai-engineering/` (index: `docs/ai-engineering/README.md`). Open only the active phase. Standing rules below (ADRs, git, webapp-only, versioning, cleanup) still apply.
+Follow `.cursor/rules/ai-software-engineering.mdc` and the phase docs under `docs/ai-engineering/` (index: `docs/ai-engineering/README.md`). Open only the active phase. Standing rules below (ADRs, git, webapp-only, versioning, cleanup) still apply. New customer-facing work must follow `.cursor/rules/superadmin-feature-flags.mdc` (Ops Deck flag, default OFF, META explanation Superadmin can act on).
 
 ## Architecture Decision Records (ADRs)
 

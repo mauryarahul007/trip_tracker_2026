@@ -19,7 +19,7 @@ export const RELEASE_PHASES: ReleasePhaseDef[] = [
     tagline: 'Frictionless on-trip logging & shared trip organization',
     description: 'Hands-free voice quick-add with Hinglish NLP parsing, compressed receipt photos, collaborative packing & rich notes, and 4D duplicate expense warning.',
     targetAudience: 'Friends & families actively traveling together',
-    flagKeys: ['enableVoiceInput', 'enableReceiptUpload', 'enableNotesAndChecklist', 'enableDuplicateDetector', 'enableTripChat', 'enableExpensePhotoLinking', 'enableExpenseDisputes', 'enableDigestNotifications', 'enableMemberLastSeen', 'enableQuietHours', 'enableExpenseApprovalThreshold', 'enablePersistentExpenseDraft'],
+    flagKeys: ['enableVoiceInput', 'enableReceiptUpload', 'enableNotesAndChecklist', 'enableNotesTalkPackPass', 'enableDuplicateDetector', 'enableTripChat', 'enableExpensePhotoLinking', 'enableExpenseDisputes', 'enableDigestNotifications', 'enableMemberLastSeen', 'enableQuietHours', 'enableExpenseApprovalThreshold', 'enablePersistentExpenseDraft'],
   },
   {
     id: 'phase3',
@@ -32,6 +32,7 @@ export const RELEASE_PHASES: ReleasePhaseDef[] = [
     flagKeys: [
       'enableTravelPasses',
       'enableNextUpCapsule',
+      'enableProgressiveNextUp',
       'enableGateScanner',
       'enableFlightRadar',
       'enablePackingAssistant',
@@ -88,6 +89,8 @@ export const RELEASE_PHASES: ReleasePhaseDef[] = [
       'enableCrossTripSearch',
       'enableSettlementConfirmation',
       'enableTripShareLink',
+      'enableHomeNetBalance',
+      'enableCloneTripSquad',
       'enableContactInvite',
       'enableExpenseQuickFilterChips',
       'enableSyncQueueInspector',
@@ -168,7 +171,7 @@ export const FEATURE_FLAGS_META: Record<FeatureFlagKey, FeatureFlagMeta> = {
   enableExplainThisNumber: {
     key: 'enableExplainThisNumber',
     label: 'Why This Amount? Settlement Audit',
-    description: 'ⓘ on a suggested transfer explains the number, including the bill titles in that balance.',
+    description: 'ⓘ Why? on a suggested settlement transfer explains the amount, including the bill titles in that balance.',
     category: 'core',
     phase: 'phase1',
     defaultEnabledForUsers: false,
@@ -279,6 +282,14 @@ export const FEATURE_FLAGS_META: Record<FeatureFlagKey, FeatureFlagMeta> = {
     phase: 'phase2',
     defaultEnabledForUsers: true,
   },
+  enableNotesTalkPackPass: {
+    key: 'enableNotesTalkPackPass',
+    label: 'Notes Hub Talk / Pack / Pass Labels',
+    description: 'Relabels Notes segments to Talk / Pack / Pass / Notes (Chat, Checklist, Passes when OFF). Requires Notes hub.',
+    category: 'collab',
+    phase: 'phase2',
+    defaultEnabledForUsers: false,
+  },
   enableDuplicateDetector: {
     key: 'enableDuplicateDetector',
     label: '4D Duplicate Expense Warning Guard',
@@ -322,6 +333,14 @@ export const FEATURE_FLAGS_META: Record<FeatureFlagKey, FeatureFlagMeta> = {
     category: 'transit',
     phase: 'phase3',
     defaultEnabledForUsers: true,
+  },
+  enableProgressiveNextUp: {
+    key: 'enableProgressiveNextUp',
+    label: 'Hide Next-Up Until a Pass Exists',
+    description: 'Expenses-tab Next-Up capsule stays hidden until the trip has at least one boarding pass or ticket. Radar and scanner stay on pass cards.',
+    category: 'transit',
+    phase: 'phase3',
+    defaultEnabledForUsers: false,
   },
   enableGateScanner: {
     key: 'enableGateScanner',
@@ -602,7 +621,7 @@ export const FEATURE_FLAGS_META: Record<FeatureFlagKey, FeatureFlagMeta> = {
   enableTripCloseout: {
     key: 'enableTripCloseout',
     label: 'End-of-Trip Closeout',
-    description: 'Guided review → settle remaining → lock the trip, plus a reminder when trip dates have ended.',
+    description: 'Guided review → settle remaining → lock the trip. After lock, opens Trip Wrapped when that flag is on.',
     category: 'splits',
     phase: 'phase5',
     defaultEnabledForUsers: false,
@@ -642,7 +661,23 @@ export const FEATURE_FLAGS_META: Record<FeatureFlagKey, FeatureFlagMeta> = {
   enableTripShareLink: {
     key: 'enableTripShareLink',
     label: 'Read-Only Trip Share Link',
-    description: 'Generate a revocable, no-login link showing a bounded read-only trip summary for people outside the trip.',
+    description: 'Generate a revocable, no-login link showing a bounded read-only trip summary. Shown first in Invite & Share so people who will not install can still see totals.',
+    category: 'core',
+    phase: 'phase5',
+    defaultEnabledForUsers: false,
+  },
+  enableHomeNetBalance: {
+    key: 'enableHomeNetBalance',
+    label: 'Home Cross-Trip You Owe / Are Owed',
+    description: 'Shows a You are owed / You owe strip on the home trip stack, plus Add to log on the trip in dates (or last used).',
+    category: 'splits',
+    phase: 'phase5',
+    defaultEnabledForUsers: false,
+  },
+  enableCloneTripSquad: {
+    key: 'enableCloneTripSquad',
+    label: 'New Trip With This Group',
+    description: 'Duplicate copies name-only squad members onto the new trip, copies remembered split habits, and labels the action New trip with this group. Off = Duplicate Trip, creator only.',
     category: 'core',
     phase: 'phase5',
     defaultEnabledForUsers: false,
@@ -816,8 +851,8 @@ export const FEATURE_FLAGS_META: Record<FeatureFlagKey, FeatureFlagMeta> = {
   },
   enableUpiPayments: {
     key: 'enableUpiPayments',
-    label: '1-Tap UPI / Payment App Links (Deferred)',
-    description: 'Out of scope for initial consumer rollout. Kept disabled.',
+    label: '1-Tap UPI on settlement rows',
+    description: 'UPI Pay chip on each settlement transfer (GPay, PhonePe, Paytm, or QR). Not a separate tab.',
     category: 'splits',
     phase: 'deferred',
     defaultEnabledForUsers: false,
@@ -839,6 +874,7 @@ export const DEFAULT_FEATURE_FLAGS: Record<FeatureFlagKey, boolean> = {
   enableVoiceInput: true,
   enableReceiptUpload: true,
   enableNotesAndChecklist: true,
+  enableNotesTalkPackPass: false,
   enableDuplicateDetector: true,
   enableTripChat: true,
   enableExpensePhotoLinking: false,
@@ -851,6 +887,7 @@ export const DEFAULT_FEATURE_FLAGS: Record<FeatureFlagKey, boolean> = {
   // Phase 3 (Armed by default)
   enableTravelPasses: true,
   enableNextUpCapsule: true,
+  enableProgressiveNextUp: false,
   enableGateScanner: true,
   enableFlightRadar: true,
   enablePackingAssistant: true,
@@ -878,7 +915,7 @@ export const DEFAULT_FEATURE_FLAGS: Record<FeatureFlagKey, boolean> = {
   enableMultiPayerExpenses: false,
   enableAmoledTheme: false,
 
-  // Phase 5 (safed by default)
+  // Phase 5 — safed; Superadmin Ops Deck arms each flag
   enableSplitwiseImport: false,
   enableWhatsAppSettlementShare: false,
   enableCloneLastExpense: false,
@@ -895,6 +932,8 @@ export const DEFAULT_FEATURE_FLAGS: Record<FeatureFlagKey, boolean> = {
   enableCrossTripSearch: false,
   enableSettlementConfirmation: false,
   enableTripShareLink: false,
+  enableHomeNetBalance: false,
+  enableCloneTripSquad: false,
   enableContactInvite: false,
   enableExpenseQuickFilterChips: false,
 

@@ -499,24 +499,8 @@ function TransferRow({
           aria-label={showAudit ? 'Hide settlement breakdown' : 'Why this amount?'}
           title={showAudit ? 'Hide settlement breakdown' : 'Why this amount?'}
           className="traveler-settlement-audit-btn"
-          style={{
-            width: '28px',
-            height: '28px',
-            minWidth: '28px',
-            borderRadius: '50%',
-            border: '1px solid var(--border-color)',
-            background: 'transparent',
-            color: 'var(--text-muted)',
-            fontSize: '12px',
-            fontWeight: 600,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            cursor: 'pointer',
-            flexShrink: 0,
-          }}
         >
-          ⓘ
+          ⓘ Why?
         </button>
         )}
       </div>

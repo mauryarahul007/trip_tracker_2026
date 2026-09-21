@@ -9,6 +9,15 @@ export interface ChangelogEntry {
 // parsed from decisions.md/BUGS.md: those are prose for developers, not client data.
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: '3.34.0',
+    date: '2026-09-21',
+    changes: [
+      'Superadmin can turn on a lighter money loop: home you-owe strip with Add, clone last expense, remembered splits, WhatsApp settle cards, UPI on settle rows, trip closeout, and a view-only share link.',
+      'Notes can be labeled Talk / Pack / Pass, Next-Up can wait until a boarding pass exists, and locking a trip can open Trip Wrapped.',
+      'Settle rows can show Why? for the suggested amount. All of this stays off until Ops Deck arms the flags.',
+    ],
+  },
+  {
     version: '3.33.0',
     date: '2026-09-21',
     changes: [

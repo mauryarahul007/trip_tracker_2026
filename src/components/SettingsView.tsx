@@ -1274,7 +1274,11 @@ export function SettingsView({
               icon={<IconShare size={18} />}
               iconGlow="teal"
               title="Invite & Share Trip"
-              subtitle="Share join link or QR code with companions"
+              subtitle={
+                isFeatureEnabled('enableTripShareLink', { tripId: activeTrip?.id, userId: userId || undefined })
+                  ? 'View-only link (no account) or join code'
+                  : 'Share join link or QR code with companions'
+              }
                 onClick={() => {
                   triggerHaptic('light');
                 onOpenShareTrip();

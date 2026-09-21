@@ -1,0 +1,28 @@
+---
+description: Every new customer-facing feature must be Superadmin-flagged, default OFF, with a clear Ops Deck explanation
+alwaysApply: true
+---
+
+# Superadmin feature flags (mandatory)
+
+Every **new customer-facing feature or UX** ships behind a Superadmin Ops Deck flag. Default **OFF**. No reachable code path when the flag is off.
+
+## Register (all four)
+
+1. `FeatureFlagKey` in `src/types/admin.ts`
+2. `FEATURE_FLAGS_META` in `src/utils/featureFlags.ts` — **label + description Superadmin can act on**
+3. `DEFAULT_FEATURE_FLAGS` — `false`
+4. `RELEASE_PHASES` `flagKeys` for the matching phase (not Deferred unless shelved)
+
+Bump the flag-count assertion in `src/utils/featureFlags.test.ts`. Ops Deck Flags/Phases are data-driven off this registry.
+
+## Explanation (required, not optional)
+
+`label`: short name Superadmin sees.
+`description`: what the traveler feels **when ON**, what is **absent when OFF**, and what this flag does **not** do (no extra tab, no new product line). One or two sentences. Vague copy like "enables the feature" is not enough.
+
+Reuse an existing flag when the work is the same surface. Do not default-ON existing flags to "ship" work.
+
+## Gate in UI/store
+
+Wrap with `isFeatureEnabled('theKey', { tripId })`. Flag OFF = old behavior. Document flags + flag-OFF checks in `docs/FEATURE_TEST_STEPS.md`.

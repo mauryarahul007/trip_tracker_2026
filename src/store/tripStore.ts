@@ -4,6 +4,7 @@ import type { Member, Group, Expense, Category, TripState, ExpenseLocation, Trip
 import type { FeatureFlagKey, ReleasePhaseId } from '../types/admin';
 import { DEFAULT_FEATURE_FLAGS, isFeatureActive, getPhaseFlagKeys } from '../utils/featureFlags';
 import { buildAutoGroupName } from '../utils/groupNaming';
+import { copyDefaultSplit } from '../utils/defaultSplit';
 import { getCurrencyDecimals } from '../utils/currency';
 import { newId } from '../utils/uuid';
 import { fetchResolvedFeatureFlags, fetchAllFeatureFlagOverrides, setFeatureFlagOverride } from '../services/featureFlagApi';
@@ -1864,18 +1865,33 @@ export const useTripStore = create<TripStore>()(
         updatedAt: now,
       }));
 
+      // Name-only copies of the rest of the squad. They join the new trip
+      // themselves; copying linkedUserId would add them without consent.
+      const copySquad = get().isFeatureEnabled('enableCloneTripSquad');
+      const extraMembers: Member[] = copySquad
+        ? source.memberIds
+            .map((id) => get().members[id])
+            .filter((m): m is Member => Boolean(m) && !m.archived && m.linkedUserId !== userId)
+            .map((m) => ({ id: newId(), name: m.name, linkedUserId: null }))
+        : [];
+
       const newTrip: Trip = {
         ...source,
         id: newTripId,
         name: `${source.name} (Copy)`,
         ownerId: userId,
-        memberIds: [newMemberId],
+        memberIds: [newMemberId, ...extraMembers.map((m) => m.id)],
         adminMemberIds: [newMemberId],
         groupIds: [],
         joinCode: Math.random().toString(36).substring(2, 8).toUpperCase(),
         createdAt: now,
         updatedAt: now,
         expenseCount: 0,
+        closed: false,
+        archived: false,
+        shareToken: null,
+        shareEnabled: false,
+        shareExpiresAt: null,
         checklist: copiedChecklist,
         notes: (source.notes || []).map((n) => ({ ...n, id: newId(), createdAt: now, updatedAt: now })),
         passes: [],
@@ -1883,11 +1899,33 @@ export const useTripStore = create<TripStore>()(
       };
 
       const newMember: Member = { id: newMemberId, name: creatorName, linkedUserId: userId };
+      const extraMemberMap = Object.fromEntries(extraMembers.map((m) => [m.id, m]));
 
       set((state) => ({
         trips: [...state.trips, newTrip],
-        members: { ...state.members, [newMemberId]: newMember },
+        members: { ...state.members, [newMemberId]: newMember, ...extraMemberMap },
       }));
+
+      if (copySquad && get().isFeatureEnabled('enableRememberDefaultSplit')) {
+        const memberIdMap: Record<string, string> = {};
+        for (const oldId of source.memberIds) {
+          const m = get().members[oldId];
+          if (!m || m.archived) continue;
+          if (m.linkedUserId === userId) {
+            memberIdMap[oldId] = newMemberId;
+            continue;
+          }
+          const copied = extraMembers.find((e) => e.name === m.name && !Object.values(memberIdMap).includes(e.id));
+          if (copied) memberIdMap[oldId] = copied.id;
+        }
+        copyDefaultSplit(source.id, newTripId, memberIdMap);
+      }
+
+      const queueExtras = () => {
+        extraMembers.forEach((m) => {
+          get().queueSync('addMember', { tempId: m.id, name: m.name, linkedUserId: null, tripId: newTripId });
+        });
+      };
 
       if (!isMissingSupabaseEnv) {
         try {
@@ -1902,6 +1940,15 @@ export const useTripStore = create<TripStore>()(
             stops: newTrip.stops,
           });
           await insertMember(inserted.id, creatorName, userId, newMemberId);
+          const extraResults = await Promise.allSettled(
+            extraMembers.map((m) => insertMember(inserted.id, m.name, undefined, m.id))
+          );
+          extraResults.forEach((r, i) => {
+            if (r.status === 'rejected') {
+              const m = extraMembers[i];
+              get().queueSync('addMember', { tempId: m.id, name: m.name, linkedUserId: null, tripId: inserted.id });
+            }
+          });
         } catch (e) {
           console.warn('duplicateTrip: backend save failed, kept locally:', e);
           get().queueSync('createTrip', {
@@ -1915,6 +1962,7 @@ export const useTripStore = create<TripStore>()(
             ownerId: userId,
             creatorName,
           });
+          queueExtras();
         }
       }
     },

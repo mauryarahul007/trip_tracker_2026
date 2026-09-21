@@ -9,11 +9,11 @@
 
 | Metric | Count |
 | :--- | :--- |
-| **Total Tracked** | **88** |
+| **Total Tracked** | **89** |
 | **💡 Requested** | **2** |
 | **📋 Planned** | **0** |
 | **🟡 In Progress** | **0** |
-| **✅ Shipped** | **86** |
+| **✅ Shipped** | **87** |
 | **⚪ Won't Do** | **0** |
 
 ---
@@ -138,6 +138,7 @@ CI pipeline for lint, build, and test on push/PR
 | **FEAT-086** | Sync Queue Inspector: readable offline queue with errors, Retry and Discard (enableSyncQueueInspector) | `sync` | `claude-cli` | `claude-cli` | Shipped in v3.31.0 behind default-OFF flag. Commit 19d96be. |
 | **FEAT-087** | Extended Undo: undo for member delete/archive and recorded settlements (enableExtendedUndo) | `ui-ux` | `claude-cli` | `claude-cli` | Shipped in v3.31.0 behind default-OFF flag. Commit 19d96be. |
 | **FEAT-088** | Quiet trip chat: overlay delete/settle, stack bills, unread on Notes | `ui-ux` | `rahul` | `rahul` | Shipped in v3.33.0; migration 0106 applied to remote. |
+| **FEAT-089** | Light money loop: home IOU, squad clone, Notes Talk/Pack/Pass, closeout recap (Superadmin-gated) | `ui-ux` | `rahul` | `rahul` | Shipped in v3.34.0 behind Superadmin Ops Deck flags (default OFF). ADR 214. FEAT-LIGHTLOOP / FEAT-LIGHTLOOP2. |
 
 ---
 
