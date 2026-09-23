@@ -7226,5 +7226,32 @@
     "resolvedBy": "claude-cli",
     "resolvedAt": "2026-09-21T18:44:51.279Z",
     "resolutionNote": "Fixed in commit 4e7fa28. Added the 3.37.0 changelog entry; npm run lint, build and test all pass locally (405/405). Lesson: rerun the full test suite after the version bump, not before."
+  },
+  {
+    "id": "BUG-244",
+    "title": "iPhone home stack squashes and hitches versus Android",
+    "description": "On iPhone Safari the home trip card is sized from the tall layout height minus a fixed 220px, so it squashes under the toolbar. Swipes and the trip sheet still hitch because the home photo keeps a live filter and the map resumes before the sheet snap ends. Android Chrome is fine.",
+    "severity": "high",
+    "category": "performance",
+    "status": "resolved",
+    "foundBy": "human",
+    "environment": {
+      "platform": "ios",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Open the trips home on iPhone Safari with at least two trips",
+      "Swipe the stack and drag the trip sheet",
+      "Compare with Android Chrome"
+    ],
+    "expectedBehavior": "The home card stays 3:4 inside the height you can see, and stack swipes and sheet snaps stay smooth.",
+    "actualBehavior": "The card squashes or overflows the visible iPhone height, and gestures hitch.",
+    "diagnostics": {},
+    "createdAt": "2026-09-23T12:55:52.587Z",
+    "updatedAt": "2026-09-23T12:55:52.941Z",
+    "resolvedBy": "cursor-agent",
+    "resolvedAt": "2026-09-23T12:55:52.940Z",
+    "resolutionNote": "Fixed in commit 6a08470 (v3.37.1). WebKit sizes the card from visualViewport height minus measured chrome, drops the home-photo filter, and holds the map paused until the sheet snap ends. Android glass and 3D tilt unchanged. ADR 219."
   }
 ]

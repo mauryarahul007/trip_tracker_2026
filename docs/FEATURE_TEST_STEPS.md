@@ -21,7 +21,7 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 
 | Shipped | Version | Id | Section |
 |--------|---------|-----|---------|
-| 2026-09-23 | v3.37.1 | iOS-SCALE | [iOS visible height and compositor](#ios-visible-height-and-compositor) |
+| 2026-09-23 | v3.37.1 | BUG-244 | [iOS visible height and compositor](#ios-visible-height-and-compositor) |
 | 2026-09-22 | v3.37.0 | FEAT-GROWTH2 | [Growth: invite conversion, telemetry, passport, nudges](#feat-growth2--invite-conversion-telemetry-passport-nudges) |
 | 2026-09-21 | v3.36.0 | FEAT-093 | [Flag recipes and saved mixes](#feat-presets--flag-recipes-and-saved-mixes) |
 | 2026-09-21 | v3.35.1 | FEAT-092 | [Restore recommended app confirm](#feat-092--restore-recommended-app-confirm) |
