@@ -4,6 +4,7 @@ import { Map as MaplibreMap, Marker, LngLatBounds, GeoJSONSource, setWorkerUrl }
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { useResolvedTripStops } from '../hooks/useResolvedTripStops';
 import { SHEET_COLLAPSED_TOP } from './TripContentSheet';
+import { isWebKitCompositor } from '../utils/tripStackMotion';
 
 setWorkerUrl(`${import.meta.env.BASE_URL}maplibre/maplibre-gl-worker.js`);
 
@@ -184,21 +185,63 @@ export function TripMapHero({ trip, onToneChange }: Props) {
 
   useEffect(() => {
     const sheet = document.querySelector('.trip-sheet');
-    if (!sheet) return;
-    const apply = () => {
+    if (!(sheet instanceof HTMLElement)) return;
+    const webkit = isWebKitCompositor();
+    let resumeTimer = 0;
+    let onSnapEnd: ((ev: TransitionEvent) => void) | null = null;
+
+    const clearSnapWait = () => {
+      window.clearTimeout(resumeTimer);
+      resumeTimer = 0;
+      if (onSnapEnd) {
+        sheet.removeEventListener('transitionend', onSnapEnd);
+        onSnapEnd = null;
+      }
+    };
+    const pause = () => {
       const map = mapInstanceRef.current;
       if (!map) return;
+      map.stop();
+      map.dragPan.disable();
+    };
+    const resume = () => {
+      if (sheet.classList.contains('dragging')) return;
+      const map = mapInstanceRef.current;
+      if (!map) return;
+      map.dragPan.enable();
+    };
+    const holdThroughSnap = () => {
+      pause();
+      onSnapEnd = (ev: TransitionEvent) => {
+        if (ev.target !== sheet || ev.propertyName !== 'transform') return;
+        clearSnapWait();
+        resume();
+      };
+      sheet.addEventListener('transitionend', onSnapEnd);
+      resumeTimer = window.setTimeout(() => {
+        clearSnapWait();
+        resume();
+      }, 450);
+    };
+    const apply = () => {
+      clearSnapWait();
       if (sheet.classList.contains('dragging')) {
-        map.stop();
-        map.dragPan.disable();
-      } else {
-        map.dragPan.enable();
+        pause();
+        return;
       }
+      if (webkit && sheet.style.transition.includes('transform')) {
+        holdThroughSnap();
+        return;
+      }
+      resume();
     };
     const observer = new MutationObserver(apply);
     observer.observe(sheet, { attributes: true, attributeFilter: ['class'] });
     apply();
-    return () => observer.disconnect();
+    return () => {
+      clearSnapWait();
+      observer.disconnect();
+    };
   }, [trip?.id, validStops.length]);
 
   if (validStops.length === 0) return null;

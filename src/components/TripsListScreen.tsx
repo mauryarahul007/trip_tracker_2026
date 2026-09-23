@@ -25,6 +25,8 @@ import { formatAmount, getCurrencySymbol } from '../utils/currency';
 import { pickTripForQuickAdd } from '../utils/pickTripForQuickAdd';
 import { fetchAppFlag } from '../services/tripApi';
 import { asCopyString, DEFAULT_EMPTY_TRIP_BLURB } from '../utils/landingCopy';
+import { isWebKitCompositor } from '../utils/tripStackMotion';
+import { readStackChrome } from '../utils/stackChrome';
 
 type Props = {
   trips: Trip[];
@@ -145,6 +147,40 @@ export function TripsListScreen({
   useEscapeKey(showList, () => setShowList(false));
   // Enables full luxury hero spotlight even with 1 trip
   const stackActive = trips.length >= 1 && !showList && !showAddTrip && !showJoinTrip;
+
+  useEffect(() => {
+    if (!stackActive || !isWebKitCompositor()) return;
+    const root = scrollContainerRef.current;
+    if (!root) return;
+
+    let frame = 0;
+    const write = () => {
+      frame = 0;
+      root.style.setProperty('--stack-chrome', `${readStackChrome(root)}px`);
+    };
+    const schedule = () => {
+      if (frame) return;
+      frame = requestAnimationFrame(write);
+    };
+
+    schedule();
+    const observer = new ResizeObserver(schedule);
+    for (const sel of ['.trips-screen-header', '.trips-section-header', '.home-net-row', '.trip-stepper-dots', '.trip-launcher']) {
+      const el = root.querySelector(sel);
+      if (el) observer.observe(el);
+    }
+    const vv = window.visualViewport;
+    vv?.addEventListener('resize', schedule);
+    window.addEventListener('orientationchange', schedule);
+
+    return () => {
+      if (frame) cancelAnimationFrame(frame);
+      observer.disconnect();
+      vv?.removeEventListener('resize', schedule);
+      window.removeEventListener('orientationchange', schedule);
+      root.style.removeProperty('--stack-chrome');
+    };
+  }, [stackActive, trips.length, homeNetOn, crossTripBalances]);
   const ambientTrip = focusedTrip || trips[0] || null;
   const ambientPhotoUrl = useTripPhoto(ambientTrip?.destination, ambientTrip?.coverImageUrl, ambientTrip?.name);
   const expeditionsTone = usePhotoTextTone(ambientPhotoUrl);

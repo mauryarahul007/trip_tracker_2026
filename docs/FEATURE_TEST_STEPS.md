@@ -21,6 +21,7 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 
 | Shipped | Version | Id | Section |
 |--------|---------|-----|---------|
+| 2026-09-23 | v3.37.1 | iOS-SCALE | [iOS visible height and compositor](#ios-visible-height-and-compositor) |
 | 2026-09-22 | v3.37.0 | FEAT-GROWTH2 | [Growth: invite conversion, telemetry, passport, nudges](#feat-growth2--invite-conversion-telemetry-passport-nudges) |
 | 2026-09-21 | v3.36.0 | FEAT-093 | [Flag recipes and saved mixes](#feat-presets--flag-recipes-and-saved-mixes) |
 | 2026-09-21 | v3.35.1 | FEAT-092 | [Restore recommended app confirm](#feat-092--restore-recommended-app-confirm) |
@@ -1075,6 +1076,27 @@ Two related performance fixes: Ops Deck / Bug Ledger no longer download the whol
 ### Pass
 - With the two default-OFF flags left OFF, no new data is collected and no push is sent.
 - Every new surface disappears when its flag is turned OFF.
+
+---
+
+## iOS visible height and compositor
+
+**Commit:** v3.37.1. **Migrations:** none. **Flags:** none — WebKit-only. Android Chrome keeps the current height, glass, and 3D stack.
+
+### Steps
+1. On **iPhone Safari** (or the installed home-screen web app), open the trips home with at least two trips. The front card stays a portrait 3:4. The slide-to-join launcher sits above the browser toolbar and the home indicator. Nothing is clipped and there is no large empty band under the card.
+2. Show and hide the Safari toolbar (scroll is locked, so rotate the phone, or switch apps and come back). The card rescales to the height you can see. It does not stay sized for the taller layout behind the toolbar.
+3. Swipe the stack left and right. The front card tracks the finger. The home photo behind it does not blur or hitch while the card moves.
+4. Open a trip and drag the content sheet up, then release. The sheet follows the finger and snaps. The map stays still until the snap finishes, then panning works again.
+5. Focus the trip chat field so the keyboard opens. The sheet and header stay on screen. The map does not jump up and fill the view.
+
+### Negative checks
+- **Android Chrome**: home cards keep their current size. Login and home chrome still use blur. Dragging a stack card still tilts in 3D. Dragging the trip sheet still pauses the map only while the finger is down.
+- No Superadmin flag. There is nothing to turn off.
+
+### Pass
+- iPhone home fits the visible height, and sheet snaps do not wake the map mid-animation.
+- Android look and motion are unchanged.
 
 ---
 

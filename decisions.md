@@ -3904,3 +3904,13 @@ This document logs all meaningful technical decisions, library choices, design p
   - Lifecycle date windows are exact, so a missed cron day skips that nudge.
   - Email sign-in fallback for invitees was dropped (would need new auth). Query-text logging (#13) was dropped.
   - Migration 0108 and the edge function were written without a local Postgres and were not exercised before this commit. Migration 0108 was applied to the live project on 2026-09-22 via `supabase db push --linked`, after the code push (an earlier attempt was blocked by the auto-mode classifier); the edge function is not yet deployed and the nudge Vault secret is not set.
+
+---
+
+## 219. iOS visible height and compositor diet (v3.37.1)
+* **Context:** Android Chrome already felt smooth. iPhone Safari still squashed the home stack and hitch during swipes and sheet snaps. `--app-vh` is the tall layout height on purpose (ADR keyboard overlay): shrinking it slides the trip chrome off the map. A fixed 220px chrome budget then sizes the 3:4 card for space the Safari toolbar has already taken. Live filters and a map that resumes the instant the finger lifts still cost WebKit frames.
+* **Decision:** WebKit only (`isWebKitCompositor` / `@supports (-webkit-touch-callout: none)`). Write `--ios-visible-vh` from `visualViewport.height` on resize, not scroll. Measure home chrome into `--stack-chrome` and size the card from that. Drop the home-photo filter and mask for a static gradient, animate stack cards with transform and opacity only, and hold the map paused until the sheet snap ends. Do not change `resolveViewportCssVars` or Android glass and 3D tilt. No new feature flag.
+* **Trade-offs Accepted:**
+  - The card can jump when Safari shows or hides its toolbar, because visible height updates on resize.
+  - The home photo on iPhone is a flat gradient over the cover, not a blur.
+  - Not verified on a physical iPhone in this change; Chrome confirmed the WebKit variables stay unset.

@@ -2,6 +2,7 @@ import { Capacitor } from '@capacitor/core';
 import { Keyboard } from '@capacitor/keyboard';
 import { StatusBar, Style } from '@capacitor/status-bar';
 import { resolveViewportCssVars } from './viewportKeyboard';
+import { isWebKitCompositor } from './tripStackMotion';
 
 // WKWebView reports env(safe-area-inset-*) as 0 on the very first paint and
 // only resolves the real geometry ~500ms later. CSS rules that read env()
@@ -40,6 +41,11 @@ function applySafeAreaVars(): void {
 // Keyboard plugin below, so this path does not overwrite it there.
 // visualViewport.scroll only resets window.scrollY -- rewriting --app-vh
 // on scroll caused document-wide style invalidation (decisions.md #105).
+//
+// --ios-visible-vh is the height Safari is actually showing (URL bar and
+// home indicator included). It is WebKit-only and written on resize, not
+// scroll. --app-vh stays the tall layout height so the keyboard overlay
+// does not slide the trip chrome off the map.
 function applyViewportHeightVar(): void {
   const root = document.documentElement.style;
   let lastFullHeight = window.innerHeight;
@@ -57,6 +63,12 @@ function applyViewportHeightVar(): void {
     );
     lastFullHeight = resolved.lastFullHeight;
     root.setProperty('--app-vh', `${resolved.appVh}px`);
+    if (isWebKitCompositor()) {
+      const visible = vv?.height ?? window.innerHeight;
+      if (visible > 0) {
+        root.setProperty('--ios-visible-vh', `${Math.round(visible)}px`);
+      }
+    }
     if (!writeNative) {
       root.setProperty('--keyboard-height', `${resolved.keyboardHeight}px`);
     }

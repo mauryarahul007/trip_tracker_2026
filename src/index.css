@@ -12511,9 +12511,32 @@ textarea.input-field {
   }
   .stack-card {
     transform-style: flat;
+    transition: transform 0.34s var(--ease-decel), opacity 0.34s var(--ease-decel);
   }
-  .home-ambient-layer {
-    filter: saturate(1.15) brightness(0.7);
+
+  /* Visible height, not the tall --app-vh keyboard lock. Card width stays
+     3:4 against the measured chrome (--stack-chrome), with 220px until the
+     first measure. */
+  .trips-screen-scroll.stack-viewport-lock {
+    height: var(--ios-visible-vh, var(--app-vh, 100dvh));
+  }
+  .trips-screen-scroll.stack-viewport-lock .trip-stack-stage {
+    max-width: min(390px, calc((var(--ios-visible-vh, var(--app-vh, 100dvh)) - var(--stack-chrome, 220px)) * 0.75));
+  }
+
+  .home-ambient-layer,
+  html.stack-dragging .home-ambient-layer {
+    filter: none;
+    -webkit-filter: none;
+    mask-image: none;
+    -webkit-mask-image: none;
+  }
+  .home-ambient-layer::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0.28) 0%, rgba(0, 0, 0, 0.55) 100%);
+    pointer-events: none;
   }
 }
 
