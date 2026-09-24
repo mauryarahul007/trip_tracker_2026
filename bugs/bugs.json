@@ -7253,5 +7253,31 @@
     "resolvedBy": "cursor-agent",
     "resolvedAt": "2026-09-23T12:55:52.940Z",
     "resolutionNote": "Fixed in commit 6a08470 (v3.37.1). WebKit sizes the card from visualViewport height minus measured chrome, drops the home-photo filter, and holds the map paused until the sheet snap ends. Android glass and 3D tilt unchanged. ADR 219."
+  },
+  {
+    "id": "BUG-245",
+    "title": "Home shows redundant You are owed strip and Add button under greeting",
+    "description": "Home shows redundant You are owed strip and Add button under greeting",
+    "severity": "low",
+    "category": "ui-ux",
+    "status": "resolved",
+    "foundBy": "human",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Navigate to application",
+      "Perform action that triggers bug"
+    ],
+    "expectedBehavior": "",
+    "actualBehavior": "",
+    "diagnostics": {},
+    "createdAt": "2026-09-24T14:16:00.267Z",
+    "updatedAt": "2026-09-24T14:16:05.409Z",
+    "resolvedBy": "claude-cli",
+    "resolvedAt": "2026-09-24T14:16:05.409Z",
+    "resolutionNote": "Fixed in commit f062807 (v3.37.2). Removed the home You are owed / You owe strip and its Add button (duplicated the per-card add-expense) and deregistered the enableHomeNetBalance flag from the Superadmin registry. Settings cross-trip balances unchanged. ADR 220."
   }
 ]

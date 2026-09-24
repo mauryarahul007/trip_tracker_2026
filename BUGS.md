@@ -9,10 +9,10 @@
 
 | Metric | Count | Status Notes |
 | :--- | :--- | :--- |
-| **Total Tracked** | **244** | All recorded bugs across sessions |
+| **Total Tracked** | **245** | All recorded bugs across sessions |
 | **🟢 Open** | **0** | No critical blockers, 0 High |
 | **🟡 In Progress** | **0** | Active investigation or fix |
-| **✅ Resolved** | **217** | Verified & closed |
+| **✅ Resolved** | **218** | Verified & closed |
 | **⚪ Won't Fix** | **27** | Expected behavior / deferred |
 
 ---
@@ -248,6 +248,7 @@
 | **BUG-242** | Tracker and ADR 218 said migration 0108 was not applied after it was applied | `general` | `low` | `claude-cli` | `claude-cli` | Fixed in commit 12b39bb (docs only). ADR 218, FEAT-094 note and FEATURE_TEST_STEPS now say 0108 was applied on 2026-09-22 after the code push. |
 | **BUG-243** | CI failing since v3.37.0: changelog entry missing for the bumped version | `general` | `medium` | `claude-cli` | `claude-cli` | Fixed in commit 4e7fa28. Added the 3.37.0 changelog entry; npm run lint, build and test all pass locally (405/405). Lesson: rerun the full test suite after the version bump, not before. |
 | **BUG-244** | iPhone home stack squashes and hitches versus Android | `performance` | `high` | `human` | `cursor-agent` | Fixed in commit 6a08470 (v3.37.1). WebKit sizes the card from visualViewport height minus measured chrome, drops the home-photo filter, and holds the map paused until the sheet snap ends. Android glass and 3D tilt unchanged. ADR 219. |
+| **BUG-245** | Home shows redundant You are owed strip and Add button under greeting | `ui-ux` | `low` | `human` | `claude-cli` | Fixed in commit f062807 (v3.37.2). Removed the home You are owed / You owe strip and its Add button (duplicated the per-card add-expense) and deregistered the enableHomeNetBalance flag from the Superadmin registry. Settings cross-trip balances unchanged. ADR 220. |
 
 ---
 
