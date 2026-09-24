@@ -4049,5 +4049,18 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - Only the primary gateway/anchor city is shown on the photo face; the complete itinerary route remains accessible on tap/hover and inside the trip journey sheet.
 
+---
 
-
+## 227. Unified Luxury Dark Card Scheme Across Light & Dark Modes
+* **Context:**
+  - In Light mode on the Journeys home screen, trip cards in list/grid view rendered an awkward white rectangular patch (`#FFFFFF`) directly below every destination photograph because `.concept2-card-footer` and `.concept2-grid-card` inherited `var(--bg-surface)`.
+  - Furthermore, `.concept2-spend-amount` was hardcoded to `#F8FAFC` (white), rendering the spent numerical value completely invisible on the white footer background.
+  - Stacked cards (`TripStack`) were already designed as full-bleed photographic cards with dark gradient overlays, creating an inconsistent visual experience when switching views in Light mode.
+* **Decision:**
+  - **Lock Trip Cards & Footers to Luxury Dark Theme:**
+    - Updated `.concept2-grid-card` and `.stack-card` to use deep obsidian dark backgrounds (`#141720`) with clean borders (`rgba(255, 255, 255, 0.08)` / `0.12`).
+    - Styled `.concept2-card-footer` with a solid dark surface (`#11141d`) and subtle separator line (`1px solid rgba(255, 255, 255, 0.06)`).
+    - In Light mode, applied an elevated drop shadow (`box-shadow: 0 10px 24px -4px rgba(15, 23, 42, 0.28), 0 2px 6px -1px rgba(15, 23, 42, 0.12)`) and crisp border so dark photo cards pop cleanly against the ambient sky/cloud backdrop.
+    - Spend amount (`#F8FAFC`), spend label (`rgba(255, 255, 255, 0.55)`), and temporal status dots remain crisp, vibrant, and AAA-accessible across all app themes.
+* **Trade-offs Accepted:**
+  - Trip cards intentionally retain an obsidian dark photographic container even when the global app theme is Light. This matches industry standards (e.g. Netflix, Spotify, Apple Maps Guides) where multimedia/photo cards preserve cinematic contrast independently of surrounding app chrome.

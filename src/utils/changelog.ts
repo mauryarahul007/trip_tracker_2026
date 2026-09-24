@@ -9,6 +9,14 @@ export interface ChangelogEntry {
 // parsed from decisions.md/BUGS.md: those are prose for developers, not client data.
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: '3.39.1',
+    date: '2026-09-25',
+    changes: [
+      'Journeys card styling: Unified both stacked and grid trip cards into a luxury dark obsidian aesthetic across Light and Dark modes.',
+      'Contrast & visibility fix: Eliminated the solid white footer patch in Light mode and restored crystal-clear contrast for spent totals and status indicators.',
+    ],
+  },
+  {
     version: '3.39.0',
     date: '2026-09-25',
     changes: [
