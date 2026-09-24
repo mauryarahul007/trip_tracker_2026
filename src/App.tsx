@@ -213,7 +213,7 @@ export default function App() {
   const userId = useAuthStore((s) => s.session?.user.id ?? null);
   const userAvatarUrl = useAuthStore((s) => s.session?.user.user_metadata?.avatar_url as string | undefined);
   const userDisplayName = useTripStore((s) => s.userDisplayName);
-  const { byCurrency: crossTripBalances, settledTripIds } = useCrossTripBalances(trips, userId);
+  const { byCurrency: crossTripBalances, settledTripIds, tripSpending } = useCrossTripBalances(trips, userId);
   const signOut = useAuthStore((s) => s.signOut);
   const deleteOwnAccount = useAuthStore((s) => s.deleteOwnAccount);
   const signInSuperadmin = useAuthStore((s) => s.signInSuperadmin);
@@ -2319,6 +2319,7 @@ export default function App() {
           onRestoreTrip={handleRestoreTrip}
           members={members}
           settledTripIds={settledTripIds}
+          tripSpending={tripSpending}
           showAddTrip={showAddTrip}
           setShowAddTrip={setShowAddTrip}
           newTripName={newTripName}

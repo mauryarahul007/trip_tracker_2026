@@ -3962,3 +3962,92 @@ This document logs all meaningful technical decisions, library choices, design p
 * **Trade-offs Accepted:**
   - Fallback photos are selected from a static royalty-free CDN collection when Wikipedia returns no matching place article.
   - Sizing to standard 500px slightly exceeds 480px on 2-column mobile displays (a negligible 4% difference) while ensuring 100% reliability against Wikimedia's HTTP 400 rejection policy.
+
+---
+
+## 223. Refined Floating Action Dock & Ambient Scrim for List Screen
+* **Context:** In the 2-column luxury bento grid (Visual Concept 2, list/grid view), the fixed bottom action dock (`.concept2-bottom-dock`) and Join flow appeared awkward in production:
+  1. The "New Trip" button lacked `white-space: nowrap`, causing "New" and "Trip" to wrap onto two lines on mobile viewports. This created an asymmetrical height mismatch with the adjacent single-line "Join" button.
+  2. The dark outer pill container with an opaque electric blue inner button created a visually heavy "capsule-in-a-capsule" dock that clashed with the destination cover photos directly underneath.
+  3. The dock sat fixed directly on top of the bottom row of cards, obscuring expedition titles, dates, and member avatars.
+  4. The "Join a Trip with Code" form was rendered as an opaque inline card at the top of `<main>`, which shoved the cards down and appeared as an abrupt black block when triggered from the bottom dock.
+* **Decision:**
+  - **Enhanced Translucent Glassmorphism:** Increased transparency on `.concept2-bottom-dock` (`background: rgba(15, 23, 42, 0.42)`, `backdrop-filter: blur(28px) saturate(190%)`), replaced the opaque solid blue button with a luminous translucent gradient (`background: linear-gradient(135deg, rgba(2, 132, 199, 0.65) 0%, rgba(37, 99, 235, 0.65) 100%)`), and lightened the bottom ambient scrim.
+  - **Floating Transparent Modal for Join Trip (`.join-trip-modal-overlay`, `.join-trip-glass-card`):** Replaced the inline top card with a centered, floating frosted glass popup with an icon badge, styled trip code input (`letter-spacing: 0.18em`, uppercase), X close button, and click-outside/escape-key dismissal.
+  - **Single-Line Compact Buttons:** Added `white-space: nowrap` and balanced height (38px) across both buttons. Added [`IconQrCode`](file:///home/rahulm/Documents/trip_tracker_2026/src/components/Icons.tsx#L561) to the Join button for balanced iconography and symmetry with `+ New Trip`.
+  - **Extended Scroll Clearance:** Increased `.concept2-grid-container` bottom padding to `calc(112px + var(--safe-bottom, 0px))` so the bottom cards scroll completely clear of the dock and scrim.
+* **Trade-offs Accepted:**
+  - The floating modal overlays the current view rather than occupying inline document flow, avoiding layout shifts and allowing the user's scroll position on the list grid to remain undisturbed.
+
+---
+
+## 224. Trip Grid Card UI Overhaul, Long-Press & Right-Click Context Menu, and Card Simplification
+* **Context:**
+  - User requested restructuring the trip grid cards (`LuxuryGridTripCard`) to precisely match an attached mobile luxury UI reference:
+    1. **Top Left:** Date range (e.g. `July 15 - 28, 2024`), with Trip Name (e.g. `Safari in Kenya`) directly below it.
+    2. **Top Right:** Ambient temperature & weather capsule of destination place (e.g. `☀️ 28°C`).
+    3. **Bottom Left:** Temporal status badge (`Upcoming Trip`, `Past trip`, or `Active Trip`), with Destination / Place name directly below it.
+    4. **Bottom Right:** Spending summary capsule (e.g. `Spent: $6,800` strictly reflecting logged expenses, eliminating all raw expense count labels like `N exp`).
+    5. **Remove Avatars:** Person avatars took up excessive visual space on compact 2-column cards.
+    6. **Remove Visible 3-Dots Button:** The visible vertical 3-dots button cluttered the card face; options menu needed to be accessible via **long-press** on mobile touch and **right-click** on desktop/computer.
+* **Decision:**
+  - **Grid Card Layout Restructure (`TripsListScreen.tsx`, `index.css`):**
+    - Removed nested card-in-card picture frame padding (`padding: 0`), allowing cover photography to bleed seamlessly to top and side edges within a single clean outer container (`border-radius: 20px`), eliminating artificial extra borders.
+    - Softened font weights from heavy `700` bold to refined `500` - `600` typography, preventing bulky visual weight and text clipping.
+    - Resolved truncated titles: Trip Name is now positioned on its own full-width row (`.concept2-card-name`) directly below the compact Date + Weather capsule row, granting it 100% horizontal clearance so names never prematurely truncate.
+    - Resolved truncated status & places: The card footer separates temporal status (`.concept2-card-status-label`, full width) from the place and spend row (`.concept2-card-footer-row`), ensuring labels like "Active Trip" and long place names have ample horizontal space without clipping.
+    - Completely eliminated raw expense counts (`N exp` / `expenses`) from the card badge. Bound spending to `useCrossTripBalances` + local `tripExpenses` to compute real logged amounts (`Spent: $X,XXX` or `Spent: $0` if unspent), with seamless support for `trip.budget` when future budget features land.
+    - Completely removed `.concept2-avatars-pile` and `.concept2-card-more-btn` from the card face.
+  - **Gesture-Based Context Menu Integration:**
+    - Mobile touch: Implemented pointer-based long press with a 450ms threshold, jitter detection (>10px cancels), haptic vibration (`triggerHaptic('medium')`), and click suppression on long-press release to prevent unwanted trip navigation.
+    - Desktop / Laptop: Bound `onContextMenu` with `e.preventDefault()` to trigger the trip options `ActionSheet`.
+    - Screen reader / Keyboard: Enabled ContextMenu key and Shift+F10 shortcuts alongside Enter/Space selection.
+    - Added CSS `-webkit-touch-callout: none;` and `user-select: none;` to suppress native browser text selection and iOS link callouts during long press.
+* **Trade-offs Accepted:**
+  - Avatars and raw transaction counters are hidden from grid cards, keeping card faces focused purely on destination photography, dates, weather, and spending. Member details and full transaction lists remain viewable inside the trip details screen.
+
+---
+
+## 225. Destination City Overlay on Photograph & Single-Row Card Footer
+* **Context:**
+  - On 2-column mobile layouts (~160px–180px card width), having both the destination place name and 5-to-6-figure spend amounts in the card footer forced both elements to truncate or collide into single-letter text.
+  - The user suggested moving the destination city directly onto the photograph on the right side to maximize breathing room for trip status and spend at the bottom.
+* **Decision:**
+  - **Frosted Glass City Badge on Photograph (`.concept2-card-city-pill`):**
+    - Positioned at `bottom: 8px; right: 8px;` inside `.concept2-card-image-wrap` with a subtle blur backdrop (`rgba(15, 23, 42, 0.65)`, `backdrop-filter: blur(8px)`), rounded pill border, and cyan map pin icon ([`IconMapPin`](file:///home/rahulm/Documents/trip_tracker_2026/src/components/Icons.tsx#L380)).
+    - Visually couples geographic context with the scenic destination photograph (matching Apple Maps Guides and Airbnb editorial cards).
+  - **Single-Row High-Clearance Footer (`.concept2-card-footer`):**
+    - Streamlined the footer to a single flex row:
+      - Left: Temporal status badge (`Active Trip`, `Upcoming Trip`, `Past trip`) accompanied by a distinct colored status indicator dot (`.concept2-status-dot` — emerald for active, sky blue for upcoming, slate for past).
+      - Right: Logged spend badge (`Spent: $X,XXX` or `Spent: ₹X,XXX`).
+    - Gives both status and spend 100% horizontal clearance across all mobile and desktop viewports, completely eliminating text truncation.
+* **Trade-offs Accepted:**
+  - Very long city names in the photo overlay badge are clipped with `text-overflow: ellipsis` up to the card's maximum width minus margins, while the full name is preserved via native browser `title` tooltips.
+
+---
+
+## 226. Single Primary City Parsing, Uncollapsible Status Labels, Borderless Spent, and Dynamic Date Contrast
+* **Context:**
+  - In 2-column mobile grids:
+    1. Multi-city itineraries (e.g. `Gangtok → Lachung → Pelling`, `Meghalaya → Arunachal Pradesh`) caused the photo city pill to overflow and truncate with ellipses inside the pill.
+    2. The status label (`• Upcoming Trip`, `• Past trip`) was collapsing into `• Upcor` or `• Past tri` because the spend badge had `flex-shrink: 0` with a boxed border and padding while the status had `flex: 1` with ellipsis truncation.
+    3. The spent amount had an unnecessary pill border around it.
+    4. On bright photography (such as white snow mountains or pale morning skies in Sikkim and Himachal), white date text was getting washed out and hard to read.
+* **Decision:**
+  - **Single Primary City Extraction (`extractPrimaryCity` in `TripsListScreen.tsx`):**
+    - Parses multi-segment routes separated by arrows (`→`, `->`, `=>`), dashes (`—`, `–`), pipes (`|`), slashes (`/`), or commas (`,`).
+    - Extracts the primary first destination city (e.g. `Gangtok`, `Meghalaya`, `Manali`) for the photo badge, ensuring uniform aesthetic compactness across all cards, while keeping the full multi-city route accessible via the `title` tooltip.
+  - **Uncollapsible Status Labels:**
+    - Shortened status strings to `Active`, `Upcoming`, and `Past` (matching the top screen filters).
+    - Set `flex-shrink: 0; white-space: nowrap;` on `.concept2-card-status-label`, completely preventing flexbox from compressing or truncating status text.
+  - **Borderless Spent Text:**
+    - Stripped the border, background pill, and padding from `.concept2-card-spend-text`. Formatted spent as clean text with a muted label (`Spent:`) and high-contrast numerical value (`₹107,709`), freeing ~16px of horizontal space.
+  - **Dynamic Date & Card Header Contrast Based on Image Luminance:**
+    - Integrated `usePhotoTextTone` from `imageLuminance.ts` which samples the top third of the trip photo.
+    - Added twin capsule styling to `.concept2-card-date` matching the weather capsule.
+    - When `tone-dark` is triggered by bright sky or snow (`luminance > 0.55`), `.concept2-card-date` and `.concept2-weather-capsule` dynamically switch to dark text (`#0F172A`) over a light frosted capsule (`rgba(255, 255, 255, 0.88)`), ensuring 100% legibility on any photograph.
+* **Trade-offs Accepted:**
+  - Only the primary gateway/anchor city is shown on the photo face; the complete itinerary route remains accessible on tap/hover and inside the trip journey sheet.
+
+
+

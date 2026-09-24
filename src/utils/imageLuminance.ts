@@ -1,3 +1,5 @@
+import { useState, useEffect } from 'react';
+
 const luminanceCache = new Map<string, number | null>();
 const dominantColorCache = new Map<string, string | null>();
 
@@ -10,6 +12,26 @@ export function photoTextTone(luminance: number | null): 'light' | 'dark' {
   return luminance > BRIGHT_LUMINANCE_THRESHOLD ? 'dark' : 'light';
 }
 
+/**
+ * React hook to dynamically determine whether text overlaying an image
+ * should be 'light' or 'dark' based on the sampled luminance of the top third.
+ */
+export function usePhotoTextTone(photoUrl: string | null): 'light' | 'dark' {
+  const [tone, setTone] = useState<'light' | 'dark'>('light');
+  useEffect(() => {
+    let cancelled = false;
+    setTone('light');
+    if (!photoUrl) return;
+    getImageLuminance(photoUrl).then((luminance) => {
+      if (!cancelled) setTone(photoTextTone(luminance));
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [photoUrl]);
+  return tone;
+}
+
 // 0 (black) to 1 (white). Samples only the top third of the image, since
 // that's the region the trip name/meta actually sit over on a stack card
 // -- not the bottom, where only the small avatar row lives.
@@ -20,7 +42,9 @@ export function getImageLuminance(url: string): Promise<number | null> {
 
   return new Promise((resolve) => {
     const img = new Image();
-    img.crossOrigin = 'anonymous';
+    if (!url.startsWith('data:') && !url.startsWith('blob:')) {
+      img.crossOrigin = 'anonymous';
+    }
 
     img.onload = () => {
       try {

@@ -1,10 +1,10 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { Trip, Member, TripStop } from '../types';
-import { IconArchive, IconMapPin, IconSearch, IconMoreVertical, IconPlus, IconEdit, IconTrash, IconCopy, IconRefresh, IconLayers, IconList } from './Icons';
+import { IconArchive, IconMapPin, IconSearch, IconPlus, IconEdit, IconTrash, IconCopy, IconRefresh, IconLayers, IconList, IconQrCode, IconX } from './Icons';
 import { ActionSheet } from './common/ActionSheet';
 import { DateRangePicker } from './DateRangePicker';
-import { formatDateRange } from '../utils/dateRange';
+import { getCurrencySymbol } from '../utils/currency';
 import { initial } from '../utils/initials';
 import { avatarColorForName } from '../utils/avatarColor';
 import { newId } from '../utils/uuid';
@@ -25,14 +25,51 @@ import { asCopyString, DEFAULT_EMPTY_TRIP_BLURB } from '../utils/landingCopy';
 import { isWebKitCompositor } from '../utils/tripStackMotion';
 import { readStackChrome } from '../utils/stackChrome';
 
+import { usePhotoTextTone } from '../utils/imageLuminance';
+import { extractPrimaryCity } from '../utils/tripDestination';
+
+
+function formatTripCardDate(startDate?: string, endDate?: string): string {
+  if (!startDate) return 'Dates pending';
+  const s = new Date(`${startDate}T00:00:00`);
+  if (Number.isNaN(s.getTime())) return 'Dates pending';
+
+  const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'July', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const sMonth = monthNames[s.getMonth()] || s.toLocaleDateString('en-US', { month: 'short' });
+  const sDay = s.getDate();
+  const sYear = s.getFullYear();
+
+  if (!endDate) {
+    return `${sMonth} ${sDay}`;
+  }
+
+  const e = new Date(`${endDate}T00:00:00`);
+  if (Number.isNaN(e.getTime())) {
+    return `${sMonth} ${sDay}`;
+  }
+
+  const eMonth = monthNames[e.getMonth()] || e.toLocaleDateString('en-US', { month: 'short' });
+  const eDay = e.getDate();
+  const eYear = e.getFullYear();
+
+  if (sYear !== eYear) {
+    return `${sMonth} ${sDay} – ${eMonth} ${eDay}, '${String(eYear).slice(2)}`;
+  }
+  if (sMonth === eMonth) {
+    return `${sMonth} ${sDay}–${eDay}`;
+  }
+  return `${sMonth} ${sDay} – ${eMonth} ${eDay}`;
+}
+
 function LuxuryGridTripCard({
   trip,
-  members,
+  tripSpending,
   onSelectTrip,
   onOpenActionSheet,
 }: {
   trip: Trip;
-  members: Record<string, Member>;
+  members?: Record<string, Member>;
+  tripSpending?: Record<string, number>;
   onSelectTrip: (id: string) => void;
   onOpenActionSheet: (trip: Trip) => void;
 }) {
@@ -43,82 +80,185 @@ function LuxuryGridTripCard({
     [trip.destination, stopNames, trip.name, trip.id]
   );
   const effectivePhotoUrl = photoUrl || fallbackPhoto;
-  const { weather } = useDestinationWeather(trip.destination, trip.name, stopNames, false);
-  const tripMembers = trip.memberIds.map((id) => members[id]).filter(Boolean);
-  const shown = tripMembers.slice(0, 3);
-  const overflow = tripMembers.length - shown.length;
-  const dateRangeStr = formatDateRange(trip.startDate, trip.endDate) || 'Dates pending';
+  const tone = usePhotoTextTone(effectivePhotoUrl);
+  const { weather } = useDestinationWeather(trip.destination, trip.name, stopNames, true);
+
+  const tripExpenses = useTripStore((s) => s.expenses);
+  const totalSpent = useMemo(() => {
+    if (tripSpending && typeof tripSpending[trip.id] === 'number') {
+      return tripSpending[trip.id];
+    }
+    return tripExpenses
+      .filter((e) => e.tripId === trip.id && !e.deletedAt && !e.isSettlement)
+      .reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
+  }, [tripSpending, tripExpenses, trip.id]);
+
+  const currencySymbol = getCurrencySymbol(trip.baseCurrency || 'USD') || '$';
+
+  const tripBudget = (trip as unknown as { budget?: number }).budget;
+  const isBudgetSet = typeof tripBudget === 'number' && tripBudget > 0;
+
+  const dateRangeStr = useMemo(() => {
+    return formatTripCardDate(trip.startDate, trip.endDate);
+  }, [trip.startDate, trip.endDate]);
+
+  const statusLabel = useMemo(() => {
+    if (trip.closed || trip.archived) {
+      return 'Past';
+    }
+    const now = new Date();
+    const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+
+    if (trip.endDate && trip.endDate < todayStr) {
+      return 'Past';
+    }
+    if (trip.startDate && trip.startDate > todayStr) {
+      return 'Upcoming';
+    }
+    if (trip.startDate && trip.endDate && trip.startDate <= todayStr && trip.endDate >= todayStr) {
+      return 'Active';
+    }
+    return 'Upcoming';
+  }, [trip.closed, trip.archived, trip.startDate, trip.endDate]);
+
+  const { primary: primaryCity, full: fullDestination } = useMemo(
+    () => extractPrimaryCity(trip.destination, trip.stops),
+    [trip.destination, trip.stops]
+  );
+  const displayCity = primaryCity || trip.name;
+
+  // Long press for mobile touch & right click for desktop
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const longPressFired = useRef(false);
+  const touchStartPos = useRef<{ x: number; y: number } | null>(null);
+
+  const clearTimer = useCallback(() => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+    touchStartPos.current = null;
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (longPressTimer.current) {
+        clearTimeout(longPressTimer.current);
+      }
+    };
+  }, []);
+
+  const handlePointerDown = (e: React.PointerEvent) => {
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    longPressFired.current = false;
+    touchStartPos.current = { x: e.clientX, y: e.clientY };
+    if (longPressTimer.current) clearTimeout(longPressTimer.current);
+    longPressTimer.current = setTimeout(() => {
+      longPressFired.current = true;
+      triggerHaptic('medium');
+      onOpenActionSheet(trip);
+    }, 450);
+  };
+
+  const handlePointerMove = (e: React.PointerEvent) => {
+    if (!touchStartPos.current || !longPressTimer.current) return;
+    const dist = Math.hypot(e.clientX - touchStartPos.current.x, e.clientY - touchStartPos.current.y);
+    if (dist > 10) {
+      clearTimer();
+    }
+  };
+
+  const handlePointerUp = () => {
+    clearTimer();
+  };
+
+  const handlePointerCancel = () => {
+    clearTimer();
+  };
+
+  const handleContextMenu = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    clearTimer();
+    triggerHaptic('medium');
+    onOpenActionSheet(trip);
+  };
+
+  const handleClick = () => {
+    if (longPressFired.current) {
+      longPressFired.current = false;
+      return;
+    }
+    triggerHaptic('light');
+    onSelectTrip(trip.id);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.target !== e.currentTarget) return;
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      onSelectTrip(trip.id);
+    } else if (e.key === 'ContextMenu' || (e.shiftKey && e.key === 'F10')) {
+      e.preventDefault();
+      triggerHaptic('medium');
+      onOpenActionSheet(trip);
+    }
+  };
 
   return (
     <div
-      className="concept2-grid-card"
-      onClick={() => {
-        triggerHaptic('light');
-        onSelectTrip(trip.id);
-      }}
+      className={`concept2-grid-card tone-${tone}`}
       role="button"
       tabIndex={0}
-      aria-label={`Open trip ${trip.name}`}
-      onKeyDown={(e) => {
-        if (e.target !== e.currentTarget) return;
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          onSelectTrip(trip.id);
-        }
-      }}
+      aria-label={`Open trip ${trip.name}. Long press or right-click for options.`}
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerUp}
+      onPointerCancel={handlePointerCancel}
+      onContextMenu={handleContextMenu}
+      onClick={handleClick}
+      onKeyDown={handleKeyDown}
     >
-      <div
-        className="concept2-card-bg"
-        style={{
-          backgroundImage: `linear-gradient(180deg, rgba(8,12,20,0.2) 0%, rgba(8,12,20,0.1) 35%, rgba(8,12,20,0.85) 75%, rgba(8,12,20,0.98) 100%), url("${effectivePhotoUrl}")`,
-        }}
-      />
-      <div className="concept2-card-content">
-        <div className="concept2-card-top">
-          {weather ? (
-            <div className="concept2-weather-capsule">
-              <span>{weather.weatherEmoji}</span>
-              <span>{weather.tempC}&deg;</span>
-            </div>
-          ) : trip.closed ? (
-            <span className="concept2-status-pill closed">CLOSED</span>
-          ) : trip.archived ? (
-            <span className="concept2-status-pill archived">ARCHIVED</span>
-          ) : (
-            <span className="concept2-status-pill active">ACTIVE</span>
-          )}
-          <button
-            type="button"
-            className="concept2-card-more-btn"
-            aria-label="Trip options"
-            title="Trip options"
-            onClick={(e) => {
-              e.stopPropagation();
-              onOpenActionSheet(trip);
-            }}
-          >
-            <IconMoreVertical size={14} />
-          </button>
+      <div className="concept2-card-image-wrap">
+        <div
+          className="concept2-card-image"
+          style={{
+            backgroundImage: `url("${effectivePhotoUrl}")`,
+          }}
+        />
+        <div className="concept2-card-image-overlay" />
+        <div className="concept2-card-image-content">
+          <div className="concept2-card-top-row">
+            <span className={`concept2-card-date date-tone-${tone}`}>{dateRangeStr}</span>
+            {weather && (
+              <div className="concept2-weather-capsule" title={`${weather.city || displayCity}: ${weather.condition || ''}`}>
+                <span>{weather.weatherEmoji || '☀️'}</span>
+                <span>{weather.tempC}&deg;</span>
+              </div>
+            )}
+          </div>
+          <h3 className="concept2-card-name" title={trip.name}>{trip.name}</h3>
         </div>
 
-        <div className="concept2-card-bottom">
-          <span className="concept2-card-date">{dateRangeStr.toUpperCase()}</span>
-          <h3 className="concept2-card-name" title={trip.name}>{trip.name}</h3>
-          <div className="concept2-card-meta">
-            <div className="concept2-avatars-pile">
-              {shown.map((m) =>
-                m.avatarUrl ? (
-                  <img key={m.id} src={m.avatarUrl} alt={m.name} className="concept2-avatar-circle" width={22} height={22} referrerPolicy="no-referrer" loading="lazy" />
-                ) : (
-                  <span key={m.id} className="concept2-avatar-circle" style={{ background: avatarColorForName(m.name) }}>{initial(m.name)}</span>
-                )
-              )}
-              {overflow > 0 && <span className="concept2-avatar-circle concept2-avatar-more">+{overflow}</span>}
-            </div>
-            <span className="concept2-card-stat">
-              {trip.expenseCount || 0} exp
-            </span>
+        {displayCity && (
+          <div className="concept2-card-city-pill" title={fullDestination || displayCity}>
+            <IconMapPin size={9} className="concept2-city-pin-icon" />
+            <span>{displayCity}</span>
           </div>
+        )}
+      </div>
+
+      <div className="concept2-card-footer">
+        <div className={`concept2-card-status-label status-${statusLabel.toLowerCase()}`}>
+          <span className="concept2-status-dot" aria-hidden="true" />
+          <span>{statusLabel}</span>
+        </div>
+        <div
+          className="concept2-card-spend-text"
+          title={isBudgetSet ? `Budget: ${currencySymbol}${Math.round(tripBudget).toLocaleString()}` : `Total logged expenses: ${currencySymbol}${Math.round(totalSpent).toLocaleString()}`}
+        >
+          <span className="concept2-spend-label">{isBudgetSet ? 'Budget: ' : 'Spent: '}</span>
+          <span className="concept2-spend-amount">{currencySymbol}{Math.round(isBudgetSet ? tripBudget : totalSpent).toLocaleString()}</span>
         </div>
       </div>
     </div>
@@ -133,6 +273,7 @@ type Props = {
   onRestoreTrip?: (trip: Trip) => void;
   members: Record<string, Member>;
   settledTripIds?: Record<string, boolean>;
+  tripSpending?: Record<string, number>;
   showAddTrip: boolean;
   setShowAddTrip: (show: boolean) => void;
   newTripName: string;
@@ -170,6 +311,7 @@ export function TripsListScreen({
   onRestoreTrip,
   members,
   settledTripIds,
+  tripSpending,
   showAddTrip,
   setShowAddTrip,
   newTripName,
@@ -323,8 +465,7 @@ export function TripsListScreen({
     statusFilter !== 'archived' &&
     displayedTrips.length >= 1 &&
     !showList &&
-    !showAddTrip &&
-    !showJoinTrip;
+    !showAddTrip;
 
   useEffect(() => {
     if (!stackActive || !isWebKitCompositor()) return;
@@ -645,42 +786,7 @@ export function TripsListScreen({
 
       <main className={`trips-screen-main${stackActive ? ' stack-main' : ''}`}>
 
-        {/* Join by code collapsible form */}
-        {showJoinTrip && (
-          <form onSubmit={handleJoinByCode} className="glass-card" style={{ marginBottom: '24px', padding: '16px' }}>
-            <h3 style={{ fontSize: '15px', fontWeight: 600, marginBottom: '12px' }}>Join a Trip with Code</h3>
-            {/* Honeypot field - visually hidden to trap bots */}
-            <div style={{ display: 'none' }} aria-hidden="true">
-              <label htmlFor="join_trip_code_hp">Leave this empty</label>
-              <input
-                id="join_trip_code_hp"
-                type="text"
-                name="join_trip_code_hp"
-                value={honeypotVal}
-                onChange={(e) => setHoneypotVal(e.target.value)}
-                tabIndex={-1}
-                autoComplete="off"
-              />
-            </div>
-            <div style={{ display: 'flex', gap: '8px' }}>
-              <input
-                type="text"
-                className="input-field"
-                placeholder="Enter 6-digit trip code (e.g. 123456)"
-                value={joinCode}
-                onChange={(e) => setJoinCode(e.target.value)}
-                style={{ flex: 1 }}
-                autoFocus
-              />
-              <button type="submit" className="gradient-btn" disabled={!joinCode.trim()}>
-                Join
-              </button>
-              <button type="button" className="secondary-btn" onClick={() => setShowJoinTrip(false)}>
-                Cancel
-              </button>
-            </div>
-          </form>
-        )}
+
 
         {/* Add/Edit trip form */}
         {showAddTrip && (
@@ -1067,6 +1173,7 @@ export function TripsListScreen({
                         key={trip.id}
                         trip={trip}
                         members={members}
+                        tripSpending={tripSpending}
                         onSelectTrip={onSelectTrip}
                         onOpenActionSheet={setActionSheetTrip}
                       />
@@ -1075,29 +1182,33 @@ export function TripsListScreen({
                 </div>
 
                 {!showAddTrip && !showJoinTrip && (
-                  <div className="concept2-bottom-dock">
-                    <button
-                      type="button"
-                      className="concept2-new-trip-pill"
-                      onClick={() => {
-                        triggerHaptic('medium');
-                        setShowAddTrip(true);
-                      }}
-                    >
-                      <IconPlus size={16} />
-                      <span>New Trip</span>
-                    </button>
-                    <button
-                      type="button"
-                      className="concept2-join-trip-btn"
-                      onClick={() => {
-                        triggerHaptic('light');
-                        setShowJoinTrip(true);
-                      }}
-                    >
-                      <span>Join</span>
-                    </button>
-                  </div>
+                  <>
+                    <div className="concept2-bottom-scrim" aria-hidden="true" />
+                    <div className="concept2-bottom-dock">
+                      <button
+                        type="button"
+                        className="concept2-new-trip-pill"
+                        onClick={() => {
+                          triggerHaptic('medium');
+                          setShowAddTrip(true);
+                        }}
+                      >
+                        <IconPlus size={15} />
+                        <span>New Trip</span>
+                      </button>
+                      <button
+                        type="button"
+                        className="concept2-join-trip-btn"
+                        onClick={() => {
+                          triggerHaptic('light');
+                          setShowJoinTrip(true);
+                        }}
+                      >
+                        <IconQrCode size={13} />
+                        <span>Join</span>
+                      </button>
+                    </div>
+                  </>
                 )}
               </>
             )}
@@ -1173,6 +1284,87 @@ export function TripsListScreen({
               : []),
           ]}
         />
+      )}
+
+      {/* Floating Transparent Modal for Joining a Trip by Code */}
+      {showJoinTrip && (
+        <div
+          className="join-trip-modal-overlay"
+          onClick={() => setShowJoinTrip(false)}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="join-journey-modal-title"
+        >
+          <div
+            className="join-trip-glass-card"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              type="button"
+              className="join-trip-close-btn"
+              onClick={() => setShowJoinTrip(false)}
+              aria-label="Close"
+              title="Close"
+            >
+              <IconX size={15} />
+            </button>
+
+            <div className="join-trip-glow-accent" aria-hidden="true" />
+
+            <div className="join-trip-badge">
+              <IconQrCode size={20} />
+            </div>
+
+            <div className="join-trip-eyebrow">EXPEDITION PASS</div>
+            <h3 id="join-journey-modal-title" className="join-trip-title">Join a Journey</h3>
+            <p className="join-trip-desc">Enter the 6-digit trip pass or invite code shared by your coordinator.</p>
+
+            <form onSubmit={handleJoinByCode}>
+              {/* Honeypot field - visually hidden to trap bots */}
+              <div style={{ display: 'none' }} aria-hidden="true">
+                <label htmlFor="join_trip_code_hp">Leave this empty</label>
+                <input
+                  id="join_trip_code_hp"
+                  type="text"
+                  name="join_trip_code_hp"
+                  value={honeypotVal}
+                  onChange={(e) => setHoneypotVal(e.target.value)}
+                  tabIndex={-1}
+                  autoComplete="off"
+                />
+              </div>
+
+              <div className="join-trip-input-wrap">
+                <input
+                  type="text"
+                  className="join-trip-input"
+                  placeholder="000000"
+                  value={joinCode}
+                  onChange={(e) => setJoinCode(e.target.value)}
+                  maxLength={10}
+                  autoFocus
+                />
+              </div>
+
+              <div className="join-trip-actions">
+                <button
+                  type="button"
+                  className="join-trip-cancel-btn"
+                  onClick={() => setShowJoinTrip(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="join-trip-submit-btn"
+                  disabled={!joinCode.trim()}
+                >
+                  Join Journey
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
     </div>
   );

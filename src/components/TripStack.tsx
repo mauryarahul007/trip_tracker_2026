@@ -5,7 +5,7 @@ import { formatDateRange, tripDayNumber } from '../utils/dateRange';
 import { initial } from '../utils/initials';
 import { avatarColorForName } from '../utils/avatarColor';
 import { fetchPlaceCoverImage, coverImageUrlAtWidth, getFallbackTravelPhoto, PEEK_COVER_WIDTH, COVER_WIDTH } from '../services/placeImageService';
-import { getImageLuminance, getImageDominantColor, photoTextTone } from '../utils/imageLuminance';
+import { getImageDominantColor, usePhotoTextTone } from '../utils/imageLuminance';
 import { triggerHaptic } from '../utils/haptics';
 import { getDestinationWeatherRealtime, type WeatherData } from '../services/weatherService';
 import { useEscapeKey } from '../utils/useEscapeKey';
@@ -257,21 +257,9 @@ export function useTripPhoto(
 
 // Text sits at the top of the card (stamp/destination/name/meta) -- only
 // the avatar row lives at the bottom -- so the scrim darkens the top, and
-// this reads the same top region to decide whether that scrim needs dark
-// or light text on top of it. Shared with the home expeditions chip.
-export function usePhotoTextTone(photoUrl: string | null): 'light' | 'dark' {
-  const [tone, setTone] = useState<'light' | 'dark'>('light');
-  useEffect(() => {
-    let cancelled = false;
-    setTone('light');
-    if (!photoUrl) return;
-    getImageLuminance(photoUrl).then((luminance) => {
-      if (!cancelled) setTone(photoTextTone(luminance));
-    });
-    return () => { cancelled = true; };
-  }, [photoUrl]);
-  return tone;
-}
+// Re-export usePhotoTextTone for backwards compatibility and cross-component use
+export { usePhotoTextTone } from '../utils/imageLuminance';
+
 
 const CardContent = memo(function CardContent({
   trip,

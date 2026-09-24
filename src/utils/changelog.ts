@@ -9,6 +9,18 @@ export interface ChangelogEntry {
 // parsed from decisions.md/BUGS.md: those are prose for developers, not client data.
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: '3.39.0',
+    date: '2026-09-25',
+    changes: [
+      'Journeys luxury grid cards overhaul: Reorganized with top date range, dedicated title row, realtime destination weather capsule, and uncollapsible temporal status indicators.',
+      'Destination photography badges: Relocated destination city directly onto the cover photograph with frosted glass styling and automatic primary city parsing for multi-city routes.',
+      'Dynamic photo contrast: Date and weather capsules dynamically switch between dark and light frosted modes based on sampled image sky luminance for crystal-clear readability.',
+      'Refined card footer: Borderless spent display and protected status labels with zero text truncation.',
+      'Long-press and right-click context menus: Access trip options with a smooth 450ms long-press on mobile touch or right-click on desktop.',
+      'Translucent floating action dock and floating frosted glass Join Journey popup.',
+    ],
+  },
+  {
     version: '3.38.0',
     date: '2026-09-24',
     changes: [

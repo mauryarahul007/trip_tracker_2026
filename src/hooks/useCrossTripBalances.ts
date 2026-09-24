@@ -14,9 +14,20 @@ export interface CrossTripBalances {
   // by trip id. Not user-specific -- matches the "Settled" state shown in
   // the trip's own detail view.
   settledTripIds: Record<string, boolean>;
+  // Total spending per trip id computed from all logged expenses.
+  tripSpending: Record<string, number>;
 }
 
-const EMPTY: CrossTripBalances = { byCurrency: {}, settledTripIds: {} };
+function getLocalSpending(): Record<string, number> {
+  const local = useTripStore.getState().expenses || [];
+  const spending: Record<string, number> = {};
+  local.forEach((exp) => {
+    if (!exp.isSettlement && !exp.deletedAt) {
+      spending[exp.tripId] = (spending[exp.tripId] || 0) + (Number(exp.amount) || 0);
+    }
+  });
+  return spending;
+}
 
 // Fetches fresh expenses server-side (not the possibly-partial local
 // store) so a trip's true settled state is reflected even for trips the
@@ -24,12 +35,17 @@ const EMPTY: CrossTripBalances = { byCurrency: {}, settledTripIds: {} };
 // only holds a trip's full expense set once that trip has actually been
 // opened, so computing balances from it for other trips can be wrong.
 export function useCrossTripBalances(trips: Trip[], userId: string | null): CrossTripBalances {
-  const [result, setResult] = useState<CrossTripBalances>(EMPTY);
+  const [result, setResult] = useState<CrossTripBalances>(() => ({
+    byCurrency: {},
+    settledTripIds: {},
+    tripSpending: getLocalSpending(),
+  }));
   const tripIdsKey = trips.map((t) => t.id).join(',');
 
   useEffect(() => {
+    const localSpending = getLocalSpending();
     if (!userId || trips.length === 0 || !navigator.onLine) {
-      setResult(EMPTY);
+      setResult({ byCurrency: {}, settledTripIds: {}, tripSpending: localSpending });
       return;
     }
     let cancelled = false;
@@ -40,6 +56,14 @@ export function useCrossTripBalances(trips: Trip[], userId: string | null): Cros
         const { members: curMembers, groups: curGroups } = useTripStore.getState();
         const byCurrency: Record<string, number> = {};
         const settledTripIds: Record<string, boolean> = {};
+        const tripSpending: Record<string, number> = { ...localSpending };
+
+        allExpenses.forEach((exp) => {
+          if (!exp.isSettlement && !exp.deletedAt) {
+            tripSpending[exp.tripId] = (tripSpending[exp.tripId] || 0) + (Number(exp.amount) || 0);
+          }
+        });
+
         tripsSnapshot.forEach((trip) => {
           const tripGroups = Object.values(curGroups).filter((g) => trip.groupIds.includes(g.id));
           const { balances: tripBalances, transfers } = calculateSettlements(trip, curMembers, allExpenses, tripGroups);
@@ -51,9 +75,9 @@ export function useCrossTripBalances(trips: Trip[], userId: string | null): Cros
           if (Math.abs(mine) < 0.01) return;
           byCurrency[trip.baseCurrency] = Number(((byCurrency[trip.baseCurrency] || 0) + mine).toFixed(2));
         });
-        setResult({ byCurrency, settledTripIds });
+        setResult({ byCurrency, settledTripIds, tripSpending });
       })
-      .catch(() => { if (!cancelled) setResult(EMPTY); });
+      .catch(() => { if (!cancelled) setResult({ byCurrency: {}, settledTripIds: {}, tripSpending: localSpending }); });
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- members/groups read fresh via getState() at resolve time, not tracked as deps
   }, [tripIdsKey, userId]);
