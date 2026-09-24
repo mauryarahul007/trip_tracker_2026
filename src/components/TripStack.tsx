@@ -1,16 +1,15 @@
 import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { Member, Trip } from '../types';
 import { IconArchive, IconEdit, IconTrash } from './Icons';
-import { formatTripStamp, tripDayNumber } from '../utils/dateRange';
+import { formatDateRange, tripDayNumber } from '../utils/dateRange';
 import { initial } from '../utils/initials';
 import { avatarColorForName } from '../utils/avatarColor';
-import { fetchPlaceCoverImage, coverImageUrlAtWidth, PEEK_COVER_WIDTH, COVER_WIDTH } from '../services/placeImageService';
+import { fetchPlaceCoverImage, coverImageUrlAtWidth, getFallbackTravelPhoto, PEEK_COVER_WIDTH, COVER_WIDTH } from '../services/placeImageService';
 import { getImageLuminance, getImageDominantColor, photoTextTone } from '../utils/imageLuminance';
 import { triggerHaptic } from '../utils/haptics';
 import { getDestinationWeatherRealtime, type WeatherData } from '../services/weatherService';
 import { useEscapeKey } from '../utils/useEscapeKey';
 import { sortTrips, type TripSortMode } from '../utils/tripSort';
-import { PassportStamp } from './common/PassportStamp';
 import {
   EXIT_TRANSITION_MS,
   SWIPE_THRESHOLD,
@@ -200,7 +199,7 @@ type Props = {
   onStartEditTrip: (trip: Trip) => void;
   onDeleteTrip: (trip: Trip) => void;
   onArchiveTrip: (trip: Trip) => void;
-  onShowList: () => void;
+  onShowList?: () => void;
   onFrontChange?: (trip: Trip | null) => void;
   onIndexChange?: (index: number) => void;
   targetTripId?: string | null;
@@ -208,26 +207,51 @@ type Props = {
 
 // Cover photo for a card's background. fetchPlaceCoverImage already
 // dedupes/caches by place name at module scope, so mounting this once per
+export { getFallbackTravelPhoto, PEEK_COVER_WIDTH, COVER_WIDTH };
+
+// Cover photo for a card's background. fetchPlaceCoverImage already
+// dedupes/caches by place name at module scope, so mounting this once per
 // peeking card (not just the front one) is effectively free after the
 // first fetch, and doubles as prefetching for whichever card rises next.
-export function useTripPhoto(destination?: string, coverImageUrl?: string, tripName?: string, width: number = COVER_WIDTH): string | null {
-  const [url, setUrl] = useState<string | null>(() => coverImageUrlAtWidth(coverImageUrl || null, width));
+export function useTripPhoto(
+  destination?: string,
+  coverImageUrl?: string,
+  tripName?: string,
+  width: number = COVER_WIDTH,
+  stops?: string[]
+): string | null {
+  const seed = (destination || (stops && stops[0]) || tripName || '').trim();
+  const fallback = seed ? getFallbackTravelPhoto(seed, width) : null;
+  const [url, setUrl] = useState<string | null>(() => (coverImageUrl ? coverImageUrlAtWidth(coverImageUrl, width) : fallback));
+
   useEffect(() => {
     let cancelled = false;
     if (coverImageUrl) {
       setUrl(coverImageUrlAtWidth(coverImageUrl, width));
       return;
     }
-    const query = destination || tripName;
-    if (!query) {
+    if (!seed) {
       setUrl(null);
       return;
     }
-    fetchPlaceCoverImage(query).then((result) => {
-      if (!cancelled) setUrl(coverImageUrlAtWidth(result, width));
+    const currentFallback = getFallbackTravelPhoto(seed, width);
+    setUrl(currentFallback);
+
+    // Prioritize destination/place entered when trip is created, then route stops, then trip name
+    const queries = [
+      destination,
+      ...(stops || []),
+      tripName,
+    ].filter(Boolean) as string[];
+
+    fetchPlaceCoverImage(queries).then((result) => {
+      if (!cancelled && result) {
+        setUrl(coverImageUrlAtWidth(result, width));
+      }
     });
     return () => { cancelled = true; };
-  }, [destination, coverImageUrl, tripName, width]);
+  }, [destination, coverImageUrl, tripName, width, seed, stops]);
+
   return url;
 }
 
@@ -252,9 +276,9 @@ export function usePhotoTextTone(photoUrl: string | null): 'light' | 'dark' {
 const CardContent = memo(function CardContent({
   trip,
   members,
-  isSettled,
+  isSettled: _isSettled,
   isFront = false,
-  onQuickAddExpense,
+  onQuickAddExpense: _onQuickAddExpense,
 }: {
   trip: Trip;
   members: Record<string, Member>;
@@ -262,156 +286,124 @@ const CardContent = memo(function CardContent({
   isFront?: boolean;
   onQuickAddExpense?: (tripId: string) => void;
 }) {
-  const stamp = formatTripStamp(trip.startDate, trip.endDate);
+  const itineraryProgress = useMemo(() => getItineraryProgress(trip.startDate, trip.endDate), [trip.startDate, trip.endDate]);
   const tripMembers = trip.memberIds.map((id) => members[id]).filter(Boolean);
   const shown = tripMembers.slice(0, 3);
   const overflow = tripMembers.length - shown.length;
   const expenseCount = trip.expenseCount || 0;
-  const photoUrl = useTripPhoto(trip.destination, trip.coverImageUrl, trip.name, isFront ? COVER_WIDTH : PEEK_COVER_WIDTH);
-  const tone = usePhotoTextTone(photoUrl);
   const stopNames = useMemo(() => trip.stops?.map((s) => s.name).filter(Boolean), [trip.stops]);
+  const photoUrl = useTripPhoto(trip.destination, trip.coverImageUrl, trip.name, isFront ? COVER_WIDTH : PEEK_COVER_WIDTH, stopNames);
+  const fallbackPhoto = useMemo(
+    () => getFallbackTravelPhoto(trip.destination || (stopNames && stopNames[0]) || trip.name || trip.id, isFront ? COVER_WIDTH : PEEK_COVER_WIDTH),
+    [trip.destination, stopNames, trip.name, trip.id, isFront]
+  );
+  const effectivePhotoUrl = photoUrl || fallbackPhoto;
+  const tone = usePhotoTextTone(effectivePhotoUrl);
   const { weather, isRefreshing, refresh: refreshWeather } = useDestinationWeather(trip.destination, trip.name, stopNames, isFront);
 
   const statusBadge = useMemo(
     () => getTripStatusBadge(trip),
     [trip.startDate, trip.endDate, trip.closed, trip.archived]
   );
-
-  const itineraryProgress = useMemo(
-    () => getItineraryProgress(trip.startDate, trip.endDate),
-    [trip.startDate, trip.endDate]
-  );
+  const dateRangeStr = formatDateRange(trip.startDate, trip.endDate) || 'Dates pending';
+  const tripDurationDays = useMemo(() => {
+    if (!trip.startDate || !trip.endDate) return null;
+    const s = new Date(`${trip.startDate}T00:00:00`).getTime();
+    const e = new Date(`${trip.endDate}T00:00:00`).getTime();
+    if (isNaN(s) || isNaN(e) || e < s) return null;
+    const days = Math.round((e - s) / 86400000) + 1;
+    return days > 0 ? `${days} Day${days === 1 ? '' : 's'}` : null;
+  }, [trip.startDate, trip.endDate]);
 
   return (
-    <div className={`stack-card-face${photoUrl ? ` has-photo tone-${tone}` : ''}`}>
-      {photoUrl && (
+    <div className={`stack-card-face has-photo tone-${tone}`}>
+      {effectivePhotoUrl && (
         <div
-          key={photoUrl}
+          key={effectivePhotoUrl}
           className="stack-card-photo"
           style={{
-            backgroundImage: `linear-gradient(180deg, rgba(7,11,18,0.45) 0%, rgba(7,11,18,0.12) 30%, rgba(7,11,18,0.92) 85%, rgba(7,11,18,0.98) 100%), url("${photoUrl}")`
+            backgroundImage: `linear-gradient(180deg, rgba(8,12,20,0.45) 0%, rgba(8,12,20,0.08) 30%, rgba(8,12,20,0.85) 75%, rgba(8,12,20,0.98) 100%), url("${effectivePhotoUrl}")`
           }}
         />
       )}
       <div className="stack-card-content">
-        {/* Authentic Passport Ink Stamp Watermark: floating mid-right on the card cover photo without displacing any text/controls */}
-        <div
-          style={{
-            position: 'absolute',
-            right: '18px',
-            top: '70px',
-            zIndex: 1,
-            pointerEvents: 'none',
-            opacity: 0.92,
-          }}
-          aria-hidden="true"
-        >
-          <PassportStamp
-            destination={trip.destination || trip.name}
-            tripName={trip.name}
-            date={trip.startDate}
-            variant={trip.closed ? 'settled' : isSettled ? 'settled' : 'entry'}
-            color={trip.closed || isSettled ? 'teal' : 'auto'}
-            size={54}
-          />
-        </div>
-
-        <div className="stack-card-top-bar">
-          <div className="pp-stamp">
-            <span>{stamp.top}</span>
-            <span>{stamp.bottom}</span>
-          </div>
-
-          <div className="stack-unified-header">
-            {/* Own row: a multi-stop route ("Gangtok -> Lachung -> Pelling")
-                needs real width, and sharing one pill with the countdown
-                badge left it with almost none. Splitting into two stacked
-                pills gives destination+weather nearly the full row instead
-                of fighting the badge for space. */}
-            {statusBadge && (
-              <span className={`stack-status-dot-indicator ${statusBadge.kind}`} title={statusBadge.label}>
-                <span className="stack-status-live-dot" />
-                <span className="stack-status-label">{statusBadge.label}</span>
-              </span>
-            )}
-            {(trip.destination || weather) && (
-              <div
-                className={`stack-header-caption${isRefreshing ? ' refreshing' : ''}`}
-                onClick={(e) => {
-                  if (weather) {
-                    e.stopPropagation();
-                    refreshWeather();
-                  }
-                }}
-                role={weather ? 'button' : undefined}
-                tabIndex={weather ? 0 : undefined}
-                onKeyDown={(e) => {
-                  if (weather && (e.key === 'Enter' || e.key === ' ')) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    refreshWeather();
-                  }
-                }}
-                title={weather ? `Live: ${weather.condition} in ${weather.city}. Tap to refresh.` : trip.destination}
-              >
-                {trip.destination && (
-                  <span className="stack-caption-dest">{trip.destination}</span>
-                )}
-                {trip.destination && weather && <span className="stack-header-sep">&middot;</span>}
-                {weather && (
-                  <span className="stack-caption-weather">
+        <div className="concept1-card-top-bar">
+          {statusBadge ? (
+            <div className={`concept1-status-pill ${statusBadge.kind}`}>
+              <span className="concept1-status-dot" />
+              <span>{statusBadge.label}</span>
+            </div>
+          ) : (
+            <div aria-hidden="true" />
+          )}
+          {(trip.destination || weather) && (
+            <div
+              className={`concept1-weather-capsule${isRefreshing ? ' refreshing' : ''}`}
+              onClick={(e) => {
+                if (weather) {
+                  e.stopPropagation();
+                  refreshWeather();
+                }
+              }}
+              role={weather ? 'button' : undefined}
+              tabIndex={weather ? 0 : undefined}
+              onKeyDown={(e) => {
+                if (weather && (e.key === 'Enter' || e.key === ' ')) {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  refreshWeather();
+                }
+              }}
+              title={weather ? `Live: ${weather.condition} in ${weather.city}. Tap to refresh.` : trip.destination}
+            >
+              <span className="concept1-weather-dest">{trip.destination || trip.name}</span>
+              {weather && (
+                <>
+                  <span className="concept1-weather-sep">&middot;</span>
+                  <span className="concept1-weather-temp">
                     <span className={`weather-emoji-icon${isRefreshing ? ' spin' : ''}`}>{weather.weatherEmoji}</span>
                     <span>{weather.tempC}&deg;C</span>
                   </span>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div style={{ marginTop: 'auto', marginBottom: '8px' }}>
-          <div className="pp-dest">
-            Trip &middot; {trip.baseCurrency}
-            {isSettled && (
-              <>
-                <span className="stack-settled-dot"> &middot; </span>
-                <span className="stack-settled-sub">✓ Settled</span>
-              </>
-            )}
-          </div>
-          <h3 className="pp-name">{trip.name}</h3>
-          <div className="pp-meta">
-            {tripMembers.length} member{tripMembers.length === 1 ? '' : 's'} &middot; {expenseCount} expense{expenseCount === 1 ? '' : 's'}
-          </div>
-        </div>
-
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 0 }}>
-          <div className="pp-avatars stack-card-avatars" style={{ marginTop: 0 }}>
-            {shown.map((m) =>
-              m.avatarUrl ? (
-                <img key={m.id} src={m.avatarUrl} alt={m.name} title={m.name} className="pp-avatar" referrerPolicy="no-referrer" loading="lazy" decoding="async" width={24} height={24} onError={(e) => { e.currentTarget.style.display = 'none'; }} />
-              ) : (
-                <span key={m.id} className="pp-avatar" style={{ background: avatarColorForName(m.name) }} title={m.name}>{initial(m.name)}</span>
-              )
-            )}
-            {overflow > 0 && <span className="pp-avatar pp-avatar-more">+{overflow}</span>}
-          </div>
-
-          {isFront && onQuickAddExpense && (
-            <button
-              type="button"
-              className="stack-quick-add-chip"
-              title="Add an expense directly to this trip"
-              aria-label="Add expense"
-              onClick={(e) => {
-                e.stopPropagation();
-                triggerHaptic('medium');
-                onQuickAddExpense(trip.id);
-              }}
-            >
-              <span>+</span> Expense
-            </button>
+                </>
+              )}
+            </div>
           )}
+        </div>
+
+        <div className="concept1-card-body">
+          <h2 className="concept1-trip-title">{trip.name}</h2>
+
+          <div className="concept1-dates-row">
+            <span className="concept1-dates-label">{dateRangeStr.toUpperCase()}</span>
+            {tripDurationDays && (
+              <span className="concept1-duration-label">{tripDurationDays}</span>
+            )}
+          </div>
+
+          <div className="concept1-footer-row">
+            <div className="concept1-avatars-pile">
+              {shown.map((m) =>
+                m.avatarUrl ? (
+                  <img key={m.id} src={m.avatarUrl} alt={m.name} title={m.name} className="concept1-avatar-circle" referrerPolicy="no-referrer" loading="lazy" decoding="async" width={32} height={32} onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                ) : (
+                  <span key={m.id} className="concept1-avatar-circle" style={{ background: avatarColorForName(m.name) }} title={m.name}>{initial(m.name)}</span>
+                )
+              )}
+              {overflow > 0 && <span className="concept1-avatar-circle concept1-avatar-more">+{overflow}</span>}
+            </div>
+
+            <div className="concept1-spend-block">
+              <div className="concept1-spend-text">
+                {expenseCount > 0 ? `${expenseCount} logged` : '0 expenses'}
+              </div>
+              <div className="concept1-spend-progress-track">
+                <div
+                  className="concept1-spend-progress-fill"
+                  style={{ width: `${Math.min(100, Math.max(15, expenseCount * 12))}%` }}
+                />
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Ambient Itinerary progress bar along bottom rim */}
@@ -526,10 +518,9 @@ function StackCardItem({
     const badgeDist = badgeHoriz ? Math.abs(x) : Math.abs(y);
     const badgeArmed = badgeDist > SWIPE_THRESHOLD || Math.abs(velocity.current.vx) > 0.42;
     const badgeProgress = Math.min(1, badgeDist / SWIPE_THRESHOLD);
-    const badgeKind: 'browse' | 'archive' | 'peek' | null =
+    const badgeKind: 'browse' | 'peek' | null =
       !active.current ? null :
       totalTrips >= 2 && badgeHoriz && Math.abs(x) > 6 ? 'browse' :
-      y < -6 ? 'archive' :
       totalTrips >= 2 && y > 8 ? 'peek' : null;
     if (!badgeKind) {
       badge.style.opacity = '0';
@@ -537,8 +528,7 @@ function StackCardItem({
     }
     badge.className = `stack-swipe-badge ${badgeKind}`;
     badge.textContent =
-      badgeKind === 'browse' ? (x < 0 ? '← Browse' : 'Browse →') :
-      badgeKind === 'archive' ? '↑ Archive' : '↓ Peek Next';
+      badgeKind === 'browse' ? (x < 0 ? '← Browse' : 'Browse →') : '↓ Peek Next';
     badge.style.opacity = String(badgeProgress);
     badge.style.transform = `translate(-50%, ${(-6 + badgeProgress * 6).toFixed(1)}px) scale(${(0.85 + badgeProgress * (badgeArmed ? 0.2 : 0.1)).toFixed(2)})`;
   };
@@ -681,7 +671,7 @@ function StackCardItem({
     if (badgeRef.current) badgeRef.current.style.opacity = '0';
 
     const { x, y } = dragRef.current;
-    const { vx, vy } = velocity.current;
+    const { vx } = velocity.current;
     const canSwipe = totalTrips >= 2;
 
     // Velocity-assisted flick (natural quick throw) or distance-based commit
@@ -720,16 +710,6 @@ function StackCardItem({
       triggerHaptic('light');
       const dir = isHorizFlick ? (vx > 0 ? 'right' : 'left') : (x > 0 ? 'right' : 'left');
       commitExit(dir, Math.abs(vx), () => onBrowse(dir));
-      return;
-    }
-
-    const isUpFlick = vy < -0.38 && y < -20;
-    const isUpThreshold = y < -SWIPE_THRESHOLD && Math.abs(y) > Math.abs(x);
-
-    if (isUpFlick || isUpThreshold) {
-      gestureFired.current = true;
-      triggerHaptic('success');
-      commitExit('up', Math.abs(vy), onArchive);
       return;
     }
 
@@ -866,7 +846,7 @@ function StackCardItem({
 export function TripStack({
   trips,
   sortMode = 'name',
-  onSortModeChange,
+  onSortModeChange: _onSortModeChange,
   members,
   settledTripIds,
   userId,
@@ -875,7 +855,7 @@ export function TripStack({
   onStartEditTrip,
   onDeleteTrip,
   onArchiveTrip,
-  onShowList,
+  onShowList: _onShowList,
   onFrontChange,
   onIndexChange,
   targetTripId,
@@ -1002,24 +982,6 @@ export function TripStack({
           />
         ))}
       </div>
-      {trips.length >= 2 && (
-        <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
-          <button type="button" className="trip-stack-viewall" style={{ margin: 0 }} onClick={onShowList}>
-            View all trips
-          </button>
-          {onSortModeChange && (
-            <button
-              type="button"
-              className="trip-stack-viewall"
-              style={{ margin: 0 }}
-              aria-label={`Sorted by ${sortMode === 'name' ? 'name' : 'date'}. Tap to change.`}
-              onClick={() => onSortModeChange(sortMode === 'name' ? 'date' : 'name')}
-            >
-              Sort: {sortMode === 'name' ? 'A–Z' : 'Date'}
-            </button>
-          )}
-        </div>
-      )}
     </div>
   );
 }

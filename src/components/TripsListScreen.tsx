@@ -1,16 +1,15 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { Trip, Member, TripStop } from '../types';
-import { IconArchive, IconMapPin, IconSearch, IconMoreVertical, IconPlus, IconEdit, IconTrash, IconCopy } from './Icons';
+import { IconArchive, IconMapPin, IconSearch, IconMoreVertical, IconPlus, IconEdit, IconTrash, IconCopy, IconRefresh, IconLayers, IconList } from './Icons';
 import { ActionSheet } from './common/ActionSheet';
 import { DateRangePicker } from './DateRangePicker';
-import { formatTripStamp } from '../utils/dateRange';
+import { formatDateRange } from '../utils/dateRange';
 import { initial } from '../utils/initials';
 import { avatarColorForName } from '../utils/avatarColor';
 import { newId } from '../utils/uuid';
 import { useTripStore } from '../store/tripStore';
-import { SwipeableRow } from './SwipeableRow';
-import { TripStack, useTripPhoto, usePhotoTextTone } from './TripStack';
+import { TripStack, useTripPhoto, useDestinationWeather, getFallbackTravelPhoto, PEEK_COVER_WIDTH } from './TripStack';
 import { sortTrips, type TripSortMode } from '../utils/tripSort';
 import { TripSlideLauncher } from './TripSlideLauncher';
 import { HomeAmbientBackdrop } from './HomeAmbientBackdrop';
@@ -26,8 +25,112 @@ import { asCopyString, DEFAULT_EMPTY_TRIP_BLURB } from '../utils/landingCopy';
 import { isWebKitCompositor } from '../utils/tripStackMotion';
 import { readStackChrome } from '../utils/stackChrome';
 
+function LuxuryGridTripCard({
+  trip,
+  members,
+  onSelectTrip,
+  onOpenActionSheet,
+}: {
+  trip: Trip;
+  members: Record<string, Member>;
+  onSelectTrip: (id: string) => void;
+  onOpenActionSheet: (trip: Trip) => void;
+}) {
+  const stopNames = useMemo(() => trip.stops?.map((s) => s.name).filter(Boolean), [trip.stops]);
+  const photoUrl = useTripPhoto(trip.destination, trip.coverImageUrl, trip.name, PEEK_COVER_WIDTH, stopNames);
+  const fallbackPhoto = useMemo(
+    () => getFallbackTravelPhoto(trip.destination || (stopNames && stopNames[0]) || trip.name || trip.id, PEEK_COVER_WIDTH),
+    [trip.destination, stopNames, trip.name, trip.id]
+  );
+  const effectivePhotoUrl = photoUrl || fallbackPhoto;
+  const { weather } = useDestinationWeather(trip.destination, trip.name, stopNames, false);
+  const tripMembers = trip.memberIds.map((id) => members[id]).filter(Boolean);
+  const shown = tripMembers.slice(0, 3);
+  const overflow = tripMembers.length - shown.length;
+  const dateRangeStr = formatDateRange(trip.startDate, trip.endDate) || 'Dates pending';
+
+  return (
+    <div
+      className="concept2-grid-card"
+      onClick={() => {
+        triggerHaptic('light');
+        onSelectTrip(trip.id);
+      }}
+      role="button"
+      tabIndex={0}
+      aria-label={`Open trip ${trip.name}`}
+      onKeyDown={(e) => {
+        if (e.target !== e.currentTarget) return;
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onSelectTrip(trip.id);
+        }
+      }}
+    >
+      <div
+        className="concept2-card-bg"
+        style={{
+          backgroundImage: `linear-gradient(180deg, rgba(8,12,20,0.2) 0%, rgba(8,12,20,0.1) 35%, rgba(8,12,20,0.85) 75%, rgba(8,12,20,0.98) 100%), url("${effectivePhotoUrl}")`,
+        }}
+      />
+      <div className="concept2-card-content">
+        <div className="concept2-card-top">
+          {weather ? (
+            <div className="concept2-weather-capsule">
+              <span>{weather.weatherEmoji}</span>
+              <span>{weather.tempC}&deg;</span>
+            </div>
+          ) : trip.closed ? (
+            <span className="concept2-status-pill closed">CLOSED</span>
+          ) : trip.archived ? (
+            <span className="concept2-status-pill archived">ARCHIVED</span>
+          ) : (
+            <span className="concept2-status-pill active">ACTIVE</span>
+          )}
+          <button
+            type="button"
+            className="concept2-card-more-btn"
+            aria-label="Trip options"
+            title="Trip options"
+            onClick={(e) => {
+              e.stopPropagation();
+              onOpenActionSheet(trip);
+            }}
+          >
+            <IconMoreVertical size={14} />
+          </button>
+        </div>
+
+        <div className="concept2-card-bottom">
+          <span className="concept2-card-date">{dateRangeStr.toUpperCase()}</span>
+          <h3 className="concept2-card-name" title={trip.name}>{trip.name}</h3>
+          <div className="concept2-card-meta">
+            <div className="concept2-avatars-pile">
+              {shown.map((m) =>
+                m.avatarUrl ? (
+                  <img key={m.id} src={m.avatarUrl} alt={m.name} className="concept2-avatar-circle" width={22} height={22} referrerPolicy="no-referrer" loading="lazy" />
+                ) : (
+                  <span key={m.id} className="concept2-avatar-circle" style={{ background: avatarColorForName(m.name) }}>{initial(m.name)}</span>
+                )
+              )}
+              {overflow > 0 && <span className="concept2-avatar-circle concept2-avatar-more">+{overflow}</span>}
+            </div>
+            <span className="concept2-card-stat">
+              {trip.expenseCount || 0} exp
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export type TripStatusFilter = 'all' | 'active' | 'past' | 'ongoing' | 'upcoming' | 'completed' | 'archived';
+
 type Props = {
   trips: Trip[];
+  archivedTrips?: Trip[];
+  onRestoreTrip?: (trip: Trip) => void;
   members: Record<string, Member>;
   settledTripIds?: Record<string, boolean>;
   showAddTrip: boolean;
@@ -61,15 +164,10 @@ type Props = {
   userDisplayName?: string | null;
 };
 
-function getTimeGreeting(): string {
-  const hour = new Date().getHours();
-  if (hour >= 5 && hour < 12) return 'Good morning';
-  if (hour >= 12 && hour < 17) return 'Good afternoon';
-  return 'Good evening';
-}
-
 export function TripsListScreen({
   trips,
+  archivedTrips = [],
+  onRestoreTrip,
   members,
   settledTripIds,
   showAddTrip,
@@ -105,7 +203,6 @@ export function TripsListScreen({
   const navigate = useNavigate();
   const userId = useTripStore((s) => s.userId);
   const refreshTrips = useTripStore((s) => s.refreshTrips);
-  const syncQueue = useTripStore((s) => s.syncQueue);
   const isFeatureEnabled = useTripStore((s) => s.isFeatureEnabled);
   const enableCrossTripSearch = isFeatureEnabled('enableCrossTripSearch', { userId: userId || undefined });
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -117,6 +214,85 @@ export function TripsListScreen({
   const [emptyTripBlurb, setEmptyTripBlurb] = useState(DEFAULT_EMPTY_TRIP_BLURB);
   const [honeypotVal, setHoneypotVal] = useState('');
   const [showList, setShowList] = useState(false);
+  const [viewMode, setViewMode] = useState<'stack' | 'grid'>(() => {
+    try {
+      const saved = localStorage.getItem('tt-home-view-mode');
+      return saved === 'grid' || saved === 'stack' ? saved : 'stack';
+    } catch {
+      return 'stack';
+    }
+  });
+
+  const handleToggleViewMode = (mode: 'stack' | 'grid') => {
+    triggerHaptic('light');
+    setViewMode(mode);
+    try {
+      localStorage.setItem('tt-home-view-mode', mode);
+    } catch {}
+  };
+
+  const [statusFilter, setStatusFilter] = useState<TripStatusFilter>('all');
+
+  const todayStr = useMemo(() => {
+    const d = new Date();
+    return d.toLocaleDateString('en-CA');
+  }, []);
+
+  const categorizedCounts = useMemo(() => {
+    let active = 0;
+    let past = 0;
+    let ongoing = 0;
+    let upcoming = 0;
+    let completed = 0;
+    trips.forEach((t: Trip) => {
+      const isPast = t.closed || (t.endDate && todayStr > t.endDate);
+      if (isPast) past++;
+      else active++;
+
+      if (!t.startDate || !t.endDate) return;
+      if (todayStr >= t.startDate && todayStr <= t.endDate) ongoing++;
+      else if (todayStr < t.startDate) upcoming++;
+      else completed++;
+    });
+    return {
+      all: trips.length,
+      active,
+      past,
+      ongoing,
+      upcoming,
+      completed,
+      archived: archivedTrips.length,
+    };
+  }, [trips, archivedTrips, todayStr]);
+
+  const displayedTrips = useMemo(() => {
+    if (statusFilter === 'archived') {
+      return archivedTrips;
+    }
+    if (statusFilter === 'all') {
+      return trips;
+    }
+    if (statusFilter === 'active') {
+      return trips.filter((t: Trip) => !t.archived && !t.closed && (!t.endDate || todayStr <= t.endDate));
+    }
+    if (statusFilter === 'past') {
+      return trips.filter((t: Trip) => !t.archived && (t.closed || (t.endDate && todayStr > t.endDate)));
+    }
+    return trips.filter((t: Trip) => {
+      if (!t.startDate || !t.endDate) return false;
+      if (statusFilter === 'ongoing') {
+        return todayStr >= t.startDate && todayStr <= t.endDate;
+      }
+      if (statusFilter === 'upcoming') {
+        return todayStr < t.startDate;
+      }
+      if (statusFilter === 'completed') {
+        return todayStr > t.endDate;
+      }
+      return true;
+    });
+  }, [statusFilter, trips, archivedTrips, todayStr]);
+
   const sortToggleOn = isFeatureEnabled('enableTripStackSort', { userId: userId || undefined });
   const [storedSort, setStoredSort] = useState<TripSortMode>(() => {
     try { return localStorage.getItem('tt-trip-stack-sort') === 'date' ? 'date' : 'name'; } catch { return 'name'; }
@@ -127,20 +303,28 @@ export function TripsListScreen({
     try { localStorage.setItem('tt-trip-stack-sort', m); } catch { /* ignore */ }
   };
   // Same order the stack uses, so the pagination dots line up with it.
-  const orderedTrips = useMemo(() => sortTrips(trips, sortMode), [trips, sortMode]);
-  const [focusedTrip, setFocusedTrip] = useState<Trip | null>(() => trips[0] || null);
+  const orderedTrips = useMemo(() => sortTrips(displayedTrips, sortMode), [displayedTrips, sortMode]);
+  const [focusedTrip, setFocusedTrip] = useState<Trip | null>(() => displayedTrips[0] || trips[0] || null);
   const [frontTripIndex, setFrontTripIndex] = useState(0);
   const [targetTripId, setTargetTripId] = useState<string | null>(null);
   const [isSavingTrip, setIsSavingTrip] = useState(false);
   const [dateError, setDateError] = useState('');
+  const [selectedTemplate, setSelectedTemplate] = useState<'weekend' | 'roadtrip' | 'flatmates' | 'vacation' | null>(null);
   const [actionSheetTrip, setActionSheetTrip] = useState<Trip | null>(null);
 
   useHistoryBack(showJoinTrip, () => setShowJoinTrip(false));
   useEscapeKey(showJoinTrip, () => setShowJoinTrip(false));
   useHistoryBack(showList, () => setShowList(false));
   useEscapeKey(showList, () => setShowList(false));
-  // Enables full luxury hero spotlight even with 1 trip
-  const stackActive = trips.length >= 1 && !showList && !showAddTrip && !showJoinTrip;
+
+  // Enables full luxury hero spotlight when stack view mode is chosen and not archived
+  const stackActive =
+    viewMode === 'stack' &&
+    statusFilter !== 'archived' &&
+    displayedTrips.length >= 1 &&
+    !showList &&
+    !showAddTrip &&
+    !showJoinTrip;
 
   useEffect(() => {
     if (!stackActive || !isWebKitCompositor()) return;
@@ -159,7 +343,7 @@ export function TripsListScreen({
 
     schedule();
     const observer = new ResizeObserver(schedule);
-    for (const sel of ['.trips-screen-header', '.trips-section-header', '.trip-stepper-dots', '.trip-launcher']) {
+    for (const sel of ['.home-unified-header', '.concept1-header', '.concept2-header', '.trips-screen-header', '.trips-section-header', '.trip-stepper-dots', '.trip-launcher']) {
       const el = root.querySelector(sel);
       if (el) observer.observe(el);
     }
@@ -175,9 +359,6 @@ export function TripsListScreen({
       root.style.removeProperty('--stack-chrome');
     };
   }, [stackActive, trips.length]);
-  const ambientTrip = focusedTrip || trips[0] || null;
-  const ambientPhotoUrl = useTripPhoto(ambientTrip?.destination, ambientTrip?.coverImageUrl, ambientTrip?.name);
-  const expeditionsTone = usePhotoTextTone(ambientPhotoUrl);
 
   useEffect(() => {
     preloadModule(() => import('./ExpenseForm'));
@@ -238,8 +419,6 @@ export function TripsListScreen({
     !stackActive
   );
 
-  const visibleTrips = trips;
-
 
   // First-run vs. "deleted my last trip" both hit trips.length === 0 — flag
   // per-account once they've ever had a trip so the two states get different
@@ -279,6 +458,61 @@ export function TripsListScreen({
     }
   };
 
+  const handleApplyTemplate = (tpl: 'weekend' | 'roadtrip' | 'flatmates' | 'vacation') => {
+    triggerHaptic('light');
+    setSelectedTemplate(tpl);
+    const today = new Date();
+    const pad = (n: number) => String(n).padStart(2, '0');
+    const formatYMD = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+
+    if (tpl === 'weekend') {
+      const start = new Date(today);
+      const day = start.getDay();
+      const diffToFriday = (5 - day + 7) % 7 || 7;
+      start.setDate(start.getDate() + diffToFriday);
+      const end = new Date(start);
+      end.setDate(end.getDate() + 2);
+
+      setNewTripName('Weekend Getaway');
+      setNewTripDestination('Goa or Coorg');
+      setNewTripStart(formatYMD(start));
+      setNewTripEnd(formatYMD(end));
+      setDateError('');
+    } else if (tpl === 'roadtrip') {
+      const start = new Date(today);
+      start.setDate(start.getDate() + 1);
+      const end = new Date(start);
+      end.setDate(end.getDate() + 8);
+
+      setNewTripName('Mountain Road Trip');
+      setNewTripDestination('Manali, Himachal');
+      setNewTripStart(formatYMD(start));
+      setNewTripEnd(formatYMD(end));
+      setDateError('');
+    } else if (tpl === 'flatmates') {
+      const start = new Date(today.getFullYear(), today.getMonth(), 1);
+      const end = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+
+      setNewTripName(`Apartment · ${today.toLocaleString('en-US', { month: 'short' })}`);
+      setNewTripDestination('Home Apartment');
+      setNewTripStart(formatYMD(start));
+      setNewTripEnd(formatYMD(end));
+      setDateError('');
+    } else if (tpl === 'vacation') {
+      const start = new Date(today);
+      start.setDate(start.getDate() + 14);
+      const end = new Date(start);
+      end.setDate(end.getDate() + 10);
+
+      setNewTripName('International Holiday');
+      setNewTripDestination('Kyoto, Japan');
+      setNewTripStart(formatYMD(start));
+      setNewTripEnd(formatYMD(end));
+      if (!editingTripId) setNewTripCurrency('USD');
+      setDateError('');
+    }
+  };
+
   return (
     <div
       id="main-content"
@@ -290,111 +524,126 @@ export function TripsListScreen({
         <PullToRefreshIndicator ref={ptrIndicatorRef} state={pullToRefresh} />
       )}
       <HomeAmbientBackdrop trip={focusedTrip || trips[0] || null} />
-      <header className="trips-screen-header">
-        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-          {onOpenCommandPalette && (
+      <header className="home-unified-header">
+        {/* Row 1: Top Navigation Bar */}
+        <div className="home-header-row1">
+          <div className="home-header-left">
             <button
               type="button"
-              className="secondary-btn"
-              style={{
-                width: '40px',
-                height: '40px',
-                padding: 0,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                borderRadius: '50%',
-                background: 'rgba(255, 255, 255, 0.06)',
-                borderColor: 'var(--border-color)',
-                color: 'var(--text-secondary)',
-              }}
-              onClick={onOpenCommandPalette}
-              aria-label={enableCrossTripSearch ? 'Search all trips and expenses (Cmd+K)' : 'Search (Cmd+K)'}
-              title={enableCrossTripSearch ? 'Search all trips and expenses (Cmd+K / Ctrl+K)' : 'Search (Cmd+K / Ctrl+K)'}
+              className="profile-avatar-btn"
+              onPointerDown={() => { void import('./GlobalSettingsModal'); }}
+              onMouseEnter={() => { void import('./GlobalSettingsModal'); }}
+              onClick={onOpenSettings}
+              aria-label="Profile & Settings"
+              title="Profile & Settings"
             >
-              <IconSearch size={16} />
-            </button>
-          )}
-          {onOpenBugTracker && (
-            <button
-              type="button"
-              className="secondary-btn"
-              style={{
-                width: '40px',
-                height: '40px',
-                padding: 0,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                borderRadius: '50%',
-                background: 'rgba(0, 191, 165, 0.08)',
-                borderColor: 'rgba(0, 191, 165, 0.4)',
-                color: 'var(--text-primary)',
-              }}
-              onClick={onOpenBugTracker}
-              aria-label="Superadmin Bug Tracker"
-              title="Superadmin Bug Tracker"
-            >
-              <span>🛡️</span>
-            </button>
-          )}
-          {!onOpenCommandPalette && !onOpenBugTracker && <div aria-hidden="true" />}
-        </div>
-        <div style={{ textAlign: 'center', minWidth: 0, overflow: 'hidden' }}>
-          <h1 className="app-logo">Trip Tracker 2026</h1>
-          <p className="home-adaptive-greeting" style={{ color: 'var(--text-secondary)', fontSize: '13.5px', marginTop: '4px', whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>
-            <span>{getTimeGreeting()}{userDisplayName ? `, ${userDisplayName.split(' ')[0]}` : ''}</span>
-            {trips.length > 0 && (
-              <>
-                <span style={{ margin: '0 6px', opacity: 0.4 }}>&middot;</span>
-                <span className={`home-expeditions-count${ambientPhotoUrl ? ` tone-${expeditionsTone}` : ''}`}>{trips.length} {trips.length === 1 ? 'Expedition' : 'Expeditions'}</span>
-              </>
-            )}
-            {typeof navigator !== 'undefined' && (!navigator.onLine || syncQueue.length > 0) && (
-              <>
-                <span style={{ margin: '0 6px', opacity: 0.4 }}>&middot;</span>
-                <span style={{ color: '#F0AE5C', fontSize: '12px', fontWeight: 600 }}>
-                  ☁️ {!navigator.onLine ? (syncQueue.length > 0 ? `${syncQueue.length} queued` : 'Offline') : 'Syncing…'}
+              {userAvatarUrl ? (
+                <img src={userAvatarUrl} alt="" referrerPolicy="no-referrer" width={40} height={40} onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+              ) : (
+                <span style={{ background: avatarColorForName(userDisplayName || 'Me') }}>
+                  {initial(userDisplayName || 'Me')}
                 </span>
-              </>
+              )}
+            </button>
+          </div>
+
+          <div className="home-header-center">
+            <h1 className="home-header-title">Journeys</h1>
+          </div>
+
+          <div className="home-header-right">
+            {onOpenCommandPalette && (
+              <button
+                type="button"
+                className="concept1-icon-btn"
+                onClick={onOpenCommandPalette}
+                aria-label={enableCrossTripSearch ? 'Search all journeys (Cmd+K)' : 'Search (Cmd+K)'}
+                title={enableCrossTripSearch ? 'Search all journeys (Cmd+K)' : 'Search (Cmd+K)'}
+              >
+                <IconSearch size={18} />
+              </button>
             )}
-          </p>
+            {onOpenBugTracker && (
+              <button
+                type="button"
+                className="concept1-icon-btn bug"
+                onClick={onOpenBugTracker}
+                aria-label="Superadmin Bug Tracker"
+                title="Superadmin Bug Tracker"
+              >
+                <span>🛡️</span>
+              </button>
+            )}
+          </div>
         </div>
-        <button
-          type="button"
-          className="profile-avatar-btn"
-          onPointerDown={() => { void import('./GlobalSettingsModal'); }}
-          onMouseEnter={() => { void import('./GlobalSettingsModal'); }}
-          onClick={onOpenSettings}
-          aria-label="Profile & Settings"
-          title="Profile & Settings"
-        >
-          {userAvatarUrl ? (
-            <img src={userAvatarUrl} alt="" referrerPolicy="no-referrer" loading="lazy" decoding="async" width={40} height={40} onError={(e) => { e.currentTarget.style.display = 'none'; }} />
-          ) : (
-            <span style={{ background: avatarColorForName(userDisplayName || 'Me') }}>
-              {initial(userDisplayName || 'Me')}
-            </span>
-          )}
-        </button>
+
+        {/* Row 2: Controls Bar - Filter Capsule & View Switcher at IDENTICAL Positions */}
+        <div className="home-header-row2">
+          <div className="concept2-filter-capsule" role="tablist" aria-label="Filter trips">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={statusFilter === 'all'}
+              className={`concept2-filter-btn ${statusFilter === 'all' ? 'active' : ''}`}
+              onClick={() => { triggerHaptic('light'); setStatusFilter('all'); }}
+            >
+              All
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={statusFilter === 'active'}
+              className={`concept2-filter-btn ${statusFilter === 'active' ? 'active' : ''}`}
+              onClick={() => { triggerHaptic('light'); setStatusFilter('active'); }}
+            >
+              Active
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={statusFilter === 'past'}
+              className={`concept2-filter-btn ${statusFilter === 'past' ? 'active' : ''}`}
+              onClick={() => { triggerHaptic('light'); setStatusFilter('past'); }}
+            >
+              Past
+            </button>
+            {categorizedCounts.archived > 0 && (
+              <button
+                type="button"
+                role="tab"
+                aria-selected={statusFilter === 'archived'}
+                className={`concept2-filter-btn ${statusFilter === 'archived' ? 'active' : ''}`}
+                onClick={() => { triggerHaptic('light'); setStatusFilter('archived'); }}
+              >
+                Archived
+              </button>
+            )}
+          </div>
+
+          <div className="concept-view-mode-pill" role="group" aria-label="View mode">
+            <button
+              type="button"
+              className={`concept-view-mode-btn ${viewMode === 'stack' ? 'active' : ''}`}
+              onClick={() => handleToggleViewMode('stack')}
+              aria-label="Stacked cards view"
+              title="Stacked cards view"
+            >
+              <IconLayers size={17} />
+            </button>
+            <button
+              type="button"
+              className={`concept-view-mode-btn ${viewMode === 'grid' ? 'active' : ''}`}
+              onClick={() => handleToggleViewMode('grid')}
+              aria-label="All trips view"
+              title="All trips view"
+            >
+              <IconList size={17} />
+            </button>
+          </div>
+        </div>
       </header>
 
       <main className={`trips-screen-main${stackActive ? ' stack-main' : ''}`}>
-        <div className="trips-section-header">
-          <h2 style={{ fontSize: '20px' }}>Your Trips</h2>
-          {!showAddTrip && (
-            <div className={`trip-home-actions${stackActive ? ' stack-active' : ''}`}>
-              {!showJoinTrip && (
-                <button className="secondary-btn" style={{ padding: '8px 16px', fontSize: '14px' }} onClick={() => setShowJoinTrip(true)}>
-                  Join a Trip
-                </button>
-              )}
-              <button className="gradient-btn" style={{ padding: '8px 16px', fontSize: '14px' }} onClick={() => setShowAddTrip(true)}>
-                + New Trip
-              </button>
-            </div>
-          )}
-        </div>
 
         {/* Join by code collapsible form */}
         {showJoinTrip && (
@@ -456,6 +705,44 @@ export function TripsListScreen({
                 autoComplete="off"
               />
             </div>
+            {/* Quick Templates for Fast Creation */}
+            {!editingTripId && (
+              <div style={{ marginBottom: '18px' }}>
+                <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)', marginBottom: '8px', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+                  ⚡ Quick Start Templates
+                </div>
+                <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '4px', scrollbarWidth: 'none' }}>
+                  <button
+                    type="button"
+                    className={`quick-template-chip ${selectedTemplate === 'weekend' ? 'active' : ''}`}
+                    onClick={() => handleApplyTemplate('weekend')}
+                  >
+                    🏖️ Weekend Getaway
+                  </button>
+                  <button
+                    type="button"
+                    className={`quick-template-chip ${selectedTemplate === 'roadtrip' ? 'active' : ''}`}
+                    onClick={() => handleApplyTemplate('roadtrip')}
+                  >
+                    🚗 Road Trip
+                  </button>
+                  <button
+                    type="button"
+                    className={`quick-template-chip ${selectedTemplate === 'flatmates' ? 'active' : ''}`}
+                    onClick={() => handleApplyTemplate('flatmates')}
+                  >
+                    🏠 Shared Flat
+                  </button>
+                  <button
+                    type="button"
+                    className={`quick-template-chip ${selectedTemplate === 'vacation' ? 'active' : ''}`}
+                    onClick={() => handleApplyTemplate('vacation')}
+                  >
+                    ✈️ International
+                  </button>
+                </div>
+              </div>
+            )}
             <div className="input-group">
               <label className="form-label" htmlFor="new_trip_name">Trip Name *</label>
               <input
@@ -464,7 +751,10 @@ export function TripsListScreen({
                 className="input-field"
                 placeholder="e.g. Goa Trip 2026"
                 value={newTripName}
-                onChange={(e) => setNewTripName(e.target.value)}
+                onChange={(e) => {
+                  setNewTripName(e.target.value);
+                  setSelectedTemplate(null);
+                }}
                 autoFocus
               />
             </div>
@@ -518,7 +808,10 @@ export function TripsListScreen({
                     className="input-field"
                     placeholder="e.g. Manali, Himachal or Kyoto, Japan"
                     value={newTripDestination}
-                    onChange={(e) => setNewTripDestination(e.target.value)}
+                    onChange={(e) => {
+                      setNewTripDestination(e.target.value);
+                      setSelectedTemplate(null);
+                    }}
                   />
                   <div style={{ marginTop: '4px' }}>
                     <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
@@ -528,7 +821,7 @@ export function TripsListScreen({
                 </div>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  {newTripStops.map((stop, sIdx) => {
+                  {newTripStops.map((stop: TripStop, sIdx: number) => {
                     const isStart = sIdx === 0;
                     const isLast = sIdx === newTripStops.length - 1;
                     return (
@@ -557,7 +850,7 @@ export function TripsListScreen({
                           value={stop.name}
                           onChange={(e) => {
                             const val = e.target.value;
-                            setNewTripStops(newTripStops.map((s, idx) => (idx === sIdx ? { ...s, name: val } : s)));
+                            setNewTripStops(newTripStops.map((s: TripStop, idx: number) => (idx === sIdx ? { ...s, name: val } : s)));
                           }}
                           style={{ flex: 1, padding: '10px 12px' }}
                         />
@@ -565,7 +858,7 @@ export function TripsListScreen({
                           <button
                             type="button"
                             onClick={() => {
-                              setNewTripStops(newTripStops.filter((_, idx) => idx !== sIdx));
+                              setNewTripStops(newTripStops.filter((_: TripStop, idx: number) => idx !== sIdx));
                             }}
                             style={{
                               background: 'none',
@@ -654,7 +947,7 @@ export function TripsListScreen({
         )}
 
         {/* Trips List Grid */}
-        {visibleTrips.length === 0 ? (
+        {trips.length === 0 ? (
           <div className="glass-card ledger-empty" style={{ borderStyle: 'dashed', position: 'relative' }}>
             <div className="ledger-rule" />
             <div className="ledger-empty-prompt">
@@ -693,181 +986,121 @@ export function TripsListScreen({
               />
             )}
           </div>
+        ) : displayedTrips.length === 0 ? (
+          <div className="glass-card ledger-empty" style={{ borderStyle: 'dashed', padding: '32px 16px', textAlign: 'center', marginTop: '16px' }}>
+            <p style={{ color: 'var(--text-secondary)', marginBottom: '12px' }}>
+              No journeys match the "<strong>{statusFilter}</strong>" filter.
+            </p>
+            <button
+              type="button"
+              className="secondary-btn"
+              onClick={() => setStatusFilter('all')}
+              style={{ fontSize: '13px', padding: '6px 14px' }}
+            >
+              Show All Journeys
+            </button>
+          </div>
         ) : (
           <>
-            {stackActive && (
-              <TripStack
-                trips={trips}
-                sortMode={sortMode}
-                onSortModeChange={sortToggleOn ? changeSortMode : undefined}
-                members={members}
-                settledTripIds={settledTripIds}
-                userId={userId}
-                onSelectTrip={onSelectTrip}
-                onQuickAddExpense={onQuickAddExpense ? (tripId) => {
-                  const t = trips.find((x) => x.id === tripId);
-                  if (t) onQuickAddExpense(t);
-                } : undefined}
-                onStartEditTrip={onStartEditTrip}
-                onDeleteTrip={onDeleteTrip}
-                onArchiveTrip={onArchiveTrip}
-                onShowList={() => setShowList(true)}
-                onFrontChange={setFocusedTrip}
-                onIndexChange={setFrontTripIndex}
-                targetTripId={targetTripId}
-              />
-            )}
-            {stackActive && trips.length >= 2 && (
-              <div
-                ref={stepperTrackRef}
-                className={`trip-stepper-dots trip-stepper-track${isScrubbing ? ' scrubbing' : ''}`}
-                role="tablist"
-                aria-label="Trip pagination"
-                onPointerDown={handleStepperPointerDown}
-                onPointerMove={handleStepperPointerMove}
-                onPointerUp={handleStepperPointerUp}
-                onPointerCancel={handleStepperPointerUp}
-              >
-                {orderedTrips.map((t, idx) => (
-                  <button
-                    key={t.id}
-                    type="button"
-                    role="tab"
-                    aria-selected={idx === frontTripIndex}
-                    className={`trip-stepper-dot trip-stepper-pill${idx === frontTripIndex ? ' active' : ''}`}
-                    onClick={() => {
-                      triggerHaptic('light');
-                      setFrontTripIndex(idx);
-                      setTargetTripId(t.id);
-                    }}
-                    title={`View ${t.name}`}
-                    aria-label={`View ${t.name}`}
-                  />
-                ))}
-              </div>
-            )}
-            {stackActive && (
-              <TripSlideLauncher
-                onCreateTrip={() => setShowAddTrip(true)}
-                onJoinTrip={() => setShowJoinTrip(true)}
-              />
-            )}
-            {trips.length >= 2 && showList && (
-              <button
-                type="button"
-                className="trip-stack-viewall"
-                style={{ marginBottom: '14px' }}
-                onClick={() => setShowList(false)}
-              >
-                Back to stack
-              </button>
-            )}
-            <div className={`passport-list ${stackActive ? 'stack-mode' : ''}`}>
-            {visibleTrips.map((trip, idx) => {
-              const stamp = formatTripStamp(trip.startDate, trip.endDate);
-              const tripMembers = trip.memberIds.map((id) => members[id]).filter(Boolean);
-              const shown = tripMembers.slice(0, 3);
-              const overflow = tripMembers.length - shown.length;
-              const expenseCount = trip.expenseCount || 0;
-              const canDelete = !trip.ownerId || !userId || trip.ownerId === userId ||
-                Boolean(trip.adminMemberIds && trip.memberIds.some((mid) => members[mid]?.linkedUserId === userId && trip.adminMemberIds?.includes(mid)));
-              return (
-                <div
-                  key={trip.id}
-                  className="passport-card"
-                  style={{ '--pp-delay': `${Math.min(idx * 30, 300)}ms` } as React.CSSProperties}
-                >
-                  <SwipeableRow
-                    onDelete={canDelete ? () => onDeleteTrip(trip) : undefined}
-                    onEdit={() => onStartEditTrip(trip)}
-                    reversed
-                    plain
+            {stackActive ? (
+              <>
+                <TripStack
+                  trips={displayedTrips}
+                  sortMode={sortMode}
+                  onSortModeChange={sortToggleOn ? changeSortMode : undefined}
+                  members={members}
+                  settledTripIds={settledTripIds}
+                  userId={userId}
+                  onSelectTrip={onSelectTrip}
+                  onQuickAddExpense={onQuickAddExpense ? (tripId) => {
+                    const t = trips.find((x: Trip) => x.id === tripId);
+                    if (t) onQuickAddExpense(t);
+                  } : undefined}
+                  onStartEditTrip={onStartEditTrip}
+                  onDeleteTrip={onDeleteTrip}
+                  onArchiveTrip={onArchiveTrip}
+                  onShowList={() => { handleToggleViewMode('grid'); }}
+                  onFrontChange={setFocusedTrip}
+                  onIndexChange={setFrontTripIndex}
+                  targetTripId={targetTripId}
+                />
+                {displayedTrips.length >= 2 && (
+                  <div
+                    ref={stepperTrackRef}
+                    className={`trip-stepper-dots trip-stepper-track${isScrubbing ? ' scrubbing' : ''}`}
+                    role="tablist"
+                    aria-label="Trip pagination"
+                    onPointerDown={handleStepperPointerDown}
+                    onPointerMove={handleStepperPointerMove}
+                    onPointerUp={handleStepperPointerUp}
+                    onPointerCancel={handleStepperPointerUp}
                   >
-                    <div
-                      className="pp-tap-surface"
-                      style={{ padding: '18px 20px 16px', cursor: 'pointer' }}
-                      role="button"
-                      tabIndex={0}
-                      aria-label={`Open trip ${trip.name}`}
-                      onClick={() => onSelectTrip(trip.id)}
-                      onKeyDown={(e) => {
-                        if (e.target !== e.currentTarget) return;
-                        if (e.key === 'Enter' || e.key === ' ') {
-                          e.preventDefault();
-                          onSelectTrip(trip.id);
-                        }
+                    {orderedTrips.map((t: Trip, idx: number) => (
+                      <button
+                        key={t.id}
+                        type="button"
+                        role="tab"
+                        aria-selected={idx === frontTripIndex}
+                        className={`trip-stepper-dot trip-stepper-pill${idx === frontTripIndex ? ' active' : ''}`}
+                        onClick={() => {
+                          triggerHaptic('light');
+                          setFrontTripIndex(idx);
+                          setTargetTripId(t.id);
+                        }}
+                        title={`View ${t.name}`}
+                        aria-label={`View ${t.name}`}
+                      />
+                    ))}
+                  </div>
+                )}
+                <TripSlideLauncher
+                  onCreateTrip={() => setShowAddTrip(true)}
+                  onJoinTrip={() => setShowJoinTrip(true)}
+                />
+              </>
+            ) : (
+              <>
+                <div className="concept2-grid-container">
+                  <div className="concept2-grid">
+                    {displayedTrips.map((trip: Trip) => (
+                      <LuxuryGridTripCard
+                        key={trip.id}
+                        trip={trip}
+                        members={members}
+                        onSelectTrip={onSelectTrip}
+                        onOpenActionSheet={setActionSheetTrip}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                {!showAddTrip && !showJoinTrip && (
+                  <div className="concept2-bottom-dock">
+                    <button
+                      type="button"
+                      className="concept2-new-trip-pill"
+                      onClick={() => {
+                        triggerHaptic('medium');
+                        setShowAddTrip(true);
                       }}
                     >
-                      <div className="pp-stamp">
-                        <span>{stamp.top}</span>
-                        <span>{stamp.bottom}</span>
-                      </div>
-                      <div className="pp-dest" style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                        <span>Trip &middot; {trip.baseCurrency}</span>
-                        {trip.archived ? (
-                          <span style={{ fontSize: '9px', fontWeight: 700, padding: '1px 6px', borderRadius: '4px', background: 'rgba(148, 163, 184, 0.15)', color: 'var(--text-secondary)', letterSpacing: '0.04em' }}>
-                            ARCHIVED
-                          </span>
-                        ) : trip.closed ? (
-                          <span style={{ fontSize: '9px', fontWeight: 700, padding: '1px 6px', borderRadius: '4px', background: 'rgba(99, 102, 241, 0.15)', color: '#818cf8', border: '1px solid rgba(99, 102, 241, 0.28)', letterSpacing: '0.04em' }}>
-                            🔒 CLOSED
-                          </span>
-                        ) : (
-                          <span style={{ fontSize: '9px', fontWeight: 700, padding: '1px 6px', borderRadius: '4px', background: 'rgba(16, 185, 129, 0.12)', color: '#10b981', letterSpacing: '0.04em' }}>
-                            ACTIVE
-                          </span>
-                        )}
-                      </div>
-                      <h3 className="pp-name">{trip.name}</h3>
-                      <div className="pp-meta">
-                        {tripMembers.length} member{tripMembers.length === 1 ? '' : 's'} &middot; {expenseCount} expense{expenseCount === 1 ? '' : 's'}
-                      </div>
-                      <div className="pp-foot">
-                        <div className="pp-avatars">
-                          {shown.map((m) =>
-                            m.avatarUrl ? (
-                              <img key={m.id} src={m.avatarUrl} alt={m.name} title={m.name} className="pp-avatar" referrerPolicy="no-referrer" loading="lazy" decoding="async" width={24} height={24} onError={(e) => { e.currentTarget.style.display = 'none'; }} />
-                            ) : (
-                              <span key={m.id} className="pp-avatar" style={{ background: avatarColorForName(m.name) }} title={m.name}>{initial(m.name)}</span>
-                            )
-                          )}
-                          {overflow > 0 && <span className="pp-avatar pp-avatar-more">+{overflow}</span>}
-                        </div>
-                        <div className="pp-actions" style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-                          <button
-                            type="button"
-                            className="secondary-btn"
-                            style={{ padding: '8px' }}
-                            aria-label="Trip options"
-                            title="Trip options"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setActionSheetTrip(trip);
-                            }}
-                          >
-                            <IconMoreVertical size={15} className="icon-sm" />
-                          </button>
-                          <button
-                            type="button"
-                            className="secondary-btn"
-                            style={{ padding: '8px' }}
-                            aria-label="Archive trip"
-                            title="Archive trip"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onArchiveTrip(trip);
-                            }}
-                          >
-                            <IconArchive size={15} className="icon-sm" />
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </SwipeableRow>
-                </div>
-              );
-            })}
-            </div>
+                      <IconPlus size={16} />
+                      <span>New Trip</span>
+                    </button>
+                    <button
+                      type="button"
+                      className="concept2-join-trip-btn"
+                      onClick={() => {
+                        triggerHaptic('light');
+                        setShowJoinTrip(true);
+                      }}
+                    >
+                      <span>Join</span>
+                    </button>
+                  </div>
+                )}
+              </>
+            )}
           </>
         )}
       </main>
@@ -910,12 +1143,23 @@ export function TripsListScreen({
               icon: <IconCopy size={18} />,
               onClick: () => onDuplicateTrip(actionSheetTrip),
             },
-            {
-              id: 'archive',
-              label: 'Archive Trip',
-              icon: <IconArchive size={18} />,
-              onClick: () => onArchiveTrip(actionSheetTrip),
-            },
+            ...(actionSheetTrip.archived && onRestoreTrip
+              ? [
+                  {
+                    id: 'restore',
+                    label: 'Restore Expedition',
+                    icon: <IconRefresh size={18} />,
+                    onClick: () => onRestoreTrip(actionSheetTrip),
+                  },
+                ]
+              : [
+                  {
+                    id: 'archive',
+                    label: 'Archive Trip',
+                    icon: <IconArchive size={18} />,
+                    onClick: () => onArchiveTrip(actionSheetTrip),
+                  },
+                ]),
             ...(userId && actionSheetTrip.ownerId === userId
               ? [
                   {

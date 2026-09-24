@@ -32,6 +32,7 @@ import { detectDuplicateExpense } from '../utils/duplicateExpenseDetector';
 import { getPredictiveQuickChips } from '../utils/predictiveExpenses';
 import { getLatestNonSettlementExpense } from '../utils/lastExpense';
 import { loadDefaultSplit, saveDefaultSplit } from '../utils/defaultSplit';
+import { evaluateMathExpression } from '../utils/mathExpression';
 
 
 const getTodayDateString = () => {
@@ -44,6 +45,7 @@ const getTodayDateString = () => {
 
 function formatAmountDisplay(raw: string): string {
   if (!raw) return '';
+  if (/[+\-*/x()]/.test(raw)) return raw;
   const [intPart, decPart] = raw.split('.');
   const withCommas = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
   return decPart !== undefined ? `${withCommas}.${decPart}` : withCommas;
@@ -545,8 +547,9 @@ export function ExpenseForm({
     setShowDuplicateDetails(false);
   }, [duplicateExpense?.id]);
 
-  // Live conversion calculation
-  const numericAmount = parseFloat(amount) || 0;
+  // Live conversion calculation & math evaluation
+  const evaluatedMath = evaluateMathExpression(amount);
+  const numericAmount = evaluatedMath !== null ? evaluatedMath : (parseFloat(amount) || 0);
   const currencyConversion = enableCurrencyFx && selectedCurrency !== baseCurrency && numericAmount > 0
     ? convertCurrency(numericAmount, selectedCurrency, baseCurrency, trip?.fxConfig?.customRates)
     : null;
@@ -882,7 +885,8 @@ export function ExpenseForm({
   const handleSubmitLocal = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isSubmitting || honeypotVal) return;
-    const amountVal = parseFloat(amount);
+    const resolvedAmt = evaluateMathExpression(amount) ?? parseFloat(amount);
+    const amountVal = resolvedAmt;
     if (isNaN(amountVal) || amountVal <= 0) {
       setFormError('Please enter a valid amount greater than 0.');
       return;
@@ -1040,8 +1044,8 @@ export function ExpenseForm({
   // at the bottom -- any error that isn't specifically about amount or
   // title (split sum, membership, API errors) falls through to the
   // bottom banner.
-  const isAmountFormError = Boolean(formError) && (!amount || parseFloat(amount) <= 0);
-  const isTitleFormError = Boolean(formError) && !isAmountFormError && !title.trim() && parseFloat(amount) > 0;
+  const isAmountFormError = Boolean(formError) && (!amount || numericAmount <= 0);
+  const isTitleFormError = Boolean(formError) && !isAmountFormError && !title.trim() && numericAmount > 0;
   const isGeneralFormError = Boolean(formError) && !isAmountFormError && !isTitleFormError;
 
   return (
@@ -1339,24 +1343,60 @@ export function ExpenseForm({
           </div>
         )}
 
-        <div className={`amount-hero ${formError && (!amount || parseFloat(amount) <= 0) ? 'amount-hero-error' : ''}`}>
+        <div className={`amount-hero ${formError && (!amount || numericAmount <= 0) ? 'amount-hero-error' : ''}`}>
           <span className="amount-hero-symbol">{getCurrencySymbol(selectedCurrency)}</span>
           <input
             id="expense-amount"
             ref={amountInputRef}
             type="text"
-            inputMode="decimal"
+            inputMode="text"
             autoFocus
             className="amount-hero-input"
             placeholder="0.00"
             value={formatAmountDisplay(amount)}
             onChange={(e) => {
               const raw = e.target.value.replace(/,/g, '');
-              if (/^\d*\.?\d*$/.test(raw)) setAmount(raw);
+              if (/^[\d\s.+\-*/x()]*$/i.test(raw)) setAmount(raw);
               if (formError) setFormError('');
+            }}
+            onBlur={() => {
+              if (/[+\-*/x()]/.test(amount)) {
+                const evalVal = evaluateMathExpression(amount);
+                if (evalVal !== null && evalVal >= 0) {
+                  setAmount(String(evalVal));
+                }
+              }
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && /[+\-*/x()]/.test(amount)) {
+                e.preventDefault();
+                const evalVal = evaluateMathExpression(amount);
+                if (evalVal !== null && evalVal >= 0) {
+                  setAmount(String(evalVal));
+                }
+              }
             }}
           />
         </div>
+
+        {/* Live Calculation Preview when user types math expression */}
+        {/[+\-*/x()]/.test(amount) && (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', margin: '4px 0 10px' }}>
+            <span style={{ fontSize: '13px', fontWeight: 600, color: evaluatedMath !== null ? 'var(--primary-accent)' : 'var(--text-secondary)' }}>
+              {evaluatedMath !== null ? `= ${getCurrencySymbol(selectedCurrency)} ${evaluatedMath.toFixed(2)}` : 'Incomplete calculation…'}
+            </span>
+            {evaluatedMath !== null && (
+              <button
+                type="button"
+                className="secondary-btn"
+                style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '12px' }}
+                onClick={() => setAmount(String(evaluatedMath))}
+              >
+                ✓ Apply
+              </button>
+            )}
+          </div>
+        )}
 
         {/* Quick Amount Increment / Rounding Chips */}
         <div className="quick-amount-chips">
@@ -1366,7 +1406,7 @@ export function ExpenseForm({
               type="button"
               className="quick-amount-chip"
               onClick={() => {
-                const current = parseFloat(amount) || 0;
+                const current = numericAmount || 0;
                 setAmount(String(Math.round((current + inc) * 100) / 100));
                 if (formError) setFormError('');
               }}
@@ -1374,12 +1414,12 @@ export function ExpenseForm({
               +{inc}
             </button>
           ))}
-          {parseFloat(amount) > 0 && Math.round(parseFloat(amount)) !== parseFloat(amount) && (
+          {numericAmount > 0 && Math.round(numericAmount) !== numericAmount && (
             <button
               type="button"
               className="quick-amount-chip"
               onClick={() => {
-                const current = parseFloat(amount) || 0;
+                const current = numericAmount || 0;
                 setAmount(String(Math.ceil(current)));
               }}
             >

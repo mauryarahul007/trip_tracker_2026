@@ -59,7 +59,7 @@ export function readStackChrome(root: HTMLElement): number {
   return stackChromePx({
     paddingTop: parseFloat(cs.paddingTop) || 0,
     paddingBottom: parseFloat(cs.paddingBottom) || 0,
-    header: visibleHeight(root.querySelector('.trips-screen-header')),
+    header: visibleHeight(root.querySelector('.home-unified-header') || root.querySelector('.concept1-header') || root.querySelector('.trips-screen-header')),
     section: visibleHeight(root.querySelector('.trips-section-header')),
     netRow: visibleHeight(root.querySelector('.home-net-row')),
     stepper: visibleHeight(root.querySelector('.trip-stepper-dots')),

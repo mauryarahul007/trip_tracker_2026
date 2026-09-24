@@ -1,12 +1,14 @@
 import type { ReactNode, ComponentType } from 'react';
 import type { Expense, Group, Trip } from '../types';
-import { IconTrash, IconEdit } from './Icons';
+import { IconTrash, IconEdit, IconArchive } from './Icons';
 
 type Props = {
   pendingDeleteExpense: Expense | null;
   onUndoDeleteExpense: () => void;
   pendingDeleteTrip: Trip | null;
   onUndoDeleteTrip: () => void;
+  pendingArchiveTrip?: Trip | null;
+  onUndoArchiveTrip?: () => void;
   pendingDeleteGroup: Group | null;
   onUndoDeleteGroup: () => void;
   pendingEditExpense?: Expense | null;
@@ -47,6 +49,8 @@ export function UndoToasts({
   onUndoDeleteExpense,
   pendingDeleteTrip,
   onUndoDeleteTrip,
+  pendingArchiveTrip,
+  onUndoArchiveTrip,
   pendingDeleteGroup,
   onUndoDeleteGroup,
   pendingEditExpense,
@@ -55,7 +59,7 @@ export function UndoToasts({
   onUndoExtended,
   durationMs,
 }: Props) {
-  if (!pendingDeleteExpense && !pendingDeleteTrip && !pendingDeleteGroup && !pendingEditExpense && !pendingExtended) return null;
+  if (!pendingDeleteExpense && !pendingDeleteTrip && !pendingArchiveTrip && !pendingDeleteGroup && !pendingEditExpense && !pendingExtended) return null;
 
   return (
     <div
@@ -90,6 +94,16 @@ export function UndoToasts({
           message={<>Trip <strong>'{truncateForToast(pendingDeleteTrip.name)}'</strong> deleted</>}
           onUndo={onUndoDeleteTrip}
           durationMs={durationMs}
+        />
+      )}
+      {pendingArchiveTrip && onUndoArchiveTrip && (
+        <PostmarkToast
+          key={`archive-${pendingArchiveTrip.id}`}
+          message={<>Trip <strong>'{truncateForToast(pendingArchiveTrip.name)}'</strong> archived</>}
+          onUndo={onUndoArchiveTrip}
+          durationMs={durationMs}
+          icon={IconArchive}
+          undoLabel="Undo archive"
         />
       )}
       {pendingDeleteGroup && (

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { fetchPlaceCoverImage, coverImageUrlAtWidth } from './placeImageService';
+import { fetchPlaceCoverImage, coverImageUrlAtWidth, getFallbackTravelPhoto } from './placeImageService';
 
 describe('placeImageService', () => {
   beforeEach(() => {
@@ -109,15 +109,15 @@ describe('placeImageService', () => {
 describe('coverImageUrlAtWidth', () => {
   it('rewrites a Wikimedia original to a sized thumb', () => {
     const original = 'https://upload.wikimedia.org/wikipedia/commons/a/ab/Goa_beach.jpg';
-    expect(coverImageUrlAtWidth(original, 480)).toBe(
-      'https://upload.wikimedia.org/wikipedia/commons/thumb/a/ab/Goa_beach.jpg/480px-Goa_beach.jpg'
+    expect(coverImageUrlAtWidth(original, 500)).toBe(
+      'https://upload.wikimedia.org/wikipedia/commons/thumb/a/ab/Goa_beach.jpg/500px-Goa_beach.jpg'
     );
   });
 
   it('rewrites an already-sized Wikimedia thumb to a smaller width', () => {
     const thumb = 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/ab/Goa_beach.jpg/960px-Goa_beach.jpg';
-    expect(coverImageUrlAtWidth(thumb, 480)).toBe(
-      'https://upload.wikimedia.org/wikipedia/commons/thumb/a/ab/Goa_beach.jpg/480px-Goa_beach.jpg'
+    expect(coverImageUrlAtWidth(thumb, 500)).toBe(
+      'https://upload.wikimedia.org/wikipedia/commons/thumb/a/ab/Goa_beach.jpg/500px-Goa_beach.jpg'
     );
   });
 
@@ -128,5 +128,32 @@ describe('coverImageUrlAtWidth', () => {
 
   it('returns null for a missing url', () => {
     expect(coverImageUrlAtWidth(null, 480)).toBeNull();
+  });
+
+  it('adjusts width parameter on Unsplash URLs', () => {
+    const unsplashUrl = 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=1000&auto=format&fit=crop';
+    expect(coverImageUrlAtWidth(unsplashUrl, 480)).toContain('w=480');
+  });
+});
+
+describe('getFallbackTravelPhoto', () => {
+  it('returns a valid fallback photo URL even without a seed', () => {
+    const url = getFallbackTravelPhoto();
+    expect(url).toBeTruthy();
+    expect(url).toContain('images.unsplash.com');
+  });
+
+  it('deterministically returns the same photo for the same seed', () => {
+    const url1 = getFallbackTravelPhoto('Test 60');
+    const url2 = getFallbackTravelPhoto('Test 60');
+    expect(url1).toBe(url2);
+  });
+
+  it('matches keywords for mountains or beach', () => {
+    const beachUrl = getFallbackTravelPhoto('Goa Coast Party');
+    expect(beachUrl).toContain('photo-1507525428034'); // Tropical beach
+
+    const mountainUrl = getFallbackTravelPhoto('Himalaya Trek');
+    expect(mountainUrl).toContain('photo-1464822759023'); // Swiss alps
   });
 });

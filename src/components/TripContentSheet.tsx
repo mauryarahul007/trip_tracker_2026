@@ -88,6 +88,7 @@ export function TripContentSheet({ children, onExpandedChange, onFullChange, onD
   const touchStartY = useRef(0);
   const touchStartX = useRef(0);
   const isDraggingRef = useRef(false);
+  const isHandleTouchRef = useRef(false);
   const liveTopPercentRef = useRef(initialTop);
   const scrollContainerRef = useRef<HTMLElement | null>(null);
   const settleTimeoutRef = useRef<number | null>(null);
@@ -232,7 +233,8 @@ export function TripContentSheet({ children, onExpandedChange, onFullChange, onD
       resetVelocityTracking(liveTopPercentRef.current);
 
       const target = e.target as HTMLElement;
-      const isHandle = target.closest('.trip-sheet-handle');
+      const isHandle = Boolean(target.closest('.trip-sheet-handle'));
+      isHandleTouchRef.current = isHandle;
 
       // Fast container lookup without layout-thrashing getComputedStyle calls
       scrollContainerRef.current = target.closest('.tab-pane, [data-scrollable]') as HTMLElement | null;
@@ -269,7 +271,7 @@ export function TripContentSheet({ children, onExpandedChange, onFullChange, onD
           (currentTop === SHEET_COLLAPSED_TOP && dy < 0) || // Swiping up when collapsed
           (currentTop === SHEET_EXPANDED_TOP && dy < 0 && isScrollAtTop) || // Continue up to full
           (currentTop === SHEET_EXPANDED_TOP && dy > 0 && isScrollAtTop) || // Back down to collapsed
-          (!forceFull && currentTop === SHEET_FULL_TOP && dy > 0 && isScrollAtTop); // Back down from full (only when not forceFull)
+          (!forceFull && currentTop === SHEET_FULL_TOP && dy > 0 && (isHandleTouchRef.current || !scrollContainerRef.current)); // Back down from full only via handle or when outside scrollable lists
 
         if (shouldDrag) {
           setDragging(true);

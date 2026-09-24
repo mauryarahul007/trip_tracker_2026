@@ -1257,6 +1257,44 @@ export function BalancesSettlements({
           </div>
         )}
 
+        {/* Debt Simplification & Transparency Info */}
+        {!isFullySettled && transfers.length > 0 && (
+          <div
+            style={{
+              padding: '10px 14px',
+              borderRadius: '12px',
+              background: 'var(--bg-glass-card, rgba(255, 255, 255, 0.04))',
+              border: '1px solid var(--border-color, rgba(255, 255, 255, 0.08))',
+              marginBottom: '16px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: '12px',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ fontSize: '15px' }}>⚡</span>
+              <div>
+                <div style={{ fontSize: '12.5px', fontWeight: 600, color: 'var(--text-primary)' }}>
+                  {isSimplified ? 'Simplified Settlements' : 'Direct Settlements'}
+                </div>
+                <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
+                  {isSimplified
+                    ? `Minimizes group debt to just ${transfers.length} direct ${transfers.length === 1 ? 'payment' : 'payments'}`
+                    : 'Each person settles directly with who paid'}
+                </div>
+              </div>
+            </div>
+            <button
+              type="button"
+              className="secondary-btn"
+              style={{ fontSize: '11px', padding: '4px 10px', borderRadius: '8px', whiteSpace: 'nowrap' }}
+              onClick={() => setShowSimplifyInfo(true)}
+            >
+              How it works
+            </button>
+          </div>
+        )}
 
         {/* Transfer Cards List with Smart Grouping */}
         {transfers.length === 0 ? (

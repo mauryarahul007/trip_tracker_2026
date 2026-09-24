@@ -1535,7 +1535,7 @@ export const useTripStore = create<TripStore>()(
       const cleanStops = stops && stops.length > 0 ? stops : undefined;
 
       // Asynchronous background cover photo fetcher
-      const triggerCoverFetch = (targetTripId: string, placeQuery: string) => {
+      const triggerCoverFetch = (targetTripId: string, placeQuery: string | string[]) => {
         fetchPlaceCoverImage(placeQuery)
           .then((coverUrl) => {
             if (coverUrl) {
@@ -1556,6 +1556,12 @@ export const useTripStore = create<TripStore>()(
           }));
         }
       };
+
+      const coverCandidates = [
+        cleanDestination,
+        ...(cleanStops?.map((s) => s.name) || []),
+        name,
+      ].filter(Boolean) as string[];
 
       // No real backend to sync against at all — skip the offline sync
       // queue entirely (it could never flush) and create the trip as a
@@ -1595,8 +1601,8 @@ export const useTripStore = create<TripStore>()(
           storageError: null,
         }));
 
-        if (cleanDestination || name) {
-          triggerCoverFetch(tripId, cleanDestination || name);
+        if (coverCandidates.length > 0) {
+          triggerCoverFetch(tripId, coverCandidates);
         }
         if (cleanStops && cleanStops.length > 0) {
           resolveStopCoordinates(tripId, cleanStops);
@@ -1638,8 +1644,8 @@ export const useTripStore = create<TripStore>()(
         storageError: null,
       }));
 
-      if (cleanDestination || name) {
-        triggerCoverFetch(tripTempId, cleanDestination || name);
+      if (coverCandidates.length > 0) {
+        triggerCoverFetch(tripTempId, coverCandidates);
       }
       if (cleanStops && cleanStops.length > 0) {
         resolveStopCoordinates(tripTempId, cleanStops);
@@ -1652,7 +1658,15 @@ export const useTripStore = create<TripStore>()(
           const trip = await insertTrip({ name, startDate, endDate, baseCurrency, destination: cleanDestination, ownerId: userId, id: tripTempId, stops: cleanStops });
           const creatorMember = await insertMember(trip.id, creatorName, userId, memberTempId);
           set((state) => ({
-            trips: state.trips.map((t) => (t.id === tripTempId ? { ...trip, memberIds: [memberTempId], adminMemberIds: [memberTempId], expenseCount: 0, destination: cleanDestination, stops: cleanStops } : t)),
+            trips: state.trips.map((t) => (t.id === tripTempId ? {
+              ...trip,
+              memberIds: [memberTempId],
+              adminMemberIds: [memberTempId],
+              expenseCount: 0,
+              destination: cleanDestination,
+              stops: cleanStops,
+              coverImageUrl: t.coverImageUrl || trip.coverImageUrl,
+            } : t)),
             members: { ...state.members, [memberTempId]: creatorMember },
           }));
         } catch (e) {
@@ -1672,8 +1686,14 @@ export const useTripStore = create<TripStore>()(
           storageError: null,
         }));
 
-        if (cleanDestination || name) {
-          fetchPlaceCoverImage(cleanDestination || name)
+        const updateCandidates = [
+          cleanDestination,
+          ...(cleanStops?.map((s) => s.name) || []),
+          name,
+        ].filter(Boolean) as string[];
+
+        if (updateCandidates.length > 0) {
+          fetchPlaceCoverImage(updateCandidates)
             .then((coverUrl) => {
               if (coverUrl) {
                 set((state) => ({

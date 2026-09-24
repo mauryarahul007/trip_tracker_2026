@@ -9,6 +9,15 @@ export interface ChangelogEntry {
 // parsed from decisions.md/BUGS.md: those are prose for developers, not client data.
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: '3.38.0',
+    date: '2026-09-24',
+    changes: [
+      'Journeys home screen overhaul: Unified 2-row header with profile avatar, centered serif title, right-aligned search, and rock-solid view and filter switcher positioning.',
+      'Stack & list view image population: Every tile is guaranteed to display rich travel photography pulled directly from the destination and route stops, with curated procedural landscape fallbacks.',
+      'Fixed Wikimedia thumbnail sizing standards to prevent broken images.',
+    ],
+  },
+  {
     version: '3.37.2',
     date: '2026-09-24',
     changes: [

@@ -16,8 +16,14 @@ const imageCache = new Map<string, string | null>();
 // rounded to the nearest one, but our /thumb/ URLs are direct hotlinks).
 // https://www.mediawiki.org/wiki/Common_thumbnail_sizes
 export const COVER_WIDTH = 960;
-export const PEEK_COVER_WIDTH = 480;
+export const PEEK_COVER_WIDTH = 500;
 const THUMB_WIDTH = COVER_WIDTH;
+
+export function normalizeWikimediaWidth(width: number): number {
+  if (width <= 250) return 250;
+  if (width <= 500) return 500;
+  return 960;
+}
 
 // Wikimedia originals live at .../wikipedia/<project>/<h1>/<h2>/<file>.
 // Rewriting to the /thumb/ path asks Wikimedia's own resizer for a
@@ -43,24 +49,30 @@ function toSizedThumbnail(url: string, width: number = THUMB_WIDTH): string {
 
   const match = parsed.pathname.match(WIKIMEDIA_ORIGINAL_PATH_PATTERN);
   if (!match) return url;
+  const targetWidth = normalizeWikimediaWidth(width);
   const [, prefix, h1, h2, filename] = match;
-  return `${parsed.origin}${prefix}thumb/${h1}/${h2}/${filename}/${width}px-${filename}`;
+  return `${parsed.origin}${prefix}thumb/${h1}/${h2}/${filename}/${targetWidth}px-${filename}`;
 }
 
 const WIKIMEDIA_THUMB_PX_PATTERN = /\/(\d+)px-([^/]+)$/;
 
 // Peek cards are ~half the front card. Rewriting an already-cached 960px
-// Wikimedia thumb to 480px keeps decode cost down without a second fetch.
+// Wikimedia thumb to 500px keeps decode cost down without a second fetch.
 export function coverImageUrlAtWidth(url: string | null, width: number): string | null {
   if (!url) return null;
   try {
     const parsed = new URL(url);
-    if (parsed.hostname !== 'upload.wikimedia.org') return url;
-    if (WIKIMEDIA_THUMB_PX_PATTERN.test(parsed.pathname)) {
-      parsed.pathname = parsed.pathname.replace(WIKIMEDIA_THUMB_PX_PATTERN, `/${width}px-$2`);
+    if (parsed.hostname === 'images.unsplash.com') {
+      parsed.searchParams.set('w', String(width));
       return parsed.toString();
     }
-    return toSizedThumbnail(url, width);
+    if (parsed.hostname !== 'upload.wikimedia.org') return url;
+    const targetWidth = normalizeWikimediaWidth(width);
+    if (WIKIMEDIA_THUMB_PX_PATTERN.test(parsed.pathname)) {
+      parsed.pathname = parsed.pathname.replace(WIKIMEDIA_THUMB_PX_PATTERN, `/${targetWidth}px-$2`);
+      return parsed.toString();
+    }
+    return toSizedThumbnail(url, targetWidth);
   } catch {
     return url;
   }
@@ -92,6 +104,92 @@ function isPhotoUrl(url?: string | null): boolean {
   return true;
 }
 
+const TRAVEL_NOISE_WORDS = /\b(bagpacking|backpacking|trip|trips|tour|tours|touring|vacation|vacations|holiday|holidays|expedition|expeditions|getaway|getaways|travel|travels|travelling|traveling|trek|trekking|roadtrip|road\s+trip|adventure|adventures|journey|journeys|diaries|diary|visit|visiting|retreat|offsite|bachelors|honeymoon|explore|exploring|\d{4})\b/gi;
+
+function hashString(str: string): number {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = (hash << 5) - hash + str.charCodeAt(i);
+    hash |= 0;
+  }
+  return Math.abs(hash);
+}
+
+export const FALLBACK_TRAVEL_PHOTOS = [
+  // 1. Tropical Paradise Beach
+  'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=1000&auto=format&fit=crop',
+  // 2. Swiss Alps Summit
+  'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=1000&auto=format&fit=crop',
+  // 3. Kyoto Bamboo Forest
+  'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?q=80&w=1000&auto=format&fit=crop',
+  // 4. Amalfi Coastline
+  'https://images.unsplash.com/photo-1533105079780-92b9be482077?q=80&w=1000&auto=format&fit=crop',
+  // 5. Nordic Aurora Fjords
+  'https://images.unsplash.com/photo-1517411032315-54ef2cb783bb?q=80&w=1000&auto=format&fit=crop',
+  // 6. Tokyo Metropolis
+  'https://images.unsplash.com/photo-1503899036084-c55cdd92da26?q=80&w=1000&auto=format&fit=crop',
+  // 7. Yosemite Glacial Lake
+  'https://images.unsplash.com/photo-1506744038136-46273834b3fb?q=80&w=1000&auto=format&fit=crop',
+  // 8. Golden Desert Dunes
+  'https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9?q=80&w=1000&auto=format&fit=crop',
+  // 9. Scenic Road Trip Highway
+  'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?q=80&w=1000&auto=format&fit=crop',
+  // 10. Tropical Sunset Palms
+  'https://images.unsplash.com/photo-1512100356356-de1b84283e18?q=80&w=1000&auto=format&fit=crop',
+  // 11. Paris Bridge & Sunset
+  'https://images.unsplash.com/photo-1499856871958-5b9627545d1a?q=80&w=1000&auto=format&fit=crop',
+  // 12. Misty Pine Ridge
+  'https://images.unsplash.com/photo-1448375240586-882707db888b?q=80&w=1000&auto=format&fit=crop',
+  // 13. Italian Dolomites Peaks
+  'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?q=80&w=1000&auto=format&fit=crop',
+  // 14. Bali Tropical Terraces
+  'https://images.unsplash.com/photo-1518548419970-58e3b4079ab2?q=80&w=1000&auto=format&fit=crop',
+  // 15. Santorini Sunset Caldera
+  'https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?q=80&w=1000&auto=format&fit=crop',
+  // 16. Iceland Emerald Waterfall
+  'https://images.unsplash.com/photo-1482938289607-e9573fc25ebb?q=80&w=1000&auto=format&fit=crop',
+];
+
+export function getFallbackTravelPhoto(seed?: string, width: number = COVER_WIDTH): string {
+  if (!seed) {
+    const defaultUrl = FALLBACK_TRAVEL_PHOTOS[0];
+    return coverImageUrlAtWidth(defaultUrl, width) || defaultUrl;
+  }
+
+  const s = seed.toLowerCase().trim();
+
+  let matchedIndex = -1;
+  if (/(beach|sea|ocean|coast|island|surf|tropical|goa|bali|maldives|phuket)/i.test(s)) {
+    matchedIndex = 0;
+  } else if (/(mountain|alps|himalaya|peak|summit|snow|ski|trek|hike|sikkim|manali|ladakh)/i.test(s)) {
+    matchedIndex = 1;
+  } else if (/(forest|bamboo|nature|jungle|green|camp|trail)/i.test(s)) {
+    matchedIndex = 2;
+  } else if (/(amalfi|italy|mediterranean|cliff|coastal)/i.test(s)) {
+    matchedIndex = 3;
+  } else if (/(aurora|fjord|norway|iceland|arctic)/i.test(s)) {
+    matchedIndex = 4;
+  } else if (/(tokyo|japan|city|metro|neon|night|urban)/i.test(s)) {
+    matchedIndex = 5;
+  } else if (/(lake|reflection|valley|yosemite|national park)/i.test(s)) {
+    matchedIndex = 6;
+  } else if (/(desert|dune|safari|dubai|egypt|sand)/i.test(s)) {
+    matchedIndex = 7;
+  } else if (/(road|drive|highway|car|route)/i.test(s)) {
+    matchedIndex = 8;
+  } else if (/(sunset|palm|evening)/i.test(s)) {
+    matchedIndex = 9;
+  } else if (/(paris|europe|france|historic|bridge)/i.test(s)) {
+    matchedIndex = 10;
+  } else if (/(waterfall|falls)/i.test(s)) {
+    matchedIndex = 15;
+  }
+
+  const selectedIndex = matchedIndex >= 0 ? matchedIndex : hashString(s) % FALLBACK_TRAVEL_PHOTOS.length;
+  const rawUrl = FALLBACK_TRAVEL_PHOTOS[selectedIndex];
+  return coverImageUrlAtWidth(rawUrl, width) || rawUrl;
+}
+
 /**
  * Clean a user-provided destination string for search.
  */
@@ -103,14 +201,21 @@ function extractPlaceCandidates(placeInput: string | string[]): string[] {
     if (!raw) continue;
     // Split on route arrows, commas, hyphens, or slashes
     const parts = raw.split(/[→\->,/|]/).map((p) => p.trim()).filter(Boolean);
-    candidates.push(...parts);
+    for (const part of parts) {
+      candidates.push(part);
+      const stripped = part.replace(TRAVEL_NOISE_WORDS, ' ').replace(/\s+/g, ' ').trim();
+      const prepStripped = stripped.replace(/^(to|in|at|around|near|of|from)\s+/i, '').trim();
+      if (prepStripped && prepStripped.length >= 2 && prepStripped !== part) {
+        candidates.push(prepStripped);
+      }
+    }
     if (!parts.includes(raw.trim())) {
       candidates.push(raw.trim());
     }
   }
 
   // Deduplicate and filter out numbers or very short strings
-  return Array.from(new Set(candidates)).filter((c) => c.length >= 2);
+  return Array.from(new Set(candidates)).filter((c) => c.length >= 2 && !/^\d+$/.test(c));
 }
 
 /**

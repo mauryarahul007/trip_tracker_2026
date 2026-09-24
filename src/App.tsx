@@ -647,6 +647,8 @@ export default function App() {
   const [undoTimer, setUndoTimer] = useState<ReturnType<typeof setTimeout> | null>(null);
   const [pendingDeleteTrip, setPendingDeleteTrip] = useState<Trip | null>(null);
   const [tripUndoTimer, setTripUndoTimer] = useState<ReturnType<typeof setTimeout> | null>(null);
+  const [pendingArchiveTrip, setPendingArchiveTrip] = useState<Trip | null>(null);
+  const [archiveUndoTimer, setArchiveUndoTimer] = useState<ReturnType<typeof setTimeout> | null>(null);
   const [pendingDeleteGroup, setPendingDeleteGroup] = useState<Group | null>(null);
   const [groupUndoTimer, setGroupUndoTimer] = useState<ReturnType<typeof setTimeout> | null>(null);
   // enableExtendedUndo: one generic slot for member delete/archive and
@@ -1806,6 +1808,21 @@ export default function App() {
 
   const handleArchiveTrip = (trip: Trip) => {
     archiveTrip(trip.id, true);
+    if (archiveUndoTimer) clearTimeout(archiveUndoTimer);
+    setPendingArchiveTrip(trip);
+    const timer = setTimeout(() => {
+      setPendingArchiveTrip(null);
+    }, UNDO_DURATION_MS);
+    setArchiveUndoTimer(timer);
+  };
+
+  const handleUndoArchiveTrip = () => {
+    if (archiveUndoTimer) clearTimeout(archiveUndoTimer);
+    setArchiveUndoTimer(null);
+    if (pendingArchiveTrip) {
+      archiveTrip(pendingArchiveTrip.id, false);
+      setPendingArchiveTrip(null);
+    }
   };
 
   const handleRestoreTrip = (trip: Trip) => {
@@ -2298,6 +2315,8 @@ export default function App() {
         /* Screen 1: Trips List */
         <TripsListScreen
           trips={visibleTrips}
+          archivedTrips={archivedTrips}
+          onRestoreTrip={handleRestoreTrip}
           members={members}
           settledTripIds={settledTripIds}
           showAddTrip={showAddTrip}
@@ -2479,14 +2498,24 @@ export default function App() {
               </div>
             </div>
             <div className="app-header-stats" style={{ position: 'relative', zIndex: 1 }}>
-              <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                <span>{visibleMembers.length} member{visibleMembers.length === 1 ? '' : 's'}</span>
-                <span>{activeTripExpenses.length} expense{activeTripExpenses.length === 1 ? '' : 's'}</span>
+              <div className="header-meta-capsule">
+                <span className="header-meta-item">
+                  <span className="header-meta-icon" aria-hidden="true">👥</span>
+                  <span>{visibleMembers.length} {visibleMembers.length === 1 ? 'member' : 'members'}</span>
+                </span>
+                <span className="header-meta-sep" aria-hidden="true">·</span>
+                <span className="header-meta-item">
+                  <span className="header-meta-icon" aria-hidden="true">🧾</span>
+                  <span>{activeTripExpenses.length} {activeTripExpenses.length === 1 ? 'expense' : 'expenses'}</span>
+                </span>
                 {activePeers.length > 0 && (
-                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '3px' }} title={`${activePeers.length} other traveler(s) online`}>
-                    <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#17B6A6', display: 'inline-block' }} />
-                    <span style={{ fontSize: '11px', color: '#17B6A6', fontWeight: 600 }}>{activePeers.length} online</span>
-                  </div>
+                  <>
+                    <span className="header-meta-sep" aria-hidden="true">·</span>
+                    <span className="header-meta-item header-meta-online" title={`${activePeers.length} other traveler(s) online`}>
+                      <span className="online-dot" aria-hidden="true" />
+                      <span>{activePeers.length} online</span>
+                    </span>
+                  </>
                 )}
               </div>
               <button
@@ -3210,6 +3239,8 @@ export default function App() {
         onUndoDeleteExpense={handleUndoDelete}
         pendingDeleteTrip={pendingDeleteTrip}
         onUndoDeleteTrip={handleUndoDeleteTrip}
+        pendingArchiveTrip={pendingArchiveTrip}
+        onUndoArchiveTrip={handleUndoArchiveTrip}
         pendingDeleteGroup={pendingDeleteGroup}
         onUndoDeleteGroup={handleUndoDeleteGroup}
         pendingEditExpense={pendingEditExpense}

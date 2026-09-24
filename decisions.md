@@ -3925,3 +3925,40 @@ This document logs all meaningful technical decisions, library choices, design p
   - `stackChrome.ts` still measures `.home-net-row`; it now always reads 0. Left alone to avoid touching the BUG-244 iOS height code.
   - Old FEAT-089 / FEAT-LIGHTLOOP2 history in `features.json` and `FEATURE_TEST_STEPS.md` still mentions the flag, kept as history.
   - Any stored `enableHomeNetBalance` row in production Ops Deck becomes an unused key.
+
+---
+
+## 221. Visual Concept 1 (Luxury Card Stack with Bottom Slide Launcher) & Visual Concept 2 (All Trips Luxury Bento Grid with Segmented Capsule Filter)
+* **Context:** The home screen previously suffered from visual clutter: the 3-column header caused the view toggle to overlap the title text, and switching between stack and grid views caused the switcher button and filter pills to jump vertically and horizontally between different rows and positions.
+* **Decision:**
+  - **Unified 2-Row Header Architecture (`.home-unified-header`):**
+    - **Row 1 (Top Bar):** Features traveler profile avatar (`.profile-avatar-btn`) on the left, high-end editorial serif title `Journeys` in the center, and Search (`IconSearch`) + Superadmin Bug Tracker on the right.
+    - **Row 2 (Controls Bar):** Displays the segmented filter capsule `[ All | Active | Past ]` (`.concept2-filter-capsule`) on the left and the segmented view mode switcher `[ 🥞 | ☰ ]` (`.concept-view-mode-pill`) on the right.
+    - **Rock-Solid Positioning:** Because Row 1 and Row 2 use identical shared layout containers and positioning across both Stack and List views, the view switcher button and the filter chips stay at the exact same pixel coordinates when toggling between views.
+  - **Filter Application in Both Views:**
+    - Tapping `Active`, `Past`, or `All` in the filter capsule filters `displayedTrips` for both the luxury stacked card carousel and the 2-column bento photo grid.
+  - **Stack View Mode (Visual Concept 1):**
+    - Squircle luxury card face (`border-radius: 32px`) with destination weather capsule (`Shimla ☀️ 22°C`), editorial serif typography, uppercase date range + duration (`AUG 10 – AUG 14 · 4 Days`), hairline separator, member avatars pile (`.concept1-avatars-pile`), and right-aligned spend summary (`$X spent`) with sleek progress track.
+    - Stepper scrub dots (`.trip-stepper-dots`) and bottom swipe launcher (`TripSlideLauncher`: `🔑 JOIN` ← ✈️ → `CREATE+`).
+  - **All Trips View Mode (Visual Concept 2):**
+    - 2-column luxury photo bento grid (`.concept2-grid`) with `LuxuryGridTripCard` cards featuring destination tourism photography, weather badges, date labels, and avatar clusters.
+    - Floating bottom action dock (`.concept2-bottom-dock`) with prominent `+ New Trip` pill and `Join` button.
+* **Trade-offs Accepted:**
+  - Both views now share the streamlined 2-row top chrome, eliminating layout shifts and providing instant, unified filtering across both Stack and Grid modes.
+
+---
+
+## 222. Destination & Place Cover Image Resolution Pipeline with Curated Fallbacks (v3.38.0)
+* **Context:** In list/grid view, multiple trip cards rendered as dark `#1E293B` rectangles without cover photography. Inquiries revealed that when users create trips, they provide a Destination/Place (e.g. *"Munnar"*, *"Ooty"*, *"Sikkim"*) alongside a custom Trip Name (e.g. *"Test 60"*, *"Test trip2"*, *"Sikkim Bagpacking"*). Two issues prevented cover images from loading:
+  1. Wikimedia's thumbnail resizer rejects non-standard widths (such as 480px) with HTTP 400 Bad Request, whereas standard sizes (500px, 960px) succeed with HTTP 200 OK.
+  2. Travel noise words and suffixes (e.g. *"Bagpacking"*, *"trip"*, *"tour"*, *"2026"*) sent directly to Wikipedia/Wikivoyage APIs resulted in 404s.
+  3. When destinations or test names had no matching articles, `useTripPhoto` returned `null` with no fallback image.
+* **Decision:**
+  - Standardize Wikimedia thumbnail width to 500px (`PEEK_COVER_WIDTH = 500`) and add `normalizeWikimediaWidth(width)` to automatically clamp thumbnail requests to valid Wikimedia sizes (250px, 500px, 960px).
+  - Add automated noise-word and preposition stripping in `extractPlaceCandidates` (`src/services/placeImageService.ts`) to cleanly extract destination roots (e.g. *"Sikkim Bagpacking"* ➔ *"Sikkim"*, *"Trip to Manali 2026"* ➔ *"Manali"*).
+  - Connect `LuxuryGridTripCard` to pull cover photos prioritizing `trip.destination`, `trip.stops`, and `trip.name`, identical to `TripStack`.
+  - Provide `getFallbackTravelPhoto` featuring 16 curated high-resolution royalty-free landscape photographs with keyword matching and deterministic hashing so every tile is guaranteed to render an aesthetic travel photo without delay or blank cards.
+  - Preserve in-flight `coverImageUrl` in `createTrip` and `updateTrip` in `src/store/tripStore.ts`.
+* **Trade-offs Accepted:**
+  - Fallback photos are selected from a static royalty-free CDN collection when Wikipedia returns no matching place article.
+  - Sizing to standard 500px slightly exceeds 480px on 2-column mobile displays (a negligible 4% difference) while ensuring 100% reliability against Wikimedia's HTTP 400 rejection policy.
