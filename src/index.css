@@ -3851,37 +3851,6 @@ input:checked + .toggle-slider:before {
   border-color: color-mix(in srgb, var(--color-danger) 28%, transparent);
 }
 
-.home-net-row {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 8px;
-  padding: 0 16px 12px;
-}
-
-.home-net-row .home-balance-chip {
-  font-size: 12.5px;
-  padding: 6px 12px;
-  cursor: default;
-}
-
-.home-net-add {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 12.5px;
-  font-weight: 700;
-  padding: 6px 12px;
-  border-radius: 999px;
-  border: 1px solid var(--border-color);
-  background: var(--bg-surface);
-  color: var(--text-primary);
-  cursor: pointer;
-}
-.home-net-add:hover {
-  background: var(--bg-surface-hover);
-}
-
 .trip-stack-viewall {
   display: block;
   margin: 0 auto;

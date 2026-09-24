@@ -21,6 +21,7 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 
 | Shipped | Version | Id | Section |
 |--------|---------|-----|---------|
+| 2026-09-24 | v3.37.2 | BUG-245 | [Remove home cross-trip IOU strip](#bug-245--remove-home-cross-trip-iou-strip) |
 | 2026-09-23 | v3.37.1 | BUG-244 | [iOS visible height and compositor](#ios-visible-height-and-compositor) |
 | 2026-09-22 | v3.37.0 | FEAT-GROWTH2 | [Growth: invite conversion, telemetry, passport, nudges](#feat-growth2--invite-conversion-telemetry-passport-nudges) |
 | 2026-09-21 | v3.36.0 | FEAT-093 | [Flag recipes and saved mixes](#feat-presets--flag-recipes-and-saved-mixes) |
@@ -1097,6 +1098,29 @@ Two related performance fixes: Ops Deck / Bug Ledger no longer download the whol
 ### Pass
 - iPhone home fits the visible height, and sheet snaps do not wake the map mid-animation.
 - Android look and motion are unchanged.
+
+---
+
+## BUG-245 — Remove home cross-trip IOU strip
+
+**Commit:** v3.37.2. **Migrations:** none. **Flag removed:** `enableHomeNetBalance` (deregistered from `FeatureFlagKey`, `FEATURE_FLAGS_META`, `DEFAULT_FEATURE_FLAGS`, and the Core pack's `flagKeys` in `src/utils/featureFlags.ts` / `src/types/admin.ts`). It no longer appears in Ops Deck → Flags or Packs.
+
+**Point:** The "You are owed / You owe" strip and its inline **Add** button, shown just below the greeting on the trips home screen, duplicated the per-card add-expense action and cluttered the header. Removed. The Settings → cross-trip balances view is unaffected (separate surface, unrelated code path).
+
+### Steps
+1. Open the app to the trips home screen (no trip open), signed in with a non-zero cross-trip balance in some currency.
+2. Below the "Good morning/afternoon/evening" greeting, confirm there is **no** balance chip and **no** inline **Add** button — only the greeting/expedition-count line, then straight to **Your Trips**.
+3. Open any trip and confirm **Add Expense** still works normally from the trip card / expenses tab (unchanged).
+4. Superadmin → Ops Deck → Flags: confirm `enableHomeNetBalance` (a.k.a. "Home Cross-Trip You Owe / Are Owed") is no longer listed.
+5. Settings → Profile & Settings: confirm the cross-trip You owe / You are owed summary there (if present) is unaffected.
+
+### Negative checks
+- No leftover flag toggle in Ops Deck for this surface.
+- No console errors on the trips home screen from the removed `crossTripBalances`/`quickAddTrip` wiring.
+
+### Pass
+- Home screen shows greeting → expedition count → Your Trips, with no IOU strip or extra Add button in between.
+- Settings cross-trip balance view still works.
 
 ---
 

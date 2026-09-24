@@ -68,7 +68,6 @@ export type FeatureFlagKey =
   | 'enableCrossTripSearch'
   | 'enableSettlementConfirmation'
   | 'enableTripShareLink'
-  | 'enableHomeNetBalance'
   | 'enableCloneTripSquad'
   | 'enableContactInvite'
   | 'enableExpenseQuickFilterChips'

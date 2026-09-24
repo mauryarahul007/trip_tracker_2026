@@ -21,8 +21,6 @@ import { triggerHaptic } from '../utils/haptics';
 import { preloadModule } from '../utils/modulePreload';
 import { useHistoryBack } from '../utils/useHistoryBack';
 import { useEscapeKey } from '../utils/useEscapeKey';
-import { formatAmount, getCurrencySymbol } from '../utils/currency';
-import { pickTripForQuickAdd } from '../utils/pickTripForQuickAdd';
 import { fetchAppFlag } from '../services/tripApi';
 import { asCopyString, DEFAULT_EMPTY_TRIP_BLURB } from '../utils/landingCopy';
 import { isWebKitCompositor } from '../utils/tripStackMotion';
@@ -32,7 +30,6 @@ type Props = {
   trips: Trip[];
   members: Record<string, Member>;
   settledTripIds?: Record<string, boolean>;
-  crossTripBalances?: Record<string, number>;
   showAddTrip: boolean;
   setShowAddTrip: (show: boolean) => void;
   newTripName: string;
@@ -75,7 +72,6 @@ export function TripsListScreen({
   trips,
   members,
   settledTripIds,
-  crossTripBalances,
   showAddTrip,
   setShowAddTrip,
   newTripName,
@@ -112,8 +108,6 @@ export function TripsListScreen({
   const syncQueue = useTripStore((s) => s.syncQueue);
   const isFeatureEnabled = useTripStore((s) => s.isFeatureEnabled);
   const enableCrossTripSearch = isFeatureEnabled('enableCrossTripSearch', { userId: userId || undefined });
-  const homeNetOn = isFeatureEnabled('enableHomeNetBalance');
-  const quickAddTrip = homeNetOn && onQuickAddExpense ? pickTripForQuickAdd(trips) : null;
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const ptrIndicatorRef = useRef<HTMLDivElement>(null);
   const stepperTrackRef = useRef<HTMLDivElement>(null);
@@ -165,7 +159,7 @@ export function TripsListScreen({
 
     schedule();
     const observer = new ResizeObserver(schedule);
-    for (const sel of ['.trips-screen-header', '.trips-section-header', '.home-net-row', '.trip-stepper-dots', '.trip-launcher']) {
+    for (const sel of ['.trips-screen-header', '.trips-section-header', '.trip-stepper-dots', '.trip-launcher']) {
       const el = root.querySelector(sel);
       if (el) observer.observe(el);
     }
@@ -180,7 +174,7 @@ export function TripsListScreen({
       window.removeEventListener('orientationchange', schedule);
       root.style.removeProperty('--stack-chrome');
     };
-  }, [stackActive, trips.length, homeNetOn, crossTripBalances]);
+  }, [stackActive, trips.length]);
   const ambientTrip = focusedTrip || trips[0] || null;
   const ambientPhotoUrl = useTripPhoto(ambientTrip?.destination, ambientTrip?.coverImageUrl, ambientTrip?.name);
   const expeditionsTone = usePhotoTextTone(ambientPhotoUrl);
@@ -386,29 +380,6 @@ export function TripsListScreen({
       </header>
 
       <main className={`trips-screen-main${stackActive ? ' stack-main' : ''}`}>
-        {crossTripBalances && homeNetOn && Object.keys(crossTripBalances).length > 0 && (
-          <div className="home-net-row" aria-live="polite">
-            {Object.entries(crossTripBalances).map(([currency, net]) => (
-              <span
-                key={currency}
-                className={`home-balance-chip ${net > 0 ? 'owed-to-me' : 'i-owe'}`}
-              >
-                {net > 0 ? 'You are owed' : 'You owe'} {formatAmount(Math.abs(net), getCurrencySymbol(currency))}
-              </span>
-            ))}
-            {quickAddTrip && onQuickAddExpense ? (
-                <button
-                  type="button"
-                  className="home-net-add"
-                  onClick={() => onQuickAddExpense(quickAddTrip)}
-                  aria-label={`Add expense to ${quickAddTrip.name}`}
-                >
-                <IconPlus size={14} />
-                Add
-              </button>
-            ) : null}
-          </div>
-        )}
         <div className="trips-section-header">
           <h2 style={{ fontSize: '20px' }}>Your Trips</h2>
           {!showAddTrip && (

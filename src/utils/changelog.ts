@@ -9,6 +9,13 @@ export interface ChangelogEntry {
 // parsed from decisions.md/BUGS.md: those are prose for developers, not client data.
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: '3.37.2',
+    date: '2026-09-24',
+    changes: [
+      'The home screen no longer shows the "You are owed / You owe" strip and extra Add button under the greeting. Add expense stays on each trip card.',
+    ],
+  },
+  {
     version: '3.37.1',
     date: '2026-09-23',
     changes: [

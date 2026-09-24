@@ -3914,3 +3914,14 @@ This document logs all meaningful technical decisions, library choices, design p
   - The card can jump when Safari shows or hides its toolbar, because visible height updates on resize.
   - The home photo on iPhone is a flat gradient over the cover, not a blur.
   - Not verified on a physical iPhone in this change; Chrome confirmed the WebKit variables stay unset.
+
+---
+
+## 220. Remove the home cross-trip IOU strip and its flag (v3.37.2)
+* **Context:** The trips home showed a "You are owed / You owe" strip with an inline Add button under the greeting (`enableHomeNetBalance`, Core, ON). Each trip card already offers add-expense, so the strip duplicated it and cost vertical space on the home stack.
+* **Decision:** Delete the strip and Add button from `TripsListScreen`, drop the `crossTripBalances` prop and `pickTripForQuickAdd` use there, remove the dead `.home-net-row` / `.home-net-add` CSS, and deregister `enableHomeNetBalance` from `FeatureFlagKey`, `FEATURE_FLAGS_META`, `DEFAULT_FEATURE_FLAGS` and the Core pack. Flag-count assertions updated (91 to 90 total, Core active 19 to 18).
+* **Trade-offs Accepted:**
+  - Settings still shows cross-trip balances (`SettingsView`), so `useCrossTripBalances`, `crossTripBalances` in `App.tsx`, and the shared `.home-balance-chip` styles stay.
+  - `stackChrome.ts` still measures `.home-net-row`; it now always reads 0. Left alone to avoid touching the BUG-244 iOS height code.
+  - Old FEAT-089 / FEAT-LIGHTLOOP2 history in `features.json` and `FEATURE_TEST_STEPS.md` still mentions the flag, kept as history.
+  - Any stored `enableHomeNetBalance` row in production Ops Deck becomes an unused key.

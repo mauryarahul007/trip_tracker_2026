@@ -2300,7 +2300,6 @@ export default function App() {
           trips={visibleTrips}
           members={members}
           settledTripIds={settledTripIds}
-          crossTripBalances={crossTripBalances}
           showAddTrip={showAddTrip}
           setShowAddTrip={setShowAddTrip}
           newTripName={newTripName}
