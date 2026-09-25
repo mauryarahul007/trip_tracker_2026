@@ -8,6 +8,7 @@ export type FeatureFlagKey =
   | 'enableCompactLedgerView'
   | 'enableCategoryReorder'
   | 'enableWhatsNewHub'
+  | 'boardingPassLogin'
   // Phase 2: Active Group Collab & Natural Entry
   | 'enableVoiceInput'
   | 'enableReceiptUpload'
@@ -178,6 +179,7 @@ export type AppConfigKey =
   | 'expense_amount_ceiling'
   | 'audit_log_retention_days'
   | 'landing_backdrop_url'
+  | 'landing_backdrop_urls'
   | 'ops_webhook_url'
   | 'landing_headline'
   | 'landing_tagline'

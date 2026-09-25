@@ -12335,6 +12335,152 @@ textarea.input-field {
   transition: background-image 0.6s ease;
 }
 
+/* Boarding Pass login only -- same idea as .login-landing-scenic-bg above,
+   but as N stacked, individually cross-fadeable layers instead of one
+   background-image (which can't transition smoothly between photos). */
+.login-landing-scenic-stack {
+  position: fixed;
+  inset: -6px;
+  pointer-events: none;
+  z-index: 0;
+}
+.login-landing-scenic-layer {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  filter: blur(2px) saturate(1.15) brightness(0.88);
+  transform: scale(1.02);
+  opacity: 0;
+  transition: opacity 1.4s ease;
+}
+.login-landing-scenic-scrim {
+  position: fixed;
+  inset: -6px;
+  background: linear-gradient(180deg, rgba(7, 11, 18, 0.28) 0%, rgba(7, 11, 18, 0.78) 52%, #070B12 100%);
+  pointer-events: none;
+  z-index: 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  .login-landing-scenic-layer { transition: none; }
+}
+
+.bp-rotation-dots {
+  display: flex;
+  justify-content: center;
+  gap: 5px;
+  margin-top: 10px;
+}
+.bp-rotation-dots span {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.35);
+}
+.bp-rotation-dots span[data-active="true"] {
+  background: #67E8F9;
+  width: 12px;
+  border-radius: 3px;
+}
+
+/* Boarding Pass login card -- built to match the approved mockup's own
+   .a-ticket structure exactly (single flex column, one seam perforation,
+   a dashed box around the gate-code form), not BoardingPassHeroCard's
+   two-face flip-card layout, which has a different shape. Only the shared
+   .boarding-pass shell (paper/ink tokens) is reused -- not its border,
+   radius or shadow, which would make this read as a floating card/popup.
+   The mockup's ticket is flush to the screen's left/right/bottom edges,
+   square-cornered, so it's pinned with position:fixed to break out of
+   .login-screen-wrap's side/bottom padding and .login-landing-container's
+   max-width, rather than sitting in-flow as a centered, margined card. */
+.login-boarding-pass {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 16px 20px calc(14px + env(safe-area-inset-bottom, 0px));
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  overflow: visible; /* the seam perforation straddles the card's top edge on purpose */
+  z-index: 10;
+}
+/* This screen is always dark regardless of system theme (see
+   .login-screen-wrap above), so pin the boarding pass to a true-black
+   variant instead of following the light-mode --bp-* tokens or the warm
+   "night pass" paper tone used elsewhere -- this card should read as
+   near-black, not brown-black. */
+.boarding-pass-mode .login-boarding-pass {
+  --bp-paper: #0B0C0E;
+  --bp-paper-soft: #16181B;
+  --bp-ink: #F5F6F7;
+  --bp-ink-strong: rgba(245, 246, 247, 0.85);
+  --bp-ink-mid: rgba(245, 246, 247, 0.72);
+  --bp-ink-soft: rgba(245, 246, 247, 0.6);
+  --bp-ink-softer: rgba(245, 246, 247, 0.5);
+  --bp-ink-faint: rgba(245, 246, 247, 0.22);
+  --bp-tint: rgba(245, 246, 247, 0.04);
+  --bp-line: #232629;
+  --bp-line-strong: #2D3033;
+  --bp-shadow: rgba(0, 0, 0, 0.6);
+}
+/* The seam perforation: a repeating row of small punched-out circles
+   straddling the photo/card boundary (half poking into the photo, half
+   into the card), like a real ticket's tear line -- not just 2 corner
+   notches. Circle color = the scrim's darkest stop showing through. */
+.bp-seam-perf {
+  position: absolute;
+  top: -7px;
+  left: 0;
+  right: 0;
+  height: 14px;
+  background-image: radial-gradient(circle 7px, var(--bg-app, #070B12) 7px, transparent 7.6px);
+  background-size: 20px 14px;
+  background-repeat: repeat-x;
+  background-position: center;
+  pointer-events: none;
+}
+.bp-ticket-fields {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-family-mono);
+}
+/* Gate-code Join button reads as the ticket's accent action -- Campfire
+   orange, not the old screen's cyan (.login-inline-join-btn stays cyan
+   for the flag-off design; this scopes the override to the ticket only). */
+.bp-join-btn {
+  background: var(--accent-orange, #FF7A00) !important;
+  border-color: var(--accent-orange, #FF7A00) !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 0 14px rgba(255, 122, 0, 0.35) !important;
+}
+.bp-join-btn:hover:not(:disabled) {
+  background: #FF8A1F !important;
+  box-shadow: 0 0 20px rgba(255, 122, 0, 0.5) !important;
+}
+.bp-join-box {
+  border: 1px dashed var(--bp-line);
+  border-radius: 9px;
+  padding: 5px;
+}
+.bp-stub-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.bp-barcode-ticks {
+  font-family: monospace;
+  font-size: 13px;
+  letter-spacing: 1px;
+  color: var(--bp-ink-softer);
+}
+
 .login-landing-container {
   position: relative;
   z-index: 10;

@@ -84,10 +84,14 @@ export function AdminToolsPage({ categories, trips, expenses, onRefresh, isRefre
   const [showImportArea, setShowImportArea] = useState(false);
   const [toastMsg, setToastMsg] = useState('');
 
-  // Landing page backdrop customization state
-  const [activeBackdropUrl, setActiveBackdropUrl] = useState<string>(BACKDROP_PRESETS[0].url);
+  // Landing page backdrop customization state -- an ordered list now (was a
+  // single URL) so the Boarding Pass login can rotate through several
+  // destination photos. Order = selection order; no drag-reorder yet.
+  // ponytail: add drag-reorder if admins ask for a specific photo sequence.
+  const [selectedBackdropUrls, setSelectedBackdropUrls] = useState<string[]>([BACKDROP_PRESETS[0].url]);
   const [customBackdropInput, setCustomBackdropInput] = useState<string>('');
   const [isSavingBackdrop, setIsSavingBackdrop] = useState<boolean>(false);
+  const activeBackdropUrl = selectedBackdropUrls[0] || BACKDROP_PRESETS[0].url;
   const [landingHeadline, setLandingHeadline] = useState(DEFAULT_LANDING_HEADLINE);
   const [landingTagline, setLandingTagline] = useState(DEFAULT_LANDING_TAGLINE);
   const [landingInviteBlurb, setLandingInviteBlurb] = useState(DEFAULT_LANDING_INVITE_BLURB);
@@ -95,12 +99,18 @@ export function AdminToolsPage({ categories, trips, expenses, onRefresh, isRefre
   const [isSavingCopy, setIsSavingCopy] = useState(false);
 
   useEffect(() => {
-    fetchAppFlag('landing_backdrop_url')
+    fetchAppFlag('landing_backdrop_urls')
       .then((val) => {
-        if (typeof val === 'string' && val.trim()) {
-          setActiveBackdropUrl(val.trim());
-          setCustomBackdropInput(val.trim());
+        if (Array.isArray(val) && val.every((u) => typeof u === 'string') && val.length > 0) {
+          setSelectedBackdropUrls(val as string[]);
+          return;
         }
+        // Legacy fallback: installs that only ever set the single-URL flag.
+        return fetchAppFlag('landing_backdrop_url').then((legacy) => {
+          if (typeof legacy === 'string' && legacy.trim()) {
+            setSelectedBackdropUrls([legacy.trim()]);
+          }
+        });
       })
       .catch(() => {});
     fetchAppFlag('landing_headline')
@@ -262,9 +272,25 @@ export function AdminToolsPage({ categories, trips, expenses, onRefresh, isRefre
     setTimeout(() => setToastMsg(''), 3000);
   };
 
+  // Toggles a preset in/out of the selection; keeps at least one photo selected.
   const handleSelectPreset = (url: string) => {
-    setActiveBackdropUrl(url);
-    setCustomBackdropInput(url);
+    setSelectedBackdropUrls((prev) => {
+      if (prev.includes(url)) {
+        return prev.length > 1 ? prev.filter((u) => u !== url) : prev;
+      }
+      return [...prev, url];
+    });
+  };
+
+  const handleAddCustomUrl = () => {
+    const url = customBackdropInput.trim();
+    if (!url) return;
+    setSelectedBackdropUrls((prev) => (prev.includes(url) ? prev : [...prev, url]));
+    setCustomBackdropInput('');
+  };
+
+  const handleRemoveBackdrop = (url: string) => {
+    setSelectedBackdropUrls((prev) => (prev.length > 1 ? prev.filter((u) => u !== url) : prev));
   };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -274,22 +300,27 @@ export function AdminToolsPage({ categories, trips, expenses, onRefresh, isRefre
     reader.onload = (event) => {
       const dataUrl = event.target?.result as string;
       if (dataUrl) {
-        setActiveBackdropUrl(dataUrl);
-        setCustomBackdropInput(dataUrl);
+        setSelectedBackdropUrls((prev) => [...prev, dataUrl]);
       }
     };
     reader.readAsDataURL(file);
+    e.target.value = '';
   };
 
   const handleSaveBackdrop = async () => {
-    const targetUrl = customBackdropInput.trim() || activeBackdropUrl;
-    if (!targetUrl) return;
+    if (selectedBackdropUrls.length === 0) return;
     setIsSavingBackdrop(true);
     try {
-      await setAppConfigValue('landing_backdrop_url', targetUrl);
-      setActiveBackdropUrl(targetUrl);
-      try { localStorage.setItem('tt-landing-bg-cache', targetUrl); } catch {}
-      showToast('Landing page background successfully updated!');
+      await setAppConfigValue('landing_backdrop_urls', selectedBackdropUrls);
+      // Legacy single-URL flag stays in sync (first photo) so the
+      // Boarding-Pass-off login screen and any older client keep working.
+      await setAppConfigValue('landing_backdrop_url', selectedBackdropUrls[0]);
+      try { localStorage.setItem('tt-landing-bg-cache', selectedBackdropUrls[0]); } catch {}
+      showToast(
+        selectedBackdropUrls.length > 1
+          ? `Landing backdrop updated — ${selectedBackdropUrls.length} photos rotating.`
+          : 'Landing page background successfully updated!'
+      );
     } catch {
       showToast('Failed to save background config.');
     } finally {
@@ -300,8 +331,9 @@ export function AdminToolsPage({ categories, trips, expenses, onRefresh, isRefre
   const handleResetBackdrop = async () => {
     setIsSavingBackdrop(true);
     try {
+      await setAppConfigValue('landing_backdrop_urls', null);
       await setAppConfigValue('landing_backdrop_url', null);
-      setActiveBackdropUrl(BACKDROP_PRESETS[0].url);
+      setSelectedBackdropUrls([BACKDROP_PRESETS[0].url]);
       setCustomBackdropInput('');
       try { localStorage.removeItem('tt-landing-bg-cache'); } catch {}
       showToast('Landing backdrop reset to Default Tropical Paradise.');
@@ -535,7 +567,7 @@ export function AdminToolsPage({ categories, trips, expenses, onRefresh, isRefre
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '10px', marginBottom: '4px' }}>
             <div>
               <h3 className="ops-section-title">Landing Page Cover Gallery</h3>
-              <p className="ops-section-sub">Select a high-resolution travel preset or upload custom photography for visitor onboarding.</p>
+              <p className="ops-section-sub">Select one or more presets, or add custom photography. Pick 2+ and the login screen rotates through them (used by the Boarding Pass Login flag).</p>
             </div>
             <div style={{ display: 'flex', gap: '6px' }}>
               <button
@@ -560,7 +592,7 @@ export function AdminToolsPage({ categories, trips, expenses, onRefresh, isRefre
 
           <div className="ops-gallery-grid">
             {BACKDROP_PRESETS.map((preset) => {
-              const isSelected = activeBackdropUrl === preset.url;
+              const isSelected = selectedBackdropUrls.includes(preset.url);
               return (
                 <button
                   key={preset.id}
@@ -568,7 +600,7 @@ export function AdminToolsPage({ categories, trips, expenses, onRefresh, isRefre
                   className="ops-gallery-item"
                   data-selected={isSelected}
                   onClick={() => handleSelectPreset(preset.url)}
-                  title={`Select ${preset.title}`}
+                  title={`${isSelected ? 'Remove' : 'Add'} ${preset.title}`}
                 >
                   <div
                     className="ops-gallery-thumb"
@@ -592,12 +624,23 @@ export function AdminToolsPage({ categories, trips, expenses, onRefresh, isRefre
                 className="ops-input mono"
                 placeholder="Or paste custom image URL (Unsplash, CDN, Supabase Storage)..."
                 value={customBackdropInput}
-                onChange={(e) => {
-                  setCustomBackdropInput(e.target.value);
-                  if (e.target.value.trim()) setActiveBackdropUrl(e.target.value.trim());
+                onChange={(e) => setCustomBackdropInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleAddCustomUrl();
+                  }
                 }}
                 style={{ flex: 1, minWidth: '240px' }}
               />
+              <button
+                type="button"
+                className="ops-btn"
+                onClick={handleAddCustomUrl}
+                disabled={!customBackdropInput.trim()}
+              >
+                + Add
+              </button>
               <label className="ops-btn" style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
                 <span>📁 Upload Photo</span>
                 <input
@@ -607,6 +650,43 @@ export function AdminToolsPage({ categories, trips, expenses, onRefresh, isRefre
                   style={{ display: 'none' }}
                 />
               </label>
+            </div>
+
+            {/* Selected photos, in rotation order */}
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', alignItems: 'center' }}>
+              <span style={{ fontSize: '11px', color: 'var(--text-secondary)', fontFamily: 'var(--font-family-mono)' }}>
+                {selectedBackdropUrls.length} selected{selectedBackdropUrls.length > 1 ? ' · rotating on the login screen' : ''}:
+              </span>
+              {selectedBackdropUrls.map((url, i) => {
+                const preset = BACKDROP_PRESETS.find((p) => p.url === url);
+                const label = preset ? preset.title : `Custom photo ${i + 1}`;
+                return (
+                  <span
+                    key={url}
+                    style={{
+                      display: 'inline-flex', alignItems: 'center', gap: '6px',
+                      padding: '3px 4px 3px 8px', borderRadius: '9999px',
+                      background: 'var(--bg-surface-hover)', border: '1px solid var(--border-color)',
+                      fontSize: '11px', color: 'var(--text-primary)',
+                    }}
+                  >
+                    {label}
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveBackdrop(url)}
+                      disabled={selectedBackdropUrls.length <= 1}
+                      title="Remove from rotation"
+                      style={{
+                        border: 'none', background: 'none', cursor: selectedBackdropUrls.length > 1 ? 'pointer' : 'not-allowed',
+                        color: 'var(--text-secondary)', fontSize: '13px', lineHeight: 1, padding: '2px',
+                        opacity: selectedBackdropUrls.length > 1 ? 1 : 0.4,
+                      }}
+                    >
+                      ✕
+                    </button>
+                  </span>
+                );
+              })}
             </div>
 
             {/* Live Landing Preview Banner */}

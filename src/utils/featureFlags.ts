@@ -28,6 +28,7 @@ export const CONSUMER_PACKS: ConsumerPackDef[] = [
       'enableContactInvite',
       'enableNotesTalkPackPass',
       'enableProgressiveNextUp',
+      'boardingPassLogin',
     ],
   },
   {
@@ -160,6 +161,17 @@ export const CONSUMER_PACKS: ConsumerPackDef[] = [
 ];
 
 export const FEATURE_FLAGS_META: Record<FeatureFlagKey, FeatureFlagMeta> = {
+  // Staged-rollout exception: Core normally defaults ON, but this replaces
+  // the traveler login/home screen for everyone the moment it ships, so it
+  // stays OFF until a superadmin arms it deliberately post-review.
+  boardingPassLogin: {
+    key: 'boardingPassLogin',
+    label: 'Boarding Pass Login',
+    description: 'ON: the traveler login/home screen becomes a ticket-styled boarding pass — perforated stub, rotating destination photo (from the Landing Page Cover Gallery below), gate-code quick-join, barcode-style staff link. OFF: today\'s glass-card login screen, unchanged. Does not touch the Superadmin credentials screen either way.',
+    category: 'core',
+    pack: 'core',
+    defaultEnabledForUsers: false,
+  },
   // Phase 1: Core Social Splitter
   enablePredictiveChips: {
     key: 'enablePredictiveChips',
@@ -905,6 +917,8 @@ export const FEATURE_FLAGS_META: Record<FeatureFlagKey, FeatureFlagMeta> = {
 };
 
 export const DEFAULT_FEATURE_FLAGS: Record<FeatureFlagKey, boolean> = {
+  // Staged-rollout exception, see FEATURE_FLAGS_META.boardingPassLogin.
+  boardingPassLogin: false,
   // Core — first and last minutes (default ON)
   enablePredictiveChips: true,
   enableRecycleBin: true,

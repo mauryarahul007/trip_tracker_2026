@@ -37,13 +37,20 @@ describe('featureFlags', () => {
   });
 
   it('defaults Core and Trip ON so first and last minutes are reachable', () => {
-    getPackFlagKeys('core').forEach((key) => {
-      expect(DEFAULT_FEATURE_FLAGS[key]).toBe(true);
-    });
+    // boardingPassLogin is a documented staged-rollout exception: it swaps
+    // the traveler login/home screen app-wide the moment it ships, so it
+    // stays OFF until a superadmin arms it deliberately. See its
+    // FEATURE_FLAGS_META description.
+    getPackFlagKeys('core')
+      .filter((key) => key !== 'boardingPassLogin')
+      .forEach((key) => {
+        expect(DEFAULT_FEATURE_FLAGS[key]).toBe(true);
+      });
     getPackFlagKeys('trip').forEach((key) => {
       expect(DEFAULT_FEATURE_FLAGS[key]).toBe(true);
     });
-    expect(getPackStatus('core', DEFAULT_FEATURE_FLAGS).status).toBe('armed');
+    expect(DEFAULT_FEATURE_FLAGS.boardingPassLogin).toBe(false);
+    expect(getPackStatus('core', DEFAULT_FEATURE_FLAGS).status).toBe('partial');
     expect(getPackStatus('trip', DEFAULT_FEATURE_FLAGS).status).toBe('armed');
   });
 
@@ -94,7 +101,7 @@ describe('featureFlags', () => {
       allArmed[k] = true;
     });
     expect(getPackStatus('core', allArmed).status).toBe('armed');
-    expect(getPackStatus('core', allArmed).activeCount).toBe(18);
+    expect(getPackStatus('core', allArmed).activeCount).toBe(19);
 
     const allSafed = { ...DEFAULT_FEATURE_FLAGS };
     getPackFlagKeys('core').forEach((k) => {
@@ -184,7 +191,7 @@ describe('featureFlags', () => {
 
   it('verifies that every flag in all packs can be enabled and disabled', () => {
     const allFlagKeys = Object.keys(DEFAULT_FEATURE_FLAGS) as (keyof typeof DEFAULT_FEATURE_FLAGS)[];
-    expect(allFlagKeys.length).toBe(90);
+    expect(allFlagKeys.length).toBe(91);
 
     allFlagKeys.forEach((flagKey) => {
       const disabledFlags = { ...DEFAULT_FEATURE_FLAGS, [flagKey]: false };

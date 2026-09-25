@@ -93,12 +93,19 @@ export function flagsForRecipe(id: FlagRecipeId): Record<FeatureFlagKey, boolean
   }
   if (id === 'on_the_road') {
     const next = { ...DEFAULT_FEATURE_FLAGS };
+    // Explicit "Core + Trip on" promise (this recipe's tagline) -- arm every
+    // current Core key rather than trusting DEFAULT_FEATURE_FLAGS to already
+    // be all-true there. boardingPassLogin is a staged-rollout exception
+    // that defaults OFF even in code, so a deliberate "arm Core" recipe
+    // still needs to say so explicitly.
+    for (const key of getPackFlagKeys('core')) next[key] = true;
     for (const packId of ['travel', 'pro', 'labs', 'ops'] as const) {
       for (const key of getPackFlagKeys(packId)) next[key] = false;
     }
     return next;
   }
   const next = { ...DEFAULT_FEATURE_FLAGS };
+  for (const key of getPackFlagKeys('core')) next[key] = true;
   for (const key of getPackFlagKeys('pro')) next[key] = true;
   for (const key of getPackFlagKeys('labs')) next[key] = false;
   for (const key of getPackFlagKeys('ops')) next[key] = false;

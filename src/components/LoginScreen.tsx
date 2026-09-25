@@ -30,6 +30,7 @@ export function LoginScreen() {
 
   const isSuperadmin = useTripStore((s) => s.isSuperadmin);
   const setUserIdentity = useTripStore((s) => s.setUserIdentity);
+  const boardingPassEnabled = useTripStore((s) => s.isFeatureEnabled('boardingPassLogin'));
   const signInSuperadmin = useAuthStore((s) => s.signInSuperadmin);
   const requestSuperadminPasswordReset = useAuthStore((s) => s.requestSuperadminPasswordReset);
 
@@ -47,6 +48,13 @@ export function LoginScreen() {
   const [landingInviteBlurb, setLandingInviteBlurb] = useState(DEFAULT_LANDING_INVITE_BLURB);
   const [quickJoinCode, setQuickJoinCode] = useState('');
   const [honeypotVal, setHoneypotVal] = useState('');
+
+  // Boarding Pass only: rotating destination-photo backdrop. Left empty when
+  // the flag is off (and no network call is made) -- the classic single
+  // `landingBackdrop` above still drives that screen unchanged.
+  const [boardingPassBackdrops, setBoardingPassBackdrops] = useState<string[]>([]);
+  const [bgIndex, setBgIndex] = useState(0);
+  const backdropRotation = boardingPassBackdrops.length > 0 ? boardingPassBackdrops : [landingBackdrop];
 
   // Superadmin credentials form states
   const [adminMode, setAdminMode] = useState<'login' | 'forgot'>('login');
@@ -88,6 +96,27 @@ export function LoginScreen() {
       .then((v) => setLandingInviteBlurb(asCopyString(v, DEFAULT_LANDING_INVITE_BLURB)))
       .catch(() => {});
   }, []);
+
+  // Boarding Pass only: the rotating-photo array. Skipped entirely when the
+  // flag is off, so the classic screen makes no extra network call.
+  useEffect(() => {
+    if (!boardingPassEnabled) return;
+    fetchAppFlag('landing_backdrop_urls')
+      .then((v) => {
+        if (Array.isArray(v) && v.every((u) => typeof u === 'string') && v.length > 0) {
+          setBoardingPassBackdrops(v as string[]);
+        }
+      })
+      .catch(() => {});
+  }, [boardingPassEnabled]);
+
+  useEffect(() => {
+    if (!boardingPassEnabled || backdropRotation.length <= 1) return;
+    const id = setInterval(() => {
+      setBgIndex((i) => (i + 1) % backdropRotation.length);
+    }, 5000);
+    return () => clearInterval(id);
+  }, [boardingPassEnabled, backdropRotation.length]);
 
   const syncRealIdentity = () => {
     const sessionState = useAuthStore.getState().session;
@@ -155,20 +184,196 @@ export function LoginScreen() {
   }
 
   return (
-    <div className="login-screen-wrap">
+    <div className={`login-screen-wrap${boardingPassEnabled ? ' boarding-pass-mode' : ''}`}>
       {/* Scenic Background & Ambient decorative layers */}
-      <div
-        className="login-landing-scenic-bg"
-        style={{
-          backgroundImage: `linear-gradient(180deg, rgba(7, 11, 18, 0.28) 0%, rgba(7, 11, 18, 0.78) 52%, #070B12 100%), url("${landingBackdrop}")`,
-        }}
-        aria-hidden="true"
-      />
+      {persona === 'traveler' && boardingPassEnabled ? (
+        <>
+          <div className="login-landing-scenic-stack" aria-hidden="true">
+            {backdropRotation.map((url, i) => (
+              <div
+                key={url + i}
+                className="login-landing-scenic-layer"
+                style={{ backgroundImage: `url("${url}")`, opacity: i === bgIndex ? 1 : 0 }}
+              />
+            ))}
+          </div>
+          <div className="login-landing-scenic-scrim" aria-hidden="true" />
+        </>
+      ) : (
+        <div
+          className="login-landing-scenic-bg"
+          style={{
+            backgroundImage: `linear-gradient(180deg, rgba(7, 11, 18, 0.28) 0%, rgba(7, 11, 18, 0.78) 52%, #070B12 100%), url("${landingBackdrop}")`,
+          }}
+          aria-hidden="true"
+        />
+      )}
       <div className="login-ambient-mesh" aria-hidden="true" />
       <div className="login-flight-grid" aria-hidden="true" />
 
       <div className="login-landing-container fade-in">
         {persona === 'traveler' ? (
+          boardingPassEnabled ? (
+          <>
+            {/* Top Hero Section, boarding-pass style. The container uses
+                justify-content:space-between, which used to split its space
+                between this header and the in-flow ticket -- now that the
+                ticket is position:fixed, this header is the ONLY flow
+                child, so it gets pinned to the bottom by space-between
+                unless it keeps something after it. The feature pills live
+                inside the header (not as a sibling) so they stay part of
+                the same flex item and render near the top, not hidden
+                behind the fixed ticket at the bottom. The header's own
+                margin-bottom:auto is cancelled for the same reason -- it
+                would otherwise push this whole block to the bottom too. */}
+            <header className="login-landing-hero" style={{ marginBottom: 0 }}>
+              <div className="login-landing-badge">
+                <span>🌴</span> PARADISE EDITION · 2026
+              </div>
+              <h1 className="login-landing-title">{landingHeadline}</h1>
+              <p className="login-landing-subtitle">
+                {landingTagline}
+              </p>
+              {backdropRotation.length > 1 && (
+                <div className="bp-rotation-dots" aria-hidden="true">
+                  {backdropRotation.map((url, i) => (
+                    <span key={url + i} data-active={i === bgIndex} />
+                  ))}
+                </div>
+              )}
+
+              {/* Fills the open photo space with the same translucent glass
+                  pills the classic screen already uses. */}
+              <div className="login-feature-pills" role="list" aria-label="Key app features">
+                <div className="login-feature-pill" role="listitem">
+                  <span className="login-pill-icon" aria-hidden="true">⚡</span>
+                  <span>100% Offline-First</span>
+                </div>
+                <div className="login-feature-pill" role="listitem">
+                  <span className="login-pill-icon" aria-hidden="true">⚖️</span>
+                  <span>Smart Splits</span>
+                </div>
+                <div className="login-feature-pill" role="listitem">
+                  <span className="login-pill-icon" aria-hidden="true">🌐</span>
+                  <span>Instant Sync</span>
+                </div>
+              </div>
+            </header>
+
+            {/* Boarding-pass ticket: reuses the app's existing .boarding-pass /
+                .bp-* design language (see BoardingPassHeroCard.tsx) rather than
+                a bespoke card, so this reads as the same product. */}
+            <main className="boarding-pass login-boarding-pass">
+              <div className="bp-seam-perf" aria-hidden="true" />
+
+              <div className="bp-ticket-fields">
+                <div>
+                  <div className="bp-eyebrow">Passenger</div>
+                  <div className="bp-title">You</div>
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <div className="bp-eyebrow">Status</div>
+                  <div className="bp-meta" style={{ marginTop: '2px' }}>Not signed in</div>
+                </div>
+              </div>
+
+              {authError && (
+                <div role="alert" className="login-alert-banner danger">
+                  <div className="login-alert-header">
+                    <IconAlertCircle size={15} />
+                    <span>{authError}</span>
+                  </div>
+                  <div className="login-alert-actions">
+                    <button
+                      type="button"
+                      onClick={clearAuthError}
+                      className="login-alert-dismiss-btn"
+                    >
+                      Dismiss
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {signInsPaused && (
+                <div role="alert" className="login-alert-banner warning">
+                  <IconAlertCircle size={15} />
+                  <span>New sign-ins are temporarily paused. Please check back shortly.</span>
+                </div>
+              )}
+
+              <button
+                type="button"
+                disabled={signInsPaused}
+                onClick={() => {
+                  triggerHaptic('medium');
+                  signInWithGoogle(redirectPath);
+                }}
+                className="login-btn-google"
+                title="Sign in with Google Account"
+              >
+                <svg viewBox="0 0 24 24" width="20" height="20" className="login-google-icon" aria-hidden="true">
+                  <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                  <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                  <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" fill="#FBBC05"/>
+                  <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                </svg>
+                <span>Board with Google</span>
+              </button>
+
+              <p className="login-legal-consent-notice" style={{ margin: 0 }}>
+                By boarding, you agree to our{' '}
+                <Link to="/terms" className="login-legal-link">Terms</Link>
+                {' '}&amp;{' '}
+                <Link to="/privacy" className="login-legal-link">Privacy Policy</Link>.
+              </p>
+
+              <form onSubmit={handleQuickJoinSubmit} className="login-inline-join-wrap bp-join-box">
+                <div style={{ display: 'none' }} aria-hidden="true">
+                  <label htmlFor="landing_join_hp_bp">Leave empty</label>
+                  <input
+                    id="landing_join_hp_bp"
+                    type="text"
+                    name="landing_join_hp"
+                    value={honeypotVal}
+                    onChange={(e) => setHoneypotVal(e.target.value)}
+                    tabIndex={-1}
+                    autoComplete="off"
+                  />
+                </div>
+                <input
+                  type="text"
+                  placeholder="GATE CODE · 6 digits"
+                  value={quickJoinCode}
+                  onChange={(e) => setQuickJoinCode(e.target.value)}
+                  className="login-inline-join-input"
+                  aria-label="Enter 6-digit trip code"
+                />
+                <button
+                  type="submit"
+                  disabled={!quickJoinCode.trim()}
+                  className="login-inline-join-btn bp-join-btn"
+                >
+                  Join
+                </button>
+              </form>
+
+              <div className="bp-stub-foot">
+                <span className="bp-barcode-ticks" aria-hidden="true">▌│█║▌║▌║</span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    triggerHaptic('light');
+                    setPersona('admin');
+                  }}
+                  className="landing-glass-footer-link"
+                >
+                  Staff ›
+                </button>
+              </div>
+            </main>
+          </>
+          ) : (
           <>
             {/* Top Hero Section (Public Visitor Experience) */}
             <header className="login-landing-hero">
@@ -308,6 +513,7 @@ export function LoginScreen() {
               </footer>
             </main>
           </>
+          )
         ) : (
           /* Superadmin Mode */
           <main className="landing-glass-card">

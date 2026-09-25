@@ -9,6 +9,14 @@ export interface ChangelogEntry {
 // parsed from decisions.md/BUGS.md: those are prose for developers, not client data.
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: '3.40.0',
+    date: '2026-09-25',
+    changes: [
+      'Boarding Pass login screen (behind a Superadmin flag, off by default): the traveler login/home screen can now be switched to a ticket-styled design — perforated seam, gate-code quick-join, rotating destination-photo backdrop, barcode-style staff link.',
+      'Landing Page Cover Gallery (Superadmin → Ops Deck) now supports selecting multiple destination photos, which the Boarding Pass screen rotates through automatically.',
+    ],
+  },
+  {
     version: '3.39.2',
     date: '2026-09-25',
     changes: [

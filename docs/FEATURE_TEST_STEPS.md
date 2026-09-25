@@ -21,6 +21,7 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 
 | Shipped | Version | Id | Section |
 |--------|---------|-----|---------|
+| 2026-09-25 | unreleased | FEAT-BOARDINGPASS | [Boarding Pass login screen + rotating backdrop gallery](#feat-boardingpass--boarding-pass-login-screen--rotating-backdrop-gallery) |
 | 2026-09-24 | v3.37.2 | BUG-245 | [Remove home cross-trip IOU strip](#bug-245--remove-home-cross-trip-iou-strip) |
 | 2026-09-23 | v3.37.1 | BUG-244 | [iOS visible height and compositor](#ios-visible-height-and-compositor) |
 | 2026-09-22 | v3.37.0 | FEAT-GROWTH2 | [Growth: invite conversion, telemetry, passport, nudges](#feat-growth2--invite-conversion-telemetry-passport-nudges) |
@@ -1098,6 +1099,41 @@ Two related performance fixes: Ops Deck / Bug Ledger no longer download the whol
 ### Pass
 - iPhone home fits the visible height, and sheet snaps do not wake the map mid-animation.
 - Android look and motion are unchanged.
+
+---
+
+## FEAT-BOARDINGPASS — Boarding Pass login screen + rotating backdrop gallery
+
+**Commit:** unreleased (local testing, not yet pushed). **Migrations:** none (`app_config.value` is already `jsonb`).
+
+### Flags
+| Behavior | Flag | Default |
+|----------|------|---------|
+| Traveler login/home screen becomes a ticket-styled boarding pass (perforated stub, gate-code join, barcode-style staff link, rotating destination photo) | `boardingPassLogin` | **OFF** — staged-rollout exception to Core's normal default-ON, since this replaces the entry screen for every traveler. Arm deliberately in Ops Deck → Flags. |
+
+Superadmin credentials screen (`Superadmin` link on the login page) is unchanged either way.
+
+### Prep
+1. Superadmin → Ops Deck → **Visuals & Branding** → Landing Page Cover Gallery: select 2–3 presets (or add a custom URL / upload a photo) and **Apply Background**. Confirm the chip row shows "N selected · rotating on the login screen."
+2. Superadmin → Ops Deck → **Flags**: locate `Boarding Pass Login` (Core pack) and arm it.
+
+### Steps
+1. Sign out, load `/login`. Confirm the ticket layout: "PASSENGER / You / Not signed in" header, dashed perforation, **Board with Google** button, Terms of Service + Privacy Policy links directly under it, a second perforation, a **GATE CODE** join field + Join button, and a 256-bit encryption seal + Superadmin link at the bottom.
+2. If 2+ photos were selected in prep, confirm small rotation dots appear under the tagline, and the backdrop photo crossfades to the next one every ~5s (dot moves with it). With only 1 photo selected, no dots should render and the backdrop stays static.
+3. Confirm **Terms of Service** and **Privacy Policy** links navigate correctly and are reachable before any sign-in action.
+4. Tap **Board with Google** and confirm the normal Google OAuth flow still starts (unchanged handler).
+5. Enter a valid 6-digit trip code in the gate-code field and confirm **Join** still routes to `/join/:code` (unchanged handler).
+6. Tap **Superadmin** and confirm the existing staff credentials screen still loads normally (this screen is not reskinned).
+7. Resize to desktop width and confirm the ticket stays centered and readable (no horizontal scroll).
+
+### Negative checks
+- Flag OFF → login screen is pixel-identical to the pre-existing glass-card design (no ticket, no perforation, no rotation dots); no extra network call for `landing_backdrop_urls` is made (check Network tab).
+- Removing photos down to 1 in the Cover Gallery removes the rotation dots and crossfade on next load; the gallery UI itself refuses to go below 1 selected photo (✕ button disables at the last one).
+- Old installs that only ever set the legacy single `landing_backdrop_url` (never the array) still show that one photo correctly, on both flag states.
+
+### Pass
+- Flag OFF: zero visual or behavioral change from before this change.
+- Flag ON: boarding-pass ticket renders correctly, legal links are visible pre-auth, Google sign-in and gate-code join both work unchanged, and multi-photo rotation crossfades smoothly with no console errors.
 
 ---
 
