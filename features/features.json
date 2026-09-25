@@ -1500,5 +1500,21 @@
     "shippedBy": "rahul",
     "shippedAt": "2026-09-21T18:40:03.951Z",
     "shippedNote": "Shipped in commit 09e8785 (v3.37.0). ADR 218. Migration 0108 applied to the live project on 2026-09-22 (after the code push). Edge function send-lifecycle-nudge not yet deployed."
+  },
+  {
+    "id": "FEAT-095",
+    "title": "Shorter Settings list",
+    "description": "Settings root is profile, this trip, notifications, appearance, data, help, and account. Digest, quiet hours, pass reminders, and mute sit behind Notifications.",
+    "category": "ui-ux",
+    "status": "shipped",
+    "requestedBy": "rahul",
+    "environment": {
+      "platform": "web"
+    },
+    "createdAt": "2026-09-25T21:53:55.242Z",
+    "updatedAt": "2026-09-25T21:53:55.242Z",
+    "shippedAt": "2026-09-25T21:53:55.242Z",
+    "shippedBy": "rahul",
+    "shippedNote": "Shipped in commit 6c802ed (v3.40.1). ADR 232. Root groups are profile, this trip, notifications, appearance, data, help, and account. No new flag."
   }
 ]

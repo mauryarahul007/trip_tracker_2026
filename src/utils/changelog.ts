@@ -9,6 +9,15 @@ export interface ChangelogEntry {
 // parsed from decisions.md/BUGS.md: those are prose for developers, not client data.
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: '3.40.1',
+    date: '2026-09-26',
+    changes: [
+      'Left and right swipe between trip tabs works again.',
+      'Summary shows one settlement explanation.',
+      'Settings opens as a shorter list: profile, this trip, notifications, appearance, data, help, and account.',
+    ],
+  },
+  {
     version: '3.40.0',
     date: '2026-09-25',
     changes: [

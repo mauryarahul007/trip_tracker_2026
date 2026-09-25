@@ -7279,5 +7279,58 @@
     "resolvedBy": "claude-cli",
     "resolvedAt": "2026-09-24T14:16:05.409Z",
     "resolutionNote": "Fixed in commit f062807 (v3.37.2). Removed the home You are owed / You owe strip and its Add button (duplicated the per-card add-expense) and deregistered the enableHomeNetBalance flag from the Superadmin registry. Settings cross-trip balances unchanged. ADR 220."
+  },
+  {
+    "id": "BUG-246",
+    "title": "Summary shows the same settlement explanation twice",
+    "description": "Minimizes transfers and Simplified Settlements both opened the same Settlement Algorithm dialog.",
+    "severity": "low",
+    "category": "ui-ux",
+    "status": "resolved",
+    "foundBy": "rahul",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Open Summary",
+      "Tap Minimizes transfers",
+      "Tap How it works on Simplified Settlements"
+    ],
+    "expectedBehavior": "One explanation of how simplified settlements work.",
+    "actualBehavior": "Two controls opened the same dialog.",
+    "diagnostics": {},
+    "createdAt": "2026-09-25T21:53:35.608Z",
+    "updatedAt": "2026-09-25T21:53:36.277Z",
+    "resolvedBy": "cursor-agent",
+    "resolvedAt": "2026-09-25T21:53:36.277Z",
+    "resolutionNote": "Fixed in commit 6c802ed (v3.40.1). Removed the Minimizes transfers link. How it works on the settlement card is the only explainer. ADR 232."
+  },
+  {
+    "id": "BUG-247",
+    "title": "Left and right swipe between trip tabs does nothing",
+    "description": "Swipe listeners bound before the trip screen mounted, and vertical tab panes were treated as horizontal scrollers, so left and right never changed tabs.",
+    "severity": "medium",
+    "category": "navigation",
+    "status": "resolved",
+    "foundBy": "rahul",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "1.0.0"
+    },
+    "reproSteps": [
+      "Open a trip",
+      "Swipe left or right on the tab content"
+    ],
+    "expectedBehavior": "A horizontal swipe moves to the next or previous bottom-nav tab.",
+    "actualBehavior": "Swiping left or right stays on the current tab.",
+    "diagnostics": {},
+    "createdAt": "2026-09-25T21:53:53.648Z",
+    "updatedAt": "2026-09-25T21:53:54.623Z",
+    "resolvedBy": "cursor-agent",
+    "resolvedAt": "2026-09-25T21:53:54.623Z",
+    "resolutionNote": "Fixed in commit 6c802ed (v3.40.1). Swipe binds when the trip main mounts, and vertical tab panes no longer cancel the gesture. ADR 232."
   }
 ]

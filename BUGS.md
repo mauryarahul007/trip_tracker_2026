@@ -9,10 +9,10 @@
 
 | Metric | Count | Status Notes |
 | :--- | :--- | :--- |
-| **Total Tracked** | **245** | All recorded bugs across sessions |
+| **Total Tracked** | **247** | All recorded bugs across sessions |
 | **🟢 Open** | **0** | No critical blockers, 0 High |
 | **🟡 In Progress** | **0** | Active investigation or fix |
-| **✅ Resolved** | **218** | Verified & closed |
+| **✅ Resolved** | **220** | Verified & closed |
 | **⚪ Won't Fix** | **27** | Expected behavior / deferred |
 
 ---
@@ -249,6 +249,8 @@
 | **BUG-243** | CI failing since v3.37.0: changelog entry missing for the bumped version | `general` | `medium` | `claude-cli` | `claude-cli` | Fixed in commit 4e7fa28. Added the 3.37.0 changelog entry; npm run lint, build and test all pass locally (405/405). Lesson: rerun the full test suite after the version bump, not before. |
 | **BUG-244** | iPhone home stack squashes and hitches versus Android | `performance` | `high` | `human` | `cursor-agent` | Fixed in commit 6a08470 (v3.37.1). WebKit sizes the card from visualViewport height minus measured chrome, drops the home-photo filter, and holds the map paused until the sheet snap ends. Android glass and 3D tilt unchanged. ADR 219. |
 | **BUG-245** | Home shows redundant You are owed strip and Add button under greeting | `ui-ux` | `low` | `human` | `claude-cli` | Fixed in commit f062807 (v3.37.2). Removed the home You are owed / You owe strip and its Add button (duplicated the per-card add-expense) and deregistered the enableHomeNetBalance flag from the Superadmin registry. Settings cross-trip balances unchanged. ADR 220. |
+| **BUG-246** | Summary shows the same settlement explanation twice | `ui-ux` | `low` | `rahul` | `cursor-agent` | Fixed in commit 6c802ed (v3.40.1). Removed the Minimizes transfers link. How it works on the settlement card is the only explainer. ADR 232. |
+| **BUG-247** | Left and right swipe between trip tabs does nothing | `navigation` | `medium` | `rahul` | `cursor-agent` | Fixed in commit 6c802ed (v3.40.1). Swipe binds when the trip main mounts, and vertical tab panes no longer cancel the gesture. ADR 232. |
 
 ---
 
