@@ -4064,3 +4064,95 @@ This document logs all meaningful technical decisions, library choices, design p
     - Spend amount (`#F8FAFC`), spend label (`rgba(255, 255, 255, 0.55)`), and temporal status dots remain crisp, vibrant, and AAA-accessible across all app themes.
 * **Trade-offs Accepted:**
   - Trip cards intentionally retain an obsidian dark photographic container even when the global app theme is Light. This matches industry standards (e.g. Netflix, Spotify, Apple Maps Guides) where multimedia/photo cards preserve cinematic contrast independently of surrounding app chrome.
+
+---
+
+## 228. Luxury Home Screen UI/UX Revamp: Consolidated Header, Universal Floating Action Dock, Real Spending Telemetry & Double-Bezel Card Stack
+* **Context:**
+  - The home screen previously suffered from vertical fragmentation and interaction mismatches:
+    1. Four separate vertical navigation and tool tiers (`home-header-row1`, `home-header-row2`, filter capsule, and card top bar) consumed over 110px of mobile screen space before displaying travel cards.
+    2. Stack View rendered a 120px+ arcade-style `TripSlideLauncher` with drag physics and vapor trails ("Slide left to Join · Slide right to Create"), an interaction pattern designed for irreversible actions like payments rather than routine primary actions.
+    3. The front card in `TripStack` only displayed `"N logged"` with an arbitrary progress bar (`expenseCount * 12%`) rather than actual expenditure amounts or budget telemetry.
+    4. The background ambient backdrop was blurred by only 3.5px, creating a sharp duplicate image behind the card instead of an ethereal chromatic aura.
+    5. The 0-trip empty state was a dashed-border wireframe box resembling an unfinished ledger.
+* **Decision:**
+  - **Consolidated Integrated Header:**
+    - Moved the view mode toggle (`concept-view-mode-pill`) into Row 1 alongside search and bug buttons, pairing mode switches with primary utilities.
+    - Streamlined Row 2 into a focused, low-profile status filter capsule (`All`, `Active`, `Past`, `Archived`) with count badges, reducing header height by over 40%.
+  - **Universal Floating Glass Action Dock:**
+    - Deprecated `TripSlideLauncher` and unified action buttons across both Stack and Grid views with a floating frosted-acrylic capsule (`.floating-action-dock`).
+    - Styled with `backdrop-filter: blur(24px)`, tactile micro-press haptics, and responsive bottom padding `max(20px, env(safe-area-inset-bottom) + 14px)`.
+    - Updated `readStackChrome` in `src/utils/stackChrome.ts` to measure the new dock height instead of the launcher, reclaiming ~70px of card height on iOS Safari / WebKit compositor.
+  - **Real Spend Telemetry & Budget Progress on Stack Cards:**
+    - Connected `tripSpending` and `useTripStore` expenses directly into `CardContent`.
+    - If a budget is set, displays `${currencySymbol}${spent} / ${currencySymbol}${budget}` with color-coded progress (emerald `<75%`, amber `75-95%`, crimson `>100%`).
+    - If no budget is set, displays `${currencySymbol}${spent} spent` with monospace tabular numbers.
+    - Updated `getTripStatusBadge` to display Flighty-style live context (`LIVE · DAY N`, `DEPARTS TODAY`, `STARTS TOMORROW`, `IN N DAYS`, `PAST · UNSETTLED`, `COMPLETED`).
+  - **Double-Bezel Card Enclosure & Motion Refinement:**
+    - Implemented machined squircle outer frame (`border-radius: 32px`, `border: 1.5px solid rgba(255, 255, 255, 0.14)`) and inner photo core (`border-radius: 28px`) with dual gradient scrim.
+    - Replaced chaotic depth tilt angles (`-2.5deg` and `2deg`) with clean parallel scale and brightness offsets (`scale(0.95)`, `filter: brightness(0.78)` for depth-1; `scale(0.90)`, `filter: brightness(0.58)` for depth-2).
+  - **Chromatic Ambient Glow & Boarding Pass Empty State:**
+    - Upgraded `.home-ambient-layer` to high-diffusion spatial blur (`filter: blur(70px) saturate(1.4) brightness(0.42); transform: scale(1.18)`), creating a rich glowing aura without competing with the card photo.
+    - Replaced dashed empty state with an aspirational "First Journey Boarding Pass" invitation card (`.luxury-boarding-empty`) featuring 3 quick-start destination inspiration chips and demo trip loader.
+* **Trade-offs Accepted:**
+  - The slide-to-confirm gesture was completely retired in favor of one-tap buttons with tactile micro-press. This trade-off was accepted because user friction is significantly reduced and ~70px of critical viewport height is reclaimed for travel photography and card content.
+
+---
+
+## 229. Frosted Glass Slider Launcher, Card Overlap Elimination & Header Layout Refinements
+* **Context:**
+  - Following the v3.39.1 home screen update, user feedback noted three critical issues:
+    1. The static pill dock (`+ New Trip | Join`) looked odd and replaced the beloved interactive slider interaction. The user requested a slider-type launcher with glass-like transparency.
+    2. The previous fixed action dock overlapped the bottom of the trip card face (obscuring user avatars, spend amount, and pagination dots).
+    3. The header looked clumsy and unrefined (disproportionate button sizes, squeezed title, and an unaligned floating filter row).
+* **Decision & Implementation:**
+  - **Frosted Glass Slide Launcher (`TripSlideLauncher.tsx`):**
+    - Redesigned as a high-end luxury frosted glass capsule (`rgba(15, 23, 42, 0.55)`, `backdrop-filter: blur(28px) saturate(180%)`, `border: 1px solid rgba(255, 255, 255, 0.16)`).
+    - Features a 44px translucent frosted glass thumb knob with a directional SVG glider that tilts smoothly with drag velocity.
+    - Integrated dual-mode interaction: immediate one-tap activation on the left (`‹ Join`) or right (`Create ›`) zones, plus fluid drag gestures with cross-device pointer capture (working seamlessly on touch, pen, and desktop mouse).
+    - Tactile haptic pulses on magnetic notch threshold crossing and release.
+    - Eliminated caption clutter for an ultra-sleek, clean profile.
+  - **Elimination of Card Overlap:**
+    - Root cause: In stack view, the previous dock had `position: fixed; bottom: 20px`, which pulled it out of normal flexbox layout, causing the card stage to expand all the way down into the dock's footprint. Additionally, `--stack-chrome` dynamic measurement was locked behind `isWebKitCompositor()`, skipping non-WebKit browsers (Chrome/Linux).
+    - Resolution: Placed `TripSlideLauncher` in normal flex flow directly beneath `.trip-stepper-dots` inside `.trips-screen-main`. Constrained `.trip-stack-stage` with `flex: 1 1 0%; min-height: 0; max-height: 100%; aspect-ratio: 3 / 4; width: auto; max-width: min(390px, calc((var(--app-vh, 100dvh) - var(--stack-chrome, 220px)) * 0.75)); margin: 0 auto 4px;`.
+    - Enabled `readStackChrome` for all browsers when `stackActive` is true, ensuring accurate dynamic measurement of header, stepper, launcher, and gaps.
+    - In Grid view, docked the slider in `.grid-floating-launcher` with `padding-bottom: calc(90px + env(safe-area-inset-bottom, 0px))` on `.concept2-grid-container`.
+  - **Refined Luxury Header:**
+    - Harmonized Row 1 with uniform 36px circular frosted glass touch targets: user avatar (left), search button (right), and a smart single-touch circular view toggle button (flipping between Stack and Grid views).
+    - Refined the "Journeys" editorial serif title to 22px Playfair Display, letter-spacing -0.015em, optically centered between equal-width flanks.
+    - Centered the Row 2 status filter capsule on screen and elevated active states from a harsh solid white block to a translucent frosted glass active indicator (`rgba(255, 255, 255, 0.18)` with subtle specular highlight and glow).
+    - Decreased header vertical bulk by ~24px, returning valuable screen height to the card stage.
+* **Trade-offs Accepted:**
+  - The slider thumb uses pointer capture for universal mouse and touch dragging. Because click and slide are both supported, the tap zones are tuned with a threshold so deliberate taps trigger instantly while drag micro-movements require passing a 35% magnetic commitment threshold before triggering.
+
+---
+
+## 230. Card Edge Bleed Fix, Multi-City Route Summary & Permanent Archived Filter Tab (v3.39.2)
+* **Context:**
+  - Following the v3.39.1 card revamp, user feedback reported three issues:
+    1. The right-side content on the stack card was bleeding out past the card boundary (`Manali → Shimla → Chandi... · ☁ 35°` pill exceeded card width and clipped).
+    2. Multi-city destinations (e.g. `Manali → Shimla → Chandigarh`) appeared cluttered and excessively long when stuffed into the compact card-top weather pill.
+    3. The "Archived" option was missing from the status filter capsule.
+* **Decision & Implementation:**
+  - **Card Edge Bleed Fix (`TripStack.tsx`, `index.css`):**
+    - Root cause: In `TripStack.tsx` and `index.css`, two separate compounding factors caused the card clipping:
+      1. `.concept1-weather-dest` held long destination strings next to the status pill, overflowing the top capsule.
+      2. `.trip-stack-stage` had `max-width: min(390px, calc(...))` with `width: auto` and `flex: 1 1 0%` inside a flex column with `overflow: hidden` on `.trip-stack`. On mobile viewports under 390px width (e.g. 360px-380px), the card's computed width from the 3:4 aspect ratio reached 390px, while the container width was only ~348px. Because `max-width: 100%` was missing, the card exceeded the container width by ~42px, and `.trip-stack`'s `overflow: hidden` sliced off the right 42px of the card in a sharp vertical cut.
+    - Resolution:
+      1. Extracted only the primary hub (`routeInfo.primary`, e.g. `Manali`) for the top weather pill (`Manali · ☁ 35°C`), reducing width by over 120px. Clamped `.concept1-weather-capsule` to `max-width: calc(100% - 110px)`, `min-width: 0`, `overflow: hidden`, and `flex-shrink: 1`.
+      2. Anchored `.trip-stack` at `justify-content: flex-start;` and `.trip-stack-stage` at `margin: 6px auto 0 auto;` with `flex: 1 1 0%; height: 100%; max-height: 100%; width: 100%; max-width: min(100%, 390px);`, completely eliminating both the top gap below the filter capsule and the excessive bottom gap above the slider launcher.
+      3. Set `width: 100%; max-width: 100%; overflow: visible; box-sizing: border-box;` on `.trip-stack`.
+      4. Added `box-sizing: border-box !important; width: 100% !important; height: 100% !important; overflow: hidden;` to `.stack-card`, `.stack-card-sway`, and `.stack-card-face`.
+      5. The card now fills the vertical space smoothly, anchoring 6px below the filter capsule and terminating just 6px above the stepper dots, with the slide launcher immediately following (total gap reduced from ~95px down to ~20px). Zero clipping, zero excess gaps.
+  - **Multi-City Route Display (`tripDestination.ts`, `TripStack.tsx`, `index.css`):**
+    - Added `getItineraryRouteInfo` in `src/utils/tripDestination.ts` which decomposes routes into primary arrival hub, stops count, and smart summary:
+      - 1 city: Plain primary city name.
+      - 2-3 cities: Complete arrow itinerary `City A ➔ City B ➔ City C`.
+      - 4+ cities: Airline route style `Origin ➔ Final Destination · N stops`.
+    - Added a dedicated frosted route chip (`.concept1-route-row`) directly in the card body below the trip title (`📍 Manali ➔ Shimla ➔ Chandigarh`), giving multi-city itineraries clear visual prominence without cluttering the top bar.
+  - **Permanent Archived Filter Tab (`TripsListScreen.tsx`):**
+    - Removed `{categorizedCounts.archived > 0 && (` conditional wrapper so `[ All | Active | Past | Archived ]` is permanently visible in the header capsule. Displays a numeric badge when archived trips are present.
+* **Trade-offs Accepted:**
+  - The top-right weather capsule displays the primary arrival destination where weather is sampled, while the full journey route is highlighted prominently on the card face.
+
+

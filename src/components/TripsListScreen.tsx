@@ -11,7 +11,6 @@ import { newId } from '../utils/uuid';
 import { useTripStore } from '../store/tripStore';
 import { TripStack, useTripPhoto, useDestinationWeather, getFallbackTravelPhoto, PEEK_COVER_WIDTH } from './TripStack';
 import { sortTrips, type TripSortMode } from '../utils/tripSort';
-import { TripSlideLauncher } from './TripSlideLauncher';
 import { HomeAmbientBackdrop } from './HomeAmbientBackdrop';
 import { OnboardingSwipe } from './OnboardingSwipe';
 import { usePullToRefresh } from '../utils/usePullToRefresh';
@@ -22,8 +21,8 @@ import { useHistoryBack } from '../utils/useHistoryBack';
 import { useEscapeKey } from '../utils/useEscapeKey';
 import { fetchAppFlag } from '../services/tripApi';
 import { asCopyString, DEFAULT_EMPTY_TRIP_BLURB } from '../utils/landingCopy';
-import { isWebKitCompositor } from '../utils/tripStackMotion';
 import { readStackChrome } from '../utils/stackChrome';
+import { TripSlideLauncher } from './TripSlideLauncher';
 
 import { usePhotoTextTone } from '../utils/imageLuminance';
 import { extractPrimaryCity } from '../utils/tripDestination';
@@ -468,7 +467,7 @@ export function TripsListScreen({
     !showAddTrip;
 
   useEffect(() => {
-    if (!stackActive || !isWebKitCompositor()) return;
+    if (!stackActive) return;
     const root = scrollContainerRef.current;
     if (!root) return;
 
@@ -484,7 +483,7 @@ export function TripsListScreen({
 
     schedule();
     const observer = new ResizeObserver(schedule);
-    for (const sel of ['.home-unified-header', '.concept1-header', '.concept2-header', '.trips-screen-header', '.trips-section-header', '.trip-stepper-dots', '.trip-launcher']) {
+    for (const sel of ['.home-unified-header', '.concept1-header', '.concept2-header', '.trips-screen-header', '.trips-section-header', '.trip-stepper-dots', '.floating-action-dock', '.concept2-bottom-dock', '.trip-launcher']) {
       const el = root.querySelector(sel);
       if (el) observer.observe(el);
     }
@@ -701,7 +700,7 @@ export function TripsListScreen({
                 aria-label={enableCrossTripSearch ? 'Search all journeys (Cmd+K)' : 'Search (Cmd+K)'}
                 title={enableCrossTripSearch ? 'Search all journeys (Cmd+K)' : 'Search (Cmd+K)'}
               >
-                <IconSearch size={18} />
+                <IconSearch size={17} />
               </button>
             )}
             {onOpenBugTracker && (
@@ -715,10 +714,19 @@ export function TripsListScreen({
                 <span>🛡️</span>
               </button>
             )}
+            <button
+              type="button"
+              className="concept1-icon-btn view-toggle"
+              onClick={() => handleToggleViewMode(viewMode === 'stack' ? 'grid' : 'stack')}
+              aria-label={viewMode === 'stack' ? 'Switch to grid view' : 'Switch to stack view'}
+              title={viewMode === 'stack' ? 'Switch to grid view' : 'Switch to stack view'}
+            >
+              {viewMode === 'stack' ? <IconList size={17} /> : <IconLayers size={17} />}
+            </button>
           </div>
         </div>
 
-        {/* Row 2: Controls Bar - Filter Capsule & View Switcher at IDENTICAL Positions */}
+        {/* Row 2: Status Filter Capsule */}
         <div className="home-header-row2">
           <div className="concept2-filter-capsule" role="tablist" aria-label="Filter trips">
             <button
@@ -728,7 +736,7 @@ export function TripsListScreen({
               className={`concept2-filter-btn ${statusFilter === 'all' ? 'active' : ''}`}
               onClick={() => { triggerHaptic('light'); setStatusFilter('all'); }}
             >
-              All
+              All {categorizedCounts.all > 0 && <span className="filter-count-badge">{categorizedCounts.all}</span>}
             </button>
             <button
               type="button"
@@ -737,7 +745,7 @@ export function TripsListScreen({
               className={`concept2-filter-btn ${statusFilter === 'active' ? 'active' : ''}`}
               onClick={() => { triggerHaptic('light'); setStatusFilter('active'); }}
             >
-              Active
+              Active {categorizedCounts.active > 0 && <span className="filter-count-badge">{categorizedCounts.active}</span>}
             </button>
             <button
               type="button"
@@ -748,37 +756,14 @@ export function TripsListScreen({
             >
               Past
             </button>
-            {categorizedCounts.archived > 0 && (
-              <button
-                type="button"
-                role="tab"
-                aria-selected={statusFilter === 'archived'}
-                className={`concept2-filter-btn ${statusFilter === 'archived' ? 'active' : ''}`}
-                onClick={() => { triggerHaptic('light'); setStatusFilter('archived'); }}
-              >
-                Archived
-              </button>
-            )}
-          </div>
-
-          <div className="concept-view-mode-pill" role="group" aria-label="View mode">
             <button
               type="button"
-              className={`concept-view-mode-btn ${viewMode === 'stack' ? 'active' : ''}`}
-              onClick={() => handleToggleViewMode('stack')}
-              aria-label="Stacked cards view"
-              title="Stacked cards view"
+              role="tab"
+              aria-selected={statusFilter === 'archived'}
+              className={`concept2-filter-btn ${statusFilter === 'archived' ? 'active' : ''}`}
+              onClick={() => { triggerHaptic('light'); setStatusFilter('archived'); }}
             >
-              <IconLayers size={17} />
-            </button>
-            <button
-              type="button"
-              className={`concept-view-mode-btn ${viewMode === 'grid' ? 'active' : ''}`}
-              onClick={() => handleToggleViewMode('grid')}
-              aria-label="All trips view"
-              title="All trips view"
-            >
-              <IconList size={17} />
+              Archived {categorizedCounts.archived > 0 && <span className="filter-count-badge">{categorizedCounts.archived}</span>}
             </button>
           </div>
         </div>
@@ -1054,34 +1039,75 @@ export function TripsListScreen({
 
         {/* Trips List Grid */}
         {trips.length === 0 ? (
-          <div className="glass-card ledger-empty" style={{ borderStyle: 'dashed', position: 'relative' }}>
-            <div className="ledger-rule" />
-            <div className="ledger-empty-prompt">
-              <span className="ledger-badge ledger-badge-tilt-right" aria-hidden="true">
-                <IconMapPin size={14} className="icon-sm" />
-              </span>
-              {isFirstRun ? (
-                <p>Welcome aboard. A trip holds your <strong>members</strong>, the <strong>expenses</strong> they log, and the <strong>splits</strong> between them — start one to see it come together.</p>
-              ) : (
-                <p>{emptyTripBlurb}</p>
-              )}
-              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'center', marginTop: '12px' }}>
-                <button className="gradient-btn" onClick={() => setShowAddTrip(true)}>
-                  Create Your First Trip
+          <div className="luxury-boarding-empty">
+            <div className="luxury-boarding-glow" aria-hidden="true" />
+            <div className="luxury-boarding-badge">
+              <span>✈️</span> READY FOR DEPARTURE
+            </div>
+            <h2 className="luxury-boarding-title">Where will your next journey begin?</h2>
+            <p className="luxury-boarding-subtitle">
+              {isFirstRun
+                ? 'Coordinate travelers, log shared expenses in real-time, and settle balances effortlessly on your next expedition.'
+                : emptyTripBlurb}
+            </p>
+
+            <div className="luxury-boarding-chips-section">
+              <span className="luxury-boarding-chips-label">QUICK INSPIRATION</span>
+              <div className="luxury-boarding-chips-row">
+                <button
+                  type="button"
+                  className="luxury-inspiration-chip"
+                  onClick={() => {
+                    handleApplyTemplate('weekend');
+                    setShowAddTrip(true);
+                  }}
+                >
+                  🏖️ Weekend Getaway
                 </button>
-                {onLoadDemoTrip && isFeatureEnabled('enableDemoSeeding') && (
-                  <button
-                    type="button"
-                    className="secondary-btn"
-                    onClick={onLoadDemoTrip}
-                    style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
-                  >
-                    <span>✨</span> Load Demo Trip
-                  </button>
-                )}
+                <button
+                  type="button"
+                  className="luxury-inspiration-chip"
+                  onClick={() => {
+                    handleApplyTemplate('roadtrip');
+                    setShowAddTrip(true);
+                  }}
+                >
+                  🚗 Mountain Road Trip
+                </button>
+                <button
+                  type="button"
+                  className="luxury-inspiration-chip"
+                  onClick={() => {
+                    handleApplyTemplate('vacation');
+                    setShowAddTrip(true);
+                  }}
+                >
+                  ✈️ International Vacation
+                </button>
               </div>
             </div>
-            <div className="ledger-rule" />
+
+            <div className="luxury-boarding-actions">
+              <button
+                type="button"
+                className="luxury-boarding-cta-btn"
+                onClick={() => setShowAddTrip(true)}
+              >
+                <IconPlus size={16} />
+                <span>Create Your First Journey</span>
+              </button>
+              {onLoadDemoTrip && isFeatureEnabled('enableDemoSeeding') && (
+                <button
+                  type="button"
+                  className="luxury-boarding-demo-btn"
+                  onClick={onLoadDemoTrip}
+                >
+                  <span>✨</span>
+                  <span>Explore Demo Trip</span>
+                </button>
+              )}
+            </div>
+
             {isFirstRun && (
               <OnboardingSwipe
                 userId={userId}
@@ -1116,6 +1142,7 @@ export function TripsListScreen({
                   onSortModeChange={sortToggleOn ? changeSortMode : undefined}
                   members={members}
                   settledTripIds={settledTripIds}
+                  tripSpending={tripSpending}
                   userId={userId}
                   onSelectTrip={onSelectTrip}
                   onQuickAddExpense={onQuickAddExpense ? (tripId) => {
@@ -1159,58 +1186,50 @@ export function TripsListScreen({
                     ))}
                   </div>
                 )}
-                <TripSlideLauncher
-                  onCreateTrip={() => setShowAddTrip(true)}
-                  onJoinTrip={() => setShowJoinTrip(true)}
-                />
+
+                {!showAddTrip && !showJoinTrip && (
+                  <TripSlideLauncher
+                    onCreateTrip={() => {
+                      triggerHaptic('medium');
+                      setShowAddTrip(true);
+                    }}
+                    onJoinTrip={() => {
+                      triggerHaptic('light');
+                      setShowJoinTrip(true);
+                    }}
+                  />
+                )}
               </>
             ) : (
-              <>
-                <div className="concept2-grid-container">
-                  <div className="concept2-grid">
-                    {displayedTrips.map((trip: Trip) => (
-                      <LuxuryGridTripCard
-                        key={trip.id}
-                        trip={trip}
-                        members={members}
-                        tripSpending={tripSpending}
-                        onSelectTrip={onSelectTrip}
-                        onOpenActionSheet={setActionSheetTrip}
-                      />
-                    ))}
-                  </div>
+              <div className="concept2-grid-container">
+                <div className="concept2-grid">
+                  {displayedTrips.map((trip: Trip) => (
+                    <LuxuryGridTripCard
+                      key={trip.id}
+                      trip={trip}
+                      members={members}
+                      tripSpending={tripSpending}
+                      onSelectTrip={onSelectTrip}
+                      onOpenActionSheet={setActionSheetTrip}
+                    />
+                  ))}
                 </div>
 
                 {!showAddTrip && !showJoinTrip && (
-                  <>
-                    <div className="concept2-bottom-scrim" aria-hidden="true" />
-                    <div className="concept2-bottom-dock">
-                      <button
-                        type="button"
-                        className="concept2-new-trip-pill"
-                        onClick={() => {
-                          triggerHaptic('medium');
-                          setShowAddTrip(true);
-                        }}
-                      >
-                        <IconPlus size={15} />
-                        <span>New Trip</span>
-                      </button>
-                      <button
-                        type="button"
-                        className="concept2-join-trip-btn"
-                        onClick={() => {
-                          triggerHaptic('light');
-                          setShowJoinTrip(true);
-                        }}
-                      >
-                        <IconQrCode size={13} />
-                        <span>Join</span>
-                      </button>
-                    </div>
-                  </>
+                  <div className="grid-floating-launcher">
+                    <TripSlideLauncher
+                      onCreateTrip={() => {
+                        triggerHaptic('medium');
+                        setShowAddTrip(true);
+                      }}
+                      onJoinTrip={() => {
+                        triggerHaptic('light');
+                        setShowJoinTrip(true);
+                      }}
+                    />
+                  </div>
                 )}
-              </>
+              </div>
             )}
           </>
         )}

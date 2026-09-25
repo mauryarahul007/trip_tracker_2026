@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { extractPrimaryCity } from './tripDestination';
+import { extractPrimaryCity, getItineraryRouteInfo } from './tripDestination';
 
 describe('extractPrimaryCity', () => {
   it('extracts first city from arrow-separated multi-destination routes', () => {
@@ -55,5 +55,50 @@ describe('extractPrimaryCity', () => {
       primary: '',
       full: '',
     });
+  });
+});
+
+describe('getItineraryRouteInfo', () => {
+  it('formats single destination properly', () => {
+    const info = getItineraryRouteInfo('Manali');
+    expect(info).toEqual({
+      primary: 'Manali',
+      full: 'Manali',
+      segments: ['Manali'],
+      stopsCount: 1,
+      routeSummary: 'Manali',
+      badgeSummary: 'Manali',
+    });
+  });
+
+  it('formats 2-3 stops with full arrow path', () => {
+    const info = getItineraryRouteInfo('Manali → Shimla → Chandigarh');
+    expect(info).toEqual({
+      primary: 'Manali',
+      full: 'Manali → Shimla → Chandigarh',
+      segments: ['Manali', 'Shimla', 'Chandigarh'],
+      stopsCount: 3,
+      routeSummary: 'Manali ➔ Shimla ➔ Chandigarh',
+      badgeSummary: 'Manali (+2)',
+    });
+  });
+
+  it('summarizes 4+ stops to avoid visual clutter', () => {
+    const info = getItineraryRouteInfo('Delhi → Agra → Jaipur → Jodhpur → Udaipur');
+    expect(info).toEqual({
+      primary: 'Delhi',
+      full: 'Delhi → Agra → Jaipur → Jodhpur → Udaipur',
+      segments: ['Delhi', 'Agra', 'Jaipur', 'Jodhpur', 'Udaipur'],
+      stopsCount: 5,
+      routeSummary: 'Delhi ➔ Udaipur · 5 stops',
+      badgeSummary: 'Delhi (+4)',
+    });
+  });
+
+  it('handles empty or undefined destinations safely', () => {
+    const info = getItineraryRouteInfo('');
+    expect(info.stopsCount).toBe(0);
+    expect(info.primary).toBe('');
+    expect(info.routeSummary).toBe('');
   });
 });

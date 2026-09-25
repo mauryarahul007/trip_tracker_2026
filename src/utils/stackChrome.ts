@@ -63,6 +63,6 @@ export function readStackChrome(root: HTMLElement): number {
     section: visibleHeight(root.querySelector('.trips-section-header')),
     netRow: visibleHeight(root.querySelector('.home-net-row')),
     stepper: visibleHeight(root.querySelector('.trip-stepper-dots')),
-    launcher: visibleHeight(root.querySelector('.trip-launcher')),
+    launcher: visibleHeight(root.querySelector('.trip-launcher') || root.querySelector('.grid-floating-launcher') || root.querySelector('.floating-action-dock') || root.querySelector('.concept2-bottom-dock')),
   });
 }

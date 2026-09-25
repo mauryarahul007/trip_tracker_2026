@@ -10,6 +10,9 @@ import { triggerHaptic } from '../utils/haptics';
 import { getDestinationWeatherRealtime, type WeatherData } from '../services/weatherService';
 import { useEscapeKey } from '../utils/useEscapeKey';
 import { sortTrips, type TripSortMode } from '../utils/tripSort';
+import { getCurrencySymbol } from '../utils/currency';
+import { useTripStore } from '../store/tripStore';
+import { getItineraryRouteInfo } from '../utils/tripDestination';
 import {
   EXIT_TRANSITION_MS,
   SWIPE_THRESHOLD,
@@ -147,8 +150,11 @@ function useAmbientGlowColor(photoUrl: string | null): string | null {
   return glowColor;
 }
 
-// Compute contextual status badge (Ongoing / Upcoming / Closed / Archived) for card header
-function getTripStatusBadge(trip: { startDate?: string; endDate?: string; closed?: boolean; archived?: boolean }): { label: string; kind: 'ongoing' | 'upcoming' | 'closed' | 'archived' } | null {
+// Compute contextual status badge (Ongoing / Upcoming / Closed / Archived / Unsettled) for card header
+function getTripStatusBadge(
+  trip: { startDate?: string; endDate?: string; closed?: boolean; archived?: boolean },
+  isSettled?: boolean
+): { label: string; kind: 'ongoing' | 'upcoming' | 'closed' | 'archived' | 'unsettled' } | null {
   if (trip.archived) {
     return { label: 'ARCHIVED', kind: 'archived' };
   }
@@ -160,13 +166,20 @@ function getTripStatusBadge(trip: { startDate?: string; endDate?: string; closed
   const todayStr = localDateStr();
   if (todayStr >= startDate && todayStr <= endDate) {
     const day = tripDayNumber(startDate, todayStr);
-    return { label: day ? `ONGOING · DAY ${day}` : 'ONGOING', kind: 'ongoing' };
+    return { label: day ? `LIVE · DAY ${day}` : 'LIVE', kind: 'ongoing' };
   }
   if (todayStr < startDate) {
     const s = new Date(`${startDate}T00:00:00`).getTime();
     const t = new Date(`${todayStr}T00:00:00`).getTime();
     const diffDays = Math.ceil((s - t) / 86400000);
+    if (diffDays <= 0) return { label: 'DEPARTS TODAY', kind: 'ongoing' };
     return { label: diffDays === 1 ? 'STARTS TOMORROW' : `IN ${diffDays} DAYS`, kind: 'upcoming' };
+  }
+  if (todayStr > endDate) {
+    if (isSettled) {
+      return { label: 'COMPLETED', kind: 'closed' };
+    }
+    return { label: 'PAST · UNSETTLED', kind: 'unsettled' };
   }
   return null;
 }
@@ -193,6 +206,7 @@ type Props = {
   onSortModeChange?: (mode: TripSortMode) => void; // omit to hide the sort toggle
   members: Record<string, Member>;
   settledTripIds?: Record<string, boolean>;
+  tripSpending?: Record<string, number>;
   userId: string | null;
   onSelectTrip: (id: string) => void;
   onQuickAddExpense?: (tripId: string) => void;
@@ -264,14 +278,16 @@ export { usePhotoTextTone } from '../utils/imageLuminance';
 const CardContent = memo(function CardContent({
   trip,
   members,
-  isSettled: _isSettled,
+  isSettled,
   isFront = false,
+  tripSpending,
   onQuickAddExpense: _onQuickAddExpense,
 }: {
   trip: Trip;
   members: Record<string, Member>;
   isSettled?: boolean;
   isFront?: boolean;
+  tripSpending?: Record<string, number>;
   onQuickAddExpense?: (tripId: string) => void;
 }) {
   const itineraryProgress = useMemo(() => getItineraryProgress(trip.startDate, trip.endDate), [trip.startDate, trip.endDate]);
@@ -289,9 +305,15 @@ const CardContent = memo(function CardContent({
   const tone = usePhotoTextTone(effectivePhotoUrl);
   const { weather, isRefreshing, refresh: refreshWeather } = useDestinationWeather(trip.destination, trip.name, stopNames, isFront);
 
+  const routeInfo = useMemo(
+    () => getItineraryRouteInfo(trip.destination, trip.stops),
+    [trip.destination, trip.stops]
+  );
+  const displayCity = routeInfo.primary || trip.name;
+
   const statusBadge = useMemo(
-    () => getTripStatusBadge(trip),
-    [trip.startDate, trip.endDate, trip.closed, trip.archived]
+    () => getTripStatusBadge(trip, isSettled),
+    [trip.startDate, trip.endDate, trip.closed, trip.archived, isSettled]
   );
   const dateRangeStr = formatDateRange(trip.startDate, trip.endDate) || 'Dates pending';
   const tripDurationDays = useMemo(() => {
@@ -303,6 +325,24 @@ const CardContent = memo(function CardContent({
     return days > 0 ? `${days} Day${days === 1 ? '' : 's'}` : null;
   }, [trip.startDate, trip.endDate]);
 
+  const tripExpenses = useTripStore((s) => s.expenses);
+  const totalSpent = useMemo(() => {
+    if (tripSpending && typeof tripSpending[trip.id] === 'number') {
+      return tripSpending[trip.id];
+    }
+    return tripExpenses
+      .filter((e) => e.tripId === trip.id && !e.deletedAt && !e.isSettlement)
+      .reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
+  }, [tripSpending, tripExpenses, trip.id]);
+
+  const currencySymbol = getCurrencySymbol(trip.baseCurrency || 'USD') || '$';
+  const tripBudget = (trip as unknown as { budget?: number }).budget;
+  const hasBudget = typeof tripBudget === 'number' && tripBudget > 0;
+  const budgetRatio = hasBudget ? (totalSpent / tripBudget) : 0;
+  const budgetPercent = Math.min(100, Math.round(budgetRatio * 100));
+  const formattedSpent = totalSpent.toLocaleString(undefined, { maximumFractionDigits: 0 });
+  const formattedBudget = hasBudget ? tripBudget.toLocaleString(undefined, { maximumFractionDigits: 0 }) : '';
+
   return (
     <div className={`stack-card-face has-photo tone-${tone}`}>
       {effectivePhotoUrl && (
@@ -310,7 +350,7 @@ const CardContent = memo(function CardContent({
           key={effectivePhotoUrl}
           className="stack-card-photo"
           style={{
-            backgroundImage: `linear-gradient(180deg, rgba(8,12,20,0.45) 0%, rgba(8,12,20,0.08) 30%, rgba(8,12,20,0.85) 75%, rgba(8,12,20,0.98) 100%), url("${effectivePhotoUrl}")`
+            backgroundImage: `linear-gradient(180deg, rgba(8,12,20,0.55) 0%, rgba(8,12,20,0.06) 30%, rgba(8,12,20,0.85) 75%, rgba(8,12,20,0.98) 100%), url("${effectivePhotoUrl}")`
           }}
         />
       )}
@@ -324,7 +364,7 @@ const CardContent = memo(function CardContent({
           ) : (
             <div aria-hidden="true" />
           )}
-          {(trip.destination || weather) && (
+          {(routeInfo.primary || weather) && (
             <div
               className={`concept1-weather-capsule${isRefreshing ? ' refreshing' : ''}`}
               onClick={(e) => {
@@ -342,9 +382,9 @@ const CardContent = memo(function CardContent({
                   refreshWeather();
                 }
               }}
-              title={weather ? `Live: ${weather.condition} in ${weather.city}. Tap to refresh.` : trip.destination}
+              title={weather ? `Live: ${weather.condition} in ${weather.city}. Tap to refresh.` : routeInfo.full || displayCity}
             >
-              <span className="concept1-weather-dest">{trip.destination || trip.name}</span>
+              <span className="concept1-weather-dest">{displayCity}</span>
               {weather && (
                 <>
                   <span className="concept1-weather-sep">&middot;</span>
@@ -360,6 +400,13 @@ const CardContent = memo(function CardContent({
 
         <div className="concept1-card-body">
           <h2 className="concept1-trip-title">{trip.name}</h2>
+
+          {routeInfo.stopsCount > 1 && (
+            <div className="concept1-route-row" title={routeInfo.full}>
+              <span className="concept1-route-pin" aria-hidden="true">📍</span>
+              <span className="concept1-route-text">{routeInfo.routeSummary}</span>
+            </div>
+          )}
 
           <div className="concept1-dates-row">
             <span className="concept1-dates-label">{dateRangeStr.toUpperCase()}</span>
@@ -382,12 +429,19 @@ const CardContent = memo(function CardContent({
 
             <div className="concept1-spend-block">
               <div className="concept1-spend-text">
-                {expenseCount > 0 ? `${expenseCount} logged` : '0 expenses'}
+                {hasBudget ? (
+                  <>
+                    <span className="concept1-spend-val">{currencySymbol}{formattedSpent}</span>
+                    <span className="concept1-spend-target"> / {currencySymbol}{formattedBudget}</span>
+                  </>
+                ) : (
+                  <span className="concept1-spend-val">{currencySymbol}{formattedSpent} spent</span>
+                )}
               </div>
               <div className="concept1-spend-progress-track">
                 <div
-                  className="concept1-spend-progress-fill"
-                  style={{ width: `${Math.min(100, Math.max(15, expenseCount * 12))}%` }}
+                  className={`concept1-spend-progress-fill${hasBudget ? (budgetRatio > 1 ? ' over-budget' : budgetRatio > 0.8 ? ' near-budget' : ' under-budget') : ''}`}
+                  style={{ width: `${hasBudget ? budgetPercent : Math.min(100, Math.max(15, expenseCount * 12))}%` }}
                 />
               </div>
             </div>
@@ -409,6 +463,7 @@ type CardItemProps = {
   trip: Trip;
   members: Record<string, Member>;
   isSettled?: boolean;
+  tripSpending?: Record<string, number>;
   idx: number;
   totalTrips: number;
   canDelete: boolean;
@@ -437,6 +492,7 @@ function StackCardItem({
   trip,
   members,
   isSettled,
+  tripSpending,
   idx,
   totalTrips,
   canDelete,
@@ -754,6 +810,7 @@ function StackCardItem({
           members={members}
           isSettled={isSettled}
           isFront={isFront}
+          tripSpending={tripSpending}
           onQuickAddExpense={isFront ? onQuickAddExpense : undefined}
         />
       </div>
@@ -837,6 +894,7 @@ export function TripStack({
   onSortModeChange: _onSortModeChange,
   members,
   settledTripIds,
+  tripSpending,
   userId,
   onSelectTrip,
   onQuickAddExpense,
@@ -955,6 +1013,7 @@ export function TripStack({
             trip={trip}
             members={members}
             isSettled={settledTripIds?.[trip.id]}
+            tripSpending={tripSpending}
             idx={idx}
             totalTrips={trips.length}
             canDelete={canDelete(trip)}

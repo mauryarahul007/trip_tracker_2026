@@ -9,6 +9,17 @@ export interface ChangelogEntry {
 // parsed from decisions.md/BUGS.md: those are prose for developers, not client data.
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: '3.39.2',
+    date: '2026-09-25',
+    changes: [
+      'Card Edge Bleed Fix: Eliminated horizontal card clipping on narrow screens; rounded squircle borders and specular highlights are now fully visible.',
+      'Multi-City Route Display: Replaced crowded top capsules with a dedicated frosted route chip on the card body (e.g. Manali ➔ Shimla ➔ Chandigarh).',
+      'Refined Card Spacing: Anchored cards directly beneath the filter capsule and tightened micro-gaps to the pagination dots and slider launcher.',
+      'Permanent Archived Filter: Restored the Archived option in the status filter capsule across all trip views.',
+      'Frosted Glass Slider Launcher: Interactive slider launcher with glass transparency, smooth drag glider, and tap zones.',
+    ],
+  },
+  {
     version: '3.39.1',
     date: '2026-09-25',
     changes: [
