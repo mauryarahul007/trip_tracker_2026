@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useMemo } from 'react';
-import type { CSSProperties, RefObject } from 'react';
+import type { CSSProperties } from 'react';
 import { triggerHaptic } from './haptics';
 
 // Horizontal travel must clearly dominate vertical travel, or an ordinary
@@ -33,6 +33,69 @@ interface DragState {
 
 const IDLE: DragState = { active: false, settling: false, direction: null, deltaPercent: 0 };
 
+const HORIZONTAL_STRIP = '.filter-chips-track, .filter-chips-collapse, .filter-chips-scroll, [data-horizontal-scroll]';
+
+/** True when this touch should start a tab change. Vertical tab panes scroll
+ * on Y, so a wide card inside one must not cancel the gesture. Real
+ * horizontal strips (chips, data-horizontal-scroll) and non-edge row swipes
+ * still opt out. */
+export function shouldStartTabSwipe(
+  target: HTMLElement,
+  container: HTMLElement,
+  clientX: number,
+  readOverflowX: (el: HTMLElement) => string,
+): boolean {
+  const noSwipeEl = target.closest('[data-no-tab-swipe]');
+  if (noSwipeEl) {
+    const rect = container.getBoundingClientRect();
+    const inEdgeZone =
+      clientX - rect.left <= EDGE_ZONE_PX || rect.right - clientX <= EDGE_ZONE_PX;
+    if (noSwipeEl.getAttribute('data-no-tab-swipe') !== 'row' || !inEdgeZone) return false;
+  }
+
+  if (target.closest(HORIZONTAL_STRIP)) return false;
+
+  let current: HTMLElement | null = target;
+  while (current && current !== container) {
+    if (!current.classList.contains('tab-pane') && current.scrollWidth > current.clientWidth + 2) {
+      const overflowX = readOverflowX(current);
+      if (overflowX === 'auto' || overflowX === 'scroll') return false;
+    }
+    current = current.parentElement;
+  }
+  return true;
+}
+
+type TabSwipeHost = HTMLElement & {
+  addEventListener(type: string, listener: EventListener, options?: AddEventListenerOptions | boolean): void;
+  removeEventListener(type: string, listener: EventListener): void;
+};
+
+/** Attaches the gesture listeners. A null host (trip screen not mounted yet)
+ * is a no-op so a later mount can bind. */
+export function bindTabSwipe(
+  host: TabSwipeHost | null,
+  createHandlers: (el: TabSwipeHost) => {
+    start: (e: TouchEvent) => void;
+    move: (e: TouchEvent) => void;
+    end: (e: TouchEvent) => void;
+    cancel: () => void;
+  },
+): () => void {
+  if (!host) return () => {};
+  const handlers = createHandlers(host);
+  host.addEventListener('touchstart', handlers.start as EventListener, { passive: true });
+  host.addEventListener('touchmove', handlers.move as EventListener, { passive: false });
+  host.addEventListener('touchend', handlers.end as EventListener);
+  host.addEventListener('touchcancel', handlers.cancel as EventListener);
+  return () => {
+    host.removeEventListener('touchstart', handlers.start as EventListener);
+    host.removeEventListener('touchmove', handlers.move as EventListener);
+    host.removeEventListener('touchend', handlers.end as EventListener);
+    host.removeEventListener('touchcancel', handlers.cancel as EventListener);
+  };
+}
+
 export interface TabSwipeRender<T extends string> {
   /** Style overrides for the currently active tab's pane. Spread after the
    * pane's own `display` logic so it only takes effect during a live drag
@@ -53,7 +116,7 @@ export interface TabSwipeRender<T extends string> {
  * SwipeableRow, or a map that owns its own pan gesture, e.g.
  * TripMapHero/TripJourneyMap). */
 export function useTabSwipe<T extends string>(
-  containerRef: RefObject<HTMLElement | null>,
+  host: HTMLElement | null,
   tabs: readonly T[],
   activeTab: T,
   onSwipe: (tab: T) => void
@@ -76,41 +139,19 @@ export function useTabSwipe<T extends string>(
   );
 
   useEffect(() => {
-    const el = containerRef.current;
-    if (!el) return;
-
+    return bindTabSwipe(host, (el) => {
     const handleTouchStart = (e: TouchEvent) => {
       if (e.touches.length !== 1) return;
-      const target = e.target as HTMLElement;
+      const target = e.target as HTMLElement | null;
       if (!target) return;
       const startTouch = e.touches[0];
 
-      const noSwipeEl = target.closest('[data-no-tab-swipe]') as HTMLElement | null;
-      if (noSwipeEl) {
-        // "row" opt-outs (SwipeableRow) still yield to an edge-zone start so
-        // page swipe stays reachable; other opt-outs (maps, etc.) are a hard
-        // block regardless of start position.
-        const rect = el.getBoundingClientRect();
-        const inEdgeZone =
-          startTouch.clientX - rect.left <= EDGE_ZONE_PX || rect.right - startTouch.clientX <= EDGE_ZONE_PX;
-        if (noSwipeEl.getAttribute('data-no-tab-swipe') !== 'row' || !inEdgeZone) return;
-      }
-
-      if (
-        target.closest('.filter-chips-track, .filter-chips-collapse, .filter-chips-scroll, [data-horizontal-scroll]')
-      ) return;
-
-      // Dynamically ignore any horizontally scrollable container (e.g. chip strips)
-      let current: HTMLElement | null = target;
-      while (current && current !== el) {
-        if (current.scrollWidth > current.clientWidth + 2) {
-          const overflowX = window.getComputedStyle(current).overflowX;
-          if (overflowX === 'auto' || overflowX === 'scroll') {
-            return;
-          }
-        }
-        current = current.parentElement;
-      }
+      if (!shouldStartTabSwipe(
+        target,
+        el,
+        startTouch.clientX,
+        (node) => window.getComputedStyle(node).overflowX,
+      )) return;
 
       touchStartX.current = startTouch.clientX;
       touchStartY.current = startTouch.clientY;
@@ -199,18 +240,14 @@ export function useTabSwipe<T extends string>(
     };
     const handleTouchCancel = () => finish(0);
 
-    el.addEventListener('touchstart', handleTouchStart, { passive: true });
-    el.addEventListener('touchmove', handleTouchMove, { passive: false });
-    el.addEventListener('touchend', handleTouchEnd);
-    el.addEventListener('touchcancel', handleTouchCancel);
-    return () => {
-      el.removeEventListener('touchstart', handleTouchStart);
-      el.removeEventListener('touchmove', handleTouchMove);
-      el.removeEventListener('touchend', handleTouchEnd);
-      el.removeEventListener('touchcancel', handleTouchCancel);
+    return {
+      start: handleTouchStart,
+      move: handleTouchMove,
+      end: handleTouchEnd,
+      cancel: handleTouchCancel,
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [containerRef, tabs]);
+    });
+  }, [host, tabs, onSwipe]);
 
   return useMemo(() => {
     const isLive = drag.active || drag.settling;

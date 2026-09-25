@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import type { Expense, Group, Member, Trip } from '../types';
 import type { MemberBalance, Transfer } from '../utils/settlement';
 import { IconEdit, IconShare, IconClose } from './Icons';
-import { getCurrencySymbol } from '../utils/currency';
+import { formatAmount, getCurrencySymbol } from '../utils/currency';
 import { sendPushNotification } from '../services/pushApi';
 import { useTripStore } from '../store/tripStore';
 import { avatarColorForName } from '../utils/avatarColor';
@@ -1046,7 +1046,7 @@ export function BalancesSettlements({
                 color: isFullySettled ? 'var(--color-success)' : 'var(--accent-orange, #FF7A00)',
               }}
             >
-              {isFullySettled ? '₹0.00' : `${currencySymbol}${totalOutstanding.toLocaleString(undefined, { maximumFractionDigits: 2 })}`}
+              {isFullySettled ? formatAmount(0, currencySymbol) : formatAmount(totalOutstanding, currencySymbol)}
             </span>
           </div>
         </div>
@@ -1137,26 +1137,6 @@ export function BalancesSettlements({
                 👥 Direct Debts
               </button>
             </div>
-            <button
-              type="button"
-              onClick={() => setShowSimplifyInfo(true)}
-              style={{
-                border: 'none',
-                background: 'transparent',
-                color: 'var(--text-muted)',
-                fontSize: '11.5px',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '4px',
-                padding: '4px 6px',
-                borderRadius: '6px',
-              }}
-              title="Learn about settlement debt algorithms"
-            >
-              <span style={{ fontSize: '12px' }}>ⓘ</span>
-              <span>{isSimplified ? 'Minimizes transfers' : 'Exact pairwise'}</span>
-            </button>
           </div>
         )}
 

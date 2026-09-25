@@ -1,5 +1,5 @@
 import type { Category, Trip } from '../../types';
-import { IconBell, IconFileSpreadsheet, IconTag, IconTrash, IconUpload } from '../Icons';
+import { IconFileSpreadsheet, IconSparkles, IconTag, IconTrash, IconUpload, IconWallet } from '../Icons';
 import { SettingsCell } from '../common/SettingsCell';
 import { triggerHaptic } from '../../utils/haptics';
 import { SettingsSubscreenFrame } from './SettingsNavHeader';
@@ -10,12 +10,10 @@ type Props = {
   activeTrip: Trip;
   categories: Category[];
   deletedCount: number;
-  isTripMuted: boolean;
   showCategories: boolean;
   showRecycleBin: boolean;
   onOpenCategories: () => void;
   onOpenRecycleBin: () => void;
-  onToggleMute: (muted: boolean) => void;
   onOpenFxRates?: () => void;
   onExportCsv?: () => void;
   onOpenSplitwiseImport?: () => void;
@@ -28,12 +26,10 @@ export function SettingsTripToolsHub({
   activeTrip,
   categories,
   deletedCount,
-  isTripMuted,
   showCategories,
   showRecycleBin,
   onOpenCategories,
   onOpenRecycleBin,
-  onToggleMute,
   onOpenFxRates,
   onExportCsv,
   onOpenSplitwiseImport,
@@ -46,7 +42,7 @@ export function SettingsTripToolsHub({
       title="Trip Tools"
       subtitle={
         <>
-          Categories, recycle bin, alerts{onOpenTripWrapped ? ', wrapped recap' : ''}{onOpenFxRates ? ', exchange rates' : ''} &amp; exports for {activeTrip.name}.
+          Categories, recycle bin{onOpenTripWrapped ? ', wrapped' : ''}{onOpenFxRates ? ', exchange rates' : ''}, and exports for {activeTrip.name}.
         </>
       }
     >
@@ -77,65 +73,11 @@ export function SettingsTripToolsHub({
             />
           )}
 
-          <div className="settings-row-item" style={{ cursor: 'default' }}>
-            <div className="settings-row-left">
-              <div className="settings-squircle squircle-orange-glow">
-                <IconBell size={18} />
-              </div>
-              <div className="settings-row-texts">
-                <span className="settings-row-title">Mute Trip Alerts</span>
-                <span className="settings-row-subtitle">Silence push notifications for this trip</span>
-              </div>
-            </div>
-            <div className="settings-row-right">
-              <label style={{ position: 'relative', display: 'inline-block', width: '44px', height: '24px', margin: 0, cursor: 'pointer' }}>
-                <input
-                  type="checkbox"
-                  checked={isTripMuted}
-                  onChange={(e) => {
-                    triggerHaptic('light');
-                    onToggleMute(e.target.checked);
-                  }}
-                  aria-label="Mute Notifications"
-                  style={{ opacity: 0, width: 0, height: 0, margin: 0 }}
-                />
-                <span
-                  style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    backgroundColor: isTripMuted ? '#17B6A6' : 'var(--border-color)',
-                    transition: '0.2s ease',
-                    borderRadius: 'var(--border-radius-pill)',
-                  }}
-                >
-                  <span
-                    style={{
-                      position: 'absolute',
-                      height: '18px',
-                      width: '18px',
-                      left: isTripMuted ? '23px' : '3px',
-                      bottom: '3px',
-                      backgroundColor: 'white',
-                      transition: '0.2s ease',
-                      borderRadius: '50%',
-                      boxShadow: '0 1px 3px rgba(0,0,0,0.25)',
-                    }}
-                  />
-                </span>
-              </label>
-            </div>
-          </div>
-
           {onOpenTripWrapped && (
             <SettingsCell
-              icon={<span style={{ fontSize: '18px' }}>✨</span>}
-              iconGlow="amber"
-              title="Trip Wrapped & Highlights"
-              subtitle="Infographic story card, superlatives & journey recap"
-              badge="STORY"
+              icon={<IconSparkles size={18} />}
+              title="Trip wrapped"
+              subtitle="A recap of this trip"
               onClick={() => {
                 triggerHaptic('light');
                 onOpenTripWrapped();
@@ -145,11 +87,9 @@ export function SettingsTripToolsHub({
 
           {onOpenFxRates && (
             <SettingsCell
-              icon={<span style={{ fontSize: '18px' }}>💱</span>}
-              iconGlow="emerald"
-              title="Multi-Currency FX Engine"
-              subtitle="Live rates, offline lock & forex markup converter"
-              badge="FX"
+              icon={<IconWallet size={18} />}
+              title="Exchange rates"
+              subtitle="Rates for this trip"
               onClick={() => {
                 triggerHaptic('light');
                 onOpenFxRates();

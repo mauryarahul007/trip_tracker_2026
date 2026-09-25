@@ -1,5 +1,6 @@
 import { useRef, useState, useEffect, useCallback, type MutableRefObject, type PointerEvent } from 'react';
 import type { Trip, Category, Expense } from '../types';
+import type { SettlementCloseoutSummary } from '../utils/settlement';
 import type { ConfirmRequest } from './ConfirmDialog';
 import { IconClose } from './Icons';
 import { SettingsView, type ThemePref } from './SettingsView';
@@ -42,6 +43,7 @@ type Props = {
 
   categories?: Category[];
   activeTripExpenses?: Expense[];
+  settlementCloseout?: SettlementCloseoutSummary;
   onAddCategory?: (name: string, icon: string) => Promise<void>;
   onDeleteCategory?: (categoryId: string, replacementCategoryId: string | null) => Promise<void>;
   onExportCsv?: () => void;
@@ -89,6 +91,7 @@ export function GlobalSettingsModal({
   onInstallApp,
   categories,
   activeTripExpenses,
+  settlementCloseout,
   onAddCategory,
   onDeleteCategory,
   onExportCsv,
@@ -235,6 +238,7 @@ export function GlobalSettingsModal({
         <SettingsView
           categories={effectiveCategories}
           activeTripExpenses={effectiveExpenses}
+          settlementCloseout={settlementCloseout}
           onAddCategory={onAddCategory || (async () => {})}
           onDeleteCategory={onDeleteCategory || (async () => {})}
           onExportCsv={onExportCsv}

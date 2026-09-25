@@ -16,6 +16,8 @@ type Props = {
   tripDestination?: string;
   isNotesEnabled?: boolean;
   isPassesEnabled?: boolean;
+  /** When set, this is the shared visible-tab decision (including chat's home). */
+  showNotesTab?: boolean;
   passesCount?: number;
   isHidden?: boolean;
   isChatFirstNav?: boolean;
@@ -32,6 +34,7 @@ export function NavTabs({
   tripDestination,
   isNotesEnabled = true,
   isPassesEnabled = true,
+  showNotesTab,
   passesCount = 0,
   isHidden = false,
   isChatFirstNav = false,
@@ -61,7 +64,7 @@ export function NavTabs({
     }
   }, [activeTab]);
 
-  const hasNotesOrPassesTab = isNotesEnabled || isPassesEnabled;
+  const hasNotesOrPassesTab = showNotesTab ?? (isNotesEnabled || isPassesEnabled);
 
   useLayoutEffect(() => {
     updatePill();
@@ -305,7 +308,7 @@ export function NavTabs({
             <span className="nav-tab-icon">
               {isNotesEnabled ? <IconClipboardList size={24} /> : <IconWallet size={24} />}
             </span>
-            <span>{isNotesEnabled ? (isChatFirstNav ? 'Prep' : 'Notes') : 'Passes'}</span>
+            <span>{isNotesEnabled ? (isChatFirstNav ? 'Prep' : 'Notes') : isPassesEnabled ? 'Passes' : 'Notes'}</span>
             {(isNotesEnabled && showNotesNudge) || (chatHasUnread && !isChatFirstNav) ? <span className="nav-tab-badge nav-tab-badge-dot" aria-hidden="true" /> : null}
             {!isNotesEnabled && passesCount > 0 && (
               <span className="nav-tab-badge" aria-label={`${passesCount} passes`}>{passesCount}</span>

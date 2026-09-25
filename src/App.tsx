@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState, useMemo, useCallback, lazy, Suspens
 import { flushSync } from 'react-dom';
 import { useTripStore, getTripNotificationRecipients, collectDirtyExpenseIds } from './store/tripStore';
 import { useAuthStore } from './store/authStore';
-import { calculateSettlements } from './utils/settlement';
+import { calculateSettlements, summarizeSettlement } from './utils/settlement';
 import type { Expense, Trip, Group, Member, TripStop, AppNotification } from './types';
 import { exportTripToCSV } from './utils/csvExport';
 import { fetchPlaceCoverImage } from './services/placeImageService';
@@ -94,6 +94,7 @@ import { pushTab, popTab } from './utils/tabTrail';
 import { parseDeepLink, withDeepLink, type DeepLink } from './utils/deepLink';
 import { getCatColor } from './utils/categoryColor';
 import { useTabSwipe } from './utils/useTabSwipe';
+import { showNotesNavTab, visibleTripTabs } from './utils/tripTabs';
 // ChecklistNotesTab (1,183 lines) stays mounted once visited -- code-split
 // and gate on hasVisitedNotes, same pattern as MembersGroupsTab above.
 const ChecklistNotesTab = lazy(lazyImport(() =>
@@ -263,18 +264,16 @@ export default function App() {
   }, [isGrowthTelemetryEnabled, userId]);
   // Notes hub also hosts Chat when trip chat is on and chat-first nav is off
   // (otherwise Chat would have nowhere to live if Notes + Passes are both off).
-  const hasNotesOrPassesTab =
-    isNotesEnabled || isPassesEnabled || (isTripChatEnabled && !isChatFirstNav);
-  const currentTabOrder = useMemo(() => {
-    if (isChatFirstNav) {
-      return hasNotesOrPassesTab
-        ? (['chat', 'expenses', 'ledger', 'members', 'notes'] as const)
-        : (['chat', 'expenses', 'ledger', 'members'] as const);
-    }
-    return hasNotesOrPassesTab
-      ? (['expenses', 'ledger', 'members', 'notes'] as const)
-      : (['expenses', 'ledger', 'members'] as const);
-  }, [isChatFirstNav, hasNotesOrPassesTab]);
+  const showNotesTab = showNotesNavTab({
+    isNotesEnabled,
+    isPassesEnabled,
+    isTripChatEnabled,
+    isChatFirstNav,
+  });
+  const currentTabOrder = useMemo(
+    () => visibleTripTabs({ isChatFirstNav, showNotesTab }),
+    [isChatFirstNav, showNotesTab],
+  );
 
   const [activeTab, setActiveTabRaw] = useState<Tab>('expenses');
   const activeTabRef = useRef(activeTab);
@@ -303,7 +302,7 @@ export default function App() {
   useEffect(() => {
     if (!tabBackHistoryOn && tabTrailRef.current.length > 0) setTabTrail([]);
   }, [tabBackHistoryOn, setTabTrail]);
-  const mainContentRef = useRef<HTMLElement>(null);
+  const [swipeHost, setSwipeHost] = useState<HTMLElement | null>(null);
 
   // Set only for notification types whose destination is a sub-tab inside
   // the Notes pane (currently just chat) rather than a top-level Tab --
@@ -322,13 +321,13 @@ export default function App() {
   const [chatComposerFocused, setChatComposerFocused] = useState(false);
 
   useEffect(() => {
-    if (activeTab === 'notes' && !hasNotesOrPassesTab) {
+    if (activeTab === 'notes' && !showNotesTab) {
       setActiveTabRaw('expenses');
     }
     if (activeTab === 'chat' && !isChatFirstNav) {
       setActiveTabRaw('expenses');
     }
-  }, [activeTab, hasNotesOrPassesTab, isChatFirstNav]);
+  }, [activeTab, showNotesTab, isChatFirstNav]);
 
   // Tab panes stay mounted once rendered (display:none swap, not unmount --
   // see the .tab-pane comment below), so a lazy SettingsTab would suspend on
@@ -408,7 +407,14 @@ export default function App() {
   // view-transition crossfade -- the drag itself already animates the
   // handoff (the pane visually slides into place), so layering a
   // second, independent crossfade on top would fight it.
-  const tabSwipe = useTabSwipe(mainContentRef, currentTabOrder, activeTab, setActiveTabTracked);
+  const tabSwipe = useTabSwipe(swipeHost, currentTabOrder, activeTab, setActiveTabTracked);
+  useEffect(() => {
+    const shown = tabSwipe.previewTab;
+    if (!shown) return;
+    if (shown === 'members') setHasVisitedMembers(true);
+    if (shown === 'notes') setHasVisitedNotes(true);
+    if (shown === 'chat') setHasVisitedChat(true);
+  }, [tabSwipe.previewTab]);
 
   // enableDeepLinkedTabs: ?trip=<id>&tab=<tab> mirrors the open screen so a
   // refresh or shared link lands back on it. Read once at load, applied
@@ -784,7 +790,7 @@ export default function App() {
             setActiveTab('members');
             return;
           }
-          if (e.key === '4' && hasNotesOrPassesTab) {
+          if (e.key === '4' && showNotesTab) {
             e.preventDefault();
             setActiveTab('notes');
             return;
@@ -795,7 +801,7 @@ export default function App() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [activeTripId, showAddExpense, showCommandPalette, setActiveTab]);
+  }, [activeTripId, showAddExpense, showCommandPalette, setActiveTab, showNotesTab]);
 
   // Superadmin-set kill-switch (Ops Deck > Flags > Fleet Controls). Checked
   // once per load, not polled -- a superadmin flipping it mid-session
@@ -1242,6 +1248,11 @@ export default function App() {
       ? calculateSettlements(activeTrip, members, expenses, visibleTripGroups)
       : { balances: [], transfers: [] };
   }, [activeTrip, members, expenses, visibleTripGroups]);
+
+  const settlementCloseout = useMemo(
+    () => summarizeSettlement(balances, transfers),
+    [balances, transfers],
+  );
 
   // Filters out settlements to keep expense analytics clean
   const nonSettlementExpenses = useMemo(() => {
@@ -2611,7 +2622,7 @@ export default function App() {
             onFullChange={setSheetFull}
             forceFull={chatViewActive || (isChatFirstNav && activeTab === 'chat')}
           >
-          <main className="app-main" ref={mainContentRef}>
+          <main className="app-main" ref={setSwipeHost}>
             {/* View Switching Tab Content */}
             {isChatFirstNav && (
               <div
@@ -2626,7 +2637,7 @@ export default function App() {
               >
                 <TabErrorBoundary label="Chat">
                   <div className={`fade-in ${activeTab === 'chat' ? 'chat-fade-fill' : ''}`}>
-                    {activeTrip && hasVisitedChat && (
+                    {activeTrip && (hasVisitedChat || tabSwipe.previewTab === 'chat') && (
                       <Suspense fallback={<LuggageTagSkeleton count={2} />}>
                         <TripChatPanel
                           tripId={activeTrip.id}
@@ -2746,7 +2757,7 @@ export default function App() {
             >
               <TabErrorBoundary label="Members">
               <div className="fade-in">
-              {hasVisitedMembers && (
+              {(hasVisitedMembers || tabSwipe.previewTab === 'members') && (
               <Suspense fallback={<LuggageTagSkeleton count={2} />}>
               <MembersGroupsTab
                 showMembersRequiredNotice={showMembersRequiredNotice}
@@ -2844,14 +2855,14 @@ export default function App() {
             <div
               className={`tab-pane ${activeTab === 'notes' && chatViewActive ? 'chat-tab-pane' : ''}`}
               style={
-                activeTab === 'notes' && hasNotesOrPassesTab ? { display: chatViewActive ? 'flex' : 'block', flexDirection: 'column', ...tabSwipe.activePaneStyle }
-                : tabSwipe.previewTab === 'notes' && hasNotesOrPassesTab ? { display: 'block', ...tabSwipe.previewPaneStyle }
+                activeTab === 'notes' && showNotesTab ? { display: chatViewActive ? 'flex' : 'block', flexDirection: 'column', ...tabSwipe.activePaneStyle }
+                : tabSwipe.previewTab === 'notes' && showNotesTab ? { display: 'block', ...tabSwipe.previewPaneStyle }
                 : { display: 'none' }
               }
             >
               <TabErrorBoundary label="Notes & Checklist">
               <div className={`fade-in ${chatViewActive ? 'chat-fade-fill' : ''}`}>
-                {activeTrip && hasVisitedNotes && hasNotesOrPassesTab && (
+                {activeTrip && showNotesTab && (hasVisitedNotes || tabSwipe.previewTab === 'notes') && (
                   <Suspense fallback={<LuggageTagSkeleton count={2} />}>
                   <ChecklistNotesTab
                     trip={activeTrip}
@@ -2893,6 +2904,7 @@ export default function App() {
               <SettingsTab
                 categories={categories}
                 activeTripExpenses={activeTripExpenses}
+                settlementCloseout={settlementCloseout}
                 onDeleteCategory={handleDeleteCategory}
                 onAddCategory={handleAddCategory}
                 onExportCsv={triggerCsvExport}
@@ -2955,6 +2967,7 @@ export default function App() {
             tripDestination={activeTrip?.destination}
             isNotesEnabled={isNotesEnabled}
             isPassesEnabled={isPassesEnabled}
+            showNotesTab={showNotesTab}
             passesCount={activeTrip?.passes?.length || 0}
             isChatFirstNav={isChatFirstNav}
             chatHasUnread={chatHasUnread}
@@ -3212,6 +3225,7 @@ export default function App() {
             baseCurrency={activeTrip ? getCurrencySymbol(activeTrip.baseCurrency) : ''}
             categories={categories}
             activeTripExpenses={activeTripExpenses}
+            settlementCloseout={settlementCloseout}
             onAddCategory={handleAddCategory}
             onDeleteCategory={handleDeleteCategory}
             onOpenFxRates={isFeatureEnabled('enableCurrencyFx', { tripId: activeTrip?.id, userId: userId || undefined }) ? () => setShowFxRates(true) : undefined}

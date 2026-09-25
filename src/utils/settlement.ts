@@ -332,3 +332,24 @@ export function calculateSettlements(
   return { balances, transfers, isSimplified: true };
 }
 
+export interface SettlementCloseoutSummary {
+  isFullySettled: boolean;
+  totalOutstanding: number;
+  transferCount: number;
+  unsettledMemberCount: number;
+}
+
+/** Same numbers Summary shows for Who owes who, so close-trip copy cannot disagree. */
+export function summarizeSettlement(
+  balances: { balance: number }[],
+  transfers: { amount: number }[],
+): SettlementCloseoutSummary {
+  const totalOutstanding = transfers.reduce((sum, t) => sum + t.amount, 0);
+  return {
+    isFullySettled: transfers.length === 0 || totalOutstanding < 0.01,
+    totalOutstanding,
+    transferCount: transfers.length,
+    unsettledMemberCount: balances.filter((b) => Math.abs(b.balance) >= 0.01).length,
+  };
+}
+

@@ -21,6 +21,9 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 
 | Shipped | Version | Id | Section |
 |--------|---------|-----|---------|
+| 2026-09-26 | v3.40.1 | SETTINGS-IA | [Settings root screen](#settings-ia--settings-root-screen) |
+| 2026-09-26 | v3.40.1 | TAB-SWIPE | [Tab swipe between bottom-nav screens](#tab-swipe--left-right-between-bottom-nav-screens) |
+| 2026-09-26 | v3.40.1 | BUG-246 | [Summary settlement explainer once](#bug-246--summary-settlement-explainer-once) |
 | 2026-09-25 | unreleased | FEAT-BOARDINGPASS | [Boarding Pass login screen + rotating backdrop gallery](#feat-boardingpass--boarding-pass-login-screen--rotating-backdrop-gallery) |
 | 2026-09-24 | v3.37.2 | BUG-245 | [Remove home cross-trip IOU strip](#bug-245--remove-home-cross-trip-iou-strip) |
 | 2026-09-23 | v3.37.1 | BUG-244 | [iOS visible height and compositor](#ios-visible-height-and-compositor) |
@@ -1157,6 +1160,85 @@ Superadmin credentials screen (`Superadmin` link on the login page) is unchanged
 ### Pass
 - Home screen shows greeting → expedition count → Your Trips, with no IOU strip or extra Add button in between.
 - Settings cross-trip balance view still works.
+
+---
+
+## BUG-246 — Summary settlement explainer once
+
+**Commit:** v3.40.1. **Migrations:** none. **Flags:** `enableSimplifyDebtsToggle` (Pro, default OFF) still controls the Simplified / Direct Debts switch. No new flag.
+
+**Point:** On Trip Summary → Who owes who, “Minimizes transfers” and the “Simplified Settlements” card both opened the same Settlement Algorithm dialog. The extra link is gone. The card’s **How it works** is the only explainer.
+
+### Steps
+1. Open a trip with unsettled balances. Summary → Who owes who.
+2. With `enableSimplifyDebtsToggle` armed, confirm the Simplified / Direct Debts switch is still there, and there is no “Minimizes transfers” or “Exact pairwise” link beside it.
+3. Confirm the “Simplified Settlements” (or “Direct Settlements”) card is still shown, with a payment count and **How it works**.
+4. Tap **How it works**. The Settlement Algorithm dialog opens once. Close it.
+
+### Negative checks
+- Flag OFF: the mode switch is absent, and there is still no second explainer link. **How it works** on the card still opens the dialog when transfers exist.
+- Fully settled, or zero transfers: the card is absent.
+
+### Pass
+- One explainer entry on Summary. The mode switch still changes simplified vs direct debts.
+
+---
+
+## TAB-SWIPE — Left/right between bottom-nav screens
+
+**Commit:** v3.40.1. **Migrations:** none. **Flags:** none new. Notes/Passes/Chat tabs still follow their existing flags. Settings stays a header screen and is not in the swipe.
+
+**Point:** A horizontal swipe on the trip screen moves Summary, Expenses, Members, and Notes (and Chat when that nav is on) with the finger. The gesture attaches when the trip screen mounts, and a tall scrolling list does not cancel it.
+
+### Steps
+1. Open a trip on a phone-width touch session (device toolbar, touch emulation). Mouse drag does not count.
+2. On Summary, swipe left. Expenses slides in. Swipe left again to Members, then to Notes if that tab is on the bar. Swipe right back through the same screens.
+3. The incoming screen is filled in during the drag, not a blank pane that pops in at the end.
+4. The bottom bar highlight matches the screen you landed on.
+5. Start a swipe on the map: the tab does not change. Start one on a filter-chip strip: the tab does not change. Start one in the middle of a swipe-to-delete row: the row moves, the tab does not. Start one within a thumb of the left or right edge of that row: the tab changes.
+6. Close-trip copy in Settings uses the same outstanding total as Summary → Who owes who.
+
+### Negative checks
+- No second “Minimizes transfers” explainer. How it works on the settlement card is unchanged.
+- Settings is not reached by swiping past the last bottom-nav tab.
+
+### Pass
+- Touch swipe moves only between the tabs shown in the bottom bar, in that order, and does not fight the map, chip strips, or row gestures.
+
+---
+
+## SETTINGS-IA — Settings root screen
+
+**Commit:** v3.40.1. **Migrations:** none.
+
+Cleanup of the existing Settings list. No new feature flag. Existing flags still hide their rows.
+
+### Flags
+| Behavior | Flag | Default |
+|----------|------|---------|
+| Compact ledger row | `enableCompactLedgerView` | OFF |
+| Data saver row | `enableDataSaverMode` | OFF |
+| Daily digest | `enableDigestNotifications` | see registry |
+| Quiet hours | `enableQuietHours` | see registry |
+| Geotag | `enableGeotagging` | see registry |
+| Passport line under your name | `enableTravelerPassport` | ON |
+| Trip tools children | their existing flags | unchanged |
+
+### Steps
+1. Open Settings from the header (in a trip, and again from the global drawer).
+2. The first screen shows your name and email, then This trip (Invite, Trip tools, Close trip), Notifications, Appearance, Data, Help, and Account with Sign out last.
+3. Close trip appears once. There is no trip status chip and no unsettled / members / expenses strip.
+4. Open Notifications. Mute, daily digest, quiet hours, and pass reminders are on that screen. Mute is not inside Trip tools.
+5. With those flags on, search “quiet”, “digest”, “mute”, and “geotag”. Each match shows on the list without opening a screen first. With the flag off, that search stays empty.
+6. With `enableTravelerPassport` ON, one line under your name shows trip and destination counts. With it OFF, that line is gone.
+7. Switches have no ON/OFF pill beside them. Status labels have no emoji.
+
+### Negative checks
+- Flag OFF for digest, quiet hours, geotag, data saver, or compact ledger: that control is absent.
+- No second Close trip control on the first screen.
+
+### Pass
+- The first screen is the six groups above, search still finds moved controls, and flagged rows stay hidden when their flags are off.
 
 ---
 

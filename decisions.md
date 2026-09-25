@@ -4176,4 +4176,19 @@ This document logs all meaningful technical decisions, library choices, design p
   - Superadmin persona (staff credentials) screen is intentionally untouched either way — this redesign is traveler-facing only.
   - The Ops Deck's multi-select gallery UI was verified by typecheck/lint/reuse of existing classes only, not screenshotted (no local superadmin credentials to reach it in this session) — first Ops Deck visit after arming the flag should double-check it.
 
+---
+
+## 232. Tab swipe, one settlement explainer, and a shorter Settings list (v3.40.1)
+* **Context:**
+  - Left/right swipe between bottom-nav screens did nothing because the gesture listeners bound before the trip `<main>` existed, and vertical tab panes were treated as horizontal scrollers.
+  - Summary showed two controls that opened the same settlement explanation.
+  - Settings read as a feature catalog: a trip stats strip, a second passport grid, and a long row of switches with ON/OFF pills.
+* **Decision & Implementation:**
+  - **Tab swipe (`useTabSwipe.ts`, `tripTabs.ts`, `App.tsx`, `NavTabs.tsx`):** Bind swipe to the mounted `<main>` host. Ignore overflow on `.tab-pane`. The bottom bar and the swipe order come from one `visibleTripTabs` list. Close-trip uses the same `summarizeSettlement` result as Summary.
+  - **Settlement explainer (`BalancesSettlements.tsx`):** The “Minimizes transfers” link is gone. “How it works” on the Simplified / Direct card is the only explainer. `enableSimplifyDebtsToggle` still gates the mode switch.
+  - **Settings (`SettingsView.tsx`, `SettingsSwitch.tsx`, `SettingsNotificationsScreen.tsx`):** Root groups are profile, This trip, Notifications, Appearance, Data, Help, and Account. Digest, quiet hours, pass reminders, and mute live behind Notifications. No new feature flag. Traveler Passport is one line under the name when `enableTravelerPassport` is on.
+* **Trade-offs Accepted:**
+  - Tab swipe stays touch-only and does not include Settings.
+  - Geotag stays on the first screen when no trip is open, because it is a global preference and Trip tools needs a trip.
+
 

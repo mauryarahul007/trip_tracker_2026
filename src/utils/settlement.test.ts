@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { calculateSettlements, calculateGroupInternalTransfers } from './settlement';
+import { calculateSettlements, calculateGroupInternalTransfers, summarizeSettlement } from './settlement';
 import type { Trip, Member, Expense, Group } from '../types';
 
 describe('Settlement Utilities', () => {
@@ -235,6 +235,20 @@ describe('Settlement Utilities', () => {
     expect(davidToAlice?.amount).toBe(15);
     expect(davidToBob?.amount).toBe(10);
     expect(bobToAlice?.amount).toBe(5);
+  });
+
+  it('summarizes the same outstanding total Summary shows', () => {
+    const summary = summarizeSettlement(
+      [{ balance: 40 }, { balance: -40 }, { balance: 0 }],
+      [{ amount: 40 }],
+    );
+    expect(summary).toEqual({
+      isFullySettled: false,
+      totalOutstanding: 40,
+      transferCount: 1,
+      unsettledMemberCount: 2,
+    });
+    expect(summarizeSettlement([], []).isFullySettled).toBe(true);
   });
 });
 

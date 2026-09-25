@@ -1,10 +1,12 @@
 import type { Category, Expense, Trip } from '../types';
+import type { SettlementCloseoutSummary } from '../utils/settlement';
 import type { ConfirmRequest } from './ConfirmDialog';
 import { SettingsView, type ThemePref } from './SettingsView';
 
 type Props = {
   categories: Category[];
   activeTripExpenses: Expense[];
+  settlementCloseout?: SettlementCloseoutSummary;
   onAddCategory: (name: string, icon: string) => Promise<void>;
   onDeleteCategory: (categoryId: string, replacementCategoryId: string | null) => Promise<void>;
   onExportCsv: () => void;
@@ -51,6 +53,7 @@ type Props = {
 export function SettingsTab({
   categories,
   activeTripExpenses,
+  settlementCloseout,
   onAddCategory,
   onDeleteCategory,
   onExportCsv,
@@ -95,6 +98,7 @@ export function SettingsTab({
     <SettingsView
       categories={categories}
       activeTripExpenses={activeTripExpenses}
+      settlementCloseout={settlementCloseout}
       onAddCategory={onAddCategory}
       onDeleteCategory={onDeleteCategory}
       onExportCsv={onExportCsv}

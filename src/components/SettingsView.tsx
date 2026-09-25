@@ -26,6 +26,7 @@ import {
 } from './Icons';
 import { SettingsCell } from './common/SettingsCell';
 import { SettingsSection } from './common/SettingsSection';
+import { SettingsToggleRow } from './common/SettingsSwitch';
 import { computeTravelerPassport } from '../utils/travelerPassport';
 import { useTripStore } from '../store/tripStore';
 import { useDataSaverEnabled, setDataSaverEnabled } from '../hooks/useDataSaverEnabled';
@@ -35,7 +36,7 @@ import { useNotificationsStore } from '../store/notificationsStore';
 import { getAppVersion, WEB_APP_VERSION } from '../utils/appVersion';
 import { triggerHaptic } from '../utils/haptics';
 import { getCurrencySymbol, formatAmount } from '../utils/currency';
-import { calculateSettlements } from '../utils/settlement';
+import { calculateSettlements, summarizeSettlement, type SettlementCloseoutSummary } from '../utils/settlement';
 import { SuperadminAuthModal } from './SuperadminAuthModal';
 import { useHistoryStack } from '../utils/useHistoryBack';
 import { useEscapeKey } from '../utils/useEscapeKey';
@@ -45,6 +46,7 @@ import {
   rescheduleTripPassReminders,
 } from '../utils/passReminders';
 import { SettingsTripToolsHub } from './settings/SettingsTripToolsHub';
+import { SettingsNotificationsScreen } from './settings/SettingsNotificationsScreen';
 import { SettingsBackupsMediaHub } from './settings/SettingsBackupsMediaHub';
 import { SettingsArchivedTripsScreen } from './settings/SettingsArchivedTripsScreen';
 import { SettingsBackupsScreen } from './settings/SettingsBackupsScreen';
@@ -65,7 +67,7 @@ const FeatureRequestModal = lazy(() => import('./FeatureRequestModal').then((m) 
 
 export type ThemePref = 'light' | 'dark' | 'oled' | 'system';
 
-type SubScreen = null | 'trip-tools' | 'categories' | 'recycle-bin' | 'backups-media' | 'backups' | 'archived-trips' | 'bug-tracker' | 'report-issue' | 'suggest-feature' | 'storage-data' | 'about' | 'privacy' | 'terms' | 'whats-new';
+type SubScreen = null | 'trip-tools' | 'notifications' | 'categories' | 'recycle-bin' | 'backups-media' | 'backups' | 'archived-trips' | 'bug-tracker' | 'report-issue' | 'suggest-feature' | 'storage-data' | 'about' | 'privacy' | 'terms' | 'whats-new';
 
 const EMPTY_SETTLEMENT = {
   isFullySettled: true,
@@ -82,6 +84,7 @@ const SETTINGS_LEAF_FALLBACK = (
 
 const DEFAULT_PARENT_MAP: Record<string, SubScreen> = {
   'trip-tools': null,
+  'notifications': null,
   'categories': null,
   'recycle-bin': null,
   'backups-media': null,
@@ -100,6 +103,8 @@ const DEFAULT_PARENT_MAP: Record<string, SubScreen> = {
 interface SettingsViewProps {
   categories: Category[];
   activeTripExpenses: Expense[];
+  /** Summary's Who-owes-who result. When set, close-trip uses it instead of a second calculation. */
+  settlementCloseout?: SettlementCloseoutSummary;
   onAddCategory: (name: string, icon: string) => Promise<void>;
   onDeleteCategory: (categoryId: string, replacementCategoryId: string | null) => Promise<void>;
   onExportCsv?: () => void;
@@ -153,6 +158,7 @@ interface SettingsViewProps {
 export function SettingsView({
   categories,
   activeTripExpenses,
+  settlementCloseout,
   onAddCategory,
   onDeleteCategory,
   onExportCsv,
@@ -268,6 +274,8 @@ export function SettingsView({
     switch (screen) {
       case 'trip-tools':
         return 'Trip Tools';
+      case 'notifications':
+        return 'Notifications';
       case 'backups-media':
         return 'Backups & Media';
       case 'storage-data':
@@ -360,24 +368,17 @@ export function SettingsView({
 
   const lastSettlementRef = useRef(EMPTY_SETTLEMENT);
   const settlementSummary = React.useMemo(() => {
+    if (settlementCloseout) return settlementCloseout;
     if (!activeTrip || !hasActiveTrip || !isTripAdmin) {
       lastSettlementRef.current = EMPTY_SETTLEMENT;
       return EMPTY_SETTLEMENT;
     }
     if (!isSurfaceVisible || subScreen !== null) return lastSettlementRef.current;
     const { balances, transfers } = calculateSettlements(activeTrip, members, activeTripExpenses, activeTripGroups);
-    const totalOutstanding = transfers.reduce((sum, t) => sum + t.amount, 0);
-    const isFullySettled = transfers.length === 0 || totalOutstanding < 0.01;
-    const unsettledMemberCount = balances.filter((b) => Math.abs(b.balance) >= 0.01).length;
-    const next = {
-      isFullySettled,
-      totalOutstanding,
-      transferCount: transfers.length,
-      unsettledMemberCount,
-    };
+    const next = summarizeSettlement(balances, transfers);
     lastSettlementRef.current = next;
     return next;
-  }, [activeTrip, hasActiveTrip, isTripAdmin, isSurfaceVisible, subScreen, members, activeTripExpenses, activeTripGroups]);
+  }, [settlementCloseout, activeTrip, hasActiveTrip, isTripAdmin, isSurfaceVisible, subScreen, members, activeTripExpenses, activeTripGroups]);
 
   const handleToggleCloseTrip = () => {
     if (!activeTrip || !isTripAdmin) return;
@@ -400,7 +401,7 @@ export function SettingsView({
           onConfirm: () => closeTrip(activeTrip.id, true),
         });
       } else {
-        const formattedAmount = `${currencySymbol}${settlementSummary.totalOutstanding.toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
+        const formattedAmount = formatAmount(settlementSummary.totalOutstanding, currencySymbol);
         const memberCountText = `${settlementSummary.unsettledMemberCount} member${settlementSummary.unsettledMemberCount === 1 ? '' : 's'}`;
 
         if (onNavigateToBalances) {
@@ -429,40 +430,10 @@ export function SettingsView({
 
   const closeTripTitle = activeTrip?.closed ? 'Reopen Trip' : 'Close Trip';
   const closeTripSubtitle = activeTrip?.closed
-    ? 'Currently locked — reopen to allow new expenses/members'
+    ? 'Locked. Reopen to add expenses.'
     : settlementSummary.isFullySettled
-    ? 'All balances settled — lock trip against new edits'
-    : `⚠️ ${currencySymbol}${settlementSummary.totalOutstanding.toLocaleString(undefined, { maximumFractionDigits: 2 })} unsettled (${settlementSummary.unsettledMemberCount} ${settlementSummary.unsettledMemberCount === 1 ? 'member' : 'members'})`;
-
-  const closeTripBadgeText = activeTrip?.closed
-    ? 'LOCKED'
-    : settlementSummary.isFullySettled
-    ? 'SETTLED'
-    : 'UNSETTLED';
-
-  const flightStatusText = activeTrip?.closed
-    ? '🔒 CLOSED'
-    : settlementSummary.isFullySettled
-    ? '🟢 ACTIVE · SETTLED'
-    : '⚠️ ACTIVE · UNSETTLED';
-
-  const flightStatusBg = activeTrip?.closed
-    ? 'rgba(239, 68, 68, 0.15)'
-    : settlementSummary.isFullySettled
-    ? 'rgba(16, 185, 129, 0.15)'
-    : 'rgba(245, 158, 11, 0.15)';
-
-  const flightStatusColor = activeTrip?.closed
-    ? '#EF4444'
-    : settlementSummary.isFullySettled
-    ? '#10B981'
-    : '#F59E0B';
-
-  const flightStatusBorder = activeTrip?.closed
-    ? 'rgba(239, 68, 68, 0.3)'
-    : settlementSummary.isFullySettled
-    ? 'rgba(16, 185, 129, 0.3)'
-    : 'rgba(245, 158, 11, 0.3)';
+    ? 'Balances are settled'
+    : `${formatAmount(settlementSummary.totalOutstanding, currencySymbol)} still unsettled`;
 
   // User avatar & cloud sync state
   const userAvatarUrl = useAuthStore((s) => s.session?.user.user_metadata?.avatar_url as string | undefined);
@@ -749,16 +720,43 @@ export function SettingsView({
         activeTrip={activeTrip}
         categories={categories}
         deletedCount={tripDeletedExpenses.length}
-        isTripMuted={isTripMuted}
         showCategories={isFeatureEnabled('enableKeywordTagging')}
         showRecycleBin={isFeatureEnabled('enableRecycleBin')}
         onOpenCategories={() => setSubScreen('categories')}
         onOpenRecycleBin={() => setSubScreen('recycle-bin')}
-        onToggleMute={(muted) => setTripMuted(activeTrip.id, muted)}
         onOpenFxRates={isFeatureEnabled('enableCurrencyFx', { tripId: activeTrip.id, userId: userId || undefined }) ? onOpenFxRates : undefined}
         onOpenTripWrapped={isFeatureEnabled('enableTripWrapped', { tripId: activeTrip.id, userId: userId || undefined }) ? onOpenTripWrapped : undefined}
         onExportCsv={onExportCsv}
         onOpenSplitwiseImport={isFeatureEnabled('enableSplitwiseImport', { tripId: activeTrip.id, userId: userId || undefined }) ? onOpenSplitwiseImport : undefined}
+      />
+    );
+  } else if (visibleScreen === 'notifications') {
+    overlay = (
+      <SettingsNotificationsScreen
+        parentTitle={parentTitle}
+        onBack={closeSubScreen}
+        unreadCount={unreadNotificationCount}
+        onOpenInbox={() => {
+          triggerHaptic('light');
+          openNotificationsPanel();
+        }}
+        showMute={Boolean(activeTrip)}
+        muted={isTripMuted}
+        onToggleMute={(muted) => {
+          if (activeTrip) setTripMuted(activeTrip.id, muted);
+        }}
+        showDigest={isFeatureEnabled('enableDigestNotifications')}
+        digestOn={digestModeOn}
+        onToggleDigest={handleToggleDigestMode}
+        showQuiet={isFeatureEnabled('enableQuietHours')}
+        quiet={quietHours}
+        quietBusy={quietHoursBusy}
+        onToggleQuiet={handleToggleQuietHours}
+        onQuietStart={(value) => saveQuietHours({ ...quietHours, startTime: value })}
+        onQuietEnd={(value) => saveQuietHours({ ...quietHours, endTime: value })}
+        showPassReminders
+        passRemindersOn={passRemindersOn}
+        onTogglePassReminders={handleTogglePassReminders}
       />
     );
   } else if (visibleScreen === 'categories' && isFeatureEnabled('enableKeywordTagging')) {
@@ -924,34 +922,44 @@ export function SettingsView({
   const showFxSearch = Boolean(onOpenFxRates && isFxEnabled && matchesSearch('Multi-Currency FX Engine', 'rates', 'fx', 'forex', 'currency', 'exchange'));
   const isWrappedEnabled = isFeatureEnabled('enableTripWrapped', { tripId: activeTrip?.id, userId: userId || undefined });
   const showWrappedSearch = Boolean(onOpenTripWrapped && isWrappedEnabled && matchesSearch('Trip Wrapped & Highlights', 'wrapped', 'story', 'highlights', 'recap', 'stats', 'infographic'));
-  const showTripStatus = Boolean(hasActiveTrip && activeTrip && !searchQuery.trim());
   const isSnapshotEnabled = isFeatureEnabled('enableOfflineSnapshot');
   const isAmoledEnabled = isFeatureEnabled('enableAmoledTheme');
   const showSnapshotSearch = Boolean(onOpenOfflineSnapshot && isSnapshotEnabled && matchesSearch('Offline Snapshot (.triptracker)', 'snapshot', 'offline', 'backup', 'triptracker'));
   const showGallerySearch = Boolean(onOpenMediaGallery && matchesSearch('Receipts & Memories Gallery', 'gallery', 'photos', 'receipts', 'memories'));
   const isVaultEnabled = isFeatureEnabled('enableDocumentVault');
   const showVaultSearch = Boolean(onOpenDocumentVault && isVaultEnabled && matchesSearch('Document Vault', 'vault', 'passport', 'visa', 'insurance', 'documents', 'id'));
-  const showTripTools = showCategories || showRecycleBin || showMute || showFxSearch || showCsvExport || showSplitwiseImport || showWrappedSearch;
-  const showTripGroup = showTripStatus || showInvite || showTripTools || showCloseTrip;
+  const showTripTools = showCategories || showRecycleBin || showFxSearch || showCsvExport || showSplitwiseImport || showWrappedSearch;
+  const showGeotag = isFeatureEnabled('enableGeotagging') && matchesSearch('Geotag Expenses', 'gps', 'location', 'place', 'map', 'pin');
+  const showLiveLocationShare = Boolean(onOpenLiveLocationShare && matchesSearch('Live Location Share', 'location', 'safety', 'share', 'gps', 'live'));
+  const showTripGroup = showInvite || showTripTools || showCloseTrip || showGeotag || showLiveLocationShare;
 
+  const searching = Boolean(searchQuery.trim());
   const showAppearance = matchesSearch('Appearance', 'theme', 'dark', 'light', 'night', 'auto', 'color', 'look');
   const showDataSaver = isFeatureEnabled('enableDataSaverMode') && matchesSearch('Data Saver', 'data', 'saver', 'mobile data', 'low data', 'map', 'battery');
   const showCompactLedger = isFeatureEnabled('enableCompactLedgerView') && matchesSearch('Compact Ledger View', 'compact', 'dense', 'ledger', 'rows', 'density');
   const showNotifications = matchesSearch('Notifications', 'alerts', 'unread', 'bell', 'messages');
   const showDigestMode = isFeatureEnabled('enableDigestNotifications') && matchesSearch('Digest Mode', 'digest', 'daily', 'summary', 'notifications', 'batch');
-  const showQuietHours = isFeatureEnabled('enableQuietHours') && matchesSearch('Quiet Hours', 'quiet', 'dnd', 'do not disturb', 'mute', 'sleep', 'night');
-  const showPassReminders = matchesSearch('Pass reminders', 'pass', 'flight', 'train', 'departure', 'alert');
-  const showGeotag = isFeatureEnabled('enableGeotagging') && matchesSearch('Geotag Expenses', 'gps', 'location', 'place', 'map', 'pin');
-  const showLiveLocationShare = Boolean(onOpenLiveLocationShare && matchesSearch('Live Location Share', 'location', 'safety', 'share', 'gps', 'live'));
+  const showQuietHours = isFeatureEnabled('enableQuietHours') && matchesSearch('Quiet Hours', 'quiet', 'dnd', 'do not disturb', 'mute', 'sleep', 'night', 'notifications');
+  const showPassReminders = matchesSearch('Pass reminders', 'pass', 'flight', 'train', 'departure', 'alert', 'notifications');
   const showInstall = pwaInstallable && matchesSearch('Install App', 'pwa', 'home screen', 'download', 'mobile');
-  const showPreferencesGroup = showAppearance || showDataSaver || showCompactLedger || showNotifications || showDigestMode || showQuietHours || showPassReminders || showGeotag || showLiveLocationShare || showInstall;
+  const notificationControls = showMute || showDigestMode || showQuietHours || showPassReminders;
+  const showNotificationsHub = !searching && (showNotifications || notificationControls);
+  const showNotificationDetails = searching && (showNotifications || notificationControls);
+  const showPreferencesGroup = showAppearance || showCompactLedger || showNotificationsHub || showNotificationDetails;
+  const notificationsSubtitle = quietHours.enabled && isFeatureEnabled('enableQuietHours')
+    ? `Quiet ${quietHours.startTime}–${quietHours.endTime}`
+    : digestModeOn && isFeatureEnabled('enableDigestNotifications')
+    ? 'Daily digest'
+    : unreadNotificationCount > 0
+    ? `${unreadNotificationCount} unread`
+    : 'Quiet hours and reminders';
 
   const showStorageManager = matchesSearch('Storage and Data', 'storage', 'data', 'cache', 'memory', 'disk', 'receipts', 'photos');
   const showArchived = matchesSearch('Archived Trips', 'restore', 'history', 'past trips', 'archive');
   const showBackups = isSuperadmin && matchesSearch('Database Backups', 'export', 'import', 'json', 'snapshot', 'restore');
   const showDemoTrip = Boolean(onLoadDemoTrip && isFeatureEnabled('enableDemoSeeding', { tripId: activeTripId || undefined, userId: userId || undefined }) && matchesSearch('Seed Demo Trip', 'sample', 'test', 'goa', 'demo'));
   const showBackupsMedia = showSnapshotSearch || showGallerySearch || showVaultSearch || showBackups;
-  const showDataGroup = showStorageManager || showArchived || showBackupsMedia;
+  const showDataGroup = showStorageManager || showArchived || showBackupsMedia || showDataSaver;
 
   const showReportProblem = matchesSearch('Report a Problem', 'bug', 'issue', 'diagnostics', 'broken', 'error');
   const showSuggestFeature = isFeatureEnabled('enableFeatureSuggestions') && matchesSearch('Suggest a Feature', 'feedback', 'idea', 'request');
@@ -960,7 +968,7 @@ export function SettingsView({
   const showSignOut = Boolean(onSignOut && matchesSearch('Sign Out', 'logout', 'session', 'disconnect', 'account'));
   const showClearData = Boolean(isSuperadmin && onClearDatabase && matchesSearch('Clear All Data', 'reset', 'wipe', 'delete', 'danger'));
   const showDeleteAccount = Boolean(onDeleteAccount && matchesSearch('Delete Account', 'remove', 'erase', 'danger', 'privacy'));
-  const showAccountGroup = showSignOut || showClearData || showDeleteAccount;
+  const showAccountGroup = showSignOut || showClearData || showDeleteAccount || showInstall;
 
   const showAbout = matchesSearch('Trip Tracker 2026', 'version', 'about', 'build', 'app', 'privacy', 'terms', 'legal');
   const showHelpAboutGroup = showReportProblem || showSuggestFeature || showBugTracker || showDemoTrip || showAbout;
@@ -1032,10 +1040,8 @@ export function SettingsView({
                 <div className="settings-profile-name-row">
                   <span className="settings-profile-name">{displayName}</span>
                   {isSuperadmin ? (
-                    <span className="settings-persona-badge superadmin">🛡️ ADMIN</span>
-                  ) : (
-                    <span className="settings-persona-badge traveler">✈️ TRAVELER</span>
-                  )}
+                    <span className="settings-persona-badge superadmin">Admin</span>
+                  ) : null}
                 </div>
                 <div
                   className="settings-profile-email"
@@ -1155,6 +1161,14 @@ export function SettingsView({
             </p>
           )}
           <div className="settings-hero-perf" aria-hidden="true" />
+          {isFeatureEnabled('enableTravelerPassport', { userId: userId || undefined }) && trips.length > 0 && (() => {
+            const passport = computeTravelerPassport(trips);
+            return (
+              <p className="settings-passport-line">
+                {passport.trips} {passport.trips === 1 ? 'trip' : 'trips'} · {passport.destinations} {passport.destinations === 1 ? 'destination' : 'destinations'}
+              </p>
+            );
+          })()}
         </>
       )}
 
@@ -1192,8 +1206,7 @@ export function SettingsView({
                   </div>
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <strong style={{ fontSize: '15px' }}>⚡ Superadmin Cockpit</strong>
-                <span style={{ fontSize: '10px', background: '#10B981', color: '#fff', padding: '1px 6px', borderRadius: '10px', fontWeight: 700 }}>ACTIVE</span>
+                <strong style={{ fontSize: '15px' }}>Superadmin</strong>
                   </div>
               <span style={{ fontSize: '12px', color: '#92A2AE' }}>Feature Flags, Global Analytics &amp; Admin Tools</span>
                 </div>
@@ -1205,7 +1218,7 @@ export function SettingsView({
       {/* Empty Search Fallback */}
       {searchQuery && !hasAnyResults && (
         <div className="settings-empty-search">
-          <span style={{ fontSize: '28px' }}>🔍</span>
+          <IconSearch size={22} />
           <strong style={{ color: 'var(--text-primary)' }}>No settings found for "{searchQuery}"</strong>
           <span style={{ fontSize: '12px' }}>Try searching for "dark", "backup", "csv", or "notifications"</span>
             <button
@@ -1222,74 +1235,6 @@ export function SettingsView({
       {/* This Trip — concrete rows on the home screen */}
       {showTripGroup && activeTrip && (
         <>
-          {showTripStatus && (
-            <div className="settings-trip-hero">
-              <div className="settings-trip-hero-top">
-                <div className="settings-trip-hero-title">
-                  <span>🌴</span> {activeTrip.name}
-                </div>
-                <button
-                  type="button"
-                  className="settings-trip-hero-status"
-                  onClick={handleToggleCloseTrip}
-                  disabled={!isTripAdmin}
-                  title={isTripAdmin ? (activeTrip.closed ? 'Click to reopen trip' : 'Click to close and lock trip') : undefined}
-                  style={{
-                    background: flightStatusBg,
-                    color: flightStatusColor,
-                    border: `1px solid ${flightStatusBorder}`,
-                    cursor: isTripAdmin ? 'pointer' : 'default',
-                  }}
-                  aria-label={activeTrip.closed ? 'Trip is closed. Click to reopen.' : 'Trip is active. Click to close.'}
-                >
-                  <span>{flightStatusText}</span>
-                </button>
-              </div>
-              <div className="settings-trip-hero-stats">
-                <div className="settings-trip-hero-stat">
-                  <span className={`settings-trip-hero-stat-value ${settlementSummary.isFullySettled ? 'ok' : 'warn'}`}>
-                    {settlementSummary.isFullySettled
-                      ? 'Settled'
-                      : `${currencySymbol}${settlementSummary.totalOutstanding.toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
-                  </span>
-                  <span className="settings-trip-hero-stat-label">
-                    {settlementSummary.isFullySettled ? 'Balances' : 'Unsettled'}
-                  </span>
-                </div>
-                <div className="settings-trip-hero-stat">
-                  <span className="settings-trip-hero-stat-value">{activeTrip.memberIds?.length ?? Object.keys(members).length}</span>
-                  <span className="settings-trip-hero-stat-label">{(activeTrip.memberIds?.length ?? Object.keys(members).length) === 1 ? 'Member' : 'Members'}</span>
-                </div>
-                <div className="settings-trip-hero-stat">
-                  <span className="settings-trip-hero-stat-value">{activeTripExpenses.length}</span>
-                  <span className="settings-trip-hero-stat-label">{activeTripExpenses.length === 1 ? 'Expense' : 'Expenses'}</span>
-                </div>
-              </div>
-            </div>
-          )}
-
-        {isFeatureEnabled('enableTravelerPassport', { userId: userId || undefined }) && trips.length > 0 && (() => {
-          const passport = computeTravelerPassport(trips);
-          const stats: [number, string][] = [
-            [passport.trips, passport.trips === 1 ? 'Trip' : 'Trips'],
-            [passport.destinations, passport.destinations === 1 ? 'Destination' : 'Destinations'],
-            [passport.tripsSettled, 'Settled'],
-            [passport.daysOnTheRoad, 'Days away'],
-          ];
-          return (
-            <SettingsSection title="Traveler Passport">
-              <div className="settings-trip-hero-stats" style={{ padding: '12px' }}>
-                {stats.map(([value, label]) => (
-                  <div key={label} className="settings-trip-hero-stat">
-                    <span className="settings-trip-hero-stat-value">{value}</span>
-                    <span className="settings-trip-hero-stat-label">{label}</span>
-                  </div>
-                ))}
-              </div>
-            </SettingsSection>
-          );
-        })()}
-
         <SettingsSection title="This Trip">
 
           {showInvite && onOpenShareTrip && (
@@ -1316,12 +1261,12 @@ export function SettingsView({
               title="Trip Tools"
               subtitle={
                 isWrappedEnabled && isFxEnabled
-                  ? "Categories, recycle bin, alerts, wrapped & FX rates"
+                  ? 'Categories, recycle bin, wrapped, and exchange rates'
                   : isWrappedEnabled
-                  ? "Categories, recycle bin, alerts & wrapped recap"
+                  ? 'Categories, recycle bin, and wrapped'
                   : isFxEnabled
-                  ? "Categories, recycle bin, alerts & FX rates"
-                  : "Categories, recycle bin, alerts & exports"
+                  ? 'Categories, recycle bin, and exchange rates'
+                  : 'Categories, recycle bin, and exports'
               }
               onPointerEnter={prefetchSettingsLeaves}
               onPointerDown={prefetchSettingsLeaves}
@@ -1329,13 +1274,34 @@ export function SettingsView({
             />
           )}
 
+          {showGeotag && (
+            <SettingsToggleRow
+              icon={<IconMapPin size={18} />}
+              title="Geotag expenses"
+              subtitle="Save a place with each expense"
+              checked={enableGeotagging}
+              onChange={(next) => {
+                triggerHaptic('light');
+                setEnableGeotagging(next);
+              }}
+              label="Geotag expenses"
+            />
+          )}
+
+          {showLiveLocationShare && onOpenLiveLocationShare && (
+            <SettingsCell
+              icon={<IconMapPin size={18} />}
+              title="Live location"
+              subtitle="Share your position for 12 hours"
+              onClick={onOpenLiveLocationShare}
+            />
+          )}
+
             {showCloseTrip && (
               <SettingsCell
                 icon={<IconShield size={18} />}
-                iconGlow={activeTrip.closed ? 'slate' : 'emerald'}
                 title={closeTripTitle}
                 subtitle={closeTripSubtitle}
-                badge={closeTripBadgeText}
                 hasDivider={false}
                 onClick={handleToggleCloseTrip}
               />
@@ -1344,13 +1310,28 @@ export function SettingsView({
         </>
       )}
 
-      {/* Preferences */}
-      {showPreferencesGroup && (
-        <SettingsSection title="Preferences">
+      {showGeotag && !activeTrip && (
+        <SettingsSection title="Expenses">
+          <SettingsToggleRow
+            icon={<IconMapPin size={18} />}
+            title="Geotag expenses"
+            subtitle="Save a place with each expense"
+            checked={enableGeotagging}
+            onChange={(next) => {
+              triggerHaptic('light');
+              setEnableGeotagging(next);
+            }}
+            label="Geotag expenses"
+          />
+        </SettingsSection>
+      )}
+
+      {(showAppearance || showCompactLedger) && (
+        <SettingsSection title="Appearance">
             {showAppearance && (
               <div className="settings-row-item" style={{ cursor: 'default' }}>
                 <div className="settings-row-left">
-                  <div className="settings-squircle squircle-orange-glow">
+                  <div className="settings-squircle">
                     {themePref === 'oled' ? <IconOled size={18} /> : themePref === 'dark' ? <IconMoon size={18} /> : themePref === 'light' ? <IconSun size={18} /> : <IconSmartphone size={18} />}
                   </div>
                   <div className="settings-row-texts">
@@ -1401,408 +1382,116 @@ export function SettingsView({
               </div>
             )}
 
-            {showDataSaver && (
-              <div className="settings-row-item" style={{ cursor: 'default' }}>
-                <div className="settings-row-left">
-                  <div className="settings-squircle squircle-emerald-glow">
-                    <IconDatabase size={18} />
-                  </div>
-                  <div className="settings-row-texts">
-                    <span className="settings-row-title">Data Saver</span>
-                    <span className="settings-row-subtitle">Keeps the map collapsed and skips celebration animations to save data &amp; battery</span>
-                  </div>
-                </div>
-                <div className="settings-row-right" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span className="settings-badge-pill" style={{ fontWeight: 600, fontSize: '10px' }}>
-                    {dataSaverOn ? 'ON' : 'OFF'}
-                  </span>
-                  <label style={{ position: 'relative', display: 'inline-block', width: '44px', height: '24px', margin: 0, cursor: 'pointer' }}>
-                    <input
-                      type="checkbox"
-                      checked={dataSaverOn}
-                      onChange={(e) => { triggerHaptic('light'); setDataSaverEnabled(e.target.checked); }}
-                      aria-label="Data Saver"
-                      style={{ opacity: 0, width: 0, height: 0, margin: 0 }}
-                    />
-                    <span
-                      style={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        backgroundColor: dataSaverOn ? '#17B6A6' : 'var(--border-color)',
-                        transition: '0.2s ease',
-                        borderRadius: 'var(--border-radius-pill)',
-                      }}
-                    >
-                      <span
-                        style={{
-                          position: 'absolute',
-                          height: '18px',
-                          width: '18px',
-                          left: dataSaverOn ? '23px' : '3px',
-                          bottom: '3px',
-                          backgroundColor: 'white',
-                          transition: '0.2s ease',
-                          borderRadius: '50%',
-                          boxShadow: '0 1px 3px rgba(0,0,0,0.25)',
-                        }}
-                      />
-                    </span>
-                  </label>
-                </div>
-              </div>
-            )}
-
             {showCompactLedger && (
-              <div className="settings-row-item" style={{ cursor: 'default' }}>
-                <div className="settings-row-left">
-                  <div className="settings-squircle squircle-amber-glow">
-                    <IconClipboardList size={18} />
-                  </div>
-                  <div className="settings-row-texts">
-                    <span className="settings-row-title">Compact Ledger View</span>
-                    <span className="settings-row-subtitle">Tighter rows and smaller icons to fit more expenses on screen</span>
-                  </div>
-                </div>
-                <div className="settings-row-right" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span className="settings-badge-pill" style={{ fontWeight: 600, fontSize: '10px' }}>
-                    {compactLedgerOn ? 'ON' : 'OFF'}
-                  </span>
-                  <label style={{ position: 'relative', display: 'inline-block', width: '44px', height: '24px', margin: 0, cursor: 'pointer' }}>
-                    <input
-                      type="checkbox"
-                      checked={compactLedgerOn}
-                      onChange={(e) => { triggerHaptic('light'); setCompactLedgerView(e.target.checked); }}
-                      aria-label="Compact Ledger View"
-                      style={{ opacity: 0, width: 0, height: 0, margin: 0 }}
-                    />
-                    <span
-                      style={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        backgroundColor: compactLedgerOn ? '#17B6A6' : 'var(--border-color)',
-                        transition: '0.2s ease',
-                        borderRadius: 'var(--border-radius-pill)',
-                      }}
-                    >
-                      <span
-                        style={{
-                          position: 'absolute',
-                          height: '18px',
-                          width: '18px',
-                          left: compactLedgerOn ? '23px' : '3px',
-                          bottom: '3px',
-                          backgroundColor: 'white',
-                          transition: '0.2s ease',
-                          borderRadius: '50%',
-                          boxShadow: '0 1px 3px rgba(0,0,0,0.25)',
-                        }}
-                      />
-                    </span>
-                  </label>
-                </div>
-              </div>
+              <SettingsToggleRow
+                icon={<IconClipboardList size={18} />}
+                title="Compact ledger"
+                subtitle="Tighter rows"
+                checked={compactLedgerOn}
+                onChange={(next) => { triggerHaptic('light'); setCompactLedgerView(next); }}
+                label="Compact ledger"
+              />
+            )}
+        </SettingsSection>
+      )}
+
+      {(showNotificationsHub || showNotificationDetails) && (
+        <SettingsSection title="Notifications">
+            {showNotificationsHub && (
+              <SettingsCell
+                icon={<IconBell size={18} />}
+                title="Notifications"
+                subtitle={notificationsSubtitle}
+                hasDivider={false}
+                onClick={() => setSubScreen('notifications')}
+              />
             )}
 
-            {showNotifications && (
-              <button type="button" className="settings-row-item" onClick={() => { triggerHaptic('light'); openNotificationsPanel(); }}>
-                <div className="settings-row-left">
-                  <div className="settings-squircle squircle-teal-glow">
-                    <IconBell size={18} />
-                  </div>
-                  <div className="settings-row-texts">
-                    <span className="settings-row-title">Notifications</span>
-                    <span className="settings-row-subtitle">{unreadNotificationCount > 0 ? `${unreadNotificationCount} unread` : 'All caught up'}</span>
-                  </div>
-                </div>
-                <div className="settings-row-right">
-                  <span className="settings-badge-pill" style={{ fontWeight: 600 }}>
-                    {unreadNotificationCount > 0 ? `${unreadNotificationCount} unread` : 'Quiet'}
-                  </span>
-                  <IconChevronRight size={16} />
-                </div>
-              </button>
+            {showNotificationDetails && showNotifications && (
+              <SettingsCell
+                icon={<IconBell size={18} />}
+                title="Inbox"
+                subtitle={unreadNotificationCount > 0 ? `${unreadNotificationCount} unread` : 'All caught up'}
+                onClick={() => { triggerHaptic('light'); openNotificationsPanel(); }}
+              />
             )}
-
-            {showDigestMode && (
-              <div className="settings-row-item" style={{ cursor: 'default' }}>
-                <div className="settings-row-left">
-                  <div className="settings-squircle squircle-slate-glow">
-                    <IconBell size={18} />
-                  </div>
-                  <div className="settings-row-texts">
-                    <span className="settings-row-title">Digest Mode</span>
-                    <span className="settings-row-subtitle">One daily summary instead of a push per event</span>
-                  </div>
-                </div>
-                <div className="settings-row-right" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span className="settings-badge-pill" style={{ fontWeight: 600, fontSize: '10px' }}>
-                    {digestModeOn ? 'ON' : 'OFF'}
-                  </span>
-                  <label style={{ position: 'relative', display: 'inline-block', width: '44px', height: '24px', margin: 0, cursor: 'pointer' }}>
-                    <input
-                      type="checkbox"
-                      checked={digestModeOn}
-                      onChange={(e) => handleToggleDigestMode(e.target.checked)}
-                      aria-label="Digest Mode"
-                      style={{ opacity: 0, width: 0, height: 0, margin: 0 }}
-                    />
-                    <span
-                      style={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        backgroundColor: digestModeOn ? '#17B6A6' : 'var(--border-color)',
-                        transition: '0.2s ease',
-                        borderRadius: 'var(--border-radius-pill)',
-                      }}
-                    >
-                      <span
-                        style={{
-                          position: 'absolute',
-                          height: '18px',
-                          width: '18px',
-                          left: digestModeOn ? '23px' : '3px',
-                          bottom: '3px',
-                          backgroundColor: 'white',
-                          transition: '0.2s ease',
-                          borderRadius: '50%',
-                          boxShadow: '0 1px 3px rgba(0,0,0,0.25)',
-                        }}
-                      />
-                    </span>
-                  </label>
-                </div>
-              </div>
+            {showNotificationDetails && showMute && activeTrip && (
+              <SettingsToggleRow
+                icon={<IconBell size={18} />}
+                title="Mute this trip"
+                subtitle="No push alerts for this trip"
+                checked={isTripMuted}
+                onChange={(next) => setTripMuted(activeTrip.id, next)}
+                label="Mute this trip"
+              />
             )}
-
-            {showQuietHours && (
-              <div className="settings-row-item" style={{ cursor: 'default', flexDirection: 'column', alignItems: 'stretch', gap: '10px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-                  <div className="settings-row-left">
-                    <div className="settings-squircle squircle-slate-glow">
-                      <span style={{ fontSize: '18px' }}>🌙</span>
-                    </div>
-                    <div className="settings-row-texts">
-                      <span className="settings-row-title">Quiet Hours</span>
-                      <span className="settings-row-subtitle">Pause push notifications during this window</span>
-                    </div>
-                  </div>
-                  <div className="settings-row-right" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span className="settings-badge-pill" style={{ fontWeight: 600, fontSize: '10px' }}>
-                      {quietHours.enabled ? 'ON' : 'OFF'}
-                    </span>
-                    <label style={{ position: 'relative', display: 'inline-block', width: '44px', height: '24px', margin: 0, cursor: 'pointer' }}>
-                      <input
-                        type="checkbox"
-                        checked={quietHours.enabled}
-                        onChange={(e) => handleToggleQuietHours(e.target.checked)}
-                        aria-label="Quiet Hours"
-                        style={{ opacity: 0, width: 0, height: 0, margin: 0 }}
-                      />
-                      <span
-                        style={{
-                          position: 'absolute',
-                          top: 0,
-                          left: 0,
-                          right: 0,
-                          bottom: 0,
-                          backgroundColor: quietHours.enabled ? '#17B6A6' : 'var(--border-color)',
-                          transition: '0.2s ease',
-                          borderRadius: 'var(--border-radius-pill)',
-                        }}
-                      >
-                        <span
-                          style={{
-                            position: 'absolute',
-                            height: '18px',
-                            width: '18px',
-                            left: quietHours.enabled ? '23px' : '3px',
-                            bottom: '3px',
-                            backgroundColor: 'white',
-                            transition: '0.2s ease',
-                            borderRadius: '50%',
-                            boxShadow: '0 1px 3px rgba(0,0,0,0.25)',
-                          }}
-                        />
-                      </span>
-                    </label>
-                  </div>
-                </div>
+            {showNotificationDetails && showDigestMode && (
+              <SettingsToggleRow
+                icon={<IconClipboardList size={18} />}
+                title="Daily digest"
+                subtitle="One summary instead of a push per event"
+                checked={digestModeOn}
+                onChange={handleToggleDigestMode}
+                label="Daily digest"
+              />
+            )}
+            {showNotificationDetails && showQuietHours && (
+              <SettingsToggleRow
+                icon={<IconMoon size={18} />}
+                title="Quiet hours"
+                subtitle={quietHours.enabled ? `${quietHours.startTime}–${quietHours.endTime}` : 'Pause push during a window'}
+                checked={quietHours.enabled}
+                onChange={handleToggleQuietHours}
+                label="Quiet hours"
+                disabled={quietHoursBusy}
+              >
                 {quietHours.enabled && (
-                  <div className="fade-in" style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                  <div className="settings-quiet-times">
                     <input
                       type="time"
                       className="input-field"
-                      style={{ flex: 1 }}
                       value={quietHours.startTime}
                       aria-label="Quiet hours start"
                       onChange={(e) => saveQuietHours({ ...quietHours, startTime: e.target.value })}
                     />
-                    <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>to</span>
+                    <span>to</span>
                     <input
                       type="time"
                       className="input-field"
-                      style={{ flex: 1 }}
                       value={quietHours.endTime}
                       aria-label="Quiet hours end"
                       onChange={(e) => saveQuietHours({ ...quietHours, endTime: e.target.value })}
                     />
                   </div>
                 )}
-              </div>
+              </SettingsToggleRow>
             )}
-
-          {showPassReminders && (
-            <div className="settings-row-item" style={{ cursor: 'default' }}>
-              <div className="settings-row-left">
-                <div className="settings-squircle squircle-amber-glow">
-                  <span style={{ fontSize: '18px' }}>🎫</span>
-                </div>
-                <div className="settings-row-texts">
-                  <span className="settings-row-title">Pass reminders</span>
-                  <span className="settings-row-subtitle">Alert 24h (and 3h for flights/trains) before departure</span>
-                </div>
-              </div>
-              <div className="settings-row-right" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span className="settings-badge-pill" style={{ fontWeight: 600, fontSize: '10px' }}>
-                  {passRemindersOn ? 'ON' : 'OFF'}
-                </span>
-                <label style={{ position: 'relative', display: 'inline-block', width: '44px', height: '24px', margin: 0, cursor: 'pointer' }}>
-                  <input
-                    type="checkbox"
-                    checked={passRemindersOn}
-                    onChange={(e) => handleTogglePassReminders(e.target.checked)}
-                    aria-label="Pass reminders"
-                    style={{ opacity: 0, width: 0, height: 0, margin: 0 }}
-                  />
-                  <span
-                    style={{
-                      position: 'absolute',
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      bottom: 0,
-                      backgroundColor: passRemindersOn ? '#17B6A6' : 'var(--border-color)',
-                      transition: '0.2s ease',
-                      borderRadius: 'var(--border-radius-pill)',
-                    }}
-                  >
-                    <span
-                      style={{
-                        position: 'absolute',
-                        height: '18px',
-                        width: '18px',
-                        left: passRemindersOn ? '23px' : '3px',
-                        bottom: '3px',
-                        backgroundColor: 'white',
-                        transition: '0.2s ease',
-                        borderRadius: '50%',
-                        boxShadow: '0 1px 3px rgba(0,0,0,0.25)',
-                      }}
-                    />
-                  </span>
-                </label>
-              </div>
-            </div>
-          )}
-
-            {showGeotag && (
-              <div className="settings-row-item" style={{ cursor: 'default' }}>
-                <div className="settings-row-left">
-                  <div className="settings-squircle squircle-emerald-glow">
-                    <IconMapPin size={18} />
-                  </div>
-                  <div className="settings-row-texts">
-                    <span className="settings-row-title">Geotag Expenses</span>
-                    <span className="settings-row-subtitle">Attach GPS coordinates &amp; place names</span>
-                  </div>
-                </div>
-                <div className="settings-row-right" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span className="settings-badge-pill" style={{ fontWeight: 600, fontSize: '10px' }}>
-                    {enableGeotagging ? 'ACTIVE' : 'OFF'}
-                  </span>
-                  <label style={{ position: 'relative', display: 'inline-block', width: '44px', height: '24px', margin: 0, cursor: 'pointer' }}>
-                    <input
-                      type="checkbox"
-                      checked={enableGeotagging}
-                      onChange={(e) => {
-                        triggerHaptic('light');
-                        setEnableGeotagging(e.target.checked);
-                      }}
-                      aria-label="Geotag Expenses"
-                      style={{ opacity: 0, width: 0, height: 0, margin: 0 }}
-                    />
-                    <span
-                      style={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        backgroundColor: enableGeotagging ? '#17B6A6' : 'var(--border-color)',
-                        transition: '0.2s ease',
-                        borderRadius: 'var(--border-radius-pill)',
-                      }}
-                    >
-                      <span
-                        style={{
-                          position: 'absolute',
-                          height: '18px',
-                          width: '18px',
-                          left: enableGeotagging ? '23px' : '3px',
-                          bottom: '3px',
-                          backgroundColor: 'white',
-                          transition: '0.2s ease',
-                          borderRadius: '50%',
-                          boxShadow: '0 1px 3px rgba(0,0,0,0.25)',
-                        }}
-                      />
-                    </span>
-                  </label>
-                </div>
-              </div>
-            )}
-
-            {showLiveLocationShare && onOpenLiveLocationShare && (
-              <SettingsCell
-                icon={<IconMapPin size={18} />}
-                iconGlow="rose"
-                title="Live Location Share"
-                subtitle="Share a public link with your current position for 12h"
-                badge="SAFETY"
-                onClick={onOpenLiveLocationShare}
+            {showNotificationDetails && showPassReminders && (
+              <SettingsToggleRow
+                icon={<IconClipboardList size={18} />}
+                title="Pass reminders"
+                subtitle="24h before departure, 3h for flights and trains"
+                checked={passRemindersOn}
+                onChange={handleTogglePassReminders}
+                label="Pass reminders"
               />
             )}
-
-            {showInstall && (
-            <SettingsCell
-              icon={<IconSmartphone size={18} />}
-              iconGlow="teal"
-              title="Install App"
-              subtitle="Add Trip Tracker to your device home screen"
-              chevron={false}
-              hasDivider={false}
-                onClick={() => {
-                  triggerHaptic('light');
-                  onInstallApp?.();
-                  onClose?.();
-                }}
-            />
-          )}
         </SettingsSection>
       )}
 
       {/* Data */}
       {showDataGroup && (
         <SettingsSection title="Data">
+            {showDataSaver && (
+              <SettingsToggleRow
+                icon={<IconDatabase size={18} />}
+                title="Data saver"
+                subtitle="Map stays collapsed"
+                checked={dataSaverOn}
+                onChange={(next) => { triggerHaptic('light'); setDataSaverEnabled(next); }}
+                label="Data saver"
+              />
+            )}
             {showStorageManager && (
               <SettingsCell
                 icon={<IconPieChart size={18} />}
@@ -1843,7 +1532,7 @@ export function SettingsView({
         <SettingsSection title="Help & About">
             {showReportProblem && (
               <SettingsCell
-                icon={<span>🐞</span>}
+                icon={<IconAlertCircle size={18} />}
                 iconGlow="rose"
                 title="Report a Problem"
                 subtitle="Tell us what went wrong — device details attach automatically"
@@ -1855,7 +1544,7 @@ export function SettingsView({
 
             {showSuggestFeature && (
               <SettingsCell
-                icon={<span>✨</span>}
+                icon={<IconSparkles size={18} />}
                 iconGlow="teal"
                 title="Suggest a Feature"
                 subtitle="Tell us what would make this app better"
@@ -1887,7 +1576,7 @@ export function SettingsView({
 
             {showBugTracker && (
               <SettingsCell
-                icon={<span>🛡️</span>}
+                icon={<IconShield size={18} />}
                 iconGlow="amber"
                 title="Superadmin Bug Tracker"
                 subtitle="Manage, triage & live-sync bugs"
@@ -1907,8 +1596,7 @@ export function SettingsView({
                 icon={<IconSmartphone size={18} />}
                 iconGlow="slate"
                 title="About & Legal"
-                subtitle={`Version ${appVersion ?? WEB_APP_VERSION} · Privacy & Terms`}
-                badge="STABLE"
+                subtitle={`Version ${appVersion ?? WEB_APP_VERSION}`}
                 hasDivider={false}
                 onPointerEnter={prefetchSettingsLegal}
                 onPointerDown={prefetchSettingsLegal}
@@ -1921,13 +1609,26 @@ export function SettingsView({
       {/* Account */}
       {showAccountGroup && (
         <SettingsSection title="Account">
+            {showInstall && (
+            <SettingsCell
+              icon={<IconSmartphone size={18} />}
+              title="Install app"
+              subtitle="Add Trip Tracker to your home screen"
+              chevron={false}
+                onClick={() => {
+                  triggerHaptic('light');
+                  onInstallApp?.();
+                  onClose?.();
+                }}
+            />
+          )}
             {showSignOut && onSignOut && (
               <SettingsCell
                 icon={<IconLogOut size={18} />}
                 iconGlow="red"
                 destructive
                 title="Sign Out"
-                subtitle="Disconnect active session from Supabase"
+                subtitle="Sign out on this device"
                 chevron={false}
                 onClick={() => {
                   if (!isOnline) {
@@ -2014,7 +1715,7 @@ export function SettingsView({
               setIsSuperadminModalOpen(true);
             }}
           >
-            <IconShield size={13} /> ⚡ Super User Login
+            <IconShield size={13} /> Super User Login
           </button>
         </div>
       )}

@@ -891,7 +891,7 @@ export const FEATURE_FLAGS_META: Record<FeatureFlagKey, FeatureFlagMeta> = {
     key: 'enableTravelerPassport',
     label: 'Traveler Passport',
     description:
-      'ON: Settings shows a Traveler Passport card with lifetime trips, destinations visited, trips settled and trips with a group, worked out from the trips already on the device. OFF: the card is absent. Does not sync a separate profile, never adds money across currencies, and has no share button.',
+      'ON: Settings shows one line under your name with trip count and destinations, worked out from the trips already on the device. OFF: that line is absent. Does not sync a separate profile, never adds money across currencies, and has no share button.',
     category: 'core',
     pack: 'trip',
     defaultEnabledForUsers: true,
