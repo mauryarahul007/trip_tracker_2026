@@ -166,6 +166,8 @@ function AdminLoadingFallback() {
   );
 }
 
+const resolvedCoverKeys = new Set<string>();
+
 export default function App() {
   const {
     trips,
@@ -911,16 +913,24 @@ export default function App() {
   const activeTrip = useMemo(() => trips.find((t) => t.id === activeTripId), [trips, activeTripId]);
   const editingExpense = useMemo(() => expenses.find((e) => e.id === editingExpenseId) || null, [expenses, editingExpenseId]);
 
-  // Auto-resolve tourism cover photo for active trip if not already resolved
+  // Auto-resolve tourism cover photo for the active trip. A typed destination
+  // is the only query — a previously saved cover may be a stop or the trip name.
   useEffect(() => {
-    if (!activeTrip || activeTrip.coverImageUrl) return;
-    const candidates = [
-      ...(activeTrip.stops?.map((s) => s.name) || []),
-      activeTrip.destination || '',
-      activeTrip.name || '',
-    ].filter(Boolean);
+    if (!activeTrip) return;
+    const destination = activeTrip.destination?.trim() || '';
+    const candidates = destination
+      ? [destination]
+      : [
+          ...(activeTrip.stops?.map((s) => s.name) || []),
+          activeTrip.name || '',
+        ].filter(Boolean);
 
     if (candidates.length === 0) return;
+    if (!destination && activeTrip.coverImageUrl) return;
+
+    const key = `${activeTrip.id}::${candidates.join('|')}`;
+    if (resolvedCoverKeys.has(key)) return;
+    resolvedCoverKeys.add(key);
 
     fetchPlaceCoverImage(candidates)
       .then((url) => {
@@ -931,7 +941,7 @@ export default function App() {
         }
       })
       .catch(() => {});
-  }, [activeTrip?.id, activeTrip?.coverImageUrl, activeTrip?.destination, activeTrip?.stops]);
+  }, [activeTrip?.id, activeTrip?.coverImageUrl, activeTrip?.destination, activeTrip?.name, activeTrip?.stops]);
 
   // Reset expense filters when switching trips
   useEffect(() => {

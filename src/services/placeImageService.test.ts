@@ -72,6 +72,20 @@ describe('placeImageService', () => {
     expect(result).toBe(realPhotoUrl);
   });
 
+  it('searches each place in "Goa or Coorg" before the full phrase', async () => {
+    const goaPhoto = 'https://upload.wikimedia.org/wikipedia/commons/goa-beach.jpg';
+    globalThis.fetch = vi.fn().mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ originalimage: { source: goaPhoto } }),
+    } as Response);
+
+    const result = await fetchPlaceCoverImage('Goa or Coorg');
+    expect(result).toBe(goaPhoto);
+    const firstUrl = String(vi.mocked(globalThis.fetch).mock.calls[0][0]).toLowerCase();
+    expect(firstUrl).toContain('goa');
+    expect(firstUrl).not.toContain('coorg');
+  });
+
   it('falls back to Wikipedia generator/search API when Wikivoyage and direct summary both fail', async () => {
     const mockPhotoUrl = 'https://upload.wikimedia.org/wikipedia/commons/goa.jpg';
     globalThis.fetch = vi

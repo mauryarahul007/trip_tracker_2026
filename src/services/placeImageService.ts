@@ -196,11 +196,16 @@ export function getFallbackTravelPhoto(seed?: string, width: number = COVER_WIDT
 function extractPlaceCandidates(placeInput: string | string[]): string[] {
   const rawList = Array.isArray(placeInput) ? placeInput : [placeInput];
   const candidates: string[] = [];
+  const compounds: string[] = [];
 
   for (const raw of rawList) {
     if (!raw) continue;
-    // Split on route arrows, commas, hyphens, or slashes
-    const parts = raw.split(/[→\->,/|]/).map((p) => p.trim()).filter(Boolean);
+    // Split routes and "Goa or Coorg" into real place names first. The full
+    // phrase is searched last so a combined query cannot win over a place.
+    const parts = raw
+      .split(/\s+\bor\b\s+|\s+\band\b\s+|->|[→>,/|-]/i)
+      .map((p) => p.trim())
+      .filter(Boolean);
     for (const part of parts) {
       candidates.push(part);
       const stripped = part.replace(TRAVEL_NOISE_WORDS, ' ').replace(/\s+/g, ' ').trim();
@@ -209,10 +214,13 @@ function extractPlaceCandidates(placeInput: string | string[]): string[] {
         candidates.push(prepStripped);
       }
     }
-    if (!parts.includes(raw.trim())) {
-      candidates.push(raw.trim());
+    const whole = raw.trim();
+    if (whole && !parts.includes(whole)) {
+      compounds.push(whole);
     }
   }
+
+  candidates.push(...compounds);
 
   // Deduplicate and filter out numbers or very short strings
   return Array.from(new Set(candidates)).filter((c) => c.length >= 2 && !/^\d+$/.test(c));

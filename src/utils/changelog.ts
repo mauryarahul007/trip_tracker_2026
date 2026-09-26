@@ -9,6 +9,14 @@ export interface ChangelogEntry {
 // parsed from decisions.md/BUGS.md: those are prose for developers, not client data.
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: '3.40.3',
+    date: '2026-09-26',
+    changes: [
+      'The trip stack photo is the destination you entered when you created the trip.',
+      'Light list view uses a soft tinted page, and the Journeys title stays readable.',
+    ],
+  },
+  {
     version: '3.40.2',
     date: '2026-09-26',
     changes: [

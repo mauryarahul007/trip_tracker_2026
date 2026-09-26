@@ -234,12 +234,27 @@ export function useTripPhoto(
   width: number = COVER_WIDTH,
   stops?: string[]
 ): string | null {
-  const seed = (destination || (stops && stops[0]) || tripName || '').trim();
+  const place = destination?.trim() || '';
+  const seed = (place || (stops && stops[0]) || tripName || '').trim();
   const fallback = seed ? getFallbackTravelPhoto(seed, width) : null;
-  const [url, setUrl] = useState<string | null>(() => (coverImageUrl ? coverImageUrlAtWidth(coverImageUrl, width) : fallback));
+  // A saved cover can be a stop or the trip name. When a destination was
+  // typed at creation, that place is the photo — the saved cover is not.
+  const [url, setUrl] = useState<string | null>(() => (
+    place ? fallback : (coverImageUrl ? coverImageUrlAtWidth(coverImageUrl, width) : fallback)
+  ));
 
   useEffect(() => {
     let cancelled = false;
+    if (place) {
+      const currentFallback = getFallbackTravelPhoto(place, width);
+      setUrl(currentFallback);
+      fetchPlaceCoverImage(place).then((result) => {
+        if (!cancelled && result) {
+          setUrl(coverImageUrlAtWidth(result, width));
+        }
+      });
+      return () => { cancelled = true; };
+    }
     if (coverImageUrl) {
       setUrl(coverImageUrlAtWidth(coverImageUrl, width));
       return;
@@ -251,9 +266,7 @@ export function useTripPhoto(
     const currentFallback = getFallbackTravelPhoto(seed, width);
     setUrl(currentFallback);
 
-    // Prioritize destination/place entered when trip is created, then route stops, then trip name
     const queries = [
-      destination,
       ...(stops || []),
       tripName,
     ].filter(Boolean) as string[];
@@ -264,7 +277,7 @@ export function useTripPhoto(
       }
     });
     return () => { cancelled = true; };
-  }, [destination, coverImageUrl, tripName, width, seed, stops]);
+  }, [place, coverImageUrl, tripName, width, seed, stops]);
 
   return url;
 }

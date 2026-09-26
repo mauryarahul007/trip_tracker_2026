@@ -4205,4 +4205,17 @@ This document logs all meaningful technical decisions, library choices, design p
   - Idle sway on the peek cards is gone, because a transformed child inside the rounded card was part of the square-corner leak.
   - The page blur stays on during a drag. Changing the filter mid-swipe was what made the backdrop pop.
 
+---
+
+## 234. Destination cover photo and a tinted light list (v3.40.3)
+* **Context:**
+  - The stack photo was often a stop or the trip name. Cover lookup tried those first, saved the first hit, and then never asked for the destination again.
+  - Light list view sat on a flat white page, and the header title and icons were white because they were styled for the dark stack photo.
+* **Decision & Implementation:**
+  - **Cover (`placeImageService.ts`, `useTripPhoto`, `tripStore.ts`, `App.tsx`):** When a destination was typed, that string is the only cover query. “Goa or Coorg” is searched as Goa, then Coorg. A saved cover from a stop or the trip name is not shown over a typed destination.
+  - **Light list (`index.css`):** The list page is a soft gray-green wash, not one shared trip photo and not solid white. The Journeys title and header icons are dark on that sheet. Stack view still uses white type over the blurred destination photo.
+* **Trade-offs Accepted:**
+  - A multi-place destination shows the first place that has a photo, then the rest, then the full phrase.
+  - Trips with no destination still fall back to stops, then the trip name.
+
 

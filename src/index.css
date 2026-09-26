@@ -7934,6 +7934,29 @@ html.capacitor-ios .trip-sheet .tab-pane {
   padding-right: max(20px, var(--safe-right, 20px));
 }
 
+/* Light list: a soft tinted sheet, not a flat white page and not one trip photo.
+   Header chrome is white for the stack photo; on this sheet it has to be dark. */
+:root:not([data-theme="dark"]):not([data-theme="oled"]) .trips-screen-scroll:not(.stack-viewport-lock) {
+  background:
+    radial-gradient(ellipse 100% 55% at 50% -12%, rgba(15, 111, 99, 0.16), transparent 62%),
+    linear-gradient(180deg, #EEF3F5 0%, #D7E3E8 100%);
+}
+
+:root:not([data-theme="dark"]):not([data-theme="oled"]) .trips-screen-scroll:not(.stack-viewport-lock) .home-header-title {
+  color: #0F172A;
+  text-shadow: none;
+}
+
+:root:not([data-theme="dark"]):not([data-theme="oled"]) .trips-screen-scroll:not(.stack-viewport-lock) .concept1-icon-btn {
+  background: rgba(15, 23, 42, 0.06);
+  border-color: rgba(15, 23, 42, 0.12);
+  color: #0F172A;
+}
+
+:root:not([data-theme="dark"]):not([data-theme="oled"]) .concept2-card-image-wrap {
+  background-color: #243044;
+}
+
 .trips-screen-header {
   position: relative;
   z-index: 10;

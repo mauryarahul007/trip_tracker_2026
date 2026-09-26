@@ -1557,11 +1557,11 @@ export const useTripStore = create<TripStore>()(
         }
       };
 
-      const coverCandidates = [
-        cleanDestination,
-        ...(cleanStops?.map((s) => s.name) || []),
-        name,
-      ].filter(Boolean) as string[];
+      const coverCandidates = (
+        cleanDestination
+          ? [cleanDestination]
+          : [...(cleanStops?.map((s) => s.name) || []), name]
+      ).filter(Boolean) as string[];
 
       // No real backend to sync against at all — skip the offline sync
       // queue entirely (it could never flush) and create the trip as a
@@ -1686,11 +1686,11 @@ export const useTripStore = create<TripStore>()(
           storageError: null,
         }));
 
-        const updateCandidates = [
-          cleanDestination,
-          ...(cleanStops?.map((s) => s.name) || []),
-          name,
-        ].filter(Boolean) as string[];
+        const updateCandidates = (
+          cleanDestination
+            ? [cleanDestination]
+            : [...(cleanStops?.map((s) => s.name) || []), name]
+        ).filter(Boolean) as string[];
 
         if (updateCandidates.length > 0) {
           fetchPlaceCoverImage(updateCandidates)

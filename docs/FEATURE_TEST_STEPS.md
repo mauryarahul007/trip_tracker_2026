@@ -22,6 +22,7 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 | Shipped | Version | Id | Section |
 |--------|---------|-----|---------|
 | 2026-09-26 | v3.40.2 | UX-TRIPS-VIEWS | [Trip stack corners, swipe, list glass](#ux-trips-views--stack-corners-smooth-swipe-list-glass) |
+| 2026-09-26 | v3.40.3 | UX-TRIPS-COVER | [Stack destination photo, light list tint](#ux-trips-cover--stack-destination-photo-light-list-tint) |
 | 2026-09-26 | v3.40.1 | SETTINGS-IA | [Settings root screen](#settings-ia--settings-root-screen) |
 | 2026-09-26 | v3.40.1 | TAB-SWIPE | [Tab swipe between bottom-nav screens](#tab-swipe--left-right-between-bottom-nav-screens) |
 | 2026-09-26 | v3.40.1 | BUG-246 | [Summary settlement explainer once](#bug-246--summary-settlement-explainer-once) |
@@ -1266,6 +1267,31 @@ None new. The trips list is the home screen.
 
 ### Pass
 - Stack corners stay round at rest and during a slow swipe, the page behind the stack is that card’s photo blurred, and the list tiles look glassy on the plain page background.
+
+---
+
+## UX-TRIPS-COVER — Stack destination photo, light list tint
+
+**Commit:** v3.40.3. **Migrations:** none. **ADR:** 234.
+
+The stack photo (and the blurred page behind it) uses the destination typed when the trip was created. Light list view keeps a soft tinted page behind the tiles, not a flat white sheet and not one shared photo.
+
+### Flags
+None new. The trips list is the home screen.
+
+### Steps
+1. Create a trip with a destination such as Goa, and a different stop or trip name. Open Trips in stack view.
+2. The front card photo is that destination. The blurred page behind the stack is the same photo. A stop or the trip name does not replace it.
+3. Switch the app to the light color scheme, then open list view.
+4. The page behind the tiles is a soft gray-green tint, not solid white. The “Journeys” title and the header icons are dark and readable. Each tile still shows its own photo. There is no single destination photo filling the page.
+
+### Negative checks
+- A trip with no destination still shows a photo from its stops or name.
+- Dark scheme list view stays on the dark app background.
+- Stack view still uses the blurred front-card photo as the page background.
+
+### Pass
+- Stack and its page blur show the created destination, and light list view is tinted rather than white.
 
 ---
 
