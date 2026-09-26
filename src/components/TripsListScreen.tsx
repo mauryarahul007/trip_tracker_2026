@@ -663,7 +663,9 @@ export function TripsListScreen({
       {!stackActive && (
         <PullToRefreshIndicator ref={ptrIndicatorRef} state={pullToRefresh} />
       )}
-      <HomeAmbientBackdrop trip={focusedTrip || trips[0] || null} />
+      {stackActive && (
+        <HomeAmbientBackdrop trip={focusedTrip || trips[0] || null} />
+      )}
       <header className="home-unified-header">
         {/* Row 1: Top Navigation Bar */}
         <div className="home-header-row1">

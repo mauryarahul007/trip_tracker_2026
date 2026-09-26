@@ -801,9 +801,9 @@ function StackCardItem({
       aria-label={isFront ? `Open trip ${trip.name}` : undefined}
       aria-hidden={isFront ? undefined : true}
     >
-      {/* Idle sway (peek cards only, see CSS) sits on this wrapper, not
-          .stack-card itself, so it layers on top of the depth-position
-          transform instead of fighting it. */}
+      {/* Clip is not transformed. The drag/depth transform stays on
+          .stack-card so the photo cannot paint past the rounded corners. */}
+      <div className="stack-card-clip">
       <div className="stack-card-sway">
         <CardContent
           trip={trip}
@@ -884,6 +884,7 @@ function StackCardItem({
           )}
         </div>
       )}
+      </div>
     </div>
   );
 }

@@ -21,6 +21,7 @@ After implementing any **customer-facing** feature or UX fix that needs manual v
 
 | Shipped | Version | Id | Section |
 |--------|---------|-----|---------|
+| 2026-09-26 | v3.40.2 | UX-TRIPS-VIEWS | [Trip stack corners, swipe, list glass](#ux-trips-views--stack-corners-smooth-swipe-list-glass) |
 | 2026-09-26 | v3.40.1 | SETTINGS-IA | [Settings root screen](#settings-ia--settings-root-screen) |
 | 2026-09-26 | v3.40.1 | TAB-SWIPE | [Tab swipe between bottom-nav screens](#tab-swipe--left-right-between-bottom-nav-screens) |
 | 2026-09-26 | v3.40.1 | BUG-246 | [Summary settlement explainer once](#bug-246--summary-settlement-explainer-once) |
@@ -1239,6 +1240,32 @@ Cleanup of the existing Settings list. No new feature flag. Existing flags still
 
 ### Pass
 - The first screen is the six groups above, search still finds moved controls, and flagged rows stay hidden when their flags are off.
+
+---
+
+## UX-TRIPS-VIEWS — Stack corners, smooth swipe, list glass
+
+**Commit:** v3.40.2. **Migrations:** none.
+
+Polish of the existing trips stack and list. No new feature flag.
+
+### Flags
+None new. The trips list is the home screen.
+
+### Steps
+1. Open Trips on a phone-width window with at least two trips. Stay on stack view.
+2. Look at the front card corners. The photo follows the curve. No square fill shows in the corner cutouts, including the cards peeking behind.
+3. Drag the front card slowly left, then slowly right, and release before it commits. The card stays flat (a slight tilt only). It does not bow, shear, or flash square corners while your finger is down. Releasing snaps it back smoothly.
+4. Fling left and right. The next card rises in place without a twist at the start of the drag.
+5. Switch to list view. Each trip tile’s photo reads clearly, and the status/spend bar is a frosted strip over the photo rather than a solid block. The page behind the tiles is the plain app background.
+6. Switch back to stack view. The page behind the card is a blurred copy of that card’s photo. Swipe to another trip: the page background changes to that trip’s photo.
+
+### Negative checks
+- One trip only: the card still has round corners and a slow drag does not warp it.
+- Reduced motion: the card still tracks the finger and the corners stay round.
+
+### Pass
+- Stack corners stay round at rest and during a slow swipe, the page behind the stack is that card’s photo blurred, and the list tiles look glassy on the plain page background.
 
 ---
 

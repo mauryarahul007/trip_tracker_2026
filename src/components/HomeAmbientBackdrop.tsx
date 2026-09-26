@@ -6,7 +6,7 @@ interface Props {
   trip: Trip | null;
 }
 
-const VISIBLE_OPACITY = 0.55;
+const VISIBLE_OPACITY = 1;
 
 // Blurred, translucent backdrop behind the home screen showing whichever
 // trip is currently front of the swipe stack. Reuses the same cached photo

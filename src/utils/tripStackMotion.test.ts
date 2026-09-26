@@ -32,10 +32,12 @@ describe('frontCardTransform', () => {
     expect(t).not.toContain('rotateX');
   });
 
-  it('keeps 3D tilt on Blink', () => {
+  it('stays flat on Blink too (no perspective warp)', () => {
     const t = frontCardTransform(40, -20, '3d');
-    expect(t).toContain('rotateY(');
-    expect(t).toContain('rotateX(');
+    expect(t).toContain('translate3d(');
+    expect(t).toContain('rotate(');
+    expect(t).not.toContain('rotateY');
+    expect(t).not.toContain('rotateX');
   });
 
   it('tracks finger 1:1 horizontally by default', () => {
@@ -51,29 +53,21 @@ describe('frontCardTransform', () => {
 });
 
 describe('peekCardTransform', () => {
-  it('smoothly scales and rotates depth-1 peek card continuously', () => {
+  it('lifts the depth-1 peek without twisting it', () => {
     const atRest = peekCardTransform(1, 0, '2d');
-    expect(atRest.transform).toContain('translate3d(0, 14.0px, 0)');
-    expect(atRest.transform).toContain('scale(0.960)');
-    expect(atRest.transform).toContain('rotate(-2.50deg)');
+    expect(atRest.transform).toBe('translate3d(0, 14.0px, 0) scale(0.950)');
 
     const atPeak = peekCardTransform(1, 1, '2d');
-    expect(atPeak.transform).toContain('translate3d(0, 0.0px, 0)');
-    expect(atPeak.transform).toContain('scale(1.000)');
-    expect(atPeak.transform).toContain('rotate(0.00deg)');
+    expect(atPeak.transform).toBe('translate3d(0, 0.0px, 0) scale(1.000)');
   });
 
-  it('smoothly scales and escalates depth-2 peek card', () => {
+  it('lifts the depth-2 peek into the depth-1 rest pose', () => {
     const atRest = peekCardTransform(2, 0, '2d');
-    expect(atRest.transform).toContain('translate3d(0, 26.0px, 0)');
-    expect(atRest.transform).toContain('scale(0.920)');
-    expect(atRest.transform).toContain('rotate(2.00deg)');
-    expect(atRest.opacity).toBe('0.85');
+    expect(atRest.transform).toBe('translate3d(0, 26.0px, 0) scale(0.900)');
+    expect(atRest.opacity).toBe('0.88');
 
     const atPeak = peekCardTransform(2, 1, '2d');
-    expect(atPeak.transform).toContain('translate3d(0, 14.0px, 0)');
-    expect(atPeak.transform).toContain('scale(0.960)');
-    expect(atPeak.transform).toContain('rotate(-2.50deg)');
+    expect(atPeak.transform).toBe('translate3d(0, 14.0px, 0) scale(0.950)');
     expect(atPeak.opacity).toBe('1.00');
   });
 });
@@ -94,17 +88,17 @@ describe('stackMotionMode', () => {
     vi.unstubAllGlobals();
   });
 
-  it('picks 3d on Blink', () => {
+  it('stays 2d on Blink so a slow drag does not perspective-warp', () => {
     vi.stubGlobal('CSS', { supports: () => false });
     expect(isWebKitCompositor()).toBe(false);
-    expect(stackMotionMode()).toBe('3d');
+    expect(stackMotionMode()).toBe('2d');
     vi.unstubAllGlobals();
   });
 });
 
 describe('prevCardTransform', () => {
   it('rests hidden-but-painted behind the stack and rises to full size', () => {
-    expect(prevCardTransform(0)).toEqual({ transform: 'translate3d(0, 34.0px, 0) scale(0.900) rotate(-2.00deg)', opacity: '0.01' });
-    expect(prevCardTransform(1)).toEqual({ transform: 'translate3d(0, 0.0px, 0) scale(1.000) rotate(0.00deg)', opacity: '1.00' });
+    expect(prevCardTransform(0)).toEqual({ transform: 'translate3d(0, 34.0px, 0) scale(0.900)', opacity: '0.01' });
+    expect(prevCardTransform(1)).toEqual({ transform: 'translate3d(0, 0.0px, 0) scale(1.000)', opacity: '1.00' });
   });
 });

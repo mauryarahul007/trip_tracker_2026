@@ -4191,4 +4191,18 @@ This document logs all meaningful technical decisions, library choices, design p
   - Tab swipe stays touch-only and does not include Settings.
   - Geotag stays on the first screen when no trip is open, because it is a global preference and Trip tools needs a trip.
 
+---
+
+## 233. Round stack cards, glassy list tiles, blurred stack backdrop (v3.40.2)
+* **Context:**
+  - Stack cards showed square corners and warped on a slow swipe because Chrome tilted them with rotateX/rotateY under perspective, which breaks border-radius clipping.
+  - List tiles used a solid footer. A single trip photo cannot sit behind that grid, because each tile is a different trip.
+* **Decision & Implementation:**
+  - **Stack motion (`tripStackMotion.ts`, `TripStack.tsx`, `index.css`):** Every browser uses a flat translate plus about 2° of tilt. The rounded clip sits on an inner shell that is not transformed. Peek cards rise without a twist. `filter: brightness()` on peek cards is a scrim, so the corners stay round.
+  - **List (`index.css`):** Each tile keeps its own photo. The status bar is a frosted strip over that photo. The page behind the grid stays the plain app background.
+  - **Stack backdrop (`HomeAmbientBackdrop.tsx`, `TripsListScreen.tsx`):** Only stack view paints the front card’s photo, blurred, behind the page. It crossfades when the front card changes. List view does not mount it.
+* **Trade-offs Accepted:**
+  - Idle sway on the peek cards is gone, because a transformed child inside the rounded card was part of the square-corner leak.
+  - The page blur stays on during a drag. Changing the filter mid-swipe was what made the backdrop pop.
+
 

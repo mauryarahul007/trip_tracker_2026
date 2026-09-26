@@ -3372,27 +3372,33 @@ input:checked + .toggle-slider:before {
   position: relative;
   height: min(58vh, 480px);
   margin-bottom: 12px;
-  perspective: 1200px;
-  perspective-origin: 50% 35%;
 }
 .stack-card {
   position: absolute;
   inset: 0;
   border-radius: var(--border-radius-md);
-  overflow: hidden;
-  background: #141720;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  box-shadow: 
-    0 16px 36px -12px rgba(0, 0, 0, 0.4),
-    0 0 0 1px rgba(255, 255, 255, 0.06) inset;
-  transform-style: preserve-3d;
+  background: transparent;
+  box-shadow: 0 16px 36px -12px rgba(0, 0, 0, 0.4);
   /* Governs the depth-1/depth-2 peek cards rising into place after a
      swipe. The front card (depth-0) sets its own inline transition while
      dragging/exiting, which overrides this. */
-  transition: transform 0.34s var(--ease-decel), opacity 0.34s var(--ease-decel), filter 0.34s var(--ease-decel);
+  transition: transform 0.34s var(--ease-decel), opacity 0.34s var(--ease-decel);
+}
+/* Clip lives on a child that is not transformed. A transform on the same
+   element as border-radius + overflow lets the photo paint as squares
+   past the curve, especially during a slow drag. */
+.stack-card-clip {
+  position: relative;
+  height: 100%;
+  border-radius: inherit;
+  overflow: hidden;
+  background: #141720;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+  clip-path: inset(0 round 32px);
 }
 /* Specular light sweep on top edge */
-.stack-card::after {
+.stack-card-clip::after {
   content: '';
   position: absolute;
   top: 0;
@@ -3415,9 +3421,6 @@ input:checked + .toggle-slider:before {
   pointer-events: none;
   will-change: transform, opacity;
 }
-.trip-stack-stage.is-dragging .stack-card-sway {
-  animation: none !important;
-}
 .trip-stack-stage.is-dragging .stack-ambient-glow {
   opacity: 0;
   transition: none;
@@ -3435,19 +3438,33 @@ input:checked + .toggle-slider:before {
 }
 .stack-card.depth-1 {
   z-index: 2;
-  transform: translateY(14px) scale(0.95);
-  filter: brightness(0.78);
+  transform: translate3d(0, 14px, 0) scale(0.95);
 }
 .stack-card.depth-2 {
   z-index: 1;
-  transform: translateY(26px) scale(0.90);
-  filter: brightness(0.58);
+  transform: translate3d(0, 26px, 0) scale(0.9);
   opacity: 0.88;
+}
+/* Dim peek cards with a scrim. filter: brightness() rasterizes the card
+   into a square and shows through the front card's rounded corners. */
+.stack-card.depth-1 .stack-card-clip::before,
+.stack-card.depth-2 .stack-card-clip::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+}
+.stack-card.depth-1 .stack-card-clip::before {
+  background: rgba(0, 0, 0, 0.22);
+}
+.stack-card.depth-2 .stack-card-clip::before {
+  background: rgba(0, 0, 0, 0.42);
 }
 /* Pre-mounted "previous" card (right swipe target); invisible until it rises. */
 .stack-card.depth-3 {
   z-index: 0;
-  transform: translateY(34px) scale(0.9) rotate(-2deg);
+  transform: translate3d(0, 34px, 0) scale(0.9);
   /* Not 0: browsers skip decoding the photo of a fully transparent layer,
      which showed as a blank white card when it rose. */
   opacity: 0.01;
@@ -3459,28 +3476,10 @@ input:checked + .toggle-slider:before {
 }
 @media (prefers-reduced-motion: reduce) {
   .stack-card { transition: none; }
-  .stack-card-sway { animation: none !important; }
 }
-/* Idle sway -- a hairline ambient rock on the two peek cards so the stack
-   reads as physically stacked, not a paused screenshot. Front card
-   (depth-0) is excluded: it's the interactive one, and unsolicited motion
-   there while a user is about to touch it reads as jitter, not life.
-   Different duration/delay per depth keeps the two out of phase. */
+/* Layout wrapper only. A transform here escapes the rounded clip. */
 .stack-card-sway {
   height: 100%;
-  transform-origin: 50% 60%;
-}
-.stack-card.depth-1 .stack-card-sway {
-  animation: stack-card-sway 8.5s ease-in-out infinite;
-  animation-delay: -2.4s;
-}
-.stack-card.depth-2 .stack-card-sway {
-  animation: stack-card-sway 6.4s ease-in-out infinite;
-  animation-delay: -4.1s;
-}
-@keyframes stack-card-sway {
-  0%, 100% { transform: translateY(0) rotate(0deg); }
-  50% { transform: translateY(-1.5px) rotate(0.5deg); }
 }
 .stack-card-face {
   position: relative;
@@ -4169,13 +4168,24 @@ input:checked + .toggle-slider:before {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
 }
 
-/* Card squircle & double-bezel surface */
+/* Card squircle. Radius and fill sit on the clip, not the transformed card,
+   so a drag cannot paint a square photo past the curve. */
 .stack-card {
   border-radius: 32px !important;
-  border: 1.5px solid rgba(255, 255, 255, 0.14) !important;
-  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.65), inset 0 1px 1px rgba(255, 255, 255, 0.22) !important;
-  background: rgba(15, 23, 42, 0.6) !important;
+  border: none !important;
+  background: transparent !important;
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.45) !important;
   box-sizing: border-box !important;
+  overflow: visible !important;
+}
+
+.stack-card-clip {
+  border-radius: 32px;
+  border: 1.5px solid rgba(255, 255, 255, 0.14);
+  background: rgba(15, 23, 42, 0.55);
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.22);
+  clip-path: inset(0 round 32px);
+  box-sizing: border-box;
 }
 
 .stack-card-sway {
@@ -4701,9 +4711,9 @@ input:checked + .toggle-slider:before {
   position: relative;
   border-radius: 20px;
   overflow: hidden;
-  background: #141720;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 8px 22px -4px rgba(0, 0, 0, 0.45);
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  box-shadow: 0 12px 28px -16px rgba(0, 0, 0, 0.35);
   cursor: pointer;
   transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.22s ease, border-color 0.22s ease;
   user-select: none;
@@ -4716,14 +4726,14 @@ input:checked + .toggle-slider:before {
 }
 
 :root[data-theme="light"] .concept2-grid-card {
-  box-shadow: 0 10px 24px -4px rgba(15, 23, 42, 0.28), 0 2px 6px -1px rgba(15, 23, 42, 0.12);
-  border-color: rgba(15, 23, 42, 0.14);
+  box-shadow: 0 12px 28px -16px rgba(15, 23, 42, 0.28);
+  border-color: rgba(15, 23, 42, 0.12);
 }
 
 .concept2-grid-card:hover {
-  transform: translateY(-2px) scale(1.01);
-  box-shadow: 0 14px 28px -6px rgba(0, 0, 0, 0.55);
-  border-color: rgba(255, 255, 255, 0.18);
+  transform: translateY(-2px);
+  box-shadow: 0 16px 32px -14px rgba(0, 0, 0, 0.4);
+  border-color: rgba(255, 255, 255, 0.22);
 }
 
 .concept2-grid-card:active {
@@ -4735,7 +4745,7 @@ input:checked + .toggle-slider:before {
   width: 100%;
   aspect-ratio: 1 / 0.94;
   overflow: hidden;
-  background-color: #1a1e28;
+  background-color: transparent;
   flex-shrink: 0;
 }
 
@@ -4757,10 +4767,10 @@ input:checked + .toggle-slider:before {
   pointer-events: none;
   background: linear-gradient(
     180deg,
-    rgba(8, 12, 18, 0.6) 0%,
-    rgba(8, 12, 18, 0.2) 35%,
-    transparent 60%,
-    rgba(8, 12, 18, 0.4) 100%
+    rgba(8, 12, 18, 0.28) 0%,
+    rgba(8, 12, 18, 0.04) 34%,
+    transparent 58%,
+    rgba(8, 12, 18, 0.12) 100%
   );
   transition: opacity 0.2s ease;
 }
@@ -4877,7 +4887,7 @@ input:checked + .toggle-slider:before {
 
 .concept2-card-city-pill {
   position: absolute;
-  bottom: 8px;
+  bottom: 40px;
   right: 8px;
   display: inline-flex;
   align-items: center;
@@ -4906,13 +4916,19 @@ input:checked + .toggle-slider:before {
 }
 
 .concept2-card-footer {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 6px;
   padding: 8px 10px;
-  background: #11141d;
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(12, 16, 24, 0.34);
+  backdrop-filter: blur(18px) saturate(1.15);
+  -webkit-backdrop-filter: blur(18px) saturate(1.15);
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
 }
 
 .concept2-card-status-label {
@@ -8102,18 +8118,24 @@ html.capacitor-ios .trip-sheet .tab-pane {
 
 .home-ambient-layer {
   position: absolute;
-  inset: -20px;
+  inset: -32px;
   background-size: cover;
   background-position: center;
-  filter: blur(70px) saturate(1.4) brightness(0.42);
+  filter: blur(42px) saturate(1.35);
   transform: scale(1.18);
   transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1);
-  mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.95) 0%, rgba(0, 0, 0, 0.85) 60%, transparent 100%);
-  -webkit-mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.95) 0%, rgba(0, 0, 0, 0.85) 60%, transparent 100%);
 }
-html.stack-dragging .home-ambient-layer {
-  filter: brightness(0.65);
-  transition: none;
+/* Light veil so header type stays readable. The photo itself stays visible. */
+.home-ambient-backdrop::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(250, 251, 252, 0.42);
+  pointer-events: none;
+}
+:root[data-theme="dark"] .home-ambient-backdrop::after,
+:root[data-theme="oled"] .home-ambient-backdrop::after {
+  background: rgba(8, 10, 14, 0.4);
 }
 
 .modal-overlay {
@@ -14636,19 +14658,9 @@ textarea.input-field {
     max-height: 100%;
   }
 
-  .home-ambient-layer,
-  html.stack-dragging .home-ambient-layer {
-    filter: none;
-    -webkit-filter: none;
-    mask-image: none;
-    -webkit-mask-image: none;
-  }
-  .home-ambient-layer::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(180deg, rgba(0, 0, 0, 0.28) 0%, rgba(0, 0, 0, 0.55) 100%);
-    pointer-events: none;
+  .home-ambient-layer {
+    filter: blur(28px) saturate(1.2);
+    -webkit-filter: blur(28px) saturate(1.2);
   }
 }
 
