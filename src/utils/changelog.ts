@@ -9,6 +9,15 @@ export interface ChangelogEntry {
 // parsed from decisions.md/BUGS.md: those are prose for developers, not client data.
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: '3.40.2',
+    date: '2026-09-26',
+    changes: [
+      'Trip stack cards stay round and no longer warp when you swipe slowly.',
+      'The page behind the stack is a blurred copy of the front trip photo.',
+      'List view tiles keep a lightly frosted status bar on each trip photo.',
+    ],
+  },
+  {
     version: '3.40.1',
     date: '2026-09-26',
     changes: [
