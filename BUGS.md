@@ -9,10 +9,10 @@
 
 | Metric | Count | Status Notes |
 | :--- | :--- | :--- |
-| **Total Tracked** | **248** | All recorded bugs across sessions |
+| **Total Tracked** | **249** | All recorded bugs across sessions |
 | **🟢 Open** | **0** | No critical blockers, 0 High |
 | **🟡 In Progress** | **0** | Active investigation or fix |
-| **✅ Resolved** | **221** | Verified & closed |
+| **✅ Resolved** | **222** | Verified & closed |
 | **⚪ Won't Fix** | **27** | Expected behavior / deferred |
 
 ---
@@ -252,6 +252,7 @@
 | **BUG-246** | Summary shows the same settlement explanation twice | `ui-ux` | `low` | `rahul` | `cursor-agent` | Fixed in commit 6c802ed (v3.40.1). Removed the Minimizes transfers link. How it works on the settlement card is the only explainer. ADR 232. |
 | **BUG-247** | Left and right swipe between trip tabs does nothing | `navigation` | `medium` | `rahul` | `cursor-agent` | Fixed in commit 6c802ed (v3.40.1). Swipe binds when the trip main mounts, and vertical tab panes no longer cancel the gesture. ADR 232. |
 | **BUG-248** | Trip stack cards show square corners and warp on a slow swipe | `ui-ux` | `medium` | `rahul` | `cursor-agent` | Fixed in commit d744520 (v3.40.2). Flat drag with the clip on an inner shell. List footer is frosted over each tile photo. Stack view blurs the front photo behind the page. ADR 233. |
+| **BUG-249** | Trip stack shows the wrong photo, and light list view is solid white | `ui-ux` | `medium` | `rahul` | `cursor-agent` | Fixed in commit d78ce3a (v3.40.3). Destination is the only cover query when one was typed. Light list uses a tinted page and dark header type. ADR 234. |
 
 ---
 

@@ -7359,5 +7359,32 @@
     "resolvedBy": "cursor-agent",
     "resolvedAt": "2026-09-26T07:50:00.000Z",
     "resolutionNote": "Fixed in commit d744520 (v3.40.2). Flat drag with the clip on an inner shell. List footer is frosted over each tile photo. Stack view blurs the front photo behind the page. ADR 233."
+  },
+  {
+    "id": "BUG-249",
+    "title": "Trip stack shows the wrong photo, and light list view is solid white",
+    "description": "On the trips stack, the card photo was a stop or the trip name instead of the destination entered at creation. In light mode, list view sat on a flat white page and the Journeys title disappeared.",
+    "severity": "medium",
+    "category": "ui-ux",
+    "status": "resolved",
+    "foundBy": "rahul",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "3.40.3"
+    },
+    "reproSteps": [
+      "Create a trip with a destination and a different name or stop",
+      "Open Trips in stack view",
+      "Switch to the light color scheme and open list view"
+    ],
+    "expectedBehavior": "The stack photo and the blurred page behind it are the destination typed at creation. Light list view is a soft tint, with a readable Journeys title, and each tile keeps its own photo.",
+    "actualBehavior": "The stack used a saved cover from a stop or the trip name. Light list view was a solid white page with a white header.",
+    "diagnostics": {},
+    "createdAt": "2026-09-26T08:09:11.684Z",
+    "updatedAt": "2026-09-26T08:09:11.775Z",
+    "resolvedBy": "cursor-agent",
+    "resolvedAt": "2026-09-26T08:09:11.775Z",
+    "resolutionNote": "Fixed in commit d78ce3a (v3.40.3). Destination is the only cover query when one was typed. Light list uses a tinted page and dark header type. ADR 234."
   }
 ]
