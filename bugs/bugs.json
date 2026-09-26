@@ -7332,5 +7332,32 @@
     "resolvedBy": "cursor-agent",
     "resolvedAt": "2026-09-25T21:53:54.623Z",
     "resolutionNote": "Fixed in commit 6c802ed (v3.40.1). Swipe binds when the trip main mounts, and vertical tab panes no longer cancel the gesture. ADR 232."
+  },
+  {
+    "id": "BUG-248",
+    "title": "Trip stack cards show square corners and warp on a slow swipe",
+    "description": "On the trips stack, the photo painted past the rounded corners, and a slow drag perspective-warped the card. The list tiles also used a solid footer.",
+    "severity": "medium",
+    "category": "ui-ux",
+    "status": "resolved",
+    "foundBy": "rahul",
+    "environment": {
+      "platform": "web",
+      "isOnline": true,
+      "appVersion": "3.40.2"
+    },
+    "reproSteps": [
+      "Open Trips in stack view with a photo on the card",
+      "Look at the rounded corners",
+      "Drag the card slowly and hold"
+    ],
+    "expectedBehavior": "Corners stay round while dragging, and the card stays flat. List tiles stay lightly frosted, each with its own photo.",
+    "actualBehavior": "Square shapes showed around the curves, and a slow swipe distorted the card.",
+    "diagnostics": {},
+    "createdAt": "2026-09-26T07:25:00.000Z",
+    "updatedAt": "2026-09-26T07:50:00.000Z",
+    "resolvedBy": "cursor-agent",
+    "resolvedAt": "2026-09-26T07:50:00.000Z",
+    "resolutionNote": "Fixed in commit d744520 (v3.40.2). Flat drag with the clip on an inner shell. List footer is frosted over each tile photo. Stack view blurs the front photo behind the page. ADR 233."
   }
 ]
